@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../../../../common';
 import { cubicBezier } from '../../../../easing';
 import type {
   CSSTransitionProperties,
@@ -293,8 +292,8 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(() => normalizeCSSTransitionProperties(config)).toThrow(
-        new ReanimatedError(
-          ERROR_MESSAGES.invalidTransitionProperty(config.transitionProperty)
+        new Error(
+          `[Reanimated] ${ERROR_MESSAGES.invalidTransitionProperty(config.transitionProperty)}`
         )
       );
     });

@@ -4,11 +4,11 @@ sidebar_position: 2137 # Last in the section - deprecated
 
 <DeprecatedBanner
   text={
-    <>
-      This API is deprecated and will be removed in the next major release. Use{' '}
-      <a href="/docs/threading/scheduleOnRuntime">scheduleOnRuntime</a> instead.
-    </>
-  }
+<>
+This API is deprecated and will be removed in the next major release. Use{' '}
+<a href="/docs/threading/scheduleOnRuntime">scheduleOnRuntime</a> instead.
+</>
+}
 />
 
 # runOnRuntime
@@ -35,15 +35,14 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function runOnRuntime<A extends any[], R>(
-  workletRuntime: WorkletRuntime,
-  fn: (...args: A) => R
-): (...args: Parameters<typeof fn>) => void;
-```
-
+  ```typescript
+  function runOnRuntime<A extends any[], R>(
+    workletRuntime: WorkletRuntime,
+    fn: (...args: A) => R
+  ): (...args: Parameters<typeof fn>) => void;
+  ```
 </details>
 
 ### Arguments

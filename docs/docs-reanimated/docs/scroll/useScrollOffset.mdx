@@ -21,35 +21,33 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function useScrollOffset<C extends ScrollableComponent>(
-  animatedRef: AnimatedRef<C> | null,
-  providedOffset?: SharedValue<number>
-): SharedValue<number>;
+  ```typescript
+  function useScrollOffset<C extends ScrollableComponent>(
+    animatedRef: AnimatedRef<C> | null,
+    providedOffset?: SharedValue<number>
+  ): SharedValue<number>;
 
-type ScrollableComponent = Component<
-  Pick<
-    ScrollViewProps,
-    | 'onScroll'
-    | 'onScrollBeginDrag'
-    | 'onScrollEndDrag'
-    | 'onMomentumScrollBegin'
-    | 'onMomentumScrollEnd'
-  >
-> &
-  Pick<ScrollView, 'getScrollableNode'>;
-```
-
+  type ScrollableComponent = Component<
+    Pick<
+      ScrollViewProps,
+      | 'onScroll'
+      | 'onScrollBeginDrag'
+      | 'onScrollEndDrag'
+      | 'onMomentumScrollBegin'
+      | 'onMomentumScrollEnd'
+    >
+  > &
+    Pick<ScrollView, 'getScrollableNode'>;
+  ```
 </details>
 
 ### Arguments
 
 #### `animatedRef`
 
-An [animated ref](/docs/core/useAnimatedRef#returns) connected to the scrollable component you'd want to scroll on. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/
-glossary#animated-component) or a React Native built-in component.
+An [animated ref](/docs/core/useAnimatedRef#returns) connected to the scrollable component you'd want to scroll on. The animated ref has to be passed either to an \[Animated component]\(/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
 
 #### `providedOffset` <Optional/>
 
@@ -64,7 +62,7 @@ An optional shared value to be updated with the scroll offset. If not provided a
 import ScrollOffset from '@site/src/examples/ScrollOffset';
 import ScrollOffsetSrc from '!!raw-loader!@site/src/examples/ScrollOffset';
 
-<InteractiveExample src={ScrollOffsetSrc} component={ScrollOffset} showCode />
+<InteractiveExample src={ScrollOffsetSrc} component={ScrollOffset} showCode/>
 
 ## Remarks
 
@@ -74,4 +72,4 @@ import ScrollOffsetSrc from '!!raw-loader!@site/src/examples/ScrollOffset';
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

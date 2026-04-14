@@ -33,16 +33,15 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function dispatchCommand<T extends Component>(
-  animatedRef: AnimatedRef<T>,
-  commandName: string,
-  args?: unknown[]
-) => void;
-```
-
+  ```typescript
+  function dispatchCommand<T extends Component>(
+    animatedRef: AnimatedRef<T>,
+    commandName: string,
+    args?: unknown[]
+  ) => void;
+  ```
 </details>
 
 ### Arguments
@@ -55,7 +54,7 @@ An [animated ref](/docs/core/useAnimatedRef#returns) connected to the component 
 
 The name of the command to execute, e.g. `'focus'` or `'scrollToEnd'`.
 
-#### `args` <Optional />
+#### `args` <Optional/>
 
 The array of command arguments. Defaults to an empty array.
 
@@ -63,12 +62,12 @@ The array of command arguments. Defaults to an empty array.
 
 <ExampleVideo
   sources={{
-    android: '/react-native-reanimated/recordings/dispatchCommand_android.mov',
-    ios: '/react-native-reanimated/recordings/dispatchCommand_ios.mov',
-  }}
+android: '/react-native-reanimated/recordings/dispatchCommand_android.mov',
+ios: '/react-native-reanimated/recordings/dispatchCommand_ios.mov',
+}}
 />
 
-<CollapsibleCode src={DispatchCommandSrc} showLines={[29, 32]} />
+<CollapsibleCode src={DispatchCommandSrc} showLines={[29, 32]}/>
 
 ## Remarks
 
@@ -76,4 +75,4 @@ The array of command arguments. Defaults to an empty array.
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios />
+<PlatformCompatibility android ios/>

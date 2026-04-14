@@ -1,6 +1,5 @@
 'use strict';
 
-import { ReanimatedError } from '../../../../../common';
 import { ERROR_MESSAGES, processSVGPath } from '../path';
 
 describe(processSVGPath, () => {
@@ -195,7 +194,7 @@ describe(processSVGPath, () => {
         expect(processSVGPath(input)).toEqual(expectedMsg);
       } else {
         expect(() => processSVGPath(input)).toThrow(
-          new ReanimatedError(expectedMsg)
+          new Error(`[Reanimated] ${expectedMsg}`)
         );
       }
     });

@@ -3,7 +3,6 @@
 import { registerWorkletStackDetails } from '../debug/errors';
 import { jsVersion } from '../debug/jsVersion';
 import { logger } from '../debug/logger';
-import { WorkletsError } from '../debug/WorkletsError';
 import { getRuntimeKind, RuntimeKind } from '../runtimeKind';
 import type { WorkletFunction, WorkletImport } from '../types';
 import { isWorkletFunction } from '../workletFunction';
@@ -91,15 +90,15 @@ const INACCESSIBLE_OBJECT = {
             // need to allow for this key to be accessed here.
             return false;
           }
-          throw new WorkletsError(
-            `Trying to access property \`${String(
+          throw new Error(
+            `[Worklets] Trying to access property \`${String(
               prop
             )}\` of an object which cannot be sent to the UI runtime.`
           );
         },
         set: () => {
-          throw new WorkletsError(
-            'Trying to write to an object which cannot be sent to the UI runtime.'
+          throw new Error(
+            '[Worklets] Trying to write to an object which cannot be sent to the UI runtime.'
           );
         },
       }
@@ -276,8 +275,8 @@ export function registerCustomSerializable<
   TPacked extends object,
 >(registrationData: RegistrationData<TValue, TPacked>) {
   if (__DEV__ && getRuntimeKind() !== RuntimeKind.ReactNative) {
-    throw new WorkletsError(
-      'registerCustomSerializable can be used only on React Native runtime.'
+    throw new Error(
+      '[Worklets] registerCustomSerializable can be used only on React Native runtime.'
     );
   }
 
@@ -313,18 +312,18 @@ function verifyRegistrationData(
   unpack: unknown
 ) {
   if (!isWorkletFunction(determine)) {
-    throw new WorkletsError(
-      'The "determine" function provided to registerCustomSerializable must be a worklet.'
+    throw new Error(
+      '[Worklets] The "determine" function provided to registerCustomSerializable must be a worklet.'
     );
   }
   if (!isWorkletFunction(pack)) {
-    throw new WorkletsError(
-      'The "pack" function provided to registerCustomSerializable must be a worklet.'
+    throw new Error(
+      '[Worklets] The "pack" function provided to registerCustomSerializable must be a worklet.'
     );
   }
   if (!isWorkletFunction(unpack)) {
-    throw new WorkletsError(
-      'The "unpack" function provided to registerCustomSerializable must be a worklet.'
+    throw new Error(
+      '[Worklets] The "unpack" function provided to registerCustomSerializable must be a worklet.'
     );
   }
 }
@@ -339,8 +338,8 @@ function detectCyclicObject(value: unknown, depth: number) {
     if (depth === DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD) {
       processedObjectAtThresholdDepth = value;
     } else if (value === processedObjectAtThresholdDepth) {
-      throw new WorkletsError(
-        'Trying to convert a cyclic object to a serializable. This is not supported.'
+      throw new Error(
+        '[Worklets] Trying to convert a cyclic object to a serializable. This is not supported.'
       );
     }
   } else {
@@ -463,8 +462,8 @@ function cloneWorklet<TValue extends WorkletFunction>(
   if (__DEV__) {
     const babelVersion = (value as WorkletFunction).__pluginVersion;
     if (babelVersion !== undefined && babelVersion !== jsVersion) {
-      throw new WorkletsError(
-        `Mismatch between JavaScript code version and Worklets Babel plugin version (${jsVersion} vs. ${babelVersion}).
+      throw new Error(
+        `[Worklets] Mismatch between JavaScript code version and Worklets Babel plugin version (${jsVersion} vs. ${babelVersion}).
     See \`https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version\` for more details.
     Offending code was: \`${getWorkletCode(value)}\``
       );
@@ -661,11 +660,13 @@ function cloneArrayBufferView<TValue extends ArrayBufferView>(
     __init: () => {
       'worklet';
       if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
-        throw new WorkletsError(`Invalid array view name \`${typeName}\`.`);
+        throw new Error(`[Worklets] Invalid array view name \`${typeName}\`.`);
       }
       const constructor = global[typeName as keyof typeof global];
       if (constructor === undefined) {
-        throw new WorkletsError(`Constructor for \`${typeName}\` not found.`);
+        throw new Error(
+          `[Worklets] Constructor for \`${typeName}\` not found.`
+        );
       }
       return new constructor(buffer);
     },

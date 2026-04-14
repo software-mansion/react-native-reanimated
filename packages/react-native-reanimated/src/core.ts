@@ -6,7 +6,7 @@ import {
 import type { WorkletFunction } from 'react-native-worklets';
 import { createSerializable } from 'react-native-worklets';
 
-import { logger, ReanimatedError } from './common';
+import { logger } from './common';
 import type {
   AnimatedKeyboardOptions,
   InternalHostInstance,
@@ -52,8 +52,8 @@ export function getViewProp<T>(
   component?: InternalHostInstance | null
 ): Promise<T> {
   if (!component) {
-    throw new ReanimatedError(
-      'Function `getViewProp` requires a component to be passed as an argument on Fabric.'
+    throw new Error(
+      '[Reanimated] Function `getViewProp` requires a component to be passed as an argument on Fabric.'
     );
   }
 

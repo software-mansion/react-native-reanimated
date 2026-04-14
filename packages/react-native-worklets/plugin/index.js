@@ -406,7 +406,7 @@ var require_globals = __commonJS({
   "lib/globals.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.globals = exports2.defaultGlobals = exports2.internalBindingsToCaptureFromGlobalScope = exports2.outsideBindingsToCaptureFromGlobalScope = void 0;
+    exports2.globals = exports2.defaultGlobals = void 0;
     exports2.initializeState = initializeState;
     exports2.initializeGlobals = initializeGlobals;
     exports2.addCustomGlobals = addCustomGlobals;
@@ -525,12 +525,6 @@ var require_globals = __commonJS({
       // Worklets
       "_WORKLET"
     ];
-    exports2.outsideBindingsToCaptureFromGlobalScope = /* @__PURE__ */ new Set([
-      "ReanimatedError"
-    ]);
-    exports2.internalBindingsToCaptureFromGlobalScope = /* @__PURE__ */ new Set([
-      "WorkletsError"
-    ]);
     var notCapturedIdentifiers_DEPRECATED = ["_IS_FABRIC"];
     function initializeState(state) {
       state.workletNumber = 1;
@@ -592,9 +586,6 @@ var require_closure = __commonJS({
             }
             capturedNames.add(name);
             closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
-            return;
-          }
-          if (globals_12.outsideBindingsToCaptureFromGlobalScope.has(name) || !state.opts.bundleMode && globals_12.internalBindingsToCaptureFromGlobalScope.has(name)) {
             return;
           }
           if ("id" in funPath.node) {

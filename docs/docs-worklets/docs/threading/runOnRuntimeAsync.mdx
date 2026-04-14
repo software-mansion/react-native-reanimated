@@ -31,16 +31,15 @@ async function performHeavyComputation(data: number[]) {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
-  workletRuntime: WorkletRuntime,
-  worklet: (...args: Args) => ReturnValue,
-  ...args: Args
-): Promise<ReturnValue>;
-```
-
+  ```typescript
+  function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
+    workletRuntime: WorkletRuntime,
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): Promise<ReturnValue>;
+  ```
 </details>
 
 ## Arguments
@@ -69,18 +68,17 @@ Arguments to the function you want to execute on the [Worker Runtime](/docs/fund
 
 <CallTable
   bundleMode={{
-    rnRuntime: true,
-    uiRuntime: false,
-    workerRuntime: false,
-  }}
+rnRuntime: true,
+uiRuntime: false,
+workerRuntime: false,
+}}
   noBundleMode={{
-    rnRuntime: true,
-    uiRuntime: false,
-    workerRuntime: false,
-  }}
+rnRuntime: true,
+uiRuntime: false,
+workerRuntime: false,
+}}
 />
 
 ## Platform compatibility
 
-
-<PlatformTable native={true} web={false} />
+<PlatformTable native={true} web={false}/>

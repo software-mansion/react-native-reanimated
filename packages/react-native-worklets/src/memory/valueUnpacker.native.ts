@@ -68,14 +68,13 @@ export function installValueUnpacker() {
         const label = remoteFunctionName
           ? `function \`${remoteFunctionName}\``
           : 'anonymous function';
-        // eslint-disable-next-line reanimated/use-worklets-error
+
         throw new Error(`[Worklets] Tried to synchronously call a non-worklet ${label} on the UI thread.
 See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
       };
       fun.__remoteFunction = objectToUnpack;
       return fun;
     } else {
-      // eslint-disable-next-line reanimated/use-worklets-error
       throw new Error(
         `[Worklets] Data type in category "${category}" not recognized by value unpacker: "${globalThis._toString(
           objectToUnpack

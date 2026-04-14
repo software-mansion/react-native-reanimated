@@ -1,6 +1,5 @@
 'use strict';
 
-import { WorkletsError } from '../debug/WorkletsError';
 import {
   runOnRuntimeSyncWithId as BundleRunOnRuntimeSyncFromId,
   scheduleOnRuntimeWithId as BundleScheduleOnRuntimeFromId,
@@ -78,8 +77,8 @@ export function installShareableGuestUnpacker() {
     }) as typeof BundleScheduleOnRuntimeFromId;
 
     runOnUIAsync = () => {
-      throw new WorkletsError(
-        'runOnUIAsync is not supported on Worklet Runtimes yet'
+      throw new Error(
+        '[Worklets] runOnUIAsync is not supported on Worklet Runtimes yet'
       );
     };
   }

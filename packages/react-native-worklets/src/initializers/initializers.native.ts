@@ -8,7 +8,6 @@ import {
 import { initializeNetworking } from '../bundleMode/network';
 import { setupCallGuard } from '../callGuard';
 import { registerReportFatalRemoteError } from '../debug/errors';
-import { registerWorkletsError, WorkletsError } from '../debug/WorkletsError';
 import { getStaticFeatureFlag } from '../featureFlags/featureFlags';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
 import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
@@ -136,8 +135,8 @@ function initializeRNRuntime() {
       'worklet';
     };
     if (!isWorkletFunction(testWorklet)) {
-      throw new WorkletsError(
-        `Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
+      throw new Error(
+        `[Worklets] Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
       );
     }
   }
@@ -168,17 +167,14 @@ function initializeWorkletRuntime() {
  */
 function installRNBindingsOnUIRuntime() {
   if (!WorkletsModule) {
-    throw new WorkletsError(
-      'Worklets are trying to initialize the UI runtime without a valid WorkletsModule'
+    throw new Error(
+      '[Worklets] Worklets are trying to initialize the UI runtime without a valid WorkletsModule'
     );
   }
 
   if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     /** In Bundle Mode Runtimes setup their callGuard themselves. */
     runOnUISync(setupCallGuard);
-
-    /** In Bundle Mode the error is taken from the bundle. */
-    runOnUISync(registerWorkletsError);
   }
 
   const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();

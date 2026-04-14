@@ -2,7 +2,6 @@
 
 import { jsVersion } from './jsVersion';
 import { logger } from './logger';
-import { WorkletsError } from './WorkletsError';
 
 export function checkCppVersion() {
   const cppVersion = global._WORKLETS_VERSION_CPP;
@@ -15,8 +14,8 @@ export function checkCppVersion() {
   }
   const ok = matchVersion(jsVersion, cppVersion);
   if (!ok) {
-    throw new WorkletsError(
-      `Mismatch between JavaScript part and native part of Worklets (${jsVersion} vs ${cppVersion}).
+    throw new Error(
+      `[Worklets] Mismatch between JavaScript part and native part of Worklets (${jsVersion} vs ${cppVersion}).
     See \`https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#mismatch-between-javascript-part-and-native-part-of-worklets\` for more details.`
     );
   }

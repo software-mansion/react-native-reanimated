@@ -10,8 +10,8 @@ Feature flags allow developers to opt-in for experimental changes or opt-out fro
 
 | Feature flag name                                                  |              Type               | Added in | Removed in | Default value |
 | ------------------------------------------------------------------ | :-----------------------------: | :------: | :--------: | :-----------: |
-| [`FETCH_PREVIEW_ENABLED`](#fetch_preview_enabled-)                 | [static](#static-feature-flags) |  0.8.0   |  &ndash;   |    `false`    |
-| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled-) | [static](#static-feature-flags) |  0.6.0   |  &ndash;   |    `true`     |
+| [`FETCH_PREVIEW_ENABLED`](#fetch_preview_enabled-)                 | [static](#static-feature-flags) |  0.8.0   |  –   |    `false`    |
+| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled-) | [static](#static-feature-flags) |  0.6.0   |  –   |    `true`     |
 
 :::info
 
@@ -48,7 +48,7 @@ Static flags are intended to be resolved during code compilation and cannot be c
 ```
 
 2. Run `pod install` (iOS only)
-3. Rebuild the native app
+2. Rebuild the native app
 
 :::warning
 Static feature flags are not supported in environments where Worklets is prebuilt with the default configuration of flags, like for instance in [Expo Go](https://expo.dev/go) and [RNRepo](https://rnrepo.org/).

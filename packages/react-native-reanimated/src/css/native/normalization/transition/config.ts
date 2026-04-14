@@ -1,6 +1,6 @@
 'use strict';
 import type { AnyRecord } from '../../../../common';
-import { convertPropertyToArray, ReanimatedError } from '../../../../common';
+import { convertPropertyToArray } from '../../../../common';
 import type {
   CSSTransitionProperties,
   CSSTransitionProperty,
@@ -50,8 +50,8 @@ const hasTransition = ({
 
     // We allow either all values to be 'none' or none of them to be 'none'
     if (transitionProperty.some((prop) => (prop === 'none') !== hasNone)) {
-      throw new ReanimatedError(
-        ERROR_MESSAGES.invalidTransitionProperty(transitionProperty)
+      throw new Error(
+        `[Reanimated] ${ERROR_MESSAGES.invalidTransitionProperty(transitionProperty)}`
       );
     }
 

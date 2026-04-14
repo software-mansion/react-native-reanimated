@@ -9,7 +9,7 @@ sidebar_position: 1
 import TimingBasic from '@site/src/examples/TimingBasic';
 import TimingBasicSrc from '!!raw-loader!@site/src/examples/TimingBasic';
 
-<InteractiveExample src={TimingBasicSrc} component={TimingBasic} />
+<InteractiveExample src={TimingBasicSrc} component={TimingBasic}/>
 
 ## Reference
 
@@ -23,30 +23,29 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type AnimatableValue = number | string | number[];
+  ```typescript
+  type AnimatableValue = number | string | number[];
 
-interface WithTimingConfig {
-  duration?: number;
-  easing?: EasingFunction;
-  reduceMotion?: ReduceMotion;
-}
+  interface WithTimingConfig {
+    duration?: number;
+    easing?: EasingFunction;
+    reduceMotion?: ReduceMotion;
+  }
 
-function withTiming<T extends AnimatableValue>(
-  toValue: T,
-  config?: WithTimingConfig,
-  callback?: (finished?: boolean, current?: AnimatableValue) => void
-): T;
+  function withTiming<T extends AnimatableValue>(
+    toValue: T,
+    config?: WithTimingConfig,
+    callback?: (finished?: boolean, current?: AnimatableValue) => void
+  ): T;
 
-enum ReduceMotion {
-  System = 'system',
-  Always = 'always',
-  Never = 'never',
-}
-```
-
+  enum ReduceMotion {
+    System = 'system',
+    Always = 'always',
+    Never = 'never',
+  }
+  ```
 </details>
 
 ### Arguments
@@ -55,15 +54,15 @@ enum ReduceMotion {
 
 import AnimationToValue from './_shared/animationToValue.mdx';
 
-<AnimationToValue />
+<AnimationToValue/>
 
-#### `config` <Optional />
+#### `config` <Optional/>
 
 The timing animation configuration.
 
 import { useTimingPlayground } from '@site/src/components/InteractivePlayground';
 
-<InteractivePlayground usePlayground={useTimingPlayground} />
+<InteractivePlayground usePlayground={useTimingPlayground}/>
 
 Available properties:
 
@@ -82,10 +81,7 @@ It will all start to make sense when you compare a `linear` easing side by side 
 import TimingEasingCompare from '@site/src/examples/TimingEasingCompare';
 import TimingEasingCompareSrc from '!!raw-loader!@site/src/examples/TimingEasingCompare';
 
-<InteractiveExample
-  src={TimingEasingCompareSrc}
-  component={TimingEasingCompare}
-/>
+<InteractiveExample src={TimingEasingCompareSrc} component={TimingEasingCompare}/>
 
 Reanimated provides a selection of ready-to-use easing functions in the `Easing` module. You can find a visualization of some common easing functions at [http://easings.net/](http://easings.net/).
 
@@ -120,7 +116,7 @@ The following helpers are used to modify other easing functions.
 - `inOut(easing: EasingFunction)` makes any easing function symmetrical
 - `out(easing: EasingFunction)` runs an easing function backwards
 
-#### `callback` <Optional />
+#### `callback` <Optional/>
 
 A function called upon animation completion. If the animation is cancelled, the callback will receive `false` as the argument; otherwise, it will receive `true`.
 
@@ -133,7 +129,7 @@ A function called upon animation completion. If the animation is cancelled, the 
 import TimingTabs from '@site/src/examples/TimingTabs';
 import TimingTabsSrc from '!!raw-loader!@site/src/examples/TimingTabs';
 
-<InteractiveExample src={TimingTabsSrc} component={TimingTabs} />
+<InteractiveExample src={TimingTabsSrc} component={TimingTabs}/>
 
 ## Remarks
 
@@ -141,4 +137,4 @@ import TimingTabsSrc from '!!raw-loader!@site/src/examples/TimingTabs';
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

@@ -10,7 +10,7 @@ The `useAnimatedKeyboard` is now deprecated. Please migrate to the [`react-nativ
 
 :::caution
 
-Android implementation of `useAnimatedKeyboard` has drawbacks on Android SDK < 30, for more details see [remarks](/docs/device/useAnimatedKeyboard#remarks) section.
+Android implementation of `useAnimatedKeyboard` has drawbacks on Android SDK \< 30, for more details see [remarks](/docs/device/useAnimatedKeyboard#remarks) section.
 
 :::
 
@@ -29,42 +29,41 @@ export default function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-// --- Function declaration ---
+  ```typescript
+  // --- Function declaration ---
 
-function useAnimatedKeyboard(
-  options: AnimatedKeyboardOptions
-): AnimatedKeyboardInfo;
+  function useAnimatedKeyboard(
+    options: AnimatedKeyboardOptions
+  ): AnimatedKeyboardInfo;
 
-// --- Configuration types ---
+  // --- Configuration types ---
 
-export interface AnimatedKeyboardOptions {
-  isStatusBarTranslucentAndroid?: boolean;
-}
+  export interface AnimatedKeyboardOptions {
+    isStatusBarTranslucentAndroid?: boolean;
+  }
 
-// --- Return types ---
+  // --- Return types ---
 
-export type AnimatedKeyboardInfo = {
-  height: SharedValue<number>;
-  state: SharedValue<KeyboardState>;
-};
+  export type AnimatedKeyboardInfo = {
+    height: SharedValue<number>;
+    state: SharedValue<KeyboardState>;
+  };
 
-export enum KeyboardState {
-  UNKNOWN = 0,
-  OPENING = 1,
-  OPEN = 2,
-  CLOSING = 3,
-  CLOSED = 4,
-}
-```
-
+  export enum KeyboardState {
+    UNKNOWN = 0,
+    OPENING = 1,
+    OPEN = 2,
+    CLOSING = 3,
+    CLOSED = 4,
+  }
+  ```
 </details>
 
 ### Arguments
 
-#### `options` <Optional />
+#### `options` <Optional/>
 
 Optional object containing additional configuration:
 
@@ -87,15 +86,15 @@ import AnimatedKeyboardSrc from '!!raw-loader!@site/src/examples/AnimatedKeyboar
 <InteractiveExample
   src={AnimatedKeyboardSrc}
   component={() => (
-    <ThemedVideo
-      center
-      width={300}
-      sources={{
-        light: '/recordings/useAnimatedKeyboard_light.mov',
-        dark: '/recordings/useAnimatedKeyboard_dark.mov',
-      }}
-    />
-  )}
+<ThemedVideo
+center
+width={300}
+sources={{
+light: '/recordings/useAnimatedKeyboard_light.mov',
+dark: '/recordings/useAnimatedKeyboard_dark.mov',
+}}
+/>
+)}
 />
 
 ## Remarks
@@ -115,15 +114,15 @@ import AnimatedKeyboardSrc from '!!raw-loader!@site/src/examples/AnimatedKeyboar
 
 - On Android, when using navigation with native header, `isStatusBarTranslucentAndroid` doesn't affect the top inset.
 
-- On Android SDK < 30, when status bar is hidden, the keyboard reverts to the default Android behavior.
+- On Android SDK \< 30, when status bar is hidden, the keyboard reverts to the default Android behavior.
 
-- <AvailableFrom version={'3.17.0'} /> On iPad, when the keyboard is floating, the
+- <AvailableFrom version={'3.17.0'}/> On iPad, when the keyboard is floating, the
   hook will always return height: <code>0</code>
   and state: <code>CLOSED</code>.
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios />
+<PlatformCompatibility android ios/>
 
 ## Migration guide
 

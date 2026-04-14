@@ -7,7 +7,6 @@ import type {
 import { ColorProperties, processColorInitially } from '../../../Colors';
 import type { StyleProps } from '../../../commonTypes';
 import { IS_ANDROID, IS_IOS } from '../../constants';
-import { ReanimatedError } from '../../errors';
 import { type ValueProcessorContext, ValueProcessorTarget } from '../../types';
 import { isRecord } from '../../utils';
 
@@ -210,13 +209,15 @@ export function processColor(
   }
   if (isDynamicColorObjectIOS(value)) {
     if (!IS_IOS) {
-      throw new ReanimatedError(ERROR_MESSAGES.dynamicNotAvailableOnPlatform());
+      throw new Error(
+        `[Reanimated] ${ERROR_MESSAGES.dynamicNotAvailableOnPlatform()}`
+      );
     }
     result = processDynamicColorObjectIOS(value);
   }
 
   if (result === null) {
-    throw new ReanimatedError(ERROR_MESSAGES.invalidColor(value));
+    throw new Error(`[Reanimated] ${ERROR_MESSAGES.invalidColor(value)}`);
   }
 
   return result;
@@ -233,11 +234,15 @@ export function unprocessColor(
   }
   if (isDynamicColorObjectIOS(value)) {
     if (!IS_IOS) {
-      throw new ReanimatedError(ERROR_MESSAGES.dynamicNotAvailableOnPlatform());
+      throw new Error(
+        `[Reanimated] ${ERROR_MESSAGES.dynamicNotAvailableOnPlatform()}`
+      );
     }
     return unprocessDynamicColorObjectIOS(value);
   }
-  throw new ReanimatedError(ERROR_MESSAGES.invalidProcessedColor(value));
+  throw new Error(
+    `[Reanimated] ${ERROR_MESSAGES.invalidProcessedColor(value)}`
+  );
 }
 
 export function processColorsInProps(props: StyleProps) {

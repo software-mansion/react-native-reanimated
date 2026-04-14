@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../errors';
 import type { TransformsArray, ValueProcessor } from '../../types';
 import { isAngle, isNumber, isNumberArray, isPercentage } from '../../utils';
 
@@ -191,7 +190,9 @@ export const processTransform: ValueProcessor<TransformsArray | string> = (
       const parsed = parseTransformProperty(part);
 
       if (parsed.length === 0) {
-        throw new ReanimatedError(ERROR_MESSAGES.invalidTransform(`${part})`));
+        throw new Error(
+          `[Reanimated] ${ERROR_MESSAGES.invalidTransform(`${part})`)}`
+        );
       }
 
       return parsed;

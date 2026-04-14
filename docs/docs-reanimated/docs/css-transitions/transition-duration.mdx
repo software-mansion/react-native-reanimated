@@ -9,10 +9,7 @@ sidebar_position: 3
 import TransitionDurationBasic from '@site/src/examples/css-transitions/TransitionDurationBasic';
 import TransitionDurationBasicSrc from '!!raw-loader!@site/src/examples/css-transitions/TransitionDurationBasic';
 
-<InteractiveExample
-  src={TransitionDurationBasicSrc}
-  component={TransitionDurationBasic}
-/>
+<InteractiveExample src={TransitionDurationBasicSrc} component={TransitionDurationBasic}/>
 
 ## Reference
 
@@ -31,14 +28,13 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type TimeUnit = `${number}s` | `${number}ms` | number;
+  ```typescript
+  type TimeUnit = `${number}s` | `${number}ms` | number;
 
-type CSSTransitionDuration = TimeUnit | TimeUnit[];
-```
-
+  type CSSTransitionDuration = TimeUnit | TimeUnit[];
+  ```
 </details>
 
 ### Values
@@ -50,31 +46,25 @@ A value which is either:
 - A string which is a non-negative number followed by `s`. Represents a time in seconds.
 
 <Indent>
-
-```typescript
-transitionDuration: '3s';
-```
-
+  ```typescript
+  transitionDuration: '3s';
+  ```
 </Indent>
 
 - A string which is a non-negative number followed by `ms`. Represents a time in milliseconds.
 
 <Indent>
-
-```typescript
-transitionDuration: '150ms';
-```
-
+  ```typescript
+  transitionDuration: '150ms';
+  ```
 </Indent>
 
 - A non-negative number which represents a time in milliseconds.
 
 <Indent>
-
-```typescript
-transitionDuration: 500;
-```
-
+  ```typescript
+  transitionDuration: 500;
+  ```
 </Indent>
 
 #### `<time unit[]>`
@@ -94,11 +84,8 @@ In the following example, it would take 3 seconds for the `width` property to tr
 import TransitionDuration from '@site/src/examples/css-transitions/TransitionDuration';
 import TransitionDurationSrc from '!!raw-loader!@site/src/examples/css-transitions/TransitionDuration';
 
-<InteractiveExample
-  src={TransitionDurationSrc}
-  component={TransitionDuration}
-/>
+<InteractiveExample src={TransitionDurationSrc} component={TransitionDuration}/>
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>
