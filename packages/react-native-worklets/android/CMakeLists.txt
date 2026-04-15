@@ -32,9 +32,6 @@ endif()
 if(${IS_REANIMATED_EXAMPLE_APP})
   string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP -Wpedantic")
 endif()
-if(${WORKLETS_BUNDLE_MODE_ENABLED})
-  string(APPEND CMAKE_CXX_FLAGS " -DWORKLETS_BUNDLE_MODE_ENABLED")
-endif()
 if(${WORKLETS_FETCH_PREVIEW_ENABLED})
   string(APPEND CMAKE_CXX_FLAGS " -DWORKLETS_FETCH_PREVIEW_ENABLED")
 endif()
@@ -99,8 +96,8 @@ target_include_directories(
 # build shared lib
 set_target_properties(worklets PROPERTIES LINKER_LANGUAGE CXX)
 
-target_link_libraries(worklets log ReactAndroid::reactnative ReactAndroid::jsi
-                      fbjni::fbjni)
+target_link_libraries(worklets android log ReactAndroid::reactnative
+                      ReactAndroid::jsi fbjni::fbjni)
 
 if(${JS_RUNTIME} STREQUAL "hermes")
   if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 82)

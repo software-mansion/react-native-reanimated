@@ -10,6 +10,15 @@ import type {
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
+import type {
+  Perspective,
+  RotateX,
+  RotateY,
+  TransformsConfig,
+  TranslateX,
+  TranslateY,
+} from './types';
+import { pickTransformValues } from './utils';
 
 /**
  * Rotate from top on the X axis. You can modify the behavior by chaining
@@ -21,7 +30,9 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipInXUp
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<
+    TransformsConfig<[Perspective, RotateX, TranslateY]>
+  >
   implements IEntryAnimationBuilder
 {
   static presetName = 'FlipInXUp';
@@ -43,12 +54,14 @@ export class FlipInXUp
       'worklet';
       return {
         initialValues: {
-          transform: [
-            { perspective: 500 },
-            { rotateX: '90deg' },
-            { translateY: -targetValues.targetHeight },
-          ],
-          ...initialValues,
+          transform: pickTransformValues(
+            [
+              { perspective: 500 },
+              { rotateX: '90deg' },
+              { translateY: -targetValues.targetHeight },
+            ],
+            initialValues
+          ),
         },
         animations: {
           transform: [
@@ -73,7 +86,9 @@ export class FlipInXUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipInYLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<
+    TransformsConfig<[Perspective, RotateY, TranslateX]>
+  >
   implements IEntryAnimationBuilder
 {
   static presetName = 'FlipInYLeft';
@@ -95,12 +110,14 @@ export class FlipInYLeft
       'worklet';
       return {
         initialValues: {
-          transform: [
-            { perspective: 500 },
-            { rotateY: '-90deg' },
-            { translateX: -targetValues.targetWidth },
-          ],
-          ...initialValues,
+          transform: pickTransformValues(
+            [
+              { perspective: 500 },
+              { rotateY: '-90deg' },
+              { translateX: -targetValues.targetWidth },
+            ],
+            initialValues
+          ),
         },
         animations: {
           transform: [
@@ -125,7 +142,9 @@ export class FlipInYLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipInXDown
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<
+    TransformsConfig<[Perspective, RotateX, TranslateY]>
+  >
   implements IEntryAnimationBuilder
 {
   static presetName = 'FlipInXDown';
@@ -147,12 +166,14 @@ export class FlipInXDown
       'worklet';
       return {
         initialValues: {
-          transform: [
-            { perspective: 500 },
-            { rotateX: '-90deg' },
-            { translateY: targetValues.targetHeight },
-          ],
-          ...initialValues,
+          transform: pickTransformValues(
+            [
+              { perspective: 500 },
+              { rotateX: '-90deg' },
+              { translateY: targetValues.targetHeight },
+            ],
+            initialValues
+          ),
         },
         animations: {
           transform: [
@@ -177,7 +198,9 @@ export class FlipInXDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipInYRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<
+    TransformsConfig<[Perspective, RotateY, TranslateX]>
+  >
   implements IEntryAnimationBuilder
 {
   static presetName = 'FlipInYRight';
@@ -199,12 +222,14 @@ export class FlipInYRight
       'worklet';
       return {
         initialValues: {
-          transform: [
-            { perspective: 500 },
-            { rotateY: '90deg' },
-            { translateX: targetValues.targetWidth },
-          ],
-          ...initialValues,
+          transform: pickTransformValues(
+            [
+              { perspective: 500 },
+              { rotateY: '90deg' },
+              { translateX: targetValues.targetWidth },
+            ],
+            initialValues
+          ),
         },
         animations: {
           transform: [
@@ -229,7 +254,7 @@ export class FlipInYRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipInEasyX
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<TransformsConfig<[Perspective, RotateX]>>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FlipInEasyX';
@@ -251,8 +276,10 @@ export class FlipInEasyX
       'worklet';
       return {
         initialValues: {
-          transform: [{ perspective: 500 }, { rotateX: '90deg' }],
-          ...initialValues,
+          transform: pickTransformValues(
+            [{ perspective: 500 }, { rotateX: '90deg' }],
+            initialValues
+          ),
         },
         animations: {
           transform: [
@@ -276,7 +303,7 @@ export class FlipInEasyX
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipInEasyY
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<TransformsConfig<[Perspective, RotateY]>>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FlipInEasyY';
@@ -298,8 +325,10 @@ export class FlipInEasyY
       'worklet';
       return {
         initialValues: {
-          transform: [{ perspective: 500 }, { rotateY: '90deg' }],
-          ...initialValues,
+          transform: pickTransformValues(
+            [{ perspective: 500 }, { rotateY: '90deg' }],
+            initialValues
+          ),
         },
         animations: {
           transform: [
@@ -323,7 +352,9 @@ export class FlipInEasyY
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipOutXUp
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<
+    TransformsConfig<[Perspective, RotateX, TranslateY]>
+  >
   implements IExitAnimationBuilder
 {
   static presetName = 'FlipOutXUp';
@@ -345,12 +376,10 @@ export class FlipOutXUp
       'worklet';
       return {
         initialValues: {
-          transform: [
-            { perspective: 500 },
-            { rotateX: '0deg' },
-            { translateY: 0 },
-          ],
-          ...initialValues,
+          transform: pickTransformValues(
+            [{ perspective: 500 }, { rotateX: '0deg' }, { translateY: 0 }],
+            initialValues
+          ),
         },
         animations: {
           transform: [
@@ -380,7 +409,9 @@ export class FlipOutXUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipOutYLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<
+    TransformsConfig<[Perspective, RotateY, TranslateX]>
+  >
   implements IExitAnimationBuilder
 {
   static presetName = 'FlipOutYLeft';
@@ -402,12 +433,10 @@ export class FlipOutYLeft
       'worklet';
       return {
         initialValues: {
-          transform: [
-            { perspective: 500 },
-            { rotateY: '0deg' },
-            { translateX: 0 },
-          ],
-          ...initialValues,
+          transform: pickTransformValues(
+            [{ perspective: 500 }, { rotateY: '0deg' }, { translateX: 0 }],
+            initialValues
+          ),
         },
         animations: {
           transform: [
@@ -437,7 +466,9 @@ export class FlipOutYLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipOutXDown
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<
+    TransformsConfig<[Perspective, RotateX, TranslateY]>
+  >
   implements IExitAnimationBuilder
 {
   static presetName = 'FlipOutXDown';
@@ -459,12 +490,10 @@ export class FlipOutXDown
       'worklet';
       return {
         initialValues: {
-          transform: [
-            { perspective: 500 },
-            { rotateX: '0deg' },
-            { translateY: 0 },
-          ],
-          ...initialValues,
+          transform: pickTransformValues(
+            [{ perspective: 500 }, { rotateX: '0deg' }, { translateY: 0 }],
+            initialValues
+          ),
         },
         animations: {
           transform: [
@@ -494,7 +523,9 @@ export class FlipOutXDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipOutYRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<
+    TransformsConfig<[Perspective, RotateY, TranslateX]>
+  >
   implements IExitAnimationBuilder
 {
   static presetName = 'FlipOutYRight';
@@ -516,12 +547,10 @@ export class FlipOutYRight
       'worklet';
       return {
         initialValues: {
-          transform: [
-            { perspective: 500 },
-            { rotateY: '0deg' },
-            { translateX: 0 },
-          ],
-          ...initialValues,
+          transform: pickTransformValues(
+            [{ perspective: 500 }, { rotateY: '0deg' }, { translateX: 0 }],
+            initialValues
+          ),
         },
         animations: {
           transform: [
@@ -551,7 +580,7 @@ export class FlipOutYRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipOutEasyX
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<TransformsConfig<[Perspective, RotateX]>>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FlipOutEasyX';
@@ -573,8 +602,10 @@ export class FlipOutEasyX
       'worklet';
       return {
         initialValues: {
-          transform: [{ perspective: 500 }, { rotateX: '0deg' }],
-          ...initialValues,
+          transform: pickTransformValues(
+            [{ perspective: 500 }, { rotateX: '0deg' }],
+            initialValues
+          ),
         },
         animations: {
           transform: [
@@ -598,7 +629,7 @@ export class FlipOutEasyX
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipOutEasyY
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<TransformsConfig<[Perspective, RotateY]>>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FlipOutEasyY';
@@ -620,8 +651,10 @@ export class FlipOutEasyY
       'worklet';
       return {
         initialValues: {
-          transform: [{ perspective: 500 }, { rotateY: '0deg' }],
-          ...initialValues,
+          transform: pickTransformValues(
+            [{ perspective: 500 }, { rotateY: '0deg' }],
+            initialValues
+          ),
         },
         animations: {
           transform: [

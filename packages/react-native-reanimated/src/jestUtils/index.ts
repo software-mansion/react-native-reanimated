@@ -2,9 +2,8 @@
 'use strict';
 
 import type React from 'react';
-import type { ReactTestInstance } from 'react-test-renderer';
 
-import { IS_JEST, logger, ReanimatedError } from '../common';
+import { IS_JEST, logger } from '../common';
 import type {
   AnimatedComponentProps,
   AnimatedProps,
@@ -278,8 +277,8 @@ export const advanceAnimationByFrame = (count: number) => {
 const requireFunction = IS_JEST
   ? require
   : () => {
-      throw new ReanimatedError(
-        '`setUpTests` is available only in Jest environment.'
+      throw new Error(
+        '[Reanimated] `setUpTests` is available only in Jest environment.'
       );
     };
 
@@ -347,13 +346,10 @@ type TestComponent = React.Component<
   }
 >;
 
-export const getAnimatedStyle = (component: ReactTestInstance) => {
-  return getCurrentStyle(
-    // This type assertion is needed to get type checking in the following
-    // functions since `ReactTestInstance` has its `props` defined as `any`.
-    component as unknown as TestComponent
-  );
+export const getAnimatedStyle = (component: {
+  props: Record<string, unknown>;
+}) => {
+  return getCurrentStyle(component as unknown as TestComponent);
 };
 
-/** @knipIgnore */
-export { worklet } from './common';
+export { cloneWorklet, worklet } from './common';

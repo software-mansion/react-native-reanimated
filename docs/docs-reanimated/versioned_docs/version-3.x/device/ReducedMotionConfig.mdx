@@ -29,20 +29,19 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-interface ReducedMotionConfigProps {
-  mode: ReduceMotion;
-}
+  ```typescript
+  interface ReducedMotionConfigProps {
+    mode: ReduceMotion;
+  }
 
-enum ReduceMotion {
-  System = 'system',
-  Always = 'always',
-  Never = 'never',
-}
-```
-
+  enum ReduceMotion {
+    System = 'system',
+    Always = 'always',
+    Never = 'never',
+  }
+  ```
 </details>
 
 ### Arguments
@@ -60,11 +59,8 @@ A parameter that determines how animations should behave in response to the devi
 import ReducedMotionConfig from '@site/src/examples/ReducedMotionConfig';
 import ReducedMotionConfigSrc from '!!raw-loader!@site/src/examples/ReducedMotionConfig';
 
-<InteractiveExample
-  src={ReducedMotionConfigSrc}
-  component={ReducedMotionConfig}
-/>
+<InteractiveExample src={ReducedMotionConfigSrc} component={ReducedMotionConfig}/>
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

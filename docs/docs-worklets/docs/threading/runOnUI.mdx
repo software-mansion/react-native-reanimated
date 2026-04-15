@@ -4,11 +4,11 @@ sidebar_position: 2137 # Last in the section - deprecated
 
 <DeprecatedBanner
   text={
-    <>
-      This API is deprecated and will be removed in the next major release. Use{' '}
-      <a href="/docs/threading/scheduleOnUI">scheduleOnUI</a> instead.
-    </>
-  }
+<>
+This API is deprecated and will be removed in the next major release. Use{' '}
+<a href="/docs/threading/scheduleOnUI">scheduleOnUI</a> instead.
+</>
+}
 />
 
 # runOnUI
@@ -35,14 +35,13 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function runOnUI<A extends any[], R>(
-  fn: (...args: A) => R
-): (...args: Parameters<typeof fn>) => void;
-```
-
+  ```typescript
+  function runOnUI<A extends any[], R>(
+    fn: (...args: A) => R
+  ): (...args: Parameters<typeof fn>) => void;
+  ```
 </details>
 
 ### Arguments
@@ -64,11 +63,7 @@ Don't forget to call the function returned from `runOnUI`.
 import RunOnUI from '@site/src/examples/RunOnUI';
 import RunOnUISrc from '!!raw-loader!@site/src/examples/RunOnUI';
 
-<InteractiveExample
-  src={RunOnUISrc}
-  component={RunOnUI}
-  label="Tap each word"
-/>
+<InteractiveExample src={RunOnUISrc} component={RunOnUI} label="Tap each word"/>
 
 ## Remarks
 

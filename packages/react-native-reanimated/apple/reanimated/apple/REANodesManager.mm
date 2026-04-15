@@ -8,10 +8,6 @@
 #import <React/RCTMountingManager.h>
 #import <React/RCTUtils.h>
 
-#if REACT_NATIVE_MINOR_VERSION < 81
-#import <React/RCTFollyConvert.h>
-#endif
-
 using namespace facebook::react;
 
 @implementation REANodesManager {
@@ -166,11 +162,7 @@ using namespace facebook::react;
   REAUIView<RCTComponentViewProtocol> *componentView =
       [componentViewRegistry findComponentViewWithTag:static_cast<Tag>(viewTag)];
   NSSet<NSString *> *propKeysManagedByAnimated = [componentView propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN];
-#if REACT_NATIVE_MINOR_VERSION >= 81
   [surfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:viewTag props:props];
-#else
-  [surfacePresenter synchronouslyUpdateViewOnUIThread:@(viewTag) props:convertFollyDynamicToId(props)];
-#endif
   [componentView setPropKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN:propKeysManagedByAnimated];
   // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
   // so that's why we need to call `finalizeUpdates` here.

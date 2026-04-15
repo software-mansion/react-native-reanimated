@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
 
 import type { RefObject } from 'react';
@@ -9,7 +8,6 @@ import {
   processColorsInProps,
   processTransform,
   processTransformOrigin,
-  ReanimatedError,
   SHOULD_BE_USE_WEB,
   stylePropsBuilder,
 } from '../common';
@@ -78,8 +76,11 @@ if (SHOULD_BE_USE_WEB) {
 
 export const updatePropsJestWrapper = (
   viewDescriptors: ViewDescriptorsWrapper,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updates: AnimatedStyle<any>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animatedValues: RefObject<AnimatedStyle<any>>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   adapters: ((updates: AnimatedStyle<any>) => void)[]
 ): void => {
   adapters.forEach((adapter) => {
@@ -149,7 +150,7 @@ function createUpdatePropsManager() {
         }
 
         if (!flushPending && (nativePropUpdates || jsPropUpdates)) {
-          queueMicrotask(this.flush);
+          global.__requestMapperRunFinalizer(this.flush);
           flushPending = true;
         }
       });
@@ -164,6 +165,7 @@ function createUpdatePropsManager() {
         jsOperations.length = 0;
       }
       flushPending = false;
+      global._maybeFlushUIUpdatesQueue();
     },
   };
 }
@@ -173,8 +175,8 @@ if (SHOULD_BE_USE_WEB) {
     // Jest attempts to access a property of this object to check if it is a Jest mock
     // so we can't throw an error in the getter.
     if (!IS_JEST) {
-      throw new ReanimatedError(
-        '`UpdatePropsManager` is not available on non-native platform.'
+      throw new Error(
+        '[Reanimated] `UpdatePropsManager` is not available on non-native platform.'
       );
     }
   };

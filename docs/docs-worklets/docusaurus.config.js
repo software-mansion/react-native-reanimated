@@ -109,8 +109,8 @@ const config = {
         darkTheme: darkCodeTheme,
       },
       algolia: {
-        appId: 'HTRBY5HZ15',
-        apiKey: '93f840a25edfcf77d2af4a5f2b386214',
+        appId: 'EXKV34DSZ0',
+        apiKey: 'b0df4e45a4bec8a2f79aa77da07b56bd',
         indexName: 'react-native-worklets',
         contextualSearch: false,
       },
@@ -173,11 +173,17 @@ const config = {
               rules: [
                 { test: /\.txt$/, type: 'asset/source' },
                 { test: /\.tsx?$/, use: 'babel-loader' },
-                { test: /\.js$/, use: 'babel-loader' },
+                { test: /\.js$/, exclude: /\.yarn[\\/]unprocessed/, use: 'babel-loader' },
               ],
             },
             resolve: {
-              alias: { 'react-native$': 'react-native-web' },
+              alias: {
+                'react-native$': 'react-native-web',
+                typescript: path.resolve(
+                  __dirname,
+                  '../../.yarn/unprocessed/typescript'
+                ),
+              },
               extensions: ['.web.js', '...'],
             },
             ignoreWarnings: [

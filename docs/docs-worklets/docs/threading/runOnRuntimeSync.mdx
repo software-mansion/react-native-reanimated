@@ -23,16 +23,15 @@ console.log(result); // 4
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
-  workletRuntime: WorkletRuntime,
-  worklet: (...args: Args) => ReturnValue,
-  ...args: Args
-): ReturnValue;
-```
-
+  ```typescript
+  function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
+    workletRuntime: WorkletRuntime,
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): ReturnValue;
+  ```
 </details>
 
 ## Arguments
@@ -49,31 +48,21 @@ A reference to a function you want to execute on the [Worker Runtime](/docs/fund
 
 Arguments to the function you want to execute on the [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime).
 
-## Remarks
+## Call table
 
-- `runOnRuntimeSync` can only be called on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime) unless the [Bundle Mode](/docs/bundleMode/) is enabled.
+<CallTable
+  bundleMode={{
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
+  noBundleMode={{
+rnRuntime: true,
+uiRuntime: false,
+workerRuntime: false,
+}}
+/>
 
-```javascript
-import { createWorkletRuntime, runOnRuntimeSync } from 'react-native-worklets';
+## Platform compatibility
 
-const workletRuntime = createWorkletRuntime({ name: 'background' });
-
-runOnUI(() => {
-  runOnRuntimeSync(workletRuntime, (greeting: string) => {
-    console.log(`${greeting} from the background Worklet Runtime`);
-  }, 'Hello'); // This will throw an error outside of Bundle Mode 🚨
-});
-```
-
-```javascript
-import { createWorkletRuntime, scheduleOnRuntime } from 'react-native-worklets';
-
-const workletRuntime = createWorkletRuntime({ name: 'background' });
-const anotherWorkletRuntime = createWorkletRuntime({ name: 'anotherBackground' });
-
-runOnRuntimeSync(anotherWorkletRuntime, () => {
-  runOnRuntimeSync(workletRuntime, (greeting: string) => {
-    console.log(`${greeting} from the background Worklet Runtime`);
-  }, 'Hello'); // This will throw an error outside of Bundle Mode 🚨
-});
-```
+<PlatformTable native={true} web={false}/>

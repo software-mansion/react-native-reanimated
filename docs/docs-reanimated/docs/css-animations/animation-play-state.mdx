@@ -9,10 +9,7 @@ sidebar_position: 8
 import AnimationPlayStateBasic from '@site/src/examples/css-animations/AnimationPlayStateBasic';
 import AnimationPlayStateBasicSrc from '!!raw-loader!@site/src/examples/css-animations/AnimationPlayStateBasic';
 
-<InteractiveExample
-  src={AnimationPlayStateBasicSrc}
-  component={AnimationPlayStateBasic}
-/>
+<InteractiveExample src={AnimationPlayStateBasicSrc} component={AnimationPlayStateBasic}/>
 
 ## Reference
 
@@ -35,14 +32,13 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type CSSAnimationPlayState = 'running' | 'paused';
+  ```typescript
+  type CSSAnimationPlayState = 'running' | 'paused';
 
-animationPlayState: CSSAnimationPlayState | CSSAnimationPlayState[];
-```
-
+  animationPlayState: CSSAnimationPlayState | CSSAnimationPlayState[];
+  ```
 </details>
 
 ### Values
@@ -69,4 +65,4 @@ In the following example, `bounceIn` animation would be pauses, `move` would be 
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

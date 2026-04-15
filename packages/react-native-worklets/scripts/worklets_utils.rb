@@ -8,7 +8,6 @@ end
 
 def worklets_find_config()
   result = {
-    :bundle_mode_flag => nil,
     :feature_flags_flag => nil,
     :fetch_preview_flag => nil,
     :is_reanimated_example_app => nil,
@@ -48,7 +47,6 @@ def worklets_find_config()
 
   feature_flags = worklets_get_static_feature_flags()
   result[:feature_flags_flag] = worklets_get_static_feature_flags_flag(feature_flags)
-  result[:bundle_mode_flag] = worklets_get_flag_from_feature_flags(feature_flags, 'BUNDLE_MODE_ENABLED')
   result[:fetch_preview_flag] = worklets_get_flag_from_feature_flags(feature_flags, 'FETCH_PREVIEW_ENABLED')
   
   return result
