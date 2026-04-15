@@ -205,8 +205,11 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.scheduleOnUI(serializable);
   }
 
-  runOnUISync<TValue, TReturn>(worklet: SerializableRef<TValue>): TReturn {
-    return this.#workletsModuleProxy.runOnUISync(worklet);
+  runOnUISync<TValue, TReturn>(
+    worklet: SerializableRef<TValue>,
+    scheduleStack?: string
+  ): TReturn {
+    return this.#workletsModuleProxy.runOnUISync(worklet, scheduleStack);
   }
 
   createWorkletRuntime(

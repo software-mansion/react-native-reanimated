@@ -300,7 +300,8 @@ static const auto callGuardLambda = [](facebook::jsi::Runtime &rt,
                                        const facebook::jsi::Value &thisVal,
                                        const facebook::jsi::Value *args,
                                        size_t count) {
-  return args[0].asObject(rt).asFunction(rt).call(rt, args + 1, count - 1);
+  // args[0] = function, args[1] = scheduleStack (string), args[2..] = actual args
+  return args[0].asObject(rt).asFunction(rt).call(rt, args + 2, count - 2);
 };
 
 jsi::Function WorkletRuntime::getCallGuard(jsi::Runtime &rt) {

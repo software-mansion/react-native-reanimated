@@ -55,11 +55,15 @@ inline void scheduleOnUI(
   });
 }
 
-inline jsi::Value
-runOnUISync(const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime, jsi::Runtime &rt, const jsi::Value &worklet) {
+inline jsi::Value runOnUISync(
+    const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
+    jsi::Runtime &rt,
+    const jsi::Value &worklet,
+    std::string scheduleStack) {
   if (auto uiWorkletRuntime = weakUIWorkletRuntime.lock()) {
     auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
         rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
+    serializableWorklet->setScheduleStack(std::move(scheduleStack));
     auto serializedResult = uiWorkletRuntime->runSyncSerialized(serializableWorklet);
     return serializedResult->toJSValue(rt);
   }
@@ -446,10 +450,14 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
-        1,
+        2,
         [uiWorkletRuntime = uiWorkletRuntime_](
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return runOnUISync(uiWorkletRuntime, rt, args[0]);
+          std::string scheduleStack;
+          if (count > 1 && args[1].isString()) {
+            scheduleStack = args[1].asString(rt).utf8(rt);
+          }
+          return runOnUISync(uiWorkletRuntime, rt, args[0], scheduleStack);
         });
   }
 

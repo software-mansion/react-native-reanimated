@@ -53,21 +53,13 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   std::invoke_result_t<TCallable, Args...> runSync(TCallable &&callable, Args &&...args) const;
   template <typename... Args>
   jsi::Value runSync(const jsi::Function &function, Args &&...args) const {
-    auto &rt = *runtime_;
-    // We only use callGuard in debug mode, otherwise we call the provided
-    // function directly. CallGuard provides a way of capturing exceptions in
-    // JavaScript and propagating them to the main React Native thread such that
-    // they can be presented using RN's LogBox.
-#ifndef NDEBUG
-    return getCallGuard(rt).call(rt, function, args...);
-#else
-    return function.call(rt, args...);
-#endif // NDEBUG
+    return callGuarded(function, "", std::forward<Args>(args)...);
   }
   template <typename... Args>
   jsi::Value runSync(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args) const {
     jsi::Runtime &rt = *runtime_;
-    return runSync(worklet->toJSValue(rt).asObject(rt).asFunction(rt), std::forward<Args>(args)...);
+    auto function = worklet->toJSValue(rt).asObject(rt).asFunction(rt);
+    return callGuarded(function, worklet->getScheduleStack(), std::forward<Args>(args)...);
   }
   template <RuntimeCallable TCallable>
   std::invoke_result_t<TCallable, jsi::Runtime &> runSync(TCallable &&job) const {
@@ -107,7 +99,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
         "must return a value serialized with `createSerializable`.");
     return serializableResult;
   }
-
   /* #endregion */
 
   jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propName) override;
@@ -175,6 +166,20 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 #endif // NDEBUG
 
  private:
+  template <typename... Args>
+  jsi::Value callGuarded(const jsi::Function &function, const std::string &scheduleStack, Args &&...args) const {
+    auto &rt = *runtime_;
+    // We only use callGuard in debug mode, otherwise we call the provided
+    // function directly. CallGuard provides a way of capturing exceptions in
+    // JavaScript and propagating them to the main React Native thread such that
+    // they can be presented using RN's LogBox.
+#ifndef NDEBUG
+    return getCallGuard(rt).call(rt, function, jsi::String::createFromUtf8(rt, scheduleStack), args...);
+#else
+    return function.call(rt, args...);
+#endif // NDEBUG
+  }
+
   void bundleModeInit(
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<const ScriptBuffer> &script,
@@ -210,7 +215,7 @@ inline jsi::Value runOnRuntimeGuarded(jsi::Runtime &rt, const jsi::Function &fun
   // JavaScript and propagating them to the main React Native thread such that
   // they can be presented using RN's LogBox.
 #ifndef NDEBUG
-  return WorkletRuntime::getCallGuard(rt).call(rt, function, args...);
+  return WorkletRuntime::getCallGuard(rt).call(rt, function, jsi::String::createFromUtf8(rt, ""), args...);
 #else
   return function.call(rt, args...);
 #endif // NDEBUG

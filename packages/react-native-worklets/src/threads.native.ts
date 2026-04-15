@@ -177,7 +177,9 @@ export function runOnUISync<Args extends unknown[], ReturnValue>(
       'worklet';
       const result = worklet(...args);
       return makeShareableCloneOnUIRecursive(result);
-    })
+    }),
+    // eslint-disable-next-line reanimated/use-worklets-error
+    __DEV__ ? (new Error().stack ?? '') : undefined
   );
 }
 

@@ -212,6 +212,17 @@ class SerializableWorklet : public SerializableObject {
   }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+  const std::string &getScheduleStack() const {
+    return scheduleStack_;
+  }
+
+  void setScheduleStack(std::string scheduleStack) {
+    scheduleStack_ = std::move(scheduleStack);
+  }
+
+ private:
+  std::string scheduleStack_;
 };
 
 class SerializableImport : public Serializable {
