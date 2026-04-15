@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../common';
 import type {
   NormalizedCubicBezierEasing,
   ParametrizedTimingFunction,
@@ -19,10 +18,14 @@ export class CubicBezierEasing implements ParametrizedTimingFunction {
 
   constructor(x1: number, y1: number, x2: number, y2: number) {
     if (x1 < 0 || x1 > 1) {
-      throw new ReanimatedError(ERROR_MESSAGES.invalidCoordinate('x1', x1));
+      throw new Error(
+        `[Reanimated] ${ERROR_MESSAGES.invalidCoordinate('x1', x1)}`
+      );
     }
     if (x2 < 0 || x2 > 1) {
-      throw new ReanimatedError(ERROR_MESSAGES.invalidCoordinate('x2', x2));
+      throw new Error(
+        `[Reanimated] ${ERROR_MESSAGES.invalidCoordinate('x2', x2)}`
+      );
     }
     this.x1 = x1;
     this.y1 = y1;

@@ -49,15 +49,7 @@ AnimationProgressState AnimationProgressProvider::getState(const double timestam
   if (timestamp < getStartTimestamp(timestamp) || !rawProgress_.has_value()) {
     return AnimationProgressState::Pending;
   }
-  const auto rawProgress = rawProgress_.value();
-  if (rawProgress >= 1) {
-    return AnimationProgressState::Finished;
-  }
   return AnimationProgressState::Running;
-}
-
-double AnimationProgressProvider::getPauseTimestamp() const {
-  return pauseTimestamp_;
 }
 
 double AnimationProgressProvider::getTotalPausedTime(const double timestamp) const {
@@ -149,12 +141,6 @@ double AnimationProgressProvider::updateIterationProgress(const double currentIt
   const auto deltaIterations = static_cast<unsigned>(progress);
 
   if (deltaIterations > 0) {
-    // Return 1 if the current iteration is the last one
-    if (iterationCount_ != -1 && currentIteration_ + deltaIterations > iterationCount_) {
-      currentIteration_ = iterationCount_;
-      return 1;
-    }
-
     currentIteration_ += deltaIterations;
     previousIterationsDuration_ = (currentIteration_ - 1) * duration_;
   }

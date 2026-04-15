@@ -11,9 +11,9 @@
 
 namespace reanimated::css {
 
-enum class AnimationDirection { Normal, Reverse, Alternate, AlternateReverse };
-enum class AnimationFillMode { None, Forwards, Backwards, Both };
-enum class AnimationPlayState { Running, Paused };
+enum class AnimationDirection : std::uint8_t { Normal, Reverse, Alternate, AlternateReverse };
+enum class AnimationFillMode : std::uint8_t { None, Forwards, Backwards, Both };
+enum class AnimationPlayState : std::uint8_t { Running, Paused };
 
 struct CSSAnimationSettings {
   double duration;

@@ -1,0 +1,40 @@
+---
+sidebar_position: 3
+---
+
+# Usage
+
+## Running third party libraries in Worklets
+
+Third party libraries have to be on an allow-list to use them in worklets. This is because libraries can come with side-effects that would break a Worklet Runtime. For instance, a library that imports something from React Native can't be used on a Worklet Runtime. This would load a second instance of React Native and break your app.
+
+To add a library to the allow-list you only need to set the `workletizableModules` option in Worklets Babel plugin, which is an array of library names. For instance, if you want to use `my-library` on a Worklet Runtime.
+
+```javascript
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  bundleMode: true,
+  strictGlobal: true, // optional, but recommended
+  // highlight-next-line
+  workletizableModules: ['my-library'],
+};
+```
+
+`workletizableModules` API is temporary and will be replaced with a more robust solution in the future.
+
+## Running network requests in Worklets
+
+In React Native ecosystem, new JavaScript runtimes don't come with networking capabilities out of the box. Worklets library provides a simplified version of `fetch` API that can be used on Worklet Runtimes - however, it might not be sufficient for all use cases.
+
+For this reason, to enable `fetch` on Worklet Runtimes you have to toggle the `FETCH_PREVIEW_ENABLED` static feature flag in your app's `package.json`. You can find instructions on how to enable it [here](/docs/guides/feature-flags).
+
+Running `fetch` also requires installing all the patches from the [Bundle Mode setup guide](/docs/bundleMode/setup).
+
+:::note
+We are currently looking for third-party networking solutions that would provide same networking capabilities on Worklet Runtimes as what's available on the RN Runtime. We are open to adopting or integrating with such solutions. If you know about such solutions, please reach out to us on [GitHub](https://github.com/software-mansion/react-native-reanimated/issues).
+
+:::
+
+## Reference
+
+To see how the setup looks in a real project, you can check out the [Bundle Mode Showcase App](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app) repository.

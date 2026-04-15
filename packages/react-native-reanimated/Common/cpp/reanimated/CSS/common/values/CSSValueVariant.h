@@ -1,7 +1,6 @@
 #pragma once
 
 #include <reanimated/CSS/common/values/CSSValue.h>
-#include <worklets/Tools/JSISerializer.h>
 
 #include <folly/json.h>
 
@@ -12,8 +11,6 @@
 #include <variant>
 
 namespace reanimated::css {
-
-using namespace worklets;
 
 /**
  * Macro to check if two lambda parameters have the same reference-removed type.
@@ -85,7 +82,7 @@ class CSSValueVariant final : public CSSValue {
   explicit CSSValueVariant(const folly::dynamic &value);
 
   bool operator==(const CSSValueVariant &other) const;
-  bool operator==(const CSSValue &other) const;
+  bool operator==(const CSSValue &other) const override;
 
   folly::dynamic toDynamic() const override;
   std::string toString() const override;

@@ -19,8 +19,7 @@ string(
     -DREANIMATED_FEATURE_FLAGS=\"${REANIMATED_FEATURE_FLAGS}\"")
 string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")
 # flags to optimize the binary size
-string(APPEND CMAKE_CXX_FLAGS
-       " -fvisibility=hidden -ffunction-sections -fdata-sections")
+string(APPEND CMAKE_CXX_FLAGS " -fvisibility=hidden")
 
 if(${REANIMATED_PROFILING})
   string(APPEND CMAKE_CXX_FLAGS " -DREANIMATED_PROFILING")
@@ -32,6 +31,7 @@ endif()
 
 if(NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")
   string(APPEND CMAKE_CXX_FLAGS " -DNDEBUG")
+  string(APPEND CMAKE_CXX_FLAGS " -flto=thin")
 endif()
 
 set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
@@ -45,6 +45,7 @@ file(GLOB_RECURSE REANIMATED_ANDROID_CPP_SOURCES CONFIGURE_DEPENDS
 
 find_package(fbjni REQUIRED CONFIG)
 find_package(ReactAndroid REQUIRED CONFIG)
+find_package(react-native-worklets REQUIRED CONFIG)
 
 add_library(reanimated SHARED ${REANIMATED_COMMON_CPP_SOURCES}
                               ${REANIMATED_ANDROID_CPP_SOURCES})
@@ -69,8 +70,7 @@ target_include_directories(
           "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
           "${REACT_NATIVE_DIR}/ReactCommon/jsiexecutor"
           "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
-          "${REACT_NATIVE_WORKLETS_DIR}/Common/cpp"
-          "${REACT_NATIVE_WORKLETS_DIR}/android/src/main/cpp")
+)
 
 set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)
 
@@ -80,18 +80,17 @@ else()
   set(BUILD_TYPE "release")
 endif()
 
-add_library(worklets SHARED IMPORTED)
-
-set_target_properties(
-  worklets
-  PROPERTIES
-    IMPORTED_LOCATION
-    "${REACT_NATIVE_WORKLETS_DIR}/android/build/intermediates/cmake/${BUILD_TYPE}/obj/${ANDROID_ABI}/libworklets.so"
-)
-
 set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)
 # remove dead code sections
 set_target_properties(reanimated PROPERTIES LINK_FLAGS "-Wl,--gc-sections")
+
+# fold identical functions
+if(NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")
+  set_property(
+    TARGET reanimated
+    APPEND_STRING
+    PROPERTY LINK_FLAGS ",--icf=safe")
+endif()
 
 target_link_libraries(
   reanimated
@@ -100,4 +99,4 @@ target_link_libraries(
   ReactAndroid::jsi
   fbjni::fbjni
   android
-  worklets)
+  react-native-worklets::worklets)

@@ -1,15 +1,16 @@
 'use strict';
 import type { BoxShadowValue } from 'react-native';
 
+import { ValueProcessorTarget } from '../../../types';
 import { processColor } from '../colors';
 import type { ProcessedBoxShadowValue } from '../shadows';
-import { processBoxShadowNative } from '../shadows';
+import { processBoxShadow } from '../shadows';
 
-describe(processBoxShadowNative, () => {
+describe(processBoxShadow, () => {
   describe('returns a correct number of shadows', () => {
     describe('when input is a string', () => {
       test('returns undefined when input is "none"', () => {
-        expect(processBoxShadowNative('none')).toBeUndefined();
+        expect(processBoxShadow('none')).toBeUndefined();
       });
 
       test.each([
@@ -18,7 +19,7 @@ describe(processBoxShadowNative, () => {
         ['0 0 10px 0 red', 1],
         ['0 0 10px 0 red, 0 0 20px 0 blue', 2],
       ])('returns a correct number of shadows', (input, expected) => {
-        expect(processBoxShadowNative(input)).toHaveLength(expected);
+        expect(processBoxShadow(input)).toHaveLength(expected);
       });
     });
 
@@ -36,7 +37,7 @@ describe(processBoxShadowNative, () => {
       ] satisfies [BoxShadowValue[], number][])(
         'returns a correct number of shadows',
         (input, expected) => {
-          expect(processBoxShadowNative(input)).toHaveLength(expected);
+          expect(processBoxShadow(input)).toHaveLength(expected);
         }
       );
     });
@@ -45,13 +46,13 @@ describe(processBoxShadowNative, () => {
   describe('returns correct shadow values', () => {
     describe('when input is a string', () => {
       test('provides proper default values', () => {
-        expect(processBoxShadowNative('0 0')).toEqual([
+        expect(processBoxShadow('0 0')).toEqual([
           {
             offsetX: 0,
             offsetY: 0,
             blurRadius: 0,
             spreadDistance: 0,
-            color: processColor('#000')!,
+            color: processColor('#000'),
           },
         ]);
       });
@@ -65,7 +66,7 @@ describe(processBoxShadowNative, () => {
               offsetY: 0,
               blurRadius: 10,
               spreadDistance: 0,
-              color: processColor('#000')!,
+              color: processColor('#000'),
             },
           ],
         ],
@@ -77,7 +78,7 @@ describe(processBoxShadowNative, () => {
               offsetY: 20,
               blurRadius: 30,
               spreadDistance: 40,
-              color: processColor('blue')!,
+              color: processColor('blue'),
               inset: true,
             },
           ],
@@ -85,7 +86,7 @@ describe(processBoxShadowNative, () => {
       ] satisfies [string | BoxShadowValue[], ProcessedBoxShadowValue[]][])(
         'for input %s returns %s',
         (input, expected) => {
-          expect(processBoxShadowNative(input)).toEqual(expected);
+          expect(processBoxShadow(input)).toEqual(expected);
         }
       );
     });
@@ -100,7 +101,7 @@ describe(processBoxShadowNative, () => {
               offsetY: 0,
               blurRadius: 10,
               spreadDistance: 0,
-              color: processColor('red')!,
+              color: processColor('red'),
             },
           ],
         ],
@@ -122,14 +123,14 @@ describe(processBoxShadowNative, () => {
               offsetY: 20,
               blurRadius: 0,
               spreadDistance: 0,
-              color: processColor('#000')!,
+              color: processColor('#000'),
             },
             {
               offsetX: 10,
               offsetY: 20,
               blurRadius: 30,
               spreadDistance: 40,
-              color: processColor('red')!,
+              color: processColor('red'),
               inset: true,
             },
           ],
@@ -137,9 +138,46 @@ describe(processBoxShadowNative, () => {
       ] satisfies [BoxShadowValue[], ProcessedBoxShadowValue[]][])(
         'returns a correct number of shadows',
         (input, expected) => {
-          expect(processBoxShadowNative(input)).toEqual(expected);
+          expect(processBoxShadow(input)).toEqual(expected);
         }
       );
+    });
+  });
+
+  describe('context-aware transparent color handling', () => {
+    test('returns numeric color by default', () => {
+      const result = processBoxShadow([
+        { offsetX: 0, offsetY: 0, color: 'transparent' },
+      ]);
+
+      expect(result).toEqual([
+        {
+          blurRadius: 0,
+          color: 0, // transparent color for non-CSS target
+          offsetX: 0,
+          offsetY: 0,
+          spreadDistance: 0,
+        },
+      ]);
+    });
+
+    test('returns false for transparent color with CSS target', () => {
+      const result = processBoxShadow(
+        [{ offsetX: 0, offsetY: 0, color: 'transparent' }],
+        {
+          target: ValueProcessorTarget.CSS,
+        }
+      );
+
+      expect(result).toEqual([
+        {
+          blurRadius: 0,
+          color: false, // transparent color for CSS target
+          offsetX: 0,
+          offsetY: 0,
+          spreadDistance: 0,
+        },
+      ]);
     });
   });
 });

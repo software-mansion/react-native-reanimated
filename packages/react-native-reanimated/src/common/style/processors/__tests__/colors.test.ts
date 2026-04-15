@@ -1,5 +1,5 @@
 'use strict';
-import { ReanimatedError } from '../../../errors';
+import { ValueProcessorTarget } from '../../../types';
 import { ERROR_MESSAGES, processColor, processColorsInProps } from '../colors';
 
 describe(processColorsInProps, () => {
@@ -59,11 +59,19 @@ describe(processColor, () => {
       ['hsl(240, 100%, 50%)', 0x0000ffff],
       ['hsla(120, 50%, 50%, 0.5)', 0x40bf4080],
       ['hwb(0, 0%, 0%)', 0xff0000ff],
-      ['transparent', null],
+      ['transparent', 0x00000000],
     ])('converts %p to %p', (value, expected) => {
       // convert from RGBA to ARGB format if not null
-      const argb = expected && ((expected << 24) | (expected >>> 8)) >>> 0;
+      const argb =
+        typeof expected === 'number' &&
+        ((expected << 24) | (expected >>> 8)) >>> 0;
       expect(processColor(value)).toEqual(argb);
+    });
+
+    test('returns false for transparent color with CSS target', () => {
+      expect(
+        processColor('transparent', { target: ValueProcessorTarget.CSS })
+      ).toBe(false);
     });
   });
 
@@ -78,7 +86,7 @@ describe(processColor, () => {
       'hwb(360, 100%, 50%, 0.5)',
     ])('throws an error for %p', (value) => {
       expect(() => processColor(value)).toThrow(
-        new ReanimatedError(ERROR_MESSAGES.invalidColor(value))
+        new Error(`[Reanimated] ${ERROR_MESSAGES.invalidColor(value)}`)
       );
     });
   });

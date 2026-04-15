@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../../errors';
 import type { TransformsArray } from '../../../types';
 import { ERROR_MESSAGES, processTransform } from '../transform';
 
@@ -248,6 +247,23 @@ describe(processTransform, () => {
           },
         ],
       },
+      {
+        name: 'perspective',
+        cases: [
+          {
+            input: 'perspective(500)',
+            output: [{ perspective: 500 }],
+          },
+          {
+            input: 'perspective(-250)',
+            output: [{ perspective: -250 }],
+          },
+          {
+            input: 'perspective(0)',
+            output: [{ perspective: 0 }],
+          },
+        ],
+      },
     ];
 
     describe.each(cases)('$name', ({ cases: testCases }) => {
@@ -285,6 +301,14 @@ describe(processTransform, () => {
       {
         input: 'rotate(90deg) translateX(25) scale(0.5)',
         output: [{ rotate: '90deg' }, { translateX: 25 }, { scale: 0.5 }],
+      },
+      {
+        input: 'perspective(600) rotate(45deg)',
+        output: [{ perspective: 600 }, { rotate: '45deg' }],
+      },
+      {
+        input: 'translateX(10) perspective(800) scale(1.2)',
+        output: [{ translateX: 10 }, { perspective: 800 }, { scale: 1.2 }],
       },
       {
         input: 'scale(2, 3) translate(10px, 20%) rotateX(45deg) rotateY(30deg)',
@@ -383,13 +407,17 @@ describe(processTransform, () => {
         input: 'rotate(90grad)', // Unsupported angle unit
         errorMessage: ERROR_MESSAGES.invalidTransform('rotate(90grad)'),
       },
+      {
+        input: 'perspective()',
+        errorMessage: ERROR_MESSAGES.invalidTransform('perspective()'),
+      },
     ];
 
     test.each(cases)(
       'throws an error for invalid input: $input',
       ({ input, errorMessage }) => {
         expect(() => processTransform(input)).toThrow(
-          new ReanimatedError(errorMessage)
+          new Error(`[Reanimated] ${errorMessage}`)
         );
       }
     );

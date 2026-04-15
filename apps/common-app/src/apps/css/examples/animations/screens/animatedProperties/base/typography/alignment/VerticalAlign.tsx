@@ -7,9 +7,10 @@ import {
   Text,
   VerticalExampleCard,
 } from '@/apps/css/components';
+import type { ExampleScreenProps } from '@/apps/css/navigation/types';
 import { colors } from '@/theme';
 
-export default function VerticalAlign() {
+export default function VerticalAlign({ labelTypes }: ExampleScreenProps) {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
       CardComponent={VerticalExampleCard}
@@ -48,7 +49,7 @@ export default function VerticalAlign() {
               title: 'Changing Vertical Alignment',
             },
           ],
-          labelTypes: ['web'],
+          labelTypes,
           title: 'Vertical Align',
         },
       ]}

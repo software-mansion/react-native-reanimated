@@ -1,7 +1,6 @@
 #include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
 
 #include <cmath>
-#include <utility>
 
 namespace reanimated::css {
 
@@ -33,9 +32,9 @@ TransformMatrix2D::TransformMatrix2D(jsi::Runtime &rt, const jsi::Value &value)
     matrix_[6] = array.getValueAtIndex(rt, 12).asNumber();
     matrix_[7] = array.getValueAtIndex(rt, 13).asNumber();
     matrix_[8] = array.getValueAtIndex(rt, 15).asNumber();
+  } else {
+    throw std::invalid_argument("[Reanimated] TransformMatrix2D: Invalid matrix size: " + std::to_string(size));
   }
-
-  throw std::invalid_argument("[Reanimated] TransformMatrix2D: Invalid matrix size: " + std::to_string(size));
 }
 
 TransformMatrix2D::TransformMatrix2D(const folly::dynamic &array)
@@ -65,9 +64,9 @@ TransformMatrix2D::TransformMatrix2D(const folly::dynamic &array)
     matrix_[6] = array[12].asDouble();
     matrix_[7] = array[13].asDouble();
     matrix_[8] = array[15].asDouble();
+  } else {
+    throw std::invalid_argument("[Reanimated] TransformMatrix2D: Invalid matrix size: " + std::to_string(size));
   }
-
-  throw std::invalid_argument("[Reanimated] TransformMatrix2D: Invalid matrix size: " + std::to_string(size));
 }
 
 bool TransformMatrix2D::canConstruct(jsi::Runtime &rt, const jsi::Value &value) {
@@ -249,7 +248,7 @@ TransformMatrix2D TransformMatrix2D::create<TransformOp::SkewY>(double v) {
 template <TransformOp TOperation>
 TransformMatrix2D TransformMatrix2D::create(double value) {
   throw std::invalid_argument(
-      "[Reanimated] Cannot create TransformMatrix2D from: " + getOperationNameFromType(TOperation));
+      "[Reanimated] Cannot create TransformMatrix2D from: " + getTransformOperationName(TOperation));
 }
 
 double TransformMatrix2D::determinant() const {

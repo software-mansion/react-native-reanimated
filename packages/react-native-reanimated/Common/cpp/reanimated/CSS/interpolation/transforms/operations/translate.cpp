@@ -21,11 +21,6 @@ bool TranslateOperationBase<TOperation>::shouldResolve() const {
 }
 
 template <TransformOp TOperation>
-folly::dynamic TranslateOperationBase<TOperation>::valueToDynamic() const {
-  return this->value.toDynamic();
-}
-
-template <TransformOp TOperation>
 TransformMatrix::Shared TranslateOperationBase<TOperation>::toMatrix(bool force3D) const {
   if (shouldResolve()) {
     throw std::runtime_error(

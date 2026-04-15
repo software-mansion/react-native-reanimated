@@ -1,6 +1,3 @@
-/* eslint-disable no-unused-expressions */
-/* eslint-disable @typescript-eslint/no-empty-function */
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
@@ -19,7 +16,7 @@ function UseHandlerTest() {
       },
     };
 
-    const { context, doDependenciesDiffer, useWeb } = useHandler(
+    const { context, doDependenciesDiffer } = useHandler(
       handlers,
       dependencies
     );
@@ -29,7 +26,7 @@ function UseHandlerTest() {
         'worklet';
         const { onScroll } = handlers;
         if (onScroll && event.eventName.endsWith('onScroll')) {
-          context.eventName = event.eventName + useWeb;
+          context.eventName = event.eventName;
           onScroll(event);
         }
       },
@@ -50,7 +47,7 @@ function UseHandlerTest() {
       },
     };
 
-    const { context, doDependenciesDiffer, useWeb } = useHandler(
+    const { context, doDependenciesDiffer } = useHandler(
       // @ts-expect-error Works with `ReanimatedEvent` only.
       handlers,
       dependencies
@@ -61,7 +58,7 @@ function UseHandlerTest() {
         'worklet';
         const { onScroll } = handlers;
         if (onScroll && event.eventName.endsWith('onScroll')) {
-          context.eventName = event.eventName + useWeb;
+          context.eventName = event.eventName;
           // @ts-expect-error Works with `ReanimatedEvent` only.
           onScroll(event);
         }
@@ -83,7 +80,7 @@ function UseHandlerTest() {
       },
     };
 
-    const { context, doDependenciesDiffer, useWeb } = useHandler(
+    const { context, doDependenciesDiffer } = useHandler(
       handlers,
       dependencies
     );
@@ -93,7 +90,7 @@ function UseHandlerTest() {
         'worklet';
         const { onScroll } = handlers;
         if (onScroll && event.eventName.endsWith('onScroll')) {
-          context.eventName = event.eventName + useWeb;
+          context.eventName = event.eventName;
           onScroll(event);
         }
       },

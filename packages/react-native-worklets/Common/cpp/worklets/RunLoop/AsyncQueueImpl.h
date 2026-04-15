@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <worklets/Public/AsyncQueue.h>
+#include <worklets/RunLoop/AsyncQueue.h>
 #include <worklets/Tools/UIScheduler.h>
 
 #include <atomic>
@@ -21,13 +21,15 @@ struct AsyncQueueState {
 
 class AsyncQueueImpl : public AsyncQueue {
  public:
-  explicit AsyncQueueImpl(std::string name);
+  explicit AsyncQueueImpl(const std::string &name);
 
   ~AsyncQueueImpl() override;
 
   void push(std::function<void()> &&job) override;
 
  private:
+  static void runLoop(const std::shared_ptr<AsyncQueueState> &state);
+
   const std::shared_ptr<AsyncQueueState> state_;
 };
 

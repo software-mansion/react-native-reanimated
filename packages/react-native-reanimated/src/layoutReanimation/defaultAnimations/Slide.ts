@@ -19,7 +19,7 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
  */
 export class SlideInRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ originX: number }>
   implements IEntryAnimationBuilder
 {
   static presetName = 'SlideInRight';
@@ -66,7 +66,7 @@ export class SlideInRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
  */
 export class SlideInLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ originX: number }>
   implements IEntryAnimationBuilder
 {
   static presetName = 'SlideInLeft';
@@ -113,7 +113,7 @@ export class SlideInLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
  */
 export class SlideOutRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ originX: number }>
   implements IExitAnimationBuilder
 {
   static presetName = 'SlideOutRight';
@@ -166,7 +166,7 @@ export class SlideOutRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
  */
 export class SlideOutLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ originX: number }>
   implements IExitAnimationBuilder
 {
   static presetName = 'SlideOutLeft';
@@ -219,7 +219,7 @@ export class SlideOutLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
  */
 export class SlideInUp
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ originY: number }>
   implements IEntryAnimationBuilder
 {
   static presetName = 'SlideInUp';
@@ -266,7 +266,7 @@ export class SlideInUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
  */
 export class SlideInDown
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ originY: number }>
   implements IEntryAnimationBuilder
 {
   static presetName = 'SlideInDown';
@@ -313,7 +313,7 @@ export class SlideInDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
  */
 export class SlideOutUp
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ originY: number }>
   implements IExitAnimationBuilder
 {
   static presetName = 'SlideOutUp';
@@ -363,7 +363,7 @@ export class SlideOutUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
  */
 export class SlideOutDown
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ originY: number }>
   implements IExitAnimationBuilder
 {
   static presetName = 'SlideOutDown';

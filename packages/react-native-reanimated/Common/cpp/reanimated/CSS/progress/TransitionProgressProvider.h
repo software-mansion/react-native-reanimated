@@ -12,7 +12,7 @@
 
 namespace reanimated::css {
 
-enum class TransitionProgressState { Pending, Running, Finished };
+enum class TransitionProgressState : std::uint8_t { Pending, Running, Finished };
 
 class TransitionPropertyProgressProvider final : public KeyframeProgressProvider, public RawProgressProvider {
  public:
@@ -54,13 +54,13 @@ class TransitionProgressProvider final {
   TransitionPropertyProgressProviders getPropertyProgressProviders() const;
   std::unordered_set<std::string> getRemovedProperties() const;
 
+  void runProgressProvider(
+      const std::string &propertyName,
+      const CSSTransitionPropertySettings &settings,
+      bool isReversed,
+      double timestamp);
+  void removeProperty(const std::string &propertyName);
   void discardFinishedProgressProviders();
-  void discardIrrelevantProgressProviders(const std::unordered_set<std::string> &transitionPropertyNames);
-  void runProgressProviders(
-      double timestamp,
-      const CSSTransitionPropertiesSettings &propertiesSettings,
-      const PropertyNames &changedPropertyNames,
-      const std::unordered_set<std::string> &reversedPropertyNames);
   void update(double timestamp);
 
  private:

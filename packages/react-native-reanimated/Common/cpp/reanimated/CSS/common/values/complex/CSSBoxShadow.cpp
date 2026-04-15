@@ -161,7 +161,7 @@ std::ostream &operator<<(std::ostream &os, const CSSBoxShadow &shadowValue) {
 
 #endif // NDEBUG
 
-const std::vector<CSSBoxShadow::FieldValidator> CSSBoxShadow::fieldValidators = {
+const std::vector<FieldValidator> CSSBoxShadow::fieldValidators = {
     {"offsetX",
      [](const folly::dynamic &val) { return CSSDouble::canConstruct(val); },
      [](jsi::Runtime &rt, const jsi::Value &val) {

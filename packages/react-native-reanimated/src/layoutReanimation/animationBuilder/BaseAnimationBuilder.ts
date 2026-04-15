@@ -1,7 +1,6 @@
 'use strict';
 import { withDelay } from '../../animation';
 import { getReduceMotionFromConfig } from '../../animation/util';
-import { ReanimatedError } from '../../common';
 import type {
   AnimationFunction,
   EntryExitAnimationFunction,
@@ -21,7 +20,7 @@ export class BaseAnimationBuilder {
   ) => InstanceType<T>;
 
   build = (): EntryExitAnimationFunction | LayoutAnimationFunction => {
-    throw new ReanimatedError('Unimplemented method in child class.');
+    throw new Error('[Reanimated] Unimplemented method in child class.');
   };
 
   /**

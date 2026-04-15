@@ -1,14 +1,16 @@
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  strictGlobal: true,
+  // Uncomment the following to enable bundle mode.
+  // bundleMode: true,
+  // workletizableModules: ['axios'],
+};
+
 /** @type {import('@babel/core').TransformOptions} */
 module.exports = {
   presets: ['module:@react-native/babel-preset'],
   plugins: [
-    [
-      'react-native-worklets/plugin',
-      {
-        // Uncomment the next line to enable bundle mode.
-        // bundleMode: true,
-      },
-    ],
+    ['react-native-worklets/plugin', workletsPluginOptions],
     [
       'module-resolver',
       {

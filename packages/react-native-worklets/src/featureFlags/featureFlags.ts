@@ -14,3 +14,7 @@ export function setDynamicFeatureFlag(
 ): void {
   // no-op
 }
+
+export function getDynamicFeatureFlag(_name: DynamicFlagName): boolean {
+  return false;
+}

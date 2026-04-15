@@ -21,7 +21,7 @@ If you stumble across any of the above errors or similar, please don't disable o
 
 ### ❌ Do not disable New Architecture if it's already enabled
 
-Starting from React Native 0.76, New Architecture is enabled by default. Disabling it manually by changing `newArchEnabled=...` in `gradle.properties` does not fix the problem, it just postpones it as the legacy architecture will be removed in a future release of React Native.
+Starting from React Native 0.76, New Architecture is enabled by default. Disabling it manually by changing `newArchEnabled=...` in `gradle.properties` does not fix the problem, it just postpones it as the Legacy Architecture is no longer available to use in React Native 0.82 and newer versions.
 
 ### ❌ Do not downgrade Android Gradle Plugin
 
@@ -45,28 +45,30 @@ First all, make sure that you have followed all instructions in [Set Up Your Env
 
 Make sure to use latest supported version of Reanimated, depending on the setup of your app.
 
-**If your app uses Expo SDK**, you must use a specific major and minor version of Reanimated (first and second number). For instance, Expo SDK 52 supports only Reanimated 3.16.x. Make sure to update to the latest available patch version (third number), for instance 3.16.7.
+**If your app uses Expo SDK**, you must use a specific major and minor version of Reanimated (first and second number). For instance, Expo SDK 54 supports only Reanimated 4.1.x. Make sure to update to the latest available patch version (third number), for instance 4.1.5.
 
-| Expo SDK version | Reanimated version |
-| :--------------: | :----------------: |
-|       `52`       |     `~3.16.1`      |
-|       `51`       |     `~3.10.1`      |
-|       `50`       |      `~3.6.2`      |
+| Expo SDK version | `react-native-reanimated` version | `react-native-worklets` version |
+| :--------------: | :-------------------------------: | :-----------------------------: |
+|       `54`       |             `~4.1.1`              |             `0.5.1`             |
+|       `53`       |             `~3.17.4`             |          don't install          |
+|       `52`       |             `~3.16.1`             |          don't install          |
+|       `51`       |             `~3.10.1`             |          don't install          |
+|       `50`       |             `~3.6.2`              |          don't install          |
 
 :::tip
-How to determine which version is compatible? Open https://github.com/expo/expo/blob/sdk-52/packages/expo/bundledNativeModules.json file, jump to `sdk-XX` branch and search for `"react-native-reanimated"`.
+How to determine which version is compatible? Open https://github.com/expo/expo/blob/sdk-54/packages/expo/bundledNativeModules.json file, jump to `sdk-XX` branch and search for `"react-native-reanimated"`.
 :::
 
 **If your project uses Expo prebuild or React Native without a framework (e.g. React Native Community CLI)**, you should use a version of Reanimated that is compatible with the version of React Native according to the [Compatibility table](/docs/guides/compatibility).
 
-For instance, Reanimated 3.15.x works only with React Native 0.72, 0.73, 0.74 or 0.75 and **is not** compatible with React Native 0.76. If you want to use Reanimated with React Native 0.76, you need to upgrade to at least 3.16.0. It is recommended to use the latest available version (in this case, 3.16.7).
+For instance, Reanimated 4.0.x works only with React Native 0.78, 0.79, 0.80 or 0.81 and **is not** compatible with React Native 0.82. If you want to use Reanimated with React Native 0.82, you need to upgrade to at least 4.1.0. It is recommended to use the latest available version (in this case, 4.1.3).
 
 ### ✅ Use appropriate version of CMake
 
 [CMake](https://cmake.org/) is a build system used to compile the C++ part of Reanimated on your machine. Make sure to use CMake `3.22.1` or newer. CMake version can be customized with `CMAKE_VERSION` environmental variable, e.g. using `set CMAKE_VERSION=3.31.1`. If not set, CMake `3.22.1` is used.
 
 :::tip
-CMake will be installed automatically during app build. You can install a specific version of CMake directly from Android Studio (Tools &rarr; SDK Manager &rarr; SDK Tools &rarr; CMake).
+CMake will be installed automatically during app build. You can install a specific version of CMake directly from Android Studio (Tools → SDK Manager → SDK Tools → CMake).
 :::
 
 ### ✅ Use appropriate version of Ninja
@@ -82,7 +84,7 @@ See [this comment on GitHub](https://github.com/ninja-build/ninja/issues/1900#is
 Android NDK (Native Development Kit) is a set of tools used for building the native part of the app. You should use the same version of NDK as used in the official app template.
 
 :::tip
-Android NDK should be installed automatically during app build. You can install a specific version of Android NDK directly from Android Studio (Tools &rarr; SDK Manager &rarr; SDK Tools &rarr; "NDK (Side by side)").
+Android NDK should be installed automatically during app build. You can install a specific version of Android NDK directly from Android Studio (Tools → SDK Manager → SDK Tools → "NDK (Side by side)").
 :::
 
 ### ✅ Make sure `_JAVA_OPTIONS` environmental variable is not set
@@ -120,7 +122,7 @@ During app build, multiple compilation artifacts are saved in various paths, for
 
 Make sure to remove these directories and their contents before trying to build the app again.
 
-It is also recommended to invalidate Android Studio caches (File &rarr; Invalidate Caches&hellip; &rarr; Select all checkboxes &rarr; Invalidate and Restart).
+It is also recommended to invalidate Android Studio caches (File → Invalidate Caches… → Select all checkboxes → Invalidate and Restart).
 
 :::tip
 You can remove all untracked files in your repository using `git clean -fdX` command. Note that this command will remove all untracked files including hidden files like `.env` so please be extra careful and proceed with caution when doing so. You will also need to reinstall `node_modules` afterwards using your chosen package manager and rebuild the app.

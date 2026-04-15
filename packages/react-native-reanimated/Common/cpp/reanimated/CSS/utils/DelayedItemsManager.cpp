@@ -6,7 +6,7 @@
 namespace reanimated::css {
 
 template <typename TValue>
-DelayedItem<TValue>::DelayedItem(const double timestamp, const TValue value) : timestamp(timestamp), value(value) {}
+DelayedItem<TValue>::DelayedItem(double timestamp, TValue value) : timestamp(timestamp), value(std::move(value)) {}
 
 template <typename TValue>
 bool DelayedItemComparator<TValue>::operator()(const DelayedItem<TValue> &lhs, const DelayedItem<TValue> &rhs) const {
@@ -18,7 +18,7 @@ bool DelayedItemComparator<TValue>::operator()(const DelayedItem<TValue> &lhs, c
 }
 
 template <typename TValue>
-void DelayedItemsManager<TValue>::add(const double timestamp, const TValue value) {
+void DelayedItemsManager<TValue>::add(const double timestamp, const TValue &value) {
   auto result = itemsSet_.emplace(timestamp, value);
   if (result.second) {
     itemsMap_[result.first->value] = result.first;
@@ -38,7 +38,7 @@ typename DelayedItemsManager<TValue>::Item DelayedItemsManager<TValue>::pop() {
 }
 
 template <typename TValue>
-bool DelayedItemsManager<TValue>::remove(const TValue value) {
+bool DelayedItemsManager<TValue>::remove(const TValue &value) {
   auto it = itemsMap_.find(value);
 
   if (it == itemsMap_.end()) {
@@ -61,11 +61,6 @@ const typename DelayedItemsManager<TValue>::Item &DelayedItemsManager<TValue>::t
 template <typename TValue>
 bool DelayedItemsManager<TValue>::empty() const {
   return itemsSet_.empty();
-}
-
-template <typename TValue>
-size_t DelayedItemsManager<TValue>::size() const {
-  return itemsSet_.size();
 }
 
 // Declare the types that will be used in the DelayedItemsManager class

@@ -4,9 +4,9 @@ import type { AssignmentExpression, Identifier } from '@babel/types';
 import { isIdentifier, isMemberExpression } from '@babel/types';
 
 import type {
-  ReanimatedPluginPass,
   WorkletizableFunction,
   WorkletizableObject,
+  WorkletsPluginPass,
 } from './types';
 import {
   isWorkletizableFunctionPath,
@@ -17,7 +17,7 @@ export function findReferencedWorklet(
   workletIdentifier: NodePath<Identifier>,
   acceptWorkletizableFunction: boolean,
   acceptObject: boolean,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
   const workletName = workletIdentifier.node.name;
   const scope = workletIdentifier.scope;
@@ -59,7 +59,7 @@ function findReferencedWorkletFromVariableDeclarator(
   workletBinding: Binding,
   acceptWorkletizableFunction: boolean,
   acceptObject: boolean,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
   const workletDeclaration = workletBinding.path;
   if (!workletDeclaration.isVariableDeclarator()) {
@@ -88,7 +88,7 @@ function findReferencedWorkletFromAssignmentExpression(
   workletBinding: Binding,
   acceptWorkletizableFunction: boolean,
   acceptObject: boolean,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
   const workletDeclaration = workletBinding.constantViolations
     .reverse()

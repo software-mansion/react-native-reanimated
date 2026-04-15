@@ -93,7 +93,7 @@ function prepareDummy(
   };
 
   const dummy = element.cloneNode(true) as ReanimatedHTMLElement;
-  dummy.reanimatedDummy = true;
+  dummy.isDummy = true;
   resetStyle(dummy);
 
   return { dummy, dummyAnimationConfig };

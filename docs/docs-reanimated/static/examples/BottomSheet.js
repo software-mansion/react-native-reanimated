@@ -14,7 +14,7 @@ import Animated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
-import {useColorMode} from '@docusaurus/theme-common';
+import { useColorMode } from '@docusaurus/theme-common';
 import useThemedTextStyle from '@site/src/hooks/useThemedTextStyle';
 
 function BottomSheet({ isOpen, toggleSheet, duration = 500, children }) {
@@ -71,7 +71,7 @@ const sheetStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
 });

@@ -8,11 +8,6 @@ template <TransformOp TOperation>
 ScaleOperationBase<TOperation>::ScaleOperationBase(const double value)
     : TransformOperationBase<TOperation, CSSDouble>(CSSDouble(value)) {}
 
-template <TransformOp TOperation>
-folly::dynamic ScaleOperationBase<TOperation>::valueToDynamic() const {
-  return this->value.toDynamic();
-}
-
 bool ScaleOperation::canConvertTo(TransformOp type) const {
   return type == TransformOp::ScaleX || type == TransformOp::ScaleY;
 }

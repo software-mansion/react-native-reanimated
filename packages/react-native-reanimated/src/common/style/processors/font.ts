@@ -1,21 +1,31 @@
 'use strict';
 import { FONT_WEIGHT_MAPPINGS } from '../../constants';
-import { ReanimatedError } from '../../errors';
 import type { ValueProcessor } from '../../types';
 
-const ERROR_MESSAGES = {
-  invalidFontWeight: (weight: string | number) =>
-    `Invalid font weight value: ${weight}`,
+export const ERROR_MESSAGES = {
+  invalidFontWeight(weight: string | number) {
+    'worklet';
+    return `Invalid font weight value: ${weight}`;
+  },
 };
 
-export const processFontWeight: ValueProcessor<string | number> = (value) => {
-  if (typeof value === 'number' || !isNaN(+value)) {
-    return value.toString();
+const VALID_FONT_WEIGHTS = new Set<string>(Object.values(FONT_WEIGHT_MAPPINGS));
+
+export const processFontWeight: ValueProcessor<string | number, string> = (
+  value
+) => {
+  'worklet';
+  const stringValue = value.toString();
+
+  if (VALID_FONT_WEIGHTS.has(stringValue)) {
+    return stringValue;
   }
 
-  if (value in FONT_WEIGHT_MAPPINGS) {
-    return FONT_WEIGHT_MAPPINGS[value as keyof typeof FONT_WEIGHT_MAPPINGS];
+  if (stringValue in FONT_WEIGHT_MAPPINGS) {
+    return FONT_WEIGHT_MAPPINGS[
+      stringValue as keyof typeof FONT_WEIGHT_MAPPINGS
+    ];
   }
 
-  throw new ReanimatedError(ERROR_MESSAGES.invalidFontWeight(value));
+  throw new Error(`[Reanimated] ${ERROR_MESSAGES.invalidFontWeight(value)}`);
 };

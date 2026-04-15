@@ -45,6 +45,7 @@ const CoordsComponent = ({
 };
 
 describe('getRelativeCoords', () => {
+  // TODO: investigate and fix, on Android sometimes we receive 49s instead of 50s
   test.each([
     ['flex-start', 'flex-start', 0, 0],
     ['flex-start', 'center', 50, 0],

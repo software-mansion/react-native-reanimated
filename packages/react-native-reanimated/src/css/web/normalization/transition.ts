@@ -17,7 +17,7 @@ const createEmptyTransitionConfig =
     transitionBehavior: [],
   });
 
-function parseTransitionShorthand(value: string) {
+export function parseTransitionShorthand(value: string) {
   return splitByComma(value).reduce<ExpandedCSSTransitionConfigProperties>(
     (acc, part) => {
       const result = parseSingleTransitionShorthand(part);

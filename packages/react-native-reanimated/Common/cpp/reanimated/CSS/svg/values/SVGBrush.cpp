@@ -6,28 +6,32 @@ namespace reanimated::css {
 
 SVGBrush::SVGBrush(jsi::Runtime &rt, const jsi::Value &value)
     : CSSColorBase<SVGBrushType, SVGBrush>(SVGBrushType::Transparent) {
-  if (value.isNumber()) {
-    *this = SVGBrush(value.getNumber());
-  } else if (value.isString() && value.getString(rt).utf8(rt) == "currentColor") {
+  if (value.isBool()) {
+    *this = SVGBrush(value.getBool());
+  } else if (value.isNumber()) {
+    *this = SVGBrush(static_cast<int64_t>(value.getNumber()));
+  } else if (value.asString(rt).utf8(rt) == "currentColor") {
     colorType = SVGBrushType::CurrentColor;
   }
 }
 
 SVGBrush::SVGBrush(const folly::dynamic &value) : CSSColorBase<SVGBrushType, SVGBrush>(SVGBrushType::Transparent) {
-  if (value.isNumber()) {
-    *this = SVGBrush(value.getDouble());
-  } else if (value.isString() && value.getString() == "currentColor") {
+  if (value.isBool()) {
+    *this = SVGBrush(value.getBool());
+  } else if (value.isNumber()) {
+    *this = SVGBrush(value.asInt());
+  } else if (value.asString() == "currentColor") {
     colorType = SVGBrushType::CurrentColor;
   }
 }
 
 bool SVGBrush::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  return jsiValue.isNumber() || jsiValue.isUndefined() ||
+  return jsiValue.isNumber() || jsiValue.isBool() ||
       (jsiValue.isString() && jsiValue.getString(rt).utf8(rt) == "currentColor");
 }
 
 bool SVGBrush::canConstruct(const folly::dynamic &value) {
-  return value.isNumber() || value.empty() || value.asString() == "currentColor";
+  return value.isNumber() || value.isBool() || value.asString() == "currentColor";
 }
 
 folly::dynamic SVGBrush::toDynamic() const {

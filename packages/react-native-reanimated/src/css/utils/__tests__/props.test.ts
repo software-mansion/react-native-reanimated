@@ -4,6 +4,10 @@ import type { CSSStyle, CSSTransitionProperty } from '../../types';
 import { filterCSSAndStyleProperties } from '../props';
 
 describe(filterCSSAndStyleProperties, () => {
+  beforeAll(() => {
+    jest.spyOn(console, 'warn').mockImplementation(jest.fn());
+  });
+
   describe('animation config', () => {
     test('returns null if there is no animationName', () => {
       const style: CSSStyle = {

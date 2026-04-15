@@ -16,7 +16,6 @@ struct TranslateOperationBase : public TransformOperationBase<TOperation, CSSLen
   explicit TranslateOperationBase(const std::string &value);
 
   bool shouldResolve() const override;
-  folly::dynamic valueToDynamic() const override;
   TransformMatrix::Shared toMatrix(bool force3D) const override;
 };
 

@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../../../../common';
 import { VALID_PREDEFINED_TIMING_FUNCTIONS } from '../../../../constants';
 import type {
   CSSTimingFunction,
@@ -53,7 +52,7 @@ describe(normalizeDelay, () => {
       (delay) => {
         const value = delay as TimeUnit;
         expect(() => normalizeDelay(value)).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidDelay(value))
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidDelay(value)}`)
         );
       }
     );
@@ -95,7 +94,7 @@ describe(normalizeDuration, () => {
       (duration) => {
         const value = duration as TimeUnit;
         expect(() => normalizeDuration(value)).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidDuration(value))
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidDuration(value)}`)
         );
       }
     );
@@ -105,7 +104,7 @@ describe(normalizeDuration, () => {
     test.each(['-100ms', '-1s', -100])('throws an error for %p', (duration) => {
       const value = duration as TimeUnit;
       expect(() => normalizeDuration(value)).toThrow(
-        new ReanimatedError(ERROR_MESSAGES.negativeDuration(value))
+        new Error(`[Reanimated] ${ERROR_MESSAGES.negativeDuration(value)}`)
       );
     });
   });
@@ -132,8 +131,8 @@ describe(normalizeTimingFunction, () => {
         (timingFunction) => {
           const value = timingFunction as PredefinedTimingFunction;
           expect(() => normalizeTimingFunction(value)).toThrow(
-            new ReanimatedError(
-              ERROR_MESSAGES.invalidPredefinedTimingFunction(value)
+            new Error(
+              `[Reanimated] ${ERROR_MESSAGES.invalidPredefinedTimingFunction(value)}`
             )
           );
         }
@@ -164,8 +163,8 @@ describe(normalizeTimingFunction, () => {
         (timingFunction) => {
           const value = timingFunction as CSSTimingFunction;
           expect(() => normalizeTimingFunction(value)).toThrow(
-            new ReanimatedError(
-              ERROR_MESSAGES.invalidParametrizedTimingFunction(value)
+            new Error(
+              `[Reanimated] ${ERROR_MESSAGES.invalidParametrizedTimingFunction(value)}`
             )
           );
         }

@@ -3,7 +3,7 @@
 import { registerWorkletStackDetails } from '../debug/errors';
 import { jsVersion } from '../debug/jsVersion';
 import { logger } from '../debug/logger';
-import { WorkletsError } from '../debug/WorkletsError';
+import { getRuntimeKind, RuntimeKind } from '../runtimeKind';
 import type { WorkletFunction, WorkletImport } from '../types';
 import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
@@ -14,7 +14,9 @@ import {
 } from './serializableMappingCache';
 import type {
   FlatSerializableRef,
+  RegistrationData,
   SerializableRef,
+  SerializationData,
   Synchronizable,
 } from './types';
 
@@ -29,9 +31,15 @@ function isHostObject(value: NonNullable<object>) {
   return MAGIC_KEY in value;
 }
 
-export function isSerializableRef(value: unknown): value is SerializableRef {
+export function isSerializableRef<TValue = unknown>(
+  value: unknown
+): value is SerializableRef<TValue> {
+  'worklet';
   return (
-    typeof value === 'object' && value !== null && '__serializableRef' in value
+    typeof value === 'object' &&
+    value !== null &&
+    '__serializableRef' in value &&
+    value.__serializableRef === true
   );
 }
 
@@ -69,7 +77,8 @@ const INACCESSIBLE_OBJECT = {
         get: (_: unknown, prop: string | symbol) => {
           if (
             prop === '_isReanimatedSharedValue' ||
-            prop === '__remoteFunction'
+            prop === '__remoteFunction' ||
+            prop === '__synchronizableRef'
           ) {
             // not very happy about this check here, but we need to allow for
             // "inaccessible" objects to be tested with isSerializableRef check
@@ -81,15 +90,15 @@ const INACCESSIBLE_OBJECT = {
             // need to allow for this key to be accessed here.
             return false;
           }
-          throw new WorkletsError(
-            `Trying to access property \`${String(
+          throw new Error(
+            `[Worklets] Trying to access property \`${String(
               prop
             )}\` of an object which cannot be sent to the UI runtime.`
           );
         },
         set: () => {
-          throw new WorkletsError(
-            'Trying to write to an object which cannot be sent to the UI runtime.'
+          throw new Error(
+            '[Worklets] Trying to write to an object which cannot be sent to the UI runtime.'
           );
         },
       }
@@ -163,15 +172,20 @@ export function createSerializable<TValue>(
   if (Array.isArray(value)) {
     return cloneArray(value, shouldPersistRemote, depth);
   }
-  if (
-    globalThis._WORKLETS_BUNDLE_MODE &&
-    isFunction &&
-    (value as WorkletImport).__bundleData
-  ) {
-    return cloneImport(value as WorkletImport) as SerializableRef<TValue>;
-  }
-  if (isFunction && !isWorkletFunction(value)) {
-    return cloneRemoteFunction(value);
+  if (isFunction) {
+    if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+      if ((value as RemoteFunction).__remoteFunction) {
+        // Remote functions are already serialized.
+        return (value as RemoteFunction)
+          .__remoteFunction as SerializableRef<TValue>;
+      }
+      if ((value as WorkletImport).__bundleData) {
+        return cloneImport(value as WorkletImport) as SerializableRef<TValue>;
+      }
+    }
+    if (!isWorkletFunction(value)) {
+      return cloneRemoteFunction(value);
+    }
   }
   // RN has introduced a new representation of TurboModules as a JS object whose prototype is the host object
   // More details: https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp#L182
@@ -219,15 +233,99 @@ export function createSerializable<TValue>(
     // typed array (e.g. Int32Array, Uint8ClampedArray) or DataView
     return cloneArrayBufferView(value);
   }
+  for (let i = 0; i < customSerializationRegistry.length; i++) {
+    const { determine, pack } = customSerializationRegistry[i];
+    if (determine(value)) {
+      return cloneCustom(value, pack, i) as SerializableRef<TValue>;
+    }
+  }
   return inaccessibleObject(value);
 }
 
-if (globalThis._WORKLETS_BUNDLE_MODE) {
-  // TODO: Do it programatically.
+if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+  // TODO: Do it programmatically.
   createSerializable.__bundleData = {
     imported: 'createSerializable',
     source: require.resolveWeak('react-native-worklets'),
   };
+}
+
+if (!globalThis.__customSerializationRegistry) {
+  globalThis.__customSerializationRegistry =
+    [] as typeof globalThis.__customSerializationRegistry;
+}
+const customSerializationRegistry = globalThis.__customSerializationRegistry;
+
+/**
+ * `registerCustomSerializable` lets you register your own pre-serialization and
+ * post-deserialization logic. This is necessary for objects with prototypes
+ * different than just `Object.prototype` or some other built-in prototypes like
+ * `Map` etc. Worklets can't handle such objects by default to convert into
+ * [Serializables](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable)
+ * hence you need to register them as **Custom Serializables**. This way you can
+ * tell Worklets how to transfer your custom data structures between different
+ * Runtimes without manually serializing and deserializing them every time.
+ *
+ * @param registrationData - The registration data for the custom serializable -
+ *   {@link RegistrationData}
+ * @see https://docs.swmansion.com/react-native-worklets/docs/memory/registerCustomSerializable/
+ */
+export function registerCustomSerializable<
+  TValue extends object,
+  TPacked extends object,
+>(registrationData: RegistrationData<TValue, TPacked>) {
+  if (__DEV__ && getRuntimeKind() !== RuntimeKind.ReactNative) {
+    throw new Error(
+      '[Worklets] registerCustomSerializable can be used only on React Native runtime.'
+    );
+  }
+
+  const { name, determine, pack, unpack } = registrationData;
+
+  if (__DEV__) {
+    verifyRegistrationData(determine, pack, unpack);
+  }
+  if (customSerializationRegistry.some((data) => data.name === name)) {
+    if (__DEV__) {
+      console.warn(
+        `Custom serializable with name "${name}" is already registered. Duplicate registration is ignored.`
+      );
+    }
+    return;
+  }
+
+  customSerializationRegistry.push(
+    registrationData as unknown as SerializationData<object, unknown>
+  );
+
+  WorkletsModule.registerCustomSerializable(
+    createSerializable(determine),
+    createSerializable(pack),
+    createSerializable(unpack),
+    customSerializationRegistry.length - 1
+  );
+}
+
+function verifyRegistrationData(
+  determine: unknown,
+  pack: unknown,
+  unpack: unknown
+) {
+  if (!isWorkletFunction(determine)) {
+    throw new Error(
+      '[Worklets] The "determine" function provided to registerCustomSerializable must be a worklet.'
+    );
+  }
+  if (!isWorkletFunction(pack)) {
+    throw new Error(
+      '[Worklets] The "pack" function provided to registerCustomSerializable must be a worklet.'
+    );
+  }
+  if (!isWorkletFunction(unpack)) {
+    throw new Error(
+      '[Worklets] The "unpack" function provided to registerCustomSerializable must be a worklet.'
+    );
+  }
 }
 
 function detectCyclicObject(value: unknown, depth: number) {
@@ -240,8 +338,8 @@ function detectCyclicObject(value: unknown, depth: number) {
     if (depth === DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD) {
       processedObjectAtThresholdDepth = value;
     } else if (value === processedObjectAtThresholdDepth) {
-      throw new WorkletsError(
-        'Trying to convert a cyclic object to a serializable. This is not supported.'
+      throw new Error(
+        '[Worklets] Trying to convert a cyclic object to a serializable. This is not supported.'
       );
     }
   } else {
@@ -364,8 +462,8 @@ function cloneWorklet<TValue extends WorkletFunction>(
   if (__DEV__) {
     const babelVersion = (value as WorkletFunction).__pluginVersion;
     if (babelVersion !== undefined && babelVersion !== jsVersion) {
-      throw new WorkletsError(
-        `Mismatch between JavaScript code version and Worklets Babel plugin version (${jsVersion} vs. ${babelVersion}).
+      throw new Error(
+        `[Worklets] Mismatch between JavaScript code version and Worklets Babel plugin version (${jsVersion} vs. ${babelVersion}).
     See \`https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version\` for more details.
     Offending code was: \`${getWorkletCode(value)}\``
       );
@@ -384,7 +482,7 @@ function cloneWorklet<TValue extends WorkletFunction>(
   }
   const clonedProps: Record<string, unknown> = cloneObjectProperties(
     value,
-    true,
+    shouldPersistRemote,
     depth
   );
   // to save on transferring static __initData field of worklet structure
@@ -562,11 +660,13 @@ function cloneArrayBufferView<TValue extends ArrayBufferView>(
     __init: () => {
       'worklet';
       if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
-        throw new WorkletsError(`Invalid array view name \`${typeName}\`.`);
+        throw new Error(`[Worklets] Invalid array view name \`${typeName}\`.`);
       }
       const constructor = global[typeName as keyof typeof global];
       if (constructor === undefined) {
-        throw new WorkletsError(`Constructor for \`${typeName}\` not found.`);
+        throw new Error(
+          `[Worklets] Constructor for \`${typeName}\` not found.`
+        );
       }
       return new constructor(buffer);
     },
@@ -593,6 +693,20 @@ function cloneImport<TValue extends WorkletImport>(
   serializableMappingCache.set(clone);
 
   return clone as SerializableRef<TValue>;
+}
+
+function cloneCustom<TValue extends object, TPacked = unknown>(
+  data: TValue,
+  pack: (data: TValue) => TPacked,
+  typeId: number
+): SerializableRef<TValue> {
+  const packedData = pack(data);
+  const serialized = createSerializable(packedData);
+
+  return WorkletsModule.createCustomSerializable(
+    serialized,
+    typeId
+  ) as SerializableRef<TValue>;
 }
 
 function inaccessibleObject<TValue extends object>(
@@ -624,7 +738,7 @@ function getWorkletCode(value: WorkletFunction) {
   return code;
 }
 
-type RemoteFunction<TValue> = {
+type RemoteFunction<TValue = unknown> = {
   __remoteFunction: FlatSerializableRef<TValue>;
 };
 
@@ -650,7 +764,7 @@ function isRemoteFunction<TValue>(value: {
  * should use shared values instead.
  */
 function freezeObjectInDev<TValue extends object>(value: TValue) {
-  if (!__DEV__) {
+  if (!__DEV__ || globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
     return;
   }
   Object.entries(value).forEach(([key, element]) => {
@@ -707,6 +821,23 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
           value
         ) as FlatSerializableRef<TValue>;
       }
+      if ((value as Record<string, unknown>).__serializableRef) {
+        return value as FlatSerializableRef<TValue>;
+      }
+      if (Object.getPrototypeOf(value) !== Object.prototype) {
+        const length = globalThis.__customSerializationRegistry.length;
+        for (let i = 0; i < length; i++) {
+          const { determine, pack } =
+            globalThis.__customSerializationRegistry[i];
+          if (determine(value)) {
+            const packedData = pack(value);
+            return globalThis.__workletsModuleProxy?.createCustomSerializable(
+              cloneRecursive(packedData as TValue) as SerializableRef<object>,
+              i
+            ) as FlatSerializableRef<TValue>;
+          }
+        }
+      }
       const toAdapt: Record<string, FlatSerializableRef<TValue>> = {};
       for (const [key, element] of Object.entries(value)) {
         toAdapt[key] = cloneRecursive(element);
@@ -748,7 +879,7 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
 
 /** @deprecated This function is no longer supported. */
 export const makeShareableCloneOnUIRecursive = (
-  globalThis._WORKLETS_BUNDLE_MODE
+  globalThis._WORKLETS_BUNDLE_MODE_ENABLED
     ? createSerializable
     : makeShareableCloneOnUIRecursiveLEGACY
 ) as typeof makeShareableCloneOnUIRecursiveLEGACY;

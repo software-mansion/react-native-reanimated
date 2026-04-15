@@ -63,6 +63,7 @@ type withTimingType = <T extends AnimatableValue>(
  * @param toValue - The value on which the animation will come at rest -
  *   {@link AnimatableValue}.
  * @param config - The timing animation configuration - {@link TimingConfig}.
+ *   Defaults to {@link TimingConfig} default values.
  * @param callback - A function called on animation complete -
  *   {@link AnimationCallback}.
  * @returns An [animation
@@ -90,6 +91,7 @@ export const withTiming = function (
     if (userConfig) {
       Object.keys(userConfig).forEach(
         (key) =>
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ((config as any)[key] = userConfig[key as keyof typeof userConfig])
       );
     }

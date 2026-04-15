@@ -32,7 +32,7 @@ export function setupSetTimeout() {
   const clearTimeoutPolyfill = (timeoutHandle: number) => {
     const rafHandle = timeoutHandleToRafHandle.get(timeoutHandle);
     timeoutHandleToRafHandle.delete(timeoutHandle);
-    cancelAnimationFrame(rafHandle!);
+    cancelAnimationFrame(rafHandle);
   };
 
   globalThis.setTimeout = setTimeoutPolyfill as typeof setTimeout;

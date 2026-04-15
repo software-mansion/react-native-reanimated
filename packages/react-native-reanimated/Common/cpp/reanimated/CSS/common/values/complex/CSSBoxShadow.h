@@ -1,5 +1,6 @@
 #pragma once
 
+#include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/common/values/CSSBoolean.h>
 #include <reanimated/CSS/common/values/CSSColor.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
@@ -59,12 +60,6 @@ struct CSSBoxShadow : public CSSSimpleValue<CSSBoxShadow> {
 #endif // NDEBUG
 
  private:
-  struct FieldValidator {
-    std::string fieldName;
-    std::function<bool(const folly::dynamic &)> validateDynamic;
-    std::function<bool(jsi::Runtime &, const jsi::Value &)> validateJSI;
-  };
-
   static const std::vector<FieldValidator> fieldValidators;
 };
 

@@ -34,8 +34,11 @@ CSSColorBase<TColorType, TDerived>::CSSColorBase(int64_t numberValue)
   channels[1] = (color >> 8) & 0xFF; // Green
   channels[2] = color & 0xFF; // Blue
   channels[3] = (color >> 24) & 0xFF; // Alpha
-  colorType = TColorType::Rgba;
 }
+
+template <ColorTypeEnum TColorType, typename TDerived>
+CSSColorBase<TColorType, TDerived>::CSSColorBase(bool value)
+    : channels{0, 0, 0, 0}, colorType(TColorType::Transparent) {}
 
 template <ColorTypeEnum TColorType, typename TDerived>
 CSSColorBase<TColorType, TDerived>::CSSColorBase(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a)
@@ -43,7 +46,7 @@ CSSColorBase<TColorType, TDerived>::CSSColorBase(const uint8_t r, const uint8_t 
 
 template <ColorTypeEnum TColorType, typename TDerived>
 CSSColorBase<TColorType, TDerived>::CSSColorBase(ColorChannels colorChannels)
-    : channels{std::move(colorChannels)}, colorType(TColorType::Rgba) {}
+    : channels{colorChannels}, colorType(TColorType::Rgba) {}
 
 template <ColorTypeEnum TColorType, typename TDerived>
 TDerived CSSColorBase<TColorType, TDerived>::interpolate(double progress, const TDerived &to) const {
@@ -58,15 +61,15 @@ TDerived CSSColorBase<TColorType, TDerived>::interpolate(double progress, const 
 
   ColorChannels resultChannels;
   for (size_t i = 0; i < 4; ++i) {
-    const auto &from = fromChannels[i];
-    const auto &to = toChannels[i];
+    const auto &fromValue = fromChannels[i];
+    const auto &toValue = toChannels[i];
     // Cast one of operands to double to avoid unsigned int subtraction overflow
     // (when from > to)
-    const double interpolated = (static_cast<double>(to) - from) * progress + from;
+    const double interpolated = (static_cast<double>(toValue) - fromValue) * progress + fromValue;
     resultChannels[i] = static_cast<uint8_t>(std::round(std::clamp(interpolated, 0.0, 255.0)));
   }
 
-  return TDerived(std::move(resultChannels));
+  return TDerived(resultChannels);
 }
 
 template <ColorTypeEnum TColorType, typename TDerived>
@@ -78,23 +81,27 @@ bool CSSColorBase<TColorType, TDerived>::operator==(const TDerived &other) const
 
 CSSColor::CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue)
     : CSSColorBase<CSSColorType, CSSColor>(CSSColorType::Transparent) {
-  if (jsiValue.isNumber()) {
-    *this = CSSColor(jsiValue.getNumber());
+  if (jsiValue.isBool()) {
+    *this = CSSColor(jsiValue.getBool());
+  } else if (jsiValue.isNumber()) {
+    *this = CSSColor(static_cast<int64_t>(jsiValue.getNumber()));
   }
 }
 
 CSSColor::CSSColor(const folly::dynamic &value) : CSSColorBase<CSSColorType, CSSColor>(CSSColorType::Transparent) {
-  if (value.isNumber()) {
+  if (value.isBool()) {
+    *this = CSSColor(value.getBool());
+  } else if (value.isNumber()) {
     *this = CSSColor(value.asInt());
   }
 }
 
 bool CSSColor::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  return jsiValue.isNumber() || jsiValue.isNull();
+  return jsiValue.isNumber() || jsiValue.isBool();
 }
 
 bool CSSColor::canConstruct(const folly::dynamic &value) {
-  return value.isNumber() || value.isNull();
+  return value.isNumber() || value.isBool();
 }
 
 folly::dynamic CSSColor::toDynamic() const {
