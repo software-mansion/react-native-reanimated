@@ -11,14 +11,23 @@ import { makeMutable } from '../core';
  * in your components.
  *
  * @param initialValue - The value you want to be initially stored to a `.value`
- *   property.
+ *   property. You can also pass a function that returns the initial value; it
+ *   is called once on mount. Useful when the initial value is expensive to
+ *   compute.
+ *
+ *   **Warning:** Don't store functions (including worklets) inside shared values.
  * @returns A shared value with a single `.value` property initially set to the
  *   `initialValue` - {@link SharedValue}.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue
  */
-export function useSharedValue<Value>(initialValue: Value | (() => Value)): SharedValue<Value> {
+export function useSharedValue<Value>(
+  initialValue: Value | (() => Value)
+): SharedValue<Value> {
   const [mutable] = useState(() => {
-    const value = typeof initialValue === 'function' ? (initialValue as () => Value)() : initialValue;
+    const value =
+      typeof initialValue === 'function'
+        ? (initialValue as () => Value)()
+        : initialValue;
 
     return makeMutable(value);
   });
