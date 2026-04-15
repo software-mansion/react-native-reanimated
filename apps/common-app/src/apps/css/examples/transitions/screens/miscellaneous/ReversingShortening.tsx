@@ -1,3 +1,5 @@
+/* eslint-disable perfectionist/sort-objects */
+
 import { useCallback, useState } from 'react';
 import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
@@ -28,11 +30,10 @@ import { colors, flex, radius, sizes, spacing } from '@/theme';
 
 const DEFAULT_TRANSITION_CONFIG: SelectableConfig<CSSTransitionProperties> = {
   transitionProperty: 'all',
-  // eslint-disable-next-line perfectionist/sort-objects
   $transitionDuration: {
     options: ['0s', '1s', '2s', '5s'],
     value: '1s',
-  }, // eslint-disable-next-line perfectionist/sort-objects
+  },
   $transitionDelay: {
     options: ['0s', '1s', '2s', '5s'],
     value: '0s',

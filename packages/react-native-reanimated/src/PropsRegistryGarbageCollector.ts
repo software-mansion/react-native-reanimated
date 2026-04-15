@@ -42,6 +42,9 @@ export const PropsRegistryGarbageCollector = {
   syncPropsBackToReact() {
     const settledUpdates = ReanimatedModule.getSettledUpdates();
     for (const { viewTag, styleProps } of settledUpdates) {
+      if (styleProps === null) {
+        continue;
+      }
       const component = this.viewsMap.get(viewTag);
       unprocessProps(styleProps);
       component?._syncStylePropsBackToReact(styleProps);

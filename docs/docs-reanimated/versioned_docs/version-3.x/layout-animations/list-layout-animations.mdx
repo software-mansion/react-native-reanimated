@@ -9,33 +9,29 @@ sidebar_label: List Layout Animations
 ## Example
 
 <Row>
+  <ThemedVideo
+    sources={{
+light: '/recordings/layout-animations/listitem_light.mov',
+dark: '/recordings/layout-animations/listitem_dark.mov',
+}}
+  />
 
-<ThemedVideo
-  sources={{
-    light: '/recordings/layout-animations/listitem_light.mov',
-    dark: '/recordings/layout-animations/listitem_dark.mov',
-  }}
-/>
+  <div style={{flexGrow: 1}}>
+    ```jsx
+    import Animated, { LinearTransition } from 'react-native-reanimated';
 
-<div style={{flexGrow: 1}}>
-
-```jsx
-import Animated, { LinearTransition } from 'react-native-reanimated';
-
-function App() {
-  return (
-    <Animated.FlatList
-      data={data}
-      renderItem={renderItem}
-      // highlight-next-line
-      itemLayoutAnimation={LinearTransition}
-    />
-  );
-}
-```
-
-</div>
-
+    function App() {
+      return (
+        <Animated.FlatList
+          data={data}
+          renderItem={renderItem}
+          // highlight-next-line
+          itemLayoutAnimation={LinearTransition}
+        />
+      );
+    }
+    ```
+  </div>
 </Row>
 
 ## Remarks
@@ -44,57 +40,53 @@ function App() {
 - You can change the `itemLayoutAnimation` on the fly or disable it by setting it to `undefined`.
 
 <Indent>
+  ```jsx
+  function App() {
+    const [transition, setTransition] = useState(LinearTransition);
 
-```jsx
-function App() {
-  const [transition, setTransition] = useState(LinearTransition);
+    const changeTransition = () => {
+      // highlight-start
+      setTransition(
+        transition === LinearTransition ? JumpingTransition : LinearTransition
+      );
+      // highlight-end
+    };
 
-  const changeTransition = () => {
-    // highlight-start
-    setTransition(
-      transition === LinearTransition ? JumpingTransition : LinearTransition
-    );
-    // highlight-end
-  };
-
-  const toggleTransition = () => {
-    // highlight-next-line
-    setTransition(transition ? undefined : LinearTransition);
-  };
-
-  return (
-    <Animated.FlatList
-      data={data}
-      renderItem={renderItem}
+    const toggleTransition = () => {
       // highlight-next-line
-      itemLayoutAnimation={transition}
-    />
-  );
-}
-```
+      setTransition(transition ? undefined : LinearTransition);
+    };
 
+    return (
+      <Animated.FlatList
+        data={data}
+        renderItem={renderItem}
+        // highlight-next-line
+        itemLayoutAnimation={transition}
+      />
+    );
+  }
+  ```
 </Indent>
 
 - If the list items contain neither a `key` nor `id` property (which are used by default by the FlatList [keyExtractor](https://reactnative.dev/docs/flatlist#keyextractor) to create list item keys), you must provide your own implementation of the `keyExtractor` function that returns a unique key for each list item.
 
 <Indent>
-
-```jsx
-function App() {
-  return (
-    <Animated.FlatList
-      data={data}
-      renderItem={renderItem}
-      itemLayoutAnimation={LinearTransition}
-      // highlight-next-line
-      keyExtractor={customKeyExtractor}
-    />
-  );
-}
-```
-
+  ```jsx
+  function App() {
+    return (
+      <Animated.FlatList
+        data={data}
+        renderItem={renderItem}
+        itemLayoutAnimation={LinearTransition}
+        // highlight-next-line
+        keyExtractor={customKeyExtractor}
+      />
+    );
+  }
+  ```
 </Indent>
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

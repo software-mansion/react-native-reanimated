@@ -1,5 +1,4 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
-#include <worklets/Resources/Unpackers.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/JSLogger.h>
@@ -91,58 +90,66 @@ WorkletRuntime::WorkletRuntime(
 void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy) {
   jsi::Runtime &rt = *runtime_;
 
-#if REACT_NATIVE_MINOR_VERSION >= 81
   rt.setRuntimeData(
       RuntimeData::weakRuntimeUUID,
       std::make_shared<WeakRuntimeHolder>(WeakRuntimeHolder{.weakRuntime = weak_from_this()}));
-#endif // REACT_NATIVE_MINOR_VERSION >= 81
 
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
   const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
   const auto memoryManager_ = jsiWorkletsModuleProxy->getMemoryManager();
-#ifdef WORKLETS_BUNDLE_MODE
-  auto script = jsiWorkletsModuleProxy->getScript();
+  const auto script = jsiWorkletsModuleProxy->getScript();
   const auto &sourceUrl = jsiWorkletsModuleProxy->getSourceUrl();
-#endif // WORKLETS_BUNDLE_MODE
+  const auto runtimeBindings = jsiWorkletsModuleProxy->getRuntimeBindings();
+  const auto bundleModeEnabled = jsiWorkletsModuleProxy->isBundleModeEnabled();
+  const auto unpackerLoader = jsiWorkletsModuleProxy->getUnpackerLoader();
 
   auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
 
   WorkletRuntimeDecorator::decorate(
       rt, name_, jsScheduler, isDevBundle, std::move(optimizedJsiWorkletsModuleProxy), eventLoop_);
 
-#ifdef WORKLETS_BUNDLE_MODE
-  if (!script) {
-    throw std::runtime_error("[Worklets] Expected to receive the bundle, but got nullptr instead.");
+  if (bundleModeEnabled) {
+    bundleModeInit(jsScheduler, script, sourceUrl, runtimeBindings);
+  } else {
+    legacyModeInit(unpackerLoader);
   }
 
-  try {
-    auto buffer = std::make_shared<const BigStringBuffer>(script);
-    rt.evaluateJavaScript(buffer, sourceUrl);
-  } catch (facebook::jsi::JSError error) {
-    const auto &message = error.getMessage();
-    const auto &stack = error.getStack();
-    if (!message.starts_with("[Worklets] Worklets initialized successfully")) {
-      const auto newMessage = "[Worklets] Failed to initialize runtime. Reason: " + message;
-      JSLogger::reportFatalErrorOnJS(
-          jsScheduler, {.message = newMessage, .stack = stack, .name = "WorkletsError", .jsEngine = "Worklets"});
-    }
-  }
-#else
-  // Legacy behavior
-  auto valueUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
-  rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
-
-  auto synchronizableUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(SynchronizableUnpackerCode);
-  rt.evaluateJavaScript(synchronizableUnpackerBuffer, "synchronizableUnpacker");
-
-  auto customSerializableUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(CustomSerializableUnpackerCode);
-  rt.evaluateJavaScript(customSerializableUnpackerBuffer, "customSerializableUnpacker");
-#endif // WORKLETS_BUNDLE_MODE
   try {
     memoryManager_->loadAllCustomSerializables(shared_from_this());
   } catch (jsi::JSError &e) {
     throw std::runtime_error(std::string("[Worklets] Failed to load custom serializables. Reason: ") + e.getMessage());
   }
+}
+
+void WorkletRuntime::bundleModeInit(
+    const std::shared_ptr<JSScheduler> &jsScheduler,
+    const std::shared_ptr<const ScriptBuffer> &script,
+    const std::string &sourceUrl,
+    const std::shared_ptr<RuntimeBindings> &runtimeBindings) {
+  jsi::Runtime &rt = *runtime_;
+
+  if (!script) {
+    throw std::runtime_error("[Worklets] Expected to receive the bundle, but got nullptr instead.");
+  }
+
+  try {
+    rt.evaluateJavaScript(script, sourceUrl);
+  } catch (facebook::jsi::JSError &error) {
+    const auto &message = error.getMessage();
+    const auto &stack = error.getStack();
+    if (!message.starts_with("[Worklets] Worklets initialized successfully")) {
+      const auto newMessage = "[Worklets] Failed to initialize runtime. Reason: " + message + " " + stack;
+      JSLogger::reportFatalErrorOnJS(
+          jsScheduler, {.message = newMessage, .stack = stack, .name = "WorkletsError", .jsEngine = "Worklets"});
+      return;
+    }
+  }
+
+  WorkletRuntimeDecorator::postEvaluateScript(rt, runtimeBindings);
+}
+
+void WorkletRuntime::legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpackerLoader) {
+  unpackerLoader->installUnpackers(*runtime_);
 }
 
 /* #region schedule */
@@ -226,6 +233,9 @@ jsi::Value WorkletRuntime::get(jsi::Runtime &rt, const jsi::PropNameID &propName
   if (name == "name") {
     return jsi::String::createFromUtf8(rt, name_);
   }
+  if (name == "runtimeId") {
+    return jsi::Value(static_cast<double>(runtimeId_));
+  }
   return jsi::Value::undefined();
 }
 
@@ -233,6 +243,7 @@ std::vector<jsi::PropNameID> WorkletRuntime::getPropertyNames(jsi::Runtime &rt) 
   std::vector<jsi::PropNameID> result;
   result.push_back(jsi::PropNameID::forUtf8(rt, "toString"));
   result.push_back(jsi::PropNameID::forUtf8(rt, "name"));
+  result.push_back(jsi::PropNameID::forUtf8(rt, "runtimeId"));
   return result;
 }
 
@@ -252,7 +263,6 @@ void scheduleOnRuntime(
   workletRuntime->schedule(serializableWorklet);
 }
 
-#if REACT_NATIVE_MINOR_VERSION >= 81
 std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
   auto runtimeData = rt.getRuntimeData(RuntimeData::weakRuntimeUUID);
   if (!runtimeData) [[unlikely]] {
@@ -263,7 +273,6 @@ std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::
   auto weakHolder = std::static_pointer_cast<WeakRuntimeHolder>(runtimeData);
   return weakHolder->weakRuntime;
 }
-#endif // REACT_NATIVE_MINOR_VERSION >= 81
 
 /* #region deprecated */
 

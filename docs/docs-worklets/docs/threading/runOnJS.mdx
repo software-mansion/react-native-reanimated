@@ -4,11 +4,11 @@ sidebar_position: 2137 # Last in the section - deprecated
 
 <DeprecatedBanner
   text={
-    <>
-      This API is deprecated and will be removed in the next major release. Use{' '}
-      <a href="/docs/threading/scheduleOnRN">scheduleOnRN</a> instead.
-    </>
-  }
+<>
+This API is deprecated and will be removed in the next major release. Use{' '}
+<a href="/docs/threading/scheduleOnRN">scheduleOnRN</a> instead.
+</>
+}
 />
 
 # runOnJS
@@ -29,14 +29,13 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function runOnJS<A extends any[], R>(
-  fn: (...args: A) => R
-): (...args: Parameters<typeof fn>) => void;
-```
-
+  ```typescript
+  function runOnJS<A extends any[], R>(
+    fn: (...args: A) => R
+  ): (...args: Parameters<typeof fn>) => void;
+  ```
 </details>
 
 ### Arguments
@@ -58,24 +57,22 @@ Don't forget to call the function returned from `runOnJS`.
 import RunOnJS from '@site/src/examples/RunOnJS';
 import RunOnJSSrc from '!!raw-loader!@site/src/examples/RunOnJS';
 
-<InteractiveExample src={RunOnJSSrc} component={RunOnJS} />
+<InteractiveExample src={RunOnJSSrc} component={RunOnJS}/>
 
 ## Remarks
 
 - Functions passed to `runOnJS` must be defined in the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) scope, i.e. in the component body or the global scope. The code below won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI thread](/docs/fundamentals/glossary#ui-thread):
 
 <Indent>
-
-```jsx
-withTiming(0, {}, () => {
-  // myFunction is defined on the UI thread 🚨
-  const myFunction = () => {
-    // ...
-  };
-  runOnJS(myFunction)(); // 💥
-});
-```
-
+  ```jsx
+  withTiming(0, {}, () => {
+    // myFunction is defined on the UI thread 🚨
+    const myFunction = () => {
+      // ...
+    };
+    runOnJS(myFunction)(); // 💥
+  });
+  ```
 </Indent>
 
 - It's a common mistake to execute function inside of runOnJS like this: ~~`runOnJS(setValue(10))()`~~. Here, the correct usage would be `runOnJS(setValue)(10)`.

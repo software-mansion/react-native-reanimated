@@ -1,4 +1,5 @@
-const { cat, exec } = require('shelljs');
+const { execSync } = require('child_process');
+const fs = require('fs');
 
 /**
  * @typedef {object} Arg
@@ -11,27 +12,37 @@ const { cat, exec } = require('shelljs');
  * @property {boolean} help - Whether help option was passed
  * @property {boolean} nightly - Whether nightly option was passed
  * @property {boolean} fresh - Whether fresh option was passed
- * @property {boolean} custom - Whether custom version was passed
+ * @property {string} customVersion - Passed custom version, if any
+ * @property {boolean} rc - Whether release candidate option was passed
+ * @property {boolean} beta - Whether beta option was passed
+ * @property {string} packageName - Name of the package to get version for
+ * @property {string} packageJsonPath - Path to package.json file
  */
 
 /**
  * @param {string[]} rawArgs
- * @param {string} packageJsonPath
  * @returns {{ currentVersion: string; newVersion: string }}
  */
-function getVersion(rawArgs, packageJsonPath) {
+function getVersion(rawArgs) {
   const {
-    flags: { custom, nightly, fresh },
-    customVersion,
+    flags: { customVersion, nightly, fresh, rc, beta, packageJsonPath },
   } = getFlags(rawArgs);
-  const packageJson = JSON.parse(cat(packageJsonPath));
-  const currentVersion = packageJson.version;
 
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+  const currentVersion = packageJson.version;
   let newVersion = currentVersion;
 
-  if (custom) {
+  if (customVersion) {
     newVersion = customVersion;
   } else {
+    const baseVersion = currentVersion.split('-')[0];
+
+    if (rc) {
+      throw new Error('Release candidate versioning is not yet implemented');
+    } else if (beta) {
+      throw new Error('Beta versioning is not yet implemented');
+    }
+
     let dateIdentifier = new Date()
       .toISOString()
       .slice(0, -5)
@@ -43,12 +54,12 @@ function getVersion(rawArgs, packageJsonPath) {
       }
 
       dateIdentifier = dateIdentifier.slice(0, -6);
-      const currentCommit = exec('git rev-parse HEAD', {
-        silent: true,
-      }).stdout.trim();
+      const currentCommit = execSync('git rev-parse HEAD', {
+        encoding: 'utf8',
+      }).trim();
       const shortCommit = currentCommit.slice(0, 9);
 
-      newVersion = `${currentVersion.split('-')[0]}-nightly-${dateIdentifier}-${shortCommit}`;
+      newVersion = `${baseVersion}-nightly-${dateIdentifier}-${shortCommit}`;
     } else if (fresh) {
       newVersion = `${currentVersion}-${dateIdentifier}`;
     }
@@ -62,7 +73,7 @@ function getVersion(rawArgs, packageJsonPath) {
 
 /**
  * @param {string[]} rawArgs
- * @returns {{ flags: Flags; customVersion: string }}
+ * @returns {{ flags: Flags }}
  */
 function getFlags(rawArgs) {
   const args = buildArgs(rawArgs);
@@ -83,21 +94,29 @@ function buildArgs(rawArgs) {
 
 /**
  * @param {Arg[]} args
- * @returns {{ flags: Flags; customVersion: string }}
+ * @returns {{ flags: Flags }}
  */
 function processArgs(args) {
   const flags = {
     help: false,
     nightly: false,
     fresh: false,
-    custom: false,
+    customVersion: '',
+    rc: false,
+    beta: false,
+    packageName: '',
+    packageJsonPath: '',
   };
 
-  let customVersion = '';
-
   args.forEach((arg) => {
-    if (arg.value === '--help' || arg.value === '-h') {
+    if (arg.handled) {
+      return;
+    } else if (arg.value === '--help' || arg.value === '-h') {
       flags.help = true;
+      arg.handled = true;
+    } else if (arg.value === '--package-json-path' || arg.value === '-p') {
+      flags.packageJsonPath = args[args.indexOf(arg) + 1].value;
+      args[args.indexOf(arg) + 1].handled = true;
       arg.handled = true;
     } else if (arg.value === '--nightly' || arg.value === '-n') {
       flags.nightly = true;
@@ -105,9 +124,19 @@ function processArgs(args) {
     } else if (arg.value === '--fresh' || arg.value === '-f') {
       flags.fresh = true;
       arg.handled = true;
-    } else if (!flags.custom) {
-      customVersion = arg.value;
-      flags.custom = true;
+    } else if (arg.value === '--rc' || arg.value === '-r') {
+      flags.rc = true;
+      arg.handled = true;
+    } else if (arg.value === '--beta' || arg.value === '-b') {
+      flags.beta = true;
+      arg.handled = true;
+    } else if (arg.value === '--version') {
+      flags.customVersion = args[args.indexOf(arg) + 1].value;
+      args[args.indexOf(arg) + 1].handled = true;
+      arg.handled = true;
+    } else if (arg.value === '--package-name') {
+      flags.packageName = args[args.indexOf(arg) + 1].value;
+      args[args.indexOf(arg) + 1].handled = true;
       arg.handled = true;
     }
   });
@@ -119,28 +148,23 @@ function processArgs(args) {
     process.exit(1);
   }
 
-  return { flags, customVersion };
+  return { flags };
 }
 
 /** @param {Flags} flags */
-function processFlags({ help, nightly, fresh, custom }) {
+function processFlags({ help, rc, beta, nightly, fresh, customVersion }) {
   if (help) {
     console.warn(
-      'Use --nightly or -n to set nightly version.\nUse --fresh or -f to set fresh version.\nElse pass the version as an argument.'
+      'Use --nightly or -n to set nightly version.\nUse --fresh or -f to set fresh version.\nUse --rc or -r to set release candidate version.\nUse --beta or -b to set beta version.\nElse pass --version <version> or -v <version>.'
     );
     process.exit(1);
   }
 
-  if (nightly && fresh) {
-    throw new Error('Cannot set nightly and fresh version at the same time.');
-  }
-
-  if ((nightly || fresh) && custom) {
-    throw new Error('Cannot set nightly or fresh version with custom version.');
-  }
-
-  if (!custom && !nightly && !fresh) {
-    throw new Error('Version not set.');
+  if ([nightly, fresh, customVersion, rc, beta].filter(Boolean).length > 1) {
+    console.error(
+      'Only one of --nightly, --fresh, --rc, --beta, and --version flags can be used.'
+    );
+    process.exit(1);
   }
 }
 

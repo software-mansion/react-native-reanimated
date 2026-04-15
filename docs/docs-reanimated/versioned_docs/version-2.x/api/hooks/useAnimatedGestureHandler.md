@@ -65,7 +65,7 @@ Note: Since version 2.10.0 of `react-native-gesture-handler`, to use this hook o
 
 ## Example
 
-In the below example we use [`PanGestureHandler`](https://docs.swmansion.com/react-native-gesture-handler/docs/gesture-handlers/pan-gh/) to register for pan gesture events performed on the rendered View.
+In the below example we use [`PanGestureHandler`](https://docs.swmansion.com/react-native-gesture-handler/docs/2.x/gesture-handlers/pan-gh/) to register for pan gesture events performed on the rendered View.
 We attach three handler worklets that are going to be triggered when the gesture starts, when it is active and the user is panning, and when the gesture is over.
 We create a shared value `x` that will correspond to the x-translation of the box.
 In `onStart` handler worklet we use `context` to save the current value of `x` and therefore remember the place at which the gesture started.

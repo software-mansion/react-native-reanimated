@@ -3,19 +3,21 @@
 import { createSerializable } from './serializable';
 import { type Synchronizable, type SynchronizableRef } from './types';
 
-export function __installUnpacker() {
+export function installSynchronizableUnpacker() {
+  'worklet';
+  'no-worklet-closure';
   // TODO: Add cache for synchronizables.
   const serializer =
-    !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE
-      ? (value: unknown, _: unknown) => createSerializable(value)
-      : globalThis._createSerializable;
+    globalThis.__RUNTIME_KIND === 1 || globalThis._WORKLETS_BUNDLE_MODE_ENABLED
+      ? createSerializable
+      : (value: unknown) => globalThis.__serializer(value);
 
   function synchronizableUnpacker<TValue>(
     synchronizableRef: SynchronizableRef<TValue>
   ): Synchronizable<TValue> {
     const synchronizable =
       synchronizableRef as unknown as Synchronizable<TValue>;
-    const proxy = globalThis.__workletsModuleProxy!;
+    const proxy = globalThis.__workletsModuleProxy;
 
     synchronizable.__synchronizableRef = true;
     synchronizable.getDirty = () => {
@@ -34,19 +36,13 @@ export function __installUnpacker() {
         const prev = synchronizable.getBlocking();
         newValue = func(prev);
 
-        proxy.synchronizableSetBlocking(
-          synchronizable,
-          serializer(newValue, undefined)
-        );
+        proxy.synchronizableSetBlocking(synchronizable, serializer(newValue));
 
         synchronizable.unlock();
       } else {
         const value = valueOrFunction;
         newValue = value;
-        proxy.synchronizableSetBlocking(
-          synchronizable,
-          serializer(newValue, undefined)
-        );
+        proxy.synchronizableSetBlocking(synchronizable, serializer(newValue));
       }
     };
     synchronizable.lock = () => {

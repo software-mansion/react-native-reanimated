@@ -39,13 +39,13 @@ type SelectListsDropdownProps<T> = {
 
 export default function SelectListDropdown<T>({
   alignment,
+  fitInScreen,
+  formatInputLabel,
   onSelect,
   options,
-  selected,
-  fitInScreen,
-  styleOptions,
-  formatInputLabel,
   renderInput,
+  selected,
+  styleOptions,
 }: SelectListsDropdownProps<T>) {
   const isExpanded = useSharedValue(false);
 

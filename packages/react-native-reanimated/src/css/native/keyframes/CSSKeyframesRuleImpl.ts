@@ -3,7 +3,6 @@ import type { PlainStyle } from '../../../common';
 import { CSSKeyframesRuleBase } from '../../models';
 import type { CSSAnimationKeyframes } from '../../types';
 import { normalizeAnimationKeyframes } from '../normalization';
-import { getStyleBuilder } from '../registry';
 import type { NormalizedCSSAnimationKeyframesConfig } from '../types';
 
 export default class CSSKeyframesRuleImpl<
@@ -19,15 +18,10 @@ export default class CSSKeyframesRuleImpl<
   }
 
   getNormalizedKeyframesConfig(
-    viewName: string
+    compoundComponentName: string
   ): NormalizedCSSAnimationKeyframesConfig {
-    if (!this.normalizedKeyframesCache_[viewName]) {
-      this.normalizedKeyframesCache_[viewName] = normalizeAnimationKeyframes(
-        this.cssRules,
-        getStyleBuilder(viewName)
-      );
-    }
-
-    return this.normalizedKeyframesCache_[viewName];
+    this.normalizedKeyframesCache_[compoundComponentName] ??=
+      normalizeAnimationKeyframes(this.cssRules, compoundComponentName);
+    return this.normalizedKeyframesCache_[compoundComponentName];
   }
 }

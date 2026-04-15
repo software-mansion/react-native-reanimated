@@ -38,7 +38,7 @@ export type Synchronizable<TValue = unknown> = SerializableRef<TValue> &
 
 /**
  * Registration data for
- * [registerCustomSerializable](https://docs.swmansion.com/react-native-reanimated/docs/memory/registerCustomSerializable)
+ * [registerCustomSerializable](https://docs.swmansion.com/react-native-worklets/docs/memory/registerCustomSerializable)
  * function.
  */
 export type RegistrationData<TValue extends object, TPacked = unknown> = {
@@ -58,7 +58,7 @@ export type RegistrationData<TValue extends object, TPacked = unknown> = {
    * A worklet that packs the JavaScript value of type `TValue` into a value
    * that can be serialized by default as Serializable. The function must return
    * a [supported type for
-   * Serialization](https://docs.swmansion.com/react-native-reanimated/docs/memory/Serializable#supported-types).
+   * Serialization](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable#supported-types).
    */
   pack: (value: TValue) => TPacked;
   /**
@@ -77,3 +77,110 @@ export type SerializationData<TValue extends object, TPacked = unknown> = Omit<
 };
 
 export type CustomSerializationRegistry = SerializationData<object, unknown>[];
+
+export type ShareableHostProps<TValue = unknown> = {
+  value: TValue;
+};
+
+export type ShareableHostMeta = {
+  isHost: true;
+  __shareableRef: true;
+};
+
+/**
+ * A worklet that takes the created {@link ShareableHost} and decorates it with
+ * additional properties or methods. It must return the same reference it
+ * received.
+ */
+export type ShareableHostDecorator<TValue = unknown, TDecorated = unknown> = (
+  shareable: ShareableHost<TValue> & TDecorated
+) => ShareableHost<TValue> & TDecorated;
+
+export type ShareableGuestMeta = {
+  isHost: false;
+  __shareableRef: true;
+};
+
+export type ShareableGuestProps<TValue = unknown> = {
+  getAsync(): Promise<TValue>;
+  getSync(): TValue;
+  setAsync(value: TValue | ((prev: TValue) => TValue)): void;
+  setSync(value: TValue | ((prev: TValue) => TValue)): void;
+};
+
+/**
+ * A worklet that decorates each {@link ShareableGuest} created for the Shareable
+ * with additional properties or methods. It must return the same reference it
+ * received.
+ */
+export type ShareableGuestDecorator<TValue = unknown, TDecorated = unknown> = (
+  shareable: ShareableGuest<TValue> & TDecorated
+) => ShareableGuest<TValue> & TDecorated;
+
+/**
+ * The host-side representation of a {@link Shareable}, living on the
+ * {@link https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime | Worklet Runtime}
+ * that hosts the Shareable.
+ */
+export type ShareableHost<
+  TValue = unknown,
+  THostDecorated = unknown,
+> = ShareableHostMeta &
+  ShareableHostProps<TValue> &
+  (THostDecorated extends object ? THostDecorated : object);
+
+/**
+ * A guest-side representation of a {@link Shareable}, used on any runtime other
+ * than the host runtime.
+ */
+export type ShareableGuest<
+  TValue = unknown,
+  TGuestDecorated = unknown,
+> = ShareableGuestMeta &
+  ShareableGuestProps<TValue> &
+  (TGuestDecorated extends object ? TGuestDecorated : object);
+
+/**
+ * A type of shared memory tied to a given runtime, called the Host Runtime.
+ * Depending on the context it's either a {@link ShareableHost} (on the hosting
+ * Worklet Runtime) or a {@link ShareableGuest} (on every other runtime).
+ *
+ * @see {@link https://docs.swmansion.com/react-native-worklets/docs/memory/shareable | Shareable docs}
+ */
+export type Shareable<
+  TValue = unknown,
+  THostDecorated = unknown,
+  TGuestDecorated = unknown,
+> =
+  | (ShareableHost<TValue, THostDecorated> &
+      Partial<
+        ShareableGuestProps<TValue> &
+          (TGuestDecorated extends object ? Partial<TGuestDecorated> : object)
+      >)
+  | (ShareableGuest<TValue, TGuestDecorated> &
+      Partial<
+        ShareableHostProps<TValue> &
+          (THostDecorated extends object ? Partial<THostDecorated> : object)
+      >);
+
+/** Optional advanced configuration for a {@link Shareable}. */
+export type ShareableConfig<TValue, THostDecorated, TGuestDecorated> = {
+  /**
+   * A worklet that decorates the {@link ShareableHost} with additional
+   * properties or methods.
+   */
+  hostDecorator?: ShareableHostDecorator<TValue, THostDecorated>;
+  /**
+   * A worklet that decorates each {@link ShareableGuest} with additional
+   * properties or methods.
+   */
+  guestDecorator?: ShareableGuestDecorator<TValue, TGuestDecorated>;
+  /**
+   * When `true`, the {@link ShareableHost} is created synchronously during the
+   * call to `createShareable` instead of lazily on first access. Use this when
+   * the host initialization triggers side effects that must happen eagerly.
+   *
+   * @defaultValue `false`
+   */
+  initSynchronously?: boolean;
+};

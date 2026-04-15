@@ -52,6 +52,8 @@ const unpack = (value: { constructorName: string }) => {
 };
 
 describe('Test CustomSerializables', () => {
+  const workletRuntime = createWorkletRuntime({ name: 'test' });
+
   test('registers without failure', () => {
     // Arrange
     let error = false;
@@ -132,12 +134,11 @@ describe('Test CustomSerializables', () => {
   test('serializes custom object on RN Runtime and deserializes on custom Worklet Runtime', async () => {
     // Arrange
     const testObject = GlobalConstructorCarrierFactory(Array);
-    const runtime = createWorkletRuntime();
     const pass = createSynchronizable(false);
     const notificationName = 'done';
 
     // Act
-    scheduleOnRuntime(runtime, () => {
+    scheduleOnRuntime(workletRuntime, () => {
       'worklet';
       pass.setBlocking(testObject.constructor === Array);
       notify(notificationName);
@@ -151,14 +152,13 @@ describe('Test CustomSerializables', () => {
 
   test('serializes custom object on custom Worklet Runtime and deserializes on RN', async () => {
     // Arrange
-    const runtime = createWorkletRuntime();
     let testObject: IGlobalConstructorCarrier | null = null;
     const notificationName = 'done';
 
     const setReturnValue = (value: any) => (testObject = value);
 
     // Act
-    scheduleOnRuntime(runtime, () => {
+    scheduleOnRuntime(workletRuntime, () => {
       'worklet';
       const testObject = GlobalConstructorCarrierFactory(Array);
       scheduleOnRN(setReturnValue, testObject);
@@ -175,7 +175,7 @@ describe('Test CustomSerializables', () => {
 
   test('propagates new registrations to all runtimes', async () => {
     // Arrange
-    const preRuntime = createWorkletRuntime();
+    const preRuntime = workletRuntime;
 
     type IGlobalConstructorCarrier2 = {
       __isCustomObject2: true;

@@ -7,9 +7,9 @@ import Paddings from './Paddings';
 
 export default {
   Dimensions,
+  flexBox,
   Insets,
   Margins,
-  Paddings,
-  flexBox,
   others,
+  Paddings,
 };

@@ -1,10 +1,9 @@
 'use strict';
 
-import { callMicrotasks } from '../../threads';
-
 export function setupRequestAnimationFrame() {
   'worklet';
   const nativeRequestAnimationFrame = globalThis.requestAnimationFrame;
+  const callMicrotasks = globalThis.__callMicrotasks;
 
   let queuedCallbacks: ((timestamp: number) => void)[] = [];
   let queuedCallbacksBegin = 0;
@@ -14,9 +13,9 @@ export function setupRequestAnimationFrame() {
   let flushedCallbacksBegin = 0;
   let flushedCallbacksEnd = 0;
 
-  let flushRequested = false;
+  let queuedFinalizers: (() => void)[] = [];
 
-  globalThis.__flushAnimationFrame = (timestamp: number) => {
+  function executeQueue(timestamp: number) {
     flushedCallbacks = queuedCallbacks;
     queuedCallbacks = [];
 
@@ -31,28 +30,23 @@ export function setupRequestAnimationFrame() {
     flushedCallbacksBegin = flushedCallbacksEnd;
 
     callMicrotasks();
-  };
 
-  globalThis.requestAnimationFrame = (
-    callback: (timestamp: number) => void
-  ): number => {
-    const handle = queuedCallbacksEnd++;
-
-    queuedCallbacks.push(callback);
-    if (!flushRequested) {
-      flushRequested = true;
-
-      nativeRequestAnimationFrame((timestamp) => {
-        flushRequested = false;
-        globalThis.__frameTimestamp = timestamp;
-        globalThis.__flushAnimationFrame(timestamp);
-        globalThis.__frameTimestamp = undefined;
-      });
+    const finalizers = queuedFinalizers;
+    queuedFinalizers = [];
+    for (const finalizer of finalizers) {
+      finalizer();
     }
-    return handle;
-  };
+  }
 
-  globalThis.cancelAnimationFrame = (handle: number) => {
+  function requestAnimationFrame(
+    callback: (timestamp: number) => void
+  ): number {
+    const handle = queuedCallbacksEnd++;
+    queuedCallbacks.push(callback);
+    return handle;
+  }
+
+  function cancelAnimationFrame(handle: number) {
     if (handle < flushedCallbacksBegin || handle >= queuedCallbacksEnd) {
       return;
     }
@@ -62,5 +56,33 @@ export function setupRequestAnimationFrame() {
     } else {
       queuedCallbacks[handle - queuedCallbacksBegin] = () => {};
     }
+  }
+
+  function nativeFlushQueue(timestamp: number) {
+    flushQueue(timestamp);
+
+    /* Schedule next frame */
+    nativeRequestAnimationFrame(nativeFlushQueue);
+  }
+
+  function flushQueue(timestamp: number) {
+    globalThis.__frameTimestamp = timestamp;
+    executeQueue(timestamp);
+    globalThis.__frameTimestamp = undefined;
+  }
+
+  globalThis.requestAnimationFrame = requestAnimationFrame;
+  globalThis.cancelAnimationFrame =
+    cancelAnimationFrame as typeof globalThis.cancelAnimationFrame;
+  globalThis.requestAnimationFrameFinalizer = (callback: () => void) => {
+    queuedFinalizers.push(callback);
+  };
+
+  /* Start the loop */
+  nativeRequestAnimationFrame(nativeFlushQueue);
+
+  // TODO: Remove it after support for Reanimated 4.3 is dropped.
+  globalThis.__flushAnimationFrame = (eventTimestamp: number) => {
+    flushQueue(eventTimestamp);
   };
 }

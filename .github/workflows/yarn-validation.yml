@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - '.github/workflows/yarn-validation.yml'
+      - 'scripts/disallow-non-exact.js'
       - '**/package.json'
       - '**/yarn.lock'
   merge_group:
@@ -15,6 +16,7 @@ on:
       - main
     paths:
       - '.github/workflows/yarn-validation.yml'
+      - 'scripts/disallow-non-exact.js'
       - '**/package.json'
       - '**/yarn.lock'
   workflow_call:
@@ -32,7 +34,7 @@ jobs:
 
       - name: Check if all versions are exact
         working-directory: ${{ github.workspace }}
-        run: ./scripts/disallow-non-exact.sh
+        run: node ./scripts/disallow-non-exact.js
 
       - name: Install monorepo dependencies
         run: yarn install --immutable
