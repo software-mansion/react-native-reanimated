@@ -15,6 +15,7 @@ import * as Animated from './Animated';
 
 export default Animated;
 
+export { createAnimatedComponent } from './Animated';
 export type {
   DecayAnimation,
   DelayAnimation,
@@ -103,10 +104,7 @@ export {
   isReanimated3,
   makeMutable,
 } from './core';
-export {
-  createAnimatedComponent,
-  NativeEventsManager,
-} from './createAnimatedComponent';
+export { NativeEventsManager } from './createAnimatedComponent';
 export * from './css';
 export type { EasingFunctionFactory } from './Easing';
 export { Easing } from './Easing';
