@@ -10,20 +10,17 @@ bool Quaternion::operator==(const Quaternion &other) const {
 #ifndef NDEBUG
 
 std::ostream &operator<<(std::ostream &os, const Quaternion &quaternion) {
-  os << "Quaternion(" << quaternion.x << ", " << quaternion.y << ", "
-     << quaternion.z << ", " << quaternion.w << ")";
+  os << "Quaternion(" << quaternion.x << ", " << quaternion.y << ", " << quaternion.z << ", " << quaternion.w << ")";
   return os;
 }
 
 #endif // NDEBUG
 
-Quaternion Quaternion::interpolate(const double t, const Quaternion &other)
-    const {
+Quaternion Quaternion::interpolate(const double t, const Quaternion &other) const {
   const double kEpsilon = 1e-5;
   Quaternion copy = *this;
 
-  double cosHalfAngle =
-      copy.x * other.x + copy.y * other.y + copy.z * other.z + copy.w * other.w;
+  double cosHalfAngle = copy.x * other.x + copy.y * other.y + copy.z * other.z + copy.w * other.w;
 
   if (cosHalfAngle < 0.0) {
     copy.x = -copy.x;

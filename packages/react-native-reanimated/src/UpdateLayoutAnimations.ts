@@ -57,6 +57,7 @@ export let updateLayoutAnimations: (
   type: LayoutAnimationType,
   config?: Keyframe | LayoutAnimationFunction,
   isUnmounting?: boolean,
+  sharedTransitionTag?: string,
   rawConfig?: AnimationRawConfig
 ) => void;
 
@@ -66,12 +67,20 @@ if (SHOULD_BE_USE_WEB) {
   };
 } else {
   const updateLayoutAnimationsManager = createUpdateManager();
-  updateLayoutAnimations = (viewTag, type, config, isUnmounting, rawConfig) => {
-    return updateLayoutAnimationsManager.update(
+  updateLayoutAnimations = (
+    viewTag,
+    type,
+    config,
+    isUnmounting,
+    sharedTransitionTag,
+    rawConfig
+  ) =>
+    updateLayoutAnimationsManager.update(
       {
         viewTag,
         type,
         config: config ? createSerializable(config) : undefined,
+        sharedTransitionTag,
         rawConfig,
       },
       isUnmounting

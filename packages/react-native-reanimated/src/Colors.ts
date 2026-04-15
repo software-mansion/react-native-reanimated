@@ -354,16 +354,6 @@ export const ColorProperties = [
   'stroke',
 ];
 
-/* copied from:
- * https://github.com/facebook/react-native/blob/v0.81.0/packages/react-native/Libraries/StyleSheet/PlatformColorValueTypesIOS.d.ts
- */
-export const DynamicColorIOSProperties = [
-  'light',
-  'dark',
-  'highContrastLight',
-  'highContrastDark',
-] as const;
-
 export function normalizeColor(color: unknown): number | null {
   'worklet';
 
@@ -385,7 +375,7 @@ export function normalizeColor(color: unknown): number | null {
     return Number.parseInt(match[1] + 'ff', 16) >>> 0;
   }
 
-  if (names[color] !== undefined) {
+  if (color in names) {
     return names[color];
   }
 
@@ -538,8 +528,8 @@ export const rgbaColor = (
   alpha = 1
 ): number | string => {
   'worklet';
-  // Replace tiny values like 1.234e-11 with 0:
-  const safeAlpha = alpha < 0.001 ? 0 : alpha;
+  // Round alpha to 3 decimal places to avoid floating point precision issues
+  const safeAlpha = Math.round(alpha * 1000) / 1000;
   return `rgba(${r}, ${g}, ${b}, ${safeAlpha})`;
 };
 
@@ -632,12 +622,10 @@ export const hsvToColor = (
   return rgbaColor(r, g, b, a);
 };
 
-export function processColorInitially(
-  color: unknown
-): number | null | undefined {
+export function processColorInitially(color: unknown): number | null {
   'worklet';
   if (color === null || color === undefined) {
-    return color;
+    return null;
   }
 
   let colorNumber: number;
@@ -646,12 +634,9 @@ export function processColorInitially(
     colorNumber = color;
   } else {
     const normalizedColor = normalizeColor(color);
-    if (normalizedColor === null || normalizedColor === undefined) {
-      return undefined;
-    }
 
     if (typeof normalizedColor !== 'number') {
-      return null;
+      return normalizedColor;
     }
 
     colorNumber = normalizedColor;
@@ -660,19 +645,20 @@ export function processColorInitially(
   return ((colorNumber << 24) | (colorNumber >>> 8)) >>> 0; // alpha rgb
 }
 
-export function isColor(value: unknown): boolean {
+export function isColor(value: unknown): value is string {
   'worklet';
   if (typeof value !== 'string') {
     return false;
   }
-  return processColorInitially(value) != null;
+  const processedColor = processColorInitially(value);
+  return processedColor !== undefined && processedColor !== null;
 }
 
 export type ParsedColorArray = [number, number, number, number];
 
 export function convertToRGBA(color: unknown): ParsedColorArray {
   'worklet';
-  const processedColor = processColorInitially(color)!; // alpha rgb;
+  const processedColor = processColorInitially(color) as number; // alpha rgb;
   const a = (processedColor >>> 24) / 255;
   const r = ((processedColor << 8) >>> 24) / 255;
   const g = ((processedColor << 16) >>> 24) / 255;

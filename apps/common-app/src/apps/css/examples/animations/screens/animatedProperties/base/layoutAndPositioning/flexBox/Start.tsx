@@ -2,9 +2,10 @@ import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { ExamplesScreen, VerticalExampleCard } from '@/apps/css/components';
+import type { ExampleScreenProps } from '@/apps/css/navigation/types';
 import { colors, radius, sizes } from '@/theme';
 
-export default function Start() {
+export default function Start({ labelTypes }: ExampleScreenProps) {
   return (
     <ExamplesScreen<{ direction: 'ltr' | 'rtl' }>
       CardComponent={VerticalExampleCard}
@@ -44,7 +45,7 @@ export default function Start() {
               title: 'Right to Left Layout',
             },
           ],
-          labelTypes: ['iOS', 'Android'],
+          labelTypes,
           title: 'Start',
         },
       ]}

@@ -1,9 +1,9 @@
 #pragma once
 
+#include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/core/CSSTransition.h>
-#include <reanimated/CSS/registries/StaticPropsRegistry.h>
+#include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/CSS/utils/DelayedItemsManager.h>
-#include <reanimated/CSS/utils/props.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
@@ -16,19 +16,16 @@
 
 namespace reanimated::css {
 
-class CSSTransitionsRegistry
-    : public UpdatesRegistry,
-      public std::enable_shared_from_this<CSSTransitionsRegistry> {
+class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared_from_this<CSSTransitionsRegistry> {
  public:
   CSSTransitionsRegistry(
-      const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
-      const GetAnimationTimestampFunction &getCurrentTimestamp);
+      const GetAnimationTimestampFunction &getCurrentTimestamp,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
   bool isEmpty() const override;
   bool hasUpdates() const;
 
-  void add(const std::shared_ptr<CSSTransition> &transition);
-  void updateSettings(Tag viewTag, const PartialCSSTransitionConfig &config);
+  void run(jsi::Runtime &rt, const std::shared_ptr<const ShadowNode> &shadowNode, const CSSTransitionConfig &config);
   void remove(Tag viewTag) override;
 
   void update(double timestamp);
@@ -37,7 +34,7 @@ class CSSTransitionsRegistry
   using Registry = std::unordered_map<Tag, std::shared_ptr<CSSTransition>>;
 
   const GetAnimationTimestampFunction &getCurrentTimestamp_;
-  const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
+  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   Registry registry_;
 
@@ -45,12 +42,8 @@ class CSSTransitionsRegistry
   DelayedItemsManager<Tag> delayedTransitionsManager_;
 
   void activateDelayedTransitions(double timestamp);
-  void scheduleOrActivateTransition(
-      const std::shared_ptr<CSSTransition> &transition);
-  PropsObserver createPropsObserver(Tag viewTag);
-  void updateInUpdatesRegistry(
-      const std::shared_ptr<CSSTransition> &transition,
-      const folly::dynamic &updates);
+  void scheduleOrActivateTransition(const std::shared_ptr<CSSTransition> &transition);
+  void updateInUpdatesRegistry(const std::shared_ptr<CSSTransition> &transition, const folly::dynamic &updates);
 };
 
 } // namespace reanimated::css

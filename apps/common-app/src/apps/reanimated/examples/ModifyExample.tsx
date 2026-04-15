@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import { useDerivedValue, useSharedValue } from 'react-native-reanimated';
-import { runOnUI } from 'react-native-worklets';
+import { scheduleOnUI } from 'react-native-worklets';
 
 export default function ModifyExample() {
   const sv = useSharedValue([1]);
@@ -24,9 +24,9 @@ export default function ModifyExample() {
 
   const handleRead = () => {
     console.log('JS', sv.value);
-    runOnUI(() => {
+    scheduleOnUI(() => {
       console.log('UI', sv.value);
-    })();
+    });
   };
 
   return (

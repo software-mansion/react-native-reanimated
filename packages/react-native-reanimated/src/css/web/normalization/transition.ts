@@ -1,11 +1,7 @@
 'use strict';
-import type { AnyRecord } from '../../../common';
+import { type AnyRecord, convertPropertyToArray } from '../../../common';
 import type { CSSTransitionProp, CSSTransitionProperties } from '../../types';
-import {
-  convertPropertyToArray,
-  parseSingleTransitionShorthand,
-  splitByComma,
-} from '../../utils';
+import { parseSingleTransitionShorthand, splitByComma } from '../../utils';
 
 type ExpandedCSSTransitionConfigProperties = Record<
   Exclude<CSSTransitionProp, 'transition'>,
@@ -21,7 +17,7 @@ const createEmptyTransitionConfig =
     transitionBehavior: [],
   });
 
-function parseTransitionShorthand(value: string) {
+export function parseTransitionShorthand(value: string) {
   return splitByComma(value).reduce<ExpandedCSSTransitionConfigProperties>(
     (acc, part) => {
       const result = parseSingleTransitionShorthand(part);

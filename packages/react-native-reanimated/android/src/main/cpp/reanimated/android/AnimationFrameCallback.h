@@ -11,8 +11,7 @@ using namespace facebook::jni;
 
 class AnimationFrameCallback : public HybridClass<AnimationFrameCallback> {
  public:
-  static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/nativeProxy/AnimationFrameCallback;";
+  static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/nativeProxy/AnimationFrameCallback;";
 
   void onAnimationFrame(double timestampMs) {
     callback_(timestampMs);
@@ -20,16 +19,14 @@ class AnimationFrameCallback : public HybridClass<AnimationFrameCallback> {
 
   static void registerNatives() {
     javaClassStatic()->registerNatives({
-        makeNativeMethod(
-            "onAnimationFrame", AnimationFrameCallback::onAnimationFrame),
+        makeNativeMethod("onAnimationFrame", AnimationFrameCallback::onAnimationFrame),
     });
   }
 
  private:
   friend HybridBase;
 
-  explicit AnimationFrameCallback(std::function<void(double)> callback)
-      : callback_(std::move(callback)) {}
+  explicit AnimationFrameCallback(std::function<void(double)> callback) : callback_(std::move(callback)) {}
 
   std::function<void(double)> callback_;
 };

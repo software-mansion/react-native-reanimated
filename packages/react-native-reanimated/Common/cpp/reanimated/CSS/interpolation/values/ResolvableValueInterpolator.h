@@ -15,15 +15,13 @@ namespace reanimated::css {
  * can occur.
  */
 template <typename... AllowedTypes>
-class ResolvableValueInterpolator final
-    : public SimpleValueInterpolator<AllowedTypes...> {
+class ResolvableValueInterpolator final : public SimpleValueInterpolator<AllowedTypes...> {
   static_assert(
       (... && std::is_base_of<CSSValue, AllowedTypes>::value),
       "[Reanimated] ResolvableValueInterpolator: All interpolated types must inherit from CSSValue");
 
  public:
-  using ValueType =
-      typename SimpleValueInterpolator<AllowedTypes...>::ValueType;
+  using ValueType = typename SimpleValueInterpolator<AllowedTypes...>::ValueType;
 
   explicit ResolvableValueInterpolator(
       const PropertyPath &propertyPath,

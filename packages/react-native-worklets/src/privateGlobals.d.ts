@@ -3,12 +3,16 @@
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
 import type { callGuardDEV } from './callGuard';
-import type { reportFatalRemoteError } from './errors';
+import type { reportFatalRemoteError } from './debug/errors';
+import type { CustomSerializableUnpacker } from './memory/customSerializableUnpacker';
+import type { makeShareableCloneOnUIRecursive } from './memory/serializable';
+import type { ShareableGuestUnpacker } from './memory/shareableGuestUnpacker';
+import type { ShareableHostUnpacker } from './memory/shareableHostUnpacker';
+import type { SynchronizableUnpacker } from './memory/synchronizableUnpacker';
+import type { CustomSerializationRegistry } from './memory/types';
 import type { Queue } from './runLoop/workletRuntime/taskQueue';
-import type { SynchronizableUnpacker } from './synchronizableUnpacker';
-import type { IWorkletsErrorConstructor } from './WorkletsError';
-import type { WorkletsModuleProxy } from './WorkletsModule';
-import type { ValueUnpacker } from './workletTypes';
+import type { ValueUnpacker } from './types';
+import type { WorkletsModuleProxy } from './WorkletsModule/workletsModuleProxy';
 
 declare global {
   /** The only runtime-available require method is `__r` defined by Metro. */
@@ -16,8 +20,8 @@ declare global {
     Record<string, unknown>;
 
   var _toString: (value: unknown) => string;
-  var __workletsModuleProxy: WorkletsModuleProxy | undefined;
-  var _WORKLETS_BUNDLE_MODE: boolean | undefined;
+  var __workletsModuleProxy: WorkletsModuleProxy;
+  var _WORKLETS_BUNDLE_MODE_ENABLED: boolean | undefined;
   var _WORKLETS_VERSION_CPP: string | undefined;
   var _WORKLETS_VERSION_JS: string | undefined;
   var _createSerializable: <T>(
@@ -53,6 +57,8 @@ declare global {
   var _createSerializableSynchronizable: (
     value: object
   ) => FlatShareableRef<object>;
+  /** Only outside of Bundle Mode on Worklet Runtimes. */
+  var __serializer: typeof makeShareableCloneOnUIRecursive;
   var __callMicrotasks: () => void;
   var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
   var _scheduleRemoteFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
@@ -60,19 +66,49 @@ declare global {
   var __reportFatalRemoteError: typeof reportFatalRemoteError | undefined;
   var __valueUnpacker: ValueUnpacker;
   var __synchronizableUnpacker: SynchronizableUnpacker;
+  var __customSerializationRegistry: CustomSerializationRegistry;
+  var __customSerializableUnpacker: CustomSerializableUnpacker;
   var __callGuardDEV: typeof callGuardDEV | undefined;
+  /**
+   * @deprecated Kept for backwards compatibility. Remove it after support for
+   *   Reanimated 4.3 is dropped. Reanimated uses it to handle event updates
+   *   synchronously.
+   */
   var __flushAnimationFrame: (timestamp: number) => void;
   var __frameTimestamp: number | undefined;
   var _log: (value: unknown) => void;
+  var _startProfiling: (meanHzFreq?: number) => void;
+  var _stopProfiling: () => string;
+  var _beginSection: (name: string) => void;
+  var _endSection: () => void;
   var _getAnimationTimestamp: () => number;
   var _scheduleOnRuntime: (
     runtime: WorkletRuntime,
     worklet: SerializableRef<() => void>
   ) => void;
+  /**
+   * @deprecated Kept for backwards compatibility. Remove it after support for
+   *   Reanimated 4.3 is dropped. Reanimated uses it to handle event updates
+   *   synchronously.
+   */
   var _microtaskQueueFinalizers: (() => void)[];
-  var WorkletsError: IWorkletsErrorConstructor;
   var _scheduleTimeoutCallback: (delay: number, handlerId: number) => void;
   var __runTimeoutCallback: (handlerId: number) => void;
-  var __flushMicrotasks: () => void;
   var _taskQueue: Queue;
+  /** Only in Debug builds. */
+  var __hasNativeState: (value: object) => boolean;
+  /** Only in Debug builds. */
+  var __isHostObject: (value: object) => boolean;
+  var __shareableHostUnpacker: ShareableHostUnpacker<unknown, unknown, unknown>;
+  var __shareableGuestUnpacker: ShareableGuestUnpacker<
+    unknown,
+    unknown,
+    unknown
+  >;
+  /** Only in Bundle Mode on Worklet Runtimes. */
+  var TurboModules: Map<string, unknown>;
+  interface NodeRequire {
+    resolveWeak(id: string): number;
+    getModules(): Map<number, unknown>;
+  }
 }

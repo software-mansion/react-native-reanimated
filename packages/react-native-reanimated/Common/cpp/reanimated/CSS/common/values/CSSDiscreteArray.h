@@ -29,16 +29,12 @@ struct CSSDiscreteArray : public CSSSimpleValue<CSSDiscreteArray<TValue>> {
 
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
-  CSSDiscreteArray<TValue> interpolate(
-      double progress,
-      const CSSDiscreteArray<TValue> &other) const override;
+  CSSDiscreteArray<TValue> interpolate(double progress, const CSSDiscreteArray<TValue> &other) const override;
 
   bool operator==(const CSSDiscreteArray<TValue> &other) const;
 
 #ifndef NDEBUG
-  friend std::ostream &operator<<(
-      std::ostream &os,
-      const CSSDiscreteArray<TValue> &arrayValue);
+  friend std::ostream &operator<<(std::ostream &os, const CSSDiscreteArray<TValue> &arrayValue);
 #endif // NDEBUG
 };
 

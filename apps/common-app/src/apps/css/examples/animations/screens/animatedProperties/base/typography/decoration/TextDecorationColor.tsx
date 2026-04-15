@@ -3,9 +3,12 @@ import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { ExamplesScreen, VerticalExampleCard } from '@/apps/css/components';
+import type { ExampleScreenProps } from '@/apps/css/navigation/types';
 import { colors } from '@/theme';
 
-export default function TextDecorationStyle() {
+export default function TextDecorationStyle({
+  labelTypes,
+}: ExampleScreenProps) {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
       CardComponent={VerticalExampleCard}
@@ -38,8 +41,7 @@ export default function TextDecorationStyle() {
               title: 'Changing Text Decoration Color',
             },
           ],
-
-          labelTypes: ['iOS', 'web'],
+          labelTypes,
           title: 'Text Decoration Color',
         },
       ]}

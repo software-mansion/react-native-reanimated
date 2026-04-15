@@ -3,6 +3,7 @@
 #include <reanimated/CSS/interpolation/transforms/operations/translate.h>
 
 #include <memory>
+#include <string>
 
 namespace reanimated::css {
 
@@ -11,8 +12,7 @@ TranslateOperationBase<TOperation>::TranslateOperationBase(double value)
     : TransformOperationBase<TOperation, CSSLength>(CSSLength(value)) {}
 
 template <TransformOp TOperation>
-TranslateOperationBase<TOperation>::TranslateOperationBase(
-    const std::string &value)
+TranslateOperationBase<TOperation>::TranslateOperationBase(const std::string &value)
     : TransformOperationBase<TOperation, CSSLength>(CSSLength(value)) {}
 
 template <TransformOp TOperation>
@@ -21,25 +21,16 @@ bool TranslateOperationBase<TOperation>::shouldResolve() const {
 }
 
 template <TransformOp TOperation>
-folly::dynamic TranslateOperationBase<TOperation>::valueToDynamic() const {
-  return this->value.toDynamic();
-}
-
-template <TransformOp TOperation>
-TransformMatrix::Shared TranslateOperationBase<TOperation>::toMatrix(
-    bool force3D) const {
+TransformMatrix::Shared TranslateOperationBase<TOperation>::toMatrix(bool force3D) const {
   if (shouldResolve()) {
     throw std::runtime_error(
-        "[Reanimated] Cannot convert unresolved relative translate value to matrix: " +
-        this->value.toString());
+        "[Reanimated] Cannot convert unresolved relative translate value to matrix: " + this->value.toString());
   }
 
   if (force3D) {
-    return std::make_shared<TransformMatrix3D>(
-        TransformMatrix3D::create<TOperation>(this->value.value));
+    return std::make_shared<TransformMatrix3D>(TransformMatrix3D::create<TOperation>(this->value.value));
   }
-  return std::make_shared<TransformMatrix2D>(
-      TransformMatrix2D::create<TOperation>(this->value.value));
+  return std::make_shared<TransformMatrix2D>(TransformMatrix2D::create<TOperation>(this->value.value));
 }
 
 template struct TranslateOperationBase<TransformOp::TranslateX>;

@@ -2,9 +2,6 @@
 
 namespace reanimated {
 
-void setGestureState(
-    id<RNGestureHandlerStateManager> gestureHandlerStateManager,
-    int handlerTag,
-    int newState);
+void setGestureState(id<RNGestureHandlerStateManager> gestureHandlerStateManager, int handlerTag, int newState);
 
 } // namespace reanimated

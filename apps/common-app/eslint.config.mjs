@@ -1,39 +1,56 @@
+import { fixupPluginRules } from '@eslint/compat';
 import jsEslint from '@eslint/js';
-import tsEslint from 'typescript-eslint';
-import perfectionist from 'eslint-plugin-perfectionist';
-import reactNative from 'eslint-plugin-react-native';
-import react from 'eslint-plugin-react';
-import globals from 'globals';
 import importPlugin from 'eslint-plugin-import';
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
-import reactHooks from 'eslint-plugin-react-hooks';
 import noRelativeImportPaths from 'eslint-plugin-no-relative-import-paths';
+import perfectionist from 'eslint-plugin-perfectionist';
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import react from 'eslint-plugin-react';
+// eslint-disable-next-line import/default
+import reactHooks from 'eslint-plugin-react-hooks';
+// @ts-expect-error eslint-plugin-react-native has no types.
+import reactNative from 'eslint-plugin-react-native';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import unusedImports from 'eslint-plugin-unused-imports';
-import { fixupPluginRules } from '@eslint/compat';
-import { globalIgnores } from 'eslint/config';
+import globals from 'globals';
+import { config, configs, parser } from 'typescript-eslint';
 
 /** @type {import('typescript-eslint').ConfigWithExtends[]} */
-export default tsEslint.config(
+export default config(
   jsEslint.configs.recommended,
   react.configs.flat.recommended,
   importPlugin.flatConfigs.recommended,
   eslintPluginPrettierRecommended,
   {
     languageOptions: {
+      parserOptions: {
+        parser: parser,
+        project: [
+          './tsconfig.json',
+          './tsconfig.web.json',
+          './../../tsconfig.json',
+        ],
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
+    languageOptions: {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       globals: {
         React: true,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         ...reactNative.environments['react-native']['react-native'],
         ...globals.node,
       },
     },
     plugins: {
       'no-relative-import-paths': noRelativeImportPaths,
+      perfectionist,
+      'react-hooks': reactHooks,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       'react-native': fixupPluginRules(reactNative),
       'simple-import-sort': simpleImportSort,
       'unused-imports': unusedImports,
-      perfectionist,
-      'react-hooks': reactHooks,
     },
     rules: {
       camelcase: [
@@ -63,6 +80,7 @@ export default tsEslint.config(
           allowImplicit: false,
         },
       ],
+      'import/no-unresolved': 'warn',
       'lines-around-comment': ['error'],
       'new-cap': [
         'error',
@@ -137,7 +155,6 @@ export default tsEslint.config(
       'no-lone-blocks': ['error'],
       'no-lonely-if': ['error'],
       'no-loop-func': ['error'],
-      'no-var': 'error',
       'no-new': ['error'],
       'no-new-object': ['error'],
       'no-new-wrappers': ['error'],
@@ -155,7 +172,7 @@ export default tsEslint.config(
       'no-regex-spaces': ['error'],
       'no-relative-import-paths/no-relative-import-paths': [
         'warn',
-        { allowSameFolder: true, allowedDepth: 1, prefix: '@', rootDir: 'src' },
+        { allowedDepth: 1, allowSameFolder: true, prefix: '@', rootDir: 'src' },
       ],
       'no-return-assign': ['error', 'except-parens'],
       'no-script-url': ['error'],
@@ -169,7 +186,6 @@ export default tsEslint.config(
       'no-undef-init': ['error'],
       'no-underscore-dangle': ['error'],
       'no-unexpected-multiline': ['error'],
-      'import/no-unresolved': 'warn',
       'no-unreachable-loop': [
         'error',
         {
@@ -185,6 +201,7 @@ export default tsEslint.config(
         },
       ],
       'no-useless-escape': ['error'],
+      'no-var': 'error',
       'no-void': [
         'error',
         {
@@ -219,8 +236,13 @@ export default tsEslint.config(
       'perfectionist/sort-named-exports': 'off',
       'perfectionist/sort-named-imports': 'off',
       'perfectionist/sort-object-types': 'off',
+      'perfectionist/sort-objects': 'warn',
       'prettier/prettier': 'error',
       radix: ['error', 'as-needed'],
+      'react-hooks/exhaustive-deps': 'warn',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-native/no-unused-styles': 'warn',
+      'react-native/sort-styles': 'off', // conflicts with perfectionist/sort-objects
       'react/display-name': 'error',
       'react/jsx-curly-brace-presence': ['error', 'never'],
       'react/jsx-sort-props': [
@@ -236,10 +258,6 @@ export default tsEslint.config(
       ],
       'react/prop-types': 'off',
       'react/react-in-jsx-scope': 'off',
-      'react-hooks/exhaustive-deps': 'warn',
-      'react-hooks/rules-of-hooks': 'error',
-      'react-native/no-unused-styles': 'warn',
-      'react-native/sort-styles': 'warn',
       'require-atomic-updates': ['error'],
       'require-await': ['error'],
       'simple-import-sort/exports': 'warn',
@@ -267,7 +285,6 @@ export default tsEslint.config(
       'import/resolver': {
         typescript: {
           alwaysTryTypes: true,
-          project: './tsconfig.json',
         },
       },
       react: {
@@ -276,27 +293,11 @@ export default tsEslint.config(
     },
   },
   {
-    files: ['**/*.ts', '**/*.tsx'],
-    extends: [tsEslint.configs.recommendedTypeChecked],
-    languageOptions: {
-      parserOptions: {
-        parser: tsEslint.parser,
-        project: './tsconfig.json',
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
+    extends: [configs.recommendedTypeChecked],
     rules: {
       '@typescript-eslint/array-type': ['error', { default: 'generic' }],
       '@typescript-eslint/consistent-type-exports': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          caughtErrorsIgnorePattern: '^_',
-        },
-      ],
       '@typescript-eslint/member-ordering': [
         'error',
         { default: ['signature', 'method', 'constructor', 'field'] },
@@ -316,6 +317,17 @@ export default tsEslint.config(
         },
       ],
       '@typescript-eslint/no-shadow': 'error',
+      '@typescript-eslint/no-unsafe-assignment': 'error',
+      '@typescript-eslint/no-unsafe-call': 'error',
+      '@typescript-eslint/no-unsafe-member-access': 'error',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
+      ],
       '@typescript-eslint/prefer-nullish-coalescing': [
         'error',
         {
@@ -323,11 +335,7 @@ export default tsEslint.config(
           ignoreMixedLogicalExpressions: true,
         },
       ],
-      '@typescript-eslint/no-unsafe-call': 'error',
-      '@typescript-eslint/no-unsafe-assignment': 'error',
-      '@typescript-eslint/no-unsafe-member-access': 'error',
       'no-underscore-dangle': 'error',
     },
-  },
-  globalIgnores(['**/eslint.config.mjs'])
+  }
 );

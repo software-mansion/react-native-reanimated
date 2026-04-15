@@ -5,31 +5,34 @@
 #include <jsireact/JSIExecutor.h>
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
+#include <worklets/SharedItems/MemoryManager.h>
+#include <worklets/SharedItems/UnpackerLoader.h>
+#include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/JSScheduler.h>
+#include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
+#include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
-#include <string>
 
 namespace worklets {
 
-class WorkletsModuleProxy
-    : public std::enable_shared_from_this<WorkletsModuleProxy> {
+class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModuleProxy> {
  public:
+  void start();
+
   explicit WorkletsModuleProxy(
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       std::function<bool()> &&isJavaScriptQueue,
-      std::function<void(std::function<void(const double)>)>
-          &&forwardedRequestAnimationFrame,
-      const std::shared_ptr<const BigStringBuffer> &script,
-      const std::string &sourceUrl);
+      const std::shared_ptr<RuntimeBindings> &runtimeBindings,
+      const BundleModeConfig &bundleModeConfig);
 
   ~WorkletsModuleProxy();
 
@@ -49,13 +52,11 @@ class WorkletsModuleProxy
     return jsLogger_;
   }
 
-  [[nodiscard]] inline std::shared_ptr<WorkletRuntime> getUIWorkletRuntime()
-      const {
+  [[nodiscard]] inline std::shared_ptr<WorkletRuntime> getUIWorkletRuntime() const {
     return uiWorkletRuntime_;
   }
 
-  [[nodiscard]] std::shared_ptr<JSIWorkletsModuleProxy>
-  createJSIWorkletsModuleProxy() const;
+  [[nodiscard]] std::shared_ptr<JSIWorkletsModuleProxy> createJSIWorkletsModuleProxy() const;
 
   [[nodiscard]] inline bool isDevBundle() const {
     return isDevBundle_;
@@ -67,10 +68,13 @@ class WorkletsModuleProxy
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   const std::shared_ptr<JSLogger> jsLogger_;
-  const std::shared_ptr<const BigStringBuffer> script_;
-  const std::string sourceUrl_;
+  const std::shared_ptr<RuntimeBindings> runtimeBindings_;
+  const BundleModeConfig bundleModeConfig_;
+  const std::shared_ptr<MemoryManager> memoryManager_;
   const std::shared_ptr<RuntimeManager> runtimeManager_;
+  const std::shared_ptr<UnpackerLoader> unpackerLoader_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
+  const std::shared_ptr<JSIWorkletsModuleProxy> rnRuntimeProxy_;
   std::shared_ptr<AnimationFrameBatchinator> animationFrameBatchinator_;
 #ifndef NDEBUG
   SingleInstanceChecker<WorkletsModuleProxy> singleInstanceChecker_;

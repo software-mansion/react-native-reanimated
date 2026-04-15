@@ -16,7 +16,18 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "checkJs": true,
-    "noEmit": true
+    "noEmit": true,
+    "moduleSuffixes": [
+      ".native.test",
+      ".native",
+      ".ios.test",
+      ".ios",
+      ".android.test",
+      ".android",
+      ".test",
+      ""
+    ]
   },
-  "exclude": ["**/eslint.config.mjs"]
+  "include": [".", "**/.*", ".github/**/*"],
+  "exclude": ["**/.worklets"]
 }

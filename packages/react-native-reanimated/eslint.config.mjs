@@ -13,9 +13,22 @@ import eslintConfig from '../../eslint.config.mjs';
 const config = tsEslint.config(
   ...eslintConfig,
   {
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+        project: [
+          './tsconfig.json',
+          './tsconfig.web.json',
+          '../../tsconfig.json',
+          './__tests__/tsconfig.json',
+          './__typetests__/tsconfig.json',
+        ],
+      },
+    },
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
       '@typescript-eslint/no-empty-function': 'error',
+      '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-expressions': 'error',
       'n/no-unpublished-import': [
         'warn',
@@ -26,11 +39,6 @@ const config = tsEslint.config(
     },
   },
   {
-    languageOptions: {
-      parserOptions: {
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
     plugins: {
       reanimated,
       'simple-import-sort': simpleImportSort,

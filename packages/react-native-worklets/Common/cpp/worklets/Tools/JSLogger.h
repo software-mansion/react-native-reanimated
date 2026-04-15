@@ -16,20 +16,14 @@ struct JSErrorData {
 
 class JSLogger {
  public:
-  explicit JSLogger(const std::shared_ptr<JSScheduler> &jsScheduler)
-      : jsScheduler_(jsScheduler) {}
+  explicit JSLogger(const std::shared_ptr<JSScheduler> &jsScheduler) : jsScheduler_(jsScheduler) {}
   void warnOnJS(const std::string &warning) const;
 
-  static void reportFatalErrorOnJS(
-      const std::shared_ptr<JSScheduler> &jsScheduler,
-      JSErrorData &&jsErrorData,
-      bool force = false);
+  static void
+  reportFatalErrorOnJS(const std::shared_ptr<JSScheduler> &jsScheduler, JSErrorData &&jsErrorData, bool force = false);
 
  private:
-  static void reportFatalErrorOnJS(
-      jsi::Runtime &rnRuntime,
-      const JSErrorData &jsErrorData,
-      bool force = false);
+  static void reportFatalErrorOnJS(jsi::Runtime &rnRuntime, const JSErrorData &jsErrorData, bool force = false);
 
   const std::shared_ptr<JSScheduler> jsScheduler_;
 };

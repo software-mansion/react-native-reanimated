@@ -1,16 +1,19 @@
 import {
   isSynchronizable,
   createSynchronizable,
-  runOnUI,
-  executeOnUIRuntimeSync,
-  runOnJS,
+  scheduleOnUI,
+  runOnUISync,
+  scheduleOnRN,
   createWorkletRuntime,
-  runOnRuntime,
+  scheduleOnRuntime,
   type Synchronizable,
+  runOnRuntimeSync,
+  type WorkletRuntime,
 } from 'react-native-worklets';
 import { describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
 
 const NOTIFICATION = 'NOTIFICATION';
+const workletRuntime = createWorkletRuntime({ name: 'test' });
 
 describe('Test Synchronizable creation and serialization', () => {
   test('createSynchronizable returns Synchronizable', () => {
@@ -21,9 +24,9 @@ describe('Test Synchronizable creation and serialization', () => {
 
   test('Synchronizable serializes correctly from RN Runtime to UI Runtime', () => {
     const synchronizable = createSynchronizable(0);
-    const value = executeOnUIRuntimeSync(() => {
+    const value = runOnUISync(() => {
       return synchronizable.getBlocking();
-    })();
+    });
 
     expect(value).toBe(0);
   });
@@ -38,14 +41,11 @@ describe('Test Synchronizable creation and serialization', () => {
     };
 
     // Act
-    const runtime = createWorkletRuntime({
-      name: 'test',
-    });
-    runOnRuntime(runtime, () => {
+    scheduleOnRuntime(workletRuntime, () => {
       'worklet';
       const value = synchronizable.getBlocking();
-      runOnJS(onJSCallback)(value);
-    })();
+      scheduleOnRN(onJSCallback, value);
+    });
     await waitForNotification(NOTIFICATION);
 
     // Assert
@@ -54,9 +54,9 @@ describe('Test Synchronizable creation and serialization', () => {
 
   test('Synchronizable serializes correctly from UI Runtime to RN runtime', () => {
     const synchronizable = createSynchronizable(0);
-    const synchronizableCopy = executeOnUIRuntimeSync(() => {
+    const synchronizableCopy = runOnUISync(() => {
       return synchronizable;
-    })();
+    });
 
     const value = synchronizableCopy.getBlocking();
     expect(value).toBe(0);
@@ -72,20 +72,17 @@ describe('Test Synchronizable creation and serialization', () => {
     };
 
     // Act
-    const runtime = createWorkletRuntime({
-      name: 'test',
-    });
-    runOnRuntime(runtime, () => {
+    scheduleOnRuntime(workletRuntime, () => {
       'worklet';
-      runOnJS(onJSCallback)(synchronizable);
-    })();
+      scheduleOnRN(onJSCallback, synchronizable);
+    });
     await waitForNotification(NOTIFICATION);
 
     const value = synchronizableCopy!.getBlocking();
     expect(value).toBe(42);
   });
 
-  // TODO: This test doesn't work because nested `runOnJS` isn't copied properly.
+  // TODO: This test doesn't work because nested `scheduleOnRN` isn't copied properly.
   // It will be fixed when BundleMode™ becomes the standard.
   // test('Synchronizable serializes correctly from UI Runtime to BG Runtime', async () => {
   //   const synchronizable = createSynchronizable(42);
@@ -100,12 +97,12 @@ describe('Test Synchronizable creation and serialization', () => {
   //   const runtime = createWorkletRuntime({
   //     name: 'test',
   //   });
-  //   runOnUI(() => {
-  //     runOnRuntime(runtime, () => {
+  //   scheduleOnUI(() => {
+  //     scheduleOnRuntime(runtime, () => {
   //       'worklet';
   //       const value = synchronizable.getBlocking();
-  //       console.log(runOnJS);
-  //       runOnJS(onJSCallback)(value);
+  //       console.log(scheduleOnRN);
+  //       scheduleOnRN(onJSCallback)(value);
   //     })();
   //   })();
 
@@ -157,28 +154,28 @@ function imperativeLockGetSet(synchronizable: Synchronizable<number>) {
 }
 
 function dispatch(
+  workletRuntime: WorkletRuntime,
   method: (synchronizable: Synchronizable<number>) => number,
   callbackRN: (value: number) => void,
   callbackUI: (value: number) => void,
   callbackBG: (value: number) => void,
 ) {
   const synchronizable = createSynchronizable(initialValue);
-  const runtime = createWorkletRuntime({ name: 'test' });
-  runOnRuntime(runtime, () => {
+  scheduleOnRuntime(workletRuntime, () => {
     'worklet';
     const value = method(synchronizable);
-    runOnJS(callbackBG)(value);
-  })();
+    scheduleOnRN(callbackBG, value);
+  });
 
-  runOnUI(() => {
+  scheduleOnUI(() => {
     'worklet';
     const value = method(synchronizable);
-    runOnJS(callbackUI)(value);
-  })();
+    scheduleOnRN(callbackUI, value);
+  });
 
   queueMicrotask(() => {
     const value = method(synchronizable);
-    runOnJS(callbackRN)(value);
+    scheduleOnRN(callbackRN, value);
   });
 }
 
@@ -209,7 +206,7 @@ describe('Test Synchronizable access', () => {
       }
     }
 
-    dispatch(getDirtySetBlocking, setValueRN, setValueUI, setValueBG);
+    dispatch(workletRuntime, getDirtySetBlocking, setValueRN, setValueUI, setValueBG);
 
     await waitForNotification(NOTIFICATION);
 
@@ -244,7 +241,7 @@ describe('Test Synchronizable access', () => {
       }
     }
 
-    dispatch(getBlockingSetBlocking, setValueRN, setValueUI, setValueBG);
+    dispatch(workletRuntime, getBlockingSetBlocking, setValueRN, setValueUI, setValueBG);
 
     await waitForNotification(NOTIFICATION);
 
@@ -279,7 +276,7 @@ describe('Test Synchronizable access', () => {
       }
     }
 
-    dispatch(transactionGetSet, setValueRN, setValueUI, setValueBG);
+    dispatch(workletRuntime, transactionGetSet, setValueRN, setValueUI, setValueBG);
 
     await waitForNotification(NOTIFICATION);
 
@@ -312,10 +309,56 @@ describe('Test Synchronizable access', () => {
       }
     }
 
-    dispatch(imperativeLockGetSet, setValueRN, setValueUI, setValueBG);
+    dispatch(workletRuntime, imperativeLockGetSet, setValueRN, setValueUI, setValueBG);
 
     await waitForNotification(NOTIFICATION);
 
     expect(Math.max(valueRN, valueUI, valueBG)).toBe(targetValue * 3);
+  });
+});
+
+describe('Test Synchronizable serialization', () => {
+  test('Synchronizable accepts primitives', () => {
+    const synchronizable = createSynchronizable(0);
+
+    // RN Runtime
+    synchronizable.setBlocking(1);
+    expect(synchronizable.getBlocking()).toBe(1);
+
+    // UI Runtime
+    runOnUISync(() => {
+      'worklet';
+      synchronizable.setBlocking(2);
+    });
+    expect(synchronizable.getBlocking()).toBe(2);
+
+    // Worker Runtime
+    runOnRuntimeSync(workletRuntime, () => {
+      'worklet';
+      synchronizable.setBlocking(3);
+    });
+    expect(synchronizable.getBlocking()).toBe(3);
+  });
+
+  test('Synchronizable accepts objects', () => {
+    const synchronizable = createSynchronizable({ a: 0 });
+
+    // RN Runtime
+    synchronizable.setBlocking({ a: 1 });
+    expect(synchronizable.getBlocking().a).toBe(1);
+
+    // UI Runtime
+    runOnUISync(() => {
+      'worklet';
+      synchronizable.setBlocking({ a: 2 });
+    });
+    expect(synchronizable.getBlocking().a).toBe(2);
+
+    // Worker Runtime
+    runOnRuntimeSync(workletRuntime, () => {
+      'worklet';
+      synchronizable.setBlocking({ a: 3 });
+    });
+    expect(synchronizable.getBlocking().a).toBe(3);
   });
 });

@@ -66,6 +66,25 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   return errorMessage === '';
 }
 
+export function safeMergeConfigs<TConfig extends object>(
+  defaults: TConfig,
+  userConfig?: Partial<TConfig>
+): TConfig {
+  'worklet';
+  if (!userConfig) {
+    return defaults;
+  }
+
+  const filtered = Object.fromEntries(
+    Object.entries(userConfig).filter(([, v]) => v !== undefined)
+  ) as Partial<TConfig>;
+
+  return {
+    ...defaults,
+    ...filtered,
+  };
+}
+
 function bisectRoot({
   min,
   max,

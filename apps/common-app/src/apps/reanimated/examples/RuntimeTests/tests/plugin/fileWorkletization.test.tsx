@@ -4,7 +4,7 @@ import { useSharedValue } from 'react-native-reanimated';
 
 import { describe, expect, getRegisteredValue, registerValue, render, test, wait } from '../../ReJest/RuntimeTestsApi';
 import { getThree, implicitContextObject, ImplicitWorkletClass } from './fileWorkletization';
-import { runOnUI } from 'react-native-worklets';
+import { scheduleOnUI } from 'react-native-worklets';
 
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
 
@@ -15,9 +15,9 @@ describe('Test file workletization', () => {
       registerValue(SHARED_VALUE_REF, output);
 
       useEffect(() => {
-        runOnUI(() => {
+        scheduleOnUI(() => {
           output.value = getThree();
-        })();
+        });
       });
 
       return <View />;
@@ -34,9 +34,9 @@ describe('Test file workletization', () => {
       registerValue(SHARED_VALUE_REF, output);
 
       useEffect(() => {
-        runOnUI(() => {
+        scheduleOnUI(() => {
           output.value = implicitContextObject.getFive();
-        })();
+        });
       });
 
       return <View />;
@@ -53,9 +53,9 @@ describe('Test file workletization', () => {
       registerValue(SHARED_VALUE_REF, output);
 
       useEffect(() => {
-        runOnUI(() => {
+        scheduleOnUI(() => {
           output.value = new ImplicitWorkletClass().getSeven();
-        })();
+        });
       });
 
       return <View />;

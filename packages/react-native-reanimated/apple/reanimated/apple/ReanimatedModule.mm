@@ -3,18 +3,18 @@
 #import <React/RCTScheduler.h>
 #import <React/RCTSurfacePresenter.h>
 
+#import <reanimated/Compat/WorkletsApi.h>
 #import <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
+#import <reanimated/Tools/SingleInstanceChecker.h>
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/ReanimatedModule.h>
 #import <reanimated/apple/native/NativeProxy.h>
 
-#import <worklets/Tools/SingleInstanceChecker.h>
-#import <worklets/apple/WorkletsModule.h>
-
 using namespace facebook::react;
 using namespace reanimated;
+using namespace worklets;
 
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;
@@ -23,7 +23,7 @@ using namespace reanimated;
 @implementation ReanimatedModule {
   __weak RCTSurfacePresenter *_surfacePresenter;
 #ifndef NDEBUG
-  SingleInstanceChecker<ReanimatedModule> singleInstanceChecker_;
+  reanimated::SingleInstanceChecker<ReanimatedModule> singleInstanceChecker_;
 #endif // NDEBUG
   bool hasListeners;
 }
@@ -129,7 +129,8 @@ RCT_EXPORT_MODULE(ReanimatedModule);
  */
 - (BOOL)hasReactNativeFailedReload
 {
-  return ![_moduleRegistry moduleIsInitialized:WorkletsModule.class];
+  id workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
+  return ![_moduleRegistry moduleIsInitialized:[workletsModule class]];
 }
 
 - (void)checkBridgeless
@@ -146,7 +147,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
     return @NO;
   }
 
-  WorkletsModule *workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
   auto jsCallInvoker = _callInvoker.callInvoker;
 
   react_native_assert(self.bridge != nullptr);
@@ -154,11 +154,13 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   react_native_assert(self.bridge.runtime != nullptr);
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
-  auto reanimatedModuleProxy =
-      reanimated::createReanimatedModuleProxy(_nodesManager, _moduleRegistry, rnRuntime, jsCallInvoker, workletsModule);
+  const auto uiWorkletRuntime = [self getUIRuntime:rnRuntime];
+  const auto uiScheduler = [self getUIScheduler:rnRuntime];
 
-  auto &uiRuntime = [workletsModule getWorkletsModuleProxy]->getUIWorkletRuntime() -> getJSIRuntime();
+  auto reanimatedModuleProxy = reanimated::createReanimatedModuleProxy(
+      _nodesManager, _moduleRegistry, rnRuntime, jsCallInvoker, uiWorkletRuntime, uiScheduler);
 
+  auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
   RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, reanimatedModuleProxy);
   [self attachReactEventListener:reanimatedModuleProxy];
 
@@ -179,6 +181,22 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   [self checkBridgeless];
   REAAssertJavaScriptQueue();
   return std::make_shared<facebook::react::NativeReanimatedModuleSpecJSI>(params);
+}
+
+- (std::shared_ptr<WorkletRuntime>)getUIRuntime:(jsi::Runtime &)rnRuntime
+{
+  const auto global = rnRuntime.global();
+  const auto uiRuntime =
+      getWorkletRuntimeFromHolder(rnRuntime, global.getPropertyAsObject(rnRuntime, "__UI_WORKLET_RUNTIME_HOLDER"));
+  return uiRuntime;
+}
+
+- (std::shared_ptr<UIScheduler>)getUIScheduler:(jsi::Runtime &)rnRuntime
+{
+  const auto global = rnRuntime.global();
+  const auto uiScheduler =
+      getUISchedulerFromHolder(rnRuntime, global.getPropertyAsObject(rnRuntime, "__UI_SCHEDULER_HOLDER"));
+  return uiScheduler;
 }
 
 @end

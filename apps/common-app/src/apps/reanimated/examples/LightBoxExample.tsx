@@ -22,7 +22,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { runOnJS, runOnUI } from 'react-native-worklets';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
@@ -170,7 +170,7 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
 
         animationProgress.value = withTiming(0, timingConfig, () => {
           imageOpacity.value = 1;
-          runOnJS(onClose)();
+          scheduleOnRN(onClose);
         });
 
         backdropOpacity.value = withTiming(0, timingConfig);
@@ -211,20 +211,20 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
   });
 
   useEffect(() => {
-    runOnUI(() => {
+    scheduleOnUI(() => {
       animationProgress.value = withTiming(1, timingConfig, () => {
         imageOpacity.value = 0;
       });
       backdropOpacity.value = withTiming(1, timingConfig);
-    })();
+    });
   }, [animationProgress, backdropOpacity, imageOpacity]);
 
   return (
-    <View style={StyleSheet.absoluteFillObject}>
+    <View style={StyleSheet.absoluteFill}>
       <Animated.View style={[styles.backdrop, backdropStyles]} />
 
       <GestureDetector gesture={gesture}>
-        <Animated.View style={StyleSheet.absoluteFillObject}>
+        <Animated.View style={StyleSheet.absoluteFill}>
           <AnimatedImage source={{ uri }} style={imageStyles} />
         </Animated.View>
       </GestureDetector>
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   },
 
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...(StyleSheet.absoluteFill as object),
     backgroundColor: 'black',
   },
 });

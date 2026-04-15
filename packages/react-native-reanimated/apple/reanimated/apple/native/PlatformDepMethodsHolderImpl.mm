@@ -2,10 +2,20 @@
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/REASlowAnimations.h>
+#import <reanimated/apple/REAUIView.h>
 #import <reanimated/apple/RNGestureHandlerStateManager.h>
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 #import <reanimated/apple/native/SetGestureState.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
+
+#import <React/RCTComponentViewProtocol.h>
+#import <React/RCTComponentViewRegistry.h>
+#import <React/RCTMountingManager.h>
+
+@protocol RNScreenViewOptionalProtocol <NSObject>
+@required
+- (void)setSnapshotAfterUpdates:(BOOL)snapshot;
+@end
 
 namespace reanimated {
 
@@ -52,13 +62,17 @@ SynchronouslyUpdateUIPropsFunction makeSynchronouslyUpdateUIPropsFunction(REANod
 
 GetAnimationTimestampFunction makeGetAnimationTimestamp()
 {
-  auto getAnimationTimestamp = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
+  auto getAnimationTimestamp = []() {
+    return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000;
+  };
   return getAnimationTimestamp;
 }
 
 MaybeFlushUIUpdatesQueueFunction makeMaybeFlushUIUpdatesQueueFunction(REANodesManager *nodesManager)
 {
-  auto maybeFlushUIUpdatesQueueFunction = [nodesManager]() { [nodesManager maybeFlushUIUpdatesQueue]; };
+  auto maybeFlushUIUpdatesQueueFunction = [nodesManager]() {
+    [nodesManager maybeFlushUIUpdatesQueue];
+  };
   return maybeFlushUIUpdatesQueueFunction;
 }
 
@@ -66,19 +80,20 @@ RegisterSensorFunction makeRegisterSensorFunction(ReanimatedSensorContainer *rea
 {
   auto registerSensorFunction =
       [=](int sensorType, int interval, int iosReferenceFrame, std::function<void(double[], int)> setter) -> int {
-    return [reanimatedSensorContainer registerSensor:(ReanimatedSensorType)sensorType
-                                            interval:interval
-                                   iosReferenceFrame:iosReferenceFrame
-                                              setter:^(double *data, int orientationDegrees) {
-                                                setter(data, orientationDegrees);
-                                              }];
+    return [reanimatedSensorContainer
+           registerSensor:(ReanimatedSensorType)sensorType
+                 interval:interval
+        iosReferenceFrame:iosReferenceFrame
+                   setter:^(double *data, int orientationDegrees) { setter(data, orientationDegrees); }];
   };
   return registerSensorFunction;
 }
 
 UnregisterSensorFunction makeUnregisterSensorFunction(ReanimatedSensorContainer *reanimatedSensorContainer)
 {
-  auto unregisterSensorFunction = [=](int sensorId) { [reanimatedSensorContainer unregisterSensor:sensorId]; };
+  auto unregisterSensorFunction = [=](int sensorId) {
+    [reanimatedSensorContainer unregisterSensor:sensorId];
+  };
   return unregisterSensorFunction;
 }
 
@@ -131,9 +146,25 @@ RunCoreAnimationForView makeRunCoreAnimationForView(REANodesManager *nodesManage
   return runCoreAnimationForView;
 }
 
+ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager)
+{
+  auto forceScreenSnapshot = [=](Tag tag) {
+    RCTSurfacePresenter *surfacePresenter = nodesManager.surfacePresenter;
+    RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
+    REAUIView<RCTComponentViewProtocol> *maybeRNSScreenView = [componentViewRegistry findComponentViewWithTag:tag];
+    SEL setSnapshotAfterUpdatesSelector = @selector(setSnapshotAfterUpdates:);
+    if ([maybeRNSScreenView respondsToSelector:setSnapshotAfterUpdatesSelector]) {
+      [(id<RNScreenViewOptionalProtocol>)maybeRNSScreenView setSnapshotAfterUpdates:YES];
+    }
+  };
+  return forceScreenSnapshot;
+}
+
 PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleRegistry, REANodesManager *nodesManager)
 {
   auto requestRender = makeRequestRender(nodesManager);
+
+  auto forceScreenSnapshotFunction = makeForceScreenSnapshotFunction(nodesManager);
 
   auto synchronouslyUpdateUIPropsFunction = makeSynchronouslyUpdateUIPropsFunction(nodesManager);
 
@@ -159,6 +190,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
+      forceScreenSnapshotFunction,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       registerSensorFunction,

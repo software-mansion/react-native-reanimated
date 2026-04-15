@@ -72,7 +72,7 @@ export default function useInterpolateColorPlayground() {
     interpolateColor(
         sv.value,
         [0, 1],
-        ['${colorLeftBoundary.toUpperCase()}', '${colorRightBoundary.toUpperCase()}']
+        ['${colorLeftBoundary.toUpperCase()}', '${colorRightBoundary.toUpperCase()}'],
         '${colorSpace}'${optionsCode ? `,
         {
           ${optionsCode}

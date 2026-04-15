@@ -50,6 +50,9 @@ export default function ExpandableCard({
           style={[styles.overlay, { height: overlayHeight }]}>
           <Animated.View style={[styles.gradient, animatedGradientStyle]}>
             <Svg height={overlayHeight} width="100%">
+              {/* TODO: Fix me */}
+              {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+              {/* @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801 */}
               <Defs>
                 <LinearGradient
                   id="vertical-gradient"
@@ -106,7 +109,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   gradient: {
-    ...StyleSheet.absoluteFillObject,
+    ...(StyleSheet.absoluteFill as object),
     pointerEvents: 'none',
   },
   overlay: {

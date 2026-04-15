@@ -2,6 +2,8 @@
 
 #include <worklets/Tools/PlatformLogger.h>
 
+#include <string>
+
 constexpr const auto tag = "Worklets";
 
 namespace worklets {

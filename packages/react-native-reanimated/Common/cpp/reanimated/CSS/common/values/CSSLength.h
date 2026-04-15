@@ -24,12 +24,9 @@ struct CSSLength : public CSSResolvableValue<CSSLength, double> {
 
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
-  CSSLength interpolate(
-      double progress,
-      const CSSLength &to,
-      const ResolvableValueInterpolationContext &context) const override;
-  std::optional<double> resolve(
-      const ResolvableValueInterpolationContext &context) const override;
+  CSSLength interpolate(double progress, const CSSLength &to, const ResolvableValueInterpolationContext &context)
+      const override;
+  std::optional<double> resolve(const ResolvableValueInterpolationContext &context) const override;
 
   bool operator==(const CSSLength &other) const;
 

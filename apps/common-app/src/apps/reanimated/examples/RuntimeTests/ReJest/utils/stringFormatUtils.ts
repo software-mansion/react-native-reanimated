@@ -72,11 +72,11 @@ function rgbToAnsi256(red: number, green: number, blue: number) {
   return 16 + 36 * scaledRed + 6 * scaledGreen + scaledBlue;
 }
 
-export function getColorSquare(color: unknown) {
+export function getColorSquare(color: string) {
   if (!isColor(color)) {
     return '??';
   }
-  const colorNumber = processColor(color) as number;
+  const colorNumber = processColor(color);
   /* eslint-disable no-bitwise */
   const red = (colorNumber >> 16) & 255;
   const green = (colorNumber >> 8) & 255;

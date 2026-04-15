@@ -25,7 +25,7 @@ import Animated, {
   ZoomIn,
   ZoomOut,
 } from 'react-native-reanimated';
-import { runOnJS } from 'react-native-worklets';
+import { scheduleOnRN } from 'react-native-worklets';
 
 type Option = {
   key: string;
@@ -183,7 +183,7 @@ const WheelPicker: React.FC<WheelPickerProps> = ({
   const onScroll = useAnimatedScrollHandler({
     onScroll: (event) => {
       contentOffsetY.value = event.contentOffset.y;
-      runOnJS(calculateSelectedValue)(event.contentOffset.y);
+      scheduleOnRN(calculateSelectedValue, event.contentOffset.y);
     },
   });
 
@@ -196,7 +196,7 @@ const WheelPicker: React.FC<WheelPickerProps> = ({
   };
 
   return (
-    <View onLayout={onLayout}>
+    <View onLayout={onLayout} style={styles.fill}>
       <Animated.FlatList
         ref={flatListRef}
         data={data}
@@ -357,4 +357,5 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   itemText: { fontWeight: 'bold', fontSize: 30 },
+  fill: { flex: 1 },
 });

@@ -3,9 +3,10 @@ import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { ExamplesScreen, VerticalExampleCard } from '@/apps/css/components';
+import type { ExampleScreenProps } from '@/apps/css/navigation/types';
 import { colors, radius, sizes } from '@/theme';
 
-export default function Elevation() {
+export default function Elevation({ labelTypes }: ExampleScreenProps) {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
       CardComponent={VerticalExampleCard}
@@ -32,7 +33,7 @@ export default function Elevation() {
               },
             },
           ],
-          labelTypes: ['Android'],
+          labelTypes,
           title: 'Elevation',
         },
       ]}

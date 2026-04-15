@@ -1,24 +1,17 @@
 #include <react/debug/react_native_assert.h>
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 
+#include <memory>
 #include <utility>
 
 namespace reanimated {
 
-AnimatedSensorModule::AnimatedSensorModule(
-    const PlatformDepMethodsHolder &platformDepMethodsHolder)
+AnimatedSensorModule::AnimatedSensorModule(const PlatformDepMethodsHolder &platformDepMethodsHolder)
     : platformRegisterSensorFunction_(platformDepMethodsHolder.registerSensor),
-      platformUnregisterSensorFunction_(
-          platformDepMethodsHolder.unregisterSensor) {}
-
-AnimatedSensorModule::~AnimatedSensorModule() {
-  react_native_assert(
-      sensorsIds_.empty() &&
-      "Tried to deallocate AnimatedSensorModule with registered sensors");
-}
+      platformUnregisterSensorFunction_(platformDepMethodsHolder.unregisterSensor) {}
 
 jsi::Value AnimatedSensorModule::registerSensor(
-    jsi::Runtime &rt,
+    jsi::Runtime &rnRuntime,
     const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime,
     const jsi::Value &sensorTypeValue,
     const jsi::Value &interval,
@@ -26,25 +19,24 @@ jsi::Value AnimatedSensorModule::registerSensor(
     const jsi::Value &sensorDataHandler) {
   SensorType sensorType = static_cast<SensorType>(sensorTypeValue.asNumber());
 
-  auto serializableHandler = extractSerializableOrThrow<SerializableWorklet>(
-      rt,
+  auto serializableHandler = extractSerializable(
+      rnRuntime,
       sensorDataHandler,
-      "[Reanimated] Sensor event handler must be a worklet.");
+      "[Reanimated] Sensor event handler must be a worklet.",
+      Serializable::ValueType::WorkletType);
 
   int sensorId = platformRegisterSensorFunction_(
-      sensorType,
+      static_cast<int>(sensorType),
       interval.asNumber(),
       iosReferenceFrame.asNumber(),
-      [sensorType,
-       serializableHandler,
-       weakUiWorkletRuntime = std::weak_ptr<WorkletRuntime>(uiWorkletRuntime)](
+      [sensorType, serializableHandler, weakUiWorkletRuntime = std::weak_ptr<WorkletRuntime>(uiWorkletRuntime)](
           double newValues[], int orientationDegrees) {
         auto uiWorkletRuntime = weakUiWorkletRuntime.lock();
         if (uiWorkletRuntime == nullptr) {
           return;
         }
 
-        jsi::Runtime &uiRuntime = uiWorkletRuntime->getJSIRuntime();
+        jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
         jsi::Object value(uiRuntime);
         if (sensorType == SensorType::ROTATION_VECTOR) {
           // TODO: timestamp should be provided by the platform implementation
@@ -62,10 +54,9 @@ jsi::Value AnimatedSensorModule::registerSensor(
           value.setProperty(uiRuntime, "y", newValues[1]);
           value.setProperty(uiRuntime, "z", newValues[2]);
         }
-        value.setProperty(
-            uiRuntime, "interfaceOrientation", orientationDegrees);
+        value.setProperty(uiRuntime, "interfaceOrientation", orientationDegrees);
 
-        uiWorkletRuntime->runGuarded(serializableHandler, value);
+        runSyncOnRuntime(uiWorkletRuntime, serializableHandler, jsi::Value(uiRuntime, value));
       });
   if (sensorId != -1) {
     sensorsIds_.insert(sensorId);

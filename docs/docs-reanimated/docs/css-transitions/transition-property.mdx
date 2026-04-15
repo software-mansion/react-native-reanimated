@@ -9,10 +9,7 @@ sidebar_position: 2
 import TransitionPropertyBasic from '@site/src/examples/css-transitions/TransitionPropertyBasic';
 import TransitionPropertyBasicSrc from '!!raw-loader!@site/src/examples/css-transitions/TransitionPropertyBasic';
 
-<InteractiveExample
-  src={TransitionPropertyBasicSrc}
-  component={TransitionPropertyBasic}
-/>
+<InteractiveExample src={TransitionPropertyBasicSrc} component={TransitionPropertyBasic}/>
 
 ## Reference
 
@@ -31,20 +28,19 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
+  ```typescript
+  import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
 
-type PlainStyle = ViewStyle & TextStyle & ImageStyle;
+  type PlainStyle = ViewStyle & TextStyle & ImageStyle;
 
-type CSSTransitionProperty<S extends object = PlainStyle> =
-  | 'all'
-  | 'none'
-  | keyof S
-  | ('all' | keyof S)[];
-```
-
+  type CSSTransitionProperty<S extends object = PlainStyle> =
+    | 'all'
+    | 'none'
+    | keyof S
+    | ('all' | keyof S)[];
+  ```
 </details>
 
 ### Values
@@ -78,11 +74,7 @@ No properties will transition.
 import TransitionProperty from '@site/src/examples/css-transitions/TransitionProperty';
 import TransitionPropertySrc from '!!raw-loader!@site/src/examples/css-transitions/TransitionProperty';
 
-<InteractiveExample
-  src={TransitionPropertySrc}
-  component={TransitionProperty}
-  label="Click rectangles to grow"
-/>
+<InteractiveExample src={TransitionPropertySrc} component={TransitionProperty} label="Click rectangles to grow"/>
 
 ## Remarks
 
@@ -96,4 +88,4 @@ import TransitionPropertySrc from '!!raw-loader!@site/src/examples/css-transitio
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

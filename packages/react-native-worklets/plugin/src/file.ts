@@ -28,7 +28,7 @@ import {
 } from '@babel/types';
 
 import { contextObjectMarker } from './contextObject';
-import type { ReanimatedPluginPass } from './types';
+import type { WorkletsPluginPass } from './types';
 import {
   isWorkletizableFunctionPath,
   isWorkletizableObjectPath,
@@ -36,7 +36,7 @@ import {
 
 export function processIfWorkletFile(
   path: NodePath<Program>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ): boolean {
   if (
     !path.node.directives.some(
@@ -58,7 +58,7 @@ export function processIfWorkletFile(
 /** Adds a worklet directive to each viable top-level entity in the file. */
 function processWorkletFile(
   programPath: NodePath<Program>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ) {
   const statements = programPath.get('body');
   dehoistCommonJSExports(programPath.node);
@@ -81,7 +81,7 @@ function getCandidate(statementPath: NodePath<Statement>) {
 
 function processWorkletizableEntity(
   nodePath: NodePath<unknown>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ) {
   if (isWorkletizableFunctionPath(nodePath)) {
     if (nodePath.isArrowFunctionExpression()) {
@@ -110,7 +110,7 @@ function processWorkletizableEntity(
 
 function processVariableDeclaration(
   variableDeclarationPath: NodePath<VariableDeclaration>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ) {
   const declarations = variableDeclarationPath.get('declarations');
   declarations.forEach((declaration) => {
@@ -123,7 +123,7 @@ function processVariableDeclaration(
 
 function processWorkletAggregator(
   objectPath: NodePath<ObjectExpression>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ) {
   const properties = objectPath.get('properties');
   properties.forEach((property) => {
