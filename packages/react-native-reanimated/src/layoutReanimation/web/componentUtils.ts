@@ -224,11 +224,17 @@ export function setElementAnimation(
       return;
     }
 
+    // Moving elements in DOM resets their scroll positions,
+    // so we save them before reparenting and restore after.
+    const scrollPositions = saveScrollPositions(element);
+
     originalElement.style.visibility = 'initial';
 
     while (element.firstChild) {
       originalElement.appendChild(element.firstChild);
     }
+
+    restoreScrollPositions(originalElement, scrollPositions, element);
 
     element.removedAfterAnimation = true;
     element.remove();
@@ -355,6 +361,38 @@ function getElementScrollValue(element: HTMLElement): ScrollOffsets {
   return scrollOffsets;
 }
 
+function saveScrollPositions(root: Element) {
+  const positions = new Map<Element, { top: number; left: number }>();
+
+  const savePositions = (node: Element) => {
+    positions.set(node, { top: node.scrollTop, left: node.scrollLeft });
+    for (const child of Array.from(node.children)) {
+      savePositions(child);
+    }
+  };
+
+  savePositions(root);
+
+  return positions;
+}
+
+function restoreScrollPositions(
+  root: Element,
+  positions: Map<Element, { top: number; left: number }>,
+  savedRoot?: Element
+) {
+  const position = positions.get(savedRoot ?? root);
+
+  if (position) {
+    root.scrollTop = position.top;
+    root.scrollLeft = position.left;
+  }
+
+  for (const child of Array.from(root.children)) {
+    restoreScrollPositions(child, positions);
+  }
+}
+
 function cleanupEnteringAnimations(element: HTMLElement) {
   const animationName = element.style.animationName;
 
@@ -386,17 +424,7 @@ export function handleExitingAnimation(
 
   // Moving elements in DOM resets their scroll positions
   // so we memorize them here and restore after
-  const scrollPositions = new Map<Element, { top: number; left: number }>();
-  const saveScrollPosition = (node: Element) => {
-    scrollPositions.set(node, {
-      top: node.scrollTop,
-      left: node.scrollLeft,
-    });
-    for (const child of Array.from(node.children)) {
-      saveScrollPosition(child);
-    }
-  };
-  saveScrollPosition(element);
+  const scrollPositions = saveScrollPositions(element);
 
   // Clean up entering animations on all descendants before moving them to the dummy.
   // This prevents entering animations from restarting when elements are moved to a new parent.
@@ -413,17 +441,7 @@ export function handleExitingAnimation(
 
   parent?.appendChild(dummy);
 
-  const restoreScrollPosition = (node: Element) => {
-    const scrollPosition = scrollPositions.get(node === dummy ? element : node);
-    if (scrollPosition) {
-      node.scrollTop = scrollPosition.top;
-      node.scrollLeft = scrollPosition.left;
-    }
-    for (const child of Array.from(node.children)) {
-      restoreScrollPosition(child);
-    }
-  };
-  restoreScrollPosition(dummy);
+  restoreScrollPositions(dummy, scrollPositions, element);
 
   const snapshot = getSnapshotForElement(element);
 
