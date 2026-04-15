@@ -1,0 +1,15 @@
+.container {
+  display: inline-block;
+}
+
+.table {
+  border-collapse: collapse;
+  margin-bottom: 0;
+}
+
+.table th,
+.table td {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  padding: 12px;
+  text-align: center;
+}

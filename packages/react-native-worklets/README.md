@@ -1,15 +1,16 @@
-<p align="center" style="margin:0; padding:0;">
-    <img width="100%" alt="React Native Worklets by Software Mansion" src="https://github.com/user-attachments/assets/fc32cc78-8d26-473b-9423-cbd05a97244d" />
-  <a href="https://stateofreactnative.com/">
-    <img width="1100" height="120" alt="sorn25-banner" src="https://github.com/user-attachments/assets/b73f9fc7-bdfc-4ed1-9968-c209782f0002" />
-  </a>
-</p>
+<img src="https://github.com/user-attachments/assets/41b37472-e55a-4c54-9064-31258e03870c" alt="React Native Worklets by Software Mansion" width="100%">
 
 ### The React Native multithreading library
 
-React Native Worklets is a library that allows you to run JavaScript code in parallel on multiple threads and runtimes.
+React Native Worklets is a library that allows you to run JavaScript code in parallel on multiple threads and runtimes, without writing any native code.
 
-While the library is in transitional period where we hone the API, all its features are functionally stable and ready to use in production.
+## Nightly CI state
+
+[![NPM Worklets publish \[Nightly\]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish.yml)
+[![Lint clang-tidy \[Nightly\]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml)
+[![Expo DevClient build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/expo-devclient-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/expo-devclient-build-check-nightly.yml)
+[![Worklets Bundle Mode build check \[Nightly\]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/worklets-bundle-mode-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/worklets-bundle-mode-build-check-nightly.yml)
+[![URL validation](https://github.com/software-mansion/react-native-reanimated/actions/workflows/url-validation-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/url-validation-nightly.yml)
 
 ## Documentation
 
@@ -23,9 +24,9 @@ Worklets library is licensed under [The MIT License](LICENSE).
 
 This project has been built and is maintained thanks to the support from [Shopify](https://shopify.com), [Expo.io](https://expo.io) and [Software Mansion](https://swmansion.com)
 
-[![shopify](https://avatars1.githubusercontent.com/u/8085?v=3&s=100 'Shopify.com')](https://shopify.com)
-[![expo](https://avatars2.githubusercontent.com/u/12504344?v=3&s=100 'Expo.io')](https://expo.io)
-[![swm](https://logo.swmansion.com/logo?color=white&variant=desktop&width=150&tag=react-native-reanimated-github 'Software Mansion')](https://swmansion.com)
+[![shopify](https://avatars1.githubusercontent.com/u/8085?v=3\&s=100 'Shopify.com')](https://shopify.com)
+[![expo](https://avatars2.githubusercontent.com/u/12504344?v=3\&s=100 'Expo.io')](https://expo.io)
+[![swm](https://logo.swmansion.com/logo?color=white\&variant=desktop\&width=150\&tag=react-native-reanimated-github 'Software Mansion')](https://swmansion.com)
 
 ## Community Discord
 
@@ -33,4 +34,4 @@ This project has been built and is maintained thanks to the support from [Shopif
 
 ## Worklets are created by Software Mansion
 
-Since 2012 [Software Mansion](https://swmansion.com) is a software agency with experience in building web and mobile apps. We are Core React Native Contributors and experts in dealing with all kinds of React Native issues. We can help you build your next dream product – [Hire us](https://swmansion.com/contact/projects?utm_source=reanimated&utm_medium=readme).
+Since 2012 [Software Mansion](https://swmansion.com) is a software agency with experience in building web and mobile apps. We are Core React Native Contributors and experts in dealing with all kinds of React Native issues. We can help you build your next dream product – [Hire us](https://swmansion.com/contact/projects?utm_source=reanimated\&utm_medium=readme).

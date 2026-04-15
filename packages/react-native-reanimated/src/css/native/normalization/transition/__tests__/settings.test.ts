@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../../../../common';
 import type { CSSTransitionBehavior } from '../../../../types';
 import { ERROR_MESSAGES, normalizeTransitionBehavior } from '../settings';
 
@@ -15,8 +14,8 @@ describe(normalizeTransitionBehavior, () => {
   test('throws an error if the behavior is invalid', () => {
     const invalidBehavior = 'invalid' as CSSTransitionBehavior;
     expect(() => normalizeTransitionBehavior(invalidBehavior)).toThrow(
-      new ReanimatedError(
-        ERROR_MESSAGES.invalidTransitionBehavior(invalidBehavior)
+      new Error(
+        `[Reanimated] ${ERROR_MESSAGES.invalidTransitionBehavior(invalidBehavior)}`
       )
     );
   });

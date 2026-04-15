@@ -45,6 +45,7 @@ export const _updatePropsJS = (
       ? viewRef.getAnimatableRef()
       : viewRef;
     const [rawStyles] = Object.keys(updates).reduce(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (acc: [StyleProps, AnimatedStyle<any>], key) => {
         const value = updates[key];
         const index = typeof value === 'function' ? 1 : 0;

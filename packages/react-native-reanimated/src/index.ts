@@ -7,6 +7,7 @@ import { ReanimatedModule } from './ReanimatedModule';
 
 // TODO: Specify the initialization pipeline since now there's no
 // universal source of truth for it.
+// is-tree-shakable-suppress
 initializeReanimatedModule(ReanimatedModule);
 
 // eslint-disable-next-line import/first
@@ -103,6 +104,7 @@ export {
   isReanimated3,
   makeMutable,
 } from './core';
+export { NativeEventsManager } from './createAnimatedComponent';
 export * from './css';
 export type { EasingFunctionFactory } from './Easing';
 export { Easing } from './Easing';
@@ -146,17 +148,14 @@ export {
   useSharedValue,
 } from './hook';
 export type {
-  InterpolateConfig,
   InterpolateHSV,
   InterpolateRGB,
   InterpolationOptions,
 } from './interpolateColor';
 export {
-  ColorSpace,
   /** @deprecated Please use {@link Extrapolation} instead. */
   Extrapolate,
   interpolateColor,
-  useInterpolateConfig,
 } from './interpolateColor';
 export type { ExtrapolationConfig, ExtrapolationType } from './interpolation';
 export { clamp, Extrapolation, interpolate } from './interpolation';

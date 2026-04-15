@@ -1,0 +1,29 @@
+name: Apple validation
+description: Lint Apple platform code
+
+inputs:
+  package-dir:
+    description: The package directory (e.g., packages/react-native-reanimated)
+    required: true
+  build-package:
+    description: Whether to build the package before linting
+    default: 'true'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install monorepo node dependencies
+      shell: bash
+      run: yarn install --immutable
+
+    - name: Build package
+      if: ${{ inputs.build-package == 'true' }}
+      shell: bash
+      working-directory: ${{ inputs.package-dir }}
+      run: yarn build
+
+    - name: Lint Apple
+      shell: bash
+      working-directory: ${{ inputs.package-dir }}
+      run: yarn lint:apple

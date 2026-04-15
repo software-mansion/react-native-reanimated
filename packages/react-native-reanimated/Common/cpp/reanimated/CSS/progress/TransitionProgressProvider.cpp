@@ -102,6 +102,36 @@ std::unordered_set<std::string> TransitionProgressProvider::getRemovedProperties
   return removedProperties_;
 }
 
+void TransitionProgressProvider::runProgressProvider(
+    const std::string &propertyName,
+    const CSSTransitionPropertySettings &settings,
+    const bool isReversed,
+    const double timestamp) {
+  const auto it = propertyProgressProviders_.find(propertyName);
+
+  if (it != propertyProgressProviders_.end()) {
+    const auto &progressProvider = it->second;
+    progressProvider->update(timestamp);
+
+    if (isReversed && progressProvider->getState() != TransitionProgressState::Finished) {
+      // Create reversing shortening progress provider for interrupted reversing transition
+      propertyProgressProviders_.insert_or_assign(
+          propertyName, createReversingShorteningProgressProvider(timestamp, settings, *progressProvider));
+      return;
+    }
+  }
+
+  // Create progress provider with the new settings
+  propertyProgressProviders_.insert_or_assign(
+      propertyName,
+      std::make_shared<TransitionPropertyProgressProvider>(
+          timestamp, settings.duration, settings.delay, settings.easingFunction));
+}
+
+void TransitionProgressProvider::removeProperty(const std::string &propertyName) {
+  propertyProgressProviders_.erase(propertyName);
+}
+
 void TransitionProgressProvider::discardFinishedProgressProviders() {
   for (auto it = propertyProgressProviders_.begin(); it != propertyProgressProviders_.end();) {
     if (it->second->getState() == TransitionProgressState::Finished) {
@@ -109,56 +139,6 @@ void TransitionProgressProvider::discardFinishedProgressProviders() {
     } else {
       ++it;
     }
-  }
-}
-
-void TransitionProgressProvider::discardIrrelevantProgressProviders(
-    const std::unordered_set<std::string> &transitionPropertyNames) {
-  for (auto it = propertyProgressProviders_.begin(); it != propertyProgressProviders_.end();) {
-    // Remove property progress providers for properties not specified in the
-    // transition property names
-    if (transitionPropertyNames.find(it->first) == transitionPropertyNames.end()) {
-      it = propertyProgressProviders_.erase(it);
-    } else {
-      ++it;
-    }
-  }
-}
-
-void TransitionProgressProvider::runProgressProviders(
-    const double timestamp,
-    const CSSTransitionPropertiesSettings &propertiesSettings,
-    const PropertyNames &changedPropertyNames,
-    const std::unordered_set<std::string> &reversedPropertyNames) {
-  for (const auto &propertyName : changedPropertyNames) {
-    const auto propertySettingsOptional = getTransitionPropertySettings(propertiesSettings, propertyName);
-
-    if (!propertySettingsOptional.has_value()) {
-      throw std::invalid_argument("[Reanimated] Property '" + propertyName + "' is not a valid transition property");
-    }
-
-    const auto &propertySettings = propertySettingsOptional.value();
-    const auto it = propertyProgressProviders_.find(propertyName);
-
-    if (it != propertyProgressProviders_.end()) {
-      const auto &progressProvider = it->second;
-      progressProvider->update(timestamp);
-
-      if (reversedPropertyNames.find(propertyName) != reversedPropertyNames.end() &&
-          progressProvider->getState() != TransitionProgressState::Finished) {
-        // Create reversing shortening progress provider for interrupted
-        // reversing transition
-        propertyProgressProviders_.insert_or_assign(
-            propertyName, createReversingShorteningProgressProvider(timestamp, propertySettings, *progressProvider));
-        continue;
-      }
-    }
-
-    // Create progress provider with the new settings
-    propertyProgressProviders_.insert_or_assign(
-        propertyName,
-        std::make_shared<TransitionPropertyProgressProvider>(
-            timestamp, propertySettings.duration, propertySettings.delay, propertySettings.easingFunction));
   }
 }
 

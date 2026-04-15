@@ -163,7 +163,7 @@ export default function ExampleCard({
 const styles = StyleSheet.create({
   collapsedCodeOverlay: {
     ...Platform.select<ViewStyle>({
-      default: StyleSheet.absoluteFillObject,
+      default: StyleSheet.absoluteFill as object,
       web: { height: '100%', position: 'absolute', width: '100%' },
     }),
     backgroundColor: colors.background2,
@@ -177,12 +177,6 @@ const styles = StyleSheet.create({
     height: 0,
     width: 0,
   },
-  itemWrapper: {
-    backgroundColor: colors.background2,
-    borderRadius: radius.sm,
-    overflow: 'hidden',
-    padding: spacing.xs,
-  },
   itemsContainer: {
     gap: spacing.sm,
   },
@@ -192,6 +186,12 @@ const styles = StyleSheet.create({
   },
   itemsContainerExpanded: {
     flexDirection: 'column',
+  },
+  itemWrapper: {
+    backgroundColor: colors.background2,
+    borderRadius: radius.sm,
+    overflow: 'hidden',
+    padding: spacing.xs,
   },
   titleRow: {
     alignItems: 'center',

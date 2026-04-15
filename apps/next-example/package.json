@@ -9,32 +9,33 @@
     "build:analyze": "ANALYZE_BUNDLE=1 next build",
     "build:disable-minification": "DISABLE_MINIFICATION=1 next build",
     "start": "next start",
-    "e2e": "start-server-and-test http://localhost:3000 \"cypress open --e2e\"",
-    "e2e:headless": "start-server-and-test http://localhost:3000 \"cypress run --e2e\"",
+    "e2e": "start-server-and-test \"next start\" http://localhost:3000 \"cypress open --e2e\"",
+    "e2e:headless": "start-server-and-test \"next start\" http://localhost:3000 \"cypress run --e2e\"",
     "lint": "eslint --max-warnings=0 .",
     "format": "prettier --write --list-different ."
   },
   "dependencies": {
     "expo": "54.0.13",
-    "next": "15.5.4",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "react-native": "0.83.0",
+    "next": "16.2.2",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.0",
     "react-native-reanimated": "workspace:*",
     "react-native-web": "0.21.1",
     "react-native-worklets": "workspace:*",
-    "webpack": "5.102.1"
+    "webpack": "5.105.4"
   },
   "devDependencies": {
     "@babel/core": "7.28.4",
     "@expo/next-adapter": "6.0.0",
     "@next/bundle-analyzer": "15.5.4",
-    "cypress": "15.4.0",
+    "babel-plugin-transform-define": "2.1.4",
+    "cypress": "patch:cypress@npm%3A15.4.0#~/.yarn/patches/cypress-npm-15.4.0-c92384506d.patch",
     "eslint": "9.37.0",
     "next-compose-plugins": "2.2.1",
     "prettier": "3.6.2",
     "start-server-and-test": "2.1.2",
-    "typescript": "5.8.3"
+    "typescript": "5.9.3"
   },
   "installConfig": {
     "selfReferences": false

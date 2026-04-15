@@ -111,6 +111,9 @@ const notCapturedIdentifiers = [
   'performance',
   'arguments', // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
   'require',
+  'fetch',
+  'XMLHttpRequest',
+  'WebSocket',
 
   // Run loop
   'queueMicrotask',
@@ -130,14 +133,6 @@ const notCapturedIdentifiers = [
   '_WORKLET',
 ];
 
-export const outsideBindingsToCaptureFromGlobalScope = new Set([
-  'ReanimatedError',
-]);
-
-export const internalBindingsToCaptureFromGlobalScope = new Set([
-  'WorkletsError',
-]);
-
 /**
  * @deprecated Since we moved on to using `global.` prefix in Reanimated, we
  *   don't need to capture these identifiers anymore. However, for safety
@@ -151,8 +146,10 @@ const notCapturedIdentifiers_DEPRECATED = ['_IS_FABRIC'];
 export function initializeState(state: WorkletsPluginPass) {
   state.workletNumber = 1;
   state.classesToWorkletize = [];
-  initializeGlobals();
-  addCustomGlobals(state);
+  if (!state.opts.strictGlobal) {
+    initializeGlobals();
+    addCustomGlobals(state);
+  }
 }
 
 export const defaultGlobals = new Set(

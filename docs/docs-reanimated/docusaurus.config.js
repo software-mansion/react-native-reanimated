@@ -71,10 +71,6 @@ const config = {
         theme: {
           customCss: require.resolve('./src/css/index.css'),
         },
-        gtag: {
-          trackingID: 'G-RNYQG9GVFJ',
-          anonymizeIP: true,
-        },
         blog: {
           routeBasePath: '/examples',
           blogSidebarTitle: 'Examples',
@@ -150,6 +146,15 @@ const config = {
       },
     }),
   plugins: [
+    ...[
+      process.env.NODE_ENV === 'production' && '@docusaurus/plugin-debug',
+      process.env.NODE_ENV === 'production' && [
+        '@docusaurus/plugin-google-tag-manager',
+        {
+          containerId: 'GTM-PVLQ9XVM',
+        },
+      ],
+    ].filter(Boolean),
     function svgModulePlugin() {
       return {
         name: 'svg-module-plugin',
@@ -180,9 +185,6 @@ const config = {
         },
       };
     },
-    ...[
-      process.env.NODE_ENV === 'production' && '@docusaurus/plugin-debug',
-    ].filter(Boolean),
     async function reanimatedDocusaurusPlugin(context, options) {
       return {
         name: 'react-native-reanimated/docusaurus-plugin',
@@ -214,12 +216,19 @@ const config = {
                 },
                 {
                   test: /\.js$/,
+                  exclude: /\.yarn[\\/]unprocessed/,
                   use: 'babel-loader',
                 },
               ],
             },
             resolve: {
-              alias: { 'react-native$': 'react-native-web' },
+              alias: {
+                'react-native$': 'react-native-web',
+                typescript: path.resolve(
+                  __dirname,
+                  '../../.yarn/unprocessed/typescript'
+                ),
+              },
               extensions: ['.web.js', '...'],
             },
             ignoreWarnings: [

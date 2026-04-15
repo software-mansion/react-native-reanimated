@@ -19,7 +19,7 @@ import type { PropsBuilderConfig } from './types';
 
 const colorAttributes = { process: processColor };
 
-export const BASE_PROPERTIES_CONFIG: PropsBuilderConfig<PlainStyle> = {
+export const STYLE_PROPERTIES_CONFIG: PropsBuilderConfig<PlainStyle> = {
   /** Layout and Positioning */
   // FLEXBOX
   flex: true,

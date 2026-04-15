@@ -1,6 +1,5 @@
 'use strict';
 import {
-  hasProp,
   isAngle,
   isConfigPropertyAlias,
   isDefined,
@@ -84,18 +83,6 @@ describe(isRecord, () => {
     ['value', false],
   ])('for %p returns %p', (input, expected) => {
     expect(isRecord(input)).toBe(expected);
-  });
-});
-
-describe(hasProp, () => {
-  test('returns true for existing prop', () => {
-    const obj = { value: 'present' };
-    expect(hasProp(obj, 'value')).toBe(true);
-  });
-
-  test('returns false for missing prop', () => {
-    const obj = { value: 'present' };
-    expect(hasProp(obj, 'missing')).toBe(false);
   });
 });
 

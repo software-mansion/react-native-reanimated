@@ -8,9 +8,10 @@ Feature flags allow developers to opt-in for experimental changes or opt-out fro
 
 ## Summary of available feature flags
 
-| Feature flag name                                                 |              Type               | Added in | Removed in | Default value |
-| ----------------------------------------------------------------- | :-----------------------------: | :------: | :--------: | :-----------: |
-| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled) | [static](#static-feature-flags) |  4.1.0   |  &ndash;   |    `true`     |
+| Feature flag name                                                  |              Type               | Added in | Removed in | Default value |
+| ------------------------------------------------------------------ | :-----------------------------: | :------: | :--------: | :-----------: |
+| [`FETCH_PREVIEW_ENABLED`](#fetch_preview_enabled-)                 | [static](#static-feature-flags) |  0.8.0   |  –   |    `false`    |
+| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled-) | [static](#static-feature-flags) |  0.6.0   |  –   |    `true`     |
 
 :::info
 
@@ -20,7 +21,12 @@ Feature flags available in `react-native-reanimated` are listed [on this page](h
 
 ## Description of available feature flags
 
-### `IOS_DYNAMIC_FRAMERATE_ENABLED`
+### `FETCH_PREVIEW_ENABLED` <AvailableFrom version="0.8.0" />
+
+This feature flag enables the [preview of fetch API on Worklet Runtimes](/docs/bundleMode/usage#running-network-requests-in-worklets) in the [Bundle Mode](/docs/bundleMode/). Make sure to follow the rest of the [setup instructions](/docs/bundleMode/setup/) after enabling this flag.
+**This flag only takes effect in Bundle Mode.**
+
+### `IOS_DYNAMIC_FRAMERATE_ENABLED` <AvailableFrom version="0.6.0" />
 
 This feature flags is supposed to improve the visual perception and perceived smoothness of computationally expensive animations. When enabled, the frame rate will be automatically adjusted for current workload of the UI thread. For instance, if the device fails to run animations in 120 fps which would usually results in irregular frame drops, the mechanism will fallback to stable 60 fps. For more details, see [PR #7624](https://github.com/software-mansion/react-native-reanimated/pull/7624).
 
@@ -42,7 +48,7 @@ Static flags are intended to be resolved during code compilation and cannot be c
 ```
 
 2. Run `pod install` (iOS only)
-3. Rebuild the native app
+2. Rebuild the native app
 
 :::warning
 Static feature flags are not supported in environments where Worklets is prebuilt with the default configuration of flags, like for instance in [Expo Go](https://expo.dev/go) and [RNRepo](https://rnrepo.org/).

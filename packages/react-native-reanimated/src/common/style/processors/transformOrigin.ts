@@ -1,7 +1,9 @@
 'use strict';
-'worklet';
-import { ReanimatedError } from '../../errors';
-import type { TransformOrigin, ValueProcessor } from '../../types';
+import type {
+  NormalizedTransformOrigin,
+  TransformOrigin,
+  ValueProcessor,
+} from '../../types';
 
 type Axis = 'x' | 'y' | 'z';
 type ConvertedValue = `${number}%` | number;
@@ -21,6 +23,7 @@ const VERTICAL_CONVERSIONS = {
 } satisfies KeywordConversions;
 
 function getAllowedValues(axis: Axis, isArray: boolean): string {
+  'worklet';
   const allowed: string[] = [];
 
   if (isArray) {
@@ -51,20 +54,25 @@ function getAllowedValues(axis: Axis, isArray: boolean): string {
 }
 
 export const ERROR_MESSAGES = {
-  invalidTransformOrigin: (value: Readonly<TransformOrigin>) =>
-    `Invalid transformOrigin: ${JSON.stringify(value)}. Expected 1-3 values.`,
+  invalidTransformOrigin: (value: Readonly<TransformOrigin>) => {
+    'worklet';
+    return `Invalid transformOrigin: ${JSON.stringify(value)}. Expected 1-3 values.`;
+  },
   invalidValue: (
     value: string | number,
     axis: Axis,
     origin: Readonly<TransformOrigin>,
     isArray: boolean
-  ) =>
-    `Invalid value "${value}" for the ${axis}-axis in transformOrigin ${JSON.stringify(
+  ) => {
+    'worklet';
+    return `Invalid value "${value}" for the ${axis}-axis in transformOrigin ${JSON.stringify(
       origin
-    )}. Allowed values: ${getAllowedValues(axis, isArray)}.`,
+    )}. Allowed values: ${getAllowedValues(axis, isArray)}.`;
+  },
 };
 
 function maybeSwapComponents(components: ReadonlyArray<string | number>) {
+  'worklet';
   if (
     components[0] in VERTICAL_CONVERSIONS &&
     (components[1] === undefined || components[1] in HORIZONTAL_CONVERSIONS)
@@ -79,11 +87,28 @@ function maybeSwapComponents(components: ReadonlyArray<string | number>) {
 
 function parseValue(
   value: string | number,
+  allowPercentages: true,
+  customParse: CustomParse,
+  getError: () => string,
+  keywordConversions?: KeywordConversions
+): `${number}%` | number;
+
+function parseValue(
+  value: string | number,
+  allowPercentages: false,
+  customParse: CustomParse,
+  getError: () => string,
+  keywordConversions?: KeywordConversions
+): number;
+
+function parseValue(
+  value: string | number,
   allowPercentages: boolean,
   customParse: CustomParse,
   getError: () => string,
   keywordConversions?: KeywordConversions
-) {
+): `${number}%` | number {
+  'worklet';
   if (typeof value === 'number') {
     return value;
   }
@@ -102,13 +127,14 @@ function parseValue(
 
   const parsed = customParse(value);
   if (parsed === null) {
-    throw new ReanimatedError(getError());
+    throw new Error(`[Reanimated] ${getError()}`);
   }
 
   return parsed;
 }
 
 function parsePx(component: string) {
+  'worklet';
   if (component.endsWith('px') || component === '0') {
     const num = parseFloat(component);
     if (!isNaN(num)) {
@@ -118,15 +144,19 @@ function parsePx(component: string) {
   return null;
 }
 
-export const processTransformOrigin: ValueProcessor<TransformOrigin> = (
-  value
-) => {
+export const processTransformOrigin: ValueProcessor<
+  TransformOrigin,
+  NormalizedTransformOrigin
+> = (value) => {
+  'worklet';
   const isArray = Array.isArray(value);
   let components = typeof value === 'string' ? value.split(/\s+/) : value;
   const customParse = isArray ? () => null : parsePx;
 
   if (components.length < 1 || components.length > 3) {
-    throw new ReanimatedError(ERROR_MESSAGES.invalidTransformOrigin(value));
+    throw new Error(
+      `[Reanimated] ${ERROR_MESSAGES.invalidTransformOrigin(value)}`
+    );
   }
 
   components = maybeSwapComponents(components);
