@@ -82,21 +82,19 @@ function getSensorContainer(): SensorContainer {
   return global.__sensorContainer;
 }
 
-export function registerEventHandler<T>(
-  eventHandler: (event: T) => void,
+export function registerEventHandler<TEvent>(
+  eventHandler: (event: TEvent) => void,
   eventName: string,
   emitterReactTag = -1
 ): number {
-  function handleAndFlushAnimationFrame(eventTimestamp: number, event: T) {
+  function handleEvent(_eventTimestamp: number, event: TEvent) {
     'worklet';
-    // TODO: Fix this and don't call `__flushAnimationFrame` here.
-    global.__frameTimestamp = eventTimestamp;
     eventHandler(event);
-    global.__flushAnimationFrame(eventTimestamp);
-    global.__frameTimestamp = undefined;
+    // We call mappers here to make sure view updates can be applied in the same frame after an event.
+    global.__mapperRun();
   }
   return ReanimatedModule.registerEventHandler(
-    createSerializable(handleAndFlushAnimationFrame as WorkletFunction),
+    createSerializable(handleEvent as WorkletFunction),
     eventName,
     emitterReactTag
   );
@@ -112,14 +110,11 @@ export function subscribeForKeyboardEvents(
 ): number {
   // TODO: this should really go with the same code path as other events, that is
   // via registerEventHandler. For now we are copying the code from there.
-  function handleAndFlushAnimationFrame(state: number, height: number) {
+  function handleEvent(state: number, height: number) {
     'worklet';
-    // TODO: Fix this and don't call `__flushAnimationFrame` here.
-    const now = global._getAnimationTimestamp();
-    global.__frameTimestamp = now;
     eventHandler(state, height);
-    global.__flushAnimationFrame(now);
-    global.__frameTimestamp = undefined;
+    // We call mappers here to make sure view updates can be applied in the same frame after an event.
+    global.__mapperRun();
   }
 
   if (__DEV__) {
@@ -131,7 +126,7 @@ export function subscribeForKeyboardEvents(
   }
 
   return ReanimatedModule.subscribeForKeyboardEvents(
-    createSerializable(handleAndFlushAnimationFrame as WorkletFunction),
+    createSerializable(handleEvent as WorkletFunction),
     EDGE_TO_EDGE || (options.isStatusBarTranslucentAndroid ?? false),
     EDGE_TO_EDGE || (options.isNavigationBarTranslucentAndroid ?? false)
   );

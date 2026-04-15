@@ -29,6 +29,7 @@ export function setupMicrotasks() {
   globalThis.queueMicrotask = (callback: () => void) => {
     microtasksQueue.push(callback);
   };
+  // TODO: Remove it after support for Reanimated 4.3 is dropped.
   globalThis._microtaskQueueFinalizers = [];
 
   globalThis.__callMicrotasks = () => {

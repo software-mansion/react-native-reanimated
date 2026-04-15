@@ -16,14 +16,14 @@ Feature flags are available since Reanimated 4.
 
 | Feature flag name                                                                                   |              Type               | Added in | Removed in |               Default value               |
 | --------------------------------------------------------------------------------------------------- | :-----------------------------: | :------: | :--------: | :---------------------------------------: |
-| [`DISABLE_COMMIT_PAUSING_MECHANISM`](#disable_commit_pausing_mechanism)                             | [static](#static-feature-flags) |  4.0.0   |  &ndash;   |                  `false`                  |
-| [`ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#android_synchronously_update_ui_props)                   | [static](#static-feature-flags) |  4.0.0   |  &ndash;   |                  `false`                  |
-| [`IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#ios_synchronously_update_ui_props)                           | [static](#static-feature-flags) |  4.2.0   |  &ndash;   |                  `false`                  |
-| [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#experimental_css_animations_for_svg_components) | [static](#static-feature-flags) |  4.1.0   |  &ndash;   |                  `false`                  |
-| [`USE_SYNCHRONIZABLE_FOR_MUTABLES`](#use_synchronizable_for_mutables)                               | [static](#static-feature-flags) |  4.1.0   |  &ndash;   | `true` for 4.3.0+ <br/> `false` otherwise |
-| [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](#use_commit_hook_only_for_react_commits)                 | [static](#static-feature-flags) |  4.2.0   |  &ndash;   | `true` for 4.3.0+ <br/> `false` otherwise |
-| [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions)                           | [static](#static-feature-flags) |  4.2.0   |  &ndash;   |                  `false`                  |
-| [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#force_react_render_for_settled_animations)           | [static](#static-feature-flags) |  4.2.0   |  &ndash;   | `true` for 4.3.0+ <br/> `false` otherwise |
+| [`DISABLE_COMMIT_PAUSING_MECHANISM`](#disable_commit_pausing_mechanism)                             | [static](#static-feature-flags) |  4.0.0   |  –   |                  `false`                  |
+| [`ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#android_synchronously_update_ui_props)                   | [static](#static-feature-flags) |  4.0.0   |  –   |                  `false`                  |
+| [`IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#ios_synchronously_update_ui_props)                           | [static](#static-feature-flags) |  4.2.0   |  –   |                  `false`                  |
+| [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#experimental_css_animations_for_svg_components) | [static](#static-feature-flags) |  4.1.0   |  –   |                  `false`                  |
+| [`USE_SYNCHRONIZABLE_FOR_MUTABLES`](#use_synchronizable_for_mutables)                               | [static](#static-feature-flags) |  4.1.0   |  –   | `true` for 4.3.0+ <br/> `false` otherwise |
+| [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](#use_commit_hook_only_for_react_commits)                 | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.3.0+ <br/> `false` otherwise |
+| [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions)                           | [static](#static-feature-flags) |  4.2.0   |  –   |                  `false`                  |
+| [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#force_react_render_for_settled_animations)           | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.3.0+ <br/> `false` otherwise |
 
 :::info
 
@@ -85,7 +85,7 @@ When enabled, non-layout styles will be applied using the `synchronouslyUpdateVi
 
 1. The changes applied via `synchronouslyUpdateViewOnUIThread` are not respected by the touch gesture system of Fabric renderer which can lead to incorrect behavior, in particular if transforms are applied. In that case, it's advisable to use `Pressable` component from `react-native-gesture-handler` (which attaches to the underlying platform view rather than using `ShadowTree` to determine the component present at given point) rather than its original counterpart from `react-native`.
 
-2. The changes are applied via `synchronouslyUpdateViewOnUIThread` are not synchronized with changes applied by `ShadowTree::commit` which may lead to minor inconsistencies of animated styles or animated components in a single animation frame.
+1. The changes are applied via `synchronouslyUpdateViewOnUIThread` are not synchronized with changes applied by `ShadowTree::commit` which may lead to minor inconsistencies of animated styles or animated components in a single animation frame.
 
 Currently, only the following styles can be updated using the fast path: `opacity`, `elevation`, `zIndex`, `backgroundColor` (excluding `PlatformColor`), `tintColor` (excluding `PlatformColor`), `borderColor` (all sides, excluding `PlatformColor`), `borderRadius` (all sides) and `transform` (all transforms). All remaining styles, if present, will be updated via `ShadowTree::commit`.
 
@@ -133,7 +133,7 @@ Static flags are intended to be resolved during code compilation and cannot be c
 ```
 
 2. Run `pod install` (iOS only)
-3. Rebuild the native app
+2. Rebuild the native app
 
 :::warning
 Static feature flags are not supported in environments where Reanimated is prebuilt with the default configuration of flags, like for instance in [Expo Go](https://expo.dev/go) and [RNRepo](https://rnrepo.org/).

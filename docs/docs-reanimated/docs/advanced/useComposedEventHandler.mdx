@@ -46,14 +46,13 @@ function ComposedEventHandlerExample() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function useComposedEventHandler(
-  handlers: (EventHandlerProcessed<Event, Context> | null)[]
-): ComposedHandlerProcessed<Event, Context>;
-```
-
+  ```typescript
+  function useComposedEventHandler(
+    handlers: (EventHandlerProcessed<Event, Context> | null)[]
+  ): ComposedHandlerProcessed<Event, Context>;
+  ```
 </details>
 
 ### Arguments
@@ -74,4 +73,4 @@ The handler should be passed to a corresponding `onEvent` prop (e.g. `onScroll` 
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

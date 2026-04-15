@@ -1,6 +1,5 @@
 'use strict';
 import { withSequence, withTiming } from '../../animation';
-import type { SkewX, TranslateX } from '../../common';
 import type {
   EntryExitAnimationFunction,
   EntryExitAnimationsValues,
@@ -8,6 +7,8 @@ import type {
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
+import type { SkewX, TransformsConfig, TranslateX } from './types';
+import { pickTransformValues } from './utils';
 /**
  * Entry from right animation with change in skew and opacity. You can modify
  * the behavior by chaining methods like `.springify()` or `.duration(500)`.
@@ -18,10 +19,9 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#lightspeed
  */
 export class LightSpeedInRight
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    transform: [TranslateX, SkewX];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[TranslateX, SkewX]>
+  >
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'LightSpeedInRight';
@@ -65,9 +65,11 @@ export class LightSpeedInRight
           ],
         },
         initialValues: {
-          opacity: 0,
-          transform: [{ translateX: values.windowWidth }, { skewX: '-45deg' }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 0,
+          transform: pickTransformValues(
+            [{ translateX: values.windowWidth }, { skewX: '-45deg' }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -85,10 +87,9 @@ export class LightSpeedInRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#lightspeed
  */
 export class LightSpeedInLeft
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    transform: [TranslateX, SkewX];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[TranslateX, SkewX]>
+  >
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'LightSpeedInLeft';
@@ -132,9 +133,11 @@ export class LightSpeedInLeft
           ],
         },
         initialValues: {
-          opacity: 0,
-          transform: [{ translateX: -values.windowWidth }, { skewX: '45deg' }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 0,
+          transform: pickTransformValues(
+            [{ translateX: -values.windowWidth }, { skewX: '45deg' }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -152,10 +155,9 @@ export class LightSpeedInLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#lightspeed
  */
 export class LightSpeedOutRight
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    transform: [TranslateX, SkewX];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[TranslateX, SkewX]>
+  >
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'LightSpeedOutRight';
@@ -191,9 +193,11 @@ export class LightSpeedOutRight
           ],
         },
         initialValues: {
-          opacity: 1,
-          transform: [{ translateX: 0 }, { skewX: '0deg' }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: pickTransformValues(
+            [{ translateX: 0 }, { skewX: '0deg' }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -211,10 +215,9 @@ export class LightSpeedOutRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#lightspeed
  */
 export class LightSpeedOutLeft
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    transform: [TranslateX, SkewX];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[TranslateX, SkewX]>
+  >
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'LightSpeedOutLeft';
@@ -250,9 +253,11 @@ export class LightSpeedOutLeft
           ],
         },
         initialValues: {
-          opacity: 1,
-          transform: [{ translateX: 0 }, { skewX: '0deg' }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: pickTransformValues(
+            [{ translateX: 0 }, { skewX: '0deg' }],
+            initialValues
+          ),
         },
         callback,
       };

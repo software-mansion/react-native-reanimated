@@ -805,7 +805,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   StickyHeaderExample: {
     icon: '🔝',
-    title: 'Sticky header',
+    title: 'Stinky header',
     screen: StickyHeaderExample,
   },
   DispatchCommandExample: {

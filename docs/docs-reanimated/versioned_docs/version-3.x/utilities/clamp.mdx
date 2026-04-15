@@ -17,12 +17,11 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function clamp(value: number, min: number, max: number): number;
-```
-
+  ```typescript
+  function clamp(value: number, min: number, max: number): number;
+  ```
 </details>
 
 ### Arguments
@@ -48,12 +47,8 @@ A number which will be returned when provided `value` is higher than `max`.
 import Clamp from '@site/src/examples/Clamp';
 import ClampSrc from '!!raw-loader!@site/src/examples/Clamp';
 
-<InteractiveExample
-  src={ClampSrc}
-  component={Clamp}
-  label="Grab and drag the square"
-/>
+<InteractiveExample src={ClampSrc} component={Clamp} label="Grab and drag the square"/>
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>
