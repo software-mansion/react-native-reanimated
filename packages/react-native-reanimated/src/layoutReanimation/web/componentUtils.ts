@@ -230,8 +230,8 @@ export function setElementAnimation(
       originalElement.appendChild(element.firstChild);
     }
 
-    element.remove();
     element.removedAfterAnimation = true;
+    element.remove();
   };
 
   let wasCallbackCalled = false;
