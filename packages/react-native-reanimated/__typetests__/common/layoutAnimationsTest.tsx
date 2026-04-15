@@ -4,16 +4,21 @@ import { View } from 'react-native';
 
 import Animated, {
   BounceIn,
+  CurvedTransition,
   FadeIn,
   FadeInDown,
   FadeInRight,
   FadeOut,
   FadeOutDown,
+  FadingTransition,
   FlipInXUp,
+  JumpingTransition,
   LightSpeedInRight,
+  LinearTransition,
   PinwheelIn,
   RollInLeft,
   RotateInDownLeft,
+  SequencedTransition,
   SlideInRight,
   StretchInX,
   ZoomIn,
@@ -429,5 +434,32 @@ function LayoutAnimationsTest() {
         />
       </View>
     );
+  }
+
+  function LayoutTransitionsRejectCustomInitialAndTargetValuesTest() {
+    // @ts-expect-error Layout transitions don't support custom initial values.
+    LinearTransition.withInitialValues({ originY: 420 });
+    // @ts-expect-error Layout transitions don't support custom target values.
+    LinearTransition.withTargetValues({ originY: 0 });
+
+    // @ts-expect-error Layout transitions don't support custom initial values.
+    SequencedTransition.withInitialValues({ originY: 420 });
+    // @ts-expect-error Layout transitions don't support custom target values.
+    SequencedTransition.withTargetValues({ originY: 0 });
+
+    // @ts-expect-error Layout transitions don't support custom initial values.
+    FadingTransition.withInitialValues({ originY: 420 });
+    // @ts-expect-error Layout transitions don't support custom target values.
+    FadingTransition.withTargetValues({ originY: 0 });
+
+    // @ts-expect-error Layout transitions don't support custom initial values.
+    JumpingTransition.withInitialValues({ originY: 420 });
+    // @ts-expect-error Layout transitions don't support custom target values.
+    JumpingTransition.withTargetValues({ originY: 0 });
+
+    // @ts-expect-error Layout transitions don't support custom initial values.
+    CurvedTransition.withInitialValues({ originY: 420 });
+    // @ts-expect-error Layout transitions don't support custom target values.
+    CurvedTransition.withTargetValues({ originY: 0 });
   }
 }
