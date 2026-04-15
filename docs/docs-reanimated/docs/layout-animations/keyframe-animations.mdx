@@ -33,36 +33,35 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type FirstFrame =
-  | {
-      0: KeyframeProps & { easing?: never };
-      from?: never;
-    }
-  | {
-      0?: never;
-      from: KeyframeProps & { easing?: never };
-    };
+  ```typescript
+  type FirstFrame =
+    | {
+        0: KeyframeProps & { easing?: never };
+        from?: never;
+      }
+    | {
+        0?: never;
+        from: KeyframeProps & { easing?: never };
+      };
 
-type LastFrame =
-  | { 100?: KeyframeProps; to?: never }
-  | { 100?: never; to: KeyframeProps };
+  type LastFrame =
+    | { 100?: KeyframeProps; to?: never }
+    | { 100?: never; to: KeyframeProps };
 
-export type ValidKeyframeProps = FirstFrame &
-  LastFrame &
-  Record<number, KeyframeProps>;
+  export type ValidKeyframeProps = FirstFrame &
+    LastFrame &
+    Record<number, KeyframeProps>;
 
-class Keyframe {
-  constructor(definitions: ValidKeyframeProps;
-  duration(durationMs: number): Keyframe;
-  delay(delayMs: number): Keyframe;
-  reduceMotion(reduceMotionV: ReduceMotion): Keyframe;
-  withCallback(callback: (finished: boolean) => void): Keyframe;
-}
-```
-
+  class Keyframe {
+    constructor(definitions: ValidKeyframeProps);
+    duration(durationMs: number): Keyframe;
+    delay(delayMs: number): Keyframe;
+    reduceMotion(reduceMotionV: ReduceMotion): Keyframe;
+    withCallback(callback: (finished: boolean) => void): Keyframe;
+  }
+  ```
 </details>
 
 ### Arguments
@@ -108,8 +107,8 @@ keyframe
 
 ## Example
 
-<InteractiveExample src={KeyframeSrc} component={Keyframe} />
+<InteractiveExample src={KeyframeSrc} component={Keyframe}/>
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

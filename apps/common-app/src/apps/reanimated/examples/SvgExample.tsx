@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedProps,
@@ -13,7 +13,9 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 export default function SvgExample() {
   const sv = useSharedValue(0);
 
-  sv.value = withRepeat(withTiming(1, { duration: 500 }), -1, true);
+  useEffect(() => {
+    sv.value = withRepeat(withTiming(1, { duration: 500 }), -1, true);
+  }, [sv]);
 
   const animatedProps = useAnimatedProps(() => {
     return {

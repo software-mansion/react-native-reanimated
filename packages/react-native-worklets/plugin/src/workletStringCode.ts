@@ -67,40 +67,42 @@ export function buildWorkletString(
 
   const parsedClasses = new Set<string>();
 
-  traverse(fun, {
-    NewExpression(path) {
-      if (!isIdentifier(path.node.callee)) {
-        return;
-      }
-      const constructorName = path.node.callee.name;
-      if (
-        !closureVariables.some(
+  if (!state.opts.disableWorkletClasses) {
+    traverse(fun, {
+      NewExpression(path) {
+        if (!isIdentifier(path.node.callee)) {
+          return;
+        }
+        const constructorName = path.node.callee.name;
+        if (
+          !closureVariables.some(
+            (variable) => variable.name === constructorName
+          ) ||
+          parsedClasses.has(constructorName)
+        ) {
+          return;
+        }
+        const index = closureVariables.findIndex(
           (variable) => variable.name === constructorName
-        ) ||
-        parsedClasses.has(constructorName)
-      ) {
-        return;
-      }
-      const index = closureVariables.findIndex(
-        (variable) => variable.name === constructorName
-      );
-      closureVariables.splice(index, 1);
-      const workletClassFactoryName =
-        constructorName + workletClassFactorySuffix;
-      closureVariables.push(identifier(workletClassFactoryName));
+        );
+        closureVariables.splice(index, 1);
+        const workletClassFactoryName =
+          constructorName + workletClassFactorySuffix;
+        closureVariables.push(identifier(workletClassFactoryName));
 
-      assertBlockStatement(expression.body);
-      expression.body.body.unshift(
-        variableDeclaration('const', [
-          variableDeclarator(
-            identifier(constructorName),
-            callExpression(identifier(workletClassFactoryName), [])
-          ),
-        ])
-      );
-      parsedClasses.add(constructorName);
-    },
-  });
+        assertBlockStatement(expression.body);
+        expression.body.body.unshift(
+          variableDeclaration('const', [
+            variableDeclarator(
+              identifier(constructorName),
+              callExpression(identifier(workletClassFactoryName), [])
+            ),
+          ])
+        );
+        parsedClasses.add(constructorName);
+      },
+    });
+  }
 
   const workletFunction = functionExpression(
     identifier(workletName),

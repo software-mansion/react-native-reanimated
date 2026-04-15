@@ -11,7 +11,7 @@ import type {
   SharedValue,
 } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
-import { legacy_makeMutableUI as makeMutableUI } from '../mutables';
+import { makeMutableUI } from '../mutables';
 
 const TAG_OFFSET = 1e9;
 
@@ -74,7 +74,6 @@ function createLayoutAnimationManager(): {
         value._value = style.initialValues;
       }
 
-      // @ts-ignore The line below started failing because I added types to the method – don't have time to fix it right now
       const animation = withStyleAnimation(currentAnimation);
 
       animation.callback = (finished?: boolean) => {

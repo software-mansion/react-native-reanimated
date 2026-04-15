@@ -1,14 +1,15 @@
 'use strict';
-import type { AnyRecord } from '../../../common';
-import { ReanimatedError } from '../../../common';
-import type { StyleBuilder } from '../../../common/style';
+import {
+  getCompoundComponentName,
+  getPropsBuilder,
+  IS_ANDROID,
+} from '../../../common';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
 import type { CSSStyle } from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
 import { filterCSSAndStyleProperties } from '../../utils';
 import { setViewStyle } from '../proxy';
-import { getStyleBuilder, hasStyleBuilder } from '../registry';
 import CSSAnimationsManager from './CSSAnimationsManager';
 import CSSTransitionsManager from './CSSTransitionsManager';
 
@@ -16,22 +17,32 @@ export default class CSSManager implements ICSSManager {
   private readonly cssAnimationsManager: CSSAnimationsManager;
   private readonly cssTransitionsManager: CSSTransitionsManager;
   private readonly viewTag: number;
-  private readonly viewName: string;
-  private readonly styleBuilder: StyleBuilder<AnyRecord> | null = null;
-  private isFirstUpdate: boolean = true;
+  private readonly propsBuilder: ReturnType<typeof getPropsBuilder>;
+  /**
+   * True if the previous update had CSS transition props attached. On the next
+   * update we still need to build `normalizedStyle` only on Android to revert
+   * props applied during the transition to correct current values. (fixes
+   * https://github.com/software-mansion/react-native-reanimated/issues/9218).
+   */
+  private hadTransitionLastUpdate = false;
 
-  constructor({ shadowNodeWrapper, viewTag, viewName = 'RCTView' }: ViewInfo) {
+  constructor(
+    { shadowNodeWrapper, viewTag, reactViewName = 'RCTView' }: ViewInfo,
+    componentDisplayName = ''
+  ) {
     const tag = (this.viewTag = viewTag as number);
     const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
 
-    this.viewName = viewName;
-    this.styleBuilder = hasStyleBuilder(viewName)
-      ? getStyleBuilder(viewName)
-      : null;
+    const compoundComponentName = getCompoundComponentName(
+      reactViewName,
+      componentDisplayName
+    );
+
+    this.propsBuilder = getPropsBuilder(compoundComponentName);
     this.cssAnimationsManager = new CSSAnimationsManager(
       wrapper,
-      viewName,
-      tag
+      tag,
+      compoundComponentName
     );
     this.cssTransitionsManager = new CSSTransitionsManager(wrapper, tag);
   }
@@ -40,31 +51,33 @@ export default class CSSManager implements ICSSManager {
     const [animationProperties, transitionProperties, filteredStyle] =
       filterCSSAndStyleProperties(style);
 
-    if (!this.styleBuilder && (animationProperties || transitionProperties)) {
-      throw new ReanimatedError(
-        `Tried to apply CSS animations to ${this.viewName} which is not supported`
-      );
-    }
+    const hasAnimation = animationProperties !== null;
+    const hasTransition = transitionProperties !== null;
 
-    const normalizedStyle = this.styleBuilder?.buildFrom(filteredStyle);
+    const normalizedStyle =
+      hasAnimation ||
+      hasTransition ||
+      (IS_ANDROID && this.hadTransitionLastUpdate)
+        ? this.propsBuilder.build(filteredStyle)
+        : undefined;
 
-    // If the update is called during the first css style update, we won't
-    // trigger CSS transitions and set styles before attaching CSS transitions
-    if (this.isFirstUpdate && normalizedStyle) {
+    if (
+      normalizedStyle &&
+      (hasAnimation ||
+        // We also need to update the current style on Android when the
+        // transition is detached.
+        (IS_ANDROID && !hasTransition && this.hadTransitionLastUpdate))
+    ) {
       setViewStyle(this.viewTag, normalizedStyle);
     }
 
-    this.cssTransitionsManager.update(transitionProperties);
+    this.cssTransitionsManager.update(
+      transitionProperties,
+      normalizedStyle ?? {}
+    );
     this.cssAnimationsManager.update(animationProperties);
 
-    // If the current update is not the fist one, we want to update CSS
-    // animations and transitions first and update the style then to make
-    // sure that the new transition is fired with new settings (like duration)
-    if (!this.isFirstUpdate && normalizedStyle) {
-      setViewStyle(this.viewTag, normalizedStyle);
-    }
-
-    this.isFirstUpdate = false;
+    this.hadTransitionLastUpdate = hasTransition;
   }
 
   unmountCleanup(): void {

@@ -7,13 +7,13 @@ git clone https://github.com/software-mansion/react-native-reanimated
 cd react-native-reanimated
 ```
 
-2. Install node_modules in project root directory:
+2. Install node\_modules in project root directory:
 
 ```
 yarn
 ```
 
-3. Install node_modules in `MacOSExample/` directory:
+3. Install node\_modules in `MacOSExample/` directory:
 
 ```
 cd MacOSExample

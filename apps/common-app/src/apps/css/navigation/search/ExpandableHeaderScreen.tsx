@@ -20,7 +20,7 @@ import Animated, {
 import { flex } from '@/theme';
 import { IS_WEB } from '@/utils';
 
-const SPRING: WithSpringConfig = { stiffness: 140, damping: 22, mass: 0.6 };
+const SPRING: WithSpringConfig = { damping: 22, mass: 0.6, stiffness: 140 };
 
 enum HeaderState {
   OPEN = 'OPEN',
@@ -50,11 +50,11 @@ type ExpandableHeaderScreenProps = {
 };
 
 export default function ExpandableHeaderScreen({
-  HeaderComponent,
+  children,
   expandMode,
+  HeaderComponent,
   headerContainerStyle,
   onHeaderShowProgressChange,
-  children,
 }: ExpandableHeaderScreenProps) {
   const scrollableRef = useAnimatedRef();
   const offsetY = useSharedValue(0);
@@ -101,6 +101,23 @@ export default function ExpandableHeaderScreen({
       dragStartTranslateY.value = null;
       isScrolling.value = true;
     },
+    onEndDrag: (_, ctx) => {
+      isScrolling.value = false;
+      if (headerShowProgress.value === 1) {
+        ctx.state = HeaderState.OPEN;
+      } else {
+        ctx.state = HeaderState.CLOSED;
+        translateY.value = withSpring(0, SPRING);
+      }
+    },
+    onMomentumEnd: (_, ctx) => {
+      const target = ctx.state === HeaderState.OPEN ? headerHeight.value : 0;
+      if (Math.abs(target - translateY.value) > 1) {
+        translateY.value = withSpring(target, SPRING);
+      } else {
+        translateY.value = target;
+      }
+    },
     onScroll: ({ contentOffset: { y } }, ctx) => {
       offsetY.value =
         ctx.state !== HeaderState.CLOSED || headerShowProgress.value > 0
@@ -123,23 +140,6 @@ export default function ExpandableHeaderScreen({
       ) {
         translateY.value -= y;
         scrollTo(scrollableRef, 0, 0, false);
-      }
-    },
-    onEndDrag: (_, ctx) => {
-      isScrolling.value = false;
-      if (headerShowProgress.value === 1) {
-        ctx.state = HeaderState.OPEN;
-      } else {
-        ctx.state = HeaderState.CLOSED;
-        translateY.value = withSpring(0, SPRING);
-      }
-    },
-    onMomentumEnd: (_, ctx) => {
-      const target = ctx.state === HeaderState.OPEN ? headerHeight.value : 0;
-      if (Math.abs(target - translateY.value) > 1) {
-        translateY.value = withSpring(target, SPRING);
-      } else {
-        translateY.value = target;
       }
     },
   });
@@ -199,8 +199,8 @@ export default function ExpandableHeaderScreen({
   }));
 
   const animatedContentContainerStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
     paddingBottom: isExpanded ? headerHeight.value : 0,
+    transform: [{ translateY: translateY.value }],
   }));
 
   const header = useMemo(() => {
@@ -213,8 +213,8 @@ export default function ExpandableHeaderScreen({
   const content = useMemo(() => {
     if (typeof children === 'function') {
       return children({
-        ref: scrollableRef,
         onScroll: expandEnabled ? scrollHandler : undefined,
+        ref: scrollableRef,
       });
     }
     return children;

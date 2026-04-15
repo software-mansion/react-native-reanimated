@@ -34,11 +34,22 @@ declare global {
    * - Value _3_: Worker Worklet Runtime
    */
   var __RUNTIME_KIND: RuntimeKind | 1 | 2 | 3;
+
+  /**
+   * Use it to schedule a function to be executed after all
+   * `requestAnimationFrame` callbacks but before the next frame is rendered.
+   * This is useful to collect all updates which happened when the animation
+   * frame queue was flushed.
+   *
+   * **Available only on the UI Runtime.**
+   */
+  var requestAnimationFrameFinalizer: (callback: () => void) => void;
 }
 
 export type WorkletRuntime = {
   __hostObjectWorkletRuntime: never;
   readonly name: string;
+  readonly runtimeId: number;
 };
 
 export type WorkletStackDetails = [
@@ -130,7 +141,7 @@ export type WorkletRuntimeConfig = {
        * An optional custom queue to be used for scheduling worklets.
        *
        * The queue has to implement the C++ `AsyncQueue` interface from
-       * `<worklets/Public/AsyncQueue.h>`.
+       * `<worklets/RunLoop/AsyncQueue.h>`.
        */
       customQueue?: never;
     }
@@ -144,7 +155,7 @@ export type WorkletRuntimeConfig = {
        * An optional custom queue to be used for scheduling worklets.
        *
        * The queue has to implement the C++ `AsyncQueue` interface from
-       * `<worklets/Public/AsyncQueue.h>`.
+       * `<worklets/RunLoop/AsyncQueue.h>`.
        */
       customQueue?: object;
     }

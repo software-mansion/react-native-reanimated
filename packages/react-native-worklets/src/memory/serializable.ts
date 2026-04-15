@@ -6,7 +6,9 @@ import type {
   SerializableRef,
 } from './types';
 
-export function isSerializableRef(value: unknown): value is SerializableRef {
+export function isSerializableRef<TValue = unknown>(
+  value: unknown
+): value is SerializableRef<TValue> {
   return true;
 }
 

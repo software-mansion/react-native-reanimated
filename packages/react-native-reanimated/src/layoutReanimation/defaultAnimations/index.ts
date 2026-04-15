@@ -8,4 +8,5 @@ export * from './Roll';
 export * from './Rotate';
 export * from './Slide';
 export * from './Stretch';
+export * from './utils';
 export * from './Zoom';

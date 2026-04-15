@@ -11,25 +11,6 @@ ArrayPropertiesInterpolator::ArrayPropertiesInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : GroupPropertiesInterpolator(propertyPath, viewStylesRepository), factories_(factories) {}
 
-bool ArrayPropertiesInterpolator::equalsReversingAdjustedStartValue(const folly::dynamic &propertyValue) const {
-  if (!propertyValue.isArray()) {
-    return false;
-  }
-
-  const auto valuesCount = propertyValue.size();
-  if (valuesCount != interpolators_.size()) {
-    return false;
-  }
-
-  for (size_t i = 0; i < valuesCount; ++i) {
-    if (!interpolators_[i]->equalsReversingAdjustedStartValue(propertyValue[i])) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 void ArrayPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) {
   const jsi::Array keyframesArray = keyframes.asObject(rt).asArray(rt);
   const size_t valuesCount = keyframesArray.size(rt);
@@ -41,32 +22,31 @@ void ArrayPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::V
   }
 }
 
-void ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
-    const folly::dynamic &oldStyleValue,
-    const folly::dynamic &newStyleValue,
-    const folly::dynamic &lastUpdateValue) {
-  const auto emptyArray = folly::dynamic::array();
-  const auto null = folly::dynamic();
+bool ArrayPropertiesInterpolator::updateKeyframes(
+    jsi::Runtime &rt,
+    const jsi::Value &fromValue,
+    const jsi::Value &toValue) {
+  const auto fromArray = fromValue.isUndefined() ? jsi::Array(rt, 0) : fromValue.asObject(rt).asArray(rt);
+  const auto toArray = toValue.isUndefined() ? jsi::Array(rt, 0) : toValue.asObject(rt).asArray(rt);
 
-  const auto &oldStyleArray = oldStyleValue.empty() ? emptyArray : oldStyleValue;
-  const auto &newStyleArray = newStyleValue.empty() ? emptyArray : newStyleValue;
-  const auto &lastUpdateArray = lastUpdateValue.empty() ? emptyArray : lastUpdateValue;
-
-  const size_t oldSize = oldStyleArray.size();
-  const size_t newSize = newStyleArray.size();
-  const size_t lastSize = lastUpdateArray.size();
-  const size_t valuesCount = std::max(oldSize, newSize);
+  const size_t fromSize = fromArray.size(rt);
+  const size_t toSize = toArray.size(rt);
+  const size_t valuesCount = std::max(fromSize, toSize);
 
   resizeInterpolators(valuesCount);
+
+  bool areAllPropsReversed = true;
 
   for (size_t i = 0; i < valuesCount; ++i) {
     // These index checks ensure that interpolation works between 2 arrays
     // with different lengths
-    interpolators_[i]->updateKeyframesFromStyleChange(
-        i < oldSize ? oldStyleArray[i] : null,
-        i < newSize ? newStyleArray[i] : null,
-        i < lastSize ? lastUpdateArray[i] : null);
+    areAllPropsReversed &= interpolators_[i]->updateKeyframes(
+        rt,
+        i < fromSize ? fromArray.getValueAtIndex(rt, i) : jsi::Value::undefined(),
+        i < toSize ? toArray.getValueAtIndex(rt, i) : jsi::Value::undefined());
   }
+
+  return areAllPropsReversed;
 }
 
 folly::dynamic ArrayPropertiesInterpolator::mapInterpolators(

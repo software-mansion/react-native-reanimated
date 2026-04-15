@@ -5,3 +5,4 @@
 /packages/eslint-plugin-reanimated/types/**/* linguist-generated=true
 /packages/react-native-worklets/plugin/index.js linguist-generated=true
 /packages/react-native-worklets/plugin/index.d.ts linguist-generated=true
+**/Podfile.lock linguist-generated=true

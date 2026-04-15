@@ -1,7 +1,7 @@
 export interface PluginOptions {
   /**
    * Enables the [Bundle
-   * Mode](https://docs.swmansion.com/react-native-worklets/docs/experimental/bundle-mode).
+   * Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode).
    *
    * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#bundle-mode}
    *
@@ -29,6 +29,18 @@ export interface PluginOptions {
    * - Defaults to `false`.
    */
   disableSourceMaps?: boolean;
+
+  /**
+   * Disables [Worklet Classes
+   * support](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about#experimental-worklet-classes).
+   * You might need to disable this feature when using [Custom
+   * Serializables](https://docs.swmansion.com/react-native-worklets/docs/memory/registerCustomSerializable).
+   *
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#disableworkletclasses}
+   *
+   * - Defaults to `false`.
+   */
+  disableWorkletClasses?: boolean;
 
   /**
    * This is a list of Babel plugins that will be used when transforming
@@ -60,6 +72,9 @@ export interface PluginOptions {
    */
   globals?: string[];
 
+  /** Temporary internal option to create ShareableUnpacker. */
+  limitInitDataHoisting?: boolean;
+
   /**
    * This option comes in handy for Web apps. Because Babel ordinarily doesn't
    * get information about the target platform, it includes worklet data in the
@@ -85,6 +100,16 @@ export interface PluginOptions {
   relativeSourceLocation?: boolean;
 
   /**
+   * This option makes it so no global identifiers are implicitly captured in
+   * worklets' closures between runtimes.
+   *
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#strictglobal}
+   *
+   * Defaults to `false`.
+   */
+  strictGlobal?: boolean;
+
+  /**
    * This option can also be useful for Web apps. In Reanimated, there are
    * numerous checks to determine the right function implementation for a
    * specific target platform. Enabling this option changes all the checks that
@@ -100,7 +125,7 @@ export interface PluginOptions {
   /**
    * This option allows you to register modules as safe to use on Worklet
    * Runtimes in the [Bundle
-   * Mode](https://docs.swmansion.com/react-native-worklets/docs/experimental/bundle-mode).
+   * Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode).
    *
    * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#workletizablemodules}
    *

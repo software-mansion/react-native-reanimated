@@ -9,10 +9,7 @@ sidebar_position: 6
 import TransitionBehaviorBasic from '@site/src/examples/css-transitions/TransitionBehaviorBasic';
 import TransitionBehaviorBasicSrc from '!!raw-loader!@site/src/examples/css-transitions/TransitionBehaviorBasic';
 
-<InteractiveExample
-  src={TransitionBehaviorBasicSrc}
-  component={TransitionBehaviorBasic}
-/>
+<InteractiveExample src={TransitionBehaviorBasicSrc} component={TransitionBehaviorBasic}/>
 
 ## Reference
 
@@ -32,12 +29,11 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type CSSTransitionBehavior = 'normal' | 'allow-discrete';
-```
-
+  ```typescript
+  type CSSTransitionBehavior = 'normal' | 'allow-discrete';
+  ```
 </details>
 
 ### Values
@@ -55,11 +51,7 @@ Doesn't allow transitions to be applied to discrete properties, resulting in cha
 import TransitionBehavior from '@site/src/examples/css-transitions/TransitionBehavior';
 import TransitionBehaviorSrc from '!!raw-loader!@site/src/examples/css-transitions/TransitionBehavior';
 
-<InteractiveExample
-  src={TransitionBehaviorSrc}
-  component={TransitionBehavior}
-  label="Comparison between allow-discrete and normal"
-/>
+<InteractiveExample src={TransitionBehaviorSrc} component={TransitionBehavior} label="Comparison between allow-discrete and normal"/>
 
 ## Remarks
 
@@ -69,4 +61,4 @@ import TransitionBehaviorSrc from '!!raw-loader!@site/src/examples/css-transitio
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

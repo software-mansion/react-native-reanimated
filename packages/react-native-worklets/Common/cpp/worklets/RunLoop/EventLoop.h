@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <worklets/Public/AsyncQueue.h>
+#include <worklets/RunLoop/AsyncQueue.h>
 
 #include <atomic>
 #include <condition_variable>

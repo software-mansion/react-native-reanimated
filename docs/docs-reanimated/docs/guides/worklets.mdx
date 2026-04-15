@@ -81,7 +81,7 @@ function App() {
 }
 ```
 
-Functions passed to `scheduleOnRN` must be defined in the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) scope, i.e. in the component body or the global scope. This code won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime):
+Functions passed to `scheduleOnRN` must be defined in the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) scope, i.e. in the component body or the global scope. This code won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime):
 
 ```javascript
 function App() {
@@ -95,7 +95,7 @@ function App() {
 
 ## Hoisting
 
-Functions marked with `'worklet'` aren't [hoisted](https://developer.mozilla.org/en-US/docs/Glossary/Hoisting). Besides affecting hoisting, the `'worklet'` directive has no effect on the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#react-native-runtime-rn-runtime).
+Functions marked with `'worklet'` aren't [hoisted](https://developer.mozilla.org/en-US/docs/Glossary/Hoisting). Besides affecting hoisting, the `'worklet'` directive has no effect on the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
 
 ## Capturing closure
 

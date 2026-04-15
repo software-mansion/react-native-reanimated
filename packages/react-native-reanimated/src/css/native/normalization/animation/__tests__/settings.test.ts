@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../../../../common';
 import { cubicBezier } from '../../../../easing';
 import type {
   CSSAnimationDirection,
@@ -40,7 +39,9 @@ describe(normalizeDirection, () => {
       (direction) => {
         const value = direction as CSSAnimationDirection;
         expect(() => normalizeDirection(value)).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidAnimationDirection(value))
+          new Error(
+            `[Reanimated] ${ERROR_MESSAGES.invalidAnimationDirection(value)}`
+          )
         );
       }
     );
@@ -74,7 +75,9 @@ describe(normalizeIterationCount, () => {
       (iterationCount) => {
         const value = iterationCount as CSSAnimationIterationCount;
         expect(() => normalizeIterationCount(value)).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidIterationCount(value))
+          new Error(
+            `[Reanimated] ${ERROR_MESSAGES.invalidIterationCount(value)}`
+          )
         );
       }
     );
@@ -83,7 +86,7 @@ describe(normalizeIterationCount, () => {
   describe('when negative number is passed', () => {
     test('throws an error', () => {
       expect(() => normalizeIterationCount(-1)).toThrow(
-        new ReanimatedError(ERROR_MESSAGES.negativeIterationCount(-1))
+        new Error(`[Reanimated] ${ERROR_MESSAGES.negativeIterationCount(-1)}`)
       );
     });
   });
@@ -104,7 +107,7 @@ describe(normalizeFillMode, () => {
     test.each(['invalid', 'none '])('throws an error for %p', (fillMode) => {
       const value = fillMode as CSSAnimationFillMode;
       expect(() => normalizeFillMode(value)).toThrow(
-        new ReanimatedError(ERROR_MESSAGES.invalidFillMode(value))
+        new Error(`[Reanimated] ${ERROR_MESSAGES.invalidFillMode(value)}`)
       );
     });
   });
@@ -127,7 +130,7 @@ describe(normalizePlayState, () => {
       (playState) => {
         const value = playState as CSSAnimationPlayState;
         expect(() => normalizePlayState(value)).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidPlayState(value))
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidPlayState(value)}`)
         );
       }
     );

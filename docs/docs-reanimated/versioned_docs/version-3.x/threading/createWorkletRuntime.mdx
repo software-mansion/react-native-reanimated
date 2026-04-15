@@ -31,20 +31,19 @@ runtime->runGuarded(worklet, ...args);
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type WorkletRuntime = {
-  __hostObjectWorkletRuntime: never;
-  readonly name: string;
-};
+  ```typescript
+  type WorkletRuntime = {
+    __hostObjectWorkletRuntime: never;
+    readonly name: string;
+  };
 
-function createWorkletRuntime(
-  name: string,
-  initializer?: __ComplexWorkletFunction<[], void>
-): WorkletRuntime;
-```
-
+  function createWorkletRuntime(
+    name: string,
+    initializer?: __ComplexWorkletFunction<[], void>
+  ): WorkletRuntime;
+  ```
 </details>
 
 ### Arguments
@@ -73,4 +72,4 @@ An optional worklet that will be run synchronously on the same thread immediatel
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios />
+<PlatformCompatibility android ios/>
