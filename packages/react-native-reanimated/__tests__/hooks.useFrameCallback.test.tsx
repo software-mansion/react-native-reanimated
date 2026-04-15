@@ -1,94 +1,60 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { cleanup, render } from '@testing-library/react-native';
-import React from 'react';
+import { act, renderHook } from '@testing-library/react-native';
 
-import Animated, { useFrameCallback } from '../src';
-
-jest.useFakeTimers();
-
-function flushFrames(count: number) {
-  for (let i = 0; i < count; i++) {
-    jest.runOnlyPendingTimers();
-  }
-}
-
-afterEach(() => {
-  cleanup();
-  flushFrames(20);
-  jest.clearAllTimers();
-});
+import { useFrameCallback } from '../src';
 
 describe('useFrameCallback', () => {
-  test('returns a frame callback object with expected shape', () => {
-    let result: ReturnType<typeof useFrameCallback> | undefined;
+  beforeAll(() => {
+    jest.useFakeTimers();
+  });
 
-    function TestComponent() {
-      result = useFrameCallback(() => {});
-      return <Animated.View />;
+  function flushFrames(count: number) {
+    for (let i = 0; i < count; i++) {
+      act(() => {
+        jest.runOnlyPendingTimers();
+      });
     }
+  }
 
-    render(<TestComponent />);
+  test('returns a frame callback object with expected shape', () => {
+    const { result } = renderHook(() => useFrameCallback(() => {}));
 
-    expect(result).toBeDefined();
-    expect(typeof result!.setActive).toBe('function');
-    expect(typeof result!.isActive).toBe('boolean');
-    expect(typeof result!.callbackId).toBe('number');
+    expect(result.current).toBeDefined();
+    expect(typeof result.current.setActive).toBe('function');
+    expect(typeof result.current.isActive).toBe('boolean');
+    expect(typeof result.current.callbackId).toBe('number');
   });
 
   test('is active by default (autostart = true)', () => {
-    let result: ReturnType<typeof useFrameCallback> | undefined;
+    const { result } = renderHook(() => useFrameCallback(() => {}));
 
-    function TestComponent() {
-      result = useFrameCallback(() => {});
-      return <Animated.View />;
-    }
-
-    render(<TestComponent />);
-
-    expect(result!.isActive).toBe(true);
+    expect(result.current.isActive).toBe(true);
   });
 
   test('is inactive when autostart is false', () => {
-    let result: ReturnType<typeof useFrameCallback> | undefined;
+    const { result } = renderHook(() => useFrameCallback(() => {}, false));
 
-    function TestComponent() {
-      result = useFrameCallback(() => {}, false);
-      return <Animated.View />;
-    }
-
-    render(<TestComponent />);
-
-    expect(result!.isActive).toBe(false);
+    expect(result.current.isActive).toBe(false);
   });
 
   test('setActive toggles isActive', () => {
-    let result: ReturnType<typeof useFrameCallback> | undefined;
+    const { result } = renderHook(() => useFrameCallback(() => {}, false));
 
-    function TestComponent() {
-      result = useFrameCallback(() => {}, false);
-      return <Animated.View />;
-    }
-
-    render(<TestComponent />);
-
-    expect(result!.isActive).toBe(false);
-    result!.setActive(true);
-    expect(result!.isActive).toBe(true);
-    result!.setActive(false);
-    expect(result!.isActive).toBe(false);
+    expect(result.current.isActive).toBe(false);
+    result.current.setActive(true);
+    expect(result.current.isActive).toBe(true);
+    result.current.setActive(false);
+    expect(result.current.isActive).toBe(false);
   });
 
   test('invokes the callback on frame updates when active', () => {
     const callback = jest.fn();
 
-    function TestComponent() {
+    renderHook(() =>
       useFrameCallback((info) => {
         callback(info);
-      });
-      return <Animated.View />;
-    }
-
-    render(<TestComponent />);
+      })
+    );
     flushFrames(20);
 
     expect(callback).toHaveBeenCalled();
@@ -106,14 +72,11 @@ describe('useFrameCallback', () => {
   test('does not invoke the callback when autostart is false', () => {
     const callback = jest.fn();
 
-    function TestComponent() {
+    renderHook(() =>
       useFrameCallback(() => {
         callback();
-      }, false);
-      return <Animated.View />;
-    }
-
-    render(<TestComponent />);
+      }, false)
+    );
     flushFrames(20);
 
     expect(callback).not.toHaveBeenCalled();
@@ -121,20 +84,16 @@ describe('useFrameCallback', () => {
 
   test('starts invoking the callback after setActive(true)', () => {
     const callback = jest.fn();
-    let result: ReturnType<typeof useFrameCallback> | undefined;
 
-    function TestComponent() {
-      result = useFrameCallback(() => {
+    const { result } = renderHook(() =>
+      useFrameCallback(() => {
         callback();
-      }, false);
-      return <Animated.View />;
-    }
-
-    render(<TestComponent />);
+      }, false)
+    );
     flushFrames(20);
     expect(callback).not.toHaveBeenCalled();
 
-    result!.setActive(true);
+    result.current.setActive(true);
     flushFrames(20);
 
     expect(callback).toHaveBeenCalled();
@@ -142,21 +101,17 @@ describe('useFrameCallback', () => {
 
   test('stops invoking the callback after setActive(false)', () => {
     const callback = jest.fn();
-    let result: ReturnType<typeof useFrameCallback> | undefined;
 
-    function TestComponent() {
-      result = useFrameCallback(() => {
+    const { result } = renderHook(() =>
+      useFrameCallback(() => {
         callback();
-      });
-      return <Animated.View />;
-    }
-
-    render(<TestComponent />);
+      })
+    );
     flushFrames(20);
     const callsWhileActive = callback.mock.calls.length;
     expect(callsWhileActive).toBeGreaterThan(0);
 
-    result!.setActive(false);
+    result.current.setActive(false);
     flushFrames(20);
 
     expect(callback.mock.calls.length).toBe(callsWhileActive);
@@ -169,14 +124,11 @@ describe('useFrameCallback', () => {
       timeSinceFirstFrame: number;
     }> = [];
 
-    function TestComponent() {
+    renderHook(() =>
       useFrameCallback((info) => {
         frames.push(info);
-      });
-      return <Animated.View />;
-    }
-
-    render(<TestComponent />);
+      })
+    );
     flushFrames(20);
 
     expect(frames.length).toBeGreaterThan(2);
@@ -187,26 +139,23 @@ describe('useFrameCallback', () => {
     for (let i = 1; i < frames.length; i++) {
       expect(typeof frames[i].timestamp).toBe('number');
       expect(typeof frames[i].timeSinceFirstFrame).toBe('number');
-      expect(frames[i].timeSincePreviousFrame).not.toBeNull();
+      expect(typeof frames[i].timeSincePreviousFrame).toBe('number');
     }
   });
 
   test('stops invoking the callback after unmount', () => {
     const callback = jest.fn();
 
-    function TestComponent() {
+    const { unmount } = renderHook(() =>
       useFrameCallback(() => {
         callback();
-      });
-      return <Animated.View />;
-    }
-
-    const component = render(<TestComponent />);
+      })
+    );
     flushFrames(20);
     const callsBeforeUnmount = callback.mock.calls.length;
     expect(callsBeforeUnmount).toBeGreaterThan(0);
 
-    component.unmount();
+    unmount();
     flushFrames(20);
 
     expect(callback.mock.calls.length).toBe(callsBeforeUnmount);
