@@ -1,4 +1,29 @@
 'use strict';
+import { useMemo, useRef } from 'react';
+
+/**
+ * Returns `true` on the render immediately following a fast refresh.
+ *
+ * Relies on `useMemo`'s cached value being reset when the component's hook
+ * signature is refreshed while `useRef` is preserved - a mismatch between the
+ * two proves the module was re-executed. Always `false` outside `__DEV__` since
+ * fast refresh is a development-only mechanism.
+ */
+/* eslint-disable react-hooks/rules-of-hooks -- __DEV__ is build-constant */
+export function useIsFastRefresh(): boolean {
+  'use no memo';
+  if (!__DEV__) {
+    return false;
+  }
+  const signal = useMemo(() => ({}), []);
+  const prev = useRef(signal);
+  if (prev.current === signal) {
+    return false;
+  }
+  prev.current = signal;
+  return true;
+}
+/* eslint-enable react-hooks/rules-of-hooks */
 
 export function isAnimated(prop: unknown) {
   'worklet';

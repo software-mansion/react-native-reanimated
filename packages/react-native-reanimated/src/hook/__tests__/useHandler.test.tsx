@@ -1,7 +1,15 @@
 'use strict';
 
 import { worklet } from '../../jestUtils';
+import { useIsFastRefresh } from '../utils';
 import { renderUseHandler, runCommonTests } from './useHandler.shared';
+
+jest.mock('../utils', () => ({
+  ...jest.requireActual('../utils'),
+  useIsFastRefresh: jest.fn(() => false),
+}));
+
+const mockFastRefresh = useIsFastRefresh as jest.Mock;
 
 function nonWorkletError(...names: string[]) {
   return new Error(
@@ -86,6 +94,41 @@ describe('useHandler (native)', () => {
       // handler changes - true despite empty deps array
       rerender({ handlers: { onScroll: worklet() }, deps: [] });
       expect(result.current.doDependenciesDiffer).toBe(true);
+    });
+  });
+
+  describe('fast refresh', () => {
+    test('flips doDependenciesDiffer to true even when worklet is unchanged', () => {
+      const w = worklet();
+      const { result, rerender } = renderUseHandler({ onScroll: w });
+
+      // We expect doDependenciesDiffer to be true on the first render.
+      expect(result.current.doDependenciesDiffer).toBe(true);
+
+      // Rerender with the same worklet handler - doDependenciesDiffer should be false.
+      rerender({ handlers: { onScroll: w } });
+      expect(result.current.doDependenciesDiffer).toBe(false);
+
+      // Next render is a fast refresh - doDependenciesDiffer should be true (behave as if it was a first render).
+      mockFastRefresh.mockReturnValueOnce(true);
+      rerender({ handlers: { onScroll: w } });
+      expect(result.current.doDependenciesDiffer).toBe(true);
+
+      // Subsequent renders return to normal behavior - doDependenciesDiffer should be false.
+      rerender({ handlers: { onScroll: w } });
+      expect(result.current.doDependenciesDiffer).toBe(false);
+    });
+
+    test('context is reinitialized after fast refresh', () => {
+      const w = worklet();
+      const { result, rerender } = renderUseHandler({ onScroll: w });
+
+      const firstContext = result.current.context;
+
+      mockFastRefresh.mockReturnValueOnce(true);
+      rerender({ handlers: { onScroll: w } });
+
+      expect(result.current.context).not.toBe(firstContext);
     });
   });
 });

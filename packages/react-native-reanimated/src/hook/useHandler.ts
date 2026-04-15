@@ -7,6 +7,7 @@ import type { WorkletClosure } from 'react-native-worklets/lib/typescript/types'
 import type { UnknownRecord } from '../common';
 import { IS_WEB } from '../common';
 import type { DependencyList, ReanimatedEvent } from './commonTypes';
+import { useIsFastRefresh } from './utils';
 
 interface GeneralHandler<
   TEvent extends object,
@@ -147,11 +148,25 @@ export function useHandler<Event extends object, Context extends UnknownRecord>(
     prevDependencies: DependencyList;
   } | null>(null);
 
+  // On fast refresh we want the hook to behave as a first render rather
+  // than a re-render, so `doDependenciesDiffer` is reported as true and
+  // consumers can rebuild native bindings tied to pre-refresh JS identities.
+  // See https://github.com/software-mansion/react-native-reanimated/pull/9075.
+  const isFastRefresh = useIsFastRefresh();
+  if (isFastRefresh) {
+    stateRef.current = null;
+  }
+
   if (stateRef.current === null) {
     stateRef.current = {
       context: makeShareable({} as Context),
       prevHandlers: undefined,
-      prevDependencies: [],
+      // Only matters on the web/no-plugin path, where `areDependenciesEqual`
+      // drives the result. Without the ternary, `deps=[]` consumers would
+      // miss the fast-refresh behavior because `areDependenciesEqual([], [])`
+      // is true. `undefined` ensures that the comparison returns `true` so
+      // that consumers can re-register handlers.
+      prevDependencies: isFastRefresh ? undefined : [],
     };
   }
 
