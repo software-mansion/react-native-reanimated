@@ -254,24 +254,22 @@ android {
     }
 
     project.tasks.withType<ExternalNativeBuildJsonTask>().configureEach {
-        val compileTask = this
         val isExampleApp = IS_REANIMATED_EXAMPLE_APP
         val pkgDir = packageDir
+        val cxxRoot = File(project.buildDir.parentFile, ".cxx")
         doLast {
             if (!isExampleApp) {
                 return@doLast
             }
-            try {
-                val abiField = compileTask.javaClass.getDeclaredField("abi").also { it.isAccessible = true }
-                val abi = abiField.get(compileTask) ?: return@doLast
-                val cxxBuildFolder = abi.javaClass.getMethod("getCxxBuildFolder").invoke(abi) as? File ?: return@doLast
-                val generated = File("$cxxBuildFolder/compile_commands.json")
-                val output = File("$pkgDir/compile_commands.json")
-                output.writeText(generated.readText())
-                println("Generated clangd metadata.")
-            } catch (e: Exception) {
-                logger.warn("Failed to generate clangd metadata: ${e.message}")
+            val generated = cxxRoot.walkTopDown()
+                .filter { it.name == "compile_commands.json" && it.isFile }
+                .maxByOrNull { it.lastModified() }
+            if (generated == null) {
+                logger.warn("Failed to generate clangd metadata: no compile_commands.json under $cxxRoot")
+                return@doLast
             }
+            File("$pkgDir/compile_commands.json").writeText(generated.readText())
+            logger.info("Generated clangd metadata from $generated.")
         }
     }
 }
