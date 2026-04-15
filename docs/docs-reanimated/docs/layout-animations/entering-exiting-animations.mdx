@@ -19,6 +19,9 @@ Spring-based animations are yet to be introduced to the web. Due to that, playgr
 ## Remarks
 
 - We recommend using layout animation builders outside of components or with `useMemo` to ensure the best performance.
+- `withInitialValues` is typed per preset, so only props specific to the animation preset are accepted (see each section's Initial values table). For transforms, prefer flat top-level props like `{ translateX: 50 }` over `transform: [{ translateX: 50 }]`. The `transform: [{ ... }]` tuple form still works but is deprecated.
+- Type definition blocks after each animation preset show the exact `withInitialValues` type. The deprecated `transform` prop also shows the order in which transforms are applied. In the flat form, object key order is ignored and the preset applies transforms in its built-in order.
+- If both forms are used, the flat prop wins for that transform slot; remaining slots fall back to the tuple value, then to the preset default. Mixing forms is supported but not recommended.
 - On the New Architecture:
   - `nativeID` is used internally to configure entering animations, so overwriting it will result in entering animations not running. Some components (e.g. TouchableWithoutFeedback) overwrite `nativeID` of its children. To work around this issue wrap your animated children with a `View`.
   - removing a non-animated view will trigger exiting animations in its children, but the non-animated view will not wait for the children's animations to finish. This is due to view flattening and can be mitigated by using `collapsable={false}`.
@@ -87,18 +90,43 @@ Available fade animations:
 
   These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-  | Name           | Config                                           |
-  | -------------- | ------------------------------------------------ |
-  | `FadeIn`       | `{opacity: 0}`                                   |
-  | `FadeInDown`   | `{opacity: 0, transform: [{ translateY: 25 }]}`  |
-  | `FadeInLeft`   | `{opacity: 0, transform: [{ translateX: -25 }]}` |
-  | `FadeInRight`  | `{opacity: 0, transform: [{ translateX: 25 }]}`  |
-  | `FadeInUp`     | `{opacity: 0, transform: [{ translateY: -25 }]}` |
-  | `FadeOut`      | `{opacity: 1}`                                   |
-  | `FadeOutDown`  | `{opacity: 1, transform: [{ translateY: 0 }]}`   |
-  | `FadeOutLeft`  | `{opacity: 1, transform: [{ translateX: 0 }]}`   |
-  | `FadeOutRight` | `{opacity: 1, transform: [{ translateX: 0 }]}`   |
-  | `FadeOutUp`    | `{opacity: 1, transform: [{ translateY: 0 }]}`   |
+  | Name           | Config                            |
+  | -------------- | --------------------------------- |
+  | `FadeIn`       | `{ opacity: 0 }`                  |
+  | `FadeInDown`   | `{ opacity: 0, translateY: 25 }`  |
+  | `FadeInLeft`   | `{ opacity: 0, translateX: -25 }` |
+  | `FadeInRight`  | `{ opacity: 0, translateX: 25 }`  |
+  | `FadeInUp`     | `{ opacity: 0, translateY: -25 }` |
+  | `FadeOut`      | `{ opacity: 1 }`                  |
+  | `FadeOutDown`  | `{ opacity: 1, translateY: 0 }`   |
+  | `FadeOutLeft`  | `{ opacity: 1, translateX: 0 }`   |
+  | `FadeOutRight` | `{ opacity: 1, translateX: 0 }`   |
+  | `FadeOutUp`    | `{ opacity: 1, translateY: 0 }`   |
+</details>
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  // FadeIn, FadeOut
+  type FadeInitialValues = { opacity?: number };
+
+  // FadeInRight, FadeInLeft, FadeOutRight, FadeOutLeft
+  type FadeXInitialValues = {
+    opacity?: number;
+    translateX?: number | `${number}%`;
+    /** @deprecated Prefer flat top-level props. */
+    transform?: [{ translateX: number | `${number}%` }];
+  };
+
+  // FadeInUp, FadeInDown, FadeOutUp, FadeOutDown
+  type FadeYInitialValues = {
+    opacity?: number;
+    translateY?: number | `${number}%`;
+    /** @deprecated Prefer flat top-level props. */
+    transform?: [{ translateY: number | `${number}%` }];
+  };
+  ```
 </details>
 
 ### Modifiers
@@ -143,7 +171,7 @@ FadeInUp.springify()
 FadeInDown.delay(500)
   .randomDelay()
   .reduceMotion(ReduceMotion.Never)
-  .withInitialValues({ transform: [{ translateY: 420 }] })
+  .withInitialValues({ translateY: 420 })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
   });
@@ -153,7 +181,7 @@ FadeInDown.delay(500)
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
-- `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
+- `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the Initial values table above).
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Bounce
@@ -220,18 +248,45 @@ Available bounce animations:
 
   These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-  | Name             | Config                                                |
-  | ---------------- | ----------------------------------------------------- |
-  | `BounceIn`       | `{transform: [{ scale: 0 }]}`                         |
-  | `BounceInRight`  | `{transform: [{ translateX: values.windowWidth }]}`   |
-  | `BounceInLeft`   | `{transform: [{ translateX: -values.windowWidth }]}`  |
-  | `BounceInUp`     | `{transform: [{ translateY: -values.windowHeight }]}` |
-  | `BounceInDown`   | `{transform: [{ translateY: values.windowHeight}]}`   |
-  | `BounceOut`      | `{transform: [{ scale: 1 }]}`                         |
-  | `BounceOutRight` | `{transform: [{ translateX: 0 }]}`                    |
-  | `BounceOutLeft`  | `{transform: [{ translateX: 0 }]}`                    |
-  | `BounceOutUp`    | `{transform: [{ translateY: 0 }]}`                    |
-  | `BounceOutDown`  | `{transform: [{ translateY: 0 }]}`                    |
+  | Name             | Config                                 |
+  | ---------------- | -------------------------------------- |
+  | `BounceIn`       | `{ scale: 0 }`                         |
+  | `BounceInRight`  | `{ translateX: values.windowWidth }`   |
+  | `BounceInLeft`   | `{ translateX: -values.windowWidth }`  |
+  | `BounceInUp`     | `{ translateY: -values.windowHeight }` |
+  | `BounceInDown`   | `{ translateY: values.windowHeight }`  |
+  | `BounceOut`      | `{ scale: 1 }`                         |
+  | `BounceOutRight` | `{ translateX: 0 }`                    |
+  | `BounceOutLeft`  | `{ translateX: 0 }`                    |
+  | `BounceOutUp`    | `{ translateY: 0 }`                    |
+  | `BounceOutDown`  | `{ translateY: 0 }`                    |
+</details>
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  // BounceIn, BounceOut
+  type BounceScaleInitialValues = {
+    scale?: number;
+    /** @deprecated Prefer flat top-level props. */
+    transform?: [{ scale: number }];
+  };
+
+  // BounceInRight, BounceInLeft, BounceOutRight, BounceOutLeft
+  type BounceXInitialValues = {
+    translateX?: number | `${number}%`;
+    /** @deprecated Prefer flat top-level props. */
+    transform?: [{ translateX: number | `${number}%` }];
+  };
+
+  // BounceInUp, BounceInDown, BounceOutUp, BounceOutDown
+  type BounceYInitialValues = {
+    translateY?: number | `${number}%`;
+    /** @deprecated Prefer flat top-level props. */
+    transform?: [{ translateY: number | `${number}%` }];
+  };
+  ```
 </details>
 
 ### Modifiers <Optional/>
@@ -241,7 +296,7 @@ BounceInDown.duration(500)
   .delay(500)
   .randomDelay()
   .reduceMotion(ReduceMotion.Never)
-  .withInitialValues({ transform: [{ translateY: -420 }] })
+  .withInitialValues({ translateY: -420 })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
   });
@@ -251,7 +306,7 @@ BounceInDown.duration(500)
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
-- `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
+- `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the Initial values table above).
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Flip
@@ -322,20 +377,68 @@ Available flip animations:
 
   These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-  | Name            | Config                                                                                                   |
-  | --------------- | -------------------------------------------------------------------------------------------------------- |
-  | `FlipInEasyX`   | `{transform: [{ perspective: 500 }, { rotateX: '90deg' }]}`                                              |
-  | `FlipInEasyY`   | `{transform: [{ perspective: 500 }, { rotateY: '90deg' }]}`                                              |
-  | `FlipInXDown`   | `{transform: [{ perspective: 500 }, { rotateX: '-90deg' }, { translateY: targetValues.targetHeight }]}`  |
-  | `FlipInXUp`     | `{transform: [{ perspective: 500 }, { rotateX: '90deg' }, { translateY: -targetValues.targetHeight }]}`  |
-  | `FlipInYLeft`   | `{transform: [{ perspective: 500 }, { rotateY: '-90deg' }, { translateX: -targetValues.targetWidth } ]}` |
-  | `FlipInYRight`  | `{transform: [{ perspective: 500 }, { rotateY: '90deg' }, { translateX: targetValues.targetWidth } ]}`   |
-  | `FlipOutEasyX`  | `{transform: [{ perspective: 500 }, { rotateX: '0deg' }]}`                                               |
-  | `FlipOutEasyY`  | `{transform: [{ perspective: 500 }, { rotateY: '0deg' }]}`                                               |
-  | `FlipOutXDown`  | `{transform: [{ perspective: 500 }, { rotateX: '0deg' }, { translateY: 0 }]}`                            |
-  | `FlipOutXUp`    | `{transform: [{ perspective: 500 }, { rotateX: '0deg' }, { translateY: 0 }]}`                            |
-  | `FlipOutYLeft`  | `{transform: [{ perspective: 500 }, { rotateY: '0deg' }, { translateX: 0 }]}`                            |
-  | `FlipOutYRight` | `{transform: [{ perspective: 500 }, { rotateY: '0deg' }, { translateX: 0 }]}`                            |
+  | Name            | Config                                                                                  |
+  | --------------- | --------------------------------------------------------------------------------------- |
+  | `FlipInEasyX`   | `{ perspective: 500, rotateX: '90deg' }`                                                |
+  | `FlipInEasyY`   | `{ perspective: 500, rotateY: '90deg' }`                                                |
+  | `FlipInXDown`   | `{ perspective: 500, rotateX: '-90deg', translateY: targetValues.targetHeight }`        |
+  | `FlipInXUp`     | `{ perspective: 500, rotateX: '90deg', translateY: -targetValues.targetHeight }`        |
+  | `FlipInYLeft`   | `{ perspective: 500, rotateY: '-90deg', translateX: -targetValues.targetWidth }`        |
+  | `FlipInYRight`  | `{ perspective: 500, rotateY: '90deg', translateX: targetValues.targetWidth }`          |
+  | `FlipOutEasyX`  | `{ perspective: 500, rotateX: '0deg' }`                                                 |
+  | `FlipOutEasyY`  | `{ perspective: 500, rotateY: '0deg' }`                                                 |
+  | `FlipOutXDown`  | `{ perspective: 500, rotateX: '0deg', translateY: 0 }`                                  |
+  | `FlipOutXUp`    | `{ perspective: 500, rotateX: '0deg', translateY: 0 }`                                  |
+  | `FlipOutYLeft`  | `{ perspective: 500, rotateY: '0deg', translateX: 0 }`                                  |
+  | `FlipOutYRight` | `{ perspective: 500, rotateY: '0deg', translateX: 0 }`                                  |
+</details>
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  // FlipInEasyX, FlipOutEasyX
+  type FlipEasyXInitialValues = {
+    perspective?: number;
+    rotateX?: string;
+    /** @deprecated Prefer flat top-level props. */
+    transform?: [{ perspective: number }, { rotateX: string }];
+  };
+
+  // FlipInEasyY, FlipOutEasyY
+  type FlipEasyYInitialValues = {
+    perspective?: number;
+    rotateY?: string;
+    /** @deprecated Prefer flat top-level props. */
+    transform?: [{ perspective: number }, { rotateY: string }];
+  };
+
+  // FlipInXDown, FlipInXUp, FlipOutXDown, FlipOutXUp
+  type FlipXInitialValues = {
+    perspective?: number;
+    rotateX?: string;
+    translateY?: number | `${number}%`;
+    /** @deprecated Prefer flat top-level props. */
+    transform?: [
+      { perspective: number },
+      { rotateX: string },
+      { translateY: number | `${number}%` },
+    ];
+  };
+
+  // FlipInYLeft, FlipInYRight, FlipOutYLeft, FlipOutYRight
+  type FlipYInitialValues = {
+    perspective?: number;
+    rotateY?: string;
+    translateX?: number | `${number}%`;
+    /** @deprecated Prefer flat top-level props. */
+    transform?: [
+      { perspective: number },
+      { rotateY: string },
+      { translateX: number | `${number}%` },
+    ];
+  };
+  ```
 </details>
 
 ### Modifiers
@@ -380,9 +483,7 @@ FlipInXUp.springify()
 FlipInEasyY.delay(500)
   .randomDelay()
   .reduceMotion(ReduceMotion.Never)
-  .withInitialValues({
-    transform: [{ perspective: 100 }, { rotateY: '123deg' }],
-  })
+  .withInitialValues({ perspective: 100, rotateY: '123deg' })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
   });
@@ -392,7 +493,7 @@ FlipInEasyY.delay(500)
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
-- `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
+- `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the Initial values table above).
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## LightSpeed
@@ -449,12 +550,27 @@ Available lightspeed animations:
 
   These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-  | Name                 | Config                                                                               |
-  | -------------------- | ------------------------------------------------------------------------------------ |
-  | `LightSpeedInLeft`   | `{opacity: 0, transform: [{ translateX: -values.windowWidth }, { skewX: '45deg' }]}` |
-  | `LightSpeedInRight`  | `{opacity: 0, transform: [{ translateX: values.windowWidth }, { skewX: '-45deg' }]}` |
-  | `LightSpeedOutLeft`  | `{opacity: 1, transform: [{ translateX: 0 }, { skewX: '0deg' }]}`                    |
-  | `LightSpeedOutRight` | `{opacity: 1, transform: [{ translateX: 0 }, { skewX: '0deg' }]}`                    |
+  | Name                 | Config                                                               |
+  | -------------------- | -------------------------------------------------------------------- |
+  | `LightSpeedInLeft`   | `{ opacity: 0, translateX: -values.windowWidth, skewX: '45deg' }`    |
+  | `LightSpeedInRight`  | `{ opacity: 0, translateX: values.windowWidth, skewX: '-45deg' }`    |
+  | `LightSpeedOutLeft`  | `{ opacity: 1, translateX: 0, skewX: '0deg' }`                       |
+  | `LightSpeedOutRight` | `{ opacity: 1, translateX: 0, skewX: '0deg' }`                       |
+</details>
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  // All LightSpeed presets
+  type LightSpeedInitialValues = {
+    opacity?: number;
+    translateX?: number | `${number}%`;
+    skewX?: string;
+    /** @deprecated Prefer flat top-level props. */
+    transform?: [{ translateX: number | `${number}%` }, { skewX: string }];
+  };
+  ```
 </details>
 
 ### Modifiers
@@ -499,9 +615,7 @@ LightSpeedInLeft.springify()
 LightSpeedInRight.delay(500)
   .randomDelay()
   .reduceMotion(ReduceMotion.Never)
-  .withInitialValues({
-    transform: [{ translateX: -100 }, { skewX: '-10deg' }],
-  })
+  .withInitialValues({ translateX: -100, skewX: '-10deg' })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
   });
@@ -511,7 +625,7 @@ LightSpeedInRight.delay(500)
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
-- `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
+- `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the Initial values table above).
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Pinwheel
@@ -562,10 +676,25 @@ Available pinwheel animations:
 
   These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-  | Name          | Config                                                   |
-  | ------------- | -------------------------------------------------------- |
-  | `PinwheelIn`  | `{opacity: 0, transform: [{ scale: 0 }, {rotate: '5'}]}` |
-  | `PinwheelOut` | `{opacity: 1, transform: [{ scale: 1 }, {rotate: '0'}]}` |
+  | Name          | Config                                  |
+  | ------------- | --------------------------------------- |
+  | `PinwheelIn`  | `{ opacity: 0, scale: 0, rotate: '5' }` |
+  | `PinwheelOut` | `{ opacity: 1, scale: 1, rotate: '0' }` |
+</details>
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  // PinwheelIn, PinwheelOut
+  type PinwheelInitialValues = {
+    opacity?: number;
+    scale?: number;
+    rotate?: string;
+    /** @deprecated Prefer flat top-level props. */
+    transform?: [{ scale: number }, { rotate: string }];
+  };
+  ```
 </details>
 
 ### Modifiers
@@ -610,9 +739,7 @@ PinwheelIn.springify()
 PinwheelIn.delay(500)
   .randomDelay()
   .reduceMotion(ReduceMotion.Never)
-  .withInitialValues({
-    transform: [{ scale: 0.8 }, { rotate: '3' }],
-  })
+  .withInitialValues({ scale: 0.8, rotate: '3' })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
   });
@@ -622,7 +749,7 @@ PinwheelIn.delay(500)
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
-- `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
+- `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the Initial values table above).
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Roll
@@ -677,12 +804,26 @@ Available roll animations:
 
   These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-  | Name           | Config                                                                      |
-  | -------------- | --------------------------------------------------------------------------- |
-  | `RollInLeft`   | `{transform: [{ translateX: -values.windowWidth }, { rotate: '-180deg' }]}` |
-  | `RollInRight`  | `{transform: [{ translateX: values.windowWidth }, { rotate: '180deg' }]}`   |
-  | `RollOutLeft`  | `{transform: [{ translateX: 0 }, { rotate: '0deg' }]}`                      |
-  | `RollOutRight` | `{transform: [{ translateX: 0 }, { rotate: '0deg' }]}`                      |
+  | Name           | Config                                                   |
+  | -------------- | -------------------------------------------------------- |
+  | `RollInLeft`   | `{ translateX: -values.windowWidth, rotate: '-180deg' }` |
+  | `RollInRight`  | `{ translateX: values.windowWidth, rotate: '180deg' }`   |
+  | `RollOutLeft`  | `{ translateX: 0, rotate: '0deg' }`                      |
+  | `RollOutRight` | `{ translateX: 0, rotate: '0deg' }`                      |
+</details>
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  // All Roll presets
+  type RollInitialValues = {
+    translateX?: number | `${number}%`;
+    rotate?: string;
+    /** @deprecated Prefer flat top-level props. */
+    transform?: [{ translateX: number | `${number}%` }, { rotate: string }];
+  };
+  ```
 </details>
 
 ### Modifiers
@@ -727,7 +868,7 @@ RollInLeft.springify()
 RollInRight.delay(500)
   .randomDelay()
   .reduceMotion(ReduceMotion.Never)
-  .withInitialValues({ transform: [{ translateX: 100 }, { rotate: '-45deg' }] })
+  .withInitialValues({ translateX: 100, rotate: '-45deg' })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
   });
@@ -737,7 +878,7 @@ RollInRight.delay(500)
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
-- `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
+- `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the Initial values table above).
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Rotate
@@ -802,16 +943,36 @@ Available rotate animations:
 
   These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-  | Name                 | Config                                                                                                                                                                                     |
-  | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-  | `RotateInDownLeft`   | `{opacity: 0, transform: [{ rotate: '-90deg' }, { translateX: values.targetWidth / 2 - values.targetHeight / 2 }, { translateY: -(values.targetWidth / 2 - values.targetHeight / 2) }]}`   |
-  | `RotateInDownRight`  | `{opacity: 0, transform: [{ rotate: '90deg' }, { translateX: -(values.targetWidth / 2 - values.targetHeight / 2) }, { translateY: -(values.targetWidth / 2 - values.targetHeight / 2) }]}` |
-  | `RotateInUpLeft`     | `{opacity: 0, transform: [{ rotate: '90deg' }, { translateX: values.targetWidth / 2 - values.targetHeight / 2 }, { translateY: values.targetWidth / 2 - values.targetHeight / 2 }]}`       |
-  | `RotateInUpRight`    | `{opacity: 0, transform: [{ rotate: '-90deg' }, { translateX: -(values.targetWidth / 2 - values.targetHeight / 2) }, { translateY: values.targetWidth / 2 - values.targetHeight / 2 }]}`   |
-  | `RotateOutDownLeft`  | `{opacity: 1, transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }]}`                                                                                                      |
-  | `RotateOutDownRight` | `{opacity: 1, transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }]}`                                                                                                      |
-  | `RotateOutUpLeft`    | `{opacity: 1, transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }]}`                                                                                                      |
-  | `RotateOutUpRight`   | `{opacity: 1, transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }]}`                                                                                                      |
+  | Name                 | Config                                                                                                                                                              |
+  | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `RotateInDownLeft`   | `{ opacity: 0, rotate: '-90deg', translateX: values.targetWidth / 2 - values.targetHeight / 2, translateY: -(values.targetWidth / 2 - values.targetHeight / 2) }`   |
+  | `RotateInDownRight`  | `{ opacity: 0, rotate: '90deg', translateX: -(values.targetWidth / 2 - values.targetHeight / 2), translateY: -(values.targetWidth / 2 - values.targetHeight / 2) }` |
+  | `RotateInUpLeft`     | `{ opacity: 0, rotate: '90deg', translateX: values.targetWidth / 2 - values.targetHeight / 2, translateY: values.targetWidth / 2 - values.targetHeight / 2 }`       |
+  | `RotateInUpRight`    | `{ opacity: 0, rotate: '-90deg', translateX: -(values.targetWidth / 2 - values.targetHeight / 2), translateY: values.targetWidth / 2 - values.targetHeight / 2 }`   |
+  | `RotateOutDownLeft`  | `{ opacity: 1, rotate: '0deg', translateX: 0, translateY: 0 }`                                                                                                      |
+  | `RotateOutDownRight` | `{ opacity: 1, rotate: '0deg', translateX: 0, translateY: 0 }`                                                                                                      |
+  | `RotateOutUpLeft`    | `{ opacity: 1, rotate: '0deg', translateX: 0, translateY: 0 }`                                                                                                      |
+  | `RotateOutUpRight`   | `{ opacity: 1, rotate: '0deg', translateX: 0, translateY: 0 }`                                                                                                      |
+</details>
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  // All Rotate presets
+  type RotateInitialValues = {
+    opacity?: number;
+    rotate?: string;
+    translateX?: number | `${number}%`;
+    translateY?: number | `${number}%`;
+    /** @deprecated Prefer flat top-level props. */
+    transform?: [
+      { rotate: string },
+      { translateX: number | `${number}%` },
+      { translateY: number | `${number}%` },
+    ];
+  };
+  ```
 </details>
 
 ### Modifiers
@@ -856,9 +1017,7 @@ RotateInUpLeft.springify()
 RotateInDownLeft.delay(500)
   .randomDelay()
   .reduceMotion(ReduceMotion.Never)
-  .withInitialValues({
-    transform: [{ rotate: '-90deg' }, { translateX: 100 }, { translateY: 100 }],
-  })
+  .withInitialValues({ rotate: '-90deg', translateX: 100, translateY: 100 })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
   });
@@ -868,7 +1027,7 @@ RotateInDownLeft.delay(500)
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
-- `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
+- `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the Initial values table above).
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Slide
@@ -931,16 +1090,28 @@ Available slide animations:
 
   These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-  | Name            | Config                                                  |
-  | --------------- | ------------------------------------------------------- |
-  | `SlideInDown`   | `{originY: values.targetOriginY + values.windowHeight}` |
-  | `SlideInLeft`   | `{originX: values.targetOriginX - values.windowWidth}`  |
-  | `SlideInRight`  | `{originX: values.targetOriginX + values.windowWidth}`  |
-  | `SlideInUp`     | `{originY: -values.windowHeight}`                       |
-  | `SlideOutDown`  | `{originY: values.currentOriginY}`                      |
-  | `SlideOutLeft`  | `{originX: values.currentOriginX}`                      |
-  | `SlideOutRight` | `{originX: values.currentOriginX}`                      |
-  | `SlideOutUp`    | `{originY: values.currentOriginY}`                      |
+  | Name            | Config                                                    |
+  | --------------- | --------------------------------------------------------- |
+  | `SlideInDown`   | `{ originY: values.targetOriginY + values.windowHeight }` |
+  | `SlideInLeft`   | `{ originX: values.targetOriginX - values.windowWidth }`  |
+  | `SlideInRight`  | `{ originX: values.targetOriginX + values.windowWidth }`  |
+  | `SlideInUp`     | `{ originY: -values.windowHeight }`                       |
+  | `SlideOutDown`  | `{ originY: values.currentOriginY }`                      |
+  | `SlideOutLeft`  | `{ originX: values.currentOriginX }`                      |
+  | `SlideOutRight` | `{ originX: values.currentOriginX }`                      |
+  | `SlideOutUp`    | `{ originY: values.currentOriginY }`                      |
+</details>
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  // SlideInLeft, SlideInRight, SlideOutLeft, SlideOutRight
+  type SlideXInitialValues = { originX?: number };
+
+  // SlideInUp, SlideInDown, SlideOutUp, SlideOutDown
+  type SlideYInitialValues = { originY?: number };
+  ```
 </details>
 
 ### Modifiers
@@ -985,7 +1156,7 @@ SlideInUp.springify()
 SlideInDown.delay(500)
   .randomDelay()
   .reduceMotion(ReduceMotion.Never)
-  .withInitialValues({ transform: [{ translateY: 420 }] })
+  .withInitialValues({ originY: 420 })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
   });
@@ -995,7 +1166,7 @@ SlideInDown.delay(500)
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
-- `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
+- `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the Initial values table above).
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Stretch
@@ -1050,12 +1221,32 @@ Available stretch animations:
 
   These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-  | Name          | Config                         |
-  | ------------- | ------------------------------ |
-  | `StretchInX`  | `{transform: [{ scaleX: 0 }]}` |
-  | `StretchInY`  | `{transform: [{ scaleY: 0 }]}` |
-  | `StretchOutX` | `{transform: [{ scaleX: 1 }]}` |
-  | `StretchOutY` | `{transform: [{ scaleY: 1 }]}` |
+  | Name          | Config          |
+  | ------------- | --------------- |
+  | `StretchInX`  | `{ scaleX: 0 }` |
+  | `StretchInY`  | `{ scaleY: 0 }` |
+  | `StretchOutX` | `{ scaleX: 1 }` |
+  | `StretchOutY` | `{ scaleY: 1 }` |
+</details>
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  // StretchInX, StretchOutX
+  type StretchXInitialValues = {
+    scaleX?: number;
+    /** @deprecated Prefer flat top-level props. */
+    transform?: [{ scaleX: number }];
+  };
+
+  // StretchInY, StretchOutY
+  type StretchYInitialValues = {
+    scaleY?: number;
+    /** @deprecated Prefer flat top-level props. */
+    transform?: [{ scaleY: number }];
+  };
+  ```
 </details>
 
 ### Modifiers
@@ -1100,7 +1291,7 @@ StretchInX.springify()
 StretchInY.delay(500)
   .randomDelay()
   .reduceMotion(ReduceMotion.Never)
-  .withInitialValues({ transform: [{ scaleY: 0.5 }] })
+  .withInitialValues({ scaleY: 0.5 })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
   });
@@ -1110,7 +1301,7 @@ StretchInY.delay(500)
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
-- `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
+- `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the Initial values table above).
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Zoom
@@ -1189,24 +1380,62 @@ Available zoom animations:
 
   These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-  | Name              | Config                                                              |
-  | ----------------- | ------------------------------------------------------------------- |
-  | `ZoomIn`          | `{transform: [{ scale: 0 }]}`                                       |
-  | `ZoomInDown`      | `{transform: [{ translateY: values.windowHeight }, { scale: 0 }]}`  |
-  | `ZoomInEasyDown`  | `{transform: [{ translateY: values.targetHeight }, { scale: 0 }]}`  |
-  | `ZoomInEasyUp`    | `{transform: [{ translateY: -values.targetHeight }, { scale: 0 }]}` |
-  | `ZoomInLeft`      | `{transform: [{ translateX: -values.windowWidth }, { scale: 0 }]}`  |
-  | `ZoomInRight`     | `{transform: [{ translateX: values.windowWidth }, { scale: 0 }]}`   |
-  | `ZoomInRotate`    | `{transform: [{ scale: 0 }, { rotate: rotate }]}`                   |
-  | `ZoomInUp`        | `{transform: [{ translateY: -values.windowHeight }, { scale: 0 }]}` |
-  | `ZoomOut`         | `{transform: [{ scale: 1 }]}`                                       |
-  | `ZoomOutDown`     | `{transform: [{ translateY: 0 }, { scale: 1 }]}`                    |
-  | `ZoomOutEasyDown` | `{transform: [{ translateY: 0 }, { scale: 1 }]}`                    |
-  | `ZoomOutEasyUp`   | `{transform: [{ translateY: 0 }, { scale: 1 }]}`                    |
-  | `ZoomOutLeft`     | `{transform: [{ translateX: 0 }, { scale: 1 }]}`                    |
-  | `ZoomOutRight`    | `{transform: [{ translateX: 0 }, { scale: 1 }]}`                    |
-  | `ZoomOutRotate`   | `{transform: [{ scale: 1 }, { rotate: '0' }]}`                      |
-  | `ZoomOutUp`       | `{transform: [{ translateY: 0 }, { scale: 1 }]}`                    |
+  | Name              | Config                                            |
+  | ----------------- | ------------------------------------------------- |
+  | `ZoomIn`          | `{ scale: 0 }`                                    |
+  | `ZoomInDown`      | `{ translateY: values.windowHeight, scale: 0 }`   |
+  | `ZoomInEasyDown`  | `{ translateY: values.targetHeight, scale: 0 }`   |
+  | `ZoomInEasyUp`    | `{ translateY: -values.targetHeight, scale: 0 }`  |
+  | `ZoomInLeft`      | `{ translateX: -values.windowWidth, scale: 0 }`   |
+  | `ZoomInRight`     | `{ translateX: values.windowWidth, scale: 0 }`    |
+  | `ZoomInRotate`    | `{ scale: 0, rotate: rotate }`                    |
+  | `ZoomInUp`        | `{ translateY: -values.windowHeight, scale: 0 }`  |
+  | `ZoomOut`         | `{ scale: 1 }`                                    |
+  | `ZoomOutDown`     | `{ translateY: 0, scale: 1 }`                     |
+  | `ZoomOutEasyDown` | `{ translateY: 0, scale: 1 }`                     |
+  | `ZoomOutEasyUp`   | `{ translateY: 0, scale: 1 }`                     |
+  | `ZoomOutLeft`     | `{ translateX: 0, scale: 1 }`                     |
+  | `ZoomOutRight`    | `{ translateX: 0, scale: 1 }`                     |
+  | `ZoomOutRotate`   | `{ scale: 1, rotate: '0' }`                       |
+  | `ZoomOutUp`       | `{ translateY: 0, scale: 1 }`                     |
+</details>
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  // ZoomIn, ZoomOut
+  type ZoomScaleInitialValues = {
+    scale?: number;
+    /** @deprecated Prefer flat top-level props. */
+    transform?: [{ scale: number }];
+  };
+
+  // ZoomInLeft, ZoomInRight, ZoomOutLeft, ZoomOutRight
+  type ZoomXInitialValues = {
+    translateX?: number | `${number}%`;
+    scale?: number;
+    /** @deprecated Prefer flat top-level props. */
+    transform?: [{ translateX: number | `${number}%` }, { scale: number }];
+  };
+
+  // ZoomInUp, ZoomInDown, ZoomInEasyUp, ZoomInEasyDown,
+  // ZoomOutUp, ZoomOutDown, ZoomOutEasyUp, ZoomOutEasyDown
+  type ZoomYInitialValues = {
+    translateY?: number | `${number}%`;
+    scale?: number;
+    /** @deprecated Prefer flat top-level props. */
+    transform?: [{ translateY: number | `${number}%` }, { scale: number }];
+  };
+
+  // ZoomInRotate, ZoomOutRotate
+  type ZoomRotateInitialValues = {
+    scale?: number;
+    rotate?: string;
+    /** @deprecated Prefer flat top-level props. */
+    transform?: [{ scale: number }, { rotate: string }];
+  };
+  ```
 </details>
 
 ### Modifiers
@@ -1251,7 +1480,7 @@ ZoomInRotate.springify()
 ZoomIn.delay(500)
   .randomDelay()
   .reduceMotion(ReduceMotion.Never)
-  .withInitialValues({ transform: [{ scale: 0.5 }] })
+  .withInitialValues({ scale: 0.5 })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
   });
@@ -1261,7 +1490,7 @@ ZoomIn.delay(500)
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
-- `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
+- `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the Initial values table above).
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Platform compatibility
