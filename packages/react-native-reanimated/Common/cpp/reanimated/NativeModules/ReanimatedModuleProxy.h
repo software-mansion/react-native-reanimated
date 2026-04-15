@@ -187,6 +187,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
 #ifdef __APPLE__
+  const RunCoreAnimationForView runCoreAnimationForViewFunction_;
   ForceScreenSnapshotFunction forceScreenSnapshot_;
 #endif
   bool cssLoopRunning_{false};

@@ -1,5 +1,6 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
+#include <reanimated/Tools/FeatureFlags.h>
 
 #include <react/renderer/animations/utils.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
@@ -31,6 +32,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   LOG(INFO) << std::endl;
   LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " " << surfaceId << std::endl;
 #endif
+
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
@@ -636,7 +638,7 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
   auto &viewProps = static_cast<const ViewProps &>(*mutation.newChildShadowView.props);
   auto opacity = viewProps.opacity;
 
-  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), finalView, current, mutation, opacity, tag]() {
+  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), finalView, current, mutation, opacity, tag, this]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -651,6 +653,22 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
           LayoutAnimation{
               .finalView = finalView, .currentView = current, .parentTag = mutation.parentTag, .opacity = opacity});
       window = strongThis->surfaceManager.getWindow(mutation.newChildShadowView.surfaceId);
+    }
+    auto oldView = mutation.oldChildShadowView;
+    auto newView = mutation.newChildShadowView;
+
+    if constexpr (StaticFeatureFlags::getFlag(
+                      "IOS_USE_NATIVE_LAYOUT_ANIMATIONS")) {
+      strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
+          tag,
+          LayoutAnimationType::ENTERING,
+          // old view does not really exist here with proper data so we just
+          // pass new view
+          newView.layoutMetrics.frame,
+          newView.layoutMetrics.frame,
+          [this, tag](bool finished) { this->endLayoutAnimation(tag, false); });
+
+      return;
     }
 
     Snapshot values(mutation.newChildShadowView, window);
@@ -675,7 +693,7 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
 #endif
   auto surfaceId = mutation.oldChildShadowView.surfaceId;
 
-  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag, mutation, surfaceId]() {
+  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag, mutation, surfaceId, this]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -690,6 +708,14 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
       window = strongThis->surfaceManager.getWindow(surfaceId);
     }
 
+    if constexpr (StaticFeatureFlags::getFlag("IOS_USE_NATIVE_LAYOUT_ANIMATIONS")) {
+      strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
+          tag,
+          LayoutAnimationType::EXITING,
+          oldView.layoutMetrics.frame,
+          oldView.layoutMetrics.frame,
+          [this, tag](bool finished) { this->endLayoutAnimation(tag, finished); });
+    } else {
     Snapshot values(oldView, window);
 
     auto &uiRuntime = strongThis->uiRuntime_;
@@ -704,6 +730,7 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
     yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
     strongThis->layoutAnimationsManager_->startLayoutAnimation(
         uiRuntime, tag, LayoutAnimationType::EXITING, yogaValues);
+    }
     strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
   });
 }
@@ -714,19 +741,32 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
 #endif
   auto surfaceId = mutation.oldChildShadowView.surfaceId;
 
-  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), mutation, surfaceId, tag]() {
+  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), mutation, surfaceId, tag, this]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
     }
 
     auto oldView = mutation.oldChildShadowView;
+    auto newView = mutation.newChildShadowView;
     Rect window{};
     {
       auto &mutex = strongThis->mutex;
       auto lock = std::unique_lock<std::recursive_mutex>(mutex);
       strongThis->createLayoutAnimation(mutation, oldView, surfaceId, tag);
       window = strongThis->surfaceManager.getWindow(surfaceId);
+    }
+
+    if constexpr (StaticFeatureFlags::getFlag(
+                      "IOS_USE_NATIVE_LAYOUT_ANIMATIONS")) {
+      strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
+          tag,
+          LayoutAnimationType::LAYOUT,
+          oldView.layoutMetrics.frame,
+          newView.layoutMetrics.frame,
+          [this, tag](bool finished) { this->endLayoutAnimation(tag, false); });
+
+      return;
     }
 
     Snapshot currentValues(oldView, window);

@@ -424,7 +424,16 @@ export default class AnimatedComponent
         ? this.reanimatedID
         : this.getComponentViewTag(),
       type,
-      currentConfig && maybeBuild(currentConfig)
+      currentConfig &&
+        maybeBuild(
+          currentConfig,
+          type === LayoutAnimationType.LAYOUT
+            ? undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */
+            : this.props?.style,
+          this._displayName
+        ),
+      undefined,
+      currentConfig?.rawConfig
     );
   }
 

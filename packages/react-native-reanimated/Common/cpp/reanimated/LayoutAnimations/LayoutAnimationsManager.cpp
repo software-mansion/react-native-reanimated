@@ -1,4 +1,6 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/LayoutAnimations/NativeLayoutAnimation.h>
+#include <reanimated/LayoutAnimations/NativeLayoutAnimationPresetFactory.h>
 
 #include <memory>
 #include <unordered_map>
@@ -10,10 +12,11 @@ namespace reanimated {
 void LayoutAnimationsManager::configureAnimationBatch(const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   for (const auto &layoutAnimationConfig : layoutAnimationsBatch) {
-    const auto &[tag, type, config, sharedTag] = layoutAnimationConfig;
+    const auto &[tag, type, config, rawConfig] = layoutAnimationConfig;
+    const auto &sharedTag = layoutAnimationConfig.sharedTransitionTag;
 
     if (type == LayoutAnimationType::ENTERING) {
-      enteringAnimationsForNativeID_[tag] = config;
+      enteringAnimationsForNativeID_[tag] = std::make_pair(config, rawConfig);
       continue;
     }
     if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID) {
@@ -23,8 +26,6 @@ void LayoutAnimationsManager::configureAnimationBatch(const std::vector<LayoutAn
     }
     if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
       if (config == nullptr) {
-        // TODO (future): if the view was transitioned (e.g. so we are on the second screen)
-        // and we remove the config, we should also bring back the view (probably using tagsToRestore_)
         sharedTransitions_.erase(tag);
         sharedTransitionManager_->tagToName_.erase(tag);
       } else {
@@ -36,7 +37,7 @@ void LayoutAnimationsManager::configureAnimationBatch(const std::vector<LayoutAn
     if (config == nullptr) {
       getConfigsForType(type).erase(tag);
     } else {
-      getConfigsForType(type)[tag] = config;
+      getConfigsForType(type)[tag] = std::make_pair(config, rawConfig);
     }
   }
 }
@@ -69,21 +70,71 @@ void LayoutAnimationsManager::startLayoutAnimation(
     const int tag,
     const LayoutAnimationType type,
     const jsi::Object &values) {
-  std::shared_ptr<Serializable> config;
+  LayoutAnimationConfigEntry configPair;
   {
     auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
     if (!getConfigsForType(type).contains(tag)) {
       return;
     }
-    config = getConfigsForType(type)[tag];
+    configPair = getConfigsForType(type)[tag];
   }
-  // TODO: cache the following!!
+
   jsi::Value layoutAnimationRepositoryAsValue =
       rt.global().getPropertyAsObject(rt, "global").getProperty(rt, "LayoutAnimationsManager");
   jsi::Function startAnimationForTag =
       layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(rt, "start");
-  startAnimationForTag.call(rt, jsi::Value(tag), jsi::Value(static_cast<int>(type)), values, config->toJSValue(rt));
+  startAnimationForTag.call(
+      rt, jsi::Value(tag), jsi::Value(static_cast<int>(type)), values, configPair.first->toJSValue(rt));
 }
+
+#if __APPLE__
+void LayoutAnimationsManager::startNativeLayoutAnimation(
+    const int tag,
+    const LayoutAnimationType type,
+    const facebook::react::Rect &startFrame,
+    const facebook::react::Rect &endFrame,
+    std::function<void(bool)> &&onAnimationEnd) {
+  LayoutAnimationConfigEntry configPair;
+  {
+    auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+    if (!getConfigsForType(type).contains(tag)) {
+      return;
+    }
+    configPair = getConfigsForType(type)[tag];
+  }
+
+  if (!configPair.second || !configPair.second->presetName) {
+    return;
+  }
+
+  std::vector<NativeLayoutAnimation> animations =
+      NativeLayoutAnimationPresetFactory::instance()
+          .create(type, *configPair.second->presetName)
+          ->calculate(startFrame, endFrame);
+
+  auto callback = std::make_shared<std::function<void(bool)>>(std::move(onAnimationEnd));
+  if (type == LayoutAnimationType::ENTERING) {
+    facebook::react::Rect initialFrame = startFrame;
+    dispatch_async(dispatch_get_main_queue(), ^{
+      runCoreAnimationForView_(
+          tag,
+          initialFrame,
+          animations,
+          *configPair.second,
+          false,
+          [callback](bool finished) { (*callback)(finished); });
+    });
+  } else {
+    runCoreAnimationForView_(
+        tag,
+        startFrame,
+        animations,
+        *configPair.second,
+        true,
+        [callback](bool finished) { (*callback)(finished); });
+  }
+}
+#endif
 
 void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const {
   jsi::Value layoutAnimationRepositoryAsValue =
@@ -96,7 +147,7 @@ void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int 
 void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, const int tag) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   const auto config = enteringAnimationsForNativeID_[nativeId];
-  if (config) {
+  if (config.first) {
     enteringAnimations_.insert_or_assign(tag, config);
   }
   enteringAnimationsForNativeID_.erase(nativeId);
@@ -118,7 +169,7 @@ std::shared_ptr<SharedTransitionManager> LayoutAnimationsManager::getSharedTrans
   return sharedTransitionManager_;
 }
 
-std::unordered_map<int, std::shared_ptr<Serializable>> &LayoutAnimationsManager::getConfigsForType(
+std::unordered_map<int, LayoutAnimationsManager::LayoutAnimationConfigEntry> &LayoutAnimationsManager::getConfigsForType(
     const LayoutAnimationType type) {
   switch (type) {
     case LayoutAnimationType::ENTERING:
@@ -127,11 +178,39 @@ std::unordered_map<int, std::shared_ptr<Serializable>> &LayoutAnimationsManager:
       return exitingAnimations_;
     case LayoutAnimationType::LAYOUT:
       return layoutAnimations_;
-    case LayoutAnimationType::SHARED_ELEMENT_TRANSITION:
-      return sharedTransitions_;
     default:
       throw std::invalid_argument("[Reanimated] Unknown layout animation type");
   }
+}
+
+const LayoutAnimationRawConfig LayoutAnimationsManager::extractRawConfigValues(
+    jsi::Runtime &rt,
+    const jsi::Object &rawConfig) {
+  std::optional<std::string> presetName;
+  std::optional<LayoutAnimationRawConfigValues> values;
+
+  jsi::Value presetNameProperty = rawConfig.getProperty(rt, "presetName");
+  if (presetNameProperty.isUndefined()) {
+    presetName = std::nullopt;
+  } else {
+    presetName = presetNameProperty.asString(rt).utf8(rt);
+  }
+
+  jsi::Value configValuesProperty = rawConfig.getProperty(rt, "values");
+  if (configValuesProperty.isUndefined()) {
+    values = std::nullopt;
+
+    return LayoutAnimationRawConfig({.presetName = presetName, .values = values});
+  }
+
+  jsi::Object configValues = configValuesProperty.asObject(rt);
+
+  jsi::Value valueProperty = configValues.getProperty(rt, "duration");
+  std::optional<double> duration =
+      !valueProperty.isUndefined() ? std::optional<double>(valueProperty.asNumber()) : std::nullopt;
+
+  return LayoutAnimationRawConfig(
+      {.presetName = presetName, .values = LayoutAnimationRawConfigValues({.duration = duration})});
 }
 
 } // namespace reanimated

@@ -3,6 +3,7 @@ import { createSerializable } from 'react-native-worklets';
 
 import { SHOULD_BE_USE_WEB } from './common';
 import type {
+  AnimationRawConfig,
   LayoutAnimationBatchItem,
   LayoutAnimationFunction,
   LayoutAnimationType,
@@ -56,7 +57,8 @@ export let updateLayoutAnimations: (
   type: LayoutAnimationType,
   config?: Keyframe | LayoutAnimationFunction,
   isUnmounting?: boolean,
-  sharedTransitionTag?: string
+  sharedTransitionTag?: string,
+  rawConfig?: AnimationRawConfig
 ) => void;
 
 if (SHOULD_BE_USE_WEB) {
@@ -70,7 +72,8 @@ if (SHOULD_BE_USE_WEB) {
     type,
     config,
     isUnmounting,
-    sharedTransitionTag
+    sharedTransitionTag,
+    rawConfig
   ) =>
     updateLayoutAnimationsManager.update(
       {
@@ -78,7 +81,9 @@ if (SHOULD_BE_USE_WEB) {
         type,
         config: config ? createSerializable(config) : undefined,
         sharedTransitionTag,
+        rawConfig,
       },
       isUnmounting
     );
+  };
 }

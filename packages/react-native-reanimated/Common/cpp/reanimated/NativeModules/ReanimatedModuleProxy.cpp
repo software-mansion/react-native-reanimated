@@ -123,9 +123,9 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       eventHandlerRegistry_(std::make_unique<UIEventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       animatedSensorModule_(platformDepMethodsHolder),
-      layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>()),
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
 #ifdef __APPLE__
+      runCoreAnimationForViewFunction_(platformDepMethodsHolder.runCoreAnimationForView),
       forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
 #endif
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
@@ -139,6 +139,13 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
 #endif // ANDROID
+      layoutAnimationsManager_(
+#ifdef __APPLE__
+          std::make_shared<LayoutAnimationsManager>(runCoreAnimationForViewFunction_)
+#else
+          std::make_shared<LayoutAnimationsManager>()
+#endif
+          ),
       subscribeForKeyboardEventsFunction_(platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
   auto lock = updatesRegistryManager_->lock();
@@ -359,6 +366,7 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     batchItem.tag = item.getProperty(rt, "viewTag").asNumber();
     batchItem.type = static_cast<LayoutAnimationType>(item.getProperty(rt, "type").asNumber());
     auto config = item.getProperty(rt, "config");
+
     if (config.isUndefined()) {
       batchItem.config = nullptr;
     } else {
@@ -368,6 +376,18 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     auto sharedTag = item.getProperty(rt, "sharedTransitionTag");
     if (!sharedTag.isUndefined()) {
       batchItem.sharedTransitionTag = sharedTag.asString(rt).utf8(rt);
+    }
+
+    auto rawConfig = item.getProperty(rt, "rawConfig");
+
+    if (rawConfig.isUndefined()) {
+      batchItem.rawConfig = nullptr;
+    } else {
+      const LayoutAnimationRawConfig &rawConfigObject =
+          LayoutAnimationsManager::extractRawConfigValues(
+              rt, rawConfig.asObject(rt));
+      batchItem.rawConfig =
+          std::make_shared<LayoutAnimationRawConfig>(rawConfigObject);
     }
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);
