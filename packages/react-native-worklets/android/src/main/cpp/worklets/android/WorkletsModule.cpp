@@ -54,9 +54,8 @@ WorkletsModule::WorkletsModule(
           }),
           bundleModeConfig)) {
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
-  auto optimizedJsiWorkletsModuleProxy = jsiWorkletsModuleProxy->toOptimizedObject(*rnRuntime_);
   RNRuntimeWorkletDecorator::decorate(
-      *rnRuntime_, std::move(optimizedJsiWorkletsModuleProxy), workletsModuleProxy_->getJSLogger());
+      *rnRuntime_, jsiWorkletsModuleProxy->toOptimizedObject(*rnRuntime_), workletsModuleProxy_->getJSLogger());
 }
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(

@@ -101,9 +101,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
       runtimeBindings,
       BundleModeConfig{.enabled = static_cast<bool>(bundleModeEnabled), .script = script, .sourceURL = sourceURL});
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
-  auto optimizedJsiWorkletsModuleProxy = jsiWorkletsModuleProxy->toOptimizedObject(rnRuntime);
   RNRuntimeWorkletDecorator::decorate(
-      rnRuntime, std::move(optimizedJsiWorkletsModuleProxy), workletsModuleProxy_->getJSLogger());
+      rnRuntime, jsiWorkletsModuleProxy->toOptimizedObject(rnRuntime), workletsModuleProxy_->getJSLogger());
 
   return @YES;
 }

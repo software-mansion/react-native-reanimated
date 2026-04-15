@@ -166,4 +166,40 @@ void installJsiFunction(jsi::Runtime &rt, std::string_view name, Fun function) {
 
 jsi::Array convertStringToArray(jsi::Runtime &rt, const std::string &value, const unsigned int expectedSize);
 
+// Bounds-checked wrapper around a JSI args array.
+// Lambdas passed to addMethod receive this instead of a raw pointer.
+// Accessing args.get<I>() where I >= N is a compile-time error.
+template <size_t N>
+struct BoundedArgs {
+  explicit BoundedArgs(const jsi::Value *data) : data_(data) {}
+
+  template <size_t I>
+  const jsi::Value &get() const {
+    static_assert(I < N, "[Worklets] arg index out of bounds");
+    return data_[I];
+  }
+
+ private:
+  const jsi::Value *data_;
+};
+
+// Adds a method to a JSI object.
+// ArgCount is a compile-time constant; the lambda receives BoundedArgs<ArgCount>
+// instead of a raw pointer, so accessing args.get<I>() with I >= ArgCount is
+// a compile-time error.
+template <size_t ArgCount, typename Func>
+void addMethod(jsi::Runtime &rt, jsi::Object &obj, const char *name, Func &&func) {
+  obj.setProperty(
+      rt,
+      name,
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, name),
+          ArgCount,
+          [func = std::forward<Func>(func)](
+              jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *args, size_t count) mutable {
+            return func(rt, thisVal, BoundedArgs<ArgCount>{args}, count);
+          }));
+}
+
 } // namespace worklets::jsi_utils

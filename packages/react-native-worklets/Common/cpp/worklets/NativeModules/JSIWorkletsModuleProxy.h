@@ -40,9 +40,8 @@ class JSIWorkletsModuleProxy {
 
   JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other) = default;
 
-  ~JSIWorkletsModuleProxy();
-
-  jsi::Object toOptimizedObject(jsi::Runtime &rt);
+  [[nodiscard]]
+  jsi::Object toOptimizedObject(jsi::Runtime &rt) const;
 
   [[nodiscard]] std::shared_ptr<MessageQueueThread> getJSQueue() const {
     return jsQueue_;

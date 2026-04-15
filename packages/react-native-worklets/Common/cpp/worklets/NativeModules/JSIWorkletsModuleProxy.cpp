@@ -12,6 +12,7 @@
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/Tools/WorkletsSystraceSection.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
@@ -172,41 +173,34 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
       runtimeBindings_(runtimeBindings),
       unpackerLoader_(unpackerLoader) {}
 
-JSIWorkletsModuleProxy::~JSIWorkletsModuleProxy() = default;
-
-jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
+jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   auto obj = jsi::Object(rt);
+  using jsi_utils::BoundedArgs;
 
-  auto addMethod = [&](const char *name, unsigned int argCount, jsi::HostFunctionType func) {
-    obj.setProperty(
-        rt,
-        name,
-        jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, name), argCount, std::move(func)));
-  };
-
-  addMethod(
+  jsi_utils::addMethod<15>(
+      rt,
+      obj,
       "loadUnpackers",
-      15,
-      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-        const auto valueUnpackerCode = args[0].asString(rt).utf8(rt);
-        const auto valueUnpackerLocation = args[1].asString(rt).utf8(rt);
-        const auto valueUnpackerSourceMap = args[2].asString(rt).utf8(rt);
+      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<15> args, size_t) {
+        const auto valueUnpackerCode = args.get<0>().asString(rt).utf8(rt);
+        const auto valueUnpackerLocation = args.get<1>().asString(rt).utf8(rt);
+        const auto valueUnpackerSourceMap = args.get<2>().asString(rt).utf8(rt);
 
-        const auto synchronizableUnpackerCode = args[3].asString(rt).utf8(rt);
-        const auto synchronizableUnpackerLocation = args[4].asString(rt).utf8(rt);
-        const auto synchronizableUnpackerSourceMap = args[5].asString(rt).utf8(rt);
+        const auto synchronizableUnpackerCode = args.get<3>().asString(rt).utf8(rt);
+        const auto synchronizableUnpackerLocation = args.get<4>().asString(rt).utf8(rt);
+        const auto synchronizableUnpackerSourceMap = args.get<5>().asString(rt).utf8(rt);
 
-        const auto customSerializableUnpackerCode = args[6].asString(rt).utf8(rt);
-        const auto customSerializableUnpackerLocation = args[7].asString(rt).utf8(rt);
-        const auto customSerializableUnpackerSourceMap = args[8].asString(rt).utf8(rt);
+        const auto customSerializableUnpackerCode = args.get<6>().asString(rt).utf8(rt);
+        const auto customSerializableUnpackerLocation = args.get<7>().asString(rt).utf8(rt);
+        const auto customSerializableUnpackerSourceMap = args.get<8>().asString(rt).utf8(rt);
 
-        const auto shareableHostUnpackerCode = args[9].asString(rt).utf8(rt);
-        const auto shareableHostUnpackerLocation = args[10].asString(rt).utf8(rt);
-        const auto shareableHostUnpackerSourceMap = args[11].asString(rt).utf8(rt);
+        const auto shareableHostUnpackerCode = args.get<9>().asString(rt).utf8(rt);
+        const auto shareableHostUnpackerLocation = args.get<10>().asString(rt).utf8(rt);
+        const auto shareableHostUnpackerSourceMap = args.get<11>().asString(rt).utf8(rt);
 
-        const auto shareableGuestUnpackerCode = args[12].asString(rt).utf8(rt);
-        const auto shareableGuestUnpackerLocation = args[13].asString(rt).utf8(rt);
-        const auto shareableGuestUnpackerSourceMap = args[14].asString(rt).utf8(rt);
+        const auto shareableGuestUnpackerCode = args.get<12>().asString(rt).utf8(rt);
+        const auto shareableGuestUnpackerLocation = args.get<13>().asString(rt).utf8(rt);
+        const auto shareableGuestUnpackerSourceMap = args.get<14>().asString(rt).utf8(rt);
 
         unpackerLoader->loadUnpackers(ShareableUnpackers{
             .valueUnpacker =
@@ -231,157 +225,181 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
         return jsi::Value::undefined();
       });
 
-  addMethod("createSerializable", 3, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    return makeSerializableClone(rt, args[0], args[1], args[2]);
-  });
-
-  addMethod("createSerializableBigInt", 1, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    return makeSerializableBigInt(rt, args[0].asBigInt(rt));
-  });
-
-  addMethod("createSerializableBoolean", 1, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    return makeSerializableBoolean(rt, args[0].asBool());
-  });
-
-  addMethod("createSerializableImport", 2, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    return makeSerializableImport(rt, args[0].asNumber(), args[1].asString(rt));
-  });
-
-  addMethod("createSerializableNull", 0, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    return makeSerializableNull(rt);
-  });
-
-  addMethod("createSerializableNumber", 1, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    return makeSerializableNumber(rt, args[0].asNumber());
-  });
-
-  addMethod("createSerializableString", 1, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    return makeSerializableString(rt, args[0].asString(rt));
-  });
-
-  addMethod("createSerializableUndefined", 0, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    return makeSerializableUndefined(rt);
-  });
-
-  addMethod(
-      "createSerializableHostObject", 1, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-        return makeSerializableHostObject(rt, args[0].asObject(rt).asHostObject(rt));
+  jsi_utils::addMethod<3>(
+      rt, obj, "createSerializable", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<3> args, size_t) {
+        return makeSerializableClone(rt, args.get<0>(), args.get<1>(), args.get<2>());
       });
 
-  addMethod(
-      "createSerializableInitializer", 1, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-        return makeSerializableInitializer(rt, args[0].asObject(rt));
+  jsi_utils::addMethod<1>(
+      rt, obj, "createSerializableBigInt", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<1> args, size_t) {
+        return makeSerializableBigInt(rt, args.get<0>().asBigInt(rt));
       });
 
-  addMethod("createSerializableArray", 2, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    return makeSerializableArray(rt, args[0].asObject(rt).asArray(rt), args[1]);
-  });
-
-  addMethod("createSerializableFunction", 1, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    return makeSerializableFunction(rt, args[0].asObject(rt).asFunction(rt));
-  });
-
-  addMethod(
-      "createSerializableTurboModuleLike", 2, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-        return makeSerializableTurboModuleLike(rt, args[0].asObject(rt), args[1].asObject(rt).asHostObject(rt));
+  jsi_utils::addMethod<1>(
+      rt, obj, "createSerializableBoolean", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<1> args, size_t) {
+        return makeSerializableBoolean(rt, args.get<0>().asBool());
       });
 
-  addMethod(
-      "createSerializableObject", 3, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t count) {
+  jsi_utils::addMethod<2>(
+      rt, obj, "createSerializableImport", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<2> args, size_t) {
+        return makeSerializableImport(rt, args.get<0>().asNumber(), args.get<1>().asString(rt));
+      });
+
+  jsi_utils::addMethod<0>(
+      rt, obj, "createSerializableNull", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<0> args, size_t) {
+        return makeSerializableNull(rt);
+      });
+
+  jsi_utils::addMethod<1>(
+      rt, obj, "createSerializableNumber", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<1> args, size_t) {
+        return makeSerializableNumber(rt, args.get<0>().asNumber());
+      });
+
+  jsi_utils::addMethod<1>(
+      rt, obj, "createSerializableString", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<1> args, size_t) {
+        return makeSerializableString(rt, args.get<0>().asString(rt));
+      });
+
+  jsi_utils::addMethod<0>(
+      rt, obj, "createSerializableUndefined", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<0> args, size_t) {
+        return makeSerializableUndefined(rt);
+      });
+
+  jsi_utils::addMethod<1>(
+      rt, obj, "createSerializableHostObject", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<1> args, size_t) {
+        return makeSerializableHostObject(rt, args.get<0>().asObject(rt).asHostObject(rt));
+      });
+
+  jsi_utils::addMethod<1>(
+      rt, obj, "createSerializableInitializer", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<1> args, size_t) {
+        return makeSerializableInitializer(rt, args.get<0>().asObject(rt));
+      });
+
+  jsi_utils::addMethod<2>(
+      rt, obj, "createSerializableArray", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<2> args, size_t) {
+        return makeSerializableArray(rt, args.get<0>().asObject(rt).asArray(rt), args.get<1>());
+      });
+
+  jsi_utils::addMethod<1>(
+      rt, obj, "createSerializableFunction", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<1> args, size_t) {
+        return makeSerializableFunction(rt, args.get<0>().asObject(rt).asFunction(rt));
+      });
+
+  jsi_utils::addMethod<2>(
+      rt,
+      obj,
+      "createSerializableTurboModuleLike",
+      [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<2> args, size_t) {
+        return makeSerializableTurboModuleLike(
+            rt, args.get<0>().asObject(rt), args.get<1>().asObject(rt).asHostObject(rt));
+      });
+
+  jsi_utils::addMethod<3>(
+      rt, obj, "createSerializableObject", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<3> args, size_t count) {
         if (count < 2) {
           throw jsi::JSError(rt, "[Worklets] createSerializableObject expects at least 2 arguments.");
         }
 
-        const auto shouldPersistRemote = args[1].getBool();
-        const auto remoteValue = count > 2 ? jsi::Value(rt, args[2]) : jsi::Value::undefined();
-        return makeSerializableObject(rt, args[0].getObject(rt), shouldPersistRemote, remoteValue);
+        const auto shouldPersistRemote = args.get<1>().getBool();
+        const auto remoteValue = count > 2 ? jsi::Value(rt, args.get<2>()) : jsi::Value::undefined();
+        return makeSerializableObject(rt, args.get<0>().getObject(rt), shouldPersistRemote, remoteValue);
       });
 
-  addMethod("createSerializableMap", 2, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    return makeSerializableMap(rt, args[0].asObject(rt).asArray(rt), args[1].asObject(rt).asArray(rt));
-  });
+  jsi_utils::addMethod<2>(
+      rt, obj, "createSerializableMap", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<2> args, size_t) {
+        return makeSerializableMap(rt, args.get<0>().asObject(rt).asArray(rt), args.get<1>().asObject(rt).asArray(rt));
+      });
 
-  addMethod("createSerializableSet", 1, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    return makeSerializableSet(rt, args[0].asObject(rt).asArray(rt));
-  });
+  jsi_utils::addMethod<1>(
+      rt, obj, "createSerializableSet", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<1> args, size_t) {
+        return makeSerializableSet(rt, args.get<0>().asObject(rt).asArray(rt));
+      });
 
-  addMethod("createSerializableWorklet", 2, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    return makeSerializableWorklet(rt, args[0].getObject(rt), args[1].getBool());
-  });
+  jsi_utils::addMethod<2>(
+      rt, obj, "createSerializableWorklet", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<2> args, size_t) {
+        return makeSerializableWorklet(rt, args.get<0>().getObject(rt), args.get<1>().getBool());
+      });
 
-  addMethod("createCustomSerializable", 2, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    return makeCustomSerializable(rt, args[0], args[1].asNumber());
-  });
+  jsi_utils::addMethod<2>(
+      rt, obj, "createCustomSerializable", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<2> args, size_t) {
+        return makeCustomSerializable(rt, args.get<0>(), args.get<1>().asNumber());
+      });
 
-  addMethod(
+  jsi_utils::addMethod<4>(
+      rt,
+      obj,
       "registerCustomSerializable",
-      4,
       [memoryManager = memoryManager_, runtimeManager = runtimeManager_](
-          jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
+          jsi::Runtime &rt, const jsi::Value &, BoundedArgs<4> args, size_t) {
         const auto determine = extractSerializableOrThrow<SerializableWorklet>(
-            rt, args[0], "[Worklets] Determine function must be a worklet.");
-        const auto pack =
-            extractSerializableOrThrow<SerializableWorklet>(rt, args[1], "[Worklets] Pack function must be a worklet.");
+            rt, args.get<0>(), "[Worklets] Determine function must be a worklet.");
+        const auto pack = extractSerializableOrThrow<SerializableWorklet>(
+            rt, args.get<1>(), "[Worklets] Pack function must be a worklet.");
         const auto unpack = extractSerializableOrThrow<SerializableWorklet>(
-            rt, args[2], "[Worklets] Unpack function must be a worklet.");
-        const auto typeId = args[3].asNumber();
+            rt, args.get<2>(), "[Worklets] Unpack function must be a worklet.");
+        const auto typeId = args.get<3>().asNumber();
         registerCustomSerializable(runtimeManager, memoryManager, determine, pack, unpack, typeId);
         return jsi::Value::undefined();
       });
 
-  addMethod(
+  jsi_utils::addMethod<1>(
+      rt,
+      obj,
       "scheduleOnUI",
-      1,
       [uiScheduler = uiScheduler_, uiWorkletRuntime = uiWorkletRuntime_](
-          jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-        scheduleOnUI(uiScheduler, uiWorkletRuntime, rt, args[0]);
+          jsi::Runtime &rt, const jsi::Value &, BoundedArgs<1> args, size_t) {
+        scheduleOnUI(uiScheduler, uiWorkletRuntime, rt, args.get<0>());
         return jsi::Value::undefined();
       });
 
-  addMethod(
+  jsi_utils::addMethod<1>(
+      rt,
+      obj,
       "runOnUISync",
-      1,
-      [uiWorkletRuntime = uiWorkletRuntime_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-        return runOnUISync(uiWorkletRuntime, rt, args[0]);
+      [uiWorkletRuntime = uiWorkletRuntime_](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<1> args, size_t) {
+        return runOnUISync(uiWorkletRuntime, rt, args.get<0>());
       });
 
-  addMethod("runOnRuntimeSync", 2, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    return runOnRuntimeSync(rt, args[0], args[1]);
-  });
+  jsi_utils::addMethod<2>(
+      rt, obj, "runOnRuntimeSync", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<2> args, size_t) {
+        return runOnRuntimeSync(rt, args.get<0>(), args.get<1>());
+      });
 
-  addMethod(
+  jsi_utils::addMethod<2>(
+      rt,
+      obj,
       "runOnRuntimeSyncWithId",
-      2,
-      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-        const int runtimeId = args[0].asNumber();
+      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<2> args, size_t) {
+        const int runtimeId = args.get<0>().asNumber();
         const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
         if (!workletRuntime) {
           throw jsi::JSError(
               rt, "[Worklets] runOnRuntimeSyncWithId: no worklet runtime found for id " + std::to_string(runtimeId));
         }
         auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
-            rt, args[1], "[Worklets] Only worklets can be executed on a worklet runtime.");
+            rt, args.get<1>(), "[Worklets] Only worklets can be executed on a worklet runtime.");
         return workletRuntime->runSyncSerialized(serializableWorklet)->toJSValue(rt);
       });
 
-  addMethod(
+  jsi_utils::addMethod<5>(
+      rt,
+      obj,
       "createWorkletRuntime",
-      5,
       [clone = std::make_shared<JSIWorkletsModuleProxy>(*this)](
-          jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-        const auto name = args[0].asString(rt).utf8(rt);
-        auto serializableInitializer =
-            extractSerializableOrThrow<SerializableWorklet>(rt, args[1], "[Worklets] Initializer must be a worklet.");
-        const auto useDefaultQueue = args[2].asBool();
+          jsi::Runtime &rt, const jsi::Value &, BoundedArgs<5> args, size_t) {
+        const auto name = args.get<0>().asString(rt).utf8(rt);
+        auto serializableInitializer = extractSerializableOrThrow<SerializableWorklet>(
+            rt, args.get<1>(), "[Worklets] Initializer must be a worklet.");
+        const auto useDefaultQueue = args.get<2>().asBool();
 
         std::shared_ptr<AsyncQueue> asyncQueue;
         if (useDefaultQueue) {
           asyncQueue = std::make_shared<AsyncQueueImpl>(name + "_queue");
         } else {
-          asyncQueue = extractAsyncQueue(rt, args[3]);
+          asyncQueue = extractAsyncQueue(rt, args.get<3>());
         }
 
-        const auto enableEventLoop = args[4].asBool();
+        const auto enableEventLoop = args.get<4>().asBool();
 
         return createWorkletRuntime(
             rt,
@@ -394,119 +412,133 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
             enableEventLoop);
       });
 
-  addMethod("scheduleOnRuntime", 2, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    worklets::scheduleOnRuntime(rt, args[0], args[1]);
-    return jsi::Value::undefined();
-  });
+  jsi_utils::addMethod<2>(
+      rt, obj, "scheduleOnRuntime", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<2> args, size_t) {
+        worklets::scheduleOnRuntime(rt, args.get<0>(), args.get<1>());
+        return jsi::Value::undefined();
+      });
 
-  addMethod(
+  jsi_utils::addMethod<2>(
+      rt,
+      obj,
       "scheduleOnRuntimeWithId",
-      2,
-      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-        const int runtimeId = args[0].asNumber();
+      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<2> args, size_t) {
+        const int runtimeId = args.get<0>().asNumber();
         const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
         if (!workletRuntime) {
           throw jsi::JSError(
               rt, "[Worklets] scheduleOnRuntimeWithId: no worklet runtime found for id " + std::to_string(runtimeId));
         }
         const auto worklet = extractSerializableOrThrow<SerializableWorklet>(
-            rt, args[1], "[Worklets] Only worklets can be scheduled to run on a worklet runtime.");
+            rt, args.get<1>(), "[Worklets] Only worklets can be scheduled to run on a worklet runtime.");
         workletRuntime->schedule(worklet);
         return jsi::Value::undefined();
       });
 
-  addMethod(
+  jsi_utils::addMethod<4>(
+      rt,
+      obj,
       "reportFatalErrorOnJS",
-      4,
-      [jsScheduler = jsScheduler_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
+      [jsScheduler = jsScheduler_](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<4> args, size_t) {
         return reportFatalErrorOnJS(
             jsScheduler,
-            /* message */ args[0].asString(rt).utf8(rt),
-            /* stack */ args[1].asString(rt).utf8(rt),
-            /* name */ args[2].asString(rt).utf8(rt),
-            /* jsEngine */ args[3].asString(rt).utf8(rt));
+            /* message */ args.get<0>().asString(rt).utf8(rt),
+            /* stack */ args.get<1>().asString(rt).utf8(rt),
+            /* name */ args.get<2>().asString(rt).utf8(rt),
+            /* jsEngine */ args.get<3>().asString(rt).utf8(rt));
       });
 
-  addMethod("getStaticFeatureFlag", 1, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    return worklets::StaticFeatureFlags::getFlag(/* name */ args[0].asString(rt).utf8(rt));
-  });
+  jsi_utils::addMethod<1>(
+      rt, obj, "getStaticFeatureFlag", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<1> args, size_t) {
+        return worklets::StaticFeatureFlags::getFlag(/* name */ args.get<0>().asString(rt).utf8(rt));
+      });
 
-  addMethod("setDynamicFeatureFlag", 2, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    worklets::DynamicFeatureFlags::setFlag(
-        /* name */ args[0].asString(rt).utf8(rt),
-        /* value */ args[1].asBool());
-    return jsi::Value::undefined();
-  });
+  jsi_utils::addMethod<2>(
+      rt, obj, "setDynamicFeatureFlag", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<2> args, size_t) {
+        worklets::DynamicFeatureFlags::setFlag(
+            /* name */ args.get<0>().asString(rt).utf8(rt),
+            /* value */ args.get<1>().asBool());
+        return jsi::Value::undefined();
+      });
 
-  addMethod("createSynchronizable", 1, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    auto initial = extractSerializableOrThrow(rt, args[0], "[Worklets] Value must be a Serializable.");
-    auto synchronizable = std::make_shared<Synchronizable>(initial);
-    return SerializableJSRef::newNativeStateObject(rt, synchronizable);
-  });
+  jsi_utils::addMethod<1>(
+      rt, obj, "createSynchronizable", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<1> args, size_t) {
+        auto initial = extractSerializableOrThrow(rt, args.get<0>(), "[Worklets] Value must be a Serializable.");
+        auto synchronizable = std::make_shared<Synchronizable>(initial);
+        return SerializableJSRef::newNativeStateObject(rt, synchronizable);
+      });
 
-  addMethod("synchronizableGetDirty", 1, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
-    return synchronizable->getDirty()->toJSValue(rt);
-  });
+  jsi_utils::addMethod<1>(
+      rt, obj, "synchronizableGetDirty", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<1> args, size_t) {
+        auto synchronizable = extractSynchronizableOrThrow(rt, args.get<0>());
+        return synchronizable->getDirty()->toJSValue(rt);
+      });
 
-  addMethod("synchronizableGetBlocking", 1, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
-    return synchronizable->getBlocking()->toJSValue(rt);
-  });
+  jsi_utils::addMethod<1>(
+      rt, obj, "synchronizableGetBlocking", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<1> args, size_t) {
+        auto synchronizable = extractSynchronizableOrThrow(rt, args.get<0>());
+        return synchronizable->getBlocking()->toJSValue(rt);
+      });
 
-  addMethod("synchronizableSetBlocking", 2, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
-    auto newValue = extractSerializableOrThrow(rt, args[1], "[Worklets] Value must be a Serializable.");
-    synchronizable->setBlocking(newValue);
-    return jsi::Value::undefined();
-  });
+  jsi_utils::addMethod<2>(
+      rt, obj, "synchronizableSetBlocking", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<2> args, size_t) {
+        auto synchronizable = extractSynchronizableOrThrow(rt, args.get<0>());
+        auto newValue = extractSerializableOrThrow(rt, args.get<1>(), "[Worklets] Value must be a Serializable.");
+        synchronizable->setBlocking(newValue);
+        return jsi::Value::undefined();
+      });
 
-  addMethod("synchronizableLock", 1, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
-    synchronizable->lock();
-    return jsi::Value::undefined();
-  });
+  jsi_utils::addMethod<1>(
+      rt, obj, "synchronizableLock", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<1> args, size_t) {
+        auto synchronizable = extractSynchronizableOrThrow(rt, args.get<0>());
+        synchronizable->lock();
+        return jsi::Value::undefined();
+      });
 
-  addMethod("synchronizableUnlock", 1, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
-    auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
-    synchronizable->unlock();
-    return jsi::Value::undefined();
-  });
+  jsi_utils::addMethod<1>(
+      rt, obj, "synchronizableUnlock", [](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<1> args, size_t) {
+        auto synchronizable = extractSynchronizableOrThrow(rt, args.get<0>());
+        synchronizable->unlock();
+        return jsi::Value::undefined();
+      });
 
-  addMethod(
+  jsi_utils::addMethod<5>(
+      rt,
+      obj,
       "createShareable",
-      5,
       [runtimeManager = runtimeManager_](
-          jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) -> jsi::Value {
-        const int hostRuntimeId = args[0].asNumber();
+          jsi::Runtime &rt, const jsi::Value &, BoundedArgs<5> args, size_t) -> jsi::Value {
+        const int hostRuntimeId = args.get<0>().asNumber();
         const auto hostRuntime = runtimeManager->getRuntime(hostRuntimeId);
         if (!hostRuntime) {
           throw jsi::JSError(
               rt, "[Worklets] createShareable: no worklet runtime found for id " + std::to_string(hostRuntimeId));
         }
-        const auto initial = extractSerializableOrThrow(rt, args[1], "[Worklets] Value must be a Serializable.");
-        const auto initSynchronously = args[2].asBool();
-        const auto decorateHost = extractSerializableOrThrow(rt, args[3]);
-        const auto decorateGuest = extractSerializableOrThrow(rt, args[4]);
+        const auto initial = extractSerializableOrThrow(rt, args.get<1>(), "[Worklets] Value must be a Serializable.");
+        const auto initSynchronously = args.get<2>().asBool();
+        const auto decorateHost = extractSerializableOrThrow(rt, args.get<3>());
+        const auto decorateGuest = extractSerializableOrThrow(rt, args.get<4>());
         const auto shareable =
             std::make_shared<Shareable>(hostRuntime, initial, initSynchronously, decorateHost, decorateGuest);
         return SerializableJSRef::newNativeStateObject(rt, shareable);
       });
 
-  addMethod(
+  jsi_utils::addMethod<2>(
+      rt,
+      obj,
       "propagateModuleUpdate",
-      2,
-      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
+      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<2> args, size_t) {
         return propagateModuleUpdate(
             runtimeManager,
-            /* code */ args[0].asString(rt).utf8(rt),
-            /* sourceURL */ args[1].asString(rt).utf8(rt));
+            /* code */ args.get<0>().asString(rt).utf8(rt),
+            /* sourceURL */ args.get<1>().asString(rt).utf8(rt));
       });
 
-  addMethod(
+  jsi_utils::addMethod<0>(
+      rt,
+      obj,
       "getUIRuntimeHolder",
-      0,
-      [uiWorkletRuntime = uiWorkletRuntime_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
+      [uiWorkletRuntime = uiWorkletRuntime_](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<0> args, size_t) {
         const auto strongUIWorkletRuntime = uiWorkletRuntime.lock();
         if (!strongUIWorkletRuntime) {
           throw jsi::JSError(rt, "[Worklets] UI Worklet Runtime is not available.");
@@ -517,10 +549,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
         return jsi::Value(std::move(obj));
       });
 
-  addMethod(
+  jsi_utils::addMethod<0>(
+      rt,
+      obj,
       "getUISchedulerHolder",
-      0,
-      [uiScheduler = uiScheduler_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
+      [uiScheduler = uiScheduler_](jsi::Runtime &rt, const jsi::Value &, BoundedArgs<0> args, size_t) {
         auto nativeState = std::make_shared<UISchedulerHolder>(uiScheduler);
         auto obj = jsi::Object(rt);
         obj.setNativeState(rt, std::move(nativeState));

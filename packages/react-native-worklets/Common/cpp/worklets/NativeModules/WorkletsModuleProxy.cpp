@@ -72,8 +72,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           runtimeBindings_,
           bundleModeConfig_,
           unpackerLoader_)) {
-  auto optimizedJsiWorkletsModuleProxy = rnRuntimeProxy_->toOptimizedObject(rnRuntime);
-  RNRuntimeWorkletDecorator::decorate(rnRuntime, std::move(optimizedJsiWorkletsModuleProxy), jsLogger_);
+  RNRuntimeWorkletDecorator::decorate(rnRuntime, rnRuntimeProxy_->toOptimizedObject(rnRuntime), jsLogger_);
 }
 
 std::shared_ptr<JSIWorkletsModuleProxy> WorkletsModuleProxy::createJSIWorkletsModuleProxy() const {
