@@ -193,7 +193,7 @@ export function setElementAnimation(
   element: ReanimatedHTMLElement,
   animationConfig: AnimationConfig,
   shouldSavePosition = false,
-  originalElement?: HTMLElement
+  originalElement?: ReanimatedHTMLElement
 ) {
   const { animationName, duration, delay, easing } = animationConfig;
 
@@ -238,6 +238,8 @@ export function setElementAnimation(
 
     element.removedAfterAnimation = true;
     element.remove();
+
+    delete originalElement.dummyClone;
   };
 
   let wasCallbackCalled = false;
