@@ -22,9 +22,12 @@ import type {
   PropUpdates,
 } from '../createAnimatedComponent/commonTypes';
 import jsPropsUpdater from '../createAnimatedComponent/JSPropsUpdater';
+import { getStaticFeatureFlag } from '../featureFlags';
 import type { Descriptor } from '../hook/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
+
+const USE_ANIMATION_BACKEND = getStaticFeatureFlag('USE_ANIMATION_BACKEND');
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
@@ -165,7 +168,9 @@ function createUpdatePropsManager() {
         jsOperations.length = 0;
       }
       flushPending = false;
-      global._maybeFlushUIUpdatesQueue();
+      if (!USE_ANIMATION_BACKEND) {
+        global._maybeFlushUIUpdatesQueue();
+      }
     },
   };
 }
