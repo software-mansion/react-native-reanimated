@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-member-access */
 import 'react-native-reanimated';
 
 import React from 'react';
@@ -351,18 +351,6 @@ const ProgressTransitionExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/ProgressTransition').default
   );
-const PseudoActiveExample: React.FC = () =>
-  React.createElement(require('./PseudoActiveExample').default);
-const PseudoFocusExample: React.FC = () =>
-  React.createElement(require('./PseudoFocusExample').default);
-const PseudoHoverExample: React.FC = () =>
-  React.createElement(require('./PseudoHoverExample').default);
-const PseudoCombinedExample: React.FC = () =>
-  React.createElement(require('./PseudoCombinedExample').default);
-const PseudoShowcaseExample: React.FC = () =>
-  React.createElement(require('./PseudoShowcaseExample').default);
-const PseudoWebSelectorsExample: React.FC = () =>
-  React.createElement(require('./PseudoWebSelectorsExample').default);
 const RainbowExample: React.FC = () =>
   React.createElement(require('./RainbowExample').default as React.FC);
 const ReactionsCounterExample: React.FC = () =>
@@ -1011,37 +999,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Shadow Nodes Cloning',
     screen: ShadowNodesCloningExample,
   },
-  PseudoActiveExample: {
-    icon: '👆',
-    title: 'Pseudo-selectors (:active)',
-    screen: PseudoActiveExample,
-  },
-  PseudoFocusExample: {
-    icon: '🔤',
-    title: 'Pseudo-selectors (:focus)',
-    screen: PseudoFocusExample,
-  },
-  PseudoHoverExample: {
-    icon: '🖱️',
-    title: 'Pseudo-selectors (:hover)',
-    screen: PseudoHoverExample,
-  },
-  PseudoCombinedExample: {
-    icon: '🔀',
-    title: 'Pseudo-selectors (combined)',
-    screen: PseudoCombinedExample,
-  },
-  PseudoShowcaseExample: {
-    icon: '🎬',
-    title: 'Pseudo-selectors (showcase)',
-    screen: PseudoShowcaseExample,
-  },
-  PseudoWebSelectorsExample: {
-    icon: '🌐',
-    title: 'Pseudo-selectors (web-only)',
-    screen: PseudoWebSelectorsExample,
-  },
-
   // Old examples
   AnimatedStyleUpdateExample: {
     title: 'Animated style update',

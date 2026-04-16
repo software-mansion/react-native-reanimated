@@ -4,9 +4,15 @@ import type { RouteNames, Routes } from '@/apps/css/navigation/types';
 
 import routeCards from './routeCards';
 import {
+  Active as PseudoActive,
+  ActiveDeepest as PseudoActiveDeepest,
   AnimatedProperties,
+  Focus as PseudoFocus,
+  FocusWithin as PseudoFocusWithin,
+  Hover as PseudoHover,
   miscellaneous,
   realWorldExamples,
+  Showcase as PseudoShowcase,
   testExamples,
   transitionSettings,
 } from './screens';
@@ -84,6 +90,36 @@ const routes = {
       HamburgerMenuButtons: {
         name: 'Hamburger Menu Buttons',
         Component: realWorldExamples.HamburgerMenuButtons,
+      },
+    },
+  },
+  PseudoSelectors: {
+    name: 'Pseudo Selectors',
+    CardComponent: routeCards.PseudoSelectorsCard,
+    routes: {
+      PseudoHover: {
+        name: ':hover',
+        Component: PseudoHover,
+      },
+      PseudoActive: {
+        name: ':active',
+        Component: PseudoActive,
+      },
+      PseudoActiveDeepest: {
+        name: ':active-deepest',
+        Component: PseudoActiveDeepest,
+      },
+      PseudoFocus: {
+        name: ':focus',
+        Component: PseudoFocus,
+      },
+      PseudoFocusWithin: {
+        name: ':focus-within',
+        Component: PseudoFocusWithin,
+      },
+      PseudoShowcase: {
+        name: 'Showcase',
+        Component: PseudoShowcase,
       },
     },
   },
