@@ -147,3 +147,18 @@ button[class*='DocSearch-Button'] {
 .navbar__brand img {
   vertical-align: middle;
 }
+
+/* Tabs nested inside details: bump label contrast against the purple details background. */
+details .tabs__item {
+  color: var(--swm-details-color) !important;
+  opacity: 0.7;
+}
+
+details .tabs__item:hover {
+  opacity: 1;
+}
+
+details .tabs__item--active {
+  opacity: 1;
+  border-bottom-color: var(--swm-details-color) !important;
+}
