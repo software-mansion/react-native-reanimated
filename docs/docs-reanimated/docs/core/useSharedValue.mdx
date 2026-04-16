@@ -35,7 +35,8 @@ function App() {
     modify: (modifier?: (value: Value) => Value, forceUpdate?: boolean) => void;
   }
 
-  function useSharedValue<Value>(initialValue: Value | (() => Value)
+  export function useSharedValue<Value>(
+    initialValue: Value | (() => Value)
   ): SharedValue<Value>;
   ```
 </details>

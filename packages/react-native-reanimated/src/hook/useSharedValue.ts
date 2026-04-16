@@ -31,6 +31,7 @@ export function useSharedValue<Value>(
 
     return makeMutable(value);
   });
+
   useEffect(() => {
     return () => {
       cancelAnimation(mutable);
