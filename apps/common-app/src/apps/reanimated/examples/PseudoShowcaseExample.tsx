@@ -35,7 +35,21 @@ const CARDS = [
   },
 ];
 
-function ActionButton() {
+function ActionButton({
+  label,
+  icon,
+  doneIcon,
+  color,
+  active,
+  onToggle,
+}: {
+  label: string;
+  icon: string;
+  doneIcon: string;
+  color: string;
+  active: boolean;
+  onToggle: () => void;
+}) {
   return (
     <Animated.View
       onStartShouldSetResponder={() => true}
@@ -72,14 +86,24 @@ function ActionButton() {
   );
 }
 
-function Card() {
+function Card({
+  title,
+  icon,
+  color,
+  actions,
+}: {
+  title: string;
+  icon: string;
+  color: string;
+  actions: { label: string; icon: string; doneIcon: string; color: string }[];
+}) {
   const [active, setActive] = useState(null);
   return (
     <Animated.View
       style={[
         styles.card,
         {
-          height: { default: 72, ':hover': 256 },
+          height: { default: 64, ':hover': 256 },
           shadowOpacity: { default: 0.06, ':hover': 0.14 },
           transitionDuration: '300ms',
           transitionTimingFunction: 'ease-in-out',
@@ -104,12 +128,44 @@ function Card() {
   );
 }
 
+function PressableTest() {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionLabel}>AnimatedPressable test</Text>
+      <Animated.View
+        onStartShouldSetResponder={() => true}
+        style={[
+          styles.pressableBtn,
+          {
+            backgroundColor: {
+              default: '#ffffff00',
+              ':hover': '#0047ff14',
+              ':active': '#0047ff29',
+            },
+            borderColor: { default: '#e5e5e5ff', ':hover': '#0047ffff' },
+            shadowOpacity: { default: 0, ':hover': 0.18 },
+            transform: {
+              default: [{ scale: 1 }],
+              ':hover': [{ scale: 0.98 }],
+              ':active': [{ scale: 0.95 }],
+            },
+            transitionDuration: '200ms',
+            transitionTimingFunction: 'ease-in-out',
+          },
+        ]}>
+        <Text style={styles.pressableBtnText}>Hover / Press me</Text>
+      </Animated.View>
+    </View>
+  );
+}
+
 export default function PseudoShowcaseExample() {
   return (
     <ScrollView style={styles.bg} contentContainerStyle={styles.screen}>
       {CARDS.map((c) => (
         <Card key={c.title} {...c} />
       ))}
+      <PressableTest />
     </ScrollView>
   );
 }
@@ -122,7 +178,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 20,
     overflow: 'hidden',
-    padding: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
     gap: 16,
     borderWidth: 1,
     borderColor: '#e5e5e5',
@@ -138,10 +195,27 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     paddingHorizontal: 16,
     borderWidth: 1,
-    backgroundColor: '#fafafa',
+    backgroundColor: '#fafafa00',
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 16,
     elevation: 4,
   },
   btnText: { fontSize: 15, fontWeight: '600' },
+  section: { gap: 8 },
+  sectionLabel: { fontSize: 13, fontWeight: '600', color: '#888' },
+  pressableBtn: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: '#e5e5e5',
+    backgroundColor: '#ffffffff',
+    alignItems: 'center',
+    shadowColor: '#0047ff',
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 12,
+    shadowOpacity: 0,
+    elevation: 4,
+  },
+  pressableBtnText: { fontSize: 15, fontWeight: '600', color: '#0047ff' },
 });
