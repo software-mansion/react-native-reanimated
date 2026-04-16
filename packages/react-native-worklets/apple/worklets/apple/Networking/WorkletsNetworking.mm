@@ -1,7 +1,6 @@
 /*
  * This file is based on RCTNetworking.mm from React Native.
  */
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
 
 #import <mutex>
 
@@ -703,5 +702,3 @@ using ArgFactory = std::function<void(facebook::jsi::Runtime &runtime, std::vect
 }
 
 @end
-
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED

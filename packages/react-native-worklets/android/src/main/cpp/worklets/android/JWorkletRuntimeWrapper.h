@@ -1,7 +1,5 @@
 #pragma once
 
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-
 #include <fbjni/fbjni.h>
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/WritableNativeArray.h>
@@ -39,5 +37,3 @@ class JWorkletRuntimeWrapper : public jni::HybridClass<JWorkletRuntimeWrapper> {
 };
 
 } // namespace worklets
-
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED

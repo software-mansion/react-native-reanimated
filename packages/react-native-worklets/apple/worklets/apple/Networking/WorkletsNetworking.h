@@ -1,6 +1,5 @@
 #pragma once
 
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
 /*
  * This file is based on RCTNetworking.h from React Native.
  */
@@ -21,5 +20,3 @@ using namespace facebook;
 - (void)jsiClearCookies:(jsi::Runtime &)rt responseSender:(jsi::Function &&)responseSender;
 
 @end
-
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED

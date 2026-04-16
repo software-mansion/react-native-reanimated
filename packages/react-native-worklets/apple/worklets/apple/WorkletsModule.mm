@@ -10,16 +10,12 @@
 #import <worklets/apple/IOSUIScheduler.h>
 #import <worklets/apple/WorkletsMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
-
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
-
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
 #import <FBReactNativeSpec/FBReactNativeSpec.h>
 #import <React/RCTNetworking.h>
 #import <ReactCommon/RCTTurboModule.h>
 #import <worklets/apple/Networking/WorkletsNetworking.h>
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 
 using namespace worklets;
 
@@ -30,9 +26,7 @@ using namespace worklets;
 @implementation WorkletsModule {
   AnimationFrameQueue *animationFrameQueue_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
   WorkletsNetworking *workletsNetworking_;
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 #ifndef NDEBUG
   SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
 #endif // NDEBUG
@@ -52,13 +46,12 @@ using namespace worklets;
 
 @synthesize bundleManager = bundleManager_;
 @synthesize callInvoker = callInvoker_;
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
 @synthesize moduleRegistry = moduleRegistry_;
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 
 RCT_EXPORT_MODULE(WorkletsModule);
 
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnabled)
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule
+                                       : (BOOL)bundleModeEnabled)
 {
   react_native_assert(self.bridge != nullptr);
   [self checkBridgeless];
@@ -78,12 +71,10 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
     NSURL *url = bundleManager_.bundleURL;
     script = [self getScript:url];
     sourceURL = [[url absoluteString] UTF8String];
-  }
 
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-  id networkingModule = [moduleRegistry_ moduleForClass:RCTNetworking.class];
-  workletsNetworking_ = [[WorkletsNetworking alloc] init:networkingModule];
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
+    id networkingModule = [moduleRegistry_ moduleForClass:RCTNetworking.class];
+    workletsNetworking_ = [[WorkletsNetworking alloc] init:networkingModule];
+  }
 
   auto jsCallInvoker = callInvoker_.callInvoker;
   auto uiScheduler = std::make_shared<IOSUIScheduler>();
@@ -91,7 +82,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
     return IsJavaScriptQueue();
   };
   animationFrameQueue_ = [AnimationFrameQueue new];
-  auto runtimeBindings = [self getRuntimeBindings];
+  auto runtimeBindings = [self getRuntimeBindings:bundleModeEnabled];
 
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
       rnRuntime,
@@ -159,15 +150,22 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
   return std::make_shared<const ScriptBuffer>(bigString);
 }
 
-- (std::shared_ptr<RuntimeBindings>)getRuntimeBindings
+- (std::shared_ptr<RuntimeBindings>)getRuntimeBindings:(BOOL)
+bundleModeEnabled
 {
-  return std::make_shared<RuntimeBindings>(RuntimeBindings{
-      .requestAnimationFrame = [animationFrameQueue =
+  auto requestAnimationFrame = [animationFrameQueue =
                                     animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
-        [animationFrameQueue requestAnimationFrame:callback];
-      }
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-      ,
+    [animationFrameQueue requestAnimationFrame:callback];
+  };
+
+  if (!bundleModeEnabled) {
+    return std::make_shared<RuntimeBindings>(RuntimeBindings{
+        .requestAnimationFrame = std::move(requestAnimationFrame),
+    });
+  }
+
+  return std::make_shared<RuntimeBindings>(RuntimeBindings{
+      .requestAnimationFrame = std::move(requestAnimationFrame),
       .abortRequest =
           [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, const jsi::Value &requestID) {
             [workletsNetworking jsiAbortRequest:requestID.asNumber()];
@@ -184,7 +182,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
             [workletsNetworking jsiSendRequest:rt jquery:query responseSender:(std::move(responseSender))];
             return jsi::Value::undefined();
           }
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
   });
 }
 

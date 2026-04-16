@@ -1,5 +1,3 @@
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
 #include <worklets/android/JWorkletRuntimeWrapper.h>
@@ -48,5 +46,3 @@ void JWorkletRuntimeWrapper::registerNatives() {
        makeNativeMethod("cxxGetRuntimeId", JWorkletRuntimeWrapper::cxxGetRuntimeId)});
 }
 } // namespace worklets
-
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED

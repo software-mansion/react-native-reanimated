@@ -13,7 +13,6 @@ struct RuntimeBindings {
 
   const RequestAnimationFrame requestAnimationFrame;
 
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
   using AbortRequest = std::function<void(jsi::Runtime &rt, double requestId)>;
   using ClearCookies = std::function<void(jsi::Runtime &rt, jsi::Function &&responseSender)>;
 #ifdef ANDROID
@@ -35,7 +34,6 @@ struct RuntimeBindings {
   const AbortRequest abortRequest;
   const ClearCookies clearCookies;
   const SendRequest sendRequest;
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 };
 
 } // namespace worklets

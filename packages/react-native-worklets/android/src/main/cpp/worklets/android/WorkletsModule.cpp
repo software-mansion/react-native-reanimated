@@ -1,22 +1,19 @@
-#include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
-#include <worklets/Tools/ScriptBuffer.h>
-#include <worklets/Tools/WorkletsJSIUtils.h>
-#include <worklets/WorkletRuntime/BundleModeConfig.h>
-#include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
-#include <worklets/WorkletRuntime/RuntimeBindings.h>
-#include <worklets/android/AnimationFrameCallback.h>
-#include <worklets/android/WorkletsModule.h>
-
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
 #include <folly/json/dynamic.h>
 #include <jni.h>
 #include <jsi/JSIDynamic.h>
 #include <react/jni/JCallback.h>
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
+#include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
+#include <worklets/Tools/ScriptBuffer.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
+#include <worklets/WorkletRuntime/BundleModeConfig.h>
+#include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
+#include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
+#include <worklets/android/AnimationFrameCallback.h>
 #include <worklets/android/JWorkletRuntimeWrapper.h>
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
+#include <worklets/android/WorkletsModule.h>
 
 #include <memory>
 #include <string>
@@ -45,14 +42,10 @@ WorkletsModule::WorkletsModule(
           uiScheduler,
           getIsOnJSQueueThread(),
           std::make_shared<RuntimeBindings>(RuntimeBindings{
-              .requestAnimationFrame = getRequestAnimationFrame()
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-                  ,
+              .requestAnimationFrame = getRequestAnimationFrame(),
               .abortRequest = getAbortRequest(),
               .clearCookies = getClearCookies(),
-              .sendRequest = getSendRequest()
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
-          }),
+              .sendRequest = getSendRequest()}),
           bundleModeConfig)) {
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
@@ -105,7 +98,6 @@ RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame(
   };
 }
 
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
 RuntimeBindings::AbortRequest WorkletsModule::getAbortRequest() {
   return [javaPart = javaPart_](jsi::Runtime &rt, double requestId) -> void {
     static const auto jAbortRequest = javaPart->getClass()->getMethod<void(int, double)>("abortRequest");
@@ -177,7 +169,6 @@ RuntimeBindings::SendRequest WorkletsModule::getSendRequest() {
         withCredentials);
   };
 }
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 
 std::function<bool()> WorkletsModule::getIsOnJSQueueThread() {
   return [javaPart = javaPart_]() -> bool {
