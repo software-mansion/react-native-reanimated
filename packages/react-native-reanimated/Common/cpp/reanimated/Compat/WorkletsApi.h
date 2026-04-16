@@ -3,7 +3,7 @@
 #include <worklets/Compat/StableApi.h>
 #include <string>
 
-#define EXPECTED_WORKLETS_STABLE_API_VERSION "0.8.0"
+#define EXPECTED_WORKLETS_STABLE_API_VERSION "0.9.0"
 
 static_assert(
     std::string(WORKLETS_STABLE_API_VERSION) == EXPECTED_WORKLETS_STABLE_API_VERSION,

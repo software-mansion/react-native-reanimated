@@ -118,4 +118,10 @@ std::shared_ptr<UIScheduler> getUISchedulerFromHolder(facebook::jsi::Runtime &rt
   return object.getNativeState<UISchedulerHolder>(rt)->scheduler_;
 }
 
+void setRequestAnimationFrame(
+    const std::shared_ptr<WorkletRuntime> &workletRuntime,
+    RequestAnimationFrameFn requestAnimationFrame) {
+  workletRuntime->setRequestAnimationFrame(std::move(requestAnimationFrame));
+}
+
 } // namespace worklets

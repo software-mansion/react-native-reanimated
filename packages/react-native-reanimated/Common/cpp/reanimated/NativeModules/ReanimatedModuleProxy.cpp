@@ -1,7 +1,9 @@
+#include <jsi/jsi.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
+#include <reanimated/Fabric/updates/propsLayoutFilter.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
@@ -9,11 +11,12 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
-
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
 
+#include <react/featureflags/ReactNativeFeatureFlags.h>
+#include <cstdio>
 #include <functional>
 #include <memory>
 #include <string>
@@ -204,6 +207,13 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
           return;
         }
         strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
+        if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+          // Layout animation progress only enqueues `notifyDelegatesOfUpdates` work;
+          // it does not produce AnimationMutations. Without this, `stopBackendIfIdle`
+          // can turn off the backend after an empty batch and later progress ticks
+          // would never schedule another frame.
+          strongThis->startBackendIfNeeded();
+        }
       };
 
   auto requestLayoutAnimationRender = [weakThis = weak_from_this()](double) {
@@ -225,10 +235,12 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
 
     if (!strongThis->layoutAnimationRenderRequested_) {
       strongThis->layoutAnimationRenderRequested_ = true;
-      // if an animation has duration 0, performOperations would not get
-      // called for it so we call requestRender to have it called in the
-      // next frame
-      strongThis->requestRender_(requestLayoutAnimationRender);
+      if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+        strongThis->startBackendIfNeeded();
+        strongThis->layoutAnimationRenderRequested_ = false;
+      } else {
+        strongThis->requestRender_(requestLayoutAnimationRender);
+      }
     }
 
     if (!surfaceId) {
@@ -386,9 +398,13 @@ bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(const std::string &event
 }
 
 void ReanimatedModuleProxy::maybeRequestRender() {
-  if (!renderRequested_) {
-    renderRequested_ = true;
-    requestRender_(onRenderCallback_);
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    startBackendIfNeeded();
+  } else {
+    if (!renderRequested_) {
+      renderRequested_ = true;
+      requestRender_(onRenderCallback_);
+    }
   }
 }
 
@@ -556,7 +572,7 @@ bool ReanimatedModuleProxy::handleEvent(
   return false;
 }
 
-bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double currentTime) {
+bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::handleRawEvent");
 
   const EventTarget *eventTarget = rawEvent.eventTarget.get();
@@ -618,13 +634,13 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   const auto &eventPayload = rawEvent.eventPayload;
   jsi::Value payload = eventPayload->asJSIValue(uiRuntime);
 
-  auto res = handleEvent(eventType, tag, payload, currentTime);
-  // TODO: we should call performOperations conditionally if event is handled
-  // (res == true), but for now handleEvent always returns false. Thankfully,
-  // performOperations does not trigger a lot of code if there is nothing to
-  // be done so this is fine for now.
-  performOperations();
-  return res;
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    handleEventAndFlush<GrandCallbackState::Event>(eventType, tag, payload);
+  } else {
+    handleEvent(eventType, tag, payload, getAnimationTimestamp_());
+    performOperations();
+  }
+  return true;
 }
 
 void ReanimatedModuleProxy::cssLoopCallback(const double /*timestampMs*/) {
@@ -645,6 +661,11 @@ void ReanimatedModuleProxy::cssLoopCallback(const double /*timestampMs*/) {
 }
 
 void ReanimatedModuleProxy::maybeRunCSSLoop() {
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    startBackendIfNeeded();
+    return;
+  }
+
   if (cssLoopRunning_) {
     return;
   }
@@ -672,14 +693,80 @@ double ReanimatedModuleProxy::getCssTimestamp() {
   return currentCssTimestamp_;
 }
 
-void ReanimatedModuleProxy::performOperations() {
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
-
+void ReanimatedModuleProxy::flushLayoutAnimationRequests() {
   auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
   for (const auto surfaceId : flushRequestsCopy) {
     uiManager_->getShadowTreeRegistry().visit(
         surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
   }
+}
+
+AnimationMutations ReanimatedModuleProxy::collectMutationsForBackend() {
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    ReanimatedSystraceSection s("ReanimatedModuleProxy::collectMutationsForBackend");
+
+    flushLayoutAnimationRequests();
+
+    UpdatesBatchAnimatedProps animatedPropsBatch;
+    {
+      ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
+
+      auto lock = updatesRegistryManager_->lock();
+
+      // The CSS loop (`cssLoopCallback`) does not run under USE_ANIMATION_BACKEND,
+      // so `shouldUpdateCssAnimations_` may still be false even when CSS registries
+      // have pending work. Force it true so `update()` runs and clears them.
+      if (cssTransitionsRegistry_->hasUpdates() || cssAnimationsRegistry_->hasUpdates()) {
+        shouldUpdateCssAnimations_ = true;
+      }
+
+      if (shouldUpdateCssAnimations_) {
+        currentCssTimestamp_ = getAnimationTimestamp_();
+        auto lock = cssTransitionsRegistry_->lock();
+        cssTransitionsRegistry_->update(currentCssTimestamp_);
+        cssTransitionsRegistry_->flushAnimatedPropsUpdates(animatedPropsBatch);
+      }
+
+      {
+        auto lock = animatedPropsRegistry_->lock();
+        animatedPropsRegistry_->flushAnimatedPropsUpdates(animatedPropsBatch);
+      }
+
+      if (shouldUpdateCssAnimations_) {
+        auto lock = cssAnimationsRegistry_->lock();
+        cssAnimationsRegistry_->update(currentCssTimestamp_);
+        cssAnimationsRegistry_->flushAnimatedPropsUpdates(animatedPropsBatch);
+      }
+
+      shouldUpdateCssAnimations_ = false;
+    }
+
+    AnimationMutations mutations;
+
+    for (auto &[node, animatedProp, hasLayoutUpdates] : animatedPropsBatch) {
+      mutations.batch.push_back(
+          AnimationMutation{node->getTag(), node->getFamilyShared(), std::move(animatedProp), hasLayoutUpdates});
+    }
+
+    return mutations;
+  }
+
+  return AnimationMutations{};
+}
+
+void ReanimatedModuleProxy::performOperations() {
+  performOperations(false);
+}
+
+void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    startBackendIfNeeded();
+    return;
+  }
+
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
+
+  flushLayoutAnimationRequests();
 
   jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
 
@@ -732,9 +819,9 @@ void ReanimatedModuleProxy::performOperations() {
 
   commitUpdates(uiRuntime, updatesBatch);
 
-  // Clear the entire cache after the commit
-  // (we don't know if the view is updated from outside of Reanimated
-  // so we have to clear the entire cache)
+  //   Clear the entire cache after the commit
+  //   (we don't know if the view is updated from outside of Reanimated
+  //   so we have to clear the entire cache)
   viewStylesRepository_->clearNodesCache();
 }
 
@@ -745,6 +832,85 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
 
   applySynchronousUpdates(updatesBatch, true);
 }
+
+AnimationMutations ReanimatedModuleProxy::collectNonLayoutMutationsForBackend() {
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    ReanimatedSystraceSection s("ReanimatedModuleProxy::collectNonLayoutMutationsForBackend");
+
+    AnimationMutations mutations;
+    {
+      auto lock = updatesRegistryManager_->lock();
+      auto propsLock = animatedPropsRegistry_->lock();
+      jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
+      animatedPropsRegistry_->flushNonLayoutUpdates(uiRuntime, mutations);
+    }
+    return mutations;
+  }
+  return AnimationMutations{};
+}
+
+void ReanimatedModuleProxy::startBackendIfNeeded() {
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    if (isAnimationRunning_) {
+      return;
+    }
+    withAnimationBackend([this](const std::shared_ptr<AnimationBackend> &backend) {
+      // Defensively remove any stale registration before adding a new one.
+      // If stopBackendIfIdle's withAnimationBackend ever silently skips (expired
+      // weak_ptr), the old callback stays in backend->callbacks while
+      // isAnimationRunning_ is false, leading to duplicate firings.
+      backend->stop(callbackId_);
+      callbackId_ = backend->start(
+          [this](AnimationTimestamp ts) { return grandCallback<GrandCallbackState::AnimationLoop>(ts); });
+      isAnimationRunning_ = true;
+    });
+  }
+}
+
+void ReanimatedModuleProxy::stopBackendIfIdle(const AnimationMutations &mutations) {
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    bool hasWork = !mutations.batch.empty() || pendingAnimationFrameCallback_ != nullptr ||
+        cssTransitionsRegistry_->hasUpdates() || cssAnimationsRegistry_->hasUpdates() ||
+        animatedPropsRegistry_->hasPendingAnimatedPropsUpdates() || shouldFlushRegistry_ ||
+        !layoutAnimationFlushRequests_.empty();
+    if (!hasWork) {
+      withAnimationBackend([this](const std::shared_ptr<AnimationBackend> &backend) { backend->stop(callbackId_); });
+      isAnimationRunning_ = false;
+    }
+  }
+}
+
+template <GrandCallbackState State>
+AnimationMutations ReanimatedModuleProxy::grandCallback(AnimationTimestamp timestamp) {
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    ReanimatedSystraceSection s("ReanimatedModuleProxy::grandCallback");
+
+    AnimationMutations mutations;
+
+    if constexpr (State == GrandCallbackState::AnimationLoop) {
+      if (pendingAnimationFrameCallback_) {
+        auto cb = std::move(pendingAnimationFrameCallback_);
+        pendingAnimationFrameCallback_ = nullptr;
+        cb(timestamp.count());
+      }
+      mutations = collectMutationsForBackend();
+      stopBackendIfIdle(mutations);
+    } else if constexpr (State == GrandCallbackState::Event) {
+      mutations = collectMutationsForBackend();
+    } else {
+      static_assert(State == GrandCallbackState::EventInAndroidDraw);
+      mutations = collectNonLayoutMutationsForBackend();
+    }
+
+    return mutations;
+  }
+  return AnimationMutations{};
+}
+
+// Explicit instantiations needed by NativeProxy.cpp (different TU) via triggerBackendCallback<State>.
+template AnimationMutations ReanimatedModuleProxy::grandCallback<GrandCallbackState::Event>(AnimationTimestamp);
+template AnimationMutations ReanimatedModuleProxy::grandCallback<GrandCallbackState::EventInAndroidDraw>(
+    AnimationTimestamp);
 
 void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, const bool allowPartialUpdates) {
 #ifdef ANDROID
@@ -1160,11 +1326,16 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
 }
 
 void ReanimatedModuleProxy::requestFlushRegistry() {
-  requestRender_([weakThis = weak_from_this()](const double timestamp) {
-    if (auto strongThis = weakThis.lock()) {
-      strongThis->shouldFlushRegistry_ = true;
-    }
-  });
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    shouldFlushRegistry_ = true;
+    startBackendIfNeeded();
+  } else {
+    requestRender_([weakThis = weak_from_this()](const double) {
+      if (auto strongThis = weakThis.lock()) {
+        strongThis->shouldFlushRegistry_ = true;
+      }
+    });
+  }
 }
 
 void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch) {
@@ -1295,6 +1466,32 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
   uiManager_ = uiManager;
   viewStylesRepository_->setUIManager(uiManager_);
 
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    if (!ReactNativeFeatureFlags::useSharedAnimatedBackend()) {
+      const auto message = std::string("[Reanimated] USE_ANIMATION_BACKEND flag is enabled, but ") +
+          "ReactNativeFeatureFlags::useSharedAnimatedBackend is disabled. " + "Animations will not work properly.";
+
+      fprintf(stderr, "%s\n", message.c_str());
+    }
+
+    setRequestAnimationFrame(uiRuntime_, [weakThis = weak_from_this()](std::function<void(const double)> callback) {
+      auto strongThis = weakThis.lock();
+      if (!strongThis) {
+        return;
+      }
+      strongThis->pendingAnimationFrameCallback_ = std::move(callback);
+      strongThis->startBackendIfNeeded();
+    });
+
+    requestRender_ = [weakThis = weak_from_this()](std::function<void(const double)> /*callback*/) {
+      auto strongThis = weakThis.lock();
+      if (!strongThis) {
+        return;
+      }
+      strongThis->startBackendIfNeeded();
+    };
+  }
+
   initializeLayoutAnimationsProxy();
 
   const std::function<void()> request = [weakThis = weak_from_this()]() {
@@ -1305,7 +1502,11 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
 
     strongThis->requestFlushRegistry();
   };
-  mountHook_ = std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, request);
+
+  if constexpr (!StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    mountHook_ = std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, request);
+  }
+
   commitHook_ = std::make_shared<ReanimatedCommitHook>(uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
 }
 

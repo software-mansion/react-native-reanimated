@@ -1,4 +1,9 @@
 #include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
+#include <reanimated/Fabric/updates/propsLayoutFilter.h>
+#include <reanimated/Tools/FeatureFlags.h>
+
+#include <react/renderer/animationbackend/AnimatedProps.h>
+#include <react/renderer/core/RawProps.h>
 
 #include <memory>
 #include <string>
@@ -215,7 +220,13 @@ void CSSAnimationsRegistry::updateViewAnimations(
   }
 
   if (hasUpdates) {
-    addUpdatesToBatch(shadowNode->getFamilyShared(), result);
+    if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+      AnimatedProps animatedProps;
+      animatedProps.rawProps = std::make_unique<RawProps>(result);
+      addAnimatedPropsToBatch(shadowNode, std::move(animatedProps), hasLayoutProps(result));
+    } else {
+      addUpdatesToBatch(shadowNode->getFamilyShared(), result);
+    }
   }
 }
 

@@ -1,6 +1,7 @@
 #include <react/fabric/Binding.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
+#include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/ReanimatedVersion.h>
 #include <reanimated/android/AnimationFrameCallback.h>
@@ -242,7 +243,8 @@ double NativeProxy::getAnimationTimestamp() {
 void NativeProxy::handleEvent(
     jni::alias_ref<JString> eventName,
     jint emitterReactTag,
-    jni::alias_ref<react::WritableMap> event) {
+    jni::alias_ref<react::WritableMap> event,
+    jboolean isInDrawPass) {
   // handles RCTEvents from RNGestureHandler
   if (event.get() == nullptr) {
     // Ignore events with null payload.
@@ -273,7 +275,23 @@ void NativeProxy::handleEvent(
     return;
   }
 
-  reanimatedModuleProxy_->handleEvent(eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    if (isInDrawPass) {
+      reanimatedModuleProxy_->handleEventAndFlush<GrandCallbackState::EventInAndroidDraw>(
+          eventName->toString(), emitterReactTag, payload);
+    } else {
+      reanimatedModuleProxy_->handleEventAndFlush<GrandCallbackState::Event>(
+          eventName->toString(), emitterReactTag, payload);
+    }
+  } else {
+    reanimatedModuleProxy_->handleEvent(eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
+    if (isInDrawPass) {
+      reanimatedModuleProxy_->performNonLayoutOperations();
+      requestRender([](double) {});
+    } else {
+      reanimatedModuleProxy_->performOperations();
+    }
+  }
 }
 
 PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {

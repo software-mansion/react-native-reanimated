@@ -1,4 +1,9 @@
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
+#include <reanimated/Fabric/updates/propsLayoutFilter.h>
+#include <reanimated/Tools/FeatureFlags.h>
+
+#include <react/renderer/animationbackend/AnimatedProps.h>
+#include <react/renderer/core/RawProps.h>
 
 #include <memory>
 #include <utility>
@@ -38,6 +43,14 @@ void CSSTransitionsRegistry::run(
 
   auto initialUpdate = transition->run(rt, config, lastUpdates, timestamp);
 
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    if (!initialUpdate.empty()) {
+      AnimatedProps animatedProps;
+      animatedProps.rawProps = std::make_unique<RawProps>(initialUpdate);
+      addAnimatedPropsToBatch(transition->getShadowNode(), std::move(animatedProps), hasLayoutProps(initialUpdate));
+    }
+  }
+
   scheduleOrActivateTransition(transition);
   updateInUpdatesRegistry(transition, initialUpdate);
 }
@@ -60,7 +73,13 @@ void CSSTransitionsRegistry::update(const double timestamp) {
 
     const folly::dynamic &updates = transition->update(timestamp);
     if (!updates.empty()) {
-      addUpdatesToBatch(transition->getShadowNode()->getFamilyShared(), updates);
+      if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+        AnimatedProps animatedProps;
+        animatedProps.rawProps = std::make_unique<RawProps>(updates);
+        addAnimatedPropsToBatch(transition->getShadowNode(), std::move(animatedProps), hasLayoutProps(updates));
+      } else {
+        addUpdatesToBatch(transition->getShadowNode()->getFamilyShared(), updates);
+      }
     }
 
     // We remove transition from running and schedule it when animation of one

@@ -139,6 +139,11 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
   void init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy);
 
+  using RequestAnimationFrameSetter = std::function<void(std::function<void(std::function<void(const double)>)>)>;
+
+  void setRequestAnimationFrameSetter(RequestAnimationFrameSetter setter);
+  void setRequestAnimationFrame(std::function<void(std::function<void(const double)>)> requestAnimationFrame);
+
   /* #region deprecated */
 
   /** @deprecated Use `runSync` instead. */
@@ -189,6 +194,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
   std::shared_ptr<EventLoop> eventLoop_;
+  RequestAnimationFrameSetter requestAnimationFrameSetter_;
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on

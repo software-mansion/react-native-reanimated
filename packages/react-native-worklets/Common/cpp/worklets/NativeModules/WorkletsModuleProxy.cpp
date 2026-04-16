@@ -82,6 +82,10 @@ std::shared_ptr<JSIWorkletsModuleProxy> WorkletsModuleProxy::createJSIWorkletsMo
   return std::make_shared<JSIWorkletsModuleProxy>(*rnRuntimeProxy_);
 }
 
+void WorkletsModuleProxy::setRequestAnimationFrame(RuntimeBindings::RequestAnimationFrame requestAnimationFrame) {
+  animationFrameBatchinator_->setRequestAnimationFrame(std::move(requestAnimationFrame));
+}
+
 WorkletsModuleProxy::~WorkletsModuleProxy() {
   animationFrameBatchinator_.reset();
   jsQueue_->quitSynchronous();

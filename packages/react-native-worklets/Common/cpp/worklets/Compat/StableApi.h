@@ -5,7 +5,7 @@
 * It can be used by libraries to verify they use a compatible version
 * of `react-native-worklets` installed when integrating in C++. 
 */
-#define WORKLETS_STABLE_API_VERSION "0.8.0"
+#define WORKLETS_STABLE_API_VERSION "0.9.0"
 
 #include <cstdint>
 #include <functional>
@@ -105,5 +105,11 @@ extern void runSyncOnRuntime(
     const std::shared_ptr<Serializable> &worklet,
     const facebook::jsi::Value &arg0,
     const facebook::jsi::Value &arg1);
+
+using RequestAnimationFrameFn = std::function<void(std::function<void(const double)>)>;
+
+extern void setRequestAnimationFrame(
+    const std::shared_ptr<WorkletRuntime> &workletRuntime,
+    RequestAnimationFrameFn requestAnimationFrame);
 
 } // namespace worklets

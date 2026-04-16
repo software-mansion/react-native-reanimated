@@ -26,6 +26,14 @@
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/SingleInstanceChecker.h>
 
+#include <worklets/NativeModules/WorkletsModuleProxy.h>
+#include <worklets/Tools/JSScheduler.h>
+#include <worklets/Tools/UIScheduler.h>
+
+#include <react/renderer/animationbackend/AnimationBackend.h>
+#include <react/renderer/uimanager/UIManagerAnimationBackend.h>
+
+#include <cstdint>
 #include <memory>
 #include <set>
 #include <string>
@@ -36,6 +44,12 @@ namespace reanimated {
 
 using namespace facebook;
 using namespace css;
+
+enum class GrandCallbackState : std::uint8_t {
+  AnimationLoop,
+  Event,
+  EventInAndroidDraw,
+};
 
 class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
                               public std::enable_shared_from_this<ReanimatedModuleProxy> {
@@ -83,13 +97,49 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   bool
   handleEvent(const std::string &eventName, const int emitterReactTag, const jsi::Value &payload, double currentTime);
 
-  bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
+  bool handleRawEvent(const RawEvent &rawEvent);
 
   void maybeRunCSSLoop();
   double getCssTimestamp();
 
+  void performOperations(const bool isTriggeredByEvent);
+  AnimationMutations collectMutationsForBackend();
   void performOperations();
   void performNonLayoutOperations();
+  AnimationMutations collectNonLayoutMutationsForBackend();
+  void flushLayoutAnimationRequests();
+
+  template <GrandCallbackState State>
+  AnimationMutations grandCallback(AnimationTimestamp timestamp);
+
+  template <GrandCallbackState State>
+  void triggerBackendCallback() {
+#ifdef RN_HAS_PUSH_ANIMATION_MUTATIONS
+    withAnimationBackend([this](const std::shared_ptr<AnimationBackend> &backend) {
+      backend->pushAnimationMutations([this](AnimationTimestamp ts) { return grandCallback<State>(ts); });
+    });
+#else
+    withAnimationBackend([](const std::shared_ptr<AnimationBackend> &backend) { backend->trigger(); });
+#endif
+  }
+
+  template <GrandCallbackState State>
+  void handleEventAndFlush(const std::string &eventName, int emitterReactTag, const jsi::Value &payload) {
+#ifdef RN_HAS_PUSH_ANIMATION_MUTATIONS
+    withAnimationBackend([&](const std::shared_ptr<AnimationBackend> &backend) {
+      backend->pushAnimationMutations([&](AnimationTimestamp ts) {
+        handleEvent(eventName, emitterReactTag, payload, ts.count());
+        return grandCallback<State>(ts);
+      });
+    });
+#else
+    handleEvent(eventName, emitterReactTag, payload, getAnimationTimestamp_());
+    triggerBackendCallback<State>();
+#endif
+  }
+
+  void startBackendIfNeeded();
+  void stopBackendIfIdle(const AnimationMutations &mutations);
 
   void setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle) override;
 
@@ -171,6 +221,14 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   std::function<std::string()> createRegistriesLeakCheck();
 
  private:
+  template <typename Func>
+  void withAnimationBackend(Func &&fn) {
+    auto weak = uiManager_->unstable_getAnimationBackend();
+    if (auto locked = weak.lock()) {
+      fn(std::static_pointer_cast<AnimationBackend>(locked));
+    }
+  }
+
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
   void applySynchronousUpdates(UpdatesBatch &updatesBatch, bool allowPartialUpdates = false);
 
@@ -180,12 +238,16 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   std::shared_ptr<worklets::UIScheduler> uiScheduler_;
 
   std::unique_ptr<UIEventHandlerRegistry> eventHandlerRegistry_;
-  const RequestRenderFunction requestRender_;
+  RequestRenderFunction requestRender_;
   volatile bool renderRequested_{false};
+  bool isAnimationRunning_{false};
+  CallbackId callbackId_;
   std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
+  std::function<void(double)> pendingAnimationFrameCallback_;
+
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
 #endif
