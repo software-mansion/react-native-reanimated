@@ -62,6 +62,8 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
     return isDevBundle_;
   }
 
+  void setRequestAnimationFrame(RuntimeBindings::RequestAnimationFrame requestAnimationFrame);
+
  private:
   const bool isDevBundle_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;

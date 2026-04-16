@@ -278,6 +278,17 @@ std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::
   return weakHolder->weakRuntime;
 }
 
+void WorkletRuntime::setRequestAnimationFrameSetter(RequestAnimationFrameSetter setter) {
+  requestAnimationFrameSetter_ = std::move(setter);
+}
+
+void WorkletRuntime::setRequestAnimationFrame(
+    std::function<void(std::function<void(const double)>)> requestAnimationFrame) {
+  if (requestAnimationFrameSetter_) {
+    requestAnimationFrameSetter_(std::move(requestAnimationFrame));
+  }
+}
+
 /* #region deprecated */
 
 void WorkletRuntime::runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet) {

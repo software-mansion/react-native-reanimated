@@ -2,6 +2,8 @@
 
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 
+#include <react/renderer/animationbackend/AnimatedProps.h>
+#include <react/renderer/animationbackend/AnimationBackend.h>
 #include <react/renderer/core/ShadowNode.h>
 
 #include <jsi/jsi.h>
@@ -18,6 +20,12 @@ using namespace facebook;
 using namespace react;
 
 using UpdatesBatch = std::vector<std::pair<ShadowNodeFamily::Shared, folly::dynamic>>;
+struct AnimatedPropsEntry {
+  std::shared_ptr<const ShadowNode> shadowNode;
+  AnimatedProps animatedProps;
+  bool hasLayoutUpdates;
+};
+using UpdatesBatchAnimatedProps = std::vector<AnimatedPropsEntry>;
 using RegistryMap = std::unordered_map<Tag, std::pair<ShadowNodeFamily::Shared, folly::dynamic>>;
 
 #ifdef ANDROID
@@ -45,6 +53,9 @@ class UpdatesRegistry {
 #endif
 
   void flushUpdates(UpdatesBatch &updatesBatch);
+  void flushAnimatedPropsUpdates(UpdatesBatchAnimatedProps &updatesBatch);
+  void flushNonLayoutUpdates(jsi::Runtime &rt, facebook::react::AnimationMutations &mutations);
+  bool hasPendingAnimatedPropsUpdates() const;
   void collectProps(PropsMap &propsMap);
   UpdatesBatch getPendingUpdates();
 
@@ -53,12 +64,17 @@ class UpdatesRegistry {
   RegistryMap updatesRegistry_;
 
   void addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
+  void addAnimatedPropsToBatch(
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      AnimatedProps animatedProps,
+      bool hasLayoutUpdates = false);
   folly::dynamic getUpdatesFromRegistry(const Tag tag) const;
   void setInUpdatesRegistry(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
   void removeFromUpdatesRegistry(Tag tag);
 
  private:
   UpdatesBatch updatesBatch_;
+  UpdatesBatchAnimatedProps updatesBatchAnimatedProps_;
 
   void flushUpdatesToRegistry(const UpdatesBatch &updatesBatch);
 

@@ -5,6 +5,7 @@
 
 typedef void (^REAOnAnimationCallback)(READisplayLink *displayLink);
 typedef void (^REAEventHandler)(id<RCTEvent> event);
+typedef void (^READispatchEventHandler)(id<RCTEvent> event);
 typedef void (^CADisplayLinkOperation)(READisplayLink *displayLink);
 typedef void (^REAPerformOperations)();
 
@@ -17,9 +18,11 @@ typedef void (^REAPerformOperations)();
 
 - (void)postOnAnimation:(REAOnAnimationCallback)clb;
 - (void)registerEventHandler:(REAEventHandler)eventHandler;
+- (void)registerDispatchEventHandler:(READispatchEventHandler)dispatchEventHandler;
 - (void)dispatchEvent:(id<RCTEvent>)event;
 - (void)synchronouslyUpdateUIProps:(ReactTag)viewTag props:(const folly::dynamic &)props;
 - (void)registerPerformOperations:(REAPerformOperations)performOperations;
+- (void)registerPerformOperationsForEvent:(REAPerformOperations)performOperationsForEvent;
 - (void)maybeFlushUIUpdatesQueue;
 
 @end
