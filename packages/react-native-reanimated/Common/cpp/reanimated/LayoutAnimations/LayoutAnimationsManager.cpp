@@ -12,7 +12,10 @@ namespace reanimated {
 void LayoutAnimationsManager::configureAnimationBatch(const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   for (const auto &layoutAnimationConfig : layoutAnimationsBatch) {
-    const auto &[tag, type, config, rawConfig] = layoutAnimationConfig;
+    const auto tag = layoutAnimationConfig.tag;
+    const auto type = layoutAnimationConfig.type;
+    const auto &config = layoutAnimationConfig.config;
+    const auto &rawConfig = layoutAnimationConfig.rawConfig;
     const auto &sharedTag = layoutAnimationConfig.sharedTransitionTag;
 
     if (type == LayoutAnimationType::ENTERING) {
@@ -107,31 +110,21 @@ void LayoutAnimationsManager::startNativeLayoutAnimation(
     return;
   }
 
-  std::vector<NativeLayoutAnimation> animations =
-      NativeLayoutAnimationPresetFactory::instance()
-          .create(type, *configPair.second->presetName)
-          ->calculate(startFrame, endFrame);
+  std::vector<NativeLayoutAnimation> animations = NativeLayoutAnimationPresetFactory::instance()
+                                                      .create(type, *configPair.second->presetName)
+                                                      ->calculate(startFrame, endFrame);
 
   auto callback = std::make_shared<std::function<void(bool)>>(std::move(onAnimationEnd));
   if (type == LayoutAnimationType::ENTERING) {
     facebook::react::Rect initialFrame = startFrame;
     dispatch_async(dispatch_get_main_queue(), ^{
-      runCoreAnimationForView_(
-          tag,
-          initialFrame,
-          animations,
-          *configPair.second,
-          false,
-          [callback](bool finished) { (*callback)(finished); });
+      runCoreAnimationForView_(tag, initialFrame, animations, *configPair.second, false, [callback](bool finished) {
+        (*callback)(finished);
+      });
     });
   } else {
     runCoreAnimationForView_(
-        tag,
-        startFrame,
-        animations,
-        *configPair.second,
-        true,
-        [callback](bool finished) { (*callback)(finished); });
+        tag, startFrame, animations, *configPair.second, true, [callback](bool finished) { (*callback)(finished); });
   }
 }
 #endif
@@ -169,8 +162,8 @@ std::shared_ptr<SharedTransitionManager> LayoutAnimationsManager::getSharedTrans
   return sharedTransitionManager_;
 }
 
-std::unordered_map<int, LayoutAnimationsManager::LayoutAnimationConfigEntry> &LayoutAnimationsManager::getConfigsForType(
-    const LayoutAnimationType type) {
+std::unordered_map<int, LayoutAnimationsManager::LayoutAnimationConfigEntry> &
+LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
   switch (type) {
     case LayoutAnimationType::ENTERING:
       return enteringAnimations_;

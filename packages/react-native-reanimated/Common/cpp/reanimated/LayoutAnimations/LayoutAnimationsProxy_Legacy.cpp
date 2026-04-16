@@ -96,7 +96,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::progressLayoutAnimation(i
   return layoutAnimation.finalView.surfaceId;
 }
 
-std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int tag, bool shouldRemove) {
+std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int tag, bool shouldRemove) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "end layout animation for " << tag << " - should remove " << shouldRemove << std::endl;
 #endif
@@ -657,8 +657,7 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
     auto oldView = mutation.oldChildShadowView;
     auto newView = mutation.newChildShadowView;
 
-    if constexpr (StaticFeatureFlags::getFlag(
-                      "IOS_USE_NATIVE_LAYOUT_ANIMATIONS")) {
+    if constexpr (StaticFeatureFlags::getFlag("IOS_USE_NATIVE_LAYOUT_ANIMATIONS")) {
       strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
           tag,
           LayoutAnimationType::ENTERING,
@@ -666,7 +665,7 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
           // pass new view
           newView.layoutMetrics.frame,
           newView.layoutMetrics.frame,
-          [this, tag](bool finished) { this->endLayoutAnimation(tag, false); });
+          [strongThis, tag](bool finished) { strongThis->endLayoutAnimation(tag, false); });
 
       return;
     }
@@ -714,22 +713,22 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
           LayoutAnimationType::EXITING,
           oldView.layoutMetrics.frame,
           oldView.layoutMetrics.frame,
-          [this, tag](bool finished) { this->endLayoutAnimation(tag, finished); });
+          [strongThis, tag](bool finished) { strongThis->endLayoutAnimation(tag, finished); });
     } else {
-    Snapshot values(oldView, window);
+      Snapshot values(oldView, window);
 
-    auto &uiRuntime = strongThis->uiRuntime_;
-    jsi::Object yogaValues(uiRuntime);
-    yogaValues.setProperty(uiRuntime, "currentOriginX", values.x);
-    yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", values.x);
-    yogaValues.setProperty(uiRuntime, "currentOriginY", values.y);
-    yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", values.y);
-    yogaValues.setProperty(uiRuntime, "currentWidth", values.width);
-    yogaValues.setProperty(uiRuntime, "currentHeight", values.height);
-    yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
-    yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
-    strongThis->layoutAnimationsManager_->startLayoutAnimation(
-        uiRuntime, tag, LayoutAnimationType::EXITING, yogaValues);
+      auto &uiRuntime = strongThis->uiRuntime_;
+      jsi::Object yogaValues(uiRuntime);
+      yogaValues.setProperty(uiRuntime, "currentOriginX", values.x);
+      yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", values.x);
+      yogaValues.setProperty(uiRuntime, "currentOriginY", values.y);
+      yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", values.y);
+      yogaValues.setProperty(uiRuntime, "currentWidth", values.width);
+      yogaValues.setProperty(uiRuntime, "currentHeight", values.height);
+      yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
+      yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
+      strongThis->layoutAnimationsManager_->startLayoutAnimation(
+          uiRuntime, tag, LayoutAnimationType::EXITING, yogaValues);
     }
     strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
   });
@@ -757,14 +756,13 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
       window = strongThis->surfaceManager.getWindow(surfaceId);
     }
 
-    if constexpr (StaticFeatureFlags::getFlag(
-                      "IOS_USE_NATIVE_LAYOUT_ANIMATIONS")) {
+    if constexpr (StaticFeatureFlags::getFlag("IOS_USE_NATIVE_LAYOUT_ANIMATIONS")) {
       strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
           tag,
           LayoutAnimationType::LAYOUT,
           oldView.layoutMetrics.frame,
           newView.layoutMetrics.frame,
-          [this, tag](bool finished) { this->endLayoutAnimation(tag, false); });
+          [strongThis, tag](bool finished) { strongThis->endLayoutAnimation(tag, false); });
 
       return;
     }

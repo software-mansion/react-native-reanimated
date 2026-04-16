@@ -33,6 +33,7 @@ struct LayoutAnimationConfig {
   int tag;
   LayoutAnimationType type;
   std::shared_ptr<worklets::Serializable> config;
+  std::string sharedTransitionTag;
   std::shared_ptr<LayoutAnimationRawConfig> rawConfig;
 };
 

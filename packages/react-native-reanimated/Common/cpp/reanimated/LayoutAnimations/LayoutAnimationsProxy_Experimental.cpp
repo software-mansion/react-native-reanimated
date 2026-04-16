@@ -265,7 +265,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::progressLayoutAnima
   return layoutAnimation.finalView.surfaceId;
 }
 
-std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(int tag, bool shouldRemove) {
+std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(int tag, bool shouldRemove) const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   auto layoutAnimationIt = layoutAnimations_.find(tag);
 

@@ -138,7 +138,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
 
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) override;
-  std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
+  std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) const override;
   std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward) override;
   std::optional<SurfaceId> onGestureCancel() override;
   void startSurface(const SurfaceId surfaceId) override;
