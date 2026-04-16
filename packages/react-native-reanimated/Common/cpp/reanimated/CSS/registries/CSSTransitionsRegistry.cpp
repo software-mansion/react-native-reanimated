@@ -1,10 +1,8 @@
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
-#include <reanimated/Fabric/updates/propsLayoutFilter.h>
+#include <reanimated/CSS/utils/animationUpdatesBatchUtils.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
-#include <react/renderer/animationbackend/AnimatedProps.h>
-#include <react/renderer/core/RawProps.h>
-
+#include <folly/json.h>
 #include <memory>
 #include <utility>
 
@@ -41,14 +39,18 @@ void CSSTransitionsRegistry::run(
   const auto &lastUpdates = getUpdatesFromRegistry(shadowNode->getTag());
   const auto timestamp = getCurrentTimestamp_();
 
-  auto initialUpdate = transition->run(rt, config, lastUpdates, timestamp);
-
+  std::shared_ptr<AnimatedPropsBuilder> propsBuilder = std::make_shared<AnimatedPropsBuilder>();
+  auto initialUpdate = transition->run(rt, config, lastUpdates, timestamp, propsBuilder);
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     if (!initialUpdate.empty()) {
-      AnimatedProps animatedProps;
-      animatedProps.rawProps = std::make_unique<RawProps>(initialUpdate);
-      addAnimatedPropsToBatch(transition->getShadowNode(), std::move(animatedProps), hasLayoutProps(initialUpdate));
+      folly::dynamic packed = initialUpdate;
+      if (propsBuilder->rawProps) {
+        const auto existing = propsBuilder->rawProps->toDynamic();
+        packed = mergeDynamicObjects(existing, packed);
+      }
+      propsBuilder->storeDynamic(packed);
     }
+    addAnimatedPropsToBatch(transition->getShadowNode(), propsBuilder->get());
   }
 
   scheduleOrActivateTransition(transition);
@@ -70,17 +72,24 @@ void CSSTransitionsRegistry::update(const double timestamp) {
   for (auto it = runningTransitionTags_.begin(); it != runningTransitionTags_.end();) {
     const auto &viewTag = *it;
     const auto &transition = registry_[viewTag];
+    std::shared_ptr<AnimatedPropsBuilder> propsBuilder = std::make_shared<AnimatedPropsBuilder>();
 
-    const folly::dynamic &updates = transition->update(timestamp);
+    const folly::dynamic &updates = transition->update(timestamp, propsBuilder);
     if (!updates.empty()) {
       if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-        AnimatedProps animatedProps;
-        animatedProps.rawProps = std::make_unique<RawProps>(updates);
-        addAnimatedPropsToBatch(transition->getShadowNode(), std::move(animatedProps), hasLayoutProps(updates));
+        folly::dynamic packed = updates;
+        if (propsBuilder->rawProps) {
+          const auto existing = propsBuilder->rawProps->toDynamic();
+          packed = mergeDynamicObjects(existing, packed);
+        }
+        propsBuilder->storeDynamic(packed);
+        addAnimatedPropsToBatch(transition->getShadowNode(), propsBuilder->get());
       } else {
         addUpdatesToBatch(transition->getShadowNode()->getFamilyShared(), updates);
       }
     }
+
+    updateInUpdatesRegistry(transition, updates);
 
     // We remove transition from running and schedule it when animation of one
     // of properties has finished and the other one is still delayed
@@ -134,7 +143,7 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
   folly::dynamic filteredUpdates = folly::dynamic::object;
 
   if (!lastUpdates.empty()) {
-    // Otherwise, we keep only allowed properties from the last updates
+    // Keep only allowed properties from the last updates
     // and update the object with the new transition starting values
     for (const auto &prop : transitionProperties) {
       if (lastUpdates.count(prop)) {

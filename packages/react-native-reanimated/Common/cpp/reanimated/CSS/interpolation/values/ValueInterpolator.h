@@ -25,7 +25,8 @@ class ValueInterpolator : public PropertyInterpolator {
   explicit ValueInterpolator(
       const PropertyPath &propertyPath,
       const std::shared_ptr<CSSValue> &defaultValue,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+      std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValue &)> addToPropsBuilder);
   virtual ~ValueInterpolator() = default;
 
   folly::dynamic getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const override;
@@ -39,6 +40,7 @@ class ValueInterpolator : public PropertyInterpolator {
   folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+      const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder,
       double fallbackInterpolateThreshold) const override;
 
  protected:
@@ -52,7 +54,8 @@ class ValueInterpolator : public PropertyInterpolator {
       double progress,
       const std::shared_ptr<CSSValue> &fromValue,
       const std::shared_ptr<CSSValue> &toValue,
-      const ValueInterpolationContext &context) const = 0;
+      const ValueInterpolationContext &context,
+      const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const = 0;
 
  private:
   std::shared_ptr<CSSValue> reversingAdjustedStartValue_;
@@ -60,6 +63,7 @@ class ValueInterpolator : public PropertyInterpolator {
   folly::dynamic convertOptionalToDynamic(const std::optional<std::shared_ptr<CSSValue>> &value) const;
   std::shared_ptr<CSSValue> getFallbackValue(const std::shared_ptr<const ShadowNode> &shadowNode) const;
   size_t getToKeyframeIndex(const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const;
+  std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValue &)> addToPropsBuilder_;
 };
 
 } // namespace reanimated::css

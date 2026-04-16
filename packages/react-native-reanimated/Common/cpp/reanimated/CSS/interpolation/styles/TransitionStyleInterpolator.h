@@ -20,7 +20,8 @@ class TransitionStyleInterpolator {
 
   folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,
-      const TransitionProgressProvider &transitionProgressProvider) const;
+      const TransitionProgressProvider &transitionProgressProvider,
+      const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const;
 
   bool createOrUpdateInterpolator(
       jsi::Runtime &rt,

@@ -4,6 +4,8 @@
 #include <reanimated/CSS/interpolation/operations/StyleOperation.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 
+#include <react/renderer/animationbackend/AnimatedPropsBuilder.h>
+
 #include <memory>
 #include <unordered_map>
 
@@ -28,10 +30,14 @@ class StyleOperationInterpolator {
       double progress,
       const std::shared_ptr<StyleOperation> &from,
       const std::shared_ptr<StyleOperation> &to,
-      const UpdateContext &context) const = 0;
+      const UpdateContext &context,
+      const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const = 0;
   virtual std::shared_ptr<StyleOperation> resolveOperation(
       const std::shared_ptr<StyleOperation> &operation,
       const UpdateContext &context) const;
+  virtual void addDiscreteStyleOperationToPropsBuilder(
+      const std::shared_ptr<StyleOperation> &operation,
+      const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const;
 
  private:
   const std::shared_ptr<StyleOperation> defaultOperation_;

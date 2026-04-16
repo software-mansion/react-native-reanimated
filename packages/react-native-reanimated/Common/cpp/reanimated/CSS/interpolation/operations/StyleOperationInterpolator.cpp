@@ -15,4 +15,8 @@ std::shared_ptr<StyleOperation> StyleOperationInterpolator::resolveOperation(
   return operation;
 }
 
+void StyleOperationInterpolator::addDiscreteStyleOperationToPropsBuilder(
+    const std::shared_ptr<StyleOperation> &operation,
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const {}
+
 } // namespace reanimated::css

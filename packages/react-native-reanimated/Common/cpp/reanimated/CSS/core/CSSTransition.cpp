@@ -32,6 +32,11 @@ TransitionProgressState CSSTransition::getState() const {
   return progressProvider_.getState();
 }
 
+folly::dynamic CSSTransition::getCurrentInterpolationStyle(
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const {
+  return styleInterpolator_.interpolate(shadowNode_, progressProvider_, propsBuilder);
+}
+
 TransitionProperties CSSTransition::getProperties() const {
   return transitionProperties_;
 }
@@ -40,18 +45,21 @@ folly::dynamic CSSTransition::run(
     jsi::Runtime &rt,
     const CSSTransitionConfig &config,
     const folly::dynamic &lastUpdateValue,
-    const double timestamp) {
+    const double timestamp,
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) {
   // Update interpolators and progress providers for changed properties
   handleChangedProperties(rt, config, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
   // Remove interpolators and progress providers for no longer transitioned props
   handleRemovedProperties(config);
   // Return the first transition frame
-  return update(timestamp);
+  return update(timestamp, propsBuilder);
 }
 
-folly::dynamic CSSTransition::update(const double timestamp) {
+folly::dynamic CSSTransition::update(
+    const double timestamp,
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) {
   progressProvider_.update(timestamp);
-  auto result = styleInterpolator_.interpolate(shadowNode_, progressProvider_);
+  auto result = styleInterpolator_.interpolate(shadowNode_, progressProvider_, propsBuilder);
   // Remove interpolators for which interpolation has finished
   // (we won't need them anymore in the current transition)
   styleInterpolator_.discardFinishedInterpolators(progressProvider_);

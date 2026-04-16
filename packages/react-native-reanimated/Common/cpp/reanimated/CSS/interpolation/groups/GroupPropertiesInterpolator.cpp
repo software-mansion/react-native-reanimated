@@ -32,9 +32,10 @@ folly::dynamic GroupPropertiesInterpolator::getLastKeyframeValue() const {
 folly::dynamic GroupPropertiesInterpolator::interpolate(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder,
     const double fallbackInterpolateThreshold) const {
   return mapInterpolators([&](PropertyInterpolator &interpolator) -> folly::dynamic {
-    return interpolator.interpolate(shadowNode, progressProvider, fallbackInterpolateThreshold);
+    return interpolator.interpolate(shadowNode, progressProvider, propsBuilder, fallbackInterpolateThreshold);
   });
 }
 

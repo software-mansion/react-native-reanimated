@@ -1,9 +1,6 @@
 #include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
-#include <reanimated/Fabric/updates/propsLayoutFilter.h>
+#include <reanimated/CSS/utils/animationUpdatesBatchUtils.h>
 #include <reanimated/Tools/FeatureFlags.h>
-
-#include <react/renderer/animationbackend/AnimatedProps.h>
-#include <react/renderer/core/RawProps.h>
 
 #include <memory>
 #include <string>
@@ -177,7 +174,11 @@ void CSSAnimationsRegistry::updateViewAnimations(
     const double timestamp,
     const bool addToBatch) {
   folly::dynamic result = folly::dynamic::object;
+  std::shared_ptr<AnimatedPropsBuilder> propsBuilder = std::make_shared<AnimatedPropsBuilder>();
   std::shared_ptr<const ShadowNode> shadowNode = nullptr;
+  // We collect reset updates to avoid merging AnimatedProps for now.
+  std::vector<std::shared_ptr<AnimatedPropsBuilder>> resetPropsUpdates;
+
   bool hasUpdates = false;
 
   for (const auto animationIndex : animationIndices) {
@@ -190,7 +191,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     }
 
     bool updatesAddedToBatch = false;
-    const auto updates = animation->update(timestamp);
+    const auto updates = animation->update(timestamp, propsBuilder);
     const auto newState = animation->getState(timestamp);
 
     if (newState == AnimationProgressState::Finished) {
@@ -199,7 +200,13 @@ void CSSAnimationsRegistry::updateViewAnimations(
       if (addToBatch && !animation->hasForwardsFillMode()) {
         //  We also have to manually commit style values
         // reverting the changes applied by the animation.
-        hasUpdates = addStyleUpdates(result, animation->getResetStyle(), false) || hasUpdates;
+        auto resetStyle = animation->getResetStyle();
+        hasUpdates = addStyleUpdates(result, resetStyle, false) || hasUpdates;
+        if (hasUpdates) {
+          std::shared_ptr<AnimatedPropsBuilder> resetPropsBuilder = std::make_shared<AnimatedPropsBuilder>();
+          resetPropsBuilder->storeDynamic(resetStyle);
+          resetPropsUpdates.push_back(resetPropsBuilder);
+        }
         updatesAddedToBatch = true;
         // We want to remove style changes applied by the animation that is
         // finished and has no forwards fill mode. We cannot simply remove
@@ -221,9 +228,23 @@ void CSSAnimationsRegistry::updateViewAnimations(
 
   if (hasUpdates) {
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-      AnimatedProps animatedProps;
-      animatedProps.rawProps = std::make_unique<RawProps>(result);
-      addAnimatedPropsToBatch(shadowNode, std::move(animatedProps), hasLayoutProps(result));
+      // Interpolators populate `result` with style keys (e.g. transform) even when
+      // `shouldSkipNonLayoutProp` skips typed AnimatedProp entries on Android
+      // (props reconciliation off). Pack that dynamic style into rawProps so the
+      // Animation Backend receives non-layout updates.
+      if (!result.empty()) {
+        folly::dynamic packed = result;
+        if (propsBuilder->rawProps) {
+          const auto existing = propsBuilder->rawProps->toDynamic();
+          packed = mergeDynamicObjects(existing, packed);
+        }
+        propsBuilder->storeDynamic(packed);
+      }
+      addAnimatedPropsToBatch(shadowNode, propsBuilder->get());
+      // overrides previous styles if not empty
+      for (auto &delayedPropsBuilder : resetPropsUpdates) {
+        addAnimatedPropsToBatch(shadowNode, delayedPropsBuilder->get());
+      }
     } else {
       addUpdatesToBatch(shadowNode->getFamilyShared(), result);
     }
@@ -274,6 +295,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(const Tag viewTag, const do
 
   folly::dynamic updatedStyle = folly::dynamic::object;
   std::shared_ptr<const ShadowNode> shadowNode = nullptr;
+  std::shared_ptr<AnimatedPropsBuilder> propsBuilder = std::make_shared<AnimatedPropsBuilder>();
 
   for (const auto &animation : it->second.animationsVector) {
     const auto startTimestamp = animation->getStartTimestamp(timestamp);
@@ -288,7 +310,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(const Tag viewTag, const do
         (currentState == AnimationProgressState::Paused && timestamp >= animation->getStartTimestamp(timestamp)) ||
         // Animation is finished and has fill forwards fill mode
         (currentState == AnimationProgressState::Finished && animation->hasForwardsFillMode())) {
-      style = animation->getCurrentInterpolationStyle();
+      style = animation->getCurrentInterpolationStyle(propsBuilder);
     }
 
     if (!shadowNode) {
