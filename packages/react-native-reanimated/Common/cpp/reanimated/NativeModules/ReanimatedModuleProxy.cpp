@@ -207,6 +207,13 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
           return;
         }
         strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
+        if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+          // Layout animation progress only enqueues `notifyDelegatesOfUpdates` work;
+          // it does not produce AnimationMutations. Without this, `stopBackendIfIdle`
+          // can turn off the backend after an empty batch and later progress ticks
+          // would never schedule another frame.
+          strongThis->startBackendIfNeeded();
+        }
       };
 
   auto requestLayoutAnimationRender = [weakThis = weak_from_this()](double) {
@@ -228,10 +235,12 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
 
     if (!strongThis->layoutAnimationRenderRequested_) {
       strongThis->layoutAnimationRenderRequested_ = true;
-      // if an animation has duration 0, performOperations would not get
-      // called for it so we call requestRender to have it called in the
-      // next frame
-      strongThis->requestRender_(requestLayoutAnimationRender);
+      if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+        strongThis->startBackendIfNeeded();
+        strongThis->layoutAnimationRenderRequested_ = false;
+      } else {
+        strongThis->requestRender_(requestLayoutAnimationRender);
+      }
     }
 
     if (!surfaceId) {
@@ -389,9 +398,13 @@ bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(const std::string &event
 }
 
 void ReanimatedModuleProxy::maybeRequestRender() {
-  if (!renderRequested_) {
-    renderRequested_ = true;
-    requestRender_(onRenderCallback_);
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    startBackendIfNeeded();
+  } else {
+    if (!renderRequested_) {
+      renderRequested_ = true;
+      requestRender_(onRenderCallback_);
+    }
   }
 }
 
@@ -648,6 +661,11 @@ void ReanimatedModuleProxy::cssLoopCallback(const double /*timestampMs*/) {
 }
 
 void ReanimatedModuleProxy::maybeRunCSSLoop() {
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    startBackendIfNeeded();
+    return;
+  }
+
   if (cssLoopRunning_) {
     return;
   }
@@ -695,12 +713,9 @@ AnimationMutations ReanimatedModuleProxy::collectMutationsForBackend() {
 
       auto lock = updatesRegistryManager_->lock();
 
-      // With USE_ANIMATION_BACKEND, `requestRender_` only calls
-      // `startBackendIfNeeded()` and does not run frame callbacks such as
-      // `cssLoopCallback`, so `shouldUpdateCssAnimations_` is often left false.
-      // CSS registries can still report pending work (e.g. `animationsToRevertMap_`
-      // cleared inside `update()`). If we skip `update()`, `hasUpdates()` stays
-      // true and `stopBackendIfIdle` never stops the backend.
+      // The CSS loop (`cssLoopCallback`) does not run under USE_ANIMATION_BACKEND,
+      // so `shouldUpdateCssAnimations_` may still be false even when CSS registries
+      // have pending work. Force it true so `update()` runs and clears them.
       if (cssTransitionsRegistry_->hasUpdates() || cssAnimationsRegistry_->hasUpdates()) {
         shouldUpdateCssAnimations_ = true;
       }
@@ -745,7 +760,7 @@ void ReanimatedModuleProxy::performOperations() {
 
 void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    requestRender_([](double const tmp) {});
+    startBackendIfNeeded();
     return;
   }
 
@@ -856,7 +871,8 @@ void ReanimatedModuleProxy::stopBackendIfIdle(const AnimationMutations &mutation
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     bool hasWork = !mutations.batch.empty() || pendingAnimationFrameCallback_ != nullptr ||
         cssTransitionsRegistry_->hasUpdates() || cssAnimationsRegistry_->hasUpdates() ||
-        animatedPropsRegistry_->hasPendingAnimatedPropsUpdates();
+        animatedPropsRegistry_->hasPendingAnimatedPropsUpdates() || shouldFlushRegistry_ ||
+        !layoutAnimationFlushRequests_.empty();
     if (!hasWork) {
       withAnimationBackend([this](const std::shared_ptr<AnimationBackend> &backend) { backend->stop(callbackId_); });
       isAnimationRunning_ = false;
@@ -1310,11 +1326,16 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
 }
 
 void ReanimatedModuleProxy::requestFlushRegistry() {
-  requestRender_([weakThis = weak_from_this()](const double timestamp) {
-    if (auto strongThis = weakThis.lock()) {
-      strongThis->shouldFlushRegistry_ = true;
-    }
-  });
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    shouldFlushRegistry_ = true;
+    startBackendIfNeeded();
+  } else {
+    requestRender_([weakThis = weak_from_this()](const double) {
+      if (auto strongThis = weakThis.lock()) {
+        strongThis->shouldFlushRegistry_ = true;
+      }
+    });
+  }
 }
 
 void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch) {

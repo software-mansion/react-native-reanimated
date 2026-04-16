@@ -119,7 +119,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
       backend->pushAnimationMutations([this](AnimationTimestamp ts) { return grandCallback<State>(ts); });
     });
 #else
-    withAnimationBackend([this](const std::shared_ptr<AnimationBackend> &backend) { backend->trigger(); });
+    withAnimationBackend([](const std::shared_ptr<AnimationBackend> &backend) { backend->trigger(); });
 #endif
   }
 

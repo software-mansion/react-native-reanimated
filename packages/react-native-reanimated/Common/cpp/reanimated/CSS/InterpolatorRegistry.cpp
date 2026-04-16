@@ -46,14 +46,11 @@
 #include <functional>
 #include <limits>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace reanimated::css {
 
 namespace {
-
-using ComponentInterpolatorsMap = std::unordered_map<std::string, InterpolatorFactoriesRecord>;
 
 template <typename... AllowedTypes>
 using CSSCallback = std::function<
@@ -417,7 +414,6 @@ const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
          {"mixBlendMode", value<CSSKeyword>("normal", CSSCallback<CSSKeyword>(addMixBlendModeToPropsBuilder))},
      }});
 
-// TEXT, IMAGE and SVG props are not supported by the animation backend.
 const InterpolatorFactoriesRecord TEXT_INTERPOLATORS_IOS = {
     {"fontVariant",
      value<CSSDiscreteArray<CSSKeyword>>(
@@ -472,6 +468,8 @@ const InterpolatorFactoriesRecord IMAGE_INTERPOLATORS = mergeInterpolators(
          {"overlayColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addImageOverlayColorToPropsBuilder))},
          {"tintColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addImageTintColorToPropsBuilder))},
      }});
+
+const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = mergeInterpolators({TEXT_INTERPOLATORS, IMAGE_INTERPOLATORS});
 
 // =================
 // SVG INTERPOLATORS
@@ -638,10 +636,6 @@ constexpr bool SVG_FEATURE_ENABLED = StaticFeatureFlags::getFlag("EXPERIMENTAL_C
 ComponentInterpolatorsMap initializeRegistry() {
   ComponentInterpolatorsMap registry = {};
 
-  registry["View"] = VIEW_INTERPOLATORS;
-  registry["Paragraph"] = TEXT_INTERPOLATORS;
-  registry["Image"] = IMAGE_INTERPOLATORS;
-
   if (SVG_FEATURE_ENABLED) {
     // SVG Components
     registry["RNSVGCircle"] = SVG_CIRCLE_INTERPOLATORS;
@@ -675,7 +669,13 @@ const InterpolatorFactoriesRecord &getComponentInterpolators(const std::string &
 
   // Use default style interpolators as a fallback for unknown components
   // (e.g. ExpoImage, which is not a RN component but should support RN Image styles)
-  return VIEW_INTERPOLATORS;
+  return STYLE_INTERPOLATORS;
+}
+
+void registerComponentInterpolators(
+    const std::string &nativeComponentName,
+    const InterpolatorFactoriesRecord &interpolators) {
+  registry[nativeComponentName] = interpolators;
 }
 
 } // namespace reanimated::css
