@@ -19,7 +19,8 @@ Spring-based animations are yet to be introduced to the web. Due to that, playgr
 ## Remarks
 
 - We recommend using layout animation builders outside of components or with `useMemo` to ensure the best performance.
-- `withInitialValues` is typed per preset, so only props specific to the animation preset are accepted (see each section's Initial values table). For transforms, prefer flat top-level props like `{ translateX: 50 }` over `transform: [{ translateX: 50 }]`. The `transform: [{ ... }]` tuple form still works but is deprecated.
+- `withInitialValues` is typed per preset, so only props specific to the animation preset are accepted (see each section's Initial values table).
+- <AvailableFrom version="4.4.0"/> For transforms, prefer flat top-level props like `{ translateX: 50 }` over `transform: [{ translateX: 50 }]`. The `transform: [{ ... }]` tuple form still works but is deprecated since 4.4.0.
 - Type definition blocks after each animation preset show the exact `withInitialValues` type. The deprecated `transform` prop also shows the order in which transforms are applied. In the flat form, object key order is ignored and the preset applies transforms in its built-in order.
 - If both forms are used, the flat prop wins for that transform slot; remaining slots fall back to the tuple value, then to the preset default. Mixing forms is supported but not recommended.
 - On the New Architecture:
