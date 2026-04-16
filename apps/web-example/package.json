@@ -8,20 +8,31 @@
     "start:noplugin": "DISABLE_BABEL_PLUGIN=1 yarn start",
     "production": "yarn expo export -p web && yarn serve dist --single",
     "format": "prettier --write --list-different .",
-    "build": ""
+    "build": "",
+    "lint": "eslint . --max-warnings 0",
+    "type:check": "tsc --noEmit",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "common-app": "workspace:*",
-    "expo": "^52.0.4",
-    "react-dom": "19.0.0",
-    "react-native": "0.79.1",
-    "react-native-web": "0.20.0"
+    "expo": "54.0.13",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.0",
+    "react-native-web": "0.21.2",
+    "react-strict-dom": "0.0.54"
   },
   "devDependencies": {
-    "@expo/metro-runtime": "~4.0.0",
-    "@stylexjs/babel-plugin": "^0.10.0",
-    "prettier": "^3.3.3",
-    "serve": "^14.2.3"
+    "@expo/metro-runtime": "6.1.2",
+    "@playwright/test": "1.57.0",
+    "@types/react": "19.2.2",
+    "babel-preset-expo": "54.0.10",
+    "eslint": "9.37.0",
+    "prettier": "3.6.2",
+    "serve": "14.2.5",
+    "typescript": "5.9.3"
   },
   "installConfig": {
     "selfReferences": false

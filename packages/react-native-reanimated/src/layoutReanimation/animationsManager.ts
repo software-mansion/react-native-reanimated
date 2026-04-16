@@ -1,7 +1,9 @@
 'use strict';
-import { runOnUI } from 'react-native-worklets';
 
-import { withStyleAnimation } from '../animation/styleAnimation';
+import { runOnUISync } from 'react-native-worklets';
+
+import { withStyleAnimation } from '../animation';
+import { SHOULD_BE_USE_WEB } from '../common';
 import type {
   LayoutAnimation,
   LayoutAnimationStartFunction,
@@ -72,7 +74,6 @@ function createLayoutAnimationManager(): {
         value._value = style.initialValues;
       }
 
-      // @ts-ignore The line below started failing because I added types to the method – don't have time to fix it right now
       const animation = withStyleAnimation(currentAnimation);
 
       animation.callback = (finished?: boolean) => {
@@ -82,8 +83,9 @@ function createLayoutAnimationManager(): {
           const shouldRemoveView = type === LayoutAnimationType.EXITING;
           stopObservingProgress(tag, value, shouldRemoveView);
         }
-        style.callback &&
+        if (style.callback) {
           style.callback(finished === undefined ? false : finished);
+        }
       };
 
       startObservingProgress(tag, value);
@@ -99,10 +101,12 @@ function createLayoutAnimationManager(): {
   };
 }
 
-runOnUI(() => {
-  'worklet';
-  global.LayoutAnimationsManager = createLayoutAnimationManager();
-})();
+if (!SHOULD_BE_USE_WEB) {
+  runOnUISync(() => {
+    'worklet';
+    global.LayoutAnimationsManager = createLayoutAnimationManager();
+  });
+}
 
 export type LayoutAnimationsManager = ReturnType<
   typeof createLayoutAnimationManager

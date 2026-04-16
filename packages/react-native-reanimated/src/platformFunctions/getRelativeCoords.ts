@@ -1,6 +1,5 @@
 'use strict';
-import type { Component } from 'react';
-
+import type { InternalHostInstance } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 import { measure } from './measure';
 
@@ -22,8 +21,8 @@ export interface ComponentCoords {
  *   {@link ComponentCoords}.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/utilities/getRelativeCoords
  */
-export function getRelativeCoords(
-  animatedRef: AnimatedRef<Component>,
+export function getRelativeCoords<TRef extends InternalHostInstance>(
+  animatedRef: AnimatedRef<TRef>,
   absoluteX: number,
   absoluteY: number
 ): ComponentCoords | null {

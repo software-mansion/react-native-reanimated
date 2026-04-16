@@ -3,17 +3,17 @@ import { parseBoxShadowString } from '../../../common';
 
 describe(parseBoxShadowString, () => {
   describe('correct number of shadows', () => {
-    it('works with empty string', () => {
+    test('works with empty string', () => {
       expect(parseBoxShadowString('')).toHaveLength(0);
     });
 
-    it('works with one shadow', () => {
+    test('works with one shadow', () => {
       expect(
         parseBoxShadowString('0 0 10px 0 rgba(0, 0, 0, 0.5)')
       ).toHaveLength(1);
     });
 
-    it('works with multiple shadows', () => {
+    test('works with multiple shadows', () => {
       expect(
         parseBoxShadowString(
           '0 0 10px 0 rgba(0, 0, 0, 0.5), 0 0 20px 0 rgba(0, 0, 0, 0.5)'
@@ -23,7 +23,7 @@ describe(parseBoxShadowString, () => {
   });
 
   describe('proper shadow values', () => {
-    it.each([
+    test.each([
       [
         '0 0 10px 0 red',
         [
@@ -74,7 +74,7 @@ describe(parseBoxShadowString, () => {
   });
 
   describe('different color formats', () => {
-    it.each([
+    test.each([
       'red',
       '#ff0000',
       'rgb(255, 0, 0)',

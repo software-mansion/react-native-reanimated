@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { cubicBezier } from 'react-native-reanimated';
 
 import { Screen } from '@/apps/css/components';
-import { colors, flex, radius, sizes, spacing } from '@/theme';
+import { colors, flex, radius, sizes, spacing, style } from '@/theme';
 import { darken, lighten } from '@/utils';
 
 const FONT_SIZES = [16, 18, 22];
@@ -32,7 +32,7 @@ export default function AppSettings() {
   return (
     <Screen>
       <Animated.ScrollView
-        contentContainerStyle={styles.scrollViewContent}
+        contentContainerStyle={style.scrollViewContent}
         style={[
           flex.fill,
           {
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xl,
   },
   fontSizeBackground: {
-    ...StyleSheet.absoluteFillObject,
+    ...(StyleSheet.absoluteFill as object),
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderColor: 'rgba(255, 255, 255, 0.5)',
     borderRadius: radius.full,
@@ -297,11 +297,6 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-  },
-  scrollViewContent: {
-    marginHorizontal: 'auto',
-    maxWidth: '100%',
-    width: 600,
   },
   sectionContent: {
     gap: spacing.md,
@@ -329,7 +324,7 @@ const styles = StyleSheet.create({
     width: sizes.md,
   },
   switchBackground: {
-    ...StyleSheet.absoluteFillObject,
+    ...(StyleSheet.absoluteFill as object),
     borderRadius: radius.full,
   },
   switchThumb: {
@@ -339,7 +334,7 @@ const styles = StyleSheet.create({
     width: 20,
   },
   thumbPressIndicator: {
-    ...StyleSheet.absoluteFillObject,
+    ...(StyleSheet.absoluteFill as object),
     backgroundColor: colors.white,
     borderRadius: radius.full,
   },

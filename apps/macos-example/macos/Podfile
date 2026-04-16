@@ -1,5 +1,4 @@
 require_relative '../node_modules/react-native-macos/scripts/react_native_pods'
-require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 
 ENV['IS_REANIMATED_EXAMPLE_APP'] = '1'
 
@@ -8,12 +7,12 @@ require_relative '../../../packages/react-native-reanimated/scripts/clangd-add-x
 prepare_react_native_project!
 
 target 'MacOSExample-macOS' do
-  platform :macos, '11.0'
+  platform :macos, '14.0'
   use_native_modules!
 
   use_react_native!(
     :path => '../node_modules/react-native-macos',
-    :hermes_enabled => false,
+    :hermes_enabled => true,
     :fabric_enabled => true,
     :new_arch_enabled => true,
     # An absolute path to your application root.

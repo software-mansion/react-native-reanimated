@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 import { StyleSheet, View } from 'react-native';
-import Animated, { runOnJS, runOnUI, useAnimatedStyle, useEvent, useSharedValue } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useEvent, useSharedValue } from 'react-native-reanimated';
 
-import { describe, expect, notify, render, test, wait, waitForNotify } from '../../ReJest/RuntimeTestsApi';
+import { describe, expect, notify, render, test, wait, waitForNotification } from '../../ReJest/RuntimeTestsApi';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 interface TestResult {
   height: number;
@@ -25,9 +26,9 @@ const TestComponent = ({ result }: { result: TestResult }) => {
   });
 
   useEffect(() => {
-    runOnUI(() => {
+    scheduleOnUI(() => {
       height.value += 100;
-    })();
+    });
   }, [height]);
 
   const setAnimatedHandlerCalled = () => {
@@ -37,7 +38,7 @@ const TestComponent = ({ result }: { result: TestResult }) => {
 
   const animatedOnLayout = useEvent(() => {
     'worklet';
-    runOnJS(setAnimatedHandlerCalled)();
+    scheduleOnRN(setAnimatedHandlerCalled);
   }, ['onLayout']);
 
   return (
@@ -51,14 +52,14 @@ describe('onLayout', () => {
   test('is not intercepted when there are no registered event handlers', async () => {
     const result = {} as TestResult;
     await render(<TestComponent result={result} />);
-    await Promise.race([waitForNotify('onLayout'), wait(1000)]);
+    await Promise.race([waitForNotification('onLayout'), wait(1000)]);
     expect(result.height).toBe(200);
   });
 
   test('is dispatched to the registered event handler', async () => {
     const result = {} as TestResult;
     await render(<TestComponent result={result} />);
-    await Promise.race([waitForNotify('animatedOnLayout'), wait(1000)]);
+    await Promise.race([waitForNotification('animatedOnLayout'), wait(1000)]);
     expect(result.animatedHandlerCalled).toBe(true);
   });
 });

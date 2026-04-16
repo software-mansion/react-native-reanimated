@@ -15,22 +15,12 @@ import {
   isObjectMethod,
 } from '@babel/types';
 
-export interface ReanimatedPluginOptions {
-  relativeSourceLocation?: boolean;
-  disableInlineStylesWarning?: boolean;
-  processNestedWorklets?: boolean;
-  omitNativeOnlyData?: boolean;
-  globals?: string[];
-  substituteWebPlatformChecks?: boolean;
-  disableSourceMaps?: boolean;
-  extraPlugins?: string[];
-  extraPresets?: string[];
-}
+import type { PluginOptions } from './options';
 
-export interface ReanimatedPluginPass {
+export interface WorkletsPluginPass {
   file: BabelFile;
   key: string;
-  opts: ReanimatedPluginOptions;
+  opts: PluginOptions;
   cwd: string;
   filename: string | undefined;
   workletNumber: number;
@@ -85,3 +75,5 @@ export function isWorkletizableObjectNode(
 }
 
 export const workletClassFactorySuffix = '__classFactory';
+
+export const generatedWorkletsDir = '.worklets';

@@ -15,7 +15,7 @@ export default function TransitionBehavior() {
       cards={[
         {
           description: [
-            '**Transition behavior** determines whether the transition is applied to **discrete properties**. By default, `transitionBehavior` is `normal`, which applies transition only to **continuous properties** and discrete property changes are **applied immediately**. `allowDiscrete` allows transitions to be applied to **discrete properties**, resulting in **delayed changes**.',
+            '**Transition behavior** determines whether the transition is applied to **discrete properties**. By default, `transitionBehavior` is `normal`, which applies transition only to **continuous properties** and discrete property changes are **applied immediately**. `allow-discrete` allows transitions to be applied to **discrete properties**, resulting in **delayed changes**.',
             'Discrete-animated properties generally flip between two values **at the midpoint** of the animation, except for the `display` property, which is changed at the moment of the **transition start**.',
           ],
           items: [

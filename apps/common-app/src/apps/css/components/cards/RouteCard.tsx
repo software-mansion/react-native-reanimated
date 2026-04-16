@@ -1,7 +1,7 @@
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useNavigation } from '@react-navigation/native';
-import type { PropsWithChildren } from 'react';
+import type { JSX, PropsWithChildren } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/apps/css/components/core';

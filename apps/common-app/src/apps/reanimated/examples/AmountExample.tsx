@@ -7,8 +7,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-Animated.addWhitelistedNativeProps({ text: true });
-
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 const DELTAS = [-100, -10, -1, 1, 10, 100];

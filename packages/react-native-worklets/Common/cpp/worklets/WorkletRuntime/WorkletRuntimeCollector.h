@@ -19,7 +19,7 @@ class WorkletRuntimeCollector : public jsi::HostObject {
     WorkletRuntimeRegistry::registerRuntime(runtime_);
   }
 
-  ~WorkletRuntimeCollector() {
+  ~WorkletRuntimeCollector() override {
     WorkletRuntimeRegistry::unregisterRuntime(runtime_);
   }
 

@@ -20,7 +20,7 @@ import {
 } from '@babel/types';
 import { strict as assert } from 'assert';
 
-import type { ReanimatedPluginPass } from './types';
+import type { WorkletsPluginPass } from './types';
 import { isRelease } from './utils';
 
 function generateInlineStylesWarning(path: NodePath<MemberExpression>) {
@@ -57,7 +57,7 @@ function processPropertyValueForInlineStylesWarning(
 ) {
   // if it's something like object.value then raise a warning
   if (path.isMemberExpression() && isIdentifier(path.node.property)) {
-    if (path.node.property.name === 'value') {
+    if (!path.node.computed && path.node.property.name === 'value') {
       path.replaceWith(generateInlineStylesWarning(path));
     }
   }
@@ -101,7 +101,7 @@ function processStyleObjectForInlineStylesWarning(
 
 export function processInlineStylesWarning(
   path: NodePath<JSXAttribute>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ) {
   if (isRelease()) {
     return;

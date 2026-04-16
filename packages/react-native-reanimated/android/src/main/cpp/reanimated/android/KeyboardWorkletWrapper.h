@@ -11,8 +11,7 @@ using namespace facebook::jni;
 
 class KeyboardWorkletWrapper : public HybridClass<KeyboardWorkletWrapper> {
  public:
-  static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/keyboard/KeyboardWorkletWrapper;";
+  static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/keyboard/KeyboardWorkletWrapper;";
 
   void invoke(int keyboardState, int height) {
     callback_(keyboardState, height);
@@ -27,8 +26,7 @@ class KeyboardWorkletWrapper : public HybridClass<KeyboardWorkletWrapper> {
  private:
   friend HybridBase;
 
-  explicit KeyboardWorkletWrapper(std::function<void(int, int)> callback)
-      : callback_(std::move(callback)) {}
+  explicit KeyboardWorkletWrapper(std::function<void(int, int)> callback) : callback_(std::move(callback)) {}
 
   std::function<void(int, int)> callback_;
 };

@@ -1,0 +1,33 @@
+'use strict';
+import type { ColorValue } from 'react-native';
+
+import { processColorNumber, type ValueProcessor } from '../../../../common';
+
+export const ERROR_MESSAGES = {
+  invalidColor: (color: unknown) =>
+    `Invalid color value: ${JSON.stringify(color)}`,
+};
+
+export const processColorSVG: ValueProcessor<
+  ColorValue | number,
+  number | false | string
+> = (value) => {
+  const processed = processColorNumber(value);
+
+  if (value === 'none') {
+    return 0;
+  }
+
+  if (processed) {
+    return processed;
+  }
+
+  if (value === 'transparent') {
+    return false;
+  }
+  if (value === 'currentColor') {
+    return 'currentColor';
+  }
+
+  throw new Error(`[Reanimated] ${ERROR_MESSAGES.invalidColor(value)}`);
+};

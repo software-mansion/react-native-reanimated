@@ -1,92 +1,94 @@
 'use strict';
 
-import { setupCallGuard, setupConsole } from './initializers';
-import { registerLoggerConfig } from './logger';
-import { shouldBeUseWeb } from './PlatformChecker';
-import {
-  makeShareableCloneOnUIRecursive,
-  makeShareableCloneRecursive,
-} from './shareables';
-import { isWorkletFunction } from './workletFunction';
-import { registerWorkletsError, WorkletsError } from './WorkletsError';
-import { WorkletsModule } from './WorkletsModule';
-import type { WorkletFunction, WorkletRuntime } from './workletTypes';
+import { RuntimeKind } from './runtimeKind';
+import type {
+  WorkletFunction,
+  WorkletRuntime,
+  WorkletRuntimeConfig,
+} from './types';
 
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
+export const UIRuntimeId = RuntimeKind.UI;
 
-/**
- * Lets you create a new JS runtime which can be used to run worklets possibly
- * on different threads than JS or UI thread.
- *
- * @param name - A name used to identify the runtime which will appear in
- *   devices list in Chrome DevTools.
- * @param initializer - An optional worklet that will be run synchronously on
- *   the same thread immediately after the runtime is created.
- * @returns WorkletRuntime which is a
- *   `jsi::HostObject<worklets::WorkletRuntime>` - {@link WorkletRuntime}
- * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/createWorkletRuntime
- */
-// @ts-expect-error Check `runOnUI` overload.
 export function createWorkletRuntime(
-  name: string,
-  initializer?: () => void
+  config?: WorkletRuntimeConfig
 ): WorkletRuntime;
 
 export function createWorkletRuntime(
-  name: string,
-  initializer?: WorkletFunction<[], void>
-): WorkletRuntime {
-  // Assign to a different variable as __workletsLoggerConfig is not a captured
-  // identifier in the Worklet runtime.
-  const config = __workletsLoggerConfig;
-  return WorkletsModule.createWorkletRuntime(
-    name,
-    makeShareableCloneRecursive(() => {
-      'worklet';
-      registerWorkletsError();
-      registerLoggerConfig(config);
-      setupCallGuard();
-      setupConsole();
-      initializer?.();
-    })
-  );
+  name?: string,
+  initializer?: () => void
+): WorkletRuntime;
+
+export function createWorkletRuntime(): never {
+  throw new Error('[Worklets] `createWorkletRuntime` is not supported on web.');
 }
 
-// @ts-expect-error Check `runOnUI` overload.
 export function runOnRuntime<Args extends unknown[], ReturnValue>(
   workletRuntime: WorkletRuntime,
   worklet: (...args: Args) => ReturnValue
 ): WorkletFunction<Args, ReturnValue>;
-/** Schedule a worklet to execute on the background queue. */
-export function runOnRuntime<Args extends unknown[], ReturnValue>(
+
+export function runOnRuntime(): never {
+  throw new Error('[Worklets] `runOnRuntime` is not supported on web.');
+}
+
+export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
   workletRuntime: WorkletRuntime,
-  worklet: WorkletFunction<Args, ReturnValue>
-): (...args: Args) => void {
-  'worklet';
-  if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
-    throw new WorkletsError(
-      'The function passed to `runOnRuntime` is not a worklet.' +
-        (globalThis._WORKLET
-          ? ' Please make sure that `processNestedWorklets` option in Reanimated Babel plugin is enabled.'
-          : '')
-    );
-  }
-  if (globalThis._WORKLET) {
-    return (...args) =>
-      global._scheduleOnRuntime(
-        workletRuntime,
-        makeShareableCloneOnUIRecursive(() => {
-          'worklet';
-          worklet(...args);
-        })
-      );
-  }
-  return (...args) =>
-    WorkletsModule.scheduleOnRuntime(
-      workletRuntime,
-      makeShareableCloneRecursive(() => {
-        'worklet';
-        worklet(...args);
-      })
-    );
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): void;
+
+export function scheduleOnRuntime(): never {
+  throw new Error('[Worklets] `scheduleOnRuntime` is not supported on web.');
+}
+
+export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): void;
+
+export function scheduleOnRuntimeWithId(): never {
+  throw new Error(
+    '[Worklets] `scheduleOnRuntimeWithId` is not supported on web.'
+  );
+}
+
+export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): ReturnValue;
+
+export function runOnRuntimeSync(): never {
+  throw new Error('[Worklets] `runOnRuntimeSync` is not supported on web.');
+}
+
+export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): ReturnValue;
+
+export function runOnRuntimeSyncWithId(): never {
+  throw new Error(
+    '[Worklets] `runOnRuntimeSyncWithId` is not supported on web.'
+  );
+}
+
+export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): Promise<ReturnValue>;
+
+export function runOnRuntimeAsync(): never {
+  throw new Error('[Worklets] `runOnRuntimeAsync` is not supported on web.');
+}
+
+export function getUIRuntimeHolder(): object {
+  throw new Error('[Worklets] `getUIRuntimeHolder` is not supported on web.');
+}
+
+export function getUISchedulerHolder(): object {
+  throw new Error('[Worklets] `getUISchedulerHolder` is not supported on web.');
 }

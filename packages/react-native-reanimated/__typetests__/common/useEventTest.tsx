@@ -1,7 +1,6 @@
-/* eslint-disable no-unused-expressions */
-/* eslint-disable @typescript-eslint/no-empty-function */
-/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-unused-expressions */
 import React from 'react';
 import type { NativeSyntheticEvent } from 'react-native';
 

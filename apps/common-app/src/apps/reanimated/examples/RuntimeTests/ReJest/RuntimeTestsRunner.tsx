@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 
 import { configure, runTests } from './RuntimeTestsApi';
@@ -35,6 +35,7 @@ interface TestData {
   testSuiteName: string;
   importTest: () => void;
   skipByDefault?: boolean;
+  disabled?: boolean;
 }
 
 interface RuntimeTestRunnerProps {
@@ -78,9 +79,9 @@ export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
       {started ? null : (
         <>
           <TestSelector tests={tests} testSelectionCallbacks={testSelectionCallbacks} />
-          <Pressable onPressOut={handleStartClick} style={button}>
+          <TouchableOpacity onPress={handleStartClick} style={button}>
             <Text style={whiteText}>Run tests</Text>
-          </Pressable>
+          </TouchableOpacity>
         </>
       )}
       {/* Don't render anything if component is undefined to prevent blinking */}
@@ -104,14 +105,16 @@ function TestSelector({ tests, testSelectionCallbacks }: TestSelectorProps) {
   );
 
   function selectAllClick(select: boolean) {
-    tests.forEach(button => {
-      setSelectedTests(selectedTests => new Map(selectedTests.set(button.testSuiteName, select)));
-      if (select) {
-        testSelectionCallbacks.current.add(button.importTest);
-      } else {
-        testSelectionCallbacks.current.delete(button.importTest);
-      }
-    });
+    tests
+      .filter(button => !button.disabled)
+      .forEach(button => {
+        setSelectedTests(selectedTests => new Map(selectedTests.set(button.testSuiteName, select)));
+        if (select) {
+          testSelectionCallbacks.current.add(button.importTest);
+        } else {
+          testSelectionCallbacks.current.delete(button.importTest);
+        }
+      });
   }
 
   function selectClick(button: TestData) {
@@ -134,8 +137,17 @@ function TestSelector({ tests, testSelectionCallbacks }: TestSelectorProps) {
         renderItem={({ item }) => {
           return (
             <SelectTest
+              // TODO: Fix me
+              // @ts-ignore RNGH types for web FlatList are broken.
               key={item.testSuiteName}
+              // TODO: Fix me
+              // @ts-ignore RNGH types for web FlatList are broken.
+              disabled={item.disabled}
+              // TODO: Fix me
+              // @ts-ignore RNGH types for web FlatList are broken.
               testSuiteName={item.testSuiteName}
+              // TODO: Fix me
+              // @ts-ignore RNGH types for web FlatList are broken.
               selectClick={() => selectClick(item)}
               selectedTests={selectedTests}
             />
@@ -150,30 +162,24 @@ interface SelectTestProps {
   testSuiteName: string;
   selectClick: () => void;
   selectedTests: Map<string, boolean>;
+  disabled?: boolean;
 }
 
-function SelectTest({ testSuiteName, selectClick, selectedTests }: SelectTestProps) {
-  const [isPressed, setIsPressed] = useState<boolean>(false);
-
-  function handleSelectClickIn() {
-    setIsPressed(true);
-  }
-
+function SelectTest({ testSuiteName, selectClick, selectedTests, disabled }: SelectTestProps) {
   function handleSelectClickOut() {
     selectClick();
-    setIsPressed(false);
   }
 
   return (
-    <Pressable
-      style={[styles.buttonWrapper, isPressed ? styles.pressedButton : {}]}
-      onPressIn={() => handleSelectClickIn()}
-      onPressOut={() => handleSelectClickOut()}>
+    <TouchableOpacity
+      disabled={disabled}
+      style={[styles.buttonWrapper, disabled ? styles.disabledButton : {}]}
+      onPress={() => handleSelectClickOut()}>
       <View style={[styles.checkbox, selectedTests.get(testSuiteName) ? styles.checkedCheckbox : {}]} />
       <View style={selectButton}>
         <Text style={navyText}>{testSuiteName}</Text>
       </View>
-    </Pressable>
+    </TouchableOpacity>
   );
 }
 
@@ -183,24 +189,10 @@ interface SelectAllButtonProps {
 }
 
 function SelectAllButtonProps({ handleSelectAllClick, select }: SelectAllButtonProps) {
-  const [isPressed, setIsPressed] = useState<boolean>(false);
-
-  function handleSelectAllClickIn() {
-    setIsPressed(true);
-  }
-
-  function handleSelectAllClickOut() {
-    handleSelectAllClick(select);
-    setIsPressed(false);
-  }
-
   return (
-    <Pressable
-      onPressIn={handleSelectAllClickIn}
-      onPressOut={() => handleSelectAllClickOut()}
-      style={[selectAllButton, isPressed ? styles.pressedButton : {}]}>
+    <TouchableOpacity onPress={() => handleSelectAllClick(select)} style={selectAllButton}>
       <Text style={navyText}>{select ? 'Select all' : 'Deselect all'}</Text>
-    </Pressable>
+    </TouchableOpacity>
   );
 }
 
@@ -269,10 +261,7 @@ const styles = StyleSheet.create({
   checkedCheckbox: {
     backgroundColor: 'navy',
   },
-  pressedButton: {
-    zIndex: 2,
-    backgroundColor: '#FFFA',
-    borderRadius: 10,
-    borderColor: '#FFFF',
+  disabledButton: {
+    opacity: 0.5,
   },
 });

@@ -60,3 +60,7 @@ lib/
 # React Native Codegen
 apple/generated
 android/generated
+
+# worklets
+.worklets/*
+!.worklets/dummy.md

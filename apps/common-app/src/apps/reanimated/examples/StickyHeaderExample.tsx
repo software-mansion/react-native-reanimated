@@ -24,7 +24,10 @@ export default function StickyHeaderExample() {
   });
 
   const animatedStyle = useAnimatedStyle(() => {
-    return { transform: [{ translateY: offset.value }] };
+    return {
+      transform: [{ translateY: offset.value }],
+      width: (offset.value % 200) + 100,
+    };
   });
 
   return (

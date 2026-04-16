@@ -14,8 +14,6 @@ def find_config()
     :is_tvos_target => nil,
     :react_native_node_modules_dir => nil,
     :react_native_common_dir => nil,
-    :dynamic_frameworks_reanimated_dir => nil,
-    :dynamic_frameworks_worklets_dir => nil,
   }
 
   react_native_node_modules_dir = File.join(File.dirname(`cd "#{Pod::Config.instance.installation_root.to_s}" && node --print "require.resolve('react-native/package.json')"`), '..')
@@ -31,6 +29,12 @@ def find_config()
     raise '[Reanimated] Unable to recognize your `react-native` version. Please set environmental variable with `react-native` location: `export REACT_NATIVE_NODE_MODULES_DIR="<path to react-native>" && pod install`.'
   end
 
+  validate_worklets_script = File.expand_path(File.join(__dir__, 'validate-worklets-build.js'))
+  unless system("node \"#{validate_worklets_script}\"")
+    abort("[Reanimated] Failed to validate worklets version")
+  end
+
+
   result[:is_reanimated_example_app] = ENV["IS_REANIMATED_EXAMPLE_APP"] != nil
   result[:is_tvos_target] = react_native_json['name'] == 'react-native-tvos'
   result[:react_native_version] = react_native_json['version']
@@ -45,23 +49,13 @@ def find_config()
   react_native_common_dir_relative = Pathname.new(react_native_common_dir_absolute).relative_path_from(pods_root).to_s
   result[:react_native_common_dir] = react_native_common_dir_relative
 
-  react_native_reanimated_dir_absolute = File.join(__dir__, '..')
-  react_native_reanimated_dir_relative = Pathname.new(react_native_reanimated_dir_absolute).relative_path_from(pods_root).to_s
-  result[:dynamic_frameworks_reanimated_dir] = react_native_reanimated_dir_relative
-
-  react_native_worklets_node_modules_dir = File.join(File.dirname(`cd "#{Pod::Config.instance.installation_root.to_s}" && node --print "require.resolve('react-native-worklets/package.json')"`), '..')
-  react_native_worklets_dir_absolute = File.join(react_native_worklets_node_modules_dir, 'react-native-worklets')
-  react_native_worklets_dir_relative = Pathname.new(react_native_worklets_dir_absolute).relative_path_from(pods_root).to_s
-  result[:dynamic_frameworks_worklets_dir] = react_native_worklets_dir_relative
-
   return result
 end
 
 def assert_minimal_react_native_version(config)
-      # If you change the minimal React Native version remember to update Compatibility Table in docs
-  minimalReactNativeVersion = 75
-  if config[:react_native_minor_version] < minimalReactNativeVersion
-    raise "[Reanimated] Unsupported React Native version. Please use #{minimalReactNativeVersion} or newer."
+  validate_react_native_version_script = File.expand_path(File.join(__dir__, 'validate-react-native-version.js'))
+  unless system("node \"#{validate_react_native_version_script}\" #{config[:react_native_version]}")
+    raise "[Reanimated] Your installed version of React Native is not compatible with installed version of Reanimated. See the documentation for the list of supported versions: https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility/"
   end
 end
 
@@ -69,4 +63,41 @@ def assert_new_architecture_enabled(new_arch_enabled)
   if !new_arch_enabled
     raise "[Reanimated] Reanimated requires the New Architecture to be enabled. If you have `RCT_NEW_ARCH_ENABLED=0` set in your environment you should remove it."
   end
+end
+
+def assert_conflicting_feature_flags(feature_flags)
+  ios_sync_ui_props = feature_flags['IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS'] == 'true'
+  shared_element_transitions = feature_flags['ENABLE_SHARED_ELEMENT_TRANSITIONS'] == 'true'
+
+  if ios_sync_ui_props && shared_element_transitions
+    raise "[Reanimated] The feature flags `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. Please disable one of them in your package.json"
+  end
+end
+
+def get_static_feature_flags()
+  feature_flags = {}
+
+  static_feature_flags_path = File.path('./src/featureFlags/staticFlags.json')
+  if !File.exist?(static_feature_flags_path)
+    raise "[Reanimated] Feature flags file not found at #{static_feature_flags_path}."
+  end
+  static_feature_flags_json = JSON.parse(File.read(static_feature_flags_path))
+  static_feature_flags_json.each do |key, value|
+    feature_flags[key] = value.to_s
+  end
+
+  package_json_path = File.join(Pod::Config.instance.installation_root.to_s, '..', 'package.json')
+  if File.exist?(package_json_path)
+    package_json = JSON.parse(File.read(package_json_path))
+    if package_json['reanimated'] && package_json['reanimated']['staticFeatureFlags']
+      feature_flags_json = package_json['reanimated']['staticFeatureFlags']
+      feature_flags_json.each do |key, value|
+        feature_flags[key] = value.to_s
+      end
+    end
+  end
+
+  assert_conflicting_feature_flags(feature_flags)
+
+  return feature_flags.map { |key, value| "[#{key}:#{value}]" }.join('')
 end

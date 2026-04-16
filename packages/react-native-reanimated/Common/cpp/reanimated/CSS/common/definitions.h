@@ -1,26 +1,25 @@
 #pragma once
 
+#include <folly/dynamic.h>
 #include <jsi/jsi.h>
-#include <memory>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace reanimated::css {
 
 using namespace facebook;
 
-using PropertyNames = std::vector<std::string>;
 using PropertyPath = std::vector<std::string>;
-/**
- * If nullopt - all style properties can trigger transition
- * If empty vector - no style property can trigger transition
- * Otherwise - only specified style properties can trigger transition
- */
-using TransitionProperties = std::optional<PropertyNames>;
+using TransitionProperties = std::unordered_set<std::string>;
 
 using EasingFunction = std::function<double(double)>;
 using ColorChannels = std::array<uint8_t, 4>;
-using Vec16Array = std::array<double, 16>;
-using Matrix4x4 = std::array<std::array<double, 4>, 4>;
+
+struct FieldValidator {
+  std::string fieldName;
+  std::function<bool(const folly::dynamic &)> validateDynamic;
+  std::function<bool(jsi::Runtime &, const jsi::Value &)> validateJSI;
+};
 
 } // namespace reanimated::css

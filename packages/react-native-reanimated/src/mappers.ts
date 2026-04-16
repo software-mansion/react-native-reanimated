@@ -1,15 +1,14 @@
 'use strict';
-import { runOnUI } from 'react-native-worklets';
 
+import { scheduleOnUI } from 'react-native-worklets';
+
+import { IS_JEST, IS_WEB } from './common';
 import type {
   MapperOutputs,
   MapperRawInputs,
   SharedValue,
 } from './commonTypes';
 import { isSharedValue } from './isSharedValue';
-import { isJest } from './PlatformChecker';
-
-const IS_JEST = isJest();
 
 type MapperExtractedInputs = SharedValue[];
 
@@ -31,7 +30,7 @@ function createMapperRegistry() {
 
   function updateMappersOrder() {
     // sort mappers topologically
-    // the algorithm here takes adventage of a fact that the topological order
+    // the algorithm here takes advantage of a fact that the topological order
     // of a transposed graph is a reverse topological order of the original graph
     // The graph in our case consists of mappers and an edge between two mappers
     // A and B exists if there is a shared value that's on A's output lists and on
@@ -87,8 +86,12 @@ function createMapperRegistry() {
     sortedMappers = newOrder;
   }
 
+  let mapperRunFinalizers: (() => void)[] = [];
+  global.__requestMapperRunFinalizer = (finalizer: () => void) => {
+    mapperRunFinalizers.push(finalizer);
+  };
+
   function mapperRun() {
-    runRequested = false;
     if (processingMappers) {
       return;
     }
@@ -105,8 +108,20 @@ function createMapperRegistry() {
       }
     } finally {
       processingMappers = false;
+      const finalizers = mapperRunFinalizers;
+      mapperRunFinalizers = [];
+      for (const finalizer of finalizers) {
+        finalizer();
+      }
     }
   }
+
+  function scheduledMapperRun() {
+    runRequested = false;
+    mapperRun();
+  }
+
+  global.__mapperRun = mapperRun;
 
   function maybeRequestUpdates() {
     if (IS_JEST) {
@@ -118,21 +133,25 @@ function createMapperRegistry() {
       // if they want to make any assertions on the effects of animations being run.
       mapperRun();
     } else if (!runRequested) {
-      if (processingMappers) {
-        // In general, we should avoid having mappers trigger updates as this may
-        // result in unpredictable behavior. Specifically, the updated value can
-        // be read by mappers that run later in the same frame but previous mappers
-        // would access the old value. Updating mappers during the mapper-run phase
-        // breaks the order in which we should execute the mappers. However, doing
-        // that is still a possibility and there are some instances where people use
-        // the API in that way, hence we need to prevent mapper-run phase falling into
-        // an infinite loop. We do that by detecting when mapper-run is requested while
-        // we are already in mapper-run phase, and in that case we use `requestAnimationFrame`
-        // instead of `queueMicrotask` which will schedule mapper run for the next
-        // frame instead of queuing another set of updates in the same frame.
-        requestAnimationFrame(mapperRun);
+      if (IS_WEB) {
+        if (processingMappers) {
+          // In general, we should avoid having mappers trigger updates as this may
+          // result in unpredictable behavior. Specifically, the updated value can
+          // be read by mappers that run later in the same frame but previous mappers
+          // would access the old value. Updating mappers during the mapper-run phase
+          // breaks the order in which we should execute the mappers. However, doing
+          // that is still a possibility and there are some instances where people use
+          // the API in that way, hence we need to prevent mapper-run phase falling into
+          // an infinite loop. We do that by detecting when mapper-run is requested while
+          // we are already in mapper-run phase, and in that case we use `requestAnimationFrame`
+          // instead of `queueMicrotask` which will schedule mapper run for the next
+          // frame instead of queuing another set of updates in the same frame.
+          requestAnimationFrame(scheduledMapperRun);
+        } else {
+          queueMicrotask(scheduledMapperRun);
+        }
       } else {
-        queueMicrotask(mapperRun);
+        globalThis.requestAnimationFrameFinalizer(scheduledMapperRun);
       }
       runRequested = true;
     }
@@ -144,7 +163,9 @@ function createMapperRegistry() {
   ): MapperExtractedInputs {
     if (Array.isArray(inputs)) {
       for (const input of inputs) {
-        input && extractInputs(input, resultArray);
+        if (input) {
+          extractInputs(input, resultArray);
+        }
       }
     } else if (isSharedValue(inputs)) {
       resultArray.push(inputs);
@@ -153,7 +174,9 @@ function createMapperRegistry() {
       // is of a derivative class (e.g. HostObject on web, or Map) we don't scan
       // it recursively
       for (const element of Object.values(inputs as Record<string, unknown>)) {
-        element && extractInputs(element, resultArray);
+        if (element) {
+          extractInputs(element, resultArray);
+        }
       }
     }
     return resultArray;
@@ -205,20 +228,20 @@ export function startMapper(
 ): number {
   const mapperID = (MAPPER_ID += 1);
 
-  runOnUI(() => {
+  scheduleOnUI(() => {
     let mapperRegistry = global.__mapperRegistry;
     if (mapperRegistry === undefined) {
       mapperRegistry = global.__mapperRegistry = createMapperRegistry();
     }
     mapperRegistry.start(mapperID, worklet, inputs, outputs);
-  })();
+  });
 
   return mapperID;
 }
 
 export function stopMapper(mapperID: number): void {
-  runOnUI(() => {
+  scheduleOnUI(() => {
     const mapperRegistry = global.__mapperRegistry;
     mapperRegistry?.stop(mapperID);
-  })();
+  });
 }

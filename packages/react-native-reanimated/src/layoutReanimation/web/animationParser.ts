@@ -1,5 +1,7 @@
 'use strict';
 
+import type { EasingFunction } from '../../commonTypes';
+import type { EasingFunctionFactory } from '../../Easing';
 import type { WebEasingsNames } from './Easing.web';
 import { WebEasings } from './Easing.web';
 
@@ -20,6 +22,7 @@ export interface ReanimatedWebTransformProperties {
 export interface AnimationStyle {
   opacity?: number;
   transform?: ReanimatedWebTransformProperties[];
+  easing?: EasingFunction | EasingFunctionFactory;
 }
 
 export interface AnimationData {
@@ -36,7 +39,9 @@ export interface TransitionData {
   reversed?: boolean;
   easingX?: string;
   easingY?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   entering?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   exiting?: any;
 }
 

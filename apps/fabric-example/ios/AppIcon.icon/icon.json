@@ -1,0 +1,39 @@
+{
+  "fill" : {
+    "automatic-gradient" : "srgb:0.00000,0.10196,0.44706,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "fill" : {
+            "solid" : "srgb:1.00000,1.00000,1.00000,1.00000"
+          },
+          "image-name" : "horse.svg",
+          "name" : "horse",
+          "position" : {
+            "scale" : 1.8,
+            "translation-in-points" : [
+              -25,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

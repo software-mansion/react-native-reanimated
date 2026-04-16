@@ -1,51 +1,86 @@
-/* eslint-disable @typescript-eslint/no-redundant-type-constituents, @typescript-eslint/no-explicit-any */
 'use strict';
 
-import type { MutableRefObject } from 'react';
-import { runOnUI } from 'react-native-worklets';
+import type { RefObject } from 'react';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
-import { processColorsInProps } from '../Colors';
+import {
+  IS_JEST,
+  processColorsInProps,
+  processTransform,
+  processTransformOrigin,
+  SHOULD_BE_USE_WEB,
+  stylePropsBuilder,
+} from '../common';
+import { processBoxShadowWeb, processFilterWeb } from '../common/web';
 import type {
   AnimatedStyle,
   ShadowNodeWrapper,
   StyleProps,
 } from '../commonTypes';
-import { ReanimatedError } from '../errors';
+import type {
+  JSPropsOperation,
+  PropUpdates,
+} from '../createAnimatedComponent/commonTypes';
+import jsPropsUpdater from '../createAnimatedComponent/JSPropsUpdater';
 import type { Descriptor } from '../hook/commonTypes';
-import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
-import { processTransformOrigin } from './processTransformOrigin';
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
-  updates: StyleProps | AnimatedStyle<any>,
+  updates: PropUpdates,
   isAnimatedProps?: boolean
 ) => void;
 
-if (shouldBeUseWeb()) {
+if (SHOULD_BE_USE_WEB) {
   updateProps = (viewDescriptors, updates, isAnimatedProps) => {
     'worklet';
     viewDescriptors.value?.forEach((viewDescriptor) => {
       const component = viewDescriptor.tag as ReanimatedHTMLElement;
+      if ('boxShadow' in updates) {
+        updates.boxShadow = processBoxShadowWeb(updates.boxShadow);
+      }
+      if ('filter' in updates) {
+        updates.filter = processFilterWeb(updates.filter);
+      }
       _updatePropsJS(updates, component, isAnimatedProps);
     });
   };
 } else {
-  updateProps = (viewDescriptors, updates) => {
+  updateProps = (viewDescriptors, updates, isAnimatedProps) => {
     'worklet';
-    processColorsInProps(updates);
-    if ('transformOrigin' in updates) {
-      updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
+
+    // TODO: Remove this if once we have SVG props builder implemented
+    // We need to keep it for now to prevent regression in SVG props processing
+    if (isAnimatedProps) {
+      processColorsInProps(updates);
+      if ('transformOrigin' in updates) {
+        updates.transformOrigin = processTransformOrigin(
+          updates.transformOrigin
+        );
+      }
+      if ('transform' in updates) {
+        updates.transform = processTransform(updates.transform);
+      }
     }
-    global.UpdatePropsManager.update(viewDescriptors, updates);
+
+    global.UpdatePropsManager.update(
+      viewDescriptors,
+      // Use props builder only for style updaters, since animated props
+      // can contain any properties of different types, depending on the
+      // component, which we cannot process properly with the props builder.
+      isAnimatedProps ? updates : stylePropsBuilder.build(updates)
+    );
   };
 }
 
 export const updatePropsJestWrapper = (
   viewDescriptors: ViewDescriptorsWrapper,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updates: AnimatedStyle<any>,
-  animatedValues: MutableRefObject<AnimatedStyle<any>>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  animatedValues: RefObject<AnimatedStyle<any>>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   adapters: ((updates: AnimatedStyle<any>) => void)[]
 ): void => {
   adapters.forEach((adapter) => {
@@ -61,41 +96,87 @@ export const updatePropsJestWrapper = (
 
 export default updateProps;
 
+function updateJSProps(operations: JSPropsOperation[]) {
+  jsPropsUpdater.updateProps(operations);
+}
+
+type NativePropsOperation = {
+  shadowNodeWrapper: ShadowNodeWrapper;
+  updates: StyleProps;
+};
+
 function createUpdatePropsManager() {
   'worklet';
-  const operations: {
-    shadowNodeWrapper: ShadowNodeWrapper;
-    updates: StyleProps | AnimatedStyle<any>;
-  }[] = [];
+  const nativeOperations: NativePropsOperation[] = [];
+  const jsOperations: JSPropsOperation[] = [];
+
+  let flushPending = false;
+
+  const processViewUpdates = (tag: number, updates: PropUpdates) =>
+    Object.entries(updates).reduce<{
+      nativePropUpdates?: PropUpdates;
+      jsPropUpdates?: PropUpdates;
+    }>((acc, [propName, value]) => {
+      if (global._tagToJSPropNamesMapping[tag]?.[propName]) {
+        acc.jsPropUpdates ??= {};
+        acc.jsPropUpdates[propName] = value;
+      } else {
+        acc.nativePropUpdates ??= {};
+        acc.nativePropUpdates[propName] = value;
+      }
+      return acc;
+    }, {});
+
   return {
-    update(
-      viewDescriptors: ViewDescriptorsWrapper,
-      updates: StyleProps | AnimatedStyle<any>
-    ) {
-      viewDescriptors.value.forEach((viewDescriptor) => {
-        operations.push({
-          shadowNodeWrapper: viewDescriptor.shadowNodeWrapper,
-          updates,
-        });
-        if (operations.length === 1) {
-          queueMicrotask(this.flush);
+    update(viewDescriptors: ViewDescriptorsWrapper, updates: PropUpdates) {
+      viewDescriptors.value.forEach(({ tag, shadowNodeWrapper }) => {
+        const viewTag = tag as number;
+        const { nativePropUpdates, jsPropUpdates } = processViewUpdates(
+          viewTag,
+          updates
+        );
+
+        if (nativePropUpdates) {
+          nativeOperations.push({
+            shadowNodeWrapper,
+            updates: nativePropUpdates,
+          });
+        }
+        if (jsPropUpdates) {
+          jsOperations.push({
+            tag: viewTag,
+            updates: jsPropUpdates,
+          });
+        }
+
+        if (!flushPending && (nativePropUpdates || jsPropUpdates)) {
+          global.__requestMapperRunFinalizer(this.flush);
+          flushPending = true;
         }
       });
     },
     flush(this: void) {
-      global._updateProps!(operations);
-      operations.length = 0;
+      if (nativeOperations.length) {
+        global._updateProps!(nativeOperations);
+        nativeOperations.length = 0;
+      }
+      if (jsOperations.length) {
+        scheduleOnRN(updateJSProps, jsOperations);
+        jsOperations.length = 0;
+      }
+      flushPending = false;
+      global._maybeFlushUIUpdatesQueue();
     },
   };
 }
 
-if (shouldBeUseWeb()) {
+if (SHOULD_BE_USE_WEB) {
   const maybeThrowError = () => {
     // Jest attempts to access a property of this object to check if it is a Jest mock
     // so we can't throw an error in the getter.
-    if (!isJest()) {
-      throw new ReanimatedError(
-        '`UpdatePropsManager` is not available on non-native platform.'
+    if (!IS_JEST) {
+      throw new Error(
+        '[Reanimated] `UpdatePropsManager` is not available on non-native platform.'
       );
     }
   };
@@ -110,10 +191,10 @@ if (shouldBeUseWeb()) {
     }
   );
 } else {
-  runOnUI(() => {
+  scheduleOnUI(() => {
     'worklet';
     global.UpdatePropsManager = createUpdatePropsManager();
-  })();
+  });
 }
 
 /**

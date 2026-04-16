@@ -1,14 +1,8 @@
 'use strict';
-import type { CSSTimingFunction } from '../easings';
-import type { PlainStyle, TimeUnit } from './common';
+import type { PlainStyle } from '../../common';
+import type { CSSTimingFunction } from '../easing';
+import type { TimeUnit } from './common';
 import type { AddArrayPropertyType, AddArrayPropertyTypes } from './helpers';
-
-export type CSSRuleList<S extends PlainStyle> = CSSKeyframeRule<S>[];
-
-export interface CSSKeyframeRule<S extends PlainStyle = PlainStyle> {
-  readonly keyText: string;
-  readonly style: S;
-}
 
 export interface CSSKeyframesRule {
   readonly cssRules: CSSAnimationKeyframes;
@@ -70,7 +64,5 @@ export type ExistingCSSAnimationProperties<S extends object = PlainStyle> =
       CSSKeyframesRule | CSSAnimationKeyframes<S>
     >;
   };
-
-export type CSSAnimationSettingProp = keyof CSSAnimationSettings;
 
 export type CSSAnimationProp = keyof CSSAnimationProperties;

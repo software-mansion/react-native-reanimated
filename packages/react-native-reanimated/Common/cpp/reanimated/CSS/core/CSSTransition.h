@@ -1,51 +1,47 @@
 #pragma once
 
-#include <reanimated/CSS/config/CSSTransitionConfig.h>
+#include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
+#include <folly/dynamic.h>
+#include <jsi/jsi.h>
 #include <memory>
 #include <string>
-#include <unordered_set>
-#include <utility>
 
 namespace reanimated::css {
 
 class CSSTransition {
  public:
   CSSTransition(
-      ShadowNode::Shared shadowNode,
-      const CSSTransitionConfig &config,
+      std::shared_ptr<const ShadowNode> shadowNode,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
   Tag getViewTag() const;
-  ShadowNode::Shared getShadowNode() const;
+  std::shared_ptr<const ShadowNode> getShadowNode() const;
   double getMinDelay(double timestamp) const;
   TransitionProgressState getState() const;
-  folly::dynamic getCurrentInterpolationStyle() const;
   TransitionProperties getProperties() const;
-  PropertyNames getAllowedProperties(
-      const folly::dynamic &oldProps,
-      const folly::dynamic &newProps);
 
-  void updateSettings(const PartialCSSTransitionConfig &config);
-  folly::dynamic run(
-      const ChangedProps &changedProps,
-      const folly::dynamic &lastUpdateValue,
-      double timestamp);
+  folly::dynamic
+  run(jsi::Runtime &rt, const CSSTransitionConfig &config, const folly::dynamic &lastUpdateValue, double timestamp);
   folly::dynamic update(double timestamp);
 
  private:
-  const ShadowNode::Shared shadowNode_;
+  const std::shared_ptr<const ShadowNode> shadowNode_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
-  TransitionProperties properties_;
-  CSSTransitionPropertiesSettings settings_;
-  TransitionProgressProvider progressProvider_;
+  TransitionProperties transitionProperties_;
   TransitionStyleInterpolator styleInterpolator_;
+  TransitionProgressProvider progressProvider_;
 
-  void updateTransitionProperties(const TransitionProperties &properties);
-  bool isAllowedProperty(const std::string &propertyName) const;
+  void handleChangedProperties(
+      jsi::Runtime &rt,
+      const CSSTransitionConfig &config,
+      const folly::dynamic &lastUpdateValue,
+      double timestamp);
+  void handleRemovedProperties(const CSSTransitionConfig &config);
+  void removeProperty(const std::string &propertyName);
 };
 
 } // namespace reanimated::css

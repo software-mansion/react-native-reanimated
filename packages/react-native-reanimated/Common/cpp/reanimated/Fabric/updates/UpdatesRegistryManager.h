@@ -1,6 +1,8 @@
 #pragma once
-#include <reanimated/CSS/config/PropertyInterpolatorsConfig.h>
-#include <reanimated/CSS/registry/StaticPropsRegistry.h>
+
+#include <reanimated/CSS/InterpolatorRegistry.h>
+#include <reanimated/CSS/registries/StaticPropsRegistry.h>
+
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
@@ -15,8 +17,7 @@ using namespace css;
 
 class UpdatesRegistryManager {
  public:
-  explicit UpdatesRegistryManager(
-      const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry);
+  explicit UpdatesRegistryManager(const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry);
 
   std::lock_guard<std::mutex> lock() const;
 
@@ -32,33 +33,32 @@ class UpdatesRegistryManager {
   bool shouldCommitAfterPause();
   void cancelCommitAfterPause();
 
-  void markNodeAsRemovable(const ShadowNode::Shared &shadowNode);
+  void markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode);
   void unmarkNodeAsRemovable(Tag viewTag);
   void handleNodeRemovals(const RootShadowNode &rootShadowNode);
   PropsMap collectProps();
 
 #ifdef ANDROID
   bool hasPropsToRevert();
-  void collectPropsToRevertBySurface(
-      std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
+  void collectPropsToRevertBySurface(std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
   void clearPropsToRevert(SurfaceId surfaceId);
 #endif
 
  private:
+  using RemovableShadowNodes = std::unordered_map<Tag, ShadowNodeFamily::Shared>;
+
   mutable std::mutex mutex_;
   std::atomic<bool> isPaused_;
   std::atomic<bool> shouldCommitAfterPause_;
-  std::unordered_map<Tag, ShadowNode::Shared> removableShadowNodes_;
+  RemovableShadowNodes removableShadowNodes_;
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
 
 #ifdef ANDROID
   PropsToRevertMap propsToRevertMap_;
 
-  static void addToPropsMap(
-      PropsMap &propsMap,
-      const ShadowNode::Shared &shadowNode,
-      const folly::dynamic &props);
+  static void
+  addToPropsMap(PropsMap &propsMap, const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
 #endif
 };
 

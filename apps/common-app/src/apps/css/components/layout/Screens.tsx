@@ -13,7 +13,11 @@ type ScreenProps = PropsWithChildren<{
 }>;
 
 export function Screen({ children, style }: ScreenProps) {
-  return <View style={[flex.fill, style]}>{children}</View>;
+  return (
+    <View collapsable={false} style={[flex.fill, style]}>
+      {children}
+    </View>
+  );
 }
 
 type ScrollScreenProps = Omit<ScrollProps, 'withBottomBarSpacing'>;

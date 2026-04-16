@@ -2,30 +2,22 @@
 
 namespace reanimated::css {
 
-RawProgressProvider::RawProgressProvider(
-    const double timestamp,
-    const double duration,
-    const double delay)
+RawProgressProvider::RawProgressProvider(const double timestamp, const double duration, const double delay)
     : duration_(duration), delay_(delay), creationTimestamp_(timestamp) {}
 
 void RawProgressProvider::setDuration(double duration) {
-  resetProgress();
   duration_ = duration;
 }
 
 void RawProgressProvider::setDelay(double delay) {
-  resetProgress();
   delay_ = delay;
 }
 
 void RawProgressProvider::resetProgress() {
   rawProgress_.reset();
-  previousRawProgress_.reset();
 }
 
 void RawProgressProvider::update(const double timestamp) {
-  previousRawProgress_ = rawProgress_;
-
   if (timestamp - creationTimestamp_ < delay_) {
     rawProgress_.reset();
     return;

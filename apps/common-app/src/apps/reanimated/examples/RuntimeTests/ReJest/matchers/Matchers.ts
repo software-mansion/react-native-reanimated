@@ -5,8 +5,10 @@ import {
   toBeCalledJSMatcher,
   toBeCalledMatcher,
   toBeCalledUIMatcher,
+  toBeDefined,
   toBeMatcher,
   toBeNullableMatcher,
+  toBeUndefined,
   toBeWithinRangeMatcher,
   toThrowMatcher,
 } from './rawMatchers';
@@ -14,7 +16,7 @@ import { compareSnapshots } from './snapshotMatchers';
 
 export class Matchers {
   private _negation = false;
-  // eslint-disable-next-line no-useless-constructor
+
   constructor(
     private _currentValue: TestValue,
     private _testCase: TestCase,
@@ -44,7 +46,9 @@ export class Matchers {
   }
 
   public toBe = this.decorateMatcher(toBeMatcher);
+  public toBeDefined = this.decorateMatcher(toBeDefined);
   public toBeNullable = this.decorateMatcher(toBeNullableMatcher);
+  public toBeUndefined = this.decorateMatcher(toBeUndefined);
   public toBeWithinRange = this.decorateMatcher(toBeWithinRangeMatcher);
   public toThrow = this.decorateAsyncMatcher(toThrowMatcher);
   public toBeCalled = this.decorateMatcher(toBeCalledMatcher);

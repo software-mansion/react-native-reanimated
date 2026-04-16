@@ -4,6 +4,7 @@ import type {
   ReduceMotion,
   StyleProps,
 } from '../../commonTypes';
+import type { EasingFunctionFactory } from '../../Easing';
 import {
   BounceIn,
   BounceInData,
@@ -43,7 +44,10 @@ import type { AnimationData, AnimationStyle } from './animationParser';
 
 export type AnimationCallback = ((finished: boolean) => void) | null;
 
-export type KeyframeDefinitions = Record<number, AnimationStyle>;
+export type KeyframeDefinitions = Record<
+  `${number}` | 'from' | 'to',
+  AnimationStyle
+>;
 
 export type InitialValuesStyleProps = Omit<StyleProps, 'opacity'> & {
   opacity?: number;
@@ -59,13 +63,13 @@ export interface AnimationConfig {
   reversed: boolean;
 }
 
-interface EasingType {
+export interface EasingType {
   (): number;
   [EasingNameSymbol: symbol]: string;
 }
 
 export interface CustomConfig {
-  easingV?: EasingType;
+  easingV?: EasingType | EasingFunctionFactory;
   easingXV?: EasingType;
   easingYV?: EasingType;
   durationV?: number;
@@ -75,7 +79,9 @@ export interface CustomConfig {
   callbackV?: AnimationCallback;
   reversed?: boolean;
   definitions?: KeyframeDefinitions;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   enteringV?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   exitingV?: any;
   initialValues?: StyleProps;
 }
@@ -134,4 +140,3 @@ export const Animations = {
 };
 
 export type AnimationNames = keyof typeof Animations;
-export type LayoutTransitionsNames = keyof typeof AnimationsData;

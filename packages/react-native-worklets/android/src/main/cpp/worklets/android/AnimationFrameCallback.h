@@ -6,11 +6,9 @@
 
 namespace worklets {
 
-class AnimationFrameCallback
-    : public facebook::jni::HybridClass<AnimationFrameCallback> {
+class AnimationFrameCallback : public facebook::jni::HybridClass<AnimationFrameCallback> {
  public:
-  static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/worklets/runloop/AnimationFrameCallback;";
+  static auto constexpr kJavaDescriptor = "Lcom/swmansion/worklets/runloop/AnimationFrameCallback;";
 
   void onAnimationFrame(double timestampMs) {
     callback_(timestampMs);
@@ -18,16 +16,14 @@ class AnimationFrameCallback
 
   static void registerNatives() {
     javaClassStatic()->registerNatives({
-        makeNativeMethod(
-            "onAnimationFrame", AnimationFrameCallback::onAnimationFrame),
+        makeNativeMethod("onAnimationFrame", AnimationFrameCallback::onAnimationFrame),
     });
   }
 
  private:
   friend HybridBase;
 
-  explicit AnimationFrameCallback(std::function<void(const double)> callback)
-      : callback_(std::move(callback)) {}
+  explicit AnimationFrameCallback(std::function<void(const double)> callback) : callback_(std::move(callback)) {}
 
   std::function<void(double)> callback_;
 };

@@ -1,9 +1,8 @@
 'use strict';
 
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
-import { addWhitelistedNativeProps } from '../ConfigHelper';
 import { createAnimatedComponent } from '../createAnimatedComponent';
 import type { FrameInfo } from '../frameCallback';
 import { useAnimatedProps, useFrameCallback, useSharedValue } from '../hook';
@@ -46,7 +45,7 @@ function createCircularDoublesBuffer(size: number) {
 }
 
 const DEFAULT_BUFFER_SIZE = 20;
-addWhitelistedNativeProps({ text: true });
+
 const AnimatedTextInput = createAnimatedComponent(TextInput);
 
 function loopAnimationFrame(fn: (lastTime: number, time: number) => void) {
@@ -170,7 +169,7 @@ export type PerformanceMonitorProps = {
  * Paper and Fabric architectures.
  *
  * @param smoothingFrames - Determines amount of saved frames which will be used
- *   for fps value smoothing.
+ *   for fps value smoothing. Defaults to `20`.
  */
 export function PerformanceMonitor({
   smoothingFrames = DEFAULT_BUFFER_SIZE,

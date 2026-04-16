@@ -1,4 +1,4 @@
-import type { ReanimatedPluginPass } from './types';
+import type { WorkletsPluginPass } from './types';
 
 const notCapturedIdentifiers = [
   // Based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
@@ -106,23 +106,31 @@ const notCapturedIdentifiers = [
   'global',
   'window',
   'globalThis',
+  'self',
   'console',
   'performance',
+  'arguments', // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
+  'require',
+  'fetch',
+  'XMLHttpRequest',
+  'WebSocket',
+
+  // Run loop
   'queueMicrotask',
   'requestAnimationFrame',
+  'cancelAnimationFrame',
+  'setTimeout',
+  'clearTimeout',
   'setImmediate',
-  'arguments', // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
+  'clearImmediate',
+  'setInterval',
+  'clearInterval',
 
   // Hermes
   'HermesInternal',
 
-  // Reanimated
-  'ReanimatedError',
-
   // Worklets
   '_WORKLET',
-  'WorkletsError',
-  '__workletsLoggerConfig',
 ];
 
 /**
@@ -133,30 +141,15 @@ const notCapturedIdentifiers = [
  *   `_WORKLET` is the only exception since it's a part of the public API.
  */
 // eslint-disable-next-line camelcase
-const notCapturedIdentifiers_DEPRECATED = [
-  // Reanimated
-  '_IS_FABRIC',
-  '_log',
-  '_toString',
-  '_scheduleHostFunctionOnJS',
-  '_scheduleRemoteFunctionOnJS',
-  '_scheduleOnRuntime',
-  '_makeShareableClone',
-  '_updateProps',
-  '_measure',
-  '_dispatchCommand',
-  '_setGestureState',
-  '_notifyAboutProgress',
-  '_notifyAboutEnd',
-  '_runOnUIQueue',
-  '_getAnimationTimestamp',
-];
+const notCapturedIdentifiers_DEPRECATED = ['_IS_FABRIC'];
 
-export function initializeState(state: ReanimatedPluginPass) {
+export function initializeState(state: WorkletsPluginPass) {
   state.workletNumber = 1;
   state.classesToWorkletize = [];
-  initializeGlobals();
-  addCustomGlobals(state);
+  if (!state.opts.strictGlobal) {
+    initializeGlobals();
+    addCustomGlobals(state);
+  }
 }
 
 export const defaultGlobals = new Set(
@@ -181,7 +174,7 @@ export function initializeGlobals() {
  * ];
  * ```
  */
-export function addCustomGlobals(state: ReanimatedPluginPass) {
+export function addCustomGlobals(state: WorkletsPluginPass) {
   if (state.opts && Array.isArray(state.opts.globals)) {
     state.opts.globals.forEach((name: string) => {
       globals.add(name);

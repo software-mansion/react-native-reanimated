@@ -130,7 +130,7 @@ describe('Test `interpolate` function', () => {
           input: [123, 12345],
           output: [12, 123],
           expected:
-            // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
+            // eslint-disable-next-line no-loss-of-precision
             22.090083456062837506136475208640157093765341188021600392734413352,
         },
       ])(

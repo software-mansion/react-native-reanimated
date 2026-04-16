@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/require-jsdoc */
 import { StyleSheet, Text, View } from 'react-native';
 
 const styles = StyleSheet.create({

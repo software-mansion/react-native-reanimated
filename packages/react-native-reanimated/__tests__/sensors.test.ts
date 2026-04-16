@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react-hooks';
 
-import type { SensorConfig, Value3D, ValueRotation } from '../src/';
-import { SensorType, useAnimatedSensor } from '../src/';
+import type { SensorConfig, Value3D, ValueRotation } from '../src';
+import { SensorType, useAnimatedSensor } from '../src';
 
 let eventHandler: (data: Value3D | ValueRotation) => void;
 
@@ -57,7 +57,7 @@ expect.extend({
 });
 
 describe('Sensors', () => {
-  it('returns rotation sensors', () => {
+  test('returns rotation sensors', () => {
     const { result } = renderHook(() =>
       useAnimatedSensor(SensorType.ROTATION, {
         adjustToInterfaceOrientation: false,
@@ -80,7 +80,7 @@ describe('Sensors', () => {
     expect(result.current.sensor.value).toStrictEqual(data);
   });
 
-  it('returns 3d sensor', () => {
+  test('returns 3d sensor', () => {
     const { result } = renderHook(() =>
       useAnimatedSensor(SensorType.ACCELEROMETER, {
         adjustToInterfaceOrientation: false,
@@ -100,7 +100,7 @@ describe('Sensors', () => {
   });
 
   // a handy calculator: https://www.andre-gaschler.com/rotationconverter/
-  it('adjusts orientation of the rotation sensor', () => {
+  test('adjusts orientation of the rotation sensor', () => {
     const { result } = renderHook(() =>
       useAnimatedSensor(SensorType.ROTATION, {
         adjustToInterfaceOrientation: true,
@@ -186,7 +186,7 @@ describe('Sensors', () => {
     expect(result.current.sensor.value).toBeEqualRounded(data270);
   });
 
-  it('adjusts orientation of the 3d sensor', () => {
+  test('adjusts orientation of the 3d sensor', () => {
     const { result } = renderHook(() =>
       useAnimatedSensor(SensorType.ACCELEROMETER, {
         adjustToInterfaceOrientation: true,

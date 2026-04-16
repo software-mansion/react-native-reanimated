@@ -1,23 +1,26 @@
 #include <reanimated/CSS/core/CSSTransition.h>
 
+#include <jsi/JSIDynamic.h>
+
+#include <memory>
+#include <string>
+#include <utility>
+
 namespace reanimated::css {
 
 CSSTransition::CSSTransition(
-    ShadowNode::Shared shadowNode,
-    const CSSTransitionConfig &config,
+    std::shared_ptr<const ShadowNode> shadowNode,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : shadowNode_(std::move(shadowNode)),
       viewStylesRepository_(viewStylesRepository),
-      properties_(config.properties),
-      settings_(config.settings),
-      progressProvider_(TransitionProgressProvider()),
-      styleInterpolator_(TransitionStyleInterpolator(viewStylesRepository)) {}
+      styleInterpolator_(TransitionStyleInterpolator(shadowNode_->getComponentName(), viewStylesRepository)),
+      progressProvider_(TransitionProgressProvider()) {}
 
 Tag CSSTransition::getViewTag() const {
   return shadowNode_->getTag();
 }
 
-ShadowNode::Shared CSSTransition::getShadowNode() const {
+std::shared_ptr<const ShadowNode> CSSTransition::getShadowNode() const {
   return shadowNode_;
 }
 
@@ -29,70 +32,20 @@ TransitionProgressState CSSTransition::getState() const {
   return progressProvider_.getState();
 }
 
-folly::dynamic CSSTransition::getCurrentInterpolationStyle() const {
-  return styleInterpolator_.interpolate(shadowNode_, progressProvider_);
-}
-
 TransitionProperties CSSTransition::getProperties() const {
-  return properties_;
-}
-
-PropertyNames CSSTransition::getAllowedProperties(
-    const folly::dynamic &oldProps,
-    const folly::dynamic &newProps) {
-  if (!oldProps.isObject() || !newProps.isObject()) {
-    return {};
-  }
-
-  // If specific properties are set, process only those
-  if (properties_.has_value()) {
-    PropertyNames allowedProps;
-    const auto &properties = properties_.value();
-    allowedProps.reserve(properties.size());
-
-    for (const auto &prop : properties) {
-      if (isAllowedProperty(prop)) {
-        allowedProps.push_back(prop);
-      }
-    }
-
-    return allowedProps;
-  }
-
-  // Process all properties from both old and new props
-  std::unordered_set<std::string> allAllowedProps;
-
-  for (const auto &props : {oldProps, newProps}) {
-    for (const auto &propertyName : props.keys()) {
-      if (isAllowedProperty(propertyName.asString())) {
-        allAllowedProps.insert(propertyName.asString());
-      }
-    }
-  }
-
-  return {allAllowedProps.begin(), allAllowedProps.end()};
-}
-
-void CSSTransition::updateSettings(const PartialCSSTransitionConfig &config) {
-  if (config.properties.has_value()) {
-    updateTransitionProperties(config.properties.value());
-  }
-  if (config.settings.has_value()) {
-    settings_ = config.settings.value();
-  }
+  return transitionProperties_;
 }
 
 folly::dynamic CSSTransition::run(
-    const ChangedProps &changedProps,
+    jsi::Runtime &rt,
+    const CSSTransitionConfig &config,
     const folly::dynamic &lastUpdateValue,
     const double timestamp) {
-  progressProvider_.runProgressProviders(
-      timestamp,
-      settings_,
-      changedProps.changedPropertyNames,
-      styleInterpolator_.getReversedPropertyNames(changedProps.newProps));
-  styleInterpolator_.updateInterpolatedProperties(
-      changedProps, lastUpdateValue);
+  // Update interpolators and progress providers for changed properties
+  handleChangedProperties(rt, config, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
+  // Remove interpolators and progress providers for no longer transitioned props
+  handleRemovedProperties(config);
+  // Return the first transition frame
   return update(timestamp);
 }
 
@@ -108,34 +61,55 @@ folly::dynamic CSSTransition::update(const double timestamp) {
   return result;
 }
 
-void CSSTransition::updateTransitionProperties(
-    const TransitionProperties &properties) {
-  properties_ = properties;
+void CSSTransition::handleChangedProperties(
+    jsi::Runtime &rt,
+    const CSSTransitionConfig &config,
+    const folly::dynamic &lastUpdateValue,
+    const double timestamp) {
+  const auto null = folly::dynamic();
 
-  const auto isAllPropertiesTransition = !properties_.has_value();
-  if (isAllPropertiesTransition) {
-    return;
+  for (const auto &[propertyName, propertySettings] : config.changedProperties) {
+    const auto allowDiscrete = propertySettings.allowDiscrete;
+
+    if (!allowDiscrete && isDiscreteProperty(propertyName, shadowNode_->getComponentName())) {
+      removeProperty(propertyName);
+      continue;
+    }
+
+    transitionProperties_.insert(propertyName);
+
+    // Update the transition style interpolator
+    const auto &valueChange = propertySettings.value;
+
+    bool isReversed;
+    if (lastUpdateValue.count(propertyName)) {
+      // TODO - get rid of lastValue dynamic in the future
+      isReversed = styleInterpolator_.createOrUpdateInterpolator(
+          rt, propertyName, jsi::valueFromDynamic(rt, lastUpdateValue.at(propertyName)), valueChange.second);
+    } else {
+      isReversed =
+          styleInterpolator_.createOrUpdateInterpolator(rt, propertyName, valueChange.first, valueChange.second);
+    }
+
+    // We still pass allowDiscrete to use correct threshold for interpolation between incompatible values
+    // (e.g. when someone passes a keyword and a numeric value - in this case we interpolate them as discrete values)
+    styleInterpolator_.setAllowDiscrete(propertyName, allowDiscrete);
+
+    // Update the transition progress provider
+    progressProvider_.runProgressProvider(propertyName, propertySettings, isReversed, timestamp);
   }
-
-  const std::unordered_set<std::string> transitionPropertyNames(
-      properties_->begin(), properties_->end());
-
-  styleInterpolator_.discardIrrelevantInterpolators(transitionPropertyNames);
-  progressProvider_.discardIrrelevantProgressProviders(transitionPropertyNames);
 }
 
-bool CSSTransition::isAllowedProperty(const std::string &propertyName) const {
-  if (!isDiscreteProperty(propertyName)) {
-    return true;
+void CSSTransition::handleRemovedProperties(const CSSTransitionConfig &config) {
+  for (const auto &propertyName : config.removedProperties) {
+    removeProperty(propertyName);
   }
+}
 
-  const auto &propertySettings =
-      getTransitionPropertySettings(settings_, propertyName);
-
-  if (!propertySettings.has_value()) {
-    return false;
-  }
-  return propertySettings.value().allowDiscrete;
+void CSSTransition::removeProperty(const std::string &propertyName) {
+  transitionProperties_.erase(propertyName);
+  styleInterpolator_.removeProperty(propertyName);
+  progressProvider_.removeProperty(propertyName);
 }
 
 } // namespace reanimated::css

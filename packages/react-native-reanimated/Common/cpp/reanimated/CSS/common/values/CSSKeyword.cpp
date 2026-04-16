@@ -1,7 +1,6 @@
-#include <folly/json.h>
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 
-#include <utility>
+#include <string>
 
 namespace reanimated::css {
 
@@ -9,33 +8,17 @@ template <typename TValue>
 CSSKeywordBase<TValue>::CSSKeywordBase(const char *value) : value(value) {}
 
 template <typename TValue>
-CSSKeywordBase<TValue>::CSSKeywordBase(
-    jsi::Runtime &rt,
-    const jsi::Value &jsiValue) {
-  if (jsiValue.isString()) {
-    value = jsiValue.getString(rt).utf8(rt);
-  } else {
-    throw std::invalid_argument(
-        "[Reanimated] CSSKeywordBase: Invalid value type: " +
-        stringifyJSIValue(rt, jsiValue));
-  }
+CSSKeywordBase<TValue>::CSSKeywordBase(jsi::Runtime &rt, const jsi::Value &jsiValue) {
+  value = jsiValue.asString(rt).utf8(rt);
 }
 
 template <typename TValue>
 CSSKeywordBase<TValue>::CSSKeywordBase(const folly::dynamic &value) {
-  if (value.isString()) {
-    this->value = value.getString();
-  } else {
-    throw std::invalid_argument(
-        "[Reanimated] CSSKeywordBase: Invalid value type: " +
-        folly::toJson(value));
-  }
+  this->value = value.asString();
 }
 
 template <typename TValue>
-bool CSSKeywordBase<TValue>::canConstruct(
-    jsi::Runtime &rt,
-    const jsi::Value &jsiValue) {
+bool CSSKeywordBase<TValue>::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   return jsiValue.isString();
 }
 
@@ -55,13 +38,11 @@ std::string CSSKeywordBase<TValue>::toString() const {
 }
 
 template <typename TValue>
-bool CSSKeywordBase<TValue>::operator==(
-    const CSSKeywordBase<TValue> &other) const {
+bool CSSKeywordBase<TValue>::operator==(const CSSKeywordBase<TValue> &other) const {
   return value == other.value;
 }
 
-CSSKeyword CSSKeyword::interpolate(double progress, const CSSKeyword &to)
-    const {
+CSSKeyword CSSKeyword::interpolate(double progress, const CSSKeyword &to) const {
   return CSSKeyword(progress < 0.5 ? value : to.value);
 }
 
@@ -74,8 +55,7 @@ std::ostream &operator<<(std::ostream &os, const CSSKeyword &keywordValue) {
 
 #endif // NDEBUG
 
-CSSDisplay CSSDisplay::interpolate(double progress, const CSSDisplay &to)
-    const {
+CSSDisplay CSSDisplay::interpolate(double progress, const CSSDisplay &to) const {
   if (value == "none" && progress > 0) {
     return CSSDisplay(to.value);
   }

@@ -1,0 +1,14 @@
+name: Check Ruby and CocoaPods versions
+description: Verify Ruby and CocoaPods versions in lockfiles
+
+inputs:
+  working-directory:
+    description: The app directory (e.g., apps/fabric-example)
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Verify Ruby and CocoaPods versions in lockfiles
+      shell: bash
+      run: .github/workflows/helper/check-ruby-pods.sh "${{ inputs.working-directory }}"

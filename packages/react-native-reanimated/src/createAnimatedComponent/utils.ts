@@ -36,18 +36,17 @@ export const has = <K extends string>(
   return false;
 };
 
-export function filterStyles(styles: StyleProps[] | undefined): {
-  cssStyle: CSSStyle;
+type FilteredStyles = {
+  cssStyle: CSSStyle | null;
   animatedStyles: StyleProps[];
-} {
+};
+
+export function filterStyles(styles: StyleProps[] | undefined): FilteredStyles {
   if (!styles) {
-    return { animatedStyles: [], cssStyle: {} };
+    return { animatedStyles: [], cssStyle: null };
   }
 
-  return styles.reduce<{
-    cssStyle: CSSStyle;
-    animatedStyles: StyleProps[];
-  }>(
+  return styles.reduce<FilteredStyles>(
     ({ animatedStyles, cssStyle }, style) => {
       if (style?.viewDescriptors) {
         animatedStyles.push(style);
@@ -56,6 +55,6 @@ export function filterStyles(styles: StyleProps[] | undefined): {
       }
       return { animatedStyles, cssStyle };
     },
-    { animatedStyles: [], cssStyle: {} }
+    { animatedStyles: [], cssStyle: null }
   );
 }

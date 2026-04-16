@@ -1,112 +1,69 @@
 #include <reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h>
 
+#include <memory>
+#include <string>
+#include <unordered_set>
+
 namespace reanimated::css {
 
 TransitionStyleInterpolator::TransitionStyleInterpolator(
+    const std::string &nativeComponentName,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : viewStylesRepository_(viewStylesRepository) {}
-
-std::unordered_set<std::string>
-TransitionStyleInterpolator::getReversedPropertyNames(
-    const folly::dynamic &newPropertyValues) const {
-  std::unordered_set<std::string> reversedProperties;
-
-  if (!newPropertyValues.isObject()) {
-    return reversedProperties;
-  }
-
-  for (const auto &[propertyName, propertyValue] : newPropertyValues.items()) {
-    const auto propertyNameStr = propertyName.getString();
-    const auto it = interpolators_.find(propertyNameStr);
-    if (it != interpolators_.end() &&
-        // First keyframe value of the previous transition is the reversing
-        // adjusted start value
-        it->second->equalsReversingAdjustedStartValue(propertyValue)) {
-      reversedProperties.insert(propertyNameStr);
-    }
-  }
-
-  return reversedProperties;
-}
+    : nativeComponentName_(nativeComponentName), viewStylesRepository_(viewStylesRepository) {}
 
 folly::dynamic TransitionStyleInterpolator::interpolate(
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const TransitionProgressProvider &transitionProgressProvider) const {
-  return mapInterpolators(
-      transitionProgressProvider,
-      [&](const std::shared_ptr<PropertyInterpolator> &interpolator,
-          const std::shared_ptr<KeyframeProgressProvider> &progressProvider) {
-        return interpolator->interpolate(shadowNode, progressProvider);
-      });
+  folly::dynamic result = folly::dynamic::object;
+
+  for (const auto &[propertyName, progressProvider] : transitionProgressProvider.getPropertyProgressProviders()) {
+    const auto &interpolator = interpolators_.at(propertyName);
+    const auto fallbackInterpolateThreshold = (allowDiscreteProperties_.contains(propertyName)) ? 0.5 : 0;
+    result[propertyName] = interpolator->interpolate(shadowNode, progressProvider, fallbackInterpolateThreshold);
+  }
+
+  return result;
+}
+
+bool TransitionStyleInterpolator::createOrUpdateInterpolator(
+    jsi::Runtime &rt,
+    const std::string &propertyName,
+    const jsi::Value &fromValue,
+    const jsi::Value &toValue) {
+  const auto &interpolator = getOrCreateInterpolator(propertyName);
+  return interpolator->updateKeyframes(rt, fromValue, toValue);
+}
+
+void TransitionStyleInterpolator::setAllowDiscrete(const std::string &propertyName, const bool allowDiscrete) {
+  if (allowDiscrete) {
+    allowDiscreteProperties_.insert(propertyName);
+  } else {
+    allowDiscreteProperties_.erase(propertyName);
+  }
+}
+
+void TransitionStyleInterpolator::removeProperty(const std::string &propertyName) {
+  interpolators_.erase(propertyName);
+  allowDiscreteProperties_.erase(propertyName);
 }
 
 void TransitionStyleInterpolator::discardFinishedInterpolators(
     const TransitionProgressProvider &transitionProgressProvider) {
-  for (const auto &propertyName :
-       transitionProgressProvider.getRemovedProperties()) {
-    interpolators_.erase(propertyName);
+  for (const auto &propertyName : transitionProgressProvider.getRemovedProperties()) {
+    removeProperty(propertyName);
   }
 }
 
-void TransitionStyleInterpolator::discardIrrelevantInterpolators(
-    const std::unordered_set<std::string> &transitionPropertyNames) {
-  for (auto it = interpolators_.begin(); it != interpolators_.end();) {
-    // Remove property interpolators for properties not specified in the
-    // transition property names
-    if (transitionPropertyNames.find(it->first) ==
-        transitionPropertyNames.end()) {
-      it = interpolators_.erase(it);
-    } else {
-      ++it;
-    }
-  }
-}
-
-void TransitionStyleInterpolator::updateInterpolatedProperties(
-    const ChangedProps &changedProps,
-    const folly::dynamic &lastUpdateValue) {
-  const auto &oldPropsObj = changedProps.oldProps;
-  const auto &newPropsObj = changedProps.newProps;
-
-  const auto empty = folly::dynamic();
-
-  for (const auto &propertyName : changedProps.changedPropertyNames) {
-    auto it = interpolators_.find(propertyName);
-    const auto shouldCreateInterpolator = it == interpolators_.end();
-
-    if (shouldCreateInterpolator) {
-      const auto newInterpolator = createPropertyInterpolator(
-          propertyName,
-          {},
-          PROPERTY_INTERPOLATORS_CONFIG,
-          viewStylesRepository_);
-      it = interpolators_.emplace(propertyName, newInterpolator).first;
-    }
-
-    const auto &oldValue = oldPropsObj.getDefault(propertyName, empty);
-    const auto &newValue = newPropsObj.getDefault(propertyName, empty);
-    // Pass lastValue only if the interpolator is updated (no new interpolator
-    // was created), otherwise pass an empty value
-    const auto &lastValue = !shouldCreateInterpolator
-        ? lastUpdateValue.getDefault(propertyName, empty)
-        : empty;
-
-    it->second->updateKeyframesFromStyleChange(oldValue, newValue, lastValue);
-  }
-}
-
-folly::dynamic TransitionStyleInterpolator::mapInterpolators(
-    const TransitionProgressProvider &transitionProgressProvider,
-    const MapInterpolatorsCallback &callback) const {
-  folly::dynamic result = folly::dynamic::object;
-
-  for (const auto &[propertyName, progressProvider] :
-       transitionProgressProvider.getPropertyProgressProviders()) {
-    result[propertyName] =
-        callback(interpolators_.at(propertyName), progressProvider);
+std::shared_ptr<PropertyInterpolator> TransitionStyleInterpolator::getOrCreateInterpolator(
+    const std::string &propertyName) {
+  if (!interpolators_.contains(propertyName)) {
+    interpolators_.emplace(
+        propertyName,
+        createPropertyInterpolator(
+            propertyName, {}, getComponentInterpolators(nativeComponentName_), viewStylesRepository_));
   }
 
-  return result;
+  return interpolators_.at(propertyName);
 }
 
 } // namespace reanimated::css

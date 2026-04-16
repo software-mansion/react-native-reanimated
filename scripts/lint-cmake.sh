@@ -5,4 +5,4 @@ if ! which cmake-lint >/dev/null; then
   exit 1
 fi
 
-cmake-lint "$@"
+cmake-lint "$@" --line-width 120

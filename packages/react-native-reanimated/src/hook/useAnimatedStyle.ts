@@ -1,11 +1,11 @@
 'use strict';
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
-import { isWorkletFunction } from 'react-native-worklets';
+import { isWorkletFunction, makeShareable } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
-import { processBoxShadow } from '../common/processors';
+import { IS_JEST, SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedPropsAdapterWorklet,
@@ -14,12 +14,11 @@ import type {
   NestedObjectValues,
   SharedValue,
   StyleProps,
+  StyleUpdaterContainer,
   Timestamp,
 } from '../commonTypes';
-import { makeShareable, startMapper, stopMapper } from '../core';
+import { startMapper, stopMapper } from '../core';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
-import { ReanimatedError } from '../errors';
-import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import { updateProps, updatePropsJestWrapper } from '../updateProps';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
@@ -31,17 +30,12 @@ import type {
   JestAnimatedStyleHandle,
 } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
-import {
-  buildWorkletsHash,
-  isAnimated,
-  shallowEqual,
-  validateAnimatedStyles,
-} from './utils';
-
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
+import { isAnimated, shallowEqual, validateAnimatedStyles } from './utils';
 
 interface AnimatedState {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   last: AnimatedStyle<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animations: AnimatedStyle<any>;
   isAnimationRunning: boolean;
   isAnimationCancelled: boolean;
@@ -49,17 +43,23 @@ interface AnimatedState {
 
 interface AnimatedUpdaterData {
   initial: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: AnimatedStyle<any>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     updater: () => AnimatedStyle<any>;
   };
   remoteState: AnimatedState;
   viewDescriptors: ViewDescriptorsSet;
+  styleUpdaterContainer: StyleUpdaterContainer;
 }
 
 function prepareAnimation(
   frameTimestamp: number,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animatedProp: AnimatedStyle<any>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lastAnimation: AnimatedStyle<any>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lastValue: AnimatedStyle<any>
 ): void {
   'worklet';
@@ -117,9 +117,11 @@ function prepareAnimation(
 }
 
 function runAnimations(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animation: AnimatedStyle<any>,
   timestamp: Timestamp,
   key: number | string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   result: AnimatedStyle<any>,
   animationsActive: SharedValue<boolean>,
   forceCopyAnimation?: boolean
@@ -158,15 +160,15 @@ function runAnimations(
       animation.timestamp = timestamp;
       if (finished) {
         animation.finished = true;
-        animation.callback && animation.callback(true /* finished */);
+        animation.callback?.(true /* finished */);
       }
     }
     /*
      * If `animation.current` is a boxShadow object, spread its properties into a new object
      * to avoid modifying the original reference. This ensures when `newValues` has a nested color prop, it stays unparsed
-     * in rgba format, allowing the animation to run correctly.
+     * in rgba format, allowing the animation to run correctly. Additionally we need to check if user animated the whole boxShadow object or only one of its properties.
      */
-    if (forceCopyAnimation) {
+    if (forceCopyAnimation && typeof animation.current === 'object') {
       result[key] = { ...animation.current };
     } else {
       result[key] = animation.current;
@@ -198,10 +200,12 @@ function runAnimations(
 
 function styleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
   state: AnimatedState,
   animationsActive: SharedValue<boolean>,
-  isAnimatedProps = false
+  isAnimatedProps = false,
+  forceUpdate?: boolean
 ): void {
   'worklet';
   const animations = state.animations ?? {};
@@ -221,13 +225,6 @@ function styleUpdater(
       animations[key] = value;
       hasAnimations = true;
     } else {
-      /* TODO: Improve this config structure in the future
-       * The goal is to create a simplified version of `src/css/platform/native/config.ts`,
-       * containing only properties that require processing and their associated processors
-       * */
-      if (key === 'boxShadow' && !SHOULD_BE_USE_WEB) {
-        newValues[key] = processBoxShadow(value);
-      }
       hasNonAnimatedValues = true;
       nonAnimatedNewValues[key] = value;
       delete animations[key];
@@ -243,6 +240,7 @@ function styleUpdater(
         return;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const updates: AnimatedStyle<any> = {};
       let allFinished = true;
       for (const propName in animations) {
@@ -261,11 +259,11 @@ function styleUpdater(
            * states, causing abrupt transitions or 'jumps' in animation states.
            */
           if (Array.isArray(updates[propName])) {
-            if (!last[propName] || typeof last[propName] !== 'object') {
-              last[propName] = {};
-            }
             updates[propName].forEach((obj: StyleProps) => {
               for (const prop in obj) {
+                if (!last[propName] || typeof last[propName] !== 'object') {
+                  last[propName] = {};
+                }
                 last[propName][prop] = obj[prop];
               }
             });
@@ -279,7 +277,7 @@ function styleUpdater(
       }
 
       if (updates) {
-        updateProps(viewDescriptors, updates);
+        updateProps(viewDescriptors, updates, isAnimatedProps);
       }
 
       if (!allFinished) {
@@ -297,13 +295,13 @@ function styleUpdater(
     }
 
     if (hasNonAnimatedValues) {
-      updateProps(viewDescriptors, nonAnimatedNewValues);
+      updateProps(viewDescriptors, nonAnimatedNewValues, isAnimatedProps);
     }
   } else {
     state.isAnimationCancelled = true;
     state.animations = [];
 
-    if (!shallowEqual(oldValues, newValues)) {
+    if (!shallowEqual(oldValues, newValues) || forceUpdate) {
       updateProps(viewDescriptors, newValues, isAnimatedProps);
     }
   }
@@ -312,13 +310,17 @@ function styleUpdater(
 
 function jestStyleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
   state: AnimatedState,
   animationsActive: SharedValue<boolean>,
-  animatedValues: MutableRefObject<AnimatedStyle<any>>,
-  adapters: AnimatedPropsAdapterFunction[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  animatedValues: RefObject<AnimatedStyle<any>>,
+  adapters: AnimatedPropsAdapterFunction[],
+  forceUpdate?: boolean
 ): void {
   'worklet';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const animations: AnimatedStyle<any> = state.animations ?? {};
   const newValues = updater() ?? {};
   const oldValues = state.last;
@@ -351,6 +353,7 @@ function jestStyleUpdater(
       return;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updates: AnimatedStyle<any> = {};
     let allFinished = true;
     Object.keys(animations).forEach((propName) => {
@@ -400,7 +403,7 @@ function jestStyleUpdater(
   // calculate diff
   state.last = newValues;
 
-  if (!shallowEqual(oldValues, newValues)) {
+  if (!shallowEqual(oldValues, newValues) || forceUpdate) {
     updatePropsJestWrapper(
       viewDescriptors,
       newValues,
@@ -436,10 +439,24 @@ function checkSharedValueUsage(
     prop.value !== undefined
   ) {
     // if shared value is passed instead of its value, throw an error
-    throw new ReanimatedError(
-      `Invalid value passed to \`${currentKey}\`, maybe you forgot to use \`.value\`?`
+    throw new Error(
+      `[Reanimated] Invalid value passed to \`${currentKey}\`, maybe you forgot to use \`.value\`?`
     );
   }
+}
+
+// Builds one big hash from multiple worklets' hashes.
+function buildWorkletsHash<Args extends unknown[], ReturnValue>(
+  worklets:
+    | Record<string, WorkletFunction<Args, ReturnValue>>
+    | WorkletFunction<Args, ReturnValue>[]
+) {
+  // For arrays `Object.values` returns the array itself.
+  return Object.values(worklets).reduce(
+    (acc, worklet: WorkletFunction<Args, ReturnValue>) =>
+      acc + worklet.__workletHash.toString(),
+    ''
+  );
 }
 
 /**
@@ -454,12 +471,11 @@ function checkSharedValueUsage(
  *   property of an Animated component you want to animate.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle
  */
-// You cannot pass Shared Values to `useAnimatedStyle` directly.
-// @ts-expect-error This overload is required by our API.
+// @ts-expect-error Public type definition which strips internals.
 export function useAnimatedStyle<Style extends DefaultStyle>(
   updater: () => Style,
   dependencies?: DependencyList | null
-): Style;
+): AnimatedStyleHandle<Style>;
 
 export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
   updater:
@@ -484,8 +500,8 @@ export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
       !dependencies &&
       !isWorkletFunction(updater)
     ) {
-      throw new ReanimatedError(
-        `\`useAnimatedStyle\` was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel plugin.
+      throw new Error(
+        `[Reanimated] \`useAnimatedStyle\` was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel plugin.
 For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin\`.`
       );
     }
@@ -507,7 +523,9 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   } else {
     dependencies.push(updater.__workletHash);
   }
-  adaptersHash && dependencies.push(adaptersHash);
+  if (adaptersHash) {
+    dependencies.push(adaptersHash);
+  }
 
   if (!animatedUpdaterData.current) {
     const initialStyle = initialUpdaterRun(updater);
@@ -526,6 +544,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
         isAnimationRunning: false,
       }),
       viewDescriptors: makeViewDescriptorsSet(),
+      styleUpdaterContainer: { current: undefined },
     };
   }
 
@@ -548,8 +567,8 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
       }) as WorkletFunction<[], Style>;
     }
 
-    if (isJest()) {
-      fun = () => {
+    if (IS_JEST) {
+      fun = (forceUpdate?: boolean) => {
         'worklet';
         jestStyleUpdater(
           shareableViewDescriptors,
@@ -557,20 +576,25 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
           remoteState,
           areAnimationsActive,
           jestAnimatedValues,
-          adaptersArray
+          adaptersArray,
+          forceUpdate
         );
       };
     } else {
-      fun = () => {
+      fun = (forceUpdate?: boolean) => {
         'worklet';
         styleUpdater(
           shareableViewDescriptors,
           updaterFn,
           remoteState,
           areAnimationsActive,
-          isAnimatedProps
+          isAnimatedProps,
+          forceUpdate
         );
       };
+    }
+    if (animatedUpdaterData.current) {
+      animatedUpdaterData.current.styleUpdaterContainer.current = fun;
     }
     const mapperId = startMapper(fun, inputs);
     return () => {
@@ -586,7 +610,9 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
     };
   }, [areAnimationsActive]);
 
-  checkSharedValueUsage(initial.value);
+  if (__DEV__) {
+    checkSharedValueUsage(initial.value);
+  }
 
   const animatedStyleHandle = useRef<
     | AnimatedStyleHandle<Style | AnimatedProps>
@@ -595,14 +621,21 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   >(null);
 
   if (!animatedStyleHandle.current) {
-    animatedStyleHandle.current = isJest()
+    const styleUpdaterContainer =
+      animatedUpdaterData.current.styleUpdaterContainer;
+    animatedStyleHandle.current = IS_JEST
       ? {
           viewDescriptors,
           initial,
           jestAnimatedValues,
           toJSON: animatedStyleHandleToJSON,
+          styleUpdaterContainer,
         }
-      : { viewDescriptors, initial };
+      : {
+          viewDescriptors,
+          initial,
+          styleUpdaterContainer,
+        };
   }
 
   return animatedStyleHandle.current;

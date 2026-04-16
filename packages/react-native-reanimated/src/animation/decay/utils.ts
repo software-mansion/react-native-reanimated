@@ -1,4 +1,5 @@
 'use strict';
+import { IS_WEB } from '../../common';
 import type {
   AnimatableValue,
   Animation,
@@ -7,9 +8,7 @@ import type {
   RequiredKeys,
   Timestamp,
 } from '../../commonTypes';
-import { isWeb } from '../../PlatformChecker';
 
-const IS_WEB = isWeb();
 export const VELOCITY_EPS = IS_WEB ? 1 / 20 : 1;
 export const SLOPE_FACTOR = 0.1;
 

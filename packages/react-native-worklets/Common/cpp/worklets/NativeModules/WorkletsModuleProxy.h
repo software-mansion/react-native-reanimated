@@ -1,67 +1,40 @@
 #pragma once
 
 #include <cxxreact/MessageQueueThread.h>
+#include <jsi/jsi.h>
+#include <jsireact/JSIExecutor.h>
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
-#include <worklets/NativeModules/WorkletsModuleProxySpec.h>
+#include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
+#include <worklets/SharedItems/MemoryManager.h>
+#include <worklets/SharedItems/UnpackerLoader.h>
+#include <worklets/Tools/Defs.h>
+#include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/JSScheduler.h>
+#include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
+#include <worklets/WorkletRuntime/BundleModeConfig.h>
+#include <worklets/WorkletRuntime/RuntimeManager.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
-#include <string>
 
 namespace worklets {
 
-class WorkletsModuleProxy
-    : public WorkletsModuleProxySpec,
-      public std::enable_shared_from_this<WorkletsModuleProxy> {
+class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModuleProxy> {
  public:
+  void start();
+
   explicit WorkletsModuleProxy(
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
-      const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      std::function<void(std::function<void(const double)>)>
-          &&forwardedRequestAnimationFrame);
+      std::function<bool()> &&isJavaScriptQueue,
+      const std::shared_ptr<RuntimeBindings> &runtimeBindings,
+      const BundleModeConfig &bundleModeConfig);
 
-  ~WorkletsModuleProxy() override;
-
-  jsi::Value makeShareableClone(
-      jsi::Runtime &rt,
-      const jsi::Value &value,
-      const jsi::Value &shouldRetainRemote,
-      const jsi::Value &nativeStateSource) override;
-
-  jsi::Value makeShareableString(jsi::Runtime &rt, const jsi::String &string)
-      override;
-
-  jsi::Value makeShareableNumber(jsi::Runtime &rt, double number) override;
-
-  jsi::Value makeShareableBoolean(jsi::Runtime &rt, bool boolean) override;
-
-  jsi::Value makeShareableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint)
-      override;
-
-  jsi::Value makeShareableUndefined(jsi::Runtime &rt) override;
-
-  jsi::Value makeShareableNull(jsi::Runtime &rt) override;
-
-  void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
-
-  jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)
-      override;
-
-  jsi::Value createWorkletRuntime(
-      jsi::Runtime &rt,
-      const jsi::Value &name,
-      const jsi::Value &initializer) override;
-
-  jsi::Value scheduleOnRuntime(
-      jsi::Runtime &rt,
-      const jsi::Value &workletRuntimeValue,
-      const jsi::Value &shareableWorkletValue) override;
+  ~WorkletsModuleProxy();
 
   [[nodiscard]] inline std::shared_ptr<MessageQueueThread> getJSQueue() const {
     return jsQueue_;
@@ -75,10 +48,15 @@ class WorkletsModuleProxy
     return uiScheduler_;
   }
 
-  [[nodiscard]] inline std::shared_ptr<WorkletRuntime> getUIWorkletRuntime()
-      const {
+  [[nodiscard]] inline std::shared_ptr<JSLogger> getJSLogger() const {
+    return jsLogger_;
+  }
+
+  [[nodiscard]] inline std::shared_ptr<WorkletRuntime> getUIWorkletRuntime() const {
     return uiWorkletRuntime_;
   }
+
+  [[nodiscard]] std::shared_ptr<JSIWorkletsModuleProxy> createJSIWorkletsModuleProxy() const;
 
   [[nodiscard]] inline bool isDevBundle() const {
     return isDevBundle_;
@@ -89,7 +67,14 @@ class WorkletsModuleProxy
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
+  const std::shared_ptr<JSLogger> jsLogger_;
+  const std::shared_ptr<RuntimeBindings> runtimeBindings_;
+  const BundleModeConfig bundleModeConfig_;
+  const std::shared_ptr<MemoryManager> memoryManager_;
+  const std::shared_ptr<RuntimeManager> runtimeManager_;
+  const std::shared_ptr<UnpackerLoader> unpackerLoader_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
+  const std::shared_ptr<JSIWorkletsModuleProxy> rnRuntimeProxy_;
   std::shared_ptr<AnimationFrameBatchinator> animationFrameBatchinator_;
 #ifndef NDEBUG
   SingleInstanceChecker<WorkletsModuleProxy> singleInstanceChecker_;

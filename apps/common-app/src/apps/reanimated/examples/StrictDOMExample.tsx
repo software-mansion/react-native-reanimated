@@ -36,8 +36,9 @@ export default function StrictDOMExample() {
   const x = useSharedValue(0);
   const y = useSharedValue(0);
 
-  // @ts-expect-error There's a TypeScript bug in `react-native-dom` that
-  // doesn't allow React-Native-like `transform`, but it works in runtime.
+  // @ts-ignore
+  // There's a TypeScript bug in `react-native-dom` that doesn't allow
+  // React-Native-like `transform`, but it works in runtime.
   // https://github.com/facebook/react-strict-dom/issues/204
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -68,8 +69,7 @@ export default function StrictDOMExample() {
       <GestureDetector gesture={panGesture}>
         {/* Our property types conversion for Animated Components is conflicting
         with Strict DOM's property type conversions in such a way they generate an endless loop. 
-        Let's circle back on it in a few years.
-        @ts-ignore TODO: */}
+        Let's circle back on it in a few years. */}
         <animated.html.div style={[styles.box, animatedStyle]} />
       </GestureDetector>
     </html.div>

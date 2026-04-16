@@ -1,90 +1,72 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
-import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Extrapolation,
   interpolate,
-  useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 
 export default function ExtrapolationExample() {
-  const translation = {
-    x: useSharedValue(50),
-    y: useSharedValue(0),
-  };
-  type AnimatedGHContext = {
-    startX: number;
-    startY: number;
-  };
-  const gestureHandler = useAnimatedGestureHandler<
-    PanGestureHandlerGestureEvent,
-    AnimatedGHContext
-  >({
-    onStart: (_, ctx) => {
-      ctx.startX = translation.x.value;
-      ctx.startY = translation.y.value;
-    },
-    onActive: (event, ctx) => {
-      translation.x.value = ctx.startX + event.translationX;
-      translation.y.value = ctx.startY + event.translationY;
-    },
-    onEnd: (_) => {
-      translation.x.value = withTiming(50);
-      translation.y.value = withTiming(0);
-    },
-  });
+  const translateY = useSharedValue(0);
+
+  const gesture = Gesture.Pan()
+    .onChange((event) => {
+      translateY.value += event.changeY;
+    })
+    .onEnd(() => {
+      translateY.value = withTiming(0);
+    });
 
   const button1Style = useAnimatedStyle(() => {
     const translateX = Math.round(
-      interpolate(translation.y.value, [0, -75], [0, -75], {
+      interpolate(translateY.value, [0, -75], [0, -75], {
         extrapolateLeft: Extrapolation.CLAMP,
         extrapolateRight: Extrapolation.EXTEND,
       })
     );
 
     return {
-      transform: [{ translateX }, { translateY: translation.y.value }],
+      transform: [{ translateX }, { translateY: translateY.value }],
     };
   });
   const button2Style = useAnimatedStyle(() => {
-    const translateY = Math.round(
-      interpolate(translation.y.value, [0, -75], [0, -150], {
+    const transY = Math.round(
+      interpolate(translateY.value, [0, -75], [0, -150], {
         extrapolateLeft: Extrapolation.CLAMP,
         extrapolateRight: Extrapolation.EXTEND,
       })
     );
 
     return {
-      transform: [{ translateY }],
+      transform: [{ translateY: transY }],
     };
   });
 
   const button3Style = useAnimatedStyle(() => {
     const translateX = Math.round(
-      interpolate(translation.y.value, [0, -75], [0, 75], {
+      interpolate(translateY.value, [0, -75], [0, 75], {
         extrapolateLeft: Extrapolation.CLAMP,
         extrapolateRight: Extrapolation.EXTEND,
       })
     );
 
     return {
-      transform: [{ translateX }, { translateY: translation.y.value }],
+      transform: [{ translateX }, { translateY: translateY.value }],
     };
   });
 
   const stylez = useAnimatedStyle(() => ({
-    transform: [{ translateY: translation.y.value }],
+    transform: [{ translateY: translateY.value }],
   }));
 
   return (
     <>
-      <PanGestureHandler onGestureEvent={gestureHandler}>
+      <GestureDetector gesture={gesture}>
         <Animated.View style={[styles.circle, styles.topCircle, stylez]} />
-      </PanGestureHandler>
+      </GestureDetector>
       <Animated.View style={[styles.circle, button1Style]} />
       <Animated.View style={[styles.circle, button2Style]} />
       <Animated.View style={[styles.circle, button3Style]} />

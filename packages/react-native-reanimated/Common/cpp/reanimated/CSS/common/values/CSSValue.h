@@ -5,18 +5,25 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <typeinfo>
 
 namespace reanimated::css {
 
 using namespace facebook;
 
-enum class RelativeTo {
+enum class RelativeTo : std::uint8_t {
   Parent,
   Self,
 };
 
-struct CSSResolvableValueInterpolationContext {
-  const ShadowNode::Shared &node;
+struct ValueInterpolationContext {
+  const std::shared_ptr<const ShadowNode> &node;
+  const double fallbackInterpolateThreshold;
+};
+
+struct ResolvableValueInterpolationContext {
+  const std::shared_ptr<const ShadowNode> &node;
+  const double fallbackInterpolateThreshold;
   const std::shared_ptr<ViewStylesRepository> &viewStylesRepository;
   const std::string &relativeProperty;
   const RelativeTo relativeTo;
@@ -28,6 +35,8 @@ struct CSSValue {
 
   virtual ~CSSValue() = default;
 
+  virtual bool operator==(const CSSValue &other) const = 0;
+
   virtual folly::dynamic toDynamic() const = 0;
   virtual std::string toString() const = 0;
 };
@@ -37,7 +46,15 @@ template <typename TDerived>
 struct CSSSimpleValue : public CSSValue {
   static constexpr bool is_resolvable_value = false;
 
+  bool operator==(const CSSValue &other) const override {
+    return typeid(*this) == typeid(other) &&
+        *static_cast<const TDerived *>(this) == static_cast<const TDerived &>(other);
+  }
+
   virtual TDerived interpolate(double progress, const TDerived &to) const = 0;
+  virtual bool canInterpolateTo(const TDerived &to) const {
+    return true;
+  }
 };
 
 // Base for leaf values that need resolution before interpolation
@@ -45,12 +62,19 @@ template <typename TDerived, typename TResolved = TDerived>
 struct CSSResolvableValue : public CSSValue {
   static constexpr bool is_resolvable_value = true;
 
-  virtual TDerived interpolate(
-      double progress,
-      const TDerived &to,
-      const CSSResolvableValueInterpolationContext &context) const = 0;
-  virtual std::optional<TResolved> resolve(
-      const CSSResolvableValueInterpolationContext &context) const = 0;
+  bool operator==(const CSSValue &other) const override {
+    return typeid(*this) == typeid(other) &&
+        *static_cast<const TDerived *>(this) == static_cast<const TDerived &>(other);
+  }
+
+  virtual TDerived interpolate(double progress, const TDerived &to, const ResolvableValueInterpolationContext &context)
+      const = 0;
+  virtual std::optional<TResolved> resolve(const ResolvableValueInterpolationContext &context) const {
+    return std::nullopt;
+  }
+  virtual bool canInterpolateTo(const TDerived &to) const {
+    return true;
+  }
 };
 
 // Checks if a type is a resolvable value that needs resolution before

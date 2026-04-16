@@ -15,23 +15,29 @@ import {
   describe,
   expect,
   getRegisteredValue,
+  notify,
   registerValue,
   render,
   test,
-  wait,
+  waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 import { ProgressBar } from './components';
 
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
+const NOTIFICATION_NAME = 'UPDATE_SHARED_VALUE';
 
 describe(`Test animation assignments on Shared Value using compiler API`, () => {
+  const notifyCallback = () => {
+    notify(NOTIFICATION_NAME);
+  };
+
   const WithTiming = ({ progress }: { progress: number }) => {
     const sharedValue = useSharedValue(0);
     registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
 
     useEffect(() => {
-      sharedValue.set(withTiming(100));
+      sharedValue.set(withTiming(100, {}, notifyCallback));
     });
     return <ProgressBar progress={progress} />;
   };
@@ -41,7 +47,7 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
     registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
 
     useEffect(() => {
-      sharedValue.set(withClamp({ min: 0, max: 100 }, withTiming(200)));
+      sharedValue.set(withClamp({ min: 0, max: 100 }, withTiming(200, {}, notifyCallback)));
     });
     return <ProgressBar progress={progress} />;
   };
@@ -51,7 +57,7 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
     registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
 
     useEffect(() => {
-      sharedValue.set(withDecay({}));
+      sharedValue.set(withDecay({}, notifyCallback));
     });
     return <ProgressBar progress={progress} />;
   };
@@ -61,7 +67,7 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
     registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
 
     useEffect(() => {
-      sharedValue.set(withDelay(100, withTiming(100)));
+      sharedValue.set(withDelay(100, withTiming(100, {}, notifyCallback)));
     });
     return <ProgressBar progress={progress} />;
   };
@@ -71,7 +77,7 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
     registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
 
     useEffect(() => {
-      sharedValue.set(withSpring(100, { duration: 250 }));
+      sharedValue.set(withSpring(100, { duration: 250 }, notifyCallback));
     });
     return <ProgressBar progress={progress} />;
   };
@@ -81,7 +87,7 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
     registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
 
     useEffect(() => {
-      sharedValue.set(withRepeat(withTiming(100), 2, true));
+      sharedValue.set(withRepeat(withTiming(100), 2, true, notifyCallback));
     });
     return <ProgressBar progress={progress} />;
   };
@@ -91,14 +97,14 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
     registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
 
     useEffect(() => {
-      sharedValue.set(withSequence(withTiming(100), withTiming(200)));
+      sharedValue.set(withSequence(withTiming(100), withTiming(200, {}, notifyCallback)));
     });
     return <ProgressBar progress={progress} />;
   };
 
   test('WithTiming', async () => {
     await render(<WithTiming progress={0} />);
-    await wait(300);
+    await waitForNotification(NOTIFICATION_NAME);
     const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
     expect(sharedValue.onJS).toBe(100, ComparisonMode.NUMBER);
     expect(sharedValue.onUI).toBe(100, ComparisonMode.NUMBER);
@@ -106,7 +112,7 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
 
   test('WithClamp', async () => {
     await render(<WithClamp progress={0.16} />);
-    await wait(300);
+    await waitForNotification(NOTIFICATION_NAME);
     const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
     expect(sharedValue.onJS).toBe(100, ComparisonMode.NUMBER);
     expect(sharedValue.onUI).toBe(100, ComparisonMode.NUMBER);
@@ -114,7 +120,7 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
 
   test('WithDecay', async () => {
     await render(<WithDecay progress={0.32} />);
-    await wait(300);
+    await waitForNotification(NOTIFICATION_NAME);
     const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
     expect(sharedValue.onJS).toBe(0, ComparisonMode.NUMBER);
     expect(sharedValue.onUI).toBe(0, ComparisonMode.NUMBER);
@@ -122,7 +128,7 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
 
   test('WithDelay', async () => {
     await render(<WithDelay progress={0.48} />);
-    await wait(400);
+    await waitForNotification(NOTIFICATION_NAME);
     const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
     expect(sharedValue.onJS).toBe(100, ComparisonMode.NUMBER);
     expect(sharedValue.onUI).toBe(100, ComparisonMode.NUMBER);
@@ -130,7 +136,7 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
 
   test('WithSpring', async () => {
     await render(<WithSpring progress={0.64} />);
-    await wait(300);
+    await waitForNotification(NOTIFICATION_NAME);
     const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
     expect(sharedValue.onJS).toBe(100, ComparisonMode.NUMBER);
     expect(sharedValue.onUI).toBe(100, ComparisonMode.NUMBER);
@@ -138,7 +144,7 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
 
   test('WithRepeat', async () => {
     await render(<WithRepeat progress={0.8} />);
-    await wait(600);
+    await waitForNotification(NOTIFICATION_NAME);
     const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
     expect(sharedValue.onJS).toBe(0, ComparisonMode.NUMBER);
     expect(sharedValue.onUI).toBe(0, ComparisonMode.NUMBER);
@@ -146,7 +152,7 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
 
   test('WithSequence', async () => {
     await render(<WithSequence progress={0.96} />);
-    await wait(600);
+    await waitForNotification(NOTIFICATION_NAME);
     const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
     expect(sharedValue.onJS).toBe(200, ComparisonMode.NUMBER);
     expect(sharedValue.onUI).toBe(200, ComparisonMode.NUMBER);

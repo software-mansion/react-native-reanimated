@@ -124,6 +124,7 @@ const ComplexAnimationsChainableMethods = new Set([
   'mass',
   'stiffness',
   'overshootClamping',
+  'energyThreshold',
   'restDisplacementThreshold',
   'restSpeedThreshold',
   'withInitialValues',

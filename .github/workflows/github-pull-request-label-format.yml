@@ -1,0 +1,22 @@
+name: GitHub Pull Request label format
+on:
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  github-pull-request-label-format:
+    permissions:
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+      - name: Label PR
+        uses: actions/labeler@v5
+        with:
+          configuration-path: '.github/labeler.yml'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          sync-labels: true

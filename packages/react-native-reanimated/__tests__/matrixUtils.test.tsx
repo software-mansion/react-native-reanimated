@@ -33,12 +33,12 @@ const consecutiveNumMatrix: AffineMatrix = [
 
 describe('Matrix util functions', () => {
   describe('Matrix multiplication', () => {
-    it('Multiply two identity matrices', () => {
+    test('Multiply two identity matrices', () => {
       expect(multiplyMatrices(identityMatrix, identityMatrix)).toEqual(
         identityMatrix
       );
     });
-    it('Multiply arbitrary matrix by identity matrix', () => {
+    test('Multiply arbitrary matrix by identity matrix', () => {
       expect(multiplyMatrices(identityMatrix, consecutiveNumMatrix)).toEqual(
         consecutiveNumMatrix
       );
@@ -48,7 +48,7 @@ describe('Matrix util functions', () => {
       );
     });
 
-    it('Multiply two arbitrary matrices', () => {
+    test('Multiply two arbitrary matrices', () => {
       expect(
         multiplyMatrices(consecutiveNumMatrix, consecutiveNumMatrix)
       ).toEqual([
@@ -60,7 +60,7 @@ describe('Matrix util functions', () => {
     });
   });
 
-  it('Test flatten & unflatten functions', () => {
+  test('Test flatten & unflatten functions', () => {
     expect(flatten(identityMatrix)).toEqual(flatIdentityMatrix);
     // @ts-expect-error I know this is not the correct way to call this function, but I'm testing that it still works
     expect(flatten(flatten(identityMatrix))).toEqual(flatIdentityMatrix);
@@ -71,11 +71,11 @@ describe('Matrix util functions', () => {
 
   describe('Type assertions:', () => {
     describe('Test isAffineMatrix function', () => {
-      it('Return true if given argument is a valid affine matrix', () => {
+      test('Return true if given argument is a valid affine matrix', () => {
         expect(isAffineMatrix(identityMatrix)).toEqual(true);
       });
 
-      it('Return false if given matrix has incorrect shape', () => {
+      test('Return false if given matrix has incorrect shape', () => {
         expect(
           isAffineMatrix([
             [1, 2, 3],
@@ -85,7 +85,7 @@ describe('Matrix util functions', () => {
         ).toEqual(false);
       });
 
-      it('Return false if given matrix contains null or NaN', () => {
+      test('Return false if given matrix contains null or NaN', () => {
         expect(
           isAffineMatrix([
             [1, 0, 0, 0],
@@ -107,15 +107,15 @@ describe('Matrix util functions', () => {
     });
 
     describe('Test isAffineMatrixFlat function ', () => {
-      it('Return true if given argument is has valid type', () => {
+      test('Return true if given argument is has valid type', () => {
         expect(isAffineMatrixFlat(flatIdentityMatrix)).toEqual(true);
       });
 
-      it('Return false if given matrix has incorrect number of elements', () => {
+      test('Return false if given matrix has incorrect number of elements', () => {
         expect(isAffineMatrixFlat([1, 0, 0, 0, 0, 1])).toEqual(false);
       });
 
-      it('Return false if given matrix contains null or NaN', () => {
+      test('Return false if given matrix contains null or NaN', () => {
         expect(
           isAffineMatrixFlat([
             1,
@@ -161,31 +161,31 @@ describe('Matrix util functions', () => {
       [14, 15, 16, 17],
     ];
 
-    it('subtract matrices', () => {
+    test('subtract matrices', () => {
       expect(subtractMatrices(a, b)).toEqual(aMinusB);
       expect(subtractMatrices(flatten(a), flatten(b))).toEqual(
         flatten(aMinusB)
       );
     });
 
-    it('add matrices', () => {
+    test('add matrices', () => {
       expect(addMatrices(a, b)).toEqual(aPlusB);
       expect(addMatrices(flatten(a), flatten(b))).toEqual(flatten(aPlusB));
     });
   });
 
   describe('Matrix decomposition', () => {
-    it('Throw an error if matrix is incorrect (has zero as its last element)', () => {
+    test('Throw an error if matrix is incorrect (has zero as its last element)', () => {
       const incorrectMatrix: AffineMatrix = [
         [1, 1, 1, 1],
         [1, 1, 1, 1],
         [1, 1, 1, 1],
         [1, 1, 1, 0],
       ];
-      expect(() => decomposeMatrix(incorrectMatrix)).toThrowError();
+      expect(() => decomposeMatrix(incorrectMatrix)).toThrow();
     });
 
-    it('Decompose identity into identities', () => {
+    test('Decompose identity into identities', () => {
       const { translationMatrix, scaleMatrix, rotationMatrix, skewMatrix } =
         decomposeMatrix(flatten(identityMatrix));
 
@@ -195,7 +195,7 @@ describe('Matrix util functions', () => {
       expect(skewMatrix).toEqual(identityMatrix);
     });
 
-    it('Decompose arbitrary matrix ', () => {
+    test('Decompose arbitrary matrix ', () => {
       const m2: AffineMatrixFlat = [
         1, 2, 3, 0, 1, 1, 1, 0, 1, 2, 0, 0, 4, 5, 6, 1,
       ];

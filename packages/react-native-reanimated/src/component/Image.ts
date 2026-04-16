@@ -5,9 +5,9 @@ import { createAnimatedComponent } from '../createAnimatedComponent';
 
 // Since createAnimatedComponent return type is ComponentClass that has the props of the argument,
 // but not things like NativeMethods, etc. we need to add them manually by extending the type.
-interface AnimatedImageComplement extends Image {
+type AnimatedImageComplement = Image & {
   getNode(): Image;
-}
+};
 
 export const AnimatedImage = createAnimatedComponent(Image);
 

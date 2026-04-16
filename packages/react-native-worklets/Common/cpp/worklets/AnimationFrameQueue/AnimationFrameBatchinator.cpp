@@ -1,6 +1,7 @@
 #include <jsi/jsi.h>
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
-#include <worklets/SharedItems/Shareables.h>
+#include <worklets/SharedItems/Serializable.h>
+#include <worklets/WorkletRuntime/RuntimeBindings.h>
 
 #include <atomic>
 #include <functional>
@@ -11,26 +12,22 @@
 
 namespace worklets {
 
-void AnimationFrameBatchinator::addToBatch(
-    const facebook::jsi::Value &callback) {
+void AnimationFrameBatchinator::addToBatch(jsi::Function &&callback) {
   {
     std::lock_guard<std::mutex> lock(callbacksMutex_);
-    callbacks_.push_back(
-        std::make_shared<const facebook::jsi::Value>(*uiRuntime_, callback));
+    callbacks_.push_back(std::make_shared<const jsi::Function>(std::move(callback)));
   }
   flush();
 }
 
-AnimationFrameBatchinator::JsiRequestAnimationFrame
-AnimationFrameBatchinator::getJsiRequestAnimationFrame() {
-  return [weakThis = weak_from_this()](
-             facebook::jsi::Runtime &rt, const facebook::jsi::Value &callback) {
+AnimationFrameBatchinator::JsiRequestAnimationFrame AnimationFrameBatchinator::getJsiRequestAnimationFrame() {
+  return [weakThis = weak_from_this()](facebook::jsi::Runtime &rt, const facebook::jsi::Value &callback) {
     const auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
     }
 
-    strongThis->addToBatch(callback);
+    strongThis->addToBatch(callback.asObject(rt).asFunction(rt));
   };
 }
 
@@ -48,24 +45,21 @@ void AnimationFrameBatchinator::flush() {
     auto callbacks = strongThis->pullCallbacks();
     strongThis->flushRequested_ = false;
 
-    auto &uiRuntime = *(strongThis->uiRuntime_);
+    auto &uiWorkletRuntime = strongThis->uiWorkletRuntime_;
     for (const auto &callback : callbacks) {
-      runOnRuntimeGuarded(uiRuntime, *callback, timestampMs);
+      uiWorkletRuntime->runSync(*callback, timestampMs);
     }
   });
 }
 
-std::vector<std::shared_ptr<const facebook::jsi::Value>>
-AnimationFrameBatchinator::pullCallbacks() {
+std::vector<std::shared_ptr<const jsi::Function>> AnimationFrameBatchinator::pullCallbacks() {
   std::lock_guard<std::mutex> lock(callbacksMutex_);
   return std::move(callbacks_);
 }
 
 AnimationFrameBatchinator::AnimationFrameBatchinator(
-    facebook::jsi::Runtime &uiRuntime,
-    std::function<void(std::function<void(const double)>)>
-        &&forwardedRequestAnimationFrame)
-    : uiRuntime_(&uiRuntime),
-      requestAnimationFrame_(std::move(forwardedRequestAnimationFrame)) {}
+    const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime,
+    RuntimeBindings::RequestAnimationFrame requestAnimationFrame)
+    : uiWorkletRuntime_(uiWorkletRuntime), requestAnimationFrame_(std::move(requestAnimationFrame)) {}
 
 } // namespace worklets

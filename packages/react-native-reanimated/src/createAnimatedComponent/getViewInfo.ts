@@ -1,42 +1,28 @@
 'use strict';
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
-// TODO: Clean this up since 0.74 is the minimum supported version now.
-// This is a makeshift solution to handle both 0.73 and 0.74 versions of React Native.
+import type { HostInstance } from '../platform-specific/types';
 
-export let getViewInfo = (element: any) => {
-  if (element._nativeTag !== undefined && element.__nativeTag !== null) {
-    getViewInfo = getViewInfo73;
-    return getViewInfo73(element);
-  } else if (
-    element.__nativeTag !== undefined &&
-    element.__nativeTag !== null
-  ) {
-    getViewInfo = getViewInfoLatest;
-    return getViewInfoLatest(element);
-  }
-  return getViewInfo73(element);
-};
-
-function getViewInfo73(element: any) {
+// Component naming convention:
+//
+//  componentDisplayName - The React/JS-facing name (e.g. "Text").
+//                         Accessed via Component.componentName in JS.
+//  reactViewName        - The name React Native uses to identify the component
+//                         (e.g. "RCTText"). This is what we use to identify
+//                         the underlying React Native component name (it is the
+//                         same as the native component name for most of third-party
+//                         components (e.g. SVG) but is often different for built-in
+//                         RN components (e.g. "RCTView").
+//  nativeComponentName  - The Fabric/C++ component name (e.g. "Paragraph").
+//                         Can be obtained on the C++ side by converting
+//                         reactViewName via componentNameByReactViewName().
+export function getViewInfo(element: HostInstance): {
+  reactViewName?: string;
+  viewTag?: number;
+} {
   return {
-    // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
-    viewName: element?.viewConfig?.uiViewClassName,
-    /**
-     * RN uses viewConfig for components for storing different properties of the
-     * component(example:
-     * https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/Components/ScrollView/ScrollViewNativeComponent.js#L24).
-     * The name we're looking for is in the field named uiViewClassName.
-     */
-    viewTag: element?._nativeTag,
-    viewConfig: element?.viewConfig,
-  };
-}
-
-function getViewInfoLatest(element: any) {
-  return {
-    viewName: element?._viewConfig?.uiViewClassName,
+    reactViewName: (element?._viewConfig?.uiViewClassName ??
+      element?.__internalInstanceHandle?.type ??
+      element?.__internalInstanceHandle?.elementType) as string,
     viewTag: element?.__nativeTag,
-    viewConfig: element?._viewConfig,
   };
 }

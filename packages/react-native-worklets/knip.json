@@ -1,0 +1,8 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": ["src/index.ts"],
+  "project": ["src/**"],
+  "include": ["files", "exports", "types"],
+  "tags": ["-knipIgnore"],
+  "ignore": ["src/valueUnpacker.ts"]
+}

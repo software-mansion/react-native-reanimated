@@ -1,8 +1,5 @@
 'use strict';
-
-import { logger } from 'react-native-worklets';
-
-import { ReanimatedError } from '../errors';
+import { logger } from '../common';
 import { jsVersion } from './jsVersion';
 
 export function checkCppVersion() {
@@ -16,15 +13,13 @@ export function checkCppVersion() {
   }
   const ok = matchVersion(jsVersion, cppVersion);
   if (!ok) {
-    throw new ReanimatedError(
-      `Mismatch between JavaScript part and native part of Reanimated (${jsVersion} vs ${cppVersion}).
+    throw new Error(
+      `[Reanimated] Mismatch between JavaScript part and native part of Reanimated (${jsVersion} vs ${cppVersion}).
     See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-javascript-part-and-native-part-of-reanimated\` for more details.`
     );
   }
 }
 
-// This is used only in test files, therefore it is reported by ts-prune (which is desired)
-// ts-prune-ignore-next
 export function matchVersion(version1: string, version2: string) {
   if (version1.match(/^\d+\.\d+\.\d+$/) && version2.match(/^\d+\.\d+\.\d+$/)) {
     // x.y.z, compare only major and minor, skip patch

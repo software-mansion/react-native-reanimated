@@ -4,7 +4,6 @@ import type {
   AnimationCallback,
   Timestamp,
 } from '../../commonTypes';
-import { ReanimatedError } from '../../errors';
 import { defineAnimation, getReduceMotionForAnimation } from '../util';
 import { rigidDecay } from './rigidDecay';
 import { rubberBandDecay } from './rubberBandDecay';
@@ -28,26 +27,26 @@ function validateConfig(config: DefaultDecayConfig): void {
   'worklet';
   if (config.clamp) {
     if (!Array.isArray(config.clamp)) {
-      throw new ReanimatedError(
-        `\`config.clamp\` must be an array but is ${typeof config.clamp}.`
+      throw new Error(
+        `[Reanimated] \`config.clamp\` must be an array but is ${typeof config.clamp}.`
       );
     }
     if (config.clamp.length !== 2) {
-      throw new ReanimatedError(
-        `\`clamp array\` must contain 2 items but is given ${
+      throw new Error(
+        `[Reanimated] \`clamp array\` must contain 2 items but is given ${
           config.clamp.length as number
         }.`
       );
     }
   }
   if (config.velocityFactor <= 0) {
-    throw new ReanimatedError(
-      `\`config.velocityFactor\` must be greater then 0 but is ${config.velocityFactor}.`
+    throw new Error(
+      `[Reanimated] \`config.velocityFactor\` must be greater than 0 but is ${config.velocityFactor}.`
     );
   }
   if (config.rubberBandEffect && !config.clamp) {
-    throw new ReanimatedError(
-      'You need to set `clamp` property when using `rubberBandEffect`.'
+    throw new Error(
+      '[Reanimated] You need to set `clamp` property when using `rubberBandEffect`.'
     );
   }
 }
@@ -56,6 +55,7 @@ function validateConfig(config: DefaultDecayConfig): void {
  * Lets you create animations that mimic objects in motion with friction.
  *
  * @param config - The decay animation configuration - {@link DecayConfig}.
+ *   Defaults to {@link DecayConfig} default values.
  * @param callback - A function called upon animation completion -
  *   {@link AnimationCallback}.
  * @returns An [animation
@@ -80,6 +80,7 @@ export const withDecay = function (
     if (userConfig) {
       Object.keys(userConfig).forEach(
         (key) =>
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ((config as any)[key] = userConfig[key as keyof typeof userConfig])
       );
     }

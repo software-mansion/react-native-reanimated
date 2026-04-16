@@ -1,9 +1,6 @@
 #pragma once
 
-#include <chrono>
 #include <optional>
-#include <utility>
-
 namespace reanimated::css {
 
 class RawProgressProvider {
@@ -22,7 +19,6 @@ class RawProgressProvider {
   double creationTimestamp_;
 
   std::optional<double> rawProgress_;
-  std::optional<double> previousRawProgress_;
 
   /**
    * Calculates the progress of the animation at the given timestamp without

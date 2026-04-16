@@ -1,5 +1,7 @@
-#include <folly/json.h>
 #include <reanimated/CSS/common/values/CSSDiscreteArray.h>
+
+#include <string>
+#include <vector>
 
 namespace reanimated::css {
 
@@ -7,19 +9,10 @@ template <CSSValueDerived TValue>
 CSSDiscreteArray<TValue>::CSSDiscreteArray() : values() {}
 
 template <CSSValueDerived TValue>
-CSSDiscreteArray<TValue>::CSSDiscreteArray(const std::vector<TValue> &values)
-    : values(values) {}
+CSSDiscreteArray<TValue>::CSSDiscreteArray(const std::vector<TValue> &values) : values(values) {}
 
 template <CSSValueDerived TValue>
-CSSDiscreteArray<TValue>::CSSDiscreteArray(
-    jsi::Runtime &rt,
-    const jsi::Value &jsiValue) {
-  if (!canConstruct(rt, jsiValue)) {
-    throw std::invalid_argument(
-        "[Reanimated] CSSDiscreteArray: Invalid value type: " +
-        stringifyJSIValue(rt, jsiValue));
-  }
-
+CSSDiscreteArray<TValue>::CSSDiscreteArray(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   const auto &array = jsiValue.asObject(rt).asArray(rt);
   values.reserve(array.size(rt));
 
@@ -29,14 +22,7 @@ CSSDiscreteArray<TValue>::CSSDiscreteArray(
 }
 
 template <CSSValueDerived TValue>
-CSSDiscreteArray<TValue>::CSSDiscreteArray(const folly::dynamic &value) {
-  if (!canConstruct(value)) {
-    throw std::invalid_argument(
-        "[Reanimated] CSSDiscreteArray: Invalid value type: " +
-        folly::toJson(value));
-  }
-
-  const auto &array = value;
+CSSDiscreteArray<TValue>::CSSDiscreteArray(const folly::dynamic &array) {
   values.reserve(array.size());
 
   for (size_t i = 0; i < array.size(); i++) {
@@ -45,9 +31,7 @@ CSSDiscreteArray<TValue>::CSSDiscreteArray(const folly::dynamic &value) {
 }
 
 template <CSSValueDerived TValue>
-bool CSSDiscreteArray<TValue>::canConstruct(
-    jsi::Runtime &rt,
-    const jsi::Value &jsiValue) {
+bool CSSDiscreteArray<TValue>::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   // TODO - maybe add better validation
   return jsiValue.isObject() && jsiValue.asObject(rt).isArray(rt);
 }
@@ -83,15 +67,13 @@ std::string CSSDiscreteArray<TValue>::toString() const {
 }
 
 template <CSSValueDerived TValue>
-CSSDiscreteArray<TValue> CSSDiscreteArray<TValue>::interpolate(
-    double progress,
-    const CSSDiscreteArray<TValue> &other) const {
+CSSDiscreteArray<TValue> CSSDiscreteArray<TValue>::interpolate(double progress, const CSSDiscreteArray<TValue> &other)
+    const {
   return CSSDiscreteArray<TValue>(progress < 0.5 ? values : other.values);
 }
 
 template <CSSValueDerived TValue>
-bool CSSDiscreteArray<TValue>::operator==(
-    const CSSDiscreteArray<TValue> &other) const {
+bool CSSDiscreteArray<TValue>::operator==(const CSSDiscreteArray<TValue> &other) const {
   if (values.size() != other.values.size()) {
     return false;
   }
@@ -106,9 +88,7 @@ bool CSSDiscreteArray<TValue>::operator==(
 #ifndef NDEBUG
 
 template <CSSValueDerived TValue>
-std::ostream &operator<<(
-    std::ostream &os,
-    const CSSDiscreteArray<TValue> &arrayValue) {
+std::ostream &operator<<(std::ostream &os, const CSSDiscreteArray<TValue> &arrayValue) {
   os << "CSSDiscreteArray(" << arrayValue.toString() << ")";
   return os;
 }

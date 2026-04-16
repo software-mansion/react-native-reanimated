@@ -1,7 +1,11 @@
-/* eslint-disable jsdoc/require-jsdoc */
 import Head from 'next/head';
+import { useEffect } from 'react';
 
 export default function App({ Component, pageProps }) {
+  useEffect(() => {
+    window.__NEXT_HYDRATED__ = true;
+  }, []);
+
   return (
     <>
       <Head>

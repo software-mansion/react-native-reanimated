@@ -50,10 +50,10 @@ function functionsAreEqual(
 }
 
 describe('Test `Bezier` function', () => {
-  it('Should be a function', () => {
+  test('Should be a function', () => {
     expect(typeof Bezier === 'function').toBeTruthy();
   });
-  it('Should create a function', () => {
+  test('Should create a function', () => {
     expect(typeof Bezier(0, 0, 1, 1) === 'function').toBeTruthy();
     expect(typeof Bezier(0, 0, 1, 1)(0.5) === 'number').toBeTruthy();
   });
@@ -69,7 +69,6 @@ describe('Test `Bezier` function', () => {
       'Invalid arguments point1 = (%d, %d) point2 = (%d, %d), x should be in range [0,1]',
       (x1, x2, y1, y2) => {
         expect(() => {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const _func = Bezier(x1, x2, y1, y2);
         }).toThrow();
       }
@@ -85,7 +84,6 @@ describe('Test `Bezier` function', () => {
       'Valid arguments point1 = (%d, %d) point2 = (%d, %d)',
       (x1, x2, y1, y2) => {
         expect(() => {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const _func = Bezier(x1, x2, y1, y2);
         }).not.toThrow();
       }
@@ -113,11 +111,13 @@ describe('Test `Bezier` function', () => {
 
       if (!functionsAreEqual(easing, (x: number) => x)) {
         allTestPass = false;
+
         test(`Bezier(${a},${a}, ${b}, ${b}) is linear`, () => {
           expect(false).toBeTruthy();
         });
       }
     });
+
     test(`All ${MONKEY_TRIES} monkey tests pass`, () => {
       expect(allTestPass).toBeTruthy();
     });
@@ -149,12 +149,14 @@ describe('Test `Bezier` function', () => {
       const satisfiesCondition = easing(0) === 0 && easing(1) === 1;
       if (!satisfiesCondition) {
         allTestPass = false;
+
         test(`Bezier(${a},${b}, ${c}, ${d})(0) = 0 \n Bezier(${a},${b}, ${c}, ${d})(1) = 1`, () => {
           expect(easing(0)).toBe(0);
           expect(easing(1)).toBe(1);
         });
       }
     });
+
     test(`All ${MONKEY_TRIES} monkey tests pass`, () => {
       expect(allTestPass).toBeTruthy();
     });
@@ -219,11 +221,13 @@ describe('Test `Bezier` function', () => {
       const almostIdentity = (x: number) => easing1(easing2(x));
       if (!functionsAreEqual(almostIdentity, (x: number) => x, PRECISION_0)) {
         allTestPass0 = false;
+
         test(`Bezier(${a},${b}, ${c}, ${d}) is symmetric to its reflection about the axis f(x)=x`, () => {
           expect(false).toBeTruthy();
         });
       }
     });
+
     test(`All ${MONKEY_TRIES} monkey tests for random a,b,c,d in [0,1] pass, precision=${PRECISION_0}`, () => {
       expect(allTestPass0).toBeTruthy();
     });
@@ -242,15 +246,19 @@ describe('Test `Bezier` function', () => {
       const almostIdentity = (x: number) => easing1(easing2(x));
       if (!functionsAreEqual(almostIdentity, (x: number) => x, PRECISION_1)) {
         allTestPass1 = false;
+
         test(`Bezier(${a},${b}, ${c}, ${d}) is symmetric to its reflection about the axis f(x)=x`, () => {
           expect(false).toBeTruthy();
         });
       }
     });
+
     test(`All ${MONKEY_TRIES} monkey tests for random a,b,c,d in [0.05,0.95] pass, precision=${PRECISION_1}`, () => {
       expect(allTestPass1).toBeTruthy();
     });
   });
 
+  // TODO: Fix this test
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   describe('Bezier(a,b,(1-a),(1-b)) should have point symmetry at point (0.5, 0.5)', () => {});
 });

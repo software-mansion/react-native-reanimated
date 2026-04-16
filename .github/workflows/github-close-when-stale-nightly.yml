@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  main:
+  github-close-when-stale-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     steps:

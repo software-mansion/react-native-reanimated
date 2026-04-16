@@ -7,28 +7,27 @@ import { strict as assert } from 'assert';
 import { html } from 'code-tag';
 
 import { version as packageVersion } from '../package.json';
+import type { PluginOptions } from '../plugin';
 import plugin from '../plugin';
-import type { ReanimatedPluginOptions } from '../plugin/src/types';
 
 const MOCK_LOCATION = '/dev/null';
 
 function runPlugin(
   input: string,
   transformOpts: TransformOptions = {},
-  pluginOpts: ReanimatedPluginOptions = {},
+  pluginOpts: PluginOptions = {},
   filename: string = MOCK_LOCATION
 ) {
-  const transformed = transformSync(input.replace(/<\/?script[^>]*>/g, ''), {
-    // Our babel presets require us to specify a filename here
-    // but it is never used so we put in '/dev/null'
-    // as a safe fallback.
+  const strippedInput = input.replace(/<\/?script[^>]*>/g, '');
+  const config = {
     filename,
     compact: false,
-    plugins: [[plugin, pluginOpts]],
     babelrc: false,
-    configFile: './plugin/plugin-unit-test.babel.config.js',
+    configFile: false,
     ...transformOpts,
-  });
+    plugins: [...(transformOpts.plugins || []), [plugin, pluginOpts]],
+  };
+  const transformed = transformSync(strippedInput, config);
   assert(transformed);
   return transformed;
 }
@@ -40,7 +39,7 @@ describe('babel plugin', () => {
   });
 
   describe('generally', () => {
-    it('transforms', () => {
+    test('transforms', () => {
       const input = html`<script>
         import Animated, {
           useAnimatedStyle,
@@ -68,12 +67,14 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input);
+      const { code } = runPlugin(input, {
+        plugins: ['@babel/plugin-syntax-jsx'],
+      });
       expect(code).toHaveWorkletData();
       expect(code).toMatchSnapshot();
     });
 
-    it('injects its version', () => {
+    test('injects its version', () => {
       process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION = '0'; // don't mock version
       const input = html`<script>
         function foo() {
@@ -83,10 +84,10 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain(`version: "${packageVersion}"`);
+      expect(code).toContain(`__pluginVersion = "${packageVersion}"`);
     });
 
-    it('injects source maps', () => {
+    test('injects source maps', () => {
       process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '0'; // don't mock source maps
       const input = html`<script>
         function foo() {
@@ -104,7 +105,7 @@ describe('babel plugin', () => {
       );
     });
 
-    it('uses relative source location when `relativeSourceLocation` is set to `true`', () => {
+    test('uses relative source location when `relativeSourceLocation` is set to `true`', () => {
       process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '0'; // don't mock source maps
       const input = html`<script>
         function foo() {
@@ -121,7 +122,7 @@ describe('babel plugin', () => {
       expect(matches).toHaveLength(2);
     });
 
-    it('removes comments from worklets', () => {
+    test('removes comments from worklets', () => {
       const input = html`<script>
         const f = () => {
           'worklet';
@@ -134,12 +135,16 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).not.toContain('some comment');
-      expect(code).not.toContain('other comment');
-      expect(code).toMatchSnapshot();
+      const initDataCode = code!.match(
+        /const _worklet_[0-9]+_init_data = {[\s\S]*?};/gm
+      );
+      for (const initData of initDataCode!) {
+        expect(initData).not.toContain('some comment');
+        expect(initData).not.toContain('other comment');
+      }
     });
 
-    it('supports recursive calls', () => {
+    test('supports recursive calls', () => {
       const input = html`<script>
         const a = 1;
         function foo(t) {
@@ -157,7 +162,7 @@ describe('babel plugin', () => {
   });
 
   describe('for worklet names', () => {
-    it('unnamed ArrowFunctionExpression', () => {
+    test('unnamed ArrowFunctionExpression', () => {
       const input = html`<script>
         () => {
           'worklet';
@@ -170,7 +175,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('unnamed FunctionExpression', () => {
+    test('unnamed FunctionExpression', () => {
       const input = html`<script>
         [
           function () {
@@ -185,7 +190,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('names ObjectMethod with expression key', () => {
+    test('names ObjectMethod with expression key', () => {
       const input = html`<script>
         const obj = {
           ['foo']() {
@@ -201,7 +206,7 @@ describe('babel plugin', () => {
       // expect(code).toMatchSnapshot();
     });
 
-    it('appends file name to function name', () => {
+    test('appends file name to function name', () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -219,7 +224,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('appends library name to function name', () => {
+    test('appends library name to function name', () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -237,7 +242,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('handles names with illegal characters', () => {
+    test('handles names with illegal characters', () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -257,7 +262,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('preserves recursion', () => {
+    test('preserves recursion', () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -273,7 +278,7 @@ describe('babel plugin', () => {
   });
 
   describe('for DirectiveLiterals', () => {
-    it("doesn't bother other Directive Literals", () => {
+    test("doesn't bother other Directive Literals", () => {
       const input = html`<script>
         function foo() {
           'foobar';
@@ -286,7 +291,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't transform functions without 'worklet' directive", () => {
+    test("doesn't transform functions without 'worklet' directive", () => {
       const input = html`<script>
         function f(x) {
           return x + 2;
@@ -298,7 +303,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('removes "worklet"; directive from worklets', () => {
+    test('removes "worklet"; directive from worklets', () => {
       const input = html`<script>
         function foo(x) {
           "worklet"; // prettier-ignore
@@ -311,7 +316,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("removes 'worklet'; directive from worklets", () => {
+    test("removes 'worklet'; directive from worklets", () => {
       const input = html`<script>
         function foo(x) {
           'worklet'; // prettier-ignore
@@ -324,7 +329,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't transform string literals", () => {
+    test("doesn't transform string literals", () => {
       const input = html`<script>
         function foo(x) {
           'worklet';
@@ -341,7 +346,7 @@ describe('babel plugin', () => {
   });
 
   describe('for closure capturing', () => {
-    it('captures worklets environment', () => {
+    test('captures worklets environment', () => {
       const input = html`<script>
         const x = 5;
 
@@ -358,7 +363,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't capture default globals", () => {
+    test("doesn't capture default globals", () => {
       const input = html`<script>
         function f() {
           'worklet';
@@ -385,10 +390,101 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't capture custom globals", () => {
+    test('implicitly captures globals with strictGlobal disabled', () => {
       const input = html`<script>
-        const foo = 42;
+        function f() {
+          'worklet';
+          globalStuff();
+        }
+      </script>`;
+      const { code, ast } = runPlugin(
+        input,
+        { ast: true },
+        { strictGlobal: false }
+      );
+      let closureBindings;
+      traverse(ast!, {
+        enter(path) {
+          if (
+            path.isAssignmentExpression() &&
+            'property' in path.node.left &&
+            'name' in path.node.left.property &&
+            'properties' in path.node.right &&
+            path.node.left.property.name === '__closure'
+          ) {
+            closureBindings = path.node.right.properties;
+          }
+        },
+      });
+      expect(closureBindings).not.toEqual([]);
+      expect(code).toMatch(/f\.__closure = {\s*globalStuff/gm);
+      expect(code).toMatchSnapshot();
+    });
 
+    test("doesn't implicitly captures globals in strict mode", () => {
+      const input = html`<script>
+        function f() {
+          'worklet';
+          globalStuff();
+        }
+      </script>`;
+      const { code, ast } = runPlugin(
+        input,
+        { ast: true },
+        { strictGlobal: true }
+      );
+      let closureBindings;
+      traverse(ast!, {
+        enter(path) {
+          if (
+            path.isAssignmentExpression() &&
+            'property' in path.node.left &&
+            'name' in path.node.left.property &&
+            'properties' in path.node.right &&
+            path.node.left.property.name === '__closure'
+          ) {
+            closureBindings = path.node.right.properties;
+          }
+        },
+      });
+      expect(closureBindings).toEqual([]);
+      expect(code).toMatchSnapshot();
+    });
+
+    test('captures locally bound variables named like globals', () => {
+      const input = html`<script>
+        const console = {
+          log: () => 42,
+        };
+
+        function f() {
+          'worklet';
+          console.log(console);
+        }
+      </script>`;
+
+      const { code, ast } = runPlugin(input, { ast: true });
+      let closureBindings;
+      traverse(ast!, {
+        enter(path) {
+          if (
+            path.isAssignmentExpression() &&
+            'property' in path.node.left &&
+            'name' in path.node.left.property &&
+            'properties' in path.node.right &&
+            path.node.left.property.name === '__closure'
+          ) {
+            closureBindings = path.node.right.properties;
+          }
+        },
+      });
+      expect(closureBindings).not.toEqual([]);
+      expect(code).toMatch(/f\.__closure = {\s*console/gm);
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't capture custom globals", () => {
+      const input = html`<script>
         function f() {
           'worklet';
           console.log(foo);
@@ -400,7 +496,22 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't capture arguments", () => {
+    test("doesn't capture locally bound variables named like custom globals", () => {
+      const input = html`<script>
+        const foo = 42;
+
+        function f() {
+          'worklet';
+          console.log(foo);
+        }
+      </script>`;
+
+      const { code } = runPlugin(input, undefined, { globals: ['foo'] });
+      expect(code).toMatch(/f\.__closure = {\s*foo/gm);
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't capture arguments", () => {
       const input = html`<script>
         function f(a, b, c) {
           'worklet';
@@ -413,7 +524,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't capture objects' properties", () => {
+    test("doesn't capture objects' properties", () => {
       const input = html`<script>
         const foo = { bar: 42 };
 
@@ -424,13 +535,13 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain('foo: foo');
+      expect(code).toMatch(/f\.__closure = {\s*foo/gm);
       expect(code).toMatchSnapshot();
     });
   });
 
   describe('for explicit worklets', () => {
-    it('workletizes FunctionDeclaration', () => {
+    test('workletizes FunctionDeclaration', () => {
       const input = html`<script>
         function foo(x) {
           'worklet';
@@ -444,7 +555,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes ArrowFunctionExpression', () => {
+    test('workletizes ArrowFunctionExpression', () => {
       const input = html`<script>
         const foo = (x) => {
           'worklet';
@@ -458,7 +569,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes unnamed FunctionExpression', () => {
+    test('workletizes unnamed FunctionExpression', () => {
       const input = html`<script>
         const foo = function (x) {
           'worklet';
@@ -472,7 +583,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes named FunctionExpression', () => {
+    test('workletizes named FunctionExpression', () => {
       const input = html`<script>
         const foo = function foo(x) {
           'worklet';
@@ -486,7 +597,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes ObjectMethod', () => {
+    test('workletizes ObjectMethod', () => {
       const input = html`<script>
         const foo = {
           bar(x) {
@@ -503,7 +614,7 @@ describe('babel plugin', () => {
   });
 
   describe('for class worklets', () => {
-    it('workletizes instance method', () => {
+    test('workletizes instance method', () => {
       const input = html`<script>
         class Foo {
           bar(x) {
@@ -513,13 +624,15 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input);
+      const { code } = runPlugin(input, {
+        configFile: './plugin/plugin-unit-test.babel.config.js',
+      });
       expect(code).toHaveWorkletData();
       expect(code).not.toContain("'worklet';");
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes static method', () => {
+    test('workletizes static method', () => {
       const input = html`<script>
         class Foo {
           static bar(x) {
@@ -529,13 +642,15 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input);
+      const { code } = runPlugin(input, {
+        configFile: './plugin/plugin-unit-test.babel.config.js',
+      });
       expect(code).toHaveWorkletData();
       expect(code).not.toContain("'worklet';");
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes getter', () => {
+    test('workletizes getter', () => {
       const input = html`<script>
         const x = 5;
         class Foo {
@@ -546,13 +661,15 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input);
+      const { code } = runPlugin(input, {
+        configFile: './plugin/plugin-unit-test.babel.config.js',
+      });
       expect(code).toHaveWorkletData();
       expect(code).not.toContain("'worklet';");
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes setter', () => {
+    test('workletizes setter', () => {
       const input = html`<script>
         class Foo {
           set bar(x) {
@@ -562,13 +679,15 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input);
+      const { code } = runPlugin(input, {
+        configFile: './plugin/plugin-unit-test.babel.config.js',
+      });
       expect(code).toHaveWorkletData();
       expect(code).not.toContain("'worklet';");
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes class field', () => {
+    test('workletizes class field', () => {
       const input = html`<script>
         class Foo {
           bar = (x) => {
@@ -578,13 +697,15 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input);
+      const { code } = runPlugin(input, {
+        configFile: './plugin/plugin-unit-test.babel.config.js',
+      });
       expect(code).toHaveWorkletData();
       expect(code).not.toContain("'worklet';");
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes static class field', () => {
+    test('workletizes static class field', () => {
       const input = html`<script>
         class Foo {
           static bar = (x) => {
@@ -594,13 +715,15 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input);
+      const { code } = runPlugin(input, {
+        configFile: './plugin/plugin-unit-test.babel.config.js',
+      });
       expect(code).toHaveWorkletData();
       expect(code).not.toContain("'worklet';");
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes constructor', () => {
+    test('workletizes constructor', () => {
       const input = html`<script>
         class Foo {
           constructor(x) {
@@ -610,7 +733,9 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input);
+      const { code } = runPlugin(input, {
+        configFile: './plugin/plugin-unit-test.babel.config.js',
+      });
       expect(code).toHaveWorkletData();
       expect(code).not.toContain("'worklet';");
       expect(code).toMatchSnapshot();
@@ -618,7 +743,7 @@ describe('babel plugin', () => {
   });
 
   describe('for function hooks', () => {
-    it('workletizes hook wrapped ArrowFunctionExpression automatically', () => {
+    test('workletizes hook wrapped ArrowFunctionExpression automatically', () => {
       const input = html`<script>
         const animatedStyle = useAnimatedStyle(() => ({
           width: 50,
@@ -630,7 +755,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes hook wrapped unnamed FunctionExpression automatically', () => {
+    test('workletizes hook wrapped unnamed FunctionExpression automatically', () => {
       const input = html`<script>
         const animatedStyle = useAnimatedStyle(function () {
           return {
@@ -644,7 +769,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes hook wrapped named FunctionExpression automatically', () => {
+    test('workletizes hook wrapped named FunctionExpression automatically', () => {
       const input = html`<script>
         const animatedStyle = useAnimatedStyle(function foo() {
           return {
@@ -658,7 +783,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes hook wrapped worklet reference automatically', () => {
+    test('workletizes hook wrapped worklet reference automatically', () => {
       const input = html`<script>
         const style = () => {
           return {
@@ -676,21 +801,7 @@ describe('babel plugin', () => {
   });
 
   describe('for object hooks', () => {
-    it('workletizes useAnimatedGestureHandler wrapped ArrowFunctionExpression automatically', () => {
-      const input = html`<script>
-        useAnimatedGestureHandler({
-          onStart: (event) => {
-            console.log(event);
-          },
-        });
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    it('workletizes useAnimatedScrollHandler wrapped ArrowFunctionExpression automatically', () => {
+    test('workletizes useAnimatedScrollHandler wrapped ArrowFunctionExpression automatically', () => {
       const input = html`<script>
         useAnimatedScrollHandler({
           onScroll: (event) => {
@@ -704,21 +815,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes useAnimatedGestureHandler wrapped unnamed FunctionExpression automatically', () => {
-      const input = html`<script>
-        useAnimatedGestureHandler({
-          onStart: function (event) {
-            console.log(event);
-          },
-        });
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    it('workletizes useAnimatedScrollHandler wrapped unnamed FunctionExpression automatically', () => {
+    test('workletizes useAnimatedScrollHandler wrapped unnamed FunctionExpression automatically', () => {
       const input = html`<script>
         useAnimatedScrollHandler({
           onScroll: function (event) {
@@ -732,21 +829,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes useAnimatedGestureHandler wrapped named FunctionExpression automatically', () => {
-      const input = html`<script>
-        useAnimatedGestureHandler({
-          onStart: function onStart(event) {
-            console.log(event);
-          },
-        });
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    it('workletizes useAnimatedScrollHandler wrapped named FunctionExpression automatically', () => {
+    test('workletizes useAnimatedScrollHandler wrapped named FunctionExpression automatically', () => {
       const input = html`<script>
         useAnimatedScrollHandler({
           onScroll: function onScroll(event) {
@@ -760,23 +843,9 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes useAnimatedGestureHandler wrapped ObjectMethod automatically', () => {
+    test('workletizes useAnimatedScrollHandler wrapped ObjectMethod automatically', () => {
       const input = html`<script>
-        useAnimatedGestureHandler({
-          onStart(event) {
-            console.log(event);
-          },
-        });
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    it('workletizes useAnimatedScrollHandler wrapped ObjectMethod automatically', () => {
-      const input = html`<script>
-        useAnimatedGestureHandler({
+        useAnimatedScrollHandler({
           onScroll(event) {
             console.log(event);
           },
@@ -788,17 +857,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('supports empty object in useAnimatedGestureHandler', () => {
-      const input = html`<script>
-        useAnimatedGestureHandler({});
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).not.toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    it('supports empty object in useAnimatedScrollHandler', () => {
+    test('supports empty object in useAnimatedScrollHandler', () => {
       const input = html`<script>
         useAnimatedScrollHandler({});
       </script>`;
@@ -808,21 +867,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('transforms each object property in useAnimatedGestureHandler', () => {
-      const input = html`<script>
-        useAnimatedGestureHandler({
-          onStart: () => {},
-          onUpdate: () => {},
-          onEnd: () => {},
-        });
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData(3);
-      expect(code).toMatchSnapshot();
-    });
-
-    it('transforms each object property in useAnimatedScrollHandler', () => {
+    test('transforms each object property in useAnimatedScrollHandler', () => {
       const input = html`<script>
         useAnimatedScrollHandler({
           onScroll: () => {},
@@ -838,37 +883,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't transform ArrowFunctionExpression as argument of useAnimatedGestureHandler", () => {
-      const input = html`<script>
-        useAnimatedGestureHandler(() => {});
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).not.toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    it("doesn't transform unnamed FunctionExpression as argument of useAnimatedGestureHandler", () => {
-      const input = html`<script>
-        useAnimatedGestureHandler(function () {});
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).not.toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    it("doesn't transform named FunctionExpression as argument of useAnimatedGestureHandler", () => {
-      const input = html`<script>
-        useAnimatedGestureHandler(function foo() {});
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).not.toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    it('transforms ArrowFunctionExpression as argument of useAnimatedScrollHandler', () => {
+    test('transforms ArrowFunctionExpression as argument of useAnimatedScrollHandler', () => {
       const input = html`<script>
         useAnimatedScrollHandler((event) => {
           console.log(event);
@@ -880,7 +895,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('transforms unnamed FunctionExpression as argument of useAnimatedScrollHandler', () => {
+    test('transforms unnamed FunctionExpression as argument of useAnimatedScrollHandler', () => {
       const input = html`<script>
         useAnimatedScrollHandler(function (event) {
           console.log(event);
@@ -892,7 +907,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('transforms named FunctionExpression as argument of useAnimatedScrollHandler', () => {
+    test('transforms named FunctionExpression as argument of useAnimatedScrollHandler', () => {
       const input = html`<script>
         useAnimatedScrollHandler(function foo(event) {
           console.log(event);
@@ -906,7 +921,60 @@ describe('babel plugin', () => {
   });
 
   describe('for react-native-gesture-handler', () => {
-    it('workletizes possibly chained gesture object callback functions automatically', () => {
+    test('workletizes gesture callbacks using the hooks api', () => {
+      const input = html`<script>
+        const foo = useTapGesture({
+          numberOfTaps: 2,
+          onBegin: () => {
+            console.log('onBegin');
+          },
+          onStart: (_event) => {
+            console.log('onStart');
+          },
+          onEnd: (_event, _success) => {
+            console.log('onEnd');
+          },
+        });
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(3);
+      expect(code).toMatchSnapshot();
+    });
+
+    test('workletizes referenced gesture callbacks using the hooks api', () => {
+      const input = html`<script>
+        const onBegin = () => {
+          console.log('onBegin');
+        };
+        const foo = useTapGesture({
+          numberOfTaps: 2,
+          onBegin: onBegin,
+        });
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
+
+    test('workletizes referenced gesture callbacks using the hooks api and shorthand syntax', () => {
+      const input = html`<script>
+        const onBegin = () => {
+          console.log('onBegin');
+        };
+        const foo = useTapGesture({
+          numberOfTaps: 2,
+          onBegin,
+        });
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
+
+    test('workletizes possibly chained gesture object callback functions automatically', () => {
       const input = html`<script>
         const foo = Gesture.Tap()
           .numberOfTaps(2)
@@ -926,7 +994,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't workletize irrelevant chained gesture object callback functions", () => {
+    test("doesn't workletize irrelevant chained gesture object callback functions", () => {
       const input = html`<script>
         const foo = Gesture.Tap().toString();
       </script>`;
@@ -936,7 +1004,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't transform standard callback functions", () => {
+    test("doesn't transform standard callback functions", () => {
       const input = html`<script>
         const foo = Something.Tap().onEnd((_event, _success) => {
           console.log('onEnd');
@@ -948,7 +1016,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't transform chained methods of objects containing Gesture property", () => {
+    test("doesn't transform chained methods of objects containing Gesture property", () => {
       const input = html`<script>
         const foo = Something.Gesture.Tap().onEnd(() => {
           console.log('onEnd');
@@ -960,7 +1028,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('transforms spread operator in worklets for arrays', () => {
+    test('transforms spread operator in worklets for arrays', () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -975,7 +1043,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('transforms spread operator in worklets for objects', () => {
+    test('transforms spread operator in worklets for objects', () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -990,7 +1058,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('transforms spread operator in worklets for function arguments', () => {
+    test('transforms spread operator in worklets for function arguments', () => {
       const input = html`<script>
         function foo(...args) {
           'worklet';
@@ -1003,7 +1071,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('transforms spread operator in worklets for function calls', () => {
+    test('transforms spread operator in worklets for function calls', () => {
       const input = html`<script>
         function foo(arg) {
           'worklet';
@@ -1016,7 +1084,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('transforms spread operator in Animated component', () => {
+    test('transforms spread operator in Animated component', () => {
       const input = html`<script>
         function App() {
           return (
@@ -1027,11 +1095,13 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input);
+      const { code } = runPlugin(input, {
+        plugins: ['@babel/plugin-syntax-jsx'],
+      });
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes referenced callbacks', () => {
+    test('workletizes referenced callbacks', () => {
       const input = html`<script>
         const onStart = () => {};
         const foo = Gesture.Tap().onStart(onStart);
@@ -1044,7 +1114,7 @@ describe('babel plugin', () => {
   });
 
   describe('for sequence expressions', () => {
-    it('supports SequenceExpression', () => {
+    test('supports SequenceExpression', () => {
       const input = html`<script>
         function App() {
           (0, fun)({ onStart() {} }, []);
@@ -1055,10 +1125,10 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('supports SequenceExpression, with objectHook', () => {
+    test('supports SequenceExpression, with objectHook', () => {
       const input = html`<script>
         function App() {
-          (0, useAnimatedGestureHandler)({ onStart() {} }, []);
+          (0, useAnimatedScrollHandler)({ onScroll() {} }, []);
         }
       </script>`;
 
@@ -1067,7 +1137,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('supports SequenceExpression, with worklet', () => {
+    test('supports SequenceExpression, with worklet', () => {
       const input = html`<script>
         function App() {
           (0, fun)(
@@ -1087,7 +1157,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('supports SequenceExpression, many arguments', () => {
+    test('supports SequenceExpression, many arguments', () => {
       const input = html`<script>
         function App() {
           (0, 3, fun)(
@@ -1107,7 +1177,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('supports SequenceExpression, with worklet closure', () => {
+    test('supports SequenceExpression, with worklet closure', () => {
       const input = html`<script>
         function App() {
           const obj = { a: 1, b: 2 };
@@ -1144,19 +1214,49 @@ describe('babel plugin', () => {
   });
 
   describe('for inline styles', () => {
-    it('shows a warning if user uses .value inside inline style', () => {
+    test('shows a warning if user uses .value inside inline style', () => {
       const input = html`<script>
         function App() {
           return <Animated.View style={{ width: sharedValue.value }} />;
         }
       </script>`;
 
-      const { code } = runPlugin(input);
+      const { code } = runPlugin(input, {
+        plugins: ['@babel/plugin-syntax-jsx'],
+      });
       expect(code).toHaveInlineStyleWarning();
       expect(code).toMatchSnapshot();
     });
 
-    it('shows a warning if user uses .value inside inline style, style array', () => {
+    test("doesn't show a warning if the user uses ['value'] inside inline style", () => {
+      const input = html`<script>
+        function App() {
+          return <Animated.View style={{ width: object['value'] }} />;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input, {
+        plugins: ['@babel/plugin-syntax-jsx'],
+      });
+      expect(code).not.toHaveInlineStyleWarning();
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't show a warning if the user uses [value] inside inline style", () => {
+      const input = html`<script>
+        function App() {
+          return <Animated.View style={{ width: object[value] }} />;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input, {
+        plugins: ['@babel/plugin-syntax-jsx'],
+      });
+      expect(code).not.toHaveInlineStyleWarning();
+      expect(code).toMatchSnapshot();
+    });
+
+    test('shows a warning if user uses .value inside inline style, style array', () => {
       const input = html`<script>
         function App() {
           return (
@@ -1165,12 +1265,14 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input);
+      const { code } = runPlugin(input, {
+        plugins: ['@babel/plugin-syntax-jsx'],
+      });
       expect(code).toHaveInlineStyleWarning();
       expect(code).toMatchSnapshot();
     });
 
-    it('shows a warning if user uses .value inside inline style, transforms', () => {
+    test('shows a warning if user uses .value inside inline style, transforms', () => {
       const input = html`<script>
         function App() {
           return (
@@ -1181,26 +1283,30 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input);
+      const { code } = runPlugin(input, {
+        plugins: ['@babel/plugin-syntax-jsx'],
+      });
       expect(code).toHaveInlineStyleWarning();
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't show a warning if user writes something like style={styles.value}", () => {
+    test("doesn't show a warning if user writes something like style={styles.value}", () => {
       const input = html`<script>
         function App() {
           return <Animated.View style={styles.value} />;
         }
       </script>`;
 
-      const { code } = runPlugin(input);
+      const { code } = runPlugin(input, {
+        plugins: ['@babel/plugin-syntax-jsx'],
+      });
       expect(code).not.toHaveInlineStyleWarning();
       expect(code).toMatchSnapshot();
     });
   });
 
   describe('is idempotent', () => {
-    it('for common cases', () => {
+    test('for common cases', () => {
       function resultIsIdempotent(input: string) {
         const firstResult = runPlugin(input).code;
         assert(firstResult);
@@ -1267,8 +1373,8 @@ describe('babel plugin', () => {
       expect(resultIsIdempotent(input6)).toBe(true);
 
       const input7 = html`<script>
-        const x = useAnimatedGestureHandler({
-          onStart: () => {
+        const scrollHandler = useAnimatedScrollHandler({
+          onScroll: () => {
             return useAnimatedStyle(() => {
               return 1;
             });
@@ -1278,10 +1384,10 @@ describe('babel plugin', () => {
       expect(resultIsIdempotent(input7)).toBe(true);
 
       const input8 = html`<script>
-        const x = useAnimatedGestureHandler({
-          onStart: () => {
-            return useAnimatedGestureHandler({
-              onStart: () => {
+        const scrollHandler = useAnimatedScrollHandler({
+          onScroll: () => {
+            return useAnimatedScrollHandler({
+              onScroll: () => {
                 return 1;
               },
             });
@@ -1308,7 +1414,7 @@ describe('babel plugin', () => {
   });
 
   describe('for Layout Animations', () => {
-    it('workletizes unchained callback functions automatically', () => {
+    test('workletizes unchained callback functions automatically', () => {
       const input = html`<script>
         FadeIn.withCallback(() => {
           console.log('FadeIn');
@@ -1320,7 +1426,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes unchained callback functions automatically with new keyword', () => {
+    test('workletizes unchained callback functions automatically with new keyword', () => {
       const input = html`<script>
         new FadeIn().withCallback(() => {
           console.log('FadeIn');
@@ -1332,7 +1438,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't workletize callback functions on unknown objects", () => {
+    test("doesn't workletize callback functions on unknown objects", () => {
       const input = html`<script>
         AmogusIn.withCallback(() => {
           console.log('AmogusIn');
@@ -1344,7 +1450,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't workletize callback functions on unknown objects with new keyword", () => {
+    test("doesn't workletize callback functions on unknown objects with new keyword", () => {
       const input = html`<script>
         new AmogusIn().withCallback(() => {
           console.log('AmogusIn');
@@ -1356,7 +1462,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes callback functions on known chained methods before', () => {
+    test('workletizes callback functions on known chained methods before', () => {
       const input = html`<script>
         FadeIn.build().withCallback(() => {
           console.log('FadeIn with build before');
@@ -1368,7 +1474,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes callback functions on known chained methods before with new keyword', () => {
+    test('workletizes callback functions on known chained methods before with new keyword', () => {
       const input = html`<script>
         new FadeIn().build().withCallback(() => {
           console.log('FadeIn with build before');
@@ -1380,7 +1486,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't workletize callback functions on unknown objects on known chained methods before", () => {
+    test("doesn't workletize callback functions on unknown objects on known chained methods before", () => {
       const input = html`<script>
         AmogusIn.build().withCallback(() => {
           console.log('AmogusIn with build before');
@@ -1391,7 +1497,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't workletize callback functions on unknown objects on known chained methods before with new keyword", () => {
+    test("doesn't workletize callback functions on unknown objects on known chained methods before with new keyword", () => {
       const input = html`<script>
         new AmogusIn().build().withCallback(() => {
           console.log('AmogusIn with build before');
@@ -1403,7 +1509,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes callback functions on known chained methods after', () => {
+    test('workletizes callback functions on known chained methods after', () => {
       const input = html`<script>
         FadeIn.withCallback(() => {
           console.log('FadeIn with build after');
@@ -1415,7 +1521,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes callback functions on known chained methods after with new keyword', () => {
+    test('workletizes callback functions on known chained methods after with new keyword', () => {
       const input = html`<script>
         new FadeIn()
           .withCallback(() => {
@@ -1429,7 +1535,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't workletize callback functions on unknown chained methods before", () => {
+    test("doesn't workletize callback functions on unknown chained methods before", () => {
       const input = html`<script>
         FadeIn.AmogusIn().withCallback(() => {
           console.log('FadeIn with AmogusIn before');
@@ -1441,7 +1547,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't workletize callback functions on unknown chained methods before with new keyword", () => {
+    test("doesn't workletize callback functions on unknown chained methods before with new keyword", () => {
       const input = html`<script>
         new FadeIn().AmogusIn().withCallback(() => {
           console.log('FadeIn with AmogusIn before');
@@ -1453,7 +1559,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't workletize callback functions on unknown objects chained with known objects", () => {
+    test("doesn't workletize callback functions on unknown objects chained with known objects", () => {
       const input = html`<script>
         AmogusIn.FadeIn().withCallback(() => {
           console.log('AmogusIn with FadeIn after');
@@ -1465,7 +1571,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't workletize callback functions on unknown objects chained with known objects with new keyword", () => {
+    test("doesn't workletize callback functions on unknown objects chained with known objects with new keyword", () => {
       const input = html`<script>
         new AmogusIn().FadeIn().withCallback(() => {
           console.log('AmogusIn with FadeIn after');
@@ -1477,7 +1583,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes callback functions on unknown objects chained after', () => {
+    test('workletizes callback functions on unknown objects chained after', () => {
       const input = html`<script>
         FadeIn.withCallback(() => {
           console.log('FadeIn with AmogusIn after');
@@ -1489,7 +1595,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes callback functions on unknown objects chained after with new keyword', () => {
+    test('workletizes callback functions on unknown objects chained after with new keyword', () => {
       const input = html`<script>
         new FadeIn()
           .withCallback(() => {
@@ -1503,7 +1609,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't workletize callback functions on unknown objects with known object chained after", () => {
+    test("doesn't workletize callback functions on unknown objects with known object chained after", () => {
       const input = html`<script>
         AmogusIn.withCallback(() => {
           console.log('AmogusIn with FadeIn before');
@@ -1515,7 +1621,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't workletize callback functions on unknown objects with known object chained after with new keyword", () => {
+    test("doesn't workletize callback functions on unknown objects with known object chained after with new keyword", () => {
       const input = html`<script>
         new AmogusIn()
           .withCallback(() => {
@@ -1529,7 +1635,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes callback functions on longer chains of known objects', () => {
+    test('workletizes callback functions on longer chains of known objects', () => {
       const input = html`<script>
         FadeIn.build()
           .duration()
@@ -1543,7 +1649,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes callback functions on longer chains of known objects with new keyword', () => {
+    test('workletizes callback functions on longer chains of known objects with new keyword', () => {
       const input = html`<script>
         new FadeIn()
           .build()
@@ -1560,7 +1666,7 @@ describe('babel plugin', () => {
   });
 
   describe('for debugging', () => {
-    it('does inject location for worklets in dev builds', () => {
+    test('does inject location for worklets in dev builds', () => {
       const input = html`<script>
         const foo = useAnimatedStyle(() => {
           const x = 1;
@@ -1572,7 +1678,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't inject location for worklets in production builds", () => {
+    test("doesn't inject location for worklets in production builds", () => {
       const input = html`<script>
         const foo = useAnimatedStyle(() => {
           const x = 1;
@@ -1587,7 +1693,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't inject version for worklets in production builds", () => {
+    test("doesn't inject version for worklets in production builds", () => {
       const input = html`<script>
         const foo = useAnimatedStyle(() => {
           const x = 1;
@@ -1602,37 +1708,21 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('throws a tagged exception when worklet processing fails', () => {
+    test('throws a tagged exception when worklet processing fails', () => {
       const input = html`<script>
         const foo = useAnimatedStyle(() => {
           return <Image />;
         });
       </script>`;
 
-      expect(() => runPlugin(input)).toThrow('[Worklets]');
+      expect(() =>
+        runPlugin(input, { plugins: ['@babel/plugin-syntax-jsx'] })
+      ).toThrow('[Worklets]');
     });
   });
 
   describe('for worklet nesting', () => {
-    it("doesn't process nested worklets when disabled", () => {
-      const input = html`<script>
-        function foo(x) {
-          'worklet';
-          function bar(x) {
-            'worklet';
-            return x + 2;
-          }
-          return bar(x) + 1;
-        }
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData(2);
-      expect(code).toContain("'worklet';");
-      expect(code).toMatchSnapshot();
-    });
-
-    it('transpiles nested worklets when enabled', () => {
+    test('transpiles nested worklets', () => {
       const input = html`<script>
         const foo = () => {
           'worklet';
@@ -1644,12 +1734,12 @@ describe('babel plugin', () => {
         };
       </script>`;
 
-      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      const { code } = runPlugin(input, {});
       expect(code).toHaveWorkletData(2);
       expect(code).toMatchSnapshot();
     });
 
-    it('transpiles nested worklets when enabled with depth 3', () => {
+    test('transpiles nested worklets with depth 3', () => {
       const input = html`<script>
         const foo = () => {
           'worklet';
@@ -1664,13 +1754,13 @@ describe('babel plugin', () => {
         };
       </script>`;
 
-      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      const { code } = runPlugin(input, {});
 
       expect(code).toHaveWorkletData(3);
       expect(code).toMatchSnapshot();
     });
 
-    it('transpiles nested worklets embedded in runOnJS in runOnUI', () => {
+    test('transpiles nested worklets embedded in runOnJS in runOnUI', () => {
       const input = html`<script>
         runOnUI(() => {
           console.log('Hello from UI thread');
@@ -1680,13 +1770,13 @@ describe('babel plugin', () => {
           })();
         })();
       </script>`;
-      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      const { code } = runPlugin(input, {});
 
       expect(code).toHaveWorkletData(2);
       expect(code).toMatchSnapshot();
     });
 
-    it('transpiles nested worklets embedded in runOnUI in runOnJS in runOnUI', () => {
+    test('transpiles nested worklets embedded in runOnUI in runOnJS in runOnUI', () => {
       const input = html`<script>
         runOnUI(() => {
           console.log('Hello from UI thread');
@@ -1699,13 +1789,13 @@ describe('babel plugin', () => {
           })();
         })();
       </script>`;
-      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      const { code } = runPlugin(input, {});
 
       expect(code).toHaveWorkletData(3);
       expect(code).toMatchSnapshot();
     });
 
-    it('transpiles worklets with functions defined on UI thread to run them on JS', () => {
+    test('transpiles worklets with functions defined on UI thread to run them on JS', () => {
       const input = html`<script>
         runOnUI(() => {
           const a = () => {
@@ -1720,7 +1810,7 @@ describe('babel plugin', () => {
           runOnJS(func)();
         })();
       </script>`;
-      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      const { code } = runPlugin(input, {});
 
       expect(code).toHaveWorkletData(3);
       expect(code).toMatchSnapshot();
@@ -1728,7 +1818,7 @@ describe('babel plugin', () => {
   });
 
   describe('for web configuration', () => {
-    it('skips initData when omitNativeOnlyData option is set to true', () => {
+    test('skips initData when omitNativeOnlyData option is set to true', () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -1741,7 +1831,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('includes initData when omitNativeOnlyData option is set to false', () => {
+    test('includes initData when omitNativeOnlyData option is set to false', () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -1754,7 +1844,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('substitutes isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to true', () => {
+    test('substitutes isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to true', () => {
       const input = html`<script>
         const x = isWeb();
         const y = shouldBeUseWeb();
@@ -1765,12 +1855,12 @@ describe('babel plugin', () => {
         {},
         { substituteWebPlatformChecks: true }
       );
-      expect(code).toContain('var x = true;');
-      expect(code).toContain('var y = true;');
+      expect(code).toContain('const x = true;');
+      expect(code).toContain('const y = true;');
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to false", () => {
+    test("doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to false", () => {
       const input = html`<script>
         const x = isWeb();
         const y = shouldBeUseWeb();
@@ -1781,24 +1871,24 @@ describe('babel plugin', () => {
         {},
         { substituteWebPlatformChecks: false }
       );
-      expect(code).toContain('var x = isWeb();');
-      expect(code).toContain('var y = shouldBeUseWeb();');
+      expect(code).toContain('const x = isWeb();');
+      expect(code).toContain('const y = shouldBeUseWeb();');
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is undefined", () => {
+    test("doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is undefined", () => {
       const input = html`<script>
         const x = isWeb();
         const y = shouldBeUseWeb();
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain('var x = isWeb();');
-      expect(code).toContain('var y = shouldBeUseWeb();');
+      expect(code).toContain('const x = isWeb();');
+      expect(code).toContain('const y = shouldBeUseWeb();');
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't substitute isWeb and shouldBeUseWeb in worklets", () => {
+    test("doesn't substitute isWeb and shouldBeUseWeb in worklets", () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -1819,7 +1909,7 @@ describe('babel plugin', () => {
   });
 
   describe('for generators', () => {
-    it('makes a generator worklet factory', () => {
+    test('makes a generator worklet factory', () => {
       const input = html`<script>
         function* foo() {
           'worklet';
@@ -1829,11 +1919,11 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain('var foo = function* foo()'); // React code
+      expect(code).toContain('const foo = function* () {');
       expect(code).toMatchSnapshot();
     });
 
-    it('makes a generator worklet string', () => {
+    test('makes a generator worklet string', () => {
       const input = html`<script>
         function* foo() {
           'worklet';
@@ -1851,7 +1941,7 @@ describe('babel plugin', () => {
   });
 
   describe('for async functions', () => {
-    it('makes an async worklet factory', () => {
+    test('makes an async worklet factory', () => {
       const input = html`<script>
         async function foo() {
           'worklet';
@@ -1860,11 +1950,11 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain('asyncToGenerator');
+      expect(code).toContain('const foo = async function () {');
       expect(code).toMatchSnapshot();
     });
 
-    it('makes an async worklet string', () => {
+    test('makes an async worklet string', () => {
       const input = html`<script>
         async function foo() {
           'worklet';
@@ -1881,7 +1971,7 @@ describe('babel plugin', () => {
   });
 
   describe('for referenced worklets', () => {
-    it('workletizes ArrowFunctionExpression on its VariableDeclarator', () => {
+    test('workletizes ArrowFunctionExpression on its VariableDeclarator', () => {
       const input = html`<script>
         let styleFactory = () => ({});
         const animatedStyle = useAnimatedStyle(styleFactory);
@@ -1892,7 +1982,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes ArrowFunctionExpression on its AssignmentExpression', () => {
+    test('workletizes ArrowFunctionExpression on its AssignmentExpression', () => {
       const input = html`<script>
         let styleFactory;
         styleFactory = () => ({});
@@ -1904,7 +1994,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes ArrowFunctionExpression only on last AssignmentExpression', () => {
+    test('workletizes ArrowFunctionExpression only on last AssignmentExpression', () => {
       const input = html`<script>
         let styleFactory;
         styleFactory = () => 1;
@@ -1918,7 +2008,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes FunctionExpression on its VariableDeclarator', () => {
+    test('workletizes FunctionExpression on its VariableDeclarator', () => {
       const input = html`<script>
         let styleFactory = function () {
           return {};
@@ -1931,7 +2021,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes FunctionExpression on its AssignmentExpression', () => {
+    test('workletizes FunctionExpression on its AssignmentExpression', () => {
       const input = html`<script>
         let styleFactory;
         styleFactory = function () {
@@ -1945,7 +2035,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes FunctionExpression only on last AssignmentExpression', () => {
+    test('workletizes FunctionExpression only on last AssignmentExpression', () => {
       const input = html`<script>
         let styleFactory;
         styleFactory = function () {
@@ -1963,7 +2053,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes FunctionDeclaration', () => {
+    test('workletizes FunctionDeclaration', () => {
       const input = html`<script>
         function styleFactory() {
           return {};
@@ -1976,7 +2066,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes ObjectExpression on its VariableDeclarator', () => {
+    test('workletizes ObjectExpression on its VariableDeclarator', () => {
       const input = html`<script>
         let handler = {
           onScroll: () => {},
@@ -1989,7 +2079,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes ObjectExpression on its AssignmentExpression', () => {
+    test('workletizes ObjectExpression on its AssignmentExpression', () => {
       const input = html`<script>
         let handler;
         handler = {
@@ -2003,7 +2093,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes ObjectExpression only on last AssignmentExpression', () => {
+    test('workletizes ObjectExpression only on last AssignmentExpression', () => {
       const input = html`<script>
         let handler;
         handler = {
@@ -2021,7 +2111,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('prefers FunctionDeclaration over AssignmentExpression', () => {
+    test('prefers FunctionDeclaration over AssignmentExpression', () => {
       const input = html`<script>
         function styleFactory() {
           return 'FunctionDeclaration';
@@ -2036,7 +2126,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('prefers AssignmentExpression over VariableDeclarator', () => {
+    test('prefers AssignmentExpression over VariableDeclarator', () => {
       // This is an anti-pattern, but let's at least have a defined behavior here.
       const input = html`<script>
         let styleFactory = () => 1;
@@ -2050,7 +2140,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes in immediate scope', () => {
+    test('workletizes in immediate scope', () => {
       const input = html`<script>
         let styleFactory = () => ({});
         animatedStyle = useAnimatedStyle(styleFactory);
@@ -2061,7 +2151,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes in nested scope', () => {
+    test('workletizes in nested scope', () => {
       const input = html`<script>
         function outerScope() {
           let styleFactory = () => ({});
@@ -2076,7 +2166,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes assignments that appear after the worklet is used', () => {
+    test('workletizes assignments that appear after the worklet is used', () => {
       const input = html`<script>
         let styleFactory = () => ({});
         animatedStyle = useAnimatedStyle(styleFactory);
@@ -2091,7 +2181,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes multiple referencing', () => {
+    test('workletizes multiple referencing', () => {
       const input = html`<script>
         const secondReference = () => ({});
         const firstReference = secondReference;
@@ -2103,7 +2193,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes recursion', () => {
+    test('workletizes recursion', () => {
       const input = html`<script>
         function recursiveWorklet() {
           if (!globalThis._WORKLET) {
@@ -2119,7 +2209,7 @@ describe('babel plugin', () => {
   });
 
   describe('for file workletization', () => {
-    it('workletizes FunctionDeclaration', () => {
+    test('workletizes FunctionDeclaration', () => {
       const input = html`<script>
         'worklet';
         function foo() {
@@ -2132,7 +2222,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes assigned FunctionDeclaration', () => {
+    test('workletizes assigned FunctionDeclaration', () => {
       const input = html`<script>
         'worklet';
         const foo = function foo() {
@@ -2145,7 +2235,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes FunctionDeclaration in named export', () => {
+    test('workletizes FunctionDeclaration in named export', () => {
       const input = html`<script>
         'worklet';
         export function foo() {
@@ -2155,11 +2245,11 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
-      expect(code).toContain('exports.foo = function');
+      expect(code).toContain('export const foo = function foo_null1Factory({');
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes FunctionDeclaration in default export', () => {
+    test('workletizes FunctionDeclaration in default export', () => {
       const input = html`<script>
         'worklet';
         export default function foo() {
@@ -2169,11 +2259,11 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
-      expect(code).toContain('exports.default = function');
+      expect(code).toContain('export default (function foo_null1Factory({');
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes FunctionExpression', () => {
+    test('workletizes FunctionExpression', () => {
       const input = html`<script>
         'worklet';
         const foo = function () {
@@ -2186,7 +2276,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes FunctionExpression in named export', () => {
+    test('workletizes FunctionExpression in named export', () => {
       const input = html`<script>
         'worklet';
         export const foo = function () {
@@ -2196,11 +2286,11 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
-      expect(code).toContain('exports.foo = function');
+      expect(code).toContain('export const foo = function null1Factory({');
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes FunctionExpression in default export', () => {
+    test('workletizes FunctionExpression in default export', () => {
       const input = html`<script>
         'worklet';
         export default function () {
@@ -2210,11 +2300,11 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
-      expect(code).toContain('exports.default = function');
+      expect(code).toContain('export default (function null1Factory({');
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes ArrowFunctionExpression', () => {
+    test('workletizes ArrowFunctionExpression', () => {
       const input = html`<script>
         'worklet';
         const foo = () => {
@@ -2227,7 +2317,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes ArrowFunctionExpression in named export', () => {
+    test('workletizes ArrowFunctionExpression in named export', () => {
       const input = html`<script>
         'worklet';
         export const foo = () => {
@@ -2237,11 +2327,11 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
-      expect(code).toContain('exports.foo = function');
+      expect(code).toContain('export const foo = function null1Factory({');
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes ArrowFunctionExpression in default export', () => {
+    test('workletizes ArrowFunctionExpression in default export', () => {
       const input = html`<script>
         'worklet';
         export default () => {
@@ -2251,11 +2341,11 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
-      expect(code).toContain('exports.default = function');
+      expect(code).toContain('export default (function null1Factory({');
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes ObjectMethod', () => {
+    test('workletizes ObjectMethod', () => {
       const input = html`<script>
         'worklet';
         const foo = {
@@ -2270,7 +2360,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes ObjectMethod in named export', () => {
+    test('workletizes ObjectMethod in named export', () => {
       const input = html`<script>
         'worklet';
         export const foo = {
@@ -2282,11 +2372,11 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
-      expect(code).toContain('exports.foo = {');
+      expect(code).toContain('export const foo = {');
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes ObjectMethod in default export', () => {
+    test('workletizes ObjectMethod in default export', () => {
       const input = html`<script>
         'worklet';
         export default {
@@ -2298,11 +2388,11 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
-      expect(code).toContain('exports.default = {');
+      expect(code).toContain('export default {');
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes implicit WorkletContextObject', () => {
+    test('workletizes implicit WorkletContextObject', () => {
       const input = html`<script>
         'worklet';
         const foo = {
@@ -2321,7 +2411,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes implicit WorkletContextObject in named export', () => {
+    test('workletizes implicit WorkletContextObject in named export', () => {
       const input = html`<script>
         'worklet';
         export const foo = {
@@ -2340,7 +2430,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes implicit WorkletContextObject in default export', () => {
+    test('workletizes implicit WorkletContextObject in default export', () => {
       const input = html`<script>
         'worklet';
         export default {
@@ -2359,7 +2449,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes ClassDeclaration', () => {
+    test('workletizes ClassDeclaration', () => {
       const input = html`<script>
         'worklet';
         class Clazz {
@@ -2371,16 +2461,14 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toContain(
-        'var Clazz__classFactory = function Clazz__classFactory_null6Factory'
+        'const Clazz__classFactory = function Clazz__classFactory_null6Factory'
       );
       expect(code).toContainInWorkletString('Clazz__classFactory');
-      expect(code).toContain(
-        'Clazz.Clazz__classFactory = _Clazz__classFactory'
-      );
+      expect(code).toContain('Clazz.Clazz__classFactory = Clazz__classFactory');
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes ClassDeclaration in named export', () => {
+    test('workletizes ClassDeclaration in named export', () => {
       const input = html`<script>
         'worklet';
         export class Clazz {
@@ -2391,18 +2479,16 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain('var Clazz = exports.Clazz = function ()');
+      expect(code).toContain('export const Clazz = function () {');
       expect(code).toContain(
-        'var Clazz__classFactory = function Clazz__classFactory_null6Factory'
+        'const Clazz__classFactory = function Clazz__classFactory_null6Factory'
       );
       expect(code).toContainInWorkletString('Clazz__classFactory');
-      expect(code).toContain(
-        'Clazz.Clazz__classFactory = _Clazz__classFactory'
-      );
+      expect(code).toContain('Clazz.Clazz__classFactory = Clazz__classFactory');
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes ClassDeclaration in default export', () => {
+    test('workletizes ClassDeclaration in default export', () => {
       const input = html`<script>
         'worklet';
         export default class Clazz {
@@ -2413,18 +2499,16 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain('var Clazz = exports.default = function ()');
+      expect(code).toContain('export default (function () {');
       expect(code).toContain(
-        'var Clazz__classFactory = function Clazz__classFactory_null6Factory'
+        'const Clazz__classFactory = function Clazz__classFactory_null6Factory'
       );
       expect(code).toContainInWorkletString('Clazz__classFactory');
-      expect(code).toContain(
-        'Clazz.Clazz__classFactory = _Clazz__classFactory'
-      );
+      expect(code).toContain('Clazz.Clazz__classFactory = Clazz__classFactory');
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes multiple functions', () => {
+    test('workletizes multiple functions', () => {
       const input = html`<script>
         'worklet';
         function foo() {
@@ -2440,7 +2524,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it("doesn't workletize function outside of top level scope", () => {
+    test("doesn't workletize function outside of top level scope", () => {
       const input = html`<script>
         'worklet';
         {
@@ -2455,7 +2539,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('moves CommonJS export to the bottom of the file', () => {
+    test('moves CommonJS export to the bottom of the file', () => {
       const input = html`<script>
         'worklet';
         exports.foo = foo;
@@ -2464,11 +2548,11 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain('var bar = 1;\nexports.foo = foo;');
+      expect(code).toContain('const bar = 1;\nexports.foo = foo;');
       expect(code).toMatchSnapshot();
     });
 
-    it('moves multiple CommonJS exports to the bottom of the file', () => {
+    test('moves multiple CommonJS exports to the bottom of the file', () => {
       const input = html`<script>
         'worklet';
         exports.foo = foo;
@@ -2487,7 +2571,7 @@ describe('babel plugin', () => {
   });
 
   describe('for context objects', () => {
-    it('removes marker', () => {
+    test('removes marker', () => {
       const input = html`<script>
         const foo = {
           bar() {
@@ -2502,7 +2586,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('creates factories', () => {
+    test('creates factories', () => {
       const input = html`<script>
         const foo = {
           bar() {
@@ -2518,7 +2602,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes regardless of marker value', () => {
+    test('workletizes regardless of marker value', () => {
       const input = html`<script>
         const foo = {
           bar() {
@@ -2533,7 +2617,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('preserves bindings', () => {
+    test('preserves bindings', () => {
       const input = html`<script>
         const foo = {
           bar() {
@@ -2553,7 +2637,7 @@ describe('babel plugin', () => {
   });
 
   describe('for worklet classes', () => {
-    it('removes marker', () => {
+    test('removes marker', () => {
       const input = html`<script>
         class Clazz {
           __workletClass = true;
@@ -2568,7 +2652,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('creates factories', () => {
+    test('creates factories', () => {
       const input = html`<script>
         class Clazz {
           __workletClass = true;
@@ -2584,7 +2668,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes regardless of marker value', () => {
+    test('workletizes regardless of marker value', () => {
       const input = html`<script>
         class Clazz {
           __workletClass = new RegExp('foo');
@@ -2600,7 +2684,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('injects class factory into worklets', () => {
+    test('injects class factory into worklets', () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -2613,7 +2697,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('modifies closures', () => {
+    test('modifies closures', () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -2626,7 +2710,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('keeps this binding', () => {
+    test('keeps this binding', () => {
       const input = html`<script>
         class Clazz {
           __workletClass = true;
@@ -2642,7 +2726,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('appends polyfills', () => {
+    test('appends polyfills', () => {
       const input = html`<script>
         class Clazz {
           __workletClass = true;
@@ -2658,7 +2742,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes polyfills', () => {
+    test('workletizes polyfills', () => {
       const input = html`<script>
         class Clazz {
           __workletClass = true;
@@ -2671,6 +2755,29 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData(6);
+      expect(code).toMatchSnapshot();
+    });
+
+    test('is disabled via option', () => {
+      const input = html`<script>
+        function foo() {
+          this.prop = 42;
+        }
+
+        function bar() {
+          'worklet';
+          const instance = new foo();
+        }
+      </script>`;
+
+      const { code } = runPlugin(
+        input,
+        {},
+        {
+          disableWorkletClasses: true,
+        }
+      );
+      expect(code).not.toContain('foo__classFactory');
       expect(code).toMatchSnapshot();
     });
   });

@@ -2,13 +2,21 @@
 
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
-
-#include <worklets/SharedItems/Shareables.h>
-#include <worklets/Tools/AsyncQueue.h>
+#include <jsireact/JSIExecutor.h>
+#include <react/debug/react_native_assert.h>
+#include <worklets/RunLoop/AsyncQueue.h>
+#include <worklets/RunLoop/AsyncQueueImpl.h>
+#include <worklets/RunLoop/EventLoop.h>
+#include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/UnpackerLoader.h>
 #include <worklets/Tools/JSScheduler.h>
+#include <worklets/Tools/ScriptBuffer.h>
+#include <worklets/WorkletRuntime/RuntimeBindings.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
 
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -17,74 +25,203 @@ using namespace react;
 
 namespace worklets {
 
-class WorkletRuntime : public jsi::HostObject,
-                       public std::enable_shared_from_this<WorkletRuntime> {
+template <typename TCallable>
+concept ImplicitlySerializableCallable = std::is_assignable_v<const jsi::Function &, TCallable> ||
+    std::is_assignable_v<const std::shared_ptr<SerializableWorklet> &, TCallable>;
+
+template <typename TCallable>
+concept RuntimeCallable = requires(TCallable &&callable, jsi::Runtime &rt) {
+  // NOLINTNEXTLINE(readability/braces) cpplint doesn't understand concepts
+  { callable(rt) };
+} || ImplicitlySerializableCallable<TCallable>;
+
+/**
+ * Forward declaration to avoid circular dependencies.
+ */
+class JSIWorkletsModuleProxy;
+
+class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_this<WorkletRuntime> {
  public:
-  explicit WorkletRuntime(
-      jsi::Runtime &rnRuntime,
-      const std::shared_ptr<MessageQueueThread> &jsQueue,
-      const std::shared_ptr<JSScheduler> &jsScheduler,
-      const std::string &name,
-      const bool supportsLocking,
-      const bool isDevBundle);
+  void schedule(jsi::Function &&function) const;
+  void schedule(std::shared_ptr<SerializableWorklet> worklet) const;
+  void schedule(std::function<void()> job) const;
+  void schedule(std::function<void(jsi::Runtime &)> job) const;
 
-  jsi::Runtime &getJSIRuntime() const {
-    return *runtime_;
-  }
+  /* #region runSync */
 
+  template <RuntimeCallable TCallable, typename... Args>
+  std::invoke_result_t<TCallable, Args...> runSync(TCallable &&callable, Args &&...args) const;
   template <typename... Args>
-  inline jsi::Value runGuarded(
-      const std::shared_ptr<ShareableWorklet> &shareableWorklet,
-      Args &&...args) const {
+  jsi::Value runSync(const jsi::Function &function, Args &&...args) const {
+    auto &rt = *runtime_;
+    // We only use callGuard in debug mode, otherwise we call the provided
+    // function directly. CallGuard provides a way of capturing exceptions in
+    // JavaScript and propagating them to the main React Native thread such that
+    // they can be presented using RN's LogBox.
+#ifndef NDEBUG
+    return getCallGuard(rt).call(rt, function, args...);
+#else
+    return function.call(rt, args...);
+#endif // NDEBUG
+  }
+  template <typename... Args>
+  jsi::Value runSync(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args) const {
     jsi::Runtime &rt = *runtime_;
-    return runOnRuntimeGuarded(
-        rt, shareableWorklet->toJSValue(rt), std::forward<Args>(args)...);
+    return runSync(worklet->toJSValue(rt).asObject(rt).asFunction(rt), std::forward<Args>(args)...);
+  }
+  template <RuntimeCallable TCallable>
+  std::invoke_result_t<TCallable, jsi::Runtime &> runSync(TCallable &&job) const {
+    jsi::Runtime &rt = getJSIRuntime();
+    auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
+    return job(rt);
   }
 
-  void runAsyncGuarded(
-      const std::shared_ptr<ShareableWorklet> &shareableWorklet) {
-    if (queue_ == nullptr) {
-      queue_ = std::make_shared<AsyncQueue>(name_);
-    }
-    queue_->push([=, weakThis = weak_from_this()] {
-      auto strongThis = weakThis.lock();
-      if (!strongThis) {
-        return;
-      }
+  /* #endregion */
 
-      strongThis->runGuarded(shareableWorklet);
-    });
+  /* #region runSyncSerialized */
+
+  template <ImplicitlySerializableCallable TCallable, typename... Args>
+  std::shared_ptr<Serializable> runSyncSerialized(TCallable &&callable, Args &&...args) const;
+  template <typename... Args>
+  std::shared_ptr<Serializable> runSyncSerialized(const jsi::Function &function, Args &&...args) const {
+    jsi::Runtime &rt = getJSIRuntime();
+    auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
+    auto result = runSync(function, std::forward<Args>(args)...);
+    auto serializableResult = extractSerializableOrThrow(
+        rt,
+        result,
+        "[Worklets] Function passed to `runSyncSerialized`"
+        "must return a value serialized with `createSerializable`.");
+    return serializableResult;
+  }
+  template <typename... Args>
+  std::shared_ptr<Serializable> runSyncSerialized(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args)
+      const {
+    jsi::Runtime &rt = getJSIRuntime();
+    auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
+    auto result = runSync(worklet, std::forward<Args>(args)...);
+    auto serializableResult = extractSerializableOrThrow(
+        rt,
+        result,
+        "[Worklets] Worklet passed to `runSyncSerialized`"
+        "must return a value serialized with `createSerializable`.");
+    return serializableResult;
   }
 
-  jsi::Value executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const;
-
-  std::string toString() const {
-    return "[WorkletRuntime \"" + name_ + "\"]";
-  }
+  /* #endregion */
 
   jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propName) override;
 
   std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
 
+  [[nodiscard]] std::string toString() const noexcept {
+    return "[WorkletRuntime \"" + name_ + "\"]";
+  }
+
+  [[nodiscard]] jsi::Runtime &getJSIRuntime() const noexcept {
+    return *runtime_;
+  }
+
+  [[nodiscard]] RuntimeData::RuntimeId getRuntimeId() const noexcept {
+    return runtimeId_;
+  }
+
+  [[nodiscard]] std::string getRuntimeName() const noexcept {
+    return name_;
+  }
+
+  explicit WorkletRuntime(
+      RuntimeData::RuntimeId runtimeId,
+      const std::shared_ptr<MessageQueueThread> &jsQueue,
+      const std::string &name,
+      const std::shared_ptr<AsyncQueue> &queue = nullptr,
+      bool enableEventLoop = true);
+
+  void init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy);
+
+  /* #region deprecated */
+
+  /** @deprecated Use `runSync` instead. */
+  template <typename... Args>
+  jsi::Value runGuarded(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args) const {
+    return runSync(worklet, std::forward<Args>(args)...);
+  }
+
+  /** @deprecated Use `schedule` instead. */
+  void runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet);
+
+  /** @deprecated Use `runSyncSerialized` and extract to `jsi::Value` with
+   * `extractSerializableOrThrow` instead. */
+  jsi::Value executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const;
+  /** @deprecated Use `runSync` instead. */
+  jsi::Value executeSync(std::function<jsi::Value(jsi::Runtime &)> &&job) const;
+  /** @deprecated Use `runSync` instead. */
+  jsi::Value executeSync(const std::function<jsi::Value(jsi::Runtime &)> &job) const;
+
+  /* #endregion */
+
+  /**
+   * Retrieves a weak reference to the WorkletRuntime associated with the
+   * provided jsi::Runtime.
+   *
+   * Throws when invoked with a non-worklet runtime.
+   *
+   * Available only on React Native 0.81 and higher.
+   */
+  static std::weak_ptr<WorkletRuntime> getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt);
+
+#ifndef NDEBUG
+  static jsi::Function getCallGuard(jsi::Runtime &rt);
+#endif // NDEBUG
+
  private:
+  void bundleModeInit(
+      const std::shared_ptr<JSScheduler> &jsScheduler,
+      const std::shared_ptr<const ScriptBuffer> &script,
+      const std::string &sourceUrl,
+      const std::shared_ptr<RuntimeBindings> &runtimeBindings);
+
+  void legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpackerLoader);
+
+  const RuntimeData::RuntimeId runtimeId_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;
-#ifndef NDEBUG
-  const bool supportsLocking_;
-#endif
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
+  std::shared_ptr<EventLoop> eventLoop_;
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on
 // Android
-std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
-    jsi::Runtime &rt,
-    const jsi::Value &value);
+std::shared_ptr<WorkletRuntime> extractWorkletRuntime(jsi::Runtime &rt, const jsi::Value &value);
 
 void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
-    const jsi::Value &shareableWorkletValue);
+    const jsi::Value &serializableWorkletValue);
+
+/**
+ * @deprecated Use `WorkletRuntime::runSync` instead.
+ */
+template <typename... Args>
+inline jsi::Value runOnRuntimeGuarded(jsi::Runtime &rt, const jsi::Function &function, Args &&...args) {
+  // We only use callGuard in debug mode, otherwise we call the provided
+  // function directly. CallGuard provides a way of capturing exceptions in
+  // JavaScript and propagating them to the main React Native thread such that
+  // they can be presented using RN's LogBox.
+#ifndef NDEBUG
+  return WorkletRuntime::getCallGuard(rt).call(rt, function, args...);
+#else
+  return function.call(rt, args...);
+#endif // NDEBUG
+}
+
+/**
+ * @deprecated Use `WorkletRuntime::runSync` instead.
+ */
+template <typename... Args>
+inline jsi::Value runOnRuntimeGuarded(jsi::Runtime &rt, const jsi::Value &function, Args &&...args) {
+  return runOnRuntimeGuarded(rt, function.asObject(rt).asFunction(rt), std::forward<Args>(args)...);
+}
 
 } // namespace worklets

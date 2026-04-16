@@ -1,12 +1,10 @@
 import { useHeaderHeight } from '@react-navigation/elements';
-import React from 'react';
+import type React from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 import { Dimensions, Platform, StyleSheet, View } from 'react-native';
-import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
-  useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
   withDecay,
@@ -61,21 +59,16 @@ function ScrollableView({
       windowDimensions.height - headerHeight - evt.nativeEvent.layout.height;
   }
 
-  type AnimatedGHContext = {
-    startY: number;
-  };
-  const handler = useAnimatedGestureHandler<
-    PanGestureHandlerGestureEvent,
-    AnimatedGHContext
-  >({
-    onStart: (_evt, ctx) => {
-      const currentY = translateY.value;
-      ctx.startY = currentY;
-      translateY.value = currentY; // for stop animation
-    },
+  const startY = useSharedValue(0);
 
-    onActive: (evt, ctx) => {
-      const nextTranslate = ctx.startY + evt.translationY;
+  const gesture = Gesture.Pan()
+    .onBegin(() => {
+      const currentTranslateY = translateY.value;
+      startY.value = currentTranslateY;
+      translateY.value = currentTranslateY; // for stop animation (assigning to a shared value stops running animation)
+    })
+    .onUpdate((event) => {
+      const nextTranslate = startY.value + event.translationY;
 
       if (nextTranslate < loverBound.value) {
         translateY.value =
@@ -85,9 +78,8 @@ function ScrollableView({
       } else {
         translateY.value = nextTranslate;
       }
-    },
-
-    onEnd: (evt, _ctx) => {
+    })
+    .onEnd((event) => {
       if (translateY.value < loverBound.value || translateY.value > 0) {
         const toValue = translateY.value > 0 ? 0 : loverBound.value;
 
@@ -98,11 +90,10 @@ function ScrollableView({
       } else {
         translateY.value = withDecay({
           clamp: [loverBound.value, 0],
-          velocity: evt.velocityY,
+          velocity: event.velocityY,
         });
       }
-    },
-  });
+    });
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
@@ -117,11 +108,11 @@ function ScrollableView({
 
   return (
     <View style={styles.flexOne}>
-      <PanGestureHandler onGestureEvent={handler}>
+      <GestureDetector gesture={gesture}>
         <Animated.View style={animatedStyles}>
           <View onLayout={onLayout}>{children}</View>
         </Animated.View>
-      </PanGestureHandler>
+      </GestureDetector>
     </View>
   );
 }

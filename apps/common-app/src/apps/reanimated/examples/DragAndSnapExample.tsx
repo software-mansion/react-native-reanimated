@@ -1,58 +1,43 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Extrapolation,
   interpolate,
-  useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
 
 export default function DragAndSnapExample() {
-  const translation = {
-    x: useSharedValue(0),
-    y: useSharedValue(0),
-  };
-  type AnimatedGHContext = {
-    startX: number;
-    startY: number;
-  };
-  const gestureHandler = useAnimatedGestureHandler<
-    PanGestureHandlerGestureEvent,
-    AnimatedGHContext
-  >({
-    onStart: (_, ctx) => {
-      ctx.startX = translation.x.value;
-      ctx.startY = translation.y.value;
-    },
-    onActive: (event, ctx) => {
-      translation.x.value = ctx.startX + event.translationX;
-      translation.y.value = ctx.startY + event.translationY;
-    },
-    onEnd: (_) => {
-      translation.x.value = withSpring(0);
-      translation.y.value = withSpring(0);
-    },
-  });
+  const translationX = useSharedValue(0);
+  const translationY = useSharedValue(0);
+
+  const gesture = Gesture.Pan()
+    .onChange((event) => {
+      translationX.value += event.changeX;
+      translationY.value += event.changeY;
+    })
+    .onEnd(() => {
+      translationX.value = withSpring(0);
+      translationY.value = withSpring(0);
+    });
 
   const stylez = useAnimatedStyle(() => {
     const H = Math.round(
-      interpolate(translation.x.value, [0, 300], [0, 360], Extrapolation.CLAMP)
+      interpolate(translationX.value, [0, 300], [0, 360], Extrapolation.CLAMP)
     );
     const S = Math.round(
-      interpolate(translation.y.value, [0, 500], [100, 50], Extrapolation.CLAMP)
+      interpolate(translationY.value, [0, 500], [100, 50], Extrapolation.CLAMP)
     );
     const backgroundColor = `hsl(${H},${S}%,50%)`;
     return {
       transform: [
         {
-          translateX: translation.x.value,
+          translateX: translationX.value,
         },
         {
-          translateY: translation.y.value,
+          translateY: translationY.value,
         },
       ],
       backgroundColor,
@@ -61,9 +46,9 @@ export default function DragAndSnapExample() {
 
   return (
     <View style={styles.container}>
-      <PanGestureHandler onGestureEvent={gestureHandler}>
+      <GestureDetector gesture={gesture}>
         <Animated.View style={[styles.box, stylez]} />
-      </PanGestureHandler>
+      </GestureDetector>
     </View>
   );
 }

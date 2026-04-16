@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { type JSX, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type {
   CSSAnimationProperties,

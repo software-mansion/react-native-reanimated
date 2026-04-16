@@ -7,19 +7,21 @@ until time comes to refactor the code and get necessary types right.
 This will not be easy though! 
 */
 
-import type { RegisteredStyle, StyleProp } from 'react-native';
+import type { StyleProp } from 'react-native';
 
 import type {
   AnimatedStyle,
   EntryExitAnimationFunction,
   LayoutAnimationFunction,
   SharedValue,
-  TransformArrayItem,
 } from './commonTypes';
+import type { NestedArray } from './createAnimatedComponent/commonTypes';
+import type { CSSStyle } from './css';
 import type { BaseAnimationBuilder } from './layoutReanimation/animationBuilder/BaseAnimationBuilder';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
+import type { SharedTransition } from './layoutReanimation/SharedTransition';
 
-type EntryOrExitLayoutType =
+export type EntryOrExitLayoutType =
   | BaseAnimationBuilder
   | typeof BaseAnimationBuilder
   | EntryExitAnimationFunction
@@ -45,8 +47,13 @@ type AnimatedStyleProps<Props extends object> = {
 };
 
 /** Component props that are not specially handled by us. */
+type ComponentPropsWithoutStyle<Props extends object> = Omit<
+  Props,
+  keyof PickStyleProps<Props> | 'style'
+>;
+
 type RestProps<Props extends object> = {
-  [K in keyof Omit<Props, keyof PickStyleProps<Props> | 'style'>]:
+  [K in keyof ComponentPropsWithoutStyle<Props>]:
     | Props[K]
     | SharedValue<Props[K]>;
 };
@@ -87,9 +94,10 @@ type LayoutProps = {
   exiting?: EntryOrExitLayoutType;
 };
 
-type AnimatedPropsProp<Props extends object> = RestProps<Props> &
-  AnimatedStyleProps<Props> &
-  LayoutProps;
+type SharedTransitionProps = {
+  sharedTransitionTag?: string;
+  sharedTransitionStyle?: SharedTransition;
+};
 
 export type AnimatedProps<Props extends object> = RestProps<Props> &
   AnimatedStyleProps<Props> &
@@ -99,29 +107,9 @@ export type AnimatedProps<Props extends object> = RestProps<Props> &
      *
      * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
      */
-    animatedProps?: Partial<AnimatedPropsProp<Props>>;
-  };
+    animatedProps?: NestedArray<
+      CSSStyle<ComponentPropsWithoutStyle<Partial<Props>>>
+    >; // TODO - improve type once useAnimatedProps is typed properly. For now it is typed in the same way as the normal style prop, so it is assignable to the CSSStyle type
+  } & SharedTransitionProps;
 
 // THE LAND OF THE DEPRECATED
-
-/** @deprecated This type is no longer relevant. */
-export type Adaptable<T> =
-  | T
-  | ReadonlyArray<T | ReadonlyArray<T>>
-  | SharedValue<T>;
-
-/** @deprecated This type is no longer relevant. */
-export type AdaptTransforms<T> = {
-  [P in keyof T]: Adaptable<T[P]>;
-};
-
-/** @deprecated Please use {@link TransformArrayItem} type instead. */
-export type TransformStyleTypes = TransformArrayItem;
-
-/** @deprecated This type is no longer relevant. */
-export type AnimatedStyleProp<T> =
-  | AnimatedStyle<T>
-  | RegisteredStyle<AnimatedStyle<T>>;
-
-/** @deprecated Please use {@link AnimatedProps} type instead. */
-export type AnimateProps<Props extends object> = AnimatedProps<Props>;

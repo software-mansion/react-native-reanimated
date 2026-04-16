@@ -1,61 +1,15 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`animatedProps Custom animated component 1`] = `
+exports[`animatedProps Multiple animated props objects matches snapshot 1`] = `
 <View>
-  <RNSVGSvgView
-    bbHeight="100%"
-    bbWidth="100%"
-    focusable={false}
-    style={
-      [
-        {
-          "backgroundColor": "transparent",
-          "borderWidth": 0,
-        },
-        {
-          "flex": 0,
-          "height": "100%",
-          "width": "100%",
-        },
-      ]
-    }
-  >
-    <RNSVGGroup
-      fill={
-        {
-          "payload": 4278190080,
-          "type": 0,
-        }
-      }
-    >
-      // SVG components strip our jest props and cannot be tested
-      <RNSVGCircle
-        cx="50%"
-        cy="50%"
-        fill={
-          {
-            "payload": 4290088433,
-            "type": 0,
-          }
-        }
-        propList={
-          [
-            "fill",
-          ]
-        }
-        r={20}
-        testID="circle"
-      />
-    </RNSVGGroup>
-  </RNSVGSvgView>
   <TextInput
-    animatedProps={"{}"}
     collapsable={false}
     defaultValue="Box width: 20"
     jestAnimatedProps={
       {
         "value": {
           "defaultValue": "Box width: 20",
+          "placeholder": "Click count: 0",
           "text": "Box width: 20",
         },
       }
@@ -65,7 +19,7 @@ exports[`animatedProps Custom animated component 1`] = `
         "value": {},
       }
     }
-    nativeID="7"
+    placeholder="Click count: 0"
     testID="text"
     text="Box width: 20"
   />
@@ -131,56 +85,9 @@ exports[`animatedProps Custom animated component 1`] = `
 </View>
 `;
 
-exports[`animatedProps SVG component cannot be tested 1`] = `
+exports[`animatedProps Single animated props object matches snapshot 1`] = `
 <View>
-  <RNSVGSvgView
-    bbHeight="100%"
-    bbWidth="100%"
-    focusable={false}
-    style={
-      [
-        {
-          "backgroundColor": "transparent",
-          "borderWidth": 0,
-        },
-        {
-          "flex": 0,
-          "height": "100%",
-          "width": "100%",
-        },
-      ]
-    }
-  >
-    <RNSVGGroup
-      fill={
-        {
-          "payload": 4278190080,
-          "type": 0,
-        }
-      }
-    >
-      // SVG components strip our jest props and cannot be tested
-      <RNSVGCircle
-        cx="50%"
-        cy="50%"
-        fill={
-          {
-            "payload": 4290088433,
-            "type": 0,
-          }
-        }
-        propList={
-          [
-            "fill",
-          ]
-        }
-        r={20}
-        testID="circle"
-      />
-    </RNSVGGroup>
-  </RNSVGSvgView>
   <TextInput
-    animatedProps={"{}"}
     collapsable={false}
     defaultValue="Box width: 20"
     jestAnimatedProps={
@@ -196,7 +103,6 @@ exports[`animatedProps SVG component cannot be tested 1`] = `
         "value": {},
       }
     }
-    nativeID="3"
     testID="text"
     text="Box width: 20"
   />

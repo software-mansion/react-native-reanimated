@@ -1,7 +1,7 @@
 #pragma once
 
+#include <reanimated/CSS/InterpolatorRegistry.h>
 #include <reanimated/CSS/common/definitions.h>
-#include <reanimated/CSS/config/PropertyInterpolatorsConfig.h>
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
@@ -15,35 +15,33 @@ namespace reanimated::css {
 class TransitionStyleInterpolator {
  public:
   TransitionStyleInterpolator(
+      const std::string &nativeComponentName,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  std::unordered_set<std::string> getReversedPropertyNames(
-      const folly::dynamic &newPropertyValues) const;
-
   folly::dynamic interpolate(
-      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
       const TransitionProgressProvider &transitionProgressProvider) const;
 
-  void discardFinishedInterpolators(
-      const TransitionProgressProvider &transitionProgressProvider);
-  void discardIrrelevantInterpolators(
-      const std::unordered_set<std::string> &transitionPropertyNames);
-  void updateInterpolatedProperties(
-      const ChangedProps &changedProps,
-      const folly::dynamic &lastUpdateValue);
+  bool createOrUpdateInterpolator(
+      jsi::Runtime &rt,
+      const std::string &propertyName,
+      const jsi::Value &fromValue,
+      const jsi::Value &toValue);
+  void setAllowDiscrete(const std::string &propertyName, bool allowDiscrete);
+  void removeProperty(const std::string &propertyName);
+  void discardFinishedInterpolators(const TransitionProgressProvider &transitionProgressProvider);
 
  private:
-  using MapInterpolatorsCallback = std::function<folly::dynamic(
-      const std::shared_ptr<PropertyInterpolator> &,
-      const std::shared_ptr<KeyframeProgressProvider> &)>;
+  using MapInterpolatorsCallback = std::function<
+      folly::dynamic(const std::shared_ptr<PropertyInterpolator> &, const std::shared_ptr<KeyframeProgressProvider> &)>;
 
+  const std::string nativeComponentName_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   PropertyInterpolatorsRecord interpolators_;
+  std::unordered_set<std::string> allowDiscreteProperties_;
 
-  folly::dynamic mapInterpolators(
-      const TransitionProgressProvider &transitionProgressProvider,
-      const MapInterpolatorsCallback &callback) const;
+  std::shared_ptr<PropertyInterpolator> getOrCreateInterpolator(const std::string &propertyName);
 };
 
 } // namespace reanimated::css

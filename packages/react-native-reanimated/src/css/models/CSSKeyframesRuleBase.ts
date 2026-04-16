@@ -1,10 +1,7 @@
 'use strict';
+import type { PlainStyle } from '../../common';
 import { ANIMATION_NAME_PREFIX } from '../constants';
-import type {
-  CSSAnimationKeyframes,
-  CSSKeyframesRule,
-  PlainStyle,
-} from '../types';
+import type { CSSAnimationKeyframes, CSSKeyframesRule } from '../types';
 
 export default abstract class CSSKeyframesRuleBase<S extends PlainStyle>
   implements CSSKeyframesRule
@@ -17,9 +14,9 @@ export default abstract class CSSKeyframesRuleBase<S extends PlainStyle>
   private readonly length_: number;
   private readonly name_: string;
 
-  constructor(keyframes: CSSAnimationKeyframes<S>) {
+  constructor(keyframes: CSSAnimationKeyframes<S>, cssText?: string) {
     this.cssRules_ = keyframes;
-    this.cssText_ = JSON.stringify(keyframes);
+    this.cssText_ = cssText ?? JSON.stringify(keyframes);
     this.length_ = Object.keys(keyframes).length;
     this.name_ = CSSKeyframesRuleBase.generateNextKeyframeName();
   }

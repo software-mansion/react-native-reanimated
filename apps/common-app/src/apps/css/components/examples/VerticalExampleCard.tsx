@@ -1,8 +1,7 @@
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Pressable } from 'react-native-gesture-handler';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   FadeInDown,
   FadeInUp,
@@ -132,16 +131,16 @@ const styles = StyleSheet.create({
     height: 'auto',
     padding: spacing.xs,
   },
+  itemsContainer: {
+    flexDirection: 'column',
+    gap: spacing.sm,
+    height: 'auto',
+  },
   itemWrapper: {
     backgroundColor: colors.background2,
     borderRadius: radius.sm,
     overflow: 'hidden',
     padding: spacing.xs,
-  },
-  itemsContainer: {
-    flexDirection: 'column',
-    gap: spacing.sm,
-    height: 'auto',
   },
   titleRow: {
     alignItems: 'center',

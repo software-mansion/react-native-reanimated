@@ -1,9 +1,8 @@
-/* eslint-disable no-unused-expressions */
-/* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useCallback } from 'react';
-import type { FlatListProps } from 'react-native';
+
+import type React from 'react';
+import { useCallback } from 'react';
 import { FlatList, View } from 'react-native';
 
 import Animated from '../..';
@@ -14,8 +13,9 @@ function AnimatedFlatListTest() {
       id: number;
     };
     const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
-    const AnimatedTypedFlatList =
-      Animated.createAnimatedComponent<FlatListProps<Item[]>>(FlatList);
+    const AnimatedTypedFlatList = Animated.createAnimatedComponent(
+      FlatList<Item[]>
+    );
     const renderItem = useCallback(
       ({ item, index }: { item: Item[]; index: number }) => {
         if (Math.random()) {

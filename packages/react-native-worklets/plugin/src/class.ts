@@ -34,7 +34,7 @@ import {
 import { strict as assert } from 'assert';
 
 import { workletTransformSync } from './transform';
-import type { ReanimatedPluginPass } from './types';
+import type { WorkletsPluginPass } from './types';
 import { workletClassFactorySuffix } from './types';
 import { replaceWithFactoryCall } from './utils';
 
@@ -42,9 +42,12 @@ const classWorkletMarker = '__workletClass';
 
 export function processIfWorkletClass(
   classPath: NodePath<ClassDeclaration>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ): boolean {
-  if (!isWorkletizableClass(classPath, state)) {
+  if (
+    !isWorkletizableClass(classPath, state) ||
+    state.opts.bundleMode /* temporary */
+  ) {
     return false;
   }
 
@@ -57,7 +60,7 @@ export function processIfWorkletClass(
 
 function processClass(
   classPath: NodePath<ClassDeclaration>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ) {
   assert(classPath.node.id);
   const className = classPath.node.id.name;
@@ -88,7 +91,7 @@ function processClass(
 
 function getPolyfilledAst(
   classNode: ClassDeclaration,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ) {
   const classCode = generate(classNode).code;
 
@@ -343,7 +346,7 @@ type Polyfill = {
 
 function isWorkletizableClass(
   classPath: NodePath<ClassDeclaration>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ): boolean {
   const className = classPath.node.id?.name;
   const classNode = classPath.node;

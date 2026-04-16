@@ -15,15 +15,14 @@ string(
   APPEND
   CMAKE_CXX_FLAGS
   " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}\
-    -DREANIMATED_PROFILING=${REANIMATED_PROFILING}\
-    -DREANIMATED_VERSION=${REANIMATED_VERSION}")
+    -DREANIMATED_VERSION=${REANIMATED_VERSION}\
+    -DREANIMATED_FEATURE_FLAGS=\"${REANIMATED_FEATURE_FLAGS}\"")
+string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")
+# flags to optimize the binary size
+string(APPEND CMAKE_CXX_FLAGS " -fvisibility=hidden")
 
-string(APPEND CMAKE_CXX_FLAGS
-       " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all\
-   -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
-
-if(${IS_NEW_ARCHITECTURE_ENABLED})
-  string(APPEND CMAKE_CXX_FLAGS " -DRCT_NEW_ARCH_ENABLED")
+if(${REANIMATED_PROFILING})
+  string(APPEND CMAKE_CXX_FLAGS " -DREANIMATED_PROFILING")
 endif()
 
 if(${IS_REANIMATED_EXAMPLE_APP})
@@ -32,6 +31,7 @@ endif()
 
 if(NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")
   string(APPEND CMAKE_CXX_FLAGS " -DNDEBUG")
+  string(APPEND CMAKE_CXX_FLAGS " -flto=thin")
 endif()
 
 set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
@@ -50,31 +50,53 @@ find_package(react-native-worklets REQUIRED CONFIG)
 add_library(reanimated SHARED ${REANIMATED_COMMON_CPP_SOURCES}
                               ${REANIMATED_ANDROID_CPP_SOURCES})
 
+if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
+  include(
+    "${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")
+  target_compile_reactnative_options(reanimated PUBLIC)
+else()
+  string(APPEND CMAKE_CXX_FLAGS
+         " -fexceptions -frtti -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
+endif()
+
 target_include_directories(
   reanimated
   PRIVATE "${COMMON_CPP_DIR}"
           "${ANDROID_CPP_DIR}"
           "${REACT_NATIVE_DIR}/ReactCommon"
+          "${REACT_NATIVE_DIR}/ReactCommon/yoga"
           "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule"
           "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
-          "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor")
-
-if(${IS_NEW_ARCHITECTURE_ENABLED})
-  target_include_directories(
-    reanimated
-    PRIVATE
-      "${REACT_NATIVE_DIR}/ReactCommon/yoga"
-      "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx")
-endif()
+          "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
+          "${REACT_NATIVE_DIR}/ReactCommon/jsiexecutor"
+          "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
+)
 
 set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)
 
-target_link_libraries(reanimated log ReactAndroid::jsi fbjni::fbjni android)
-
-target_link_libraries(reanimated react-native-worklets::worklets)
-
-if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
-  target_link_libraries(reanimated ReactAndroid::reactnative)
+if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
+  set(BUILD_TYPE "debug")
 else()
-  target_link_libraries(reanimated ReactAndroid::react_nativemodule_core)
+  set(BUILD_TYPE "release")
 endif()
+
+set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)
+# remove dead code sections
+set_target_properties(reanimated PROPERTIES LINK_FLAGS "-Wl,--gc-sections")
+
+# fold identical functions
+if(NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")
+  set_property(
+    TARGET reanimated
+    APPEND_STRING
+    PROPERTY LINK_FLAGS ",--icf=safe")
+endif()
+
+target_link_libraries(
+  reanimated
+  log
+  ReactAndroid::reactnative
+  ReactAndroid::jsi
+  fbjni::fbjni
+  android
+  react-native-worklets::worklets)

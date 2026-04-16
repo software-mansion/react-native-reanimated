@@ -1,15 +1,20 @@
 'use strict';
-
+import type { Component, ElementType, JSX, RefObject } from 'react';
 import type {
-  ImageStyle,
+  FlatList,
+  HostInstance,
+  ScrollView,
+  SectionList,
   TextStyle,
   TransformsStyle,
   ViewStyle,
 } from 'react-native';
-import type { ShareableRef, WorkletFunction } from 'react-native-worklets';
+import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 
+import type { AnyRecord, Maybe } from './common';
 import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
 import type { EasingFunctionFactory } from './Easing';
+import type { AnimatedStyleHandle, DefaultStyle } from './hook/commonTypes';
 
 type LayoutAnimationOptions =
   | 'originX'
@@ -66,6 +71,7 @@ export type LayoutAnimation = {
   callback?: (finished: boolean) => void;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnimationFunction = (a?: any, b?: any, c?: any) => any; // this is just a temporary mock
 
 export type EntryAnimationsValues = TargetLayoutAnimationValues &
@@ -89,6 +95,10 @@ export enum LayoutAnimationType {
   ENTERING = 1,
   EXITING = 2,
   LAYOUT = 3,
+  SHARED_ELEMENT_TRANSITION = 4,
+  SHARED_ELEMENT_TRANSITION_NATIVE_ID = 5,
+  SHARED_ELEMENT_TRANSITION_PROGRESS = 6,
+  SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID = 7,
 }
 
 export type LayoutAnimationFunction = (
@@ -115,8 +125,7 @@ export interface BaseLayoutAnimationConfig {
   mass?: number;
   stiffness?: number;
   overshootClamping?: number;
-  restDisplacementThreshold?: number;
-  restSpeedThreshold?: number;
+  energyThreshold?: number;
 }
 
 export interface BaseBuilderAnimationConfig extends BaseLayoutAnimationConfig {
@@ -157,13 +166,16 @@ export type StylePropsWithArrayTransform = StyleProps & {
 export interface LayoutAnimationBatchItem {
   viewTag: number;
   type: LayoutAnimationType;
-  config: ShareableRef<Keyframe | LayoutAnimationFunction> | undefined;
+  config: SerializableRef<Keyframe | LayoutAnimationFunction> | undefined;
+  sharedTransitionTag?: string;
 }
 
 export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
+
 export interface StyleProps extends ViewStyle, TextStyle {
   originX?: number;
   originY?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 
@@ -183,10 +195,7 @@ export interface SharedValue<Value = unknown> {
   set(value: Value | ((value: Value) => Value)): void;
   addListener: (listenerID: number, listener: (value: Value) => void) => void;
   removeListener: (listenerID: number) => void;
-  modify: (
-    modifier?: <T extends Value>(value: T) => T,
-    forceUpdate?: boolean
-  ) => void;
+  modify: (modifier?: (value: Value) => Value, forceUpdate?: boolean) => void;
 }
 
 /**
@@ -197,7 +206,7 @@ export interface SharedValue<Value = unknown> {
  */
 type SharedValueDisableContravariance<Value = unknown> = Omit<
   SharedValue<Value>,
-  'set'
+  'set' | 'modify'
 >;
 
 export interface Mutable<Value = unknown> extends SharedValue<Value> {
@@ -211,6 +220,11 @@ export interface Mutable<Value = unknown> extends SharedValue<Value> {
    * method.
    */
   _value: Value;
+  /**
+   * Defined only when enabled with a feature flag
+   * `USE_SYNCHRONIZABLE_FOR_MUTABLES`.
+   */
+  setDirty?: (dirty: boolean) => void;
 }
 
 export type MapperRawInputs = unknown[];
@@ -220,7 +234,7 @@ export type MapperOutputs = SharedValue[];
 export type MapperRegistry = {
   start: (
     mapperID: number,
-    worklet: () => void,
+    worklet: (forceUpdate?: boolean) => void,
     inputs: MapperRawInputs,
     outputs?: MapperOutputs
   ) => void;
@@ -252,6 +266,7 @@ export type AnimatableValueObject = { [key: string]: Animatable };
 export type AnimatableValue = Animatable | AnimatableValueObject;
 
 export interface AnimationObject<T = AnimatableValue> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
   callback?: AnimationCallback;
   current?: T;
@@ -264,11 +279,15 @@ export interface AnimationObject<T = AnimatableValue> {
 
   __prefix?: string;
   __suffix?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onFrame: (animation: any, timestamp: Timestamp) => boolean;
   onStart: (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     nextAnimation: any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     current: any,
     timestamp: Timestamp,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     previousAnimation: any
   ) => void;
 }
@@ -279,6 +298,7 @@ export interface Animation<T extends AnimationObject> extends AnimationObject {
     nextAnimation: T,
     current: AnimatableValue,
     timestamp: Timestamp,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     previousAnimation: Animation<any> | null | T
   ) => void;
 }
@@ -349,7 +369,12 @@ export enum InterfaceOrientation {
 }
 
 export type ShadowNodeWrapper = {
-  __hostObjectShadowNodeWrapper: never;
+  __nativeStateShadowNodeWrapper: never;
+};
+
+export type SettledUpdate = {
+  viewTag: number;
+  styleProps: StyleProps | null;
 };
 
 export enum KeyboardState {
@@ -430,22 +455,45 @@ type MaybeSharedValueRecursive<Value> = Value extends readonly (infer Item)[]
           }
     : MaybeSharedValue<Value>;
 
-type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
-
 // Ideally we want AnimatedStyle to not be generic, but there are
 // so many dependencies on it being generic that it's not feasible at the moment.
 export type AnimatedStyle<Style = DefaultStyle> =
   | (Style & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) // TODO - maybe add css animation config somewhere else
-  | MaybeSharedValueRecursive<Style>;
+  | MaybeSharedValueRecursive<Style>
+  | AnimatedStyleHandle<Style>;
 
 export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
 >;
 
-/** @deprecated Please use {@link AnimatedStyle} type instead. */
-export type AnimateStyle<Style = DefaultStyle> = AnimatedStyle<Style>;
+export type StyleUpdaterContainer = RefObject<
+  ((forceUpdate: boolean) => void) | undefined
+>;
 
-/** @deprecated This type is no longer relevant. */
-export type StylesOrDefault<T> = 'style' extends keyof T
-  ? MaybeSharedValueRecursive<T['style']>
-  : Record<string, unknown>;
+type GetProp<T, K extends PropertyKey> = K extends keyof T ? T[K] : undefined;
+
+type ScrollResponderType = InternalHostInstance &
+  Partial<
+    ReturnType<
+      NonNullable<
+        | GetProp<ScrollView, 'getScrollResponder'>
+        | GetProp<FlatList, 'getScrollResponder'>
+        | GetProp<SectionList, 'getScrollResponder'>
+      >
+    > &
+      JSX.Element
+  >;
+
+export type InternalHostInstance = Partial<
+  HostInstance & {
+    getScrollResponder: () => Maybe<ScrollResponderType>;
+    getNativeScrollRef: () => Maybe<
+      Partial<InternalHostInstance & typeof ScrollView>
+    >;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getScrollableNode: () => any;
+    __internalInstanceHandle: AnyRecord;
+  }
+>;
+
+export type InstanceOrElement = InternalHostInstance | ElementType | Component;

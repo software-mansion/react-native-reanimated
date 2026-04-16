@@ -5,12 +5,12 @@
 
 import React from 'react';
 import { Text, View } from 'react-native';
-import { createAnimatedComponent, css } from 'react-native-reanimated';
+import { createCSSAnimatedComponent, css } from 'react-native-reanimated';
 
 import { Screen } from '@/apps/css/components';
 import { flex } from '@/theme';
 
-const AnimatedView = createAnimatedComponent(View);
+const AnimatedView = createCSSAnimatedComponent(View);
 
 export default function Playground() {
   return (

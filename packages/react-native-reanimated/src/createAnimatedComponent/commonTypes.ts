@@ -1,27 +1,33 @@
 'use strict';
-import type { Component, MutableRefObject, Ref } from 'react';
+import type { Component, Ref, RefObject } from 'react';
 
 import type {
+  AnimatedStyle,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
   ShadowNodeWrapper,
   SharedValue,
   StyleProps,
+  StyleUpdaterContainer,
 } from '../commonTypes';
 import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
-import type { ViewConfig } from '../ConfigHelper';
 import type { BaseAnimationBuilder } from '../layoutReanimation';
+import type { SharedTransition } from '../layoutReanimation/SharedTransition';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 
 export interface AnimatedProps extends Record<string, unknown> {
   viewDescriptors?: ViewDescriptorsSet;
   initial?: SharedValue<StyleProps>;
+  styleUpdaterContainer?: StyleUpdaterContainer;
 }
 
 export interface ViewInfo {
   viewTag: number | AnimatedComponentRef | HTMLElement | null;
   shadowNodeWrapper: ShadowNodeWrapper | null;
-  viewConfig: ViewConfig;
+  // The React Native view class name for the host component
+  // (e.g. "RCTText" for Text). See getViewInfo.ts for the full naming
+  // convention used in CSS.
+  reactViewName?: string;
   DOMElement?: HTMLElement | null;
 }
 
@@ -33,21 +39,30 @@ export interface IInlinePropManager {
   detachInlineProps(): void;
 }
 
+export type AnimatedComponentTypeInternal = Component &
+  IAnimatedComponentInternal;
+
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents, @typescript-eslint/no-explicit-any
+export type PropUpdates = StyleProps | AnimatedStyle<any>;
+
 export interface IPropsFilter {
   filterNonAnimatedProps: (
-    component: React.Component<unknown, unknown> & IAnimatedComponentInternal
+    component: AnimatedComponentTypeInternal
   ) => Record<string, unknown>;
 }
 
+export type JSPropsOperation = {
+  tag: number;
+  updates: StyleProps;
+};
+
 export interface IJSPropsUpdater {
-  addOnJSPropsChangeListener(
-    animatedComponent: React.Component<unknown, unknown> &
-      IAnimatedComponentInternal
+  registerComponent(
+    animatedComponent: AnimatedComponentTypeInternal,
+    jsProps: string[]
   ): void;
-  removeOnJSPropsChangeListener(
-    animatedComponent: React.Component<unknown, unknown> &
-      IAnimatedComponentInternal
-  ): void;
+  unregisterComponent(animatedComponent: AnimatedComponentTypeInternal): void;
+  updateProps(operations: JSPropsOperation[]): void;
 }
 
 export interface INativeEventsManager {
@@ -65,9 +80,11 @@ export type AnimatedComponentProps<
 > = P & {
   ref?: Ref<Component>;
   style?: NestedArray<StyleProps>;
-  animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
-  jestAnimatedValues?: MutableRefObject<AnimatedProps>;
+  animatedProps?: NestedArray<Partial<AnimatedComponentProps<AnimatedProps>>>;
+  jestAnimatedValues?: RefObject<AnimatedProps>;
   animatedStyle?: StyleProps;
+  sharedTransitionTag?: string;
+  sharedTransitionStyle?: SharedTransition & LayoutAnimationStaticContext;
   layout?: (
     | BaseAnimationBuilder
     | ILayoutAnimationBuilder
@@ -90,6 +107,15 @@ export type AnimatedComponentProps<
     LayoutAnimationStaticContext;
 };
 
+export type LayoutAnimationOrBuilder = (
+  | BaseAnimationBuilder
+  | typeof BaseAnimationBuilder
+  | EntryExitAnimationFunction
+  | Keyframe
+  | ILayoutAnimationBuilder
+) &
+  LayoutAnimationStaticContext;
+
 export interface AnimatedComponentRef extends Component {
   setNativeProps?: (props: Record<string, unknown>) => void;
   getScrollableNode?: () => AnimatedComponentRef;
@@ -98,29 +124,36 @@ export interface AnimatedComponentRef extends Component {
   elementRef?: React.RefObject<HTMLElement>;
 }
 
-export interface IAnimatedComponentInternal {
+export interface IAnimatedComponentInternalBase {
   ChildComponent: AnyComponent;
-  _animatedStyles: StyleProps[];
-  _prevAnimatedStyles: StyleProps[];
-  _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
-  _isFirstRender: boolean;
-  jestInlineStyle: NestedArray<StyleProps> | undefined;
-  jestAnimatedStyle: { value: StyleProps };
-  jestAnimatedProps: { value: AnimatedProps };
   _componentRef: AnimatedComponentRef | HTMLElement | null;
   _hasAnimatedRef: boolean;
-  _jsPropsUpdater: IJSPropsUpdater;
-  _InlinePropManager: IInlinePropManager;
-  _PropsFilter: IPropsFilter;
-  /** Doesn't exist on web. */
-  _NativeEventsManager?: INativeEventsManager;
   _viewInfo?: ViewInfo;
-  context: React.ContextType<typeof SkipEnteringContext>;
+
   /**
    * Used for Layout Animations and Animated Styles. It is not related to event
    * handling.
    */
   getComponentViewTag: () => number;
+}
+
+export interface IAnimatedComponentInternal
+  extends IAnimatedComponentInternalBase {
+  _animatedStyles: StyleProps[];
+  _prevAnimatedStyles: StyleProps[];
+  _animatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[];
+  _prevAnimatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[];
+  _isFirstRender: boolean;
+  jestInlineStyle: NestedArray<StyleProps> | undefined;
+  jestAnimatedStyle: { value: StyleProps };
+  jestAnimatedProps: { value: AnimatedProps };
+  _InlinePropManager: IInlinePropManager;
+  _PropsFilter: IPropsFilter;
+  /** Doesn't exist on web. */
+  _NativeEventsManager?: INativeEventsManager;
+  context: React.ContextType<typeof SkipEnteringContext>;
+  setNativeProps: (props: StyleProps) => void;
+  _syncStylePropsBackToReact: (props: StyleProps) => void;
 }
 
 export type NestedArray<T> = T | NestedArray<T>[];

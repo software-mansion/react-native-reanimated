@@ -12,6 +12,8 @@ import { Button, Screen } from '@/apps/css/components';
 
 const transitionStyles: Array<ViewStyle> = [
   {
+    boxShadow:
+      'inset 0 0 20px 10px rgba(34, 197, 94, 0.3), 0 8px 16px #ff6b35, 0 16px 32px rgba(59, 130, 246, 0.4)',
     transform: [
       { perspective: 100 },
       { rotate: '45deg' },
@@ -22,6 +24,23 @@ const transitionStyles: Array<ViewStyle> = [
   {
     backgroundColor: 'blue',
     borderRadius: 100,
+    boxShadow: [
+      {
+        blurRadius: 12,
+        color: 'rgba(34, 197, 94, 0.8)',
+        offsetX: 0,
+        offsetY: 8,
+        spreadDistance: 0,
+      },
+      {
+        blurRadius: 8,
+        color: '#dc2626',
+        inset: true,
+        offsetX: 4,
+        offsetY: 4,
+        spreadDistance: 2,
+      },
+    ],
     opacity: 0.5,
     transform: [{ translateY: 200 }, { rotate: '45deg' }, { scale: 2 }],
   },

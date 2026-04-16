@@ -6,7 +6,7 @@ on:
     types: [opened, edited]
 
 jobs:
-  main:
+  github-issue-template-check:
     if: ${{ github.repository == 'software-mansion/react-native-reanimated' && !contains(github.event.issue.labels.*.name, 'Maintainer issue') }}
     runs-on: ubuntu-latest
     concurrency:

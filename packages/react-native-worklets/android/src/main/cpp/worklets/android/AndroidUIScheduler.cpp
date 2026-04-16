@@ -1,5 +1,7 @@
 #include <worklets/android/AndroidUIScheduler.h>
 
+#include <utility>
+
 namespace worklets {
 
 using namespace facebook;
@@ -10,9 +12,8 @@ class UISchedulerWrapper : public UIScheduler {
   jni::global_ref<AndroidUIScheduler::javaobject> androidUiScheduler_;
 
  public:
-  explicit UISchedulerWrapper(
-      jni::global_ref<AndroidUIScheduler::javaobject> androidUiScheduler)
-      : androidUiScheduler_(androidUiScheduler) {}
+  explicit UISchedulerWrapper(jni::global_ref<AndroidUIScheduler::javaobject> androidUiScheduler)
+      : androidUiScheduler_(std::move(androidUiScheduler)) {}
 
   void scheduleOnUI(std::function<void()> job) override {
     UIScheduler::scheduleOnUI(job);
@@ -23,14 +24,11 @@ class UISchedulerWrapper : public UIScheduler {
   }
 };
 
-AndroidUIScheduler::AndroidUIScheduler(
-    jni::alias_ref<AndroidUIScheduler::javaobject> jThis)
-    : javaPart_(jni::make_global(jThis)),
-      uiScheduler_(
-          std::make_shared<UISchedulerWrapper>(jni::make_global(jThis))) {}
+AndroidUIScheduler::AndroidUIScheduler(const jni::alias_ref<AndroidUIScheduler::jhybridobject> &jThis)
+    : javaPart_(jni::make_global(jThis)), uiScheduler_(std::make_shared<UISchedulerWrapper>(jni::make_global(jThis))) {}
 
 jni::local_ref<AndroidUIScheduler::jhybriddata> AndroidUIScheduler::initHybrid(
-    jni::alias_ref<jhybridobject> jThis) {
+    jni::alias_ref<jhybridobject> jThis) { // NOLINT //(performance-unnecessary-value-param)
   return makeCxxInstance(jThis);
 }
 
@@ -42,8 +40,7 @@ void AndroidUIScheduler::triggerUI() {
 }
 
 void AndroidUIScheduler::scheduleTriggerOnUI() {
-  static const auto method =
-      javaPart_->getClass()->getMethod<void()>("scheduleTriggerOnUI");
+  static const auto method = javaPart_->getClass()->getMethod<void()>("scheduleTriggerOnUI");
   method(javaPart_.get());
 }
 

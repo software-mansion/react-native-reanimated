@@ -1,0 +1,119 @@
+---
+sidebar_position: 42 # Use alphabetical order
+---
+
+# createWorkletRuntime
+
+`createWorkletRuntime` lets you create a new JS runtime which can be used to run [worklets](/docs/fundamentals/glossary#worklet) possibly on different threads than [JS](/docs/fundamentals/glossary#javascript-thread) or [UI thread](/docs/fundamentals/glossary#ui-thread). Use this function if you need to integrate with Worklet Runtimes in C++.
+
+The return value represents the runtime. You can pass it to the C++ side using JSI (JavaScript Interface) for further operations.
+
+## Reference
+
+### Usage in JavaScript
+
+```jsx
+import { createWorkletRuntime } from 'react-native-worklets';
+
+function App() {
+  const runtime = createWorkletRuntime({
+    name: 'background',
+    initializer: () => {
+      'worklet';
+      console.log('Runtime initialized!');
+    },
+  });
+}
+```
+
+### Usage in C++
+
+```cpp
+auto runtime = reanimated::extractWorkletRuntime(rt, runtimeValue);
+
+jsi::Runtime &rt = runtime->getJSIRuntime();
+
+auto worklet = reanimated::extractShareableOrThrow<reanimated::ShareableWorklet>(rt, workletValue);
+
+runtime->runGuarded(worklet, ...args);
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  type WorkletRuntime = {
+    __hostObjectWorkletRuntime: never;
+    readonly name: string;
+    readonly runtimeId: number;
+  };
+
+  type WorkletRuntimeConfig = {
+    name?: string;
+    initializer?: () => void;
+    animationQueuePollingRate?: number;
+    enableEventLoop?: true;
+  } &
+    (
+      | {
+          useDefaultQueue?: true;
+          customQueue?: never;
+        }
+      | {
+          useDefaultQueue: false;
+          customQueue?: object;
+        }
+    );
+
+  function createWorkletRuntime(
+    config?: WorkletRuntimeConfig
+  ): WorkletRuntime;
+  ```
+</details>
+
+### Arguments
+
+#### `config`
+
+Runtime configuration object.
+
+##### `name`
+
+A name of the runtime used in debugging. Defaults to `'anonymous'`.
+
+##### `initializer`
+
+An optional worklet that will be run synchronously on the same thread immediately after the runtime is created. It can be used to inject some global variables or functions into the runtime.
+
+##### `animationQueuePollingRate`
+
+Time interval in milliseconds between polling of frame callbacks scheduled by `requestAnimationFrame`. Defaults to `16`.
+
+##### `enableEventLoop`
+
+Determines whether to enable the default event loop. Defaults to `true`.
+When enabled, the runtime provides `setTimeout`, `setImmediate`, `setInterval`, `requestAnimationFrame`, `queueMicrotask`, `clearTimeout`, `clearInterval`, `clearImmediate`, and `cancelAnimationFrame`.
+
+##### `useDefaultQueue`
+
+Determines whether to use the default queue implementation for scheduling worklets. Defaults to `true`.
+
+##### `customQueue`
+
+Optional custom queue object used for scheduling worklets. It can only be used when `useDefaultQueue` is set to `false`.
+
+### Returns
+
+`createWorkletRuntime` returns `WorkletRuntime` which is a `jsi::HostObject<reanimated::WorkletRuntime>`.
+
+## Remarks
+
+- Worklet runtimes come with `performance.now` and `console.*` methods installed out-of-the-box. Other APIs are not available and need to be injected into the runtime or captured via worklet closure.
+
+- The default queue implementation is used unless `useDefaultQueue` is set to `false`.
+
+- In development mode, all unhandled errors thrown in the runtime (except for those thrown in `initializer`) will be caught and thus logged to the console and displayed in a LogBox.
+
+## Platform compatibility
+
+<PlatformTable native={true} web={false}/>

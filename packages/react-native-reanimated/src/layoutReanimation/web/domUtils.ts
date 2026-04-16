@@ -1,8 +1,5 @@
 'use strict';
-import { logger } from 'react-native-worklets';
-
-import { ReanimatedError } from '../../errors';
-import { isWindowAvailable } from '../../PlatformChecker';
+import { IS_WINDOW_AVAILABLE, logger } from '../../common';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import { setElementPosition, snapshots } from './componentStyle';
 import type { AnimationNames } from './config';
@@ -23,7 +20,7 @@ let isObserverSet = false;
  */
 export function configureWebLayoutAnimations() {
   if (
-    !isWindowAvailable() || // Without this check SSR crashes because document is undefined (NextExample on CI)
+    !IS_WINDOW_AVAILABLE || // Without this check SSR crashes because document is undefined (NextExample on CI)
     document.getElementById(PREDEFINED_WEB_ANIMATIONS_ID) !== null
   ) {
     return;
@@ -54,7 +51,7 @@ export function configureWebLayoutAnimations() {
 
 export function insertWebAnimation(animationName: string, keyframe: string) {
   // Without this check SSR crashes because document is undefined (NextExample on CI)
-  if (!isWindowAvailable()) {
+  if (!IS_WINDOW_AVAILABLE) {
     return;
   }
 
@@ -76,7 +73,7 @@ export function insertWebAnimation(animationName: string, keyframe: string) {
     const nextAnimationIndex = animationNameToIndex.get(nextAnimationName);
 
     if (nextAnimationIndex === undefined) {
-      throw new ReanimatedError('Failed to obtain animation index.');
+      throw new Error('[Reanimated] Failed to obtain animation index.');
     }
 
     animationNameToIndex.set(animationNameList[i], nextAnimationIndex + 1);
@@ -88,7 +85,7 @@ function removeWebAnimation(
   animationRemoveCallback: () => void
 ) {
   // Without this check SSR crashes because document is undefined (NextExample on CI)
-  if (!isWindowAvailable()) {
+  if (!IS_WINDOW_AVAILABLE) {
     return;
   }
 
@@ -99,7 +96,7 @@ function removeWebAnimation(
   const currentAnimationIndex = animationNameToIndex.get(animationName);
 
   if (currentAnimationIndex === undefined) {
-    throw new ReanimatedError('Failed to obtain animation index.');
+    throw new Error('[Reanimated] Failed to obtain animation index.');
   }
 
   animationRemoveCallback();
@@ -114,14 +111,14 @@ function removeWebAnimation(
     const nextAnimationIndex = animationNameToIndex.get(nextAnimationName);
 
     if (nextAnimationIndex === undefined) {
-      throw new ReanimatedError('Failed to obtain animation index.');
+      throw new Error('[Reanimated] Failed to obtain animation index.');
     }
 
     animationNameToIndex.set(animationNameList[i], nextAnimationIndex - 1);
   }
 }
 
-const timeoutScale = 1.25; // We use this value to enlarge timeout duration. It can prove useful if animation lags.
+const timeoutScale = 5; // We use this value to enlarge timeout duration. It can prove useful if animation lags.
 const frameDurationMs = 16; // Just an approximation.
 const minimumFrames = 10;
 
@@ -177,7 +174,7 @@ function findDescendantWithExitingAnimation(
     return;
   }
 
-  if (node.reanimatedDummy && node.removedAfterAnimation === undefined) {
+  if (node.isDummy && node.removedAfterAnimation === undefined) {
     reattachElementToAncestor(node, root);
   }
 
@@ -226,7 +223,7 @@ function checkIfScreenWasChanged(
 }
 
 export function addHTMLMutationObserver() {
-  if (isObserverSet || !isWindowAvailable()) {
+  if (isObserverSet || !IS_WINDOW_AVAILABLE) {
     return;
   }
 

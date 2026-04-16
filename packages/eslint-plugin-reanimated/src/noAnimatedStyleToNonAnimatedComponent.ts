@@ -1,10 +1,9 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-// TODO: FIX ME
 // eslint-disable-next-line import/no-unresolved
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
-  create: function (context) {
+  create(context) {
     return {
       JSXOpeningElement(node: TSESTree.JSXOpeningElement) {
         if (node.name.type === AST_NODE_TYPES.JSXMemberExpression) {
@@ -54,6 +53,7 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
 
           // @ts-expect-error TODO: FIX ME
           const styleExpression = styleValue.expression;
+
           switch (styleExpression.type) {
             case AST_NODE_TYPES.Identifier: // style={myVariable}
               checkIdentifierNodeForBeingAnimated(styleExpression);
@@ -162,7 +162,6 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
   },
   meta: {
     docs: {
-      recommended: 'recommended',
       description:
         "Don't pass a reanimated animated style into a non-animated component.",
     },

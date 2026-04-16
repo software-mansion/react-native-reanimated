@@ -230,9 +230,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   if (hasKeyboardAnimation || forceAnimation) {
     _measuringView.frame = CGRectMake(0, -1, 0, _initialKeyboardHeight);
     [UIView animateWithDuration:animationDuration
-                     animations:^{
-                       self->_measuringView.frame = CGRectMake(0, -1, 0, self->_targetKeyboardHeight);
-                     }];
+                     animations:^{ self->_measuringView.frame = CGRectMake(0, -1, 0, self->_targetKeyboardHeight); }];
     [self runUpdater];
   }
 }
@@ -399,10 +397,23 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   ;
 }
 
-- (REAUIView *_Nullable)findClass:(NSString *)className inViewsList:(NSArray<REAUIView *> *)viewList
+- (bool (^)(REAUIView *))withPrefix:(NSArray<NSString *> *)prefixes
 {
-  for (UIWindow *view in viewList) {
-    if ([NSStringFromClass([view class]) isEqual:className]) {
+  return ^bool(REAUIView *view) {
+    NSString *desc = [view description];
+    for (NSString *prefix in prefixes) {
+      if ([desc hasPrefix:prefix]) {
+        return true;
+      }
+    }
+    return false;
+  };
+}
+
+- (REAUIView *_Nullable)findView:(NSArray<REAUIView *> *)viewList condition:(bool (^)(REAUIView *))condition
+{
+  for (REAUIView *view in viewList) {
+    if (condition(view)) {
       return view;
     }
   }
@@ -412,13 +423,19 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 // Inspired by: https://stackoverflow.com/questions/32598490
 - (REAUIView *_Nullable)getKeyboardView
 {
-  if (_keyboardView) {
-    return _keyboardView;
+  if (!_keyboardView) {
+    auto window = [self findView:[UIApplication sharedApplication].windows
+                       condition:[self withPrefix:@[ @"<UITextEffectsWindow" ]]];
+    auto container = [self findView:window.subviews
+                          condition:[self withPrefix:@[ @"<UIInputSetContainerView", @"<UITrackingWindowView" ]]];
+    _keyboardView =
+        [self findView:container.subviews
+             condition:^bool(REAUIView *view) {
+               return [self withPrefix:@[ @"<UIInputSetHostView", @"<UIKeyboardItemContainerView" ]](view) &&
+                   view.frame.size.height > 0;
+             }];
   }
-  NSArray<UIWindow *> *windows = [UIApplication sharedApplication].windows;
-  auto window = [self findClass:@"UITextEffectsWindow" inViewsList:windows];
-  auto keyboardContainer = [self findClass:@"UIInputSetContainerView" inViewsList:window.subviews];
-  _keyboardView = [self findClass:@"UIInputSetHostView" inViewsList:keyboardContainer.subviews];
+
   return _keyboardView;
 }
 

@@ -1,9 +1,11 @@
 'use strict';
 
-import type { ShareableRef, WorkletFunction } from 'react-native-worklets';
+import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 
 import type {
+  InternalHostInstance,
   LayoutAnimationBatchItem,
+  SettledUpdate,
   ShadowNodeWrapper,
   StyleProps,
   Value3D,
@@ -11,14 +13,14 @@ import type {
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
-  NormalizedCSSTransitionConfig,
-} from '../css/platform/native';
+} from '../css/native';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {
   registerEventHandler<T>(
-    eventHandler: ShareableRef<T>,
+    eventHandler: SerializableRef<T>,
     eventName: string,
     emitterReactTag: number
   ): number;
@@ -31,21 +33,21 @@ export interface ReanimatedModuleProxy {
     callback?: (result: T) => void
   ): Promise<T>;
 
-  enableLayoutAnimations(flag: boolean): void;
-
   registerSensor(
     sensorType: number,
     interval: number,
     iosReferenceFrame: number,
-    handler: ShareableRef<(data: Value3D | ValueRotation) => void>
+    handler: SerializableRef<(data: Value3D | ValueRotation) => void>
   ): number;
 
   unregisterSensor(sensorId: number): void;
 
-  configureProps(uiProps: string[], nativeProps: string[]): void;
+  getStaticFeatureFlag(name: string): boolean;
+
+  setDynamicFeatureFlag(name: string, value: boolean): void;
 
   subscribeForKeyboardEvents(
-    handler: ShareableRef<WorkletFunction>,
+    handler: SerializableRef<WorkletFunction>,
     isStatusBarTranslucent: boolean,
     isNavigationBarTranslucent: boolean
   ): number;
@@ -65,29 +67,31 @@ export interface ReanimatedModuleProxy {
 
   registerCSSKeyframes(
     animationName: string,
+    compoundComponentName: string,
     keyframesConfig: NormalizedCSSAnimationKeyframesConfig
   ): void;
 
-  unregisterCSSKeyframes(animationName: string): void;
+  unregisterCSSKeyframes(
+    animationName: string,
+    compoundComponentName: string
+  ): void;
 
   applyCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,
+    compoundComponentName: string,
     animationUpdates: CSSAnimationUpdates
   ): void;
 
   unregisterCSSAnimations(viewTag: number): void;
 
-  registerCSSTransition(
+  runCSSTransition(
     shadowNodeWrapper: ShadowNodeWrapper,
-    transitionConfig: NormalizedCSSTransitionConfig
-  ): void;
-
-  updateCSSTransition(
-    viewTag: number,
-    settingsUpdates: Partial<NormalizedCSSTransitionConfig>
+    transitionConfig: CSSTransitionConfig
   ): void;
 
   unregisterCSSTransition(viewTag: number): void;
+
+  getSettledUpdates(): SettledUpdate[];
 }
 
 export interface IReanimatedModule
@@ -95,7 +99,7 @@ export interface IReanimatedModule
   getViewProp<TValue>(
     viewTag: number,
     propName: string,
-    component: React.Component | undefined,
+    component: InternalHostInstance | null,
     callback?: (result: TValue) => void
   ): Promise<TValue>;
 }

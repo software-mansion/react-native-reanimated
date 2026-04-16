@@ -1,19 +1,25 @@
 import React, { useMemo } from 'react';
-import { Alert, Dimensions, StyleSheet, Text, View } from 'react-native';
+import {
+  Alert,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {
   FlatList,
   Gesture,
   GestureDetector,
-  TouchableOpacity,
 } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 const windowDimensions = Dimensions.get('window');
 const BUTTON_WIDTH = 80;
@@ -63,7 +69,11 @@ export default function SwipeableListExample() {
     <View style={s.container}>
       <FlatList
         data={data}
+        // TODO: Fix me
+        // @ts-ignore RNGH types for web FlatList are broken.
         renderItem={({ item }) => <ListItem item={item} onRemove={onRemove} />}
+        // TODO: Fix me
+        // @ts-ignore RNGH types for web FlatList are broken.
         keyExtractor={(item) => item.id}
       />
     </View>
@@ -78,8 +88,6 @@ const springConfig = (velocity: number) => {
     damping: 500,
     mass: 3,
     overshootClamping: true,
-    restDisplacementThreshold: 0.01,
-    restSpeedThreshold: 0.01,
     velocity,
   };
 };
@@ -129,7 +137,7 @@ function ListItem({ item, onRemove }: ListItemProps) {
     if (isRemoving.value) {
       return {
         height: withTiming(0, timingConfig, () => {
-          runOnJS(onRemove)();
+          scheduleOnRN(onRemove);
         }),
         opacity: withTiming(0, timingConfig),
         transform: [

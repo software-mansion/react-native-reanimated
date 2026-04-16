@@ -4,9 +4,13 @@
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
 #include <react/jni/JMessageQueueThread.h>
-
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
+#include <worklets/Tools/Defs.h>
+#include <worklets/Tools/ScriptBuffer.h>
+#include <worklets/WorkletRuntime/BundleModeConfig.h>
+#include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/android/AndroidUIScheduler.h>
+#include <worklets/android/JScriptBufferWrapper.h>
 
 #include <memory>
 #include <string>
@@ -18,17 +22,16 @@ using namespace facebook::jni;
 
 class WorkletsModule : public jni::HybridClass<WorkletsModule> {
  public:
-  static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/worklets/WorkletsModule;";
+  static auto constexpr kJavaDescriptor = "Lcom/swmansion/worklets/WorkletsModule;";
 
   static jni::local_ref<jhybriddata> initHybrid(
       jni::alias_ref<jhybridobject> jThis,
+      jboolean bundleModeEnabled,
       jlong jsContext,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-      jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
-          jsCallInvokerHolder,
-      jni::alias_ref<worklets::AndroidUIScheduler::javaobject>
-          androidUIScheduler);
+      jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
+      jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
+      jni::alias_ref<JScriptBufferWrapper::javaobject> jScriptBufferWrapper);
 
   static void registerNatives();
 
@@ -39,11 +42,13 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
  private:
   explicit WorkletsModule(
       jni::alias_ref<jhybridobject> jThis,
+      const BundleModeConfig &bundleModeConfig,
       jsi::Runtime *rnRuntime,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-      const std::shared_ptr<worklets::JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler);
+
+  void startCpp();
 
   void invalidateCpp();
 
@@ -52,8 +57,14 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
     return javaPart_->getClass()->getMethod<Signature>(methodName.c_str());
   }
 
-  std::function<void(std::function<void(const double)>)>
-  getForwardedRequestAnimationFrame();
+  RuntimeBindings::RequestAnimationFrame getRequestAnimationFrame();
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
+  RuntimeBindings::AbortRequest getAbortRequest();
+  RuntimeBindings::ClearCookies getClearCookies();
+  RuntimeBindings::SendRequest getSendRequest();
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED
+
+  std::function<bool()> getIsOnJSQueueThread();
 
   friend HybridBase;
   jni::global_ref<WorkletsModule::javaobject> javaPart_;

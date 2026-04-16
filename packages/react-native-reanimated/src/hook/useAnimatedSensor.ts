@@ -1,6 +1,5 @@
 'use strict';
 import { useEffect, useMemo, useRef } from 'react';
-import { callMicrotasks } from 'react-native-worklets';
 
 import type {
   AnimatedSensor,
@@ -117,6 +116,7 @@ export function useAnimatedSensor(
       iosReferenceFrame: IOSReferenceFrame.Auto,
       ...userConfigRef.current,
     }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [userConfigRef.current]
   );
 
@@ -153,7 +153,6 @@ export function useAnimatedSensor(
         }
       }
       sensorData.value = data;
-      callMicrotasks();
     });
 
     if (id !== -1) {

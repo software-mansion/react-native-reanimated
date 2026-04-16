@@ -2,9 +2,7 @@ import type { BabelFileResult, NodePath, PluginItem } from '@babel/core';
 import { traverse } from '@babel/core';
 import generate from '@babel/generator';
 import type {
-  ExpressionStatement,
   File as BabelFile,
-  FunctionDeclaration,
   Identifier,
   VariableDeclaration,
 } from '@babel/types';
@@ -33,7 +31,7 @@ import * as convertSourceMap from 'convert-source-map';
 import * as fs from 'fs';
 
 import { workletTransformSync } from './transform';
-import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
+import type { WorkletizableFunction, WorkletsPluginPass } from './types';
 import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
 
@@ -41,18 +39,16 @@ const MOCK_SOURCE_MAP = 'mock source map';
 
 export function buildWorkletString(
   fun: BabelFile,
-  state: ReanimatedPluginPass,
+  state: WorkletsPluginPass,
   closureVariables: Array<Identifier>,
   workletName: string,
   inputMap: BabelFileResult['map']
 ): Array<string | null | undefined> {
   restoreRecursiveCalls(fun, workletName);
 
-  const draftExpression = (fun.program.body.find((obj) =>
-    isFunctionDeclaration(obj)
-  ) ||
-    fun.program.body.find((obj) => isExpressionStatement(obj)) ||
-    undefined) as FunctionDeclaration | ExpressionStatement | undefined;
+  const draftExpression =
+    fun.program.body.find((obj) => isFunctionDeclaration(obj)) ||
+    fun.program.body.find((obj) => isExpressionStatement(obj));
 
   assert(draftExpression, '[Reanimated] `draftExpression` is undefined.');
 
@@ -71,40 +67,42 @@ export function buildWorkletString(
 
   const parsedClasses = new Set<string>();
 
-  traverse(fun, {
-    NewExpression(path) {
-      if (!isIdentifier(path.node.callee)) {
-        return;
-      }
-      const constructorName = path.node.callee.name;
-      if (
-        !closureVariables.some(
+  if (!state.opts.disableWorkletClasses) {
+    traverse(fun, {
+      NewExpression(path) {
+        if (!isIdentifier(path.node.callee)) {
+          return;
+        }
+        const constructorName = path.node.callee.name;
+        if (
+          !closureVariables.some(
+            (variable) => variable.name === constructorName
+          ) ||
+          parsedClasses.has(constructorName)
+        ) {
+          return;
+        }
+        const index = closureVariables.findIndex(
           (variable) => variable.name === constructorName
-        ) ||
-        parsedClasses.has(constructorName)
-      ) {
-        return;
-      }
-      const index = closureVariables.findIndex(
-        (variable) => variable.name === constructorName
-      );
-      closureVariables.splice(index, 1);
-      const workletClassFactoryName =
-        constructorName + workletClassFactorySuffix;
-      closureVariables.push(identifier(workletClassFactoryName));
+        );
+        closureVariables.splice(index, 1);
+        const workletClassFactoryName =
+          constructorName + workletClassFactorySuffix;
+        closureVariables.push(identifier(workletClassFactoryName));
 
-      assertBlockStatement(expression.body);
-      expression.body.body.unshift(
-        variableDeclaration('const', [
-          variableDeclarator(
-            identifier(constructorName),
-            callExpression(identifier(workletClassFactoryName), [])
-          ),
-        ])
-      );
-      parsedClasses.add(constructorName);
-    },
-  });
+        assertBlockStatement(expression.body);
+        expression.body.body.unshift(
+          variableDeclaration('const', [
+            variableDeclarator(
+              identifier(constructorName),
+              callExpression(identifier(workletClassFactoryName), [])
+            ),
+          ])
+        );
+        parsedClasses.add(constructorName);
+      },
+    });
+  }
 
   const workletFunction = functionExpression(
     identifier(workletName),

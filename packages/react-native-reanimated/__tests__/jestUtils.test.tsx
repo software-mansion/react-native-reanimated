@@ -5,7 +5,7 @@ import { View } from 'react-native';
 import Animated, { useAnimatedStyle } from '../src';
 
 describe('jestUtils', () => {
-  it('differentiates matching with shouldMatchAllProps option with toHaveAnimatedStyle', () => {
+  test('differentiates matching with shouldMatchAllProps option with toHaveAnimatedStyle', () => {
     const AnimatedComponent = () => {
       const style = useAnimatedStyle(() => {
         return {
@@ -58,7 +58,8 @@ describe('jestUtils', () => {
     const rendered = render(<AnimatedComponent />).toJSON();
     expect(rendered).toMatchSnapshot();
   });
-  it('Can parse arrays containing falsy values', () => {
+
+  test('can parse arrays containing falsy values', () => {
     const AnimatedComponent = () => {
       const style = useAnimatedStyle(() => {
         return {
@@ -82,4 +83,5 @@ describe('jestUtils', () => {
       { flex: 1 },
       { shouldMatchAllProps: false }
     );
+  });
 });

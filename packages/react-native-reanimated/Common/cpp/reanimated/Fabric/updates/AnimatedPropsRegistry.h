@@ -6,21 +6,20 @@
 
 #include <memory>
 #include <string>
-#include <utility>
+#include <unordered_map>
 #include <vector>
 
 namespace reanimated {
 
-using JSIUpdates = std::vector<std::pair<Tag, std::unique_ptr<jsi::Value>>>;
-
 class AnimatedPropsRegistry : public UpdatesRegistry {
-  JSIUpdates jsiUpdates_;
-
  public:
-  JSIUpdates getJSIUpdates();
-
-  SurfaceId update(jsi::Runtime &rt, const jsi::Value &operations);
+  void update(jsi::Runtime &rt, const jsi::Value &operations, double timestamp);
   void remove(Tag tag) override;
+  jsi::Value getUpdatesOlderThanTimestamp(jsi::Runtime &rt, double timestamp);
+  void removeUpdatesOlderThanTimestamp(double timestamp);
+
+ private:
+  std::unordered_map<Tag, double> timestampMap_; // viewTag -> timestamp, protected by `mutex_`
 };
 
 } // namespace reanimated

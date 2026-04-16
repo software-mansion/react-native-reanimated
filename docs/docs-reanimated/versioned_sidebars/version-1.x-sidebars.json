@@ -1,0 +1,314 @@
+{
+  "docs": [
+    {
+      "type": "category",
+      "label": "Overview",
+      "items": [
+        {
+          "type": "doc",
+          "id": "about"
+        },
+        {
+          "type": "doc",
+          "id": "getting_started"
+        },
+        {
+          "type": "doc",
+          "id": "declarative"
+        },
+        {
+          "type": "doc",
+          "id": "examples"
+        },
+        {
+          "type": "doc",
+          "id": "transitions"
+        },
+        {
+          "type": "doc",
+          "id": "config"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Features",
+      "items": [
+        {
+          "type": "doc",
+          "id": "value"
+        },
+        {
+          "type": "doc",
+          "id": "clock"
+        },
+        {
+          "type": "category",
+          "label": "Animations",
+          "items": [
+            {
+              "type": "doc",
+              "id": "animations/timing"
+            },
+            {
+              "type": "doc",
+              "id": "animations/decay"
+            },
+            {
+              "type": "doc",
+              "id": "animations/spring"
+            },
+            {
+              "type": "doc",
+              "id": "animations/spring_utils"
+            }
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Nodes",
+          "items": [
+            {
+              "type": "category",
+              "label": "Math",
+              "items": [
+                {
+                  "type": "doc",
+                  "id": "nodes/abs"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/add"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/ceil"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/divide"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/exp"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/floor"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/log"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/max"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/min"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/modulo"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/multiply"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/pow"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/round"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/sqrt"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/sub"
+                }
+              ]
+            },
+            {
+              "type": "category",
+              "label": "Trigonometry",
+              "items": [
+                {
+                  "type": "doc",
+                  "id": "nodes/acos"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/asin"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/atan"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/cos"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/sin"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/tan"
+                }
+              ]
+            },
+            {
+              "type": "category",
+              "label": "Logical expressions",
+              "items": [
+                {
+                  "type": "doc",
+                  "id": "nodes/and"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/eq"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/greaterOrEq"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/greaterThan"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/lessOrEq"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/lessThan"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/neq"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/not"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/or"
+                }
+              ]
+            },
+            {
+              "type": "category",
+              "label": "Clock",
+              "items": [
+                {
+                  "type": "doc",
+                  "id": "nodes/clockRunning"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/startClock"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/stopClock"
+                }
+              ]
+            },
+            {
+              "type": "category",
+              "label": "Others",
+              "items": [
+                {
+                  "type": "doc",
+                  "id": "nodes/acc"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/block"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/call"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/color"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/concat"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/cond"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/debug"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/defined"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/diff"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/diffClamp"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/event"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/interpolate"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/interpolateColors"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/onChange"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/proc"
+                },
+                {
+                  "type": "doc",
+                  "id": "nodes/set"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "doc",
+          "id": "event"
+        },
+        {
+          "type": "doc",
+          "id": "view"
+        },
+        {
+          "type": "doc",
+          "id": "code"
+        }
+      ]
+    }
+  ]
+}

@@ -1,9 +1,10 @@
 'use strict';
+
+import { logger } from './common';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedPropsAdapterWorklet,
 } from './commonTypes';
-import { addWhitelistedNativeProps } from './ConfigHelper';
 
 // @ts-expect-error This overload is required by our API.
 export function createAnimatedPropAdapter(
@@ -13,12 +14,10 @@ export function createAnimatedPropAdapter(
 
 export function createAnimatedPropAdapter(
   adapter: AnimatedPropsAdapterWorklet,
-  nativeProps?: string[]
+  _nativeProps?: string[]
 ): AnimatedPropsAdapterWorklet {
-  const nativePropsToAdd: { [key: string]: boolean } = {};
-  nativeProps?.forEach((prop) => {
-    nativePropsToAdd[prop] = true;
-  });
-  addWhitelistedNativeProps(nativePropsToAdd);
+  logger.warn(
+    '`createAnimatedPropAdapter` is no longer necessary in Reanimated 4 and will be removed in next version. Please remove this call from your code and pass the adapter function directly.'
+  );
   return adapter;
 }

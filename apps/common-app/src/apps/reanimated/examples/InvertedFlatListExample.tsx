@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text } from 'react-native';
 import Animated, {
   interpolate,
+  SharedValue,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
@@ -81,7 +82,7 @@ function Item({
 }: {
   item: number;
   index: number;
-  scrollPosition: Animated.SharedValue<number>;
+  scrollPosition: SharedValue<number>;
 }) {
   const style = useAnimatedStyle(() => {
     return {
