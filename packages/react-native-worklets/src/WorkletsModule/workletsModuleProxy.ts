@@ -79,7 +79,8 @@ export interface WorkletsModuleProxy {
   createSerializableInitializer(obj: object): SerializableRef<object>;
 
   createSerializableFunction<TArgs extends unknown[], TReturn>(
-    func: (...args: TArgs) => TReturn
+    func: (...args: TArgs) => TReturn,
+    id: number
   ): SerializableRef<TReturn>;
 
   createSerializableWorklet(

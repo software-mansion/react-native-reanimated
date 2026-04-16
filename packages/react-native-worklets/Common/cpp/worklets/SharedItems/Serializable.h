@@ -233,21 +233,19 @@ class SerializableRemoteFunction : public Serializable,
 #ifndef NDEBUG
   const std::string name_;
 #endif
-  std::unique_ptr<jsi::Value> function_;
+  int id_;
 
  public:
-  SerializableRemoteFunction(jsi::Runtime &rt, jsi::Function &&function)
+  SerializableRemoteFunction(jsi::Runtime &rt, jsi::Value id)
       : Serializable(ValueType::RemoteFunctionType),
         runtime_(&rt),
 #ifndef NDEBUG
-        name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
+        name_("placeholder"),
 #endif
-        function_(std::make_unique<jsi::Value>(rt, std::move(function))) {
+        id_(id.asNumber()) {
   }
 
-  ~SerializableRemoteFunction() override {
-    cleanupIfRuntimeExists(runtime_, function_);
-  }
+  ~SerializableRemoteFunction() override {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 };

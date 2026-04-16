@@ -32,7 +32,7 @@ jsi::Value makeSerializableClone(
     } else if (!object.getProperty(rt, "__init").isUndefined()) {
       return makeSerializableInitializer(rt, object);
     } else if (object.isFunction(rt)) {
-      return makeSerializableFunction(rt, object.asFunction(rt));
+      return makeSerializableFunction(rt, object.asFunction(rt), -1);
     } else if (object.isArray(rt)) {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
         serializable = std::make_shared<RetainingSerializable<SerializableArray>>(rt, object.asArray(rt));
@@ -240,7 +240,11 @@ jsi::Value SerializableImport::toJSValue(jsi::Runtime &rt) {
 
 jsi::Value SerializableRemoteFunction::toJSValue(jsi::Runtime &rt) {
   if (&rt == runtime_) {
-    return jsi::Value(rt, *function_);
+    auto global = rt.global();
+    auto remoteFunctionCache = global.getPropertyAsObject(rt, "__remoteFunctionCache");
+    auto cached =
+        remoteFunctionCache.getPropertyAsFunction(rt, "get").callWithThis(rt, remoteFunctionCache, jsi::Value(id_));
+    return cached;
   } else {
 #ifndef NDEBUG
     return getValueUnpacker(rt).call(

@@ -197,7 +197,7 @@ void WorkletRuntimeDecorator::decorate(
   });
 
   jsi_utils::installJsiFunction(rt, "_createSerializableFunction", [](jsi::Runtime &rt, const jsi::Value &value) {
-    return makeSerializableFunction(rt, value.asObject(rt).asFunction(rt));
+    return makeSerializableFunction(rt, value.asObject(rt).asFunction(rt), -1);
   });
 
   jsi_utils::installJsiFunction(rt, "_createSerializableSynchronizable", [](jsi::Runtime &rt, const jsi::Value &value) {

@@ -432,10 +432,18 @@ function cloneArray<T extends unknown[]>(
   return clone;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+const remoteFunctionCache = new Map<number, Function>();
+// @ts-expect-error it's ok
+globalThis.__remoteFunctionCache = remoteFunctionCache;
+let index = 0;
+
 function cloneRemoteFunction<TArgs extends unknown[], TReturn>(
   value: (...args: TArgs) => TReturn
 ): SerializableRef<TReturn> {
-  const clone = WorkletsModule.createSerializableFunction(value);
+  const currentIndex = index++;
+  remoteFunctionCache.set(currentIndex, value);
+  const clone = WorkletsModule.createSerializableFunction(value, currentIndex);
   serializableMappingCache.set(value, clone);
   serializableMappingCache.set(clone);
 

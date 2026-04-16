@@ -378,8 +378,8 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
 
   if (name == "createSerializableFunction") {
     return jsi::Function::createFromHostFunction(
-        rt, propName, 1, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return makeSerializableFunction(rt, args[0].asObject(rt).asFunction(rt));
+        rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          return makeSerializableFunction(rt, args[0].asObject(rt).asFunction(rt), args[1].asNumber());
         });
   }
 
