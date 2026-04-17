@@ -91,7 +91,7 @@ function createMapperRegistry() {
     mapperRunFinalizers.push(finalizer);
   };
 
-  let anyMapperDirty = false;
+  let isAnyMapperDirty = false;
 
   function mapperRun() {
     if (processingMappers) {
@@ -102,14 +102,14 @@ function createMapperRegistry() {
       if (mappers.size !== sortedMappers.length) {
         updateMappersOrder();
       }
-      if (anyMapperDirty) {
+      if (isAnyMapperDirty) {
         for (const mapper of sortedMappers) {
           if (mapper.dirty) {
             mapper.dirty = false;
             mapper.worklet();
           }
         }
-        anyMapperDirty = false;
+        isAnyMapperDirty = false;
       }
     } finally {
       processingMappers = false;
@@ -209,11 +209,11 @@ function createMapperRegistry() {
       };
       mappers.set(mapper.id, mapper);
       sortedMappers = [];
-      anyMapperDirty = true;
+      isAnyMapperDirty = true;
       for (const sv of mapper.inputs) {
         sv.addListener(mapper.id, () => {
           mapper.dirty = true;
-          anyMapperDirty = true;
+          isAnyMapperDirty = true;
           maybeRequestUpdates();
         });
       }
@@ -224,7 +224,7 @@ function createMapperRegistry() {
       if (mapper) {
         mappers.delete(mapper.id);
         sortedMappers = [];
-        anyMapperDirty = true;
+        isAnyMapperDirty = true;
         for (const sv of mapper.inputs) {
           sv.removeListener(mapper.id);
         }
