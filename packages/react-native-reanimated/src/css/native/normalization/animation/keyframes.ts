@@ -9,7 +9,6 @@ import {
   getSeparatelyInterpolatedNestedProperties,
   isDefined,
   isNumber,
-  ReanimatedError,
 } from '../../../../common';
 import { PERCENTAGE_REGEX } from '../../../constants';
 import type {
@@ -56,10 +55,14 @@ export function normalizeKeyframeSelector(
     }
 
     if (!isNumber(offset)) {
-      throw new ReanimatedError(ERROR_MESSAGES.invalidOffsetType(selector));
+      throw new Error(
+        `[Reanimated] ${ERROR_MESSAGES.invalidOffsetType(selector)}`
+      );
     }
     if (offset < 0 || offset > 1) {
-      throw new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(selector));
+      throw new Error(
+        `[Reanimated] ${ERROR_MESSAGES.invalidOffsetRange(selector)}`
+      );
     }
 
     return offset;

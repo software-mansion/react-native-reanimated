@@ -3,7 +3,7 @@
 
 import type React from 'react';
 
-import { IS_JEST, logger, ReanimatedError } from '../common';
+import { IS_JEST, logger } from '../common';
 import type {
   AnimatedComponentProps,
   AnimatedProps,
@@ -277,8 +277,8 @@ export const advanceAnimationByFrame = (count: number) => {
 const requireFunction = IS_JEST
   ? require
   : () => {
-      throw new ReanimatedError(
-        '`setUpTests` is available only in Jest environment.'
+      throw new Error(
+        '[Reanimated] `setUpTests` is available only in Jest environment.'
       );
     };
 

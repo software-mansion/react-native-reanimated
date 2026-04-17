@@ -117,9 +117,9 @@ This example will result in an error. Let's quickly describe why:
 
 1. Upon creating the functions and resolving their worklet factories, the `runOnUI` function is called. This function first takes the worklet's data, loads it into the UI thread after converting it, and then schedules an execution asynchronously.
 
-2. During execution, the worklet scheduled for execution calls `runOnSomeOtherThread`. This action mirrors what `runOnUI` does, but targets SomeOtherThread.
+1. During execution, the worklet scheduled for execution calls `runOnSomeOtherThread`. This action mirrors what `runOnUI` does, but targets SomeOtherThread.
 
-3. This process fails because the injection of `outerWorklet` into the UI thread occurred without the `innerWorklet` worklet data, therefore it's not available for SomeOtherThread.
+1. This process fails because the injection of `outerWorklet` into the UI thread occurred without the `innerWorklet` worklet data, therefore it's not available for SomeOtherThread.
 
 If you enable this option, the system will workletize functions depth-first, avoiding the above-mentioned scenario and ensuring things operate correctly. Keep in mind that nesting worklets like in the provided example is only useful in threading.
 

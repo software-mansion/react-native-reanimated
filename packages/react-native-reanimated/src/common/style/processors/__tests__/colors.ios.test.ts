@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../../errors';
 import type { ProcessedDynamicColorObjectIOS } from '../colors';
 import {
   DynamicColorIOS,
@@ -60,7 +59,7 @@ describe('DynamicColorIOS support on iOS', () => {
     });
 
     expect(() => processColor(nested)).toThrow(
-      new ReanimatedError(ERROR_MESSAGES.invalidColor(nested))
+      new Error(`[Reanimated] ${ERROR_MESSAGES.invalidColor(nested)}`)
     );
   });
 });

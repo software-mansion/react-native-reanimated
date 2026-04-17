@@ -3,11 +3,7 @@ import type { Binding } from '@babel/traverse';
 import type { Identifier, ImportDeclaration } from '@babel/types';
 import { cloneNode } from '@babel/types';
 
-import {
-  globals,
-  internalBindingsToCaptureFromGlobalScope,
-  outsideBindingsToCaptureFromGlobalScope,
-} from './globals';
+import { globals } from './globals';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
 
 export function getClosure(
@@ -64,19 +60,6 @@ export function getClosure(
           }
           capturedNames.add(name);
           closureVariables.push(cloneNode(idPath.node as Identifier, true));
-          return;
-        }
-
-        if (
-          outsideBindingsToCaptureFromGlobalScope.has(name) ||
-          (!state.opts.bundleMode &&
-            internalBindingsToCaptureFromGlobalScope.has(name))
-        ) {
-          /**
-           * In legacy bundling we have to purposefully ignore some bound
-           * identifiers since they are supposed to be captured from the global
-           * scope.
-           */
           return;
         }
 

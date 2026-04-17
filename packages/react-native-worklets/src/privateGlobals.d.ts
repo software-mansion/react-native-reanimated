@@ -69,7 +69,11 @@ declare global {
   var __customSerializationRegistry: CustomSerializationRegistry;
   var __customSerializableUnpacker: CustomSerializableUnpacker;
   var __callGuardDEV: typeof callGuardDEV | undefined;
-  /** @deprecated Don't flush animation frames imperatively. Don't use. */
+  /**
+   * @deprecated Kept for backwards compatibility. Remove it after support for
+   *   Reanimated 4.3 is dropped. Reanimated uses it to handle event updates
+   *   synchronously.
+   */
   var __flushAnimationFrame: (timestamp: number) => void;
   var __frameTimestamp: number | undefined;
   var _log: (value: unknown) => void;
@@ -82,6 +86,11 @@ declare global {
     runtime: WorkletRuntime,
     worklet: SerializableRef<() => void>
   ) => void;
+  /**
+   * @deprecated Kept for backwards compatibility. Remove it after support for
+   *   Reanimated 4.3 is dropped. Reanimated uses it to handle event updates
+   *   synchronously.
+   */
   var _microtaskQueueFinalizers: (() => void)[];
   var _scheduleTimeoutCallback: (delay: number, handlerId: number) => void;
   var __runTimeoutCallback: (handlerId: number) => void;

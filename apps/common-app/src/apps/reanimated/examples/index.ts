@@ -147,6 +147,10 @@ const DefaultAnimations: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/DefaultAnimations').default as React.FC
   );
+const DefaultAnimationsOverrides: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/DefaultAnimationsOverrides').default as React.FC
+  );
 const DeleteAncestorOfExiting: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/DeleteAncestorOfExiting').default
@@ -805,7 +809,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   StickyHeaderExample: {
     icon: '🔝',
-    title: 'Sticky header',
+    title: 'Stinky header',
     screen: StickyHeaderExample,
   },
   DispatchCommandExample: {
@@ -1193,6 +1197,10 @@ export const EXAMPLES: Record<string, Example> = {
   DurationZeroExample: {
     title: '[LA] Duration zero',
     screen: DurationZeroExample,
+  },
+  DefaultAnimationsOverrides: {
+    title: '[LA] Default layout animations overrides',
+    screen: DefaultAnimationsOverrides,
   },
 
   // Shared Element Transitions

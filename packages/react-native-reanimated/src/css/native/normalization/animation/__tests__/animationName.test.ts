@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../../../../common';
 import type { CSSAnimationKeyframeSelector } from '../../../../types';
 import { ERROR_MESSAGES, normalizeAnimationKeyframes } from '../keyframes';
 
@@ -41,7 +40,7 @@ describe(normalizeAnimationKeyframes, () => {
               COMPONENT_DISPLAY_NAME
             )
           ).toThrow(
-            new ReanimatedError(ERROR_MESSAGES.invalidOffsetType(value))
+            new Error(`[Reanimated] ${ERROR_MESSAGES.invalidOffsetType(value)}`)
           );
         }
       );
@@ -58,7 +57,9 @@ describe(normalizeAnimationKeyframes, () => {
               COMPONENT_DISPLAY_NAME
             )
           ).toThrow(
-            new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(value))
+            new Error(
+              `[Reanimated] ${ERROR_MESSAGES.invalidOffsetRange(value)}`
+            )
           );
         }
       );
@@ -103,7 +104,7 @@ describe(normalizeAnimationKeyframes, () => {
             { [value]: { opacity: 1 } },
             COMPONENT_DISPLAY_NAME
           )
-        ).toThrow(new ReanimatedError(errorMsg));
+        ).toThrow(new Error(`[Reanimated] ${errorMsg}`));
       });
     });
   });

@@ -39,37 +39,36 @@ runtime->runGuarded(worklet, ...args);
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type WorkletRuntime = {
-  __hostObjectWorkletRuntime: never;
-  readonly name: string;
-  readonly runtimeId: number;
-};
+  ```typescript
+  type WorkletRuntime = {
+    __hostObjectWorkletRuntime: never;
+    readonly name: string;
+    readonly runtimeId: number;
+  };
 
-type WorkletRuntimeConfig = {
-  name?: string;
-  initializer?: () => void;
-  animationQueuePollingRate?: number;
-  enableEventLoop?: true;
-} &
-  (
-    | {
-        useDefaultQueue?: true;
-        customQueue?: never;
-      }
-    | {
-        useDefaultQueue: false;
-        customQueue?: object;
-      }
-  );
+  type WorkletRuntimeConfig = {
+    name?: string;
+    initializer?: () => void;
+    animationQueuePollingRate?: number;
+    enableEventLoop?: true;
+  } &
+    (
+      | {
+          useDefaultQueue?: true;
+          customQueue?: never;
+        }
+      | {
+          useDefaultQueue: false;
+          customQueue?: object;
+        }
+    );
 
-function createWorkletRuntime(
-  config?: WorkletRuntimeConfig
-): WorkletRuntime;
-```
-
+  function createWorkletRuntime(
+    config?: WorkletRuntimeConfig
+  ): WorkletRuntime;
+  ```
 </details>
 
 ### Arguments
@@ -117,4 +116,4 @@ Optional custom queue object used for scheduling worklets. It can only be used w
 
 ## Platform compatibility
 
-<PlatformTable native={true} web={false} />
+<PlatformTable native={true} web={false}/>

@@ -11,15 +11,25 @@ const disableMinification = process.env.DISABLE_MINIFICATION === '1';
 
 /** @type {import('next').NextConfig} */
 module.exports = withPlugins([withBundleAnalyzer, withExpo], {
-  // transpilePackages is a Next.js +13.1 feature.
-  // older versions can use next-transpile-modules
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
   transpilePackages: ['react-native-reanimated', 'react-native', 'expo'],
+  turbopack: {
+    resolveExtensions: [
+      '.web.tsx',
+      '.web.ts',
+      '.web.jsx',
+      '.web.js',
+      '.tsx',
+      '.ts',
+      '.jsx',
+      '.js',
+      '.mjs',
+      '.cjs',
+      '.json',
+    ],
+  },
   webpack(config) {
     if (disableMinification) {
       config.optimization.minimizer = [];

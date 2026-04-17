@@ -1,10 +1,6 @@
 'use strict';
 import type { ConvertValuesToArraysWithUndefined } from '../../../../common';
-import {
-  camelizeKebabCase,
-  isPercentage,
-  ReanimatedError,
-} from '../../../../common';
+import { camelizeKebabCase, isPercentage } from '../../../../common';
 import type { ControlPoint, CSSTimingFunction } from '../../../easing';
 import { cubicBezier, linear, steps } from '../../../easing';
 import type { CSSTransitionProperties } from '../../../types';
@@ -71,7 +67,7 @@ function parseTimingFunction(value: string): CSSTimingFunction {
   // TODO: implement more strict check
   const regex = /^(.+)\((.+)\)$/;
   if (!regex.test(value)) {
-    throw new ReanimatedError(`Unsupported timing function: ${value}`);
+    throw new Error(`[Reanimated] Unsupported timing function: ${value}`);
   }
 
   const [, name, args] = value.match(regex)!;
@@ -93,8 +89,8 @@ function parseTimingFunction(value: string): CSSTimingFunction {
         const parts = splitByWhitespace(arg);
         const controlPoint = asControlPoint(parts);
         if (!controlPoint) {
-          throw new ReanimatedError(
-            `Invalid control point: ${arg} in ${value} timing function`
+          throw new Error(
+            `[Reanimated] Invalid control point: ${arg} in ${value} timing function`
           );
         }
         return controlPoint;
@@ -115,5 +111,5 @@ function parseTimingFunction(value: string): CSSTimingFunction {
     }
   }
 
-  throw new ReanimatedError(`Invalid timing function: ${value}`);
+  throw new Error(`[Reanimated] Invalid timing function: ${value}`);
 }

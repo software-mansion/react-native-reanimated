@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../../../common';
 import { VALID_PREDEFINED_TIMING_FUNCTIONS } from '../../../constants';
 import type {
   CSSTimingFunction,
@@ -25,7 +24,7 @@ export const ERROR_MESSAGES = {
 export function normalizeDelay(delay: TimeUnit = 0): number {
   const delayMs = normalizeTimeUnit(delay);
   if (delayMs === null) {
-    throw new ReanimatedError(ERROR_MESSAGES.invalidDelay(delay));
+    throw new Error(`[Reanimated] ${ERROR_MESSAGES.invalidDelay(delay)}`);
   }
   return delayMs;
 }
@@ -33,9 +32,11 @@ export function normalizeDelay(delay: TimeUnit = 0): number {
 export function normalizeDuration(duration: TimeUnit = 0): number {
   const durationMs = normalizeTimeUnit(duration);
   if (durationMs === null) {
-    throw new ReanimatedError(ERROR_MESSAGES.invalidDuration(duration));
+    throw new Error(`[Reanimated] ${ERROR_MESSAGES.invalidDuration(duration)}`);
   } else if (durationMs < 0) {
-    throw new ReanimatedError(ERROR_MESSAGES.negativeDuration(duration));
+    throw new Error(
+      `[Reanimated] ${ERROR_MESSAGES.negativeDuration(duration)}`
+    );
   }
   return durationMs;
 }
@@ -45,8 +46,8 @@ export function normalizeTimingFunction(
 ): NormalizedCSSTimingFunction {
   if (typeof timingFunction === 'string') {
     if (!isPredefinedTimingFunction(timingFunction)) {
-      throw new ReanimatedError(
-        ERROR_MESSAGES.invalidPredefinedTimingFunction(timingFunction)
+      throw new Error(
+        `[Reanimated] ${ERROR_MESSAGES.invalidPredefinedTimingFunction(timingFunction)}`
       );
     }
     return timingFunction;
@@ -55,8 +56,8 @@ export function normalizeTimingFunction(
     !timingFunction.normalize ||
     typeof timingFunction.normalize !== 'function'
   ) {
-    throw new ReanimatedError(
-      ERROR_MESSAGES.invalidParametrizedTimingFunction(timingFunction)
+    throw new Error(
+      `[Reanimated] ${ERROR_MESSAGES.invalidParametrizedTimingFunction(timingFunction)}`
     );
   }
   return timingFunction.normalize();

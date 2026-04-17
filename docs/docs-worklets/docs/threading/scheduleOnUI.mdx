@@ -20,15 +20,14 @@ scheduleOnUI(myFunction); // Hello from the UI Runtime!
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function scheduleOnUI<Args extends unknown[], ReturnValue>(
-  fun: (...args: Args) => ReturnValue,
-  ...args: Args
-): void;
-```
-
+  ```typescript
+  function scheduleOnUI<Args extends unknown[], ReturnValue>(
+    fun: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): void;
+  ```
 </details>
 
 ### Arguments
@@ -51,17 +50,17 @@ Arguments to pass to the function.
 
 <CallTable
   bundleMode={{
-    rnRuntime: true,
-    uiRuntime: true,
-    workerRuntime: true,
-  }}
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
   noBundleMode={{
-    rnRuntime: true,
-    uiRuntime: false,
-    workerRuntime: false,
-  }}
+rnRuntime: true,
+uiRuntime: false,
+workerRuntime: false,
+}}
 />
 
 ## Platform compatibility
 
-<PlatformTable native={true} web={true} />
+<PlatformTable native={true} web={true}/>

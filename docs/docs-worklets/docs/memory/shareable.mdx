@@ -4,7 +4,7 @@ title: Shareable
 sidebar_position: 42 # Use alphabetical order
 ---
 
-# Shareable <AvailableFrom version="0.8.0" />
+# Shareable <AvailableFrom version="0.8.0"/>
 
 A Shareable is a type of shared memory tied to a specific JavaScript Runtime, called the **Host Runtime**, where it can be freely accessed and modified. Other Runtimes, called **Guest Runtimes**, only have access to a reference to the Shareable. They can read and modify the Shareable, but doing so means crossing the boundary between the JavaScript Runtimes.
 
@@ -21,69 +21,68 @@ A Shareable is useful in scenarios where it's mostly read and updated on the Hos
 </figcaption>
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type ShareableHostProps<TValue = unknown> = {
-  value: TValue;
-};
+  ```typescript
+  type ShareableHostProps<TValue = unknown> = {
+    value: TValue;
+  };
 
-type ShareableHostMeta = {
-  isHost: true;
-  __shareableRef: true;
-};
+  type ShareableHostMeta = {
+    isHost: true;
+    __shareableRef: true;
+  };
 
-type ShareableHostDecorator<TValue = unknown, TDecorated = unknown> = (
-  shareable: ShareableHost<TValue> & TDecorated
-) => ShareableHost<TValue> & TDecorated;
+  type ShareableHostDecorator<TValue = unknown, TDecorated = unknown> = (
+    shareable: ShareableHost<TValue> & TDecorated
+  ) => ShareableHost<TValue> & TDecorated;
 
-type ShareableGuestMeta = {
-  isHost: false;
-  __shareableRef: true;
-};
+  type ShareableGuestMeta = {
+    isHost: false;
+    __shareableRef: true;
+  };
 
-type ShareableGuestProps<TValue = unknown> = {
-  getAsync(): Promise<TValue>;
-  getSync(): TValue;
-  setAsync(value: TValue | ((prev: TValue) => TValue)): void;
-  setSync(value: TValue | ((prev: TValue) => TValue)): void;
-};
+  type ShareableGuestProps<TValue = unknown> = {
+    getAsync(): Promise<TValue>;
+    getSync(): TValue;
+    setAsync(value: TValue | ((prev: TValue) => TValue)): void;
+    setSync(value: TValue | ((prev: TValue) => TValue)): void;
+  };
 
-type ShareableGuestDecorator<TValue = unknown, TDecorated = unknown> = (
-  shareable: ShareableGuest<TValue> & TDecorated
-) => ShareableGuest<TValue> & TDecorated;
+  type ShareableGuestDecorator<TValue = unknown, TDecorated = unknown> = (
+    shareable: ShareableGuest<TValue> & TDecorated
+  ) => ShareableGuest<TValue> & TDecorated;
 
-type ShareableHost<
-  TValue = unknown,
-  THostDecorated = unknown,
-> = ShareableHostMeta &
-  ShareableHostProps<TValue> &
-  (THostDecorated extends object ? THostDecorated : object);
+  type ShareableHost<
+    TValue = unknown,
+    THostDecorated = unknown,
+  > = ShareableHostMeta &
+    ShareableHostProps<TValue> &
+    (THostDecorated extends object ? THostDecorated : object);
 
-type ShareableGuest<
-  TValue = unknown,
-  TGuestDecorated = unknown,
-> = ShareableGuestMeta &
-  ShareableGuestProps<TValue> &
-  (TGuestDecorated extends object ? TGuestDecorated : object);
+  type ShareableGuest<
+    TValue = unknown,
+    TGuestDecorated = unknown,
+  > = ShareableGuestMeta &
+    ShareableGuestProps<TValue> &
+    (TGuestDecorated extends object ? TGuestDecorated : object);
 
-type Shareable<
-  TValue = unknown,
-  THostDecorated = unknown,
-  TGuestDecorated = unknown,
-> =
-  | (ShareableHost<TValue, THostDecorated> &
-      Partial<
-        ShareableGuestProps<TValue> &
-          (TGuestDecorated extends object ? Partial<TGuestDecorated> : object)
-      >)
-  | (ShareableGuest<TValue, TGuestDecorated> &
-      Partial<
-        ShareableHostProps<TValue> &
-          (THostDecorated extends object ? Partial<THostDecorated> : object)
-      >);
-```
-
+  type Shareable<
+    TValue = unknown,
+    THostDecorated = unknown,
+    TGuestDecorated = unknown,
+  > =
+    | (ShareableHost<TValue, THostDecorated> &
+        Partial<
+          ShareableGuestProps<TValue> &
+            (TGuestDecorated extends object ? Partial<TGuestDecorated> : object)
+        >)
+    | (ShareableGuest<TValue, TGuestDecorated> &
+        Partial<
+          ShareableHostProps<TValue> &
+            (THostDecorated extends object ? Partial<THostDecorated> : object)
+        >);
+  ```
 </details>
 
 ## Reference

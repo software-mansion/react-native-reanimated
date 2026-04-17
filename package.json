@@ -25,6 +25,7 @@
     "build-all": "husky && yarn workspaces foreach --all --parallel --topological-dev run build",
     "format": "yarn format:root && yarn format:workspaces",
     "format:root": "prettier --cache --write --list-different --ignore-path .gitignore --ignore-path .prettierignore --ignore-path .prettiereslintignore .",
+    "format:md": "remark --output --ext md . && remark --rc-path .remarkrc.mdx.mjs --output --ext mdx .",
     "format:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run format",
     "lint": "yarn lint:root && yarn lint:workspaces",
     "lint:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run lint",
@@ -75,6 +76,10 @@
     "react": "19.2.3",
     "react-native": "0.85.0",
     "react-native-builder-bob": "0.40.13",
+    "remark-cli": "12.0.1",
+    "remark-frontmatter": "5.0.0",
+    "remark-gfm": "4.0.1",
+    "remark-mdx": "3.1.0",
     "shelljs": "0.10.0",
     "typescript": "5.9.3"
   }

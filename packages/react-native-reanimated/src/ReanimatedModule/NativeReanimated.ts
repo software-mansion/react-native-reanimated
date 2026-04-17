@@ -5,14 +5,9 @@ import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 import {
   getUIRuntimeHolder,
   getUISchedulerHolder,
-  runOnUISync,
 } from 'react-native-worklets';
 
-import {
-  ReanimatedError,
-  registerReanimatedError,
-  SHOULD_BE_USE_WEB,
-} from '../common';
+import { SHOULD_BE_USE_WEB } from '../common';
 import type {
   InternalHostInstance,
   LayoutAnimationBatchItem,
@@ -46,8 +41,8 @@ function assertSingleReanimatedInstance() {
     global._REANIMATED_VERSION_JS !== undefined &&
     global._REANIMATED_VERSION_JS !== jsVersion
   ) {
-    throw new ReanimatedError(
-      `Another instance of Reanimated was detected.
+    throw new Error(
+      `[Reanimated] Another instance of Reanimated was detected.
 See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#another-instance-of-reanimated-was-detected\` for more details. Previous: ${global._REANIMATED_VERSION_JS}, current: ${jsVersion}.`
     );
   }
@@ -80,24 +75,20 @@ class NativeReanimatedModule implements IReanimatedModule {
     }
 
     if (global.__reanimatedModuleProxy === undefined) {
-      throw new ReanimatedError(
-        `Native part of Reanimated doesn't seem to be initialized.
+      throw new Error(
+        `[Reanimated] Native part of Reanimated doesn't seem to be initialized.
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
     if (__DEV__ && !globalThis.RN$Bridgeless && !SHOULD_BE_USE_WEB) {
-      throw new ReanimatedError(
-        'Reanimated 4 supports only the React Native New Architecture and web.'
+      throw new Error(
+        '[Reanimated] Reanimated 4 supports only the React Native New Architecture and web.'
       );
     }
     if (__DEV__) {
       checkCppVersion();
     }
     this.#reanimatedModuleProxy = global.__reanimatedModuleProxy;
-    runOnUISync(function initializeUI() {
-      'worklet';
-      registerReanimatedError();
-    });
   }
 
   registerSensor(

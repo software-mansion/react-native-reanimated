@@ -5,7 +5,7 @@ import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction, makeShareable } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
-import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
+import { IS_JEST, SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedPropsAdapterWorklet,
@@ -439,8 +439,8 @@ function checkSharedValueUsage(
     prop.value !== undefined
   ) {
     // if shared value is passed instead of its value, throw an error
-    throw new ReanimatedError(
-      `Invalid value passed to \`${currentKey}\`, maybe you forgot to use \`.value\`?`
+    throw new Error(
+      `[Reanimated] Invalid value passed to \`${currentKey}\`, maybe you forgot to use \`.value\`?`
     );
   }
 }
@@ -500,8 +500,8 @@ export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
       !dependencies &&
       !isWorkletFunction(updater)
     ) {
-      throw new ReanimatedError(
-        `\`useAnimatedStyle\` was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel plugin.
+      throw new Error(
+        `[Reanimated] \`useAnimatedStyle\` was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel plugin.
 For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin\`.`
       );
     }

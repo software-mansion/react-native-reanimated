@@ -1,6 +1,5 @@
 'use strict';
 
-import { WorkletsError } from '../debug/WorkletsError';
 import { addNoBundleModeGuardImplementation } from '../guardImplementation';
 import { UIRuntimeId } from '../runtimes';
 import { isWorkletFunction } from '../workletFunction';
@@ -58,13 +57,13 @@ export function createShareable<
   const { hostDecorator, guestDecorator, initSynchronously } = config || {};
   if (__DEV__) {
     if (hostRuntimeId !== UIRuntimeId) {
-      throw new WorkletsError('Only UI host runtime is supported currently');
+      throw new Error('[Worklets] Only UI host runtime is supported currently');
     }
     if (hostDecorator && !isWorkletFunction(hostDecorator)) {
-      throw new WorkletsError('hostDecorator must be a worklet function');
+      throw new Error('[Worklets] hostDecorator must be a worklet function');
     }
     if (guestDecorator && !isWorkletFunction(guestDecorator)) {
-      throw new WorkletsError('guestDecorator must be a worklet function');
+      throw new Error('[Worklets] guestDecorator must be a worklet function');
     }
   }
 
