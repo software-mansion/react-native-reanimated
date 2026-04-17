@@ -6,6 +6,7 @@ import { Platform, StyleSheet } from 'react-native';
 
 import type { AnyComponent, AnyRecord, PlainStyle } from '../../common';
 import { IS_JEST, SHOULD_BE_USE_WEB } from '../../common';
+import { stylePropsBuilder } from '../../common/style';
 import type {
   InternalHostInstance,
   ShadowNodeWrapper,
