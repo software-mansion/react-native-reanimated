@@ -17,7 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
  *                   macOS: NSPressGestureRecognizer (minimumPressDuration = 0)
  *   ActiveDeepest - Same as Active, but only fires on the deepest descendant
  *   Focus         - iOS: UITextField/UITextView editing notifications
- *                   macOS: NSControl/NSText editing notifications
+ *                   macOS: NSWindow.firstResponder KVO observation
  *   FocusWithin   - Same as Focus, but matches any descendant gaining focus
  *   Hover         - iOS: UIHoverGestureRecognizer (iOS 13+)
  *                   macOS: NSTrackingArea (mouseEntered/mouseExited)

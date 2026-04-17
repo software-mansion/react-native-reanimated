@@ -161,34 +161,45 @@ static int _focusObserverContext;
 - (void)attachMacFocusObservers
 {
   [self observeWindowForFocus];
-  
+
   __weak REAPseudoSelectorObserver *weakSelf = self;
-  _windowFrameObserver = [[NSNotificationCenter defaultCenter] addObserverForName:NSViewGlobalFrameDidChangeNotification object:_view queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification * _Nonnull note) {
-    [weakSelf observeWindowForFocus];
-  }];
+  _windowFrameObserver = [[NSNotificationCenter defaultCenter]
+      addObserverForName:NSViewGlobalFrameDidChangeNotification
+                  object:_view
+                   queue:NSOperationQueue.mainQueue
+              usingBlock:^(NSNotification *_Nonnull note) { [weakSelf observeWindowForFocus]; }];
 }
 
 - (void)observeWindowForFocus
 {
-  if (!_view) return;
+  if (!_view)
+    return;
   NSWindow *currentWindow = _view.window;
-  if (_observedWindow == currentWindow) return;
-  
+  if (_observedWindow == currentWindow)
+    return;
+
   if (_observedWindow) {
     [_observedWindow removeObserver:self forKeyPath:@"firstResponder" context:&_focusObserverContext];
   }
-  
+
   _observedWindow = currentWindow;
-  
+
   if (_observedWindow) {
-    [_observedWindow addObserver:self forKeyPath:@"firstResponder" options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew context:&_focusObserverContext];
+    [_observedWindow addObserver:self
+                      forKeyPath:@"firstResponder"
+                         options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
+                         context:&_focusObserverContext];
   }
 }
 
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context
+- (void)observeValueForKeyPath:(NSString *)keyPath
+                      ofObject:(id)object
+                        change:(NSDictionary<NSKeyValueChangeKey, id> *)change
+                       context:(void *)context
 {
   if (context == &_focusObserverContext) {
-    if (!_view || !_callback) return;
+    if (!_view || !_callback)
+      return;
     NSResponder *firstResponder = _observedWindow.firstResponder;
     BOOL isFocused = NO;
     if ([firstResponder isKindOfClass:[NSView class]]) {
