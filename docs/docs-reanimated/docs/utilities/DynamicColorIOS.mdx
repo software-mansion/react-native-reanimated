@@ -30,28 +30,27 @@ function Example() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function DynamicColorIOS(
-  {
-    light: ColorValue,
-    dark: ColorValue,
-    highContrastLight?: ColorValue,
-    highContrastDark?: ColorValue
+  ```typescript
+  function DynamicColorIOS(
+    {
+      light: ColorValue,
+      dark: ColorValue,
+      highContrastLight?: ColorValue,
+      highContrastDark?: ColorValue
+    }
+  ): DynamicColorValue;
+
+  type DynamicColorValue = {
+    dynamic: {
+      light: ColorValue,
+      dark: ColorValue,
+      highContrastLight?: ColorValue,
+      highContrastDark?: ColorValue
+    },
   }
-): DynamicColorValue;
-
-type DynamicColorValue = {
-  dynamic: {
-    light: ColorValue,
-    dark: ColorValue,
-    highContrastLight?: ColorValue,
-    highContrastDark?: ColorValue
-  },
-}
-```
-
+  ```
 </details>
 
 ### Arguments
@@ -69,8 +68,8 @@ An object containing a `dynamic` field, which holds the injected color values.
 import DynamicColorIOSExample from '@site/src/examples/DynamicColorIOSExample';
 import DynamicColorIOSExampleSrc from '!!raw-loader!@site/src/examples/DynamicColorIOSExample';
 
-<CollapsibleCode src={DynamicColorIOSExampleSrc} showLines={[22, 45]} />
+<CollapsibleCode src={DynamicColorIOSExampleSrc} showLines={[22, 45]}/>
 
 ## Platform compatibility
 
-<PlatformCompatibility ios />
+<PlatformCompatibility ios/>

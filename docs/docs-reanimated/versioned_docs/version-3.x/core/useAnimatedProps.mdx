@@ -28,16 +28,15 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function useAnimatedProps<T extends {}>(
-  updater: () => Partial<T>,
-  dependencies?: DependencyList | null,
-  adapters?: PropsAdapterFunction | PropsAdapterFunction[] | null
-): Partial<T>;
-```
-
+  ```typescript
+  function useAnimatedProps<T extends {}>(
+    updater: () => Partial<T>,
+    dependencies?: DependencyList | null,
+    adapters?: PropsAdapterFunction | PropsAdapterFunction[] | null
+  ): Partial<T>;
+  ```
 </details>
 
 ### Arguments
@@ -69,7 +68,7 @@ Here's an example of adapting `fill` and `stroke` properties from `react-native-
 
 import AnimatedPropAdapterSrc from '!!raw-loader!@site/src/examples/AnimatedPropAdapter';
 
-<CollapsibleCode showLines={[13, 25]} src={AnimatedPropAdapterSrc} />
+<CollapsibleCode showLines={[13, 25]} src={AnimatedPropAdapterSrc}/>
 
 ### Color-related properties
 
@@ -116,7 +115,7 @@ function App() {
 import AnimatingProps from '@site/src/examples/AnimatingProps';
 import AnimatingPropsSrc from '!!raw-loader!@site/src/examples/AnimatingProps';
 
-<InteractiveExample src={AnimatingPropsSrc} component={AnimatingProps} />
+<InteractiveExample src={AnimatingPropsSrc} component={AnimatingProps}/>
 
 ## Remarks
 
@@ -125,4 +124,4 @@ import AnimatingPropsSrc from '!!raw-loader!@site/src/examples/AnimatingProps';
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

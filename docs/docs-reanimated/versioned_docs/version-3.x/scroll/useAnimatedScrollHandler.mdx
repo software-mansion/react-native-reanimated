@@ -27,29 +27,28 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function useAnimatedScrollHandler<Context extends Record<string, unknown>>(
-  handlers: ScrollHandler<Context> | ScrollHandlers<Context>,
-  dependencies?: DependencyList
-): ScrollHandlerProcessed<Context>;
+  ```typescript
+  function useAnimatedScrollHandler<Context extends Record<string, unknown>>(
+    handlers: ScrollHandler<Context> | ScrollHandlers<Context>,
+    dependencies?: DependencyList
+  ): ScrollHandlerProcessed<Context>;
 
-type ScrollHandler<
-  Context extends Record<string, unknown> = Record<string, unknown>
-> = (event: ReanimatedScrollEvent, context: Context) => void;
+  type ScrollHandler<
+    Context extends Record<string, unknown> = Record<string, unknown>
+  > = (event: ReanimatedScrollEvent, context: Context) => void;
 
-interface ScrollHandlers<Context extends Record<string, unknown>> {
-  onScroll?: ScrollHandler<Context>;
-  onBeginDrag?: ScrollHandler<Context>;
-  onEndDrag?: ScrollHandler<Context>;
-  onMomentumBegin?: ScrollHandler<Context>;
-  onMomentumEnd?: ScrollHandler<Context>;
-}
+  interface ScrollHandlers<Context extends Record<string, unknown>> {
+    onScroll?: ScrollHandler<Context>;
+    onBeginDrag?: ScrollHandler<Context>;
+    onEndDrag?: ScrollHandler<Context>;
+    onMomentumBegin?: ScrollHandler<Context>;
+    onMomentumEnd?: ScrollHandler<Context>;
+  }
 
-type DependencyList = Array<unknown> | undefined;
-```
-
+  type DependencyList = Array<unknown> | undefined;
+  ```
 </details>
 
 ### Arguments
@@ -77,7 +76,7 @@ Each of the event worklets will receive the following parameters when called:
   This object will persist in between scroll event occurrences and you can read and write any data to it.
   When there are several event handlers provided in a form of an object of worklets, the `context` object will be shared in between the worklets allowing them to communicate with each other.
 
-#### `dependencies` <Optional />
+#### `dependencies` <Optional/>
 
 An optional array of dependencies.
 
@@ -92,10 +91,7 @@ The hook returns a handler object that can be hooked into a scrollable container
 import AnimatedScrollHandler from '@site/src/examples/AnimatedScrollHandler';
 import AnimatedScrollHandlerSrc from '!!raw-loader!@site/src/examples/AnimatedScrollHandler';
 
-<InteractiveExample
-  src={AnimatedScrollHandlerSrc}
-  component={AnimatedScrollHandler}
-/>
+<InteractiveExample src={AnimatedScrollHandlerSrc} component={AnimatedScrollHandler}/>
 
 ## Remarks
 
@@ -105,4 +101,4 @@ import AnimatedScrollHandlerSrc from '!!raw-loader!@site/src/examples/AnimatedSc
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

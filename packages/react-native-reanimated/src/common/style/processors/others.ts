@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../errors';
 import type { ValueProcessor } from '../../types';
 
 export const ERROR_MESSAGES = {
@@ -24,7 +23,9 @@ export const processAspectRatio: ValueProcessor<number | string> = (value) => {
     }
   }
 
-  throw new ReanimatedError(ERROR_MESSAGES.unsupportedAspectRatio(value));
+  throw new Error(
+    `[Reanimated] ${ERROR_MESSAGES.unsupportedAspectRatio(value)}`
+  );
 };
 
 export const processGap: ValueProcessor<number | string> = (value) => {

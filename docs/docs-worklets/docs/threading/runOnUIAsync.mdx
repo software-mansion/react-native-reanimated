@@ -22,15 +22,14 @@ await result; // 1
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function runOnUIAsync<Args extends unknown[], ReturnValue>(
-  worklet: (...args: Args) => ReturnValue,
-  ...args: Args
-): Promise<ReturnValue>;
-```
-
+  ```typescript
+  function runOnUIAsync<Args extends unknown[], ReturnValue>(
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): Promise<ReturnValue>;
+  ```
 </details>
 
 ### Arguments
@@ -49,17 +48,17 @@ A reference to a function you want to execute on the UI thread. Arguments to you
 
 <CallTable
   bundleMode={{
-    rnRuntime: true,
-    uiRuntime: false,
-    workerRuntime: false,
-  }}
+rnRuntime: true,
+uiRuntime: false,
+workerRuntime: false,
+}}
   noBundleMode={{
-    rnRuntime: true,
-    uiRuntime: false,
-    workerRuntime: false,
-  }}
+rnRuntime: true,
+uiRuntime: false,
+workerRuntime: false,
+}}
 />
 
 ## Platform compatibility
 
-<PlatformTable native={true} web={true} />
+<PlatformTable native={true} web={true}/>

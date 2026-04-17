@@ -26,18 +26,17 @@ const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function createAnimatedComponent<P extends object>(
-  component: ComponentClass<P>
-): ComponentClass<AnimateProps<P>>;
+  ```typescript
+  function createAnimatedComponent<P extends object>(
+    component: ComponentClass<P>
+  ): ComponentClass<AnimateProps<P>>;
 
-function createAnimatedComponent<P extends object>(
-  component: FunctionComponent<P>
-): FunctionComponent<AnimateProps<P>>;
-```
-
+  function createAnimatedComponent<P extends object>(
+    component: FunctionComponent<P>
+  ): FunctionComponent<AnimateProps<P>>;
+  ```
 </details>
 
 ### Arguments
@@ -55,12 +54,8 @@ The component you want to make animatable. Function components have to be wrappe
 import CreateAnimatedComponent from '@site/src/examples/CreateAnimatedComponent';
 import CreateAnimatedComponentSrc from '!!raw-loader!@site/src/examples/CreateAnimatedComponent';
 
-<InteractiveExample
-  src={CreateAnimatedComponentSrc}
-  component={CreateAnimatedComponent}
-  showCode
-/>
+<InteractiveExample src={CreateAnimatedComponentSrc} component={CreateAnimatedComponent} showCode/>
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

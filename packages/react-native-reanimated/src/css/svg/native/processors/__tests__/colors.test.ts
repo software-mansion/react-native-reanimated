@@ -1,6 +1,5 @@
 'use strict';
 
-import { ReanimatedError } from '../../../../../common';
 import { ERROR_MESSAGES, processColorSVG } from '../colors';
 
 const COLOR_CASES: Array<[string, string | number, number]> = [
@@ -30,7 +29,7 @@ describe(processColorSVG, () => {
   test('throws for unsupported values with proper message', () => {
     const invalidValue = 'url(#gradient)';
     expect(() => processColorSVG(invalidValue)).toThrow(
-      new ReanimatedError(ERROR_MESSAGES.invalidColor(invalidValue))
+      new Error(`[Reanimated] ${ERROR_MESSAGES.invalidColor(invalidValue)}`)
     );
   });
 });

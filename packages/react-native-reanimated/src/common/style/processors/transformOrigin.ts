@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../errors';
 import type {
   NormalizedTransformOrigin,
   TransformOrigin,
@@ -128,7 +127,7 @@ function parseValue(
 
   const parsed = customParse(value);
   if (parsed === null) {
-    throw new ReanimatedError(getError());
+    throw new Error(`[Reanimated] ${getError()}`);
   }
 
   return parsed;
@@ -155,7 +154,9 @@ export const processTransformOrigin: ValueProcessor<
   const customParse = isArray ? () => null : parsePx;
 
   if (components.length < 1 || components.length > 3) {
-    throw new ReanimatedError(ERROR_MESSAGES.invalidTransformOrigin(value));
+    throw new Error(
+      `[Reanimated] ${ERROR_MESSAGES.invalidTransformOrigin(value)}`
+    );
   }
 
   components = maybeSwapComponents(components);

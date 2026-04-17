@@ -9,7 +9,7 @@ sidebar_position: 5
 import RepeatBasic from '@site/src/examples/RepeatBasic';
 import RepeatBasicSrc from '!!raw-loader!@site/src/examples/RepeatBasic';
 
-<InteractiveExample src={RepeatBasicSrc} component={RepeatBasic} />
+<InteractiveExample src={RepeatBasicSrc} component={RepeatBasic}/>
 
 ## Reference
 
@@ -23,26 +23,25 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type AnimatableValue = number | string | number[];
+  ```typescript
+  type AnimatableValue = number | string | number[];
 
-function withRepeat<T extends AnimatableValue>(
-  animation: T,
-  numberOfReps?: number,
-  reverse?: boolean,
-  callback?: (finished?: boolean, current?: AnimatableValue) => void,
-  reduceMotion?: ReduceMotion
-): T;
+  function withRepeat<T extends AnimatableValue>(
+    animation: T,
+    numberOfReps?: number,
+    reverse?: boolean,
+    callback?: (finished?: boolean, current?: AnimatableValue) => void,
+    reduceMotion?: ReduceMotion
+  ): T;
 
-enum ReduceMotion {
-  System = 'system',
-  Always = 'always',
-  Never = 'never',
-}
-```
-
+  enum ReduceMotion {
+    System = 'system',
+    Always = 'always',
+    Never = 'never',
+  }
+  ```
 </details>
 
 ### Arguments
@@ -51,29 +50,29 @@ enum ReduceMotion {
 
 An [animation object](/docs/fundamentals/glossary#animation-object) you want to repeat.
 
-#### `numberOfReps` <Optional />
+#### `numberOfReps` <Optional/>
 
 The number of times the animation is going to be repeated. Defaults to `2`.
 
 A non-positive value (e.g. `0` or `-1`) will cause the animation to repeat indefinitely until it is cancelled or torn down. For example, if the component unmounts or [`cancelAnimation`](/docs/core/cancelAnimation) was called.
 
-#### `reverse` <Optional />
+#### `reverse` <Optional/>
 
 Whether the animation should run in reverse every other repetition. Defaults to `false`.
 
 This option only supports [animation functions](/docs/fundamentals/glossary#animation-function) (eg. [`withSpring`](/docs/animations/withSpring)) and doesn't work with [animation modifiers](/docs/fundamentals/glossary#animation-modifier) (eg. [`withSequence`](/docs/animations/withSequence)).
 
-#### `callback` <Optional />
+#### `callback` <Optional/>
 
 A function called on animation complete. In case the animation is cancelled, the callback will receive `false` as the argument, otherwise it will receive `true`.
 
-#### `reduceMotion` <Optional />
+#### `reduceMotion` <Optional/>
 
 A parameter that determines how the animation responds to the device's reduced motion accessibility setting.
 
 import { useRepeatPlayground } from '@site/src/components/InteractivePlayground';
 
-<InteractivePlayground usePlayground={useRepeatPlayground} />
+<InteractivePlayground usePlayground={useRepeatPlayground}/>
 
 ### Returns
 
@@ -84,7 +83,7 @@ import { useRepeatPlayground } from '@site/src/components/InteractivePlayground'
 import SequenceWobble from '@site/src/examples/SequenceWobble';
 import SequenceWobbleSrc from '!!raw-loader!@site/src/examples/SequenceWobble';
 
-<InteractiveExample src={SequenceWobbleSrc} component={SequenceWobble} />
+<InteractiveExample src={SequenceWobbleSrc} component={SequenceWobble}/>
 
 ## Remarks
 
@@ -92,4 +91,4 @@ import SequenceWobbleSrc from '!!raw-loader!@site/src/examples/SequenceWobble';
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

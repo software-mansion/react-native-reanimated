@@ -1,11 +1,12 @@
 'use strict';
-import type { Rotate, Scale } from '../../common';
 import type {
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
+import type { Rotate, Scale, TransformsConfig } from './types';
+import { animateTransformToValues, pickTransformValues } from './utils';
 
 /**
  * Entry with change in rotation, scale, and opacity. You can modify the
@@ -17,10 +18,9 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#pinwheel
  */
 export class PinwheelIn
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    transform: [Scale, Rotate];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[Scale, Rotate]>
+  >
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'PinwheelIn';
@@ -33,36 +33,35 @@ export class PinwheelIn
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
-          transform: [
-            {
-              scale: delayFunction(delay, animation(1, config)),
-            },
-            {
-              rotate: delayFunction(delay, animation('0rad', config)),
-            },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
+          transform: animateTransformToValues(
+            [{ scale: 1 }, { rotate: '0rad' }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          opacity: 0,
-          transform: [
-            {
-              scale: 0,
-            },
-            {
-              rotate: '5rad',
-            },
-          ],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 0,
+          transform: pickTransformValues(
+            [{ scale: 0 }, { rotate: '5rad' }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -80,10 +79,9 @@ export class PinwheelIn
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#pinwheel
  */
 export class PinwheelOut
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    transform: [Scale, Rotate];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[Scale, Rotate]>
+  >
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'PinwheelOut';
@@ -96,36 +94,35 @@ export class PinwheelOut
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
-          transform: [
-            {
-              scale: delayFunction(delay, animation(0, config)),
-            },
-            {
-              rotate: delayFunction(delay, animation('5rad', config)),
-            },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
+          transform: animateTransformToValues(
+            [{ scale: 0 }, { rotate: '5rad' }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          opacity: 1,
-          transform: [
-            {
-              scale: 1,
-            },
-            {
-              rotate: '0rad',
-            },
-          ],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: pickTransformValues(
+            [{ scale: 1 }, { rotate: '0rad' }],
+            initialValues
+          ),
         },
         callback,
       };

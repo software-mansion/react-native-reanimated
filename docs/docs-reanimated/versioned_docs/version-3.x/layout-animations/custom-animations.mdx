@@ -34,30 +34,29 @@ function CustomAnimation(values) {
 ## Custom Exiting Animation
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function CustomExitTransition (values: ExitAnimationsValues) => LayoutAnimation
+  ```typescript
+  function CustomExitTransition (values: ExitAnimationsValues) => LayoutAnimation
 
-type LayoutAnimation = {
-    initialValues: StyleProps;
-    animations: StyleProps;
-    callback?: (finished: boolean) => void;
-};
+  type LayoutAnimation = {
+      initialValues: StyleProps;
+      animations: StyleProps;
+      callback?: (finished: boolean) => void;
+  };
 
-type ExitAnimationsValues = CurrentLayoutAnimationsValues &
-  WindowDimensions;
+  type ExitAnimationsValues = CurrentLayoutAnimationsValues &
+    WindowDimensions;
 
-type CurrentLayoutAnimationsValues = {
-  ['currentOriginX', 'currentOriginY', 'currentWidth', 'currentHeight', 'currentBorderRadius', 'currentGlobalOriginX','currentGlobalOriginY']: number;
-};
+  type CurrentLayoutAnimationsValues = {
+    ['currentOriginX', 'currentOriginY', 'currentWidth', 'currentHeight', 'currentBorderRadius', 'currentGlobalOriginX','currentGlobalOriginY']: number;
+  };
 
-interface WindowDimensions {
-    windowWidth: number;
-    windowHeight: number;
-}
-```
-
+  interface WindowDimensions {
+      windowWidth: number;
+      windowHeight: number;
+  }
+  ```
 </details>
 
 ### Arguments
@@ -75,41 +74,40 @@ interface WindowDimensions {
 
 <ExampleVideo
   sources={{
-    android:
-      '/react-native-reanimated/recordings/custom_animations/android_exiting_custom.mov',
-    ios: '/react-native-reanimated/recordings/custom_animations/ios_exiting_custom.mov',
-  }}
+android:
+'/react-native-reanimated/recordings/custom_animations/android_exiting_custom.mov',
+ios: '/react-native-reanimated/recordings/custom_animations/ios_exiting_custom.mov',
+}}
 />
 
-<CollapsibleCode src={EnteringExitingAnimationSrc} showLines={[29, 45]} />
+<CollapsibleCode src={EnteringExitingAnimationSrc} showLines={[29, 45]}/>
 
 ## Custom Entering Animation
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function CustomEntryTransition (values: EntryAnimationsValues) => LayoutAnimation
+  ```typescript
+  function CustomEntryTransition (values: EntryAnimationsValues) => LayoutAnimation
 
-type LayoutAnimation = {
-    initialValues: StyleProps;
-    animations: StyleProps;
-    callback?: (finished: boolean) => void;
-};
+  type LayoutAnimation = {
+      initialValues: StyleProps;
+      animations: StyleProps;
+      callback?: (finished: boolean) => void;
+  };
 
-type EntryAnimationsValues = TargetLayoutAnimationsValues &
-  WindowDimensions;
+  type EntryAnimationsValues = TargetLayoutAnimationsValues &
+    WindowDimensions;
 
-type TargetLayoutAnimationsValues = {
-  ['targetOriginX', 'targetOriginY', 'targetWidth', 'targetHeight', 'targetBorderRadius', 'targetGlobalOriginX','targetGlobalOriginY']: number;
-};
+  type TargetLayoutAnimationsValues = {
+    ['targetOriginX', 'targetOriginY', 'targetWidth', 'targetHeight', 'targetBorderRadius', 'targetGlobalOriginX','targetGlobalOriginY']: number;
+  };
 
-interface WindowDimensions {
-    windowWidth: number;
-    windowHeight: number;
-}
-```
-
+  interface WindowDimensions {
+      windowWidth: number;
+      windowHeight: number;
+  }
+  ```
 </details>
 
 ### Arguments
@@ -127,44 +125,43 @@ interface WindowDimensions {
 
 <ExampleVideo
   sources={{
-    android:
-      '/react-native-reanimated/recordings/custom_animations/android_entering_custom.mov',
-    ios: '/react-native-reanimated/recordings/custom_animations/ios_entering_custom.mov',
-  }}
+android:
+'/react-native-reanimated/recordings/custom_animations/android_entering_custom.mov',
+ios: '/react-native-reanimated/recordings/custom_animations/ios_entering_custom.mov',
+}}
 />
 
-<CollapsibleCode src={EnteringExitingAnimationSrc} showLines={[6, 28]} />
+<CollapsibleCode src={EnteringExitingAnimationSrc} showLines={[6, 28]}/>
 
 ## Custom Layout Transition
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function CustomLayoutTransition (values: LayoutAnimationValues) => LayoutAnimation
+  ```typescript
+  function CustomLayoutTransition (values: LayoutAnimationValues) => LayoutAnimation
 
-type LayoutAnimation = {
-    initialValues: StyleProps;
-    animations: StyleProps;
-    callback?: (finished: boolean) => void;
-};
+  type LayoutAnimation = {
+      initialValues: StyleProps;
+      animations: StyleProps;
+      callback?: (finished: boolean) => void;
+  };
 
-type LayoutAnimationsValues = CurrentLayoutAnimationsValues & TargetLayoutAnimationsValues & WindowDimensions;
+  type LayoutAnimationsValues = CurrentLayoutAnimationsValues & TargetLayoutAnimationsValues & WindowDimensions;
 
-type CurrentLayoutAnimationsValues = {
-    ['currentOriginX', 'currentOriginY', 'currentWidth', 'currentHeight', 'currentBorderRadius', 'currentGlobalOriginX','currentGlobalOriginY']: number;
-};
+  type CurrentLayoutAnimationsValues = {
+      ['currentOriginX', 'currentOriginY', 'currentWidth', 'currentHeight', 'currentBorderRadius', 'currentGlobalOriginX','currentGlobalOriginY']: number;
+  };
 
-type TargetLayoutAnimationsValues = {
-    ['targetOriginX', 'targetOriginY', 'targetWidth', 'targetHeight', 'targetBorderRadius', 'targetGlobalOriginX','targetGlobalOriginY']: number;
-};
+  type TargetLayoutAnimationsValues = {
+      ['targetOriginX', 'targetOriginY', 'targetWidth', 'targetHeight', 'targetBorderRadius', 'targetGlobalOriginX','targetGlobalOriginY']: number;
+  };
 
-interface WindowDimensions {
-    windowWidth: number;
-    windowHeight: number;
-}
-```
-
+  interface WindowDimensions {
+      windowWidth: number;
+      windowHeight: number;
+  }
+  ```
 </details>
 
 ### Arguments
@@ -189,13 +186,13 @@ interface WindowDimensions {
 
 <ExampleVideo
   sources={{
-    android:
-      '/react-native-reanimated/recordings/custom_animations/android_layout_custom.mov',
-    ios: '/react-native-reanimated/recordings/custom_animations/ios_layout_custom.mov',
-  }}
+android:
+'/react-native-reanimated/recordings/custom_animations/android_layout_custom.mov',
+ios: '/react-native-reanimated/recordings/custom_animations/ios_layout_custom.mov',
+}}
 />
 
-<CollapsibleCode src={LayoutAnimationSrc} showLines={[8, 28]} />
+<CollapsibleCode src={LayoutAnimationSrc} showLines={[8, 28]}/>
 
 ## Remarks
 
@@ -203,4 +200,4 @@ interface WindowDimensions {
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios />
+<PlatformCompatibility android ios/>

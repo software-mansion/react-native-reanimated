@@ -33,23 +33,22 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type InterpolationOptions = {
-  gamma?: number;
-  useCorrectedHSVInterpolation?: boolean;
-};
+  ```typescript
+  type InterpolationOptions = {
+    gamma?: number;
+    useCorrectedHSVInterpolation?: boolean;
+  };
 
-function interpolateColor(
-  value: number,
-  input: number[],
-  output: string[],
-  colorSpace?: 'RGB' | 'HSV' | 'LAB',
-  options?: InterpolationOptions
-): string;
-```
-
+  function interpolateColor(
+    value: number,
+    input: number[],
+    output: string[],
+    colorSpace?: 'RGB' | 'HSV' | 'LAB',
+    options?: InterpolationOptions
+  ): string;
+  ```
 </details>
 
 ### Arguments
@@ -66,18 +65,18 @@ An array of numbers specifying the input range of the interpolation. Values in t
 
 An array of output colors values in form of strings (like `'red'`, `'#ff0000'`, `'rgba(255, 0, 0, 0.5)'` etc.). It should have at least the same number of points as the input range.
 
-#### `colorSpace` <Optional />
+#### `colorSpace` <Optional/>
 
 The color space to use for interpolation. Can be either `'HSV'`, `'RGB'` or [`'LAB'`](https://en.wikipedia.org/wiki/Oklab_color_space). Defaults to `'RGB'`.
 
-#### `options` <Optional />
+#### `options` <Optional/>
 
 Color interpolation options. Allowed parameters:
 
 | Options                                   | Type      | Default | Description                                                                 |
 | ----------------------------------------- | --------- | ------- | --------------------------------------------------------------------------- |
-| gamma <Optional />                        | `number`  | 2.2     | Gamma parameter used in gamma correction.                                   |
-| useCorrectedHSVInterpolation <Optional /> | `boolean` | true    | Whether to reduce the number of colors the interpolation has to go through. |
+| gamma <Optional/>                        | `number`  | 2.2     | Gamma parameter used in gamma correction.                                   |
+| useCorrectedHSVInterpolation <Optional/> | `boolean` | true    | Whether to reduce the number of colors the interpolation has to go through. |
 
 #### Options explanation
 
@@ -99,7 +98,7 @@ Color interpolation options. Allowed parameters:
 
 import { useInterpolateColorPlayground } from '@site/src/components/InteractivePlayground';
 
-<InteractivePlayground usePlayground={useInterpolateColorPlayground} />
+<InteractivePlayground usePlayground={useInterpolateColorPlayground}/>
 
 ## Remarks
 
@@ -107,4 +106,4 @@ import { useInterpolateColorPlayground } from '@site/src/components/InteractiveP
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>
