@@ -19,8 +19,7 @@ export function installValueUnpacker() {
 
   function valueUnpacker(
     objectToUnpack: ObjectToUnpack,
-    category?: string,
-    remoteFunctionName?: string
+    category?: string
   ): unknown {
     const workletHash = objectToUnpack.__workletHash;
     if (workletHash !== undefined) {
@@ -63,17 +62,6 @@ export function installValueUnpacker() {
         handleCache.set(objectToUnpack, value);
       }
       return value;
-    } else if (category === 'RemoteFunction') {
-      const fun = () => {
-        const label = remoteFunctionName
-          ? `function \`${remoteFunctionName}\``
-          : 'anonymous function';
-
-        throw new Error(`[Worklets] Tried to synchronously call a non-worklet ${label} on the UI thread.
-See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
-      };
-      fun.__remoteFunction = objectToUnpack;
-      return fun;
     } else {
       throw new Error(
         `[Worklets] Data type in category "${category}" not recognized by value unpacker: "${globalThis._toString(

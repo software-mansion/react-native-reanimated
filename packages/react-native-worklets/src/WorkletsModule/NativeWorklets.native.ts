@@ -3,10 +3,15 @@
 import { checkCppVersion } from '../debug/checkCppVersion';
 import { jsVersion } from '../debug/jsVersion';
 import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
+import { installRemoteFunctionUnpacker } from '../memory/remoteFunctionUnpacker';
 import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
 import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
 import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
-import type { SerializableRef, SynchronizableRef } from '../memory/types';
+import type {
+  NewRemoteFunction,
+  SerializableRef,
+  SynchronizableRef,
+} from '../memory/types';
 import { installValueUnpacker } from '../memory/valueUnpacker';
 import { isRNRuntime } from '../runtimeKind';
 import { WorkletsTurboModule } from '../specs';
@@ -151,11 +156,20 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.createSerializableInitializer(obj);
   }
 
-  createSerializableFunction<TArgs extends unknown[], TReturn>(
-    func: (...args: TArgs) => TReturn,
-    id: number
+  createSerializableHostFunction<TArgs extends unknown[], TReturn>(
+    func: (...args: TArgs) => TReturn
   ): SerializableRef<TReturn> {
-    return this.#workletsModuleProxy.createSerializableFunction(func, id);
+    return this.#workletsModuleProxy.createSerializableHostFunction(func);
+  }
+
+  createSerializableRemoteFunction<TArgs extends unknown[], TReturn>(
+    functionId: number,
+    runtimeId: number
+  ): SerializableRef<(...args: TArgs) => TReturn> {
+    return this.#workletsModuleProxy.createSerializableRemoteFunction(
+      functionId,
+      runtimeId
+    );
   }
 
   createSerializableWorklet(worklet: object, shouldPersistRemote: boolean) {
@@ -200,6 +214,13 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       decorateHost,
       decorateRef
     );
+  }
+
+  scheduleOnRN<TArgs extends unknown[]>(
+    serializable: NewRemoteFunction,
+    args?: SerializableRef<TArgs>
+  ): void {
+    this.#workletsModuleProxy.scheduleOnRN(serializable, args);
   }
 
   scheduleOnUI<TValue>(serializable: SerializableRef<TValue>) {
@@ -361,6 +382,11 @@ function installUnpackers(workletsModuleProxy: WorkletsModuleProxy) {
     (installShareableGuestUnpacker as WorkletFunction).__initData!.location ??
       '',
     (installShareableGuestUnpacker as WorkletFunction).__initData!.sourceMap ??
+      '',
+    (installRemoteFunctionUnpacker as WorkletFunction).__initData!.code,
+    (installRemoteFunctionUnpacker as WorkletFunction).__initData!.location ??
+      '',
+    (installRemoteFunctionUnpacker as WorkletFunction).__initData!.sourceMap ??
       ''
   );
 }

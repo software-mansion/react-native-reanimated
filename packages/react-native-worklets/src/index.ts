@@ -55,6 +55,7 @@ export type {
   Synchronizable,
   SynchronizableRef,
 } from './memory/types';
+export { getRuntimeId, getRuntimeName, UIRuntimeId } from './runtimeData';
 export {
   getRuntimeKind,
   isRNRuntime,
@@ -73,7 +74,6 @@ export {
   runOnRuntimeSyncWithId,
   scheduleOnRuntime,
   scheduleOnRuntimeWithId,
-  UIRuntimeId,
 } from './runtimes';
 export {
   executeOnUIRuntimeSync,

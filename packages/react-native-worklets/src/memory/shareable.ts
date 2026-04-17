@@ -1,6 +1,6 @@
 'use strict';
 
-import type { UIRuntimeId } from '../runtimes';
+import type { UIRuntimeId } from '../runtimeData';
 import type { Shareable, ShareableConfig } from './types';
 
 /**

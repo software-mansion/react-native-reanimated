@@ -13,9 +13,11 @@
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -190,7 +192,8 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableHostObject"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableInitializer"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableArray"));
-  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableFunction"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableHostFunction"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableRemoteFunction"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableTurboModuleLike"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableObject"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableMap"));
@@ -199,6 +202,7 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createCustomSerializable"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "registerCustomSerializable"));
 
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnRN"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnUI"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "runOnUISync"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "runOnRuntimeSync"));
@@ -238,7 +242,7 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
-        15,
+        18,
         [unpackerLoader = unpackerLoader_](
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
           const auto valueUnpackerCode = args[0].asString(rt).utf8(rt);
@@ -261,6 +265,10 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
           const auto shareableGuestUnpackerLocation = args[13].asString(rt).utf8(rt);
           const auto shareableGuestUnpackerSourceMap = args[14].asString(rt).utf8(rt);
 
+          const auto remoteFunctionUnpackerCode = args[15].asString(rt).utf8(rt);
+          const auto remoteFunctionUnpackerLocation = args[16].asString(rt).utf8(rt);
+          const auto remoteFunctionUnpackerSourceMap = args[17].asString(rt).utf8(rt);
+
           unpackerLoader->loadUnpackers(ShareableUnpackers{
               .valueUnpacker =
                   {.code = valueUnpackerCode, .location = valueUnpackerLocation, .sourceMap = valueUnpackerSourceMap},
@@ -280,6 +288,10 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
                   {.code = shareableGuestUnpackerCode,
                    .location = shareableGuestUnpackerLocation,
                    .sourceMap = shareableGuestUnpackerSourceMap},
+              .remoteFunctionUnpacker =
+                  {.code = remoteFunctionUnpackerCode,
+                   .location = remoteFunctionUnpackerLocation,
+                   .sourceMap = remoteFunctionUnpackerSourceMap},
           });
           return jsi::Value::undefined();
         });
@@ -376,10 +388,21 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         });
   }
 
-  if (name == "createSerializableFunction") {
+  if (name == "createSerializableHostFunction") {
     return jsi::Function::createFromHostFunction(
-        rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return makeSerializableFunction(rt, args[0].asObject(rt).asFunction(rt), args[1].asNumber());
+        rt, propName, 1, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          return makeSerializableHostFunction(rt, args[0].asObject(rt).asFunction(rt));
+        });
+  }
+
+  if (name == "createSerializableRemoteFunction") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [jsScheduler = jsScheduler_](
+            jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          return makeSerializableRemoteFunction(rt, args[0].asNumber(), jsScheduler);
         });
   }
 
@@ -426,6 +449,39 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
               rt, args[2], "[Worklets] Unpack function must be a worklet.");
           const auto typeId = args[3].asNumber();
           registerCustomSerializable(runtimeManager, memoryManager, determine, pack, unpack, typeId);
+          return jsi::Value::undefined();
+        });
+  }
+
+  if (name == "scheduleOnRN") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [jsScheduler = jsScheduler_](
+            jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          auto remoteFunction = extractSerializableOrThrow<SerializableRemoteFunction>(rt, args[0]);
+          auto &remoteArgs = args[1];
+
+          auto serializableArgs = remoteArgs.isUndefined()
+              ? nullptr
+              : extractSerializableOrThrow<SerializableArray>(rt, remoteArgs, "[Worklets] Args must be an array.");
+
+          if (remoteFunction->getHostRuntimeId() != RuntimeData::rnRuntimeId) {
+            throw std::runtime_error(
+                "[Worklets] Function passed to `scheduleOnRN` does not belong to the React Native runtime. Make sure to define it on the React Native runtime before passing it to `scheduleOnRN`.");
+          }
+          jsScheduler->scheduleOnJS([remoteFunction, serializableArgs](jsi::Runtime &rnRuntime) {
+            auto fun = remoteFunction->toJSValue(rnRuntime).asObject(rnRuntime).asFunction(rnRuntime);
+
+            if (serializableArgs == nullptr) {
+              // fast path for remote function w/o arguments
+              fun.call(rnRuntime);
+            } else {
+              auto args = serializableArgs->toArgs(rnRuntime);
+              fun.call(rnRuntime, const_cast<const jsi::Value *>(args.data()), args.size());
+            }
+          });
           return jsi::Value::undefined();
         });
   }

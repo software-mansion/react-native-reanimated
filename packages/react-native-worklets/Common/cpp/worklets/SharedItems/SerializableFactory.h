@@ -43,7 +43,10 @@ jsi::Value makeSerializableSet(jsi::Runtime &rt, const jsi::Array &values);
 
 jsi::Value makeSerializableInitializer(jsi::Runtime &rt, const jsi::Object &initializerObject);
 
-jsi::Value makeSerializableFunction(jsi::Runtime &rt, jsi::Function function);
+jsi::Value makeSerializableHostFunction(jsi::Runtime &rt, jsi::Function function);
+
+jsi::Value
+makeSerializableRemoteFunction(jsi::Runtime &rt, int remoteId, const std::shared_ptr<JSScheduler> &jsScheduler);
 
 jsi::Value makeSerializableWorklet(jsi::Runtime &rt, const jsi::Object &object, const bool &shouldRetainRemote);
 

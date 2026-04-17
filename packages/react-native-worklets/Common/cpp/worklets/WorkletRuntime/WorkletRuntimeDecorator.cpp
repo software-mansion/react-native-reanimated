@@ -69,7 +69,8 @@ static inline std::vector<jsi::Value> parseArgs(
 
 void WorkletRuntimeDecorator::decorate(
     jsi::Runtime &rt,
-    const std::string &name,
+    const std::string &runtimeName,
+    RuntimeData::RuntimeId runtimeId,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const bool isDevBundle,
     jsi::Object &&jsiWorkletsModuleProxy,
@@ -81,7 +82,9 @@ void WorkletRuntimeDecorator::decorate(
 
   rt.global().setProperty(rt, "_WORKLET", true);
 
-  rt.global().setProperty(rt, "_LABEL", jsi::String::createFromAscii(rt, name));
+  rt.global().setProperty(rt, RuntimeData::runtimeNameBindingName, runtimeName);
+
+  rt.global().setProperty(rt, RuntimeData::runtimeIdBindingName, static_cast<int>(runtimeId));
 
   // TODO: Remove _IS_FABRIC sometime in the future
   // react-native-screens 4.9.0 depends on it
@@ -196,8 +199,12 @@ void WorkletRuntimeDecorator::decorate(
     return makeSerializableInitializer(rt, value.asObject(rt));
   });
 
-  jsi_utils::installJsiFunction(rt, "_createSerializableFunction", [](jsi::Runtime &rt, const jsi::Value &value) {
-    return makeSerializableFunction(rt, value.asObject(rt).asFunction(rt), -1);
+  jsi_utils::installJsiFunction(rt, "_createSerializableHostFunction", [](jsi::Runtime &rt, const jsi::Value &value) {
+    return makeSerializableHostFunction(rt, value.asObject(rt).asFunction(rt));
+  });
+
+  jsi_utils::installJsiFunction(rt, "_createSerializableRemoteFunction", [](jsi::Runtime &rt, const jsi::Value &value) {
+    throw std::runtime_error("[Worklets] not implemented");
   });
 
   jsi_utils::installJsiFunction(rt, "_createSerializableSynchronizable", [](jsi::Runtime &rt, const jsi::Value &value) {

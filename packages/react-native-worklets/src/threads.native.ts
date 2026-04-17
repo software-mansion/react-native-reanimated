@@ -8,6 +8,7 @@ import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
 } from './memory/serializable';
+import type { NewRemoteFunction } from './memory/types';
 import { isRNRuntime, RuntimeKind } from './runtimeKind';
 import type { WorkletFunction, WorkletImport } from './types';
 import { isWorkletFunction } from './workletFunction';
@@ -254,31 +255,21 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
         ? () => (fun as (...args: Args) => ReturnValue)(...args)
         : (fun as () => ReturnValue)
     );
-    return;
-  }
-  if (isWorkletFunction<Args, ReturnValue>(fun)) {
+  } else if (isWorkletFunction<Args, ReturnValue>(fun)) {
     // If `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
     // and pass the worklet as a first argument followed by original arguments.
     scheduleOnRN(runWorkletOnJS<Args, ReturnValue>, fun, ...args);
-    return;
+  } else if ((fun as FunDevRemote).__remoteFunction) {
+    globalThis.__workletsModuleProxy.scheduleOnRN(
+      fun as unknown as NewRemoteFunction,
+      args.length > 0 ? globalThis.__serializer(args) : undefined
+    );
+  } else {
+    globalThis._scheduleHostFunctionOnJS(
+      fun as (...args: Args) => ReturnValue,
+      args.length > 0 ? globalThis.__serializer(args) : undefined
+    );
   }
-  if ((fun as FunDevRemote).__remoteFunction) {
-    // In development mode the function provided as `fun` throws an error message
-    // such that when someone accidentally calls it directly on the UI runtime, they
-    // see that they should use `runOnJS` instead. To facilitate that we put the
-    // reference to the original remote function in the `__remoteFunction` property.
-    fun = (fun as FunDevRemote).__remoteFunction;
-  }
-
-  const scheduleOnRNImpl =
-    typeof fun === 'function'
-      ? globalThis._scheduleHostFunctionOnJS
-      : globalThis._scheduleRemoteFunctionOnJS;
-
-  scheduleOnRNImpl(
-    fun as (...args: Args) => ReturnValue,
-    args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
-  );
 }
 
 /**

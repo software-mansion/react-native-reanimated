@@ -18,5 +18,8 @@ extern const std::string uiRuntimeName;
 
 constexpr facebook::jsi::UUID weakRuntimeUUID{0x770c6f2e, 0x1e4d, 0x436a, 0xa2b1, 0x9f322c8d5f5e};
 
+constexpr auto runtimeIdBindingName = "__RUNTIME_ID";
+constexpr auto runtimeNameBindingName = "__RUNTIME_NAME";
+
 }; // namespace RuntimeData
 } // namespace worklets

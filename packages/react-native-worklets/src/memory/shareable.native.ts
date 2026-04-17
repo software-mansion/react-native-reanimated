@@ -1,7 +1,7 @@
 'use strict';
 
 import { addNoBundleModeGuardImplementation } from '../guardImplementation';
-import { UIRuntimeId } from '../runtimes';
+import { UIRuntimeId } from '../runtimeData';
 import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
 import { createSerializable } from './serializable';
