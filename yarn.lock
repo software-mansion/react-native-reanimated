@@ -11497,14 +11497,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:1.13.6, axios@npm:^1.12.1":
-  version: 1.13.6
-  resolution: "axios@npm:1.13.6"
+"axios@npm:1.15.0, axios@npm:^1.12.1":
+  version: 1.15.0
+  resolution: "axios@npm:1.15.0"
   dependencies:
     follow-redirects: "npm:^1.15.11"
     form-data: "npm:^4.0.5"
-    proxy-from-env: "npm:^1.1.0"
-  checksum: 10/a7ed83c2af3ef21d64609df0f85e76893a915a864c5934df69241001d0578082d6521a0c730bf37518ee458821b5695957cb10db9fc705f2a8996c8686ea7a89
+    proxy-from-env: "npm:^2.1.0"
+  checksum: 10/d39a2c0ebc7ff4739401b282e726cc2673377949d6c46d60eb619458f8d7a2f7eadbcada7097f4dbc7d5c59abb4d3bf6fac33d474412bc3415d3f5aa7ed45530
   languageName: node
   linkType: hard
 
@@ -13704,7 +13704,7 @@ __metadata:
     "@types/jest": "npm:30.0.0"
     "@types/react": "npm:19.2.2"
     "@types/react-test-renderer": "npm:19.1.0"
-    axios: "npm:1.13.6"
+    axios: "npm:1.15.0"
     d3-shape: "npm:3.2.0"
     eslint: "npm:9.37.0"
     fuse.js: "patch:fuse.js@npm%3A7.1.0#~/.yarn/patches/fuse.js-npm-7.1.0-5dcae892a6.patch"
@@ -27451,10 +27451,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"proxy-from-env@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "proxy-from-env@npm:1.1.0"
-  checksum: 10/f0bb4a87cfd18f77bc2fba23ae49c3b378fb35143af16cc478171c623eebe181678f09439707ad80081d340d1593cd54a33a0113f3ccb3f4bc9451488780ee23
+"proxy-from-env@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "proxy-from-env@npm:2.1.0"
+  checksum: 10/fbbaf4dab2a6231dc9e394903a5f66f20475e36b734335790b46feb9da07c37d6b32e2c02e3e2ea4d4b23774c53d8562e5b7cc73282cb43f4a597b7eacaee2ee
   languageName: node
   linkType: hard
 
