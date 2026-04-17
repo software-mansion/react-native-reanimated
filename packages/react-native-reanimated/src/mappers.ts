@@ -2,7 +2,7 @@
 
 import { scheduleOnUI } from 'react-native-worklets';
 
-import { IS_JEST, IS_WEB } from './common';
+import { IS_JEST, IS_WEB, SHOULD_BE_USE_WEB } from './common';
 import type {
   MapperOutputs,
   MapperRawInputs,
@@ -99,18 +99,18 @@ function createMapperRegistry() {
     }
     try {
       processingMappers = true;
+      if (mappers.size !== sortedMappers.length) {
+        updateMappersOrder();
+      }
       if (anyMapperDirty) {
-        if (mappers.size !== sortedMappers.length) {
-          updateMappersOrder();
-        }
         for (const mapper of sortedMappers) {
           if (mapper.dirty) {
             mapper.dirty = false;
             mapper.worklet();
           }
         }
+        anyMapperDirty = false;
       }
-      anyMapperDirty = false;
     } finally {
       processingMappers = false;
       const finalizers = mapperRunFinalizers;
@@ -121,13 +121,20 @@ function createMapperRegistry() {
     }
   }
 
+  const schedulingFunction = IS_WEB
+    ? requestAnimationFrame
+    : requestAnimationFrameFinalizer;
+
   function scheduledMapperRun() {
     runRequested = false;
     mapperRun();
-    globalThis.requestAnimationFrameFinalizer(scheduledMapperRun);
+    if (!SHOULD_BE_USE_WEB) {
+      // We always run mappers on native.
+      schedulingFunction(scheduledMapperRun);
+    }
   }
 
-  globalThis.requestAnimationFrameFinalizer(scheduledMapperRun);
+  schedulingFunction(scheduledMapperRun);
 
   global.__mapperRun = mapperRun;
 
@@ -140,7 +147,7 @@ function createMapperRegistry() {
       // immediately for testing purposes and only expect test to advance timers
       // if they want to make any assertions on the effects of animations being run.
       mapperRun();
-    } else if (!runRequested && IS_WEB) {
+    } else if (IS_WEB && !runRequested) {
       if (processingMappers) {
         // In general, we should avoid having mappers trigger updates as this may
         // result in unpredictable behavior. Specifically, the updated value can
@@ -153,10 +160,11 @@ function createMapperRegistry() {
         // we are already in mapper-run phase, and in that case we use `requestAnimationFrame`
         // instead of `queueMicrotask` which will schedule mapper run for the next
         // frame instead of queuing another set of updates in the same frame.
-        requestAnimationFrame(scheduledMapperRun);
+        schedulingFunction(scheduledMapperRun);
       } else {
         queueMicrotask(scheduledMapperRun);
       }
+      runRequested = true;
     }
   }
 
