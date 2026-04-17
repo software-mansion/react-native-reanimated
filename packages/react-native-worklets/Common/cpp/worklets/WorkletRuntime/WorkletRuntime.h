@@ -203,7 +203,8 @@ std::shared_ptr<WorkletRuntime> extractWorkletRuntime(jsi::Runtime &rt, const js
 void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
-    const jsi::Value &serializableWorkletValue);
+    const jsi::Value &serializableWorkletValue,
+    std::string scheduleStack = "");
 
 /**
  * @deprecated Use `WorkletRuntime::runSync` instead.

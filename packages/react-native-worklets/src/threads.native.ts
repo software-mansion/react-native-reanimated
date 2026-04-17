@@ -17,6 +17,7 @@ type UIJob<Args extends unknown[] = unknown[], ReturnValue = unknown> = [
   worklet: WorkletFunction<Args, ReturnValue>,
   args: Args,
   resolve?: (value: ReturnValue) => void,
+  scheduleStack?: string,
 ];
 
 let runOnUIQueue: UIJob[] = [];
@@ -98,7 +99,13 @@ export function scheduleOnUI<Args extends unknown[], ReturnValue>(
     createSerializable(args);
   }
 
-  enqueueUI(worklet, args);
+  enqueueUI(
+    worklet,
+    args,
+    undefined,
+    // eslint-disable-next-line reanimated/use-worklets-error
+    __DEV__ ? (new Error().stack ?? '') : undefined
+  );
 }
 
 /**
@@ -346,6 +353,8 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
       );
     }
   }
+  // eslint-disable-next-line reanimated/use-worklets-error
+  const scheduleStack = __DEV__ ? (new Error().stack ?? '') : undefined;
   return new Promise<ReturnValue>((resolve) => {
     if (__DEV__) {
       // in DEV mode we call serializable conversion here because in case the object
@@ -357,16 +366,25 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
       createSerializable(args);
     }
 
-    enqueueUI(worklet as WorkletFunction<Args, ReturnValue>, args, resolve);
+    enqueueUI(
+      worklet as WorkletFunction<Args, ReturnValue>,
+      args,
+      resolve,
+      scheduleStack
+    );
   });
 }
 
 function enqueueUI<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>,
   args: Args,
-  resolve?: (value: ReturnValue) => void
+  resolve?: (value: ReturnValue) => void,
+  scheduleStack?: string
 ): void {
-  const job = [worklet, args, resolve] as UIJob<Args, ReturnValue>;
+  const job = [worklet, args, resolve, scheduleStack] as UIJob<
+    Args,
+    ReturnValue
+  >;
   runOnUIQueue.push(job as unknown as UIJob);
   if (runOnUIQueue.length === 1) {
     flushUIQueue();
@@ -377,6 +395,7 @@ function flushUIQueue(): void {
   queueMicrotask(() => {
     const queue = runOnUIQueue;
     runOnUIQueue = [];
+    const firstScheduleStack = queue[0]?.[3];
     WorkletsModule.scheduleOnUI(
       createSerializable(() => {
         'worklet';
@@ -387,7 +406,8 @@ function flushUIQueue(): void {
           }
         });
         globalThis.__callMicrotasks();
-      })
+      }),
+      firstScheduleStack
     );
   });
 }

@@ -28,9 +28,11 @@ inline void scheduleOnUI(
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
     jsi::Runtime &rt,
-    const jsi::Value &worklet) {
+    const jsi::Value &worklet,
+    std::string scheduleStack) {
   auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, worklet, "[Worklets] Only worklets can be scheduled to run on UI.");
+  serializableWorklet->setScheduleStack(std::move(scheduleStack));
   uiScheduler->scheduleOnUI([serializableWorklet, weakUIWorkletRuntime]() {
     // This callback can outlive the WorkletsModuleProxy object during the
     // invalidation of React Native. This happens when WorkletsModuleProxy
@@ -70,11 +72,15 @@ inline jsi::Value runOnUISync(
   return jsi::Value::undefined();
 }
 
-jsi::Value
-runOnRuntimeSync(jsi::Runtime &rt, const jsi::Value &workletRuntimeValue, const jsi::Value &serializableWorkletValue) {
+jsi::Value runOnRuntimeSync(
+    jsi::Runtime &rt,
+    const jsi::Value &workletRuntimeValue,
+    const jsi::Value &serializableWorkletValue,
+    std::string scheduleStack) {
   auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
   auto worklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
+  worklet->setScheduleStack(std::move(scheduleStack));
   return workletRuntime->runSyncSerialized(worklet)->toJSValue(rt);
 }
 
@@ -438,10 +444,14 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
-        1,
+        2,
         [uiScheduler = uiScheduler_, uiWorkletRuntime = uiWorkletRuntime_](
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          scheduleOnUI(uiScheduler, uiWorkletRuntime, rt, args[0]);
+          std::string scheduleStack;
+          if (count > 1 && args[1].isString()) {
+            scheduleStack = args[1].asString(rt).utf8(rt);
+          }
+          scheduleOnUI(uiScheduler, uiWorkletRuntime, rt, args[0], std::move(scheduleStack));
           return jsi::Value::undefined();
         });
   }
@@ -463,8 +473,12 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
 
   if (name == "runOnRuntimeSync") {
     return jsi::Function::createFromHostFunction(
-        rt, propName, 2, [](jsi::Runtime &rt, const jsi ::Value &thisValue, const jsi::Value *args, size_t count) {
-          return runOnRuntimeSync(rt, args[0], args[1]);
+        rt, propName, 3, [](jsi::Runtime &rt, const jsi ::Value &thisValue, const jsi::Value *args, size_t count) {
+          std::string scheduleStack;
+          if (count > 2 && args[2].isString()) {
+            scheduleStack = args[2].asString(rt).utf8(rt);
+          }
+          return runOnRuntimeSync(rt, args[0], args[1], std::move(scheduleStack));
         });
   }
 
@@ -472,7 +486,7 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
-        2,
+        3,
         [runtimeManager = runtimeManager_](
             jsi::Runtime &rt, const jsi ::Value &thisValue, const jsi::Value *args, size_t count) {
           const int runtimeId = args[0].asNumber();
@@ -483,6 +497,9 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
           }
           auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
               rt, args[1], "[Worklets] Only worklets can be executed on a worklet runtime.");
+          if (count > 2 && args[2].isString()) {
+            serializableWorklet->setScheduleStack(args[2].asString(rt).utf8(rt));
+          }
           return workletRuntime->runSyncSerialized(serializableWorklet)->toJSValue(rt);
         });
   }
@@ -522,8 +539,12 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
 
   if (name == "scheduleOnRuntime") {
     return jsi::Function::createFromHostFunction(
-        rt, propName, 2, [](jsi::Runtime &rt, const jsi ::Value &thisValue, const jsi::Value *args, size_t count) {
-          worklets::scheduleOnRuntime(rt, args[0], args[1]);
+        rt, propName, 3, [](jsi::Runtime &rt, const jsi ::Value &thisValue, const jsi::Value *args, size_t count) {
+          std::string scheduleStack;
+          if (count > 2 && args[2].isString()) {
+            scheduleStack = args[2].asString(rt).utf8(rt);
+          }
+          worklets::scheduleOnRuntime(rt, args[0], args[1], std::move(scheduleStack));
           return jsi::Value::undefined();
         });
   }
@@ -532,7 +553,7 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
-        2,
+        3,
         [runtimeManager = runtimeManager_](
             jsi::Runtime &rt, const jsi ::Value &thisValue, const jsi::Value *args, size_t count) {
           const int runtimeId = args[0].asNumber();
@@ -543,6 +564,9 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
           }
           const auto worklet = extractSerializableOrThrow<SerializableWorklet>(
               rt, args[1], "[Worklets] Only worklets can be scheduled to run on a worklet runtime.");
+          if (count > 2 && args[2].isString()) {
+            worklet->setScheduleStack(args[2].asString(rt).utf8(rt));
+          }
           workletRuntime->schedule(worklet);
           return jsi::Value::undefined();
         });

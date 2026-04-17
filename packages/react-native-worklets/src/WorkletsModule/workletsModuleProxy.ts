@@ -107,7 +107,10 @@ export interface WorkletsModuleProxy {
     decorateGuest: SerializableRef
   ): SerializableRef<TValue>;
 
-  scheduleOnUI<TValue>(serializable: SerializableRef<TValue>): void;
+  scheduleOnUI<TValue>(
+    serializable: SerializableRef<TValue>,
+    scheduleStack?: string
+  ): void;
 
   runOnUISync<TValue, TReturn>(
     serializable: SerializableRef<TValue>,
@@ -124,22 +127,26 @@ export interface WorkletsModuleProxy {
 
   scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack?: string
   ): void;
 
   scheduleOnRuntimeWithId<TValue>(
     runtimeId: number,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack?: string
   ): void;
 
   runOnRuntimeSync<TValue, TReturn>(
     workletRuntime: WorkletRuntime,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack?: string
   ): TReturn;
 
   runOnRuntimeSyncWithId<TValue, TReturn>(
     runtimeId: number,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack?: string
   ): TReturn;
 
   reportFatalErrorOnJS(

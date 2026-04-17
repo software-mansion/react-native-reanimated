@@ -201,8 +201,11 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  scheduleOnUI<TValue>(serializable: SerializableRef<TValue>) {
-    return this.#workletsModuleProxy.scheduleOnUI(serializable);
+  scheduleOnUI<TValue>(
+    serializable: SerializableRef<TValue>,
+    scheduleStack?: string
+  ) {
+    return this.#workletsModuleProxy.scheduleOnUI(serializable, scheduleStack);
   }
 
   runOnUISync<TValue, TReturn>(
@@ -230,36 +233,50 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
-    serializableWorklet: SerializableRef<TValue>
+    serializableWorklet: SerializableRef<TValue>,
+    scheduleStack?: string
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntime(
       workletRuntime,
-      serializableWorklet
+      serializableWorklet,
+      scheduleStack
     );
   }
 
   scheduleOnRuntimeWithId<TValue>(
     runtimeId: number,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack?: string
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntimeWithId(
       runtimeId,
-      worklet
+      worklet,
+      scheduleStack
     );
   }
 
   runOnRuntimeSync<TValue, TReturn>(
     workletRuntime: WorkletRuntime,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack?: string
   ): TReturn {
-    return this.#workletsModuleProxy.runOnRuntimeSync(workletRuntime, worklet);
+    return this.#workletsModuleProxy.runOnRuntimeSync(
+      workletRuntime,
+      worklet,
+      scheduleStack
+    );
   }
 
   runOnRuntimeSyncWithId<TValue, TReturn>(
     runtimeId: number,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack?: string
   ): TReturn {
-    return this.#workletsModuleProxy.runOnRuntimeSyncWithId(runtimeId, worklet);
+    return this.#workletsModuleProxy.runOnRuntimeSyncWithId(
+      runtimeId,
+      worklet,
+      scheduleStack
+    );
   }
 
   createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue> {

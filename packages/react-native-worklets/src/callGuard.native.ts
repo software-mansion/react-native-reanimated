@@ -19,19 +19,16 @@ export function callGuardDEV<Args extends unknown[], ReturnValue>(
       const labeledWorkletFrames = (stack ?? '')
         .split('\n    at')
         .map((line) => `\n    at [${label}]:` + line)
+        .slice(1) // remove error message
         .join('');
 
-      // Strip the "Error" header from the schedule stack, keeping all frames.
       const scheduleFrames = scheduleStack
         ? scheduleStack.substring(scheduleStack.indexOf('\n    at'))
         : '';
 
-      // `message` acts as the header consumed by slice(1); worklet frames come
-      // first so "Source" points to the throw, schedule frames follow.
-      const combinedStack = (message + labeledWorkletFrames + scheduleFrames)
-        .split('\n    at')
-        .slice(1)
-        .join('\n    at');
+      const combinedStack = message + labeledWorkletFrames + scheduleFrames;
+
+      console.log(combinedStack);
 
       globalThis.__workletsModuleProxy.reportFatalErrorOnJS(
         message,
