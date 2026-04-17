@@ -8,16 +8,21 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- * Attaches a native event observer to a UIView for a single pseudo-selector.
+ * Attaches a native event observer to a view for a single pseudo-selector.
  * Calls the C++ callback with `true` when the selector becomes active,
  * `false` when it becomes inactive.
  *
  * Supported selectors:
- *   Active - UILongPressGestureRecognizer with minimumPressDuration = 0
- *   Focus  - NSNotificationCenter UITextFieldTextDidBeginEditing/DidEndEditing
- *   Hover  - UIHoverGestureRecognizer (iOS 13+, pointer/trackpad/mouse devices)
+ *   Active        - iOS: UILongPressGestureRecognizer (minimumPressDuration = 0)
+ *                   macOS: NSPressGestureRecognizer (minimumPressDuration = 0)
+ *   ActiveDeepest - Same as Active, but only fires on the deepest descendant
+ *   Focus         - iOS: UITextField/UITextView editing notifications
+ *                   macOS: NSControl/NSText editing notifications
+ *   FocusWithin   - Same as Focus, but matches any descendant gaining focus
+ *   Hover         - iOS: UIHoverGestureRecognizer (iOS 13+)
+ *                   macOS: NSTrackingArea (mouseEntered/mouseExited)
  *
- * Lifetime: store as an associated object on the UIView so it is
+ * Lifetime: store as an associated object on the view so it is
  * automatically released when the view is deallocated.
  */
 @interface REAPseudoSelectorObserver : NSObject
