@@ -91,21 +91,26 @@ function createMapperRegistry() {
     mapperRunFinalizers.push(finalizer);
   };
 
+  let anyMapperDirty = false;
+
   function mapperRun() {
     if (processingMappers) {
       return;
     }
     try {
       processingMappers = true;
-      if (mappers.size !== sortedMappers.length) {
-        updateMappersOrder();
-      }
-      for (const mapper of sortedMappers) {
-        if (mapper.dirty) {
-          mapper.dirty = false;
-          mapper.worklet();
+      if (anyMapperDirty) {
+        if (mappers.size !== sortedMappers.length) {
+          updateMappersOrder();
+        }
+        for (const mapper of sortedMappers) {
+          if (mapper.dirty) {
+            mapper.dirty = false;
+            mapper.worklet();
+          }
         }
       }
+      anyMapperDirty = false;
     } finally {
       processingMappers = false;
       const finalizers = mapperRunFinalizers;
@@ -119,7 +124,10 @@ function createMapperRegistry() {
   function scheduledMapperRun() {
     runRequested = false;
     mapperRun();
+    globalThis.requestAnimationFrameFinalizer(scheduledMapperRun);
   }
+
+  globalThis.requestAnimationFrameFinalizer(scheduledMapperRun);
 
   global.__mapperRun = mapperRun;
 
@@ -132,28 +140,23 @@ function createMapperRegistry() {
       // immediately for testing purposes and only expect test to advance timers
       // if they want to make any assertions on the effects of animations being run.
       mapperRun();
-    } else if (!runRequested) {
-      if (IS_WEB) {
-        if (processingMappers) {
-          // In general, we should avoid having mappers trigger updates as this may
-          // result in unpredictable behavior. Specifically, the updated value can
-          // be read by mappers that run later in the same frame but previous mappers
-          // would access the old value. Updating mappers during the mapper-run phase
-          // breaks the order in which we should execute the mappers. However, doing
-          // that is still a possibility and there are some instances where people use
-          // the API in that way, hence we need to prevent mapper-run phase falling into
-          // an infinite loop. We do that by detecting when mapper-run is requested while
-          // we are already in mapper-run phase, and in that case we use `requestAnimationFrame`
-          // instead of `queueMicrotask` which will schedule mapper run for the next
-          // frame instead of queuing another set of updates in the same frame.
-          requestAnimationFrame(scheduledMapperRun);
-        } else {
-          queueMicrotask(scheduledMapperRun);
-        }
+    } else if (!runRequested && IS_WEB) {
+      if (processingMappers) {
+        // In general, we should avoid having mappers trigger updates as this may
+        // result in unpredictable behavior. Specifically, the updated value can
+        // be read by mappers that run later in the same frame but previous mappers
+        // would access the old value. Updating mappers during the mapper-run phase
+        // breaks the order in which we should execute the mappers. However, doing
+        // that is still a possibility and there are some instances where people use
+        // the API in that way, hence we need to prevent mapper-run phase falling into
+        // an infinite loop. We do that by detecting when mapper-run is requested while
+        // we are already in mapper-run phase, and in that case we use `requestAnimationFrame`
+        // instead of `queueMicrotask` which will schedule mapper run for the next
+        // frame instead of queuing another set of updates in the same frame.
+        requestAnimationFrame(scheduledMapperRun);
       } else {
-        globalThis.requestAnimationFrameFinalizer(scheduledMapperRun);
+        queueMicrotask(scheduledMapperRun);
       }
-      runRequested = true;
     }
   }
 
@@ -198,9 +201,11 @@ function createMapperRegistry() {
       };
       mappers.set(mapper.id, mapper);
       sortedMappers = [];
+      anyMapperDirty = true;
       for (const sv of mapper.inputs) {
         sv.addListener(mapper.id, () => {
           mapper.dirty = true;
+          anyMapperDirty = true;
           maybeRequestUpdates();
         });
       }
@@ -211,6 +216,7 @@ function createMapperRegistry() {
       if (mapper) {
         mappers.delete(mapper.id);
         sortedMappers = [];
+        anyMapperDirty = true;
         for (const sv of mapper.inputs) {
           sv.removeListener(mapper.id);
         }
