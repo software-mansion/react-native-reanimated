@@ -619,6 +619,50 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
   return animatedPropsRegistry_->getUpdatesOlderThanTimestamp(rt, currentTimestamp - 1000); // 1 second
 }
 
+void ReanimatedModuleProxy::registerPseudoStyle(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &selector,
+    const jsi::Value &selectorStyle,
+    const jsi::Value &defaultStyle,
+    const jsi::Value &transitionConfig) {
+  const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  const auto tag = shadowNode->getTag();
+  const auto selectorStr = stringFromValue(rt, selector);
+  const auto selectorEnum = pseudoSelectorFromString(selectorStr);
+  if (!selectorEnum) {
+    return;
+  }
+  const auto selectorStyleDyn = jsi::dynamicFromValue(rt, selectorStyle);
+  const auto defaultStyleDyn = jsi::dynamicFromValue(rt, defaultStyle);
+
+  double duration = 0;
+  double delay = 0;
+  css::EasingFunction easingFn = css::getPredefinedEasingFunction("ease");
+  if (transitionConfig.isObject()) {
+    auto configObj = transitionConfig.asObject(rt);
+    auto durationProp = configObj.getProperty(rt, "duration");
+    if (durationProp.isNumber()) {
+      duration = durationProp.asNumber();
+    }
+    auto delayProp = configObj.getProperty(rt, "delay");
+    if (delayProp.isNumber()) {
+      delay = delayProp.asNumber();
+    }
+    auto timingFunctionProp = configObj.getProperty(rt, "timingFunction");
+    if (!timingFunctionProp.isUndefined() && !timingFunctionProp.isNull()) {
+      easingFn = css::createEasingFunction(rt, timingFunctionProp);
+    }
+  }
+
+  pseudoStylesRegistry_->registerPseudoStyle(
+      tag, shadowNode, *selectorEnum, selectorStyleDyn, defaultStyleDyn, duration, delay, std::move(easingFn));
+}
+
+void ReanimatedModuleProxy::unregisterPseudoStyle(jsi::Runtime &, const jsi::Value &viewTag) {
+  pseudoStylesRegistry_->remove(static_cast<Tag>(viewTag.asNumber()));
+}
+
 bool ReanimatedModuleProxy::handleEvent(
     const std::string &eventName,
     const int emitterReactTag,
