@@ -13,7 +13,7 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
-#include <worklets/Tools/UIScheduler.h>
+#include <worklets/Compat/StableApi.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
@@ -269,7 +269,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       return;
     }
     // Schedule on the UI worklet thread where jsi::Runtime is available.
-    strongThis->uiScheduler_->scheduleOnUI([weakThis, shadowNode, fromStyle, toStyle, duration, delay, easingFn]() {
+    scheduleOnUI(strongThis->uiScheduler_, [weakThis, shadowNode, fromStyle, toStyle, duration, delay, easingFn]() {
       auto strongThis = weakThis.lock();
       if (!strongThis) {
         return;
