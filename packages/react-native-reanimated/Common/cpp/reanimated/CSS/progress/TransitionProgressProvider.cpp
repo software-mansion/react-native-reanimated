@@ -128,7 +128,7 @@ void TransitionProgressProvider::runProgressProvider(
   propertyProgressProviders_.insert_or_assign(
       propertyName,
       std::make_shared<TransitionPropertyProgressProvider>(
-          timestamp, settings.duration, settings.delay, settings.easingFunction));
+          timestamp, settings.duration, settings.delay, getEasingFunctionFromConfig(settings.easingConfig)));
 }
 
 void TransitionProgressProvider::removeProperty(const std::string &propertyName) {
@@ -169,7 +169,7 @@ TransitionProgressProvider::createReversingShorteningProgressProvider(
       timestamp,
       propertySettings.duration * newReversingShorteningFactor,
       propertySettings.delay < 0 ? newReversingShorteningFactor * propertySettings.delay : propertySettings.delay,
-      propertySettings.easingFunction,
+      getEasingFunctionFromConfig(propertySettings.easingConfig),
       newReversingShorteningFactor);
 }
 
