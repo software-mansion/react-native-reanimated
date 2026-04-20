@@ -103,7 +103,13 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
   const auto unpackerLoader = jsiWorkletsModuleProxy->getUnpackerLoader();
   const auto &nativeLoggingHook = runtimeBindings->nativeLoggingHook;
   WorkletRuntimeDecorator::decorate(
-      rt, name_, jsScheduler, isDevBundle, jsiWorkletsModuleProxy->toOptimizedObject(rt), eventLoop_, nativeLoggingHook);
+      rt,
+      name_,
+      jsScheduler,
+      isDevBundle,
+      jsiWorkletsModuleProxy->toOptimizedObject(rt),
+      eventLoop_,
+      nativeLoggingHook);
 
   if (bundleModeEnabled) {
     bundleModeInit(jsScheduler, script, sourceUrl, runtimeBindings);

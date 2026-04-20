@@ -9,6 +9,11 @@ import {
 } from '../../ReJest/RuntimeTestsApi';
 import { runOnUISync, scheduleOnRN, createShareable, createSynchronizable, UIRuntimeId } from 'react-native-worklets';
 
+declare global {
+  // eslint-disable-next-line no-var
+  var nativeLoggingHook: ((serializedMessage: string, level: number) => void) | undefined;
+}
+
 // `expected`, same output in both modes
 // `bundleMode` / `noBundleMode`, output differs between modes
 // `checkIncludes`, assert the expected string is (or isn't) a substring of the output
@@ -294,7 +299,8 @@ const testCases: Record<string, TestCase> = {
     noBundleMode: '42',
     factory: () => {
       'worklet';
-      return globalThis.__workletsModuleProxy.createSerializable(42);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (globalThis.__workletsModuleProxy as any).createSerializable(42);
     },
   },
   shareable: {
