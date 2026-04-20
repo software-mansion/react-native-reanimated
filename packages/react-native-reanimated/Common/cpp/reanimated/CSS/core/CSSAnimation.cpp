@@ -25,7 +25,7 @@ CSSAnimation::CSSAnimation(
           settings.delay,
           settings.iterationCount,
           settings.direction,
-          settings.easingFunction,
+          getEasingFunctionFromConfig(settings.easingConfig),
           cssKeyframesConfig.keyframeEasingFunctions)) {
   if (settings.playState == AnimationPlayState::Paused) {
     progressProvider_->pause(timestamp);
@@ -77,8 +77,8 @@ void CSSAnimation::updateConfig(const PartialCSSAnimationSettings &updatedSettin
   if (updatedSettings.duration.has_value()) {
     progressProvider_->setDuration(updatedSettings.duration.value());
   }
-  if (updatedSettings.easingFunction.has_value()) {
-    progressProvider_->setEasingFunction(updatedSettings.easingFunction.value());
+  if (updatedSettings.easingConfig.has_value()) {
+    progressProvider_->setEasingFunction(getEasingFunctionFromConfig(updatedSettings.easingConfig.value()));
   }
   if (updatedSettings.delay.has_value()) {
     progressProvider_->setDelay(updatedSettings.delay.value());

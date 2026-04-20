@@ -31,7 +31,7 @@ CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value 
           propertyName,
           CSSTransitionPropertySettings{
               getDuration(rt, propertySettingsObj),
-              getTimingFunction(rt, propertySettingsObj),
+              getEasingConfig(rt, propertySettingsObj),
               getDelay(rt, propertySettingsObj),
               getAllowDiscrete(rt, propertySettingsObj),
           });
