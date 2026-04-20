@@ -16,7 +16,6 @@ using namespace facebook::react;
   REAEventHandler _eventHandler;
   READispatchEventHandler _dispatchEventHandler;
   REAPerformOperations _performOperations;
-  REAPerformOperations _performOperationsForEvent;
 }
 
 - (READisplayLink *)getDisplayLink
@@ -97,12 +96,6 @@ using namespace facebook::react;
   _performOperations = performOperations;
 }
 
-- (void)registerPerformOperationsForEvent:(REAPerformOperations)performOperationsForEvent
-{
-  REAAssertJavaScriptQueue();
-  _performOperationsForEvent = performOperationsForEvent;
-}
-
 - (void)startUpdatingOnAnimationFrame
 {
   RCTAssertMainQueue();
@@ -159,15 +152,9 @@ using namespace facebook::react;
       if (eventHandler != nil) {
         eventHandler(event);
       }
-      [strongSelf performOperationsForEvent];
+      [strongSelf performOperations];
     }
   });
-}
-
-- (void)performOperationsForEvent
-{
-  RCTAssertMainQueue();
-  _performOperationsForEvent();
 }
 
 - (void)maybeFlushUIUpdatesQueue

@@ -22,7 +22,6 @@ typedef void (^REAPerformOperations)();
 - (void)dispatchEvent:(id<RCTEvent>)event;
 - (void)synchronouslyUpdateUIProps:(ReactTag)viewTag props:(const folly::dynamic &)props;
 - (void)registerPerformOperations:(REAPerformOperations)performOperations;
-- (void)registerPerformOperationsForEvent:(REAPerformOperations)performOperationsForEvent;
 - (void)maybeFlushUIUpdatesQueue;
 
 @end

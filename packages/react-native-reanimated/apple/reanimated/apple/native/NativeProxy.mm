@@ -65,14 +65,6 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
     }
   }];
 
-  if constexpr (!StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    [nodesManager registerPerformOperationsForEvent:^() {
-      if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
-        reanimatedModuleProxy->performOperations();
-      }
-    }];
-  }
-
   return reanimatedModuleProxy;
 }
 
