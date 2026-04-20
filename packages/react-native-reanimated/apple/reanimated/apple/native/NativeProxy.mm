@@ -34,27 +34,20 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
 
   auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
 
-  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    // Backend path: handleEventAndFlush performs mutation flushing; REANodesManager
-    // skips performOperations after the event when USE_ANIMATION_BACKEND is on.
-    [nodesManager registerEventHandler:^(id<RCTEvent> event) {
-      std::string eventName = [event.eventName UTF8String];
-      int emitterReactTag = [event.viewTag intValue];
-      id eventData = [event arguments][2];
-      jsi::Value payload = convertObjCObjectToJSIValue(uiRuntime, eventData);
-      reanimatedModuleProxy->handleEventAndFlush<GrandCallbackState::Event>(
-          eventName, emitterReactTag, payload);
-    }];
-  } else {
-    [nodesManager registerEventHandler:^(id<RCTEvent> event) {
-      std::string eventName = [event.eventName UTF8String];
-      int emitterReactTag = [event.viewTag intValue];
-      id eventData = [event arguments][2];
-      jsi::Value payload = convertObjCObjectToJSIValue(uiRuntime, eventData);
-      double currentTime = CACurrentMediaTime() * 1000;
+  // REANodesManager skips post-event performOperations when USE_ANIMATION_BACKEND
+  // is enabled.
+  [nodesManager registerEventHandler:^(id<RCTEvent> event) {
+    std::string eventName = [event.eventName UTF8String];
+    int emitterReactTag = [event.viewTag intValue];
+    id eventData = [event arguments][2];
+    jsi::Value payload = convertObjCObjectToJSIValue(uiRuntime, eventData);
+    if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+      reanimatedModuleProxy->handleEventAndFlush<GrandCallbackState::Event>(eventName, emitterReactTag, payload);
+    } else {
+      const double currentTime = CACurrentMediaTime() * 1000;
       reanimatedModuleProxy->handleEvent(eventName, emitterReactTag, payload, currentTime);
-    }];
-  }
+    }
+  }];
 
   std::weak_ptr<ReanimatedModuleProxy> weakReanimatedModuleProxy = reanimatedModuleProxy; // to avoid retain cycle
   [nodesManager registerPerformOperations:^() {
