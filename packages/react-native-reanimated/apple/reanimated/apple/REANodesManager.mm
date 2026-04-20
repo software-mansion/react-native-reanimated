@@ -138,9 +138,10 @@ using namespace facebook::react;
     if (strongSelf == nil) {
       return;
     }
-    if (eventHandler != nil) {
-      eventHandler(event);
+    if (eventHandler == nil) {
+      return;
     }
+    eventHandler(event);
     // Animation backend flushes inside handleEventAndFlush instead (see NativeProxy.mm).
     if (!reanimated::StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
       [strongSelf performOperations];
