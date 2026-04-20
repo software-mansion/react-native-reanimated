@@ -3,6 +3,7 @@
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/core/CSSAnimationGroup.h>
+#include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/utils/props.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
@@ -23,7 +24,8 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
  public:
   CSSAnimationsRegistry(
       const std::shared_ptr<OperationsLoop> &loop,
-      const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry);
+      const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
+      const std::shared_ptr<CSSPlatformAnimationFactory> &platformAnimationFactory);
 
   bool needsFlush() const;
 
@@ -38,6 +40,7 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
  private:
   const std::shared_ptr<OperationsLoop> loop_;
   const std::shared_ptr<CSSKeyframesRegistry> keyframesRegistry_;
+  const std::shared_ptr<CSSPlatformAnimationFactory> platformAnimationFactory_;
 
   std::unordered_map<Tag, CSSAnimationGroup> groups_;
   std::shared_ptr<std::unordered_set<Tag>> updatedViewTags_;
