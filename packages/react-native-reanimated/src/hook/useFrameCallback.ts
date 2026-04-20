@@ -20,8 +20,7 @@ export type FrameCallback = {
 const frameCallbackRegistry = new FrameCallbackRegistryJS();
 
 /**
- * Lets you run a function on every frame update. This is expensive, so don't
- * create multiple timers if you can use one and share it.
+ * Lets you run a function on every frame update.
  *
  * @param callback - A function executed on every frame update.
  * @param autostart - Whether the callback should start automatically. Defaults
