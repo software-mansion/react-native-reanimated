@@ -26,7 +26,7 @@ CSSAnimation::CSSAnimation(
           settings.iterationCount,
           settings.direction,
           getEasingFunctionFromConfig(settings.easingConfig),
-          cssKeyframesConfig.keyframeEasingFunctions)) {
+          cssKeyframesConfig.keyframeEasingConfigs)) {
   if (settings.playState == AnimationPlayState::Paused) {
     progressProvider_->pause(timestamp);
   }

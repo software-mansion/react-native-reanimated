@@ -4,6 +4,7 @@
 
 #include <jsi/jsi.h>
 #include <string>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -26,6 +27,8 @@ struct LinearStopsEasing {
 };
 
 using EasingConfig = std::variant<LinearEasing, CubicBezierEasing, StepsEasing, LinearStopsEasing>;
+
+using KeyframeEasingConfigs = std::unordered_map<double, EasingConfig>;
 
 EasingConfig getEasingConfig(jsi::Runtime &rt, const jsi::Value &easingConfig);
 EasingFunction getEasingFunctionFromConfig(const EasingConfig &easingConfig);
