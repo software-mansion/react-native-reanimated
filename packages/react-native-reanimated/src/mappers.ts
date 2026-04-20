@@ -2,7 +2,7 @@
 
 import { scheduleOnUI } from 'react-native-worklets';
 
-import { IS_JEST, IS_WEB, SHOULD_BE_USE_WEB } from './common';
+import { IS_JEST, SHOULD_BE_USE_WEB } from './common';
 import type {
   MapperOutputs,
   MapperRawInputs,
@@ -121,9 +121,9 @@ function createMapperRegistry() {
     }
   }
 
-  const schedulingFunction = IS_WEB
+  const schedulingFunction = SHOULD_BE_USE_WEB
     ? requestAnimationFrame
-    : requestAnimationFrameFinalizer;
+    : globalThis.requestAnimationFrameFinalizer;
 
   function scheduledMapperRun() {
     runRequested = false;
@@ -134,7 +134,9 @@ function createMapperRegistry() {
     }
   }
 
-  schedulingFunction(scheduledMapperRun);
+  if (!SHOULD_BE_USE_WEB) {
+    schedulingFunction(scheduledMapperRun);
+  }
 
   global.__mapperRun = mapperRun;
 
@@ -147,7 +149,7 @@ function createMapperRegistry() {
       // immediately for testing purposes and only expect test to advance timers
       // if they want to make any assertions on the effects of animations being run.
       mapperRun();
-    } else if (IS_WEB && !runRequested) {
+    } else if (!runRequested) {
       if (processingMappers) {
         // In general, we should avoid having mappers trigger updates as this may
         // result in unpredictable behavior. Specifically, the updated value can
@@ -214,10 +216,14 @@ function createMapperRegistry() {
         sv.addListener(mapper.id, () => {
           mapper.dirty = true;
           isAnyMapperDirty = true;
-          maybeRequestUpdates();
+          if (SHOULD_BE_USE_WEB) {
+            maybeRequestUpdates();
+          }
         });
       }
-      maybeRequestUpdates();
+      if (SHOULD_BE_USE_WEB) {
+        maybeRequestUpdates();
+      }
     },
     stop: (mapperID: number) => {
       const mapper = mappers.get(mapperID);
