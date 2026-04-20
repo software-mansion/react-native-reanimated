@@ -22,6 +22,9 @@ struct CSSAnimationSettings {
   AnimationDirection direction;
   AnimationFillMode fillMode;
   AnimationPlayState playState;
+
+  bool hasForwardsFillMode() const;
+  bool hasBackwardsFillMode() const;
 };
 
 struct PartialCSSAnimationSettings {

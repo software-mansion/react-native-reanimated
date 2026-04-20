@@ -2,8 +2,7 @@
 
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/configs/CSSKeyframesConfig.h>
-#include <reanimated/CSS/progress/AnimationProgressProvider.h>
-#include <reanimated/Fabric/updates/LoopOperation.h>
+#include <reanimated/CSS/core/CSSLoopAnimation.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
 
 #include <memory>
@@ -12,10 +11,8 @@
 
 namespace reanimated::css {
 
-class CSSAnimation : public LoopOperation, public std::enable_shared_from_this<CSSAnimation> {
+class CSSAnimation {
  public:
-  static constexpr double FALLBACK_INTERPOLATION_THRESHOLD = 0.5;
-
   CSSAnimation(
       Tag viewTag,
       std::string animationName,
@@ -26,14 +23,10 @@ class CSSAnimation : public LoopOperation, public std::enable_shared_from_this<C
       const std::shared_ptr<OperationsLoop> &loop,
       double timestamp);
 
-  bool update(double timestamp) override;
-
   const std::string &getName() const;
 
-  double getStartTimestamp(double timestamp) const;
   AnimationProgressState getState() const;
 
-  bool isReversed() const;
   bool hasForwardsFillMode() const;
   bool hasBackwardsFillMode() const;
 
@@ -47,16 +40,12 @@ class CSSAnimation : public LoopOperation, public std::enable_shared_from_this<C
   void updateSettings(const PartialCSSAnimationSettings &updatedSettings, double timestamp);
 
  private:
-  const Tag viewTag_;
   const std::string name_;
-  AnimationFillMode fillMode_;
-
-  const std::shared_ptr<std::unordered_set<Tag>> updatedViewTags_;
-  const std::shared_ptr<std::unordered_set<Tag>> revertedTags_;
-  const std::shared_ptr<OperationsLoop> loop_;
-
+  const std::shared_ptr<CSSAnimationSettings> settings_;
   const std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;
-  const std::shared_ptr<AnimationProgressProvider> progressProvider_;
+  const std::shared_ptr<CSSLoopAnimation> loopAnimation_;
+
+  bool isReversed() const;
 };
 
 } // namespace reanimated::css
