@@ -59,7 +59,7 @@ CSSAnimationSettings parseCSSAnimationSettings(jsi::Runtime &rt, const jsi::Valu
 
   return {
       getDuration(rt, settingsObj),
-      getTimingFunction(rt, settingsObj),
+      getEasingConfig(rt, settingsObj),
       getDelay(rt, settingsObj),
       getIterationCount(rt, settingsObj),
       getDirection(rt, settingsObj),
@@ -76,7 +76,7 @@ PartialCSSAnimationSettings parsePartialCSSAnimationSettings(jsi::Runtime &rt, c
     result.duration = getDuration(rt, partialObj);
   }
   if (partialObj.hasProperty(rt, "timingFunction")) {
-    result.easingFunction = getTimingFunction(rt, partialObj);
+    result.easingConfig = getEasingConfig(rt, partialObj);
   }
   if (partialObj.hasProperty(rt, "delay")) {
     result.delay = getDelay(rt, partialObj);
