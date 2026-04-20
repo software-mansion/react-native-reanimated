@@ -358,79 +358,124 @@ var rule4 = {
 };
 var useLogger_default = rule4;
 
-// public/useReanimatedError.js
+// public/createErrorPrefixRule.js
 var import_utils5 = require('@typescript-eslint/utils');
-var rule5 = {
-  create: function (context) {
-    return {
-      NewExpression: function (node) {
-        if (
-          node.callee.type === import_utils5.AST_NODE_TYPES.Identifier &&
-          node.callee.name === 'Error'
-        ) {
-          context.report({
-            node,
-            messageId: 'useReanimatedError',
-            fix: function (fixer) {
-              return fixer.replaceText(node.callee, 'ReanimatedError');
-            },
-          });
-        }
+function createErrorPrefixRule(prefix, messageId) {
+  var _a;
+  return {
+    create: function (context) {
+      return {
+        NewExpression: function (node) {
+          var _a2;
+          if (
+            node.callee.type !== import_utils5.AST_NODE_TYPES.Identifier ||
+            node.callee.name !== 'Error'
+          ) {
+            return;
+          }
+          var args = node.arguments;
+          if (args.length === 0) {
+            context.report({
+              node,
+              messageId,
+              fix: function (fixer) {
+                var closeParen = context.sourceCode.getLastToken(node);
+                return fixer.insertTextBefore(
+                  closeParen,
+                  "'".concat(prefix, "'")
+                );
+              },
+            });
+            return;
+          }
+          var first = args[0];
+          if (
+            first.type === import_utils5.AST_NODE_TYPES.Literal &&
+            typeof first.value === 'string'
+          ) {
+            if (first.value.startsWith(prefix)) {
+              return;
+            }
+            context.report({
+              node,
+              messageId,
+              fix: function (fixer) {
+                return fixer.replaceText(
+                  first,
+                  JSON.stringify(''.concat(prefix, ' ').concat(first.value))
+                );
+              },
+            });
+          } else if (
+            first.type === import_utils5.AST_NODE_TYPES.TemplateLiteral
+          ) {
+            var firstQuasi_1 = first.quasis[0];
+            var cooked =
+              (_a2 = firstQuasi_1.value.cooked) !== null && _a2 !== void 0
+                ? _a2
+                : '';
+            if (cooked.startsWith(prefix)) {
+              return;
+            }
+            context.report({
+              node,
+              messageId,
+              fix: function (fixer) {
+                return fixer.replaceTextRange(
+                  [firstQuasi_1.range[0] + 1, firstQuasi_1.range[0] + 1],
+                  ''.concat(prefix, ' ')
+                );
+              },
+            });
+          } else {
+            context.report({
+              node,
+              messageId,
+              fix: function (fixer) {
+                var exprText = context.sourceCode.getText(first);
+                return fixer.replaceText(
+                  first,
+                  '`'.concat(prefix, ' ${').concat(exprText, '}`')
+                );
+              },
+            });
+          }
+        },
+      };
+    },
+    meta: {
+      docs: {
+        description: 'Enforce that `new Error` messages start with "'.concat(
+          prefix,
+          '".'
+        ),
       },
-    };
-  },
-  meta: {
-    docs: {
-      description:
-        'Warns when `new Error` is used instead of `new ReanimatedError`.',
+      messages:
+        ((_a = {}),
+        (_a[messageId] = 'Error messages must start with `'.concat(
+          prefix,
+          '`.'
+        )),
+        _a),
+      type: 'suggestion',
+      schema: [],
+      fixable: 'code',
     },
-    messages: {
-      useReanimatedError: 'Use `new ReanimatedError` instead of `new Error`.',
-    },
-    type: 'suggestion',
-    schema: [],
-    fixable: 'code',
-  },
-  defaultOptions: [],
-};
-var useReanimatedError_default = rule5;
+    defaultOptions: [],
+  };
+}
+
+// public/useReanimatedError.js
+var useReanimatedError_default = createErrorPrefixRule(
+  '[Reanimated]',
+  'useReanimatedError'
+);
 
 // public/useWorkletsError.js
-var import_utils6 = require('@typescript-eslint/utils');
-var rule6 = {
-  create: function (context) {
-    return {
-      NewExpression: function (node) {
-        if (
-          node.callee.type === import_utils6.AST_NODE_TYPES.Identifier &&
-          node.callee.name === 'Error'
-        ) {
-          context.report({
-            node,
-            messageId: 'useWorkletsError',
-            fix: function (fixer) {
-              return fixer.replaceText(node.callee, 'WorkletsError');
-            },
-          });
-        }
-      },
-    };
-  },
-  meta: {
-    docs: {
-      description:
-        'Warns when `new Error` is used instead of `new WorkletsError`.',
-    },
-    messages: {
-      useWorkletsError: 'Use `new WorkletsError` instead of `new Error`.',
-    },
-    type: 'suggestion',
-    schema: [],
-    fixable: 'code',
-  },
-  defaultOptions: [],
-};
-var useWorkletsError_default = rule6;
+var useWorkletsError_default = createErrorPrefixRule(
+  '[Worklets]',
+  'useWorkletsError'
+);
 
 // public/index.js
 var rules = {

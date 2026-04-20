@@ -26,15 +26,14 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function runOnRuntime<A extends any[], R>(
-  workletRuntime: WorkletRuntime,
-  fn: (...args: A) => R
-): (...args: Parameters<typeof fn>) => void;
-```
-
+  ```typescript
+  function runOnRuntime<A extends any[], R>(
+    workletRuntime: WorkletRuntime,
+    fn: (...args: A) => R
+  ): (...args: Parameters<typeof fn>) => void;
+  ```
 </details>
 
 ### Arguments
@@ -67,4 +66,4 @@ Don't forget to call the function returned from `runOnRuntime`.
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios />
+<PlatformCompatibility android ios/>

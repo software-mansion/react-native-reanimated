@@ -1,6 +1,5 @@
 'use strict';
 import { FONT_WEIGHT_MAPPINGS } from '../../constants';
-import { ReanimatedError } from '../../errors';
 import type { ValueProcessor } from '../../types';
 
 export const ERROR_MESSAGES = {
@@ -28,5 +27,5 @@ export const processFontWeight: ValueProcessor<string | number, string> = (
     ];
   }
 
-  throw new ReanimatedError(ERROR_MESSAGES.invalidFontWeight(value));
+  throw new Error(`[Reanimated] ${ERROR_MESSAGES.invalidFontWeight(value)}`);
 };

@@ -31,13 +31,12 @@ Install `react-native-worklets` package from npm:
     ```bash
     npm install react-native-worklets
     ```
-
   </TabItem>
+
   <TabItem value="yarn" label="YARN">
     ```bash
     yarn add react-native-worklets
     ```
-
   </TabItem>
 </Tabs>
 
@@ -51,6 +50,7 @@ Run prebuild to update the native code in the `ios` and `android` directories.
     npx expo prebuild
     ```
   </TabItem>
+
   <TabItem value="yarn" label="YARN">
     ```bash
     yarn expo prebuild
@@ -79,14 +79,13 @@ module.exports = {
 Worklets Babel plugin comes with several options, you can explore what they are and how to use them in the [Options for Worklets Babel Plugin](/docs/worklets-babel-plugin/plugin-options) section.
 
 <details>
-<summary>Why do I need this?</summary>
+  <summary>Why do I need this?</summary>
 
-In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime)
+  In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime)
 
-Since [Expo SDK 54](https://expo.dev/changelog/sdk-54-beta#notable-breaking-changes), the Expo starter template includes the Worklets babel plugin by default.
+  Since [Expo SDK 54](https://expo.dev/changelog/sdk-54-beta#notable-breaking-changes), the Expo starter template includes the Worklets babel plugin by default.
 
-To learn more about the plugin head onto to [Worklets babel plugin](/docs/worklets-babel-plugin/about) section.
-
+  To learn more about the plugin head onto to [Worklets babel plugin](/docs/worklets-babel-plugin/about) section.
 </details>
 
 #### Clear Metro bundler cache (recommended)
@@ -97,6 +96,7 @@ To learn more about the plugin head onto to [Worklets babel plugin](/docs/workle
     npm start -- --reset-cache
     ```
   </TabItem>
+
   <TabItem value="yarn" label="YARN">
     ```bash
     yarn start --reset-cache

@@ -22,18 +22,17 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function scheduleOnRN<Args extends unknown[], ReturnValue>(
-  fun:
-    | ((...args: Args) => ReturnValue)
-    | RemoteFunction<Args, ReturnValue>
-    | WorkletFunction<Args, ReturnValue>,
-  ...args: Args
-): void;
-```
-
+  ```typescript
+  function scheduleOnRN<Args extends unknown[], ReturnValue>(
+    fun:
+      | ((...args: Args) => ReturnValue)
+      | RemoteFunction<Args, ReturnValue>
+      | WorkletFunction<Args, ReturnValue>,
+    ...args: Args
+  ): void;
+  ```
 </details>
 
 ### Arguments
@@ -51,26 +50,24 @@ Arguments to the function you want to execute on the [RN Runtime](/docs/fundamen
 import ScheduleOnRN from '@site/src/examples/ScheduleOnRN';
 import ScheduleOnRNsrc from '!!raw-loader!@site/src/examples/ScheduleOnRN';
 
-<InteractiveExample src={ScheduleOnRNsrc} component={ScheduleOnRN} />
+<InteractiveExample src={ScheduleOnRNsrc} component={ScheduleOnRN}/>
 
 ## Remarks
 
 - Functions passed to `scheduleOnRN` must be defined in the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime) scope, i.e. in the component body or the global scope. The code below won't work because `myFunction` is defined in the `runOnUI` callback, which is only executed in the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime):
 
 <Indent>
+  ```jsx
+  import { runOnUI, scheduleOnRN } from 'react-native-worklets';
 
-```jsx
-import { runOnUI, scheduleOnRN } from 'react-native-worklets';
-
-runOnUI(() => {
-  // myFunction is defined on the UI thread 🚨
-  const myFunction = () => {
-    // ...
-  };
-  scheduleOnRN(myFunction); // 💥
-})();
-```
-
+  runOnUI(() => {
+    // myFunction is defined on the UI thread 🚨
+    const myFunction = () => {
+      // ...
+    };
+    scheduleOnRN(myFunction); // 💥
+  })();
+  ```
 </Indent>
 
 ## Implementation Details
@@ -83,17 +80,17 @@ runOnUI(() => {
 
 <CallTable
   bundleMode={{
-    rnRuntime: true,
-    uiRuntime: true,
-    workerRuntime: true,
-  }}
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
   noBundleMode={{
-    rnRuntime: true,
-    uiRuntime: true,
-    workerRuntime: true,
-  }}
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
 />
 
 ## Platform compatibility
 
-<PlatformTable native={true} web={true} />
+<PlatformTable native={true} web={true}/>

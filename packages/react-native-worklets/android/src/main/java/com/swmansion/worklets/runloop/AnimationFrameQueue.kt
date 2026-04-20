@@ -6,15 +6,16 @@ import com.facebook.react.modules.core.ReactChoreographer
 import com.facebook.react.uimanager.GuardedFrameCallback
 import java.util.concurrent.atomic.AtomicBoolean
 
-class AnimationFrameQueue(reactApplicationContext: ReactApplicationContext) {
-
+class AnimationFrameQueue(
+    reactApplicationContext: ReactApplicationContext,
+) {
     private var mFirstUptime = SystemClock.uptimeMillis()
     private var mSlowAnimationsEnabled = false
     private var lastFrameTimeMs = 0.0
     private var mAnimationsDragFactor = 1
 
-    /// ReactChoreographer is
-    /// [thread safe](https://github.com/facebook/react-native/blob/main/packages/react-native/ReactAndroid/src/main/java/com/facebook/react/modules/core/ReactChoreographer.kt#L21).
+    // ReactChoreographer is
+    // [thread safe](https://github.com/facebook/react-native/blob/main/packages/react-native/ReactAndroid/src/main/java/com/facebook/react/modules/core/ReactChoreographer.kt#L21).
     private val mReactChoreographer: ReactChoreographer = ReactChoreographer.getInstance()
     private val mChoreographerCallback: GuardedFrameCallback =
         object : GuardedFrameCallback(reactApplicationContext) {
@@ -36,7 +37,8 @@ class AnimationFrameQueue(reactApplicationContext: ReactApplicationContext) {
         synchronized(mPaused) {
             if (!mPaused.getAndSet(true) && mCallbackPosted.getAndSet(false)) {
                 mReactChoreographer.removeFrameCallback(
-                    ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE, mChoreographerCallback
+                    ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE,
+                    mChoreographerCallback,
                 )
             }
         }
@@ -49,7 +51,10 @@ class AnimationFrameQueue(reactApplicationContext: ReactApplicationContext) {
         scheduleQueueExecution()
     }
 
-    fun enableSlowAnimations(slowAnimationsEnabled: Boolean, animationsDragFactor: Int) {
+    fun enableSlowAnimations(
+        slowAnimationsEnabled: Boolean,
+        animationsDragFactor: Int,
+    ) {
         mSlowAnimationsEnabled = slowAnimationsEnabled
         mAnimationsDragFactor = animationsDragFactor
         if (slowAnimationsEnabled) {
@@ -61,7 +66,8 @@ class AnimationFrameQueue(reactApplicationContext: ReactApplicationContext) {
         synchronized(mPaused) {
             if (!mPaused.get() && !mCallbackPosted.getAndSet(true)) {
                 mReactChoreographer.postFrameCallback(
-                    ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE, mChoreographerCallback
+                    ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE,
+                    mChoreographerCallback,
                 )
             }
         }

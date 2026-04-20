@@ -19,16 +19,15 @@ scheduleOnRuntime(workletRuntime, (greeting: string) => {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
-  workletRuntime: WorkletRuntime,
-  worklet: (...args: Args) => ReturnValue,
-  ...args: Args
-): void;
-```
-
+  ```typescript
+  function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
+    workletRuntime: WorkletRuntime,
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): void;
+  ```
 </details>
 
 ## Arguments
@@ -54,17 +53,17 @@ Arguments to the function you want to execute on the [Worker Runtime](/docs/fund
 
 <CallTable
   bundleMode={{
-    rnRuntime: true,
-    uiRuntime: true,
-    workerRuntime: true,
-  }}
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
   noBundleMode={{
-    rnRuntime: true,
-    uiRuntime: true,
-    workerRuntime: true,
-  }}
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
 />
 
 ## Platform compatibility
 
-<PlatformTable native={true} web={false} />
+<PlatformTable native={true} web={false}/>

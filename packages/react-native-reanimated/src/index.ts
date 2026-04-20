@@ -104,6 +104,7 @@ export {
   isReanimated3,
   makeMutable,
 } from './core';
+export { NativeEventsManager } from './createAnimatedComponent';
 export * from './css';
 export type { EasingFunctionFactory } from './Easing';
 export { Easing } from './Easing';

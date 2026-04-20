@@ -27,6 +27,13 @@ export function filterCSSAndStyleProperties<S extends AnyRecord>(
   const filteredStyle: AnyRecord = {};
 
   for (const [prop, value] of Object.entries(style)) {
+    if (value === undefined) {
+      // If the user explicitly sets a property to undefined (e.g. when they want
+      // to remove CSS transition or animation), we treat the property as if it was not
+      // present in the style object.
+      continue;
+    }
+
     if (isAnimationProp(prop)) {
       // TODO - add support for animation shorthand
       animationProperties[prop] = value;

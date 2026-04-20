@@ -17,5 +17,5 @@ assignees: ''
 
 -->
 
-- [original PR link]
+- \[original PR link]
   - cherry-pick PR

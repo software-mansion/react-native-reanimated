@@ -1,6 +1,6 @@
 'use strict';
 
-import { ReanimatedError, type ValueProcessor } from '../../../../common';
+import type { ValueProcessor } from '../../../../common';
 import {
   arcToCubic,
   lineToCubic,
@@ -35,7 +35,9 @@ function processPathSegment(
   let type = command.toLowerCase();
 
   if (pathSegments.length === 0 && type !== 'm') {
-    throw new ReanimatedError(ERROR_MESSAGES.invalidSVGPathStart(command));
+    throw new Error(
+      `[Reanimated] ${ERROR_MESSAGES.invalidSVGPathStart(command)}`
+    );
   }
 
   let argsStartIdx = 0;
@@ -49,8 +51,8 @@ function processPathSegment(
 
   do {
     if (args.length - argsStartIdx < PATH_COMMAND_LENGTHS[type]) {
-      throw new ReanimatedError(
-        ERROR_MESSAGES.invalidSVGPathCommand(command, args.slice(argsStartIdx))
+      throw new Error(
+        `[Reanimated] ${ERROR_MESSAGES.invalidSVGPathCommand(command, args.slice(argsStartIdx))}`
       );
     }
 

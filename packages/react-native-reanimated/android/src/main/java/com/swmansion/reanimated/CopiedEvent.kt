@@ -5,7 +5,9 @@ import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.events.Event
 import com.facebook.react.uimanager.events.RCTModernEventEmitter
 
-class CopiedEvent(event: Event<*>) {
+class CopiedEvent(
+    event: Event<*>,
+) {
     var surfaceId: Int = 0
         private set
 

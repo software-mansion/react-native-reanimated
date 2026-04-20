@@ -14,16 +14,14 @@ import java.util.concurrent.Future
 // function implementation for details).
 @DoNotStrip
 abstract class WorkletsMessageQueueThreadBase : MessageQueueThread {
-
     protected val messageQueueThread: MessageQueueThreadImpl =
         MessageQueueThreadImpl.create(
-            MessageQueueThreadSpec.mainThreadSpec()
+            MessageQueueThreadSpec.mainThreadSpec(),
         ) { exception ->
             throw RuntimeException(exception)
         }
 
-    override fun <T> callOnQueue(callable: Callable<T>): Future<T> =
-        messageQueueThread.callOnQueue(callable)
+    override fun <T> callOnQueue(callable: Callable<T>): Future<T> = messageQueueThread.callOnQueue(callable)
 
     override fun isOnThread(): Boolean = messageQueueThread.isOnThread()
 

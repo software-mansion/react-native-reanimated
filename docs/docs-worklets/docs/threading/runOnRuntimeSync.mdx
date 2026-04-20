@@ -23,16 +23,15 @@ console.log(result); // 4
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
-  workletRuntime: WorkletRuntime,
-  worklet: (...args: Args) => ReturnValue,
-  ...args: Args
-): ReturnValue;
-```
-
+  ```typescript
+  function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
+    workletRuntime: WorkletRuntime,
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): ReturnValue;
+  ```
 </details>
 
 ## Arguments
@@ -53,17 +52,17 @@ Arguments to the function you want to execute on the [Worker Runtime](/docs/fund
 
 <CallTable
   bundleMode={{
-    rnRuntime: true,
-    uiRuntime: true,
-    workerRuntime: true,
-  }}
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
   noBundleMode={{
-    rnRuntime: true,
-    uiRuntime: false,
-    workerRuntime: false,
-  }}
+rnRuntime: true,
+uiRuntime: false,
+workerRuntime: false,
+}}
 />
 
 ## Platform compatibility
 
-<PlatformTable native={true} web={false} />
+<PlatformTable native={true} web={false}/>

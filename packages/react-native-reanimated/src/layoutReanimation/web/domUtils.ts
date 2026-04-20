@@ -1,5 +1,5 @@
 'use strict';
-import { IS_WINDOW_AVAILABLE, logger, ReanimatedError } from '../../common';
+import { IS_WINDOW_AVAILABLE, logger } from '../../common';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import { setElementPosition, snapshots } from './componentStyle';
 import type { AnimationNames } from './config';
@@ -73,7 +73,7 @@ export function insertWebAnimation(animationName: string, keyframe: string) {
     const nextAnimationIndex = animationNameToIndex.get(nextAnimationName);
 
     if (nextAnimationIndex === undefined) {
-      throw new ReanimatedError('Failed to obtain animation index.');
+      throw new Error('[Reanimated] Failed to obtain animation index.');
     }
 
     animationNameToIndex.set(animationNameList[i], nextAnimationIndex + 1);
@@ -96,7 +96,7 @@ function removeWebAnimation(
   const currentAnimationIndex = animationNameToIndex.get(animationName);
 
   if (currentAnimationIndex === undefined) {
-    throw new ReanimatedError('Failed to obtain animation index.');
+    throw new Error('[Reanimated] Failed to obtain animation index.');
   }
 
   animationRemoveCallback();
@@ -111,7 +111,7 @@ function removeWebAnimation(
     const nextAnimationIndex = animationNameToIndex.get(nextAnimationName);
 
     if (nextAnimationIndex === undefined) {
-      throw new ReanimatedError('Failed to obtain animation index.');
+      throw new Error('[Reanimated] Failed to obtain animation index.');
     }
 
     animationNameToIndex.set(animationNameList[i], nextAnimationIndex - 1);

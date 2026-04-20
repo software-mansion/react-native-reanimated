@@ -48,6 +48,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler);
 
+  void startCpp();
+
   void invalidateCpp();
 
   template <class Signature>
