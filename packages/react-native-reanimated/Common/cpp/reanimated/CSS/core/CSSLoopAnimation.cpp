@@ -65,6 +65,10 @@ void CSSLoopAnimation::unschedule() {
   loop_->remove(shared_from_this());
 }
 
+void CSSLoopAnimation::setAnimatedProperties(const std::unordered_set<std::string> &loopDrivenProperties) {
+  interpolator_->setActiveProperties(loopDrivenProperties);
+}
+
 void CSSLoopAnimation::updateSettings(const PartialCSSAnimationSettings &updatedSettings, const double timestamp) {
   progressProvider_->resetProgress();
 

@@ -3,6 +3,7 @@
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <react/renderer/core/ReactPrimitives.h>
+#include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
 
 #include <memory>
 #include <string>
@@ -60,6 +61,7 @@ struct PlatformDepMethodsHolder {
   KeyboardEventSubscribeFunction subscribeForKeyboardEvents;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEvents;
   MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction;
+  std::shared_ptr<css::CSSPlatformAnimationFactory> platformAnimationFactory;
 };
 
 } // namespace reanimated

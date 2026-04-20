@@ -7,6 +7,7 @@
 #include <reanimated/Fabric/updates/OperationsLoop.h>
 
 #include <memory>
+#include <string>
 #include <unordered_set>
 
 namespace reanimated::css {
@@ -33,6 +34,7 @@ class CSSLoopAnimation : public LoopOperation, public std::enable_shared_from_th
   void schedule();
   void unschedule();
 
+  void setAnimatedProperties(const std::unordered_set<std::string> &loopDrivenProperties);
   void updateSettings(const PartialCSSAnimationSettings &updatedSettings, double timestamp);
 
  private:
