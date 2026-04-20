@@ -1,7 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/easing/EasingConfigs.h>
-#include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolator.h>
+#include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolatorFactory.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 
 #include <memory>
@@ -10,7 +10,7 @@
 namespace reanimated::css {
 
 struct CSSKeyframesConfig {
-  std::shared_ptr<AnimationStyleInterpolator> styleInterpolator;
+  std::shared_ptr<AnimationStyleInterpolatorFactory> styleInterpolatorFactory;
   std::shared_ptr<KeyframeEasingConfigs> keyframeEasingConfigs;
 };
 
