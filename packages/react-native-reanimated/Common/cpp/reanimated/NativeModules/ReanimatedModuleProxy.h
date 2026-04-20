@@ -122,17 +122,20 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   }
 
   template <GrandCallbackState State>
-  void handleEventAndFlush(const std::string &eventName, int emitterReactTag, const jsi::Value &payload) {
+  bool handleEventAndFlush(const std::string &eventName, int emitterReactTag, const jsi::Value &payload) {
 #ifdef RN_HAS_PUSH_ANIMATION_MUTATIONS
+    bool handled = false;
     withAnimationBackend([&](const std::shared_ptr<AnimationBackend> &backend) {
       backend->pushAnimationMutations([&](AnimationTimestamp ts) {
-        handleEvent(eventName, emitterReactTag, payload, ts.count());
+        handled = handleEvent(eventName, emitterReactTag, payload, ts.count());
         return grandCallback<State>(ts);
       });
     });
+    return handled;
 #else
-    handleEvent(eventName, emitterReactTag, payload, getAnimationTimestamp_());
+    const bool handled = handleEvent(eventName, emitterReactTag, payload, getAnimationTimestamp_());
     triggerBackendCallback<State>();
+    return handled;
 #endif
   }
 

@@ -35,10 +35,9 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
   auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    // Backend path: single dispatch handler that calls handleEventAndFlush.
-    // Both event handling and mutation flushing happen inside one
-    // pushAnimationMutations call, so there's a single timestamp source.
-    [nodesManager registerDispatchEventHandler:^(id<RCTEvent> event) {
+    // Backend path: handleEventAndFlush performs mutation flushing; REANodesManager
+    // skips performOperations after the event when USE_ANIMATION_BACKEND is on.
+    [nodesManager registerEventHandler:^(id<RCTEvent> event) {
       std::string eventName = [event.eventName UTF8String];
       int emitterReactTag = [event.viewTag intValue];
       id eventData = [event arguments][2];
@@ -47,7 +46,6 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
           eventName, emitterReactTag, payload);
     }];
   } else {
-    // Non-backend path: separate event handler + performOperations blocks.
     [nodesManager registerEventHandler:^(id<RCTEvent> event) {
       std::string eventName = [event.eventName UTF8String];
       int emitterReactTag = [event.viewTag intValue];

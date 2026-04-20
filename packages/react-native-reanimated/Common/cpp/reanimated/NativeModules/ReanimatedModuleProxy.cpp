@@ -643,12 +643,12 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent) {
   jsi::Value payload = eventPayload->asJSIValue(uiRuntime);
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    handleEventAndFlush<GrandCallbackState::Event>(eventType, tag, payload);
-  } else {
-    handleEvent(eventType, tag, payload, getAnimationTimestamp_());
-    performOperations();
+    return handleEventAndFlush<GrandCallbackState::Event>(eventType, tag, payload);
   }
-  return true;
+
+  const bool res = handleEvent(eventType, tag, payload, getAnimationTimestamp_());
+  performOperations();
+  return res;
 }
 
 void ReanimatedModuleProxy::flushLayoutAnimationRequests() {
