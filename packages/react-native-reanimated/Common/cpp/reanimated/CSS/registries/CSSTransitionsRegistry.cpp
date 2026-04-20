@@ -84,12 +84,13 @@ void CSSTransitionsRegistry::update(const double timestamp) {
         }
         propsBuilder->storeDynamic(packed);
         addAnimatedPropsToBatch(transition->getShadowNode(), propsBuilder->get());
+        // Legacy flushes merge each frame into the updates registry; animated-props flushes do not.
+        // Keep the registry current so the next transition reads a real "from" value, not the first frame only.
+        updateInUpdatesRegistry(transition, updates);
       } else {
         addUpdatesToBatch(transition->getShadowNode()->getFamilyShared(), updates);
       }
     }
-
-    updateInUpdatesRegistry(transition, updates);
 
     // We remove transition from running and schedule it when animation of one
     // of properties has finished and the other one is still delayed
