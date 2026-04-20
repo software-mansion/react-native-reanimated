@@ -182,10 +182,6 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
 
     const auto timestamp = strongThis->getAnimationTimestamp_();
     strongThis->animatedPropsRegistry_->update(rt, operations, timestamp);
-
-    if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-      strongThis->triggerBackendCallback<GrandCallbackState::Event>();
-    }
   };
 
   auto measure = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) -> jsi::Value {
