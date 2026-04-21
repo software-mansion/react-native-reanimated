@@ -70,9 +70,10 @@ export function createWorkletRuntime(
   nameOrConfig?: string | WorkletRuntimeConfigInternal,
   initializer?: WorkletFunction<[], void>
 ): WorkletRuntime {
-  const runtimeBoundCapturableConsole = globalThis._WORKLETS_BUNDLE_MODE_ENABLED
-    ? getMemorySafeCapturableConsole()
-    : null;
+  const runtimeBoundCapturableConsole =
+    globalThis._WORKLETS_BUNDLE_MODE_ENABLED && !__DEV__
+      ? null
+      : getMemorySafeCapturableConsole();
 
   let name: string;
   let initializerFn: (() => void) | undefined;
@@ -108,7 +109,9 @@ export function createWorkletRuntime(
       setupCallGuard();
       setupSerializer();
       if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-        setupConsole(runtimeBoundCapturableConsole);
+        setupConsole(runtimeBoundCapturableConsole!);
+      } else if (__DEV__) {
+        setupConsoleBundleModeDev(runtimeBoundCapturableConsole!);
       }
       if (enableEventLoop) {
         setupRunLoop(animationQueuePollingRate);

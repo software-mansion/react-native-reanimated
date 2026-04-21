@@ -1,6 +1,7 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
+#include <worklets/WorkletRuntime/NativeLoggingHookExtractor.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/android/AnimationFrameCallback.h>
@@ -43,15 +44,7 @@ WorkletsModule::WorkletsModule(
           jsCallInvoker,
           uiScheduler,
           getIsOnJSQueueThread(),
-          std::make_shared<RuntimeBindings>(RuntimeBindings{
-              .requestAnimationFrame = getRequestAnimationFrame()
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-                  ,
-              .abortRequest = getAbortRequest(),
-              .clearCookies = getClearCookies(),
-              .sendRequest = getSendRequest()
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
-          }),
+          createRuntimeBindings(bundleModeConfig.enabled, *rnRuntime),
           bundleModeConfig)) {
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   RNRuntimeWorkletDecorator::decorate(
@@ -92,6 +85,24 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
       messageQueueThread,
       jsCallInvoker,
       uiScheduler);
+}
+
+std::shared_ptr<RuntimeBindings> WorkletsModule::createRuntimeBindings(
+    bool bundleModeEnabled,
+    jsi::Runtime &rnRuntime) {
+  auto runtimeBindings = std::make_shared<RuntimeBindings>(RuntimeBindings{
+      .requestAnimationFrame = getRequestAnimationFrame()
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
+          ,
+      .abortRequest = getAbortRequest(),
+      .clearCookies = getClearCookies(),
+      .sendRequest = getSendRequest()
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED
+  });
+  if (bundleModeEnabled) {
+    runtimeBindings->nativeLoggingHook = extractNativeLoggingHookFromRNRuntime(rnRuntime);
+  }
+  return runtimeBindings;
 }
 
 RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame() {

@@ -72,15 +72,6 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           runtimeBindings_,
           bundleModeConfig_,
           unpackerLoader_)) {
-  if (bundleModeConfig_.enabled) {
-    auto nativeLoggingHookValue = rnRuntime.global().getProperty(rnRuntime, "nativeLoggingHook");
-    if (nativeLoggingHookValue.isObject() && nativeLoggingHookValue.asObject(rnRuntime).isFunction(rnRuntime)) {
-      runtimeBindings_->nativeLoggingHook =
-          nativeLoggingHookValue.asObject(rnRuntime).asFunction(rnRuntime).getHostFunction(rnRuntime);
-    } else {
-      throw std::runtime_error("[Worklets] nativeLoggingHook is missing.");
-    }
-  }
   RNRuntimeWorkletDecorator::decorate(rnRuntime, rnRuntimeProxy_->toOptimizedObject(rnRuntime), jsLogger_);
 }
 

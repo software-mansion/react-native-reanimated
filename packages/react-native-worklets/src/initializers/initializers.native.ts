@@ -96,44 +96,24 @@ export function setupConsoleBundleModeDev(
   boundCapturableConsole: typeof console
 ) {
   'worklet';
-  const oldLog = console.log;
-  const captureSerializedLog = (...args: unknown[]): string => {
-    let captured = '';
-    const originalUIHook = globalThis.nativeLoggingHook;
-    globalThis.nativeLoggingHook = (msg: string, _level: number) => {
-      captured = msg;
-    };
-    try {
-      oldLog(...args);
-    } catch (e: Error) {
-      originalUIHook(e.message, 0);
+
+  globalThis.nativeLoggingHook = (message: string, level: number) => {
+    switch (level) {
+      case 0:
+        scheduleOnRN(boundCapturableConsole.debug, message);
+        break;
+      case 1:
+        scheduleOnRN(boundCapturableConsole.log, message);
+        break;
+      case 2:
+        scheduleOnRN(boundCapturableConsole.warn, message);
+        break;
+      case 3:
+        scheduleOnRN(boundCapturableConsole.error, message);
+        break;
+      default:
+        scheduleOnRN(boundCapturableConsole.log, message);
     }
-    globalThis.nativeLoggingHook = originalUIHook;
-    return captured;
-  };
-  globalThis.console.assert = (...args) => {
-    const serializedData = captureSerializedLog(...args);
-    scheduleOnRN(boundCapturableConsole.assert, serializedData);
-  };
-  globalThis.console.debug = (...args) => {
-    const serializedData = captureSerializedLog(...args);
-    scheduleOnRN(boundCapturableConsole.debug, serializedData);
-  };
-  globalThis.console.log = (...args) => {
-    const serializedData = captureSerializedLog(...args);
-    scheduleOnRN(boundCapturableConsole.log, serializedData);
-  };
-  globalThis.console.warn = (...args) => {
-    const serializedData = captureSerializedLog(...args);
-    scheduleOnRN(boundCapturableConsole.warn, serializedData);
-  };
-  globalThis.console.error = (...args) => {
-    const serializedData = captureSerializedLog(...args);
-    scheduleOnRN(boundCapturableConsole.error, serializedData);
-  };
-  globalThis.console.info = (...args) => {
-    const serializedData = captureSerializedLog(...args);
-    scheduleOnRN(boundCapturableConsole.info, serializedData);
   };
 }
 
@@ -236,9 +216,9 @@ function installRNBindingsOnUIRuntime() {
      */
 
     if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-      setupConsole(runtimeBoundCapturableConsole);
+      setupConsole(runtimeBoundCapturableConsole!);
     } else if (__DEV__) {
-      setupConsoleBundleModeDev(runtimeBoundCapturableConsole);
+      setupConsoleBundleModeDev(runtimeBoundCapturableConsole!);
     }
 
     setupMicrotasks();

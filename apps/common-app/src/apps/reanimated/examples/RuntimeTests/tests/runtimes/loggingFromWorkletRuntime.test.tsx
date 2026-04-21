@@ -14,16 +14,17 @@ declare global {
   var nativeLoggingHook: ((serializedMessage: string, level: number) => void) | undefined;
 }
 
-// `expected`, same output in both modes
-// `bundleMode` / `noBundleMode`, output differs between modes
-// `checkIncludes`, assert the expected string is (or isn't) a substring of the output
-// `errorsOnNoBundleMode`, console.log throws on the UI thread; the caught error message is logged instead
 type TestCase = {
   factory: () => unknown;
+  /** Expected output; identical in both modes. */
   expected?: string;
+  /** Expected output in bundle mode (when it differs from no-bundle mode). */
   bundleMode?: string;
+  /** Expected output in no-bundle mode (when it differs from bundle mode). */
   noBundleMode?: string;
+  /** Assert the expected string is (or isn't) a substring of the output. */
   checkIncludes?: boolean | { bundleMode: boolean; noBundleMode: boolean };
+  /** In no-bundle mode console.log throws on the UI thread; the caught error message is logged instead. */
   errorsOnNoBundleMode?: boolean;
 };
 
@@ -327,35 +328,15 @@ const modeKey = isBundleMode ? 'bundleMode' : 'noBundleMode';
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const originalHook = globalThis.nativeLoggingHook;
 
+type ConsoleMethod = 'log' | 'warn' | 'error' | 'debug';
+
 // eslint-disable-next-line @typescript-eslint/require-await
 describe('loggingFromWorkletRuntime', async () => {
   let message = '';
 
-  const captureSerializedLog = async (factory: () => unknown): Promise<string> => {
-    if (isBundleMode) {
-      try {
-        console.log(factory());
-      } catch (e) {
-        console.log(`Error: ${(e as Error).message}`);
-      }
-      return message;
-    } else {
-      const notifyWrapper = () => notify('LOG_CAPTURED');
-      runOnUISync(() => {
-        'worklet';
-        try {
-          console.log(factory());
-        } catch (e) {
-          console.log(`Error: ${(e as Error).message}`);
-        }
-        scheduleOnRN(notifyWrapper);
-      });
-      await waitForNotification('LOG_CAPTURED');
-      return message;
-    }
-  };
-
   test('setup beforeEach and afterEach', () => {
+    // TODO: there's a bug in ReJest and beforeEach/afterEach have to be
+    // registered inside a test case.
     beforeEach(() => {
       message = '';
       globalThis.nativeLoggingHook = (serializedMessage: string, _level: number) => {
@@ -366,6 +347,30 @@ describe('loggingFromWorkletRuntime', async () => {
       globalThis.nativeLoggingHook = originalHook;
     });
   });
+
+  const captureSerializedLog = async (factory: () => unknown, method: ConsoleMethod = 'log'): Promise<string> => {
+    if (isBundleMode) {
+      try {
+        console[method](factory());
+      } catch (e) {
+        console[method](`Error: ${(e as Error).message}`);
+      }
+      return message;
+    } else {
+      const notifyWrapper = () => notify('LOG_CAPTURED');
+      runOnUISync(() => {
+        'worklet';
+        try {
+          console[method](factory());
+        } catch (e) {
+          console[method](`Error: ${(e as Error).message}`);
+        }
+        scheduleOnRN(notifyWrapper);
+      });
+      await waitForNotification('LOG_CAPTURED');
+      return message;
+    }
+  };
 
   test('nativeLoggingHook is defined on worklets runtime in bundle mode', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -389,5 +394,13 @@ describe('loggingFromWorkletRuntime', async () => {
     } else {
       expect(result).toBe(expected);
     }
+  });
+
+  test.each(['warn', 'error', 'debug'] as const)('console.%s is routed through nativeLoggingHook', async method => {
+    const result = await captureSerializedLog(() => {
+      'worklet';
+      return { a: 1 };
+    }, method);
+    expect(result).toBe('{ a: 1 }');
   });
 });
