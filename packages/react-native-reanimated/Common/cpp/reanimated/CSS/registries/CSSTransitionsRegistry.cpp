@@ -47,7 +47,8 @@ void CSSTransitionsRegistry::run(
     if (!initialUpdate.empty()) {
       AnimatedProps animatedProps;
       animatedProps.rawProps = std::make_unique<RawProps>(initialUpdate);
-      addAnimatedPropsToBatch(transition->getShadowNode(), std::move(animatedProps), hasLayoutProps(initialUpdate));
+      addAnimatedPropsToBatch(
+          transition->getShadowNode()->getFamilyShared(), std::move(animatedProps), hasLayoutProps(initialUpdate));
     }
   }
 
@@ -76,7 +77,8 @@ void CSSTransitionsRegistry::update(const double timestamp) {
       if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
         AnimatedProps animatedProps;
         animatedProps.rawProps = std::make_unique<RawProps>(updates);
-        addAnimatedPropsToBatch(transition->getShadowNode(), std::move(animatedProps), hasLayoutProps(updates));
+        addAnimatedPropsToBatch(
+            transition->getShadowNode()->getFamilyShared(), std::move(animatedProps), hasLayoutProps(updates));
         // Legacy flushes merge each frame into the updates registry; animated-props flushes do not.
         // Keep the registry current so the next transition reads a real "from" value, not the first frame only.
         updateInUpdatesRegistry(transition, updates);

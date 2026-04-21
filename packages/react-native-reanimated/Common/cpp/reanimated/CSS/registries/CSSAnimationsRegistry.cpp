@@ -223,7 +223,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
       AnimatedProps animatedProps;
       animatedProps.rawProps = std::make_unique<RawProps>(result);
-      addAnimatedPropsToBatch(shadowNode, std::move(animatedProps), hasLayoutProps(result));
+      addAnimatedPropsToBatch(shadowNode->getFamilyShared(), std::move(animatedProps), hasLayoutProps(result));
     } else {
       addUpdatesToBatch(shadowNode->getFamilyShared(), result);
     }

@@ -53,7 +53,7 @@ void UpdatesRegistry::flushAnimatedPropsUpdates(UpdatesBatchAnimatedProps &updat
 void UpdatesRegistry::flushNonLayoutUpdates(jsi::Runtime &rt, AnimationMutations &mutations) {
   UpdatesBatchAnimatedProps remaining;
 
-  for (auto &[node, animatedProp, _hasLayout] : updatesBatchAnimatedProps_) {
+  for (auto &[shadowNodeFamily, animatedProp, _hasLayout] : updatesBatchAnimatedProps_) {
     // Split typed props by layout vs non-layout.
     std::vector<std::unique_ptr<AnimatedPropBase>> nonLayoutTyped;
     std::vector<std::unique_ptr<AnimatedPropBase>> layoutTyped;
@@ -93,13 +93,13 @@ void UpdatesRegistry::flushNonLayoutUpdates(jsi::Runtime &rt, AnimationMutations
     if (!nonLayoutTyped.empty() || nonLayoutRaw) {
       AnimatedProps nonLayoutProps{std::move(nonLayoutTyped), std::move(nonLayoutRaw)};
       mutations.batch.push_back(
-          AnimationMutation{node->getTag(), node->getFamilyShared(), std::move(nonLayoutProps), false});
+          AnimationMutation{shadowNodeFamily->getTag(), shadowNodeFamily, std::move(nonLayoutProps), false});
     }
 
     // Layout part → defer to next full flush.
     if (!layoutTyped.empty() || layoutRaw) {
       AnimatedProps layoutProps{std::move(layoutTyped), std::move(layoutRaw)};
-      remaining.push_back(AnimatedPropsEntry{node, std::move(layoutProps), true});
+      remaining.push_back(AnimatedPropsEntry{shadowNodeFamily, std::move(layoutProps), true});
     }
   }
 
@@ -145,7 +145,7 @@ void UpdatesRegistry::addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNo
 }
 
 void UpdatesRegistry::addAnimatedPropsToBatch(
-    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const ShadowNodeFamily::Shared &shadowNodeFamily,
     AnimatedProps animatedProps,
     bool hasLayoutUpdates) {
   // Check typed props for layout — safe and doesn't touch rawProps.
@@ -157,7 +157,8 @@ void UpdatesRegistry::addAnimatedPropsToBatch(
       }
     }
   }
-  updatesBatchAnimatedProps_.push_back(AnimatedPropsEntry{shadowNode, std::move(animatedProps), hasLayoutUpdates});
+  updatesBatchAnimatedProps_.push_back(
+      AnimatedPropsEntry{shadowNodeFamily, std::move(animatedProps), hasLayoutUpdates});
 }
 
 void UpdatesRegistry::setInUpdatesRegistry(

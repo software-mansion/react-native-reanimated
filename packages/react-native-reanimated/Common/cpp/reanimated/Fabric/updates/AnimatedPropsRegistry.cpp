@@ -55,7 +55,7 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
       const bool hasLayoutUpdates = hasLayoutPropsInObject(rt, updatesObj);
       AnimatedPropsBuilder builder;
       builder.storeJSI(rt, updatesOwned);
-      addAnimatedPropsToBatch(shadowNode, builder.get(), hasLayoutUpdates);
+      addAnimatedPropsToBatch(shadowNode->getFamilyShared(), builder.get(), hasLayoutUpdates);
     } else {
       auto dynamic = jsi::dynamicFromValue(rt, updates);
       addUpdatesToBatch(shadowNode->getFamilyShared(), dynamic);

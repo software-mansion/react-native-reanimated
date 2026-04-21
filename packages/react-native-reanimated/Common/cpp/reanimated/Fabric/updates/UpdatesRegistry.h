@@ -4,7 +4,6 @@
 
 #include <react/renderer/animationbackend/AnimatedProps.h>
 #include <react/renderer/animationbackend/AnimationBackend.h>
-#include <react/renderer/core/ShadowNode.h>
 
 #include <jsi/jsi.h>
 #include <memory>
@@ -21,7 +20,7 @@ using namespace react;
 
 using UpdatesBatch = std::vector<std::pair<ShadowNodeFamily::Shared, folly::dynamic>>;
 struct AnimatedPropsEntry {
-  std::shared_ptr<const ShadowNode> shadowNode;
+  ShadowNodeFamily::Shared shadowNodeFamily;
   AnimatedProps animatedProps;
   bool hasLayoutUpdates;
 };
@@ -65,7 +64,7 @@ class UpdatesRegistry {
 
   void addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
   void addAnimatedPropsToBatch(
-      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const ShadowNodeFamily::Shared &shadowNodeFamily,
       AnimatedProps animatedProps,
       bool hasLayoutUpdates = false);
   folly::dynamic getUpdatesFromRegistry(const Tag tag) const;

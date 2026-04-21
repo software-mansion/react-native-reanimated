@@ -701,12 +701,9 @@ AnimationMutations ReanimatedModuleProxy::collectMutationsForBackend() {
 
     AnimationMutations mutations;
 
-    for (auto &[shadowNode, animatedProps, hasLayoutUpdates] : animatedPropsBatch) {
+    for (auto &[shadowNodeFamily, animatedProps, hasLayoutUpdates] : animatedPropsBatch) {
       mutations.batch.push_back(AnimationMutation{
-          shadowNode->getTag(),
-          shadowNode->getFamilyShared(),
-          std::move(animatedProps),
-          hasLayoutUpdates});
+          shadowNodeFamily->getTag(), shadowNodeFamily, std::move(animatedProps), hasLayoutUpdates});
     }
 
     return mutations;
