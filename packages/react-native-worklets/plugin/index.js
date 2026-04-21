@@ -913,7 +913,7 @@ var require_workletFactory = __commonJS({
     var MOCK_VERSION = "x.y.z";
     function makeWorkletFactory(fun, state) {
       var _a;
-      const includeClosure = !hasDirective(fun, "no-worklet-closure");
+      const includeClosure = state.opts.bundleMode || !hasDirective(fun, "no-worklet-closure");
       const limitInitDataHoisting = hasDirective(fun, "limit-init-data-hoisting");
       stripWorkletDirectives(fun);
       (0, assert_1.strict)(state.file.opts.filename, "[Reanimated] `state.file.opts.filename` is undefined.");
