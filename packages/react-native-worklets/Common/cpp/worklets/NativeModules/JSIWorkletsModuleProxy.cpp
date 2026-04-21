@@ -80,13 +80,12 @@ inline jsi::Value createWorkletRuntime(
     jsi::Runtime &originRuntime,
     const std::shared_ptr<RuntimeManager> &runtimeManager,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
-    std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
+    const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy,
     const std::string &name,
     std::shared_ptr<SerializableWorklet> &initializer,
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop) {
-  const auto workletRuntime =
-      runtimeManager->createWorkletRuntime(std::move(jsiWorkletsModuleProxy), name, initializer, queue);
+  const auto workletRuntime = runtimeManager->createWorkletRuntime(jsiWorkletsModuleProxy, name, initializer, queue);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
