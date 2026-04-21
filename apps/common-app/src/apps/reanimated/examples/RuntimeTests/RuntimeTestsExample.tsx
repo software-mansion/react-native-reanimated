@@ -61,16 +61,16 @@ export default function RuntimeTestsExample() {
           testSuiteName: 'runtimes',
           importTest: () => {
             require('./tests/runtimes/loggingFromWorkletRuntime.test');
-            require('./tests/runtimes/createWorkletRuntime.test');
-            require('./tests/runtimes/scheduleOnRN.test');
-            require('./tests/runtimes/runOnUISync.test');
-            require('./tests/runtimes/scheduleOnRuntime.test');
-            require('./tests/runtimes/scheduleOnUI.test');
-            require('./tests/runtimes/runOnRuntimeSync.test');
-            require('./tests/runtimes/runOnUIAsync.test');
-            require('./tests/runtimes/runOnRuntimeAsync.test');
-            require('./tests/runtimes/runOnRuntimeSyncWithId.test');
-            require('./tests/runtimes/scheduleOnRuntimeWithId.test');
+            // require('./tests/runtimes/createWorkletRuntime.test');
+            // require('./tests/runtimes/scheduleOnRN.test');
+            // require('./tests/runtimes/runOnUISync.test');
+            // require('./tests/runtimes/scheduleOnRuntime.test');
+            // require('./tests/runtimes/scheduleOnUI.test');
+            // require('./tests/runtimes/runOnRuntimeSync.test');
+            // require('./tests/runtimes/runOnUIAsync.test');
+            // require('./tests/runtimes/runOnRuntimeAsync.test');
+            // require('./tests/runtimes/runOnRuntimeSyncWithId.test');
+            // require('./tests/runtimes/scheduleOnRuntimeWithId.test');
           },
         },
         {

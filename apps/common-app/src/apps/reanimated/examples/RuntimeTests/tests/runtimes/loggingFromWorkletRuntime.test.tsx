@@ -304,7 +304,8 @@ const testCases: Record<string, TestCase> = {
     },
   },
   shareable: {
-    expected: `{ isHost: true, __shareableRef: true, value: 42 }`,
+    bundleMode: `{ __serializableRef: true,\n  isHost: false,\n  __shareableRef: true,\n  getAsync: [Function],\n  getSync: [Function],\n  setAsync: [Function],\n  setSync: [Function] }`,
+    noBundleMode: '{ isHost: true, __shareableRef: true, value: 42 }',
     factory: () => {
       'worklet';
       return shareable;
@@ -332,21 +333,12 @@ describe('loggingFromWorkletRuntime', async () => {
 
   const captureSerializedLog = async (factory: () => unknown): Promise<string> => {
     if (isBundleMode) {
-      return runOnUISync(() => {
-        'worklet';
-        let captured = '';
-        const originalUIHook = globalThis.nativeLoggingHook;
-        globalThis.nativeLoggingHook = (msg: string, _level: number) => {
-          captured = msg;
-        };
-        try {
-          console.log(factory());
-        } catch (e) {
-          console.log(`Error: ${(e as Error).message}`);
-        }
-        globalThis.nativeLoggingHook = originalUIHook;
-        return captured;
-      });
+      try {
+        console.log(factory());
+      } catch (e) {
+        console.log(`Error: ${(e as Error).message}`);
+      }
+      return message;
     } else {
       const notifyWrapper = () => notify('LOG_CAPTURED');
       runOnUISync(() => {
@@ -364,9 +356,6 @@ describe('loggingFromWorkletRuntime', async () => {
   };
 
   test('setup beforeEach and afterEach', () => {
-    if (isBundleMode) {
-      return;
-    }
     beforeEach(() => {
       message = '';
       globalThis.nativeLoggingHook = (serializedMessage: string, _level: number) => {

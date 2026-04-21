@@ -92,6 +92,51 @@ export function setupConsole(boundCapturableConsole: typeof console) {
   };
 }
 
+export function setupConsoleBundleModeDev(
+  boundCapturableConsole: typeof console
+) {
+  'worklet';
+  const oldLog = console.log;
+  const captureSerializedLog = (...args: unknown[]): string => {
+    let captured = '';
+    const originalUIHook = globalThis.nativeLoggingHook;
+    globalThis.nativeLoggingHook = (msg: string, _level: number) => {
+      captured = msg;
+    };
+    try {
+      oldLog(...args);
+    } catch (e: Error) {
+      originalUIHook(e.message, 0);
+    }
+    globalThis.nativeLoggingHook = originalUIHook;
+    return captured;
+  };
+  globalThis.console.assert = (...args) => {
+    const serializedData = captureSerializedLog(...args);
+    scheduleOnRN(boundCapturableConsole.assert, serializedData);
+  };
+  globalThis.console.debug = (...args) => {
+    const serializedData = captureSerializedLog(...args);
+    scheduleOnRN(boundCapturableConsole.debug, serializedData);
+  };
+  globalThis.console.log = (...args) => {
+    const serializedData = captureSerializedLog(...args);
+    scheduleOnRN(boundCapturableConsole.log, serializedData);
+  };
+  globalThis.console.warn = (...args) => {
+    const serializedData = captureSerializedLog(...args);
+    scheduleOnRN(boundCapturableConsole.warn, serializedData);
+  };
+  globalThis.console.error = (...args) => {
+    const serializedData = captureSerializedLog(...args);
+    scheduleOnRN(boundCapturableConsole.error, serializedData);
+  };
+  globalThis.console.info = (...args) => {
+    const serializedData = captureSerializedLog(...args);
+    scheduleOnRN(boundCapturableConsole.info, serializedData);
+  };
+}
+
 export function setupSerializer() {
   'worklet';
   globalThis.__serializer = makeShareableCloneOnUIRecursive;
@@ -177,9 +222,10 @@ function installRNBindingsOnUIRuntime() {
     runOnUISync(setupCallGuard);
   }
 
-  const runtimeBoundCapturableConsole = globalThis._WORKLETS_BUNDLE_MODE_ENABLED
-    ? null
-    : getMemorySafeCapturableConsole();
+  const runtimeBoundCapturableConsole =
+    globalThis._WORKLETS_BUNDLE_MODE_ENABLED && !__DEV__
+      ? null
+      : getMemorySafeCapturableConsole();
 
   runOnUISync(() => {
     'worklet';
@@ -189,8 +235,10 @@ function installRNBindingsOnUIRuntime() {
      * Worklet Runtimes.
      */
 
-    if (runtimeBoundCapturableConsole) {
+    if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
       setupConsole(runtimeBoundCapturableConsole);
+    } else if (__DEV__) {
+      setupConsoleBundleModeDev(runtimeBoundCapturableConsole);
     }
 
     setupMicrotasks();

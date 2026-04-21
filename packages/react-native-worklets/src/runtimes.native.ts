@@ -8,6 +8,7 @@ import {
 import {
   getMemorySafeCapturableConsole,
   setupConsole,
+  setupConsoleBundleModeDev,
   setupSerializer,
 } from './initializers/initializers';
 import {
@@ -106,7 +107,7 @@ export function createWorkletRuntime(
       'worklet';
       setupCallGuard();
       setupSerializer();
-      if (runtimeBoundCapturableConsole) {
+      if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
         setupConsole(runtimeBoundCapturableConsole);
       }
       if (enableEventLoop) {
