@@ -1,8 +1,15 @@
 diff --git a/jest-preset.js b/jest-preset.js
-index 5632cc7fe5c2feeb7d8474db42cbc64403963cb1..b6902abb053f65e24579795507f77428d997a4f1 100644
+index 5632cc7fe5c2feeb7d8474db42cbc64403963cb1..b2eeae995a767af48e9f73b2ccbb458f4df7e308 100644
 --- a/jest-preset.js
 +++ b/jest-preset.js
-@@ -17,9 +17,6 @@ module.exports = {
+@@ -10,16 +10,11 @@
+ 
+ 'use strict';
+ 
+-const path = require('path');
+-
+ module.exports = {
+   haste: {
      defaultPlatform: 'ios',
      platforms: ['android', 'ios', 'native'],
    },
