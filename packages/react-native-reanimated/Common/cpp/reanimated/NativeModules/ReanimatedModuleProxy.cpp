@@ -163,6 +163,23 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
   };
   onRenderCallback_ = std::move(onRenderCallback);
 
+  operationsLoop_ = std::make_shared<OperationsLoop>(
+      uiScheduler_,
+      requestRender_,
+      getAnimationTimestamp_,
+      [weakThis = weak_from_this()](double /*timestampMs*/) -> bool {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return false;
+        }
+        strongThis->shouldUpdateCssAnimations_ = true;
+        return strongThis->cssAnimationsRegistry_->hasUpdates() || strongThis->cssTransitionsRegistry_->hasUpdates()
+#ifdef ANDROID
+            || strongThis->updatesRegistryManager_->hasPropsToRevert()
+#endif // ANDROID
+            ;
+      });
+
   auto updateProps = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &operations) {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
@@ -456,7 +473,7 @@ void ReanimatedModuleProxy::applyCSSAnimations(
     const jsi::Value &compoundComponentName,
     const jsi::Value &animationUpdates) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  const auto timestamp = getCssTimestamp();
+  const auto timestamp = operationsLoop_->getTimestamp();
   const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
 
   CSSAnimationsMap newAnimations;
@@ -495,7 +512,7 @@ void ReanimatedModuleProxy::applyCSSAnimations(
         rt, shadowNode, updates.animationNames, newAnimations, updates.settingsUpdates, timestamp);
   }
 
-  maybeRunCSSLoop();
+  operationsLoop_->run();
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
@@ -515,7 +532,7 @@ void ReanimatedModuleProxy::runCSSTransition(
     cssTransitionsRegistry_->run(rt, shadowNode, config);
   }
 
-  maybeRunCSSLoop();
+  operationsLoop_->run();
 }
 
 void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) {
@@ -627,51 +644,6 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   return res;
 }
 
-void ReanimatedModuleProxy::cssLoopCallback(const double /*timestampMs*/) {
-  shouldUpdateCssAnimations_ = true;
-  if (cssAnimationsRegistry_->hasUpdates() || cssTransitionsRegistry_->hasUpdates()
-#ifdef ANDROID
-      || updatesRegistryManager_->hasPropsToRevert()
-#endif // ANDROID
-  ) {
-    requestRender_([weakThis = weak_from_this()](const double newTimestampMs) {
-      if (auto strongThis = weakThis.lock()) {
-        strongThis->cssLoopCallback(newTimestampMs);
-      }
-    });
-  } else {
-    cssLoopRunning_ = false;
-  }
-}
-
-void ReanimatedModuleProxy::maybeRunCSSLoop() {
-  if (cssLoopRunning_) {
-    return;
-  }
-
-  cssLoopRunning_ = true;
-
-  scheduleOnUI(uiScheduler_, [=, weakThis = weak_from_this()]() {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-    strongThis->requestRender_([weakThis](const double timestampMs) {
-      if (auto strongThis = weakThis.lock()) {
-        strongThis->cssLoopCallback(timestampMs);
-      }
-    });
-  });
-}
-
-double ReanimatedModuleProxy::getCssTimestamp() {
-  if (cssLoopRunning_) {
-    return currentCssTimestamp_;
-  }
-  currentCssTimestamp_ = getAnimationTimestamp_();
-  return currentCssTimestamp_;
-}
-
 void ReanimatedModuleProxy::performOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
@@ -689,11 +661,12 @@ void ReanimatedModuleProxy::performOperations() {
 
     auto lock = updatesRegistryManager_->lock();
 
+    const double currentCssTimestamp = shouldUpdateCssAnimations_ ? getAnimationTimestamp_() : 0;
+
     if (shouldUpdateCssAnimations_) {
-      currentCssTimestamp_ = getAnimationTimestamp_();
       auto lock = cssTransitionsRegistry_->lock();
       // Update CSS transitions and flush updates
-      cssTransitionsRegistry_->update(currentCssTimestamp_);
+      cssTransitionsRegistry_->update(currentCssTimestamp);
       cssTransitionsRegistry_->flushUpdates(updatesBatch);
     }
 
@@ -706,7 +679,7 @@ void ReanimatedModuleProxy::performOperations() {
     if (shouldUpdateCssAnimations_) {
       auto lock = cssAnimationsRegistry_->lock();
       // Update CSS animations and flush updates
-      cssAnimationsRegistry_->update(currentCssTimestamp_);
+      cssAnimationsRegistry_->update(currentCssTimestamp);
       cssAnimationsRegistry_->flushUpdates(updatesBatch);
     }
 
