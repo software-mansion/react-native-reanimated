@@ -534,10 +534,7 @@ export default class AnimatedComponent
       }
     }
 
-    if (
-      FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS &&
-      Object.keys(this.state.settledProps).length > 0
-    ) {
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
       return super.render({
         nativeID,
         ...filteredProps,
