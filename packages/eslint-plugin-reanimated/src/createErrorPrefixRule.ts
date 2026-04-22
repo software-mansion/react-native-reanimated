@@ -21,14 +21,8 @@ export function createErrorPrefixRule<MessageId extends string>(
           const args = node.arguments;
 
           if (args.length === 0) {
-            context.report({
-              node,
-              messageId,
-              fix(fixer) {
-                const closeParen = sourceCode.getLastToken(node)!;
-                return fixer.insertTextBefore(closeParen, `'${prefix}'`);
-              },
-            });
+            // Empty `new Error()` is used for stack capture, not as a thrown
+            // error with a user-facing message, so the prefix doesn't apply.
             return;
           }
 
