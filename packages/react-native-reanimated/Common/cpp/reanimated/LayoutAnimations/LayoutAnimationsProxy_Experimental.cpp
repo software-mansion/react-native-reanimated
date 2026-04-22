@@ -537,18 +537,23 @@ void LayoutAnimationsProxy_Experimental::updateOngoingAnimationTarget(const int 
 }
 
 void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) const {
-  auto pendingCleanupLayoutAnimationIt = layoutAnimations_.find(tag);
-  if (pendingCleanupLayoutAnimationIt != layoutAnimations_.end() && pendingCleanupLayoutAnimationIt->second.isPendingCleanup) {
-    auto pendingCleanupSurfaceId = pendingCleanupLayoutAnimationIt->second.finalView.surfaceId;
-    surfaceManager.getUpdateMap(pendingCleanupSurfaceId).erase(tag);
-    removePendingCleanupAnimationTag(pendingCleanupSurfaceId, tag);
-    layoutAnimations_.erase(pendingCleanupLayoutAnimationIt);
-  }
-
-  if (!layoutAnimations_.contains(tag)) {
+  const auto layoutAnimationIt = layoutAnimations_.find(tag);
+  if (layoutAnimationIt == layoutAnimations_.end()) {
     return;
   }
-  layoutAnimations_.erase(tag);
+
+  const auto isPendingCleanup = layoutAnimationIt->second.isPendingCleanup;
+  if (isPendingCleanup) {
+    auto pendingCleanupSurfaceId = layoutAnimationIt->second.finalView.surfaceId;
+    surfaceManager.getUpdateMap(pendingCleanupSurfaceId).erase(tag);
+    removePendingCleanupAnimationTag(pendingCleanupSurfaceId, tag);
+  }
+
+  layoutAnimations_.erase(layoutAnimationIt);
+  if (isPendingCleanup) {
+    return;
+  }
+
   scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
