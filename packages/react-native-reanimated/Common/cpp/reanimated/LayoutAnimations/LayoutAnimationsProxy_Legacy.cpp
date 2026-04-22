@@ -620,8 +620,6 @@ void LayoutAnimationsProxy_Legacy::createLayoutAnimation(
   int count = 1;
   auto pendingCleanupLayoutAnimationIt = layoutAnimations_.find(tag);
   if (pendingCleanupLayoutAnimationIt != layoutAnimations_.end() && pendingCleanupLayoutAnimationIt->second.isPendingCleanup) {
-    auto pendingCleanupSurfaceId = pendingCleanupLayoutAnimationIt->second.finalView.surfaceId;
-    surfaceManager.getUpdateMap(pendingCleanupSurfaceId).erase(tag);
     layoutAnimations_.erase(pendingCleanupLayoutAnimationIt);
   }
   const auto layoutAnimationIt = layoutAnimations_.find(tag);
@@ -670,8 +668,6 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
       auto pendingCleanupLayoutAnimationIt = strongThis->layoutAnimations_.find(tag);
       if (pendingCleanupLayoutAnimationIt != strongThis->layoutAnimations_.end() &&
           pendingCleanupLayoutAnimationIt->second.isPendingCleanup) {
-        auto pendingCleanupSurfaceId = pendingCleanupLayoutAnimationIt->second.finalView.surfaceId;
-        strongThis->surfaceManager.getUpdateMap(pendingCleanupSurfaceId).erase(tag);
         strongThis->layoutAnimations_.erase(pendingCleanupLayoutAnimationIt);
       }
       strongThis->layoutAnimations_.insert_or_assign(
@@ -793,11 +789,6 @@ void LayoutAnimationsProxy_Legacy::maybeCancelAnimation(const int tag) const {
   }
 
   const auto isPendingCleanup = layoutAnimationIt->second.isPendingCleanup;
-  if (isPendingCleanup) {
-    auto pendingCleanupSurfaceId = layoutAnimationIt->second.finalView.surfaceId;
-    surfaceManager.getUpdateMap(pendingCleanupSurfaceId).erase(tag);
-  }
-
   layoutAnimations_.erase(layoutAnimationIt);
   if (isPendingCleanup) {
     return;
