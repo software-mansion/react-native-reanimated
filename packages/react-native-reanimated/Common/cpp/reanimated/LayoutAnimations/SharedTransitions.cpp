@@ -211,7 +211,7 @@ Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
   auto containerTag = sharedTransitionManager_->containerTags_[sharedTag];
   auto shouldCreateContainer = true;
   if (containerTag != -1) {
-    auto layoutAnimationIt = layoutAnimations_.find(containerTag);
+    const auto layoutAnimationIt = layoutAnimations_.find(containerTag);
     shouldCreateContainer =
         layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isPendingCleanup;
   }
@@ -268,7 +268,7 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
       auto &[_, after] = transition.snapshot;
 
       auto containerTag = sharedTransitionManager_->containerTags_[sharedTag];
-      auto layoutAnimationIt = layoutAnimations_.find(containerTag);
+      const auto layoutAnimationIt = layoutAnimations_.find(containerTag);
       if (layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isPendingCleanup) {
         continue;
       }

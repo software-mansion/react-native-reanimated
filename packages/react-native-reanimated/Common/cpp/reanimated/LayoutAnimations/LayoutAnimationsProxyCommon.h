@@ -62,12 +62,15 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
 
  protected:
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
+  mutable std::unordered_map<SurfaceId, std::vector<Tag>> pendingCleanupAnimationTags_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   std::shared_ptr<const ContextContainer> contextContainer_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
   jsi::Runtime &uiRuntime_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   PreserveMountedTagsFunction preserveMountedTags_;
+
+  void removePendingCleanupAnimationTag(SurfaceId surfaceId, Tag tag) const;
 
 #ifdef ANDROID
   std::shared_ptr<facebook::react::UIManager> uiManager_;

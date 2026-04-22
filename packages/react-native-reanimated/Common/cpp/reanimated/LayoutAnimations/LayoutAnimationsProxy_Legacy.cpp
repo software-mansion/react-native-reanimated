@@ -41,13 +41,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
 
   addOngoingAnimations(surfaceId, filteredMutations);
 
-  std::vector<Tag> pendingCleanupAnimationTags;
-  pendingCleanupAnimationTags.reserve(layoutAnimations_.size());
-  for (const auto &[tag, layoutAnimation] : layoutAnimations_) {
-    if (layoutAnimation.isPendingCleanup && layoutAnimation.finalView.surfaceId == surfaceId) {
-      pendingCleanupAnimationTags.push_back(tag);
-    }
-  }
+  const auto pendingCleanupAnimationTags = pendingCleanupAnimationTags_[surfaceId];
 
 #ifdef ANDROID
   restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId, pendingCleanupAnimationTags);
@@ -57,6 +51,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
     layoutAnimations_.erase(tag);
     updateMap.erase(tag);
   }
+  pendingCleanupAnimationTags_.erase(surfaceId);
 
   parseRemoveMutations(movedViews, mutations, roots);
 
@@ -124,6 +119,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
   }
   layoutAnimation.isPendingCleanup = true;
   auto surfaceId = layoutAnimation.finalView.surfaceId;
+  pendingCleanupAnimationTags_[surfaceId].push_back(tag);
 
   if (!shouldRemove || !nodeForTag_.contains(tag)) {
     return {};
@@ -419,22 +415,22 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(SurfaceId surfaceId, Sha
     }
 #endif
 
-    auto layoutAnimationIt = layoutAnimations_.find(tag);
+    const auto layoutAnimationIt = layoutAnimations_.find(tag);
 
     if (layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isPendingCleanup) {
       continue;
     }
 
-    auto &currentLayoutAnimation = layoutAnimationIt->second;
-    currentLayoutAnimation.isViewAlreadyMounted = true;
-    auto newView = currentLayoutAnimation.finalView;
+    auto &layoutAnimation = layoutAnimationIt->second;
+    layoutAnimation.isViewAlreadyMounted = true;
+    auto newView = layoutAnimation.finalView;
     newView.props = updateValues.newProps;
     updateLayoutMetrics(newView.layoutMetrics, updateValues.frame);
 
     mutations.push_back(
         ShadowViewMutation::UpdateMutation(
-            currentLayoutAnimation.currentView, newView, currentLayoutAnimation.parentTag));
-    currentLayoutAnimation.currentView = newView;
+            layoutAnimation.currentView, newView, layoutAnimation.parentTag));
+    layoutAnimation.currentView = newView;
   }
   updateMap.clear();
 }
@@ -614,18 +610,19 @@ bool LayoutAnimationsProxy_Legacy::shouldOverridePullTransaction() const {
 void LayoutAnimationsProxy_Legacy::createLayoutAnimation(
     const ShadowViewMutation &mutation,
     ShadowView &oldView,
+    const SurfaceId &surfaceId,
     const int tag) const {
   int count = 1;
   auto pendingCleanupLayoutAnimationIt = layoutAnimations_.find(tag);
   if (pendingCleanupLayoutAnimationIt != layoutAnimations_.end() && pendingCleanupLayoutAnimationIt->second.isPendingCleanup) {
     auto pendingCleanupSurfaceId = pendingCleanupLayoutAnimationIt->second.finalView.surfaceId;
     surfaceManager.getUpdateMap(pendingCleanupSurfaceId).erase(tag);
+    removePendingCleanupAnimationTag(pendingCleanupSurfaceId, tag);
     layoutAnimations_.erase(pendingCleanupLayoutAnimationIt);
   }
-  auto layoutAnimationIt = layoutAnimations_.find(tag);
-  bool hadExistingAnimation = layoutAnimationIt != layoutAnimations_.end();
+  const auto layoutAnimationIt = layoutAnimations_.find(tag);
 
-  if (hadExistingAnimation) {
+  if (layoutAnimationIt != layoutAnimations_.end()) {
     auto &layoutAnimation = layoutAnimationIt->second;
     oldView = layoutAnimation.currentView;
     count = layoutAnimation.count + 1;
@@ -671,6 +668,7 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
           pendingCleanupLayoutAnimationIt->second.isPendingCleanup) {
         auto pendingCleanupSurfaceId = pendingCleanupLayoutAnimationIt->second.finalView.surfaceId;
         strongThis->surfaceManager.getUpdateMap(pendingCleanupSurfaceId).erase(tag);
+        strongThis->removePendingCleanupAnimationTag(pendingCleanupSurfaceId, tag);
         strongThis->layoutAnimations_.erase(pendingCleanupLayoutAnimationIt);
       }
       strongThis->layoutAnimations_.insert_or_assign(
@@ -713,7 +711,7 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
     {
       auto &mutex = strongThis->mutex;
       auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-      strongThis->createLayoutAnimation(mutation, oldView, tag);
+      strongThis->createLayoutAnimation(mutation, oldView, surfaceId, tag);
       window = strongThis->surfaceManager.getWindow(surfaceId);
     }
 
@@ -752,7 +750,7 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
     {
       auto &mutex = strongThis->mutex;
       auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-      strongThis->createLayoutAnimation(mutation, oldView, tag);
+      strongThis->createLayoutAnimation(mutation, oldView, surfaceId, tag);
       window = strongThis->surfaceManager.getWindow(surfaceId);
     }
 
@@ -790,6 +788,7 @@ void LayoutAnimationsProxy_Legacy::maybeCancelAnimation(const int tag) const {
   if (pendingCleanupLayoutAnimationIt != layoutAnimations_.end() && pendingCleanupLayoutAnimationIt->second.isPendingCleanup) {
     auto pendingCleanupSurfaceId = pendingCleanupLayoutAnimationIt->second.finalView.surfaceId;
     surfaceManager.getUpdateMap(pendingCleanupSurfaceId).erase(tag);
+    removePendingCleanupAnimationTag(pendingCleanupSurfaceId, tag);
     layoutAnimations_.erase(pendingCleanupLayoutAnimationIt);
   }
 
