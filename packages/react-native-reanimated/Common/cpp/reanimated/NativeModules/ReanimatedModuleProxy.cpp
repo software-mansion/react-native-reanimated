@@ -643,7 +643,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent) {
   jsi::Value payload = eventPayload->asJSIValue(uiRuntime);
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    return handleEventAndFlush<GrandCallbackState::Event>(eventType, tag, payload);
+    return handleEventAndFlush(eventType, tag, payload, GrandCallbackState::Event);
   }
 
   const bool res = handleEvent(eventType, tag, payload, getAnimationTimestamp_());
@@ -659,57 +659,15 @@ void ReanimatedModuleProxy::flushLayoutAnimationRequests() {
   }
 }
 
-AnimationMutations ReanimatedModuleProxy::collectMutationsForBackend() {
-  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    ReanimatedSystraceSection s("ReanimatedModuleProxy::collectMutationsForBackend");
-
-    flushLayoutAnimationRequests();
-
-    UpdatesBatchAnimatedProps animatedPropsBatch;
-    {
-      ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
-
-      auto lock = updatesRegistryManager_->lock();
-
-      // Under USE_ANIMATION_BACKEND, OperationsLoop does not mirror the non-backend idle path,
-      // so shouldUpdateCssAnimations may be false even when CSS registries have pending work.
-      bool shouldUpdateCssAnimations = operationsLoop_->shouldUpdateCssAnimations();
-      if (cssTransitionsRegistry_->hasUpdates() || cssAnimationsRegistry_->hasUpdates()) {
-        shouldUpdateCssAnimations = true;
-      }
-      const double currentCssTimestamp = shouldUpdateCssAnimations ? getAnimationTimestamp_() : 0;
-
-      if (shouldUpdateCssAnimations) {
-        auto lock = cssTransitionsRegistry_->lock();
-        cssTransitionsRegistry_->update(currentCssTimestamp);
-        cssTransitionsRegistry_->flushAnimatedPropsUpdates(animatedPropsBatch);
-      }
-
-      {
-        auto lock = animatedPropsRegistry_->lock();
-        animatedPropsRegistry_->flushAnimatedPropsUpdates(animatedPropsBatch);
-      }
-
-      if (shouldUpdateCssAnimations) {
-        auto lock = cssAnimationsRegistry_->lock();
-        cssAnimationsRegistry_->update(currentCssTimestamp);
-        cssAnimationsRegistry_->flushAnimatedPropsUpdates(animatedPropsBatch);
-      }
-
-      operationsLoop_->clearShouldUpdateCssAnimations();
-    }
-
-    AnimationMutations mutations;
-
-    for (auto &[shadowNodeFamily, animatedProps, hasLayoutUpdates] : animatedPropsBatch) {
-      mutations.batch.push_back(AnimationMutation{
-          shadowNodeFamily->getTag(), shadowNodeFamily, std::move(animatedProps), hasLayoutUpdates});
-    }
-
-    return mutations;
+AnimationMutations ReanimatedModuleProxy::mutationsFromAnimatedPropsBatch(
+    UpdatesBatchAnimatedProps &&animatedPropsBatch) {
+  AnimationMutations mutations;
+  mutations.batch.reserve(animatedPropsBatch.size());
+  for (auto &[shadowNodeFamily, animatedProps, hasLayoutUpdates] : animatedPropsBatch) {
+    mutations.batch.push_back(AnimationMutation{
+        shadowNodeFamily->getTag(), shadowNodeFamily, std::move(animatedProps), hasLayoutUpdates});
   }
-
-  return AnimationMutations{};
+  return mutations;
 }
 
 void ReanimatedModuleProxy::performOperations() {
@@ -793,9 +751,9 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
   applySynchronousUpdates(updatesBatch, true);
 }
 
-AnimationMutations ReanimatedModuleProxy::collectNonLayoutMutationsForBackend() {
+AnimationMutations ReanimatedModuleProxy::collectNonLayoutAnimationUpdates() {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    ReanimatedSystraceSection s("ReanimatedModuleProxy::collectNonLayoutMutationsForBackend");
+    ReanimatedSystraceSection s("ReanimatedModuleProxy::collectNonLayoutAnimationUpdates");
 
     AnimationMutations mutations;
     {
@@ -821,15 +779,15 @@ void ReanimatedModuleProxy::startBackendIfNeeded() {
       // isAnimationRunning_ is false, leading to duplicate firings.
       backend->stop(callbackId_);
       callbackId_ = backend->start(
-          [this](AnimationTimestamp ts) { return grandCallback<GrandCallbackState::AnimationLoop>(ts); });
+          [this](AnimationTimestamp ts) { return grandCallback(ts, GrandCallbackState::AnimationLoop); });
       isAnimationRunning_ = true;
     });
   }
 }
 
-void ReanimatedModuleProxy::stopBackendIfIdle(const AnimationMutations &mutations) {
+void ReanimatedModuleProxy::stopBackendIfIdle(const AnimationMutations &mutationsProducedThisTick) {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    bool hasWork = !mutations.batch.empty() || pendingAnimationFrameCallback_ != nullptr ||
+    bool hasWork = !mutationsProducedThisTick.batch.empty() || pendingAnimationFrameCallback_ != nullptr ||
         cssTransitionsRegistry_->hasUpdates() || cssAnimationsRegistry_->hasUpdates() ||
         animatedPropsRegistry_->hasPendingAnimatedPropsUpdates() || shouldFlushRegistry_ ||
         !layoutAnimationFlushRequests_.empty();
@@ -840,37 +798,111 @@ void ReanimatedModuleProxy::stopBackendIfIdle(const AnimationMutations &mutation
   }
 }
 
-template <GrandCallbackState State>
-AnimationMutations ReanimatedModuleProxy::grandCallback(AnimationTimestamp timestamp) {
-  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    ReanimatedSystraceSection s("ReanimatedModuleProxy::grandCallback");
+AnimationMutations ReanimatedModuleProxy::grandCallback(
+    const AnimationTimestamp timestamp,
+    const GrandCallbackState state) {
+  if constexpr (!StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    return AnimationMutations{};
+  }
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::grandCallback");
 
-    AnimationMutations mutations;
-
-    if constexpr (State == GrandCallbackState::AnimationLoop) {
-      if (pendingAnimationFrameCallback_) {
-        auto cb = std::move(pendingAnimationFrameCallback_);
-        pendingAnimationFrameCallback_ = nullptr;
-        cb(timestamp.count());
-      }
-      mutations = collectMutationsForBackend();
+  switch (state) {
+    case GrandCallbackState::AnimationLoop: {
+      executeWorkletsForFrame(timestamp);
+      flushLayoutAnimationRequests();
+      AnimationMutations mutations = collectAnimationUpdates();
       stopBackendIfIdle(mutations);
-    } else if constexpr (State == GrandCallbackState::Event) {
-      mutations = collectMutationsForBackend();
-    } else {
-      static_assert(State == GrandCallbackState::EventInAndroidDraw);
-      mutations = collectNonLayoutMutationsForBackend();
+      return mutations;
     }
 
-    return mutations;
+    case GrandCallbackState::Event: {
+      flushLayoutAnimationRequests();
+      return collectEventUpdates();
+    }
+
+    case GrandCallbackState::EventInAndroidDraw:
+      return collectNonLayoutAnimationUpdates();
   }
+
   return AnimationMutations{};
 }
 
-// Explicit instantiations needed by NativeProxy.cpp (different TU) via triggerBackendCallback<State>.
-template AnimationMutations ReanimatedModuleProxy::grandCallback<GrandCallbackState::Event>(AnimationTimestamp);
-template AnimationMutations ReanimatedModuleProxy::grandCallback<GrandCallbackState::EventInAndroidDraw>(
-    AnimationTimestamp);
+void ReanimatedModuleProxy::executeWorkletsForFrame(const AnimationTimestamp timestamp) {
+  if (!pendingAnimationFrameCallback_) {
+    return;
+  }
+  auto cb = std::move(pendingAnimationFrameCallback_);
+  pendingAnimationFrameCallback_ = nullptr;
+  cb(timestamp.count());
+}
+
+AnimationMutations ReanimatedModuleProxy::collectAnimationUpdates() {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::collectAnimationUpdates");
+
+  // The non-backend CSS idle loop does not run under USE_ANIMATION_BACKEND;
+  // the backend's animation tick IS our CSS loop, so we always advance CSS here.
+  const double currentCssTimestamp = getAnimationTimestamp_();
+
+  UpdatesBatchAnimatedProps batch;
+  auto lock = updatesRegistryManager_->lock();
+
+  {
+    auto transitionsLock = cssTransitionsRegistry_->lock();
+    cssTransitionsRegistry_->update(currentCssTimestamp);
+    cssTransitionsRegistry_->flushAnimatedPropsUpdates(batch);
+  }
+
+  {
+    auto propsLock = animatedPropsRegistry_->lock();
+    animatedPropsRegistry_->flushAnimatedPropsUpdates(batch);
+  }
+
+  {
+    auto animationsLock = cssAnimationsRegistry_->lock();
+    cssAnimationsRegistry_->update(currentCssTimestamp);
+    cssAnimationsRegistry_->flushAnimatedPropsUpdates(batch);
+  }
+
+  return mutationsFromAnimatedPropsBatch(std::move(batch));
+}
+
+AnimationMutations ReanimatedModuleProxy::collectEventUpdates() {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::collectEventUpdates");
+
+  // Events only carry worklet-driven prop updates; CSS is only ticked on animation frames.
+  UpdatesBatchAnimatedProps batch;
+  auto lock = updatesRegistryManager_->lock();
+  auto propsLock = animatedPropsRegistry_->lock();
+  animatedPropsRegistry_->flushAnimatedPropsUpdates(batch);
+
+  return mutationsFromAnimatedPropsBatch(std::move(batch));
+}
+
+bool ReanimatedModuleProxy::handleEventAndFlush(
+    const std::string &eventName,
+    const int emitterReactTag,
+    const jsi::Value &payload,
+    const GrandCallbackState state) {
+#ifdef RN_HAS_PUSH_ANIMATION_MUTATIONS
+  // Run handleEvent and grandCallback inside the backend's animation tick so the
+  // mutations produced by the event are included in the same frame.
+  bool handled = false;
+  withAnimationBackend([&](const std::shared_ptr<AnimationBackend> &backend) {
+    backend->pushAnimationMutations([&, state](AnimationTimestamp ts) {
+      handled = handleEvent(eventName, emitterReactTag, payload, ts.count());
+      return grandCallback(ts, state);
+    });
+  });
+  return handled;
+#else
+  // Legacy path: run handleEvent now, then ask the backend to trigger a fresh tick
+  // so grandCallback can pick up the newly produced updates.
+  const bool handled = handleEvent(eventName, emitterReactTag, payload, getAnimationTimestamp_());
+  (void)state;
+  withAnimationBackend([](const std::shared_ptr<AnimationBackend> &backend) { backend->trigger(); });
+  return handled;
+#endif
+}
 
 void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, const bool allowPartialUpdates) {
 #ifdef ANDROID

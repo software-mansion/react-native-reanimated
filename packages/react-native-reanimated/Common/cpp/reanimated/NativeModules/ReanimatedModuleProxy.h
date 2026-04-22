@@ -102,45 +102,17 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   void performOperations();
   void performOperations(const bool isTriggeredByEvent);
-  AnimationMutations collectMutationsForBackend();
   void performNonLayoutOperations();
-  AnimationMutations collectNonLayoutMutationsForBackend();
   void flushLayoutAnimationRequests();
 
-  template <GrandCallbackState State>
-  AnimationMutations grandCallback(AnimationTimestamp timestamp);
-
-  template <GrandCallbackState State>
-  void triggerBackendCallback() {
-#ifdef RN_HAS_PUSH_ANIMATION_MUTATIONS
-    withAnimationBackend([this](const std::shared_ptr<AnimationBackend> &backend) {
-      backend->pushAnimationMutations([this](AnimationTimestamp ts) { return grandCallback<State>(ts); });
-    });
-#else
-    withAnimationBackend([](const std::shared_ptr<AnimationBackend> &backend) { backend->trigger(); });
-#endif
-  }
-
-  template <GrandCallbackState State>
-  bool handleEventAndFlush(const std::string &eventName, int emitterReactTag, const jsi::Value &payload) {
-#ifdef RN_HAS_PUSH_ANIMATION_MUTATIONS
-    bool handled = false;
-    withAnimationBackend([&](const std::shared_ptr<AnimationBackend> &backend) {
-      backend->pushAnimationMutations([&](AnimationTimestamp ts) {
-        handled = handleEvent(eventName, emitterReactTag, payload, ts.count());
-        return grandCallback<State>(ts);
-      });
-    });
-    return handled;
-#else
-    const bool handled = handleEvent(eventName, emitterReactTag, payload, getAnimationTimestamp_());
-    triggerBackendCallback<State>();
-    return handled;
-#endif
-  }
+  bool handleEventAndFlush(
+      const std::string &eventName,
+      int emitterReactTag,
+      const jsi::Value &payload,
+      GrandCallbackState state);
 
   void startBackendIfNeeded();
-  void stopBackendIfIdle(const AnimationMutations &mutations);
+  void stopBackendIfIdle(const AnimationMutations &mutationsProducedThisTick);
 
   void setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle) override;
 
@@ -230,6 +202,13 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
   void applySynchronousUpdates(UpdatesBatch &updatesBatch, bool allowPartialUpdates = false);
+
+  AnimationMutations grandCallback(AnimationTimestamp timestamp, GrandCallbackState state);
+  void executeWorkletsForFrame(AnimationTimestamp timestamp);
+  AnimationMutations collectAnimationUpdates();
+  AnimationMutations collectEventUpdates();
+  AnimationMutations collectNonLayoutAnimationUpdates();
+  AnimationMutations mutationsFromAnimatedPropsBatch(UpdatesBatchAnimatedProps &&animatedPropsBatch);
 
   const bool isReducedMotion_;
   bool shouldFlushRegistry_ = false;

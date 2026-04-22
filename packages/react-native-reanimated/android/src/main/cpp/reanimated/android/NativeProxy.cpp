@@ -276,13 +276,11 @@ void NativeProxy::handleEvent(
   }
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    if (isInDrawPass) {
-      reanimatedModuleProxy_->handleEventAndFlush<GrandCallbackState::EventInAndroidDraw>(
-          eventName->toString(), emitterReactTag, payload);
-    } else {
-      reanimatedModuleProxy_->handleEventAndFlush<GrandCallbackState::Event>(
-          eventName->toString(), emitterReactTag, payload);
-    }
+    reanimatedModuleProxy_->handleEventAndFlush(
+        eventName->toString(),
+        emitterReactTag,
+        payload,
+        isInDrawPass ? GrandCallbackState::EventInAndroidDraw : GrandCallbackState::Event);
   } else {
     reanimatedModuleProxy_->handleEvent(eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
     if (isInDrawPass) {
