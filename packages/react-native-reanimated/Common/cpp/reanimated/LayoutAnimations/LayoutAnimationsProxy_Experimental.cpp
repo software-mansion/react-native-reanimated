@@ -285,7 +285,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
   }
   layoutAnimation.isPendingCleanup = true;
   auto surfaceId = layoutAnimation.finalView.surfaceId;
-  pendingCleanupAnimationTags_[surfaceId].push_back(tag);
+  maybePendingCleanupTags_[surfaceId].push_back(tag);
 
   if (sharedTransitionManager_->tagToName_.contains(tag)) {
     auto sharedTag = sharedTransitionManager_->tagToName_[tag];
@@ -546,7 +546,6 @@ void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) con
   if (isPendingCleanup) {
     auto pendingCleanupSurfaceId = layoutAnimationIt->second.finalView.surfaceId;
     surfaceManager.getUpdateMap(pendingCleanupSurfaceId).erase(tag);
-    removePendingCleanupAnimationTag(pendingCleanupSurfaceId, tag);
   }
 
   layoutAnimations_.erase(layoutAnimationIt);
@@ -641,17 +640,22 @@ void LayoutAnimationsProxy_Experimental::cleanupAnimations(
   cleanupSharedTransitions(filteredMutations, propsParserContext, surfaceId);
 
 #ifdef ANDROID
-  auto pendingCleanupAnimationTags = pendingCleanupAnimationTags_[surfaceId];
-  restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId, pendingCleanupAnimationTags);
+  auto maybePendingCleanupTags = maybePendingCleanupTags_[surfaceId];
+  restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId, maybePendingCleanupTags);
 #else
-  auto pendingCleanupAnimationTags = pendingCleanupAnimationTags_[surfaceId];
+  auto maybePendingCleanupTags = maybePendingCleanupTags_[surfaceId];
 #endif // ANDROID
   auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
-  for (const auto tag : pendingCleanupAnimationTags) {
-    layoutAnimations_.erase(tag);
+  for (const auto tag : maybePendingCleanupTags) {
+    auto layoutAnimationIt = layoutAnimations_.find(tag);
+    if (layoutAnimationIt == layoutAnimations_.end() || !layoutAnimationIt->second.isPendingCleanup) {
+      continue;
+    }
+
+    layoutAnimations_.erase(layoutAnimationIt);
     updateMap.erase(tag);
   }
-  pendingCleanupAnimationTags_.erase(surfaceId);
+  maybePendingCleanupTags_.erase(surfaceId);
 }
 
 // MARK: Start Animation
@@ -666,7 +670,6 @@ ShadowView LayoutAnimationsProxy_Experimental::maybeCreateLayoutAnimation(
   if (pendingCleanupLayoutAnimationIt != layoutAnimations_.end() && pendingCleanupLayoutAnimationIt->second.isPendingCleanup) {
     auto pendingCleanupSurfaceId = pendingCleanupLayoutAnimationIt->second.finalView.surfaceId;
     surfaceManager.getUpdateMap(pendingCleanupSurfaceId).erase(tag);
-    removePendingCleanupAnimationTag(pendingCleanupSurfaceId, tag);
     layoutAnimations_.erase(pendingCleanupLayoutAnimationIt);
   }
   const auto layoutAnimationIt = layoutAnimations_.find(tag);
@@ -721,7 +724,6 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::share
               pendingCleanupLayoutAnimationIt->second.isPendingCleanup) {
             auto pendingCleanupSurfaceId = pendingCleanupLayoutAnimationIt->second.finalView.surfaceId;
             strongThis->surfaceManager.getUpdateMap(pendingCleanupSurfaceId).erase(tag);
-            strongThis->removePendingCleanupAnimationTag(pendingCleanupSurfaceId, tag);
             strongThis->layoutAnimations_.erase(pendingCleanupLayoutAnimationIt);
           }
           strongThis->layoutAnimations_[tag] = {

@@ -41,17 +41,22 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
 
   addOngoingAnimations(surfaceId, filteredMutations);
 
-  const auto pendingCleanupAnimationTags = pendingCleanupAnimationTags_[surfaceId];
+  const auto maybePendingCleanupTags = maybePendingCleanupTags_[surfaceId];
 
 #ifdef ANDROID
-  restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId, pendingCleanupAnimationTags);
+  restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId, maybePendingCleanupTags);
 #endif // ANDROID
   auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
-  for (const auto tag : pendingCleanupAnimationTags) {
-    layoutAnimations_.erase(tag);
+  for (const auto tag : maybePendingCleanupTags) {
+    auto layoutAnimationIt = layoutAnimations_.find(tag);
+    if (layoutAnimationIt == layoutAnimations_.end() || !layoutAnimationIt->second.isPendingCleanup) {
+      continue;
+    }
+
+    layoutAnimations_.erase(layoutAnimationIt);
     updateMap.erase(tag);
   }
-  pendingCleanupAnimationTags_.erase(surfaceId);
+  maybePendingCleanupTags_.erase(surfaceId);
 
   parseRemoveMutations(movedViews, mutations, roots);
 
@@ -119,7 +124,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
   }
   layoutAnimation.isPendingCleanup = true;
   auto surfaceId = layoutAnimation.finalView.surfaceId;
-  pendingCleanupAnimationTags_[surfaceId].push_back(tag);
+  maybePendingCleanupTags_[surfaceId].push_back(tag);
 
   if (!shouldRemove || !nodeForTag_.contains(tag)) {
     return {};
@@ -617,7 +622,6 @@ void LayoutAnimationsProxy_Legacy::createLayoutAnimation(
   if (pendingCleanupLayoutAnimationIt != layoutAnimations_.end() && pendingCleanupLayoutAnimationIt->second.isPendingCleanup) {
     auto pendingCleanupSurfaceId = pendingCleanupLayoutAnimationIt->second.finalView.surfaceId;
     surfaceManager.getUpdateMap(pendingCleanupSurfaceId).erase(tag);
-    removePendingCleanupAnimationTag(pendingCleanupSurfaceId, tag);
     layoutAnimations_.erase(pendingCleanupLayoutAnimationIt);
   }
   const auto layoutAnimationIt = layoutAnimations_.find(tag);
@@ -668,7 +672,6 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
           pendingCleanupLayoutAnimationIt->second.isPendingCleanup) {
         auto pendingCleanupSurfaceId = pendingCleanupLayoutAnimationIt->second.finalView.surfaceId;
         strongThis->surfaceManager.getUpdateMap(pendingCleanupSurfaceId).erase(tag);
-        strongThis->removePendingCleanupAnimationTag(pendingCleanupSurfaceId, tag);
         strongThis->layoutAnimations_.erase(pendingCleanupLayoutAnimationIt);
       }
       strongThis->layoutAnimations_.insert_or_assign(
@@ -793,7 +796,6 @@ void LayoutAnimationsProxy_Legacy::maybeCancelAnimation(const int tag) const {
   if (isPendingCleanup) {
     auto pendingCleanupSurfaceId = layoutAnimationIt->second.finalView.surfaceId;
     surfaceManager.getUpdateMap(pendingCleanupSurfaceId).erase(tag);
-    removePendingCleanupAnimationTag(pendingCleanupSurfaceId, tag);
   }
 
   layoutAnimations_.erase(layoutAnimationIt);

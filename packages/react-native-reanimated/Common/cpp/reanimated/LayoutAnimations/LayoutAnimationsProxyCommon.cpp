@@ -4,7 +4,6 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 
-#include <algorithm>
 #include <functional>
 #include <memory>
 #include <utility>
@@ -23,20 +22,6 @@ std::optional<facebook::react::SurfaceId> LayoutAnimationsProxyCommon::onGesture
 
 void LayoutAnimationsProxyCommon::startSurface(const SurfaceId surfaceId) {}
 
-void LayoutAnimationsProxyCommon::removePendingCleanupAnimationTag(SurfaceId surfaceId, Tag tag) const {
-  auto pendingCleanupTagsIt = pendingCleanupAnimationTags_.find(surfaceId);
-  if (pendingCleanupTagsIt == pendingCleanupAnimationTags_.end()) {
-    return;
-  }
-
-  auto &pendingCleanupTags = pendingCleanupTagsIt->second;
-  pendingCleanupTags.erase(
-      std::remove(pendingCleanupTags.begin(), pendingCleanupTags.end(), tag), pendingCleanupTags.end());
-  if (pendingCleanupTags.empty()) {
-    pendingCleanupAnimationTags_.erase(pendingCleanupTagsIt);
-  }
-}
-
 #ifdef ANDROID
 
 const facebook::react::ShadowNode *findInShadowTreeByTag(const facebook::react::ShadowNode &node, Tag tag) {
@@ -53,11 +38,11 @@ const facebook::react::ShadowNode *findInShadowTreeByTag(const facebook::react::
 
 void LayoutAnimationsProxyCommon::restoreOpacityInCaseOfFlakyEnteringAnimation(
     SurfaceId surfaceId,
-    const std::vector<Tag> &pendingCleanupAnimationTags) const {
+    const std::vector<Tag> &maybePendingCleanupTags) const {
   std::vector<std::pair<double, Tag>> opacityToRestore;
-  for (const auto tag : pendingCleanupAnimationTags) {
+  for (const auto tag : maybePendingCleanupTags) {
     auto layoutAnimationIt = layoutAnimations_.find(tag);
-    if (layoutAnimationIt == layoutAnimations_.end()) {
+    if (layoutAnimationIt == layoutAnimations_.end() || !layoutAnimationIt->second.isPendingCleanup) {
       continue;
     }
 

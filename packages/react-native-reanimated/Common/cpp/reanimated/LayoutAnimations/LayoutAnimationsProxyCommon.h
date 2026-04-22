@@ -62,7 +62,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
 
  protected:
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
-  mutable std::unordered_map<SurfaceId, std::vector<Tag>> pendingCleanupAnimationTags_;
+  mutable std::unordered_map<SurfaceId, std::vector<Tag>> maybePendingCleanupTags_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   std::shared_ptr<const ContextContainer> contextContainer_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
@@ -70,15 +70,13 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   const std::shared_ptr<UIScheduler> uiScheduler_;
   PreserveMountedTagsFunction preserveMountedTags_;
 
-  void removePendingCleanupAnimationTag(SurfaceId surfaceId, Tag tag) const;
-
 #ifdef ANDROID
   std::shared_ptr<facebook::react::UIManager> uiManager_;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker_;
 
   void restoreOpacityInCaseOfFlakyEnteringAnimation(
       SurfaceId surfaceId,
-      const std::vector<Tag> &pendingCleanupAnimationTags) const;
+      const std::vector<Tag> &maybePendingCleanupTags) const;
 
 #endif
 };
