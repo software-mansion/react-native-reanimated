@@ -142,7 +142,7 @@ using namespace facebook::react;
       return;
     }
     eventHandler(event);
-    // Animation backend flushes inside handleEventAndFlush instead (see NativeProxy.mm).
+    // When not using the shared animation backend, flush after the event on the main thread.
     if (!reanimated::StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
       [strongSelf performOperations];
     }

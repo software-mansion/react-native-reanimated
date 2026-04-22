@@ -883,7 +883,6 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
     const int emitterReactTag,
     const jsi::Value &payload,
     const GrandCallbackState state) {
-#ifdef RN_HAS_PUSH_ANIMATION_MUTATIONS
   // Run handleEvent and grandCallback inside the backend's animation tick so the
   // mutations produced by the event are included in the same frame.
   bool handled = false;
@@ -894,14 +893,6 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
     });
   });
   return handled;
-#else
-  // Legacy path: run handleEvent now, then ask the backend to trigger a fresh tick
-  // so grandCallback can pick up the newly produced updates.
-  const bool handled = handleEvent(eventName, emitterReactTag, payload, getAnimationTimestamp_());
-  (void)state;
-  withAnimationBackend([](const std::shared_ptr<AnimationBackend> &backend) { backend->trigger(); });
-  return handled;
-#endif
 }
 
 void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, const bool allowPartialUpdates) {

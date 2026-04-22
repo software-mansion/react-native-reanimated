@@ -34,8 +34,8 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
 
   auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
 
-  // REANodesManager skips post-event performOperations when USE_ANIMATION_BACKEND
-  // is enabled.
+  // When USE_ANIMATION_BACKEND is on, flushes run inside handleEventAndFlush; otherwise
+  // REANodesManager calls performOperations after the event (see REANodesManager).
   [nodesManager registerEventHandler:^(id<RCTEvent> event) {
     std::string eventName = [event.eventName UTF8String];
     int emitterReactTag = [event.viewTag intValue];
