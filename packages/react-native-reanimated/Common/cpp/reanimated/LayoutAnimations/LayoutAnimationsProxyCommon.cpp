@@ -36,10 +36,17 @@ const facebook::react::ShadowNode *findInShadowTreeByTag(const facebook::react::
   return nullptr;
 }
 
-void LayoutAnimationsProxyCommon::restoreOpacityInCaseOfFlakyEnteringAnimation(SurfaceId surfaceId) const {
+void LayoutAnimationsProxyCommon::restoreOpacityInCaseOfFlakyEnteringAnimation(
+    SurfaceId surfaceId,
+    const std::vector<Tag> &pendingCleanupAnimationTags) const {
   std::vector<std::pair<double, Tag>> opacityToRestore;
-  for (const auto tag : finishedAnimationTags_) {
-    const auto &opacity = layoutAnimations_[tag].opacity;
+  for (const auto tag : pendingCleanupAnimationTags) {
+    auto layoutAnimationIt = layoutAnimations_.find(tag);
+    if (layoutAnimationIt == layoutAnimations_.end()) {
+      continue;
+    }
+
+    const auto &opacity = layoutAnimationIt->second.opacity;
     if (opacity.has_value()) {
       opacityToRestore.emplace_back(std::pair<double, Tag>{opacity.value(), tag});
     }

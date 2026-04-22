@@ -20,6 +20,7 @@ struct LayoutAnimation {
   Tag parentTag;
   std::optional<double> opacity;
   bool isViewAlreadyMounted = false;
+  bool isPendingCleanup = false;
   int count = 1;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 };
@@ -60,7 +61,6 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   virtual void startSurface(const SurfaceId surfaceId);
 
  protected:
-  mutable std::vector<Tag> finishedAnimationTags_;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   std::shared_ptr<const ContextContainer> contextContainer_;
@@ -73,7 +73,9 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   std::shared_ptr<facebook::react::UIManager> uiManager_;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker_;
 
-  void restoreOpacityInCaseOfFlakyEnteringAnimation(SurfaceId surfaceId) const;
+  void restoreOpacityInCaseOfFlakyEnteringAnimation(
+      SurfaceId surfaceId,
+      const std::vector<Tag> &pendingCleanupAnimationTags) const;
 
 #endif
 };

@@ -41,15 +41,22 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
 
   addOngoingAnimations(surfaceId, filteredMutations);
 
+  std::vector<Tag> pendingCleanupAnimationTags;
+  pendingCleanupAnimationTags.reserve(layoutAnimations_.size());
+  for (const auto &[tag, layoutAnimation] : layoutAnimations_) {
+    if (layoutAnimation.isPendingCleanup && layoutAnimation.finalView.surfaceId == surfaceId) {
+      pendingCleanupAnimationTags.push_back(tag);
+    }
+  }
+
 #ifdef ANDROID
-  restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId);
+  restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId, pendingCleanupAnimationTags);
 #endif // ANDROID
-  for (const auto tag : finishedAnimationTags_) {
-    auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+  auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+  for (const auto tag : pendingCleanupAnimationTags) {
     layoutAnimations_.erase(tag);
     updateMap.erase(tag);
   }
-  finishedAnimationTags_.clear();
 
   parseRemoveMutations(movedViews, mutations, roots);
 
@@ -115,7 +122,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
     layoutAnimation.count--;
     return {};
   }
-  finishedAnimationTags_.push_back(tag);
+  layoutAnimation.isPendingCleanup = true;
   auto surfaceId = layoutAnimation.finalView.surfaceId;
 
   if (!shouldRemove || !nodeForTag_.contains(tag)) {
@@ -123,6 +130,10 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
   }
 
   auto node = nodeForTag_[tag];
+  if (!node->isMutationNode()) {
+    return {};
+  }
+
   auto mutationNode = std::static_pointer_cast<MutationNode>(node);
   mutationNode->state = ExitingState_Legacy::DEAD;
   auto &[deadNodes] = surfaceContext_[surfaceId];
@@ -296,7 +307,7 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
 
         if (movedViews.contains(tag)) {
           auto layoutAnimationIt = layoutAnimations_.find(tag);
-          if (layoutAnimationIt == layoutAnimations_.end()) {
+          if (layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isPendingCleanup) {
             if (oldShadowViewsForReparentings.contains(tag)) {
               filteredMutations.push_back(ShadowViewMutation::InsertMutation(
                   mutationParent, oldShadowViewsForReparentings[tag], mutation.index));
@@ -333,8 +344,10 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
 
       case ShadowViewMutation::Type::Update: {
         auto shouldAnimate = hasLayoutChanged(mutation);
+        auto layoutAnimationIt = layoutAnimations_.find(tag);
+        auto hasOngoingAnimation = layoutAnimationIt != layoutAnimations_.end() && !layoutAnimationIt->second.isPendingCleanup;
         if (!layoutAnimationsManager_->hasLayoutAnimation(tag, LayoutAnimationType::LAYOUT) ||
-            (!shouldAnimate && !layoutAnimations_.contains(tag))) {
+            (!shouldAnimate && !hasOngoingAnimation)) {
           // We should cancel any ongoing animation here to ensure that the
           // proper final state is reached for this view However, due to how
           // RNSScreens handle adding headers (a second commit is triggered to
@@ -408,19 +421,20 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(SurfaceId surfaceId, Sha
 
     auto layoutAnimationIt = layoutAnimations_.find(tag);
 
-    if (layoutAnimationIt == layoutAnimations_.end()) {
+    if (layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isPendingCleanup) {
       continue;
     }
 
-    auto &layoutAnimation = layoutAnimationIt->second;
-    layoutAnimation.isViewAlreadyMounted = true;
-    auto newView = layoutAnimation.finalView;
+    auto &currentLayoutAnimation = layoutAnimationIt->second;
+    currentLayoutAnimation.isViewAlreadyMounted = true;
+    auto newView = currentLayoutAnimation.finalView;
     newView.props = updateValues.newProps;
     updateLayoutMetrics(newView.layoutMetrics, updateValues.frame);
 
     mutations.push_back(
-        ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));
-    layoutAnimation.currentView = newView;
+        ShadowViewMutation::UpdateMutation(
+            currentLayoutAnimation.currentView, newView, currentLayoutAnimation.parentTag));
+    currentLayoutAnimation.currentView = newView;
   }
   updateMap.clear();
 }
@@ -600,12 +614,18 @@ bool LayoutAnimationsProxy_Legacy::shouldOverridePullTransaction() const {
 void LayoutAnimationsProxy_Legacy::createLayoutAnimation(
     const ShadowViewMutation &mutation,
     ShadowView &oldView,
-    const SurfaceId &surfaceId,
     const int tag) const {
   int count = 1;
+  auto pendingCleanupLayoutAnimationIt = layoutAnimations_.find(tag);
+  if (pendingCleanupLayoutAnimationIt != layoutAnimations_.end() && pendingCleanupLayoutAnimationIt->second.isPendingCleanup) {
+    auto pendingCleanupSurfaceId = pendingCleanupLayoutAnimationIt->second.finalView.surfaceId;
+    surfaceManager.getUpdateMap(pendingCleanupSurfaceId).erase(tag);
+    layoutAnimations_.erase(pendingCleanupLayoutAnimationIt);
+  }
   auto layoutAnimationIt = layoutAnimations_.find(tag);
+  bool hadExistingAnimation = layoutAnimationIt != layoutAnimations_.end();
 
-  if (layoutAnimationIt != layoutAnimations_.end()) {
+  if (hadExistingAnimation) {
     auto &layoutAnimation = layoutAnimationIt->second;
     oldView = layoutAnimation.currentView;
     count = layoutAnimation.count + 1;
@@ -646,6 +666,13 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
     {
       auto &mutex = strongThis->mutex;
       auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+      auto pendingCleanupLayoutAnimationIt = strongThis->layoutAnimations_.find(tag);
+      if (pendingCleanupLayoutAnimationIt != strongThis->layoutAnimations_.end() &&
+          pendingCleanupLayoutAnimationIt->second.isPendingCleanup) {
+        auto pendingCleanupSurfaceId = pendingCleanupLayoutAnimationIt->second.finalView.surfaceId;
+        strongThis->surfaceManager.getUpdateMap(pendingCleanupSurfaceId).erase(tag);
+        strongThis->layoutAnimations_.erase(pendingCleanupLayoutAnimationIt);
+      }
       strongThis->layoutAnimations_.insert_or_assign(
           tag,
           LayoutAnimation{
@@ -686,7 +713,7 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
     {
       auto &mutex = strongThis->mutex;
       auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-      strongThis->createLayoutAnimation(mutation, oldView, surfaceId, tag);
+      strongThis->createLayoutAnimation(mutation, oldView, tag);
       window = strongThis->surfaceManager.getWindow(surfaceId);
     }
 
@@ -725,7 +752,7 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
     {
       auto &mutex = strongThis->mutex;
       auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-      strongThis->createLayoutAnimation(mutation, oldView, surfaceId, tag);
+      strongThis->createLayoutAnimation(mutation, oldView, tag);
       window = strongThis->surfaceManager.getWindow(surfaceId);
     }
 
@@ -759,6 +786,13 @@ void LayoutAnimationsProxy_Legacy::updateOngoingAnimationTarget(const int tag, c
 }
 
 void LayoutAnimationsProxy_Legacy::maybeCancelAnimation(const int tag) const {
+  auto pendingCleanupLayoutAnimationIt = layoutAnimations_.find(tag);
+  if (pendingCleanupLayoutAnimationIt != layoutAnimations_.end() && pendingCleanupLayoutAnimationIt->second.isPendingCleanup) {
+    auto pendingCleanupSurfaceId = pendingCleanupLayoutAnimationIt->second.finalView.surfaceId;
+    surfaceManager.getUpdateMap(pendingCleanupSurfaceId).erase(tag);
+    layoutAnimations_.erase(pendingCleanupLayoutAnimationIt);
+  }
+
   if (!layoutAnimations_.contains(tag)) {
     return;
   }

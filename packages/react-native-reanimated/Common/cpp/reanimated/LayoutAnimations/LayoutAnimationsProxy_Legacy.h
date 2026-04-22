@@ -174,7 +174,6 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
   void createLayoutAnimation(
       const ShadowViewMutation &mutation,
       ShadowView &oldView,
-      const SurfaceId &surfaceId,
       const int tag) const;
 
   void updateIndexForMutation(ShadowViewMutation &mutation) const;

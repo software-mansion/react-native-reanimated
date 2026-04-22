@@ -283,7 +283,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
     layoutAnimation.count--;
     return {};
   }
-  finishedAnimationTags_.push_back(tag);
+  layoutAnimation.isPendingCleanup = true;
   auto surfaceId = layoutAnimation.finalView.surfaceId;
 
   if (sharedTransitionManager_->tagToName_.contains(tag)) {
@@ -333,8 +333,9 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
       // The biggest convenience of this approach is that it is much easier to maintain indices of animated views, and handle reparentings.
 
       auto current = node->current;
-      if (layoutAnimations_.contains(node->current.tag)) {
-        current = layoutAnimations_.at(node->current.tag).currentView;
+      auto layoutAnimationIt = layoutAnimations_.find(node->current.tag);
+      if (layoutAnimationIt != layoutAnimations_.end() && !layoutAnimationIt->second.isPendingCleanup) {
+        current = layoutAnimationIt->second.currentView;
       }
       filteredMutations.push_back(
           ShadowViewMutation::InsertMutation(parent->current.tag, current, static_cast<int>(parent->children.size())));
@@ -397,23 +398,24 @@ void LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceI
     }
 #endif
 
-    const auto layoutAnimationIt = layoutAnimations_.find(tag);
+    auto layoutAnimationIt = layoutAnimations_.find(tag);
 
-    if (layoutAnimationIt == layoutAnimations_.end()) {
+    if (layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isPendingCleanup) {
       continue;
     }
 
-    auto &layoutAnimation = layoutAnimationIt->second;
-    layoutAnimation.isViewAlreadyMounted = true;
-    auto newView = layoutAnimation.finalView;
+    auto &currentLayoutAnimation = layoutAnimationIt->second;
+    currentLayoutAnimation.isViewAlreadyMounted = true;
+    auto newView = currentLayoutAnimation.finalView;
     if (updateValues.newProps) {
       newView.props = updateValues.newProps;
     }
     updateLayoutMetrics(newView.layoutMetrics, updateValues.frame);
 
     mutations.push_back(
-        ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));
-    layoutAnimation.currentView = newView;
+        ShadowViewMutation::UpdateMutation(
+            currentLayoutAnimation.currentView, newView, currentLayoutAnimation.parentTag));
+    currentLayoutAnimation.currentView = newView;
   }
   updateMap.clear();
 }
@@ -534,6 +536,13 @@ void LayoutAnimationsProxy_Experimental::updateOngoingAnimationTarget(const int 
 }
 
 void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) const {
+  auto pendingCleanupLayoutAnimationIt = layoutAnimations_.find(tag);
+  if (pendingCleanupLayoutAnimationIt != layoutAnimations_.end() && pendingCleanupLayoutAnimationIt->second.isPendingCleanup) {
+    auto pendingCleanupSurfaceId = pendingCleanupLayoutAnimationIt->second.finalView.surfaceId;
+    surfaceManager.getUpdateMap(pendingCleanupSurfaceId).erase(tag);
+    layoutAnimations_.erase(pendingCleanupLayoutAnimationIt);
+  }
+
   if (!layoutAnimations_.contains(tag)) {
     return;
   }
@@ -625,14 +634,28 @@ void LayoutAnimationsProxy_Experimental::cleanupAnimations(
   cleanupSharedTransitions(filteredMutations, propsParserContext, surfaceId);
 
 #ifdef ANDROID
-  restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId);
+  std::vector<Tag> pendingCleanupAnimationTags;
+  pendingCleanupAnimationTags.reserve(layoutAnimations_.size());
+  for (const auto &[tag, layoutAnimation] : layoutAnimations_) {
+    if (layoutAnimation.isPendingCleanup && layoutAnimation.finalView.surfaceId == surfaceId) {
+      pendingCleanupAnimationTags.push_back(tag);
+    }
+  }
+  restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId, pendingCleanupAnimationTags);
+#else
+  std::vector<Tag> pendingCleanupAnimationTags;
+  pendingCleanupAnimationTags.reserve(layoutAnimations_.size());
+  for (const auto &[tag, layoutAnimation] : layoutAnimations_) {
+    if (layoutAnimation.isPendingCleanup && layoutAnimation.finalView.surfaceId == surfaceId) {
+      pendingCleanupAnimationTags.push_back(tag);
+    }
+  }
 #endif // ANDROID
-  for (const auto tag : finishedAnimationTags_) {
-    auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+  auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+  for (const auto tag : pendingCleanupAnimationTags) {
     layoutAnimations_.erase(tag);
     updateMap.erase(tag);
   }
-  finishedAnimationTags_.clear();
 }
 
 // MARK: Start Animation
@@ -643,6 +666,12 @@ ShadowView LayoutAnimationsProxy_Experimental::maybeCreateLayoutAnimation(
     const Tag parentTag) const {
   auto count = 1;
   const auto tag = after.tag;
+  auto pendingCleanupLayoutAnimationIt = layoutAnimations_.find(tag);
+  if (pendingCleanupLayoutAnimationIt != layoutAnimations_.end() && pendingCleanupLayoutAnimationIt->second.isPendingCleanup) {
+    auto pendingCleanupSurfaceId = pendingCleanupLayoutAnimationIt->second.finalView.surfaceId;
+    surfaceManager.getUpdateMap(pendingCleanupSurfaceId).erase(tag);
+    layoutAnimations_.erase(pendingCleanupLayoutAnimationIt);
+  }
   auto layoutAnimationIt = layoutAnimations_.find(tag);
   auto &oldView = before;
 
@@ -690,6 +719,13 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::share
         const auto tag = newChildShadowView.tag;
         {
           auto lock = std::unique_lock<std::recursive_mutex>(strongThis->mutex);
+          auto pendingCleanupLayoutAnimationIt = strongThis->layoutAnimations_.find(tag);
+          if (pendingCleanupLayoutAnimationIt != strongThis->layoutAnimations_.end() &&
+              pendingCleanupLayoutAnimationIt->second.isPendingCleanup) {
+            auto pendingCleanupSurfaceId = pendingCleanupLayoutAnimationIt->second.finalView.surfaceId;
+            strongThis->surfaceManager.getUpdateMap(pendingCleanupSurfaceId).erase(tag);
+            strongThis->layoutAnimations_.erase(pendingCleanupLayoutAnimationIt);
+          }
           strongThis->layoutAnimations_[tag] = {
               .finalView = newChildShadowView,
               .currentView = newChildShadowView,

@@ -209,7 +209,12 @@ Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
     ShadowViewMutationList &filteredMutations,
     SurfaceId surfaceId) const {
   auto containerTag = sharedTransitionManager_->containerTags_[sharedTag];
-  auto shouldCreateContainer = (containerTag == -1 || !layoutAnimations_.contains(containerTag));
+  auto shouldCreateContainer = true;
+  if (containerTag != -1) {
+    auto layoutAnimationIt = layoutAnimations_.find(containerTag);
+    shouldCreateContainer =
+        layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isPendingCleanup;
+  }
 
   if (shouldCreateContainer) {
     containerTag = containerTag_;
@@ -263,11 +268,12 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
       auto &[_, after] = transition.snapshot;
 
       auto containerTag = sharedTransitionManager_->containerTags_[sharedTag];
-      if (!layoutAnimations_.contains(containerTag)) {
+      auto layoutAnimationIt = layoutAnimations_.find(containerTag);
+      if (layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isPendingCleanup) {
         continue;
       }
       after.tag = containerTag;
-      const auto &la = layoutAnimations_[containerTag];
+      const auto &la = layoutAnimationIt->second;
       if (la.finalView.layoutMetrics != after.layoutMetrics) {
         overrideTransform(after, transition.transform[AFTER], propsParserContext);
         startSharedTransition(containerTag, la.currentView, after, surfaceId);
