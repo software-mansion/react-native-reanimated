@@ -35,7 +35,9 @@ function App() {
     modify: (modifier?: (value: Value) => Value, forceUpdate?: boolean) => void;
   }
 
-  function useSharedValue<Value>(initialValue: Value): SharedValue<Value>;
+  export function useSharedValue<Value>(
+    initialValue: Value | (() => Value)
+  ): SharedValue<Value>;
   ```
 </details>
 
@@ -44,6 +46,12 @@ function App() {
 #### `initialValue`
 
 The value you want to store initially in the shared value. It can be any JavaScript value like `number`, `string` or `boolean` but also data structures such as `array` and `object`.
+
+<AvailableFrom version={'4.4.0'}/> You can also pass a function as `initialValue`. It will be called once on mount and its return value used as the initial shared value. Useful when the initial value is expensive to compute.
+
+```javascript
+const sv = useSharedValue(() => computeExpensiveInitialValue());
+```
 
 ### Returns
 
@@ -82,6 +90,8 @@ import SharedValueSrc from '!!raw-loader!@site/src/examples/SharedValue';
 - Don't read or modify the value of a shared value during a component's render. Access to `value` property or calling `get`/`set` methods is a side-effect. Triggering side-effects during render [violates the Rules of React](https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render). All reads from and writes to a shared value should happen in relevant callbacks which aren't executed during render, i.e. in `useAnimatedStyle` or `useEffect` hooks.
 
 - When you change the `sv.value` Reanimated will update the styles and keep the shared value in sync between the threads. However, this won't trigger a typical React re-render because a shared value is a plain JavaScript object.
+
+- Don't store functions (including worklets) inside shared values. This is not supported and may lead to unexpected behavior.
 
 - When you read the `sv.value` on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread), the thread will get blocked until the value is fetched from the [UI thread](/docs/fundamentals/glossary#ui-thread). In most cases it will be negligible, but if the UI thread is busy or you are reading a value multiple times, the wait time needed to synchronize both threads may significantly increase.
 

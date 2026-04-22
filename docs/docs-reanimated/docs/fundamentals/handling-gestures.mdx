@@ -16,7 +16,7 @@ Let's start with the simplest gesture - tapping. Tap gesture detects fingers tou
 
 In this example, we'll create a circle that will grow and change color on touch.
 
-First, let's wrap our app with [`GestureHandlerRootView`](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/installation/#js). Make sure to keep the `GestureHandlerRootView` as close to the actual root view as possible. That'll ensure that our gestures will work as expected with each other.
+First, let's wrap our app with [`GestureHandlerRootView`](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/root-view). Make sure to keep the `GestureHandlerRootView` as close to the actual root view as possible. That'll ensure that our gestures will work as expected with each other.
 
 ```jsx
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -43,7 +43,7 @@ We'd like our circle to change color from violet to yellow and smoothly scale by
 
 <CollapsibleCode showLines={[27, 30]} src={TapGestureSrc}/>
 
-You need to pass your defined gesture to the `gesture` prop of the [`GestureDetector`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/gesture-detector) component. That component should wrap the view you'd like to handle gestures on. Also, remember to pass the defined `animatedStyles` to the view you want to animate like so:
+You need to pass your defined gesture to the `gesture` prop of the [`GestureDetector`](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/gesture-detector) component. That component should wrap the view you'd like to handle gestures on. Also, remember to pass the defined `animatedStyles` to the view you want to animate like so:
 
 <CollapsibleCode showLines={[32, 43]} src={TapGestureSrc}/>
 
@@ -51,7 +51,7 @@ And that's it! Pretty straightforward, isn't it? Let's see it in its full glory 
 
 <InteractiveExample src={TapGestureSrc} component={TapGesture} label="Tap the circle"/>
 
-You can make use of [composing gestures](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/gesture-composition/) to more complex behaviors. But what if we'd like to create something a bit more interesting?
+You can make use of [composing gestures](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/gesture-composition/) to more complex behaviors. But what if we'd like to create something a bit more interesting?
 
 ## Handling pan gestures
 

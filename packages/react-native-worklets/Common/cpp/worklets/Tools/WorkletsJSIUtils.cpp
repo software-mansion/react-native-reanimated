@@ -27,12 +27,4 @@ jsi::Array convertStringToArray(jsi::Runtime &rt, const std::string &value, cons
   return matrix;
 }
 
-jsi::Object optimizedFromHostObject(jsi::Runtime &rt, const std::shared_ptr<jsi::HostObject> &hostObject) {
-  auto optimizedObject = jsi::Object(rt);
-  for (const auto &propertyName : hostObject->getPropertyNames(rt)) {
-    optimizedObject.setProperty(rt, propertyName, hostObject->get(rt, propertyName));
-  }
-  return optimizedObject;
-}
-
 } // namespace worklets::jsi_utils

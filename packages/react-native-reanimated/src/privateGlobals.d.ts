@@ -77,12 +77,10 @@ declare global {
    * @deprecated Internals of `react-native-worklets`, abstain from using in the
    *   future.
    */
-  var __flushAnimationFrame: (timestamp: number) => void;
-  /**
-   * @deprecated Internals of `react-native-worklets`, abstain from using in the
-   *   future.
-   */
   var __frameTimestamp: number | undefined;
+  var __mapperRun: () => void;
+  var __requestMapperRunFinalizer: (finalizer: () => void) => void;
+  var _maybeFlushUIUpdatesQueue: () => void;
   var __UI_WORKLET_RUNTIME_HOLDER: object | undefined;
   var __UI_SCHEDULER_HOLDER: object | undefined;
   var __toggleSlowAnimationsOnUIRuntime: (() => bool) | undefined;

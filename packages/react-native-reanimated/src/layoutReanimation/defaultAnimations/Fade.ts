@@ -1,11 +1,14 @@
 'use strict';
-import type { TranslateX, TranslateY } from '../../common';
 import type {
+  AnimationConfigFunction,
   EntryExitAnimationFunction,
+  ExitAnimationsValues,
   IEntryExitAnimationBuilder,
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
+import type { TransformsConfig, TranslateX, TranslateY } from './types';
+import { animateTransformToValues, pickTransformValues } from './utils';
 
 /**
  * Fade in animation. You can modify the behavior by chaining methods like
@@ -21,6 +24,7 @@ export class FadeIn
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FadeIn';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -32,17 +36,20 @@ export class FadeIn
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
 
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
         },
         initialValues: {
-          opacity: 0,
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 0,
         },
         callback,
       };
@@ -60,10 +67,9 @@ export class FadeIn
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
  */
 export class FadeInRight
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    transform: [TranslateX];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[TranslateX]>
+  >
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FadeInRight';
@@ -76,24 +82,32 @@ export class FadeInRight
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
 
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
-          transform: [
-            { translateX: delayFunction(delay, animation(0, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
+          transform: animateTransformToValues(
+            [{ translateX: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          opacity: 0,
-          transform: [{ translateX: 25 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 0,
+          transform: pickTransformValues([{ translateX: 25 }], initialValues),
         },
         callback,
       };
@@ -111,10 +125,9 @@ export class FadeInRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
  */
 export class FadeInLeft
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    transform: [TranslateX];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[TranslateX]>
+  >
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FadeInLeft';
@@ -127,24 +140,32 @@ export class FadeInLeft
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
 
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
-          transform: [
-            { translateX: delayFunction(delay, animation(0, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
+          transform: animateTransformToValues(
+            [{ translateX: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          opacity: 0,
-          transform: [{ translateX: -25 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 0,
+          transform: pickTransformValues([{ translateX: -25 }], initialValues),
         },
         callback,
       };
@@ -162,10 +183,9 @@ export class FadeInLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
  */
 export class FadeInUp
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    transform: [TranslateY];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[TranslateY]>
+  >
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FadeInUp';
@@ -178,24 +198,32 @@ export class FadeInUp
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
 
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
-          transform: [
-            { translateY: delayFunction(delay, animation(0, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
+          transform: animateTransformToValues(
+            [{ translateY: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          opacity: 0,
-          transform: [{ translateY: -25 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 0,
+          transform: pickTransformValues([{ translateY: -25 }], initialValues),
         },
         callback,
       };
@@ -213,10 +241,9 @@ export class FadeInUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
  */
 export class FadeInDown
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    transform: [TranslateY];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[TranslateY]>
+  >
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FadeInDown';
@@ -229,24 +256,32 @@ export class FadeInDown
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
 
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
-          transform: [
-            { translateY: delayFunction(delay, animation(0, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
+          transform: animateTransformToValues(
+            [{ translateY: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          opacity: 0,
-          transform: [{ translateY: 25 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 0,
+          transform: pickTransformValues([{ translateY: 25 }], initialValues),
         },
         callback,
       };
@@ -280,17 +315,20 @@ export class FadeOut
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
 
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
         },
         initialValues: {
-          opacity: 1,
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
         },
         callback,
       };
@@ -308,10 +346,9 @@ export class FadeOut
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
  */
 export class FadeOutRight
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    transform: [TranslateX];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[TranslateX]>
+  >
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FadeOutRight';
@@ -324,24 +361,32 @@ export class FadeOutRight
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
 
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
-          transform: [
-            { translateX: delayFunction(delay, animation(25, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
+          transform: animateTransformToValues(
+            [{ translateX: 25 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          opacity: 1,
-          transform: [{ translateX: 0 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: pickTransformValues([{ translateX: 0 }], initialValues),
         },
         callback,
       };
@@ -359,10 +404,9 @@ export class FadeOutRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
  */
 export class FadeOutLeft
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    transform: [TranslateX];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[TranslateX]>
+  >
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FadeOutLeft';
@@ -375,24 +419,32 @@ export class FadeOutLeft
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
 
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
-          transform: [
-            { translateX: delayFunction(delay, animation(-25, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
+          transform: animateTransformToValues(
+            [{ translateX: -25 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          opacity: 1,
-          transform: [{ translateX: 0 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: pickTransformValues([{ translateX: 0 }], initialValues),
         },
         callback,
       };
@@ -409,10 +461,9 @@ export class FadeOutLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
  */
 export class FadeOutUp
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    transform: [TranslateY];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[TranslateY]>
+  >
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FadeOutUp';
@@ -425,24 +476,32 @@ export class FadeOutUp
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
 
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
-          transform: [
-            { translateY: delayFunction(delay, animation(-25, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
+          transform: animateTransformToValues(
+            [{ translateY: -25 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          opacity: 1,
-          transform: [{ translateY: 0 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: pickTransformValues([{ translateY: 0 }], initialValues),
         },
         callback,
       };
@@ -460,10 +519,9 @@ export class FadeOutUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
  */
 export class FadeOutDown
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    transform: [TranslateY];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[TranslateY]>
+  >
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FadeOutDown';
@@ -474,26 +532,34 @@ export class FadeOutDown
     return new FadeOutDown() as InstanceType<T>;
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
 
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
-          transform: [
-            { translateY: delayFunction(delay, animation(25, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
+          transform: animateTransformToValues(
+            [{ translateY: 25 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          opacity: 1,
-          transform: [{ translateY: 0 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: pickTransformValues([{ translateY: 0 }], initialValues),
         },
         callback,
       };

@@ -624,7 +624,6 @@ function cloneError<TValue extends Error>(
   const handle = cloneInitializer({
     __init: () => {
       'worklet';
-      // eslint-disable-next-line reanimated/use-worklets-error
       const error = new Error();
       error.name = name;
       error.message = message;

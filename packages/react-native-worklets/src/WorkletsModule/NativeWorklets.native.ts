@@ -29,7 +29,9 @@ class NativeWorklets implements IWorkletsModule {
     const onRNRuntime = isRNRuntime();
     if (globalThis.__workletsModuleProxy === undefined && onRNRuntime) {
       WorkletsTurboModule?.installTurboModule(bundleModeEnabled);
-      installUnpackers(globalThis.__workletsModuleProxy);
+      if (!bundleModeEnabled) {
+        installUnpackers(globalThis.__workletsModuleProxy);
+      }
       WorkletsTurboModule?.start();
     }
     if (globalThis.__workletsModuleProxy === undefined) {
