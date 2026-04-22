@@ -21,8 +21,9 @@ export function createErrorPrefixRule<MessageId extends string>(
           const args = node.arguments;
 
           if (args.length === 0) {
-            // Empty `new Error()` is used for stack capture, not as a thrown
-            // error with a user-facing message, so the prefix doesn't apply.
+            // Empty `new Error()` may be used for stack capture or when the
+            // message/stack is assigned after construction (for example, during
+            // error cloning), so the prefix doesn't apply here.
             return;
           }
 
