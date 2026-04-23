@@ -60,6 +60,7 @@ export default function RuntimeTestsExample() {
         {
           testSuiteName: 'runtimes',
           importTest: () => {
+            require('./tests/runtimes/loggingFromWorkletRuntime.test');
             require('./tests/runtimes/createWorkletRuntime.test');
             require('./tests/runtimes/scheduleOnRN.test');
             require('./tests/runtimes/runOnUISync.test');
