@@ -577,25 +577,6 @@ void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi:
   cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
-jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
-  react_native_assert(
-      StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS") &&
-      "getSettledUpdates requires FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS static feature flag to be enabled");
-
-  // TODO(future): use unified timestamp
-  const auto currentTimestamp = getAnimationTimestamp_();
-
-  const auto lock = animatedPropsRegistry_->lock();
-
-  // TODO: fix bug when threshold difference is smaller than 1 second
-  // TODO(future): flush updates from CSS animations and CSS transitions registries
-  animatedPropsRegistry_->removeUpdatesOlderThanTimestamp(currentTimestamp - 2000); // 2 seconds
-
-  // TODO(future): find a better way to obtain timestamp for removing updates
-  // TODO(future): move removing old updates to separate method
-  return animatedPropsRegistry_->getUpdatesOlderThanTimestamp(rt, currentTimestamp - 1000); // 1 second
-}
-
 void ReanimatedModuleProxy::registerPseudoStyle(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
@@ -638,6 +619,25 @@ void ReanimatedModuleProxy::registerPseudoStyle(
 
 void ReanimatedModuleProxy::unregisterPseudoStyle(jsi::Runtime &, const jsi::Value &viewTag) {
   pseudoStylesRegistry_->remove(static_cast<Tag>(viewTag.asNumber()));
+}
+
+jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
+  react_native_assert(
+      StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS") &&
+      "getSettledUpdates requires FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS static feature flag to be enabled");
+
+  // TODO(future): use unified timestamp
+  const auto currentTimestamp = getAnimationTimestamp_();
+
+  const auto lock = animatedPropsRegistry_->lock();
+
+  // TODO: fix bug when threshold difference is smaller than 1 second
+  // TODO(future): flush updates from CSS animations and CSS transitions registries
+  animatedPropsRegistry_->removeUpdatesOlderThanTimestamp(currentTimestamp - 2000); // 2 seconds
+
+  // TODO(future): find a better way to obtain timestamp for removing updates
+  // TODO(future): move removing old updates to separate method
+  return animatedPropsRegistry_->getUpdatesOlderThanTimestamp(rt, currentTimestamp - 1000); // 1 second
 }
 
 bool ReanimatedModuleProxy::handleEvent(

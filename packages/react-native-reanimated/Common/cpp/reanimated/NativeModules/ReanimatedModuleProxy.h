@@ -118,8 +118,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
       override;
   void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) override;
 
-  jsi::Value getSettledUpdates(jsi::Runtime &rt) override;
-
   void registerPseudoStyle(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeWrapper,
@@ -128,6 +126,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
       const jsi::Value &defaultStyle,
       const jsi::Value &transitionConfig) override;
   void unregisterPseudoStyle(jsi::Runtime &rt, const jsi::Value &viewTag) override;
+
+  jsi::Value getSettledUpdates(jsi::Runtime &rt) override;
 
   void cssLoopCallback(const double /*timestampMs*/);
 
