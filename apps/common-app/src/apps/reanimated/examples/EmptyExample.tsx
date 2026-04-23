@@ -10,8 +10,9 @@ export default function EmptyExample() {
   function onPress() {
     scheduleOnUI(() => {
       'worklet';
-      scheduleOnRN(callback, 'ya nerd');
-      console.log('hello there', 'you');
+      // scheduleOnRN(callback, 'ya nerd');
+      scheduleOnRN(() => {});
+      // console.log('hello there', 'you');
     });
   }
 

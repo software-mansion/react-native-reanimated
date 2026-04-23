@@ -2,6 +2,7 @@
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
 #include <string>
@@ -102,7 +103,7 @@ std::shared_ptr<Serializable> extractSerializableOrThrow(
       auto nativeState = object.getNativeState(rt);
       return std::dynamic_pointer_cast<SerializableJSRef>(nativeState)->value();
     }
-    throw std::runtime_error("[Worklets] Attempted to extract from an Object that wasn't converted to a Serializable.");
+    throw std::runtime_error(errorMessage);
   } else if (maybeSerializableValue.isUndefined()) {
     return Serializable::undefined();
   }
@@ -254,15 +255,22 @@ jsi::Value SerializableImport::toJSValue(jsi::Runtime &rt) {
 }
 
 SerializableRemoteFunction::~SerializableRemoteFunction() {
+  // TODO: consider batching
   if (hostRuntimeId_ == RuntimeData::rnRuntimeId) {
-    // TODO: consider batching
     jsScheduler_->scheduleOnJS([id = id_](jsi::Runtime &rt) {
       auto registryProp = rt.global().getProperty(rt, "__remoteFunctionRegistry");
       auto registry = registryProp.asObject(rt);
       registry.getPropertyAsFunction(rt, "delete").callWithThis(rt, registry, jsi::Value(id));
     });
   } else {
-    // not implemented
+    auto hostWorkletRuntime = hostWorkletRuntime_.lock();
+    if (hostWorkletRuntime) {
+      hostWorkletRuntime->schedule([id = id_](jsi::Runtime &rt) {
+        auto registryProp = rt.global().getProperty(rt, "__remoteFunctionRegistry");
+        auto registry = registryProp.asObject(rt);
+        registry.getPropertyAsFunction(rt, "delete").callWithThis(rt, registry, jsi::Value(id));
+      });
+    }
   }
 }
 

@@ -8,8 +8,8 @@ export function installRemoteFunctionUnpacker() {
     remoteFunctionName: string | undefined
   ): unknown {
     const label = remoteFunctionName
-      ? `function \`${remoteFunctionName}\``
-      : 'anonymous function';
+      ? `\`${remoteFunctionName}\``
+      : 'anonymous';
 
     const fun = function remoteFunctionGuard() {
       throw new Error(`[Worklets] Tried to synchronously call a remote function ${label} on ${globalThis.__RUNTIME_NAME} runtime.

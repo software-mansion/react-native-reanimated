@@ -247,7 +247,6 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
   ...args: Args
 ): void {
   'worklet';
-  type FunDevRemote = Extract<typeof fun, DevRemoteFunction<Args, ReturnValue>>;
   if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
     // if we are already on the JS thread, we just schedule the worklet on the JS queue
     queueMicrotask(
@@ -259,14 +258,19 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
     // If `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
     // and pass the worklet as a first argument followed by original arguments.
     scheduleOnRN(runWorkletOnJS<Args, ReturnValue>, fun, ...args);
-  } else if ((fun as FunDevRemote).__remoteFunction) {
+  } else {
+    if (
+      __DEV__ &&
+      !(fun as unknown as NewRemoteFunction).__remoteFunction &&
+      !globalThis.__workletsModuleProxy.isHostFunction(fun)
+    ) {
+      throw new Error(
+        '[Worklets] It seems that you passed a locally defined function to `scheduleOnRN`. Functions defined in a different Runtime cannot be scheduled on RN Runtime. Make sure to define the function you are trying to schedule on the RN Runtime before passing it to `scheduleOnRN`.'
+      );
+    }
+
     globalThis.__workletsModuleProxy.scheduleOnRN(
       fun as unknown as NewRemoteFunction,
-      args.length > 0 ? globalThis.__serializer(args) : undefined
-    );
-  } else {
-    globalThis._scheduleHostFunctionOnJS(
-      fun as (...args: Args) => ReturnValue,
       args.length > 0 ? globalThis.__serializer(args) : undefined
     );
   }

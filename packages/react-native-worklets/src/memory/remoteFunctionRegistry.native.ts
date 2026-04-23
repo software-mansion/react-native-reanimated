@@ -3,7 +3,7 @@
 
 const remoteFunctionRegistry = new Map<number, Function>();
 
-let nextRemoteFunctionId = 1;
+export let nextRemoteFunctionId = 1;
 
 export function registerRemoteFunction(fun: Function): number {
   const id = nextRemoteFunctionId++;

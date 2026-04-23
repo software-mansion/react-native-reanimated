@@ -187,7 +187,7 @@ class SerializableHostObject : public Serializable {
 
 class SerializableHostFunction : public Serializable {
  public:
-  SerializableHostFunction(jsi::Runtime &rt, jsi::Function function)
+  SerializableHostFunction(jsi::Runtime &rt, const jsi::Function &function)
       : Serializable(ValueType::HostFunctionType),
         hostFunction_(function.getHostFunction(rt)),
         name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
@@ -244,15 +244,11 @@ class SerializableRemoteFunction : public Serializable,
   const std::weak_ptr<WorkletRuntime> hostWorkletRuntime_;
 
  public:
-  SerializableRemoteFunction(
-      jsi::Runtime &hostRuntime,
-      int remoteId,
-      RuntimeData::RuntimeId hostRuntimeId,
-      const std::shared_ptr<JSScheduler> &jsScheduler)
+  SerializableRemoteFunction(jsi::Runtime &hostRuntime, int remoteId, const std::shared_ptr<JSScheduler> &jsScheduler)
       : Serializable(ValueType::RemoteFunctionType),
         id_(remoteId),
         hostRuntime_(&hostRuntime),
-        hostRuntimeId_(hostRuntimeId),
+        hostRuntimeId_(RuntimeData::rnRuntimeId),
         jsScheduler_(jsScheduler) {}
 
   SerializableRemoteFunction(

@@ -8,7 +8,10 @@ import type { WorkletFunction, WorkletImport } from '../types';
 import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
 import { isSynchronizable } from './isSynchronizable';
-import { registerRemoteFunction } from './remoteFunctionRegistry';
+import {
+  nextRemoteFunctionId,
+  registerRemoteFunction,
+} from './remoteFunctionRegistry';
 import {
   serializableMappingCache,
   serializableMappingFlag,
@@ -184,7 +187,7 @@ export function createSerializable<TValue>(
       }
     }
     if (!isWorkletFunction(value)) {
-      return cloneAsRemoteFunction(value) as SerializableRef<TValue>;
+      return cloneNonWorkletFunction(value) as SerializableRef<TValue>;
     }
   }
   // RN has introduced a new representation of TurboModules as a JS object whose prototype is the host object
@@ -432,13 +435,17 @@ function cloneArray<T extends unknown[]>(
   return clone;
 }
 
-function cloneAsRemoteFunction<TArgs extends unknown[], TReturn>(
+function cloneNonWorkletFunction<TArgs extends unknown[], TReturn>(
   fun: (...args: TArgs) => TReturn
 ): SerializableRef<(...args: TArgs) => TReturn> {
-  const functionId = registerRemoteFunction(fun);
-  const clone = WorkletsModule.createSerializableRemoteFunction(
+  const functionId = nextRemoteFunctionId;
+  const clone = WorkletsModule.createSerializableNonWorkletFunction(
+    fun,
     functionId
   ) as SerializableRef<(...args: TArgs) => TReturn>;
+  if ((clone as Record<string, unknown>).__isRemoteFunctionRef) {
+    registerRemoteFunction(fun);
+  }
   serializableMappingCache.set(fun, clone);
   serializableMappingCache.set(clone);
 

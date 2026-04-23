@@ -85,7 +85,8 @@ export interface WorkletsModuleProxy {
 
   createSerializableInitializer(obj: object): SerializableRef<object>;
 
-  createSerializableRemoteFunction<TArgs extends unknown[], TReturn>(
+  createSerializableNonWorkletFunction<TArgs extends unknown[], TReturn>(
+    fun: (...args: TArgs) => TReturn,
     functionId: number
   ): SerializableRef<(...args: TArgs) => TReturn>;
 
@@ -117,6 +118,8 @@ export interface WorkletsModuleProxy {
     decorateHost: SerializableRef,
     decorateGuest: SerializableRef
   ): SerializableRef<TValue>;
+
+  isHostFunction(fun: unknown): boolean;
 
   scheduleOnRN<TArgs extends unknown[]>(
     serializable: NewRemoteFunction,
@@ -194,7 +197,7 @@ export interface WorkletsModuleProxy {
   getUISchedulerHolder(): object;
 }
 
-type InternalMethods = 'loadUnpackers';
+type InternalMethods = 'loadUnpackers' | 'isHostFunction';
 
 type TurboModulePublic = {
   toggleSlowAnimationsOnUIRuntime(): boolean;
