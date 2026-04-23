@@ -109,12 +109,12 @@ export interface WorkletsModuleProxy {
 
   scheduleOnUI<TValue>(
     serializable: SerializableRef<TValue>,
-    scheduleStack?: string
+    scheduleStack: string | undefined
   ): void;
 
   runOnUISync<TValue, TReturn>(
     serializable: SerializableRef<TValue>,
-    scheduleStack?: string
+    scheduleStack: string | undefined
   ): TReturn;
 
   createWorkletRuntime(
@@ -128,25 +128,25 @@ export interface WorkletsModuleProxy {
   scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
     worklet: SerializableRef<TValue>,
-    scheduleStack?: string
+    scheduleStack: string | undefined
   ): void;
 
   scheduleOnRuntimeWithId<TValue>(
     runtimeId: number,
     worklet: SerializableRef<TValue>,
-    scheduleStack?: string
+    scheduleStack: string | undefined
   ): void;
 
   runOnRuntimeSync<TValue, TReturn>(
     workletRuntime: WorkletRuntime,
     worklet: SerializableRef<TValue>,
-    scheduleStack?: string
+    scheduleStack: string | undefined
   ): TReturn;
 
   runOnRuntimeSyncWithId<TValue, TReturn>(
     runtimeId: number,
     worklet: SerializableRef<TValue>,
-    scheduleStack?: string
+    scheduleStack: string | undefined
   ): TReturn;
 
   reportFatalErrorOnJS(

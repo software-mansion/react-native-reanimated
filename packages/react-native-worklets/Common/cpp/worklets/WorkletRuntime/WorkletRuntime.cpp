@@ -251,13 +251,13 @@ void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &serializableWorkletValue,
-    std::string scheduleStack) {
+    const std::optional<std::string> &scheduleStack) {
   auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
   auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt,
       serializableWorkletValue,
       "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
-  serializableWorklet->setScheduleStack(std::move(scheduleStack));
+  serializableWorklet->setScheduleStack(scheduleStack);
   workletRuntime->schedule(serializableWorklet);
 }
 

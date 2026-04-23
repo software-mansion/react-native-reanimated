@@ -15,6 +15,7 @@
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -53,7 +54,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   std::invoke_result_t<TCallable, Args...> runSync(TCallable &&callable, Args &&...args) const;
   template <typename... Args>
   jsi::Value runSync(const jsi::Function &function, Args &&...args) const {
-    return callGuarded(function, "", std::forward<Args>(args)...);
+    return callGuarded(function, std::nullopt, std::forward<Args>(args)...);
   }
   template <typename... Args>
   jsi::Value runSync(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args) const {
@@ -167,14 +168,20 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
  private:
   template <typename... Args>
-  jsi::Value callGuarded(const jsi::Function &function, const std::string &scheduleStack, Args &&...args) const {
+  jsi::Value callGuarded(
+      const jsi::Function &function,
+      const std::optional<std::string> &scheduleStack,
+      Args &&...args) const {
     auto &rt = *runtime_;
     // We only use callGuard in debug mode, otherwise we call the provided
     // function directly. CallGuard provides a way of capturing exceptions in
     // JavaScript and propagating them to the main React Native thread such that
     // they can be presented using RN's LogBox.
 #ifndef NDEBUG
-    return getCallGuard(rt).call(rt, function, jsi::String::createFromUtf8(rt, scheduleStack), args...);
+    jsi::Value stackValue = scheduleStack.has_value()
+        ? jsi::Value(jsi::String::createFromUtf8(rt, *scheduleStack))
+        : jsi::Value::undefined();
+    return getCallGuard(rt).call(rt, function, stackValue, args...);
 #else
     return function.call(rt, args...);
 #endif // NDEBUG
@@ -204,7 +211,7 @@ void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &serializableWorkletValue,
-    std::string scheduleStack = "");
+    const std::optional<std::string> &scheduleStack = std::nullopt);
 
 /**
  * @deprecated Use `WorkletRuntime::runSync` instead.
@@ -216,7 +223,7 @@ inline jsi::Value runOnRuntimeGuarded(jsi::Runtime &rt, const jsi::Function &fun
   // JavaScript and propagating them to the main React Native thread such that
   // they can be presented using RN's LogBox.
 #ifndef NDEBUG
-  return WorkletRuntime::getCallGuard(rt).call(rt, function, jsi::String::createFromUtf8(rt, ""), args...);
+  return WorkletRuntime::getCallGuard(rt).call(rt, function, jsi::Value::undefined(), args...);
 #else
   return function.call(rt, args...);
 #endif // NDEBUG

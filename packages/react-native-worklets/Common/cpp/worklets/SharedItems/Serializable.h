@@ -6,6 +6,7 @@
 #include <jsi/jsi.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -213,16 +214,16 @@ class SerializableWorklet : public SerializableObject {
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
-  const std::string &getScheduleStack() const {
+  [[nodiscard]] const std::optional<std::string> &getScheduleStack() const {
     return scheduleStack_;
   }
 
-  void setScheduleStack(std::string scheduleStack) {
-    scheduleStack_ = std::move(scheduleStack);
+  void setScheduleStack(const std::optional<std::string> &scheduleStack) {
+    scheduleStack_ = scheduleStack;
   }
 
  private:
-  std::string scheduleStack_;
+  std::optional<std::string> scheduleStack_;
 };
 
 class SerializableImport : public Serializable {

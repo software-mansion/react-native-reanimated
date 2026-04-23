@@ -160,7 +160,6 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
       worklet(...args);
       globalThis.__callMicrotasks?.();
     }),
-    // eslint-disable-next-line reanimated/use-worklets-error
     __DEV__ ? (new Error().stack ?? '') : undefined
   );
 }
@@ -239,7 +238,6 @@ export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
       worklet(...args);
       globalThis.__callMicrotasks?.();
     }),
-    // eslint-disable-next-line reanimated/use-worklets-error
     __DEV__ ? (new Error().stack ?? '') : undefined
   );
 }
@@ -337,7 +335,6 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
       const result = worklet(...args);
       return makeShareableCloneOnUIRecursive(result);
     }),
-    // eslint-disable-next-line reanimated/use-worklets-error
     __DEV__ ? (new Error().stack ?? '') : undefined
   );
 }
@@ -388,7 +385,6 @@ export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
       const result = worklet(...args);
       return makeShareableCloneOnUIRecursive(result);
     }),
-    // eslint-disable-next-line reanimated/use-worklets-error
     __DEV__ ? (new Error().stack ?? '') : undefined
   );
 }
@@ -437,7 +433,6 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
     }
   }
 
-  // eslint-disable-next-line reanimated/use-worklets-error
   const scheduleStack = __DEV__ ? (new Error().stack ?? '') : undefined;
   return new Promise<ReturnValue>((resolve, reject) => {
     if (__DEV__) {

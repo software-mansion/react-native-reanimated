@@ -5,7 +5,7 @@ import type { RNError } from './debug/errors';
 /** Used only with debug builds. */
 export function callGuardDEV<Args extends unknown[], ReturnValue>(
   fn: (...args: Args) => ReturnValue,
-  scheduleStack: string,
+  scheduleStack: string | undefined,
   ...args: Args
 ): ReturnValue | void {
   'worklet';
@@ -27,8 +27,6 @@ export function callGuardDEV<Args extends unknown[], ReturnValue>(
         : '';
 
       const combinedStack = message + labeledWorkletFrames + scheduleFrames;
-
-      console.log(combinedStack);
 
       globalThis.__workletsModuleProxy.reportFatalErrorOnJS(
         message,
