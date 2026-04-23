@@ -24,7 +24,7 @@ namespace worklets {
 
 class WorkletRuntime;
 
-class JSIWorkletsModuleProxy : public jsi::HostObject {
+class JSIWorkletsModuleProxy {
  public:
   explicit JSIWorkletsModuleProxy(
       const bool isDevBundle,
@@ -40,11 +40,8 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
 
   JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other) = default;
 
-  ~JSIWorkletsModuleProxy() override;
-
-  std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
-
-  jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propName) override;
+  [[nodiscard]]
+  jsi::Object toOptimizedObject(jsi::Runtime &rt) const;
 
   [[nodiscard]] std::shared_ptr<MessageQueueThread> getJSQueue() const {
     return jsQueue_;
