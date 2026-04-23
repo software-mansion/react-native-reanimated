@@ -41,8 +41,11 @@ folly::dynamic CSSTransition::run(
     const CSSTransitionConfig<jsi::Value> &config,
     const folly::dynamic &lastUpdateValue,
     const double timestamp) {
+  // Update interpolators and progress providers for changed properties
   handleChangedProperties(rt, config, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
+  // Remove interpolators and progress providers for no longer transitioned props
   handleRemovedProperties(config.removedProperties);
+  // Return the first transition frame
   return update(timestamp);
 }
 
@@ -82,6 +85,7 @@ void CSSTransition::handleChangedProperties(
 
     transitionProperties_.insert(propertyName);
 
+    // Update the transition style interpolator
     const auto &valueChange = propertySettings.value;
     bool isReversed;
     if (lastUpdateValue.count(propertyName)) {
@@ -96,6 +100,8 @@ void CSSTransition::handleChangedProperties(
     // We still pass allowDiscrete to use correct threshold for interpolation between incompatible values
     // (e.g. when someone passes a keyword and a numeric value - in this case we interpolate them as discrete values)
     styleInterpolator_.setAllowDiscrete(propertyName, allowDiscrete);
+
+    // Update the transition progress provider
     progressProvider_.runProgressProvider(propertyName, propertySettings, isReversed, timestamp);
   }
 }
