@@ -6,6 +6,7 @@
 #import <reanimated/apple/RNGestureHandlerStateManager.h>
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 #import <reanimated/apple/native/SetGestureState.h>
+#import <reanimated/apple/pseudoSelectors/REAPseudoSelectorAttachQueue.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 
 #import <React/RCTComponentViewProtocol.h>
@@ -133,6 +134,22 @@ ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nod
   return forceScreenSnapshot;
 }
 
+PlatformAttachPseudoSelectorFunction makeAttachPseudoSelectorFunction(REAPseudoSelectorAttachQueue *attachQueue)
+{
+  return [attachQueue](Tag tag, PseudoSelector selector, std::function<void(bool)> callback) {
+    auto sharedCallback = std::make_shared<std::function<void(bool)>>(std::move(callback));
+    dispatch_async(
+        dispatch_get_main_queue(), ^{ [attachQueue attachTag:tag selector:selector sharedCallback:sharedCallback]; });
+  };
+}
+
+PlatformDetachPseudoSelectorFunction makeDetachPseudoSelectorFunction(REAPseudoSelectorAttachQueue *attachQueue)
+{
+  return [attachQueue](Tag tag, PseudoSelector selector) {
+    dispatch_async(dispatch_get_main_queue(), ^{ [attachQueue detachTag:tag selector:selector]; });
+  };
+}
+
 PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleRegistry, REANodesManager *nodesManager)
 {
   auto requestRender = makeRequestRender(nodesManager);
@@ -159,6 +176,11 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   auto maybeFlushUIUpdatesQueueFunction = makeMaybeFlushUIUpdatesQueueFunction(nodesManager);
 
+  REAPseudoSelectorAttachQueue *attachQueue =
+      [[REAPseudoSelectorAttachQueue alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
+  auto attachPseudoSelectorFunction = makeAttachPseudoSelectorFunction(attachQueue);
+  auto detachPseudoSelectorFunction = makeDetachPseudoSelectorFunction(attachQueue);
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       forceScreenSnapshotFunction,
@@ -170,6 +192,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUIUpdatesQueueFunction,
+      attachPseudoSelectorFunction,
+      detachPseudoSelectorFunction,
   };
   return platformDepMethodsHolder;
 }
