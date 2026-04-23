@@ -25,8 +25,11 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
   bool isEmpty() const override;
   bool hasUpdates() const;
 
-  void run(jsi::Runtime &rt, const std::shared_ptr<const ShadowNode> &shadowNode, const CSSTransitionConfig &config);
-  void run(const std::shared_ptr<const ShadowNode> &shadowNode, const CSSTransitionDynamicConfig &config);
+  void run(
+      jsi::Runtime &rt,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const CSSTransitionConfig<jsi::Value> &config);
+  void run(const std::shared_ptr<const ShadowNode> &shadowNode, const CSSTransitionConfig<folly::dynamic> &config);
   void remove(Tag viewTag) override;
 
   void update(double timestamp);

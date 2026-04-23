@@ -38,7 +38,7 @@ TransitionProperties CSSTransition::getProperties() const {
 
 folly::dynamic CSSTransition::run(
     jsi::Runtime &rt,
-    const CSSTransitionConfig &config,
+    const CSSTransitionConfig<jsi::Value> &config,
     const folly::dynamic &lastUpdateValue,
     const double timestamp) {
   handleChangedProperties(rt, config, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
@@ -47,7 +47,7 @@ folly::dynamic CSSTransition::run(
 }
 
 folly::dynamic CSSTransition::run(
-    const CSSTransitionDynamicConfig &config,
+    const CSSTransitionConfig<folly::dynamic> &config,
     const folly::dynamic &lastUpdateValue,
     const double timestamp) {
   handleChangedProperties(config, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
@@ -69,7 +69,7 @@ folly::dynamic CSSTransition::update(const double timestamp) {
 
 void CSSTransition::handleChangedProperties(
     jsi::Runtime &rt,
-    const CSSTransitionConfig &config,
+    const CSSTransitionConfig<jsi::Value> &config,
     const folly::dynamic &lastUpdateValue,
     const double timestamp) {
   for (const auto &[propertyName, propertySettings] : config.changedProperties) {
@@ -93,19 +93,15 @@ void CSSTransition::handleChangedProperties(
           styleInterpolator_.createOrUpdateInterpolator(rt, propertyName, valueChange.first, valueChange.second);
     }
 
+    // We still pass allowDiscrete to use correct threshold for interpolation between incompatible values
+    // (e.g. when someone passes a keyword and a numeric value - in this case we interpolate them as discrete values)
     styleInterpolator_.setAllowDiscrete(propertyName, allowDiscrete);
-    progressProvider_.runProgressProvider(
-        propertyName,
-        propertySettings.duration,
-        propertySettings.delay,
-        propertySettings.easingFunction,
-        isReversed,
-        timestamp);
+    progressProvider_.runProgressProvider(propertyName, propertySettings, isReversed, timestamp);
   }
 }
 
 void CSSTransition::handleChangedProperties(
-    const CSSTransitionDynamicConfig &config,
+    const CSSTransitionConfig<folly::dynamic> &config,
     const folly::dynamic &lastUpdateValue,
     const double timestamp) {
   for (const auto &[propertyName, propertySettings] : config.changedProperties) {
@@ -128,13 +124,7 @@ void CSSTransition::handleChangedProperties(
     }
 
     styleInterpolator_.setAllowDiscrete(propertyName, allowDiscrete);
-    progressProvider_.runProgressProvider(
-        propertyName,
-        propertySettings.duration,
-        propertySettings.delay,
-        propertySettings.easingFunction,
-        isReversed,
-        timestamp);
+    progressProvider_.runProgressProvider(propertyName, propertySettings, isReversed, timestamp);
   }
 }
 

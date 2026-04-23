@@ -7,12 +7,12 @@ bool getAllowDiscrete(jsi::Runtime &rt, const jsi::Object &config) {
   return config.getProperty(rt, "allowDiscrete").asBool();
 }
 
-CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config) {
+CSSTransitionConfig<jsi::Value> parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config) {
   const auto configObj = config.asObject(rt);
   const auto propertyNames = configObj.getPropertyNames(rt);
   const auto propertiesCount = propertyNames.size(rt);
 
-  CSSTransitionConfig result;
+  CSSTransitionConfig<jsi::Value> result;
 
   for (size_t i = 0; i < propertiesCount; ++i) {
     const auto propertyName = propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
@@ -29,7 +29,7 @@ CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value 
 
       result.changedProperties.emplace(
           propertyName,
-          CSSTransitionPropertySettings{
+          CSSTransitionPropertySettings<jsi::Value>{
               std::make_pair(std::move(oldValue), std::move(newValue)),
               getDuration(rt, propertySettingsObj),
               getTimingFunction(rt, propertySettingsObj),
@@ -46,8 +46,8 @@ bool getAllowDiscrete(const folly::dynamic &config) {
   return config.at("allowDiscrete").asBool();
 }
 
-CSSTransitionDynamicConfig parseCSSTransitionConfig(const folly::dynamic &config) {
-  CSSTransitionDynamicConfig result;
+CSSTransitionConfig<folly::dynamic> parseCSSTransitionConfig(const folly::dynamic &config) {
+  CSSTransitionConfig<folly::dynamic> result;
 
   if (!config.isObject()) {
     return result;
@@ -63,7 +63,7 @@ CSSTransitionDynamicConfig parseCSSTransitionConfig(const folly::dynamic &config
 
       result.changedProperties.emplace(
           propertyName,
-          CSSTransitionDynamicPropertySettings{
+          CSSTransitionPropertySettings<folly::dynamic>{
               std::make_pair(valueArray[0], valueArray[1]),
               getDuration(propertyValue),
               getTimingFunction(propertyValue),

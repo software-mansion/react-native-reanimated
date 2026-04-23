@@ -102,11 +102,10 @@ std::unordered_set<std::string> TransitionProgressProvider::getRemovedProperties
   return removedProperties_;
 }
 
+template <CSSValueType ValueType>
 void TransitionProgressProvider::runProgressProvider(
     const std::string &propertyName,
-    const double duration,
-    const double delay,
-    const EasingFunction &easingFunction,
+    const CSSTransitionPropertySettings<ValueType> &settings,
     const bool isReversed,
     const double timestamp) {
   const auto it = propertyProgressProviders_.find(propertyName);
@@ -116,18 +115,28 @@ void TransitionProgressProvider::runProgressProvider(
     progressProvider->update(timestamp);
 
     if (isReversed && progressProvider->getState() != TransitionProgressState::Finished) {
-      // Create reversing shortening progress provider for interrupted reversing transition
       propertyProgressProviders_.insert_or_assign(
-          propertyName,
-          createReversingShorteningProgressProvider(timestamp, duration, delay, easingFunction, *progressProvider));
+          propertyName, createReversingShorteningProgressProvider(timestamp, settings, *progressProvider));
       return;
     }
   }
 
-  // Create progress provider with the new settings
   propertyProgressProviders_.insert_or_assign(
-      propertyName, std::make_shared<TransitionPropertyProgressProvider>(timestamp, duration, delay, easingFunction));
+      propertyName,
+      std::make_shared<TransitionPropertyProgressProvider>(
+          timestamp, settings.duration, settings.delay, settings.easingFunction));
 }
+
+template void TransitionProgressProvider::runProgressProvider<jsi::Value>(
+    const std::string &,
+    const CSSTransitionPropertySettings<jsi::Value> &,
+    bool,
+    double);
+template void TransitionProgressProvider::runProgressProvider<folly::dynamic>(
+    const std::string &,
+    const CSSTransitionPropertySettings<folly::dynamic> &,
+    bool,
+    double);
 
 void TransitionProgressProvider::removeProperty(const std::string &propertyName) {
   propertyProgressProviders_.erase(propertyName);
@@ -154,12 +163,11 @@ void TransitionProgressProvider::update(const double timestamp) {
   }
 }
 
+template <CSSValueType ValueType>
 std::shared_ptr<TransitionPropertyProgressProvider>
 TransitionProgressProvider::createReversingShorteningProgressProvider(
     const double timestamp,
-    const double duration,
-    const double delay,
-    const EasingFunction &easingFunction,
+    const CSSTransitionPropertySettings<ValueType> &propertySettings,
     const TransitionPropertyProgressProvider &existingProgressProvider) {
   const auto oldProgress = existingProgressProvider.getKeyframeProgress(0, 1);
   const auto oldReversingShorteningFactor = existingProgressProvider.getReversingShorteningFactor();
@@ -167,10 +175,21 @@ TransitionProgressProvider::createReversingShorteningProgressProvider(
 
   return std::make_shared<TransitionPropertyProgressProvider>(
       timestamp,
-      duration * newReversingShorteningFactor,
-      delay < 0 ? newReversingShorteningFactor * delay : delay,
-      easingFunction,
+      propertySettings.duration * newReversingShorteningFactor,
+      propertySettings.delay < 0 ? newReversingShorteningFactor * propertySettings.delay : propertySettings.delay,
+      propertySettings.easingFunction,
       newReversingShorteningFactor);
 }
+
+template std::shared_ptr<TransitionPropertyProgressProvider>
+TransitionProgressProvider::createReversingShorteningProgressProvider<jsi::Value>(
+    double,
+    const CSSTransitionPropertySettings<jsi::Value> &,
+    const TransitionPropertyProgressProvider &);
+template std::shared_ptr<TransitionPropertyProgressProvider>
+TransitionProgressProvider::createReversingShorteningProgressProvider<folly::dynamic>(
+    double,
+    const CSSTransitionPropertySettings<folly::dynamic> &,
+    const TransitionPropertyProgressProvider &);
 
 } // namespace reanimated::css

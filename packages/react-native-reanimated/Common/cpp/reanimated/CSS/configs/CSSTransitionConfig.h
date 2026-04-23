@@ -4,6 +4,7 @@
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
+#include <concepts>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -11,37 +12,28 @@
 
 namespace reanimated::css {
 
+template <typename T>
+concept CSSValueType = std::same_as<T, jsi::Value> || std::same_as<T, folly::dynamic>;
+
+template <CSSValueType ValueType>
 struct CSSTransitionPropertySettings {
-  std::pair<jsi::Value, jsi::Value> value;
+  std::pair<ValueType, ValueType> value;
   double duration;
   EasingFunction easingFunction;
   double delay;
   bool allowDiscrete;
 };
 
-using CSSTransitionPropertiesSettings = std::unordered_map<std::string, CSSTransitionPropertySettings>;
+template <CSSValueType ValueType>
+using CSSTransitionPropertiesSettings = std::unordered_map<std::string, CSSTransitionPropertySettings<ValueType>>;
 
+template <CSSValueType ValueType>
 struct CSSTransitionConfig {
-  CSSTransitionPropertiesSettings changedProperties;
+  CSSTransitionPropertiesSettings<ValueType> changedProperties;
   std::vector<std::string> removedProperties;
 };
 
-struct CSSTransitionDynamicPropertySettings {
-  std::pair<folly::dynamic, folly::dynamic> value;
-  double duration;
-  EasingFunction easingFunction;
-  double delay;
-  bool allowDiscrete;
-};
-
-using CSSTransitionDynamicPropertiesSettings = std::unordered_map<std::string, CSSTransitionDynamicPropertySettings>;
-
-struct CSSTransitionDynamicConfig {
-  CSSTransitionDynamicPropertiesSettings changedProperties;
-  std::vector<std::string> removedProperties;
-};
-
-CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config);
-CSSTransitionDynamicConfig parseCSSTransitionConfig(const folly::dynamic &config);
+CSSTransitionConfig<jsi::Value> parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config);
+CSSTransitionConfig<folly::dynamic> parseCSSTransitionConfig(const folly::dynamic &config);
 
 } // namespace reanimated::css
