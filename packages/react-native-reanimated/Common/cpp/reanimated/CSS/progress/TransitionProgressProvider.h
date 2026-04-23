@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/configs/CSSTransitionConfig.h>
+#include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 #include <reanimated/CSS/progress/RawProgressProvider.h>
 #include <reanimated/CSS/utils/props.h>
@@ -56,7 +56,9 @@ class TransitionProgressProvider final {
 
   void runProgressProvider(
       const std::string &propertyName,
-      const CSSTransitionPropertySettings &settings,
+      double duration,
+      double delay,
+      const EasingFunction &easingFunction,
       bool isReversed,
       double timestamp);
   void removeProperty(const std::string &propertyName);
@@ -70,7 +72,9 @@ class TransitionProgressProvider final {
 
   std::shared_ptr<TransitionPropertyProgressProvider> createReversingShorteningProgressProvider(
       double timestamp,
-      const CSSTransitionPropertySettings &propertySettings,
+      double duration,
+      double delay,
+      const EasingFunction &easingFunction,
       const TransitionPropertyProgressProvider &existingProgressProvider);
 };
 
