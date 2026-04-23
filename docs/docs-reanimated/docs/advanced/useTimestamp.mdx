@@ -1,0 +1,61 @@
+---
+sidebar_position: 10
+---
+
+# useTimestamp
+
+`useTimestamp` lets you access the current frame timestamp as a [Shared Value](/docs/fundamentals/glossary#shared-value). It's a convenience wrapper around [`useFrameCallback`](/docs/advanced/useFrameCallback) for the common case of driving animations or shaders from the current time.
+
+## Reference
+
+```javascript
+import { useTimestamp } from 'react-native-reanimated';
+
+function App() {
+  const timestamp = useTimestamp();
+
+  // timestamp.value is the time (in ms) elapsed since
+  // the first frame. It updates on every frame.
+}
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  function useTimestamp(isActive?: boolean): SharedValue<number>;
+  ```
+</details>
+
+### Arguments
+
+#### `isActive` <Optional/>
+
+Whether the timestamp should update. Defaults to `true`.
+
+### Returns
+
+`useTimestamp` returns a [Shared Value](/docs/fundamentals/glossary#shared-value) that updates every frame with the time (in milliseconds) elapsed since the first frame after the hook was activated.
+
+## Example
+
+```javascript
+function PulsingDot({ visible }) {
+  const timestamp = useTimestamp(visible);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: 0.5 + 0.5 * Math.sin(timestamp.value / 300),
+  }));
+
+  return <Animated.View style={[styles.dot, animatedStyle]} />;
+}
+```
+
+## Remarks
+
+- Internally wraps [`useFrameCallback`](/docs/advanced/useFrameCallback).
+- For best performance, prefer to re-use a single `useTimestamp` instance (for example, by lifting it up and passing it via props or React context) instead of calling `useTimestamp` in many components.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web/>

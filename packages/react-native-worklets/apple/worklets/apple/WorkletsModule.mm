@@ -2,7 +2,6 @@
 #import <worklets/Tools/Defs.h>
 #import <worklets/Tools/ScriptBuffer.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
-#import <worklets/Tools/WorkletsJSIUtils.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #import <worklets/apple/AnimationFrameQueue.h>
 #import <worklets/apple/AssertJavaScriptQueue.h>
@@ -91,7 +90,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
     return IsJavaScriptQueue();
   };
   animationFrameQueue_ = [AnimationFrameQueue new];
-  auto runtimeBindings = [self getRuntimeBindings];
+  auto runtimeBindings = [self getRuntimeBindings:rnRuntime bundleModeEnabled:bundleModeEnabled];
 
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
       rnRuntime,
@@ -102,10 +101,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
       runtimeBindings,
       BundleModeConfig{.enabled = static_cast<bool>(bundleModeEnabled), .script = script, .sourceURL = sourceURL});
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
-  auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
-      rnRuntime, std::static_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));
   RNRuntimeWorkletDecorator::decorate(
-      rnRuntime, std::move(optimizedJsiWorkletsModuleProxy), workletsModuleProxy_->getJSLogger());
+      rnRuntime, jsiWorkletsModuleProxy->toOptimizedObject(rnRuntime), workletsModuleProxy_->getJSLogger());
 
   return @YES;
 }
@@ -159,13 +156,16 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
   return std::make_shared<const ScriptBuffer>(bigString);
 }
 
-- (std::shared_ptr<RuntimeBindings>)getRuntimeBindings
+- (std::shared_ptr<RuntimeBindings>)getRuntimeBindings:(jsi::Runtime &)rnRuntime
+                                     bundleModeEnabled:(BOOL)bundleModeEnabled
 {
   return std::make_shared<RuntimeBindings>(RuntimeBindings{
       .requestAnimationFrame = [animationFrameQueue =
                                     animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
         [animationFrameQueue requestAnimationFrame:callback];
-      }
+      },
+      .nativeLoggingHook =
+          bundleModeEnabled ? extractNativeLoggingHookFromRNRuntime(rnRuntime) : RuntimeBindings::NativeLoggingHook{}
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
       ,
       .abortRequest =

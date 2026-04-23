@@ -8,6 +8,7 @@ import {
 import {
   getMemorySafeCapturableConsole,
   setupConsole,
+  setupConsoleForwarding,
   setupSerializer,
 } from './initializers/initializers';
 import {
@@ -69,7 +70,10 @@ export function createWorkletRuntime(
   nameOrConfig?: string | WorkletRuntimeConfigInternal,
   initializer?: WorkletFunction<[], void>
 ): WorkletRuntime {
-  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
+  const runtimeBoundCapturableConsole =
+    globalThis._WORKLETS_BUNDLE_MODE_ENABLED && !__DEV__
+      ? null
+      : getMemorySafeCapturableConsole();
 
   let name: string;
   let initializerFn: (() => void) | undefined;
@@ -104,7 +108,11 @@ export function createWorkletRuntime(
       'worklet';
       setupCallGuard();
       setupSerializer();
-      setupConsole(runtimeBoundCapturableConsole);
+      if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+        setupConsole(runtimeBoundCapturableConsole!);
+      } else if (__DEV__) {
+        setupConsoleForwarding(runtimeBoundCapturableConsole!);
+      }
       if (enableEventLoop) {
         setupRunLoop(animationQueuePollingRate);
       }

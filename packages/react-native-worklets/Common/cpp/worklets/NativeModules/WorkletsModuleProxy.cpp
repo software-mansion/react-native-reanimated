@@ -5,7 +5,6 @@
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/ScriptBuffer.h>
-#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
@@ -75,9 +74,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           bundleModeConfig_,
           unpackerLoader_,
           RuntimeData::rnRuntimeId)) {
-  auto optimizedJsiWorkletsModuleProxy =
-      jsi_utils::optimizedFromHostObject(rnRuntime, std::static_pointer_cast<jsi::HostObject>(rnRuntimeProxy_));
-  RNRuntimeWorkletDecorator::decorate(rnRuntime, std::move(optimizedJsiWorkletsModuleProxy), jsLogger_);
+  RNRuntimeWorkletDecorator::decorate(rnRuntime, rnRuntimeProxy_->toOptimizedObject(rnRuntime), jsLogger_);
 }
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {

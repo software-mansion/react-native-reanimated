@@ -1,6 +1,5 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Tools/ScriptBuffer.h>
-#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
@@ -44,21 +43,11 @@ WorkletsModule::WorkletsModule(
           jsCallInvoker,
           uiScheduler,
           getIsOnJSQueueThread(),
-          std::make_shared<RuntimeBindings>(RuntimeBindings{
-              .requestAnimationFrame = getRequestAnimationFrame()
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-                  ,
-              .abortRequest = getAbortRequest(),
-              .clearCookies = getClearCookies(),
-              .sendRequest = getSendRequest()
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
-          }),
+          getRuntimeBindings(bundleModeConfig.enabled, *rnRuntime),
           bundleModeConfig)) {
   auto rnRuntimeProxy = workletsModuleProxy_->getRNRuntimeProxy();
-  auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
-      *rnRuntime_, std::static_pointer_cast<jsi::HostObject>(std::move(rnRuntimeProxy)));
   RNRuntimeWorkletDecorator::decorate(
-      *rnRuntime_, std::move(optimizedJsiWorkletsModuleProxy), workletsModuleProxy_->getJSLogger());
+      *rnRuntime_, rnRuntimeProxy->toOptimizedObject(*rnRuntime_), workletsModuleProxy_->getJSLogger());
 }
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
@@ -95,6 +84,22 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
       messageQueueThread,
       jsCallInvoker,
       uiScheduler);
+}
+
+std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(
+    const bool bundleModeEnabled,
+    jsi::Runtime &rnRuntime) {
+  return std::make_shared<RuntimeBindings>(RuntimeBindings{
+      .requestAnimationFrame = getRequestAnimationFrame(),
+      .nativeLoggingHook =
+          bundleModeEnabled ? extractNativeLoggingHookFromRNRuntime(rnRuntime) : RuntimeBindings::NativeLoggingHook{}
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
+      ,
+      .abortRequest = getAbortRequest(),
+      .clearCookies = getClearCookies(),
+      .sendRequest = getSendRequest()
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED
+  });
 }
 
 RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame() {
