@@ -63,4 +63,12 @@ EasingFunction cubicBezier(jsi::Runtime &rt, const jsi::Object &easingConfig) {
   return cubicBezier(x1, y1, x2, y2);
 }
 
+EasingFunction cubicBezier(const folly::dynamic &easingConfig) {
+  const auto x1 = easingConfig.at("x1").asDouble();
+  const auto y1 = easingConfig.at("y1").asDouble();
+  const auto x2 = easingConfig.at("x2").asDouble();
+  const auto y2 = easingConfig.at("y2").asDouble();
+  return cubicBezier(x1, y1, x2, y2);
+}
+
 } // namespace reanimated::css

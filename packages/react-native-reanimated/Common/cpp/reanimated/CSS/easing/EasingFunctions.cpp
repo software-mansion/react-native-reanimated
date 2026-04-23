@@ -66,4 +66,40 @@ EasingFunction createParametrizedEasingFunction(jsi::Runtime &rt, const jsi::Obj
   }
 }
 
+EasingFunction createEasingFunction(const folly::dynamic &easingConfig) {
+  if (easingConfig.isString()) {
+    return getPredefinedEasingFunction(easingConfig.asString());
+  } else if (easingConfig.isObject()) {
+    return createParametrizedEasingFunction(easingConfig);
+  } else {
+    throw std::runtime_error(std::string("[Reanimated] Invalid easing function"));
+  }
+}
+
+EasingFunction createParametrizedEasingFunction(const folly::dynamic &easingConfig) {
+  const auto easingName = easingConfig.at("name").asString();
+
+  if (easingName == "cubicBezier") {
+    return cubicBezier(easingConfig);
+  }
+
+  std::vector<double> pointsX;
+  std::vector<double> pointsY;
+
+  const auto &points = easingConfig.at("points");
+  for (const auto &pointObj : points) {
+    pointsX.push_back(pointObj.at("x").asDouble());
+    pointsY.push_back(pointObj.at("y").asDouble());
+  }
+
+  if (easingName == "linear") {
+    return linear(pointsX, pointsY);
+  } else if (easingName == "steps") {
+    return steps(pointsX, pointsY);
+  } else {
+    throw std::runtime_error(
+        std::string("[Reanimated] Parametrized easing function with name '" + easingName + "' is not defined."));
+  }
+}
+
 } // namespace reanimated::css
