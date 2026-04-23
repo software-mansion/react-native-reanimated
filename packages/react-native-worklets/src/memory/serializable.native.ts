@@ -3,7 +3,6 @@
 import { registerWorkletStackDetails } from '../debug/errors';
 import { jsVersion } from '../debug/jsVersion';
 import { logger } from '../debug/logger';
-import { getRuntimeId } from '../runtimeData';
 import { getRuntimeKind, RuntimeKind } from '../runtimeKind';
 import type { WorkletFunction, WorkletImport } from '../types';
 import { isWorkletFunction } from '../workletFunction';
@@ -433,15 +432,12 @@ function cloneArray<T extends unknown[]>(
   return clone;
 }
 
-const runtimeId = getRuntimeId();
-
 function cloneAsRemoteFunction<TArgs extends unknown[], TReturn>(
   fun: (...args: TArgs) => TReturn
 ): SerializableRef<(...args: TArgs) => TReturn> {
   const functionId = registerRemoteFunction(fun);
   const clone = WorkletsModule.createSerializableRemoteFunction(
-    functionId,
-    runtimeId
+    functionId
   ) as SerializableRef<(...args: TArgs) => TReturn>;
   serializableMappingCache.set(fun, clone);
   serializableMappingCache.set(clone);

@@ -163,12 +163,10 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   }
 
   createSerializableRemoteFunction<TArgs extends unknown[], TReturn>(
-    functionId: number,
-    runtimeId: number
+    functionId: number
   ): SerializableRef<(...args: TArgs) => TReturn> {
     return this.#workletsModuleProxy.createSerializableRemoteFunction(
-      functionId,
-      runtimeId
+      functionId
     );
   }
 

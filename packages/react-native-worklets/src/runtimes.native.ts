@@ -27,6 +27,12 @@ import { isWorkletFunction } from './workletFunction';
 import { WorkletsModule } from './WorkletsModule/NativeWorklets';
 
 /**
+ * The ID of the [UI Worklet
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
+ */
+export const UIRuntimeId = RuntimeKind.UI as 2;
+
+/**
  * Lets you create a new JS runtime which can be used to run worklets possibly
  * on different threads than JS or UI thread.
  *

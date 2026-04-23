@@ -29,7 +29,7 @@ class RuntimeManager {
   std::shared_ptr<WorkletRuntime> getUIRuntime();
 
   std::shared_ptr<WorkletRuntime> createWorkletRuntime(
-      std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
+      const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,
       const std::string &name,
       const std::shared_ptr<SerializableWorklet> &initializer = nullptr,
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
@@ -54,6 +54,7 @@ class RuntimeManager {
   std::map<uint64_t, std::weak_ptr<WorkletRuntime>> weakRuntimes_;
   std::shared_mutex weakRuntimesMutex_;
   std::mutex registrationMutex_;
+  const facebook::jsi::Runtime *rnRuntime_;
 };
 
 } // namespace worklets

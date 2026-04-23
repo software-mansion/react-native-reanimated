@@ -161,7 +161,8 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
     const std::shared_ptr<RuntimeBindings> &runtimeBindings,
     const BundleModeConfig &bundleModeConfig,
-    const std::shared_ptr<UnpackerLoader> &unpackerLoader)
+    const std::shared_ptr<UnpackerLoader> &unpackerLoader,
+    const RuntimeData::RuntimeId hostRuntimeId)
     : jsi::HostObject(),
       isDevBundle_(isDevBundle),
       bundleModeConfig_(bundleModeConfig),
@@ -172,7 +173,8 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
       runtimeManager_(runtimeManager),
       uiWorkletRuntime_(uiWorkletRuntime),
       runtimeBindings_(runtimeBindings),
-      unpackerLoader_(unpackerLoader) {}
+      unpackerLoader_(unpackerLoader),
+      hostRuntimeId_(hostRuntimeId) {}
 
 JSIWorkletsModuleProxy::~JSIWorkletsModuleProxy() = default;
 
@@ -399,10 +401,10 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
-        2,
-        [jsScheduler = jsScheduler_](
+        1,
+        [jsScheduler = jsScheduler_, hostRuntimeId = hostRuntimeId_](
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return makeSerializableRemoteFunction(rt, args[0].asNumber(), jsScheduler);
+          return makeSerializableRemoteFunction(rt, args[0].asNumber(), hostRuntimeId, jsScheduler);
         });
   }
 

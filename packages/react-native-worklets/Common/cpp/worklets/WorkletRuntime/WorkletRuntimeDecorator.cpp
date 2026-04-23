@@ -69,8 +69,7 @@ static inline std::vector<jsi::Value> parseArgs(
 
 void WorkletRuntimeDecorator::decorate(
     jsi::Runtime &rt,
-    const std::string &runtimeName,
-    RuntimeData::RuntimeId runtimeId,
+    const std::string &name,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const bool isDevBundle,
     jsi::Object &&jsiWorkletsModuleProxy,
@@ -82,9 +81,7 @@ void WorkletRuntimeDecorator::decorate(
 
   rt.global().setProperty(rt, "_WORKLET", true);
 
-  rt.global().setProperty(rt, RuntimeData::runtimeNameBindingName, runtimeName);
-
-  rt.global().setProperty(rt, RuntimeData::runtimeIdBindingName, static_cast<int>(runtimeId));
+  rt.global().setProperty(rt, "__RUNTIME_NAME", jsi::String::createFromAscii(rt, name));
 
   // TODO: Remove _IS_FABRIC sometime in the future
   // react-native-screens 4.9.0 depends on it

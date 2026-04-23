@@ -5,6 +5,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "worklets/WorkletRuntime/RuntimeData.h"
 
 namespace worklets {
 
@@ -36,17 +37,16 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::getUIRuntime() {
 }
 
 std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
-    std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
+    const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,
     const std::string &name,
     const std::shared_ptr<SerializableWorklet> &initializer,
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop) {
   const auto runtimeId = getNextRuntimeId();
-  const auto jsQueue = jsiWorkletsModuleProxy->getJSQueue();
+  const auto jsQueue = sourceProxy->getJSQueue();
 
   auto workletRuntime = std::make_shared<WorkletRuntime>(runtimeId, jsQueue, name, queue, enableEventLoop);
-
-  workletRuntime->init(std::move(jsiWorkletsModuleProxy));
+  workletRuntime->init(std::make_shared<JSIWorkletsModuleProxy>(*sourceProxy, runtimeId));
 
   if (initializer) {
     workletRuntime->runSync(initializer);

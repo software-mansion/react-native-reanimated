@@ -54,9 +54,9 @@ WorkletsModule::WorkletsModule(
 #endif // WORKLETS_FETCH_PREVIEW_ENABLED
           }),
           bundleModeConfig)) {
-  auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
+  auto rnRuntimeProxy = workletsModuleProxy_->getRNRuntimeProxy();
   auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
-      *rnRuntime_, std::static_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));
+      *rnRuntime_, std::static_pointer_cast<jsi::HostObject>(std::move(rnRuntimeProxy)));
   RNRuntimeWorkletDecorator::decorate(
       *rnRuntime_, std::move(optimizedJsiWorkletsModuleProxy), workletsModuleProxy_->getJSLogger());
 }

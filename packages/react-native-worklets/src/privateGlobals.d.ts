@@ -19,7 +19,6 @@ declare global {
   /** The only runtime-available require method is `__r` defined by Metro. */
   var __r: ((moduleId: number) => Record<string, unknown>) &
     Record<string, unknown>;
-  var __RUNTIME_ID: number;
   var __RUNTIME_NAME: string;
   var _toString: (value: unknown) => string;
   var __workletsModuleProxy: WorkletsModuleProxy;

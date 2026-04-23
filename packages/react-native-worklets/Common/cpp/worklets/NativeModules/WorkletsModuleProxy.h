@@ -56,7 +56,9 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
     return uiWorkletRuntime_;
   }
 
-  [[nodiscard]] std::shared_ptr<JSIWorkletsModuleProxy> createJSIWorkletsModuleProxy() const;
+  [[nodiscard]] inline const std::shared_ptr<JSIWorkletsModuleProxy> &getRNRuntimeProxy() const {
+    return rnRuntimeProxy_;
+  }
 
   [[nodiscard]] inline bool isDevBundle() const {
     return isDevBundle_;

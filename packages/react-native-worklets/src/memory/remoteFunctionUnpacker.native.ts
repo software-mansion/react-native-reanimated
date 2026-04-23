@@ -1,7 +1,5 @@
 'use strict';
 
-// import type { NewRemoteFunction } from './types';
-
 export function installRemoteFunctionUnpacker() {
   'worklet';
   'no-worklet-closure';
@@ -14,7 +12,7 @@ export function installRemoteFunctionUnpacker() {
       : 'anonymous function';
 
     const fun = function remoteFunctionGuard() {
-      throw new Error(`[Worklets] Tried to synchronously call a non-worklet ${label} on ${globalThis.__RUNTIME_NAME} Runtime (${globalThis.__RUNTIME_ID}).
+      throw new Error(`[Worklets] Tried to synchronously call a remote function ${label} on ${globalThis.__RUNTIME_NAME} runtime.
 See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
     };
 

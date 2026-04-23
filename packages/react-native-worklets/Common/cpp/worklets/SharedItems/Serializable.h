@@ -244,11 +244,15 @@ class SerializableRemoteFunction : public Serializable,
   const std::weak_ptr<WorkletRuntime> hostWorkletRuntime_;
 
  public:
-  SerializableRemoteFunction(jsi::Runtime &hostRuntime, int remoteId, const std::shared_ptr<JSScheduler> &jsScheduler)
+  SerializableRemoteFunction(
+      jsi::Runtime &hostRuntime,
+      int remoteId,
+      RuntimeData::RuntimeId hostRuntimeId,
+      const std::shared_ptr<JSScheduler> &jsScheduler)
       : Serializable(ValueType::RemoteFunctionType),
         id_(remoteId),
         hostRuntime_(&hostRuntime),
-        hostRuntimeId_(RuntimeData::rnRuntimeId),
+        hostRuntimeId_(hostRuntimeId),
         jsScheduler_(jsScheduler) {}
 
   SerializableRemoteFunction(

@@ -86,8 +86,7 @@ export interface WorkletsModuleProxy {
   createSerializableInitializer(obj: object): SerializableRef<object>;
 
   createSerializableRemoteFunction<TArgs extends unknown[], TReturn>(
-    functionId: number,
-    runtimeId: number
+    functionId: number
   ): SerializableRef<(...args: TArgs) => TReturn>;
 
   createSerializableHostFunction<TArgs extends unknown[], TReturn>(
