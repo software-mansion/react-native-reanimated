@@ -364,6 +364,7 @@ function createErrorPrefixRule(prefix, messageId) {
   var _a;
   return {
     create: function (context) {
+      var sourceCode = context.getSourceCode();
       return {
         NewExpression: function (node) {
           var _a2;
@@ -375,17 +376,6 @@ function createErrorPrefixRule(prefix, messageId) {
           }
           var args = node.arguments;
           if (args.length === 0) {
-            context.report({
-              node,
-              messageId,
-              fix: function (fixer) {
-                var closeParen = context.sourceCode.getLastToken(node);
-                return fixer.insertTextBefore(
-                  closeParen,
-                  "'".concat(prefix, "'")
-                );
-              },
-            });
             return;
           }
           var first = args[0];
@@ -432,7 +422,7 @@ function createErrorPrefixRule(prefix, messageId) {
               node,
               messageId,
               fix: function (fixer) {
-                var exprText = context.sourceCode.getText(first);
+                var exprText = sourceCode.getText(first);
                 return fixer.replaceText(
                   first,
                   '`'.concat(prefix, ' ${').concat(exprText, '}`')
