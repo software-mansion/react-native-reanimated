@@ -45,15 +45,6 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
   void remove(Tag tag);
 
  private:
-  // Defines all supported selectors and their merge priority (last = highest priority).
-  static constexpr PseudoSelector kPriorityOrder[] = {
-      PseudoSelector::FocusWithin,
-      PseudoSelector::Focus,
-      PseudoSelector::Hover,
-      PseudoSelector::Active,
-      PseudoSelector::ActiveDeepest,
-  };
-
   struct SelectorData {
     folly::dynamic selectorStyle;
     folly::dynamic defaultStyle;
@@ -67,9 +58,9 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
 
     std::map<PseudoSelector, SelectorData> selectors;
 
-    std::array<folly::dynamic, (1u << std::size(kPriorityOrder))> precomputedStyles;
+    std::array<folly::dynamic, (1u << kPseudoSelectorBits)> precomputedStyles;
 
-    uint8_t activeMask = 0;
+    PseudoSelectorMask activeMask = 0;
   };
 
   std::mutex mutex_;

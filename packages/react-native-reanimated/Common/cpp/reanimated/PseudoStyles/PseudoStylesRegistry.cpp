@@ -22,25 +22,22 @@ void PseudoStylesRegistry::setOnSelectorStateChangedFn(OnSelectorStateChangedFn 
 
 // static
 void PseudoStylesRegistry::recomputeAllStyles(TagEntry &entry) {
-  // Build merged default (last writer wins).
   folly::dynamic mergedDefault = folly::dynamic::object();
   for (const auto &[sel, data] : entry.selectors) {
-    for (const auto &[key, val] : data.defaultStyle.items()) {
-      mergedDefault[key] = val;
-    }
+    mergedDefault.update(data.defaultStyle);
   }
 
-  for (uint8_t mask = 0; mask < (1u << std::size(kPriorityOrder)); ++mask) {
+  const PseudoSelectorMask maxMask = (1u << kPseudoSelectorBits);
+
+  for (PseudoSelectorMask mask = 0; mask < maxMask; ++mask) {
     folly::dynamic style = mergedDefault;
-    for (PseudoSelector sel : kPriorityOrder) {
+
+    for (const auto &[sel, data] : entry.selectors) {
       if (mask & (1u << static_cast<int>(sel))) {
-        if (auto it = entry.selectors.find(sel); it != entry.selectors.end()) {
-          for (const auto &[key, val] : it->second.selectorStyle.items()) {
-            style[key] = val;
-          }
-        }
+        style.update(data.selectorStyle);
       }
     }
+
     entry.precomputedStyles[mask] = std::move(style);
   }
 }
@@ -54,12 +51,6 @@ void PseudoStylesRegistry::registerPseudoStyle(
     double duration,
     double delay,
     css::EasingFunction easingFn) {
-  // fprintf(
-  //     stderr,
-  //     "[PseudoStylesRegistry] registerPseudoStyle tag=%d selector=%d duration=%.0fms\n",
-  //     tag,
-  //     static_cast<int>(selector),
-  //     duration);
   {
     std::lock_guard<std::mutex> lock{mutex_};
     auto &entry = registry_[tag];
@@ -98,13 +89,6 @@ void PseudoStylesRegistry::remove(Tag tag) {
 }
 
 void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector selector, bool isActive) {
-  // fprintf(
-  //     stderr,
-  //     "[PseudoStylesRegistry] onSelectorStateChanged tag=%d selector=%d isActive=%d\n",
-  //     tag,
-  //     static_cast<int>(selector),
-  //     isActive);
-
   std::shared_ptr<const ShadowNode> shadowNode;
   folly::dynamic fromStyle, toStyle;
   double duration, delay;
@@ -113,13 +97,12 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
     std::lock_guard<std::mutex> lock{mutex_};
     auto it = registry_.find(tag);
     if (it == registry_.end()) {
-      // fprintf(stderr, "[PseudoStylesRegistry] tag=%d not found in registry!\n", tag);
       return;
     }
     TagEntry &entry = it->second;
 
-    const uint8_t oldMask = entry.activeMask;
-    const uint8_t bit = 1u << static_cast<int>(selector);
+    const PseudoSelectorMask oldMask = entry.activeMask;
+    const PseudoSelectorMask bit = 1u << static_cast<int>(selector);
     entry.activeMask = isActive ? (oldMask | bit) : (oldMask & ~bit);
 
     fromStyle = entry.precomputedStyles[oldMask];

@@ -91,7 +91,7 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
   runCSSTransition(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &transitionConfig) = 0;
   virtual void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) = 0;
 
-  // pseudo-selectors
+  // CSS pseudo-selectors
   virtual void registerPseudoStyle(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeWrapper,

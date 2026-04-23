@@ -154,8 +154,6 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
   // highest)
   // CSS transitions should be overriden by animated style animations;
   // animated style animations should be overriden by CSS animations.
-  // Pseudo-selectors override CSS transitions but are overridden by
-  // useAnimatedStyle and CSS animations.
   updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
   updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
   updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
@@ -268,7 +266,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     if (!strongThis) {
       return;
     }
-    // Schedule on the UI worklet thread where jsi::Runtime is available.
+
     scheduleOnUI(strongThis->uiScheduler_, [weakThis, shadowNode, fromStyle, toStyle, duration, delay, easingFn]() {
       auto strongThis = weakThis.lock();
       if (!strongThis) {
