@@ -20,7 +20,7 @@ struct RuntimeBindings {
   using NativeLoggingHook = jsi::HostFunctionType;
 
   const RequestAnimationFrame requestAnimationFrame;
-  NativeLoggingHook nativeLoggingHook;
+  const NativeLoggingHook nativeLoggingHook;
 
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
   using AbortRequest = std::function<void(jsi::Runtime &rt, double requestId)>;
