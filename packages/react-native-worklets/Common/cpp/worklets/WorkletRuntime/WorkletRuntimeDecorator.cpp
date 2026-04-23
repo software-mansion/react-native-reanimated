@@ -75,7 +75,7 @@ void WorkletRuntimeDecorator::decorate(
     const bool isDevBundle,
     jsi::Object &&jsiWorkletsModuleProxy,
     const std::shared_ptr<EventLoop> &eventLoop,
-    const jsi::HostFunctionType &nativeLoggingHook) {
+    const RuntimeBindings::NativeLoggingHook &nativeLoggingHook) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 

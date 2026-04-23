@@ -22,7 +22,7 @@ class WorkletRuntimeDecorator {
       const bool isDevBundle,
       jsi::Object &&jsiWorkletsModuleProxy,
       const std::shared_ptr<EventLoop> &eventLoop,
-      const jsi::HostFunctionType &nativeLoggingHook);
+      const RuntimeBindings::NativeLoggingHook &nativeLoggingHook);
 
   static void postEvaluateScript(jsi::Runtime &rt, const std::shared_ptr<RuntimeBindings> &runtimeBindings);
 

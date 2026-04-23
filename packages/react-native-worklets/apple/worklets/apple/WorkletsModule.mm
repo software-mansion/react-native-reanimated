@@ -2,7 +2,6 @@
 #import <worklets/Tools/Defs.h>
 #import <worklets/Tools/ScriptBuffer.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
-#import <worklets/WorkletRuntime/NativeLoggingHookExtractor.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #import <worklets/apple/AnimationFrameQueue.h>
 #import <worklets/apple/AssertJavaScriptQueue.h>
@@ -160,11 +159,13 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
 - (std::shared_ptr<RuntimeBindings>)getRuntimeBindings:(jsi::Runtime &)rnRuntime
                                      bundleModeEnabled:(BOOL)bundleModeEnabled
 {
-  auto runtimeBindings = std::make_shared<RuntimeBindings>(RuntimeBindings{
+  return std::make_shared<RuntimeBindings>(RuntimeBindings{
       .requestAnimationFrame = [animationFrameQueue =
                                     animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
         [animationFrameQueue requestAnimationFrame:callback];
-      }
+      },
+      .nativeLoggingHook =
+          bundleModeEnabled ? extractNativeLoggingHookFromRNRuntime(rnRuntime) : RuntimeBindings::NativeLoggingHook{}
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
       ,
       .abortRequest =
@@ -185,10 +186,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
           }
 #endif // WORKLETS_FETCH_PREVIEW_ENABLED
   });
-  if (bundleModeEnabled) {
-    runtimeBindings->nativeLoggingHook = extractNativeLoggingHookFromRNRuntime(rnRuntime);
-  }
-  return runtimeBindings;
 }
 
 @end

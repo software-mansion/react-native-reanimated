@@ -8,7 +8,7 @@ import {
 import {
   getMemorySafeCapturableConsole,
   setupConsole,
-  setupConsoleBundleModeDev,
+  setupConsoleForwarding,
   setupSerializer,
 } from './initializers/initializers';
 import {
@@ -111,7 +111,7 @@ export function createWorkletRuntime(
       if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
         setupConsole(runtimeBoundCapturableConsole!);
       } else if (__DEV__) {
-        setupConsoleBundleModeDev(runtimeBoundCapturableConsole!);
+        setupConsoleForwarding(runtimeBoundCapturableConsole!);
       }
       if (enableEventLoop) {
         setupRunLoop(animationQueuePollingRate);

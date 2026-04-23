@@ -92,9 +92,7 @@ export function setupConsole(boundCapturableConsole: typeof console) {
   };
 }
 
-export function setupConsoleBundleModeDev(
-  boundCapturableConsole: typeof console
-) {
+export function setupConsoleForwarding(boundCapturableConsole: typeof console) {
   'worklet';
 
   globalThis.nativeLoggingHook = (message: string, level: number) => {
@@ -218,7 +216,7 @@ function installRNBindingsOnUIRuntime() {
     if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
       setupConsole(runtimeBoundCapturableConsole!);
     } else if (__DEV__) {
-      setupConsoleBundleModeDev(runtimeBoundCapturableConsole!);
+      setupConsoleForwarding(runtimeBoundCapturableConsole!);
     }
 
     setupMicrotasks();

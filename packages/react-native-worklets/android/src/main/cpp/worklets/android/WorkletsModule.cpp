@@ -1,7 +1,6 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
-#include <worklets/WorkletRuntime/NativeLoggingHookExtractor.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/android/AnimationFrameCallback.h>
@@ -44,7 +43,7 @@ WorkletsModule::WorkletsModule(
           jsCallInvoker,
           uiScheduler,
           getIsOnJSQueueThread(),
-          createRuntimeBindings(bundleModeConfig.enabled, *rnRuntime),
+          getRuntimeBindings(bundleModeConfig.enabled, *rnRuntime),
           bundleModeConfig)) {
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   RNRuntimeWorkletDecorator::decorate(
@@ -87,22 +86,20 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
       uiScheduler);
 }
 
-std::shared_ptr<RuntimeBindings> WorkletsModule::createRuntimeBindings(
-    bool bundleModeEnabled,
+std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(
+    const bool bundleModeEnabled,
     jsi::Runtime &rnRuntime) {
-  auto runtimeBindings = std::make_shared<RuntimeBindings>(RuntimeBindings{
-      .requestAnimationFrame = getRequestAnimationFrame()
+  return std::make_shared<RuntimeBindings>(RuntimeBindings{
+      .requestAnimationFrame = getRequestAnimationFrame(),
+      .nativeLoggingHook =
+          bundleModeEnabled ? extractNativeLoggingHookFromRNRuntime(rnRuntime) : RuntimeBindings::NativeLoggingHook{}
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-          ,
+      ,
       .abortRequest = getAbortRequest(),
       .clearCookies = getClearCookies(),
       .sendRequest = getSendRequest()
 #endif // WORKLETS_FETCH_PREVIEW_ENABLED
   });
-  if (bundleModeEnabled) {
-    runtimeBindings->nativeLoggingHook = extractNativeLoggingHookFromRNRuntime(rnRuntime);
-  }
-  return runtimeBindings;
 }
 
 RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame() {

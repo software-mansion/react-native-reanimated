@@ -26,9 +26,9 @@ type TestCase = {
   checkIncludes?: boolean | { bundleMode: boolean; noBundleMode: boolean };
   /** In no-bundle mode console.log throws on the UI thread; the caught error message is logged instead. */
   errorsOnNoBundleMode?: boolean;
+  /** Test only runs in bundle mode (skipped otherwise). */
+  bundleModeOnly?: boolean;
 };
-
-// https://docs.swmansion.com/react-native-worklets/docs/memory/serializable
 
 // For closure
 const reanimatedModuleProxy = globalThis.__reanimatedModuleProxy;
@@ -123,20 +123,18 @@ const testCases: Record<string, TestCase> = {
       return [1, [2, [3]]];
     },
   },
-  // workletFunction: this example fails when bundle mode is off, as RN runtime does not have valueUnpacker
-  // workletFunction: {
-  //   bundleMode: '[Function: workletFn]',
-  //   noBundleMode: '{}',
-  //   checkIncludes: { bundleMode: true, noBundleMode: false },
-  //   errorsOnNoBundleMode: true,
-  //   factory: () => {
-  //     'worklet';
-  //     function workletFn() {
-  //       'worklet';
-  //     }
-  //     return workletFn;
-  //   },
-  // },
+  workletFunction: {
+    bundleModeOnly: true,
+    expected: '[Function: workletFn]',
+    checkIncludes: true,
+    factory: () => {
+      'worklet';
+      function workletFn() {
+        'worklet';
+      }
+      return workletFn;
+    },
+  },
   hostObject: {
     expected: 'registerSensor',
     checkIncludes: { bundleMode: true, noBundleMode: true },
@@ -186,7 +184,6 @@ const testCases: Record<string, TestCase> = {
       return asyncGenFn;
     },
   },
-  // Error types: bundle mode shows [ErrorName: message], no-bundle mode loses Error prototype on transfer
   error: {
     bundleMode: '[Error: oops]',
     noBundleMode: '{}',
@@ -203,7 +200,6 @@ const testCases: Record<string, TestCase> = {
       return new RangeError('out of range');
     },
   },
-  // Map loses its type on transfer, arrives as {} in both modes
   map: {
     expected: '{}',
     factory: () => {
@@ -211,7 +207,6 @@ const testCases: Record<string, TestCase> = {
       return new Map([['key', 1]]);
     },
   },
-  // Set loses its type on transfer, arrives as {} in both modes
   set: {
     expected: '{}',
     factory: () => {
@@ -219,7 +214,6 @@ const testCases: Record<string, TestCase> = {
       return new Set([1, 2]);
     },
   },
-  // Int8Array loses its type on transfer, numeric keys are enumerated as plain object properties
   int8Array: {
     expected: "{ '0': 1, '1': 2, '2': 3 }",
     factory: () => {
@@ -227,8 +221,6 @@ const testCases: Record<string, TestCase> = {
       return new Int8Array([1, 2, 3]);
     },
   },
-  // Abstractions: bundle mode shows [TypeName], no-bundle mode loses type on transfer
-  // Promise loses its type on transfer in both modes and exposes Hermes internal fields
   promise: {
     expected: '{ _x: 0, _y: 1, _z: undefined, _A: null }',
     factory: () => {
@@ -238,7 +230,6 @@ const testCases: Record<string, TestCase> = {
       });
     },
   },
-  // Date: bundle mode calls toString(), no-bundle mode loses type on transfer
   date: {
     expected: '1970',
     bundleMode: 'Thu Jan 01 1970 00:00:00 GMT+0000 (UTC)',
@@ -249,7 +240,6 @@ const testCases: Record<string, TestCase> = {
       return new Date(0);
     },
   },
-  // Special types: bundle mode has rich serialization, no-bundle mode enumerates properties
   regExp: {
     bundleMode: '/abc/gi',
     noBundleMode: '{}',
@@ -258,7 +248,6 @@ const testCases: Record<string, TestCase> = {
       return /abc/gi;
     },
   },
-  // Circular reference: bundle mode detects it, no-bundle mode throws stack overflow
   circularReference: {
     expected: '[Circular',
     checkIncludes: { bundleMode: true, noBundleMode: false },
@@ -270,7 +259,6 @@ const testCases: Record<string, TestCase> = {
       return circular;
     },
   },
-  // Getters: bundle mode exposes them as [Getter], no-bundle mode reads the value
   objectWithGetter: {
     expected: '[Getter]',
     checkIncludes: { bundleMode: true, noBundleMode: false },
@@ -330,8 +318,7 @@ const originalHook = globalThis.nativeLoggingHook;
 
 type ConsoleMethod = 'log' | 'warn' | 'error' | 'debug';
 
-// eslint-disable-next-line @typescript-eslint/require-await
-describe('loggingFromWorkletRuntime', async () => {
+describe('loggingFromWorkletRuntime', () => {
   let message = '';
 
   test('setup beforeEach and afterEach', () => {
@@ -382,7 +369,9 @@ describe('loggingFromWorkletRuntime', async () => {
     expect(workletsNativeLoggingHook !== undefined).toBe(!!isBundleMode);
   });
 
-  test.each(Object.keys(testCases))('%s serializes as expected', async key => {
+  const testKeys = Object.keys(testCases).filter(key => !testCases[key].bundleModeOnly || isBundleMode);
+
+  test.each(testKeys)('%s serializes as expected', async key => {
     const entry = testCases[key];
     const expected = entry.expected ?? entry[modeKey]!;
     const result = await captureSerializedLog(entry.factory);
