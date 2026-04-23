@@ -92,6 +92,7 @@ export function setupConsole(boundCapturableConsole: typeof console) {
   };
 }
 
+// This is only used in DEV mode in Bunde Mode, it's necessary to see the logs in metro / devtools
 export function setupConsoleForwarding(boundCapturableConsole: typeof console) {
   'worklet';
 
