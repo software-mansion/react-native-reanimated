@@ -114,8 +114,6 @@ void WorkletRuntimeDecorator::decorate(
       rt, "_log", [](jsi::Runtime &rt, const jsi::Value &value) { PlatformLogger::log(stringifyJSIValue(rt, value)); });
 
   if (nativeLoggingHook) {
-    // 2 arguments: message (string) and logLevel (number). See:
-    // https://github.com/facebook/react-native/blob/654d64655ab3e3319fdfd4bfbe1c19c0b1233ff8/packages/react-native/ReactCommon/jsitooling/react/runtime/JSRuntimeBindings.cpp
     rt.global().setProperty(
         rt,
         "nativeLoggingHook",

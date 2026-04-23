@@ -17,6 +17,7 @@ struct RuntimeBindings {
   //   jsi::Value(jsi::Runtime &rt, const jsi::Value &thisVal,
   //              const jsi::Value *args, size_t count)
   // where args[0] is the message string and args[1] is the log level (double).
+  // https://github.com/facebook/react-native/blob/654d64655ab3e3319fdfd4bfbe1c19c0b1233ff8/packages/react-native/ReactCommon/jsitooling/react/runtime/JSRuntimeBindings.cpp
   using NativeLoggingHook = jsi::HostFunctionType;
 
   const RequestAnimationFrame requestAnimationFrame;
