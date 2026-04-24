@@ -58,7 +58,7 @@ export type WorkletStackDetails = [
   columnOffset: number,
 ];
 
-export type WorkletClosure = Record<string, unknown>;
+type WorkletClosure = Record<string, unknown>;
 
 interface WorkletInitData {
   code: string;
