@@ -205,7 +205,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   AnimationMutations grandCallback(AnimationTimestamp timestamp, GrandCallbackState state);
   void executeWorkletsForFrame(AnimationTimestamp timestamp);
-  AnimationMutations collectAnimationUpdates();
+  AnimationMutations collectAnimationUpdates(AnimationTimestamp timestamp);
   AnimationMutations collectEventUpdates();
   AnimationMutations collectNonLayoutAnimationUpdates();
   AnimationMutations mutationsFromAnimatedPropsBatch(UpdatesBatchAnimatedProps &&animatedPropsBatch);

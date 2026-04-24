@@ -810,7 +810,7 @@ AnimationMutations ReanimatedModuleProxy::grandCallback(
     case GrandCallbackState::AnimationLoop: {
       executeWorkletsForFrame(timestamp);
       flushLayoutAnimationRequests();
-      AnimationMutations mutations = collectAnimationUpdates();
+      AnimationMutations mutations = collectAnimationUpdates(timestamp);
       stopBackendIfIdle(mutations);
       return mutations;
     }
@@ -836,12 +836,12 @@ void ReanimatedModuleProxy::executeWorkletsForFrame(const AnimationTimestamp tim
   cb(timestamp.count());
 }
 
-AnimationMutations ReanimatedModuleProxy::collectAnimationUpdates() {
+AnimationMutations ReanimatedModuleProxy::collectAnimationUpdates(const AnimationTimestamp timestamp) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::collectAnimationUpdates");
 
   // The non-backend CSS idle loop does not run under USE_ANIMATION_BACKEND;
-  // the backend's animation tick IS our CSS loop, so we always advance CSS here.
-  const double currentCssTimestamp = getAnimationTimestamp_();
+  // advance CSS against the AnimationBackend frame clock.
+  const double currentCssTimestamp = timestamp.count();
 
   UpdatesBatchAnimatedProps batch;
   auto lock = updatesRegistryManager_->lock();
@@ -869,7 +869,6 @@ AnimationMutations ReanimatedModuleProxy::collectAnimationUpdates() {
 AnimationMutations ReanimatedModuleProxy::collectEventUpdates() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::collectEventUpdates");
 
-  // Events only carry worklet-driven prop updates; CSS is only ticked on animation frames.
   UpdatesBatchAnimatedProps batch;
   auto lock = updatesRegistryManager_->lock();
   auto propsLock = animatedPropsRegistry_->lock();
@@ -883,8 +882,6 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
     const int emitterReactTag,
     const jsi::Value &payload,
     const GrandCallbackState state) {
-  // Run handleEvent and grandCallback inside the backend's animation tick so the
-  // mutations produced by the event are included in the same frame.
   bool handled = false;
   withAnimationBackend([&](const std::shared_ptr<AnimationBackend> &backend) {
     backend->pushAnimationMutations([&, state](AnimationTimestamp ts) {
