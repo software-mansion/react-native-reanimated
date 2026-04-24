@@ -773,11 +773,6 @@ void ReanimatedModuleProxy::startBackendIfNeeded() {
       return;
     }
     withAnimationBackend([this](const std::shared_ptr<AnimationBackend> &backend) {
-      // Defensively remove any stale registration before adding a new one.
-      // If stopBackendIfIdle's withAnimationBackend ever silently skips (expired
-      // weak_ptr), the old callback stays in backend->callbacks while
-      // isAnimationRunning_ is false, leading to duplicate firings.
-      backend->stop(callbackId_);
       callbackId_ = backend->start(
           [this](AnimationTimestamp ts) { return grandCallback(ts, GrandCallbackState::AnimationLoop); });
       isAnimationRunning_ = true;

@@ -219,7 +219,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   RequestRenderFunction requestRender_;
   volatile bool renderRequested_{false};
   bool isAnimationRunning_{false};
-  CallbackId callbackId_;
+  CallbackId callbackId_{0};
   std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
