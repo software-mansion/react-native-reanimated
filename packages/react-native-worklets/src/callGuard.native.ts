@@ -1,7 +1,5 @@
 'use strict';
 
-import type { RNError } from './debug/errors';
-
 /** Used only with debug builds. */
 export function callGuardDEV<Args extends unknown[], ReturnValue>(
   fn: (...args: Args) => ReturnValue,
@@ -12,12 +10,11 @@ export function callGuardDEV<Args extends unknown[], ReturnValue>(
     return fn(...args);
   } catch (error) {
     if (globalThis.__workletsModuleProxy) {
-      const { message, stack, name, jsEngine } = error as RNError;
+      const { message, stack, name } = error as Error;
       globalThis.__workletsModuleProxy.reportFatalErrorOnJS(
         message,
         stack ?? '',
-        name ?? 'WorkletsError',
-        jsEngine ?? 'Worklets'
+        name ?? 'WorkletsError'
       );
     } else {
       throw error;

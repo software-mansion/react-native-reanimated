@@ -108,10 +108,8 @@ inline jsi::Value reportFatalErrorOnJS(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &message,
     const std::string &stack,
-    const std::string &name,
-    const std::string &jsEngine) {
-  JSLogger::reportFatalErrorOnJS(
-      jsScheduler, JSErrorData{.message = message, .stack = stack, .name = name, .jsEngine = jsEngine});
+    const std::string &name) {
+  JSLogger::reportFatalErrorOnJS(jsScheduler, JSErrorData{.message = message, .stack = stack, .name = name});
   return jsi::Value::undefined();
 }
 
@@ -419,17 +417,16 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         workletRuntime->schedule(worklet);
       });
 
-  jsi_utils::addMethod<4>(
+  jsi_utils::addMethod<3>(
       rt,
       obj,
       "reportFatalErrorOnJS",
-      [jsScheduler = jsScheduler_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[4]) {
+      [jsScheduler = jsScheduler_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
         return reportFatalErrorOnJS(
             jsScheduler,
             /* message */ at<0>(args).asString(rt).utf8(rt),
             /* stack */ at<1>(args).asString(rt).utf8(rt),
-            /* name */ at<2>(args).asString(rt).utf8(rt),
-            /* jsEngine */ at<3>(args).asString(rt).utf8(rt));
+            /* name */ at<2>(args).asString(rt).utf8(rt));
       });
 
   jsi_utils::addMethod<1>(
