@@ -15,10 +15,15 @@ import {
   runOnRuntimeSync,
 } from 'react-native-worklets';
 
+declare global {
+  var __reportFatalRemoteError: ((error: Error, _: boolean) => void) | undefined;
+}
+
 const originalReportFatalRemoteError = globalThis.__reportFatalRemoteError;
 
 describe('Error traces from UI', () => {
-  let errorData = null;
+  let errorData: Error | null = null;
+
   const testRuntime = createWorkletRuntime({
     name: 'testRuntime',
   });
@@ -28,7 +33,8 @@ describe('Error traces from UI', () => {
     // registered inside a test case.
 
     beforeEach(() => {
-      globalThis.__reportFatalRemoteError = (a, b) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      globalThis.__reportFatalRemoteError = (a: Error, _: boolean) => {
         errorData = a;
         notify('errorReported');
       };
@@ -49,7 +55,7 @@ describe('Error traces from UI', () => {
       throw new Error();
     });
 
-    expect(errorData.stack.includes('at [UI]:')).toBe(true);
+    expect(errorData?.stack?.includes('at [UI]:')).toBe(true);
   });
 
   test('scheduleOnUI has good stack trace added', async () => {
@@ -63,8 +69,8 @@ describe('Error traces from UI', () => {
     });
 
     await waitForNotification('errorReported');
-    expect(errorData.stack.includes('at [UI]:')).toBe(true);
-    expect(errorData.stack.includes('at [UI]: functionNameA')).toBe(true);
+    expect(errorData?.stack?.includes('at [UI]:')).toBe(true);
+    expect(errorData?.stack?.includes('at [UI]: functionNameA')).toBe(true);
   });
 
   test('scheduleOnRuntime has good stack trace added', async () => {
@@ -79,8 +85,8 @@ describe('Error traces from UI', () => {
     });
 
     await waitForNotification('errorReported');
-    expect(errorData.stack.includes('at [testRuntime]:')).toBe(true);
-    expect(errorData.stack.includes('at [testRuntime]: functionNameB')).toBe(true);
+    expect(errorData?.stack?.includes('at [testRuntime]:')).toBe(true);
+    expect(errorData?.stack?.includes('at [testRuntime]: functionNameB')).toBe(true);
   });
 
   test('runOnUISync has good stack trace added', async () => {
@@ -95,8 +101,8 @@ describe('Error traces from UI', () => {
     });
 
     await waitForNotification('errorReported');
-    expect(errorData.stack.includes('at [UI]:')).toBe(true);
-    expect(errorData.stack.includes('at [UI]: functionNameC')).toBe(true);
+    expect(errorData?.stack?.includes('at [UI]:')).toBe(true);
+    expect(errorData?.stack?.includes('at [UI]: functionNameC')).toBe(true);
   });
 
   test('runOnRuntimeSync has good stack trace added', async () => {
@@ -111,7 +117,7 @@ describe('Error traces from UI', () => {
     });
 
     await waitForNotification('errorReported');
-    expect(errorData.stack.includes('at [testRuntime]:')).toBe(true);
-    expect(errorData.stack.includes('at [testRuntime]: functionNameD')).toBe(true);
+    expect(errorData?.stack?.includes('at [testRuntime]:')).toBe(true);
+    expect(errorData?.stack?.includes('at [testRuntime]: functionNameD')).toBe(true);
   });
 });
