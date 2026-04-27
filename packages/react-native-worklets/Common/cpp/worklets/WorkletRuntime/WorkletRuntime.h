@@ -168,19 +168,16 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
  private:
   template <typename... Args>
-  jsi::Value callGuarded(
-      const jsi::Function &function,
-      const std::optional<std::string> &scheduleStack,
-      Args &&...args) const {
+  jsi::Value callGuarded(const jsi::Function &function, const std::optional<std::string> &scheduleStack, Args &&...args)
+      const {
     auto &rt = *runtime_;
     // We only use callGuard in debug mode, otherwise we call the provided
     // function directly. CallGuard provides a way of capturing exceptions in
     // JavaScript and propagating them to the main React Native thread such that
     // they can be presented using RN's LogBox.
 #ifndef NDEBUG
-    jsi::Value stackValue = scheduleStack.has_value()
-        ? jsi::Value(jsi::String::createFromUtf8(rt, *scheduleStack))
-        : jsi::Value::undefined();
+    jsi::Value stackValue = scheduleStack.has_value() ? jsi::Value(jsi::String::createFromUtf8(rt, *scheduleStack))
+                                                      : jsi::Value::undefined();
     return getCallGuard(rt).call(rt, function, stackValue, args...);
 #else
     return function.call(rt, args...);
