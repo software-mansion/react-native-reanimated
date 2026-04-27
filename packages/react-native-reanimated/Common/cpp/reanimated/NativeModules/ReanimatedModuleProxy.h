@@ -209,7 +209,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<ReanimatedMountHook> mountHook_;
   std::set<SurfaceId> layoutAnimationFlushRequests_;
-  bool layoutAnimationRenderRequested_;
 
   const KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction_;
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;

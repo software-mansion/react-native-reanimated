@@ -204,18 +204,12 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
           return;
         }
         strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
+        // Wake the display link so onAnimationFrame -> performOperations runs
+        // next frame and drains layoutAnimationFlushRequests_.
+        strongThis->maybeRequestRender();
       };
 
-  auto requestLayoutAnimationRender = [weakThis = weak_from_this()](double) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-    strongThis->layoutAnimationRenderRequested_ = false;
-  };
-
-  EndLayoutAnimationFunction endLayoutAnimation = [weakThis = weak_from_this(), requestLayoutAnimationRender](
-                                                      int tag, bool shouldRemove) {
+  EndLayoutAnimationFunction endLayoutAnimation = [weakThis = weak_from_this()](int tag, bool shouldRemove) {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -223,13 +217,9 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
 
     auto surfaceId = strongThis->layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
 
-    if (!strongThis->layoutAnimationRenderRequested_) {
-      strongThis->layoutAnimationRenderRequested_ = true;
-      // if an animation has duration 0, performOperations would not get
-      // called for it so we call requestRender to have it called in the
-      // next frame
-      strongThis->requestRender_(requestLayoutAnimationRender);
-    }
+    // Always request a render — covers the duration-0 case where
+    // performOperations would not otherwise get called for this LA.
+    strongThis->maybeRequestRender();
 
     if (!surfaceId) {
       return;
