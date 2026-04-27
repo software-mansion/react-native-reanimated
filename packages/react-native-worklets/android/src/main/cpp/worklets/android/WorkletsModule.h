@@ -57,6 +57,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
     return javaPart_->getClass()->getMethod<Signature>(methodName.c_str());
   }
 
+  std::shared_ptr<RuntimeBindings> getRuntimeBindings(bool bundleModeEnabled, jsi::Runtime &rnRuntime);
+
   RuntimeBindings::RequestAnimationFrame getRequestAnimationFrame();
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
   RuntimeBindings::AbortRequest getAbortRequest();

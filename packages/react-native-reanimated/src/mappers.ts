@@ -2,7 +2,7 @@
 
 import { scheduleOnUI } from 'react-native-worklets';
 
-import { IS_JEST, IS_WEB } from './common';
+import { IS_JEST, SHOULD_BE_USE_WEB } from './common';
 import type {
   MapperOutputs,
   MapperRawInputs,
@@ -91,6 +91,8 @@ function createMapperRegistry() {
     mapperRunFinalizers.push(finalizer);
   };
 
+  let isAnyMapperDirty = false;
+
   function mapperRun() {
     if (processingMappers) {
       return;
@@ -100,11 +102,14 @@ function createMapperRegistry() {
       if (mappers.size !== sortedMappers.length) {
         updateMappersOrder();
       }
-      for (const mapper of sortedMappers) {
-        if (mapper.dirty) {
-          mapper.dirty = false;
-          mapper.worklet();
+      if (isAnyMapperDirty) {
+        for (const mapper of sortedMappers) {
+          if (mapper.dirty) {
+            mapper.dirty = false;
+            mapper.worklet();
+          }
         }
+        isAnyMapperDirty = false;
       }
     } finally {
       processingMappers = false;
@@ -116,9 +121,21 @@ function createMapperRegistry() {
     }
   }
 
+  const schedulingFunction = SHOULD_BE_USE_WEB
+    ? requestAnimationFrame
+    : globalThis.requestAnimationFrameFinalizer;
+
   function scheduledMapperRun() {
     runRequested = false;
     mapperRun();
+    if (!SHOULD_BE_USE_WEB) {
+      // We always run mappers on native.
+      schedulingFunction(scheduledMapperRun);
+    }
+  }
+
+  if (!SHOULD_BE_USE_WEB) {
+    schedulingFunction(scheduledMapperRun);
   }
 
   global.__mapperRun = mapperRun;
@@ -133,25 +150,21 @@ function createMapperRegistry() {
       // if they want to make any assertions on the effects of animations being run.
       mapperRun();
     } else if (!runRequested) {
-      if (IS_WEB) {
-        if (processingMappers) {
-          // In general, we should avoid having mappers trigger updates as this may
-          // result in unpredictable behavior. Specifically, the updated value can
-          // be read by mappers that run later in the same frame but previous mappers
-          // would access the old value. Updating mappers during the mapper-run phase
-          // breaks the order in which we should execute the mappers. However, doing
-          // that is still a possibility and there are some instances where people use
-          // the API in that way, hence we need to prevent mapper-run phase falling into
-          // an infinite loop. We do that by detecting when mapper-run is requested while
-          // we are already in mapper-run phase, and in that case we use `requestAnimationFrame`
-          // instead of `queueMicrotask` which will schedule mapper run for the next
-          // frame instead of queuing another set of updates in the same frame.
-          requestAnimationFrame(scheduledMapperRun);
-        } else {
-          queueMicrotask(scheduledMapperRun);
-        }
+      if (processingMappers) {
+        // In general, we should avoid having mappers trigger updates as this may
+        // result in unpredictable behavior. Specifically, the updated value can
+        // be read by mappers that run later in the same frame but previous mappers
+        // would access the old value. Updating mappers during the mapper-run phase
+        // breaks the order in which we should execute the mappers. However, doing
+        // that is still a possibility and there are some instances where people use
+        // the API in that way, hence we need to prevent mapper-run phase falling into
+        // an infinite loop. We do that by detecting when mapper-run is requested while
+        // we are already in mapper-run phase, and in that case we use `requestAnimationFrame`
+        // instead of `queueMicrotask` which will schedule mapper run for the next
+        // frame instead of queuing another set of updates in the same frame.
+        schedulingFunction(scheduledMapperRun);
       } else {
-        globalThis.requestAnimationFrameFinalizer(scheduledMapperRun);
+        queueMicrotask(scheduledMapperRun);
       }
       runRequested = true;
     }
@@ -198,19 +211,26 @@ function createMapperRegistry() {
       };
       mappers.set(mapper.id, mapper);
       sortedMappers = [];
+      isAnyMapperDirty = true;
       for (const sv of mapper.inputs) {
         sv.addListener(mapper.id, () => {
           mapper.dirty = true;
-          maybeRequestUpdates();
+          isAnyMapperDirty = true;
+          if (SHOULD_BE_USE_WEB) {
+            maybeRequestUpdates();
+          }
         });
       }
-      maybeRequestUpdates();
+      if (SHOULD_BE_USE_WEB) {
+        maybeRequestUpdates();
+      }
     },
     stop: (mapperID: number) => {
       const mapper = mappers.get(mapperID);
       if (mapper) {
         mappers.delete(mapper.id);
         sortedMappers = [];
+        isAnyMapperDirty = true;
         for (const sv of mapper.inputs) {
           sv.removeListener(mapper.id);
         }
