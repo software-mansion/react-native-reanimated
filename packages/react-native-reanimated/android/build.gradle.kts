@@ -135,6 +135,21 @@ val IS_REANIMATED_EXAMPLE_APP: Boolean = safeAppExtGet("isReanimatedExampleApp",
 val REANIMATED_PROFILING: Boolean = safeAppExtGet("enableReanimatedProfiling", false)?.toString()?.toBoolean() ?: false
 val REANIMATED_FEATURE_FLAGS: String = getReanimatedStaticFeatureFlags()
 
+val JS_RUNTIME: String = run {
+    System.getenv("JS_RUNTIME")?.let { return@run it }
+
+    val appProject = rootProject.allprojects.find { it.plugins.hasPlugin("com.android.application") }
+    val appExt = appProject?.extensions?.extraProperties
+    val hermesEnabled = appExt?.properties?.get("hermesEnabled")?.toString()?.toBoolean()
+        ?: (appExt?.properties?.get("react") as? Map<*, *>)?.get("enableHermes")?.let { it.toString().toBoolean() }
+        ?: false
+    if (hermesEnabled) {
+        return@run "hermes"
+    }
+
+    "jsc"
+}
+
 // Set version for prefab
 version = REANIMATED_VERSION
 
@@ -201,7 +216,8 @@ android {
                     "-DREANIMATED_PROFILING=$REANIMATED_PROFILING",
                     "-DREANIMATED_VERSION=$REANIMATED_VERSION",
                     "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
-                    "-DREANIMATED_FEATURE_FLAGS=$REANIMATED_FEATURE_FLAGS"
+                    "-DREANIMATED_FEATURE_FLAGS=$REANIMATED_FEATURE_FLAGS",
+                    "-DJS_RUNTIME=$JS_RUNTIME"
                 )
                 abiFilters.addAll(reactNativeArchitectures())
                 targets("reanimated")
@@ -365,6 +381,9 @@ dependencies {
     "implementation"("androidx.core:core:1.15.0")
     "implementation"("com.facebook.react:react-android") // version substituted by RNGP
     "implementation"("androidx.core:core-ktx:1.18.0")
+    if (JS_RUNTIME == "hermes") {
+        "implementation"("com.facebook.react:hermes-android") // version substituted by RNGP
+    }
 
     if (project == rootProject) {
         // This is needed for linting in Reanimated's repo.
