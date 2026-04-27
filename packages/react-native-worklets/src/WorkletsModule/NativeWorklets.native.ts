@@ -301,18 +301,8 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.synchronizableUnlock(synchronizableRef);
   }
 
-  reportFatalErrorOnJS(
-    message: string,
-    stack: string,
-    name: string,
-    jsEngine: string
-  ) {
-    return this.#workletsModuleProxy.reportFatalErrorOnJS(
-      message,
-      stack,
-      name,
-      jsEngine
-    );
+  reportFatalErrorOnJS(message: string, stack: string, name: string) {
+    return this.#workletsModuleProxy.reportFatalErrorOnJS(message, stack, name);
   }
 
   getStaticFeatureFlag(name: string): boolean {

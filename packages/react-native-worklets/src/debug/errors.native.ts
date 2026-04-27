@@ -45,23 +45,18 @@ function processStack(stack?: string): string | undefined {
   return result;
 }
 
-export interface RNError extends Error {
-  jsEngine: string;
-}
-
 /**
  * Remote error is an error coming from a Worklet Runtime that we bubble up to
  * the RN Runtime.
  */
 export function reportFatalRemoteError(
-  { message, stack, name, jsEngine }: RNError,
+  { message, stack, name }: Error,
   force: boolean
 ): void {
-  const error = new Error('[Worklets]') as RNError;
+  const error = new Error('[Worklets]');
   error.message = message;
   error.stack = processStack(stack);
   error.name = name;
-  error.jsEngine = jsEngine;
   if (force) {
     throw error;
   } else {

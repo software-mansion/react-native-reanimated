@@ -101,8 +101,15 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
   const auto runtimeBindings = jsiWorkletsModuleProxy->getRuntimeBindings();
   const auto bundleModeEnabled = jsiWorkletsModuleProxy->isBundleModeEnabled();
   const auto unpackerLoader = jsiWorkletsModuleProxy->getUnpackerLoader();
+  const auto &nativeLoggingHook = runtimeBindings->nativeLoggingHook;
   WorkletRuntimeDecorator::decorate(
-      rt, name_, jsScheduler, isDevBundle, jsiWorkletsModuleProxy->toOptimizedObject(rt), eventLoop_);
+      rt,
+      name_,
+      jsScheduler,
+      isDevBundle,
+      jsiWorkletsModuleProxy->toOptimizedObject(rt),
+      eventLoop_,
+      nativeLoggingHook);
 
   if (bundleModeEnabled) {
     bundleModeInit(jsScheduler, script, sourceUrl, runtimeBindings);
@@ -135,8 +142,7 @@ void WorkletRuntime::bundleModeInit(
     const auto &stack = error.getStack();
     if (!message.starts_with("[Worklets] Worklets initialized successfully")) {
       const auto newMessage = "[Worklets] Failed to initialize runtime. Reason: " + message + " " + stack;
-      JSLogger::reportFatalErrorOnJS(
-          jsScheduler, {.message = newMessage, .stack = stack, .name = "WorkletsError", .jsEngine = "Worklets"});
+      JSLogger::reportFatalErrorOnJS(jsScheduler, {.message = newMessage, .stack = stack, .name = "WorkletsError"});
       return;
     }
   }

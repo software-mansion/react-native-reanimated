@@ -1,3 +1,4 @@
+#include <jsi/jsi.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
 #include <worklets/Tools/Defs.h>
@@ -73,7 +74,8 @@ void WorkletRuntimeDecorator::decorate(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const bool isDevBundle,
     jsi::Object &&jsiWorkletsModuleProxy,
-    const std::shared_ptr<EventLoop> &eventLoop) {
+    const std::shared_ptr<EventLoop> &eventLoop,
+    const RuntimeBindings::NativeLoggingHook &nativeLoggingHook) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
@@ -110,6 +112,14 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt, "_log", [](jsi::Runtime &rt, const jsi::Value &value) { PlatformLogger::log(stringifyJSIValue(rt, value)); });
+
+  if (nativeLoggingHook) {
+    rt.global().setProperty(
+        rt,
+        "nativeLoggingHook",
+        jsi::Function::createFromHostFunction(
+            rt, jsi::PropNameID::forAscii(rt, "nativeLoggingHook"), 2, nativeLoggingHook));
+  }
 
   jsi_utils::installJsiFunction(rt, "_toString", [](jsi::Runtime &rt, const jsi::Value &value) {
     return jsi::String::createFromUtf8(rt, stringifyJSIValue(rt, value));

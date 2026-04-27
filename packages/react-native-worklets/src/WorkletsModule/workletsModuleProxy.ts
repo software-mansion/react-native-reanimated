@@ -139,12 +139,7 @@ export interface WorkletsModuleProxy {
     worklet: SerializableRef<TValue>
   ): TReturn;
 
-  reportFatalErrorOnJS(
-    message: string,
-    stack: string,
-    name: string,
-    jsEngine: string
-  ): void;
+  reportFatalErrorOnJS(message: string, stack: string, name: string): void;
 
   createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue>;
 

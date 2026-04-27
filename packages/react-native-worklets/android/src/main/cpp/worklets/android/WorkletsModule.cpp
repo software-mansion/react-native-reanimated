@@ -43,15 +43,7 @@ WorkletsModule::WorkletsModule(
           jsCallInvoker,
           uiScheduler,
           getIsOnJSQueueThread(),
-          std::make_shared<RuntimeBindings>(RuntimeBindings{
-              .requestAnimationFrame = getRequestAnimationFrame()
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-                  ,
-              .abortRequest = getAbortRequest(),
-              .clearCookies = getClearCookies(),
-              .sendRequest = getSendRequest()
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
-          }),
+          getRuntimeBindings(bundleModeConfig.enabled, *rnRuntime),
           bundleModeConfig)) {
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   RNRuntimeWorkletDecorator::decorate(
@@ -92,6 +84,22 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
       messageQueueThread,
       jsCallInvoker,
       uiScheduler);
+}
+
+std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(
+    const bool bundleModeEnabled,
+    jsi::Runtime &rnRuntime) {
+  return std::make_shared<RuntimeBindings>(RuntimeBindings{
+      .requestAnimationFrame = getRequestAnimationFrame(),
+      .nativeLoggingHook =
+          bundleModeEnabled ? extractNativeLoggingHookFromRNRuntime(rnRuntime) : RuntimeBindings::NativeLoggingHook{}
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
+      ,
+      .abortRequest = getAbortRequest(),
+      .clearCookies = getClearCookies(),
+      .sendRequest = getSendRequest()
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED
+  });
 }
 
 RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame() {
