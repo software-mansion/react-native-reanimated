@@ -1,6 +1,7 @@
 #include <reanimated/PseudoStyles/PseudoStylesRegistry.h>
 
 #include <folly/json.h>
+#include <hermes/hermes.h>
 
 #include <cstdio>
 #include <utility>
@@ -12,9 +13,11 @@ using namespace facebook::react;
 PseudoStylesRegistry::PseudoStylesRegistry(
     PlatformAttachPseudoSelectorFunction attachFn,
     PlatformDetachPseudoSelectorFunction detachFn)
-    : attachFn_(std::move(attachFn)),
+    : registryRuntime_(facebook::hermes::makeHermesRuntime()),
+      attachFn_(std::move(attachFn)),
       detachFn_(std::move(detachFn)),
-      onSelectorStateChangedFn_([](const auto &, const auto &, const auto &, double, double, const auto &) {}) {}
+      onSelectorStateChangedFn_(
+          [](jsi::Runtime &, const auto &, const auto &, const auto &, double, double, const auto &) {}) {}
 
 void PseudoStylesRegistry::setOnSelectorStateChangedFn(OnSelectorStateChangedFn fn) {
   onSelectorStateChangedFn_ = std::move(fn);
@@ -114,7 +117,7 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
     easingFn = entry.easingFn;
   }
 
-  onSelectorStateChangedFn_(shadowNode, fromStyle, toStyle, duration, delay, easingFn);
+  onSelectorStateChangedFn_(*registryRuntime_, shadowNode, fromStyle, toStyle, duration, delay, easingFn);
 }
 
 } // namespace reanimated

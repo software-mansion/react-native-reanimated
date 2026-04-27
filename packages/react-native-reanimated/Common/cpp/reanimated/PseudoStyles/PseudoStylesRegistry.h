@@ -4,6 +4,7 @@
 #include <reanimated/PseudoStyles/PseudoSelector.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
+#include <jsi/jsi.h>
 #include <react/renderer/core/ShadowNode.h>
 
 #include <folly/dynamic.h>
@@ -21,6 +22,7 @@ using namespace react;
 class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesRegistry> {
  public:
   using OnSelectorStateChangedFn = std::function<void(
+      jsi::Runtime &rt,
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const folly::dynamic &fromStyle,
       const folly::dynamic &toStyle,
@@ -65,6 +67,8 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
 
   std::mutex mutex_;
   std::unordered_map<Tag, TagEntry> registry_;
+
+  std::unique_ptr<jsi::Runtime> registryRuntime_;
 
   PlatformAttachPseudoSelectorFunction attachFn_;
   PlatformDetachPseudoSelectorFunction detachFn_;

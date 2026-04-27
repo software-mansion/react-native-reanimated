@@ -256,6 +256,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
   };
 
   pseudoStylesRegistry_->setOnSelectorStateChangedFn([weakThis = weak_from_this()](
+                                                         jsi::Runtime &rt,
                                                          const std::shared_ptr<const ShadowNode> &shadowNode,
                                                          const folly::dynamic &fromStyle,
                                                          const folly::dynamic &toStyle,
@@ -267,36 +268,36 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       return;
     }
 
-    scheduleOnUI(strongThis->uiScheduler_, [weakThis, shadowNode, fromStyle, toStyle, duration, delay, easingFn]() {
-      auto strongThis = weakThis.lock();
-      if (!strongThis) {
-        return;
-      }
-      auto &rt = getJSIRuntimeFromWorkletRuntime(strongThis->uiRuntime_);
+    scheduleOnUI(
+        strongThis->uiScheduler_, [weakThis, &rt, shadowNode, fromStyle, toStyle, duration, delay, easingFn]() {
+          auto strongThis = weakThis.lock();
+          if (!strongThis) {
+            return;
+          }
 
-      CSSTransitionConfig config;
+          CSSTransitionConfig config;
 
-      for (const auto &[propKey, toVal] : toStyle.items()) {
-        const auto propName = propKey.asString();
-        const folly::dynamic &fromVal = fromStyle.count(propName) ? fromStyle[propName] : toVal;
+          for (const auto &[propKey, toVal] : toStyle.items()) {
+            const auto propName = propKey.asString();
+            const folly::dynamic &fromVal = fromStyle.count(propName) ? fromStyle[propName] : toVal;
 
-        config.changedProperties.emplace(
-            propName,
-            CSSTransitionPropertySettings{
-                std::make_pair(jsi::valueFromDynamic(rt, fromVal), jsi::valueFromDynamic(rt, toVal)),
-                duration,
-                easingFn,
-                delay,
-                false,
-            });
-      }
+            config.changedProperties.emplace(
+                propName,
+                CSSTransitionPropertySettings{
+                    std::make_pair(jsi::valueFromDynamic(rt, fromVal), jsi::valueFromDynamic(rt, toVal)),
+                    duration,
+                    easingFn,
+                    delay,
+                    false,
+                });
+          }
 
-      {
-        auto lock = strongThis->cssTransitionsRegistry_->lock();
-        strongThis->cssTransitionsRegistry_->run(rt, shadowNode, config);
-      }
-      strongThis->maybeRunCSSLoop();
-    });
+          {
+            auto lock = strongThis->cssTransitionsRegistry_->lock();
+            strongThis->cssTransitionsRegistry_->run(rt, shadowNode, config);
+          }
+          strongThis->maybeRunCSSLoop();
+        });
   });
 
   jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
