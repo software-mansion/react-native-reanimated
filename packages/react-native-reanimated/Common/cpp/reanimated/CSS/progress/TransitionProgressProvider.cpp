@@ -104,9 +104,7 @@ std::unordered_set<std::string> TransitionProgressProvider::getRemovedProperties
 
 void TransitionProgressProvider::runProgressProvider(
     const std::string &propertyName,
-    const double duration,
-    const double delay,
-    const EasingFunction &easingFunction,
+    const CSSTransitionPropertySettings &settings,
     const bool isReversed,
     const double timestamp) {
   const auto it = propertyProgressProviders_.find(propertyName);
@@ -118,15 +116,16 @@ void TransitionProgressProvider::runProgressProvider(
     if (isReversed && progressProvider->getState() != TransitionProgressState::Finished) {
       // Create reversing shortening progress provider for interrupted reversing transition
       propertyProgressProviders_.insert_or_assign(
-          propertyName,
-          createReversingShorteningProgressProvider(timestamp, duration, delay, easingFunction, *progressProvider));
+          propertyName, createReversingShorteningProgressProvider(timestamp, settings, *progressProvider));
       return;
     }
   }
 
   // Create progress provider with the new settings
   propertyProgressProviders_.insert_or_assign(
-      propertyName, std::make_shared<TransitionPropertyProgressProvider>(timestamp, duration, delay, easingFunction));
+      propertyName,
+      std::make_shared<TransitionPropertyProgressProvider>(
+          timestamp, settings.duration, settings.delay, settings.easingFunction));
 }
 
 void TransitionProgressProvider::removeProperty(const std::string &propertyName) {
@@ -157,9 +156,7 @@ void TransitionProgressProvider::update(const double timestamp) {
 std::shared_ptr<TransitionPropertyProgressProvider>
 TransitionProgressProvider::createReversingShorteningProgressProvider(
     const double timestamp,
-    const double duration,
-    const double delay,
-    const EasingFunction &easingFunction,
+    const CSSTransitionPropertySettings &propertySettings,
     const TransitionPropertyProgressProvider &existingProgressProvider) {
   const auto oldProgress = existingProgressProvider.getKeyframeProgress(0, 1);
   const auto oldReversingShorteningFactor = existingProgressProvider.getReversingShorteningFactor();
@@ -167,9 +164,9 @@ TransitionProgressProvider::createReversingShorteningProgressProvider(
 
   return std::make_shared<TransitionPropertyProgressProvider>(
       timestamp,
-      duration * newReversingShorteningFactor,
-      delay < 0 ? newReversingShorteningFactor * delay : delay,
-      easingFunction,
+      propertySettings.duration * newReversingShorteningFactor,
+      propertySettings.delay < 0 ? newReversingShorteningFactor * propertySettings.delay : propertySettings.delay,
+      propertySettings.easingFunction,
       newReversingShorteningFactor);
 }
 

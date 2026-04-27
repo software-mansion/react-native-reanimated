@@ -42,26 +42,6 @@ void CSSTransitionsRegistry::run(
   updateInUpdatesRegistry(transition, initialUpdate);
 }
 
-void CSSTransitionsRegistry::run(
-    const std::shared_ptr<const ShadowNode> &shadowNode,
-    const CSSTransitionDynamicConfig &config) {
-  const auto viewTag = shadowNode->getTag();
-
-  if (!registry_.contains(viewTag)) {
-    auto transition = std::make_shared<CSSTransition>(shadowNode, viewStylesRepository_);
-    registry_.insert({viewTag, transition});
-  }
-
-  const auto &transition = registry_.at(viewTag);
-  const auto &lastUpdates = getUpdatesFromRegistry(shadowNode->getTag());
-  const auto timestamp = getCurrentTimestamp_();
-
-  auto initialUpdate = transition->run(config, lastUpdates, timestamp);
-
-  scheduleOrActivateTransition(transition);
-  updateInUpdatesRegistry(transition, initialUpdate);
-}
-
 void CSSTransitionsRegistry::remove(const Tag viewTag) {
   removeFromUpdatesRegistry(viewTag);
   delayedTransitionsManager_.remove(viewTag);

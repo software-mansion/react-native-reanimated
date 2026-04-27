@@ -42,38 +42,4 @@ CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value 
   return result;
 }
 
-bool getAllowDiscrete(const folly::dynamic &config) {
-  return config.at("allowDiscrete").asBool();
-}
-
-CSSTransitionDynamicConfig parseCSSTransitionConfig(const folly::dynamic &config) {
-  CSSTransitionDynamicConfig result;
-
-  if (!config.isObject()) {
-    return result;
-  }
-
-  for (const auto &[keyDyn, propertyValue] : config.items()) {
-    const auto propertyName = keyDyn.asString();
-
-    if (propertyValue.isNull()) {
-      result.removedProperties.emplace_back(propertyName);
-    } else {
-      const auto &valueArray = propertyValue.at("value");
-
-      result.changedProperties.emplace(
-          propertyName,
-          CSSTransitionDynamicPropertySettings{
-              std::make_pair(valueArray[0], valueArray[1]),
-              getDuration(propertyValue),
-              getTimingFunction(propertyValue),
-              getDelay(propertyValue),
-              getAllowDiscrete(propertyValue),
-          });
-    }
-  }
-
-  return result;
-}
-
 } // namespace reanimated::css

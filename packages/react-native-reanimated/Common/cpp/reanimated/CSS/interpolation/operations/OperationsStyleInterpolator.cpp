@@ -119,20 +119,6 @@ bool OperationsStyleInterpolator::updateKeyframes(
   return equalsReversingAdjustedStartValue;
 }
 
-bool OperationsStyleInterpolator::updateKeyframes(const folly::dynamic &fromValue, const folly::dynamic &toValue) {
-  const auto fromOperations = parseStyleOperations(fromValue);
-  const auto toOperations = parseStyleOperations(toValue);
-
-  const auto equalsReversingAdjustedStartValue = areStyleOperationsEqual(toOperations, reversingAdjustedStartValue_);
-  reversingAdjustedStartValue_ = keyframes_.empty() ? fromOperations : keyframes_[0]->toOperations;
-
-  keyframes_.clear();
-  keyframes_.reserve(1);
-  keyframes_.emplace_back(createStyleOperationsKeyframe(0, 1, fromOperations, toOperations));
-
-  return equalsReversingAdjustedStartValue;
-}
-
 std::optional<StyleOperations> OperationsStyleInterpolator::parseStyleOperations(
     jsi::Runtime &rt,
     const jsi::Value &values) const {

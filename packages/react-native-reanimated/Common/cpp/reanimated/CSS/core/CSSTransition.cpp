@@ -41,17 +41,11 @@ folly::dynamic CSSTransition::run(
     const CSSTransitionConfig &config,
     const folly::dynamic &lastUpdateValue,
     const double timestamp) {
+  // Update interpolators and progress providers for changed properties
   handleChangedProperties(rt, config, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
-  handleRemovedProperties(config.removedProperties);
-  return update(timestamp);
-}
-
-folly::dynamic CSSTransition::run(
-    const CSSTransitionDynamicConfig &config,
-    const folly::dynamic &lastUpdateValue,
-    const double timestamp) {
-  handleChangedProperties(config, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
-  handleRemovedProperties(config.removedProperties);
+  // Remove interpolators and progress providers for no longer transitioned props
+  handleRemovedProperties(config);
+  // Return the first transition frame
   return update(timestamp);
 }
 
@@ -72,6 +66,8 @@ void CSSTransition::handleChangedProperties(
     const CSSTransitionConfig &config,
     const folly::dynamic &lastUpdateValue,
     const double timestamp) {
+  const auto null = folly::dynamic();
+
   for (const auto &[propertyName, propertySettings] : config.changedProperties) {
     const auto allowDiscrete = propertySettings.allowDiscrete;
 
@@ -82,7 +78,9 @@ void CSSTransition::handleChangedProperties(
 
     transitionProperties_.insert(propertyName);
 
+    // Update the transition style interpolator
     const auto &valueChange = propertySettings.value;
+
     bool isReversed;
     if (lastUpdateValue.count(propertyName)) {
       // TODO - get rid of lastValue dynamic in the future
@@ -93,53 +91,17 @@ void CSSTransition::handleChangedProperties(
           styleInterpolator_.createOrUpdateInterpolator(rt, propertyName, valueChange.first, valueChange.second);
     }
 
+    // We still pass allowDiscrete to use correct threshold for interpolation between incompatible values
+    // (e.g. when someone passes a keyword and a numeric value - in this case we interpolate them as discrete values)
     styleInterpolator_.setAllowDiscrete(propertyName, allowDiscrete);
-    progressProvider_.runProgressProvider(
-        propertyName,
-        propertySettings.duration,
-        propertySettings.delay,
-        propertySettings.easingFunction,
-        isReversed,
-        timestamp);
+
+    // Update the transition progress provider
+    progressProvider_.runProgressProvider(propertyName, propertySettings, isReversed, timestamp);
   }
 }
 
-void CSSTransition::handleChangedProperties(
-    const CSSTransitionDynamicConfig &config,
-    const folly::dynamic &lastUpdateValue,
-    const double timestamp) {
-  for (const auto &[propertyName, propertySettings] : config.changedProperties) {
-    const auto allowDiscrete = propertySettings.allowDiscrete;
-
-    if (!allowDiscrete && isDiscreteProperty(propertyName, shadowNode_->getComponentName())) {
-      removeProperty(propertyName);
-      continue;
-    }
-
-    transitionProperties_.insert(propertyName);
-
-    const auto &valueChange = propertySettings.value;
-    bool isReversed;
-    if (lastUpdateValue.count(propertyName)) {
-      isReversed = styleInterpolator_.createOrUpdateInterpolator(
-          propertyName, lastUpdateValue.at(propertyName), valueChange.second);
-    } else {
-      isReversed = styleInterpolator_.createOrUpdateInterpolator(propertyName, valueChange.first, valueChange.second);
-    }
-
-    styleInterpolator_.setAllowDiscrete(propertyName, allowDiscrete);
-    progressProvider_.runProgressProvider(
-        propertyName,
-        propertySettings.duration,
-        propertySettings.delay,
-        propertySettings.easingFunction,
-        isReversed,
-        timestamp);
-  }
-}
-
-void CSSTransition::handleRemovedProperties(const std::vector<std::string> &removedProperties) {
-  for (const auto &propertyName : removedProperties) {
+void CSSTransition::handleRemovedProperties(const CSSTransitionConfig &config) {
+  for (const auto &propertyName : config.removedProperties) {
     removeProperty(propertyName);
   }
 }

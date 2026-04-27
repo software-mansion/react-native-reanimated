@@ -26,7 +26,6 @@ class CSSTransition {
 
   folly::dynamic
   run(jsi::Runtime &rt, const CSSTransitionConfig &config, const folly::dynamic &lastUpdateValue, double timestamp);
-  folly::dynamic run(const CSSTransitionDynamicConfig &config, const folly::dynamic &lastUpdateValue, double timestamp);
   folly::dynamic update(double timestamp);
 
  private:
@@ -41,11 +40,7 @@ class CSSTransition {
       const CSSTransitionConfig &config,
       const folly::dynamic &lastUpdateValue,
       double timestamp);
-  void handleChangedProperties(
-      const CSSTransitionDynamicConfig &config,
-      const folly::dynamic &lastUpdateValue,
-      double timestamp);
-  void handleRemovedProperties(const std::vector<std::string> &removedProperties);
+  void handleRemovedProperties(const CSSTransitionConfig &config);
   void removeProperty(const std::string &propertyName);
 };
 
