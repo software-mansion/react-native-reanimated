@@ -203,7 +203,10 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
         if (!surfaceId) {
           return;
         }
-        strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
+        {
+          std::lock_guard<std::mutex> lock(strongThis->flushRequestsMutex_);
+          strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
+        }
       };
 
   auto requestLayoutAnimationRender = [weakThis = weak_from_this()](double) {
@@ -234,6 +237,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     if (!surfaceId) {
       return;
     }
+    std::lock_guard<std::mutex> lock(strongThis->flushRequestsMutex_);
     strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
   };
 
@@ -675,7 +679,13 @@ double ReanimatedModuleProxy::getCssTimestamp() {
 void ReanimatedModuleProxy::performOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
-  auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
+  // Drain layoutAnimationFlushRequests_ under the mutex.
+  // See https://github.com/software-mansion/react-native-reanimated/issues/9293
+  std::set<SurfaceId> flushRequestsCopy;
+  {
+    std::lock_guard<std::mutex> lock(flushRequestsMutex_);
+    flushRequestsCopy.swap(layoutAnimationFlushRequests_);
+  }
   for (const auto surfaceId : flushRequestsCopy) {
     uiManager_->getShadowTreeRegistry().visit(
         surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
