@@ -170,6 +170,10 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     }
 
     const auto timestamp = strongThis->getAnimationTimestamp_();
+    // Hold the registry mutex while update() mutates updatesBatch_ /
+    // timestampMap_; performOperations() on the main thread races otherwise.
+    // See https://github.com/software-mansion/react-native-reanimated/issues/9303
+    const auto lock = strongThis->animatedPropsRegistry_->lock();
     strongThis->animatedPropsRegistry_->update(rt, operations, timestamp);
   };
 
