@@ -128,25 +128,25 @@ export interface WorkletsModuleProxy {
   scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
     worklet: SerializableRef<TValue>,
-    scheduleStack: string | undefined
+    scheduleStack?: string
   ): void;
 
   scheduleOnRuntimeWithId<TValue>(
     runtimeId: number,
     worklet: SerializableRef<TValue>,
-    scheduleStack: string | undefined
+    scheduleStack?: string
   ): void;
 
   runOnRuntimeSync<TValue, TReturn>(
     workletRuntime: WorkletRuntime,
     worklet: SerializableRef<TValue>,
-    scheduleStack: string | undefined
+    scheduleStack?: string
   ): TReturn;
 
   runOnRuntimeSyncWithId<TValue, TReturn>(
     runtimeId: number,
     worklet: SerializableRef<TValue>,
-    scheduleStack: string | undefined
+    scheduleStack?: string
   ): TReturn;
 
   reportFatalErrorOnJS(
