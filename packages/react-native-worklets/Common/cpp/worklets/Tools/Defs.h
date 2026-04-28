@@ -4,7 +4,7 @@
 #define JS_RUNTIME_HERMES 1
 #endif
 
-#if REACT_NATIVE_MINOR_VERSION >= 84
+#if REACT_NATIVE_VERSION_MINOR >= 84
 #include <cxxreact/JSBigString.h>
 namespace worklets {
 using JSBigStringBuffer = facebook::react::JSBigString;
@@ -14,4 +14,4 @@ using JSBigStringBuffer = facebook::react::JSBigString;
 namespace worklets {
 using JSBigStringBuffer = facebook::react::BigStringBuffer;
 }
-#endif // REACT_NATIVE_MINOR_VERSION >= 84
+#endif // REACT_NATIVE_VERSION_MINOR >= 84
