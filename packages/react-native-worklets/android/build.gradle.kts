@@ -135,7 +135,6 @@ val featureFlags = getStaticFeatureFlags()
 
 val packageDir: File = project.projectDir.parentFile
 val reactNativeRootDir: File = resolveReactNativeDirectory()
-val REACT_NATIVE_MINOR_VERSION: Int = getReactNativeMinorVersion()
 val REACT_NATIVE_VERSION: String = getReactNativeVersion()
 val WORKLETS_VERSION: String = getWorkletsVersion()
 val IS_NEW_ARCHITECTURE_ENABLED: Boolean = isNewArchitectureEnabled()
@@ -216,14 +215,12 @@ android {
         buildConfigField("boolean", "WORKLETS_PROFILING", WORKLETS_PROFILING.toString())
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
-        buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
 
         @Suppress("UnstableApiUsage")
         externalNativeBuild {
             cmake {
                 arguments(
                     "-DANDROID_STL=c++_shared",
-                    "-DREACT_NATIVE_MINOR_VERSION=$REACT_NATIVE_MINOR_VERSION",
                     "-DANDROID_TOOLCHAIN=clang",
                     "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
                     "-DJS_RUNTIME=$JS_RUNTIME",
