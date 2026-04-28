@@ -255,21 +255,19 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     return strongThis->obtainProp(rt, shadowNodeWrapper, propName);
   };
 
-  pseudoStylesRegistry_->setOnSelectorStateChangedFn([weakThis = weak_from_this()](
-                                                         jsi::Runtime &rt,
-                                                         const std::shared_ptr<const ShadowNode> &shadowNode,
-                                                         const folly::dynamic &fromStyle,
-                                                         const folly::dynamic &toStyle,
-                                                         double duration,
-                                                         double delay,
-                                                         const css::EasingFunction &easingFn) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
+  pseudoStylesRegistry_->setOnSelectorStateChangedFn(
+      [weakThis = weak_from_this()](
+          jsi::Runtime &rt,
+          const std::shared_ptr<const ShadowNode> &shadowNode,
+          const folly::dynamic &fromStyle,
+          const folly::dynamic &toStyle,
+          const PseudoStylesRegistry::PseudoTransitionConfig &transitionConfig) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
 
-    scheduleOnUI(
-        strongThis->uiScheduler_, [weakThis, &rt, shadowNode, fromStyle, toStyle, duration, delay, easingFn]() {
+        scheduleOnUI(strongThis->uiScheduler_, [weakThis, &rt, shadowNode, fromStyle, toStyle, transitionConfig]() {
           auto strongThis = weakThis.lock();
           if (!strongThis) {
             return;
@@ -285,9 +283,9 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
                 propName,
                 CSSTransitionPropertySettings{
                     std::make_pair(jsi::valueFromDynamic(rt, fromVal), jsi::valueFromDynamic(rt, toVal)),
-                    duration,
-                    easingFn,
-                    delay,
+                    transitionConfig.duration,
+                    transitionConfig.easingFn,
+                    transitionConfig.delay,
                     false,
                 });
           }
@@ -298,7 +296,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
           }
           strongThis->maybeRunCSSLoop();
         });
-  });
+      });
 
   jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   UIRuntimeDecorator::decorate(
@@ -579,41 +577,43 @@ void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi:
 void ReanimatedModuleProxy::registerPseudoStyle(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
-    const jsi::Value &selector,
-    const jsi::Value &selectorStyle,
-    const jsi::Value &defaultStyle,
-    const jsi::Value &transitionConfig) {
+    const jsi::Value &config) {
   const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto tag = shadowNode->getTag();
-  const auto selectorStr = stringFromValue(rt, selector);
+  const auto configObj = config.asObject(rt);
+
+  const auto selectorStr = stringFromValue(rt, configObj.getProperty(rt, "selector"));
   const auto selectorEnum = pseudoSelectorFromString(selectorStr);
   if (!selectorEnum) {
     return;
   }
-  const auto selectorStyleDyn = jsi::dynamicFromValue(rt, selectorStyle);
-  const auto defaultStyleDyn = jsi::dynamicFromValue(rt, defaultStyle);
+  const auto selectorStyleDyn = jsi::dynamicFromValue(rt, configObj.getProperty(rt, "selectorStyle"));
+  const auto defaultStyleDyn = jsi::dynamicFromValue(rt, configObj.getProperty(rt, "defaultStyle"));
 
-  double duration = 0;
-  double delay = 0;
-  css::EasingFunction easingFn = css::getPredefinedEasingFunction("ease");
-  if (transitionConfig.isObject()) {
-    auto configObj = transitionConfig.asObject(rt);
-    auto durationProp = configObj.getProperty(rt, "duration");
+  PseudoStylesRegistry::PseudoTransitionConfig transitionConfig{
+      .duration = 0,
+      .delay = 0,
+      .easingFn = css::getPredefinedEasingFunction("ease"),
+  };
+  auto transitionProp = configObj.getProperty(rt, "transition");
+  if (transitionProp.isObject()) {
+    auto transitionObj = transitionProp.asObject(rt);
+    auto durationProp = transitionObj.getProperty(rt, "duration");
     if (durationProp.isNumber()) {
-      duration = durationProp.asNumber();
+      transitionConfig.duration = durationProp.asNumber();
     }
-    auto delayProp = configObj.getProperty(rt, "delay");
+    auto delayProp = transitionObj.getProperty(rt, "delay");
     if (delayProp.isNumber()) {
-      delay = delayProp.asNumber();
+      transitionConfig.delay = delayProp.asNumber();
     }
-    auto timingFunctionProp = configObj.getProperty(rt, "timingFunction");
+    auto timingFunctionProp = transitionObj.getProperty(rt, "timingFunction");
     if (!timingFunctionProp.isUndefined() && !timingFunctionProp.isNull()) {
-      easingFn = css::createEasingFunction(rt, timingFunctionProp);
+      transitionConfig.easingFn = css::createEasingFunction(rt, timingFunctionProp);
     }
   }
 
   pseudoStylesRegistry_->registerPseudoStyle(
-      tag, shadowNode, *selectorEnum, selectorStyleDyn, defaultStyleDyn, duration, delay, std::move(easingFn));
+      tag, shadowNode, *selectorEnum, selectorStyleDyn, defaultStyleDyn, std::move(transitionConfig));
 }
 
 void ReanimatedModuleProxy::unregisterPseudoStyle(jsi::Runtime &, const jsi::Value &viewTag) {

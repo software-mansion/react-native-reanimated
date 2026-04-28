@@ -190,18 +190,17 @@ export default class AnimatedComponent<
         ? transitionProperties.transitionTimingFunction[0]
         : transitionProperties?.transitionTimingFunction
     );
-    const transitionConfig = { duration, delay, timingFunction };
+    const transition = { duration, delay, timingFunction };
 
     for (const [selector, { selectorStyle, defaultStyle }] of Object.entries(
       pseudoStylesBySelector
     )) {
-      ReanimatedModule.registerPseudoStyle(
-        shadowNodeWrapper,
+      ReanimatedModule.registerPseudoStyle(shadowNodeWrapper, {
         selector,
-        stylePropsBuilder.build(selectorStyle),
-        stylePropsBuilder.build(defaultStyle),
-        transitionConfig
-      );
+        selectorStyle: stylePropsBuilder.build(selectorStyle),
+        defaultStyle: stylePropsBuilder.build(defaultStyle),
+        transition,
+      });
     }
     this._pseudoStylesRegistered = true;
   }

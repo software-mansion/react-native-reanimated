@@ -245,18 +245,9 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   registerPseudoStyle(
     shadowNodeWrapper: ShadowNodeWrapper,
-    selector: string,
-    selectorStyle: StyleProps,
-    defaultStyle: StyleProps,
-    transitionConfig: { duration?: number; delay?: number }
+    config: Parameters<ReanimatedModuleProxy['registerPseudoStyle']>[1]
   ) {
-    this.#reanimatedModuleProxy.registerPseudoStyle(
-      shadowNodeWrapper,
-      selector,
-      selectorStyle,
-      defaultStyle,
-      transitionConfig
-    );
+    this.#reanimatedModuleProxy.registerPseudoStyle(shadowNodeWrapper, config);
   }
 
   unregisterPseudoStyle(viewTag: number) {

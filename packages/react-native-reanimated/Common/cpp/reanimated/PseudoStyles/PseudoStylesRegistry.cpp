@@ -16,8 +16,7 @@ PseudoStylesRegistry::PseudoStylesRegistry(
     : registryRuntime_(facebook::hermes::makeHermesRuntime()),
       attachFn_(std::move(attachFn)),
       detachFn_(std::move(detachFn)),
-      onSelectorStateChangedFn_(
-          [](jsi::Runtime &, const auto &, const auto &, const auto &, double, double, const auto &) {}) {}
+      onSelectorStateChangedFn_([](jsi::Runtime &, const auto &, const auto &, const auto &, const auto &) {}) {}
 
 void PseudoStylesRegistry::setOnSelectorStateChangedFn(OnSelectorStateChangedFn fn) {
   onSelectorStateChangedFn_ = std::move(fn);
@@ -51,16 +50,12 @@ void PseudoStylesRegistry::registerPseudoStyle(
     PseudoSelector selector,
     const folly::dynamic &selectorStyle,
     const folly::dynamic &defaultStyle,
-    double duration,
-    double delay,
-    css::EasingFunction easingFn) {
+    PseudoTransitionConfig transitionConfig) {
   {
     std::lock_guard<std::mutex> lock{mutex_};
     auto &entry = registry_[tag];
     entry.shadowNode = shadowNode;
-    entry.duration = duration;
-    entry.delay = delay;
-    entry.easingFn = std::move(easingFn);
+    entry.transitionConfig = std::move(transitionConfig);
     entry.selectors[selector] = {selectorStyle, defaultStyle};
     recomputeAllStyles(entry);
   }
@@ -94,8 +89,7 @@ void PseudoStylesRegistry::remove(Tag tag) {
 void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector selector, bool isActive) {
   std::shared_ptr<const ShadowNode> shadowNode;
   folly::dynamic fromStyle, toStyle;
-  double duration, delay;
-  css::EasingFunction easingFn;
+  PseudoTransitionConfig transitionConfig;
   {
     std::lock_guard<std::mutex> lock{mutex_};
     auto it = registry_.find(tag);
@@ -112,12 +106,10 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
     toStyle = entry.precomputedStyles[entry.activeMask];
 
     shadowNode = entry.shadowNode;
-    duration = entry.duration;
-    delay = entry.delay;
-    easingFn = entry.easingFn;
+    transitionConfig = entry.transitionConfig;
   }
 
-  onSelectorStateChangedFn_(*registryRuntime_, shadowNode, fromStyle, toStyle, duration, delay, easingFn);
+  onSelectorStateChangedFn_(*registryRuntime_, shadowNode, fromStyle, toStyle, transitionConfig);
 }
 
 } // namespace reanimated

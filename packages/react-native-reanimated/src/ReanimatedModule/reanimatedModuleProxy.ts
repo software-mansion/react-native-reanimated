@@ -96,13 +96,15 @@ export interface ReanimatedModuleProxy {
 
   registerPseudoStyle(
     shadowNodeWrapper: ShadowNodeWrapper,
-    selector: string,
-    selectorStyle: StyleProps,
-    defaultStyle: StyleProps,
-    transitionConfig: {
-      duration?: number;
-      delay?: number;
-      timingFunction?: NormalizedCSSTimingFunction;
+    config: {
+      selector: string;
+      selectorStyle: StyleProps;
+      defaultStyle: StyleProps;
+      transition: {
+        duration?: number;
+        delay?: number;
+        timingFunction?: NormalizedCSSTimingFunction;
+      };
     }
   ): void;
 
