@@ -16,11 +16,11 @@ import { WorkletsModule } from './WorkletsModule/NativeWorklets';
 type UIJob<Args extends unknown[] = unknown[], ReturnValue = unknown> = [
   worklet: WorkletFunction<Args, ReturnValue>,
   args: Args,
-  resolve?: (value: ReturnValue) => void,
+  resolve: ((value: ReturnValue) => void) | undefined,
+  scheduleStack: string | undefined,
 ];
 
 let runOnUIQueue: UIJob[] = [];
-let errorStack: string | undefined;
 
 export function setupMicrotasks() {
   'worklet';
@@ -367,10 +367,11 @@ function enqueueUI<Args extends unknown[], ReturnValue>(
   args: Args,
   resolve?: (value: ReturnValue) => void
 ): void {
-  if (__DEV__ && !errorStack) {
-    errorStack = new Error().stack ?? '';
-  }
-  const job = [worklet, args, resolve] as UIJob<Args, ReturnValue>;
+  const scheduleStack = __DEV__ ? (new Error().stack ?? '') : undefined;
+  const job = [worklet, args, resolve, scheduleStack] as UIJob<
+    Args,
+    ReturnValue
+  >;
   runOnUIQueue.push(job as unknown as UIJob);
   if (runOnUIQueue.length === 1) {
     flushUIQueue();
@@ -381,20 +382,24 @@ function flushUIQueue(): void {
   queueMicrotask(() => {
     const queue = runOnUIQueue;
     runOnUIQueue = [];
-    const stack = errorStack;
-    errorStack = undefined;
-    WorkletsModule.scheduleOnUI(
-      createSerializable(() => {
-        'worklet';
-        queue.forEach(([workletFunction, workletArgs, jobResolve]) => {
+    const jobWorklets = queue.map(
+      ([workletFunction, workletArgs, jobResolve, scheduleStack]) => {
+        const closure = () => {
+          'worklet';
           const result = workletFunction(...workletArgs);
           if (jobResolve) {
             scheduleOnRN(jobResolve, result);
           }
-        });
-        globalThis.__callMicrotasks();
-      }),
-      stack
+        };
+        if (__DEV__) {
+          (closure as unknown as Record<string, unknown>).__scheduleStack =
+            scheduleStack;
+        }
+        return createSerializable(closure);
+      }
+    );
+    WorkletsModule.scheduleOnUI(
+      WorkletsModule.createSerializableArray(jobWorklets, false)
     );
   });
 }

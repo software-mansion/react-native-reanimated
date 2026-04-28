@@ -13,6 +13,7 @@ import {
   scheduleOnRuntime,
   createWorkletRuntime,
   runOnRuntimeSync,
+  scheduleOnRN,
 } from 'react-native-worklets';
 
 declare global {
@@ -119,5 +120,33 @@ describe('Error traces from UI', () => {
     await waitForNotification('errorReported');
     expect(errorData?.stack?.includes('at [testRuntime]:')).toBe(true);
     expect(errorData?.stack?.includes('at [testRuntime]: functionNameD')).toBe(true);
+  });
+
+  test('batched scheduleOnUI: throw in middle job does not break siblings, each job has its own stack', async () => {
+    const notifyJob1Ran = () => notify('job1Ran');
+    const notifyJob3Ran = () => notify('job3Ran');
+
+    scheduleOnUI(function functionNameJob1() {
+      'worklet';
+      scheduleOnRN(notifyJob1Ran);
+    });
+
+    scheduleOnUI(function functionNameJob2() {
+      'worklet';
+      throw new Error();
+    });
+
+    scheduleOnUI(function functionNameJob3() {
+      'worklet';
+      scheduleOnRN(notifyJob3Ran);
+    });
+
+    await waitForNotification('errorReported');
+    await waitForNotification('job1Ran');
+    await waitForNotification('job3Ran');
+
+    expect(errorData?.stack?.includes('at [UI]: functionNameJob2')).toBe(true);
+    expect(errorData?.stack?.includes('at [UI]: functionNameJob1')).toBe(false);
+    expect(errorData?.stack?.includes('at [UI]: functionNameJob3')).toBe(false);
   });
 });

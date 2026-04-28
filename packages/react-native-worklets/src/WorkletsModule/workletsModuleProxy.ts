@@ -107,10 +107,7 @@ export interface WorkletsModuleProxy {
     decorateGuest: SerializableRef
   ): SerializableRef<TValue>;
 
-  scheduleOnUI<TValue>(
-    serializable: SerializableRef<TValue>,
-    scheduleStack: string | undefined
-  ): void;
+  scheduleOnUI<TValue>(serializables: SerializableRef<TValue[]>): void;
 
   runOnUISync<TValue, TReturn>(
     serializable: SerializableRef<TValue>,
@@ -149,12 +146,7 @@ export interface WorkletsModuleProxy {
     scheduleStack?: string
   ): TReturn;
 
-  reportFatalErrorOnJS(
-    message: string,
-    stack: string,
-    name: string,
-    jsEngine: string
-  ): void;
+  reportFatalErrorOnJS(message: string, stack: string, name: string): void;
 
   createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue>;
 

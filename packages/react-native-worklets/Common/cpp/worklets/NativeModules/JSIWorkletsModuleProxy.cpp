@@ -31,12 +31,18 @@ inline void scheduleOnUI(
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
     jsi::Runtime &rt,
-    const jsi::Value &worklet,
-    const std::optional<std::string> &scheduleStack) {
-  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
-      rt, worklet, "[Worklets] Only worklets can be scheduled to run on UI.");
-  serializableWorklet->setScheduleStack(scheduleStack);
-  uiScheduler->scheduleOnUI([serializableWorklet, weakUIWorkletRuntime]() {
+    const jsi::Value &workletsArrayValue) {
+  auto serializableArray = extractSerializableOrThrow<SerializableArray>(
+      rt, workletsArrayValue, "[Worklets] scheduleOnUI expects a serializable array of worklets.");
+
+  std::vector<std::shared_ptr<SerializableWorklet>> worklets;
+  const auto &list = serializableArray->getList();
+  worklets.reserve(list.size());
+  for (const auto &item : list) {
+    worklets.push_back(std::static_pointer_cast<SerializableWorklet>(item));
+  }
+
+  uiScheduler->scheduleOnUI([worklets = std::move(worklets), weakUIWorkletRuntime]() {
     // This callback can outlive the WorkletsModuleProxy object during the
     // invalidation of React Native. This happens when WorkletsModuleProxy
     // destructor is called on the JS thread and the UI thread is
@@ -47,16 +53,26 @@ inline void scheduleOnUI(
       return;
     }
 
+    for (const auto &worklet : worklets) {
 #if JS_RUNTIME_HERMES
-    // JSI's scope defined here allows for JSI-objects to be cleared up
-    // after each runtime loop. Within these loops we typically create
-    // some temporary JSI objects and hence it allows for such objects to
-    // be garbage collected much sooner. Apparently the scope API is only
-    // supported on Hermes at the moment.
-    const auto scope = jsi::Scope(uiWorkletRuntime->getJSIRuntime());
+      // JSI's scope defined here allows for JSI-objects to be cleared up
+      // after each runtime loop. Within these loops we typically create
+      // some temporary JSI objects and hence it allows for such objects to
+      // be garbage collected much sooner. Apparently the scope API is only
+      // supported on Hermes at the moment.
+      const auto scope = jsi::Scope(uiWorkletRuntime->getJSIRuntime());
 #endif // JS_RUNTIME_HERMES
 
-    uiWorkletRuntime->runSync(serializableWorklet);
+      uiWorkletRuntime->runSync(worklet);
+    }
+
+    uiWorkletRuntime->runSync([](jsi::Runtime &rt) {
+      auto callMicrotasks = rt.global().getProperty(rt, "__callMicrotasks");
+      if (callMicrotasks.isObject()) {
+        callMicrotasks.asObject(rt).asFunction(rt).call(rt);
+      }
+      return jsi::Value::undefined();
+    });
   });
 }
 
@@ -119,10 +135,8 @@ inline jsi::Value reportFatalErrorOnJS(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &message,
     const std::string &stack,
-    const std::string &name,
-    const std::string &jsEngine) {
-  JSLogger::reportFatalErrorOnJS(
-      jsScheduler, JSErrorData{.message = message, .stack = stack, .name = name, .jsEngine = jsEngine});
+    const std::string &name) {
+  JSLogger::reportFatalErrorOnJS(jsScheduler, JSErrorData{.message = message, .stack = stack, .name = name});
   return jsi::Value::undefined();
 }
 
@@ -340,17 +354,13 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         registerCustomSerializable(runtimeManager, memoryManager, determine, pack, unpack, typeId);
       });
 
-  jsi_utils::addMethod<2>(
+  jsi_utils::addMethod<1>(
       rt,
       obj,
       "scheduleOnUI",
       [uiScheduler = uiScheduler_, uiWorkletRuntime = uiWorkletRuntime_](
-          jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
-        std::optional<std::string> scheduleStack;
-        if (at<1>(args).isString()) {
-          scheduleStack = at<1>(args).asString(rt).utf8(rt);
-        }
-        scheduleOnUI(uiScheduler, uiWorkletRuntime, rt, at<0>(args), scheduleStack);
+          jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        scheduleOnUI(uiScheduler, uiWorkletRuntime, rt, at<0>(args));
       });
 
   jsi_utils::addMethod<2>(
@@ -452,17 +462,16 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         workletRuntime->schedule(worklet);
       });
 
-  jsi_utils::addMethod<4>(
+  jsi_utils::addMethod<3>(
       rt,
       obj,
       "reportFatalErrorOnJS",
-      [jsScheduler = jsScheduler_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[4]) {
+      [jsScheduler = jsScheduler_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
         return reportFatalErrorOnJS(
             jsScheduler,
             /* message */ at<0>(args).asString(rt).utf8(rt),
             /* stack */ at<1>(args).asString(rt).utf8(rt),
-            /* name */ at<2>(args).asString(rt).utf8(rt),
-            /* jsEngine */ at<3>(args).asString(rt).utf8(rt));
+            /* name */ at<2>(args).asString(rt).utf8(rt));
       });
 
   jsi_utils::addMethod<1>(

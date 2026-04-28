@@ -94,6 +94,7 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
       std::make_shared<WeakRuntimeHolder>(WeakRuntimeHolder{.weakRuntime = weak_from_this()}));
 
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
+  jsScheduler_ = jsScheduler;
   const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
   const auto memoryManager_ = jsiWorkletsModuleProxy->getMemoryManager();
   const auto script = jsiWorkletsModuleProxy->getScript();
@@ -142,8 +143,7 @@ void WorkletRuntime::bundleModeInit(
     const auto &stack = error.getStack();
     if (!message.starts_with("[Worklets] Worklets initialized successfully")) {
       const auto newMessage = "[Worklets] Failed to initialize runtime. Reason: " + message + " " + stack;
-      JSLogger::reportFatalErrorOnJS(
-          jsScheduler, {.message = newMessage, .stack = stack, .name = "WorkletsError", .jsEngine = "Worklets"});
+      JSLogger::reportFatalErrorOnJS(jsScheduler, {.message = newMessage, .stack = stack, .name = "WorkletsError"});
       return;
     }
   }
@@ -301,28 +301,57 @@ jsi::Value WorkletRuntime::executeSync(const std::function<jsi::Value(jsi::Runti
 }
 
 #ifndef NDEBUG
-static const auto callGuardLambda = [](facebook::jsi::Runtime &rt,
-                                       const facebook::jsi::Value &thisVal,
-                                       const facebook::jsi::Value *args,
-                                       size_t count) {
-  // args[0] = function, args[1] = scheduleStack (string), args[2..] = actual args
-  return args[0].asObject(rt).asFunction(rt).call(rt, args + 2, count - 2);
-};
-
-jsi::Function WorkletRuntime::getCallGuard(jsi::Runtime &rt) {
-  auto callGuard = rt.global().getProperty(rt, "__callGuardDEV");
-  if (callGuard.isObject()) {
-    // Use JS implementation if `__callGuardDEV` has already been installed.
-    // This is the desired behavior.
-    return callGuard.asObject(rt).asFunction(rt);
+static std::string labelStackFrames(const std::string &rawStack, const std::string &label) {
+  static const std::string sep = "\n    at";
+  std::string result;
+  size_t pos = rawStack.find(sep);
+  while (pos != std::string::npos) {
+    size_t next = rawStack.find(sep, pos + sep.size());
+    size_t end = (next == std::string::npos) ? rawStack.size() : next;
+    result += "\n    at [" + label + "]:" + rawStack.substr(pos + sep.size(), end - (pos + sep.size()));
+    pos = next;
   }
+  return result;
+}
 
-  // Otherwise, fallback to C++ JSI implementation. This is necessary so that we
-  // can install `__callGuardDEV` itself and should happen only once. Note that
-  // the C++ implementation doesn't intercept errors and simply throws them as
-  // C++ exceptions which crashes the app. We assume that installing the guard
-  // doesn't throw any errors.
-  return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "callGuard"), 1, callGuardLambda);
+void WorkletRuntime::reportFatalErrorFromCpp(
+    const std::string &message,
+    const std::string &rawStack,
+    const std::string &name,
+    const std::optional<std::string> &scheduleStack) const {
+  std::string combined = message + labelStackFrames(rawStack, name_);
+  if (scheduleStack.has_value()) {
+    auto pos = scheduleStack->find("\n    at");
+    if (pos != std::string::npos) {
+      combined += scheduleStack->substr(pos);
+    }
+  }
+  JSLogger::reportFatalErrorOnJS(jsScheduler_, JSErrorData{.message = message, .stack = combined, .name = name});
+}
+
+void WorkletRuntime::handleJSError(jsi::JSError &error, const std::optional<std::string> &scheduleStack) const {
+  jsi::Runtime &rt = *runtime_;
+  std::string name = "WorkletsError";
+  const auto &errVal = error.value();
+  if (errVal.isObject()) {
+    auto errObj = errVal.asObject(rt);
+    if (errObj.hasProperty(rt, "name")) {
+      auto nameVal = errObj.getProperty(rt, "name");
+      if (nameVal.isString()) {
+        name = nameVal.asString(rt).utf8(rt);
+      }
+    }
+  }
+  reportFatalErrorFromCpp(error.getMessage(), error.getStack(), name, scheduleStack);
+}
+
+void WorkletRuntime::handleJSIException(jsi::JSIException &error, const std::optional<std::string> &scheduleStack)
+    const {
+  reportFatalErrorFromCpp(error.what(), "", "WorkletsError", scheduleStack);
+}
+
+void WorkletRuntime::handleStdException(std::exception &error, const std::optional<std::string> &scheduleStack) const {
+  reportFatalErrorFromCpp(error.what(), "", "WorkletsError", scheduleStack);
 }
 #endif // NDEBUG
 

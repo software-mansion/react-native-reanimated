@@ -203,11 +203,8 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  scheduleOnUI<TValue>(
-    serializable: SerializableRef<TValue>,
-    scheduleStack: string | undefined
-  ) {
-    return this.#workletsModuleProxy.scheduleOnUI(serializable, scheduleStack);
+  scheduleOnUI<TValue>(serializables: SerializableRef<TValue[]>) {
+    return this.#workletsModuleProxy.scheduleOnUI(serializables);
   }
 
   runOnUISync<TValue, TReturn>(
@@ -321,18 +318,8 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.synchronizableUnlock(synchronizableRef);
   }
 
-  reportFatalErrorOnJS(
-    message: string,
-    stack: string,
-    name: string,
-    jsEngine: string
-  ) {
-    return this.#workletsModuleProxy.reportFatalErrorOnJS(
-      message,
-      stack,
-      name,
-      jsEngine
-    );
+  reportFatalErrorOnJS(message: string, stack: string, name: string) {
+    return this.#workletsModuleProxy.reportFatalErrorOnJS(message, stack, name);
   }
 
   getStaticFeatureFlag(name: string): boolean {

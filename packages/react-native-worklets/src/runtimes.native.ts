@@ -1,6 +1,5 @@
 'use strict';
 
-import { setupCallGuard } from './callGuard';
 import {
   addGuardImplementation,
   addNoBundleModeGuardImplementation,
@@ -106,7 +105,6 @@ export function createWorkletRuntime(
     name,
     createSerializable(() => {
       'worklet';
-      setupCallGuard();
       setupSerializer();
       if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
         setupConsole(runtimeBoundCapturableConsole!);

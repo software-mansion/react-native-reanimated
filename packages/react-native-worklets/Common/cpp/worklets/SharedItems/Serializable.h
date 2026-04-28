@@ -130,6 +130,10 @@ class SerializableArray : public Serializable {
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
+  [[nodiscard]] const std::vector<std::shared_ptr<Serializable>> &getList() const {
+    return data_;
+  }
+
  protected:
   std::vector<std::shared_ptr<Serializable>> data_;
 };
@@ -210,6 +214,14 @@ class SerializableWorklet : public SerializableObject {
  public:
   SerializableWorklet(jsi::Runtime &rt, const jsi::Object &worklet) : SerializableObject(rt, worklet) {
     valueType_ = ValueType::WorkletType;
+#ifndef NDEBUG
+    if (worklet.hasProperty(rt, "__scheduleStack")) {
+      auto val = worklet.getProperty(rt, "__scheduleStack");
+      if (val.isString()) {
+        scheduleStack_ = val.asString(rt).utf8(rt);
+      }
+    }
+#endif // NDEBUG
   }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
