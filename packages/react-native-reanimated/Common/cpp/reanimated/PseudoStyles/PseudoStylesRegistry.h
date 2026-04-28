@@ -21,14 +21,18 @@ using namespace react;
 
 class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesRegistry> {
  public:
+  struct PseudoTransitionConfig {
+    double duration;
+    double delay;
+    css::EasingFunction easingFn;
+  };
+
   using OnSelectorStateChangedFn = std::function<void(
       jsi::Runtime &rt,
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const folly::dynamic &fromStyle,
       const folly::dynamic &toStyle,
-      double duration,
-      double delay,
-      const css::EasingFunction &easingFn)>;
+      const PseudoTransitionConfig &transitionConfig)>;
 
   PseudoStylesRegistry(PlatformAttachPseudoSelectorFunction attachFn, PlatformDetachPseudoSelectorFunction detachFn);
 
@@ -40,9 +44,7 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
       PseudoSelector selector,
       const folly::dynamic &selectorStyle,
       const folly::dynamic &defaultStyle,
-      double duration,
-      double delay,
-      css::EasingFunction easingFn);
+      PseudoTransitionConfig transitionConfig);
 
   void remove(Tag tag);
 
@@ -54,9 +56,7 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
 
   struct TagEntry {
     std::shared_ptr<const ShadowNode> shadowNode;
-    double duration;
-    double delay;
-    css::EasingFunction easingFn;
+    PseudoTransitionConfig transitionConfig;
 
     std::map<PseudoSelector, SelectorData> selectors;
 
