@@ -32,7 +32,6 @@
     "babel-plugin-transform-define": "2.1.4",
     "cypress": "patch:cypress@npm%3A15.4.0#~/.yarn/patches/cypress-npm-15.4.0-c92384506d.patch",
     "next-compose-plugins": "2.2.1",
-    "prettier": "3.6.2",
     "start-server-and-test": "2.1.2",
     "typescript": "5.9.3"
   },

@@ -27,7 +27,6 @@
     "@react-native/babel-preset": "0.81.4",
     "@react-native/metro-config": "0.81.4",
     "@react-native/typescript-config": "0.81.4",
-    "prettier": "3.6.2",
     "typescript": "5.9.3"
   },
   "engines": {

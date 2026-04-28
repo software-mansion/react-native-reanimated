@@ -127,7 +127,6 @@
     "jest-expo": "52.0.5",
     "knip": "5.61.3",
     "madge": "8.0.0",
-    "prettier": "3.6.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.85.2",

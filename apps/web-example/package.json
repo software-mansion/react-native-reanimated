@@ -29,7 +29,6 @@
     "@playwright/test": "1.57.0",
     "@types/react": "19.2.2",
     "babel-preset-expo": "54.0.10",
-    "prettier": "3.6.2",
     "serve": "14.2.5",
     "typescript": "5.9.3"
   },

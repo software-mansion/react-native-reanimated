@@ -60,7 +60,6 @@
     "oxfmt": "0.45.0",
     "oxlint": "1.60.0",
     "oxlint-tsgolint": "0.21.1",
-    "prettier": "3.6.2",
     "react": "19.2.3",
     "react-native": "0.85.2",
     "react-native-builder-bob": "0.40.13",
