@@ -11,7 +11,7 @@
     "start": "next start",
     "e2e": "start-server-and-test \"next start\" http://localhost:3000 \"cypress open --e2e\"",
     "e2e:headless": "start-server-and-test \"next start\" http://localhost:3000 \"cypress run --e2e\"",
-    "lint": "eslint --max-warnings=0 .",
+    "lint": "yarn run -T oxlint --max-warnings=0 . && yarn prettier --check . --ignore-path .gitignore --ignore-path ../../.prettierignore",
     "format": "prettier --write --list-different ."
   },
   "dependencies": {
@@ -31,7 +31,6 @@
     "@next/bundle-analyzer": "15.5.4",
     "babel-plugin-transform-define": "2.1.4",
     "cypress": "patch:cypress@npm%3A15.4.0#~/.yarn/patches/cypress-npm-15.4.0-c92384506d.patch",
-    "eslint": "9.37.0",
     "next-compose-plugins": "2.2.1",
     "prettier": "3.6.2",
     "start-server-and-test": "2.1.2",

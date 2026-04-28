@@ -15,6 +15,7 @@ import {
   RefreshControl,
   ScrollView,
   SectionList,
+  StyleSheet,
   Switch,
   Text,
   TextInput,
@@ -24,11 +25,10 @@ import {
   // TouchableWithoutFeedback,
   View,
   VirtualizedList,
-  StyleSheet,
 } from 'react-native';
 import { ScrollView as RNGHScrollView } from 'react-native-gesture-handler';
-import { Path as RNSVGPath } from 'react-native-svg';
 import { makeMutable } from 'react-native-reanimated';
+import { Path as RNSVGPath } from 'react-native-svg';
 
 // Make sure Reanimated and Worklets are initialized.
 makeMutable(() => {

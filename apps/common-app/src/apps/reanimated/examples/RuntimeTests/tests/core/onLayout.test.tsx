@@ -2,9 +2,9 @@ import { useEffect } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useEvent, useSharedValue } from 'react-native-reanimated';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import { describe, expect, notify, render, test, wait, waitForNotification } from '../../ReJest/RuntimeTestsApi';
-import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 interface TestResult {
   height: number;

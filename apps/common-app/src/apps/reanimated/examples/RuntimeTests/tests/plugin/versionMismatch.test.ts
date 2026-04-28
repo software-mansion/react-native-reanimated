@@ -1,5 +1,6 @@
-import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
 import { scheduleOnUI, type WorkletFunction } from 'react-native-worklets';
+
+import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
 
 describe('Test plugin version mismatch', () => {
   if (__DEV__) {

@@ -1,5 +1,6 @@
-import { createWorkletRuntime, scheduleOnRuntime, scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
-import { describe, expect, notify, test, waitForNotification, beforeEach } from '../../ReJest/RuntimeTestsApi';
+import { createWorkletRuntime, scheduleOnRN, scheduleOnRuntime, scheduleOnUI } from 'react-native-worklets';
+
+import { beforeEach, describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
 
 describe('scheduleOnRN', () => {
   const PASS_NOTIFICATION = 'PASS';

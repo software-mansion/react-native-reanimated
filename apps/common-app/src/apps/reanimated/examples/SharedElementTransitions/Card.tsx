@@ -4,13 +4,9 @@ import type {
 } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  TouchableNativeFeedback,
-  View,
-} from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
+
 import photo from './assets/image.jpg';
 
 type ParamList = {

@@ -1,16 +1,17 @@
 import type { Component, ReactElement, RefObject } from 'react';
 import { useRef } from 'react';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { Matchers } from '../matchers/Matchers';
 import { TestComponent } from '../TestComponent';
 import type {
   DefaultValue,
-  ValueWrapper,
   MaybeAsync,
   TestCase,
   TestConfiguration,
   TestSuite,
   TestValue,
+  ValueWrapper,
 } from '../types';
 import { RenderLock } from '../utils/SyncUIRunner';
 import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
@@ -21,7 +22,6 @@ import { TestSuiteBuilder } from './TestSuiteBuilder';
 import { TestSummaryLogger } from './TestSummaryLogger';
 import { ValueRegistry } from './ValueRegistry';
 import { WindowDimensionsMocker } from './WindowDimensionsMocker';
-import { scheduleOnRN } from 'react-native-worklets';
 
 export { Presets } from '../Presets';
 

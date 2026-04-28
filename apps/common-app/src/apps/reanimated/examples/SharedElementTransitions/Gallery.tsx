@@ -2,11 +2,11 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
 import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeIn, cubicBezier } from 'react-native-reanimated';
+import Animated, { cubicBezier, FadeIn } from 'react-native-reanimated';
 
-import florence from './assets/florence.jpg';
 import countryside from './assets/countryside.jpg';
 import dawn from './assets/dawn.jpg';
+import florence from './assets/florence.jpg';
 
 type StackParamList = {
   Home: undefined;

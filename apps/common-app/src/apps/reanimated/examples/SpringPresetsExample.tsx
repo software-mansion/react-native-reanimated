@@ -6,15 +6,15 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import {
-  SharedValue,
-  Reanimated3DefaultSpringConfig,
-  Reanimated3DefaultSpringConfigWithDuration,
   GentleSpringConfig,
   GentleSpringConfigWithDuration,
-  WigglySpringConfig,
-  WigglySpringConfigWithDuration,
+  Reanimated3DefaultSpringConfig,
+  Reanimated3DefaultSpringConfigWithDuration,
+  SharedValue,
   SnappySpringConfig,
   SnappySpringConfigWithDuration,
+  WigglySpringConfig,
+  WigglySpringConfigWithDuration,
 } from 'react-native-reanimated';
 
 const VIOLET = '#b58df1';

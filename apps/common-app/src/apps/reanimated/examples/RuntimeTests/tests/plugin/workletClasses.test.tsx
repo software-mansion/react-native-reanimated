@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
+import { scheduleOnUI } from 'react-native-worklets';
 
 import { describe, expect, getRegisteredValue, registerValue, render, test, wait } from '../../ReJest/RuntimeTestsApi';
-import { scheduleOnUI } from 'react-native-worklets';
 
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
 

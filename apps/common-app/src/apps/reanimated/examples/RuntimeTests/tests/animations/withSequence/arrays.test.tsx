@@ -18,7 +18,6 @@ import {
   render,
   test,
   useTestRef,
-  wait,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';

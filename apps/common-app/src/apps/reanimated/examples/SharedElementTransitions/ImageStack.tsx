@@ -5,9 +5,9 @@ import type { ImageSourcePropType } from 'react-native';
 import { Button, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import florence from './assets/florence.jpg';
 import countryside from './assets/countryside.jpg';
 import dawn from './assets/dawn.jpg';
+import florence from './assets/florence.jpg';
 
 type ParamList = {
   Screen1?: object;

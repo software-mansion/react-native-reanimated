@@ -18,9 +18,9 @@ import {
   Text,
   View,
 } from 'react-native';
-import Animated, { scrollTo, useAnimatedRef } from 'react-native-reanimated';
 import { ScrollView as RNGHScrollView } from 'react-native-gesture-handler';
-import { scheduleOnUI, getRuntimeKind } from 'react-native-worklets';
+import Animated, { scrollTo, useAnimatedRef } from 'react-native-reanimated';
+import { getRuntimeKind, scheduleOnUI } from 'react-native-worklets';
 
 const DATA = [...Array(100).keys()];
 

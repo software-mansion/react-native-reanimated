@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import type { SharedValue } from 'react-native-reanimated';
 import { useSharedValue } from 'react-native-reanimated';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import {
   describe,
@@ -15,7 +16,6 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 import { MutableAPI, ProgressBar } from './components';
-import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 type MultiplyComponentProps<T> = {
   initialValue: T;

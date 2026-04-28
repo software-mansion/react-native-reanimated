@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
-import type { SharedValue } from 'react-native-reanimated';
 import { useSharedValue } from 'react-native-reanimated';
 import { runOnUISync } from 'react-native-worklets';
 

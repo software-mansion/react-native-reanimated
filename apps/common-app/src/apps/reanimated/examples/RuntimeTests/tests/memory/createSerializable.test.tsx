@@ -4,7 +4,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
+import { TurboModuleRegistry } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
+import { createSerializable, scheduleOnUI } from 'react-native-worklets';
 
 import {
   describe,
@@ -17,8 +19,6 @@ import {
   wait,
   waitForNotification,
 } from '../../ReJest/RuntimeTestsApi';
-import { createSerializable, scheduleOnUI } from 'react-native-worklets';
-import { TurboModuleRegistry } from 'react-native';
 
 const RESULT_SHARED_VALUE_REF = 'RESULT_SHARED_VALUE_REF';
 

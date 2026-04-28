@@ -1,18 +1,15 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
-import { Pressable, StyleSheet, TouchableNativeFeedback } from 'react-native';
-import {
-  Gesture,
-  GestureDetector,
-  type PanGestureHandlerGestureEvent,
-} from 'react-native-gesture-handler';
+import { Pressable, StyleSheet } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
+
 import photo from './assets/image.jpg';
 
 type ParamList = {

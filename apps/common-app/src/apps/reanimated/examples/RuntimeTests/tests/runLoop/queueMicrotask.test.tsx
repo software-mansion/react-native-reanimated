@@ -1,17 +1,17 @@
 import React from 'react';
+import { RuntimeKind } from 'react-native-worklets';
 
 import {
+  createOrderConstraint,
+  createTestValue,
   describe,
   expect,
   render,
   test,
-  createOrderConstraint,
-  createTestValue,
-  waitForNotifications,
   waitForNotification,
+  waitForNotifications,
 } from '../../ReJest/RuntimeTestsApi';
 import { DispatchTestComponent } from './DispatchTestComponent';
-import { RuntimeKind } from 'react-native-worklets';
 
 describe('Test queueMicrotask', () => {
   test.each([RuntimeKind.UI, RuntimeKind.Worker])('executes single microtask, runtime: **%s**', async runtimeKind => {

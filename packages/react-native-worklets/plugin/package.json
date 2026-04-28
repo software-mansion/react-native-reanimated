@@ -11,9 +11,7 @@
     "@babel/traverse": "7.28.4",
     "@babel/types": "7.28.4",
     "@types/node": "24.0.14",
-    "@typescript-eslint/parser": "8.37.0",
     "esbuild": "0.25.10",
-    "eslint": "9.37.0",
     "prettier": "3.6.2",
     "tsc-watch": "7.2.0",
     "typescript": "5.9.3"
@@ -25,7 +23,7 @@
     "bundle": "node bundle.js",
     "format": "prettier --write --ignore-path '' --log-level silent types/options.d.ts && prettier --write --list-different src",
     "watch": "tsc-watch --onSuccess \"yarn bundle\"",
-    "lint": "eslint --max-warnings=0 src",
+    "lint": "yarn run -T oxlint --max-warnings=0 src",
     "type:check": "tsc --noEmit"
   },
   "installConfig": {

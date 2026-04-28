@@ -7,7 +7,8 @@ import {
   scheduleOnUI,
   UIRuntimeId,
 } from 'react-native-worklets';
-import { describe, expect, notify, test, waitForNotification, beforeEach } from '../../ReJest/RuntimeTestsApi';
+
+import { beforeEach, describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
 
 const PASS_NOTIFICATION = 'PASS';
 const FAIL_NOTIFICATION = 'FAIL';

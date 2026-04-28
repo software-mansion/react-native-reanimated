@@ -1,12 +1,12 @@
+import axios from 'axios';
 import React from 'react';
-import { StyleSheet, View, Button, Text } from 'react-native';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import {
+  createSynchronizable,
   createWorkletRuntime,
   scheduleOnRuntime,
   type WorkletRuntime,
-  createSynchronizable,
 } from 'react-native-worklets';
-import axios from 'axios';
 
 export default function App() {
   let elephantRuntime: WorkletRuntime;

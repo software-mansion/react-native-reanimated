@@ -1,4 +1,5 @@
 import { createWorkletRuntime, scheduleOnRN } from 'react-native-worklets';
+
 import { describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
 
 const INITIALIZER_CALLED_NOTIFICATION = 'INITIALIZER_CALLED_NOTIFICATION';

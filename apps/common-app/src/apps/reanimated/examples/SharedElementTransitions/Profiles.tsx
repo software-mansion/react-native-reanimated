@@ -17,7 +17,6 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn,
   runOnJS,
-  SharedTransition,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,

@@ -1,15 +1,16 @@
 import {
-  isSynchronizable,
   createSynchronizable,
-  scheduleOnUI,
+  createWorkletRuntime,
+  isSynchronizable,
+  runOnRuntimeSync,
   runOnUISync,
   scheduleOnRN,
-  createWorkletRuntime,
   scheduleOnRuntime,
+  scheduleOnUI,
   type Synchronizable,
-  runOnRuntimeSync,
   type WorkletRuntime,
 } from 'react-native-worklets';
+
 import { describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
 
 const NOTIFICATION = 'NOTIFICATION';

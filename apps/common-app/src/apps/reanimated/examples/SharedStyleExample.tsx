@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useState, type JSX } from 'react';
+import { type JSX, useState } from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,

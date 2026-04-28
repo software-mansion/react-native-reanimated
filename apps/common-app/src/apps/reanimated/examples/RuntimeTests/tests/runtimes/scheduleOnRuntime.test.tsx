@@ -1,10 +1,11 @@
 import {
   createWorkletRuntime,
-  scheduleOnRuntime,
-  scheduleOnRN,
-  scheduleOnUI,
   runOnRuntimeSync,
+  scheduleOnRN,
+  scheduleOnRuntime,
+  scheduleOnUI,
 } from 'react-native-worklets';
+
 import { beforeEach, describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
 
 type localGlobal = typeof globalThis & {

@@ -1,5 +1,5 @@
-import { useEffect, useState, StrictMode } from 'react';
-import { StyleSheet, View, Text, Button } from 'react-native';
+import { StrictMode, useEffect, useState } from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 export default function LayoutAnimationsStrictMode() {

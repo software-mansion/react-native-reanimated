@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import type { ViewStyle } from 'react-native';
 import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, {
+  type AnimatedStyle,
   useAnimatedStyle,
   useSharedValue,
   withClamp,
   withSpring,
-  type AnimatedStyle,
 } from 'react-native-reanimated';
 
 const VIOLET = '#b58df1';

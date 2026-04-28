@@ -3,11 +3,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
-import Animated, {
-  ReduceMotion,
-  SharedTransition,
-  withSpring,
-} from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 const Stack = createNativeStackNavigator();
 

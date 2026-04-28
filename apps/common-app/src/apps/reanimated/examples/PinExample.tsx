@@ -1,7 +1,6 @@
 import React from 'react';
 import { Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { SharedValue } from 'react-native-reanimated';
 import Animated, {
   scrollTo,
   useAnimatedRef,
@@ -9,6 +8,7 @@ import Animated, {
   useDerivedValue,
   useSharedValue,
 } from 'react-native-reanimated';
+import { SharedValue } from 'react-native-reanimated';
 
 const digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 const indices = [0, 1, 2, 3];

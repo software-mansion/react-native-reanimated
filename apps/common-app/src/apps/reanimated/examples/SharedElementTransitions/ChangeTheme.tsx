@@ -10,11 +10,7 @@ import React, {
   useState,
 } from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
-import Animated, {
-  Layout,
-  SharedTransition,
-  withSpring,
-} from 'react-native-reanimated';
+import Animated, { Layout } from 'react-native-reanimated';
 
 const Stack = createNativeStackNavigator();
 const Context = createContext({

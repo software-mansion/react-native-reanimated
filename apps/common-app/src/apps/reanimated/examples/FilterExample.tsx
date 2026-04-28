@@ -1,6 +1,5 @@
-import { balloonsImage } from '@/apps/css/assets';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, Switch, View } from 'react-native';
+import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import Animated, {
   interpolateColor,
   SharedValue,
@@ -9,6 +8,8 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+
+import { balloonsImage } from '@/apps/css/assets';
 
 const FILTER_TYPES = [
   'brightness',

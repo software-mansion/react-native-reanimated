@@ -1,5 +1,6 @@
-import { incorrect, ThreeMethodsConfig } from './utils';
 import { RuntimeKind } from 'react-native-worklets';
+
+import { incorrect, ThreeMethodsConfig } from './utils';
 
 export const CONFIG: ThreeMethodsConfig[] = [
   // setTimeout

@@ -1,17 +1,17 @@
 import React from 'react';
+import { RuntimeKind } from 'react-native-worklets';
 
 import {
+  createTestValue,
   describe,
   expect,
   notify,
   render,
   test,
-  createTestValue,
-  waitForNotifications,
   waitForNotification,
+  waitForNotifications,
 } from '../../ReJest/RuntimeTestsApi';
 import { DispatchTestComponent } from './DispatchTestComponent';
-import { RuntimeKind } from 'react-native-worklets';
 
 describe('Test cancelAnimationFrame', () => {
   test.each([RuntimeKind.UI, RuntimeKind.Worker])('does nothing on invalid handle', async runtimeKind => {

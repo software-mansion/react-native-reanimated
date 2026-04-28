@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
 import 'react-native-reanimated';
+
 import React from 'react';
 
 const AboutExample: React.FC = () =>

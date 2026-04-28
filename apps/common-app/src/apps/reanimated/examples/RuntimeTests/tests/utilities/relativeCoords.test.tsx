@@ -3,9 +3,9 @@ import type { ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
 import type { ComponentCoords } from 'react-native-reanimated';
 import Animated, { getRelativeCoords, measure, useAnimatedRef, useSharedValue } from 'react-native-reanimated';
+import { scheduleOnUI } from 'react-native-worklets';
 
 import { describe, expect, getRegisteredValue, registerValue, render, test, wait } from '../../ReJest/RuntimeTestsApi';
-import { scheduleOnUI } from 'react-native-worklets';
 
 const REGISTERED_VALUE_KEY = 'sv';
 

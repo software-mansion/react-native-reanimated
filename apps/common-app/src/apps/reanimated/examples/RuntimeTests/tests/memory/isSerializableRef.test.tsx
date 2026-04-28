@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { isSerializableRef, createSerializable } from 'react-native-worklets';
+import { createSerializable, isSerializableRef } from 'react-native-worklets';
+
 import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
 
 describe('Test isSerializableRef', () => {

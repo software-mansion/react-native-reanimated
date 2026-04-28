@@ -1,11 +1,11 @@
 import { makeMutable } from 'react-native-reanimated';
+import { getRuntimeKind, RuntimeKind } from 'react-native-worklets';
 
 import type { TestValue, TrackerCallCount } from '../types';
 import { ComparisonMode } from '../types';
 import { cyan, green, red, yellow } from '../utils/stringFormatUtils';
 import { SyncUIRunner } from '../utils/SyncUIRunner';
 import { getComparator } from './Comparators';
-import { getRuntimeKind, RuntimeKind } from 'react-native-worklets';
 
 type ToBeArgs = [TestValue, ComparisonMode?];
 export type ToThrowArgs = [string?];

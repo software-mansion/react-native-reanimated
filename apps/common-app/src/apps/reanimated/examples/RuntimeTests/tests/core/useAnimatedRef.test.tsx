@@ -1,5 +1,5 @@
-import React from 'react';
 import { FlashList } from '@shopify/flash-list';
+import React from 'react';
 import {
   ActivityIndicator,
   Button,
@@ -8,9 +8,9 @@ import {
   Modal,
   Pressable,
   RefreshControl,
-  Text,
-  Switch,
   SectionList,
+  Switch,
+  Text,
   TextInput,
   TouchableHighlight,
   TouchableOpacity,
@@ -18,8 +18,8 @@ import {
   VirtualizedList,
 } from 'react-native';
 import { ScrollView as RNGHScrollView } from 'react-native-gesture-handler';
-import { Path } from 'react-native-svg';
 import Animated, { useAnimatedRef } from 'react-native-reanimated';
+import { Path } from 'react-native-svg';
 
 import { describe, render, test } from '../../ReJest/RuntimeTestsApi';
 

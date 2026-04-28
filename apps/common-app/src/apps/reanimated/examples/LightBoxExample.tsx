@@ -1,7 +1,7 @@
 import '../types';
 
 import { useHeaderHeight } from '@react-navigation/elements';
-import type { ComponentRef, RefObject } from 'react';
+import type { ComponentRef } from 'react';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Dimensions,
@@ -12,8 +12,8 @@ import {
   View,
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
-import type { SharedValue } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   Easing,
   Extrapolation,

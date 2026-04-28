@@ -1,20 +1,19 @@
 import React from 'react';
+import { createWorkletRuntime, scheduleOnRuntime } from 'react-native-worklets';
 
 import {
+  createOrderConstraint,
   describe,
   expect,
-  createOrderConstraint,
   render,
   test,
   waitForNotifications,
 } from '../../ReJest/RuntimeTestsApi';
 import { DispatchTestComponent } from './DispatchTestComponent';
-import { createWorkletRuntime, scheduleOnRuntime } from 'react-native-worklets';
-
-import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_2_METHODS } from './executionOrderConfigs/twoMethodsSerial';
-import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SERIAL } from './executionOrderConfigs/threeMethodsSerial';
 import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_RUN_ON_RUNTIME } from './executionOrderConfigs/runOnRuntime';
 import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SCHEDULING } from './executionOrderConfigs/threeMethodsScheduling';
+import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SERIAL } from './executionOrderConfigs/threeMethodsSerial';
+import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_2_METHODS } from './executionOrderConfigs/twoMethodsSerial';
 import { getMethodMap } from './executionOrderConfigs/utils';
 
 describe('Test mixed order of execution', () => {

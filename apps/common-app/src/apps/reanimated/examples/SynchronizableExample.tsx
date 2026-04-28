@@ -2,10 +2,10 @@ import React from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 import {
   createSynchronizable,
-  scheduleOnRN,
-  scheduleOnUI,
   createWorkletRuntime,
+  scheduleOnRN,
   scheduleOnRuntime,
+  scheduleOnUI,
 } from 'react-native-worklets';
 
 const initialValue = 0;

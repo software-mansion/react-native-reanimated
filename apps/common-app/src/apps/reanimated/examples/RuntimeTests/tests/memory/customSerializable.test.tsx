@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
 import {
   createSerializable,
   createSynchronizable,
@@ -13,6 +12,8 @@ import {
   scheduleOnRuntime,
   scheduleOnUI,
 } from 'react-native-worklets';
+
+import { describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
 
 type IGlobalConstructorCarrier = {
   __isCustomObject: true;

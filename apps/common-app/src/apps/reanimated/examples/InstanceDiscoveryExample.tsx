@@ -4,6 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { FlashList } from '@shopify/flash-list';
+import { useCallback } from 'react';
 import {
   ActivityIndicator,
   Button,
@@ -16,7 +17,9 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
+  type ScrollViewProps,
   SectionList,
+  StyleSheet,
   Switch,
   Text,
   TextInput,
@@ -26,15 +29,12 @@ import {
   // TouchableWithoutFeedback,
   View,
   VirtualizedList,
-  StyleSheet,
-  type ScrollViewProps,
 } from 'react-native';
-import { ScrollView as RNGHScrollView } from 'react-native-gesture-handler';
-import { Path as RNSVGPath } from 'react-native-svg';
-import { makeMutable } from 'react-native-reanimated';
 // @ts-expect-error No types for deep import.
 import ReactFabric from 'react-native/Libraries/Renderer/shims/ReactFabric';
-import { useCallback } from 'react';
+import { ScrollView as RNGHScrollView } from 'react-native-gesture-handler';
+import { makeMutable } from 'react-native-reanimated';
+import { Path as RNSVGPath } from 'react-native-svg';
 
 const findHostInstance_DEPRECATED = ReactFabric.findHostInstance_DEPRECATED as (
   ref: any

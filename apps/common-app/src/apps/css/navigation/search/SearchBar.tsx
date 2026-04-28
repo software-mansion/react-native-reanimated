@@ -1,5 +1,4 @@
 import { StyleSheet, TextInput } from 'react-native';
-import { type SharedValue } from 'react-native-reanimated';
 import Animated, {
   dispatchCommand,
   FadeIn,
@@ -9,6 +8,7 @@ import Animated, {
   useAnimatedRef,
   useAnimatedStyle,
 } from 'react-native-reanimated';
+import { type SharedValue } from 'react-native-reanimated';
 
 import { Button } from '@/apps/css/components';
 import { colors, radius, sizes, spacing, style, text } from '@/theme';

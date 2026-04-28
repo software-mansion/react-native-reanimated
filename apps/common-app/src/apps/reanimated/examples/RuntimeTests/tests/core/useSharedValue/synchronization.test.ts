@@ -1,6 +1,7 @@
-import { runOnUISync, runOnUIAsync, scheduleOnUI } from 'react-native-worklets';
-import { describe, expect, test } from '../../../ReJest/RuntimeTestsApi';
 import { makeMutable } from 'react-native-reanimated';
+import { runOnUIAsync, runOnUISync, scheduleOnUI } from 'react-native-worklets';
+
+import { describe, expect, test } from '../../../ReJest/RuntimeTestsApi';
 
 describe('Synchronization of Shared Value between the RN Runtime and UI Runtime', () => {
   test('reading from shared value on the RN runtime immediately after initializing', () => {

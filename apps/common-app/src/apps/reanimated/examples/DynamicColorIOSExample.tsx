@@ -13,6 +13,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+
 import { IS_IOS } from '@/utils';
 
 const LIGHT_COLORS = ['#38acdd', '#57b495'];

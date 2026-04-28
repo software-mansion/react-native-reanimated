@@ -1,4 +1,5 @@
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
+
 import type { LockObject } from '../types';
 
 class WaitForUnlock {

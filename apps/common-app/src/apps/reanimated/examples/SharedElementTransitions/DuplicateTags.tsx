@@ -5,8 +5,8 @@ import * as React from 'react';
 import { StyleSheet, Text, TouchableNativeFeedback, View } from 'react-native';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
-import firstPhoto from './assets/doge.jpg';
 import secondPhoto from './assets/angry-doge.jpg';
+import firstPhoto from './assets/doge.jpg';
 
 const Stack = createNativeStackNavigator();
 

@@ -1,18 +1,18 @@
 import React from 'react';
+import { RuntimeKind } from 'react-native-worklets';
 
 import {
+  createOrderConstraint,
+  createTestValue,
   describe,
   expect,
   notify,
   render,
   test,
-  createOrderConstraint,
-  createTestValue,
-  waitForNotifications,
   waitForNotification,
+  waitForNotifications,
 } from '../../ReJest/RuntimeTestsApi';
 import { DispatchTestComponent } from './DispatchTestComponent';
-import { RuntimeKind } from 'react-native-worklets';
 
 describe('Test setTimeout', () => {
   test.each([RuntimeKind.UI, RuntimeKind.Worker])('executes single callback, runtime: **%s**', async runtimeKind => {

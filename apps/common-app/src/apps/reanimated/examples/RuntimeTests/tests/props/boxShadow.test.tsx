@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BoxShadowValue, StyleSheet, View, ViewStyle } from 'react-native';
+import { BoxShadowValue, StyleSheet, View } from 'react-native';
 import type { AnimatableValue } from 'react-native-reanimated';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import type { DefaultStyle } from 'react-native-reanimated/lib/typescript/hook/commonTypes';
