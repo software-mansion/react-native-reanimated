@@ -38,6 +38,6 @@ for (const version of supportedRNVersions) {
 
 // eslint-disable-next-line reanimated/use-logger
 console.error(
-  `[Worklets] React Native ${reactNativeVersion} version is not compatible with Worklets ${workletsVersion}`
+  `[Worklets] Your installed version of React Native (${reactNativeVersion}) is not compatible with installed version of Worklets (${workletsVersion}). See the documentation for the list of supported versions: https://docs.swmansion.com/react-native-worklets/docs/guides/compatibility/`
 );
 process.exit(1);

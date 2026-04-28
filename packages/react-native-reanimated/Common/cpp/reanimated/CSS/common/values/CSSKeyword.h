@@ -35,9 +35,7 @@ struct CSSKeyword : public CSSKeywordBase<CSSKeyword> {
   CSSKeyword interpolate(double progress, const CSSKeyword &to) const override;
 
 #ifndef NDEBUG
-  friend std::ostream &operator<<(
-      std::ostream &os,
-      const CSSKeyword &keywordValue);
+  friend std::ostream &operator<<(std::ostream &os, const CSSKeyword &keywordValue);
 #endif // NDEBUG
 };
 
@@ -48,9 +46,7 @@ struct CSSDisplay : public CSSKeywordBase<CSSDisplay> {
   CSSDisplay interpolate(double progress, const CSSDisplay &to) const override;
 
 #ifndef NDEBUG
-  friend std::ostream &operator<<(
-      std::ostream &os,
-      const CSSDisplay &displayValue);
+  friend std::ostream &operator<<(std::ostream &os, const CSSDisplay &displayValue);
 #endif // NDEBUG
 };
 

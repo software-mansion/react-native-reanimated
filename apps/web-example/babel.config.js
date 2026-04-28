@@ -1,20 +1,11 @@
-const stylexPlugin = require('@stylexjs/babel-plugin');
-const rsdPlugin = require('react-strict-dom/babel');
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  strictGlobal: true,
+};
 
 /** @type {import('@babel/core').ConfigFunction} */
 module.exports = function (api) {
   const plugins = [
-    rsdPlugin,
-    [
-      stylexPlugin,
-      {
-        importSources: [
-          '@stylexjs/stylex',
-          { from: 'react-strict-dom', as: 'css' },
-        ],
-        runtimeInjection: true,
-      },
-    ],
     [
       'module-resolver',
       {
@@ -31,12 +22,26 @@ module.exports = function (api) {
   api.cache.invalidate(() => disableBabelPlugin);
   if (disableBabelPlugin) {
     console.log('Starting Web example without Babel plugin.');
+    console.log(
+      'DISABLE_BABEL_PLUGIN env var:',
+      process.env.DISABLE_BABEL_PLUGIN
+    );
   } else {
-    plugins.push('react-native-worklets/plugin');
+    plugins.push(['react-native-worklets/plugin', workletsPluginOptions]);
   }
 
   return {
-    presets: ['babel-preset-expo'],
+    presets: [
+      [
+        'babel-preset-expo',
+        {
+          // Disable worklets and reanimated plugins from babel-preset-expo when DISABLE_BABEL_PLUGIN is set
+          worklets: !disableBabelPlugin,
+          reanimated: !disableBabelPlugin,
+        },
+      ],
+      'react-strict-dom/babel-preset',
+    ],
     plugins,
   };
 };

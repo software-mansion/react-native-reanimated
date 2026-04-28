@@ -1,19 +1,11 @@
 'use strict';
+
 import { RuntimeKind } from 'react-native-worklets';
 
 import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
-import type { InstanceOrElement, ShadowNodeWrapper } from '../commonTypes';
-import type {
-  AnimatedRef,
-  AnimatedRefOnJS,
-  AnimatedRefOnUI,
-} from '../hook/commonTypes';
-
-type DispatchCommand = <TRef extends InstanceOrElement>(
-  animatedRef: AnimatedRef<TRef>,
-  commandName: string,
-  args?: unknown[]
-) => void;
+import type { ShadowNodeWrapper } from '../commonTypes';
+import type { AnimatedRefOnJS, AnimatedRefOnUI } from '../hook/commonTypes';
+import type { DispatchCommand } from './types';
 
 /**
  * Lets you synchronously call a command of a native component.

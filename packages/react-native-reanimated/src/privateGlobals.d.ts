@@ -3,10 +3,7 @@
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
 
-import type {
-  IReanimatedErrorConstructor,
-  LoggerConfigInternal,
-} from './common';
+import type { LoggerConfigInternal } from './common';
 import type {
   MapperRegistry,
   MeasuredDimensions,
@@ -27,6 +24,10 @@ declare global {
   var _REANIMATED_VERSION_JS: string | undefined;
   var __reanimatedModuleProxy: ReanimatedModuleProxy | undefined;
   var _log: (value: unknown) => void;
+  var _startProfiling: (meanHzFreq?: number) => void;
+  var _stopProfiling: () => string;
+  var _beginSection: (name: string) => void;
+  var _endSection: () => void;
   var _notifyAboutProgress: (
     tag: number,
     value: Record<string, unknown>
@@ -56,7 +57,7 @@ declare global {
     | undefined;
   var _frameCallbackRegistry: FrameCallbackRegistryUI;
   var console: Console;
-  var __reanimatedLoggerConfig: LoggerConfigInternal;
+  var __reanimatedLoggerConfig: LoggerConfigInternal | undefined;
   var __mapperRegistry: MapperRegistry;
   var __sensorContainer: SensorContainer;
   var LayoutAnimationsManager: LayoutAnimationsManager;
@@ -76,11 +77,11 @@ declare global {
    * @deprecated Internals of `react-native-worklets`, abstain from using in the
    *   future.
    */
-  var __flushAnimationFrame: (timestamp: number) => void;
-  /**
-   * @deprecated Internals of `react-native-worklets`, abstain from using in the
-   *   future.
-   */
   var __frameTimestamp: number | undefined;
-  var ReanimatedError: IReanimatedErrorConstructor;
+  var __mapperRun: () => void;
+  var __requestMapperRunFinalizer: (finalizer: () => void) => void;
+  var _maybeFlushUIUpdatesQueue: () => void;
+  var __UI_WORKLET_RUNTIME_HOLDER: object | undefined;
+  var __UI_SCHEDULER_HOLDER: object | undefined;
+  var __toggleSlowAnimationsOnUIRuntime: (() => bool) | undefined;
 }

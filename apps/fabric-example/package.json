@@ -8,20 +8,22 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "format": "prettier --write --list-different .",
+    "lint": "eslint . --max-warnings 0",
     "type:check": "tsc --noEmit"
   },
   "dependencies": {
     "common-app": "workspace:*",
-    "react": "19.1.1",
-    "react-native": "0.82.0"
+    "react": "19.2.3",
+    "react-native": "0.85.2"
   },
   "devDependencies": {
     "@types/react": "19.2.2",
+    "eslint": "9.37.0",
     "prettier": "3.6.2",
-    "typescript": "5.8.3"
+    "typescript": "5.9.3"
   },
   "engines": {
-    "node": ">=20.13.0"
+    "node": ">= 22.11.0"
   },
   "installConfig": {
     "selfReferences": false
@@ -30,17 +32,20 @@
     "staticFeatureFlags": {
       "RUNTIME_TEST_FLAG": true,
       "DISABLE_COMMIT_PAUSING_MECHANISM": true,
-      "ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS": true,
-      "IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS": true,
+      "ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS": false,
+      "IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS": false,
       "EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS": true,
       "USE_SYNCHRONIZABLE_FOR_MUTABLES": true,
-      "USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS": true
+      "USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS": true,
+      "ENABLE_SHARED_ELEMENT_TRANSITIONS": true,
+      "FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS": true
     }
   },
   "worklets": {
     "staticFeatureFlags": {
       "RUNTIME_TEST_FLAG": true,
-      "IOS_DYNAMIC_FRAMERATE_ENABLED": true
+      "IOS_DYNAMIC_FRAMERATE_ENABLED": true,
+      "FETCH_PREVIEW_ENABLED": false
     }
   }
 }

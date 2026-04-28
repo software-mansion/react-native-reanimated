@@ -4,17 +4,18 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
 import { useContext, useEffect, useState } from 'react';
 import { Freeze } from 'react-freeze';
-import { Button, Text, View } from 'react-native';
+import { Button, Pressable, Text, View } from 'react-native';
 import Animated, {
   css,
   Easing,
   useAnimatedStyle,
   useSharedValue,
-  withDelay,
   withTiming,
 } from 'react-native-reanimated';
 
 import { NukeContext } from '@/components';
+
+const DEMO_DURATION_MS = 10_000;
 
 type RootStackParamList = {
   screen1: undefined;
@@ -43,9 +44,11 @@ const AnimatedSwitch = () => {
   });
 
   return (
-    <View style={styles.switchContainer} onTouchEnd={handleToggle}>
-      <Animated.View style={[styles.toggle, animatedStyles]} />
-    </View>
+    <Pressable onPress={handleToggle}>
+      <View style={styles.switchContainer}>
+        <Animated.View style={[styles.toggle, animatedStyles]} />
+      </View>
+    </Pressable>
   );
 };
 
@@ -61,7 +64,7 @@ const CSSTransition = () => {
   const [state, setState] = useState(true);
 
   useEffect(() => {
-    setState((x) => !x);
+    setTimeout(() => setState((x) => !x));
   }, []);
 
   return (
@@ -78,14 +81,16 @@ const AnimatedStyleAnimation = () => {
     sv.value = 100;
   }, [sv]);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      left: withDelay(
-        1000,
-        withTiming(sv.value, { duration: 10000, easing: Easing.linear })
-      ),
-    };
-  });
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateX: withTiming(sv.value, {
+          duration: DEMO_DURATION_MS,
+          easing: Easing.linear,
+        }),
+      },
+    ],
+  }));
 
   return (
     <Animated.View style={[styles.box, animatedStyle]}>
@@ -174,15 +179,7 @@ type StackParamList = {
   screen3: undefined;
 };
 
-const Stack = createNativeStackNavigator<StackParamList>({
-  initialRouteName: 'home',
-  screens: {
-    home: HomeScreen,
-    screen1: Screen1,
-    screen2: Screen2,
-    screen3: Screen3,
-  },
-});
+const Stack = createNativeStackNavigator<StackParamList>();
 
 export default function App() {
   return (
@@ -220,9 +217,9 @@ const styles = css.create({
   animationBox: {
     width: 100,
     height: 50,
-    animationDelay: '1s',
-    animationDuration: '10s',
-    animationFillMode: 'forwards',
+    animationDuration: DEMO_DURATION_MS,
+    animationFillMode: 'both',
+    animationTimingFunction: 'linear',
     animationName: {
       from: {
         backgroundColor: 'red',
@@ -238,16 +235,13 @@ const styles = css.create({
     width: 100,
     height: 50,
     backgroundColor: 'blue',
-    transitionDelay: '1s',
-    transitionDuration: '10s',
+    transitionDuration: DEMO_DURATION_MS,
     transitionProperty: 'left',
+    transitionTimingFunction: 'linear',
   },
   box: {
     width: 100,
     height: 50,
     backgroundColor: 'pink',
-    transitionDelay: '1s',
-    transitionDuration: '20s',
-    transitionProperty: 'left',
   },
 });

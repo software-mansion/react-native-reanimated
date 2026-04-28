@@ -1,11 +1,16 @@
 'use strict';
+
+// TODO: Fix me
+// @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
 import type { PathProps } from 'react-native-svg';
 
+import { processSVGPath } from '../processors';
 import type { SvgStyleBuilderConfig } from './common';
-import { commonSvgProps } from './common';
+import { SVG_COMMON_PROPERTIES_CONFIG } from './common';
 
-// @ts-expect-error - remove when more properties are added
+// TODO: Fix me
+// @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
 export const SVG_PATH_PROPERTIES_CONFIG: SvgStyleBuilderConfig<PathProps> = {
-  ...commonSvgProps,
-  // TODO - add more properties
+  ...SVG_COMMON_PROPERTIES_CONFIG,
+  d: { process: processSVGPath },
 };

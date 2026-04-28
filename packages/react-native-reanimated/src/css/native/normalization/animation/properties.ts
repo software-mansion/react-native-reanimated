@@ -1,9 +1,9 @@
 'use strict';
+import { convertPropertiesToArrays } from '../../../../common';
 import type {
   ExistingCSSAnimationProperties,
   SingleCSSAnimationProperties,
 } from '../../../types';
-import { convertPropertiesToArrays } from '../../../utils';
 
 export function createSingleCSSAnimationProperties(
   properties: ExistingCSSAnimationProperties

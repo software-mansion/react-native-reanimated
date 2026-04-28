@@ -56,11 +56,8 @@ Vector2D Vector2D::addScaled(const Vector2D &other, const double scale) const {
   return Vector2D{vec[0] + scale * other.vec[0], vec[1] + scale * other.vec[1]};
 }
 
-Vector2D Vector2D::interpolate(const double progress, const Vector2D &other)
-    const {
-  return Vector2D{
-      vec[0] + progress * (other.vec[0] - vec[0]),
-      vec[1] + progress * (other.vec[1] - vec[1])};
+Vector2D Vector2D::interpolate(const double progress, const Vector2D &other) const {
+  return Vector2D{vec[0] + progress * (other.vec[0] - vec[0]), vec[1] + progress * (other.vec[1] - vec[1])};
 }
 
 // Vector3D
@@ -83,8 +80,7 @@ Vector3D &Vector3D::operator*=(const double scalar) {
 #ifndef NDEBUG
 
 std::ostream &operator<<(std::ostream &os, const Vector3D &vector) {
-  os << "Vector3D(" << vector.vec[0] << ", " << vector.vec[1] << ", "
-     << vector.vec[2] << ")";
+  os << "Vector3D(" << vector.vec[0] << ", " << vector.vec[1] << ", " << vector.vec[2] << ")";
   return os;
 }
 
@@ -120,14 +116,10 @@ Vector3D Vector3D::cross(const Vector3D &other) const {
 }
 
 Vector3D Vector3D::addScaled(const Vector3D &other, const double scale) const {
-  return Vector3D{
-      vec[0] + scale * other.vec[0],
-      vec[1] + scale * other.vec[1],
-      vec[2] + scale * other.vec[2]};
+  return Vector3D{vec[0] + scale * other.vec[0], vec[1] + scale * other.vec[1], vec[2] + scale * other.vec[2]};
 }
 
-Vector3D Vector3D::interpolate(const double progress, const Vector3D &other)
-    const {
+Vector3D Vector3D::interpolate(const double progress, const Vector3D &other) const {
   return Vector3D{
       vec[0] + progress * (other.vec[0] - vec[0]),
       vec[1] + progress * (other.vec[1] - vec[1]),
@@ -144,8 +136,7 @@ const double &Vector4D::operator[](const size_t idx) const {
   return vec[idx];
 }
 
-Vector4D Vector4D::interpolate(const double progress, const Vector4D &other)
-    const {
+Vector4D Vector4D::interpolate(const double progress, const Vector4D &other) const {
   return Vector4D{
       vec[0] + progress * (other.vec[0] - vec[0]),
       vec[1] + progress * (other.vec[1] - vec[1]),
@@ -156,8 +147,7 @@ Vector4D Vector4D::interpolate(const double progress, const Vector4D &other)
 #ifndef NDEBUG
 
 std::ostream &operator<<(std::ostream &os, const Vector4D &vector) {
-  os << "Vector4D(" << vector.vec[0] << ", " << vector.vec[1] << ", "
-     << vector.vec[2] << ", " << vector.vec[3] << ")";
+  os << "Vector4D(" << vector.vec[0] << ", " << vector.vec[1] << ", " << vector.vec[2] << ", " << vector.vec[3] << ")";
   return os;
 }
 

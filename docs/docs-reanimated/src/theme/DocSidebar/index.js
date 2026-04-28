@@ -15,6 +15,7 @@ export default function DocSidebarWrapper(props) {
 
   const newItems = [];
   const experimentalItems = ['shared-element-transitions/overview'];
+  const deprecatedItems = ['device/useAnimatedKeyboard'];
   const unreleasedItems = [];
 
   return (
@@ -22,6 +23,7 @@ export default function DocSidebarWrapper(props) {
       newItems={newItems}
       experimentalItems={experimentalItems}
       unreleasedItems={unreleasedItems}
+      deprecatedItems={deprecatedItems}
       heroImages={heroImages}
       titleImages={titleImages}
       {...props}

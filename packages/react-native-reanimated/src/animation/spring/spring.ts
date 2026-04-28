@@ -24,6 +24,7 @@ import {
   getEnergy,
   initialCalculations,
   isAnimationTerminatingCalculation,
+  safeMergeConfigs,
   scaleZetaToMatchClamps,
   underDampedSpringCalculations,
 } from './springUtils';
@@ -71,12 +72,16 @@ export const withSpring = ((
       clamp: undefined,
     } as const;
 
-    const config: DefaultSpringConfig & SpringConfigInner = {
-      ...defaultConfig,
-      ...userConfig,
-      useDuration: !!(userConfig?.duration || userConfig?.dampingRatio),
-      skipAnimation: false,
-    };
+    const config: DefaultSpringConfig & SpringConfigInner = safeMergeConfigs<
+      DefaultSpringConfig & SpringConfigInner
+    >(
+      {
+        ...defaultConfig,
+        useDuration: !!(userConfig?.duration || userConfig?.dampingRatio),
+        skipAnimation: false,
+      },
+      userConfig
+    );
 
     config.skipAnimation = !checkIfConfigIsValid(config);
 

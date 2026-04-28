@@ -140,3 +140,25 @@ button[class*='DocSearch-Button'] {
 [class*='yearGroupHeading'] {
   display: none;
 }
+
+/* Center logo vertically in navbar items */
+.navbar__items a[href='/react-native-reanimated/'] img,
+.navbar__brand a[href='/react-native-reanimated/'] img,
+.navbar__brand img {
+  vertical-align: middle;
+}
+
+/* Tabs nested inside details: bump label contrast against the purple details background. */
+details .tabs__item {
+  color: var(--swm-details-color) !important;
+  opacity: 0.7;
+}
+
+details .tabs__item:hover {
+  opacity: 1;
+}
+
+details .tabs__item--active {
+  opacity: 1;
+  border-bottom-color: var(--swm-details-color) !important;
+}

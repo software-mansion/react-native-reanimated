@@ -1,6 +1,8 @@
 import type { NodePath } from '@babel/core';
 import generate from '@babel/generator';
+import type { Binding } from '@babel/traverse';
 import type {
+  BlockStatement,
   ExpressionStatement,
   FunctionExpression,
   ObjectExpression,
@@ -38,7 +40,7 @@ import { basename, relative } from 'path';
 import { getClosure } from './closure';
 import { generateWorkletFile } from './generate';
 import { workletTransformSync } from './transform';
-import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
+import type { WorkletizableFunction, WorkletsPluginPass } from './types';
 import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
 import { buildWorkletString } from './workletStringCode';
@@ -50,7 +52,7 @@ const MOCK_VERSION = 'x.y.z';
 
 export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ): {
   factory: FunctionExpression;
   factoryCallParamPack: ObjectExpression;
@@ -59,7 +61,10 @@ export function makeWorkletFactory(
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
-  removeWorkletDirective(fun);
+  const includeClosure =
+    state.opts.bundleMode || !hasDirective(fun, 'no-worklet-closure');
+  const limitInitDataHoisting = hasDirective(fun, 'limit-init-data-hoisting');
+  stripWorkletDirectives(fun);
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
@@ -97,7 +102,13 @@ export function makeWorkletFactory(
     closureVariables,
     libraryBindingsToImport,
     relativeBindingsToImport,
-  } = getClosure(fun, state);
+  } = includeClosure
+    ? getClosure(fun, state)
+    : {
+        closureVariables: [],
+        libraryBindingsToImport: new Set<Binding>(),
+        relativeBindingsToImport: new Set<Binding>(),
+      };
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
@@ -192,11 +203,16 @@ export function makeWorkletFactory(
   const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
 
   if (shouldIncludeInitData && !state.opts.bundleMode) {
-    pathForStringDefinitions.insertBefore(
-      variableDeclaration('const', [
-        variableDeclarator(initDataId, initDataObjectExpression),
-      ])
-    );
+    const initDataDeclaration = variableDeclaration('const', [
+      variableDeclarator(initDataId, initDataObjectExpression),
+    ]);
+    if (limitInitDataHoisting) {
+      (fun.getFunctionParent()!.node.body as BlockStatement).body.unshift(
+        initDataDeclaration
+      );
+    } else {
+      pathForStringDefinitions.insertBefore(initDataDeclaration);
+    }
   }
 
   assert(
@@ -387,11 +403,36 @@ export function makeWorkletFactory(
   return { factory, factoryCallParamPack, workletHash };
 }
 
-function removeWorkletDirective(fun: NodePath<WorkletizableFunction>): void {
+function hasDirective(
+  path: NodePath<WorkletizableFunction>,
+  directiveText: string
+): boolean {
+  if (!path.node.body) {
+    return false;
+  }
+
+  const bodyPath = path.get('body');
+  let has = false;
+  if (bodyPath.isBlockStatement()) {
+    has = bodyPath.get('directives').some((directivePath) => {
+      if (
+        directivePath.isDirective() &&
+        directivePath.node.value.value === directiveText
+      ) {
+        return true;
+      }
+    });
+  }
+  return has;
+}
+
+function stripWorkletDirectives(fun: NodePath<WorkletizableFunction>): void {
   fun.traverse({
     DirectiveLiteral(nodePath) {
       if (
-        nodePath.node.value === 'worklet' &&
+        (nodePath.node.value === 'worklet' ||
+          nodePath.node.value === 'no-worklet-closure' ||
+          nodePath.node.value === 'limit-init-data-hoisting') &&
         nodePath.getFunctionParent() === fun
       ) {
         nodePath.parentPath.remove();
@@ -425,7 +466,7 @@ function hash(str: string): number {
 
 function makeWorkletName(
   fun: NodePath<WorkletizableFunction>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ): { workletName: string; reactName: string } {
   let source = 'unknownFile';
 

@@ -9,7 +9,7 @@ Layout transitions allows you to replace layout changes with smooth transitions.
 import LayoutTransitions from '@site/src/examples/LayoutTransitions';
 import LayoutTransitionsSrc from '!!raw-loader!@site/src/examples/LayoutTransitions';
 
-<InteractiveExample src={LayoutTransitionsSrc} component={LayoutTransitions} />
+<InteractiveExample src={LayoutTransitionsSrc} component={LayoutTransitions}/>
 
 ## Predefined Transitions
 
@@ -33,7 +33,7 @@ function App() {
 
 #### Easing <Optional/>
 
-Easing modifiers are time-based modifiers that relay on [`withTiming`](/docs/animations/withTiming) function.
+Easing modifiers are time-based modifiers that rely on [`withTiming`](/docs/animations/withTiming) function.
 
 ```javascript
 LinearTransition.easing(Easing.ease);
@@ -47,7 +47,7 @@ The `.easing(...)` modifiers have no effect when `.springify()` is used.
 
 #### Spring-based <Optional/>
 
-Spring-based modifiers relay on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
 Just as in `withSpring` config, spring-based modifiers can be physics-based (have `mass` and `damping` modifiers) or duration-based (have `duration` and `dampingRatio` modifiers).
 
 :::info
@@ -80,7 +80,6 @@ LinearTransition.springify()
 ```javascript
 LinearTransition.delay(500)
   .reduceMotion(ReduceMotion.Never)
-  .withInitialValues({ transform: [{ translateY: 420 }] })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
   });
@@ -89,17 +88,16 @@ LinearTransition.delay(500)
 - `.duration(duration: number)` sets length of the animation (in milliseconds). Defaults to '300'.
 - `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
-- `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ### Example
 
 <ExampleVideo
   sources={{
-    android:
-      '/react-native-reanimated/recordings/layout_transitions/android_linear_transition.mov',
-    ios: '/react-native-reanimated/recordings/layout_transitions/ios_linear_transition.mov',
-  }}
+android:
+'/react-native-reanimated/recordings/layout_transitions/android_linear_transition.mov',
+ios: '/react-native-reanimated/recordings/layout_transitions/ios_linear_transition.mov',
+}}
 />
 
 ## Sequenced Transition
@@ -138,10 +136,10 @@ SequencedTransition.duration(1000)
 
 <ExampleVideo
   sources={{
-    android:
-      '/react-native-reanimated/recordings/layout_transitions/android_sequenced_transition.mov',
-    ios: '/react-native-reanimated/recordings/layout_transitions/ios_sequenced_transition.mov',
-  }}
+android:
+'/react-native-reanimated/recordings/layout_transitions/android_sequenced_transition.mov',
+ios: '/react-native-reanimated/recordings/layout_transitions/ios_sequenced_transition.mov',
+}}
 />
 
 ## Fading Transition
@@ -178,10 +176,10 @@ FadingTransition.duration(1000)
 
 <ExampleVideo
   sources={{
-    android:
-      '/react-native-reanimated/recordings/layout_transitions/android_fading_transition.mov',
-    ios: '/react-native-reanimated/recordings/layout_transitions/ios_fading_transition.mov',
-  }}
+android:
+'/react-native-reanimated/recordings/layout_transitions/android_fading_transition.mov',
+ios: '/react-native-reanimated/recordings/layout_transitions/ios_fading_transition.mov',
+}}
 />
 
 ## Jumping Transition
@@ -218,10 +216,10 @@ JumpingTransition.duration(1000)
 
 <ExampleVideo
   sources={{
-    android:
-      '/react-native-reanimated/recordings/layout_transitions/android_jumping_transition.mov',
-    ios: '/react-native-reanimated/recordings/layout_transitions/ios_jumping_transition.mov',
-  }}
+android:
+'/react-native-reanimated/recordings/layout_transitions/android_jumping_transition.mov',
+ios: '/react-native-reanimated/recordings/layout_transitions/ios_jumping_transition.mov',
+}}
 />
 
 ## Curved Transition
@@ -270,10 +268,10 @@ CurvedTransition.duration(1000)
 
 <ExampleVideo
   sources={{
-    android:
-      '/react-native-reanimated/recordings/layout_transitions/android_curved_transition.mov',
-    ios: '/react-native-reanimated/recordings/layout_transitions/ios_curved_transition.mov',
-  }}
+android:
+'/react-native-reanimated/recordings/layout_transitions/android_curved_transition.mov',
+ios: '/react-native-reanimated/recordings/layout_transitions/ios_curved_transition.mov',
+}}
 />
 
 ## Entry/Exit Transition
@@ -318,12 +316,12 @@ EntryExitTransition.duration(1000)
 
 <ExampleVideo
   sources={{
-    android:
-      '/react-native-reanimated/recordings/layout_transitions/android_entryexit_transition.mov',
-    ios: '/react-native-reanimated/recordings/layout_transitions/ios_entryexit_transition.mov',
-  }}
+android:
+'/react-native-reanimated/recordings/layout_transitions/android_entryexit_transition.mov',
+ios: '/react-native-reanimated/recordings/layout_transitions/ios_entryexit_transition.mov',
+}}
 />
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

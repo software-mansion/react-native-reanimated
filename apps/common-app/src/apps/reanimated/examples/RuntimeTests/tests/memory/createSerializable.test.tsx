@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
@@ -13,7 +17,8 @@ import {
   wait,
   waitForNotification,
 } from '../../ReJest/RuntimeTestsApi';
-import { runOnUI } from 'react-native-worklets';
+import { createSerializable, scheduleOnUI } from 'react-native-worklets';
+import { TurboModuleRegistry } from 'react-native';
 
 const RESULT_SHARED_VALUE_REF = 'RESULT_SHARED_VALUE_REF';
 
@@ -27,16 +32,16 @@ const ValueComponent = ({ onRunUIFunction }: { onRunUIFunction: () => boolean })
 
   useEffect(() => {
     try {
-      runOnUI(() => {
+      scheduleOnUI(() => {
         'worklet';
         try {
           const result = onRunUIFunction();
           sharedResult.value = result ? 'ok' : 'not_ok';
-        } catch (error) {
+        } catch {
           sharedResult.value = 'error';
         }
-      })();
-    } catch (error) {
+      });
+    } catch {
       sharedResult.value = 'error';
     }
     notify(DONE_NOTIFICATION_NAME);
@@ -178,7 +183,7 @@ describe('Test createSerializable', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
-  test('createSerializableBigInt', async () => {
+  test('createSerializableBigInt fitting in int64', async () => {
     // Arrange
     const bigIntValue = BigInt(123);
 
@@ -200,9 +205,31 @@ describe('Test createSerializable', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
+  test('createSerializableBigInt too big for uint64', async () => {
+    // Arrange
+    const maxInt64 = BigInt('0x7FFFFFFFFFFFFFFF');
+    const bigIntValue = maxInt64 * maxInt64;
+
+    // Act
+    await render(
+      <ValueComponent
+        onRunUIFunction={() => {
+          'worklet';
+          const checks = [typeof bigIntValue === 'bigint', bigIntValue === maxInt64 * maxInt64];
+          return checks.every(Boolean);
+        }}
+      />,
+    );
+    await waitForNotification(DONE_NOTIFICATION_NAME);
+
+    // Assert
+    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
+    expect(sharedValue.onUI).toBe('ok');
+    expect(sharedValue.onJS).toBe('ok');
+  });
+
   test('createSerializableHostObject', async () => {
     // Arrange
-    // @ts-expect-error It's ok
     const hostObjectValue = globalThis.__reanimatedModuleProxy;
     const hostObjectKeys = Object.keys(hostObjectValue);
 
@@ -572,8 +599,7 @@ describe('Test createSerializable', () => {
 
   test('createSerializableHostFunction', async () => {
     // Arrange
-    // @ts-expect-error It's ok
-    const hostFunction = globalThis.__workletsModuleProxy.createSerializableBoolean;
+    const hostFunction = globalThis.__workletsModuleProxy.createSerializableBoolean as any;
 
     // Act
     await render(
@@ -597,7 +623,6 @@ describe('Test createSerializable', () => {
 
   test('createSerializableTurboModuleLike', async () => {
     // Arrange
-    // @ts-expect-error This global host object isn't exposed in the types.
     const proto = globalThis.__reanimatedModuleProxy;
     const reanimatedModuleKeys = Object.keys(proto);
     const obj = {
@@ -751,3 +776,94 @@ describe('Test createSerializable', () => {
     expect(sharedValue.onJS).toBe('error');
   });
 });
+
+const FREEZE_WARNING = 'Tried to modify key';
+
+describe('Test serializable freezing', () => {
+  test('warns when modifying converted array', async () => {
+    const obj = [1, 2, 3];
+    createSerializable(obj);
+    await expect(() => {
+      obj[0] = 2;
+    }).toThrow(FREEZE_WARNING);
+  });
+
+  test('warns when modifying converted remote function', async () => {
+    const obj = () => {};
+    obj.prop = 1;
+    createSerializable(obj);
+    await expect(() => {
+      obj.prop = 2;
+    }).toThrow(FREEZE_WARNING);
+  });
+
+  test('does not warn when modifying converted host object', async () => {
+    const obj = TurboModuleRegistry.get('Clipboard');
+    if (!obj) {
+      return;
+    }
+    createSerializable(obj);
+    await expect(() => {
+      (obj as any).prop = 2;
+    }).not.toThrow();
+  });
+
+  test('warns when modifying converted plain object', async () => {
+    const obj = { prop: 1 };
+    createSerializable(obj);
+    await expect(() => {
+      obj.prop = 2;
+    }).toThrow(FREEZE_WARNING);
+  });
+
+  test('does not warn when modifying converted RegExp literal', async () => {
+    const obj = /a/;
+    createSerializable(obj);
+    await expect(() => {
+      (obj as any).prop = 2;
+    }).not.toThrow();
+  });
+
+  test('does not warn when modifying converted RegExp instance', async () => {
+    // eslint-disable-next-line prefer-regex-literals
+    const obj = new RegExp('a');
+    createSerializable(obj);
+    await expect(() => {
+      (obj as any).prop = 2;
+    }).not.toThrow();
+  });
+
+  test('does not warn when modifying converted ArrayBuffer', async () => {
+    const obj = new ArrayBuffer(8);
+    createSerializable(obj);
+    await expect(() => {
+      (obj as any).prop = 2;
+    }).not.toThrow();
+  });
+
+  test('does not warn when modifying converted Int32Array', async () => {
+    const obj = new Int32Array(2);
+    createSerializable(obj);
+    await expect(() => {
+      obj[1] = 2;
+    }).not.toThrow();
+  });
+
+  test('handles unconfigurable object without throwing', async () => {
+    const obj = {};
+    Object.defineProperty(obj, 'prop', {
+      value: 1,
+      writable: false,
+      enumerable: true,
+      configurable: false,
+    });
+    await expect(() => {
+      createSerializable(obj);
+    }).not.toThrow();
+  });
+});
+
+declare global {
+  var __reanimatedModuleProxy: Record<string, unknown>;
+  var __workletsModuleProxy: Record<string, unknown>;
+}

@@ -1,15 +1,15 @@
 import { TurboModuleRegistry } from 'react-native';
-import { executeOnUIRuntimeSync } from 'react-native-worklets';
+import { runOnUISync } from 'react-native-worklets';
 
 import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
 
 describe('Test createSerializableOnUI', () => {
   test('createSerializableOnUIString', () => {
     // Arrange & Act
-    const stringValue = executeOnUIRuntimeSync(() => {
+    const stringValue = runOnUISync(() => {
       'worklet';
       return 'test';
-    })();
+    });
 
     // Assert
     expect(typeof stringValue).toBe('string');
@@ -18,10 +18,10 @@ describe('Test createSerializableOnUI', () => {
 
   test('createSerializableOnUINumber', () => {
     // Arrange & Act
-    const numberValue = executeOnUIRuntimeSync(() => {
+    const numberValue = runOnUISync(() => {
       'worklet';
       return 123;
-    })();
+    });
 
     // Assert
     expect(typeof numberValue).toBe('number');
@@ -30,10 +30,10 @@ describe('Test createSerializableOnUI', () => {
 
   test('createSerializableOnUITrue', () => {
     // Arrange & Act
-    const trueValue = executeOnUIRuntimeSync(() => {
+    const trueValue = runOnUISync(() => {
       'worklet';
       return true;
-    })();
+    });
 
     // Assert
     expect(typeof trueValue).toBe('boolean');
@@ -42,10 +42,10 @@ describe('Test createSerializableOnUI', () => {
 
   test('createSerializableOnUIFalse', () => {
     // Arrange & Act
-    const falseValue = executeOnUIRuntimeSync(() => {
+    const falseValue = runOnUISync(() => {
       'worklet';
       return false;
-    })();
+    });
 
     // Assert
     expect(typeof falseValue).toBe('boolean');
@@ -54,10 +54,10 @@ describe('Test createSerializableOnUI', () => {
 
   test('createSerializableOnUIUndefined', () => {
     // Arrange & Act
-    const undefinedValue = executeOnUIRuntimeSync(() => {
+    const undefinedValue = runOnUISync(() => {
       'worklet';
       return undefined;
-    })();
+    });
 
     // Assert
     expect(typeof undefinedValue).toBe('undefined');
@@ -66,10 +66,10 @@ describe('Test createSerializableOnUI', () => {
 
   test('createSerializableOnUINull', () => {
     // Arrange & Act
-    const nullValue = executeOnUIRuntimeSync(() => {
+    const nullValue = runOnUISync(() => {
       'worklet';
       return null;
-    })();
+    });
 
     // Assert
     expect(typeof nullValue).toBe('object');
@@ -78,10 +78,10 @@ describe('Test createSerializableOnUI', () => {
 
   test('createSerializableOnUIBigInt', () => {
     // Arrange & Act
-    const bigIntValue = executeOnUIRuntimeSync(() => {
+    const bigIntValue = runOnUISync(() => {
       'worklet';
       return BigInt(123);
-    })();
+    });
 
     // Assert
     expect(typeof bigIntValue).toBe('bigint');
@@ -91,12 +91,12 @@ describe('Test createSerializableOnUI', () => {
   test('createSerializableOnUIHostObject', () => {
     // Arrange & Act
     // Prototype of TurboModule is a host object
-    const hostObject = Object.getPrototypeOf(TurboModuleRegistry.get('Clipboard'));
+    const hostObject = Object.getPrototypeOf(TurboModuleRegistry.get('Clipboard')) as Record<string, unknown>;
     const hostObjectKeys = Object.keys(hostObject);
-    const hostObjectValue = executeOnUIRuntimeSync(() => {
+    const hostObjectValue = runOnUISync(() => {
       'worklet';
       return hostObject;
-    })();
+    });
 
     // Assert
     expect(typeof hostObjectValue).toBe('object');
@@ -127,7 +127,7 @@ describe('Test createSerializableOnUI', () => {
     uint8Array[2] = 3;
 
     // Act
-    const arrayValue: any[] = executeOnUIRuntimeSync(() => {
+    const arrayValue = runOnUISync(() => {
       'worklet';
       return [
         // number
@@ -155,8 +155,8 @@ describe('Test createSerializableOnUI', () => {
         /a/,
         // array buffer
         arrayBuffer,
-      ];
-    })();
+      ] as const;
+    });
 
     // Assert
     // number
@@ -177,7 +177,9 @@ describe('Test createSerializableOnUI', () => {
     expect(typeof arrayValue[index.object]).toBe('object');
     expect(arrayValue[index.object].a).toBe(1);
     // remote function
-    expect(typeof arrayValue[index.remoteFunction]).toBe('object');
+    expect(typeof arrayValue[index.remoteFunction]).toBe(
+      globalThis._WORKLETS_BUNDLE_MODE_ENABLED ? 'function' : 'object',
+    );
     // array
     expect(arrayValue[index.array].length).toBe(1);
     expect(arrayValue[index.array][0]).toBe(1);
@@ -190,7 +192,7 @@ describe('Test createSerializableOnUI', () => {
   // These types are not supported yet
   // test('createSerializableOnUIError', async () => {
   //   // Arrange
-  //   const errorValue = executeOnUIRuntimeSync(() => {
+  //   const errorValue = runOnUISync(() => {
   //     'worklet';
   //     return new Error('test');
   //   })();
@@ -215,7 +217,7 @@ describe('Test createSerializableOnUI', () => {
 
   // test('createSerializableOnUIInitializer', async () => {
   //   // Arrange
-  //   const regExpValue = executeOnUIRuntimeSync(() => {
+  //   const regExpValue = runOnUISync(() => {
   //     'worklet';
   //     return /a/;
   //   })();
@@ -254,7 +256,7 @@ describe('Test createSerializableOnUI', () => {
       initializer = 10,
       arrayBuffer = 11,
     }
-    const obj = executeOnUIRuntimeSync(() => {
+    const obj = runOnUISync(() => {
       'worklet';
       return {
         [key.number]: 1,
@@ -272,7 +274,7 @@ describe('Test createSerializableOnUI', () => {
         [key.initializer]: /test/,
         [key.arrayBuffer]: new ArrayBuffer(3),
       };
-    })();
+    });
 
     // Assert
     expect(typeof obj[key.number]).toBe('number');
@@ -292,7 +294,7 @@ describe('Test createSerializableOnUI', () => {
     expect(typeof obj[key.object]).toBe('object');
     expect(obj[key.object].f).toBe(4);
     expect(obj[key.object].g).toBe('test');
-    expect(typeof obj[key.remoteFunction]).toBe('object');
+    expect(typeof obj[key.remoteFunction]).toBe(globalThis._WORKLETS_BUNDLE_MODE_ENABLED ? 'function' : 'object');
     expect(obj[key.array].length).toBe(1);
     expect(obj[key.array][0]).toBe(1);
     expect(typeof obj[key.initializer]).toBe('object');
@@ -301,7 +303,7 @@ describe('Test createSerializableOnUI', () => {
   // These types are not supported yet
   // test('createSerializableCloneOnUIWorklet', async () => {
   //   // Arrange
-  //   const workletFunction = executeOnUIRuntimeSync(() => {
+  //   const workletFunction = runOnUISync(() => {
   //     'worklet';
   //     return () => {
   //       'worklet';
@@ -329,7 +331,7 @@ describe('Test createSerializableOnUI', () => {
 
   // test('createSerializableCloneOnUIArrayBuffer', async () => {
   //   // Arrange
-  //   const arrayBuffer = executeOnUIRuntimeSync(() => {
+  //   const arrayBuffer = runOnUISync(() => {
   //     'worklet';
   //     return new ArrayBuffer(3);
   //   })();
@@ -358,7 +360,7 @@ describe('Test createSerializableOnUI', () => {
 
   // test('createSerializableRemoteFunction', async () => {
   //   // Arrange & Act
-  //   const remoteFunction = executeOnUIRuntimeSync(() => {
+  //   const remoteFunction = runOnUISync(() => {
   //     'worklet';
   //     const remoteFunction = () => {
   //       return 1;
@@ -373,7 +375,7 @@ describe('Test createSerializableOnUI', () => {
 
   // test('createSerializableHostFunction', async () => {
   //   // Arrange & Act
-  //   const hostFunction = executeOnUIRuntimeSync(() => {
+  //   const hostFunction = runOnUISync(() => {
   //     'worklet';
   //     // @ts-expect-error It's ok
   //     return globalThis.__workletsModuleProxy.createSerializableBoolean;
@@ -387,7 +389,7 @@ describe('Test createSerializableOnUI', () => {
 
   // test('createSerializableTurboModuleLike', async () => {
   //   // Arrange & Act
-  //   const { obj, reanimatedModuleKeys } = executeOnUIRuntimeSync(() => {
+  //   const { obj, reanimatedModuleKeys } = runOnUISync(() => {
   //     // @ts-expect-error This global host object isn't exposed in the types.
   //     const proto = globalThis.__reanimatedModuleProxy;
   //     const _reanimatedModuleKeys = Object.keys(proto);
@@ -408,23 +410,27 @@ describe('Test createSerializableOnUI', () => {
 
   test('createSerializableOnUIInaccessibleObject', async () => {
     // Arrange
-    const set = executeOnUIRuntimeSync(() => {
+    const clazz = runOnUISync(() => {
       'worklet';
-      return new Set();
-    })();
+      class Clazz {
+        method() {}
+      }
+
+      return new Clazz();
+    });
 
     // Act & Assert
     await expect(() => {
-      set.has(42);
+      clazz.method();
     }).toThrow();
   });
 
   test('createSerializableOnUIRemoteNamedFunctionSyncCall', async () => {
     // Arrange
-    const foo = executeOnUIRuntimeSync(() => {
+    const foo = runOnUISync(() => {
       'worklet';
       return function () {};
-    })();
+    });
 
     // Act & Assert
     await expect(() => {
@@ -434,10 +440,10 @@ describe('Test createSerializableOnUI', () => {
 
   test('createSerializableOnUIRemoteAnonymousFunctionSyncCall', async () => {
     // Arrange
-    const foo = executeOnUIRuntimeSync(() => {
+    const foo = runOnUISync(() => {
       'worklet';
       return function () {};
-    })();
+    });
 
     // Act & Assert
     await expect(() => {

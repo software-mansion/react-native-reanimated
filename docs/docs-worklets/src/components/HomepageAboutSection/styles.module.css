@@ -41,7 +41,19 @@
   }
 
   .videoContainer {
-    height: 200px;
+    height: 400px;
     margin-top: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .videoContainer {
+    height: 300px;
+  }
+}
+
+@media (max-width: 420px) {
+  .videoContainer {
+    height: 200px;
   }
 }

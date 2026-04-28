@@ -7,6 +7,7 @@ import { ReanimatedModule } from './ReanimatedModule';
 
 // TODO: Specify the initialization pipeline since now there's no
 // universal source of truth for it.
+// is-tree-shakable-suppress
 initializeReanimatedModule(ReanimatedModule);
 
 // eslint-disable-next-line import/first
@@ -48,12 +49,8 @@ export {
 } from './animation';
 export type { ParsedColorArray } from './Colors';
 export { convertToRGBA, isColor } from './Colors';
-export {
-  DynamicColorIOS,
-  PlatformColor,
-  processColor,
-  ReanimatedLogLevel,
-} from './common';
+export { ReanimatedLogLevel } from './common';
+export { DynamicColorIOS, PlatformColor, processColor } from './common';
 export type {
   AnimatableValue,
   AnimatableValueObject,
@@ -107,10 +104,15 @@ export {
   isReanimated3,
   makeMutable,
 } from './core';
+export { NativeEventsManager } from './createAnimatedComponent';
 export * from './css';
 export type { EasingFunctionFactory } from './Easing';
 export { Easing } from './Easing';
-export { getStaticFeatureFlag, setDynamicFeatureFlag } from './featureFlags';
+export {
+  getDynamicFeatureFlag,
+  getStaticFeatureFlag,
+  setDynamicFeatureFlag,
+} from './featureFlags';
 export type { FrameInfo } from './frameCallback';
 export type { AnimatedProps, EntryOrExitLayoutType } from './helperTypes';
 export type {
@@ -144,19 +146,17 @@ export {
   /** @deprecated Please use {@link useScrollOffset} instead. */
   useScrollOffset as useScrollViewOffset,
   useSharedValue,
+  useTimestamp,
 } from './hook';
 export type {
-  InterpolateConfig,
   InterpolateHSV,
   InterpolateRGB,
   InterpolationOptions,
 } from './interpolateColor';
 export {
-  ColorSpace,
   /** @deprecated Please use {@link Extrapolation} instead. */
   Extrapolate,
   interpolateColor,
-  useInterpolateConfig,
 } from './interpolateColor';
 export type { ExtrapolationConfig, ExtrapolationType } from './interpolation';
 export { clamp, Extrapolation, interpolate } from './interpolation';
@@ -238,6 +238,7 @@ export {
   RotateOutUpLeft,
   RotateOutUpRight,
   SequencedTransition,
+  SharedTransition,
   SlideInDown,
   SlideInLeft,
   // Slide

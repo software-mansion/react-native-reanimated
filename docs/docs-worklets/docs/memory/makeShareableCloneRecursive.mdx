@@ -1,13 +1,13 @@
 ---
-sidebar_position: 4
+sidebar_position: 2137 # Last in the section - deprecated
 ---
 
 # makeShareableCloneRecursive
 
-<DeprecatedBanner text="⚠️ This function is deprecated and will be removed in the next major release. Use createSerializable instead." />
+<DeprecatedBanner text="⚠️ This function is deprecated and will be removed in the next major release. Use createSerializable instead."/>
 
 `makeShareableCloneRecursive` recursively converts JavaScript values into shareable references that can be used on different Runtimes than RN Runtime.
-The reference cannot be manipulated, as it doesn't represent any standard JavaScript object. Changes to the original value don't affect the `Shareable`. 
+The reference cannot be manipulated, as it doesn't represent any standard JavaScript object. Changes to the original value don't affect the `Shareable`.
 To prevent misconceptions about it we freeze the original value for object-like values and for arrays.
 
 **Functions like `runOnUI`, `runOnRuntime`, `runOnJS`, `executeOnUIRuntimeSync` and `runOnUIAsync` automatically convert values to `Shareable` references.**
@@ -29,17 +29,15 @@ global.customWorkletScheduler(shareable);
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type ShareableRef<T = unknown> = {
-  __hostObjectShareableJSRef: T;
-};
+  ```typescript
+  type ShareableRef<T = unknown> = {
+    __hostObjectShareableJSRef: T;
+  };
 
-
-function makeShareableCloneRecursive<T>(value: T): ShareableRef<T> {
-  return value as ShareableRef<T>;
-}
-```
-
+  function makeShareableCloneRecursive<T>(value: T): ShareableRef<T> {
+    return value as ShareableRef<T>;
+  }
+  ```
 </details>

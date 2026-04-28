@@ -1,0 +1,37 @@
+CompileFlags:
+  Remove:
+    # Apple-clang-specific flags not understood by open-source clang/clangd
+    - -ivfsstatcache
+    - -index-store-path
+    - -index-unit-output-path
+    - --serialize-diagnostics
+    - --analyze
+    - -fdiagnostics-show-note-include-stack
+    - -fno-implicit-modules
+    - -fregister-global-dtors-with-atexit
+    - -fpascal-strings
+    - -fskip-odr-check-in-gmf
+    - -fmodules-validate-once-per-build-session
+    - -fno-cxx-modules
+    - -fmodule-name=*
+    - -fmodule-map-file=*
+    - -fmodules-prune-interval=*
+    - -fmodules-prune-after=*
+    - -fbuild-session-file=*
+    - -fgnuc-version=*
+    - -fmax-type-align=*
+    - -mlinker-version=*
+    - -clang-vendor-feature=*
+    - -fno-odr-hash-protocols
+    - -code-extended-block-signature
+---
+If:
+  PathMatch: packages/react-native-reanimated/.*
+CompileFlags:
+  CompilationDatabase: packages/react-native-reanimated
+
+---
+If:
+  PathMatch: packages/react-native-worklets/.*
+CompileFlags:
+  CompilationDatabase: packages/react-native-worklets

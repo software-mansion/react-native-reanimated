@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import type {
   ImageProps,
   ImageStyle,
@@ -22,7 +23,6 @@ import {
 } from '@/apps/css/components';
 import { stringifyConfig } from '@/apps/css/utils';
 import { colors, radius, sizes, spacing } from '@/theme';
-import type { JSX } from 'react';
 
 const sharedConfig: CSSAnimationSettings = {
   animationDirection: 'alternate',

@@ -1,5 +1,6 @@
 'use strict';
-import { executeOnUIRuntimeSync } from 'react-native-worklets';
+
+import { runOnUISync } from 'react-native-worklets';
 
 import { withStyleAnimation } from '../animation';
 import { SHOULD_BE_USE_WEB } from '../common';
@@ -10,7 +11,7 @@ import type {
   SharedValue,
 } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
-import { legacy_makeMutableUI as makeMutableUI } from '../mutables';
+import { makeMutableUI } from '../mutables';
 
 const TAG_OFFSET = 1e9;
 
@@ -73,7 +74,6 @@ function createLayoutAnimationManager(): {
         value._value = style.initialValues;
       }
 
-      // @ts-ignore The line below started failing because I added types to the method – don't have time to fix it right now
       const animation = withStyleAnimation(currentAnimation);
 
       animation.callback = (finished?: boolean) => {
@@ -102,10 +102,10 @@ function createLayoutAnimationManager(): {
 }
 
 if (!SHOULD_BE_USE_WEB) {
-  executeOnUIRuntimeSync(() => {
+  runOnUISync(() => {
     'worklet';
     global.LayoutAnimationsManager = createLayoutAnimationManager();
-  })();
+  });
 }
 
 export type LayoutAnimationsManager = ReturnType<

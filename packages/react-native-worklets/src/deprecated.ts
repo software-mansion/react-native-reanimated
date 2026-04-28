@@ -5,9 +5,9 @@ import {
   isSerializableRef,
   makeShareable,
   makeShareableCloneOnUIRecursive,
-} from './serializable';
-import { serializableMappingCache } from './serializableMappingCache';
-import type { SerializableRef } from './workletTypes';
+} from './memory/serializable';
+import { serializableMappingCache } from './memory/serializableMappingCache';
+import type { SerializableRef } from './memory/types';
 
 /** @deprecated Use {@link SerializableRef} instead. */
 export type ShareableRef<T> = SerializableRef<T>;
@@ -30,3 +30,9 @@ export const isShareableRef = isSerializableRef;
 
 /** @deprecated Use {@link serializableMappingCache} instead. */
 export const shareableMappingCache = serializableMappingCache;
+
+/** @deprecated NOOP, don't use. */
+export function callMicrotasks(): void {
+  'worklet';
+  // NOOP for backwards compatibility.
+}

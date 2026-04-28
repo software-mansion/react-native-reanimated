@@ -11,8 +11,7 @@ namespace reanimated::css {
 
 static constexpr size_t MATRIX_2D_DIMENSION = 3; // 3x3 matrix
 
-class TransformMatrix2D
-    : public TransformMatrixBase<TransformMatrix2D, MATRIX_2D_DIMENSION> {
+class TransformMatrix2D : public TransformMatrixBase<TransformMatrix2D, MATRIX_2D_DIMENSION> {
  public:
   struct Decomposed {
     Vector2D scale;
@@ -21,16 +20,13 @@ class TransformMatrix2D
     Vector2D translation;
 
 #ifndef NDEBUG
-    friend std::ostream &operator<<(
-        std::ostream &os,
-        const Decomposed &decomposed);
+    friend std::ostream &operator<<(std::ostream &os, const Decomposed &decomposed);
 #endif // NDEBUG
 
     Decomposed interpolate(double progress, const Decomposed &other) const;
   };
 
-  using TransformMatrixBase<TransformMatrix2D, MATRIX_2D_DIMENSION>::
-      TransformMatrixBase;
+  using TransformMatrixBase<TransformMatrix2D, MATRIX_2D_DIMENSION>::TransformMatrixBase;
 
   explicit TransformMatrix2D(jsi::Runtime &rt, const jsi::Value &value);
   explicit TransformMatrix2D(const folly::dynamic &array);
@@ -50,8 +46,7 @@ class TransformMatrix2D
 
  private:
   Vector2D getTranslation() const;
-  static std::pair<Vector2D, double> computeScaleAndSkew(
-      std::array<Vector2D, 2> &rows);
+  static std::pair<Vector2D, double> computeScaleAndSkew(std::array<Vector2D, 2> &rows);
   static double computeRotation(std::array<Vector2D, 2> &rows);
 };
 

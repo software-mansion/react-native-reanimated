@@ -15,7 +15,7 @@ describe('Test `normalizeColor` function', () => {
         'rgb(1, 2, 3,)',
         'rgb(1, 2, 3',
       ].forEach((color) => {
-        expect(normalizeColor(color)).toBe(null);
+        expect(normalizeColor(color)).toBeNull();
       });
     });
 
@@ -33,7 +33,7 @@ describe('Test `normalizeColor` function', () => {
         'hsl(1%, 2, 3)',
         'rg b( 1%, 2%, 3%)',
       ].forEach((color) => {
-        expect(normalizeColor(color)).toBe(null);
+        expect(normalizeColor(color)).toBeNull();
       });
     });
 
@@ -50,7 +50,7 @@ describe('Test `normalizeColor` function', () => {
         'rgb(-1, -2, -3)',
         'rgba(0, 0, 0, 1)',
       ].forEach((color) => {
-        expect(normalizeColor(color)).not.toBe(null);
+        expect(normalizeColor(color)).not.toBeNull();
       });
     });
   });

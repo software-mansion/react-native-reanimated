@@ -27,6 +27,13 @@ export function filterCSSAndStyleProperties<S extends AnyRecord>(
   const filteredStyle: AnyRecord = {};
 
   for (const [prop, value] of Object.entries(style)) {
+    if (value === undefined) {
+      // If the user explicitly sets a property to undefined (e.g. when they want
+      // to remove CSS transition or animation), we treat the property as if it was not
+      // present in the style object.
+      continue;
+    }
+
     if (isAnimationProp(prop)) {
       // TODO - add support for animation shorthand
       animationProperties[prop] = value;
@@ -77,14 +84,6 @@ export function filterCSSAndStyleProperties<S extends AnyRecord>(
 }
 
 function validateCSSAnimationProps(props: Partial<CSSAnimationProperties>) {
-  // Check if any animation properties are present but animationName is missing
-  if (!('animationName' in props) && Object.keys(props).length > 0) {
-    logger.warn(
-      'CSS animation properties were provided without specifying animationName.\n' +
-        'If unintended, add animationName or remove unnecessary animation properties.'
-    );
-  }
-
   // Check if animationDuration is missing when animationName is present
   if (!('animationDuration' in props) && 'animationName' in props) {
     logger.warn(

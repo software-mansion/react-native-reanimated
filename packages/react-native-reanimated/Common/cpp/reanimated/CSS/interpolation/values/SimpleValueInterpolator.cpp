@@ -11,8 +11,13 @@
 #include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
-#include <reanimated/CSS/svg/values/SVGLength.h>
+#include <reanimated/CSS/svg/values/CSSLengthArray.h>
+#include <reanimated/CSS/svg/values/SVGBrush.h>
+#include <reanimated/CSS/svg/values/SVGPath.h>
+#include <reanimated/CSS/svg/values/SVGStops.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
+
+#include <memory>
 
 namespace reanimated::css {
 
@@ -21,10 +26,7 @@ SimpleValueInterpolator<AllowedTypes...>::SimpleValueInterpolator(
     const PropertyPath &propertyPath,
     const ValueType &defaultStyleValue,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : ValueInterpolator(
-          propertyPath,
-          std::make_shared<ValueType>(defaultStyleValue),
-          viewStylesRepository) {}
+    : ValueInterpolator(propertyPath, std::make_shared<ValueType>(defaultStyleValue), viewStylesRepository) {}
 
 template <typename... AllowedTypes>
 std::shared_ptr<CSSValue> SimpleValueInterpolator<AllowedTypes...>::createValue(
@@ -34,8 +36,7 @@ std::shared_ptr<CSSValue> SimpleValueInterpolator<AllowedTypes...>::createValue(
 }
 
 template <typename... AllowedTypes>
-std::shared_ptr<CSSValue> SimpleValueInterpolator<AllowedTypes...>::createValue(
-    const folly::dynamic &value) const {
+std::shared_ptr<CSSValue> SimpleValueInterpolator<AllowedTypes...>::createValue(const folly::dynamic &value) const {
   return std::make_shared<ValueType>(value);
 }
 
@@ -55,6 +56,7 @@ template class SimpleValueInterpolator<CSSLength, CSSKeyword>;
 template class SimpleValueInterpolator<CSSDouble>;
 template class SimpleValueInterpolator<CSSDouble, CSSKeyword>;
 template class SimpleValueInterpolator<CSSInteger>;
+template class SimpleValueInterpolator<CSSIndex>;
 template class SimpleValueInterpolator<CSSAngle>;
 template class SimpleValueInterpolator<CSSColor>;
 template class SimpleValueInterpolator<CSSBoolean>;
@@ -63,8 +65,10 @@ template class SimpleValueInterpolator<CSSKeyword>;
 template class SimpleValueInterpolator<CSSBoxShadow>;
 template class SimpleValueInterpolator<CSSDiscreteArray<CSSKeyword>>;
 
-template class SimpleValueInterpolator<SVGLength>;
-template class SimpleValueInterpolator<SVGLength, CSSKeyword>;
+template class SimpleValueInterpolator<SVGPath>;
+template class SimpleValueInterpolator<CSSLengthArray>;
+template class SimpleValueInterpolator<SVGStops>;
 template class SimpleValueInterpolator<SVGStrokeDashArray, CSSKeyword>;
+template class SimpleValueInterpolator<SVGBrush>;
 
 } // namespace reanimated::css

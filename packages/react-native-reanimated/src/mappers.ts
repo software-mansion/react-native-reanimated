@@ -1,7 +1,8 @@
 'use strict';
-import { runOnUI } from 'react-native-worklets';
 
-import { IS_JEST } from './common';
+import { scheduleOnUI } from 'react-native-worklets';
+
+import { IS_JEST, SHOULD_BE_USE_WEB } from './common';
 import type {
   MapperOutputs,
   MapperRawInputs,
@@ -29,7 +30,7 @@ function createMapperRegistry() {
 
   function updateMappersOrder() {
     // sort mappers topologically
-    // the algorithm here takes adventage of a fact that the topological order
+    // the algorithm here takes advantage of a fact that the topological order
     // of a transposed graph is a reverse topological order of the original graph
     // The graph in our case consists of mappers and an edge between two mappers
     // A and B exists if there is a shared value that's on A's output lists and on
@@ -85,8 +86,14 @@ function createMapperRegistry() {
     sortedMappers = newOrder;
   }
 
+  let mapperRunFinalizers: (() => void)[] = [];
+  global.__requestMapperRunFinalizer = (finalizer: () => void) => {
+    mapperRunFinalizers.push(finalizer);
+  };
+
+  let isAnyMapperDirty = false;
+
   function mapperRun() {
-    runRequested = false;
     if (processingMappers) {
       return;
     }
@@ -95,16 +102,43 @@ function createMapperRegistry() {
       if (mappers.size !== sortedMappers.length) {
         updateMappersOrder();
       }
-      for (const mapper of sortedMappers) {
-        if (mapper.dirty) {
-          mapper.dirty = false;
-          mapper.worklet();
+      if (isAnyMapperDirty) {
+        for (const mapper of sortedMappers) {
+          if (mapper.dirty) {
+            mapper.dirty = false;
+            mapper.worklet();
+          }
         }
+        isAnyMapperDirty = false;
       }
     } finally {
       processingMappers = false;
+      const finalizers = mapperRunFinalizers;
+      mapperRunFinalizers = [];
+      for (const finalizer of finalizers) {
+        finalizer();
+      }
     }
   }
+
+  const schedulingFunction = SHOULD_BE_USE_WEB
+    ? requestAnimationFrame
+    : globalThis.requestAnimationFrameFinalizer;
+
+  function scheduledMapperRun() {
+    runRequested = false;
+    mapperRun();
+    if (!SHOULD_BE_USE_WEB) {
+      // We always run mappers on native.
+      schedulingFunction(scheduledMapperRun);
+    }
+  }
+
+  if (!SHOULD_BE_USE_WEB) {
+    schedulingFunction(scheduledMapperRun);
+  }
+
+  global.__mapperRun = mapperRun;
 
   function maybeRequestUpdates() {
     if (IS_JEST) {
@@ -128,9 +162,9 @@ function createMapperRegistry() {
         // we are already in mapper-run phase, and in that case we use `requestAnimationFrame`
         // instead of `queueMicrotask` which will schedule mapper run for the next
         // frame instead of queuing another set of updates in the same frame.
-        requestAnimationFrame(mapperRun);
+        schedulingFunction(scheduledMapperRun);
       } else {
-        queueMicrotask(mapperRun);
+        queueMicrotask(scheduledMapperRun);
       }
       runRequested = true;
     }
@@ -177,19 +211,26 @@ function createMapperRegistry() {
       };
       mappers.set(mapper.id, mapper);
       sortedMappers = [];
+      isAnyMapperDirty = true;
       for (const sv of mapper.inputs) {
         sv.addListener(mapper.id, () => {
           mapper.dirty = true;
-          maybeRequestUpdates();
+          isAnyMapperDirty = true;
+          if (SHOULD_BE_USE_WEB) {
+            maybeRequestUpdates();
+          }
         });
       }
-      maybeRequestUpdates();
+      if (SHOULD_BE_USE_WEB) {
+        maybeRequestUpdates();
+      }
     },
     stop: (mapperID: number) => {
       const mapper = mappers.get(mapperID);
       if (mapper) {
         mappers.delete(mapper.id);
         sortedMappers = [];
+        isAnyMapperDirty = true;
         for (const sv of mapper.inputs) {
           sv.removeListener(mapper.id);
         }
@@ -207,20 +248,20 @@ export function startMapper(
 ): number {
   const mapperID = (MAPPER_ID += 1);
 
-  runOnUI(() => {
+  scheduleOnUI(() => {
     let mapperRegistry = global.__mapperRegistry;
     if (mapperRegistry === undefined) {
       mapperRegistry = global.__mapperRegistry = createMapperRegistry();
     }
     mapperRegistry.start(mapperID, worklet, inputs, outputs);
-  })();
+  });
 
   return mapperID;
 }
 
 export function stopMapper(mapperID: number): void {
-  runOnUI(() => {
+  scheduleOnUI(() => {
     const mapperRegistry = global.__mapperRegistry;
     mapperRegistry?.stop(mapperID);
-  })();
+  });
 }

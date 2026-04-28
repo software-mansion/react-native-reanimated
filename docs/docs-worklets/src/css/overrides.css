@@ -1,6 +1,6 @@
 :root {
   --swm-expandable-transition: transform 200ms ease;
-  --doc-sidebar-width: 310px !important;
+  --doc-sidebar-width: 410px !important;
 }
 
 table {

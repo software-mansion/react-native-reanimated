@@ -1,6 +1,6 @@
 import { version as packageVersion } from '../package.json';
-import { logger } from '../src/logger';
-import { checkCppVersion, matchVersion } from '../src/utils/checkCppVersion';
+import { checkCppVersion, matchVersion } from '../src/debug/checkCppVersion';
+import { logger } from '../src/debug/logger';
 
 describe('checkCppVersion', () => {
   beforeEach(() => {
@@ -48,3 +48,7 @@ describe('matchVersion', () => {
     expect(matchVersion('1.2.3-rc.10', '1.2.3-rc.10')).toBe(true);
   });
 });
+
+declare global {
+  var _WORKLETS_VERSION_CPP: string | undefined;
+}

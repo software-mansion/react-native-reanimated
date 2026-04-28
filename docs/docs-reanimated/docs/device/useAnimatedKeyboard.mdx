@@ -4,9 +4,13 @@ sidebar_position: 1
 
 `useAnimatedKeyboard` lets you create animations based on state and height of the virtual keyboard.
 
+:::info ⚠️ Deprecation notice
+The `useAnimatedKeyboard` is now deprecated. Please migrate to the [`react-native-keyboard-controller`](https://kirillzyusko.github.io/react-native-keyboard-controller/) library. See the [migration guide](#migration-guide) below.
+:::
+
 :::caution
 
-Android implementation of `useAnimatedKeyboard` has drawbacks on Android SDK < 30, for more details see [remarks](/docs/device/useAnimatedKeyboard#remarks) section.
+Android implementation of `useAnimatedKeyboard` has drawbacks on Android SDK \< 30, for more details see [remarks](/docs/device/useAnimatedKeyboard#remarks) section.
 
 :::
 
@@ -25,42 +29,41 @@ export default function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-// --- Function declaration ---
+  ```typescript
+  // --- Function declaration ---
 
-function useAnimatedKeyboard(
-  options: AnimatedKeyboardOptions
-): AnimatedKeyboardInfo;
+  function useAnimatedKeyboard(
+    options: AnimatedKeyboardOptions
+  ): AnimatedKeyboardInfo;
 
-// --- Configuration types ---
+  // --- Configuration types ---
 
-export interface AnimatedKeyboardOptions {
-  isStatusBarTranslucentAndroid?: boolean;
-}
+  export interface AnimatedKeyboardOptions {
+    isStatusBarTranslucentAndroid?: boolean;
+  }
 
-// --- Return types ---
+  // --- Return types ---
 
-export type AnimatedKeyboardInfo = {
-  height: SharedValue<number>;
-  state: SharedValue<KeyboardState>;
-};
+  export type AnimatedKeyboardInfo = {
+    height: SharedValue<number>;
+    state: SharedValue<KeyboardState>;
+  };
 
-export enum KeyboardState {
-  UNKNOWN = 0,
-  OPENING = 1,
-  OPEN = 2,
-  CLOSING = 3,
-  CLOSED = 4,
-}
-```
-
+  export enum KeyboardState {
+    UNKNOWN = 0,
+    OPENING = 1,
+    OPEN = 2,
+    CLOSING = 3,
+    CLOSED = 4,
+  }
+  ```
 </details>
 
 ### Arguments
 
-#### `options` <Optional />
+#### `options` <Optional/>
 
 Optional object containing additional configuration:
 
@@ -83,15 +86,15 @@ import AnimatedKeyboardSrc from '!!raw-loader!@site/src/examples/AnimatedKeyboar
 <InteractiveExample
   src={AnimatedKeyboardSrc}
   component={() => (
-    <ThemedVideo
-      center
-      width={300}
-      sources={{
-        light: '/recordings/useAnimatedKeyboard_light.mov',
-        dark: '/recordings/useAnimatedKeyboard_dark.mov',
-      }}
-    />
-  )}
+<ThemedVideo
+center
+width={300}
+sources={{
+light: '/recordings/useAnimatedKeyboard_light.mov',
+dark: '/recordings/useAnimatedKeyboard_dark.mov',
+}}
+/>
+)}
 />
 
 ## Remarks
@@ -111,12 +114,35 @@ import AnimatedKeyboardSrc from '!!raw-loader!@site/src/examples/AnimatedKeyboar
 
 - On Android, when using navigation with native header, `isStatusBarTranslucentAndroid` doesn't affect the top inset.
 
-- On Android SDK < 30, when status bar is hidden, the keyboard reverts to the default Android behavior.
+- On Android SDK \< 30, when status bar is hidden, the keyboard reverts to the default Android behavior.
 
-- <AvailableFrom version={'3.17.0'} /> On iPad, when the keyboard is floating, the
+- <AvailableFrom version={'3.17.0'}/> On iPad, when the keyboard is floating, the
   hook will always return height: <code>0</code>
   and state: <code>CLOSED</code>.
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios />
+<PlatformCompatibility android ios/>
+
+## Migration guide
+
+As of `react-native-reanimated` **4.x** the `useAnimatedKeyboard` hook has been deprecated due to persistent bugs on iOS 26. To address this, we recommend migrating to the [react-native-keyboard-controller](https://kirillzyusko.github.io/react-native-keyboard-controller/) library, which offers a more robust and feature-complete solution for handling keyboard interactions. This guide walks you through the migration process.
+
+### Step 1: Install `react-native-keyboard-controller`
+
+Follow the official installation instructions in the [installation guide](https://kirillzyusko.github.io/react-native-keyboard-controller/docs/installation).
+
+### Step 2: Use a compatibility wrapper
+
+To make migration easier, you can use a compatibility layer. For that just replace your existing imports with the compat layer:
+
+```diff
+- import { useAnimatedKeyboard, KeyboardState } from 'react-native-reanimated';
++ import { useAnimatedKeyboard, KeyboardState } from 'react-native-keyboard-controller';
+```
+
+And that’s it 🎉
+
+If you run into any issues or edge cases, please open a ticket in the [`react-native-keyboard-controller`](https://github.com/kirillzyusko/react-native-keyboard-controller) repository.
+
+Also consider exploring the built-in [components](https://kirillzyusko.github.io/react-native-keyboard-controller/docs/guides/components-overview) - they can help reduce boilerplate and simplify your integration.

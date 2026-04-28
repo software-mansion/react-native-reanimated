@@ -11,9 +11,7 @@ namespace worklets {
 class JSISerializer {
  public:
   explicit JSISerializer(jsi::Runtime &rt);
-  std::string stringifyJSIValueRecursively(
-      const jsi::Value &value,
-      bool isTopLevel = false);
+  std::string stringifyJSIValueRecursively(const jsi::Value &value, bool isTopLevel = false);
 
  private:
   std::string stringifyArray(const jsi::Array &arr);
@@ -28,14 +26,11 @@ class JSISerializer {
   std::string stringifyRecursiveType(const jsi::Object &object);
 
   bool hasBeenVisited(const jsi::Object &object) {
-    return visitedNodes_.getPropertyAsFunction(rt_, "has")
-        .callWithThis(rt_, visitedNodes_, object)
-        .getBool();
+    return visitedNodes_.getPropertyAsFunction(rt_, "has").callWithThis(rt_, visitedNodes_, object).getBool();
   }
 
   void markAsVisited(const jsi::Object &object) {
-    visitedNodes_.getPropertyAsFunction(rt_, "add")
-        .callWithThis(rt_, visitedNodes_, object);
+    visitedNodes_.getPropertyAsFunction(rt_, "add").callWithThis(rt_, visitedNodes_, object);
   }
 
   jsi::Runtime &rt_;

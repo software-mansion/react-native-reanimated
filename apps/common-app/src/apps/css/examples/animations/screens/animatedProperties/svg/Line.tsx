@@ -1,4 +1,7 @@
 import Animated, { type CSSAnimationKeyframes } from 'react-native-reanimated';
+// TODO: Fix me
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
 import { Line, type LineProps, Svg } from 'react-native-svg';
 
 import { ExamplesScreen } from '@/apps/css/components';
@@ -10,10 +13,10 @@ export default function LineExample() {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes<LineProps> }, LineProps>
       buildAnimation={({ keyframes }) => ({
-        animationName: keyframes,
         animationDirection: 'alternate',
         animationDuration: '1s',
         animationIterationCount: 'infinite',
+        animationName: keyframes,
         animationTimingFunction: 'linear',
       })}
       renderExample={({ animation }) => (
@@ -44,6 +47,8 @@ export default function LineExample() {
                   title: 'Start X (x1) - Absolute',
                 },
                 {
+                  description:
+                    'Animation using only percentage values for smooth relative positioning',
                   keyframes: {
                     from: {
                       x1: '10%',
@@ -53,10 +58,10 @@ export default function LineExample() {
                     },
                   },
                   title: 'Start X (x1) - Percentage',
-                  description:
-                    'Animation using only percentage values for smooth relative positioning',
                 },
                 {
+                  description:
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
                       x1: 20,
@@ -66,8 +71,6 @@ export default function LineExample() {
                     },
                   },
                   title: 'Start X (x1) - Mixed',
-                  description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the start X position is changed **abruptly**',
                 },
               ],
               title: 'Start X Position (x1)',
@@ -83,6 +86,8 @@ export default function LineExample() {
                   title: 'Start Y (y1) - Absolute',
                 },
                 {
+                  description:
+                    'Animation using only percentage values for smooth relative positioning',
                   keyframes: {
                     from: {
                       y1: '10%',
@@ -92,10 +97,10 @@ export default function LineExample() {
                     },
                   },
                   title: 'Start Y (y1) - Percentage',
-                  description:
-                    'Animation using only percentage values for smooth relative positioning',
                 },
                 {
+                  description:
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
                       y1: 15,
@@ -105,8 +110,6 @@ export default function LineExample() {
                     },
                   },
                   title: 'Start Y (y1) - Mixed',
-                  description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the start Y position is changed **abruptly**',
                 },
               ],
               title: 'Start Y Position (y1)',
@@ -127,6 +130,8 @@ export default function LineExample() {
                   title: 'End X (x2) - Absolute',
                 },
                 {
+                  description:
+                    'Animation using only percentage values for smooth relative positioning',
                   keyframes: {
                     from: {
                       x2: '90%',
@@ -136,10 +141,10 @@ export default function LineExample() {
                     },
                   },
                   title: 'End X (x2) - Percentage',
-                  description:
-                    'Animation using only percentage values for smooth relative positioning',
                 },
                 {
+                  description:
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
                       x2: 80,
@@ -149,8 +154,6 @@ export default function LineExample() {
                     },
                   },
                   title: 'End X (x2) - Mixed',
-                  description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the end X position is changed **abruptly**',
                 },
               ],
               title: 'End X Position (x2)',
@@ -166,6 +169,8 @@ export default function LineExample() {
                   title: 'End Y (y2) - Absolute',
                 },
                 {
+                  description:
+                    'Animation using only percentage values for smooth relative positioning',
                   keyframes: {
                     from: {
                       y2: '90%',
@@ -175,10 +180,10 @@ export default function LineExample() {
                     },
                   },
                   title: 'End Y (y2) - Percentage',
-                  description:
-                    'Animation using only percentage values for smooth relative positioning',
                 },
                 {
+                  description:
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
                       y2: 85,
@@ -188,8 +193,6 @@ export default function LineExample() {
                     },
                   },
                   title: 'End Y (y2) - Mixed',
-                  description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the end Y position is changed **abruptly**',
                 },
               ],
               title: 'End Y Position (y2)',

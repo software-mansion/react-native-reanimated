@@ -12,8 +12,6 @@ struct SkewOperationBase : public TransformOperationBase<TOperation, CSSAngle> {
   using TransformOperationBase<TOperation, CSSAngle>::TransformOperationBase;
 
   explicit SkewOperationBase(const std::string &value);
-
-  folly::dynamic valueToDynamic() const override;
 };
 
 using SkewXOperation = SkewOperationBase<TransformOp::SkewX>;

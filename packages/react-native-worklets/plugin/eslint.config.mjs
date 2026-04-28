@@ -12,6 +12,14 @@ import eslintConfig from '../../../eslint.config.mjs';
 const config = tsEslint.config(
   ...eslintConfig,
   {
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.json', '../../../tsconfig.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
     plugins: {
       'simple-import-sort': simpleImportSort,
     },
@@ -25,9 +33,9 @@ const config = tsEslint.config(
     rules: {
       'jsdoc/require-jsdoc': 'off',
       'no-bitwise': 'off',
-      'no-redeclare': 'warn'
+      'no-redeclare': 'warn',
     },
-  },
+  }
 );
 
 export default config;

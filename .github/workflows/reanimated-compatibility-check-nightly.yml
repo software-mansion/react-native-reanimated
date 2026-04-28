@@ -1,6 +1,7 @@
 name: Reanimated compatibility check [Nightly]
 env:
   YARN_ENABLE_HARDENED_MODE: 0
+  YARN_ENABLE_IMMUTABLE_INSTALLS: 0
 on:
   pull_request:
     types: [opened, synchronize, labeled, unlabeled]
@@ -26,7 +27,7 @@ jobs:
 
   reanimated-compatibility-check-nightly:
     if: ${{github.repository == 'software-mansion/react-native-reanimated' && (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'Check compatibility'))}}
-    runs-on: ${{matrix.platform == 'iOS' && 'macos-15' || 'ubuntu-latest'}}
+    runs-on: ${{matrix.platform == 'iOS' && 'macos-26' || 'ubuntu-latest'}}
     needs: read-compatibility-json
     strategy:
       matrix:
@@ -51,7 +52,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 24
       - uses: ruby/setup-ruby@v1
         if: ${{ matrix.platform == 'iOS' }}
         with:

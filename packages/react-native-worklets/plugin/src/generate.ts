@@ -13,10 +13,10 @@ import {
   stringLiteral,
 } from '@babel/types';
 import assert from 'assert';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import { dirname, relative, resolve } from 'path';
 
-import type { ReanimatedPluginPass } from './types';
+import type { WorkletsPluginPass } from './types';
 import { generatedWorkletsDir } from './types';
 
 export function generateWorkletFile(
@@ -24,7 +24,7 @@ export function generateWorkletFile(
   relativeBindingsToImport: Set<Binding>,
   factory: FunctionExpression,
   workletHash: number,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ) {
   const libraryImports = Array.from(libraryBindingsToImport)
     .filter(
@@ -82,10 +82,6 @@ export function generateWorkletFile(
   })?.code;
 
   assert(transformedProg, '[Worklets] `transformedProg` is undefined.');
-
-  if (!existsSync(filesDirPath)) {
-    mkdirSync(filesDirPath, {});
-  }
 
   const dedicatedFilePath = resolve(filesDirPath, `${workletHash}.js`);
 

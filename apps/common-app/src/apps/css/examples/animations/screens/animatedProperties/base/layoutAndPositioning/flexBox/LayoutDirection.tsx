@@ -2,11 +2,12 @@ import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { ExamplesScreen, VerticalExampleCard } from '@/apps/css/components';
+import type { ExampleScreenProps } from '@/apps/css/navigation/types';
 import { colors, flex, radius, sizes } from '@/theme';
 
 const BOX_COLORS = [colors.primaryLight, colors.primary, colors.primaryDark];
 
-export default function LayoutDirection() {
+export default function LayoutDirection({ labelTypes }: ExampleScreenProps) {
   return (
     <ExamplesScreen
       CardComponent={VerticalExampleCard}
@@ -58,7 +59,7 @@ export default function LayoutDirection() {
               title: 'Changing Layout Direction',
             },
           ],
-          labelTypes: ['iOS', 'Android'],
+          labelTypes,
           title: 'Layout Direction',
         },
       ]}

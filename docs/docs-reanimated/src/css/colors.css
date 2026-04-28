@@ -121,6 +121,8 @@
   /* Typography */
   --ifm-heading-color: var(--ifm-color-primary);
   --ifm-font-color-base: var(--swm-navy-light-100);
+  --ifm-link-color: var(--swm-blue-light-100);
+  --ifm-link-hover-color: var(--swm-blue-light-60);
 
   /* Tabs */
   --swm-tab: var(--swm-navy-light-20);
@@ -296,6 +298,17 @@
   --swm-appjs-2025-primary: #484dfc;
   --swm-appjs-2025-primary-hover: #7189ff;
   --swm-appjs-2025-background: #f7eded;
+
+  /* Special codeblocks colors */
+  --codeblock-diff-inserted-color-light: #265f4c;
+  --codeblock-diff-inserted-color-dark: var(--swm-green-dark-40);
+  --codeblock-diff-inserted-background-light: var(--swm-green-light-20);
+  --codeblock-diff-inserted-background-dark: var(--swm-green-dark-140);
+
+  --codeblock-diff-deleted-color-light: #b8403a;
+  --codeblock-diff-deleted-color-dark: var(--swm-red-dark-40);
+  --codeblock-diff-deleted-background-light: var(--swm-red-light-20);
+  --codeblock-diff-deleted-background-dark: var(--swm-red-dark-140);
 }
 
 :root[data-theme='dark'] {
@@ -316,6 +329,8 @@
 
   /* Typography */
   --ifm-font-color-base: var(--swm-navy-light-10);
+  --ifm-link-color: var(--swm-blue-dark-80);
+  --ifm-link-hover-color: var(--swm-blue-dark-60);
 
   /* Tabs */
   --swm-tab: var(--swm-navy-light-60);
@@ -450,6 +465,9 @@
 
   --swm-sidebar-label-text-unreleased: var(--swm-off-white);
   --swm-sidebar-label-background-unreleased: var(--swm-blue-dark-120);
+
+  --swm-sidebar-label-text-deprecated: var(--swm-sidebar-menu-color);
+  --swm-sidebar-label-background-deprecated: rgba(170, 188, 208, 0.5);
 
   /* Mobile sidebar versions */
   --swm-sidebar-elements-version-text: var(--swm-navy-dark-20);

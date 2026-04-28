@@ -26,12 +26,9 @@ class SimpleValueInterpolator : public ValueInterpolator {
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
  protected:
-  std::shared_ptr<CSSValue> createValue(
-      jsi::Runtime &rt,
-      const jsi::Value &value) const override;
+  std::shared_ptr<CSSValue> createValue(jsi::Runtime &rt, const jsi::Value &value) const override;
 
-  std::shared_ptr<CSSValue> createValue(
-      const folly::dynamic &value) const override;
+  std::shared_ptr<CSSValue> createValue(const folly::dynamic &value) const override;
 
   folly::dynamic interpolateValue(
       double progress,

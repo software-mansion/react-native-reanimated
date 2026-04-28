@@ -1,4 +1,5 @@
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import type { useNavigation } from '@react-navigation/native';
 
 import type { LabelType, RouteCardComponent } from '@/apps/css/components';
 
@@ -6,7 +7,6 @@ export type Route = RouteWithComponent | RouteWithRoutes;
 
 type SharedRouteProps = {
   name: string;
-  disabled?: boolean;
   displayed?: boolean;
   labelTypes?: Array<LabelType>;
   CardComponent?: RouteCardComponent;
@@ -17,8 +17,13 @@ export type RouteWithRoutes = {
   routes: Routes;
 } & SharedRouteProps;
 
+export type ExampleScreenProps = {
+  navigation: ReturnType<typeof useNavigation>;
+  labelTypes?: Array<LabelType>;
+};
+
 type RouteWithComponent = {
-  Component: React.ComponentType;
+  Component: React.ComponentType<ExampleScreenProps>;
 } & SharedRouteProps;
 
 export type Routes = Record<string, Route>;

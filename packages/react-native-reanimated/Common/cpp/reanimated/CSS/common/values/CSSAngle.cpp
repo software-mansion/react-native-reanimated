@@ -2,6 +2,7 @@
 
 #include <iomanip>
 #include <regex>
+#include <string>
 #include <unordered_map>
 
 namespace reanimated::css {
@@ -22,23 +23,20 @@ CSSAngle::CSSAngle(const std::string &rotationString) {
   size_t pos = rotationString.find_first_not_of("0123456789.-+");
 
   if (pos == std::string::npos) {
-    throw std::invalid_argument(
-        "[Reanimated] CSSAngle: Invalid angle value: " + rotationString);
+    throw std::invalid_argument("[Reanimated] CSSAngle: Invalid angle value: " + rotationString);
   }
 
   std::string numericPart = rotationString.substr(0, pos);
   std::string unitPart = rotationString.substr(pos);
 
   if (!std::regex_match(numericPart, validNumberRegex)) {
-    throw std::invalid_argument(
-        "[Reanimated] CSSAngle: Invalid angle value: " + rotationString);
+    throw std::invalid_argument("[Reanimated] CSSAngle: Invalid angle value: " + rotationString);
   }
 
   // Lookup the unit and convert to radians
   auto it = unitFactors.find(unitPart);
   if (it == unitFactors.cend()) {
-    throw std::invalid_argument(
-        "[Reanimated] CSSAngle: Invalid angle unit: " + unitPart);
+    throw std::invalid_argument("[Reanimated] CSSAngle: Invalid angle unit: " + unitPart);
   }
 
   double numericValue = std::stod(numericPart);

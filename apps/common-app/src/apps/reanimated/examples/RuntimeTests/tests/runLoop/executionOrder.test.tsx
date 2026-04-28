@@ -9,7 +9,7 @@ import {
   waitForNotifications,
 } from '../../ReJest/RuntimeTestsApi';
 import { DispatchTestComponent } from './DispatchTestComponent';
-import { createWorkletRuntime, runOnRuntime } from 'react-native-worklets';
+import { createWorkletRuntime, scheduleOnRuntime } from 'react-native-worklets';
 
 import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_2_METHODS } from './executionOrderConfigs/twoMethodsSerial';
 import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SERIAL } from './executionOrderConfigs/threeMethodsSerial';
@@ -18,6 +18,8 @@ import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SCHEDULING } from './ex
 import { getMethodMap } from './executionOrderConfigs/utils';
 
 describe('Test mixed order of execution', () => {
+  const rt = createWorkletRuntime({ name: 'test' });
+
   test.each(EXPECTED_ORDER_OF_EXECUTION_2_METHODS)(
     'two methods, **${0}**[**${1}**], **${2}**[**${3}**], runtime: **${4}**',
     async config => {
@@ -44,24 +46,23 @@ describe('Test mixed order of execution', () => {
   );
 
   test.each(EXPECTED_ORDER_OF_EXECUTION_RUN_ON_RUNTIME)(
-    'runOnRuntime, **${0}**[**${1}**], **${2}**[**${3}**]',
+    'scheduleOnRuntime, **${0}**[**${1}**], **${2}**[**${3}**]',
     async ([firstMethodName, firstMethodOrder, secondMethodName, secondMethodOrder]) => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
       const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
-      const rt = createWorkletRuntime({ name: 'test' });
-      runOnRuntime(rt, () => {
+      scheduleOnRuntime(rt, () => {
         'worklet';
         getMethodMap()[firstMethodName](() => order(firstMethodOrder, notification1));
-        // heavy task, to make sure that next runOnRuntime will schedule task on async queue
+        // heavy task, to make sure that next scheduleOnRuntime will schedule task on async queue
         new Array(100000).map((_v, i) => (i / 2) * i * 9 + 7);
-      })();
-      runOnRuntime(rt, () => {
+      });
+      scheduleOnRuntime(rt, () => {
         'worklet';
         getMethodMap()[secondMethodName](() => order(secondMethodOrder, notification2));
-      })();
+      });
 
       await waitForNotifications([notification1, notification2]);
       expect(confirmedOrder.value).toBe(2);

@@ -1,5 +1,5 @@
 'use strict';
-import { logger, ReanimatedError } from '../common';
+import { logger } from '../common';
 import { jsVersion } from './jsVersion';
 
 export function checkCppVersion() {
@@ -13,8 +13,8 @@ export function checkCppVersion() {
   }
   const ok = matchVersion(jsVersion, cppVersion);
   if (!ok) {
-    throw new ReanimatedError(
-      `Mismatch between JavaScript part and native part of Reanimated (${jsVersion} vs ${cppVersion}).
+    throw new Error(
+      `[Reanimated] Mismatch between JavaScript part and native part of Reanimated (${jsVersion} vs ${cppVersion}).
     See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-javascript-part-and-native-part-of-reanimated\` for more details.`
     );
   }

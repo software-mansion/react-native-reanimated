@@ -8,11 +8,6 @@ template <TransformOp TOperation>
 ScaleOperationBase<TOperation>::ScaleOperationBase(const double value)
     : TransformOperationBase<TOperation, CSSDouble>(CSSDouble(value)) {}
 
-template <TransformOp TOperation>
-folly::dynamic ScaleOperationBase<TOperation>::valueToDynamic() const {
-  return this->value.toDynamic();
-}
-
 bool ScaleOperation::canConvertTo(TransformOp type) const {
   return type == TransformOp::ScaleX || type == TransformOp::ScaleY;
 }
@@ -20,13 +15,9 @@ bool ScaleOperation::canConvertTo(TransformOp type) const {
 TransformOperations ScaleOperation::convertTo(TransformOp type) const {
   assertCanConvertTo(type);
   if (type == TransformOp::ScaleX) {
-    return {
-        std::make_shared<ScaleXOperation>(value),
-        std::make_shared<ScaleYOperation>(value)};
+    return {std::make_shared<ScaleXOperation>(value), std::make_shared<ScaleYOperation>(value)};
   } else {
-    return {
-        std::make_shared<ScaleYOperation>(value),
-        std::make_shared<ScaleXOperation>(value)};
+    return {std::make_shared<ScaleYOperation>(value), std::make_shared<ScaleXOperation>(value)};
   }
 }
 

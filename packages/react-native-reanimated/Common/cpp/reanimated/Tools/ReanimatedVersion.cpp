@@ -1,8 +1,8 @@
 #include <reanimated/Tools/ReanimatedVersion.h>
-#include <worklets/Tools/JSLogger.h>
-#include <worklets/Tools/VersionUtils.h>
 
-#include <memory>
+#ifndef NDEBUG
+#include <regex>
+#endif // NDEBUG
 #include <string>
 
 #ifdef REANIMATED_VERSION
@@ -21,31 +21,60 @@ std::string getReanimatedCppVersion() {
 
 void injectReanimatedCppVersion(jsi::Runtime &rnRuntime) {
   auto version = getReanimatedCppVersion();
-  rnRuntime.global().setProperty(
-      rnRuntime,
-      "_REANIMATED_VERSION_CPP",
-      jsi::String::createFromUtf8(rnRuntime, version));
+  rnRuntime.global().setProperty(rnRuntime, "_REANIMATED_VERSION_CPP", jsi::String::createFromUtf8(rnRuntime, version));
 }
 
 #ifndef NDEBUG
-void checkJSVersion(
-    jsi::Runtime &rnRuntime,
-    const std::shared_ptr<worklets::JSLogger> &jsLogger) {
-  auto cppVersion = getReanimatedCppVersion();
-  auto jsVersionValue =
-      rnRuntime.global().getProperty(rnRuntime, "_REANIMATED_VERSION_JS");
-  worklets::checkJSVersion(
-      rnRuntime,
-      jsVersionValue,
-      jsLogger,
-      cppVersion,
-      "Reanimated",
-      "https://docs.swmansion.com/react-native-reanimated/");
+bool matchVersion(const std::string &version1, const std::string &version2) {
+  std::regex pattern("^(\\d+)\\.(\\d+)\\.\\d+$");
+  std::smatch mv1;
+  std::smatch mv2;
+  if (std::regex_match(version1, mv1, pattern) && std::regex_match(version2, mv2, pattern)) {
+    return mv1[1].str() == mv2[1].str() && mv1[2].str() == mv2[2].str();
+  } else {
+    return version1 == version2;
+  }
+}
+
+void checkJSVersion(jsi::Runtime &rt) {
+  const auto cppVersion = getReanimatedCppVersion();
+  const auto jsVersionValue = rt.global().getProperty(rt, "_REANIMATED_VERSION_JS");
+  const auto docsBaseUrl = "https://docs.swmansion.com/react-native-reanimated/";
+  const auto consoleWarn = rt.global().getPropertyAsObject(rt, "console").getPropertyAsFunction(rt, "warn");
+  const auto libraryPrefix = std::string("[Reanimated] ");
+
+  if (jsVersionValue.isUndefined()) {
+    consoleWarn.call(
+        rt,
+        std::string(
+            libraryPrefix +
+            "C++ side failed to resolve JavaScript code "
+            "version\n") +
+            "See " + docsBaseUrl +
+            "guides/"
+            "troubleshooting#c-side-failed-to-resolve-javascript-code-version for "
+            "more details.");
+    return;
+  }
+
+  const auto jsVersion = jsVersionValue.asString(rt).utf8(rt);
+
+  if (!matchVersion(cppVersion, jsVersion)) {
+    consoleWarn.call(
+        rt,
+        std::string(
+            libraryPrefix +
+            "Mismatch between C++ code version and "
+            "JavaScript code version (") +
+            cppVersion + " vs. " + jsVersion + " respectively).\n" + "See " + docsBaseUrl +
+            "/guides/"
+            "troubleshooting#mismatch-between-c-code-version-and-javascript-code-"
+            "version` for more details.");
+    return;
+  }
 }
 #else
-void checkJSVersion(
-    jsi::Runtime &rnRuntime,
-    const std::shared_ptr<worklets::JSLogger> &jsLogger) {
+void checkJSVersion(jsi::Runtime &rt) {
   // In release builds we don't check the version, hence
   // this function is a NOOP.
 }

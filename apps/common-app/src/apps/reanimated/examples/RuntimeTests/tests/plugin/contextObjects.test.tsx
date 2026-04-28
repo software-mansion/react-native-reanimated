@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 
 import { describe, expect, getRegisteredValue, registerValue, render, test, wait } from '../../ReJest/RuntimeTestsApi';
-import { runOnUI } from 'react-native-worklets';
+import { scheduleOnUI } from 'react-native-worklets';
 
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
 
@@ -20,9 +20,9 @@ describe('Test context objects', () => {
       };
 
       useEffect(() => {
-        runOnUI(() => {
+        scheduleOnUI(() => {
           output.value = contextObject.foo();
-        })();
+        });
       });
 
       return <View />;
@@ -43,9 +43,9 @@ describe('Test context objects', () => {
       };
 
       useEffect(() => {
-        runOnUI(() => {
+        scheduleOnUI(() => {
           output.value = contextObject.foo();
-        })();
+        });
       });
 
       return <View />;
@@ -71,9 +71,9 @@ describe('Test context objects', () => {
       };
 
       useEffect(() => {
-        runOnUI(() => {
+        scheduleOnUI(() => {
           output.value = contextObject.bar();
-        })();
+        });
       });
 
       return <View />;
@@ -99,9 +99,9 @@ describe('Test context objects', () => {
       };
 
       useEffect(() => {
-        runOnUI(() => {
+        scheduleOnUI(() => {
           output.value = contextObject.bar();
-        })();
+        });
       });
 
       return <View />;
@@ -125,10 +125,10 @@ describe('Test context objects', () => {
       };
 
       useEffect(() => {
-        runOnUI(() => {
+        scheduleOnUI(() => {
           contextObject.bar();
           output.value = contextObject.foo;
-        })();
+        });
       });
 
       return <View />;
@@ -152,10 +152,10 @@ describe('Test context objects', () => {
       };
 
       useEffect(() => {
-        runOnUI(() => {
+        scheduleOnUI(() => {
           contextObject.bar();
           output.value = contextObject.foo;
-        })();
+        });
       });
 
       return <View />;

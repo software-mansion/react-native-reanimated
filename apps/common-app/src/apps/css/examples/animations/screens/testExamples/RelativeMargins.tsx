@@ -2,9 +2,10 @@ import { View } from 'react-native';
 import Animated, { css } from 'react-native-reanimated';
 
 import { TestExampleScreen } from '@/apps/css/components';
+import type { ExampleScreenProps } from '@/apps/css/navigation/types';
 import { colors, radius, sizes } from '@/theme';
 
-export default function RelativeMargins() {
+export default function RelativeMargins({ labelTypes }: ExampleScreenProps) {
   return (
     <TestExampleScreen
       sections={[
@@ -27,7 +28,7 @@ export default function RelativeMargins() {
             },
           ],
           example: <Example />,
-          labelTypes: ['needsFix'],
+          labelTypes,
           title: 'Relative and mixed unit margins',
           webExampleLink:
             'https://codepen.io/Mateusz-opaciski/pen/NWQVMMp?editors=1100',

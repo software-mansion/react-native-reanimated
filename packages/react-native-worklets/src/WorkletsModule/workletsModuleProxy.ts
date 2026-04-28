@@ -1,10 +1,28 @@
 'use strict';
 
-import type { SynchronizableRef } from '../synchronizable';
-import type { SerializableRef, WorkletRuntime } from '../workletTypes';
+import type { SerializableRef, SynchronizableRef } from '../memory/types';
+import type { WorkletRuntime } from '../types';
 
 /** Type of `__workletsModuleProxy` injected with JSI. */
 export interface WorkletsModuleProxy {
+  loadUnpackers(
+    valueUnpackerCode: string,
+    valueUnpackerLocation: string,
+    valueUnpackerSourceMap: string,
+    synchronizableUnpackerCode: string,
+    synchronizableUnpackerLocation: string,
+    synchronizableUnpackerSourceMap: string,
+    customSerializableUnpackerCode: string,
+    customSerializableUnpackerLocation: string,
+    customSerializableUnpackerSourceMap: string,
+    shareableHostUnpackerCode: string,
+    shareableHostUnpackerLocation: string,
+    shareableHostUnpackerSourceMap: string,
+    shareableGuestUnpackerCode: string,
+    shareableGuestUnpackerLocation: string,
+    shareableGuestUnpackerSourceMap: string
+  ): void;
+
   createSerializable<TValue>(
     value: TValue,
     shouldPersistRemote: boolean,
@@ -69,11 +87,29 @@ export interface WorkletsModuleProxy {
     shouldPersistRemote: boolean
   ): SerializableRef<object>;
 
+  createCustomSerializable(
+    data: SerializableRef<unknown>,
+    typeId: number
+  ): SerializableRef<unknown>;
+
+  registerCustomSerializable(
+    determine: SerializableRef<object>,
+    pack: SerializableRef<object>,
+    unpack: SerializableRef<object>,
+    typeId: number
+  ): void;
+
+  createShareable<TValue = unknown>(
+    hostRuntimeId: number,
+    initial: SerializableRef<TValue>,
+    initSynchronously: boolean,
+    decorateHost: SerializableRef,
+    decorateGuest: SerializableRef
+  ): SerializableRef<TValue>;
+
   scheduleOnUI<TValue>(serializable: SerializableRef<TValue>): void;
 
-  executeOnUIRuntimeSync<TValue, TReturn>(
-    serializable: SerializableRef<TValue>
-  ): TReturn;
+  runOnUISync<TValue, TReturn>(serializable: SerializableRef<TValue>): TReturn;
 
   createWorkletRuntime(
     name: string,
@@ -88,12 +124,22 @@ export interface WorkletsModuleProxy {
     worklet: SerializableRef<TValue>
   ): void;
 
-  reportFatalErrorOnJS(
-    message: string,
-    stack: string,
-    name: string,
-    jsEngine: string
+  scheduleOnRuntimeWithId<TValue>(
+    runtimeId: number,
+    worklet: SerializableRef<TValue>
   ): void;
+
+  runOnRuntimeSync<TValue, TReturn>(
+    workletRuntime: WorkletRuntime,
+    worklet: SerializableRef<TValue>
+  ): TReturn;
+
+  runOnRuntimeSyncWithId<TValue, TReturn>(
+    runtimeId: number,
+    worklet: SerializableRef<TValue>
+  ): TReturn;
+
+  reportFatalErrorOnJS(message: string, stack: string, name: string): void;
 
   createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue>;
 
@@ -121,6 +167,17 @@ export interface WorkletsModuleProxy {
   getStaticFeatureFlag(name: string): boolean;
 
   setDynamicFeatureFlag(name: string, value: boolean): void;
+
+  getUIRuntimeHolder(): object;
+
+  getUISchedulerHolder(): object;
 }
 
-export type IWorkletsModule = WorkletsModuleProxy;
+type InternalMethods = 'loadUnpackers';
+
+type TurboModulePublic = {
+  toggleSlowAnimationsOnUIRuntime(): boolean;
+};
+
+export type IWorkletsModule = Omit<WorkletsModuleProxy, InternalMethods> &
+  TurboModulePublic;

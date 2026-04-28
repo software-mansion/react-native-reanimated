@@ -9,10 +9,7 @@ sidebar_position: 4
 import TransitionDelayBasic from '@site/src/examples/css-transitions/TransitionDelayBasic';
 import TransitionDelayBasicSrc from '!!raw-loader!@site/src/examples/css-transitions/TransitionDelayBasic';
 
-<InteractiveExample
-  src={TransitionDelayBasicSrc}
-  component={TransitionDelayBasic}
-/>
+<InteractiveExample src={TransitionDelayBasicSrc} component={TransitionDelayBasic}/>
 
 ## Reference
 
@@ -32,14 +29,13 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type TimeUnit = `${number}s` | `${number}ms` | number;
+  ```typescript
+  type TimeUnit = `${number}s` | `${number}ms` | number;
 
-type CSSTransitionDelay = TimeUnit | TimeUnit[];
-```
-
+  type CSSTransitionDelay = TimeUnit | TimeUnit[];
+  ```
 </details>
 
 ### Values
@@ -51,31 +47,25 @@ A value which is either:
 - A string which is a number followed by `s`. Represents a time in seconds.
 
 <Indent>
-
-```typescript
-transitionDelay: '3s';
-```
-
+  ```typescript
+  transitionDelay: '3s';
+  ```
 </Indent>
 
 - A string which is a number followed by `ms`. Represents a time in milliseconds.
 
 <Indent>
-
-```typescript
-transitionDelay: '-150ms';
-```
-
+  ```typescript
+  transitionDelay: '-150ms';
+  ```
 </Indent>
 
 - A number which represents a time in milliseconds.
 
 <Indent>
-
-```typescript
-transitionDelay: 500;
-```
-
+  ```typescript
+  transitionDelay: 500;
+  ```
 </Indent>
 
 #### `<time unit[]>`
@@ -95,7 +85,7 @@ In the following example, the `width` property to transition will be delayed by 
 import TransitionDelay from '@site/src/examples/css-transitions/TransitionDelay';
 import TransitionDelaySrc from '!!raw-loader!@site/src/examples/css-transitions/TransitionDelay';
 
-<InteractiveExample src={TransitionDelaySrc} component={TransitionDelay} />
+<InteractiveExample src={TransitionDelaySrc} component={TransitionDelay}/>
 
 ## Remarks
 
@@ -103,4 +93,4 @@ import TransitionDelaySrc from '!!raw-loader!@site/src/examples/css-transitions/
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 
 #include <cxxreact/ReactNativeVersion.h>
 #include <react/renderer/uimanager/UIManagerCommitHook.h>
@@ -12,14 +12,12 @@ using namespace facebook::react;
 
 namespace reanimated {
 
-class ReanimatedCommitHook
-    : public UIManagerCommitHook,
-      public std::enable_shared_from_this<ReanimatedCommitHook> {
+class ReanimatedCommitHook : public UIManagerCommitHook, public std::enable_shared_from_this<ReanimatedCommitHook> {
  public:
   ReanimatedCommitHook(
       const std::shared_ptr<UIManager> &uiManager,
       const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-      const std::shared_ptr<LayoutAnimationsProxy> &layoutAnimationsProxy);
+      const std::shared_ptr<LayoutAnimationsProxyCommon> &layoutAnimationsProxy);
 
   ~ReanimatedCommitHook() noexcept override;
 
@@ -32,17 +30,13 @@ class ReanimatedCommitHook
   RootShadowNode::Unshared shadowTreeWillCommit(
       ShadowTree const &shadowTree,
       RootShadowNode::Shared const &oldRootShadowNode,
-      RootShadowNode::Unshared const &newRootShadowNode
-#if REACT_NATIVE_VERSION_MINOR >= 80
-      ,
-      const ShadowTreeCommitOptions &commitOptions
-#endif // REACT_NATIVE_VERSION_MINOR >= 80
-      ) noexcept override;
+      RootShadowNode::Unshared const &newRootShadowNode,
+      const ShadowTreeCommitOptions &commitOptions) noexcept override;
 
  private:
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
+  std::shared_ptr<LayoutAnimationsProxyCommon> layoutAnimationsProxy_;
 
   SurfaceId currentMaxSurfaceId_ = -1;
 

@@ -6,12 +6,6 @@
       "@/*": ["../common-app/src/*"]
     }
   },
-  "exclude": [
-    "**/node_modules",
-    "**/Pods",
-    "metro.config.js",
-    "android",
-    "ios",
-    ".bundle"
-  ]
+  "include": ["."],
+  "exclude": ["android", "ios", ".bundle", "vendor", "assets"]
 }

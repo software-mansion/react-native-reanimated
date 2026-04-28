@@ -1,5 +1,8 @@
 #include <worklets/Tools/FeatureFlags.h>
 
+#include <string>
+#include <unordered_map>
+
 namespace worklets {
 
 std::unordered_map<std::string, bool> DynamicFeatureFlags::flags_;

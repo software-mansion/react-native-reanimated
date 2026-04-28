@@ -1,15 +1,13 @@
 #pragma once
 
-#include <reanimated/NativeModules/ReanimatedModuleProxy.h>
-
-#include <worklets/android/WorkletsModule.h>
-
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
 #include <react/fabric/JFabricUIManager.h>
 #include <react/jni/WritableNativeMap.h>
 #include <react/renderer/scheduler/Scheduler.h>
+#include <reanimated/Compat/WorkletsApi.h>
+#include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 
 #include <memory>
 #include <string>
@@ -21,29 +19,24 @@ namespace reanimated {
 using namespace facebook;
 using namespace facebook::jni;
 
-class NativeProxy : public jni::HybridClass<NativeProxy>,
-                    std::enable_shared_from_this<NativeProxy> {
+class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_from_this<NativeProxy> {
  public:
-  static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/NativeProxy;";
+  static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/NativeProxy;";
   static jni::local_ref<jhybriddata> initHybrid(
       jni::alias_ref<jhybridobject> jThis,
-      jni::alias_ref<WorkletsModule::javaobject> jWorkletsModule,
       jlong jsContext,
-      jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
-          jsCallInvokerHolder,
-      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager);
+      jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
+      jni::alias_ref<facebook::react::JFabricUIManager::javaobject> fabricUIManager);
 
   static void registerNatives();
 
-  ~NativeProxy();
+  ~NativeProxy() override;
 
  private:
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
-  std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
+  std::shared_ptr<worklets::WorkletRuntime> uiRuntime_;
   std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
 #ifndef NDEBUG
   void checkJavaVersion();
@@ -53,38 +46,27 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
   // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
   // std::shared_ptr<EventListener> eventListener_;
   void installJSIBindings();
-  std::optional<std::unique_ptr<int[]>> preserveMountedTags(
-      std::vector<int> &tags);
-  void synchronouslyUpdateUIProps(
-      const std::vector<int> &intBuffer,
-      const std::vector<double> &doubleBuffer);
+  std::optional<std::unique_ptr<int[]>> preserveMountedTags(std::vector<int> &tags);
+  void synchronouslyUpdateUIProps(const std::vector<int> &intBuffer, const std::vector<double> &doubleBuffer);
   PlatformDepMethodsHolder getPlatformDependentMethods();
 
   double getAnimationTimestamp();
-  bool isAnyHandlerWaitingForEvent(
-      const std::string &eventName,
-      const int emitterReactTag);
+  bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
   void performOperations();
+  void performNonLayoutOperations();
   bool getIsReducedMotion();
   void requestRender(std::function<void(double)> onRender);
   void registerEventHandler();
   void maybeFlushUIUpdatesQueue();
   void setGestureState(int handlerTag, int newState);
-  int registerSensor(
-      int sensorType,
-      int interval,
-      int iosReferenceFrame,
-      std::function<void(double[], int)> setter);
+  int registerSensor(int sensorType, int interval, int iosReferenceFrame, std::function<void(double[], int)> setter);
   void unregisterSensor(int sensorId);
   int subscribeForKeyboardEvents(
       std::function<void(int, int)> callback,
       bool isStatusBarTranslucent,
       bool isNavigationBarTranslucent);
   void unsubscribeFromKeyboardEvents(int listenerId);
-  void handleEvent(
-      jni::alias_ref<JString> eventName,
-      jint emitterReactTag,
-      jni::alias_ref<react::WritableMap> event);
+  void handleEvent(jni::alias_ref<JString> eventName, jint emitterReactTag, jni::alias_ref<react::WritableMap> event);
 
   /***
    * Wraps a method of `NativeProxy` in a function object capturing `this`
@@ -95,8 +77,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
    * that method on `this`
    */
   template <class TReturn, class... TParams>
-  std::function<TReturn(TParams...)> bindThis(
-      TReturn (NativeProxy::*methodPtr)(TParams...)) {
+  std::function<TReturn(TParams...)> bindThis(TReturn (NativeProxy::*methodPtr)(TParams...)) {
     // It's probably safe to pass `this` as reference here...
     return [this, methodPtr](TParams &&...args) {
       return (this->*methodPtr)(std::forward<TParams>(args)...);
@@ -110,13 +91,14 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
 
   explicit NativeProxy(
       jni::alias_ref<NativeProxy::jhybridobject> jThis,
-      const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
       jsi::Runtime *rnRuntime,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager);
+      jni::alias_ref<facebook::react::JFabricUIManager::javaobject> fabricUIManager,
+      const std::shared_ptr<worklets::WorkletRuntime> &uiRuntime,
+      const std::shared_ptr<worklets::UIScheduler> &uiScheduler);
 
   void invalidateCpp();
+  void toggleSlowAnimationsOnUIRuntime();
 };
 
 } // namespace reanimated

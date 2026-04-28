@@ -9,7 +9,7 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import Svg, { Circle, Path } from 'react-native-svg';
-import { runOnJS } from 'react-native-worklets';
+import { scheduleOnRN } from 'react-native-worklets';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -121,7 +121,7 @@ function CircularSlider(props: CircularSliderProps) {
     })
     .onFinalize(() => {
       if (onValueChange) {
-        runOnJS(onValueChange)(currentValue.value);
+        scheduleOnRN(onValueChange, currentValue.value);
       }
     });
 

@@ -6,8 +6,7 @@ namespace worklets {
 void SynchronizableAccess::getBlockingBefore() {
   std::unique_lock<std::mutex> lock(accessLock_);
   queue_.wait(lock, [this]() {
-    return !blockingWriter_ /* && dirtyWriters_ == 0 */ &&
-        (!imperativelyLocked_ || imperativeOwner_ == pthread_self());
+    return !blockingWriter_ /* && dirtyWriters_ == 0 */ && (!imperativelyLocked_ || imperativeOwner_ == pthread_self());
   });
   blockingReaders_++;
 }
@@ -44,8 +43,7 @@ void SynchronizableAccess::getBlockingAfter() {
 void SynchronizableAccess::setBlockingBefore() {
   std::unique_lock<std::mutex> lock(accessLock_);
   queue_.wait(lock, [this]() {
-    return !blockingWriter_ &&
-        blockingReaders_ == 0 /* && dirtyWriters_ == 0 */ &&
+    return !blockingWriter_ && blockingReaders_ == 0 /* && dirtyWriters_ == 0 */ &&
         (!imperativelyLocked_ || imperativeOwner_ == pthread_self());
   });
   blockingWriter_ = true;
@@ -60,8 +58,7 @@ void SynchronizableAccess::setBlockingAfter() {
 void SynchronizableAccess::lock() {
   std::unique_lock<std::mutex> lock(accessLock_);
   queue_.wait(lock, [this]() {
-    return !blockingWriter_ &&
-        blockingReaders_ == 0 /* && dirtyWriters_ == 0 */ &&
+    return !blockingWriter_ && blockingReaders_ == 0 /* && dirtyWriters_ == 0 */ &&
         (!imperativelyLocked_ || imperativeOwner_ == pthread_self());
   });
   imperativelyLocked_ = true;

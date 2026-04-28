@@ -1,50 +1,30 @@
 #pragma once
 
-#include <reanimated/CSS/common/definitions.h>
-#include <reanimated/CSS/configs/common.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
+#include <jsi/jsi.h>
 #include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace reanimated::css {
 
 struct CSSTransitionPropertySettings {
+  std::pair<jsi::Value, jsi::Value> value;
   double duration;
   EasingFunction easingFunction;
   double delay;
   bool allowDiscrete;
 };
 
-using CSSTransitionPropertiesSettings =
-    std::unordered_map<std::string, CSSTransitionPropertySettings>;
+using CSSTransitionPropertiesSettings = std::unordered_map<std::string, CSSTransitionPropertySettings>;
 
 struct CSSTransitionConfig {
-  TransitionProperties properties;
-  CSSTransitionPropertiesSettings settings;
+  CSSTransitionPropertiesSettings changedProperties;
+  std::vector<std::string> removedProperties;
 };
 
-struct PartialCSSTransitionConfig {
-  std::optional<TransitionProperties> properties;
-  std::optional<CSSTransitionPropertiesSettings> settings;
-};
-
-std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(
-    const CSSTransitionPropertiesSettings &propertiesSettings,
-    const std::string &propName);
-
-TransitionProperties getProperties(jsi::Runtime &rt, const jsi::Object &config);
-
-CSSTransitionPropertiesSettings parseCSSTransitionPropertiesSettings(
-    jsi::Runtime &rt,
-    const jsi::Object &settings);
-
-CSSTransitionConfig parseCSSTransitionConfig(
-    jsi::Runtime &rt,
-    const jsi::Value &config);
-
-PartialCSSTransitionConfig parsePartialCSSTransitionConfig(
-    jsi::Runtime &rt,
-    const jsi::Value &partialConfig);
+CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config);
 
 } // namespace reanimated::css

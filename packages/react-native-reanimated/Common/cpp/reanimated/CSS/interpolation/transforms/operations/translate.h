@@ -9,15 +9,13 @@
 namespace reanimated::css {
 
 template <TransformOp TOperation>
-struct TranslateOperationBase
-    : public TransformOperationBase<TOperation, CSSLength> {
+struct TranslateOperationBase : public TransformOperationBase<TOperation, CSSLength> {
   using TransformOperationBase<TOperation, CSSLength>::TransformOperationBase;
 
   explicit TranslateOperationBase(double value);
   explicit TranslateOperationBase(const std::string &value);
 
   bool shouldResolve() const override;
-  folly::dynamic valueToDynamic() const override;
   TransformMatrix::Shared toMatrix(bool force3D) const override;
 };
 

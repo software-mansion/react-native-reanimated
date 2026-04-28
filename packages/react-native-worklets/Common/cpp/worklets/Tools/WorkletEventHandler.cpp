@@ -1,4 +1,10 @@
+// WorkletEventHandler was fully moved to Reanimated.
+// This file is kept only for backwards compatibility with older versions of Reanimated.
+
 #include <worklets/Tools/WorkletEventHandler.h>
+
+#include <memory>
+#include <string>
 
 namespace worklets {
 
@@ -6,8 +12,7 @@ void WorkletEventHandler::process(
     const std::shared_ptr<WorkletRuntime> &workletRuntime,
     const double eventTimestamp,
     const jsi::Value &eventValue) const {
-  workletRuntime->runGuarded(
-      handlerFunction_, jsi::Value(eventTimestamp), eventValue);
+  workletRuntime->runSync(handlerFunction_, jsi::Value(eventTimestamp), eventValue);
 }
 
 uint64_t WorkletEventHandler::getHandlerId() const {

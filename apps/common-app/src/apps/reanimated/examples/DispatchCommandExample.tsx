@@ -2,9 +2,9 @@ import React from 'react';
 import { Button, StyleSheet, TextInput, View } from 'react-native';
 import Animated, {
   dispatchCommand,
-  runOnUI,
   useAnimatedRef,
 } from 'react-native-reanimated';
+import { scheduleOnUI } from 'react-native-worklets';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -22,17 +22,17 @@ export default function DispatchCommandExample() {
   };
 
   const focusFromUI = () => {
-    runOnUI(() => {
+    scheduleOnUI(() => {
       console.log(_WORKLET);
       dispatchCommand(aref, 'focus');
-    })();
+    });
   };
 
   const blurFromUI = () => {
-    runOnUI(() => {
+    scheduleOnUI(() => {
       console.log(_WORKLET);
       dispatchCommand(aref, 'blur');
-    })();
+    });
   };
 
   return (

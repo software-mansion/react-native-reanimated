@@ -5,6 +5,7 @@ import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 import type {
   InternalHostInstance,
   LayoutAnimationBatchItem,
+  SettledUpdate,
   ShadowNodeWrapper,
   StyleProps,
   Value3D,
@@ -12,8 +13,8 @@ import type {
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
-  NormalizedCSSTransitionConfig,
 } from '../css/native';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
@@ -66,30 +67,31 @@ export interface ReanimatedModuleProxy {
 
   registerCSSKeyframes(
     animationName: string,
-    viewName: string,
+    compoundComponentName: string,
     keyframesConfig: NormalizedCSSAnimationKeyframesConfig
   ): void;
 
-  unregisterCSSKeyframes(animationName: string, viewName: string): void;
+  unregisterCSSKeyframes(
+    animationName: string,
+    compoundComponentName: string
+  ): void;
 
   applyCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,
+    compoundComponentName: string,
     animationUpdates: CSSAnimationUpdates
   ): void;
 
   unregisterCSSAnimations(viewTag: number): void;
 
-  registerCSSTransition(
+  runCSSTransition(
     shadowNodeWrapper: ShadowNodeWrapper,
-    transitionConfig: NormalizedCSSTransitionConfig
-  ): void;
-
-  updateCSSTransition(
-    viewTag: number,
-    settingsUpdates: Partial<NormalizedCSSTransitionConfig>
+    transitionConfig: CSSTransitionConfig
   ): void;
 
   unregisterCSSTransition(viewTag: number): void;
+
+  getSettledUpdates(): SettledUpdate[];
 }
 
 export interface IReanimatedModule

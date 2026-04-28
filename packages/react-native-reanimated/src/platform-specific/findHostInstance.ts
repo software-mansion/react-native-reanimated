@@ -1,15 +1,9 @@
 /* eslint-disable camelcase */
 'use strict';
 
-import { ReanimatedError } from '../common';
 import type { InternalHostInstance } from '../commonTypes';
 import type { IAnimatedComponentInternalBase } from '../createAnimatedComponent/commonTypes';
-
-export type HostInstance = {
-  __internalInstanceHandle?: Record<string, unknown>;
-  __nativeTag?: number;
-  _viewConfig?: Record<string, unknown>;
-};
+import type { HostInstance } from './types';
 
 function findHostInstanceFastPath(maybeNativeRef: HostInstance | undefined) {
   if (!maybeNativeRef) {
@@ -40,7 +34,9 @@ function resolveFindHostInstance_DEPRECATED() {
       ReactFabric?.default?.findHostInstance_DEPRECATED ??
       ReactFabric?.findHostInstance_DEPRECATED;
   } catch (_e) {
-    throw new ReanimatedError('Failed to resolve findHostInstance_DEPRECATED');
+    throw new Error(
+      '[Reanimated] Failed to resolve findHostInstance_DEPRECATED'
+    );
   }
 }
 

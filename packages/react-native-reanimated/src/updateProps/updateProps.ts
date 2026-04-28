@@ -1,17 +1,17 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
+
 import type { RefObject } from 'react';
-import { runOnJS, runOnUI } from 'react-native-worklets';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import {
   IS_JEST,
-  processBoxShadowNative,
-  processBoxShadowWeb,
   processColorsInProps,
+  processTransform,
   processTransformOrigin,
-  ReanimatedError,
   SHOULD_BE_USE_WEB,
+  stylePropsBuilder,
 } from '../common';
+import { processBoxShadowWeb, processFilterWeb } from '../common/web';
 import type {
   AnimatedStyle,
   ShadowNodeWrapper,
@@ -40,31 +40,47 @@ if (SHOULD_BE_USE_WEB) {
       if ('boxShadow' in updates) {
         updates.boxShadow = processBoxShadowWeb(updates.boxShadow);
       }
+      if ('filter' in updates) {
+        updates.filter = processFilterWeb(updates.filter);
+      }
       _updatePropsJS(updates, component, isAnimatedProps);
     });
   };
 } else {
-  updateProps = (viewDescriptors, updates) => {
+  updateProps = (viewDescriptors, updates, isAnimatedProps) => {
     'worklet';
-    /* TODO: Improve this config structure in the future
-     * The goal is to create a simplified version of `src/css/platform/native/config.ts`,
-     * containing only properties that require processing and their associated processors
-     * */
-    processColorsInProps(updates);
-    if ('transformOrigin' in updates) {
-      updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
+
+    // TODO: Remove this if once we have SVG props builder implemented
+    // We need to keep it for now to prevent regression in SVG props processing
+    if (isAnimatedProps) {
+      processColorsInProps(updates);
+      if ('transformOrigin' in updates) {
+        updates.transformOrigin = processTransformOrigin(
+          updates.transformOrigin
+        );
+      }
+      if ('transform' in updates) {
+        updates.transform = processTransform(updates.transform);
+      }
     }
-    if ('boxShadow' in updates) {
-      updates.boxShadow = processBoxShadowNative(updates.boxShadow);
-    }
-    global.UpdatePropsManager.update(viewDescriptors, updates);
+
+    global.UpdatePropsManager.update(
+      viewDescriptors,
+      // Use props builder only for style updaters, since animated props
+      // can contain any properties of different types, depending on the
+      // component, which we cannot process properly with the props builder.
+      isAnimatedProps ? updates : stylePropsBuilder.build(updates)
+    );
   };
 }
 
 export const updatePropsJestWrapper = (
   viewDescriptors: ViewDescriptorsWrapper,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updates: AnimatedStyle<any>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animatedValues: RefObject<AnimatedStyle<any>>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   adapters: ((updates: AnimatedStyle<any>) => void)[]
 ): void => {
   adapters.forEach((adapter) => {
@@ -134,7 +150,7 @@ function createUpdatePropsManager() {
         }
 
         if (!flushPending && (nativePropUpdates || jsPropUpdates)) {
-          queueMicrotask(this.flush);
+          global.__requestMapperRunFinalizer(this.flush);
           flushPending = true;
         }
       });
@@ -145,10 +161,11 @@ function createUpdatePropsManager() {
         nativeOperations.length = 0;
       }
       if (jsOperations.length) {
-        runOnJS(updateJSProps)(jsOperations);
+        scheduleOnRN(updateJSProps, jsOperations);
         jsOperations.length = 0;
       }
       flushPending = false;
+      global._maybeFlushUIUpdatesQueue();
     },
   };
 }
@@ -158,8 +175,8 @@ if (SHOULD_BE_USE_WEB) {
     // Jest attempts to access a property of this object to check if it is a Jest mock
     // so we can't throw an error in the getter.
     if (!IS_JEST) {
-      throw new ReanimatedError(
-        '`UpdatePropsManager` is not available on non-native platform.'
+      throw new Error(
+        '[Reanimated] `UpdatePropsManager` is not available on non-native platform.'
       );
     }
   };
@@ -174,10 +191,10 @@ if (SHOULD_BE_USE_WEB) {
     }
   );
 } else {
-  runOnUI(() => {
+  scheduleOnUI(() => {
     'worklet';
     global.UpdatePropsManager = createUpdatePropsManager();
-  })();
+  });
 }
 
 /**

@@ -18,13 +18,11 @@ class JSScheduler {
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       std::function<bool()> &&isJavaScriptQueue)
-      : rnRuntime_(rnRuntime),
-        jsCallInvoker_(jsCallInvoker),
-        isJavaScriptQueue_(isJavaScriptQueue) {}
+      : rnRuntime_(rnRuntime), jsCallInvoker_(jsCallInvoker), isJavaScriptQueue_(isJavaScriptQueue) {}
 
   void scheduleOnJS(std::function<void(jsi::Runtime &rt)> job);
 
-  void invokeSyncOnJS(std::function<void(jsi::Runtime &rt)> job);
+  void invokeSyncOnJS(const std::function<void(jsi::Runtime &rt)> &job);
 
   bool canInvokeSyncOnJS();
 

@@ -8,6 +8,8 @@
 #import <React/RCTMountingManager.h>
 #import <React/RCTUtils.h>
 
+using namespace facebook::react;
+
 @implementation REANodesManager {
   READisplayLink *_displayLink;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
@@ -54,9 +56,7 @@
       // no-op
     };
   }
-  [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) {
-    [displayLink setPaused:YES];
-  }];
+  [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) { [displayLink setPaused:YES]; }];
 
   return self;
 }
@@ -66,9 +66,7 @@
   REAAssertTurboModuleManagerQueue();
 
   _eventHandler = nil;
-  [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) {
-    [displayLink invalidate];
-  }];
+  [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) { [displayLink invalidate]; }];
 }
 
 - (void)postOnAnimation:(REAOnAnimationCallback)clb
@@ -157,19 +155,18 @@
 
 - (void)synchronouslyUpdateUIProps:(ReactTag)viewTag props:(const folly::dynamic &)props
 {
-#if !TARGET_OS_OSX
   RCTAssertMainQueue();
 
   RCTSurfacePresenter *surfacePresenter = self.surfacePresenter;
   RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
-  UIView<RCTComponentViewProtocol> *componentView = [componentViewRegistry findComponentViewWithTag:viewTag];
+  REAUIView<RCTComponentViewProtocol> *componentView =
+      [componentViewRegistry findComponentViewWithTag:static_cast<Tag>(viewTag)];
   NSSet<NSString *> *propKeysManagedByAnimated = [componentView propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN];
   [surfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:viewTag props:props];
   [componentView setPropKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN:propKeysManagedByAnimated];
   // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
   // so that's why we need to call `finalizeUpdates` here.
   [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
-#endif // !TARGET_OS_OSX
 }
 
 @end
