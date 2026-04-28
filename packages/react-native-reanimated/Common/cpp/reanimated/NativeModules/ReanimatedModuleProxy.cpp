@@ -597,7 +597,7 @@ void ReanimatedModuleProxy::registerPseudoStyle(
 }
 
 void ReanimatedModuleProxy::unregisterPseudoStyle(jsi::Runtime &, const jsi::Value &viewTag) {
-  pseudoStylesRegistry_->remove(static_cast<Tag>(viewTag.asNumber()));
+  pseudoStylesRegistry_->remove(viewTag.asNumber());
 }
 
 jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
