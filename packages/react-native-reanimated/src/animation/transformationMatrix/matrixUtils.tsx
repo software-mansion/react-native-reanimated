@@ -20,7 +20,7 @@ type TransformMatrixDecomposition = Record<
 
 type Axis = 'x' | 'y' | 'z';
 
-interface TansformMatrixDecompositionWithAngles extends TransformMatrixDecomposition {
+interface TransformMatrixDecompositionWithAngles extends TransformMatrixDecomposition {
   rx: number;
   ry: number;
   rz: number;
@@ -388,7 +388,7 @@ export function decomposeMatrix(
 
 export function decomposeMatrixIntoMatricesAndAngles(
   matrix: AffineMatrixFlat | AffineMatrix
-): TansformMatrixDecompositionWithAngles {
+): TransformMatrixDecompositionWithAngles {
   'worklet';
   // eslint-disable-next-line @typescript-eslint/no-shadow
   const { scaleMatrix, rotationMatrix, translationMatrix, skewMatrix } =
