@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/common/definitions.h>
+#include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/PseudoStyles/PseudoSelector.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
@@ -21,18 +22,12 @@ using namespace react;
 
 class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesRegistry> {
  public:
-  struct PseudoTransitionConfig {
-    double duration;
-    double delay;
-    css::EasingFunction easingFn;
-  };
-
   using OnSelectorStateChangedFn = std::function<void(
       jsi::Runtime &rt,
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const folly::dynamic &fromStyle,
       const folly::dynamic &toStyle,
-      const PseudoTransitionConfig &transitionConfig)>;
+      const css::PseudoTransitionConfig &transitionConfig)>;
 
   PseudoStylesRegistry(PlatformAttachPseudoSelectorFunction attachFn, PlatformDetachPseudoSelectorFunction detachFn);
 
@@ -44,7 +39,7 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
       PseudoSelector selector,
       const folly::dynamic &selectorStyle,
       const folly::dynamic &defaultStyle,
-      PseudoTransitionConfig transitionConfig);
+      css::PseudoTransitionConfig transitionConfig);
 
   void remove(Tag tag);
 
@@ -56,7 +51,7 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
 
   struct TagEntry {
     std::shared_ptr<const ShadowNode> shadowNode;
-    PseudoTransitionConfig transitionConfig;
+    css::PseudoTransitionConfig transitionConfig;
 
     std::map<PseudoSelector, SelectorData> selectors;
 
