@@ -11,10 +11,7 @@ set(CMAKE_CXX_STANDARD 20)
 include("${REACT_NATIVE_DIR}/ReactAndroid/cmake-utils/folly-flags.cmake")
 add_compile_options(${folly_FLAGS})
 
-string(
-  APPEND
-  CMAKE_CXX_FLAGS
-  " -DREANIMATED_VERSION=${REANIMATED_VERSION}\
+string(APPEND CMAKE_CXX_FLAGS " -DREANIMATED_VERSION=${REANIMATED_VERSION}\
     -DREANIMATED_FEATURE_FLAGS=\"${REANIMATED_FEATURE_FLAGS}\"")
 string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")
 # flags to optimize the binary size

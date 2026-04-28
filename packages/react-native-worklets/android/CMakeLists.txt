@@ -11,10 +11,7 @@ set(CMAKE_CXX_STANDARD 20)
 include("${REACT_NATIVE_DIR}/ReactAndroid/cmake-utils/folly-flags.cmake")
 add_compile_options(${folly_FLAGS})
 
-string(
-  APPEND
-  CMAKE_CXX_FLAGS
-  " -DWORKLETS_VERSION=${WORKLETS_VERSION}\
+string(APPEND CMAKE_CXX_FLAGS " -DWORKLETS_VERSION=${WORKLETS_VERSION}\
     -DWORKLETS_FEATURE_FLAGS=\"${WORKLETS_FEATURE_FLAGS}\"")
 
 # HERMES_V1_ENABLED is centralized in react-native-flags.cmake for RN >= 84.
