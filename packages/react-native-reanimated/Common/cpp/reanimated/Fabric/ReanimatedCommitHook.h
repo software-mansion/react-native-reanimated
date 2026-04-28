@@ -3,7 +3,6 @@
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 
-#include <cxxreact/ReactNativeVersion.h>
 #include <react/renderer/uimanager/UIManagerCommitHook.h>
 
 #include <memory>

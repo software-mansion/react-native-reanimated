@@ -3,7 +3,6 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 
-#include <cxxreact/ReactNativeVersion.h>
 #include <react/renderer/uimanager/UIManagerMountHook.h>
 
 #include <memory>
