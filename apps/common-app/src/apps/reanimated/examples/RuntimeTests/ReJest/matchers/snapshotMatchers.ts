@@ -43,16 +43,17 @@ function compareSingleViewSnapshots(
   for (let i = 0; i < capturedSnapshots.length - 1; i++) {
     const capturedSnapshot = capturedSnapshots[i];
     /**
-      The TestRunner can collect two types of snapshots:
-      - JS snapshots: animation updates sent via `_updateProps`
-      - Native snapshots: snapshots obtained from the native side via `getViewProp`
-
-      Updates applied through `_updateProps` are not synchronously applied to the native side.
-      Instead, they are batched and applied at the end of each frame. Therefore, it is not allowed
-      to take a native snapshot immediately after the `_updateProps` call. To address this issue,
-      we need to wait for the next frame before capturing the native snapshot.
-      That's why native snapshots are one frame behind JS snapshots. To account for this delay,
-      one additional native snapshot is taken during the execution of the `getNativeSnapshots` function. */
+     * The TestRunner can collect two types of snapshots:
+     *
+     * - JS snapshots: animation updates sent via `_updateProps`
+     * - Native snapshots: snapshots obtained from the native side via `getViewProp`
+     *
+     * Updates applied through `_updateProps` are not synchronously applied to the native side. Instead, they are
+     * batched and applied at the end of each frame. Therefore, it is not allowed to take a native snapshot immediately
+     * after the `_updateProps` call. To address this issue, we need to wait for the next frame before capturing the
+     * native snapshot. That's why native snapshots are one frame behind JS snapshots. To account for this delay, one
+     * additional native snapshot is taken during the execution of the `getNativeSnapshots` function.
+     */
     const expectedSnapshot = expectedSnapshots[i + Number(native)];
     const snapshotMatching = compareSnapshot(expectedSnapshot, capturedSnapshot, expectNegativeValueMismatch);
     if (!snapshotMatching) {
@@ -70,16 +71,17 @@ function compareSingleViewSnapshots(
 }
 
 /**
-      The TestRunner can collect two types of snapshots:
-      - **JS snapshots:** animation updates sent via `_updateProps`
-      - **Native snapshots:** snapshots obtained from the native side via `getViewProp`
-      The purpose of this function is to compare this two suits of snapshots.
-
-      @param expectNegativeValueMismatch - Some props expose unexpected behavior, when negative.
-      For example negative `width` may render a full-width component.
-      It means that JS snapshot is negative and the native one is positive, which is a valid behavior.
-      Set this property to true to expect all comparisons with negative value of JS snapshot **NOT** to match.
-   */
+ * The TestRunner can collect two types of snapshots:
+ *
+ * - **JS snapshots:** animation updates sent via `_updateProps`
+ * - **Native snapshots:** snapshots obtained from the native side via `getViewProp` The purpose of this function is to
+ *   compare this two suits of snapshots.
+ *
+ * @param expectNegativeValueMismatch - Some props expose unexpected behavior, when negative. For example negative
+ *   `width` may render a full-width component. It means that JS snapshot is negative and the native one is positive,
+ *   which is a valid behavior. Set this property to true to expect all comparisons with negative value of JS snapshot
+ *   **NOT** to match.
+ */
 function compareSingleViewNativeSnapshots(
   nativeSnapshots: SingleViewSnapshot,
   jsUpdates: Array<OperationUpdate>,

@@ -20,8 +20,10 @@ const defaultPresets: PluginItem[] = [
 
 const defaultPlugins: PluginItem[] = [];
 
-interface WorkletTransformOptions
-  extends Omit<TransformOptions, 'plugins' | 'presets'> {
+interface WorkletTransformOptions extends Omit<
+  TransformOptions,
+  'plugins' | 'presets'
+> {
   extraPlugins?: PluginItem[];
   extraPresets?: PluginItem[];
   filename: TransformOptions['filename'];

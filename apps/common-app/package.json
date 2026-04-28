@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "build": "",
-    "lint": "yarn run -T oxlint . && yarn prettier --check .",
-    "format": "prettier --write --list-different .",
+    "lint": "yarn run -T oxlint . && yarn run -T oxfmt --check .",
+    "format": "yarn run -T oxfmt .",
     "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src",
     "type:check": "yarn type:check:native && yarn type:check:web",
     "type:check:native": "tsc --noEmit",

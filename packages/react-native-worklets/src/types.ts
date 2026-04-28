@@ -6,7 +6,7 @@ import type { RuntimeKind } from './runtimeKind';
 /** Public globals to be exposed to the user. */
 declare global {
   /**
-   * @deprecated Use {@link __RUNTIME_KIND} instead.
+   * @deprecated Use `__RUNTIME_KIND` instead.
    *
    *   This global variable is a diagnostic/development tool.
    *

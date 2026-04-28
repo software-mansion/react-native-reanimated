@@ -5,8 +5,8 @@
   "scripts": {
     "macos": "react-native run-macos",
     "build": "cd macos && bundle install && bundle exec pod update",
-    "format": "prettier --write --list-different .",
-    "lint": "yarn run -T oxlint . --max-warnings 0 && yarn prettier --check . --ignore-path .gitignore --ignore-path ../../.prettierignore",
+    "format": "yarn run -T oxfmt .",
+    "lint": "yarn run -T oxlint . --max-warnings 0 && yarn run -T oxfmt --check . --ignore-path .gitignore --ignore-path ../../.prettierignore",
     "start": "react-native start",
     "type:check": "tsc --noEmit"
   },

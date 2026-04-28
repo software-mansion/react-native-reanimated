@@ -20,8 +20,7 @@ type TransformMatrixDecomposition = Record<
 
 type Axis = 'x' | 'y' | 'z';
 
-interface TansformMatrixDecompositionWithAngles
-  extends TransformMatrixDecomposition {
+interface TansformMatrixDecompositionWithAngles extends TransformMatrixDecomposition {
   rx: number;
   ry: number;
   rz: number;

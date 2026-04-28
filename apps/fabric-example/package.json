@@ -7,8 +7,8 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "format": "prettier --write --list-different .",
-    "lint": "yarn run -T oxlint . --max-warnings 0 && yarn prettier --check . --ignore-path .gitignore --ignore-path ../../.prettierignore",
+    "format": "yarn run -T oxfmt .",
+    "lint": "yarn run -T oxlint . --max-warnings 0 && yarn run -T oxfmt --check . --ignore-path .gitignore --ignore-path ../../.prettierignore",
     "type:check": "tsc --noEmit"
   },
   "dependencies": {

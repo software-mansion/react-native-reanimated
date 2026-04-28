@@ -21,7 +21,7 @@
   "scripts": {
     "build": "yarn tsc && yarn bundle && yarn format && cp types/options.d.ts index.d.ts",
     "bundle": "node bundle.js",
-    "format": "prettier --write --ignore-path '' --log-level silent types/options.d.ts && prettier --write --list-different src",
+    "format": "yarn run -T oxfmt --ignore-path '' types/options.d.ts && yarn run -T oxfmt src",
     "watch": "tsc-watch --onSuccess \"yarn bundle\"",
     "lint": "yarn run -T oxlint --max-warnings=0 src",
     "type:check": "tsc --noEmit"

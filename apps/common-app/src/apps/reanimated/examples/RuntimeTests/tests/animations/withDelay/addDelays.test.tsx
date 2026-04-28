@@ -87,9 +87,8 @@ const NonActiveWidthComponents = ({ delays }: { delays: [number] | [number, numb
 };
 
 /**
-    Make sure that
-    withDelay( A, withDelay( B, withDelay( C, some_animation) and
-    withDelay( A + B + C, some_animation) are equal.
+ * Make sure that withDelay( A, withDelay( B, withDelay( C, some_animation) and withDelay( A + B + C, some_animation)
+ * are equal.
  */
 describe('Compare a sequence of three delays, with one delay of their sum', () => {
   async function getSnapshotUpdates(delays: [number] | [number, number, number], componentType: ComponentType) {
