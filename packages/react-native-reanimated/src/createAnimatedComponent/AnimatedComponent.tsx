@@ -433,6 +433,7 @@ export default class AnimatedComponent
           this._displayName
         ),
       undefined,
+      undefined,
       currentConfig?.rawConfig
     );
   }

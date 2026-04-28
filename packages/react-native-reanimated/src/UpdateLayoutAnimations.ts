@@ -74,7 +74,7 @@ if (SHOULD_BE_USE_WEB) {
     isUnmounting,
     sharedTransitionTag,
     rawConfig
-  ) =>
+  ) => {
     updateLayoutAnimationsManager.update(
       {
         viewTag,
