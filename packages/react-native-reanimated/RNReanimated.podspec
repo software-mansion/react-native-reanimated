@@ -5,9 +5,6 @@ reanimated_package_json = JSON.parse(File.read(File.join(__dir__, "package.json"
 $config = find_config()
 assert_minimal_react_native_version($config)
 
-$new_arch_enabled = ENV['RCT_NEW_ARCH_ENABLED'] != '0'
-assert_new_architecture_enabled($new_arch_enabled)
-
 boost_compiler_flags = '-Wno-documentation'
 example_flag = $config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_APP' : ''
 reanimated_profiling_flag = ENV['IS_REANIMATED_PROFILING'] ? '-DREANIMATED_PROFILING' : ''
