@@ -48,7 +48,7 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
   return false;
 }
-#endif // REACT_NATIVE_VERSION_MINOR >= 81
+#endif
 
 std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
     const UpdatesBatch &updatesBatch,
