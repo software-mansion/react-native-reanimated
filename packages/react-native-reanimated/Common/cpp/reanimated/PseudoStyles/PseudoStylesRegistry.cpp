@@ -50,7 +50,7 @@ void PseudoStylesRegistry::registerPseudoStyle(
     PseudoSelector selector,
     const folly::dynamic &selectorStyle,
     const folly::dynamic &defaultStyle,
-    PseudoTransitionConfig transitionConfig) {
+    css::PseudoTransitionConfig transitionConfig) {
   {
     std::lock_guard<std::mutex> lock{mutex_};
     auto &entry = registry_[tag];
@@ -89,7 +89,7 @@ void PseudoStylesRegistry::remove(Tag tag) {
 void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector selector, bool isActive) {
   std::shared_ptr<const ShadowNode> shadowNode;
   folly::dynamic fromStyle, toStyle;
-  PseudoTransitionConfig transitionConfig;
+  css::PseudoTransitionConfig transitionConfig;
   {
     std::lock_guard<std::mutex> lock{mutex_};
     auto it = registry_.find(tag);

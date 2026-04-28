@@ -255,48 +255,47 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     return strongThis->obtainProp(rt, shadowNodeWrapper, propName);
   };
 
-  pseudoStylesRegistry_->setOnSelectorStateChangedFn(
-      [weakThis = weak_from_this()](
-          jsi::Runtime &rt,
-          const std::shared_ptr<const ShadowNode> &shadowNode,
-          const folly::dynamic &fromStyle,
-          const folly::dynamic &toStyle,
-          const PseudoStylesRegistry::PseudoTransitionConfig &transitionConfig) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
+  pseudoStylesRegistry_->setOnSelectorStateChangedFn([weakThis = weak_from_this()](
+                                                         jsi::Runtime &rt,
+                                                         const std::shared_ptr<const ShadowNode> &shadowNode,
+                                                         const folly::dynamic &fromStyle,
+                                                         const folly::dynamic &toStyle,
+                                                         const css::PseudoTransitionConfig &transitionConfig) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
 
-        scheduleOnUI(strongThis->uiScheduler_, [weakThis, &rt, shadowNode, fromStyle, toStyle, transitionConfig]() {
-          auto strongThis = weakThis.lock();
-          if (!strongThis) {
-            return;
-          }
+    scheduleOnUI(strongThis->uiScheduler_, [weakThis, &rt, shadowNode, fromStyle, toStyle, transitionConfig]() {
+      auto strongThis = weakThis.lock();
+      if (!strongThis) {
+        return;
+      }
 
-          CSSTransitionConfig config;
+      CSSTransitionConfig config;
 
-          for (const auto &[propKey, toVal] : toStyle.items()) {
-            const auto propName = propKey.asString();
-            const folly::dynamic &fromVal = fromStyle.count(propName) ? fromStyle[propName] : toVal;
+      for (const auto &[propKey, toVal] : toStyle.items()) {
+        const auto propName = propKey.asString();
+        const folly::dynamic &fromVal = fromStyle.count(propName) ? fromStyle[propName] : toVal;
 
-            config.changedProperties.emplace(
-                propName,
-                CSSTransitionPropertySettings{
-                    std::make_pair(jsi::valueFromDynamic(rt, fromVal), jsi::valueFromDynamic(rt, toVal)),
-                    transitionConfig.duration,
-                    transitionConfig.easingFn,
-                    transitionConfig.delay,
-                    false,
-                });
-          }
+        config.changedProperties.emplace(
+            propName,
+            CSSTransitionPropertySettings{
+                std::make_pair(jsi::valueFromDynamic(rt, fromVal), jsi::valueFromDynamic(rt, toVal)),
+                transitionConfig.duration,
+                transitionConfig.easingFn,
+                transitionConfig.delay,
+                false,
+            });
+      }
 
-          {
-            auto lock = strongThis->cssTransitionsRegistry_->lock();
-            strongThis->cssTransitionsRegistry_->run(rt, shadowNode, config);
-          }
-          strongThis->maybeRunCSSLoop();
-        });
-      });
+      {
+        auto lock = strongThis->cssTransitionsRegistry_->lock();
+        strongThis->cssTransitionsRegistry_->run(rt, shadowNode, config);
+      }
+      strongThis->maybeRunCSSLoop();
+    });
+  });
 
   jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   UIRuntimeDecorator::decorate(
@@ -587,33 +586,14 @@ void ReanimatedModuleProxy::registerPseudoStyle(
   if (!selectorEnum) {
     return;
   }
-  const auto selectorStyleDyn = jsi::dynamicFromValue(rt, configObj.getProperty(rt, "selectorStyle"));
-  const auto defaultStyleDyn = jsi::dynamicFromValue(rt, configObj.getProperty(rt, "defaultStyle"));
-
-  PseudoStylesRegistry::PseudoTransitionConfig transitionConfig{
-      .duration = 0,
-      .delay = 0,
-      .easingFn = css::getPredefinedEasingFunction("ease"),
-  };
-  auto transitionProp = configObj.getProperty(rt, "transition");
-  if (transitionProp.isObject()) {
-    auto transitionObj = transitionProp.asObject(rt);
-    auto durationProp = transitionObj.getProperty(rt, "duration");
-    if (durationProp.isNumber()) {
-      transitionConfig.duration = durationProp.asNumber();
-    }
-    auto delayProp = transitionObj.getProperty(rt, "delay");
-    if (delayProp.isNumber()) {
-      transitionConfig.delay = delayProp.asNumber();
-    }
-    auto timingFunctionProp = transitionObj.getProperty(rt, "timingFunction");
-    if (!timingFunctionProp.isUndefined() && !timingFunctionProp.isNull()) {
-      transitionConfig.easingFn = css::createEasingFunction(rt, timingFunctionProp);
-    }
-  }
 
   pseudoStylesRegistry_->registerPseudoStyle(
-      tag, shadowNode, *selectorEnum, selectorStyleDyn, defaultStyleDyn, std::move(transitionConfig));
+      tag,
+      shadowNode,
+      *selectorEnum,
+      jsi::dynamicFromValue(rt, configObj.getProperty(rt, "selectorStyle")),
+      jsi::dynamicFromValue(rt, configObj.getProperty(rt, "defaultStyle")),
+      css::parsePseudoTransitionConfig(rt, configObj.getProperty(rt, "transition")));
 }
 
 void ReanimatedModuleProxy::unregisterPseudoStyle(jsi::Runtime &, const jsi::Value &viewTag) {
