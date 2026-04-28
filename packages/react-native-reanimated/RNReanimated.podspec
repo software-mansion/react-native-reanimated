@@ -11,7 +11,7 @@ assert_new_architecture_enabled($new_arch_enabled)
 boost_compiler_flags = '-Wno-documentation'
 example_flag = $config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_APP' : ''
 reanimated_profiling_flag = ENV['IS_REANIMATED_PROFILING'] ? '-DREANIMATED_PROFILING' : ''
-version_flags = "-DREANIMATED_VERSION=#{reanimated_package_json['version']}"
+version_flag = "-DREANIMATED_VERSION=#{reanimated_package_json['version']}"
 ios_min_version = '13.4'
 
 # Directory in which data for further processing for clangd will be stored.
