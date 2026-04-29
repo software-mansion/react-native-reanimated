@@ -1,5 +1,9 @@
 #include <reanimated/Fabric/updates/OperationsLoop.h>
 
+#include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
+#include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
+#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
+
 #include <worklets/Compat/StableApi.h>
 
 #include <utility>
@@ -12,10 +16,17 @@ OperationsLoop::OperationsLoop(
     const std::shared_ptr<worklets::UIScheduler> &uiScheduler,
     const RequestRenderFunction &requestRender,
     const GetAnimationTimestampFunction &getTimestamp,
-    TickFunction tick)
-    : uiScheduler_(uiScheduler), requestRender_(requestRender), getTimestamp_(getTimestamp), tick_(std::move(tick)) {}
+    const std::shared_ptr<css::CSSAnimationsRegistry> &cssAnimationsRegistry,
+    const std::shared_ptr<css::CSSTransitionsRegistry> &cssTransitionsRegistry,
+    const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager)
+    : uiScheduler_(uiScheduler),
+      requestRender_(requestRender),
+      getTimestamp_(getTimestamp),
+      cssAnimationsRegistry_(cssAnimationsRegistry),
+      cssTransitionsRegistry_(cssTransitionsRegistry),
+      updatesRegistryManager_(updatesRegistryManager) {}
 
-double OperationsLoop::getTimestamp() {
+double OperationsLoop::resolveTimestamp() {
   if (running_) {
     return currentTimestamp_;
   }
@@ -34,25 +45,42 @@ void OperationsLoop::run() {
     if (!strongThis) {
       return;
     }
-    strongThis->requestRender_([weakThis](double timestampMs) {
+    strongThis->requestRender_([weakThis](double /*timestampMs*/) {
       if (auto strongThis = weakThis.lock()) {
-        strongThis->onRender(timestampMs);
+        strongThis->onRender();
       }
     });
   });
 }
 
-void OperationsLoop::onRender(double timestampMs) {
-  currentTimestamp_ = timestampMs;
+bool OperationsLoop::shouldUpdateCssAnimations() const {
+  return shouldUpdateCssAnimations_;
+}
 
-  if (!tick_(timestampMs)) {
+void OperationsLoop::clearShouldUpdateCssAnimations() {
+  shouldUpdateCssAnimations_ = false;
+}
+
+bool OperationsLoop::hasPendingUpdates() const {
+  return cssAnimationsRegistry_->hasUpdates() || cssTransitionsRegistry_->hasUpdates()
+#ifdef ANDROID
+      || updatesRegistryManager_->hasPropsToRevert()
+#endif // ANDROID
+      ;
+}
+
+void OperationsLoop::onRender() {
+  currentTimestamp_ = getTimestamp_();
+
+  shouldUpdateCssAnimations_ = true;
+  if (!hasPendingUpdates()) {
     running_ = false;
     return;
   }
 
-  requestRender_([weakThis = weak_from_this()](double newTimestampMs) {
+  requestRender_([weakThis = weak_from_this()](double /*timestampMs*/) {
     if (auto strongThis = weakThis.lock()) {
-      strongThis->onRender(newTimestampMs);
+      strongThis->onRender();
     }
   });
 }

@@ -167,18 +167,9 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       uiScheduler_,
       requestRender_,
       getAnimationTimestamp_,
-      [weakThis = weak_from_this()](double /*timestampMs*/) -> bool {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return false;
-        }
-        strongThis->shouldUpdateCssAnimations_ = true;
-        return strongThis->cssAnimationsRegistry_->hasUpdates() || strongThis->cssTransitionsRegistry_->hasUpdates()
-#ifdef ANDROID
-            || strongThis->updatesRegistryManager_->hasPropsToRevert()
-#endif // ANDROID
-            ;
-      });
+      cssAnimationsRegistry_,
+      cssTransitionsRegistry_,
+      updatesRegistryManager_);
 
   auto updateProps = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &operations) {
     auto strongThis = weakThis.lock();
@@ -473,7 +464,7 @@ void ReanimatedModuleProxy::applyCSSAnimations(
     const jsi::Value &compoundComponentName,
     const jsi::Value &animationUpdates) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  const auto timestamp = operationsLoop_->getTimestamp();
+  const auto timestamp = operationsLoop_->resolveTimestamp();
   const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
 
   CSSAnimationsMap newAnimations;
@@ -661,9 +652,10 @@ void ReanimatedModuleProxy::performOperations() {
 
     auto lock = updatesRegistryManager_->lock();
 
-    const double currentCssTimestamp = shouldUpdateCssAnimations_ ? getAnimationTimestamp_() : 0;
+    const bool shouldUpdateCssAnimations = operationsLoop_->shouldUpdateCssAnimations();
+    const double currentCssTimestamp = shouldUpdateCssAnimations ? getAnimationTimestamp_() : 0;
 
-    if (shouldUpdateCssAnimations_) {
+    if (shouldUpdateCssAnimations) {
       auto lock = cssTransitionsRegistry_->lock();
       // Update CSS transitions and flush updates
       cssTransitionsRegistry_->update(currentCssTimestamp);
@@ -676,14 +668,14 @@ void ReanimatedModuleProxy::performOperations() {
       animatedPropsRegistry_->flushUpdates(updatesBatch);
     }
 
-    if (shouldUpdateCssAnimations_) {
+    if (shouldUpdateCssAnimations) {
       auto lock = cssAnimationsRegistry_->lock();
       // Update CSS animations and flush updates
       cssAnimationsRegistry_->update(currentCssTimestamp);
       cssAnimationsRegistry_->flushUpdates(updatesBatch);
     }
 
-    shouldUpdateCssAnimations_ = false;
+    operationsLoop_->clearShouldUpdateCssAnimations();
 
     if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
       applySynchronousUpdates(updatesBatch);

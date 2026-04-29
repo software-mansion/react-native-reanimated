@@ -185,7 +185,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
 #endif
-  bool shouldUpdateCssAnimations_{true};
   std::shared_ptr<OperationsLoop> operationsLoop_;
 
   const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
