@@ -59,7 +59,7 @@ void OperationsLoop::maybeScheduleFrame() {
     return;
   }
 
-  uiScheduler_->scheduleOnUI([weakThis = weak_from_this()]() {
+  worklets::scheduleOnUI(uiScheduler_, [weakThis = weak_from_this()]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;

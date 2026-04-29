@@ -46,6 +46,8 @@ double AnimationProgressProvider::getKeyframeProgress(const double fromOffset, c
 
   const auto keyframeProgress = (getGlobalProgress() - fromOffset) / (toOffset - fromOffset);
 
+  // Use the overridden easing function if it was overridden for the
+  // current keyframe
   const auto easingFunctionIt = keyframeEasingFunctions_->find(fromOffset);
   if (easingFunctionIt != keyframeEasingFunctions_->end()) {
     return easingFunctionIt->second(keyframeProgress);
