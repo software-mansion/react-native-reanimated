@@ -29,6 +29,7 @@ struct PseudoTransitionConfig {
   double duration;
   double delay;
   EasingFunction easingFn;
+  bool allowDiscrete;
 };
 
 CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config);

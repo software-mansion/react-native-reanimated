@@ -104,6 +104,7 @@ export interface ReanimatedModuleProxy {
         duration?: number;
         delay?: number;
         timingFunction?: NormalizedCSSTimingFunction;
+        allowDiscrete: boolean;
       };
     }
   ): void;

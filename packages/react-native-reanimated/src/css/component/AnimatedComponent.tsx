@@ -26,6 +26,7 @@ import {
   normalizeDuration,
   normalizeTimingFunction,
 } from '../native/normalization/common';
+import { normalizeTransitionBehavior } from '../native/normalization/transition';
 import { CSSManager } from '../platform';
 import type { CSSStyle, CSSTransitionProperties } from '../types';
 import {
@@ -190,7 +191,12 @@ export default class AnimatedComponent<
         ? transitionProperties.transitionTimingFunction[0]
         : transitionProperties?.transitionTimingFunction
     );
-    const transition = { duration, delay, timingFunction };
+    const allowDiscrete = normalizeTransitionBehavior(
+      Array.isArray(transitionProperties?.transitionBehavior)
+        ? transitionProperties.transitionBehavior[0]
+        : transitionProperties?.transitionBehavior
+    );
+    const transition = { duration, delay, timingFunction, allowDiscrete };
 
     for (const [selector, { selectorStyle, defaultStyle }] of Object.entries(
       pseudoStylesBySelector

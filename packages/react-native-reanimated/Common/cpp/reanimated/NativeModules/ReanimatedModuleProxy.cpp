@@ -281,11 +281,11 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
         config.changedProperties.emplace(
             propName,
             CSSTransitionPropertySettings{
-                std::make_pair(jsi::valueFromDynamic(rt, fromVal), jsi::valueFromDynamic(rt, toVal)),
-                transitionConfig.duration,
-                transitionConfig.easingFn,
-                transitionConfig.delay,
-                false,
+                .value = {jsi::valueFromDynamic(rt, fromVal), jsi::valueFromDynamic(rt, toVal)},
+                .duration = transitionConfig.duration,
+                .easingFunction = transitionConfig.easingFn,
+                .delay = transitionConfig.delay,
+                .allowDiscrete = transitionConfig.allowDiscrete,
             });
       }
 
