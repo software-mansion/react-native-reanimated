@@ -11,11 +11,14 @@
 #else
 @interface REAPseudoSelectorObserver () <NSGestureRecognizerDelegate>
 #endif
-- (void)attachActiveToView:(REAUIView *)view;
-- (void)attachActiveDeepestToView:(REAUIView *)view;
+- (void)attachActiveGestureRecognizerToView:(REAUIView *)view;
 - (void)attachHoverToView:(REAUIView *)view;
+#if !TARGET_OS_OSX
 - (void)attachFocusToView:(REAUIView *)view;
 - (void)attachFocusWithinToView:(REAUIView *)view;
+#else
+- (void)attachMacFocusObservers;
+#endif
 @end
 
 @implementation REAPseudoSelectorObserver {
@@ -50,31 +53,26 @@
 {
   switch (selector) {
     case reanimated::PseudoSelector::Active:
-      [self attachActiveToView:view];
-      break;
     case reanimated::PseudoSelector::ActiveDeepest:
-      [self attachActiveDeepestToView:view];
+      [self attachActiveGestureRecognizerToView:view];
       break;
     case reanimated::PseudoSelector::Hover:
       [self attachHoverToView:view];
       break;
+#if !TARGET_OS_OSX
     case reanimated::PseudoSelector::Focus:
       [self attachFocusToView:view];
       break;
     case reanimated::PseudoSelector::FocusWithin:
       [self attachFocusWithinToView:view];
       break;
+#else
+    case reanimated::PseudoSelector::Focus:
+    case reanimated::PseudoSelector::FocusWithin:
+      [self attachMacFocusObservers];
+      break;
+#endif
   }
-}
-
-- (void)attachActiveToView:(REAUIView *)view
-{
-  [self attachActiveGestureRecognizerToView:view];
-}
-
-- (void)attachActiveDeepestToView:(REAUIView *)view
-{
-  [self attachActiveGestureRecognizerToView:view];
 }
 
 - (void)attachActiveGestureRecognizerToView:(REAUIView *)view
@@ -97,13 +95,11 @@
 {
 #if !TARGET_OS_OSX
 #if !TARGET_OS_TV
-  if (@available(iOS 13.0, *)) {
-    UIHoverGestureRecognizer *recognizer =
-        [[UIHoverGestureRecognizer alloc] initWithTarget:self action:@selector(handleHoverGesture:)];
-    recognizer.delegate = self;
-    [view addGestureRecognizer:recognizer];
-    _gestureRecognizer = recognizer;
-  }
+  UIHoverGestureRecognizer *recognizer =
+      [[UIHoverGestureRecognizer alloc] initWithTarget:self action:@selector(handleHoverGesture:)];
+  recognizer.delegate = self;
+  [view addGestureRecognizer:recognizer];
+  _gestureRecognizer = recognizer;
 #endif
 #else // TARGET_OS_OSX
   NSTrackingArea *trackingArea = [[NSTrackingArea alloc]
@@ -146,16 +142,6 @@
   [self attachFocusObserversWithPredicate:isOurs];
 }
 #else
-- (void)attachFocusToView:(REAUIView *)view
-{
-  [self attachMacFocusObservers];
-}
-
-- (void)attachFocusWithinToView:(REAUIView *)view
-{
-  [self attachMacFocusObservers];
-}
-
 static int _focusObserverContext;
 
 - (void)attachMacFocusObservers
@@ -265,7 +251,7 @@ static int _focusObserverContext;
 #if !TARGET_OS_OSX
 
 #if !TARGET_OS_TV
-- (void)handleHoverGesture:(UIHoverGestureRecognizer *)recognizer API_AVAILABLE(ios(13.0))
+- (void)handleHoverGesture:(UIHoverGestureRecognizer *)recognizer
 {
   switch (recognizer.state) {
     case UIGestureRecognizerStateBegan:
@@ -358,13 +344,8 @@ static int _focusObserverContext;
     current = current.superview;
   }
 #else
-  NSView *current = nil;
-  if ([view respondsToSelector:@selector(hitTest:withEvent:)]) {
-    current = [(id)view hitTest:location withEvent:nil];
-  } else {
-    NSPoint locationInSuper = [view convertPoint:location toView:view.superview];
-    current = [view.superview hitTest:locationInSuper];
-  }
+  NSPoint locationInSuper = [view convertPoint:location toView:view.superview];
+  NSView *current = [view.superview hitTest:locationInSuper];
 
   while (current && current != view) {
     for (NSGestureRecognizer *gr in current.gestureRecognizers) {
