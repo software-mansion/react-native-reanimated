@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+
 namespace reanimated::css {
 
 class RawProgressProvider {

@@ -23,8 +23,7 @@ class CSSTransition : public LoopOperation, public std::enable_shared_from_this<
       const std::shared_ptr<std::unordered_set<Tag>> &updatedViewTags,
       const std::shared_ptr<OperationsLoop> &loop);
 
-  void onUpdate(double timestamp) override;
-  bool isRunning() const override;
+  bool update(double timestamp) override;
 
   Tag getViewTag() const;
   std::shared_ptr<const ShadowNode> getShadowNode() const;

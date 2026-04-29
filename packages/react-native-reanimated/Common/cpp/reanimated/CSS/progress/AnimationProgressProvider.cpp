@@ -59,6 +59,9 @@ AnimationProgressState AnimationProgressProvider::getState() const {
 }
 
 double AnimationProgressProvider::getStartTimestamp(const double timestamp) const {
+  // Start timestamp is the timestamp when the first animation keyframe
+  // should be applied (it depends on the animation delay and the total
+  // time when the animation was paused)
   return creationTimestamp_ + delay_ + getTotalPausedTime(timestamp);
 }
 

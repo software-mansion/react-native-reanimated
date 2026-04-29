@@ -26,8 +26,7 @@ class CSSAnimation : public LoopOperation, public std::enable_shared_from_this<C
       const std::shared_ptr<OperationsLoop> &loop,
       double timestamp);
 
-  void onUpdate(double timestamp) override;
-  bool isRunning() const override;
+  bool update(double timestamp) override;
 
   const std::string &getName() const;
 

@@ -20,16 +20,14 @@ CSSTransition::CSSTransition(
       styleInterpolator_(TransitionStyleInterpolator(shadowNode_->getComponentName(), viewStylesRepository)),
       progressProvider_(TransitionProgressProvider()) {}
 
-void CSSTransition::onUpdate(const double timestamp) {
+bool CSSTransition::update(const double timestamp) {
   progressProvider_.update(timestamp);
   updatedViewTags_->insert(shadowNode_->getTag());
 
   if (progressProvider_.getState() == TransitionProgressState::Pending) {
     loop_->schedule(shared_from_this(), timestamp + progressProvider_.getMinDelay(timestamp));
   }
-}
 
-bool CSSTransition::isRunning() const {
   return progressProvider_.getState() == TransitionProgressState::Running;
 }
 

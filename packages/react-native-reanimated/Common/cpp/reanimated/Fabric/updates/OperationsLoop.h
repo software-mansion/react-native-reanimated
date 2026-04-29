@@ -5,40 +5,44 @@
 
 #include <worklets/Tools/UIScheduler.h>
 
-#include <functional>
+#include <atomic>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <set>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 namespace reanimated {
 
 class OperationsLoop : public std::enable_shared_from_this<OperationsLoop> {
  public:
-  using OperationPtr = std::shared_ptr<LoopOperation>;
-
   OperationsLoop(
       const std::shared_ptr<worklets::UIScheduler> &uiScheduler,
       const RequestRenderFunction &requestRender,
       const GetAnimationTimestampFunction &getTimestamp);
 
-  double getTimestamp();
+  // Returns the cached frame timestamp if one is in flight, otherwise fetches
+  // a fresh one and schedules a frame to invalidate it.
+  double resolveTimestamp();
 
-  void schedule(OperationPtr operation, double startTimestamp);
-  void remove(const OperationPtr &operation);
-  bool isEmpty() const;
+  void schedule(std::shared_ptr<LoopOperation> operation, double startTimestamp);
+  void remove(const std::shared_ptr<LoopOperation> &operation);
 
  private:
+  struct ScheduledOperation {
+    std::shared_ptr<LoopOperation> operation;
+    std::optional<double> insertAt; // nullopt means remove
+  };
+
   struct DelayedEntry {
     double activateAt;
-    OperationPtr operation;
+    std::shared_ptr<LoopOperation> operation;
 
     bool operator<(const DelayedEntry &other) const {
-      if (activateAt != other.activateAt) {
-        return activateAt < other.activateAt;
-      }
-      return std::less<OperationPtr>{}(operation, other.operation);
+      return std::tie(activateAt, operation) < std::tie(other.activateAt, other.operation);
     }
   };
 
@@ -46,17 +50,26 @@ class OperationsLoop : public std::enable_shared_from_this<OperationsLoop> {
   const RequestRenderFunction requestRender_;
   const GetAnimationTimestampFunction getTimestamp_;
 
-  bool frameRequested_{false};
-  double currentTimestamp_{0};
+  mutable std::mutex queueMutex_;
+  std::vector<ScheduledOperation> scheduledOperations_;
 
-  mutable std::mutex mutex_;
-  std::unordered_set<OperationPtr> activeOps_;
+  std::atomic<bool> frameRequested_{false};
+  std::atomic<double> currentTimestamp_{0};
+
+  std::unordered_set<std::shared_ptr<LoopOperation>> activeOps_;
   std::set<DelayedEntry> delayedOps_;
-  std::unordered_map<OperationPtr, std::set<DelayedEntry>::iterator> delayedLookup_;
+  std::unordered_map<std::shared_ptr<LoopOperation>, std::set<DelayedEntry>::iterator> delayedLookup_;
 
   void update();
-  void maybeRequestFrame(bool onUIThread = false);
-  void deferTimestampReset();
+  void enqueue(ScheduledOperation operation);
+
+  void maybeScheduleFrame();
+
+  std::pair<std::vector<ScheduledOperation>, double> beginFrame();
+  void endFrame();
+  void applyScheduledOperations(std::vector<ScheduledOperation> operations, double timestamp);
+  void activateDelayedOperations(double timestamp);
+  void updateActiveOperations(double timestamp);
 };
 
 } // namespace reanimated
