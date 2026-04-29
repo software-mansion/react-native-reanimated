@@ -13,6 +13,7 @@ PseudoTransitionConfig parsePseudoTransitionConfig(jsi::Runtime &rt, const jsi::
       .duration = getDuration(rt, transitionObj),
       .delay = getDelay(rt, transitionObj),
       .easingFn = getTimingFunction(rt, transitionObj),
+      .allowDiscrete = getAllowDiscrete(rt, transitionObj),
   };
 }
 
