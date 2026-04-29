@@ -26,6 +26,7 @@ class OperationsLoop : public std::enable_shared_from_this<OperationsLoop> {
   // Starts the loop if it's not already running.
   void run();
 
+	[[nodiscard]]
   bool isRunning() const {
     return running_;
   }
