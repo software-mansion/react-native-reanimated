@@ -3,7 +3,7 @@
 #include <reanimated/Fabric/updates/LoopOperation.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
-#include <worklets/Tools/UIScheduler.h>
+#include <worklets/Compat/StableApi.h>
 
 #include <atomic>
 #include <memory>
