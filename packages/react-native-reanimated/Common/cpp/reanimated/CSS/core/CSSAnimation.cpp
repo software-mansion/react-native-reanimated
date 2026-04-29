@@ -35,16 +35,14 @@ CSSAnimation::CSSAnimation(
   }
 }
 
-void CSSAnimation::onUpdate(const double timestamp) {
+bool CSSAnimation::update(const double timestamp) {
   progressProvider_->update(timestamp);
   updatedViewTags_->insert(viewTag_);
 
   if (progressProvider_->getState() == AnimationProgressState::Finished && !hasForwardsFillMode()) {
     revertedTags_->insert(viewTag_);
   }
-}
 
-bool CSSAnimation::isRunning() const {
   return progressProvider_->getState() == AnimationProgressState::Running;
 }
 
@@ -87,7 +85,7 @@ folly::dynamic CSSAnimation::getResetStyle(const std::shared_ptr<const ShadowNod
 
 void CSSAnimation::schedule() {
   if (progressProvider_->getState() != AnimationProgressState::Paused) {
-    const auto timestamp = loop_->getTimestamp();
+    const auto timestamp = loop_->resolveTimestamp();
     loop_->schedule(shared_from_this(), progressProvider_->getStartTimestamp(timestamp));
   }
 }

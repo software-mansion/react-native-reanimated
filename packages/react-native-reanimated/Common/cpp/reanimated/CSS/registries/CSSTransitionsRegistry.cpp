@@ -29,7 +29,7 @@ void CSSTransitionsRegistry::run(
 
   const auto &transition = registry_.at(viewTag);
   const auto &lastUpdates = getUpdatesFromRegistry(viewTag);
-  const auto timestamp = loop_->getTimestamp();
+  const auto timestamp = loop_->resolveTimestamp();
 
   auto initialUpdate = transition->run(rt, config, lastUpdates, timestamp);
 

@@ -6,14 +6,8 @@ class LoopOperation {
  public:
   virtual ~LoopOperation() = default;
 
-  void update(double timestamp) {
-    onUpdate(timestamp);
-  }
-
-  virtual bool isRunning() const = 0;
-
- protected:
-  virtual void onUpdate(double timestamp) = 0;
+  // Tick the operation. Return true to keep it scheduled, false to remove.
+  virtual bool update(double timestamp) = 0;
 };
 
 } // namespace reanimated

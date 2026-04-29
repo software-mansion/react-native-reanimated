@@ -48,7 +48,7 @@ void CSSAnimationsRegistry::apply(
   }
 
   auto &group = it->second;
-  group.updateSettings(updates.settingsUpdates, loop_->getTimestamp());
+  group.updateSettings(updates.settingsUpdates, loop_->resolveTimestamp());
   group.schedule();
 
   // Set current style to updates registry to ensure that all old
@@ -100,7 +100,7 @@ std::optional<CSSAnimationGroup> CSSAnimationsRegistry::maybeBuildNewGroup(
   const auto groupIt = groups_.find(viewTag);
 
   const auto &names = updatedAnimationNames.value();
-  const auto timestamp = loop_->getTimestamp();
+  const auto timestamp = loop_->resolveTimestamp();
 
   // Index old animations by name (reversed for quick pop)
   std::unordered_map<std::string, CSSAnimationsVector> oldByName;

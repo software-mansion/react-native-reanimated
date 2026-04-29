@@ -10,125 +10,132 @@ OperationsLoop::OperationsLoop(
     const GetAnimationTimestampFunction &getTimestamp)
     : uiScheduler_(uiScheduler), requestRender_(requestRender), getTimestamp_(getTimestamp) {}
 
-double OperationsLoop::getTimestamp() {
-  if (currentTimestamp_ <= 0) {
-    // Cache the timestamp so all callers within the same frame window
-    // get a consistent value.
-    currentTimestamp_ = getTimestamp_();
-    // Schedule a frame to reset the cache,
-    // preventing it from going stale if no operations are scheduled.
-    deferTimestampReset();
+double OperationsLoop::resolveTimestamp() {
+  // Fast path: cache hit is lock-free.
+  if (const double cached = currentTimestamp_.load(std::memory_order_acquire); cached > 0) {
+    return cached;
   }
-  return currentTimestamp_;
+
+  // Slow path: try to win the cache fill. If someone else already filled it, use theirs.
+  const double fresh = getTimestamp_();
+  double expected = 0;
+  if (!currentTimestamp_.compare_exchange_strong(expected, fresh, std::memory_order_acq_rel)) {
+    return expected;
+  }
+
+  // We filled the cache - make sure a frame is scheduled to invalidate it.
+  maybeScheduleFrame();
+  return fresh;
 }
 
-void OperationsLoop::schedule(OperationPtr operation, double startTimestamp) {
-  std::lock_guard<std::mutex> lock(mutex_);
-
-  // Remove existing entry first to avoid duplicates
-  activeOps_.erase(operation);
-  auto lookupIt = delayedLookup_.find(operation);
-  if (lookupIt != delayedLookup_.end()) {
-    delayedOps_.erase(lookupIt->second);
-    delayedLookup_.erase(lookupIt);
-  }
-
-  if (startTimestamp <= getTimestamp()) {
-    activeOps_.insert(std::move(operation));
-  } else {
-    auto it = delayedOps_.insert({startTimestamp, operation}).first;
-    delayedLookup_[operation] = it;
-  }
-
-  maybeRequestFrame();
+void OperationsLoop::schedule(std::shared_ptr<LoopOperation> operation, double startTimestamp) {
+  enqueue({std::move(operation), startTimestamp});
 }
 
-void OperationsLoop::remove(const OperationPtr &operation) {
-  std::lock_guard<std::mutex> lock(mutex_);
-
-  activeOps_.erase(operation);
-
-  auto lookupIt = delayedLookup_.find(operation);
-  if (lookupIt != delayedLookup_.end()) {
-    delayedOps_.erase(lookupIt->second);
-    delayedLookup_.erase(lookupIt);
-  }
-}
-
-bool OperationsLoop::isEmpty() const {
-  std::lock_guard<std::mutex> lock(mutex_);
-  return activeOps_.empty() && delayedOps_.empty();
+void OperationsLoop::remove(const std::shared_ptr<LoopOperation> &operation) {
+  enqueue({operation, std::nullopt});
 }
 
 void OperationsLoop::update() {
-  std::lock_guard<std::mutex> lock(mutex_);
-
-  frameRequested_ = false;
-  currentTimestamp_ = getTimestamp_();
-
-  // Promote delayed operations which start time has arrived
-  while (!delayedOps_.empty()) {
-    auto it = delayedOps_.begin();
-    if (it->activateAt > currentTimestamp_) {
-      break;
-    }
-    activeOps_.insert(it->operation);
-    delayedLookup_.erase(it->operation);
-    delayedOps_.erase(it);
-  }
-
-  // Update all active operations and remove non-running ones
-  for (auto it = activeOps_.begin(); it != activeOps_.end();) {
-    (*it)->update(currentTimestamp_);
-
-    if ((*it)->isRunning()) {
-      ++it;
-    } else {
-      it = activeOps_.erase(it);
-    }
-  }
-
-  // Invalidate cached timestamp — next getTimestamp() call fetches fresh
-  currentTimestamp_ = 0;
-
-  maybeRequestFrame(true);
+  auto [operations, timestamp] = beginFrame();
+  applyScheduledOperations(std::move(operations), timestamp);
+  activateDelayedOperations(timestamp);
+  updateActiveOperations(timestamp);
+  endFrame();
 }
 
-void OperationsLoop::maybeRequestFrame(bool onUIThread) {
-  if (frameRequested_ || (activeOps_.empty() && delayedOps_.empty())) {
+void OperationsLoop::enqueue(ScheduledOperation operation) {
+  {
+    std::lock_guard<std::mutex> lock(queueMutex_);
+    scheduledOperations_.emplace_back(std::move(operation));
+  }
+
+  maybeScheduleFrame();
+}
+
+void OperationsLoop::maybeScheduleFrame() {
+  // No-op if a frame is already scheduled - flips the flag and returns true if so.
+  if (frameRequested_.exchange(true, std::memory_order_acq_rel)) {
     return;
   }
 
-  frameRequested_ = true;
-
-  auto renderCallback = [weakThis = weak_from_this()](double /*frameTimestamp*/) {
-    if (auto strongThis = weakThis.lock()) {
-      strongThis->update();
+  uiScheduler_->scheduleOnUI([weakThis = weak_from_this()]() {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
     }
-  };
-
-  if (onUIThread) {
-    requestRender_(std::move(renderCallback));
-  } else {
-    uiScheduler_->scheduleOnUI([requestRender = requestRender_, renderCallback = std::move(renderCallback)]() {
-      requestRender(std::move(renderCallback));
-    });
-  }
-}
-
-void OperationsLoop::deferTimestampReset() {
-  if (frameRequested_ || !activeOps_.empty() || !delayedOps_.empty()) {
-    return;
-  }
-
-  frameRequested_ = true;
-  uiScheduler_->scheduleOnUI([requestRender = requestRender_, weakThis = weak_from_this()]() {
-    requestRender([weakThis](double /*frameTimestamp*/) {
+    strongThis->requestRender_([weakThis](double /*frameTimestamp*/) {
       if (auto strongThis = weakThis.lock()) {
         strongThis->update();
       }
     });
   });
+}
+
+std::pair<std::vector<OperationsLoop::ScheduledOperation>, double> OperationsLoop::beginFrame() {
+  const double freshTimestamp = getTimestamp_();
+
+  std::vector<ScheduledOperation> drained;
+  {
+    // Reset frameRequested_ together with the drain so an enqueue() can't slip a push
+    // in between (which would see the flag still true and skip scheduling).
+    std::lock_guard<std::mutex> lock(queueMutex_);
+    drained = std::exchange(scheduledOperations_, {});
+    frameRequested_.store(false, std::memory_order_release);
+  }
+
+  currentTimestamp_.store(freshTimestamp, std::memory_order_release);
+
+  return {std::move(drained), freshTimestamp};
+}
+
+void OperationsLoop::endFrame() {
+  // activeOps_ / delayedOps_ are touched only on the UI thread, so we can read them lock-free.
+  // We don't check the scheduledOperations_ queue: enqueue() schedules its own frame, so any
+  // pushes that arrived during update() have already requested a frame on their own.
+  const bool hasOngoingOperations = !activeOps_.empty() || !delayedOps_.empty();
+
+  currentTimestamp_.store(0, std::memory_order_release);
+
+  if (hasOngoingOperations) {
+    maybeScheduleFrame();
+  }
+}
+
+void OperationsLoop::applyScheduledOperations(std::vector<ScheduledOperation> operations, double timestamp) {
+  for (auto &op : operations) {
+    // Remove any prior scheduling for this operation.
+    activeOps_.erase(op.operation);
+    if (auto it = delayedLookup_.find(op.operation); it != delayedLookup_.end()) {
+      delayedOps_.erase(it->second);
+      delayedLookup_.erase(it);
+    }
+
+    if (!op.insertAt) {
+      continue;
+    }
+
+    const double insertAt = *op.insertAt;
+    if (insertAt <= timestamp) {
+      activeOps_.insert(std::move(op.operation));
+    } else {
+      auto it = delayedOps_.insert({insertAt, op.operation}).first;
+      delayedLookup_.emplace(std::move(op.operation), it);
+    }
+  }
+}
+
+void OperationsLoop::activateDelayedOperations(double timestamp) {
+  while (!delayedOps_.empty() && delayedOps_.begin()->activateAt <= timestamp) {
+    auto it = delayedOps_.begin();
+    delayedLookup_.erase(it->operation);
+    activeOps_.insert(it->operation);
+    delayedOps_.erase(it);
+  }
+}
+
+void OperationsLoop::updateActiveOperations(double timestamp) {
+  std::erase_if(activeOps_, [&](auto &op) { return !op->update(timestamp); });
 }
 
 } // namespace reanimated
