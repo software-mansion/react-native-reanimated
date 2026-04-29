@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <reanimated/CSS/easing/EasingFunctions.h>
+#include <reanimated/CSS/easing/EasingConfigs.h>
 
 #include <string>
 #include <utility>
@@ -10,7 +10,7 @@ namespace reanimated::css {
 
 double getDuration(jsi::Runtime &rt, const jsi::Object &config);
 
-EasingFunction getTimingFunction(jsi::Runtime &rt, const jsi::Object &config);
+EasingConfig getEasingConfig(jsi::Runtime &rt, const jsi::Object &config);
 
 double getDelay(jsi::Runtime &rt, const jsi::Object &config);
 
