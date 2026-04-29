@@ -5,6 +5,14 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_STANDARD 20)
 
+# Consume shared libraries and headers from prefabs
+find_package(fbjni REQUIRED CONFIG)
+find_package(ReactAndroid REQUIRED CONFIG)
+
+if(${JS_RUNTIME} STREQUAL "hermes")
+  find_package(hermes-engine REQUIRED CONFIG)
+endif()
+
 # default CMAKE_CXX_FLAGS: "-g -DANDROID -fdata-sections -ffunction-sections
 # -funwind-tables -fstack-protector-strong -no-canonical-prefixes
 # -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fstack-protector-all"
@@ -53,13 +61,7 @@ file(GLOB_RECURSE WORKLETS_COMMON_CPP_SOURCES CONFIGURE_DEPENDS
 file(GLOB_RECURSE WORKLETS_ANDROID_CPP_SOURCES CONFIGURE_DEPENDS
      "${ANDROID_CPP_DIR}/worklets/*.cpp")
 
-# Consume shared libraries and headers from prefabs
-find_package(fbjni REQUIRED CONFIG)
-find_package(ReactAndroid REQUIRED CONFIG)
 
-if(${JS_RUNTIME} STREQUAL "hermes")
-  find_package(hermes-engine REQUIRED CONFIG)
-endif()
 
 add_library(worklets SHARED ${WORKLETS_COMMON_CPP_SOURCES}
                             ${WORKLETS_ANDROID_CPP_SOURCES})
