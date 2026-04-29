@@ -107,7 +107,9 @@ export interface WorkletsModuleProxy {
     decorateGuest: SerializableRef
   ): SerializableRef<TValue>;
 
-  scheduleOnUI<TValue>(serializables: SerializableRef<TValue[]>): void;
+  scheduleOnUI<TValue>(
+    serializableArrayOfWorklets: SerializableRef<TValue[]>
+  ): void;
 
   runOnUISync<TValue, TReturn>(
     serializable: SerializableRef<TValue>,

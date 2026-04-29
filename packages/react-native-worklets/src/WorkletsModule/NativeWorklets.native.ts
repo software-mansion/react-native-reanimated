@@ -203,8 +203,8 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  scheduleOnUI<TValue>(serializables: SerializableRef<TValue[]>) {
-    return this.#workletsModuleProxy.scheduleOnUI(serializables);
+  scheduleOnUI<TValue>(serializableArrayOfWorklets: SerializableRef<TValue[]>) {
+    return this.#workletsModuleProxy.scheduleOnUI(serializableArrayOfWorklets);
   }
 
   runOnUISync<TValue, TReturn>(
