@@ -123,15 +123,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   jsi::Value getSettledUpdates(jsi::Runtime &rt) override;
 
-  void registerPseudoStyle(
-      jsi::Runtime &rt,
-      const jsi::Value &shadowNodeWrapper,
-      const jsi::Value &selector,
-      const jsi::Value &selectorStyle,
-      const jsi::Value &defaultStyle,
-      const jsi::Value &transitionConfig) override;
-  void unregisterPseudoStyle(jsi::Runtime &rt, const jsi::Value &viewTag) override;
-
   void cssLoopCallback(const double /*timestampMs*/);
 
   void dispatchCommand(
