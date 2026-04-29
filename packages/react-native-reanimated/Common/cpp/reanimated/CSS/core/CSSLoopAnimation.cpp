@@ -54,7 +54,7 @@ folly::dynamic CSSLoopAnimation::getCurrentInterpolationStyle(
 
 void CSSLoopAnimation::schedule() {
   if (progressProvider_->getState() != AnimationProgressState::Paused) {
-    const auto timestamp = loop_->getTimestamp();
+    const auto timestamp = loop_->resolveTimestamp();
     loop_->schedule(shared_from_this(), progressProvider_->getStartTimestamp(timestamp));
   }
 }
