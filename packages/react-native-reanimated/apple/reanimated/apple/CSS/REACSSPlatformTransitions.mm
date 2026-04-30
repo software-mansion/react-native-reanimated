@@ -12,6 +12,7 @@
 
 #import <stdexcept>
 #import <string>
+#import <unordered_set>
 #import <variant>
 
 using namespace facebook::react;
@@ -19,10 +20,30 @@ using namespace reanimated::css;
 
 bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &easing)
 {
-  if (propertyName != "opacity") {
+  static const std::unordered_set<std::string> kRoutable = {
+      "opacity",
+      "borderWidth",
+      "borderRadius",
+      "borderColor",
+      "shadowOpacity",
+      "shadowRadius",
+      "backgroundColor",
+      "shadowColor",
+      "shadowOffset",
+  };
+  if (!kRoutable.contains(propertyName)) {
     return false;
   }
   return std::holds_alternative<LinearEasing>(easing) || std::holds_alternative<CubicBezierEasing>(easing);
+}
+
+static NSString *caKeyPathForCSSProperty(NSString *cssName)
+{
+  // CSS uses borderRadius; CALayer's animatable property is cornerRadius.
+  if ([cssName isEqualToString:@"borderRadius"]) {
+    return @"cornerRadius";
+  }
+  return cssName;
 }
 
 static CAMediaTimingFunction *makeTimingFunction(const EasingConfig &easing)
@@ -38,6 +59,18 @@ static id idFromPlatformValue(NSString *propertyName, const PlatformValue &value
 {
   if (const auto *v = std::get_if<double>(&value)) {
     return @(*v);
+  }
+  if (const auto *v = std::get_if<std::array<double, 4>>(&value)) {
+    // 4-element values are RGBA colors (sRGB).
+    CGFloat components[4] = {(*v)[0], (*v)[1], (*v)[2], (*v)[3]};
+    CGColorSpaceRef space = CGColorSpaceCreateDeviceRGB();
+    CGColorRef color = CGColorCreate(space, components);
+    CGColorSpaceRelease(space);
+    return (__bridge_transfer id)color;
+  }
+  if (const auto *v = std::get_if<std::array<double, 2>>(&value)) {
+    // 2-element values are CGSizes (shadowOffset).
+    return [NSValue valueWithCGSize:CGSizeMake((*v)[0], (*v)[1])];
   }
   // Fired when the parser produced a variant alternative the iOS renderer
   // doesn't yet handle, or std::monostate (parser couldn't parse the value).
@@ -71,9 +104,10 @@ static id idFromPlatformValue(NSString *propertyName, const PlatformValue &value
   // CALayer access must run on the main thread; runCSSTransition arrives here
   // on the JS thread during React's shouldComponentUpdate.
   Tag viewTag = config.viewTag;
-  NSString *keyPath = [NSString stringWithUTF8String:config.propertyName.c_str()];
-  id toValue = idFromPlatformValue(keyPath, config.toValue);
-  id fromValue = idFromPlatformValue(keyPath, config.fromValue);
+  NSString *cssName = [NSString stringWithUTF8String:config.propertyName.c_str()];
+  NSString *keyPath = caKeyPathForCSSProperty(cssName);
+  id toValue = idFromPlatformValue(cssName, config.toValue);
+  id fromValue = idFromPlatformValue(cssName, config.fromValue);
   double durationSec = config.durationMs / 1000.0;
   CFTimeInterval beginTime = config.startTimestampMs / 1000.0;
   CAMediaTimingFunction *timing = makeTimingFunction(config.easing);
@@ -114,6 +148,7 @@ static id idFromPlatformValue(NSString *propertyName, const PlatformValue &value
 
 - (void)removeTransitionForTag:(Tag)viewTag propertyName:(NSString *)propertyName
 {
+  NSString *keyPath = caKeyPathForCSSProperty(propertyName);
   __weak __typeof__(self) weakSelf = self;
   RCTExecuteOnMainQueue(^{
     __typeof__(self) strongSelf = weakSelf;
@@ -125,11 +160,11 @@ static id idFromPlatformValue(NSString *propertyName, const PlatformValue &value
       return;
     }
     // Freeze the last visible frame into the model so the layer doesn't snap.
-    id presentationValue = [[layer presentationLayer] valueForKeyPath:propertyName];
+    id presentationValue = [[layer presentationLayer] valueForKeyPath:keyPath];
     if (presentationValue) {
-      [layer setValue:presentationValue forKeyPath:propertyName];
+      [layer setValue:presentationValue forKeyPath:keyPath];
     }
-    [layer removeAnimationForKey:propertyName];
+    [layer removeAnimationForKey:keyPath];
   });
 }
 
