@@ -1359,17 +1359,30 @@ var require_bundleMode = __commonJS({
       if (!expressionPath.isAssignmentExpression()) {
         return;
       }
+      const propertyName = getGlobalPropertyName(expressionPath);
+      if (propertyName === "_WORKLETS_BUNDLE_MODE_ENABLED") {
+        expressionPath.get("right").replaceWith((0, types_12.booleanLiteral)(true));
+        return;
+      }
+      if (propertyName === "_WORKLETS_REACT_NATIVE_IMPORTS_ALLOWED" && areReactNativeImportsAllowed(state)) {
+        expressionPath.get("right").replaceWith((0, types_12.booleanLiteral)(true));
+      }
+    }
+    function getGlobalPropertyName(expressionPath) {
       const left = expressionPath.get("left");
       if (!left.isMemberExpression()) {
-        return;
+        return null;
       }
       const object = left.get("object");
       const property = left.get("property");
-      if (!object.isIdentifier() || object.node.name !== "globalThis" || !property.isIdentifier() || property.node.name !== "_WORKLETS_BUNDLE_MODE_ENABLED") {
-        return;
+      if (!object.isIdentifier() || object.node.name !== "globalThis" || !property.isIdentifier()) {
+        return null;
       }
-      const right = expressionPath.get("right");
-      right.replaceWith((0, types_12.booleanLiteral)(true));
+      return property.node.name;
+    }
+    function areReactNativeImportsAllowed(state) {
+      var _a, _b;
+      return (_b = (_a = state.opts.workletizableModules) === null || _a === void 0 ? void 0 : _a.includes("react-native")) !== null && _b !== void 0 ? _b : false;
     }
   }
 });

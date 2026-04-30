@@ -540,6 +540,52 @@ describe('babel plugin', () => {
     });
   });
 
+  describe('for bundle mode runtime entry', () => {
+    const workletRuntimeEntryFilename =
+      '/tmp/react-native-worklets/src/initializers/workletRuntimeEntry.native.ts';
+
+    test('enables bundle mode in worklet runtime entry', () => {
+      const input = html`<script>
+        globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;
+      </script>`;
+
+      const { code } = runPlugin(input, undefined, {
+        bundleMode: true,
+      }, workletRuntimeEntryFilename);
+
+      expect(code).toContain('globalThis._WORKLETS_BUNDLE_MODE_ENABLED = true;');
+    });
+
+    test('allows react-native imports when explicitly configured', () => {
+      const input = html`<script>
+        globalThis._WORKLETS_REACT_NATIVE_IMPORTS_ALLOWED = false;
+      </script>`;
+
+      const { code } = runPlugin(input, undefined, {
+        bundleMode: true,
+        workletizableModules: ['react-native'],
+      }, workletRuntimeEntryFilename);
+
+      expect(code).toContain(
+        'globalThis._WORKLETS_REACT_NATIVE_IMPORTS_ALLOWED = true;'
+      );
+    });
+
+    test("doesn't allow react-native imports by default", () => {
+      const input = html`<script>
+        globalThis._WORKLETS_REACT_NATIVE_IMPORTS_ALLOWED = false;
+      </script>`;
+
+      const { code } = runPlugin(input, undefined, {
+        bundleMode: true,
+      }, workletRuntimeEntryFilename);
+
+      expect(code).toContain(
+        'globalThis._WORKLETS_REACT_NATIVE_IMPORTS_ALLOWED = false;'
+      );
+    });
+  });
+
   describe('for explicit worklets', () => {
     test('workletizes FunctionDeclaration', () => {
       const input = html`<script>
