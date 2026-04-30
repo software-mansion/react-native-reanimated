@@ -18,7 +18,10 @@ using namespace react;
 
 class CSSPlatformTransition {
  public:
-  CSSPlatformTransition(Tag viewTag, const std::shared_ptr<CSSPlatformTransitionProxy> &proxy);
+  CSSPlatformTransition(
+      Tag viewTag,
+      const std::string &componentName,
+      const std::shared_ptr<CSSPlatformTransitionProxy> &proxy);
 
   CSSPlatformTransition(const CSSPlatformTransition &) = delete;
 
@@ -40,7 +43,10 @@ class CSSPlatformTransition {
       const CSSTransitionPropertySettings &settings,
       double timestamp);
 
+  folly::dynamic defaultValueFor(const std::string &propertyName) const;
+
   const Tag viewTag_;
+  const std::string componentName_;
   const std::shared_ptr<CSSPlatformTransitionProxy> proxy_;
   std::unordered_map<std::string, ActiveProperty> activeProperties_;
 };

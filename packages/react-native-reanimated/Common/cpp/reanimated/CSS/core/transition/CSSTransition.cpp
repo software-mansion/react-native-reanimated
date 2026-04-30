@@ -78,7 +78,8 @@ folly::dynamic CSSTransition::runLoop(
 
 void CSSTransition::runPlatform(jsi::Runtime &rt, const CSSTransitionConfig &config, const double timestamp) {
   if (!platformTransition_) {
-    platformTransition_ = std::make_unique<CSSPlatformTransition>(shadowNode_->getTag(), platformTransitionProxy_);
+    platformTransition_ = std::make_unique<CSSPlatformTransition>(
+        shadowNode_->getTag(), shadowNode_->getComponentName(), platformTransitionProxy_);
   }
   platformTransition_->run(rt, config, timestamp);
 }
