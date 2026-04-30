@@ -1,4 +1,4 @@
-#include <reanimated/CSS/core/CSSLoopTransition.h>
+#include <reanimated/CSS/core/transition/CSSLoopTransition.h>
 
 #include <jsi/JSIDynamic.h>
 
@@ -15,10 +15,9 @@ CSSLoopTransition::CSSLoopTransition(
     const std::shared_ptr<std::unordered_set<Tag>> &updatedViewTags,
     const std::shared_ptr<OperationsLoop> &loop)
     : viewTag_(viewTag),
-      componentName_(componentName),
       updatedViewTags_(updatedViewTags),
       loop_(loop),
-      styleInterpolator_(TransitionStyleInterpolator(componentName_, viewStylesRepository)),
+      styleInterpolator_(TransitionStyleInterpolator(componentName, viewStylesRepository)),
       progressProvider_(TransitionProgressProvider()) {}
 
 TransitionProperties CSSLoopTransition::getProperties() const {
@@ -56,15 +55,9 @@ folly::dynamic CSSLoopTransition::run(
     removeProperty(propertyName);
   }
 
-  // Advance progress so the initial frame reflects post-config state, and so the
-  // following discardFinishedInterpolators/discardFinishedProgressProviders calls
-  // in computeCurrentStyle see fresh state.
   progressProvider_.update(timestamp);
   auto initialFrame = computeCurrentStyle(shadowNode);
 
-  // Schedule the next tick. The loop transition self-reschedules from update()
-  // while it stays Pending, and is removed from the loop when update() returns
-  // false (i.e. once the state becomes Idle) or explicitly via unschedule().
   schedule(timestamp + progressProvider_.getMinDelay(timestamp));
 
   return initialFrame;
@@ -95,13 +88,6 @@ void CSSLoopTransition::runProperty(
     const CSSTransitionPropertySettings &propertySettings,
     const folly::dynamic &lastUpdateValue,
     const double timestamp) {
-  const auto allowDiscrete = propertySettings.allowDiscrete;
-
-  if (!allowDiscrete && isDiscreteProperty(propertyName, componentName_)) {
-    removeProperty(propertyName);
-    return;
-  }
-
   properties_.insert(propertyName);
 
   // Update the transition style interpolator
@@ -116,11 +102,10 @@ void CSSLoopTransition::runProperty(
     isReversed = styleInterpolator_.createOrUpdateInterpolator(rt, propertyName, valueChange.first, valueChange.second);
   }
 
-  // We still pass allowDiscrete to use correct threshold for interpolation between incompatible values
-  // (e.g. when someone passes a keyword and a numeric value - in this case we interpolate them as discrete values)
-  styleInterpolator_.setAllowDiscrete(propertyName, allowDiscrete);
+  // Pass allowDiscrete so the interpolator picks the right threshold for
+  // incompatible value pairs (e.g. keyword interpolated against numeric).
+  styleInterpolator_.setAllowDiscrete(propertyName, propertySettings.allowDiscrete);
 
-  // Update the transition progress provider
   progressProvider_.runProgressProvider(propertyName, propertySettings, isReversed, timestamp);
 }
 

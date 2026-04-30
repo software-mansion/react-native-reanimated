@@ -1,7 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
-#include <reanimated/CSS/core/CSSLoopTransition.h>
+#include <reanimated/CSS/core/transition/CSSLoopTransition.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
 
 #include <folly/dynamic.h>

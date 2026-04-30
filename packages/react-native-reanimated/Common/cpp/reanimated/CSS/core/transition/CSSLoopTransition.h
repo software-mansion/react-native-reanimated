@@ -50,7 +50,6 @@ class CSSLoopTransition : public LoopOperation, public std::enable_shared_from_t
   void removeProperty(const std::string &propertyName);
 
   const Tag viewTag_;
-  const std::string componentName_;
   const std::shared_ptr<std::unordered_set<Tag>> updatedViewTags_;
   const std::shared_ptr<OperationsLoop> loop_;
 
