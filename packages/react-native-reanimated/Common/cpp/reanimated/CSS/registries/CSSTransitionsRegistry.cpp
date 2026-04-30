@@ -33,16 +33,12 @@ void CSSTransitionsRegistry::run(
 
   auto initialUpdate = transition->run(rt, config, lastUpdates, timestamp);
 
-  loop_->schedule(transition, timestamp + transition->getMinDelay(timestamp));
-
   updateInUpdatesRegistry(transition, initialUpdate);
 }
 
 void CSSTransitionsRegistry::remove(const Tag viewTag) {
-  const auto it = registry_.find(viewTag);
-  if (it != registry_.end()) {
-    loop_->remove(it->second);
-  }
+  // Erasing the entry destroys the CSSTransition, whose destructor removes
+  // its loop transition from the loop.
   removeFromUpdatesRegistry(viewTag);
   registry_.erase(viewTag);
   updatedViewTags_->erase(viewTag);
@@ -55,11 +51,11 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
       continue;
     }
 
-    auto &transition = it->second;
+    const auto &transition = it->second;
     const auto updates = transition->computeCurrentStyle();
 
     if (!updates.empty()) {
-      addUpdatesToBatch(transition->getShadowNodeFamily(), updates);
+      addUpdatesToBatch(transition->getFamilyShared(), updates);
     }
   }
 
@@ -70,8 +66,8 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
 void CSSTransitionsRegistry::updateInUpdatesRegistry(
     const std::shared_ptr<CSSTransition> &transition,
     const folly::dynamic &updates) {
-  const auto &shadowNode = transition->getShadowNode();
-  const auto &lastUpdates = getUpdatesFromRegistry(shadowNode->getTag());
+  const auto viewTag = transition->getViewTag();
+  const auto &lastUpdates = getUpdatesFromRegistry(viewTag);
   const auto &transitionProperties = transition->getProperties();
 
   folly::dynamic filteredUpdates = folly::dynamic::object;
@@ -89,7 +85,7 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
   // updated object contains only allowed properties so we don't need
   // to do additional filtering here
   filteredUpdates.update(updates);
-  setInUpdatesRegistry(shadowNode->getFamilyShared(), filteredUpdates);
+  setInUpdatesRegistry(transition->getFamilyShared(), filteredUpdates);
 }
 
 } // namespace reanimated::css
