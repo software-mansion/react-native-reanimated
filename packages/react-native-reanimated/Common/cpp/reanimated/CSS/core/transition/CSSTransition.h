@@ -35,7 +35,7 @@ class CSSTransition {
  private:
   folly::dynamic
   runLoop(jsi::Runtime &rt, const CSSTransitionConfig &config, const folly::dynamic &lastUpdates, double timestamp);
-  folly::dynamic runPlatform(const CSSPlatformTransitionConfig &config);
+  folly::dynamic runPlatform(jsi::Runtime &rt, const CSSTransitionConfig &config, double timestamp);
 
   const std::shared_ptr<const ShadowNode> shadowNode_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;

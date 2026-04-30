@@ -90,7 +90,6 @@ void CSSLoopTransition::runProperty(
     const double timestamp) {
   properties_.insert(propertyName);
 
-  // Update the transition style interpolator
   const auto &valueChange = propertySettings.value;
 
   bool isReversed;

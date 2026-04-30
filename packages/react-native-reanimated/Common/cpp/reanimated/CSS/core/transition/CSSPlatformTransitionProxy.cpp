@@ -1,7 +1,5 @@
 #include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
 
-#include <jsi/JSIDynamic.h>
-
 #include <utility>
 
 namespace reanimated::css {
@@ -14,8 +12,8 @@ CSSPlatformTransitionProxy::CSSPlatformTransitionProxy(
       applyTransition_(std::move(applyTransition)),
       removeTransition_(std::move(removeTransition)) {}
 
-bool CSSPlatformTransitionProxy::canRoute(const std::string &propertyName) const {
-  return canRoute_ && canRoute_(propertyName);
+bool CSSPlatformTransitionProxy::canRoute(const std::string &propertyName, const EasingConfig &easing) const {
+  return canRoute_ && canRoute_(propertyName, easing);
 }
 
 void CSSPlatformTransitionProxy::run(const CSSPlatformTransitionPropertyConfig &config) const {
@@ -30,32 +28,25 @@ void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &pr
   }
 }
 
-// Splits the new config into loop/platform buckets. result.routing starts as
-// a copy of the previous call's routing and is updated as we route each prop;
-// erasing from the *other* side's set returns nonzero exactly when the prop
-// is migrating sides - that's how we emit cancels.
 CSSPlatformTransitionProxy::ProcessedConfig CSSPlatformTransitionProxy::processConfig(
-    jsi::Runtime &rt,
-    const Tag viewTag,
     CSSTransitionConfig &&config,
     const CSSTransitionRouting &previousRouting) const {
   ProcessedConfig result;
   result.routing = previousRouting;
 
-  // extract() preserves move-only PropertySettings (jsi::Value).
+  // Drain via extract() so move-only PropertySettings (jsi::Value) can be
+  // moved into the matching bucket.
   while (!config.changedProperties.empty()) {
     auto node = config.changedProperties.extract(config.changedProperties.begin());
     const auto &propertyName = node.key();
 
-    if (canRoute(propertyName)) {
-      // loop -> platform migration: cancel on loop.
+    if (canRoute(propertyName, node.mapped().easingConfig)) {
       if (result.routing.loop.erase(propertyName) > 0) {
         result.loop.removedProperties.push_back(propertyName);
       }
       result.routing.platform.insert(propertyName);
-      result.platform.changedProperties.push_back(buildPropertyConfig(rt, viewTag, propertyName, node.mapped()));
+      result.platform.changedProperties.insert(std::move(node));
     } else {
-      // platform -> loop migration: cancel on platform.
       if (result.routing.platform.erase(propertyName) > 0) {
         result.platform.removedProperties.push_back(propertyName);
       }
@@ -75,20 +66,6 @@ CSSPlatformTransitionProxy::ProcessedConfig CSSPlatformTransitionProxy::processC
   }
 
   return result;
-}
-
-CSSPlatformTransitionPropertyConfig CSSPlatformTransitionProxy::buildPropertyConfig(
-    jsi::Runtime &rt,
-    const Tag viewTag,
-    const std::string &propertyName,
-    const CSSTransitionPropertySettings &propertySettings) const {
-  return CSSPlatformTransitionPropertyConfig{
-      viewTag,
-      propertyName,
-      jsi::dynamicFromValue(rt, propertySettings.value.second),
-      propertySettings.duration,
-      propertySettings.delay,
-      propertySettings.easingConfig};
 }
 
 } // namespace reanimated::css
