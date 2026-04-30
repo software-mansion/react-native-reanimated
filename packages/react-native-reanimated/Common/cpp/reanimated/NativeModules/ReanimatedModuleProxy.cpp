@@ -478,7 +478,7 @@ void ReanimatedModuleProxy::runCSSTransition(
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &transitionConfig) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  const auto config = parseCSSTransitionConfig(rt, transitionConfig);
+  const auto config = parseCSSTransitionConfig(rt, shadowNode->getComponentName(), transitionConfig);
 
   {
     auto lock = cssTransitionsRegistry_->lock();

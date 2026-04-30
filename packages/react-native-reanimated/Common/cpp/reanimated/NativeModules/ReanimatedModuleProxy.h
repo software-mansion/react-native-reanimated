@@ -5,7 +5,7 @@
 #include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
-#include <reanimated/CSS/core/CSSTransition.h>
+#include <reanimated/CSS/core/transition/CSSTransition.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>

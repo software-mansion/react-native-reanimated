@@ -1,4 +1,4 @@
-#include <reanimated/CSS/core/CSSTransition.h>
+#include <reanimated/CSS/core/transition/CSSTransition.h>
 
 #include <memory>
 #include <utility>
