@@ -203,12 +203,18 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  scheduleOnUI<TValue>(serializable: SerializableRef<TValue>) {
-    return this.#workletsModuleProxy.scheduleOnUI(serializable);
+  scheduleOnUI<TValue>(
+    serializable: SerializableRef<TValue>,
+    scheduleStack: string | undefined
+  ) {
+    return this.#workletsModuleProxy.scheduleOnUI(serializable, scheduleStack);
   }
 
-  runOnUISync<TValue, TReturn>(worklet: SerializableRef<TValue>): TReturn {
-    return this.#workletsModuleProxy.runOnUISync(worklet);
+  runOnUISync<TValue, TReturn>(
+    worklet: SerializableRef<TValue>,
+    scheduleStack: string | undefined
+  ): TReturn {
+    return this.#workletsModuleProxy.runOnUISync(worklet, scheduleStack);
   }
 
   createWorkletRuntime(
@@ -229,36 +235,50 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
-    serializableWorklet: SerializableRef<TValue>
+    serializableWorklet: SerializableRef<TValue>,
+    scheduleStack: string | undefined
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntime(
       workletRuntime,
-      serializableWorklet
+      serializableWorklet,
+      scheduleStack
     );
   }
 
   scheduleOnRuntimeWithId<TValue>(
     runtimeId: number,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack: string | undefined
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntimeWithId(
       runtimeId,
-      worklet
+      worklet,
+      scheduleStack
     );
   }
 
   runOnRuntimeSync<TValue, TReturn>(
     workletRuntime: WorkletRuntime,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack: string | undefined
   ): TReturn {
-    return this.#workletsModuleProxy.runOnRuntimeSync(workletRuntime, worklet);
+    return this.#workletsModuleProxy.runOnRuntimeSync(
+      workletRuntime,
+      worklet,
+      scheduleStack
+    );
   }
 
   runOnRuntimeSyncWithId<TValue, TReturn>(
     runtimeId: number,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack: string | undefined
   ): TReturn {
-    return this.#workletsModuleProxy.runOnRuntimeSyncWithId(runtimeId, worklet);
+    return this.#workletsModuleProxy.runOnRuntimeSyncWithId(
+      runtimeId,
+      worklet,
+      scheduleStack
+    );
   }
 
   createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue> {
@@ -301,18 +321,8 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.synchronizableUnlock(synchronizableRef);
   }
 
-  reportFatalErrorOnJS(
-    message: string,
-    stack: string,
-    name: string,
-    jsEngine: string
-  ) {
-    return this.#workletsModuleProxy.reportFatalErrorOnJS(
-      message,
-      stack,
-      name,
-      jsEngine
-    );
+  reportFatalErrorOnJS(message: string, stack: string, name: string) {
+    return this.#workletsModuleProxy.reportFatalErrorOnJS(message, stack, name);
   }
 
   getStaticFeatureFlag(name: string): boolean {
