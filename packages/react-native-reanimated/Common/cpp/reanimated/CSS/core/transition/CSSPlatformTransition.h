@@ -22,7 +22,7 @@ class CSSPlatformTransition {
 
   CSSPlatformTransition(const CSSPlatformTransition &) = delete;
 
-  folly::dynamic run(jsi::Runtime &rt, const CSSTransitionConfig &config, double timestamp);
+  void run(jsi::Runtime &rt, const CSSTransitionConfig &config, double timestamp);
 
   void cancel(const std::string &propertyName);
   void cancelAll();
@@ -38,7 +38,6 @@ class CSSPlatformTransition {
       jsi::Runtime &rt,
       const std::string &propertyName,
       const CSSTransitionPropertySettings &settings,
-      folly::dynamic &initialUpdate,
       double timestamp);
 
   const Tag viewTag_;

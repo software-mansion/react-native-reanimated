@@ -18,6 +18,7 @@ using namespace react;
 struct CSSPlatformTransitionPropertyConfig {
   Tag viewTag;
   std::string propertyName;
+  folly::dynamic fromValue;
   folly::dynamic toValue;
   double durationMs;
   double startTimestampMs;

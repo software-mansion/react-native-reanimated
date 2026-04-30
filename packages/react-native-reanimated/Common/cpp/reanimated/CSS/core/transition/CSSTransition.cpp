@@ -53,10 +53,8 @@ folly::dynamic CSSTransition::run(
   auto processed = platformTransitionProxy_->processConfig(std::move(config), routing_);
   routing_ = std::move(processed.routing);
 
-  folly::dynamic initialUpdate = folly::dynamic::object();
-  initialUpdate.update(runLoop(rt, processed.loop, lastUpdates, timestamp));
-  initialUpdate.update(runPlatform(rt, processed.platform, timestamp));
-  return initialUpdate;
+  runPlatform(rt, processed.platform, timestamp);
+  return runLoop(rt, processed.loop, lastUpdates, timestamp);
 }
 
 folly::dynamic CSSTransition::computeCurrentLoopStyle() {
@@ -78,11 +76,11 @@ folly::dynamic CSSTransition::runLoop(
   return loopTransition_->run(rt, shadowNode_, config, lastUpdates, timestamp);
 }
 
-folly::dynamic CSSTransition::runPlatform(jsi::Runtime &rt, const CSSTransitionConfig &config, const double timestamp) {
+void CSSTransition::runPlatform(jsi::Runtime &rt, const CSSTransitionConfig &config, const double timestamp) {
   if (!platformTransition_) {
     platformTransition_ = std::make_unique<CSSPlatformTransition>(shadowNode_->getTag(), platformTransitionProxy_);
   }
-  return platformTransition_->run(rt, config, timestamp);
+  platformTransition_->run(rt, config, timestamp);
 }
 
 } // namespace reanimated::css

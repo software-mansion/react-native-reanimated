@@ -4,6 +4,7 @@
 #import <React/RCTComponentViewRegistry.h>
 #import <React/RCTSurfacePresenter.h>
 #import <React/RCTMountingManager.h>
+#import <React/RCTUtils.h>
 
 #import <QuartzCore/QuartzCore.h>
 
@@ -49,47 +50,79 @@ static id valueForProperty(NSString *propertyName, const folly::dynamic &dynamic
 
 - (nullable CALayer *)layerForTag:(Tag)viewTag
 {
-  RCTComponentViewRegistry *registry = _surfacePresenter.mountingManager.componentViewRegistry;
-  UIView<RCTComponentViewProtocol> *view = [registry findComponentViewWithTag:viewTag];
+  UIView<RCTComponentViewProtocol> *view =
+      [_surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:viewTag];
   return view.layer;
 }
 
 - (void)applyTransition:(const CSSPlatformTransitionPropertyConfig &)config
 {
-  CALayer *layer = [self layerForTag:config.viewTag];
-  if (!layer) {
-    return;
-  }
-
+  // CALayer access must run on the main thread; runCSSTransition arrives here
+  // on the JS thread during React's shouldComponentUpdate.
+  Tag viewTag = config.viewTag;
   NSString *keyPath = [NSString stringWithUTF8String:config.propertyName.c_str()];
   id toValue = valueForProperty(keyPath, config.toValue);
   if (toValue == nil) {
     return;
   }
+  id fromValue = valueForProperty(keyPath, config.fromValue);
+  double durationSec = config.durationMs / 1000.0;
+  CFTimeInterval beginTime = config.startTimestampMs / 1000.0;
+  CAMediaTimingFunction *timing = makeTimingFunction(config.easing);
 
-  CABasicAnimation *anim = [CABasicAnimation animationWithKeyPath:keyPath];
-  anim.toValue = toValue;
-  anim.duration = config.durationMs / 1000.0;
-  anim.beginTime = config.startTimestampMs / 1000.0;
-  anim.timingFunction = makeTimingFunction(config.easing);
-  anim.fillMode = kCAFillModeBackwards;
+  __weak __typeof__(self) weakSelf = self;
+  RCTExecuteOnMainQueue(^{
+    __typeof__(self) strongSelf = weakSelf;
+    if (strongSelf == nil) {
+      return;
+    }
+    CALayer *layer = [strongSelf layerForTag:viewTag];
+    if (!layer) {
+      return;
+    }
 
-  [layer addAnimation:anim forKey:keyPath];
+    CABasicAnimation *anim = [CABasicAnimation animationWithKeyPath:keyPath];
+    // Implicit fromValue races RN's model commit; on reversal we want the
+    // live presentation value, mirroring how the loop side picks up the
+    // interpolator's last output on interruption.
+    if ([[layer animationForKey:keyPath] isKindOfClass:[CABasicAnimation class]]) {
+      id presentationValue = [[layer presentationLayer] valueForKeyPath:keyPath];
+      anim.fromValue = presentationValue ?: fromValue;
+    } else {
+      anim.fromValue = fromValue;
+    }
+    anim.toValue = toValue;
+    anim.duration = durationSec;
+    anim.beginTime = beginTime;
+    anim.timingFunction = timing;
+    // Persist so presentation holds the animated value before beginTime
+    // (kCAFillModeBackwards) and after duration (kCAFillModeForwards),
+    // overriding any concurrent model commits. Cleared in removeTransition.
+    anim.fillMode = kCAFillModeBoth;
+    anim.removedOnCompletion = NO;
+    [layer addAnimation:anim forKey:keyPath];
+  });
 }
 
 - (void)removeTransitionForTag:(Tag)viewTag propertyName:(NSString *)propertyName
 {
-  CALayer *layer = [self layerForTag:viewTag];
-  if (!layer) {
-    return;
-  }
-
-  // Freeze the last visible frame into the model so the layer doesn't snap.
-  id presentationValue = [[layer presentationLayer] valueForKeyPath:propertyName];
-  if (presentationValue) {
-    [layer setValue:presentationValue forKeyPath:propertyName];
-  }
-  [layer removeAnimationForKey:propertyName];
+  __weak __typeof__(self) weakSelf = self;
+  RCTExecuteOnMainQueue(^{
+    __typeof__(self) strongSelf = weakSelf;
+    if (strongSelf == nil) {
+      return;
+    }
+    CALayer *layer = [strongSelf layerForTag:viewTag];
+    if (!layer) {
+      return;
+    }
+    // Freeze the last visible frame into the model so the layer doesn't snap.
+    id presentationValue = [[layer presentationLayer] valueForKeyPath:propertyName];
+    if (presentationValue) {
+      [layer setValue:presentationValue forKeyPath:propertyName];
+    }
+    [layer removeAnimationForKey:propertyName];
+  });
 }
 
 @end

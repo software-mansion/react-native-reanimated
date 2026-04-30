@@ -13,26 +13,22 @@ CSSPlatformTransition::CSSPlatformTransition(
     const std::shared_ptr<CSSPlatformTransitionProxy> &proxy)
     : viewTag_(viewTag), proxy_(proxy) {}
 
-folly::dynamic CSSPlatformTransition::run(jsi::Runtime &rt, const CSSTransitionConfig &config, const double timestamp) {
-  folly::dynamic initialUpdate = folly::dynamic::object();
-
+void CSSPlatformTransition::run(jsi::Runtime &rt, const CSSTransitionConfig &config, const double timestamp) {
   for (const auto &[propertyName, settings] : config.changedProperties) {
-    runProperty(rt, propertyName, settings, initialUpdate, timestamp);
+    runProperty(rt, propertyName, settings, timestamp);
   }
 
   for (const auto &propertyName : config.removedProperties) {
     cancel(propertyName);
   }
-
-  return initialUpdate;
 }
 
 void CSSPlatformTransition::runProperty(
     jsi::Runtime &rt,
     const std::string &propertyName,
     const CSSTransitionPropertySettings &settings,
-    folly::dynamic &initialUpdate,
     const double timestamp) {
+  auto fromValue = jsi::dynamicFromValue(rt, settings.value.first);
   auto toValue = jsi::dynamicFromValue(rt, settings.value.second);
 
   const auto activeIt = activeProperties_.find(propertyName);
@@ -42,14 +38,10 @@ void CSSPlatformTransition::runProperty(
                  : makeReversingState(timestamp, settings.duration, settings.delay, settings.easingConfig);
 
   proxy_->run(CSSPlatformTransitionPropertyConfig{
-      viewTag_, propertyName, toValue, rs.duration, rs.startTimestamp, settings.easingConfig});
-
-  // Settle the model layer on toValue so RN's view stays there once the
-  // native animation completes.
-  initialUpdate[propertyName] = toValue;
+      viewTag_, propertyName, fromValue, toValue, rs.duration, rs.startTimestamp, settings.easingConfig});
 
   activeProperties_[propertyName] = ActiveProperty{
-      prev ? std::move(prev->adjustedEnd) : jsi::dynamicFromValue(rt, settings.value.first),
+      prev ? std::move(prev->adjustedEnd) : std::move(fromValue),
       std::move(toValue),
       std::move(rs),
   };
