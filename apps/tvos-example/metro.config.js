@@ -10,7 +10,7 @@ const defaultConfig = getDefaultConfig(__dirname);
 const { blockList, extraNodeModules } = getMonorepoMetroOptions(
   modulesToFilter,
   __dirname,
-  // @ts-ignore type discrepancy between older metro types
+  // @ts-expect-error type discrepancy between older metro types
   // in tvos-example and newer used in `getMonorepoMetroOptions`
   defaultConfig
 );
