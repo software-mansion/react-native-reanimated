@@ -1,7 +1,9 @@
 import type { NodePath } from '@babel/core';
-import type { CallExpression } from '@babel/types';
+import type { BlockStatement, CallExpression } from '@babel/types';
 import { isSequenceExpression, isV8IntrinsicIdentifier } from '@babel/types';
 
+import { appendWorkletDirective, replaceImplicitReturnWithBlock } from './file';
+import { findWorklet } from './findWorklet';
 import {
   gestureHandlerBuilderMethods,
   gestureHandlerObjectHooks,
@@ -9,9 +11,13 @@ import {
   isGestureObjectEventCallbackMethod,
 } from './gestureHandlerAutoworkletization';
 import { isLayoutAnimationCallback } from './layoutAnimationAutoworkletization';
-import { tryProcessingNode } from './objectWorklets';
-import type { WorkletizableFunction, WorkletsPluginPass } from './types';
-import { processWorklet } from './workletSubstitution';
+import {
+  isWorkletizableFunctionPath,
+  isWorkletizableObjectPath,
+  type WorkletizableFunction,
+  type WorkletizableObject,
+  type WorkletsPluginPass,
+} from './types';
 
 const reanimatedObjectHooks = new Set([
   'useAnimatedScrollHandler',
@@ -72,19 +78,15 @@ const reanimatedFunctionArgsToWorkletize = new Map([
   ...Array.from(gestureHandlerBuilderMethods).map((name) => [name, [0]]),
 ] as [string, number[]][]);
 
-/** @returns `true` if the function was workletized, `false` otherwise. */
-export function processIfAutoworkletizableCallback(
-  path: NodePath<WorkletizableFunction>,
-  state: WorkletsPluginPass
-): boolean {
+export function addWorkletDirectiveToKnownCallback(
+  path: NodePath<WorkletizableFunction>
+): void {
   if (isGestureHandlerEventCallback(path) || isLayoutAnimationCallback(path)) {
-    processWorklet(path, state);
-    return true;
+    addWorkletDirective(path);
   }
-  return false;
 }
 
-export function processCalleesAutoworkletizableCallbacks(
+export function addWorkletDirectivesToCallbacks(
   path: NodePath<CallExpression>,
   state: WorkletsPluginPass
 ): void {
@@ -112,23 +114,86 @@ export function processCalleesAutoworkletizableCallbacks(
       .get('arguments')
       .filter((_, index) => argIndices.includes(index));
 
-    processArgs(args, state, acceptWorkletizableFunction, acceptObject);
+    addWorkletDirectiveToArgs(
+      args,
+      state,
+      acceptWorkletizableFunction,
+      acceptObject
+    );
   } else if (
     !isV8IntrinsicIdentifier(callee) &&
     isGestureObjectEventCallbackMethod(callee)
   ) {
     const args = path.get('arguments');
-    processArgs(args, state, true, true);
+    addWorkletDirectiveToArgs(args, state, true, true);
   }
 }
 
-function processArgs(
+function addWorkletDirectiveToArgs(
   args: NodePath[],
   state: WorkletsPluginPass,
   acceptWorkletizableFunction: boolean,
   acceptObject: boolean
 ): void {
   args.forEach((arg) => {
-    tryProcessingNode(arg, state, acceptWorkletizableFunction, acceptObject);
+    addWorkletDirectiveToNode(
+      arg,
+      state,
+      acceptWorkletizableFunction,
+      acceptObject
+    );
   });
+}
+
+function addWorkletDirectiveToNode(
+  arg: NodePath,
+  state: WorkletsPluginPass,
+  acceptWorkletizableFunction: boolean,
+  acceptObject: boolean
+): void {
+  const maybeWorklet = findWorklet(
+    arg,
+    state,
+    acceptWorkletizableFunction,
+    acceptObject
+  );
+  if (!maybeWorklet) {
+    return;
+  }
+  if (isWorkletizableFunctionPath(maybeWorklet)) {
+    addWorkletDirective(maybeWorklet);
+  } else if (isWorkletizableObjectPath(maybeWorklet)) {
+    addWorkletDirectiveToMethods(maybeWorklet, state);
+  }
+}
+
+function addWorkletDirectiveToMethods(
+  path: NodePath<WorkletizableObject>,
+  state: WorkletsPluginPass
+): void {
+  const properties = path.get('properties');
+  for (const property of properties) {
+    if (property.isObjectMethod()) {
+      addWorkletDirective(property);
+    } else if (property.isObjectProperty()) {
+      const value = property.get('value');
+      addWorkletDirectiveToNode(
+        value,
+        state,
+        true, // acceptWorkletizableFunction
+        false // acceptObject
+      );
+    } else {
+      throw new Error(
+        `[Reanimated] '${property.type}' as to-be workletized argument is not supported for object hooks.`
+      );
+    }
+  }
+}
+
+function addWorkletDirective(path: NodePath<WorkletizableFunction>): void {
+  if (path.isArrowFunctionExpression()) {
+    replaceImplicitReturnWithBlock(path.node);
+  }
+  appendWorkletDirective(path.node.body as BlockStatement);
 }

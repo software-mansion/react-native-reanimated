@@ -144,13 +144,13 @@ function processWorkletAggregator(
  * This is necessary because the worklet directive is only allowed on block
  * statements.
  */
-function replaceImplicitReturnWithBlock(path: ArrowFunctionExpression) {
+export function replaceImplicitReturnWithBlock(path: ArrowFunctionExpression) {
   if (!isBlockStatement(path.body)) {
     path.body = blockStatement([returnStatement(path.body)]);
   }
 }
 
-function appendWorkletDirective(node: BlockStatement) {
+export function appendWorkletDirective(node: BlockStatement) {
   if (
     !node.directives.some(
       (functionDirective) => functionDirective.value.value === 'worklet'

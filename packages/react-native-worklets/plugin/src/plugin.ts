@@ -9,8 +9,8 @@ import type {
 } from '@babel/types';
 
 import {
-  processCalleesAutoworkletizableCallbacks,
-  processIfAutoworkletizableCallback,
+  addWorkletDirectivesToCallbacks,
+  addWorkletDirectiveToKnownCallback,
 } from './autoworkletization';
 import { toggleBundleMode } from './bundleMode';
 import { processIfWorkletClass } from './class';
@@ -24,30 +24,25 @@ import { substituteWebCallExpression } from './webOptimization';
 import { processIfWithWorkletDirective } from './workletSubstitution';
 
 module.exports = function WorkletsBabelPlugin(): PluginItem {
-  function runWithTaggedExceptions(fun: () => void) {
-    try {
-      fun();
-    } catch (e) {
-      const error = e as Error;
-      error.message = `[Worklets] Babel plugin exception: ${error.message}`;
-      error.name = 'WorkletsBabelPluginError';
-      throw error;
-    }
-  }
-
   return {
     name: 'worklets',
 
     pre(this: WorkletsPluginPass) {
       runWithTaggedExceptions(() => {
         initializeState(this);
+        /**
+         * We run the micro-plugin in the `pre` step of the whole pipeline to
+         * add all 'worklet' directives before React Compiler kicks in.
+         *
+         * As of now React Compiler begins its work on `Program` visitor.
+         */
+        this.file.path.traverse(getAutoworkletizationMicroPlugin(), this);
       });
     },
     visitor: {
       CallExpression: {
         enter(path: NodePath<CallExpression>, state: WorkletsPluginPass) {
           runWithTaggedExceptions(() => {
-            processCalleesAutoworkletizableCallbacks(path, state);
             if (state.opts.substituteWebPlatformChecks) {
               substituteWebCallExpression(path);
             }
@@ -59,11 +54,9 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
           path: NodePath<WorkletizableFunction>,
           state: WorkletsPluginPass
         ) {
-          runWithTaggedExceptions(
-            () =>
-              processIfWithWorkletDirective(path, state) ||
-              processIfAutoworkletizableCallback(path, state)
-          );
+          runWithTaggedExceptions(() => {
+            processIfWithWorkletDirective(path, state);
+          });
         },
       },
       ObjectExpression: {
@@ -107,3 +100,31 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
     },
   };
 };
+
+export function getAutoworkletizationMicroPlugin() {
+  return {
+    CallExpression: {
+      enter(path: NodePath<CallExpression>, state: WorkletsPluginPass) {
+        addWorkletDirectivesToCallbacks(path, state);
+      },
+    },
+    [WorkletizableFunction]: {
+      enter(path: NodePath) {
+        addWorkletDirectiveToKnownCallback(
+          path as NodePath<WorkletizableFunction>
+        );
+      },
+    },
+  };
+}
+
+function runWithTaggedExceptions(fun: () => void) {
+  try {
+    fun();
+  } catch (e) {
+    const error = e as Error;
+    error.message = `[Worklets] Babel plugin exception: ${error.message}`;
+    error.name = 'WorkletsBabelPluginError';
+    throw error;
+  }
+}
