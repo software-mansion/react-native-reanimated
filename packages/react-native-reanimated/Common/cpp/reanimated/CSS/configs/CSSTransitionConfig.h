@@ -20,10 +20,13 @@ struct CSSTransitionPropertySettings {
 
 using CSSTransitionPropertiesSettings = std::unordered_map<std::string, CSSTransitionPropertySettings>;
 
-struct CSSTransitionConfig {
-  CSSTransitionPropertiesSettings changedProperties;
+template <typename ChangedT>
+struct CSSTransitionConfigBase {
+  ChangedT changedProperties;
   std::vector<std::string> removedProperties;
 };
+
+using CSSTransitionConfig = CSSTransitionConfigBase<CSSTransitionPropertiesSettings>;
 
 CSSTransitionConfig
 parseCSSTransitionConfig(jsi::Runtime &rt, const std::string &componentName, const jsi::Value &config);

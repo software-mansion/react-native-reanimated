@@ -7,9 +7,11 @@ namespace reanimated::css {
 
 CSSTransitionsRegistry::CSSTransitionsRegistry(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const std::shared_ptr<OperationsLoop> &loop)
+    const std::shared_ptr<OperationsLoop> &loop,
+    const std::shared_ptr<CSSPlatformTransitionProxy> &platformTransitionProxy)
     : viewStylesRepository_(viewStylesRepository),
       loop_(loop),
+      platformTransitionProxy_(platformTransitionProxy),
       updatedViewTags_(std::make_shared<std::unordered_set<Tag>>()) {}
 
 bool CSSTransitionsRegistry::needsFlush() const {
@@ -19,11 +21,12 @@ bool CSSTransitionsRegistry::needsFlush() const {
 void CSSTransitionsRegistry::run(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
-    const CSSTransitionConfig &config) {
+    CSSTransitionConfig &&config) {
   const auto viewTag = shadowNode->getTag();
 
   if (!registry_.contains(viewTag)) {
-    auto transition = std::make_shared<CSSTransition>(shadowNode, viewStylesRepository_, updatedViewTags_, loop_);
+    auto transition = std::make_shared<CSSTransition>(
+        shadowNode, viewStylesRepository_, updatedViewTags_, loop_, platformTransitionProxy_);
     registry_.insert({viewTag, transition});
   }
 
@@ -31,7 +34,7 @@ void CSSTransitionsRegistry::run(
   const auto &lastUpdates = getUpdatesFromRegistry(viewTag);
   const auto timestamp = loop_->resolveTimestamp();
 
-  auto initialUpdate = transition->run(rt, config, lastUpdates, timestamp);
+  auto initialUpdate = transition->run(rt, std::move(config), lastUpdates, timestamp);
 
   updateInUpdatesRegistry(transition, initialUpdate);
 }
@@ -52,7 +55,7 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
     }
 
     const auto &transition = it->second;
-    const auto updates = transition->computeCurrentStyle();
+    const auto updates = transition->computeCurrentLoopStyle();
 
     if (!updates.empty()) {
       addUpdatesToBatch(transition->getFamilyShared(), updates);

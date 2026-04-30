@@ -16,11 +16,12 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
  public:
   CSSTransitionsRegistry(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const std::shared_ptr<OperationsLoop> &loop);
+      const std::shared_ptr<OperationsLoop> &loop,
+      const std::shared_ptr<CSSPlatformTransitionProxy> &platformTransitionProxy);
 
   bool needsFlush() const;
 
-  void run(jsi::Runtime &rt, const std::shared_ptr<const ShadowNode> &shadowNode, const CSSTransitionConfig &config);
+  void run(jsi::Runtime &rt, const std::shared_ptr<const ShadowNode> &shadowNode, CSSTransitionConfig &&config);
   void remove(Tag viewTag) override;
 
   void flushUpdates(UpdatesBatch &updatesBatch);
@@ -30,6 +31,7 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
 
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
   const std::shared_ptr<OperationsLoop> loop_;
+  const std::shared_ptr<CSSPlatformTransitionProxy> platformTransitionProxy_;
 
   Registry registry_;
   std::shared_ptr<std::unordered_set<Tag>> updatedViewTags_;

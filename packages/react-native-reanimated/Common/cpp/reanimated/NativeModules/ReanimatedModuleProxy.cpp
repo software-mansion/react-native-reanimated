@@ -138,7 +138,13 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(staticPropsRegistry_, animatedPropsRegistry_)),
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>(operationsLoop_, cssAnimationKeyframesRegistry_)),
-      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(viewStylesRepository_, operationsLoop_)),
+      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
+          viewStylesRepository_,
+          operationsLoop_,
+          std::make_shared<CSSPlatformTransitionProxy>(
+              platformDepMethodsHolder.cssCanRouteProperty,
+              platformDepMethodsHolder.cssApplyTransition,
+              platformDepMethodsHolder.cssRemoveTransition))),
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
@@ -478,11 +484,11 @@ void ReanimatedModuleProxy::runCSSTransition(
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &transitionConfig) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  const auto config = parseCSSTransitionConfig(rt, shadowNode->getComponentName(), transitionConfig);
+  auto config = parseCSSTransitionConfig(rt, shadowNode->getComponentName(), transitionConfig);
 
   {
     auto lock = cssTransitionsRegistry_->lock();
-    cssTransitionsRegistry_->run(rt, shadowNode, config);
+    cssTransitionsRegistry_->run(rt, shadowNode, std::move(config));
   }
 }
 
