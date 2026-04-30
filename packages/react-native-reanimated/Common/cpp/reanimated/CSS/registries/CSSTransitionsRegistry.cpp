@@ -71,7 +71,7 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
     const folly::dynamic &updates) {
   const auto viewTag = transition->getViewTag();
   const auto &lastUpdates = getUpdatesFromRegistry(viewTag);
-  const auto &transitionProperties = transition->getProperties();
+  const auto transitionProperties = transition->collectProperties();
 
   folly::dynamic filteredUpdates = folly::dynamic::object;
 

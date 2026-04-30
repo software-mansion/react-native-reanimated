@@ -26,14 +26,13 @@ class CSSTransition {
 
   Tag getViewTag() const;
   ShadowNodeFamily::Shared getFamilyShared() const;
-  TransitionProperties getProperties() const;
+  TransitionProperties collectProperties() const;
 
   folly::dynamic
   run(jsi::Runtime &rt, CSSTransitionConfig &&config, const folly::dynamic &lastUpdateValue, double timestamp);
   folly::dynamic computeCurrentLoopStyle();
 
  private:
-  void updateOwnedProperties(const CSSTransitionConfig &config);
   folly::dynamic
   runLoop(jsi::Runtime &rt, const CSSTransitionConfig &config, const folly::dynamic &lastUpdates, double timestamp);
   folly::dynamic runPlatform(const CSSPlatformTransitionConfig &config);
@@ -44,10 +43,10 @@ class CSSTransition {
   const std::shared_ptr<OperationsLoop> loop_;
   const std::shared_ptr<CSSPlatformTransitionProxy> platformTransitionProxy_;
 
-  TransitionProperties properties_;
+  CSSTransitionRouting routing_;
 
-  // Loop transition is shared_ptr because OperationsLoop holds strong refs;
-  // platform transition is unique_ptr (this coordinator is the sole owner).
+  // shared_ptr: OperationsLoop holds strong refs. unique_ptr: this coordinator
+  // is the sole owner.
   std::shared_ptr<CSSLoopTransition> loopTransition_;
   std::unique_ptr<CSSPlatformTransition> platformTransition_;
 };

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingConfigs.h>
 
@@ -31,11 +32,17 @@ using CSSCanRoutePropertyFunction = std::function<bool(const std::string &proper
 using CSSApplyTransitionFunction = std::function<void(const CSSPlatformTransitionPropertyConfig &config)>;
 using CSSRemoveTransitionFunction = std::function<void(Tag viewTag, const std::string &propertyName)>;
 
+struct CSSTransitionRouting {
+  TransitionProperties loop;
+  TransitionProperties platform;
+};
+
 class CSSPlatformTransitionProxy {
  public:
   struct ProcessedConfig {
     CSSTransitionConfig loop;
     CSSPlatformTransitionConfig platform;
+    CSSTransitionRouting routing;
   };
 
   CSSPlatformTransitionProxy(
@@ -43,12 +50,21 @@ class CSSPlatformTransitionProxy {
       CSSApplyTransitionFunction applyTransition,
       CSSRemoveTransitionFunction removeTransition);
 
-  bool canRoute(const std::string &propertyName) const;
   void run(const CSSPlatformTransitionPropertyConfig &config) const;
   void remove(Tag viewTag, const std::string &propertyName) const;
-  ProcessedConfig processConfig(jsi::Runtime &rt, Tag viewTag, CSSTransitionConfig &&config) const;
+
+  // Splits the new config across loop/platform sides given the previous
+  // call's routing decisions. When a property's side flips compared to
+  // previousRouting, the old side receives an implicit cancel so two engines
+  // never drive the same prop.
+  ProcessedConfig processConfig(
+      jsi::Runtime &rt,
+      Tag viewTag,
+      CSSTransitionConfig &&config,
+      const CSSTransitionRouting &previousRouting) const;
 
  private:
+  bool canRoute(const std::string &propertyName) const;
   CSSPlatformTransitionPropertyConfig buildPropertyConfig(
       jsi::Runtime &rt,
       Tag viewTag,

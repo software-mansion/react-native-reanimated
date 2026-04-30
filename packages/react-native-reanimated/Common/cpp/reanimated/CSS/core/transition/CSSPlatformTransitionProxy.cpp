@@ -30,25 +30,46 @@ void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &pr
   }
 }
 
-CSSPlatformTransitionProxy::ProcessedConfig
-CSSPlatformTransitionProxy::processConfig(jsi::Runtime &rt, const Tag viewTag, CSSTransitionConfig &&config) const {
+// Splits the new config into loop/platform buckets. result.routing starts as
+// a copy of the previous call's routing and is updated as we route each prop;
+// erasing from the *other* side's set returns nonzero exactly when the prop
+// is migrating sides - that's how we emit cancels.
+CSSPlatformTransitionProxy::ProcessedConfig CSSPlatformTransitionProxy::processConfig(
+    jsi::Runtime &rt,
+    const Tag viewTag,
+    CSSTransitionConfig &&config,
+    const CSSTransitionRouting &previousRouting) const {
   ProcessedConfig result;
+  result.routing = previousRouting;
 
-  // Drain changedProperties by extracting nodes - preserves the move-only
-  // CSSTransitionPropertySettings (which holds non-copyable jsi::Value).
+  // extract() preserves move-only PropertySettings (jsi::Value).
   while (!config.changedProperties.empty()) {
     auto node = config.changedProperties.extract(config.changedProperties.begin());
-    if (canRoute(node.key())) {
-      result.platform.changedProperties.push_back(buildPropertyConfig(rt, viewTag, node.key(), node.mapped()));
+    const auto &propertyName = node.key();
+
+    if (canRoute(propertyName)) {
+      // loop -> platform migration: cancel on loop.
+      if (result.routing.loop.erase(propertyName) > 0) {
+        result.loop.removedProperties.push_back(propertyName);
+      }
+      result.routing.platform.insert(propertyName);
+      result.platform.changedProperties.push_back(buildPropertyConfig(rt, viewTag, propertyName, node.mapped()));
     } else {
+      // platform -> loop migration: cancel on platform.
+      if (result.routing.platform.erase(propertyName) > 0) {
+        result.platform.removedProperties.push_back(propertyName);
+      }
+      result.routing.loop.insert(propertyName);
       result.loop.changedProperties.insert(std::move(node));
     }
   }
 
+  // Props JS asked to stop transitioning: look up the owning side in routing
+  // and forward the cancel there.
   for (auto &propertyName : config.removedProperties) {
-    if (canRoute(propertyName)) {
+    if (result.routing.platform.erase(propertyName) > 0) {
       result.platform.removedProperties.push_back(std::move(propertyName));
-    } else {
+    } else if (result.routing.loop.erase(propertyName) > 0) {
       result.loop.removedProperties.push_back(std::move(propertyName));
     }
   }

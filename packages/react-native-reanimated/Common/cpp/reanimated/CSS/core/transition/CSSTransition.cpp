@@ -34,8 +34,12 @@ ShadowNodeFamily::Shared CSSTransition::getFamilyShared() const {
   return shadowNode_->getFamilyShared();
 }
 
-TransitionProperties CSSTransition::getProperties() const {
-  return properties_;
+TransitionProperties CSSTransition::collectProperties() const {
+  TransitionProperties result;
+  result.reserve(routing_.loop.size() + routing_.platform.size());
+  result.insert(routing_.loop.begin(), routing_.loop.end());
+  result.insert(routing_.platform.begin(), routing_.platform.end());
+  return result;
 }
 
 folly::dynamic CSSTransition::run(
@@ -46,9 +50,8 @@ folly::dynamic CSSTransition::run(
   const folly::dynamic emptyObject = folly::dynamic::object();
   const folly::dynamic &lastUpdates = lastUpdateValue.empty() ? emptyObject : lastUpdateValue;
 
-  updateOwnedProperties(config);
-
-  auto processed = platformTransitionProxy_->processConfig(rt, shadowNode_->getTag(), std::move(config));
+  auto processed = platformTransitionProxy_->processConfig(rt, shadowNode_->getTag(), std::move(config), routing_);
+  routing_ = std::move(processed.routing);
 
   folly::dynamic initialUpdate = folly::dynamic::object();
   initialUpdate.update(runLoop(rt, processed.loop, lastUpdates, timestamp));
@@ -61,15 +64,6 @@ folly::dynamic CSSTransition::computeCurrentLoopStyle() {
     return folly::dynamic::object();
   }
   return loopTransition_->computeCurrentStyle(shadowNode_);
-}
-
-void CSSTransition::updateOwnedProperties(const CSSTransitionConfig &config) {
-  for (const auto &[propertyName, _] : config.changedProperties) {
-    properties_.insert(propertyName);
-  }
-  for (const auto &propertyName : config.removedProperties) {
-    properties_.erase(propertyName);
-  }
 }
 
 folly::dynamic CSSTransition::runLoop(
