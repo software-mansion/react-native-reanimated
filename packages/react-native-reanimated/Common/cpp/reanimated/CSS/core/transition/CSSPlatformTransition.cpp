@@ -1,9 +1,6 @@
 #include <reanimated/CSS/core/transition/CSSPlatformTransition.h>
 
-#include <reanimated/CSS/InterpolatorRegistry.h>
 #include <reanimated/CSS/utils/reversingShortening.h>
-
-#include <jsi/JSIDynamic.h>
 
 #include <utility>
 
@@ -11,9 +8,8 @@ namespace reanimated::css {
 
 CSSPlatformTransition::CSSPlatformTransition(
     const Tag viewTag,
-    const std::string &componentName,
     const std::shared_ptr<CSSPlatformTransitionProxy> &proxy)
-    : viewTag_(viewTag), componentName_(componentName), proxy_(proxy) {}
+    : viewTag_(viewTag), proxy_(proxy) {}
 
 void CSSPlatformTransition::run(jsi::Runtime &rt, const CSSTransitionConfig &config, const double timestamp) {
   for (const auto &[propertyName, settings] : config.changedProperties) {
@@ -30,15 +26,10 @@ void CSSPlatformTransition::runProperty(
     const std::string &propertyName,
     const CSSTransitionPropertySettings &settings,
     const double timestamp) {
-  auto fromValue = jsi::dynamicFromValue(rt, settings.value.first);
-  auto toValue = jsi::dynamicFromValue(rt, settings.value.second);
-
-  if (fromValue.isNull()) {
-    fromValue = defaultValueFor(propertyName);
-  }
-  if (toValue.isNull()) {
-    toValue = defaultValueFor(propertyName);
-  }
+  // null/undefined endpoints are resolved to the property's default inside
+  // parsePlatformValue; type mismatches and unsupported properties throw.
+  auto fromValue = parsePlatformValue(rt, propertyName, settings.value.first);
+  auto toValue = parsePlatformValue(rt, propertyName, settings.value.second);
 
   const auto activeIt = activeProperties_.find(propertyName);
   auto *prev =
@@ -67,14 +58,6 @@ void CSSPlatformTransition::cancelAll() {
     proxy_->remove(viewTag_, propertyName);
   }
   activeProperties_.clear();
-}
-
-folly::dynamic CSSPlatformTransition::defaultValueFor(const std::string &propertyName) const {
-  const auto &factories = getComponentInterpolators(componentName_);
-  if (auto it = factories.find(propertyName); it != factories.end()) {
-    return it->second->getDefaultValue().toDynamic();
-  }
-  return folly::dynamic();
 }
 
 } // namespace reanimated::css

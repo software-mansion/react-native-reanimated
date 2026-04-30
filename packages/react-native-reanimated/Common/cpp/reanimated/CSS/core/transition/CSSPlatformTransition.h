@@ -1,9 +1,9 @@
 #pragma once
 
 #include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
+#include <reanimated/CSS/utils/platform.h>
 #include <reanimated/CSS/utils/reversingShortening.h>
 
-#include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <react/renderer/core/ReactPrimitives.h>
 
@@ -18,10 +18,7 @@ using namespace react;
 
 class CSSPlatformTransition {
  public:
-  CSSPlatformTransition(
-      Tag viewTag,
-      const std::string &componentName,
-      const std::shared_ptr<CSSPlatformTransitionProxy> &proxy);
+  CSSPlatformTransition(Tag viewTag, const std::shared_ptr<CSSPlatformTransitionProxy> &proxy);
 
   CSSPlatformTransition(const CSSPlatformTransition &) = delete;
 
@@ -32,8 +29,8 @@ class CSSPlatformTransition {
 
  private:
   struct ActiveProperty {
-    folly::dynamic adjustedStart;
-    folly::dynamic adjustedEnd;
+    PlatformValue adjustedStart;
+    PlatformValue adjustedEnd;
     ReversingState previous;
   };
 
@@ -43,10 +40,7 @@ class CSSPlatformTransition {
       const CSSTransitionPropertySettings &settings,
       double timestamp);
 
-  folly::dynamic defaultValueFor(const std::string &propertyName) const;
-
   const Tag viewTag_;
-  const std::string componentName_;
   const std::shared_ptr<CSSPlatformTransitionProxy> proxy_;
   std::unordered_map<std::string, ActiveProperty> activeProperties_;
 };

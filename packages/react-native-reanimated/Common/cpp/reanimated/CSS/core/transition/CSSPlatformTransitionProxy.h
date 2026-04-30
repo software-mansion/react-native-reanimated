@@ -3,8 +3,8 @@
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingConfigs.h>
+#include <reanimated/CSS/utils/platform.h>
 
-#include <folly/dynamic.h>
 #include <react/renderer/core/ReactPrimitives.h>
 
 #include <functional>
@@ -18,8 +18,8 @@ using namespace react;
 struct CSSPlatformTransitionPropertyConfig {
   Tag viewTag;
   std::string propertyName;
-  folly::dynamic fromValue;
-  folly::dynamic toValue;
+  PlatformValue fromValue;
+  PlatformValue toValue;
   double durationMs;
   double startTimestampMs;
   EasingConfig easing;

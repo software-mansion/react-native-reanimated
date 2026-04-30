@@ -1,5 +1,7 @@
 #import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
 
+#import <reanimated/CSS/utils/platform.h>
+
 #import <React/RCTComponentViewProtocol.h>
 #import <React/RCTComponentViewRegistry.h>
 #import <React/RCTMountingManager.h>
@@ -7,6 +9,10 @@
 #import <React/RCTUtils.h>
 
 #import <QuartzCore/QuartzCore.h>
+
+#import <stdexcept>
+#import <string>
+#import <variant>
 
 using namespace facebook::react;
 using namespace reanimated::css;
@@ -28,12 +34,17 @@ static CAMediaTimingFunction *makeTimingFunction(const EasingConfig &easing)
   return [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
 }
 
-static id valueForProperty(NSString *propertyName, const folly::dynamic &dynamicValue)
+static id idFromPlatformValue(NSString *propertyName, const PlatformValue &value)
 {
-  if ([propertyName isEqualToString:@"opacity"]) {
-    return @(dynamicValue.asDouble());
+  if (const auto *v = std::get_if<double>(&value)) {
+    return @(*v);
   }
-  return nil;
+  // Fired when the parser produced a variant alternative the iOS renderer
+  // doesn't yet handle, or std::monostate (parser couldn't parse the value).
+  // Both indicate a developer-side bug worth surfacing loudly.
+  throw std::runtime_error(
+      std::string("[Reanimated] iOS renderer cannot convert PlatformValue for property '") +
+      std::string(propertyName.UTF8String) + "'");
 }
 
 @implementation REACSSPlatformTransitions {
@@ -61,11 +72,8 @@ static id valueForProperty(NSString *propertyName, const folly::dynamic &dynamic
   // on the JS thread during React's shouldComponentUpdate.
   Tag viewTag = config.viewTag;
   NSString *keyPath = [NSString stringWithUTF8String:config.propertyName.c_str()];
-  id toValue = valueForProperty(keyPath, config.toValue);
-  if (toValue == nil) {
-    return;
-  }
-  id fromValue = valueForProperty(keyPath, config.fromValue);
+  id toValue = idFromPlatformValue(keyPath, config.toValue);
+  id fromValue = idFromPlatformValue(keyPath, config.fromValue);
   double durationSec = config.durationMs / 1000.0;
   CFTimeInterval beginTime = config.startTimestampMs / 1000.0;
   CAMediaTimingFunction *timing = makeTimingFunction(config.easing);
