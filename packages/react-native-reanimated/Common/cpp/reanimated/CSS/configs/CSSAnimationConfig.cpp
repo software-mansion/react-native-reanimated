@@ -8,6 +8,14 @@
 
 namespace reanimated::css {
 
+bool CSSAnimationSettings::hasForwardsFillMode() const {
+  return fillMode == AnimationFillMode::Forwards || fillMode == AnimationFillMode::Both;
+}
+
+bool CSSAnimationSettings::hasBackwardsFillMode() const {
+  return fillMode == AnimationFillMode::Backwards || fillMode == AnimationFillMode::Both;
+}
+
 double getIterationCount(jsi::Runtime &rt, const jsi::Object &settings) {
   return settings.getProperty(rt, "iterationCount").asNumber();
 }
@@ -59,7 +67,7 @@ CSSAnimationSettings parseCSSAnimationSettings(jsi::Runtime &rt, const jsi::Valu
 
   return {
       getDuration(rt, settingsObj),
-      getTimingFunction(rt, settingsObj),
+      getEasingConfig(rt, settingsObj),
       getDelay(rt, settingsObj),
       getIterationCount(rt, settingsObj),
       getDirection(rt, settingsObj),
@@ -76,7 +84,7 @@ PartialCSSAnimationSettings parsePartialCSSAnimationSettings(jsi::Runtime &rt, c
     result.duration = getDuration(rt, partialObj);
   }
   if (partialObj.hasProperty(rt, "timingFunction")) {
-    result.easingFunction = getTimingFunction(rt, partialObj);
+    result.easingConfig = getEasingConfig(rt, partialObj);
   }
   if (partialObj.hasProperty(rt, "delay")) {
     result.delay = getDelay(rt, partialObj);

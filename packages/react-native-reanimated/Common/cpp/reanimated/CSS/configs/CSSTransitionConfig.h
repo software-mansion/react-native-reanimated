@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/easing/EasingFunctions.h>
+#include <reanimated/CSS/configs/common.h>
 
 #include <jsi/jsi.h>
 #include <string>
@@ -13,18 +13,22 @@ namespace reanimated::css {
 struct CSSTransitionPropertySettings {
   std::pair<jsi::Value, jsi::Value> value;
   double duration;
-  EasingFunction easingFunction;
+  EasingConfig easingConfig;
   double delay;
   bool allowDiscrete;
 };
 
 using CSSTransitionPropertiesSettings = std::unordered_map<std::string, CSSTransitionPropertySettings>;
 
-struct CSSTransitionConfig {
-  CSSTransitionPropertiesSettings changedProperties;
+template <typename ChangedT>
+struct CSSTransitionConfigBase {
+  ChangedT changedProperties;
   std::vector<std::string> removedProperties;
 };
 
-CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config);
+using CSSTransitionConfig = CSSTransitionConfigBase<CSSTransitionPropertiesSettings>;
+
+CSSTransitionConfig
+parseCSSTransitionConfig(jsi::Runtime &rt, const std::string &componentName, const jsi::Value &config);
 
 } // namespace reanimated::css

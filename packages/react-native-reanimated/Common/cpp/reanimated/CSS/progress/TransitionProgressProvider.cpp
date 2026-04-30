@@ -46,12 +46,13 @@ double TransitionPropertyProgressProvider::getReversingShorteningFactor() const 
 }
 
 TransitionProgressState TransitionPropertyProgressProvider::getState() const {
+  // rawProgress_ is empty until the property's delay has passed
+  // (RawProgressProvider::update resets it while timestamp < creationTimestamp + delay)
   if (!rawProgress_.has_value()) {
     return TransitionProgressState::Pending;
   }
-  const auto rawProgress = rawProgress_.value();
-  if (rawProgress >= 1) {
-    return TransitionProgressState::Finished;
+  if (rawProgress_.value() >= 1) {
+    return TransitionProgressState::Idle;
   }
   return TransitionProgressState::Running;
 }
@@ -70,12 +71,14 @@ double TransitionPropertyProgressProvider::getElapsedTime(const double timestamp
 // TransitionProgressProvider
 
 TransitionProgressState TransitionProgressProvider::getState() const {
-  for (const auto &[_, propertyProgressProvider] : propertyProgressProviders_) {
-    if (propertyProgressProvider->getState() == TransitionProgressState::Running) {
-      return TransitionProgressState::Running;
+  for (const auto &[_, progressProvider] : propertyProgressProviders_) {
+    const auto state = progressProvider->getState();
+    if (state != TransitionProgressState::Idle) {
+      return state;
     }
   }
-  return TransitionProgressState::Pending;
+
+  return TransitionProgressState::Idle;
 }
 
 double TransitionProgressProvider::getMinDelay(const double timestamp) const {
@@ -113,7 +116,7 @@ void TransitionProgressProvider::runProgressProvider(
     const auto &progressProvider = it->second;
     progressProvider->update(timestamp);
 
-    if (isReversed && progressProvider->getState() != TransitionProgressState::Finished) {
+    if (isReversed && progressProvider->getState() != TransitionProgressState::Idle) {
       // Create reversing shortening progress provider for interrupted reversing transition
       propertyProgressProviders_.insert_or_assign(
           propertyName, createReversingShorteningProgressProvider(timestamp, settings, *progressProvider));
@@ -125,7 +128,7 @@ void TransitionProgressProvider::runProgressProvider(
   propertyProgressProviders_.insert_or_assign(
       propertyName,
       std::make_shared<TransitionPropertyProgressProvider>(
-          timestamp, settings.duration, settings.delay, settings.easingFunction));
+          timestamp, settings.duration, settings.delay, getEasingFunctionFromConfig(settings.easingConfig)));
 }
 
 void TransitionProgressProvider::removeProperty(const std::string &propertyName) {
@@ -134,7 +137,7 @@ void TransitionProgressProvider::removeProperty(const std::string &propertyName)
 
 void TransitionProgressProvider::discardFinishedProgressProviders() {
   for (auto it = propertyProgressProviders_.begin(); it != propertyProgressProviders_.end();) {
-    if (it->second->getState() == TransitionProgressState::Finished) {
+    if (it->second->getState() == TransitionProgressState::Idle) {
       it = propertyProgressProviders_.erase(it);
     } else {
       ++it;
@@ -147,7 +150,7 @@ void TransitionProgressProvider::update(const double timestamp) {
 
   for (const auto &[propertyName, propertyProgressProvider] : propertyProgressProviders_) {
     propertyProgressProvider->update(timestamp);
-    if (propertyProgressProvider->getState() == TransitionProgressState::Finished) {
+    if (propertyProgressProvider->getState() == TransitionProgressState::Idle) {
       removedProperties_.insert(propertyName);
     }
   }
@@ -166,7 +169,7 @@ TransitionProgressProvider::createReversingShorteningProgressProvider(
       timestamp,
       propertySettings.duration * newReversingShorteningFactor,
       propertySettings.delay < 0 ? newReversingShorteningFactor * propertySettings.delay : propertySettings.delay,
-      propertySettings.easingFunction,
+      getEasingFunctionFromConfig(propertySettings.easingConfig),
       newReversingShorteningFactor);
 }
 
