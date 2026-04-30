@@ -33,7 +33,6 @@ class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_th
       const CSSAnimationsMap &newAnimations,
       const CSSAnimationSettingsUpdatesMap &settingsUpdates,
       double timestamp);
-  void remove(Tag viewTag) override;
 
   void update(double timestamp);
 
@@ -53,6 +52,8 @@ class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_th
   RunningAnimationIndicesMap runningAnimationIndicesMap_;
   AnimationsToRevertMap animationsToRevertMap_;
   DelayedItemsManager<std::shared_ptr<CSSAnimation>> delayedAnimationsManager_;
+
+  void remove_(Tag viewTag) override;
 
   CSSAnimationsVector buildAnimationsVector(
       jsi::Runtime &rt,

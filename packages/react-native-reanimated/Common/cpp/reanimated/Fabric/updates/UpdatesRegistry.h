@@ -33,11 +33,12 @@ class UpdatesRegistry {
  public:
   virtual ~UpdatesRegistry() {}
 
-  std::lock_guard<std::mutex> lock() const;
-
   virtual bool isEmpty() const;
   folly::dynamic get(Tag tag) const;
-  virtual void remove(Tag tag) = 0;
+  void remove(Tag tag) {
+    std::lock_guard<std::mutex> lock{mutex_};
+    remove_(tag);
+  }
 
 #ifdef ANDROID
   bool hasPropsToRevert() const;
@@ -52,9 +53,19 @@ class UpdatesRegistry {
   mutable std::mutex mutex_;
   RegistryMap updatesRegistry_;
 
+  /// Assumes the caller already locked the registry.
+  virtual void remove_(Tag tag) = 0;
+
+  /// Assumes the caller already locked the registry.
   void addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
+
+  /// Assumes the caller already locked the registry.
   folly::dynamic getUpdatesFromRegistry(const Tag tag) const;
+
+  /// Assumes the caller already locked the registry.
   void setInUpdatesRegistry(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
+
+  /// Assumes the caller already locked the registry.
   void removeFromUpdatesRegistry(Tag tag);
 
  private:

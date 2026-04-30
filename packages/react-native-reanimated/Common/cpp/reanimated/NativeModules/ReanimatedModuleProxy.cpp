@@ -170,10 +170,6 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     }
 
     const auto timestamp = strongThis->getAnimationTimestamp_();
-    // Hold the registry mutex while update() mutates updatesBatch_ /
-    // timestampMap_; performOperations() on the main thread races otherwise.
-    // See https://github.com/software-mansion/react-native-reanimated/issues/9303
-    const auto lock = strongThis->animatedPropsRegistry_->lock();
     strongThis->animatedPropsRegistry_->update(rt, operations, timestamp);
   };
 
@@ -493,17 +489,13 @@ void ReanimatedModuleProxy::applyCSSAnimations(
     }
   }
 
-  {
-    auto lock = cssAnimationsRegistry_->lock();
-    cssAnimationsRegistry_->apply(
-        rt, shadowNode, updates.animationNames, newAnimations, updates.settingsUpdates, timestamp);
-  }
+  cssAnimationsRegistry_->apply(
+      rt, shadowNode, updates.animationNames, newAnimations, updates.settingsUpdates, timestamp);
 
   maybeRunCSSLoop();
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
-  auto lock = cssAnimationsRegistry_->lock();
   cssAnimationsRegistry_->remove(viewTag.asNumber());
 }
 
@@ -514,16 +506,12 @@ void ReanimatedModuleProxy::runCSSTransition(
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto config = parseCSSTransitionConfig(rt, transitionConfig);
 
-  {
-    auto lock = cssTransitionsRegistry_->lock();
-    cssTransitionsRegistry_->run(rt, shadowNode, config);
-  }
+  cssTransitionsRegistry_->run(rt, shadowNode, config);
 
   maybeRunCSSLoop();
 }
 
 void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) {
-  auto lock = cssTransitionsRegistry_->lock();
   cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
@@ -534,8 +522,6 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
 
   // TODO(future): use unified timestamp
   const auto currentTimestamp = getAnimationTimestamp_();
-
-  const auto lock = animatedPropsRegistry_->lock();
 
   // TODO: fix bug when threshold difference is smaller than 1 second
   // TODO(future): flush updates from CSS animations and CSS transitions registries
@@ -695,20 +681,15 @@ void ReanimatedModuleProxy::performOperations() {
 
     if (shouldUpdateCssAnimations_) {
       currentCssTimestamp_ = getAnimationTimestamp_();
-      auto lock = cssTransitionsRegistry_->lock();
       // Update CSS transitions and flush updates
       cssTransitionsRegistry_->update(currentCssTimestamp_);
       cssTransitionsRegistry_->flushUpdates(updatesBatch);
     }
 
-    {
-      auto lock = animatedPropsRegistry_->lock();
-      // Flush all animated props updates
-      animatedPropsRegistry_->flushUpdates(updatesBatch);
-    }
+    // Flush all animated props updates
+    animatedPropsRegistry_->flushUpdates(updatesBatch);
 
     if (shouldUpdateCssAnimations_) {
-      auto lock = cssAnimationsRegistry_->lock();
       // Update CSS animations and flush updates
       cssAnimationsRegistry_->update(currentCssTimestamp_);
       cssAnimationsRegistry_->flushUpdates(updatesBatch);

@@ -11,12 +11,14 @@ CSSTransitionsRegistry::CSSTransitionsRegistry(
     : getCurrentTimestamp_(getCurrentTimestamp), viewStylesRepository_(viewStylesRepository) {}
 
 bool CSSTransitionsRegistry::isEmpty() const {
+  std::lock_guard<std::mutex> lock{mutex_};
   // The registry is empty if has no registered animations and no updates
   // stored in the updates registry
-  return UpdatesRegistry::isEmpty() && registry_.empty();
+  return updatesRegistry_.empty() && registry_.empty();
 }
 
 bool CSSTransitionsRegistry::hasUpdates() const {
+  std::lock_guard<std::mutex> lock{mutex_};
   return !runningTransitionTags_.empty() || !delayedTransitionsManager_.empty();
 }
 
@@ -24,6 +26,8 @@ void CSSTransitionsRegistry::run(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const CSSTransitionConfig &config) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
   const auto viewTag = shadowNode->getTag();
 
   if (!registry_.contains(viewTag)) {
@@ -42,7 +46,7 @@ void CSSTransitionsRegistry::run(
   updateInUpdatesRegistry(transition, initialUpdate);
 }
 
-void CSSTransitionsRegistry::remove(const Tag viewTag) {
+void CSSTransitionsRegistry::remove_(const Tag viewTag) {
   removeFromUpdatesRegistry(viewTag);
   delayedTransitionsManager_.remove(viewTag);
   runningTransitionTags_.erase(viewTag);
@@ -50,6 +54,8 @@ void CSSTransitionsRegistry::remove(const Tag viewTag) {
 }
 
 void CSSTransitionsRegistry::update(const double timestamp) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
   // Activate all delayed transitions that should start now
   activateDelayedTransitions(timestamp);
 
