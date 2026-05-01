@@ -1,6 +1,7 @@
 #import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
 
 #import <reanimated/CSS/utils/platform.h>
+#import <reanimated/apple/REAUIView.h>
 
 #import <React/RCTComponentViewProtocol.h>
 #import <React/RCTComponentViewRegistry.h>
@@ -61,7 +62,7 @@ static id idFromPlatformValue(NSString *propertyName, const PlatformValue &value
 
 - (nullable CALayer *)layerForTag:(Tag)viewTag
 {
-  UIView<RCTComponentViewProtocol> *view =
+  REAUIView<RCTComponentViewProtocol> *view =
       [_surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:viewTag];
   return view.layer;
 }
