@@ -4,7 +4,6 @@ import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
-import * as os from 'os';
 import * as path from 'path';
 
 import { countOccurrences } from '../jest/pluginTestUtils';
@@ -28,12 +27,9 @@ import type { PluginOptions } from '../plugin';
 // eslint-disable-next-line import/first
 import plugin from '../plugin';
 
-const MOCK_LOCATION = os.devNull;
-const MOCK_WORKLET_RUNTIME_ENTRY = path.join(
-  os.tmpdir(),
-  'workletRuntimeEntry.native.ts'
-);
-const MOCK_OTHER_FILE = path.join(os.tmpdir(), 'someOtherFile.ts');
+const MOCK_LOCATION = 'test.js';
+const MOCK_WORKLET_RUNTIME_ENTRY = 'workletRuntimeEntry.native.ts';
+const MOCK_OTHER_FILE = 'someOtherFile.ts';
 
 const REQUIRE_PREFIX = 'require("react-native-worklets/.worklets/';
 
@@ -52,7 +48,7 @@ function runPlugin(
     ...transformOpts,
     plugins: [
       ...(transformOpts.plugins || []),
-      [plugin, { ...pluginOpts, bundleMode: true }],
+      [plugin, { disableSourceMaps: true, ...pluginOpts, bundleMode: true }],
     ],
   };
   const transformed = transformSync(strippedInput, config);
@@ -205,6 +201,31 @@ describe('babel plugin in bundleMode', () => {
       // Library bindings are imported by the worklet file directly, not forwarded via the closure.
       expect(code).toContain('.default({})');
     });
+
+    test('rebases relative imports against the worklets directory', () => {
+      const input = html`<script>
+        import { foo } from './bar';
+        function baz() {
+          'worklet';
+          return foo();
+        }
+      </script>`;
+
+      const fakeFilename = '/some-library/src/file.ts';
+      const { files } = runPlugin(
+        input,
+        {},
+        { workletizableModules: ['some-library'] },
+        fakeFilename
+      );
+      const filesDirPath = path.resolve(
+        path.dirname(require.resolve('react-native-worklets/package.json')),
+        '.worklets'
+      );
+      const expected = path.relative(filesDirPath, '/some-library/src/bar');
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toContain(`from "${expected}"`);
+    });
   });
 
   describe('workletRuntimeEntry toggle', () => {
@@ -214,9 +235,7 @@ describe('babel plugin in bundleMode', () => {
       </script>`;
 
       const { code } = runPlugin(input, {}, {}, MOCK_WORKLET_RUNTIME_ENTRY);
-      expect(code).toContain(
-        'globalThis._WORKLETS_BUNDLE_MODE_ENABLED = true;'
-      );
+      expect(code).toContain('globalThis._WORKLETS_BUNDLE_MODE_ENABLED = true');
     });
 
     test('does not flip the flag in unrelated files', () => {
@@ -226,7 +245,7 @@ describe('babel plugin in bundleMode', () => {
 
       const { code } = runPlugin(input, {}, {}, MOCK_OTHER_FILE);
       expect(code).toContain(
-        'globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;'
+        'globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false'
       );
     });
 
@@ -247,7 +266,7 @@ describe('babel plugin in bundleMode', () => {
       );
       assert(transformed?.code);
       expect(transformed.code).toContain(
-        'globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;'
+        'globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false'
       );
     });
   });
@@ -292,6 +311,29 @@ describe('babel plugin in bundleMode', () => {
       const outerFile = files.find((f) => code.includes(path.basename(f.path)));
       assert(outerFile);
       expect(files[files.length - 1]).toBe(outerFile);
+    });
+  });
+
+  describe('with source maps enabled', () => {
+    test('emits a worklet file without crashing', () => {
+      // Other tests in this file disable source maps so the filename can be
+      // arbitrary; here we run with real source-map generation against a real
+      // file path so that path is at least exercised once.
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var x = 1;
+        }
+      </script>`;
+
+      const { code, files } = runPlugin(
+        input,
+        {},
+        { disableSourceMaps: false },
+        __filename
+      );
+      expect(files).toHaveLength(1);
+      expect(code).toContain(REQUIRE_PREFIX);
     });
   });
 });

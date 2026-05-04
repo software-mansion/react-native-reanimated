@@ -1,16 +1,16 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`babel plugin in bundleMode source replacement replaces inline factory with a require to the worklet file 1`] = `"const foo = require("react-native-worklets/.worklets/5956317040731.js").default({});"`;
+exports[`babel plugin in bundleMode source replacement replaces inline factory with a require to the worklet file 1`] = `"const foo = require("react-native-worklets/.worklets/10408705723983.js").default({});"`;
 
 exports[`babel plugin in bundleMode worklet file emission written file content has factory shape 1`] = `
-"export default (function foo_null1Factory({}) {
+"export default (function foo_testJs1Factory({}) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
     var x = 1;
     return x;
   };
   foo.__closure = {};
-  foo.__workletHash = 1470143941330;
+  foo.__workletHash = 4225216281158;
   foo.__pluginVersion = "x.y.z";
   foo.__stackDetails = _e;
   return foo;

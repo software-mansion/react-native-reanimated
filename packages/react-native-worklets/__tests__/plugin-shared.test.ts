@@ -4,7 +4,6 @@ import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
-import * as os from 'os';
 
 import { countOccurrences } from '../jest/pluginTestUtils';
 
@@ -27,7 +26,7 @@ import type { PluginOptions } from '../plugin';
 // eslint-disable-next-line import/first
 import plugin from '../plugin';
 
-const MOCK_LOCATION = os.devNull;
+const MOCK_LOCATION = 'test.js';
 
 type RunResult = {
   code: string;
@@ -47,7 +46,10 @@ function runPlugin(
     babelrc: false,
     configFile: false,
     ...transformOpts,
-    plugins: [...(transformOpts.plugins || []), [plugin, pluginOpts]],
+    plugins: [
+      ...(transformOpts.plugins || []),
+      [plugin, { disableSourceMaps: true, ...pluginOpts }],
+    ],
   });
   assert(transformed);
   return { code: transformed.code ?? '', files: [...capturedFiles] };
