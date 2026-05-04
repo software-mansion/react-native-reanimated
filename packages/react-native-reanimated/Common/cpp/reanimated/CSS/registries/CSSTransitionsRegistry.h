@@ -17,6 +17,8 @@
 
 namespace reanimated::css {
 
+using MaybeRunCSSLoopFunction = std::function<void()>;
+
 class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared_from_this<CSSTransitionsRegistry> {
  public:
   CSSTransitionsRegistry(
@@ -48,6 +50,8 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
 
   const GetAnimationTimestampFunction &getCurrentTimestamp_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
+
+  MaybeRunCSSLoopFunction maybeRunCSSLoopFn_;
 
   Registry registry_;
 

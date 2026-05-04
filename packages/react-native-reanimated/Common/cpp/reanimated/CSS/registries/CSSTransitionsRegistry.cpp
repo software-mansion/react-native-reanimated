@@ -9,7 +9,13 @@ namespace reanimated::css {
 CSSTransitionsRegistry::CSSTransitionsRegistry(
     const GetAnimationTimestampFunction &getCurrentTimestamp,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : getCurrentTimestamp_(getCurrentTimestamp), viewStylesRepository_(viewStylesRepository) {}
+    : getCurrentTimestamp_(getCurrentTimestamp),
+      viewStylesRepository_(viewStylesRepository),
+      maybeRunCSSLoopFn_([]() {}) {}
+
+void CSSTransitionsRegistry::setMaybeRunCSSLoopFn(MaybeRunCSSLoopFunction fn) {
+  maybeRunCSSLoopFn_ = std::move(fn);
+}
 
 bool CSSTransitionsRegistry::isEmpty() const {
   std::lock_guard<std::mutex> lock{mutex_};
