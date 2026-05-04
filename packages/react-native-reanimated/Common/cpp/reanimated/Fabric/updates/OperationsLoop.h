@@ -36,7 +36,10 @@ class OperationsLoop : public std::enable_shared_from_this<OperationsLoop> {
     return running_;
   }
 
-  bool shouldUpdateCssAnimations() const;
+  [[nodiscard]]
+  bool shouldUpdateCssAnimations() const {
+    return shouldUpdateCssAnimations_;
+    }
 
   void clearShouldUpdateCssAnimations();
 
