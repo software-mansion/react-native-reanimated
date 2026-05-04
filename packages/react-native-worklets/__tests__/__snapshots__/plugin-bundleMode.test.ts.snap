@@ -4,7 +4,6 @@ exports[`babel plugin in bundleMode nested worklets extracts each nested worklet
 
 exports[`babel plugin in bundleMode nested worklets extracts each nested worklet into its own file 2`] = `
 "export default (function testJs2Factory({}) {
-  const _e = [new global.Error(), 1, -27];
   const testJs2 = function () {
     const bar = require("react-native-worklets/.worklets/11336869676092.js").default({});
     return bar();
@@ -12,7 +11,6 @@ exports[`babel plugin in bundleMode nested worklets extracts each nested worklet
   testJs2.__closure = {};
   testJs2.__workletHash = 3455030333622;
   testJs2.__pluginVersion = "x.y.z";
-  testJs2.__stackDetails = _e;
   return testJs2;
 });"
 `;
@@ -30,7 +28,6 @@ exports[`babel plugin in bundleMode source replacement still captures closure ev
 "export default (function foo_testJs1Factory({
   x
 }) {
-  const _e = [new global.Error(), -2, -27];
   const foo = function () {
     return x;
   };
@@ -39,7 +36,6 @@ exports[`babel plugin in bundleMode source replacement still captures closure ev
   };
   foo.__workletHash = 16036484462760;
   foo.__pluginVersion = "x.y.z";
-  foo.__stackDetails = _e;
   return foo;
 });"
 `;
@@ -48,14 +44,24 @@ exports[`babel plugin in bundleMode worklet file emission does not emit init dat
 
 exports[`babel plugin in bundleMode worklet file emission does not emit init data 2`] = `
 "export default (function foo_testJs1Factory({}) {
-  const _e = [new global.Error(), 1, -27];
   const foo = function () {
     var x = 1;
   };
   foo.__closure = {};
   foo.__workletHash = 10408705723983;
   foo.__pluginVersion = "x.y.z";
-  foo.__stackDetails = _e;
+  return foo;
+});"
+`;
+
+exports[`babel plugin in bundleMode worklet file emission does not emit stack-trace machinery 1`] = `
+"export default (function foo_testJs1Factory({}) {
+  const foo = function () {
+    var x = 1;
+  };
+  foo.__closure = {};
+  foo.__workletHash = 10408705723983;
+  foo.__pluginVersion = "x.y.z";
   return foo;
 });"
 `;
@@ -74,7 +80,6 @@ exports[`babel plugin in bundleMode worklet file emission forwards closure varia
   a,
   b
 }) {
-  const _e = [new global.Error(), -3, -27];
   const foo = function () {
     return a + b;
   };
@@ -84,7 +89,6 @@ exports[`babel plugin in bundleMode worklet file emission forwards closure varia
   };
   foo.__workletHash = 227435842223;
   foo.__pluginVersion = "x.y.z";
-  foo.__stackDetails = _e;
   return foo;
 });"
 `;
@@ -97,21 +101,18 @@ const bar = require("react-native-worklets/.worklets/3872906538980.js").default(
 exports[`babel plugin in bundleMode worklet file emission preserves workletizable library imports in the written worklet file 2`] = `
 "import { foo } from "some-library";
 export default (function bar_testJs1Factory({}) {
-  const _e = [new global.Error(), 1, -27];
   const bar = function () {
     return foo();
   };
   bar.__closure = {};
   bar.__workletHash = 3872906538980;
   bar.__pluginVersion = "x.y.z";
-  bar.__stackDetails = _e;
   return bar;
 });"
 `;
 
 exports[`babel plugin in bundleMode worklet file emission written file content has factory shape 1`] = `
 "export default (function foo_testJs1Factory({}) {
-  const _e = [new global.Error(), 1, -27];
   const foo = function () {
     var x = 1;
     return x;
@@ -119,7 +120,6 @@ exports[`babel plugin in bundleMode worklet file emission written file content h
   foo.__closure = {};
   foo.__workletHash = 4225216281158;
   foo.__pluginVersion = "x.y.z";
-  foo.__stackDetails = _e;
   return foo;
 });"
 `;
