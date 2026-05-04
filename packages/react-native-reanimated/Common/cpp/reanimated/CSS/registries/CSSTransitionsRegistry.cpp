@@ -46,7 +46,7 @@ void CSSTransitionsRegistry::run(
   updateInUpdatesRegistry(transition, initialUpdate);
 }
 
-void CSSTransitionsRegistry::remove_(const Tag viewTag) {
+void CSSTransitionsRegistry::removeTag(const Tag viewTag) {
   removeFromUpdatesRegistry(viewTag);
   delayedTransitionsManager_.remove(viewTag);
   runningTransitionTags_.erase(viewTag);
@@ -54,8 +54,6 @@ void CSSTransitionsRegistry::remove_(const Tag viewTag) {
 }
 
 void CSSTransitionsRegistry::update(const double timestamp) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
   // Activate all delayed transitions that should start now
   activateDelayedTransitions(timestamp);
 

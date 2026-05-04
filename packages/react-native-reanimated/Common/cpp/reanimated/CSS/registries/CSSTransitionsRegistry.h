@@ -8,6 +8,7 @@
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <memory>
+#include <mutex>
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
@@ -27,10 +28,16 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
 
   void run(jsi::Runtime &rt, const std::shared_ptr<const ShadowNode> &shadowNode, const CSSTransitionConfig &config);
 
-  void update(double timestamp);
+  void updateAndFlush(double timestamp, UpdatesBatch &updatesBatch) {
+    std::lock_guard<std::mutex> lock{mutex_};
+    update(timestamp);
+    flush(updatesBatch);
+  }
 
  private:
-  void remove_(Tag viewTag) override;
+  void update(double timestamp);
+
+  void removeTag(Tag viewTag) override;
   using Registry = std::unordered_map<Tag, std::shared_ptr<CSSTransition>>;
 
   const GetAnimationTimestampFunction &getCurrentTimestamp_;

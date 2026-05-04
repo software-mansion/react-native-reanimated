@@ -33,7 +33,7 @@ void CSSAnimationsRegistry::apply(
 
   const auto viewTag = shadowNode->getTag();
   if (animationsVector.empty()) {
-    remove_(viewTag);
+    removeTag(viewTag);
     return;
   }
 
@@ -60,15 +60,13 @@ void CSSAnimationsRegistry::apply(
   applyViewAnimationsStyle(viewTag, timestamp);
 }
 
-void CSSAnimationsRegistry::remove_(const Tag viewTag) {
+void CSSAnimationsRegistry::removeTag(const Tag viewTag) {
   removeViewAnimations(viewTag);
   removeFromUpdatesRegistry(viewTag);
   registry_.erase(viewTag);
 }
 
 void CSSAnimationsRegistry::update(const double timestamp) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
   // Activate all delayed animations that should start now
   activateDelayedAnimations(timestamp);
   // Update styles in the registry for views which animations were reverted

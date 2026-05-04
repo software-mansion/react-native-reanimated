@@ -37,7 +37,7 @@ class UpdatesRegistry {
   folly::dynamic get(Tag tag) const;
   void remove(Tag tag) {
     std::lock_guard<std::mutex> lock{mutex_};
-    remove_(tag);
+    removeTag(tag);
   }
 
 #ifdef ANDROID
@@ -45,7 +45,11 @@ class UpdatesRegistry {
   void collectPropsToRevert(PropsToRevertMap &propsToRevertMap);
 #endif
 
-  void flushUpdates(UpdatesBatch &updatesBatch);
+  void flushUpdates(UpdatesBatch &updatesBatch) {
+    std::lock_guard<std::mutex> lock{mutex_};
+    flush(updatesBatch);
+  }
+
   void collectProps(PropsMap &propsMap);
   UpdatesBatch getPendingUpdates();
 
@@ -54,7 +58,10 @@ class UpdatesRegistry {
   RegistryMap updatesRegistry_;
 
   /// Assumes the caller already locked the registry.
-  virtual void remove_(Tag tag) = 0;
+  void flush(UpdatesBatch &updatesBatch);
+
+  /// Assumes the caller already locked the registry.
+  virtual void removeTag(Tag tag) = 0;
 
   /// Assumes the caller already locked the registry.
   void addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);

@@ -30,7 +30,7 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
   }
 }
 
-void AnimatedPropsRegistry::remove_(const Tag tag) {
+void AnimatedPropsRegistry::removeTag(const Tag tag) {
   updatesRegistry_.erase(tag);
   timestampMap_.erase(tag);
 }
