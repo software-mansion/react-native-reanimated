@@ -54,17 +54,18 @@ class TransitionProgressProvider final {
   TransitionPropertyProgressProviders getPropertyProgressProviders() const;
   std::unordered_set<std::string> getRemovedProperties() const;
 
-  void runProgressProvider(
-      const std::string &propertyName,
-      const CSSTransitionPropertySettings &settings,
-      bool isReversed,
-      double timestamp);
+  void runProgressProvider(const std::string &propertyName, bool isReversed, double timestamp);
   void removeProperty(const std::string &propertyName);
   void discardFinishedProgressProviders();
   void update(double timestamp);
+  void setPropertySettings(const std::string &propertyName, const CSSTransitionPropertySettings &propertySettings);
+  CSSTransitionPropertySettings getPropertySettings(const std::string &propertyName);
 
  private:
   TransitionPropertyProgressProviders propertyProgressProviders_;
+
+  // Never cleaned by design - if the property has already been transitioned in the past, we might want to reuse the config (run without settings in the config).
+  CSSTransitionPropertiesSettings propertySettings_;
 
   std::unordered_set<std::string> removedProperties_;
 

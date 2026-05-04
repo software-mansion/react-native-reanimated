@@ -104,13 +104,16 @@ std::unordered_set<std::string> TransitionProgressProvider::getRemovedProperties
 
 void TransitionProgressProvider::runProgressProvider(
     const std::string &propertyName,
-    const CSSTransitionPropertySettings &settings,
     const bool isReversed,
     const double timestamp) {
-  const auto it = propertyProgressProviders_.find(propertyName);
 
-  if (it != propertyProgressProviders_.end()) {
-    const auto &progressProvider = it->second;
+  // We assume that it exists (TransitionProgressProvider was called for this prop beforehand)
+  const auto &settings = propertySettings_.at(propertyName);
+
+  const auto providerIt = propertyProgressProviders_.find(propertyName);
+
+  if (providerIt != propertyProgressProviders_.end()) {
+    const auto &progressProvider = providerIt->second;
     progressProvider->update(timestamp);
 
     if (isReversed && progressProvider->getState() != TransitionProgressState::Finished) {
@@ -168,6 +171,17 @@ TransitionProgressProvider::createReversingShorteningProgressProvider(
       propertySettings.delay < 0 ? newReversingShorteningFactor * propertySettings.delay : propertySettings.delay,
       propertySettings.easingFunction,
       newReversingShorteningFactor);
+}
+
+void TransitionProgressProvider::setPropertySettings(
+    const std::string &propertyName,
+    const CSSTransitionPropertySettings &propertySettings) {
+  propertySettings_[propertyName] = propertySettings;
+}
+
+CSSTransitionPropertySettings TransitionProgressProvider::getPropertySettings(const std::string &propertyName) {
+  // We assume it exists
+  return propertySettings_.at(propertyName);
 }
 
 } // namespace reanimated::css

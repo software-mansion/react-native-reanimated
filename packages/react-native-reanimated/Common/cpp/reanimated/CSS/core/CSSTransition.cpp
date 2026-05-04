@@ -68,7 +68,16 @@ void CSSTransition::handleChangedProperties(
     const double timestamp) {
   const auto null = folly::dynamic();
 
-  for (const auto &[propertyName, propertySettings] : config.changedProperties) {
+  for (const auto &[propertyName, propertyDiff] : config.changedProperties) {
+    const auto &propertySettingsIt = config.changedPropertiesSettings.find(propertyName);
+
+    CSSTransitionPropertySettings propertySettings;
+    if (propertySettingsIt != config.changedPropertiesSettings.end()) {
+      propertySettings = propertySettingsIt->second;
+    } else {
+      propertySettings = progressProvider_.getPropertySettings(propertyName);
+    }
+
     const auto allowDiscrete = propertySettings.allowDiscrete;
 
     if (!allowDiscrete && isDiscreteProperty(propertyName, shadowNode_->getComponentName())) {
@@ -79,7 +88,7 @@ void CSSTransition::handleChangedProperties(
     transitionProperties_.insert(propertyName);
 
     // Update the transition style interpolator
-    const auto &valueChange = propertySettings.value;
+    const auto &valueChange = propertyDiff;
 
     bool isReversed;
     if (lastUpdateValue.count(propertyName)) {
@@ -95,8 +104,13 @@ void CSSTransition::handleChangedProperties(
     // (e.g. when someone passes a keyword and a numeric value - in this case we interpolate them as discrete values)
     styleInterpolator_.setAllowDiscrete(propertyName, allowDiscrete);
 
+    // Update the settings in progress provider if provided
+    if (propertySettingsIt != config.changedPropertiesSettings.end()) {
+      progressProvider_.setPropertySettings(propertyName, propertySettings);
+    }
+
     // Update the transition progress provider
-    progressProvider_.runProgressProvider(propertyName, propertySettings, isReversed, timestamp);
+    progressProvider_.runProgressProvider(propertyName, isReversed, timestamp);
   }
 }
 
