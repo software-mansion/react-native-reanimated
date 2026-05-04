@@ -8,8 +8,6 @@ if [ $# -ge 1 ]; then
   fi
 fi
 
-yarn build
-
 npm pack
 
 if [ $# -ge 1 ]; then
