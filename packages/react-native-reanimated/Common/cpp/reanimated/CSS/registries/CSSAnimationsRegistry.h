@@ -7,6 +7,7 @@
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <memory>
+#include <mutex>
 #include <set>
 #include <string>
 #include <unordered_map>
