@@ -73,11 +73,6 @@ describe('babel plugin in bundleMode', () => {
 
       const { code, files } = runPlugin(input);
       expect(files).toHaveLength(1);
-      expect(code).toContain(REQUIRE_PREFIX);
-      expect(code).not.toContain('Factory({');
-      expect(code).not.toContain('__workletHash');
-      expect(code).not.toContain('__pluginVersion');
-      expect(code).not.toContain('__stackDetails');
       expect(code).toMatchSnapshot();
     });
 
@@ -92,9 +87,9 @@ describe('babel plugin in bundleMode', () => {
       </script>`;
 
       const { code, files } = runPlugin(input);
-      expect(code).toContain('.default({\n  x\n})');
       expect(files).toHaveLength(1);
-      expect(files[0].content).toContain('__closure = {\n    x\n  }');
+      expect(code).toMatchSnapshot();
+      expect(files[0].content).toMatchSnapshot();
     });
   });
 
@@ -127,6 +122,7 @@ describe('babel plugin in bundleMode', () => {
       expect(files).toHaveLength(1);
       const fileBasename = path.basename(files[0].path);
       expect(code).toContain(`${REQUIRE_PREFIX}${fileBasename}"`);
+      expect(code).toMatchSnapshot();
     });
 
     test('written file content has factory shape', () => {
@@ -140,15 +136,7 @@ describe('babel plugin in bundleMode', () => {
 
       const { files } = runPlugin(input);
       expect(files).toHaveLength(1);
-      const content = files[0].content;
-      expect(content).toContain('export default (function ');
-      expect(content).toContain('Factory(');
-      expect(content).toContain('__closure = {}');
-      expect(content).toContain('__workletHash');
-      expect(content).toContain('__pluginVersion = "x.y.z"');
-      expect(content).toContain('__stackDetails = _e');
-      expect(content).toContain('return foo;');
-      expect(content).toMatchSnapshot();
+      expect(files[0].content).toMatchSnapshot();
     });
 
     test('does not emit init data', () => {
@@ -160,10 +148,8 @@ describe('babel plugin in bundleMode', () => {
       </script>`;
 
       const { code, files } = runPlugin(input);
-      for (const text of [code, files[0].content]) {
-        expect(text).not.toContain('_init_data');
-        expect(text).not.toContain('__initData');
-      }
+      expect(code).toMatchSnapshot();
+      expect(files[0].content).toMatchSnapshot();
     });
 
     test('forwards closure variables from source to factory', () => {
@@ -177,9 +163,8 @@ describe('babel plugin in bundleMode', () => {
       </script>`;
 
       const { code, files } = runPlugin(input);
-      expect(code).toContain('.default({\n  a,\n  b\n})');
-      expect(files[0].content).toContain('Factory({\n  a,\n  b\n})');
-      expect(files[0].content).toContain('__closure = {\n    a,\n    b\n  }');
+      expect(code).toMatchSnapshot();
+      expect(files[0].content).toMatchSnapshot();
     });
 
     test('preserves workletizable library imports in the written worklet file', () => {
@@ -197,9 +182,8 @@ describe('babel plugin in bundleMode', () => {
         { workletizableModules: ['some-library'] }
       );
       expect(files).toHaveLength(1);
-      expect(files[0].content).toContain('from "some-library"');
-      // Library bindings are imported by the worklet file directly, not forwarded via the closure.
-      expect(code).toContain('.default({})');
+      expect(code).toMatchSnapshot();
+      expect(files[0].content).toMatchSnapshot();
     });
 
     test('rebases relative imports against the worklets directory', () => {
@@ -235,7 +219,7 @@ describe('babel plugin in bundleMode', () => {
       </script>`;
 
       const { code } = runPlugin(input, {}, {}, MOCK_WORKLET_RUNTIME_ENTRY);
-      expect(code).toContain('globalThis._WORKLETS_BUNDLE_MODE_ENABLED = true');
+      expect(code).toMatchSnapshot();
     });
 
     test('does not flip the flag in unrelated files', () => {
@@ -244,9 +228,7 @@ describe('babel plugin in bundleMode', () => {
       </script>`;
 
       const { code } = runPlugin(input, {}, {}, MOCK_OTHER_FILE);
-      expect(code).toContain(
-        'globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false'
-      );
+      expect(code).toMatchSnapshot();
     });
 
     test('does not flip the flag without bundleMode option', () => {
@@ -265,9 +247,7 @@ describe('babel plugin in bundleMode', () => {
         }
       );
       assert(transformed?.code);
-      expect(transformed.code).toContain(
-        'globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false'
-      );
+      expect(transformed.code).toMatchSnapshot();
     });
   });
 
@@ -290,7 +270,8 @@ describe('babel plugin in bundleMode', () => {
       expect(sourceRequires).toBe(1);
       const outerFile = files.find((f) => code.includes(path.basename(f.path)));
       assert(outerFile);
-      expect(outerFile.content).toContain(REQUIRE_PREFIX);
+      expect(code).toMatchSnapshot();
+      expect(outerFile.content).toMatchSnapshot();
     });
 
     test('writes the inner worklet file before the outer one', () => {

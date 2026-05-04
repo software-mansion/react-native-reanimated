@@ -43,7 +43,16 @@ function runPlugin(
     compact: false,
     babelrc: false,
     configFile: false,
-    plugins: [[plugin, { disableSourceMaps: true, ...pluginOpts }]],
+    plugins: [
+      [
+        plugin,
+        {
+          disableSourceMaps: true,
+          relativeSourceLocation: true,
+          ...pluginOpts,
+        },
+      ],
+    ],
   });
   assert(transformed);
   return { code: transformed.code ?? '', files: [...capturedFiles] };
@@ -123,9 +132,10 @@ describe.each([
         ? result.files.length
         : countOccurrences(result.code, 'Factory(');
       expect(factoryCount).toBe(1);
-      const text = workletText(result, bundleMode);
-      expect(text).toContain('return x + 2;');
-      expect(text).not.toContain("'worklet';");
+      expect(result.code).toMatchSnapshot();
+      if (bundleMode) {
+        expect(result.files[0].content).toMatchSnapshot();
+      }
     });
   });
 
@@ -140,7 +150,7 @@ describe.each([
       </script>`;
 
       const result = runPlugin(input, { bundleMode });
-      expect(workletText(result, bundleMode)).toContain('__closure = {}');
+      expect(workletText(result, bundleMode)).toMatchSnapshot();
     });
 
     test('captures locally bound variables shadowing globals', () => {
@@ -156,9 +166,7 @@ describe.each([
       </script>`;
 
       const result = runPlugin(input, { bundleMode });
-      expect(workletText(result, bundleMode)).toContain(
-        '__closure = {\n    console\n  }'
-      );
+      expect(workletText(result, bundleMode)).toMatchSnapshot();
     });
 
     test('captures multiple closure variables', () => {
@@ -172,9 +180,7 @@ describe.each([
       </script>`;
 
       const result = runPlugin(input, { bundleMode });
-      expect(workletText(result, bundleMode)).toContain(
-        '__closure = {\n    a,\n    b\n  }'
-      );
+      expect(workletText(result, bundleMode)).toMatchSnapshot();
     });
   });
 
@@ -188,8 +194,10 @@ describe.each([
       </script>`;
 
       const result = runPlugin(input, { bundleMode });
-      expect(workletText(result, bundleMode)).toContain('width: 100');
-      expect(result.code).toContain('useAnimatedStyle(');
+      expect(result.code).toMatchSnapshot();
+      if (bundleMode) {
+        expect(result.files[0].content).toMatchSnapshot();
+      }
     });
   });
 
@@ -203,8 +211,7 @@ describe.each([
 
       const result = runPlugin(input, { bundleMode });
       expect(result.files).toHaveLength(0);
-      expect(result.code).not.toContain('Factory(');
-      expect(result.code).not.toContain('__closure');
+      expect(result.code).toMatchSnapshot();
     });
   });
 });
