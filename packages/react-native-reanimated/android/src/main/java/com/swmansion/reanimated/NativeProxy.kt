@@ -3,7 +3,6 @@ package com.swmansion.reanimated
 import android.content.ContentResolver
 import android.os.SystemClock
 import android.provider.Settings
-import android.util.Log
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
 import com.facebook.react.bridge.JavaOnlyArray
@@ -22,7 +21,9 @@ import com.swmansion.reanimated.keyboard.KeyboardAnimationManager
 import com.swmansion.reanimated.keyboard.KeyboardWorkletWrapper
 import com.swmansion.reanimated.nativeProxy.AnimationFrameCallback
 import com.swmansion.reanimated.nativeProxy.EventHandler
+import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
 import com.swmansion.reanimated.nativeProxy.SensorSetter
+import com.swmansion.reanimated.pseudoSelectors.PseudoSelectorManager
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer
 import com.swmansion.reanimated.sensor.ReanimatedSensorType
 import java.lang.ref.WeakReference
@@ -151,6 +152,7 @@ open class NativeProxy {
     private val reanimatedSensorContainer: ReanimatedSensorContainer
     private val gestureHandlerStateManager: GestureHandlerStateManager?
     private val keyboardAnimationManager: KeyboardAnimationManager
+    private val pseudoSelectorManager: PseudoSelectorManager
     private var firstUptime: Long = SystemClock.uptimeMillis()
     private var slowAnimationsEnabled = false
     private val animationsDragFactor = 10
@@ -197,6 +199,7 @@ open class NativeProxy {
 
         mFabricUIManager =
             UIManagerHelper.getUIManager(context, UIManagerType.FABRIC) as FabricUIManager
+        pseudoSelectorManager = PseudoSelectorManager(mFabricUIManager)
 
         val callInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
         mHybridData =
@@ -232,6 +235,19 @@ open class NativeProxy {
     external fun toggleSlowAnimationsOnUIRuntime()
 
     protected fun getHybridData(): HybridData = mHybridData
+
+    @DoNotStrip
+    fun attachPseudoSelector(
+        tag: Int,
+        selector: Int,
+        callback: PseudoSelectorCallback,
+    ) = pseudoSelectorManager.attach(tag, selector, callback)
+
+    @DoNotStrip
+    fun detachPseudoSelector(
+        tag: Int,
+        selector: Int,
+    ) = pseudoSelectorManager.detach(tag, selector)
 
     fun invalidate() {
         if (mInvalidated.getAndSet(true)) {

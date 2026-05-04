@@ -12,7 +12,11 @@ import type {
 import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 
 import type { AnyRecord, Maybe } from './common';
-import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
+import type {
+  CSSAnimationProperties,
+  CSSPseudoSelectorStyle,
+  CSSTransitionProperties,
+} from './css';
 import type { EasingFunctionFactory } from './Easing';
 import type { AnimatedStyleHandle, DefaultStyle } from './hook/commonTypes';
 
@@ -460,7 +464,8 @@ type MaybeSharedValueRecursive<Value> = Value extends readonly (infer Item)[]
 export type AnimatedStyle<Style = DefaultStyle> =
   | (Style & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) // TODO - maybe add css animation config somewhere else
   | MaybeSharedValueRecursive<Style>
-  | AnimatedStyleHandle<Style>;
+  | AnimatedStyleHandle<Style>
+  | CSSPseudoSelectorStyle;
 
 export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']

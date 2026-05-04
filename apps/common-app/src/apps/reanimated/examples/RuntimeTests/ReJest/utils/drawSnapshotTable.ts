@@ -105,8 +105,8 @@ function getComparisonRow(mismatch: Mismatch, keys: Array<string>) {
   const { index, capturedSnapshot, expectedSnapshot } = mismatch;
   const indexColumn = adjustValueToLength(index.toString(), INDEX_COLUMN_WIDTH);
   const formattedCells = keys.map(key => {
-    const expectedValue = expectedSnapshot[key as keyof typeof expectedSnapshot];
-    const capturedValue = capturedSnapshot[key as keyof typeof capturedSnapshot];
+    const expectedValue = expectedSnapshot[key];
+    const capturedValue = capturedSnapshot[key];
 
     const comparisonMode = isValidPropName(key) ? getComparisonModeForProp(key) : ComparisonMode.AUTO;
 

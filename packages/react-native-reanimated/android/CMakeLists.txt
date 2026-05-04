@@ -47,6 +47,10 @@ find_package(fbjni REQUIRED CONFIG)
 find_package(ReactAndroid REQUIRED CONFIG)
 find_package(react-native-worklets REQUIRED CONFIG)
 
+if(${JS_RUNTIME} STREQUAL "hermes")
+  find_package(hermes-engine REQUIRED CONFIG)
+endif()
+
 add_library(reanimated SHARED ${REANIMATED_COMMON_CPP_SOURCES}
                               ${REANIMATED_ANDROID_CPP_SOURCES})
 
@@ -100,3 +104,11 @@ target_link_libraries(
   fbjni::fbjni
   android
   react-native-worklets::worklets)
+
+if(${JS_RUNTIME} STREQUAL "hermes")
+  if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 82)
+    target_link_libraries(reanimated hermes-engine::hermesvm)
+  else()
+    target_link_libraries(reanimated hermes-engine::libhermes)
+  endif()
+endif()

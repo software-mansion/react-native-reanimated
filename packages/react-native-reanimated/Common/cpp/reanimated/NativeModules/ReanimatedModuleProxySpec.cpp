@@ -132,6 +132,19 @@ static jsi::Value REANIMATED_SPEC_PREFIX(
 }
 
 static jsi::Value REANIMATED_SPEC_PREFIX(
+    registerPseudoStyle)(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value *args, size_t) {
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+      ->registerPseudoStyle(rt, std::move(args[0]), std::move(args[1]));
+  return jsi::Value::undefined();
+}
+
+static jsi::Value REANIMATED_SPEC_PREFIX(
+    unregisterPseudoStyle)(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value *args, size_t) {
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)->unregisterPseudoStyle(rt, std::move(args[0]));
+  return jsi::Value::undefined();
+}
+
+static jsi::Value REANIMATED_SPEC_PREFIX(
     getSettledUpdates)(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value *args, size_t) {
   return static_cast<ReanimatedModuleProxySpec *>(&turboModule)->getSettledUpdates(rt);
 }
@@ -167,6 +180,9 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(const std::shared_ptr<CallI
 
   methodMap_["runCSSTransition"] = MethodMetadata{2, REANIMATED_SPEC_PREFIX(runCSSTransition)};
   methodMap_["unregisterCSSTransition"] = MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSTransition)};
+
+  methodMap_["registerPseudoStyle"] = MethodMetadata{2, REANIMATED_SPEC_PREFIX(registerPseudoStyle)};
+  methodMap_["unregisterPseudoStyle"] = MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterPseudoStyle)};
 
   methodMap_["getSettledUpdates"] = MethodMetadata{1, REANIMATED_SPEC_PREFIX(getSettledUpdates)};
 }
