@@ -1,11 +1,11 @@
 #pragma once
 
+#include <jsi/jsi.h>
+#include <react/renderer/core/ShadowNode.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 
-#include <react/renderer/core/ShadowNode.h>
-
-#include <jsi/jsi.h>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
