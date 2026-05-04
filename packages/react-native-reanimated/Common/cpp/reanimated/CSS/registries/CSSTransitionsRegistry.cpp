@@ -1,6 +1,7 @@
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 

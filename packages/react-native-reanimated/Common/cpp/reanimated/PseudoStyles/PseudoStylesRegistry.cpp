@@ -1,5 +1,6 @@
 #include <reanimated/PseudoStyles/PseudoStylesRegistry.h>
 
+#include <string>
 #include <utility>
 
 namespace reanimated {
