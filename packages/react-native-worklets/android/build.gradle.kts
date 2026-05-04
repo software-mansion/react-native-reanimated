@@ -250,25 +250,6 @@ android {
         }
     }
 
-    buildTypes {
-        debug {
-            @Suppress("UnstableApiUsage")
-            externalNativeBuild {
-                cmake {
-                    if (JS_RUNTIME == "hermes") {
-                        //  React Native doesn't expose these flags, but not having them
-                        //  can lead to runtime errors due to ABI mismatches.
-                        //  There's also
-                        //    HERMESVM_PROFILER_OPCODE
-                        //    HERMESVM_PROFILER_BB
-                        //  which shouldn't be defined in standard setups.
-                        arguments("-DHERMES_ENABLE_DEBUGGER=1")
-                    }
-                }
-            }
-        }
-    }
-
     lint {
         abortOnError = false
     }
@@ -291,7 +272,6 @@ android {
                 "**/libjsi.so",
                 "**/libhermes.so",
                 "**/libhermesvm.so",
-                "**/libhermestooling.so",
                 "**/libreactnative.so",
                 "**/libjscexecutor.so",
             )

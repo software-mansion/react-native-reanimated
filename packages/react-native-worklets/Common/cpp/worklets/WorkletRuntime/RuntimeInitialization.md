@@ -64,23 +64,6 @@ We run jest tests in release mode, because source maps will contain absolute
 paths, which will be different on every machine and therefore would also alter
 worklet hashes. Running in release mode prevents this.
 
-2. Enable debugging on the runtime object
-
-This is done by creating an adapter (`HermesExecutorRuntimeAdapter` inside of
-`WorkletHermesRuntime.cpp`) which holds the runtime and allows the debugger
-to communicate with it. The adapter is managed by a `Connection` (`ConnectionDemux`)
-object, but this is not important in our case. We just have to make a call
-to `facebook::hermes::inspector::chrome::enableDebugging()` and pass the adapter
-and runtime name as parameters.
-
-It is important to also `disableDebugging()` before the runtime is destroyed.
-Failing to do so will probably crash the app as the debugger will try to
-connect to a non-existent runtime.
-
-The runtime should also be destroyed before the Reanimated module, because
-otherwise there might be weird BAD\_ACCESS errors when the gc gets it
-hand on the runtime.
-
 ## Metro endpoint
 
 Flipper and Chrome DevTools in general use the `localhost:8081/json` (where `8081`

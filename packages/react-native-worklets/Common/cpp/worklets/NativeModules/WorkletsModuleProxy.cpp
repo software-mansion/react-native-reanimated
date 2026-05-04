@@ -60,10 +60,9 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       runtimeManager_(std::make_shared<RuntimeManager>()),
       unpackerLoader_(std::make_shared<UnpackerLoader>()),
       uiWorkletRuntime_(
-          runtimeManager_->createUninitializedUIRuntime(jsQueue_, std::make_shared<AsyncQueueUI>(uiScheduler_))),
+          runtimeManager_->createUninitializedUIRuntime(std::make_shared<AsyncQueueUI>(uiScheduler_))),
       rnRuntimeProxy_(std::make_shared<JSIWorkletsModuleProxy>(
           isDevBundle_,
-          jsQueue_,
           jsScheduler_,
           uiScheduler_,
           memoryManager_,

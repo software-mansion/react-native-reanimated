@@ -36,10 +36,6 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
 
   ~WorkletsModuleProxy();
 
-  [[nodiscard]] inline std::shared_ptr<MessageQueueThread> getJSQueue() const {
-    return jsQueue_;
-  }
-
   [[nodiscard]] inline std::shared_ptr<JSScheduler> getJSScheduler() const {
     return jsScheduler_;
   }
