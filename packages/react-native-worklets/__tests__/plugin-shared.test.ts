@@ -1,6 +1,5 @@
 import '../plugin/src/jestMatchers';
 
-import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
@@ -36,7 +35,6 @@ type RunResult = {
 function runPlugin(
   input: string,
   pluginOpts: PluginOptions,
-  transformOpts: TransformOptions = {},
   filename: string = MOCK_LOCATION
 ): RunResult {
   const strippedInput = input.replace(/<\/?script[^>]*>/g, '');
@@ -45,11 +43,7 @@ function runPlugin(
     compact: false,
     babelrc: false,
     configFile: false,
-    ...transformOpts,
-    plugins: [
-      ...(transformOpts.plugins || []),
-      [plugin, { disableSourceMaps: true, ...pluginOpts }],
-    ],
+    plugins: [[plugin, { disableSourceMaps: true, ...pluginOpts }]],
   });
   assert(transformed);
   return { code: transformed.code ?? '', files: [...capturedFiles] };
