@@ -152,6 +152,20 @@ describe('babel plugin in bundleMode', () => {
       expect(files[0].content).toMatchSnapshot();
     });
 
+    test('does not emit stack-trace machinery', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var x = 1;
+        }
+      </script>`;
+
+      const { files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).not.toContain('__stackDetails');
+      expect(files[0].content).toMatchSnapshot();
+    });
+
     test('forwards closure variables from source to factory', () => {
       const input = html`<script>
         const a = 1;
