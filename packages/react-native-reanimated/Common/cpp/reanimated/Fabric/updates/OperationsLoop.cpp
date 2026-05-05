@@ -53,10 +53,6 @@ void OperationsLoop::run() {
   });
 }
 
-bool OperationsLoop::shouldUpdateCssAnimations() const {
-  return shouldUpdateCssAnimations_;
-}
-
 void OperationsLoop::clearShouldUpdateCssAnimations() {
   shouldUpdateCssAnimations_ = false;
 }
