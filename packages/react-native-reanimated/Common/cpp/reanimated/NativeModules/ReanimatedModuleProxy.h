@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ReactCommon/CallInvoker.h>
 #include <react/renderer/componentregistry/componentNameByReactViewName.h>
 #include <react/renderer/core/ShadowNode.h>
 #include <react/renderer/uimanager/UIManager.h>
@@ -23,7 +24,6 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
-#include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/SingleInstanceChecker.h>
 
@@ -36,10 +36,10 @@
 namespace reanimated {
 
 using namespace facebook;
+using namespace facebook::react;
 using namespace css;
 
-class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
-                              public std::enable_shared_from_this<ReanimatedModuleProxy> {
+class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModuleProxy> {
  public:
   ReanimatedModuleProxy(
       const std::shared_ptr<worklets::WorkletRuntime> &uiRuntime,
@@ -54,26 +54,29 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   // is fully constructed.
   void init(const PlatformDepMethodsHolder &platformDepMethodsHolder);
 
-  ~ReanimatedModuleProxy() override;
+  ~ReanimatedModuleProxy();
+
+  [[nodiscard]]
+  jsi::Object toOptimizedObject(jsi::Runtime &rt);
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,
       const jsi::Value &worklet,
       const jsi::Value &eventName,
-      const jsi::Value &emitterReactTag) override;
-  void unregisterEventHandler(jsi::Runtime &rt, const jsi::Value &registrationId) override;
+      const jsi::Value &emitterReactTag);
+  void unregisterEventHandler(jsi::Runtime &rt, const jsi::Value &registrationId);
 
   jsi::Value getViewProp(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeWrapper,
       const jsi::Value &propName,
-      const jsi::Value &callback) override;
+      const jsi::Value &callback);
 
-  jsi::Value getStaticFeatureFlag(jsi::Runtime &rt, const jsi::Value &name) override;
-  jsi::Value setDynamicFeatureFlag(jsi::Runtime &rt, const jsi::Value &name, const jsi::Value &value) override;
+  jsi::Value getStaticFeatureFlag(jsi::Runtime &rt, const jsi::Value &name);
+  jsi::Value setDynamicFeatureFlag(jsi::Runtime &rt, const jsi::Value &name, const jsi::Value &value);
 
-  jsi::Value configureLayoutAnimationBatch(jsi::Runtime &rt, const jsi::Value &layoutAnimationsBatch) override;
-  void setShouldAnimateExiting(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &shouldAnimate) override;
+  jsi::Value configureLayoutAnimationBatch(jsi::Runtime &rt, const jsi::Value &layoutAnimationsBatch);
+  void setShouldAnimateExiting(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &shouldAnimate);
 
   void onRender(double timestampMs);
 
@@ -89,33 +92,32 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   void performOperations();
   void performNonLayoutOperations();
 
-  void setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle) override;
+  void setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle);
 
-  void markNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) override;
-  void unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &viewTag) override;
+  void markNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper);
+  void unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &viewTag);
 
   void registerCSSKeyframes(
       jsi::Runtime &rt,
       const jsi::Value &animationName,
       const jsi::Value &compoundComponentName,
-      const jsi::Value &keyframesConfig) override;
+      const jsi::Value &keyframesConfig);
   void unregisterCSSKeyframes(
       jsi::Runtime &rt,
       const jsi::Value &animationName,
-      const jsi::Value &compoundComponentName) override;
+      const jsi::Value &compoundComponentName);
 
   void applyCSSAnimations(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeWrapper,
       const jsi::Value &compoundComponentName,
-      const jsi::Value &animationUpdates) override;
-  void unregisterCSSAnimations(const jsi::Value &viewTag) override;
+      const jsi::Value &animationUpdates);
+  void unregisterCSSAnimations(const jsi::Value &viewTag);
 
-  void runCSSTransition(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &transitionConfig)
-      override;
-  void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) override;
+  void runCSSTransition(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &transitionConfig);
+  void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag);
 
-  jsi::Value getSettledUpdates(jsi::Runtime &rt) override;
+  jsi::Value getSettledUpdates(jsi::Runtime &rt);
 
   void dispatchCommand(
       jsi::Runtime &rt,
@@ -141,8 +143,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
       const jsi::Value &sensorType,
       const jsi::Value &interval,
       const jsi::Value &iosReferenceFrame,
-      const jsi::Value &sensorDataContainer) override;
-  void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
+      const jsi::Value &sensorDataContainer);
+  void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId);
 
   void cleanupSensors();
 
@@ -150,8 +152,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
       jsi::Runtime &rt,
       const jsi::Value &keyboardEventContainer,
       const jsi::Value &isStatusBarTranslucent,
-      const jsi::Value &isNavigationBarTranslucent) override;
-  void unsubscribeFromKeyboardEvents(jsi::Runtime &rt, const jsi::Value &listenerId) override;
+      const jsi::Value &isNavigationBarTranslucent);
+  void unsubscribeFromKeyboardEvents(jsi::Runtime &rt, const jsi::Value &listenerId);
 
   void toggleSlowAnimationsOnUIRuntime() const;
 
@@ -174,6 +176,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   bool shouldFlushRegistry_ = false;
   std::shared_ptr<worklets::WorkletRuntime> uiRuntime_;
   std::shared_ptr<worklets::UIScheduler> uiScheduler_;
+  std::shared_ptr<CallInvoker> jsInvoker_;
 
   std::unique_ptr<UIEventHandlerRegistry> eventHandlerRegistry_;
   const RequestRenderFunction requestRender_;
