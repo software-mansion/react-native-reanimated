@@ -31,49 +31,78 @@ inline void scheduleOnUI(
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
     jsi::Runtime &rt,
-    const jsi::Value &workletsArrayValue) {
-  auto serializableArray = extractSerializableOrThrow<SerializableArray>(
-      rt, workletsArrayValue, "[Worklets] scheduleOnUI expects a serializable array of worklets.");
+    const jsi::Value &serializableArrayOfWorkletsValue,
+    const jsi::Value &scheduleStacksValue) {
+  auto serializableArrayOfWorklets = extractSerializableOrThrow<SerializableArray>(
+      rt, serializableArrayOfWorkletsValue, "[Worklets] scheduleOnUI expects a serializable array of worklets.");
 
+  const auto &workletsList = serializableArrayOfWorklets->getList();
   std::vector<std::shared_ptr<SerializableWorklet>> worklets;
-  const auto &list = serializableArray->getList();
-  worklets.reserve(list.size());
-  for (const auto &item : list) {
-    worklets.push_back(std::static_pointer_cast<SerializableWorklet>(item));
+  worklets.reserve(workletsList.size());
+  for (size_t i = 0; i < workletsList.size(); i++) {
+    auto worklet = std::dynamic_pointer_cast<SerializableWorklet>(workletsList[i]);
+    if (!worklet) {
+      throw jsi::JSError(
+          rt,
+          "[Worklets] scheduleOnUI expects a serializable array of worklets. Element at index " + std::to_string(i) +
+              " is not a worklet.");
+    }
+    worklets.push_back(std::move(worklet));
   }
 
-  uiScheduler->scheduleOnUI([worklets = std::move(worklets), weakUIWorkletRuntime]() {
-    // This callback can outlive the WorkletsModuleProxy object during the
-    // invalidation of React Native. This happens when WorkletsModuleProxy
-    // destructor is called on the JS thread and the UI thread is
-    // executing callbacks from the `scheduleOnUI` queue. Therefore, we
-    // need to make sure it's still alive before we try to access it.
-    auto uiWorkletRuntime = weakUIWorkletRuntime.lock();
-    if (!uiWorkletRuntime) {
-      return;
+  std::vector<std::optional<std::string>> scheduleStacks(worklets.size());
+#ifndef NDEBUG
+  if (scheduleStacksValue.isObject()) {
+    auto stacksObject = scheduleStacksValue.asObject(rt);
+    if (stacksObject.isArray(rt)) {
+      auto stacksArray = stacksObject.asArray(rt);
+      auto count = std::min<size_t>(stacksArray.size(rt), scheduleStacks.size());
+      for (size_t i = 0; i < count; i++) {
+        auto stackValue = stacksArray.getValueAtIndex(rt, i);
+        if (stackValue.isString()) {
+          scheduleStacks[i] = stackValue.asString(rt).utf8(rt);
+        }
+      }
     }
+  }
+#endif // NDEBUG
 
-    for (const auto &worklet : worklets) {
+  uiScheduler->scheduleOnUI(
+      [worklets = std::move(worklets), scheduleStacks = std::move(scheduleStacks), weakUIWorkletRuntime]() {
+        // This callback can outlive the WorkletsModuleProxy object during the
+        // invalidation of React Native. This happens when WorkletsModuleProxy
+        // destructor is called on the JS thread and the UI thread is
+        // executing callbacks from the `scheduleOnUI` queue. Therefore, we
+        // need to make sure it's still alive before we try to access it.
+        auto uiWorkletRuntime = weakUIWorkletRuntime.lock();
+        if (!uiWorkletRuntime) {
+          return;
+        }
+
+        for (size_t i = 0; i < worklets.size(); i++) {
 #if JS_RUNTIME_HERMES
-      // JSI's scope defined here allows for JSI-objects to be cleared up
-      // after each runtime loop. Within these loops we typically create
-      // some temporary JSI objects and hence it allows for such objects to
-      // be garbage collected much sooner. Apparently the scope API is only
-      // supported on Hermes at the moment.
-      const auto scope = jsi::Scope(uiWorkletRuntime->getJSIRuntime());
+          // JSI's scope defined here allows for JSI-objects to be cleared up
+          // after each runtime loop. Within these loops we typically create
+          // some temporary JSI objects and hence it allows for such objects to
+          // be garbage collected much sooner. Apparently the scope API is only
+          // supported on Hermes at the moment.
+          const auto scope = jsi::Scope(uiWorkletRuntime->getJSIRuntime());
 #endif // JS_RUNTIME_HERMES
 
-      uiWorkletRuntime->runSync(worklet);
-    }
+          uiWorkletRuntime->runSyncWithStack(worklets[i], scheduleStacks[i]);
+        }
 
-    uiWorkletRuntime->runSync([](jsi::Runtime &rt) {
-      auto callMicrotasks = rt.global().getProperty(rt, "__callMicrotasks");
-      if (callMicrotasks.isObject()) {
-        callMicrotasks.asObject(rt).asFunction(rt).call(rt);
-      }
-      return jsi::Value::undefined();
-    });
-  });
+        uiWorkletRuntime->runSync([](jsi::Runtime &rt) {
+          auto callMicrotasks = rt.global().getProperty(rt, "__callMicrotasks");
+          if (callMicrotasks.isObject()) {
+            auto callMicrotasksObject = callMicrotasks.asObject(rt);
+            if (callMicrotasksObject.isFunction(rt)) {
+              callMicrotasksObject.asFunction(rt).call(rt);
+            }
+          }
+          return jsi::Value::undefined();
+        });
+      });
 }
 
 inline jsi::Value runOnUISync(
@@ -84,8 +113,7 @@ inline jsi::Value runOnUISync(
   if (auto uiWorkletRuntime = weakUIWorkletRuntime.lock()) {
     auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
         rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
-    serializableWorklet->setScheduleStack(scheduleStack);
-    auto serializedResult = uiWorkletRuntime->runSyncSerialized(serializableWorklet);
+    auto serializedResult = uiWorkletRuntime->runSyncSerialized(serializableWorklet, scheduleStack);
     return serializedResult->toJSValue(rt);
   }
   return jsi::Value::undefined();
@@ -99,8 +127,7 @@ jsi::Value runOnRuntimeSync(
   auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
   auto worklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
-  worklet->setScheduleStack(scheduleStack);
-  return workletRuntime->runSyncSerialized(worklet)->toJSValue(rt);
+  return workletRuntime->runSyncSerialized(worklet, scheduleStack)->toJSValue(rt);
 }
 
 inline jsi::Value createWorkletRuntime(
@@ -354,13 +381,13 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         registerCustomSerializable(runtimeManager, memoryManager, determine, pack, unpack, typeId);
       });
 
-  jsi_utils::addMethod<1>(
+  jsi_utils::addMethod<2>(
       rt,
       obj,
       "scheduleOnUI",
       [uiScheduler = uiScheduler_, uiWorkletRuntime = uiWorkletRuntime_](
-          jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        scheduleOnUI(uiScheduler, uiWorkletRuntime, rt, at<0>(args));
+          jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        scheduleOnUI(uiScheduler, uiWorkletRuntime, rt, at<0>(args), at<1>(args));
       });
 
   jsi_utils::addMethod<2>(
@@ -397,10 +424,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
         auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Only worklets can be executed on a worklet runtime.");
+        std::optional<std::string> scheduleStack;
         if (at<2>(args).isString()) {
-          serializableWorklet->setScheduleStack(at<2>(args).asString(rt).utf8(rt));
+          scheduleStack = at<2>(args).asString(rt).utf8(rt);
         }
-        return workletRuntime->runSyncSerialized(serializableWorklet)->toJSValue(rt);
+        return workletRuntime->runSyncSerialized(serializableWorklet, scheduleStack)->toJSValue(rt);
       });
 
   jsi_utils::addMethod<5>(
@@ -456,10 +484,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
         const auto worklet = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Only worklets can be scheduled to run on a worklet runtime.");
+        std::optional<std::string> scheduleStack;
         if (at<2>(args).isString()) {
-          worklet->setScheduleStack(at<2>(args).asString(rt).utf8(rt));
+          scheduleStack = at<2>(args).asString(rt).utf8(rt);
         }
-        workletRuntime->schedule(worklet);
+        workletRuntime->schedule(worklet, scheduleStack);
       });
 
   jsi_utils::addMethod<3>(

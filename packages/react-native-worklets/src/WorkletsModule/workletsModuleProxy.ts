@@ -108,7 +108,8 @@ export interface WorkletsModuleProxy {
   ): SerializableRef<TValue>;
 
   scheduleOnUI<TValue>(
-    serializableArrayOfWorklets: SerializableRef<TValue[]>
+    serializableArrayOfWorklets: SerializableRef<TValue[]>,
+    scheduleStacks: (string | undefined)[] | undefined
   ): void;
 
   runOnUISync<TValue, TReturn>(

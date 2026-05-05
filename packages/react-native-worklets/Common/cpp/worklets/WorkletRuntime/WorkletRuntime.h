@@ -44,7 +44,9 @@ class JSIWorkletsModuleProxy;
 class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_this<WorkletRuntime> {
  public:
   void schedule(jsi::Function &&function) const;
-  void schedule(std::shared_ptr<SerializableWorklet> worklet) const;
+  void schedule(
+      std::shared_ptr<SerializableWorklet> worklet,
+      std::optional<std::string> scheduleStack = std::nullopt) const;
   void schedule(std::function<void()> job) const;
   void schedule(std::function<void(jsi::Runtime &)> job) const;
 
@@ -58,9 +60,16 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   }
   template <typename... Args>
   jsi::Value runSync(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args) const {
+    return runSyncWithStack(worklet, std::nullopt, std::forward<Args>(args)...);
+  }
+  template <typename... Args>
+  jsi::Value runSyncWithStack(
+      const std::shared_ptr<SerializableWorklet> &worklet,
+      const std::optional<std::string> &scheduleStack,
+      Args &&...args) const {
     jsi::Runtime &rt = *runtime_;
     auto function = worklet->toJSValue(rt).asObject(rt).asFunction(rt);
-    return callGuarded(function, worklet->getScheduleStack(), std::forward<Args>(args)...);
+    return callGuarded(function, scheduleStack, std::forward<Args>(args)...);
   }
   template <RuntimeCallable TCallable>
   std::invoke_result_t<TCallable, jsi::Runtime &> runSync(TCallable &&job) const {
@@ -87,12 +96,12 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
         "must return a value serialized with `createSerializable`.");
     return serializableResult;
   }
-  template <typename... Args>
-  std::shared_ptr<Serializable> runSyncSerialized(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args)
-      const {
+  std::shared_ptr<Serializable> runSyncSerialized(
+      const std::shared_ptr<SerializableWorklet> &worklet,
+      const std::optional<std::string> &scheduleStack = std::nullopt) const {
     jsi::Runtime &rt = getJSIRuntime();
     auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
-    auto result = runSync(worklet, std::forward<Args>(args)...);
+    auto result = runSyncWithStack(worklet, scheduleStack);
     auto serializableResult = extractSerializableOrThrow(
         rt,
         result,
@@ -185,8 +194,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
 #ifndef NDEBUG
   void handleJSError(jsi::JSError &error, const std::optional<std::string> &scheduleStack) const;
-  void handleJSIException(jsi::JSIException &error, const std::optional<std::string> &scheduleStack) const;
-  void handleStdException(std::exception &error, const std::optional<std::string> &scheduleStack) const;
 #endif // NDEBUG
 
   void bundleModeInit(

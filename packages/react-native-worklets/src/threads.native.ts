@@ -1,5 +1,6 @@
 'use strict';
 
+import { getScheduleStack } from './debug/scheduleStack';
 import {
   addGuardImplementation,
   addNoBundleModeGuardImplementation,
@@ -180,7 +181,7 @@ export function runOnUISync<Args extends unknown[], ReturnValue>(
       const result = worklet(...args);
       return makeShareableCloneOnUIRecursive(result);
     }),
-    __DEV__ ? (new Error().stack ?? '') : undefined
+    getScheduleStack()
   );
 }
 
@@ -367,7 +368,7 @@ function enqueueUI<Args extends unknown[], ReturnValue>(
   args: Args,
   resolve?: (value: ReturnValue) => void
 ): void {
-  const scheduleStack = __DEV__ ? (new Error().stack ?? '') : undefined;
+  const scheduleStack = getScheduleStack();
   const job = [worklet, args, resolve, scheduleStack] as UIJob<
     Args,
     ReturnValue
@@ -382,24 +383,21 @@ function flushUIQueue(): void {
   queueMicrotask(() => {
     const queue = runOnUIQueue;
     runOnUIQueue = [];
-    const jobWorklets = queue.map(
-      ([workletFunction, workletArgs, jobResolve, scheduleStack]) => {
-        const closure = () => {
-          'worklet';
-          const result = workletFunction(...workletArgs);
-          if (jobResolve) {
-            scheduleOnRN(jobResolve, result);
-          }
-        };
-        if (__DEV__) {
-          (closure as unknown as Record<string, unknown>).__scheduleStack =
-            scheduleStack;
+    const jobWorklets = queue.map(([workletFunction, workletArgs, jobResolve]) =>
+      createSerializable(() => {
+        'worklet';
+        const result = workletFunction(...workletArgs);
+        if (jobResolve) {
+          scheduleOnRN(jobResolve, result);
         }
-        return createSerializable(closure);
-      }
+      })
     );
+    const scheduleStacks = queue.some(([, , , stack]) => stack !== undefined)
+      ? queue.map(([, , , scheduleStack]) => scheduleStack)
+      : undefined;
     WorkletsModule.scheduleOnUI(
-      WorkletsModule.createSerializableArray(jobWorklets, false)
+      WorkletsModule.createSerializableArray(jobWorklets, false),
+      scheduleStacks
     );
   });
 }

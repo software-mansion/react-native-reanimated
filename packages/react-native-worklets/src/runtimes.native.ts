@@ -1,5 +1,6 @@
 'use strict';
 
+import { getScheduleStack } from './debug/scheduleStack';
 import {
   addGuardImplementation,
   addNoBundleModeGuardImplementation,
@@ -166,7 +167,7 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
       worklet(...args);
       globalThis.__callMicrotasks?.();
     }),
-    __DEV__ ? (new Error().stack ?? '') : undefined
+    getScheduleStack()
   );
 }
 
@@ -244,7 +245,7 @@ export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
       worklet(...args);
       globalThis.__callMicrotasks?.();
     }),
-    __DEV__ ? (new Error().stack ?? '') : undefined
+    getScheduleStack()
   );
 }
 
@@ -341,7 +342,7 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
       const result = worklet(...args);
       return makeShareableCloneOnUIRecursive(result);
     }),
-    __DEV__ ? (new Error().stack ?? '') : undefined
+    getScheduleStack()
   );
 }
 
@@ -391,7 +392,7 @@ export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
       const result = worklet(...args);
       return makeShareableCloneOnUIRecursive(result);
     }),
-    __DEV__ ? (new Error().stack ?? '') : undefined
+    getScheduleStack()
   );
 }
 
@@ -439,7 +440,7 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
     }
   }
 
-  const scheduleStack = __DEV__ ? (new Error().stack ?? '') : undefined;
+  const scheduleStack = getScheduleStack();
   return new Promise<ReturnValue>((resolve, reject) => {
     if (__DEV__) {
       // in DEV mode we call serializable conversion here because in case the object

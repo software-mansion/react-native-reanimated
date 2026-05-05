@@ -172,19 +172,22 @@ void WorkletRuntime::schedule(jsi::Function &&function) const {
   });
 }
 
-void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet) const {
+void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet, std::optional<std::string> scheduleStack)
+    const {
   react_native_assert(
       queue_ &&
       "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
       "async queue is not set. Recreate the runtime with a valid async queue.");
 
-  queue_->push([worklet = std::move(worklet), weakThis = weak_from_this()] {
+  queue_->push([worklet = std::move(worklet),
+                scheduleStack = std::move(scheduleStack),
+                weakThis = weak_from_this()] {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
     }
 
-    strongThis->runSync(worklet);
+    strongThis->runSyncWithStack(worklet, scheduleStack);
   });
 }
 
@@ -264,8 +267,7 @@ void scheduleOnRuntime(
       rt,
       serializableWorkletValue,
       "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
-  serializableWorklet->setScheduleStack(scheduleStack);
-  workletRuntime->schedule(serializableWorklet);
+  workletRuntime->schedule(serializableWorklet, scheduleStack);
 }
 
 std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
@@ -343,15 +345,6 @@ void WorkletRuntime::handleJSError(jsi::JSError &error, const std::optional<std:
     }
   }
   reportFatalErrorFromCpp(error.getMessage(), error.getStack(), name, scheduleStack);
-}
-
-void WorkletRuntime::handleJSIException(jsi::JSIException &error, const std::optional<std::string> &scheduleStack)
-    const {
-  reportFatalErrorFromCpp(error.what(), "", "WorkletsError", scheduleStack);
-}
-
-void WorkletRuntime::handleStdException(std::exception &error, const std::optional<std::string> &scheduleStack) const {
-  reportFatalErrorFromCpp(error.what(), "", "WorkletsError", scheduleStack);
 }
 #endif // NDEBUG
 

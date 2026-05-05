@@ -214,28 +214,9 @@ class SerializableWorklet : public SerializableObject {
  public:
   SerializableWorklet(jsi::Runtime &rt, const jsi::Object &worklet) : SerializableObject(rt, worklet) {
     valueType_ = ValueType::WorkletType;
-#ifndef NDEBUG
-    if (worklet.hasProperty(rt, "__scheduleStack")) {
-      auto val = worklet.getProperty(rt, "__scheduleStack");
-      if (val.isString()) {
-        scheduleStack_ = val.asString(rt).utf8(rt);
-      }
-    }
-#endif // NDEBUG
   }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
-
-  [[nodiscard]] const std::optional<std::string> &getScheduleStack() const {
-    return scheduleStack_;
-  }
-
-  void setScheduleStack(const std::optional<std::string> &scheduleStack) {
-    scheduleStack_ = scheduleStack;
-  }
-
- private:
-  std::optional<std::string> scheduleStack_;
 };
 
 class SerializableImport : public Serializable {

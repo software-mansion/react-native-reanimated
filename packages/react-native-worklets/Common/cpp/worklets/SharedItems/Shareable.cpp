@@ -37,11 +37,13 @@ Shareable::Shareable(
 }
 
 Shareable::~Shareable() {
-  const auto strongHostRuntime = weakHostRuntime_.lock();
-  if (strongHostRuntime && hostValue_) {
-    strongHostRuntime->runSync([this](jsi::Runtime &rt) { hostValue_.reset(); });
-  } else {
-    hostValue_.release();
+  if (hostValue_) {
+    const auto strongHostRuntime = weakHostRuntime_.lock();
+    if (strongHostRuntime) {
+      hostValue_.reset();
+    } else {
+      hostValue_.release();
+    }
   }
 }
 
