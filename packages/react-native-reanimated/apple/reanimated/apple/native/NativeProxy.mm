@@ -37,6 +37,7 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
   // When USE_ANIMATION_BACKEND is on, flushes run inside handleEventAndFlush; otherwise
   // REANodesManager calls performOperations after the event (see REANodesManager).
   [nodesManager registerEventHandler:^(id<RCTEvent> event) {
+    // handles RCTEvents from RNGestureHandler
     std::string eventName = [event.eventName UTF8String];
     int emitterReactTag = [event.viewTag intValue];
     id eventData = [event arguments][2];
