@@ -129,7 +129,10 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.createSerializableHostObject(obj);
   }
 
-  createSerializableArray(array: unknown[], shouldRetainRemote: boolean = false) {
+  createSerializableArray(
+    array: unknown[],
+    shouldRetainRemote: boolean = false
+  ) {
     return this.#workletsModuleProxy.createSerializableArray(
       array,
       shouldRetainRemote
