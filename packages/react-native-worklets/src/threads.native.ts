@@ -1,6 +1,6 @@
 'use strict';
 
-import { getScheduleStack } from './debug/scheduleStack';
+import { getStaticFeatureFlag } from './featureFlags/featureFlags';
 import {
   addGuardImplementation,
   addNoBundleModeGuardImplementation,
@@ -13,6 +13,9 @@ import { isRNRuntime, RuntimeKind } from './runtimeKind';
 import type { WorkletFunction, WorkletImport } from './types';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsModule } from './WorkletsModule/NativeWorklets';
+
+const SHOULD_CAPTURE_SCHEDULE_STACK =
+  __DEV__ && !getStaticFeatureFlag('DISABLE_ACCURATE_ERROR_STACKS');
 
 type UIJob<Args extends unknown[] = unknown[], ReturnValue = unknown> = [
   worklet: WorkletFunction<Args, ReturnValue>,
@@ -181,7 +184,7 @@ export function runOnUISync<Args extends unknown[], ReturnValue>(
       const result = worklet(...args);
       return makeShareableCloneOnUIRecursive(result);
     }),
-    getScheduleStack()
+    SHOULD_CAPTURE_SCHEDULE_STACK ? (new Error().stack ?? '') : undefined
   );
 }
 
@@ -368,7 +371,9 @@ function enqueueUI<Args extends unknown[], ReturnValue>(
   args: Args,
   resolve?: (value: ReturnValue) => void
 ): void {
-  const scheduleStack = getScheduleStack();
+  const scheduleStack = SHOULD_CAPTURE_SCHEDULE_STACK
+    ? (new Error().stack ?? '')
+    : undefined;
   const job = [worklet, args, resolve, scheduleStack] as UIJob<
     Args,
     ReturnValue
@@ -383,14 +388,15 @@ function flushUIQueue(): void {
   queueMicrotask(() => {
     const queue = runOnUIQueue;
     runOnUIQueue = [];
-    const jobWorklets = queue.map(([workletFunction, workletArgs, jobResolve]) =>
-      createSerializable(() => {
-        'worklet';
-        const result = workletFunction(...workletArgs);
-        if (jobResolve) {
-          scheduleOnRN(jobResolve, result);
-        }
-      })
+    const jobWorklets = queue.map(
+      ([workletFunction, workletArgs, jobResolve]) =>
+        createSerializable(() => {
+          'worklet';
+          const result = workletFunction(...workletArgs);
+          if (jobResolve) {
+            scheduleOnRN(jobResolve, result);
+          }
+        })
     );
     const scheduleStacks = queue.some(([, , , stack]) => stack !== undefined)
       ? queue.map(([, , , scheduleStack]) => scheduleStack)

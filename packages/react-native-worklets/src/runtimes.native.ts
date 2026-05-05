@@ -1,6 +1,6 @@
 'use strict';
 
-import { getScheduleStack } from './debug/scheduleStack';
+import { getStaticFeatureFlag } from './featureFlags/featureFlags';
 import {
   addGuardImplementation,
   addNoBundleModeGuardImplementation,
@@ -26,6 +26,9 @@ import type {
 } from './types';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsModule } from './WorkletsModule/NativeWorklets';
+
+const SHOULD_CAPTURE_SCHEDULE_STACK =
+  __DEV__ && !getStaticFeatureFlag('DISABLE_ACCURATE_ERROR_STACKS');
 
 /**
  * The ID of the [UI Worklet
@@ -167,7 +170,7 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
       worklet(...args);
       globalThis.__callMicrotasks?.();
     }),
-    getScheduleStack()
+    SHOULD_CAPTURE_SCHEDULE_STACK ? (new Error().stack ?? '') : undefined
   );
 }
 
@@ -245,7 +248,7 @@ export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
       worklet(...args);
       globalThis.__callMicrotasks?.();
     }),
-    getScheduleStack()
+    SHOULD_CAPTURE_SCHEDULE_STACK ? (new Error().stack ?? '') : undefined
   );
 }
 
@@ -342,7 +345,7 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
       const result = worklet(...args);
       return makeShareableCloneOnUIRecursive(result);
     }),
-    getScheduleStack()
+    SHOULD_CAPTURE_SCHEDULE_STACK ? (new Error().stack ?? '') : undefined
   );
 }
 
@@ -392,7 +395,7 @@ export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
       const result = worklet(...args);
       return makeShareableCloneOnUIRecursive(result);
     }),
-    getScheduleStack()
+    SHOULD_CAPTURE_SCHEDULE_STACK ? (new Error().stack ?? '') : undefined
   );
 }
 
@@ -440,7 +443,9 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
     }
   }
 
-  const scheduleStack = getScheduleStack();
+  const scheduleStack = SHOULD_CAPTURE_SCHEDULE_STACK
+    ? (new Error().stack ?? '')
+    : undefined;
   return new Promise<ReturnValue>((resolve, reject) => {
     if (__DEV__) {
       // in DEV mode we call serializable conversion here because in case the object

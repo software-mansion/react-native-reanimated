@@ -44,9 +44,8 @@ class JSIWorkletsModuleProxy;
 class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_this<WorkletRuntime> {
  public:
   void schedule(jsi::Function &&function) const;
-  void schedule(
-      std::shared_ptr<SerializableWorklet> worklet,
-      std::optional<std::string> scheduleStack = std::nullopt) const;
+  void schedule(std::shared_ptr<SerializableWorklet> worklet, std::optional<std::string> scheduleStack = std::nullopt)
+      const;
   void schedule(std::function<void()> job) const;
   void schedule(std::function<void(jsi::Runtime &)> job) const;
 

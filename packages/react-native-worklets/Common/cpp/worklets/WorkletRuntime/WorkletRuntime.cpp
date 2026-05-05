@@ -179,9 +179,7 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet, std:
       "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
       "async queue is not set. Recreate the runtime with a valid async queue.");
 
-  queue_->push([worklet = std::move(worklet),
-                scheduleStack = std::move(scheduleStack),
-                weakThis = weak_from_this()] {
+  queue_->push([worklet = std::move(worklet), scheduleStack = std::move(scheduleStack), weakThis = weak_from_this()] {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;

@@ -17,6 +17,7 @@
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <string>
