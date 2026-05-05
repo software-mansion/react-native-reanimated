@@ -64,7 +64,7 @@ export interface WorkletsModuleProxy {
 
   createSerializableArray(
     array: unknown[],
-    shouldRetainRemote: boolean
+    shouldRetainRemote?: boolean
   ): SerializableRef<unknown[]>;
 
   createSerializableMap<TKey, TValue>(

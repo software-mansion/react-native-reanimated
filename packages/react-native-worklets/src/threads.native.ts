@@ -402,7 +402,7 @@ function flushUIQueue(): void {
       ? queue.map(([, , , scheduleStack]) => scheduleStack)
       : undefined;
     WorkletsModule.scheduleOnUI(
-      WorkletsModule.createSerializableArray(jobWorklets, false),
+      WorkletsModule.createSerializableArray(jobWorklets),
       scheduleStacks
     );
   });
