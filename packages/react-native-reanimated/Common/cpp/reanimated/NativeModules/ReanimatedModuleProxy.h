@@ -102,10 +102,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
       const jsi::Value &animationName,
       const jsi::Value &compoundComponentName,
       const jsi::Value &keyframesConfig);
-  void unregisterCSSKeyframes(
-      jsi::Runtime &rt,
-      const jsi::Value &animationName,
-      const jsi::Value &compoundComponentName);
+  void
+  unregisterCSSKeyframes(jsi::Runtime &rt, const jsi::Value &animationName, const jsi::Value &compoundComponentName);
 
   void applyCSSAnimations(
       jsi::Runtime &rt,
