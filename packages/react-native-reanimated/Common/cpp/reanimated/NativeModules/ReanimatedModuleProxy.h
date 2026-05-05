@@ -46,7 +46,7 @@ namespace reanimated {
 using namespace facebook;
 using namespace css;
 
-enum class GrandCallbackState : std::uint8_t {
+enum class GrandCallbackSource : std::uint8_t {
   AnimationLoop,
   Event,
   EventInAndroidDraw,
@@ -109,7 +109,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
       const std::string &eventName,
       int emitterReactTag,
       const jsi::Value &payload,
-      GrandCallbackState state);
+      GrandCallbackSource state);
 
   void startBackendIfNeeded();
   void stopBackendIfIdle(const AnimationMutations &mutationsProducedThisTick);
@@ -203,7 +203,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
   void applySynchronousUpdates(UpdatesBatch &updatesBatch, bool allowPartialUpdates = false);
 
-  AnimationMutations grandCallback(AnimationTimestamp timestamp, GrandCallbackState state);
+  AnimationMutations grandCallback(AnimationTimestamp timestamp, GrandCallbackSource state);
   void executeWorkletsForFrame(AnimationTimestamp timestamp);
   AnimationMutations collectAnimationUpdates(AnimationTimestamp timestamp);
   AnimationMutations collectEventUpdates();

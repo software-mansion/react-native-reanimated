@@ -643,7 +643,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent) {
   jsi::Value payload = eventPayload->asJSIValue(uiRuntime);
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    return handleEventAndFlush(eventType, tag, payload, GrandCallbackState::Event);
+    return handleEventAndFlush(eventType, tag, payload, GrandCallbackSource::Event);
   }
 
   const bool res = handleEvent(eventType, tag, payload, getAnimationTimestamp_());
@@ -774,7 +774,7 @@ void ReanimatedModuleProxy::startBackendIfNeeded() {
     }
     withAnimationBackend([this](const std::shared_ptr<AnimationBackend> &backend) {
       callbackId_ = backend->start(
-          [this](AnimationTimestamp ts) { return grandCallback(ts, GrandCallbackState::AnimationLoop); });
+          [this](AnimationTimestamp ts) { return grandCallback(ts, GrandCallbackSource::AnimationLoop); });
       isAnimationRunning_ = true;
     });
   }
@@ -795,14 +795,14 @@ void ReanimatedModuleProxy::stopBackendIfIdle(const AnimationMutations &mutation
 
 AnimationMutations ReanimatedModuleProxy::grandCallback(
     const AnimationTimestamp timestamp,
-    const GrandCallbackState state) {
+    const GrandCallbackSource state) {
   if constexpr (!StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     return AnimationMutations{};
   }
   ReanimatedSystraceSection s("ReanimatedModuleProxy::grandCallback");
 
   switch (state) {
-    case GrandCallbackState::AnimationLoop: {
+    case GrandCallbackSource::AnimationLoop: {
       executeWorkletsForFrame(timestamp);
       flushLayoutAnimationRequests();
       AnimationMutations mutations = collectAnimationUpdates(timestamp);
@@ -810,12 +810,12 @@ AnimationMutations ReanimatedModuleProxy::grandCallback(
       return mutations;
     }
 
-    case GrandCallbackState::Event: {
+    case GrandCallbackSource::Event: {
       flushLayoutAnimationRequests();
       return collectEventUpdates();
     }
 
-    case GrandCallbackState::EventInAndroidDraw:
+    case GrandCallbackSource::EventInAndroidDraw:
       return collectNonLayoutAnimationUpdates();
   }
 
@@ -876,7 +876,7 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
     const std::string &eventName,
     const int emitterReactTag,
     const jsi::Value &payload,
-    const GrandCallbackState state) {
+    const GrandCallbackSource state) {
   bool handled = false;
   withAnimationBackend([&](const std::shared_ptr<AnimationBackend> &backend) {
     backend->pushAnimationMutations([&, state](AnimationTimestamp ts) {

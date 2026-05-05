@@ -280,7 +280,7 @@ void NativeProxy::handleEvent(
         eventName->toString(),
         emitterReactTag,
         payload,
-        isInDrawPass ? GrandCallbackState::EventInAndroidDraw : GrandCallbackState::Event);
+        isInDrawPass ? GrandCallbackSource::EventInAndroidDraw : GrandCallbackSource::Event);
   } else {
     reanimatedModuleProxy_->handleEvent(eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
   }

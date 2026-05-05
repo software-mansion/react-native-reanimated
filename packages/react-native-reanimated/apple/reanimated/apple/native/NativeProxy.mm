@@ -43,7 +43,7 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
     id eventData = [event arguments][2];
     jsi::Value payload = convertObjCObjectToJSIValue(uiRuntime, eventData);
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-      reanimatedModuleProxy->handleEventAndFlush(eventName, emitterReactTag, payload, GrandCallbackState::Event);
+      reanimatedModuleProxy->handleEventAndFlush(eventName, emitterReactTag, payload, GrandCallbackSource::Event);
     } else {
       const double currentTime = CACurrentMediaTime() * 1000;
       reanimatedModuleProxy->handleEvent(eventName, emitterReactTag, payload, currentTime);
