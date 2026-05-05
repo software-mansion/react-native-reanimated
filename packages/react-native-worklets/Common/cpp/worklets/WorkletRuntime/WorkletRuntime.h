@@ -1,7 +1,6 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <jsireact/JSIExecutor.h>
 #include <react/debug/react_native_assert.h>
 #include <worklets/RunLoop/AsyncQueue.h>
 #include <worklets/RunLoop/AsyncQueueImpl.h>
@@ -20,10 +19,10 @@
 #include <utility>
 #include <vector>
 
+namespace worklets {
+
 using namespace facebook;
 using namespace react;
-
-namespace worklets {
 
 template <typename TCallable>
 concept ImplicitlySerializableCallable = std::is_assignable_v<const jsi::Function &, TCallable> ||

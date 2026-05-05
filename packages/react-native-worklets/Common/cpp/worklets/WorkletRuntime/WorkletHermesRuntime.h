@@ -13,7 +13,6 @@
 
 #include <atomic>
 #include <memory>
-#include <string>
 #include <thread>
 
 namespace worklets {
