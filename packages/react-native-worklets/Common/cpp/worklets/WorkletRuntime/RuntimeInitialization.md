@@ -78,7 +78,7 @@ Failing to do so will probably crash the app as the debugger will try to
 connect to a non-existent runtime.
 
 The runtime should also be destroyed before the Reanimated module, because
-otherwise there might be weird BAD_ACCESS errors when the gc gets it
+otherwise there might be weird BAD\_ACCESS errors when the gc gets it
 hand on the runtime.
 
 ## Metro endpoint

@@ -136,6 +136,10 @@ bool NativeProxy::getIsReducedMotion() {
   return method(javaPart_.get());
 }
 
+void NativeProxy::toggleSlowAnimationsOnUIRuntime() {
+  reanimatedModuleProxy_->toggleSlowAnimationsOnUIRuntime();
+}
+
 void NativeProxy::registerNatives() {
   registerHybrid(
       {makeNativeMethod("initHybrid", NativeProxy::initHybrid),
@@ -143,7 +147,8 @@ void NativeProxy::registerNatives() {
        makeNativeMethod("isAnyHandlerWaitingForEvent", NativeProxy::isAnyHandlerWaitingForEvent),
        makeNativeMethod("performOperations", NativeProxy::performOperations),
        makeNativeMethod("performNonLayoutOperations", NativeProxy::performNonLayoutOperations),
-       makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp)});
+       makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp),
+       makeNativeMethod("toggleSlowAnimationsOnUIRuntime", NativeProxy::toggleSlowAnimationsOnUIRuntime)});
 }
 
 void NativeProxy::requestRender(std::function<void(double)> onRender) {

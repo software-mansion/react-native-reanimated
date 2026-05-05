@@ -19,34 +19,33 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-interface SharedValue<Value = unknown> {
-  value: Value;
-  get(): Value;
-  set(value: Value | ((value: Value) => Value)): void;
-  addListener: (listenerID: number, listener: (value: Value) => void) => void;
-  removeListener: (listenerID: number) => void;
-  modify: (modifier?: (value: Value) => Value, forceUpdate?: boolean) => void;
-}
+  ```typescript
+  interface SharedValue<Value = unknown> {
+    value: Value;
+    get(): Value;
+    set(value: Value | ((value: Value) => Value)): void;
+    addListener: (listenerID: number, listener: (value: Value) => void) => void;
+    removeListener: (listenerID: number) => void;
+    modify: (modifier?: (value: Value) => Value, forceUpdate?: boolean) => void;
+  }
 
-interface DerivedValue<Value = unknown>
-  extends Readonly<Omit<SharedValue<Value>, 'set'>> {
-  /**
-   * @deprecated Derived values are readonly, don't use this method. It's here
-   *   only to prevent breaking changes in TypeScript types. It will be removed
-   *   in the future.
-   */
-  set: SharedValue<Value>['set'];
-}
+  interface DerivedValue<Value = unknown>
+    extends Readonly<Omit<SharedValue<Value>, 'set'>> {
+    /**
+     * @deprecated Derived values are readonly, don't use this method. It's here
+     *   only to prevent breaking changes in TypeScript types. It will be removed
+     *   in the future.
+     */
+    set: SharedValue<Value>['set'];
+  }
 
-function useDerivedValue<T>(
-  updater: () => T,
-  dependencies?: DependencyList
-): DerivedValue<T>;
-```
-
+  function useDerivedValue<T>(
+    updater: () => T,
+    dependencies?: DependencyList
+  ): DerivedValue<T>;
+  ```
 </details>
 
 ### Arguments
@@ -70,7 +69,7 @@ Only relevant when using Reanimated [without the Babel plugin on the Web](https:
 import DerivedValue from '@site/src/examples/DerivedValue';
 import DerivedValueSrc from '!!raw-loader!@site/src/examples/DerivedValue';
 
-<InteractiveExample src={DerivedValueSrc} component={DerivedValue} />
+<InteractiveExample src={DerivedValueSrc} component={DerivedValue}/>
 
 ## Remarks
 
@@ -80,4 +79,4 @@ import DerivedValueSrc from '!!raw-loader!@site/src/examples/DerivedValue';
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

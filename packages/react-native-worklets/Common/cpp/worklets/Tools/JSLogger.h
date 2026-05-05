@@ -11,7 +11,6 @@ struct JSErrorData {
   std::string message;
   std::string stack;
   std::string name;
-  std::string jsEngine;
 };
 
 class JSLogger {

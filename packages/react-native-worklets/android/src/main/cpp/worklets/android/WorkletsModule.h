@@ -48,12 +48,16 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler);
 
+  void startCpp();
+
   void invalidateCpp();
 
   template <class Signature>
   JMethod<Signature> getJniMethod(std::string const &methodName) {
     return javaPart_->getClass()->getMethod<Signature>(methodName.c_str());
   }
+
+  std::shared_ptr<RuntimeBindings> getRuntimeBindings(bool bundleModeEnabled, jsi::Runtime &rnRuntime);
 
   RuntimeBindings::RequestAnimationFrame getRequestAnimationFrame();
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED

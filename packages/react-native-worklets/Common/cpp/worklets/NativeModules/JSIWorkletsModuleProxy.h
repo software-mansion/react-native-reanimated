@@ -6,6 +6,7 @@
 #include <react/renderer/uimanager/primitives.h>
 #include <worklets/SharedItems/MemoryManager.h>
 #include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/UnpackerLoader.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
@@ -23,7 +24,7 @@ namespace worklets {
 
 class WorkletRuntime;
 
-class JSIWorkletsModuleProxy : public jsi::HostObject {
+class JSIWorkletsModuleProxy {
  public:
   explicit JSIWorkletsModuleProxy(
       const bool isDevBundle,
@@ -34,15 +35,13 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
       const std::shared_ptr<RuntimeManager> &runtimeManager,
       const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
       const std::shared_ptr<RuntimeBindings> &runtimeBindings,
-      const BundleModeConfig &bundleModeConfig);
+      const BundleModeConfig &bundleModeConfig,
+      const std::shared_ptr<UnpackerLoader> &unpackerLoader);
 
   JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other) = default;
 
-  ~JSIWorkletsModuleProxy() override;
-
-  std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
-
-  jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propName) override;
+  [[nodiscard]]
+  jsi::Object toOptimizedObject(jsi::Runtime &rt) const;
 
   [[nodiscard]] std::shared_ptr<MessageQueueThread> getJSQueue() const {
     return jsQueue_;
@@ -84,6 +83,10 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
     return runtimeBindings_;
   }
 
+  [[nodiscard]] std::shared_ptr<UnpackerLoader> getUnpackerLoader() const {
+    return unpackerLoader_;
+  }
+
  private:
   const bool isDevBundle_;
   const BundleModeConfig bundleModeConfig_;
@@ -94,6 +97,7 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
   const std::shared_ptr<RuntimeManager> runtimeManager_;
   const std::weak_ptr<WorkletRuntime> uiWorkletRuntime_;
   const std::shared_ptr<RuntimeBindings> runtimeBindings_;
+  const std::shared_ptr<UnpackerLoader> unpackerLoader_;
 };
 
 } // namespace worklets

@@ -34,6 +34,16 @@ declare global {
    * - Value _3_: Worker Worklet Runtime
    */
   var __RUNTIME_KIND: RuntimeKind | 1 | 2 | 3;
+
+  /**
+   * Use it to schedule a function to be executed after all
+   * `requestAnimationFrame` callbacks but before the next frame is rendered.
+   * This is useful to collect all updates which happened when the animation
+   * frame queue was flushed.
+   *
+   * **Available only on the UI Runtime.**
+   */
+  var requestAnimationFrameFinalizer: (callback: () => void) => void;
 }
 
 export type WorkletRuntime = {
@@ -48,7 +58,7 @@ export type WorkletStackDetails = [
   columnOffset: number,
 ];
 
-export type WorkletClosure = Record<string, unknown>;
+type WorkletClosure = Record<string, unknown>;
 
 interface WorkletInitData {
   code: string;

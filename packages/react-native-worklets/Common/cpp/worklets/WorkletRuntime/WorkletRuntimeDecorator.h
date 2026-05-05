@@ -21,7 +21,8 @@ class WorkletRuntimeDecorator {
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const bool isDevBundle,
       jsi::Object &&jsiWorkletsModuleProxy,
-      const std::shared_ptr<EventLoop> &eventLoop);
+      const std::shared_ptr<EventLoop> &eventLoop,
+      const RuntimeBindings::NativeLoggingHook &nativeLoggingHook);
 
   static void postEvaluateScript(jsi::Runtime &rt, const std::shared_ptr<RuntimeBindings> &runtimeBindings);
 

@@ -9,8 +9,7 @@
     "worklets"
   ],
   "scripts": {
-    "build": "yarn workspace babel-plugin-worklets build && bob build && yarn build:unpackers",
-    "build:unpackers": "NODE_ENV='production' node ./scripts/export-unpackers.js",
+    "build": "yarn workspace babel-plugin-worklets build && yarn set-version && bob build",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
     "find-unused-code:js": "knip",
     "format": "yarn format:js && yarn format:plugin && yarn format:common && yarn format:android && yarn format:apple",
@@ -30,6 +29,7 @@
     "lint:clang-tidy": "../../scripts/clang-tidy-lint.sh \".\"",
     "lint:js": "eslint src && yarn prettier --check src",
     "lint:plugin": "yarn workspace babel-plugin-worklets lint",
+    "set-version": "node scripts/set-version.js",
     "test": "jest",
     "type:check": "yarn type:check:src:native && yarn type:check:src:web && yarn type:check:plugin && yarn type:check:app && yarn type:check:tests",
     "type:check:src:native": "yarn tsc --noEmit",
@@ -37,6 +37,9 @@
     "type:check:app": "yarn workspace common-app type:check",
     "type:check:plugin": "yarn workspace babel-plugin-worklets type:check",
     "type:check:tests": "../../scripts/test-ts.sh __typetests__",
+    "type:check:strict": "yarn type:check:strict:src && yarn type:check:strict:app",
+    "type:check:strict:src": "yarn tsc --noEmit --customConditions react-native-strict-api",
+    "type:check:strict:app": "yarn workspace common-app type:check:strict",
     "tree-shake:check:web": "yarn is-tree-shakable --resolution web",
     "validate-peers": "node ../../scripts/validate-compatibility-peer-dependencies.js"
   },
@@ -75,7 +78,7 @@
     "@babel/core": "7.28.4",
     "@react-native-community/cli": "20.1.0",
     "@react-native/eslint-config": "0.83.0",
-    "@react-native/jest-preset": "patch:@react-native/jest-preset@npm%3A0.85.0-rc.6#~/.yarn/patches/@react-native-jest-preset-npm-0.85.0-rc.6-7ccb42a0b9.patch",
+    "@react-native/jest-preset": "patch:@react-native/jest-preset@npm%3A0.85.2#~/.yarn/patches/@react-native-jest-preset-npm-0.85.2-d3275e8971.patch",
     "@types/jest": "30.0.0",
     "@types/node": "24.7.0",
     "@types/react": "19.2.2",
@@ -88,9 +91,9 @@
     "madge": "8.0.0",
     "prettier": "3.6.2",
     "react": "19.2.3",
-    "react-native": "0.85.0-rc.6",
+    "react-native": "0.85.2",
     "react-native-builder-bob": "0.40.13",
-    "typescript": "5.8.3"
+    "typescript": "5.9.3"
   },
   "main": "./lib/module/index",
   "module": "./lib/module/index",

@@ -1,9 +1,7 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
-#include <worklets/Resources/Unpackers.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/JSLogger.h>
-#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RuntimeHolder.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
@@ -159,7 +157,7 @@ WorkletRuntime::WorkletRuntime(
 
 WorkletRuntime::~WorkletRuntime() = default;
 
-void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy) {
+void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy) {
   jsi::Runtime &rt = *runtime_;
 
   rt.setRuntimeData(
@@ -173,16 +171,21 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
   const auto &sourceUrl = jsiWorkletsModuleProxy->getSourceUrl();
   const auto runtimeBindings = jsiWorkletsModuleProxy->getRuntimeBindings();
   const auto bundleModeEnabled = jsiWorkletsModuleProxy->isBundleModeEnabled();
-
-  auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
-
+  const auto unpackerLoader = jsiWorkletsModuleProxy->getUnpackerLoader();
+  const auto &nativeLoggingHook = runtimeBindings->nativeLoggingHook;
   WorkletRuntimeDecorator::decorate(
-      rt, name_, jsScheduler, isDevBundle, std::move(optimizedJsiWorkletsModuleProxy), eventLoop_);
+      rt,
+      name_,
+      jsScheduler,
+      isDevBundle,
+      jsiWorkletsModuleProxy->toOptimizedObject(rt),
+      eventLoop_,
+      nativeLoggingHook);
 
   if (bundleModeEnabled) {
     bundleModeInit(jsScheduler, script, sourceUrl, runtimeBindings);
   } else {
-    legacyModeInit();
+    legacyModeInit(unpackerLoader);
   }
 
   try {
@@ -210,8 +213,7 @@ void WorkletRuntime::bundleModeInit(
     const auto &stack = error.getStack();
     if (!message.starts_with("[Worklets] Worklets initialized successfully")) {
       const auto newMessage = "[Worklets] Failed to initialize runtime. Reason: " + message + " " + stack;
-      JSLogger::reportFatalErrorOnJS(
-          jsScheduler, {.message = newMessage, .stack = stack, .name = "WorkletsError", .jsEngine = "Worklets"});
+      JSLogger::reportFatalErrorOnJS(jsScheduler, {.message = newMessage, .stack = stack, .name = "WorkletsError"});
       return;
     }
   }
@@ -219,22 +221,8 @@ void WorkletRuntime::bundleModeInit(
   WorkletRuntimeDecorator::postEvaluateScript(rt, runtimeBindings);
 }
 
-void WorkletRuntime::legacyModeInit() {
-  jsi::Runtime &rt = *runtime_;
-
-  auto valueUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
-  rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
-
-  auto synchronizableUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(SynchronizableUnpackerCode);
-  rt.evaluateJavaScript(synchronizableUnpackerBuffer, "synchronizableUnpacker");
-
-  auto shareableHostUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(ShareableHostUnpackerCode);
-  rt.evaluateJavaScript(shareableHostUnpackerBuffer, "shareableHostUnpacker");
-  auto shareableGuestUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(ShareableGuestUnpackerCode);
-  rt.evaluateJavaScript(shareableGuestUnpackerBuffer, "shareableGuestUnpacker");
-
-  auto customSerializableUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(CustomSerializableUnpackerCode);
-  rt.evaluateJavaScript(customSerializableUnpackerBuffer, "customSerializableUnpacker");
+void WorkletRuntime::legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpackerLoader) {
+  unpackerLoader->installUnpackers(*runtime_);
 }
 
 /* #region schedule */
@@ -339,12 +327,14 @@ std::shared_ptr<WorkletRuntime> extractWorkletRuntime(jsi::Runtime &rt, const js
 void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
-    const jsi::Value &serializableWorkletValue) {
+    const jsi::Value &serializableWorkletValue,
+    const std::optional<std::string> &scheduleStack) {
   auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
   auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt,
       serializableWorkletValue,
       "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
+  serializableWorklet->setScheduleStack(scheduleStack);
   workletRuntime->schedule(serializableWorklet);
 }
 
@@ -385,7 +375,8 @@ static const auto callGuardLambda = [](facebook::jsi::Runtime &rt,
                                        const facebook::jsi::Value &thisVal,
                                        const facebook::jsi::Value *args,
                                        size_t count) {
-  return args[0].asObject(rt).asFunction(rt).call(rt, args + 1, count - 1);
+  // args[0] = function, args[1] = scheduleStack (string), args[2..] = actual args
+  return args[0].asObject(rt).asFunction(rt).call(rt, args + 2, count - 2);
 };
 
 jsi::Function WorkletRuntime::getCallGuard(jsi::Runtime &rt) {

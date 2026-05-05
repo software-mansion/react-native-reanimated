@@ -36,21 +36,20 @@ const Comp = () => {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function getRelativeCoords(
-  animatedRef: AnimatedRef<Component>,
-  absoluteX: number,
-  absoluteY: number
-): ComponentCoords | null;
+  ```typescript
+  function getRelativeCoords(
+    animatedRef: AnimatedRef<Component>,
+    absoluteX: number,
+    absoluteY: number
+  ): ComponentCoords | null;
 
-interface ComponentCoords {
-  x: number;
-  y: number;
-}
-```
-
+  interface ComponentCoords {
+    x: number;
+    y: number;
+  }
+  ```
 </details>
 
 ### Arguments
@@ -79,8 +78,8 @@ Object which contains relative coordinates
 import RelativeCoords from '@site/src/examples/RelativeCoords';
 import RelativeCoordsSrc from '!!raw-loader!@site/src/examples/RelativeCoords';
 
-<InteractiveExample src={RelativeCoordsSrc} component={RelativeCoords} />
+<InteractiveExample src={RelativeCoordsSrc} component={RelativeCoords}/>
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

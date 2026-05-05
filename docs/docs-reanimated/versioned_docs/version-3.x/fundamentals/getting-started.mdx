@@ -26,6 +26,7 @@ If you don't have an existing project, you can create a new Expo app using a tem
     npx create-expo-app@latest my-app -e with-reanimated
     ```
   </TabItem>
+
   <TabItem value="yarn" label="YARN">
     ```bash
     yarn create expo-app my-app -e with-reanimated
@@ -49,11 +50,13 @@ Install `react-native-reanimated` package from npm:
     npx expo install react-native-reanimated
     ```
   </TabItem>
+
   <TabItem value="npm" label="NPM">
     ```bash
     npm install react-native-reanimated
     ```
   </TabItem>
+
   <TabItem value="yarn" label="YARN">
     ```bash
     yarn add react-native-reanimated
@@ -84,12 +87,11 @@ Add `react-native-reanimated/plugin` plugin to your `babel.config.js`.
 :::
 
 <details>
-<summary>Why do I need this?</summary>
+  <summary>Why do I need this?</summary>
 
-In short, the Reanimated babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the UI thread.
+  In short, the Reanimated babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the UI thread.
 
-To learn more about the plugin head onto to [Reanimated babel plugin](/docs/fundamentals/glossary#worklets-babel-plugin) section.
-
+  To learn more about the plugin head onto to [Reanimated babel plugin](/docs/fundamentals/glossary#worklets-babel-plugin) section.
 </details>
 
 ### Step 3: Wrap metro config with reanimated wrapper (recommended)
@@ -110,12 +112,11 @@ module.exports = wrapWithReanimatedMetroConfig(config);
 ```
 
 <details>
-<summary>Why should I do this?</summary>
+  <summary>Why should I do this?</summary>
 
-Wrapping your Metro configuration with the Reanimated Metro config wrapper will result in displaying improved reanimated errors and warnings with more accurate call stacks. Thanks to this, identifying misuses of the Reanimated API will be much easier than before.
+  Wrapping your Metro configuration with the Reanimated Metro config wrapper will result in displaying improved reanimated errors and warnings with more accurate call stacks. Thanks to this, identifying misuses of the Reanimated API will be much easier than before.
 
-To learn more about this feature, head onto to [Accurate Call Stacks](/docs/debugging/accurate-call-stacks).
-
+  To learn more about this feature, head onto to [Accurate Call Stacks](/docs/debugging/accurate-call-stacks).
 </details>
 
 ### Step 4: Clear Metro bundler cache (recommended)
@@ -126,11 +127,13 @@ To learn more about this feature, head onto to [Accurate Call Stacks](/docs/debu
     npx expo start -c
     ```
   </TabItem>
+
   <TabItem value="npm" label="NPM">
     ```bash
     npm start -- --reset-cache
     ```
   </TabItem>
+
   <TabItem value="yarn" label="YARN">
     ```bash
     yarn start --reset-cache
@@ -172,11 +175,13 @@ To use Reanimated on the web all you need to do is to install and add [`@babel/p
     npx expo install @babel/plugin-proposal-export-namespace-from
     ```
   </TabItem>
+
   <TabItem value="npm" label="NPM">
     ```bash
     npm install @babel/plugin-proposal-export-namespace-from
     ```
   </TabItem>
+
   <TabItem value="yarn" label="YARN">
     ```bash
     yarn add @babel/plugin-proposal-export-namespace-from

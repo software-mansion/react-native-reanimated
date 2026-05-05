@@ -9,10 +9,7 @@ sidebar_position: 5
 import AnimationDirectionBasic from '@site/src/examples/css-animations/AnimationDirectionBasic';
 import AnimationDirectionBasicSrc from '!!raw-loader!@site/src/examples/css-animations/AnimationDirectionBasic';
 
-<InteractiveExample
-  src={AnimationDirectionBasicSrc}
-  component={AnimationDirectionBasic}
-/>
+<InteractiveExample src={AnimationDirectionBasicSrc} component={AnimationDirectionBasic}/>
 
 ## Reference
 
@@ -36,18 +33,17 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type CSSAnimationDirection =
-  | 'normal'
-  | 'reverse'
-  | 'alternate'
-  | 'alternate-reverse';
+  ```typescript
+  type CSSAnimationDirection =
+    | 'normal'
+    | 'reverse'
+    | 'alternate'
+    | 'alternate-reverse';
 
-animationDirection: CSSAnimationDirection | CSSAnimationDirection[];
-```
-
+  animationDirection: CSSAnimationDirection | CSSAnimationDirection[];
+  ```
 </details>
 
 ### Values
@@ -85,11 +81,8 @@ In the following example, `bounceIn` keyframe would alternate between running fo
 import AnimationDirection from '@site/src/examples/css-animations/AnimationDirection';
 import AnimationDirectionSrc from '!!raw-loader!@site/src/examples/css-animations/AnimationDirection';
 
-<InteractiveExample
-  src={AnimationDirectionSrc}
-  component={AnimationDirection}
-/>
+<InteractiveExample src={AnimationDirectionSrc} component={AnimationDirection}/>
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

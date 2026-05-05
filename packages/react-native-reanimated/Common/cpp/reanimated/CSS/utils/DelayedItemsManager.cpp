@@ -63,11 +63,6 @@ bool DelayedItemsManager<TValue>::empty() const {
   return itemsSet_.empty();
 }
 
-template <typename TValue>
-size_t DelayedItemsManager<TValue>::size() const {
-  return itemsSet_.size();
-}
-
 // Declare the types that will be used in the DelayedItemsManager class
 template class DelayedItemsManager<std::shared_ptr<CSSAnimation>>;
 template class DelayedItemsManager<Tag>;

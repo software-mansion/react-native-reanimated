@@ -16,9 +16,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 @Suppress("KotlinJniMissingFunction")
 @ReactModule(name = WorkletsModule.NAME)
-class WorkletsModule(reactContext: ReactApplicationContext) :
-    NativeWorkletsModuleSpec(reactContext), LifecycleEventListener {
-
+class WorkletsModule(
+    reactContext: ReactApplicationContext,
+) : NativeWorkletsModuleSpec(reactContext),
+    LifecycleEventListener {
     companion object {
         const val NAME = "WorkletsModule"
 
@@ -56,7 +57,7 @@ class WorkletsModule(reactContext: ReactApplicationContext) :
         messageQueueThread: MessageQueueThread,
         jsCallInvokerHolder: CallInvokerHolderImpl,
         androidUIScheduler: AndroidUIScheduler,
-        scriptBufferWrapper: ScriptBufferWrapper?
+        scriptBufferWrapper: ScriptBufferWrapper?,
     ): HybridData
 
     @OptIn(FrameworkAPI::class)
@@ -67,13 +68,16 @@ class WorkletsModule(reactContext: ReactApplicationContext) :
         context.assertOnJSQueueThread()
 
         val jsContext = checkNotNull(context.javaScriptContextHolder).get()
-        val jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context)
+        val jsCallInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
 
         val sourceURL = context.sourceURL
 
-        val scriptBufferWrapper: ScriptBufferWrapper? = if (bundleModeEnabled) {
-            ScriptBufferWrapper(sourceURL!!, context.assets)
-        } else null
+        val scriptBufferWrapper: ScriptBufferWrapper? =
+            if (bundleModeEnabled) {
+                ScriptBufferWrapper(sourceURL!!, context.assets)
+            } else {
+                null
+            }
 
         mHybridData =
             initHybrid(
@@ -82,7 +86,16 @@ class WorkletsModule(reactContext: ReactApplicationContext) :
                 mMessageQueueThread,
                 jsCallInvokerHolder,
                 mAndroidUIScheduler,
-                scriptBufferWrapper)
+                scriptBufferWrapper,
+            )
+        return true
+    }
+
+    @OptIn(FrameworkAPI::class)
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    override fun start(): Boolean {
+        reactApplicationContext.assertOnJSQueueThread()
+        startCpp()
         return true
     }
 
@@ -100,6 +113,13 @@ class WorkletsModule(reactContext: ReactApplicationContext) :
         mAnimationFrameQueue.enableSlowAnimations(mSlowAnimationsEnabled, animationsDragFactor)
     }
 
+    @OptIn(FrameworkAPI::class)
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    override fun toggleSlowAnimationsOnUIRuntime(): Boolean {
+        toggleSlowAnimations()
+        return mSlowAnimationsEnabled
+    }
+
     override fun invalidate() {
         if (mInvalidated.getAndSet(true)) {
             return
@@ -114,6 +134,8 @@ class WorkletsModule(reactContext: ReactApplicationContext) :
     }
 
     private external fun invalidateCpp()
+
+    private external fun startCpp()
 
     override fun onHostResume() {
         mAnimationFrameQueue.resume()

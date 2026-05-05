@@ -132,7 +132,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(staticPropsRegistry_, animatedPropsRegistry_)),
-      cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>(viewStylesRepository_)),
+      cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(getAnimationTimestamp_, viewStylesRepository_)),
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
@@ -162,6 +162,14 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     strongThis->onRender(timestampMs);
   };
   onRenderCallback_ = std::move(onRenderCallback);
+
+  operationsLoop_ = std::make_shared<OperationsLoop>(
+      uiScheduler_,
+      requestRender_,
+      getAnimationTimestamp_,
+      cssAnimationsRegistry_,
+      cssTransitionsRegistry_,
+      updatesRegistryManager_);
 
   auto updateProps = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &operations) {
     auto strongThis = weakThis.lock();
@@ -416,11 +424,7 @@ void ReanimatedModuleProxy::cleanupSensors() {
 }
 
 void ReanimatedModuleProxy::setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle) {
-  const auto tag = viewTag.asNumber();
-  staticPropsRegistry_->set(rt, tag, viewStyle);
-  if (staticPropsRegistry_->hasObservers(tag)) {
-    maybeRunCSSLoop();
-  }
+  staticPropsRegistry_->set(rt, viewTag.asNumber(), viewStyle);
 }
 
 void ReanimatedModuleProxy::markNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) {
@@ -460,7 +464,7 @@ void ReanimatedModuleProxy::applyCSSAnimations(
     const jsi::Value &compoundComponentName,
     const jsi::Value &animationUpdates) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  const auto timestamp = getCssTimestamp();
+  const auto timestamp = operationsLoop_->resolveTimestamp();
   const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
 
   CSSAnimationsMap newAnimations;
@@ -499,7 +503,7 @@ void ReanimatedModuleProxy::applyCSSAnimations(
         rt, shadowNode, updates.animationNames, newAnimations, updates.settingsUpdates, timestamp);
   }
 
-  maybeRunCSSLoop();
+  operationsLoop_->run();
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
@@ -519,7 +523,7 @@ void ReanimatedModuleProxy::runCSSTransition(
     cssTransitionsRegistry_->run(rt, shadowNode, config);
   }
 
-  maybeRunCSSLoop();
+  operationsLoop_->run();
 }
 
 void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) {
@@ -631,51 +635,6 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   return res;
 }
 
-void ReanimatedModuleProxy::cssLoopCallback(const double /*timestampMs*/) {
-  shouldUpdateCssAnimations_ = true;
-  if (cssAnimationsRegistry_->hasUpdates() || cssTransitionsRegistry_->hasUpdates()
-#ifdef ANDROID
-      || updatesRegistryManager_->hasPropsToRevert()
-#endif // ANDROID
-  ) {
-    requestRender_([weakThis = weak_from_this()](const double newTimestampMs) {
-      if (auto strongThis = weakThis.lock()) {
-        strongThis->cssLoopCallback(newTimestampMs);
-      }
-    });
-  } else {
-    cssLoopRunning_ = false;
-  }
-}
-
-void ReanimatedModuleProxy::maybeRunCSSLoop() {
-  if (cssLoopRunning_) {
-    return;
-  }
-
-  cssLoopRunning_ = true;
-
-  scheduleOnUI(uiScheduler_, [=, weakThis = weak_from_this()]() {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-    strongThis->requestRender_([weakThis](const double timestampMs) {
-      if (auto strongThis = weakThis.lock()) {
-        strongThis->cssLoopCallback(timestampMs);
-      }
-    });
-  });
-}
-
-double ReanimatedModuleProxy::getCssTimestamp() {
-  if (cssLoopRunning_) {
-    return currentCssTimestamp_;
-  }
-  currentCssTimestamp_ = getAnimationTimestamp_();
-  return currentCssTimestamp_;
-}
-
 void ReanimatedModuleProxy::performOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
@@ -693,11 +652,13 @@ void ReanimatedModuleProxy::performOperations() {
 
     auto lock = updatesRegistryManager_->lock();
 
-    if (shouldUpdateCssAnimations_) {
-      currentCssTimestamp_ = getAnimationTimestamp_();
+    const bool shouldUpdateCssAnimations = operationsLoop_->shouldUpdateCssAnimations();
+    const double currentCssTimestamp = shouldUpdateCssAnimations ? getAnimationTimestamp_() : 0;
+
+    if (shouldUpdateCssAnimations) {
       auto lock = cssTransitionsRegistry_->lock();
       // Update CSS transitions and flush updates
-      cssTransitionsRegistry_->update(currentCssTimestamp_);
+      cssTransitionsRegistry_->update(currentCssTimestamp);
       cssTransitionsRegistry_->flushUpdates(updatesBatch);
     }
 
@@ -707,14 +668,14 @@ void ReanimatedModuleProxy::performOperations() {
       animatedPropsRegistry_->flushUpdates(updatesBatch);
     }
 
-    if (shouldUpdateCssAnimations_) {
+    if (shouldUpdateCssAnimations) {
       auto lock = cssAnimationsRegistry_->lock();
       // Update CSS animations and flush updates
-      cssAnimationsRegistry_->update(currentCssTimestamp_);
+      cssAnimationsRegistry_->update(currentCssTimestamp);
       cssAnimationsRegistry_->flushUpdates(updatesBatch);
     }
 
-    shouldUpdateCssAnimations_ = false;
+    operationsLoop_->clearShouldUpdateCssAnimations();
 
     if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
       applySynchronousUpdates(updatesBatch);
@@ -1410,6 +1371,17 @@ jsi::Value ReanimatedModuleProxy::subscribeForKeyboardEvents(
 
 void ReanimatedModuleProxy::unsubscribeFromKeyboardEvents(jsi::Runtime &, const jsi::Value &listenerId) {
   unsubscribeFromKeyboardEventsFunction_(listenerId.asNumber());
+}
+
+void ReanimatedModuleProxy::toggleSlowAnimationsOnUIRuntime() const {
+  this->jsInvoker_->invokeAsync([](jsi::Runtime &rt) {
+    const auto toggleFn = rt.global().getProperty(rt, "__toggleSlowAnimationsOnUIRuntime");
+    if (!(toggleFn.isObject() && toggleFn.asObject(rt).isFunction(rt))) [[unlikely]] {
+      throw std::runtime_error("[Reanimated] __toggleSlowAnimationsOnUIRuntime function missing on global.");
+    }
+
+    toggleFn.asObject(rt).asFunction(rt).call(rt);
+  });
 }
 
 } // namespace reanimated

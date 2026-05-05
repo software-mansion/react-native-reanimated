@@ -1,5 +1,5 @@
 /**
-* Based on HeaderUtil.kt from React Native 
+* Based on HeaderUtil.kt from React Native
 */
 
 package com.swmansion.worklets
@@ -11,20 +11,20 @@ package com.swmansion.worklets
  * error as 401 could be handled to invalidate the wrong token in the client code.
  */
 internal class WorkletsHeaderUtil {
-  companion object {
-    @JvmStatic
-    fun stripHeaderName(name: String): String {
-      val builder = StringBuilder(name.length)
-      var modified = false
-      for (i in 0 until name.length) {
-        val c = name[i]
-        if (c > '\u0020' && c < '\u007f') {
-          builder.append(c)
-        } else {
-          modified = true
+    companion object {
+        @JvmStatic
+        fun stripHeaderName(name: String): String {
+            val builder = StringBuilder(name.length)
+            var modified = false
+            for (i in 0 until name.length) {
+                val c = name[i]
+                if (c > '\u0020' && c < '\u007f') {
+                    builder.append(c)
+                } else {
+                    modified = true
+                }
+            }
+            return if (modified) builder.toString() else name
         }
-      }
-      return if (modified) builder.toString() else name
     }
-  }
 }

@@ -28,22 +28,21 @@ configureReanimatedLogger({
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function configureReanimatedLogger(config: LoggerConfig): void;
+  ```typescript
+  function configureReanimatedLogger(config: LoggerConfig): void;
 
-type LoggerConfig = {
-  level?: ReanimatedLogLevel;
-  strict?: boolean;
-};
+  type LoggerConfig = {
+    level?: ReanimatedLogLevel;
+    strict?: boolean;
+  };
 
-enum ReanimatedLogLevel {
-  warn = 1,
-  error = 2,
-}
-```
-
+  enum ReanimatedLogLevel {
+    warn = 1,
+    error = 2,
+  }
+  ```
 </details>
 
 ### Configuration options
@@ -66,4 +65,4 @@ A boolean value that enables or disables **strict** mode. When **strict** mode i
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

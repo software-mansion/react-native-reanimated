@@ -1,0 +1,61 @@
+name: npm package publish
+on:
+  workflow_call:
+    inputs:
+      package-name:
+        description: 'Name of the package to publish - react-native-worklets or react-native-reanimated.'
+        required: true
+        type: string
+
+      package-json-path:
+        description: 'Path to the package.json file of the package to be published.'
+        required: true
+        type: string
+
+      publish:
+        description: 'Whether to publish the package or just do a dry run.'
+        required: false
+        type: boolean
+        default: false
+
+      version:
+        description: 'Version to be published if cannot be inferred automatically, use for stable releases.'
+        required: false
+        type: string
+        default: ''
+
+      release-type:
+        description: 'Release type to be published (stable, nightly, beta, rc)'
+        type: string
+        required: true
+
+      npm-tag:
+        description: 'npm tag to publish under (usually inferred from release type and version)'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: 'yarn'
+          node-version: 22
+
+      - name: Build and publish ${{ inputs.package-name }}
+        uses: software-mansion/npm-package-publish@264013301cc21350186b190f1f6dd10ae4c8ee04
+        with:
+          package-name: ${{ inputs.package-name }}
+          package-json-path: ${{ inputs.package-json-path }}
+          release-type: ${{ inputs.release-type || 'nightly' }}
+          version: ${{ inputs.version }}
+          npm-tag: ${{ inputs.npm-tag }}
+          dry-run: ${{ !inputs.publish }}
+          version-getter-script: 'scripts/resolve-release-version.js'
+          perform-git-operations: 'false'

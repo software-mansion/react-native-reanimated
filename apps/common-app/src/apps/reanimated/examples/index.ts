@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
 import 'react-native-reanimated';
 import React from 'react';
@@ -145,6 +146,10 @@ const CustomTransitionExample: React.FC = () =>
 const DefaultAnimations: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/DefaultAnimations').default as React.FC
+  );
+const DefaultAnimationsOverrides: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/DefaultAnimationsOverrides').default as React.FC
   );
 const DeleteAncestorOfExiting: React.FC = () =>
   React.createElement(
@@ -376,8 +381,6 @@ const RestoreStateExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/RestoreState').default
   );
-const RunOnAsyncExample: React.FC = () =>
-  React.createElement(require('./RunOnAsyncExample').default as React.FC);
 const RuntimeTestsExample: React.FC = () =>
   React.createElement(
     require('./RuntimeTests/RuntimeTestsExample').default as React.FC
@@ -566,11 +569,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '❄️',
     title: 'React freeze',
     screen: FreezeExample,
-  },
-  RunOnAsyncExample: {
-    icon: '👷‍♂️',
-    title: 'runOnAsync',
-    screen: RunOnAsyncExample,
   },
   FetchExample: {
     icon: '📡',
@@ -811,7 +809,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   StickyHeaderExample: {
     icon: '🔝',
-    title: 'Sticky header',
+    title: 'Stinky header',
     screen: StickyHeaderExample,
   },
   DispatchCommandExample: {
@@ -1200,6 +1198,10 @@ export const EXAMPLES: Record<string, Example> = {
   DurationZeroExample: {
     title: '[LA] Duration zero',
     screen: DurationZeroExample,
+  },
+  DefaultAnimationsOverrides: {
+    title: '[LA] Default layout animations overrides',
+    screen: DefaultAnimationsOverrides,
   },
 
   // Shared Element Transitions

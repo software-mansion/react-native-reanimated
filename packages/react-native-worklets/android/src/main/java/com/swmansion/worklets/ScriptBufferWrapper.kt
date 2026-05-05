@@ -16,8 +16,10 @@ import java.nio.charset.StandardCharsets
 @Suppress("KotlinJniMissingFunction")
 @SuppressLint("MissingNativeLoadLibrary")
 @DoNotStripAny
-class ScriptBufferWrapper(uri: String, assetManager: AssetManager) {
-
+class ScriptBufferWrapper(
+    uri: String,
+    assetManager: AssetManager,
+) {
     @field:DoNotStrip
     private val mHybridData: HybridData
 
@@ -25,31 +27,39 @@ class ScriptBufferWrapper(uri: String, assetManager: AssetManager) {
         val filePrefix = "file://"
         val assetsPrefix = "assets://"
 
-        mHybridData = when {
-            uri.startsWith(filePrefix) -> {
-                val fileName = uri.substring(filePrefix.length)
-                initHybridFromFile(fileName)
-            }
-            uri.startsWith(assetsPrefix) -> {
-                val assetURL = uri.substring(assetsPrefix.length)
-                initHybridFromAssets(assetManager, assetURL)
-            }
-            else -> {
-                val scriptContent = try {
-                    downloadScript(uri)
-                } catch (e: IOException) {
-                    throw RuntimeException(e)
+        mHybridData =
+            when {
+                uri.startsWith(filePrefix) -> {
+                    val fileName = uri.substring(filePrefix.length)
+                    initHybridFromFile(fileName)
                 }
-                initHybridFromString(scriptContent, uri)
+                uri.startsWith(assetsPrefix) -> {
+                    val assetURL = uri.substring(assetsPrefix.length)
+                    initHybridFromAssets(assetManager, assetURL)
+                }
+                else -> {
+                    val scriptContent =
+                        try {
+                            downloadScript(uri)
+                        } catch (e: IOException) {
+                            throw RuntimeException(e)
+                        }
+                    initHybridFromString(scriptContent, uri)
+                }
             }
-        }
     }
 
-    private external fun initHybridFromAssets(assetManager: AssetManager, assetURL: String): HybridData
+    private external fun initHybridFromAssets(
+        assetManager: AssetManager,
+        assetURL: String,
+    ): HybridData
 
     private external fun initHybridFromFile(fileName: String): HybridData
 
-    private external fun initHybridFromString(script: String, url: String): HybridData
+    private external fun initHybridFromString(
+        script: String,
+        url: String,
+    ): HybridData
 
     companion object {
         private fun downloadScript(url: String): String {

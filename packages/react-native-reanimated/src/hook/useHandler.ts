@@ -2,10 +2,9 @@
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction, makeShareable } from 'react-native-worklets';
-import type { WorkletClosure } from 'react-native-worklets/lib/typescript/types';
 
 import type { UnknownRecord } from '../common';
-import { IS_WEB, ReanimatedError } from '../common';
+import { IS_WEB } from '../common';
 import type { DependencyList, ReanimatedEvent } from './commonTypes';
 
 interface GeneralHandler<
@@ -48,8 +47,8 @@ function ensureWorkletHandlers(handlers: UnknownRecord) {
   );
 
   if (nonWorkletNames.length > 0) {
-    throw new ReanimatedError(
-      `Passed handlers that are not worklets. Only worklet functions are allowed. Handlers "${nonWorkletNames.join(', ')}" are not worklets.`
+    throw new Error(
+      `[Reanimated] Passed handlers that are not worklets. Only worklet functions are allowed. Handlers "${nonWorkletNames.join(', ')}" are not worklets.`
     );
   }
 }
@@ -60,6 +59,8 @@ const objectIs: (a: unknown, b: unknown) => boolean =
     : (x, y) =>
         (x === y && (x !== 0 || 1 / (x as number) === 1 / (y as number))) ||
         (Number.isNaN(x as number) && Number.isNaN(y as number));
+
+type WorkletClosure = Record<string, unknown>;
 
 function areWorkletClosuresEqual(
   next: WorkletClosure,
