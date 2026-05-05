@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <utility>
+#include "react/debug/react_native_assert.h"
 
 namespace reanimated {
 
@@ -24,13 +25,10 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     jsi::Value updates = item.getProperty(rt, "updates");
 
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-      if (!updates.isObject()) {
-        continue;
-      }
-      jsi::Value updatesOwned(rt, updates);
-      auto updatesObj = updatesOwned.asObject(rt);
+      react_native_assert(updates.isObject() && "Updates need to be an object");
+      auto updatesObj = updates.asObject(rt);
       const bool hasLayoutUpdates = hasLayoutProps(rt, updatesObj);
-      addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updatesOwned, hasLayoutUpdates);
+      addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updates, hasLayoutUpdates);
     } else {
       auto dynamic = jsi::dynamicFromValue(rt, updates);
       addUpdatesToBatch(shadowNode->getFamilyShared(), dynamic);

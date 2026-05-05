@@ -89,9 +89,7 @@ inline bool hasLayoutProps(facebook::jsi::Runtime &rt, facebook::jsi::Object &ob
   const size_t n = names.size(rt);
   for (size_t ki = 0; ki < n; ++ki) {
     facebook::jsi::Value keyVal = names.getValueAtIndex(rt, ki);
-    if (!keyVal.isString()) {
-      continue;
-    }
+    react_native_assert(keyVal.isString() && "Prop name has to be a string");
     const auto keyStr = keyVal.asString(rt).utf8(rt);
     const auto propName = propNameFromString(keyStr);
     if (propName.has_value() && isLayoutProp(propName.value())) {
