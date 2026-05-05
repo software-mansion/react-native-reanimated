@@ -510,7 +510,10 @@ void ReanimatedModuleProxy::runCSSTransition(
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto config = parseCSSTransitionConfig(rt, transitionConfig);
 
-  cssTransitionsRegistry_->run(rt, shadowNode, config);
+  {
+    auto lock = cssTransitionsRegistry_->lock();
+    cssTransitionsRegistry_->updateSettingsOrRun(rt, shadowNode, config);
+  }
 
   operationsLoop_->run();
 }

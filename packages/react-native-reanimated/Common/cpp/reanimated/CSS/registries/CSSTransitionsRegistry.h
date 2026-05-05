@@ -26,7 +26,16 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
   bool isEmpty() const override;
   bool hasUpdates() const;
 
-  void run(jsi::Runtime &rt, const std::shared_ptr<const ShadowNode> &shadowNode, const CSSTransitionConfig &config);
+  void updateSettingsOrRun(
+      jsi::Runtime &rt,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const CSSTransitionConfig &config);
+  // run Should be called only after sb someone has already set settings with updateSettingsOrRun
+  void run(
+      jsi::Runtime &rt,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const CSSTransitionPropertiesDiffs &propertyDiffs);
+  void remove(Tag viewTag) override;
 
   void updateAndFlush(double timestamp, UpdatesBatch &updatesBatch) {
     std::lock_guard<std::mutex> lock{mutex_};

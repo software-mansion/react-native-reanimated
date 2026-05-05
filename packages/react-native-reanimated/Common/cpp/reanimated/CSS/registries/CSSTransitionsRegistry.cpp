@@ -22,7 +22,7 @@ bool CSSTransitionsRegistry::hasUpdates() const {
   return !runningTransitionTags_.empty() || !delayedTransitionsManager_.empty();
 }
 
-void CSSTransitionsRegistry::run(
+void CSSTransitionsRegistry::updateSettingsOrRun(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const CSSTransitionConfig &config) {
@@ -40,7 +40,34 @@ void CSSTransitionsRegistry::run(
   const auto &lastUpdates = getUpdatesFromRegistry(shadowNode->getTag());
   const auto timestamp = getCurrentTimestamp_();
 
-  auto initialUpdate = transition->run(rt, config, lastUpdates, timestamp);
+  if (config.changedPropertiesSettings.size() || config.removedProperties.size()) {
+    transition->updateSettings(config.changedPropertiesSettings, config.removedProperties);
+  }
+  if (config.changedProperties.size()) {
+    auto initialUpdate = transition->run(rt, config.changedProperties, lastUpdates, timestamp);
+
+    scheduleOrActivateTransition(transition);
+    updateInUpdatesRegistry(transition, initialUpdate);
+  }
+}
+
+void CSSTransitionsRegistry::run(
+    jsi::Runtime &rt,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const CSSTransitionPropertiesDiffs &propertyDiffs) {
+  const auto viewTag = shadowNode->getTag();
+
+  if (!registry_.contains(viewTag)) {
+    // Create new transition
+    auto transition = std::make_shared<CSSTransition>(shadowNode, viewStylesRepository_);
+    registry_.insert({viewTag, transition});
+  }
+
+  const auto &transition = registry_.at(viewTag);
+  const auto &lastUpdates = getUpdatesFromRegistry(shadowNode->getTag());
+  const auto timestamp = getCurrentTimestamp_();
+
+  auto initialUpdate = transition->run(rt, propertyDiffs, lastUpdates, timestamp);
 
   scheduleOrActivateTransition(transition);
   updateInUpdatesRegistry(transition, initialUpdate);
