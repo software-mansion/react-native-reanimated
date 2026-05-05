@@ -9,27 +9,6 @@
 
 namespace reanimated {
 
-namespace {
-
-bool hasLayoutPropsInObject(jsi::Runtime &rt, jsi::Object &obj) {
-  jsi::Array names = obj.getPropertyNames(rt);
-  const size_t n = names.size(rt);
-  for (size_t ki = 0; ki < n; ++ki) {
-    jsi::Value keyVal = names.getValueAtIndex(rt, ki);
-    if (!keyVal.isString()) {
-      continue;
-    }
-    const auto keyStr = keyVal.asString(rt).utf8(rt);
-    const auto propName = propNameFromString(keyStr);
-    if (propName.has_value() && isLayoutProp(propName.value())) {
-      return true;
-    }
-  }
-  return false;
-}
-
-} // namespace
-
 static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper) {
@@ -52,7 +31,7 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
       }
       jsi::Value updatesOwned(rt, updates);
       auto updatesObj = updatesOwned.asObject(rt);
-      const bool hasLayoutUpdates = hasLayoutPropsInObject(rt, updatesObj);
+      const bool hasLayoutUpdates = hasLayoutProps(rt, updatesObj);
       AnimatedPropsBuilder builder;
       builder.storeJSI(rt, updatesOwned);
       addAnimatedPropsToBatch(shadowNode->getFamilyShared(), builder.get(), hasLayoutUpdates);

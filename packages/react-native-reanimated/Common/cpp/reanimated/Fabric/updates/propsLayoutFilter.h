@@ -2,6 +2,8 @@
 
 #include <reanimated/Fabric/updates/propNameFromString.h>
 
+#include <jsi/jsi.h>
+
 #include <react/featureflags/ReactNativeFeatureFlags.h>
 #include <react/renderer/animationbackend/AnimatedProps.h>
 
@@ -75,6 +77,23 @@ inline bool animatedPropsContainLayoutProps(const facebook::react::AnimatedProps
 inline bool hasLayoutProps(const folly::dynamic &props) {
   for (const auto &key : props.keys()) {
     const auto propName = propNameFromString(key.asString());
+    if (propName.has_value() && isLayoutProp(propName.value())) {
+      return true;
+    }
+  }
+  return false;
+}
+
+inline bool hasLayoutProps(facebook::jsi::Runtime &rt, facebook::jsi::Object &obj) {
+  facebook::jsi::Array names = obj.getPropertyNames(rt);
+  const size_t n = names.size(rt);
+  for (size_t ki = 0; ki < n; ++ki) {
+    facebook::jsi::Value keyVal = names.getValueAtIndex(rt, ki);
+    if (!keyVal.isString()) {
+      continue;
+    }
+    const auto keyStr = keyVal.asString(rt).utf8(rt);
+    const auto propName = propNameFromString(keyStr);
     if (propName.has_value() && isLayoutProp(propName.value())) {
       return true;
     }
