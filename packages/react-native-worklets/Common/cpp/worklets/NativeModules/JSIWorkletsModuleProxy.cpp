@@ -409,13 +409,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         const auto enableEventLoop = at<4>(args).asBool();
 
         return createWorkletRuntime(
-            rt,
-            clone->getRuntimeManager(),
-            clone,
-            name,
-            serializableInitializer,
-            asyncQueue,
-            enableEventLoop);
+            rt, clone->getRuntimeManager(), clone, name, serializableInitializer, asyncQueue, enableEventLoop);
       });
 
   jsi_utils::addMethod<3>(

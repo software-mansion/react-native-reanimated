@@ -96,8 +96,7 @@ struct WorkletsReentrancyCheck {
 // https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/jsi/jsi/decorator.h
 class WorkletHermesRuntime : public jsi::WithRuntimeDecorator<WorkletsReentrancyCheck> {
  public:
-  WorkletHermesRuntime(
-      std::unique_ptr<facebook::hermes::HermesRuntime> runtime);
+  WorkletHermesRuntime(std::unique_ptr<facebook::hermes::HermesRuntime> runtime);
   ~WorkletHermesRuntime() override;
 
  private:

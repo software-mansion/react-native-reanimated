@@ -12,8 +12,7 @@
 
 namespace worklets {
 
-WorkletHermesRuntime::WorkletHermesRuntime(
-    std::unique_ptr<facebook::hermes::HermesRuntime> runtime)
+WorkletHermesRuntime::WorkletHermesRuntime(std::unique_ptr<facebook::hermes::HermesRuntime> runtime)
     : jsi::WithRuntimeDecorator<WorkletsReentrancyCheck>(*runtime, reentrancyCheck_), runtime_(std::move(runtime)) {
 #ifndef NDEBUG
   facebook::hermes::HermesRuntime *wrappedRuntime = runtime_.get();

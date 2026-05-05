@@ -51,8 +51,7 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
         runtime_(std::move(runtime)) {}
 };
 
-static std::shared_ptr<jsi::Runtime> makeRuntime(
-    const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
+static std::shared_ptr<jsi::Runtime> makeRuntime(const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
   std::shared_ptr<jsi::Runtime> jsiRuntime;
 #if JS_RUNTIME_HERMES
   auto hermesRuntime = facebook::hermes::makeHermesRuntime();

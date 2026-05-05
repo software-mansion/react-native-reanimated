@@ -35,8 +35,7 @@ class RuntimeManager {
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
       bool enableEventLoop = true);
 
-  std::shared_ptr<WorkletRuntime> createUninitializedUIRuntime(
-      const std::shared_ptr<AsyncQueue> &uiAsyncQueue);
+  std::shared_ptr<WorkletRuntime> createUninitializedUIRuntime(const std::shared_ptr<AsyncQueue> &uiAsyncQueue);
 
   /** Pauses registration of new Worklet Runtimes. */
   void pause();
