@@ -18,6 +18,7 @@
 #include <reanimated/Fabric/ReanimatedMountHook.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
+#include <reanimated/Fabric/updates/OperationsLoop.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
@@ -85,9 +86,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
 
-  void maybeRunCSSLoop();
-  double getCssTimestamp();
-
   void performOperations();
   void performNonLayoutOperations();
 
@@ -118,8 +116,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) override;
 
   jsi::Value getSettledUpdates(jsi::Runtime &rt) override;
-
-  void cssLoopCallback(const double /*timestampMs*/);
 
   void dispatchCommand(
       jsi::Runtime &rt,
@@ -189,9 +185,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
 #endif
-  bool cssLoopRunning_{false};
-  bool shouldUpdateCssAnimations_{true};
-  double currentCssTimestamp_{0};
+  std::shared_ptr<OperationsLoop> operationsLoop_;
 
   const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
