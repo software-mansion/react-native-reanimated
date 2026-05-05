@@ -20,6 +20,8 @@ class EventHandler : RCTModernEventEmitter {
         mHybridData = hybridData
     }
 
+    private fun isInDrawPass(): Boolean = isInDrawPassProvider?.invoke() == true
+
     override fun receiveEvent(
         surfaceId: Int,
         targetTag: Int,
@@ -30,7 +32,7 @@ class EventHandler : RCTModernEventEmitter {
         category: Int,
     ) {
         val resolvedEventName = mCustomEventNamesResolver!!.resolveCustomEventName(eventName) ?: eventName
-        receiveEvent(resolvedEventName, targetTag, params, isInDrawPassProvider?.invoke() == true)
+        receiveEvent(resolvedEventName, targetTag, params, isInDrawPass())
     }
 
     override fun receiveEvent(
@@ -40,7 +42,7 @@ class EventHandler : RCTModernEventEmitter {
         params: WritableMap?,
     ) {
         val resolvedEventName = mCustomEventNamesResolver!!.resolveCustomEventName(eventName) ?: eventName
-        receiveEvent(resolvedEventName, targetTag, params, isInDrawPassProvider?.invoke() == true)
+        receiveEvent(resolvedEventName, targetTag, params, isInDrawPass())
     }
 
     override fun receiveEvent(
@@ -49,7 +51,7 @@ class EventHandler : RCTModernEventEmitter {
         params: WritableMap?,
     ) {
         val resolvedEventName = mCustomEventNamesResolver!!.resolveCustomEventName(eventName) ?: eventName
-        receiveEvent(resolvedEventName, targetTag, params, isInDrawPassProvider?.invoke() == true)
+        receiveEvent(resolvedEventName, targetTag, params, isInDrawPass())
     }
 
     override fun receiveTouches(
