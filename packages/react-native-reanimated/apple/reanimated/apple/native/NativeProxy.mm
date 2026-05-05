@@ -1,10 +1,8 @@
-#import <reanimated/Tools/FeatureFlags.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAReducedMotion.h>
 #import <reanimated/apple/native/NativeProxy.h>
 #import <reanimated/apple/native/PlatformDepMethodsHolderImpl.h>
-#import <reanimated/apple/native/REAJSIUtils.h>
 
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;
@@ -31,24 +29,6 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
   auto reanimatedModuleProxy = std::make_shared<ReanimatedModuleProxy>(
       uiWorkletRuntime, uiScheduler, rnRuntime, jsInvoker, platformDepMethodsHolder, getIsReducedMotion());
   reanimatedModuleProxy->init(platformDepMethodsHolder);
-
-  auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
-
-  // When USE_ANIMATION_BACKEND is on, flushes run inside handleEventAndFlush; otherwise
-  // REANodesManager calls performOperations after the event (see REANodesManager).
-  [nodesManager registerEventHandler:^(id<RCTEvent> event) {
-    // handles RCTEvents from RNGestureHandler
-    std::string eventName = [event.eventName UTF8String];
-    int emitterReactTag = [event.viewTag intValue];
-    id eventData = [event arguments][2];
-    jsi::Value payload = convertObjCObjectToJSIValue(uiRuntime, eventData);
-    if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-      reanimatedModuleProxy->handleEventAndFlush(eventName, emitterReactTag, payload, GrandCallbackSource::Event);
-    } else {
-      const double currentTime = CACurrentMediaTime() * 1000;
-      reanimatedModuleProxy->handleEvent(eventName, emitterReactTag, payload, currentTime);
-    }
-  }];
 
   std::weak_ptr<ReanimatedModuleProxy> weakReanimatedModuleProxy = reanimatedModuleProxy; // to avoid retain cycle
   [nodesManager registerPerformOperations:^() {
