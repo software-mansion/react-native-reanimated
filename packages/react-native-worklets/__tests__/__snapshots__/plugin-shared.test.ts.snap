@@ -9,14 +9,12 @@ function Box() {
 
 exports[`babel plugin core (bundle mode) autoworkletization workletizes useAnimatedStyle callback 2`] = `
 "export default (function testJs1Factory({}) {
-  const _e = [new global.Error(), 1, -27];
   const testJs1 = () => ({
     width: 100
   });
   testJs1.__closure = {};
   testJs1.__workletHash = 1509422450054;
   testJs1.__pluginVersion = "x.y.z";
-  testJs1.__stackDetails = _e;
   return testJs1;
 });"
 `;
@@ -25,7 +23,6 @@ exports[`babel plugin core (bundle mode) closure handling captures locally bound
 "export default (function f_testJs1Factory({
   console
 }) {
-  const _e = [new global.Error(), -2, -27];
   const f = function () {
     console.log(console);
   };
@@ -34,7 +31,6 @@ exports[`babel plugin core (bundle mode) closure handling captures locally bound
   };
   f.__workletHash = 5363195507870;
   f.__pluginVersion = "x.y.z";
-  f.__stackDetails = _e;
   return f;
 });"
 `;
@@ -44,7 +40,6 @@ exports[`babel plugin core (bundle mode) closure handling captures multiple clos
   a,
   b
 }) {
-  const _e = [new global.Error(), -3, -27];
   const foo = function () {
     return a + b;
   };
@@ -54,14 +49,12 @@ exports[`babel plugin core (bundle mode) closure handling captures multiple clos
   };
   foo.__workletHash = 227435842223;
   foo.__pluginVersion = "x.y.z";
-  foo.__stackDetails = _e;
   return foo;
 });"
 `;
 
 exports[`babel plugin core (bundle mode) closure handling does not capture default globals 1`] = `
 "export default (function f_testJs1Factory({}) {
-  const _e = [new global.Error(), 1, -27];
   const f = function () {
     console.log('hi');
     return Math.random();
@@ -69,7 +62,6 @@ exports[`babel plugin core (bundle mode) closure handling does not capture defau
   f.__closure = {};
   f.__workletHash = 12892866902550;
   f.__pluginVersion = "x.y.z";
-  f.__stackDetails = _e;
   return f;
 });"
 `;
@@ -84,14 +76,12 @@ exports[`babel plugin core (bundle mode) worklet shapes workletizes ArrowFunctio
 
 exports[`babel plugin core (bundle mode) worklet shapes workletizes ArrowFunctionExpression 2`] = `
 "export default (function testJs1Factory({}) {
-  const _e = [new global.Error(), 1, -27];
   const testJs1 = function (x) {
     return x + 2;
   };
   testJs1.__closure = {};
   testJs1.__workletHash = 919891681460;
   testJs1.__pluginVersion = "x.y.z";
-  testJs1.__stackDetails = _e;
   return testJs1;
 });"
 `;
@@ -100,14 +90,12 @@ exports[`babel plugin core (bundle mode) worklet shapes workletizes FunctionDecl
 
 exports[`babel plugin core (bundle mode) worklet shapes workletizes FunctionDeclaration 2`] = `
 "export default (function foo_testJs1Factory({}) {
-  const _e = [new global.Error(), 1, -27];
   const foo = function (x) {
     return x + 2;
   };
   foo.__closure = {};
   foo.__workletHash = 11633341088429;
   foo.__pluginVersion = "x.y.z";
-  foo.__stackDetails = _e;
   return foo;
 });"
 `;
@@ -120,14 +108,12 @@ exports[`babel plugin core (bundle mode) worklet shapes workletizes ObjectMethod
 
 exports[`babel plugin core (bundle mode) worklet shapes workletizes ObjectMethod 2`] = `
 "export default (function bar_testJs1Factory({}) {
-  const _e = [new global.Error(), 1, -27];
   const bar = function (x) {
     return x + 2;
   };
   bar.__closure = {};
   bar.__workletHash = 12638252513242;
   bar.__pluginVersion = "x.y.z";
-  bar.__stackDetails = _e;
   return bar;
 });"
 `;
@@ -136,14 +122,12 @@ exports[`babel plugin core (bundle mode) worklet shapes workletizes named Functi
 
 exports[`babel plugin core (bundle mode) worklet shapes workletizes named FunctionExpression 2`] = `
 "export default (function foo_testJs1Factory({}) {
-  const _e = [new global.Error(), 1, -27];
   const foo = function (x) {
     return x + 2;
   };
   foo.__closure = {};
   foo.__workletHash = 11633341088429;
   foo.__pluginVersion = "x.y.z";
-  foo.__stackDetails = _e;
   return foo;
 });"
 `;
@@ -152,14 +136,12 @@ exports[`babel plugin core (bundle mode) worklet shapes workletizes unnamed Func
 
 exports[`babel plugin core (bundle mode) worklet shapes workletizes unnamed FunctionExpression 2`] = `
 "export default (function testJs1Factory({}) {
-  const _e = [new global.Error(), 1, -27];
   const testJs1 = function (x) {
     return x + 2;
   };
   testJs1.__closure = {};
   testJs1.__workletHash = 919891681460;
   testJs1.__pluginVersion = "x.y.z";
-  testJs1.__stackDetails = _e;
   return testJs1;
 });"
 `;

@@ -305,7 +305,7 @@ export function makeWorkletFactory(
     );
   }
 
-  if (!isRelease()) {
+  if (!isRelease() && !state.opts.bundleMode) {
     statements.unshift(
       variableDeclaration('const', [
         variableDeclarator(
