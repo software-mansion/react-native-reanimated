@@ -2,8 +2,6 @@
 #include <reanimated/Fabric/updates/propsLayoutFilter.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
-#include <react/renderer/animationbackend/AnimatedPropsBuilder.h>
-
 #include <memory>
 #include <utility>
 
@@ -32,9 +30,7 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
       jsi::Value updatesOwned(rt, updates);
       auto updatesObj = updatesOwned.asObject(rt);
       const bool hasLayoutUpdates = hasLayoutProps(rt, updatesObj);
-      AnimatedPropsBuilder builder;
-      builder.storeJSI(rt, updatesOwned);
-      addAnimatedPropsToBatch(shadowNode->getFamilyShared(), builder.get(), hasLayoutUpdates);
+      addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updatesOwned, hasLayoutUpdates);
     } else {
       auto dynamic = jsi::dynamicFromValue(rt, updates);
       addUpdatesToBatch(shadowNode->getFamilyShared(), dynamic);

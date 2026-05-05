@@ -3,6 +3,7 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 
 #include <react/renderer/animationbackend/AnimatedProps.h>
+#include <react/renderer/animationbackend/AnimatedPropsBuilder.h>
 #include <react/renderer/animationbackend/AnimationBackend.h>
 
 #include <jsi/jsi.h>
@@ -67,6 +68,15 @@ class UpdatesRegistry {
       const ShadowNodeFamily::Shared &shadowNodeFamily,
       AnimatedProps animatedProps,
       bool hasLayoutUpdates = false);
+  void addRawPropsToAnimatedPropsBatch(
+      const ShadowNodeFamily::Shared &shadowNodeFamily,
+      folly::dynamic props,
+      bool hasLayoutUpdates = false);
+  void addJSIPropsToAnimatedPropsBatch(
+      const ShadowNodeFamily::Shared &shadowNodeFamily,
+      jsi::Runtime &rt,
+      jsi::Value &props,
+      bool hasLayoutUpdates = false);
   folly::dynamic getUpdatesFromRegistry(const Tag tag) const;
   void setInUpdatesRegistry(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
   void removeFromUpdatesRegistry(Tag tag);
@@ -74,6 +84,7 @@ class UpdatesRegistry {
  private:
   UpdatesBatch updatesBatch_;
   UpdatesBatchAnimatedProps updatesBatchAnimatedProps_;
+  AnimatedPropsBuilder animatedPropsBuilder_;
 
   void flushUpdatesToRegistry(const UpdatesBatch &updatesBatch);
 

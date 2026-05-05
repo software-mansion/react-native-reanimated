@@ -161,6 +161,23 @@ void UpdatesRegistry::addAnimatedPropsToBatch(
       AnimatedPropsEntry{shadowNodeFamily, std::move(animatedProps), hasLayoutUpdates});
 }
 
+void UpdatesRegistry::addRawPropsToAnimatedPropsBatch(
+    const ShadowNodeFamily::Shared &shadowNodeFamily,
+    folly::dynamic props,
+    bool hasLayoutUpdates) {
+  animatedPropsBuilder_.storeDynamic(props);
+  addAnimatedPropsToBatch(shadowNodeFamily, animatedPropsBuilder_.get(), hasLayoutUpdates);
+}
+
+void UpdatesRegistry::addJSIPropsToAnimatedPropsBatch(
+    const ShadowNodeFamily::Shared &shadowNodeFamily,
+    jsi::Runtime &rt,
+    jsi::Value &props,
+    bool hasLayoutUpdates) {
+  animatedPropsBuilder_.storeJSI(rt, props);
+  addAnimatedPropsToBatch(shadowNodeFamily, animatedPropsBuilder_.get(), hasLayoutUpdates);
+}
+
 void UpdatesRegistry::setInUpdatesRegistry(
     const ShadowNodeFamily::Shared &shadowNodeFamily,
     const folly::dynamic &props) {

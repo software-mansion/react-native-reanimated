@@ -2,9 +2,6 @@
 #include <reanimated/Fabric/updates/propsLayoutFilter.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
-#include <react/renderer/animationbackend/AnimatedProps.h>
-#include <react/renderer/core/RawProps.h>
-
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -221,9 +218,8 @@ void CSSAnimationsRegistry::updateViewAnimations(
 
   if (hasUpdates) {
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-      AnimatedProps animatedProps;
-      animatedProps.rawProps = std::make_unique<RawProps>(result);
-      addAnimatedPropsToBatch(shadowNode->getFamilyShared(), std::move(animatedProps), hasLayoutProps(result));
+      const auto hasLayoutUpdates = hasLayoutProps(result);
+      addRawPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), std::move(result), hasLayoutUpdates);
     } else {
       addUpdatesToBatch(shadowNode->getFamilyShared(), result);
     }
