@@ -173,7 +173,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     const std::vector<size_t> &animationIndices,
     const double timestamp,
     const bool addToBatch) {
-  folly::dynamic result = folly::dynamic::object;
+  folly::dynamic animatedProps = folly::dynamic::object;
   std::shared_ptr<const ShadowNode> shadowNode = nullptr;
   bool hasUpdates = false;
 
@@ -196,7 +196,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
       if (addToBatch && !animation->hasForwardsFillMode()) {
         //  We also have to manually commit style values
         // reverting the changes applied by the animation.
-        hasUpdates = addStyleUpdates(result, animation->getResetStyle(), false) || hasUpdates;
+        hasUpdates = addStyleUpdates(animatedProps, animation->getResetStyle(), false) || hasUpdates;
         updatesAddedToBatch = true;
         // We want to remove style changes applied by the animation that is
         // finished and has no forwards fill mode. We cannot simply remove
@@ -209,7 +209,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     }
 
     if (addToBatch && !updatesAddedToBatch) {
-      hasUpdates = addStyleUpdates(result, updates, true) || hasUpdates;
+      hasUpdates = addStyleUpdates(animatedProps, updates, true) || hasUpdates;
     }
     if (newState != AnimationProgressState::Running) {
       runningAnimationIndicesMap_[viewTag].erase(animationIndex);
@@ -218,10 +218,10 @@ void CSSAnimationsRegistry::updateViewAnimations(
 
   if (hasUpdates) {
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-      const auto hasLayoutUpdates = hasLayoutProps(result);
-      addRawPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), std::move(result), hasLayoutUpdates);
+      const auto hasLayoutUpdates = hasLayoutProps(animatedProps);
+      addRawPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), std::move(animatedProps), hasLayoutUpdates);
     } else {
-      addUpdatesToBatch(shadowNode->getFamilyShared(), result);
+      addUpdatesToBatch(shadowNode->getFamilyShared(), animatedProps);
     }
   }
 }
