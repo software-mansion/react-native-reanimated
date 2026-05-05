@@ -283,12 +283,6 @@ void NativeProxy::handleEvent(
         isInDrawPass ? GrandCallbackState::EventInAndroidDraw : GrandCallbackState::Event);
   } else {
     reanimatedModuleProxy_->handleEvent(eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
-    if (isInDrawPass) {
-      reanimatedModuleProxy_->performNonLayoutOperations();
-      requestRender([](double) {});
-    } else {
-      reanimatedModuleProxy_->performOperations();
-    }
   }
 }
 
