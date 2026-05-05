@@ -580,7 +580,7 @@ bool ReanimatedModuleProxy::handleEvent(
   return false;
 }
 
-bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent) {
+bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double currentTime) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::handleRawEvent");
 
   const EventTarget *eventTarget = rawEvent.eventTarget.get();
@@ -646,7 +646,11 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent) {
     return handleEventAndFlush(eventType, tag, payload, GrandCallbackSource::Event);
   }
 
-  const bool res = handleEvent(eventType, tag, payload, getAnimationTimestamp_());
+  auto res = handleEvent(eventType, tag, payload, currentTime);
+  // TODO: we should call performOperations conditionally if event is handled
+  // (res == true), but for now handleEvent always returns false. Thankfully,
+  // performOperations does not trigger a lot of code if there is nothing to
+  // be done so this is fine for now.
   performOperations();
   return res;
 }

@@ -98,7 +98,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   bool
   handleEvent(const std::string &eventName, const int emitterReactTag, const jsi::Value &payload, double currentTime);
 
-  bool handleRawEvent(const RawEvent &rawEvent);
+  bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
 
   void performOperations();
   void performOperations(const bool isTriggeredByEvent);

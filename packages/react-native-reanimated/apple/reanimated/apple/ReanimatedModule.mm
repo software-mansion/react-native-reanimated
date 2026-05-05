@@ -65,7 +65,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
             return false;
           }
           if (const auto reanimatedModuleProxy = reanimatedModuleProxyWeak.lock()) {
-            return reanimatedModuleProxy->handleRawEvent(rawEvent);
+            return reanimatedModuleProxy->handleRawEvent(rawEvent, CACurrentMediaTime() * 1000);
           }
           return false;
         });
