@@ -142,8 +142,9 @@ using namespace facebook::react;
       return;
     }
     eventHandler(event);
-    // When not using the shared animation backend, flush after the event on the main thread.
-    if (!reanimated::StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    if constexpr (reanimated::StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+      // Flush already ran inside ReanimatedModuleProxy::handleEventAndFlush (see ReanimatedModule).
+    } else {
       [strongSelf performOperations];
     }
   });
