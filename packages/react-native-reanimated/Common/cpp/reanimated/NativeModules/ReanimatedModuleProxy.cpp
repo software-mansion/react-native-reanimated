@@ -3,7 +3,7 @@
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
-#include <reanimated/Fabric/updates/propsLayoutFilter.h>
+#include <reanimated/Fabric/updates/PropsLayoutFilter.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>

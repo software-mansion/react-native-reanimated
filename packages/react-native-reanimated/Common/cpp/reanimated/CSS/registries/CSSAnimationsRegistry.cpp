@@ -1,5 +1,5 @@
 #include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
-#include <reanimated/Fabric/updates/propsLayoutFilter.h>
+#include <reanimated/Fabric/updates/PropsLayoutFilter.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
 #include <memory>

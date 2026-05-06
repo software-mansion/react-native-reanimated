@@ -1,6 +1,6 @@
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
-#include <reanimated/Fabric/updates/propsLayoutFilter.h>
+#include <reanimated/Fabric/updates/PropsLayoutFilter.h>
 
 #include <jsi/jsi.h>
 #include <memory>
