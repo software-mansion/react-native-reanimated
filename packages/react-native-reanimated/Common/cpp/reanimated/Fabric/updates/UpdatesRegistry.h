@@ -1,13 +1,15 @@
 #pragma once
 
+#include <jsi/jsi.h>
+#include <react/renderer/core/ShadowNode.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 
 #include <react/renderer/animationbackend/AnimatedProps.h>
 #include <react/renderer/animationbackend/AnimatedPropsBuilder.h>
 #include <react/renderer/animationbackend/AnimationBackend.h>
 
-#include <jsi/jsi.h>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -41,11 +43,12 @@ class UpdatesRegistry {
  public:
   virtual ~UpdatesRegistry() {}
 
-  std::lock_guard<std::mutex> lock() const;
-
   virtual bool isEmpty() const;
   folly::dynamic get(Tag tag) const;
-  virtual void remove(Tag tag) = 0;
+  void remove(Tag tag) {
+    std::lock_guard<std::mutex> lock{mutex_};
+    removeTag(tag);
+  }
 
 #ifdef ANDROID
   bool hasPropsToRevert() const;
@@ -63,6 +66,13 @@ class UpdatesRegistry {
   mutable std::mutex mutex_;
   RegistryMap updatesRegistry_;
 
+  /// Assumes the caller already locked the registry.
+  void flush(UpdatesBatch &updatesBatch);
+
+  /// Assumes the caller already locked the registry.
+  virtual void removeTag(Tag tag) = 0;
+
+  /// Assumes the caller already locked the registry.
   void addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
   void addAnimatedPropsToBatch(
       const ShadowNodeFamily::Shared &shadowNodeFamily,
@@ -77,8 +87,14 @@ class UpdatesRegistry {
       jsi::Runtime &rt,
       jsi::Value &props,
       bool hasLayoutUpdates = false);
+
+  /// Assumes the caller already locked the registry.
   folly::dynamic getUpdatesFromRegistry(const Tag tag) const;
+
+  /// Assumes the caller already locked the registry.
   void setInUpdatesRegistry(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
+
+  /// Assumes the caller already locked the registry.
   void removeFromUpdatesRegistry(Tag tag);
 
  private:

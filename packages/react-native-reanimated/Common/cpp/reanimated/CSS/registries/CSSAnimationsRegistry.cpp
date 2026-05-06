@@ -11,12 +11,14 @@
 namespace reanimated::css {
 
 bool CSSAnimationsRegistry::isEmpty() const {
+  std::lock_guard<std::mutex> lock{mutex_};
   // The registry is empty if has no registered animations and no updates
   // stored in the updates registry
-  return UpdatesRegistry::isEmpty() && registry_.empty();
+  return updatesRegistry_.empty() && registry_.empty();
 }
 
 bool CSSAnimationsRegistry::hasUpdates() const {
+  std::lock_guard<std::mutex> lock{mutex_};
   return !runningAnimationIndicesMap_.empty() || !delayedAnimationsManager_.empty() || !animationsToRevertMap_.empty();
 }
 
@@ -27,11 +29,13 @@ void CSSAnimationsRegistry::apply(
     const CSSAnimationsMap &newAnimations,
     const CSSAnimationSettingsUpdatesMap &settingsUpdates,
     double timestamp) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
   auto animationsVector = buildAnimationsVector(rt, shadowNode, animationNames, newAnimations);
 
   const auto viewTag = shadowNode->getTag();
   if (animationsVector.empty()) {
-    remove(viewTag);
+    removeTag(viewTag);
     return;
   }
 
@@ -58,7 +62,7 @@ void CSSAnimationsRegistry::apply(
   applyViewAnimationsStyle(viewTag, timestamp);
 }
 
-void CSSAnimationsRegistry::remove(const Tag viewTag) {
+void CSSAnimationsRegistry::removeTag(const Tag viewTag) {
   removeViewAnimations(viewTag);
   removeFromUpdatesRegistry(viewTag);
   registry_.erase(viewTag);

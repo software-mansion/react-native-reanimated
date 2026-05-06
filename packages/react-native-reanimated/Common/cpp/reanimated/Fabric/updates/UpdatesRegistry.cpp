@@ -11,11 +11,8 @@
 
 namespace reanimated {
 
-std::lock_guard<std::mutex> UpdatesRegistry::lock() const {
-  return std::lock_guard<std::mutex>{mutex_};
-}
-
 bool UpdatesRegistry::isEmpty() const {
+  std::lock_guard<std::mutex> lock{mutex_};
   return updatesRegistry_.empty();
 }
 
@@ -29,7 +26,7 @@ folly::dynamic UpdatesRegistry::get(const Tag tag) const {
   return it->second.second;
 }
 
-void UpdatesRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
+void UpdatesRegistry::flush(UpdatesBatch &updatesBatch) {
   auto copiedUpdatesBatch = std::move(updatesBatch_);
   updatesBatch_.clear();
 
@@ -111,7 +108,7 @@ bool UpdatesRegistry::hasPendingAnimatedPropsUpdates() const {
 }
 
 UpdatesBatch UpdatesRegistry::getPendingUpdates() {
-  auto lock = std::lock_guard<std::mutex>{mutex_};
+  std::lock_guard<std::mutex> lock{mutex_};
   flushUpdatesToRegistry(updatesBatch_);
 
   UpdatesBatch updatesBatch;
@@ -218,6 +215,7 @@ void UpdatesRegistry::flushUpdatesToRegistry(const UpdatesBatch &updatesBatch) {
 #ifdef ANDROID
 
 bool UpdatesRegistry::hasPropsToRevert() const {
+  std::lock_guard<std::mutex> lock{mutex_};
   return !propsToRevertMap_.empty();
 }
 
