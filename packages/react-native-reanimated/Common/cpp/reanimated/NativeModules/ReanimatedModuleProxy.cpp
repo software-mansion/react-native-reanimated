@@ -216,13 +216,6 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
           return;
         }
         strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
-        if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-          // Layout animation progress only enqueues `notifyDelegatesOfUpdates` work;
-          // it does not produce AnimationMutations. Without this, `stopBackendIfIdle`
-          // can turn off the backend after an empty batch and later progress ticks
-          // would never schedule another frame.
-          strongThis->startBackendIfNeeded();
-        }
       };
 
   auto requestLayoutAnimationRender = [weakThis = weak_from_this()](double) {
@@ -242,15 +235,15 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
 
     auto surfaceId = strongThis->layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
 
-    if (!strongThis->layoutAnimationRenderRequested_) {
-      strongThis->layoutAnimationRenderRequested_ = true;
-      // if an animation has duration 0, performOperations/AnimationBackend would not get
-      // called for it so we call requestRender/startBackend to have it called in the
-      // next frame
-      if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-        strongThis->startBackendIfNeeded();
-        strongThis->layoutAnimationRenderRequested_ = false;
-      } else {
+    if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+      // in the backend path this is called from grandCallback,
+      // we are guaranteed to have the changes flushed
+    } else {
+      if (!strongThis->layoutAnimationRenderRequested_) {
+        strongThis->layoutAnimationRenderRequested_ = true;
+        // if an animation has duration 0, performOperations would not get
+        // called for it so we call requestRender to have it called in the
+        // next frame
         strongThis->requestRender_(requestLayoutAnimationRender);
       }
     }
