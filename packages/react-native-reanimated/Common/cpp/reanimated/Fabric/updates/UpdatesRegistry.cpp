@@ -148,7 +148,6 @@ void UpdatesRegistry::addAnimatedPropsToBatch(
     const ShadowNodeFamily::Shared &shadowNodeFamily,
     AnimatedProps animatedProps,
     bool hasLayoutUpdates) {
-  // Check typed props for layout — safe and doesn't touch rawProps.
   if (!hasLayoutUpdates) {
     for (const auto &prop : animatedProps.props) {
       if (isLayoutProp(prop->propName)) {
