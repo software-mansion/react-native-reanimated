@@ -163,8 +163,9 @@ void OperationsLoop::applyScheduledOperations(std::vector<ScheduledOperation> op
       activeOps_.erase(op.operation);
     }
 
-    if (!op.insertAt)
+    if (!op.insertAt) {
       continue;
+      }
 
     const double insertAt = op.insertAt.value();
     if (insertAt <= timestamp) {
