@@ -1,8 +1,8 @@
+#import <QuartzCore/QuartzCore.h>
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurfacePresenter.h>
-#import <QuartzCore/QuartzCore.h>
 
 #import <reanimated/Compat/WorkletsApi.h>
 #import <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
@@ -74,7 +74,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 }
 
 - (void)registerRCTEventHandler:(const std::shared_ptr<ReanimatedModuleProxy>)reanimatedModuleProxy
-                 uiWorkletRuntime:(const std::shared_ptr<WorkletRuntime>)uiWorkletRuntime
+               uiWorkletRuntime:(const std::shared_ptr<WorkletRuntime>)uiWorkletRuntime
 {
   REAAssertJavaScriptQueue();
 
