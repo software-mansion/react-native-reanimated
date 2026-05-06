@@ -18,9 +18,9 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
   void removeUpdatesOlderThanTimestamp(double timestamp);
 
  private:
-  void removeTag(Tag tag) override;
-
   std::unordered_map<Tag, double> timestampMap_; // viewTag -> timestamp, protected by `mutex_`
+
+  void removeTag(Tag tag) override;
 };
 
 } // namespace reanimated
