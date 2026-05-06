@@ -24,19 +24,6 @@ fun safeAppExtGet(prop: String, fallback: Any?): Any? {
         fallback
 }
 
-fun isNewArchitectureEnabled(): Boolean {
-    // In React Native 0.82+, users can no longer opt-out of the New Architecture.
-    if (getReactNativeMinorVersion() >= 82) {
-        return true
-    }
-
-    // In older versions, to opt-in for the New Architecture, you can either:
-    // - Set `newArchEnabled` to true inside the `gradle.properties` file
-    // - Invoke gradle with `-newArchEnabled=true`
-    // - Set an environment variable `ORG_GRADLE_PROJECT_newArchEnabled=true`
-    return project.hasProperty("newArchEnabled") && project.property("newArchEnabled") == "true"
-}
-
 fun resolveReactNativeDirectory(): File {
     val reactNativeLocation = safeAppExtGet("REACT_NATIVE_NODE_MODULES_DIR", null) as String?
     if (reactNativeLocation != null) {
@@ -121,7 +108,7 @@ fun validateConflictingFeatureFlags(featureFlags: HashMap<String, String>) {
     }
 }
 
-if (isNewArchitectureEnabled() && project != rootProject) {
+if (project != rootProject) {
     apply(plugin = "com.facebook.react")
 }
 
@@ -130,7 +117,6 @@ val reactNativeRootDir: File = resolveReactNativeDirectory()
 val REACT_NATIVE_MINOR_VERSION: Int = getReactNativeMinorVersion()
 val REACT_NATIVE_VERSION: String = getReactNativeVersion()
 val REANIMATED_VERSION: String = getReanimatedVersion()
-val IS_NEW_ARCHITECTURE_ENABLED: Boolean = isNewArchitectureEnabled()
 val IS_REANIMATED_EXAMPLE_APP: Boolean = safeAppExtGet("isReanimatedExampleApp", false)?.toString()?.toBoolean() ?: false
 val REANIMATED_PROFILING: Boolean = safeAppExtGet("enableReanimatedProfiling", false)?.toString()?.toBoolean() ?: false
 val REANIMATED_FEATURE_FLAGS: String = getReanimatedStaticFeatureFlags()
@@ -304,16 +290,6 @@ tasks.register("assertMinimalReactNativeVersionTask") {
 }
 
 tasks.named("preBuild") { dependsOn("assertMinimalReactNativeVersionTask") }
-
-tasks.register("assertNewArchitectureEnabledTask") {
-    val isNewArch = IS_NEW_ARCHITECTURE_ENABLED
-    onlyIf { !isNewArch }
-    doFirst {
-        throw GradleException("[Reanimated] Reanimated requires new architecture to be enabled. Please enable it by setting `newArchEnabled` to `true` in `gradle.properties`.")
-    }
-}
-
-tasks.named("preBuild") { dependsOn("assertNewArchitectureEnabledTask") }
 
 val validateWorkletsBuildResult = providers.exec {
     workingDir(projectDir.path)
