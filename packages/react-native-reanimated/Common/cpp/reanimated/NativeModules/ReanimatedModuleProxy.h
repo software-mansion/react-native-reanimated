@@ -193,6 +193,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
  private:
   template <typename Func>
   void withAnimationBackend(Func &&fn) {
+    react_native_assert(
+        uiManager_ != nullptr && "[Reanimated] Animation Backend used before the uiManager was registered");
     auto weak = uiManager_->unstable_getAnimationBackend();
     if (auto locked = weak.lock()) {
       fn(std::static_pointer_cast<AnimationBackend>(locked));
