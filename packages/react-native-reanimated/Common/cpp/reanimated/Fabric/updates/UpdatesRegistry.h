@@ -70,6 +70,9 @@ class UpdatesRegistry {
   void flush(UpdatesBatch &updatesBatch);
 
   /// Assumes the caller already locked the registry.
+  void flushAnimatedProps(UpdatesBatchAnimatedProps &updatesBatch);
+
+  /// Assumes the caller already locked the registry.
   virtual void removeTag(Tag tag) = 0;
 
   /// Assumes the caller already locked the registry.

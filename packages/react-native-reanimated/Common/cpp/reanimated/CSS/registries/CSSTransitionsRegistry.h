@@ -34,6 +34,12 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
     flush(updatesBatch);
   }
 
+  void updateAndFlushAnimatedProps(double timestamp, UpdatesBatchAnimatedProps &updatesBatch) {
+    std::lock_guard<std::mutex> lock{mutex_};
+    update(timestamp);
+    flushAnimatedProps(updatesBatch);
+  }
+
  private:
   using Registry = std::unordered_map<Tag, std::shared_ptr<CSSTransition>>;
 

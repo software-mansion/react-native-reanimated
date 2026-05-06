@@ -741,7 +741,6 @@ AnimationMutations ReanimatedModuleProxy::collectNonLayoutAnimationUpdates() {
     AnimationMutations mutations;
     {
       auto lock = updatesRegistryManager_->lock();
-      auto propsLock = animatedPropsRegistry_->lock();
       jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
       animatedPropsRegistry_->flushNonLayoutUpdates(uiRuntime, mutations);
     }
@@ -816,28 +815,15 @@ void ReanimatedModuleProxy::executeWorkletsForFrame(const AnimationTimestamp tim
 }
 
 AnimationMutations ReanimatedModuleProxy::executeOperationsAndCollectUpdates(const AnimationTimestamp timestamp) {
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::executeOperationsAndCollectUpdates")
-      const double currentCssTimestamp = timestamp.count();
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::executeOperationsAndCollectUpdates");
+  const double currentCssTimestamp = timestamp.count();
 
   UpdatesBatchAnimatedProps batch;
   auto lock = updatesRegistryManager_->lock();
 
-  {
-    auto transitionsLock = cssTransitionsRegistry_->lock();
-    cssTransitionsRegistry_->update(currentCssTimestamp);
-    cssTransitionsRegistry_->flushAnimatedPropsUpdates(batch);
-  }
-
-  {
-    auto propsLock = animatedPropsRegistry_->lock();
-    animatedPropsRegistry_->flushAnimatedPropsUpdates(batch);
-  }
-
-  {
-    auto animationsLock = cssAnimationsRegistry_->lock();
-    cssAnimationsRegistry_->update(currentCssTimestamp);
-    cssAnimationsRegistry_->flushAnimatedPropsUpdates(batch);
-  }
+  cssTransitionsRegistry_->updateAndFlushAnimatedProps(currentCssTimestamp, batch);
+  animatedPropsRegistry_->flushAnimatedPropsUpdates(batch);
+  cssAnimationsRegistry_->updateAndFlushAnimatedProps(currentCssTimestamp, batch);
 
   return mutationsFromAnimatedPropsBatch(std::move(batch));
 }
@@ -847,7 +833,6 @@ AnimationMutations ReanimatedModuleProxy::collectEventUpdates() {
 
   UpdatesBatchAnimatedProps batch;
   auto lock = updatesRegistryManager_->lock();
-  auto propsLock = animatedPropsRegistry_->lock();
   animatedPropsRegistry_->flushAnimatedPropsUpdates(batch);
 
   return mutationsFromAnimatedPropsBatch(std::move(batch));

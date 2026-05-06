@@ -39,6 +39,11 @@ void UpdatesRegistry::flush(UpdatesBatch &updatesBatch) {
 }
 
 void UpdatesRegistry::flushAnimatedPropsUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
+  std::lock_guard<std::mutex> lock{mutex_};
+  flushAnimatedProps(updatesBatch);
+}
+
+void UpdatesRegistry::flushAnimatedProps(UpdatesBatchAnimatedProps &updatesBatch) {
   auto copiedUpdatesBatch = std::move(updatesBatchAnimatedProps_);
   updatesBatchAnimatedProps_.clear();
 
@@ -48,6 +53,8 @@ void UpdatesRegistry::flushAnimatedPropsUpdates(UpdatesBatchAnimatedProps &updat
 }
 
 void UpdatesRegistry::flushNonLayoutUpdates(jsi::Runtime &rt, AnimationMutations &mutations) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
   UpdatesBatchAnimatedProps remaining;
 
   for (auto &[shadowNodeFamily, animatedProp, _hasLayout] : updatesBatchAnimatedProps_) {
@@ -104,6 +111,7 @@ void UpdatesRegistry::flushNonLayoutUpdates(jsi::Runtime &rt, AnimationMutations
 }
 
 bool UpdatesRegistry::hasPendingAnimatedPropsUpdates() const {
+  std::lock_guard<std::mutex> lock{mutex_};
   return !updatesBatchAnimatedProps_.empty();
 }
 

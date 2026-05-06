@@ -41,6 +41,12 @@ class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_th
     flush(updatesBatch);
   }
 
+  void updateAndFlushAnimatedProps(double timestamp, UpdatesBatchAnimatedProps &updatesBatch) {
+    std::lock_guard<std::mutex> lock{mutex_};
+    update(timestamp);
+    flushAnimatedProps(updatesBatch);
+  }
+
  private:
   using AnimationToIndexMap = std::unordered_map<std::shared_ptr<CSSAnimation>, size_t>;
   using RunningAnimationIndicesMap = std::unordered_map<Tag, std::set<size_t>>;
