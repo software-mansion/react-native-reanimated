@@ -30,8 +30,13 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
   }
 }
 
-jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt, const double timestamp) {
+jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(
+    jsi::Runtime &rt,
+    const double timestamp,
+    const double cleanupTimestamp) {
   std::lock_guard<std::mutex> lock{mutex_};
+  removeUpdatesOlderThanTimestamp(cleanupTimestamp);
+
   std::vector<std::pair<Tag, std::reference_wrapper<const folly::dynamic>>> updates;
 
   for (const auto &[viewTag, pair] : updatesRegistry_) {
@@ -54,7 +59,6 @@ jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt,
 }
 
 void AnimatedPropsRegistry::removeUpdatesOlderThanTimestamp(const double timestamp) {
-  std::lock_guard<std::mutex> lock{mutex_};
   for (auto it = timestampMap_.begin(); it != timestampMap_.end();) {
     const auto viewTag = it->first;
     const auto viewTimestamp = it->second;
