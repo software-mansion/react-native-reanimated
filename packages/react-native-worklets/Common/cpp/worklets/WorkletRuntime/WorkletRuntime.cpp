@@ -70,12 +70,14 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
 WorkletRuntime::WorkletRuntime(
     uint64_t runtimeId,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
+    const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name,
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop)
     : runtimeId_(runtimeId),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(jsQueue, name, runtimeMutex_)),
+      jsScheduler_(jsScheduler),
       name_(name),
       queue_(queue) {
   jsi::Runtime &rt = *runtime_;
@@ -94,7 +96,6 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
       std::make_shared<WeakRuntimeHolder>(WeakRuntimeHolder{.weakRuntime = weak_from_this()}));
 
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
-  jsScheduler_ = jsScheduler;
   const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
   const auto memoryManager_ = jsiWorkletsModuleProxy->getMemoryManager();
   const auto script = jsiWorkletsModuleProxy->getScript();
@@ -172,6 +173,22 @@ void WorkletRuntime::schedule(jsi::Function &&function) const {
   });
 }
 
+void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet) const {
+  react_native_assert(
+      queue_ &&
+      "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
+      "async queue is not set. Recreate the runtime with a valid async queue.");
+
+  queue_->push([worklet = std::move(worklet), weakThis = weak_from_this()] {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    strongThis->runSync(worklet);
+  });
+}
+
 void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet, std::optional<std::string> scheduleStack)
     const {
   react_native_assert(
@@ -186,6 +203,18 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet, std:
     }
 
     strongThis->runSyncWithStack(worklet, scheduleStack);
+  });
+}
+
+void WorkletRuntime::callMicrotasks() const {
+  runSync([](jsi::Runtime &rt) {
+    auto callMicrotasks = rt.global().getProperty(rt, "__callMicrotasks");
+    if (callMicrotasks.isObject()) {
+      auto callMicrotasksObject = callMicrotasks.asObject(rt);
+      if (callMicrotasksObject.isFunction(rt)) {
+        callMicrotasksObject.asFunction(rt).call(rt);
+      }
+    }
   });
 }
 
@@ -299,52 +328,6 @@ jsi::Value WorkletRuntime::executeSync(std::function<jsi::Value(jsi::Runtime &)>
 jsi::Value WorkletRuntime::executeSync(const std::function<jsi::Value(jsi::Runtime &)> &job) const {
   return runSync(job);
 }
-
-#ifndef NDEBUG
-static std::string labelStackFrames(const std::string &rawStack, const std::string &label) {
-  static const std::string sep = "\n    at";
-  std::string result;
-  size_t pos = rawStack.find(sep);
-  while (pos != std::string::npos) {
-    size_t next = rawStack.find(sep, pos + sep.size());
-    size_t end = (next == std::string::npos) ? rawStack.size() : next;
-    result += "\n    at [" + label + "]:" + rawStack.substr(pos + sep.size(), end - (pos + sep.size()));
-    pos = next;
-  }
-  return result;
-}
-
-void WorkletRuntime::reportFatalErrorFromCpp(
-    const std::string &message,
-    const std::string &rawStack,
-    const std::string &name,
-    const std::optional<std::string> &scheduleStack) const {
-  std::string combined = message + labelStackFrames(rawStack, name_);
-  if (scheduleStack.has_value()) {
-    auto pos = scheduleStack->find("\n    at");
-    if (pos != std::string::npos) {
-      combined += scheduleStack->substr(pos);
-    }
-  }
-  JSLogger::reportFatalErrorOnJS(jsScheduler_, JSErrorData{.message = message, .stack = combined, .name = name});
-}
-
-void WorkletRuntime::handleJSError(jsi::JSError &error, const std::optional<std::string> &scheduleStack) const {
-  jsi::Runtime &rt = *runtime_;
-  std::string name = "WorkletsError";
-  const auto &errVal = error.value();
-  if (errVal.isObject()) {
-    auto errObj = errVal.asObject(rt);
-    if (errObj.hasProperty(rt, "name")) {
-      auto nameVal = errObj.getProperty(rt, "name");
-      if (nameVal.isString()) {
-        name = nameVal.asString(rt).utf8(rt);
-      }
-    }
-  }
-  reportFatalErrorFromCpp(error.getMessage(), error.getStack(), name, scheduleStack);
-}
-#endif // NDEBUG
 
 /* #endregion */
 

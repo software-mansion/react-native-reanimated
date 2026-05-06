@@ -24,7 +24,7 @@ const DefaultStaticFeatureFlags = {
   RUNTIME_TEST_FLAG: false,
   FETCH_PREVIEW_ENABLED: false,
   IOS_DYNAMIC_FRAMERATE_ENABLED: true,
-  DISABLE_ACCURATE_ERROR_STACKS: false,
+  ENABLE_CROSS_RUNTIME_STACK_TRACES: true,
 } as const satisfies typeof StaticFeatureFlagsJSON;
 
 export type StaticFeatureFlagsSchema = {

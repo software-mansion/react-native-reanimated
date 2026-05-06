@@ -15,7 +15,7 @@ import { isWorkletFunction } from './workletFunction';
 import { WorkletsModule } from './WorkletsModule/NativeWorklets';
 
 const SHOULD_CAPTURE_SCHEDULE_STACK =
-  __DEV__ && !getStaticFeatureFlag('DISABLE_ACCURATE_ERROR_STACKS');
+  __DEV__ && getStaticFeatureFlag('ENABLE_CROSS_RUNTIME_STACK_TRACES');
 
 type UIJob<Args extends unknown[] = unknown[], ReturnValue = unknown> = [
   worklet: WorkletFunction<Args, ReturnValue>,
@@ -372,7 +372,7 @@ function enqueueUI<Args extends unknown[], ReturnValue>(
   resolve?: (value: ReturnValue) => void
 ): void {
   const scheduleStack = SHOULD_CAPTURE_SCHEDULE_STACK
-    ? (new Error().stack ?? '')
+    ? new Error().stack
     : undefined;
   const job = [worklet, args, resolve, scheduleStack] as UIJob<
     Args,
@@ -398,8 +398,8 @@ function flushUIQueue(): void {
           }
         })
     );
-    const scheduleStacks = queue.some(([, , , stack]) => stack !== undefined)
-      ? queue.map(([, , , scheduleStack]) => scheduleStack)
+    const scheduleStacks = SHOULD_CAPTURE_SCHEDULE_STACK
+      ? (queue.map(([, , , scheduleStack]) => scheduleStack) as string[])
       : undefined;
     WorkletsModule.scheduleOnUI(
       WorkletsModule.createSerializableArray(jobWorklets),

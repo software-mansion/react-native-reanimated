@@ -28,7 +28,7 @@ import { isWorkletFunction } from './workletFunction';
 import { WorkletsModule } from './WorkletsModule/NativeWorklets';
 
 const SHOULD_CAPTURE_SCHEDULE_STACK =
-  __DEV__ && !getStaticFeatureFlag('DISABLE_ACCURATE_ERROR_STACKS');
+  __DEV__ && getStaticFeatureFlag('ENABLE_CROSS_RUNTIME_STACK_TRACES');
 
 /**
  * The ID of the [UI Worklet
@@ -170,7 +170,7 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
       worklet(...args);
       globalThis.__callMicrotasks?.();
     }),
-    SHOULD_CAPTURE_SCHEDULE_STACK ? (new Error().stack ?? '') : undefined
+    SHOULD_CAPTURE_SCHEDULE_STACK ? new Error().stack : undefined
   );
 }
 
@@ -248,7 +248,7 @@ export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
       worklet(...args);
       globalThis.__callMicrotasks?.();
     }),
-    SHOULD_CAPTURE_SCHEDULE_STACK ? (new Error().stack ?? '') : undefined
+    SHOULD_CAPTURE_SCHEDULE_STACK ? new Error().stack : undefined
   );
 }
 
@@ -345,7 +345,7 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
       const result = worklet(...args);
       return makeShareableCloneOnUIRecursive(result);
     }),
-    SHOULD_CAPTURE_SCHEDULE_STACK ? (new Error().stack ?? '') : undefined
+    SHOULD_CAPTURE_SCHEDULE_STACK ? new Error().stack : undefined
   );
 }
 
@@ -395,7 +395,7 @@ export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
       const result = worklet(...args);
       return makeShareableCloneOnUIRecursive(result);
     }),
-    SHOULD_CAPTURE_SCHEDULE_STACK ? (new Error().stack ?? '') : undefined
+    SHOULD_CAPTURE_SCHEDULE_STACK ? new Error().stack : undefined
   );
 }
 
@@ -444,7 +444,7 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
   }
 
   const scheduleStack = SHOULD_CAPTURE_SCHEDULE_STACK
-    ? (new Error().stack ?? '')
+    ? new Error().stack
     : undefined;
   return new Promise<ReturnValue>((resolve, reject) => {
     if (__DEV__) {

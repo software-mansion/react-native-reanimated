@@ -9,6 +9,7 @@
 #include <worklets/RunLoop/EventLoop.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/UnpackerLoader.h>
+#include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
@@ -44,10 +45,16 @@ class JSIWorkletsModuleProxy;
 class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_this<WorkletRuntime> {
  public:
   void schedule(jsi::Function &&function) const;
-  void schedule(std::shared_ptr<SerializableWorklet> worklet, std::optional<std::string> scheduleStack = std::nullopt)
-      const;
+  void schedule(std::shared_ptr<SerializableWorklet> worklet) const;
+  void schedule(std::shared_ptr<SerializableWorklet> worklet, std::optional<std::string> scheduleStack) const;
   void schedule(std::function<void()> job) const;
   void schedule(std::function<void(jsi::Runtime &)> job) const;
+
+  /**
+   * Drains the JS microtask queue inside this runtime.
+   * Safe to call from any thread; takes the runtime lock internally.
+   */
+  void callMicrotasks() const;
 
   /* #region runSync */
 
@@ -133,6 +140,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   explicit WorkletRuntime(
       RuntimeData::RuntimeId runtimeId,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
+      const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::string &name,
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
       bool enableEventLoop = true);
@@ -183,17 +191,13 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     try {
       return function.call(rt, args...);
     } catch (jsi::JSError &e) {
-      handleJSError(e, scheduleStack);
+      JSLogger::handleJSError(jsScheduler_, rt, name_, e, scheduleStack);
       return jsi::Value::undefined();
     }
 #else
     return function.call(rt, args...);
 #endif // NDEBUG
   }
-
-#ifndef NDEBUG
-  void handleJSError(jsi::JSError &error, const std::optional<std::string> &scheduleStack) const;
-#endif // NDEBUG
 
   void bundleModeInit(
       const std::shared_ptr<JSScheduler> &jsScheduler,
@@ -203,19 +207,11 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
   void legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpackerLoader);
 
-#ifndef NDEBUG
-  void reportFatalErrorFromCpp(
-      const std::string &message,
-      const std::string &rawStack,
-      const std::string &name,
-      const std::optional<std::string> &scheduleStack) const;
-#endif // NDEBUG
-
   const RuntimeData::RuntimeId runtimeId_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;
+  const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::string name_;
-  std::shared_ptr<JSScheduler> jsScheduler_;
   std::shared_ptr<AsyncQueue> queue_;
   std::shared_ptr<EventLoop> eventLoop_;
 };

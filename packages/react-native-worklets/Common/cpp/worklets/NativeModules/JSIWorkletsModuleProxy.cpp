@@ -40,19 +40,12 @@ inline void scheduleOnUI(
   const auto &workletsList = serializableArrayOfWorklets->getList();
   std::vector<std::shared_ptr<SerializableWorklet>> worklets;
   worklets.reserve(workletsList.size());
-  for (size_t i = 0; i < workletsList.size(); i++) {
-    auto worklet = std::dynamic_pointer_cast<SerializableWorklet>(workletsList[i]);
-    if (!worklet) {
-      throw jsi::JSError(
-          rt,
-          "[Worklets] scheduleOnUI expects a serializable array of worklets. Element at index " + std::to_string(i) +
-              " is not a worklet.");
-    }
-    worklets.push_back(std::move(worklet));
+  for (const auto &item : workletsList) {
+    worklets.push_back(std::static_pointer_cast<SerializableWorklet>(item));
   }
 
-  std::vector<std::optional<std::string>> scheduleStacks(worklets.size());
 #ifndef NDEBUG
+  std::vector<std::optional<std::string>> scheduleStacks(worklets.size());
   if (scheduleStacksValue.isObject()) {
     auto stacksObject = scheduleStacksValue.asObject(rt);
     if (stacksObject.isArray(rt)) {
@@ -66,7 +59,6 @@ inline void scheduleOnUI(
       }
     }
   }
-#endif // NDEBUG
 
   uiScheduler->scheduleOnUI(
       [worklets = std::move(worklets), scheduleStacks = std::move(scheduleStacks), weakUIWorkletRuntime]() {
@@ -93,17 +85,26 @@ inline void scheduleOnUI(
           uiWorkletRuntime->runSyncWithStack(worklets[i], scheduleStacks[i]);
         }
 
-        uiWorkletRuntime->runSync([](jsi::Runtime &rt) {
-          auto callMicrotasks = rt.global().getProperty(rt, "__callMicrotasks");
-          if (callMicrotasks.isObject()) {
-            auto callMicrotasksObject = callMicrotasks.asObject(rt);
-            if (callMicrotasksObject.isFunction(rt)) {
-              callMicrotasksObject.asFunction(rt).call(rt);
-            }
-          }
-          return jsi::Value::undefined();
-        });
+        uiWorkletRuntime->callMicrotasks();
       });
+#else
+  uiScheduler->scheduleOnUI([worklets = std::move(worklets), weakUIWorkletRuntime]() {
+    auto uiWorkletRuntime = weakUIWorkletRuntime.lock();
+    if (!uiWorkletRuntime) {
+      return;
+    }
+
+    for (const auto &worklet : worklets) {
+#if JS_RUNTIME_HERMES
+      const auto scope = jsi::Scope(uiWorkletRuntime->getJSIRuntime());
+#endif // JS_RUNTIME_HERMES
+
+      uiWorkletRuntime->runSync(worklet);
+    }
+
+    uiWorkletRuntime->callMicrotasks();
+  });
+#endif // NDEBUG
 }
 
 inline jsi::Value runOnUISync(

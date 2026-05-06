@@ -37,6 +37,7 @@ class RuntimeManager {
 
   std::shared_ptr<WorkletRuntime> createUninitializedUIRuntime(
       const std::shared_ptr<MessageQueueThread> &jsQueue,
+      const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<AsyncQueue> &uiAsyncQueue);
 
   /** Pauses registration of new Worklet Runtimes. */
