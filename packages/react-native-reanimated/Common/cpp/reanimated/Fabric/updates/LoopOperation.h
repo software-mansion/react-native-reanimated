@@ -6,7 +6,7 @@ class LoopOperation {
  public:
   virtual ~LoopOperation() = default;
 
-  // Tick the operation. Return true to keep it scheduled, false to remove.
+  /// Tick the operation. Return true to keep it scheduled, false to remove.
   virtual bool update(double timestamp) = 0;
 };
 

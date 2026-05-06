@@ -53,9 +53,6 @@ class OperationsLoop : public std::enable_shared_from_this<OperationsLoop> {
 
   void clearShouldUpdateCssAnimations();
 
-  // Operation-based scheduling. Not yet wired to anything - introduced here so
-  // the migration of CSSTransition / CSSAnimation in a follow-up PR can move
-  // them onto this API without re-touching the loop's structure.
   void schedule(std::shared_ptr<LoopOperation> operation, double startTimestamp);
   void remove(const std::shared_ptr<LoopOperation> &operation);
 
@@ -85,7 +82,6 @@ class OperationsLoop : public std::enable_shared_from_this<OperationsLoop> {
   double currentTimestamp_{0};
   bool shouldUpdateCssAnimations_{true};
 
-  // Operation-based machinery (dormant in this PR).
   mutable std::mutex queueMutex_;
   std::vector<ScheduledOperation> scheduledOperations_;
   std::atomic_bool frameRequested_{false};

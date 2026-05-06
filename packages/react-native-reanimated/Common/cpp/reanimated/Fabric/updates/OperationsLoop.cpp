@@ -153,8 +153,7 @@ void OperationsLoop::applyScheduledOperations(std::vector<ScheduledOperation> op
   for (auto &op : operations) {
     // Remove from prior placement. delayedLookup_ tells us where: if it's
     // there, the op is delayed and we extract the tree node (so we can reuse
-    // it below); otherwise it's either active or new, so we just erase from
-    // the hash set (no-op if it isn't there either).
+    // it below); otherwise we just erase it from the active operations set.
     std::set<DelayedEntry>::node_type node;
     if (auto it = delayedLookup_.find(op.operation); it != delayedLookup_.end()) {
       node = delayedOps_.extract(it->second);
@@ -163,15 +162,16 @@ void OperationsLoop::applyScheduledOperations(std::vector<ScheduledOperation> op
       activeOps_.erase(op.operation);
     }
 
-    if (!op.insertAt) {
+    // Skip if the operation is scheduled for removal.
+    if (op.insertAt == std::nullopt) {
       continue;
-      }
+    }
 
     const double insertAt = op.insertAt.value();
     if (insertAt <= timestamp) {
       activeOps_.insert(std::move(op.operation));
     } else if (node) {
-      // Reuse the extracted node - no allocation.
+      // Reuse the extracted node
       node.value().activateAt = insertAt;
       auto it = delayedOps_.insert(std::move(node)).position;
       delayedLookup_.emplace(std::move(op.operation), it);
