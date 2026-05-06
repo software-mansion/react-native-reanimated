@@ -79,7 +79,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   REAAssertJavaScriptQueue();
 
   auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
-  std::weak_ptr<ReanimatedModuleProxy> reanimatedModuleProxyWeak = reanimatedModuleProxy;
 
   // When USE_ANIMATION_BACKEND is on, flushes run inside handleEventAndFlush; otherwise
   // REANodesManager calls performOperations after the event (see REANodesManager).
@@ -89,13 +88,11 @@ RCT_EXPORT_MODULE(ReanimatedModule);
     int emitterReactTag = [event.viewTag intValue];
     id eventData = [event arguments][2];
     jsi::Value payload = convertObjCObjectToJSIValue(uiRuntime, eventData);
-    if (auto reanimatedModuleProxy = reanimatedModuleProxyWeak.lock()) {
-      if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-        reanimatedModuleProxy->handleEventAndFlush(eventName, emitterReactTag, payload, GrandCallbackSource::Event);
-      } else {
-        const double currentTime = CACurrentMediaTime() * 1000;
-        reanimatedModuleProxy->handleEvent(eventName, emitterReactTag, payload, currentTime);
-      }
+    if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+      reanimatedModuleProxy->handleEventAndFlush(eventName, emitterReactTag, payload, GrandCallbackSource::Event);
+    } else {
+      const double currentTime = CACurrentMediaTime() * 1000;
+      reanimatedModuleProxy->handleEvent(eventName, emitterReactTag, payload, currentTime);
     }
   }];
 }
