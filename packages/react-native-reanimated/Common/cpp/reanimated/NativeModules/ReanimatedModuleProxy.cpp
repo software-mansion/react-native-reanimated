@@ -1,4 +1,5 @@
 #include <jsi/jsi.h>
+#include <react/featureflags/ReactNativeFeatureFlags.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <reanimated/Compat/WorkletsApi.h>
@@ -16,7 +17,6 @@
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
 
-#include <react/featureflags/ReactNativeFeatureFlags.h>
 #include <cstdio>
 #include <functional>
 #include <memory>
