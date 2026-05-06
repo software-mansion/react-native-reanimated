@@ -672,10 +672,6 @@ AnimationMutations ReanimatedModuleProxy::mutationsFromAnimatedPropsBatch(
 }
 
 void ReanimatedModuleProxy::performOperations() {
-  performOperations(false);
-}
-
-void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     startBackendIfNeeded();
     return;

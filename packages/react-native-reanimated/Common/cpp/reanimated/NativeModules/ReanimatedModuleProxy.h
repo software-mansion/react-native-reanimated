@@ -101,7 +101,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
 
   void performOperations();
-  void performOperations(const bool isTriggeredByEvent);
   void performNonLayoutOperations();
   void flushLayoutAnimationRequests();
 
