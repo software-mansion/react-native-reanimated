@@ -125,7 +125,9 @@ bool NativeProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, cons
 }
 
 void NativeProxy::performOperations() {
-  reanimatedModuleProxy_->performOperations();
+  if constexpr (!StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    reanimatedModuleProxy_->performOperations();
+  }
 }
 
 void NativeProxy::performNonLayoutOperations() {

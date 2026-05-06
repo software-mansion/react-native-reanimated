@@ -1,4 +1,5 @@
 #include <jsi/jsi.h>
+#include <react/debug/react_native_assert.h>
 #include <react/featureflags/ReactNativeFeatureFlags.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
@@ -673,7 +674,8 @@ AnimationMutations ReanimatedModuleProxy::mutationsFromAnimatedPropsBatch(
 
 void ReanimatedModuleProxy::performOperations() {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    startBackendIfNeeded();
+    react_native_assert(
+        false && "[Reanimated] performOperations must not be called when USE_ANIMATION_BACKEND is enabled");
     return;
   }
 
