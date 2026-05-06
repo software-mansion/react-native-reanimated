@@ -44,11 +44,7 @@ WorkletsModule::WorkletsModule(
           uiScheduler,
           getIsOnJSQueueThread(),
           getRuntimeBindings(bundleModeConfig.enabled, *rnRuntime),
-          bundleModeConfig)) {
-  auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
-  RNRuntimeWorkletDecorator::decorate(
-      *rnRuntime_, jsiWorkletsModuleProxy->toOptimizedObject(*rnRuntime_), workletsModuleProxy_->getJSLogger());
-}
+          bundleModeConfig)) {}
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)

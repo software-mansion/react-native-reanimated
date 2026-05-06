@@ -32,7 +32,7 @@ void WorkletsModuleProxy::start() {
    * We call additional `init` method here because
    * JSIWorkletsModuleProxy needs a weak_ptr to the UI Runtime.
    */
-  uiWorkletRuntime_->init(createJSIWorkletsModuleProxy());
+  uiWorkletRuntime_->init(std::make_shared<JSIWorkletsModuleProxy>(*rnRuntimeProxy_));
 
   animationFrameBatchinator_ =
       std::make_shared<AnimationFrameBatchinator>(uiWorkletRuntime_, runtimeBindings_->requestAnimationFrame);
@@ -73,10 +73,6 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           bundleModeConfig_,
           unpackerLoader_)) {
   RNRuntimeWorkletDecorator::decorate(rnRuntime, rnRuntimeProxy_->toOptimizedObject(rnRuntime), jsLogger_);
-}
-
-std::shared_ptr<JSIWorkletsModuleProxy> WorkletsModuleProxy::createJSIWorkletsModuleProxy() const {
-  return std::make_shared<JSIWorkletsModuleProxy>(*rnRuntimeProxy_);
 }
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {
