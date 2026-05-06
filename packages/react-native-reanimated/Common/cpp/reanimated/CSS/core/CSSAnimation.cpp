@@ -7,15 +7,20 @@
 namespace reanimated::css {
 
 CSSAnimation::CSSAnimation(
-    jsi::Runtime &rt,
-    std::shared_ptr<const ShadowNode> shadowNode,
+    const Tag viewTag,
     std::string animationName,
     const CSSKeyframesConfig &cssKeyframesConfig,
     const CSSAnimationSettings &settings,
+    const std::shared_ptr<std::unordered_set<Tag>> &updatedViewTags,
+    const std::shared_ptr<std::unordered_set<Tag>> &revertedTags,
+    const std::shared_ptr<OperationsLoop> &loop,
     const double timestamp)
-    : name_(std::move(animationName)),
-      shadowNode_(std::move(shadowNode)),
+    : viewTag_(viewTag),
+      name_(std::move(animationName)),
       fillMode_(settings.fillMode),
+      updatedViewTags_(updatedViewTags),
+      revertedTags_(revertedTags),
+      loop_(loop),
       styleInterpolator_(cssKeyframesConfig.styleInterpolator),
       progressProvider_(std::make_shared<AnimationProgressProvider>(
           timestamp,
@@ -30,20 +35,27 @@ CSSAnimation::CSSAnimation(
   }
 }
 
-const std::string &CSSAnimation::getName() const {
-  return name_;
+bool CSSAnimation::update(const double timestamp) {
+  progressProvider_->update(timestamp);
+  updatedViewTags_->insert(viewTag_);
+
+  if (progressProvider_->getState() == AnimationProgressState::Finished && !hasForwardsFillMode()) {
+    revertedTags_->insert(viewTag_);
+  }
+
+  return progressProvider_->getState() == AnimationProgressState::Running;
 }
 
-std::shared_ptr<const ShadowNode> CSSAnimation::getShadowNode() const {
-  return shadowNode_;
+const std::string &CSSAnimation::getName() const {
+  return name_;
 }
 
 double CSSAnimation::getStartTimestamp(const double timestamp) const {
   return progressProvider_->getStartTimestamp(timestamp);
 }
 
-AnimationProgressState CSSAnimation::getState(double timestamp) const {
-  return progressProvider_->getState(timestamp);
+AnimationProgressState CSSAnimation::getState() const {
+  return progressProvider_->getState();
 }
 
 bool CSSAnimation::isReversed() const {
@@ -59,37 +71,27 @@ bool CSSAnimation::hasBackwardsFillMode() const {
   return fillMode_ == AnimationFillMode::Backwards || fillMode_ == AnimationFillMode::Both;
 }
 
-folly::dynamic CSSAnimation::getCurrentInterpolationStyle() const {
-  return styleInterpolator_->interpolate(shadowNode_, progressProvider_, FALLBACK_INTERPOLATION_THRESHOLD);
-}
-
 folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
   return isReversed() ? styleInterpolator_->getLastKeyframeValue() : styleInterpolator_->getFirstKeyframeValue();
 }
 
-folly::dynamic CSSAnimation::getResetStyle() const {
-  return styleInterpolator_->getResetStyle(shadowNode_);
+folly::dynamic CSSAnimation::getCurrentInterpolationStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const {
+  return styleInterpolator_->interpolate(shadowNode, progressProvider_, FALLBACK_INTERPOLATION_THRESHOLD);
 }
 
-void CSSAnimation::run(const double timestamp) {
-  if (progressProvider_->getState(timestamp) == AnimationProgressState::Finished) {
-    return;
-  }
-  progressProvider_->play(timestamp);
+folly::dynamic CSSAnimation::getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const {
+  return styleInterpolator_->getResetStyle(shadowNode);
 }
 
-folly::dynamic CSSAnimation::update(const double timestamp) {
-  progressProvider_->update(timestamp);
-
-  // Check if the animation has not started yet because of the delay
-  // (In general, it shouldn't be activated until the delay has passed but we
-  // add this check to make sure that animation doesn't start with the negative
-  // progress)
-  if (progressProvider_->getState(timestamp) == AnimationProgressState::Pending) {
-    return hasBackwardsFillMode() ? getBackwardsFillStyle() : folly::dynamic();
+void CSSAnimation::schedule() {
+  if (progressProvider_->getState() != AnimationProgressState::Paused) {
+    const auto timestamp = loop_->resolveTimestamp();
+    loop_->schedule(shared_from_this(), progressProvider_->getStartTimestamp(timestamp));
   }
+}
 
-  return styleInterpolator_->interpolate(shadowNode_, progressProvider_, FALLBACK_INTERPOLATION_THRESHOLD);
+void CSSAnimation::unschedule() {
+  loop_->remove(shared_from_this());
 }
 
 void CSSAnimation::updateSettings(const PartialCSSAnimationSettings &updatedSettings, const double timestamp) {
