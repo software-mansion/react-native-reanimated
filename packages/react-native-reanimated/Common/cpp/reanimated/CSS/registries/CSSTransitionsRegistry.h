@@ -35,9 +35,6 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
   }
 
  private:
-  void update(double timestamp);
-
-  void removeTag(Tag viewTag) override;
   using Registry = std::unordered_map<Tag, std::shared_ptr<CSSTransition>>;
 
   const GetAnimationTimestampFunction &getCurrentTimestamp_;
@@ -48,6 +45,8 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
   std::unordered_set<Tag> runningTransitionTags_;
   DelayedItemsManager<Tag> delayedTransitionsManager_;
 
+  void removeTag(Tag viewTag) override;
+  void update(double timestamp);
   void activateDelayedTransitions(double timestamp);
   void scheduleOrActivateTransition(const std::shared_ptr<CSSTransition> &transition);
   void updateInUpdatesRegistry(const std::shared_ptr<CSSTransition> &transition, const folly::dynamic &updates);

@@ -30,11 +30,6 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
   }
 }
 
-void AnimatedPropsRegistry::removeTag(const Tag tag) {
-  updatesRegistry_.erase(tag);
-  timestampMap_.erase(tag);
-}
-
 jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt, const double timestamp) {
   std::lock_guard<std::mutex> lock{mutex_};
   std::vector<std::pair<Tag, std::reference_wrapper<const folly::dynamic>>> updates;
@@ -70,6 +65,11 @@ void AnimatedPropsRegistry::removeUpdatesOlderThanTimestamp(const double timesta
       it++;
     }
   }
+}
+
+void AnimatedPropsRegistry::removeTag(const Tag tag) {
+  updatesRegistry_.erase(tag);
+  timestampMap_.erase(tag);
 }
 
 } // namespace reanimated

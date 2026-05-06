@@ -42,8 +42,6 @@ class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_th
   }
 
  private:
-  void update(double timestamp);
-
   using AnimationToIndexMap = std::unordered_map<std::shared_ptr<CSSAnimation>, size_t>;
   using RunningAnimationIndicesMap = std::unordered_map<Tag, std::set<size_t>>;
   using AnimationsToRevertMap = std::unordered_map<Tag, std::unordered_set<size_t>>;
@@ -61,6 +59,7 @@ class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_th
   DelayedItemsManager<std::shared_ptr<CSSAnimation>> delayedAnimationsManager_;
 
   void removeTag(Tag viewTag) override;
+  void update(double timestamp);
 
   CSSAnimationsVector buildAnimationsVector(
       jsi::Runtime &rt,
