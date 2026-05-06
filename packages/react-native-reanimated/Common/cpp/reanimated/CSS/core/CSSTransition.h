@@ -1,7 +1,6 @@
 #pragma once
 
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
-#include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 #include <reanimated/Fabric/updates/LoopOperation.h>
@@ -25,11 +24,9 @@ class CSSTransition : public LoopOperation, public std::enable_shared_from_this<
 
   bool update(double timestamp) override;
 
-  Tag getViewTag() const;
   std::shared_ptr<const ShadowNode> getShadowNode() const;
   ShadowNodeFamily::Shared getShadowNodeFamily() const;
   double getMinDelay(double timestamp) const;
-  TransitionProgressState getState() const;
   TransitionProperties getProperties() const;
 
   folly::dynamic
@@ -39,7 +36,6 @@ class CSSTransition : public LoopOperation, public std::enable_shared_from_this<
 
  private:
   const std::shared_ptr<const ShadowNode> shadowNode_;
-  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
   const std::shared_ptr<std::unordered_set<Tag>> updatedViewTags_;
   const std::shared_ptr<OperationsLoop> loop_;
 

@@ -14,7 +14,6 @@ CSSTransition::CSSTransition(
     const std::shared_ptr<std::unordered_set<Tag>> &updatedViewTags,
     const std::shared_ptr<OperationsLoop> &loop)
     : shadowNode_(std::move(shadowNode)),
-      viewStylesRepository_(viewStylesRepository),
       updatedViewTags_(updatedViewTags),
       loop_(loop),
       styleInterpolator_(TransitionStyleInterpolator(shadowNode_->getComponentName(), viewStylesRepository)),
@@ -31,10 +30,6 @@ bool CSSTransition::update(const double timestamp) {
   return progressProvider_.getState() == TransitionProgressState::Running;
 }
 
-Tag CSSTransition::getViewTag() const {
-  return shadowNode_->getTag();
-}
-
 ShadowNodeFamily::Shared CSSTransition::getShadowNodeFamily() const {
   return shadowNode_->getFamilyShared();
 }
@@ -45,10 +40,6 @@ std::shared_ptr<const ShadowNode> CSSTransition::getShadowNode() const {
 
 double CSSTransition::getMinDelay(double timestamp) const {
   return progressProvider_.getMinDelay(timestamp);
-}
-
-TransitionProgressState CSSTransition::getState() const {
-  return progressProvider_.getState();
 }
 
 TransitionProperties CSSTransition::getProperties() const {
@@ -85,8 +76,6 @@ void CSSTransition::handleChangedProperties(
     const CSSTransitionConfig &config,
     const folly::dynamic &lastUpdateValue,
     const double timestamp) {
-  const auto null = folly::dynamic();
-
   for (const auto &[propertyName, propertySettings] : config.changedProperties) {
     const auto allowDiscrete = propertySettings.allowDiscrete;
 

@@ -50,10 +50,6 @@ const std::string &CSSAnimation::getName() const {
   return name_;
 }
 
-double CSSAnimation::getStartTimestamp(const double timestamp) const {
-  return progressProvider_->getStartTimestamp(timestamp);
-}
-
 AnimationProgressState CSSAnimation::getState() const {
   return progressProvider_->getState();
 }

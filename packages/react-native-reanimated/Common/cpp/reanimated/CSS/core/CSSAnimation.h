@@ -30,7 +30,6 @@ class CSSAnimation : public LoopOperation, public std::enable_shared_from_this<C
 
   const std::string &getName() const;
 
-  double getStartTimestamp(double timestamp) const;
   AnimationProgressState getState() const;
 
   bool isReversed() const;
