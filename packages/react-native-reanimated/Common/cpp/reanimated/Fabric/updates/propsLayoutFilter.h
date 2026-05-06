@@ -61,9 +61,7 @@ inline bool animatedPropsContainLayoutProps(const facebook::react::AnimatedProps
 
   const auto rawPropsDynamic = animatedProps.rawProps->toDynamic();
   for (const auto &key : rawPropsDynamic.keys()) {
-    if (!key.isString()) {
-      continue;
-    }
+    react_native_assert(key.isString() && "Key needs to be a string");
 
     const auto propName = propNameFromString(key.asString());
     if (propName.has_value() && isLayoutProp(propName.value())) {
