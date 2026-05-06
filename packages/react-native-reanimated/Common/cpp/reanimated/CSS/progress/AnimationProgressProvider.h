@@ -35,12 +35,13 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   AnimationDirection getDirection() const;
   double getGlobalProgress() const override;
   double getKeyframeProgress(double fromOffset, double toOffset) const override;
-  AnimationProgressState getState(double timestamp) const;
-  double getTotalPausedTime(double timestamp) const;
+
+  AnimationProgressState getState() const;
   double getStartTimestamp(double timestamp) const;
 
   void pause(double timestamp);
   void play(double timestamp);
+  void update(double timestamp) override;
   void resetProgress() override;
 
  protected:
@@ -52,12 +53,15 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   EasingFunction easingFunction_;
   std::shared_ptr<KeyframeEasingFunctions> keyframeEasingFunctions_;
 
+  AnimationProgressState state_ = AnimationProgressState::Pending;
   unsigned currentIteration_ = 1;
   double previousIterationsDuration_ = 0;
   double pauseTimestamp_ = 0;
   double totalPausedTime_ = 0;
 
+  double getTotalPausedTime(double timestamp) const;
   bool shouldFinish(double timestamp) const;
+  AnimationProgressState computeState(double timestamp) const;
 
   double updateIterationProgress(double currentIterationElapsedTime);
   double applyAnimationDirection(double iterationProgress) const;
