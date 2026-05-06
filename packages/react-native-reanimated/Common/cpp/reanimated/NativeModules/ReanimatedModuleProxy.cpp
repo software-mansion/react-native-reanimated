@@ -736,9 +736,9 @@ void ReanimatedModuleProxy::performOperations() {
 
   commitUpdates(uiRuntime, updatesBatch);
 
-  //   Clear the entire cache after the commit
-  //   (we don't know if the view is updated from outside of Reanimated
-  //   so we have to clear the entire cache)
+  // Clear the entire cache after the commit
+  // (we don't know if the view is updated from outside of Reanimated
+  // so we have to clear the entire cache)
   viewStylesRepository_->clearNodesCache();
 }
 
