@@ -11,6 +11,7 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
+
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
