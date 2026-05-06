@@ -88,7 +88,7 @@ class OperationsLoop : public std::enable_shared_from_this<OperationsLoop> {
   // Operation-based machinery (dormant in this PR).
   mutable std::mutex queueMutex_;
   std::vector<ScheduledOperation> scheduledOperations_;
-  std::atomic<bool> frameRequested_{false};
+  std::atomic_bool frameRequested_{false};
   std::unordered_set<std::shared_ptr<LoopOperation>> activeOps_;
   std::set<DelayedEntry> delayedOps_;
   std::unordered_map<std::shared_ptr<LoopOperation>, std::set<DelayedEntry>::iterator> delayedLookup_;
