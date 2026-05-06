@@ -70,7 +70,6 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
       return newRootShadowNode;
     }
 
-#if REACT_NATIVE_MINOR_VERSION >= 80
     if constexpr (StaticFeatureFlags::getFlag("USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS")) {
       // State updates are based on the currently committed ShadowTree,
       // which means that all animation changes are already included.
@@ -79,7 +78,6 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
         return newRootShadowNode;
       }
     }
-#endif
 
     // ShadowTree not commited by Reanimated, apply updates from the updates
     // registry manager
