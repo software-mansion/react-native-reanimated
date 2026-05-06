@@ -1,3 +1,4 @@
+#include <glog/logging.h>
 #include <jsi/jsi.h>
 #include <react/debug/react_native_assert.h>
 #include <react/featureflags/ReactNativeFeatureFlags.h>
@@ -1442,10 +1443,11 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     if (!ReactNativeFeatureFlags::useSharedAnimatedBackend()) {
-      const auto message = std::string("[Reanimated] USE_ANIMATION_BACKEND flag is enabled, but ") +
-          "ReactNativeFeatureFlags::useSharedAnimatedBackend is disabled. " + "Animations will not work properly.";
+      LOG(ERROR) << "[Reanimated] USE_ANIMATION_BACKEND flag is enabled, but "
+                 << "ReactNativeFeatureFlags::useSharedAnimatedBackend is disabled. "
+                 << "Enable the Experimental Release level in React Native, or disable the Reanimated Feature Flag";
 
-      fprintf(stderr, "%s\n", message.c_str());
+      react_native_assert(false);
     }
 
     setRequestAnimationFrame(uiRuntime_, [weakThis = weak_from_this()](std::function<void(const double)> callback) {
