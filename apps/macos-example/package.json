@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "macos": "react-native run-macos",
-    "build": "cd macos && bundle install && bundle exec pod update",
+    "build": "cd macos && bundle install && bundle exec pod update --no-repo-update",
     "format": "prettier --write --list-different .",
     "lint": "eslint . --max-warnings 0",
     "start": "react-native start",
