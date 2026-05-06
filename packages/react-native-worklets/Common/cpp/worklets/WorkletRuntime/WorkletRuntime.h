@@ -50,12 +50,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   void schedule(std::function<void()> job) const;
   void schedule(std::function<void(jsi::Runtime &)> job) const;
 
-  /**
-   * Drains the JS microtask queue inside this runtime.
-   * Safe to call from any thread; takes the runtime lock internally.
-   */
-  void callMicrotasks() const;
-
   /* #region runSync */
 
   template <RuntimeCallable TCallable, typename... Args>
@@ -85,6 +79,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   }
 
   /* #endregion */
+
+  void callMicrotasks() const;
 
   /* #region runSyncSerialized */
 
