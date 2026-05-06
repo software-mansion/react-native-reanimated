@@ -244,6 +244,9 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
 
     if (!strongThis->layoutAnimationRenderRequested_) {
       strongThis->layoutAnimationRenderRequested_ = true;
+      // if an animation has duration 0, performOperations/AnimationBackend would not get
+      // called for it so we call requestRender/startBackend to have it called in the
+      // next frame
       if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
         strongThis->startBackendIfNeeded();
         strongThis->layoutAnimationRenderRequested_ = false;
