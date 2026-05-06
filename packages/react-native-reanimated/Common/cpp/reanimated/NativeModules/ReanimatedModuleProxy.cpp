@@ -773,7 +773,7 @@ void ReanimatedModuleProxy::startBackendIfNeeded() {
       return;
     }
     withAnimationBackend([this](const std::shared_ptr<AnimationBackend> &backend) {
-      callbackId_ = backend->start(
+      animationBackendCallbackId_ = backend->start(
           [this](AnimationTimestamp ts) { return grandCallback(ts, GrandCallbackSource::AnimationLoop); });
       isAnimationRunning_ = true;
     });
@@ -787,7 +787,8 @@ void ReanimatedModuleProxy::stopBackendIfIdle(const AnimationMutations &mutation
         animatedPropsRegistry_->hasPendingAnimatedPropsUpdates() || shouldFlushRegistry_ ||
         !layoutAnimationFlushRequests_.empty();
     if (!hasWork) {
-      withAnimationBackend([this](const std::shared_ptr<AnimationBackend> &backend) { backend->stop(callbackId_); });
+      withAnimationBackend(
+          [this](const std::shared_ptr<AnimationBackend> &backend) { backend->stop(animationBackendCallbackId_); });
       isAnimationRunning_ = false;
     }
   }
