@@ -1,7 +1,5 @@
 #include <worklets/android/AndroidUIScheduler.h>
 
-#include <pthread.h>
-#include <atomic>
 #include <utility>
 
 namespace worklets {
@@ -9,22 +7,18 @@ namespace worklets {
 using namespace facebook;
 using namespace react;
 
+static thread_local bool tls_isOnUIThread = false;
+
 class UISchedulerWrapper : public UIScheduler {
  private:
   jni::global_ref<AndroidUIScheduler::javaobject> androidUiScheduler_;
-  std::atomic<pthread_t> uiThreadId_{0};
-
-  bool isOnUIThread() const {
-    const auto cached = uiThreadId_.load(std::memory_order_acquire);
-    return cached != 0 && pthread_equal(pthread_self(), cached);
-  }
 
  public:
   explicit UISchedulerWrapper(jni::global_ref<AndroidUIScheduler::javaobject> androidUiScheduler)
       : androidUiScheduler_(std::move(androidUiScheduler)) {}
 
   void scheduleOnUI(std::function<void()> job) override {
-    if (isOnUIThread()) {
+    if (tls_isOnUIThread) {
       job();
       return;
     }
@@ -36,7 +30,7 @@ class UISchedulerWrapper : public UIScheduler {
   }
 
   void triggerUI() override {
-    uiThreadId_.store(pthread_self(), std::memory_order_release);
+    tls_isOnUIThread = true;
     UIScheduler::triggerUI();
   }
 };
