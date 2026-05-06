@@ -102,7 +102,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   void performOperations();
   void performNonLayoutOperations();
-  void flushLayoutAnimationRequests();
+  void executeLayoutAnimationsRequests();
 
   bool handleEventAndFlush(
       const std::string &eventName,
@@ -111,7 +111,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
       GrandCallbackSource state);
 
   void startBackendIfNeeded();
-  void stopBackendIfIdle(const AnimationMutations &mutationsProducedThisTick);
+  void stopBackendIfIdle(bool producedMutations);
 
   void setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle) override;
 
@@ -206,7 +206,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   AnimationMutations grandCallback(AnimationTimestamp timestamp, GrandCallbackSource state);
   void executeWorkletsForFrame(AnimationTimestamp timestamp);
-  AnimationMutations collectAnimationUpdates(AnimationTimestamp timestamp);
+  AnimationMutations executeOperationsAndCollectUpdates(AnimationTimestamp timestamp);
   AnimationMutations collectEventUpdates();
   AnimationMutations collectNonLayoutAnimationUpdates();
   AnimationMutations mutationsFromAnimatedPropsBatch(UpdatesBatchAnimatedProps &&animatedPropsBatch);

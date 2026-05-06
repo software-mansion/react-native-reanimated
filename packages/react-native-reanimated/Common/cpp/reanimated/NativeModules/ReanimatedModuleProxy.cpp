@@ -654,7 +654,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   return res;
 }
 
-void ReanimatedModuleProxy::flushLayoutAnimationRequests() {
+void ReanimatedModuleProxy::executeLayoutAnimationsRequests() {
   auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
   for (const auto surfaceId : flushRequestsCopy) {
     uiManager_->getShadowTreeRegistry().visit(
@@ -667,8 +667,8 @@ AnimationMutations ReanimatedModuleProxy::mutationsFromAnimatedPropsBatch(
   AnimationMutations mutations;
   mutations.batch.reserve(animatedPropsBatch.size());
   for (auto &[shadowNodeFamily, animatedProps, hasLayoutUpdates] : animatedPropsBatch) {
-    mutations.batch.push_back(AnimationMutation{
-        shadowNodeFamily->getTag(), shadowNodeFamily, std::move(animatedProps), hasLayoutUpdates});
+    mutations.batch.push_back(
+        AnimationMutation{shadowNodeFamily->getTag(), shadowNodeFamily, std::move(animatedProps), hasLayoutUpdates});
   }
   return mutations;
 }
@@ -682,7 +682,7 @@ void ReanimatedModuleProxy::performOperations() {
 
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
-  flushLayoutAnimationRequests();
+  executeLayoutAnimationsRequests();
 
   jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
 
@@ -780,9 +780,9 @@ void ReanimatedModuleProxy::startBackendIfNeeded() {
   }
 }
 
-void ReanimatedModuleProxy::stopBackendIfIdle(const AnimationMutations &mutationsProducedThisTick) {
+void ReanimatedModuleProxy::stopBackendIfIdle(const bool producedMutations) {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    bool hasWork = !mutationsProducedThisTick.batch.empty() || pendingAnimationFrameCallback_ != nullptr ||
+    bool hasWork = producedMutations || pendingAnimationFrameCallback_ != nullptr ||
         cssTransitionsRegistry_->hasUpdates() || cssAnimationsRegistry_->hasUpdates() ||
         animatedPropsRegistry_->hasPendingAnimatedPropsUpdates() || shouldFlushRegistry_ ||
         !layoutAnimationFlushRequests_.empty();
@@ -805,14 +805,14 @@ AnimationMutations ReanimatedModuleProxy::grandCallback(
   switch (state) {
     case GrandCallbackSource::AnimationLoop: {
       executeWorkletsForFrame(timestamp);
-      flushLayoutAnimationRequests();
-      AnimationMutations mutations = collectAnimationUpdates(timestamp);
-      stopBackendIfIdle(mutations);
+      executeLayoutAnimationsRequests();
+      auto mutations = executeOperationsAndCollectUpdates(timestamp);
+      stopBackendIfIdle(!mutations.batch.empty());
       return mutations;
     }
 
     case GrandCallbackSource::Event: {
-      flushLayoutAnimationRequests();
+      executeLayoutAnimationsRequests();
       return collectEventUpdates();
     }
 
@@ -832,12 +832,9 @@ void ReanimatedModuleProxy::executeWorkletsForFrame(const AnimationTimestamp tim
   cb(timestamp.count());
 }
 
-AnimationMutations ReanimatedModuleProxy::collectAnimationUpdates(const AnimationTimestamp timestamp) {
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::collectAnimationUpdates");
-
-  // The non-backend CSS idle loop does not run under USE_ANIMATION_BACKEND;
-  // advance CSS against the AnimationBackend frame clock.
-  const double currentCssTimestamp = timestamp.count();
+AnimationMutations ReanimatedModuleProxy::executeOperationsAndCollectUpdates(const AnimationTimestamp timestamp) {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::executeOperationsAndCollectUpdates")
+      const double currentCssTimestamp = timestamp.count();
 
   UpdatesBatchAnimatedProps batch;
   auto lock = updatesRegistryManager_->lock();
