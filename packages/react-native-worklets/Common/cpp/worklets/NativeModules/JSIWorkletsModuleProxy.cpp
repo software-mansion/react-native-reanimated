@@ -17,7 +17,9 @@
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
+#ifndef NDEBUG
 #include <algorithm>
+#endif // NDEBUG
 #include <memory>
 #include <optional>
 #include <string>
@@ -107,7 +109,7 @@ inline jsi::Value runOnUISync(
     auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
         rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
 #ifndef NDEBUG
-    auto serializedResult = uiWorkletRuntime->runSyncSerialized(serializableWorklet, scheduleStack);
+    auto serializedResult = uiWorkletRuntime->runSyncSerializedWithStack(serializableWorklet, scheduleStack);
 #else
     auto serializedResult = uiWorkletRuntime->runSyncSerialized(serializableWorklet);
 #endif // NDEBUG
@@ -125,7 +127,7 @@ jsi::Value runOnRuntimeSync(
   auto worklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
 #ifndef NDEBUG
-  return workletRuntime->runSyncSerialized(worklet, scheduleStack)->toJSValue(rt);
+  return workletRuntime->runSyncSerializedWithStack(worklet, scheduleStack)->toJSValue(rt);
 #else
   return workletRuntime->runSyncSerialized(worklet)->toJSValue(rt);
 #endif // NDEBUG
@@ -438,7 +440,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         if (at<2>(args).isString()) {
           scheduleStack = at<2>(args).asString(rt).utf8(rt);
         }
-        return workletRuntime->runSyncSerialized(serializableWorklet, scheduleStack)->toJSValue(rt);
+        return workletRuntime->runSyncSerializedWithStack(serializableWorklet, scheduleStack)->toJSValue(rt);
 #else
         return workletRuntime->runSyncSerialized(serializableWorklet)->toJSValue(rt);
 #endif // NDEBUG

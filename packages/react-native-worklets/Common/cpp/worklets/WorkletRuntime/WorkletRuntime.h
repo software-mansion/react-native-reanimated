@@ -98,18 +98,26 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
         "must return a value serialized with `createSerializable`.");
     return serializableResult;
   }
-  std::shared_ptr<Serializable> runSyncSerialized(
+  template <typename... Args>
+  std::shared_ptr<Serializable> runSyncSerializedWithStack(
       const std::shared_ptr<SerializableWorklet> &worklet,
-      const std::optional<std::string> &scheduleStack = std::nullopt) const {
+      const std::optional<std::string> &scheduleStack,
+      Args &&...args) const {
     jsi::Runtime &rt = getJSIRuntime();
     auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
-    auto result = runSyncWithStack(worklet, scheduleStack);
+    auto result = runSyncWithStack(worklet, scheduleStack, std::forward<Args>(args)...);
     auto serializableResult = extractSerializableOrThrow(
         rt,
         result,
         "[Worklets] Worklet passed to `runSyncSerialized`"
         "must return a value serialized with `createSerializable`.");
     return serializableResult;
+  }
+  template <typename... Args>
+  std::shared_ptr<Serializable> runSyncSerialized(
+      const std::shared_ptr<SerializableWorklet> &worklet,
+      Args &&...args) const {
+    return runSyncSerializedWithStack(worklet, std::nullopt, std::forward<Args>(args)...);
   }
   /* #endregion */
 
