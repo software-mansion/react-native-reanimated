@@ -89,7 +89,7 @@ Pod::Spec.new do |s|
 
   s.dependency 'React-jsi'
   using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
-  if using_hermes && !$config[:is_tvos_target]
+  if using_hermes
     s.dependency 'React-hermes'
   end
 end
