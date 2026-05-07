@@ -266,25 +266,28 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     return strongThis->obtainProp(rt, shadowNodeWrapper, propName);
   };
 
-  auto requestAnimationFrame = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &callback) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-
-    auto callbackFunction = std::make_shared<jsi::Function>(callback.asObject(rt).asFunction(rt));
-    strongThis->pendingAnimationFrameCallbackFromWorklets_ = [callbackFunction = std::move(callbackFunction),
-                                                              weakRuntime =
-                                                                  getWeakRuntimeFromJSIRuntime(rt)](double timestamp) {
-      auto runtime = weakRuntime.lock();
-      if (!runtime) {
+  std::optional<worklets::RequestAnimationFrameHostFunction> requestAnimationFrame;
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    requestAnimationFrame = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &callback) {
+      auto strongThis = weakThis.lock();
+      if (!strongThis) {
         return;
       }
 
-      runSyncOnRuntime(runtime, *callbackFunction, jsi::Value(timestamp));
+      auto callbackFunction = std::make_shared<jsi::Function>(callback.asObject(rt).asFunction(rt));
+      strongThis->pendingAnimationFrameCallbackFromWorklets_ =
+          [callbackFunction = std::move(callbackFunction),
+           weakRuntime = getWeakRuntimeFromJSIRuntime(rt)](double timestamp) {
+            auto runtime = weakRuntime.lock();
+            if (!runtime) {
+              return;
+            }
+
+            runSyncOnRuntime(runtime, *callbackFunction, jsi::Value(timestamp));
+          };
+      strongThis->startBackendIfNeeded();
     };
-    strongThis->startBackendIfNeeded();
-  };
+  }
 
   jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   UIRuntimeDecorator::decorate(
