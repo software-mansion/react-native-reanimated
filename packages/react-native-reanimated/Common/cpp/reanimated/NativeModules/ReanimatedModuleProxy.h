@@ -84,8 +84,6 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
 
-  void maybeRequestRender();
-
   bool
   handleEvent(const std::string &eventName, const int emitterReactTag, const jsi::Value &payload, double currentTime);
 
@@ -180,7 +178,6 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   std::unique_ptr<UIEventHandlerRegistry> eventHandlerRegistry_;
   const RequestRenderFunction requestRender_;
-  std::atomic<bool> renderRequested_{false};
   std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
