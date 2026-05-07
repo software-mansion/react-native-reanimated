@@ -158,7 +158,6 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       return;
     }
 
-    strongThis->renderRequested_ = false;
     strongThis->onRender(timestampMs);
   };
   onRenderCallback_ = std::move(onRenderCallback);
@@ -386,12 +385,6 @@ void ReanimatedModuleProxy::setShouldAnimateExiting(
 
 bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) {
   return eventHandlerRegistry_->isAnyHandlerWaitingForEvent(eventName, emitterReactTag);
-}
-
-void ReanimatedModuleProxy::maybeRequestRender() {
-  if (!renderRequested_.exchange(true)) {
-    requestRender_(onRenderCallback_);
-  }
 }
 
 void ReanimatedModuleProxy::onRender(double timestampMs) {
