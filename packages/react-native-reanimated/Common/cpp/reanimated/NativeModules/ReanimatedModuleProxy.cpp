@@ -774,9 +774,14 @@ void ReanimatedModuleProxy::startBackendIfNeeded() {
     if (isAnimationRunning_) {
       return;
     }
-    withAnimationBackend([this](const std::shared_ptr<AnimationBackend> &backend) {
-      animationBackendCallbackId_ = backend->start(
-          [this](AnimationTimestamp ts) { return grandCallback(ts, GrandCallbackSource::AnimationLoop); });
+    withAnimationBackendSync([this, weakThis = weak_from_this()](const std::shared_ptr<AnimationBackend> &backend) {
+      animationBackendCallbackId_ = backend->start([weakThis](AnimationTimestamp timestamp) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return AnimationMutations{};
+        }
+        return strongThis->grandCallback(timestamp, GrandCallbackSource::AnimationLoop);
+      });
       isAnimationRunning_ = true;
     });
   }
@@ -789,7 +794,7 @@ void ReanimatedModuleProxy::stopBackendIfIdle(const bool producedMutations) {
         animatedPropsRegistry_->hasPendingAnimatedPropsUpdates() || shouldFlushRegistry_ ||
         !layoutAnimationFlushRequests_.empty();
     if (!hasWork) {
-      withAnimationBackend(
+      withAnimationBackendSync(
           [this](const std::shared_ptr<AnimationBackend> &backend) { backend->stop(animationBackendCallbackId_); });
       isAnimationRunning_ = false;
     }
@@ -864,10 +869,10 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
     const jsi::Value &payload,
     const GrandCallbackSource state) {
   bool handled = false;
-  withAnimationBackend([&](const std::shared_ptr<AnimationBackend> &backend) {
-    backend->pushAnimationMutations([&, state](AnimationTimestamp ts) {
-      handled = handleEvent(eventName, emitterReactTag, payload, ts.count());
-      return grandCallback(ts, state);
+  withAnimationBackendSync([&](const std::shared_ptr<AnimationBackend> &backend) {
+    backend->pushAnimationMutations([&, state](AnimationTimestamp timestamp) {
+      handled = handleEvent(eventName, emitterReactTag, payload, timestamp.count());
+      return grandCallback(timestamp, state);
     });
   });
   return handled;

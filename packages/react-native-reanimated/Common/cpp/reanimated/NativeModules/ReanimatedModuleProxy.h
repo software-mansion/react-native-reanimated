@@ -188,7 +188,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
  private:
   template <typename Func>
-  void withAnimationBackend(Func &&fn) {
+  void withAnimationBackendSync(Func &&fn) {
     react_native_assert(
         uiManager_ != nullptr && "[Reanimated] Animation Backend used before the uiManager was registered");
     auto weak = uiManager_->unstable_getAnimationBackend();
