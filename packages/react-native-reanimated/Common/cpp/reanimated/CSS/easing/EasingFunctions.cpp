@@ -51,8 +51,8 @@ EasingFunction createParametrizedEasingFunction(jsi::Runtime &rt, const jsi::Obj
   const auto pointsCount = points.size(rt);
 
   if (pointsCount == 0) {
-    throw std::runtime_error(
-        std::string("[Reanimated] Parametrized easing function '" + easingName + "' requires a non-empty points array."));
+    throw std::runtime_error(std::string(
+        "[Reanimated] Parametrized easing function '" + easingName + "' requires a non-empty points array."));
   }
 
   for (size_t i = 0; i < pointsCount; i++) {

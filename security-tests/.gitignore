@@ -1,4 +1,10 @@
 01_easing_oob/build/
 02_arraybuffer_truncation/repro
-03_crlf_okhttp/*.class
 02_arraybuffer_truncation/repro.dSYM/
+03_crlf_okhttp/*.class
+04_serializable_nullderef/repro
+04_serializable_nullderef/repro.dSYM/
+06_asyncqueue_silent_null/repro
+06_asyncqueue_silent_null/repro.dSYM/
+</content>
+</invoke>
