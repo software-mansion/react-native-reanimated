@@ -1,4 +1,3 @@
-#import <QuartzCore/QuartzCore.h>
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
 #import <React/RCTScheduler.h>
