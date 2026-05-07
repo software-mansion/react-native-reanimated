@@ -14,12 +14,6 @@ declare global {
    */
   var _WORKLET: boolean | undefined;
 
-  /**
-   * This ArrayBuffer contains the memory address of `jsi::Runtime` which is the
-   * Reanimated UI runtime.
-   */
-  var _WORKLET_RUNTIME: ArrayBuffer;
-
   /** @deprecated Don't use. */
   var _IS_FABRIC: boolean | undefined;
 

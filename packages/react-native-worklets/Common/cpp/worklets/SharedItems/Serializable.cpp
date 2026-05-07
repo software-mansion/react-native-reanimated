@@ -85,7 +85,15 @@ std::shared_ptr<Serializable> extractSerializableOrThrow(
     auto object = maybeSerializableValue.asObject(rt);
     if (object.hasNativeState(rt)) {
       auto nativeState = object.getNativeState(rt);
-      return std::dynamic_pointer_cast<SerializableJSRef>(nativeState)->value();
+      auto serializableRef = std::dynamic_pointer_cast<SerializableJSRef>(nativeState);
+      if (!serializableRef) {
+        // The object carries native state but it is not one we set. Any other
+        // library can install its own NativeState (expo-modules' SharedObject,
+        // RN's runtime scheduler primitives, etc.); without this guard the
+        // dynamic cast returns nullptr and the next dereference is UB.
+        throw std::runtime_error(errorMessage);
+      }
+      return serializableRef->value();
     }
     throw std::runtime_error("[Worklets] Attempted to extract from an Object that wasn't converted to a Serializable.");
   } else if (maybeSerializableValue.isUndefined()) {

@@ -10,14 +10,12 @@ void RNRuntimeDecorator::decorate(
     jsi::Runtime &rnRuntime,
     jsi::Runtime &uiRuntime,
     const std::shared_ptr<ReanimatedModuleProxy> &reanimatedModuleProxy) {
-  auto workletRuntimeValue = rnRuntime.global()
-                                 .getPropertyAsObject(rnRuntime, "ArrayBuffer")
-                                 .asFunction(rnRuntime)
-                                 .callAsConstructor(rnRuntime, {static_cast<double>(sizeof(void *))});
-  uintptr_t *workletRuntimeData =
-      reinterpret_cast<uintptr_t *>(workletRuntimeValue.getObject(rnRuntime).getArrayBuffer(rnRuntime).data(rnRuntime));
-  workletRuntimeData[0] = reinterpret_cast<uintptr_t>(&uiRuntime);
-  rnRuntime.global().setProperty(rnRuntime, "_WORKLET_RUNTIME", workletRuntimeValue);
+  // The `_WORKLET_RUNTIME` global previously published the address of
+  // `uiRuntime` to the JS runtime as an 8-byte ArrayBuffer. No code in this
+  // repo or in `react-native-worklets` ever read it back, so it was a
+  // gratuitous heap-pointer leak that any JS in the bundle (third-party
+  // library, OTA-pushed bundle, etc.) could turn into an ASLR oracle. Removed.
+  (void)uiRuntime;
 
 #ifndef NDEBUG
   checkJSVersion(rnRuntime);

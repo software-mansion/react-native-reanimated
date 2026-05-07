@@ -80,7 +80,22 @@ jsi::Value runOnRuntimeSync(
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &serializableWorkletValue,
     const std::optional<std::string> &scheduleStack) {
-  auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
+  // jsi::Object::getHostObject<T> only asserts (debug-only) that the object is
+  // a host object before downcasting; in release the assert is compiled out,
+  // and on a non-host-object the implementation can either return a null
+  // shared_ptr or read uninitialized internal state. Validate the shape here
+  // so we never dereference a null/garbage pointer below.
+  if (!workletRuntimeValue.isObject()) {
+    throw jsi::JSError(rt, "[Worklets] runOnRuntimeSync: first argument must be a WorkletRuntime.");
+  }
+  auto workletRuntimeObject = workletRuntimeValue.getObject(rt);
+  if (!workletRuntimeObject.isHostObject(rt)) {
+    throw jsi::JSError(rt, "[Worklets] runOnRuntimeSync: first argument must be a WorkletRuntime.");
+  }
+  auto workletRuntime = workletRuntimeObject.getHostObject<WorkletRuntime>(rt);
+  if (!workletRuntime) {
+    throw jsi::JSError(rt, "[Worklets] runOnRuntimeSync: first argument must be a WorkletRuntime.");
+  }
   auto worklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
   worklet->setScheduleStack(scheduleStack);
@@ -125,17 +140,25 @@ inline jsi::Value reportFatalErrorOnJS(
 }
 
 inline std::shared_ptr<AsyncQueue> extractAsyncQueue(jsi::Runtime &rt, const jsi::Value &value) {
+  // The previous implementation returned nullptr for any wrong-shape input and
+  // the caller (createWorkletRuntime) passed it through unchecked, so a stray
+  // non-AsyncQueue object from JS turned into a null queue stored on the new
+  // WorkletRuntime — the eventual deref happened far from the bad input. Throw
+  // at the boundary instead so the error names the user-supplied value.
   if (!value.isObject()) {
-    return nullptr;
+    throw jsi::JSError(rt, "[Worklets] createWorkletRuntime: queue argument must be an AsyncQueue.");
   }
   const auto object = value.asObject(rt);
 
   if (!object.hasNativeState(rt)) {
-    return nullptr;
+    throw jsi::JSError(rt, "[Worklets] createWorkletRuntime: queue argument must be an AsyncQueue.");
   }
 
   const auto &nativeState = object.getNativeState(rt);
   auto asyncQueue = std::dynamic_pointer_cast<AsyncQueue>(nativeState);
+  if (!asyncQueue) {
+    throw jsi::JSError(rt, "[Worklets] createWorkletRuntime: queue argument must be an AsyncQueue.");
+  }
 
   return asyncQueue;
 }
