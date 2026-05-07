@@ -2,6 +2,8 @@
 
 #include <jsi/jsi.h>
 
+#include <worklets/Compat/StableApi.h>
+
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 using namespace facebook;
@@ -20,7 +22,8 @@ class UIRuntimeDecorator {
       const SetGestureStateFunction &setGestureState,
       const ProgressLayoutAnimationFunction &progressLayoutAnimation,
       const EndLayoutAnimationFunction &endLayoutAnimation,
-      const MaybeFlushUIUpdatesQueueFunction &maybeFlushUIUpdatesQueue);
+      const MaybeFlushUIUpdatesQueueFunction &maybeFlushUIUpdatesQueue,
+      const worklets::RequestAnimationFrameHostFunction &requestAnimationFrame);
 };
 
 } // namespace reanimated

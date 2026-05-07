@@ -24,8 +24,6 @@ class AnimationFrameBatchinator : public std::enable_shared_from_this<AnimationF
       const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime,
       RuntimeBindings::RequestAnimationFrame requestAnimationFrame);
 
-  void setRequestAnimationFrame(RuntimeBindings::RequestAnimationFrame requestAnimationFrame);
-
  private:
   void flush();
   std::vector<std::shared_ptr<const jsi::Function>> pullCallbacks();

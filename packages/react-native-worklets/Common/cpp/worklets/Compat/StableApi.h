@@ -16,6 +16,7 @@ namespace facebook::jsi {
 class Runtime;
 class Value;
 class Object;
+class Function;
 } // namespace facebook::jsi
 
 namespace worklets {
@@ -106,10 +107,11 @@ extern void runSyncOnRuntime(
     const facebook::jsi::Value &arg0,
     const facebook::jsi::Value &arg1);
 
-using RequestAnimationFrameFn = std::function<void(std::function<void(const double)>)>;
+using RequestAnimationFrameHostFunction =
+    std::function<void(facebook::jsi::Runtime &rt, const facebook::jsi::Value &callback)>;
 
-extern void setRequestAnimationFrame(
-    const std::shared_ptr<WorkletRuntime> &workletRuntime,
-    RequestAnimationFrameFn requestAnimationFrame);
+extern void installRequestAnimationFrame(
+    facebook::jsi::Runtime &uiRuntime,
+    RequestAnimationFrameHostFunction requestAnimationFrame);
 
 } // namespace worklets

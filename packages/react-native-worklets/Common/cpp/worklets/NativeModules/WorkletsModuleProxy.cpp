@@ -37,11 +37,6 @@ void WorkletsModuleProxy::start() {
   animationFrameBatchinator_ =
       std::make_shared<AnimationFrameBatchinator>(uiWorkletRuntime_, runtimeBindings_->requestAnimationFrame);
 
-  uiWorkletRuntime_->setRequestAnimationFrameSetter(
-      [batchinator = animationFrameBatchinator_](RuntimeBindings::RequestAnimationFrame raf) {
-        batchinator->setRequestAnimationFrame(std::move(raf));
-      });
-
   UIRuntimeDecorator::decorate(
       uiWorkletRuntime_->getJSIRuntime(), animationFrameBatchinator_->getJsiRequestAnimationFrame());
 }
@@ -78,10 +73,6 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           bundleModeConfig_,
           unpackerLoader_)) {
   RNRuntimeWorkletDecorator::decorate(rnRuntime, rnRuntimeProxy_->toOptimizedObject(rnRuntime), jsLogger_);
-}
-
-void WorkletsModuleProxy::setRequestAnimationFrame(RuntimeBindings::RequestAnimationFrame requestAnimationFrame) {
-  animationFrameBatchinator_->setRequestAnimationFrame(std::move(requestAnimationFrame));
 }
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {

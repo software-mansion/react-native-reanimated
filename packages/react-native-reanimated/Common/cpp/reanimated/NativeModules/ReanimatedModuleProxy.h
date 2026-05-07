@@ -226,7 +226,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   AnimatedSensorModule animatedSensorModule_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
-  std::function<void(double)> pendingAnimationFrameCallback_;
+  std::function<void(double)> pendingAnimationFrameCallbackFromWorklets_;
 
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;

@@ -4,6 +4,7 @@
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/JSISerializer.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RuntimeHolder.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
@@ -118,10 +119,10 @@ std::shared_ptr<UIScheduler> getUISchedulerFromHolder(facebook::jsi::Runtime &rt
   return object.getNativeState<UISchedulerHolder>(rt)->scheduler_;
 }
 
-void setRequestAnimationFrame(
-    const std::shared_ptr<WorkletRuntime> &workletRuntime,
-    RequestAnimationFrameFn requestAnimationFrame) {
-  workletRuntime->setRequestAnimationFrame(std::move(requestAnimationFrame));
+void installRequestAnimationFrame(
+    facebook::jsi::Runtime &uiRuntime,
+    RequestAnimationFrameHostFunction requestAnimationFrame) {
+  jsi_utils::installJsiFunction(uiRuntime, "__nativeRequestAnimationFrame", std::move(requestAnimationFrame));
 }
 
 } // namespace worklets

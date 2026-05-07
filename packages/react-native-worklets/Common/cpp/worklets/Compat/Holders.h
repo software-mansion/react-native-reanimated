@@ -8,8 +8,6 @@
 
 namespace worklets {
 
-class WorkletsModuleProxy;
-
 class WorkletRuntimeHolder : public facebook::jsi::NativeState {
  public:
   explicit WorkletRuntimeHolder(const std::shared_ptr<WorkletRuntime> &runtime) : runtime_(runtime) {}
@@ -22,13 +20,6 @@ class UISchedulerHolder : public facebook::jsi::NativeState {
   explicit UISchedulerHolder(const std::shared_ptr<UIScheduler> &scheduler) : scheduler_(scheduler) {}
 
   const std::shared_ptr<UIScheduler> scheduler_;
-};
-
-class WorkletsModuleProxyHolder : public facebook::jsi::NativeState {
- public:
-  explicit WorkletsModuleProxyHolder(const std::weak_ptr<WorkletsModuleProxy> &proxy) : proxy_(proxy) {}
-
-  const std::weak_ptr<WorkletsModuleProxy> proxy_;
 };
 
 } // namespace worklets

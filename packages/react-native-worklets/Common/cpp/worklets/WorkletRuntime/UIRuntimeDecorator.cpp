@@ -1,8 +1,6 @@
-#include <worklets/Tools/WorkletsJSIUtils.h>
+#include <worklets/Compat/StableApi.h>
 #include <worklets/WorkletRuntime/RuntimeKind.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
-
-#include <utility>
 
 namespace worklets {
 
@@ -14,7 +12,7 @@ void UIRuntimeDecorator::decorate(
 
   uiRuntime.global().setProperty(uiRuntime, "_UI", true);
 
-  jsi_utils::installJsiFunction(uiRuntime, "requestAnimationFrame", requestAnimationFrame);
+  installRequestAnimationFrame(uiRuntime, requestAnimationFrame);
 }
 
 } // namespace worklets

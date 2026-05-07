@@ -62,8 +62,4 @@ AnimationFrameBatchinator::AnimationFrameBatchinator(
     RuntimeBindings::RequestAnimationFrame requestAnimationFrame)
     : uiWorkletRuntime_(uiWorkletRuntime), requestAnimationFrame_(std::move(requestAnimationFrame)) {}
 
-void AnimationFrameBatchinator::setRequestAnimationFrame(RuntimeBindings::RequestAnimationFrame requestAnimationFrame) {
-  requestAnimationFrame_ = std::move(requestAnimationFrame);
-}
-
 } // namespace worklets

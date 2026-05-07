@@ -267,6 +267,26 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     return strongThis->obtainProp(rt, shadowNodeWrapper, propName);
   };
 
+  auto requestAnimationFrame = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &callback) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    auto callbackFunction = std::make_shared<jsi::Function>(callback.asObject(rt).asFunction(rt));
+    strongThis->pendingAnimationFrameCallbackFromWorklets_ = [callbackFunction = std::move(callbackFunction),
+                                                              weakRuntime =
+                                                                  getWeakRuntimeFromJSIRuntime(rt)](double timestamp) {
+      auto runtime = weakRuntime.lock();
+      if (!runtime) {
+        return;
+      }
+
+      runtime->runSync(*callbackFunction, timestamp);
+    };
+    strongThis->startBackendIfNeeded();
+  };
+
   jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   UIRuntimeDecorator::decorate(
       uiRuntime,
@@ -278,7 +298,8 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       platformDepMethodsHolder.setGestureStateFunction,
       progressLayoutAnimation,
       endLayoutAnimation,
-      platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction);
+      platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction,
+      requestAnimationFrame);
 }
 
 ReanimatedModuleProxy::~ReanimatedModuleProxy() {
@@ -764,7 +785,7 @@ void ReanimatedModuleProxy::startBackendIfNeeded() {
 
 void ReanimatedModuleProxy::stopBackendIfIdle(const bool producedMutations) {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    bool hasWork = producedMutations || pendingAnimationFrameCallback_ != nullptr ||
+    bool hasWork = producedMutations || pendingAnimationFrameCallbackFromWorklets_ != nullptr ||
         cssTransitionsRegistry_->hasUpdates() || cssAnimationsRegistry_->hasUpdates() ||
         animatedPropsRegistry_->hasPendingAnimatedPropsUpdates() || shouldFlushRegistry_ ||
         !layoutAnimationFlushRequests_.empty();
@@ -806,11 +827,11 @@ AnimationMutations ReanimatedModuleProxy::grandCallback(
 }
 
 void ReanimatedModuleProxy::executeWorkletsForFrame(const AnimationTimestamp timestamp) {
-  if (!pendingAnimationFrameCallback_) {
+  if (!pendingAnimationFrameCallbackFromWorklets_) {
     return;
   }
-  auto cb = std::move(pendingAnimationFrameCallback_);
-  pendingAnimationFrameCallback_ = nullptr;
+  auto cb = std::move(pendingAnimationFrameCallbackFromWorklets_);
+  pendingAnimationFrameCallbackFromWorklets_ = nullptr;
   cb(timestamp.count());
 }
 
@@ -1415,15 +1436,6 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
 
       react_native_assert(false);
     }
-
-    setRequestAnimationFrame(uiRuntime_, [weakThis = weak_from_this()](std::function<void(const double)> callback) {
-      auto strongThis = weakThis.lock();
-      if (!strongThis) {
-        return;
-      }
-      strongThis->pendingAnimationFrameCallback_ = std::move(callback);
-      strongThis->startBackendIfNeeded();
-    });
 
     requestRender_ = [weakThis = weak_from_this()](std::function<void(const double)> /*callback*/) {
       auto strongThis = weakThis.lock();
