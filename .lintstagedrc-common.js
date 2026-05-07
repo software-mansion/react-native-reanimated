@@ -2,6 +2,6 @@
 module.exports = {
   '*.(js|jsx|ts|tsx)': [
     'yarn eslint --flag v10_config_lookup_from_file',
-    'oxfmt',
+    'yarn run -T oxfmt',
   ],
 };

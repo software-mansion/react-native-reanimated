@@ -12,7 +12,7 @@
     "e2e": "start-server-and-test \"next start\" http://localhost:3000 \"cypress open --e2e\"",
     "e2e:headless": "start-server-and-test \"next start\" http://localhost:3000 \"cypress run --e2e\"",
     "lint": "eslint --max-warnings=0 .",
-    "format": "oxfmt ."
+    "format": "yarn run -T oxfmt ."
   },
   "dependencies": {
     "expo": "54.0.13",

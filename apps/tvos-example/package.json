@@ -7,7 +7,7 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "lint": "eslint . --max-warnings 0",
-    "format": "oxfmt .",
+    "format": "yarn run -T oxfmt .",
     "start": "react-native start",
     "test": "jest",
     "type:check": "tsc --noEmit"

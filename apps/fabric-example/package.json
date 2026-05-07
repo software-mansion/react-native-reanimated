@@ -7,7 +7,7 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "format": "oxfmt .",
+    "format": "yarn run -T oxfmt .",
     "lint": "eslint . --max-warnings 0",
     "type:check": "tsc --noEmit"
   },
