@@ -60,7 +60,7 @@ class UpdatesRegistry {
     std::lock_guard<std::mutex> lock{mutex_};
     flush(updatesBatch);
   }
-  // get updates in the non-animation backend path
+  // get updates in the animation backend path
   void flushAnimatedPropsUpdates(UpdatesBatchAnimatedProps &updatesBatch);
   // get only non-layout updates (for android event handling) in the animation backend path
   void flushNonLayoutUpdates(jsi::Runtime &rt, facebook::react::AnimationMutations &mutations);
