@@ -61,6 +61,26 @@ export class TestSuiteBuilder {
     });
   }
 
+  public beforeAll(job: MaybeAsync<void>) {
+    assertTestSuite(this._currentTestSuite);
+    this._currentTestSuite.beforeAll = job;
+  }
+
+  public afterAll(job: MaybeAsync<void>) {
+    assertTestSuite(this._currentTestSuite);
+    this._currentTestSuite.afterAll = job;
+  }
+
+  public beforeEach(job: MaybeAsync<void>) {
+    assertTestSuite(this._currentTestSuite);
+    this._currentTestSuite.beforeEach = job;
+  }
+
+  public afterEach(job: MaybeAsync<void>) {
+    assertTestSuite(this._currentTestSuite);
+    this._currentTestSuite.afterEach = job;
+  }
+
   public testEach<T>(examples: Array<T>, decorator: TestDecorator | null) {
     return (name: string, testCase: (example: T, index: number) => void | Promise<void>) => {
       examples.forEach((example, index) => {

@@ -3,18 +3,10 @@ import { useRef } from 'react';
 
 import { Matchers } from '../matchers/Matchers';
 import { TestComponent } from '../TestComponent';
-import type {
-  DefaultValue,
-  ValueWrapper,
-  MaybeAsync,
-  TestCase,
-  TestConfiguration,
-  TestSuite,
-  TestValue,
-} from '../types';
+import type { DefaultValue, ValueWrapper, TestCase, TestConfiguration, TestSuite, TestValue } from '../types';
 import { RenderLock } from '../utils/SyncUIRunner';
 import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
-import { assertTestCase, assertTestSuite } from './Asserts';
+import { assertTestCase } from './Asserts';
 import { CallTrackerRegistry } from './CallTrackerRegistry';
 import { NotificationRegistry } from './NotificationRegistry';
 import { TestSuiteBuilder } from './TestSuiteBuilder';
@@ -198,25 +190,5 @@ export class TestRunner {
   public expect(currentValue: TestValue): Matchers {
     assertTestCase(this._currentTestCase);
     return new Matchers(currentValue, this._currentTestCase);
-  }
-
-  public beforeAll(job: MaybeAsync<void>) {
-    assertTestSuite(this._currentTestSuite);
-    this._currentTestSuite.beforeAll = job;
-  }
-
-  public afterAll(job: MaybeAsync<void>) {
-    assertTestSuite(this._currentTestSuite);
-    this._currentTestSuite.afterAll = job;
-  }
-
-  public beforeEach(job: MaybeAsync<void>) {
-    assertTestSuite(this._currentTestSuite);
-    this._currentTestSuite.beforeEach = job;
-  }
-
-  public afterEach(job: MaybeAsync<void>) {
-    assertTestSuite(this._currentTestSuite);
-    this._currentTestSuite.afterEach = job;
   }
 }

@@ -28,21 +28,16 @@ describe('Error traces from UI', () => {
     name: 'testRuntime',
   });
 
-  test('setup beforeEach and afterEach', () => {
-    // TODO: there's a bug in ReJest and beforeEach/afterEach have to be
-    // registered inside a test case.
+  beforeEach(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    globalThis.__reportFatalRemoteError = (a: Error, _: boolean) => {
+      errorData = a;
+      notify('errorReported');
+    };
+  });
 
-    beforeEach(() => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      globalThis.__reportFatalRemoteError = (a: Error, _: boolean) => {
-        errorData = a;
-        notify('errorReported');
-      };
-    });
-
-    afterEach(() => {
-      globalThis.__reportFatalRemoteError = originalReportFatalRemoteError;
-    });
+  afterEach(() => {
+    globalThis.__reportFatalRemoteError = originalReportFatalRemoteError;
   });
 
   test('[UI] tag gets added to stack trace', () => {
