@@ -26,7 +26,11 @@ type Result = 'ok' | 'not_ok' | 'error';
 
 const DONE_NOTIFICATION_NAME = 'DONE_NOTIFICATION_NAME';
 
-const ValueComponent = ({ onRunUIFunction }: { onRunUIFunction: () => boolean }) => {
+const ValueComponent = ({
+  onRunUIFunction,
+}: {
+  onRunUIFunction: () => boolean;
+}) => {
   const sharedResult = useSharedValue<Result>('not_ok');
   registerValue(RESULT_SHARED_VALUE_REF, sharedResult);
 
@@ -60,10 +64,13 @@ describe('Test createSerializable', () => {
       <ValueComponent
         onRunUIFunction={() => {
           'worklet';
-          const checks = [typeof testString === 'string', testString === 'test'];
+          const checks = [
+            typeof testString === 'string',
+            testString === 'test',
+          ];
           return checks.every(Boolean);
         }}
-      />,
+      />
     );
     await waitForNotification(DONE_NOTIFICATION_NAME);
 
@@ -85,7 +92,7 @@ describe('Test createSerializable', () => {
           const checks = [typeof testNumber === 'number', testNumber === 123];
           return checks.every(Boolean);
         }}
-      />,
+      />
     );
     await waitForNotification(DONE_NOTIFICATION_NAME);
 
@@ -107,7 +114,7 @@ describe('Test createSerializable', () => {
           const checks = [typeof trueValue === 'boolean', trueValue === true];
           return checks.every(Boolean);
         }}
-      />,
+      />
     );
     await wait(100);
 
@@ -126,10 +133,13 @@ describe('Test createSerializable', () => {
       <ValueComponent
         onRunUIFunction={() => {
           'worklet';
-          const checks = [typeof falseValue === 'boolean', falseValue === false];
+          const checks = [
+            typeof falseValue === 'boolean',
+            falseValue === false,
+          ];
           return checks.every(Boolean);
         }}
-      />,
+      />
     );
     await waitForNotification(DONE_NOTIFICATION_NAME);
 
@@ -148,10 +158,13 @@ describe('Test createSerializable', () => {
       <ValueComponent
         onRunUIFunction={() => {
           'worklet';
-          const checks = [typeof undefinedValue === 'undefined', undefinedValue === undefined];
+          const checks = [
+            typeof undefinedValue === 'undefined',
+            undefinedValue === undefined,
+          ];
           return checks.every(Boolean);
         }}
-      />,
+      />
     );
     await waitForNotification(DONE_NOTIFICATION_NAME);
 
@@ -173,7 +186,7 @@ describe('Test createSerializable', () => {
           const checks = [typeof nullValue === 'object', nullValue === null];
           return checks.every(Boolean);
         }}
-      />,
+      />
     );
     await waitForNotification(DONE_NOTIFICATION_NAME);
 
@@ -192,10 +205,13 @@ describe('Test createSerializable', () => {
       <ValueComponent
         onRunUIFunction={() => {
           'worklet';
-          const checks = [typeof bigIntValue === 'bigint', bigIntValue === BigInt(123)];
+          const checks = [
+            typeof bigIntValue === 'bigint',
+            bigIntValue === BigInt(123),
+          ];
           return checks.every(Boolean);
         }}
-      />,
+      />
     );
     await waitForNotification(DONE_NOTIFICATION_NAME);
 
@@ -215,10 +231,13 @@ describe('Test createSerializable', () => {
       <ValueComponent
         onRunUIFunction={() => {
           'worklet';
-          const checks = [typeof bigIntValue === 'bigint', bigIntValue === maxInt64 * maxInt64];
+          const checks = [
+            typeof bigIntValue === 'bigint',
+            bigIntValue === maxInt64 * maxInt64,
+          ];
           return checks.every(Boolean);
         }}
-      />,
+      />
     );
     await waitForNotification(DONE_NOTIFICATION_NAME);
 
@@ -241,11 +260,11 @@ describe('Test createSerializable', () => {
           const checks = [
             typeof hostObjectValue === 'object',
             Object.keys(hostObjectValue).length === hostObjectKeys.length,
-            hostObjectKeys.every(key => hostObjectValue[key] !== undefined),
+            hostObjectKeys.every((key) => hostObjectValue[key] !== undefined),
           ];
           return checks.every(Boolean);
         }}
-      />,
+      />
     );
     await waitForNotification(DONE_NOTIFICATION_NAME);
 
@@ -354,7 +373,7 @@ describe('Test createSerializable', () => {
           ];
           return checks.every(Boolean);
         }}
-      />,
+      />
     );
     await waitForNotification(DONE_NOTIFICATION_NAME);
 
@@ -383,7 +402,7 @@ describe('Test createSerializable', () => {
           ];
           return checks.every(Boolean);
         }}
-      />,
+      />
     );
     await waitForNotification(DONE_NOTIFICATION_NAME);
 
@@ -416,7 +435,7 @@ describe('Test createSerializable', () => {
           ];
           return checks.every(Boolean);
         }}
-      />,
+      />
     );
     await wait(100);
 
@@ -435,10 +454,13 @@ describe('Test createSerializable', () => {
       <ValueComponent
         onRunUIFunction={() => {
           'worklet';
-          const checks = [errorValue instanceof Error, String(errorValue).includes('test')];
+          const checks = [
+            errorValue instanceof Error,
+            String(errorValue).includes('test'),
+          ];
           return checks.every(Boolean);
         }}
-      />,
+      />
     );
     await waitForNotification(DONE_NOTIFICATION_NAME);
 
@@ -460,7 +482,7 @@ describe('Test createSerializable', () => {
           const checks = [regExpValue instanceof RegExp, regExpValue.test('a')];
           return checks.every(Boolean);
         }}
-      />,
+      />
     );
     await waitForNotification(DONE_NOTIFICATION_NAME);
 
@@ -525,7 +547,8 @@ describe('Test createSerializable', () => {
             obj[key.object].g === 'test',
             typeof obj[key.remoteFunction] === 'function',
             __DEV__ === false ||
-              ('__remoteFunction' in obj[key.remoteFunction] && !!obj[key.remoteFunction].__remoteFunction),
+              ('__remoteFunction' in obj[key.remoteFunction] &&
+                !!obj[key.remoteFunction].__remoteFunction),
             obj[key.array].length === 1,
             obj[key.array][0] === 1,
             obj[key.workletFunction]() === 2,
@@ -536,7 +559,7 @@ describe('Test createSerializable', () => {
           ];
           return checks.every(Boolean);
         }}
-      />,
+      />
     );
     await waitForNotification(DONE_NOTIFICATION_NAME);
 
@@ -558,10 +581,13 @@ describe('Test createSerializable', () => {
       <ValueComponent
         onRunUIFunction={() => {
           'worklet';
-          const checks = [typeof workletFunction === 'function', workletFunction() === 1];
+          const checks = [
+            typeof workletFunction === 'function',
+            workletFunction() === 1,
+          ];
           return checks.every(Boolean);
         }}
-      />,
+      />
     );
     await waitForNotification(DONE_NOTIFICATION_NAME);
 
@@ -584,11 +610,13 @@ describe('Test createSerializable', () => {
           'worklet';
           const checks = [
             typeof remoteFunction === 'function',
-            __DEV__ === false || ('__remoteFunction' in remoteFunction && !!remoteFunction.__remoteFunction),
+            __DEV__ === false ||
+              ('__remoteFunction' in remoteFunction &&
+                !!remoteFunction.__remoteFunction),
           ];
           return checks.every(Boolean);
         }}
-      />,
+      />
     );
     await waitForNotification(DONE_NOTIFICATION_NAME);
 
@@ -599,7 +627,8 @@ describe('Test createSerializable', () => {
 
   test('createSerializableHostFunction', async () => {
     // Arrange
-    const hostFunction = globalThis.__workletsModuleProxy.createSerializableBoolean as any;
+    const hostFunction = globalThis.__workletsModuleProxy
+      .createSerializableBoolean as any;
 
     // Act
     await render(
@@ -608,10 +637,13 @@ describe('Test createSerializable', () => {
           'worklet';
           // createSerializableBoolean returns a SerializableRef<boolean> which is a serializable ref
           const serializableBoolean = hostFunction(true);
-          const checks = [typeof hostFunction === 'function', serializableBoolean.__serializableRef];
+          const checks = [
+            typeof hostFunction === 'function',
+            serializableBoolean.__serializableRef,
+          ];
           return checks.every(Boolean);
         }}
-      />,
+      />
     );
     await wait(100);
 
@@ -639,12 +671,14 @@ describe('Test createSerializable', () => {
           const checks = [
             obj.a === 1,
             obj.b === 'test',
-            reanimatedModuleKeys.every(key => key in Object.getPrototypeOf(obj)),
+            reanimatedModuleKeys.every(
+              (key) => key in Object.getPrototypeOf(obj)
+            ),
             'magicKey' in Object.getPrototypeOf(obj) === true,
           ];
           return checks.every(Boolean);
         }}
-      />,
+      />
     );
     await waitForNotification(DONE_NOTIFICATION_NAME);
 
@@ -667,10 +701,13 @@ describe('Test createSerializable', () => {
       <ValueComponent
         onRunUIFunction={() => {
           'worklet';
-          const checks = [arrayBuffer instanceof ArrayBuffer, arrayBuffer.byteLength === 3];
+          const checks = [
+            arrayBuffer instanceof ArrayBuffer,
+            arrayBuffer.byteLength === 3,
+          ];
           return checks.every(Boolean);
         }}
-      />,
+      />
     );
     await waitForNotification(DONE_NOTIFICATION_NAME);
 
@@ -696,7 +733,7 @@ describe('Test createSerializable', () => {
           const _test = cyclicArray[1];
           return true;
         }}
-      />,
+      />
     );
     await wait(100);
 
@@ -722,7 +759,7 @@ describe('Test createSerializable', () => {
           'worklet';
           return inaccessibleObject.access();
         }}
-      />,
+      />
     );
     await waitForNotification(DONE_NOTIFICATION_NAME);
 
@@ -744,7 +781,7 @@ describe('Test createSerializable', () => {
           foo();
           return true;
         }}
-      />,
+      />
     );
     await waitForNotification(DONE_NOTIFICATION_NAME);
 
@@ -766,7 +803,7 @@ describe('Test createSerializable', () => {
           foo();
           return true;
         }}
-      />,
+      />
     );
     await waitForNotification(DONE_NOTIFICATION_NAME);
 

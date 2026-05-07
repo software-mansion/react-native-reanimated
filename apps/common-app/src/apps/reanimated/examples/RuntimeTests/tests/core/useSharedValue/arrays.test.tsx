@@ -27,7 +27,11 @@ type ArrayComponentProps = {
 const ARRAY_OPERATION_NOTIFICATION_NAME = 'ARRAY_OPERATION_NOTIFICATION_NAME';
 
 describe(`_Array operations_ on sharedValue`, () => {
-  const AppendToArrayOriginalAPI = ({ initialArray, appendedArray, progress }: ArrayComponentProps) => {
+  const AppendToArrayOriginalAPI = ({
+    initialArray,
+    appendedArray,
+    progress,
+  }: ArrayComponentProps) => {
     const sharedValue = useSharedValue(initialArray);
     registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
 
@@ -38,12 +42,16 @@ describe(`_Array operations_ on sharedValue`, () => {
     return <ProgressBar progress={progress} />;
   };
 
-  const AppendToArrayReactAPI = ({ initialArray, appendedArray, progress }: ArrayComponentProps) => {
+  const AppendToArrayReactAPI = ({
+    initialArray,
+    appendedArray,
+    progress,
+  }: ArrayComponentProps) => {
     const sharedValue = useSharedValue(initialArray);
     registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
 
     useEffect(() => {
-      sharedValue.set(value => [...value, ...appendedArray]);
+      sharedValue.set((value) => [...value, ...appendedArray]);
       notify(ARRAY_OPERATION_NOTIFICATION_NAME);
     });
     return <ProgressBar progress={progress} />;
@@ -55,8 +63,17 @@ describe(`_Array operations_ on sharedValue`, () => {
     progress,
     mutableAPI,
   }: ArrayComponentProps & { mutableAPI: MutableAPI }) {
-    const ComponentToRender = mutableAPI === MutableAPI.ORIGINAL ? AppendToArrayOriginalAPI : AppendToArrayReactAPI;
-    await render(<ComponentToRender initialArray={initialArray} appendedArray={appendedArray} progress={progress} />);
+    const ComponentToRender =
+      mutableAPI === MutableAPI.ORIGINAL
+        ? AppendToArrayOriginalAPI
+        : AppendToArrayReactAPI;
+    await render(
+      <ComponentToRender
+        initialArray={initialArray}
+        appendedArray={appendedArray}
+        progress={progress}
+      />
+    );
     const expected = [...initialArray, ...appendedArray];
     await waitForNotification(ARRAY_OPERATION_NOTIFICATION_NAME);
     const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);

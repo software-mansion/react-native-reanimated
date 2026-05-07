@@ -24,21 +24,29 @@ import Animated, { useAnimatedRef } from 'react-native-reanimated';
 import { describe, render, test } from '../../ReJest/RuntimeTestsApi';
 
 const AnimatedFlashList = Animated.createAnimatedComponent(FlashList);
-const AnimatedActivityIndicator = Animated.createAnimatedComponent(ActivityIndicator);
+const AnimatedActivityIndicator =
+  Animated.createAnimatedComponent(ActivityIndicator);
 const AnimatedButton = Animated.createAnimatedComponent(Button);
-const AnimatedImageBackground = Animated.createAnimatedComponent(ImageBackground);
-const AnimatedKeyboardAvoidingView = Animated.createAnimatedComponent(KeyboardAvoidingView);
+const AnimatedImageBackground =
+  Animated.createAnimatedComponent(ImageBackground);
+const AnimatedKeyboardAvoidingView =
+  Animated.createAnimatedComponent(KeyboardAvoidingView);
 const AnimatedModal = Animated.createAnimatedComponent(Modal);
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const AnimatedRefreshControl = Animated.createAnimatedComponent(RefreshControl);
 const AnimatedSectionList = Animated.createAnimatedComponent(SectionList);
 const AnimatedSwitch = Animated.createAnimatedComponent(Switch);
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
-const AnimatedTouchableHighlight = Animated.createAnimatedComponent(TouchableHighlight);
-const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
-const AnimatedTouchableWithoutFeedback = Animated.createAnimatedComponent(TouchableWithoutFeedback);
-// @ts-ignore This is broken with react-native-strict-api types.
-const AnimatedVirtualizedList = Animated.createAnimatedComponent(VirtualizedList);
+const AnimatedTouchableHighlight =
+  Animated.createAnimatedComponent(TouchableHighlight);
+const AnimatedTouchableOpacity =
+  Animated.createAnimatedComponent(TouchableOpacity);
+const AnimatedTouchableWithoutFeedback = Animated.createAnimatedComponent(
+  TouchableWithoutFeedback
+);
+const AnimatedVirtualizedList =
+  // @ts-ignore This is broken with react-native-strict-api types.
+  Animated.createAnimatedComponent(VirtualizedList);
 const AnimatedRNGHScrollView = Animated.createAnimatedComponent(RNGHScrollView);
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
@@ -71,7 +79,9 @@ describe('Test *****useAnimatedRef*****', () => {
     const Component = () => {
       const animatedRef = useAnimatedRef<Animated.Image>();
 
-      return <Animated.Image ref={animatedRef} src={'../../../assets/doge.png'} />;
+      return (
+        <Animated.Image ref={animatedRef} src={'../../../assets/doge.png'} />
+      );
     };
 
     test('mounts without crashing', async () => {
@@ -93,7 +103,13 @@ describe('Test *****useAnimatedRef*****', () => {
   describe('Animated.FlatList', () => {
     const Component = () => {
       const animatedRef = useAnimatedRef<Animated.FlatList<number>>();
-      return <Animated.FlatList ref={animatedRef} data={[]} renderItem={() => null} />;
+      return (
+        <Animated.FlatList
+          ref={animatedRef}
+          data={[]}
+          renderItem={() => null}
+        />
+      );
     };
 
     test('mounts without crashing', async () => {
@@ -104,7 +120,13 @@ describe('Test *****useAnimatedRef*****', () => {
   describe('Animated.FlashList', () => {
     const Component = () => {
       const animatedRef = useAnimatedRef<typeof AnimatedFlashList>();
-      return <AnimatedFlashList ref={animatedRef} data={[]} renderItem={() => null} />;
+      return (
+        <AnimatedFlashList
+          ref={animatedRef}
+          data={[]}
+          renderItem={() => null}
+        />
+      );
     };
     test('mounts without crashing', async () => {
       await render(<Component />);
@@ -124,7 +146,9 @@ describe('Test *****useAnimatedRef*****', () => {
   describe('Animated.Button', () => {
     const Component = () => {
       const animatedRef = useAnimatedRef<typeof AnimatedButton>();
-      return <AnimatedButton ref={animatedRef} title="Press me" onPress={() => {}} />;
+      return (
+        <AnimatedButton ref={animatedRef} title="Press me" onPress={() => {}} />
+      );
     };
     test('mounts without crashing', async () => {
       await render(<Component />);
@@ -184,7 +208,13 @@ describe('Test *****useAnimatedRef*****', () => {
   describe('Animated.RefreshControl', () => {
     const Component = () => {
       const animatedRef = useAnimatedRef<typeof AnimatedRefreshControl>();
-      return <AnimatedRefreshControl ref={animatedRef} refreshing={false} onRefresh={() => {}} />;
+      return (
+        <AnimatedRefreshControl
+          ref={animatedRef}
+          refreshing={false}
+          onRefresh={() => {}}
+        />
+      );
     };
     test('mounts without crashing', async () => {
       await render(<Component />);
@@ -194,7 +224,13 @@ describe('Test *****useAnimatedRef*****', () => {
   describe('Animated.SectionList', () => {
     const Component = () => {
       const animatedRef = useAnimatedRef<typeof AnimatedSectionList>();
-      return <AnimatedSectionList ref={animatedRef} sections={[]} renderItem={() => null} />;
+      return (
+        <AnimatedSectionList
+          ref={animatedRef}
+          sections={[]}
+          renderItem={() => null}
+        />
+      );
     };
     test('mounts without crashing', async () => {
       await render(<Component />);
@@ -204,7 +240,13 @@ describe('Test *****useAnimatedRef*****', () => {
   describe('Animated.Switch', () => {
     const Component = () => {
       const animatedRef = useAnimatedRef<typeof AnimatedSwitch>();
-      return <AnimatedSwitch ref={animatedRef} value={false} onValueChange={() => {}} />;
+      return (
+        <AnimatedSwitch
+          ref={animatedRef}
+          value={false}
+          onValueChange={() => {}}
+        />
+      );
     };
     test('mounts without crashing', async () => {
       await render(<Component />);
@@ -214,7 +256,13 @@ describe('Test *****useAnimatedRef*****', () => {
   describe('Animated.TextInput', () => {
     const Component = () => {
       const animatedRef = useAnimatedRef<typeof AnimatedTextInput>();
-      return <AnimatedTextInput ref={animatedRef} value="Hello" onChangeText={() => {}} />;
+      return (
+        <AnimatedTextInput
+          ref={animatedRef}
+          value="Hello"
+          onChangeText={() => {}}
+        />
+      );
     };
     test('mounts without crashing', async () => {
       await render(<Component />);
@@ -251,7 +299,8 @@ describe('Test *****useAnimatedRef*****', () => {
 
   describe('Animated.TouchableWithoutFeedback', () => {
     const Component = () => {
-      const animatedRef = useAnimatedRef<typeof AnimatedTouchableWithoutFeedback>();
+      const animatedRef =
+        useAnimatedRef<typeof AnimatedTouchableWithoutFeedback>();
       return (
         <AnimatedTouchableWithoutFeedback ref={animatedRef} onPress={() => {}}>
           <Text>Dont feedback me</Text>
@@ -295,7 +344,14 @@ describe('Test *****useAnimatedRef*****', () => {
   describe('Animated.Path from react-native-svg', () => {
     const Component = () => {
       const animatedRef = useAnimatedRef<typeof AnimatedPath>();
-      return <AnimatedPath ref={animatedRef} d="M10 10 H 90 V 90 H 10 L 10 10" stroke="black" fill="transparent" />;
+      return (
+        <AnimatedPath
+          ref={animatedRef}
+          d="M10 10 H 90 V 90 H 10 L 10 10"
+          stroke="black"
+          fill="transparent"
+        />
+      );
     };
     test('mounts without crashing', async () => {
       await render(<Component />);

@@ -13,7 +13,11 @@ export class TestSuiteBuilder {
     return this._testSuites;
   }
 
-  public describe(name: string, buildSuite: MaybeAsync<void>, decorator: DescribeDecorator | null) {
+  public describe(
+    name: string,
+    buildSuite: MaybeAsync<void>,
+    decorator: DescribeDecorator | null
+  ) {
     if (decorator === DescribeDecorator.ONLY) {
       this._includesOnly = true;
     }
@@ -22,12 +26,15 @@ export class TestSuiteBuilder {
     if (this._currentTestSuite === null) {
       index = this._testSuites.length; // If we have no parent describe, we append at the end
     } else {
-      const parentIndex = this._testSuites.findIndex(testSuite => {
+      const parentIndex = this._testSuites.findIndex((testSuite) => {
         return testSuite === this._currentTestSuite;
       });
       const parentNesting = this._currentTestSuite.nestingLevel;
       index = parentIndex + 1;
-      while (index < this._testSuites.length && this._testSuites[index].nestingLevel > parentNesting) {
+      while (
+        index < this._testSuites.length &&
+        this._testSuites[index].nestingLevel > parentNesting
+      ) {
         // Append after last child of the parent describe
         // The children have bigger nesting level
         index += 1;
@@ -45,7 +52,11 @@ export class TestSuiteBuilder {
     });
   }
 
-  public test(name: string, run: MaybeAsync<void>, decorator: TestDecorator | null) {
+  public test(
+    name: string,
+    run: MaybeAsync<void>,
+    decorator: TestDecorator | null
+  ) {
     assertTestSuite(this._currentTestSuite);
     if (decorator === TestDecorator.ONLY) {
       this._includesOnly = true;
@@ -56,18 +67,27 @@ export class TestSuiteBuilder {
       componentsRefs: {},
       callsRegistry: {},
       errors: [],
-      skip: decorator === TestDecorator.SKIP || this._currentTestSuite.decorator === DescribeDecorator.SKIP,
+      skip:
+        decorator === TestDecorator.SKIP ||
+        this._currentTestSuite.decorator === DescribeDecorator.SKIP,
       decorator,
     });
   }
 
   public testEach<T>(examples: Array<T>, decorator: TestDecorator | null) {
-    return (name: string, testCase: (example: T, index: number) => void | Promise<void>) => {
+    return (
+      name: string,
+      testCase: (example: T, index: number) => void | Promise<void>
+    ) => {
       examples.forEach((example, index) => {
         const currentTestCase = async () => {
           await testCase(example, index);
         };
-        this.test(formatTestName(name, example, index), currentTestCase, decorator);
+        this.test(
+          formatTestName(name, example, index),
+          currentTestCase,
+          decorator
+        );
       });
     };
   }
@@ -87,13 +107,16 @@ export class TestSuiteBuilder {
       let skipTestSuite = testSuite.skip;
 
       if (this._includesOnly) {
-        skipTestSuite = skipTestSuite || !(testSuite.decorator === DescribeDecorator.ONLY);
+        skipTestSuite =
+          skipTestSuite || !(testSuite.decorator === DescribeDecorator.ONLY);
 
         for (const testCase of testSuite.testCases) {
           if (testCase.decorator === TestDecorator.ONLY) {
             skipTestSuite = false;
           } else {
-            testCase.skip = testCase.skip || !(testSuite.decorator === DescribeDecorator.ONLY);
+            testCase.skip =
+              testCase.skip ||
+              !(testSuite.decorator === DescribeDecorator.ONLY);
           }
         }
       }

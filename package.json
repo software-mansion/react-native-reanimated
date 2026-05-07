@@ -26,12 +26,12 @@
     "build-docs": "yarn workspaces foreach --all --parallel --topological-dev --include 'docs-*' run build",
     "build-packages": "yarn workspace react-native-reanimated build",
     "format": "yarn format:root && yarn format:workspaces",
-    "format:root": "yarn run -T oxfmt --ignore-path .gitignore --ignore-path .prettierignore --ignore-path .prettiereslintignore .",
+    "format:root": "yarn run --top-level oxfmt --ignore-path .prettiereslintignore .",
     "format:md": "remark --output --ext md . && remark --rc-path .remarkrc.mdx.mjs --output --ext mdx .",
     "format:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run format",
     "lint": "yarn lint:root && yarn lint:workspaces",
     "lint:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run lint",
-    "lint:root": "eslint . --ignore-pattern 'packages/**' --ignore-pattern 'apps/**' --ignore-pattern 'docs/**' && yarn run -T oxfmt --check --ignore-path .gitignore --ignore-path .prettierignore --ignore-path .prettiereslintignore .",
+    "lint:root": "eslint . --ignore-pattern 'packages/**' --ignore-pattern 'apps/**' --ignore-pattern 'docs/**' && yarn run --top-level oxfmt --check --ignore-path .prettiereslintignore .",
     "toggle-bundle-mode": "bash ./scripts/toggle-bundle-mode.sh"
   },
   "devDependencies": {

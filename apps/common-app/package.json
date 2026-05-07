@@ -5,7 +5,7 @@
   "scripts": {
     "build": "",
     "lint": "eslint . --flag v10_config_lookup_from_file",
-    "format": "yarn run -T oxfmt .",
+    "format": "yarn run --top-level oxfmt .",
     "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src",
     "type:check": "yarn type:check:native && yarn type:check:web",
     "type:check:native": "tsc --noEmit",

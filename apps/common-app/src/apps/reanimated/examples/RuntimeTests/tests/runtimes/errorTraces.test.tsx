@@ -16,7 +16,9 @@ import {
 } from 'react-native-worklets';
 
 declare global {
-  var __reportFatalRemoteError: ((error: Error, _: boolean) => void) | undefined;
+  var __reportFatalRemoteError:
+    | ((error: Error, _: boolean) => void)
+    | undefined;
 }
 
 const originalReportFatalRemoteError = globalThis.__reportFatalRemoteError;
@@ -86,7 +88,9 @@ describe('Error traces from UI', () => {
 
     await waitForNotification('errorReported');
     expect(errorData?.stack?.includes('at [testRuntime]:')).toBe(true);
-    expect(errorData?.stack?.includes('at [testRuntime]: functionNameB')).toBe(true);
+    expect(errorData?.stack?.includes('at [testRuntime]: functionNameB')).toBe(
+      true
+    );
   });
 
   test('runOnUISync has good stack trace added', async () => {
@@ -118,6 +122,8 @@ describe('Error traces from UI', () => {
 
     await waitForNotification('errorReported');
     expect(errorData?.stack?.includes('at [testRuntime]:')).toBe(true);
-    expect(errorData?.stack?.includes('at [testRuntime]: functionNameD')).toBe(true);
+    expect(errorData?.stack?.includes('at [testRuntime]: functionNameD')).toBe(
+      true
+    );
   });
 });

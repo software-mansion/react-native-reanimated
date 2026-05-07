@@ -20,23 +20,10 @@
     "macos/",
     "vendor/",
     "apps/common-app/**/*.snapshot.ts",
-    "docs/"
+    "docs/**/build/",
+    "docs/**/.docusaurus/"
   ],
   "overrides": [
-    {
-      "files": ["apps/common-app/src/apps/reanimated/examples/RuntimeTests/**"],
-      "options": {
-        "arrowParens": "avoid",
-        "trailingComma": "all",
-        "printWidth": 120
-      }
-    },
-    {
-      "files": ["**/*.snapshot.ts"],
-      "options": {
-        "printWidth": 1000
-      }
-    },
     {
       "files": ["packages/react-native-worklets/src/types.ts"],
       "options": {

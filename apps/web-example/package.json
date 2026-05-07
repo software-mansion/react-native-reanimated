@@ -7,7 +7,7 @@
     "start": "expo start --web",
     "start:noplugin": "DISABLE_BABEL_PLUGIN=1 yarn start",
     "production": "yarn expo export -p web && yarn serve dist --single",
-    "format": "yarn run -T oxfmt .",
+    "format": "yarn run --top-level oxfmt .",
     "build": "",
     "lint": "eslint . --max-warnings 0",
     "type:check": "tsc --noEmit",

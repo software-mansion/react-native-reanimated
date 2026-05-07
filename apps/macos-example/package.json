@@ -5,7 +5,7 @@
   "scripts": {
     "macos": "react-native run-macos",
     "build": "cd macos && bundle install && bundle exec pod update --no-repo-update",
-    "format": "yarn run -T oxfmt .",
+    "format": "yarn run --top-level oxfmt .",
     "lint": "eslint . --max-warnings 0",
     "start": "react-native start",
     "type:check": "tsc --noEmit"

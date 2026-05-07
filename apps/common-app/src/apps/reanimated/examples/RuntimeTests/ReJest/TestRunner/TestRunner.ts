@@ -28,10 +28,12 @@ export { Presets } from '../Presets';
 export class TestRunner {
   private _currentTestSuite: TestSuite | null = null;
   private _currentTestCase: TestCase | null = null;
-  private _renderHook: (component: ReactElement<Component> | null) => void = () => {};
+  private _renderHook: (component: ReactElement<Component> | null) => void =
+    () => {};
   private _renderLock: RenderLock = new RenderLock();
   private _testSummary: TestSummaryLogger = new TestSummaryLogger();
-  private _windowDimensionsMocker: WindowDimensionsMocker = new WindowDimensionsMocker();
+  private _windowDimensionsMocker: WindowDimensionsMocker =
+    new WindowDimensionsMocker();
   private _animationRecorder = new AnimationUpdatesRecorder();
   private _valueRegistry = new ValueRegistry();
   private _callTrackerRegistry = new CallTrackerRegistry();
@@ -69,12 +71,18 @@ export class TestRunner {
 
   public createTestValue<T = DefaultValue>(
     defaultValue: T | DefaultValue,
-    customSetter?: (prev: T, current: T) => T,
-  ): [ValueWrapper<T>, (value?: T | DefaultValue, notificationName?: string) => void] {
+    customSetter?: (prev: T, current: T) => T
+  ): [
+    ValueWrapper<T>,
+    (value?: T | DefaultValue, notificationName?: string) => void,
+  ] {
     const state: ValueWrapper<T> = {
       value: defaultValue,
     };
-    const jsSetter = (value: T | DefaultValue = 'ok', notificationName?: string) => {
+    const jsSetter = (
+      value: T | DefaultValue = 'ok',
+      notificationName?: string
+    ) => {
       if (customSetter) {
         state.value = customSetter(state.value as T, value as T);
       } else {
