@@ -55,7 +55,10 @@ class UpdatesRegistry {
   void collectPropsToRevert(PropsToRevertMap &propsToRevertMap);
 #endif
 
-  void flushUpdates(UpdatesBatch &updatesBatch);
+  void flushUpdates(UpdatesBatch &updatesBatch) {
+    std::lock_guard<std::mutex> lock{mutex_};
+    flush(updatesBatch);
+  }
   void flushAnimatedPropsUpdates(UpdatesBatchAnimatedProps &updatesBatch);
   void flushNonLayoutUpdates(jsi::Runtime &rt, facebook::react::AnimationMutations &mutations);
   bool hasPendingAnimatedPropsUpdates() const;
