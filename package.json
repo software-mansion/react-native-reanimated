@@ -21,8 +21,10 @@
   "private": true,
   "scripts": {
     "build": "husky && yarn build-packages",
-    "build-packages": "yarn workspace react-native-reanimated build",
     "build-all": "husky && yarn workspaces foreach --all --parallel --topological-dev run build",
+    "build-apps": "yarn workspaces foreach --all --parallel --topological-dev --include '{common-app,*-example}' run build",
+    "build-docs": "yarn workspaces foreach --all --parallel --topological-dev --include 'docs-*' run build",
+    "build-packages": "yarn workspace react-native-reanimated build",
     "format": "yarn format:root && yarn format:workspaces",
     "format:root": "prettier --cache --write --list-different --ignore-path .gitignore --ignore-path .prettierignore --ignore-path .prettiereslintignore .",
     "format:md": "remark --output --ext md . && remark --rc-path .remarkrc.mdx.mjs --output --ext mdx .",

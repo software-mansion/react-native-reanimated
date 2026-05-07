@@ -256,12 +256,14 @@ std::shared_ptr<WorkletRuntime> extractWorkletRuntime(jsi::Runtime &rt, const js
 void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
-    const jsi::Value &serializableWorkletValue) {
+    const jsi::Value &serializableWorkletValue,
+    const std::optional<std::string> &scheduleStack) {
   auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
   auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt,
       serializableWorkletValue,
       "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
+  serializableWorklet->setScheduleStack(scheduleStack);
   workletRuntime->schedule(serializableWorklet);
 }
 
@@ -302,7 +304,8 @@ static const auto callGuardLambda = [](facebook::jsi::Runtime &rt,
                                        const facebook::jsi::Value &thisVal,
                                        const facebook::jsi::Value *args,
                                        size_t count) {
-  return args[0].asObject(rt).asFunction(rt).call(rt, args + 1, count - 1);
+  // args[0] = function, args[1] = scheduleStack (string), args[2..] = actual args
+  return args[0].asObject(rt).asFunction(rt).call(rt, args + 2, count - 2);
 };
 
 jsi::Function WorkletRuntime::getCallGuard(jsi::Runtime &rt) {

@@ -24,19 +24,6 @@ fun safeAppExtGet(prop: String, fallback: Any?): Any? {
         fallback
 }
 
-fun isNewArchitectureEnabled(): Boolean {
-    // In React Native 0.82+, users can no longer opt-out of the New Architecture.
-    if (getReactNativeMinorVersion() >= 82) {
-        return true
-    }
-
-    // In older versions, to opt-in for the New Architecture, you can either:
-    // - Set `newArchEnabled` to true inside the `gradle.properties` file
-    // - Invoke gradle with `-newArchEnabled=true`
-    // - Set an environment variable `ORG_GRADLE_PROJECT_newArchEnabled=true`
-    return project.hasProperty("newArchEnabled") && project.property("newArchEnabled") == "true"
-}
-
 fun resolveReactNativeDirectory(): File {
     val reactNativeLocation = safeAppExtGet("REACT_NATIVE_NODE_MODULES_DIR", null) as String?
     if (reactNativeLocation != null) {
@@ -127,7 +114,7 @@ fun getStaticFeatureFlagsString(featureFlags: Map<String, String>): String =
 fun isFlagEnabled(featureFlags: Map<String, String>, flagName: String): Boolean =
     featureFlags.containsKey(flagName) && featureFlags[flagName] == "true"
 
-if (isNewArchitectureEnabled() && project != rootProject) {
+if (project != rootProject) {
     apply(plugin = "com.facebook.react")
 }
 
@@ -137,7 +124,6 @@ val packageDir: File = project.projectDir.parentFile
 val reactNativeRootDir: File = resolveReactNativeDirectory()
 val REACT_NATIVE_VERSION: String = getReactNativeVersion()
 val WORKLETS_VERSION: String = getWorkletsVersion()
-val IS_NEW_ARCHITECTURE_ENABLED: Boolean = isNewArchitectureEnabled()
 val IS_REANIMATED_EXAMPLE_APP: Boolean = safeAppExtGet("isReanimatedExampleApp", false)?.toString()?.toBoolean() ?: false
 val FETCH_PREVIEW_ENABLED: Boolean = isFlagEnabled(featureFlags, "FETCH_PREVIEW_ENABLED")
 val WORKLETS_FEATURE_FLAGS: String = getStaticFeatureFlagsString(featureFlags)
@@ -363,16 +349,6 @@ tasks.register("assertMinimalReactNativeVersionTask") {
 }
 
 tasks.named("preBuild") { dependsOn("assertMinimalReactNativeVersionTask") }
-
-tasks.register("assertNewArchitectureEnabledTask") {
-    val isNewArch = IS_NEW_ARCHITECTURE_ENABLED
-    onlyIf { !isNewArch }
-    doFirst {
-        throw GradleException("[Worklets] Worklets require new architecture to be enabled. Please enable it by setting `newArchEnabled` to `true` in `gradle.properties`.")
-    }
-}
-
-tasks.named("preBuild") { dependsOn("assertNewArchitectureEnabledTask") }
 
 // Workaround for AGP 9 + Kotlin 2.x lint K2 UAST crash on .gradle.kts build scripts.
 // See: https://issuetracker.google.com/issues/432144179

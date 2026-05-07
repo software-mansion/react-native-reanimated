@@ -54,12 +54,6 @@ def worklets_assert_minimal_react_native_version(config)
   end
 end
 
-def worklets_assert_new_architecture_enabled(new_arch_enabled)
-  if !new_arch_enabled
-    raise "[Worklets] Worklets require the New Architecture to be enabled. If you have `RCT_NEW_ARCH_ENABLED=0` set in your environment you should remove it."
-  end
-end
-
 def worklets_get_flag_from_feature_flags(feature_flags, flag_name)
   if feature_flags[flag_name] == 'true'
     return "-DWORKLETS_#{flag_name}"
