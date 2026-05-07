@@ -14,11 +14,6 @@ export function setupRequestAnimationFrame() {
 
   let queuedFinalizers: (() => void)[] = [];
 
-  function nativeRequestAnimationFrame(callback: (timestamp: number) => void) {
-    const requestAnimationFrameImpl = globalThis.__nativeRequestAnimationFrame;
-    requestAnimationFrameImpl(callback);
-  }
-
   function executeQueue(timestamp: number) {
     flushedCallbacks = queuedCallbacks;
     queuedCallbacks = [];
@@ -66,7 +61,7 @@ export function setupRequestAnimationFrame() {
     flushQueue(timestamp);
 
     /* Schedule next frame */
-    nativeRequestAnimationFrame(nativeFlushQueue);
+    globalThis.__nativeRequestAnimationFrame(nativeFlushQueue);
   }
 
   function flushQueue(timestamp: number) {
@@ -83,7 +78,7 @@ export function setupRequestAnimationFrame() {
   };
 
   /* Start the loop */
-  nativeRequestAnimationFrame(nativeFlushQueue);
+  globalThis.__nativeRequestAnimationFrame(nativeFlushQueue);
 
   // TODO: Remove it after support for Reanimated 4.3 is dropped.
   globalThis.__flushAnimationFrame = (eventTimestamp: number) => {
