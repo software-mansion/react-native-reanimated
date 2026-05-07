@@ -34,7 +34,7 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
           react_native_assert(children.size() > 0);
           const auto &childShadowNode = children[0];
           react_native_assert(!strcmp(childShadowNode->getComponentName(), "RawText"));
-          addUpdatesToBatch(childShadowNode, folly::dynamic::object("text", value.asString()));
+          addUpdatesToBatch(childShadowNode->getFamilyShared(), folly::dynamic::object("text", value.asString()));
           if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
             timestampMap_[childShadowNode->getTag()] = timestamp;
           }
