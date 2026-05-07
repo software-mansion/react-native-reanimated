@@ -36,6 +36,12 @@
       "options": {
         "printWidth": 1000
       }
+    },
+    {
+      "files": ["packages/react-native-worklets/src/types.ts"],
+      "options": {
+        "jsdoc": false
+      }
     }
   ]
 }

@@ -44,13 +44,13 @@ function getMonorepoMetroOptions(modulesToFilter, appDir, defaultConfig) {
  */
 function getModuleBlocklist(moduleNames, defaultConfig) {
   const blockList = moduleNames.reduce(
-    (acc, /** @type {RegExp[]} */ moduleName) => {
+    (/** @type {RegExp[]} */ acc, /** @type {string} */ moduleName) => {
       blockedDirs.forEach((dir) => {
         acc.push(getBlockRegex(dir, moduleName));
       });
       return acc;
     },
-    /** @type {RegExp[]} */ ([])
+    []
   );
   const mergedBlockList = [
     ...blockList.concat(defaultConfig?.resolver?.blockList ?? []),
