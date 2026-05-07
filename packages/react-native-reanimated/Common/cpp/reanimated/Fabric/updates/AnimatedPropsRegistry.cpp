@@ -1,10 +1,10 @@
+#include <react/debug/react_native_assert.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 #include <reanimated/Fabric/updates/PropsLayoutFilter.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
 #include <memory>
 #include <utility>
-#include "react/debug/react_native_assert.h"
 
 namespace reanimated {
 
