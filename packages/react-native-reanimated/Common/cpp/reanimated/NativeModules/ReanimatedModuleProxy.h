@@ -30,9 +30,11 @@
 #include <react/renderer/animationbackend/AnimationBackend.h>
 #include <react/renderer/uimanager/UIManagerAnimationBackend.h>
 
+#include <atomic>
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <set>
 #include <string>
 #include <utility>
@@ -91,9 +93,9 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   void onRender(double timestampMs);
 
-  bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
-
   void maybeRequestRender();
+
+  bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
 
   bool
   handleEvent(const std::string &eventName, const int emitterReactTag, const jsi::Value &payload, double currentTime);
@@ -246,8 +248,9 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   std::shared_ptr<LayoutAnimationsProxyCommon> layoutAnimationsProxy_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<ReanimatedMountHook> mountHook_;
+  std::mutex flushRequestsMutex_;
   std::set<SurfaceId> layoutAnimationFlushRequests_;
-  bool layoutAnimationRenderRequested_;
+  std::atomic<bool> layoutAnimationRenderRequested_{false};
 
   const KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction_;
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;
