@@ -59,7 +59,7 @@ class TransitionProgressProvider final {
   void discardFinishedProgressProviders();
   void update(double timestamp);
   void setPropertySettings(const std::string &propertyName, const CSSTransitionPropertySettings &propertySettings);
-  CSSTransitionPropertySettings getPropertySettings(const std::string &propertyName);
+  CSSTransitionPropertySettings getPropertySettings(const std::string &propertyName) const;
 
  private:
   TransitionPropertyProgressProviders propertyProgressProviders_;

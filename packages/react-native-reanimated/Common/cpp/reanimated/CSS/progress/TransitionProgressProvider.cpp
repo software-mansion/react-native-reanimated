@@ -179,7 +179,7 @@ void TransitionProgressProvider::setPropertySettings(
   propertySettings_[propertyName] = propertySettings;
 }
 
-CSSTransitionPropertySettings TransitionProgressProvider::getPropertySettings(const std::string &propertyName) {
+CSSTransitionPropertySettings TransitionProgressProvider::getPropertySettings(const std::string &propertyName) const {
   // We assume it exists
   return propertySettings_.at(propertyName);
 }

@@ -64,6 +64,8 @@ void CSSTransitionsRegistry::run(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const PropertyValueDiffsMap &propertyDiffs) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
   const auto viewTag = shadowNode->getTag();
 
   const auto &transition = registry_.at(viewTag);
