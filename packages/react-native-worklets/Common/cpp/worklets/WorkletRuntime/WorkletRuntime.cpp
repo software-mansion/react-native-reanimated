@@ -189,6 +189,7 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet) cons
   });
 }
 
+#ifndef NDEBUG
 void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet, std::optional<std::string> scheduleStack)
     const {
   react_native_assert(
@@ -205,6 +206,7 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet, std:
     strongThis->runSyncWithStack(worklet, scheduleStack);
   });
 }
+#endif // NDEBUG
 
 void WorkletRuntime::callMicrotasks() const {
   runSync([](jsi::Runtime &rt) {
@@ -287,6 +289,19 @@ std::shared_ptr<WorkletRuntime> extractWorkletRuntime(jsi::Runtime &rt, const js
 void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
+    const jsi::Value &serializableWorkletValue) {
+  auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
+  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
+      rt,
+      serializableWorkletValue,
+      "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
+  workletRuntime->schedule(serializableWorklet);
+}
+
+#ifndef NDEBUG
+void scheduleOnRuntime(
+    jsi::Runtime &rt,
+    const jsi::Value &workletRuntimeValue,
     const jsi::Value &serializableWorkletValue,
     const std::optional<std::string> &scheduleStack) {
   auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
@@ -296,6 +311,7 @@ void scheduleOnRuntime(
       "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
   workletRuntime->schedule(serializableWorklet, scheduleStack);
 }
+#endif // NDEBUG
 
 std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
   auto runtimeData = rt.getRuntimeData(RuntimeData::weakRuntimeUUID);

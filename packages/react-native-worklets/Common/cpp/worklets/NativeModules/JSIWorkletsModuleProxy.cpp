@@ -34,8 +34,12 @@ inline void scheduleOnUI(
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
     jsi::Runtime &rt,
-    const jsi::Value &serializableArrayOfWorkletsValue,
-    const jsi::Value &scheduleStacksValue) {
+    const jsi::Value &serializableArrayOfWorkletsValue
+#ifndef NDEBUG
+    ,
+    const jsi::Value &scheduleStacksValue
+#endif // NDEBUG
+) {
   auto serializable = extractSerializableOrThrow(
       rt, serializableArrayOfWorkletsValue, "[Worklets] scheduleOnUI expects a serializable array of worklets.");
   auto serializableArrayOfWorklets = std::static_pointer_cast<SerializableArray>(serializable);
@@ -100,38 +104,53 @@ inline void scheduleOnUI(
   });
 }
 
-inline jsi::Value runOnUISync(
-    const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
-    jsi::Runtime &rt,
-    const jsi::Value &worklet,
-    [[maybe_unused]] const std::optional<std::string> &scheduleStack) {
+inline jsi::Value
+runOnUISync(const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime, jsi::Runtime &rt, const jsi::Value &worklet) {
   if (auto uiWorkletRuntime = weakUIWorkletRuntime.lock()) {
     auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
         rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
-#ifndef NDEBUG
-    auto serializedResult = uiWorkletRuntime->runSyncSerializedWithStack(serializableWorklet, scheduleStack);
-#else
     auto serializedResult = uiWorkletRuntime->runSyncSerialized(serializableWorklet);
-#endif // NDEBUG
     return serializedResult->toJSValue(rt);
   }
   return jsi::Value::undefined();
 }
 
+#ifndef NDEBUG
+inline jsi::Value runOnUISync(
+    const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
+    jsi::Runtime &rt,
+    const jsi::Value &worklet,
+    const std::optional<std::string> &scheduleStack) {
+  if (auto uiWorkletRuntime = weakUIWorkletRuntime.lock()) {
+    auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
+        rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
+    auto serializedResult = uiWorkletRuntime->runSyncSerializedWithStack(serializableWorklet, scheduleStack);
+    return serializedResult->toJSValue(rt);
+  }
+  return jsi::Value::undefined();
+}
+#endif // NDEBUG
+
+jsi::Value
+runOnRuntimeSync(jsi::Runtime &rt, const jsi::Value &workletRuntimeValue, const jsi::Value &serializableWorkletValue) {
+  auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
+  auto worklet = extractSerializableOrThrow<SerializableWorklet>(
+      rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
+  return workletRuntime->runSyncSerialized(worklet)->toJSValue(rt);
+}
+
+#ifndef NDEBUG
 jsi::Value runOnRuntimeSync(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &serializableWorkletValue,
-    [[maybe_unused]] const std::optional<std::string> &scheduleStack) {
+    const std::optional<std::string> &scheduleStack) {
   auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
   auto worklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
-#ifndef NDEBUG
   return workletRuntime->runSyncSerializedWithStack(worklet, scheduleStack)->toJSValue(rt);
-#else
-  return workletRuntime->runSyncSerialized(worklet)->toJSValue(rt);
-#endif // NDEBUG
 }
+#endif // NDEBUG
 
 inline jsi::Value createWorkletRuntime(
     jsi::Runtime &originRuntime,
@@ -390,7 +409,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       "scheduleOnUI",
       [uiScheduler = uiScheduler_, uiWorkletRuntime = uiWorkletRuntime_](
           jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+#ifndef NDEBUG
         scheduleOnUI(uiScheduler, uiWorkletRuntime, rt, at<0>(args), at<1>(args));
+#else
+        scheduleOnUI(uiScheduler, uiWorkletRuntime, rt, at<0>(args));
+#endif // NDEBUG
       });
 
   jsi_utils::addMethod<2>(
@@ -405,7 +428,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
         return runOnUISync(uiWorkletRuntime, rt, at<0>(args), scheduleStack);
 #else
-        return runOnUISync(uiWorkletRuntime, rt, at<0>(args), std::nullopt);
+        return runOnUISync(uiWorkletRuntime, rt, at<0>(args));
 #endif // NDEBUG
       });
 
@@ -418,7 +441,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
         return runOnRuntimeSync(rt, at<0>(args), at<1>(args), scheduleStack);
 #else
-        return runOnRuntimeSync(rt, at<0>(args), at<1>(args), std::nullopt);
+        return runOnRuntimeSync(rt, at<0>(args), at<1>(args));
 #endif // NDEBUG
       });
 
