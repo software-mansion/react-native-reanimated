@@ -27,10 +27,6 @@
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/SingleInstanceChecker.h>
 
-#include <worklets/NativeModules/WorkletsModuleProxy.h>
-#include <worklets/Tools/JSScheduler.h>
-#include <worklets/Tools/UIScheduler.h>
-
 #include <react/renderer/animationbackend/AnimationBackend.h>
 #include <react/renderer/uimanager/UIManagerAnimationBackend.h>
 

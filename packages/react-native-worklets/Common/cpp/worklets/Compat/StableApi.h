@@ -16,7 +16,6 @@ namespace facebook::jsi {
 class Runtime;
 class Value;
 class Object;
-class Function;
 } // namespace facebook::jsi
 
 namespace worklets {

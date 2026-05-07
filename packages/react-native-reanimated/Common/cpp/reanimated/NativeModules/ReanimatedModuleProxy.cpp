@@ -1,4 +1,3 @@
-#include <glog/logging.h>
 #include <jsi/jsi.h>
 #include <react/debug/react_native_assert.h>
 #include <react/featureflags/ReactNativeFeatureFlags.h>
