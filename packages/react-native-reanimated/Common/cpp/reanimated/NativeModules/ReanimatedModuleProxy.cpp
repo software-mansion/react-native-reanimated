@@ -398,8 +398,7 @@ bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(const std::string &event
 }
 
 void ReanimatedModuleProxy::maybeRequestRender() {
-  if (!renderRequested_) {
-    renderRequested_ = true;
+  if (!renderRequested_.exchange(true)) {
     requestRender_(onRenderCallback_);
   }
 }

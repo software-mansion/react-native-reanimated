@@ -180,7 +180,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   std::unique_ptr<UIEventHandlerRegistry> eventHandlerRegistry_;
   const RequestRenderFunction requestRender_;
-  volatile bool renderRequested_{false};
+  std::atomic<bool> renderRequested_{false};
   std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
