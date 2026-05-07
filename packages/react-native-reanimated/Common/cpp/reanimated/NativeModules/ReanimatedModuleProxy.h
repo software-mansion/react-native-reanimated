@@ -31,6 +31,7 @@
 #include <react/renderer/uimanager/UIManagerAnimationBackend.h>
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <set>
 #include <string>
@@ -187,8 +188,9 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   std::function<std::string()> createRegistriesLeakCheck();
 
  private:
-  template <typename Func>
-  void withAnimationBackendSync(Func &&fn) {
+  using AnimationBackendSyncCallback = std::function<void(const std::shared_ptr<AnimationBackend> &)>;
+
+  void withAnimationBackendSync(const AnimationBackendSyncCallback &fn) {
     react_native_assert(
         uiManager_ != nullptr && "[Reanimated] Animation Backend used before the uiManager was registered");
     auto weak = uiManager_->unstable_getAnimationBackend();
