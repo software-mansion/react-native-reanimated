@@ -49,7 +49,7 @@ Make sure to use latest supported version of Reanimated, depending on the setup 
 
 | Expo SDK version | `react-native-reanimated` version | `react-native-worklets` version |
 | :--------------: | :-------------------------------: | :-----------------------------: |
-|       `56`       |             `4.3.0`               |             `0.8.3`             |
+|       `56`       |             `4.3.1`               |             `0.8.3`             |
 |       `55`       |             `4.2.1`               |             `0.7.4`             |
 |       `54`       |             `~4.1.1`              |             `0.5.1`             |
 |       `53`       |             `~3.17.4`             |          don't install          |
