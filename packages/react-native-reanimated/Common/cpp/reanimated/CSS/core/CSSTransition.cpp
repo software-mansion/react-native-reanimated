@@ -39,7 +39,7 @@ TransitionProperties CSSTransition::getProperties() const {
 
 folly::dynamic CSSTransition::run(
     jsi::Runtime &rt,
-    const CSSTransitionPropertiesDiffs &propertiesDiffs,
+    const PropertyValueDiffsMap &propertiesDiffs,
     const folly::dynamic &lastUpdateValue,
     const double timestamp) {
   // Update interpolators and progress providers for changed properties
@@ -50,7 +50,7 @@ folly::dynamic CSSTransition::run(
 }
 
 void CSSTransition::updateSettings(
-    const CSSTransitionPropertiesSettings &changedPropertiesSettings,
+    const PropertiesSettingsMap &changedPropertiesSettings,
     const std::vector<std::string> &removedProperties) {
 
   // Remove interpolators and progress providers for no longer transitioned props
@@ -74,7 +74,7 @@ folly::dynamic CSSTransition::update(const double timestamp) {
 
 void CSSTransition::handleChangedProperties(
     jsi::Runtime &rt,
-    const CSSTransitionPropertiesDiffs &propertiesDiffs,
+    const PropertyValueDiffsMap &propertiesDiffs,
     const folly::dynamic &lastUpdateValue,
     const double timestamp) {
   const auto null = folly::dynamic();
@@ -111,7 +111,7 @@ void CSSTransition::handleChangedProperties(
   }
 }
 
-void CSSTransition::handleChangedSettings(const CSSTransitionPropertiesSettings &changedPropertiesSettings) {
+void CSSTransition::handleChangedSettings(const PropertiesSettingsMap &changedPropertiesSettings) {
   for (const auto &[propertyName, propertySettings] : changedPropertiesSettings) {
     progressProvider_.setPropertySettings(propertyName, propertySettings);
   }

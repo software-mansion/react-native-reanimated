@@ -30,11 +30,11 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
       jsi::Runtime &rt,
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const CSSTransitionConfig &config);
-  // run Should be called only after sb someone has already set settings with updateSettingsOrRun
+  // run Should be called only after someone has already set settings with updateSettingsOrRun
   void run(
       jsi::Runtime &rt,
       const std::shared_ptr<const ShadowNode> &shadowNode,
-      const CSSTransitionPropertiesDiffs &propertyDiffs);
+      const PropertyValueDiffsMap &propertyDiffs);
   void remove(Tag viewTag) override;
 
   void updateAndFlush(double timestamp, UpdatesBatch &updatesBatch) {
@@ -59,6 +59,11 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
   void activateDelayedTransitions(double timestamp);
   void scheduleOrActivateTransition(const std::shared_ptr<CSSTransition> &transition);
   void updateInUpdatesRegistry(const std::shared_ptr<CSSTransition> &transition, const folly::dynamic &updates);
+  void runTransition(
+      jsi::Runtime &rt,
+      const std::shared_ptr<CSSTransition> &transition,
+      const facebook::react::Tag &viewTag,
+      const PropertyValueDiffsMap &propertyDiffs);
 };
 
 } // namespace reanimated::css

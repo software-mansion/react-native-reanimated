@@ -65,7 +65,7 @@ class TransitionProgressProvider final {
   TransitionPropertyProgressProviders propertyProgressProviders_;
 
   // Never cleaned by design - if the property has already been transitioned in the past, we might want to reuse the config (run without settings in the config).
-  CSSTransitionPropertiesSettings propertySettings_;
+  PropertiesSettingsMap propertySettings_;
 
   std::unordered_set<std::string> removedProperties_;
 

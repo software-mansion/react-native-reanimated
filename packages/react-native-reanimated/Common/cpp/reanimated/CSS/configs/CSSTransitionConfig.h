@@ -19,13 +19,13 @@ struct CSSTransitionPropertySettings {
 
 using PropertyValueDiff = std::pair<jsi::Value, jsi::Value>;
 
-using CSSTransitionPropertiesDiffs = std::unordered_map<std::string, PropertyValueDiff>;
+using PropertyValueDiffsMap = std::unordered_map<std::string, PropertyValueDiff>;
 
-using CSSTransitionPropertiesSettings = std::unordered_map<std::string, CSSTransitionPropertySettings>;
+using PropertiesSettingsMap = std::unordered_map<std::string, CSSTransitionPropertySettings>;
 
 struct CSSTransitionConfig {
-  CSSTransitionPropertiesSettings changedPropertiesSettings;
-  CSSTransitionPropertiesDiffs changedProperties;
+  PropertiesSettingsMap changedPropertiesSettings;
+  PropertyValueDiffsMap changedProperties;
   std::vector<std::string> removedProperties;
 };
 

@@ -27,11 +27,11 @@ class CSSTransition {
 
   folly::dynamic run(
       jsi::Runtime &rt,
-      const CSSTransitionPropertiesDiffs &propertiesDiffs,
+      const PropertyValueDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
       double timestamp);
   void updateSettings(
-      const CSSTransitionPropertiesSettings &changedPropertiesSettings,
+      const PropertiesSettingsMap &changedPropertiesSettings,
       const std::vector<std::string> &removedProperties);
   folly::dynamic update(double timestamp);
 
@@ -44,10 +44,10 @@ class CSSTransition {
 
   void handleChangedProperties(
       jsi::Runtime &rt,
-      const CSSTransitionPropertiesDiffs &propertiesDiffs,
+      const PropertyValueDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
       double timestamp);
-  void handleChangedSettings(const CSSTransitionPropertiesSettings &changedPropertiesSettings);
+  void handleChangedSettings(const PropertiesSettingsMap &changedPropertiesSettings);
   void handleRemovedProperties(const std::vector<std::string> &config);
   void removeProperty(const std::string &propertyName);
 };

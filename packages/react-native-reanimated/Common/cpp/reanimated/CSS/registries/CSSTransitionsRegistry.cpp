@@ -22,6 +22,20 @@ bool CSSTransitionsRegistry::hasUpdates() const {
   return !runningTransitionTags_.empty() || !delayedTransitionsManager_.empty();
 }
 
+void CSSTransitionsRegistry::runTransition(
+    jsi::Runtime &rt,
+    const std::shared_ptr<CSSTransition> &transition,
+    const facebook::react::Tag &viewTag,
+    const PropertyValueDiffsMap &propertyDiffs) {
+  const auto &lastUpdates = getUpdatesFromRegistry(viewTag);
+  const auto timestamp = getCurrentTimestamp_();
+
+  auto initialUpdate = transition->run(rt, propertyDiffs, lastUpdates, timestamp);
+
+  scheduleOrActivateTransition(transition);
+  updateInUpdatesRegistry(transition, initialUpdate);
+}
+
 void CSSTransitionsRegistry::updateSettingsOrRun(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
@@ -37,40 +51,23 @@ void CSSTransitionsRegistry::updateSettingsOrRun(
   }
 
   const auto &transition = registry_.at(viewTag);
-  const auto &lastUpdates = getUpdatesFromRegistry(shadowNode->getTag());
-  const auto timestamp = getCurrentTimestamp_();
 
   if (config.changedPropertiesSettings.size() || config.removedProperties.size()) {
     transition->updateSettings(config.changedPropertiesSettings, config.removedProperties);
   }
   if (config.changedProperties.size()) {
-    auto initialUpdate = transition->run(rt, config.changedProperties, lastUpdates, timestamp);
-
-    scheduleOrActivateTransition(transition);
-    updateInUpdatesRegistry(transition, initialUpdate);
+    runTransition(rt, transition, viewTag, config.changedProperties);
   }
 }
 
 void CSSTransitionsRegistry::run(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
-    const CSSTransitionPropertiesDiffs &propertyDiffs) {
+    const PropertyValueDiffsMap &propertyDiffs) {
   const auto viewTag = shadowNode->getTag();
 
-  if (!registry_.contains(viewTag)) {
-    // Create new transition
-    auto transition = std::make_shared<CSSTransition>(shadowNode, viewStylesRepository_);
-    registry_.insert({viewTag, transition});
-  }
-
   const auto &transition = registry_.at(viewTag);
-  const auto &lastUpdates = getUpdatesFromRegistry(shadowNode->getTag());
-  const auto timestamp = getCurrentTimestamp_();
-
-  auto initialUpdate = transition->run(rt, propertyDiffs, lastUpdates, timestamp);
-
-  scheduleOrActivateTransition(transition);
-  updateInUpdatesRegistry(transition, initialUpdate);
+  runTransition(rt, transition, viewTag, propertyDiffs);
 }
 
 void CSSTransitionsRegistry::removeTag(const Tag viewTag) {
