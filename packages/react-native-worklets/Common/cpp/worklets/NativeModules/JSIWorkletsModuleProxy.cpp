@@ -34,8 +34,9 @@ inline void scheduleOnUI(
     jsi::Runtime &rt,
     const jsi::Value &serializableArrayOfWorkletsValue,
     const jsi::Value &scheduleStacksValue) {
-  auto serializableArrayOfWorklets = extractSerializableOrThrow<SerializableArray>(
+  auto serializable = extractSerializableOrThrow(
       rt, serializableArrayOfWorkletsValue, "[Worklets] scheduleOnUI expects a serializable array of worklets.");
+  auto serializableArrayOfWorklets = std::static_pointer_cast<SerializableArray>(serializable);
 
   const auto &workletsList = serializableArrayOfWorklets->getList();
   std::vector<std::shared_ptr<SerializableWorklet>> worklets;
