@@ -203,7 +203,10 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
         if (!surfaceId) {
           return;
         }
-        strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
+        {
+          std::lock_guard<std::mutex> lock(strongThis->flushRequestsMutex_);
+          strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
+        }
       };
 
   auto requestLayoutAnimationRender = [weakThis = weak_from_this()](double) {
@@ -223,8 +226,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
 
     auto surfaceId = strongThis->layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
 
-    if (!strongThis->layoutAnimationRenderRequested_) {
-      strongThis->layoutAnimationRenderRequested_ = true;
+    if (!strongThis->layoutAnimationRenderRequested_.exchange(true)) {
       // if an animation has duration 0, performOperations would not get
       // called for it so we call requestRender to have it called in the
       // next frame
@@ -234,6 +236,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     if (!surfaceId) {
       return;
     }
+    std::lock_guard<std::mutex> lock(strongThis->flushRequestsMutex_);
     strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
   };
 
@@ -386,8 +389,7 @@ bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(const std::string &event
 }
 
 void ReanimatedModuleProxy::maybeRequestRender() {
-  if (!renderRequested_) {
-    renderRequested_ = true;
+  if (!renderRequested_.exchange(true)) {
     requestRender_(onRenderCallback_);
   }
 }
@@ -668,7 +670,11 @@ double ReanimatedModuleProxy::getCssTimestamp() {
 void ReanimatedModuleProxy::performOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
-  auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
+  std::set<SurfaceId> flushRequestsCopy;
+  {
+    std::lock_guard<std::mutex> lock(flushRequestsMutex_);
+    flushRequestsCopy.swap(layoutAnimationFlushRequests_);
+  }
   for (const auto surfaceId : flushRequestsCopy) {
     uiManager_->getShadowTreeRegistry().visit(
         surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
