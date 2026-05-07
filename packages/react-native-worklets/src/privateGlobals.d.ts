@@ -60,6 +60,7 @@ declare global {
   /** Only outside of Bundle Mode on Worklet Runtimes. */
   var __serializer: typeof makeShareableCloneOnUIRecursive;
   var __callMicrotasks: () => void;
+  /** Available only on the UI Runtime */
   var __nativeRequestAnimationFrame: (
     callback: (timestamp: number) => void
   ) => void;
