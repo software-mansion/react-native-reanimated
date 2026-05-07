@@ -238,7 +238,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     if (!strongThis->layoutAnimationRenderRequested_.exchange(true)) {
       // if an animation has duration 0, performOperations would not get
       // called for it so we call requestRender to have it called in the
-      // next frame.
+      // next frame
       strongThis->requestRender_(requestLayoutAnimationRender);
     }
 
@@ -630,8 +630,6 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
 void ReanimatedModuleProxy::performOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
-  // Drain layoutAnimationFlushRequests_ under the mutex.
-  // See https://github.com/software-mansion/react-native-reanimated/issues/9293
   std::set<SurfaceId> flushRequestsCopy;
   {
     std::lock_guard<std::mutex> lock(flushRequestsMutex_);
