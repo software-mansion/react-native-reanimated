@@ -29,6 +29,7 @@
     "lint:clang-tidy": "../../scripts/clang-tidy-lint.sh \".\"",
     "lint:js": "eslint src && yarn prettier --check src",
     "lint:plugin": "yarn workspace babel-plugin-worklets lint",
+    "prepack": "yarn build",
     "set-version": "node scripts/set-version.js",
     "test": "jest",
     "type:check": "yarn type:check:src:native && yarn type:check:src:web && yarn type:check:plugin && yarn type:check:app && yarn type:check:tests",

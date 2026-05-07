@@ -5,22 +5,26 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_STANDARD 20)
 
+# Consume shared libraries and headers from prefabs
+find_package(fbjni REQUIRED CONFIG)
+find_package(ReactAndroid REQUIRED CONFIG)
+
+if(${JS_RUNTIME} STREQUAL "hermes")
+  find_package(hermes-engine REQUIRED CONFIG)
+endif()
+
 # default CMAKE_CXX_FLAGS: "-g -DANDROID -fdata-sections -ffunction-sections
 # -funwind-tables -fstack-protector-strong -no-canonical-prefixes
 # -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fstack-protector-all"
 include("${REACT_NATIVE_DIR}/ReactAndroid/cmake-utils/folly-flags.cmake")
 add_compile_options(${folly_FLAGS})
 
-string(
-  APPEND
-  CMAKE_CXX_FLAGS
-  " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}\
-    -DWORKLETS_VERSION=${WORKLETS_VERSION}\
+string(APPEND CMAKE_CXX_FLAGS " -DWORKLETS_VERSION=${WORKLETS_VERSION}\
     -DWORKLETS_FEATURE_FLAGS=\"${WORKLETS_FEATURE_FLAGS}\"")
 
 # HERMES_V1_ENABLED is centralized in react-native-flags.cmake for RN >= 84.
 # Only define manually for older versions to avoid macro redefinition error.
-if(REACT_NATIVE_MINOR_VERSION LESS 84)
+if(ReactAndroid_VERSION_MINOR LESS 84)
   string(APPEND CMAKE_CXX_FLAGS " -DHERMES_V1_ENABLED=${HERMES_V1_ENABLED}")
 endif()
 
@@ -56,14 +60,6 @@ file(GLOB_RECURSE WORKLETS_COMMON_CPP_SOURCES CONFIGURE_DEPENDS
      "${COMMON_CPP_DIR}/worklets/*.cpp")
 file(GLOB_RECURSE WORKLETS_ANDROID_CPP_SOURCES CONFIGURE_DEPENDS
      "${ANDROID_CPP_DIR}/worklets/*.cpp")
-
-# Consume shared libraries and headers from prefabs
-find_package(fbjni REQUIRED CONFIG)
-find_package(ReactAndroid REQUIRED CONFIG)
-
-if(${JS_RUNTIME} STREQUAL "hermes")
-  find_package(hermes-engine REQUIRED CONFIG)
-endif()
 
 add_library(worklets SHARED ${WORKLETS_COMMON_CPP_SOURCES}
                             ${WORKLETS_ANDROID_CPP_SOURCES})
