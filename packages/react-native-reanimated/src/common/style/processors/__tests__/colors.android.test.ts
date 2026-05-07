@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../../errors';
 import {
   DynamicColorIOS,
   ERROR_MESSAGES,
@@ -15,7 +14,9 @@ describe('DynamicColorIOS support on Android', () => {
     };
 
     expect(() => processColorsInProps(props)).toThrow(
-      new ReanimatedError(ERROR_MESSAGES.dynamicNotAvailableOnPlatform())
+      new Error(
+        `[Reanimated] ${ERROR_MESSAGES.dynamicNotAvailableOnPlatform()}`
+      )
     );
   });
 
@@ -23,7 +24,9 @@ describe('DynamicColorIOS support on Android', () => {
     const dynamic = DynamicColorIOS({ light: '#ffffff', dark: '#000000' });
 
     expect(() => processColor(dynamic)).toThrow(
-      new ReanimatedError(ERROR_MESSAGES.dynamicNotAvailableOnPlatform())
+      new Error(
+        `[Reanimated] ${ERROR_MESSAGES.dynamicNotAvailableOnPlatform()}`
+      )
     );
   });
 });

@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../common';
 import type { Point } from '../types';
 import type {
   NormalizedStepsEasing,
@@ -19,7 +18,9 @@ export class StepsEasing implements ParametrizedTimingFunction {
 
   constructor(stepsNumber: number, modifier: StepsModifier = 'jump-end') {
     if (stepsNumber <= 0 || stepsNumber % 1 !== 0) {
-      throw new ReanimatedError(ERROR_MESSAGES.invalidStepsNumber(stepsNumber));
+      throw new Error(
+        `[Reanimated] ${ERROR_MESSAGES.invalidStepsNumber(stepsNumber)}`
+      );
     }
     this.stepsNumber = stepsNumber;
     this.modifier = modifier;

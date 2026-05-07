@@ -8,6 +8,7 @@
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
+#include <reanimated/Tools/ReaJSIUtils.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #ifdef __ANDROID__
@@ -58,7 +59,7 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
   UpdatesBatch synchronousUpdatesBatch;
   UpdatesBatch shadowTreeUpdatesBatch;
 
-  for (const auto &[shadowNode, props] : updatesBatch) {
+  for (const auto &[shadowNodeFamily, props] : updatesBatch) {
     if (allowPartialViews) {
       folly::dynamic synchronousProps = folly::dynamic::object();
       folly::dynamic shadowTreeProps = folly::dynamic::object();
@@ -76,11 +77,11 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       }
 
       if (!synchronousProps.empty()) {
-        synchronousUpdatesBatch.emplace_back(shadowNode, std::move(synchronousProps));
+        synchronousUpdatesBatch.emplace_back(shadowNodeFamily, std::move(synchronousProps));
       }
 
       if (!shadowTreeProps.empty()) {
-        shadowTreeUpdatesBatch.emplace_back(shadowNode, std::move(shadowTreeProps));
+        shadowTreeUpdatesBatch.emplace_back(shadowNodeFamily, std::move(shadowTreeProps));
       }
     } else {
       bool hasOnlySynchronousProps = true;
@@ -97,9 +98,9 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       }
 
       if (hasOnlySynchronousProps) {
-        synchronousUpdatesBatch.emplace_back(shadowNode, props);
+        synchronousUpdatesBatch.emplace_back(shadowNodeFamily, props);
       } else {
-        shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
+        shadowTreeUpdatesBatch.emplace_back(shadowNodeFamily, props);
       }
     }
   }
@@ -116,10 +117,10 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
     const std::shared_ptr<CallInvoker> &jsCallInvoker,
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
     const bool isReducedMotion)
-    : ReanimatedModuleProxySpec(jsCallInvoker),
-      isReducedMotion_(isReducedMotion),
+    : isReducedMotion_(isReducedMotion),
       uiRuntime_(uiRuntime),
       uiScheduler_(uiScheduler),
+      jsInvoker_(jsCallInvoker),
       eventHandlerRegistry_(std::make_unique<UIEventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       animatedSensorModule_(platformDepMethodsHolder),
@@ -132,7 +133,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(staticPropsRegistry_, animatedPropsRegistry_)),
-      cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>(viewStylesRepository_)),
+      cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(getAnimationTimestamp_, viewStylesRepository_)),
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
@@ -162,6 +163,14 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     strongThis->onRender(timestampMs);
   };
   onRenderCallback_ = std::move(onRenderCallback);
+
+  operationsLoop_ = std::make_shared<OperationsLoop>(
+      uiScheduler_,
+      requestRender_,
+      getAnimationTimestamp_,
+      cssAnimationsRegistry_,
+      cssTransitionsRegistry_,
+      updatesRegistryManager_);
 
   auto updateProps = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &operations) {
     auto strongThis = weakThis.lock();
@@ -416,11 +425,7 @@ void ReanimatedModuleProxy::cleanupSensors() {
 }
 
 void ReanimatedModuleProxy::setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle) {
-  const auto tag = viewTag.asNumber();
-  staticPropsRegistry_->set(rt, tag, viewStyle);
-  if (staticPropsRegistry_->hasObservers(tag)) {
-    maybeRunCSSLoop();
-  }
+  staticPropsRegistry_->set(rt, viewTag.asNumber(), viewStyle);
 }
 
 void ReanimatedModuleProxy::markNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) {
@@ -460,7 +465,7 @@ void ReanimatedModuleProxy::applyCSSAnimations(
     const jsi::Value &compoundComponentName,
     const jsi::Value &animationUpdates) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  const auto timestamp = getCssTimestamp();
+  const auto timestamp = operationsLoop_->resolveTimestamp();
   const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
 
   CSSAnimationsMap newAnimations;
@@ -493,17 +498,13 @@ void ReanimatedModuleProxy::applyCSSAnimations(
     }
   }
 
-  {
-    auto lock = cssAnimationsRegistry_->lock();
-    cssAnimationsRegistry_->apply(
-        rt, shadowNode, updates.animationNames, newAnimations, updates.settingsUpdates, timestamp);
-  }
+  cssAnimationsRegistry_->apply(
+      rt, shadowNode, updates.animationNames, newAnimations, updates.settingsUpdates, timestamp);
 
-  maybeRunCSSLoop();
+  operationsLoop_->run();
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
-  auto lock = cssAnimationsRegistry_->lock();
   cssAnimationsRegistry_->remove(viewTag.asNumber());
 }
 
@@ -514,16 +515,12 @@ void ReanimatedModuleProxy::runCSSTransition(
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto config = parseCSSTransitionConfig(rt, transitionConfig);
 
-  {
-    auto lock = cssTransitionsRegistry_->lock();
-    cssTransitionsRegistry_->run(rt, shadowNode, config);
-  }
+  cssTransitionsRegistry_->run(rt, shadowNode, config);
 
-  maybeRunCSSLoop();
+  operationsLoop_->run();
 }
 
 void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) {
-  auto lock = cssTransitionsRegistry_->lock();
   cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
@@ -535,15 +532,12 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
   // TODO(future): use unified timestamp
   const auto currentTimestamp = getAnimationTimestamp_();
 
-  const auto lock = animatedPropsRegistry_->lock();
-
   // TODO: fix bug when threshold difference is smaller than 1 second
   // TODO(future): flush updates from CSS animations and CSS transitions registries
-  animatedPropsRegistry_->removeUpdatesOlderThanTimestamp(currentTimestamp - 2000); // 2 seconds
-
   // TODO(future): find a better way to obtain timestamp for removing updates
   // TODO(future): move removing old updates to separate method
-  return animatedPropsRegistry_->getUpdatesOlderThanTimestamp(rt, currentTimestamp - 1000); // 1 second
+  return animatedPropsRegistry_->getUpdatesOlderThanTimestamp(
+      rt, currentTimestamp - 1000 /* 1 second */, currentTimestamp - 2000 /* 2 seconds */);
 }
 
 bool ReanimatedModuleProxy::handleEvent(
@@ -631,51 +625,6 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   return res;
 }
 
-void ReanimatedModuleProxy::cssLoopCallback(const double /*timestampMs*/) {
-  shouldUpdateCssAnimations_ = true;
-  if (cssAnimationsRegistry_->hasUpdates() || cssTransitionsRegistry_->hasUpdates()
-#ifdef ANDROID
-      || updatesRegistryManager_->hasPropsToRevert()
-#endif // ANDROID
-  ) {
-    requestRender_([weakThis = weak_from_this()](const double newTimestampMs) {
-      if (auto strongThis = weakThis.lock()) {
-        strongThis->cssLoopCallback(newTimestampMs);
-      }
-    });
-  } else {
-    cssLoopRunning_ = false;
-  }
-}
-
-void ReanimatedModuleProxy::maybeRunCSSLoop() {
-  if (cssLoopRunning_) {
-    return;
-  }
-
-  cssLoopRunning_ = true;
-
-  scheduleOnUI(uiScheduler_, [=, weakThis = weak_from_this()]() {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-    strongThis->requestRender_([weakThis](const double timestampMs) {
-      if (auto strongThis = weakThis.lock()) {
-        strongThis->cssLoopCallback(timestampMs);
-      }
-    });
-  });
-}
-
-double ReanimatedModuleProxy::getCssTimestamp() {
-  if (cssLoopRunning_) {
-    return currentCssTimestamp_;
-  }
-  currentCssTimestamp_ = getAnimationTimestamp_();
-  return currentCssTimestamp_;
-}
-
 void ReanimatedModuleProxy::performOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
@@ -693,28 +642,23 @@ void ReanimatedModuleProxy::performOperations() {
 
     auto lock = updatesRegistryManager_->lock();
 
-    if (shouldUpdateCssAnimations_) {
-      currentCssTimestamp_ = getAnimationTimestamp_();
-      auto lock = cssTransitionsRegistry_->lock();
+    const bool shouldUpdateCssAnimations = operationsLoop_->shouldUpdateCssAnimations();
+    const double currentCssTimestamp = shouldUpdateCssAnimations ? getAnimationTimestamp_() : 0;
+
+    if (shouldUpdateCssAnimations) {
       // Update CSS transitions and flush updates
-      cssTransitionsRegistry_->update(currentCssTimestamp_);
-      cssTransitionsRegistry_->flushUpdates(updatesBatch);
+      cssTransitionsRegistry_->updateAndFlush(currentCssTimestamp, updatesBatch);
     }
 
-    {
-      auto lock = animatedPropsRegistry_->lock();
-      // Flush all animated props updates
-      animatedPropsRegistry_->flushUpdates(updatesBatch);
-    }
+    // Flush all animated props updates
+    animatedPropsRegistry_->flushUpdates(updatesBatch);
 
-    if (shouldUpdateCssAnimations_) {
-      auto lock = cssAnimationsRegistry_->lock();
+    if (shouldUpdateCssAnimations) {
       // Update CSS animations and flush updates
-      cssAnimationsRegistry_->update(currentCssTimestamp_);
-      cssAnimationsRegistry_->flushUpdates(updatesBatch);
+      cssAnimationsRegistry_->updateAndFlush(currentCssTimestamp, updatesBatch);
     }
 
-    shouldUpdateCssAnimations_ = false;
+    operationsLoop_->clearShouldUpdateCssAnimations();
 
     if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
       applySynchronousUpdates(updatesBatch);
@@ -983,9 +927,9 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
     intBuffer.reserve(1024);
     doubleBuffer.reserve(1024);
 
-    for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
+    for (const auto &[shadowNodeFamily, props] : synchronousUpdatesBatch) {
       intBuffer.push_back(CMD_START_OF_VIEW);
-      intBuffer.push_back(shadowNode->getTag());
+      intBuffer.push_back(shadowNodeFamily->getTag());
       for (const auto &[key, value] : props.items()) {
         const auto command = propNameToCommand(key.getString());
         switch (command) {
@@ -1155,8 +1099,8 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
   auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
       partitionUpdates(updatesBatch, synchronousProps, false, allowPartialUpdates);
 
-  for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
-    synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
+  for (const auto &[shadowNodeFamily, props] : synchronousUpdatesBatch) {
+    synchronouslyUpdateUIPropsFunction_(shadowNodeFamily->getTag(), props);
   }
 
   updatesBatch = std::move(shadowTreeUpdatesBatch);
@@ -1193,11 +1137,9 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
       }
     }
   } else {
-    for (auto const &[shadowNode, props] : updatesBatch) {
-      SurfaceId surfaceId = shadowNode->getSurfaceId();
-      auto family = &shadowNode->getFamily();
-      react_native_assert(family->getSurfaceId() == surfaceId);
-      propsMapBySurface[surfaceId][family].emplace_back(props);
+    for (auto const &[shadowNodeFamily, props] : updatesBatch) {
+      SurfaceId surfaceId = shadowNodeFamily->getSurfaceId();
+      propsMapBySurface[surfaceId][shadowNodeFamily].emplace_back(props);
     }
   }
 
@@ -1412,6 +1354,274 @@ jsi::Value ReanimatedModuleProxy::subscribeForKeyboardEvents(
 
 void ReanimatedModuleProxy::unsubscribeFromKeyboardEvents(jsi::Runtime &, const jsi::Value &listenerId) {
   unsubscribeFromKeyboardEventsFunction_(listenerId.asNumber());
+}
+
+void ReanimatedModuleProxy::toggleSlowAnimationsOnUIRuntime() const {
+  this->jsInvoker_->invokeAsync([](jsi::Runtime &rt) {
+    const auto toggleFn = rt.global().getProperty(rt, "__toggleSlowAnimationsOnUIRuntime");
+    if (!(toggleFn.isObject() && toggleFn.asObject(rt).isFunction(rt))) [[unlikely]] {
+      throw std::runtime_error("[Reanimated] __toggleSlowAnimationsOnUIRuntime function missing on global.");
+    }
+
+    toggleFn.asObject(rt).asFunction(rt).call(rt);
+  });
+}
+
+jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
+  using jsi_utils::addMethod;
+  using jsi_utils::at;
+
+  auto obj = jsi::Object(rt);
+
+  addMethod<3>(
+      rt,
+      obj,
+      "registerEventHandler",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value::undefined();
+        }
+        return strongThis->registerEventHandler(rt, at<0>(args), at<1>(args), at<2>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "unregisterEventHandler",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->unregisterEventHandler(rt, at<0>(args));
+      });
+
+  addMethod<3>(
+      rt,
+      obj,
+      "getViewProp",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value::undefined();
+        }
+        return strongThis->getViewProp(rt, at<0>(args), at<1>(args), at<2>(args));
+      });
+
+  addMethod<4>(
+      rt,
+      obj,
+      "registerSensor",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[4]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value::undefined();
+        }
+        return strongThis->registerSensor(rt, at<0>(args), at<1>(args), at<2>(args), at<3>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "unregisterSensor",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->unregisterSensor(rt, at<0>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "getStaticFeatureFlag",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value::undefined();
+        }
+        return strongThis->getStaticFeatureFlag(rt, at<0>(args));
+      });
+
+  addMethod<2>(
+      rt,
+      obj,
+      "setDynamicFeatureFlag",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value::undefined();
+        }
+        return strongThis->setDynamicFeatureFlag(rt, at<0>(args), at<1>(args));
+      });
+
+  addMethod<3>(
+      rt,
+      obj,
+      "subscribeForKeyboardEvents",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value::undefined();
+        }
+        return strongThis->subscribeForKeyboardEvents(rt, at<0>(args), at<1>(args), at<2>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "unsubscribeFromKeyboardEvents",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->unsubscribeFromKeyboardEvents(rt, at<0>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "configureLayoutAnimationBatch",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value::undefined();
+        }
+        return strongThis->configureLayoutAnimationBatch(rt, at<0>(args));
+      });
+
+  addMethod<2>(
+      rt,
+      obj,
+      "setShouldAnimateExitingForTag",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->setShouldAnimateExiting(rt, at<0>(args), at<1>(args));
+      });
+
+  addMethod<2>(
+      rt,
+      obj,
+      "setViewStyle",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->setViewStyle(rt, at<0>(args), at<1>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "markNodeAsRemovable",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->markNodeAsRemovable(rt, at<0>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "unmarkNodeAsRemovable",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->unmarkNodeAsRemovable(rt, at<0>(args));
+      });
+
+  addMethod<3>(
+      rt,
+      obj,
+      "registerCSSKeyframes",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->registerCSSKeyframes(rt, at<0>(args), at<1>(args), at<2>(args));
+      });
+
+  addMethod<2>(
+      rt,
+      obj,
+      "unregisterCSSKeyframes",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->unregisterCSSKeyframes(rt, at<0>(args), at<1>(args));
+      });
+
+  addMethod<3>(
+      rt,
+      obj,
+      "applyCSSAnimations",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->applyCSSAnimations(rt, at<0>(args), at<1>(args), at<2>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "unregisterCSSAnimations",
+      [weakThis = weak_from_this()](jsi::Runtime &, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->unregisterCSSAnimations(at<0>(args));
+      });
+
+  addMethod<2>(
+      rt,
+      obj,
+      "runCSSTransition",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->runCSSTransition(rt, at<0>(args), at<1>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "unregisterCSSTransition",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->unregisterCSSTransition(rt, at<0>(args));
+      });
+
+  addMethod<0>(rt, obj, "getSettledUpdates", [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return jsi::Value::undefined();
+    }
+    return strongThis->getSettledUpdates(rt);
+  });
+
+  return obj;
 }
 
 } // namespace reanimated

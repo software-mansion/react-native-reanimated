@@ -1,6 +1,10 @@
 build/
 .yarn/
 
+# Markdown is formatted by remark
+*.md
+*.mdx
+
 # Worklets
 packages/react-native-worklets/plugin/lib/
 packages/react-native-worklets/plugin/index.js

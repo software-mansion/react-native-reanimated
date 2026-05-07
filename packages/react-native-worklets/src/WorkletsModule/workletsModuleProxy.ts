@@ -5,6 +5,24 @@ import type { WorkletRuntime } from '../types';
 
 /** Type of `__workletsModuleProxy` injected with JSI. */
 export interface WorkletsModuleProxy {
+  loadUnpackers(
+    valueUnpackerCode: string,
+    valueUnpackerLocation: string,
+    valueUnpackerSourceMap: string,
+    synchronizableUnpackerCode: string,
+    synchronizableUnpackerLocation: string,
+    synchronizableUnpackerSourceMap: string,
+    customSerializableUnpackerCode: string,
+    customSerializableUnpackerLocation: string,
+    customSerializableUnpackerSourceMap: string,
+    shareableHostUnpackerCode: string,
+    shareableHostUnpackerLocation: string,
+    shareableHostUnpackerSourceMap: string,
+    shareableGuestUnpackerCode: string,
+    shareableGuestUnpackerLocation: string,
+    shareableGuestUnpackerSourceMap: string
+  ): void;
+
   createSerializable<TValue>(
     value: TValue,
     shouldPersistRemote: boolean,
@@ -89,9 +107,15 @@ export interface WorkletsModuleProxy {
     decorateGuest: SerializableRef
   ): SerializableRef<TValue>;
 
-  scheduleOnUI<TValue>(serializable: SerializableRef<TValue>): void;
+  scheduleOnUI<TValue>(
+    serializable: SerializableRef<TValue>,
+    scheduleStack: string | undefined
+  ): void;
 
-  runOnUISync<TValue, TReturn>(serializable: SerializableRef<TValue>): TReturn;
+  runOnUISync<TValue, TReturn>(
+    serializable: SerializableRef<TValue>,
+    scheduleStack: string | undefined
+  ): TReturn;
 
   createWorkletRuntime(
     name: string,
@@ -103,30 +127,29 @@ export interface WorkletsModuleProxy {
 
   scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack?: string
   ): void;
 
   scheduleOnRuntimeWithId<TValue>(
     runtimeId: number,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack?: string
   ): void;
 
   runOnRuntimeSync<TValue, TReturn>(
     workletRuntime: WorkletRuntime,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack?: string
   ): TReturn;
 
   runOnRuntimeSyncWithId<TValue, TReturn>(
     runtimeId: number,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack?: string
   ): TReturn;
 
-  reportFatalErrorOnJS(
-    message: string,
-    stack: string,
-    name: string,
-    jsEngine: string
-  ): void;
+  reportFatalErrorOnJS(message: string, stack: string, name: string): void;
 
   createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue>;
 
@@ -160,4 +183,11 @@ export interface WorkletsModuleProxy {
   getUISchedulerHolder(): object;
 }
 
-export type IWorkletsModule = WorkletsModuleProxy;
+type InternalMethods = 'loadUnpackers';
+
+type TurboModulePublic = {
+  toggleSlowAnimationsOnUIRuntime(): boolean;
+};
+
+export type IWorkletsModule = Omit<WorkletsModuleProxy, InternalMethods> &
+  TurboModulePublic;

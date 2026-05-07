@@ -98,6 +98,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
       const std::shared_ptr<worklets::UIScheduler> &uiScheduler);
 
   void invalidateCpp();
+  void toggleSlowAnimationsOnUIRuntime();
 };
 
 } // namespace reanimated

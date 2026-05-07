@@ -1,11 +1,11 @@
 #pragma once
 
+#include <jsi/jsi.h>
+#include <react/renderer/core/ShadowNode.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 
-#include <react/renderer/core/ShadowNode.h>
-
-#include <jsi/jsi.h>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -17,12 +17,12 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-using UpdatesBatch = std::vector<std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
-using RegistryMap = std::unordered_map<Tag, std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
+using UpdatesBatch = std::vector<std::pair<ShadowNodeFamily::Shared, folly::dynamic>>;
+using RegistryMap = std::unordered_map<Tag, std::pair<ShadowNodeFamily::Shared, folly::dynamic>>;
 
 #ifdef ANDROID
 struct PropsToRevert {
-  std::shared_ptr<const ShadowNode> shadowNode;
+  ShadowNodeFamily::Shared shadowNodeFamily;
   std::unordered_set<std::string> props;
 };
 
@@ -33,18 +33,23 @@ class UpdatesRegistry {
  public:
   virtual ~UpdatesRegistry() {}
 
-  std::lock_guard<std::mutex> lock() const;
-
   virtual bool isEmpty() const;
   folly::dynamic get(Tag tag) const;
-  virtual void remove(Tag tag) = 0;
+  void remove(Tag tag) {
+    std::lock_guard<std::mutex> lock{mutex_};
+    removeTag(tag);
+  }
 
 #ifdef ANDROID
   bool hasPropsToRevert() const;
   void collectPropsToRevert(PropsToRevertMap &propsToRevertMap);
 #endif
 
-  void flushUpdates(UpdatesBatch &updatesBatch);
+  void flushUpdates(UpdatesBatch &updatesBatch) {
+    std::lock_guard<std::mutex> lock{mutex_};
+    flush(updatesBatch);
+  }
+
   void collectProps(PropsMap &propsMap);
   UpdatesBatch getPendingUpdates();
 
@@ -52,9 +57,22 @@ class UpdatesRegistry {
   mutable std::mutex mutex_;
   RegistryMap updatesRegistry_;
 
-  void addUpdatesToBatch(const std::shared_ptr<const ShadowNode> &shadowNode, const folly::dynamic &props);
+  /// Assumes the caller already locked the registry.
+  void flush(UpdatesBatch &updatesBatch);
+
+  /// Assumes the caller already locked the registry.
+  virtual void removeTag(Tag tag) = 0;
+
+  /// Assumes the caller already locked the registry.
+  void addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
+
+  /// Assumes the caller already locked the registry.
   folly::dynamic getUpdatesFromRegistry(const Tag tag) const;
-  void setInUpdatesRegistry(const std::shared_ptr<const ShadowNode> &shadowNode, const folly::dynamic &props);
+
+  /// Assumes the caller already locked the registry.
+  void setInUpdatesRegistry(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
+
+  /// Assumes the caller already locked the registry.
   void removeFromUpdatesRegistry(Tag tag);
 
  private:

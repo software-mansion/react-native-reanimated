@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "build": "cd ios && bundle install && bundle exec pod update",
+    "build": "cd ios && bundle install && bundle exec pod update --no-repo-update",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "lint": "eslint . --max-warnings 0",
@@ -33,7 +33,7 @@
     "jest": "30.2.0",
     "prettier": "3.6.2",
     "react-test-renderer": "19.2.3",
-    "typescript": "5.8.3"
+    "typescript": "5.9.3"
   },
   "engines": {
     "node": ">= 22.11.0"
@@ -58,7 +58,6 @@
     "staticFeatureFlags": {
       "RUNTIME_TEST_FLAG": true,
       "IOS_DYNAMIC_FRAMERATE_ENABLED": true,
-      "BUNDLE_MODE_ENABLED": false,
       "FETCH_PREVIEW_ENABLED": false
     }
   }

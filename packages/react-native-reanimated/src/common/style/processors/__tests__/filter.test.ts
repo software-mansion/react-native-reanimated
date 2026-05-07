@@ -1,8 +1,7 @@
 'use strict';
-import { ReanimatedError } from '../../../errors';
 import type { FilterArray } from '../../../types';
 import { ValueProcessorTarget } from '../../../types';
-import { ERROR_MESSAGES, processFilter } from '../filter';
+import { processFilter } from '../filter';
 
 describe(processFilter, () => {
   test('returns the same object if not a string', () => {
@@ -199,36 +198,113 @@ describe(processFilter, () => {
     });
   });
 
-  describe('error handling', () => {
-    const cases: { input: string; errorMessage: string }[] = [
-      {
-        input: 'brightness()', // missing value
-        errorMessage: ERROR_MESSAGES.invalidFilter('brightness()'),
-      },
-      {
-        input: 'contrast(two)', // invalid number
-        errorMessage: ERROR_MESSAGES.invalidFilter('contrast(two)'),
-      },
-      {
-        input: 'blur()', // missing value
-        errorMessage: ERROR_MESSAGES.invalidFilter('blur()'),
-      },
-      {
-        input: 'hueRotate(90)', // missing units
-        errorMessage: ERROR_MESSAGES.invalidFilter('hueRotate(90)'),
-      },
-      {
-        input: 'unknownFilter(5)',
-        errorMessage: ERROR_MESSAGES.invalidFilter('unknownFilter(5)'),
-      },
+  test('numeric hueRotate in array input is treated as degrees', () => {
+    expect(processFilter([{ hueRotate: 90 }])).toEqual([{ hueRotate: 90 }]);
+  });
+
+  describe('returns empty array for invalid filter values', () => {
+    describe('string inputs', () => {
+      const invalidStringCases: { name: string; input: string }[] = [
+        {
+          name: 'negative blur string',
+          input: 'blur(-5px)',
+        },
+        {
+          name: 'negative percentage filter',
+          input: 'brightness(-0.5)',
+        },
+        {
+          name: 'invalidates all filters if any is invalid',
+          input: 'brightness(0.5) blur(-5)',
+        },
+        {
+          name: 'missing filter value',
+          input: 'brightness()',
+        },
+        {
+          name: 'non-numeric filter value',
+          input: 'contrast(two)',
+        },
+        {
+          name: 'hueRotate string without units',
+          input: 'hueRotate(90)',
+        },
+        {
+          name: 'unknown filter name',
+          input: 'unknownFilter(5)',
+        },
+        {
+          name: 'completely invalid string',
+          input: 'not a filter',
+        },
+      ];
+
+      test.each(invalidStringCases)(
+        '$name returns empty array',
+        ({ input }) => {
+          expect(processFilter(input)).toEqual([]);
+        }
+      );
+    });
+
+    describe('array/object filter inputs', () => {
+      const invalidArrayCases: {
+        name: string;
+        input: Parameters<typeof processFilter>[0];
+      }[] = [
+        {
+          name: 'negative blur in array input',
+          input: [{ blur: -5 }],
+        },
+        {
+          name: 'negative brightness in array input',
+          input: [{ brightness: -0.5 }],
+        },
+        {
+          name: 'hueRotate string without units in array input',
+          input: [{ hueRotate: '90' }],
+        },
+        {
+          name: 'negative dropShadow standardDeviation in array input',
+          input: [
+            {
+              dropShadow: {
+                color: 'red',
+                offsetX: 1,
+                offsetY: 1,
+                standardDeviation: -1,
+              },
+            },
+          ],
+        },
+        {
+          name: 'invalidates all array filters if any is invalid',
+          input: [{ brightness: 0.5 }, { blur: -5 }],
+        },
+      ];
+
+      test.each(invalidArrayCases)('$name returns empty array', ({ input }) => {
+        expect(processFilter(input)).toEqual([]);
+      });
+    });
+  });
+
+  describe('returns empty array for non-filter input type', () => {
+    // Helper to bypass type checking for the function to allow passing
+    // invalid input types
+    const processFilterUntyped = processFilter as (value: unknown) => unknown;
+
+    const invalidInputTypeCases = [
+      { name: 'number input', input: 123 },
+      { name: 'object input', input: {} },
+      { name: 'null input', input: null },
+      { name: 'undefined input', input: undefined },
     ];
 
-    test.each(cases)(
-      'throws an error for invalid input: $input',
-      ({ input, errorMessage }) => {
-        expect(() => processFilter(input)).toThrow(
-          new ReanimatedError(errorMessage)
-        );
+    test.each(invalidInputTypeCases)(
+      'returns empty array for $name',
+      ({ input }) => {
+        expect(processFilterUntyped(input)).toEqual([]);
       }
     );
   });

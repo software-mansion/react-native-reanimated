@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "macos": "react-native run-macos",
-    "build": "cd macos && bundle install && bundle exec pod update",
+    "build": "cd macos && bundle install && bundle exec pod update --no-repo-update",
     "format": "prettier --write --list-different .",
     "lint": "eslint . --max-warnings 0",
     "start": "react-native start",
@@ -30,7 +30,7 @@
     "@react-native/typescript-config": "0.81.4",
     "eslint": "9.37.0",
     "prettier": "3.6.2",
-    "typescript": "5.8.3"
+    "typescript": "5.9.3"
   },
   "engines": {
     "node": ">= 22.11.0"
@@ -55,7 +55,6 @@
     "staticFeatureFlags": {
       "RUNTIME_TEST_FLAG": true,
       "IOS_DYNAMIC_FRAMERATE_ENABLED": true,
-      "BUNDLE_MODE_ENABLED": false,
       "FETCH_PREVIEW_ENABLED": false
     }
   }

@@ -28,18 +28,17 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type DependencyList = ReadonlyArray<any>;
+  ```typescript
+  type DependencyList = ReadonlyArray<any>;
 
-function useAnimatedReaction<T>(
-  prepare: () => T,
-  react: (prepareResult: T, preparePreviousResult: T | null) => void,
-  dependencies?: DependencyList
-): void;
-```
-
+  function useAnimatedReaction<T>(
+    prepare: () => T,
+    react: (prepareResult: T, preparePreviousResult: T | null) => void,
+    dependencies?: DependencyList
+  ): void;
+  ```
 </details>
 
 ### Arguments
@@ -97,33 +96,28 @@ Only relevant when using Reanimated [without the Babel plugin on the Web](https:
 import AnimatedReactionMeasure from '@site/src/examples/AnimatedReactionMeasure';
 import AnimatedReactionMeasureSrc from '!!raw-loader!@site/src/examples/AnimatedReactionMeasure';
 
-<InteractiveExample
-  src={AnimatedReactionMeasureSrc}
-  component={AnimatedReactionMeasure}
-/>
+<InteractiveExample src={AnimatedReactionMeasureSrc} component={AnimatedReactionMeasure}/>
 
 ## Remarks
 
 - Ensure you do not mutate the same shared value in the `result` function that you've used in the `prepare` function, as this will lead to an infinite loop.
 
 <Indent>
-
-```jsx
-function App() {
-  useAnimatedReaction(
-    () => {
-      // highlight-next-line
-      return width.value;
-    },
-    (currentValue) => {
-      // 🚨 An infinite loop!
-      // highlight-next-line
-      width.value += currentValue;
-    }
-  );
-}
-```
-
+  ```jsx
+  function App() {
+    useAnimatedReaction(
+      () => {
+        // highlight-next-line
+        return width.value;
+      },
+      (currentValue) => {
+        // 🚨 An infinite loop!
+        // highlight-next-line
+        width.value += currentValue;
+      }
+    );
+  }
+  ```
 </Indent>
 
 - Callbacks passed to the `prepare` and `result` arguments are automatically [workletized](/docs/fundamentals/glossary#to-workletize) and run on the [UI thread](/docs/fundamentals/glossary#ui-thread).
@@ -132,4 +126,4 @@ function App() {
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

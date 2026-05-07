@@ -13,6 +13,8 @@ export function setupRequestAnimationFrame() {
   let flushedCallbacksBegin = 0;
   let flushedCallbacksEnd = 0;
 
+  let queuedFinalizers: (() => void)[] = [];
+
   function executeQueue(timestamp: number) {
     flushedCallbacks = queuedCallbacks;
     queuedCallbacks = [];
@@ -28,6 +30,12 @@ export function setupRequestAnimationFrame() {
     flushedCallbacksBegin = flushedCallbacksEnd;
 
     callMicrotasks();
+
+    const finalizers = queuedFinalizers;
+    queuedFinalizers = [];
+    for (const finalizer of finalizers) {
+      finalizer();
+    }
   }
 
   function requestAnimationFrame(
@@ -66,12 +74,15 @@ export function setupRequestAnimationFrame() {
   globalThis.requestAnimationFrame = requestAnimationFrame;
   globalThis.cancelAnimationFrame =
     cancelAnimationFrame as typeof globalThis.cancelAnimationFrame;
-  globalThis.__flushAnimationFrame = (eventTimestamp: number) => {
-    // TODO: Remove this in the future.
-    // Reanimated uses this method to trigger event synchronously.
-    flushQueue(eventTimestamp);
+  globalThis.requestAnimationFrameFinalizer = (callback: () => void) => {
+    queuedFinalizers.push(callback);
   };
 
   /* Start the loop */
   nativeRequestAnimationFrame(nativeFlushQueue);
+
+  // TODO: Remove it after support for Reanimated 4.3 is dropped.
+  globalThis.__flushAnimationFrame = (eventTimestamp: number) => {
+    flushQueue(eventTimestamp);
+  };
 }

@@ -6,6 +6,8 @@ import type {
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
+import type { Rotate, TransformsConfig, TranslateX } from './types';
+import { animateTransformToValues, pickTransformValues } from './utils';
 
 /**
  * Roll from left animation. You can modify the behavior by chaining methods
@@ -17,7 +19,7 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#roll
  */
 export class RollInLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<TransformsConfig<[TranslateX, Rotate]>>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'RollInLeft';
@@ -30,26 +32,29 @@ export class RollInLeft
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            { translateX: delayFunction(delay, animation(0, config)) },
-            { rotate: delayFunction(delay, animation('0deg', config)) },
-          ],
+          transform: animateTransformToValues(
+            [{ translateX: 0 }, { rotate: '0deg' }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          transform: [
-            { translateX: -values.windowWidth },
-            { rotate: '-180deg' },
-          ],
-          ...initialValues,
+          transform: pickTransformValues(
+            [{ translateX: -values.windowWidth }, { rotate: '-180deg' }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -67,7 +72,7 @@ export class RollInLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#roll
  */
 export class RollInRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<TransformsConfig<[TranslateX, Rotate]>>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'RollInRight';
@@ -80,23 +85,29 @@ export class RollInRight
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            { translateX: delayFunction(delay, animation(0, config)) },
-            { rotate: delayFunction(delay, animation('0deg', config)) },
-          ],
+          transform: animateTransformToValues(
+            [{ translateX: 0 }, { rotate: '0deg' }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          transform: [{ translateX: values.windowWidth }, { rotate: '180deg' }],
-          ...initialValues,
+          transform: pickTransformValues(
+            [{ translateX: values.windowWidth }, { rotate: '180deg' }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -114,7 +125,7 @@ export class RollInRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#roll
  */
 export class RollOutLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<TransformsConfig<[TranslateX, Rotate]>>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'RollOutLeft';
@@ -127,28 +138,29 @@ export class RollOutLeft
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            {
-              translateX: delayFunction(
-                delay,
-                animation(-values.windowWidth, config)
-              ),
-            },
-            { rotate: delayFunction(delay, animation('-180deg', config)) },
-          ],
+          transform: animateTransformToValues(
+            [{ translateX: -values.windowWidth }, { rotate: '-180deg' }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          transform: [{ translateX: 0 }, { rotate: '0deg' }],
-          ...initialValues,
+          transform: pickTransformValues(
+            [{ translateX: 0 }, { rotate: '0deg' }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -166,7 +178,7 @@ export class RollOutLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#roll
  */
 export class RollOutRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<TransformsConfig<[TranslateX, Rotate]>>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'RollOutRight';
@@ -179,28 +191,29 @@ export class RollOutRight
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            {
-              translateX: delayFunction(
-                delay,
-                animation(values.windowWidth, config)
-              ),
-            },
-            { rotate: delayFunction(delay, animation('180deg', config)) },
-          ],
+          transform: animateTransformToValues(
+            [{ translateX: values.windowWidth }, { rotate: '180deg' }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          transform: [{ translateX: 0 }, { rotate: '0deg' }],
-          ...initialValues,
+          transform: pickTransformValues(
+            [{ translateX: 0 }, { rotate: '0deg' }],
+            initialValues
+          ),
         },
         callback,
       };

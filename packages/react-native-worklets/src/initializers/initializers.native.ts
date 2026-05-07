@@ -8,14 +8,14 @@ import {
 import { initializeNetworking } from '../bundleMode/network';
 import { setupCallGuard } from '../callGuard';
 import { registerReportFatalRemoteError } from '../debug/errors';
-import { registerWorkletsError, WorkletsError } from '../debug/WorkletsError';
 import { getStaticFeatureFlag } from '../featureFlags/featureFlags';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
-import { __installUnpacker as installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
+import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
 import { makeShareableCloneOnUIRecursive } from '../memory/serializable';
-import { __installUnpacker as installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
-import { __installUnpacker as installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
-import { __installUnpacker as installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
+import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
+import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
+import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
+import { installValueUnpacker } from '../memory/valueUnpacker';
 import { setupSetImmediate } from '../runLoop/common/setImmediatePolyfill';
 import { setupSetInterval } from '../runLoop/common/setIntervalPolyfill';
 import { setupRequestAnimationFrame } from '../runLoop/uiRuntime/requestAnimationFrame';
@@ -92,6 +92,30 @@ export function setupConsole(boundCapturableConsole: typeof console) {
   };
 }
 
+// This is only used in DEV mode in Bunde Mode, it's necessary to see the logs in metro / devtools
+export function setupConsoleForwarding(boundCapturableConsole: typeof console) {
+  'worklet';
+
+  globalThis.nativeLoggingHook = (message: string, level: number) => {
+    switch (level) {
+      case 0:
+        scheduleOnRN(boundCapturableConsole.debug, message);
+        break;
+      case 1:
+        scheduleOnRN(boundCapturableConsole.log, message);
+        break;
+      case 2:
+        scheduleOnRN(boundCapturableConsole.warn, message);
+        break;
+      case 3:
+        scheduleOnRN(boundCapturableConsole.error, message);
+        break;
+      default:
+        scheduleOnRN(boundCapturableConsole.log, message);
+    }
+  };
+}
+
 export function setupSerializer() {
   'worklet';
   globalThis.__serializer = makeShareableCloneOnUIRecursive;
@@ -119,6 +143,8 @@ export function init() {
 function initializeRuntime() {
   if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
+  } else {
+    installValueUnpacker();
   }
   installSynchronizableUnpacker();
   installCustomSerializableUnpacker();
@@ -133,8 +159,8 @@ function initializeRNRuntime() {
       'worklet';
     };
     if (!isWorkletFunction(testWorklet)) {
-      throw new WorkletsError(
-        `Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
+      throw new Error(
+        `[Worklets] Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
       );
     }
   }
@@ -165,30 +191,35 @@ function initializeWorkletRuntime() {
  */
 function installRNBindingsOnUIRuntime() {
   if (!WorkletsModule) {
-    throw new WorkletsError(
-      'Worklets are trying to initialize the UI runtime without a valid WorkletsModule'
+    throw new Error(
+      '[Worklets] Worklets are trying to initialize the UI runtime without a valid WorkletsModule'
     );
   }
 
   if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     /** In Bundle Mode Runtimes setup their callGuard themselves. */
     runOnUISync(setupCallGuard);
-
-    /** In Bundle Mode the error is taken from the bundle. */
-    runOnUISync(registerWorkletsError);
   }
 
-  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
+  const runtimeBoundCapturableConsole =
+    globalThis._WORKLETS_BUNDLE_MODE_ENABLED && !__DEV__
+      ? null
+      : getMemorySafeCapturableConsole();
 
   runOnUISync(() => {
     'worklet';
-
-    setupConsole(runtimeBoundCapturableConsole);
     /**
      * TODO: Move `setupMicrotasks` and `setupRequestAnimationFrame` to a
      * separate function once we have a better way to distinguish between
      * Worklet Runtimes.
      */
+
+    if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+      setupConsole(runtimeBoundCapturableConsole!);
+    } else if (__DEV__) {
+      setupConsoleForwarding(runtimeBoundCapturableConsole!);
+    }
+
     setupMicrotasks();
     setupRequestAnimationFrame();
     setupSetTimeout();

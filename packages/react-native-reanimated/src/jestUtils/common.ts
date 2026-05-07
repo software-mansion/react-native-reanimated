@@ -22,3 +22,13 @@ export const worklet = <Args extends unknown[] = [], ReturnValue = void>(
   fn.__closure = {};
   return fn;
 };
+
+/** Creates a new worklet with the same hash and closure as the original. */
+export const cloneWorklet = <Args extends unknown[] = [], ReturnValue = void>(
+  original: WorkletFunction<Args, ReturnValue>
+): WorkletFunction<Args, ReturnValue> => {
+  const w = worklet<Args, ReturnValue>();
+  w.__workletHash = original.__workletHash;
+  w.__closure = { ...original.__closure };
+  return w;
+};

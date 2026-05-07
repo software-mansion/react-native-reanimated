@@ -1,6 +1,5 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Tools/ScriptBuffer.h>
-#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
@@ -44,22 +43,8 @@ WorkletsModule::WorkletsModule(
           jsCallInvoker,
           uiScheduler,
           getIsOnJSQueueThread(),
-          std::make_shared<RuntimeBindings>(RuntimeBindings{
-              .requestAnimationFrame = getRequestAnimationFrame()
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-                  ,
-              .abortRequest = getAbortRequest(),
-              .clearCookies = getClearCookies(),
-              .sendRequest = getSendRequest()
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
-          }),
-          bundleModeConfig)) {
-  auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
-  auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
-      *rnRuntime_, std::static_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));
-  RNRuntimeWorkletDecorator::decorate(
-      *rnRuntime_, std::move(optimizedJsiWorkletsModuleProxy), workletsModuleProxy_->getJSLogger());
-}
+          getRuntimeBindings(bundleModeConfig.enabled, *rnRuntime),
+          bundleModeConfig)) {}
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
@@ -95,6 +80,22 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
       messageQueueThread,
       jsCallInvoker,
       uiScheduler);
+}
+
+std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(
+    const bool bundleModeEnabled,
+    jsi::Runtime &rnRuntime) {
+  return std::make_shared<RuntimeBindings>(RuntimeBindings{
+      .requestAnimationFrame = getRequestAnimationFrame(),
+      .nativeLoggingHook =
+          bundleModeEnabled ? extractNativeLoggingHookFromRNRuntime(rnRuntime) : RuntimeBindings::NativeLoggingHook{}
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
+      ,
+      .abortRequest = getAbortRequest(),
+      .clearCookies = getClearCookies(),
+      .sendRequest = getSendRequest()
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED
+  });
 }
 
 RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame() {
@@ -190,10 +191,15 @@ void WorkletsModule::invalidateCpp() {
   workletsModuleProxy_.reset();
 }
 
+void WorkletsModule::startCpp() {
+  workletsModuleProxy_->start();
+}
+
 void WorkletsModule::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", WorkletsModule::initHybrid),
       makeNativeMethod("invalidateCpp", WorkletsModule::invalidateCpp),
+      makeNativeMethod("startCpp", WorkletsModule::startCpp),
   });
 }
 

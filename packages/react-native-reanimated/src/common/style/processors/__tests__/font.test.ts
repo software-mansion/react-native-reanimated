@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../../errors';
 import { ERROR_MESSAGES, processFontWeight } from '../font';
 
 describe(processFontWeight, () => {
@@ -19,7 +18,7 @@ describe(processFontWeight, () => {
       'throws an error for %p',
       (value) => {
         expect(() => processFontWeight(value)).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidFontWeight(value))
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidFontWeight(value)}`)
         );
       }
     );

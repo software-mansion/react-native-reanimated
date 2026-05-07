@@ -1,13 +1,26 @@
 'use strict';
 
-import { WorkletsError } from '../debug/WorkletsError';
-import { addGuardImplementation } from '../guardImplementation';
+import { addNoBundleModeGuardImplementation } from '../guardImplementation';
 import { UIRuntimeId } from '../runtimes';
 import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
 import { createSerializable } from './serializable';
-import type { SerializableRef, Shareable, ShareableConfig } from './types';
+import type { Shareable, ShareableConfig } from './types';
 
+/**
+ * Creates a new {@link Shareable} holding the provided initial value. You must
+ * explicitly declare which Worklet Runtime will host the Shareable by passing
+ * its `runtimeId`.
+ *
+ * Currently only hosting a Shareable on the UI Runtime is supported.
+ *
+ * @param hostRuntimeId - The `runtimeId` of the Worklet Runtime that will host
+ *   the Shareable. Use {@link UIRuntimeId}.
+ * @param initial - The initial value of the Shareable.
+ * @param config - Optional advanced configuration.
+ * @returns The created {@link Shareable}.
+ * @see {@link https://docs.swmansion.com/react-native-worklets/docs/memory/createShareable | createShareable docs}
+ */
 export function createShareable<
   TValue = unknown,
   THostDecorated = unknown,
@@ -28,7 +41,7 @@ export function createShareable<
   TGuestDecorated = unknown,
 >(
   hostRuntimeId: number,
-  initial: SerializableRef<TValue>,
+  initial: TValue,
   config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
 ): Shareable<TValue, THostDecorated, TGuestDecorated>;
 
@@ -44,13 +57,13 @@ export function createShareable<
   const { hostDecorator, guestDecorator, initSynchronously } = config || {};
   if (__DEV__) {
     if (hostRuntimeId !== UIRuntimeId) {
-      throw new WorkletsError('Only UI host runtime is supported currently');
+      throw new Error('[Worklets] Only UI host runtime is supported currently');
     }
     if (hostDecorator && !isWorkletFunction(hostDecorator)) {
-      throw new WorkletsError('hostDecorator must be a worklet function');
+      throw new Error('[Worklets] hostDecorator must be a worklet function');
     }
     if (guestDecorator && !isWorkletFunction(guestDecorator)) {
-      throw new WorkletsError('guestDecorator must be a worklet function');
+      throw new Error('[Worklets] guestDecorator must be a worklet function');
     }
   }
 
@@ -70,5 +83,5 @@ export function createShareable<
 }
 
 if (__DEV__ && globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-  addGuardImplementation(createShareable);
+  addNoBundleModeGuardImplementation(createShareable);
 }

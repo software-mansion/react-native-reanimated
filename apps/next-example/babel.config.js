@@ -8,6 +8,10 @@ module.exports = {
   presets: ['next/babel'],
   plugins: [
     [
+      'babel-plugin-transform-define',
+      { __DEV__: process.env.NODE_ENV !== 'production' },
+    ],
+    [
       'module-resolver',
       {
         extensions: ['.js', '.jsx', '.ts', '.tsx'],

@@ -5,7 +5,7 @@ import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 
 import type { AnyComponent, AnyRecord, PlainStyle } from '../../common';
-import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../../common';
+import { IS_JEST, SHOULD_BE_USE_WEB } from '../../common';
 import type {
   InternalHostInstance,
   ShadowNodeWrapper,
@@ -87,8 +87,8 @@ export default class AnimatedComponent<
           (render function returns null). Example: 
           svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
         */
-        throw new ReanimatedError(
-          'Cannot find host instance for this component. Maybe it renders nothing?'
+        throw new Error(
+          '[Reanimated] Cannot find host instance for this component. Maybe it renders nothing?'
         );
       }
 

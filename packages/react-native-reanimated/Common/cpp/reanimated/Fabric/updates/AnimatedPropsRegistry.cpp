@@ -15,6 +15,7 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
 void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operations, const double timestamp) {
   auto operationsArray = operations.asObject(rt).asArray(rt);
 
+  std::lock_guard<std::mutex> lock{mutex_};
   for (size_t i = 0, length = operationsArray.size(rt); i < length; ++i) {
     auto item = operationsArray.getValueAtIndex(rt, i).asObject(rt);
     auto shadowNodeWrapper = item.getProperty(rt, "shadowNodeWrapper");
@@ -47,7 +48,7 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
       props.erase("text");
     }
 
-    addUpdatesToBatch(shadowNode, props);
+    addUpdatesToBatch(shadowNode->getFamilyShared(), props);
 
     if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
       timestampMap_[shadowNode->getTag()] = timestamp;
@@ -55,12 +56,13 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
   }
 }
 
-void AnimatedPropsRegistry::remove(const Tag tag) {
-  updatesRegistry_.erase(tag);
-  timestampMap_.erase(tag);
-}
+jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(
+    jsi::Runtime &rt,
+    const double timestamp,
+    const double cleanupTimestamp) {
+  std::lock_guard<std::mutex> lock{mutex_};
+  removeUpdatesOlderThanTimestamp(cleanupTimestamp);
 
-jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt, const double timestamp) {
   std::vector<std::pair<Tag, std::reference_wrapper<const folly::dynamic>>> updates;
 
   for (const auto &[viewTag, pair] : updatesRegistry_) {
@@ -93,6 +95,11 @@ void AnimatedPropsRegistry::removeUpdatesOlderThanTimestamp(const double timesta
       it++;
     }
   }
+}
+
+void AnimatedPropsRegistry::removeTag(const Tag tag) {
+  updatesRegistry_.erase(tag);
+  timestampMap_.erase(tag);
 }
 
 } // namespace reanimated

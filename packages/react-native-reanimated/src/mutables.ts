@@ -13,7 +13,7 @@ import {
   UIRuntimeId,
 } from 'react-native-worklets';
 
-import { IS_JEST, logger, ReanimatedError, SHOULD_BE_USE_WEB } from './common';
+import { IS_JEST, logger, SHOULD_BE_USE_WEB } from './common';
 import type { Mutable } from './commonTypes';
 import { getStaticFeatureFlag } from './featureFlags';
 import { isFirstReactRender, isReactRendering } from './reactUtils';
@@ -217,8 +217,12 @@ function mutableGuestDecorator<TValue>(
       set(newValue) {
         if (globalThis.__RUNTIME_KIND === 1) {
           checkInvalidWriteDuringRender();
+          scheduleOnUI(() => {
+            mutable.value = newValue;
+          });
+        } else {
+          mutable.setAsync(newValue);
         }
-        mutable.setAsync(newValue);
       },
       enumerable: true,
       configurable: true,
@@ -226,13 +230,13 @@ function mutableGuestDecorator<TValue>(
 
     _value: {
       get() {
-        throw new ReanimatedError(
-          'Reading from `_value` directly is only possible on the UI runtime. Perhaps you wanted to access `value` instead?'
+        throw new Error(
+          '[Reanimated] Reading from `_value` directly is only possible on the UI runtime. Perhaps you wanted to access `value` instead?'
         );
       },
       set(_newValue) {
-        throw new ReanimatedError(
-          'Setting `_value` directly is only possible on the UI runtime. Perhaps you wanted to assign to `value` instead?'
+        throw new Error(
+          '[Reanimated] Setting `_value` directly is only possible on the UI runtime. Perhaps you wanted to assign to `value` instead?'
         );
       },
     },
@@ -250,8 +254,8 @@ function mutableGuestDecorator<TValue>(
 
     addListener: {
       value: () => {
-        throw new ReanimatedError(
-          'Adding listeners is only possible on the UI runtime.'
+        throw new Error(
+          '[Reanimated] Adding listeners is only possible on the UI runtime.'
         );
       },
       writable: true,
@@ -261,8 +265,8 @@ function mutableGuestDecorator<TValue>(
 
     removeListener: {
       value: () => {
-        throw new ReanimatedError(
-          'Removing listeners is only possible on the UI runtime.'
+        throw new Error(
+          '[Reanimated] Removing listeners is only possible on the UI runtime.'
         );
       },
       writable: true,

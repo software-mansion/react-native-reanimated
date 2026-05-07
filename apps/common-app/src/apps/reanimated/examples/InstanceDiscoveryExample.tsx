@@ -27,12 +27,14 @@ import {
   View,
   VirtualizedList,
   StyleSheet,
+  type ScrollViewProps,
 } from 'react-native';
 import { ScrollView as RNGHScrollView } from 'react-native-gesture-handler';
 import { Path as RNSVGPath } from 'react-native-svg';
 import { makeMutable } from 'react-native-reanimated';
 // @ts-expect-error No types for deep import.
 import ReactFabric from 'react-native/Libraries/Renderer/shims/ReactFabric';
+import { useCallback } from 'react';
 
 const findHostInstance_DEPRECATED = ReactFabric.findHostInstance_DEPRECATED as (
   ref: any
@@ -43,6 +45,31 @@ makeMutable(() => {
   'worklet';
   return undefined;
 });
+
+const CustomScrollComponent = (props: ScrollViewProps) => (
+  <View>
+    <ScrollView {...props} />
+  </View>
+);
+
+function FlatListWithCustomRenderer({ data, ref }: { data: any[]; ref: any }) {
+  const renderItem = useCallback((info: any) => {
+    return <Text>{info.item}</Text>;
+  }, []);
+
+  const renderScrollComponent = useCallback((props: ScrollViewProps) => {
+    return <CustomScrollComponent {...props} />;
+  }, []);
+
+  return (
+    <FlatList
+      data={data}
+      ref={ref}
+      renderItem={renderItem}
+      renderScrollComponent={renderScrollComponent}
+    />
+  );
+}
 
 type ImperativeShadowNodeWrapper = {
   source: string;
@@ -88,6 +115,8 @@ let visited = new Set<any>();
 
 function getRefChecker(name: string) {
   return (ref: any) => {
+    console.log('equality check', ref === ref.getScrollResponder());
+
     refId = 1;
     foundRefToId = new Map<any, number>();
 
@@ -526,6 +555,10 @@ export default function InstanceDiscoveryExample() {
         fill="lime"
         stroke="purple"
         strokeWidth="1"
+      />
+      <FlatListWithCustomRenderer
+        ref={getRefChecker('FlatListWithCustomRenderer')}
+        data={[]}
       />
     </>
   );

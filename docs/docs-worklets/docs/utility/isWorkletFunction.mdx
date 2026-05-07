@@ -30,47 +30,46 @@ console.log(isNonWorkletFunction); // false
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type WorkletClosure = Record<string, unknown>;
+  ```typescript
+  type WorkletClosure = Record<string, unknown>;
 
-export type WorkletStackDetails = [
-  error: Error,
-  lineOffset: number,
-  columnOffset: number,
-];
+  export type WorkletStackDetails = [
+    error: Error,
+    lineOffset: number,
+    columnOffset: number,
+  ];
 
-interface WorkletInitData {
-  code: string;
-  /** Only in dev builds. */
-  location?: string;
-  /** Only in dev builds. */
-  sourceMap?: string;
-  /** Only in dev builds. */
-  version?: string;
-}
+  interface WorkletInitData {
+    code: string;
+    /** Only in dev builds. */
+    location?: string;
+    /** Only in dev builds. */
+    sourceMap?: string;
+    /** Only in dev builds. */
+    version?: string;
+  }
 
-interface WorkletProps {
-  __closure: WorkletClosure;
-  __workletHash: number;
-  __initData: WorkletInitData;
-  __init?: () => unknown;
-  /** `__stackDetails` is removed after parsing. */
-  __stackDetails?: WorkletStackDetails;
-}
+  interface WorkletProps {
+    __closure: WorkletClosure;
+    __workletHash: number;
+    __initData: WorkletInitData;
+    __init?: () => unknown;
+    /** `__stackDetails` is removed after parsing. */
+    __stackDetails?: WorkletStackDetails;
+  }
 
-type WorkletFunction<
-  TArgs extends unknown[] = unknown[],
-  TReturn = unknown,
-> = ((...args: TArgs) => TReturn) & WorkletProps;
+  type WorkletFunction<
+    TArgs extends unknown[] = unknown[],
+    TReturn = unknown,
+  > = ((...args: TArgs) => TReturn) & WorkletProps;
 
-function isWorkletFunction<
-  Args extends unknown[] = unknown[],
-  ReturnValue = unknown,
->(value: unknown): value is WorkletFunction<Args, ReturnValue>;
-```
-
+  function isWorkletFunction<
+    Args extends unknown[] = unknown[],
+    ReturnValue = unknown,
+  >(value: unknown): value is WorkletFunction<Args, ReturnValue>;
+  ```
 </details>
 
 ### Arguments
