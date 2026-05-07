@@ -104,6 +104,8 @@ if(${JS_RUNTIME} STREQUAL "hermes")
 
   if(${HERMES_ENABLE_DEBUGGER})
     string(APPEND CMAKE_CXX_FLAGS " -DHERMES_ENABLE_DEBUGGER=1")
+
+    target_link_libraries(worklets ReactAndroid::hermestooling)
   endif()
 elseif(${JS_RUNTIME} STREQUAL "jsc")
   target_link_libraries(worklets ReactAndroid::jsctooling)

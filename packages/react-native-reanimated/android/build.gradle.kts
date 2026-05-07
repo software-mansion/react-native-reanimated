@@ -223,6 +223,7 @@ android {
                 "**/libjsi.so",
                 "**/libhermes.so",
                 "**/libhermesvm.so",
+                "**/libhermestooling.so",
                 "**/libreactnative.so",
                 "**/libjscexecutor.so",
                 "**/libworklets.so",
