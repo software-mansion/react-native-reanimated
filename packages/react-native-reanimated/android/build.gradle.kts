@@ -224,7 +224,6 @@ android {
                 "**/libhermes.so",
                 "**/libhermesvm.so",
                 "**/libreactnative.so",
-                "**/libjscexecutor.so",
                 "**/libworklets.so",
             )
         }

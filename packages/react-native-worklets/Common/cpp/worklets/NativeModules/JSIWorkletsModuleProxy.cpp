@@ -9,7 +9,6 @@
 #include <worklets/SharedItems/SerializableFactory.h>
 #include <worklets/SharedItems/Shareable.h>
 #include <worklets/SharedItems/Synchronizable.h>
-#include <worklets/Tools/Defs.h>
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
@@ -47,14 +46,11 @@ inline void scheduleOnUI(
       return;
     }
 
-#if JS_RUNTIME_HERMES
     // JSI's scope defined here allows for JSI-objects to be cleared up
     // after each runtime loop. Within these loops we typically create
     // some temporary JSI objects and hence it allows for such objects to
-    // be garbage collected much sooner. Apparently the scope API is only
-    // supported on Hermes at the moment.
+    // be garbage collected much sooner.
     const auto scope = jsi::Scope(uiWorkletRuntime->getJSIRuntime());
-#endif // JS_RUNTIME_HERMES
 
     uiWorkletRuntime->runSync(serializableWorklet);
   });

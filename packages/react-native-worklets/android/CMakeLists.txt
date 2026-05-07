@@ -8,10 +8,7 @@ set(CMAKE_CXX_STANDARD 20)
 # Consume shared libraries and headers from prefabs
 find_package(fbjni REQUIRED CONFIG)
 find_package(ReactAndroid REQUIRED CONFIG)
-
-if(${JS_RUNTIME} STREQUAL "hermes")
-  find_package(hermes-engine REQUIRED CONFIG)
-endif()
+find_package(hermes-engine REQUIRED CONFIG)
 
 # default CMAKE_CXX_FLAGS: "-g -DANDROID -fdata-sections -ffunction-sections
 # -funwind-tables -fstack-protector-strong -no-canonical-prefixes
@@ -42,14 +39,6 @@ endif()
 
 if(NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")
   string(APPEND CMAKE_CXX_FLAGS " -DNDEBUG")
-endif()
-
-if(${JS_RUNTIME} STREQUAL "hermes")
-  string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_HERMES=1")
-elseif(${JS_RUNTIME} STREQUAL "jsc")
-  string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_JSC=1")
-else()
-  message(FATAL_ERROR "Unknown JS runtime ${JS_RUNTIME}.")
 endif()
 
 set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
@@ -95,16 +84,12 @@ set_target_properties(worklets PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(worklets android log ReactAndroid::reactnative
                       ReactAndroid::jsi fbjni::fbjni)
 
-if(${JS_RUNTIME} STREQUAL "hermes")
-  if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 82)
-    target_link_libraries(worklets hermes-engine::hermesvm)
-  else()
-    target_link_libraries(worklets hermes-engine::libhermes)
-  endif()
+if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 82)
+  target_link_libraries(worklets hermes-engine::hermesvm)
+else()
+  target_link_libraries(worklets hermes-engine::libhermes)
+endif()
 
-  if(${HERMES_ENABLE_DEBUGGER})
-    string(APPEND CMAKE_CXX_FLAGS " -DHERMES_ENABLE_DEBUGGER=1")
-  endif()
-elseif(${JS_RUNTIME} STREQUAL "jsc")
-  target_link_libraries(worklets ReactAndroid::jsctooling)
+if(${HERMES_ENABLE_DEBUGGER})
+  string(APPEND CMAKE_CXX_FLAGS " -DHERMES_ENABLE_DEBUGGER=1")
 endif()
