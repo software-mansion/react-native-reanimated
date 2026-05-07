@@ -281,7 +281,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
         return;
       }
 
-      runtime->runSync(*callbackFunction, timestamp);
+      runSyncOnRuntime(runtime, *callbackFunction, jsi::Value(timestamp));
     };
     strongThis->startBackendIfNeeded();
   };
