@@ -7,7 +7,7 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "format": "prettier --write --list-different .",
+    "format": "oxfmt .",
     "lint": "eslint . --max-warnings 0",
     "type:check": "tsc --noEmit"
   },
@@ -19,7 +19,6 @@
   "devDependencies": {
     "@types/react": "19.2.2",
     "eslint": "9.37.0",
-    "prettier": "3.6.2",
     "typescript": "5.9.3"
   },
   "engines": {

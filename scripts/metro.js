@@ -44,7 +44,7 @@ function getMonorepoMetroOptions(modulesToFilter, appDir, defaultConfig) {
  */
 function getModuleBlocklist(moduleNames, defaultConfig) {
   const blockList = moduleNames.reduce(
-    (acc /** @type {RegExp[]} */, moduleName) => {
+    (acc, /** @type {RegExp[]} */ moduleName) => {
       blockedDirs.forEach((dir) => {
         acc.push(getBlockRegex(dir, moduleName));
       });

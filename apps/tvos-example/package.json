@@ -7,7 +7,7 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "lint": "eslint . --max-warnings 0",
-    "format": "prettier --write --list-different .",
+    "format": "oxfmt .",
     "start": "react-native start",
     "test": "jest",
     "type:check": "tsc --noEmit"
@@ -31,7 +31,6 @@
     "babel-jest": "30.2.0",
     "eslint": "9.37.0",
     "jest": "30.2.0",
-    "prettier": "3.6.2",
     "react-test-renderer": "19.2.3",
     "typescript": "5.9.3"
   },

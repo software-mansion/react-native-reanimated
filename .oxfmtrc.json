@@ -1,0 +1,41 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "bracketSameLine": true,
+  "printWidth": 80,
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "tabWidth": 2,
+  "arrowParens": "always",
+  "sortPackageJson": false,
+  "jsdoc": true,
+  "ignorePatterns": [
+    "build/",
+    ".yarn/",
+    "*.md",
+    "*.mdx",
+    "packages/react-native-worklets/plugin/lib/",
+    "packages/react-native-worklets/plugin/index.js",
+    "packages/react-native-worklets/plugin/index.js.map",
+    "ios/",
+    "macos/",
+    "vendor/",
+    "apps/common-app/**/*.snapshot.ts",
+    "docs/"
+  ],
+  "overrides": [
+    {
+      "files": ["apps/common-app/src/apps/reanimated/examples/RuntimeTests/**"],
+      "options": {
+        "arrowParens": "avoid",
+        "trailingComma": "all",
+        "printWidth": 120
+      }
+    },
+    {
+      "files": ["**/*.snapshot.ts"],
+      "options": {
+        "printWidth": 1000
+      }
+    }
+  ]
+}

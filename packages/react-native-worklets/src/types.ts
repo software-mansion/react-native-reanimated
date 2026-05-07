@@ -5,14 +5,16 @@ import type { RuntimeKind } from './runtimeKind';
 
 /** Public globals to be exposed to the user. */
 declare global {
+  /* eslint-disable tsdoc/syntax */
   /**
-   * @deprecated Use {@link __RUNTIME_KIND} instead.
+   * @deprecated Use {@link \_\_RUNTIME_KIND} instead.
    *
    *   This global variable is a diagnostic/development tool.
    *
    *   It's `true` on Worklet Runtimes and `false` on React Native Runtime.
    */
   var _WORKLET: boolean | undefined;
+  /* eslint-enable tsdoc/syntax */
 
   /**
    * This ArrayBuffer contains the memory address of `jsi::Runtime` which is the

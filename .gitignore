@@ -39,7 +39,9 @@ package-lock.json
 # vscode
 jsconfig.json
 .project
-.vscode
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 
 # BUCK
 buck-out/
