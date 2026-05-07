@@ -41,8 +41,6 @@ void JSLogger::reportFatalErrorOnJS(jsi::Runtime &rnRuntime, const JSErrorData &
 
   errorInstance.setProperty(rnRuntime, "name", jsi::String::createFromUtf8(rnRuntime, jsErrorData.name));
 
-  errorInstance.setProperty(rnRuntime, "jsEngine", jsi::String::createFromUtf8(rnRuntime, jsErrorData.jsEngine));
-
   const auto &reportFatalErrorFunction = global.getPropertyAsFunction(rnRuntime, "__reportFatalRemoteError");
   reportFatalErrorFunction.call(rnRuntime, errorInstance, force);
 }

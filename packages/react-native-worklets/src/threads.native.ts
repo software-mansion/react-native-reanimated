@@ -20,6 +20,7 @@ type UIJob<Args extends unknown[] = unknown[], ReturnValue = unknown> = [
 ];
 
 let runOnUIQueue: UIJob[] = [];
+let errorStack: string | undefined;
 
 export function setupMicrotasks() {
   'worklet';
@@ -178,7 +179,8 @@ export function runOnUISync<Args extends unknown[], ReturnValue>(
       'worklet';
       const result = worklet(...args);
       return makeShareableCloneOnUIRecursive(result);
-    })
+    }),
+    __DEV__ ? (new Error().stack ?? '') : undefined
   );
 }
 
@@ -365,6 +367,9 @@ function enqueueUI<Args extends unknown[], ReturnValue>(
   args: Args,
   resolve?: (value: ReturnValue) => void
 ): void {
+  if (__DEV__ && !errorStack) {
+    errorStack = new Error().stack ?? '';
+  }
   const job = [worklet, args, resolve] as UIJob<Args, ReturnValue>;
   runOnUIQueue.push(job as unknown as UIJob);
   if (runOnUIQueue.length === 1) {
@@ -376,6 +381,8 @@ function flushUIQueue(): void {
   queueMicrotask(() => {
     const queue = runOnUIQueue;
     runOnUIQueue = [];
+    const stack = errorStack;
+    errorStack = undefined;
     WorkletsModule.scheduleOnUI(
       createSerializable(() => {
         'worklet';
@@ -386,7 +393,8 @@ function flushUIQueue(): void {
           }
         });
         globalThis.__callMicrotasks();
-      })
+      }),
+      stack
     );
   });
 }
