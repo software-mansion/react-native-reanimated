@@ -4,8 +4,6 @@
 // don't support hermes and it causes the compilation to fail.
 #if JS_RUNTIME_HERMES
 
-#include <cxxreact/MessageQueueThread.h>
-#include <jsi/decorator.h>
 #include <jsi/jsi.h>
 
 #include <memory>
@@ -14,13 +12,7 @@
 
 namespace worklets {
 
-using namespace facebook;
-using namespace react;
-
-WorkletHermesRuntime::WorkletHermesRuntime(
-    std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::string &name)
+WorkletHermesRuntime::WorkletHermesRuntime(std::unique_ptr<facebook::hermes::HermesRuntime> runtime)
     : jsi::WithRuntimeDecorator<WorkletsReentrancyCheck>(*runtime, reentrancyCheck_), runtime_(std::move(runtime)) {
 #ifndef NDEBUG
   facebook::hermes::HermesRuntime *wrappedRuntime = runtime_.get();

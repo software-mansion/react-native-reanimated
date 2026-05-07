@@ -7,7 +7,6 @@
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
-#include <cxxreact/MessageQueueThread.h>
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
 
@@ -52,14 +51,11 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
         runtime_(std::move(runtime)) {}
 };
 
-static std::shared_ptr<jsi::Runtime> makeRuntime(
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::string &name,
-    const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
+static std::shared_ptr<jsi::Runtime> makeRuntime(const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
   std::shared_ptr<jsi::Runtime> jsiRuntime;
 #if JS_RUNTIME_HERMES
   auto hermesRuntime = facebook::hermes::makeHermesRuntime();
-  jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime), jsQueue, name);
+  jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime));
 #else
   jsiRuntime = facebook::jsc::makeJSCRuntime();
 #endif
@@ -69,13 +65,12 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
 
 WorkletRuntime::WorkletRuntime(
     uint64_t runtimeId,
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::string &name,
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop)
     : runtimeId_(runtimeId),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
-      runtime_(makeRuntime(jsQueue, name, runtimeMutex_)),
+      runtime_(makeRuntime(runtimeMutex_)),
       name_(name),
       queue_(queue) {
   jsi::Runtime &rt = *runtime_;
