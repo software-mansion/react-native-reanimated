@@ -1,9 +1,10 @@
+cmake_minimum_required(VERSION 3.18)
 project(Reanimated)
-cmake_minimum_required(VERSION 3.8)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # default CMAKE_CXX_FLAGS: "-g -DANDROID -fdata-sections -ffunction-sections
 # -funwind-tables -fstack-protector-strong -no-canonical-prefixes
@@ -11,26 +12,10 @@ set(CMAKE_CXX_STANDARD 20)
 include("${REACT_NATIVE_DIR}/ReactAndroid/cmake-utils/folly-flags.cmake")
 add_compile_options(${folly_FLAGS})
 
-string(APPEND CMAKE_CXX_FLAGS " -DREANIMATED_VERSION=${REANIMATED_VERSION}\
-    -DREANIMATED_FEATURE_FLAGS=\"${REANIMATED_FEATURE_FLAGS}\"")
-string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")
-# flags to optimize the binary size
-string(APPEND CMAKE_CXX_FLAGS " -fvisibility=hidden")
+find_package(fbjni REQUIRED CONFIG)
+find_package(ReactAndroid REQUIRED CONFIG)
+find_package(react-native-worklets REQUIRED CONFIG)
 
-if(${REANIMATED_PROFILING})
-  string(APPEND CMAKE_CXX_FLAGS " -DREANIMATED_PROFILING")
-endif()
-
-if(${IS_REANIMATED_EXAMPLE_APP})
-  string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP -Wpedantic")
-endif()
-
-if(NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")
-  string(APPEND CMAKE_CXX_FLAGS " -DNDEBUG")
-  string(APPEND CMAKE_CXX_FLAGS " -flto=thin")
-endif()
-
-set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 set(ANDROID_CPP_DIR "${CMAKE_SOURCE_DIR}/src/main/cpp")
 set(COMMON_CPP_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp")
 
@@ -38,10 +23,6 @@ file(GLOB_RECURSE REANIMATED_COMMON_CPP_SOURCES CONFIGURE_DEPENDS
      "${COMMON_CPP_DIR}/reanimated/*.cpp")
 file(GLOB_RECURSE REANIMATED_ANDROID_CPP_SOURCES CONFIGURE_DEPENDS
      "${ANDROID_CPP_DIR}/reanimated/*.cpp")
-
-find_package(fbjni REQUIRED CONFIG)
-find_package(ReactAndroid REQUIRED CONFIG)
-find_package(react-native-worklets REQUIRED CONFIG)
 
 add_library(reanimated SHARED ${REANIMATED_COMMON_CPP_SOURCES}
                               ${REANIMATED_ANDROID_CPP_SOURCES})
@@ -51,8 +32,30 @@ if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
     "${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")
   target_compile_reactnative_options(reanimated PUBLIC)
 else()
-  string(APPEND CMAKE_CXX_FLAGS
-         " -fexceptions -frtti -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
+  target_compile_options(reanimated PRIVATE
+    -fexceptions
+    -frtti
+    -Wall
+    -Werror)
+endif()
+
+target_compile_definitions(reanimated PRIVATE
+  "REANIMATED_VERSION=${REANIMATED_VERSION}"
+  "REANIMATED_FEATURE_FLAGS=${REANIMATED_FEATURE_FLAGS}")
+
+target_compile_options(reanimated PRIVATE
+  -fno-omit-frame-pointer
+  -fstack-protector-all
+  -fvisibility=hidden
+  "$<$<NOT:$<CONFIG:Debug>>:-flto=thin>")
+
+if(REANIMATED_PROFILING)
+  target_compile_definitions(reanimated PRIVATE REANIMATED_PROFILING)
+endif()
+
+if(IS_REANIMATED_EXAMPLE_APP)
+  target_compile_definitions(reanimated PRIVATE IS_REANIMATED_EXAMPLE_APP)
+  target_compile_options(reanimated PRIVATE -Wpedantic)
 endif()
 
 target_include_directories(
@@ -68,25 +71,9 @@ target_include_directories(
           "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
 )
 
-set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)
-
-if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
-  set(BUILD_TYPE "debug")
-else()
-  set(BUILD_TYPE "release")
-endif()
-
-set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)
-# remove dead code sections
-set_target_properties(reanimated PROPERTIES LINK_FLAGS "-Wl,--gc-sections")
-
-# fold identical functions
-if(NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")
-  set_property(
-    TARGET reanimated
-    APPEND_STRING
-    PROPERTY LINK_FLAGS ",--icf=safe")
-endif()
+target_link_options(reanimated PRIVATE
+  "LINKER:--gc-sections"
+  "$<$<NOT:$<CONFIG:Debug>>:LINKER:--icf=safe>")
 
 target_link_libraries(
   reanimated
