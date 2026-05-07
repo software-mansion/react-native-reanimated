@@ -121,9 +121,15 @@ jsi::Value SerializableArray::toJSValue(jsi::Runtime &rt) {
 }
 
 jsi::Value SerializableArrayBuffer::toJSValue(jsi::Runtime &rt) {
-  auto size = static_cast<int>(data_.size());
-  auto arrayBuffer =
-      rt.global().getPropertyAsFunction(rt, "ArrayBuffer").callAsConstructor(rt, size).getObject(rt).getArrayBuffer(rt);
+  // NOTE: jsi only accepts double for callAsConstructor numeric args; size_t may
+  // exceed INT_MAX on 64-bit builds, so we go through double directly without
+  // truncating to int and use the unmodified size_t for memcpy.
+  const auto size = data_.size();
+  auto arrayBuffer = rt.global()
+                         .getPropertyAsFunction(rt, "ArrayBuffer")
+                         .callAsConstructor(rt, jsi::Value(static_cast<double>(size)))
+                         .getObject(rt)
+                         .getArrayBuffer(rt);
   memcpy(arrayBuffer.data(rt), data_.data(), size);
   return arrayBuffer;
 }

@@ -26,6 +26,35 @@ using namespace worklets;
 
 // TODO: Document thread switching because it's a mess right now...
 
+/**
+ * Sanitize a header / multipart-part value by stripping CR / LF / NUL characters.
+ *
+ * `[NSMutableURLRequest addValue:forHTTPHeaderField:]` and direct `stringWithFormat:`
+ * interpolation into the multipart body do *not* enforce that header values are free
+ * of CRLF, so attacker-controlled values would otherwise enable HTTP request smuggling
+ * and response splitting (CWE-113). Apply this before any header value reaches the
+ * network stack or the multipart writer.
+ */
+static NSString *WorkletsSanitizeHeaderValue(NSString *value)
+{
+  if (value == nil) {
+    return value;
+  }
+  NSCharacterSet *forbidden = [NSCharacterSet
+      characterSetWithCharactersInString:@"\r\n\0"];
+  if ([value rangeOfCharacterFromSet:forbidden].location == NSNotFound) {
+    return value;
+  }
+  NSMutableString *cleaned = [NSMutableString stringWithCapacity:value.length];
+  for (NSUInteger i = 0; i < value.length; i++) {
+    unichar c = [value characterAtIndex:i];
+    if (c != '\r' && c != '\n' && c != '\0') {
+      [cleaned appendFormat:@"%C", c];
+    }
+  }
+  return cleaned;
+}
+
 typedef RCTURLRequestCancellationBlock (^WorkletsHTTPQueryResult)(NSError *error, NSDictionary<NSString *, id> *result);
 
 @interface WorkletsNetworking ()
@@ -122,7 +151,9 @@ static NSString *WorkletsGenerateFormBoundary()
     headers[@"content-type"] = partContentType;
   }
   [headers enumerateKeysAndObjectsUsingBlock:^(NSString *parameterKey, NSString *parameterValue, BOOL *stop) {
-    [self->_multipartBody appendData:[[NSString stringWithFormat:@"%@: %@\r\n", parameterKey, parameterValue]
+    NSString *safeKey = WorkletsSanitizeHeaderValue(parameterKey);
+    NSString *safeValue = WorkletsSanitizeHeaderValue(parameterValue);
+    [self->_multipartBody appendData:[[NSString stringWithFormat:@"%@: %@\r\n", safeKey, safeValue]
                                          dataUsingEncoding:NSUTF8StringEncoding]];
   }];
 
@@ -255,11 +286,14 @@ static NSString *WorkletsGenerateFormBoundary()
     request.allHTTPHeaderFields = [NSHTTPCookie requestHeaderFieldsWithCookies:cookies];
   }
 
-  // Set supplied headers.
+  // Set supplied headers. Sanitize CR/LF/NUL out of values to avoid HTTP request
+  // smuggling / response splitting (CWE-113); NSMutableURLRequest does not consistently
+  // reject CRLF in header values across iOS versions.
   NSDictionary *headers = [RCTConvert NSDictionary:query[@"headers"]];
   [headers enumerateKeysAndObjectsUsingBlock:^(NSString *key, id value, BOOL *stop) {
     if (value) {
-      [request addValue:[RCTConvert NSString:value] forHTTPHeaderField:key];
+      NSString *safe = WorkletsSanitizeHeaderValue([RCTConvert NSString:value]);
+      [request addValue:safe forHTTPHeaderField:key];
     }
   }];
 

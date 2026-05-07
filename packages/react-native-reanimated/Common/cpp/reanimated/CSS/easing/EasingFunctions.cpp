@@ -50,6 +50,11 @@ EasingFunction createParametrizedEasingFunction(jsi::Runtime &rt, const jsi::Obj
   const auto points = easingConfig.getProperty(rt, "points").asObject(rt).asArray(rt);
   const auto pointsCount = points.size(rt);
 
+  if (pointsCount == 0) {
+    throw std::runtime_error(
+        std::string("[Reanimated] Parametrized easing function '" + easingName + "' requires a non-empty points array."));
+  }
+
   for (size_t i = 0; i < pointsCount; i++) {
     const auto pointObj = points.getValueAtIndex(rt, i).asObject(rt);
     pointsX.push_back(pointObj.getProperty(rt, "x").asNumber());

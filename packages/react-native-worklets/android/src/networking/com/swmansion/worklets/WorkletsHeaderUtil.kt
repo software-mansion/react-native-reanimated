@@ -26,5 +26,30 @@ internal class WorkletsHeaderUtil {
             }
             return if (modified) builder.toString() else name
         }
+
+        /**
+         * OkHttp's `Headers.Builder.addUnsafeNonAscii` skips byte validation on the
+         * value, so it accepts CR / LF / NUL inside header values verbatim and OkHttp
+         * will then write the value as-is to the wire. Untrusted header values reaching
+         * the network stack must therefore be sanitized here to prevent HTTP request
+         * smuggling and response splitting (CWE-113).
+         */
+        @JvmStatic
+        fun stripHeaderValue(value: String): String {
+            for (i in 0 until value.length) {
+                val c = value[i]
+                if (c == '\r' || c == '\n' || c == '\u0000') {
+                    val builder = StringBuilder(value.length)
+                    for (j in 0 until value.length) {
+                        val ch = value[j]
+                        if (ch != '\r' && ch != '\n' && ch != '\u0000') {
+                            builder.append(ch)
+                        }
+                    }
+                    return builder.toString()
+                }
+            }
+            return value
+        }
     }
 }

@@ -1076,7 +1076,10 @@ public class WorkletsNetworking(
             if (headerName == null || headerValue == null) {
                 return null
             }
-            headersBuilder.addUnsafeNonAscii(headerName, headerValue)
+            // Sanitize CR/LF/NUL out of header values to prevent HTTP request smuggling
+            // and response splitting; OkHttp's addUnsafeNonAscii does not validate the
+            // value bytes (CWE-113).
+            headersBuilder.addUnsafeNonAscii(headerName, WorkletsHeaderUtil.stripHeaderValue(headerValue))
         }
         if (headersBuilder[USER_AGENT_HEADER_NAME] == null && defaultUserAgent != null) {
             headersBuilder.add(USER_AGENT_HEADER_NAME, defaultUserAgent)
