@@ -226,11 +226,10 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
 
     auto surfaceId = strongThis->layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
 
-    if (!strongThis->layoutAnimationRenderRequested_) {
-      strongThis->layoutAnimationRenderRequested_ = true;
+    if (!strongThis->layoutAnimationRenderRequested_.exchange(true)) {
       // if an animation has duration 0, performOperations would not get
       // called for it so we call requestRender to have it called in the
-      // next frame
+      // next frame.
       strongThis->requestRender_(requestLayoutAnimationRender);
     }
 

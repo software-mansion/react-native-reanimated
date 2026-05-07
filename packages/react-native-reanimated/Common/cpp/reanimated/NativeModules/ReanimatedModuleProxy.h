@@ -26,6 +26,7 @@
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/SingleInstanceChecker.h>
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <set>
@@ -209,12 +210,11 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   std::shared_ptr<LayoutAnimationsProxyCommon> layoutAnimationsProxy_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<ReanimatedMountHook> mountHook_;
-  // Guards `layoutAnimationFlushRequests_` against concurrent writers on the
-  // UI worklet runtime and the main-thread drainer in `performOperations`.
-  // See https://github.com/software-mansion/react-native-reanimated/issues/9293
+
   std::mutex flushRequestsMutex_;
   std::set<SurfaceId> layoutAnimationFlushRequests_;
-  bool layoutAnimationRenderRequested_;
+
+  std::atomic<bool> layoutAnimationRenderRequested_{false};
 
   const KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction_;
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;
