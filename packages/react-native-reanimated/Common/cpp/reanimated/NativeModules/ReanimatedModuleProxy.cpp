@@ -168,6 +168,19 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
   };
   onRenderCallback_ = std::move(onRenderCallback);
 
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    // OperationsLoop stores requestRender_ by value, so switch scheduling to
+    // the Animation Backend before constructing it.
+    // This is temporary, we will converge on a single approach when both features are done
+    requestRender_ = [weakThis = weak_from_this()](const std::function<void(const double)> & /*callback*/) {
+      auto strongThis = weakThis.lock();
+      if (!strongThis) {
+        return;
+      }
+      strongThis->startBackendIfNeeded();
+    };
+  }
+
   operationsLoop_ = std::make_shared<OperationsLoop>(
       uiScheduler_,
       requestRender_,
@@ -1449,14 +1462,6 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
 
       react_native_assert(false);
     }
-
-    requestRender_ = [weakThis = weak_from_this()](std::function<void(const double)> /*callback*/) {
-      auto strongThis = weakThis.lock();
-      if (!strongThis) {
-        return;
-      }
-      strongThis->startBackendIfNeeded();
-    };
   }
 
   initializeLayoutAnimationsProxy();
