@@ -6,7 +6,6 @@
 // don't support hermes and it causes the compilation to fail.
 #if JS_RUNTIME_HERMES
 
-#include <cxxreact/MessageQueueThread.h>
 #include <hermes/hermes.h>
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
@@ -14,13 +13,11 @@
 
 #include <atomic>
 #include <memory>
-#include <string>
 #include <thread>
 
 namespace worklets {
 
 using namespace facebook;
-using namespace react;
 
 // ReentrancyCheck is copied from React Native
 // from ReactCommon/hermes/executor/HermesExecutorFactory.cpp
@@ -98,10 +95,7 @@ struct WorkletsReentrancyCheck {
 // https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/jsi/jsi/decorator.h
 class WorkletHermesRuntime : public jsi::WithRuntimeDecorator<WorkletsReentrancyCheck> {
  public:
-  WorkletHermesRuntime(
-      std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
-      const std::shared_ptr<MessageQueueThread> &jsQueue,
-      const std::string &name);
+  explicit WorkletHermesRuntime(std::unique_ptr<facebook::hermes::HermesRuntime> runtime);
   ~WorkletHermesRuntime() override;
 
  private:

@@ -248,9 +248,10 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   std::shared_ptr<LayoutAnimationsProxyCommon> layoutAnimationsProxy_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<ReanimatedMountHook> mountHook_;
-  std::mutex flushRequestsMutex_;
+  /// Access only on UI thread.
   std::set<SurfaceId> layoutAnimationFlushRequests_;
-  std::atomic<bool> layoutAnimationRenderRequested_{false};
+  /// Access only on UI thread.
+  bool layoutAnimationRenderRequested_;
 
   const KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction_;
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;

@@ -221,6 +221,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
   };
   ProgressLayoutAnimationFunction progressLayoutAnimation =
       [weakThis = weak_from_this()](jsi::Runtime &rt, int tag, const jsi::Object &newStyle) {
+        // Always on UI thread.
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
@@ -229,10 +230,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
         if (!surfaceId) {
           return;
         }
-        {
-          std::lock_guard<std::mutex> lock(strongThis->flushRequestsMutex_);
-          strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
-        }
+        strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
       };
 
   auto requestLayoutAnimationRender = [weakThis = weak_from_this()](double) {
@@ -245,6 +243,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
 
   EndLayoutAnimationFunction endLayoutAnimation = [weakThis = weak_from_this(), requestLayoutAnimationRender](
                                                       int tag, bool shouldRemove) {
+    // Always on UI thread.
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -256,10 +255,11 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       // in the backend path this is called from grandCallback,
       // we are guaranteed to have the changes flushed
     } else {
-      if (!strongThis->layoutAnimationRenderRequested_.exchange(true)) {
+      if (!strongThis->layoutAnimationRenderRequested_) {
         // if an animation has duration 0, performOperations would not get
         // called for it so we call requestRender to have it called in the
         // next frame
+        strongThis->layoutAnimationRenderRequested_ = true;
         strongThis->requestRender_(requestLayoutAnimationRender);
       }
     }
@@ -267,7 +267,6 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     if (!surfaceId) {
       return;
     }
-    std::lock_guard<std::mutex> lock(strongThis->flushRequestsMutex_);
     strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
   };
 
@@ -683,11 +682,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
 }
 
 void ReanimatedModuleProxy::executeLayoutAnimationsRequests() {
-  std::set<SurfaceId> flushRequestsCopy;
-  {
-    std::lock_guard<std::mutex> lock(flushRequestsMutex_);
-    flushRequestsCopy.swap(layoutAnimationFlushRequests_);
-  }
+  std::set<SurfaceId> flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
   for (const auto surfaceId : flushRequestsCopy) {
     uiManager_->getShadowTreeRegistry().visit(
         surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
