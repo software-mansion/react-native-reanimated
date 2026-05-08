@@ -220,7 +220,6 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   std::unique_ptr<UIEventHandlerRegistry> eventHandlerRegistry_;
   RequestRenderFunction requestRender_;
-  volatile bool renderRequested_{false};
   bool isAnimationRunning_{false};
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
