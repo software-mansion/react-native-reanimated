@@ -20,9 +20,9 @@
   "license": "MIT",
   "readmeFilename": "README.md",
   "scripts": {
-    "build": "yarn tsc && yarn bundle && yarn run --top-level oxfmt --ignore-path '' types/options.d.ts && yarn format && cp types/options.d.ts index.d.ts",
+    "build": "yarn tsc && yarn bundle && yarn format && cp types/options.d.ts index.d.ts",
     "bundle": "node bundle.js",
-    "format": "yarn run --top-level oxfmt src",
+    "format": "yarn run --top-level oxfmt --ignore-path '' src types/options.d.ts",
     "watch": "tsc-watch --onSuccess \"yarn bundle\"",
     "lint": "eslint --max-warnings=0 src",
     "type:check": "tsc --noEmit"
