@@ -25,6 +25,9 @@ namespace worklets {
 using namespace facebook;
 using namespace react;
 
+// Forward declaration — full definition in WorkletRuntimeInspectorTarget.h
+class WorkletRuntimeInspectorTarget;
+
 template <typename TCallable>
 concept ImplicitlySerializableCallable = std::is_assignable_v<const jsi::Function &, TCallable> ||
     std::is_assignable_v<const std::shared_ptr<SerializableWorklet> &, TCallable>;
@@ -168,6 +171,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
       bool enableEventLoop = true);
 
+  ~WorkletRuntime();
+
   void init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy);
 
   /* #region deprecated */
@@ -234,6 +239,9 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
   std::shared_ptr<EventLoop> eventLoop_;
+#if JS_RUNTIME_HERMES
+  std::unique_ptr<WorkletRuntimeInspectorTarget> inspectorTarget_;
+#endif
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on

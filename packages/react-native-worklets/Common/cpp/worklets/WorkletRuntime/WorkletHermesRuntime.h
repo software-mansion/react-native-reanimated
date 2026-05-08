@@ -92,6 +92,10 @@ class WorkletHermesRuntime : public jsi::WithRuntimeDecorator<WorkletsReentrancy
   explicit WorkletHermesRuntime(std::unique_ptr<facebook::hermes::HermesRuntime> runtime);
   ~WorkletHermesRuntime() override;
 
+  facebook::hermes::HermesRuntime &getHermesRuntime() noexcept {
+    return *runtime_;
+  }
+
  private:
   std::unique_ptr<facebook::hermes::HermesRuntime> runtime_;
   WorkletsReentrancyCheck reentrancyCheck_;
