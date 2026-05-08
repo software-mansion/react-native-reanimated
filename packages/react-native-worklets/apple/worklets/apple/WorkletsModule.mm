@@ -1,5 +1,4 @@
 #import <worklets/NativeModules/JSIWorkletsModuleProxy.h>
-#import <worklets/Tools/Defs.h>
 #import <worklets/Tools/ScriptBuffer.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
