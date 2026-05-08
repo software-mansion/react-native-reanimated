@@ -19,7 +19,6 @@
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
 
-#include <cstdio>
 #include <functional>
 #include <memory>
 #include <string>

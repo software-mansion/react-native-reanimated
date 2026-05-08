@@ -6,6 +6,7 @@
 #include <worklets/Compat/StableApi.h>
 
 #include <optional>
+
 using namespace facebook;
 
 namespace reanimated {
