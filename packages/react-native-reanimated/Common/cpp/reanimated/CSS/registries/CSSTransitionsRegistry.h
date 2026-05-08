@@ -34,11 +34,13 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
     flush(updatesBatch);
   }
 
+#if REACT_NATIVE_VERSION_MINOR >= 85
   void updateAndFlushAnimatedProps(double timestamp, UpdatesBatchAnimatedProps &updatesBatch) {
     std::lock_guard<std::mutex> lock{mutex_};
     update(timestamp);
     flushAnimatedProps(updatesBatch);
   }
+#endif
 
  private:
   using Registry = std::unordered_map<Tag, std::shared_ptr<CSSTransition>>;

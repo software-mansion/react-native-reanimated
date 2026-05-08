@@ -46,9 +46,11 @@ void CSSTransitionsRegistry::run(
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     if (!initialUpdate.empty()) {
+#if REACT_NATIVE_VERSION_MINOR >= 85
       const auto hasLayoutUpdates = hasLayoutProps(initialUpdate);
       addRawPropsToAnimatedPropsBatch(
           transition->getShadowNode()->getFamilyShared(), std::move(initialUpdate), hasLayoutUpdates);
+#endif
     }
   }
 
@@ -74,6 +76,7 @@ void CSSTransitionsRegistry::update(const double timestamp) {
 
     const folly::dynamic &updates = transition->update(timestamp);
     if (!updates.empty()) {
+#if REACT_NATIVE_VERSION_MINOR >= 85
       if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
         addRawPropsToAnimatedPropsBatch(
             transition->getShadowNode()->getFamilyShared(), updates, hasLayoutProps(updates));
@@ -83,6 +86,9 @@ void CSSTransitionsRegistry::update(const double timestamp) {
       } else {
         addUpdatesToBatch(transition->getShadowNode()->getFamilyShared(), updates);
       }
+#else
+      addUpdatesToBatch(transition->getShadowNode()->getFamilyShared(), updates);
+#endif
     }
 
     // We remove transition from running and schedule it when animation of one

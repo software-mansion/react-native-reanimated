@@ -1,11 +1,14 @@
 #pragma once
 
-#include <reanimated/Fabric/updates/propNameFromString.h>
-
 #include <jsi/jsi.h>
 
+#include <cxxreact/ReactNativeVersion.h>
 #include <react/featureflags/ReactNativeFeatureFlags.h>
+#include <reanimated/Fabric/updates/propNameFromString.h>
+
+#if REACT_NATIVE_VERSION_MINOR >= 85
 #include <react/renderer/animationbackend/AnimatedProps.h>
+#endif
 
 #include <set>
 
@@ -20,6 +23,7 @@ inline bool shouldFilterNonLayoutProps() {
 #endif
 }
 
+#if REACT_NATIVE_VERSION_MINOR >= 85
 inline const std::set<facebook::react::PropName> &layoutPropNames() {
   static const std::set<facebook::react::PropName> props = {
       facebook::react::WIDTH,        facebook::react::HEIGHT,         facebook::react::FLEX,
@@ -71,6 +75,7 @@ inline bool animatedPropsContainLayoutProps(const facebook::react::AnimatedProps
 
   return false;
 }
+#endif
 
 inline bool hasLayoutProps(const folly::dynamic &props) {
   for (const auto &key : props.keys()) {

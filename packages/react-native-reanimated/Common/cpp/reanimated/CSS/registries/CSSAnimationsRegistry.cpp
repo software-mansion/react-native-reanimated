@@ -222,8 +222,10 @@ void CSSAnimationsRegistry::updateViewAnimations(
 
   if (hasUpdates) {
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+#if REACT_NATIVE_VERSION_MINOR >= 85
       const auto hasLayoutUpdates = hasLayoutProps(animatedProps);
       addRawPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), std::move(animatedProps), hasLayoutUpdates);
+#endif
     } else {
       addUpdatesToBatch(shadowNode->getFamilyShared(), animatedProps);
     }

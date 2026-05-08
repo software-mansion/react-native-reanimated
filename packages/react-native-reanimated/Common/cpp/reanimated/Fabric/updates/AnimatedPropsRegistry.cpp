@@ -1,3 +1,4 @@
+#include <cxxreact/ReactNativeVersion.h>
 #include <react/debug/react_native_assert.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 #include <reanimated/Fabric/updates/PropsLayoutFilter.h>
@@ -26,10 +27,12 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     jsi::Value updates = item.getProperty(rt, "updates");
 
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+#if REACT_NATIVE_VERSION_MINOR >= 85
       react_native_assert(updates.isObject() && "Updates need to be an object");
       auto updatesObj = updates.asObject(rt);
       const bool hasLayoutUpdates = hasLayoutProps(rt, updatesObj);
       addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updates, hasLayoutUpdates);
+#endif
     } else {
       addUpdatesToBatch(shadowNode->getFamilyShared(), jsi::dynamicFromValue(rt, updates));
     }

@@ -1,12 +1,15 @@
 #pragma once
 
+#include <cxxreact/ReactNativeVersion.h>
 #include <jsi/jsi.h>
 #include <react/renderer/core/ShadowNode.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 
+#if REACT_NATIVE_VERSION_MINOR >= 85
 #include <react/renderer/animationbackend/AnimatedProps.h>
 #include <react/renderer/animationbackend/AnimatedPropsBuilder.h>
 #include <react/renderer/animationbackend/AnimationBackend.h>
+#endif
 
 #include <memory>
 #include <mutex>
@@ -22,12 +25,16 @@ using namespace facebook;
 using namespace react;
 
 using UpdatesBatch = std::vector<std::pair<ShadowNodeFamily::Shared, folly::dynamic>>;
+
+#if REACT_NATIVE_VERSION_MINOR >= 85
 struct AnimatedPropsEntry {
   ShadowNodeFamily::Shared shadowNodeFamily;
   AnimatedProps animatedProps;
   bool hasLayoutUpdates;
 };
 using UpdatesBatchAnimatedProps = std::vector<AnimatedPropsEntry>;
+#endif
+
 using RegistryMap = std::unordered_map<Tag, std::pair<ShadowNodeFamily::Shared, folly::dynamic>>;
 
 #ifdef ANDROID
@@ -60,29 +67,15 @@ class UpdatesRegistry {
     std::lock_guard<std::mutex> lock{mutex_};
     flush(updatesBatch);
   }
+
+#if REACT_NATIVE_VERSION_MINOR >= 85
   // get updates in the animation backend path
   void flushAnimatedPropsUpdates(UpdatesBatchAnimatedProps &updatesBatch);
   // get only non-layout updates (for android event handling) in the animation backend path
   void flushNonLayoutUpdates(jsi::Runtime &rt, facebook::react::AnimationMutations &mutations);
   bool hasPendingAnimatedPropsUpdates() const;
-  void collectProps(PropsMap &propsMap);
-  UpdatesBatch getPendingUpdates();
-
- protected:
-  mutable std::mutex mutex_;
-  RegistryMap updatesRegistry_;
-
-  /// Assumes the caller already locked the registry.
-  void flush(UpdatesBatch &updatesBatch);
-
   /// Assumes the caller already locked the registry.
   void flushAnimatedProps(UpdatesBatchAnimatedProps &updatesBatch);
-
-  /// Assumes the caller already locked the registry.
-  virtual void removeTag(Tag tag) = 0;
-
-  /// Assumes the caller already locked the registry.
-  void addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
   void addAnimatedPropsToBatch(
       const ShadowNodeFamily::Shared &shadowNodeFamily,
       AnimatedProps animatedProps,
@@ -96,6 +89,23 @@ class UpdatesRegistry {
       jsi::Runtime &rt,
       jsi::Value &props,
       bool hasLayoutUpdates = false);
+#endif
+
+  void collectProps(PropsMap &propsMap);
+  UpdatesBatch getPendingUpdates();
+
+ protected:
+  mutable std::mutex mutex_;
+  RegistryMap updatesRegistry_;
+
+  /// Assumes the caller already locked the registry.
+  void flush(UpdatesBatch &updatesBatch);
+
+  /// Assumes the caller already locked the registry.
+  virtual void removeTag(Tag tag) = 0;
+
+  /// Assumes the caller already locked the registry.
+  void addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
 
   /// Assumes the caller already locked the registry.
   folly::dynamic getUpdatesFromRegistry(const Tag tag) const;
@@ -108,8 +118,11 @@ class UpdatesRegistry {
 
  private:
   UpdatesBatch updatesBatch_;
+
+#if REACT_NATIVE_VERSION_MINOR >= 85
   UpdatesBatchAnimatedProps updatesBatchAnimatedProps_;
   AnimatedPropsBuilder animatedPropsBuilder_;
+#endif
 
   void flushUpdatesToRegistry(const UpdatesBatch &updatesBatch);
 

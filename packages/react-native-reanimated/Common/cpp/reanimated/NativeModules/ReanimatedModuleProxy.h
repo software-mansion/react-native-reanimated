@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ReactCommon/CallInvoker.h>
+#include <cxxreact/ReactNativeVersion.h>
 #include <react/renderer/componentregistry/componentNameByReactViewName.h>
 #include <react/renderer/core/ShadowNode.h>
 #include <react/renderer/uimanager/UIManager.h>
@@ -27,8 +28,10 @@
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/SingleInstanceChecker.h>
 
+#if REACT_NATIVE_VERSION_MINOR >= 85
 #include <react/renderer/animationbackend/AnimationBackend.h>
 #include <react/renderer/uimanager/UIManagerAnimationBackend.h>
+#endif
 
 #include <atomic>
 #include <cstdint>
@@ -189,7 +192,10 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void requestFlushRegistry();
   std::function<std::string()> createRegistriesLeakCheck();
 
- private:
+  void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
+  void applySynchronousUpdates(UpdatesBatch &updatesBatch, bool allowPartialUpdates = false);
+
+#if REACT_NATIVE_VERSION_MINOR >= 85
   using AnimationBackendSyncCallback = std::function<void(const std::shared_ptr<AnimationBackend> &)>;
 
   void withAnimationBackendSync(const AnimationBackendSyncCallback &fn) {
@@ -200,16 +206,13 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
       fn(std::static_pointer_cast<AnimationBackend>(locked));
     }
   }
-
-  void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
-  void applySynchronousUpdates(UpdatesBatch &updatesBatch, bool allowPartialUpdates = false);
-
   AnimationMutations grandCallback(AnimationTimestamp timestamp, GrandCallbackSource state);
   void executeWorkletsForFrame(AnimationTimestamp timestamp);
   AnimationMutations executeOperationsAndCollectUpdates(AnimationTimestamp timestamp);
   AnimationMutations collectEventUpdates();
   AnimationMutations collectNonLayoutAnimationUpdates();
   AnimationMutations mutationsFromAnimatedPropsBatch(UpdatesBatchAnimatedProps &&animatedPropsBatch);
+#endif
 
   const bool isReducedMotion_;
   bool shouldFlushRegistry_ = false;
@@ -221,7 +224,11 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   RequestRenderFunction requestRender_;
   volatile bool renderRequested_{false};
   bool isAnimationRunning_{false};
+
+#if REACT_NATIVE_VERSION_MINOR >= 85
   CallbackId animationBackendCallbackId_{0};
+#endif
+
   std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;

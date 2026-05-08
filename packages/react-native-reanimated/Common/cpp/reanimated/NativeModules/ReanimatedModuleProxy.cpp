@@ -1,3 +1,4 @@
+#include <cxxreact/ReactNativeVersion.h>
 #include <jsi/jsi.h>
 #include <react/debug/react_native_assert.h>
 #include <react/featureflags/ReactNativeFeatureFlags.h>
@@ -688,6 +689,7 @@ void ReanimatedModuleProxy::executeLayoutAnimationsRequests() {
   }
 }
 
+#if REACT_NATIVE_VERSION_MINOR >= 85
 AnimationMutations ReanimatedModuleProxy::mutationsFromAnimatedPropsBatch(
     UpdatesBatchAnimatedProps &&animatedPropsBatch) {
   AnimationMutations mutations;
@@ -698,6 +700,7 @@ AnimationMutations ReanimatedModuleProxy::mutationsFromAnimatedPropsBatch(
   }
   return mutations;
 }
+#endif
 
 void ReanimatedModuleProxy::performOperations() {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
@@ -770,22 +773,22 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
   applySynchronousUpdates(updatesBatch, true);
 }
 
+#if REACT_NATIVE_VERSION_MINOR >= 85
 AnimationMutations ReanimatedModuleProxy::collectNonLayoutAnimationUpdates() {
-  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    ReanimatedSystraceSection s("ReanimatedModuleProxy::collectNonLayoutAnimationUpdates");
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::collectNonLayoutAnimationUpdates");
 
-    AnimationMutations mutations;
-    {
-      auto lock = updatesRegistryManager_->lock();
-      jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
-      animatedPropsRegistry_->flushNonLayoutUpdates(uiRuntime, mutations);
-    }
-    return mutations;
+  AnimationMutations mutations;
+  {
+    auto lock = updatesRegistryManager_->lock();
+    jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
+    animatedPropsRegistry_->flushNonLayoutUpdates(uiRuntime, mutations);
   }
-  return AnimationMutations{};
+  return mutations;
 }
+#endif
 
 void ReanimatedModuleProxy::startBackendIfNeeded() {
+#if REACT_NATIVE_VERSION_MINOR >= 85
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     if (isAnimationRunning_) {
       return;
@@ -801,9 +804,11 @@ void ReanimatedModuleProxy::startBackendIfNeeded() {
       isAnimationRunning_ = true;
     });
   }
+#endif
 }
 
 void ReanimatedModuleProxy::stopBackendIfIdle(const bool producedMutations) {
+#if REACT_NATIVE_VERSION_MINOR >= 85
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     bool hasWork = producedMutations || pendingAnimationFrameCallbackFromWorklets_ != nullptr ||
         cssTransitionsRegistry_->hasUpdates() || cssAnimationsRegistry_->hasUpdates() ||
@@ -815,14 +820,13 @@ void ReanimatedModuleProxy::stopBackendIfIdle(const bool producedMutations) {
       isAnimationRunning_ = false;
     }
   }
+#endif
 }
 
+#if REACT_NATIVE_VERSION_MINOR >= 85
 AnimationMutations ReanimatedModuleProxy::grandCallback(
     const AnimationTimestamp timestamp,
     const GrandCallbackSource state) {
-  if constexpr (!StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    return AnimationMutations{};
-  }
   ReanimatedSystraceSection s("ReanimatedModuleProxy::grandCallback");
 
   switch (state) {
@@ -878,6 +882,7 @@ AnimationMutations ReanimatedModuleProxy::collectEventUpdates() {
 
   return mutationsFromAnimatedPropsBatch(std::move(batch));
 }
+#endif
 
 bool ReanimatedModuleProxy::handleEventAndFlush(
     const std::string &eventName,
@@ -885,12 +890,19 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
     const jsi::Value &payload,
     const GrandCallbackSource state) {
   bool handled = false;
+#if REACT_NATIVE_VERSION_MINOR >= 85 && (REACT_NATIVE_VERSION_MINOR > 85 || REACT_NATIVE_VERSION_PATCH >= 2)
   withAnimationBackendSync([&](const std::shared_ptr<AnimationBackend> &backend) {
     backend->pushAnimationMutations([&, state](AnimationTimestamp timestamp) {
       handled = handleEvent(eventName, emitterReactTag, payload, timestamp.count());
       return grandCallback(timestamp, state);
     });
   });
+#else
+  (void)eventName;
+  (void)emitterReactTag;
+  (void)payload;
+  (void)state;
+#endif
   return handled;
 }
 
@@ -1449,6 +1461,11 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
   viewStylesRepository_->setUIManager(uiManager_);
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    react_native_assert(
+        (REACT_NATIVE_VERSION_MINOR > 85 || (REACT_NATIVE_VERSION_MINOR == 85 && REACT_NATIVE_VERSION_PATCH >= 2)) &&
+        "[Reanimated] USE_ANIMATION_BACKEND requires React Native 0.85.2 or newer.");
+
+#if REACT_NATIVE_VERSION_MINOR >= 85
     if (!ReactNativeFeatureFlags::useSharedAnimatedBackend()) {
       LOG(ERROR) << "[Reanimated] USE_ANIMATION_BACKEND flag is enabled, but "
                  << "ReactNativeFeatureFlags::useSharedAnimatedBackend is disabled. "
@@ -1456,6 +1473,7 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
 
       react_native_assert(false);
     }
+#endif
   }
 
   initializeLayoutAnimationsProxy();

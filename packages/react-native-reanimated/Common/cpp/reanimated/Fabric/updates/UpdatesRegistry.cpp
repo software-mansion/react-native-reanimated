@@ -38,6 +38,7 @@ void UpdatesRegistry::flush(UpdatesBatch &updatesBatch) {
   }
 }
 
+#if REACT_NATIVE_VERSION_MINOR >= 85
 void UpdatesRegistry::flushAnimatedPropsUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
   std::lock_guard<std::mutex> lock{mutex_};
   flushAnimatedProps(updatesBatch);
@@ -115,6 +116,40 @@ bool UpdatesRegistry::hasPendingAnimatedPropsUpdates() const {
   return !updatesBatchAnimatedProps_.empty();
 }
 
+void UpdatesRegistry::addAnimatedPropsToBatch(
+    const ShadowNodeFamily::Shared &shadowNodeFamily,
+    AnimatedProps animatedProps,
+    bool hasLayoutUpdates) {
+  if (!hasLayoutUpdates) {
+    for (const auto &prop : animatedProps.props) {
+      if (isLayoutProp(prop->propName)) {
+        hasLayoutUpdates = true;
+        break;
+      }
+    }
+  }
+  updatesBatchAnimatedProps_.push_back(
+      AnimatedPropsEntry{shadowNodeFamily, std::move(animatedProps), hasLayoutUpdates});
+}
+
+void UpdatesRegistry::addRawPropsToAnimatedPropsBatch(
+    const ShadowNodeFamily::Shared &shadowNodeFamily,
+    folly::dynamic props,
+    bool hasLayoutUpdates) {
+  animatedPropsBuilder_.storeDynamic(props);
+  addAnimatedPropsToBatch(shadowNodeFamily, animatedPropsBuilder_.get(), hasLayoutUpdates);
+}
+
+void UpdatesRegistry::addJSIPropsToAnimatedPropsBatch(
+    const ShadowNodeFamily::Shared &shadowNodeFamily,
+    jsi::Runtime &rt,
+    jsi::Value &props,
+    bool hasLayoutUpdates) {
+  animatedPropsBuilder_.storeJSI(rt, props);
+  addAnimatedPropsToBatch(shadowNodeFamily, animatedPropsBuilder_.get(), hasLayoutUpdates);
+}
+#endif
+
 UpdatesBatch UpdatesRegistry::getPendingUpdates() {
   std::lock_guard<std::mutex> lock{mutex_};
   flushUpdatesToRegistry(updatesBatch_);
@@ -147,39 +182,6 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) {
 
 void UpdatesRegistry::addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props) {
   updatesBatch_.emplace_back(shadowNodeFamily, props);
-}
-
-void UpdatesRegistry::addAnimatedPropsToBatch(
-    const ShadowNodeFamily::Shared &shadowNodeFamily,
-    AnimatedProps animatedProps,
-    bool hasLayoutUpdates) {
-  if (!hasLayoutUpdates) {
-    for (const auto &prop : animatedProps.props) {
-      if (isLayoutProp(prop->propName)) {
-        hasLayoutUpdates = true;
-        break;
-      }
-    }
-  }
-  updatesBatchAnimatedProps_.push_back(
-      AnimatedPropsEntry{shadowNodeFamily, std::move(animatedProps), hasLayoutUpdates});
-}
-
-void UpdatesRegistry::addRawPropsToAnimatedPropsBatch(
-    const ShadowNodeFamily::Shared &shadowNodeFamily,
-    folly::dynamic props,
-    bool hasLayoutUpdates) {
-  animatedPropsBuilder_.storeDynamic(props);
-  addAnimatedPropsToBatch(shadowNodeFamily, animatedPropsBuilder_.get(), hasLayoutUpdates);
-}
-
-void UpdatesRegistry::addJSIPropsToAnimatedPropsBatch(
-    const ShadowNodeFamily::Shared &shadowNodeFamily,
-    jsi::Runtime &rt,
-    jsi::Value &props,
-    bool hasLayoutUpdates) {
-  animatedPropsBuilder_.storeJSI(rt, props);
-  addAnimatedPropsToBatch(shadowNodeFamily, animatedPropsBuilder_.get(), hasLayoutUpdates);
 }
 
 void UpdatesRegistry::setInUpdatesRegistry(
