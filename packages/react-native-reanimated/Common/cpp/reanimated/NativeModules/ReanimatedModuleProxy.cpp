@@ -442,17 +442,6 @@ bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(const std::string &event
   return eventHandlerRegistry_->isAnyHandlerWaitingForEvent(eventName, emitterReactTag);
 }
 
-void ReanimatedModuleProxy::maybeRequestRender() {
-  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    startBackendIfNeeded();
-  } else {
-    if (!renderRequested_) {
-      renderRequested_ = true;
-      requestRender_(onRenderCallback_);
-    }
-  }
-}
-
 void ReanimatedModuleProxy::onRender(double timestampMs) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::onRender");
   // NOOP

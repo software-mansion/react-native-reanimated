@@ -96,8 +96,6 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   void onRender(double timestampMs);
 
-  void maybeRequestRender();
-
   bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
 
   bool
