@@ -11,7 +11,6 @@ def worklets_find_config()
     :feature_flags_flag => nil,
     :fetch_preview_flag => nil,
     :is_reanimated_example_app => nil,
-    :is_tvos_target => nil,
     :react_native_version => nil,
     :react_native_node_modules_dir => nil,
     :react_native_common_dir => nil,
@@ -31,7 +30,6 @@ def worklets_find_config()
   end
 
   result[:is_reanimated_example_app] = ENV["IS_REANIMATED_EXAMPLE_APP"] != nil
-  result[:is_tvos_target] = react_native_json['name'] == 'react-native-tvos'
   result[:react_native_version] = react_native_json['version']
   result[:react_native_node_modules_dir] = File.expand_path(react_native_node_modules_dir)
 

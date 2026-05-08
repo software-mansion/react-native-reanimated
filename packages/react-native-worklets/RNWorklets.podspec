@@ -59,10 +59,7 @@ Pod::Spec.new do |s|
   s.dependency 'React-jsinspector'
   s.dependency 'React-jsinspectorcdp'
   s.dependency 'React-jsinspectortracing'
-  using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
-  if using_hermes && !$worklets_config[:is_tvos_target]
-    s.dependency 'React-hermes'
-  end
+  s.dependency 'React-hermes'
   
   s.pod_target_xcconfig = {
     "USE_HEADERMAP" => "YES",
