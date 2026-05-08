@@ -9,6 +9,10 @@
 #include <string>
 #include <utility>
 
+#if defined(__APPLE__)
+#include <TargetConditionals.h>
+#endif
+
 namespace reanimated {
 
 namespace detail {
@@ -64,6 +68,16 @@ class ReanimatedPerformanceTracerSection {
     using facebook::react::jsinspector_modern::tracing::PerformanceTracer;
 
     const HighResTimeStamp end = HighResTimeStamp::now();
+#if defined(TARGET_OS_OSX) && TARGET_OS_OSX
+    // react-native-macos ships an older PerformanceTracer API that only
+    // accepts a single track name (no track group, no properties).
+    PerformanceTracer::getInstance().reportMeasure(
+        std::string(name_),
+        *start_,
+        end - *start_,
+        facebook::react::jsinspector_modern::DevToolsTrackEntryPayload{
+            std::string(kReanimatedPerformanceTracerTrackGroup) + " · " + reanimatedPerformanceTracerCurrentThreadLabel()});
+#else
     folly::dynamic devtools = folly::dynamic::object("track", reanimatedPerformanceTracerCurrentThreadLabel())(
         "trackGroup", std::string(kReanimatedPerformanceTracerTrackGroup));
     if (propsFunc_.has_value()) {
@@ -77,6 +91,7 @@ class ReanimatedPerformanceTracerSection {
 
     PerformanceTracer::getInstance().reportMeasure(
         std::string(name_), *start_, end - *start_, std::move(detail), std::nullopt);
+#endif
   }
 
   ReanimatedPerformanceTracerSection(const ReanimatedPerformanceTracerSection &) = delete;
