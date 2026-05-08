@@ -203,9 +203,9 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
  private:
 #ifndef NDEBUG
-  /// Wraps the provided function in a try/catch so an exception thrown on the
-  /// worklet runtime can be reported on the RN Runtime LogBox with a
-  /// stack pointing back to the JS call site that scheduled the worklet.
+  // Wraps the provided function in a try/catch so an exception thrown on the
+  // worklet runtime can be reported on the RN Runtime LogBox with a
+  // stack pointing back to the JS call site that scheduled the worklet.
   template <typename... Args>
   jsi::Value callGuarded(const jsi::Function &function, const std::optional<std::string> &scheduleStack, Args &&...args)
       const {
