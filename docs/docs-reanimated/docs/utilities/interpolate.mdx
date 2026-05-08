@@ -9,7 +9,7 @@ sidebar_position: 1
 import Interpolate from '@site/src/examples/Interpolate';
 import InterpolateSrc from '!!raw-loader!@site/src/examples/Interpolate';
 
-<InteractiveExample src={InterpolateSrc} component={Interpolate} />
+<InteractiveExample src={InterpolateSrc} component={Interpolate}/>
 
 ## Reference
 
@@ -25,31 +25,30 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-enum Extrapolation {
-  IDENTITY = 'identity',
-  CLAMP = 'clamp',
-  EXTEND = 'extend',
-}
+  ```typescript
+  enum Extrapolation {
+    IDENTITY = 'identity',
+    CLAMP = 'clamp',
+    EXTEND = 'extend',
+  }
 
-type ExtrapolationAsString = 'identity' | 'clamp' | 'extend';
+  type ExtrapolationAsString = 'identity' | 'clamp' | 'extend';
 
-export type ExtrapolationType =
-  | ExtrapolationConfig
-  | Extrapolation
-  | ExtrapolationAsString
-  | undefined;
+  export type ExtrapolationType =
+    | ExtrapolationConfig
+    | Extrapolation
+    | ExtrapolationAsString
+    | undefined;
 
-function interpolate(
-  value: number,
-  input: readonly number[],
-  output: readonly number[],
-  extrapolate?: ExtrapolationType
-): number;
-```
-
+  function interpolate(
+    value: number,
+    input: readonly number[],
+    output: readonly number[],
+    extrapolate?: ExtrapolationType
+  ): number;
+  ```
 </details>
 
 ### Arguments
@@ -79,20 +78,23 @@ Available types:
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
 <div style={{display: "flex", justifyContent: "center", textAlign: "center"}}>
+  <div style={{ maxWidth: 320 }}>
+    <img src={useBaseUrl('/img/extrapolation/extend.png')}/>
 
-<div style={{ maxWidth: 320 }}>
-  <img src={useBaseUrl('/img/extrapolation/extend.png')} />
-  <p>EXTEND</p>
-</div>
-<div style={{ maxWidth: 320 }}>
-  <img src={useBaseUrl('/img/extrapolation/clamp.png')} />
-  <p>CLAMP</p>
-</div>
-<div style={{ maxWidth: 320 }}>
-  <img src={useBaseUrl('/img/extrapolation/identity.png')} />
-  <p>IDENTITY</p>
-</div>
+    <p>EXTEND</p>
+  </div>
 
+  <div style={{ maxWidth: 320 }}>
+    <img src={useBaseUrl('/img/extrapolation/clamp.png')}/>
+
+    <p>CLAMP</p>
+  </div>
+
+  <div style={{ maxWidth: 320 }}>
+    <img src={useBaseUrl('/img/extrapolation/identity.png')}/>
+
+    <p>IDENTITY</p>
+  </div>
 </div>
 
 This parameter also accepts string values:
@@ -122,12 +124,8 @@ const opacity = interpolate(
 import InterpolateRotation from '@site/src/examples/InterpolateRotation';
 import InterpolateRotationSrc from '!!raw-loader!@site/src/examples/InterpolateRotation';
 
-<InteractiveExample
-  src={InterpolateRotationSrc}
-  component={InterpolateRotation}
-  label="Grab and drag any of the squares. The dashed lines indicate the range of the interpolation."
-/>
+<InteractiveExample src={InterpolateRotationSrc} component={InterpolateRotation} label="Grab and drag any of the squares. The dashed lines indicate the range of the interpolation."/>
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

@@ -19,7 +19,6 @@ class RawProgressProvider {
   double creationTimestamp_;
 
   std::optional<double> rawProgress_;
-  std::optional<double> previousRawProgress_;
 
   /**
    * Calculates the progress of the animation at the given timestamp without

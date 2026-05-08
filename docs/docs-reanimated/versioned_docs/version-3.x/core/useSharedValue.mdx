@@ -23,24 +23,23 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-interface SharedValue<Value = unknown> {
-  value: Value;
-  get(): Value;
-  set(value: Value | ((value: Value) => Value)): void;
-  addListener: (listenerID: number, listener: (value: Value) => void) => void;
-  removeListener: (listenerID: number) => void;
-  modify: (
-    modifier?: <T extends Value>(value: T) => T,
-    forceUpdate?: boolean
-  ) => void;
-}
+  ```typescript
+  interface SharedValue<Value = unknown> {
+    value: Value;
+    get(): Value;
+    set(value: Value | ((value: Value) => Value)): void;
+    addListener: (listenerID: number, listener: (value: Value) => void) => void;
+    removeListener: (listenerID: number) => void;
+    modify: (
+      modifier?: <T extends Value>(value: T) => T,
+      forceUpdate?: boolean
+    ) => void;
+  }
 
-function useSharedValue<Value>(initialValue: Value): SharedValue<Value>;
-```
-
+  function useSharedValue<Value>(initialValue: Value): SharedValue<Value>;
+  ```
 </details>
 
 ### Arguments
@@ -79,7 +78,7 @@ function App() {
 import SharedValue from '@site/src/examples/SharedValue';
 import SharedValueSrc from '!!raw-loader!@site/src/examples/SharedValue';
 
-<InteractiveExample src={SharedValueSrc} component={SharedValue} showCode />
+<InteractiveExample src={SharedValueSrc} component={SharedValue} showCode/>
 
 ## Remarks
 
@@ -92,73 +91,65 @@ import SharedValueSrc from '!!raw-loader!@site/src/examples/SharedValue';
 - When you change the `sv.value` the update will happen synchronously on the [UI thread](/docs/fundamentals/glossary#ui-thread). On the other hand, on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) the update is asynchronous. This means when you try to immediately log the `value` after the change it will log the previously stored value.
 
 <Indent>
+  ```javascript
+  function App() {
+    const sv = useSharedValue(100); // initially set 100
 
-```javascript
-function App() {
-  const sv = useSharedValue(100); // initially set 100
+    sv.value += 50; // changing value stored in a shared value
 
-  sv.value += 50; // changing value stored in a shared value
-
-  console.log(sv.value); // will still log 100
-}
-```
-
+    console.log(sv.value); // will still log 100
+  }
+  ```
 </Indent>
 
 - Stay away from [destructuring assignment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment) when working with shared values. While this is a completely valid JavaScript code it will make Reanimated unable to keep the reactivity of a shared value.
 
 <Indent>
+  ```javascript
+  function App() {
+    let { value } = sv; // don't do this
 
-```javascript
-function App() {
-  let { value } = sv; // don't do this
+    console.log(value); // you can read the value just fine
 
-  console.log(value); // you can read the value just fine
-
-  value += 50; // but this won't update the styles
-}
-```
-
+    value += 50; // but this won't update the styles
+  }
+  ```
 </Indent>
 
 - When storing objects in a shared value, make sure to reassign an object instead of changing the properties individually.
 
 <Indent>
+  ```javascript
+  function App() {
+    const sv = useSharedValue({ x: 0, y: 0 });
 
-```javascript
-function App() {
-  const sv = useSharedValue({ x: 0, y: 0 });
+    sv.value.x = 50; // Reanimated loses reactivity 🚨
 
-  sv.value.x = 50; // Reanimated loses reactivity 🚨
-
-  sv.value = { x: 50, y: 0 }; // ✅
-}
-```
-
+    sv.value = { x: 50, y: 0 }; // ✅
+  }
+  ```
 </Indent>
 
 - When storing large arrays or complex objects in a shared value, you can use `.modify` method to alter the existing value instead of creating a new one.
 
 <Indent>
+  ```javascript
+  function App() {
+    const sv = useSharedValue([1, 2, 3]);
 
-```javascript
-function App() {
-  const sv = useSharedValue([1, 2, 3]);
+    sv.value.push(1000); // Reanimated loses reactivity 🚨
 
-  sv.value.push(1000); // Reanimated loses reactivity 🚨
+    sv.value = [...sv.value, 1000]; // works, but creates a new copy ⚠️
 
-  sv.value = [...sv.value, 1000]; // works, but creates a new copy ⚠️
-
-  sv.modify((value) => {
-    'worklet';
-    value.push(1000); // ✅
-    return value;
-  });
-}
-```
-
+    sv.modify((value) => {
+      'worklet';
+      value.push(1000); // ✅
+      return value;
+    });
+  }
+  ```
 </Indent>
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

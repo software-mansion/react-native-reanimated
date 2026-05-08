@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../../errors';
 import type {
   NormalizedTransformOrigin,
   TransformOrigin,
@@ -350,7 +349,7 @@ describe(processTransformOrigin, () => {
           'throws error with message "$message" for input "$input"',
           ({ input, message }) => {
             expect(() => processTransformOrigin(input)).toThrow(
-              ReanimatedError(message)
+              new Error(`[Reanimated] ${message}`)
             );
           }
         );

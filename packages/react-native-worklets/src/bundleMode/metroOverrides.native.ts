@@ -1,6 +1,5 @@
 'use strict';
 
-import { WorkletsError } from '../debug/WorkletsError';
 import { isWorkletRuntime } from '../runtimeKind';
 
 /**
@@ -50,7 +49,6 @@ export function disallowRNImports() {
             `You tried to import '${String(
               prop
             )}' from 'react-native' module on a Worklet Runtime. Using 'react-native' module on a Worklet Runtime is not allowed.`,
-            // eslint-disable-next-line reanimated/use-worklets-error
             new Error().stack
           );
           return {
@@ -127,8 +125,8 @@ export function mockTurboModuleRegistry() {
 
 function assertWorkletRuntime(functionName: string) {
   if (!isWorkletRuntime()) {
-    throw new WorkletsError(
-      `${functionName} can be used only on Worklet Runtimes.`
+    throw new Error(
+      `[Worklets] ${functionName} can be used only on Worklet Runtimes.`
     );
   }
 }

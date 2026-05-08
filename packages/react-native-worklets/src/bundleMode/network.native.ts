@@ -1,7 +1,5 @@
 'use strict';
 
-import { WorkletsError } from '../debug/WorkletsError';
-
 /**
  * Mocks necessary networking TurboModules on Worklet Runtimes to prevent
  * crashes when code running on Worklet Runtimes tries to use networking APIs.
@@ -46,8 +44,8 @@ function makeMockTurboModule(name: string, extraNoopMethods?: string[]) {
             return () => {};
           };
         }
-        throw new WorkletsError(
-          `You tried to call method '${String(
+        throw new Error(
+          `[Worklets] You tried to call method '${String(
             prop
           )}' from '${name}' TurboModule on a Worklet Runtime. Using '${name}' TurboModule on a Worklet Runtime is not allowed.`
         );

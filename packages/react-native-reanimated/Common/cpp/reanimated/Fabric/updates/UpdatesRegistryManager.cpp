@@ -99,12 +99,12 @@ void UpdatesRegistryManager::addToPropsMap(
     PropsMap &propsMap,
     const ShadowNodeFamily::Shared &shadowNodeFamily,
     const folly::dynamic &props) {
-  auto it = propsMap.find(shadowNodeFamily.get());
+  auto it = propsMap.find(shadowNodeFamily);
 
   if (it == propsMap.cend()) {
     auto propsVector = std::vector<RawProps>{};
     propsVector.emplace_back(props);
-    propsMap.emplace(shadowNodeFamily.get(), propsVector);
+    propsMap.emplace(shadowNodeFamily, propsVector);
   } else {
     it->second.emplace_back(props);
   }

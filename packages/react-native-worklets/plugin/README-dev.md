@@ -190,8 +190,8 @@ This might seem a bit weird regarding two issues:
 It's understandable that dependencies required to run plugin are not in `plugin/package.json`, as plugin itself is not a dependency required by Reanimated thus its' dependencies wouldn't ever be installed by the user.
 
 The hard part begins if we consider the latter issue.
-The fact is, from theoretical perspective, dependencies required to run should just be _dependencies_, not _dev_ ones. But in reality, all of those listed as _devs_ are _dependencies_ for _dependencies_ of _react-native_ ( :dizzy*face: ) - hence, if user doesn't have them, react-native won't (or shouldn't) work at all.
-What is more, we want to avoid potential issues with forcing users to install multiple versions of the same package. Thus, the solution is to \_trust* that user will have those packages and NodeJS will be able to resolve them for the plugin. The only thing we can do is to list them as _peerDependencies_ for clarity and to simplify potential troubleshooting and keep them as _devDependencies_ for us to be sure we have them.
+The fact is, from theoretical perspective, dependencies required to run should just be _dependencies_, not _dev_ ones. But in reality, all of those listed as _devs_ are _dependencies_ for _dependencies_ of _react-native_ ( :dizz&#x79;_&#x66;ace: ) - hence, if user doesn't have them, react-native won't (or shouldn't) work at all.
+What is more, we want to avoid potential issues with forcing users to install multiple versions of the same package. Thus, the solution is to \_trust_ that user will have those packages and NodeJS will be able to resolve them for the plugin. The only thing we can do is to list them as _peerDependencies_ for clarity and to simplify potential troubleshooting and keep them as _devDependencies_ for us to be sure we have them.
 It's not an ideal solution, but definitely best we have at the moment.
 
 Keep in mind this was the situation as of March 2023.

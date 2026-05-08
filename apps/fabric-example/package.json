@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "build": "cd ios && bundle install && bundle exec pod update",
+    "build": "cd ios && bundle install && bundle exec pod update --no-repo-update",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
@@ -14,13 +14,13 @@
   "dependencies": {
     "common-app": "workspace:*",
     "react": "19.2.3",
-    "react-native": "0.85.0-rc.1"
+    "react-native": "0.85.2"
   },
   "devDependencies": {
     "@types/react": "19.2.2",
     "eslint": "9.37.0",
     "prettier": "3.6.2",
-    "typescript": "5.8.3"
+    "typescript": "5.9.3"
   },
   "engines": {
     "node": ">= 22.11.0"

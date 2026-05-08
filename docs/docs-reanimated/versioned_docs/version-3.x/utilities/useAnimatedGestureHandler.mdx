@@ -47,30 +47,29 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-interface GestureHandlers<
-  Event extends NativeEventWrapper<PropsUsedInUseAnimatedGestureHandler>,
-  Context extends Record<string, unknown>
-> {
-  [key: string]: GestureHandler<Event, Context> | undefined;
-  onStart?: GestureHandler<Event, Context>;
-  onActive?: GestureHandler<Event, Context>;
-  onEnd?: GestureHandler<Event, Context>;
-  onFail?: GestureHandler<Event, Context>;
-  onCancel?: GestureHandler<Event, Context>;
-  onFinish?: GestureHandler<Event, Context>;
-}
+  ```typescript
+  interface GestureHandlers<
+    Event extends NativeEventWrapper<PropsUsedInUseAnimatedGestureHandler>,
+    Context extends Record<string, unknown>
+  > {
+    [key: string]: GestureHandler<Event, Context> | undefined;
+    onStart?: GestureHandler<Event, Context>;
+    onActive?: GestureHandler<Event, Context>;
+    onEnd?: GestureHandler<Event, Context>;
+    onFail?: GestureHandler<Event, Context>;
+    onCancel?: GestureHandler<Event, Context>;
+    onFinish?: GestureHandler<Event, Context>;
+  }
 
-// highlight-start
-function useAnimatedGestureHandler<
-  Event extends NativeEventWrapper<PropsUsedInUseAnimatedGestureHandler> = DefaultEvent,
-  Context extends Record<string, unknown> = Record<string, unknown>
->(handlers: GestureHandlers<Event, Context>, dependencies?: DependencyList);
-// highlight-end
-```
-
+  // highlight-start
+  function useAnimatedGestureHandler<
+    Event extends NativeEventWrapper<PropsUsedInUseAnimatedGestureHandler> = DefaultEvent,
+    Context extends Record<string, unknown> = Record<string, unknown>
+  >(handlers: GestureHandlers<Event, Context>, dependencies?: DependencyList);
+  // highlight-end
+  ```
 </details>
 
 ### Arguments
@@ -84,10 +83,10 @@ Each of the specified handlers will be triggered depending on the current state 
 Read more about gesture handling states in the [Gesture Handler documentation](https://docs.swmansion.com/react-native-gesture-handler/docs/under-the-hood/state).
 The handler receives the following arguments:
 
-- `event` [object] - an event object carrying the event payload.
+- `event` \[object] - an event object carrying the event payload.
   The payload will be different depending on the type of the gesture handler to which the callback is attached to (`PanGestureHandler`, `RotationGestureHandler`, etc.).
 
-- `context` [object] - a JavaScript object that can be used to store some state. You can read and write any data to it. This object persists between events and across handlers for all the selected states.
+- `context` \[object] - a JavaScript object that can be used to store some state. You can read and write any data to it. This object persists between events and across handlers for all the selected states.
 
 #### `dependencies` <Optional/>
 
@@ -103,11 +102,9 @@ You need to pass this object to the `onGestureEvent` property of a gesture handl
 ## Platform compatibility
 
 <div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ⚠️  |
-
+  | Android | iOS | Web |
+  | ------- | --- | --- |
+  | ✅      | ✅  | ⚠️  |
 </div>
 
 \* On Web, you have to pass returned handler object to both `onGestureEvent` and `onHandlerStateChange` parameters.

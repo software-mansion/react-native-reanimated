@@ -2,11 +2,15 @@
 
 import { checkCppVersion } from '../debug/checkCppVersion';
 import { jsVersion } from '../debug/jsVersion';
-import { WorkletsError } from '../debug/WorkletsError';
+import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
+import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
+import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
+import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
 import type { SerializableRef, SynchronizableRef } from '../memory/types';
-import { RuntimeKind } from '../runtimeKind';
+import { installValueUnpacker } from '../memory/valueUnpacker';
+import { isRNRuntime } from '../runtimeKind';
 import { WorkletsTurboModule } from '../specs';
-import type { WorkletRuntime } from '../types';
+import type { WorkletFunction, WorkletRuntime } from '../types';
 import type {
   IWorkletsModule,
   WorkletsModuleProxy,
@@ -22,27 +26,31 @@ class NativeWorklets implements IWorkletsModule {
   constructor() {
     const bundleModeEnabled = globalThis._WORKLETS_BUNDLE_MODE_ENABLED ?? false;
     globalThis._WORKLETS_VERSION_JS = jsVersion;
-    if (
-      global.__workletsModuleProxy === undefined &&
-      globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative
-    ) {
+    const onRNRuntime = isRNRuntime();
+    if (globalThis.__workletsModuleProxy === undefined && onRNRuntime) {
       WorkletsTurboModule?.installTurboModule(bundleModeEnabled);
-      if (__DEV__ && bundleModeEnabled) {
+      if (!bundleModeEnabled) {
+        installUnpackers(globalThis.__workletsModuleProxy);
+      }
+      WorkletsTurboModule?.start();
+    }
+    if (globalThis.__workletsModuleProxy === undefined) {
+      throw new Error(
+        `[Worklets] Native part of Worklets doesn't seem to be initialized.
+See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#native-part-of-worklets-doesnt-seem-to-be-initialized for more details.`
+      );
+    }
+    if (__DEV__) {
+      if (bundleModeEnabled) {
         console.log(
           '[Worklets] Bundle mode initialization: Downloaded the bundle for Worklet Runtimes.'
         );
       }
+      if (onRNRuntime) {
+        checkCppVersion();
+      }
     }
-    if (global.__workletsModuleProxy === undefined) {
-      throw new WorkletsError(
-        `Native part of Worklets doesn't seem to be initialized.
-See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#native-part-of-worklets-doesnt-seem-to-be-initialized for more details.`
-      );
-    }
-    if (__DEV__ && globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
-      checkCppVersion();
-    }
-    this.#workletsModuleProxy = global.__workletsModuleProxy;
+    this.#workletsModuleProxy = globalThis.__workletsModuleProxy;
     this.#serializableNull = this.#workletsModuleProxy.createSerializableNull();
     this.#serializableUndefined =
       this.#workletsModuleProxy.createSerializableUndefined();
@@ -195,12 +203,18 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  scheduleOnUI<TValue>(serializable: SerializableRef<TValue>) {
-    return this.#workletsModuleProxy.scheduleOnUI(serializable);
+  scheduleOnUI<TValue>(
+    serializable: SerializableRef<TValue>,
+    scheduleStack: string | undefined
+  ) {
+    return this.#workletsModuleProxy.scheduleOnUI(serializable, scheduleStack);
   }
 
-  runOnUISync<TValue, TReturn>(worklet: SerializableRef<TValue>): TReturn {
-    return this.#workletsModuleProxy.runOnUISync(worklet);
+  runOnUISync<TValue, TReturn>(
+    worklet: SerializableRef<TValue>,
+    scheduleStack: string | undefined
+  ): TReturn {
+    return this.#workletsModuleProxy.runOnUISync(worklet, scheduleStack);
   }
 
   createWorkletRuntime(
@@ -221,36 +235,50 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
-    serializableWorklet: SerializableRef<TValue>
+    serializableWorklet: SerializableRef<TValue>,
+    scheduleStack: string | undefined
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntime(
       workletRuntime,
-      serializableWorklet
+      serializableWorklet,
+      scheduleStack
     );
   }
 
   scheduleOnRuntimeWithId<TValue>(
     runtimeId: number,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack: string | undefined
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntimeWithId(
       runtimeId,
-      worklet
+      worklet,
+      scheduleStack
     );
   }
 
   runOnRuntimeSync<TValue, TReturn>(
     workletRuntime: WorkletRuntime,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack: string | undefined
   ): TReturn {
-    return this.#workletsModuleProxy.runOnRuntimeSync(workletRuntime, worklet);
+    return this.#workletsModuleProxy.runOnRuntimeSync(
+      workletRuntime,
+      worklet,
+      scheduleStack
+    );
   }
 
   runOnRuntimeSyncWithId<TValue, TReturn>(
     runtimeId: number,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack: string | undefined
   ): TReturn {
-    return this.#workletsModuleProxy.runOnRuntimeSyncWithId(runtimeId, worklet);
+    return this.#workletsModuleProxy.runOnRuntimeSyncWithId(
+      runtimeId,
+      worklet,
+      scheduleStack
+    );
   }
 
   createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue> {
@@ -293,18 +321,8 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.synchronizableUnlock(synchronizableRef);
   }
 
-  reportFatalErrorOnJS(
-    message: string,
-    stack: string,
-    name: string,
-    jsEngine: string
-  ) {
-    return this.#workletsModuleProxy.reportFatalErrorOnJS(
-      message,
-      stack,
-      name,
-      jsEngine
-    );
+  reportFatalErrorOnJS(message: string, stack: string, name: string) {
+    return this.#workletsModuleProxy.reportFatalErrorOnJS(message, stack, name);
   }
 
   getStaticFeatureFlag(name: string): boolean {
@@ -322,6 +340,38 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   getUISchedulerHolder(): object {
     return this.#workletsModuleProxy.getUISchedulerHolder();
   }
+
+  toggleSlowAnimationsOnUIRuntime(): boolean {
+    return WorkletsTurboModule?.toggleSlowAnimationsOnUIRuntime() ?? false;
+  }
 }
 
 export const WorkletsModule: IWorkletsModule = new NativeWorklets();
+
+function installUnpackers(workletsModuleProxy: WorkletsModuleProxy) {
+  workletsModuleProxy.loadUnpackers(
+    (installValueUnpacker as WorkletFunction).__initData!.code,
+    (installValueUnpacker as WorkletFunction).__initData!.location ?? '',
+    (installValueUnpacker as WorkletFunction).__initData!.sourceMap ?? '',
+    (installSynchronizableUnpacker as WorkletFunction).__initData!.code,
+    (installSynchronizableUnpacker as WorkletFunction).__initData!.location ??
+      '',
+    (installSynchronizableUnpacker as WorkletFunction).__initData!.sourceMap ??
+      '',
+    (installCustomSerializableUnpacker as WorkletFunction).__initData!.code,
+    (installCustomSerializableUnpacker as WorkletFunction).__initData!
+      .location ?? '',
+    (installCustomSerializableUnpacker as WorkletFunction).__initData!
+      .sourceMap ?? '',
+    (installShareableHostUnpacker as WorkletFunction).__initData!.code,
+    (installShareableHostUnpacker as WorkletFunction).__initData!.location ??
+      '',
+    (installShareableHostUnpacker as WorkletFunction).__initData!.sourceMap ??
+      '',
+    (installShareableGuestUnpacker as WorkletFunction).__initData!.code,
+    (installShareableGuestUnpacker as WorkletFunction).__initData!.location ??
+      '',
+    (installShareableGuestUnpacker as WorkletFunction).__initData!.sourceMap ??
+      ''
+  );
+}

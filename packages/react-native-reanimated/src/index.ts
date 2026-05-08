@@ -104,6 +104,7 @@ export {
   isReanimated3,
   makeMutable,
 } from './core';
+export { NativeEventsManager } from './createAnimatedComponent';
 export * from './css';
 export type { EasingFunctionFactory } from './Easing';
 export { Easing } from './Easing';
@@ -145,19 +146,17 @@ export {
   /** @deprecated Please use {@link useScrollOffset} instead. */
   useScrollOffset as useScrollViewOffset,
   useSharedValue,
+  useTimestamp,
 } from './hook';
 export type {
-  InterpolateConfig,
   InterpolateHSV,
   InterpolateRGB,
   InterpolationOptions,
 } from './interpolateColor';
 export {
-  ColorSpace,
   /** @deprecated Please use {@link Extrapolation} instead. */
   Extrapolate,
   interpolateColor,
-  useInterpolateConfig,
 } from './interpolateColor';
 export type { ExtrapolationConfig, ExtrapolationType } from './interpolation';
 export { clamp, Extrapolation, interpolate } from './interpolation';

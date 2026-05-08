@@ -5,6 +5,7 @@
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/ScriptBuffer.h>
+#include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
@@ -15,32 +16,23 @@ using namespace facebook;
 
 namespace worklets {
 
-bool isDevBundleFromRNRuntime(jsi::Runtime &rnRuntime);
+bool isDevBundleFromRNRuntime(jsi::Runtime &rnRuntime) {
+  const auto rtDev = rnRuntime.global().getProperty(rnRuntime, "__DEV__");
+  return rtDev.isBool() && rtDev.asBool();
+}
 
-WorkletsModuleProxy::WorkletsModuleProxy(
-    jsi::Runtime &rnRuntime,
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::shared_ptr<CallInvoker> &jsCallInvoker,
-    const std::shared_ptr<UIScheduler> &uiScheduler,
-    std::function<bool()> &&isJavaScriptThread,
-    const std::shared_ptr<RuntimeBindings> &runtimeBindings,
-    const BundleModeConfig &bundleModeConfig)
-    : isDevBundle_(isDevBundleFromRNRuntime(rnRuntime)),
-      jsQueue_(jsQueue),
-      jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsCallInvoker, std::move(isJavaScriptThread))),
-      uiScheduler_(uiScheduler),
-      jsLogger_(std::make_shared<JSLogger>(jsScheduler_)),
-      runtimeBindings_(runtimeBindings),
-      bundleModeConfig_(bundleModeConfig),
-      memoryManager_(std::make_shared<MemoryManager>()),
-      runtimeManager_(std::make_shared<RuntimeManager>()),
-      uiWorkletRuntime_(
-          runtimeManager_->createUninitializedUIRuntime(jsQueue_, std::make_shared<AsyncQueueUI>(uiScheduler_))) {
+/**
+* This method is required outside of Bundle Mode to make sure we start creating
+* Worklet Runtimes only after unpackers code was loaded from the RN Runtime.
+*
+* In Bundle Mode unpackers are installed during bundle evaluation instead.
+ */
+void WorkletsModuleProxy::start() {
   /**
    * We call additional `init` method here because
    * JSIWorkletsModuleProxy needs a weak_ptr to the UI Runtime.
    */
-  uiWorkletRuntime_->init(createJSIWorkletsModuleProxy());
+  uiWorkletRuntime_->init(std::make_shared<JSIWorkletsModuleProxy>(*rnRuntimeProxy_));
 
   animationFrameBatchinator_ =
       std::make_shared<AnimationFrameBatchinator>(uiWorkletRuntime_, runtimeBindings_->requestAnimationFrame);
@@ -49,29 +41,39 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       uiWorkletRuntime_->getJSIRuntime(), animationFrameBatchinator_->getJsiRequestAnimationFrame());
 }
 
-std::shared_ptr<JSIWorkletsModuleProxy> WorkletsModuleProxy::createJSIWorkletsModuleProxy() const {
-  assert(uiWorkletRuntime_ && "UI Worklet Runtime must be initialized before creating JSI proxy.");
-  return std::make_shared<JSIWorkletsModuleProxy>(
-      isDevBundle_,
-      jsQueue_,
-      jsScheduler_,
-      uiScheduler_,
-      memoryManager_,
-      runtimeManager_,
-      uiWorkletRuntime_,
-      runtimeBindings_,
-      bundleModeConfig_);
+WorkletsModuleProxy::WorkletsModuleProxy(
+    jsi::Runtime &rnRuntime,
+    const std::shared_ptr<CallInvoker> &jsCallInvoker,
+    const std::shared_ptr<UIScheduler> &uiScheduler,
+    std::function<bool()> &&isJavaScriptThread,
+    const std::shared_ptr<RuntimeBindings> &runtimeBindings,
+    const BundleModeConfig &bundleModeConfig)
+    : isDevBundle_(isDevBundleFromRNRuntime(rnRuntime)),
+      jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsCallInvoker, std::move(isJavaScriptThread))),
+      uiScheduler_(uiScheduler),
+      jsLogger_(std::make_shared<JSLogger>(jsScheduler_)),
+      runtimeBindings_(runtimeBindings),
+      bundleModeConfig_(bundleModeConfig),
+      memoryManager_(std::make_shared<MemoryManager>()),
+      runtimeManager_(std::make_shared<RuntimeManager>()),
+      unpackerLoader_(std::make_shared<UnpackerLoader>()),
+      uiWorkletRuntime_(runtimeManager_->createUninitializedUIRuntime(std::make_shared<AsyncQueueUI>(uiScheduler_))),
+      rnRuntimeProxy_(std::make_shared<JSIWorkletsModuleProxy>(
+          isDevBundle_,
+          jsScheduler_,
+          uiScheduler_,
+          memoryManager_,
+          runtimeManager_,
+          uiWorkletRuntime_,
+          runtimeBindings_,
+          bundleModeConfig_,
+          unpackerLoader_)) {
+  RNRuntimeWorkletDecorator::decorate(rnRuntime, rnRuntimeProxy_->toOptimizedObject(rnRuntime), jsLogger_);
 }
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {
   animationFrameBatchinator_.reset();
-  jsQueue_->quitSynchronous();
   uiWorkletRuntime_.reset();
-}
-
-auto isDevBundleFromRNRuntime(jsi::Runtime &rnRuntime) -> bool {
-  const auto rtDev = rnRuntime.global().getProperty(rnRuntime, "__DEV__");
-  return rtDev.isBool() && rtDev.asBool();
 }
 
 } // namespace worklets

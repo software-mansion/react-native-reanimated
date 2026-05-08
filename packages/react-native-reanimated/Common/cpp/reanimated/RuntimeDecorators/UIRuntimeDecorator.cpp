@@ -1,8 +1,6 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/ReaJSIUtils.h>
 
-#include <utility>
-
 namespace reanimated {
 
 void UIRuntimeDecorator::decorate(
@@ -25,32 +23,7 @@ void UIRuntimeDecorator::decorate(
   jsi_utils::installJsiFunction(uiRuntime, "_notifyAboutEnd", endLayoutAnimation);
   jsi_utils::installJsiFunction(uiRuntime, "_setGestureState", setGestureState);
   jsi_utils::installJsiFunction(uiRuntime, "_obtainProp", obtainPropFunction);
-
-  subscribeForMicrotasksFinalization(uiRuntime, maybeFlushUIUpdatesQueue);
-}
-
-void UIRuntimeDecorator::subscribeForMicrotasksFinalization(
-    jsi::Runtime &uiRuntime,
-    const MaybeFlushUIUpdatesQueueFunction &maybeFlushUIUpdatesQueue) {
-  auto maybeMicrotaskQueueFinalizers = uiRuntime.global().getProperty(uiRuntime, "_microtaskQueueFinalizers");
-
-  if (maybeMicrotaskQueueFinalizers.isUndefined()) {
-    throw std::runtime_error(
-        "[Reanimated] Expected microtaskQueueFinalizers to be defined. "
-        "Perhaps Worklets failed to initialize the UI Runtime?");
-  }
-
-  const auto microtaskQueueFinalizers = maybeMicrotaskQueueFinalizers.asObject(uiRuntime).asArray(uiRuntime);
-
-  microtaskQueueFinalizers.getPropertyAsFunction(uiRuntime, "push")
-      .callWithThis(
-          uiRuntime,
-          microtaskQueueFinalizers,
-          jsi::Function::createFromHostFunction(
-              uiRuntime,
-              jsi::PropNameID::forAscii(uiRuntime, "_maybeFlushUIUpdatesQueue"),
-              0,
-              jsi_utils::createHostFunction(maybeFlushUIUpdatesQueue)));
+  jsi_utils::installJsiFunction(uiRuntime, "_maybeFlushUIUpdatesQueue", maybeFlushUIUpdatesQueue);
 }
 
 } // namespace reanimated

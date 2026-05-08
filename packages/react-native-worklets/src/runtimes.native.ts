@@ -1,11 +1,14 @@
 'use strict';
 
 import { setupCallGuard } from './callGuard';
-import { registerWorkletsError, WorkletsError } from './debug/WorkletsError';
-import { addGuardImplementation } from './guardImplementation';
+import {
+  addGuardImplementation,
+  addNoBundleModeGuardImplementation,
+} from './guardImplementation';
 import {
   getMemorySafeCapturableConsole,
   setupConsole,
+  setupConsoleForwarding,
   setupSerializer,
 } from './initializers/initializers';
 import {
@@ -67,7 +70,10 @@ export function createWorkletRuntime(
   nameOrConfig?: string | WorkletRuntimeConfigInternal,
   initializer?: WorkletFunction<[], void>
 ): WorkletRuntime {
-  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
+  const runtimeBoundCapturableConsole =
+    globalThis._WORKLETS_BUNDLE_MODE_ENABLED && !__DEV__
+      ? null
+      : getMemorySafeCapturableConsole();
 
   let name: string;
   let initializerFn: (() => void) | undefined;
@@ -91,8 +97,8 @@ export function createWorkletRuntime(
   }
 
   if (initializerFn && !isWorkletFunction(initializerFn)) {
-    throw new WorkletsError(
-      'The initializer passed to `createWorkletRuntime` is not a worklet.'
+    throw new Error(
+      '[Worklets] The initializer passed to `createWorkletRuntime` is not a worklet.'
     );
   }
 
@@ -102,8 +108,11 @@ export function createWorkletRuntime(
       'worklet';
       setupCallGuard();
       setupSerializer();
-      registerWorkletsError();
-      setupConsole(runtimeBoundCapturableConsole);
+      if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+        setupConsole(runtimeBoundCapturableConsole!);
+      } else if (__DEV__) {
+        setupConsoleForwarding(runtimeBoundCapturableConsole!);
+      }
       if (enableEventLoop) {
         setupRunLoop(animationQueuePollingRate);
       }
@@ -147,8 +156,8 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
   ...args: Args
 ): void {
   if (__DEV__ && !isWorkletFunction(worklet)) {
-    throw new WorkletsError(
-      'The function passed to `scheduleOnRuntime` is not a worklet.'
+    throw new Error(
+      '[Worklets] The function passed to `scheduleOnRuntime` is not a worklet.'
     );
   }
 
@@ -157,8 +166,9 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
     createSerializable(() => {
       'worklet';
       worklet(...args);
-      globalThis.__flushMicrotasks?.();
-    })
+      globalThis.__callMicrotasks?.();
+    }),
+    __DEV__ ? (new Error().stack ?? '') : undefined
   );
 }
 
@@ -170,8 +180,8 @@ if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
   ): void {
     'worklet';
     if (__DEV__ && !isWorkletFunction(worklet)) {
-      throw new WorkletsError(
-        'The function passed to `scheduleOnRuntime` is not a worklet.'
+      throw new Error(
+        '[Worklets] The function passed to `scheduleOnRuntime` is not a worklet.'
       );
     }
 
@@ -180,7 +190,7 @@ if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
       globalThis.__serializer(() => {
         'worklet';
         worklet(...args);
-        globalThis.__flushMicrotasks?.();
+        globalThis.__callMicrotasks?.();
       })
     );
   }
@@ -224,8 +234,8 @@ export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
   ...args: Args
 ): void {
   if (__DEV__ && !isWorkletFunction(worklet)) {
-    throw new WorkletsError(
-      'The function passed to `scheduleOnRuntimeWithId` is not a worklet.'
+    throw new Error(
+      '[Worklets] The function passed to `scheduleOnRuntimeWithId` is not a worklet.'
     );
   }
 
@@ -234,8 +244,9 @@ export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
     createSerializable(() => {
       'worklet';
       worklet(...args);
-      globalThis.__flushMicrotasks?.();
-    })
+      globalThis.__callMicrotasks?.();
+    }),
+    __DEV__ ? (new Error().stack ?? '') : undefined
   );
 }
 
@@ -247,8 +258,8 @@ if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
   ): void {
     'worklet';
     if (__DEV__ && !isWorkletFunction(worklet)) {
-      throw new WorkletsError(
-        'The function passed to `scheduleOnRuntimeWithId` is not a worklet.'
+      throw new Error(
+        '[Worklets] The function passed to `scheduleOnRuntimeWithId` is not a worklet.'
       );
     }
 
@@ -257,7 +268,7 @@ if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
       globalThis.__serializer(() => {
         'worklet';
         worklet(...args);
-        globalThis.__flushMicrotasks?.();
+        globalThis.__callMicrotasks?.();
       })
     );
   }
@@ -286,8 +297,8 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
 ): (...args: Args) => void {
   'worklet';
   if (__DEV__ && !isWorkletFunction(worklet)) {
-    throw new WorkletsError(
-      'The function passed to `runOnRuntime` is not a worklet.'
+    throw new Error(
+      '[Worklets] The function passed to `runOnRuntime` is not a worklet.'
     );
   }
   return (...args) => scheduleOnRuntime(workletRuntime, worklet, ...args);
@@ -320,8 +331,8 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
   ...args: Args
 ): ReturnValue {
   if (__DEV__ && !isWorkletFunction(worklet)) {
-    throw new WorkletsError(
-      'The function passed to `runOnRuntimeSync` is not a worklet.'
+    throw new Error(
+      '[Worklets] The function passed to `runOnRuntimeSync` is not a worklet.'
     );
   }
 
@@ -331,7 +342,8 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
       'worklet';
       const result = worklet(...args);
       return makeShareableCloneOnUIRecursive(result);
-    })
+    }),
+    __DEV__ ? (new Error().stack ?? '') : undefined
   );
 }
 
@@ -369,8 +381,8 @@ export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
   ...args: Args
 ): ReturnValue {
   if (__DEV__ && !isWorkletFunction(worklet)) {
-    throw new WorkletsError(
-      'The function passed to `runOnRuntimeSyncWithId` is not a worklet.'
+    throw new Error(
+      '[Worklets] The function passed to `runOnRuntimeSyncWithId` is not a worklet.'
     );
   }
 
@@ -380,7 +392,8 @@ export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
       'worklet';
       const result = worklet(...args);
       return makeShareableCloneOnUIRecursive(result);
-    })
+    }),
+    __DEV__ ? (new Error().stack ?? '') : undefined
   );
 }
 
@@ -393,13 +406,13 @@ export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
  *
  * - The worklet is scheduled on the Worker Runtime's Async Queue
  * - Returns a Promise that resolves with the worklet's return value
- * - This function can only be called from the [RN
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
  *
  * @param workletRuntime - The runtime to run the worklet on.
  * @param worklet - The worklet to run.
  * @param args - The arguments to pass to the worklet.
  * @returns A Promise that resolves to the return value of the worklet.
+ * @throws If called from a runtime other than the [RN
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
  * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRuntimeAsync
  */
 // @ts-expect-error This overload is correct since it's what user sees in their code
@@ -417,17 +430,18 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
 ): Promise<ReturnValue> {
   if (__DEV__) {
     if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
-      throw new WorkletsError(
-        '`runOnRuntimeAsync` can only be called on the RN Runtime.'
+      throw new Error(
+        '[Worklets] `runOnRuntimeAsync` can only be called on the RN Runtime.'
       );
     }
     if (!isWorkletFunction(worklet)) {
-      throw new WorkletsError(
-        'The function passed to `runOnRuntimeAsync` is not a worklet.'
+      throw new Error(
+        '[Worklets] The function passed to `runOnRuntimeAsync` is not a worklet.'
       );
     }
   }
 
+  const scheduleStack = __DEV__ ? (new Error().stack ?? '') : undefined;
   return new Promise<ReturnValue>((resolve, reject) => {
     if (__DEV__) {
       // in DEV mode we call serializable conversion here because in case the object
@@ -449,8 +463,9 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
         } catch (error) {
           scheduleOnRN(reject, error);
         }
-        globalThis.__flushMicrotasks?.();
-      })
+        globalThis.__callMicrotasks?.();
+      }),
+      scheduleStack
     );
   });
 }
@@ -460,9 +475,12 @@ if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
    * QoL guards to give a meaningful error message when the user tries to call
    * these functions on Worklet Runtimes outside of the Bundle Mode.
    */
-  addGuardImplementation(runOnRuntimeAsync);
-  addGuardImplementation(runOnRuntimeSync);
-  addGuardImplementation(runOnRuntimeSyncWithId);
+  addGuardImplementation(
+    runOnRuntimeAsync,
+    '`runOnRuntimeAsync` can only be called on the RN Runtime.'
+  );
+  addNoBundleModeGuardImplementation(runOnRuntimeSync);
+  addNoBundleModeGuardImplementation(runOnRuntimeSyncWithId);
 }
 
 export function getUIRuntimeHolder(): object {

@@ -1,12 +1,11 @@
 'use strict';
 
-import { ReanimatedError } from '../../common';
 import { worklet } from '../../jestUtils';
 import { renderUseHandler, runCommonTests } from './useHandler.shared';
 
 function nonWorkletError(...names: string[]) {
-  return new ReanimatedError(
-    `Passed handlers that are not worklets. Only worklet functions are allowed. Handlers "${names.join(', ')}" are not worklets.`
+  return new Error(
+    `[Reanimated] Passed handlers that are not worklets. Only worklet functions are allowed. Handlers "${names.join(', ')}" are not worklets.`
   );
 }
 

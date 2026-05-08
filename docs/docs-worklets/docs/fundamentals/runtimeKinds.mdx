@@ -26,10 +26,10 @@ Each Worklet Runtime has a unique `runtimeId` that can be used to refer to it wh
 
 Special kind of a Worklet Runtime. Its primary function is to execute worklets which represent high-priority JavaScript tasks. The UI Runtime is mostly executed by the UI (main) thread. Examples of such tasks are:
 
-- **Synchronous handling of native events**.  
+- **Synchronous handling of native events**.\
   Responding to native events like touches on the UI thread allows to react to them on the same frame of the user interaction, without any perceivable delays.
 
-- **Animation calculations**.  
+- **Animation calculations**.\
   Running animations on a main thread, decoupled from heavy business logic on RN Runtime, ensures that they run without interruptions, maintaining stable frame rates.
 
 UI Runtime can be periodically acquired by other threads (other runtimes) to synchronize data.

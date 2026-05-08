@@ -15,7 +15,7 @@ import {
 } from './debugging_tables/tables';
 import DocsCompatibilityInfo from '../_shared/_docs_compatibility_info.mdx';
 
-<DocsCompatibilityInfo />
+<DocsCompatibilityInfo/>
 
 Due to Reanimated's unique architecture and usage of a second JS runtime, debugging
 can be problematic, and some common solutions might not work as expected.
@@ -73,7 +73,7 @@ apps using Reanimated on web.
 
 ### Summary
 
-<SummaryTable />
+<SummaryTable/>
 
 :::caution
 
@@ -85,7 +85,7 @@ the JS runtime.
 
 ### Chrome Debugger
 
-<ChromeDebuggerTable />
+<ChromeDebuggerTable/>
 
 **Summary:**
 Works, but uses web implementations of functions and runs everything on the JS thread.
@@ -137,7 +137,7 @@ thread now).
 
 ### Chrome DevTools
 
-<ChromeDevToolsTable />
+<ChromeDevToolsTable/>
 
 **Summary:**
 Works and both contexts can be debugged.
@@ -158,22 +158,22 @@ If you still want to use Chrome DevTools then follow these steps:
 1. Add the `patch-package` to your project and set it up to run as a `post-install` task.
    More details can be found [here](https://www.npmjs.com/package/patch-package).
 
-2. Add the necessary patch for `metro-inspector-proxy` to the `patches/` folder:
+1. Add the necessary patch for `metro-inspector-proxy` to the `patches/` folder:
 
-- `0.76.7` &rarr; [here](/content/metro-inspector-proxy+0.76.7.patch)
-- `0.76.5` &rarr; [here](/content/metro-inspector-proxy+0.76.5.patch)
-- `0.76.4` &rarr; [here](/content/metro-inspector-proxy+0.76.4.patch)
-- `0.76.0` &rarr; [here](/content/metro-inspector-proxy+0.76.0.patch)
-- `0.73.7` &rarr; [here](/content/metro-inspector-proxy+0.73.7.patch)
-- `0.73.5` &rarr; [here](/content/metro-inspector-proxy+0.73.5.patch)
-- `0.72.3` &rarr; [here](/content/metro-inspector-proxy+0.72.3.patch)
-- `0.72.1` &rarr; [here](/content/metro-inspector-proxy+0.72.1.patch)
+- `0.76.7` → [here](/content/metro-inspector-proxy+0.76.7.patch)
+- `0.76.5` → [here](/content/metro-inspector-proxy+0.76.5.patch)
+- `0.76.4` → [here](/content/metro-inspector-proxy+0.76.4.patch)
+- `0.76.0` → [here](/content/metro-inspector-proxy+0.76.0.patch)
+- `0.73.7` → [here](/content/metro-inspector-proxy+0.73.7.patch)
+- `0.73.5` → [here](/content/metro-inspector-proxy+0.73.5.patch)
+- `0.72.3` → [here](/content/metro-inspector-proxy+0.72.3.patch)
+- `0.72.1` → [here](/content/metro-inspector-proxy+0.72.1.patch)
 
 _Warnings about mismatched patch versions can be safely ignored if the patch was successfully applied._
 
 3. Open [chrome://inspect](chrome://inspect) in a Google Chrome browser.
 
-4. Select the Reanimated runtime from the list. The list should look something
+3. Select the Reanimated runtime from the list. The list should look something
    like this:
 
 ![Screenshot showing Chrome DevTools target selection](/img/debugging/ChromeDevToolsList.png)
@@ -212,7 +212,7 @@ _We are actively working on improving the debugging experience with Chrome DevTo
 
 ### Flipper (Hermes debugger)
 
-<FlipperTable />
+<FlipperTable/>
 
 **Summary:**
 Works and both contexts can be debugged.
@@ -229,7 +229,7 @@ feature. If you want to try it out follow these steps:
 1. Add the `patch-package` to your project and set it up to run as a `post-install` task.
    More details can be found [here](https://www.npmjs.com/package/patch-package);
 
-2. Add the necessary patches to the `patches/` folder:
+1. Add the necessary patches to the `patches/` folder:
 
 - [this](/content/metro-inspector-proxy+0.72.1.patch) patch for `metro-inspector-proxy`,
 - [this](/content/react-native-gesture-handler+2.5.0.patch) one for `react-native-gesture-handler`
@@ -280,7 +280,7 @@ _We are actively working on improving the debugging experience with Flipper on H
 
 ### Safari DevTools
 
-<SafariDevToolsTable />
+<SafariDevToolsTable/>
 
 **Summary:**
 Safari DevTools is only available on iOS devices running the JSC engine.
@@ -304,7 +304,7 @@ worklets.
 
 ### React Developer Tools
 
-<ReactDeveloperToolsTable />
+<ReactDeveloperToolsTable/>
 
 **Summary:**
 React Developer Tools work as expected, and the profiler and layout inspector can

@@ -9,10 +9,7 @@ sidebar_position: 2
 import AnimationDurationBasic from '@site/src/examples/css-animations/AnimationDurationBasic';
 import AnimationDurationBasicSrc from '!!raw-loader!@site/src/examples/css-animations/AnimationDurationBasic';
 
-<InteractiveExample
-  src={AnimationDurationBasicSrc}
-  component={AnimationDurationBasic}
-/>
+<InteractiveExample src={AnimationDurationBasicSrc} component={AnimationDurationBasic}/>
 
 ## Reference
 
@@ -35,14 +32,13 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type TimeUnit = `${number}s` | `${number}ms` | number;
+  ```typescript
+  type TimeUnit = `${number}s` | `${number}ms` | number;
 
-type CSSAnimationDuration = TimeUnit | TimeUnit[];
-```
-
+  type CSSAnimationDuration = TimeUnit | TimeUnit[];
+  ```
 </details>
 
 ### Values
@@ -54,31 +50,25 @@ A value which is either:
 - A string which is a non-negative number followed by `s`. Represents a time in seconds.
 
 <Indent>
-
-```typescript
-animationDuration: '3s';
-```
-
+  ```typescript
+  animationDuration: '3s';
+  ```
 </Indent>
 
 - A string which is a non-negative number followed by `ms`. Represents a time in milliseconds.
 
 <Indent>
-
-```typescript
-animationDuration: '150ms';
-```
-
+  ```typescript
+  animationDuration: '150ms';
+  ```
 </Indent>
 
 - A non-negative number which represents a time in milliseconds.
 
 <Indent>
-
-```typescript
-animationDuration: 500;
-```
-
+  ```typescript
+  animationDuration: 500;
+  ```
 </Indent>
 
 #### `<time unit[]>`
@@ -98,8 +88,8 @@ In the following example, it would take 3 seconds for the `bounceIn` keyframe to
 import AnimationDuration from '@site/src/examples/css-animations/AnimationDuration';
 import AnimationDurationSrc from '!!raw-loader!@site/src/examples/css-animations/AnimationDuration';
 
-<InteractiveExample src={AnimationDurationSrc} component={AnimationDuration} />
+<InteractiveExample src={AnimationDurationSrc} component={AnimationDuration}/>
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

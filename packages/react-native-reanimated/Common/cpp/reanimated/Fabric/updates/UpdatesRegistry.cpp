@@ -8,11 +8,8 @@
 
 namespace reanimated {
 
-std::lock_guard<std::mutex> UpdatesRegistry::lock() const {
-  return std::lock_guard<std::mutex>{mutex_};
-}
-
 bool UpdatesRegistry::isEmpty() const {
+  std::lock_guard<std::mutex> lock{mutex_};
   return updatesRegistry_.empty();
 }
 
@@ -26,7 +23,7 @@ folly::dynamic UpdatesRegistry::get(const Tag tag) const {
   return it->second.second;
 }
 
-void UpdatesRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
+void UpdatesRegistry::flush(UpdatesBatch &updatesBatch) {
   auto copiedUpdatesBatch = std::move(updatesBatch_);
   updatesBatch_.clear();
 
@@ -39,7 +36,7 @@ void UpdatesRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
 }
 
 UpdatesBatch UpdatesRegistry::getPendingUpdates() {
-  auto lock = std::lock_guard<std::mutex>{mutex_};
+  std::lock_guard<std::mutex> lock{mutex_};
   flushUpdatesToRegistry(updatesBatch_);
 
   UpdatesBatch updatesBatch;
@@ -56,12 +53,12 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) {
   auto copiedRegistry = updatesRegistry_;
   for (const auto &[tag, pair] : copiedRegistry) {
     const auto &[shadowNodeFamily, props] = pair;
-    auto it = propsMap.find(shadowNodeFamily.get());
+    const auto it = propsMap.find(shadowNodeFamily);
 
     if (it == propsMap.cend()) {
       auto propsVector = std::vector<RawProps>{};
       propsVector.emplace_back(RawProps(props));
-      propsMap.emplace(shadowNodeFamily.get(), propsVector);
+      propsMap.emplace(shadowNodeFamily, propsVector);
     } else {
       it->second.push_back(RawProps(props));
     }
@@ -113,6 +110,7 @@ void UpdatesRegistry::flushUpdatesToRegistry(const UpdatesBatch &updatesBatch) {
 #ifdef ANDROID
 
 bool UpdatesRegistry::hasPropsToRevert() const {
+  std::lock_guard<std::mutex> lock{mutex_};
   return !propsToRevertMap_.empty();
 }
 

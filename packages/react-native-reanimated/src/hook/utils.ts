@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../common';
 
 export function isAnimated(prop: unknown) {
   'worklet';
@@ -38,12 +37,12 @@ export function shallowEqual<
 export function validateAnimatedStyles(styles: unknown[] | object) {
   'worklet';
   if (typeof styles !== 'object') {
-    throw new ReanimatedError(
-      `\`useAnimatedStyle\` has to return an object, found ${typeof styles} instead.`
+    throw new Error(
+      `[Reanimated] \`useAnimatedStyle\` has to return an object, found ${typeof styles} instead.`
     );
   } else if (Array.isArray(styles)) {
-    throw new ReanimatedError(
-      '`useAnimatedStyle` has to return an object and cannot return static styles combined with dynamic ones. Please do merging where a component receives props.'
+    throw new Error(
+      '[Reanimated] `useAnimatedStyle` has to return an object and cannot return static styles combined with dynamic ones. Please do merging where a component receives props.'
     );
   }
 }
