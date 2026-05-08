@@ -1,8 +1,6 @@
 #pragma once
 
-#include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
-#include <jsireact/JSIExecutor.h>
 #include <react/debug/react_native_assert.h>
 #include <worklets/RunLoop/AsyncQueue.h>
 #include <worklets/RunLoop/AsyncQueueImpl.h>
@@ -22,10 +20,10 @@
 #include <utility>
 #include <vector>
 
+namespace worklets {
+
 using namespace facebook;
 using namespace react;
-
-namespace worklets {
 
 template <typename TCallable>
 concept ImplicitlySerializableCallable = std::is_assignable_v<const jsi::Function &, TCallable> ||
@@ -166,8 +164,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
   explicit WorkletRuntime(
       RuntimeData::RuntimeId runtimeId,
-      const std::shared_ptr<MessageQueueThread> &jsQueue,
-      const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::string &name,
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
       bool enableEventLoop = true);
@@ -234,7 +230,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   const RuntimeData::RuntimeId runtimeId_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;
-  const std::shared_ptr<JSScheduler> jsScheduler_;
+  std::shared_ptr<JSScheduler> jsScheduler_;
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
   std::shared_ptr<EventLoop> eventLoop_;

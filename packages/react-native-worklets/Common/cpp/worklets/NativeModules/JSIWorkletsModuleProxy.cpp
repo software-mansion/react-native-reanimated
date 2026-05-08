@@ -155,7 +155,6 @@ jsi::Value runOnRuntimeSync(
 inline jsi::Value createWorkletRuntime(
     jsi::Runtime &originRuntime,
     const std::shared_ptr<RuntimeManager> &runtimeManager,
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy,
     const std::string &name,
     std::shared_ptr<SerializableWorklet> &initializer,
@@ -226,7 +225,6 @@ inline void registerCustomSerializable(
 
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const bool isDevBundle,
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::shared_ptr<MemoryManager> &memoryManager,
@@ -237,7 +235,6 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const std::shared_ptr<UnpackerLoader> &unpackerLoader)
     : isDevBundle_(isDevBundle),
       bundleModeConfig_(bundleModeConfig),
-      jsQueue_(jsQueue),
       jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
       memoryManager_(memoryManager),
@@ -490,14 +487,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         const auto enableEventLoop = at<4>(args).asBool();
 
         return createWorkletRuntime(
-            rt,
-            clone->getRuntimeManager(),
-            clone->getJSQueue(),
-            clone,
-            name,
-            serializableInitializer,
-            asyncQueue,
-            enableEventLoop);
+            rt, clone->getRuntimeManager(), clone, name, serializableInitializer, asyncQueue, enableEventLoop);
       });
 
   jsi_utils::addMethod<3>(

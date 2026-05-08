@@ -42,10 +42,8 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop) {
   const auto runtimeId = getNextRuntimeId();
-  const auto jsQueue = jsiWorkletsModuleProxy->getJSQueue();
-  const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
 
-  auto workletRuntime = std::make_shared<WorkletRuntime>(runtimeId, jsQueue, jsScheduler, name, queue, enableEventLoop);
+  auto workletRuntime = std::make_shared<WorkletRuntime>(runtimeId, name, queue, enableEventLoop);
 
   workletRuntime->init(jsiWorkletsModuleProxy);
 
@@ -59,13 +57,9 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
 }
 
 std::shared_ptr<WorkletRuntime> RuntimeManager::createUninitializedUIRuntime(
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<AsyncQueue> &uiAsyncQueue) {
   const auto uiRuntime = std::make_shared<WorkletRuntime>(
       RuntimeData::uiRuntimeId,
-      jsQueue,
-      jsScheduler,
       RuntimeData::uiRuntimeName,
       uiAsyncQueue,
       /*enableEventLoop*/ false);
