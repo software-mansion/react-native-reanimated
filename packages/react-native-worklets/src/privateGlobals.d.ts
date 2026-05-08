@@ -2,7 +2,6 @@
 
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
-import type { callGuardDEV } from './callGuard';
 import type { reportFatalRemoteError } from './debug/errors';
 import type { CustomSerializableUnpacker } from './memory/customSerializableUnpacker';
 import type { makeShareableCloneOnUIRecursive } from './memory/serializable';
@@ -68,7 +67,6 @@ declare global {
   var __synchronizableUnpacker: SynchronizableUnpacker;
   var __customSerializationRegistry: CustomSerializationRegistry;
   var __customSerializableUnpacker: CustomSerializableUnpacker;
-  var __callGuardDEV: typeof callGuardDEV | undefined;
   /**
    * @deprecated Kept for backwards compatibility. Remove it after support for
    *   Reanimated 4.3 is dropped. Reanimated uses it to handle event updates
