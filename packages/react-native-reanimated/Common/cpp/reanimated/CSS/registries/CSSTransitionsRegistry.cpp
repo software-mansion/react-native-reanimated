@@ -76,19 +76,17 @@ void CSSTransitionsRegistry::update(const double timestamp) {
 
     const folly::dynamic &updates = transition->update(timestamp);
     if (!updates.empty()) {
-#if REACT_NATIVE_VERSION_MINOR >= 85
       if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+#if REACT_NATIVE_VERSION_MINOR >= 85
         addRawPropsToAnimatedPropsBatch(
             transition->getShadowNode()->getFamilyShared(), updates, hasLayoutProps(updates));
         // Legacy flushes merge each frame into the updates registry; animated-props flushes do not.
         // Keep the registry current so the next transition reads a real "from" value, not the first frame only.
         updateInUpdatesRegistry(transition, updates);
+#endif
       } else {
         addUpdatesToBatch(transition->getShadowNode()->getFamilyShared(), updates);
       }
-#else
-      addUpdatesToBatch(transition->getShadowNode()->getFamilyShared(), updates);
-#endif
     }
 
     // We remove transition from running and schedule it when animation of one
