@@ -5,7 +5,6 @@
 #include <jsinspector-modern/tracing/PerformanceTracer.h>
 
 #include <functional>
-#include <mutex>
 #include <optional>
 #include <string>
 #include <utility>
@@ -33,36 +32,36 @@ inline std::string reanimatedPerformanceTracerCurrentThreadLabel() {
 }
 
 inline void reanimatedPerformanceTracerMarkCurrentThreadAsJs() {
-  static std::once_flag once;
-  std::call_once(once, [] { detail::performanceTracerThreadLabelSlot() = "JS thread"; });
+  auto &slot = detail::performanceTracerThreadLabelSlot();
+  if (slot == nullptr) {
+    slot = "JS thread";
+  }
 }
 
 inline void reanimatedPerformanceTracerMarkCurrentThreadAsUi() {
-  static std::once_flag once;
-  std::call_once(once, [] { detail::performanceTracerThreadLabelSlot() = "UI thread"; });
+  auto &slot = detail::performanceTracerThreadLabelSlot();
+  if (slot == nullptr) {
+    slot = "UI thread";
+  }
 }
 
 class ReanimatedPerformanceTracerSection {
  public:
-  explicit ReanimatedPerformanceTracerSection(const char *name)
-      : name_(name),
-        active_(facebook::react::jsinspector_modern::tracing::PerformanceTracer::getInstance().isTracing()) {
-    if (active_) {
+  explicit ReanimatedPerformanceTracerSection(const char *name) : name_(name) {
+    if (facebook::react::jsinspector_modern::tracing::PerformanceTracer::getInstance().isTracing()) {
       start_ = facebook::react::HighResTimeStamp::now();
     }
   }
 
-  ReanimatedPerformanceTracerSection(const char *name, std::function<void(folly::dynamic &)> propsFunc)
-      : name_(name),
-        active_(facebook::react::jsinspector_modern::tracing::PerformanceTracer::getInstance().isTracing()) {
-    if (active_) {
+  ReanimatedPerformanceTracerSection(const char *name, std::function<void(folly::dynamic &)> propsFunc) : name_(name) {
+    if (facebook::react::jsinspector_modern::tracing::PerformanceTracer::getInstance().isTracing()) {
       start_ = facebook::react::HighResTimeStamp::now();
       propsFunc_ = std::move(propsFunc);
     }
   }
 
   ~ReanimatedPerformanceTracerSection() {
-    if (!active_ || !start_) {
+    if (!start_) {
       return;
     }
     using facebook::react::HighResTimeStamp;
@@ -74,17 +73,16 @@ class ReanimatedPerformanceTracerSection {
     // added in 0.84 is defaulted, so a 4-arg call works for 0.82-0.86.
     folly::dynamic devtools = folly::dynamic::object("track", reanimatedPerformanceTracerCurrentThreadLabel())(
         "trackGroup", std::string(kReanimatedPerformanceTracerTrackGroup));
-    if (propsFunc_.has_value()) {
+    if (propsFunc_) {
       folly::dynamic props = folly::dynamic::array();
-      (*propsFunc_)(props);
+      propsFunc_(props);
       if (props.isArray()) {
         devtools["properties"] = std::move(props);
       }
     }
     folly::dynamic detail = folly::dynamic::object("devtools", std::move(devtools));
 
-    PerformanceTracer::getInstance().reportMeasure(
-        std::string(name_), *start_, end - *start_, std::move(detail));
+    PerformanceTracer::getInstance().reportMeasure(std::string(name_), *start_, end - *start_, std::move(detail));
 #else
     // 0.81 only supports a single track name (no track group, no properties).
     PerformanceTracer::getInstance().reportMeasure(
@@ -92,7 +90,8 @@ class ReanimatedPerformanceTracerSection {
         *start_,
         end - *start_,
         facebook::react::jsinspector_modern::DevToolsTrackEntryPayload{
-            std::string(kReanimatedPerformanceTracerTrackGroup) + " · " + reanimatedPerformanceTracerCurrentThreadLabel()});
+            std::string(kReanimatedPerformanceTracerTrackGroup) + " · " +
+            reanimatedPerformanceTracerCurrentThreadLabel()});
 #endif
   }
 
@@ -101,8 +100,7 @@ class ReanimatedPerformanceTracerSection {
 
  private:
   const char *name_;
-  std::optional<std::function<void(folly::dynamic &)>> propsFunc_;
-  bool active_{false};
+  std::function<void(folly::dynamic &)> propsFunc_;
   std::optional<facebook::react::HighResTimeStamp> start_;
 };
 
