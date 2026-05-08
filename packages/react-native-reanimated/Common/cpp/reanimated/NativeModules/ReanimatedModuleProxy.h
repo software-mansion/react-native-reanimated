@@ -205,6 +205,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
     }
   }
   AnimationMutations grandCallback(AnimationTimestamp timestamp, GrandCallbackSource source);
+  void executeOperationsLoop(AnimationTimestamp timestamp);
   void executeWorkletsForFrame(AnimationTimestamp timestamp);
   AnimationMutations executeOperationsAndCollectUpdates(AnimationTimestamp timestamp);
   AnimationMutations collectEventUpdates();
@@ -227,6 +228,11 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 #endif
 
   std::function<void(const double)> onRenderCallback_;
+  // Callbacks queued by OperationsLoop via the requestRender_ override when
+  // USE_ANIMATION_BACKEND is on. They are drained at the start of each
+  // grandCallback(AnimationLoop) tick, so the backend plays the role of the
+  // platform frame source for the loop.
+  std::vector<std::function<void(double)>> pendingFrameCallbacks_;
   AnimatedSensorModule animatedSensorModule_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;

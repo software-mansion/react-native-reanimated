@@ -171,12 +171,16 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     // OperationsLoop stores requestRender_ by value, so switch scheduling to
     // the Animation Backend before constructing it.
-    // This is temporary, we will converge on a single approach when both features are done
-    requestRender_ = [weakThis = weak_from_this()](const std::function<void(const double)> & /*callback*/) {
+    // This is temporary, we will converge on a single approach when both
+    // features are done. Until then, the backend plays the role of the platform
+    // frame source: we queue the callback the loop hands us and run it from
+    // grandCallback(AnimationLoop) on the next backend tick.
+    requestRender_ = [weakThis = weak_from_this()](std::function<void(const double)> callback) {
       auto strongThis = weakThis.lock();
       if (!strongThis) {
         return;
       }
+      strongThis->pendingFrameCallbacks_.push_back(std::move(callback));
       strongThis->startBackendIfNeeded();
     };
   }
@@ -799,10 +803,10 @@ void ReanimatedModuleProxy::startBackendIfNeeded() {
 void ReanimatedModuleProxy::stopBackendIfIdle(const bool producedMutations) {
 #if REACT_NATIVE_VERSION_MINOR >= 85
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    bool hasWork = producedMutations || pendingAnimationFrameCallbackFromWorklets_ != nullptr ||
-        cssTransitionsRegistry_->hasUpdates() || cssAnimationsRegistry_->hasUpdates() ||
-        animatedPropsRegistry_->hasPendingAnimatedPropsUpdates() || shouldFlushRegistry_ ||
-        !layoutAnimationFlushRequests_.empty();
+    bool hasWork = producedMutations || !pendingFrameCallbacks_.empty() ||
+        pendingAnimationFrameCallbackFromWorklets_ != nullptr || cssTransitionsRegistry_->hasUpdates() ||
+        cssAnimationsRegistry_->hasUpdates() || animatedPropsRegistry_->hasPendingAnimatedPropsUpdates() ||
+        shouldFlushRegistry_ || !layoutAnimationFlushRequests_.empty();
     if (!hasWork) {
       withAnimationBackendSync(
           [this](const std::shared_ptr<AnimationBackend> &backend) { backend->stop(animationBackendCallbackId_); });
@@ -821,6 +825,7 @@ AnimationMutations ReanimatedModuleProxy::grandCallback(
   switch (source) {
     case GrandCallbackSource::AnimationLoop: {
       executeWorkletsForFrame(timestamp);
+      executeOperationsLoop(timestamp);
       executeLayoutAnimationsRequests();
       auto mutations = executeOperationsAndCollectUpdates(timestamp);
       stopBackendIfIdle(!mutations.batch.empty());
@@ -837,6 +842,15 @@ AnimationMutations ReanimatedModuleProxy::grandCallback(
   }
 
   return AnimationMutations{};
+}
+
+void ReanimatedModuleProxy::executeOperationsLoop(const AnimationTimestamp timestamp) {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::executeOperationsLoop");
+
+  auto pendingFrameCallbacks = std::exchange(pendingFrameCallbacks_, {});
+  for (auto &cb : pendingFrameCallbacks) {
+    cb(timestamp.count());
+  }
 }
 
 void ReanimatedModuleProxy::executeWorkletsForFrame(const AnimationTimestamp timestamp) {
