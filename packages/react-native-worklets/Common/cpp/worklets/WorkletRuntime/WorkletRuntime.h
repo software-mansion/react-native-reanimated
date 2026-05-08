@@ -132,9 +132,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   template <typename... Args>
   std::shared_ptr<Serializable> runSyncSerialized(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args)
       const {
-#ifndef NDEBUG
-    return runSyncSerializedWithStack(worklet, std::nullopt, std::forward<Args>(args)...);
-#else
     jsi::Runtime &rt = getJSIRuntime();
     auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
     auto result = runSync(worklet, std::forward<Args>(args)...);
@@ -144,7 +141,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
         "[Worklets] Worklet passed to `runSyncSerialized`"
         "must return a value serialized with `createSerializable`.");
     return serializableResult;
-#endif // NDEBUG
   }
   /* #endregion */
 
@@ -211,9 +207,9 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
  private:
 #ifndef NDEBUG
-  // Wraps the provided function in a try/catch so an exception thrown on the
-  // worklet runtime can be reported to the main RN thread (LogBox) with a
-  // stack pointing back to the JS call site that scheduled the worklet.
+  /// Wraps the provided function in a try/catch so an exception thrown on the
+  /// worklet runtime can be reported on the RN Runtime LogBox with a
+  /// stack pointing back to the JS call site that scheduled the worklet.
   template <typename... Args>
   jsi::Value callGuarded(const jsi::Function &function, const std::optional<std::string> &scheduleStack, Args &&...args)
       const {
