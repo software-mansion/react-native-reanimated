@@ -1,8 +1,8 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
-#include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/RuntimeHolder.h>
+#include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
@@ -14,12 +14,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-#if JS_RUNTIME_HERMES
-#include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
-#else
-#include <jsc/JSCRuntime.h>
-#endif // JS_RUNTIME
 
 namespace worklets {
 
@@ -52,14 +46,8 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
 };
 
 static std::shared_ptr<jsi::Runtime> makeRuntime(const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
-  std::shared_ptr<jsi::Runtime> jsiRuntime;
-#if JS_RUNTIME_HERMES
   auto hermesRuntime = facebook::hermes::makeHermesRuntime();
-  jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime));
-#else
-  jsiRuntime = facebook::jsc::makeJSCRuntime();
-#endif
-
+  std::shared_ptr<jsi::Runtime> jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime));
   return std::make_shared<LockableRuntime>(jsiRuntime, runtimeMutex);
 }
 

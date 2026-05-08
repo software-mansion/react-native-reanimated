@@ -4,7 +4,6 @@
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
-#include <worklets/Tools/Defs.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>

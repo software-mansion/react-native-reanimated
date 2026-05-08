@@ -1,9 +1,5 @@
 #include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
 
-// Only include this file in Hermes-enabled builds as some platforms (like tvOS)
-// don't support hermes and it causes the compilation to fail.
-#if JS_RUNTIME_HERMES
-
 #include <jsi/jsi.h>
 
 #include <memory>
@@ -40,5 +36,3 @@ WorkletHermesRuntime::WorkletHermesRuntime(std::unique_ptr<facebook::hermes::Her
 WorkletHermesRuntime::~WorkletHermesRuntime() = default;
 
 } // namespace worklets
-
-#endif // JS_RUNTIME_HERMES

@@ -5,7 +5,6 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/SharedItems/MemoryManager.h>
 #include <worklets/SharedItems/UnpackerLoader.h>
-#include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/ScriptBuffer.h>

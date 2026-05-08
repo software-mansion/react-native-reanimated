@@ -1,11 +1,5 @@
 #pragma once
 
-#include <worklets/Tools/Defs.h>
-
-// Only include this file in Hermes-enabled builds as some platforms (like tvOS)
-// don't support hermes and it causes the compilation to fail.
-#if JS_RUNTIME_HERMES
-
 #include <hermes/hermes.h>
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
@@ -104,5 +98,3 @@ class WorkletHermesRuntime : public jsi::WithRuntimeDecorator<WorkletsReentrancy
 };
 
 } // namespace worklets
-
-#endif // JS_RUNTIME_HERMES

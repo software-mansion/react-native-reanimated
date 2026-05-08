@@ -89,8 +89,5 @@ Pod::Spec.new do |s|
 
   s.dependency 'React-jsi'
   s.dependency 'React-jsinspectortracing'
-  using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
-  if using_hermes
-    s.dependency 'React-hermes'
-  end
+  s.dependency 'React-hermes'
 end
