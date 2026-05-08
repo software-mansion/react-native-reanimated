@@ -815,10 +815,10 @@ void ReanimatedModuleProxy::stopBackendIfIdle(const bool producedMutations) {
 #if REACT_NATIVE_VERSION_MINOR >= 85
 AnimationMutations ReanimatedModuleProxy::grandCallback(
     const AnimationTimestamp timestamp,
-    const GrandCallbackSource state) {
+    const GrandCallbackSource source) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::grandCallback");
 
-  switch (state) {
+  switch (source) {
     case GrandCallbackSource::AnimationLoop: {
       executeWorkletsForFrame(timestamp);
       executeLayoutAnimationsRequests();
@@ -877,13 +877,13 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
     const std::string &eventName,
     const int emitterReactTag,
     const jsi::Value &payload,
-    const GrandCallbackSource state) {
+    const GrandCallbackSource source) {
   bool handled = false;
 #if REACT_NATIVE_VERSION_MINOR >= 85 && (REACT_NATIVE_VERSION_MINOR > 85 || REACT_NATIVE_VERSION_PATCH >= 2)
   withAnimationBackendSync([&](const std::shared_ptr<AnimationBackend> &backend) {
-    backend->pushAnimationMutations([&, state](AnimationTimestamp timestamp) {
+    backend->pushAnimationMutations([&, source](AnimationTimestamp timestamp) {
       handled = handleEvent(eventName, emitterReactTag, payload, timestamp.count());
-      return grandCallback(timestamp, state);
+      return grandCallback(timestamp, source);
     });
   });
 #else

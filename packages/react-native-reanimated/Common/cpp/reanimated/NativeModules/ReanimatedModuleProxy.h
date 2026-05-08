@@ -111,7 +111,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
       const std::string &eventName,
       int emitterReactTag,
       const jsi::Value &payload,
-      GrandCallbackSource state);
+      GrandCallbackSource source);
 
   void startBackendIfNeeded();
   void stopBackendIfIdle(bool producedMutations);
@@ -204,7 +204,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
       fn(std::static_pointer_cast<AnimationBackend>(locked));
     }
   }
-  AnimationMutations grandCallback(AnimationTimestamp timestamp, GrandCallbackSource state);
+  AnimationMutations grandCallback(AnimationTimestamp timestamp, GrandCallbackSource source);
   void executeWorkletsForFrame(AnimationTimestamp timestamp);
   AnimationMutations executeOperationsAndCollectUpdates(AnimationTimestamp timestamp);
   AnimationMutations collectEventUpdates();
