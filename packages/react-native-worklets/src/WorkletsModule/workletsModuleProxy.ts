@@ -64,7 +64,7 @@ export interface WorkletsModuleProxy {
 
   createSerializableArray(
     array: unknown[],
-    shouldRetainRemote: boolean
+    shouldRetainRemote?: boolean
   ): SerializableRef<unknown[]>;
 
   createSerializableMap<TKey, TValue>(
@@ -108,8 +108,8 @@ export interface WorkletsModuleProxy {
   ): SerializableRef<TValue>;
 
   scheduleOnUI<TValue>(
-    serializable: SerializableRef<TValue>,
-    scheduleStack: string | undefined
+    serializableArrayOfWorklets: SerializableRef<TValue[]>,
+    scheduleStacks: string[] | undefined
   ): void;
 
   runOnUISync<TValue, TReturn>(
