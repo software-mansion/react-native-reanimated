@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cxxreact/ReactNativeVersion.h>
 #include <folly/dynamic.h>
 #include <jsinspector-modern/tracing/PerformanceTracer.h>
 
@@ -9,8 +10,8 @@
 #include <string>
 #include <utility>
 
-#if defined(__APPLE__)
-#include <TargetConditionals.h>
+#if REACT_NATIVE_VERSION_MINOR < 82
+#include <jsinspector-modern/tracing/CdpTracing.h>
 #endif
 
 namespace reanimated {
@@ -68,16 +69,9 @@ class ReanimatedPerformanceTracerSection {
     using facebook::react::jsinspector_modern::tracing::PerformanceTracer;
 
     const HighResTimeStamp end = HighResTimeStamp::now();
-#if defined(TARGET_OS_OSX) && TARGET_OS_OSX
-    // react-native-macos ships an older PerformanceTracer API that only
-    // accepts a single track name (no track group, no properties).
-    PerformanceTracer::getInstance().reportMeasure(
-        std::string(name_),
-        *start_,
-        end - *start_,
-        facebook::react::jsinspector_modern::DevToolsTrackEntryPayload{
-            std::string(kReanimatedPerformanceTracerTrackGroup) + " · " + reanimatedPerformanceTracerCurrentThreadLabel()});
-#else
+#if REACT_NATIVE_VERSION_MINOR >= 82
+    // 0.82+ accepts a `folly::dynamic` detail. The 5th `stackTrace` parameter
+    // added in 0.84 is defaulted, so a 4-arg call works for 0.82-0.86.
     folly::dynamic devtools = folly::dynamic::object("track", reanimatedPerformanceTracerCurrentThreadLabel())(
         "trackGroup", std::string(kReanimatedPerformanceTracerTrackGroup));
     if (propsFunc_.has_value()) {
@@ -90,7 +84,15 @@ class ReanimatedPerformanceTracerSection {
     folly::dynamic detail = folly::dynamic::object("devtools", std::move(devtools));
 
     PerformanceTracer::getInstance().reportMeasure(
-        std::string(name_), *start_, end - *start_, std::move(detail), std::nullopt);
+        std::string(name_), *start_, end - *start_, std::move(detail));
+#else
+    // 0.81 only supports a single track name (no track group, no properties).
+    PerformanceTracer::getInstance().reportMeasure(
+        std::string(name_),
+        *start_,
+        end - *start_,
+        facebook::react::jsinspector_modern::DevToolsTrackEntryPayload{
+            std::string(kReanimatedPerformanceTracerTrackGroup) + " · " + reanimatedPerformanceTracerCurrentThreadLabel()});
 #endif
   }
 
