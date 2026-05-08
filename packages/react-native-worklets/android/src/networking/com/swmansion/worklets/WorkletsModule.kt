@@ -8,7 +8,6 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableNativeArray
 import com.facebook.react.bridge.ReadableNativeMap
-import com.facebook.react.bridge.queue.MessageQueueThread
 import com.facebook.react.common.annotations.FrameworkAPI
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl
@@ -42,7 +41,6 @@ class WorkletsModule(
         reactContext.assertOnJSQueueThread()
     }
 
-    private val mMessageQueueThread = WorkletsMessageQueueThread()
     private val mAndroidUIScheduler = AndroidUIScheduler(reactContext)
     private val mAnimationFrameQueue = AnimationFrameQueue(reactContext)
     private val mWorkletsNetworking = WorkletsNetworking()
@@ -58,7 +56,6 @@ class WorkletsModule(
     private external fun initHybrid(
         bundleModeEnabled: Boolean,
         jsContext: Long,
-        messageQueueThread: MessageQueueThread,
         jsCallInvokerHolder: CallInvokerHolderImpl,
         androidUIScheduler: AndroidUIScheduler,
         scriptBufferWrapper: ScriptBufferWrapper?,
@@ -87,7 +84,6 @@ class WorkletsModule(
             initHybrid(
                 bundleModeEnabled,
                 jsContext,
-                mMessageQueueThread,
                 jsCallInvokerHolder,
                 mAndroidUIScheduler,
                 scriptBufferWrapper,
