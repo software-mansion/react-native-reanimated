@@ -46,6 +46,7 @@ void AnimationFrameBatchinator::flush() {
     strongThis->flushRequested_ = false;
 
     auto &uiWorkletRuntime = strongThis->uiWorkletRuntime_;
+    const auto scope = jsi::Scope(uiWorkletRuntime->getJSIRuntime());
     for (const auto &callback : callbacks) {
       uiWorkletRuntime->runSync(*callback, timestampMs);
     }

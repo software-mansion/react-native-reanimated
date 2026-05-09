@@ -79,6 +79,7 @@ void EventHandlerRegistry::processEvent(
   }
 
   jsi::Runtime &rt = uiWorkletRuntime->getJSIRuntime();
+  const auto scope = jsi::Scope(rt);
   eventPayload.asObject(rt).setProperty(rt, "eventName", jsi::String::createFromUtf8(rt, eventName));
   for (const auto &handler : handlersForEvent) {
     handler->process(uiWorkletRuntime, eventTimestamp, eventPayload);
