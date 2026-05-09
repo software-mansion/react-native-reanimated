@@ -109,7 +109,7 @@ const tsDocRules = {
 /** @type {import('typescript-eslint').ConfigWithExtends['extends']} */
 const tsCommonExtends = [
   tsEslint.configs.recommendedTypeChecked,
-  reactHooks.configs['recommended-latest'],
+  reactHooks.configs.flat['recommended-latest'],
   importPlugin.flatConfigs.recommended,
   importPlugin.flatConfigs.typescript,
   nodePlugin.configs['flat/recommended-script'],

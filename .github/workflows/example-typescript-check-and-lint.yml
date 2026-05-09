@@ -55,6 +55,10 @@ jobs:
         working-directory: ${{ matrix.working-directory }}
         if: ${{ contains(env.TYPE_CHECK_DIRECTORIES, matrix.working-directory) }}
         run: yarn lint
+      - name: React Compiler healthcheck
+        working-directory: ${{ matrix.working-directory }}
+        if: ${{ matrix.working-directory == 'apps/common-app' }}
+        run: yarn react-compiler-healthcheck
       - name: Build WebExample
         working-directory: ${{ matrix.working-directory }}
         if: ${{ matrix.working-directory == 'apps/web-example' }}
