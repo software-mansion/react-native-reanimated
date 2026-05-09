@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from 'react-native';
 
-import { useDerivedValue, useSharedValue } from '../..';
+import { useDerivedValue, useSharedValue } from '..';
 
 function UseDerivedValueTestOldAPI() {
   const progress = useSharedValue(0);

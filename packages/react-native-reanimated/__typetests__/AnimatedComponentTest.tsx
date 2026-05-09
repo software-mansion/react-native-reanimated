@@ -4,8 +4,8 @@ import React from 'react';
 import type { ViewStyle } from 'react-native';
 import { FlatList, ScrollView, View } from 'react-native';
 
-import type { AnimatedStyle } from '../..';
-import Animated from '../..';
+import type { AnimatedStyle } from '..';
+import Animated from '..';
 
 function AnimatedStyleRecursiveReadonlyArrayTest() {
   type TestStyleProp<T> = T | ReadonlyArray<TestStyleProp<T>>;

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { withDecay } from '../..';
+import { withDecay } from '..';
 
 function WithDecayTest() {
   // @ts-expect-error `rubberBandEffect=true` makes `clamp` required.
