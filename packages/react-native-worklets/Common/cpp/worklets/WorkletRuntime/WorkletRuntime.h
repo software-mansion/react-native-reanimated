@@ -18,7 +18,6 @@
 #include <string>
 #include <type_traits>
 #include <utility>
-#include <vector>
 
 namespace worklets {
 
@@ -40,7 +39,7 @@ concept RuntimeCallable = requires(TCallable &&callable, jsi::Runtime &rt) {
  */
 class JSIWorkletsModuleProxy;
 
-class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_this<WorkletRuntime> {
+class WorkletRuntime : public jsi::NativeState, public std::enable_shared_from_this<WorkletRuntime> {
  public:
   void schedule(jsi::Function &&function) const;
   void schedule(std::shared_ptr<SerializableWorklet> worklet) const;
@@ -142,9 +141,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   }
   /* #endregion */
 
-  jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propName) override;
-
-  std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
+  jsi::Object toJSObject(jsi::Runtime &rt);
 
   [[nodiscard]] std::string toString() const noexcept {
     return "[WorkletRuntime \"" + name_ + "\"]";

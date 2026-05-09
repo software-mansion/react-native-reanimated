@@ -13,7 +13,6 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
 namespace worklets {
 
@@ -231,41 +230,26 @@ void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
 
 /* #endregion */
 
-jsi::Value WorkletRuntime::get(jsi::Runtime &rt, const jsi::PropNameID &propName) {
-  auto name = propName.utf8(rt);
-  if (name == "toString") {
-    return jsi::Function::createFromHostFunction(
-        rt,
-        propName,
-        0,
-        [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *, size_t) -> jsi::Value {
-          auto strongThis = weakThis.lock();
-          if (!strongThis) {
-            return jsi::String::createFromUtf8(rt, "");
-          }
-
-          return jsi::String::createFromUtf8(rt, strongThis->toString());
-        });
-  }
-  if (name == "name") {
-    return jsi::String::createFromUtf8(rt, name_);
-  }
-  if (name == "runtimeId") {
-    return jsi::Value(static_cast<double>(runtimeId_));
-  }
-  return jsi::Value::undefined();
-}
-
-std::vector<jsi::PropNameID> WorkletRuntime::getPropertyNames(jsi::Runtime &rt) {
-  std::vector<jsi::PropNameID> result;
-  result.push_back(jsi::PropNameID::forUtf8(rt, "toString"));
-  result.push_back(jsi::PropNameID::forUtf8(rt, "name"));
-  result.push_back(jsi::PropNameID::forUtf8(rt, "runtimeId"));
-  return result;
+jsi::Object WorkletRuntime::toJSObject(jsi::Runtime &rt) {
+  jsi::Object object(rt);
+  object.setNativeState(rt, shared_from_this());
+  object.setProperty(rt, "name", jsi::String::createFromUtf8(rt, name_));
+  object.setProperty(rt, "runtimeId", jsi::Value(static_cast<double>(runtimeId_)));
+  object.setProperty(
+      rt,
+      "toString",
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forUtf8(rt, "toString"),
+          0,
+          [str = toString()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *, size_t) -> jsi::Value {
+            return jsi::String::createFromUtf8(rt, str);
+          }));
+  return object;
 }
 
 std::shared_ptr<WorkletRuntime> extractWorkletRuntime(jsi::Runtime &rt, const jsi::Value &value) {
-  return value.getObject(rt).getHostObject<WorkletRuntime>(rt);
+  return value.getObject(rt).getNativeState<WorkletRuntime>(rt);
 }
 
 void scheduleOnRuntime(

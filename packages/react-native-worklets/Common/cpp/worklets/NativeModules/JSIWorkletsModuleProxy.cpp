@@ -129,7 +129,7 @@ inline jsi::Value runOnUISync(
 
 jsi::Value
 runOnRuntimeSync(jsi::Runtime &rt, const jsi::Value &workletRuntimeValue, const jsi::Value &serializableWorkletValue) {
-  auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
+  auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
   auto worklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
   return workletRuntime->runSyncSerialized(worklet)->toJSValue(rt);
@@ -141,7 +141,7 @@ jsi::Value runOnRuntimeSync(
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &serializableWorkletValue,
     const std::optional<std::string> &scheduleStack) {
-  auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
+  auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
   auto worklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
   return workletRuntime->runSyncSerializedWithStack(worklet, scheduleStack)->toJSValue(rt);
@@ -157,7 +157,7 @@ inline jsi::Value createWorkletRuntime(
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop) {
   const auto workletRuntime = runtimeManager->createWorkletRuntime(jsiWorkletsModuleProxy, name, initializer, queue);
-  return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
+  return workletRuntime->toJSObject(originRuntime);
 }
 
 inline jsi::Value propagateModuleUpdate(
