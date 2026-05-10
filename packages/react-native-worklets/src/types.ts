@@ -47,7 +47,7 @@ declare global {
 }
 
 export type WorkletRuntime = {
-  __hostObjectWorkletRuntime: never;
+  __nativeStateWorkletRuntime: never;
   readonly name: string;
   readonly runtimeId: number;
 };
