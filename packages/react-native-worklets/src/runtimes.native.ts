@@ -41,8 +41,8 @@ export const UIRuntimeId = RuntimeKind.UI as 2;
  * on different threads than JS or UI thread.
  *
  * @param config - Runtime configuration object - {@link WorkletRuntimeConfig}.
- * @returns WorkletRuntime which is a
- *   `jsi::HostObject<worklets::WorkletRuntime>` - {@link WorkletRuntime}
+ * @returns WorkletRuntime which is an object with a
+ *   `jsi::NativeState<worklets::WorkletRuntime>` - {@link WorkletRuntime}
  * @see https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime/
  */
 // @ts-expect-error Public API overload.
@@ -60,8 +60,8 @@ export function createWorkletRuntime(
  *   devices list in Chrome DevTools.
  * @param initializer - An optional worklet that will be run synchronously on
  *   the same thread immediately after the runtime is created.
- * @returns WorkletRuntime which is a
- *   `jsi::HostObject<worklets::WorkletRuntime>` - {@link WorkletRuntime}
+ * @returns WorkletRuntime which is an object with a
+ *   `jsi::NativeState<worklets::WorkletRuntime>` - {@link WorkletRuntime}
  * @see https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime/
  */
 export function createWorkletRuntime(
