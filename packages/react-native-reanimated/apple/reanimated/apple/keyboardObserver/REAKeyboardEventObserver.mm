@@ -176,6 +176,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 
 - (void)updateKeyboardFrame
 {
+  RCTAssertMainQueue();
   bool isKeyboardAnimationRunning = [self hasAnyAnimation:_measuringView];
   if (isKeyboardAnimationRunning) {
     CGFloat keyboardHeight = [self getAnimatingKeyboardHeight];
@@ -185,6 +186,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 
 - (void)keyboardWillChangeFrame:(NSNotification *)notification
 {
+  RCTAssertMainQueue();
   NSDictionary *userInfo = [notification userInfo];
   CGRect beginFrame = [[userInfo objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue];
   CGRect endFrame = [[userInfo objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
@@ -297,12 +299,14 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 
 - (void)keyboardWillShow:(NSNotification *)notification
 {
+  RCTAssertMainQueue();
   _state = OPENING;
   [self keyboardWillChangeFrame:notification];
 }
 
 - (void)keyboardDidShow:(NSNotification *)notification
 {
+  RCTAssertMainQueue();
   [[self getDisplayLink] setPaused:YES];
 
   auto window = [[[UIApplication sharedApplication] delegate] window];
@@ -329,6 +333,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 
 - (void)keyboardWillHide:(NSNotification *)notification
 {
+  RCTAssertMainQueue();
   if (_isKeyboardObserverAttached) {
     [_keyboardView removeObserver:self forKeyPath:@"center"];
     _isKeyboardObserverAttached = false;
@@ -340,6 +345,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 
 - (void)keyboardDidHide:(NSNotification *)notification
 {
+  RCTAssertMainQueue();
   [[self getDisplayLink] setPaused:YES];
 
   _targetKeyboardHeight = 0;
@@ -350,6 +356,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 - (void)updateKeyboardHeightDuringInteractiveDismiss:(CGPoint)oldKeyboardFrame
                                     newKeyboardFrame:(CGPoint)newKeyboardFrame
 {
+  RCTAssertMainQueue();
   auto keyboardView = [self getKeyboardView];
   if (!keyboardView) {
     return;
@@ -384,6 +391,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
                         change:(NSDictionary<NSKeyValueChangeKey, id> *)change
                        context:(void *)context
 {
+  RCTAssertMainQueue();
   if ([keyPath isEqualToString:@"center"]) {
     CGPoint oldKeyboardFrame = [change[NSKeyValueChangeOldKey] CGPointValue];
     CGPoint newKeyboardFrame = [change[NSKeyValueChangeNewKey] CGPointValue];

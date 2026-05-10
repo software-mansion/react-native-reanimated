@@ -307,6 +307,7 @@ open class NativeProxy {
         intBuffer: IntArray,
         doubleBuffer: DoubleArray,
     ) {
+        UiThreadUtil.assertOnUiThread()
         val intIterator = Arrays.stream(intBuffer).iterator()
         val doubleIterator = Arrays.stream(doubleBuffer).iterator()
         var viewTag = -1
