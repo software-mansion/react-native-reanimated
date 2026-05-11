@@ -24,7 +24,6 @@ struct ShareableUnpackers {
   Unpacker customSerializableUnpacker;
   Unpacker shareableHostUnpacker;
   Unpacker shareableGuestUnpacker;
-  Unpacker remoteFunctionUnpacker;
 };
 
 class UnpackerLoader {
@@ -50,16 +49,12 @@ class UnpackerLoader {
         "(" + unpackers.shareableGuestUnpacker.code + ")();",
         unpackers.shareableGuestUnpacker.location,
         unpackers.shareableGuestUnpacker.sourceMap};
-    remoteFunctionUnpacker_ = {
-        "(" + unpackers.remoteFunctionUnpacker.code + ")();",
-        unpackers.remoteFunctionUnpacker.location,
-        unpackers.remoteFunctionUnpacker.sourceMap};
   }
 
   void installUnpackers(facebook::jsi::Runtime &rt) const {
     if (valueUnpacker_.code.empty() || synchronizableUnpacker_.code.empty() ||
         customSerializableUnpacker_.code.empty() || shareableHostUnpacker_.code.empty() ||
-        shareableGuestUnpacker_.code.empty() || remoteFunctionUnpacker_.code.empty()) [[unlikely]] {
+        shareableGuestUnpacker_.code.empty()) [[unlikely]] {
       throw std::runtime_error(
           "[Worklets] UnpackerLoader tried to install unpackers but the code for unpackers was not loaded.");
     }
@@ -78,8 +73,6 @@ class UnpackerLoader {
         rt, shareableHostUnpacker_.code, shareableHostUnpacker_.location, shareableHostUnpacker_.sourceMap);
     evalWithSourceMap.call(
         rt, shareableGuestUnpacker_.code, shareableGuestUnpacker_.location, shareableGuestUnpacker_.sourceMap);
-    evalWithSourceMap.call(
-        rt, remoteFunctionUnpacker_.code, remoteFunctionUnpacker_.location, remoteFunctionUnpacker_.sourceMap);
 #else
     rt.evaluateJavaScript(std::make_shared<facebook::jsi::StringBuffer>(valueUnpacker_.code), valueUnpacker_.location);
     rt.evaluateJavaScript(
@@ -91,8 +84,6 @@ class UnpackerLoader {
         std::make_shared<facebook::jsi::StringBuffer>(shareableHostUnpacker_.code), shareableHostUnpacker_.location);
     rt.evaluateJavaScript(
         std::make_shared<facebook::jsi::StringBuffer>(shareableGuestUnpacker_.code), shareableGuestUnpacker_.location);
-    rt.evaluateJavaScript(
-        std::make_shared<facebook::jsi::StringBuffer>(remoteFunctionUnpacker_.code), remoteFunctionUnpacker_.location);
 #endif // NDEBUG
   }
 
@@ -102,7 +93,6 @@ class UnpackerLoader {
   Unpacker customSerializableUnpacker_;
   Unpacker shareableHostUnpacker_;
   Unpacker shareableGuestUnpacker_;
-  Unpacker remoteFunctionUnpacker_;
 };
 
 } // namespace worklets

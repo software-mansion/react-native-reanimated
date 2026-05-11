@@ -49,17 +49,13 @@ jsi::Value makeSerializableHostFunction(
     const std::string &name,
     unsigned int paramCount);
 
-jsi::Value makeSerializableRNRuntimeRemoteFunction(
-    jsi::Runtime &rnRuntime,
-    const std::string &name,
-    int remoteId,
-    const std::shared_ptr<JSScheduler> &jsScheduler);
-
-jsi::Value makeSerializableWorkletRuntimeRemoteFunction(
-    jsi::Runtime &hostRuntime,
-    const std::string &name,
+jsi::Value makeSerializableRemoteFunction(
+    jsi::Runtime &rt,
     jsi::Function function,
-    RuntimeData::RuntimeId hostRuntimeId);
+#ifndef NDEBUG
+    const std::string &name
+#endif
+);
 
 jsi::Value makeSerializableWorklet(jsi::Runtime &rt, const jsi::Object &object, const bool &shouldRetainRemote);
 

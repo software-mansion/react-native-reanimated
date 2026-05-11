@@ -1,8 +1,6 @@
 #include <jsi/jsi.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
-#include <worklets/WorkletRuntime/RuntimeData.h>
-#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
 #include <string>
@@ -18,12 +16,6 @@ jsi::Function getValueUnpacker(jsi::Runtime &rt) {
   auto valueUnpacker = rt.global().getProperty(rt, "__valueUnpacker");
   react_native_assert(valueUnpacker.isObject() && "valueUnpacker not found");
   return valueUnpacker.asObject(rt).asFunction(rt);
-}
-
-jsi::Function getRemoteFunctionUnpacker(jsi::Runtime &rt) {
-  auto remoteFunctionUnpacker = rt.global().getProperty(rt, "__remoteFunctionUnpacker");
-  react_native_assert(remoteFunctionUnpacker.isObject() && "remoteFunctionUnpacker not found");
-  return remoteFunctionUnpacker.asObject(rt).asFunction(rt);
 }
 
 } // namespace
@@ -258,32 +250,19 @@ jsi::Value SerializableImport::toJSValue(jsi::Runtime &rt) {
   return metroRequire.asObject(rt).asFunction(rt).call(rt, source_).asObject(rt).getProperty(rt, imported);
 }
 
-SerializableRemoteFunction::~SerializableRemoteFunction() {
-  if (isHostedOnRNRuntime()) {
-    // TODO: consider batching
-    rnRuntimeData_->jsScheduler->scheduleOnJS([id = rnRuntimeData_->remoteId](jsi::Runtime &rt) {
-      auto registryProp = rt.global().getProperty(rt, "__remoteFunctionRegistry");
-      auto registry = registryProp.asObject(rt);
-      registry.getPropertyAsFunction(rt, "delete").callWithThis(rt, registry, jsi::Value(id));
-    });
-  } else {
-    cleanupIfRuntimeExists(hostRuntime_, workletRuntimeData_->function);
-  }
-}
-
 jsi::Value SerializableRemoteFunction::toJSValue(jsi::Runtime &rt) {
-  if (&rt == hostRuntime_) {
-    if (isHostedOnRNRuntime()) {
-      auto registry = rt.global().getPropertyAsObject(rt, "__remoteFunctionRegistry");
-      return registry.getPropertyAsFunction(rt, "get").callWithThis(rt, registry, jsi::Value(rnRuntimeData_->remoteId));
-    } else {
-      return jsi::Value(rt, *workletRuntimeData_->function);
-    }
+  if (&rt == runtime_) {
+    return jsi::Value(rt, *function_);
   } else {
-    auto name = name_.empty() ? jsi::Value::undefined() : jsi::String::createFromUtf8(rt, name_);
-    auto holderFunction = getRemoteFunctionUnpacker(rt).call(rt, name).asObject(rt);
-    holderFunction.setNativeState(rt, std::make_shared<SerializableJSRef>(shared_from_this()));
-    return holderFunction;
+#ifndef NDEBUG
+    return getValueUnpacker(rt).call(
+        rt,
+        SerializableJSRef::newNativeStateObject(rt, shared_from_this()),
+        jsi::String::createFromAscii(rt, "RemoteFunction"),
+        jsi::String::createFromUtf8(rt, name_));
+#else
+    return SerializableJSRef::newNativeStateObject(rt, shared_from_this());
+#endif
   }
 }
 

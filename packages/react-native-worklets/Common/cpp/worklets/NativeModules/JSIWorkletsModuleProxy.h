@@ -9,7 +9,6 @@
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
-#include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
@@ -33,21 +32,9 @@ class JSIWorkletsModuleProxy {
       const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
       const std::shared_ptr<RuntimeBindings> &runtimeBindings,
       const BundleModeConfig &bundleModeConfig,
-      const std::shared_ptr<UnpackerLoader> &unpackerLoader,
-      RuntimeData::RuntimeId hostRuntimeId);
+      const std::shared_ptr<UnpackerLoader> &unpackerLoader);
 
-  JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other, RuntimeData::RuntimeId hostRuntimeId)
-      : JSIWorkletsModuleProxy(
-            other.isDevBundle_,
-            other.jsScheduler_,
-            other.uiScheduler_,
-            other.memoryManager_,
-            other.runtimeManager_,
-            other.uiWorkletRuntime_,
-            other.runtimeBindings_,
-            other.bundleModeConfig_,
-            other.unpackerLoader_,
-            hostRuntimeId) {}
+  JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other) = default;
 
   [[nodiscard]]
   jsi::Object toOptimizedObject(jsi::Runtime &rt) const;
@@ -102,7 +89,6 @@ class JSIWorkletsModuleProxy {
   const std::weak_ptr<WorkletRuntime> uiWorkletRuntime_;
   const std::shared_ptr<RuntimeBindings> runtimeBindings_;
   const std::shared_ptr<UnpackerLoader> unpackerLoader_;
-  const RuntimeData::RuntimeId hostRuntimeId_;
 };
 
 } // namespace worklets

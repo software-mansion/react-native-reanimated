@@ -3,8 +3,6 @@
 #include <jsi/jsi.h>
 #include <worklets/Compat/StableApi.h>
 #include <worklets/Registries/WorkletRuntimeRegistry.h>
-#include <worklets/Tools/JSScheduler.h>
-#include <worklets/WorkletRuntime/RuntimeData.h>
 
 #include <memory>
 #include <optional>
@@ -129,7 +127,7 @@ class SerializableArray : public Serializable {
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
-  std::vector<jsi::Value> toArgs(jsi::Runtime &rt) {
+  std::vector<jsi::Value> getJSArgs(jsi::Runtime &rt) {
     std::vector<jsi::Value> args;
     args.reserve(data_.size());
     for (const auto &item : data_) {
@@ -239,58 +237,33 @@ class SerializableImport : public Serializable {
 class SerializableRemoteFunction : public Serializable,
                                    public std::enable_shared_from_this<SerializableRemoteFunction> {
  private:
-  struct RNRuntimeData {
-    const int remoteId = 0;
-    const std::shared_ptr<JSScheduler> jsScheduler = nullptr;
-  };
-
-  struct WorkletRuntimeData {
-    std::unique_ptr<jsi::Value> function;
-  };
-
-  jsi::Runtime *hostRuntime_;
-  const RuntimeData::RuntimeId hostRuntimeId_;
-  const std::optional<RNRuntimeData> rnRuntimeData_;
-  std::optional<WorkletRuntimeData> workletRuntimeData_;
+  jsi::Runtime *runtime_;
+#ifndef NDEBUG
   const std::string name_;
+#endif
+  std::unique_ptr<jsi::Value> function_;
 
  public:
   SerializableRemoteFunction(
-      jsi::Runtime &rnRuntime,
-      const std::string &name,
-      int remoteId,
-      const std::shared_ptr<JSScheduler> &jsScheduler)
-      : Serializable(ValueType::RemoteFunctionType),
-        hostRuntime_(&rnRuntime),
-        hostRuntimeId_(RuntimeData::rnRuntimeId),
-        rnRuntimeData_({remoteId, jsScheduler}),
-        name_(name) {}
-
-  SerializableRemoteFunction(
-      jsi::Runtime &hostRuntime,
-      const std::string &name,
+      jsi::Runtime &rt,
       jsi::Function &&function,
-      RuntimeData::RuntimeId hostRuntimeId)
+#ifndef NDEBUG
+      const std::string &name
+#endif
+      )
       : Serializable(ValueType::RemoteFunctionType),
-        hostRuntime_(&hostRuntime),
-        hostRuntimeId_(hostRuntimeId),
-        workletRuntimeData_(WorkletRuntimeData{std::make_unique<jsi::Value>(hostRuntime, function)}),
-        name_(name) {}
+        runtime_(&rt),
+#ifndef NDEBUG
+        name_(name),
+#endif
+        function_(std::make_unique<jsi::Value>(rt, std::move(function))) {
+  }
 
-  ~SerializableRemoteFunction() override;
-
-  SerializableRemoteFunction(const SerializableRemoteFunction &) = delete;
-  SerializableRemoteFunction &operator=(const SerializableRemoteFunction &) = delete;
+  ~SerializableRemoteFunction() override {
+    cleanupIfRuntimeExists(runtime_, function_);
+  }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
-
-  [[nodiscard]] bool isHostedOnRNRuntime() const noexcept {
-    return rnRuntimeData_.has_value();
-  }
-
-  [[nodiscard]] RuntimeData::RuntimeId getHostRuntimeId() const {
-    return hostRuntimeId_;
-  }
 };
 
 class SerializableInitializer : public Serializable {

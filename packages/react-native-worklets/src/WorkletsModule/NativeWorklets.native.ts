@@ -3,15 +3,10 @@
 import { checkCppVersion } from '../debug/checkCppVersion';
 import { jsVersion } from '../debug/jsVersion';
 import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
-import { installRemoteFunctionUnpacker } from '../memory/remoteFunctionUnpacker';
 import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
 import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
 import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
-import type {
-  NewRemoteFunction,
-  SerializableRef,
-  SynchronizableRef,
-} from '../memory/types';
+import type { SerializableRef, SynchronizableRef } from '../memory/types';
 import { installValueUnpacker } from '../memory/valueUnpacker';
 import { isRNRuntime } from '../runtimeKind';
 import { WorkletsTurboModule } from '../specs';
@@ -162,15 +157,9 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   }
 
   createSerializableNonWorkletFunction<TArgs extends unknown[], TReturn>(
-    fun: (...args: TArgs) => TReturn,
-    functionId: number,
-    functionName: string | undefined
+    fun: (...args: TArgs) => TReturn
   ): SerializableRef<(...args: TArgs) => TReturn> {
-    return this.#workletsModuleProxy.createSerializableNonWorkletFunction(
-      fun,
-      functionId,
-      functionName
-    );
+    return this.#workletsModuleProxy.createSerializableNonWorkletFunction(fun);
   }
 
   createSerializableWorklet(worklet: object, shouldPersistRemote: boolean) {
@@ -218,10 +207,10 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   }
 
   scheduleOnRN<TArgs extends unknown[]>(
-    serializable: NewRemoteFunction,
+    fun: (...args: TArgs) => unknown,
     args?: SerializableRef<TArgs>
   ): void {
-    this.#workletsModuleProxy.scheduleOnRN(serializable, args);
+    this.#workletsModuleProxy.scheduleOnRN(fun, args);
   }
 
   scheduleOnUI<TValue>(
@@ -396,11 +385,6 @@ function installUnpackers(workletsModuleProxy: WorkletsModuleProxy) {
     (installShareableGuestUnpacker as WorkletFunction).__initData!.location ??
       '',
     (installShareableGuestUnpacker as WorkletFunction).__initData!.sourceMap ??
-      '',
-    (installRemoteFunctionUnpacker as WorkletFunction).__initData!.code,
-    (installRemoteFunctionUnpacker as WorkletFunction).__initData!.location ??
-      '',
-    (installRemoteFunctionUnpacker as WorkletFunction).__initData!.sourceMap ??
       ''
   );
 }

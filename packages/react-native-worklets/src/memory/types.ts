@@ -184,7 +184,3 @@ export type ShareableConfig<TValue, THostDecorated, TGuestDecorated> = {
    */
   initSynchronously?: boolean;
 };
-
-export interface NewRemoteFunction extends SerializableRef {
-  __remoteFunction: true;
-}

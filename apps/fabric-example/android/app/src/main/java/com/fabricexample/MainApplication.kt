@@ -25,7 +25,7 @@ class MainApplication : Application(), ReactApplication {
 
   override fun onCreate() {
     super.onCreate()
-    DefaultNewArchitectureEntryPoint.releaseLevel = ReleaseLevel.EXPERIMENTAL
+    DefaultNewArchitectureEntryPoint.releaseLevel = ReleaseLevel.STABLE
     loadReactNative(this)
 
     ReactFontManager.getInstance().addCustomFont(this, "Poppins", R.font.poppins)

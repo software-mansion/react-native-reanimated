@@ -6,7 +6,7 @@ export default function EmptyExample() {
   function onPress() {
     scheduleOnUI(() => {
       'worklet';
-      scheduleOnRN(() => {});
+      scheduleOnRN(function foo() {});
     });
   }
 
