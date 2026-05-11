@@ -55,8 +55,41 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 
 std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
     const UpdatesBatch &updatesBatch,
-    const std::unordered_set<std::string> &synchronousPropNames,
     const bool allowPartialUpdates = false) {
+  static const std::unordered_set<std::string> synchronousPropNames = {
+      "opacity",
+      "elevation",
+      "zIndex",
+#if __APPLE__
+      "shadowOpacity",
+      "shadowRadius",
+#endif // __APPLE__
+      "backgroundColor",
+      // "color", // not supported
+      "tintColor",
+      "borderRadius",
+      "borderTopLeftRadius",
+      "borderTopRightRadius",
+      "borderTopStartRadius",
+      "borderTopEndRadius",
+      "borderBottomLeftRadius",
+      "borderBottomRightRadius",
+      "borderBottomStartRadius",
+      "borderBottomEndRadius",
+      "borderStartStartRadius",
+      "borderStartEndRadius",
+      "borderEndStartRadius",
+      "borderEndEndRadius",
+      "borderColor",
+      "borderTopColor",
+      "borderBottomColor",
+      "borderLeftColor",
+      "borderRightColor",
+      "borderStartColor",
+      "borderEndColor",
+      "transform",
+  };
+
 #ifdef ANDROID
   constexpr bool shouldRequireIntegerColors = true;
 #else
@@ -698,42 +731,7 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
 }
 
 void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, const bool allowPartialUpdates) {
-  static const std::unordered_set<std::string> synchronousProps = {
-      "opacity",
-      "elevation",
-      "zIndex",
-#if __APPLE__
-      "shadowOpacity",
-      "shadowRadius",
-#endif // __APPLE__
-      "backgroundColor",
-      // "color", // not supported
-      "tintColor",
-      "borderRadius",
-      "borderTopLeftRadius",
-      "borderTopRightRadius",
-      "borderTopStartRadius",
-      "borderTopEndRadius",
-      "borderBottomLeftRadius",
-      "borderBottomRightRadius",
-      "borderBottomStartRadius",
-      "borderBottomEndRadius",
-      "borderStartStartRadius",
-      "borderStartEndRadius",
-      "borderEndStartRadius",
-      "borderEndEndRadius",
-      "borderColor",
-      "borderTopColor",
-      "borderBottomColor",
-      "borderLeftColor",
-      "borderRightColor",
-      "borderStartColor",
-      "borderEndColor",
-      "transform",
-  };
-
-  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
-      partitionUpdates(updatesBatch, synchronousProps, allowPartialUpdates);
+  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] = partitionUpdates(updatesBatch, allowPartialUpdates);
 
 #ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {
