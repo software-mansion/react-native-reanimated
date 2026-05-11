@@ -168,7 +168,6 @@ declare global {
     | undefined;
   var _getAnimationTimestamp: () => number;
   var __frameTimestamp: number | undefined;
-  var _IS_FABRIC: boolean | undefined;
   var _registriesLeakCheck: () => string;
   var _updateProps: (operations: Operation[]) => void;
   var _notifyAboutProgress: (

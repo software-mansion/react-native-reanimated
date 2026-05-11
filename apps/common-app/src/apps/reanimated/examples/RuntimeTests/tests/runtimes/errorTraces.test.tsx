@@ -13,6 +13,7 @@ import {
   scheduleOnRuntime,
   createWorkletRuntime,
   runOnRuntimeSync,
+  scheduleOnRN,
 } from 'react-native-worklets';
 
 declare global {
@@ -30,21 +31,16 @@ describe('Error traces from UI', () => {
     name: 'testRuntime',
   });
 
-  test('setup beforeEach and afterEach', () => {
-    // TODO: there's a bug in ReJest and beforeEach/afterEach have to be
-    // registered inside a test case.
+  beforeEach(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    globalThis.__reportFatalRemoteError = (a: Error, _: boolean) => {
+      errorData = a;
+      notify('errorReported');
+    };
+  });
 
-    beforeEach(() => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      globalThis.__reportFatalRemoteError = (a: Error, _: boolean) => {
-        errorData = a;
-        notify('errorReported');
-      };
-    });
-
-    afterEach(() => {
-      globalThis.__reportFatalRemoteError = originalReportFatalRemoteError;
-    });
+  afterEach(() => {
+    globalThis.__reportFatalRemoteError = originalReportFatalRemoteError;
   });
 
   test('[UI] tag gets added to stack trace', () => {
@@ -125,5 +121,33 @@ describe('Error traces from UI', () => {
     expect(errorData?.stack?.includes('at [testRuntime]: functionNameD')).toBe(
       true
     );
+  });
+
+  test('batched scheduleOnUI: throw in middle job does not break siblings, each job has its own stack', async () => {
+    const notifyJob1Ran = () => notify('job1Ran');
+    const notifyJob3Ran = () => notify('job3Ran');
+
+    scheduleOnUI(function functionNameJob1() {
+      'worklet';
+      scheduleOnRN(notifyJob1Ran);
+    });
+
+    scheduleOnUI(function functionNameJob2() {
+      'worklet';
+      throw new Error();
+    });
+
+    scheduleOnUI(function functionNameJob3() {
+      'worklet';
+      scheduleOnRN(notifyJob3Ran);
+    });
+
+    await waitForNotification('errorReported');
+    await waitForNotification('job1Ran');
+    await waitForNotification('job3Ran');
+
+    expect(errorData?.stack?.includes('at [UI]: functionNameJob2')).toBe(true);
+    expect(errorData?.stack?.includes('at [UI]: functionNameJob1')).toBe(false);
+    expect(errorData?.stack?.includes('at [UI]: functionNameJob3')).toBe(false);
   });
 });

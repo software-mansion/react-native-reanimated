@@ -2,8 +2,8 @@
 import React from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
-import type { ReanimatedEvent } from '../..';
-import Animated, { useEvent, useHandler } from '../..';
+import type { ReanimatedEvent } from '..';
+import Animated, { useEvent, useHandler } from '..';
 
 function UseHandlerTest() {
   function UseHandlerTest1() {

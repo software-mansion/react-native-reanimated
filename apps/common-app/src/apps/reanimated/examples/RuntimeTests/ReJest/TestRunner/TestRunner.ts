@@ -3,18 +3,10 @@ import { useRef } from 'react';
 
 import { Matchers } from '../matchers/Matchers';
 import { TestComponent } from '../TestComponent';
-import type {
-  DefaultValue,
-  ValueWrapper,
-  MaybeAsync,
-  TestCase,
-  TestConfiguration,
-  TestSuite,
-  TestValue,
-} from '../types';
+import type { DefaultValue, ValueWrapper, TestCase, TestConfiguration, TestSuite, TestValue } from '../types';
 import { RenderLock } from '../utils/SyncUIRunner';
 import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
-import { assertTestCase, assertTestSuite } from './Asserts';
+import { assertTestCase } from './Asserts';
 import { CallTrackerRegistry } from './CallTrackerRegistry';
 import { NotificationRegistry } from './NotificationRegistry';
 import { TestSuiteBuilder } from './TestSuiteBuilder';
@@ -26,7 +18,6 @@ import { scheduleOnRN } from 'react-native-worklets';
 export { Presets } from '../Presets';
 
 export class TestRunner {
-  private _currentTestSuite: TestSuite | null = null;
   private _currentTestCase: TestCase | null = null;
   private _renderHook: (component: ReactElement<Component> | null) => void =
     () => {};
@@ -162,7 +153,6 @@ export class TestRunner {
       return;
     }
 
-    this._currentTestSuite = testSuite;
     this._testSummary.logRunningTestSuite(testSuite);
 
     if (testSuite.beforeAll) {
@@ -178,7 +168,6 @@ export class TestRunner {
     if (testSuite.afterAll) {
       await testSuite.afterAll();
     }
-    this._currentTestSuite = null;
   }
 
   private async runTestCase(testSuite: TestSuite, testCase: TestCase) {
@@ -206,25 +195,5 @@ export class TestRunner {
   public expect(currentValue: TestValue): Matchers {
     assertTestCase(this._currentTestCase);
     return new Matchers(currentValue, this._currentTestCase);
-  }
-
-  public beforeAll(job: MaybeAsync<void>) {
-    assertTestSuite(this._currentTestSuite);
-    this._currentTestSuite.beforeAll = job;
-  }
-
-  public afterAll(job: MaybeAsync<void>) {
-    assertTestSuite(this._currentTestSuite);
-    this._currentTestSuite.afterAll = job;
-  }
-
-  public beforeEach(job: MaybeAsync<void>) {
-    assertTestSuite(this._currentTestSuite);
-    this._currentTestSuite.beforeEach = job;
-  }
-
-  public afterEach(job: MaybeAsync<void>) {
-    assertTestSuite(this._currentTestSuite);
-    this._currentTestSuite.afterEach = job;
   }
 }

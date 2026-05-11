@@ -10,7 +10,7 @@ import {
   useAnimatedProps,
   useAnimatedStyle,
   useSharedValue,
-} from '../..';
+} from '..';
 
 function MakeMutableTest() {
   const mut1 = makeMutable(0);

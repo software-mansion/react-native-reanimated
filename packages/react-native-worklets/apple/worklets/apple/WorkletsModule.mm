@@ -1,5 +1,4 @@
 #import <worklets/NativeModules/JSIWorkletsModuleProxy.h>
-#import <worklets/Tools/Defs.h>
 #import <worklets/Tools/ScriptBuffer.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
@@ -7,7 +6,6 @@
 #import <worklets/apple/AssertJavaScriptQueue.h>
 #import <worklets/apple/AssertTurboModuleManagerQueue.h>
 #import <worklets/apple/IOSUIScheduler.h>
-#import <worklets/apple/WorkletsMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
 
 #import <React/RCTBridge+Private.h>
@@ -67,9 +65,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
 
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
-  auto jsQueue =
-      std::make_shared<WorkletsMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) { throw error; });
-
   std::string sourceURL = "";
   std::shared_ptr<const ScriptBuffer> script = nullptr;
 
@@ -94,7 +89,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
 
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
       rnRuntime,
-      jsQueue,
       jsCallInvoker,
       uiScheduler,
       std::move(isJavaScriptQueue),

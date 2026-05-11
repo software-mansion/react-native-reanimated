@@ -81,19 +81,19 @@ test.skip = testSkip;
 test.only = testOnly;
 
 export function beforeAll(job: MaybeAsync<void>) {
-  testRunner.beforeAll(job);
+  testSuiteBuilder.beforeAll(job);
 }
 
 export function afterAll(job: MaybeAsync<void>) {
-  testRunner.afterAll(job);
+  testSuiteBuilder.afterAll(job);
 }
 
 export function beforeEach(job: MaybeAsync<void>) {
-  testRunner.beforeEach(job);
+  testSuiteBuilder.beforeEach(job);
 }
 
 export function afterEach(job: MaybeAsync<void>) {
-  testRunner.afterEach(job);
+  testSuiteBuilder.afterEach(job);
 }
 
 export async function render(component: ReactElement<Component> | null) {

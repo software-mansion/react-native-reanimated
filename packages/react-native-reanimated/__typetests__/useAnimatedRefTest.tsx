@@ -12,7 +12,7 @@ import React, { useRef } from 'react';
 import type { ImageProps } from 'react-native';
 import { FlatList, Image, ScrollView, Text, View } from 'react-native';
 
-import Animated, { useAnimatedRef } from '../..';
+import Animated, { useAnimatedRef } from '..';
 
 function UseAnimatedRefTest() {
   // This example checks if useAnimatedRef and the plain ref work in the same way

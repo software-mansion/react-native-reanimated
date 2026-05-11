@@ -27,12 +27,8 @@ describe('runOnUIAsync', () => {
     notify(FAIL_NOTIFICATION);
   };
 
-  test('setup beforeEach', () => {
-    // TODO: there's a bug in ReJest and beforeEach has to be registered
-    // inside a test case.
-    beforeEach(() => {
-      reason = '';
-    });
+  beforeEach(() => {
+    reason = '';
   });
 
   test('schedules on RN Runtime to UI Runtime', async () => {
