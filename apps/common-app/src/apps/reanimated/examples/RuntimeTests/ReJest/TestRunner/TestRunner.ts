@@ -18,7 +18,6 @@ import { scheduleOnRN } from 'react-native-worklets';
 export { Presets } from '../Presets';
 
 export class TestRunner {
-  private _currentTestSuite: TestSuite | null = null;
   private _currentTestCase: TestCase | null = null;
   private _renderHook: (component: ReactElement<Component> | null) => void = () => {};
   private _renderLock: RenderLock = new RenderLock();
@@ -146,7 +145,6 @@ export class TestRunner {
       return;
     }
 
-    this._currentTestSuite = testSuite;
     this._testSummary.logRunningTestSuite(testSuite);
 
     if (testSuite.beforeAll) {
@@ -162,7 +160,6 @@ export class TestRunner {
     if (testSuite.afterAll) {
       await testSuite.afterAll();
     }
-    this._currentTestSuite = null;
   }
 
   private async runTestCase(testSuite: TestSuite, testCase: TestCase) {
