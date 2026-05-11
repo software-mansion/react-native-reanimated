@@ -55,8 +55,13 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
     const UpdatesBatch &updatesBatch,
     const std::unordered_set<std::string> &synchronousPropNames,
-    const bool shouldRequireIntegerColors = false,
     const bool allowPartialViews = false) {
+#ifdef ANDROID
+  constexpr bool shouldRequireIntegerColors = true;
+#elif __APPLE__
+  constexpr bool shouldRequireIntegerColors = false;
+#endif
+
   UpdatesBatch synchronousUpdatesBatch;
   UpdatesBatch shadowTreeUpdatesBatch;
 
@@ -725,14 +730,8 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
       "transform",
   };
 
-#ifdef ANDROID
-  constexpr bool shouldRequireIntegerColors = true;
-#elif __APPLE__
-  constexpr bool shouldRequireIntegerColors = false;
-#endif
-
   auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
-      partitionUpdates(updatesBatch, synchronousProps, shouldRequireIntegerColors, allowPartialUpdates);
+      partitionUpdates(updatesBatch, synchronousProps, allowPartialUpdates);
 
 #ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {
