@@ -139,7 +139,6 @@ declare global {
   var originalFlushAnimationFrame: ((frameTimestamp: number) => void) | undefined;
   var _getAnimationTimestamp: () => number;
   var __frameTimestamp: number | undefined;
-  var _IS_FABRIC: boolean | undefined;
   var _registriesLeakCheck: () => string;
   var _updateProps: (operations: Operation[]) => void;
   var _notifyAboutProgress: (tag: number, value: Record<string, unknown>) => void;
