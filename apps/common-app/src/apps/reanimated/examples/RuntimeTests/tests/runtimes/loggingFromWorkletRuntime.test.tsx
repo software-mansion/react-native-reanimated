@@ -321,18 +321,14 @@ type ConsoleMethod = 'log' | 'warn' | 'error' | 'debug';
 describe('loggingFromWorkletRuntime', () => {
   let message = '';
 
-  test('setup beforeEach and afterEach', () => {
-    // TODO: there's a bug in ReJest and beforeEach/afterEach have to be
-    // registered inside a test case.
-    beforeEach(() => {
-      message = '';
-      globalThis.nativeLoggingHook = (serializedMessage: string, _level: number) => {
-        message = serializedMessage;
-      };
-    });
-    afterEach(() => {
-      globalThis.nativeLoggingHook = originalHook;
-    });
+  beforeEach(() => {
+    message = '';
+    globalThis.nativeLoggingHook = (serializedMessage: string, _level: number) => {
+      message = serializedMessage;
+    };
+  });
+  afterEach(() => {
+    globalThis.nativeLoggingHook = originalHook;
   });
 
   const captureSerializedLog = async (factory: () => unknown, method: ConsoleMethod = 'log'): Promise<string> => {
