@@ -905,7 +905,7 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
   (void)eventName;
   (void)emitterReactTag;
   (void)payload;
-  (void)state;
+  (void)source;
 #endif
   return handled;
 }
