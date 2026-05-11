@@ -801,7 +801,8 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
         // RemoteFunctions are created by us therefore they are
         // a Serializable out of the box and there is no need to
         // call `_createSerializableClone`.
-        return value as FlatSerializableRef<TValue>;
+        return (value as Record<string, unknown>)
+          .__remoteFunction as FlatSerializableRef<TValue>;
       }
       if (Array.isArray(value)) {
         return global._createSerializableArray(
