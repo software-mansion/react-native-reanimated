@@ -1,10 +1,9 @@
 #pragma once
 
+#include <jsi/jsi.h>
 #include <worklets/RunLoop/EventLoop.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
-
-#include <jsi/jsi.h>
 
 #include <memory>
 #include <string>
