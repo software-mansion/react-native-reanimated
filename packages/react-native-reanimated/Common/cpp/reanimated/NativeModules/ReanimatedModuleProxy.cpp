@@ -169,7 +169,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
   onRenderCallback_ = std::move(onRenderCallback);
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    // OperationsLoop stores requestRender_ by value, so switch scheduling to
+    // TODO: OperationsLoop stores requestRender_ by value, so switch scheduling to
     // the Animation Backend before constructing it.
     // This is temporary, we will converge on a single approach when both
     // features are done. Until then, the backend plays the role of the platform
