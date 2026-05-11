@@ -8,10 +8,11 @@ Feature flags allow developers to opt-in for experimental changes or opt-out fro
 
 ## Summary of available feature flags
 
-| Feature flag name                                                  |              Type               | Added in | Removed in | Default value |
-| ------------------------------------------------------------------ | :-----------------------------: | :------: | :--------: | :-----------: |
-| [`FETCH_PREVIEW_ENABLED`](#fetch_preview_enabled-)                 | [static](#static-feature-flags) |  0.8.0   |  –   |    `false`    |
-| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled-) | [static](#static-feature-flags) |  0.6.0   |  –   |    `true`     |
+| Feature flag name                                                          |              Type               | Added in | Removed in | Default value |
+| -------------------------------------------------------------------------- | :-----------------------------: | :------: | :--------: | :-----------: |
+| [`FETCH_PREVIEW_ENABLED`](#fetch_preview_enabled-)                         | [static](#static-feature-flags) |  0.8.0   |  –   |    `false`    |
+| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled-)         | [static](#static-feature-flags) |  0.6.0   |  –   |    `true`     |
+| [`ENABLE_CROSS_RUNTIME_STACK_TRACES`](#enable_cross_runtime_stack_traces-) | [static](#static-feature-flags) |  0.9.0   |  –   |    `true`     |
 
 :::info
 
@@ -29,6 +30,22 @@ This feature flag enables the [preview of fetch API on Worklet Runtimes](/docs/b
 ### `IOS_DYNAMIC_FRAMERATE_ENABLED` <AvailableFrom version="0.6.0" />
 
 This feature flags is supposed to improve the visual perception and perceived smoothness of computationally expensive animations. When enabled, the frame rate will be automatically adjusted for current workload of the UI thread. For instance, if the device fails to run animations in 120 fps which would usually results in irregular frame drops, the mechanism will fallback to stable 60 fps. For more details, see [PR #7624](https://github.com/software-mansion/react-native-reanimated/pull/7624).
+
+### `ENABLE_CROSS_RUNTIME_STACK_TRACES` <AvailableFrom version="0.9.0" />
+
+When enabled, the JavaScript call site that schedules a worklet (via `runOnUI`, `scheduleOnRuntime` and similar) is captured and attached to the worklet. If the worklet then throws on the worklet runtime, the resulting error stack is stitched together with the original scheduling stack so the LogBox entry points back to the line that scheduled it, rather than ending at the worklet runtime boundary. This makes errors thrown deep inside worklets much easier to trace back to their origin in your app code. For more details, see [PR #9313](https://github.com/software-mansion/react-native-reanimated/pull/9313).
+
+Below is an example of a cross-runtime stack trace produced with this flag enabled:
+
+<div style={{maxWidth: '320px'}}>
+
+![Cross-runtime stack trace](/img/cross-runtime-stack-trace.png)
+
+</div>
+
+The frames without the `[UI]:` prefix (`enqueueUI`, `scheduleOnUI`, `EmptyExample`, ...) are the ones contributed by this feature. They come from the RN runtime call site that scheduled the worklet. Without the flag, the stack would stop at the worklet runtime boundary and only the `[UI]:` frames would be visible.
+
+This flag only takes effect in development builds (`__DEV__`). In release builds, capturing the scheduling stack is skipped regardless of the flag value to avoid the runtime overhead. Disable this flag in development only if you specifically want to opt out of the additional bookkeeping.
 
 ## Static feature flags
 
