@@ -18,6 +18,7 @@ import { config, configs, parser } from 'typescript-eslint';
 export default config(
   jsEslint.configs.recommended,
   react.configs.flat.recommended,
+  reactHooks.configs.flat['recommended-latest'],
   importPlugin.flatConfigs.recommended,
   eslintPluginPrettierRecommended,
   {
