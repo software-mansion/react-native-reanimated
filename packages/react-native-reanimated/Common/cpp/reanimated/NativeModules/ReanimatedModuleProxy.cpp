@@ -16,6 +16,7 @@
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
 
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <string>
@@ -55,7 +56,7 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
     const UpdatesBatch &updatesBatch,
     const std::unordered_set<std::string> &synchronousPropNames,
-    const bool allowPartialViews = false) {
+    const bool allowPartialUpdates = false) {
 #ifdef ANDROID
   constexpr bool shouldRequireIntegerColors = true;
 #else
@@ -79,7 +80,7 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
   UpdatesBatch shadowTreeUpdatesBatch;
 
   for (const auto &[shadowNodeFamily, props] : updatesBatch) {
-    if (allowPartialViews) {
+    if (allowPartialUpdates) {
       folly::dynamic synchronousProps = folly::dynamic::object();
       folly::dynamic shadowTreeProps = folly::dynamic::object();
 
@@ -100,14 +101,9 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
         shadowTreeUpdatesBatch.emplace_back(shadowNodeFamily, std::move(shadowTreeProps));
       }
     } else {
-      bool hasOnlySynchronousProps = true;
-
-      for (const auto &[key, value] : props.items()) {
-        if (!isSynchronous(key.asString(), value)) {
-          hasOnlySynchronousProps = false;
-          break;
-        }
-      }
+      const bool hasOnlySynchronousProps = std::all_of(props.items().begin(), props.items().end(), [&](const auto &kv) {
+        return isSynchronous(kv.first.asString(), kv.second);
+      });
 
       if (hasOnlySynchronousProps) {
         synchronousUpdatesBatch.emplace_back(shadowNodeFamily, props);
