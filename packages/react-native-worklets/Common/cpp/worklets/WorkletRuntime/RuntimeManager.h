@@ -54,7 +54,6 @@ class RuntimeManager {
   std::map<uint64_t, std::weak_ptr<WorkletRuntime>> weakRuntimes_;
   std::shared_mutex weakRuntimesMutex_;
   std::mutex registrationMutex_;
-  const facebook::jsi::Runtime *rnRuntime_;
 };
 
 } // namespace worklets

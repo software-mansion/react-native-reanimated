@@ -187,11 +187,8 @@ class SerializableHostObject : public Serializable {
 
 class SerializableHostFunction : public Serializable {
  public:
-  SerializableHostFunction(jsi::Runtime &rt, const jsi::Function &function)
-      : Serializable(ValueType::HostFunctionType),
-        hostFunction_(function.getHostFunction(rt)),
-        name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
-        paramCount_(function.getProperty(rt, "length").asNumber()) {}
+  SerializableHostFunction(const jsi::HostFunctionType &function, const std::string &name, unsigned int paramCount)
+      : Serializable(ValueType::HostFunctionType), hostFunction_(function), name_(name), paramCount_(paramCount) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -237,30 +234,43 @@ class SerializableImport : public Serializable {
 class SerializableRemoteFunction : public Serializable,
                                    public std::enable_shared_from_this<SerializableRemoteFunction> {
  private:
-  const int id_;
-  const jsi::Runtime *hostRuntime_;
+  struct RNRuntimeData {
+    const int remoteId = 0;
+    const std::shared_ptr<JSScheduler> jsScheduler = nullptr;
+  };
+
+  struct WorkletRuntimeData {
+    std::unique_ptr<jsi::Value> function;
+  };
+
+  jsi::Runtime *hostRuntime_;
   const RuntimeData::RuntimeId hostRuntimeId_;
-  const std::shared_ptr<JSScheduler> jsScheduler_ = nullptr;
-  const std::weak_ptr<WorkletRuntime> hostWorkletRuntime_;
+  const std::optional<RNRuntimeData> rnRuntimeData_;
+  std::optional<WorkletRuntimeData> workletRuntimeData_;
+  const std::string name_;
 
  public:
-  SerializableRemoteFunction(jsi::Runtime &hostRuntime, int remoteId, const std::shared_ptr<JSScheduler> &jsScheduler)
+  SerializableRemoteFunction(
+      jsi::Runtime &rnRuntime,
+      const std::string &name,
+      int remoteId,
+      const std::shared_ptr<JSScheduler> &jsScheduler)
       : Serializable(ValueType::RemoteFunctionType),
-        id_(remoteId),
-        hostRuntime_(&hostRuntime),
+        hostRuntime_(&rnRuntime),
         hostRuntimeId_(RuntimeData::rnRuntimeId),
-        jsScheduler_(jsScheduler) {}
+        rnRuntimeData_({remoteId, jsScheduler}),
+        name_(name) {};
 
   SerializableRemoteFunction(
       jsi::Runtime &hostRuntime,
-      int remoteId,
-      RuntimeData::RuntimeId hostRuntimeId,
-      const std::weak_ptr<WorkletRuntime> &hostWorkletRuntime)
+      const std::string &name,
+      jsi::Function &&function,
+      RuntimeData::RuntimeId hostRuntimeId)
       : Serializable(ValueType::RemoteFunctionType),
-        id_(remoteId),
         hostRuntime_(&hostRuntime),
         hostRuntimeId_(hostRuntimeId),
-        hostWorkletRuntime_(hostWorkletRuntime) {}
+        workletRuntimeData_(WorkletRuntimeData{std::make_unique<jsi::Value>(hostRuntime, function)}),
+        name_(name) {}
 
   ~SerializableRemoteFunction() override;
 
@@ -268,6 +278,10 @@ class SerializableRemoteFunction : public Serializable,
   SerializableRemoteFunction &operator=(const SerializableRemoteFunction &) = delete;
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+  [[nodiscard]] bool isHostedOnRNRuntime() const noexcept {
+    return rnRuntimeData_.has_value();
+  }
 
   [[nodiscard]] RuntimeData::RuntimeId getHostRuntimeId() const {
     return hostRuntimeId_;

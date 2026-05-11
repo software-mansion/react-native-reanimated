@@ -158,19 +158,15 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.createSerializableInitializer(obj);
   }
 
-  createSerializableHostFunction<TArgs extends unknown[], TReturn>(
-    func: (...args: TArgs) => TReturn
-  ): SerializableRef<TReturn> {
-    return this.#workletsModuleProxy.createSerializableHostFunction(func);
-  }
-
   createSerializableNonWorkletFunction<TArgs extends unknown[], TReturn>(
     fun: (...args: TArgs) => TReturn,
-    functionId: number
+    functionId: number,
+    functionName: string | undefined
   ): SerializableRef<(...args: TArgs) => TReturn> {
     return this.#workletsModuleProxy.createSerializableNonWorkletFunction(
       fun,
-      functionId
+      functionId,
+      functionName
     );
   }
 

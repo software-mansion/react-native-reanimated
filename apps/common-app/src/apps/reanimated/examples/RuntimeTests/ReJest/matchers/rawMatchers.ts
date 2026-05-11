@@ -12,8 +12,9 @@ export type ToThrowArgs = [string?];
 type ToBeNullArgs = [];
 type ToBeWithinRangeArgs = [number, number];
 type ToBeCalledArgs = [number];
+type ToIncludeArgs = [string];
 
-export type SyncMatcherArguments = ToBeArgs | ToBeNullArgs | ToBeCalledArgs | ToBeWithinRangeArgs;
+export type SyncMatcherArguments = ToBeArgs | ToBeNullArgs | ToBeCalledArgs | ToBeWithinRangeArgs | ToIncludeArgs;
 export type AsyncMatcherArguments = ToThrowArgs;
 export type MatcherReturn = {
   pass: boolean;
@@ -135,6 +136,17 @@ export const toBeCalledUIMatcher: Matcher<ToBeCalledArgs> = (currentValue, negat
 
 export const toBeCalledJSMatcher: Matcher<ToBeCalledArgs> = (currentValue, negation, times) => {
   return toBeCalledOnThreadMatcher(currentValue, negation, times, 'JS');
+};
+
+export const toIncludeMatcher: Matcher<ToIncludeArgs> = (currentValue, negation, substring) => {
+  const pass = typeof currentValue === 'string' && currentValue.includes(substring);
+  return {
+    pass,
+    message:
+      typeof currentValue !== 'string'
+        ? `Expected a ${green('string')} received ${red(typeof currentValue)}`
+        : `Expected string${negation ? ' NOT' : ''} to include ${green(substring)}, received ${red(currentValue)}`,
+  };
 };
 
 export const toThrowMatcher: AsyncMatcher<ToThrowArgs> = async (throwingFunction, negation, errorMessage) => {

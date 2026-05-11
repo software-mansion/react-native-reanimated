@@ -10,6 +10,7 @@ import {
   toBeNullableMatcher,
   toBeUndefined,
   toBeWithinRangeMatcher,
+  toIncludeMatcher,
   toThrowMatcher,
 } from './rawMatchers';
 import { compareSnapshots } from './snapshotMatchers';
@@ -54,6 +55,7 @@ export class Matchers {
   public toBeCalled = this.decorateMatcher(toBeCalledMatcher);
   public toBeCalledUI = this.decorateMatcher(toBeCalledUIMatcher);
   public toBeCalledJS = this.decorateMatcher(toBeCalledJSMatcher);
+  public toInclude = this.decorateMatcher(toIncludeMatcher);
 
   public toMatchSnapshots(expectedSnapshots: SingleViewSnapshot) {
     const capturedSnapshots = this._currentValue as SingleViewSnapshot;

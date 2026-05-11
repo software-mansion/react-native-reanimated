@@ -3,10 +3,6 @@ import { Button, StyleSheet, Text, View } from 'react-native';
 import { scheduleOnUI, scheduleOnRN } from 'react-native-worklets';
 
 export default function EmptyExample() {
-  const callback = (msg: string) => {
-    console.log('hello there', msg);
-  };
-
   function onPress() {
     scheduleOnUI(() => {
       'worklet';

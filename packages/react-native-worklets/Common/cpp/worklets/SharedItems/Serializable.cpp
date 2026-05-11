@@ -44,10 +44,14 @@ jsi::Value makeSerializableClone(
     } else if (!object.getProperty(rt, "__init").isUndefined()) {
       return makeSerializableInitializer(rt, object);
     } else if (object.isFunction(rt)) {
-      if (object.asFunction(rt).isHostFunction(rt)) {
-        return makeSerializableHostFunction(rt, object.asFunction(rt));
+      auto fun = object.asFunction(rt);
+      if (fun.isHostFunction(rt)) {
+        auto name = fun.getProperty(rt, "name").asString(rt).utf8(rt);
+        return makeSerializableHostFunction(
+            rt, fun.getHostFunction(rt), name, fun.getProperty(rt, "length").asNumber());
       } else {
-        throw std::runtime_error("[Worklets] Not implemented.");
+        throw std::runtime_error(
+            "[Worklets] Cloning remote functions from Worklet Runtimes is only available in Bundle Mode.");
       }
     } else if (object.isArray(rt)) {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
@@ -255,31 +259,29 @@ jsi::Value SerializableImport::toJSValue(jsi::Runtime &rt) {
 }
 
 SerializableRemoteFunction::~SerializableRemoteFunction() {
-  // TODO: consider batching
-  if (hostRuntimeId_ == RuntimeData::rnRuntimeId) {
-    jsScheduler_->scheduleOnJS([id = id_](jsi::Runtime &rt) {
+  if (isHostedOnRNRuntime()) {
+    // TODO: consider batching
+    rnRuntimeData_->jsScheduler->scheduleOnJS([id = rnRuntimeData_->remoteId](jsi::Runtime &rt) {
       auto registryProp = rt.global().getProperty(rt, "__remoteFunctionRegistry");
       auto registry = registryProp.asObject(rt);
       registry.getPropertyAsFunction(rt, "delete").callWithThis(rt, registry, jsi::Value(id));
     });
   } else {
-    auto hostWorkletRuntime = hostWorkletRuntime_.lock();
-    if (hostWorkletRuntime) {
-      hostWorkletRuntime->schedule([id = id_](jsi::Runtime &rt) {
-        auto registryProp = rt.global().getProperty(rt, "__remoteFunctionRegistry");
-        auto registry = registryProp.asObject(rt);
-        registry.getPropertyAsFunction(rt, "delete").callWithThis(rt, registry, jsi::Value(id));
-      });
-    }
+    cleanupIfRuntimeExists(hostRuntime_, workletRuntimeData_->function);
   }
 }
 
 jsi::Value SerializableRemoteFunction::toJSValue(jsi::Runtime &rt) {
   if (&rt == hostRuntime_) {
-    auto registry = rt.global().getPropertyAsObject(rt, "__remoteFunctionRegistry");
-    return registry.getPropertyAsFunction(rt, "get").callWithThis(rt, registry, jsi::Value(id_));
+    if (isHostedOnRNRuntime()) {
+      auto registry = rt.global().getPropertyAsObject(rt, "__remoteFunctionRegistry");
+      return registry.getPropertyAsFunction(rt, "get").callWithThis(rt, registry, jsi::Value(rnRuntimeData_->remoteId));
+    } else {
+      return jsi::Value(rt, *workletRuntimeData_->function);
+    }
   } else {
-    auto holderFunction = getRemoteFunctionUnpacker(rt).call(rt).asObject(rt);
+    auto name = name_.empty() ? jsi::Value::undefined() : jsi::String::createFromUtf8(rt, name_);
+    auto holderFunction = getRemoteFunctionUnpacker(rt).call(rt, name).asObject(rt);
     holderFunction.setNativeState(rt, std::make_shared<SerializableJSRef>(shared_from_this()));
     return holderFunction;
   }

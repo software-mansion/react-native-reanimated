@@ -51,26 +51,31 @@ jsi::Value makeSerializableInitializer(jsi::Runtime &rt, const jsi::Object &init
   return SerializableJSRef::newNativeStateObject(rt, serializable);
 }
 
-jsi::Value makeSerializableHostFunction(jsi::Runtime &rt, const jsi::Function &function) {
-  auto serializable = std::make_shared<SerializableHostFunction>(rt, function);
+jsi::Value makeSerializableHostFunction(
+    jsi::Runtime &rt,
+    const jsi::HostFunctionType &function,
+    const std::string &name,
+    unsigned int paramCount) {
+  auto serializable = std::make_shared<SerializableHostFunction>(function, name, paramCount);
   return SerializableJSRef::newNativeStateObject(rt, serializable);
 }
 
 jsi::Value makeSerializableRNRuntimeRemoteFunction(
     jsi::Runtime &rnRuntime,
+    const std::string &name,
     const int remoteId,
     const std::shared_ptr<JSScheduler> &jsScheduler) {
-  auto serializable = std::make_shared<SerializableRemoteFunction>(rnRuntime, remoteId, jsScheduler);
+  auto serializable = std::make_shared<SerializableRemoteFunction>(rnRuntime, name, remoteId, jsScheduler);
   return SerializableJSRef::newNativeStateObject(rnRuntime, serializable);
 }
 
-jsi::Value makeSerializableRemoteFunction(
+jsi::Value makeSerializableWorkletRuntimeRemoteFunction(
     jsi::Runtime &hostRuntime,
-    const int remoteId,
-    const RuntimeData::RuntimeId hostRuntimeId,
-    const std::weak_ptr<WorkletRuntime> &hostWorkletRuntime) {
+    const std::string &name,
+    jsi::Function function,
+    RuntimeData::RuntimeId hostRuntimeId) {
   auto serializable =
-      std::make_shared<SerializableRemoteFunction>(hostRuntime, remoteId, hostRuntimeId, hostWorkletRuntime);
+      std::make_shared<SerializableRemoteFunction>(hostRuntime, name, std::move(function), hostRuntimeId);
   return SerializableJSRef::newNativeStateObject(hostRuntime, serializable);
 }
 

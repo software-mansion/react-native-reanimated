@@ -189,14 +189,6 @@ void WorkletRuntimeDecorator::decorate(
     return makeSerializableInitializer(rt, value.asObject(rt));
   });
 
-  jsi_utils::installJsiFunction(rt, "_createSerializableHostFunction", [](jsi::Runtime &rt, const jsi::Value &value) {
-    return makeSerializableHostFunction(rt, value.asObject(rt).asFunction(rt));
-  });
-
-  jsi_utils::installJsiFunction(rt, "_createSerializableRemoteFunction", [](jsi::Runtime &rt, const jsi::Value &value) {
-    throw std::runtime_error("[Worklets] not implemented");
-  });
-
   jsi_utils::installJsiFunction(rt, "_createSerializableSynchronizable", [](jsi::Runtime &rt, const jsi::Value &value) {
     return SerializableJSRef::newNativeStateObject(rt, extractSerializableOrThrow(rt, value));
   });

@@ -441,7 +441,8 @@ function cloneNonWorkletFunction<TArgs extends unknown[], TReturn>(
   const functionId = nextRemoteFunctionId;
   const clone = WorkletsModule.createSerializableNonWorkletFunction(
     fun,
-    functionId
+    functionId,
+    __DEV__ ? fun.name : undefined
   ) as SerializableRef<(...args: TArgs) => TReturn>;
   if ((clone as Record<string, unknown>).__isRemoteFunctionRef) {
     registerRemoteFunction(fun);
