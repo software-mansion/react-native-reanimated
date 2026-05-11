@@ -13,6 +13,5 @@ class AnimationFrameCallback : NodesManager.OnAnimationFrame {
         mHybridData = hybridData
     }
 
-    @DoNotStrip
     external override fun onAnimationFrame(timestampMs: Double)
 }
