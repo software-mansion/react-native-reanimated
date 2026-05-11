@@ -525,7 +525,6 @@ var require_globals = __commonJS({
       // Worklets
       "_WORKLET"
     ];
-    var notCapturedIdentifiers_DEPRECATED = ["_IS_FABRIC"];
     function initializeState(state) {
       state.workletNumber = 1;
       state.classesToWorkletize = [];
@@ -534,7 +533,7 @@ var require_globals = __commonJS({
         addCustomGlobals(state);
       }
     }
-    exports2.defaultGlobals = new Set(notCapturedIdentifiers.concat(notCapturedIdentifiers_DEPRECATED));
+    exports2.defaultGlobals = new Set(notCapturedIdentifiers);
     function initializeGlobals() {
       exports2.globals = new Set(exports2.defaultGlobals);
     }

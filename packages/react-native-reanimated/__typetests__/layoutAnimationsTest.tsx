@@ -23,7 +23,7 @@ import Animated, {
   StretchInX,
   ZoomIn,
   ZoomInRotate,
-} from '../..';
+} from '..';
 
 function LayoutAnimationsTest() {
   function LayoutAnimationsWithInitialValues() {

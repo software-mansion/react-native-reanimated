@@ -28,13 +28,9 @@ describe('runOnRuntimeSyncWithId', () => {
   const workletRuntime1 = createWorkletRuntime({ name: 'test1' });
   const workletRuntime2 = createWorkletRuntime({ name: 'test2' });
 
-  test('setup beforeEach', () => {
-    // TODO: there's a bug in ReJest and beforeEach has to be registered
-    // inside a test case.
-    beforeEach(() => {
-      value = 0;
-      reason = '';
-    });
+  beforeEach(() => {
+    value = 0;
+    reason = '';
   });
 
   test('from RN Runtime to UI Runtime', () => {

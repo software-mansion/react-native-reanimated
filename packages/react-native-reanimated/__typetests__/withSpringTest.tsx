@@ -4,7 +4,7 @@
 import React from 'react';
 import { View } from 'react-native';
 
-import Animated, { useAnimatedStyle, withSpring } from '../..';
+import Animated, { useAnimatedStyle, withSpring } from '..';
 
 function WithSpringTest() {
   function WithSpringTestToValueAsColor() {

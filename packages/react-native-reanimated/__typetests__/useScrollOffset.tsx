@@ -2,7 +2,7 @@
 import React, { useRef } from 'react';
 import { Button, FlatList, ScrollView } from 'react-native';
 
-import Animated, { useAnimatedRef, useScrollOffset } from '../..';
+import Animated, { useAnimatedRef, useScrollOffset } from '..';
 
 function useScrollOffsetTest() {
   function useScrollOffsetTest1() {

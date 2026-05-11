@@ -5,7 +5,7 @@ import Animated, {
   interpolateColor,
   useDerivedValue,
   useSharedValue,
-} from '../..';
+} from '..';
 
 function InlineStylesTest() {
   function InlineStylesTest1() {

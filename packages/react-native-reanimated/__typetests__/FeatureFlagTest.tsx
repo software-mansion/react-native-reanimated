@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { getStaticFeatureFlag } from '../..';
+import { getStaticFeatureFlag } from '..';
 
 function GetStaticFeatureFlagTest() {
   // ok - this flag exists
