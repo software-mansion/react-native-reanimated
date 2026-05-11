@@ -1,24 +1,24 @@
-name: Example tvOS build check [Nightly]
+name: Example macOS build check
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     paths:
-      - .github/workflows/example-tvos-build-check-nightly.yml
+      - .github/workflows/example-macos-build-check.yml
   schedule:
-    - cron: '47 19 * * *'
+    - cron: '37 19 * * *'
   workflow_call:
   workflow_dispatch:
 
 jobs:
-  example-tvos-build-check:
+  example-macos-build-check:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: macos-26
     env:
-      WORKING_DIRECTORY: apps/tvos-example
+      WORKING_DIRECTORY: apps/macos-example
       REANIMATED_DIR: packages/react-native-reanimated
     concurrency:
-      group: tvos-${{ github.ref }}
+      group: macos-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -38,15 +38,15 @@ jobs:
         uses: ./.github/actions/install-pods
         with:
           working-directory: ${{ env.WORKING_DIRECTORY }}
-          pod-directory: ios
+          pod-directory: macos
 
       - name: Cache DerivedData
         uses: ./.github/actions/cache-derived-data
         with:
-          platform: tvos
+          platform: macos
           working-directory: ${{ env.WORKING_DIRECTORY }}
-          pod-directory: ios
+          pod-directory: macos
 
       - name: Build app
-        working-directory: ${{ env.WORKING_DIRECTORY }}/ios
-        run: xcodebuild -workspace TVOSExample.xcworkspace -configuration Debug -scheme "Debug TVOSExample" -destination "generic/platform=tvOS Simulator" -quiet
+        working-directory: ${{ env.WORKING_DIRECTORY }}/macos
+        run: xcodebuild -workspace MacOSExample.xcworkspace -configuration Debug -scheme "Debug MacOSExample" -destination "generic/platform=macOS" -quiet
