@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useRef } from 'react';
 
-import type Animated from '../..';
+import type Animated from '..';
 import {
   dispatchCommand,
   measure,
   scrollTo,
   setGestureState,
   useAnimatedRef,
-} from '../..';
+} from '..';
 
 function NativeMethodsTest() {
   function MeasureTest() {

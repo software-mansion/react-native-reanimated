@@ -19,7 +19,7 @@ import {
   VirtualizedList,
 } from 'react-native';
 
-import Animated, { useAnimatedStyle, useSharedValue } from '../..';
+import Animated, { useAnimatedStyle, useSharedValue } from '..';
 
 function UseAnimatedStyleInAnimatedComponent() {
   function UseAnimatedStyleTest1() {

@@ -4,8 +4,8 @@
 import React from 'react';
 import type { NativeSyntheticEvent } from 'react-native';
 
-import type { ReanimatedEvent } from '../..';
-import Animated, { useEvent } from '../..';
+import type { ReanimatedEvent } from '..';
+import Animated, { useEvent } from '..';
 
 function UseEventTest() {
   function UseEventTestNativeSyntheticEvent() {
