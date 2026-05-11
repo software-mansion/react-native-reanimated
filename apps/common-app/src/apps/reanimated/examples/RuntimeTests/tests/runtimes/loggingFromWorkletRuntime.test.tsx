@@ -1,3 +1,4 @@
+import { TurboModuleRegistry } from 'react-native';
 import {
   describe,
   expect,
@@ -7,7 +8,14 @@ import {
   beforeEach,
   afterEach,
 } from '../../ReJest/RuntimeTestsApi';
-import { runOnUISync, scheduleOnRN, createShareable, createSynchronizable, UIRuntimeId } from 'react-native-worklets';
+import {
+  runOnUISync,
+  scheduleOnRN,
+  createShareable,
+  createSynchronizable,
+  UIRuntimeId,
+  createWorkletRuntime,
+} from 'react-native-worklets';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -31,7 +39,7 @@ type TestCase = {
 };
 
 // For closure
-const reanimatedModuleProxy = globalThis.__reanimatedModuleProxy;
+const hostObject = createWorkletRuntime({ name: 'HO' });
 const shareable = createShareable(UIRuntimeId, 42);
 const synchronizable = createSynchronizable(42);
 
@@ -136,11 +144,11 @@ const testCases: Record<string, TestCase> = {
     },
   },
   hostObject: {
-    expected: 'registerSensor',
+    expected: 'HO',
     checkIncludes: { bundleMode: true, noBundleMode: true },
     factory: () => {
       'worklet';
-      return reanimatedModuleProxy;
+      return hostObject;
     },
   },
   hostFunction: {
@@ -279,7 +287,7 @@ const testCases: Record<string, TestCase> = {
     factory: () => {
       'worklet';
       const obj: Record<string, unknown> = { a: 1 };
-      Object.setPrototypeOf(obj, reanimatedModuleProxy);
+      Object.setPrototypeOf(obj, hostObject);
       return obj;
     },
   },
@@ -321,18 +329,14 @@ type ConsoleMethod = 'log' | 'warn' | 'error' | 'debug';
 describe('loggingFromWorkletRuntime', () => {
   let message = '';
 
-  test('setup beforeEach and afterEach', () => {
-    // TODO: there's a bug in ReJest and beforeEach/afterEach have to be
-    // registered inside a test case.
-    beforeEach(() => {
-      message = '';
-      globalThis.nativeLoggingHook = (serializedMessage: string, _level: number) => {
-        message = serializedMessage;
-      };
-    });
-    afterEach(() => {
-      globalThis.nativeLoggingHook = originalHook;
-    });
+  beforeEach(() => {
+    message = '';
+    globalThis.nativeLoggingHook = (serializedMessage: string, _level: number) => {
+      message = serializedMessage;
+    };
+  });
+  afterEach(() => {
+    globalThis.nativeLoggingHook = originalHook;
   });
 
   const captureSerializedLog = async (factory: () => unknown, method: ConsoleMethod = 'log'): Promise<string> => {

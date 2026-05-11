@@ -71,7 +71,7 @@ export interface WorkletsModuleProxy {
 
   createSerializableArray(
     array: unknown[],
-    shouldRetainRemote: boolean
+    shouldRetainRemote?: boolean
   ): SerializableRef<unknown[]>;
 
   createSerializableMap<TKey, TValue>(
@@ -123,9 +123,15 @@ export interface WorkletsModuleProxy {
     args?: SerializableRef<TArgs>
   ): void;
 
-  scheduleOnUI<TValue>(serializable: SerializableRef<TValue>): void;
+  scheduleOnUI<TValue>(
+    serializableArrayOfWorklets: SerializableRef<TValue[]>,
+    scheduleStacks: string[] | undefined
+  ): void;
 
-  runOnUISync<TValue, TReturn>(serializable: SerializableRef<TValue>): TReturn;
+  runOnUISync<TValue, TReturn>(
+    serializable: SerializableRef<TValue>,
+    scheduleStack: string | undefined
+  ): TReturn;
 
   createWorkletRuntime(
     name: string,
@@ -137,30 +143,29 @@ export interface WorkletsModuleProxy {
 
   scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack?: string
   ): void;
 
   scheduleOnRuntimeWithId<TValue>(
     runtimeId: number,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack?: string
   ): void;
 
   runOnRuntimeSync<TValue, TReturn>(
     workletRuntime: WorkletRuntime,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack?: string
   ): TReturn;
 
   runOnRuntimeSyncWithId<TValue, TReturn>(
     runtimeId: number,
-    worklet: SerializableRef<TValue>
+    worklet: SerializableRef<TValue>,
+    scheduleStack?: string
   ): TReturn;
 
-  reportFatalErrorOnJS(
-    message: string,
-    stack: string,
-    name: string,
-    jsEngine: string
-  ): void;
+  reportFatalErrorOnJS(message: string, stack: string, name: string): void;
 
   createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue>;
 

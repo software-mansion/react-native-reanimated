@@ -1,7 +1,6 @@
 #include <jsi/jsi.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
-#include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/PlatformLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
@@ -213,7 +212,6 @@ void WorkletRuntimeDecorator::decorate(
           }));
   rt.global().setProperty(rt, "performance", performance);
 
-#if JS_RUNTIME_HERMES
   rt.global().setProperty(
       rt,
       "_startProfiling",
@@ -230,7 +228,6 @@ void WorkletRuntimeDecorator::decorate(
     std::string path = stopProfiling(rt);
     return jsi::String::createFromUtf8(rt, path);
   });
-#endif // JS_RUNTIME_HERMES
 
   jsi_utils::installJsiFunction(
       rt,

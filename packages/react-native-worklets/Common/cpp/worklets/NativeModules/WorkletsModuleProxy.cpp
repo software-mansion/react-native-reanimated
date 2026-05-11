@@ -3,7 +3,6 @@
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 #include <worklets/SharedItems/Serializable.h>
-#include <worklets/Tools/Defs.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
@@ -44,14 +43,12 @@ void WorkletsModuleProxy::start() {
 
 WorkletsModuleProxy::WorkletsModuleProxy(
     jsi::Runtime &rnRuntime,
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     std::function<bool()> &&isJavaScriptThread,
     const std::shared_ptr<RuntimeBindings> &runtimeBindings,
     const BundleModeConfig &bundleModeConfig)
     : isDevBundle_(isDevBundleFromRNRuntime(rnRuntime)),
-      jsQueue_(jsQueue),
       jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsCallInvoker, std::move(isJavaScriptThread))),
       uiScheduler_(uiScheduler),
       jsLogger_(std::make_shared<JSLogger>(jsScheduler_)),
@@ -60,11 +57,9 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       memoryManager_(std::make_shared<MemoryManager>()),
       runtimeManager_(std::make_shared<RuntimeManager>()),
       unpackerLoader_(std::make_shared<UnpackerLoader>()),
-      uiWorkletRuntime_(
-          runtimeManager_->createUninitializedUIRuntime(jsQueue_, std::make_shared<AsyncQueueUI>(uiScheduler_))),
+      uiWorkletRuntime_(runtimeManager_->createUninitializedUIRuntime(std::make_shared<AsyncQueueUI>(uiScheduler_))),
       rnRuntimeProxy_(std::make_shared<JSIWorkletsModuleProxy>(
           isDevBundle_,
-          jsQueue_,
           jsScheduler_,
           uiScheduler_,
           memoryManager_,
@@ -79,7 +74,6 @@ WorkletsModuleProxy::WorkletsModuleProxy(
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {
   animationFrameBatchinator_.reset();
-  jsQueue_->quitSynchronous();
   uiWorkletRuntime_.reset();
 }
 

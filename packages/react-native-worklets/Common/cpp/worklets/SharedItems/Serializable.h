@@ -7,6 +7,7 @@
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -137,6 +138,10 @@ class SerializableArray : public Serializable {
     return args;
   }
 
+  [[nodiscard]] const std::vector<std::shared_ptr<Serializable>> &getList() const {
+    return data_;
+  }
+
  protected:
   std::vector<std::shared_ptr<Serializable>> data_;
 };
@@ -259,7 +264,7 @@ class SerializableRemoteFunction : public Serializable,
         hostRuntime_(&rnRuntime),
         hostRuntimeId_(RuntimeData::rnRuntimeId),
         rnRuntimeData_({remoteId, jsScheduler}),
-        name_(name) {};
+        name_(name) {}
 
   SerializableRemoteFunction(
       jsi::Runtime &hostRuntime,

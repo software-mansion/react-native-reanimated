@@ -29,6 +29,7 @@
     "lint:clang-tidy": "../../scripts/clang-tidy-lint.sh \".\"",
     "lint:js": "eslint src && yarn prettier --check src",
     "lint:plugin": "yarn workspace babel-plugin-worklets lint",
+    "prepack": "yarn build",
     "set-version": "node scripts/set-version.js",
     "test": "jest",
     "type:check": "yarn type:check:src:native && yarn type:check:src:web && yarn type:check:plugin && yarn type:check:app && yarn type:check:tests",
@@ -37,6 +38,9 @@
     "type:check:app": "yarn workspace common-app type:check",
     "type:check:plugin": "yarn workspace babel-plugin-worklets type:check",
     "type:check:tests": "../../scripts/test-ts.sh __typetests__",
+    "type:check:strict": "yarn type:check:strict:src && yarn type:check:strict:app",
+    "type:check:strict:src": "yarn tsc --noEmit --customConditions react-native-strict-api",
+    "type:check:strict:app": "yarn workspace common-app type:check:strict",
     "tree-shake:check:web": "yarn is-tree-shakable --resolution web",
     "validate-peers": "node ../../scripts/validate-compatibility-peer-dependencies.js"
   },

@@ -1,13 +1,10 @@
 #pragma once
 
-#include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
-#include <jsireact/JSIExecutor.h>
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/SharedItems/MemoryManager.h>
 #include <worklets/SharedItems/UnpackerLoader.h>
-#include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/ScriptBuffer.h>
@@ -27,7 +24,6 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
 
   explicit WorkletsModuleProxy(
       jsi::Runtime &rnRuntime,
-      const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       std::function<bool()> &&isJavaScriptQueue,
@@ -35,10 +31,6 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
       const BundleModeConfig &bundleModeConfig);
 
   ~WorkletsModuleProxy();
-
-  [[nodiscard]] inline std::shared_ptr<MessageQueueThread> getJSQueue() const {
-    return jsQueue_;
-  }
 
   [[nodiscard]] inline std::shared_ptr<JSScheduler> getJSScheduler() const {
     return jsScheduler_;
@@ -56,17 +48,12 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
     return uiWorkletRuntime_;
   }
 
-  [[nodiscard]] inline const std::shared_ptr<JSIWorkletsModuleProxy> &getRNRuntimeProxy() const {
-    return rnRuntimeProxy_;
-  }
-
   [[nodiscard]] inline bool isDevBundle() const {
     return isDevBundle_;
   }
 
  private:
   const bool isDevBundle_;
-  const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   const std::shared_ptr<JSLogger> jsLogger_;

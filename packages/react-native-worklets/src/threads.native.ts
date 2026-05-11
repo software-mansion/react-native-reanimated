@@ -1,5 +1,6 @@
 'use strict';
 
+import { getStaticFeatureFlag } from './featureFlags/featureFlags';
 import {
   addGuardImplementation,
   addNoBundleModeGuardImplementation,
@@ -14,10 +15,14 @@ import type { WorkletFunction, WorkletImport } from './types';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsModule } from './WorkletsModule/NativeWorklets';
 
+const SHOULD_CAPTURE_SCHEDULE_STACK =
+  __DEV__ && getStaticFeatureFlag('ENABLE_CROSS_RUNTIME_STACK_TRACES');
+
 type UIJob<Args extends unknown[] = unknown[], ReturnValue = unknown> = [
   worklet: WorkletFunction<Args, ReturnValue>,
   args: Args,
-  resolve?: (value: ReturnValue) => void,
+  resolve: ((value: ReturnValue) => void) | undefined,
+  scheduleStack: string | undefined,
 ];
 
 let runOnUIQueue: UIJob[] = [];
@@ -179,7 +184,8 @@ export function runOnUISync<Args extends unknown[], ReturnValue>(
       'worklet';
       const result = worklet(...args);
       return makeShareableCloneOnUIRecursive(result);
-    })
+    }),
+    SHOULD_CAPTURE_SCHEDULE_STACK ? (new Error().stack ?? '') : undefined
   );
 }
 
@@ -360,7 +366,13 @@ function enqueueUI<Args extends unknown[], ReturnValue>(
   args: Args,
   resolve?: (value: ReturnValue) => void
 ): void {
-  const job = [worklet, args, resolve] as UIJob<Args, ReturnValue>;
+  const scheduleStack = SHOULD_CAPTURE_SCHEDULE_STACK
+    ? new Error().stack
+    : undefined;
+  const job = [worklet, args, resolve, scheduleStack] as UIJob<
+    Args,
+    ReturnValue
+  >;
   runOnUIQueue.push(job as unknown as UIJob);
   if (runOnUIQueue.length === 1) {
     flushUIQueue();
@@ -371,17 +383,22 @@ function flushUIQueue(): void {
   queueMicrotask(() => {
     const queue = runOnUIQueue;
     runOnUIQueue = [];
-    WorkletsModule.scheduleOnUI(
-      createSerializable(() => {
-        'worklet';
-        queue.forEach(([workletFunction, workletArgs, jobResolve]) => {
+    const jobWorklets = queue.map(
+      ([workletFunction, workletArgs, jobResolve]) =>
+        createSerializable(() => {
+          'worklet';
           const result = workletFunction(...workletArgs);
           if (jobResolve) {
             scheduleOnRN(jobResolve, result);
           }
-        });
-        globalThis.__callMicrotasks();
-      })
+        })
+    );
+    const scheduleStacks = SHOULD_CAPTURE_SCHEDULE_STACK
+      ? (queue.map(([, , , scheduleStack]) => scheduleStack) as string[])
+      : undefined;
+    WorkletsModule.scheduleOnUI(
+      WorkletsModule.createSerializableArray(jobWorklets),
+      scheduleStacks
     );
   });
 }

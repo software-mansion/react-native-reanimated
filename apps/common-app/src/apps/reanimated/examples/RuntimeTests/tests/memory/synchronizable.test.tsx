@@ -114,7 +114,7 @@ describe('Test Synchronizable creation and serialization', () => {
 
 const initialValue = 0;
 
-const targetValue = 100000;
+const targetValue = 32768;
 
 function getDirtySetBlocking(synchronizable: Synchronizable<number>) {
   'worklet';

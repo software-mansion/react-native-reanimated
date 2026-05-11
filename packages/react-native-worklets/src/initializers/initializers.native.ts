@@ -6,7 +6,6 @@ import {
   silenceHMRWarnings,
 } from '../bundleMode/metroOverrides';
 import { initializeNetworking } from '../bundleMode/network';
-import { setupCallGuard } from '../callGuard';
 import { registerReportFatalRemoteError } from '../debug/errors';
 import { getStaticFeatureFlag } from '../featureFlags/featureFlags';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
@@ -173,8 +172,6 @@ function initializeRNRuntime() {
 /** A function that should be run only on Worklet runtimes. */
 function initializeWorkletRuntime() {
   if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-    setupCallGuard();
-
     if (__DEV__) {
       silenceHMRWarnings();
       disallowRNImports();
@@ -196,11 +193,6 @@ function installRNBindingsOnUIRuntime() {
     throw new Error(
       '[Worklets] Worklets are trying to initialize the UI runtime without a valid WorkletsModule'
     );
-  }
-
-  if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-    /** In Bundle Mode Runtimes setup their callGuard themselves. */
-    runOnUISync(setupCallGuard);
   }
 
   const runtimeBoundCapturableConsole =

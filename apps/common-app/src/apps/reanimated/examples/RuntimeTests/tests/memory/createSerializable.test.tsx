@@ -43,13 +43,9 @@ describe('Test createSerializable', () => {
 
   Object.entries(schedulingFunction).forEach(([schedulingFunctionName, schedule]) => {
     describe(`using ${schedulingFunctionName}`, () => {
-      test('setup beforeEach', () => {
-        // TODO: there's a bug in ReJest and beforeEach has to be registered
-        // inside a test case.
-        beforeEach(() => {
-          result = false;
-          errorMessage = '';
-        });
+      beforeEach(() => {
+        result = false;
+        errorMessage = '';
       });
 
       test('createSerializableString', async () => {
@@ -427,21 +423,14 @@ describe('Test createSerializable', () => {
       });
 
       test('createSerializableTurboModuleLike', async () => {
-        const proto = globalThis.__reanimatedModuleProxy;
-        const reanimatedModuleKeys = Object.keys(proto);
-        const obj = {
-          a: 1,
-          b: 'test',
-        };
-        Object.setPrototypeOf(obj, proto);
+        const clipboard = TurboModuleRegistry.getEnforcing('Clipboard');
 
         schedule(() => {
           'worklet';
           const checks = [
-            obj.a === 1,
-            obj.b === 'test',
-            reanimatedModuleKeys.every(key => key in Object.getPrototypeOf(obj)),
-            'magicKey' in Object.getPrototypeOf(obj) === true,
+            Object.getOwnPropertyNames(clipboard).includes('magicKey') === false,
+            'magicKey' in Object.getPrototypeOf(clipboard) === true,
+            Object.keys(clipboard).every(key => key in Object.getPrototypeOf(clipboard)),
           ];
           scheduleOnRN(callbackPass, checks.every(Boolean));
         });
@@ -515,18 +504,18 @@ describe('Test createSerializable', () => {
         });
         await waitForNotification(FAIL_NOTIFICATION);
         expect(errorMessage).toInclude(
-          '[Worklets] Tried to synchronously call a remote function anonymous on ' +
+          '[Worklets] Tried to synchronously call a remote function `foo` on ' +
             (schedulingFunctionName === 'toUIRuntime' ? 'UI' : 'testRuntime') +
             ' runtime.',
         );
       });
 
       test('createSerializableRemoteAnonymousFunctionSyncCall', async () => {
-        const foo = () => {};
+        const foo = [() => {}];
         schedule(() => {
           'worklet';
           try {
-            foo();
+            foo[0]();
             scheduleOnRN(callbackPass, false);
           } catch (error) {
             scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
