@@ -35,15 +35,55 @@ This feature flags is supposed to improve the visual perception and perceived sm
 
 When enabled, the JavaScript call site that schedules a worklet (via `runOnUI`, `scheduleOnRuntime` and similar) is captured and attached to the worklet. If the worklet then throws on the worklet runtime, the resulting error stack is stitched together with the original scheduling stack so the LogBox entry points back to the line that scheduled it, rather than ending at the worklet runtime boundary. This makes errors thrown deep inside worklets much easier to trace back to their origin in your app code. For more details, see [PR #9313](https://github.com/software-mansion/react-native-reanimated/pull/9313).
 
-Below is an example of a cross-runtime stack trace produced with this flag enabled:
+Given the following snippet:
 
-<div style={{maxWidth: '320px'}}>
+```tsx
+import { scheduleOnUI } from 'react-native-worklets';
 
-![Cross-runtime stack trace](/img/cross-runtime-stack-trace.png)
+function hardToDebug(callback: () => void) {
+  'worklet';
+  callback();
+}
+
+function functionThatThrows() {
+  'worklet';
+  throw new Error("I'm not!");
+}
+
+function functionThatDoesntThrow() {
+  'worklet';
+  console.log("I'm okay");
+}
+
+export default function App() {
+  // Which invocation throws?
+  scheduleOnUI(hardToDebug, functionThatDoesntThrow);
+  scheduleOnUI(hardToDebug, functionThatThrows);
+  scheduleOnUI(hardToDebug, functionThatDoesntThrow);
+  return null;
+}
+```
+
+the call stack reported in LogBox differs depending on whether the flag is enabled:
+
+<div style={{display: 'flex', gap: '16px', alignItems: 'flex-start'}}>
+<div style={{flex: 1}}>
+
+**Enabled**
+
+![Cross-runtime stack trace with flag enabled](/img/cross-runtime-stack-trace-enabled.png)
 
 </div>
+<div style={{flex: 1}}>
 
-The frames without the `[UI]:` prefix (`enqueueUI`, `scheduleOnUI`, `EmptyExample`, ...) are the ones contributed by this feature. They come from the RN runtime call site that scheduled the worklet. Without the flag, the stack would stop at the worklet runtime boundary and only the `[UI]:` frames would be visible.
+**Disabled**
+
+![Cross-runtime stack trace with flag disabled](/img/cross-runtime-stack-trace-disabled.png)
+
+</div>
+</div>
+
+The frames without the `[UI]:` prefix (`enqueueUI`, `scheduleOnUI`, `App`, ...) are the ones contributed by this feature. They come from the RN runtime call site that scheduled the worklet. Without the flag, the stack stops at the worklet runtime boundary and only the `[UI]:` frames are visible.
 
 This flag only takes effect in development builds (`__DEV__`). In release builds, capturing the scheduling stack is skipped regardless of the flag value to avoid the runtime overhead. Disable this flag in development only if you specifically want to opt out of the additional bookkeeping.
 
