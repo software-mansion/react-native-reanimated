@@ -58,9 +58,22 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
     const bool allowPartialViews = false) {
 #ifdef ANDROID
   constexpr bool shouldRequireIntegerColors = true;
-#elif __APPLE__
+#else
   constexpr bool shouldRequireIntegerColors = false;
 #endif
+
+  const auto isSynchronous = [&](const std::string &keyStr, const folly::dynamic &value) {
+    if (!synchronousPropNames.contains(keyStr)) {
+      return false;
+    }
+    if (shouldRequireIntegerColors) {
+      const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
+      if (isColorProp && !value.isNumber()) {
+        return false;
+      }
+    }
+    return true;
+  };
 
   UpdatesBatch synchronousUpdatesBatch;
   UpdatesBatch shadowTreeUpdatesBatch;
@@ -72,10 +85,7 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
 
       for (const auto &[key, value] : props.items()) {
         const auto keyStr = key.asString();
-        const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
-        const bool isSynchronous =
-            synchronousPropNames.contains(keyStr) && (!shouldRequireIntegerColors || !isColorProp || value.isNumber());
-        if (isSynchronous) {
+        if (isSynchronous(keyStr, value)) {
           synchronousProps[keyStr] = value;
         } else {
           shadowTreeProps[keyStr] = value;
@@ -93,11 +103,7 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       bool hasOnlySynchronousProps = true;
 
       for (const auto &[key, value] : props.items()) {
-        const auto keyStr = key.asString();
-        const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
-        const bool isSynchronous =
-            synchronousPropNames.contains(keyStr) && (!shouldRequireIntegerColors || !isColorProp || value.isNumber());
-        if (!isSynchronous) {
+        if (!isSynchronous(key.asString(), value)) {
           hasOnlySynchronousProps = false;
           break;
         }
