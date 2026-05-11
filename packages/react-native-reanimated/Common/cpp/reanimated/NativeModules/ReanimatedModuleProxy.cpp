@@ -691,15 +691,16 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
 }
 
 void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, const bool allowPartialUpdates) {
-#ifdef ANDROID
   static const std::unordered_set<std::string> synchronousProps = {
       "opacity",
       "elevation",
       "zIndex",
-      // "shadowOpacity", // not supported on Android
-      // "shadowRadius", // not supported on Android
+#if __APPLE__
+      "shadowOpacity",
+      "shadowRadius",
+#endif // __APPLE__
       "backgroundColor",
-      // "color", // TODO: fix animating color of Animated.Text,
+      // "color", // not supported
       "tintColor",
       "borderRadius",
       "borderTopLeftRadius",
@@ -724,6 +725,7 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
       "transform",
   };
 
+#ifdef ANDROID
   auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
       partitionUpdates(updatesBatch, synchronousProps, true, allowPartialUpdates);
 
@@ -740,38 +742,6 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
 #endif // ANDROID
 
 #if __APPLE__
-  static const std::unordered_set<std::string> synchronousProps = {
-      "opacity",
-      "elevation",
-      "zIndex",
-      "shadowOpacity",
-      "shadowRadius",
-      "backgroundColor",
-      // "color", // TODO: fix animating color of Animated.Text
-      "tintColor",
-      "borderRadius",
-      "borderTopLeftRadius",
-      "borderTopRightRadius",
-      "borderTopStartRadius",
-      "borderTopEndRadius",
-      "borderBottomLeftRadius",
-      "borderBottomRightRadius",
-      "borderBottomStartRadius",
-      "borderBottomEndRadius",
-      "borderStartStartRadius",
-      "borderStartEndRadius",
-      "borderEndStartRadius",
-      "borderEndEndRadius",
-      "borderColor",
-      "borderTopColor",
-      "borderBottomColor",
-      "borderLeftColor",
-      "borderRightColor",
-      "borderStartColor",
-      "borderEndColor",
-      "transform",
-  };
-
   auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
       partitionUpdates(updatesBatch, synchronousProps, false, allowPartialUpdates);
 
