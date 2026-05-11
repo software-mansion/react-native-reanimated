@@ -82,6 +82,26 @@ export class TestSuiteBuilder {
     this._setSkipFlags();
   }
 
+  public beforeAll(job: MaybeAsync<void>) {
+    assertTestSuite(this._currentTestSuite);
+    this._currentTestSuite.beforeAll = job;
+  }
+
+  public afterAll(job: MaybeAsync<void>) {
+    assertTestSuite(this._currentTestSuite);
+    this._currentTestSuite.afterAll = job;
+  }
+
+  public beforeEach(job: MaybeAsync<void>) {
+    assertTestSuite(this._currentTestSuite);
+    this._currentTestSuite.beforeEach = job;
+  }
+
+  public afterEach(job: MaybeAsync<void>) {
+    assertTestSuite(this._currentTestSuite);
+    this._currentTestSuite.afterEach = job;
+  }
+
   private _setSkipFlags() {
     for (const testSuite of this._testSuites) {
       let skipTestSuite = testSuite.skip;

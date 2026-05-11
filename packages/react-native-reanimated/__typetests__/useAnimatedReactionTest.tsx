@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState } from 'react';
 
-import { useAnimatedReaction, useSharedValue } from '../..';
+import { useAnimatedReaction, useSharedValue } from '..';
 
 function UseAnimatedReactionTest() {
   const [state, setState] = useState();

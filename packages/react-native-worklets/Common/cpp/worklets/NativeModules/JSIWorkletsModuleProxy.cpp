@@ -30,7 +30,6 @@ using namespace facebook;
 namespace worklets {
 
 inline void scheduleOnUI(
-    const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
     jsi::Runtime &rt,
     const jsi::Value &serializableArrayOfWorkletsValue
@@ -67,11 +66,15 @@ inline void scheduleOnUI(
   }
 #endif // NDEBUG
 
-  uiScheduler->scheduleOnUI([worklets = std::move(worklets),
+  auto uiWorkletRuntime = weakUIWorkletRuntime.lock();
+  if (!uiWorkletRuntime) {
+    return;
+  }
+  uiWorkletRuntime->schedule([worklets = std::move(worklets),
 #ifndef NDEBUG
-                             scheduleStacks = std::move(scheduleStacks),
+                              scheduleStacks = std::move(scheduleStacks),
 #endif // NDEBUG
-                             weakUIWorkletRuntime]() {
+                              weakUIWorkletRuntime]() {
     // This callback can outlive the WorkletsModuleProxy object during the
     // invalidation of React Native. This happens when WorkletsModuleProxy
     // destructor is called on the JS thread and the UI thread is
@@ -400,12 +403,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       rt,
       obj,
       "scheduleOnUI",
-      [uiScheduler = uiScheduler_, uiWorkletRuntime = uiWorkletRuntime_](
-          jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+      [uiWorkletRuntime = uiWorkletRuntime_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
 #ifndef NDEBUG
-        scheduleOnUI(uiScheduler, uiWorkletRuntime, rt, at<0>(args), at<1>(args));
+        scheduleOnUI(uiWorkletRuntime, rt, at<0>(args), at<1>(args));
 #else
-        scheduleOnUI(uiScheduler, uiWorkletRuntime, rt, at<0>(args));
+        scheduleOnUI(uiWorkletRuntime, rt, at<0>(args));
 #endif // NDEBUG
       });
 
