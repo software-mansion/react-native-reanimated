@@ -726,9 +726,15 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
   };
 
 #ifdef ANDROID
-  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
-      partitionUpdates(updatesBatch, synchronousProps, true, allowPartialUpdates);
+  constexpr bool shouldRequireIntegerColors = true;
+#elif __APPLE__
+  constexpr bool shouldRequireIntegerColors = false;
+#endif
 
+  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
+      partitionUpdates(updatesBatch, synchronousProps, shouldRequireIntegerColors, allowPartialUpdates);
+
+#ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {
     std::vector<int> intBuffer;
     std::vector<double> doubleBuffer;
@@ -737,20 +743,15 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
     serializeSynchronousPropsToBuffers(synchronousUpdatesBatch, intBuffer, doubleBuffer);
     synchronouslyUpdateUIPropsFunction_(intBuffer, doubleBuffer);
   }
-
-  updatesBatch = std::move(shadowTreeUpdatesBatch);
 #endif // ANDROID
 
 #if __APPLE__
-  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
-      partitionUpdates(updatesBatch, synchronousProps, false, allowPartialUpdates);
-
   for (const auto &[shadowNodeFamily, props] : synchronousUpdatesBatch) {
     synchronouslyUpdateUIPropsFunction_(shadowNodeFamily->getTag(), props);
   }
+#endif // __APPLE__
 
   updatesBatch = std::move(shadowTreeUpdatesBatch);
-#endif // __APPLE__
 }
 
 void ReanimatedModuleProxy::requestFlushRegistry() {
