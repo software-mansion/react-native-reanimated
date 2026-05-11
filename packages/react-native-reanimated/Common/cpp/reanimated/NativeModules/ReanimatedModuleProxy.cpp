@@ -90,22 +90,18 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       "transform",
   };
 
-#ifdef ANDROID
-  constexpr bool shouldRequireIntegerColors = true;
-#else
-  constexpr bool shouldRequireIntegerColors = false;
-#endif
-
-  const auto isSynchronous = [&](const std::string &keyStr, const folly::dynamic &value) {
+  const auto isSynchronous = [&](const std::string &keyStr, [[maybe_unused]] const folly::dynamic &value) {
     if (!synchronousPropNames.contains(keyStr)) {
       return false;
     }
-    if (shouldRequireIntegerColors) {
-      const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
-      if (isColorProp && !value.isNumber()) {
-        return false;
-      }
+#ifdef ANDROID
+    // The Android synchronous path serializes color props into an int buffer via `value.asInt()`,
+    // so non-numeric color values (e.g. strings) must fall back to the shadow tree commit path.
+    const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
+    if (isColorProp && !value.isNumber()) {
+      return false;
     }
+#endif // ANDROID
     return true;
   };
 
