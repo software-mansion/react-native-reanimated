@@ -64,7 +64,7 @@ export default function App() {
 }
 ```
 
-the call stack reported in LogBox differs depending on whether the flag is enabled:
+The call stack reported in LogBox differs depending on whether the flag is enabled:
 
 <div style={{display: 'flex', gap: '16px', alignItems: 'flex-start'}}>
 <div style={{flex: 1}}>
