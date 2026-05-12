@@ -2,12 +2,12 @@
 import React from 'react';
 import { Text } from 'react-native';
 
-import type { ReanimatedEvent } from '../..';
+import type { ReanimatedEvent } from '..';
 import Animated, {
   useAnimatedScrollHandler,
   useComposedEventHandler,
   useEvent,
-} from '../..';
+} from '..';
 
 function useComposedEventHandlerTest() {
   function useComposedEventHandlerTestDifferentHandlers() {

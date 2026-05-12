@@ -3,7 +3,7 @@ import React from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { FlatList, ScrollView } from 'react-native';
 
-import Animated, { useAnimatedScrollHandler, useSharedValue } from '../..';
+import Animated, { useAnimatedScrollHandler, useSharedValue } from '..';
 
 function UseAnimatedScrollHandlerTest() {
   function UseAnimatedScrollHandlerTest1() {

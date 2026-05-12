@@ -741,13 +741,6 @@ type RemoteFunction<TValue = unknown> = {
   __remoteFunction: FlatSerializableRef<TValue>;
 };
 
-function isRemoteFunction<TValue>(value: {
-  __remoteFunction?: unknown;
-}): value is RemoteFunction<TValue> {
-  'worklet';
-  return !!value.__remoteFunction;
-}
-
 /**
  * We freeze
  *
@@ -804,11 +797,12 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
           value
         ) as FlatSerializableRef<TValue>;
       }
-      if (isRemoteFunction<TValue>(value)) {
+      if ((value as Record<string, unknown>).__remoteFunction) {
         // RemoteFunctions are created by us therefore they are
         // a Serializable out of the box and there is no need to
         // call `_createSerializableClone`.
-        return value.__remoteFunction;
+        return (value as Record<string, unknown>)
+          .__remoteFunction as FlatSerializableRef<TValue>;
       }
       if (Array.isArray(value)) {
         return global._createSerializableArray(

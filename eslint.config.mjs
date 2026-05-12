@@ -15,7 +15,6 @@ import nodePlugin from 'eslint-plugin-n';
 // @ts-expect-error No types for eslint-plugin-promise.
 import pluginPromise from 'eslint-plugin-promise';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import { fixupPluginRules } from '@eslint/compat';
 
 /** @type {import('typescript-eslint').ConfigWithExtends['rules']} */
@@ -113,7 +112,6 @@ const tsCommonExtends = [
   importPlugin.flatConfigs.recommended,
   importPlugin.flatConfigs.typescript,
   nodePlugin.configs['flat/recommended-script'],
-  eslintPluginPrettierRecommended,
   react.configs.flat.recommended,
   react.configs.flat['jsx-runtime'],
 ];

@@ -205,7 +205,8 @@ void serializeSynchronousPropsToBuffers(
     intBuffer.push_back(CMD_START_OF_VIEW);
     intBuffer.push_back(shadowNodeFamily->getTag());
     for (const auto &[key, value] : props.items()) {
-      const auto command = propNameToCommand(key.getString());
+      const auto &propName = key.getString();
+      const auto command = propNameToCommand(propName);
       switch (command) {
         case CMD_OPACITY:
         case CMD_ELEVATION:
@@ -266,7 +267,8 @@ void serializeSynchronousPropsToBuffers(
             react_native_assert(item.isObject() && "[Reanimated] Transform array item must be an object");
             react_native_assert(
                 item.size() == 1 && "[Reanimated] Transform array item must have exactly one key-value pair");
-            const auto transformCommand = transformNameToCommand(item.keys().begin()->getString());
+            const auto &transformName = item.keys().begin()->getString();
+            const auto transformCommand = transformNameToCommand(transformName);
             const auto &transformValue = *item.values().begin();
             switch (transformCommand) {
               case CMD_TRANSFORM_SCALE:
@@ -323,10 +325,15 @@ void serializeSynchronousPropsToBuffers(
                 }
                 break;
               }
+              default:
+                throw std::runtime_error("[Reanimated] Unsupported transform: " + transformName);
             }
           }
           intBuffer.push_back(CMD_END_OF_TRANSFORM);
           break;
+
+        default:
+          throw std::runtime_error("[Reanimated] Unsupported prop: " + propName);
       }
     }
     intBuffer.push_back(CMD_END_OF_VIEW);

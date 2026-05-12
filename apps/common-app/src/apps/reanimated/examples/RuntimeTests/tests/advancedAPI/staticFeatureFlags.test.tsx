@@ -4,8 +4,8 @@ import { getStaticFeatureFlag as getStaticFeatureFlagWorklets } from 'react-nati
 import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
 
 /**
- * This flag is `false` by default - this test checks if setting it
- * to `true` in `package.json` is picked up on the native side.
+ * This flag is `false` by default - this test checks if setting it to `true` in
+ * `package.json` is picked up on the native side.
  */
 const RUNTIME_TEST_FLAG = 'RUNTIME_TEST_FLAG';
 

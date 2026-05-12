@@ -8,8 +8,9 @@ import type { SharedValue } from '../commonTypes';
 import { makeMutable, startMapper, stopMapper } from '../core';
 import type { DependencyList } from './commonTypes';
 
-export interface DerivedValue<Value = unknown>
-  extends Readonly<Omit<SharedValue<Value>, 'set'>> {
+export interface DerivedValue<Value = unknown> extends Readonly<
+  Omit<SharedValue<Value>, 'set'>
+> {
   /**
    * @deprecated Derived values are readonly, don't use this method. It's here
    *   only to prevent breaking changes in TypeScript types. It will be removed

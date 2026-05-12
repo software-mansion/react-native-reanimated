@@ -94,8 +94,10 @@ export interface ReanimatedModuleProxy {
   getSettledUpdates(): SettledUpdate[];
 }
 
-export interface IReanimatedModule
-  extends Omit<ReanimatedModuleProxy, 'getViewProp'> {
+export interface IReanimatedModule extends Omit<
+  ReanimatedModuleProxy,
+  'getViewProp'
+> {
   getViewProp<TValue>(
     viewTag: number,
     propName: string,

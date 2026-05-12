@@ -6,10 +6,10 @@ if (window && typeof window.matchMedia !== 'function') {
     matches: false,
     media: query,
     onchange: null,
-    addEventListener: () => { },
-    removeEventListener: () => { },
-    addListener: () => { },
-    removeListener: () => { },
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
     dispatchEvent: () => false,
   });
 }
