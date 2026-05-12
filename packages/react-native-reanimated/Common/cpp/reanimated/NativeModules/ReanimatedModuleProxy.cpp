@@ -1,3 +1,4 @@
+#include <folly/dynamic.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <reanimated/Compat/WorkletsApi.h>
@@ -10,6 +11,7 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReaJSIUtils.h>
+#include <reanimated/Tools/ReanimatedPerformanceTracerSection.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #ifdef __ANDROID__
@@ -18,6 +20,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -154,6 +157,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 }
 
 void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMethodsHolder) {
+  reanimatedPerformanceTracerMarkCurrentThreadAsJs();
+
   auto onRenderCallback = [weakThis = weak_from_this()](const double timestampMs) {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
@@ -397,6 +402,8 @@ bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(const std::string &event
 }
 
 void ReanimatedModuleProxy::onRender(double timestampMs) {
+  reanimatedPerformanceTracerMarkCurrentThreadAsUi();
+
   ReanimatedSystraceSection s("ReanimatedModuleProxy::onRender");
   // NOOP
 }
@@ -540,7 +547,16 @@ bool ReanimatedModuleProxy::handleEvent(
     const int emitterReactTag,
     const jsi::Value &payload,
     double currentTime) {
+  reanimatedPerformanceTracerMarkCurrentThreadAsUi();
+
   ReanimatedSystraceSection s("ReanimatedModuleProxy::handleEvent");
+  ReanimatedPerformanceTracerSection pts("handleEvent", [&](folly::dynamic &props) {
+    jsi::Runtime &rt = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
+    props.push_back(folly::dynamic::array("eventName", eventName));
+    const auto json = rt.global().getPropertyAsObject(rt, "JSON");
+    const auto stringify = json.getPropertyAsFunction(rt, "stringify");
+    props.push_back(folly::dynamic::array("payload", stringify.call(rt, payload).asString(rt).utf8(rt)));
+  });
 
   eventHandlerRegistry_->processEvent(uiRuntime_, currentTime, eventName, emitterReactTag, payload);
 
@@ -550,7 +566,19 @@ bool ReanimatedModuleProxy::handleEvent(
 }
 
 bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double currentTime) {
+  reanimatedPerformanceTracerMarkCurrentThreadAsUi();
+
   ReanimatedSystraceSection s("ReanimatedModuleProxy::handleRawEvent");
+  ReanimatedPerformanceTracerSection pts("handleRawEvent", [&](folly::dynamic &props) {
+    jsi::Runtime &rt = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
+    props.push_back(folly::dynamic::array("type", rawEvent.type));
+    if (rawEvent.eventPayload != nullptr) {
+      const jsi::Value v = rawEvent.eventPayload->asJSIValue(rt);
+      const auto json = rt.global().getPropertyAsObject(rt, "JSON");
+      const auto stringify = json.getPropertyAsFunction(rt, "stringify");
+      props.push_back(folly::dynamic::array("payload", stringify.call(rt, v).asString(rt).utf8(rt)));
+    }
+  });
 
   const EventTarget *eventTarget = rawEvent.eventTarget.get();
   if (eventTarget == nullptr) {
@@ -622,7 +650,11 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
 
 void ReanimatedModuleProxy::performOperations() {
   // Always on UI thread.
+
+  reanimatedPerformanceTracerMarkCurrentThreadAsUi();
+
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
+  ReanimatedPerformanceTracerSection pts("performOperations");
 
   std::set<SurfaceId> flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
   for (const auto surfaceId : flushRequestsCopy) {
@@ -683,7 +715,10 @@ void ReanimatedModuleProxy::performOperations() {
 }
 
 void ReanimatedModuleProxy::performNonLayoutOperations() {
+  reanimatedPerformanceTracerMarkCurrentThreadAsUi();
+
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performNonLayoutOperations");
+  ReanimatedPerformanceTracerSection pts("performNonLayoutOperations");
 
   UpdatesBatch updatesBatch = animatedPropsRegistry_->getPendingUpdates();
 
@@ -728,6 +763,10 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
       partitionUpdates(updatesBatch, synchronousProps, true, allowPartialUpdates);
 
   if (!synchronousUpdatesBatch.empty()) {
+    ReanimatedPerformanceTracerSection pts("synchronous prop updates", [&](folly::dynamic &props) {
+      props.push_back(folly::dynamic::array("view count", std::to_string(synchronousUpdatesBatch.size())));
+    });
+
     std::vector<int> intBuffer;
     std::vector<double> doubleBuffer;
     intBuffer.reserve(1024);
@@ -775,8 +814,14 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
   auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
       partitionUpdates(updatesBatch, synchronousProps, false, allowPartialUpdates);
 
-  for (const auto &[shadowNodeFamily, props] : synchronousUpdatesBatch) {
-    synchronouslyUpdateUIPropsFunction_(shadowNodeFamily->getTag(), props);
+  if (!synchronousUpdatesBatch.empty()) {
+    ReanimatedPerformanceTracerSection pts("synchronous prop updates", [&](folly::dynamic &props) {
+      props.push_back(folly::dynamic::array("view count", std::to_string(synchronousUpdatesBatch.size())));
+    });
+
+    for (const auto &[shadowNodeFamily, props] : synchronousUpdatesBatch) {
+      synchronouslyUpdateUIPropsFunction_(shadowNodeFamily->getTag(), props);
+    }
   }
 
   updatesBatch = std::move(shadowTreeUpdatesBatch);
@@ -793,6 +838,8 @@ void ReanimatedModuleProxy::requestFlushRegistry() {
 
 void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::commitUpdates");
+  ReanimatedPerformanceTracerSection pts("commitUpdates");
+
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
 
@@ -821,8 +868,14 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
 
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
+      ReanimatedSystraceSection s1("ShadowTree::commit");
+      ReanimatedPerformanceTracerSection pts1("ShadowTree::commit");
+
       const auto status = shadowTree.commit(
           [&](RootShadowNode const &oldRootShadowNode) -> RootShadowNode::Unshared {
+            ReanimatedSystraceSection s2("transaction");
+            ReanimatedPerformanceTracerSection pts2("transaction");
+
             if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
               return nullptr;
             }

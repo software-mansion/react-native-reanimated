@@ -88,5 +88,6 @@ Pod::Spec.new do |s|
   install_modules_dependencies(s)
 
   s.dependency 'React-jsi'
+  s.dependency 'React-jsinspectortracing'
   s.dependency 'React-hermes'
 end

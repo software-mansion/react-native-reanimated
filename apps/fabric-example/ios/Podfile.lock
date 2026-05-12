@@ -1944,6 +1944,7 @@ PODS:
     - React-hermes
     - React-ImageManager
     - React-jsi
+    - React-jsinspectortracing
     - React-NativeModulesApple
     - React-RCTFabric
     - React-renderercss
@@ -1970,6 +1971,7 @@ PODS:
     - React-hermes
     - React-ImageManager
     - React-jsi
+    - React-jsinspectortracing
     - React-NativeModulesApple
     - React-RCTFabric
     - React-renderercss
@@ -1994,6 +1996,7 @@ PODS:
     - React-hermes
     - React-ImageManager
     - React-jsi
+    - React-jsinspectortracing
     - React-NativeModulesApple
     - React-RCTFabric
     - React-renderercss
@@ -2509,7 +2512,7 @@ SPEC CHECKSUMS:
   RNCClipboard: 715fa7c6c8366f17d00f05a439ee7488f390fa5f
   RNCMaskedView: eb2b2e538afa907f05a5848a1a1ac26092e6fec9
   RNGestureHandler: c84901d120acdae2f6f27b5889a7cf144e64e6ec
-  RNReanimated: 2ef44fc6be85b2152c5bb63c9d7747a48c9fa6e5
+  RNReanimated: ef98dabfd7a4d2fb59a602fa111b9dc259a4eb50
   RNScreens: 01b065ded2dfe7987bcce770ff3a196be417ff41
   RNSVG: 04044c3abcf177fd674a1a3d13097efa1adebcbe
   RNWorklets: 3851d0b15e5694cedc4ca65ff1bc2b93e9752640
