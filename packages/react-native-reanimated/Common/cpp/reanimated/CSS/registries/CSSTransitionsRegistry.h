@@ -26,11 +26,12 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
   bool isEmpty() const override;
   bool hasUpdates() const;
 
-  void updateSettingsOrRun(
+  // TO DO: In the future we want to decouple config update and run
+  void updateConfigOrRun(
       jsi::Runtime &rt,
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const CSSTransitionConfig &config);
-  // run Should be called only after someone has already set settings with updateSettingsOrRun
+  /// run Should be called only after someone has already set settings with updateConfigOrRun
   void run(
       jsi::Runtime &rt,
       const std::shared_ptr<const ShadowNode> &shadowNode,

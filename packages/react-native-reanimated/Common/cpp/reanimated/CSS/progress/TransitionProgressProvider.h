@@ -9,6 +9,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 namespace reanimated::css {
 
@@ -55,16 +56,17 @@ class TransitionProgressProvider final {
   std::unordered_set<std::string> getRemovedProperties() const;
 
   void runProgressProvider(const std::string &propertyName, bool isReversed, double timestamp);
-  void removeProperty(const std::string &propertyName);
+  void removeProperties(const std::vector<std::string> &propertyNames);
   void discardFinishedProgressProviders();
   void update(double timestamp);
-  void setPropertySettings(const std::string &propertyName, const CSSTransitionPropertySettings &propertySettings);
+  void setPropertySettings(const PropertiesSettingsMap &changedPropertiesSettings);
   CSSTransitionPropertySettings getPropertySettings(const std::string &propertyName) const;
 
  private:
   TransitionPropertyProgressProviders propertyProgressProviders_;
 
-  // Never cleaned by design - if the property has already been transitioned in the past, we might want to reuse the config (run without settings in the config).
+  // TO DO: currently never cleaned by design - if the property has already been transitioned in the past, we might want to reuse the config (run without settings in the config).
+  /// We might want to add an option for clearing those settings in the future.
   PropertiesSettingsMap propertySettings_;
 
   std::unordered_set<std::string> removedProperties_;

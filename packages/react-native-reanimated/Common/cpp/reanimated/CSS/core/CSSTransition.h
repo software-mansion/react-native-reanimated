@@ -30,7 +30,7 @@ class CSSTransition {
       const PropertyValueDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
       double timestamp);
-  void updateSettings(
+  void updateConfig(
       const PropertiesSettingsMap &changedPropertiesSettings,
       const std::vector<std::string> &removedProperties);
   folly::dynamic update(double timestamp);
@@ -47,9 +47,7 @@ class CSSTransition {
       const PropertyValueDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
       double timestamp);
-  void handleChangedSettings(const PropertiesSettingsMap &changedPropertiesSettings);
-  void handleRemovedProperties(const std::vector<std::string> &config);
-  void removeProperty(const std::string &propertyName);
+  void removeProperties(const std::vector<std::string> &propertyNames);
 };
 
 } // namespace reanimated::css

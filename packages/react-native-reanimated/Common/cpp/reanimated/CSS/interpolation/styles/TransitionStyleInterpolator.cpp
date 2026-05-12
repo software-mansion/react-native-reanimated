@@ -42,16 +42,17 @@ void TransitionStyleInterpolator::setAllowDiscrete(const std::string &propertyNa
   }
 }
 
-void TransitionStyleInterpolator::removeProperty(const std::string &propertyName) {
-  interpolators_.erase(propertyName);
-  allowDiscreteProperties_.erase(propertyName);
+void TransitionStyleInterpolator::removeProperties(const std::vector<std::string> &propertyNames) {
+  for (const auto &propertyName : propertyNames) {
+    interpolators_.erase(propertyName);
+    allowDiscreteProperties_.erase(propertyName);
+  }
 }
 
 void TransitionStyleInterpolator::discardFinishedInterpolators(
     const TransitionProgressProvider &transitionProgressProvider) {
-  for (const auto &propertyName : transitionProgressProvider.getRemovedProperties()) {
-    removeProperty(propertyName);
-  }
+  const auto &removedProperties = transitionProgressProvider.getRemovedProperties();
+  removeProperties(std::vector<std::string>(removedProperties.begin(), removedProperties.end()));
 }
 
 std::shared_ptr<PropertyInterpolator> TransitionStyleInterpolator::getOrCreateInterpolator(

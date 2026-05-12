@@ -49,15 +49,15 @@ folly::dynamic CSSTransition::run(
   return update(timestamp);
 }
 
-void CSSTransition::updateSettings(
+void CSSTransition::updateConfig(
     const PropertiesSettingsMap &changedPropertiesSettings,
     const std::vector<std::string> &removedProperties) {
 
   // Remove interpolators and progress providers for no longer transitioned props
-  handleRemovedProperties(removedProperties);
+  removeProperties(removedProperties);
 
   // Update the settings saved in progress provider
-  handleChangedSettings(changedPropertiesSettings);
+  progressProvider_.setPropertySettings(changedPropertiesSettings);
 }
 
 folly::dynamic CSSTransition::update(const double timestamp) {
@@ -83,23 +83,21 @@ void CSSTransition::handleChangedProperties(
     const auto allowDiscrete = progressProvider_.getPropertySettings(propertyName).allowDiscrete;
 
     if (!allowDiscrete && isDiscreteProperty(propertyName, shadowNode_->getComponentName())) {
-      removeProperty(propertyName);
+      removeProperties({propertyName});
       continue;
     }
 
     transitionProperties_.insert(propertyName);
 
     // Update the transition style interpolator
-    const auto &valueChange = propertyDiff;
-
     bool isReversed;
     if (lastUpdateValue.count(propertyName)) {
       // TODO - get rid of lastValue dynamic in the future
       isReversed = styleInterpolator_.createOrUpdateInterpolator(
-          rt, propertyName, jsi::valueFromDynamic(rt, lastUpdateValue.at(propertyName)), valueChange.second);
+          rt, propertyName, jsi::valueFromDynamic(rt, lastUpdateValue.at(propertyName)), propertyDiff.second);
     } else {
       isReversed =
-          styleInterpolator_.createOrUpdateInterpolator(rt, propertyName, valueChange.first, valueChange.second);
+          styleInterpolator_.createOrUpdateInterpolator(rt, propertyName, propertyDiff.first, propertyDiff.second);
     }
 
     // We still pass allowDiscrete to use correct threshold for interpolation between incompatible values
@@ -111,22 +109,12 @@ void CSSTransition::handleChangedProperties(
   }
 }
 
-void CSSTransition::handleChangedSettings(const PropertiesSettingsMap &changedPropertiesSettings) {
-  for (const auto &[propertyName, propertySettings] : changedPropertiesSettings) {
-    progressProvider_.setPropertySettings(propertyName, propertySettings);
+void CSSTransition::removeProperties(const std::vector<std::string> &propertyNames) {
+  styleInterpolator_.removeProperties(propertyNames);
+  progressProvider_.removeProperties(propertyNames);
+  for (const auto &propertyName : propertyNames) {
+    transitionProperties_.erase(propertyName);
   }
-}
-
-void CSSTransition::handleRemovedProperties(const std::vector<std::string> &removedProperties) {
-  for (const auto &propertyName : removedProperties) {
-    removeProperty(propertyName);
-  }
-}
-
-void CSSTransition::removeProperty(const std::string &propertyName) {
-  transitionProperties_.erase(propertyName);
-  styleInterpolator_.removeProperty(propertyName);
-  progressProvider_.removeProperty(propertyName);
 }
 
 } // namespace reanimated::css
