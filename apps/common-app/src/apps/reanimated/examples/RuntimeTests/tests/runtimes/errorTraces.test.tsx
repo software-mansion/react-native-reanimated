@@ -53,7 +53,7 @@ describe('Error traces from UI', () => {
       throw new Error();
     });
 
-    expect(errorData?.stack?.includes('at [UI]:')).toBe(true);
+    expect(errorData?.stack).toInclude('at [UI]:');
   });
 
   test('scheduleOnUI has good stack trace added', async () => {
@@ -67,8 +67,8 @@ describe('Error traces from UI', () => {
     });
 
     await waitForNotification('errorReported');
-    expect(errorData?.stack?.includes('at [UI]:')).toBe(true);
-    expect(errorData?.stack?.includes('at [UI]: functionNameA')).toBe(true);
+    expect(errorData?.stack).toInclude('at [UI]:');
+    expect(errorData?.stack).toInclude('at [UI]: functionNameA');
   });
 
   test('scheduleOnRuntime has good stack trace added', async () => {
@@ -83,10 +83,8 @@ describe('Error traces from UI', () => {
     });
 
     await waitForNotification('errorReported');
-    expect(errorData?.stack?.includes('at [testRuntime]:')).toBe(true);
-    expect(errorData?.stack?.includes('at [testRuntime]: functionNameB')).toBe(
-      true
-    );
+    expect(errorData?.stack).toInclude('at [testRuntime]:');
+    expect(errorData?.stack).toInclude('at [testRuntime]: functionNameB');
   });
 
   test('runOnUISync has good stack trace added', async () => {
@@ -101,8 +99,8 @@ describe('Error traces from UI', () => {
     });
 
     await waitForNotification('errorReported');
-    expect(errorData?.stack?.includes('at [UI]:')).toBe(true);
-    expect(errorData?.stack?.includes('at [UI]: functionNameC')).toBe(true);
+    expect(errorData?.stack).toInclude('at [UI]:');
+    expect(errorData?.stack).toInclude('at [UI]: functionNameC');
   });
 
   test('runOnRuntimeSync has good stack trace added', async () => {
@@ -117,10 +115,8 @@ describe('Error traces from UI', () => {
     });
 
     await waitForNotification('errorReported');
-    expect(errorData?.stack?.includes('at [testRuntime]:')).toBe(true);
-    expect(errorData?.stack?.includes('at [testRuntime]: functionNameD')).toBe(
-      true
-    );
+    expect(errorData?.stack).toInclude('at [testRuntime]:');
+    expect(errorData?.stack).toInclude('at [testRuntime]: functionNameD');
   });
 
   test('batched scheduleOnUI: throw in middle job does not break siblings, each job has its own stack', async () => {
@@ -146,8 +142,8 @@ describe('Error traces from UI', () => {
     await waitForNotification('job1Ran');
     await waitForNotification('job3Ran');
 
-    expect(errorData?.stack?.includes('at [UI]: functionNameJob2')).toBe(true);
-    expect(errorData?.stack?.includes('at [UI]: functionNameJob1')).toBe(false);
-    expect(errorData?.stack?.includes('at [UI]: functionNameJob3')).toBe(false);
+    expect(errorData?.stack).toInclude('at [UI]: functionNameJob2');
+    expect(errorData?.stack).not.toInclude('at [UI]: functionNameJob1');
+    expect(errorData?.stack).not.toInclude('at [UI]: functionNameJob3');
   });
 });
