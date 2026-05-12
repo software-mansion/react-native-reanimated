@@ -15,9 +15,9 @@ We recommend using handy shorthands like [isRNRuntime](/docs/utility/isRNRuntime
 ```typescript
 import {
   getRuntimeKind,
-  scheduleOnUI,
   createWorkletRuntime,
   scheduleOnRuntime,
+  scheduleOnUI,
 } from 'react-native-worklets';
 
 console.log(getRuntimeKind()); // 1 (RN Runtime)
@@ -94,8 +94,6 @@ randomDispatch(); // Could log either "RN: Hello!" or "UI: Hello!"
 For micro-optimizations of your code you can skip the invocation of `getRuntimeKind` and use the global variable `__RUNTIME_KIND` directly:
 
 ```typescript
-import { getRuntimeKind } from 'react-native-worklets';
-
 console.log(globalThis.__RUNTIME_KIND); // 1 (RN Runtime)
 ```
 

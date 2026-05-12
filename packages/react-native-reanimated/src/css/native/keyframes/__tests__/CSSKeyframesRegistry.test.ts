@@ -193,4 +193,117 @@ describe('CSSKeyframesRegistry', () => {
       expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(1); // Finally, the animation is removed
     });
   });
+
+  describe('get', () => {
+    test('returns the rule when looked up by its name', () => {
+      cssKeyframesRegistry.add(
+        keyframesRule1,
+        viewTag1,
+        COMPOUND_COMPONENT_NAME
+      );
+
+      expect(cssKeyframesRegistry.get(keyframesRule1.name)).toBe(
+        keyframesRule1
+      );
+    });
+
+    test('returns the rule when looked up by its cssText', () => {
+      cssKeyframesRegistry.add(
+        keyframesRule1,
+        viewTag1,
+        COMPOUND_COMPONENT_NAME
+      );
+
+      expect(cssKeyframesRegistry.get(keyframesRule1.cssText)).toBe(
+        keyframesRule1
+      );
+    });
+
+    test('returns undefined when neither name nor cssText match a registered rule', () => {
+      cssKeyframesRegistry.add(
+        keyframesRule1,
+        viewTag1,
+        COMPOUND_COMPONENT_NAME
+      );
+
+      expect(
+        cssKeyframesRegistry.get('not-a-registered-animation-name')
+      ).toBeUndefined();
+      expect(
+        cssKeyframesRegistry.get('{"to":{"opacity":0.99}}')
+      ).toBeUndefined();
+    });
+
+    test.each([
+      {
+        which: 'first-added',
+        removed: keyframesRule1,
+        removedViewTag: viewTag1,
+        survivor: keyframesRule2,
+      },
+      {
+        which: 'second-added',
+        removed: keyframesRule2,
+        removedViewTag: viewTag2,
+        survivor: keyframesRule1,
+      },
+    ])(
+      'finds a survivor by content lookup after the $which rule is removed',
+      ({ removed, removedViewTag, survivor }) => {
+        // Two separately-constructed rules share the same cssText but have
+        // different names — both must remain reachable by content lookup
+        // until the last one is removed.
+        expect(keyframesRule1.cssText).toBe(keyframesRule2.cssText);
+        expect(keyframesRule1.name).not.toBe(keyframesRule2.name);
+
+        cssKeyframesRegistry.add(
+          keyframesRule1,
+          viewTag1,
+          COMPOUND_COMPONENT_NAME
+        );
+        cssKeyframesRegistry.add(
+          keyframesRule2,
+          viewTag2,
+          COMPOUND_COMPONENT_NAME
+        );
+
+        cssKeyframesRegistry.remove(
+          removed.name,
+          removedViewTag,
+          COMPOUND_COMPONENT_NAME
+        );
+
+        expect(cssKeyframesRegistry.get(keyframesRule1.cssText)).toBe(survivor);
+      }
+    );
+
+    test('returns undefined from content lookup only after every same-content rule is removed', () => {
+      cssKeyframesRegistry.add(
+        keyframesRule1,
+        viewTag1,
+        COMPOUND_COMPONENT_NAME
+      );
+      cssKeyframesRegistry.add(
+        keyframesRule2,
+        viewTag2,
+        COMPOUND_COMPONENT_NAME
+      );
+
+      cssKeyframesRegistry.remove(
+        keyframesRule1.name,
+        viewTag1,
+        COMPOUND_COMPONENT_NAME
+      );
+      expect(cssKeyframesRegistry.get(keyframesRule1.cssText)).toBe(
+        keyframesRule2
+      );
+
+      cssKeyframesRegistry.remove(
+        keyframesRule2.name,
+        viewTag2,
+        COMPOUND_COMPONENT_NAME
+      );
+      expect(cssKeyframesRegistry.get(keyframesRule1.cssText)).toBeUndefined();
+    });
+  });
 });
