@@ -465,7 +465,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
               rt,
               args[0],
               "[Worklets] Locally defined function passed to scheduleOnRN" + name +
-                  ". Only functions defined on the RN Runtime or host functions can be scheduled on the RN Runtime. Define the function on the RN Runtime and pass it as a reference. See TODO: for more details.");
+                  ". Only functions defined on the RN Runtime or host functions can be scheduled on the RN Runtime. Define the function on the RN Runtime and pass it as a reference. See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#locally-defined-function-passed-to-scheduleonrn for more details.");
           jsScheduler->scheduleOnJS([remoteFunction, serializableArgs](jsi::Runtime &rnRuntime) {
             auto fun = remoteFunction->toJSValue(rnRuntime).asObject(rnRuntime).asFunction(rnRuntime);
 
