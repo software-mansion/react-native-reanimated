@@ -1,9 +1,11 @@
 #pragma once
 
 #include <reanimated/CSS/InterpolatorRegistry.h>
-#include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
+
+#include <folly/dynamic.h>
+#include <jsi/jsi.h>
 
 #include <memory>
 #include <string>
@@ -12,6 +14,8 @@
 #include <vector>
 
 namespace reanimated::css {
+
+using namespace facebook;
 
 class TransitionStyleInterpolator {
  public:

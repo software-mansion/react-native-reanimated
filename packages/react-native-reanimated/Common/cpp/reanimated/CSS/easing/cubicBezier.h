@@ -2,7 +2,11 @@
 
 #include <reanimated/CSS/common/definitions.h>
 
+#include <jsi/jsi.h>
+
 namespace reanimated::css {
+
+using namespace facebook;
 
 double sampleCurveX(double t, double x1, double x2);
 double sampleCurveY(double t, double y1, double y2);

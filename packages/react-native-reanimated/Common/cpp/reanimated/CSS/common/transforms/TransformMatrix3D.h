@@ -6,6 +6,8 @@
 #include <reanimated/CSS/common/transforms/vectors.h>
 
 #include <folly/dynamic.h>
+#include <jsi/jsi.h>
+
 #include <utility>
 
 namespace reanimated::css {

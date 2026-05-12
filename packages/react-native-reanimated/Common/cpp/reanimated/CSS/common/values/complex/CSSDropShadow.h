@@ -1,16 +1,20 @@
 #pragma once
 
 #include <reanimated/CSS/common/FieldValidator.h>
-#include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/common/values/CSSBoolean.h>
 #include <reanimated/CSS/common/values/CSSColor.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
+
+#include <folly/dynamic.h>
+#include <jsi/jsi.h>
 
 #include <functional>
 #include <string>
 #include <vector>
 
 namespace reanimated::css {
+
+using namespace facebook;
 
 struct CSSDropShadow : public CSSSimpleValue<CSSDropShadow> {
   CSSDouble offsetX;

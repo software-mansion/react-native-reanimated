@@ -1,14 +1,13 @@
 #pragma once
 
-#include <folly/dynamic.h>
-#include <jsi/jsi.h>
+#include <array>
+#include <cstdint>
+#include <functional>
 #include <string>
 #include <unordered_set>
 #include <vector>
 
 namespace reanimated::css {
-
-using namespace facebook;
 
 using PropertyPath = std::vector<std::string>;
 using TransitionProperties = std::unordered_set<std::string>;
