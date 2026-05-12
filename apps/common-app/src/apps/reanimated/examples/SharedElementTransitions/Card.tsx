@@ -114,11 +114,9 @@ function Screen2({
 export default function CardExample() {
   return (
     <Stack.Navigator
-      screenOptions={
-        {
-          // animation: 'none',
-        }
-      }>
+      screenOptions={{
+        // animation: 'none',
+      }}>
       <Stack.Screen
         name="Screen1"
         component={Screen1}

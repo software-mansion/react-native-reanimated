@@ -159,7 +159,8 @@ describe('Test isSerializableRef', () => {
   });
 
   test('check if createSerializable<host function> returns serializable ref', () => {
-    const hostFunction = globalThis.__workletsModuleProxy.createSerializableBoolean;
+    const hostFunction =
+      globalThis.__workletsModuleProxy.createSerializableBoolean;
     const serializableRef = createSerializable(hostFunction);
 
     expect(isSerializableRef(serializableRef)).toBe(true);

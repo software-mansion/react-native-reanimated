@@ -1,6 +1,10 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import {
   describe,
@@ -42,11 +46,16 @@ const AnimatedComponent = ({
 async function getSnapshotUpdates(
   snapshotName: keyof typeof MatrixSnapshots,
   initialTransform: Array<number>,
-  finalTransform: Array<number>,
+  finalTransform: Array<number>
 ) {
   await mockAnimationTimer();
   const updatesContainer = await recordAnimationUpdates();
-  await render(<AnimatedComponent initialTransform={initialTransform} finalTransform={finalTransform} />);
+  await render(
+    <AnimatedComponent
+      initialTransform={initialTransform}
+      finalTransform={finalTransform}
+    />
+  );
 
   await waitForAnimationUpdates(MatrixSnapshots[snapshotName].length);
   const updates = updatesContainer.getUpdates();
@@ -68,18 +77,29 @@ describe('withTiming snapshots 📸, test TRANSFORM MATRIX', () => {
       finalTransform: [1, 1, 1, 1, 0, 2, 0, 0, 0, 0, 10, 0, 0, 0, 0, 2],
     },
     {
-      initialTransform: [10, 10, 10, 10, 0, 1, 0.5, 0, 0.5, 0, 1, 0, 0, 0, 0.5, 1],
+      initialTransform: [
+        10, 10, 10, 10, 0, 1, 0.5, 0, 0.5, 0, 1, 0, 0, 0, 0.5, 1,
+      ],
       finalTransform: [1, 1, 1, 1, 0, 2, 0, 0.5, 30, 0, 10, 0, 0, 0, 0, 2],
     },
     {
-      initialTransform: [-10, -20, -10, 10, 0, 1, 0.5, 0, 0.5, 0, 1, 60, 0, 0, 0.5, 1],
+      initialTransform: [
+        -10, -20, -10, 10, 0, 1, 0.5, 0, 0.5, 0, 1, 60, 0, 0, 0.5, 1,
+      ],
       finalTransform: [1, 1, 100, 1, 0, 2, 0, 0.5, 30, 0, 10, 0, 30, 0, 0, 2],
     },
-  ])('From ${initialTransform} to ${finalTransform}', async ({ initialTransform, finalTransform }, index) => {
-    const snapshotName = `matrix_${index}` as keyof typeof MatrixSnapshots;
-    const updates = await getSnapshotUpdates(snapshotName, initialTransform, finalTransform);
-    expect(updates).toMatchSnapshots(MatrixSnapshots[snapshotName]);
-  });
+  ])(
+    'From ${initialTransform} to ${finalTransform}',
+    async ({ initialTransform, finalTransform }, index) => {
+      const snapshotName = `matrix_${index}` as keyof typeof MatrixSnapshots;
+      const updates = await getSnapshotUpdates(
+        snapshotName,
+        initialTransform,
+        finalTransform
+      );
+      expect(updates).toMatchSnapshots(MatrixSnapshots[snapshotName]);
+    }
+  );
 });
 
 const styles = StyleSheet.create({

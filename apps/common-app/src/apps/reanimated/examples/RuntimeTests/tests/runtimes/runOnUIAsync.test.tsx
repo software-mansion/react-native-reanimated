@@ -5,12 +5,20 @@ import {
   scheduleOnRuntime,
   scheduleOnUI,
 } from 'react-native-worklets';
-import { beforeEach, describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
+import {
+  beforeEach,
+  describe,
+  expect,
+  notify,
+  test,
+  waitForNotification,
+} from '../../ReJest/RuntimeTestsApi';
 
 describe('runOnUIAsync', () => {
   const FAIL_NOTIFICATION = 'FAIL';
   let reason = '';
-  const errorMessage = '[Worklets] `runOnUIAsync` can only be called on the RN Runtime.';
+  const errorMessage =
+    '[Worklets] `runOnUIAsync` can only be called on the RN Runtime.';
 
   const workletRuntime = createWorkletRuntime({ name: 'test' });
 
@@ -42,7 +50,10 @@ describe('runOnUIAsync', () => {
           return 42;
         });
       } catch (error) {
-        scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+        scheduleOnRN(
+          callbackFail,
+          error instanceof Error ? error.message : String(error)
+        );
       }
     });
 
@@ -60,7 +71,10 @@ describe('runOnUIAsync', () => {
           return 42;
         });
       } catch (error) {
-        scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+        scheduleOnRN(
+          callbackFail,
+          error instanceof Error ? error.message : String(error)
+        );
       }
     });
 

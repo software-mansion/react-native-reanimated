@@ -1,6 +1,9 @@
 import { isColor } from 'react-native-reanimated';
 
-import { getComparator, getComparisonModeForProp } from '../matchers/Comparators';
+import {
+  getComparator,
+  getComparisonModeForProp,
+} from '../matchers/Comparators';
 import type { Mismatch, TestValue } from '../types';
 import { ComparisonMode, isValidPropName } from '../types';
 import { color, getColorSquare, green, red } from './stringFormatUtils';
@@ -19,7 +22,10 @@ function prepareValueToTableCell(message: TestValue): string {
     return 'null';
   } else if (typeof message === 'object') {
     return JSON.stringify(message);
-  } else if (typeof message === 'number' || (typeof message === 'string' && Number(message) !== null)) {
+  } else if (
+    typeof message === 'number' ||
+    (typeof message === 'string' && Number(message) !== null)
+  ) {
     const messageNum = Number(message);
     const digitsAfterDot = messageNum.toString().split('.')?.[1]?.length || 0;
     for (let i = 0; i < digitsAfterDot; i++) {
@@ -33,11 +39,19 @@ function prepareValueToTableCell(message: TestValue): string {
   }
 }
 
-function adjustValueToLength(value: TestValue, length: number, valueKey?: string) {
+function adjustValueToLength(
+  value: TestValue,
+  length: number,
+  valueKey?: string
+) {
   let valueStr = prepareValueToTableCell(value);
   let messageLen = valueStr.length;
 
-  if (isColor(valueStr) && valueKey === 'backgroundColor' && messageLen + 3 <= VALUE_COLUMN_WIDTH) {
+  if (
+    isColor(valueStr) &&
+    valueKey === 'backgroundColor' &&
+    messageLen + 3 <= VALUE_COLUMN_WIDTH
+  ) {
     valueStr += ' ' + getColorSquare(valueStr);
     messageLen += 3;
   }
@@ -61,10 +75,10 @@ function getBorderLine(keys: Array<string>, type: 'top' | 'bottom' | 'mid') {
     boldLineJoint[type] +
     keys
       .map(
-        _key =>
+        (_key) =>
           HORIZONTAL_LINE.repeat(VALUE_COLUMN_WIDTH) +
           singleLineJoint[type] +
-          HORIZONTAL_LINE.repeat(VALUE_COLUMN_WIDTH),
+          HORIZONTAL_LINE.repeat(VALUE_COLUMN_WIDTH)
       )
       .join(boldLineJoint[type]) +
     rightEdge[type]
@@ -77,8 +91,10 @@ function getUpperTableHeader(keys: Array<string>) {
     VERTICAL_LINE_DOUBLE +
     keys
       .map(
-        key =>
-          adjustValueToLength(key, VALUE_COLUMN_WIDTH) + VERTICAL_LINE + adjustValueToLength(key, VALUE_COLUMN_WIDTH),
+        (key) =>
+          adjustValueToLength(key, VALUE_COLUMN_WIDTH) +
+          VERTICAL_LINE +
+          adjustValueToLength(key, VALUE_COLUMN_WIDTH)
       )
       .join(VERTICAL_LINE_DOUBLE)
   );
@@ -93,7 +109,7 @@ function getLowerTableHeader(keys: Array<string>, native: boolean) {
   return (
     adjustValueToLength('index', INDEX_COLUMN_WIDTH) +
     VERTICAL_LINE_DOUBLE +
-    keys.map(_ => columnPair).join(VERTICAL_LINE_DOUBLE)
+    keys.map((_) => columnPair).join(VERTICAL_LINE_DOUBLE)
   );
 }
 
@@ -104,16 +120,28 @@ function withSideBorders(line: string) {
 function getComparisonRow(mismatch: Mismatch, keys: Array<string>) {
   const { index, capturedSnapshot, expectedSnapshot } = mismatch;
   const indexColumn = adjustValueToLength(index.toString(), INDEX_COLUMN_WIDTH);
-  const formattedCells = keys.map(key => {
-    const expectedValue = expectedSnapshot[key as keyof typeof expectedSnapshot];
-    const capturedValue = capturedSnapshot[key as keyof typeof capturedSnapshot];
+  const formattedCells = keys.map((key) => {
+    const expectedValue =
+      expectedSnapshot[key as keyof typeof expectedSnapshot];
+    const capturedValue =
+      capturedSnapshot[key as keyof typeof capturedSnapshot];
 
-    const comparisonMode = isValidPropName(key) ? getComparisonModeForProp(key) : ComparisonMode.AUTO;
+    const comparisonMode = isValidPropName(key)
+      ? getComparisonModeForProp(key)
+      : ComparisonMode.AUTO;
 
     const match = getComparator(comparisonMode)(expectedValue, capturedValue);
 
-    const expectedAdjusted = adjustValueToLength(expectedValue, VALUE_COLUMN_WIDTH, key);
-    const capturedAdjusted = adjustValueToLength(capturedValue, VALUE_COLUMN_WIDTH, key);
+    const expectedAdjusted = adjustValueToLength(
+      expectedValue,
+      VALUE_COLUMN_WIDTH,
+      key
+    );
+    const capturedAdjusted = adjustValueToLength(
+      capturedValue,
+      VALUE_COLUMN_WIDTH,
+      key
+    );
 
     const expectedColored = match ? expectedAdjusted : green(expectedAdjusted);
     const capturedColored = match ? capturedAdjusted : red(capturedAdjusted);
@@ -121,18 +149,25 @@ function getComparisonRow(mismatch: Mismatch, keys: Array<string>) {
     return expectedColored + color(VERTICAL_LINE, 'gray') + capturedColored;
   });
 
-  return indexColumn + VERTICAL_LINE_DOUBLE + formattedCells.join(VERTICAL_LINE_DOUBLE);
+  return (
+    indexColumn +
+    VERTICAL_LINE_DOUBLE +
+    formattedCells.join(VERTICAL_LINE_DOUBLE)
+  );
 }
 
-export function formatSnapshotMismatch(mismatches: Array<Mismatch>, native: boolean) {
+export function formatSnapshotMismatch(
+  mismatches: Array<Mismatch>,
+  native: boolean
+) {
   const keysToPrint: Array<string> = [];
   mismatches.forEach(({ expectedSnapshot, capturedSnapshot }) => {
-    Object.keys(expectedSnapshot).forEach(key => {
+    Object.keys(expectedSnapshot).forEach((key) => {
       if (!keysToPrint.includes(key)) {
         keysToPrint.push(key);
       }
     });
-    Object.keys(capturedSnapshot).forEach(key => {
+    Object.keys(capturedSnapshot).forEach((key) => {
       if (!keysToPrint.includes(key)) {
         keysToPrint.push(key);
       }
@@ -143,8 +178,17 @@ export function formatSnapshotMismatch(mismatches: Array<Mismatch>, native: bool
   const upperHeader = withSideBorders(getUpperTableHeader(keysToPrint));
   const lowerHeader = withSideBorders(getLowerTableHeader(keysToPrint, native));
   const separatorLine = getBorderLine(keysToPrint, 'mid');
-  const mismatchRows = mismatches.map(mismatch => withSideBorders(getComparisonRow(mismatch, keysToPrint)));
+  const mismatchRows = mismatches.map((mismatch) =>
+    withSideBorders(getComparisonRow(mismatch, keysToPrint))
+  );
   const bottomLine = getBorderLine(keysToPrint, 'bottom');
 
-  return [topLine, upperHeader, lowerHeader, separatorLine, ...mismatchRows, bottomLine].join('\n');
+  return [
+    topLine,
+    upperHeader,
+    lowerHeader,
+    separatorLine,
+    ...mismatchRows,
+    bottomLine,
+  ].join('\n');
 }
