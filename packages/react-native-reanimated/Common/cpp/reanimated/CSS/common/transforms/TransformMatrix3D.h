@@ -12,6 +12,8 @@
 
 namespace reanimated::css {
 
+using namespace facebook;
+
 static constexpr size_t MATRIX_3D_DIMENSION = 4; // 4x4 matrix
 
 class TransformMatrix3D : public TransformMatrixBase<TransformMatrix3D, MATRIX_3D_DIMENSION> {
