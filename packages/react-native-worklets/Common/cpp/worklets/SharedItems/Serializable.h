@@ -37,7 +37,9 @@ inline void cleanupIfRuntimeExists(jsi::Runtime *rt, std::unique_ptr<jsi::Value>
     // before the runtime is terminated. Note that the underlying memory that
     // jsi::Value refers to is managed by the VM and gets freed along with the
     // runtime.
-    value.release(); // NOLINT
+    // Skip ~jsi::Value (would UAF dead runtime's slot arena) but still free
+    // the unique_ptr's heap-allocated wrapper.
+    ::operator delete(value.release());
   }
 }
 
