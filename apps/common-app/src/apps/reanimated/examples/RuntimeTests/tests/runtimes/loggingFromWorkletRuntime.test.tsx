@@ -1,4 +1,3 @@
-import { TurboModuleRegistry } from 'react-native';
 import {
   describe,
   expect,
