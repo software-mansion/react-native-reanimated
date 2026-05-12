@@ -98,7 +98,8 @@ const useSelectedStyle = (selectedItem, item, borderColor) =>
   useAnimatedStyle(() => ({
     fontWeight: selectedItem.value === item ? '600' : '400',
     borderBottomWidth: selectedItem.value === item ? 1 : 0,
-    borderBottomColor: selectedItem.value === item ? borderColor : 'transparent',
+    borderBottomColor:
+      selectedItem.value === item ? borderColor : 'transparent',
   }));
 
 const TableOfContentsElement = ({
@@ -108,9 +109,8 @@ const TableOfContentsElement = ({
   sectionCardsRef,
 }) => {
   const textColor = useThemedTextStyle();
-  const borderColor = textColor.color 
+  const borderColor = textColor.color;
   const style = useSelectedStyle(visibleIndex, index, borderColor);
-
 
   return (
     <Pressable
@@ -120,11 +120,7 @@ const TableOfContentsElement = ({
       }}
       style={[sectionListStyles.tableOfContentsElement]}>
       <Animated.Text
-        style={[
-          style,
-          sectionListStyles.tableOfContentsElement,
-          textColor,
-        ]}>
+        style={[style, sectionListStyles.tableOfContentsElement, textColor]}>
         {item}
       </Animated.Text>
     </Pressable>

@@ -56,8 +56,9 @@ const createCellRendererComponent = (
   return CellRendererComponent;
 };
 
-interface ReanimatedFlatListPropsWithLayout<T>
-  extends AnimatedProps<FlatListProps<T>> {
+interface ReanimatedFlatListPropsWithLayout<T> extends AnimatedProps<
+  FlatListProps<T>
+> {
   /**
    * Lets you pass layout animation directly to the FlatList item. Works only
    * with a single-column `Animated.FlatList`, `numColumns` property cannot be

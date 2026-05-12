@@ -7,7 +7,14 @@ import {
   beforeEach,
   afterEach,
 } from '../../ReJest/RuntimeTestsApi';
-import { runOnUISync, scheduleOnRN, createShareable, createSynchronizable, UIRuntimeId } from 'react-native-worklets';
+import {
+  runOnUISync,
+  scheduleOnRN,
+  createShareable,
+  createSynchronizable,
+  UIRuntimeId,
+  createWorkletRuntime,
+} from 'react-native-worklets';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -31,7 +38,7 @@ type TestCase = {
 };
 
 // For closure
-const reanimatedModuleProxy = globalThis.__reanimatedModuleProxy;
+const hostObject = createWorkletRuntime({ name: 'HO' });
 const shareable = createShareable(UIRuntimeId, 42);
 const synchronizable = createSynchronizable(42);
 
@@ -136,11 +143,11 @@ const testCases: Record<string, TestCase> = {
     },
   },
   hostObject: {
-    expected: 'registerSensor',
+    expected: 'HO',
     checkIncludes: { bundleMode: true, noBundleMode: true },
     factory: () => {
       'worklet';
-      return reanimatedModuleProxy;
+      return hostObject;
     },
   },
   hostFunction: {
@@ -279,7 +286,7 @@ const testCases: Record<string, TestCase> = {
     factory: () => {
       'worklet';
       const obj: Record<string, unknown> = { a: 1 };
-      Object.setPrototypeOf(obj, reanimatedModuleProxy);
+      Object.setPrototypeOf(obj, hostObject);
       return obj;
     },
   },

@@ -1,7 +1,11 @@
 import { useEffect } from 'react';
 import { BoxShadowValue, StyleSheet, View, ViewStyle } from 'react-native';
 import type { AnimatableValue } from 'react-native-reanimated';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 import type { DefaultStyle } from 'react-native-reanimated/lib/typescript/hook/commonTypes';
 
 import {
@@ -57,7 +61,7 @@ describe('animation of BoxShadow', () => {
           },
           () => {
             notify(NOTIFICATION_NAME);
-          },
+          }
         ) as unknown as BoxShadowValue;
         boxShadowPassiveSV.value = finalBoxShadow;
       }, 500);
@@ -67,8 +71,14 @@ describe('animation of BoxShadow', () => {
 
     return (
       <View style={styles.container}>
-        <Animated.View ref={refActive} style={[styles.animatedBox, styleActive]} />
-        <Animated.View ref={refPassive} style={[styles.animatedBox, stylePassive]} />
+        <Animated.View
+          ref={refActive}
+          style={[styles.animatedBox, styleActive]}
+        />
+        <Animated.View
+          ref={refPassive}
+          style={[styles.animatedBox, stylePassive]}
+        />
       </View>
     );
   }
@@ -94,16 +104,21 @@ describe('animation of BoxShadow', () => {
       },
     },
   ])('Animate', async ({ finalBoxShadow, startBoxShadow }) => {
-    await render(<BoxShadowComponent finalBoxShadow={finalBoxShadow} startBoxShadow={startBoxShadow} />);
+    await render(
+      <BoxShadowComponent
+        finalBoxShadow={finalBoxShadow}
+        startBoxShadow={startBoxShadow}
+      />
+    );
 
     const activeComponent = getTestComponent(Component.ACTIVE);
     const passiveComponent = getTestComponent(Component.PASSIVE);
 
     const activeBoxShadow = JSON.parse(
-      await activeComponent.getAnimatedStyle('boxShadow'),
+      await activeComponent.getAnimatedStyle('boxShadow')
     ) as unknown as BoxShadowValue[];
     const passiveBoxShadow = JSON.parse(
-      await passiveComponent.getAnimatedStyle('boxShadow'),
+      await passiveComponent.getAnimatedStyle('boxShadow')
     ) as unknown as BoxShadowValue[];
 
     expect(activeBoxShadow).toBe([startBoxShadow], ComparisonMode.ARRAY);
@@ -112,10 +127,10 @@ describe('animation of BoxShadow', () => {
     await waitForNotification(NOTIFICATION_NAME);
 
     const passiveBoxShadowFinal = JSON.parse(
-      await passiveComponent.getAnimatedStyle('boxShadow'),
+      await passiveComponent.getAnimatedStyle('boxShadow')
     ) as unknown as BoxShadowValue[];
     const activeBoxShadowFinal = JSON.parse(
-      await activeComponent.getAnimatedStyle('boxShadow'),
+      await activeComponent.getAnimatedStyle('boxShadow')
     ) as unknown as BoxShadowValue[];
 
     expect(activeBoxShadowFinal).toBe([finalBoxShadow], ComparisonMode.ARRAY);

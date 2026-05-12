@@ -5,7 +5,7 @@
   "scripts": {
     "build": "",
     "lint": "eslint . --flag v10_config_lookup_from_file",
-    "format": "prettier --write --list-different .",
+    "format": "yarn run --top-level oxfmt .",
     "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src",
     "type:check": "yarn type:check:native && yarn type:check:web",
     "type:check:native": "tsc --noEmit",
@@ -63,7 +63,6 @@
     "eslint": "9.37.0",
     "jest": "30.2.0",
     "madge": "8.0.0",
-    "prettier": "3.6.2",
     "react-native": "0.85.2",
     "react-test-renderer": "19.2.3",
     "typescript": "5.9.3",

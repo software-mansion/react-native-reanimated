@@ -20,7 +20,9 @@ export function AssignValueExample() {
 
   return (
     <StrictMode>
-      <Animated.View style={[{ height: 100, backgroundColor: 'green' }, animatedStyle]} />
+      <Animated.View
+        style={[{ height: 100, backgroundColor: 'green' }, animatedStyle]}
+      />
     </StrictMode>
   );
 }
@@ -36,7 +38,9 @@ export function AssignAnimationExample() {
 
   return (
     <StrictMode>
-      <Animated.View style={[{ height: 100, backgroundColor: 'green' }, animatedStyle]} />
+      <Animated.View
+        style={[{ height: 100, backgroundColor: 'green' }, animatedStyle]}
+      />
     </StrictMode>
   );
 }
@@ -71,5 +75,9 @@ export function ExitingExample() {
     setToggle(false);
   }, []);
 
-  return <StrictMode>{toggle && <Animated.View exiting={FadeOut} style={defaultStyle} />}</StrictMode>;
+  return (
+    <StrictMode>
+      {toggle && <Animated.View exiting={FadeOut} style={defaultStyle} />}
+    </StrictMode>
+  );
 }

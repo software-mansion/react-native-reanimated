@@ -1,9 +1,8 @@
 #pragma once
 
+#include <jsi/jsi.h>
 #include <worklets/Compat/StableApi.h>
 #include <worklets/Registries/WorkletRuntimeRegistry.h>
-
-#include <jsi/jsi.h>
 
 #include <memory>
 #include <optional>
@@ -14,8 +13,6 @@
 using namespace facebook;
 
 namespace worklets {
-
-jsi::Function getValueUnpacker(jsi::Runtime &rt);
 
 // Frees the heap-allocated jsi::Value wrapper without running ~jsi::Value.
 // Use when the runtime that owns the JSI handle is already gone. Running the
