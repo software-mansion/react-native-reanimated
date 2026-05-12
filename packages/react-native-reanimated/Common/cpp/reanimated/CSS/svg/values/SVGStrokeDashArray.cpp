@@ -1,5 +1,6 @@
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
+#include <sstream>
 #include <string>
 #include <vector>
 
