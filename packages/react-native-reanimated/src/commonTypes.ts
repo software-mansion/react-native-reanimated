@@ -455,10 +455,6 @@ type MaybeSharedValueRecursive<Value> = Value extends readonly (infer Item)[]
           }
     : MaybeSharedValue<Value>;
 
-type AnimatedCSSPropKeys =
-  | keyof CSSAnimationProperties
-  | keyof CSSTransitionProperties;
-
 type ReanimatedCSSProps = Partial<
   CSSAnimationProperties & CSSTransitionProperties
 >;
@@ -471,7 +467,7 @@ type ReanimatedCSSProps = Partial<
 type WithReanimatedCSS<Style> =
   | (Style & ReanimatedCSSProps)
   | (Style extends object
-      ? Omit<Style, AnimatedCSSPropKeys> & ReanimatedCSSProps
+      ? Omit<Style, keyof ReanimatedCSSProps> & ReanimatedCSSProps
       : never);
 
 // Ideally we want AnimatedStyle to not be generic, but there are
