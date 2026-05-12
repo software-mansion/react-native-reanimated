@@ -455,10 +455,29 @@ type MaybeSharedValueRecursive<Value> = Value extends readonly (infer Item)[]
           }
     : MaybeSharedValue<Value>;
 
+type AnimatedCSSPropKeys =
+  | keyof CSSAnimationProperties
+  | keyof CSSTransitionProperties;
+
+type ReanimatedCSSProps = Partial<
+  CSSAnimationProperties & CSSTransitionProperties
+>;
+
+// Two candidates — the static intersection keeps generic inference working
+// (e.g. `useAnimatedStyle<Style>`); the stripped fallback sidesteps the
+// `never`-collapse when a base style augmentation (e.g. Expo's
+// `expo-env.d.ts`) declares our CSS keys with conflicting types. See
+// https://github.com/software-mansion/react-native-reanimated/issues/9328
+type WithReanimatedCSS<Style> =
+  | (Style & ReanimatedCSSProps)
+  | (Style extends object
+      ? Omit<Style, AnimatedCSSPropKeys> & ReanimatedCSSProps
+      : never);
+
 // Ideally we want AnimatedStyle to not be generic, but there are
 // so many dependencies on it being generic that it's not feasible at the moment.
 export type AnimatedStyle<Style = DefaultStyle> =
-  | (Style & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) // TODO - maybe add css animation config somewhere else
+  | WithReanimatedCSS<Style>
   | MaybeSharedValueRecursive<Style>
   | AnimatedStyleHandle<Style>;
 
