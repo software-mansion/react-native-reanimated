@@ -57,6 +57,7 @@ class TransitionProgressProvider final {
 
   void runProgressProvider(const std::string &propertyName, bool isReversed, double timestamp);
   void removeProperties(const std::vector<std::string> &propertyNames);
+  void removeProperty(const std::string &propertyName);
   void discardFinishedProgressProviders();
   void update(double timestamp);
   void setPropertySettings(const PropertiesSettingsMap &changedPropertiesSettings);

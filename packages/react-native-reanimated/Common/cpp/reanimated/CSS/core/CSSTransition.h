@@ -48,6 +48,7 @@ class CSSTransition {
       const folly::dynamic &lastUpdateValue,
       double timestamp);
   void removeProperties(const std::vector<std::string> &propertyNames);
+  void removeProperty(const std::string &propertyName);
 };
 
 } // namespace reanimated::css

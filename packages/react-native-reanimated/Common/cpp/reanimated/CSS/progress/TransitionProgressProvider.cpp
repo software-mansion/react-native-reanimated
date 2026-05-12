@@ -137,6 +137,10 @@ void TransitionProgressProvider::removeProperties(const std::vector<std::string>
   }
 }
 
+void TransitionProgressProvider::removeProperty(const std::string &propertyName) {
+  propertyProgressProviders_.erase(propertyName);
+}
+
 void TransitionProgressProvider::discardFinishedProgressProviders() {
   for (auto it = propertyProgressProviders_.begin(); it != propertyProgressProviders_.end();) {
     if (it->second->getState() == TransitionProgressState::Finished) {

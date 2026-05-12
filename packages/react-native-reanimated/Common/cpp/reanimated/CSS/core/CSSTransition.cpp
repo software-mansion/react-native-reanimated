@@ -83,7 +83,7 @@ void CSSTransition::handleChangedProperties(
     const auto allowDiscrete = progressProvider_.getPropertySettings(propertyName).allowDiscrete;
 
     if (!allowDiscrete && isDiscreteProperty(propertyName, shadowNode_->getComponentName())) {
-      removeProperties({propertyName});
+      removeProperty(propertyName);
       continue;
     }
 
@@ -115,6 +115,12 @@ void CSSTransition::removeProperties(const std::vector<std::string> &propertyNam
   for (const auto &propertyName : propertyNames) {
     transitionProperties_.erase(propertyName);
   }
+}
+
+void CSSTransition::removeProperty(const std::string &propertyName) {
+  styleInterpolator_.removeProperty(propertyName);
+  progressProvider_.removeProperty(propertyName);
+  transitionProperties_.erase(propertyName);
 }
 
 } // namespace reanimated::css

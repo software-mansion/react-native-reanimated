@@ -49,6 +49,10 @@ void TransitionStyleInterpolator::removeProperties(const std::vector<std::string
   }
 }
 
+void TransitionStyleInterpolator::removeProperty(const std::string &propertyName) {
+  interpolators_.erase(propertyName);
+}
+
 void TransitionStyleInterpolator::discardFinishedInterpolators(
     const TransitionProgressProvider &transitionProgressProvider) {
   const auto &removedProperties = transitionProgressProvider.getRemovedProperties();

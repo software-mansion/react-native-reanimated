@@ -30,6 +30,7 @@ class TransitionStyleInterpolator {
       const jsi::Value &toValue);
   void setAllowDiscrete(const std::string &propertyName, bool allowDiscrete);
   void removeProperties(const std::vector<std::string> &propertyNames);
+  void removeProperty(const std::string &propertyName);
   void discardFinishedInterpolators(const TransitionProgressProvider &transitionProgressProvider);
 
  private:
