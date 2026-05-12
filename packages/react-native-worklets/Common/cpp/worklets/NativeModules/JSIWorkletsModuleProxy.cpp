@@ -29,6 +29,8 @@ using namespace facebook;
 
 namespace worklets {
 
+namespace {
+
 inline void scheduleOnUI(
     const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
     jsi::Runtime &rt,
@@ -103,17 +105,6 @@ inline void scheduleOnUI(
   });
 }
 
-inline jsi::Value
-runOnUISync(const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime, jsi::Runtime &rt, const jsi::Value &worklet) {
-  if (auto uiWorkletRuntime = weakUIWorkletRuntime.lock()) {
-    auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
-        rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
-    auto serializedResult = uiWorkletRuntime->runSyncSerialized(serializableWorklet);
-    return serializedResult->toJSValue(rt);
-  }
-  return jsi::Value::undefined();
-}
-
 #ifndef NDEBUG
 inline jsi::Value runOnUISync(
     const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
@@ -128,15 +119,18 @@ inline jsi::Value runOnUISync(
   }
   return jsi::Value::undefined();
 }
-#endif // NDEBUG
-
-jsi::Value
-runOnRuntimeSync(jsi::Runtime &rt, const jsi::Value &workletRuntimeValue, const jsi::Value &serializableWorkletValue) {
-  auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
-  auto worklet = extractSerializableOrThrow<SerializableWorklet>(
-      rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
-  return workletRuntime->runSyncSerialized(worklet)->toJSValue(rt);
+#else
+inline jsi::Value
+runOnUISync(const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime, jsi::Runtime &rt, const jsi::Value &worklet) {
+  if (auto uiWorkletRuntime = weakUIWorkletRuntime.lock()) {
+    auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
+        rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
+    auto serializedResult = uiWorkletRuntime->runSyncSerialized(serializableWorklet);
+    return serializedResult->toJSValue(rt);
+  }
+  return jsi::Value::undefined();
 }
+#endif // NDEBUG
 
 #ifndef NDEBUG
 jsi::Value runOnRuntimeSync(
@@ -148,6 +142,14 @@ jsi::Value runOnRuntimeSync(
   auto worklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
   return workletRuntime->runSyncSerializedWithStack(worklet, scheduleStack)->toJSValue(rt);
+}
+#else
+jsi::Value
+runOnRuntimeSync(jsi::Runtime &rt, const jsi::Value &workletRuntimeValue, const jsi::Value &serializableWorkletValue) {
+  auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
+  auto worklet = extractSerializableOrThrow<SerializableWorklet>(
+      rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
+  return workletRuntime->runSyncSerialized(worklet)->toJSValue(rt);
 }
 #endif // NDEBUG
 
@@ -221,6 +223,8 @@ inline void registerCustomSerializable(
 
   runtimeManager->resume();
 }
+
+} // namespace
 
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const bool isDevBundle,
