@@ -45,6 +45,9 @@ inline void reanimatedPerformanceTracerMarkCurrentThreadAsUi() {
   }
 }
 
+// NOTE: The destructor of this class is non-trivial (it allocates `folly::dynamic`
+// objects and calls into `PerformanceTracer`). Do not use it for hot paths or
+// frequently invoked operations — limit usage to coarse-grained sections.
 class ReanimatedPerformanceTracerSection {
  public:
   explicit ReanimatedPerformanceTracerSection(const char *name) : name_(name) {
