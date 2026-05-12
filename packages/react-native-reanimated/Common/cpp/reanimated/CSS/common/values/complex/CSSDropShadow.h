@@ -1,5 +1,6 @@
 #pragma once
 
+#include <reanimated/CSS/common/FieldValidator.h>
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/common/values/CSSBoolean.h>
 #include <reanimated/CSS/common/values/CSSColor.h>
