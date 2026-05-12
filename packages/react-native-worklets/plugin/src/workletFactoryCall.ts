@@ -45,7 +45,7 @@ export function makeWorkletFactoryCall(
   return replacement;
 }
 
-/* 
+/*
   If for some reason the code of the worklet is so bad that it
   causes the worklet factory to crash, eg.:
 

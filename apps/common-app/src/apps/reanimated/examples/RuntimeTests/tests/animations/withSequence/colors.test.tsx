@@ -37,7 +37,11 @@ describe('withSequence animation of color', () => {
     PASSIVE = 'PASSIVE',
   }
   const DELAY = 75;
-  const WidthComponent = ({ startColor, middleColor, finalColor }: TestCase) => {
+  const WidthComponent = ({
+    startColor,
+    middleColor,
+    finalColor,
+  }: TestCase) => {
     const colorActiveSV = useSharedValue(startColor);
     const colorPassiveSV = useSharedValue(startColor);
 
@@ -49,16 +53,22 @@ describe('withSequence animation of color', () => {
         backgroundColor: withSequence(
           withDelay(
             DELAY,
-            withTiming(colorActiveSV.value, { duration: 200 }, () => notify(START_ANIMATION_NOTIFICATION_NAME)),
+            withTiming(colorActiveSV.value, { duration: 200 }, () =>
+              notify(START_ANIMATION_NOTIFICATION_NAME)
+            )
           ),
           withDelay(
             DELAY,
-            withTiming(middleColor, { duration: 300 }, () => notify(MIDDLE_ANIMATION_NOTIFICATION_NAME)),
+            withTiming(middleColor, { duration: 300 }, () =>
+              notify(MIDDLE_ANIMATION_NOTIFICATION_NAME)
+            )
           ),
           withDelay(
             DELAY,
-            withTiming(colorActiveSV.value, { duration: 200 }, () => notify(FINAL_ANIMATION_NOTIFICATION_NAME)),
-          ),
+            withTiming(colorActiveSV.value, { duration: 200 }, () =>
+              notify(FINAL_ANIMATION_NOTIFICATION_NAME)
+            )
+          )
         ),
       };
     });
@@ -76,23 +86,35 @@ describe('withSequence animation of color', () => {
       colorPassiveSV.value = withSequence(
         withDelay(
           DELAY,
-          withTiming(finalColor, { duration: 200 }, () => notify(START_ANIMATION_NOTIFICATION_NAME)),
+          withTiming(finalColor, { duration: 200 }, () =>
+            notify(START_ANIMATION_NOTIFICATION_NAME)
+          )
         ),
         withDelay(
           DELAY,
-          withTiming(middleColor, { duration: 300 }, () => notify(MIDDLE_ANIMATION_NOTIFICATION_NAME)),
+          withTiming(middleColor, { duration: 300 }, () =>
+            notify(MIDDLE_ANIMATION_NOTIFICATION_NAME)
+          )
         ),
         withDelay(
           DELAY,
-          withTiming(finalColor, { duration: 200 }, () => notify(FINAL_ANIMATION_NOTIFICATION_NAME)),
-        ),
+          withTiming(finalColor, { duration: 200 }, () =>
+            notify(FINAL_ANIMATION_NOTIFICATION_NAME)
+          )
+        )
       );
     }, [colorPassiveSV, finalColor, middleColor]);
 
     return (
       <View style={styles.container}>
-        <Animated.View ref={refActive} style={[styles.animatedBox, styleActive]} />
-        <Animated.View ref={refPassive} style={[styles.animatedBox, stylePassive]} />
+        <Animated.View
+          ref={refActive}
+          style={[styles.animatedBox, styleActive]}
+        />
+        <Animated.View
+          ref={refPassive}
+          style={[styles.animatedBox, stylePassive]}
+        />
       </View>
     );
   };
@@ -156,7 +178,13 @@ describe('withSequence animation of color', () => {
   ])(
     'Animate ${startColor} → ${finalColor} → ${middleColor} → ${finalColor}',
     async ({ startColor, middleColor, finalColor }) => {
-      await render(<WidthComponent startColor={startColor} middleColor={middleColor} finalColor={finalColor} />);
+      await render(
+        <WidthComponent
+          startColor={startColor}
+          middleColor={middleColor}
+          finalColor={finalColor}
+        />
+      );
       const activeComponent = getTestComponent(Component.ACTIVE);
       const passiveComponent = getTestComponent(Component.PASSIVE);
 
@@ -164,19 +192,42 @@ describe('withSequence animation of color', () => {
       // TODO: There is inconsistency in parsing props, we don't parse colors properly during first frame (render).
       // It will be fixed in the future.
       if (!startColor.startsWith('hwb')) {
-        expect(await activeComponent.getAnimatedStyle('backgroundColor')).not.toBe(startColor, ComparisonMode.COLOR);
-        expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(startColor, ComparisonMode.COLOR);
+        expect(
+          await activeComponent.getAnimatedStyle('backgroundColor')
+        ).not.toBe(startColor, ComparisonMode.COLOR);
+        expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(
+          startColor,
+          ComparisonMode.COLOR
+        );
       }
       await waitForNotification(START_ANIMATION_NOTIFICATION_NAME);
-      expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(finalColor, ComparisonMode.COLOR);
-      expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(finalColor, ComparisonMode.COLOR);
+      expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(
+        finalColor,
+        ComparisonMode.COLOR
+      );
+      expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(
+        finalColor,
+        ComparisonMode.COLOR
+      );
       await waitForNotification(MIDDLE_ANIMATION_NOTIFICATION_NAME);
-      expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(middleColor, ComparisonMode.COLOR);
-      expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(middleColor, ComparisonMode.COLOR);
+      expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(
+        middleColor,
+        ComparisonMode.COLOR
+      );
+      expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(
+        middleColor,
+        ComparisonMode.COLOR
+      );
       await waitForNotification(FINAL_ANIMATION_NOTIFICATION_NAME);
-      expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(finalColor, ComparisonMode.COLOR);
-      expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(finalColor, ComparisonMode.COLOR);
-    },
+      expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(
+        finalColor,
+        ComparisonMode.COLOR
+      );
+      expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(
+        finalColor,
+        ComparisonMode.COLOR
+      );
+    }
   );
 });
 const styles = StyleSheet.create({

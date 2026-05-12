@@ -67,10 +67,6 @@ void WorkletRuntimeDecorator::decorate(
 
   rt.global().setProperty(rt, "__RUNTIME_NAME", jsi::String::createFromAscii(rt, name));
 
-  // TODO: Remove _IS_FABRIC sometime in the future
-  // react-native-screens 4.9.0 depends on it
-  rt.global().setProperty(rt, "_IS_FABRIC", true);
-
   rt.global().setProperty(rt, "__DEV__", isDevBundle);
 
   rt.global().setProperty(rt, "__workletsModuleProxy", std::move(jsiWorkletsModuleProxy));

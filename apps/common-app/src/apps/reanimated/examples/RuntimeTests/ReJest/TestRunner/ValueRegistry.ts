@@ -8,12 +8,17 @@ export class ValueRegistry {
   private _valueRegistry: Record<string, SharedValue> = {};
   private _syncUIRunner = new SyncUIRunner();
 
-  public registerValue<TValue = unknown>(name: string, value: SharedValue<TValue>) {
+  public registerValue<TValue = unknown>(
+    name: string,
+    value: SharedValue<TValue>
+  ) {
     'worklet';
     this._valueRegistry[name] = value as SharedValue;
   }
 
-  public async getRegisteredValue<TValue extends TestValue>(name: string): Promise<SharedValueSnapshot<TValue>> {
+  public async getRegisteredValue<TValue extends TestValue>(
+    name: string
+  ): Promise<SharedValueSnapshot<TValue>> {
     const jsValue = this._valueRegistry[name].value;
     const sharedValue = this._valueRegistry[name];
     const valueContainer = makeMutable<unknown>(null);
