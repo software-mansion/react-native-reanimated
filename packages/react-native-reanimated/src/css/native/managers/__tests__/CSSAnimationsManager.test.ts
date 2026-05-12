@@ -198,21 +198,18 @@ describe('CSSAnimationsManager', () => {
           2,
           COMPOUND_COMPONENT_NAME
         );
-        const manager3 = new CSSAnimationsManager(
-          shadowNodeWrapper,
-          3,
-          COMPOUND_COMPONENT_NAME
-        );
 
         manager1.update({ animationName: rule1 });
         manager2.update({ animationName: rule2 });
+        expect(registerCSSKeyframes).toHaveBeenCalledTimes(2);
+
         manager1.unmountCleanup();
+        // Re-attach manager1 with matching inline keyframes - should reuse
+        // rule2 instead of constructing and registering a third rule.
+        manager1.update({ animationName: keyframes });
 
-        jest.clearAllMocks();
-        manager3.update({ animationName: keyframes });
-
-        expect(registerCSSKeyframes).not.toHaveBeenCalled();
-        expect(applyCSSAnimations).toHaveBeenCalledWith(
+        expect(registerCSSKeyframes).toHaveBeenCalledTimes(2);
+        expect(applyCSSAnimations).toHaveBeenLastCalledWith(
           shadowNodeWrapper,
           COMPOUND_COMPONENT_NAME,
           expect.objectContaining({ animationNames: [rule2.name] })
