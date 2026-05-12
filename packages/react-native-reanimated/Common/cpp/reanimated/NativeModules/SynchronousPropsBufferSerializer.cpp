@@ -142,9 +142,16 @@ void serializeSynchronousPropsToBuffers(
     const UpdatesBatch &synchronousUpdatesBatch,
     std::vector<int> &intBuffer,
     std::vector<double> &doubleBuffer) {
+  const auto pushInt = [&](int value) {
+    intBuffer.push_back(value);
+  };
+  const auto pushDouble = [&](double value) {
+    doubleBuffer.push_back(value);
+  };
+
   for (const auto &[shadowNodeFamily, props] : synchronousUpdatesBatch) {
-    intBuffer.push_back(CMD_START_OF_VIEW);
-    intBuffer.push_back(shadowNodeFamily->getTag());
+    pushInt(CMD_START_OF_VIEW);
+    pushInt(shadowNodeFamily->getTag());
     for (const auto &[key, value] : props.items()) {
       const auto &propName = key.getString();
       const auto command = propNameToCommand(propName);
@@ -154,8 +161,8 @@ void serializeSynchronousPropsToBuffers(
         case CMD_Z_INDEX:
         case CMD_SHADOW_OPACITY:
         case CMD_SHADOW_RADIUS:
-          intBuffer.push_back(command);
-          doubleBuffer.push_back(value.asDouble());
+          pushInt(command);
+          pushDouble(value.asDouble());
           break;
 
         case CMD_BACKGROUND_COLOR:
@@ -168,8 +175,8 @@ void serializeSynchronousPropsToBuffers(
         case CMD_BORDER_RIGHT_COLOR:
         case CMD_BORDER_START_COLOR:
         case CMD_BORDER_END_COLOR:
-          intBuffer.push_back(command);
-          intBuffer.push_back(value.asInt());
+          pushInt(command);
+          pushInt(value.asInt());
           break;
 
         case CMD_BORDER_RADIUS:
@@ -185,24 +192,24 @@ void serializeSynchronousPropsToBuffers(
         case CMD_BORDER_START_END_RADIUS:
         case CMD_BORDER_END_START_RADIUS:
         case CMD_BORDER_END_END_RADIUS:
-          intBuffer.push_back(command);
+          pushInt(command);
           if (value.isDouble()) {
-            intBuffer.push_back(CMD_UNIT_PX);
-            doubleBuffer.push_back(value.getDouble());
+            pushInt(CMD_UNIT_PX);
+            pushDouble(value.getDouble());
           } else if (value.isString()) {
             const auto &valueStr = value.getString();
             if (!valueStr.ends_with("%")) {
               throw std::runtime_error("[Reanimated] Border radius string must be a percentage");
             }
-            intBuffer.push_back(CMD_UNIT_PERCENT);
-            doubleBuffer.push_back(std::stof(valueStr.substr(0, -1)));
+            pushInt(CMD_UNIT_PERCENT);
+            pushDouble(std::stof(valueStr.substr(0, -1)));
           } else {
             throw std::runtime_error("[Reanimated] Border radius value must be either a number or a string");
           }
           break;
 
         case CMD_START_OF_TRANSFORM:
-          intBuffer.push_back(command);
+          pushInt(command);
           react_native_assert(value.isArray() && "[Reanimated] Transform value must be an array");
           for (const auto &item : value) {
             react_native_assert(item.isObject() && "[Reanimated] Transform array item must be an object");
@@ -216,23 +223,23 @@ void serializeSynchronousPropsToBuffers(
               case CMD_TRANSFORM_SCALE_X:
               case CMD_TRANSFORM_SCALE_Y:
               case CMD_TRANSFORM_PERSPECTIVE: {
-                intBuffer.push_back(transformCommand);
-                doubleBuffer.push_back(transformValue.asDouble());
+                pushInt(transformCommand);
+                pushDouble(transformValue.asDouble());
                 break;
               }
               case CMD_TRANSFORM_TRANSLATE_X:
               case CMD_TRANSFORM_TRANSLATE_Y: {
-                intBuffer.push_back(transformCommand);
+                pushInt(transformCommand);
                 if (transformValue.isDouble()) {
-                  intBuffer.push_back(CMD_UNIT_PX);
-                  doubleBuffer.push_back(transformValue.getDouble());
+                  pushInt(CMD_UNIT_PX);
+                  pushDouble(transformValue.getDouble());
                 } else if (transformValue.isString()) {
                   const auto &transformValueStr = transformValue.getString();
                   if (!transformValueStr.ends_with("%")) {
                     throw std::runtime_error("[Reanimated] String translate must be a percentage");
                   }
-                  intBuffer.push_back(CMD_UNIT_PERCENT);
-                  doubleBuffer.push_back(std::stof(transformValueStr.substr(0, -1)));
+                  pushInt(CMD_UNIT_PERCENT);
+                  pushDouble(std::stof(transformValueStr.substr(0, -1)));
                 } else {
                   throw std::runtime_error("[Reanimated] Translate value must be either a number or a string");
                 }
@@ -245,24 +252,24 @@ void serializeSynchronousPropsToBuffers(
               case CMD_TRANSFORM_SKEW_X:
               case CMD_TRANSFORM_SKEW_Y: {
                 const auto &transformValueStr = transformValue.getString();
-                intBuffer.push_back(transformCommand);
+                pushInt(transformCommand);
                 if (transformValueStr.ends_with("deg")) {
-                  intBuffer.push_back(CMD_UNIT_DEG);
+                  pushInt(CMD_UNIT_DEG);
                 } else if (transformValueStr.ends_with("rad")) {
-                  intBuffer.push_back(CMD_UNIT_RAD);
+                  pushInt(CMD_UNIT_RAD);
                 } else {
                   throw std::runtime_error("[Reanimated] Unsupported rotation unit: " + transformValueStr);
                 }
-                doubleBuffer.push_back(std::stof(transformValueStr.substr(0, -3)));
+                pushDouble(std::stof(transformValueStr.substr(0, -3)));
                 break;
               }
               case CMD_TRANSFORM_MATRIX: {
-                intBuffer.push_back(transformCommand);
+                pushInt(transformCommand);
                 react_native_assert(transformValue.isArray() && "[Reanimated] Matrix must be an array");
                 int size = transformValue.size();
-                intBuffer.push_back(size);
+                pushInt(size);
                 for (int i = 0; i < size; i++) {
-                  doubleBuffer.push_back(transformValue[i].asDouble());
+                  pushDouble(transformValue[i].asDouble());
                 }
                 break;
               }
@@ -270,14 +277,14 @@ void serializeSynchronousPropsToBuffers(
                 throw std::runtime_error("[Reanimated] Unsupported transform: " + transformName);
             }
           }
-          intBuffer.push_back(CMD_END_OF_TRANSFORM);
+          pushInt(CMD_END_OF_TRANSFORM);
           break;
 
         default:
           throw std::runtime_error("[Reanimated] Unsupported prop: " + propName);
       }
     }
-    intBuffer.push_back(CMD_END_OF_VIEW);
+    pushInt(CMD_END_OF_VIEW);
   }
 }
 
