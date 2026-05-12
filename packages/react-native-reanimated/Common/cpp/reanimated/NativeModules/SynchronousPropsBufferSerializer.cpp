@@ -2,201 +2,136 @@
 
 #include <react/debug/react_native_assert.h>
 
+#include <cstdint>
 #include <stdexcept>
 #include <string>
+#include <string_view>
+#include <unordered_map>
 
 namespace reanimated {
 
 namespace {
 
 // NOTE: Keep in sync with SynchronousPropsBufferParser.kt
-constexpr auto CMD_START_OF_VIEW = 1;
-constexpr auto CMD_START_OF_TRANSFORM = 2;
-constexpr auto CMD_END_OF_TRANSFORM = 3;
-constexpr auto CMD_END_OF_VIEW = 4;
+enum Command : std::uint8_t {
+  CMD_START_OF_VIEW = 1,
+  CMD_START_OF_TRANSFORM = 2,
+  CMD_END_OF_TRANSFORM = 3,
+  CMD_END_OF_VIEW = 4,
 
-constexpr auto CMD_OPACITY = 10;
-constexpr auto CMD_ELEVATION = 11;
-constexpr auto CMD_Z_INDEX = 12;
-constexpr auto CMD_SHADOW_OPACITY = 13;
-constexpr auto CMD_SHADOW_RADIUS = 14;
-constexpr auto CMD_BACKGROUND_COLOR = 15;
-constexpr auto CMD_COLOR = 16;
-constexpr auto CMD_TINT_COLOR = 17;
+  CMD_OPACITY = 10,
+  CMD_ELEVATION = 11,
+  CMD_Z_INDEX = 12,
+  CMD_SHADOW_OPACITY = 13,
+  CMD_SHADOW_RADIUS = 14,
+  CMD_BACKGROUND_COLOR = 15,
+  CMD_COLOR = 16,
+  CMD_TINT_COLOR = 17,
 
-constexpr auto CMD_BORDER_RADIUS = 20;
-constexpr auto CMD_BORDER_TOP_LEFT_RADIUS = 21;
-constexpr auto CMD_BORDER_TOP_RIGHT_RADIUS = 22;
-constexpr auto CMD_BORDER_TOP_START_RADIUS = 23;
-constexpr auto CMD_BORDER_TOP_END_RADIUS = 24;
-constexpr auto CMD_BORDER_BOTTOM_LEFT_RADIUS = 25;
-constexpr auto CMD_BORDER_BOTTOM_RIGHT_RADIUS = 26;
-constexpr auto CMD_BORDER_BOTTOM_START_RADIUS = 27;
-constexpr auto CMD_BORDER_BOTTOM_END_RADIUS = 28;
-constexpr auto CMD_BORDER_START_START_RADIUS = 29;
-constexpr auto CMD_BORDER_START_END_RADIUS = 30;
-constexpr auto CMD_BORDER_END_START_RADIUS = 31;
-constexpr auto CMD_BORDER_END_END_RADIUS = 32;
+  CMD_BORDER_RADIUS = 20,
+  CMD_BORDER_TOP_LEFT_RADIUS = 21,
+  CMD_BORDER_TOP_RIGHT_RADIUS = 22,
+  CMD_BORDER_TOP_START_RADIUS = 23,
+  CMD_BORDER_TOP_END_RADIUS = 24,
+  CMD_BORDER_BOTTOM_LEFT_RADIUS = 25,
+  CMD_BORDER_BOTTOM_RIGHT_RADIUS = 26,
+  CMD_BORDER_BOTTOM_START_RADIUS = 27,
+  CMD_BORDER_BOTTOM_END_RADIUS = 28,
+  CMD_BORDER_START_START_RADIUS = 29,
+  CMD_BORDER_START_END_RADIUS = 30,
+  CMD_BORDER_END_START_RADIUS = 31,
+  CMD_BORDER_END_END_RADIUS = 32,
 
-constexpr auto CMD_BORDER_COLOR = 40;
-constexpr auto CMD_BORDER_TOP_COLOR = 41;
-constexpr auto CMD_BORDER_BOTTOM_COLOR = 42;
-constexpr auto CMD_BORDER_LEFT_COLOR = 43;
-constexpr auto CMD_BORDER_RIGHT_COLOR = 44;
-constexpr auto CMD_BORDER_START_COLOR = 45;
-constexpr auto CMD_BORDER_END_COLOR = 46;
+  CMD_BORDER_COLOR = 40,
+  CMD_BORDER_TOP_COLOR = 41,
+  CMD_BORDER_BOTTOM_COLOR = 42,
+  CMD_BORDER_LEFT_COLOR = 43,
+  CMD_BORDER_RIGHT_COLOR = 44,
+  CMD_BORDER_START_COLOR = 45,
+  CMD_BORDER_END_COLOR = 46,
 
-constexpr auto CMD_TRANSFORM_TRANSLATE_X = 100;
-constexpr auto CMD_TRANSFORM_TRANSLATE_Y = 101;
-constexpr auto CMD_TRANSFORM_SCALE = 102;
-constexpr auto CMD_TRANSFORM_SCALE_X = 103;
-constexpr auto CMD_TRANSFORM_SCALE_Y = 104;
-constexpr auto CMD_TRANSFORM_ROTATE = 105;
-constexpr auto CMD_TRANSFORM_ROTATE_X = 106;
-constexpr auto CMD_TRANSFORM_ROTATE_Y = 107;
-constexpr auto CMD_TRANSFORM_ROTATE_Z = 108;
-constexpr auto CMD_TRANSFORM_SKEW_X = 109;
-constexpr auto CMD_TRANSFORM_SKEW_Y = 110;
-constexpr auto CMD_TRANSFORM_MATRIX = 111;
-constexpr auto CMD_TRANSFORM_PERSPECTIVE = 112;
+  CMD_TRANSFORM_TRANSLATE_X = 100,
+  CMD_TRANSFORM_TRANSLATE_Y = 101,
+  CMD_TRANSFORM_SCALE = 102,
+  CMD_TRANSFORM_SCALE_X = 103,
+  CMD_TRANSFORM_SCALE_Y = 104,
+  CMD_TRANSFORM_ROTATE = 105,
+  CMD_TRANSFORM_ROTATE_X = 106,
+  CMD_TRANSFORM_ROTATE_Y = 107,
+  CMD_TRANSFORM_ROTATE_Z = 108,
+  CMD_TRANSFORM_SKEW_X = 109,
+  CMD_TRANSFORM_SKEW_Y = 110,
+  CMD_TRANSFORM_MATRIX = 111,
+  CMD_TRANSFORM_PERSPECTIVE = 112,
 
-constexpr auto CMD_UNIT_DEG = 200;
-constexpr auto CMD_UNIT_RAD = 201;
-constexpr auto CMD_UNIT_PX = 202;
-constexpr auto CMD_UNIT_PERCENT = 203;
+  CMD_UNIT_DEG = 200,
+  CMD_UNIT_RAD = 201,
+  CMD_UNIT_PX = 202,
+  CMD_UNIT_PERCENT = 203,
+};
 
-int propNameToCommand(const std::string &name) {
-  if (name == "opacity")
-    return CMD_OPACITY;
+const std::unordered_map<std::string_view, Command> kPropNameToCommand = {
+    {"opacity", CMD_OPACITY},
+    {"elevation", CMD_ELEVATION},
+    {"zIndex", CMD_Z_INDEX},
+    {"shadowOpacity", CMD_SHADOW_OPACITY},
+    {"shadowRadius", CMD_SHADOW_RADIUS},
+    {"backgroundColor", CMD_BACKGROUND_COLOR},
+    {"color", CMD_COLOR},
+    {"tintColor", CMD_TINT_COLOR},
+    {"borderRadius", CMD_BORDER_RADIUS},
+    {"borderTopLeftRadius", CMD_BORDER_TOP_LEFT_RADIUS},
+    {"borderTopRightRadius", CMD_BORDER_TOP_RIGHT_RADIUS},
+    {"borderTopStartRadius", CMD_BORDER_TOP_START_RADIUS},
+    {"borderTopEndRadius", CMD_BORDER_TOP_END_RADIUS},
+    {"borderBottomLeftRadius", CMD_BORDER_BOTTOM_LEFT_RADIUS},
+    {"borderBottomRightRadius", CMD_BORDER_BOTTOM_RIGHT_RADIUS},
+    {"borderBottomStartRadius", CMD_BORDER_BOTTOM_START_RADIUS},
+    {"borderBottomEndRadius", CMD_BORDER_BOTTOM_END_RADIUS},
+    {"borderStartStartRadius", CMD_BORDER_START_START_RADIUS},
+    {"borderStartEndRadius", CMD_BORDER_START_END_RADIUS},
+    {"borderEndStartRadius", CMD_BORDER_END_START_RADIUS},
+    {"borderEndEndRadius", CMD_BORDER_END_END_RADIUS},
+    {"borderColor", CMD_BORDER_COLOR},
+    {"borderTopColor", CMD_BORDER_TOP_COLOR},
+    {"borderBottomColor", CMD_BORDER_BOTTOM_COLOR},
+    {"borderLeftColor", CMD_BORDER_LEFT_COLOR},
+    {"borderRightColor", CMD_BORDER_RIGHT_COLOR},
+    {"borderStartColor", CMD_BORDER_START_COLOR},
+    {"borderEndColor", CMD_BORDER_END_COLOR},
+    {"transform", CMD_START_OF_TRANSFORM}, // TODO: use CMD_TRANSFORM?
+};
 
-  if (name == "elevation")
-    return CMD_ELEVATION;
-
-  if (name == "zIndex")
-    return CMD_Z_INDEX;
-
-  if (name == "shadowOpacity")
-    return CMD_SHADOW_OPACITY;
-
-  if (name == "shadowRadius")
-    return CMD_SHADOW_RADIUS;
-
-  if (name == "backgroundColor")
-    return CMD_BACKGROUND_COLOR;
-
-  if (name == "color")
-    return CMD_COLOR;
-
-  if (name == "tintColor")
-    return CMD_TINT_COLOR;
-
-  if (name == "borderRadius")
-    return CMD_BORDER_RADIUS;
-
-  if (name == "borderTopLeftRadius")
-    return CMD_BORDER_TOP_LEFT_RADIUS;
-
-  if (name == "borderTopRightRadius")
-    return CMD_BORDER_TOP_RIGHT_RADIUS;
-
-  if (name == "borderTopStartRadius")
-    return CMD_BORDER_TOP_START_RADIUS;
-
-  if (name == "borderTopEndRadius")
-    return CMD_BORDER_TOP_END_RADIUS;
-
-  if (name == "borderBottomLeftRadius")
-    return CMD_BORDER_BOTTOM_LEFT_RADIUS;
-
-  if (name == "borderBottomRightRadius")
-    return CMD_BORDER_BOTTOM_RIGHT_RADIUS;
-
-  if (name == "borderBottomStartRadius")
-    return CMD_BORDER_BOTTOM_START_RADIUS;
-
-  if (name == "borderBottomEndRadius")
-    return CMD_BORDER_BOTTOM_END_RADIUS;
-
-  if (name == "borderStartStartRadius")
-    return CMD_BORDER_START_START_RADIUS;
-
-  if (name == "borderStartEndRadius")
-    return CMD_BORDER_START_END_RADIUS;
-
-  if (name == "borderEndStartRadius")
-    return CMD_BORDER_END_START_RADIUS;
-
-  if (name == "borderEndEndRadius")
-    return CMD_BORDER_END_END_RADIUS;
-
-  if (name == "borderColor")
-    return CMD_BORDER_COLOR;
-
-  if (name == "borderTopColor")
-    return CMD_BORDER_TOP_COLOR;
-
-  if (name == "borderBottomColor")
-    return CMD_BORDER_BOTTOM_COLOR;
-
-  if (name == "borderLeftColor")
-    return CMD_BORDER_LEFT_COLOR;
-
-  if (name == "borderRightColor")
-    return CMD_BORDER_RIGHT_COLOR;
-
-  if (name == "borderStartColor")
-    return CMD_BORDER_START_COLOR;
-
-  if (name == "borderEndColor")
-    return CMD_BORDER_END_COLOR;
-
-  if (name == "transform")
-    return CMD_START_OF_TRANSFORM; // TODO: use CMD_TRANSFORM?
-
-  throw std::runtime_error("[Reanimated] Unsupported style: " + name);
+Command propNameToCommand(const std::string &name) {
+  const auto it = kPropNameToCommand.find(name);
+  if (it == kPropNameToCommand.end()) {
+    throw std::runtime_error("[Reanimated] Unsupported style: " + name);
+  }
+  return it->second;
 }
 
-int transformNameToCommand(const std::string &name) {
-  if (name == "translateX")
-    return CMD_TRANSFORM_TRANSLATE_X;
+const std::unordered_map<std::string_view, Command> kTransformNameToCommand = {
+    {"translateX", CMD_TRANSFORM_TRANSLATE_X},
+    {"translateY", CMD_TRANSFORM_TRANSLATE_Y},
+    {"scale", CMD_TRANSFORM_SCALE},
+    {"scaleX", CMD_TRANSFORM_SCALE_X},
+    {"scaleY", CMD_TRANSFORM_SCALE_Y},
+    {"rotate", CMD_TRANSFORM_ROTATE},
+    {"rotateX", CMD_TRANSFORM_ROTATE_X},
+    {"rotateY", CMD_TRANSFORM_ROTATE_Y},
+    {"rotateZ", CMD_TRANSFORM_ROTATE_Z},
+    {"skewX", CMD_TRANSFORM_SKEW_X},
+    {"skewY", CMD_TRANSFORM_SKEW_Y},
+    {"matrix", CMD_TRANSFORM_MATRIX},
+    {"perspective", CMD_TRANSFORM_PERSPECTIVE},
+};
 
-  if (name == "translateY")
-    return CMD_TRANSFORM_TRANSLATE_Y;
-
-  if (name == "scale")
-    return CMD_TRANSFORM_SCALE;
-
-  if (name == "scaleX")
-    return CMD_TRANSFORM_SCALE_X;
-
-  if (name == "scaleY")
-    return CMD_TRANSFORM_SCALE_Y;
-
-  if (name == "rotate")
-    return CMD_TRANSFORM_ROTATE;
-
-  if (name == "rotateX")
-    return CMD_TRANSFORM_ROTATE_X;
-
-  if (name == "rotateY")
-    return CMD_TRANSFORM_ROTATE_Y;
-
-  if (name == "rotateZ")
-    return CMD_TRANSFORM_ROTATE_Z;
-
-  if (name == "skewX")
-    return CMD_TRANSFORM_SKEW_X;
-
-  if (name == "skewY")
-    return CMD_TRANSFORM_SKEW_Y;
-
-  if (name == "matrix")
-    return CMD_TRANSFORM_MATRIX;
-
-  if (name == "perspective")
-    return CMD_TRANSFORM_PERSPECTIVE;
-
-  throw std::runtime_error("[Reanimated] Unsupported transform: " + name);
+Command transformNameToCommand(const std::string &name) {
+  const auto it = kTransformNameToCommand.find(name);
+  if (it == kTransformNameToCommand.end()) {
+    throw std::runtime_error("[Reanimated] Unsupported transform: " + name);
+  }
+  return it->second;
 }
 
 } // namespace
