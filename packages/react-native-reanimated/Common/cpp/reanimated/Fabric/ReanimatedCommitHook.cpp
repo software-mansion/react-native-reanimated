@@ -4,8 +4,6 @@
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
-#include <react/renderer/core/ComponentDescriptor.h>
-
 #include <memory>
 #include <unordered_map>
 #include <vector>
