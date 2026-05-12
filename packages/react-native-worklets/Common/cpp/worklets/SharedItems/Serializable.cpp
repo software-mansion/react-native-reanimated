@@ -10,11 +10,15 @@ using namespace facebook;
 
 namespace worklets {
 
+namespace {
+
 jsi::Function getValueUnpacker(jsi::Runtime &rt) {
   auto valueUnpacker = rt.global().getProperty(rt, "__valueUnpacker");
   react_native_assert(valueUnpacker.isObject() && "valueUnpacker not found");
   return valueUnpacker.asObject(rt).asFunction(rt);
 }
+
+} // namespace
 
 jsi::Value makeSerializableClone(
     jsi::Runtime &rt,

@@ -29,16 +29,28 @@ export async function getSnapshotUpdates(
   layout: any,
   direction: Direction,
   snapshotLength: number,
-  changeSize?: boolean,
+  changeSize?: boolean
 ) {
   await mockAnimationTimer();
   await mockWindowDimensions();
 
   const updatesContainer = await recordAnimationUpdates();
   if (direction === Direction.UP || direction === Direction.DOWN) {
-    await render(<TransitionUpOrDown layout={layout} direction={direction} changeSize={!!changeSize} />);
+    await render(
+      <TransitionUpOrDown
+        layout={layout}
+        direction={direction}
+        changeSize={!!changeSize}
+      />
+    );
   } else {
-    await render(<TransitionLeftOrRight layout={layout} direction={direction} changeSize={!!changeSize} />);
+    await render(
+      <TransitionLeftOrRight
+        layout={layout}
+        direction={direction}
+        changeSize={!!changeSize}
+      />
+    );
   }
   await waitForAnimationUpdates(snapshotLength);
   const component = getTestComponent(TRANSITION_REF);
@@ -67,7 +79,11 @@ export const TransitionUpOrDown = ({
     setShow(false);
   }, [setShow]);
 
-  const mainBoxStyle = [styles.animatedBox, styles.mainBox, changeSize && !show ? styles.bigBox : {}];
+  const mainBoxStyle = [
+    styles.animatedBox,
+    styles.mainBox,
+    changeSize && !show ? styles.bigBox : {},
+  ];
 
   return (
     <View style={styles.containerVertical}>
@@ -80,7 +96,9 @@ export const TransitionUpOrDown = ({
       )}
       {direction === Direction.DOWN && (
         <>
-          {!show && <Animated.View layout={layout} style={styles.animatedBox} />}
+          {!show && (
+            <Animated.View layout={layout} style={styles.animatedBox} />
+          )}
           <Animated.View layout={layout} style={styles.animatedBox} />
           <Animated.View ref={ref} layout={layout} style={mainBoxStyle} />
         </>
@@ -105,7 +123,11 @@ export const TransitionLeftOrRight = ({
     setShow(false);
   }, [setShow]);
 
-  const mainBoxStyle = [styles.animatedBox, styles.mainBox, changeSize && !show ? styles.bigBox : {}];
+  const mainBoxStyle = [
+    styles.animatedBox,
+    styles.mainBox,
+    changeSize && !show ? styles.bigBox : {},
+  ];
 
   return (
     <View style={styles.containerHorizontal}>
@@ -118,7 +140,9 @@ export const TransitionLeftOrRight = ({
       )}
       {direction === Direction.RIGHT && (
         <>
-          {!show && <Animated.View layout={layout} style={styles.animatedBox} />}
+          {!show && (
+            <Animated.View layout={layout} style={styles.animatedBox} />
+          )}
           <Animated.View layout={layout} style={styles.animatedBox} />
           <Animated.View ref={ref} layout={layout} style={mainBoxStyle} />
         </>
@@ -145,7 +169,11 @@ export const TransitionLeftOrRight = ({
           )}
           <Animated.View layout={layout} style={styles.animatedBox} />
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <Animated.View ref={ref} layout={layout} style={[styles.animatedBox, styles.mainBox]} />
+          <Animated.View
+            ref={ref}
+            layout={layout}
+            style={[styles.animatedBox, styles.mainBox]}
+          />
         </>
       )}
     </View>

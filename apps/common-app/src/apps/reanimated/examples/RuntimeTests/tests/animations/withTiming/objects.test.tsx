@@ -1,10 +1,23 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { AnimatableValueObject } from 'react-native-reanimated';
-import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { getComparisonModeForProp } from '../../../ReJest/matchers/Comparators';
-import { describe, expect, getTestComponent, render, test, useTestRef, wait } from '../../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  getTestComponent,
+  render,
+  test,
+  useTestRef,
+  wait,
+} from '../../../ReJest/RuntimeTestsApi';
 import type { ValidPropNames } from '../../../ReJest/types';
 
 const COMPONENT_REF = 'AnimatedComponent';
@@ -60,17 +73,25 @@ describe('withTiming animation of WIDTH', () => {
     // },
   ])(
     'Animate from **${startStyle}** to **${finalStyle}**',
-    async ({ startStyle, finalStyle }: { startStyle: any; finalStyle: any }) => {
-      await render(<AnimatedComponent startStyle={startStyle} finalStyle={finalStyle} />);
+    async ({
+      startStyle,
+      finalStyle,
+    }: {
+      startStyle: any;
+      finalStyle: any;
+    }) => {
+      await render(
+        <AnimatedComponent startStyle={startStyle} finalStyle={finalStyle} />
+      );
       const component = getTestComponent(COMPONENT_REF);
       await wait(1000);
       for (const key of Object.keys(finalStyle)) {
         expect(await component.getAnimatedStyle(key as ValidPropNames)).toBe(
           finalStyle[key],
-          getComparisonModeForProp(key as ValidPropNames),
+          getComparisonModeForProp(key as ValidPropNames)
         );
       }
-    },
+    }
   );
 });
 

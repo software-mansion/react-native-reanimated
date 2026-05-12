@@ -137,8 +137,7 @@ export interface IAnimatedComponentInternalBase {
   getComponentViewTag: () => number;
 }
 
-export interface IAnimatedComponentInternal
-  extends IAnimatedComponentInternalBase {
+export interface IAnimatedComponentInternal extends IAnimatedComponentInternalBase {
   _animatedStyles: StyleProps[];
   _prevAnimatedStyles: StyleProps[];
   _animatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[];

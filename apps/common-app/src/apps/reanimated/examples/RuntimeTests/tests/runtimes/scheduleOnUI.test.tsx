@@ -1,5 +1,17 @@
-import { createWorkletRuntime, scheduleOnRuntime, scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
-import { beforeEach, describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
+import {
+  createWorkletRuntime,
+  scheduleOnRuntime,
+  scheduleOnRN,
+  scheduleOnUI,
+} from 'react-native-worklets';
+import {
+  beforeEach,
+  describe,
+  expect,
+  notify,
+  test,
+  waitForNotification,
+} from '../../ReJest/RuntimeTestsApi';
 
 describe('scheduleOnUI', () => {
   const PASS_NOTIFICATION = 'PASS';
@@ -70,12 +82,17 @@ describe('scheduleOnUI', () => {
             scheduleOnRN(callbackPass, 42);
           });
         } catch (error) {
-          scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+          scheduleOnRN(
+            callbackFail,
+            error instanceof Error ? error.message : String(error)
+          );
         }
       });
 
       await waitForNotification(FAIL_NOTIFICATION);
-      expect(reason).toBe('[Worklets] scheduleOnUI cannot be called on Worklet Runtimes outside of the Bundle Mode.');
+      expect(reason).toBe(
+        '[Worklets] scheduleOnUI cannot be called on Worklet Runtimes outside of the Bundle Mode.'
+      );
     });
 
     test('throws when scheduling on Worker Runtime to UI Runtime', async () => {
@@ -87,12 +104,17 @@ describe('scheduleOnUI', () => {
             scheduleOnRN(callbackPass, 42);
           });
         } catch (error) {
-          scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+          scheduleOnRN(
+            callbackFail,
+            error instanceof Error ? error.message : String(error)
+          );
         }
       });
 
       await waitForNotification(FAIL_NOTIFICATION);
-      expect(reason).toBe('[Worklets] scheduleOnUI cannot be called on Worklet Runtimes outside of the Bundle Mode.');
+      expect(reason).toBe(
+        '[Worklets] scheduleOnUI cannot be called on Worklet Runtimes outside of the Bundle Mode.'
+      );
     });
   }
 });
