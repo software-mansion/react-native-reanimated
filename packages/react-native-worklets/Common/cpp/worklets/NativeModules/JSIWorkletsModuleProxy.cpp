@@ -2,7 +2,6 @@
 #include <worklets/Compat/Holders.h>
 #include <worklets/Compat/StableApi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
-#include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
 #include <worklets/SharedItems/Shareable.h>
@@ -10,9 +9,7 @@
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
-#include <worklets/Tools/WorkletsSystraceSection.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
-#include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #ifndef NDEBUG
 #include <algorithm>
