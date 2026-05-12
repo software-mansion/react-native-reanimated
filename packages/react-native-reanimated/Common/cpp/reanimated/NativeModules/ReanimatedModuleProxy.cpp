@@ -401,6 +401,8 @@ bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(const std::string &event
 }
 
 void ReanimatedModuleProxy::onRender(double timestampMs) {
+  reanimatedPerformanceTracerMarkCurrentThreadAsUi();
+
   ReanimatedSystraceSection s("ReanimatedModuleProxy::onRender");
   // NOOP
 }
@@ -544,6 +546,8 @@ bool ReanimatedModuleProxy::handleEvent(
     const int emitterReactTag,
     const jsi::Value &payload,
     double currentTime) {
+  reanimatedPerformanceTracerMarkCurrentThreadAsUi();
+
   ReanimatedSystraceSection s("ReanimatedModuleProxy::handleEvent");
   ReanimatedPerformanceTracerSection pts("handleEvent", [&](folly::dynamic &props) {
     jsi::Runtime &rt = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
@@ -561,6 +565,8 @@ bool ReanimatedModuleProxy::handleEvent(
 }
 
 bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double currentTime) {
+  reanimatedPerformanceTracerMarkCurrentThreadAsUi();
+
   ReanimatedSystraceSection s("ReanimatedModuleProxy::handleRawEvent");
   ReanimatedPerformanceTracerSection pts("handleRawEvent", [&](folly::dynamic &props) {
     jsi::Runtime &rt = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
