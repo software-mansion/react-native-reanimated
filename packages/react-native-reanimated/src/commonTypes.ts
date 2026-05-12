@@ -455,10 +455,29 @@ type MaybeSharedValueRecursive<Value> = Value extends readonly (infer Item)[]
           }
     : MaybeSharedValue<Value>;
 
+type AnimatedCSSPropKeys =
+  | keyof CSSAnimationProperties
+  | keyof CSSTransitionProperties;
+
+type WithAnimatedCSSProps<Style> = Style &
+  Partial<CSSAnimationProperties> &
+  Partial<CSSTransitionProperties>;
+
+// Augmented RN styles (e.g. Expo `expo-env.d.ts`) can declare our CSS keys in a
+// way that makes `Style & Partial<CSS…>` resolve those properties to `never`.
+// When that would happen, omit those keys first, then merge our CSS types back.
+// `Style extends unknown` distributes so `StyleProp<…>` unions are handled per
+// member. https://github.com/software-mansion/react-native-reanimated/issues/9328
+type AnimatedStyleLiteral<Style> = Style extends unknown
+  ? Extract<keyof Style, AnimatedCSSPropKeys> extends never
+    ? WithAnimatedCSSProps<Style>
+    : WithAnimatedCSSProps<Omit<Style, AnimatedCSSPropKeys>>
+  : never;
+
 // Ideally we want AnimatedStyle to not be generic, but there are
 // so many dependencies on it being generic that it's not feasible at the moment.
 export type AnimatedStyle<Style = DefaultStyle> =
-  | (Style & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) // TODO - maybe add css animation config somewhere else
+  | AnimatedStyleLiteral<Style>
   | MaybeSharedValueRecursive<Style>
   | AnimatedStyleHandle<Style>;
 
