@@ -26,7 +26,16 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
   bool isEmpty() const override;
   bool hasUpdates() const;
 
-  void run(jsi::Runtime &rt, const std::shared_ptr<const ShadowNode> &shadowNode, const CSSTransitionConfig &config);
+  // TO DO: In the future we want to decouple config update and run
+  void updateConfigOrRun(
+      jsi::Runtime &rt,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const CSSTransitionConfig &config);
+  /// run Should be called only after someone has already set settings with updateConfigOrRun
+  void run(
+      jsi::Runtime &rt,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const PropertyValueDiffsMap &propertyDiffs);
 
   void updateAndFlush(double timestamp, UpdatesBatch &updatesBatch) {
     std::lock_guard<std::mutex> lock{mutex_};
@@ -50,6 +59,11 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
   void activateDelayedTransitions(double timestamp);
   void scheduleOrActivateTransition(const std::shared_ptr<CSSTransition> &transition);
   void updateInUpdatesRegistry(const std::shared_ptr<CSSTransition> &transition, const folly::dynamic &updates);
+  void runTransition(
+      jsi::Runtime &rt,
+      const std::shared_ptr<CSSTransition> &transition,
+      const facebook::react::Tag &viewTag,
+      const PropertyValueDiffsMap &propertyDiffs);
 };
 
 } // namespace reanimated::css

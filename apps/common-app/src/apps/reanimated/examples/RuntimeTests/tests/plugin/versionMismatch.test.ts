@@ -11,7 +11,9 @@ describe('Test plugin version mismatch', () => {
         }) as WorkletFunction;
         worklet.__pluginVersion = 'x.y.z';
         scheduleOnUI(worklet);
-      }).toThrow('[Worklets] Mismatch between JavaScript code version and Worklets Babel plugin version');
+      }).toThrow(
+        '[Worklets] Mismatch between JavaScript code version and Worklets Babel plugin version'
+      );
     });
   }
 });

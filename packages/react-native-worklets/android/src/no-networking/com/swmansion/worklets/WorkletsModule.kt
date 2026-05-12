@@ -95,6 +95,7 @@ class WorkletsModule(
         return true
     }
 
+    @DoNotStrip
     fun requestAnimationFrame(animationFrameCallback: AnimationFrameCallback) {
         mAnimationFrameQueue.requestAnimationFrame(animationFrameCallback)
     }

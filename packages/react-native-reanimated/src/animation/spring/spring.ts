@@ -44,8 +44,8 @@ type withSpringType = <T extends AnimatableValue>(
  * @param config - The spring animation configuration - {@link SpringConfig}.
  *   Defaults to {@link GentleSpringConfig}. You can use other predefined spring
  *   configurations, such as {@link WigglySpringConfig},
- *   {@link SnappySpringConfig}, {@link Reanimated3DefaultSpringConfig} or create
- *   your own.
+ *   {@link SnappySpringConfig}, {@link Reanimated3DefaultSpringConfig} or
+ *   create your own.
  * @param callback - A function called on animation complete -
  *   {@link AnimationCallback}
  * @returns An [animation

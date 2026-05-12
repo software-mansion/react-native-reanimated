@@ -32,9 +32,9 @@ export type AnimatedComponentProps = Record<string, unknown> & {
 // private/protected ones when possible (when changes from this repo are merged
 // to the main one)
 export default class AnimatedComponent<
-    P extends AnyRecord = AnimatedComponentProps,
-    S extends AnyRecord = Record<string, unknown>,
-  >
+  P extends AnyRecord = AnimatedComponentProps,
+  S extends AnyRecord = Record<string, unknown>,
+>
   extends Component<P, S>
   implements IAnimatedComponentInternalBase
 {
@@ -82,7 +82,7 @@ export default class AnimatedComponent<
     } else {
       const hostInstance = findHostInstance(this);
       if (!hostInstance) {
-        /* 
+        /*
           findHostInstance can return null for a component that doesn't render anything 
           (render function returns null). Example: 
           svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx

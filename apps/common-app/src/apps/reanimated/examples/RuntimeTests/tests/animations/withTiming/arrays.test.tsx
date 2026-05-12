@@ -1,8 +1,21 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from 'react-native-reanimated';
 
-import { describe, expect, getTestComponent, render, test, useTestRef, wait } from '../../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  getTestComponent,
+  render,
+  test,
+  useTestRef,
+  wait,
+} from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 
 const COMPONENT_REF = {
@@ -41,7 +54,7 @@ const IndependentComponents = ({
       100,
       withTiming(finalWidths, {
         duration,
-      }),
+      })
     );
   }, [widths, finalWidths, duration]);
 
@@ -73,11 +86,36 @@ describe('withTiming animation of ARRAY', () => {
     { startWidths: [200, 200, 200], finalWidths: [200, 140, 150], speed: 10 },
     { startWidths: [20, 20, 20], finalWidths: [130, 140, 150], speed: 0 },
     { startWidths: [20, 20, 20], finalWidths: [130, 14.3, 150], speed: 500 },
-    { startWidths: [2e-4, 20, 20], finalWidths: [13.78e-4, 200, 20], scalars: [1e5, 1, 1], speed: 500 },
-    { startWidths: [2e-9, 20, 20], finalWidths: [13.78e-9, 200, 20], scalars: [1e10, 1, 1], speed: 500 },
-    { startWidths: [2e-17, 20, 20], finalWidths: [13.78e-17, 200, 20], scalars: [1e18, 1, 1], speed: 500 },
-    { startWidths: [2e-125, 1e20, 20], finalWidths: [13.78e-125, 1e20, 20], scalars: [1e126, 1e-19, 1], speed: 500 },
-    { startWidths: [2e-130, 1e-20, 20], finalWidths: [13.78e-125, 15e20, 20], scalars: [1e126, 1e-19, 1], speed: 50 },
+    {
+      startWidths: [2e-4, 20, 20],
+      finalWidths: [13.78e-4, 200, 20],
+      scalars: [1e5, 1, 1],
+      speed: 500,
+    },
+    {
+      startWidths: [2e-9, 20, 20],
+      finalWidths: [13.78e-9, 200, 20],
+      scalars: [1e10, 1, 1],
+      speed: 500,
+    },
+    {
+      startWidths: [2e-17, 20, 20],
+      finalWidths: [13.78e-17, 200, 20],
+      scalars: [1e18, 1, 1],
+      speed: 500,
+    },
+    {
+      startWidths: [2e-125, 1e20, 20],
+      finalWidths: [13.78e-125, 1e20, 20],
+      scalars: [1e126, 1e-19, 1],
+      speed: 500,
+    },
+    {
+      startWidths: [2e-130, 1e-20, 20],
+      finalWidths: [13.78e-125, 15e20, 20],
+      scalars: [1e126, 1e-19, 1],
+      speed: 50,
+    },
   ];
 
   test.each(TEST_CASES)(
@@ -90,15 +128,17 @@ describe('withTiming animation of ARRAY', () => {
           finalWidths={finalWidths}
           duration={speed}
           scalars={scalars}
-        />,
+        />
       );
-      const components = Object.values(COMPONENT_REF).map(refName => getTestComponent(refName));
+      const components = Object.values(COMPONENT_REF).map((refName) =>
+        getTestComponent(refName)
+      );
       let index = 0;
       index = 0;
       for (const component of components) {
         expect(await component.getAnimatedStyle('width')).toBe(
           startWidths[index] * scalars[index],
-          ComparisonMode.PIXEL,
+          ComparisonMode.PIXEL
         );
         index += 1;
       }
@@ -107,11 +147,11 @@ describe('withTiming animation of ARRAY', () => {
       for (const component of components) {
         expect(await component.getAnimatedStyle('width')).toBe(
           finalWidths[index] * scalars[index],
-          ComparisonMode.PIXEL,
+          ComparisonMode.PIXEL
         );
         index += 1;
       }
-    },
+    }
   );
 });
 

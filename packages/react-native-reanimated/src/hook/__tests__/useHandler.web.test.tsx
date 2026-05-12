@@ -20,9 +20,10 @@ describe('useHandler (web)', () => {
 
       test('is true when a primitive dep changes', () => {
         const handler = jest.fn();
-        const { result, rerender } = renderUseHandler({ onScroll: handler }, [
-          1,
-        ]);
+        const { result, rerender } = renderUseHandler(
+          { onScroll: handler },
+          [1]
+        );
 
         rerender({ handlers: { onScroll: handler }, deps: [2] });
         expect(result.current.doDependenciesDiffer).toBe(true);

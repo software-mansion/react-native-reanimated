@@ -47,7 +47,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
   }
 
   private parseDefinitions(): ParsedKeyframesDefinition {
-    /* 
+    /*
         Each style property contain an array with all their key points: 
         value, duration of transition to that value, and optional easing function (defaults to Linear)
     */
@@ -73,7 +73,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       this.definitions['100'] = this.definitions.to;
       delete this.definitions.to;
     }
-    /* 
+    /*
       One of the assumptions is that keyframe  0 is required to properly set initial values.
       Every other keyframe should contain properties from the set provided as initial values.
     */
@@ -118,7 +118,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       return maxDuration - currentDuration;
     };
 
-    /* 
+    /*
        Other keyframes can't contain properties that were not specified in initial keyframe.
     */
     const addKeyPoint = ({
@@ -241,7 +241,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       'worklet';
       const animations: StylePropsWithArrayTransform = {};
 
-      /* 
+      /*
             For each style property, an animations sequence is created that corresponds with its key points.
             Transform style properties require special handling because of their nested structure.
       */

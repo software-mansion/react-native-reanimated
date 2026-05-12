@@ -546,7 +546,7 @@ void ReanimatedModuleProxy::runCSSTransition(
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto config = parseCSSTransitionConfig(rt, transitionConfig);
 
-  cssTransitionsRegistry_->run(rt, shadowNode, config);
+  cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, config);
 
   operationsLoop_->run();
 }

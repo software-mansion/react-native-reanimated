@@ -13,7 +13,13 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 import { ColorSnapshots as Snapshots } from './entering.snapshot';
 
-const AnimatedComponent = ({ fromColor, toColor }: { fromColor: string; toColor: string }) => {
+const AnimatedComponent = ({
+  fromColor,
+  toColor,
+}: {
+  fromColor: string;
+  toColor: string;
+}) => {
   const customAnim = () => {
     'worklet';
     const animations = {
@@ -26,7 +32,11 @@ const AnimatedComponent = ({ fromColor, toColor }: { fromColor: string; toColor:
   return <Animated.View style={styles.colorBox} entering={customAnim} />;
 };
 
-async function getSnapshotUpdates(fromColor: string, toColor: string, snapshot: Array<any>) {
+async function getSnapshotUpdates(
+  fromColor: string,
+  toColor: string,
+  snapshot: Array<any>
+) {
   await mockAnimationTimer();
   const updatesContainer = await recordAnimationUpdates();
   await render(<AnimatedComponent fromColor={fromColor} toColor={toColor} />);
@@ -55,7 +65,11 @@ describe('entering with custom animation (withDelay + withTiming color changes) 
       .replace(/,/g, '_')
       .replace(/rgba/g, '') as keyof typeof Snapshots;
     const snapshot = Snapshots[snapshotName];
-    const [updates, nativeUpdates] = await getSnapshotUpdates(fromColor, toColor, snapshot);
+    const [updates, nativeUpdates] = await getSnapshotUpdates(
+      fromColor,
+      toColor,
+      snapshot
+    );
     expect(updates).toMatchSnapshots(snapshot);
     expect(updates).toMatchNativeSnapshots(nativeUpdates);
   });
