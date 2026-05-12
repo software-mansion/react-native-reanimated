@@ -1,15 +1,26 @@
 #pragma once
 
-#include <reanimated/CSS/misc/ViewStylesRepository.h>
+#include <folly/dynamic.h>
+#include <jsi/jsi.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <typeinfo>
 
+// Forward-declared to keep <react/renderer/core/ShadowNode.h> out of this header.
+namespace facebook::react {
+class ShadowNode;
+} // namespace facebook::react
+
 namespace reanimated::css {
 
+// Forward-declared to keep ViewStylesRepository.h (and its heavy transitive includes) out of this header.
+class ViewStylesRepository;
+
 using namespace facebook;
+using namespace facebook::react;
 
 enum class RelativeTo : std::uint8_t {
   Parent,
