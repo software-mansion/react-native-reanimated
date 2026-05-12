@@ -25,16 +25,24 @@ export function createUpdatesContainer() {
   const jsUpdates = makeMutable<Array<JsUpdate>>([]);
   const nativeSnapshots = makeMutable<Array<NativeUpdate>>([]);
 
-  function _updateNativeSnapshot(updateInfos: JsUpdate[], jsUpdateIndex: number): void {
+  function _updateNativeSnapshot(
+    updateInfos: JsUpdate[],
+    jsUpdateIndex: number
+  ): void {
     'worklet';
-    nativeSnapshots.modify(values => {
+    nativeSnapshots.modify((values) => {
       'worklet';
       for (const updateInfo of updateInfos) {
         const snapshot: OperationUpdate = {};
         const updatedProps = Object.keys(updateInfo.update);
-        const propsToUpdate = updatedProps.filter(propName => isValidPropName(propName));
+        const propsToUpdate = updatedProps.filter((propName) =>
+          isValidPropName(propName)
+        );
         for (const prop of propsToUpdate) {
-          snapshot[prop] = global._obtainProp(updateInfo?.shadowNodeWrapper, prop);
+          snapshot[prop] = global._obtainProp(
+            updateInfo?.shadowNodeWrapper,
+            prop
+          );
         }
         values.push({
           tag: updateInfo.tag,
@@ -49,7 +57,7 @@ export function createUpdatesContainer() {
 
   function _updateJsSnapshot(newUpdates: JsUpdate[]): void {
     'worklet';
-    jsUpdates.modify(updates => {
+    jsUpdates.modify((updates) => {
       for (const update of newUpdates) {
         updates.push(update);
       }
@@ -57,7 +65,9 @@ export function createUpdatesContainer() {
     });
   }
 
-  function _extractJSUpdatesUpdatesFromOperation(operations: Operation[]): Array<Required<JsUpdate>> {
+  function _extractJSUpdatesUpdatesFromOperation(
+    operations: Operation[]
+  ): Array<Required<JsUpdate>> {
     'worklet';
     const jsUpdates: Array<Required<JsUpdate>> = [];
     for (const operation of operations) {
@@ -78,15 +88,20 @@ export function createUpdatesContainer() {
     _updateJsSnapshot(newUpdates);
   }
 
-  function pushLayoutAnimationUpdates(tag: number, update: Record<string, unknown>) {
+  function pushLayoutAnimationUpdates(
+    tag: number,
+    update: Record<string, unknown>
+  ) {
     'worklet';
     // Deep Copy, works with nested objects, but doesn't copy functions (which should be fine here)
     const updatesCopy = JSON.parse(JSON.stringify(update));
     if ('backgroundColor' in updatesCopy) {
-      updatesCopy.backgroundColor = convertDecimalColor(updatesCopy.backgroundColor);
+      updatesCopy.backgroundColor = convertDecimalColor(
+        updatesCopy.backgroundColor
+      );
     }
     _updateNativeSnapshot([{ tag, update }], jsUpdates.value.length - 1);
-    jsUpdates.modify(updates => {
+    jsUpdates.modify((updates) => {
       updates.push({
         tag,
         update: updatesCopy,
@@ -97,7 +112,7 @@ export function createUpdatesContainer() {
 
   function _sortUpdatesByViewTag(
     updates: Array<JsUpdate> | Array<NativeUpdate>,
-    propsNames: string[],
+    propsNames: string[]
   ): MultiViewSnapshot {
     const updatesForTag: Record<number, Array<OperationUpdate>> = {};
     for (const updateRequest of updates) {
@@ -108,7 +123,10 @@ export function createUpdatesContainer() {
       }
       let update: OperationUpdate = {};
       if (propsNames.length === 0) {
-        update = 'update' in updateRequest ? updateRequest.update : updateRequest.snapshot;
+        update =
+          'update' in updateRequest
+            ? updateRequest.update
+            : updateRequest.snapshot;
       } else {
         for (const prop of propsNames) {
           update[prop] =
@@ -122,13 +140,18 @@ export function createUpdatesContainer() {
     return updatesForTag;
   }
 
-  function _getComponentFromSortedUpdates(sortedUpdates: MultiViewSnapshot, component?: TestComponent) {
+  function _getComponentFromSortedUpdates(
+    sortedUpdates: MultiViewSnapshot,
+    component?: TestComponent
+  ) {
     if (component === undefined) {
       const viewTags = Object.keys(sortedUpdates);
       if (viewTags.length === 1) {
         return sortedUpdates[Number(viewTags[0])];
       }
-      throw new Error('Recorded snapshots of many views, specify component you want to get snapshot of');
+      throw new Error(
+        'Recorded snapshots of many views, specify component you want to get snapshot of'
+      );
     }
     const tag = component?.getTag();
     if (!tag || !(tag in sortedUpdates)) {
@@ -138,12 +161,18 @@ export function createUpdatesContainer() {
     }
   }
 
-  function getUpdates(component?: TestComponent, propsNames: string[] = []): SingleViewSnapshot {
+  function getUpdates(
+    component?: TestComponent,
+    propsNames: string[] = []
+  ): SingleViewSnapshot {
     const sortedUpdates = _sortUpdatesByViewTag(jsUpdates.value, propsNames);
     return _getComponentFromSortedUpdates(sortedUpdates, component);
   }
 
-  async function getNativeSnapshots(component?: TestComponent, propsNames: string[] = []): Promise<SingleViewSnapshot> {
+  async function getNativeSnapshots(
+    component?: TestComponent,
+    propsNames: string[] = []
+  ): Promise<SingleViewSnapshot> {
     const nativeSnapshotsCount = nativeSnapshots.value.length;
     const jsUpdatesCount = jsUpdates.value.length;
     if (jsUpdatesCount === nativeSnapshotsCount) {
@@ -159,12 +188,15 @@ export function createUpdatesContainer() {
                 update: lastSnapshot.snapshot,
               },
             ],
-            jsUpdatesCount - 1,
+            jsUpdatesCount - 1
           );
         }
       });
     }
-    const sortedUpdates = _sortUpdatesByViewTag(nativeSnapshots.value, propsNames);
+    const sortedUpdates = _sortUpdatesByViewTag(
+      nativeSnapshots.value,
+      propsNames
+    );
     return _getComponentFromSortedUpdates(sortedUpdates, component);
   }
 

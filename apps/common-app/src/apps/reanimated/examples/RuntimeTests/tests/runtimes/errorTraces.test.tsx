@@ -17,7 +17,9 @@ import {
 } from 'react-native-worklets';
 
 declare global {
-  var __reportFatalRemoteError: ((error: Error, _: boolean) => void) | undefined;
+  var __reportFatalRemoteError:
+    | ((error: Error, _: boolean) => void)
+    | undefined;
 }
 
 const originalReportFatalRemoteError = globalThis.__reportFatalRemoteError;

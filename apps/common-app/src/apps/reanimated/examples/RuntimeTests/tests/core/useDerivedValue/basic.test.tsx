@@ -64,8 +64,12 @@ describe('Test useDerivedValue changing width', () => {
         return {
           width:
             animationType === AnimationType.TIMING
-              ? withTiming(compilerApi ? derivedValue.get() : derivedValue.value)
-              : withSpring(compilerApi ? derivedValue.get() : derivedValue.value),
+              ? withTiming(
+                  compilerApi ? derivedValue.get() : derivedValue.value
+                )
+              : withSpring(
+                  compilerApi ? derivedValue.get() : derivedValue.value
+                ),
         };
       } else {
         return { width: compilerApi ? derivedValue.get() : derivedValue.value };
@@ -75,9 +79,16 @@ describe('Test useDerivedValue changing width', () => {
     useEffect(() => {
       if (animate === AnimationLocation.USE_EFFECT) {
         if (compilerApi) {
-          basicValue.set(animationType === AnimationType.TIMING ? withTiming(finalWidth) : withSpring(finalWidth));
+          basicValue.set(
+            animationType === AnimationType.TIMING
+              ? withTiming(finalWidth)
+              : withSpring(finalWidth)
+          );
         } else {
-          basicValue.value = animationType === AnimationType.TIMING ? withTiming(finalWidth) : withSpring(finalWidth);
+          basicValue.value =
+            animationType === AnimationType.TIMING
+              ? withTiming(finalWidth)
+              : withSpring(finalWidth);
         }
       } else {
         if (compilerApi) {
@@ -90,7 +101,10 @@ describe('Test useDerivedValue changing width', () => {
 
     return (
       <View style={styles.container}>
-        <Animated.View ref={componentRef} style={[styles.animatedBox, derivedValueStyle]} />
+        <Animated.View
+          ref={componentRef}
+          style={[styles.animatedBox, derivedValueStyle]}
+        />
       </View>
     );
   };
@@ -121,7 +135,7 @@ describe('Test useDerivedValue changing width', () => {
         finalWidth: number,
         animate: AnimationLocation,
         animationType: AnimationType,
-        compilerApi: boolean,
+        compilerApi: boolean
       ) {
         await mockAnimationTimer();
         const updatesContainerActive = await recordAnimationUpdates();
@@ -133,11 +147,14 @@ describe('Test useDerivedValue changing width', () => {
             animationType={animationType}
             deriveFunction={derivedFun}
             compilerApi={compilerApi}
-          />,
+          />
         );
         const testComponent = getTestComponent(WIDTH_COMPONENT);
         await waitForAnimationUpdates(snapshotLength);
-        expect(await testComponent.getAnimatedStyle('width')).toBe(derivedFun(finalWidth), ComparisonMode.PIXEL);
+        expect(await testComponent.getAnimatedStyle('width')).toBe(
+          derivedFun(finalWidth),
+          ComparisonMode.PIXEL
+        );
         const updates = updatesContainerActive.getUpdates();
         const naiveUpdates = await updatesContainerActive.getNativeSnapshots();
         await unmockAnimationTimer();
@@ -208,7 +225,11 @@ describe('Test useDerivedValue changing width', () => {
           },
         ].reduce(
           (acc, element) => {
-            return [...acc, { ...element, compilerApi: false }, { ...element, compilerApi: true }];
+            return [
+              ...acc,
+              { ...element, compilerApi: false },
+              { ...element, compilerApi: true },
+            ];
           },
           [] as {
             startWidth: number;
@@ -216,8 +237,8 @@ describe('Test useDerivedValue changing width', () => {
             animate: AnimationLocation;
             animationType: AnimationType;
             compilerApi: boolean;
-          }[],
-        ),
+          }[]
+        )
       )(
         'Animate from ${startWidth} to ${finalWidth}, ${animationType} ${animate}',
         async ({ startWidth, finalWidth, animate, animationType }) => {
@@ -227,25 +248,27 @@ describe('Test useDerivedValue changing width', () => {
             [AnimationLocation.ANIMATED_STYLE]: 3,
           };
 
-          const snapshot = BasicSnapshots[`func_${index}` as keyof typeof BasicSnapshots];
+          const snapshot =
+            BasicSnapshots[`func_${index}` as keyof typeof BasicSnapshots];
           const snapshotName =
             `width_${animationType}_${snapshotIdPerType[animate]}_${startWidth}_${finalWidth}`.replace(
               /\./g,
-              '$',
+              '$'
             ) as keyof typeof snapshot;
 
-          const [updates, nativeUpdates] = await getSnapshotUpdatesAndCheckFinalValue(
-            snapshot[snapshotName].length,
-            startWidth,
-            finalWidth,
-            animate,
-            animationType,
-            false,
-          );
+          const [updates, nativeUpdates] =
+            await getSnapshotUpdatesAndCheckFinalValue(
+              snapshot[snapshotName].length,
+              startWidth,
+              finalWidth,
+              animate,
+              animationType,
+              false
+            );
 
           expect(updates).toMatchSnapshots(snapshot[snapshotName]);
           expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
-        },
+        }
       );
     });
   });

@@ -1,6 +1,11 @@
 import React, { useEffect } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from 'react-native-reanimated';
 
 import {
   callTracker,
@@ -45,7 +50,10 @@ describe('withTiming animation of WIDTH', () => {
 
     const styleActive = useAnimatedStyle(() => {
       return {
-        width: withTiming(compilerApi ? widthActiveSV.get() : widthActiveSV.value, { duration: 500 }),
+        width: withTiming(
+          compilerApi ? widthActiveSV.get() : widthActiveSV.value,
+          { duration: 500 }
+        ),
       };
     });
     const stylePassive = useAnimatedStyle(() => {
@@ -74,9 +82,20 @@ describe('withTiming animation of WIDTH', () => {
       <View style={styles.container}>
         <Animated.View
           ref={refActive}
-          style={[styles.animatedBox, { backgroundColor: 'palevioletred' }, styleActive]}
+          style={[
+            styles.animatedBox,
+            { backgroundColor: 'palevioletred' },
+            styleActive,
+          ]}
         />
-        <Animated.View ref={refPassive} style={[styles.animatedBox, { backgroundColor: 'royalblue' }, stylePassive]} />
+        <Animated.View
+          ref={refPassive}
+          style={[
+            styles.animatedBox,
+            { backgroundColor: 'royalblue' },
+            stylePassive,
+          ]}
+        />
       </View>
     );
   };
@@ -90,7 +109,12 @@ describe('withTiming animation of WIDTH', () => {
   }
   test.each(
     [
-      { startWidth: 0, finalWidth: 100, finalWidthInPixels: 100, description: 'width in pixels' },
+      {
+        startWidth: 0,
+        finalWidth: 100,
+        finalWidthInPixels: 100,
+        description: 'width in pixels',
+      },
       {
         startWidth: '0%',
         finalWidth: '100%',
@@ -113,29 +137,60 @@ describe('withTiming animation of WIDTH', () => {
       (acc, element) => [
         ...acc,
         { ...element, compilerApi: false },
-        { ...element, compilerApi: true, description: `${element.description} (compiler API)` },
+        {
+          ...element,
+          compilerApi: true,
+          description: `${element.description} (compiler API)`,
+        },
       ],
-      [] as Record<string, unknown>[],
-    ) as unknown as Array<TestCase>,
+      [] as Record<string, unknown>[]
+    ) as unknown as Array<TestCase>
   )(
     '${description}, from ${startWidth} to ${finalWidth}',
-    async ({ startWidth, finalWidth, finalWidthInPixels, compilerApi }: TestCase) => {
-      await render(<WidthComponent startWidth={startWidth} finalWidth={finalWidth} compilerApi={compilerApi} />);
+    async ({
+      startWidth,
+      finalWidth,
+      finalWidthInPixels,
+      compilerApi,
+    }: TestCase) => {
+      await render(
+        <WidthComponent
+          startWidth={startWidth}
+          finalWidth={finalWidth}
+          compilerApi={compilerApi}
+        />
+      );
       const componentActive = getTestComponent(WIDTH_COMPONENT_ACTIVE_REF);
-      const WidthComponentPassive = getTestComponent(WIDTH_COMPONENT_PASSIVE_REF);
+      const WidthComponentPassive = getTestComponent(
+        WIDTH_COMPONENT_PASSIVE_REF
+      );
       await wait(1000);
-      expect(await componentActive.getAnimatedStyle('width')).toBe(finalWidthInPixels, ComparisonMode.PIXEL);
-      expect(await WidthComponentPassive.getAnimatedStyle('width')).toBe(finalWidthInPixels, ComparisonMode.PIXEL);
-    },
+      expect(await componentActive.getAnimatedStyle('width')).toBe(
+        finalWidthInPixels,
+        ComparisonMode.PIXEL
+      );
+      expect(await WidthComponentPassive.getAnimatedStyle('width')).toBe(
+        finalWidthInPixels,
+        ComparisonMode.PIXEL
+      );
+    }
   );
 
   test('Width from percent to pixels is NOT handled correctly', async () => {
-    await render(<WidthComponent startWidth={'20%'} finalWidth={100} compilerApi={false} />);
+    await render(
+      <WidthComponent startWidth={'20%'} finalWidth={100} compilerApi={false} />
+    );
     const componentActive = getTestComponent(WIDTH_COMPONENT_ACTIVE_REF);
     const WidthComponentPassive = getTestComponent(WIDTH_COMPONENT_PASSIVE_REF);
     await wait(1000);
-    expect(await componentActive.getAnimatedStyle('width')).not.toBe(100, ComparisonMode.PIXEL);
-    expect(await WidthComponentPassive.getAnimatedStyle('width')).not.toBe(100, ComparisonMode.PIXEL);
+    expect(await componentActive.getAnimatedStyle('width')).not.toBe(
+      100,
+      ComparisonMode.PIXEL
+    );
+    expect(await WidthComponentPassive.getAnimatedStyle('width')).not.toBe(
+      100,
+      ComparisonMode.PIXEL
+    );
   });
 });
 
@@ -146,8 +201,15 @@ describe('withTiming, test CALLBACKS', () => {
     const style = useAnimatedStyle(() => {
       callTracker(Tracker.UseAnimatedStyle);
       return {
-        width: withTiming(sv.value, { duration: 200 }, callTrackerFn(Tracker.Width)),
-        height: withDelay(10, withTiming(sv.value, { duration: 400 }, callTrackerFn(Tracker.Height))),
+        width: withTiming(
+          sv.value,
+          { duration: 200 },
+          callTrackerFn(Tracker.Width)
+        ),
+        height: withDelay(
+          10,
+          withTiming(sv.value, { duration: 400 }, callTrackerFn(Tracker.Height))
+        ),
         opacity: 1,
       };
     });

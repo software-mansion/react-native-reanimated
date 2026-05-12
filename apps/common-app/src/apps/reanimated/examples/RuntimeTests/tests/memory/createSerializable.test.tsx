@@ -145,7 +145,7 @@ describe('Test createSerializable', () => {
           const checks = [
             typeof hostObjectValue === 'object',
             Object.keys(hostObjectValue).length === hostObjectKeys.length,
-            hostObjectKeys.every(key => hostObjectValue[key] !== undefined),
+            hostObjectKeys.every((key) => hostObjectValue[key] !== undefined),
           ];
           scheduleOnRN(callbackPass, checks.every(Boolean));
         });
@@ -365,7 +365,8 @@ describe('Test createSerializable', () => {
             obj[key.object].g === 'test',
             typeof obj[key.remoteFunction] === 'function',
             __DEV__ === false ||
-              ('__remoteFunction' in obj[key.remoteFunction] && !!obj[key.remoteFunction].__remoteFunction),
+              ('__remoteFunction' in obj[key.remoteFunction] &&
+                !!obj[key.remoteFunction].__remoteFunction),
             obj[key.array].length === 1,
             obj[key.array][0] === 1,
             obj[key.workletFunction]() === 2,
@@ -402,7 +403,9 @@ describe('Test createSerializable', () => {
           'worklet';
           const checks = [
             typeof remoteFunction === 'function',
-            __DEV__ === false || ('__remoteFunction' in remoteFunction && !!remoteFunction.__remoteFunction),
+            __DEV__ === false ||
+              ('__remoteFunction' in remoteFunction &&
+                !!remoteFunction.__remoteFunction),
           ];
           scheduleOnRN(callbackPass, checks.every(Boolean));
         });

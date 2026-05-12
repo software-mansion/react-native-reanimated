@@ -173,7 +173,11 @@ const config = {
               rules: [
                 { test: /\.txt$/, type: 'asset/source' },
                 { test: /\.tsx?$/, use: 'babel-loader' },
-                { test: /\.js$/, exclude: /\.yarn[\\/]unprocessed/, use: 'babel-loader' },
+                {
+                  test: /\.js$/,
+                  exclude: /\.yarn[\\/]unprocessed/,
+                  use: 'babel-loader',
+                },
               ],
             },
             resolve: {

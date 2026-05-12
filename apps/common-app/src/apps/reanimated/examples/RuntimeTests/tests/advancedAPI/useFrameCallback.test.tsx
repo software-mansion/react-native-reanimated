@@ -2,7 +2,13 @@ import React from 'react';
 import { View } from 'react-native';
 import { useFrameCallback } from 'react-native-reanimated';
 
-import { describe, expect, render, test, wait } from '../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  render,
+  test,
+  wait,
+} from '../../ReJest/RuntimeTestsApi';
 
 describe('Test *****useFrameCallback*****', () => {
   // TODO: Fix this test
@@ -52,7 +58,7 @@ describe('Test *****useFrameCallback*****', () => {
         console.log('I am not a worklet');
       };
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const frameCallback = useFrameCallback(_frameInfo => {
+      const frameCallback = useFrameCallback((_frameInfo) => {
         imNotAWorklet();
       });
 
@@ -64,7 +70,7 @@ describe('Test *****useFrameCallback*****', () => {
         await render(<InvalidFrameCallback />);
         await wait(200);
       }).toThrow(
-        '[Worklets] Tried to synchronously call a non-worklet function `imNotAWorklet` on the UI thread.\nSee https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.',
+        '[Worklets] Tried to synchronously call a non-worklet function `imNotAWorklet` on the UI thread.\nSee https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.'
       );
     });
   });

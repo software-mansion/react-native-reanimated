@@ -16,14 +16,12 @@ export interface HigherOrderAnimation {
 export type NextAnimation<T extends AnimationObject> = T | (() => T);
 
 export interface ClampAnimation
-  extends Animation<ClampAnimation>,
-    HigherOrderAnimation {
+  extends Animation<ClampAnimation>, HigherOrderAnimation {
   current: AnimatableValue;
 }
 
 export interface DelayAnimation
-  extends Animation<DelayAnimation>,
-    HigherOrderAnimation {
+  extends Animation<DelayAnimation>, HigherOrderAnimation {
   startTime: Timestamp;
   started: boolean;
   previousAnimation: DelayAnimation | null;
@@ -31,8 +29,7 @@ export interface DelayAnimation
 }
 
 export interface RepeatAnimation
-  extends Animation<RepeatAnimation>,
-    HigherOrderAnimation {
+  extends Animation<RepeatAnimation>, HigherOrderAnimation {
   reps: number;
   startValue: AnimatableValue;
   toValue?: AnimatableValue;
@@ -40,8 +37,7 @@ export interface RepeatAnimation
 }
 
 export interface SequenceAnimation
-  extends Animation<SequenceAnimation>,
-    HigherOrderAnimation {
+  extends Animation<SequenceAnimation>, HigherOrderAnimation {
   animationIndex: number;
 }
 
