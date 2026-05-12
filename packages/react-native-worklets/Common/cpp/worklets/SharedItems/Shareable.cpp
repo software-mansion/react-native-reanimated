@@ -42,7 +42,7 @@ Shareable::~Shareable() {
     if (strongHostRuntime) {
       hostValue_.reset();
     } else {
-      freeWrapperSkippingDestructor(hostValue_);
+      freeWithoutCallingDestructor(hostValue_);
     }
   }
 }

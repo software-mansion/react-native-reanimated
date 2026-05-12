@@ -5,6 +5,7 @@
 #include <worklets/Registries/WorkletRuntimeRegistry.h>
 
 #include <memory>
+#include <new>
 #include <optional>
 #include <string>
 #include <utility>
@@ -15,17 +16,19 @@ using namespace facebook;
 namespace worklets {
 
 // Frees the heap-allocated jsi::Value wrapper without running ~jsi::Value.
-// Use when the runtime that owns the JSI handle is already gone. Running the
-// destructor would call PointerValue::invalidate() on a freed slot arena and
-// crash. The JS object itself lived inside the runtime's heap and was
-// reclaimed with the runtime; only the C++ wrapper allocation remains.
-inline void freeWrapperSkippingDestructor(std::unique_ptr<jsi::Value> &value) {
+// Use when the runtime that owns the JSI handle is already gone. When the
+// owning runtime is terminated, the orphaned JSI objects would crash the app
+// if their destructors ran, because they call into memory managed by the
+// terminated runtime. The JS object itself lived inside the runtime's heap
+// and was reclaimed with the runtime; only the C++ wrapper allocation
+// remains, and we free it here without invoking ~jsi::Value.
+inline void freeWithoutCallingDestructor(std::unique_ptr<jsi::Value> &value) {
   ::operator delete(value.release());
 }
 
 inline void cleanupIfRuntimeExists(jsi::Runtime *rt, std::unique_ptr<jsi::Value> &value) {
   if (rt != nullptr && !WorkletRuntimeRegistry::isRuntimeAlive(rt)) {
-    freeWrapperSkippingDestructor(value);
+    freeWithoutCallingDestructor(value);
   }
 }
 
