@@ -145,6 +145,7 @@ void serializeSynchronousPropsToBuffers(
   const auto pushInt = [&](int value) {
     intBuffer.push_back(value);
   };
+
   const auto pushDouble = [&](double value) {
     doubleBuffer.push_back(value);
   };
@@ -202,7 +203,7 @@ void serializeSynchronousPropsToBuffers(
               throw std::runtime_error("[Reanimated] Border radius string must be a percentage");
             }
             pushInt(CMD_UNIT_PERCENT);
-            pushDouble(std::stof(valueStr.substr(0, -1)));
+            pushDouble(std::stof(valueStr.substr(0, valueStr.size() - 1)));
           } else {
             throw std::runtime_error("[Reanimated] Border radius value must be either a number or a string");
           }
@@ -239,7 +240,7 @@ void serializeSynchronousPropsToBuffers(
                     throw std::runtime_error("[Reanimated] String translate must be a percentage");
                   }
                   pushInt(CMD_UNIT_PERCENT);
-                  pushDouble(std::stof(transformValueStr.substr(0, -1)));
+                  pushDouble(std::stof(transformValueStr.substr(0, transformValueStr.size() - 1)));
                 } else {
                   throw std::runtime_error("[Reanimated] Translate value must be either a number or a string");
                 }
@@ -260,7 +261,7 @@ void serializeSynchronousPropsToBuffers(
                 } else {
                   throw std::runtime_error("[Reanimated] Unsupported rotation unit: " + transformValueStr);
                 }
-                pushDouble(std::stof(transformValueStr.substr(0, -3)));
+                pushDouble(std::stof(transformValueStr.substr(0, transformValueStr.size() - 3)));
                 break;
               }
               case CMD_TRANSFORM_MATRIX: {
