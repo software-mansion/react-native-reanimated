@@ -1,5 +1,7 @@
 #include <reanimated/NativeModules/SynchronousPropsBufferSerializer.h>
 
+#ifdef ANDROID
+
 #include <react/debug/react_native_assert.h>
 
 #include <stdexcept>
@@ -341,3 +343,5 @@ void serializeSynchronousPropsToBuffers(
 }
 
 } // namespace reanimated
+
+#endif // ANDROID
