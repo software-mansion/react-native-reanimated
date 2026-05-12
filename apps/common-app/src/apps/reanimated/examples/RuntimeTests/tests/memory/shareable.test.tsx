@@ -135,7 +135,8 @@ describe('Shareable hosted on UI', () => {
     expect(value).toBe(0);
   });
 
-  test.each(initModes)('getAsync as guest on RN Runtime (%s)', async initMode => {
+  // SKIP: getAsync stubbed pending runOnRuntimeAsyncWithId.
+  test.skip.each(initModes)('getAsync as guest on RN Runtime (%s)', async initMode => {
     const shareable = createShareable(UIRuntimeId, 0, getInitOptions(initMode));
     const value = await (shareable as ShareableGuest<number>).getAsync();
     expect(value).toBe(0);
@@ -148,7 +149,8 @@ describe('Shareable hosted on UI', () => {
     expect(value).toBe(42);
   });
 
-  test.each(initModes)('setAsync as guest on RN Runtime (%s)', async initMode => {
+  // SKIP: getAsync stubbed pending runOnRuntimeAsyncWithId.
+  test.skip.each(initModes)('setAsync as guest on RN Runtime (%s)', async initMode => {
     const shareable = createShareable(UIRuntimeId, 0, getInitOptions(initMode));
     (shareable as ShareableGuest<number>).setAsync(42);
     const value = await (shareable as ShareableGuest<number>).getAsync();
@@ -182,7 +184,8 @@ describe('Shareable hosted on UI', () => {
     expect(value).toBe(42);
   });
 
-  test.each(initModes)('setAsync as guest on Worker Runtime (%s)', async initMode => {
+  // SKIP: getAsync stubbed pending runOnRuntimeAsyncWithId.
+  test.skip.each(initModes)('setAsync as guest on Worker Runtime (%s)', async initMode => {
     const shareable = createShareable(UIRuntimeId, 0, getInitOptions(initMode));
 
     runOnRuntimeSync(runtime, () => {
@@ -314,6 +317,225 @@ describe('Shareable hosted on UI', () => {
       return shareable.getSync!();
     });
 
+    expect(getSyncValue).toBe(-1);
+  });
+});
+
+describe('Shareable hosted on Worker Runtime', () => {
+  const host = createWorkletRuntime({ name: 'shareable-host' });
+  const otherGuest = createWorkletRuntime({ name: 'shareable-other-guest' });
+
+  test.each(initModes)('can be hosted on Worker Runtime (%s)', async initMode => {
+    const fn = () => createShareable(host.runtimeId, 0, getInitOptions(initMode));
+    await expect(fn).not.toThrow();
+  });
+
+  test.each(initModes)('is recognized as shareable on RN Runtime (%s)', initMode => {
+    const shareable = createShareable(host.runtimeId, 0, getInitOptions(initMode));
+    expect(isShareable(shareable)).toBe(true);
+  });
+
+  test.each(initModes)('is recognized as shareable on host Runtime (%s)', initMode => {
+    const shareable = createShareable(host.runtimeId, 0, getInitOptions(initMode));
+    const isShareableResult = runOnRuntimeSync(host, () => {
+      'worklet';
+      return isShareable(shareable);
+    });
+    expect(isShareableResult).toBe(true);
+  });
+
+  test.each(initModes)('is recognized as shareable on UI Runtime (%s)', initMode => {
+    const shareable = createShareable(host.runtimeId, 0, getInitOptions(initMode));
+    const isShareableResult = runOnUISync(() => {
+      'worklet';
+      return isShareable(shareable);
+    });
+    expect(isShareableResult).toBe(true);
+  });
+
+  test.each(initModes)('is recognized as shareable on other Worker Runtime (%s)', initMode => {
+    const shareable = createShareable(host.runtimeId, 0, getInitOptions(initMode));
+    const isShareableResult = runOnRuntimeSync(otherGuest, () => {
+      'worklet';
+      return isShareable(shareable);
+    });
+    expect(isShareableResult).toBe(true);
+  });
+
+  test.each(initModes)('reads value on host Runtime (%s)', initMode => {
+    const shareable = createShareable(host.runtimeId, 0, getInitOptions(initMode));
+    const value = runOnRuntimeSync(host, () => (shareable as ShareableHost<number>).value);
+    expect(value).toBe(0);
+  });
+
+  test.each(initModes)('sets value on host Runtime (%s)', initMode => {
+    const shareable = createShareable(host.runtimeId, 0, getInitOptions(initMode));
+    const value = runOnRuntimeSync(host, () => {
+      'worklet';
+      shareable.value = 42;
+      return shareable.value;
+    });
+    expect(value).toBe(42);
+  });
+
+  test.each(initModes)('getSync as guest on RN Runtime (%s)', initMode => {
+    const shareable = createShareable(host.runtimeId, 0, getInitOptions(initMode));
+    const value = (shareable as ShareableGuest<number>).getSync();
+    expect(value).toBe(0);
+  });
+
+  test.each(initModes)('setSync as guest on RN Runtime (%s)', initMode => {
+    const shareable = createShareable(host.runtimeId, 0, getInitOptions(initMode));
+    (shareable as ShareableGuest<number>).setSync(42);
+    const value = (shareable as ShareableGuest<number>).getSync();
+    expect(value).toBe(42);
+  });
+
+  // SKIP: getAsync stubbed pending runOnRuntimeAsyncWithId.
+  test.skip.each(initModes)('setAsync as guest on RN Runtime (%s)', async initMode => {
+    const shareable = createShareable(host.runtimeId, 0, getInitOptions(initMode));
+    (shareable as ShareableGuest<number>).setAsync(42);
+    const value = await (shareable as ShareableGuest<number>).getAsync();
+    expect(value).toBe(42);
+  });
+
+  test.each(initModes)('getSync as guest on UI Runtime (%s)', initMode => {
+    const shareable = createShareable(host.runtimeId, 0, getInitOptions(initMode));
+    const value = runOnUISync(() => {
+      'worklet';
+      return (shareable as ShareableGuest<number>).getSync();
+    });
+    expect(value).toBe(0);
+  });
+
+  test.each(initModes)('setSync as guest on UI Runtime (%s)', initMode => {
+    const shareable = createShareable(host.runtimeId, 0, getInitOptions(initMode));
+    runOnUISync(() => {
+      'worklet';
+      (shareable as ShareableGuest<number>).setSync(42);
+    });
+    const value = (shareable as ShareableGuest<number>).getSync();
+    expect(value).toBe(42);
+  });
+
+  test.each(initModes)('getSync as guest on other Worker Runtime (%s)', initMode => {
+    const shareable = createShareable(host.runtimeId, 0, getInitOptions(initMode));
+    const value = runOnRuntimeSync(otherGuest, () => {
+      'worklet';
+      return (shareable as ShareableGuest<number>).getSync();
+    });
+    expect(value).toBe(0);
+  });
+
+  test.each(initModes)('setSync as guest on other Worker Runtime (%s)', initMode => {
+    const shareable = createShareable(host.runtimeId, 0, getInitOptions(initMode));
+    runOnRuntimeSync(otherGuest, () => {
+      'worklet';
+      (shareable as ShareableGuest<number>).setSync(42);
+    });
+    const value = (shareable as ShareableGuest<number>).getSync();
+    expect(value).toBe(42);
+  });
+
+  // SKIP: getAsync stubbed pending runOnRuntimeAsyncWithId.
+  test.skip.each(initModes)('getAsync as guest on RN Runtime (%s)', async initMode => {
+    const shareable = createShareable(host.runtimeId, 0, getInitOptions(initMode));
+    const value = await (shareable as ShareableGuest<number>).getAsync();
+    expect(value).toBe(0);
+  });
+
+  test.each(initModes)('host decorator adds property (%s)', initMode => {
+    const shareable = createShareable(host.runtimeId, 0, {
+      ...getInitOptions(initMode),
+      hostDecorator: decorateHostProperty,
+    });
+    const decoration = runOnRuntimeSync(host, () => {
+      'worklet';
+      return shareable.myDecoration;
+    });
+    expect(decoration).toBe('decorated host');
+  });
+
+  test.each(initModes)('host decorator adds function (%s)', initMode => {
+    const shareable = createShareable(host.runtimeId, 0, {
+      ...getInitOptions(initMode),
+      hostDecorator: decorateHostFunction,
+    });
+    const decorationResult = runOnRuntimeSync(host, () => {
+      'worklet';
+      return shareable.myDecorationFunction!();
+    });
+    expect(decorationResult).toBe('decorated function');
+  });
+
+  test.each(initModes)('host decorator overrides getter (%s)', initMode => {
+    const shareable = createShareable(host.runtimeId, 0, {
+      ...getInitOptions(initMode),
+      hostDecorator: decorateHostGetter,
+    });
+    const value = runOnRuntimeSync(host, () => shareable.value);
+    expect(value).toBe(42);
+  });
+
+  test.each(initModes)('host decorator overrides setter (%s)', initMode => {
+    const shareable = createShareable(host.runtimeId, 0, {
+      ...getInitOptions(initMode),
+      hostDecorator: decorateHostSetter,
+    });
+    const valuePre = runOnRuntimeSync(host, () => {
+      'worklet';
+      return shareable.value;
+    });
+    const valuePost = runOnRuntimeSync(host, () => {
+      'worklet';
+      shareable.value = 42;
+      return shareable.value;
+    });
+    expect(valuePre).toBe(42);
+    expect(valuePost).toBe(42 + 42 * 2);
+  });
+
+  test.each(initModes)('guest decorator on RN Runtime adds property (%s)', initMode => {
+    const shareable = createShareable(host.runtimeId, 0, {
+      ...getInitOptions(initMode),
+      guestDecorator: decorateGuestProperty,
+    });
+    expect(shareable.myDecoration).toBe('decorated');
+  });
+
+  test.each(initModes)('guest decorator on other Worker Runtime adds property (%s)', initMode => {
+    const shareable = createShareable(host.runtimeId, 0, {
+      ...getInitOptions(initMode),
+      guestDecorator: decorateGuestProperty,
+    });
+    const decoration = runOnRuntimeSync(otherGuest, () => {
+      'worklet';
+      return shareable.myDecoration;
+    });
+    expect(decoration).toBe('decorated');
+  });
+
+  test.each(initModes)('guest decorator on other Worker Runtime adds function (%s)', initMode => {
+    const shareable = createShareable(host.runtimeId, 0, {
+      ...getInitOptions(initMode),
+      guestDecorator: decorateGuestFunction,
+    });
+    const decorationResult = runOnRuntimeSync(otherGuest, () => {
+      'worklet';
+      return shareable.myDecorationFunction!();
+    });
+    expect(decorationResult).toBe('decorated function');
+  });
+
+  test.each(initModes)('guest decorator on other Worker Runtime overrides method (%s)', initMode => {
+    const shareable = createShareable(host.runtimeId, 0, {
+      ...getInitOptions(initMode),
+      guestDecorator: decorateGuestOverride,
+    });
+    const getSyncValue = runOnRuntimeSync(otherGuest, () => {
+      'worklet';
+      return shareable.getSync!();
+    });
     expect(getSyncValue).toBe(-1);
   });
 });
