@@ -20,9 +20,6 @@ declare global {
    */
   var _WORKLET_RUNTIME: ArrayBuffer;
 
-  /** @deprecated Don't use. */
-  var _IS_FABRIC: boolean | undefined;
-
   /**
    * This global variable is used to determine the kind of the current runtime.
    * You can use it directly to differentiate between runtimes. However, the

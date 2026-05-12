@@ -9,7 +9,7 @@
     "bundle": "yarn esbuild ./public/index.js --external:espree --external:@typescript-eslint --platform=node --bundle --outfile=./index.js",
     "build": "yarn tsc && yarn bundle && rm -rf ./public/* && yarn format",
     "lint": "eslint --max-warnings=0 src --ignore-pattern 'types/**'",
-    "format": "prettier --write --list-different ."
+    "format": "yarn run --top-level oxfmt ."
   },
   "devDependencies": {
     "@types/jest": "30.0.0",
@@ -20,7 +20,6 @@
     "esbuild": "0.25.10",
     "eslint": "9.37.0",
     "jest": "30.2.0",
-    "prettier": "3.6.2",
     "ts-jest": "29.4.5",
     "typescript": "5.9.3"
   }

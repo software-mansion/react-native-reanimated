@@ -1,5 +1,9 @@
 import type { TestCase, TestSuite } from '../types';
-import { color, EMPTY_LOG_PLACEHOLDER, indentNestingLevel } from '../utils/stringFormatUtils';
+import {
+  color,
+  EMPTY_LOG_PLACEHOLDER,
+  indentNestingLevel,
+} from '../utils/stringFormatUtils';
 
 export class TestSummaryLogger {
   private _passed: number = 0;
@@ -9,7 +13,9 @@ export class TestSummaryLogger {
   private _startTime: number = Date.now();
 
   public logRunningTestSuite(testSuite: TestSuite) {
-    console.log(`${indentNestingLevel(testSuite.nestingLevel)}${testSuite.name}`);
+    console.log(
+      `${indentNestingLevel(testSuite.nestingLevel)}${testSuite.name}`
+    );
   }
 
   public showTestCaseSummary(testCase: TestCase, nestingLevel: number) {
@@ -22,10 +28,15 @@ export class TestSummaryLogger {
       this._passed++;
       mark = color('✔', 'green');
     }
-    console.log(`${indentNestingLevel(nestingLevel)} ${mark} ${color(testCase.name, 'gray')}`);
+    console.log(
+      `${indentNestingLevel(nestingLevel)} ${mark} ${color(testCase.name, 'gray')}`
+    );
 
     for (const error of testCase.errors) {
-      const indentedError = error.replace(/\n/g, '\n' + EMPTY_LOG_PLACEHOLDER + indentNestingLevel(nestingLevel + 2));
+      const indentedError = error.replace(
+        /\n/g,
+        '\n' + EMPTY_LOG_PLACEHOLDER + indentNestingLevel(nestingLevel + 2)
+      );
       console.log(`${indentNestingLevel(nestingLevel)}\t${indentedError}`);
     }
   }
@@ -51,10 +62,12 @@ export class TestSummaryLogger {
     console.log(
       `🧮 Tests summary: ${color(this._passed, 'green')} passed, ${color(this._failed, 'red')} failed, ${color(
         this._skipped,
-        'orange',
-      )} skipped`,
+        'orange'
+      )} skipped`
     );
-    console.log(`⏱️  Total time: ${Math.floor(timeInSeconds / 60)} minutes ${timeInSeconds % 60} s`);
+    console.log(
+      `⏱️  Total time: ${Math.floor(timeInSeconds / 60)} minutes ${timeInSeconds % 60} s`
+    );
 
     if (this._failed > 0) {
       console.log('❌ Failed tests:');

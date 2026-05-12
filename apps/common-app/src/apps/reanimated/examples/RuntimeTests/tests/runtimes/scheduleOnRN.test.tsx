@@ -1,5 +1,17 @@
-import { createWorkletRuntime, scheduleOnRuntime, scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
-import { describe, expect, notify, test, waitForNotification, beforeEach } from '../../ReJest/RuntimeTestsApi';
+import {
+  createWorkletRuntime,
+  scheduleOnRuntime,
+  scheduleOnRN,
+  scheduleOnUI,
+} from 'react-native-worklets';
+import {
+  describe,
+  expect,
+  notify,
+  test,
+  waitForNotification,
+  beforeEach,
+} from '../../ReJest/RuntimeTestsApi';
 
 describe('scheduleOnRN', () => {
   const PASS_NOTIFICATION = 'PASS';
@@ -12,12 +24,8 @@ describe('scheduleOnRN', () => {
     notify(PASS_NOTIFICATION);
   };
 
-  test('setup beforeEach', () => {
-    // TODO: there's a bug in ReJest and beforeEach has to be registered
-    // inside a test case.
-    beforeEach(() => {
-      value = 0;
-    });
+  beforeEach(() => {
+    value = 0;
   });
 
   test('schedules on RN Runtime to RN Runtime', async () => {

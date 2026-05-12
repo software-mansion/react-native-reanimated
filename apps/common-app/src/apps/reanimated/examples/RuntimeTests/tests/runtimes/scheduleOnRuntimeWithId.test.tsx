@@ -33,19 +33,15 @@ describe('scheduleOnRuntimeWithId', () => {
   const workletRuntime1 = createWorkletRuntime({ name: 'test1' });
   const workletRuntime2 = createWorkletRuntime({ name: 'test2' });
 
-  test('setup beforeEach', () => {
-    // TODO: there's a bug in ReJest and beforeEach has to be registered
-    // inside a test case. beforeAll seems to be broken too.
-    beforeEach(() => {
-      value = 0;
-      reason = '';
+  beforeEach(() => {
+    value = 0;
+    reason = '';
 
-      [UIRuntimeId, workletRuntime1.runtimeId, workletRuntime2.runtimeId].forEach(runtimeId => {
-        runOnRuntimeSyncWithId(runtimeId, () => {
-          'worklet';
-          // TODO: fix worklet re-serialization outside of Bundle Mode
-          (globalThis as localGlobal).scheduleOnRN = scheduleOnRN;
-        });
+    [UIRuntimeId, workletRuntime1.runtimeId, workletRuntime2.runtimeId].forEach(runtimeId => {
+      runOnRuntimeSyncWithId(runtimeId, () => {
+        'worklet';
+        // TODO: fix worklet re-serialization outside of Bundle Mode
+        (globalThis as localGlobal).scheduleOnRN = scheduleOnRN;
       });
     });
   });

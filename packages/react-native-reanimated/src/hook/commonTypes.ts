@@ -115,8 +115,9 @@ export interface AnimatedStyleHandle<Style = DefaultStyle> {
   styleUpdaterContainer: StyleUpdaterContainer;
 }
 
-export interface JestAnimatedStyleHandle<Style = DefaultStyle>
-  extends AnimatedStyleHandle<Style> {
+export interface JestAnimatedStyleHandle<
+  Style = DefaultStyle,
+> extends AnimatedStyleHandle<Style> {
   jestAnimatedValues: RefObject<AnimatedStyle<Style>>;
   toJSON: () => string;
 }

@@ -23,18 +23,14 @@ describe('scheduleOnRuntime', () => {
     notify(PASS_NOTIFICATION);
   };
 
-  test('setup beforeEach', () => {
-    // TODO: there's a bug in ReJest and beforeEach has to be registered
-    // inside a test case. beforeAll seems to be broken too.
-    beforeEach(() => {
-      value = 0;
+  beforeEach(() => {
+    value = 0;
 
-      [workletRuntime1, workletRuntime2].forEach(runtime => {
-        runOnRuntimeSync(runtime, () => {
-          'worklet';
-          // TODO: fix worklet re-serialization outside of Bundle Mode
-          (globalThis as localGlobal).scheduleOnRN = scheduleOnRN;
-        });
+    [workletRuntime1, workletRuntime2].forEach(runtime => {
+      runOnRuntimeSync(runtime, () => {
+        'worklet';
+        // TODO: fix worklet re-serialization outside of Bundle Mode
+        (globalThis as localGlobal).scheduleOnRN = scheduleOnRN;
       });
     });
   });

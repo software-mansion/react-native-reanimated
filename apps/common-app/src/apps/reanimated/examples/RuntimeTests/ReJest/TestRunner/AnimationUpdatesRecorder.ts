@@ -11,7 +11,8 @@ export class AnimationUpdatesRecorder {
   public async recordAnimationUpdates() {
     const updatesContainer = createUpdatesContainer();
     const recordAnimationUpdates = updatesContainer.pushAnimationUpdates;
-    const recordLayoutAnimationUpdates = updatesContainer.pushLayoutAnimationUpdates;
+    const recordLayoutAnimationUpdates =
+      updatesContainer.pushLayoutAnimationUpdates;
 
     await this._syncUIRunner.runOnUIBlocking(() => {
       'worklet';
@@ -27,7 +28,10 @@ export class AnimationUpdatesRecorder {
 
       const originalNotifyAboutProgress = global._notifyAboutProgress;
       global.originalNotifyAboutProgress = originalNotifyAboutProgress;
-      global._notifyAboutProgress = (tag: number, value: Record<string, unknown>) => {
+      global._notifyAboutProgress = (
+        tag: number,
+        value: Record<string, unknown>
+      ) => {
         recordLayoutAnimationUpdates(tag, value);
         originalNotifyAboutProgress(tag, value);
       };
@@ -89,7 +93,8 @@ export class AnimationUpdatesRecorder {
         global.originalGetAnimationTimestamp = undefined;
       }
       if (global.originalRequestAnimationFrame) {
-        (global.requestAnimationFrame as any) = global.originalRequestAnimationFrame;
+        (global.requestAnimationFrame as any) =
+          global.originalRequestAnimationFrame;
         global.originalRequestAnimationFrame = undefined;
       }
       if (global.originalFlushAnimationFrame) {
@@ -106,7 +111,7 @@ export class AnimationUpdatesRecorder {
   }
 
   public wait(delay: number) {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       setTimeout(resolve, delay);
     });
   }
@@ -114,7 +119,7 @@ export class AnimationUpdatesRecorder {
   public waitForAnimationUpdates(updatesCount: number): Promise<boolean> {
     const CHECK_INTERVAL = 20;
     const flag = makeMutable(false);
-    return new Promise<boolean>(resolve => {
+    return new Promise<boolean>((resolve) => {
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       const interval = setInterval(async () => {
         await new SyncUIRunner().runOnUIBlocking(() => {
