@@ -4,7 +4,6 @@ import {
   runOnRuntimeSyncWithId as BundleRunOnRuntimeSyncFromId,
   scheduleOnRuntimeWithId as BundleScheduleOnRuntimeFromId,
 } from '../runtimes';
-import { runOnUIAsync as BundleRuntimeRunOnUIAsync } from '../threads';
 import type { WorkletFunction } from '../types';
 import { createSerializable } from './serializable';
 import { serializableMappingCache } from './serializableMappingCache';
@@ -26,7 +25,6 @@ export function installShareableGuestUnpacker() {
   ) => void;
 
   let scheduleOnRuntimeFromId: typeof BundleScheduleOnRuntimeFromId;
-  let runOnUIAsync: typeof BundleRuntimeRunOnUIAsync;
   let serializer: (value: unknown) => SerializableRef<unknown>;
 
   if (
@@ -38,7 +36,6 @@ export function installShareableGuestUnpacker() {
 
     runOnRuntimeSyncFromId = BundleRunOnRuntimeSyncFromId;
     scheduleOnRuntimeFromId = BundleScheduleOnRuntimeFromId;
-    runOnUIAsync = BundleRuntimeRunOnUIAsync;
   } else {
     // Serializer can't be inlined here because it might be yet undefined
     // when the unpacker is installed.
@@ -75,12 +72,6 @@ export function installShareableGuestUnpacker() {
         })
       );
     }) as typeof BundleScheduleOnRuntimeFromId;
-
-    runOnUIAsync = () => {
-      throw new Error(
-        '[Worklets] runOnUIAsync is not supported on Worklet Runtimes yet'
-      );
-    };
   }
 
   function shareableGuestUnpacker<TValue>(
@@ -117,7 +108,9 @@ export function installShareableGuestUnpacker() {
     };
 
     shareableGuest.getAsync = () => {
-      return runOnUIAsync(get);
+      throw new Error(
+        '[Worklets] Shareable.getAsync is not implemented yet — pending runOnRuntimeAsyncWithId.'
+      );
     };
 
     shareableGuest.getSync = () => {

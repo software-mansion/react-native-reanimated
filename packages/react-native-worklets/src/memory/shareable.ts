@@ -1,6 +1,5 @@
 'use strict';
 
-import type { UIRuntimeId } from '../runtimes';
 import type { Shareable, ShareableConfig } from './types';
 
 /**
@@ -8,39 +7,13 @@ import type { Shareable, ShareableConfig } from './types';
  * explicitly declare which Worklet Runtime will host the Shareable by passing
  * its `runtimeId`.
  *
- * Currently only hosting a Shareable on the UI Runtime is supported.
- *
  * @param hostRuntimeId - The `runtimeId` of the Worklet Runtime that will host
- *   the Shareable. Use {@link UIRuntimeId}.
+ *   the Shareable.
  * @param initial - The initial value of the Shareable.
  * @param config - Optional advanced configuration.
  * @returns The created {@link Shareable}.
  * @see {@link https://docs.swmansion.com/react-native-worklets/docs/memory/createShareable | createShareable docs}
  */
-export function createShareable<
-  TValue = unknown,
-  THostDecorated = unknown,
-  TGuestDecorated = unknown,
->(
-  hostRuntimeId: typeof UIRuntimeId,
-  initial: TValue,
-  config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
-): Shareable<TValue, THostDecorated, TGuestDecorated>;
-
-/**
- * @deprecated Only UI host runtime is supported now. Use {@link UIRuntimeId} as
- *   the `hostRuntimeId` argument.
- */
-export function createShareable<
-  TValue = unknown,
-  THostDecorated = unknown,
-  TGuestDecorated = unknown,
->(
-  hostRuntimeId: number,
-  initial: TValue,
-  config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
-): Shareable<TValue, THostDecorated, TGuestDecorated>;
-
 export function createShareable<
   TValue = unknown,
   THostDecorated = unknown,
