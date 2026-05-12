@@ -2,7 +2,6 @@ import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 import groovy.json.JsonSlurper
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import java.util.Properties
 import javax.inject.Inject
 
@@ -122,7 +121,6 @@ val featureFlags = getStaticFeatureFlags()
 
 val packageDir: File = project.projectDir.parentFile
 val reactNativeRootDir: File = resolveReactNativeDirectory()
-val REACT_NATIVE_MINOR_VERSION: Int = getReactNativeMinorVersion()
 val REACT_NATIVE_VERSION: String = getReactNativeVersion()
 val WORKLETS_VERSION: String = getWorkletsVersion()
 val IS_REANIMATED_EXAMPLE_APP: Boolean = safeAppExtGet("isReanimatedExampleApp", false)?.toString()?.toBoolean() ?: false
@@ -135,24 +133,6 @@ val WORKLETS_PROFILING: Boolean = safeAppExtGet("enableWorkletsProfiling", false
 version = WORKLETS_VERSION
 
 val workletsPrefabHeadersDir: File = project.file("${layout.buildDirectory.get().asFile.absolutePath}/prefab-headers/worklets")
-
-val JS_RUNTIME: String = run {
-    // Override JS runtime with environment variable
-    System.getenv("JS_RUNTIME")?.let { return@run it }
-
-    // Check if Hermes is enabled in app setup
-    val appProject = rootProject.allprojects.find { it.plugins.hasPlugin("com.android.application") }
-    val appExt = appProject?.extensions?.extraProperties
-    val hermesEnabled = appExt?.properties?.get("hermesEnabled")?.toString()?.toBoolean()
-        ?: (appExt?.properties?.get("react") as? Map<*, *>)?.get("enableHermes")?.let { it.toString().toBoolean() }
-        ?: false
-    if (hermesEnabled) {
-        return@run "hermes"
-    }
-
-    // Use JavaScriptCore (JSC) by default
-    "jsc"
-}
 
 fun reactNativeArchitectures(): List<String> {
     val value = project.findProperty("reactNativeArchitectures") as String?
@@ -202,17 +182,14 @@ android {
         buildConfigField("boolean", "WORKLETS_PROFILING", WORKLETS_PROFILING.toString())
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
-        buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
 
         @Suppress("UnstableApiUsage")
         externalNativeBuild {
             cmake {
                 arguments(
                     "-DANDROID_STL=c++_shared",
-                    "-DREACT_NATIVE_MINOR_VERSION=$REACT_NATIVE_MINOR_VERSION",
                     "-DANDROID_TOOLCHAIN=clang",
                     "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
-                    "-DJS_RUNTIME=$JS_RUNTIME",
                     "-DIS_REANIMATED_EXAMPLE_APP=$IS_REANIMATED_EXAMPLE_APP",
                     "-DWORKLETS_FETCH_PREVIEW_ENABLED=$FETCH_PREVIEW_ENABLED",
                     "-DWORKLETS_PROFILING=$WORKLETS_PROFILING",
@@ -241,15 +218,13 @@ android {
             @Suppress("UnstableApiUsage")
             externalNativeBuild {
                 cmake {
-                    if (JS_RUNTIME == "hermes") {
-                        //  React Native doesn't expose these flags, but not having them
-                        //  can lead to runtime errors due to ABI mismatches.
-                        //  There's also
-                        //    HERMESVM_PROFILER_OPCODE
-                        //    HERMESVM_PROFILER_BB
-                        //  which shouldn't be defined in standard setups.
-                        arguments("-DHERMES_ENABLE_DEBUGGER=1")
-                    }
+                    //  React Native doesn't expose these flags, but not having them
+                    //  can lead to runtime errors due to ABI mismatches.
+                    //  There's also
+                    //    HERMESVM_PROFILER_OPCODE
+                    //    HERMESVM_PROFILER_BB
+                    //  which shouldn't be defined in standard setups.
+                    arguments("-DHERMES_ENABLE_DEBUGGER=1")
                 }
             }
         }
@@ -277,9 +252,7 @@ android {
                 "**/libjsi.so",
                 "**/libhermes.so",
                 "**/libhermesvm.so",
-                "**/libhermestooling.so",
                 "**/libreactnative.so",
-                "**/libjscexecutor.so",
             )
         }
     }
@@ -390,9 +363,7 @@ dependencies {
     "implementation"("androidx.core:core:1.15.0")
     "implementation"("com.facebook.react:react-android") // version substituted by RNGP
     "implementation"("androidx.core:core-ktx:1.17.0")
-    if (JS_RUNTIME == "hermes") {
-        "implementation"("com.facebook.react:hermes-android") // version substituted by RNGP
-    }
+    "implementation"("com.facebook.react:hermes-android") // version substituted by RNGP
 }
 
 tasks.named("preBuild") { dependsOn("prepareWorkletsHeadersForPrefabs") }

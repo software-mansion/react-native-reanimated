@@ -4,7 +4,14 @@ import type { SharedValue } from 'react-native-reanimated';
 import { useSharedValue } from 'react-native-reanimated';
 import { runOnUISync } from 'react-native-worklets';
 
-import { describe, expect, getRegisteredValue, registerValue, render, test } from '../../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  getRegisteredValue,
+  registerValue,
+  render,
+  test,
+} from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 import { ProgressBar } from './components';
 
@@ -18,7 +25,11 @@ type UpdateKeyComponentProps = {
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
 
 describe('Tests of objects as sharedValue', () => {
-  const UpdateKeyOriginalAPI = ({ initialValue, keyToUpdate, newVal }: UpdateKeyComponentProps) => {
+  const UpdateKeyOriginalAPI = ({
+    initialValue,
+    keyToUpdate,
+    newVal,
+  }: UpdateKeyComponentProps) => {
     const sharedValue = useSharedValue(initialValue);
     registerValue(SHARED_VALUE_REF, sharedValue);
     useEffect(() => {
@@ -32,7 +43,12 @@ describe('Tests of objects as sharedValue', () => {
     return <View />;
   };
 
-  const UpdateKeyReactAPI = ({ initialValue, keyToUpdate, newVal, progress }: UpdateKeyComponentProps) => {
+  const UpdateKeyReactAPI = ({
+    initialValue,
+    keyToUpdate,
+    newVal,
+    progress,
+  }: UpdateKeyComponentProps) => {
     const sharedValue = useSharedValue(initialValue);
     registerValue(SHARED_VALUE_REF, sharedValue);
     useEffect(() => {
@@ -51,7 +67,11 @@ describe('Tests of objects as sharedValue', () => {
     { initialValue: { 1: 'a' }, key: 1, newVal: 1 },
     { initialValue: [1, 2, 3, 4, 5], key: 1, newVal: -1 },
     { initialValue: [1, 2, 3, 4, 5], key: 0, newVal: -1 },
-    { initialValue: [1, 2, 3, 4, 5], key: 0, newVal: { A: [1, 2, 3, { B: 2 }] } },
+    {
+      initialValue: [1, 2, 3, 4, 5],
+      key: 0,
+      newVal: { A: [1, 2, 3, { B: 2 }] },
+    },
     { initialValue: [1, 2, 3, 4, 5], key: 0, newVal: [1, 2, 3, 4] },
     { initialValue: { a: undefined, b: [[[[]]]] }, key: 'a', newVal: 1 },
     { initialValue: { a: undefined, b: [[[[]]]] }, key: 'b', newVal: null },
@@ -68,13 +88,13 @@ describe('Tests of objects as sharedValue', () => {
           keyToUpdate={key}
           newVal={newVal}
           progress={index / TEST_CASES.length}
-        />,
+        />
       );
       const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
       const expected = { ...initialValue, [key]: newVal };
       expect(sharedValue.onJS).toBe(expected, ComparisonMode.OBJECT);
       await render(<ProgressBar progress={index / TEST_CASES.length} />);
-    },
+    }
   );
 
   test.each(TEST_CASES)(
@@ -86,12 +106,12 @@ describe('Tests of objects as sharedValue', () => {
           keyToUpdate={key}
           newVal={newVal}
           progress={index / TEST_CASES.length}
-        />,
+        />
       );
       const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
       const expected = { ...initialValue, [key]: newVal };
       expect(sharedValue.onJS).toBe(expected, ComparisonMode.OBJECT);
       await render(<ProgressBar progress={index / TEST_CASES.length} />);
-    },
+    }
   );
 });

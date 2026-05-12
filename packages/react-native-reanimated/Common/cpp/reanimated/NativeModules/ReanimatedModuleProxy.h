@@ -27,7 +27,9 @@
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/SingleInstanceChecker.h>
 
+#include <atomic>
 #include <memory>
+#include <mutex>
 #include <set>
 #include <string>
 #include <utility>
@@ -81,8 +83,6 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void onRender(double timestampMs);
 
   bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
-
-  void maybeRequestRender();
 
   bool
   handleEvent(const std::string &eventName, const int emitterReactTag, const jsi::Value &payload, double currentTime);
@@ -178,7 +178,6 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   std::unique_ptr<UIEventHandlerRegistry> eventHandlerRegistry_;
   const RequestRenderFunction requestRender_;
-  volatile bool renderRequested_{false};
   std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
@@ -203,7 +202,9 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   std::shared_ptr<LayoutAnimationsProxyCommon> layoutAnimationsProxy_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<ReanimatedMountHook> mountHook_;
+  /// Access only on UI thread.
   std::set<SurfaceId> layoutAnimationFlushRequests_;
+  /// Access only on UI thread.
   bool layoutAnimationRenderRequested_;
 
   const KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction_;

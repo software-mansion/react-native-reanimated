@@ -2,7 +2,6 @@ import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 import groovy.json.JsonSlurper
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import java.util.Properties
 import javax.inject.Inject
 
@@ -51,11 +50,6 @@ fun getReactNativeVersion(): String {
     val reactProperties = Properties()
     file("$reactNativeRootDir/ReactAndroid/gradle.properties").inputStream().use { reactProperties.load(it) }
     return reactProperties.getProperty("VERSION_NAME")
-}
-
-fun getReactNativeMinorVersion(): Int {
-    val reactNativeVersion = getReactNativeVersion()
-    return if (reactNativeVersion.startsWith("0.0.0-")) 1000 else reactNativeVersion.split(".")[1].toInt()
 }
 
 fun getReanimatedVersion(): String {
@@ -114,7 +108,6 @@ if (project != rootProject) {
 
 val packageDir: File = project.projectDir.parentFile
 val reactNativeRootDir: File = resolveReactNativeDirectory()
-val REACT_NATIVE_MINOR_VERSION: Int = getReactNativeMinorVersion()
 val REACT_NATIVE_VERSION: String = getReactNativeVersion()
 val REANIMATED_VERSION: String = getReanimatedVersion()
 val IS_REANIMATED_EXAMPLE_APP: Boolean = safeAppExtGet("isReanimatedExampleApp", false)?.toString()?.toBoolean() ?: false
@@ -173,14 +166,12 @@ android {
         buildConfigField("String", "REANIMATED_VERSION_JAVA", "\"$REANIMATED_VERSION\"")
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
-        buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
 
         @Suppress("UnstableApiUsage")
         externalNativeBuild {
             cmake {
                 arguments(
                     "-DANDROID_STL=c++_shared",
-                    "-DREACT_NATIVE_MINOR_VERSION=$REACT_NATIVE_MINOR_VERSION",
                     "-DANDROID_TOOLCHAIN=clang",
                     "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
                     "-DIS_REANIMATED_EXAMPLE_APP=$IS_REANIMATED_EXAMPLE_APP",
@@ -226,9 +217,7 @@ android {
                 "**/libjsi.so",
                 "**/libhermes.so",
                 "**/libhermesvm.so",
-                "**/libhermestooling.so",
                 "**/libreactnative.so",
-                "**/libjscexecutor.so",
                 "**/libworklets.so",
             )
         }
