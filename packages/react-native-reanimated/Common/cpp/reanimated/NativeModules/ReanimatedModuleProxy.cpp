@@ -16,6 +16,7 @@
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
 
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <string>
@@ -54,23 +55,67 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 
 std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
     const UpdatesBatch &updatesBatch,
-    const std::unordered_set<std::string> &synchronousPropNames,
-    const bool shouldRequireIntegerColors = false,
-    const bool allowPartialViews = false) {
+    const bool allowPartialUpdates = false) {
+  static const std::unordered_set<std::string> synchronousPropNames = {
+      "opacity",
+      "elevation",
+      "zIndex",
+#if __APPLE__
+      "shadowOpacity",
+      "shadowRadius",
+#endif // __APPLE__
+      "backgroundColor",
+      // "color", // not supported
+      "tintColor",
+      "borderRadius",
+      "borderTopLeftRadius",
+      "borderTopRightRadius",
+      "borderTopStartRadius",
+      "borderTopEndRadius",
+      "borderBottomLeftRadius",
+      "borderBottomRightRadius",
+      "borderBottomStartRadius",
+      "borderBottomEndRadius",
+      "borderStartStartRadius",
+      "borderStartEndRadius",
+      "borderEndStartRadius",
+      "borderEndEndRadius",
+      "borderColor",
+      "borderTopColor",
+      "borderBottomColor",
+      "borderLeftColor",
+      "borderRightColor",
+      "borderStartColor",
+      "borderEndColor",
+      "transform",
+  };
+
+  const auto isSynchronous = [&](const std::string &keyStr, [[maybe_unused]] const folly::dynamic &value) {
+    if (!synchronousPropNames.contains(keyStr)) {
+      return false;
+    }
+#ifdef ANDROID
+    // The Android synchronous path serializes color props into an int buffer via `value.asInt()`,
+    // so non-numeric color values (e.g. strings) must fall back to the shadow tree commit path.
+    const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
+    if (isColorProp && !value.isNumber()) {
+      return false;
+    }
+#endif // ANDROID
+    return true;
+  };
+
   UpdatesBatch synchronousUpdatesBatch;
   UpdatesBatch shadowTreeUpdatesBatch;
 
   for (const auto &[shadowNodeFamily, props] : updatesBatch) {
-    if (allowPartialViews) {
+    if (allowPartialUpdates) {
       folly::dynamic synchronousProps = folly::dynamic::object();
       folly::dynamic shadowTreeProps = folly::dynamic::object();
 
       for (const auto &[key, value] : props.items()) {
         const auto keyStr = key.asString();
-        const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
-        const bool isSynchronous =
-            synchronousPropNames.contains(keyStr) && (!shouldRequireIntegerColors || !isColorProp || value.isNumber());
-        if (isSynchronous) {
+        if (isSynchronous(keyStr, value)) {
           synchronousProps[keyStr] = value;
         } else {
           shadowTreeProps[keyStr] = value;
@@ -85,18 +130,9 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
         shadowTreeUpdatesBatch.emplace_back(shadowNodeFamily, std::move(shadowTreeProps));
       }
     } else {
-      bool hasOnlySynchronousProps = true;
-
-      for (const auto &[key, value] : props.items()) {
-        const auto keyStr = key.asString();
-        const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
-        const bool isSynchronous =
-            synchronousPropNames.contains(keyStr) && (!shouldRequireIntegerColors || !isColorProp || value.isNumber());
-        if (!isSynchronous) {
-          hasOnlySynchronousProps = false;
-          break;
-        }
-      }
+      const bool hasOnlySynchronousProps = std::all_of(props.items().begin(), props.items().end(), [&](const auto &kv) {
+        return isSynchronous(kv.first.asString(), kv.second);
+      });
 
       if (hasOnlySynchronousProps) {
         synchronousUpdatesBatch.emplace_back(shadowNodeFamily, props);
@@ -691,42 +727,9 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
 }
 
 void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, const bool allowPartialUpdates) {
+  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] = partitionUpdates(updatesBatch, allowPartialUpdates);
+
 #ifdef ANDROID
-  static const std::unordered_set<std::string> synchronousProps = {
-      "opacity",
-      "elevation",
-      "zIndex",
-      // "shadowOpacity", // not supported on Android
-      // "shadowRadius", // not supported on Android
-      "backgroundColor",
-      // "color", // TODO: fix animating color of Animated.Text,
-      "tintColor",
-      "borderRadius",
-      "borderTopLeftRadius",
-      "borderTopRightRadius",
-      "borderTopStartRadius",
-      "borderTopEndRadius",
-      "borderBottomLeftRadius",
-      "borderBottomRightRadius",
-      "borderBottomStartRadius",
-      "borderBottomEndRadius",
-      "borderStartStartRadius",
-      "borderStartEndRadius",
-      "borderEndStartRadius",
-      "borderEndEndRadius",
-      "borderColor",
-      "borderTopColor",
-      "borderBottomColor",
-      "borderLeftColor",
-      "borderRightColor",
-      "borderStartColor",
-      "borderEndColor",
-      "transform",
-  };
-
-  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
-      partitionUpdates(updatesBatch, synchronousProps, true, allowPartialUpdates);
-
   if (!synchronousUpdatesBatch.empty()) {
     std::vector<int> intBuffer;
     std::vector<double> doubleBuffer;
@@ -735,52 +738,15 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
     serializeSynchronousPropsToBuffers(synchronousUpdatesBatch, intBuffer, doubleBuffer);
     synchronouslyUpdateUIPropsFunction_(intBuffer, doubleBuffer);
   }
-
-  updatesBatch = std::move(shadowTreeUpdatesBatch);
 #endif // ANDROID
 
 #if __APPLE__
-  static const std::unordered_set<std::string> synchronousProps = {
-      "opacity",
-      "elevation",
-      "zIndex",
-      "shadowOpacity",
-      "shadowRadius",
-      "backgroundColor",
-      // "color", // TODO: fix animating color of Animated.Text
-      "tintColor",
-      "borderRadius",
-      "borderTopLeftRadius",
-      "borderTopRightRadius",
-      "borderTopStartRadius",
-      "borderTopEndRadius",
-      "borderBottomLeftRadius",
-      "borderBottomRightRadius",
-      "borderBottomStartRadius",
-      "borderBottomEndRadius",
-      "borderStartStartRadius",
-      "borderStartEndRadius",
-      "borderEndStartRadius",
-      "borderEndEndRadius",
-      "borderColor",
-      "borderTopColor",
-      "borderBottomColor",
-      "borderLeftColor",
-      "borderRightColor",
-      "borderStartColor",
-      "borderEndColor",
-      "transform",
-  };
-
-  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
-      partitionUpdates(updatesBatch, synchronousProps, false, allowPartialUpdates);
-
   for (const auto &[shadowNodeFamily, props] : synchronousUpdatesBatch) {
     synchronouslyUpdateUIPropsFunction_(shadowNodeFamily->getTag(), props);
   }
+#endif // __APPLE__
 
   updatesBatch = std::move(shadowTreeUpdatesBatch);
-#endif // __APPLE__
 }
 
 void ReanimatedModuleProxy::requestFlushRegistry() {
