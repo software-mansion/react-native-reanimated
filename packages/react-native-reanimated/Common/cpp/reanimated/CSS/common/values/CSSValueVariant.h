@@ -2,9 +2,8 @@
 
 #include <reanimated/CSS/common/values/CSSValue.h>
 
-#include <folly/json.h>
+#include <folly/dynamic.h>
 
-#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
