@@ -10,9 +10,7 @@ sidebar_label: Troubleshooting
 
 **Problem:** This usually happens when Worklets is not properly installed, e.g. forgetting to include the Worklets Babel plugin in `babel.config.js`.
 
-{/* TODO: Add proper url here, when getting-started page will be ready */}
-
-**Solution:** See installation docs at https://docs.swmansion.com/react-native-worklets/docs more information.
+**Solution:** See [installation docs](/docs/#installation) for more information.
 
 ### Native part of Worklets doesn't seem to be initialized
 
@@ -82,9 +80,9 @@ function worklet() {
   console.log(obj.prop);
 }
 
-runOnUI(worklet)();
+scheduleOnUI(worklet);
 obj.prop = 2; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
-runOnUI(worklet)();
+scheduleOnUI(worklet);
 ```
 
 and expect the results to be `1` and `2`. However, the results will be `1` and `1` because `obj` is not a shared value and is only copied to UI runtime once. Therefore, in development builds, we make the object immutable and add this warning after copying it to signal that it's not a valid use of Reanimated. To fix this, you should use a shared value instead:
@@ -101,11 +99,11 @@ and expect the results to be `1` and `2`. However, the results will be `1` and `
 +  console.log(sv.value.prop);
  }
 
- runOnUI(worklet)();
+ scheduleOnUI(worklet);
 -obj.prop = 2; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
 +sv.value = { prop: 2 }; // Everything is fine here.
 +// Keep in mind that you cannot modify the property directly with `sv.value.prop = 2` unless you use the `modify` method.
- runOnUI(worklet)();
+ scheduleOnUI(worklet);
 ```
 
 #### 2. Not accessing object properties granularly.
@@ -120,7 +118,7 @@ function worklet() {
   console.log(obj.propAccessedInWorklet);
 }
 
-runOnUI(worklet)();
+scheduleOnUI(worklet);
 obj.propNotAccessedInWorklet = 3; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
 ```
 
@@ -141,7 +139,7 @@ Assign accessed properties to variables beforehand and use those in the worklet:
 +  console.log(propAccessedInWorklet);
  }
 
- runOnUI(worklet)();
+ scheduleOnUI(worklet);
 -obj.propNotAccessedInWorklet = 3; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
 +obj.propNotAccessedInWorklet = 3; // Everything is fine here.
 ```
@@ -158,12 +156,12 @@ function callee() {
 }
 function caller() {
   'worklet';
-  callee(); // <- this will throw in `runOnUI`
+  callee(); // <- this will throw in `scheduleOnUI`
 }
-runOnUI(caller)();
+scheduleOnUI(caller);
 ```
 
-In this example, `callee` cannot be called from a worklet ran on UI thread because there is no corresponding UI function for `callee`.
+In this example, `callee` cannot be called from a worklet ran on UI Runtime because there is no corresponding UI function for `callee`.
 
 **Solution:**
 
@@ -176,14 +174,14 @@ In this example, `callee` cannot be called from a worklet ran on UI thread becau
  }
 ```
 
-2. If you want to execute this function on the JS thread, wrap it using `runOnJS`:
+2. If you want to execute this function on the RN Runtime, wrap it using `scheduleOnRN`:
 
 ```diff
  function caller() {
    'worklet';
 -  callee();
-+  runOnJS(callee)();
++  scheduleOnRN(callee);
  }
 ```
 
-Check [this page](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) to learn more about worklets.
+Check [this page](/docs/fundamentals/glossary#worklet) to learn more about worklets.
