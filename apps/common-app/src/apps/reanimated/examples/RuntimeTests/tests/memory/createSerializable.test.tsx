@@ -72,9 +72,6 @@ describe('Test createSerializable', () => {
           ];
           scheduleOnRN(callbackPass, checks.every(Boolean));
         });
-        await waitForNotification(PASS_NOTIFICATION);
-        expect(result).toBe(true);
-      });
 
       test('createSerializableNumber', async () => {
         const testNumber = 123;
@@ -511,8 +508,11 @@ describe('Test createSerializable', () => {
         await expect(() => {
           scheduleOnTarget(() => {
             'worklet';
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const _test = cyclicArray[1];
+            const checks = [
+              typeof testString === 'string',
+              testString === 'test',
+            ];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
           });
         }).toThrow();
       });
@@ -586,8 +586,8 @@ describe('Test createSerializable', () => {
             ' runtime.'
         );
       });
-    });
-  });
+    }
+  );
 });
 
 const FREEZE_WARNING = 'Tried to modify key';

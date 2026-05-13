@@ -1,12 +1,21 @@
 import React, { useEffect } from 'react';
-import { Platform, ScrollView, StyleSheet, Text } from 'react-native';
+import {
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+} from 'react-native';
 import Animated, {
   interpolateColor,
+  useAnimatedProps,
   useDerivedValue,
   useSharedValue,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 export default function SynchronousPropsExample() {
   const sv = useSharedValue(0);
@@ -42,6 +51,10 @@ export default function SynchronousPropsExample() {
     () => [sv.value * 2, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 10, 1],
     [sv]
   );
+
+  const placeholderTextColorAnimatedProps = useAnimatedProps(() => ({
+    placeholderTextColor: colorSv.value,
+  }));
 
   return (
     <ScrollView
@@ -141,6 +154,13 @@ export default function SynchronousPropsExample() {
       <Animated.Image
         style={{ width: 50, height: 50, tintColor: colorSv }}
         source={require('./assets/logo.png')}
+      />
+
+      <Text>placeholderTextColor</Text>
+      <AnimatedTextInput
+        style={{ width: 200, height: 40, borderWidth: 1, padding: 8 }}
+        placeholder="Placeholder text"
+        animatedProps={placeholderTextColorAnimatedProps}
       />
 
       {[
