@@ -1503,10 +1503,10 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
     if (!ReactNativeFeatureFlags::useSharedAnimatedBackend()) {
       react_native_assert(
           false &&
-          "[Reanimated] USE_ANIMATION_BACKEND flag is enabled,
-           but ReactNativeFeatureFlags::useSharedAnimatedBackend is disabled.
-           Enable the Experimental Release level in React Native, 
-           or disable the Reanimated Feature Flag");
+          "[Reanimated] USE_ANIMATION_BACKEND flag is enabled, "
+          "but ReactNativeFeatureFlags::useSharedAnimatedBackend is disabled. "
+          "Enable the Experimental Release level in React Native, "
+          "or disable the Reanimated Feature Flag");
     }
 #endif
   }
