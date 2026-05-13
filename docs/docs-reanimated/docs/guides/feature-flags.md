@@ -24,6 +24,7 @@ Feature flags are available since Reanimated 4.
 | [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](#use_commit_hook_only_for_react_commits)                 | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.3.0+ <br/> `false` otherwise |
 | [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions)                           | [static](#static-feature-flags) |  4.2.0   |  –   |                  `false`                  |
 | [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#force_react_render_for_settled_animations)           | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.3.0+ <br/> `false` otherwise |
+| [`USE_ANIMATION_BACKEND`](#use_animation_backend)                                                   | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
 
 :::info
 
@@ -114,6 +115,12 @@ When enabled, Shared Element Transitions are available to use, also the synchron
 ### `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`
 
 This feature flag enables a mechanism that periodically synchronizes animated style updates back to React by triggering a React render for animated components with accumulated animated styles and evicting them from the registry on the C++ side. It is supposed to improve performance by decreasing the number of `ShadowNode` clone operations in `ReanimatedCommitHook` for React commits. When enabled, it also alters the behavior when detaching animated styles from animated components—the animated styles are not reverted to the original styles. If your app depends on that previous behavior, set this flag to `false` in `reanimated.staticFeatureFlags` in your app's `package.json`.
+
+### `USE_ANIMATION_BACKEND`
+
+When enabled, Reanimated feeds animated Fabric updates through React Native's shared **Animation Backend** instead of the legacy path that relies on `performOperations` and the Reanimated commit/mount hooks. The backend receives batches of animation mutations and can apply non-layout style changes synchronously on the UI thread while routing layout-affecting updates through the shadow tree as appropriate.
+
+This flag is **experimental** and defaults to `false`. To use it, you must run **React Native 0.85.2 or newer** on the **New Architecture (Fabric)**. React Native's **`useSharedAnimatedBackend`** feature flag must be **enabled** at runtime (which is achieved by using React Native's **Experimental** release level in development).
 
 ## Static feature flags
 
