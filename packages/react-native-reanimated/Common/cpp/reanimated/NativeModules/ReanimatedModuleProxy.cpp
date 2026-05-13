@@ -2,6 +2,7 @@
 #include <jsi/jsi.h>
 #include <react/debug/react_native_assert.h>
 #include <react/featureflags/ReactNativeFeatureFlags.h>
+#include <react/renderer/core/RawProps.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <reanimated/Compat/WorkletsApi.h>
@@ -39,6 +40,24 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
 }
 
 namespace {
+
+#if REACT_NATIVE_VERSION_MINOR >= 85
+void mergeAnimatedProps(AnimatedProps &target, AnimatedProps &&source) {
+  if (source.rawProps) {
+    if (target.rawProps) {
+      auto mergedRawProps = target.rawProps->toDynamic();
+      mergedRawProps.merge_patch(source.rawProps->toDynamic());
+      target.rawProps = std::make_unique<RawProps>(std::move(mergedRawProps));
+    } else {
+      target.rawProps = std::move(source.rawProps);
+    }
+  }
+
+  for (auto &prop : source.props) {
+    target.props.push_back(std::move(prop));
+  }
+}
+#endif
 
 #ifdef ANDROID
 constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
@@ -683,19 +702,6 @@ void ReanimatedModuleProxy::executeLayoutAnimationsRequests() {
   }
 }
 
-#if REACT_NATIVE_VERSION_MINOR >= 85
-AnimationMutations ReanimatedModuleProxy::mutationsFromAnimatedPropsBatch(
-    UpdatesBatchAnimatedProps &&animatedPropsBatch) {
-  AnimationMutations mutations;
-  mutations.batch.reserve(animatedPropsBatch.size());
-  for (auto &[shadowNodeFamily, animatedProps, hasLayoutUpdates] : animatedPropsBatch) {
-    mutations.batch.push_back(
-        AnimationMutation{shadowNodeFamily->getTag(), shadowNodeFamily, std::move(animatedProps), hasLayoutUpdates});
-  }
-  return mutations;
-}
-#endif
-
 void ReanimatedModuleProxy::performOperations() {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     react_native_assert(
@@ -818,6 +824,30 @@ void ReanimatedModuleProxy::stopBackendIfIdle(const bool producedMutations) {
 }
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
+AnimationMutations ReanimatedModuleProxy::mutationsFromAnimatedPropsBatch(
+    UpdatesBatchAnimatedProps &&animatedPropsBatch) {
+  // This is a temporary fix, in reanimated we can sometimes produce multiple updates for the same view
+  // In that case Animation Backend will only apply the last one.
+  // Until the fix is implemented there, we will keep the merging logic here.
+  AnimationMutations mutations;
+  mutations.batch.reserve(animatedPropsBatch.size());
+  std::unordered_map<Tag, size_t> mutationIndexByTag;
+  for (auto &[shadowNodeFamily, animatedProps, hasLayoutUpdates] : animatedPropsBatch) {
+    const auto tag = shadowNodeFamily->getTag();
+
+    const auto it = mutationIndexByTag.find(tag);
+    if (it == mutationIndexByTag.end()) {
+      mutationIndexByTag.emplace(tag, mutations.batch.size());
+      mutations.batch.push_back(AnimationMutation{tag, shadowNodeFamily, std::move(animatedProps), hasLayoutUpdates});
+    } else {
+      auto &mutation = mutations.batch[it->second];
+      mutation.hasLayoutUpdates |= hasLayoutUpdates;
+      mergeAnimatedProps(mutation.props, std::move(animatedProps));
+    }
+  }
+  return mutations;
+}
+
 AnimationMutations ReanimatedModuleProxy::grandCallback(
     const AnimationTimestamp timestamp,
     const GrandCallbackSource source) {
