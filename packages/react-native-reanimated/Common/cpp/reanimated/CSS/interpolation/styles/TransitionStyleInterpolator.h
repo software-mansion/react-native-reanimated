@@ -28,6 +28,7 @@ class TransitionStyleInterpolator {
       const std::string &propertyName,
       const jsi::Value &fromValue,
       const jsi::Value &toValue);
+  /** TODO: unify folly::dynamic and jsi::value versions */
   bool createOrUpdateInterpolator(
       const std::string &propertyName,
       const folly::dynamic &fromValue,

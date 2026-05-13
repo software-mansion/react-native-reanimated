@@ -18,6 +18,7 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   bool updateKeyframes(jsi::Runtime &rt, const jsi::Value &fromValue, const jsi::Value &toValue) override;
+  /** TODO: unify folly::dynamic and jsi::value versions */
   bool updateKeyframes(const folly::dynamic &fromValue, const folly::dynamic &toValue) override;
 
  protected:

@@ -19,9 +19,11 @@ struct CSSTransitionPropertySettings {
 };
 
 using PropertyValueDiff = std::pair<jsi::Value, jsi::Value>;
+/** TODO: unify folly::dynamic and jsi::value versions */
 using PropertyValueDynamicDiff = std::pair<folly::dynamic, folly::dynamic>;
 
 using PropertyValueDiffsMap = std::unordered_map<std::string, PropertyValueDiff>;
+/** TODO: unify folly::dynamic and jsi::value versions */
 using PropertyValueDynamicDiffsMap = std::unordered_map<std::string, PropertyValueDynamicDiff>;
 
 using PropertiesSettingsMap = std::unordered_map<std::string, CSSTransitionPropertySettings>;

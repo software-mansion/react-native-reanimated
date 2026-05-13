@@ -31,6 +31,7 @@ class CSSTransition {
       const folly::dynamic &lastUpdateValue,
       double timestamp);
   folly::dynamic
+  /** TODO: unify folly::dynamic and jsi::value versions */
   run(const PropertyValueDynamicDiffsMap &propertiesDiffs, const folly::dynamic &lastUpdateValue, double timestamp);
   void updateConfig(
       const PropertiesSettingsMap &changedPropertiesSettings,
@@ -49,6 +50,7 @@ class CSSTransition {
       const PropertyValueDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
       double timestamp);
+  /** TODO: unify folly::dynamic and jsi::value versions */
   void handleChangedProperties(
       const PropertyValueDynamicDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
