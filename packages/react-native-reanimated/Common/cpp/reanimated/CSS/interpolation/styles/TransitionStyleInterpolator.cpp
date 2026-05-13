@@ -34,6 +34,14 @@ bool TransitionStyleInterpolator::createOrUpdateInterpolator(
   return interpolator->updateKeyframes(rt, fromValue, toValue);
 }
 
+bool TransitionStyleInterpolator::createOrUpdateInterpolator(
+    const std::string &propertyName,
+    const folly::dynamic &fromValue,
+    const folly::dynamic &toValue) {
+  const auto &interpolator = getOrCreateInterpolator(propertyName);
+  return interpolator->updateKeyframes(fromValue, toValue);
+}
+
 void TransitionStyleInterpolator::setAllowDiscrete(const std::string &propertyName, const bool allowDiscrete) {
   if (allowDiscrete) {
     allowDiscreteProperties_.insert(propertyName);

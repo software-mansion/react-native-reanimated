@@ -36,6 +36,8 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
       jsi::Runtime &rt,
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const PropertyValueDiffsMap &propertyDiffs);
+  /** TODO: unify folly::dynamic and jsi::value versions */
+  void run(const std::shared_ptr<const ShadowNode> &shadowNode, const PropertyValueDynamicDiffsMap &propertyDiffs);
 
   void updateAndFlush(double timestamp, UpdatesBatch &updatesBatch) {
     std::lock_guard<std::mutex> lock{mutex_};

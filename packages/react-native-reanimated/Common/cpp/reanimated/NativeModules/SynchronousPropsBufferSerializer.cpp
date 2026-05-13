@@ -24,11 +24,13 @@ enum Command : std::uint8_t {
   CMD_OPACITY = 10,
   CMD_ELEVATION = 11,
   CMD_Z_INDEX = 12,
+  CMD_SHADOW_COLOR = 19,
   CMD_SHADOW_OPACITY = 13,
   CMD_SHADOW_RADIUS = 14,
   CMD_BACKGROUND_COLOR = 15,
   CMD_COLOR = 16,
   CMD_TINT_COLOR = 17,
+  CMD_PLACEHOLDER_TEXT_COLOR = 18,
 
   CMD_BORDER_RADIUS = 20,
   CMD_BORDER_TOP_LEFT_RADIUS = 21,
@@ -76,11 +78,13 @@ const std::unordered_map<std::string_view, Command> kPropNameToCommand = {
     {"opacity", CMD_OPACITY},
     {"elevation", CMD_ELEVATION},
     {"zIndex", CMD_Z_INDEX},
+    {"shadowColor", CMD_SHADOW_COLOR},
     {"shadowOpacity", CMD_SHADOW_OPACITY},
     {"shadowRadius", CMD_SHADOW_RADIUS},
     {"backgroundColor", CMD_BACKGROUND_COLOR},
     {"color", CMD_COLOR},
     {"tintColor", CMD_TINT_COLOR},
+    {"placeholderTextColor", CMD_PLACEHOLDER_TEXT_COLOR},
     {"borderRadius", CMD_BORDER_RADIUS},
     {"borderTopLeftRadius", CMD_BORDER_TOP_LEFT_RADIUS},
     {"borderTopRightRadius", CMD_BORDER_TOP_RIGHT_RADIUS},
@@ -166,9 +170,11 @@ void serializeSynchronousPropsToBuffers(
           pushDouble(value.asDouble());
           break;
 
+        case CMD_SHADOW_COLOR:
         case CMD_BACKGROUND_COLOR:
         case CMD_COLOR:
         case CMD_TINT_COLOR:
+        case CMD_PLACEHOLDER_TEXT_COLOR:
         case CMD_BORDER_COLOR:
         case CMD_BORDER_TOP_COLOR:
         case CMD_BORDER_BOTTOM_COLOR:

@@ -65,6 +65,7 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       "opacity",
       "elevation",
       "zIndex",
+      "shadowColor",
 #if __APPLE__
       "shadowOpacity",
       "shadowRadius",
@@ -72,6 +73,7 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       "backgroundColor",
       // "color", // not supported
       "tintColor",
+      "placeholderTextColor",
       "borderRadius",
       "borderTopLeftRadius",
       "borderTopRightRadius",
@@ -207,14 +209,6 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     strongThis->onRender(timestampMs);
   };
   onRenderCallback_ = std::move(onRenderCallback);
-
-  operationsLoop_ = std::make_shared<OperationsLoop>(
-      uiScheduler_,
-      requestRender_,
-      getAnimationTimestamp_,
-      cssAnimationsRegistry_,
-      cssTransitionsRegistry_,
-      updatesRegistryManager_);
 
   auto updateProps = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &operations) {
     auto strongThis = weakThis.lock();
@@ -1339,6 +1333,30 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
     }
     return strongThis->getSettledUpdates(rt);
   });
+
+  addMethod<2>(
+      rt,
+      obj,
+      "registerPseudoStyle",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->registerPseudoStyle(rt, at<0>(args), at<1>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "unregisterPseudoStyle",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->unregisterPseudoStyle(rt, at<0>(args));
+      });
 
   return obj;
 }
