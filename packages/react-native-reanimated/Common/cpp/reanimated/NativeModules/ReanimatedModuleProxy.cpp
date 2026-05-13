@@ -66,6 +66,7 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       "zIndex",
       "shadowColor",
 #if __APPLE__
+      "shadowOffset",
       "shadowOpacity",
       "shadowRadius",
 #endif // __APPLE__
