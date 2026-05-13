@@ -66,6 +66,7 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       "backgroundColor",
       // "color", // not supported
       "tintColor",
+      "placeholderTextColor",
       "borderRadius",
       "borderTopLeftRadius",
       "borderTopRightRadius",
