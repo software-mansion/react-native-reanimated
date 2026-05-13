@@ -35,7 +35,7 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
   }
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
-  void updateAndFlushAnimatedProps(double timestamp, UpdatesBatchAnimatedProps &updatesBatch) {
+  void updateAndFlushAnimatedProps(double timestamp, const UpdatesBatchAnimatedProps &updatesBatch) {
     std::lock_guard<std::mutex> lock{mutex_};
     update(timestamp);
     flushAnimatedProps(updatesBatch);
