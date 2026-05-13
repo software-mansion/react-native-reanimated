@@ -556,7 +556,10 @@ describe('Test createSerializable', () => {
           });
           await waitForNotification(FAIL_NOTIFICATION);
           expect(errorMessage).toInclude(
-            '[Worklets] Tried to synchronously call a non-worklet function `foo` on the UI thread.'
+            'Tried to synchronously call a Remote Function'
+          );
+          expect(errorMessage).toInclude(
+            `Called "foo" on the ${schedulingFunctionName === 'toUIRuntime' ? 'UI' : 'testRuntime'} Runtime`
           );
         });
 
@@ -576,7 +579,10 @@ describe('Test createSerializable', () => {
           });
           await waitForNotification(FAIL_NOTIFICATION);
           expect(errorMessage).toInclude(
-            '[Worklets] Tried to synchronously call a non-worklet anonymous function on the UI thread.'
+            'Tried to synchronously call a Remote Function'
+          );
+          expect(errorMessage).toInclude(
+            `Called "anonymous" on the ${schedulingFunctionName === 'toUIRuntime' ? 'UI' : 'testRuntime'} Runtime`
           );
         });
       });

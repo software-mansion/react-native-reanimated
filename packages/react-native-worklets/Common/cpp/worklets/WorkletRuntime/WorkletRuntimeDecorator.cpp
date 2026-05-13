@@ -5,7 +5,7 @@
 #include <worklets/Tools/PlatformLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/HermesProfiling.h>
-#include <worklets/WorkletRuntime/RuntimeKind.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
@@ -69,6 +69,7 @@ static inline std::vector<jsi::Value> parseArgs(
 
 void WorkletRuntimeDecorator::decorate(
     jsi::Runtime &rt,
+    const RuntimeData::RuntimeKind runtimeKind,
     const std::string &name,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const bool isDevBundle,
@@ -78,11 +79,11 @@ void WorkletRuntimeDecorator::decorate(
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
-  rt.global().setProperty(rt, runtimeKindBindingName, static_cast<int>(RuntimeKind::Worker));
+  rt.global().setProperty(rt, RuntimeData::runtimeKindBindingName, static_cast<int>(runtimeKind));
 
   rt.global().setProperty(rt, "_WORKLET", true);
 
-  rt.global().setProperty(rt, "_LABEL", jsi::String::createFromAscii(rt, name));
+  rt.global().setProperty(rt, RuntimeData::runtimeNameBindingName, jsi::String::createFromAscii(rt, name));
 
   rt.global().setProperty(rt, "__DEV__", isDevBundle);
 
