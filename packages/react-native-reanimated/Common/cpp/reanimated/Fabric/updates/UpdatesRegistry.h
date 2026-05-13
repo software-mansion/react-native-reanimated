@@ -69,12 +69,12 @@ class UpdatesRegistry {
   }
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
-  // get updates in the animation backend path
+  // Get updates in the animation backend path.
   void flushAnimatedPropsUpdates(UpdatesBatchAnimatedProps &updatesBatch);
-  // get only non-layout updates (for android event handling) in the animation backend path
+  // Get only non-layout updates (for android event handling) in the animation backend path.
   void flushNonLayoutUpdates(jsi::Runtime &rt, facebook::react::AnimationMutations &mutations);
   bool hasPendingAnimatedPropsUpdates() const;
-  /// Assumes the caller already locked the registry.
+  // Assumes the caller already locked the registry.
   void flushAnimatedProps(UpdatesBatchAnimatedProps &updatesBatch);
   void addAnimatedPropsToBatch(
       const ShadowNodeFamily::Shared &shadowNodeFamily,
