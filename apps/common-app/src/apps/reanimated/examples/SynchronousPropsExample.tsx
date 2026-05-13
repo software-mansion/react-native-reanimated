@@ -53,7 +53,7 @@ export default function SynchronousPropsExample() {
   );
 
   const placeholderTextColorAnimatedProps = useAnimatedProps(() => ({
-    placeholderTextColor: interpolateColor(sv.value, [0, 1], ['red', 'blue']),
+    placeholderTextColor: colorSv.value,
   }));
 
   return (
