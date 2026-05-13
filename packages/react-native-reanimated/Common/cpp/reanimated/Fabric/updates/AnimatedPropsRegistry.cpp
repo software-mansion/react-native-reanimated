@@ -28,7 +28,6 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
 
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
 #if REACT_NATIVE_VERSION_MINOR >= 85
-      react_native_assert(updates.isObject() && "Updates need to be an object");
       auto updatesObj = updates.asObject(rt);
       const bool hasLayoutUpdates = hasLayoutProps(rt, updatesObj);
       addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updates, hasLayoutUpdates);
