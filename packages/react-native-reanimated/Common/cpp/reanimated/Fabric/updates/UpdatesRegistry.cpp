@@ -136,15 +136,15 @@ void UpdatesRegistry::addRawPropsToAnimatedPropsBatch(
     const ShadowNodeFamily::Shared &shadowNodeFamily,
     folly::dynamic props) {
   const bool hasLayoutUpdates = hasLayoutProps(props);
-  animatedPropsBuilder_.storeDynamic(std::move(props));
+  animatedPropsBuilder_.storeDynamic(props);
   addAnimatedPropsToBatch(shadowNodeFamily, animatedPropsBuilder_.get(), hasLayoutUpdates);
 }
 
 void UpdatesRegistry::addJSIPropsToAnimatedPropsBatch(
     const ShadowNodeFamily::Shared &shadowNodeFamily,
     jsi::Runtime &rt,
-    jsi::Value &props,
-    bool hasLayoutUpdates) {
+    jsi::Value &props) {
+  const bool hasLayoutUpdates = hasLayoutProps(rt, props);
   animatedPropsBuilder_.storeJSI(rt, props);
   addAnimatedPropsToBatch(shadowNodeFamily, animatedPropsBuilder_.get(), hasLayoutUpdates);
 }

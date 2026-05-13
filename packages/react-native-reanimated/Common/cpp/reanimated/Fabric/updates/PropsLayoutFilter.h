@@ -23,8 +23,8 @@ inline bool shouldFilterNonLayoutProps() {
 #endif
 }
 
-inline const std::set<facebook::react::PropName> &layoutPropNames() {
-  static const std::set<facebook::react::PropName> props = {
+inline bool isLayoutProp(facebook::react::PropName propName) {
+  static const std::set<facebook::react::PropName> layoutPropNames = {
       facebook::react::WIDTH,        facebook::react::HEIGHT,         facebook::react::FLEX,
       facebook::react::MARGIN,       facebook::react::PADDING,        facebook::react::POSITION,
       facebook::react::BORDER_WIDTH, facebook::react::ALIGN_CONTENT,  facebook::react::ALIGN_ITEMS,
@@ -36,12 +36,7 @@ inline const std::set<facebook::react::PropName> &layoutPropNames() {
       facebook::react::MIN_WIDTH,    facebook::react::STYLE_OVERFLOW, facebook::react::POSITION_TYPE,
       facebook::react::DIRECTION,    facebook::react::Z_INDEX,
   };
-
-  return props;
-}
-
-inline bool isLayoutProp(facebook::react::PropName propName) {
-  return layoutPropNames().contains(propName);
+  return layoutPropNames.contains(propName);
 }
 
 inline bool shouldSkipNonLayoutProp(facebook::react::PropName propName) {
@@ -64,8 +59,6 @@ inline bool animatedPropsContainLayoutProps(const facebook::react::AnimatedProps
 
   const auto rawPropsDynamic = animatedProps.rawProps->toDynamic();
   for (const auto &key : rawPropsDynamic.keys()) {
-    react_native_assert(key.isString() && "Key needs to be a string");
-
     const auto propName = propNameFromString(key.asString());
     if (propName.has_value() && isLayoutProp(propName.value())) {
       return true;
@@ -85,12 +78,12 @@ inline bool hasLayoutProps(const folly::dynamic &props) {
   return false;
 }
 
-inline bool hasLayoutProps(facebook::jsi::Runtime &rt, facebook::jsi::Object &obj) {
+inline bool hasLayoutProps(facebook::jsi::Runtime &rt, const facebook::jsi::Value &value) {
+  facebook::jsi::Object obj = value.asObject(rt);
   facebook::jsi::Array names = obj.getPropertyNames(rt);
   const size_t n = names.size(rt);
   for (size_t ki = 0; ki < n; ++ki) {
     facebook::jsi::Value keyVal = names.getValueAtIndex(rt, ki);
-    react_native_assert(keyVal.isString() && "Prop name has to be a string");
     const auto keyStr = keyVal.asString(rt).utf8(rt);
     const auto propName = propNameFromString(keyStr);
     if (propName.has_value() && isLayoutProp(propName.value())) {

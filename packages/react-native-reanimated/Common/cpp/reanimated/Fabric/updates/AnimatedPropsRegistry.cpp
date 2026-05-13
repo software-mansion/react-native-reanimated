@@ -1,7 +1,5 @@
 #include <cxxreact/ReactNativeVersion.h>
-#include <react/debug/react_native_assert.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
-#include <reanimated/Fabric/updates/PropsLayoutFilter.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
 #include <memory>
@@ -28,9 +26,7 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
 
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
 #if REACT_NATIVE_VERSION_MINOR >= 85
-      auto updatesObj = updates.asObject(rt);
-      const bool hasLayoutUpdates = hasLayoutProps(rt, updatesObj);
-      addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updates, hasLayoutUpdates);
+      addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updates);
 #endif
     } else {
       addUpdatesToBatch(shadowNode->getFamilyShared(), jsi::dynamicFromValue(rt, updates));

@@ -84,8 +84,7 @@ class UpdatesRegistry {
   void addJSIPropsToAnimatedPropsBatch(
       const ShadowNodeFamily::Shared &shadowNodeFamily,
       jsi::Runtime &rt,
-      jsi::Value &props,
-      bool hasLayoutUpdates = false);
+      jsi::Value &props);
 #endif
 
   void collectProps(PropsMap &propsMap);
