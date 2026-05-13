@@ -5,7 +5,7 @@ import type { Shareable, ShareableConfig } from './types';
 /**
  * Creates a new {@link Shareable} holding the provided initial value. You must
  * explicitly declare which Worklet Runtime will host the Shareable by passing
- * its `runtimeId`.
+ * its `runtimeId`. To host on the UI Runtime, pass {@link UIRuntimeId}.
  *
  * @param hostRuntimeId - The `runtimeId` of the Worklet Runtime that will host
  *   the Shareable.

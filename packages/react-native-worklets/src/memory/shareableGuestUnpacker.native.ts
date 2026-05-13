@@ -78,7 +78,7 @@ export function installShareableGuestUnpacker() {
 
     runOnRuntimeAsyncFromId = (() => {
       throw new Error(
-        '[Worklets] `runOnRuntimeAsyncWithId` can only be called on the RN Runtime.'
+        '[Worklets] `Shareable.getAsync` can only be called on the RN Runtime.'
       );
     }) as typeof BundleRunOnRuntimeAsyncFromId;
   }

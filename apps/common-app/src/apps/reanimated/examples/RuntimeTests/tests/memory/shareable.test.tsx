@@ -611,6 +611,50 @@ describe('Shareable hosted on Worker Runtime', () => {
     }
   );
 
+  test.each(initModes)(
+    'getAsync as guest on UI Runtime throws (%s)',
+    (initMode) => {
+      const shareable = createShareable(
+        host.runtimeId,
+        0,
+        getInitOptions(initMode)
+      );
+      const threw = runOnUISync(() => {
+        'worklet';
+        try {
+          // eslint-disable-next-line no-void
+          void (shareable as ShareableGuest<number>).getAsync();
+          return false;
+        } catch {
+          return true;
+        }
+      });
+      expect(threw).toBe(true);
+    }
+  );
+
+  test.each(initModes)(
+    'getAsync as guest on other Worker Runtime throws (%s)',
+    (initMode) => {
+      const shareable = createShareable(
+        host.runtimeId,
+        0,
+        getInitOptions(initMode)
+      );
+      const threw = runOnRuntimeSync(otherGuest, () => {
+        'worklet';
+        try {
+          // eslint-disable-next-line no-void
+          void (shareable as ShareableGuest<number>).getAsync();
+          return false;
+        } catch {
+          return true;
+        }
+      });
+      expect(threw).toBe(true);
+    }
+  );
+
   test.each(initModes)('host decorator adds property (%s)', (initMode) => {
     const shareable = createShareable(host.runtimeId, 0, {
       ...getInitOptions(initMode),
