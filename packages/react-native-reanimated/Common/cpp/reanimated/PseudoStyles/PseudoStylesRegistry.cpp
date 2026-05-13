@@ -64,21 +64,19 @@ void PseudoStylesRegistry::registerPseudoStyle(
 }
 
 void PseudoStylesRegistry::remove(Tag tag) {
-  std::map<PseudoSelector, SelectorData> selectorsCopy;
+  std::map<PseudoSelector, SelectorData> selectorsToDetach;
   {
     std::lock_guard<std::mutex> lock{mutex_};
     auto it = registry_.find(tag);
     if (it == registry_.end()) {
       return;
     }
-    selectorsCopy = std::move(it->second.selectors);
+    selectorsToDetach = std::move(it->second.selectors);
     registry_.erase(it);
   }
-  for (const auto &[selector, data] : selectorsCopy) {
+  for (const auto &[selector, data] : selectorsToDetach) {
     detachFn_(tag, selector);
   }
-
-  cssTransitionsRegistry_->remove(tag);
 }
 
 void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector selector, bool isActive) {
