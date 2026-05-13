@@ -56,7 +56,7 @@ import ScheduleOnRNsrc from '!!raw-loader!@site/src/examples/ScheduleOnRN';
 
 ### What functions can be passed to `scheduleOnRN`?
 
-Functions passed to `scheduleOnRN` must be defined in the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime) scope, i.e. in the component body or the global scope. The code below won't work because `myFunction` is defined in the `scheduleOnUI` callback, which is only executed in the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime).
+Functions passed to `scheduleOnRN` must be defined on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime) scope, i.e. in the component body or the global scope. The code below won't work because `myFunction` is defined in the `scheduleOnUI` callback, which is only executed on the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime).
 
 ```jsx
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
@@ -78,7 +78,7 @@ To fix it, you have to move the function definition to the [RN Runtime](/docs/fu
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 function App() {
-  // myFunction is defined in the RN Runtime ✅
+  // myFunction is defined on the RN Runtime ✅
   // highlight-next-line
   const myFunction = () => {};
 
