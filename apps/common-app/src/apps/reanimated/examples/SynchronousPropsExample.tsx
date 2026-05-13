@@ -238,6 +238,9 @@ export default function SynchronousPropsExample() {
         'borderRightColor',
         'borderStartColor',
         'borderEndColor',
+        'borderBlockColor',
+        'borderBlockStartColor',
+        'borderBlockEndColor',
       ].map((prop) => (
         <React.Fragment key={prop}>
           <Text>{prop}</Text>

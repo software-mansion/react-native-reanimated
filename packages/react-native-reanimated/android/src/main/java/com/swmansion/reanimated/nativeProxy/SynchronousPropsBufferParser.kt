@@ -43,6 +43,9 @@ internal object SynchronousPropsBufferParser {
     private const val CMD_BORDER_RIGHT_COLOR = 44
     private const val CMD_BORDER_START_COLOR = 45
     private const val CMD_BORDER_END_COLOR = 46
+    private const val CMD_BORDER_BLOCK_COLOR = 47
+    private const val CMD_BORDER_BLOCK_START_COLOR = 48
+    private const val CMD_BORDER_BLOCK_END_COLOR = 49
 
     private const val CMD_TRANSFORM_TRANSLATE_X = 100
     private const val CMD_TRANSFORM_TRANSLATE_Y = 101
@@ -95,6 +98,9 @@ internal object SynchronousPropsBufferParser {
             CMD_BORDER_RIGHT_COLOR -> "borderRightColor"
             CMD_BORDER_START_COLOR -> "borderStartColor"
             CMD_BORDER_END_COLOR -> "borderEndColor"
+            CMD_BORDER_BLOCK_COLOR -> "borderBlockColor"
+            CMD_BORDER_BLOCK_START_COLOR -> "borderBlockStartColor"
+            CMD_BORDER_BLOCK_END_COLOR -> "borderBlockEndColor"
             else -> throw RuntimeException("Unknown command: $command")
         }
 
@@ -155,6 +161,9 @@ internal object SynchronousPropsBufferParser {
                 CMD_BORDER_RIGHT_COLOR,
                 CMD_BORDER_START_COLOR,
                 CMD_BORDER_END_COLOR,
+                CMD_BORDER_BLOCK_COLOR,
+                CMD_BORDER_BLOCK_START_COLOR,
+                CMD_BORDER_BLOCK_END_COLOR,
                 -> {
                     val name = commandToString(command)
                     props.putInt(name, intIterator.nextInt())
