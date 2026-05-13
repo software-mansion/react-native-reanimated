@@ -91,7 +91,9 @@ describe('Test createSerializableOnUI', () => {
   test('createSerializableOnUIHostObject', () => {
     // Arrange & Act
     // Prototype of TurboModule is a host object
-    const hostObject = Object.getPrototypeOf(TurboModuleRegistry.get('Clipboard')) as Record<string, unknown>;
+    const hostObject = Object.getPrototypeOf(
+      TurboModuleRegistry.get('Clipboard')
+    ) as Record<string, unknown>;
     const hostObjectKeys = Object.keys(hostObject);
     const hostObjectValue = runOnUISync(() => {
       'worklet';
@@ -101,7 +103,9 @@ describe('Test createSerializableOnUI', () => {
     // Assert
     expect(typeof hostObjectValue).toBe('object');
     expect(Object.keys(hostObjectValue).length).toBe(hostObjectKeys.length);
-    expect(hostObjectKeys.every(key => hostObjectValue[key] !== undefined)).toBe(true);
+    expect(
+      hostObjectKeys.every((key) => hostObjectValue[key] !== undefined)
+    ).toBe(true);
   });
 
   test('createSerializableOnUIArray', () => {
@@ -178,7 +182,7 @@ describe('Test createSerializableOnUI', () => {
     expect(arrayValue[index.object].a).toBe(1);
     // remote function
     expect(typeof arrayValue[index.remoteFunction]).toBe(
-      globalThis._WORKLETS_BUNDLE_MODE_ENABLED ? 'function' : 'object',
+      globalThis._WORKLETS_BUNDLE_MODE_ENABLED ? 'function' : 'object'
     );
     // array
     expect(arrayValue[index.array].length).toBe(1);
@@ -294,7 +298,9 @@ describe('Test createSerializableOnUI', () => {
     expect(typeof obj[key.object]).toBe('object');
     expect(obj[key.object].f).toBe(4);
     expect(obj[key.object].g).toBe('test');
-    expect(typeof obj[key.remoteFunction]).toBe(globalThis._WORKLETS_BUNDLE_MODE_ENABLED ? 'function' : 'object');
+    expect(typeof obj[key.remoteFunction]).toBe(
+      globalThis._WORKLETS_BUNDLE_MODE_ENABLED ? 'function' : 'object'
+    );
     expect(obj[key.array].length).toBe(1);
     expect(obj[key.array][0]).toBe(1);
     expect(typeof obj[key.initializer]).toBe('object');

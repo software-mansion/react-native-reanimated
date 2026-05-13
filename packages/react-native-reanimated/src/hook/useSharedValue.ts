@@ -15,7 +15,8 @@ import { makeMutable } from '../core';
  *   is called once on mount. Useful when the initial value is expensive to
  *   compute.
  *
- *   **Warning:** Don't store functions (including worklets) inside shared values.
+ *   **Warning:** Don't store functions (including worklets) inside shared
+ *   values.
  * @returns A shared value with a single `.value` property initially set to the
  *   `initialValue` - {@link SharedValue}.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue

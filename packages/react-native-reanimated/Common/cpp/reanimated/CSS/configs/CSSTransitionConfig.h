@@ -11,17 +11,21 @@
 namespace reanimated::css {
 
 struct CSSTransitionPropertySettings {
-  std::pair<jsi::Value, jsi::Value> value;
   double duration;
   EasingFunction easingFunction;
   double delay;
   bool allowDiscrete;
 };
 
-using CSSTransitionPropertiesSettings = std::unordered_map<std::string, CSSTransitionPropertySettings>;
+using PropertyValueDiff = std::pair<jsi::Value, jsi::Value>;
+
+using PropertyValueDiffsMap = std::unordered_map<std::string, PropertyValueDiff>;
+
+using PropertiesSettingsMap = std::unordered_map<std::string, CSSTransitionPropertySettings>;
 
 struct CSSTransitionConfig {
-  CSSTransitionPropertiesSettings changedProperties;
+  PropertiesSettingsMap changedPropertiesSettings;
+  PropertyValueDiffsMap changedProperties;
   std::vector<std::string> removedProperties;
 };
 

@@ -9,6 +9,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 namespace reanimated::css {
 
@@ -28,6 +29,7 @@ class TransitionStyleInterpolator {
       const jsi::Value &fromValue,
       const jsi::Value &toValue);
   void setAllowDiscrete(const std::string &propertyName, bool allowDiscrete);
+  void removeProperties(const std::vector<std::string> &propertyNames);
   void removeProperty(const std::string &propertyName);
   void discardFinishedInterpolators(const TransitionProgressProvider &transitionProgressProvider);
 

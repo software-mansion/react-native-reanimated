@@ -1,11 +1,11 @@
 #pragma once
 
+#include <jsi/jsi.h>
 #include <worklets/Compat/StableApi.h>
 #include <worklets/Registries/WorkletRuntimeRegistry.h>
 
-#include <jsi/jsi.h>
-
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -13,8 +13,6 @@
 using namespace facebook;
 
 namespace worklets {
-
-jsi::Function getValueUnpacker(jsi::Runtime &rt);
 
 inline void cleanupIfRuntimeExists(jsi::Runtime *rt, std::unique_ptr<jsi::Value> &value) {
   if (rt != nullptr && !WorkletRuntimeRegistry::isRuntimeAlive(rt)) {
@@ -128,6 +126,10 @@ class SerializableArray : public Serializable {
   SerializableArray(jsi::Runtime &rt, const jsi::Array &array);
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+  [[nodiscard]] const std::vector<std::shared_ptr<Serializable>> &getList() const {
+    return data_;
+  }
 
  protected:
   std::vector<std::shared_ptr<Serializable>> data_;

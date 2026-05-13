@@ -37,15 +37,16 @@ CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value 
       auto oldValue = valueArray.getValueAtIndex(rt, 0);
       auto newValue = valueArray.getValueAtIndex(rt, 1);
 
-      result.changedProperties.emplace(
+      result.changedPropertiesSettings.emplace(
           propertyName,
           CSSTransitionPropertySettings{
-              std::make_pair(std::move(oldValue), std::move(newValue)),
               getDuration(rt, propertySettingsObj),
               getTimingFunction(rt, propertySettingsObj),
               getDelay(rt, propertySettingsObj),
               getAllowDiscrete(rt, propertySettingsObj),
           });
+
+      result.changedProperties.emplace(propertyName, std::make_pair(std::move(oldValue), std::move(newValue)));
     }
   }
 

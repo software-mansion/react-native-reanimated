@@ -2,779 +2,586 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect } from 'react';
-import { View } from 'react-native';
-import { useSharedValue } from 'react-native-reanimated';
+import { TurboModuleRegistry } from 'react-native';
+import {
+  createSerializable,
+  createWorkletRuntime,
+  scheduleOnRN,
+  scheduleOnRuntime,
+  scheduleOnUI,
+} from 'react-native-worklets';
 
 import {
+  beforeEach,
   describe,
   expect,
-  getRegisteredValue,
   notify,
-  registerValue,
-  render,
   test,
-  wait,
   waitForNotification,
 } from '../../ReJest/RuntimeTestsApi';
-import { createSerializable, scheduleOnUI } from 'react-native-worklets';
-import { TurboModuleRegistry } from 'react-native';
-
-const RESULT_SHARED_VALUE_REF = 'RESULT_SHARED_VALUE_REF';
-
-type Result = 'ok' | 'not_ok' | 'error';
-
-const DONE_NOTIFICATION_NAME = 'DONE_NOTIFICATION_NAME';
-
-const ValueComponent = ({ onRunUIFunction }: { onRunUIFunction: () => boolean }) => {
-  const sharedResult = useSharedValue<Result>('not_ok');
-  registerValue(RESULT_SHARED_VALUE_REF, sharedResult);
-
-  useEffect(() => {
-    try {
-      scheduleOnUI(() => {
-        'worklet';
-        try {
-          const result = onRunUIFunction();
-          sharedResult.value = result ? 'ok' : 'not_ok';
-        } catch {
-          sharedResult.value = 'error';
-        }
-      });
-    } catch {
-      sharedResult.value = 'error';
-    }
-    notify(DONE_NOTIFICATION_NAME);
-  });
-
-  return <View />;
-};
 
 describe('Test createSerializable', () => {
-  test('createSerializableString', async () => {
-    // Arrange
-    const testString = 'test';
+  const PASS_NOTIFICATION = 'PASS';
+  const FAIL_NOTIFICATION = 'FAIL';
+  let result = false;
+  let errorMessage = '';
 
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          const checks = [typeof testString === 'string', testString === 'test'];
-          return checks.every(Boolean);
-        }}
-      />,
-    );
-    await waitForNotification(DONE_NOTIFICATION_NAME);
+  const workletRuntime = createWorkletRuntime({ name: 'testRuntime' });
 
-    // Assert
-    const sharedResult = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedResult.onUI).toBe('ok');
-    expect(sharedResult.onJS).toBe('ok');
-  });
-
-  test('createSerializableNumber', async () => {
-    // Arrange
-    const testNumber = 123;
-
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          const checks = [typeof testNumber === 'number', testNumber === 123];
-          return checks.every(Boolean);
-        }}
-      />,
-    );
-    await waitForNotification(DONE_NOTIFICATION_NAME);
-
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('ok');
-    expect(sharedValue.onJS).toBe('ok');
-  });
-
-  test('createSerializableTrue', async () => {
-    // Arrange
-    const trueValue = true;
-
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          const checks = [typeof trueValue === 'boolean', trueValue === true];
-          return checks.every(Boolean);
-        }}
-      />,
-    );
-    await wait(100);
-
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('ok');
-    expect(sharedValue.onJS).toBe('ok');
-  });
-
-  test('createSerializableFalse', async () => {
-    // Arrange
-    const falseValue = false;
-
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          const checks = [typeof falseValue === 'boolean', falseValue === false];
-          return checks.every(Boolean);
-        }}
-      />,
-    );
-    await waitForNotification(DONE_NOTIFICATION_NAME);
-
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('ok');
-    expect(sharedValue.onJS).toBe('ok');
-  });
-
-  test('createSerializableUndefined', async () => {
-    // Arrange
-    const undefinedValue = undefined;
-
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          const checks = [typeof undefinedValue === 'undefined', undefinedValue === undefined];
-          return checks.every(Boolean);
-        }}
-      />,
-    );
-    await waitForNotification(DONE_NOTIFICATION_NAME);
-
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('ok');
-    expect(sharedValue.onJS).toBe('ok');
-  });
-
-  test('createSerializableNull', async () => {
-    // Arrange
-    const nullValue = null;
-
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          const checks = [typeof nullValue === 'object', nullValue === null];
-          return checks.every(Boolean);
-        }}
-      />,
-    );
-    await waitForNotification(DONE_NOTIFICATION_NAME);
-
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('ok');
-    expect(sharedValue.onJS).toBe('ok');
-  });
-
-  test('createSerializableBigInt fitting in int64', async () => {
-    // Arrange
-    const bigIntValue = BigInt(123);
-
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          const checks = [typeof bigIntValue === 'bigint', bigIntValue === BigInt(123)];
-          return checks.every(Boolean);
-        }}
-      />,
-    );
-    await waitForNotification(DONE_NOTIFICATION_NAME);
-
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('ok');
-    expect(sharedValue.onJS).toBe('ok');
-  });
-
-  test('createSerializableBigInt too big for uint64', async () => {
-    // Arrange
-    const maxInt64 = BigInt('0x7FFFFFFFFFFFFFFF');
-    const bigIntValue = maxInt64 * maxInt64;
-
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          const checks = [typeof bigIntValue === 'bigint', bigIntValue === maxInt64 * maxInt64];
-          return checks.every(Boolean);
-        }}
-      />,
-    );
-    await waitForNotification(DONE_NOTIFICATION_NAME);
-
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('ok');
-    expect(sharedValue.onJS).toBe('ok');
-  });
-
-  test('createSerializableHostObject', async () => {
-    // Arrange
-    const hostObjectValue = globalThis.__reanimatedModuleProxy;
-    const hostObjectKeys = Object.keys(hostObjectValue);
-
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          const checks = [
-            typeof hostObjectValue === 'object',
-            Object.keys(hostObjectValue).length === hostObjectKeys.length,
-            hostObjectKeys.every(key => hostObjectValue[key] !== undefined),
-          ];
-          return checks.every(Boolean);
-        }}
-      />,
-    );
-    await waitForNotification(DONE_NOTIFICATION_NAME);
-
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('ok');
-    expect(sharedValue.onJS).toBe('ok');
-  });
-
-  test('createSerializableArray', async () => {
-    // Arrange
-    enum index {
-      number = 0,
-      true = 1,
-      false = 2,
-      null = 3,
-      undefined = 4,
-      string = 5,
-      bigint = 6,
-      object = 7,
-      remoteFunction = 8,
-      array = 9,
-      workletFunction = 10,
-      initializer = 11,
-      arrayBuffer = 12,
-    }
-    const arrayBuffer = new ArrayBuffer(3);
-    const uint8Array = new Uint8Array(arrayBuffer);
-    uint8Array[0] = 1;
-    uint8Array[1] = 2;
-    uint8Array[2] = 3;
-    const arrayValue: any[] = [
-      // number
-      1,
-      // boolean
-      true,
-      false,
-      // null
-      null,
-      // undefined
-      undefined,
-      // string
-      'a',
-      // bigint
-      BigInt(123),
-      // object
-      { a: 1 },
-      // remote function - not a worklet
-      () => {
-        return 1;
-      },
-      // array
-      [1],
-      // worklet function
-      () => {
-        'worklet';
-        return 1;
-      },
-      // initializer - regexp
-      /a/,
-      // array buffer
-      arrayBuffer,
-    ];
-
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          const uint8ArrayUI = new Uint8Array(arrayValue[index.arrayBuffer]);
-          const checks = [
-            // number
-            arrayValue[index.number] === 1,
-            // boolean
-            arrayValue[index.true] === true,
-            arrayValue[index.false] === false,
-            // null
-            arrayValue[index.null] === null,
-            // undefined
-            arrayValue[index.undefined] === undefined,
-            // string
-            arrayValue[index.string] === 'a',
-            // bigint
-            typeof arrayValue[index.bigint] === 'bigint',
-            arrayValue[index.bigint] === BigInt(123),
-            // object
-            typeof arrayValue[index.object] === 'object',
-            arrayValue[index.object].a === 1,
-            // remote function - not worklet
-            typeof arrayValue[index.remoteFunction] === 'function',
-            // array
-            arrayValue[index.array].length === 1,
-            arrayValue[index.array][0] === 1,
-            // worklet function
-            typeof arrayValue[index.workletFunction] === 'function',
-            arrayValue[index.workletFunction]() === 1,
-            // initializer - regexp
-            arrayValue[index.initializer] instanceof RegExp,
-            arrayValue[index.initializer].test('a'),
-            // array buffer
-            arrayValue[index.arrayBuffer] instanceof ArrayBuffer,
-            arrayValue[index.arrayBuffer].byteLength === 3,
-            uint8ArrayUI[0] === 1,
-            uint8ArrayUI[1] === 2,
-            uint8ArrayUI[2] === 3,
-          ];
-          return checks.every(Boolean);
-        }}
-      />,
-    );
-    await waitForNotification(DONE_NOTIFICATION_NAME);
-
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('ok');
-    expect(sharedValue.onJS).toBe('ok');
-  });
-
-  test('createSerializableSet', async () => {
-    // Arrange
-    const setValue = new Set([1, '1', true]);
-
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          const checks = [
-            setValue.has(1),
-            setValue.has('1'),
-            setValue.has(true),
-            setValue.size === 3,
-            typeof setValue === 'object',
-            setValue instanceof Set,
-          ];
-          return checks.every(Boolean);
-        }}
-      />,
-    );
-    await waitForNotification(DONE_NOTIFICATION_NAME);
-
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('ok');
-    expect(sharedValue.onJS).toBe('ok');
-  });
-
-  test('createSerializableMap', async () => {
-    // Arrange
-    const mapValue = new Map<any, any>([
-      [1, 2],
-      ['1', '2'],
-      [true, false],
-    ]);
-
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          const checks = [
-            mapValue.get(1) === 2,
-            mapValue.get('1') === '2',
-            mapValue.get(true) === false,
-            mapValue.size === 3,
-            typeof mapValue === 'object',
-            mapValue instanceof Map,
-          ];
-          return checks.every(Boolean);
-        }}
-      />,
-    );
-    await wait(100);
-
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('ok');
-    expect(sharedValue.onJS).toBe('ok');
-  });
-
-  test('createSerializableError', async () => {
-    // Arrange
-    const errorValue = new Error('test');
-
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          const checks = [errorValue instanceof Error, String(errorValue).includes('test')];
-          return checks.every(Boolean);
-        }}
-      />,
-    );
-    await waitForNotification(DONE_NOTIFICATION_NAME);
-
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('ok');
-    expect(sharedValue.onJS).toBe('ok');
-  });
-
-  test('createSerializableInitializer', async () => {
-    // Arrange
-    const regExpValue = /a/;
-
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          const checks = [regExpValue instanceof RegExp, regExpValue.test('a')];
-          return checks.every(Boolean);
-        }}
-      />,
-    );
-    await waitForNotification(DONE_NOTIFICATION_NAME);
-
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('ok');
-    expect(sharedValue.onJS).toBe('ok');
-  });
-
-  test('createSerializablePlainObject', async () => {
-    // Arrange
-    enum key {
-      number = 0,
-      true = 1,
-      false = 2,
-      null = 3,
-      undefined = 4,
-      string = 5,
-      bigint = 6,
-      object = 7,
-      remoteFunction = 8,
-      array = 9,
-      workletFunction = 10,
-      initializer = 11,
-      arrayBuffer = 12,
-    }
-    const obj = {
-      [key.number]: 1,
-      [key.true]: true,
-      [key.false]: false,
-      [key.null]: null,
-      [key.undefined]: undefined,
-      [key.string]: 'test',
-      [key.bigint]: BigInt(123),
-      [key.object]: { f: 4, g: 'test' },
-      [key.remoteFunction]: () => {
-        return 1;
-      },
-      [key.array]: [1],
-      [key.workletFunction]: () => {
-        'worklet';
-        return 2;
-      },
-      [key.initializer]: /test/,
-      [key.arrayBuffer]: new ArrayBuffer(3),
-    };
-
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          const checks = [
-            obj[key.number] === 1,
-            obj[key.true] === true,
-            obj[key.false] === false,
-            obj[key.null] === null,
-            obj[key.undefined] === undefined,
-            obj[key.string] === 'test',
-            obj[key.bigint] === BigInt(123),
-            obj[key.object].f === 4,
-            obj[key.object].g === 'test',
-            typeof obj[key.remoteFunction] === 'function',
-            __DEV__ === false ||
-              ('__remoteFunction' in obj[key.remoteFunction] && !!obj[key.remoteFunction].__remoteFunction),
-            obj[key.array].length === 1,
-            obj[key.array][0] === 1,
-            obj[key.workletFunction]() === 2,
-            obj[key.initializer] instanceof RegExp,
-            obj[key.initializer].test('test'),
-            obj[key.arrayBuffer] instanceof ArrayBuffer,
-            obj[key.arrayBuffer].byteLength === 3,
-          ];
-          return checks.every(Boolean);
-        }}
-      />,
-    );
-    await waitForNotification(DONE_NOTIFICATION_NAME);
-
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('ok');
-    expect(sharedValue.onJS).toBe('ok');
-  });
-
-  test('createSerializableWorklet', async () => {
-    // Arrange
-    const workletFunction = () => {
+  const schedulingFunction = {
+    toUIRuntime: (worklet: () => void) => {
+      scheduleOnUI(worklet);
+    },
+    toWorkletRuntime: (worklet: () => void) => {
       'worklet';
-      return 1;
-    };
+      scheduleOnRuntime(workletRuntime, worklet);
+    },
+  };
 
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          const checks = [typeof workletFunction === 'function', workletFunction() === 1];
-          return checks.every(Boolean);
-        }}
-      />,
-    );
-    await waitForNotification(DONE_NOTIFICATION_NAME);
+  const callbackPass = (ok: boolean) => {
+    result = ok;
+    notify(PASS_NOTIFICATION);
+  };
 
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('ok');
-    expect(sharedValue.onJS).toBe('ok');
-  });
+  const callbackFail = (message: string) => {
+    errorMessage = message;
+    notify(FAIL_NOTIFICATION);
+  };
 
-  test('createSerializableRemoteFunction', async () => {
-    // Arrange
-    const remoteFunction = () => {
-      return 1;
-    };
+  Object.entries(schedulingFunction).forEach(
+    ([schedulingFunctionName, schedule]) => {
+      describe(`using ${schedulingFunctionName}`, () => {
+        beforeEach(() => {
+          result = false;
+          errorMessage = '';
+        });
 
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          const checks = [
-            typeof remoteFunction === 'function',
-            __DEV__ === false || ('__remoteFunction' in remoteFunction && !!remoteFunction.__remoteFunction),
+        test('createSerializableString', async () => {
+          const testString = 'test';
+          schedule(() => {
+            'worklet';
+            const checks = [
+              typeof testString === 'string',
+              testString === 'test',
+            ];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
+
+        test('createSerializableNumber', async () => {
+          const testNumber = 123;
+          schedule(() => {
+            'worklet';
+            const checks = [typeof testNumber === 'number', testNumber === 123];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
+
+        test('createSerializableTrue', async () => {
+          const trueValue = true;
+          schedule(() => {
+            'worklet';
+            const checks = [typeof trueValue === 'boolean', trueValue === true];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
+
+        test('createSerializableFalse', async () => {
+          const falseValue = false;
+          schedule(() => {
+            'worklet';
+            const checks = [
+              typeof falseValue === 'boolean',
+              falseValue === false,
+            ];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
+
+        test('createSerializableUndefined', async () => {
+          const undefinedValue = undefined;
+          schedule(() => {
+            'worklet';
+            const checks = [
+              typeof undefinedValue === 'undefined',
+              undefinedValue === undefined,
+            ];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
+
+        test('createSerializableNull', async () => {
+          const nullValue = null;
+          schedule(() => {
+            'worklet';
+            const checks = [typeof nullValue === 'object', nullValue === null];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
+
+        test('createSerializableBigInt fitting in int64', async () => {
+          const bigIntValue = BigInt(123);
+          schedule(() => {
+            'worklet';
+            const checks = [
+              typeof bigIntValue === 'bigint',
+              bigIntValue === BigInt(123),
+            ];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
+
+        test('createSerializableBigInt too big for uint64', async () => {
+          const maxInt64 = BigInt('0x7FFFFFFFFFFFFFFF');
+          const bigIntValue = maxInt64 * maxInt64;
+          schedule(() => {
+            'worklet';
+            const checks = [
+              typeof bigIntValue === 'bigint',
+              bigIntValue === maxInt64 * maxInt64,
+            ];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
+
+        test('createSerializableHostObject', async () => {
+          const hostObjectValue = globalThis.__reanimatedModuleProxy;
+          const hostObjectKeys = Object.keys(hostObjectValue);
+          schedule(() => {
+            'worklet';
+            const checks = [
+              typeof hostObjectValue === 'object',
+              Object.keys(hostObjectValue).length === hostObjectKeys.length,
+              hostObjectKeys.every((key) => hostObjectValue[key] !== undefined),
+            ];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
+
+        test('createSerializableArray', async () => {
+          enum index {
+            number = 0,
+            true = 1,
+            false = 2,
+            null = 3,
+            undefined = 4,
+            string = 5,
+            bigint = 6,
+            object = 7,
+            remoteFunction = 8,
+            array = 9,
+            workletFunction = 10,
+            initializer = 11,
+            arrayBuffer = 12,
+          }
+          const arrayBuffer = new ArrayBuffer(3);
+          const uint8Array = new Uint8Array(arrayBuffer);
+          uint8Array[0] = 1;
+          uint8Array[1] = 2;
+          uint8Array[2] = 3;
+          const arrayValue: any[] = [
+            // number
+            1,
+            // boolean
+            true,
+            false,
+            // null
+            null,
+            // undefined
+            undefined,
+            // string
+            'a',
+            // bigint
+            BigInt(123),
+            // object
+            { a: 1 },
+            // remote function - not a worklet
+            () => {
+              return 1;
+            },
+            // array
+            [1],
+            // worklet function
+            () => {
+              'worklet';
+              return 1;
+            },
+            // initializer - regexp
+            /a/,
+            // array buffer
+            arrayBuffer,
           ];
-          return checks.every(Boolean);
-        }}
-      />,
-    );
-    await waitForNotification(DONE_NOTIFICATION_NAME);
 
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('ok');
-  });
+          schedule(() => {
+            'worklet';
+            const uint8ArrayUI = new Uint8Array(arrayValue[index.arrayBuffer]);
+            const checks = [
+              // number
+              arrayValue[index.number] === 1,
+              // boolean
+              arrayValue[index.true] === true,
+              arrayValue[index.false] === false,
+              // null
+              arrayValue[index.null] === null,
+              // undefined
+              arrayValue[index.undefined] === undefined,
+              // string
+              arrayValue[index.string] === 'a',
+              // bigint
+              typeof arrayValue[index.bigint] === 'bigint',
+              arrayValue[index.bigint] === BigInt(123),
+              // object
+              typeof arrayValue[index.object] === 'object',
+              arrayValue[index.object].a === 1,
+              // remote function - not worklet
+              typeof arrayValue[index.remoteFunction] === 'function',
+              // array
+              arrayValue[index.array].length === 1,
+              arrayValue[index.array][0] === 1,
+              // worklet function
+              typeof arrayValue[index.workletFunction] === 'function',
+              arrayValue[index.workletFunction]() === 1,
+              // initializer - regexp
+              arrayValue[index.initializer] instanceof RegExp,
+              arrayValue[index.initializer].test('a'),
+              // array buffer
+              arrayValue[index.arrayBuffer] instanceof ArrayBuffer,
+              arrayValue[index.arrayBuffer].byteLength === 3,
+              uint8ArrayUI[0] === 1,
+              uint8ArrayUI[1] === 2,
+              uint8ArrayUI[2] === 3,
+            ];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
 
-  test('createSerializableHostFunction', async () => {
-    // Arrange
-    const hostFunction = globalThis.__workletsModuleProxy.createSerializableBoolean as any;
+        test('createSerializableSet', async () => {
+          const setValue = new Set([1, '1', true]);
+          schedule(() => {
+            'worklet';
+            const checks = [
+              setValue.has(1),
+              setValue.has('1'),
+              setValue.has(true),
+              setValue.size === 3,
+              typeof setValue === 'object',
+              setValue instanceof Set,
+            ];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
 
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          // createSerializableBoolean returns a SerializableRef<boolean> which is a serializable ref
-          const serializableBoolean = hostFunction(true);
-          const checks = [typeof hostFunction === 'function', serializableBoolean.__serializableRef];
-          return checks.every(Boolean);
-        }}
-      />,
-    );
-    await wait(100);
+        test('createSerializableMap', async () => {
+          const mapValue = new Map<any, any>([
+            [1, 2],
+            ['1', '2'],
+            [true, false],
+          ]);
+          schedule(() => {
+            'worklet';
+            const checks = [
+              mapValue.get(1) === 2,
+              mapValue.get('1') === '2',
+              mapValue.get(true) === false,
+              mapValue.size === 3,
+              typeof mapValue === 'object',
+              mapValue instanceof Map,
+            ];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
 
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('ok');
-    expect(sharedValue.onJS).toBe('ok');
-  });
+        test('createSerializableError', async () => {
+          const errorValue = new Error('test');
+          schedule(() => {
+            'worklet';
+            const checks = [
+              errorValue instanceof Error,
+              String(errorValue).includes('test'),
+            ];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
 
-  test('createSerializableTurboModuleLike', async () => {
-    // Arrange
-    const proto = globalThis.__reanimatedModuleProxy;
-    const reanimatedModuleKeys = Object.keys(proto);
-    const obj = {
-      a: 1,
-      b: 'test',
-    };
-    Object.setPrototypeOf(obj, proto);
+        test('createSerializableInitializer', async () => {
+          const regExpValue = /a/;
+          schedule(() => {
+            'worklet';
+            const checks = [
+              regExpValue instanceof RegExp,
+              regExpValue.test('a'),
+            ];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
 
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          const checks = [
-            obj.a === 1,
-            obj.b === 'test',
-            reanimatedModuleKeys.every(key => key in Object.getPrototypeOf(obj)),
-            'magicKey' in Object.getPrototypeOf(obj) === true,
-          ];
-          return checks.every(Boolean);
-        }}
-      />,
-    );
-    await waitForNotification(DONE_NOTIFICATION_NAME);
+        test('createSerializablePlainObject', async () => {
+          enum key {
+            number = 0,
+            true = 1,
+            false = 2,
+            null = 3,
+            undefined = 4,
+            string = 5,
+            bigint = 6,
+            object = 7,
+            remoteFunction = 8,
+            array = 9,
+            workletFunction = 10,
+            initializer = 11,
+            arrayBuffer = 12,
+          }
+          const obj = {
+            [key.number]: 1,
+            [key.true]: true,
+            [key.false]: false,
+            [key.null]: null,
+            [key.undefined]: undefined,
+            [key.string]: 'test',
+            [key.bigint]: BigInt(123),
+            [key.object]: { f: 4, g: 'test' },
+            [key.remoteFunction]: () => {
+              return 1;
+            },
+            [key.array]: [1],
+            [key.workletFunction]: () => {
+              'worklet';
+              return 2;
+            },
+            [key.initializer]: /test/,
+            [key.arrayBuffer]: new ArrayBuffer(3),
+          };
 
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('ok');
-    expect(sharedValue.onJS).toBe('ok');
-  });
+          schedule(() => {
+            'worklet';
+            const checks = [
+              obj[key.number] === 1,
+              obj[key.true] === true,
+              obj[key.false] === false,
+              obj[key.null] === null,
+              obj[key.undefined] === undefined,
+              obj[key.string] === 'test',
+              obj[key.bigint] === BigInt(123),
+              obj[key.object].f === 4,
+              obj[key.object].g === 'test',
+              typeof obj[key.remoteFunction] === 'function',
+              __DEV__ === false ||
+                ('__remoteFunction' in obj[key.remoteFunction] &&
+                  !!obj[key.remoteFunction].__remoteFunction),
+              obj[key.array].length === 1,
+              obj[key.array][0] === 1,
+              obj[key.workletFunction]() === 2,
+              obj[key.initializer] instanceof RegExp,
+              obj[key.initializer].test('test'),
+              obj[key.arrayBuffer] instanceof ArrayBuffer,
+              obj[key.arrayBuffer].byteLength === 3,
+            ];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
 
-  test('createSerializableArrayBuffer', async () => {
-    // Arrange
-    const arrayBuffer = new ArrayBuffer(3);
-    const uint8Array = new Uint8Array(arrayBuffer);
-    uint8Array[0] = 1;
-    uint8Array[1] = 2;
-    uint8Array[2] = 3;
+        test('createSerializableWorklet', async () => {
+          const workletFunction = () => {
+            'worklet';
+            return 1;
+          };
+          schedule(() => {
+            'worklet';
+            const checks = [
+              typeof workletFunction === 'function',
+              workletFunction() === 1,
+            ];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
 
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          const checks = [arrayBuffer instanceof ArrayBuffer, arrayBuffer.byteLength === 3];
-          return checks.every(Boolean);
-        }}
-      />,
-    );
-    await waitForNotification(DONE_NOTIFICATION_NAME);
+        test('createSerializableRemoteFunction', async () => {
+          const remoteFunction = () => {
+            return 1;
+          };
+          schedule(() => {
+            'worklet';
+            const checks = [
+              typeof remoteFunction === 'function',
+              __DEV__ === false ||
+                ('__remoteFunction' in remoteFunction &&
+                  !!remoteFunction.__remoteFunction),
+            ];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
 
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('ok');
-    expect(sharedValue.onJS).toBe('ok');
-  });
+        test('createSerializableHostFunction', async () => {
+          const hostFunction = globalThis.__workletsModuleProxy
+            .createSerializableBoolean as any;
+          schedule(() => {
+            'worklet';
+            // createSerializableBoolean returns a SerializableRef<boolean> which is a serializable ref
+            const serializableBoolean = hostFunction(true);
+            const checks = [
+              typeof hostFunction === 'function',
+              serializableBoolean.__serializableRef,
+            ];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
 
-  test('createSerializableCyclicObject', async () => {
-    // Arrange
-    type RecursiveArray = (number | RecursiveArray)[];
-    const cyclicArray: RecursiveArray = [];
-    cyclicArray.push(1);
-    cyclicArray.push(cyclicArray);
+        test('createSerializableTurboModuleLike', async () => {
+          const clipboard = TurboModuleRegistry.getEnforcing('Clipboard');
 
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const _test = cyclicArray[1];
-          return true;
-        }}
-      />,
-    );
-    await wait(100);
+          schedule(() => {
+            'worklet';
+            const checks = [
+              Object.getOwnPropertyNames(clipboard).includes('magicKey') ===
+                false,
+              'magicKey' in Object.getPrototypeOf(clipboard) === true,
+              Object.keys(clipboard).every(
+                (key) => key in Object.getPrototypeOf(clipboard)
+              ),
+            ];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
 
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('error');
-    expect(sharedValue.onJS).toBe('error');
-  });
+        test('createSerializableArrayBuffer', async () => {
+          const arrayBuffer = new ArrayBuffer(3);
+          const uint8Array = new Uint8Array(arrayBuffer);
+          uint8Array[0] = 1;
+          uint8Array[1] = 2;
+          uint8Array[2] = 3;
+          schedule(() => {
+            'worklet';
+            const checks = [
+              arrayBuffer instanceof ArrayBuffer,
+              arrayBuffer.byteLength === 3,
+            ];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
 
-  test('createSerializableInaccessibleObject', async () => {
-    // Arrange
-    class Inaccessible {
-      access() {
-        return true;
-      }
+        test('createSerializableCyclicObject', async () => {
+          type RecursiveArray = (number | RecursiveArray)[];
+          const cyclicArray: RecursiveArray = [];
+          cyclicArray.push(1);
+          cyclicArray.push(cyclicArray);
+
+          await expect(() => {
+            schedule(() => {
+              'worklet';
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const _test = cyclicArray[1];
+            });
+          }).toThrow();
+        });
+
+        test('createSerializableInaccessibleObject', async () => {
+          class Inaccessible {
+            access() {
+              return true;
+            }
+          }
+          const inaccessibleObject = new Inaccessible();
+
+          schedule(() => {
+            'worklet';
+            try {
+              inaccessibleObject.access();
+              scheduleOnRN(callbackPass, false);
+            } catch (error) {
+              scheduleOnRN(
+                callbackFail,
+                error instanceof Error ? error.message : String(error)
+              );
+            }
+          });
+          await waitForNotification(FAIL_NOTIFICATION);
+          expect(errorMessage).toInclude(
+            '[Worklets] Trying to access property `access` of an object which cannot be sent to the UI runtime.'
+          );
+        });
+
+        test('createSerializableRemoteNamedFunctionSyncCall', async () => {
+          function foo() {}
+          schedule(() => {
+            'worklet';
+            try {
+              foo();
+              scheduleOnRN(callbackPass, false);
+            } catch (error) {
+              scheduleOnRN(
+                callbackFail,
+                error instanceof Error ? error.message : String(error)
+              );
+            }
+          });
+          await waitForNotification(FAIL_NOTIFICATION);
+          expect(errorMessage).toInclude(
+            '[Worklets] Tried to synchronously call a non-worklet function `foo` on the UI thread.'
+          );
+        });
+
+        test('createSerializableRemoteAnonymousFunctionSyncCall', async () => {
+          const foo = [() => {}];
+          schedule(() => {
+            'worklet';
+            try {
+              foo[0]();
+              scheduleOnRN(callbackPass, false);
+            } catch (error) {
+              scheduleOnRN(
+                callbackFail,
+                error instanceof Error ? error.message : String(error)
+              );
+            }
+          });
+          await waitForNotification(FAIL_NOTIFICATION);
+          expect(errorMessage).toInclude(
+            '[Worklets] Tried to synchronously call a non-worklet anonymous function on the UI thread.'
+          );
+        });
+      });
     }
-    const inaccessibleObject = new Inaccessible();
-
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          return inaccessibleObject.access();
-        }}
-      />,
-    );
-    await waitForNotification(DONE_NOTIFICATION_NAME);
-
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('error');
-    expect(sharedValue.onJS).toBe('error');
-  });
-
-  test('createSerializableRemoteNamedFunctionSyncCall', async () => {
-    // Arrange
-    function foo() {}
-
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          foo();
-          return true;
-        }}
-      />,
-    );
-    await waitForNotification(DONE_NOTIFICATION_NAME);
-
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('error');
-    expect(sharedValue.onJS).toBe('error');
-  });
-
-  test('createSerializableRemoteAnonymousFunctionSyncCall', async () => {
-    // Arrange
-    const foo = () => {};
-
-    // Act
-    await render(
-      <ValueComponent
-        onRunUIFunction={() => {
-          'worklet';
-          foo();
-          return true;
-        }}
-      />,
-    );
-    await waitForNotification(DONE_NOTIFICATION_NAME);
-
-    // Assert
-    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe('error');
-    expect(sharedValue.onJS).toBe('error');
-  });
+  );
 });
 
 const FREEZE_WARNING = 'Tried to modify key';

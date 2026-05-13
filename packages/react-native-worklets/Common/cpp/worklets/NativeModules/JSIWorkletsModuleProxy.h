@@ -1,13 +1,9 @@
 #pragma once
 
-#include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
-#include <react/renderer/uimanager/UIManagerBinding.h>
-#include <react/renderer/uimanager/primitives.h>
 #include <worklets/SharedItems/MemoryManager.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/UnpackerLoader.h>
-#include <worklets/Tools/Defs.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
@@ -16,7 +12,6 @@
 
 #include <memory>
 #include <string>
-#include <vector>
 
 using namespace facebook;
 
@@ -28,7 +23,6 @@ class JSIWorkletsModuleProxy {
  public:
   explicit JSIWorkletsModuleProxy(
       const bool isDevBundle,
-      const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const std::shared_ptr<MemoryManager> &memoryManager,
@@ -42,10 +36,6 @@ class JSIWorkletsModuleProxy {
 
   [[nodiscard]]
   jsi::Object toOptimizedObject(jsi::Runtime &rt) const;
-
-  [[nodiscard]] std::shared_ptr<MessageQueueThread> getJSQueue() const {
-    return jsQueue_;
-  }
 
   [[nodiscard]] std::shared_ptr<JSScheduler> getJSScheduler() const {
     return jsScheduler_;
@@ -90,7 +80,6 @@ class JSIWorkletsModuleProxy {
  private:
   const bool isDevBundle_;
   const BundleModeConfig bundleModeConfig_;
-  const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   const std::shared_ptr<MemoryManager> memoryManager_;

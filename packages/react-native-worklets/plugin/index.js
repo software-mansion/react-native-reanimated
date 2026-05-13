@@ -525,7 +525,6 @@ var require_globals = __commonJS({
       // Worklets
       "_WORKLET"
     ];
-    var notCapturedIdentifiers_DEPRECATED = ["_IS_FABRIC"];
     function initializeState(state) {
       state.workletNumber = 1;
       state.classesToWorkletize = [];
@@ -534,7 +533,7 @@ var require_globals = __commonJS({
         addCustomGlobals(state);
       }
     }
-    exports2.defaultGlobals = new Set(notCapturedIdentifiers.concat(notCapturedIdentifiers_DEPRECATED));
+    exports2.defaultGlobals = new Set(notCapturedIdentifiers);
     function initializeGlobals() {
       exports2.globals = new Set(exports2.defaultGlobals);
     }
@@ -1003,7 +1002,7 @@ var require_workletFactory = __commonJS({
       if (shouldIncludeInitData && !state.opts.bundleMode) {
         statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__initData"), false), (0, types_12.cloneNode)(initDataId, true))));
       }
-      if (!(0, utils_1.isRelease)()) {
+      if (!(0, utils_1.isRelease)() && !state.opts.bundleMode) {
         statements.unshift((0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)((0, types_12.identifier)("_e"), (0, types_12.arrayExpression)([
             (0, types_12.newExpression)((0, types_12.memberExpression)((0, types_12.identifier)("global"), (0, types_12.identifier)("Error")), []),

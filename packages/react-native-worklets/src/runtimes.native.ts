@@ -1,6 +1,6 @@
 'use strict';
 
-import { setupCallGuard } from './callGuard';
+import { getStaticFeatureFlag } from './featureFlags/featureFlags';
 import {
   addGuardImplementation,
   addNoBundleModeGuardImplementation,
@@ -26,6 +26,9 @@ import type {
 } from './types';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsModule } from './WorkletsModule/NativeWorklets';
+
+const SHOULD_CAPTURE_SCHEDULE_STACK =
+  __DEV__ && getStaticFeatureFlag('ENABLE_CROSS_RUNTIME_STACK_TRACES');
 
 /**
  * The ID of the [UI Worklet
@@ -106,7 +109,6 @@ export function createWorkletRuntime(
     name,
     createSerializable(() => {
       'worklet';
-      setupCallGuard();
       setupSerializer();
       if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
         setupConsole(runtimeBoundCapturableConsole!);
@@ -167,7 +169,8 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
       'worklet';
       worklet(...args);
       globalThis.__callMicrotasks?.();
-    })
+    }),
+    SHOULD_CAPTURE_SCHEDULE_STACK ? new Error().stack : undefined
   );
 }
 
@@ -244,7 +247,8 @@ export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
       'worklet';
       worklet(...args);
       globalThis.__callMicrotasks?.();
-    })
+    }),
+    SHOULD_CAPTURE_SCHEDULE_STACK ? new Error().stack : undefined
   );
 }
 
@@ -340,7 +344,8 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
       'worklet';
       const result = worklet(...args);
       return makeShareableCloneOnUIRecursive(result);
-    })
+    }),
+    SHOULD_CAPTURE_SCHEDULE_STACK ? new Error().stack : undefined
   );
 }
 
@@ -389,7 +394,8 @@ export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
       'worklet';
       const result = worklet(...args);
       return makeShareableCloneOnUIRecursive(result);
-    })
+    }),
+    SHOULD_CAPTURE_SCHEDULE_STACK ? new Error().stack : undefined
   );
 }
 
@@ -437,6 +443,9 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
     }
   }
 
+  const scheduleStack = SHOULD_CAPTURE_SCHEDULE_STACK
+    ? new Error().stack
+    : undefined;
   return new Promise<ReturnValue>((resolve, reject) => {
     if (__DEV__) {
       // in DEV mode we call serializable conversion here because in case the object
@@ -459,7 +468,8 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
           scheduleOnRN(reject, error);
         }
         globalThis.__callMicrotasks?.();
-      })
+      }),
+      scheduleStack
     );
   });
 }

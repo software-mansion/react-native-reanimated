@@ -5,7 +5,6 @@ const { Platform } = require('react-native');
  *
  * @typedef {Parameters<import('react-native').Platform['select']>[0]} PlatformSelectSpec
  *
- *
  * @typedef {keyof PlatformSelectSpec | 'default'} PlatformSelectKey
  */
 

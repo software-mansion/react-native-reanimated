@@ -47,7 +47,9 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
     registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
 
     useEffect(() => {
-      sharedValue.set(withClamp({ min: 0, max: 100 }, withTiming(200, {}, notifyCallback)));
+      sharedValue.set(
+        withClamp({ min: 0, max: 100 }, withTiming(200, {}, notifyCallback))
+      );
     });
     return <ProgressBar progress={progress} />;
   };
@@ -97,7 +99,9 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
     registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
 
     useEffect(() => {
-      sharedValue.set(withSequence(withTiming(100), withTiming(200, {}, notifyCallback)));
+      sharedValue.set(
+        withSequence(withTiming(100), withTiming(200, {}, notifyCallback))
+      );
     });
     return <ProgressBar progress={progress} />;
   };
