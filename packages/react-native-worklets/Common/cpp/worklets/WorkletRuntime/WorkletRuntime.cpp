@@ -1,5 +1,4 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
-#include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/RuntimeHolder.h>
 #include <worklets/WorkletRuntime/WorkletHermesRuntime.h>

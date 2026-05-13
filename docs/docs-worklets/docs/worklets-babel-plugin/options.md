@@ -172,13 +172,13 @@ function readFromUI() {
 
 function run() {
   setOnJS();
-  runOnUI(setOnUI)();
+  scheduleOnUI(setOnUI);
   readFromJS();
-  runOnUI(readFromUI)();
+  scheduleOnUI(readFromUI);
 }
 ```
 
-Without `global` as an blocklisted identifier in this case, you'd only get:
+Without `global` as a blocklisted identifier in this case, you'd only get:
 
 ```
 JS THREAD
