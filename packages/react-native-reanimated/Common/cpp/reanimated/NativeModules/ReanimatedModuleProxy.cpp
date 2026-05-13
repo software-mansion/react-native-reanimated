@@ -785,6 +785,17 @@ AnimationMutations ReanimatedModuleProxy::collectNonLayoutAnimationUpdates() {
   }
   return mutations;
 }
+
+std::shared_ptr<UIManagerAnimationBackend> ReanimatedModuleProxy::getAnimationBackend() {
+  react_native_assert(
+      uiManager_ != nullptr && "[Reanimated] Animation Backend used before the uiManager was registered");
+  auto locked = uiManager_->unstable_getAnimationBackend().lock();
+  // UIManager owns the backend, so this is just a sanity check.
+  react_native_assert(
+      locked != nullptr &&
+      "[Reanimated] Animation Backend is null (UIManager not wired to a backend yet or already torn down)");
+  return locked;
+}
 #endif
 
 void ReanimatedModuleProxy::startBackendIfNeeded() {
@@ -793,16 +804,15 @@ void ReanimatedModuleProxy::startBackendIfNeeded() {
     if (isAnimationRunning_) {
       return;
     }
-    withAnimationBackendSync([this, weakThis = weak_from_this()](const std::shared_ptr<AnimationBackend> &backend) {
-      animationBackendCallbackId_ = backend->start([weakThis](AnimationTimestamp timestamp) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return AnimationMutations{};
-        }
-        return strongThis->grandCallback(timestamp, GrandCallbackSource::AnimationLoop);
-      });
-      isAnimationRunning_ = true;
-    });
+    animationBackendCallbackId_ =
+        getAnimationBackend()->start([weakThis = weak_from_this()](AnimationTimestamp timestamp) {
+          auto strongThis = weakThis.lock();
+          if (!strongThis) {
+            return AnimationMutations{};
+          }
+          return strongThis->grandCallback(timestamp, GrandCallbackSource::AnimationLoop);
+        });
+    isAnimationRunning_ = true;
   }
 #endif
 }
@@ -815,8 +825,7 @@ void ReanimatedModuleProxy::stopBackendIfIdle(const bool producedMutations) {
         cssAnimationsRegistry_->hasUpdates() || animatedPropsRegistry_->hasPendingAnimatedPropsUpdates() ||
         shouldFlushRegistry_ || !layoutAnimationFlushRequests_.empty();
     if (!hasWork) {
-      withAnimationBackendSync(
-          [this](const std::shared_ptr<AnimationBackend> &backend) { backend->stop(animationBackendCallbackId_); });
+      getAnimationBackend()->stop(animationBackendCallbackId_);
       isAnimationRunning_ = false;
     }
   }
@@ -925,11 +934,9 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
     const GrandCallbackSource source) {
   bool handled = false;
 #if REACT_NATIVE_VERSION_MINOR >= 85 && (REACT_NATIVE_VERSION_MINOR > 85 || REACT_NATIVE_VERSION_PATCH >= 2)
-  withAnimationBackendSync([&](const std::shared_ptr<AnimationBackend> &backend) {
-    backend->pushAnimationMutations([&, source](AnimationTimestamp timestamp) {
-      handled = handleEvent(eventName, emitterReactTag, payload, timestamp.count());
-      return grandCallback(timestamp, source);
-    });
+  getAnimationBackend()->pushAnimationMutations([&, source](AnimationTimestamp timestamp) {
+    handled = handleEvent(eventName, emitterReactTag, payload, timestamp.count());
+    return grandCallback(timestamp, source);
   });
 #else
   (void)eventName;

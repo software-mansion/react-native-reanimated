@@ -194,16 +194,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void applySynchronousUpdates(UpdatesBatch &updatesBatch, bool allowPartialUpdates = false);
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
-  using AnimationBackendSyncCallback = std::function<void(const std::shared_ptr<AnimationBackend> &)>;
-
-  void withAnimationBackendSync(const AnimationBackendSyncCallback &fn) {
-    react_native_assert(
-        uiManager_ != nullptr && "[Reanimated] Animation Backend used before the uiManager was registered");
-    auto weak = uiManager_->unstable_getAnimationBackend();
-    if (auto locked = weak.lock()) {
-      fn(std::static_pointer_cast<AnimationBackend>(locked));
-    }
-  }
+  std::shared_ptr<UIManagerAnimationBackend> getAnimationBackend();
   AnimationMutations grandCallback(AnimationTimestamp timestamp, GrandCallbackSource source);
   void executeOperationsLoop(AnimationTimestamp timestamp);
   void executeWorkletsForFrame(AnimationTimestamp timestamp);
