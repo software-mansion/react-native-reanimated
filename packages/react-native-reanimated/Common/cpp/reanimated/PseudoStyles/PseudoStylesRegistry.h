@@ -63,7 +63,7 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
 
   std::shared_ptr<OperationsLoop> operationsLoop_;
 
-  static void recomputeAllStyles(TagEntry &entry);
+  static std::array<folly::dynamic, (1u << kPseudoSelectorBits)> recomputeAllStyles(const TagEntry &entry);
 
   void onSelectorStateChanged(Tag tag, PseudoSelector selector, bool isActive);
 };

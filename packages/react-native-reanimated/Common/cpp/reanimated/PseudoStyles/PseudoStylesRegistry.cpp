@@ -18,13 +18,15 @@ PseudoStylesRegistry::PseudoStylesRegistry(
       operationsLoop_(std::move(operationsLoop)) {}
 
 // static
-void PseudoStylesRegistry::recomputeAllStyles(TagEntry &entry) {
+std::array<folly::dynamic, (1u << kPseudoSelectorBits)> PseudoStylesRegistry::recomputeAllStyles(
+    const TagEntry &entry) {
   folly::dynamic mergedDefault = folly::dynamic::object();
   for (const auto &[sel, data] : entry.selectors) {
     mergedDefault.update(data.defaultStyle);
   }
 
   const PseudoSelectorMask maxMask = (1u << kPseudoSelectorBits);
+  std::array<folly::dynamic, (1u << kPseudoSelectorBits)> newPrecomputedStyles;
 
   for (PseudoSelectorMask mask = 0; mask < maxMask; ++mask) {
     folly::dynamic style = mergedDefault;
@@ -35,8 +37,10 @@ void PseudoStylesRegistry::recomputeAllStyles(TagEntry &entry) {
       }
     }
 
-    entry.precomputedStyles[mask] = std::move(style);
+    newPrecomputedStyles[mask] = std::move(style);
   }
+
+  return newPrecomputedStyles;
 }
 
 void PseudoStylesRegistry::registerPseudoStyle(
@@ -50,7 +54,7 @@ void PseudoStylesRegistry::registerPseudoStyle(
     auto &entry = registry_[tag];
     entry.shadowNode = shadowNode;
     entry.selectors[selector] = {selectorStyle, defaultStyle};
-    recomputeAllStyles(entry);
+    entry.precomputedStyles = recomputeAllStyles(entry);
   }
 
   attachFn_(
