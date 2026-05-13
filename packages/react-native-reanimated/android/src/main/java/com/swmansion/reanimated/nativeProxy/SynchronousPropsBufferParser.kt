@@ -5,7 +5,7 @@ import com.facebook.react.bridge.JavaOnlyMap
 import java.util.Arrays
 
 internal object SynchronousPropsBufferParser {
-    // NOTE: Keep in sync with SynchronousPropsBufferSerializer.h
+    // NOTE: Keep in sync with SynchronousPropsBufferSerializer.cpp
     private const val CMD_START_OF_VIEW = 1
     private const val CMD_START_OF_TRANSFORM = 2
     private const val CMD_END_OF_TRANSFORM = 3
@@ -14,6 +14,7 @@ internal object SynchronousPropsBufferParser {
     private const val CMD_OPACITY = 10
     private const val CMD_ELEVATION = 11
     private const val CMD_Z_INDEX = 12
+    private const val CMD_SHADOW_COLOR = 19
     private const val CMD_SHADOW_OPACITY = 13
     private const val CMD_SHADOW_RADIUS = 14
     private const val CMD_BACKGROUND_COLOR = 15
@@ -67,6 +68,7 @@ internal object SynchronousPropsBufferParser {
             CMD_OPACITY -> "opacity"
             CMD_ELEVATION -> "elevation"
             CMD_Z_INDEX -> "zIndex"
+            CMD_SHADOW_COLOR -> "shadowColor"
             CMD_SHADOW_OPACITY -> "shadowOpacity"
             CMD_SHADOW_RADIUS -> "shadowRadius"
             CMD_BACKGROUND_COLOR -> "backgroundColor"
@@ -141,6 +143,7 @@ internal object SynchronousPropsBufferParser {
                     props.putDouble(name, doubleIterator.nextDouble())
                 }
 
+                CMD_SHADOW_COLOR,
                 CMD_BACKGROUND_COLOR,
                 CMD_COLOR,
                 CMD_TINT_COLOR,
