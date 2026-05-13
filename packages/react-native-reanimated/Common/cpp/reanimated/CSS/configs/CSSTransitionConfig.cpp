@@ -7,16 +7,6 @@ bool getAllowDiscrete(jsi::Runtime &rt, const jsi::Object &config) {
   return config.getProperty(rt, "allowDiscrete").asBool();
 }
 
-PseudoTransitionConfig parsePseudoTransitionConfig(jsi::Runtime &rt, const jsi::Value &transition) {
-  const auto transitionObj = transition.asObject(rt);
-  return {
-      .duration = getDuration(rt, transitionObj),
-      .delay = getDelay(rt, transitionObj),
-      .easingFn = getTimingFunction(rt, transitionObj),
-      .allowDiscrete = getAllowDiscrete(rt, transitionObj),
-  };
-}
-
 CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config) {
   const auto configObj = config.asObject(rt);
   const auto propertyNames = configObj.getPropertyNames(rt);

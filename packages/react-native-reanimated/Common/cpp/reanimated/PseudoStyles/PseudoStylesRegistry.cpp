@@ -1,9 +1,6 @@
 #include <reanimated/PseudoStyles/PseudoStylesRegistry.h>
 
-#include <folly/json.h>
-#include <hermes/hermes.h>
-
-#include <cstdio>
+#include <string>
 #include <utility>
 
 namespace reanimated {
@@ -12,24 +9,24 @@ using namespace facebook::react;
 
 PseudoStylesRegistry::PseudoStylesRegistry(
     PlatformAttachPseudoSelectorFunction attachFn,
-    PlatformDetachPseudoSelectorFunction detachFn)
-    : registryRuntime_(facebook::hermes::makeHermesRuntime()),
-      attachFn_(std::move(attachFn)),
+    PlatformDetachPseudoSelectorFunction detachFn,
+    std::shared_ptr<css::CSSTransitionsRegistry> cssTransitionsRegistry,
+    std::shared_ptr<OperationsLoop> operationsLoop)
+    : attachFn_(std::move(attachFn)),
       detachFn_(std::move(detachFn)),
-      onSelectorStateChangedFn_([](jsi::Runtime &, const auto &, const auto &, const auto &, const auto &) {}) {}
-
-void PseudoStylesRegistry::setOnSelectorStateChangedFn(OnSelectorStateChangedFn fn) {
-  onSelectorStateChangedFn_ = std::move(fn);
-}
+      cssTransitionsRegistry_(std::move(cssTransitionsRegistry)),
+      operationsLoop_(std::move(operationsLoop)) {}
 
 // static
-void PseudoStylesRegistry::recomputeAllStyles(TagEntry &entry) {
+std::array<folly::dynamic, (1u << kPseudoSelectorBits)> PseudoStylesRegistry::recomputeAllStyles(
+    const TagEntry &entry) {
   folly::dynamic mergedDefault = folly::dynamic::object();
   for (const auto &[sel, data] : entry.selectors) {
     mergedDefault.update(data.defaultStyle);
   }
 
   const PseudoSelectorMask maxMask = (1u << kPseudoSelectorBits);
+  std::array<folly::dynamic, (1u << kPseudoSelectorBits)> newPrecomputedStyles;
 
   for (PseudoSelectorMask mask = 0; mask < maxMask; ++mask) {
     folly::dynamic style = mergedDefault;
@@ -40,8 +37,10 @@ void PseudoStylesRegistry::recomputeAllStyles(TagEntry &entry) {
       }
     }
 
-    entry.precomputedStyles[mask] = std::move(style);
+    newPrecomputedStyles[mask] = std::move(style);
   }
+
+  return newPrecomputedStyles;
 }
 
 void PseudoStylesRegistry::registerPseudoStyle(
@@ -49,15 +48,13 @@ void PseudoStylesRegistry::registerPseudoStyle(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     PseudoSelector selector,
     const folly::dynamic &selectorStyle,
-    const folly::dynamic &defaultStyle,
-    css::PseudoTransitionConfig transitionConfig) {
+    const folly::dynamic &defaultStyle) {
   {
     std::lock_guard<std::mutex> lock{mutex_};
     auto &entry = registry_[tag];
     entry.shadowNode = shadowNode;
-    entry.transitionConfig = std::move(transitionConfig);
     entry.selectors[selector] = {selectorStyle, defaultStyle};
-    recomputeAllStyles(entry);
+    entry.precomputedStyles = recomputeAllStyles(entry);
   }
 
   attachFn_(
@@ -71,25 +68,25 @@ void PseudoStylesRegistry::registerPseudoStyle(
 }
 
 void PseudoStylesRegistry::remove(Tag tag) {
-  std::map<PseudoSelector, SelectorData> selectorsCopy;
+  std::map<PseudoSelector, SelectorData> selectorsToDetach;
   {
     std::lock_guard<std::mutex> lock{mutex_};
     auto it = registry_.find(tag);
     if (it == registry_.end()) {
       return;
     }
-    selectorsCopy = std::move(it->second.selectors);
+    selectorsToDetach = std::move(it->second.selectors);
     registry_.erase(it);
   }
-  for (const auto &[selector, data] : selectorsCopy) {
+  for (const auto &[selector, data] : selectorsToDetach) {
     detachFn_(tag, selector);
   }
 }
 
 void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector selector, bool isActive) {
   std::shared_ptr<const ShadowNode> shadowNode;
-  folly::dynamic fromStyle, toStyle;
-  css::PseudoTransitionConfig transitionConfig;
+  folly::dynamic fromStyle;
+  folly::dynamic toStyle;
   {
     std::lock_guard<std::mutex> lock{mutex_};
     auto it = registry_.find(tag);
@@ -102,14 +99,20 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
     const PseudoSelectorMask bit = 1u << static_cast<int>(selector);
     entry.activeMask = isActive ? (oldMask | bit) : (oldMask & ~bit);
 
+    shadowNode = entry.shadowNode;
     fromStyle = entry.precomputedStyles[oldMask];
     toStyle = entry.precomputedStyles[entry.activeMask];
-
-    shadowNode = entry.shadowNode;
-    transitionConfig = entry.transitionConfig;
   }
 
-  onSelectorStateChangedFn_(*registryRuntime_, shadowNode, fromStyle, toStyle, transitionConfig);
+  std::unordered_map<std::string, std::pair<folly::dynamic, folly::dynamic>> valueChanges;
+  for (const auto &[propKey, toVal] : toStyle.items()) {
+    const auto propName = propKey.asString();
+    const folly::dynamic &fromVal = fromStyle.count(propName) ? fromStyle[propName] : toVal;
+    valueChanges.emplace(propName, std::make_pair(fromVal, toVal));
+  }
+
+  cssTransitionsRegistry_->run(shadowNode, valueChanges);
+  operationsLoop_->run();
 }
 
 } // namespace reanimated

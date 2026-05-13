@@ -1,11 +1,11 @@
 #pragma once
 
 #include <reanimated/CSS/common/definitions.h>
-#include <reanimated/CSS/configs/CSSTransitionConfig.h>
+#include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
+#include <reanimated/Fabric/updates/OperationsLoop.h>
 #include <reanimated/PseudoStyles/PseudoSelector.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
-#include <jsi/jsi.h>
 #include <react/renderer/core/ShadowNode.h>
 
 #include <folly/dynamic.h>
@@ -22,24 +22,18 @@ using namespace react;
 
 class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesRegistry> {
  public:
-  using OnSelectorStateChangedFn = std::function<void(
-      jsi::Runtime &rt,
-      const std::shared_ptr<const ShadowNode> &shadowNode,
-      const folly::dynamic &fromStyle,
-      const folly::dynamic &toStyle,
-      const css::PseudoTransitionConfig &transitionConfig)>;
-
-  PseudoStylesRegistry(PlatformAttachPseudoSelectorFunction attachFn, PlatformDetachPseudoSelectorFunction detachFn);
-
-  void setOnSelectorStateChangedFn(OnSelectorStateChangedFn fn);
+  PseudoStylesRegistry(
+      PlatformAttachPseudoSelectorFunction attachFn,
+      PlatformDetachPseudoSelectorFunction detachFn,
+      std::shared_ptr<css::CSSTransitionsRegistry> cssTransitionsRegistry,
+      std::shared_ptr<OperationsLoop> operationsLoop);
 
   void registerPseudoStyle(
       Tag tag,
       const std::shared_ptr<const ShadowNode> &shadowNode,
       PseudoSelector selector,
       const folly::dynamic &selectorStyle,
-      const folly::dynamic &defaultStyle,
-      css::PseudoTransitionConfig transitionConfig);
+      const folly::dynamic &defaultStyle);
 
   void remove(Tag tag);
 
@@ -51,7 +45,6 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
 
   struct TagEntry {
     std::shared_ptr<const ShadowNode> shadowNode;
-    css::PseudoTransitionConfig transitionConfig;
 
     std::map<PseudoSelector, SelectorData> selectors;
 
@@ -63,13 +56,14 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
   std::mutex mutex_;
   std::unordered_map<Tag, TagEntry> registry_;
 
-  std::unique_ptr<jsi::Runtime> registryRuntime_;
-
   PlatformAttachPseudoSelectorFunction attachFn_;
   PlatformDetachPseudoSelectorFunction detachFn_;
-  OnSelectorStateChangedFn onSelectorStateChangedFn_;
 
-  static void recomputeAllStyles(TagEntry &entry);
+  std::shared_ptr<css::CSSTransitionsRegistry> cssTransitionsRegistry_;
+
+  std::shared_ptr<OperationsLoop> operationsLoop_;
+
+  static std::array<folly::dynamic, (1u << kPseudoSelectorBits)> recomputeAllStyles(const TagEntry &entry);
 
   void onSelectorStateChanged(Tag tag, PseudoSelector selector, bool isActive);
 };

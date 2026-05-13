@@ -15,7 +15,6 @@
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReaJSIUtils.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
-#include <worklets/Compat/StableApi.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
@@ -180,9 +179,18 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(getAnimationTimestamp_, viewStylesRepository_)),
+      operationsLoop_(std::make_shared<OperationsLoop>(
+          uiScheduler_,
+          platformDepMethodsHolder.requestRender,
+          getAnimationTimestamp_,
+          cssAnimationsRegistry_,
+          cssTransitionsRegistry_,
+          updatesRegistryManager_)),
       pseudoStylesRegistry_(std::make_shared<PseudoStylesRegistry>(
           platformDepMethodsHolder.attachPseudoSelector,
-          platformDepMethodsHolder.detachPseudoSelector)),
+          platformDepMethodsHolder.detachPseudoSelector,
+          cssTransitionsRegistry_,
+          operationsLoop_)),
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
@@ -295,48 +303,6 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
 
     return strongThis->obtainProp(rt, shadowNodeWrapper, propName);
   };
-
-  pseudoStylesRegistry_->setOnSelectorStateChangedFn([weakThis = weak_from_this()](
-                                                         jsi::Runtime &rt,
-                                                         const std::shared_ptr<const ShadowNode> &shadowNode,
-                                                         const folly::dynamic &fromStyle,
-                                                         const folly::dynamic &toStyle,
-                                                         const css::PseudoTransitionConfig &transitionConfig) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-
-    scheduleOnUI(strongThis->uiScheduler_, [weakThis, &rt, shadowNode, fromStyle, toStyle, transitionConfig]() {
-      auto strongThis = weakThis.lock();
-      if (!strongThis) {
-        return;
-      }
-
-      CSSTransitionConfig config;
-
-      for (const auto &[propKey, toVal] : toStyle.items()) {
-        const auto propName = propKey.asString();
-        const folly::dynamic &fromVal = fromStyle.count(propName) ? fromStyle[propName] : toVal;
-
-        config.changedProperties.emplace(
-            propName,
-            CSSTransitionPropertySettings{
-                .value = {jsi::valueFromDynamic(rt, fromVal), jsi::valueFromDynamic(rt, toVal)},
-                .duration = transitionConfig.duration,
-                .easingFunction = transitionConfig.easingFn,
-                .delay = transitionConfig.delay,
-                .allowDiscrete = transitionConfig.allowDiscrete,
-            });
-      }
-
-      {
-        auto lock = strongThis->cssTransitionsRegistry_->lock();
-        strongThis->cssTransitionsRegistry_->run(rt, shadowNode, config);
-      }
-      strongThis->maybeRunCSSLoop();
-    });
-  });
 
   jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   UIRuntimeDecorator::decorate(
@@ -613,13 +579,18 @@ void ReanimatedModuleProxy::registerPseudoStyle(
     return;
   }
 
+  auto transitionConfig = css::parseCSSTransitionConfig(rt, configObj.getProperty(rt, "transition"));
+  // We want to provide only the default settings (we drop the diff not to run any transitions straight away.
+  // The diff will be provided when `PseudoStylesRegistry::onSelectorStateChanged` is run).
+  transitionConfig.changedProperties.clear();
+  cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, transitionConfig);
+
   pseudoStylesRegistry_->registerPseudoStyle(
       tag,
       shadowNode,
       *selectorEnum,
       jsi::dynamicFromValue(rt, configObj.getProperty(rt, "selectorStyle")),
-      jsi::dynamicFromValue(rt, configObj.getProperty(rt, "defaultStyle")),
-      css::parsePseudoTransitionConfig(rt, configObj.getProperty(rt, "transition")));
+      jsi::dynamicFromValue(rt, configObj.getProperty(rt, "defaultStyle")));
 }
 
 void ReanimatedModuleProxy::unregisterPseudoStyle(jsi::Runtime &, const jsi::Value &viewTag) {

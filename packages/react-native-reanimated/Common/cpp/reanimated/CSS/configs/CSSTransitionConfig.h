@@ -34,15 +34,6 @@ struct CSSTransitionConfig {
   std::vector<std::string> removedProperties;
 };
 
-struct PseudoTransitionConfig {
-  double duration;
-  double delay;
-  EasingFunction easingFn;
-  bool allowDiscrete;
-};
-
 CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config);
-
-PseudoTransitionConfig parsePseudoTransitionConfig(jsi::Runtime &rt, const jsi::Value &transition);
 
 } // namespace reanimated::css
