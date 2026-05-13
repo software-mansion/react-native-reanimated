@@ -253,6 +253,40 @@ export default function SynchronousPropsExample() {
         </React.Fragment>
       ))}
 
+      <Text>outlineColor</Text>
+      <Animated.View
+        style={{
+          width: 50,
+          height: 50,
+          borderWidth: 1,
+          outlineWidth: 2,
+          outlineColor: colorSv,
+        }}
+      />
+
+      <Text>outlineOffset</Text>
+      <Animated.View
+        style={{
+          width: 50,
+          height: 50,
+          borderWidth: 1,
+          outlineWidth: 2,
+          outlineColor: 'gray',
+          outlineOffset: tenSv,
+        }}
+      />
+
+      <Text>outlineWidth</Text>
+      <Animated.View
+        style={{
+          width: 50,
+          height: 50,
+          borderWidth: 1,
+          outlineColor: 'gray',
+          outlineWidth: tenSv,
+        }}
+      />
+
       {(['translateX', 'translateY'] as const).map((prop) => (
         <React.Fragment key={prop}>
           <Text>{prop} [px]</Text>
