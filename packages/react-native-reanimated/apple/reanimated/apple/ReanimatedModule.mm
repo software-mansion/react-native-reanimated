@@ -72,8 +72,9 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   });
 }
 
-- (void)registerRCTEventHandler:(const std::shared_ptr<ReanimatedModuleProxy> &)reanimatedModuleProxy
-               uiWorkletRuntime:(const std::shared_ptr<WorkletRuntime> &)uiWorkletRuntime
+// TODO: pass by reference instead of value when the proxy lifecycle is fixed
+- (void)registerRCTEventHandler:(const std::shared_ptr<ReanimatedModuleProxy>)reanimatedModuleProxy
+               uiWorkletRuntime:(const std::shared_ptr<WorkletRuntime>)uiWorkletRuntime
 {
   REAAssertJavaScriptQueue();
 
