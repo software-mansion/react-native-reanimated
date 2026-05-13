@@ -69,16 +69,16 @@ void UpdatesRegistry::flushNonLayoutUpdates(jsi::Runtime &rt, AnimationMutations
     std::unique_ptr<RawProps> nonLayoutRawProps;
     std::unique_ptr<RawProps> layoutRawProps;
     if (animatedProp.rawProps) {
-      auto raw = animatedProp.rawProps->toDynamic();
+      auto propsDyn = animatedProp.rawProps->toDynamic();
       folly::dynamic nonLayoutDyn = folly::dynamic::object();
       folly::dynamic layoutDyn = folly::dynamic::object();
-      for (const auto &key : raw.keys()) {
+      for (const auto &key : propsDyn.keys()) {
         const auto keyStr = key.asString();
         const auto propName = propNameFromString(keyStr);
         if (propName.has_value() && isLayoutProp(propName.value())) {
-          layoutDyn[keyStr] = raw[key];
+          layoutDyn[keyStr] = propsDyn[key];
         } else {
-          nonLayoutDyn[keyStr] = raw[key];
+          nonLayoutDyn[keyStr] = propsDyn[key];
         }
       }
       if (!nonLayoutDyn.empty()) {
