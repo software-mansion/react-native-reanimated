@@ -5,7 +5,7 @@
 #include <worklets/Tools/PlatformLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/HermesProfiling.h>
-#include <worklets/WorkletRuntime/RuntimeKind.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
@@ -61,11 +61,11 @@ void WorkletRuntimeDecorator::decorate(
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
-  rt.global().setProperty(rt, runtimeKindBindingName, static_cast<int>(RuntimeKind::Worker));
+  rt.global().setProperty(rt, RuntimeData::runtimeKindBindingName, static_cast<int>(RuntimeData::RuntimeKind::Worker));
 
   rt.global().setProperty(rt, "_WORKLET", true);
 
-  rt.global().setProperty(rt, "__RUNTIME_NAME", jsi::String::createFromAscii(rt, name));
+  rt.global().setProperty(rt, RuntimeData::runtimeNameBindingName, jsi::String::createFromAscii(rt, name));
 
   rt.global().setProperty(rt, "__DEV__", isDevBundle);
 

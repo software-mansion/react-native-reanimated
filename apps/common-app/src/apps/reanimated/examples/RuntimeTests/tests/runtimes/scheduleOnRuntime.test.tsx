@@ -5,14 +5,7 @@ import {
   scheduleOnUI,
   runOnRuntimeSync,
 } from 'react-native-worklets';
-import {
-  beforeEach,
-  describe,
-  expect,
-  notify,
-  test,
-  waitForNotification,
-} from '../../ReJest/RuntimeTestsApi';
+import { beforeEach, describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
 
 type localGlobal = typeof globalThis & {
   scheduleOnRN: typeof scheduleOnRN;
@@ -33,7 +26,7 @@ describe('scheduleOnRuntime', () => {
   beforeEach(() => {
     value = 0;
 
-    [workletRuntime1, workletRuntime2].forEach((runtime) => {
+    [workletRuntime1, workletRuntime2].forEach(runtime => {
       runOnRuntimeSync(runtime, () => {
         'worklet';
         // TODO: fix worklet re-serialization outside of Bundle Mode

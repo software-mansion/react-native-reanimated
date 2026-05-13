@@ -14,12 +14,7 @@ type ToBeWithinRangeArgs = [number, number];
 type ToBeCalledArgs = [number];
 type ToIncludeArgs = [string];
 
-export type SyncMatcherArguments =
-  | ToBeArgs
-  | ToBeNullArgs
-  | ToBeCalledArgs
-  | ToBeWithinRangeArgs
-  | ToIncludeArgs;
+export type SyncMatcherArguments = ToBeArgs | ToBeNullArgs | ToBeCalledArgs | ToBeWithinRangeArgs | ToIncludeArgs;
 export type AsyncMatcherArguments = ToThrowArgs;
 export type MatcherReturn = {
   pass: boolean;
@@ -175,13 +170,8 @@ export const toBeCalledJSMatcher: Matcher<ToBeCalledArgs> = (
   return toBeCalledOnThreadMatcher(currentValue, negation, times, 'JS');
 };
 
-export const toIncludeMatcher: Matcher<ToIncludeArgs> = (
-  currentValue,
-  negation,
-  substring
-) => {
-  const pass =
-    typeof currentValue === 'string' && currentValue.includes(substring);
+export const toIncludeMatcher: Matcher<ToIncludeArgs> = (currentValue, negation, substring) => {
+  const pass = typeof currentValue === 'string' && currentValue.includes(substring);
   return {
     pass,
     message:
@@ -191,11 +181,7 @@ export const toIncludeMatcher: Matcher<ToIncludeArgs> = (
   };
 };
 
-export const toThrowMatcher: AsyncMatcher<ToThrowArgs> = async (
-  throwingFunction,
-  negation,
-  errorMessage
-) => {
+export const toThrowMatcher: AsyncMatcher<ToThrowArgs> = async (throwingFunction, negation, errorMessage) => {
   if (typeof throwingFunction !== 'function') {
     return {
       pass: false,

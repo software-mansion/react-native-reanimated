@@ -7,7 +7,8 @@ const handleCache = new WeakMap<WorkletFunction, unknown>();
 
 export function bundleValueUnpacker(
   objectToUnpack: ObjectToUnpack,
-  category?: string
+  category?: string,
+  remoteFunctionName?: string
 ): unknown {
   const workletHash = objectToUnpack.__workletHash;
   if (workletHash !== undefined) {
@@ -19,6 +20,15 @@ export function bundleValueUnpacker(
       handleCache.set(objectToUnpack, value);
     }
     return value;
+  } else if (category === 'RemoteFunction') {
+    const remoteFunctionHolder = () => {
+      remoteFunctionName = remoteFunctionName ?? 'anonymous';
+
+      throw new Error(`[Worklets] Tried to synchronously call a Remote Function. Called "${remoteFunctionName}" on the ${globalThis.__RUNTIME_NAME} Runtime.
+See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#tried-to-synchronously-call-a-remote-function for more details.`);
+    };
+    remoteFunctionHolder.__remoteFunction = objectToUnpack;
+    return remoteFunctionHolder;
   } else {
     throw new Error(
       `[Worklets] Data type in category "${category}" not recognized by value unpacker: "${globalThis._toString(

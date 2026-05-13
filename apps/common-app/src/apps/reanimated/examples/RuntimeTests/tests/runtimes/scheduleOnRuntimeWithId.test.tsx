@@ -7,14 +7,7 @@ import {
   scheduleOnUI,
   UIRuntimeId,
 } from 'react-native-worklets';
-import {
-  describe,
-  expect,
-  notify,
-  test,
-  waitForNotification,
-  beforeEach,
-} from '../../ReJest/RuntimeTestsApi';
+import { describe, expect, notify, test, waitForNotification, beforeEach } from '../../ReJest/RuntimeTestsApi';
 
 const PASS_NOTIFICATION = 'PASS';
 const FAIL_NOTIFICATION = 'FAIL';
@@ -44,15 +37,13 @@ describe('scheduleOnRuntimeWithId', () => {
     value = 0;
     reason = '';
 
-    [UIRuntimeId, workletRuntime1.runtimeId, workletRuntime2.runtimeId].forEach(
-      (runtimeId) => {
-        runOnRuntimeSyncWithId(runtimeId, () => {
-          'worklet';
-          // TODO: fix worklet re-serialization outside of Bundle Mode
-          (globalThis as localGlobal).scheduleOnRN = scheduleOnRN;
-        });
-      }
-    );
+    [UIRuntimeId, workletRuntime1.runtimeId, workletRuntime2.runtimeId].forEach(runtimeId => {
+      runOnRuntimeSyncWithId(runtimeId, () => {
+        'worklet';
+        // TODO: fix worklet re-serialization outside of Bundle Mode
+        (globalThis as localGlobal).scheduleOnRN = scheduleOnRN;
+      });
+    });
   });
 
   test('from RN Runtime to UI Runtime', async () => {
@@ -83,9 +74,7 @@ describe('scheduleOnRuntimeWithId', () => {
         scheduleOnRN(callbackPass, 42);
       });
 
-    await expect(fun).toThrow(
-      '[Worklets] scheduleOnRuntimeWithId: no worklet runtime found for id 9999'
-    );
+    await expect(fun).toThrow('[Worklets] scheduleOnRuntimeWithId: no worklet runtime found for id 9999');
   });
 
   test('from UI Runtime to UI Runtime', async () => {
@@ -122,17 +111,12 @@ describe('scheduleOnRuntimeWithId', () => {
           scheduleOnRN(callbackPass, 42);
         });
       } catch (error) {
-        scheduleOnRN(
-          callbackFail,
-          error instanceof Error ? error.message : String(error)
-        );
+        scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
       }
     });
 
     await waitForNotification(FAIL_NOTIFICATION);
-    expect(reason).toBe(
-      '[Worklets] scheduleOnRuntimeWithId: no worklet runtime found for id 9999'
-    );
+    expect(reason).toBe('[Worklets] scheduleOnRuntimeWithId: no worklet runtime found for id 9999');
   });
 
   test('from Worker Runtime to UI Runtime', async () => {
@@ -177,16 +161,11 @@ describe('scheduleOnRuntimeWithId', () => {
           (globalThis as localGlobal).scheduleOnRN(callbackPass, 42);
         });
       } catch (error) {
-        scheduleOnRN(
-          callbackFail,
-          error instanceof Error ? error.message : String(error)
-        );
+        scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
       }
     });
 
     await waitForNotification(FAIL_NOTIFICATION);
-    expect(reason).toBe(
-      '[Worklets] scheduleOnRuntimeWithId: no worklet runtime found for id 9999'
-    );
+    expect(reason).toBe('[Worklets] scheduleOnRuntimeWithId: no worklet runtime found for id 9999');
   });
 });
