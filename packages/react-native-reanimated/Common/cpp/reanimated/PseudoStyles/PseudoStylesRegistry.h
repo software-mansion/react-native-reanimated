@@ -35,6 +35,8 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
 
   void remove(Tag tag);
 
+  void setRunLoopFn(std::function<void()> fn);
+
  private:
   struct SelectorData {
     folly::dynamic selectorStyle;
@@ -58,6 +60,8 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
   PlatformDetachPseudoSelectorFunction detachFn_;
 
   std::shared_ptr<css::CSSTransitionsRegistry> cssTransitionsRegistry_;
+
+  std::function<void()> runLoopFn_;
 
   static void recomputeAllStyles(TagEntry &entry);
 

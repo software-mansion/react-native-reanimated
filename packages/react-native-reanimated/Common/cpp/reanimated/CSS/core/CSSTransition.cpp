@@ -49,6 +49,15 @@ folly::dynamic CSSTransition::run(
   return update(timestamp);
 }
 
+folly::dynamic CSSTransition::run(
+    const PropertyValueDynamicDiffsMap &propertiesDiffs,
+    const folly::dynamic &lastUpdateValue,
+    const double timestamp) {
+  handleChangedProperties(
+      propertiesDiffs, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
+  return update(timestamp);
+}
+
 void CSSTransition::updateConfig(
     const PropertiesSettingsMap &changedPropertiesSettings,
     const std::vector<std::string> &removedProperties) {
@@ -70,59 +79,6 @@ folly::dynamic CSSTransition::update(const double timestamp) {
   // the last frame of the transition
   progressProvider_.discardFinishedProgressProviders();
   return result;
-}
-
-void CSSTransition::setConfig(const int configKey, CSSTransitionConfig config) {
-  // Strip value pairs - they're never read back from storedConfigs_ (trigger()
-  // pulls from/to values from its own dynamic-typed argument). Holding live
-  // jsi::Value long-term would tie destruction to whichever runtime parsed it.
-  for (auto &[_, settings] : config.changedProperties) {
-    settings.value.first = jsi::Value();
-    settings.value.second = jsi::Value();
-  }
-  storedConfigs_.insert_or_assign(configKey, std::move(config));
-}
-
-folly::dynamic CSSTransition::trigger(
-    const int configKey,
-    std::unordered_map<std::string, std::pair<folly::dynamic, folly::dynamic>> &&valueChanges,
-    const folly::dynamic &lastUpdateValue,
-    const double timestamp) {
-  const auto storedIt = storedConfigs_.find(configKey);
-  if (storedIt == storedConfigs_.end()) {
-    return folly::dynamic::object();
-  }
-  const auto &storedConfig = storedIt->second;
-
-  for (auto &&[propertyName, valuePair] : valueChanges) {
-    const auto settingsIt = storedConfig.changedProperties.find(propertyName);
-    if (settingsIt == storedConfig.changedProperties.end()) {
-      continue;
-    }
-    const auto &propertySettings = settingsIt->second;
-    const auto allowDiscrete = propertySettings.allowDiscrete;
-
-    if (!allowDiscrete && isDiscreteProperty(propertyName, shadowNode_->getComponentName())) {
-      removeProperty(propertyName);
-      continue;
-    }
-
-    transitionProperties_.insert(propertyName);
-
-    // Resolve the actual "from": prefer the in-flight last-update so a
-    // mid-transition retrigger reverses cleanly. lastUpdateValue may be null
-    // for tags with no updates yet, so guard with isObject() before .count().
-    const folly::dynamic &fromValue = (lastUpdateValue.isObject() && lastUpdateValue.count(propertyName))
-        ? lastUpdateValue.at(propertyName)
-        : valuePair.first;
-
-    const auto isReversed = styleInterpolator_.createOrUpdateInterpolator(propertyName, fromValue, valuePair.second);
-
-    styleInterpolator_.setAllowDiscrete(propertyName, allowDiscrete);
-    progressProvider_.runProgressProvider(propertyName, propertySettings, isReversed, timestamp);
-  }
-
-  return update(timestamp);
 }
 
 void CSSTransition::handleChangedProperties(
@@ -158,6 +114,34 @@ void CSSTransition::handleChangedProperties(
     styleInterpolator_.setAllowDiscrete(propertyName, allowDiscrete);
 
     // Update the transition progress provider
+    progressProvider_.runProgressProvider(propertyName, isReversed, timestamp);
+  }
+}
+
+void CSSTransition::handleChangedProperties(
+    const PropertyValueDynamicDiffsMap &propertiesDiffs,
+    const folly::dynamic &lastUpdateValue,
+    const double timestamp) {
+  for (const auto &[propertyName, propertyDiff] : propertiesDiffs) {
+    const auto allowDiscrete = progressProvider_.getPropertySettings(propertyName).allowDiscrete;
+
+    if (!allowDiscrete && isDiscreteProperty(propertyName, shadowNode_->getComponentName())) {
+      removeProperty(propertyName);
+      continue;
+    }
+
+    transitionProperties_.insert(propertyName);
+
+    bool isReversed;
+    if (lastUpdateValue.count(propertyName)) {
+      isReversed = styleInterpolator_.createOrUpdateInterpolator(
+          propertyName, lastUpdateValue.at(propertyName), propertyDiff.second);
+    } else {
+      isReversed = styleInterpolator_.createOrUpdateInterpolator(propertyName, propertyDiff.first, propertyDiff.second);
+    }
+
+    styleInterpolator_.setAllowDiscrete(propertyName, allowDiscrete);
+
     progressProvider_.runProgressProvider(propertyName, isReversed, timestamp);
   }
 }

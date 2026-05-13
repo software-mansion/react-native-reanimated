@@ -1,5 +1,9 @@
 #include <jsi/JSIDynamic.h>
 #include <react/renderer/scheduler/Scheduler.h>
+#include <react/renderer/uimanager/UIManagerBinding.h>
+#include <react/renderer/uimanager/primitives.h>
+#include <reanimated/CSS/configs/CSSTransitionConfig.h>
+#include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
@@ -195,12 +199,6 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 }
 
 void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMethodsHolder) {
-  cssTransitionsRegistry_->setMaybeRunCSSLoopFn([weakThis = weak_from_this()]() {
-    if (auto strongThis = weakThis.lock()) {
-      strongThis->maybeRunCSSLoop();
-    }
-  });
-
   auto onRenderCallback = [weakThis = weak_from_this()](const double timestampMs) {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
@@ -218,6 +216,12 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       cssAnimationsRegistry_,
       cssTransitionsRegistry_,
       updatesRegistryManager_);
+
+  pseudoStylesRegistry_->setRunLoopFn([weakThis = weak_from_this()]() {
+    if (auto strongThis = weakThis.lock()) {
+      strongThis->operationsLoop_->run();
+    }
+  });
 
   auto updateProps = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &operations) {
     auto strongThis = weakThis.lock();
@@ -581,10 +585,10 @@ void ReanimatedModuleProxy::registerPseudoStyle(
   }
 
   auto transitionConfig = css::parseCSSTransitionConfig(rt, configObj.getProperty(rt, "transition"));
-  {
-    auto lock = cssTransitionsRegistry_->lock();
-    cssTransitionsRegistry_->prepare(shadowNode, static_cast<int>(*selectorEnum), std::move(transitionConfig));
-  }
+  // We want to provide only the default settings (we drop the diff not to run any transitions straight away.
+  // The diff will be provided when `PseudoStylesRegistry::onSelectorStateChanged` is run).
+  transitionConfig.changedProperties.clear();
+  cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, transitionConfig);
 
   pseudoStylesRegistry_->registerPseudoStyle(
       tag,
@@ -1305,6 +1309,30 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
     }
     return strongThis->getSettledUpdates(rt);
   });
+
+  addMethod<2>(
+      rt,
+      obj,
+      "registerPseudoStyle",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->registerPseudoStyle(rt, at<0>(args), at<1>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "unregisterPseudoStyle",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->unregisterPseudoStyle(rt, at<0>(args));
+      });
 
   return obj;
 }

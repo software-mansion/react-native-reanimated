@@ -1,7 +1,6 @@
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 
 #include <memory>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -10,13 +9,7 @@ namespace reanimated::css {
 CSSTransitionsRegistry::CSSTransitionsRegistry(
     const GetAnimationTimestampFunction &getCurrentTimestamp,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : getCurrentTimestamp_(getCurrentTimestamp),
-      viewStylesRepository_(viewStylesRepository),
-      maybeRunCSSLoopFn_([]() {}) {}
-
-void CSSTransitionsRegistry::setMaybeRunCSSLoopFn(MaybeRunCSSLoopFunction fn) {
-  maybeRunCSSLoopFn_ = std::move(fn);
-}
+    : getCurrentTimestamp_(getCurrentTimestamp), viewStylesRepository_(viewStylesRepository) {}
 
 bool CSSTransitionsRegistry::isEmpty() const {
   std::lock_guard<std::mutex> lock{mutex_};
@@ -64,6 +57,23 @@ void CSSTransitionsRegistry::run(
   const auto &transition = registry_.at(viewTag);
 
   runTransition(rt, transition, viewTag, propertyDiffs);
+}
+
+void CSSTransitionsRegistry::run(
+    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const PropertyValueDynamicDiffsMap &propertyDiffs) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
+  const auto viewTag = shadowNode->getTag();
+  const auto &transition = registry_.at(viewTag);
+
+  const auto &lastUpdates = getUpdatesFromRegistry(viewTag);
+  const auto timestamp = getCurrentTimestamp_();
+
+  auto initialUpdate = transition->run(propertyDiffs, lastUpdates, timestamp);
+
+  scheduleOrActivateTransition(transition);
+  updateInUpdatesRegistry(transition, initialUpdate);
 }
 
 void CSSTransitionsRegistry::removeTag(const Tag viewTag) {

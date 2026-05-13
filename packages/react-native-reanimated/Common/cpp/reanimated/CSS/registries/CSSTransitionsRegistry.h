@@ -10,15 +10,12 @@
 #include <memory>
 #include <mutex>
 #include <set>
-#include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
 namespace reanimated::css {
-
-using MaybeRunCSSLoopFunction = std::function<void()>;
 
 class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared_from_this<CSSTransitionsRegistry> {
  public:
@@ -39,6 +36,7 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
       jsi::Runtime &rt,
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const PropertyValueDiffsMap &propertyDiffs);
+  void run(const std::shared_ptr<const ShadowNode> &shadowNode, const PropertyValueDynamicDiffsMap &propertyDiffs);
 
   void updateAndFlush(double timestamp, UpdatesBatch &updatesBatch) {
     std::lock_guard<std::mutex> lock{mutex_};
@@ -51,8 +49,6 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
 
   const GetAnimationTimestampFunction &getCurrentTimestamp_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
-
-  MaybeRunCSSLoopFunction maybeRunCSSLoopFn_;
 
   Registry registry_;
 

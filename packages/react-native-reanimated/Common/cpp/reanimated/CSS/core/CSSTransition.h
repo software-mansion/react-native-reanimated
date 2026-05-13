@@ -30,21 +30,12 @@ class CSSTransition {
       const PropertyValueDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
       double timestamp);
+  folly::dynamic
+  run(const PropertyValueDynamicDiffsMap &propertiesDiffs, const folly::dynamic &lastUpdateValue, double timestamp);
   void updateConfig(
       const PropertiesSettingsMap &changedPropertiesSettings,
       const std::vector<std::string> &removedProperties);
   folly::dynamic update(double timestamp);
-
-  // Preconfigured-trigger API. setConfig stores a CSSTransitionConfig under an
-  // opaque int key (callers, e.g. pseudo selectors, decide what the key
-  // represents). trigger(key, ...) plays the transition using the stored
-  // config's per-property timing settings, with values supplied via valueChanges.
-  void setConfig(int configKey, CSSTransitionConfig config);
-  folly::dynamic trigger(
-      int configKey,
-      std::unordered_map<std::string, std::pair<folly::dynamic, folly::dynamic>> &&valueChanges,
-      const folly::dynamic &lastUpdateValue,
-      double timestamp);
 
  private:
   const std::shared_ptr<const ShadowNode> shadowNode_;
@@ -52,11 +43,14 @@ class CSSTransition {
   TransitionProperties transitionProperties_;
   TransitionStyleInterpolator styleInterpolator_;
   TransitionProgressProvider progressProvider_;
-  std::unordered_map<int, CSSTransitionConfig> storedConfigs_;
 
   void handleChangedProperties(
       jsi::Runtime &rt,
       const PropertyValueDiffsMap &propertiesDiffs,
+      const folly::dynamic &lastUpdateValue,
+      double timestamp);
+  void handleChangedProperties(
+      const PropertyValueDynamicDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
       double timestamp);
   void removeProperties(const std::vector<std::string> &propertyNames);

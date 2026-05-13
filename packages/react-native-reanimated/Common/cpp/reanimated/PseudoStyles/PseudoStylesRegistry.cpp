@@ -1,6 +1,5 @@
 #include <reanimated/PseudoStyles/PseudoStylesRegistry.h>
 
-#include <string>
 #include <utility>
 
 namespace reanimated {
@@ -13,7 +12,12 @@ PseudoStylesRegistry::PseudoStylesRegistry(
     std::shared_ptr<css::CSSTransitionsRegistry> cssTransitionsRegistry)
     : attachFn_(std::move(attachFn)),
       detachFn_(std::move(detachFn)),
-      cssTransitionsRegistry_(std::move(cssTransitionsRegistry)) {}
+      cssTransitionsRegistry_(std::move(cssTransitionsRegistry)),
+      runLoopFn_([]() {}) {}
+
+void PseudoStylesRegistry::setRunLoopFn(std::function<void()> fn) {
+  runLoopFn_ = std::move(fn);
+}
 
 // static
 void PseudoStylesRegistry::recomputeAllStyles(TagEntry &entry) {
@@ -76,11 +80,11 @@ void PseudoStylesRegistry::remove(Tag tag) {
     detachFn_(tag, selector);
   }
 
-  auto lock = cssTransitionsRegistry_->lock();
   cssTransitionsRegistry_->remove(tag);
 }
 
 void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector selector, bool isActive) {
+  std::shared_ptr<const ShadowNode> shadowNode;
   folly::dynamic fromStyle;
   folly::dynamic toStyle;
   {
@@ -95,6 +99,7 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
     const PseudoSelectorMask bit = 1u << static_cast<int>(selector);
     entry.activeMask = isActive ? (oldMask | bit) : (oldMask & ~bit);
 
+    shadowNode = entry.shadowNode;
     fromStyle = entry.precomputedStyles[oldMask];
     toStyle = entry.precomputedStyles[entry.activeMask];
   }
@@ -106,8 +111,8 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
     valueChanges.emplace(propName, std::make_pair(fromVal, toVal));
   }
 
-  auto lock = cssTransitionsRegistry_->lock();
-  cssTransitionsRegistry_->trigger(tag, static_cast<int>(selector), std::move(valueChanges));
+  cssTransitionsRegistry_->run(shadowNode, valueChanges);
+  runLoopFn_();
 }
 
 } // namespace reanimated
