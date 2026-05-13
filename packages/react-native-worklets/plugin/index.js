@@ -975,8 +975,8 @@ var require_workletFactory = __commonJS({
       if (sourceMapString) {
         initDataObjectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)("sourceMap"), (0, types_12.stringLiteral)(sourceMapString)));
       }
-      const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
-      if (shouldIncludeInitData && !state.opts.bundleMode) {
+      const shouldIncludeInitData = !state.opts.omitNativeOnlyData && !state.opts.bundleMode;
+      if (shouldIncludeInitData) {
         const initDataDeclaration = (0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
         ]);
@@ -995,11 +995,14 @@ var require_workletFactory = __commonJS({
         (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(closureVariables.map((variable) => !state.opts.bundleMode && variable.name.endsWith(types_2.workletClassFactorySuffix) ? (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.memberExpression)((0, types_12.identifier)(variable.name.slice(0, variable.name.length - types_2.workletClassFactorySuffix.length)), (0, types_12.identifier)(variable.name))) : (0, types_12.objectProperty)((0, types_12.cloneNode)(variable, true), (0, types_12.cloneNode)(variable, true), false, true))))),
         (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__workletHash"), false), (0, types_12.numericLiteral)(workletHash)))
       ];
+      if (limitInitDataHoisting) {
+        statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__serializableInLegacyMode"), false), (0, types_12.booleanLiteral)(true))));
+      }
       const shouldInjectVersion = !(0, utils_1.isRelease)();
       if (shouldInjectVersion) {
         statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__pluginVersion")), (0, types_12.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION))));
       }
-      if (shouldIncludeInitData && !state.opts.bundleMode) {
+      if (shouldIncludeInitData) {
         statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__initData"), false), (0, types_12.cloneNode)(initDataId, true))));
       }
       if (!(0, utils_1.isRelease)() && !state.opts.bundleMode) {
@@ -1021,7 +1024,7 @@ var require_workletFactory = __commonJS({
         }
         return clonedId;
       });
-      if (shouldIncludeInitData && !state.opts.bundleMode) {
+      if (shouldIncludeInitData) {
         factoryParams.unshift((0, types_12.cloneNode)(initDataId, true));
       }
       const factoryParamObjectPattern = (0, types_12.objectPattern)(factoryParams.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));

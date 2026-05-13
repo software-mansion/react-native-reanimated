@@ -11,7 +11,14 @@ import {
   scheduleOnUI,
 } from 'react-native-worklets';
 
-import { beforeEach, describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
+import {
+  beforeEach,
+  describe,
+  expect,
+  notify,
+  test,
+  waitForNotification,
+} from '../../ReJest/RuntimeTestsApi';
 
 describe('Test createSerializable', () => {
   const PASS_NOTIFICATION = 'PASS';
@@ -19,17 +26,24 @@ describe('Test createSerializable', () => {
   let result = false;
   let errorMessage = '';
 
-  const workletRuntime = createWorkletRuntime({ name: 'testRuntime' });
+  const workerName = 'testRuntime';
+  const workletRuntime = createWorkletRuntime({ name: workerName });
 
-  const schedulingFunction = {
-    toUIRuntime: (worklet: () => void) => {
-      scheduleOnUI(worklet);
+  const targets = [
+    {
+      scheduleOnTarget: (worklet: () => void) => {
+        scheduleOnUI(worklet);
+      },
+      targetRuntime: 'UI',
     },
-    toWorkletRuntime: (worklet: () => void) => {
-      'worklet';
-      scheduleOnRuntime(workletRuntime, worklet);
+    {
+      scheduleOnTarget: (worklet: () => void) => {
+        'worklet';
+        scheduleOnRuntime(workletRuntime, worklet);
+      },
+      targetRuntime: 'Worker',
     },
-  };
+  ];
 
   const callbackPass = (ok: boolean) => {
     result = ok;
@@ -41,8 +55,8 @@ describe('Test createSerializable', () => {
     notify(FAIL_NOTIFICATION);
   };
 
-  Object.entries(schedulingFunction).forEach(([schedulingFunctionName, schedule]) => {
-    describe(`using ${schedulingFunctionName}`, () => {
+  targets.forEach(({ targetRuntime, scheduleOnTarget }) => {
+    describe(`on ${targetRuntime} Runtime`, () => {
       beforeEach(() => {
         result = false;
         errorMessage = '';
@@ -50,9 +64,12 @@ describe('Test createSerializable', () => {
 
       test('createSerializableString', async () => {
         const testString = 'test';
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
-          const checks = [typeof testString === 'string', testString === 'test'];
+          const checks = [
+            typeof testString === 'string',
+            testString === 'test',
+          ];
           scheduleOnRN(callbackPass, checks.every(Boolean));
         });
         await waitForNotification(PASS_NOTIFICATION);
@@ -61,7 +78,7 @@ describe('Test createSerializable', () => {
 
       test('createSerializableNumber', async () => {
         const testNumber = 123;
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
           const checks = [typeof testNumber === 'number', testNumber === 123];
           scheduleOnRN(callbackPass, checks.every(Boolean));
@@ -72,7 +89,7 @@ describe('Test createSerializable', () => {
 
       test('createSerializableTrue', async () => {
         const trueValue = true;
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
           const checks = [typeof trueValue === 'boolean', trueValue === true];
           scheduleOnRN(callbackPass, checks.every(Boolean));
@@ -83,9 +100,12 @@ describe('Test createSerializable', () => {
 
       test('createSerializableFalse', async () => {
         const falseValue = false;
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
-          const checks = [typeof falseValue === 'boolean', falseValue === false];
+          const checks = [
+            typeof falseValue === 'boolean',
+            falseValue === false,
+          ];
           scheduleOnRN(callbackPass, checks.every(Boolean));
         });
         await waitForNotification(PASS_NOTIFICATION);
@@ -94,9 +114,12 @@ describe('Test createSerializable', () => {
 
       test('createSerializableUndefined', async () => {
         const undefinedValue = undefined;
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
-          const checks = [typeof undefinedValue === 'undefined', undefinedValue === undefined];
+          const checks = [
+            typeof undefinedValue === 'undefined',
+            undefinedValue === undefined,
+          ];
           scheduleOnRN(callbackPass, checks.every(Boolean));
         });
         await waitForNotification(PASS_NOTIFICATION);
@@ -105,7 +128,7 @@ describe('Test createSerializable', () => {
 
       test('createSerializableNull', async () => {
         const nullValue = null;
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
           const checks = [typeof nullValue === 'object', nullValue === null];
           scheduleOnRN(callbackPass, checks.every(Boolean));
@@ -116,9 +139,12 @@ describe('Test createSerializable', () => {
 
       test('createSerializableBigInt fitting in int64', async () => {
         const bigIntValue = BigInt(123);
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
-          const checks = [typeof bigIntValue === 'bigint', bigIntValue === BigInt(123)];
+          const checks = [
+            typeof bigIntValue === 'bigint',
+            bigIntValue === BigInt(123),
+          ];
           scheduleOnRN(callbackPass, checks.every(Boolean));
         });
         await waitForNotification(PASS_NOTIFICATION);
@@ -128,9 +154,12 @@ describe('Test createSerializable', () => {
       test('createSerializableBigInt too big for uint64', async () => {
         const maxInt64 = BigInt('0x7FFFFFFFFFFFFFFF');
         const bigIntValue = maxInt64 * maxInt64;
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
-          const checks = [typeof bigIntValue === 'bigint', bigIntValue === maxInt64 * maxInt64];
+          const checks = [
+            typeof bigIntValue === 'bigint',
+            bigIntValue === maxInt64 * maxInt64,
+          ];
           scheduleOnRN(callbackPass, checks.every(Boolean));
         });
         await waitForNotification(PASS_NOTIFICATION);
@@ -140,7 +169,7 @@ describe('Test createSerializable', () => {
       test('createSerializableHostObject', async () => {
         const hostObjectValue = globalThis.__reanimatedModuleProxy;
         const hostObjectKeys = Object.keys(hostObjectValue);
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
           const checks = [
             typeof hostObjectValue === 'object',
@@ -207,7 +236,7 @@ describe('Test createSerializable', () => {
           arrayBuffer,
         ];
 
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
           const uint8ArrayUI = new Uint8Array(arrayValue[index.arrayBuffer]);
           const checks = [
@@ -254,7 +283,7 @@ describe('Test createSerializable', () => {
 
       test('createSerializableSet', async () => {
         const setValue = new Set([1, '1', true]);
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
           const checks = [
             setValue.has(1),
@@ -276,7 +305,7 @@ describe('Test createSerializable', () => {
           ['1', '2'],
           [true, false],
         ]);
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
           const checks = [
             mapValue.get(1) === 2,
@@ -294,9 +323,12 @@ describe('Test createSerializable', () => {
 
       test('createSerializableError', async () => {
         const errorValue = new Error('test');
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
-          const checks = [errorValue instanceof Error, String(errorValue).includes('test')];
+          const checks = [
+            errorValue instanceof Error,
+            String(errorValue).includes('test'),
+          ];
           scheduleOnRN(callbackPass, checks.every(Boolean));
         });
         await waitForNotification(PASS_NOTIFICATION);
@@ -305,7 +337,7 @@ describe('Test createSerializable', () => {
 
       test('createSerializableInitializer', async () => {
         const regExpValue = /a/;
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
           const checks = [regExpValue instanceof RegExp, regExpValue.test('a')];
           scheduleOnRN(callbackPass, checks.every(Boolean));
@@ -351,7 +383,7 @@ describe('Test createSerializable', () => {
           [key.arrayBuffer]: new ArrayBuffer(3),
         };
 
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
           const checks = [
             obj[key.number] === 1,
@@ -386,9 +418,12 @@ describe('Test createSerializable', () => {
           'worklet';
           return 1;
         };
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
-          const checks = [typeof workletFunction === 'function', workletFunction() === 1];
+          const checks = [
+            typeof workletFunction === 'function',
+            workletFunction() === 1,
+          ];
           scheduleOnRN(callbackPass, checks.every(Boolean));
         });
         await waitForNotification(PASS_NOTIFICATION);
@@ -399,7 +434,7 @@ describe('Test createSerializable', () => {
         const remoteFunction = () => {
           return 1;
         };
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
           const checks = [
             typeof remoteFunction === 'function',
@@ -414,12 +449,16 @@ describe('Test createSerializable', () => {
       });
 
       test('createSerializableHostFunction', async () => {
-        const hostFunction = globalThis.__workletsModuleProxy.createSerializableBoolean as any;
-        schedule(() => {
+        const hostFunction = globalThis.__workletsModuleProxy
+          .createSerializableBoolean as any;
+        scheduleOnTarget(() => {
           'worklet';
           // createSerializableBoolean returns a SerializableRef<boolean> which is a serializable ref
           const serializableBoolean = hostFunction(true);
-          const checks = [typeof hostFunction === 'function', serializableBoolean.__serializableRef];
+          const checks = [
+            typeof hostFunction === 'function',
+            serializableBoolean.__serializableRef,
+          ];
           scheduleOnRN(callbackPass, checks.every(Boolean));
         });
         await waitForNotification(PASS_NOTIFICATION);
@@ -429,12 +468,15 @@ describe('Test createSerializable', () => {
       test('createSerializableTurboModuleLike', async () => {
         const clipboard = TurboModuleRegistry.getEnforcing('Clipboard');
 
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
           const checks = [
-            Object.getOwnPropertyNames(clipboard).includes('magicKey') === false,
+            Object.getOwnPropertyNames(clipboard).includes('magicKey') ===
+              false,
             'magicKey' in Object.getPrototypeOf(clipboard) === true,
-            Object.keys(clipboard).every(key => key in Object.getPrototypeOf(clipboard)),
+            Object.keys(clipboard).every(
+              (key) => key in Object.getPrototypeOf(clipboard)
+            ),
           ];
           scheduleOnRN(callbackPass, checks.every(Boolean));
         });
@@ -448,9 +490,12 @@ describe('Test createSerializable', () => {
         uint8Array[0] = 1;
         uint8Array[1] = 2;
         uint8Array[2] = 3;
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
-          const checks = [arrayBuffer instanceof ArrayBuffer, arrayBuffer.byteLength === 3];
+          const checks = [
+            arrayBuffer instanceof ArrayBuffer,
+            arrayBuffer.byteLength === 3,
+          ];
           scheduleOnRN(callbackPass, checks.every(Boolean));
         });
         await waitForNotification(PASS_NOTIFICATION);
@@ -464,7 +509,7 @@ describe('Test createSerializable', () => {
         cyclicArray.push(cyclicArray);
 
         await expect(() => {
-          schedule(() => {
+          scheduleOnTarget(() => {
             'worklet';
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const _test = cyclicArray[1];
@@ -480,61 +525,70 @@ describe('Test createSerializable', () => {
         }
         const inaccessibleObject = new Inaccessible();
 
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
           try {
             inaccessibleObject.access();
             scheduleOnRN(callbackPass, false);
           } catch (error) {
-            scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+            scheduleOnRN(
+              callbackFail,
+              error instanceof Error ? error.message : String(error)
+            );
           }
         });
         await waitForNotification(FAIL_NOTIFICATION);
         expect(errorMessage).toInclude(
-          '[Worklets] Trying to access property `access` of an object which cannot be sent to the UI runtime.',
+          '[Worklets] Trying to access property `access` of an object which cannot be sent to the UI runtime.'
         );
       });
 
       test('createSerializableRemoteNamedFunctionSyncCall', async () => {
         function foo() {}
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
           try {
             foo();
             scheduleOnRN(callbackPass, false);
           } catch (error) {
-            scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+            scheduleOnRN(
+              callbackFail,
+              error instanceof Error ? error.message : String(error)
+            );
           }
         });
         await waitForNotification(FAIL_NOTIFICATION);
         expect(errorMessage).toInclude(
-          '[Worklets] Tried to synchronously call a non-worklet function `foo` on the UI thread.',
+          '[Worklets] Tried to synchronously call a non-worklet function `foo` on the UI thread.'
         );
       });
 
       test('createSerializableRemoteAnonymousFunctionSyncCall', async () => {
         const foo = [() => {}];
-        schedule(() => {
+        scheduleOnTarget(() => {
           'worklet';
           try {
             foo[0]();
             scheduleOnRN(callbackPass, false);
           } catch (error) {
-            scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+            scheduleOnRN(
+              callbackFail,
+              error instanceof Error ? error.message : String(error)
+            );
           }
         });
         await waitForNotification(FAIL_NOTIFICATION);
         expect(errorMessage).toInclude(
-          '[Worklets] Tried to synchronously call a non-worklet anonymous function on the UI thread.',
+          '[Worklets] Tried to synchronously call a non-worklet anonymous function on the UI thread.'
         );
       });
     });
   });
 });
 
-const FREEZE_WARNING = 'Tried to modify key';
-
 describe('Test serializable freezing', () => {
+  const FREEZE_WARNING = 'Tried to modify key';
+
   test('warns when modifying converted array', async () => {
     const obj = [1, 2, 3];
     createSerializable(obj);

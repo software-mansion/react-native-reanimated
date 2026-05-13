@@ -184,7 +184,7 @@ export function createSerializable<TValue>(
       }
     }
     if (!isWorkletFunction(value)) {
-      return cloneRemoteFunction(value);
+      return cloneNonWorkletFunction(value) as SerializableRef<TValue>;
     }
   }
   // RN has introduced a new representation of TurboModules as a JS object whose prototype is the host object
@@ -432,14 +432,16 @@ function cloneArray<T extends unknown[]>(
   return clone;
 }
 
-function cloneRemoteFunction<TArgs extends unknown[], TReturn>(
-  value: (...args: TArgs) => TReturn
-): SerializableRef<TReturn> {
-  const clone = WorkletsModule.createSerializableFunction(value);
-  serializableMappingCache.set(value, clone);
+function cloneNonWorkletFunction<TArgs extends unknown[], TReturn>(
+  fun: (...args: TArgs) => TReturn
+): SerializableRef<(...args: TArgs) => TReturn> {
+  const clone = WorkletsModule.createSerializableNonWorkletFunction(
+    fun
+  ) as SerializableRef<(...args: TArgs) => TReturn>;
+  serializableMappingCache.set(fun, clone);
   serializableMappingCache.set(clone);
 
-  freezeObjectInDev(value);
+  freezeObjectInDev(fun);
   return clone;
 }
 
@@ -781,18 +783,28 @@ function freezeObjectInDev<TValue extends object>(value: TValue) {
 }
 
 function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
-  value: TValue
+  toSerialize: TValue
 ): FlatSerializableRef<TValue> {
   'worklet';
-  // eslint-disable-next-line @typescript-eslint/no-shadow
+  let cloningInsideShareableLogic = false;
+
+  return cloneRecursive(toSerialize);
+
   function cloneRecursive(value: TValue): FlatSerializableRef<TValue> {
     if (
       (typeof value === 'object' && value !== null) ||
       typeof value === 'function'
     ) {
       if (isHostObject(value)) {
-        // We call `_createSerializableClone` to wrap the provided HostObject
-        // inside SerializableJSRef.
+        if (
+          __DEV__ &&
+          Object.getPrototypeOf(value) !== value &&
+          isHostObject(Object.getPrototypeOf(value))
+        ) {
+          throw new Error(
+            '[Worklets] Serializing objects with prototypes different than Object.prototype is not supported. Use `registerCustomSerializable` to register custom serialization logic for such objects.'
+          );
+        }
         return global._createSerializableHostObject(
           value
         ) as FlatSerializableRef<TValue>;
@@ -803,6 +815,18 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
         // call `_createSerializableClone`.
         return (value as Record<string, unknown>)
           .__remoteFunction as FlatSerializableRef<TValue>;
+      }
+      if (typeof value === 'function') {
+        if ((value as WorkletFunction).__workletHash) {
+          if ((value as WorkletFunction).__serializableInLegacyMode) {
+            cloningInsideShareableLogic = true;
+          }
+        } else {
+          return global._createSerializable(
+            value,
+            value
+          ) as FlatSerializableRef<TValue>;
+        }
       }
       if (Array.isArray(value)) {
         return global._createSerializableArray(
@@ -817,7 +841,16 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
       if ((value as Record<string, unknown>).__serializableRef) {
         return value as FlatSerializableRef<TValue>;
       }
-      if (Object.getPrototypeOf(value) !== Object.prototype) {
+      if (value instanceof Error) {
+        return global._createSerializable(
+          {},
+          {}
+        ) as FlatSerializableRef<TValue>;
+      }
+      if (
+        Object.getPrototypeOf(value) !== Object.prototype &&
+        typeof value !== 'function'
+      ) {
         const length = globalThis.__customSerializationRegistry.length;
         for (let i = 0; i < length; i++) {
           const { determine, pack } =
@@ -830,6 +863,10 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
             ) as FlatSerializableRef<TValue>;
           }
         }
+        console.log(String(Object.getPrototypeOf(value)));
+        throw new Error(
+          '[Worklets] Serializing objects with prototypes different than Object.prototype is not supported. Use `registerCustomSerializable` to register custom serialization logic for such objects.'
+        );
       }
       const toAdapt: Record<string, FlatSerializableRef<TValue>> = {};
       for (const [key, element] of Object.entries(value)) {
@@ -867,7 +904,6 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
 
     return global._createSerializable(value, undefined);
   }
-  return cloneRecursive(value);
 }
 
 /** @deprecated This function is no longer supported. */

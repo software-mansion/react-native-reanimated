@@ -127,6 +127,15 @@ class SerializableArray : public Serializable {
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
+  std::vector<jsi::Value> getJSValueArray(jsi::Runtime &rt) {
+    std::vector<jsi::Value> args;
+    args.reserve(data_.size());
+    for (const auto &item : data_) {
+      args.push_back(item->toJSValue(rt));
+    }
+    return args;
+  }
+
   [[nodiscard]] const std::vector<std::shared_ptr<Serializable>> &getList() const {
     return data_;
   }
@@ -181,11 +190,8 @@ class SerializableHostObject : public Serializable {
 
 class SerializableHostFunction : public Serializable {
  public:
-  SerializableHostFunction(jsi::Runtime &rt, jsi::Function function)
-      : Serializable(ValueType::HostFunctionType),
-        hostFunction_(function.getHostFunction(rt)),
-        name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
-        paramCount_(function.getProperty(rt, "length").asNumber()) {}
+  SerializableHostFunction(const jsi::HostFunctionType &function, const std::string &name, unsigned int paramCount)
+      : Serializable(ValueType::HostFunctionType), hostFunction_(function), name_(name), paramCount_(paramCount) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -238,11 +244,17 @@ class SerializableRemoteFunction : public Serializable,
   std::unique_ptr<jsi::Value> function_;
 
  public:
-  SerializableRemoteFunction(jsi::Runtime &rt, jsi::Function &&function)
+  SerializableRemoteFunction(
+      jsi::Runtime &rt,
+      jsi::Function &&function,
+#ifndef NDEBUG
+      const std::string &name
+#endif
+      )
       : Serializable(ValueType::RemoteFunctionType),
         runtime_(&rt),
 #ifndef NDEBUG
-        name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
+        name_(name),
 #endif
         function_(std::make_unique<jsi::Value>(rt, std::move(function))) {
   }

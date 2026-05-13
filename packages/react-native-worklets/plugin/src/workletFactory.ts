@@ -13,6 +13,7 @@ import {
   arrayExpression,
   assignmentExpression,
   blockStatement,
+  booleanLiteral,
   cloneNode,
   expressionStatement,
   functionExpression,
@@ -200,9 +201,10 @@ export function makeWorkletFactory(
     );
   }
 
-  const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
+  const shouldIncludeInitData =
+    !state.opts.omitNativeOnlyData && !state.opts.bundleMode;
 
-  if (shouldIncludeInitData && !state.opts.bundleMode) {
+  if (shouldIncludeInitData) {
     const initDataDeclaration = variableDeclaration('const', [
       variableDeclarator(initDataId, initDataObjectExpression),
     ]);
@@ -273,6 +275,22 @@ export function makeWorkletFactory(
     ),
   ];
 
+  if (limitInitDataHoisting) {
+    statements.push(
+      expressionStatement(
+        assignmentExpression(
+          '=',
+          memberExpression(
+            identifier(reactName),
+            identifier('__serializableInLegacyMode'),
+            false
+          ),
+          booleanLiteral(true)
+        )
+      )
+    );
+  }
+
   const shouldInjectVersion = !isRelease();
   if (shouldInjectVersion) {
     statements.push(
@@ -289,7 +307,7 @@ export function makeWorkletFactory(
     );
   }
 
-  if (shouldIncludeInitData && !state.opts.bundleMode) {
+  if (shouldIncludeInitData) {
     statements.push(
       expressionStatement(
         assignmentExpression(
@@ -352,7 +370,7 @@ export function makeWorkletFactory(
     return clonedId;
   });
 
-  if (shouldIncludeInitData && !state.opts.bundleMode) {
+  if (shouldIncludeInitData) {
     factoryParams.unshift(cloneNode(initDataId, true));
   }
 

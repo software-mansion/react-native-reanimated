@@ -53,8 +53,13 @@ export function installValueUnpacker() {
         }
         workletsCache.set(workletHash, workletFun!);
       }
-      const functionInstance = workletFun!.bind(objectToUnpack);
+      const functionInstance = workletFun!.bind(
+        objectToUnpack
+      ) as typeof workletFun & Record<string, unknown>;
       objectToUnpack._recur = functionInstance;
+      if (__DEV__) {
+        functionInstance.__extractedWorklet = true;
+      }
       return functionInstance;
     } else if (objectToUnpack.__init !== undefined) {
       let value = handleCache.get(objectToUnpack);

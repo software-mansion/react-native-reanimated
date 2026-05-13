@@ -33,10 +33,17 @@ jsi::Value makeSerializableClone(
       // by `makeSerializableCloneOnUIRecursive` which doesn't
       // make Retaining Serializables.
       return makeSerializableWorklet(rt, object, false);
-    } else if (!object.getProperty(rt, "__init").isUndefined()) {
-      return makeSerializableInitializer(rt, object);
+
     } else if (object.isFunction(rt)) {
-      return makeSerializableFunction(rt, object.asFunction(rt));
+      auto fun = object.asFunction(rt);
+      if (fun.isHostFunction(rt)) {
+        auto name = fun.getProperty(rt, "name").asString(rt).utf8(rt);
+        return makeSerializableHostFunction(
+            rt, fun.getHostFunction(rt), name, fun.getProperty(rt, "length").asNumber());
+      } else {
+        throw std::runtime_error(
+            "[Worklets] Cloning remote functions from Worklet Runtimes is only available in Bundle Mode.");
+      }
     } else if (object.isArray(rt)) {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
         serializable = std::make_shared<RetainingSerializable<SerializableArray>>(rt, object.asArray(rt));
@@ -91,7 +98,7 @@ std::shared_ptr<Serializable> extractSerializableOrThrow(
       auto nativeState = object.getNativeState(rt);
       return std::dynamic_pointer_cast<SerializableJSRef>(nativeState)->value();
     }
-    throw std::runtime_error("[Worklets] Attempted to extract from an Object that wasn't converted to a Serializable.");
+    throw std::runtime_error(errorMessage);
   } else if (maybeSerializableValue.isUndefined()) {
     return Serializable::undefined();
   }

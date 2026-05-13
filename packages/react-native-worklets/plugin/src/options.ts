@@ -72,9 +72,6 @@ export interface PluginOptions {
    */
   globals?: string[];
 
-  /** Temporary internal option to create ShareableUnpacker. */
-  limitInitDataHoisting?: boolean;
-
   /**
    * This option comes in handy for Web apps. Because Babel ordinarily doesn't
    * get information about the target platform, it includes worklet data in the
