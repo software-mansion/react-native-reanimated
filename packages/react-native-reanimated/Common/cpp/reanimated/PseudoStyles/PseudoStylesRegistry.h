@@ -2,6 +2,7 @@
 
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
+#include <reanimated/Fabric/updates/OperationsLoop.h>
 #include <reanimated/PseudoStyles/PseudoSelector.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
@@ -24,7 +25,8 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
   PseudoStylesRegistry(
       PlatformAttachPseudoSelectorFunction attachFn,
       PlatformDetachPseudoSelectorFunction detachFn,
-      std::shared_ptr<css::CSSTransitionsRegistry> cssTransitionsRegistry);
+      std::shared_ptr<css::CSSTransitionsRegistry> cssTransitionsRegistry,
+      std::shared_ptr<OperationsLoop> operationsLoop);
 
   void registerPseudoStyle(
       Tag tag,
@@ -34,8 +36,6 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
       const folly::dynamic &defaultStyle);
 
   void remove(Tag tag);
-
-  void setRunLoopFn(std::function<void()> fn);
 
  private:
   struct SelectorData {
@@ -61,7 +61,7 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
 
   std::shared_ptr<css::CSSTransitionsRegistry> cssTransitionsRegistry_;
 
-  std::function<void()> runLoopFn_;
+  std::shared_ptr<OperationsLoop> operationsLoop_;
 
   static void recomputeAllStyles(TagEntry &entry);
 
