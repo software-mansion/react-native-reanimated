@@ -55,19 +55,19 @@ void UpdatesRegistry::flushNonLayoutUpdates(jsi::Runtime &rt, AnimationMutations
 
   for (auto &[shadowNodeFamily, animatedProp, _hasLayout] : updatesBatchAnimatedProps_) {
     // Split typed props by layout vs non-layout.
-    std::vector<std::unique_ptr<AnimatedPropBase>> nonLayoutTyped;
-    std::vector<std::unique_ptr<AnimatedPropBase>> layoutTyped;
+    std::vector<std::unique_ptr<AnimatedPropBase>> nonLayoutTypedProps;
+    std::vector<std::unique_ptr<AnimatedPropBase>> layoutTypedProps;
     for (auto &prop : animatedProp.props) {
       if (isLayoutProp(prop->propName)) {
-        layoutTyped.push_back(std::move(prop));
+        layoutTypedProps.push_back(std::move(prop));
       } else {
-        nonLayoutTyped.push_back(std::move(prop));
+        nonLayoutTypedProps.push_back(std::move(prop));
       }
     }
 
     // Split rawProps by layout vs non-layout.
-    std::unique_ptr<RawProps> nonLayoutRaw;
-    std::unique_ptr<RawProps> layoutRaw;
+    std::unique_ptr<RawProps> nonLayoutRawProps;
+    std::unique_ptr<RawProps> layoutRawProps;
     if (animatedProp.rawProps) {
       auto raw = animatedProp.rawProps->toDynamic();
       folly::dynamic nonLayoutDyn = folly::dynamic::object();
@@ -82,23 +82,23 @@ void UpdatesRegistry::flushNonLayoutUpdates(jsi::Runtime &rt, AnimationMutations
         }
       }
       if (!nonLayoutDyn.empty()) {
-        nonLayoutRaw = std::make_unique<RawProps>(rt, jsi::valueFromDynamic(rt, nonLayoutDyn));
+        nonLayoutRawProps = std::make_unique<RawProps>(rt, jsi::valueFromDynamic(rt, nonLayoutDyn));
       }
       if (!layoutDyn.empty()) {
-        layoutRaw = std::make_unique<RawProps>(rt, jsi::valueFromDynamic(rt, layoutDyn));
+        layoutRawProps = std::make_unique<RawProps>(rt, jsi::valueFromDynamic(rt, layoutDyn));
       }
     }
 
     // Non-layout part → apply now.
-    if (!nonLayoutTyped.empty() || nonLayoutRaw) {
-      AnimatedProps nonLayoutProps{std::move(nonLayoutTyped), std::move(nonLayoutRaw)};
+    if (!nonLayoutTypedProps.empty() || nonLayoutRawProps) {
+      AnimatedProps nonLayoutProps{std::move(nonLayoutTypedProps), std::move(nonLayoutRawProps)};
       mutations.batch.push_back(
           AnimationMutation{shadowNodeFamily->getTag(), shadowNodeFamily, std::move(nonLayoutProps), false});
     }
 
     // Layout part → defer to next full flush.
-    if (!layoutTyped.empty() || layoutRaw) {
-      AnimatedProps layoutProps{std::move(layoutTyped), std::move(layoutRaw)};
+    if (!layoutTypedProps.empty() || layoutRawProps) {
+      AnimatedProps layoutProps{std::move(layoutTypedProps), std::move(layoutRawProps)};
       remaining.push_back(AnimatedPropsEntry{shadowNodeFamily, std::move(layoutProps), true});
     }
   }
