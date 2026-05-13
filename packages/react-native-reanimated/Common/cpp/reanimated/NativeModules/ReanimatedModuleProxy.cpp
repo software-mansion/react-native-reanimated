@@ -15,7 +15,6 @@
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReaJSIUtils.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
-#include <worklets/Compat/StableApi.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
