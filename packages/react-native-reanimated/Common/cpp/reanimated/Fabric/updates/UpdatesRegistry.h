@@ -28,9 +28,9 @@ using UpdatesBatch = std::vector<std::pair<ShadowNodeFamily::Shared, folly::dyna
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
 struct AnimatedPropsEntry {
-  ShadowNodeFamily::Shared shadowNodeFamily;
+  const ShadowNodeFamily::Shared shadowNodeFamily;
   AnimatedProps animatedProps;
-  bool hasLayoutUpdates;
+  const bool hasLayoutUpdates;
 };
 using UpdatesBatchAnimatedProps = std::vector<AnimatedPropsEntry>;
 #endif
