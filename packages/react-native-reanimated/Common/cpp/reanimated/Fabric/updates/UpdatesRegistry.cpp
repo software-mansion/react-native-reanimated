@@ -134,9 +134,9 @@ void UpdatesRegistry::addAnimatedPropsToBatch(
 
 void UpdatesRegistry::addRawPropsToAnimatedPropsBatch(
     const ShadowNodeFamily::Shared &shadowNodeFamily,
-    folly::dynamic props,
-    bool hasLayoutUpdates) {
-  animatedPropsBuilder_.storeDynamic(props);
+    folly::dynamic props) {
+  const bool hasLayoutUpdates = hasLayoutProps(props);
+  animatedPropsBuilder_.storeDynamic(std::move(props));
   addAnimatedPropsToBatch(shadowNodeFamily, animatedPropsBuilder_.get(), hasLayoutUpdates);
 }
 

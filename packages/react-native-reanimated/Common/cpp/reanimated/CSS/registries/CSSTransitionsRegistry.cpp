@@ -1,5 +1,4 @@
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
-#include <reanimated/Fabric/updates/PropsLayoutFilter.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
 #include <memory>
@@ -47,9 +46,7 @@ void CSSTransitionsRegistry::run(
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     if (!initialUpdate.empty()) {
 #if REACT_NATIVE_VERSION_MINOR >= 85
-      const auto hasLayoutUpdates = hasLayoutProps(initialUpdate);
-      addRawPropsToAnimatedPropsBatch(
-          transition->getShadowNode()->getFamilyShared(), std::move(initialUpdate), hasLayoutUpdates);
+      addRawPropsToAnimatedPropsBatch(transition->getShadowNode()->getFamilyShared(), std::move(initialUpdate));
 #endif
     }
   }
@@ -78,8 +75,7 @@ void CSSTransitionsRegistry::update(const double timestamp) {
     if (!updates.empty()) {
       if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
 #if REACT_NATIVE_VERSION_MINOR >= 85
-        addRawPropsToAnimatedPropsBatch(
-            transition->getShadowNode()->getFamilyShared(), updates, hasLayoutProps(updates));
+        addRawPropsToAnimatedPropsBatch(transition->getShadowNode()->getFamilyShared(), updates);
         // Legacy flushes merge each frame into the updates registry; animated-props flushes do not.
         // Keep the registry current so the next transition reads a real "from" value, not the first frame only.
         updateInUpdatesRegistry(transition, updates);

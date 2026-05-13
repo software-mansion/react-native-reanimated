@@ -80,10 +80,7 @@ class UpdatesRegistry {
       const ShadowNodeFamily::Shared &shadowNodeFamily,
       AnimatedProps animatedProps,
       bool hasLayoutUpdates = false);
-  void addRawPropsToAnimatedPropsBatch(
-      const ShadowNodeFamily::Shared &shadowNodeFamily,
-      folly::dynamic props,
-      bool hasLayoutUpdates = false);
+  void addRawPropsToAnimatedPropsBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, folly::dynamic props);
   void addJSIPropsToAnimatedPropsBatch(
       const ShadowNodeFamily::Shared &shadowNodeFamily,
       jsi::Runtime &rt,
