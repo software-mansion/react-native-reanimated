@@ -42,8 +42,6 @@ Shareable::~Shareable() {
     if (strongHostRuntime) {
       hostValue_.reset();
     } else {
-      // Host runtime is gone; ~jsi::Value would UAF its slot arena. Skip the
-      // destructor and free only the wrapper allocation.
       ::operator delete(hostValue_.release());
     }
   }

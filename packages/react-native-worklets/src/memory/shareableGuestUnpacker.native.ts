@@ -1,6 +1,7 @@
 'use strict';
 
 import {
+  runOnRuntimeAsyncWithId as BundleRunOnRuntimeAsyncFromId,
   runOnRuntimeSyncWithId as BundleRunOnRuntimeSyncFromId,
   scheduleOnRuntimeWithId as BundleScheduleOnRuntimeFromId,
 } from '../runtimes';
@@ -19,6 +20,7 @@ export function installShareableGuestUnpacker() {
   'worklet';
   'no-worklet-closure';
   let runOnRuntimeSyncFromId: typeof BundleRunOnRuntimeSyncFromId;
+  let runOnRuntimeAsyncFromId: typeof BundleRunOnRuntimeAsyncFromId;
   let memoize: (
     unpacked: Shareable<unknown>,
     serialized: SerializableRef<unknown>
@@ -35,6 +37,7 @@ export function installShareableGuestUnpacker() {
     memoize = serializableMappingCache.set.bind(serializableMappingCache);
 
     runOnRuntimeSyncFromId = BundleRunOnRuntimeSyncFromId;
+    runOnRuntimeAsyncFromId = BundleRunOnRuntimeAsyncFromId;
     scheduleOnRuntimeFromId = BundleScheduleOnRuntimeFromId;
   } else {
     // Serializer can't be inlined here because it might be yet undefined
@@ -72,6 +75,12 @@ export function installShareableGuestUnpacker() {
         })
       );
     }) as typeof BundleScheduleOnRuntimeFromId;
+
+    runOnRuntimeAsyncFromId = (() => {
+      throw new Error(
+        '[Worklets] `runOnRuntimeAsyncWithId` can only be called on the RN Runtime.'
+      );
+    }) as typeof BundleRunOnRuntimeAsyncFromId;
   }
 
   function shareableGuestUnpacker<TValue>(
@@ -108,9 +117,7 @@ export function installShareableGuestUnpacker() {
     };
 
     shareableGuest.getAsync = () => {
-      throw new Error(
-        '[Worklets] Shareable.getAsync is not implemented yet — pending runOnRuntimeAsyncWithId.'
-      );
+      return runOnRuntimeAsyncFromId(hostId, get);
     };
 
     shareableGuest.getSync = () => {
