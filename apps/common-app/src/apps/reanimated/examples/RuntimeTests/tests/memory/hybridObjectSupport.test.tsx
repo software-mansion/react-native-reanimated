@@ -4,6 +4,7 @@
 import {
   describe,
   expect,
+  getWorkletRuntimeFromPool,
   notify,
   test,
   waitForNotification,
@@ -11,7 +12,6 @@ import {
 import {
   createSerializable,
   createSynchronizable,
-  createWorkletRuntime,
   registerCustomSerializable,
   runOnUISync,
   scheduleOnRN,
@@ -74,7 +74,7 @@ const getTestData = () => {
 };
 
 describe('Test HybridObject Support', () => {
-  const workletRuntime = createWorkletRuntime();
+  const workletRuntime = getWorkletRuntimeFromPool('test');
 
   test('passes HybridObjects from RN runtime to UI runtime', () => {
     // Arrange

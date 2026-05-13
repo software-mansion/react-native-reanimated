@@ -20,6 +20,7 @@ import { TestSuiteBuilder } from './TestSuiteBuilder';
 import { TestSummaryLogger } from './TestSummaryLogger';
 import { ValueRegistry } from './ValueRegistry';
 import { WindowDimensionsMocker } from './WindowDimensionsMocker';
+import { WorkletRuntimePool } from './WorkletRuntimePool';
 import { scheduleOnRN } from 'react-native-worklets';
 
 export { Presets } from '../Presets';
@@ -36,6 +37,7 @@ export class TestRunner {
   private _valueRegistry = new ValueRegistry();
   private _callTrackerRegistry = new CallTrackerRegistry();
   private _notificationRegistry = new NotificationRegistry();
+  private _workletRuntimePool = new WorkletRuntimePool();
   private _testSuiteBuilder = new TestSuiteBuilder();
 
   public getWindowDimensionsMocker() {
@@ -56,6 +58,10 @@ export class TestRunner {
 
   public getNotificationRegistry() {
     return this._notificationRegistry;
+  }
+
+  public getWorkletRuntimePool() {
+    return this._workletRuntimePool;
   }
 
   public getTestSuiteBuilder() {
