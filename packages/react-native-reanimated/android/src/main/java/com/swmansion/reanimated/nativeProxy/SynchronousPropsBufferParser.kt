@@ -5,7 +5,7 @@ import com.facebook.react.bridge.JavaOnlyMap
 import java.util.Arrays
 
 internal object SynchronousPropsBufferParser {
-    // NOTE: Keep in sync with SynchronousPropsBufferSerializer.h
+    // NOTE: Keep in sync with command IDs in SynchronousPropsBufferSerializer.cpp
     private const val CMD_START_OF_VIEW = 1
     private const val CMD_START_OF_TRANSFORM = 2
     private const val CMD_END_OF_TRANSFORM = 3
