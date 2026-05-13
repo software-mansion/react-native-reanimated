@@ -559,9 +559,7 @@ describe('Test createSerializable', () => {
         });
         await waitForNotification(FAIL_NOTIFICATION);
         expect(errorMessage).toInclude(
-          '[Worklets] Tried to synchronously call a remote function `foo` on ' +
-            (targetRuntime === 'UI' ? 'UI' : workerName) +
-            ' runtime.'
+          '[Worklets] Tried to synchronously call a non-worklet function `foo` on the UI thread.'
         );
       });
 
@@ -581,18 +579,16 @@ describe('Test createSerializable', () => {
         });
         await waitForNotification(FAIL_NOTIFICATION);
         expect(errorMessage).toInclude(
-          '[Worklets] Tried to synchronously call a remote function anonymous on ' +
-            (targetRuntime === 'UI' ? 'UI' : workerName) +
-            ' runtime.'
+          '[Worklets] Tried to synchronously call a non-worklet anonymous function on the UI thread.'
         );
       });
     });
   });
 });
 
-const FREEZE_WARNING = 'Tried to modify key';
-
 describe('Test serializable freezing', () => {
+  const FREEZE_WARNING = 'Tried to modify key';
+
   test('warns when modifying converted array', async () => {
     const obj = [1, 2, 3];
     createSerializable(obj);

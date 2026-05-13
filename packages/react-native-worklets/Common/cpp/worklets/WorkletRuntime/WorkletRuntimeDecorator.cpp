@@ -65,7 +65,7 @@ void WorkletRuntimeDecorator::decorate(
 
   rt.global().setProperty(rt, "_WORKLET", true);
 
-  rt.global().setProperty(rt, "__RUNTIME_NAME", jsi::String::createFromAscii(rt, name));
+  rt.global().setProperty(rt, "_LABEL", jsi::String::createFromAscii(rt, name));
 
   rt.global().setProperty(rt, "__DEV__", isDevBundle);
 

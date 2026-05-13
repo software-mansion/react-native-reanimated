@@ -3,14 +3,7 @@ import { useRef } from 'react';
 
 import { Matchers } from '../matchers/Matchers';
 import { TestComponent } from '../TestComponent';
-import type {
-  DefaultValue,
-  ValueWrapper,
-  TestCase,
-  TestConfiguration,
-  TestSuite,
-  TestValue,
-} from '../types';
+import type { DefaultValue, ValueWrapper, TestCase, TestConfiguration, TestSuite, TestValue } from '../types';
 import { RenderLock } from '../utils/SyncUIRunner';
 import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
 import { assertTestCase } from './Asserts';

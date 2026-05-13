@@ -33,8 +33,7 @@ jsi::Value makeSerializableClone(
       // by `makeSerializableCloneOnUIRecursive` which doesn't
       // make Retaining Serializables.
       return makeSerializableWorklet(rt, object, false);
-    } else if (!object.getProperty(rt, "__init").isUndefined()) {
-      return makeSerializableInitializer(rt, object);
+
     } else if (object.isFunction(rt)) {
       auto fun = object.asFunction(rt);
       if (fun.isHostFunction(rt)) {

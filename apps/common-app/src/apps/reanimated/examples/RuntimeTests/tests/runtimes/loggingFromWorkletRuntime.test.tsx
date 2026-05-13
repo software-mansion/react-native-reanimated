@@ -1,4 +1,3 @@
-import { TurboModuleRegistry } from 'react-native';
 import {
   describe,
   expect,
@@ -158,7 +157,7 @@ const testCases: Record<string, TestCase> = {
   },
   hostFunction: {
     bundleMode: '[Function: createSerializable]',
-    noBundleMode: '{}',
+    noBundleMode: '[Function: createSerializable]',
     factory: () => {
       'worklet';
       return globalThis.__workletsModuleProxy.createSerializable;
@@ -166,7 +165,7 @@ const testCases: Record<string, TestCase> = {
   },
   generatorFunction: {
     bundleMode: '[Function: gen]',
-    noBundleMode: '{}',
+    errorsOnNoBundleMode: true,
     factory: () => {
       'worklet';
       function* gen() {
@@ -177,7 +176,7 @@ const testCases: Record<string, TestCase> = {
   },
   asyncFunction: {
     bundleMode: '[Function: asyncFn]',
-    noBundleMode: '{}',
+    errorsOnNoBundleMode: true,
     factory: () => {
       'worklet';
       // eslint-disable-next-line no-empty-function
@@ -187,7 +186,7 @@ const testCases: Record<string, TestCase> = {
   },
   asyncGeneratorFunction: {
     bundleMode: '[Function: asyncGenFn]',
-    noBundleMode: '{}',
+    errorsOnNoBundleMode: true,
     factory: () => {
       'worklet';
       // eslint-disable-next-line @typescript-eslint/require-await
@@ -199,7 +198,7 @@ const testCases: Record<string, TestCase> = {
   },
   error: {
     bundleMode: '[Error: oops]',
-    noBundleMode: '{}',
+    errorsOnNoBundleMode: true,
     factory: () => {
       'worklet';
       return new Error('oops');
@@ -207,7 +206,7 @@ const testCases: Record<string, TestCase> = {
   },
   rangeError: {
     bundleMode: '[RangeError: out of range]',
-    noBundleMode: '{}',
+    errorsOnNoBundleMode: true,
     factory: () => {
       'worklet';
       return new RangeError('out of range');
@@ -215,6 +214,7 @@ const testCases: Record<string, TestCase> = {
   },
   map: {
     expected: '{}',
+    errorsOnNoBundleMode: true,
     factory: () => {
       'worklet';
       return new Map([['key', 1]]);
@@ -222,6 +222,7 @@ const testCases: Record<string, TestCase> = {
   },
   set: {
     expected: '{}',
+    errorsOnNoBundleMode: true,
     factory: () => {
       'worklet';
       return new Set([1, 2]);
@@ -229,6 +230,7 @@ const testCases: Record<string, TestCase> = {
   },
   int8Array: {
     expected: "{ '0': 1, '1': 2, '2': 3 }",
+    errorsOnNoBundleMode: true,
     factory: () => {
       'worklet';
       return new Int8Array([1, 2, 3]);
@@ -236,6 +238,7 @@ const testCases: Record<string, TestCase> = {
   },
   promise: {
     expected: '{ _x: 0, _y: 1, _z: undefined, _A: null }',
+    errorsOnNoBundleMode: true,
     factory: () => {
       'worklet';
       return new Promise<void>((r) => {
@@ -254,8 +257,8 @@ const testCases: Record<string, TestCase> = {
     },
   },
   regExp: {
-    bundleMode: '/abc/gi',
-    noBundleMode: '{}',
+    expected: '/abc/gi',
+    errorsOnNoBundleMode: true,
     factory: () => {
       'worklet';
       return /abc/gi;

@@ -1,5 +1,5 @@
 import { TurboModuleRegistry } from 'react-native';
-import { runOnUISync } from 'react-native-worklets';
+import { createWorkletRuntime, runOnUISync } from 'react-native-worklets';
 
 import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
 
@@ -119,16 +119,8 @@ describe('Test createSerializableOnUI', () => {
       string = 5,
       bigint = 6,
       object = 7,
-      remoteFunction = 8,
-      array = 9,
-      initializer = 10,
-      arrayBuffer = 11,
+      array = 8,
     }
-    const arrayBuffer = new ArrayBuffer(3);
-    const uint8Array = new Uint8Array(arrayBuffer);
-    uint8Array[0] = 1;
-    uint8Array[1] = 2;
-    uint8Array[2] = 3;
 
     // Act
     const arrayValue = runOnUISync(() => {
@@ -149,16 +141,8 @@ describe('Test createSerializableOnUI', () => {
         BigInt(123),
         // object
         { a: 1 },
-        // remote function - not a worklet
-        () => {
-          return 1;
-        },
         // array
         [1],
-        // initializer - regexp
-        /a/,
-        // array buffer
-        arrayBuffer,
       ] as const;
     });
 
@@ -180,69 +164,32 @@ describe('Test createSerializableOnUI', () => {
     // object
     expect(typeof arrayValue[index.object]).toBe('object');
     expect(arrayValue[index.object].a).toBe(1);
-    // remote function
-    expect(typeof arrayValue[index.remoteFunction]).toBe(
-      globalThis._WORKLETS_BUNDLE_MODE_ENABLED ? 'function' : 'object'
-    );
     // array
     expect(arrayValue[index.array].length).toBe(1);
     expect(arrayValue[index.array][0]).toBe(1);
-    // initializer - regexp
-    expect(typeof arrayValue[index.initializer]).toBe('object');
-    // array buffer
-    expect(typeof arrayValue[index.arrayBuffer]).toBe('object');
   });
 
-  // These types are not supported yet
-  // test('createSerializableOnUIError', async () => {
-  //   // Arrange
-  //   const errorValue = runOnUISync(() => {
-  //     'worklet';
-  //     return new Error('test');
-  //   })();
+  test('createSerializableOnUIError', async () => {
+    await expect(() => {
+      runOnUISync(() => {
+        'worklet';
+        return new Error('test');
+      });
+    }).toThrow(
+      'Serializing objects with prototypes different than Object.prototype is not supported. Use `registerCustomSerializable` to register custom serialization logic for such objects.'
+    );
+  });
 
-  //   // Act
-  //   await render(
-  //     <ValueComponent
-  //       validationFunction={() => {
-  //         'worklet';
-  //         const checks = [errorValue instanceof Error, String(errorValue).includes('test')];
-  //         return checks.every(Boolean);
-  //       }}
-  //     />,
-  //   );
-  //   await wait(100);
-
-  //   // Assert
-  //   const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-  //   expect(sharedValue.onUI).toBe('ok');
-  //   expect(sharedValue.onJS).toBe('ok');
-  // });
-
-  // test('createSerializableOnUIInitializer', async () => {
-  //   // Arrange
-  //   const regExpValue = runOnUISync(() => {
-  //     'worklet';
-  //     return /a/;
-  //   })();
-
-  //   // Act
-  //   await render(
-  //     <ValueComponent
-  //       validationFunction={() => {
-  //         'worklet';
-  //         const checks = [regExpValue instanceof RegExp, regExpValue.test('a')];
-  //         return checks.every(Boolean);
-  //       }}
-  //     />,
-  //   );
-  //   await wait(100);
-
-  //   // Assert
-  //   const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-  //   expect(sharedValue.onUI).toBe('ok');
-  //   expect(sharedValue.onJS).toBe('ok');
-  // });
+  test('createSerializableOnUIInitializer', async () => {
+    await expect(() => {
+      runOnUISync(() => {
+        'worklet';
+        return /a/;
+      });
+    }).toThrow(
+      'Serializing objects with prototypes different than Object.prototype is not supported. Use `registerCustomSerializable` to register custom serialization logic for such objects.'
+    );
+  });
 
   test('createSerializableOnUIPlainObject', () => {
     // Arrange & Act
@@ -255,10 +202,7 @@ describe('Test createSerializableOnUI', () => {
       string = 5,
       bigint = 6,
       object = 7,
-      remoteFunction = 8,
-      array = 9,
-      initializer = 10,
-      arrayBuffer = 11,
+      array = 8,
     }
     const obj = runOnUISync(() => {
       'worklet';
@@ -271,12 +215,7 @@ describe('Test createSerializableOnUI', () => {
         [key.string]: 'test',
         [key.bigint]: BigInt(123),
         [key.object]: { f: 4, g: 'test' },
-        [key.remoteFunction]: () => {
-          return 1;
-        },
         [key.array]: [1],
-        [key.initializer]: /test/,
-        [key.arrayBuffer]: new ArrayBuffer(3),
       };
     });
 
@@ -298,162 +237,138 @@ describe('Test createSerializableOnUI', () => {
     expect(typeof obj[key.object]).toBe('object');
     expect(obj[key.object].f).toBe(4);
     expect(obj[key.object].g).toBe('test');
-    expect(typeof obj[key.remoteFunction]).toBe(
-      globalThis._WORKLETS_BUNDLE_MODE_ENABLED ? 'function' : 'object'
-    );
     expect(obj[key.array].length).toBe(1);
     expect(obj[key.array][0]).toBe(1);
-    expect(typeof obj[key.initializer]).toBe('object');
   });
 
-  // These types are not supported yet
-  // test('createSerializableCloneOnUIWorklet', async () => {
-  //   // Arrange
-  //   const workletFunction = runOnUISync(() => {
-  //     'worklet';
-  //     return () => {
-  //       'worklet';
-  //       return 1;
-  //     };
-  //   })();
-
-  //   // Act
-  //   await render(
-  //     <ValueComponent
-  //       validationFunction={() => {
-  //         'worklet';
-  //         const checks = [typeof workletFunction === 'function', workletFunction() === 1];
-  //         return checks.every(Boolean);
-  //       }}
-  //     />,
-  //   );
-  //   await wait(100);
-
-  //   // Assert
-  //   const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-  //   expect(sharedValue.onUI).toBe('ok');
-  //   expect(sharedValue.onJS).toBe('ok');
-  // });
-
-  // test('createSerializableCloneOnUIArrayBuffer', async () => {
-  //   // Arrange
-  //   const arrayBuffer = runOnUISync(() => {
-  //     'worklet';
-  //     return new ArrayBuffer(3);
-  //   })();
-  //   const uint8Array = new Uint8Array(arrayBuffer);
-  //   uint8Array[0] = 1;
-  //   uint8Array[1] = 2;
-  //   uint8Array[2] = 3;
-
-  //   // Act
-  //   await render(
-  //     <ValueComponent
-  //       validationFunction={() => {
-  //         'worklet';
-  //         const checks = [arrayBuffer instanceof ArrayBuffer, arrayBuffer.byteLength === 3];
-  //         return checks.every(Boolean);
-  //       }}
-  //     />,
-  //   );
-  //   await wait(100);
-
-  //   // Assert
-  //   const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-  //   expect(sharedValue.onUI).toBe('ok');
-  //   expect(sharedValue.onJS).toBe('ok');
-  // });
-
-  // test('createSerializableRemoteFunction', async () => {
-  //   // Arrange & Act
-  //   const remoteFunction = runOnUISync(() => {
-  //     'worklet';
-  //     const remoteFunction = () => {
-  //       return 1;
-  //     };
-  //     return remoteFunction;
-  //   })();
-
-  //   // Assert
-  //   expect(typeof remoteFunction).toBe('function');
-  //   expect(__DEV__ === false || ('__remoteFunction' in remoteFunction && !!remoteFunction.__remoteFunction)).toBe(true);
-  // });
-
-  // test('createSerializableHostFunction', async () => {
-  //   // Arrange & Act
-  //   const hostFunction = runOnUISync(() => {
-  //     'worklet';
-  //     // @ts-expect-error It's ok
-  //     return globalThis.__workletsModuleProxy.createSerializableBoolean;
-  //   })();
-
-  //   // Assert
-  //   const shareableBoolean = hostFunction(true);
-  //   expect(typeof shareableBoolean).toBe('function');
-  //   expect('magicKey' in shareableBoolean).toBe(true);
-  // });
-
-  // test('createSerializableTurboModuleLike', async () => {
-  //   // Arrange & Act
-  //   const { obj, reanimatedModuleKeys } = runOnUISync(() => {
-  //     // @ts-expect-error This global host object isn't exposed in the types.
-  //     const proto = globalThis.__reanimatedModuleProxy;
-  //     const _reanimatedModuleKeys = Object.keys(proto);
-  //     const _obj = {
-  //       a: 1,
-  //       b: 'test',
-  //     };
-  //     Object.setPrototypeOf(_obj, proto);
-  //     return { obj: _obj, reanimatedModuleKeys: _reanimatedModuleKeys };
-  //   })();
-
-  //   // Assert
-  //   expect(obj.a).toBe(1);
-  //   expect(obj.b).toBe('test');
-  //   expect(reanimatedModuleKeys.every(key => key in Object.getPrototypeOf(obj))).toBe(true);
-  //   expect('magicKey' in Object.getPrototypeOf(obj)).toBe(true);
-  // });
-
-  test('createSerializableOnUIInaccessibleObject', async () => {
-    // Arrange
-    const clazz = runOnUISync(() => {
+  test('createSerializableOnUICapturedWorklet', async () => {
+    const worklet = () => {
       'worklet';
-      class Clazz {
-        method() {}
-      }
+    };
 
-      return new Clazz();
-    });
+    await expect(() => {
+      runOnUISync(() => {
+        'worklet';
+        return worklet;
+      });
+    }).toThrow(
+      'Cloning remote functions from Worklet Runtimes isasdasdasd only available in Bundle Mode'
+    );
+  });
 
+  test('createSerializableOnUINestedWorklet', async () => {
+    await expect(() => {
+      runOnUISync(() => {
+        'worklet';
+        return () => {
+          'worklet';
+          return 1;
+        };
+      });
+    }).toThrow(
+      'Serializing worklet functions on Worklet Runtimes is not supported outside of Bundle Mode.'
+    );
+  });
+
+  test('createSerializableCloneOnUIArrayBuffer', async () => {
+    if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+      const arrayBuffer = runOnUISync(() => {
+        'worklet';
+        return new ArrayBuffer(3);
+      });
+
+      expect(arrayBuffer instanceof ArrayBuffer).toBe(true);
+      expect(arrayBuffer.byteLength).toBe(3);
+    } else {
+      await expect(() => {
+        runOnUISync(() => {
+          'worklet';
+          return new ArrayBuffer(3);
+        });
+      }).toThrow(
+        'Serializing objects with prototypes different than Object.prototype is not supported. Use `registerCustomSerializable` to register custom serialization logic for such objects.'
+      );
+    }
+  });
+
+  test('createSerializableHostFunction', () => {
+    // Arrange & Act
+    const hostFunction = runOnUISync(() => {
+      'worklet';
+      return globalThis.__workletsModuleProxy.createSerializableBoolean;
+    }) as (value: boolean) => unknown;
+
+    // Assert
+    expect(typeof hostFunction).toBe('function');
+    const serializableBoolean = hostFunction(true);
+    expect(typeof serializableBoolean).toBe('object');
+  });
+
+  test('createSerializableTurboModuleLike', async () => {
+    const hostObject = createWorkletRuntime({ name: 'test' });
+
+    if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+      const turboModuleLike = runOnUISync(() => {
+        'worklet';
+        const obj = {};
+        Object.setPrototypeOf(obj, hostObject);
+        return obj;
+      });
+
+      // Assert
+      expect(typeof turboModuleLike).toBe('object');
+      expect('magicKey' in Object.getPrototypeOf(turboModuleLike)).toBe(true);
+    } else {
+      await expect(() => {
+        runOnUISync(() => {
+          'worklet';
+          const obj = {};
+          Object.setPrototypeOf(obj, hostObject);
+          return obj;
+        });
+      }).toThrow(
+        'Serializing objects with prototypes different than Object.prototype is not supported. Use `registerCustomSerializable` to register custom serialization logic for such objects.'
+      );
+    }
+  });
+
+  test('createSerializableOnUICustomPrototype', async () => {
     // Act & Assert
     await expect(() => {
-      clazz.method();
-    }).toThrow();
+      runOnUISync(() => {
+        'worklet';
+        class Clazz {
+          method() {}
+        }
+
+        return new Clazz();
+      });
+    }).toThrow(
+      'Serializing objects with prototypes different than Object.prototype is not supported. Use `registerCustomSerializable` to register custom serialization logic for such objects.'
+    );
   });
 
   test('createSerializableOnUIRemoteNamedFunctionSyncCall', async () => {
     // Arrange
-    const foo = runOnUISync(() => {
-      'worklet';
-      return function () {};
-    });
-
-    // Act & Assert
     await expect(() => {
-      foo();
-    }).toThrow();
+      runOnUISync(() => {
+        'worklet';
+        return function () {};
+      });
+    }).toThrow(
+      'Cloning remote functions from Worklet Runtimes is only available in Bundle Mode'
+    );
   });
 
   test('createSerializableOnUIRemoteAnonymousFunctionSyncCall', async () => {
-    // Arrange
-    const foo = runOnUISync(() => {
-      'worklet';
-      return function () {};
-    });
-
     // Act & Assert
     await expect(() => {
-      foo();
-    }).toThrow();
+      runOnUISync(() => {
+        'worklet';
+        return function () {};
+      });
+    }).toThrow(
+      'Cloning remote functions from Worklet Runtimes is only available in Bundle Mode'
+    );
   });
 });

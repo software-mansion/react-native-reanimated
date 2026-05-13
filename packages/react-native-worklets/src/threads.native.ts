@@ -261,6 +261,8 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
         ? () => (fun as (...args: Args) => ReturnValue)(...args)
         : (fun as () => ReturnValue)
     );
+  } else if (__DEV__ && fun.__extractedWorklet) {
+    throw new Error('BBBBBBBBBB');
   } else if (isWorkletFunction<Args, ReturnValue>(fun)) {
     // If `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
     // and pass the worklet as a first argument followed by original arguments.
@@ -269,6 +271,7 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
     if ((fun as FunDevRemote).__remoteFunction) {
       fun = (fun as FunDevRemote).__remoteFunction;
     }
+
     globalThis.__workletsModuleProxy.scheduleOnRN(
       fun as (...args: Args) => ReturnValue,
       (args.length > 0

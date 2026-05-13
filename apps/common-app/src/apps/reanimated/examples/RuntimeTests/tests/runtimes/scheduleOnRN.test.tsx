@@ -26,6 +26,11 @@ describe('scheduleOnRN', () => {
     notify(PASS_NOTIFICATION);
   };
 
+  const workletCallbackPass = (num: number) => {
+    'worklet';
+    callbackPass(num);
+  };
+
   const callbackFail = (message: string) => {
     errorMessage = message;
     notify(FAIL_NOTIFICATION);
@@ -59,7 +64,7 @@ describe('scheduleOnRN', () => {
   });
 
   allSources.forEach(({ name, scheduleOnTarget }) => {
-    test(`schedules remoteFunction from ${name} Runtime to RN Runtime`, async () => {
+    test(`schedules a Remote Function from ${name} Runtime to RN Runtime`, async () => {
       scheduleOnTarget(() => {
         'worklet';
         scheduleOnRN(callbackPass, 42);
@@ -71,7 +76,7 @@ describe('scheduleOnRN', () => {
   });
 
   allSources.forEach(({ name, scheduleOnTarget }) =>
-    test(`schedules hostFunction from ${name} Runtime to RN Runtime`, async () => {
+    test(`schedules a Host Function from ${name} Runtime to RN Runtime`, async () => {
       scheduleOnTarget(() => {
         'worklet';
         const hostFunction = globalThis.__workletsModuleProxy
@@ -84,6 +89,33 @@ describe('scheduleOnRN', () => {
       expect(value).toBe(42);
     })
   );
+
+  test(`schedules a Worklet Function from RN Runtime to RN Runtime without errors`, async () => {
+    scheduleOnRN(workletCallbackPass, 42);
+
+    await waitForNotification(PASS_NOTIFICATION);
+    expect(value).toBe(42);
+  });
+
+  if (__DEV__) {
+    workletSources.forEach(({ name, scheduleOnTarget }) =>
+      test(`throws actionable error when a Worklet Function is passed to scheduleOnRN on ${name} Runtime`, async () => {
+        scheduleOnTarget(() => {
+          'worklet';
+          try {
+            scheduleOnRN(workletCallbackPass, 42);
+          } catch (error) {
+            scheduleOnRN(callbackFail, (error as Error).message);
+          }
+        });
+
+        await waitForNotification(FAIL_NOTIFICATION);
+        expect(errorMessage).toInclude(
+          'Passing worklets to scheduleOnRN on Worklet Runtimes is not yet supported'
+        );
+      })
+    );
+  }
 
   test('schedules locally defined function from RN Runtime to RN Runtime without errors', async () => {
     scheduleOnRN(() => {

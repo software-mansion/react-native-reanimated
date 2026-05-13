@@ -119,7 +119,7 @@ describe('scheduleOnRuntimeWithId', () => {
       try {
         scheduleOnRuntimeWithId(9999, () => {
           'worklet';
-          scheduleOnRN(callbackPass, 42);
+          (globalThis as localGlobal).scheduleOnRN(callbackPass, 42);
         });
       } catch (error) {
         scheduleOnRN(

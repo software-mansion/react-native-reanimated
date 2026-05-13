@@ -70,6 +70,8 @@ interface WorkletProps {
   __workletHash: number;
   /** Only in Legacy Bundling. */
   __initData?: WorkletInitData;
+  /** Only in Legacy Bundling. */
+  __serializableInLegacyMode?: true;
   /** Only for Handles. */
   __init?: () => unknown;
   /** `__stackDetails` is removed after parsing. */
