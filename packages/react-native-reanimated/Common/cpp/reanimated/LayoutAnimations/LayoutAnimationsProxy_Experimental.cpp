@@ -97,6 +97,11 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
 
   cleanupAnimations(filteredMutations, propsParserContext, surfaceId);
 
+  for (const auto tag : sharedTransitionTagsToErase_) {
+    layoutAnimationsManager_->eraseSharedTransition(tag);
+  }
+  sharedTransitionTagsToErase_.clear();
+
   transitionMap_.clear();
   transitions_.clear();
 
@@ -185,7 +190,13 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         break;
       }
       case ShadowViewMutation::Delete: {
-        lightNodes_.erase(mutation.oldChildShadowView.tag);
+        const auto deletedTag = mutation.oldChildShadowView.tag;
+        lightNodes_.erase(deletedTag);
+        layoutAnimationsManager_->clearSharedTransitionConfig(deletedTag);
+        if (layoutAnimationsManager_->hasLayoutAnimation(
+                deletedTag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION)) {
+          sharedTransitionTagsToErase_.push_back(deletedTag);
+        }
         break;
       }
       case ShadowViewMutation::Insert: {

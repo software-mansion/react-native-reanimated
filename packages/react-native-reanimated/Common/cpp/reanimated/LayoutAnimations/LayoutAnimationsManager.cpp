@@ -62,6 +62,17 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(const int tag) {
   exitingAnimations_.erase(tag);
   layoutAnimations_.erase(tag);
   shouldAnimateExitingForTag_.erase(tag);
+  sharedTransitions_.erase(tag);
+  sharedTransitionManager_->tagToName_.erase(tag);
+}
+
+void LayoutAnimationsManager::clearSharedTransitionConfig(const int tag) {
+  sharedTransitionManager_->tagToName_.erase(tag);
+}
+
+void LayoutAnimationsManager::eraseSharedTransition(const int tag) {
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+  sharedTransitions_.erase(tag);
 }
 
 void LayoutAnimationsManager::startLayoutAnimation(
