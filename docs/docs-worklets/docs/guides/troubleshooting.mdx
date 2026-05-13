@@ -146,9 +146,9 @@ Assign accessed properties to variables beforehand and use those in the worklet:
 
 ## Threading issues
 
-### Tried to synchronously call a non-worklet function on the UI thread
+### Tried to synchronously call a Remote Function 
 
-**Problem:** This can happen when you try to call a function that is not marked as a worklet from a worklet. E.g.:
+**Problem:** This can happen when you try to call a function that is neither Worklet nor a Host Function on a different Runtime than it was defined on.
 
 ```typescript
 function callee() {
@@ -185,3 +185,7 @@ In this example, `callee` cannot be called from a worklet ran on UI Runtime beca
 ```
 
 Check [this page](/docs/fundamentals/glossary#worklet) to learn more about worklets.
+
+### Tried to synchronously call a non-worklet function on the UI thread
+
+See [Tried to synchronously call a Remote Function](#tried-to-synchronously-call-a-remote-function).

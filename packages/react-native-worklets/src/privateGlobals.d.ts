@@ -18,6 +18,15 @@ declare global {
   var __r: ((moduleId: number) => Record<string, unknown>) &
     Record<string, unknown>;
 
+  /**
+   * The name of the current runtime, used in debugging.
+   *
+   * - "RN" for the RN Runtime.
+   * - "UI" for the UI Runtime.
+   * - A custom name for Worker Runtimes.
+   */
+  var __RUNTIME_NAME: string;
+
   var _toString: (value: unknown) => string;
   var __workletsModuleProxy: WorkletsModuleProxy;
   var _WORKLETS_BUNDLE_MODE_ENABLED: boolean | undefined;
@@ -59,8 +68,6 @@ declare global {
   /** Only outside of Bundle Mode on Worklet Runtimes. */
   var __serializer: typeof makeShareableCloneOnUIRecursive;
   var __callMicrotasks: () => void;
-  var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
-  var _scheduleRemoteFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
   /** Available only on RN Runtime */
   var __reportFatalRemoteError: typeof reportFatalRemoteError | undefined;
   var __valueUnpacker: ValueUnpacker;
