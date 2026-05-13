@@ -39,12 +39,7 @@ void UpdatesRegistry::flush(UpdatesBatch &updatesBatch) {
 }
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
-void UpdatesRegistry::flushAnimatedPropsUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
-  std::lock_guard<std::mutex> lock{mutex_};
-  flushAnimatedProps(updatesBatch);
-}
-
-void UpdatesRegistry::flushAnimatedProps(UpdatesBatchAnimatedProps &updatesBatch) {
+void UpdatesRegistry::flush(UpdatesBatchAnimatedProps &updatesBatch) {
   auto copiedUpdatesBatch = std::move(updatesBatchAnimatedProps_);
   updatesBatchAnimatedProps_.clear();
 

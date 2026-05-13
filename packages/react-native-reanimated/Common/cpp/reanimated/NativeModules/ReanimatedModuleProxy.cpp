@@ -900,9 +900,9 @@ AnimationMutations ReanimatedModuleProxy::executeOperationsAndCollectUpdates(con
   UpdatesBatchAnimatedProps batch;
   auto lock = updatesRegistryManager_->lock();
 
-  cssTransitionsRegistry_->updateAndFlushAnimatedProps(currentCssTimestamp, batch);
-  animatedPropsRegistry_->flushAnimatedPropsUpdates(batch);
-  cssAnimationsRegistry_->updateAndFlushAnimatedProps(currentCssTimestamp, batch);
+  cssTransitionsRegistry_->updateAndFlush(currentCssTimestamp, batch);
+  animatedPropsRegistry_->flushUpdates(batch);
+  cssAnimationsRegistry_->updateAndFlush(currentCssTimestamp, batch);
 
   return mutationsFromAnimatedPropsBatch(std::move(batch));
 }
@@ -912,7 +912,7 @@ AnimationMutations ReanimatedModuleProxy::collectEventUpdates() {
 
   UpdatesBatchAnimatedProps batch;
   auto lock = updatesRegistryManager_->lock();
-  animatedPropsRegistry_->flushAnimatedPropsUpdates(batch);
+  animatedPropsRegistry_->flushUpdates(batch);
 
   return mutationsFromAnimatedPropsBatch(std::move(batch));
 }

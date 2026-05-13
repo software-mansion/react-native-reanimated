@@ -62,20 +62,22 @@ class UpdatesRegistry {
   void collectPropsToRevert(PropsToRevertMap &propsToRevertMap);
 #endif
 
-  // get updates in the non-animation backend path
+  // Drains pending style updates as folly::dynamic (acquires mutex_).
   void flushUpdates(UpdatesBatch &updatesBatch) {
     std::lock_guard<std::mutex> lock{mutex_};
     flush(updatesBatch);
   }
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
-  // Get updates in the animation backend path.
-  void flushAnimatedPropsUpdates(UpdatesBatchAnimatedProps &updatesBatch);
+  // Drains pending typed animated props (acquires mutex_).
+  void flushUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
+    std::lock_guard<std::mutex> lock{mutex_};
+    flush(updatesBatch);
+  }
+
   // Get only non-layout updates (for android event handling) in the animation backend path.
   void flushNonLayoutUpdates(jsi::Runtime &rt, facebook::react::AnimationMutations &mutations);
   bool hasPendingAnimatedPropsUpdates() const;
-  // Assumes the caller already locked the registry.
-  void flushAnimatedProps(UpdatesBatchAnimatedProps &updatesBatch);
   void addAnimatedPropsToBatch(
       const ShadowNodeFamily::Shared &shadowNodeFamily,
       AnimatedProps animatedProps,
@@ -96,6 +98,11 @@ class UpdatesRegistry {
 
   /// Assumes the caller already locked the registry.
   void flush(UpdatesBatch &updatesBatch);
+
+#if REACT_NATIVE_VERSION_MINOR >= 85
+  // Assumes the caller already locked the registry.
+  void flush(UpdatesBatchAnimatedProps &updatesBatch);
+#endif
 
   /// Assumes the caller already locked the registry.
   virtual void removeTag(Tag tag) = 0;
