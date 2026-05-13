@@ -5,7 +5,6 @@
 #include <worklets/Registries/WorkletRuntimeRegistry.h>
 
 #include <memory>
-#include <new>
 #include <optional>
 #include <string>
 #include <utility>
@@ -22,6 +21,7 @@ namespace worklets {
 // terminated runtime. The JS object itself lived inside the runtime's heap
 // and was reclaimed with the runtime; only the C++ wrapper allocation
 // remains, and we free it here without invoking ~jsi::Value.
+// See https://github.com/facebook/hermes/blob/75b617a/API/jsi/jsi/jsi.h#L833
 inline void freeWithoutCallingDestructor(std::unique_ptr<jsi::Value> &value) {
   ::operator delete(value.release());
 }
