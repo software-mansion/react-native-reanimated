@@ -19,6 +19,7 @@ internal object SynchronousPropsBufferParser {
     private const val CMD_BACKGROUND_COLOR = 15
     private const val CMD_COLOR = 16
     private const val CMD_TINT_COLOR = 17
+    private const val CMD_PLACEHOLDER_TEXT_COLOR = 18
 
     private const val CMD_BORDER_RADIUS = 20
     private const val CMD_BORDER_TOP_LEFT_RADIUS = 21
@@ -71,6 +72,7 @@ internal object SynchronousPropsBufferParser {
             CMD_BACKGROUND_COLOR -> "backgroundColor"
             CMD_COLOR -> "color"
             CMD_TINT_COLOR -> "tintColor"
+            CMD_PLACEHOLDER_TEXT_COLOR -> "placeholderTextColor"
             CMD_BORDER_RADIUS -> "borderRadius"
             CMD_BORDER_TOP_LEFT_RADIUS -> "borderTopLeftRadius"
             CMD_BORDER_TOP_RIGHT_RADIUS -> "borderTopRightRadius"
@@ -142,6 +144,7 @@ internal object SynchronousPropsBufferParser {
                 CMD_BACKGROUND_COLOR,
                 CMD_COLOR,
                 CMD_TINT_COLOR,
+                CMD_PLACEHOLDER_TEXT_COLOR,
                 CMD_BORDER_COLOR,
                 CMD_BORDER_TOP_COLOR,
                 CMD_BORDER_BOTTOM_COLOR,

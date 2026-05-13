@@ -29,6 +29,7 @@ enum Command : std::uint8_t {
   CMD_BACKGROUND_COLOR = 15,
   CMD_COLOR = 16,
   CMD_TINT_COLOR = 17,
+  CMD_PLACEHOLDER_TEXT_COLOR = 18,
 
   CMD_BORDER_RADIUS = 20,
   CMD_BORDER_TOP_LEFT_RADIUS = 21,
@@ -81,6 +82,7 @@ const std::unordered_map<std::string_view, Command> kPropNameToCommand = {
     {"backgroundColor", CMD_BACKGROUND_COLOR},
     {"color", CMD_COLOR},
     {"tintColor", CMD_TINT_COLOR},
+    {"placeholderTextColor", CMD_PLACEHOLDER_TEXT_COLOR},
     {"borderRadius", CMD_BORDER_RADIUS},
     {"borderTopLeftRadius", CMD_BORDER_TOP_LEFT_RADIUS},
     {"borderTopRightRadius", CMD_BORDER_TOP_RIGHT_RADIUS},
@@ -169,6 +171,7 @@ void serializeSynchronousPropsToBuffers(
         case CMD_BACKGROUND_COLOR:
         case CMD_COLOR:
         case CMD_TINT_COLOR:
+        case CMD_PLACEHOLDER_TEXT_COLOR:
         case CMD_BORDER_COLOR:
         case CMD_BORDER_TOP_COLOR:
         case CMD_BORDER_BOTTOM_COLOR:
