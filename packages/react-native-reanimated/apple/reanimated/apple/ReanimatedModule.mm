@@ -22,6 +22,7 @@ using namespace worklets;
 
 @implementation ReanimatedModule {
   __weak RCTSurfacePresenter *_surfacePresenter;
+  std::shared_ptr<ReanimatedModuleProxy> _reanimatedModuleProxy;
 #ifndef NDEBUG
   reanimated::SingleInstanceChecker<ReanimatedModule> singleInstanceChecker_;
 #endif // NDEBUG
@@ -38,6 +39,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   REAAssertTurboModuleManagerQueue();
 
   [_nodesManager invalidate];
+  _reanimatedModuleProxy.reset();
   [super invalidate];
 }
 
@@ -157,12 +159,12 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   const auto uiWorkletRuntime = [self getUIRuntime:rnRuntime];
   const auto uiScheduler = [self getUIScheduler:rnRuntime];
 
-  auto reanimatedModuleProxy = reanimated::createReanimatedModuleProxy(
+  _reanimatedModuleProxy = reanimated::createReanimatedModuleProxy(
       _nodesManager, _moduleRegistry, rnRuntime, jsCallInvoker, uiWorkletRuntime, uiScheduler);
 
   auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
-  RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, reanimatedModuleProxy);
-  [self attachReactEventListener:reanimatedModuleProxy];
+  RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, _reanimatedModuleProxy);
+  [self attachReactEventListener:_reanimatedModuleProxy];
 
   react_native_assert(_surfacePresenter != nil && "_surfacePresenter is nil");
   RCTScheduler *scheduler = [_surfacePresenter scheduler];
@@ -170,7 +172,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   react_native_assert(scheduler.uiManager != nil && "_surfacePresenter.scheduler.uiManager is nil");
   const auto &uiManager = scheduler.uiManager;
   react_native_assert(uiManager.get() != nil);
-  reanimatedModuleProxy->initializeFabric(uiManager);
+  _reanimatedModuleProxy->initializeFabric(uiManager);
 
   return @YES;
 }
