@@ -2,6 +2,8 @@
 
 #include <jsi/jsi.h>
 
+#include <cstdint>
+
 namespace worklets {
 namespace RuntimeData {
 

@@ -79,7 +79,7 @@ void WorkletRuntimeDecorator::decorate(
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
-  rt.global().setProperty(rt, RuntimeData::runtimeKindBindingName, static_cast<int>(RuntimeData::RuntimeKind::Worker));
+  rt.global().setProperty(rt, RuntimeData::runtimeKindBindingName, static_cast<int>(runtimeKind));
 
   rt.global().setProperty(rt, "_WORKLET", true);
 
