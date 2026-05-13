@@ -59,6 +59,23 @@ void CSSTransitionsRegistry::run(
   runTransition(rt, transition, viewTag, propertyDiffs);
 }
 
+void CSSTransitionsRegistry::run(
+    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const PropertyValueDynamicDiffsMap &propertyDiffs) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
+  const auto viewTag = shadowNode->getTag();
+  const auto &transition = registry_.at(viewTag);
+
+  const auto &lastUpdates = getUpdatesFromRegistry(viewTag);
+  const auto timestamp = getCurrentTimestamp_();
+
+  auto initialUpdate = transition->run(propertyDiffs, lastUpdates, timestamp);
+
+  scheduleOrActivateTransition(transition);
+  updateInUpdatesRegistry(transition, initialUpdate);
+}
+
 void CSSTransitionsRegistry::removeTag(const Tag viewTag) {
   removeFromUpdatesRegistry(viewTag);
   delayedTransitionsManager_.remove(viewTag);

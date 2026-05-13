@@ -49,6 +49,15 @@ folly::dynamic CSSTransition::run(
   return update(timestamp);
 }
 
+folly::dynamic CSSTransition::run(
+    const PropertyValueDynamicDiffsMap &propertiesDiffs,
+    const folly::dynamic &lastUpdateValue,
+    const double timestamp) {
+  handleChangedProperties(
+      propertiesDiffs, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
+  return update(timestamp);
+}
+
 void CSSTransition::updateConfig(
     const PropertiesSettingsMap &changedPropertiesSettings,
     const std::vector<std::string> &removedProperties) {
@@ -105,6 +114,34 @@ void CSSTransition::handleChangedProperties(
     styleInterpolator_.setAllowDiscrete(propertyName, allowDiscrete);
 
     // Update the transition progress provider
+    progressProvider_.runProgressProvider(propertyName, isReversed, timestamp);
+  }
+}
+
+void CSSTransition::handleChangedProperties(
+    const PropertyValueDynamicDiffsMap &propertiesDiffs,
+    const folly::dynamic &lastUpdateValue,
+    const double timestamp) {
+  for (const auto &[propertyName, propertyDiff] : propertiesDiffs) {
+    const auto allowDiscrete = progressProvider_.getPropertySettings(propertyName).allowDiscrete;
+
+    if (!allowDiscrete && isDiscreteProperty(propertyName, shadowNode_->getComponentName())) {
+      removeProperty(propertyName);
+      continue;
+    }
+
+    transitionProperties_.insert(propertyName);
+
+    bool isReversed;
+    if (lastUpdateValue.count(propertyName)) {
+      isReversed = styleInterpolator_.createOrUpdateInterpolator(
+          propertyName, lastUpdateValue.at(propertyName), propertyDiff.second);
+    } else {
+      isReversed = styleInterpolator_.createOrUpdateInterpolator(propertyName, propertyDiff.first, propertyDiff.second);
+    }
+
+    styleInterpolator_.setAllowDiscrete(propertyName, allowDiscrete);
+
     progressProvider_.runProgressProvider(propertyName, isReversed, timestamp);
   }
 }
