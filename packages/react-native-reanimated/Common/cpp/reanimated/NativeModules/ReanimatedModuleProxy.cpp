@@ -64,6 +64,7 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       "opacity",
       "elevation",
       "zIndex",
+      "shadowColor",
 #if __APPLE__
       "shadowOpacity",
       "shadowRadius",
@@ -71,6 +72,7 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       "backgroundColor",
       // "color", // not supported
       "tintColor",
+      "placeholderTextColor",
       "borderRadius",
       "borderTopLeftRadius",
       "borderTopRightRadius",
