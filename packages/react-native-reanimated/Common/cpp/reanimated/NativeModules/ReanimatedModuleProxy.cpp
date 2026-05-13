@@ -193,7 +193,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     // This is temporary, we will converge on a single approach when both
     // features are done. Until then, the backend plays the role of the platform
     // frame source: we queue the callback the loop hands us and run it from
-    // grandCallback(AnimationLoop) on the next backend tick.
+    // runGrandCallback(AnimationLoop) on the next backend tick.
     requestRender_ = [weakThis = weak_from_this()](std::function<void(const double)> callback) {
       auto strongThis = weakThis.lock();
       if (!strongThis) {
@@ -275,7 +275,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     auto surfaceId = strongThis->layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
 
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-      // in the backend path this is called from grandCallback,
+      // in the backend path this is called from runGrandCallback,
       // we are guaranteed to have the changes flushed
     } else {
       if (!strongThis->layoutAnimationRenderRequested_) {
@@ -810,7 +810,7 @@ void ReanimatedModuleProxy::startBackendIfNeeded() {
           if (!strongThis) {
             return AnimationMutations{};
           }
-          return strongThis->grandCallback(timestamp, GrandCallbackSource::AnimationLoop);
+          return strongThis->runGrandCallback(timestamp, GrandCallbackSource::AnimationLoop);
         });
     isAnimationRunning_ = true;
   }
@@ -857,10 +857,10 @@ AnimationMutations ReanimatedModuleProxy::mutationsFromAnimatedPropsBatch(
   return mutations;
 }
 
-AnimationMutations ReanimatedModuleProxy::grandCallback(
+AnimationMutations ReanimatedModuleProxy::runGrandCallback(
     const AnimationTimestamp timestamp,
     const GrandCallbackSource source) {
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::grandCallback");
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::runGrandCallback");
 
   switch (source) {
     case GrandCallbackSource::AnimationLoop: {
@@ -936,7 +936,7 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
 #if REACT_NATIVE_VERSION_MINOR >= 85 && (REACT_NATIVE_VERSION_MINOR > 85 || REACT_NATIVE_VERSION_PATCH >= 2)
   getAnimationBackend()->pushAnimationMutations([&, source](AnimationTimestamp timestamp) {
     handled = handleEvent(eventName, emitterReactTag, payload, timestamp.count());
-    return grandCallback(timestamp, source);
+    return runGrandCallback(timestamp, source);
   });
 #else
   (void)eventName;
