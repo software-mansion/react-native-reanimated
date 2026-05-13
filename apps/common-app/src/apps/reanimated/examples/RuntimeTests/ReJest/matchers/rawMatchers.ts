@@ -14,7 +14,12 @@ type ToBeWithinRangeArgs = [number, number];
 type ToBeCalledArgs = [number];
 type ToIncludeArgs = [string];
 
-export type SyncMatcherArguments = ToBeArgs | ToBeNullArgs | ToBeCalledArgs | ToBeWithinRangeArgs | ToIncludeArgs;
+export type SyncMatcherArguments =
+  | ToBeArgs
+  | ToBeNullArgs
+  | ToBeCalledArgs
+  | ToBeWithinRangeArgs
+  | ToIncludeArgs;
 export type AsyncMatcherArguments = ToThrowArgs;
 export type MatcherReturn = {
   pass: boolean;
@@ -170,8 +175,13 @@ export const toBeCalledJSMatcher: Matcher<ToBeCalledArgs> = (
   return toBeCalledOnThreadMatcher(currentValue, negation, times, 'JS');
 };
 
-export const toIncludeMatcher: Matcher<ToIncludeArgs> = (currentValue, negation, substring) => {
-  const pass = typeof currentValue === 'string' && currentValue.includes(substring);
+export const toIncludeMatcher: Matcher<ToIncludeArgs> = (
+  currentValue,
+  negation,
+  substring
+) => {
+  const pass =
+    typeof currentValue === 'string' && currentValue.includes(substring);
   return {
     pass,
     message:
@@ -181,7 +191,11 @@ export const toIncludeMatcher: Matcher<ToIncludeArgs> = (currentValue, negation,
   };
 };
 
-export const toThrowMatcher: AsyncMatcher<ToThrowArgs> = async (throwingFunction, negation, errorMessage) => {
+export const toThrowMatcher: AsyncMatcher<ToThrowArgs> = async (
+  throwingFunction,
+  negation,
+  errorMessage
+) => {
   if (typeof throwingFunction !== 'function') {
     return {
       pass: false,
@@ -252,6 +266,10 @@ async function mockConsole(): Promise<
   console.warn = mockedConsoleFunction;
   await syncUIRunner.runOnUIBlocking(() => {
     'worklet';
+    (globalThis as Record<string, unknown>).__originalConsoleError =
+      console.error;
+    (globalThis as Record<string, unknown>).__originalConsoleWarn =
+      console.warn;
     console.error = mockedConsoleFunction;
     console.warn = mockedConsoleFunction;
   });
@@ -261,8 +279,12 @@ async function mockConsole(): Promise<
     console.warn = originalWarning;
     await syncUIRunner.runOnUIBlocking(() => {
       'worklet';
-      console.error = originalError;
-      console.warn = originalWarning;
+      console.error = (globalThis as Record<string, unknown>)
+        .__originalConsoleError as typeof console.error;
+      console.warn = (globalThis as Record<string, unknown>)
+        .__originalConsoleWarn as typeof console.warn;
+      delete (globalThis as Record<string, unknown>).__originalConsoleError;
+      delete (globalThis as Record<string, unknown>).__originalConsoleWarn;
     });
   };
 
