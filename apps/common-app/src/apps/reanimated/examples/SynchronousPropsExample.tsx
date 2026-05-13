@@ -131,6 +131,19 @@ export default function SynchronousPropsExample() {
         }}
       />
 
+      <Text>shadowColor</Text>
+      <Animated.View
+        style={{
+          width: 50,
+          height: 50,
+          borderWidth: 1,
+          elevation: 2,
+          shadowRadius: 2,
+          shadowOpacity: 1,
+          shadowColor: colorSv,
+        }}
+      />
+
       <Text>backgroundColor</Text>
       <Animated.View
         style={{
