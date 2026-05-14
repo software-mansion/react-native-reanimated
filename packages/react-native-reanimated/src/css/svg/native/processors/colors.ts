@@ -19,6 +19,8 @@ export const processColorSVG: ValueProcessor<
   }
 
   if (processed !== null) {
+    // Same convention as the main `processColor`: the `transparent` keyword
+    // becomes the `false` sentinel; explicit zero-alpha colours pass through.
     if (processed === 0 && value === 'transparent') {
       return false;
     }

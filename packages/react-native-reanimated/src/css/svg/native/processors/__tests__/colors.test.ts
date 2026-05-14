@@ -23,10 +23,10 @@ describe(processColorSVG, () => {
   });
 
   test.each([
-    ['rgba comma',    'rgba(0, 0, 0, 0)'],
-    ['rgba slash',    'rgba(0 0 0 / 0)'],
-    ['hsla comma',    'hsla(0, 0%, 0%, 0)'],
-    ['hsla slash',    'hsla(0 0% 0% / 0)'],
+    ['rgba comma', 'rgba(0, 0, 0, 0)'],
+    ['rgba slash', 'rgba(0 0 0 / 0)'],
+    ['hsla comma', 'hsla(0, 0%, 0%, 0)'],
+    ['hsla slash', 'hsla(0 0% 0% / 0)'],
     ['hex 8 with 00', '#00000000'],
   ])('returns 0 for explicit zero-alpha input (%s)', (_label, input) => {
     expect(processColorSVG(input)).toBe(0);
