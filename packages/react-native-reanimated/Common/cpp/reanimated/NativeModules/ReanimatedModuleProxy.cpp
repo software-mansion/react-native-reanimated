@@ -903,14 +903,13 @@ void ReanimatedModuleProxy::executeWorkletsForFrame(const AnimationTimestamp tim
 
 AnimationMutations ReanimatedModuleProxy::executeOperationsAndCollectUpdates(const AnimationTimestamp timestamp) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::executeOperationsAndCollectUpdates");
-  const double currentCssTimestamp = timestamp.count();
 
   UpdatesBatchAnimatedProps batch;
   auto lock = updatesRegistryManager_->lock();
 
-  cssTransitionsRegistry_->updateAndFlush(currentCssTimestamp, batch);
+  cssTransitionsRegistry_->updateAndFlush(timestamp, batch);
   animatedPropsRegistry_->flushUpdates(batch);
-  cssAnimationsRegistry_->updateAndFlush(currentCssTimestamp, batch);
+  cssAnimationsRegistry_->updateAndFlush(timestamp, batch);
 
   return mutationsFromAnimatedPropsBatch(std::move(batch));
 }
