@@ -408,8 +408,8 @@ describe('Shareable hosted on UI', () => {
 });
 
 describe('Shareable hosted on Worker Runtime', () => {
-  const host = getWorkletRuntimeFromPool('shareable-host');
-  const otherGuest = getWorkletRuntimeFromPool('shareable-other-guest');
+  const host = getWorkletRuntimeFromPool('test');
+  const otherGuest = getWorkletRuntimeFromPool('test2');
 
   test.each(initModes)(
     'can be hosted on Worker Runtime (%s)',
@@ -584,7 +584,9 @@ describe('Shareable hosted on Worker Runtime', () => {
           return (e as Error).message;
         }
       });
-      expect(errorMessage).toInclude('can only be called on the RN Runtime');
+      expect(errorMessage).toInclude(
+        '`Shareable.getAsync` can only be called on the RN Runtime'
+      );
     }
   );
 
@@ -634,7 +636,9 @@ describe('Shareable hosted on Worker Runtime', () => {
           return (e as Error).message;
         }
       });
-      expect(errorMessage).toInclude('can only be called on the RN Runtime');
+      expect(errorMessage).toInclude(
+        '`Shareable.getAsync` can only be called on the RN Runtime'
+      );
     }
   );
 
