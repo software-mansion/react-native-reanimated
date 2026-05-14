@@ -172,7 +172,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
  private:
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
-  void applySynchronousUpdates(UpdatesBatch &updatesBatch, bool allowPartialUpdates = false);
+  void applySynchronousUpdates(UpdatesBatch &updatesBatch, bool allowPartialUpdates);
 
   const bool isReducedMotion_;
   bool shouldFlushRegistry_ = false;

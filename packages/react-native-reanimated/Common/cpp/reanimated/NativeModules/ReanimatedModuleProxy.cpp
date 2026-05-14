@@ -59,7 +59,7 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 
 std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
     const UpdatesBatch &updatesBatch,
-    const bool allowPartialUpdates = false) {
+    const bool allowPartialUpdates) {
   static const std::unordered_set<std::string> synchronousPropNames = {
       "opacity",
       "elevation",
@@ -739,7 +739,7 @@ void ReanimatedModuleProxy::performOperations() {
     operationsLoop_->clearShouldUpdateCssAnimations();
 
     if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
-      applySynchronousUpdates(updatesBatch);
+      applySynchronousUpdates(updatesBatch, false);
     }
 
     if ((updatesBatch.size() > 0) && updatesRegistryManager_->shouldReanimatedSkipCommit()) {
