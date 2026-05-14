@@ -92,6 +92,8 @@ export function createWorkletRuntime(
     initializerFn = nameOrConfig?.initializer;
     if (nameOrConfig?.queue !== undefined) {
       queue = nameOrConfig.queue;
+    } else if (nameOrConfig?.useDefaultQueue === false) {
+      queue = nameOrConfig.customQueue ?? null;
     }
     animationQueuePollingRate = Math.round(
       nameOrConfig?.animationQueuePollingRate ?? 16

@@ -105,8 +105,7 @@ export interface WorkletImport {
   };
 }
 
-/** Configuration object for creating a worklet runtime. */
-export type WorkletRuntimeConfig = {
+type WorkletRuntimeConfigBase = {
   /** The name of the worklet runtime. */
   name?: string;
   /**
@@ -127,13 +126,36 @@ export type WorkletRuntimeConfig = {
    * defaults to `true`.
    */
   enableEventLoop?: true;
-  /**
-   * The queue used for scheduling worklets on this runtime.
-   *
-   * - `'default'` (the default): use the built-in queue implementation.
-   * - An object implementing the C++ `AsyncQueue` interface from
-   *   `<worklets/RunLoop/AsyncQueue.h>`: use the provided custom queue.
-   * - `null`: do not attach any queue to the runtime.
-   */
-  queue?: 'default' | object | null;
 };
+
+/** Configuration object for creating a worklet runtime. */
+export type WorkletRuntimeConfig = WorkletRuntimeConfigBase &
+  (
+    | {
+        /**
+         * The queue used for scheduling worklets on this runtime.
+         *
+         * - `'default'` (the default): use the built-in queue implementation.
+         * - An object implementing the C++ `AsyncQueue` interface from
+         *   `<worklets/RunLoop/AsyncQueue.h>`: use the provided custom queue.
+         * - `null`: do not attach any queue to the runtime.
+         */
+        queue?: 'default' | object | null;
+        useDefaultQueue?: never;
+        customQueue?: never;
+      }
+    | {
+        queue?: never;
+        /** @deprecated Use {@link queue} instead. */
+        useDefaultQueue?: true;
+        /** @deprecated Use {@link queue} instead. */
+        customQueue?: never;
+      }
+    | {
+        queue?: never;
+        /** @deprecated Use {@link queue} instead. */
+        useDefaultQueue: false;
+        /** @deprecated Use {@link queue} instead. */
+        customQueue?: object;
+      }
+  );
