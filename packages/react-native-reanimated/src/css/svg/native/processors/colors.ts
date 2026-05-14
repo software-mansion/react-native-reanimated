@@ -18,13 +18,13 @@ export const processColorSVG: ValueProcessor<
     return 0;
   }
 
-  if (processed) {
+  if (processed !== null) {
+    if (processed === 0 && value === 'transparent') {
+      return false;
+    }
     return processed;
   }
 
-  if (value === 'transparent') {
-    return false;
-  }
   if (value === 'currentColor') {
     return 'currentColor';
   }
