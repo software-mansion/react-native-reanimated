@@ -118,9 +118,9 @@ This feature flag enables a mechanism that periodically synchronizes animated st
 
 ### `USE_ANIMATION_BACKEND`
 
-When enabled, Reanimated feeds animated Fabric updates through React Native's shared **Animation Backend** instead of the legacy path that relies on `performOperations` and the Reanimated commit/mount hooks. The backend receives batches of animation mutations and can apply non-layout style changes synchronously on the UI thread while routing layout-affecting updates through the shadow tree as appropriate.
+When enabled, Reanimated will use the React Native's new Animation Backend for applying animated changes. The backend will now be responsible for keeping animation changes in sync with the current React tree. This is meant to help with long-term stability and unlock new performance optimizations.
 
-This flag is **experimental** and defaults to `false`. To use it, you must run **React Native 0.85.2 or newer** on the **New Architecture (Fabric)**. React Native's **`useSharedAnimatedBackend`** feature flag must be **enabled** at runtime (which is achieved by using React Native's **Experimental** release level in development).
+This flag is experimental and defaults to `false`. To use it, you must run React Native 0.85.2 or newer with `useSharedAnimatedBackend` feature flag enabled (which is achieved by using React Native's Experimental release level in development).
 
 ## Static feature flags
 
