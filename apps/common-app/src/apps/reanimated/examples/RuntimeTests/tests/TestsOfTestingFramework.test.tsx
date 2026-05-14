@@ -16,6 +16,7 @@ import {
   getRegisteredValue,
   getTestComponent,
   getTrackerCallCount,
+  getWorkletRuntimeFromPool,
   notify,
   Presets,
   registerValue,
@@ -30,11 +31,7 @@ import {
 } from '../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../ReJest/types';
 import { Snapshots } from './TestsOfTestingFramework.snapshot';
-import {
-  createWorkletRuntime,
-  scheduleOnRuntime,
-  scheduleOnUI,
-} from 'react-native-worklets';
+import { scheduleOnRuntime, scheduleOnUI } from 'react-native-worklets';
 
 const AnimatedComponent = () => {
   const widthSV = useSharedValue(0);
@@ -436,7 +433,7 @@ describe('Tests of Test Framework', () => {
 
       const [state3, setState3] = createTestValue('not_ok');
       const notification3 = 'notification3';
-      const rt = createWorkletRuntime({ name: 'test' });
+      const rt = getWorkletRuntimeFromPool('test');
       scheduleOnRuntime(rt, () => {
         'worklet';
         setState3('ok', notification3);
