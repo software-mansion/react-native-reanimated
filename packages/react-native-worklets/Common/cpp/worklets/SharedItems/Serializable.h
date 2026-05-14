@@ -14,27 +14,21 @@ using namespace facebook;
 
 namespace worklets {
 
-inline void cleanupIfRuntimeExists(jsi::Runtime *rt, std::unique_ptr<jsi::Value> &value) {
+// Frees the heap-allocated jsi::Value wrapper without running ~jsi::Value.
+// Use when the runtime that owns the JSI handle is already gone. When the
+// owning runtime is terminated, the orphaned JSI objects would crash the app
+// if their destructors ran, because they call into memory managed by the
+// terminated runtime. The JS object itself lived inside the runtime's heap
+// and was reclaimed with the runtime; only the C++ wrapper allocation
+// remains, and we free it here without invoking ~jsi::Value.
+// See https://github.com/facebook/hermes/blob/75b617a/API/jsi/jsi/jsi.h#L833
+inline void freeWithoutCallingDestructor(std::unique_ptr<jsi::Value> &value) {
+  ::operator delete(value.release());
+}
+
+inline void cleanupRuntimeAware(jsi::Runtime *rt, std::unique_ptr<jsi::Value> &value) {
   if (rt != nullptr && !WorkletRuntimeRegistry::isRuntimeAlive(rt)) {
-    // The below use of unique_ptr.release prevents the smart pointer from
-    // calling the destructor of the kept object. This effectively results in
-    // leaking some memory. We do this on purpose, as sometimes we would keep
-    // references to JSI objects past the lifetime of its runtime (e.g.,
-    // shared values references from the RN VM holds reference to JSI objects
-    // on the UI runtime). When the UI runtime is terminated, the orphaned JSI
-    // objects would crash the app when their destructors are called, because
-    // they call into a memory that's managed by the terminated runtime. We
-    // accept the tradeoff of leaking memory here, as it has a limited impact.
-    // This scenario can only occur when the React instance is torn down which
-    // happens in development mode during app reloads, or in production when
-    // the app is being shut down gracefully by the system. An alternative
-    // solution would require us to keep track of all JSI values that are in
-    // use which would require additional data structure and compute spent on
-    // bookkeeping that only for the sake of destroying the values in time
-    // before the runtime is terminated. Note that the underlying memory that
-    // jsi::Value refers to is managed by the VM and gets freed along with the
-    // runtime.
-    value.release(); // NOLINT
+    freeWithoutCallingDestructor(value);
   }
 }
 
@@ -73,7 +67,7 @@ class RetainingSerializable : virtual public BaseClass {
   }
 
   ~RetainingSerializable() override {
-    cleanupIfRuntimeExists(secondaryRuntime_, secondaryValue_);
+    cleanupRuntimeAware(secondaryRuntime_, secondaryValue_);
   }
 };
 
@@ -248,7 +242,7 @@ class SerializableRemoteFunction : public Serializable,
   }
 
   ~SerializableRemoteFunction() override {
-    cleanupIfRuntimeExists(runtime_, function_);
+    cleanupRuntimeAware(runtime_, function_);
   }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
@@ -271,7 +265,7 @@ class SerializableInitializer : public Serializable {
         initializer_(std::make_unique<SerializableObject>(rt, initializerObject)) {}
 
   ~SerializableInitializer() override {
-    cleanupIfRuntimeExists(remoteRuntime_, remoteValue_);
+    cleanupRuntimeAware(remoteRuntime_, remoteValue_);
   }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;

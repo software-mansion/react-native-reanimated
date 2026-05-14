@@ -5,7 +5,7 @@ import com.facebook.react.bridge.JavaOnlyMap
 import java.util.Arrays
 
 internal object SynchronousPropsBufferParser {
-    // NOTE: Keep in sync with SynchronousPropsBufferSerializer.h
+    // NOTE: Keep in sync with SynchronousPropsBufferSerializer.cpp
     private const val CMD_START_OF_VIEW = 1
     private const val CMD_START_OF_TRANSFORM = 2
     private const val CMD_END_OF_TRANSFORM = 3
@@ -14,11 +14,10 @@ internal object SynchronousPropsBufferParser {
     private const val CMD_OPACITY = 10
     private const val CMD_ELEVATION = 11
     private const val CMD_Z_INDEX = 12
-    private const val CMD_SHADOW_OPACITY = 13
-    private const val CMD_SHADOW_RADIUS = 14
+    private const val CMD_SHADOW_COLOR = 19
     private const val CMD_BACKGROUND_COLOR = 15
-    private const val CMD_COLOR = 16
     private const val CMD_TINT_COLOR = 17
+    private const val CMD_PLACEHOLDER_TEXT_COLOR = 18
 
     private const val CMD_BORDER_RADIUS = 20
     private const val CMD_BORDER_TOP_LEFT_RADIUS = 21
@@ -41,6 +40,13 @@ internal object SynchronousPropsBufferParser {
     private const val CMD_BORDER_RIGHT_COLOR = 44
     private const val CMD_BORDER_START_COLOR = 45
     private const val CMD_BORDER_END_COLOR = 46
+    private const val CMD_BORDER_BLOCK_COLOR = 47
+    private const val CMD_BORDER_BLOCK_START_COLOR = 48
+    private const val CMD_BORDER_BLOCK_END_COLOR = 49
+
+    private const val CMD_OUTLINE_COLOR = 50
+    private const val CMD_OUTLINE_OFFSET = 51
+    private const val CMD_OUTLINE_WIDTH = 52
 
     private const val CMD_TRANSFORM_TRANSLATE_X = 100
     private const val CMD_TRANSFORM_TRANSLATE_Y = 101
@@ -66,11 +72,10 @@ internal object SynchronousPropsBufferParser {
             CMD_OPACITY -> "opacity"
             CMD_ELEVATION -> "elevation"
             CMD_Z_INDEX -> "zIndex"
-            CMD_SHADOW_OPACITY -> "shadowOpacity"
-            CMD_SHADOW_RADIUS -> "shadowRadius"
+            CMD_SHADOW_COLOR -> "shadowColor"
             CMD_BACKGROUND_COLOR -> "backgroundColor"
-            CMD_COLOR -> "color"
             CMD_TINT_COLOR -> "tintColor"
+            CMD_PLACEHOLDER_TEXT_COLOR -> "placeholderTextColor"
             CMD_BORDER_RADIUS -> "borderRadius"
             CMD_BORDER_TOP_LEFT_RADIUS -> "borderTopLeftRadius"
             CMD_BORDER_TOP_RIGHT_RADIUS -> "borderTopRightRadius"
@@ -91,6 +96,12 @@ internal object SynchronousPropsBufferParser {
             CMD_BORDER_RIGHT_COLOR -> "borderRightColor"
             CMD_BORDER_START_COLOR -> "borderStartColor"
             CMD_BORDER_END_COLOR -> "borderEndColor"
+            CMD_BORDER_BLOCK_COLOR -> "borderBlockColor"
+            CMD_BORDER_BLOCK_START_COLOR -> "borderBlockStartColor"
+            CMD_BORDER_BLOCK_END_COLOR -> "borderBlockEndColor"
+            CMD_OUTLINE_COLOR -> "outlineColor"
+            CMD_OUTLINE_OFFSET -> "outlineOffset"
+            CMD_OUTLINE_WIDTH -> "outlineWidth"
             else -> throw RuntimeException("Unknown command: $command")
         }
 
@@ -132,16 +143,17 @@ internal object SynchronousPropsBufferParser {
                 CMD_OPACITY,
                 CMD_ELEVATION,
                 CMD_Z_INDEX,
-                CMD_SHADOW_OPACITY,
-                CMD_SHADOW_RADIUS,
+                CMD_OUTLINE_OFFSET,
+                CMD_OUTLINE_WIDTH,
                 -> {
                     val name = commandToString(command)
                     props.putDouble(name, doubleIterator.nextDouble())
                 }
 
+                CMD_SHADOW_COLOR,
                 CMD_BACKGROUND_COLOR,
-                CMD_COLOR,
                 CMD_TINT_COLOR,
+                CMD_PLACEHOLDER_TEXT_COLOR,
                 CMD_BORDER_COLOR,
                 CMD_BORDER_TOP_COLOR,
                 CMD_BORDER_BOTTOM_COLOR,
@@ -149,6 +161,10 @@ internal object SynchronousPropsBufferParser {
                 CMD_BORDER_RIGHT_COLOR,
                 CMD_BORDER_START_COLOR,
                 CMD_BORDER_END_COLOR,
+                CMD_BORDER_BLOCK_COLOR,
+                CMD_BORDER_BLOCK_START_COLOR,
+                CMD_BORDER_BLOCK_END_COLOR,
+                CMD_OUTLINE_COLOR,
                 -> {
                     val name = commandToString(command)
                     props.putInt(name, intIterator.nextInt())

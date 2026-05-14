@@ -24,11 +24,10 @@ enum Command : std::uint8_t {
   CMD_OPACITY = 10,
   CMD_ELEVATION = 11,
   CMD_Z_INDEX = 12,
-  CMD_SHADOW_OPACITY = 13,
-  CMD_SHADOW_RADIUS = 14,
+  CMD_SHADOW_COLOR = 19,
   CMD_BACKGROUND_COLOR = 15,
-  CMD_COLOR = 16,
   CMD_TINT_COLOR = 17,
+  CMD_PLACEHOLDER_TEXT_COLOR = 18,
 
   CMD_BORDER_RADIUS = 20,
   CMD_BORDER_TOP_LEFT_RADIUS = 21,
@@ -51,6 +50,13 @@ enum Command : std::uint8_t {
   CMD_BORDER_RIGHT_COLOR = 44,
   CMD_BORDER_START_COLOR = 45,
   CMD_BORDER_END_COLOR = 46,
+  CMD_BORDER_BLOCK_COLOR = 47,
+  CMD_BORDER_BLOCK_START_COLOR = 48,
+  CMD_BORDER_BLOCK_END_COLOR = 49,
+
+  CMD_OUTLINE_COLOR = 50,
+  CMD_OUTLINE_OFFSET = 51,
+  CMD_OUTLINE_WIDTH = 52,
 
   CMD_TRANSFORM_TRANSLATE_X = 100,
   CMD_TRANSFORM_TRANSLATE_Y = 101,
@@ -76,11 +82,10 @@ const std::unordered_map<std::string_view, Command> kPropNameToCommand = {
     {"opacity", CMD_OPACITY},
     {"elevation", CMD_ELEVATION},
     {"zIndex", CMD_Z_INDEX},
-    {"shadowOpacity", CMD_SHADOW_OPACITY},
-    {"shadowRadius", CMD_SHADOW_RADIUS},
+    {"shadowColor", CMD_SHADOW_COLOR},
     {"backgroundColor", CMD_BACKGROUND_COLOR},
-    {"color", CMD_COLOR},
     {"tintColor", CMD_TINT_COLOR},
+    {"placeholderTextColor", CMD_PLACEHOLDER_TEXT_COLOR},
     {"borderRadius", CMD_BORDER_RADIUS},
     {"borderTopLeftRadius", CMD_BORDER_TOP_LEFT_RADIUS},
     {"borderTopRightRadius", CMD_BORDER_TOP_RIGHT_RADIUS},
@@ -101,7 +106,13 @@ const std::unordered_map<std::string_view, Command> kPropNameToCommand = {
     {"borderRightColor", CMD_BORDER_RIGHT_COLOR},
     {"borderStartColor", CMD_BORDER_START_COLOR},
     {"borderEndColor", CMD_BORDER_END_COLOR},
-    {"transform", CMD_START_OF_TRANSFORM}, // TODO: use CMD_TRANSFORM?
+    {"borderBlockColor", CMD_BORDER_BLOCK_COLOR},
+    {"borderBlockStartColor", CMD_BORDER_BLOCK_START_COLOR},
+    {"borderBlockEndColor", CMD_BORDER_BLOCK_END_COLOR},
+    {"outlineColor", CMD_OUTLINE_COLOR},
+    {"outlineOffset", CMD_OUTLINE_OFFSET},
+    {"outlineWidth", CMD_OUTLINE_WIDTH},
+    {"transform", CMD_START_OF_TRANSFORM},
 };
 
 Command propNameToCommand(const std::string &name) {
@@ -142,6 +153,9 @@ void serializeSynchronousPropsToBuffers(
     const UpdatesBatch &synchronousUpdatesBatch,
     std::vector<int> &intBuffer,
     std::vector<double> &doubleBuffer) {
+  intBuffer.clear();
+  doubleBuffer.clear();
+
   const auto pushInt = [&](int value) {
     intBuffer.push_back(value);
   };
@@ -160,15 +174,16 @@ void serializeSynchronousPropsToBuffers(
         case CMD_OPACITY:
         case CMD_ELEVATION:
         case CMD_Z_INDEX:
-        case CMD_SHADOW_OPACITY:
-        case CMD_SHADOW_RADIUS:
+        case CMD_OUTLINE_OFFSET:
+        case CMD_OUTLINE_WIDTH:
           pushInt(command);
           pushDouble(value.asDouble());
           break;
 
+        case CMD_SHADOW_COLOR:
         case CMD_BACKGROUND_COLOR:
-        case CMD_COLOR:
         case CMD_TINT_COLOR:
+        case CMD_PLACEHOLDER_TEXT_COLOR:
         case CMD_BORDER_COLOR:
         case CMD_BORDER_TOP_COLOR:
         case CMD_BORDER_BOTTOM_COLOR:
@@ -176,6 +191,10 @@ void serializeSynchronousPropsToBuffers(
         case CMD_BORDER_RIGHT_COLOR:
         case CMD_BORDER_START_COLOR:
         case CMD_BORDER_END_COLOR:
+        case CMD_BORDER_BLOCK_COLOR:
+        case CMD_BORDER_BLOCK_START_COLOR:
+        case CMD_BORDER_BLOCK_END_COLOR:
+        case CMD_OUTLINE_COLOR:
           pushInt(command);
           pushInt(value.asInt());
           break;
@@ -203,7 +222,7 @@ void serializeSynchronousPropsToBuffers(
               throw std::runtime_error("[Reanimated] Border radius string must be a percentage");
             }
             pushInt(CMD_UNIT_PERCENT);
-            pushDouble(std::stof(valueStr.substr(0, valueStr.size() - 1)));
+            pushDouble(std::stod(valueStr.substr(0, valueStr.size() - 1)));
           } else {
             throw std::runtime_error("[Reanimated] Border radius value must be either a number or a string");
           }
@@ -240,7 +259,7 @@ void serializeSynchronousPropsToBuffers(
                     throw std::runtime_error("[Reanimated] String translate must be a percentage");
                   }
                   pushInt(CMD_UNIT_PERCENT);
-                  pushDouble(std::stof(transformValueStr.substr(0, transformValueStr.size() - 1)));
+                  pushDouble(std::stod(transformValueStr.substr(0, transformValueStr.size() - 1)));
                 } else {
                   throw std::runtime_error("[Reanimated] Translate value must be either a number or a string");
                 }
@@ -261,7 +280,7 @@ void serializeSynchronousPropsToBuffers(
                 } else {
                   throw std::runtime_error("[Reanimated] Unsupported rotation unit: " + transformValueStr);
                 }
-                pushDouble(std::stof(transformValueStr.substr(0, transformValueStr.size() - 3)));
+                pushDouble(std::stod(transformValueStr.substr(0, transformValueStr.size() - 3)));
                 break;
               }
               case CMD_TRANSFORM_MATRIX: {

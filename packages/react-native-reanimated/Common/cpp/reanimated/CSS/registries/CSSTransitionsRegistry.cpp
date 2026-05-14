@@ -1,4 +1,5 @@
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
+#include <reanimated/Tools/FeatureFlags.h>
 
 #include <memory>
 #include <utility>
@@ -72,6 +73,14 @@ void CSSTransitionsRegistry::run(
 
   auto initialUpdate = transition->run(propertyDiffs, lastUpdates, timestamp);
 
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+#if REACT_NATIVE_VERSION_MINOR >= 85
+    if (!initialUpdate.empty()) {
+      addRawPropsToAnimatedPropsBatch(transition->getShadowNode()->getFamilyShared(), initialUpdate);
+    }
+#endif
+  }
+
   scheduleOrActivateTransition(transition);
   updateInUpdatesRegistry(transition, initialUpdate);
 }
@@ -94,7 +103,16 @@ void CSSTransitionsRegistry::update(const double timestamp) {
 
     const folly::dynamic &updates = transition->update(timestamp);
     if (!updates.empty()) {
-      addUpdatesToBatch(transition->getShadowNode()->getFamilyShared(), updates);
+      if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+#if REACT_NATIVE_VERSION_MINOR >= 85
+        addRawPropsToAnimatedPropsBatch(transition->getShadowNode()->getFamilyShared(), updates);
+        // Legacy flushes merge each frame into the updates registry; animated-props flushes do not.
+        // Keep the registry current so the next transition reads a real "from" value, not the first frame only.
+        updateInUpdatesRegistry(transition, updates);
+#endif
+      } else {
+        addUpdatesToBatch(transition->getShadowNode()->getFamilyShared(), updates);
+      }
     }
 
     // We remove transition from running and schedule it when animation of one

@@ -234,6 +234,7 @@ open class NativeProxy {
     @DoNotStrip
     fun registerEventHandler(handler: EventHandler) {
         handler.mCustomEventNamesResolver = mNodesManager!!.getEventNameResolver()
+        handler.isInDrawPassProvider = { mNodesManager!!.isInDrawPass() }
         mNodesManager!!.registerEventHandler(handler)
     }
 
