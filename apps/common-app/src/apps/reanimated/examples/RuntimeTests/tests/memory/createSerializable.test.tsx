@@ -34,6 +34,7 @@ describe('Test createSerializable', () => {
         scheduleOnUI(worklet);
       },
       targetRuntime: 'UI',
+      runtimeName: 'UI',
     },
     {
       scheduleOnTarget: (worklet: () => void) => {
@@ -41,6 +42,7 @@ describe('Test createSerializable', () => {
         scheduleOnRuntime(workletRuntime, worklet);
       },
       targetRuntime: 'Worker',
+      runtimeName: 'test',
     },
   ];
 
@@ -54,7 +56,7 @@ describe('Test createSerializable', () => {
     notify(FAIL_NOTIFICATION);
   };
 
-  targets.forEach(({ targetRuntime, scheduleOnTarget }) => {
+  targets.forEach(({ targetRuntime, scheduleOnTarget, runtimeName }) => {
     describe(`on ${targetRuntime} Runtime`, () => {
       beforeEach(() => {
         result = false;
@@ -543,11 +545,11 @@ describe('Test createSerializable', () => {
       });
 
       test('createSerializableRemoteNamedFunctionSyncCall', async () => {
-        function foo() {}
+        function fooFunction() {}
         scheduleOnTarget(() => {
           'worklet';
           try {
-            foo();
+            fooFunction();
             scheduleOnRN(callbackPass, false);
           } catch (error) {
             scheduleOnRN(
@@ -558,10 +560,10 @@ describe('Test createSerializable', () => {
         });
         await waitForNotification(FAIL_NOTIFICATION);
         expect(errorMessage).toInclude(
-          '[Worklets] Tried to synchronously call a remote function `foo` on ' +
-            '' +
-            ' runtime.'
+          'Tried to synchronously call a Remote Function.'
         );
+        expect(errorMessage).toInclude('fooFunction');
+        expect(errorMessage).toInclude('on the ' + runtimeName + ' Runtime');
       });
 
       test('createSerializableRemoteAnonymousFunctionSyncCall', async () => {
@@ -580,10 +582,10 @@ describe('Test createSerializable', () => {
         });
         await waitForNotification(FAIL_NOTIFICATION);
         expect(errorMessage).toInclude(
-          '[Worklets] Tried to synchronously call a remote function anonymous on ' +
-            '' +
-            ' runtime.'
+          'Tried to synchronously call a Remote Function.'
         );
+        expect(errorMessage).toInclude('anonymous');
+        expect(errorMessage).toInclude('on the ' + runtimeName + ' Runtime');
       });
     });
   });
