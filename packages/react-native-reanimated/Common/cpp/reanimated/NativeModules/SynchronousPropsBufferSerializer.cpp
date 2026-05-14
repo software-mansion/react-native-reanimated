@@ -106,7 +106,7 @@ const std::unordered_map<std::string_view, Command> kPropNameToCommand = {
     {"outlineColor", CMD_OUTLINE_COLOR},
     {"outlineOffset", CMD_OUTLINE_OFFSET},
     {"outlineWidth", CMD_OUTLINE_WIDTH},
-    {"transform", CMD_START_OF_TRANSFORM}, // TODO: use CMD_TRANSFORM?
+    {"transform", CMD_START_OF_TRANSFORM},
 };
 
 Command propNameToCommand(const std::string &name) {
