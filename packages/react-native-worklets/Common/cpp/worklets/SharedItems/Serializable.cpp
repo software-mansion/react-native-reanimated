@@ -95,7 +95,7 @@ std::shared_ptr<Serializable> extractSerializableOrThrow(
     const std::string &errorMessage) {
   if (maybeSerializableValue.isObject()) {
     auto object = maybeSerializableValue.getObject(rt);
-    extractSerializableOrThrow(rt, object, errorMessage);
+    return extractSerializableOrThrow(rt, object, errorMessage);
   } else if (maybeSerializableValue.isUndefined()) {
     return Serializable::undefined();
   }

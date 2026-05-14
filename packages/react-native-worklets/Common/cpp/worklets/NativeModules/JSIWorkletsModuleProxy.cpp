@@ -10,13 +10,13 @@
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
-#include <stdexcept>
 
 #ifndef NDEBUG
 #include <algorithm>
 #endif // NDEBUG
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>

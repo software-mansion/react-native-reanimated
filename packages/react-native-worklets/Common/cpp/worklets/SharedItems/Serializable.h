@@ -92,23 +92,27 @@ class SerializableJSRef : public jsi::NativeState {
   }
 };
 
+[[nodiscard]]
 jsi::Value makeSerializableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
     const jsi::Value &shouldRetainRemote,
     const jsi::Value &nativeStateSource);
 
+[[nodiscard]]
 std::shared_ptr<Serializable> extractSerializableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeSerializableValue,
     const std::string &errorMessage = "[Worklets] Expecting the object to be of type SerializableJSRef.");
 
+[[nodiscard]]
 std::shared_ptr<Serializable> extractSerializableOrThrow(
     jsi::Runtime &rt,
     const jsi::Object &maybeSerializableValue,
     const std::string &errorMessage = "[Worklets] Expecting the object to be of type SerializableJSRef.");
 
 template <typename TSerializable>
+[[nodiscard]]
 std::shared_ptr<TSerializable> extractSerializableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &serializableRef,
@@ -121,6 +125,7 @@ std::shared_ptr<TSerializable> extractSerializableOrThrow(
 }
 
 template <typename TSerializable>
+[[nodiscard]]
 std::shared_ptr<TSerializable> extractSerializableOrThrow(
     jsi::Runtime &rt,
     const jsi::Object &serializableRef,
