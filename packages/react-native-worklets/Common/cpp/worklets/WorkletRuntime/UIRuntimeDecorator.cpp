@@ -9,9 +9,7 @@ void UIRuntimeDecorator::decorate(
     const std::function<void(facebook::jsi::Runtime &rt, const facebook::jsi::Value &callback)>
         &requestAnimationFrame) {
   uiRuntime.global().setProperty(
-      uiRuntime,
-      RuntimeData::runtimeKindBindingName,
-      static_cast<int>(RuntimeData::RuntimeKind::UI));
+      uiRuntime, RuntimeData::runtimeKindBindingName, static_cast<int>(RuntimeData::RuntimeKind::UI));
 
   uiRuntime.global().setProperty(uiRuntime, "_UI", true);
 
