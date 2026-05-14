@@ -5,7 +5,6 @@
 import { TurboModuleRegistry } from 'react-native';
 import {
   createSerializable,
-  createWorkletRuntime,
   scheduleOnRN,
   scheduleOnRuntime,
   scheduleOnUI,
@@ -15,6 +14,7 @@ import {
   beforeEach,
   describe,
   expect,
+  getWorkletRuntimeFromPool,
   notify,
   test,
   waitForNotification,
@@ -26,7 +26,7 @@ describe('Test createSerializable', () => {
   let result = false;
   let errorMessage = '';
 
-  const workletRuntime = createWorkletRuntime({ name: 'testRuntime' });
+  const workletRuntime = getWorkletRuntimeFromPool('test');
 
   const schedulingFunction = {
     toUIRuntime: (worklet: () => void) => {
@@ -559,7 +559,7 @@ describe('Test createSerializable', () => {
             'Tried to synchronously call a Remote Function'
           );
           expect(errorMessage).toInclude(
-            `Called "foo" on the ${schedulingFunctionName === 'toUIRuntime' ? 'UI' : 'testRuntime'} Runtime`
+            `Called "foo" on the ${schedulingFunctionName === 'toUIRuntime' ? 'UI' : 'test'} Runtime`
           );
         });
 
