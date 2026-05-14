@@ -80,8 +80,7 @@ export function createWorkletRuntime(
 
   let name: string;
   let initializerFn: (() => void) | undefined;
-  let useDefaultQueue = true;
-  let customQueue: object | undefined;
+  let queue: 'default' | object | null = 'default';
   let animationQueuePollingRate: number;
   let enableEventLoop = true;
   if (typeof nameOrConfig === 'string') {
@@ -91,13 +90,20 @@ export function createWorkletRuntime(
     // TODO: Make anonymous name globally unique.
     name = nameOrConfig?.name ?? 'anonymous';
     initializerFn = nameOrConfig?.initializer;
-    useDefaultQueue = nameOrConfig?.useDefaultQueue ?? true;
-    customQueue = nameOrConfig?.customQueue;
+    if (nameOrConfig?.queue !== undefined) {
+      queue = nameOrConfig.queue;
+    } else if (nameOrConfig?.useDefaultQueue === false) {
+      queue = nameOrConfig.customQueue ?? null;
+    }
     animationQueuePollingRate = Math.round(
       nameOrConfig?.animationQueuePollingRate ?? 16
     );
     enableEventLoop = nameOrConfig?.enableEventLoop ?? true;
   }
+
+  const useDefaultQueue = queue === 'default';
+  const customQueue =
+    typeof queue === 'object' && queue !== null ? queue : undefined;
 
   if (initializerFn && !isWorkletFunction(initializerFn)) {
     throw new Error(

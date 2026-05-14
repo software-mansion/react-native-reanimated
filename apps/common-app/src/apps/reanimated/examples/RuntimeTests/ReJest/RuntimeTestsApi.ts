@@ -20,6 +20,7 @@ const valueRegistry = testRunner.getValueRegistry();
 const testSuiteBuilder = testRunner.getTestSuiteBuilder();
 const callTrackerRegistry = testRunner.getCallTrackerRegistry();
 const notificationRegistry = testRunner.getNotificationRegistry();
+const workletRuntimePool = testRunner.getWorkletRuntimePool();
 
 type DescribeFunction = (name: string, buildSuite: MaybeAsync<void>) => void;
 type TestFunction = (name: string, buildTest: MaybeAsync<void>) => void;
@@ -175,6 +176,10 @@ export async function waitForNotifications(
   timeout: number | undefined = 10_000
 ) {
   return notificationRegistry.waitForNotifications(names, timeout);
+}
+
+export function getWorkletRuntimeFromPool(name: string) {
+  return workletRuntimePool.getOrCreateWorkletRuntime(name);
 }
 
 export function expect(value: TestValue) {

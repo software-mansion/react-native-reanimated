@@ -1,13 +1,10 @@
 import { useEffect } from 'react';
 import { View } from 'react-native';
-import {
-  createWorkletRuntime,
-  scheduleOnRuntime,
-  scheduleOnUI,
-} from 'react-native-worklets';
+import { scheduleOnRuntime, scheduleOnUI } from 'react-native-worklets';
 import { RuntimeKind } from 'react-native-worklets';
+import { getWorkletRuntimeFromPool } from '../../ReJest/RuntimeTestsApi';
 
-const workletRuntime = createWorkletRuntime({ name: 'testRuntime' });
+const workletRuntime = getWorkletRuntimeFromPool('test');
 
 export function DispatchTestComponent({
   worklet,
