@@ -28,6 +28,11 @@ class TransitionStyleInterpolator {
       const std::string &propertyName,
       const jsi::Value &fromValue,
       const jsi::Value &toValue);
+  /** TODO: unify folly::dynamic and jsi::value versions */
+  bool createOrUpdateInterpolator(
+      const std::string &propertyName,
+      const folly::dynamic &fromValue,
+      const folly::dynamic &toValue);
   void setAllowDiscrete(const std::string &propertyName, bool allowDiscrete);
   void removeProperties(const std::vector<std::string> &propertyNames);
   void removeProperty(const std::string &propertyName);

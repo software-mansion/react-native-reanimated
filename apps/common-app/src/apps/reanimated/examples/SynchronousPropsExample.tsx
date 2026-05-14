@@ -42,6 +42,11 @@ export default function SynchronousPropsExample() {
     [sv]
   );
 
+  const shadowOffsetSv = useDerivedValue(
+    () => ({ width: tenSv.value, height: tenSv.value }),
+    [sv]
+  );
+
   const perspectiveSv = useDerivedValue(
     () => Math.pow(2, sv.value * 3 + 4.5),
     [sv]
@@ -106,6 +111,18 @@ export default function SynchronousPropsExample() {
           height: 50,
           borderWidth: 1,
           zIndex: zIndexSv,
+        }}
+      />
+
+      <Text>shadowOffset (not supported on Android)</Text>
+      <Animated.View
+        style={{
+          width: 50,
+          height: 50,
+          borderWidth: 1,
+          shadowRadius: 2,
+          shadowOpacity: 1,
+          shadowOffset: shadowOffsetSv,
         }}
       />
 
@@ -221,6 +238,9 @@ export default function SynchronousPropsExample() {
         'borderRightColor',
         'borderStartColor',
         'borderEndColor',
+        'borderBlockColor',
+        'borderBlockStartColor',
+        'borderBlockEndColor',
       ].map((prop) => (
         <React.Fragment key={prop}>
           <Text>{prop}</Text>
@@ -235,6 +255,40 @@ export default function SynchronousPropsExample() {
           />
         </React.Fragment>
       ))}
+
+      <Text>outlineColor</Text>
+      <Animated.View
+        style={{
+          width: 50,
+          height: 50,
+          borderWidth: 1,
+          outlineWidth: 2,
+          outlineColor: colorSv,
+        }}
+      />
+
+      <Text>outlineOffset</Text>
+      <Animated.View
+        style={{
+          width: 50,
+          height: 50,
+          borderWidth: 1,
+          outlineWidth: 2,
+          outlineColor: 'gray',
+          outlineOffset: tenSv,
+        }}
+      />
+
+      <Text>outlineWidth</Text>
+      <Animated.View
+        style={{
+          width: 50,
+          height: 50,
+          borderWidth: 1,
+          outlineColor: 'gray',
+          outlineWidth: tenSv,
+        }}
+      />
 
       {(['translateX', 'translateY'] as const).map((prop) => (
         <React.Fragment key={prop}>

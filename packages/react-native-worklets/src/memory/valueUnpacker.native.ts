@@ -65,12 +65,12 @@ export function installValueUnpacker() {
       return value;
     } else if (category === 'RemoteFunction') {
       const fun = () => {
-        const label = remoteFunctionName
-          ? `function \`${remoteFunctionName}\``
-          : 'anonymous function';
+        remoteFunctionName = remoteFunctionName
+          ? remoteFunctionName
+          : 'anonymous';
 
-        throw new Error(`[Worklets] Tried to synchronously call a non-worklet ${label} on the UI thread.
-See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
+        throw new Error(`[Worklets] Tried to synchronously call a Remote Function. Called "${remoteFunctionName}" on the ${globalThis.__RUNTIME_NAME} Runtime.
+See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#tried-to-synchronously-call-a-remote-function for more details.`);
       };
       fun.__remoteFunction = objectToUnpack;
       return fun;
