@@ -74,11 +74,11 @@ void CSSTransitionsRegistry::run(
   auto initialUpdate = transition->run(propertyDiffs, lastUpdates, timestamp);
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    if (!initialUpdate.empty()) {
 #if REACT_NATIVE_VERSION_MINOR >= 85
+    if (!initialUpdate.empty()) {
       addRawPropsToAnimatedPropsBatch(transition->getShadowNode()->getFamilyShared(), initialUpdate);
-#endif
     }
+#endif
   }
 
   scheduleOrActivateTransition(transition);
