@@ -897,8 +897,7 @@ void ReanimatedModuleProxy::executeWorkletsForFrame(const AnimationTimestamp tim
   if (!pendingAnimationFrameCallbackFromWorklets_) {
     return;
   }
-  auto cb = std::move(pendingAnimationFrameCallbackFromWorklets_);
-  pendingAnimationFrameCallbackFromWorklets_ = nullptr;
+  auto cb = std::exchange(pendingAnimationFrameCallbackFromWorklets_, nullptr);
   cb(timestamp.count());
 }
 
