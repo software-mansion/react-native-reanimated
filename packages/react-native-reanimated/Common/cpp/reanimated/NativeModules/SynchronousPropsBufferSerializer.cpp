@@ -53,6 +53,9 @@ enum Command : std::uint8_t {
   CMD_BORDER_RIGHT_COLOR = 44,
   CMD_BORDER_START_COLOR = 45,
   CMD_BORDER_END_COLOR = 46,
+  CMD_BORDER_BLOCK_COLOR = 47,
+  CMD_BORDER_BLOCK_START_COLOR = 48,
+  CMD_BORDER_BLOCK_END_COLOR = 49,
 
   CMD_OUTLINE_COLOR = 50,
   CMD_OUTLINE_OFFSET = 51,
@@ -109,6 +112,9 @@ const std::unordered_map<std::string_view, Command> kPropNameToCommand = {
     {"borderRightColor", CMD_BORDER_RIGHT_COLOR},
     {"borderStartColor", CMD_BORDER_START_COLOR},
     {"borderEndColor", CMD_BORDER_END_COLOR},
+    {"borderBlockColor", CMD_BORDER_BLOCK_COLOR},
+    {"borderBlockStartColor", CMD_BORDER_BLOCK_START_COLOR},
+    {"borderBlockEndColor", CMD_BORDER_BLOCK_END_COLOR},
     {"outlineColor", CMD_OUTLINE_COLOR},
     {"outlineOffset", CMD_OUTLINE_OFFSET},
     {"outlineWidth", CMD_OUTLINE_WIDTH},
@@ -191,6 +197,9 @@ void serializeSynchronousPropsToBuffers(
         case CMD_BORDER_RIGHT_COLOR:
         case CMD_BORDER_START_COLOR:
         case CMD_BORDER_END_COLOR:
+        case CMD_BORDER_BLOCK_COLOR:
+        case CMD_BORDER_BLOCK_START_COLOR:
+        case CMD_BORDER_BLOCK_END_COLOR:
         case CMD_OUTLINE_COLOR:
           pushInt(command);
           pushInt(value.asInt());
