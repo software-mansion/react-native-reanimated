@@ -1,9 +1,21 @@
 import { useEffect } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 import { StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, useEvent, useSharedValue } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useEvent,
+  useSharedValue,
+} from 'react-native-reanimated';
 
-import { describe, expect, notify, render, test, wait, waitForNotification } from '../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  notify,
+  render,
+  test,
+  wait,
+  waitForNotification,
+} from '../../ReJest/RuntimeTestsApi';
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 interface TestResult {
@@ -43,7 +55,10 @@ const TestComponent = ({ result }: { result: TestResult }) => {
 
   return (
     <View onLayout={onLayout}>
-      <Animated.View style={[styles.smallBox, animatedStyle]} onLayout={animatedOnLayout} />
+      <Animated.View
+        style={[styles.smallBox, animatedStyle]}
+        onLayout={animatedOnLayout}
+      />
     </View>
   );
 };

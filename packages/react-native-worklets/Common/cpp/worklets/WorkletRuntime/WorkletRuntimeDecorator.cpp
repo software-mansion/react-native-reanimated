@@ -1,12 +1,11 @@
 #include <jsi/jsi.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
-#include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/PlatformLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/HermesProfiling.h>
-#include <worklets/WorkletRuntime/RuntimeKind.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
@@ -70,6 +69,7 @@ static inline std::vector<jsi::Value> parseArgs(
 
 void WorkletRuntimeDecorator::decorate(
     jsi::Runtime &rt,
+    const RuntimeData::RuntimeKind runtimeKind,
     const std::string &name,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const bool isDevBundle,
@@ -79,15 +79,11 @@ void WorkletRuntimeDecorator::decorate(
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
-  rt.global().setProperty(rt, runtimeKindBindingName, static_cast<int>(RuntimeKind::Worker));
+  rt.global().setProperty(rt, RuntimeData::runtimeKindBindingName, static_cast<int>(runtimeKind));
 
   rt.global().setProperty(rt, "_WORKLET", true);
 
-  rt.global().setProperty(rt, "_LABEL", jsi::String::createFromAscii(rt, name));
-
-  // TODO: Remove _IS_FABRIC sometime in the future
-  // react-native-screens 4.9.0 depends on it
-  rt.global().setProperty(rt, "_IS_FABRIC", true);
+  rt.global().setProperty(rt, RuntimeData::runtimeNameBindingName, jsi::String::createFromAscii(rt, name));
 
   rt.global().setProperty(rt, "__DEV__", isDevBundle);
 
@@ -275,7 +271,6 @@ void WorkletRuntimeDecorator::decorate(
           }));
   rt.global().setProperty(rt, "performance", performance);
 
-#if JS_RUNTIME_HERMES
   rt.global().setProperty(
       rt,
       "_startProfiling",
@@ -292,7 +287,6 @@ void WorkletRuntimeDecorator::decorate(
     std::string path = stopProfiling(rt);
     return jsi::String::createFromUtf8(rt, path);
   });
-#endif // JS_RUNTIME_HERMES
 
   jsi_utils::installJsiFunction(
       rt,

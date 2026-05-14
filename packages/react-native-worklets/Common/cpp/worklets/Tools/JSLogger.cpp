@@ -45,4 +45,48 @@ void JSLogger::reportFatalErrorOnJS(jsi::Runtime &rnRuntime, const JSErrorData &
   reportFatalErrorFunction.call(rnRuntime, errorInstance, force);
 }
 
+#ifndef NDEBUG
+static std::string labelStackFrames(const std::string &rawStack, const std::string &label) {
+  static const std::string sep = "\n    at";
+  std::string result;
+  size_t pos = rawStack.find(sep);
+  while (pos != std::string::npos) {
+    size_t next = rawStack.find(sep, pos + sep.size());
+    size_t end = (next == std::string::npos) ? rawStack.size() : next;
+    result += "\n    at [" + label + "]:" + rawStack.substr(pos + sep.size(), end - (pos + sep.size()));
+    pos = next;
+  }
+  return result;
+}
+
+void JSLogger::handleJSError(
+    const std::shared_ptr<JSScheduler> &jsScheduler,
+    jsi::Runtime &workletRuntime,
+    const std::string &runtimeName,
+    jsi::JSError &error,
+    const std::optional<std::string> &scheduleStack) {
+  std::string name = "WorkletsError";
+  const auto &errVal = error.value();
+  if (errVal.isObject()) {
+    auto errObj = errVal.asObject(workletRuntime);
+    if (errObj.hasProperty(workletRuntime, "name")) {
+      auto nameVal = errObj.getProperty(workletRuntime, "name");
+      if (nameVal.isString()) {
+        name = nameVal.asString(workletRuntime).utf8(workletRuntime);
+      }
+    }
+  }
+
+  const auto &message = error.getMessage();
+  std::string combined = message + labelStackFrames(error.getStack(), runtimeName);
+  if (scheduleStack.has_value()) {
+    auto pos = scheduleStack->find("\n    at");
+    if (pos != std::string::npos) {
+      combined += scheduleStack->substr(pos);
+    }
+  }
+  reportFatalErrorOnJS(jsScheduler, JSErrorData{.message = message, .stack = combined, .name = name});
+}
+#endif // NDEBUG
+
 } // namespace worklets

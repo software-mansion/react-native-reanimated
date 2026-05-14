@@ -36,7 +36,8 @@ export function indentNestingLevel(nestingLevel: number) {
 }
 
 export function color(value: TestValue, color: SupportedColors) {
-  const stringValue = typeof value === 'object' ? JSON.stringify(value) : value?.toString();
+  const stringValue =
+    typeof value === 'object' ? JSON.stringify(value) : value?.toString();
   return `${COLOR_CODES[color]}${stringValue}${COLOR_CODES.reset}`;
 }
 export const cyan = (x: TestValue) => color(x, 'cyan');
@@ -46,13 +47,28 @@ export const yellow = (x: TestValue) => color(x, 'yellow');
 export const red = (x: TestValue) => color(x, 'red');
 export const orange = (x: TestValue) => color(x, 'orange');
 
-export const EMPTY_LOG_PLACEHOLDER = color(applyMarkdown('***   ***'), 'lightGray');
+export const EMPTY_LOG_PLACEHOLDER = color(
+  applyMarkdown('***   ***'),
+  'lightGray'
+);
 
 export function applyMarkdown(template: string) {
-  template = template.replace(/\*{3}(.+?)\*{3}(?!\*)/g, `${ANSI_CODES.reverse} $1 ${ANSI_CODES.resetReverse}`);
-  template = template.replace(/\*{2}(.+?)\*{2}(?!\*)/g, `${ANSI_CODES.bold}$1${ANSI_CODES.resetBold}`);
-  template = template.replace(/\*{1}(.+?)\*{1}(?!\*)/g, `${ANSI_CODES.italic}$1${ANSI_CODES.resetItalic}`);
-  template = template.replace(/_(.+?)_(?!_)/g, `${ANSI_CODES.underline}$1${ANSI_CODES.resetUnderline}`);
+  template = template.replace(
+    /\*{3}(.+?)\*{3}(?!\*)/g,
+    `${ANSI_CODES.reverse} $1 ${ANSI_CODES.resetReverse}`
+  );
+  template = template.replace(
+    /\*{2}(.+?)\*{2}(?!\*)/g,
+    `${ANSI_CODES.bold}$1${ANSI_CODES.resetBold}`
+  );
+  template = template.replace(
+    /\*{1}(.+?)\*{1}(?!\*)/g,
+    `${ANSI_CODES.italic}$1${ANSI_CODES.resetItalic}`
+  );
+  template = template.replace(
+    /_(.+?)_(?!_)/g,
+    `${ANSI_CODES.underline}$1${ANSI_CODES.resetUnderline}`
+  );
 
   return template;
 }
@@ -68,7 +84,9 @@ function rgbToAnsi256(red: number, green: number, blue: number) {
     return Math.round(((red - 8) / 247) * 24) + 232;
   }
 
-  const [scaledRed, scaledGreen, scaledBlue] = [red, green, blue].map(col => Math.round((col / 255) * 5));
+  const [scaledRed, scaledGreen, scaledBlue] = [red, green, blue].map((col) =>
+    Math.round((col / 255) * 5)
+  );
   return 16 + 36 * scaledRed + 6 * scaledGreen + scaledBlue;
 }
 
@@ -86,7 +104,11 @@ export function getColorSquare(color: string) {
   return colorAnsi + '  ' + RESET_BACKGROUND;
 }
 
-export function formatTestName(template: string, variableObject: unknown, index: number) {
+export function formatTestName(
+  template: string,
+  variableObject: unknown,
+  index: number
+) {
   const valueToString: (arg0: unknown) => string = (value: unknown) => {
     if (value instanceof Error) {
       return `**${value.name}** "${value.message}"`;
@@ -119,9 +141,12 @@ export function formatTestName(template: string, variableObject: unknown, index:
   }
   if (typeof variableObject === 'object') {
     const keys = Object.keys(variableObject);
-    keys.forEach(k => {
+    keys.forEach((k) => {
       // Typical object literal syntax
-      testName = testName.replace('${' + k + '}', valueToString(variableObject[k as keyof typeof variableObject]));
+      testName = testName.replace(
+        '${' + k + '}',
+        valueToString(variableObject[k as keyof typeof variableObject])
+      );
     });
   }
 

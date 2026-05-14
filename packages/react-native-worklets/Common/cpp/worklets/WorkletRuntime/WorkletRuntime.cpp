@@ -1,25 +1,17 @@
+#include <jsi/decorator.h>
+#include <jsi/jsi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
-#include <worklets/Tools/Defs.h>
-#include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/RuntimeHolder.h>
+#include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
-
-#include <jsi/decorator.h>
-#include <jsi/jsi.h>
 
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-
-#if JS_RUNTIME_HERMES
-#include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
-#else
-#include <jsc/JSCRuntime.h>
-#endif // JS_RUNTIME
 
 namespace worklets {
 
@@ -52,25 +44,21 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
 };
 
 static std::shared_ptr<jsi::Runtime> makeRuntime(const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
-  std::shared_ptr<jsi::Runtime> jsiRuntime;
-#if JS_RUNTIME_HERMES
   auto hermesRuntime = facebook::hermes::makeHermesRuntime();
-  jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime));
-#else
-  jsiRuntime = facebook::jsc::makeJSCRuntime();
-#endif
-
+  std::shared_ptr<jsi::Runtime> jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime));
   return std::make_shared<LockableRuntime>(jsiRuntime, runtimeMutex);
 }
 
 WorkletRuntime::WorkletRuntime(
     uint64_t runtimeId,
+    const RuntimeData::RuntimeKind runtimeKind,
     const std::string &name,
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop)
     : runtimeId_(runtimeId),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(runtimeMutex_)),
+      runtimeKind_(runtimeKind),
       name_(name),
       queue_(queue) {
   jsi::Runtime &rt = *runtime_;
@@ -89,6 +77,7 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
       std::make_shared<WeakRuntimeHolder>(WeakRuntimeHolder{.weakRuntime = weak_from_this()}));
 
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
+  jsScheduler_ = jsScheduler;
   const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
   const auto memoryManager_ = jsiWorkletsModuleProxy->getMemoryManager();
   const auto script = jsiWorkletsModuleProxy->getScript();
@@ -97,8 +86,10 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
   const auto bundleModeEnabled = jsiWorkletsModuleProxy->isBundleModeEnabled();
   const auto unpackerLoader = jsiWorkletsModuleProxy->getUnpackerLoader();
   const auto &nativeLoggingHook = runtimeBindings->nativeLoggingHook;
+
   WorkletRuntimeDecorator::decorate(
       rt,
+      runtimeKind_,
       name_,
       jsScheduler,
       isDevBundle,
@@ -182,6 +173,37 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet) cons
   });
 }
 
+#ifndef NDEBUG
+void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet, std::optional<std::string> scheduleStack)
+    const {
+  react_native_assert(
+      queue_ &&
+      "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
+      "async queue is not set. Recreate the runtime with a valid async queue.");
+
+  queue_->push([worklet = std::move(worklet), scheduleStack = std::move(scheduleStack), weakThis = weak_from_this()] {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    strongThis->runSyncWithStack(worklet, scheduleStack);
+  });
+}
+#endif // NDEBUG
+
+void WorkletRuntime::callMicrotasks() const {
+  runSync([](jsi::Runtime &rt) {
+    auto callMicrotasks = rt.global().getProperty(rt, "__callMicrotasks");
+    if (callMicrotasks.isObject()) {
+      auto callMicrotasksObject = callMicrotasks.asObject(rt);
+      if (callMicrotasksObject.isFunction(rt)) {
+        callMicrotasksObject.asFunction(rt).call(rt);
+      }
+    }
+  });
+}
+
 void WorkletRuntime::schedule(std::function<void()> job) const {
   react_native_assert(
       queue_ &&
@@ -251,6 +273,19 @@ std::shared_ptr<WorkletRuntime> extractWorkletRuntime(jsi::Runtime &rt, const js
 void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
+    const jsi::Value &serializableWorkletValue) {
+  auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
+  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
+      rt,
+      serializableWorkletValue,
+      "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
+  workletRuntime->schedule(serializableWorklet);
+}
+
+#ifndef NDEBUG
+void scheduleOnRuntime(
+    jsi::Runtime &rt,
+    const jsi::Value &workletRuntimeValue,
     const jsi::Value &serializableWorkletValue,
     const std::optional<std::string> &scheduleStack) {
   auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
@@ -258,9 +293,9 @@ void scheduleOnRuntime(
       rt,
       serializableWorkletValue,
       "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
-  serializableWorklet->setScheduleStack(scheduleStack);
-  workletRuntime->schedule(serializableWorklet);
+  workletRuntime->schedule(serializableWorklet, scheduleStack);
 }
+#endif // NDEBUG
 
 std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
   auto runtimeData = rt.getRuntimeData(RuntimeData::weakRuntimeUUID);
@@ -293,32 +328,6 @@ jsi::Value WorkletRuntime::executeSync(std::function<jsi::Value(jsi::Runtime &)>
 jsi::Value WorkletRuntime::executeSync(const std::function<jsi::Value(jsi::Runtime &)> &job) const {
   return runSync(job);
 }
-
-#ifndef NDEBUG
-static const auto callGuardLambda = [](facebook::jsi::Runtime &rt,
-                                       const facebook::jsi::Value &thisVal,
-                                       const facebook::jsi::Value *args,
-                                       size_t count) {
-  // args[0] = function, args[1] = scheduleStack (string), args[2..] = actual args
-  return args[0].asObject(rt).asFunction(rt).call(rt, args + 2, count - 2);
-};
-
-jsi::Function WorkletRuntime::getCallGuard(jsi::Runtime &rt) {
-  auto callGuard = rt.global().getProperty(rt, "__callGuardDEV");
-  if (callGuard.isObject()) {
-    // Use JS implementation if `__callGuardDEV` has already been installed.
-    // This is the desired behavior.
-    return callGuard.asObject(rt).asFunction(rt);
-  }
-
-  // Otherwise, fallback to C++ JSI implementation. This is necessary so that we
-  // can install `__callGuardDEV` itself and should happen only once. Note that
-  // the C++ implementation doesn't intercept errors and simply throws them as
-  // C++ exceptions which crashes the app. We assume that installing the guard
-  // doesn't throw any errors.
-  return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "callGuard"), 1, callGuardLambda);
-}
-#endif // NDEBUG
 
 /* #endregion */
 

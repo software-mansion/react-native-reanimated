@@ -21,8 +21,7 @@ export interface DecayAnimation extends Animation<DecayAnimation> {
 }
 
 export interface InnerDecayAnimation
-  extends Omit<DecayAnimation, 'current'>,
-    AnimationObject {
+  extends Omit<DecayAnimation, 'current'>, AnimationObject {
   current: number;
   springActive?: boolean;
 }

@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <utility>
+#include <vector>
 
 namespace reanimated::css {
 
@@ -22,7 +23,7 @@ bool CSSTransitionsRegistry::hasUpdates() const {
   return !runningTransitionTags_.empty() || !delayedTransitionsManager_.empty();
 }
 
-void CSSTransitionsRegistry::run(
+void CSSTransitionsRegistry::updateConfigOrRun(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const CSSTransitionConfig &config) {
@@ -37,10 +38,39 @@ void CSSTransitionsRegistry::run(
   }
 
   const auto &transition = registry_.at(viewTag);
-  const auto &lastUpdates = getUpdatesFromRegistry(shadowNode->getTag());
+
+  if (config.changedPropertiesSettings.size() || config.removedProperties.size()) {
+    transition->updateConfig(config.changedPropertiesSettings, config.removedProperties);
+  }
+  if (config.changedProperties.size()) {
+    runTransition(rt, transition, viewTag, config.changedProperties);
+  }
+}
+
+void CSSTransitionsRegistry::run(
+    jsi::Runtime &rt,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const PropertyValueDiffsMap &propertyDiffs) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
+  const auto viewTag = shadowNode->getTag();
+  const auto &transition = registry_.at(viewTag);
+
+  runTransition(rt, transition, viewTag, propertyDiffs);
+}
+
+void CSSTransitionsRegistry::run(
+    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const PropertyValueDynamicDiffsMap &propertyDiffs) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
+  const auto viewTag = shadowNode->getTag();
+  const auto &transition = registry_.at(viewTag);
+
+  const auto &lastUpdates = getUpdatesFromRegistry(viewTag);
   const auto timestamp = getCurrentTimestamp_();
 
-  auto initialUpdate = transition->run(rt, config, lastUpdates, timestamp);
+  auto initialUpdate = transition->run(propertyDiffs, lastUpdates, timestamp);
 
   scheduleOrActivateTransition(transition);
   updateInUpdatesRegistry(transition, initialUpdate);
@@ -132,6 +162,20 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
   // to do additional filtering here
   filteredUpdates.update(updates);
   setInUpdatesRegistry(shadowNode->getFamilyShared(), filteredUpdates);
+}
+
+void CSSTransitionsRegistry::runTransition(
+    jsi::Runtime &rt,
+    const std::shared_ptr<CSSTransition> &transition,
+    const facebook::react::Tag &viewTag,
+    const PropertyValueDiffsMap &propertyDiffs) {
+  const auto &lastUpdates = getUpdatesFromRegistry(viewTag);
+  const auto timestamp = getCurrentTimestamp_();
+
+  auto initialUpdate = transition->run(rt, propertyDiffs, lastUpdates, timestamp);
+
+  scheduleOrActivateTransition(transition);
+  updateInUpdatesRegistry(transition, initialUpdate);
 }
 
 } // namespace reanimated::css

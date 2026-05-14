@@ -22,9 +22,15 @@ describe('Test mixed order of execution', () => {
 
   test.each(EXPECTED_ORDER_OF_EXECUTION_2_METHODS)(
     'two methods, **${0}**[**${1}**], **${2}**[**${3}**], runtime: **${4}**',
-    async config => {
+    async (config) => {
       // Arrange
-      const [firstMethodName, firstMethodOrder, secondMethodName, secondMethodOrder, runtimeKind] = config;
+      const [
+        firstMethodName,
+        firstMethodOrder,
+        secondMethodName,
+        secondMethodOrder,
+        runtimeKind,
+      ] = config;
       const [notification1, notification2] = ['callback1', 'callback2'];
       const [confirmedOrder, order] = createOrderConstraint();
       // Act
@@ -33,21 +39,30 @@ describe('Test mixed order of execution', () => {
           worklet={() => {
             'worklet';
             const nameToMethod = getMethodMap();
-            nameToMethod[firstMethodName](() => order(firstMethodOrder, notification1));
-            nameToMethod[secondMethodName](() => order(secondMethodOrder, notification2));
+            nameToMethod[firstMethodName](() =>
+              order(firstMethodOrder, notification1)
+            );
+            nameToMethod[secondMethodName](() =>
+              order(secondMethodOrder, notification2)
+            );
           }}
           runtimeKind={runtimeKind}
-        />,
+        />
       );
 
       await waitForNotifications([notification1, notification2]);
       expect(confirmedOrder.value).toBe(2);
-    },
+    }
   );
 
   test.each(EXPECTED_ORDER_OF_EXECUTION_RUN_ON_RUNTIME)(
     'scheduleOnRuntime, **${0}**[**${1}**], **${2}**[**${3}**]',
-    async ([firstMethodName, firstMethodOrder, secondMethodName, secondMethodOrder]) => {
+    async ([
+      firstMethodName,
+      firstMethodOrder,
+      secondMethodName,
+      secondMethodOrder,
+    ]) => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
       const [confirmedOrder, order] = createOrderConstraint();
@@ -55,23 +70,27 @@ describe('Test mixed order of execution', () => {
       // Act
       scheduleOnRuntime(rt, () => {
         'worklet';
-        getMethodMap()[firstMethodName](() => order(firstMethodOrder, notification1));
+        getMethodMap()[firstMethodName](() =>
+          order(firstMethodOrder, notification1)
+        );
         // heavy task, to make sure that next scheduleOnRuntime will schedule task on async queue
         new Array(100000).map((_v, i) => (i / 2) * i * 9 + 7);
       });
       scheduleOnRuntime(rt, () => {
         'worklet';
-        getMethodMap()[secondMethodName](() => order(secondMethodOrder, notification2));
+        getMethodMap()[secondMethodName](() =>
+          order(secondMethodOrder, notification2)
+        );
       });
 
       await waitForNotifications([notification1, notification2]);
       expect(confirmedOrder.value).toBe(2);
-    },
+    }
   );
 
   test.each(EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SERIAL)(
     'three methods in serial, **${0}**[**${1}**], **${2}**[**${3}**], **${4}**[**${5}**], runtime: **${6}**',
-    async config => {
+    async (config) => {
       // Arrange
       const [
         firstMethodName,
@@ -82,7 +101,11 @@ describe('Test mixed order of execution', () => {
         thirdMethodOrder,
         runtimeKind,
       ] = config;
-      const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
+      const [notification1, notification2, notification3] = [
+        'callback1',
+        'callback2',
+        'callback3',
+      ];
       const [confirmedOrder, order] = createOrderConstraint();
       // Act
       await render(
@@ -90,22 +113,28 @@ describe('Test mixed order of execution', () => {
           worklet={() => {
             'worklet';
             const nameToMethod = getMethodMap();
-            nameToMethod[firstMethodName](() => order(firstMethodOrder, notification1));
-            nameToMethod[secondMethodName](() => order(secondMethodOrder, notification2));
-            nameToMethod[thirdMethodName](() => order(thirdMethodOrder, notification3));
+            nameToMethod[firstMethodName](() =>
+              order(firstMethodOrder, notification1)
+            );
+            nameToMethod[secondMethodName](() =>
+              order(secondMethodOrder, notification2)
+            );
+            nameToMethod[thirdMethodName](() =>
+              order(thirdMethodOrder, notification3)
+            );
           }}
           runtimeKind={runtimeKind}
-        />,
+        />
       );
 
       await waitForNotifications([notification1, notification2, notification3]);
       expect(confirmedOrder.value).toBe(3);
-    },
+    }
   );
 
   test.each(EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SCHEDULING)(
     'nested scheduling, **${0}**[**${1}**], **${2}**[**${3}**], **${4}**[**${5}**], runtime: **${6}**',
-    async config => {
+    async (config) => {
       // Arrange
       const [
         firstMethodName,
@@ -116,7 +145,11 @@ describe('Test mixed order of execution', () => {
         thirdMethodOrder,
         runtimeKind,
       ] = config;
-      const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
+      const [notification1, notification2, notification3] = [
+        'callback1',
+        'callback2',
+        'callback3',
+      ];
       const [confirmedOrder, order] = createOrderConstraint();
       // Act
       await render(
@@ -125,17 +158,21 @@ describe('Test mixed order of execution', () => {
             'worklet';
             const nameToMethod = getMethodMap();
             nameToMethod[firstMethodName](() => {
-              nameToMethod[secondMethodName](() => order(secondMethodOrder, notification2));
+              nameToMethod[secondMethodName](() =>
+                order(secondMethodOrder, notification2)
+              );
               order(firstMethodOrder, notification1);
             });
-            nameToMethod[thirdMethodName](() => order(thirdMethodOrder, notification3));
+            nameToMethod[thirdMethodName](() =>
+              order(thirdMethodOrder, notification3)
+            );
           }}
           runtimeKind={runtimeKind}
-        />,
+        />
       );
 
       await waitForNotifications([notification1, notification2, notification3]);
       expect(confirmedOrder.value).toBe(3);
-    },
+    }
   );
 });

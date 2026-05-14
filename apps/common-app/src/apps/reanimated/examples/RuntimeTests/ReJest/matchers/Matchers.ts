@@ -1,6 +1,11 @@
 import type { SingleViewSnapshot } from '../TestRunner/UpdatesContainer';
 import type { TestCase, TestValue } from '../types';
-import type { AsyncMatcher, AsyncMatcherArguments, Matcher, SyncMatcherArguments } from './rawMatchers';
+import type {
+  AsyncMatcher,
+  AsyncMatcherArguments,
+  Matcher,
+  SyncMatcherArguments,
+} from './rawMatchers';
 import {
   toBeCalledJSMatcher,
   toBeCalledMatcher,
@@ -10,6 +15,7 @@ import {
   toBeNullableMatcher,
   toBeUndefined,
   toBeWithinRangeMatcher,
+  toIncludeMatcher,
   toThrowMatcher,
 } from './rawMatchers';
 import { compareSnapshots } from './snapshotMatchers';
@@ -19,7 +25,7 @@ export class Matchers {
 
   constructor(
     private _currentValue: TestValue,
-    private _testCase: TestCase,
+    private _testCase: TestCase
   ) {}
 
   get not() {
@@ -27,18 +33,30 @@ export class Matchers {
     return this;
   }
 
-  private decorateMatcher<MatcherArgs extends SyncMatcherArguments>(matcher: Matcher<MatcherArgs>) {
+  private decorateMatcher<MatcherArgs extends SyncMatcherArguments>(
+    matcher: Matcher<MatcherArgs>
+  ) {
     return (...args: MatcherArgs) => {
-      const { pass, message } = matcher(this._currentValue, this._negation, ...args);
+      const { pass, message } = matcher(
+        this._currentValue,
+        this._negation,
+        ...args
+      );
       if ((!pass && !this._negation) || (pass && this._negation)) {
         this._testCase.errors.push(message);
       }
     };
   }
 
-  private decorateAsyncMatcher<MatcherArgs extends AsyncMatcherArguments>(matcher: AsyncMatcher<MatcherArgs>) {
+  private decorateAsyncMatcher<MatcherArgs extends AsyncMatcherArguments>(
+    matcher: AsyncMatcher<MatcherArgs>
+  ) {
     return async (...args: MatcherArgs) => {
-      const { pass, message } = await matcher(this._currentValue, this._negation, ...args);
+      const { pass, message } = await matcher(
+        this._currentValue,
+        this._negation,
+        ...args
+      );
       if ((!pass && !this._negation) || (pass && this._negation)) {
         this._testCase.errors.push(message);
       }
@@ -50,6 +68,7 @@ export class Matchers {
   public toBeNullable = this.decorateMatcher(toBeNullableMatcher);
   public toBeUndefined = this.decorateMatcher(toBeUndefined);
   public toBeWithinRange = this.decorateMatcher(toBeWithinRangeMatcher);
+  public toInclude = this.decorateMatcher(toIncludeMatcher);
   public toThrow = this.decorateAsyncMatcher(toThrowMatcher);
   public toBeCalled = this.decorateMatcher(toBeCalledMatcher);
   public toBeCalledUI = this.decorateMatcher(toBeCalledUIMatcher);
@@ -58,7 +77,11 @@ export class Matchers {
   public toMatchSnapshots(expectedSnapshots: SingleViewSnapshot) {
     const capturedSnapshots = this._currentValue as SingleViewSnapshot;
     if (capturedSnapshots) {
-      const mismatchError = compareSnapshots(expectedSnapshots, capturedSnapshots, false);
+      const mismatchError = compareSnapshots(
+        expectedSnapshots,
+        capturedSnapshots,
+        false
+      );
       if (mismatchError) {
         this._testCase.errors.push(mismatchError);
       }
@@ -67,9 +90,17 @@ export class Matchers {
     }
   }
 
-  public toMatchNativeSnapshots(expectedSnapshots: SingleViewSnapshot, expectNegativeValueMismatch = false) {
+  public toMatchNativeSnapshots(
+    expectedSnapshots: SingleViewSnapshot,
+    expectNegativeValueMismatch = false
+  ) {
     const capturedSnapshots = this._currentValue as SingleViewSnapshot;
-    const mismatchError = compareSnapshots(expectedSnapshots, capturedSnapshots, true, expectNegativeValueMismatch);
+    const mismatchError = compareSnapshots(
+      expectedSnapshots,
+      capturedSnapshots,
+      true,
+      expectNegativeValueMismatch
+    );
     if (mismatchError) {
       this._testCase.errors.push(mismatchError);
     }
