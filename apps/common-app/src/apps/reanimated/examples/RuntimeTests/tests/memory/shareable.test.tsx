@@ -1,7 +1,6 @@
 import {
   createShareable,
   runOnUISync,
-  createWorkletRuntime,
   runOnRuntimeSync,
   type ShareableGuest,
   type ShareableGuestDecorator,
@@ -10,7 +9,12 @@ import {
   type ShareableHost,
   UIRuntimeId,
 } from 'react-native-worklets';
-import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  getWorkletRuntimeFromPool,
+  test,
+} from '../../ReJest/RuntimeTestsApi';
 
 type StringDecorated = {
   myDecoration: string;
@@ -94,7 +98,7 @@ const getInitOptions = (initMode: unknown) => ({
 });
 
 describe('Shareable hosted on UI', () => {
-  const runtime = createWorkletRuntime({ name: 'test' });
+  const runtime = getWorkletRuntimeFromPool('test');
 
   test.each(initModes)('can be hosted on UI (%s)', async (initMode) => {
     const fn = () => createShareable(UIRuntimeId, 0, getInitOptions(initMode));
@@ -355,7 +359,7 @@ describe('Shareable hosted on UI', () => {
         ...getInitOptions(initMode),
         guestDecorator: decorateGuestProperty,
       });
-      const runtime = createWorkletRuntime({ name: 'test' });
+      const runtime = getWorkletRuntimeFromPool('test');
 
       const decoration = runOnRuntimeSync(runtime, () => {
         'worklet';
@@ -373,7 +377,7 @@ describe('Shareable hosted on UI', () => {
         ...getInitOptions(initMode),
         guestDecorator: decorateGuestFunction,
       });
-      const runtime = createWorkletRuntime({ name: 'test' });
+      const runtime = getWorkletRuntimeFromPool('test');
 
       const decorationResult = runOnRuntimeSync(runtime, () => {
         'worklet';
@@ -391,7 +395,7 @@ describe('Shareable hosted on UI', () => {
         ...getInitOptions(initMode),
         guestDecorator: decorateGuestOverride,
       });
-      const runtime = createWorkletRuntime({ name: 'test' });
+      const runtime = getWorkletRuntimeFromPool('test');
 
       const getSyncValue = runOnRuntimeSync(runtime, () => {
         'worklet';
