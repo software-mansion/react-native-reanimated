@@ -59,28 +59,10 @@ export class PropsFilter implements IPropsFilter {
         // it will help other libs to interpret styles correctly
         props[key] = processedStyle;
       } else if (key === 'animatedProps') {
-        const animatedPropsProp = inputProps.animatedProps;
-        const animatedPropsArray = flattenArray<
-          Partial<AnimatedComponentProps<AnimatedProps>>
-        >(animatedPropsProp ?? []);
-
-        animatedPropsArray.forEach((animatedProps) => {
-          if (!animatedProps) {
-            return;
-          }
-          if (animatedProps.viewDescriptors && animatedProps.initial) {
-            const initialValue = animatedProps.initial.value;
-            for (const initialValueKey in initialValue) {
-              props[initialValueKey] = initialValue[initialValueKey];
-            }
-          } else {
-            for (const animatedPropKey in animatedProps) {
-              if (!isCSSStyleProp(animatedPropKey)) {
-                props[animatedPropKey] = animatedProps[animatedPropKey];
-              }
-            }
-          }
-        });
+        // Handled in a second pass after this loop so that animatedProps
+        // values always take precedence over inline props with the same key,
+        // regardless of JSX attribute order.
+        continue;
       } else if (
         has('workletEventHandler', value) &&
         value.workletEventHandler instanceof WorkletEventHandler
@@ -104,6 +86,36 @@ export class PropsFilter implements IPropsFilter {
         props[key] = value;
       }
     }
+
+    // Second pass: apply animatedProps last so it always wins over inline
+    // props that share a key. This makes the precedence deterministic and
+    // independent of the order in which attributes were written in JSX.
+    const animatedPropsProp = inputProps.animatedProps;
+    if (animatedPropsProp) {
+      const animatedPropsArray =
+        flattenArray<Partial<AnimatedComponentProps<AnimatedProps>>>(
+          animatedPropsProp
+        );
+
+      animatedPropsArray.forEach((animatedProps) => {
+        if (!animatedProps) {
+          return;
+        }
+        if (animatedProps.viewDescriptors && animatedProps.initial) {
+          const initialValue = animatedProps.initial.value;
+          for (const initialValueKey in initialValue) {
+            props[initialValueKey] = initialValue[initialValueKey];
+          }
+        } else {
+          for (const animatedPropKey in animatedProps) {
+            if (!isCSSStyleProp(animatedPropKey)) {
+              props[animatedPropKey] = animatedProps[animatedPropKey];
+            }
+          }
+        }
+      });
+    }
+
     return props;
   }
 }
