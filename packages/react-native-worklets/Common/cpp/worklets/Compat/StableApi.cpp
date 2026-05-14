@@ -4,10 +4,12 @@
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/JSISerializer.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RuntimeHolder.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
+#include <utility>
 
 namespace worklets {
 
@@ -108,6 +110,17 @@ void runSyncOnRuntime(
   workletRuntime->runSync(std::static_pointer_cast<SerializableWorklet>(worklet), arg0, arg1);
 }
 
+void runSyncOnRuntime(const std::shared_ptr<WorkletRuntime> &workletRuntime, const facebook::jsi::Function &function) {
+  workletRuntime->runSync(function);
+}
+
+void runSyncOnRuntime(
+    const std::shared_ptr<WorkletRuntime> &workletRuntime,
+    const facebook::jsi::Function &function,
+    const facebook::jsi::Value &arg0) {
+  workletRuntime->runSync(function, arg0);
+}
+
 std::shared_ptr<WorkletRuntime> getWorkletRuntimeFromHolder(
     facebook::jsi::Runtime &rt,
     const facebook::jsi::Object &object) {
@@ -116,6 +129,12 @@ std::shared_ptr<WorkletRuntime> getWorkletRuntimeFromHolder(
 
 std::shared_ptr<UIScheduler> getUISchedulerFromHolder(facebook::jsi::Runtime &rt, const facebook::jsi::Object &object) {
   return object.getNativeState<UISchedulerHolder>(rt)->scheduler_;
+}
+
+void installRequestAnimationFrame(
+    facebook::jsi::Runtime &uiRuntime,
+    const RequestAnimationFrameHostFunction &requestAnimationFrame) {
+  jsi_utils::installJsiFunction(uiRuntime, "__nativeRequestAnimationFrame", requestAnimationFrame);
 }
 
 } // namespace worklets

@@ -5,12 +5,14 @@
 
 #import <reanimated/Compat/WorkletsApi.h>
 #import <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
+#import <reanimated/Tools/FeatureFlags.h>
 #import <reanimated/Tools/SingleInstanceChecker.h>
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/ReanimatedModule.h>
 #import <reanimated/apple/native/NativeProxy.h>
+#import <reanimated/apple/native/REAJSIUtils.h>
 
 using namespace facebook::react;
 using namespace reanimated;
@@ -70,6 +72,35 @@ RCT_EXPORT_MODULE(ReanimatedModule);
         });
     [scheduler addEventListener:eventListener];
   });
+}
+
+- (void)registerRCTEventHandler:(const std::shared_ptr<ReanimatedModuleProxy> &)reanimatedModuleProxy
+               uiWorkletRuntime:(const std::shared_ptr<WorkletRuntime> &)uiWorkletRuntime
+{
+  REAAssertJavaScriptQueue();
+
+  auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
+  std::weak_ptr<ReanimatedModuleProxy> weakReanimatedModuleProxy = reanimatedModuleProxy;
+
+  // When USE_ANIMATION_BACKEND is on, flushes run inside handleEventAndFlush; otherwise
+  // REANodesManager calls performOperations after the event (see REANodesManager).
+  [_nodesManager registerEventHandler:^(id<RCTEvent> event) {
+    auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
+    if (!reanimatedModuleProxy) {
+      return;
+    }
+    // handles RCTEvents from RNGestureHandler
+    std::string eventName = [event.eventName UTF8String];
+    int emitterReactTag = [event.viewTag intValue];
+    id eventData = [event arguments][2];
+    jsi::Value payload = convertObjCObjectToJSIValue(uiRuntime, eventData);
+    if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+      reanimatedModuleProxy->handleEventAndFlush(eventName, emitterReactTag, payload, GrandCallbackSource::Event);
+    } else {
+      const double currentTime = CACurrentMediaTime() * 1000;
+      reanimatedModuleProxy->handleEvent(eventName, emitterReactTag, payload, currentTime);
+    }
+  }];
 }
 
 #pragma mark-- Bridgeless methods
@@ -164,7 +195,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
   auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
   RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, _reanimatedModuleProxy);
-  [self attachReactEventListener:_reanimatedModuleProxy];
 
   react_native_assert(_surfacePresenter != nil && "_surfacePresenter is nil");
   RCTScheduler *scheduler = [_surfacePresenter scheduler];
@@ -173,6 +203,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   const auto &uiManager = scheduler.uiManager;
   react_native_assert(uiManager.get() != nil);
   _reanimatedModuleProxy->initializeFabric(uiManager);
+  [self attachReactEventListener:_reanimatedModuleProxy];
+  [self registerRCTEventHandler:_reanimatedModuleProxy uiWorkletRuntime:uiWorkletRuntime];
 
   return @YES;
 }

@@ -68,6 +68,10 @@ declare global {
   /** Only outside of Bundle Mode on Worklet Runtimes. */
   var __serializer: typeof makeShareableCloneOnUIRecursive;
   var __callMicrotasks: () => void;
+  /** Available only on the UI Runtime */
+  var __nativeRequestAnimationFrame: (
+    callback: (timestamp: number) => void
+  ) => void;
   var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
   var _scheduleRemoteFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
   /** Available only on RN Runtime */
