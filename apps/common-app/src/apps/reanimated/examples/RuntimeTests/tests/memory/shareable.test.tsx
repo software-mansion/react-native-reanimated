@@ -408,8 +408,8 @@ describe('Shareable hosted on UI', () => {
 });
 
 describe('Shareable hosted on Worker Runtime', () => {
-  const host = createWorkletRuntime({ name: 'shareable-host' });
-  const otherGuest = createWorkletRuntime({ name: 'shareable-other-guest' });
+  const host = getWorkletRuntimeFromPool('shareable-host');
+  const otherGuest = getWorkletRuntimeFromPool('shareable-other-guest');
 
   test.each(initModes)(
     'can be hosted on Worker Runtime (%s)',
@@ -517,6 +517,19 @@ describe('Shareable hosted on Worker Runtime', () => {
     expect(value).toBe(0);
   });
 
+  test.each(initModes)(
+    'getAsync as guest on RN Runtime (%s)',
+    async (initMode) => {
+      const shareable = createShareable(
+        host.runtimeId,
+        0,
+        getInitOptions(initMode)
+      );
+      const value = await (shareable as ShareableGuest<number>).getAsync();
+      expect(value).toBe(0);
+    }
+  );
+
   test.each(initModes)('setSync as guest on RN Runtime (%s)', (initMode) => {
     const shareable = createShareable(
       host.runtimeId,
@@ -555,6 +568,26 @@ describe('Shareable hosted on Worker Runtime', () => {
     expect(value).toBe(0);
   });
 
+  test.each(initModes)(
+    'getAsync as guest on UI Runtime throws (%s)',
+    (initMode) => {
+      const shareable = createShareable(
+        host.runtimeId,
+        0,
+        getInitOptions(initMode)
+      );
+      const errorMessage = runOnUISync(() => {
+        'worklet';
+        try {
+          return (shareable as ShareableGuest<number>).getAsync() as never;
+        } catch (e) {
+          return (e as Error).message;
+        }
+      });
+      expect(errorMessage).toInclude('can only be called on the RN Runtime');
+    }
+  );
+
   test.each(initModes)('setSync as guest on UI Runtime (%s)', (initMode) => {
     const shareable = createShareable(
       host.runtimeId,
@@ -586,6 +619,26 @@ describe('Shareable hosted on Worker Runtime', () => {
   );
 
   test.each(initModes)(
+    'getAsync as guest on other Worker Runtime throws (%s)',
+    (initMode) => {
+      const shareable = createShareable(
+        host.runtimeId,
+        0,
+        getInitOptions(initMode)
+      );
+      const errorMessage = runOnRuntimeSync(otherGuest, () => {
+        'worklet';
+        try {
+          return (shareable as ShareableGuest<number>).getAsync() as never;
+        } catch (e) {
+          return (e as Error).message;
+        }
+      });
+      expect(errorMessage).toInclude('can only be called on the RN Runtime');
+    }
+  );
+
+  test.each(initModes)(
     'setSync as guest on other Worker Runtime (%s)',
     (initMode) => {
       const shareable = createShareable(
@@ -599,63 +652,6 @@ describe('Shareable hosted on Worker Runtime', () => {
       });
       const value = (shareable as ShareableGuest<number>).getSync();
       expect(value).toBe(42);
-    }
-  );
-
-  test.each(initModes)(
-    'getAsync as guest on RN Runtime (%s)',
-    async (initMode) => {
-      const shareable = createShareable(
-        host.runtimeId,
-        0,
-        getInitOptions(initMode)
-      );
-      const value = await (shareable as ShareableGuest<number>).getAsync();
-      expect(value).toBe(0);
-    }
-  );
-
-  test.each(initModes)(
-    'getAsync as guest on UI Runtime throws (%s)',
-    (initMode) => {
-      const shareable = createShareable(
-        host.runtimeId,
-        0,
-        getInitOptions(initMode)
-      );
-      const threw = runOnUISync(() => {
-        'worklet';
-        try {
-          // eslint-disable-next-line no-void
-          void (shareable as ShareableGuest<number>).getAsync();
-          return false;
-        } catch {
-          return true;
-        }
-      });
-      expect(threw).toBe(true);
-    }
-  );
-
-  test.each(initModes)(
-    'getAsync as guest on other Worker Runtime throws (%s)',
-    (initMode) => {
-      const shareable = createShareable(
-        host.runtimeId,
-        0,
-        getInitOptions(initMode)
-      );
-      const threw = runOnRuntimeSync(otherGuest, () => {
-        'worklet';
-        try {
-          // eslint-disable-next-line no-void
-          void (shareable as ShareableGuest<number>).getAsync();
-          return false;
-        } catch {
-          return true;
-        }
-      });
-      expect(threw).toBe(true);
     }
   );
 
