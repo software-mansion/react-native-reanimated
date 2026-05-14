@@ -15,10 +15,7 @@ internal object SynchronousPropsBufferParser {
     private const val CMD_ELEVATION = 11
     private const val CMD_Z_INDEX = 12
     private const val CMD_SHADOW_COLOR = 19
-    private const val CMD_SHADOW_OPACITY = 13
-    private const val CMD_SHADOW_RADIUS = 14
     private const val CMD_BACKGROUND_COLOR = 15
-    private const val CMD_COLOR = 16
     private const val CMD_TINT_COLOR = 17
     private const val CMD_PLACEHOLDER_TEXT_COLOR = 18
 
@@ -76,10 +73,7 @@ internal object SynchronousPropsBufferParser {
             CMD_ELEVATION -> "elevation"
             CMD_Z_INDEX -> "zIndex"
             CMD_SHADOW_COLOR -> "shadowColor"
-            CMD_SHADOW_OPACITY -> "shadowOpacity"
-            CMD_SHADOW_RADIUS -> "shadowRadius"
             CMD_BACKGROUND_COLOR -> "backgroundColor"
-            CMD_COLOR -> "color"
             CMD_TINT_COLOR -> "tintColor"
             CMD_PLACEHOLDER_TEXT_COLOR -> "placeholderTextColor"
             CMD_BORDER_RADIUS -> "borderRadius"
@@ -149,8 +143,6 @@ internal object SynchronousPropsBufferParser {
                 CMD_OPACITY,
                 CMD_ELEVATION,
                 CMD_Z_INDEX,
-                CMD_SHADOW_OPACITY,
-                CMD_SHADOW_RADIUS,
                 CMD_OUTLINE_OFFSET,
                 CMD_OUTLINE_WIDTH,
                 -> {
@@ -160,7 +152,6 @@ internal object SynchronousPropsBufferParser {
 
                 CMD_SHADOW_COLOR,
                 CMD_BACKGROUND_COLOR,
-                CMD_COLOR,
                 CMD_TINT_COLOR,
                 CMD_PLACEHOLDER_TEXT_COLOR,
                 CMD_BORDER_COLOR,
