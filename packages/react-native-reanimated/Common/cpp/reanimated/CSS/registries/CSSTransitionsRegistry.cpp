@@ -76,7 +76,7 @@ void CSSTransitionsRegistry::run(
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     if (!initialUpdate.empty()) {
 #if REACT_NATIVE_VERSION_MINOR >= 85
-      addRawPropsToAnimatedPropsBatch(transition->getShadowNode()->getFamilyShared(), std::move(initialUpdate));
+      addRawPropsToAnimatedPropsBatch(transition->getShadowNode()->getFamilyShared(), initialUpdate);
 #endif
     }
   }
