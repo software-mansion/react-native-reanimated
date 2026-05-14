@@ -220,7 +220,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
   // for vector growth allocations.
   if (StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
     synchronousPropsIntBuffer_.reserve(1024);
-    synchronousPropsDoubleBuffer_.reserve(512);
+    synchronousPropsDoubleBuffer_.reserve(1024);
   }
 #endif // ANDROID
 }
