@@ -103,12 +103,29 @@ std::shared_ptr<Serializable> extractSerializableOrThrow(
     const jsi::Value &maybeSerializableValue,
     const std::string &errorMessage = "[Worklets] Expecting the object to be of type SerializableJSRef.");
 
-template <typename T>
-std::shared_ptr<T> extractSerializableOrThrow(
+std::shared_ptr<Serializable> extractSerializableOrThrow(
+    jsi::Runtime &rt,
+    const jsi::Object &maybeSerializableValue,
+    const std::string &errorMessage = "[Worklets] Expecting the object to be of type SerializableJSRef.");
+
+template <typename TSerializable>
+std::shared_ptr<TSerializable> extractSerializableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &serializableRef,
     const std::string &errorMessage = "[Worklets] Provided serializable object is of an incompatible type.") {
-  auto res = std::dynamic_pointer_cast<T>(extractSerializableOrThrow(rt, serializableRef, errorMessage));
+  auto res = std::dynamic_pointer_cast<TSerializable>(extractSerializableOrThrow(rt, serializableRef, errorMessage));
+  if (!res) {
+    throw std::runtime_error(errorMessage);
+  }
+  return res;
+}
+
+template <typename TSerializable>
+std::shared_ptr<TSerializable> extractSerializableOrThrow(
+    jsi::Runtime &rt,
+    const jsi::Object &serializableRef,
+    const std::string &errorMessage = "[Worklets] Provided serializable object is of an incompatible type.") {
+  auto res = std::dynamic_pointer_cast<TSerializable>(extractSerializableOrThrow(rt, serializableRef, errorMessage));
   if (!res) {
     throw std::runtime_error(errorMessage);
   }

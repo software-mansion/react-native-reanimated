@@ -65,7 +65,6 @@ declare global {
   var _createSerializableSynchronizable: (
     value: object
   ) => FlatShareableRef<object>;
-  /** Only outside of Bundle Mode on Worklet Runtimes. */
   var __serializer: typeof makeShareableCloneOnUIRecursive;
   var __callMicrotasks: () => void;
   /** Available only on RN Runtime */

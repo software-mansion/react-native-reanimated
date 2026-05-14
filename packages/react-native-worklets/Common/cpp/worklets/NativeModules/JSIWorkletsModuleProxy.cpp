@@ -10,6 +10,7 @@
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
+#include <stdexcept>
 
 #ifndef NDEBUG
 #include <algorithm>
@@ -423,39 +424,35 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       obj,
       "scheduleOnRN",
       [jsScheduler = jsScheduler_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
-        const auto &funValue = at<0>(args).getObject(rt);
+        const auto &funOrSerializable = at<0>(args).getObject(rt);
         const auto &remoteArgs = at<1>(args);
 
         auto serializableArgs = remoteArgs.isUndefined()
             ? nullptr
             : extractSerializableOrThrow<SerializableArray>(rt, remoteArgs, "[Worklets] Args must be an array.");
 
-        if (funValue.isFunction(rt) && funValue.getFunction(rt).isHostFunction(rt)) // NOLINT(readability/braces)
-            [[unlikely]] {
-          auto hostFun = funValue.getFunction(rt).getHostFunction(rt);
-          jsScheduler->scheduleOnJS([hostFun = std::move(hostFun), serializableArgs](jsi::Runtime &rnRuntime) {
-            if (serializableArgs == nullptr) {
-              // fast path for host function w/o arguments
-              hostFun(rnRuntime, jsi::Value::undefined(), nullptr, 0);
-            } else {
-              auto args = serializableArgs->getJSArgs(rnRuntime);
-              hostFun(rnRuntime, jsi::Value::undefined(), const_cast<const jsi::Value *>(args.data()), args.size());
-            }
-          });
-        } else {
-          std::string name;
-#ifndef NDEBUG
-          if (funValue.isFunction(rt)) {
-            name = funValue.getFunction(rt).getProperty(rt, "name").asString(rt).utf8(rt);
+        if (funOrSerializable.isFunction(rt)) {
+          auto fun = funOrSerializable.getFunction(rt);
+          if (fun.isHostFunction(rt)) {
+            auto hostFun = fun.getHostFunction(rt);
+            jsScheduler->scheduleOnJS([hostFun = std::move(hostFun), serializableArgs](jsi::Runtime &rnRuntime) {
+              if (serializableArgs == nullptr) {
+                // fast path for host function w/o arguments
+                hostFun(rnRuntime, jsi::Value::undefined(), nullptr, 0);
+              } else {
+                auto args = serializableArgs->getJSArgs(rnRuntime);
+                hostFun(rnRuntime, jsi::Value::undefined(), const_cast<const jsi::Value *>(args.data()), args.size());
+              }
+            });
+          } else [[unlikely]] { // NOLINT(readability/braces)
+            const auto fnName = fun.getProperty(rt, "name").asString(rt).utf8(rt);
+            const auto nameInError = fnName.empty() ? "" : " (" + fnName + ")";
+            throw std::runtime_error(
+                "[Worklets] Locally defined function passed to scheduleOnRN" + nameInError +
+                ". Only functions defined on the RN Runtime or host functions can be scheduled on the RN Runtime. Define the function on the RN Runtime and pass it as a reference. See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#locally-defined-function-passed-to-scheduleonrn for more details.");
           }
-          name = name.empty() ? "" : " (" + name + ")";
-#endif
-
-          auto remoteFunction = extractSerializableOrThrow<SerializableRemoteFunction>(
-              rt,
-              args[0],
-              "[Worklets] Locally defined function passed to scheduleOnRN" + name +
-                  ". Only functions defined on the RN Runtime or host functions can be scheduled on the RN Runtime. Define the function on the RN Runtime and pass it as a reference. See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#locally-defined-function-passed-to-scheduleonrn for more details.");
+        } else {
+          auto remoteFunction = extractSerializableOrThrow<SerializableRemoteFunction>(rt, funOrSerializable);
           jsScheduler->scheduleOnJS([remoteFunction, serializableArgs](jsi::Runtime &rnRuntime) {
             auto fun = remoteFunction->toJSValue(rnRuntime).getObject(rnRuntime).getFunction(rnRuntime);
 

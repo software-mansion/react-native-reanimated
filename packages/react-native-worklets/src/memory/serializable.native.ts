@@ -435,9 +435,7 @@ function cloneArray<T extends unknown[]>(
 function cloneNonWorkletFunction<TArgs extends unknown[], TReturn>(
   fun: (...args: TArgs) => TReturn
 ): SerializableRef<(...args: TArgs) => TReturn> {
-  const clone = WorkletsModule.createSerializableNonWorkletFunction(
-    fun
-  ) as SerializableRef<(...args: TArgs) => TReturn>;
+  const clone = WorkletsModule.createSerializableNonWorkletFunction(fun);
   serializableMappingCache.set(fun, clone);
   serializableMappingCache.set(clone);
 
