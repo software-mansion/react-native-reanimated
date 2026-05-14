@@ -3,7 +3,6 @@ package com.swmansion.reanimated
 import android.content.ContentResolver
 import android.os.SystemClock
 import android.provider.Settings
-import android.util.Log
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
 import com.facebook.react.bridge.NativeModule
@@ -20,8 +19,10 @@ import com.swmansion.reanimated.keyboard.KeyboardAnimationManager
 import com.swmansion.reanimated.keyboard.KeyboardWorkletWrapper
 import com.swmansion.reanimated.nativeProxy.AnimationFrameCallback
 import com.swmansion.reanimated.nativeProxy.EventHandler
+import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
 import com.swmansion.reanimated.nativeProxy.SensorSetter
 import com.swmansion.reanimated.nativeProxy.SynchronousPropsBufferParser
+import com.swmansion.reanimated.pseudoSelectors.PseudoSelectorManager
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer
 import com.swmansion.reanimated.sensor.ReanimatedSensorType
 import java.lang.ref.WeakReference
@@ -42,25 +43,22 @@ open class NativeProxy {
     private val reanimatedSensorContainer: ReanimatedSensorContainer
     private val gestureHandlerStateManager: GestureHandlerStateManager?
     private val keyboardAnimationManager: KeyboardAnimationManager
+    private val pseudoSelectorManager: PseudoSelectorManager
     private var firstUptime: Long = SystemClock.uptimeMillis()
     private var slowAnimationsEnabled = false
     private val animationsDragFactor = 10
 
     // It turns out it's pretty difficult to set a member of a class
     // instance through JNI so we decided to use a setter instead.
-    @set:DoNotStrip
-    @Suppress("unused")
-    protected var cppVersion: String? = null
+    @set:DoNotStrip @Suppress("unused") protected var cppVersion: String? = null
 
     /**
-     * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
-     * cost us much to add synchronization for extra safety.
+     * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it
+     * doesn't cost us much to add synchronization for extra safety.
      */
     private val mInvalidated = AtomicBoolean(false)
 
-    @field:DoNotStrip
-    @Suppress("unused")
-    private val mHybridData: HybridData
+    @field:DoNotStrip @Suppress("unused") private val mHybridData: HybridData
 
     constructor(context: ReactApplicationContext, nodesManager: NodesManager) {
         context.assertOnJSQueueThread()
@@ -74,10 +72,11 @@ open class NativeProxy {
         try {
             @Suppress("UNCHECKED_CAST")
             val gestureHandlerModuleClass =
-                Class.forName("com.swmansion.gesturehandler.react.RNGestureHandlerModule")
-                    as Class<NativeModule>
+                    Class.forName("com.swmansion.gesturehandler.react.RNGestureHandlerModule") as
+                            Class<NativeModule>
             tempHandlerStateManager =
-                context.getNativeModule(gestureHandlerModuleClass) as GestureHandlerStateManager?
+                    context.getNativeModule(gestureHandlerModuleClass) as
+                            GestureHandlerStateManager?
         } catch (e: ClassCastException) {
             tempHandlerStateManager = null
         } catch (e: ClassNotFoundException) {
@@ -87,29 +86,30 @@ open class NativeProxy {
         mNodesManager = nodesManager
 
         mFabricUIManager =
-            UIManagerHelper.getUIManager(context, UIManagerType.FABRIC) as FabricUIManager
+                UIManagerHelper.getUIManager(context, UIManagerType.FABRIC) as FabricUIManager
+        pseudoSelectorManager = PseudoSelectorManager(mFabricUIManager)
 
         val callInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
         mHybridData =
-            initHybrid(
-                context.javaScriptContextHolder!!.get(),
-                callInvokerHolder,
-                mFabricUIManager,
-            )
+                initHybrid(
+                        context.javaScriptContextHolder!!.get(),
+                        callInvokerHolder,
+                        mFabricUIManager,
+                )
         if (BuildConfig.DEBUG) {
             checkCppVersion() // injectCppVersion should be called during initHybrid above
         }
     }
 
     private external fun initHybrid(
-        jsContext: Long,
-        jsCallInvokerHolder: CallInvokerHolderImpl,
-        fabricUIManager: FabricUIManager,
+            jsContext: Long,
+            jsCallInvokerHolder: CallInvokerHolderImpl,
+            fabricUIManager: FabricUIManager,
     ): HybridData
 
     external fun isAnyHandlerWaitingForEvent(
-        eventName: String,
-        emitterReactTag: Int,
+            eventName: String,
+            emitterReactTag: Int,
     ): Boolean
 
     external fun performOperations()
@@ -148,32 +148,44 @@ open class NativeProxy {
     }
 
     @DoNotStrip
+    fun attachPseudoSelector(
+            tag: Int,
+            selector: Int,
+            callback: PseudoSelectorCallback,
+    ) = pseudoSelectorManager.attach(tag, selector, callback)
+
+    @DoNotStrip
+    fun detachPseudoSelector(
+            tag: Int,
+            selector: Int,
+    ) = pseudoSelectorManager.detach(tag, selector)
+
+    @DoNotStrip
     fun requestRender(callback: AnimationFrameCallback) {
         UiThreadUtil.assertOnUiThread()
         mNodesManager!!.postOnAnimation(callback)
     }
 
-    @DoNotStrip
-    fun getReanimatedJavaVersion(): String = BuildConfig.REANIMATED_VERSION_JAVA
+    @DoNotStrip fun getReanimatedJavaVersion(): String = BuildConfig.REANIMATED_VERSION_JAVA
 
     protected fun checkCppVersion() {
         if (cppVersion == null) {
             throw RuntimeException(
-                "[Reanimated] Java side failed to resolve C++ code version. " +
-                    "See https://docs.swmansion.com/react-native-reanimated/docs" +
-                    "/guides/troubleshooting#java-side-failed-to-resolve-c-code-version for more information.",
+                    "[Reanimated] Java side failed to resolve C++ code version. " +
+                            "See https://docs.swmansion.com/react-native-reanimated/docs" +
+                            "/guides/troubleshooting#java-side-failed-to-resolve-c-code-version for more information.",
             )
         }
         val javaVersion = getReanimatedJavaVersion()
         if (cppVersion != javaVersion) {
             throw RuntimeException(
-                "[Reanimated] Mismatch between Java code version and C++ code version (" +
-                    javaVersion +
-                    " vs. " +
-                    cppVersion +
-                    " respectively). See " +
-                    "https://docs.swmansion.com/react-native-reanimated/docs" +
-                    "/guides/troubleshooting#mismatch-between-java-code-version-and-c-code-version for more information.",
+                    "[Reanimated] Mismatch between Java code version and C++ code version (" +
+                            javaVersion +
+                            " vs. " +
+                            cppVersion +
+                            " respectively). See " +
+                            "https://docs.swmansion.com/react-native-reanimated/docs" +
+                            "/guides/troubleshooting#mismatch-between-java-code-version-and-c-code-version for more information.",
             )
         }
     }
@@ -195,8 +207,8 @@ open class NativeProxy {
 
     @DoNotStrip
     fun synchronouslyUpdateUIProps(
-        intBuffer: IntArray,
-        doubleBuffer: DoubleArray,
+            intBuffer: IntArray,
+            doubleBuffer: DoubleArray,
     ) {
         SynchronousPropsBufferParser.parse(intBuffer, doubleBuffer) { viewTag, props ->
             mFabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, props)
@@ -205,19 +217,19 @@ open class NativeProxy {
 
     @DoNotStrip
     fun setGestureState(
-        handlerTag: Int,
-        newState: Int,
+            handlerTag: Int,
+            newState: Int,
     ) {
         gestureHandlerStateManager?.setGestureHandlerState(handlerTag, newState)
     }
 
     @DoNotStrip
     fun getAnimationTimestamp(): Long =
-        if (slowAnimationsEnabled) {
-            firstUptime + (SystemClock.uptimeMillis() - firstUptime) / animationsDragFactor
-        } else {
-            SystemClock.uptimeMillis()
-        }
+            if (slowAnimationsEnabled) {
+                firstUptime + (SystemClock.uptimeMillis() - firstUptime) / animationsDragFactor
+            } else {
+                SystemClock.uptimeMillis()
+            }
 
     @DoNotStrip
     fun registerEventHandler(handler: EventHandler) {
@@ -228,15 +240,15 @@ open class NativeProxy {
 
     @DoNotStrip
     fun registerSensor(
-        sensorType: Int,
-        interval: Int,
-        setter: SensorSetter,
+            sensorType: Int,
+            interval: Int,
+            setter: SensorSetter,
     ): Int =
-        reanimatedSensorContainer.registerSensor(
-            ReanimatedSensorType.getInstanceById(sensorType),
-            interval,
-            setter,
-        )
+            reanimatedSensorContainer.registerSensor(
+                    ReanimatedSensorType.getInstanceById(sensorType),
+                    interval,
+                    setter,
+            )
 
     @DoNotStrip
     fun unregisterSensor(sensorId: Int) {
@@ -245,15 +257,15 @@ open class NativeProxy {
 
     @DoNotStrip
     fun subscribeForKeyboardEvents(
-        keyboardWorkletWrapper: KeyboardWorkletWrapper,
-        isStatusBarTranslucent: Boolean,
-        isNavigationBarTranslucent: Boolean,
+            keyboardWorkletWrapper: KeyboardWorkletWrapper,
+            isStatusBarTranslucent: Boolean,
+            isNavigationBarTranslucent: Boolean,
     ): Int =
-        keyboardAnimationManager.subscribeForKeyboardUpdates(
-            keyboardWorkletWrapper,
-            isStatusBarTranslucent,
-            isNavigationBarTranslucent,
-        )
+            keyboardAnimationManager.subscribeForKeyboardUpdates(
+                    keyboardWorkletWrapper,
+                    isStatusBarTranslucent,
+                    isNavigationBarTranslucent,
+            )
 
     @DoNotStrip
     fun unsubscribeFromKeyboardEvents(listenerId: Int) {
@@ -264,7 +276,10 @@ open class NativeProxy {
     fun getIsReducedMotion(): Boolean {
         val mContentResolver: ContentResolver = mContext.get()!!.contentResolver
         val rawValue =
-            Settings.Global.getString(mContentResolver, Settings.Global.TRANSITION_ANIMATION_SCALE)
+                Settings.Global.getString(
+                        mContentResolver,
+                        Settings.Global.TRANSITION_ANIMATION_SCALE
+                )
         val parsedValue = if (rawValue != null) rawValue.toFloat() else 1f
         return parsedValue == 0f
     }

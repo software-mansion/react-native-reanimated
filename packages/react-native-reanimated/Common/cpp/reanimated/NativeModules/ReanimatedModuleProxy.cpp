@@ -210,6 +210,18 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(getAnimationTimestamp_, viewStylesRepository_)),
+      operationsLoop_(std::make_shared<OperationsLoop>(
+          uiScheduler_,
+          platformDepMethodsHolder.requestRender,
+          getAnimationTimestamp_,
+          cssAnimationsRegistry_,
+          cssTransitionsRegistry_,
+          updatesRegistryManager_)),
+      pseudoStylesRegistry_(std::make_shared<PseudoStylesRegistry>(
+          platformDepMethodsHolder.attachPseudoSelector,
+          platformDepMethodsHolder.detachPseudoSelector,
+          cssTransitionsRegistry_,
+          operationsLoop_)),
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
@@ -259,19 +271,6 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       strongThis->startBackendIfNeeded();
     };
   }
-
-  operationsLoop_ = std::make_shared<OperationsLoop>(
-      uiScheduler_,
-      requestRender_,
-      getAnimationTimestamp_,
-      cssAnimationsRegistry_,
-      cssTransitionsRegistry_,
-      updatesRegistryManager_);
-  pseudoStylesRegistry_ = std::make_shared<PseudoStylesRegistry>(
-      platformDepMethodsHolder.attachPseudoSelector,
-      platformDepMethodsHolder.detachPseudoSelector,
-      cssTransitionsRegistry_,
-      operationsLoop_);
 
   auto updateProps = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &operations) {
     auto strongThis = weakThis.lock();
