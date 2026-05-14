@@ -204,14 +204,16 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #endif // ANDROID
       subscribeForKeyboardEventsFunction_(platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
-  auto lock = updatesRegistryManager_->lock();
-  // Add registries in order of their priority (from the lowest to the
-  // highest)
-  // CSS transitions should be overriden by animated style animations;
-  // animated style animations should be overriden by CSS animations.
-  updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
-  updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
-  updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
+  {
+    auto lock = updatesRegistryManager_->lock();
+    // Add registries in order of their priority (from the lowest to the
+    // highest)
+    // CSS transitions should be overriden by animated style animations;
+    // animated style animations should be overriden by CSS animations.
+    updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
+    updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
+    updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
+  }
 
 #ifdef ANDROID
   // Pre-allocate the synchronous props buffers so the first frame doesn't pay
