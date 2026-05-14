@@ -153,6 +153,9 @@ void serializeSynchronousPropsToBuffers(
     const UpdatesBatch &synchronousUpdatesBatch,
     std::vector<int> &intBuffer,
     std::vector<double> &doubleBuffer) {
+  intBuffer.clear();
+  doubleBuffer.clear();
+
   const auto pushInt = [&](int value) {
     intBuffer.push_back(value);
   };

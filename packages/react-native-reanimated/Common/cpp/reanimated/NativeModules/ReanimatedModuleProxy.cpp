@@ -209,6 +209,15 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
   updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
   updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
   updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
+
+#ifdef ANDROID
+  // Pre-allocate the synchronous props buffers so the first frame doesn't pay
+  // for vector growth allocations.
+  if (StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
+    synchronousPropsIntBuffer_.reserve(256);
+    synchronousPropsDoubleBuffer_.reserve(256);
+  }
+#endif // ANDROID
 }
 
 void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMethodsHolder) {
@@ -777,12 +786,9 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
 
 #ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {
-    std::vector<int> intBuffer;
-    std::vector<double> doubleBuffer;
-    intBuffer.reserve(1024);
-    doubleBuffer.reserve(1024);
-    serializeSynchronousPropsToBuffers(synchronousUpdatesBatch, intBuffer, doubleBuffer);
-    synchronouslyUpdateUIPropsFunction_(intBuffer, doubleBuffer);
+    serializeSynchronousPropsToBuffers(
+        synchronousUpdatesBatch, synchronousPropsIntBuffer_, synchronousPropsDoubleBuffer_);
+    synchronouslyUpdateUIPropsFunction_(synchronousPropsIntBuffer_, synchronousPropsDoubleBuffer_);
   }
 #endif // ANDROID
 
