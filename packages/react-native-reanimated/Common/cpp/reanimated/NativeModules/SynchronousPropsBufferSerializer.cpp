@@ -25,8 +25,6 @@ enum Command : std::uint8_t {
   CMD_ELEVATION = 11,
   CMD_Z_INDEX = 12,
   CMD_SHADOW_COLOR = 19,
-  CMD_SHADOW_OPACITY = 13,
-  CMD_SHADOW_RADIUS = 14,
   CMD_BACKGROUND_COLOR = 15,
   CMD_COLOR = 16,
   CMD_TINT_COLOR = 17,
@@ -83,8 +81,6 @@ const std::unordered_map<std::string_view, Command> kPropNameToCommand = {
     {"elevation", CMD_ELEVATION},
     {"zIndex", CMD_Z_INDEX},
     {"shadowColor", CMD_SHADOW_COLOR},
-    {"shadowOpacity", CMD_SHADOW_OPACITY},
-    {"shadowRadius", CMD_SHADOW_RADIUS},
     {"backgroundColor", CMD_BACKGROUND_COLOR},
     {"color", CMD_COLOR},
     {"tintColor", CMD_TINT_COLOR},
@@ -174,8 +170,6 @@ void serializeSynchronousPropsToBuffers(
         case CMD_OPACITY:
         case CMD_ELEVATION:
         case CMD_Z_INDEX:
-        case CMD_SHADOW_OPACITY:
-        case CMD_SHADOW_RADIUS:
         case CMD_OUTLINE_OFFSET:
         case CMD_OUTLINE_WIDTH:
           pushInt(command);
