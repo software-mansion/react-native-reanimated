@@ -2,6 +2,7 @@
 #include <jsi/jsi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Tools/JSLogger.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RuntimeHolder.h>
 #include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
@@ -117,21 +118,23 @@ void WorkletRuntime::bundleModeInit(
     const std::shared_ptr<RuntimeBindings> &runtimeBindings) {
   jsi::Runtime &rt = *runtime_;
 
+  jsi::Object global = rt.global();
+
+  jsi_utils::addMethod<0>(rt, global, "__r", [](jsi::Runtime &rt, const jsi::Value &) {
+    // Drain React Native entry points.
+  });
+
   if (!script) {
     throw std::runtime_error("[Worklets] Expected to receive the bundle, but got nullptr instead.");
   }
 
-  try {
-    rt.evaluateJavaScript(script, sourceUrl);
-  } catch (facebook::jsi::JSError &error) {
-    const auto &message = error.getMessage();
-    const auto &stack = error.getStack();
-    if (!message.starts_with("[Worklets] Worklets initialized successfully")) {
-      const auto newMessage = "[Worklets] Failed to initialize runtime. Reason: " + message + " " + stack;
-      JSLogger::reportFatalErrorOnJS(jsScheduler, {.message = newMessage, .stack = stack, .name = "WorkletsError"});
-      return;
-    }
-  }
+  rt.evaluateJavaScript(script, sourceUrl);
+
+  auto require = global.getProperty(rt, "__e").getObject(rt).getFunction(rt);
+
+  global.setProperty(rt, "__r", require);
+
+  require.call(rt, -2);
 
   WorkletRuntimeDecorator::postEvaluateScript(rt, runtimeBindings);
 }
