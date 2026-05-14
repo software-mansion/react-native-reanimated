@@ -62,6 +62,8 @@ Functions passed to `scheduleOnRN` must be defined on the [RN Runtime](/docs/fun
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 function App() {
+  //... component code
+
   scheduleOnUI(() => {
     // callback is defined on the UI Runtime 🚨
     // highlight-next-line
@@ -78,6 +80,8 @@ To fix it, you have to move the function definition to the [RN Runtime](/docs/fu
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 function App() {
+  //... component code
+
   // myFunction is defined on the RN Runtime ✅
   // highlight-next-line
   const myFunction = () => {};

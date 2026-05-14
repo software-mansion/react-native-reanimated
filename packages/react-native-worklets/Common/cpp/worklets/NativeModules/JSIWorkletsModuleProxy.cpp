@@ -351,23 +351,22 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       "createSerializableNonWorkletFunction",
       [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         auto fun = at<0>(args).asObject(rt).asFunction(rt);
-#ifndef NDEBUG
-        const auto name = fun.getProperty(rt, "name").asString(rt).utf8(rt);
-#else
-        const auto name = std::string();
-#endif
         if (fun.isHostFunction(rt)) {
           return makeSerializableHostFunction(
-              rt, fun.getHostFunction(rt), name, fun.getProperty(rt, "length").asNumber());
-        }
-        return makeSerializableRemoteFunction(
-            rt,
-            std::move(fun)
+              rt,
+              fun.getHostFunction(rt),
+              fun.getProperty(rt, "name").asString(rt).utf8(rt),
+              fun.getProperty(rt, "length").asNumber());
+        } else {
+          return makeSerializableRemoteFunction(
+              rt,
+              std::move(fun)
 #ifndef NDEBUG
-                ,
-            name
+                  ,
+              fun.getProperty(rt, "name").asString(rt).utf8(rt)
 #endif
-        );
+          );
+        }
       });
 
   jsi_utils::addMethod<2>(

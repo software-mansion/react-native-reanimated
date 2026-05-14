@@ -108,7 +108,7 @@ export interface WorkletsModuleProxy {
   ): SerializableRef<TValue>;
 
   scheduleOnRN<TArgs extends unknown[]>(
-    serializable: (...args: TArgs) => unknown,
+    fun: (...args: TArgs) => unknown,
     args: SerializableRef<TArgs> | undefined
   ): void;
 
