@@ -109,7 +109,7 @@ export interface WorkletsModuleProxy {
 
   scheduleOnRN<TArgs extends unknown[]>(
     serializable: (...args: TArgs) => unknown,
-    args?: SerializableRef<TArgs>
+    args: SerializableRef<TArgs> | undefined
   ): void;
 
   scheduleOnUI<TValue>(

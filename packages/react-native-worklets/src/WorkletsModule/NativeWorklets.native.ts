@@ -208,7 +208,7 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   scheduleOnRN<TArgs extends unknown[]>(
     fun: (...args: TArgs) => unknown,
-    args?: SerializableRef<TArgs>
+    args: SerializableRef<TArgs> | undefined
   ): void {
     this.#workletsModuleProxy.scheduleOnRN(fun, args);
   }
