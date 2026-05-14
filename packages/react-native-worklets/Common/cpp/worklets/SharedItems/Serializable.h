@@ -26,7 +26,7 @@ inline void freeWithoutCallingDestructor(std::unique_ptr<jsi::Value> &value) {
   ::operator delete(value.release());
 }
 
-inline void cleanupIfRuntimeExists(jsi::Runtime *rt, std::unique_ptr<jsi::Value> &value) {
+inline void cleanupRuntimeAware(jsi::Runtime *rt, std::unique_ptr<jsi::Value> &value) {
   if (rt != nullptr && !WorkletRuntimeRegistry::isRuntimeAlive(rt)) {
     freeWithoutCallingDestructor(value);
   }
@@ -67,7 +67,7 @@ class RetainingSerializable : virtual public BaseClass {
   }
 
   ~RetainingSerializable() override {
-    cleanupIfRuntimeExists(secondaryRuntime_, secondaryValue_);
+    cleanupRuntimeAware(secondaryRuntime_, secondaryValue_);
   }
 };
 
@@ -242,7 +242,7 @@ class SerializableRemoteFunction : public Serializable,
   }
 
   ~SerializableRemoteFunction() override {
-    cleanupIfRuntimeExists(runtime_, function_);
+    cleanupRuntimeAware(runtime_, function_);
   }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
@@ -265,7 +265,7 @@ class SerializableInitializer : public Serializable {
         initializer_(std::make_unique<SerializableObject>(rt, initializerObject)) {}
 
   ~SerializableInitializer() override {
-    cleanupIfRuntimeExists(remoteRuntime_, remoteValue_);
+    cleanupRuntimeAware(remoteRuntime_, remoteValue_);
   }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
