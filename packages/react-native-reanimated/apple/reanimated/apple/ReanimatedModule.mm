@@ -43,7 +43,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   [super invalidate];
 }
 
-- (void)attachReactEventListener:(const std::shared_ptr<ReanimatedModuleProxy>)reanimatedModuleProxy
+- (void)attachReactEventListener:(const std::shared_ptr<ReanimatedModuleProxy> &)reanimatedModuleProxy
 {
   REAAssertJavaScriptQueue();
 
