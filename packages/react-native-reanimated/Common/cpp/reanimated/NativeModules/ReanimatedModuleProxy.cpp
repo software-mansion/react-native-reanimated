@@ -118,6 +118,12 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       "borderRightColor",
       "borderStartColor",
       "borderEndColor",
+      "borderBlockColor",
+      "borderBlockStartColor",
+      "borderBlockEndColor",
+      "outlineColor",
+      "outlineOffset",
+      "outlineWidth",
       "transform",
   };
 

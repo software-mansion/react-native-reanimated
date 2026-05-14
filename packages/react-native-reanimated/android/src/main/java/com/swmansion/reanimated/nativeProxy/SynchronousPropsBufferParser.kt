@@ -43,6 +43,13 @@ internal object SynchronousPropsBufferParser {
     private const val CMD_BORDER_RIGHT_COLOR = 44
     private const val CMD_BORDER_START_COLOR = 45
     private const val CMD_BORDER_END_COLOR = 46
+    private const val CMD_BORDER_BLOCK_COLOR = 47
+    private const val CMD_BORDER_BLOCK_START_COLOR = 48
+    private const val CMD_BORDER_BLOCK_END_COLOR = 49
+
+    private const val CMD_OUTLINE_COLOR = 50
+    private const val CMD_OUTLINE_OFFSET = 51
+    private const val CMD_OUTLINE_WIDTH = 52
 
     private const val CMD_TRANSFORM_TRANSLATE_X = 100
     private const val CMD_TRANSFORM_TRANSLATE_Y = 101
@@ -95,6 +102,12 @@ internal object SynchronousPropsBufferParser {
             CMD_BORDER_RIGHT_COLOR -> "borderRightColor"
             CMD_BORDER_START_COLOR -> "borderStartColor"
             CMD_BORDER_END_COLOR -> "borderEndColor"
+            CMD_BORDER_BLOCK_COLOR -> "borderBlockColor"
+            CMD_BORDER_BLOCK_START_COLOR -> "borderBlockStartColor"
+            CMD_BORDER_BLOCK_END_COLOR -> "borderBlockEndColor"
+            CMD_OUTLINE_COLOR -> "outlineColor"
+            CMD_OUTLINE_OFFSET -> "outlineOffset"
+            CMD_OUTLINE_WIDTH -> "outlineWidth"
             else -> throw RuntimeException("Unknown command: $command")
         }
 
@@ -138,6 +151,8 @@ internal object SynchronousPropsBufferParser {
                 CMD_Z_INDEX,
                 CMD_SHADOW_OPACITY,
                 CMD_SHADOW_RADIUS,
+                CMD_OUTLINE_OFFSET,
+                CMD_OUTLINE_WIDTH,
                 -> {
                     val name = commandToString(command)
                     props.putDouble(name, doubleIterator.nextDouble())
@@ -155,6 +170,10 @@ internal object SynchronousPropsBufferParser {
                 CMD_BORDER_RIGHT_COLOR,
                 CMD_BORDER_START_COLOR,
                 CMD_BORDER_END_COLOR,
+                CMD_BORDER_BLOCK_COLOR,
+                CMD_BORDER_BLOCK_START_COLOR,
+                CMD_BORDER_BLOCK_END_COLOR,
+                CMD_OUTLINE_COLOR,
                 -> {
                     val name = commandToString(command)
                     props.putInt(name, intIterator.nextInt())

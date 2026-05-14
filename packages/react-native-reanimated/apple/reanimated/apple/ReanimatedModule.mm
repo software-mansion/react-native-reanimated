@@ -24,6 +24,7 @@ using namespace worklets;
 
 @implementation ReanimatedModule {
   __weak RCTSurfacePresenter *_surfacePresenter;
+  std::shared_ptr<ReanimatedModuleProxy> _reanimatedModuleProxy;
 #ifndef NDEBUG
   reanimated::SingleInstanceChecker<ReanimatedModule> singleInstanceChecker_;
 #endif // NDEBUG
@@ -40,10 +41,11 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   REAAssertTurboModuleManagerQueue();
 
   [_nodesManager invalidate];
+  _reanimatedModuleProxy.reset();
   [super invalidate];
 }
 
-- (void)attachReactEventListener:(const std::shared_ptr<ReanimatedModuleProxy>)reanimatedModuleProxy
+- (void)attachReactEventListener:(const std::shared_ptr<ReanimatedModuleProxy> &)reanimatedModuleProxy
 {
   REAAssertJavaScriptQueue();
 
@@ -72,17 +74,21 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   });
 }
 
-// TODO: pass by reference instead of value when the proxy lifecycle is fixed
-- (void)registerRCTEventHandler:(const std::shared_ptr<ReanimatedModuleProxy>)reanimatedModuleProxy
-               uiWorkletRuntime:(const std::shared_ptr<WorkletRuntime>)uiWorkletRuntime
+- (void)registerRCTEventHandler:(const std::shared_ptr<ReanimatedModuleProxy>&)reanimatedModuleProxy
+               uiWorkletRuntime:(const std::shared_ptr<WorkletRuntime>&)uiWorkletRuntime
 {
   REAAssertJavaScriptQueue();
 
   auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
+  std::weak_ptr<ReanimatedModuleProxy> weakReanimatedModuleProxy = reanimatedModuleProxy;
 
   // When USE_ANIMATION_BACKEND is on, flushes run inside handleEventAndFlush; otherwise
   // REANodesManager calls performOperations after the event (see REANodesManager).
   [_nodesManager registerEventHandler:^(id<RCTEvent> event) {
+    auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
+    if (!reanimatedModuleProxy) {
+      return;
+    }
     // handles RCTEvents from RNGestureHandler
     std::string eventName = [event.eventName UTF8String];
     int emitterReactTag = [event.viewTag intValue];
@@ -184,11 +190,11 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   const auto uiWorkletRuntime = [self getUIRuntime:rnRuntime];
   const auto uiScheduler = [self getUIScheduler:rnRuntime];
 
-  auto reanimatedModuleProxy = reanimated::createReanimatedModuleProxy(
+  _reanimatedModuleProxy = reanimated::createReanimatedModuleProxy(
       _nodesManager, _moduleRegistry, rnRuntime, jsCallInvoker, uiWorkletRuntime, uiScheduler);
 
   auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
-  RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, reanimatedModuleProxy);
+  RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, _reanimatedModuleProxy);
 
   react_native_assert(_surfacePresenter != nil && "_surfacePresenter is nil");
   RCTScheduler *scheduler = [_surfacePresenter scheduler];
@@ -196,9 +202,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   react_native_assert(scheduler.uiManager != nil && "_surfacePresenter.scheduler.uiManager is nil");
   const auto &uiManager = scheduler.uiManager;
   react_native_assert(uiManager.get() != nil);
-  reanimatedModuleProxy->initializeFabric(uiManager);
-  [self attachReactEventListener:reanimatedModuleProxy];
-  [self registerRCTEventHandler:reanimatedModuleProxy uiWorkletRuntime:uiWorkletRuntime];
+  _reanimatedModuleProxy->initializeFabric(uiManager);
+  [self attachReactEventListener:_reanimatedModuleProxy];
+  [self registerRCTEventHandler:_reanimatedModuleProxy uiWorkletRuntime:uiWorkletRuntime];
 
   return @YES;
 }
