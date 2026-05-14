@@ -1,5 +1,4 @@
 import {
-  createWorkletRuntime,
   runOnRuntimeSyncWithId,
   scheduleOnRN,
   scheduleOnRuntime,
@@ -10,6 +9,7 @@ import {
 import {
   describe,
   expect,
+  getWorkletRuntimeFromPool,
   notify,
   test,
   waitForNotification,
@@ -37,8 +37,8 @@ describe('scheduleOnRuntimeWithId', () => {
     notify(FAIL_NOTIFICATION);
   };
 
-  const workletRuntime1 = createWorkletRuntime({ name: 'test1' });
-  const workletRuntime2 = createWorkletRuntime({ name: 'test2' });
+  const workletRuntime1 = getWorkletRuntimeFromPool('test');
+  const workletRuntime2 = getWorkletRuntimeFromPool('test2');
 
   beforeEach(() => {
     value = 0;

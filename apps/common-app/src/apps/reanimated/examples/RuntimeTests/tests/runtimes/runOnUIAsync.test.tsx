@@ -1,5 +1,4 @@
 import {
-  createWorkletRuntime,
   runOnUIAsync,
   scheduleOnRN,
   scheduleOnRuntime,
@@ -9,6 +8,7 @@ import {
   beforeEach,
   describe,
   expect,
+  getWorkletRuntimeFromPool,
   notify,
   test,
   waitForNotification,
@@ -20,7 +20,7 @@ describe('runOnUIAsync', () => {
   const errorMessage =
     '[Worklets] `runOnUIAsync` can only be called on the RN Runtime.';
 
-  const workletRuntime = createWorkletRuntime({ name: 'test' });
+  const workletRuntime = getWorkletRuntimeFromPool('test');
 
   const callbackFail = (rea: string) => {
     reason = rea;

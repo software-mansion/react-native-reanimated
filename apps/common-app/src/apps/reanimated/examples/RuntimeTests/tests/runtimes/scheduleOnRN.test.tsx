@@ -1,5 +1,4 @@
 import {
-  createWorkletRuntime,
   scheduleOnRuntime,
   scheduleOnRN,
   scheduleOnUI,
@@ -7,6 +6,7 @@ import {
 import {
   describe,
   expect,
+  getWorkletRuntimeFromPool,
   notify,
   test,
   waitForNotification,
@@ -19,7 +19,7 @@ describe('scheduleOnRN', () => {
   const FAIL_NOTIFICATION = 'FAIL';
   let errorMessage = '';
 
-  const workletRuntime = createWorkletRuntime({ name: 'test' });
+  const workletRuntime = getWorkletRuntimeFromPool('test');
 
   const callbackPass = (num: number) => {
     value = num;

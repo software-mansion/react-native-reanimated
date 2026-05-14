@@ -5,6 +5,7 @@
 import {
   describe,
   expect,
+  getWorkletRuntimeFromPool,
   notify,
   test,
   waitForNotification,
@@ -60,7 +61,7 @@ const unpack = (value: { constructorName: string }) => {
 };
 
 describe('Test CustomSerializables', () => {
-  const workletRuntime = createWorkletRuntime({ name: 'test' });
+  const workletRuntime = getWorkletRuntimeFromPool('test');
 
   test('registers without failure', () => {
     // Arrange

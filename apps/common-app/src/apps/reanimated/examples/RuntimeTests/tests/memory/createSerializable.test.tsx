@@ -5,7 +5,6 @@
 import { TurboModuleRegistry } from 'react-native';
 import {
   createSerializable,
-  createWorkletRuntime,
   scheduleOnRN,
   scheduleOnRuntime,
   scheduleOnUI,
@@ -15,6 +14,7 @@ import {
   beforeEach,
   describe,
   expect,
+  getWorkletRuntimeFromPool,
   notify,
   test,
   waitForNotification,
@@ -26,8 +26,7 @@ describe('Test createSerializable', () => {
   let result = false;
   let errorMessage = '';
 
-  const workerName = 'testRuntime';
-  const workletRuntime = createWorkletRuntime({ name: workerName });
+  const workletRuntime = getWorkletRuntimeFromPool('test');
 
   const targets = [
     {
@@ -72,6 +71,9 @@ describe('Test createSerializable', () => {
           ];
           scheduleOnRN(callbackPass, checks.every(Boolean));
         });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
 
       test('createSerializableNumber', async () => {
         const testNumber = 123;
@@ -508,11 +510,8 @@ describe('Test createSerializable', () => {
         await expect(() => {
           scheduleOnTarget(() => {
             'worklet';
-            const checks = [
-              typeof testString === 'string',
-              testString === 'test',
-            ];
-            scheduleOnRN(callbackPass, checks.every(Boolean));
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const _test = cyclicArray[1];
           });
         }).toThrow();
       });
@@ -560,7 +559,7 @@ describe('Test createSerializable', () => {
         await waitForNotification(FAIL_NOTIFICATION);
         expect(errorMessage).toInclude(
           '[Worklets] Tried to synchronously call a remote function `foo` on ' +
-            (targetRuntime === 'UI' ? 'UI' : workerName) +
+            '' +
             ' runtime.'
         );
       });
@@ -582,12 +581,12 @@ describe('Test createSerializable', () => {
         await waitForNotification(FAIL_NOTIFICATION);
         expect(errorMessage).toInclude(
           '[Worklets] Tried to synchronously call a remote function anonymous on ' +
-            (targetRuntime === 'UI' ? 'UI' : workerName) +
+            '' +
             ' runtime.'
         );
       });
-    }
-  );
+    });
+  });
 });
 
 const FREEZE_WARNING = 'Tried to modify key';
