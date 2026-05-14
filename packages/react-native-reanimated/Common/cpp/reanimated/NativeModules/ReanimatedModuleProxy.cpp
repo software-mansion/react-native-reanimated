@@ -1220,7 +1220,8 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
   };
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    // We no longer need the mount hook if animation backend is enabled
+    // TODO: we don't use the mount hook here, but we still need a way to handleNodeRemovals
+    // for now we leave this to leak the memory, a fix will come in a follow-up
   } else {
     mountHook_ = std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, request);
   }
