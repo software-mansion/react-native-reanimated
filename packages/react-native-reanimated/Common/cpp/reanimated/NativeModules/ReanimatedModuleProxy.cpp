@@ -1527,7 +1527,9 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
     strongThis->requestFlushRegistry();
   };
 
-  if constexpr (!StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    // We no longer need the mount hook if animation backend is enabled
+  } else {
     mountHook_ = std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, request);
   }
 

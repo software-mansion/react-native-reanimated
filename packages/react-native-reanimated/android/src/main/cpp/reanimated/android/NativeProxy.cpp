@@ -125,7 +125,10 @@ bool NativeProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, cons
 }
 
 void NativeProxy::performOperations() {
-  if constexpr (!StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    // We don't use performOperations in the backend path,
+    // but we don't have access to the feature flags in Kotlin, so we gate it here
+  } else {
     reanimatedModuleProxy_->performOperations();
   }
 }
