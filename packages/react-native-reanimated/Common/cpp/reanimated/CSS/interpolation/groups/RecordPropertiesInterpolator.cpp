@@ -65,6 +65,37 @@ bool RecordPropertiesInterpolator::updateKeyframes(
   return areAllPropsReversed;
 }
 
+bool RecordPropertiesInterpolator::updateKeyframes(const folly::dynamic &fromValue, const folly::dynamic &toValue) {
+  // TODO - maybe add a possibility to remove interpolators that are no longer
+  // used (for now, for simplicity, we only add new ones)
+  const auto fromIsObject = fromValue.isObject();
+  const auto toIsObject = toValue.isObject();
+
+  std::unordered_set<std::string> propertyNamesSet;
+  if (fromIsObject) {
+    for (const auto &item : fromValue.items()) {
+      propertyNamesSet.insert(item.first.asString());
+    }
+  }
+  if (toIsObject) {
+    for (const auto &item : toValue.items()) {
+      propertyNamesSet.insert(item.first.asString());
+    }
+  }
+
+  bool areAllPropsReversed = true;
+
+  static const folly::dynamic kNull;
+  for (const auto &propertyName : propertyNamesSet) {
+    maybeCreateInterpolator(propertyName);
+    areAllPropsReversed &= interpolators_[propertyName]->updateKeyframes(
+        fromIsObject && fromValue.count(propertyName) ? fromValue[propertyName] : kNull,
+        toIsObject && toValue.count(propertyName) ? toValue[propertyName] : kNull);
+  }
+
+  return areAllPropsReversed;
+}
+
 folly::dynamic RecordPropertiesInterpolator::mapInterpolators(
     const std::function<folly::dynamic(PropertyInterpolator &)> &callback) const {
   folly::dynamic result = folly::dynamic::object;

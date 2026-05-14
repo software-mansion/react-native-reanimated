@@ -30,8 +30,10 @@ export interface SpringAnimation extends Animation<SpringAnimation> {
   initialEnergy: number;
 }
 
-export interface InnerSpringAnimation
-  extends Omit<SpringAnimation, 'toValue' | 'current'> {
+export interface InnerSpringAnimation extends Omit<
+  SpringAnimation,
+  'toValue' | 'current'
+> {
   toValue: number;
   current: number;
 }
@@ -250,10 +252,10 @@ export function calculateNewStiffnessToMatchDuration(
    * to find the asymptote and estimate the damping that gives us the expected
    * duration
    *
-   *             ⎛ ⎛ c⎞           ⎞
-   *             ⎜-⎜──⎟ ⋅ duration⎟
-   *             ⎝ ⎝2m⎠           ⎠
-   *        A ⋅ e                   = threshold
+   *          ⎛ ⎛ c⎞           ⎞
+   *          ⎜-⎜──⎟ ⋅ duration⎟
+   *          ⎝ ⎝2m⎠           ⎠
+   *     A ⋅ e                   = threshold
    */
   const {
     dampingRatio: zeta,

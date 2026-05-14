@@ -5,6 +5,7 @@ import com.facebook.jni.annotations.DoNotStrip
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.WritableNativeArray
 
+@DoNotStrip
 @Suppress("KotlinJniMissingFunction")
 class WorkletRuntimeWrapper
     @DoNotStrip

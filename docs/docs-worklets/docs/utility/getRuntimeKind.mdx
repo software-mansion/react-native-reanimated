@@ -15,21 +15,21 @@ We recommend using handy shorthands like [isRNRuntime](/docs/utility/isRNRuntime
 ```typescript
 import {
   getRuntimeKind,
-  runOnUI,
   createWorkletRuntime,
-  runOnRuntime,
+  scheduleOnRuntime,
+  scheduleOnUI,
 } from 'react-native-worklets';
 
 console.log(getRuntimeKind()); // 1 (RN Runtime)
 
-runOnUI(() => {
+scheduleOnUI(() => {
   console.log(getRuntimeKind()); // 2 (UI Runtime)
-})();
+});
 
 const workerRuntime = createWorkletRuntime();
-runOnRuntime(workerRuntime, () => {
+scheduleOnRuntime(workerRuntime, () => {
   console.log(getRuntimeKind()); // 3 (Worker Runtime)
-})();
+});
 ```
 
 <details>
@@ -60,8 +60,8 @@ An enum value representing the current runtime kind:
 import {
   getRuntimeKind,
   RuntimeKind,
-  runOnJS,
-  runOnUI,
+  scheduleOnRN,
+  scheduleOnUI,
 } from 'react-native-worklets';
 
 function logToConsole(message: string) {
@@ -74,13 +74,13 @@ function log(message: string) {
     console.log(`RN: ${message}`);
   } else {
     // Fun fact - this is how `console.log` is implemented on Worklet Runtimes.
-    runOnJS(logToConsole)(`UI: ${message}`);
+    scheduleOnRN(logToConsole, `UI: ${message}`);
   }
 }
 
 function randomDispatch() {
   if (Math.random() > 0.5) {
-    runOnUI(log)('Hello!');
+    scheduleOnUI(log, 'Hello!');
   } else {
     log('Hello!');
   }
@@ -94,13 +94,6 @@ randomDispatch(); // Could log either "RN: Hello!" or "UI: Hello!"
 For micro-optimizations of your code you can skip the invocation of `getRuntimeKind` and use the global variable `__RUNTIME_KIND` directly:
 
 ```typescript
-import {
-  getRuntimeKind,
-  runOnUI,
-  createWorkletRuntime,
-  runOnRuntime,
-} from 'react-native-worklets';
-
 console.log(globalThis.__RUNTIME_KIND); // 1 (RN Runtime)
 ```
 

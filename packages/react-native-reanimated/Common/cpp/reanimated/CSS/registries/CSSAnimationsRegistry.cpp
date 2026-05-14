@@ -166,7 +166,7 @@ void CSSAnimationsRegistry::updateAnimationSettings(
     const auto &animation = animationsVector[i];
     const auto it = settingsUpdates.find(i);
     if (it != settingsUpdates.end()) {
-      animation->updateSettings(it->second, timestamp);
+      animation->updateConfig(it->second, timestamp);
     }
   }
 }

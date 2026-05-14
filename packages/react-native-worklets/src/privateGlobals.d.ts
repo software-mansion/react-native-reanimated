@@ -2,7 +2,6 @@
 
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
-import type { callGuardDEV } from './callGuard';
 import type { reportFatalRemoteError } from './debug/errors';
 import type { CustomSerializableUnpacker } from './memory/customSerializableUnpacker';
 import type { makeShareableCloneOnUIRecursive } from './memory/serializable';
@@ -18,6 +17,15 @@ declare global {
   /** The only runtime-available require method is `__r` defined by Metro. */
   var __r: ((moduleId: number) => Record<string, unknown>) &
     Record<string, unknown>;
+
+  /**
+   * The name of the current runtime, used in debugging.
+   *
+   * - "RN" for the RN Runtime.
+   * - "UI" for the UI Runtime.
+   * - A custom name for Worker Runtimes.
+   */
+  var __RUNTIME_NAME: string;
 
   var _toString: (value: unknown) => string;
   var __workletsModuleProxy: WorkletsModuleProxy;
@@ -72,7 +80,6 @@ declare global {
   var __synchronizableUnpacker: SynchronizableUnpacker;
   var __customSerializationRegistry: CustomSerializationRegistry;
   var __customSerializableUnpacker: CustomSerializableUnpacker;
-  var __callGuardDEV: typeof callGuardDEV | undefined;
   /**
    * @deprecated Kept for backwards compatibility. Remove it after support for
    *   Reanimated 4.3 is dropped. Reanimated uses it to handle event updates

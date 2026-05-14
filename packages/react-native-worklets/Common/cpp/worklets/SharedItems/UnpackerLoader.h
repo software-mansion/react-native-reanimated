@@ -2,9 +2,12 @@
 
 #include <hermes/hermes.h>
 #include <jsi/jsi.h>
-#include <worklets/Tools/Defs.h>
 
+#ifndef NDEBUG
+// Nothing
+#else
 #include <memory>
+#endif // NDEBUG
 #include <string>
 
 namespace worklets {
@@ -56,7 +59,7 @@ class UnpackerLoader {
           "[Worklets] UnpackerLoader tried to install unpackers but the code for unpackers was not loaded.");
     }
 
-#if defined(JS_RUNTIME_HERMES) && !defined(NDEBUG)
+#ifndef NDEBUG
     auto evalWithSourceMap = rt.global().getPropertyAsFunction(rt, "evalWithSourceMap");
     evalWithSourceMap.call(rt, valueUnpacker_.code, valueUnpacker_.location, valueUnpacker_.sourceMap);
     evalWithSourceMap.call(
@@ -81,7 +84,7 @@ class UnpackerLoader {
         std::make_shared<facebook::jsi::StringBuffer>(shareableHostUnpacker_.code), shareableHostUnpacker_.location);
     rt.evaluateJavaScript(
         std::make_shared<facebook::jsi::StringBuffer>(shareableGuestUnpacker_.code), shareableGuestUnpacker_.location);
-#endif // JS_RUNTIME_HERMES
+#endif // NDEBUG
   }
 
  private:

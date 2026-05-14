@@ -129,7 +129,10 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.createSerializableHostObject(obj);
   }
 
-  createSerializableArray(array: unknown[], shouldRetainRemote: boolean) {
+  createSerializableArray(
+    array: unknown[],
+    shouldRetainRemote: boolean = false
+  ) {
     return this.#workletsModuleProxy.createSerializableArray(
       array,
       shouldRetainRemote
@@ -204,10 +207,13 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   }
 
   scheduleOnUI<TValue>(
-    serializable: SerializableRef<TValue>,
-    scheduleStack: string | undefined
+    serializableArrayOfWorklets: SerializableRef<TValue[]>,
+    scheduleStacks: string[] | undefined
   ) {
-    return this.#workletsModuleProxy.scheduleOnUI(serializable, scheduleStack);
+    return this.#workletsModuleProxy.scheduleOnUI(
+      serializableArrayOfWorklets,
+      scheduleStacks
+    );
   }
 
   runOnUISync<TValue, TReturn>(
