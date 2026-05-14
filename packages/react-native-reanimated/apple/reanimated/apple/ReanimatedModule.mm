@@ -74,8 +74,8 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   });
 }
 
-- (void)registerRCTEventHandler:(const std::shared_ptr<ReanimatedModuleProxy>&)reanimatedModuleProxy
-               uiWorkletRuntime:(const std::shared_ptr<WorkletRuntime>&)uiWorkletRuntime
+- (void)registerRCTEventHandler:(const std::shared_ptr<ReanimatedModuleProxy> &)reanimatedModuleProxy
+               uiWorkletRuntime:(const std::shared_ptr<WorkletRuntime> &)uiWorkletRuntime
 {
   REAAssertJavaScriptQueue();
 
