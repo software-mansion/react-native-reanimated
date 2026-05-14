@@ -121,6 +121,6 @@ using RequestAnimationFrameHostFunction =
 
 extern void installRequestAnimationFrame(
     facebook::jsi::Runtime &uiRuntime,
-    const RequestAnimationFrameHostFunction requestAnimationFrame);
+    const RequestAnimationFrameHostFunction &requestAnimationFrame);
 
 } // namespace worklets

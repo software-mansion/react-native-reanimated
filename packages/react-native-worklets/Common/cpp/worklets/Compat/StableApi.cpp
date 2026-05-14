@@ -133,8 +133,8 @@ std::shared_ptr<UIScheduler> getUISchedulerFromHolder(facebook::jsi::Runtime &rt
 
 void installRequestAnimationFrame(
     facebook::jsi::Runtime &uiRuntime,
-    const RequestAnimationFrameHostFunction requestAnimationFrame) {
-  jsi_utils::installJsiFunction(uiRuntime, "__nativeRequestAnimationFrame", std::move(requestAnimationFrame));
+    const RequestAnimationFrameHostFunction &requestAnimationFrame) {
+  jsi_utils::installJsiFunction(uiRuntime, "__nativeRequestAnimationFrame", requestAnimationFrame);
 }
 
 } // namespace worklets
