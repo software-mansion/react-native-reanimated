@@ -106,8 +106,8 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
     }
 #ifdef ANDROID
     // The Android synchronous path serializes color props into an int buffer via `value.asInt()`,
-    // so non-numeric color values (e.g. strings) must fall back to the shadow tree commit path.
-    const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
+    // so non-numeric color values (e.g. PlatformColor) must fall back to the shadow tree commit path.
+    const bool isColorProp = keyStr.find("Color") != std::string::npos;
     if (isColorProp && !value.isNumber()) {
       return false;
     }
