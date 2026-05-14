@@ -127,33 +127,13 @@ export type WorkletRuntimeConfig = {
    * defaults to `true`.
    */
   enableEventLoop?: true;
-} & (
-  | {
-      /**
-       * If true, the runtime will use the default queue implementation for
-       * scheduling worklets. Defaults to true.
-       */
-      useDefaultQueue?: true;
-      /**
-       * An optional custom queue to be used for scheduling worklets.
-       *
-       * The queue has to implement the C++ `AsyncQueue` interface from
-       * `<worklets/RunLoop/AsyncQueue.h>`.
-       */
-      customQueue?: never;
-    }
-  | {
-      /**
-       * If true, the runtime will use the default queue implementation for
-       * scheduling worklets. Defaults to true.
-       */
-      useDefaultQueue: false;
-      /**
-       * An optional custom queue to be used for scheduling worklets.
-       *
-       * The queue has to implement the C++ `AsyncQueue` interface from
-       * `<worklets/RunLoop/AsyncQueue.h>`.
-       */
-      customQueue?: object;
-    }
-);
+  /**
+   * The queue used for scheduling worklets on this runtime.
+   *
+   * - `'default'` (the default): use the built-in queue implementation.
+   * - An object implementing the C++ `AsyncQueue` interface from
+   *   `<worklets/RunLoop/AsyncQueue.h>`: use the provided custom queue.
+   * - `null`: do not attach any queue to the runtime.
+   */
+  queue?: 'default' | object | null;
+};

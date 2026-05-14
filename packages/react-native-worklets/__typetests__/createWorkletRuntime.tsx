@@ -21,20 +21,19 @@ export function createWorkletRuntimeTypeTests() {
     initializer,
   });
 
-  // Correct usage - config object with useDefaultQueue = true.
+  // Correct usage - config object with a custom queue.
   createWorkletRuntime({
-    useDefaultQueue: false,
+    queue: {},
   });
 
-  // Correct usage - config object with useDefaultQueue = false.
+  // Correct usage - config object with the default queue sentinel.
   createWorkletRuntime({
-    useDefaultQueue: false,
+    queue: 'default',
   });
 
-  // Correct usage - config object with useDefaultQueue = false and customQueue.
+  // Correct usage - config object with no queue.
   createWorkletRuntime({
-    useDefaultQueue: false,
-    customQueue: {},
+    queue: null,
   });
 
   // Correct usage - deprecated positional parameters
@@ -52,9 +51,8 @@ export function createWorkletRuntimeTypeTests() {
     initializer,
   });
 
-  // @ts-expect-error - Using both useDefaultQueue and customQueue
+  // @ts-expect-error - Unknown queue sentinel string
   createWorkletRuntime({
-    useDefaultQueue: true,
-    customQueue: {},
+    queue: 'custom',
   });
 }
