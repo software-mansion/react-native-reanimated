@@ -309,7 +309,6 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     if (!strongThis) {
       return;
     }
-    strongThis->performOperations();
     strongThis->layoutAnimationRenderRequested_ = false;
   };
 
