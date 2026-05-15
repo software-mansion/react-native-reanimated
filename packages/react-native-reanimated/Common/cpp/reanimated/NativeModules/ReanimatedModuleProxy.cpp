@@ -303,6 +303,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
 
     strongThis->dispatchCommand(rt, shadowNodeValue, commandNameValue, argsValue);
   };
+
   ProgressLayoutAnimationFunction progressLayoutAnimation =
       [weakThis = weak_from_this()](jsi::Runtime &rt, int tag, const jsi::Object &newStyle) {
         // Always on UI thread.
@@ -315,18 +316,11 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
           return;
         }
         strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
+
+        strongThis->requestRenderForLayoutAnimations();
       };
 
-  auto requestLayoutAnimationRender = [weakThis = weak_from_this()](double) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-    strongThis->layoutAnimationRenderRequested_ = false;
-  };
-
-  EndLayoutAnimationFunction endLayoutAnimation = [weakThis = weak_from_this(), requestLayoutAnimationRender](
-                                                      int tag, bool shouldRemove) {
+  EndLayoutAnimationFunction endLayoutAnimation = [weakThis = weak_from_this()](int tag, bool shouldRemove) {
     // Always on UI thread.
     auto strongThis = weakThis.lock();
     if (!strongThis) {
@@ -339,13 +333,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       // in the backend path this is called from runGrandCallback,
       // we are guaranteed to have the changes flushed
     } else {
-      if (!strongThis->layoutAnimationRenderRequested_) {
-        // if an animation has duration 0, performOperations would not get
-        // called for it so we call requestRender to have it called in the
-        // next frame
-        strongThis->layoutAnimationRenderRequested_ = true;
-        strongThis->requestRender_(requestLayoutAnimationRender);
-      }
+      strongThis->requestRenderForLayoutAnimations();
     }
 
     if (!surfaceId) {
