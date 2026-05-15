@@ -439,7 +439,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
                 // fast path for host function w/o arguments
                 hostFun(rnRuntime, jsi::Value::undefined(), nullptr, 0);
               } else {
-                auto args = serializableArgs->getJSArgs(rnRuntime);
+                auto args = serializableArgs->getJSIValueArr(rnRuntime);
                 hostFun(rnRuntime, jsi::Value::undefined(), const_cast<const jsi::Value *>(args.data()), args.size());
               }
             });
@@ -459,7 +459,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
               // fast path for remote function w/o arguments
               fun.call(rnRuntime);
             } else {
-              auto args = serializableArgs->getJSArgs(rnRuntime);
+              auto args = serializableArgs->getJSIValueArr(rnRuntime);
               fun.call(rnRuntime, const_cast<const jsi::Value *>(args.data()), args.size());
             }
           });

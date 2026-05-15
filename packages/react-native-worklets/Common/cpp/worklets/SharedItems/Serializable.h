@@ -143,7 +143,7 @@ class SerializableArray : public Serializable {
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
-  std::vector<jsi::Value> getJSArgs(jsi::Runtime &rt) {
+  std::vector<jsi::Value> getJSIValueArr(jsi::Runtime &rt) {
     std::vector<jsi::Value> args;
     args.reserve(data_.size());
     for (const auto &item : data_) {
