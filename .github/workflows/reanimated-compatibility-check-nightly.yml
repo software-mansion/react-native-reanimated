@@ -17,7 +17,7 @@ jobs:
     outputs:
       react-native-versions: ${{ steps.set-outputs.outputs.react-native-versions }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - name: Read compatibility.json
         run: node .github/workflows/helper/read-compatibility.js
       - name: Set outputs
@@ -42,18 +42,18 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - name: Set up JDK 18
         if: ${{ matrix.platform == 'Android' }}
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@17f84c3641ba7b8f6deff6309fc4c864478f5d62
         with:
           distribution: 'zulu'
           java-version: '18'
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610
         with:
           node-version: 24
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
         if: ${{ matrix.platform == 'iOS' }}
         with:
           ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
