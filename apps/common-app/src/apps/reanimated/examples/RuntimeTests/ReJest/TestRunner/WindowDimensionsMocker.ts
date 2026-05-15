@@ -26,7 +26,7 @@ export class WindowDimensionsMocker {
         tag: number,
         type: LayoutAnimationType,
         _yogaValues: Partial<LayoutAnimationsValues>,
-        config: (arg: Partial<LayoutAnimationsValues>) => LayoutAnimation,
+        config: (arg: Partial<LayoutAnimationsValues>) => LayoutAnimation
       ) => {
         originalLayoutAnimationsManager.start(
           tag,
@@ -36,7 +36,7 @@ export class WindowDimensionsMocker {
             windowHeight: 852,
             windowWidth: 393,
           },
-          config,
+          config
         );
       };
 

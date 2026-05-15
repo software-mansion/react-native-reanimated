@@ -1,5 +1,9 @@
+#include <jsi/JSIDynamic.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
+#include <react/renderer/uimanager/primitives.h>
+#include <reanimated/CSS/configs/CSSTransitionConfig.h>
+#include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
@@ -16,6 +20,7 @@
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
 
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <string>
@@ -54,23 +59,76 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 
 std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
     const UpdatesBatch &updatesBatch,
-    const std::unordered_set<std::string> &synchronousPropNames,
-    const bool shouldRequireIntegerColors = false,
-    const bool allowPartialViews = false) {
+    const bool allowPartialUpdates = false) {
+  static const std::unordered_set<std::string> synchronousPropNames = {
+      "opacity",
+      "elevation",
+      "zIndex",
+      "shadowColor",
+#if __APPLE__
+      "shadowOffset",
+      "shadowOpacity",
+      "shadowRadius",
+#endif // __APPLE__
+      "backgroundColor",
+      // "color", // not supported
+      "tintColor",
+      "placeholderTextColor",
+      "borderRadius",
+      "borderTopLeftRadius",
+      "borderTopRightRadius",
+      "borderTopStartRadius",
+      "borderTopEndRadius",
+      "borderBottomLeftRadius",
+      "borderBottomRightRadius",
+      "borderBottomStartRadius",
+      "borderBottomEndRadius",
+      "borderStartStartRadius",
+      "borderStartEndRadius",
+      "borderEndStartRadius",
+      "borderEndEndRadius",
+      "borderColor",
+      "borderTopColor",
+      "borderBottomColor",
+      "borderLeftColor",
+      "borderRightColor",
+      "borderStartColor",
+      "borderEndColor",
+      "borderBlockColor",
+      "borderBlockStartColor",
+      "borderBlockEndColor",
+      "outlineColor",
+      "outlineOffset",
+      "outlineWidth",
+      "transform",
+  };
+
+  const auto isSynchronous = [&](const std::string &keyStr, [[maybe_unused]] const folly::dynamic &value) {
+    if (!synchronousPropNames.contains(keyStr)) {
+      return false;
+    }
+#ifdef ANDROID
+    // The Android synchronous path serializes color props into an int buffer via `value.asInt()`,
+    // so non-numeric color values (e.g. strings) must fall back to the shadow tree commit path.
+    const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
+    if (isColorProp && !value.isNumber()) {
+      return false;
+    }
+#endif // ANDROID
+    return true;
+  };
+
   UpdatesBatch synchronousUpdatesBatch;
   UpdatesBatch shadowTreeUpdatesBatch;
 
   for (const auto &[shadowNodeFamily, props] : updatesBatch) {
-    if (allowPartialViews) {
+    if (allowPartialUpdates) {
       folly::dynamic synchronousProps = folly::dynamic::object();
       folly::dynamic shadowTreeProps = folly::dynamic::object();
 
       for (const auto &[key, value] : props.items()) {
         const auto keyStr = key.asString();
-        const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
-        const bool isSynchronous =
-            synchronousPropNames.contains(keyStr) && (!shouldRequireIntegerColors || !isColorProp || value.isNumber());
-        if (isSynchronous) {
+        if (isSynchronous(keyStr, value)) {
           synchronousProps[keyStr] = value;
         } else {
           shadowTreeProps[keyStr] = value;
@@ -85,18 +143,9 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
         shadowTreeUpdatesBatch.emplace_back(shadowNodeFamily, std::move(shadowTreeProps));
       }
     } else {
-      bool hasOnlySynchronousProps = true;
-
-      for (const auto &[key, value] : props.items()) {
-        const auto keyStr = key.asString();
-        const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
-        const bool isSynchronous =
-            synchronousPropNames.contains(keyStr) && (!shouldRequireIntegerColors || !isColorProp || value.isNumber());
-        if (!isSynchronous) {
-          hasOnlySynchronousProps = false;
-          break;
-        }
-      }
+      const bool hasOnlySynchronousProps = std::all_of(props.items().begin(), props.items().end(), [&](const auto &kv) {
+        return isSynchronous(kv.first.asString(), kv.second);
+      });
 
       if (hasOnlySynchronousProps) {
         synchronousUpdatesBatch.emplace_back(shadowNodeFamily, props);
@@ -137,6 +186,18 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(getAnimationTimestamp_, viewStylesRepository_)),
+      operationsLoop_(std::make_shared<OperationsLoop>(
+          uiScheduler_,
+          platformDepMethodsHolder.requestRender,
+          getAnimationTimestamp_,
+          cssAnimationsRegistry_,
+          cssTransitionsRegistry_,
+          updatesRegistryManager_)),
+      pseudoStylesRegistry_(std::make_shared<PseudoStylesRegistry>(
+          platformDepMethodsHolder.attachPseudoSelector,
+          platformDepMethodsHolder.detachPseudoSelector,
+          cssTransitionsRegistry_,
+          operationsLoop_)),
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
@@ -147,7 +208,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
   // Add registries in order of their priority (from the lowest to the
   // highest)
   // CSS transitions should be overriden by animated style animations;
-  // animated style animations should be overriden by CSS animations
+  // animated style animations should be overriden by CSS animations.
   updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
   updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
   updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
@@ -163,14 +224,6 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     strongThis->onRender(timestampMs);
   };
   onRenderCallback_ = std::move(onRenderCallback);
-
-  operationsLoop_ = std::make_shared<OperationsLoop>(
-      uiScheduler_,
-      requestRender_,
-      getAnimationTimestamp_,
-      cssAnimationsRegistry_,
-      cssTransitionsRegistry_,
-      updatesRegistryManager_);
 
   auto updateProps = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &operations) {
     auto strongThis = weakThis.lock();
@@ -510,13 +563,45 @@ void ReanimatedModuleProxy::runCSSTransition(
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto config = parseCSSTransitionConfig(rt, transitionConfig);
 
-  cssTransitionsRegistry_->run(rt, shadowNode, config);
+  cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, config);
 
   operationsLoop_->run();
 }
 
 void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) {
   cssTransitionsRegistry_->remove(viewTag.asNumber());
+}
+
+void ReanimatedModuleProxy::registerPseudoStyle(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &config) {
+  const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  const auto tag = shadowNode->getTag();
+  const auto configObj = config.asObject(rt);
+
+  const auto selectorStr = stringFromValue(rt, configObj.getProperty(rt, "selector"));
+  const auto selectorEnum = pseudoSelectorFromString(selectorStr);
+  if (!selectorEnum) {
+    return;
+  }
+
+  auto transitionConfig = css::parseCSSTransitionConfig(rt, configObj.getProperty(rt, "transition"));
+  // We want to provide only the default settings (we drop the diff not to run any transitions straight away.
+  // The diff will be provided when `PseudoStylesRegistry::onSelectorStateChanged` is run).
+  transitionConfig.changedProperties.clear();
+  cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, transitionConfig);
+
+  pseudoStylesRegistry_->registerPseudoStyle(
+      tag,
+      shadowNode,
+      *selectorEnum,
+      jsi::dynamicFromValue(rt, configObj.getProperty(rt, "selectorStyle")),
+      jsi::dynamicFromValue(rt, configObj.getProperty(rt, "defaultStyle")));
+}
+
+void ReanimatedModuleProxy::unregisterPseudoStyle(jsi::Runtime &, const jsi::Value &viewTag) {
+  pseudoStylesRegistry_->remove(viewTag.asNumber());
 }
 
 jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
@@ -691,42 +776,9 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
 }
 
 void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, const bool allowPartialUpdates) {
+  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] = partitionUpdates(updatesBatch, allowPartialUpdates);
+
 #ifdef ANDROID
-  static const std::unordered_set<std::string> synchronousProps = {
-      "opacity",
-      "elevation",
-      "zIndex",
-      // "shadowOpacity", // not supported on Android
-      // "shadowRadius", // not supported on Android
-      "backgroundColor",
-      // "color", // TODO: fix animating color of Animated.Text,
-      "tintColor",
-      "borderRadius",
-      "borderTopLeftRadius",
-      "borderTopRightRadius",
-      "borderTopStartRadius",
-      "borderTopEndRadius",
-      "borderBottomLeftRadius",
-      "borderBottomRightRadius",
-      "borderBottomStartRadius",
-      "borderBottomEndRadius",
-      "borderStartStartRadius",
-      "borderStartEndRadius",
-      "borderEndStartRadius",
-      "borderEndEndRadius",
-      "borderColor",
-      "borderTopColor",
-      "borderBottomColor",
-      "borderLeftColor",
-      "borderRightColor",
-      "borderStartColor",
-      "borderEndColor",
-      "transform",
-  };
-
-  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
-      partitionUpdates(updatesBatch, synchronousProps, true, allowPartialUpdates);
-
   if (!synchronousUpdatesBatch.empty()) {
     std::vector<int> intBuffer;
     std::vector<double> doubleBuffer;
@@ -735,52 +787,15 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
     serializeSynchronousPropsToBuffers(synchronousUpdatesBatch, intBuffer, doubleBuffer);
     synchronouslyUpdateUIPropsFunction_(intBuffer, doubleBuffer);
   }
-
-  updatesBatch = std::move(shadowTreeUpdatesBatch);
 #endif // ANDROID
 
 #if __APPLE__
-  static const std::unordered_set<std::string> synchronousProps = {
-      "opacity",
-      "elevation",
-      "zIndex",
-      "shadowOpacity",
-      "shadowRadius",
-      "backgroundColor",
-      // "color", // TODO: fix animating color of Animated.Text
-      "tintColor",
-      "borderRadius",
-      "borderTopLeftRadius",
-      "borderTopRightRadius",
-      "borderTopStartRadius",
-      "borderTopEndRadius",
-      "borderBottomLeftRadius",
-      "borderBottomRightRadius",
-      "borderBottomStartRadius",
-      "borderBottomEndRadius",
-      "borderStartStartRadius",
-      "borderStartEndRadius",
-      "borderEndStartRadius",
-      "borderEndEndRadius",
-      "borderColor",
-      "borderTopColor",
-      "borderBottomColor",
-      "borderLeftColor",
-      "borderRightColor",
-      "borderStartColor",
-      "borderEndColor",
-      "transform",
-  };
-
-  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
-      partitionUpdates(updatesBatch, synchronousProps, false, allowPartialUpdates);
-
   for (const auto &[shadowNodeFamily, props] : synchronousUpdatesBatch) {
     synchronouslyUpdateUIPropsFunction_(shadowNodeFamily->getTag(), props);
   }
+#endif // __APPLE__
 
   updatesBatch = std::move(shadowTreeUpdatesBatch);
-#endif // __APPLE__
 }
 
 void ReanimatedModuleProxy::requestFlushRegistry() {
@@ -1296,6 +1311,30 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
     }
     return strongThis->getSettledUpdates(rt);
   });
+
+  addMethod<2>(
+      rt,
+      obj,
+      "registerPseudoStyle",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->registerPseudoStyle(rt, at<0>(args), at<1>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "unregisterPseudoStyle",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->unregisterPseudoStyle(rt, at<0>(args));
+      });
 
   return obj;
 }

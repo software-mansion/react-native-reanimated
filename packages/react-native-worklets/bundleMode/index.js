@@ -91,18 +91,14 @@ function getEntryPoints() {
   const entryPoints = [];
   try {
     entryPoints.push(
-      require.resolve(
-        'react-native-worklets/src/initializers/workletRuntimeEntry.native.ts'
-      )
+      require.resolve('react-native-worklets/src/initializers/workletRuntimeEntry.native.ts')
     );
   } catch {
     /* empty */
   }
   try {
     entryPoints.push(
-      require.resolve(
-        'react-native-worklets/lib/module/initializers/workletRuntimeEntry.native.js'
-      )
+      require.resolve('react-native-worklets/lib/module/initializers/workletRuntimeEntry.native.js')
     );
   } catch {
     /* empty */

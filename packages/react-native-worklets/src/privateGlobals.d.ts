@@ -18,7 +18,16 @@ declare global {
   /** The only runtime-available require method is `__r` defined by Metro. */
   var __r: ((moduleId: number) => Record<string, unknown>) &
     Record<string, unknown>;
+
+  /**
+   * The name of the current runtime, used in debugging.
+   *
+   * - "RN" for the RN Runtime.
+   * - "UI" for the UI Runtime.
+   * - A custom name for Worker Runtimes.
+   */
   var __RUNTIME_NAME: string;
+
   var _toString: (value: unknown) => string;
   var __workletsModuleProxy: WorkletsModuleProxy;
   var _WORKLETS_BUNDLE_MODE_ENABLED: boolean | undefined;
@@ -57,7 +66,6 @@ declare global {
   var _createSerializableSynchronizable: (
     value: object
   ) => FlatShareableRef<object>;
-  /** Only outside of Bundle Mode on Worklet Runtimes. */
   var __serializer: typeof makeShareableCloneOnUIRecursive;
   var __callMicrotasks: () => void;
   /** Available only on RN Runtime */

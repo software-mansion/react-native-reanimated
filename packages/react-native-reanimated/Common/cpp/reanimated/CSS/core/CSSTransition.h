@@ -9,6 +9,7 @@
 #include <jsi/jsi.h>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace reanimated::css {
 
@@ -24,8 +25,17 @@ class CSSTransition {
   TransitionProgressState getState() const;
   TransitionProperties getProperties() const;
 
+  folly::dynamic run(
+      jsi::Runtime &rt,
+      const PropertyValueDiffsMap &propertiesDiffs,
+      const folly::dynamic &lastUpdateValue,
+      double timestamp);
   folly::dynamic
-  run(jsi::Runtime &rt, const CSSTransitionConfig &config, const folly::dynamic &lastUpdateValue, double timestamp);
+  /** TODO: unify folly::dynamic and jsi::value versions */
+  run(const PropertyValueDynamicDiffsMap &propertiesDiffs, const folly::dynamic &lastUpdateValue, double timestamp);
+  void updateConfig(
+      const PropertiesSettingsMap &changedPropertiesSettings,
+      const std::vector<std::string> &removedProperties);
   folly::dynamic update(double timestamp);
 
  private:
@@ -37,10 +47,15 @@ class CSSTransition {
 
   void handleChangedProperties(
       jsi::Runtime &rt,
-      const CSSTransitionConfig &config,
+      const PropertyValueDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
       double timestamp);
-  void handleRemovedProperties(const CSSTransitionConfig &config);
+  /** TODO: unify folly::dynamic and jsi::value versions */
+  void handleChangedProperties(
+      const PropertyValueDynamicDiffsMap &propertiesDiffs,
+      const folly::dynamic &lastUpdateValue,
+      double timestamp);
+  void removeProperties(const std::vector<std::string> &propertyNames);
   void removeProperty(const std::string &propertyName);
 };
 

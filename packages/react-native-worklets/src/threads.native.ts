@@ -10,6 +10,7 @@ import {
   makeShareableCloneOnUIRecursive,
 } from './memory/serializable';
 import type { NewRemoteFunction } from './memory/types';
+import type { SerializableRef } from './memory/types';
 import { isRNRuntime, RuntimeKind } from './runtimeKind';
 import type { WorkletFunction, WorkletImport } from './types';
 import { isWorkletFunction } from './workletFunction';
@@ -265,19 +266,11 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
     // and pass the worklet as a first argument followed by original arguments.
     scheduleOnRN(runWorkletOnJS<Args, ReturnValue>, fun, ...args);
   } else {
-    if (
-      __DEV__ &&
-      !(fun as unknown as NewRemoteFunction).__remoteFunction &&
-      !globalThis.__workletsModuleProxy.isHostFunction(fun)
-    ) {
-      throw new Error(
-        '[Worklets] It seems that you passed a locally defined function to `scheduleOnRN`. Functions defined in a different Runtime cannot be scheduled on RN Runtime. Make sure to define the function you are trying to schedule on the RN Runtime before passing it to `scheduleOnRN`.'
-      );
-    }
-
     globalThis.__workletsModuleProxy.scheduleOnRN(
-      fun as unknown as NewRemoteFunction,
-      args.length > 0 ? globalThis.__serializer(args) : undefined
+      fun as (...args: Args) => ReturnValue,
+      (args.length > 0
+        ? globalThis.__serializer(args)
+        : undefined) as SerializableRef<Args>
     );
   }
 }

@@ -1,10 +1,6 @@
-#include <glog/logging.h>
-#include <react/renderer/animations/utils.h>
-#include <react/renderer/core/ConcreteState.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
-#include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <algorithm>

@@ -99,6 +99,7 @@ class WorkletsModule(
         return true
     }
 
+    @DoNotStrip
     fun abortRequest(
         runtimeId: Int,
         requestIdAsDouble: Double,
@@ -106,10 +107,12 @@ class WorkletsModule(
         mWorkletsNetworking.jsiAbortRequest(runtimeId, requestIdAsDouble)
     }
 
+    @DoNotStrip
     fun clearCookies(callback: Callback) {
         mWorkletsNetworking.jsiClearCookies(callback)
     }
 
+    @DoNotStrip
     fun sendRequest(
         runtimeWrapper: WorkletRuntimeWrapper,
         method: String,
@@ -136,6 +139,7 @@ class WorkletsModule(
         )
     }
 
+    @DoNotStrip
     fun requestAnimationFrame(animationFrameCallback: AnimationFrameCallback) {
         mAnimationFrameQueue.requestAnimationFrame(animationFrameCallback)
     }

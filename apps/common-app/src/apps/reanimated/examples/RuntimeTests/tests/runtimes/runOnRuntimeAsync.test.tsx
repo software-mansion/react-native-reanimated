@@ -1,19 +1,27 @@
 import {
-  createWorkletRuntime,
   runOnRuntimeAsync,
   scheduleOnRN,
   scheduleOnRuntime,
   scheduleOnUI,
 } from 'react-native-worklets';
-import { beforeEach, describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
+import {
+  beforeEach,
+  describe,
+  expect,
+  getWorkletRuntimeFromPool,
+  notify,
+  test,
+  waitForNotification,
+} from '../../ReJest/RuntimeTestsApi';
 
 describe('runOnRuntimeAsync', () => {
   const FAIL_NOTIFICATION = 'FAIL';
   let reason = '';
-  const errorMessage = '[Worklets] `runOnRuntimeAsync` can only be called on the RN Runtime.';
+  const errorMessage =
+    '[Worklets] `runOnRuntimeAsync` can only be called on the RN Runtime.';
 
-  const workletRuntime1 = createWorkletRuntime({ name: 'test1' });
-  const workletRuntime2 = createWorkletRuntime({ name: 'test2' });
+  const workletRuntime1 = getWorkletRuntimeFromPool('test');
+  const workletRuntime2 = getWorkletRuntimeFromPool('test2');
 
   const callbackFail = (rea: string) => {
     reason = rea;
@@ -43,7 +51,10 @@ describe('runOnRuntimeAsync', () => {
           return 42;
         });
       } catch (error) {
-        scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+        scheduleOnRN(
+          callbackFail,
+          error instanceof Error ? error.message : String(error)
+        );
       }
     });
 
@@ -61,7 +72,10 @@ describe('runOnRuntimeAsync', () => {
           return 42;
         });
       } catch (error) {
-        scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+        scheduleOnRN(
+          callbackFail,
+          error instanceof Error ? error.message : String(error)
+        );
       }
     });
 
@@ -79,7 +93,10 @@ describe('runOnRuntimeAsync', () => {
           return 42;
         });
       } catch (error) {
-        scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+        scheduleOnRN(
+          callbackFail,
+          error instanceof Error ? error.message : String(error)
+        );
       }
     });
 

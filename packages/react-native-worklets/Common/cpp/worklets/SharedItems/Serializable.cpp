@@ -102,14 +102,21 @@ std::shared_ptr<Serializable> extractSerializableOrThrow(
     const jsi::Value &maybeSerializableValue,
     const std::string &errorMessage) {
   if (maybeSerializableValue.isObject()) {
-    auto object = maybeSerializableValue.asObject(rt);
-    if (object.hasNativeState(rt)) {
-      auto nativeState = object.getNativeState(rt);
-      return std::dynamic_pointer_cast<SerializableJSRef>(nativeState)->value();
-    }
-    throw std::runtime_error(errorMessage);
+    auto object = maybeSerializableValue.getObject(rt);
+    return extractSerializableOrThrow(rt, object, errorMessage);
   } else if (maybeSerializableValue.isUndefined()) {
     return Serializable::undefined();
+  }
+  throw std::runtime_error(errorMessage);
+}
+
+std::shared_ptr<Serializable> extractSerializableOrThrow(
+    jsi::Runtime &rt,
+    const jsi::Object &maybeSerializableValue,
+    const std::string &errorMessage) {
+  if (maybeSerializableValue.hasNativeState(rt)) {
+    auto nativeState = maybeSerializableValue.getNativeState(rt);
+    return std::dynamic_pointer_cast<SerializableJSRef>(nativeState)->value();
   }
   throw std::runtime_error(errorMessage);
 }

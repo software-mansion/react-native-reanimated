@@ -6,18 +6,20 @@ import {
   expect,
   notify,
   waitForNotification,
+  getWorkletRuntimeFromPool,
 } from '../../ReJest/RuntimeTestsApi';
 import {
   runOnUISync,
   scheduleOnUI,
   scheduleOnRuntime,
-  createWorkletRuntime,
   runOnRuntimeSync,
   scheduleOnRN,
 } from 'react-native-worklets';
 
 declare global {
-  var __reportFatalRemoteError: ((error: Error, _: boolean) => void) | undefined;
+  var __reportFatalRemoteError:
+    | ((error: Error, _: boolean) => void)
+    | undefined;
 }
 
 const originalReportFatalRemoteError = globalThis.__reportFatalRemoteError;
@@ -25,9 +27,7 @@ const originalReportFatalRemoteError = globalThis.__reportFatalRemoteError;
 describe('Error traces from UI', () => {
   let errorData: Error | null = null;
 
-  const testRuntime = createWorkletRuntime({
-    name: 'testRuntime',
-  });
+  const testRuntime = getWorkletRuntimeFromPool('test');
 
   beforeEach(() => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -81,8 +81,8 @@ describe('Error traces from UI', () => {
     });
 
     await waitForNotification('errorReported');
-    expect(errorData?.stack).toInclude('at [testRuntime]:');
-    expect(errorData?.stack).toInclude('at [testRuntime]: functionNameB');
+    expect(errorData?.stack).toInclude('at [test]:');
+    expect(errorData?.stack).toInclude('at [test]: functionNameB');
   });
 
   test('runOnUISync has good stack trace added', async () => {
@@ -113,8 +113,8 @@ describe('Error traces from UI', () => {
     });
 
     await waitForNotification('errorReported');
-    expect(errorData?.stack).toInclude('at [testRuntime]:');
-    expect(errorData?.stack).toInclude('at [testRuntime]: functionNameD');
+    expect(errorData?.stack).toInclude('at [test]:');
+    expect(errorData?.stack).toInclude('at [test]: functionNameD');
   });
 
   test('batched scheduleOnUI: throw in middle job does not break siblings, each job has its own stack', async () => {

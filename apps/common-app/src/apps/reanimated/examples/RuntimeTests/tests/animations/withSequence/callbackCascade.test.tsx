@@ -61,7 +61,7 @@ describe(`Cascade of callbacks`, () => {
               // execution of this animation never starts
               callTracker(Tracker.animationNotExecuted);
               callbackArgument1.value = callbackArgument1.value || finished;
-            }),
+            })
           );
         }),
 
@@ -75,10 +75,10 @@ describe(`Cascade of callbacks`, () => {
             }),
             withSpring(10, { duration: 300, dampingRatio: 2 }, () => {
               callTracker(Tracker.callbackAnimation);
-            }),
+            })
           );
         }),
-        withTiming(200, { duration: 400 }),
+        withTiming(200, { duration: 400 })
       );
     });
 

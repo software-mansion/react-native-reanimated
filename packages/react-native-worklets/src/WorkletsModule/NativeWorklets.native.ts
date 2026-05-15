@@ -218,10 +218,10 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   }
 
   scheduleOnRN<TArgs extends unknown[]>(
-    serializable: NewRemoteFunction,
-    args?: SerializableRef<TArgs>
+    fun: NewRemoteFunction,
+    args: SerializableRef<TArgs> | undefined
   ): void {
-    this.#workletsModuleProxy.scheduleOnRN(serializable, args);
+    this.#workletsModuleProxy.scheduleOnRN(fun, args);
   }
 
   scheduleOnUI<TValue>(

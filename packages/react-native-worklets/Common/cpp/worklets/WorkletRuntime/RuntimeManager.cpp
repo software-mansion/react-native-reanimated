@@ -44,8 +44,10 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
     bool enableEventLoop) {
   const auto runtimeId = getNextRuntimeId();
 
-  auto workletRuntime = std::make_shared<WorkletRuntime>(runtimeId, name, queue, enableEventLoop);
-  workletRuntime->init(std::make_shared<JSIWorkletsModuleProxy>(*sourceProxy, runtimeId));
+  auto workletRuntime =
+      std::make_shared<WorkletRuntime>(runtimeId, RuntimeData::RuntimeKind::Worker, name, queue, enableEventLoop);
+
+  workletRuntime->init(sourceProxy);
 
   if (initializer) {
     workletRuntime->runSync(initializer);
@@ -60,6 +62,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createUninitializedUIRuntime(
     const std::shared_ptr<AsyncQueue> &uiAsyncQueue) {
   const auto uiRuntime = std::make_shared<WorkletRuntime>(
       RuntimeData::uiRuntimeId,
+      RuntimeData::RuntimeKind::UI,
       RuntimeData::uiRuntimeName,
       uiAsyncQueue,
       /*enableEventLoop*/ false);

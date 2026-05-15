@@ -32,8 +32,13 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
   reanimatedModuleProxy->init(platformDepMethodsHolder);
 
   auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
+  std::weak_ptr<ReanimatedModuleProxy> weakReanimatedModuleProxy = reanimatedModuleProxy;
 
   [nodesManager registerEventHandler:^(id<RCTEvent> event) {
+    auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
+    if (!reanimatedModuleProxy) {
+      return;
+    }
     // handles RCTEvents from RNGestureHandler
     std::string eventName = [event.eventName UTF8String];
     int emitterReactTag = [event.viewTag intValue];
@@ -43,7 +48,6 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
     reanimatedModuleProxy->handleEvent(eventName, emitterReactTag, payload, currentTime);
   }];
 
-  std::weak_ptr<ReanimatedModuleProxy> weakReanimatedModuleProxy = reanimatedModuleProxy; // to avoid retain cycle
   [nodesManager registerPerformOperations:^() {
     if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
       reanimatedModuleProxy->performOperations();

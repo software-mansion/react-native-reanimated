@@ -1,14 +1,12 @@
+#include <jsi/decorator.h>
+#include <jsi/jsi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
-#include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/RuntimeHolder.h>
 #include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
-
-#include <jsi/decorator.h>
-#include <jsi/jsi.h>
 
 #include <memory>
 #include <string>
@@ -53,12 +51,14 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(const std::shared_ptr<std::recu
 
 WorkletRuntime::WorkletRuntime(
     uint64_t runtimeId,
+    const RuntimeData::RuntimeKind runtimeKind,
     const std::string &name,
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop)
     : runtimeId_(runtimeId),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(runtimeMutex_)),
+      runtimeKind_(runtimeKind),
       name_(name),
       queue_(queue) {
   jsi::Runtime &rt = *runtime_;
@@ -69,7 +69,7 @@ WorkletRuntime::WorkletRuntime(
   }
 }
 
-void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy) {
+void WorkletRuntime::init(const std::shared_ptr<const JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy) {
   jsi::Runtime &rt = *runtime_;
 
   rt.setRuntimeData(
@@ -86,8 +86,10 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
   const auto bundleModeEnabled = jsiWorkletsModuleProxy->isBundleModeEnabled();
   const auto unpackerLoader = jsiWorkletsModuleProxy->getUnpackerLoader();
   const auto &nativeLoggingHook = runtimeBindings->nativeLoggingHook;
+
   WorkletRuntimeDecorator::decorate(
       rt,
+      runtimeKind_,
       name_,
       jsScheduler,
       isDevBundle,

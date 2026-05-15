@@ -116,11 +116,9 @@ export interface WorkletsModuleProxy {
     decorateGuest: SerializableRef
   ): SerializableRef<TValue>;
 
-  isHostFunction(fun: unknown): boolean;
-
   scheduleOnRN<TArgs extends unknown[]>(
-    serializable: NewRemoteFunction,
-    args?: SerializableRef<TArgs>
+    fun: NewRemoteFunction,
+    args: SerializableRef<TArgs> | undefined
   ): void;
 
   scheduleOnUI<TValue>(

@@ -10,7 +10,9 @@ export class ErrorBoundary extends React.Component<
   { children: React.JSX.Element | Array<React.JSX.Element> },
   { hasError: boolean }
 > {
-  constructor(props: { children: React.JSX.Element | Array<React.JSX.Element> }) {
+  constructor(props: {
+    children: React.JSX.Element | Array<React.JSX.Element>;
+  }) {
     super(props);
     this.state = { hasError: false };
   }
@@ -50,8 +52,9 @@ export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
   const testSelectionCallbacks = useRef<Set<() => void>>(new Set());
 
   useEffect(() => {
-    tests.forEach(testData => {
-      !testData.skipByDefault && testSelectionCallbacks.current.add(testData.importTest);
+    tests.forEach((testData) => {
+      !testData.skipByDefault &&
+        testSelectionCallbacks.current.add(testData.importTest);
     });
   }, [tests]);
 
@@ -68,7 +71,7 @@ export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
   }
 
   function handleStartClick() {
-    testSelectionCallbacks.current.forEach(callback => callback());
+    testSelectionCallbacks.current.forEach((callback) => callback());
     setStarted(true);
     // eslint-disable-next-line no-void
     void run();
@@ -78,7 +81,10 @@ export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
     <View style={styles.flexOne}>
       {started ? null : (
         <>
-          <TestSelector tests={tests} testSelectionCallbacks={testSelectionCallbacks} />
+          <TestSelector
+            tests={tests}
+            testSelectionCallbacks={testSelectionCallbacks}
+          />
           <TouchableOpacity onPress={handleStartClick} style={button}>
             <Text style={whiteText}>Run tests</Text>
           </TouchableOpacity>
@@ -86,7 +92,9 @@ export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
       )}
       {/* Don't render anything if component is undefined to prevent blinking */}
       {component || null}
-      {finished ? <Text style={navyText}>Reload the app to run the tests again</Text> : null}
+      {finished ? (
+        <Text style={navyText}>Reload the app to run the tests again</Text>
+      ) : null}
     </View>
   );
 }
@@ -101,14 +109,17 @@ function TestSelector({ tests, testSelectionCallbacks }: TestSelectorProps) {
     tests.reduce((acc, testData) => {
       acc.set(testData.testSuiteName, !testData.skipByDefault);
       return acc;
-    }, new Map<string, boolean>()),
+    }, new Map<string, boolean>())
   );
 
   function selectAllClick(select: boolean) {
     tests
-      .filter(button => !button.disabled)
-      .forEach(button => {
-        setSelectedTests(selectedTests => new Map(selectedTests.set(button.testSuiteName, select)));
+      .filter((button) => !button.disabled)
+      .forEach((button) => {
+        setSelectedTests(
+          (selectedTests) =>
+            new Map(selectedTests.set(button.testSuiteName, select))
+        );
         if (select) {
           testSelectionCallbacks.current.add(button.importTest);
         } else {
@@ -118,7 +129,14 @@ function TestSelector({ tests, testSelectionCallbacks }: TestSelectorProps) {
   }
 
   function selectClick(button: TestData) {
-    setSelectedTests(new Map(selectedTests.set(button.testSuiteName, !selectedTests.get(button.testSuiteName))));
+    setSelectedTests(
+      new Map(
+        selectedTests.set(
+          button.testSuiteName,
+          !selectedTests.get(button.testSuiteName)
+        )
+      )
+    );
     if (testSelectionCallbacks.current.has(button.importTest)) {
       testSelectionCallbacks.current.delete(button.importTest);
     } else {
@@ -128,8 +146,14 @@ function TestSelector({ tests, testSelectionCallbacks }: TestSelectorProps) {
 
   return (
     <View style={styles.flexOne}>
-      <SelectAllButtonProps handleSelectAllClick={selectAllClick} select={true} />
-      <SelectAllButtonProps handleSelectAllClick={selectAllClick} select={false} />
+      <SelectAllButtonProps
+        handleSelectAllClick={selectAllClick}
+        select={true}
+      />
+      <SelectAllButtonProps
+        handleSelectAllClick={selectAllClick}
+        select={false}
+      />
 
       <FlatList
         style={styles.selectButtonsFrame}
@@ -165,7 +189,12 @@ interface SelectTestProps {
   disabled?: boolean;
 }
 
-function SelectTest({ testSuiteName, selectClick, selectedTests, disabled }: SelectTestProps) {
+function SelectTest({
+  testSuiteName,
+  selectClick,
+  selectedTests,
+  disabled,
+}: SelectTestProps) {
   function handleSelectClickOut() {
     selectClick();
   }
@@ -175,7 +204,12 @@ function SelectTest({ testSuiteName, selectClick, selectedTests, disabled }: Sel
       disabled={disabled}
       style={[styles.buttonWrapper, disabled ? styles.disabledButton : {}]}
       onPress={() => handleSelectClickOut()}>
-      <View style={[styles.checkbox, selectedTests.get(testSuiteName) ? styles.checkedCheckbox : {}]} />
+      <View
+        style={[
+          styles.checkbox,
+          selectedTests.get(testSuiteName) ? styles.checkedCheckbox : {},
+        ]}
+      />
       <View style={selectButton}>
         <Text style={navyText}>{testSuiteName}</Text>
       </View>
@@ -188,9 +222,14 @@ interface SelectAllButtonProps {
   select: boolean;
 }
 
-function SelectAllButtonProps({ handleSelectAllClick, select }: SelectAllButtonProps) {
+function SelectAllButtonProps({
+  handleSelectAllClick,
+  select,
+}: SelectAllButtonProps) {
   return (
-    <TouchableOpacity onPress={() => handleSelectAllClick(select)} style={selectAllButton}>
+    <TouchableOpacity
+      onPress={() => handleSelectAllClick(select)}
+      style={selectAllButton}>
       <Text style={navyText}>{select ? 'Select all' : 'Deselect all'}</Text>
     </TouchableOpacity>
   );
@@ -223,12 +262,30 @@ const basicStyles = StyleSheet.create({
   whiteText: { color: 'white' },
 });
 
-const whiteButtonCommon = StyleSheet.flatten([commonStyles.buttonCommon, commonStyles.whiteButtonCommon]);
-const selectAllButton = StyleSheet.flatten([whiteButtonCommon, basicStyles.selectAllButton]);
-const selectButton = StyleSheet.flatten([whiteButtonCommon, basicStyles.selectButton]);
-const button = StyleSheet.flatten([commonStyles.buttonCommon, basicStyles.button]);
-const navyText = StyleSheet.flatten([commonStyles.textCommon, basicStyles.navyText]);
-const whiteText = StyleSheet.flatten([commonStyles.textCommon, basicStyles.whiteText]);
+const whiteButtonCommon = StyleSheet.flatten([
+  commonStyles.buttonCommon,
+  commonStyles.whiteButtonCommon,
+]);
+const selectAllButton = StyleSheet.flatten([
+  whiteButtonCommon,
+  basicStyles.selectAllButton,
+]);
+const selectButton = StyleSheet.flatten([
+  whiteButtonCommon,
+  basicStyles.selectButton,
+]);
+const button = StyleSheet.flatten([
+  commonStyles.buttonCommon,
+  basicStyles.button,
+]);
+const navyText = StyleSheet.flatten([
+  commonStyles.textCommon,
+  basicStyles.navyText,
+]);
+const whiteText = StyleSheet.flatten([
+  commonStyles.textCommon,
+  basicStyles.whiteText,
+]);
 
 const styles = StyleSheet.create({
   flexOne: {

@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <unordered_set>
+#include <vector>
 
 namespace reanimated::css {
 
@@ -104,13 +105,15 @@ std::unordered_set<std::string> TransitionProgressProvider::getRemovedProperties
 
 void TransitionProgressProvider::runProgressProvider(
     const std::string &propertyName,
-    const CSSTransitionPropertySettings &settings,
     const bool isReversed,
     const double timestamp) {
-  const auto it = propertyProgressProviders_.find(propertyName);
 
-  if (it != propertyProgressProviders_.end()) {
-    const auto &progressProvider = it->second;
+  const auto &settings = propertySettings_.at(propertyName);
+
+  const auto providerIt = propertyProgressProviders_.find(propertyName);
+
+  if (providerIt != propertyProgressProviders_.end()) {
+    const auto &progressProvider = providerIt->second;
     progressProvider->update(timestamp);
 
     if (isReversed && progressProvider->getState() != TransitionProgressState::Finished) {
@@ -126,6 +129,12 @@ void TransitionProgressProvider::runProgressProvider(
       propertyName,
       std::make_shared<TransitionPropertyProgressProvider>(
           timestamp, settings.duration, settings.delay, settings.easingFunction));
+}
+
+void TransitionProgressProvider::removeProperties(const std::vector<std::string> &propertyNames) {
+  for (const auto &propertyName : propertyNames) {
+    propertyProgressProviders_.erase(propertyName);
+  }
 }
 
 void TransitionProgressProvider::removeProperty(const std::string &propertyName) {
@@ -168,6 +177,16 @@ TransitionProgressProvider::createReversingShorteningProgressProvider(
       propertySettings.delay < 0 ? newReversingShorteningFactor * propertySettings.delay : propertySettings.delay,
       propertySettings.easingFunction,
       newReversingShorteningFactor);
+}
+
+void TransitionProgressProvider::setPropertySettings(const PropertiesSettingsMap &changedPropertiesSettings) {
+  for (const auto &[propertyName, propertySettings] : changedPropertiesSettings) {
+    propertySettings_[propertyName] = propertySettings;
+  }
+}
+
+CSSTransitionPropertySettings TransitionProgressProvider::getPropertySettings(const std::string &propertyName) const {
+  return propertySettings_.at(propertyName);
 }
 
 } // namespace reanimated::css

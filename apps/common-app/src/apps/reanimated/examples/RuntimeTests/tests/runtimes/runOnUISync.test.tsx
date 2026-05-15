@@ -1,11 +1,18 @@
 import {
-  createWorkletRuntime,
   runOnUISync,
   scheduleOnRN,
   scheduleOnRuntime,
   scheduleOnUI,
 } from 'react-native-worklets';
-import { beforeEach, describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
+import {
+  beforeEach,
+  describe,
+  expect,
+  getWorkletRuntimeFromPool,
+  notify,
+  test,
+  waitForNotification,
+} from '../../ReJest/RuntimeTestsApi';
 
 describe('runOnUISync', () => {
   const PASS_NOTIFICATION = 'PASS';
@@ -13,7 +20,7 @@ describe('runOnUISync', () => {
   let value = 0;
   let reason = '';
 
-  const workletRuntime = createWorkletRuntime({ name: 'test' });
+  const workletRuntime = getWorkletRuntimeFromPool('test');
 
   const callbackPass = (num: number) => {
     value = num;
@@ -81,12 +88,17 @@ describe('runOnUISync', () => {
             return 42;
           });
         } catch (error) {
-          scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+          scheduleOnRN(
+            callbackFail,
+            error instanceof Error ? error.message : String(error)
+          );
         }
       });
 
       await waitForNotification(FAIL_NOTIFICATION);
-      expect(reason).toBe('[Worklets] runOnUISync cannot be called on Worklet Runtimes outside of the Bundle Mode.');
+      expect(reason).toBe(
+        '[Worklets] runOnUISync cannot be called on Worklet Runtimes outside of the Bundle Mode.'
+      );
     });
 
     test('throws when scheduling on Worker Runtime to UI Runtime', async () => {
@@ -98,12 +110,17 @@ describe('runOnUISync', () => {
             return 42;
           });
         } catch (error) {
-          scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+          scheduleOnRN(
+            callbackFail,
+            error instanceof Error ? error.message : String(error)
+          );
         }
       });
 
       await waitForNotification(FAIL_NOTIFICATION);
-      expect(reason).toBe('[Worklets] runOnUISync cannot be called on Worklet Runtimes outside of the Bundle Mode.');
+      expect(reason).toBe(
+        '[Worklets] runOnUISync cannot be called on Worklet Runtimes outside of the Bundle Mode.'
+      );
     });
   }
 });
