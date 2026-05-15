@@ -1,6 +1,10 @@
 'use strict';
 
-import type { SerializableRef, SynchronizableRef } from '../memory/types';
+import type {
+  NewRemoteFunction,
+  SerializableRef,
+  SynchronizableRef,
+} from '../memory/types';
 import type { WorkletRuntime } from '../types';
 
 /** Type of `__workletsModuleProxy` injected with JSI. */
@@ -20,7 +24,10 @@ export interface WorkletsModuleProxy {
     shareableHostUnpackerSourceMap: string,
     shareableGuestUnpackerCode: string,
     shareableGuestUnpackerLocation: string,
-    shareableGuestUnpackerSourceMap: string
+    shareableGuestUnpackerSourceMap: string,
+    remoteFunctionUnpackerCode: string,
+    remoteFunctionUnpackerLocation: string,
+    remoteFunctionUnpackerSourceMap: string
   ): void;
 
   createSerializable<TValue>(
@@ -78,9 +85,11 @@ export interface WorkletsModuleProxy {
 
   createSerializableInitializer(obj: object): SerializableRef<object>;
 
-  createSerializableFunction<TArgs extends unknown[], TReturn>(
-    func: (...args: TArgs) => TReturn
-  ): SerializableRef<TReturn>;
+  createSerializableNonWorkletFunction<TArgs extends unknown[], TReturn>(
+    fun: (...args: TArgs) => TReturn,
+    functionId: number,
+    functionName: string | undefined
+  ): SerializableRef<(...args: TArgs) => TReturn>;
 
   createSerializableWorklet(
     worklet: object,
@@ -106,6 +115,13 @@ export interface WorkletsModuleProxy {
     decorateHost: SerializableRef,
     decorateGuest: SerializableRef
   ): SerializableRef<TValue>;
+
+  isHostFunction(fun: unknown): boolean;
+
+  scheduleOnRN<TArgs extends unknown[]>(
+    serializable: NewRemoteFunction,
+    args?: SerializableRef<TArgs>
+  ): void;
 
   scheduleOnUI<TValue>(
     serializableArrayOfWorklets: SerializableRef<TValue[]>,
@@ -183,7 +199,7 @@ export interface WorkletsModuleProxy {
   getUISchedulerHolder(): object;
 }
 
-type InternalMethods = 'loadUnpackers';
+type InternalMethods = 'loadUnpackers' | 'isHostFunction';
 
 type TurboModulePublic = {
   toggleSlowAnimationsOnUIRuntime(): boolean;

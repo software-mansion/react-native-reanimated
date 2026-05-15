@@ -9,6 +9,7 @@ import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
 } from './memory/serializable';
+import type { NewRemoteFunction } from './memory/types';
 import { isRNRuntime, RuntimeKind } from './runtimeKind';
 import type { WorkletFunction, WorkletImport } from './types';
 import { isWorkletFunction } from './workletFunction';
@@ -252,7 +253,6 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
   ...args: Args
 ): void {
   'worklet';
-  type FunDevRemote = Extract<typeof fun, DevRemoteFunction<Args, ReturnValue>>;
   if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
     // if we are already on the JS thread, we just schedule the worklet on the JS queue
     queueMicrotask(
@@ -260,31 +260,26 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
         ? () => (fun as (...args: Args) => ReturnValue)(...args)
         : (fun as () => ReturnValue)
     );
-    return;
-  }
-  if (isWorkletFunction<Args, ReturnValue>(fun)) {
+  } else if (isWorkletFunction<Args, ReturnValue>(fun)) {
     // If `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
     // and pass the worklet as a first argument followed by original arguments.
     scheduleOnRN(runWorkletOnJS<Args, ReturnValue>, fun, ...args);
-    return;
-  }
-  if ((fun as FunDevRemote).__remoteFunction) {
-    // In development mode the function provided as `fun` throws an error message
-    // such that when someone accidentally calls it directly on the UI runtime, they
-    // see that they should use `runOnJS` instead. To facilitate that we put the
-    // reference to the original remote function in the `__remoteFunction` property.
-    fun = (fun as FunDevRemote).__remoteFunction;
-  }
+  } else {
+    if (
+      __DEV__ &&
+      !(fun as unknown as NewRemoteFunction).__remoteFunction &&
+      !globalThis.__workletsModuleProxy.isHostFunction(fun)
+    ) {
+      throw new Error(
+        '[Worklets] It seems that you passed a locally defined function to `scheduleOnRN`. Functions defined in a different Runtime cannot be scheduled on RN Runtime. Make sure to define the function you are trying to schedule on the RN Runtime before passing it to `scheduleOnRN`.'
+      );
+    }
 
-  const scheduleOnRNImpl =
-    typeof fun === 'function'
-      ? globalThis._scheduleHostFunctionOnJS
-      : globalThis._scheduleRemoteFunctionOnJS;
-
-  scheduleOnRNImpl(
-    fun as (...args: Args) => ReturnValue,
-    args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
-  );
+    globalThis.__workletsModuleProxy.scheduleOnRN(
+      fun as unknown as NewRemoteFunction,
+      args.length > 0 ? globalThis.__serializer(args) : undefined
+    );
+  }
 }
 
 /**

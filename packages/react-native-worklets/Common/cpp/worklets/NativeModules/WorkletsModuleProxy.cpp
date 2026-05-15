@@ -6,6 +6,7 @@
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #include <memory>
@@ -31,7 +32,7 @@ void WorkletsModuleProxy::start() {
    * We call additional `init` method here because
    * JSIWorkletsModuleProxy needs a weak_ptr to the UI Runtime.
    */
-  uiWorkletRuntime_->init(std::make_shared<JSIWorkletsModuleProxy>(*rnRuntimeProxy_));
+  uiWorkletRuntime_->init(std::make_shared<JSIWorkletsModuleProxy>(*rnRuntimeProxy_, RuntimeData::uiRuntimeId));
 
   animationFrameBatchinator_ =
       std::make_shared<AnimationFrameBatchinator>(uiWorkletRuntime_, runtimeBindings_->requestAnimationFrame);
@@ -66,7 +67,8 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           uiWorkletRuntime_,
           runtimeBindings_,
           bundleModeConfig_,
-          unpackerLoader_)) {
+          unpackerLoader_,
+          RuntimeData::rnRuntimeId)) {
   RNRuntimeWorkletDecorator::decorate(rnRuntime, rnRuntimeProxy_->toOptimizedObject(rnRuntime), jsLogger_);
 }
 

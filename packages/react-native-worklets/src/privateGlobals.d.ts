@@ -4,6 +4,7 @@
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
 import type { reportFatalRemoteError } from './debug/errors';
 import type { CustomSerializableUnpacker } from './memory/customSerializableUnpacker';
+import type { RemoteFunctionUnpacker } from './memory/remoteFunctionUnpacker';
 import type { makeShareableCloneOnUIRecursive } from './memory/serializable';
 import type { ShareableGuestUnpacker } from './memory/shareableGuestUnpacker';
 import type { ShareableHostUnpacker } from './memory/shareableHostUnpacker';
@@ -17,7 +18,7 @@ declare global {
   /** The only runtime-available require method is `__r` defined by Metro. */
   var __r: ((moduleId: number) => Record<string, unknown>) &
     Record<string, unknown>;
-
+  var __RUNTIME_NAME: string;
   var _toString: (value: unknown) => string;
   var __workletsModuleProxy: WorkletsModuleProxy;
   var _WORKLETS_BUNDLE_MODE_ENABLED: boolean | undefined;
@@ -59,14 +60,13 @@ declare global {
   /** Only outside of Bundle Mode on Worklet Runtimes. */
   var __serializer: typeof makeShareableCloneOnUIRecursive;
   var __callMicrotasks: () => void;
-  var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
-  var _scheduleRemoteFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
   /** Available only on RN Runtime */
   var __reportFatalRemoteError: typeof reportFatalRemoteError | undefined;
   var __valueUnpacker: ValueUnpacker;
   var __synchronizableUnpacker: SynchronizableUnpacker;
   var __customSerializationRegistry: CustomSerializationRegistry;
   var __customSerializableUnpacker: CustomSerializableUnpacker;
+  var __remoteFunctionUnpacker: RemoteFunctionUnpacker;
   /**
    * @deprecated Kept for backwards compatibility. Remove it after support for
    *   Reanimated 4.3 is dropped. Reanimated uses it to handle event updates
@@ -103,6 +103,8 @@ declare global {
     unknown,
     unknown
   >;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+  var __remoteFunctionRegistry: Map<number, Function>;
   /** Only in Bundle Mode on Worklet Runtimes. */
   var TurboModules: Map<string, unknown>;
   /**

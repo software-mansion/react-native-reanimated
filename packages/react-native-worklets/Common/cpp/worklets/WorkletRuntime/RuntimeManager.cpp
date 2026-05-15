@@ -1,4 +1,5 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 
 #include <memory>
@@ -36,7 +37,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::getUIRuntime() {
 }
 
 std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
-    const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy,
+    const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,
     const std::string &name,
     const std::shared_ptr<SerializableWorklet> &initializer,
     const std::shared_ptr<AsyncQueue> &queue,
@@ -44,8 +45,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
   const auto runtimeId = getNextRuntimeId();
 
   auto workletRuntime = std::make_shared<WorkletRuntime>(runtimeId, name, queue, enableEventLoop);
-
-  workletRuntime->init(jsiWorkletsModuleProxy);
+  workletRuntime->init(std::make_shared<JSIWorkletsModuleProxy>(*sourceProxy, runtimeId));
 
   if (initializer) {
     workletRuntime->runSync(initializer);
