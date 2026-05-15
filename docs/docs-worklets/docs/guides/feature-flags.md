@@ -33,9 +33,11 @@ This feature flags is supposed to improve the visual perception and perceived sm
 
 ### `ENABLE_CROSS_RUNTIME_STACK_TRACES` <AvailableFrom version="0.9.0" />
 
-When enabled, the JavaScript call site that schedules a worklet (via `scheduleOnUI`, `scheduleOnRuntime` and similar) is captured and attached to the worklet. If the worklet then throws on the worklet runtime, the resulting error stack is stitched together with the original scheduling stack so the LogBox entry points back to the line that scheduled it, rather than ending at the worklet runtime boundary. This makes errors thrown deep inside worklets much easier to trace back to their origin in your app code. For more details, see [PR #9313](https://github.com/software-mansion/react-native-reanimated/pull/9313).
+When enabled, the JavaScript call site that schedules a worklet (via `scheduleOnUI`, `scheduleOnRuntime` and similar) is captured and attached to the worklet. If the worklet then throws on the worklet runtime, the resulting error stack is stitched together with the original scheduling stack so the LogBox entry points back to the line that scheduled it, rather than ending at the worklet runtime boundary. This makes errors thrown deep inside worklets much easier to trace back to their origin in your app code.
 
-This flag only takes effect in development builds (`__DEV__`). In release builds, capturing the scheduling stack is skipped regardless of the flag value to avoid the runtime overhead. Capturing extra stack trace data can significantly hurt performance in code paths that perform many async/worklet scheduling calls. We recommend opting out of this flag in those situations.
+This flag only takes effect in development builds (`__DEV__`). In release builds, capturing the scheduling stack is skipped regardless of the flag value to avoid the runtime overhead.
+
+**Capturing extra stack trace data can significantly hurt performance in code paths that perform many async/worklet scheduling calls. We recommend opting out of this flag in those situations.**
 
 Given the following snippet:
 
