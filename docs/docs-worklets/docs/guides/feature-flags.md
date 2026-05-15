@@ -33,7 +33,9 @@ This feature flags is supposed to improve the visual perception and perceived sm
 
 ### `ENABLE_CROSS_RUNTIME_STACK_TRACES` <AvailableFrom version="0.9.0" />
 
-When enabled, the JavaScript call site that schedules a worklet (via `runOnUI`, `scheduleOnRuntime` and similar) is captured and attached to the worklet. If the worklet then throws on the worklet runtime, the resulting error stack is stitched together with the original scheduling stack so the LogBox entry points back to the line that scheduled it, rather than ending at the worklet runtime boundary. This makes errors thrown deep inside worklets much easier to trace back to their origin in your app code. For more details, see [PR #9313](https://github.com/software-mansion/react-native-reanimated/pull/9313).
+When enabled, the JavaScript call site that schedules a worklet (via `scheduleOnUI`, `scheduleOnRuntime` and similar) is captured and attached to the worklet. If the worklet then throws on the worklet runtime, the resulting error stack is stitched together with the original scheduling stack so the LogBox entry points back to the line that scheduled it, rather than ending at the worklet runtime boundary. This makes errors thrown deep inside worklets much easier to trace back to their origin in your app code. For more details, see [PR #9313](https://github.com/software-mansion/react-native-reanimated/pull/9313).
+
+This flag only takes effect in development builds (`__DEV__`). In release builds, capturing the scheduling stack is skipped regardless of the flag value to avoid the runtime overhead. Capturing extra stack trace data can significantly hurt performance in code paths that perform many async/worklet scheduling calls. We recommend opting out of this flag in those situations.
 
 Given the following snippet:
 
@@ -84,8 +86,6 @@ the call stack reported in LogBox differs depending on whether the flag is enabl
 </div>
 
 The frames without the `[UI]:` prefix (`enqueueUI`, `scheduleOnUI`, `App`, ...) are the ones contributed by this feature. They come from the RN runtime call site that scheduled the worklet. Without the flag, the stack stops at the worklet runtime boundary and only the `[UI]:` frames are visible.
-
-This flag only takes effect in development builds (`__DEV__`). In release builds, capturing the scheduling stack is skipped regardless of the flag value to avoid the runtime overhead. Disable this flag in development only if you specifically want to opt out of the additional bookkeeping.
 
 ## Static feature flags
 
