@@ -16,3 +16,5 @@ if [ ! -f "compile_commands.json" ]; then
 fi
 
 run-clang-tidy -quiet -p . -header-filter="^.*/$1/.*\.h$" "$1"
+
+# some change
