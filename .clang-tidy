@@ -34,6 +34,7 @@ Checks:
   # - hicpp-*
   # - llvm-*
   # - misc-*
+  - misc-const-correctness
 
   # - modernize-*
   - modernize-use-override
