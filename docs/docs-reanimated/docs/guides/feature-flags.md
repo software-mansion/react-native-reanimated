@@ -110,7 +110,7 @@ This feature flag is supposed to fix performance regressions of animations while
 
 ### `ENABLE_SHARED_ELEMENT_TRANSITIONS`
 
-When enabled, Shared Element Transitions are available to use, also the synchronous prop update flags are disabled. The feature is not yet production ready, and may have some limitations or bugs. For more details, see [PR #7466](https://github.com/software-mansion/react-native-reanimated/pull/7466).
+When enabled, Shared Element Transitions are available to use. This flag can be combined with `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` / `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS`; for views with a `sharedTransitionTag`, `transform` and `opacity` updates route through the shadow tree so that shared transitions read the latest values, while other sync-eligible props still use the synchronous fast path. The feature is not yet production ready, and may have some limitations or bugs. For more details, see [PR #7466](https://github.com/software-mansion/react-native-reanimated/pull/7466).
 
 ### `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`
 

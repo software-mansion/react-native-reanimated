@@ -86,20 +86,7 @@ fun getReanimatedStaticFeatureFlags(): String {
             ?.forEach { (key, value) -> featureFlags[key.toString()] = value.toString() }
     }
 
-    validateConflictingFeatureFlags(featureFlags)
-
     return featureFlags.entries.joinToString("") { (key, value) -> "[$key:$value]" }
-}
-
-fun validateConflictingFeatureFlags(featureFlags: HashMap<String, String>) {
-    val androidSyncUiProps = featureFlags["ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS"] == "true"
-    val sharedElementTransitions = featureFlags["ENABLE_SHARED_ELEMENT_TRANSITIONS"] == "true"
-
-    if (androidSyncUiProps && sharedElementTransitions) {
-        throw GradleException(
-            "[Reanimated] The feature flags `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. Please disable one of them in your package.json."
-        )
-    }
 }
 
 if (project != rootProject) {

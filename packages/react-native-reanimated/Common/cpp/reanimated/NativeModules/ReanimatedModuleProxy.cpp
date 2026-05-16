@@ -65,25 +65,10 @@ void mergeAnimatedProps(AnimatedProps &target, AnimatedProps &&source) {
 }
 #endif
 
-#ifdef ANDROID
-constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
-  return StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
-      !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS");
-}
-#elif __APPLE__
-constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
-  return StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
-      !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS");
-}
-#else
-constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
-  return false;
-}
-#endif
-
 std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
     const UpdatesBatch &updatesBatch,
-    const bool allowPartialUpdates) {
+    const bool allowPartialUpdates,
+    [[maybe_unused]] const std::shared_ptr<SharedTransitionManager> &sharedTransitionManager) {
   static const std::unordered_set<std::string> synchronousPropNames = {
       "opacity",
       "elevation",
@@ -127,9 +112,18 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       "transform",
   };
 
-  const auto isSynchronous = [&](const std::string &keyStr, [[maybe_unused]] const folly::dynamic &value) {
+  const auto isSynchronous = [&]([[maybe_unused]] Tag tag, const std::string &keyStr, [[maybe_unused]] const folly::dynamic &value) {
     if (!synchronousPropNames.contains(keyStr)) {
       return false;
+    }
+    // When SET is enabled, `transform` and `opacity` on views participating in a shared
+    // transition must route through the shadow tree so SET's snapshot reads the latest
+    // values; other sync-whitelisted props are safe because PropsDiffer ignores them.
+    if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+      if ((keyStr == "transform" || keyStr == "opacity") &&
+          sharedTransitionManager->tagToName_.contains(tag)) {
+        return false;
+      }
     }
 #ifdef ANDROID
     // The Android synchronous path serializes color props into an int buffer via `value.asInt()`,
@@ -146,13 +140,14 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
   UpdatesBatch shadowTreeUpdatesBatch;
 
   for (const auto &[shadowNodeFamily, props] : updatesBatch) {
+    const Tag tag = shadowNodeFamily->getTag();
     if (allowPartialUpdates) {
       folly::dynamic synchronousProps = folly::dynamic::object();
       folly::dynamic shadowTreeProps = folly::dynamic::object();
 
       for (const auto &[key, value] : props.items()) {
         const auto keyStr = key.asString();
-        if (isSynchronous(keyStr, value)) {
+        if (isSynchronous(tag, keyStr, value)) {
           synchronousProps[keyStr] = value;
         } else {
           shadowTreeProps[keyStr] = value;
@@ -168,7 +163,7 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       }
     } else {
       const bool hasOnlySynchronousProps = std::all_of(props.items().begin(), props.items().end(), [&](const auto &kv) {
-        return isSynchronous(kv.first.asString(), kv.second);
+        return isSynchronous(tag, kv.first.asString(), kv.second);
       });
 
       if (hasOnlySynchronousProps) {
@@ -820,7 +815,14 @@ void ReanimatedModuleProxy::performOperations() {
 
     operationsLoop_->clearShouldUpdateCssAnimations();
 
-    if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
+#ifdef ANDROID
+    constexpr bool synchronouslyUpdateUIProps = StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS");
+#elif __APPLE__
+    constexpr bool synchronouslyUpdateUIProps = StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS");
+#else
+    constexpr bool synchronouslyUpdateUIProps = false;
+#endif
+    if constexpr (synchronouslyUpdateUIProps) {
       applySynchronousUpdates(updatesBatch, false);
     }
 
@@ -1027,7 +1029,8 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
 }
 
 void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, const bool allowPartialUpdates) {
-  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] = partitionUpdates(updatesBatch, allowPartialUpdates);
+  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
+      partitionUpdates(updatesBatch, allowPartialUpdates, layoutAnimationsManager_->getSharedTransitionManager());
 
 #ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {
