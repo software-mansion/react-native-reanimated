@@ -112,29 +112,29 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       "transform",
   };
 
-  const auto isSynchronous = [&]([[maybe_unused]] Tag tag, const std::string &keyStr, [[maybe_unused]] const folly::dynamic &value) {
-    if (!synchronousPropNames.contains(keyStr)) {
-      return false;
-    }
-    // When SET is enabled, `transform` and `opacity` on views participating in a shared
-    // transition must route through the shadow tree so SET's snapshot reads the latest
-    // values; other sync-whitelisted props are safe because PropsDiffer ignores them.
-    if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-      if ((keyStr == "transform" || keyStr == "opacity") &&
-          sharedTransitionManager->tagToName_.contains(tag)) {
-        return false;
-      }
-    }
+  const auto isSynchronous =
+      [&]([[maybe_unused]] Tag tag, const std::string &keyStr, [[maybe_unused]] const folly::dynamic &value) {
+        if (!synchronousPropNames.contains(keyStr)) {
+          return false;
+        }
+        // When SET is enabled, `transform` and `opacity` on views participating in a shared
+        // transition must route through the shadow tree so SET's snapshot reads the latest
+        // values; other sync-whitelisted props are safe because PropsDiffer ignores them.
+        if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+          if ((keyStr == "transform" || keyStr == "opacity") && sharedTransitionManager->tagToName_.contains(tag)) {
+            return false;
+          }
+        }
 #ifdef ANDROID
-    // The Android synchronous path serializes color props into an int buffer via `value.asInt()`,
-    // so non-numeric color values (e.g. PlatformColor) must fall back to the shadow tree commit path.
-    const bool isColorProp = keyStr.find("Color") != std::string::npos;
-    if (isColorProp && !value.isNumber()) {
-      return false;
-    }
+        // The Android synchronous path serializes color props into an int buffer via `value.asInt()`,
+        // so non-numeric color values (e.g. PlatformColor) must fall back to the shadow tree commit path.
+        const bool isColorProp = keyStr.find("Color") != std::string::npos;
+        if (isColorProp && !value.isNumber()) {
+          return false;
+        }
 #endif // ANDROID
-    return true;
-  };
+        return true;
+      };
 
   UpdatesBatch synchronousUpdatesBatch;
   UpdatesBatch shadowTreeUpdatesBatch;
