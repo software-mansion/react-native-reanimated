@@ -35,6 +35,7 @@ Checks:
   # - llvm-*
   # - misc-*
   - misc-const-correctness
+  - misc-misplaced-const
 
   # - modernize-*
   - modernize-use-override
