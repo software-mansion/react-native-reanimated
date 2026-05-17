@@ -180,7 +180,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   }
 
   /** @deprecated Use `schedule` instead. */
-  void runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet);
+  void runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet) const;
 
   /** @deprecated Use `runSyncSerialized` and extract to `jsi::Value` with
    * `extractSerializableOrThrow` instead. */

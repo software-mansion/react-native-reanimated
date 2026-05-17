@@ -310,7 +310,7 @@ std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::
 
 /* #region deprecated */
 
-void WorkletRuntime::runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet) {
+void WorkletRuntime::runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet) const {
   schedule(worklet);
 }
 

@@ -43,4 +43,6 @@ Checks:
   - performance-*
   # - portability-*
   # - readability-*
+  - readability-make-member-function-const
+  - readability-const-return-type
 WarningsAsErrors: '*'

@@ -437,7 +437,7 @@ void ReanimatedModuleProxy::unregisterEventHandler(jsi::Runtime &, const jsi::Va
 std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
     jsi::Runtime &rt,
     const std::string &propName,
-    const std::shared_ptr<const ShadowNode> &shadowNode) {
+    const std::shared_ptr<const ShadowNode> &shadowNode) const {
   auto newestCloneOfShadowNode = uiManager_->getNewestCloneOfShadowNode(*shadowNode);
 
   return PropValueProcessor::processPropValue(propName, newestCloneOfShadowNode, rt);
@@ -479,7 +479,7 @@ ReanimatedModuleProxy::setDynamicFeatureFlag(jsi::Runtime &rt, const jsi::Value 
 
 jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     jsi::Runtime &rt,
-    const jsi::Value &layoutAnimationsBatch) {
+    const jsi::Value &layoutAnimationsBatch) const {
   auto array = layoutAnimationsBatch.asObject(rt).asArray(rt);
   const size_t length = array.size(rt);
   std::vector<LayoutAnimationConfig> batch(length);
@@ -507,11 +507,12 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
 void ReanimatedModuleProxy::setShouldAnimateExiting(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
-    const jsi::Value &shouldAnimate) {
+    const jsi::Value &shouldAnimate) const {
   layoutAnimationsManager_->setShouldAnimateExiting(viewTag.asNumber(), shouldAnimate.getBool());
 }
 
-bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) {
+bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag)
+    const {
   return eventHandlerRegistry_->isAnyHandlerWaitingForEvent(eventName, emitterReactTag);
 }
 
@@ -667,7 +668,7 @@ void ReanimatedModuleProxy::registerPseudoStyle(
       jsi::dynamicFromValue(rt, configObj.getProperty(rt, "defaultStyle")));
 }
 
-void ReanimatedModuleProxy::unregisterPseudoStyle(jsi::Runtime &, const jsi::Value &viewTag) {
+void ReanimatedModuleProxy::unregisterPseudoStyle(jsi::Runtime &, const jsi::Value &viewTag) const {
   pseudoStylesRegistry_->remove(viewTag.asNumber());
 }
 
@@ -691,7 +692,7 @@ bool ReanimatedModuleProxy::handleEvent(
     const std::string &eventName,
     const int emitterReactTag,
     const jsi::Value &payload,
-    double currentTime) {
+    double currentTime) const {
   const ReanimatedSystraceSection s("ReanimatedModuleProxy::handleEvent");
 
   eventHandlerRegistry_->processEvent(uiRuntime_, currentTime, eventName, emitterReactTag, payload);
@@ -868,7 +869,7 @@ AnimationMutations ReanimatedModuleProxy::collectNonLayoutAnimationUpdates() {
   return mutations;
 }
 
-std::shared_ptr<UIManagerAnimationBackend> ReanimatedModuleProxy::getAnimationBackend() {
+std::shared_ptr<UIManagerAnimationBackend> ReanimatedModuleProxy::getAnimationBackend() const {
   react_native_assert(
       uiManager_ != nullptr && "[Reanimated] Animation Backend used before the uiManager was registered");
   auto locked = uiManager_->unstable_getAnimationBackend().lock();
@@ -1125,7 +1126,7 @@ void ReanimatedModuleProxy::dispatchCommand(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue,
     const jsi::Value &commandNameValue,
-    const jsi::Value &argsValue) {
+    const jsi::Value &argsValue) const {
   const auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
   const std::string commandName = stringFromValue(rt, commandNameValue);
   const folly::dynamic args = commandArgsFromValue(rt, argsValue);
@@ -1143,8 +1144,10 @@ void ReanimatedModuleProxy::dispatchCommand(
   }
 }
 
-jsi::String
-ReanimatedModuleProxy::obtainProp(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &propName) {
+jsi::String ReanimatedModuleProxy::obtainProp(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &propName) const {
   jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   const auto propNameStr = propName.asString(rt).utf8(rt);
   const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
@@ -1152,7 +1155,7 @@ ReanimatedModuleProxy::obtainProp(jsi::Runtime &rt, const jsi::Value &shadowNode
   return jsi::String::createFromUtf8(rt, resultStr);
 }
 
-jsi::Value ReanimatedModuleProxy::measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
+jsi::Value ReanimatedModuleProxy::measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue) const {
   // based on implementation from UIManagerBinding.cpp
 
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
