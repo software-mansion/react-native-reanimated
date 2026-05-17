@@ -15,6 +15,6 @@ if [ ! -f "compile_commands.json" ]; then
   )
 fi
 
-run-clang-tidy -quiet -p . -header-filter="^.*/$1/.*\.h$" "$1"
-
-# some change
+# Only diagnose headers under the current package directory, so we don't pick up
+# findings from system headers, fbjni, react-native, hermes, etc.
+run-clang-tidy -quiet -p . -header-filter="^${PWD}/.*\.h$" .
