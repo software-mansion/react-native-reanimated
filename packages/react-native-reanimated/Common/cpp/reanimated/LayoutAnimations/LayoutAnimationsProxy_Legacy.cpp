@@ -275,7 +275,8 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
   for (auto &mutation : mutations) {
     maybeUpdateWindowDimensions(mutation, surfaceId);
 
-    const Tag tag = mutation.type == ShadowViewMutation::Type::Create || mutation.type == ShadowViewMutation::Type::Insert
+    const Tag tag =
+        mutation.type == ShadowViewMutation::Type::Create || mutation.type == ShadowViewMutation::Type::Insert
         ? mutation.newChildShadowView.tag
         : mutation.oldChildShadowView.tag;
 
