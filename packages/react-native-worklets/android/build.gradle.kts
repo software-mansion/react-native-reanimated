@@ -149,7 +149,7 @@ if (project == rootProject) {
 }
 
 apply(from = "./fix-prefab.gradle.kts")
-apply(from = "./generate-pch.gradle.kts")
+apply(from = "./generate-stub-pch.gradle.kts")
 
 android {
     compileSdk = safeExtGet("compileSdkVersion", 36) as Int
