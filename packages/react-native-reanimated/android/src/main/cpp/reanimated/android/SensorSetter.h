@@ -14,7 +14,7 @@ class SensorSetter : public HybridClass<SensorSetter> {
   static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/nativeProxy/SensorSetter;";
 
   void sensorSetter(jni::alias_ref<JArrayFloat> value, int orientationDegrees) {
-    size_t size = value->size();
+    const size_t size = value->size();
     auto elements = value->getRegion(0, size);
     double array[7];
     for (size_t i = 0; i < size; i++) {

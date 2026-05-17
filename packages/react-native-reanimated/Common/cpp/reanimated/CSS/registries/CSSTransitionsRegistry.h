@@ -40,14 +40,14 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
   void run(const std::shared_ptr<const ShadowNode> &shadowNode, const PropertyValueDynamicDiffsMap &propertyDiffs);
 
   void updateAndFlush(double timestamp, UpdatesBatch &updatesBatch) {
-    std::lock_guard<std::mutex> lock{mutex_};
+    const std::lock_guard<std::mutex> lock{mutex_};
     update(timestamp);
     flush(updatesBatch);
   }
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
   void updateAndFlush(facebook::react::AnimationTimestamp timestamp, UpdatesBatchAnimatedProps &updatesBatch) {
-    std::lock_guard<std::mutex> lock{mutex_};
+    const std::lock_guard<std::mutex> lock{mutex_};
     update(timestamp.count());
     flush(updatesBatch);
   }

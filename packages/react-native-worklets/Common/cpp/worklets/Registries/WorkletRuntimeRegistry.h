@@ -18,12 +18,12 @@ class WorkletRuntimeRegistry {
   WorkletRuntimeRegistry() {} // private ctor
 
   static void registerRuntime(jsi::Runtime &runtime) {
-    std::lock_guard<std::mutex> lock(mutex_);
+    const std::lock_guard<std::mutex> lock(mutex_);
     registry_.insert(&runtime);
   }
 
   static void unregisterRuntime(jsi::Runtime &runtime) {
-    std::lock_guard<std::mutex> lock(mutex_);
+    const std::lock_guard<std::mutex> lock(mutex_);
     registry_.erase(&runtime);
   }
 
@@ -32,7 +32,7 @@ class WorkletRuntimeRegistry {
  public:
   static bool isRuntimeAlive(jsi::Runtime *runtime) {
     react_native_assert(runtime != nullptr && "runtime is nullptr");
-    std::lock_guard<std::mutex> lock(mutex_);
+    const std::lock_guard<std::mutex> lock(mutex_);
     return registry_.find(runtime) != registry_.end();
   }
 };

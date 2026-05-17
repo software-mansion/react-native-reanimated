@@ -105,9 +105,11 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) const;
 
-  bool
-  handleEvent(const std::string &eventName, const int emitterReactTag, const jsi::Value &payload, double currentTime)
-      const;
+  bool handleEvent(
+      const std::string &eventName,
+      const int emitterReactTag,
+      const jsi::Value &payload,
+      double currentTime) const;
 
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
 

@@ -17,11 +17,11 @@ class EventHandler : public HybridClass<EventHandler> {
   static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/nativeProxy/EventHandler;";
 
   void receiveEvent(
-      jni::alias_ref<JString> eventKey,
+      const jni::alias_ref<JString> &eventKey,
       jint emitterReactTag,
-      jni::alias_ref<react::WritableMap> event,
+      const jni::alias_ref<react::WritableMap> &event,
       jboolean isInDrawPass) {
-    ReanimatedSystraceSection s("EventHandler::receiveEvent");
+    const ReanimatedSystraceSection s("EventHandler::receiveEvent");
     handler_(eventKey, emitterReactTag, event, isInDrawPass);
   }
 
