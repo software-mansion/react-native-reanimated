@@ -17,8 +17,8 @@ void RecordPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::
   // used (for now, for simplicity, we only add new ones)
   const jsi::Object keyframesObject = keyframes.asObject(rt);
 
-  jsi::Array propertyNames = keyframesObject.getPropertyNames(rt);
-  size_t propertiesCount = propertyNames.size(rt);
+  const jsi::Array propertyNames = keyframesObject.getPropertyNames(rt);
+  const size_t propertiesCount = propertyNames.size(rt);
 
   for (size_t i = 0; i < propertiesCount; ++i) {
     const std::string propertyName = propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);

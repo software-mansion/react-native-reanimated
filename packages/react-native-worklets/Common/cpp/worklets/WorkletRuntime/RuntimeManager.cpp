@@ -10,7 +10,7 @@
 namespace worklets {
 
 std::shared_ptr<WorkletRuntime> RuntimeManager::getRuntime(uint64_t runtimeId) {
-  std::shared_lock lock(weakRuntimesMutex_);
+  const std::shared_lock lock(weakRuntimesMutex_);
   if (weakRuntimes_.contains(runtimeId)) {
     return weakRuntimes_.at(runtimeId).lock();
   }
@@ -18,7 +18,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::getRuntime(uint64_t runtimeId) {
 }
 
 std::vector<std::shared_ptr<WorkletRuntime>> RuntimeManager::getAllRuntimes() {
-  std::shared_lock lock(weakRuntimesMutex_);
+  const std::shared_lock lock(weakRuntimesMutex_);
 
   std::vector<std::shared_ptr<WorkletRuntime>> runtimes;
   runtimes.reserve(weakRuntimes_.size());
@@ -77,8 +77,8 @@ uint64_t RuntimeManager::getNextRuntimeId() {
 }
 
 void RuntimeManager::registerRuntime(const uint64_t runtimeId, const std::shared_ptr<WorkletRuntime> &workletRuntime) {
-  std::unique_lock registrationLock(registrationMutex_);
-  std::unique_lock lock(weakRuntimesMutex_);
+  const std::lock_guard registrationLock(registrationMutex_);
+  const std::lock_guard lock(weakRuntimesMutex_);
   weakRuntimes_[runtimeId] = workletRuntime;
 }
 

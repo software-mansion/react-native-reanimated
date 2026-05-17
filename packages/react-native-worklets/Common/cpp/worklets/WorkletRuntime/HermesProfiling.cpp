@@ -13,7 +13,7 @@ static std::string generateUniqueProfilePath() {
   auto now = std::chrono::steady_clock::now().time_since_epoch().count();
   std::ostringstream oss;
   oss << "profile-" << now << ".cpuprofile";
-  std::filesystem::path dir = std::filesystem::temp_directory_path();
+  const std::filesystem::path dir = std::filesystem::temp_directory_path();
   return (dir / oss.str()).string();
 }
 

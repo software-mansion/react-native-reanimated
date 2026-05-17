@@ -76,7 +76,8 @@ void PropsDiffer::diffTransform(jsi::Runtime &rt) {
   if (sourceJsiOperations.size() == 1 && targetJsiOperations.size() == 1 &&
       sourceJsiOperations[0].currentValue.hasProperty(rt, "matrix") &&
       targetJsiOperations[0].currentValue.hasProperty(rt, "matrix")) {
-    jsi::Array sourceTransforms(rt, 1), targetTransforms(rt, 1);
+    const jsi::Array sourceTransforms(rt, 1);
+    const jsi::Array targetTransforms(rt, 1);
     sourceTransforms.setValueAtIndex(rt, 0, sourceJsiOperations[0].currentValue);
     targetTransforms.setValueAtIndex(rt, 0, targetJsiOperations[0].currentValue);
     sourceValues_.setProperty(rt, "transform", sourceTransforms);
@@ -84,14 +85,14 @@ void PropsDiffer::diffTransform(jsi::Runtime &rt) {
     return;
   }
 
-  jsi::Array sourceTransforms(rt, sourceJsiOperations.size() + targetJsiOperations.size());
-  jsi::Array targetTransforms(rt, sourceJsiOperations.size() + targetJsiOperations.size());
+  const jsi::Array sourceTransforms(rt, sourceJsiOperations.size() + targetJsiOperations.size());
+  const jsi::Array targetTransforms(rt, sourceJsiOperations.size() + targetJsiOperations.size());
   for (size_t i = 0; i < sourceJsiOperations.size(); i++) {
     sourceTransforms.setValueAtIndex(rt, i, sourceJsiOperations[i].currentValue);
     targetTransforms.setValueAtIndex(rt, i, sourceJsiOperations[i].defaultValue);
   }
   for (size_t i = 0; i < targetJsiOperations.size(); i++) {
-    size_t index = i + sourceJsiOperations.size();
+    const size_t index = i + sourceJsiOperations.size();
     sourceTransforms.setValueAtIndex(rt, index, targetJsiOperations[i].defaultValue);
     targetTransforms.setValueAtIndex(rt, index, targetJsiOperations[i].currentValue);
   }
@@ -106,7 +107,8 @@ std::vector<TransformOperationWithDefault> PropsDiffer::getTransformOperationsFr
   const auto &operations = props.transform.operations;
 
   if (operations.size() == 1 && operations[0].type == react::TransformOperationType::Arbitrary) {
-    jsi::Array currentMatrix(rt, 16), defaultMatrix(rt, 16);
+    const jsi::Array currentMatrix(rt, 16);
+    const jsi::Array defaultMatrix(rt, 16);
     for (int i = 0; i < 16; i++) {
       currentMatrix.setValueAtIndex(rt, i, props.transform.matrix[i]);
       defaultMatrix.setValueAtIndex(rt, i, i % 5 == 0 ? 1 : 0);
@@ -190,7 +192,7 @@ void PropsDiffer::addTransformOriginToDiff(
     const TransformOrigin &transformOrigin,
     jsi::Object &jsiValues,
     const ShadowView &view) {
-  jsi::Array transformOriginJsi(rt, 3);
+  const jsi::Array transformOriginJsi(rt, 3);
 
   if (transformOrigin.xy[0].unit == UnitType::Percent) {
     const float origin = view.layoutMetrics.frame.size.width * transformOrigin.xy[0].value / 100;
@@ -217,7 +219,8 @@ void PropsDiffer::diffShadow(jsi::Runtime &rt) {
 
   if (sourceBoxShadows.size() == targetBoxShadows.size()) {
     const size_t size = sourceBoxShadows.size();
-    jsi::Array sourceBoxShadowArray(rt, size), targetBoxShadowArray(rt, size);
+    const jsi::Array sourceBoxShadowArray(rt, size);
+    const jsi::Array targetBoxShadowArray(rt, size);
     for (int i = 0; i < size; i++) {
       sourceBoxShadowArray.setValueAtIndex(rt, i, sourceBoxShadows[i].currentValue);
       targetBoxShadowArray.setValueAtIndex(rt, i, targetBoxShadows[i].currentValue);
@@ -226,13 +229,14 @@ void PropsDiffer::diffShadow(jsi::Runtime &rt) {
     targetValues_.setProperty(rt, "boxShadow", targetBoxShadowArray);
   } else {
     const size_t size = sourceBoxShadows.size() + targetBoxShadows.size();
-    jsi::Array sourceBoxShadowArray(rt, size), targetBoxShadowArray(rt, size);
+    const jsi::Array sourceBoxShadowArray(rt, size);
+    const jsi::Array targetBoxShadowArray(rt, size);
     for (size_t i = 0; i < sourceBoxShadows.size(); i++) {
       sourceBoxShadowArray.setValueAtIndex(rt, i, sourceBoxShadows[i].currentValue);
       targetBoxShadowArray.setValueAtIndex(rt, i, sourceBoxShadows[i].defaultValue);
     }
     for (size_t i = 0; i < targetBoxShadows.size(); i++) {
-      size_t index = i + sourceBoxShadows.size();
+      const size_t index = i + sourceBoxShadows.size();
       sourceBoxShadowArray.setValueAtIndex(rt, index, targetBoxShadows[i].defaultValue);
       targetBoxShadowArray.setValueAtIndex(rt, index, targetBoxShadows[i].currentValue);
     }
@@ -245,7 +249,8 @@ void PropsDiffer::diffShadow(jsi::Runtime &rt) {
     targetValues_.setProperty(rt, "shadowColor", toString(targetViewProps_.shadowColor));
   }
   if (sourceViewProps_.shadowOffset != targetViewProps_.shadowOffset) {
-    jsi::Object sourceShadowOffset(rt), targetShadowOffset(rt);
+    const jsi::Object sourceShadowOffset(rt);
+    const jsi::Object targetShadowOffset(rt);
     sourceShadowOffset.setProperty(rt, "width", sourceViewProps_.shadowOffset.width);
     sourceShadowOffset.setProperty(rt, "height", sourceViewProps_.shadowOffset.height);
     targetShadowOffset.setProperty(rt, "width", targetViewProps_.shadowOffset.width);
@@ -348,7 +353,7 @@ void PropsDiffer::diffBorderRadius(
     const std::optional<react::ValueUnit> &targetValue,
     const char *name,
     jsi::Runtime &rt) {
-  ValueUnit defaultValue;
+  const ValueUnit defaultValue;
   const auto &source = sourceValue.value_or(defaultValue).value;
   const auto &target = targetValue.value_or(defaultValue).value;
   if (source == target) {
@@ -415,7 +420,7 @@ void PropsDiffer::diffBorderColors(
     const std::optional<react::SharedColor> &targetValue,
     const char *name,
     jsi::Runtime &rt) {
-  SharedColor defaultValue;
+  const SharedColor defaultValue;
   const auto &source = sourceValue.value_or(defaultValue);
   const auto &target = targetValue.value_or(defaultValue);
   if (source != target) {
@@ -440,7 +445,7 @@ void PropsDiffer::diffBorderColors(
 // I needed to manually apply a patch for unnecessary alpha channel
 // normalization.
 inline std::string PropsDiffer::toString(const SharedColor &value) {
-  ColorComponents components = colorComponentsFromColor(value);
+  const ColorComponents components = colorComponentsFromColor(value);
   std::array<char, 255> buffer{};
   std::snprintf(
       buffer.data(),

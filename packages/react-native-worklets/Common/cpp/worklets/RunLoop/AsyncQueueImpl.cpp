@@ -45,7 +45,7 @@ AsyncQueueImpl::AsyncQueueImpl(const std::string &name) : state_(std::make_share
 
 AsyncQueueImpl::~AsyncQueueImpl() {
   {
-    std::unique_lock<std::mutex> lock(state_->mutex);
+    const std::lock_guard<std::mutex> lock(state_->mutex);
     state_->running = false;
     state_->queue = {};
   }
@@ -54,7 +54,7 @@ AsyncQueueImpl::~AsyncQueueImpl() {
 
 void AsyncQueueImpl::push(std::function<void()> &&job) {
   {
-    std::unique_lock<std::mutex> lock(state_->mutex);
+    const std::lock_guard<std::mutex> lock(state_->mutex);
     state_->queue.emplace(job);
   }
   state_->cv.notify_one();

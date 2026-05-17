@@ -30,7 +30,7 @@ std::shared_ptr<FilterOperation> FilterOperation::fromJSIValue(jsi::Runtime &rt,
     throw std::invalid_argument("[Reanimated] FilterOperation must be an object.");
   }
 
-  jsi::Object obj = value.asObject(rt);
+  const jsi::Object obj = value.asObject(rt);
   auto propertyNames = obj.getPropertyNames(rt);
 
   if (propertyNames.size(rt) != 1) {
@@ -39,7 +39,7 @@ std::shared_ptr<FilterOperation> FilterOperation::fromJSIValue(jsi::Runtime &rt,
 
   const auto propertyName = propertyNames.getValueAtIndex(rt, 0).asString(rt).utf8(rt);
   const auto propertyValue = obj.getProperty(rt, jsi::PropNameID::forUtf8(rt, propertyName));
-  FilterOp operationType = getFilterOperationType(propertyName);
+  const FilterOp operationType = getFilterOperationType(propertyName);
 
   switch (operationType) {
     case FilterOp::Blur:
@@ -79,7 +79,7 @@ std::shared_ptr<FilterOperation> FilterOperation::fromDynamic(const folly::dynam
 
   auto propertyName = obj.items().begin()->first.getString();
   auto propertyValue = obj.items().begin()->second;
-  FilterOp operationType = getFilterOperationType(propertyName);
+  const FilterOp operationType = getFilterOperationType(propertyName);
 
   switch (operationType) {
     case FilterOp::Blur:

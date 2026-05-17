@@ -20,7 +20,7 @@ interpolateValue(double x, size_t leftIdx, const std::vector<double> &pointsX, c
 
 EasingFunction linear(const std::vector<double> &pointsX, const std::vector<double> &pointsY) {
   return [=](double x) {
-    size_t leftIdx = firstSmallerOrEqual(x, pointsX);
+    const size_t leftIdx = firstSmallerOrEqual(x, pointsX);
     return interpolateValue(x, leftIdx, pointsX, pointsY);
   };
 }

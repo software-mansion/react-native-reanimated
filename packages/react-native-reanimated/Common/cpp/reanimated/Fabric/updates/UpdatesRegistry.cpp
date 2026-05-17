@@ -12,12 +12,12 @@
 namespace reanimated {
 
 bool UpdatesRegistry::isEmpty() const {
-  std::lock_guard<std::mutex> lock{mutex_};
+  const std::lock_guard<std::mutex> lock{mutex_};
   return updatesRegistry_.empty();
 }
 
 folly::dynamic UpdatesRegistry::get(const Tag tag) const {
-  std::lock_guard<std::mutex> lock{mutex_};
+  const std::lock_guard<std::mutex> lock{mutex_};
 
   auto it = updatesRegistry_.find(tag);
   if (it == updatesRegistry_.cend()) {
@@ -49,7 +49,7 @@ void UpdatesRegistry::flush(UpdatesBatchAnimatedProps &updatesBatch) {
 }
 
 void UpdatesRegistry::flushNonLayoutUpdates(jsi::Runtime &rt, AnimationMutations &mutations) {
-  std::lock_guard<std::mutex> lock{mutex_};
+  const std::lock_guard<std::mutex> lock{mutex_};
 
   UpdatesBatchAnimatedProps remaining;
 
@@ -107,7 +107,7 @@ void UpdatesRegistry::flushNonLayoutUpdates(jsi::Runtime &rt, AnimationMutations
 }
 
 bool UpdatesRegistry::hasPendingAnimatedPropsUpdates() const {
-  std::lock_guard<std::mutex> lock{mutex_};
+  const std::lock_guard<std::mutex> lock{mutex_};
   return !updatesBatchAnimatedProps_.empty();
 }
 
@@ -146,7 +146,7 @@ void UpdatesRegistry::addJSIPropsToAnimatedPropsBatch(
 #endif
 
 UpdatesBatch UpdatesRegistry::getPendingUpdates() {
-  std::lock_guard<std::mutex> lock{mutex_};
+  const std::lock_guard<std::mutex> lock{mutex_};
   flushUpdatesToRegistry(updatesBatch_);
 
   UpdatesBatch updatesBatch;
@@ -158,7 +158,7 @@ UpdatesBatch UpdatesRegistry::getPendingUpdates() {
 }
 
 void UpdatesRegistry::collectProps(PropsMap &propsMap) {
-  std::lock_guard<std::mutex> lock{mutex_};
+  const std::lock_guard<std::mutex> lock{mutex_};
 
   auto copiedRegistry = updatesRegistry_;
   for (const auto &[tag, pair] : copiedRegistry) {
@@ -220,12 +220,12 @@ void UpdatesRegistry::flushUpdatesToRegistry(const UpdatesBatch &updatesBatch) {
 #ifdef ANDROID
 
 bool UpdatesRegistry::hasPropsToRevert() const {
-  std::lock_guard<std::mutex> lock{mutex_};
+  const std::lock_guard<std::mutex> lock{mutex_};
   return !propsToRevertMap_.empty();
 }
 
 void UpdatesRegistry::collectPropsToRevert(PropsToRevertMap &propsToRevertMap) {
-  std::lock_guard<std::mutex> lock{mutex_};
+  const std::lock_guard<std::mutex> lock{mutex_};
 
   for (const auto &[tag, pair] : propsToRevertMap_) {
     const auto &[shadowNodeFamily, props] = pair;

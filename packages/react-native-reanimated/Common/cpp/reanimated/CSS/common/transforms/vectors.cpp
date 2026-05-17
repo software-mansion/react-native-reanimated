@@ -32,9 +32,9 @@ double Vector2D::length() const {
 }
 
 void Vector2D::scaleToLength(double targetLength) {
-  double currentLength = length();
+  const double currentLength = length();
   if (currentLength != 0) {
-    double factor = targetLength / currentLength;
+    const double factor = targetLength / currentLength;
     vec[0] *= factor;
     vec[1] *= factor;
   }
@@ -91,9 +91,9 @@ double Vector3D::length() const {
 }
 
 void Vector3D::scaleToLength(double targetLength) {
-  double currentLength = length();
+  const double currentLength = length();
   if (currentLength != 0) {
-    double factor = targetLength / currentLength;
+    const double factor = targetLength / currentLength;
     vec[0] *= factor;
     vec[1] *= factor;
     vec[2] *= factor;

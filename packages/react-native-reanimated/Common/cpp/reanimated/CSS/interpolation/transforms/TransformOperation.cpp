@@ -51,7 +51,7 @@ std::shared_ptr<TransformOperation> TransformOperation::fromJSIValue(jsi::Runtim
     throw std::invalid_argument("[Reanimated] TransformOperation must be an object.");
   }
 
-  jsi::Object obj = value.asObject(rt);
+  const jsi::Object obj = value.asObject(rt);
   auto propertyNames = obj.getPropertyNames(rt);
 
   if (propertyNames.size(rt) != 1) {

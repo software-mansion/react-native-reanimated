@@ -71,7 +71,7 @@ std::string PropValueProcessor::processStyleProp(
   } else if (propName == "backgroundColor") {
     return intColorToHex(*viewProps->backgroundColor);
   } else if (propName == "boxShadow") {
-    jsi::Array result = jsi::Array(rt, viewProps->boxShadow.size());
+    const jsi::Array result = jsi::Array(rt, viewProps->boxShadow.size());
     for (size_t i = 0; i < viewProps->boxShadow.size(); i++) {
       result.setValueAtIndex(rt, i, boxShadowPreprocessing(viewProps->boxShadow[i], rt));
     }

@@ -241,7 +241,7 @@ void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
 
 double NativeProxy::getAnimationTimestamp() {
   static const auto method = getJniMethod<jlong()>("getAnimationTimestamp");
-  jlong output = method(javaPart_.get());
+  const jlong output = method(javaPart_.get());
   return static_cast<double>(output);
 }
 

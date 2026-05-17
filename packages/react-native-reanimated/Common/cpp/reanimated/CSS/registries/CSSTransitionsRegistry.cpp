@@ -13,14 +13,14 @@ CSSTransitionsRegistry::CSSTransitionsRegistry(
     : getCurrentTimestamp_(getCurrentTimestamp), viewStylesRepository_(viewStylesRepository) {}
 
 bool CSSTransitionsRegistry::isEmpty() const {
-  std::lock_guard<std::mutex> lock{mutex_};
+  const std::lock_guard<std::mutex> lock{mutex_};
   // The registry is empty if has no registered animations and no updates
   // stored in the updates registry
   return updatesRegistry_.empty() && registry_.empty();
 }
 
 bool CSSTransitionsRegistry::hasUpdates() const {
-  std::lock_guard<std::mutex> lock{mutex_};
+  const std::lock_guard<std::mutex> lock{mutex_};
   return !runningTransitionTags_.empty() || !delayedTransitionsManager_.empty();
 }
 
@@ -28,7 +28,7 @@ void CSSTransitionsRegistry::updateConfigOrRun(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const CSSTransitionConfig &config) {
-  std::lock_guard<std::mutex> lock{mutex_};
+  const std::lock_guard<std::mutex> lock{mutex_};
 
   const auto viewTag = shadowNode->getTag();
 
@@ -52,7 +52,7 @@ void CSSTransitionsRegistry::run(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const PropertyValueDiffsMap &propertyDiffs) {
-  std::lock_guard<std::mutex> lock{mutex_};
+  const std::lock_guard<std::mutex> lock{mutex_};
 
   const auto viewTag = shadowNode->getTag();
   const auto &transition = registry_.at(viewTag);
@@ -63,7 +63,7 @@ void CSSTransitionsRegistry::run(
 void CSSTransitionsRegistry::run(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const PropertyValueDynamicDiffsMap &propertyDiffs) {
-  std::lock_guard<std::mutex> lock{mutex_};
+  const std::lock_guard<std::mutex> lock{mutex_};
 
   const auto viewTag = shadowNode->getTag();
   const auto &transition = registry_.at(viewTag);

@@ -16,7 +16,7 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
 void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operations, const double timestamp) {
   auto operationsArray = operations.asObject(rt).asArray(rt);
 
-  std::lock_guard<std::mutex> lock{mutex_};
+  const std::lock_guard<std::mutex> lock{mutex_};
   for (size_t i = 0, length = operationsArray.size(rt); i < length; ++i) {
     auto item = operationsArray.getValueAtIndex(rt, i).asObject(rt);
     auto shadowNodeWrapper = item.getProperty(rt, "shadowNodeWrapper");
@@ -42,7 +42,7 @@ jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(
     jsi::Runtime &rt,
     const double timestamp,
     const double cleanupTimestamp) {
-  std::lock_guard<std::mutex> lock{mutex_};
+  const std::lock_guard<std::mutex> lock{mutex_};
   removeUpdatesOlderThanTimestamp(cleanupTimestamp);
 
   std::vector<std::pair<Tag, std::reference_wrapper<const folly::dynamic>>> updates;

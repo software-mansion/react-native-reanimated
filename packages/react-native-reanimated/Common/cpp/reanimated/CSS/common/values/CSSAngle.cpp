@@ -20,14 +20,14 @@ CSSAngle::CSSAngle(const std::string &rotationString) {
 
   // Find position of the first non-numeric character (first character
   // of the unit, e.g. "deg" or "rad")
-  size_t pos = rotationString.find_first_not_of("0123456789.-+");
+  const size_t pos = rotationString.find_first_not_of("0123456789.-+");
 
   if (pos == std::string::npos) {
     throw std::invalid_argument("[Reanimated] CSSAngle: Invalid angle value: " + rotationString);
   }
 
-  std::string numericPart = rotationString.substr(0, pos);
-  std::string unitPart = rotationString.substr(pos);
+  const std::string numericPart = rotationString.substr(0, pos);
+  const std::string unitPart = rotationString.substr(pos);
 
   if (!std::regex_match(numericPart, validNumberRegex)) {
     throw std::invalid_argument("[Reanimated] CSSAngle: Invalid angle value: " + rotationString);
@@ -39,7 +39,7 @@ CSSAngle::CSSAngle(const std::string &rotationString) {
     throw std::invalid_argument("[Reanimated] CSSAngle: Invalid angle unit: " + unitPart);
   }
 
-  double numericValue = std::stod(numericPart);
+  const double numericValue = std::stod(numericPart);
 
   this->value = numericValue * it->second;
 }
