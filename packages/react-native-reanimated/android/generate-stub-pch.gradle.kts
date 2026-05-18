@@ -1,12 +1,15 @@
 import groovy.json.JsonSlurper
 
-// Workaround for Android Studio's Gradle Sync failing when CMake's precompiled
-// headers (ReanimatedPCH.h) haven't been built yet. See the underlying issue:
-// https://issuetracker.google.com/issues/187448826
+// Workaround for Android Studio's C++ analyzer surfacing errors during Gradle
+// Sync when CMake's precompiled header binary (`cmake_pch.hxx.pch`, generated
+// from `ReanimatedPCH.h`) hasn't been built yet. The project compiles fine,
+// but on a clean sync the IDE can't index sources without the PCH binary. See
+// the underlying issue: https://issuetracker.google.com/issues/187448826
 
-// Generates minimal stub PCH files from an empty header so the IDE's C++ engine
-// doesn't fail during sync. The actual build regenerates proper PCH files via
-// ninja because we set the stub PCH's mtime older than its source.
+// Generates minimal stub `.pch` files from an empty header so the IDE's C++
+// engine doesn't fail during sync. The actual build regenerates the real PCH
+// files via ninja because we set each stub PCH's mtime older than its source
+// (`cmake_pch.hxx.cxx`).
 
 // Adapted from Expo's PR: https://github.com/expo/expo/pull/45921
 
