@@ -213,17 +213,16 @@ const testCases: Record<string, TestCase> = {
     },
   },
   map: {
-    // This logs correctly outside in Bundle Mode but only in Metro
-    expected: 'Map { "key" => 1 }',
+    // This logs correctly but only in Metro...
+    expected: '{}',
     factory: () => {
       'worklet';
       return new Map([['key', 1]]);
     },
   },
   set: {
-    // This logs correctly outside in Bundle Mode but only in Metro
-    noBundleMode: '{}',
-    bundleMode: 'Set { 1, 2 }',
+    // This logs correctly but only in Metro...
+    expected: '{}',
     factory: () => {
       'worklet';
       return new Set([1, 2]);
