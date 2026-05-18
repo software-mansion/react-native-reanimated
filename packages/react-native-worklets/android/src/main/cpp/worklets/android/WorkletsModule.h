@@ -10,6 +10,7 @@
 #include <worklets/android/AndroidUIScheduler.h>
 #include <worklets/android/JScriptBufferWrapper.h>
 
+#include <atomic>
 #include <memory>
 #include <string>
 
@@ -65,6 +66,10 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
   std::function<bool()> getIsOnJSQueueThread();
 
   friend HybridBase;
+  // Shared with every binding lambda captured into RuntimeBindings. Flipped
+  // to false in `invalidateCpp` so lambdas that fire on worklet runtimes
+  // after teardown skip the JNI call.
+  std::shared_ptr<std::atomic<bool>> alive_;
   jni::global_ref<WorkletsModule::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;

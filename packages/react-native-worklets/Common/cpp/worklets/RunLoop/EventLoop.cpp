@@ -1,5 +1,9 @@
 #include <worklets/RunLoop/EventLoop.h>
 
+#ifdef ANDROID
+#include <fbjni/fbjni.h>
+#endif // ANDROID
+
 #include <memory>
 #include <string>
 #include <thread>
@@ -29,45 +33,54 @@ void EventLoop::run() {
 #if __APPLE__
     pthread_setname_np(threadName.c_str());
 #endif
-    while (state->running) {
-      std::unique_lock<std::mutex> lock(state->mutex);
 
-      if (state->queue.empty()) {
-        state->cv.wait(lock);
-      } else {
-        const auto &nextTimeout = state->queue[0];
-        const auto timeToWait = nextTimeout.targetTime - getCurrentTimeInMs();
-        state->cv.wait_for(lock, std::chrono::milliseconds(timeToWait));
-      }
+    auto runLoop = [&] {
+      while (state->running) {
+        std::unique_lock<std::mutex> lock(state->mutex);
 
-      // Early return if the Event Loop got destroyed already.
-      if (!state->running) {
-        return;
-      }
+        if (state->queue.empty()) {
+          state->cv.wait(lock);
+        } else {
+          const auto &nextTimeout = state->queue[0];
+          const auto timeToWait = nextTimeout.targetTime - getCurrentTimeInMs();
+          state->cv.wait_for(lock, std::chrono::milliseconds(timeToWait));
+        }
 
-      const auto currentTime = getCurrentTimeInMs();
-      std::vector<std::function<void(jsi::Runtime & rt)>> jobs;
-      auto &timeouts = state->queue;
-      timeouts.erase(
-          std::remove_if(
-              timeouts.begin(),
-              timeouts.end(),
-              [currentTime, &jobs](const Timeout &timeout) {
-                if (currentTime >= timeout.targetTime) {
-                  jobs.emplace_back(timeout.callback);
-                  return true;
-                }
-                return false;
-              }),
-          timeouts.end());
-      lock.unlock();
+        // Early return if the Event Loop got destroyed already.
+        if (!state->running) {
+          return;
+        }
 
-      if (auto strongThis = weakThis.lock()) {
-        for (auto &job : jobs) {
-          strongThis->pushTask(std::move(job));
+        const auto currentTime = getCurrentTimeInMs();
+        std::vector<std::function<void(jsi::Runtime & rt)>> jobs;
+        auto &timeouts = state->queue;
+        timeouts.erase(
+            std::remove_if(
+                timeouts.begin(),
+                timeouts.end(),
+                [currentTime, &jobs](const Timeout &timeout) {
+                  if (currentTime >= timeout.targetTime) {
+                    jobs.emplace_back(timeout.callback);
+                    return true;
+                  }
+                  return false;
+                }),
+            timeouts.end());
+        lock.unlock();
+
+        if (auto strongThis = weakThis.lock()) {
+          for (auto &job : jobs) {
+            strongThis->pushTask(std::move(job));
+          }
         }
       }
-    }
+    };
+
+#ifdef ANDROID
+    facebook::jni::ThreadScope::WithClassLoader(runLoop);
+#else
+    runLoop();
+#endif // ANDROID
   });
 #ifdef ANDROID
   pthread_setname_np(thread.native_handle(), threadName.c_str());

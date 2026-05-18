@@ -14,7 +14,10 @@ class AndroidUIScheduler(
     @field:DoNotStrip
     private val mHybridData: HybridData = initHybrid()
 
-    private val mContext: ReactApplicationContext = context
+    // Capture the exception handler at construction so that scheduleTriggerOnUI
+    // (invoked from C++) cannot NPE if the React context has already been
+    // invalidated by the time the call reaches Kotlin.
+    private val mExceptionHandler = context.exceptionHandler
     private val mActive = AtomicBoolean(true)
 
     private val mUIThreadRunnable =
@@ -39,7 +42,7 @@ class AndroidUIScheduler(
     @Suppress("unused")
     private fun scheduleTriggerOnUI() {
         UiThreadUtil.runOnUiThread(
-            object : GuardedRunnable(mContext.exceptionHandler) {
+            object : GuardedRunnable(mExceptionHandler) {
                 override fun runGuarded() {
                     mUIThreadRunnable.run()
                 }

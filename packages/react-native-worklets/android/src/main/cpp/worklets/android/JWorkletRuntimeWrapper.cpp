@@ -42,7 +42,6 @@ int JWorkletRuntimeWrapper::cxxGetRuntimeId() {
 }
 
 void JWorkletRuntimeWrapper::registerNatives() {
-  javaClassStatic()->registerNatives({});
   registerHybrid(
       {makeNativeMethod("cxxEmitDeviceEvent", JWorkletRuntimeWrapper::cxxEmitDeviceEvent),
        makeNativeMethod("cxxGetRuntimeId", JWorkletRuntimeWrapper::cxxGetRuntimeId)});
