@@ -222,6 +222,8 @@ jsi::Value SerializableError::toJSValue(jsi::Runtime &rt) {
 
   if (stack_.has_value()) {
     error.setProperty(rt, "stack", jsi::String::createFromUtf8(rt, stack_.value()));
+  } else {
+    error.setProperty(rt, "stack", jsi::String::createFromUtf8(rt, ""));
   }
 
   return error;
