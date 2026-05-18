@@ -198,7 +198,7 @@ const testCases: Record<string, TestCase> = {
   },
   error: {
     bundleMode: '[Error: oops]',
-    noBundleMode: '{}',
+    noBundleMode: "{ [Error: oops] name: 'Error' }",
     factory: () => {
       'worklet';
       return new Error('oops');
@@ -206,21 +206,24 @@ const testCases: Record<string, TestCase> = {
   },
   rangeError: {
     bundleMode: '[RangeError: out of range]',
-    noBundleMode: '{}',
+    noBundleMode: "{ [RangeError: out of range] name: 'RangeError' }",
     factory: () => {
       'worklet';
       return new RangeError('out of range');
     },
   },
   map: {
-    expected: '{}',
+    // This logs correctly outside in Bundle Mode but only in Metro
+    expected: 'Map { "key" => 1 }',
     factory: () => {
       'worklet';
       return new Map([['key', 1]]);
     },
   },
   set: {
-    expected: '{}',
+    // This logs correctly outside in Bundle Mode but only in Metro
+    noBundleMode: '{}',
+    bundleMode: 'Set { 1, 2 }',
     factory: () => {
       'worklet';
       return new Set([1, 2]);

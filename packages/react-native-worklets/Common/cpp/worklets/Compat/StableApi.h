@@ -52,7 +52,8 @@ class Serializable {
     SynchronizableType,
     CustomType,
     SymbolType, /* unused */
-    ShareableType
+    ShareableType,
+    ErrorType,
   };
 
   explicit Serializable(ValueType valueType) : valueType_(valueType) {}

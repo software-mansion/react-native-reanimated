@@ -76,6 +76,12 @@ export interface WorkletsModuleProxy {
     values: TValues[]
   ): SerializableRef<Set<TValues>>;
 
+  createSerializableError(
+    name: string,
+    message: string,
+    stack: string | undefined
+  ): SerializableRef<Error>;
+
   createSerializableInitializer(obj: object): SerializableRef<object>;
 
   createSerializableFunction<TArgs extends unknown[], TReturn>(

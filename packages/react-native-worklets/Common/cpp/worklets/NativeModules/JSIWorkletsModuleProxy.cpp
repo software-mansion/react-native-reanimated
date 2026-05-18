@@ -372,6 +372,15 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         return makeSerializableSet(rt, at<0>(args).asObject(rt).asArray(rt));
       });
 
+  jsi_utils::addMethod<3>(
+      rt, obj, "createSerializableError", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+        return makeSerializableError(
+            rt,
+            at<0>(args).getString(rt).utf8(rt),
+            at<1>(args).getString(rt).utf8(rt),
+            at<2>(args).isString() ? std::optional<std::string>(at<2>(args).getString(rt).utf8(rt)) : std::nullopt);
+      });
+
   jsi_utils::addMethod<2>(
       rt, obj, "createSerializableWorklet", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         return makeSerializableWorklet(rt, at<0>(args).getObject(rt), at<1>(args).getBool());

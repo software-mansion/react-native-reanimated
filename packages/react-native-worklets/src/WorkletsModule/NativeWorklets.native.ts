@@ -152,6 +152,18 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.createSerializableSet(values);
   }
 
+  createSerializableError(
+    name: string,
+    message: string,
+    stack: string
+  ): SerializableRef<Error> {
+    return this.#workletsModuleProxy.createSerializableError(
+      name,
+      message,
+      stack
+    );
+  }
+
   createSerializableInitializer(obj: object) {
     return this.#workletsModuleProxy.createSerializableInitializer(obj);
   }

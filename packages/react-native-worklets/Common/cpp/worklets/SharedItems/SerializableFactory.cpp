@@ -81,6 +81,15 @@ jsi::Value makeSerializableSet(jsi::Runtime &rt, const jsi::Array &values) {
   return SerializableJSRef::newNativeStateObject(rt, serializable);
 }
 
+jsi::Value makeSerializableError(
+    jsi::Runtime &rt,
+    const std::string &name,
+    const std::string &message,
+    const std::optional<std::string> &stack) {
+  auto serializable = std::make_shared<SerializableError>(name, message, stack);
+  return SerializableJSRef::newNativeStateObject(rt, serializable);
+}
+
 jsi::Value makeSerializableHostObject(jsi::Runtime &rt, const std::shared_ptr<jsi::HostObject> &value) {
   const auto serializable = std::make_shared<SerializableHostObject>(rt, value);
   return SerializableJSRef::newNativeStateObject(rt, serializable);

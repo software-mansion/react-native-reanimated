@@ -317,11 +317,46 @@ describe('Test createSerializable', () => {
 
         test('createSerializableError', async () => {
           const errorValue = new Error('test');
+          const originalStack = errorValue.stack;
           schedule(() => {
             'worklet';
             const checks = [
               errorValue instanceof Error,
+              errorValue.name === 'Error',
+              errorValue.message === 'test',
+              errorValue.stack === originalStack,
               String(errorValue).includes('test'),
+            ];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
+
+        test('createSerializableError preserves custom name', async () => {
+          const errorValue = new Error('boom');
+          errorValue.name = 'CustomError';
+          schedule(() => {
+            'worklet';
+            const checks = [
+              errorValue instanceof Error,
+              errorValue.name === 'CustomError',
+              errorValue.message === 'boom',
+            ];
+            scheduleOnRN(callbackPass, checks.every(Boolean));
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        });
+
+        test('createSerializableError from Error subclass', async () => {
+          const errorValue = new TypeError('bad type');
+          schedule(() => {
+            'worklet';
+            const checks = [
+              errorValue instanceof Error,
+              errorValue.name === 'TypeError',
+              errorValue.message === 'bad type',
             ];
             scheduleOnRN(callbackPass, checks.every(Boolean));
           });
@@ -582,7 +617,7 @@ describe('Test createSerializable', () => {
             'Tried to synchronously call a Remote Function'
           );
           expect(errorMessage).toInclude(
-            `Called "anonymous" on the ${schedulingFunctionName === 'toUIRuntime' ? 'UI' : 'testRuntime'} Runtime`
+            `Called "anonymous" on the ${schedulingFunctionName === 'toUIRuntime' ? 'UI' : 'test'} Runtime`
           );
         });
       });
