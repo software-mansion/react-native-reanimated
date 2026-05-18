@@ -133,6 +133,8 @@ if (project == rootProject) {
     }
 }
 
+apply(from = "./generate-stub-pch.gradle.kts")
+
 android {
     compileSdk = safeExtGet("compileSdkVersion", 36) as Int
 

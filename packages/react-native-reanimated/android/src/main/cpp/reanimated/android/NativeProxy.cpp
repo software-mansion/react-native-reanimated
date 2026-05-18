@@ -1,6 +1,7 @@
 #include <react/fabric/Binding.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
+#include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/ReanimatedVersion.h>
 #include <reanimated/android/AnimationFrameCallback.h>
@@ -124,7 +125,12 @@ bool NativeProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, cons
 }
 
 void NativeProxy::performOperations() {
-  reanimatedModuleProxy_->performOperations();
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    // We don't use performOperations in the backend path,
+    // but we don't have access to the feature flags in Kotlin, so we gate it here
+  } else {
+    reanimatedModuleProxy_->performOperations();
+  }
 }
 
 void NativeProxy::performNonLayoutOperations() {
@@ -242,7 +248,8 @@ double NativeProxy::getAnimationTimestamp() {
 void NativeProxy::handleEvent(
     jni::alias_ref<JString> eventName,
     jint emitterReactTag,
-    jni::alias_ref<react::WritableMap> event) {
+    jni::alias_ref<react::WritableMap> event,
+    jboolean isInDrawPass) {
   // handles RCTEvents from RNGestureHandler
   if (event.get() == nullptr) {
     // Ignore events with null payload.
@@ -273,7 +280,15 @@ void NativeProxy::handleEvent(
     return;
   }
 
-  reanimatedModuleProxy_->handleEvent(eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    reanimatedModuleProxy_->handleEventAndFlush(
+        eventName->toString(),
+        emitterReactTag,
+        payload,
+        isInDrawPass ? GrandCallbackSource::EventInAndroidDraw : GrandCallbackSource::Event);
+  } else {
+    reanimatedModuleProxy_->handleEvent(eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
+  }
 }
 
 PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {

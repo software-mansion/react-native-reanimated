@@ -80,8 +80,7 @@ export function createWorkletRuntime(
 
   let name: string;
   let initializerFn: (() => void) | undefined;
-  let useDefaultQueue = true;
-  let customQueue: object | undefined;
+  let queue: 'default' | object | null = 'default';
   let animationQueuePollingRate: number;
   let enableEventLoop = true;
   if (typeof nameOrConfig === 'string') {
@@ -91,13 +90,20 @@ export function createWorkletRuntime(
     // TODO: Make anonymous name globally unique.
     name = nameOrConfig?.name ?? 'anonymous';
     initializerFn = nameOrConfig?.initializer;
-    useDefaultQueue = nameOrConfig?.useDefaultQueue ?? true;
-    customQueue = nameOrConfig?.customQueue;
+    if (nameOrConfig?.queue !== undefined) {
+      queue = nameOrConfig.queue;
+    } else if (nameOrConfig?.useDefaultQueue === false) {
+      queue = nameOrConfig.customQueue ?? null;
+    }
     animationQueuePollingRate = Math.round(
       nameOrConfig?.animationQueuePollingRate ?? 16
     );
     enableEventLoop = nameOrConfig?.enableEventLoop ?? true;
   }
+
+  const useDefaultQueue = queue === 'default';
+  const customQueue =
+    typeof queue === 'object' && queue !== null ? queue : undefined;
 
   if (initializerFn && !isWorkletFunction(initializerFn)) {
     throw new Error(
@@ -474,6 +480,77 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
   });
 }
 
+/**
+ * Lets you asynchronously run a
+ * [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)
+ * on a [Worker
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime)
+ * identified by the runtime's id and get the result via a Promise.
+ *
+ * - The worklet is scheduled on the target Runtime's Async Queue
+ * - Returns a Promise that resolves with the worklet's return value
+ * - You can target the UI Runtime with this function by passing
+ *   {@link UIRuntimeId} as the `runtimeId` argument.
+ *
+ * @param runtimeId - The id of the runtime to run the worklet on.
+ * @param worklet - The worklet to run.
+ * @param args - The arguments to pass to the worklet.
+ * @returns A Promise that resolves to the return value of the worklet.
+ * @throws If called from a runtime other than the [RN
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
+ */
+// @ts-expect-error This overload is correct since it's what user sees in their code
+// before it's transformed by Worklets Babel plugin.
+export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): Promise<ReturnValue>;
+
+export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: WorkletFunction<Args, ReturnValue>,
+  ...args: Args
+): Promise<ReturnValue> {
+  if (__DEV__) {
+    if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
+      throw new Error(
+        '[Worklets] `runOnRuntimeAsyncWithId` can only be called on the RN Runtime.'
+      );
+    }
+    if (!isWorkletFunction(worklet)) {
+      throw new Error(
+        '[Worklets] The function passed to `runOnRuntimeAsyncWithId` is not a worklet.'
+      );
+    }
+  }
+
+  const scheduleStack = SHOULD_CAPTURE_SCHEDULE_STACK
+    ? new Error().stack
+    : undefined;
+  return new Promise<ReturnValue>((resolve, reject) => {
+    if (__DEV__) {
+      createSerializable(worklet);
+      createSerializable(args);
+    }
+
+    WorkletsModule.scheduleOnRuntimeWithId(
+      runtimeId,
+      createSerializable(() => {
+        'worklet';
+        try {
+          const result = worklet(...args);
+          scheduleOnRN(resolve, result);
+        } catch (error) {
+          scheduleOnRN(reject, error);
+        }
+        globalThis.__callMicrotasks?.();
+      }),
+      scheduleStack
+    );
+  });
+}
+
 if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
   /**
    * QoL guards to give a meaningful error message when the user tries to call
@@ -482,6 +559,10 @@ if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
   addGuardImplementation(
     runOnRuntimeAsync,
     '`runOnRuntimeAsync` can only be called on the RN Runtime.'
+  );
+  addGuardImplementation(
+    runOnRuntimeAsyncWithId,
+    '`runOnRuntimeAsyncWithId` can only be called on the RN Runtime.'
   );
   addNoBundleModeGuardImplementation(runOnRuntimeSync);
   addNoBundleModeGuardImplementation(runOnRuntimeSyncWithId);
