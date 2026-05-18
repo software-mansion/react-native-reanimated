@@ -158,7 +158,6 @@ void NativeProxy::registerNatives() {
 }
 
 void NativeProxy::requestRender(std::function<void(double)> onRender) {
-  // Module might be already destroyed.
   if (!javaPart_) {
     return;
   }
@@ -187,7 +186,6 @@ std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(std::vect
     return {};
   }
 
-  // Module might be already destroyed.
   if (!javaPart_) {
     return {};
   }
@@ -207,7 +205,6 @@ std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(std::vect
 void NativeProxy::synchronouslyUpdateUIProps(
     const std::vector<int> &intBuffer,
     const std::vector<double> &doubleBuffer) {
-  // Module might be already destroyed.
   if (!javaPart_) {
     return;
   }
@@ -342,13 +339,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 void NativeProxy::invalidateCpp() {
   uiRuntime_.reset();
   // cleanup all animated sensors here, since the next line resets
-  // the pointer and it will be too late after it. cleanupSensors() itself
-  // calls back into Java via unregisterSensor, so javaPart_ must still be valid.
+  // the pointer and it will be too late after it
   reanimatedModuleProxy_->cleanupSensors();
-  // Release the Java side before destroying the C++ proxy so that any in-flight
-  // callback from the UI thread (e.g. a Choreographer-driven CSS frame holding
-  // a locked weak_from_this) short-circuits in the javaPart_ null guards
-  // instead of trying to call into Java while teardown is mid-flight.
   javaPart_ = nullptr;
   reanimatedModuleProxy_.reset();
 }
