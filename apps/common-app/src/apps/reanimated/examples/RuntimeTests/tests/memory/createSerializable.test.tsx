@@ -582,7 +582,7 @@ describe('Test createSerializable', () => {
             'Tried to synchronously call a Remote Function'
           );
           expect(errorMessage).toInclude(
-            `Called "anonymous" on the ${schedulingFunctionName === 'toUIRuntime' ? 'UI' : 'testRuntime'} Runtime`
+            `Called "anonymous" on the ${schedulingFunctionName === 'toUIRuntime' ? 'UI' : 'test'} Runtime`
           );
         });
       });
