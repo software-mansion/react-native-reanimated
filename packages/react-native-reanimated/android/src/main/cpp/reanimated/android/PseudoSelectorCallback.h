@@ -7,7 +7,6 @@
 
 namespace reanimated {
 
-using namespace facebook;
 using namespace facebook::jni;
 
 class PseudoSelectorCallback : public HybridClass<PseudoSelectorCallback> {
