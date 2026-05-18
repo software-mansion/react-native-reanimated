@@ -83,7 +83,7 @@ std::shared_ptr<Serializable> extractSerializable(
     case Serializable::ValueType::SymbolType:
       throw std::runtime_error("[Worklets] Not implemented.");
     case Serializable::ValueType::ShareableType:
-      throw extractSerializableOrThrow<Shareable>(rt, value, errorMessage);
+      return extractSerializableOrThrow<Shareable>(rt, value, errorMessage);
     case Serializable::ValueType::ErrorType:
       return extractSerializableOrThrow<SerializableError>(rt, value, errorMessage);
     default:

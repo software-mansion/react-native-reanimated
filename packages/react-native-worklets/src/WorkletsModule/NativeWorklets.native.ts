@@ -155,7 +155,7 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   createSerializableError(
     name: string,
     message: string,
-    stack: string
+    stack: string | undefined
   ): SerializableRef<Error> {
     return this.#workletsModuleProxy.createSerializableError(
       name,

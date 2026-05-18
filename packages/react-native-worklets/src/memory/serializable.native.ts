@@ -221,7 +221,7 @@ export function createSerializable<TValue>(
     return cloneMap(value) as SerializableRef<TValue>;
   }
   if (value instanceof RegExp) {
-    return cloneRegExp(value);
+    return cloneRegExp(value) as SerializableRef<TValue>;
   }
   if (value instanceof Error) {
     return cloneError(value) as SerializableRef<TValue>;
@@ -594,9 +594,7 @@ function cloneSet(value: Set<unknown>): SerializableRef<Set<unknown>> {
   return clone;
 }
 
-function cloneRegExp<TValue extends RegExp>(
-  value: TValue
-): SerializableRef<TValue> {
+function cloneRegExp(value: RegExp): SerializableRef<RegExp> {
   const pattern = value.source;
   const flags = value.flags;
   const handle = cloneInitializer({
@@ -604,7 +602,7 @@ function cloneRegExp<TValue extends RegExp>(
       'worklet';
       return new RegExp(pattern, flags);
     },
-  }) as unknown as SerializableRef<TValue>;
+  }) as SerializableRef<RegExp>;
   serializableMappingCache.set(value, handle);
 
   return handle;
@@ -816,20 +814,19 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
           stack
         ) as FlatSerializableRef<TValue>;
       }
+      if (value instanceof Map) {
+        const keys: unknown[] = [];
+        const values: unknown[] = [];
+        value.forEach((element, key) => {
+          keys.push(cloneRecursive(key));
+          values.push(cloneRecursive(element));
+        });
+        return globalThis.__workletsModuleProxy.createSerializableMap(
+          keys,
+          values
+        ) as FlatSerializableRef<TValue>;
+      }
       if (Object.getPrototypeOf(value) !== Object.prototype) {
-        if (value instanceof Map) {
-          const keys: unknown[] = [];
-          const values: unknown[] = [];
-          value.forEach((element, key) => {
-            keys.push(cloneRecursive(key));
-            values.push(cloneRecursive(element));
-          });
-          return globalThis.__workletsModuleProxy.createSerializableMap(
-            keys,
-            values
-          ) as FlatSerializableRef<TValue>;
-        }
-
         const length = globalThis.__customSerializationRegistry.length;
         for (let i = 0; i < length; i++) {
           const { determine, pack } =
