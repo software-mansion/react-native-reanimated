@@ -99,7 +99,8 @@ jsi::Value makeSerializableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
     const jsi::Value &shouldRetainRemote,
-    const jsi::Value &nativeStateSource);
+    const jsi::Value &nativeStateSource,
+    const RuntimeData::RuntimeId hostRuntimeId);
 
 [[nodiscard]]
 std::shared_ptr<Serializable> extractSerializableOrThrow(
@@ -252,6 +253,9 @@ class SerializableImport : public Serializable {
   const std::string imported_;
 };
 
+/** Forward declaration */
+class RuntimeManager;
+
 class SerializableRemoteFunction : public Serializable,
                                    public std::enable_shared_from_this<SerializableRemoteFunction> {
  private:
@@ -297,6 +301,10 @@ class SerializableRemoteFunction : public Serializable,
 
   SerializableRemoteFunction(const SerializableRemoteFunction &) = delete;
   SerializableRemoteFunction &operator=(const SerializableRemoteFunction &) = delete;
+
+  void schedule(
+      const std::shared_ptr<Serializable> &resolveValue,
+      const std::shared_ptr<RuntimeManager> &runtimeManager);
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 

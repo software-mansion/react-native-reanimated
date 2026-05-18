@@ -1,7 +1,9 @@
 #include <jsi/jsi.h>
+#include <react/debug/react_native_assert.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
+#include <worklets/WorkletRuntime/RuntimeManager.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
@@ -32,7 +34,8 @@ jsi::Value makeSerializableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
     const jsi::Value &shouldRetainRemote,
-    const jsi::Value &nativeStateSource) {
+    const jsi::Value &nativeStateSource,
+    const RuntimeData::RuntimeId hostRuntimeId) {
   std::shared_ptr<Serializable> serializable;
   if (value.isObject()) {
     auto object = value.asObject(rt);
@@ -44,14 +47,14 @@ jsi::Value makeSerializableClone(
     } else if (!object.getProperty(rt, "__init").isUndefined()) {
       return makeSerializableInitializer(rt, object);
     } else if (object.isFunction(rt)) {
-      auto fun = object.asFunction(rt);
+      auto fun = object.getFunction(rt);
       if (fun.isHostFunction(rt)) {
         auto name = fun.getProperty(rt, "name").asString(rt).utf8(rt);
         return makeSerializableHostFunction(
             rt, fun.getHostFunction(rt), name, fun.getProperty(rt, "length").asNumber());
       } else {
-        throw std::runtime_error(
-            "[Worklets] Cloning remote functions from Worklet Runtimes is only available in Bundle Mode.");
+        auto name = fun.getProperty(rt, "name").asString(rt).utf8(rt);
+        return makeSerializableRemoteFunction(rt, name, std::move(fun), hostRuntimeId);
       }
     } else if (object.isArray(rt)) {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
@@ -291,6 +294,26 @@ jsi::Value SerializableRemoteFunction::toJSValue(jsi::Runtime &rt) {
     auto holderFunction = getRemoteFunctionUnpacker(rt).call(rt, name).asObject(rt);
     holderFunction.setNativeState(rt, std::make_shared<SerializableJSRef>(shared_from_this()));
     return holderFunction;
+  }
+}
+
+void SerializableRemoteFunction::schedule(
+    const std::shared_ptr<Serializable> &resolveValue,
+    const std::shared_ptr<RuntimeManager> &runtimeManager) {
+  if (isHostedOnRNRuntime()) {
+    rnRuntimeData_->jsScheduler->scheduleOnJS([resolver = shared_from_this(), resolveValue](jsi::Runtime &rt) {
+      resolver->toJSValue(rt).getObject(rt).getFunction(rt).call(rt, resolveValue->toJSValue(rt));
+    });
+  } else {
+    auto workletRuntime = runtimeManager->getRuntime(hostRuntimeId_);
+    if (!workletRuntime) [[unlikely]] {
+      // Host runtime is dead, most likely we're the last owner of the Remote Function.
+      // Do nothing.
+    } else {
+      workletRuntime->schedule([resolver = shared_from_this(), resolveValue](jsi::Runtime &rt) {
+        resolver->toJSValue(rt).getObject(rt).getFunction(rt).call(rt, resolveValue->toJSValue(rt));
+      });
+    }
   }
 }
 

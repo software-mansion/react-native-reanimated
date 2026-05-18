@@ -131,12 +131,6 @@ void WorkletRuntimeDecorator::decorate(
     return jsi::Value::undefined();
   });
 
-  jsi_utils::installJsiFunction(
-      rt, "_createSerializable", [](jsi::Runtime &rt, const jsi::Value &value, const jsi::Value &nativeStateSource) {
-        auto shouldRetainRemote = jsi::Value::undefined();
-        return makeSerializableClone(rt, value, shouldRetainRemote, nativeStateSource);
-      });
-
   jsi_utils::installJsiFunction(rt, "_createSerializableHostObject", [](jsi::Runtime &rt, const jsi::Value &value) {
     return makeSerializableHostObject(rt, value.asObject(rt).asHostObject(rt));
   });

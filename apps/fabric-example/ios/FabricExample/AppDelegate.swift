@@ -15,7 +15,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     let delegate = ReactNativeDelegate()
-    let factory = RCTReactNativeFactory(delegate: delegate, releaseLevel: RCTReleaseLevel.Experimental)
+    let factory = RCTReactNativeFactory(delegate: delegate, releaseLevel: RCTReleaseLevel.Stable)
     delegate.dependencyProvider = RCTAppDependencyProvider()
 
     reactNativeDelegate = delegate

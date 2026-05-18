@@ -20,7 +20,7 @@ namespace worklets {
 
 class WorkletRuntime;
 
-class JSIWorkletsModuleProxy {
+class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsModuleProxy> {
  public:
   explicit JSIWorkletsModuleProxy(
       const bool isDevBundle,
@@ -46,6 +46,8 @@ class JSIWorkletsModuleProxy {
             other.bundleModeConfig_,
             other.unpackerLoader_,
             hostRuntimeId) {}
+
+  JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other) = delete;
 
   [[nodiscard]]
   jsi::Object toOptimizedObject(jsi::Runtime &rt) const;

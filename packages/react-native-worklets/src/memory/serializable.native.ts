@@ -166,7 +166,9 @@ export function createSerializable<TValue>(
   }
 
   if ((!isObject && !isFunction) || value === null) {
-    return clonePrimitive(value, shouldPersistRemote);
+    throw new Error(
+      `[Worklets] Trying to serialize an unsupported value type (${typeof value}).`
+    );
   }
 
   const cached = getFromCache(value);
@@ -231,7 +233,7 @@ export function createSerializable<TValue>(
     return cloneError(value);
   }
   if (value instanceof ArrayBuffer) {
-    return cloneArrayBuffer(value, shouldPersistRemote);
+    return cloneArrayBuffer(value);
   }
   if (ArrayBuffer.isView(value)) {
     // typed array (e.g. Int32Array, Uint8ClampedArray) or DataView
@@ -349,13 +351,6 @@ function detectCyclicObject(value: unknown, depth: number) {
   } else {
     processedObjectAtThresholdDepth = undefined;
   }
-}
-
-function clonePrimitive<T>(
-  value: T,
-  shouldPersistRemote: boolean
-): SerializableRef<T> {
-  return WorkletsModule.createSerializable(value, shouldPersistRemote);
 }
 
 function cloneString(value: string): SerializableRef<string> {
@@ -647,15 +642,12 @@ function cloneError<TValue extends Error>(
   return handle as unknown as SerializableRef<TValue>;
 }
 
-function cloneArrayBuffer<T extends ArrayBuffer>(
-  value: T,
-  shouldPersistRemote: boolean
-): SerializableRef<T> {
-  const clone = WorkletsModule.createSerializable(
-    value,
-    shouldPersistRemote,
+function cloneArrayBuffer<TValue extends ArrayBuffer>(
+  value: TValue
+): SerializableRef<TValue> {
+  const clone = WorkletsModule.createSerializableArrayBuffer(
     value
-  );
+  ) as SerializableRef<TValue>;
   serializableMappingCache.set(value, clone);
   serializableMappingCache.set(clone);
 
@@ -842,7 +834,7 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
       for (const [key, element] of Object.entries(value)) {
         toAdapt[key] = cloneRecursive(element);
       }
-      return global._createSerializable(
+      return globalThis.__workletsModuleProxy.createSerializableLEGACY(
         toAdapt,
         value
       ) as FlatSerializableRef<TValue>;
@@ -872,7 +864,10 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
       return global._createSerializableNull();
     }
 
-    return global._createSerializable(value, undefined);
+    return globalThis.__workletsModuleProxy.createSerializableLEGACY(
+      value,
+      undefined
+    );
   }
   return cloneRecursive(value);
 }

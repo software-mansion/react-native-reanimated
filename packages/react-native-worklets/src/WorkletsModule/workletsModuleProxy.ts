@@ -1,6 +1,7 @@
 'use strict';
 
 import type {
+  FlatSerializableRef,
   RemoteFunction,
   SerializableRef,
   SynchronizableRef,
@@ -29,12 +30,6 @@ export interface WorkletsModuleProxy {
     remoteFunctionUnpackerLocation: string,
     remoteFunctionUnpackerSourceMap: string
   ): void;
-
-  createSerializable<TValue>(
-    value: TValue,
-    shouldPersistRemote: boolean,
-    nativeStateSource?: object
-  ): SerializableRef<TValue>;
 
   createSerializableImport<TValue>(
     source: string,
@@ -73,6 +68,10 @@ export interface WorkletsModuleProxy {
     array: unknown[],
     shouldRetainRemote?: boolean
   ): SerializableRef<unknown[]>;
+
+  createSerializableArrayBuffer(
+    arrayBuffer: ArrayBuffer
+  ): SerializableRef<ArrayBuffer>;
 
   createSerializableMap<TKey, TValue>(
     keys: TKey[],
@@ -163,6 +162,11 @@ export interface WorkletsModuleProxy {
     scheduleStack?: string
   ): TReturn;
 
+  handlePromise<TValue>(
+    resolveOrReject: ((value: TValue) => void) | RemoteFunction,
+    value: SerializableRef<TValue>
+  ): void;
+
   reportFatalErrorOnJS(message: string, stack: string, name: string): void;
 
   createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue>;
@@ -195,9 +199,18 @@ export interface WorkletsModuleProxy {
   getUIRuntimeHolder(): object;
 
   getUISchedulerHolder(): object;
+
+  /* #region deprecated */
+
+  createSerializableLEGACY<TValue>(
+    value: TValue,
+    nativeStateSource?: object
+  ): FlatSerializableRef<TValue>;
+
+  /* #endregion deprecated */
 }
 
-type InternalMethods = 'loadUnpackers' | 'isHostFunction';
+type InternalMethods = 'loadUnpackers' | 'createSerializableLEGACY';
 
 type TurboModulePublic = {
   toggleSlowAnimationsOnUIRuntime(): boolean;

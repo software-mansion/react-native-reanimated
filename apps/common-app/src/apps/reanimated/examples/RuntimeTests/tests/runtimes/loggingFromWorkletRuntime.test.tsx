@@ -156,11 +156,11 @@ const testCases: Record<string, TestCase> = {
     },
   },
   hostFunction: {
-    bundleMode: '[Function: createSerializable]',
+    bundleMode: '[Function: createSerializableNumber]',
     noBundleMode: '{}',
     factory: () => {
       'worklet';
-      return globalThis.__workletsModuleProxy.createSerializable;
+      return globalThis.__workletsModuleProxy.createSerializableNumber;
     },
   },
   generatorFunction: {
@@ -301,7 +301,9 @@ const testCases: Record<string, TestCase> = {
     factory: () => {
       'worklet';
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (globalThis.__workletsModuleProxy as any).createSerializable(42);
+      return (globalThis.__workletsModuleProxy as any).createSerializableNumber(
+        42
+      );
     },
   },
   shareable: {
