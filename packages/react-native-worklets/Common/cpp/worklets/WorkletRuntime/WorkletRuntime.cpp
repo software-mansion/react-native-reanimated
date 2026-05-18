@@ -69,7 +69,7 @@ WorkletRuntime::WorkletRuntime(
   }
 }
 
-void WorkletRuntime::init(const std::shared_ptr<const JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy) {
+void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy) {
   jsi::Runtime &rt = *runtime_;
 
   rt.setRuntimeData(

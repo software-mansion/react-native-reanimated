@@ -7,13 +7,11 @@ export function installRemoteFunctionUnpacker() {
   function remoteFunctionUnpacker(
     remoteFunctionName: string | undefined
   ): unknown {
-    const label = remoteFunctionName
-      ? `\`${remoteFunctionName}\``
-      : 'anonymous';
+    remoteFunctionName = remoteFunctionName ? remoteFunctionName : 'anonymous';
 
     const fun = function remoteFunctionGuard() {
-      throw new Error(`[Worklets] Tried to synchronously call a remote function ${label} on ${globalThis.__RUNTIME_NAME} runtime.
-See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
+      throw new Error(`[Worklets] Tried to synchronously call a Remote Function. Called "${remoteFunctionName}" on the ${globalThis.__RUNTIME_NAME} Runtime.
+See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#tried-to-synchronously-call-a-remote-function for more details.`);
     };
 
     fun.__remoteFunction = true;
@@ -24,4 +22,6 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     remoteFunctionUnpacker as RemoteFunctionUnpacker;
 }
 
-export type RemoteFunctionUnpacker = (remoteFunctionName?: string) => unknown;
+export type RemoteFunctionUnpacker = (
+  remoteFunctionName: string | undefined
+) => unknown;

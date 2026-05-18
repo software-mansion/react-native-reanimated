@@ -1,7 +1,7 @@
 'use strict';
 
 import type {
-  NewRemoteFunction,
+  RemoteFunction,
   SerializableRef,
   SynchronizableRef,
 } from '../memory/types';
@@ -117,7 +117,7 @@ export interface WorkletsModuleProxy {
   ): SerializableRef<TValue>;
 
   scheduleOnRN<TArgs extends unknown[]>(
-    fun: NewRemoteFunction,
+    fun: RemoteFunction | ((...args: TArgs) => unknown),
     args: SerializableRef<TArgs> | undefined
   ): void;
 

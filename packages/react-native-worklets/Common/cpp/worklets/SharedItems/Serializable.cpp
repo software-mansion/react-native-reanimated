@@ -274,7 +274,7 @@ SerializableRemoteFunction::~SerializableRemoteFunction() {
       registry.getPropertyAsFunction(rt, "delete").callWithThis(rt, registry, jsi::Value(id));
     });
   } else {
-    cleanupIfRuntimeExists(hostRuntime_, workletRuntimeData_->function);
+    cleanupRuntimeAware(hostRuntime_, workletRuntimeData_->function);
   }
 }
 

@@ -169,7 +169,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
       bool enableEventLoop = true);
 
-  void init(const std::shared_ptr<const JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy);
+  void init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy);
 
   /* #region deprecated */
 

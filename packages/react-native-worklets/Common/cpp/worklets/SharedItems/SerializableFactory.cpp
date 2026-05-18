@@ -60,7 +60,7 @@ jsi::Value makeSerializableHostFunction(
   return SerializableJSRef::newNativeStateObject(rt, serializable);
 }
 
-jsi::Value makeSerializableRNRuntimeRemoteFunction(
+jsi::Value makeSerializableRemoteFunction(
     jsi::Runtime &rnRuntime,
     const std::string &name,
     const int remoteId,
@@ -69,14 +69,14 @@ jsi::Value makeSerializableRNRuntimeRemoteFunction(
   return SerializableJSRef::newNativeStateObject(rnRuntime, serializable);
 }
 
-jsi::Value makeSerializableWorkletRuntimeRemoteFunction(
-    jsi::Runtime &hostRuntime,
+jsi::Value makeSerializableRemoteFunction(
+    jsi::Runtime &workletRuntime,
     const std::string &name,
-    jsi::Function function,
+    jsi::Function &&function,
     RuntimeData::RuntimeId hostRuntimeId) {
   auto serializable =
-      std::make_shared<SerializableRemoteFunction>(hostRuntime, name, std::move(function), hostRuntimeId);
-  return SerializableJSRef::newNativeStateObject(hostRuntime, serializable);
+      std::make_shared<SerializableRemoteFunction>(workletRuntime, name, std::move(function), hostRuntimeId);
+  return SerializableJSRef::newNativeStateObject(workletRuntime, serializable);
 }
 
 jsi::Value makeSerializableArray(jsi::Runtime &rt, const jsi::Array &array, const jsi::Value &shouldRetainRemote) {

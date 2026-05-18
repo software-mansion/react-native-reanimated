@@ -145,7 +145,7 @@ class SerializableArray : public Serializable {
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
-  std::vector<jsi::Value> getJSArgs(jsi::Runtime &rt) {
+  std::vector<jsi::Value> getJSIValueArr(jsi::Runtime &rt) {
     std::vector<jsi::Value> args;
     args.reserve(data_.size());
     for (const auto &item : data_) {
@@ -266,7 +266,7 @@ class SerializableRemoteFunction : public Serializable,
 
   jsi::Runtime *hostRuntime_;
   const RuntimeData::RuntimeId hostRuntimeId_;
-  const std::optional<RNRuntimeData> rnRuntimeData_;
+  std::optional<RNRuntimeData> rnRuntimeData_;
   std::optional<WorkletRuntimeData> workletRuntimeData_;
   const std::string name_;
 
@@ -274,7 +274,7 @@ class SerializableRemoteFunction : public Serializable,
   SerializableRemoteFunction(
       jsi::Runtime &rnRuntime,
       const std::string &name,
-      int remoteId,
+      const int remoteId,
       const std::shared_ptr<JSScheduler> &jsScheduler)
       : Serializable(ValueType::RemoteFunctionType),
         hostRuntime_(&rnRuntime),
@@ -283,14 +283,14 @@ class SerializableRemoteFunction : public Serializable,
         name_(name) {}
 
   SerializableRemoteFunction(
-      jsi::Runtime &hostRuntime,
+      jsi::Runtime &workletRuntime,
       const std::string &name,
       jsi::Function &&function,
       RuntimeData::RuntimeId hostRuntimeId)
       : Serializable(ValueType::RemoteFunctionType),
-        hostRuntime_(&hostRuntime),
+        hostRuntime_(&workletRuntime),
         hostRuntimeId_(hostRuntimeId),
-        workletRuntimeData_(WorkletRuntimeData{std::make_unique<jsi::Value>(hostRuntime, function)}),
+        workletRuntimeData_(WorkletRuntimeData{std::make_unique<jsi::Value>(workletRuntime, function)}),
         name_(name) {}
 
   ~SerializableRemoteFunction() override;

@@ -8,7 +8,7 @@ import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker'
 import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
 import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
 import type {
-  NewRemoteFunction,
+  RemoteFunction,
   SerializableRef,
   SynchronizableRef,
 } from '../memory/types';
@@ -218,7 +218,7 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   }
 
   scheduleOnRN<TArgs extends unknown[]>(
-    fun: NewRemoteFunction,
+    fun: RemoteFunction,
     args: SerializableRef<TArgs> | undefined
   ): void {
     this.#workletsModuleProxy.scheduleOnRN(fun, args);
