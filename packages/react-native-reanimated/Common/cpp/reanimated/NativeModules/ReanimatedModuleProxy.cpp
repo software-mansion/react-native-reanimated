@@ -230,7 +230,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #ifdef ANDROID
   // Pre-allocate the synchronous props buffers so the first frame doesn't pay
   // for vector growth allocations.
-  if (StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
+  if constexpr (StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
     synchronousPropsIntBuffer_.reserve(1024);
     synchronousPropsDoubleBuffer_.reserve(1024);
   }
