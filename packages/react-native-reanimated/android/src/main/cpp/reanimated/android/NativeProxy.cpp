@@ -158,6 +158,10 @@ void NativeProxy::registerNatives() {
 }
 
 void NativeProxy::requestRender(std::function<void(double)> onRender) {
+  // Module might be already destroyed.
+  if (!javaPart_) {
+    return;
+  }
   static const auto method = getJniMethod<void(AnimationFrameCallback::javaobject)>("requestRender");
   method(javaPart_.get(), AnimationFrameCallback::newObjectCxxArgs(std::move(onRender)).get());
 }

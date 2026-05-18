@@ -73,14 +73,21 @@ class NodesManager(
     }
 
     fun invalidate() {
+        // Stop new work before tearing the native side down — invalidate() can run off
+        // the UI thread, racing an in-flight Choreographer frame against the C++ teardown.
+        mFabricUIManager.eventDispatcher.removeListener(this)
+        mEventQueue.clear()
+        UiThreadUtil.runOnUiThread {
+            stopUpdatingOnAnimationFrame()
+            mFrameCallbacks.clear()
+        }
+
         mNativeProxy?.let {
             it.invalidate()
             mNativeProxy = null
         }
 
         mDrawPassDetector.invalidate()
-
-        mFabricUIManager.eventDispatcher.removeListener(this)
     }
 
     fun onHostPause() {
