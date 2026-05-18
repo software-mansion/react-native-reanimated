@@ -230,7 +230,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #ifdef ANDROID
   // Pre-allocate the synchronous props buffers so the first frame doesn't pay
   // for vector growth allocations.
-  if (StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
+  if constexpr (StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
     synchronousPropsIntBuffer_.reserve(1024);
     synchronousPropsDoubleBuffer_.reserve(1024);
   }
@@ -238,16 +238,6 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 }
 
 void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMethodsHolder) {
-  auto onRenderCallback = [weakThis = weak_from_this()](const double timestampMs) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-
-    strongThis->onRender(timestampMs);
-  };
-  onRenderCallback_ = std::move(onRenderCallback);
-
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     // Override the requestRender_ function before passing it to the OperationsLoop
     requestRender_ = [weakThis = weak_from_this()](std::function<void(const double)> callback) {
@@ -303,6 +293,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
 
     strongThis->dispatchCommand(rt, shadowNodeValue, commandNameValue, argsValue);
   };
+
   ProgressLayoutAnimationFunction progressLayoutAnimation =
       [weakThis = weak_from_this()](jsi::Runtime &rt, int tag, const jsi::Object &newStyle) {
         // Always on UI thread.
@@ -315,18 +306,11 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
           return;
         }
         strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
+
+        strongThis->requestRenderForLayoutAnimations();
       };
 
-  auto requestLayoutAnimationRender = [weakThis = weak_from_this()](double) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-    strongThis->layoutAnimationRenderRequested_ = false;
-  };
-
-  EndLayoutAnimationFunction endLayoutAnimation = [weakThis = weak_from_this(), requestLayoutAnimationRender](
-                                                      int tag, bool shouldRemove) {
+  EndLayoutAnimationFunction endLayoutAnimation = [weakThis = weak_from_this()](int tag, bool shouldRemove) {
     // Always on UI thread.
     auto strongThis = weakThis.lock();
     if (!strongThis) {
@@ -339,13 +323,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       // in the backend path this is called from runGrandCallback,
       // we are guaranteed to have the changes flushed
     } else {
-      if (!strongThis->layoutAnimationRenderRequested_) {
-        // if an animation has duration 0, performOperations would not get
-        // called for it so we call requestRender to have it called in the
-        // next frame
-        strongThis->layoutAnimationRenderRequested_ = true;
-        strongThis->requestRender_(requestLayoutAnimationRender);
-      }
+      strongThis->requestRenderForLayoutAnimations();
     }
 
     if (!surfaceId) {
@@ -524,11 +502,6 @@ void ReanimatedModuleProxy::setShouldAnimateExiting(
 
 bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) {
   return eventHandlerRegistry_->isAnyHandlerWaitingForEvent(eventName, emitterReactTag);
-}
-
-void ReanimatedModuleProxy::onRender(double timestampMs) {
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::onRender");
-  // NOOP
 }
 
 jsi::Value ReanimatedModuleProxy::registerSensor(
