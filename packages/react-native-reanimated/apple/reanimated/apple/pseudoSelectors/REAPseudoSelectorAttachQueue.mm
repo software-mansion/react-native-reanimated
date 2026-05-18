@@ -63,6 +63,8 @@ static void attachObserverToView(
     attachObserverToView(view, selector, sharedCallback);
   } else {
     NSString *key = [NSString stringWithFormat:@"%d:%d", tag, static_cast<int>(selector)];
+    // TODO: entries are only cleared on successful mount or explicit detach.
+    // Tags whose view never mounts (and never receive a detach) leak across the app lifetime.
     _pendingAttaches[key] =
         [^(REAUIView *mountedView) { attachObserverToView(mountedView, selector, sharedCallback); } copy];
   }
