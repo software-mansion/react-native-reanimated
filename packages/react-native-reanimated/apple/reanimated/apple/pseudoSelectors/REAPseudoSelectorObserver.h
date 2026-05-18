@@ -21,6 +21,8 @@ NS_ASSUME_NONNULL_BEGIN
  *   FocusWithin   - Same as Focus, but matches any descendant gaining focus
  *   Hover         - iOS: UIHoverGestureRecognizer (iOS 13+)
  *                   macOS: NSTrackingArea (mouseEntered/mouseExited)
+ *                   tvOS: no-op (UIHoverGestureRecognizer is unavailable);
+ *                         the observer is constructed but never fires.
  *
  * Lifetime: store as an associated object on the view so it is
  * automatically released when the view is deallocated.
