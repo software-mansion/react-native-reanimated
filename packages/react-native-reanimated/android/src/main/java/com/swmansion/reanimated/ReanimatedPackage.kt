@@ -9,11 +9,10 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.module.model.ReactModuleInfo
 import com.facebook.react.module.model.ReactModuleInfoProvider
-import com.facebook.react.uimanager.ViewManager;
-import com.swmansion.reanimated.view.RNReanimatedSharedTransitionBoundaryManager;
+import com.facebook.react.uimanager.ViewManager
+import com.swmansion.reanimated.view.RNReanimatedSharedTransitionBoundaryManager
 import java.util.HashMap
 import java.util.Objects
-import java.util.List;
 
 class ReanimatedPackage :
     BaseReactPackage(),
