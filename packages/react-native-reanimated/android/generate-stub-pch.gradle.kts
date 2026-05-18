@@ -63,6 +63,16 @@ val generateStubPCHTask = tasks.register("generateStubPCH") {
     }
 }
 
-tasks.register("prepareKotlinBuildScriptModel") {
-    dependsOn(generateStubPCHTask)
+// Register `prepareKotlinBuildScriptModel` if absent (Android Studio sync needs it
+// to exist so the stub PCH generation runs) or configure it if some other plugin
+// already registered it (e.g. on CI, where re-registering throws `Cannot add task
+// 'prepareKotlinBuildScriptModel' as a task with that name already exists.`).
+if (tasks.findByName("prepareKotlinBuildScriptModel") == null) {
+    tasks.register("prepareKotlinBuildScriptModel") {
+        dependsOn(generateStubPCHTask)
+    }
+} else {
+    tasks.named("prepareKotlinBuildScriptModel") {
+        dependsOn(generateStubPCHTask)
+    }
 }
