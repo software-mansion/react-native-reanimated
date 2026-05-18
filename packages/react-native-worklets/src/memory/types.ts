@@ -187,5 +187,8 @@ export type ShareableConfig<TValue, THostDecorated, TGuestDecorated> = {
 
 /** TODO: explain what a Remote Function is. */
 export interface RemoteFunction extends SerializableRef {
-  __remoteFunction: true;
+  /** Defined when extracted on a Guest Runtime. */
+  __remoteFunction: true | undefined;
+  /** Defined when created on the Host Runtime. */
+  __keepAlive: true | undefined;
 }
