@@ -350,20 +350,28 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       obj,
       "createSerializableNonWorkletFunction",
       [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        auto fun = at<0>(args).asObject(rt).asFunction(rt);
+        auto fun = at<0>(args).getObject(rt).getFunction(rt);
+#ifndef NDEBUG
+        const auto funName = fun.getProperty(rt, "name").getString(rt).utf8(rt);
+#endif // NDEBUG
         if (fun.isHostFunction(rt)) {
           return makeSerializableHostFunction(
               rt,
               fun.getHostFunction(rt),
-              fun.getProperty(rt, "name").asString(rt).utf8(rt),
+#ifndef NDEBUG
+              funName,
+#else
+              fun.getProperty(rt, "name").getString(rt).utf8(rt),
+#endif // NDEBUG
               fun.getProperty(rt, "length").asNumber());
         } else {
           return makeSerializableRemoteFunction(
               rt,
               std::move(fun)
+
 #ifndef NDEBUG
                   ,
-              fun.getProperty(rt, "name").asString(rt).utf8(rt)
+              funName
 #endif
           );
         }
@@ -439,8 +447,8 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
                 // fast path for host function w/o arguments
                 hostFun(rnRuntime, jsi::Value::undefined(), nullptr, 0);
               } else {
-                auto args = serializableArgs->getJSIValueArr(rnRuntime);
-                hostFun(rnRuntime, jsi::Value::undefined(), const_cast<const jsi::Value *>(args.data()), args.size());
+                const auto args = serializableArgs->getJSIValueArr(rnRuntime);
+                hostFun(rnRuntime, jsi::Value::undefined(), args.data(), args.size());
               }
             });
           } else [[unlikely]] { // NOLINT(readability/braces)
@@ -459,8 +467,8 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
               // fast path for remote function w/o arguments
               fun.call(rnRuntime);
             } else {
-              auto args = serializableArgs->getJSIValueArr(rnRuntime);
-              fun.call(rnRuntime, const_cast<const jsi::Value *>(args.data()), args.size());
+              const auto args = serializableArgs->getJSIValueArr(rnRuntime);
+              fun.call(rnRuntime, args.data(), args.size());
             }
           });
         }
