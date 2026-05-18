@@ -32,7 +32,9 @@ static void attachObserverToView(
 
 @implementation REAPseudoSelectorAttachQueue {
   __weak RCTSurfacePresenter *_surfacePresenter;
-  NSMutableDictionary<NSString *, void (^)(REAUIView *)> *_pendingAttaches;
+  // Outer key: tag, inner key: selector. Lets `didMountComponentsWithRootTag:`
+  // look up pending entries by tag directly instead of parsing composite string keys.
+  NSMutableDictionary<NSNumber *, NSMutableDictionary<NSNumber *, void (^)(REAUIView *)> *> *_pendingAttaches;
 }
 
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter
@@ -61,20 +63,32 @@ static void attachObserverToView(
   REAUIView *view = [_surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:tag];
   if (view) {
     attachObserverToView(view, selector, sharedCallback);
-  } else {
-    NSString *key = [NSString stringWithFormat:@"%d:%d", tag, static_cast<int>(selector)];
-    // TODO: entries are only cleared on successful mount or explicit detach.
-    // Tags whose view never mounts (and never receive a detach) leak across the app lifetime.
-    _pendingAttaches[key] =
-        [^(REAUIView *mountedView) { attachObserverToView(mountedView, selector, sharedCallback); } copy];
+    return;
   }
+  // TODO: entries are only cleared on successful mount or explicit detach.
+  // Tags whose view never mounts (and never receive a detach) leak across the app lifetime.
+  NSNumber *tagKey = @(tag);
+  NSMutableDictionary<NSNumber *, void (^)(REAUIView *)> *bySelector = _pendingAttaches[tagKey];
+  if (!bySelector) {
+    bySelector = [NSMutableDictionary new];
+    _pendingAttaches[tagKey] = bySelector;
+  }
+  bySelector[@(static_cast<int>(selector))] =
+      [^(REAUIView *mountedView) { attachObserverToView(mountedView, selector, sharedCallback); } copy];
 }
 
 - (void)detachTag:(int)tag selector:(reanimated::PseudoSelector)selector
 {
   RCTAssertMainQueue();
-  NSString *key = [NSString stringWithFormat:@"%d:%d", tag, static_cast<int>(selector)];
-  [_pendingAttaches removeObjectForKey:key];
+  NSNumber *tagKey = @(tag);
+  NSNumber *selectorKey = @(static_cast<int>(selector));
+  NSMutableDictionary<NSNumber *, void (^)(REAUIView *)> *bySelector = _pendingAttaches[tagKey];
+  if (bySelector) {
+    [bySelector removeObjectForKey:selectorKey];
+    if (bySelector.count == 0) {
+      [_pendingAttaches removeObjectForKey:tagKey];
+    }
+  }
 
   REAUIView *view = [_surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:tag];
   if (!view) {
@@ -82,9 +96,8 @@ static void attachObserverToView(
   }
   NSMutableDictionary<NSNumber *, REAPseudoSelectorObserver *> *observers =
       objc_getAssociatedObject(view, &kREAPseudoSelectorObserversKey);
-  NSNumber *obsKey = @(static_cast<int>(selector));
-  [observers[obsKey] detach];
-  [observers removeObjectForKey:obsKey];
+  [observers[selectorKey] detach];
+  [observers removeObjectForKey:selectorKey];
 }
 
 - (void)didMountComponentsWithRootTag:(NSInteger)rootTag
@@ -94,13 +107,15 @@ static void attachObserverToView(
     return;
   }
   RCTComponentViewRegistry *registry = _surfacePresenter.mountingManager.componentViewRegistry;
-  NSArray<NSString *> *keys = [_pendingAttaches.allKeys copy];
-  for (NSString *key in keys) {
-    int tag = [[key componentsSeparatedByString:@":"][0] intValue];
-    REAUIView *view = [registry findComponentViewWithTag:(Tag)tag];
-    if (view) {
-      void (^block)(REAUIView *) = _pendingAttaches[key];
-      [_pendingAttaches removeObjectForKey:key];
+  NSArray<NSNumber *> *tagKeys = [_pendingAttaches.allKeys copy];
+  for (NSNumber *tagKey in tagKeys) {
+    REAUIView *view = [registry findComponentViewWithTag:(Tag)tagKey.intValue];
+    if (!view) {
+      continue;
+    }
+    NSMutableDictionary<NSNumber *, void (^)(REAUIView *)> *bySelector = _pendingAttaches[tagKey];
+    [_pendingAttaches removeObjectForKey:tagKey];
+    for (void (^block)(REAUIView *) in bySelector.allValues) {
       block(view);
     }
   }

@@ -324,12 +324,14 @@ static int _focusObserverContext;
   if (!view) {
     return NO;
   }
-  // always allow for :active
-  if (_selector == reanimated::PseudoSelector::Active) {
+  // The descendant walk below is only meaningful for :active-deepest.
+  // :active always allows, and any other selector (e.g. :hover, which shares
+  // this delegate) never participates in deepest arbitration.
+  if (_selector != reanimated::PseudoSelector::ActiveDeepest) {
     return YES;
   }
   // for :active-deepest walk up from the hit view: if any descendant
-  // already has an :active-deepest gesture recognizer, that descendant
+  // already has an :active-deepest or :active gesture recognizer, that descendant
   // owns the touch.
   CGPoint location = [gestureRecognizer locationInView:view];
 #if !TARGET_OS_OSX
