@@ -238,16 +238,6 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 }
 
 void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMethodsHolder) {
-  auto onRenderCallback = [weakThis = weak_from_this()](const double timestampMs) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-
-    strongThis->onRender(timestampMs);
-  };
-  onRenderCallback_ = std::move(onRenderCallback);
-
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     // Override the requestRender_ function before passing it to the OperationsLoop
     requestRender_ = [weakThis = weak_from_this()](std::function<void(const double)> callback) {
@@ -512,11 +502,6 @@ void ReanimatedModuleProxy::setShouldAnimateExiting(
 
 bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) {
   return eventHandlerRegistry_->isAnyHandlerWaitingForEvent(eventName, emitterReactTag);
-}
-
-void ReanimatedModuleProxy::onRender(double timestampMs) {
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::onRender");
-  // NOOP
 }
 
 jsi::Value ReanimatedModuleProxy::registerSensor(

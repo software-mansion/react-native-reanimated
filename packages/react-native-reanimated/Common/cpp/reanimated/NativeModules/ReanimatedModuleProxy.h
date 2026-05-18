@@ -242,7 +242,6 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   CallbackId animationBackendCallbackId_{0};
 #endif
 
-  std::function<void(const double)> onRenderCallback_;
   // Callbacks queued by OperationsLoop via the requestRender_ override when
   // USE_ANIMATION_BACKEND is on. They are drained at the start of each
   // runGrandCallback(AnimationLoop) tick, so the backend plays the role of the

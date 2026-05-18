@@ -25,6 +25,10 @@ jobs:
       group: ${{ matrix.platform }}-react-native-nightly-${{ github.ref }}
       cancel-in-progress: true
     steps:
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - name: Setup Yarn
         # Sometimes `npx @react-native-community/cli init` fails at random.
         # Pre-installing it with Yarn seems to improve stability.
