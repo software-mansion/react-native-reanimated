@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native';
-import Animated from 'react-native-reanimated';
+import { StyleSheet, TextInput } from 'react-native';
+import Animated, { createAnimatedComponent } from 'react-native-reanimated';
 
 import {
   Screen,
@@ -9,225 +9,116 @@ import {
 } from '@/apps/css/components';
 import { colors, radius, sizes, spacing } from '@/theme';
 
+const AnimatedTextInput = createAnimatedComponent(TextInput);
+
 export default function PerStateTransitionConfig() {
   return (
     <Screen>
       <Scroll contentContainerStyle={styles.content} withBottomBarSpacing>
         <Section
-          description="Every transition* field accepts a scalar, an array (per-property), or a pseudo-keyed object that varies the timing per pseudo-selector state. The same selector's timing applies on entry AND on exit — hovering uses :hover's duration both ways."
-          title="Pseudo-selector transition configs">
+          description="Different pseudo-selectors can drive different style properties on the same element. Use `transitionProperty` with aligned timing arrays to give each property its own speed/curve."
+          title="Composing pseudo-selectors">
           <VerticalExampleCard
-            collapsedCode={`transitionDuration: '300ms'`}
-            title="Scalar duration (same for all states)"
-            code={`<Animated.View
-  style={{
-    backgroundColor: {
-      default: colors.primary,
-      ':hover': colors.primaryDark,
-    },
-    transitionDuration: '300ms',
-  }}
-/>`}>
-            <Animated.View
-              style={[
-                styles.box,
-                {
-                  backgroundColor: {
-                    ':hover': colors.primaryDark,
-                    default: colors.primary,
-                  },
-                  transitionDuration: '300ms',
-                },
-              ]}
-            />
-          </VerticalExampleCard>
-
-          <VerticalExampleCard
-            title="Array (per-property timing)"
+            description="Hover changes the background; active scales it down. Both animate with the same duration."
+            title="Two selectors, two properties, shared timing"
             code={`<Animated.View
   style={{
     backgroundColor: { default: colors.primary, ':hover': colors.primaryDark },
-    transform: {
-      default: [{ scale: 1 }],
-      ':hover': [{ scale: 1.2 }],
-    },
+    transform:       { default: [{ scale: 1 }], ':active': [{ scale: 0.92 }] },
+    transitionDuration: '180ms',
+  }}
+/>`}
+            collapsedCode={`transitionDuration: '180ms'`}>
+            <Animated.View
+              style={[
+                styles.box,
+                {
+                  backgroundColor: {
+                    default: colors.primary,
+                    ':hover': colors.primaryDark,
+                  },
+                  transform: {
+                    default: [{ scale: 1 }],
+                    ':active': [{ scale: 0.92 }],
+                  },
+                  transitionDuration: '180ms',
+                },
+              ]}
+            />
+          </VerticalExampleCard>
+
+          <VerticalExampleCard
+            description="Hover-driven color change is smooth (250ms); active-driven press is snappy (60ms). Aligned arrays give each property its own duration."
+            title="Per-property timing for different selectors"
+            code={`<Animated.View
+  style={{
+    backgroundColor: { default: colors.primary, ':hover': colors.primaryDark },
+    transform:       { default: [{ scale: 1 }], ':active': [{ scale: 0.92 }] },
     transitionProperty: ['backgroundColor', 'transform'],
-    transitionDuration: ['600ms', '150ms'],
+    transitionDuration: ['250ms', '60ms'],
   }}
 />`}
             collapsedCode={`transitionProperty: ['backgroundColor', 'transform'],
-transitionDuration: ['600ms', '150ms'],`}>
+transitionDuration: ['250ms', '60ms']`}>
             <Animated.View
               style={[
                 styles.box,
                 {
                   backgroundColor: {
-                    ':hover': colors.primaryDark,
                     default: colors.primary,
+                    ':hover': colors.primaryDark,
                   },
                   transform: {
-                    ':hover': [{ scale: 1.2 }],
                     default: [{ scale: 1 }],
+                    ':active': [{ scale: 0.92 }],
                   },
-                  transitionDuration: ['600ms', '150ms'],
                   transitionProperty: ['backgroundColor', 'transform'],
+                  transitionDuration: ['250ms', '60ms'],
                 },
               ]}
             />
           </VerticalExampleCard>
 
           <VerticalExampleCard
-            description="The selector whose state flips drives the transition. Both entering AND leaving :hover use ':hover''s 120ms — the 'default' branch only applies if some non-hover selector is involved."
-            title="Per-state duration"
-            code={`<Animated.View
+            description="Three pseudo-selectors driving three different properties on a text input. Hover lightens the background, focus thickens the border, active scales it down — each on its own timing."
+            title="Three selectors, three properties"
+            code={`<AnimatedTextInput
   style={{
-    backgroundColor: {
-      default: colors.primary,
-      ':hover': colors.primaryDark,
-    },
-    transitionDuration: {
-      default: '900ms',
-      ':hover': '120ms',
-    },
+    backgroundColor: { default: colors.primary,  ':hover':  colors.primaryDark },
+    borderWidth:     { default: 0,               ':focus':  3 },
+    transform:       { default: [{ scale: 1 }],  ':active': [{ scale: 0.95 }] },
+    transitionProperty: ['backgroundColor', 'borderWidth', 'transform'],
+    transitionDuration: ['220ms', '160ms', '60ms'],
   }}
 />`}
-            collapsedCode={`transitionDuration: {
-  default: '900ms',
-  ':hover': '120ms',
-}`}>
-            <Animated.View
+            collapsedCode={`transitionProperty: ['backgroundColor', 'borderWidth', 'transform'],
+transitionDuration: ['220ms', '160ms', '60ms']`}>
+            <AnimatedTextInput
+              placeholder="Tap, hover or focus me"
               style={[
-                styles.box,
+                styles.input,
                 {
                   backgroundColor: {
-                    ':hover': colors.primaryDark,
                     default: colors.primary,
+                    ':hover': colors.primaryDark,
                   },
-                  transitionDuration: {
-                    ':hover': '120ms',
-                    default: '900ms',
+                  borderWidth: {
+                    default: 0,
+                    ':focus': 3,
                   },
-                },
-              ]}
-            />
-          </VerticalExampleCard>
-
-          <VerticalExampleCard
-            title="Per-state timing function (ease-in vs ease-out)"
-            code={`<Animated.View
-  style={{
-    transform: {
-      default: [{ scale: 1 }],
-      ':hover': [{ scale: 1.3 }],
-    },
-    transitionDuration: '500ms',
-    transitionTimingFunction: {
-      default: 'ease-in',
-      ':hover': 'ease-out',
-    },
-  }}
-/>`}
-            collapsedCode={`transitionTimingFunction: {
-  default: 'ease-in',
-  ':hover': 'ease-out',
-}`}>
-            <Animated.View
-              style={[
-                styles.box,
-                {
-                  backgroundColor: colors.primary,
                   transform: {
-                    ':hover': [{ scale: 1.3 }],
                     default: [{ scale: 1 }],
+                    ':active': [{ scale: 0.95 }],
                   },
-                  transitionDuration: '500ms',
-                  transitionTimingFunction: {
-                    ':hover': 'ease-out',
-                    default: 'ease-in',
-                  },
+                  transitionProperty: [
+                    'backgroundColor',
+                    'borderWidth',
+                    'transform',
+                  ],
+                  transitionDuration: ['220ms', '160ms', '60ms'],
                 },
               ]}
             />
-          </VerticalExampleCard>
-
-          <VerticalExampleCard
-            title="Per-state delay (instant in, delayed out)"
-            code={`<Animated.View
-  style={{
-    backgroundColor: {
-      default: colors.primary,
-      ':hover': colors.primaryDark,
-    },
-    transitionDuration: '200ms',
-    transitionDelay: {
-      default: '500ms', // 500ms wait before starting to fade back
-      ':hover': '0ms',
-    },
-  }}
-/>`}
-            collapsedCode={`transitionDelay: {
-  default: '500ms',
-  ':hover': '0ms',
-}`}>
-            <Animated.View
-              style={[
-                styles.box,
-                {
-                  backgroundColor: {
-                    ':hover': colors.primaryDark,
-                    default: colors.primary,
-                  },
-                  transitionDelay: {
-                    ':hover': '0ms',
-                    default: '500ms',
-                  },
-                  transitionDuration: '200ms',
-                },
-              ]}
-            />
-          </VerticalExampleCard>
-
-          <VerticalExampleCard
-            title="Per-state behavior (allow-discrete on hover only)"
-            code={`<Animated.View
-  style={{
-    justifyContent: {
-      default: 'flex-start',
-      ':hover': 'flex-end',
-    },
-    transitionDuration: '1s',
-    transitionTimingFunction: 'linear',
-    transitionBehavior: {
-      default: 'normal',
-      ':hover': 'allow-discrete',
-    },
-  }}>
-  {/* three children */}
-</Animated.View>`}
-            collapsedCode={`transitionBehavior: {
-  default: 'normal',
-  ':hover': 'allow-discrete',
-}`}>
-            <Animated.View
-              style={[
-                styles.behaviorTrack,
-                {
-                  justifyContent: {
-                    ':hover': 'flex-end',
-                    default: 'flex-start',
-                  },
-                  transitionBehavior: {
-                    ':hover': 'allow-discrete',
-                    default: 'normal',
-                  },
-                  transitionDuration: '1s',
-                  transitionTimingFunction: 'linear',
-                },
-              ]}>
-              <Animated.View style={styles.behaviorChip} />
-              <Animated.View style={styles.behaviorChip} />
-              <Animated.View style={styles.behaviorChip} />
-            </Animated.View>
           </VerticalExampleCard>
         </Section>
       </Scroll>
@@ -236,20 +127,6 @@ transitionDuration: ['600ms', '150ms'],`}>
 }
 
 const styles = StyleSheet.create({
-  behaviorChip: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.xs,
-    height: sizes.sm,
-    width: sizes.xs,
-  },
-  behaviorTrack: {
-    backgroundColor: colors.primaryLight,
-    borderRadius: radius.sm,
-    flexDirection: 'row',
-    height: sizes.sm,
-    overflow: 'hidden',
-    width: sizes.xxl,
-  },
   box: {
     borderRadius: radius.md,
     height: sizes.md,
@@ -257,5 +134,13 @@ const styles = StyleSheet.create({
   },
   content: {
     gap: spacing.xs,
+  },
+  input: {
+    borderColor: colors.foreground1,
+    borderRadius: radius.md,
+    color: colors.background1,
+    height: sizes.md,
+    paddingHorizontal: spacing.sm,
+    width: sizes.xxl,
   },
 });
