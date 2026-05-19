@@ -30,12 +30,6 @@ export interface WorkletsModuleProxy {
     remoteFunctionUnpackerSourceMap: string
   ): void;
 
-  createSerializable<TValue>(
-    value: TValue,
-    shouldPersistRemote: boolean,
-    nativeStateSource?: object
-  ): SerializableRef<TValue>;
-
   createSerializableImport<TValue>(
     source: string,
     imported: string
@@ -73,6 +67,10 @@ export interface WorkletsModuleProxy {
     array: unknown[],
     shouldRetainRemote?: boolean
   ): SerializableRef<unknown[]>;
+
+  createSerializableArrayBuffer(
+    arrayBuffer: ArrayBuffer
+  ): SerializableRef<ArrayBuffer>;
 
   createSerializableMap<TKey, TValue>(
     keys: TKey[],
@@ -201,9 +199,18 @@ export interface WorkletsModuleProxy {
   getUIRuntimeHolder(): object;
 
   getUISchedulerHolder(): object;
+
+  /* #region deprecated */
+
+  createSerializableLEGACY<TValue>(
+    value: TValue,
+    nativeStateSource?: object
+  ): SerializableRef<TValue>;
+
+  /* #endregion deprecated */
 }
 
-type InternalMethods = 'loadUnpackers';
+type InternalMethods = 'loadUnpackers' | 'createSerializableLEGACY';
 
 type TurboModulePublic = {
   toggleSlowAnimationsOnUIRuntime(): boolean;

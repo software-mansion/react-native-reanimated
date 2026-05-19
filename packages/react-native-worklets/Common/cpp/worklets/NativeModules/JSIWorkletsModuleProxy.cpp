@@ -282,11 +282,6 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         });
       });
 
-  jsi_utils::addMethod<3>(
-      rt, obj, "createSerializable", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
-        return makeSerializableClone(rt, at<0>(args), at<1>(args), at<2>(args));
-      });
-
   jsi_utils::addMethod<1>(
       rt, obj, "createSerializableBigInt", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         return makeSerializableBigInt(rt, at<0>(args).asBigInt(rt));
@@ -332,6 +327,12 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   jsi_utils::addMethod<2>(
       rt, obj, "createSerializableArray", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         return makeSerializableArray(rt, at<0>(args).asObject(rt).asArray(rt), at<1>(args));
+      });
+
+  jsi_utils::addMethod<2>(
+      rt, obj, "createSerializableArrayBuffer", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        const auto buffer = at<0>(args).getObject(rt).getArrayBuffer(rt);
+        return makeSerializableArrayBuffer(rt, buffer);
       });
 
   jsi_utils::addMethod<3>(
@@ -700,6 +701,18 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         obj.setNativeState(rt, std::move(nativeState));
         return jsi::Value(std::move(obj));
       });
+
+  /* #region deprecated */
+
+  jsi_utils::addMethod<2>(
+      rt, obj, "createSerializableLEGACY", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        const auto &value = at<0>(args);
+        const auto shouldRetainRemote = jsi::Value::undefined();
+        const auto &nativeStateSource = at<1>(args);
+        return makeSerializableClone(rt, value, shouldRetainRemote, nativeStateSource);
+      });
+
+  /* #endregion deprecated */
 
   return obj;
 }

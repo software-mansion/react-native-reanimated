@@ -11,7 +11,10 @@ import { getStaticFeatureFlag } from '../featureFlags/featureFlags';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
 import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
 import { installRemoteFunctionUnpacker } from '../memory/remoteFunctionUnpacker';
-import { makeShareableCloneOnUIRecursive } from '../memory/serializable';
+import {
+  createSerializable,
+  makeShareableCloneOnUIRecursive,
+} from '../memory/serializable';
 import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
 import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
 import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
@@ -118,7 +121,15 @@ export function setupConsoleForwarding(boundCapturableConsole: typeof console) {
 
 export function setupSerializer() {
   'worklet';
-  globalThis.__serializer = makeShareableCloneOnUIRecursive;
+  if (
+    !globalThis._WORKLETS_BUNDLE_MODE_ENABLED &&
+    globalThis.__RUNTIME_KIND === 1
+  ) {
+    globalThis.__serializer =
+      createSerializable as typeof globalThis.__serializer;
+  } else {
+    globalThis.__serializer = makeShareableCloneOnUIRecursive;
+  }
 }
 
 let initialized = false;
@@ -166,6 +177,7 @@ function initializeRNRuntime() {
     }
   }
 
+  setupSerializer();
   registerReportFatalRemoteError();
 }
 

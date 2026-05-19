@@ -65,18 +65,6 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       this.#workletsModuleProxy.createSerializableBoolean(false);
   }
 
-  createSerializable<TValue>(
-    value: TValue,
-    shouldPersistRemote: boolean,
-    nativeStateSource?: object
-  ) {
-    return this.#workletsModuleProxy.createSerializable(
-      value,
-      shouldPersistRemote,
-      nativeStateSource
-    );
-  }
-
   createSerializableImport<TValue>(
     from: string,
     to: string
@@ -142,6 +130,10 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       array,
       shouldRetainRemote
     );
+  }
+
+  createSerializableArrayBuffer(arrayBuffer: ArrayBuffer) {
+    return this.#workletsModuleProxy.createSerializableArrayBuffer(arrayBuffer);
   }
 
   createSerializableMap<TKey, TValue>(
