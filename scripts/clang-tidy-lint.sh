@@ -11,7 +11,7 @@ if [ ! -f "compile_commands.json" ]; then
   (
     cd ../../apps/fabric-example || exit 1
     yarn
-    cd android && ./gradlew assembleDebug --build-cache -PreactNativeArchitectures=arm64-v8a
+    cd android && ./gradlew :react-native-worklets:assembleDebug :react-native-reanimated:assembleDebug --build-cache -PreactNativeArchitectures=arm64-v8a
   )
 fi
 
