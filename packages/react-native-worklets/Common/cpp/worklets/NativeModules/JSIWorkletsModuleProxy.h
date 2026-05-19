@@ -9,7 +9,6 @@
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
-#include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #include <memory>
 #include <string>
@@ -32,21 +31,35 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
       const std::shared_ptr<RuntimeBindings> &runtimeBindings,
       const BundleModeConfig &bundleModeConfig,
       const std::shared_ptr<UnpackerLoader> &unpackerLoader,
-      RuntimeData::RuntimeId hostRuntimeId);
+      RuntimeData::RuntimeId hostRuntimeId)
+      : isDevBundle_(isDevBundle),
+        bundleModeConfig_(bundleModeConfig),
+        jsScheduler_(jsScheduler),
+        uiScheduler_(uiScheduler),
+        memoryManager_(memoryManager),
+        runtimeManager_(runtimeManager),
+        uiWorkletRuntime_(uiWorkletRuntime),
+        runtimeBindings_(runtimeBindings),
+        unpackerLoader_(unpackerLoader),
+        hostRuntimeId_(hostRuntimeId) {}
 
-  JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other, RuntimeData::RuntimeId hostRuntimeId)
-      : JSIWorkletsModuleProxy(
-            other.isDevBundle_,
-            other.jsScheduler_,
-            other.uiScheduler_,
-            other.memoryManager_,
-            other.runtimeManager_,
-            other.uiWorkletRuntime_,
-            other.runtimeBindings_,
-            other.bundleModeConfig_,
-            other.unpackerLoader_,
-            hostRuntimeId) {}
+  static std::shared_ptr<JSIWorkletsModuleProxy> createForNewRuntime(
+      const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,
+      RuntimeData::RuntimeId hostRuntimeId) {
+    return std::make_shared<JSIWorkletsModuleProxy>(
+        sourceProxy->isDevBundle_,
+        sourceProxy->jsScheduler_,
+        sourceProxy->uiScheduler_,
+        sourceProxy->memoryManager_,
+        sourceProxy->runtimeManager_,
+        sourceProxy->uiWorkletRuntime_,
+        sourceProxy->runtimeBindings_,
+        sourceProxy->bundleModeConfig_,
+        sourceProxy->unpackerLoader_,
+        hostRuntimeId);
+  }
 
+  /** No copy constructor to prevent making JSIWorkletsModuleProxy with wrong hostRuntimeId. */
   JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other) = delete;
 
   [[nodiscard]]

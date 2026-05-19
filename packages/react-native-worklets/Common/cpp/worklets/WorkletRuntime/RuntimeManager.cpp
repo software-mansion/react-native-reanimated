@@ -44,10 +44,9 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
     bool enableEventLoop) {
   const auto runtimeId = getNextRuntimeId();
 
-  auto workletRuntime =
+  const auto workletRuntime =
       std::make_shared<WorkletRuntime>(runtimeId, RuntimeData::RuntimeKind::Worker, name, queue, enableEventLoop);
-
-  const auto targetProxy = std::make_shared<JSIWorkletsModuleProxy>(*sourceProxy, runtimeId);
+  const auto targetProxy = JSIWorkletsModuleProxy::createForNewRuntime(sourceProxy, runtimeId);
 
   workletRuntime->init(targetProxy);
 

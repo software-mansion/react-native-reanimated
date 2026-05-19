@@ -11,7 +11,6 @@
 #include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
-#include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #ifndef NDEBUG
 #include <algorithm>
@@ -223,28 +222,6 @@ inline void registerCustomSerializable(
 }
 
 } // namespace
-
-JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
-    const bool isDevBundle,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
-    const std::shared_ptr<UIScheduler> &uiScheduler,
-    const std::shared_ptr<MemoryManager> &memoryManager,
-    const std::shared_ptr<RuntimeManager> &runtimeManager,
-    const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
-    const std::shared_ptr<RuntimeBindings> &runtimeBindings,
-    const BundleModeConfig &bundleModeConfig,
-    const std::shared_ptr<UnpackerLoader> &unpackerLoader,
-    const RuntimeData::RuntimeId hostRuntimeId)
-    : isDevBundle_(isDevBundle),
-      bundleModeConfig_(bundleModeConfig),
-      jsScheduler_(jsScheduler),
-      uiScheduler_(uiScheduler),
-      memoryManager_(memoryManager),
-      runtimeManager_(runtimeManager),
-      uiWorkletRuntime_(uiWorkletRuntime),
-      runtimeBindings_(runtimeBindings),
-      unpackerLoader_(unpackerLoader),
-      hostRuntimeId_(hostRuntimeId) {}
 
 jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   auto obj = jsi::Object(rt);
@@ -694,7 +671,6 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
 
         const auto enableEventLoop = at<4>(args).asBool();
-
         const auto runtimeManager = sourceProxy->getRuntimeManager();
 
         return createWorkletRuntime(
