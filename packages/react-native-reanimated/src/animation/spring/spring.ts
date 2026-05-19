@@ -24,6 +24,7 @@ import {
   getEnergy,
   initialCalculations,
   isAnimationTerminatingCalculation,
+  overDampedSpringCalculations,
   safeMergeConfigs,
   scaleZetaToMatchClamps,
   underDampedSpringCalculations,
@@ -112,22 +113,36 @@ export const withSpring = ((
 
       const { zeta, omega0, omega1 } = animation;
 
-      const { position: newPosition, velocity: newVelocity } =
-        zeta < 1
-          ? underDampedSpringCalculations(animation, {
-              zeta,
-              v0,
-              x0,
-              omega0,
-              omega1,
-              t,
-            })
-          : criticallyDampedSpringCalculations(animation, {
-              v0,
-              x0,
-              omega0,
-              t,
-            });
+      let newPosition: number;
+      let newVelocity: number;
+      if (zeta < 1) {
+        ({ position: newPosition, velocity: newVelocity } =
+          underDampedSpringCalculations(animation, {
+            zeta,
+            v0,
+            x0,
+            omega0,
+            omega1,
+            t,
+          }));
+      } else if (zeta > 1) {
+        ({ position: newPosition, velocity: newVelocity } =
+          overDampedSpringCalculations(animation, {
+            zeta,
+            v0,
+            x0,
+            omega0,
+            t,
+          }));
+      } else {
+        ({ position: newPosition, velocity: newVelocity } =
+          criticallyDampedSpringCalculations(animation, {
+            v0,
+            x0,
+            omega0,
+            t,
+          }));
+      }
 
       animation.current = newPosition;
       animation.velocity = newVelocity;
@@ -184,6 +199,16 @@ export const withSpring = ((
             : previousAnimation?.velocity + config.velocity) || 0;
       } else {
         animation.velocity = config.velocity || 0;
+      }
+
+      // Clip velocity that would drive the first frame away from the new target.
+      // Inertia is only preserved when it already points toward toValue.
+      const toValueNum = Number(animation.toValue);
+      if (
+        (toValueNum > value && animation.velocity < 0) ||
+        (toValueNum < value && animation.velocity > 0)
+      ) {
+        animation.velocity = 0;
       }
 
       if (triggeredTwice) {
