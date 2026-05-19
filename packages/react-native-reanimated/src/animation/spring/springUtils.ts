@@ -304,7 +304,6 @@ export function calculateNewStiffnessToMatchDuration(
   });
 }
 
-// ts-prune-ignore-next This function is exported to be tested
 export function overDampedSpringCalculations(
   animation: InnerSpringAnimation,
   precalculatedValues: {
