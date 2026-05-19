@@ -2,6 +2,7 @@ import { TurboModuleRegistry } from 'react-native';
 import { runOnUISync } from 'react-native-worklets';
 
 import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
+import type { TestValue } from '../../ReJest/types';
 
 describe('Test createSerializableOnUI', () => {
   test('createSerializableOnUIString', () => {
@@ -193,31 +194,33 @@ describe('Test createSerializableOnUI', () => {
     expect(typeof arrayValue[index.arrayBuffer]).toBe('object');
   });
 
-  // These types are not supported yet
-  // test('createSerializableOnUIError', async () => {
-  //   // Arrange
-  //   const errorValue = runOnUISync(() => {
-  //     'worklet';
-  //     return new Error('test');
-  //   })();
+  test('createSerializableOnUIMap', () => {
+    const mapValue = runOnUISync(() => {
+      'worklet';
+      return new Map<string, TestValue>([
+        ['a', 1],
+        ['b', 'two'],
+      ]);
+    });
 
-  //   // Act
-  //   await render(
-  //     <ValueComponent
-  //       validationFunction={() => {
-  //         'worklet';
-  //         const checks = [errorValue instanceof Error, String(errorValue).includes('test')];
-  //         return checks.every(Boolean);
-  //       }}
-  //     />,
-  //   );
-  //   await wait(100);
+    expect(mapValue instanceof Map).toBe(true);
+    expect(mapValue.size).toBe(2);
+    expect(mapValue.get('a')).toBe(1);
+    expect(mapValue.get('b')).toBe('two');
+  });
 
-  //   // Assert
-  //   const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-  //   expect(sharedValue.onUI).toBe('ok');
-  //   expect(sharedValue.onJS).toBe('ok');
-  // });
+  test('createSerializableOnUISet', () => {
+    const setValue = runOnUISync(() => {
+      'worklet';
+      return new Set<unknown>([1, '1', true]);
+    });
+
+    expect(setValue instanceof Set).toBe(true);
+    expect(setValue.size).toBe(3);
+    expect(setValue.has(1)).toBe(true);
+    expect(setValue.has('1')).toBe(true);
+    expect(setValue.has(true)).toBe(true);
+  });
 
   // test('createSerializableOnUIInitializer', async () => {
   //   // Arrange

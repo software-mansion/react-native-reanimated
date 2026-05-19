@@ -213,6 +213,7 @@ const testCases: Record<string, TestCase> = {
     },
   },
   map: {
+    // This logs correctly but only in Metro...
     expected: '{}',
     factory: () => {
       'worklet';
@@ -220,6 +221,7 @@ const testCases: Record<string, TestCase> = {
     },
   },
   set: {
+    // This logs correctly but only in Metro...
     expected: '{}',
     factory: () => {
       'worklet';
