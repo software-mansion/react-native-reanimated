@@ -1,7 +1,6 @@
 'use strict';
 
 import type {
-  FlatSerializableRef,
   RemoteFunction,
   SerializableRef,
   SynchronizableRef,
@@ -206,14 +205,11 @@ export interface WorkletsModuleProxy {
 
   getUISchedulerHolder(): object;
 
-  /* #region deprecated */
-
+  /** @deprecated Don't use unless you have to. */
   createSerializableLEGACY<TValue>(
     value: TValue,
-    nativeStateSource?: object
-  ): FlatSerializableRef<TValue>;
-
-  /* #endregion deprecated */
+    nativeStateSource: object | undefined
+  ): SerializableRef<TValue>;
 }
 
 type InternalMethods = 'loadUnpackers' | 'createSerializableLEGACY';

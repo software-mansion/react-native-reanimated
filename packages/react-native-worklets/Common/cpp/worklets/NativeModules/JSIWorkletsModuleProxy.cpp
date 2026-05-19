@@ -1,4 +1,5 @@
 #include <jsi/jsi.h>
+#include <react/debug/react_native_assert.h>
 #include <worklets/Compat/Holders.h>
 #include <worklets/Compat/StableApi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
@@ -329,8 +330,8 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         return makeSerializableArray(rt, at<0>(args).asObject(rt).asArray(rt), at<1>(args));
       });
 
-  jsi_utils::addMethod<2>(
-      rt, obj, "createSerializableArrayBuffer", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+  jsi_utils::addMethod<1>(
+      rt, obj, "createSerializableArrayBuffer", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         const auto buffer = at<0>(args).getObject(rt).getArrayBuffer(rt);
         return makeSerializableArrayBuffer(rt, buffer);
       });
@@ -723,7 +724,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         } else [[likely]] {
           auto resolveOrReject = extractSerializableOrThrow<SerializableRemoteFunction>(rt, at<0>(args));
           auto resolveOrError = extractSerializableOrThrow(rt, at<1>(args));
-          resolveOrReject->schedule(resolveOrError, runtimeManager);
+          resolveOrReject->scheduleOnHost(resolveOrError, runtimeManager);
         }
       });
 
@@ -848,8 +849,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       obj,
       "createSerializableLEGACY",
       [hostRuntimeId = hostRuntimeId_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        react_native_assert(
+            hostRuntimeId != RuntimeData::rnRuntimeId &&
+            "createSerializableLEGACY should never be called on the React Native runtime.");
         const auto &value = at<0>(args);
-        auto shouldRetainRemote = jsi::Value::undefined();
+        const auto shouldRetainRemote = jsi::Value::undefined();
         const auto &nativeStateSource = at<1>(args);
         return makeSerializableClone(rt, value, shouldRetainRemote, nativeStateSource, hostRuntimeId);
       });
