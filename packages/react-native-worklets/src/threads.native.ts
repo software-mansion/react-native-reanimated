@@ -374,7 +374,7 @@ function flushUIQueue(): void {
             if (resolve) {
               const serializedResult = globalThis.__serializer(result);
               globalThis.__workletsModuleProxy.handlePromise(
-                resolve as unknown as RemoteFunction,
+                resolve,
                 serializedResult
               );
             }
@@ -382,7 +382,7 @@ function flushUIQueue(): void {
             if (reject) {
               const serializedError = globalThis.__serializer(error);
               globalThis.__workletsModuleProxy.handlePromise(
-                reject as unknown as RemoteFunction,
+                reject,
                 serializedError
               );
             } else {

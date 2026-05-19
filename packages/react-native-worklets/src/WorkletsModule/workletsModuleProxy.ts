@@ -168,7 +168,9 @@ export interface WorkletsModuleProxy {
   ): TReturn;
 
   handlePromise<TValue>(
-    resolveOrReject: ((value: TValue) => void) | RemoteFunction,
+    resolveOrReject:
+      | ((value: TValue | PromiseLike<TValue>) => void)
+      | RemoteFunction,
     valueOrError: SerializableRef<TValue>
   ): void;
 

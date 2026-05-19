@@ -13,7 +13,7 @@ import {
   makeShareableCloneOnUIRecursive,
 } from './memory/serializable';
 import { serializableMappingCache } from './memory/serializableMappingCache';
-import type { RemoteFunction } from './memory/types';
+import type { SerializableRef } from './memory/types';
 import { setupRunLoop } from './runLoop/workletRuntime';
 import { RuntimeKind } from './runtimeKind';
 import type {
@@ -457,23 +457,19 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
         'worklet';
         try {
           const result = worklet(...args);
-          if (resolve) {
-            const serializedResult = globalThis.__serializer(result);
-            globalThis.__workletsModuleProxy.handlePromise(
-              resolve as unknown as RemoteFunction,
-              serializedResult
-            );
-          }
+          const serializedResult = globalThis.__serializer(
+            result
+          ) as SerializableRef<ReturnValue>;
+          globalThis.__workletsModuleProxy.handlePromise(
+            resolve,
+            serializedResult
+          );
         } catch (error) {
-          if (reject) {
-            const serializedError = globalThis.__serializer(error);
-            globalThis.__workletsModuleProxy.handlePromise(
-              reject as unknown as RemoteFunction,
-              serializedError
-            );
-          } else {
-            throw error;
-          }
+          const serializedError = globalThis.__serializer(error);
+          globalThis.__workletsModuleProxy.handlePromise(
+            reject,
+            serializedError
+          );
         }
         globalThis.__callMicrotasks?.();
       }),
@@ -536,23 +532,19 @@ export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
         'worklet';
         try {
           const result = worklet(...args);
-          if (resolve) {
-            const serializedResult = globalThis.__serializer(result);
-            globalThis.__workletsModuleProxy.handlePromise(
-              resolve as unknown as RemoteFunction,
-              serializedResult
-            );
-          }
+          const serializedResult = globalThis.__serializer(
+            result
+          ) as SerializableRef<ReturnValue>;
+          globalThis.__workletsModuleProxy.handlePromise(
+            resolve,
+            serializedResult
+          );
         } catch (error) {
-          if (reject) {
-            const serializedError = globalThis.__serializer(error);
-            globalThis.__workletsModuleProxy.handlePromise(
-              reject as unknown as RemoteFunction,
-              serializedError
-            );
-          } else {
-            throw error;
-          }
+          const serializedError = globalThis.__serializer(error);
+          globalThis.__workletsModuleProxy.handlePromise(
+            reject,
+            serializedError
+          );
         }
         globalThis.__callMicrotasks?.();
       }),
