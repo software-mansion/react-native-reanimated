@@ -129,7 +129,10 @@ export function createUpdatesContainer() {
             : updateRequest.snapshot;
       } else {
         for (const prop of propsNames) {
-          update[prop] = 'update' in updateRequest ? updateRequest.update[prop] : updateRequest.snapshot[prop];
+          update[prop] =
+            'update' in updateRequest
+              ? updateRequest.update[prop as keyof OperationUpdate]
+              : updateRequest.snapshot[prop as keyof OperationUpdate];
         }
       }
       updatesForTag[tag].push(update);

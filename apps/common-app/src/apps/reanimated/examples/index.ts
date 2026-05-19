@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-var-requires */
 import 'react-native-reanimated';
-
 import React from 'react';
 
 const AboutExample: React.FC = () =>
@@ -1003,6 +1003,7 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Shadow Nodes Cloning',
     screen: ShadowNodesCloningExample,
   },
+
   // Old examples
   AnimatedStyleUpdateExample: {
     title: 'Animated style update',
