@@ -62,15 +62,17 @@ jsi::Value makeSerializableHostFunction(
 
 jsi::Value makeSerializableRemoteFunction(
     jsi::Runtime &rt,
-    jsi::Function function,
+    jsi::Function function
 #ifndef NDEBUG
+    ,
     const std::string &name
 #endif
 ) {
   auto serializable = std::make_shared<SerializableRemoteFunction>(
       rt,
-      std::move(function),
+      std::move(function)
 #ifndef NDEBUG
+          ,
       name
 #endif
   );

@@ -262,8 +262,9 @@ class SerializableRemoteFunction : public Serializable,
  public:
   SerializableRemoteFunction(
       jsi::Runtime &rt,
-      jsi::Function &&function,
+      jsi::Function &&function
 #ifndef NDEBUG
+      ,
       const std::string &name
 #endif
       )
