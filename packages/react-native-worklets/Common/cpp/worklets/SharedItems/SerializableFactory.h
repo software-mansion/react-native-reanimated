@@ -41,6 +41,12 @@ jsi::Value makeSerializableMap(jsi::Runtime &rt, const jsi::Array &keys, const j
 
 jsi::Value makeSerializableSet(jsi::Runtime &rt, const jsi::Array &values);
 
+jsi::Value makeSerializableError(
+    jsi::Runtime &rt,
+    const std::string &name,
+    const std::string &message,
+    const std::optional<std::string> &stack);
+
 jsi::Value makeSerializableInitializer(jsi::Runtime &rt, const jsi::Object &initializerObject);
 
 jsi::Value makeSerializableHostFunction(

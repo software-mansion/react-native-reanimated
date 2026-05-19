@@ -219,16 +219,16 @@ export function createSerializable<TValue>(
     return clonePlainJSObject(value, shouldPersistRemote, depth);
   }
   if (value instanceof Set) {
-    return cloneSet(value);
+    return cloneSet(value) as SerializableRef<TValue>;
   }
   if (value instanceof Map) {
-    return cloneMap(value);
+    return cloneMap(value) as SerializableRef<TValue>;
   }
   if (value instanceof RegExp) {
-    return cloneRegExp(value);
+    return cloneRegExp(value) as SerializableRef<TValue>;
   }
   if (value instanceof Error) {
-    return cloneError(value);
+    return cloneError(value) as SerializableRef<TValue>;
   }
   if (value instanceof ArrayBuffer) {
     return cloneArrayBuffer(value, shouldPersistRemote);
@@ -576,19 +576,16 @@ function clonePlainJSObject<TValue extends object>(
   return clone;
 }
 
-function cloneMap<TValue extends Map<unknown, unknown>>(
-  value: TValue
-): SerializableRef<TValue> {
+function cloneMap(
+  value: Map<unknown, unknown>
+): SerializableRef<Map<unknown, unknown>> {
   const clonedKeys: unknown[] = [];
   const clonedValues: unknown[] = [];
   for (const [key, element] of value.entries()) {
     clonedKeys.push(createSerializable(key));
     clonedValues.push(createSerializable(element));
   }
-  const clone = WorkletsModule.createSerializableMap(
-    clonedKeys,
-    clonedValues
-  ) as SerializableRef<TValue>;
+  const clone = WorkletsModule.createSerializableMap(clonedKeys, clonedValues);
   serializableMappingCache.set(value, clone);
   serializableMappingCache.set(clone);
 
@@ -596,16 +593,12 @@ function cloneMap<TValue extends Map<unknown, unknown>>(
   return clone;
 }
 
-function cloneSet<TValue extends Set<unknown>>(
-  value: TValue
-): SerializableRef<TValue> {
+function cloneSet(value: Set<unknown>): SerializableRef<Set<unknown>> {
   const clonedElements: unknown[] = [];
   for (const element of value) {
     clonedElements.push(createSerializable(element));
   }
-  const clone = WorkletsModule.createSerializableSet(
-    clonedElements
-  ) as SerializableRef<TValue>;
+  const clone = WorkletsModule.createSerializableSet(clonedElements);
   serializableMappingCache.set(value, clone);
   serializableMappingCache.set(clone);
 
@@ -613,9 +606,7 @@ function cloneSet<TValue extends Set<unknown>>(
   return clone;
 }
 
-function cloneRegExp<TValue extends RegExp>(
-  value: TValue
-): SerializableRef<TValue> {
+function cloneRegExp(value: RegExp): SerializableRef<RegExp> {
   const pattern = value.source;
   const flags = value.flags;
   const handle = cloneInitializer({
@@ -623,28 +614,17 @@ function cloneRegExp<TValue extends RegExp>(
       'worklet';
       return new RegExp(pattern, flags);
     },
-  }) as unknown as SerializableRef<TValue>;
+  }) as SerializableRef<RegExp>;
   serializableMappingCache.set(value, handle);
 
   return handle;
 }
 
-function cloneError<TValue extends Error>(
-  value: TValue
-): SerializableRef<TValue> {
+function cloneError(value: Error): SerializableRef<Error> {
   const { name, message, stack } = value;
-  const handle = cloneInitializer({
-    __init: () => {
-      'worklet';
-      const error = new Error();
-      error.name = name;
-      error.message = message;
-      error.stack = stack;
-      return error;
-    },
-  });
-  serializableMappingCache.set(value, handle);
-  return handle as unknown as SerializableRef<TValue>;
+  const clone = WorkletsModule.createSerializableError(name, message, stack);
+  serializableMappingCache.set(value, clone);
+  return clone;
 }
 
 function cloneArrayBuffer<T extends ArrayBuffer>(
@@ -801,7 +781,7 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
       if (isHostObject(value)) {
         // We call `_createSerializableClone` to wrap the provided HostObject
         // inside SerializableJSRef.
-        return global._createSerializableHostObject(
+        return globalThis._createSerializableHostObject(
           value
         ) as FlatSerializableRef<TValue>;
       }
@@ -812,17 +792,46 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
         return value as FlatSerializableRef<TValue>;
       }
       if (Array.isArray(value)) {
-        return global._createSerializableArray(
+        return globalThis._createSerializableArray(
           value.map(cloneRecursive)
         ) as FlatSerializableRef<TValue>;
       }
       if ((value as Record<string, unknown>).__synchronizableRef) {
-        return global._createSerializableSynchronizable(
+        return globalThis._createSerializableSynchronizable(
           value
         ) as FlatSerializableRef<TValue>;
       }
       if ((value as Record<string, unknown>).__serializableRef) {
         return value as FlatSerializableRef<TValue>;
+      }
+      if (value instanceof Set) {
+        const values: unknown[] = [];
+        value.forEach((element) => {
+          values.push(cloneRecursive(element));
+        });
+        return globalThis.__workletsModuleProxy.createSerializableSet(
+          values
+        ) as FlatSerializableRef<TValue>;
+      }
+      if (value instanceof Error) {
+        const { name, message, stack } = value;
+        return globalThis.__workletsModuleProxy.createSerializableError(
+          name,
+          message,
+          stack
+        ) as FlatSerializableRef<TValue>;
+      }
+      if (value instanceof Map) {
+        const keys: unknown[] = [];
+        const values: unknown[] = [];
+        value.forEach((element, key) => {
+          keys.push(cloneRecursive(key));
+          values.push(cloneRecursive(element));
+        });
+        return globalThis.__workletsModuleProxy.createSerializableMap(
+          keys,
+          values
+        ) as FlatSerializableRef<TValue>;
       }
       if (Object.getPrototypeOf(value) !== Object.prototype) {
         const length = globalThis.__customSerializationRegistry.length;
@@ -831,7 +840,7 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
             globalThis.__customSerializationRegistry[i];
           if (determine(value)) {
             const packedData = pack(value);
-            return globalThis.__workletsModuleProxy?.createCustomSerializable(
+            return globalThis.__workletsModuleProxy.createCustomSerializable(
               cloneRecursive(packedData as TValue) as SerializableRef<object>,
               i
             ) as FlatSerializableRef<TValue>;
@@ -842,37 +851,37 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
       for (const [key, element] of Object.entries(value)) {
         toAdapt[key] = cloneRecursive(element);
       }
-      return global._createSerializable(
+      return globalThis._createSerializable(
         toAdapt,
         value
       ) as FlatSerializableRef<TValue>;
     }
 
     if (typeof value === 'string') {
-      return global._createSerializableString(value);
+      return globalThis._createSerializableString(value);
     }
 
     if (typeof value === 'number') {
-      return global._createSerializableNumber(value);
+      return globalThis._createSerializableNumber(value);
     }
 
     if (typeof value === 'boolean') {
-      return global._createSerializableBoolean(value);
+      return globalThis._createSerializableBoolean(value);
     }
 
     if (typeof value === 'bigint') {
-      return global._createSerializableBigInt(value);
+      return globalThis._createSerializableBigInt(value);
     }
 
     if (value === undefined) {
-      return global._createSerializableUndefined();
+      return globalThis._createSerializableUndefined();
     }
 
     if (value === null) {
-      return global._createSerializableNull();
+      return globalThis._createSerializableNull();
     }
 
-    return global._createSerializable(value, undefined);
+    return globalThis._createSerializable(value, undefined);
   }
   return cloneRecursive(value);
 }

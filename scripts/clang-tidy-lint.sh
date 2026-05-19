@@ -11,8 +11,11 @@ if [ ! -f "compile_commands.json" ]; then
   (
     cd ../../apps/fabric-example || exit 1
     yarn
-    cd android && ./gradlew assembleDebug --build-cache -PreactNativeArchitectures=arm64-v8a
+    cd android && ./gradlew :react-native-worklets:assembleDebug :react-native-reanimated:assembleDebug --build-cache -PreactNativeArchitectures=arm64-v8a
   )
 fi
 
-run-clang-tidy -quiet -p . -header-filter="^.*/$1/.*\.h$" "$1"
+ndk_bin="$(grep -oE '/[^ "]+/clang\+\+' compile_commands.json | head -1 | xargs dirname)"
+
+run-clang-tidy -quiet -p . -clang-tidy-binary "$ndk_bin/clang-tidy" \
+  -header-filter="^.*/$1/.*\.h$" "$1"
