@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 'use strict';
 
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
@@ -115,7 +116,6 @@ declare global {
     unknown,
     unknown
   >;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   var __remoteFunctionRegistry: Map<number, Function>;
   /** Only in Bundle Mode on Worklet Runtimes. */
   var TurboModules: Map<string, unknown>;

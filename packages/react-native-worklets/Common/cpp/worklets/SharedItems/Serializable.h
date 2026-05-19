@@ -270,7 +270,7 @@ class SerializableRemoteFunction : public Serializable,
  private:
   struct RNRuntimeData {
     const int remoteId = 0;
-    const std::shared_ptr<JSScheduler> jsScheduler = nullptr;
+    const std::shared_ptr<JSScheduler> jsScheduler;
   };
 
   struct WorkletRuntimeData {

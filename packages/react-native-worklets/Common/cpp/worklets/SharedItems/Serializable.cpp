@@ -26,6 +26,12 @@ jsi::Function getRemoteFunctionUnpacker(jsi::Runtime &rt) {
   return remoteFunctionUnpacker.asObject(rt).asFunction(rt);
 }
 
+jsi::Object getRemoteFunctionRegistry(jsi::Runtime &rt) {
+  auto registry = rt.global().getProperty(rt, "__remoteFunctionRegistry");
+  react_native_assert(registry.isObject() && "remoteFunctionRegistry not found");
+  return registry.getObject(rt);
+}
+
 } // namespace
 
 jsi::Value makeSerializableClone(
@@ -286,8 +292,7 @@ SerializableRemoteFunction::~SerializableRemoteFunction() {
   if (isHostedOnRNRuntime()) {
     // TODO: consider batching
     rnRuntimeData_->jsScheduler->scheduleOnJS([id = rnRuntimeData_->remoteId](jsi::Runtime &rt) {
-      auto registryProp = rt.global().getProperty(rt, "__remoteFunctionRegistry");
-      auto registry = registryProp.asObject(rt);
+      const auto registry = getRemoteFunctionRegistry(rt);
       registry.getPropertyAsFunction(rt, "delete").callWithThis(rt, registry, jsi::Value(id));
     });
   } else {
@@ -298,14 +303,14 @@ SerializableRemoteFunction::~SerializableRemoteFunction() {
 jsi::Value SerializableRemoteFunction::toJSValue(jsi::Runtime &rt) {
   if (&rt == hostRuntime_) {
     if (isHostedOnRNRuntime()) {
-      auto registry = rt.global().getPropertyAsObject(rt, "__remoteFunctionRegistry");
+      const auto registry = getRemoteFunctionRegistry(rt);
       return registry.getPropertyAsFunction(rt, "get").callWithThis(rt, registry, jsi::Value(rnRuntimeData_->remoteId));
     } else {
       return jsi::Value(rt, *workletRuntimeData_->function);
     }
   } else {
-    auto name = name_.empty() ? jsi::Value::undefined() : jsi::String::createFromUtf8(rt, name_);
-    auto holderFunction = getRemoteFunctionUnpacker(rt).call(rt, name).asObject(rt);
+    const auto name = name_.empty() ? jsi::Value::undefined() : jsi::String::createFromUtf8(rt, name_);
+    auto holderFunction = getRemoteFunctionUnpacker(rt).call(rt, name).getObject(rt);
     holderFunction.setNativeState(rt, std::make_shared<SerializableJSRef>(shared_from_this()));
     return holderFunction;
   }

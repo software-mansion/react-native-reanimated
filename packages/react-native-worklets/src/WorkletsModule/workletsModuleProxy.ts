@@ -203,7 +203,7 @@ export interface WorkletsModuleProxy {
   getUISchedulerHolder(): object;
 }
 
-type InternalMethods = 'loadUnpackers' | 'isHostFunction';
+type InternalMethods = 'loadUnpackers';
 
 type TurboModulePublic = {
   toggleSlowAnimationsOnUIRuntime(): boolean;
