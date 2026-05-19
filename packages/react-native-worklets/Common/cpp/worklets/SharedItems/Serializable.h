@@ -10,6 +10,7 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 using namespace facebook;
@@ -279,11 +280,11 @@ class SerializableRemoteFunction : public Serializable,
 
   jsi::Runtime *hostRuntime_;
   const RuntimeData::RuntimeId hostRuntimeId_;
-  std::optional<RNRuntimeData> rnRuntimeData_;
-  std::optional<WorkletRuntimeData> workletRuntimeData_;
+  std::variant<RNRuntimeData, WorkletRuntimeData> runtimeData_;
   const std::string name_;
 
  public:
+  /** Creates RN Runtime Remote Function. */
   SerializableRemoteFunction(
       jsi::Runtime &rnRuntime,
       const std::string &name,
@@ -292,9 +293,10 @@ class SerializableRemoteFunction : public Serializable,
       : Serializable(ValueType::RemoteFunctionType),
         hostRuntime_(&rnRuntime),
         hostRuntimeId_(RuntimeData::rnRuntimeId),
-        rnRuntimeData_({.remoteId = remoteId, .jsScheduler = jsScheduler}),
+        runtimeData_(RNRuntimeData{.remoteId = remoteId, .jsScheduler = jsScheduler}),
         name_(name) {}
 
+  /** Creates Worklet Runtime Remote Function. */
   SerializableRemoteFunction(
       jsi::Runtime &workletRuntime,
       const std::string &name,
@@ -303,7 +305,7 @@ class SerializableRemoteFunction : public Serializable,
       : Serializable(ValueType::RemoteFunctionType),
         hostRuntime_(&workletRuntime),
         hostRuntimeId_(hostRuntimeId),
-        workletRuntimeData_({.function = std::make_unique<jsi::Value>(workletRuntime, function)}),
+        runtimeData_(WorkletRuntimeData{.function = std::make_unique<jsi::Value>(workletRuntime, std::move(function))}),
         name_(name) {}
 
   ~SerializableRemoteFunction() override;
@@ -314,7 +316,7 @@ class SerializableRemoteFunction : public Serializable,
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
   [[nodiscard]] bool isHostedOnRNRuntime() const noexcept {
-    return rnRuntimeData_.has_value();
+    return std::holds_alternative<RNRuntimeData>(runtimeData_);
   }
 
   [[nodiscard]] RuntimeData::RuntimeId getHostRuntimeId() const {

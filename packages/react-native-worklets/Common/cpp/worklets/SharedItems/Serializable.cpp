@@ -291,22 +291,26 @@ jsi::Value SerializableImport::toJSValue(jsi::Runtime &rt) {
 SerializableRemoteFunction::~SerializableRemoteFunction() {
   if (isHostedOnRNRuntime()) {
     // TODO: consider batching
-    rnRuntimeData_->jsScheduler->scheduleOnJS([id = rnRuntimeData_->remoteId](jsi::Runtime &rt) {
+    const auto &data = std::get<RNRuntimeData>(runtimeData_);
+    data.jsScheduler->scheduleOnJS([id = data.remoteId](jsi::Runtime &rt) {
       const auto registry = getRemoteFunctionRegistry(rt);
       registry.getPropertyAsFunction(rt, "delete").callWithThis(rt, registry, jsi::Value(id));
     });
   } else {
-    cleanupRuntimeAware(hostRuntime_, workletRuntimeData_->function);
+    auto &workletData = std::get<WorkletRuntimeData>(runtimeData_);
+    cleanupRuntimeAware(hostRuntime_, workletData.function);
   }
 }
 
 jsi::Value SerializableRemoteFunction::toJSValue(jsi::Runtime &rt) {
   if (&rt == hostRuntime_) {
     if (isHostedOnRNRuntime()) {
+      const auto &rnData = std::get<RNRuntimeData>(runtimeData_);
       const auto registry = getRemoteFunctionRegistry(rt);
-      return registry.getPropertyAsFunction(rt, "get").callWithThis(rt, registry, jsi::Value(rnRuntimeData_->remoteId));
+      return registry.getPropertyAsFunction(rt, "get").callWithThis(rt, registry, jsi::Value(rnData.remoteId));
     } else {
-      return jsi::Value(rt, *workletRuntimeData_->function);
+      const auto &workletData = std::get<WorkletRuntimeData>(runtimeData_);
+      return jsi::Value(rt, *workletData.function);
     }
   } else {
     const auto name = name_.empty() ? jsi::Value::undefined() : jsi::String::createFromUtf8(rt, name_);
