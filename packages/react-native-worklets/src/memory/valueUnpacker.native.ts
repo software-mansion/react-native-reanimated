@@ -17,11 +17,7 @@ export function installValueUnpacker() {
   const workletsCache = new Map<number, () => unknown>();
   const handleCache = new WeakMap<object, unknown>();
 
-  function valueUnpacker(
-    objectToUnpack: ObjectToUnpack,
-    category?: string,
-    remoteFunctionName?: string
-  ): unknown {
+  function valueUnpacker(objectToUnpack: ObjectToUnpack): unknown {
     const workletHash = objectToUnpack.__workletHash;
     if (workletHash !== undefined) {
       let workletFun = workletsCache.get(workletHash);
@@ -63,20 +59,9 @@ export function installValueUnpacker() {
         handleCache.set(objectToUnpack, value);
       }
       return value;
-    } else if (category === 'RemoteFunction') {
-      const fun = () => {
-        remoteFunctionName = remoteFunctionName
-          ? remoteFunctionName
-          : 'anonymous';
-
-        throw new Error(`[Worklets] Tried to synchronously call a Remote Function. Called "${remoteFunctionName}" on the ${globalThis.__RUNTIME_NAME} Runtime.
-See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#tried-to-synchronously-call-a-remote-function for more details.`);
-      };
-      fun.__remoteFunction = objectToUnpack;
-      return fun;
     } else {
       throw new Error(
-        `[Worklets] Data type in category "${category}" not recognized by value unpacker: "${globalThis._toString(
+        `[Worklets] Data type not recognized by value unpacker: "${globalThis._toString(
           objectToUnpack
         )}".`
       );

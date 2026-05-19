@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 'use strict';
 
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
 import type { reportFatalRemoteError } from './debug/errors';
 import type { CustomSerializableUnpacker } from './memory/customSerializableUnpacker';
+import type { RemoteFunctionUnpacker } from './memory/remoteFunctionUnpacker';
 import type { makeShareableCloneOnUIRecursive } from './memory/serializable';
 import type { ShareableGuestUnpacker } from './memory/shareableGuestUnpacker';
 import type { ShareableHostUnpacker } from './memory/shareableHostUnpacker';
@@ -77,6 +79,7 @@ declare global {
   var __synchronizableUnpacker: SynchronizableUnpacker;
   var __customSerializationRegistry: CustomSerializationRegistry;
   var __customSerializableUnpacker: CustomSerializableUnpacker;
+  var __remoteFunctionUnpacker: RemoteFunctionUnpacker;
   /**
    * @deprecated Kept for backwards compatibility. Remove it after support for
    *   Reanimated 4.3 is dropped. Reanimated uses it to handle event updates
@@ -113,6 +116,7 @@ declare global {
     unknown,
     unknown
   >;
+  var __remoteFunctionRegistry: Map<number, Function>;
   /** Only in Bundle Mode on Worklet Runtimes. */
   var TurboModules: Map<string, unknown>;
   /**

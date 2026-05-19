@@ -10,6 +10,7 @@ import { registerReportFatalRemoteError } from '../debug/errors';
 import { getStaticFeatureFlag } from '../featureFlags/featureFlags';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
 import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
+import { installRemoteFunctionUnpacker } from '../memory/remoteFunctionUnpacker';
 import { makeShareableCloneOnUIRecursive } from '../memory/serializable';
 import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
 import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
@@ -149,6 +150,7 @@ function initializeRuntime() {
   installCustomSerializableUnpacker();
   installShareableHostUnpacker();
   installShareableGuestUnpacker();
+  installRemoteFunctionUnpacker();
 }
 
 /** A function that should be run only on React Native runtime. */
