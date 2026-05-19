@@ -10,6 +10,7 @@
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
 
 #ifndef NDEBUG
 #include <algorithm>
@@ -152,12 +153,12 @@ runOnRuntimeSync(jsi::Runtime &rt, const jsi::Value &workletRuntimeValue, const 
 inline jsi::Value createWorkletRuntime(
     jsi::Runtime &originRuntime,
     const std::shared_ptr<RuntimeManager> &runtimeManager,
-    const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy,
+    const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,
     const std::string &name,
     std::shared_ptr<SerializableWorklet> &initializer,
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop) {
-  const auto workletRuntime = runtimeManager->createWorkletRuntime(jsiWorkletsModuleProxy, name, initializer, queue);
+  const auto workletRuntime = runtimeManager->createWorkletRuntime(sourceProxy, name, initializer, queue);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
@@ -221,26 +222,6 @@ inline void registerCustomSerializable(
 }
 
 } // namespace
-
-JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
-    const bool isDevBundle,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
-    const std::shared_ptr<UIScheduler> &uiScheduler,
-    const std::shared_ptr<MemoryManager> &memoryManager,
-    const std::shared_ptr<RuntimeManager> &runtimeManager,
-    const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
-    const std::shared_ptr<RuntimeBindings> &runtimeBindings,
-    const BundleModeConfig &bundleModeConfig,
-    const std::shared_ptr<UnpackerLoader> &unpackerLoader)
-    : isDevBundle_(isDevBundle),
-      bundleModeConfig_(bundleModeConfig),
-      jsScheduler_(jsScheduler),
-      uiScheduler_(uiScheduler),
-      memoryManager_(memoryManager),
-      runtimeManager_(runtimeManager),
-      uiWorkletRuntime_(uiWorkletRuntime),
-      runtimeBindings_(runtimeBindings),
-      unpackerLoader_(unpackerLoader) {}
 
 jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   auto obj = jsi::Object(rt);
@@ -556,8 +537,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       rt,
       obj,
       "createWorkletRuntime",
-      [clone = std::make_shared<JSIWorkletsModuleProxy>(*this)](
-          jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[5]) {
+      [sourceProxy = shared_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[5]) {
         const auto name = at<0>(args).asString(rt).utf8(rt);
         auto serializableInitializer = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Initializer must be a worklet.");
@@ -571,9 +551,10 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
 
         const auto enableEventLoop = at<4>(args).asBool();
+        const auto runtimeManager = sourceProxy->getRuntimeManager();
 
         return createWorkletRuntime(
-            rt, clone->getRuntimeManager(), clone, name, serializableInitializer, asyncQueue, enableEventLoop);
+            rt, runtimeManager, sourceProxy, name, serializableInitializer, asyncQueue, enableEventLoop);
       });
 
   jsi_utils::addMethod<3>(
