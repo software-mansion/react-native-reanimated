@@ -584,9 +584,16 @@ describe('Shareable hosted on Worker Runtime', () => {
           return (e as Error).message;
         }
       });
-      expect(errorMessage).toInclude(
-        '`Shareable.getAsync` can only be called on the RN Runtime'
-      );
+
+      if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+        expect(errorMessage).toInclude(
+          '`runOnRuntimeAsyncWithId` can only be called on the RN Runtime'
+        );
+      } else {
+        expect(errorMessage).toInclude(
+          '`Shareable.getAsync` can only be called on the RN Runtime'
+        );
+      }
     }
   );
 
@@ -636,9 +643,15 @@ describe('Shareable hosted on Worker Runtime', () => {
           return (e as Error).message;
         }
       });
-      expect(errorMessage).toInclude(
-        '`Shareable.getAsync` can only be called on the RN Runtime'
-      );
+      if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+        expect(errorMessage).toInclude(
+          '`runOnRuntimeAsyncWithId` can only be called on the RN Runtime'
+        );
+      } else {
+        expect(errorMessage).toInclude(
+          '`Shareable.getAsync` can only be called on the RN Runtime'
+        );
+      }
     }
   );
 

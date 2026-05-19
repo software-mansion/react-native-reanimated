@@ -36,7 +36,15 @@ jsi::Value makeSerializableClone(
     } else if (!object.getProperty(rt, "__init").isUndefined()) {
       return makeSerializableInitializer(rt, object);
     } else if (object.isFunction(rt)) {
-      return makeSerializableFunction(rt, object.asFunction(rt));
+      auto fun = object.asFunction(rt);
+      if (fun.isHostFunction(rt)) {
+        auto name = fun.getProperty(rt, "name").asString(rt).utf8(rt);
+        return makeSerializableHostFunction(
+            rt, fun.getHostFunction(rt), name, fun.getProperty(rt, "length").asNumber());
+      } else {
+        throw std::runtime_error(
+            "[Worklets] Cloning remote functions from Worklet Runtimes is only available in Bundle Mode.");
+      }
     } else if (object.isArray(rt)) {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
         serializable = std::make_shared<RetainingSerializable<SerializableArray>>(rt, object.asArray(rt));
@@ -86,14 +94,21 @@ std::shared_ptr<Serializable> extractSerializableOrThrow(
     const jsi::Value &maybeSerializableValue,
     const std::string &errorMessage) {
   if (maybeSerializableValue.isObject()) {
-    auto object = maybeSerializableValue.asObject(rt);
-    if (object.hasNativeState(rt)) {
-      auto nativeState = object.getNativeState(rt);
-      return std::dynamic_pointer_cast<SerializableJSRef>(nativeState)->value();
-    }
-    throw std::runtime_error("[Worklets] Attempted to extract from an Object that wasn't converted to a Serializable.");
+    auto object = maybeSerializableValue.getObject(rt);
+    return extractSerializableOrThrow(rt, object, errorMessage);
   } else if (maybeSerializableValue.isUndefined()) {
     return Serializable::undefined();
+  }
+  throw std::runtime_error(errorMessage);
+}
+
+std::shared_ptr<Serializable> extractSerializableOrThrow(
+    jsi::Runtime &rt,
+    const jsi::Object &maybeSerializableValue,
+    const std::string &errorMessage) {
+  if (maybeSerializableValue.hasNativeState(rt)) {
+    auto nativeState = maybeSerializableValue.getNativeState(rt);
+    return std::dynamic_pointer_cast<SerializableJSRef>(nativeState)->value();
   }
   throw std::runtime_error(errorMessage);
 }
@@ -210,6 +225,23 @@ jsi::Value SerializableSet::toJSValue(jsi::Runtime &rt) {
   auto set = global.getPropertyAsFunction(rt, "Set").callAsConstructor(rt, std::move(values));
 
   return set;
+}
+
+jsi::Value SerializableError::toJSValue(jsi::Runtime &rt) {
+  auto error = rt.global()
+                   .getPropertyAsFunction(rt, "Error")
+                   .callAsConstructor(rt, jsi::String::createFromUtf8(rt, message_))
+                   .getObject(rt);
+
+  error.setProperty(rt, "name", jsi::String::createFromUtf8(rt, name_));
+
+  if (stack_.has_value()) {
+    error.setProperty(rt, "stack", jsi::String::createFromUtf8(rt, stack_.value()));
+  } else {
+    error.setProperty(rt, "stack", jsi::String::createFromUtf8(rt, ""));
+  }
+
+  return error;
 }
 
 jsi::Value SerializableHostObject::toJSValue(jsi::Runtime &rt) {

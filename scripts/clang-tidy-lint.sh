@@ -11,10 +11,13 @@ if [ ! -f "compile_commands.json" ]; then
   (
     cd ../../apps/fabric-example || exit 1
     yarn
-    cd android && ./gradlew assembleDebug --build-cache -PreactNativeArchitectures=arm64-v8a
+    cd android && ./gradlew :react-native-worklets:assembleDebug :react-native-reanimated:assembleDebug --build-cache -PreactNativeArchitectures=arm64-v8a
   )
 fi
 
+ndk_bin="$(grep -oE '/[^ "]+/clang\+\+' compile_commands.json | head -1 | xargs dirname)"
+
 # Only diagnose headers under the current package directory, so we don't pick up
 # findings from system headers, fbjni, react-native, hermes, etc.
-run-clang-tidy -quiet -p . -header-filter="^${PWD}/.*\.h$" .
+run-clang-tidy -quiet -p . -clang-tidy-binary "$ndk_bin/clang-tidy" \
+  -header-filter="^.*/$1/.*\.h$" .

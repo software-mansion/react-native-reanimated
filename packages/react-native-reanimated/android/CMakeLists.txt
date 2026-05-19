@@ -1,5 +1,5 @@
 project(Reanimated)
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -45,6 +45,9 @@ find_package(react-native-worklets REQUIRED CONFIG)
 
 add_library(reanimated SHARED ${REANIMATED_COMMON_CPP_SOURCES}
                               ${REANIMATED_ANDROID_CPP_SOURCES})
+
+target_precompile_headers(reanimated PRIVATE
+                          "${ANDROID_CPP_DIR}/ReanimatedPCH.h")
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
   include(

@@ -26,7 +26,7 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
       - name: Setup Yarn
@@ -35,7 +35,7 @@ jobs:
         run: corepack enable && yarn init
       - name: Set up JDK 18
         if: ${{ matrix.platform == 'Android' }}
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@17f84c3641ba7b8f6deff6309fc4c864478f5d62
         with:
           distribution: 'zulu'
           java-version: '18'
@@ -62,7 +62,7 @@ jobs:
       - name: Install Worklets
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
         if: ${{ matrix.platform == 'iOS' }}
         with:
           ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`

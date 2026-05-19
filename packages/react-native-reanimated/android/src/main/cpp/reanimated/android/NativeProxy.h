@@ -71,6 +71,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
       jint emitterReactTag,
       jni::alias_ref<react::WritableMap> event,
       jboolean isInDrawPass);
+  void attachPseudoSelector(Tag tag, PseudoSelector selector, std::function<void(bool)> callback);
+  void detachPseudoSelector(Tag tag, PseudoSelector selector);
 
   /***
    * Wraps a method of `NativeProxy` in a function object capturing `this`
