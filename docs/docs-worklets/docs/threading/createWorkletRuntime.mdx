@@ -53,17 +53,8 @@ runtime->runGuarded(worklet, ...args);
     initializer?: () => void;
     animationQueuePollingRate?: number;
     enableEventLoop?: true;
-  } &
-    (
-      | {
-          useDefaultQueue?: true;
-          customQueue?: never;
-        }
-      | {
-          useDefaultQueue: false;
-          customQueue?: object;
-        }
-    );
+    queue?: 'default' | object | null;
+  };
 
   function createWorkletRuntime(
     config?: WorkletRuntimeConfig
@@ -94,13 +85,13 @@ Time interval in milliseconds between polling of frame callbacks scheduled by `r
 Determines whether to enable the default event loop. Defaults to `true`.
 When enabled, the runtime provides `setTimeout`, `setImmediate`, `setInterval`, `requestAnimationFrame`, `queueMicrotask`, `clearTimeout`, `clearInterval`, `clearImmediate`, and `cancelAnimationFrame`.
 
-##### `useDefaultQueue`
+##### `queue`
 
-Determines whether to use the default queue implementation for scheduling worklets. Defaults to `true`.
+Controls the queue used for scheduling worklets on this runtime. Defaults to `'default'`.
 
-##### `customQueue`
-
-Optional custom queue object used for scheduling worklets. It can only be used when `useDefaultQueue` is set to `false`.
+- `'default'`: use the built-in queue implementation.
+- An object implementing the C++ `AsyncQueue` interface from `<worklets/RunLoop/AsyncQueue.h>`: use the provided custom queue.
+- `null`: do not attach any queue to the Runtime. Keep in mind that this will effectively disable all asynchronous features like Promises, `setTimeout` etc. Use it if you're going to implement the event-loop for the Runtime yourself.
 
 ### Returns
 
@@ -109,8 +100,6 @@ Optional custom queue object used for scheduling worklets. It can only be used w
 ## Remarks
 
 - Worklet runtimes come with `performance.now` and `console.*` methods installed out-of-the-box. Other APIs are not available and need to be injected into the runtime or captured via worklet closure.
-
-- The default queue implementation is used unless `useDefaultQueue` is set to `false`.
 
 - In development mode, all unhandled errors thrown in the runtime (except for those thrown in `initializer`) will be caught and thus logged to the console and displayed in a LogBox.
 

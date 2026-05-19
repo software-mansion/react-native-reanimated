@@ -4,8 +4,6 @@
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
-#include <react/renderer/core/ComponentDescriptor.h>
-
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -58,6 +56,10 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   ReanimatedSystraceSection s("ReanimatedCommitHook::shadowTreeWillCommit");
 
   maybeInitializeLayoutAnimations(newRootShadowNode->getSurfaceId());
+
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    return newRootShadowNode;
+  }
 
   auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(newRootShadowNode);
 

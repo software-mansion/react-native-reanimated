@@ -2,7 +2,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  getWorkletRuntimeFromPool,
+  notify,
+  test,
+  waitForNotification,
+} from '../../ReJest/RuntimeTestsApi';
 import {
   createSerializable,
   createSynchronizable,
@@ -24,7 +31,7 @@ function GlobalConstructorCarrierFactory(constructor: any) {
   // Workaround because `new` keyword is reserved for Worklet Classes...
   const GlobalConstructorCarrier = function GlobalConstructorCarrier(
     this: IGlobalConstructorCarrier,
-    constructor: any,
+    constructor: any
   ) {
     this.__isCustomObject = true;
     this.constructor = constructor;
@@ -48,11 +55,13 @@ const pack = (value: IGlobalConstructorCarrier) => {
 
 const unpack = (value: { constructorName: string }) => {
   'worklet';
-  return GlobalConstructorCarrierFactory((globalThis as any)[value.constructorName]);
+  return GlobalConstructorCarrierFactory(
+    (globalThis as any)[value.constructorName]
+  );
 };
 
 describe('Test CustomSerializables', () => {
-  const workletRuntime = createWorkletRuntime({ name: 'test' });
+  const workletRuntime = getWorkletRuntimeFromPool('test');
 
   test('registers without failure', () => {
     // Arrange
@@ -187,7 +196,7 @@ describe('Test CustomSerializables', () => {
       // Workaround because `new` keyword is reserved for Worklet Classes...
       const GlobalConstructorCarrier2 = function GlobalConstructorCarrier2(
         this: IGlobalConstructorCarrier2,
-        constructor: any,
+        constructor: any
       ) {
         this.__isCustomObject2 = true;
         this.constructor = constructor;

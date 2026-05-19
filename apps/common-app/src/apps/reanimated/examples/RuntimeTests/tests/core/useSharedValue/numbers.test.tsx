@@ -75,7 +75,7 @@ describe('Test _mathematical operations_ on sharedValue', () => {
     const sharedValue = useSharedValue(initialValue);
     registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
     useEffect(() => {
-      sharedValue.set(value => (value * factor) as T);
+      sharedValue.set((value) => (value * factor) as T);
       scheduleOnUI(() => {
         'worklet';
         scheduleOnRN(notifyMultiplicationDone);
@@ -102,7 +102,13 @@ describe('Test _mathematical operations_ on sharedValue', () => {
         ComponentToRender = MultiplySVReactAPIWithFunction;
         break;
     }
-    await render(<ComponentToRender initialValue={initialValue} factor={factor} progress={progress} />);
+    await render(
+      <ComponentToRender
+        initialValue={initialValue}
+        factor={factor}
+        progress={progress}
+      />
+    );
     await waitForNotification(MULTIPLICATION_NOTIFICATION_NAME);
     const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
     const expected = initialValue * factor;
@@ -111,40 +117,54 @@ describe('Test _mathematical operations_ on sharedValue', () => {
     await render(<ProgressBar progress={progress} />);
   }
 
-  test.each([2, 0.0000045, 123456789])('Test multiplication  *=%p, original API', async (factor: number) => {
-    for (const [index, preset] of Presets.numbers.entries()) {
-      await testSharedValueMultiplication({
-        initialValue: preset,
-        factor,
-        progress: index / Presets.numbers.length,
-        mutableAPI: MutableAPI.ORIGINAL,
-      });
+  test.each([2, 0.0000045, 123456789])(
+    'Test multiplication  *=%p, original API',
+    async (factor: number) => {
+      for (const [index, preset] of Presets.numbers.entries()) {
+        await testSharedValueMultiplication({
+          initialValue: preset,
+          factor,
+          progress: index / Presets.numbers.length,
+          mutableAPI: MutableAPI.ORIGINAL,
+        });
+      }
     }
-  });
+  );
 
-  test.each([2, 0.0000045, 123456789])('Test multiplication  *=%p, React API', async (factor: number) => {
-    for (const [index, preset] of Presets.numbers.entries()) {
-      await testSharedValueMultiplication({
-        initialValue: preset,
-        factor,
-        progress: index / Presets.numbers.length,
-        mutableAPI: MutableAPI.REACT_COMPATIBLE,
-      });
+  test.each([2, 0.0000045, 123456789])(
+    'Test multiplication  *=%p, React API',
+    async (factor: number) => {
+      for (const [index, preset] of Presets.numbers.entries()) {
+        await testSharedValueMultiplication({
+          initialValue: preset,
+          factor,
+          progress: index / Presets.numbers.length,
+          mutableAPI: MutableAPI.REACT_COMPATIBLE,
+        });
+      }
     }
-  });
+  );
 
-  test.each([2, 123456789])('Test multiplication  *=%p, React API with function', async (factor: number) => {
-    for (const [index, preset] of Presets.numbers.entries()) {
-      await testSharedValueMultiplication({
-        initialValue: preset,
-        factor,
-        progress: index / Presets.numbers.length,
-        mutableAPI: MutableAPI.REACT_COMPATIBLE_WITH_FUNCTION,
-      });
+  test.each([2, 123456789])(
+    'Test multiplication  *=%p, React API with function',
+    async (factor: number) => {
+      for (const [index, preset] of Presets.numbers.entries()) {
+        await testSharedValueMultiplication({
+          initialValue: preset,
+          factor,
+          progress: index / Presets.numbers.length,
+          mutableAPI: MutableAPI.REACT_COMPATIBLE_WITH_FUNCTION,
+        });
+      }
     }
-  });
+  );
 
-  test.each([BigInt(2), BigInt(-2), BigInt(123456789), BigInt(1234567891234567)])(
+  test.each([
+    BigInt(2),
+    BigInt(-2),
+    BigInt(123456789),
+    BigInt(1234567891234567),
+  ])(
     'Test bigInt multiplication  *=%p,  original API',
     async (factor: bigint) => {
       for (const [index, preset] of Presets.bigInts.entries()) {
@@ -155,24 +175,31 @@ describe('Test _mathematical operations_ on sharedValue', () => {
           mutableAPI: MutableAPI.ORIGINAL,
         });
       }
-    },
+    }
   );
 
-  test.each([BigInt(2), BigInt(-2), BigInt(123456789), BigInt(1234567891234567)])(
-    'Test bigInt multiplication  *=%p,  React API',
-    async (factor: bigint) => {
-      for (const [index, preset] of Presets.bigInts.entries()) {
-        await testSharedValueMultiplication({
-          initialValue: preset,
-          factor,
-          progress: index / Presets.numbers.length,
-          mutableAPI: MutableAPI.REACT_COMPATIBLE,
-        });
-      }
-    },
-  );
+  test.each([
+    BigInt(2),
+    BigInt(-2),
+    BigInt(123456789),
+    BigInt(1234567891234567),
+  ])('Test bigInt multiplication  *=%p,  React API', async (factor: bigint) => {
+    for (const [index, preset] of Presets.bigInts.entries()) {
+      await testSharedValueMultiplication({
+        initialValue: preset,
+        factor,
+        progress: index / Presets.numbers.length,
+        mutableAPI: MutableAPI.REACT_COMPATIBLE,
+      });
+    }
+  });
 
-  test.each([BigInt(2), BigInt(-2), BigInt(123456789), BigInt(1234567891234567)])(
+  test.each([
+    BigInt(2),
+    BigInt(-2),
+    BigInt(123456789),
+    BigInt(1234567891234567),
+  ])(
     'Test bigInt multiplication  *=%p,  React API with function',
     async (factor: bigint) => {
       for (const [index, preset] of Presets.bigInts.entries()) {
@@ -183,6 +210,6 @@ describe('Test _mathematical operations_ on sharedValue', () => {
           mutableAPI: MutableAPI.REACT_COMPATIBLE_WITH_FUNCTION,
         });
       }
-    },
+    }
   );
 });

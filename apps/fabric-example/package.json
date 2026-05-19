@@ -7,7 +7,7 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "format": "prettier --write --list-different .",
+    "format": "yarn run --top-level oxfmt .",
     "lint": "eslint . --max-warnings 0",
     "type:check": "tsc --noEmit"
   },
@@ -19,7 +19,6 @@
   "devDependencies": {
     "@types/react": "19.2.2",
     "eslint": "9.37.0",
-    "prettier": "3.6.2",
     "typescript": "5.9.3"
   },
   "engines": {
@@ -38,7 +37,8 @@
       "USE_SYNCHRONIZABLE_FOR_MUTABLES": true,
       "USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS": true,
       "ENABLE_SHARED_ELEMENT_TRANSITIONS": true,
-      "FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS": true
+      "FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS": true,
+      "USE_ANIMATION_BACKEND": false
     }
   },
   "worklets": {

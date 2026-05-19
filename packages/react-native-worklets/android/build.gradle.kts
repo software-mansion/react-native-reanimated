@@ -2,7 +2,6 @@ import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 import groovy.json.JsonSlurper
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import java.util.Properties
 import javax.inject.Inject
 
@@ -150,6 +149,7 @@ if (project == rootProject) {
 }
 
 apply(from = "./fix-prefab.gradle.kts")
+apply(from = "./generate-stub-pch.gradle.kts")
 
 android {
     compileSdk = safeExtGet("compileSdkVersion", 36) as Int

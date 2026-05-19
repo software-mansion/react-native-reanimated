@@ -1,7 +1,11 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { WithSpringConfig } from 'react-native-reanimated';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 
 import {
   describe,
@@ -42,10 +46,20 @@ const AnimatedComponent = ({
   );
 };
 
-async function getSnapshotUpdates(snapshotName: keyof typeof Snapshots, animateFrom: number, animateTo: number) {
+async function getSnapshotUpdates(
+  snapshotName: keyof typeof Snapshots,
+  animateFrom: number,
+  animateTo: number
+) {
   await mockAnimationTimer();
   const updatesContainer = await recordAnimationUpdates();
-  await render(<AnimatedComponent animateFrom={animateFrom} animateTo={animateTo} config={{}} />);
+  await render(
+    <AnimatedComponent
+      animateFrom={animateFrom}
+      animateTo={animateTo}
+      config={{}}
+    />
+  );
   await waitForAnimationUpdates(Snapshots[snapshotName].length);
   const updates = updatesContainer.getUpdates();
   const nativeUpdates = await updatesContainer.getNativeSnapshots();
@@ -63,20 +77,31 @@ describe('WithSpring snapshots 📸, test various configs', () => {
     ] as Array<[number, number]>)(
       'Empty config, from ${0} to ${1}',
       async ([animateFrom, animateTo]: [number, number]) => {
-        const snapshotName = `empty_${animateFrom}_${animateTo}` as keyof typeof Snapshots;
-        const [updates, nativeUpdates] = await getSnapshotUpdates(snapshotName, animateFrom, animateTo);
+        const snapshotName =
+          `empty_${animateFrom}_${animateTo}` as keyof typeof Snapshots;
+        const [updates, nativeUpdates] = await getSnapshotUpdates(
+          snapshotName,
+          animateFrom,
+          animateTo
+        );
         expect(updates).toMatchSnapshots(Snapshots[snapshotName]);
         expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
-      },
+      }
     );
   });
 
   describe('Invalid configuration, test warning', () => {
     test('Invalid mass and stiffness, config is { mass: -40, stiffness: -400 }', async () => {
       await expect(async () => {
-        await render(<AnimatedComponent animateFrom={30} animateTo={300} config={{ mass: -40, stiffness: -400 }} />);
+        await render(
+          <AnimatedComponent
+            animateFrom={30}
+            animateTo={300}
+            config={{ mass: -40, stiffness: -400 }}
+          />
+        );
       }).toThrow(
-        '[Reanimated] Invalid spring config, stiffness must be grater than zero but got -400, mass must be grater than zero but got -40',
+        '[Reanimated] Invalid spring config, stiffness must be grater than zero but got -400, mass must be grater than zero but got -40'
       );
     });
 
@@ -87,10 +112,18 @@ describe('WithSpring snapshots 📸, test various configs', () => {
       { mass: -5, duration: 5000 },
       { mass: -5, damping: 50 },
       { mass: -20, stiffness: 20 },
-    ])('%# Invalid mass, config is %p', async config => {
+    ])('%# Invalid mass, config is %p', async (config) => {
       await expect(async () => {
-        await render(<AnimatedComponent animateFrom={30} animateTo={300} config={config as any} />);
-      }).toThrow(`[Reanimated] Invalid spring config, mass must be grater than zero but got ${config.mass}`);
+        await render(
+          <AnimatedComponent
+            animateFrom={30}
+            animateTo={300}
+            config={config as any}
+          />
+        );
+      }).toThrow(
+        `[Reanimated] Invalid spring config, mass must be grater than zero but got ${config.mass}`
+      );
     });
 
     test.each([
@@ -99,23 +132,49 @@ describe('WithSpring snapshots 📸, test various configs', () => {
       { damping: 20, stiffness: -20 },
       { mass: 20, stiffness: -20 },
       { mass: 20, stiffness: 0 },
-    ])('%# Invalid stiffness, config is %p', async config => {
+    ])('%# Invalid stiffness, config is %p', async (config) => {
       await expect(async () => {
-        await render(<AnimatedComponent animateFrom={30} animateTo={300} config={config} />);
-      }).toThrow(`[Reanimated] Invalid spring config, stiffness must be grater than zero but got ${config.stiffness}`);
+        await render(
+          <AnimatedComponent animateFrom={30} animateTo={300} config={config} />
+        );
+      }).toThrow(
+        `[Reanimated] Invalid spring config, stiffness must be grater than zero but got ${config.stiffness}`
+      );
     });
 
-    test.each([{ damping: -20 }, { damping: 0 }])('%# Invalid damping, config is %p', async config => {
-      await expect(async () => {
-        await render(<AnimatedComponent animateFrom={30} animateTo={300} config={config} />);
-      }).toThrow(`[Reanimated] Invalid spring config, damping must be grater than zero but got ${config.damping}`);
-    });
+    test.each([{ damping: -20 }, { damping: 0 }])(
+      '%# Invalid damping, config is %p',
+      async (config) => {
+        await expect(async () => {
+          await render(
+            <AnimatedComponent
+              animateFrom={30}
+              animateTo={300}
+              config={config}
+            />
+          );
+        }).toThrow(
+          `[Reanimated] Invalid spring config, damping must be grater than zero but got ${config.damping}`
+        );
+      }
+    );
 
-    test.each([{ duration: -20 }])('%# Invalid duration, config is %p', async config => {
-      await expect(async () => {
-        await render(<AnimatedComponent animateFrom={30} animateTo={300} config={config} />);
-      }).toThrow(`[Reanimated] Invalid spring config, duration can't be negative, got ${config.duration}`);
-    });
+    test.each([{ duration: -20 }])(
+      '%# Invalid duration, config is %p',
+      async (config) => {
+        await expect(async () => {
+          await render(
+            <AnimatedComponent
+              animateFrom={30}
+              animateTo={300}
+              config={config}
+            />
+          );
+        }).toThrow(
+          `[Reanimated] Invalid spring config, duration can't be negative, got ${config.duration}`
+        );
+      }
+    );
   });
 });
 

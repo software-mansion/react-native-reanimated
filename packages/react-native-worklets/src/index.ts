@@ -69,6 +69,7 @@ export {
   getUISchedulerHolder,
   runOnRuntime,
   runOnRuntimeAsync,
+  runOnRuntimeAsyncWithId,
   runOnRuntimeSync,
   runOnRuntimeSyncWithId,
   scheduleOnRuntime,

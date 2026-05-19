@@ -7,11 +7,20 @@ import {
   beforeEach,
   afterEach,
 } from '../../ReJest/RuntimeTestsApi';
-import { runOnUISync, scheduleOnRN, createShareable, createSynchronizable, UIRuntimeId } from 'react-native-worklets';
+import {
+  runOnUISync,
+  scheduleOnRN,
+  createShareable,
+  createSynchronizable,
+  UIRuntimeId,
+  createWorkletRuntime,
+} from 'react-native-worklets';
 
 declare global {
   // eslint-disable-next-line no-var
-  var nativeLoggingHook: ((serializedMessage: string, level: number) => void) | undefined;
+  var nativeLoggingHook:
+    | ((serializedMessage: string, level: number) => void)
+    | undefined;
 }
 
 type TestCase = {
@@ -24,14 +33,17 @@ type TestCase = {
   noBundleMode?: string;
   /** Assert the expected string is (or isn't) a substring of the output. */
   checkIncludes?: boolean | { bundleMode: boolean; noBundleMode: boolean };
-  /** In no-bundle mode console.log throws on the UI thread; the caught error message is logged instead. */
+  /**
+   * In no-bundle mode console.log throws on the UI thread; the caught error
+   * message is logged instead.
+   */
   errorsOnNoBundleMode?: boolean;
   /** Test only runs in bundle mode (skipped otherwise). */
   bundleModeOnly?: boolean;
 };
 
 // For closure
-const reanimatedModuleProxy = globalThis.__reanimatedModuleProxy;
+const hostObject = createWorkletRuntime({ name: 'HO' });
 const shareable = createShareable(UIRuntimeId, 42);
 const synchronizable = createSynchronizable(42);
 
@@ -136,11 +148,11 @@ const testCases: Record<string, TestCase> = {
     },
   },
   hostObject: {
-    expected: 'registerSensor',
+    expected: 'HO',
     checkIncludes: { bundleMode: true, noBundleMode: true },
     factory: () => {
       'worklet';
-      return reanimatedModuleProxy;
+      return hostObject;
     },
   },
   hostFunction: {
@@ -225,7 +237,7 @@ const testCases: Record<string, TestCase> = {
     expected: '{ _x: 0, _y: 1, _z: undefined, _A: null }',
     factory: () => {
       'worklet';
-      return new Promise<void>(r => {
+      return new Promise<void>((r) => {
         r();
       });
     },
@@ -279,7 +291,7 @@ const testCases: Record<string, TestCase> = {
     factory: () => {
       'worklet';
       const obj: Record<string, unknown> = { a: 1 };
-      Object.setPrototypeOf(obj, reanimatedModuleProxy);
+      Object.setPrototypeOf(obj, hostObject);
       return obj;
     },
   },
@@ -321,21 +333,23 @@ type ConsoleMethod = 'log' | 'warn' | 'error' | 'debug';
 describe('loggingFromWorkletRuntime', () => {
   let message = '';
 
-  test('setup beforeEach and afterEach', () => {
-    // TODO: there's a bug in ReJest and beforeEach/afterEach have to be
-    // registered inside a test case.
-    beforeEach(() => {
-      message = '';
-      globalThis.nativeLoggingHook = (serializedMessage: string, _level: number) => {
-        message = serializedMessage;
-      };
-    });
-    afterEach(() => {
-      globalThis.nativeLoggingHook = originalHook;
-    });
+  beforeEach(() => {
+    message = '';
+    globalThis.nativeLoggingHook = (
+      serializedMessage: string,
+      _level: number
+    ) => {
+      message = serializedMessage;
+    };
+  });
+  afterEach(() => {
+    globalThis.nativeLoggingHook = originalHook;
   });
 
-  const captureSerializedLog = async (factory: () => unknown, method: ConsoleMethod = 'log'): Promise<string> => {
+  const captureSerializedLog = async (
+    factory: () => unknown,
+    method: ConsoleMethod = 'log'
+  ): Promise<string> => {
     if (isBundleMode) {
       try {
         console[method](factory());
@@ -369,13 +383,18 @@ describe('loggingFromWorkletRuntime', () => {
     expect(workletsNativeLoggingHook !== undefined).toBe(!!isBundleMode);
   });
 
-  const testKeys = Object.keys(testCases).filter(key => !testCases[key].bundleModeOnly || isBundleMode);
+  const testKeys = Object.keys(testCases).filter(
+    (key) => !testCases[key].bundleModeOnly || isBundleMode
+  );
 
-  test.each(testKeys)('%s serializes as expected', async key => {
+  test.each(testKeys)('%s serializes as expected', async (key) => {
     const entry = testCases[key];
     const expected = entry.expected ?? entry[modeKey]!;
     const result = await captureSerializedLog(entry.factory);
-    const checkIncludes = typeof entry.checkIncludes === 'object' ? entry.checkIncludes[modeKey] : entry.checkIncludes;
+    const checkIncludes =
+      typeof entry.checkIncludes === 'object'
+        ? entry.checkIncludes[modeKey]
+        : entry.checkIncludes;
     if (entry.errorsOnNoBundleMode && !isBundleMode) {
       expect(result.startsWith('Error:')).toBe(true);
     } else if (checkIncludes !== undefined) {
@@ -385,11 +404,14 @@ describe('loggingFromWorkletRuntime', () => {
     }
   });
 
-  test.each(['warn', 'error', 'debug'] as const)('console.%s is routed through nativeLoggingHook', async method => {
-    const result = await captureSerializedLog(() => {
-      'worklet';
-      return { a: 1 };
-    }, method);
-    expect(result).toBe('{ a: 1 }');
-  });
+  test.each(['warn', 'error', 'debug'] as const)(
+    'console.%s is routed through nativeLoggingHook',
+    async (method) => {
+      const result = await captureSerializedLog(() => {
+        'worklet';
+        return { a: 1 };
+      }, method);
+      expect(result).toBe('{ a: 1 }');
+    }
+  );
 });

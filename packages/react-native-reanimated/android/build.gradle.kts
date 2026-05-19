@@ -2,7 +2,6 @@ import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 import groovy.json.JsonSlurper
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import java.util.Properties
 import javax.inject.Inject
 
@@ -51,11 +50,6 @@ fun getReactNativeVersion(): String {
     val reactProperties = Properties()
     file("$reactNativeRootDir/ReactAndroid/gradle.properties").inputStream().use { reactProperties.load(it) }
     return reactProperties.getProperty("VERSION_NAME")
-}
-
-fun getReactNativeMinorVersion(): Int {
-    val reactNativeVersion = getReactNativeVersion()
-    return if (reactNativeVersion.startsWith("0.0.0-")) 1000 else reactNativeVersion.split(".")[1].toInt()
 }
 
 fun getReanimatedVersion(): String {
@@ -138,6 +132,8 @@ if (project == rootProject) {
         }
     }
 }
+
+apply(from = "./generate-stub-pch.gradle.kts")
 
 android {
     compileSdk = safeExtGet("compileSdkVersion", 36) as Int

@@ -26,13 +26,32 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
   bool isEmpty() const override;
   bool hasUpdates() const;
 
-  void run(jsi::Runtime &rt, const std::shared_ptr<const ShadowNode> &shadowNode, const CSSTransitionConfig &config);
+  // TO DO: In the future we want to decouple config update and run
+  void updateConfigOrRun(
+      jsi::Runtime &rt,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const CSSTransitionConfig &config);
+  /// run Should be called only after someone has already set settings with updateConfigOrRun
+  void run(
+      jsi::Runtime &rt,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const PropertyValueDiffsMap &propertyDiffs);
+  /** TODO: unify folly::dynamic and jsi::value versions */
+  void run(const std::shared_ptr<const ShadowNode> &shadowNode, const PropertyValueDynamicDiffsMap &propertyDiffs);
 
   void updateAndFlush(double timestamp, UpdatesBatch &updatesBatch) {
     std::lock_guard<std::mutex> lock{mutex_};
     update(timestamp);
     flush(updatesBatch);
   }
+
+#if REACT_NATIVE_VERSION_MINOR >= 85
+  void updateAndFlush(facebook::react::AnimationTimestamp timestamp, UpdatesBatchAnimatedProps &updatesBatch) {
+    std::lock_guard<std::mutex> lock{mutex_};
+    update(timestamp.count());
+    flush(updatesBatch);
+  }
+#endif
 
  private:
   using Registry = std::unordered_map<Tag, std::shared_ptr<CSSTransition>>;
@@ -50,6 +69,11 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
   void activateDelayedTransitions(double timestamp);
   void scheduleOrActivateTransition(const std::shared_ptr<CSSTransition> &transition);
   void updateInUpdatesRegistry(const std::shared_ptr<CSSTransition> &transition, const folly::dynamic &updates);
+  void runTransition(
+      jsi::Runtime &rt,
+      const std::shared_ptr<CSSTransition> &transition,
+      const facebook::react::Tag &viewTag,
+      const PropertyValueDiffsMap &propertyDiffs);
 };
 
 } // namespace reanimated::css

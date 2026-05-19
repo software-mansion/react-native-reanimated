@@ -16,7 +16,13 @@ import { ProgressBar } from './components';
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
 
 describe('Test setting different values as sharedValue', () => {
-  const SharedValueComponent = ({ initialValue, progress }: { initialValue: unknown; progress: number }) => {
+  const SharedValueComponent = ({
+    initialValue,
+    progress,
+  }: {
+    initialValue: unknown;
+    progress: number;
+  }) => {
     const sharedValue = useSharedValue(initialValue);
     registerValue(SHARED_VALUE_REF, sharedValue);
     return <ProgressBar progress={progress} />;
@@ -28,12 +34,29 @@ describe('Test setting different values as sharedValue', () => {
     { presetName: 'serializableArrays', comparisonMode: ComparisonMode.ARRAY },
     { presetName: 'arrays', comparisonMode: ComparisonMode.OBJECT },
     { presetName: 'strings', comparisonMode: ComparisonMode.STRING },
-    { presetName: 'serializableObjects', comparisonMode: ComparisonMode.OBJECT },
-  ] as Array<{ presetName: keyof typeof Presets; comparisonMode: ComparisonMode }>)(
+    {
+      presetName: 'serializableObjects',
+      comparisonMode: ComparisonMode.OBJECT,
+    },
+  ] as Array<{
+    presetName: keyof typeof Presets;
+    comparisonMode: ComparisonMode;
+  }>)(
     'Elements of Presets.**${presetName}** can be assigned to shared value',
-    async ({ presetName, comparisonMode }: { presetName: keyof typeof Presets; comparisonMode: ComparisonMode }) => {
+    async ({
+      presetName,
+      comparisonMode,
+    }: {
+      presetName: keyof typeof Presets;
+      comparisonMode: ComparisonMode;
+    }) => {
       for (const [index, preset] of Presets[presetName].entries()) {
-        await render(<SharedValueComponent initialValue={preset} progress={index / Presets[presetName].length} />);
+        await render(
+          <SharedValueComponent
+            initialValue={preset}
+            progress={index / Presets[presetName].length}
+          />
+        );
 
         const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
 
@@ -43,19 +66,28 @@ describe('Test setting different values as sharedValue', () => {
           This test checks the value of sharedValue after the component mounts. Therefore, we need to clear the render output
           to ensure that a new component will be fully mounted, not just rerendered.
           */
-        await render(<ProgressBar progress={index / Presets[presetName].length} />);
+        await render(
+          <ProgressBar progress={index / Presets[presetName].length} />
+        );
       }
-    },
+    }
   );
 
-  test.each([...Presets.stringObjects, ...Presets.dates])('Object %p causes an error', async testedValue => {
-    await expect(async () => {
-      await render(<SharedValueComponent initialValue={testedValue} progress={0} />);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const _sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-      await render(<ProgressBar progress={0} />);
-    }).toThrow('[Worklets] Trying to access property `onFrame` of an object which cannot be sent to the UI runtime.');
-  });
+  test.each([...Presets.stringObjects, ...Presets.dates])(
+    'Object %p causes an error',
+    async (testedValue) => {
+      await expect(async () => {
+        await render(
+          <SharedValueComponent initialValue={testedValue} progress={0} />
+        );
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const _sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
+        await render(<ProgressBar progress={0} />);
+      }).toThrow(
+        '[Worklets] Trying to access property `onFrame` of an object which cannot be sent to the UI runtime.'
+      );
+    }
+  );
 
   describe('Test setting _Error types_ as sharedValue', () => {
     test.each([
@@ -67,8 +99,10 @@ describe('Test setting different values as sharedValue', () => {
       new SyntaxError('Example SyntaxError'),
       new TypeError('Example TypeError'),
       new URIError('Example URIError'),
-    ])('Test %p', async error => {
-      await expect(() => render(<SharedValueComponent initialValue={error} progress={0} />)).not.toThrow();
+    ])('Test %p', async (error) => {
+      await expect(() =>
+        render(<SharedValueComponent initialValue={error} progress={0} />)
+      ).not.toThrow();
     });
   });
 });

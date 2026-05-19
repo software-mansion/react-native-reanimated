@@ -1,10 +1,7 @@
 #include <jsi/jsi.h>
-#include <react/renderer/uimanager/UIManagerBinding.h>
-#include <react/renderer/uimanager/primitives.h>
 #include <worklets/Compat/Holders.h>
 #include <worklets/Compat/StableApi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
-#include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
 #include <worklets/SharedItems/Shareable.h>
@@ -12,15 +9,14 @@
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
-#include <worklets/Tools/WorkletsSystraceSection.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
-#include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #ifndef NDEBUG
 #include <algorithm>
 #endif // NDEBUG
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -29,8 +25,9 @@ using namespace facebook;
 
 namespace worklets {
 
+namespace {
+
 inline void scheduleOnUI(
-    const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
     jsi::Runtime &rt,
     const jsi::Value &serializableArrayOfWorkletsValue
@@ -67,11 +64,15 @@ inline void scheduleOnUI(
   }
 #endif // NDEBUG
 
-  uiScheduler->scheduleOnUI([worklets = std::move(worklets),
+  auto uiWorkletRuntime = weakUIWorkletRuntime.lock();
+  if (!uiWorkletRuntime) {
+    return;
+  }
+  uiWorkletRuntime->schedule([worklets = std::move(worklets),
 #ifndef NDEBUG
-                             scheduleStacks = std::move(scheduleStacks),
+                              scheduleStacks = std::move(scheduleStacks),
 #endif // NDEBUG
-                             weakUIWorkletRuntime]() {
+                              weakUIWorkletRuntime]() {
     // This callback can outlive the WorkletsModuleProxy object during the
     // invalidation of React Native. This happens when WorkletsModuleProxy
     // destructor is called on the JS thread and the UI thread is
@@ -100,17 +101,6 @@ inline void scheduleOnUI(
   });
 }
 
-inline jsi::Value
-runOnUISync(const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime, jsi::Runtime &rt, const jsi::Value &worklet) {
-  if (auto uiWorkletRuntime = weakUIWorkletRuntime.lock()) {
-    auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
-        rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
-    auto serializedResult = uiWorkletRuntime->runSyncSerialized(serializableWorklet);
-    return serializedResult->toJSValue(rt);
-  }
-  return jsi::Value::undefined();
-}
-
 #ifndef NDEBUG
 inline jsi::Value runOnUISync(
     const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
@@ -125,15 +115,18 @@ inline jsi::Value runOnUISync(
   }
   return jsi::Value::undefined();
 }
-#endif // NDEBUG
-
-jsi::Value
-runOnRuntimeSync(jsi::Runtime &rt, const jsi::Value &workletRuntimeValue, const jsi::Value &serializableWorkletValue) {
-  auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
-  auto worklet = extractSerializableOrThrow<SerializableWorklet>(
-      rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
-  return workletRuntime->runSyncSerialized(worklet)->toJSValue(rt);
+#else
+inline jsi::Value
+runOnUISync(const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime, jsi::Runtime &rt, const jsi::Value &worklet) {
+  if (auto uiWorkletRuntime = weakUIWorkletRuntime.lock()) {
+    auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
+        rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
+    auto serializedResult = uiWorkletRuntime->runSyncSerialized(serializableWorklet);
+    return serializedResult->toJSValue(rt);
+  }
+  return jsi::Value::undefined();
 }
+#endif // NDEBUG
 
 #ifndef NDEBUG
 jsi::Value runOnRuntimeSync(
@@ -145,6 +138,14 @@ jsi::Value runOnRuntimeSync(
   auto worklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
   return workletRuntime->runSyncSerializedWithStack(worklet, scheduleStack)->toJSValue(rt);
+}
+#else
+jsi::Value
+runOnRuntimeSync(jsi::Runtime &rt, const jsi::Value &workletRuntimeValue, const jsi::Value &serializableWorkletValue) {
+  auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
+  auto worklet = extractSerializableOrThrow<SerializableWorklet>(
+      rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
+  return workletRuntime->runSyncSerialized(worklet)->toJSValue(rt);
 }
 #endif // NDEBUG
 
@@ -218,6 +219,8 @@ inline void registerCustomSerializable(
 
   runtimeManager->resume();
 }
+
+} // namespace
 
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const bool isDevBundle,
@@ -343,8 +346,35 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       });
 
   jsi_utils::addMethod<1>(
-      rt, obj, "createSerializableFunction", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        return makeSerializableFunction(rt, at<0>(args).asObject(rt).asFunction(rt));
+      rt,
+      obj,
+      "createSerializableNonWorkletFunction",
+      [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto fun = at<0>(args).getObject(rt).getFunction(rt);
+#ifndef NDEBUG
+        const auto funName = fun.getProperty(rt, "name").getString(rt).utf8(rt);
+#endif // NDEBUG
+        if (fun.isHostFunction(rt)) {
+          return makeSerializableHostFunction(
+              rt,
+              fun.getHostFunction(rt),
+#ifndef NDEBUG
+              funName,
+#else
+              fun.getProperty(rt, "name").getString(rt).utf8(rt),
+#endif // NDEBUG
+              fun.getProperty(rt, "length").asNumber());
+        } else {
+          return makeSerializableRemoteFunction(
+              rt,
+              std::move(fun)
+
+#ifndef NDEBUG
+                  ,
+              funName
+#endif
+          );
+        }
       });
 
   jsi_utils::addMethod<2>(
@@ -399,13 +429,60 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   jsi_utils::addMethod<2>(
       rt,
       obj,
+      "scheduleOnRN",
+      [jsScheduler = jsScheduler_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        const auto &funOrSerializable = at<0>(args).getObject(rt);
+        const auto &remoteArgs = at<1>(args);
+
+        auto serializableArgs = remoteArgs.isUndefined()
+            ? nullptr
+            : extractSerializableOrThrow<SerializableArray>(rt, remoteArgs, "[Worklets] Args must be an array.");
+
+        if (funOrSerializable.isFunction(rt)) {
+          auto fun = funOrSerializable.getFunction(rt);
+          if (fun.isHostFunction(rt)) {
+            auto hostFun = fun.getHostFunction(rt);
+            jsScheduler->scheduleOnJS([hostFun = std::move(hostFun), serializableArgs](jsi::Runtime &rnRuntime) {
+              if (serializableArgs == nullptr) {
+                // fast path for host function w/o arguments
+                hostFun(rnRuntime, jsi::Value::undefined(), nullptr, 0);
+              } else {
+                const auto args = serializableArgs->getJSIValueArr(rnRuntime);
+                hostFun(rnRuntime, jsi::Value::undefined(), args.data(), args.size());
+              }
+            });
+          } else [[unlikely]] { // NOLINT(readability/braces)
+            const auto fnName = fun.getProperty(rt, "name").asString(rt).utf8(rt);
+            const auto nameInError = fnName.empty() ? "" : " (" + fnName + ")";
+            throw std::runtime_error(
+                "[Worklets] Locally defined function passed to scheduleOnRN" + nameInError +
+                ". Only functions defined on the RN Runtime or host functions can be scheduled on the RN Runtime. Define the function on the RN Runtime and pass it as a reference. See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#locally-defined-function-passed-to-scheduleonrn for more details.");
+          }
+        } else {
+          auto remoteFunction = extractSerializableOrThrow<SerializableRemoteFunction>(rt, funOrSerializable);
+          jsScheduler->scheduleOnJS([remoteFunction, serializableArgs](jsi::Runtime &rnRuntime) {
+            auto fun = remoteFunction->toJSValue(rnRuntime).getObject(rnRuntime).getFunction(rnRuntime);
+
+            if (serializableArgs == nullptr) {
+              // fast path for remote function w/o arguments
+              fun.call(rnRuntime);
+            } else {
+              const auto args = serializableArgs->getJSIValueArr(rnRuntime);
+              fun.call(rnRuntime, args.data(), args.size());
+            }
+          });
+        }
+      });
+
+  jsi_utils::addMethod<2>(
+      rt,
+      obj,
       "scheduleOnUI",
-      [uiScheduler = uiScheduler_, uiWorkletRuntime = uiWorkletRuntime_](
-          jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+      [uiWorkletRuntime = uiWorkletRuntime_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
 #ifndef NDEBUG
-        scheduleOnUI(uiScheduler, uiWorkletRuntime, rt, at<0>(args), at<1>(args));
+        scheduleOnUI(uiWorkletRuntime, rt, at<0>(args), at<1>(args));
 #else
-        scheduleOnUI(uiScheduler, uiWorkletRuntime, rt, at<0>(args));
+        scheduleOnUI(uiWorkletRuntime, rt, at<0>(args));
 #endif // NDEBUG
       });
 

@@ -3,7 +3,12 @@ import type { SharedValue } from 'react-native-reanimated';
 
 import type { TestComponent } from './TestComponent';
 import { TestRunner } from './TestRunner/TestRunner';
-import type { DefaultValue, MaybeAsync, TestConfiguration, TestValue } from './types';
+import type {
+  DefaultValue,
+  MaybeAsync,
+  TestConfiguration,
+  TestValue,
+} from './types';
 import { DescribeDecorator, TestDecorator } from './types';
 
 export { Presets } from './Presets';
@@ -15,19 +20,25 @@ const valueRegistry = testRunner.getValueRegistry();
 const testSuiteBuilder = testRunner.getTestSuiteBuilder();
 const callTrackerRegistry = testRunner.getCallTrackerRegistry();
 const notificationRegistry = testRunner.getNotificationRegistry();
+const workletRuntimePool = testRunner.getWorkletRuntimePool();
 
 type DescribeFunction = (name: string, buildSuite: MaybeAsync<void>) => void;
 type TestFunction = (name: string, buildTest: MaybeAsync<void>) => void;
 type TestEachFunction = <T>(
-  examples: Array<T>,
-) => (name: string, testCase: (example: T, index: number) => void | Promise<void>) => void;
+  examples: Array<T>
+) => (
+  name: string,
+  testCase: (example: T, index: number) => void | Promise<void>
+) => void;
 type DecoratedTestFunction = TestFunction & { each: TestEachFunction };
 
 const describeBasic = (name: string, buildSuite: MaybeAsync<void>) => {
   testSuiteBuilder.describe(name, buildSuite, null);
 };
 
-export const describe = <DescribeFunction & Record<DescribeDecorator, DescribeFunction>>describeBasic;
+export const describe = <
+  DescribeFunction & Record<DescribeDecorator, DescribeFunction>
+>describeBasic;
 describe.skip = (name, buildSuite) => {
   testSuiteBuilder.describe(name, buildSuite, DescribeDecorator.SKIP);
 };
@@ -35,45 +46,55 @@ describe.only = (name, buildSuite) => {
   testSuiteBuilder.describe(name, buildSuite, DescribeDecorator.ONLY);
 };
 
-const testBasic: DecoratedTestFunction = (name: string, testCase: MaybeAsync<void>) => {
+const testBasic: DecoratedTestFunction = (
+  name: string,
+  testCase: MaybeAsync<void>
+) => {
   testSuiteBuilder.test(name, testCase, null);
 };
 testBasic.each = <T>(examples: Array<T>) => {
   return testSuiteBuilder.testEach(examples, null);
 };
-const testSkip: DecoratedTestFunction = (name: string, testCase: MaybeAsync<void>) => {
+const testSkip: DecoratedTestFunction = (
+  name: string,
+  testCase: MaybeAsync<void>
+) => {
   testSuiteBuilder.test(name, testCase, TestDecorator.SKIP);
 };
 testSkip.each = <T>(examples: Array<T>) => {
   return testSuiteBuilder.testEach(examples, TestDecorator.SKIP);
 };
-const testOnly: DecoratedTestFunction = (name: string, testCase: MaybeAsync<void>) => {
+const testOnly: DecoratedTestFunction = (
+  name: string,
+  testCase: MaybeAsync<void>
+) => {
   testSuiteBuilder.test(name, testCase, TestDecorator.ONLY);
 };
 testOnly.each = <T>(examples: Array<T>) => {
   return testSuiteBuilder.testEach(examples, TestDecorator.ONLY);
 };
 
-type TestType = DecoratedTestFunction & Record<TestDecorator.SKIP | TestDecorator.ONLY, DecoratedTestFunction>;
+type TestType = DecoratedTestFunction &
+  Record<TestDecorator.SKIP | TestDecorator.ONLY, DecoratedTestFunction>;
 
 export const test = <TestType>testBasic;
 test.skip = testSkip;
 test.only = testOnly;
 
 export function beforeAll(job: MaybeAsync<void>) {
-  testRunner.beforeAll(job);
+  testSuiteBuilder.beforeAll(job);
 }
 
 export function afterAll(job: MaybeAsync<void>) {
-  testRunner.afterAll(job);
+  testSuiteBuilder.afterAll(job);
 }
 
 export function beforeEach(job: MaybeAsync<void>) {
-  testRunner.beforeEach(job);
+  testSuiteBuilder.beforeEach(job);
 }
 
 export function afterEach(job: MaybeAsync<void>) {
-  testRunner.afterEach(job);
+  testSuiteBuilder.afterEach(job);
 }
 
 export async function render(component: ReactElement<Component> | null) {
@@ -107,11 +128,16 @@ export function getTrackerCallCount(name: string) {
   return callTrackerRegistry.getTrackerCallCount(name);
 }
 
-export function registerValue<TValue = unknown>(name: string, value: SharedValue<TValue>) {
+export function registerValue<TValue = unknown>(
+  name: string,
+  value: SharedValue<TValue>
+) {
   return valueRegistry.registerValue(name, value);
 }
 
-export async function getRegisteredValue<TValue extends TestValue>(name: string) {
+export async function getRegisteredValue<TValue extends TestValue>(
+  name: string
+) {
   return await valueRegistry.getRegisteredValue<TValue>(name);
 }
 
@@ -138,12 +164,22 @@ export function notify(name: string) {
   return testRunnerNotifyFn(name);
 }
 
-export async function waitForNotification(name: string, timeout: number | undefined = 10_000) {
+export async function waitForNotification(
+  name: string,
+  timeout: number | undefined = 10_000
+) {
   return notificationRegistry.waitForNotification(name, timeout);
 }
 
-export async function waitForNotifications(names: string[], timeout: number | undefined = 10_000) {
+export async function waitForNotifications(
+  names: string[],
+  timeout: number | undefined = 10_000
+) {
   return notificationRegistry.waitForNotifications(names, timeout);
+}
+
+export function getWorkletRuntimeFromPool(name: string) {
+  return workletRuntimePool.getOrCreateWorkletRuntime(name);
 }
 
 export function expect(value: TestValue) {

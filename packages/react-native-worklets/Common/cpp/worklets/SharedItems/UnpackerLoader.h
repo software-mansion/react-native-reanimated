@@ -1,9 +1,12 @@
 #pragma once
 
-#include <hermes/hermes.h>
 #include <jsi/jsi.h>
 
+#ifndef NDEBUG
+// Nothing
+#else
 #include <memory>
+#endif // NDEBUG
 #include <string>
 
 namespace worklets {
