@@ -179,16 +179,21 @@ void PropsDiffer::addTransformOriginToDiff(
     const ShadowView &view) {
   jsi::Array transformOriginJsi(rt, 3);
 
+  const auto &viewSize = view.layoutMetrics.frame.size;
+
   if (transformOrigin.xy[0].unit == UnitType::Percent) {
-    const float origin = view.layoutMetrics.frame.size.width * transformOrigin.xy[0].value / 100;
-    transformOriginJsi.setValueAtIndex(rt, 0, origin);
+    transformOriginJsi.setValueAtIndex(rt, 0, viewSize.width * transformOrigin.xy[0].value / 100);
+  } else if (transformOrigin.xy[0].unit == UnitType::Undefined) {
+    // Unset transformOrigin defaults to "50% 50%" (view center), per CSS.
+    transformOriginJsi.setValueAtIndex(rt, 0, viewSize.width * 0.5);
   } else {
     transformOriginJsi.setValueAtIndex(rt, 0, transformOrigin.xy[0].value);
   }
 
   if (transformOrigin.xy[1].unit == UnitType::Percent) {
-    const float origin = view.layoutMetrics.frame.size.height * transformOrigin.xy[1].value / 100;
-    transformOriginJsi.setValueAtIndex(rt, 1, origin);
+    transformOriginJsi.setValueAtIndex(rt, 1, viewSize.height * transformOrigin.xy[1].value / 100);
+  } else if (transformOrigin.xy[1].unit == UnitType::Undefined) {
+    transformOriginJsi.setValueAtIndex(rt, 1, viewSize.height * 0.5);
   } else {
     transformOriginJsi.setValueAtIndex(rt, 1, transformOrigin.xy[1].value);
   }
