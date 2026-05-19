@@ -76,11 +76,17 @@ export interface WorkletsModuleProxy {
     values: TValues[]
   ): SerializableRef<Set<TValues>>;
 
+  createSerializableError(
+    name: string,
+    message: string,
+    stack: string | undefined
+  ): SerializableRef<Error>;
+
   createSerializableInitializer(obj: object): SerializableRef<object>;
 
-  createSerializableFunction<TArgs extends unknown[], TReturn>(
-    func: (...args: TArgs) => TReturn
-  ): SerializableRef<TReturn>;
+  createSerializableNonWorkletFunction<TArgs extends unknown[], TReturn>(
+    fun: (...args: TArgs) => TReturn
+  ): SerializableRef<(...args: TArgs) => TReturn>;
 
   createSerializableWorklet(
     worklet: object,
@@ -106,6 +112,11 @@ export interface WorkletsModuleProxy {
     decorateHost: SerializableRef,
     decorateGuest: SerializableRef
   ): SerializableRef<TValue>;
+
+  scheduleOnRN<TArgs extends unknown[]>(
+    fun: (...args: TArgs) => unknown,
+    args: SerializableRef<TArgs> | undefined
+  ): void;
 
   scheduleOnUI<TValue>(
     serializableArrayOfWorklets: SerializableRef<TValue[]>,

@@ -41,9 +41,28 @@ jsi::Value makeSerializableMap(jsi::Runtime &rt, const jsi::Array &keys, const j
 
 jsi::Value makeSerializableSet(jsi::Runtime &rt, const jsi::Array &values);
 
+jsi::Value makeSerializableError(
+    jsi::Runtime &rt,
+    const std::string &name,
+    const std::string &message,
+    const std::optional<std::string> &stack);
+
 jsi::Value makeSerializableInitializer(jsi::Runtime &rt, const jsi::Object &initializerObject);
 
-jsi::Value makeSerializableFunction(jsi::Runtime &rt, jsi::Function function);
+jsi::Value makeSerializableHostFunction(
+    jsi::Runtime &rt,
+    const jsi::HostFunctionType &function,
+    const std::string &name,
+    unsigned int paramCount);
+
+jsi::Value makeSerializableRemoteFunction(
+    jsi::Runtime &rt,
+    jsi::Function function
+#ifndef NDEBUG
+    ,
+    const std::string &name
+#endif
+);
 
 jsi::Value makeSerializableWorklet(jsi::Runtime &rt, const jsi::Object &object, const bool &shouldRetainRemote);
 

@@ -92,23 +92,45 @@ class SerializableJSRef : public jsi::NativeState {
   }
 };
 
+[[nodiscard]]
 jsi::Value makeSerializableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
     const jsi::Value &shouldRetainRemote,
     const jsi::Value &nativeStateSource);
 
+[[nodiscard]]
 std::shared_ptr<Serializable> extractSerializableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeSerializableValue,
     const std::string &errorMessage = "[Worklets] Expecting the object to be of type SerializableJSRef.");
 
-template <typename T>
-std::shared_ptr<T> extractSerializableOrThrow(
+[[nodiscard]]
+std::shared_ptr<Serializable> extractSerializableOrThrow(
+    jsi::Runtime &rt,
+    const jsi::Object &maybeSerializableValue,
+    const std::string &errorMessage = "[Worklets] Expecting the object to be of type SerializableJSRef.");
+
+template <typename TSerializable>
+[[nodiscard]]
+std::shared_ptr<TSerializable> extractSerializableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &serializableRef,
     const std::string &errorMessage = "[Worklets] Provided serializable object is of an incompatible type.") {
-  auto res = std::dynamic_pointer_cast<T>(extractSerializableOrThrow(rt, serializableRef, errorMessage));
+  auto res = std::dynamic_pointer_cast<TSerializable>(extractSerializableOrThrow(rt, serializableRef, errorMessage));
+  if (!res) {
+    throw std::runtime_error(errorMessage);
+  }
+  return res;
+}
+
+template <typename TSerializable>
+[[nodiscard]]
+std::shared_ptr<TSerializable> extractSerializableOrThrow(
+    jsi::Runtime &rt,
+    const jsi::Object &serializableRef,
+    const std::string &errorMessage = "[Worklets] Provided serializable object is of an incompatible type.") {
+  auto res = std::dynamic_pointer_cast<TSerializable>(extractSerializableOrThrow(rt, serializableRef, errorMessage));
   if (!res) {
     throw std::runtime_error(errorMessage);
   }
@@ -120,6 +142,15 @@ class SerializableArray : public Serializable {
   SerializableArray(jsi::Runtime &rt, const jsi::Array &array);
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+  std::vector<jsi::Value> getJSIValueArr(jsi::Runtime &rt) {
+    std::vector<jsi::Value> args;
+    args.reserve(data_.size());
+    for (const auto &item : data_) {
+      args.push_back(item->toJSValue(rt));
+    }
+    return args;
+  }
 
   [[nodiscard]] const std::vector<std::shared_ptr<Serializable>> &getList() const {
     return data_;
@@ -162,6 +193,19 @@ class SerializableSet : public Serializable {
   std::vector<std::shared_ptr<Serializable>> data_;
 };
 
+class SerializableError : public Serializable {
+ public:
+  SerializableError(const std::string &name, const std::string &message, const std::optional<std::string> &stack)
+      : Serializable(ValueType::ErrorType), name_(name), message_(message), stack_(stack) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  const std::string name_;
+  const std::string message_;
+  const std::optional<std::string> stack_;
+};
+
 class SerializableHostObject : public Serializable {
  public:
   SerializableHostObject(jsi::Runtime &, const std::shared_ptr<jsi::HostObject> &hostObject)
@@ -175,11 +219,8 @@ class SerializableHostObject : public Serializable {
 
 class SerializableHostFunction : public Serializable {
  public:
-  SerializableHostFunction(jsi::Runtime &rt, jsi::Function function)
-      : Serializable(ValueType::HostFunctionType),
-        hostFunction_(function.getHostFunction(rt)),
-        name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
-        paramCount_(function.getProperty(rt, "length").asNumber()) {}
+  SerializableHostFunction(const jsi::HostFunctionType &function, const std::string &name, unsigned int paramCount)
+      : Serializable(ValueType::HostFunctionType), hostFunction_(function), name_(name), paramCount_(paramCount) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -232,11 +273,18 @@ class SerializableRemoteFunction : public Serializable,
   std::unique_ptr<jsi::Value> function_;
 
  public:
-  SerializableRemoteFunction(jsi::Runtime &rt, jsi::Function &&function)
+  SerializableRemoteFunction(
+      jsi::Runtime &rt,
+      jsi::Function &&function
+#ifndef NDEBUG
+      ,
+      const std::string &name
+#endif
+      )
       : Serializable(ValueType::RemoteFunctionType),
         runtime_(&rt),
 #ifndef NDEBUG
-        name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
+        name_(name),
 #endif
         function_(std::make_unique<jsi::Value>(rt, std::move(function))) {
   }

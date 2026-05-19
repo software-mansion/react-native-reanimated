@@ -51,13 +51,31 @@ jsi::Value makeSerializableInitializer(jsi::Runtime &rt, const jsi::Object &init
   return SerializableJSRef::newNativeStateObject(rt, serializable);
 }
 
-jsi::Value makeSerializableFunction(jsi::Runtime &rt, jsi::Function function) {
-  std::shared_ptr<Serializable> serializable;
-  if (function.isHostFunction(rt)) {
-    serializable = std::make_shared<SerializableHostFunction>(rt, std::move(function));
-  } else {
-    serializable = std::make_shared<SerializableRemoteFunction>(rt, std::move(function));
-  }
+jsi::Value makeSerializableHostFunction(
+    jsi::Runtime &rt,
+    const jsi::HostFunctionType &function,
+    const std::string &name,
+    unsigned int paramCount) {
+  auto serializable = std::make_shared<SerializableHostFunction>(function, name, paramCount);
+  return SerializableJSRef::newNativeStateObject(rt, serializable);
+}
+
+jsi::Value makeSerializableRemoteFunction(
+    jsi::Runtime &rt,
+    jsi::Function function
+#ifndef NDEBUG
+    ,
+    const std::string &name
+#endif
+) {
+  auto serializable = std::make_shared<SerializableRemoteFunction>(
+      rt,
+      std::move(function)
+#ifndef NDEBUG
+          ,
+      name
+#endif
+  );
   return SerializableJSRef::newNativeStateObject(rt, serializable);
 }
 
@@ -78,6 +96,15 @@ jsi::Value makeSerializableMap(jsi::Runtime &rt, const jsi::Array &keys, const j
 
 jsi::Value makeSerializableSet(jsi::Runtime &rt, const jsi::Array &values) {
   auto serializable = std::make_shared<SerializableSet>(rt, values);
+  return SerializableJSRef::newNativeStateObject(rt, serializable);
+}
+
+jsi::Value makeSerializableError(
+    jsi::Runtime &rt,
+    const std::string &name,
+    const std::string &message,
+    const std::optional<std::string> &stack) {
+  auto serializable = std::make_shared<SerializableError>(name, message, stack);
   return SerializableJSRef::newNativeStateObject(rt, serializable);
 }
 

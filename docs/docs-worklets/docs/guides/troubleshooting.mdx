@@ -62,6 +62,18 @@ See [Couldn't determine the version of the native part of Worklets](#couldnt-det
 
 See [Mismatch between JavaScript part and native part of Worklets](#mismatch-between-javascript-part-and-native-part-of-worklets) and [Mismatch between JavaScript code version and Worklets Babel plugin version](#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version).
 
+### TypeError: right operand of 'in' is not an object
+
+**Problem:** This happens because Expo apps disable [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) by default. This breaks the initialization pipeline for Worklets.
+
+**Solution:** See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445) for the current workaround (enable `inlineRequires` in `metro.config.js`).
+
+### Cannot read property 'createSerializableString' of undefined
+
+**Problem:** This happens because Expo apps disable [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) by default. This breaks the initialization pipeline for Worklets.
+
+**Solution:** See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445) for the current workaround (enable `inlineRequires` in `metro.config.js`).
+
 ## Warnings
 
 ### Tried to modify key of an object which has been converted to a serializable.
@@ -189,3 +201,7 @@ Check [this page](/docs/fundamentals/glossary#worklet) to learn more about workl
 ### Tried to synchronously call a non-worklet function on the UI thread
 
 See [Tried to synchronously call a Remote Function](#tried-to-synchronously-call-a-remote-function).
+
+### Locally defined function passed to scheduleOnRN
+
+See [this page](/docs/threading/scheduleOnRN#what-functions-can-be-passed-to-scheduleonrn) to learn more about functions that can be passed to `scheduleOnRN`.

@@ -2,6 +2,7 @@
 #include <worklets/Compat/Holders.h>
 #include <worklets/Compat/StableApi.h>
 #include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/Shareable.h>
 #include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
@@ -9,7 +10,6 @@
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
-#include <utility>
 
 namespace worklets {
 
@@ -83,7 +83,9 @@ std::shared_ptr<Serializable> extractSerializable(
     case Serializable::ValueType::SymbolType:
       throw std::runtime_error("[Worklets] Not implemented.");
     case Serializable::ValueType::ShareableType:
-      throw std::runtime_error("[Worklets] Not implemented.");
+      return extractSerializableOrThrow<Shareable>(rt, value, errorMessage);
+    case Serializable::ValueType::ErrorType:
+      return extractSerializableOrThrow<SerializableError>(rt, value, errorMessage);
     default:
       throw std::runtime_error("[Worklets] Invalid expected type provided to extractSerializable.");
   }
