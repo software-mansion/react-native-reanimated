@@ -64,13 +64,13 @@ See [Mismatch between JavaScript part and native part of Worklets](#mismatch-bet
 
 ### TypeError: right operand of 'in' is not an object
 
-**Problem:** This can happen in Expo apps due to eager loading being the default. Worklets needs to set up properties on the global object before imports are evaluated. With eager loading, those properties are missing at evaluation time and the imports crash.
+**Problem:** This happens because Expo apps disable [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) by default. This breaks the initialization pipeline for Worklets.
 
 **Solution:** See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445) for the current workaround (enable `inlineRequires` in `metro.config.js`).
 
 ### Cannot read property 'createSerializableString' of undefined
 
-**Problem:** This can happen in Expo apps due to eager loading being the default. Worklets needs to set up properties on the global object before imports are evaluated. With eager loading, those properties are missing at evaluation time and the imports crash.
+**Problem:** This happens because Expo apps disable [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) by default. This breaks the initialization pipeline for Worklets.
 
 **Solution:** See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445) for the current workaround (enable `inlineRequires` in `metro.config.js`).
 
