@@ -269,7 +269,7 @@ class SerializableRemoteFunction : public Serializable,
                                    public std::enable_shared_from_this<SerializableRemoteFunction> {
  private:
   struct RNRuntimeData {
-    const int remoteId = 0;
+    const int remoteId;
     const std::shared_ptr<JSScheduler> jsScheduler;
   };
 
@@ -292,7 +292,7 @@ class SerializableRemoteFunction : public Serializable,
       : Serializable(ValueType::RemoteFunctionType),
         hostRuntime_(&rnRuntime),
         hostRuntimeId_(RuntimeData::rnRuntimeId),
-        rnRuntimeData_({remoteId, jsScheduler}),
+        rnRuntimeData_({.remoteId = remoteId, .jsScheduler = jsScheduler}),
         name_(name) {}
 
   SerializableRemoteFunction(
@@ -303,7 +303,7 @@ class SerializableRemoteFunction : public Serializable,
       : Serializable(ValueType::RemoteFunctionType),
         hostRuntime_(&workletRuntime),
         hostRuntimeId_(hostRuntimeId),
-        workletRuntimeData_(WorkletRuntimeData{std::make_unique<jsi::Value>(workletRuntime, function)}),
+        workletRuntimeData_({.function = std::make_unique<jsi::Value>(workletRuntime, function)}),
         name_(name) {}
 
   ~SerializableRemoteFunction() override;

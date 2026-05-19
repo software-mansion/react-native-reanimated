@@ -18,6 +18,7 @@ import {
 } from './serializableMappingCache';
 import type {
   FlatSerializableRef,
+  RegisteredRemoteFunction,
   RegistrationData,
   RemoteFunction,
   SerializableRef,
@@ -445,7 +446,7 @@ function cloneNonWorkletFunction<TArgs extends unknown[], TReturn>(
     functionId,
     __DEV__ ? fun.name : undefined
   ) as SerializableRef<(...args: TArgs) => TReturn>;
-  if ((clone as RemoteFunction).__keepAlive) {
+  if ((clone as RegisteredRemoteFunction).__keepAlive) {
     registerRemoteFunction(fun);
   }
   serializableMappingCache.set(fun, clone);

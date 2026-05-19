@@ -347,7 +347,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
               rt, fun.getHostFunction(rt), name, fun.getProperty(rt, "length").getNumber());
         }
         if (hostRuntimeId == RuntimeData::rnRuntimeId) {
-          const auto remoteId = at<1>(args).getNumber();
+          const int remoteId = static_cast<int>(at<1>(args).getNumber());
           auto ref = makeSerializableRemoteFunction(rt, name, remoteId, jsScheduler);
           ref.asObject(rt).setProperty(rt, "__keepAlive", true);
           return ref;
