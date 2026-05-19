@@ -9,7 +9,6 @@
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
-#include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #include <memory>
 #include <string>

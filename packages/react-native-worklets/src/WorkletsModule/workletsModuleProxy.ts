@@ -1,6 +1,10 @@
 'use strict';
 
-import type { SerializableRef, SynchronizableRef } from '../memory/types';
+import type {
+  RemoteFunction,
+  SerializableRef,
+  SynchronizableRef,
+} from '../memory/types';
 import type { WorkletRuntime } from '../types';
 
 /** Type of `__workletsModuleProxy` injected with JSI. */
@@ -20,7 +24,10 @@ export interface WorkletsModuleProxy {
     shareableHostUnpackerSourceMap: string,
     shareableGuestUnpackerCode: string,
     shareableGuestUnpackerLocation: string,
-    shareableGuestUnpackerSourceMap: string
+    shareableGuestUnpackerSourceMap: string,
+    remoteFunctionUnpackerCode: string,
+    remoteFunctionUnpackerLocation: string,
+    remoteFunctionUnpackerSourceMap: string
   ): void;
 
   createSerializable<TValue>(
@@ -85,7 +92,9 @@ export interface WorkletsModuleProxy {
   createSerializableInitializer(obj: object): SerializableRef<object>;
 
   createSerializableNonWorkletFunction<TArgs extends unknown[], TReturn>(
-    fun: (...args: TArgs) => TReturn
+    fun: (...args: TArgs) => TReturn,
+    functionId: number,
+    functionName: string | undefined
   ): SerializableRef<(...args: TArgs) => TReturn>;
 
   createSerializableWorklet(
@@ -114,7 +123,7 @@ export interface WorkletsModuleProxy {
   ): SerializableRef<TValue>;
 
   scheduleOnRN<TArgs extends unknown[]>(
-    fun: (...args: TArgs) => unknown,
+    fun: RemoteFunction | ((...args: TArgs) => unknown),
     args: SerializableRef<TArgs> | undefined
   ): void;
 

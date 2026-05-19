@@ -9,7 +9,7 @@ import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
 } from './memory/serializable';
-import type { SerializableRef } from './memory/types';
+import type { RemoteFunction, SerializableRef } from './memory/types';
 import { isRNRuntime, RuntimeKind } from './runtimeKind';
 import type { WorkletFunction, WorkletImport } from './types';
 import { isWorkletFunction } from './workletFunction';
@@ -203,18 +203,6 @@ export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
   };
 }
 
-type ReleaseRemoteFunction<Args extends unknown[], ReturnValue> = {
-  (...args: Args): ReturnValue;
-};
-
-type DevRemoteFunction<Args extends unknown[], ReturnValue> = {
-  __remoteFunction: (...args: Args) => ReturnValue;
-};
-
-type RemoteFunction<Args extends unknown[], ReturnValue> =
-  | ReleaseRemoteFunction<Args, ReturnValue>
-  | DevRemoteFunction<Args, ReturnValue>;
-
 function runWorkletOnJS<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>,
   ...args: Args
@@ -248,12 +236,11 @@ function runWorkletOnJS<Args extends unknown[], ReturnValue>(
 export function scheduleOnRN<Args extends unknown[], ReturnValue>(
   fun:
     | ((...args: Args) => ReturnValue)
-    | RemoteFunction<Args, ReturnValue>
+    | RemoteFunction
     | WorkletFunction<Args, ReturnValue>,
   ...args: Args
 ): void {
   'worklet';
-  type FunDevRemote = Extract<typeof fun, DevRemoteFunction<Args, ReturnValue>>;
   if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
     // if we are already on the JS thread, we just schedule the worklet on the JS queue
     queueMicrotask(
@@ -266,11 +253,8 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
     // and pass the worklet as a first argument followed by original arguments.
     scheduleOnRN(runWorkletOnJS<Args, ReturnValue>, fun, ...args);
   } else {
-    if ((fun as FunDevRemote).__remoteFunction) {
-      fun = (fun as FunDevRemote).__remoteFunction;
-    }
     globalThis.__workletsModuleProxy.scheduleOnRN(
-      fun as (...args: Args) => ReturnValue,
+      fun,
       (args.length > 0
         ? globalThis.__serializer(args)
         : undefined) as SerializableRef<Args>
@@ -296,7 +280,7 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
 export function runOnJS<Args extends unknown[], ReturnValue>(
   fun:
     | ((...args: Args) => ReturnValue)
-    | RemoteFunction<Args, ReturnValue>
+    | RemoteFunction
     | WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => void {
   'worklet';
