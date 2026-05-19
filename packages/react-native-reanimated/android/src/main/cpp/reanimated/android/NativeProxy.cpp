@@ -8,6 +8,7 @@
 #include <reanimated/android/EventHandler.h>
 #include <reanimated/android/KeyboardWorkletWrapper.h>
 #include <reanimated/android/NativeProxy.h>
+#include <reanimated/android/PseudoSelectorCallback.h>
 #include <reanimated/android/SensorSetter.h>
 
 #include <memory>
@@ -239,6 +240,20 @@ void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
   method(javaPart_.get(), listenerId);
 }
 
+void NativeProxy::attachPseudoSelector(Tag tag, PseudoSelector selector, std::function<void(bool)> callback) {
+  static const auto method = getJniMethod<void(int, int, PseudoSelectorCallback::javaobject)>("attachPseudoSelector");
+  method(
+      javaPart_.get(),
+      static_cast<int>(tag),
+      static_cast<int>(selector),
+      PseudoSelectorCallback::newObjectCxxArgs(std::move(callback)).get());
+}
+
+void NativeProxy::detachPseudoSelector(Tag tag, PseudoSelector selector) {
+  static const auto method = getJniMethod<void(int, int)>("detachPseudoSelector");
+  method(javaPart_.get(), static_cast<int>(tag), static_cast<int>(selector));
+}
+
 double NativeProxy::getAnimationTimestamp() {
   static const auto method = getJniMethod<jlong()>("getAnimationTimestamp");
   jlong output = method(javaPart_.get());
@@ -312,6 +327,10 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto maybeFlushUiUpdatesQueueFunction = bindThis(&NativeProxy::maybeFlushUIUpdatesQueue);
 
+  auto attachPseudoSelectorFunction = bindThis(&NativeProxy::attachPseudoSelector);
+
+  auto detachPseudoSelectorFunction = bindThis(&NativeProxy::detachPseudoSelector);
+
   return {
       requestRender,
       preserveMountedTags,
@@ -323,6 +342,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUiUpdatesQueueFunction,
+      attachPseudoSelectorFunction,
+      detachPseudoSelectorFunction,
   };
 }
 
