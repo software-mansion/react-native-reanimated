@@ -56,11 +56,12 @@ function isPlainJSObject(object: object): object is Record<string, unknown> {
 
 /**
  * RN has introduced a new representation of TurboModules as a JS object whose
- * prototype is the host object More details:
+ * prototype is the host object. More details:
  * https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp#L182
  */
 function isTurboModuleLike(object: object): object is Record<string, unknown> {
-  return isHostObject(Object.getPrototypeOf(object));
+  const proto = Object.getPrototypeOf(object);
+  return proto !== null && isHostObject(proto);
 }
 
 function getFromCache(value: object) {

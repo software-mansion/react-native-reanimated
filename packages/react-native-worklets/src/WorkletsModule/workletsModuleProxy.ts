@@ -200,14 +200,11 @@ export interface WorkletsModuleProxy {
 
   getUISchedulerHolder(): object;
 
-  /* #region deprecated */
-
+  /** @deprecated Don't use unless you have to. */
   createSerializableLEGACY<TValue>(
     value: TValue,
     nativeStateSource?: object
   ): SerializableRef<TValue>;
-
-  /* #endregion deprecated */
 }
 
 type InternalMethods = 'loadUnpackers' | 'createSerializableLEGACY';
