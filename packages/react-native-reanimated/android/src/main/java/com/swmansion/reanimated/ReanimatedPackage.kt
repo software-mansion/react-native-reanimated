@@ -26,9 +26,8 @@ class ReanimatedPackage :
             else -> null
         }
 
-    override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
-      return listOf(RNReanimatedSharedTransitionBoundaryManager())
-    }
+    override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> =
+        listOf(RNReanimatedSharedTransitionBoundaryManager())
 
     override fun getReactModuleInfoProvider(): ReactModuleInfoProvider {
         val moduleList: Array<Class<out NativeModule>> = arrayOf(ReanimatedModule::class.java)
