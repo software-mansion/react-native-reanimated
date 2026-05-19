@@ -184,7 +184,7 @@ export function createSerializable<TValue>(
       }
     }
     if (!isWorkletFunction(value)) {
-      return cloneRemoteFunction(value);
+      return cloneNonWorkletFunction(value) as SerializableRef<TValue>;
     }
   }
   // RN has introduced a new representation of TurboModules as a JS object whose prototype is the host object
@@ -432,14 +432,14 @@ function cloneArray<T extends unknown[]>(
   return clone;
 }
 
-function cloneRemoteFunction<TArgs extends unknown[], TReturn>(
-  value: (...args: TArgs) => TReturn
-): SerializableRef<TReturn> {
-  const clone = WorkletsModule.createSerializableFunction(value);
-  serializableMappingCache.set(value, clone);
+function cloneNonWorkletFunction<TArgs extends unknown[], TReturn>(
+  fun: (...args: TArgs) => TReturn
+): SerializableRef<(...args: TArgs) => TReturn> {
+  const clone = WorkletsModule.createSerializableNonWorkletFunction(fun);
+  serializableMappingCache.set(fun, clone);
   serializableMappingCache.set(clone);
 
-  freezeObjectInDev(value);
+  freezeObjectInDev(fun);
   return clone;
 }
 

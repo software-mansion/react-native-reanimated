@@ -53,8 +53,7 @@ file(GLOB_RECURSE WORKLETS_ANDROID_CPP_SOURCES CONFIGURE_DEPENDS
 add_library(worklets SHARED ${WORKLETS_COMMON_CPP_SOURCES}
                             ${WORKLETS_ANDROID_CPP_SOURCES})
 
-target_precompile_headers(worklets PRIVATE
-                          "${ANDROID_CPP_DIR}/WorkletsPCH.h")
+target_precompile_headers(worklets PRIVATE "${ANDROID_CPP_DIR}/WorkletsPCH.h")
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
   include(

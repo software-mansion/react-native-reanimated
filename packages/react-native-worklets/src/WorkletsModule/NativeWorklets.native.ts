@@ -168,10 +168,10 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.createSerializableInitializer(obj);
   }
 
-  createSerializableFunction<TArgs extends unknown[], TReturn>(
-    func: (...args: TArgs) => TReturn
-  ) {
-    return this.#workletsModuleProxy.createSerializableFunction(func);
+  createSerializableNonWorkletFunction<TArgs extends unknown[], TReturn>(
+    fun: (...args: TArgs) => TReturn
+  ): SerializableRef<(...args: TArgs) => TReturn> {
+    return this.#workletsModuleProxy.createSerializableNonWorkletFunction(fun);
   }
 
   createSerializableWorklet(worklet: object, shouldPersistRemote: boolean) {
@@ -216,6 +216,13 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       decorateHost,
       decorateRef
     );
+  }
+
+  scheduleOnRN<TArgs extends unknown[]>(
+    fun: (...args: TArgs) => unknown,
+    args: SerializableRef<TArgs> | undefined
+  ): void {
+    this.#workletsModuleProxy.scheduleOnRN(fun, args);
   }
 
   scheduleOnUI<TValue>(
