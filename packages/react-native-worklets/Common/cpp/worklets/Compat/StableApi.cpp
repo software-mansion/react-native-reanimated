@@ -84,6 +84,8 @@ std::shared_ptr<Serializable> extractSerializable(
       throw std::runtime_error("[Worklets] Not implemented.");
     case Serializable::ValueType::ShareableType:
       return extractSerializableOrThrow<Shareable>(rt, value, errorMessage);
+    case Serializable::ValueType::ErrorType:
+      return extractSerializableOrThrow<SerializableError>(rt, value, errorMessage);
     default:
       throw std::runtime_error("[Worklets] Invalid expected type provided to extractSerializable.");
   }

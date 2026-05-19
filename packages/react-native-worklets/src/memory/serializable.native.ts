@@ -610,18 +610,9 @@ function cloneRegExp(value: RegExp): SerializableRef<RegExp> {
 
 function cloneError(value: Error): SerializableRef<Error> {
   const { name, message, stack } = value;
-  const handle = cloneInitializer({
-    __init: () => {
-      'worklet';
-      const error = new Error();
-      error.name = name;
-      error.message = message;
-      error.stack = stack;
-      return error;
-    },
-  });
-  serializableMappingCache.set(value, handle);
-  return handle as unknown as SerializableRef<Error>;
+  const clone = WorkletsModule.createSerializableError(name, message, stack);
+  serializableMappingCache.set(value, clone);
+  return clone;
 }
 
 function cloneArrayBuffer<T extends ArrayBuffer>(
@@ -813,6 +804,14 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
         });
         return globalThis.__workletsModuleProxy.createSerializableSet(
           values
+        ) as FlatSerializableRef<TValue>;
+      }
+      if (value instanceof Error) {
+        const { name, message, stack } = value;
+        return globalThis.__workletsModuleProxy.createSerializableError(
+          name,
+          message,
+          stack
         ) as FlatSerializableRef<TValue>;
       }
       if (value instanceof Map) {

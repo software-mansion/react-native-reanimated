@@ -194,6 +194,41 @@ describe('Test createSerializableOnUI', () => {
     expect(typeof arrayValue[index.arrayBuffer]).toBe('object');
   });
 
+  test('createSerializableOnUIError', () => {
+    const errorValue = runOnUISync(() => {
+      'worklet';
+      return new Error('test');
+    });
+
+    expect(errorValue instanceof Error).toBe(true);
+    expect(errorValue.name).toBe('Error');
+    expect(errorValue.message).toBe('test');
+  });
+
+  test('createSerializableOnUIError preserves custom name', () => {
+    const errorValue = runOnUISync(() => {
+      'worklet';
+      const e = new Error('boom');
+      e.name = 'CustomError';
+      return e;
+    });
+
+    expect(errorValue instanceof Error).toBe(true);
+    expect(errorValue.name).toBe('CustomError');
+    expect(errorValue.message).toBe('boom');
+  });
+
+  test('createSerializableOnUIError from Error subclass', () => {
+    const errorValue = runOnUISync(() => {
+      'worklet';
+      return new TypeError('bad type');
+    });
+
+    expect(errorValue instanceof Error).toBe(true);
+    expect(errorValue.name).toBe('TypeError');
+    expect(errorValue.message).toBe('bad type');
+  });
+
   test('createSerializableOnUIMap', () => {
     const mapValue = runOnUISync(() => {
       'worklet';

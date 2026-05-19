@@ -227,6 +227,23 @@ jsi::Value SerializableSet::toJSValue(jsi::Runtime &rt) {
   return set;
 }
 
+jsi::Value SerializableError::toJSValue(jsi::Runtime &rt) {
+  auto error = rt.global()
+                   .getPropertyAsFunction(rt, "Error")
+                   .callAsConstructor(rt, jsi::String::createFromUtf8(rt, message_))
+                   .getObject(rt);
+
+  error.setProperty(rt, "name", jsi::String::createFromUtf8(rt, name_));
+
+  if (stack_.has_value()) {
+    error.setProperty(rt, "stack", jsi::String::createFromUtf8(rt, stack_.value()));
+  } else {
+    error.setProperty(rt, "stack", jsi::String::createFromUtf8(rt, ""));
+  }
+
+  return error;
+}
+
 jsi::Value SerializableHostObject::toJSValue(jsi::Runtime &rt) {
   return jsi::Object::createFromHostObject(rt, hostObject_);
 }

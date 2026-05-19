@@ -193,6 +193,19 @@ class SerializableSet : public Serializable {
   std::vector<std::shared_ptr<Serializable>> data_;
 };
 
+class SerializableError : public Serializable {
+ public:
+  SerializableError(const std::string &name, const std::string &message, const std::optional<std::string> &stack)
+      : Serializable(ValueType::ErrorType), name_(name), message_(message), stack_(stack) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  const std::string name_;
+  const std::string message_;
+  const std::optional<std::string> stack_;
+};
+
 class SerializableHostObject : public Serializable {
  public:
   SerializableHostObject(jsi::Runtime &, const std::shared_ptr<jsi::HostObject> &hostObject)
