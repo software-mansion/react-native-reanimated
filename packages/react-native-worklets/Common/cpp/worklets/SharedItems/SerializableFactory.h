@@ -51,8 +51,9 @@ jsi::Value makeSerializableHostFunction(
 
 jsi::Value makeSerializableRemoteFunction(
     jsi::Runtime &rt,
-    jsi::Function function,
+    jsi::Function function
 #ifndef NDEBUG
+    ,
     const std::string &name
 #endif
 );
