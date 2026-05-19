@@ -60,6 +60,7 @@ export default class AnimatedComponent<
   _componentDOMRef: HTMLElement | null = null;
   _willUnmount: boolean = false;
   _pseudoStylesRegistered: boolean = false;
+  _lastPseudoSnapshot: string | null = null;
 
   constructor(ChildComponent: AnyComponent, props: P) {
     super(props);
@@ -236,6 +237,7 @@ export default class AnimatedComponent<
       ReanimatedModule.unregisterPseudoStyle(viewTag);
     }
     this._pseudoStylesRegistered = false;
+    this._lastPseudoSnapshot = null;
   }
 
   _syncPseudoStyles() {
@@ -244,7 +246,15 @@ export default class AnimatedComponent<
     }
     const [, transitionProperties, , pseudoStylesBySelector] =
       filterCSSAndStyleProperties(this._cssStyle);
+    const snapshot = JSON.stringify([
+      pseudoStylesBySelector,
+      transitionProperties,
+    ]);
+    if (snapshot === this._lastPseudoSnapshot) {
+      return;
+    }
     this._unregisterPseudoStyles();
+    this._lastPseudoSnapshot = snapshot;
     if (pseudoStylesBySelector) {
       this._registerPseudoStyles(pseudoStylesBySelector, transitionProperties);
     }

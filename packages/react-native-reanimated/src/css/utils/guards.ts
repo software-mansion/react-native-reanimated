@@ -94,5 +94,5 @@ export const resolvePseudoKeyed = <T>(
     return value;
   }
   const obj = value as Record<string, unknown>;
-  return ((obj[selector] ?? obj.default) as T | undefined) ?? undefined;
+  return (obj[selector] ?? obj.default) as T | undefined;
 };
