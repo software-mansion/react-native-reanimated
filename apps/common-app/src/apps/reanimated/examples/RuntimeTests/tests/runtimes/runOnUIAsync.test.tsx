@@ -57,11 +57,7 @@ describe('runOnUIAsync', () => {
       reason = error instanceof Error ? error.message : String(error);
     }
 
-    if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-      expect(reason).toBe('test error');
-    } else {
-      expect(reason).toBe('[object Object]');
-    }
+    expect(reason).toBe('test error');
   });
 
   if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {

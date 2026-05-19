@@ -100,8 +100,7 @@ jsi::Value makeSerializableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
     const jsi::Value &shouldRetainRemote,
-    const jsi::Value &nativeStateSource,
-    const RuntimeData::RuntimeId hostRuntimeId);
+    const jsi::Value &nativeStateSource);
 
 [[nodiscard]]
 std::shared_ptr<Serializable> extractSerializableOrThrow(
@@ -317,7 +316,7 @@ class SerializableRemoteFunction : public Serializable,
   SerializableRemoteFunction(const SerializableRemoteFunction &) = delete;
   SerializableRemoteFunction &operator=(const SerializableRemoteFunction &) = delete;
 
-  void scheduleOnHost(
+  void resolveOrRejectPromise(
       const std::shared_ptr<Serializable> &resolveValue,
       const std::shared_ptr<RuntimeManager> &runtimeManager);
 

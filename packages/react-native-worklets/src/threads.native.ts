@@ -22,7 +22,7 @@ type UIJob<Args extends unknown[] = unknown[], ReturnValue = unknown> = [
   worklet: WorkletFunction<Args, ReturnValue>,
   args: Args,
   resolve: ((value: ReturnValue) => void) | undefined,
-  reject: ((reason?: unknown) => void) | undefined,
+  reject: ((reason: unknown) => void) | undefined,
   scheduleStack: string | undefined,
 ];
 
@@ -346,7 +346,7 @@ function enqueueUI<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>,
   args: Args,
   resolve?: (value: ReturnValue) => void,
-  reject?: (reason?: unknown) => void
+  reject?: (reason: unknown) => void
 ): void {
   const scheduleStack = SHOULD_CAPTURE_SCHEDULE_STACK
     ? new Error().stack

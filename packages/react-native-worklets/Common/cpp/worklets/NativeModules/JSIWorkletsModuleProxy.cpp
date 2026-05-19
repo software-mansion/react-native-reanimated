@@ -419,129 +419,6 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         registerCustomSerializable(runtimeManager, memoryManager, determine, pack, unpack, typeId);
       });
 
-  jsi_utils::addMethod<1>(
-      rt, obj, "isHostFunction", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        return args[0].isObject() && args[0].asObject(rt).asFunction(rt).isHostFunction(rt);
-      });
-
-  jsi_utils::addMethod<2>(
-      rt,
-      obj,
-      "scheduleOnRN",
-      [jsScheduler = jsScheduler_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
-        const auto &funValue = args[0].asObject(rt).asFunction(rt);
-        auto &remoteArgs = args[1];
-
-        auto serializableArgs = remoteArgs.isUndefined()
-            ? nullptr
-            : extractSerializableOrThrow<SerializableArray>(rt, remoteArgs, "[Worklets] Args must be an array.");
-
-        if (funValue.isHostFunction(rt)) [[unlikely]] { // NOLINT(readability/braces)
-          auto hostFun = funValue.getHostFunction(rt);
-          jsScheduler->scheduleOnJS([hostFun = std::move(hostFun), serializableArgs](jsi::Runtime &rnRuntime) {
-            if (serializableArgs == nullptr) {
-              // fast path for host function w/o arguments
-              hostFun(rnRuntime, jsi::Value::undefined(), nullptr, 0);
-            } else {
-              auto args = serializableArgs->getJSIValueArr(rnRuntime);
-              hostFun(rnRuntime, jsi::Value::undefined(), const_cast<const jsi::Value *>(args.data()), args.size());
-            }
-          });
-        } else {
-          auto remoteFunction = extractSerializableOrThrow<SerializableRemoteFunction>(
-              rt,
-              args[0],
-              "[Worklets] It seems that you passed a locally defined function to `scheduleOnRN`. Functions defined in a different Runtime cannot be scheduled on RN Runtime. Make sure to define the function you are trying to schedule on the RN Runtime before passing it to `scheduleOnRN`.");
-          if (!remoteFunction->isHostedOnRNRuntime()) [[unlikely]] {
-            throw std::runtime_error(
-                "[Worklets] Function passed to `scheduleOnRN` does not belong to the React Native runtime but to runtime with id " +
-                std::to_string(remoteFunction->getHostRuntimeId()) + ".");
-          }
-          jsScheduler->scheduleOnJS([remoteFunction, serializableArgs](jsi::Runtime &rnRuntime) {
-            auto fun = remoteFunction->toJSValue(rnRuntime).asObject(rnRuntime).asFunction(rnRuntime);
-
-            if (serializableArgs == nullptr) {
-              // fast path for remote function w/o arguments
-              fun.call(rnRuntime);
-            } else {
-              auto args = serializableArgs->getJSIValueArr(rnRuntime);
-              fun.call(rnRuntime, const_cast<const jsi::Value *>(args.data()), args.size());
-            }
-          });
-        }
-      });
-
-  jsi_utils::addMethod<2>(
-      rt,
-      obj,
-      "scheduleOnRN",
-      [jsScheduler = jsScheduler_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
-        const auto &funOrSerializable = at<0>(args).getObject(rt).getFunction(rt);
-        const auto &remoteArgs = at<1>(args);
-
-        auto serializableArgs = remoteArgs.isUndefined()
-            ? nullptr
-            : extractSerializableOrThrow<SerializableArray>(rt, remoteArgs, "[Worklets] Args must be an array.");
-
-        if (!funOrSerializable.getProperty(rt, "__remoteFunction").isUndefined())
-            [[likely]] { // NOLINT(readability/braces)
-          auto remoteFunction = extractSerializableOrThrow<SerializableRemoteFunction>(rt, funOrSerializable);
-          jsScheduler->scheduleOnJS([remoteFunction, serializableArgs](jsi::Runtime &rnRuntime) {
-            auto fun = remoteFunction->toJSValue(rnRuntime).getObject(rnRuntime).getFunction(rnRuntime);
-
-            if (serializableArgs == nullptr) {
-              // fast path for remote function w/o arguments
-              fun.call(rnRuntime);
-            } else {
-              auto args = serializableArgs->getJSIValueArr(rnRuntime);
-              fun.call(rnRuntime, const_cast<const jsi::Value *>(args.data()), args.size());
-            }
-          });
-        } else if (funOrSerializable.isHostFunction(rt)) {
-          auto hostFun = funOrSerializable.getHostFunction(rt);
-          jsScheduler->scheduleOnJS([hostFun = std::move(hostFun), serializableArgs](jsi::Runtime &rnRuntime) {
-            if (serializableArgs == nullptr) {
-              // fast path for host function w/o arguments
-              hostFun(rnRuntime, jsi::Value::undefined(), nullptr, 0);
-            } else {
-              auto args = serializableArgs->getJSIValueArr(rnRuntime);
-              hostFun(rnRuntime, jsi::Value::undefined(), const_cast<const jsi::Value *>(args.data()), args.size());
-            }
-          });
-        } else [[unlikely]] { // NOLINT(readability/braces)
-          const auto fnName = funOrSerializable.getProperty(rt, "name").asString(rt).utf8(rt);
-          const auto nameInError = fnName.empty() ? "" : " (" + fnName + ")";
-          throw std::runtime_error(
-              "[Worklets] Locally defined function passed to scheduleOnRN" + nameInError +
-              ". Only functions defined on the RN Runtime or host functions can be scheduled on the RN Runtime. Define the function on the RN Runtime and pass it as a reference. See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#locally-defined-function-passed-to-scheduleonrn for more details.");
-        }
-      });
-
-  jsi_utils::addMethod<2>(
-      rt,
-      obj,
-      "scheduleRemoteFunctionOnRN",
-      [jsScheduler = jsScheduler_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
-        const auto &remoteFunction = extractSerializableOrThrow<SerializableRemoteFunction>(rt, at<0>(args));
-        const auto &remoteArgs = at<1>(args);
-
-        auto serializableArgs = remoteArgs.isUndefined()
-            ? nullptr
-            : extractSerializableOrThrow<SerializableArray>(rt, remoteArgs, "[Worklets] Args must be an array.");
-
-        jsScheduler->scheduleOnJS([remoteFunction, serializableArgs](jsi::Runtime &rnRuntime) {
-          auto fun = remoteFunction->toJSValue(rnRuntime).getObject(rnRuntime).getFunction(rnRuntime);
-
-          if (serializableArgs == nullptr) {
-            // fast path for remote function w/o arguments
-            fun.call(rnRuntime);
-          } else {
-            auto args = serializableArgs->getJSIValueArr(rnRuntime);
-            fun.call(rnRuntime, const_cast<const jsi::Value *>(args.data()), args.size());
-          }
-        });
-      });
-
   jsi_utils::addMethod<2>(
       rt,
       obj,
@@ -718,13 +595,14 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       "handlePromise",
       [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         const auto fun = at<0>(args).getObject(rt).getFunction(rt);
+        // NOLINTNEXTLINE(readability/braces)
         if (fun.getProperty(rt, "__remoteFunction").isUndefined()) [[unlikely]] {
           // TODO: add a fast path for it in TypeScript
           fun.call(rt, extractSerializableOrThrow(rt, at<1>(args))->toJSValue(rt));
-        } else [[likely]] {
+        } else {
           auto resolveOrReject = extractSerializableOrThrow<SerializableRemoteFunction>(rt, at<0>(args));
-          auto resolveOrError = extractSerializableOrThrow(rt, at<1>(args));
-          resolveOrReject->scheduleOnHost(resolveOrError, runtimeManager);
+          auto valueOrError = extractSerializableOrThrow(rt, at<1>(args));
+          resolveOrReject->resolveOrRejectPromise(valueOrError, runtimeManager);
         }
       });
 

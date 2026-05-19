@@ -169,7 +169,7 @@ export interface WorkletsModuleProxy {
 
   handlePromise<TValue>(
     resolveOrReject: ((value: TValue) => void) | RemoteFunction,
-    value: SerializableRef<TValue>
+    valueOrError: SerializableRef<TValue>
   ): void;
 
   reportFatalErrorOnJS(message: string, stack: string, name: string): void;

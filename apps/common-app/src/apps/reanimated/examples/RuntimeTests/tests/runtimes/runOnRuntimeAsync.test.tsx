@@ -57,11 +57,7 @@ describe('runOnRuntimeAsync', () => {
       reason = error instanceof Error ? error.message : String(error);
     }
 
-    if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-      expect(reason).toBe('test error');
-    } else {
-      expect(reason).toBe('[object Object]');
-    }
+    expect(reason).toBe('test error');
   });
 
   if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
@@ -95,11 +91,7 @@ describe('runOnRuntimeAsync', () => {
       });
 
       await waitForNotification(FAIL_NOTIFICATION);
-      if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-        expect(reason).toBe('test error');
-      } else {
-        expect(reason).toBe('[object Object]');
-      }
+      expect(reason).toBe('test error');
     });
 
     test('schedules on Worker Runtime to self', async () => {
@@ -132,11 +124,7 @@ describe('runOnRuntimeAsync', () => {
       });
 
       await waitForNotification(FAIL_NOTIFICATION);
-      if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-        expect(reason).toBe('test error');
-      } else {
-        expect(reason).toBe('[object Object]');
-      }
+      expect(reason).toBe('test error');
     });
 
     test('schedules on Worker Runtime to another Worker Runtime', async () => {
@@ -169,11 +157,7 @@ describe('runOnRuntimeAsync', () => {
       });
 
       await waitForNotification(FAIL_NOTIFICATION);
-      if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-        expect(reason).toBe('test error');
-      } else {
-        expect(reason).toBe('[object Object]');
-      }
+      expect(reason).toBe('test error');
     });
   } else {
     test('throws when scheduling on UI Runtime to a Worker Runtime ', async () => {

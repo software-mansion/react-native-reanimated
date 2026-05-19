@@ -5,15 +5,21 @@ import {
   type ShareableGuest,
   type ShareableGuestDecorator,
   type ShareableHostDecorator,
+  scheduleOnUI,
+  scheduleOnRN,
+  scheduleOnRuntime,
+  UIRuntimeId,
   isShareable,
   type ShareableHost,
-  UIRuntimeId,
 } from 'react-native-worklets';
 import {
   describe,
   expect,
   getWorkletRuntimeFromPool,
+  notify,
   test,
+  waitForNotification,
+  beforeEach,
 } from '../../ReJest/RuntimeTestsApi';
 
 type StringDecorated = {
@@ -96,6 +102,20 @@ const initModes = ['initLazy', 'initSynchronously'];
 const getInitOptions = (initMode: unknown) => ({
   initSynchronously: initMode === 'initSynchronously',
 });
+
+const PASS_NOTIFICATION = 'PASS';
+const FAIL_NOTIFICATION = 'FAIL';
+let value = 0;
+let reason = '';
+
+const callbackPass = (num: number) => {
+  value = num;
+  notify(PASS_NOTIFICATION);
+};
+const callbackFail = (rea: string) => {
+  reason = rea;
+  notify(FAIL_NOTIFICATION);
+};
 
 describe('Shareable hosted on UI', () => {
   const runtime = getWorkletRuntimeFromPool('test');
@@ -411,6 +431,11 @@ describe('Shareable hosted on Worker Runtime', () => {
   const host = getWorkletRuntimeFromPool('test');
   const otherGuest = getWorkletRuntimeFromPool('test2');
 
+  beforeEach(() => {
+    value = 0;
+    reason = '';
+  });
+
   test.each(initModes)(
     'can be hosted on Worker Runtime (%s)',
     async (initMode) => {
@@ -570,27 +595,40 @@ describe('Shareable hosted on Worker Runtime', () => {
 
   test.each(initModes)(
     'getAsync as guest on UI Runtime throws (%s)',
-    (initMode) => {
+    async (initMode) => {
       const shareable = createShareable(
         host.runtimeId,
-        0,
+        42,
         getInitOptions(initMode)
       );
-      const errorMessage = runOnUISync(() => {
+      scheduleOnUI(() => {
         'worklet';
         try {
-          return (shareable as ShareableGuest<number>).getAsync() as never;
+          (shareable as ShareableGuest<number>).getAsync().then(
+            (value) => {
+              scheduleOnRN(callbackPass, value);
+            },
+            (error: unknown) => {
+              scheduleOnRN(
+                callbackFail,
+                error instanceof Error ? error.message : String(error)
+              );
+            }
+          );
         } catch (e) {
-          return (e as Error).message;
+          scheduleOnRN(
+            callbackFail,
+            e instanceof Error ? e.message : String(e)
+          );
         }
       });
 
       if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-        expect(errorMessage).toInclude(
-          '`runOnRuntimeAsyncWithId` can only be called on the RN Runtime'
-        );
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(value).toBe(42);
       } else {
-        expect(errorMessage).toInclude(
+        await waitForNotification(FAIL_NOTIFICATION);
+        expect(reason).toInclude(
           '`Shareable.getAsync` can only be called on the RN Runtime'
         );
       }
@@ -629,26 +667,39 @@ describe('Shareable hosted on Worker Runtime', () => {
 
   test.each(initModes)(
     'getAsync as guest on other Worker Runtime throws (%s)',
-    (initMode) => {
+    async (initMode) => {
       const shareable = createShareable(
         host.runtimeId,
-        0,
+        42,
         getInitOptions(initMode)
       );
-      const errorMessage = runOnRuntimeSync(otherGuest, () => {
+      scheduleOnRuntime(otherGuest, () => {
         'worklet';
         try {
-          return (shareable as ShareableGuest<number>).getAsync() as never;
+          (shareable as ShareableGuest<number>)
+            .getAsync()
+            .then((value) => {
+              scheduleOnRN(callbackPass, value);
+            })
+            .catch((error: unknown) => {
+              scheduleOnRN(
+                callbackFail,
+                error instanceof Error ? error.message : String(error)
+              );
+            });
         } catch (e) {
-          return (e as Error).message;
+          scheduleOnRN(
+            callbackFail,
+            e instanceof Error ? e.message : String(e)
+          );
         }
       });
       if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-        expect(errorMessage).toInclude(
-          '`runOnRuntimeAsyncWithId` can only be called on the RN Runtime'
-        );
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(value).toBe(42);
       } else {
-        expect(errorMessage).toInclude(
+        await waitForNotification(FAIL_NOTIFICATION);
+        expect(reason).toInclude(
           '`Shareable.getAsync` can only be called on the RN Runtime'
         );
       }

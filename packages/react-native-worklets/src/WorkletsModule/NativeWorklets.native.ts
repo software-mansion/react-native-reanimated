@@ -311,9 +311,12 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   handlePromise<TValue>(
     resolveOrReject: ((value: TValue) => void) | RemoteFunction,
-    value: SerializableRef<TValue>
+    valueOrError: SerializableRef<TValue>
   ) {
-    return this.#workletsModuleProxy.handlePromise(resolveOrReject, value);
+    return this.#workletsModuleProxy.handlePromise(
+      resolveOrReject,
+      valueOrError
+    );
   }
 
   createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue> {

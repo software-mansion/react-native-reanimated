@@ -1,10 +1,7 @@
 'use strict';
 
 import { getStaticFeatureFlag } from './featureFlags/featureFlags';
-import {
-  addGuardImplementation,
-  addNoBundleModeGuardImplementation,
-} from './guardImplementation';
+import { addNoBundleModeGuardImplementation } from './guardImplementation';
 import {
   getMemorySafeCapturableConsole,
   setupConsole,
@@ -433,11 +430,11 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
 
 export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
   workletRuntime: WorkletRuntime,
-  workletFunction: WorkletFunction<Args, ReturnValue>,
-  ...workletArgs: Args
+  worklet: WorkletFunction<Args, ReturnValue>,
+  ...args: Args
 ): Promise<ReturnValue> {
   if (__DEV__) {
-    if (!isWorkletFunction(workletFunction)) {
+    if (!isWorkletFunction(worklet)) {
       throw new Error(
         '[Worklets] The function passed to `runOnRuntimeAsync` is not a worklet.'
       );
@@ -446,25 +443,20 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
 
   return new Promise<ReturnValue>((resolve, reject) => {
     if (__DEV__) {
-      // in DEV mode we call serializable conversion here because in case the object
-      // can't be converted, we will get a meaningful stack-trace as opposed to the
-      // situation when conversion is only done via microtask queue. This does not
-      // make the app particularily less efficient as converted objects are cached
-      // and for a given worklet the conversion only happens once.
-      globalThis.__serializer(workletFunction);
-      globalThis.__serializer(workletArgs);
+      createSerializable(worklet);
+      createSerializable(args);
     }
 
     const scheduleStack = SHOULD_CAPTURE_SCHEDULE_STACK
       ? new Error().stack
       : undefined;
 
-    globalThis.__workletsModuleProxy.scheduleOnRuntime(
+    WorkletsModule.scheduleOnRuntime(
       workletRuntime,
-      globalThis.__serializer(() => {
+      createSerializable(() => {
         'worklet';
         try {
-          const result = workletFunction(...workletArgs);
+          const result = worklet(...args);
           if (resolve) {
             const serializedResult = globalThis.__serializer(result);
             globalThis.__workletsModuleProxy.handlePromise(
@@ -524,28 +516,23 @@ export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
 ): Promise<ReturnValue> {
   if (__DEV__ && !isWorkletFunction(worklet)) {
     throw new Error(
-      '[Worklets] The function passed to `scheduleOnRuntimeWithId` is not a worklet.'
+      '[Worklets] The function passed to `runOnRuntimeAsyncWithId` is not a worklet.'
     );
   }
 
   return new Promise<ReturnValue>((resolve, reject) => {
     if (__DEV__) {
-      // in DEV mode we call serializable conversion here because in case the object
-      // can't be converted, we will get a meaningful stack-trace as opposed to the
-      // situation when conversion is only done via microtask queue. This does not
-      // make the app particularily less efficient as converted objects are cached
-      // and for a given worklet the conversion only happens once.
-      globalThis.__serializer(worklet);
-      globalThis.__serializer(args);
+      createSerializable(worklet);
+      createSerializable(args);
     }
 
     const scheduleStack = SHOULD_CAPTURE_SCHEDULE_STACK
       ? new Error().stack
       : undefined;
 
-    globalThis.__workletsModuleProxy.scheduleOnRuntimeWithId(
+    WorkletsModule.scheduleOnRuntimeWithId(
       runtimeId,
-      globalThis.__serializer(() => {
+      createSerializable(() => {
         'worklet';
         try {
           const result = worklet(...args);
@@ -566,77 +553,6 @@ export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
           } else {
             throw error;
           }
-        }
-        globalThis.__callMicrotasks?.();
-      }),
-      scheduleStack
-    );
-  });
-}
-
-/**
- * Lets you asynchronously run a
- * [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)
- * on a [Worker
- * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime)
- * identified by the runtime's id and get the result via a Promise.
- *
- * - The worklet is scheduled on the target Runtime's Async Queue
- * - Returns a Promise that resolves with the worklet's return value
- * - You can target the UI Runtime with this function by passing
- *   {@link UIRuntimeId} as the `runtimeId` argument.
- *
- * @param runtimeId - The id of the runtime to run the worklet on.
- * @param worklet - The worklet to run.
- * @param args - The arguments to pass to the worklet.
- * @returns A Promise that resolves to the return value of the worklet.
- * @throws If called from a runtime other than the [RN
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
- */
-// @ts-expect-error This overload is correct since it's what user sees in their code
-// before it's transformed by Worklets Babel plugin.
-export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
-  runtimeId: number,
-  worklet: (...args: Args) => ReturnValue,
-  ...args: Args
-): Promise<ReturnValue>;
-
-export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
-  runtimeId: number,
-  worklet: WorkletFunction<Args, ReturnValue>,
-  ...args: Args
-): Promise<ReturnValue> {
-  if (__DEV__) {
-    if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
-      throw new Error(
-        '[Worklets] `runOnRuntimeAsyncWithId` can only be called on the RN Runtime.'
-      );
-    }
-    if (!isWorkletFunction(worklet)) {
-      throw new Error(
-        '[Worklets] The function passed to `runOnRuntimeAsyncWithId` is not a worklet.'
-      );
-    }
-  }
-
-  const scheduleStack = SHOULD_CAPTURE_SCHEDULE_STACK
-    ? new Error().stack
-    : undefined;
-  return new Promise<ReturnValue>((resolve, reject) => {
-    if (__DEV__) {
-      createSerializable(worklet);
-      createSerializable(args);
-    }
-
-    WorkletsModule.scheduleOnRuntimeWithId(
-      runtimeId,
-      createSerializable(() => {
-        'worklet';
-        try {
-          const result = worklet(...args);
-          scheduleOnRN(resolve, result);
-        } catch (error) {
-          scheduleOnRN(reject, error);
         }
         globalThis.__callMicrotasks?.();
       }),

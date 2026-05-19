@@ -60,11 +60,7 @@ describe('runOnRuntimeAsyncWithId', () => {
       reason = error instanceof Error ? error.message : String(error);
     }
 
-    if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-      expect(reason).toBe('test error');
-    } else {
-      expect(reason).toBe('[object Object]');
-    }
+    expect(reason).toBe('test error');
   });
 
   test('schedules from RN Runtime to Worker Runtime', async () => {
@@ -89,11 +85,7 @@ describe('runOnRuntimeAsyncWithId', () => {
       reason = error instanceof Error ? error.message : String(error);
     }
 
-    if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-      expect(reason).toBe('test error');
-    } else {
-      expect(reason).toBe('[object Object]');
-    }
+    expect(reason).toBe('test error');
   });
 
   test('throws when scheduling from RN Runtime to non-existing Runtime', async () => {
