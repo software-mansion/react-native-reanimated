@@ -1,4 +1,5 @@
 #include <jsi/jsi.h>
+#include <react/debug/react_native_assert.h>
 #include <worklets/Compat/Holders.h>
 #include <worklets/Compat/StableApi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
@@ -705,7 +706,13 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   /* #region deprecated */
 
   jsi_utils::addMethod<2>(
-      rt, obj, "createSerializableLEGACY", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+      rt,
+      obj,
+      "createSerializableLEGACY",
+      [hostRuntimeId = hostRuntimeId_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        react_native_assert(
+            hostRuntimeId != RuntimeData::rnRuntimeId &&
+            "createSerializableLEGACY should never be called on the React Native runtime.");
         const auto &value = at<0>(args);
         const auto shouldRetainRemote = jsi::Value::undefined();
         const auto &nativeStateSource = at<1>(args);

@@ -54,6 +54,11 @@ function isPlainJSObject(object: object): object is Record<string, unknown> {
   return Object.getPrototypeOf(object) === Object.prototype;
 }
 
+/**
+ * RN has introduced a new representation of TurboModules as a JS object whose
+ * prototype is the host object More details:
+ * https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp#L182
+ */
 function isTurboModuleLike(object: object): object is Record<string, unknown> {
   return isHostObject(Object.getPrototypeOf(object));
 }
@@ -139,7 +144,6 @@ export function createSerializable<TValue>(
 ): SerializableRef<TValue> {
   detectCyclicObject(value, depth);
 
-  const isObject = typeof value === 'object';
   const isFunction = typeof value === 'function';
 
   if (typeof value === 'string') {
@@ -166,13 +170,6 @@ export function createSerializable<TValue>(
     return cloneNull() as SerializableRef<TValue>;
   }
 
-  if ((!isObject && !isFunction) || value === null) {
-    // TODO: most likely dead code
-    throw new Error(
-      `[Worklets] Trying to serialize an unsupported value type (${typeof value}).`
-    );
-  }
-
   const cached = getFromCache(value);
   if (cached !== undefined) {
     return cached as SerializableRef<TValue>;
@@ -183,20 +180,22 @@ export function createSerializable<TValue>(
   }
   if (isFunction) {
     if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-      if ((value as WorkletImport).__bundleData) {
-        return cloneImport(value as WorkletImport) as SerializableRef<TValue>;
+      if ((value as unknown as WorkletImport).__bundleData) {
+        return cloneImport(
+          value as unknown as WorkletImport
+        ) as SerializableRef<TValue>;
       }
     }
-    if ((value as RemoteFunction).__remoteFunction) {
+    if ((value as unknown as RemoteFunction).__remoteFunction) {
       // Remote functions are already serialized.
-      return value;
+      return value as unknown as SerializableRef<TValue>;
     }
     if (!isWorkletFunction(value)) {
-      return cloneNonWorkletFunction(value) as SerializableRef<TValue>;
+      return cloneNonWorkletFunction(
+        value as () => unknown
+      ) as SerializableRef<TValue>;
     }
   }
-  // RN has introduced a new representation of TurboModules as a JS object whose prototype is the host object
-  // More details: https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp#L182
   if (isTurboModuleLike(value)) {
     return cloneTurboModuleLike(value, shouldPersistRemote, depth);
   }
