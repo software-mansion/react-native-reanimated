@@ -310,7 +310,9 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   }
 
   handlePromise<TValue>(
-    resolveOrReject: ((value: TValue) => void) | RemoteFunction,
+    resolveOrReject:
+      | ((value: TValue | PromiseLike<TValue>) => void)
+      | RemoteFunction,
     valueOrError: SerializableRef<TValue>
   ) {
     return this.#workletsModuleProxy.handlePromise(

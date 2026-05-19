@@ -40,8 +40,7 @@ jsi::Value makeSerializableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
     const jsi::Value &shouldRetainRemote,
-    const jsi::Value &nativeStateSource,
-    const RuntimeData::RuntimeId hostRuntimeId) {
+    const jsi::Value &nativeStateSource) {
   std::shared_ptr<Serializable> serializable;
   if (value.isObject()) {
     auto object = value.asObject(rt);

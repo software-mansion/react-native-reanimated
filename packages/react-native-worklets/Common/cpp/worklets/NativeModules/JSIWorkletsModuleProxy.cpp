@@ -733,7 +733,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         const auto &value = at<0>(args);
         const auto shouldRetainRemote = jsi::Value::undefined();
         const auto &nativeStateSource = at<1>(args);
-        return makeSerializableClone(rt, value, shouldRetainRemote, nativeStateSource, hostRuntimeId);
+        return makeSerializableClone(rt, value, shouldRetainRemote, nativeStateSource);
       });
 
   /* #endregion deprecated */
