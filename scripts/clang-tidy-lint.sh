@@ -17,7 +17,5 @@ fi
 
 ndk_bin="$(grep -oE '/[^ "]+/clang\+\+' compile_commands.json | head -1 | xargs dirname)"
 
-# Only diagnose headers under the current package directory, so we don't pick up
-# findings from system headers, fbjni, react-native, hermes, etc.
 run-clang-tidy -quiet -p . -clang-tidy-binary "$ndk_bin/clang-tidy" \
-  -header-filter="^.*/$1/.*\.h$" .
+  -header-filter="^.*/$1/.*\.h$" "$1"
