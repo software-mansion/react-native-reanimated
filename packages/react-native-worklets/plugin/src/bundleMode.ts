@@ -19,7 +19,8 @@ export function toggleBundleMode(
 ) {
   if (
     !state.opts.bundleMode ||
-    !state.filename?.includes('workletRuntimeEntry')
+    (!state.filename?.includes('react-native-worklets/src/index.ts') &&
+      !state.filename?.includes('react-native-worklets/lib/module/index.js'))
   ) {
     return;
   }
