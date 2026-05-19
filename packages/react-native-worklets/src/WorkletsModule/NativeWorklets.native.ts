@@ -149,6 +149,18 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.createSerializableSet(values);
   }
 
+  createSerializableError(
+    name: string,
+    message: string,
+    stack: string | undefined
+  ): SerializableRef<Error> {
+    return this.#workletsModuleProxy.createSerializableError(
+      name,
+      message,
+      stack
+    );
+  }
+
   createSerializableInitializer(obj: object) {
     return this.#workletsModuleProxy.createSerializableInitializer(obj);
   }
@@ -210,7 +222,7 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   }
 
   scheduleOnRN<TArgs extends unknown[]>(
-    fun: RemoteFunction,
+    fun: RemoteFunction | ((...args: TArgs) => unknown),
     args: SerializableRef<TArgs> | undefined
   ): void {
     this.#workletsModuleProxy.scheduleOnRN(fun, args);

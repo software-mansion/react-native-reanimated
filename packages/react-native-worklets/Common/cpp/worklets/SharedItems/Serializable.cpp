@@ -28,6 +28,12 @@ jsi::Function getRemoteFunctionUnpacker(jsi::Runtime &rt) {
   return remoteFunctionUnpacker.asObject(rt).asFunction(rt);
 }
 
+jsi::Object getRemoteFunctionRegistry(jsi::Runtime &rt) {
+  auto registry = rt.global().getProperty(rt, "__remoteFunctionRegistry");
+  react_native_assert(registry.isObject() && "remoteFunctionRegistry not found");
+  return registry.getObject(rt);
+}
+
 } // namespace
 
 jsi::Value makeSerializableClone(
@@ -49,11 +55,11 @@ jsi::Value makeSerializableClone(
     } else if (object.isFunction(rt)) {
       auto fun = object.getFunction(rt);
       if (fun.isHostFunction(rt)) {
-        auto name = fun.getProperty(rt, "name").asString(rt).utf8(rt);
+        auto name = fun.getProperty(rt, "name").getString(rt).utf8(rt);
         return makeSerializableHostFunction(
             rt, fun.getHostFunction(rt), name, fun.getProperty(rt, "length").asNumber());
       } else {
-        auto name = fun.getProperty(rt, "name").asString(rt).utf8(rt);
+        auto name = fun.getProperty(rt, "name").getString(rt).utf8(rt);
         return makeSerializableRemoteFunction(rt, name, std::move(fun), hostRuntimeId);
       }
     } else if (object.isArray(rt)) {
@@ -238,6 +244,23 @@ jsi::Value SerializableSet::toJSValue(jsi::Runtime &rt) {
   return set;
 }
 
+jsi::Value SerializableError::toJSValue(jsi::Runtime &rt) {
+  auto error = rt.global()
+                   .getPropertyAsFunction(rt, "Error")
+                   .callAsConstructor(rt, jsi::String::createFromUtf8(rt, message_))
+                   .getObject(rt);
+
+  error.setProperty(rt, "name", jsi::String::createFromUtf8(rt, name_));
+
+  if (stack_.has_value()) {
+    error.setProperty(rt, "stack", jsi::String::createFromUtf8(rt, stack_.value()));
+  } else {
+    error.setProperty(rt, "stack", jsi::String::createFromUtf8(rt, ""));
+  }
+
+  return error;
+}
+
 jsi::Value SerializableHostObject::toJSValue(jsi::Runtime &rt) {
   return jsi::Object::createFromHostObject(rt, hostObject_);
 }
@@ -271,37 +294,41 @@ jsi::Value SerializableImport::toJSValue(jsi::Runtime &rt) {
 SerializableRemoteFunction::~SerializableRemoteFunction() {
   if (isHostedOnRNRuntime()) {
     // TODO: consider batching
-    rnRuntimeData_->jsScheduler->scheduleOnJS([id = rnRuntimeData_->remoteId](jsi::Runtime &rt) {
-      auto registryProp = rt.global().getProperty(rt, "__remoteFunctionRegistry");
-      auto registry = registryProp.asObject(rt);
+    const auto &data = std::get<RNRuntimeData>(runtimeData_);
+    data.jsScheduler->scheduleOnJS([id = data.remoteId](jsi::Runtime &rt) {
+      const auto registry = getRemoteFunctionRegistry(rt);
       registry.getPropertyAsFunction(rt, "delete").callWithThis(rt, registry, jsi::Value(id));
     });
   } else {
-    cleanupRuntimeAware(hostRuntime_, workletRuntimeData_->function);
+    auto &workletData = std::get<WorkletRuntimeData>(runtimeData_);
+    cleanupRuntimeAware(hostRuntime_, workletData.function);
   }
 }
 
 jsi::Value SerializableRemoteFunction::toJSValue(jsi::Runtime &rt) {
   if (&rt == hostRuntime_) {
     if (isHostedOnRNRuntime()) {
-      auto registry = rt.global().getPropertyAsObject(rt, "__remoteFunctionRegistry");
-      return registry.getPropertyAsFunction(rt, "get").callWithThis(rt, registry, jsi::Value(rnRuntimeData_->remoteId));
+      const auto &rnData = std::get<RNRuntimeData>(runtimeData_);
+      const auto registry = getRemoteFunctionRegistry(rt);
+      return registry.getPropertyAsFunction(rt, "get").callWithThis(rt, registry, jsi::Value(rnData.remoteId));
     } else {
-      return jsi::Value(rt, *workletRuntimeData_->function);
+      const auto &workletData = std::get<WorkletRuntimeData>(runtimeData_);
+      return jsi::Value(rt, *workletData.function);
     }
   } else {
-    auto name = name_.empty() ? jsi::Value::undefined() : jsi::String::createFromUtf8(rt, name_);
-    auto holderFunction = getRemoteFunctionUnpacker(rt).call(rt, name).asObject(rt);
+    const auto name = name_.empty() ? jsi::Value::undefined() : jsi::String::createFromUtf8(rt, name_);
+    auto holderFunction = getRemoteFunctionUnpacker(rt).call(rt, name).getObject(rt);
     holderFunction.setNativeState(rt, std::make_shared<SerializableJSRef>(shared_from_this()));
     return holderFunction;
   }
 }
 
-void SerializableRemoteFunction::schedule(
+void SerializableRemoteFunction::scheduleOnHost(
     const std::shared_ptr<Serializable> &resolveValue,
     const std::shared_ptr<RuntimeManager> &runtimeManager) {
   if (isHostedOnRNRuntime()) {
-    rnRuntimeData_->jsScheduler->scheduleOnJS([resolver = shared_from_this(), resolveValue](jsi::Runtime &rt) {
+    const auto &data = std::get<RNRuntimeData>(runtimeData_);
+    data.jsScheduler->scheduleOnJS([resolver = shared_from_this(), resolveValue](jsi::Runtime &rt) {
       resolver->toJSValue(rt).getObject(rt).getFunction(rt).call(rt, resolveValue->toJSValue(rt));
     });
   } else {

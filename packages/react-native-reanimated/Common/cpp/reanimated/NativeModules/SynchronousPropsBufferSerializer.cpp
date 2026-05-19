@@ -25,10 +25,7 @@ enum Command : std::uint8_t {
   CMD_ELEVATION = 11,
   CMD_Z_INDEX = 12,
   CMD_SHADOW_COLOR = 19,
-  CMD_SHADOW_OPACITY = 13,
-  CMD_SHADOW_RADIUS = 14,
   CMD_BACKGROUND_COLOR = 15,
-  CMD_COLOR = 16,
   CMD_TINT_COLOR = 17,
   CMD_PLACEHOLDER_TEXT_COLOR = 18,
 
@@ -86,10 +83,7 @@ const std::unordered_map<std::string_view, Command> kPropNameToCommand = {
     {"elevation", CMD_ELEVATION},
     {"zIndex", CMD_Z_INDEX},
     {"shadowColor", CMD_SHADOW_COLOR},
-    {"shadowOpacity", CMD_SHADOW_OPACITY},
-    {"shadowRadius", CMD_SHADOW_RADIUS},
     {"backgroundColor", CMD_BACKGROUND_COLOR},
-    {"color", CMD_COLOR},
     {"tintColor", CMD_TINT_COLOR},
     {"placeholderTextColor", CMD_PLACEHOLDER_TEXT_COLOR},
     {"borderRadius", CMD_BORDER_RADIUS},
@@ -118,7 +112,7 @@ const std::unordered_map<std::string_view, Command> kPropNameToCommand = {
     {"outlineColor", CMD_OUTLINE_COLOR},
     {"outlineOffset", CMD_OUTLINE_OFFSET},
     {"outlineWidth", CMD_OUTLINE_WIDTH},
-    {"transform", CMD_START_OF_TRANSFORM}, // TODO: use CMD_TRANSFORM?
+    {"transform", CMD_START_OF_TRANSFORM},
 };
 
 Command propNameToCommand(const std::string &name) {
@@ -159,6 +153,9 @@ void serializeSynchronousPropsToBuffers(
     const UpdatesBatch &synchronousUpdatesBatch,
     std::vector<int> &intBuffer,
     std::vector<double> &doubleBuffer) {
+  intBuffer.clear();
+  doubleBuffer.clear();
+
   const auto pushInt = [&](int value) {
     intBuffer.push_back(value);
   };
@@ -177,8 +174,6 @@ void serializeSynchronousPropsToBuffers(
         case CMD_OPACITY:
         case CMD_ELEVATION:
         case CMD_Z_INDEX:
-        case CMD_SHADOW_OPACITY:
-        case CMD_SHADOW_RADIUS:
         case CMD_OUTLINE_OFFSET:
         case CMD_OUTLINE_WIDTH:
           pushInt(command);
@@ -187,7 +182,6 @@ void serializeSynchronousPropsToBuffers(
 
         case CMD_SHADOW_COLOR:
         case CMD_BACKGROUND_COLOR:
-        case CMD_COLOR:
         case CMD_TINT_COLOR:
         case CMD_PLACEHOLDER_TEXT_COLOR:
         case CMD_BORDER_COLOR:
@@ -228,7 +222,7 @@ void serializeSynchronousPropsToBuffers(
               throw std::runtime_error("[Reanimated] Border radius string must be a percentage");
             }
             pushInt(CMD_UNIT_PERCENT);
-            pushDouble(std::stof(valueStr.substr(0, valueStr.size() - 1)));
+            pushDouble(std::stod(valueStr.substr(0, valueStr.size() - 1)));
           } else {
             throw std::runtime_error("[Reanimated] Border radius value must be either a number or a string");
           }
@@ -265,7 +259,7 @@ void serializeSynchronousPropsToBuffers(
                     throw std::runtime_error("[Reanimated] String translate must be a percentage");
                   }
                   pushInt(CMD_UNIT_PERCENT);
-                  pushDouble(std::stof(transformValueStr.substr(0, transformValueStr.size() - 1)));
+                  pushDouble(std::stod(transformValueStr.substr(0, transformValueStr.size() - 1)));
                 } else {
                   throw std::runtime_error("[Reanimated] Translate value must be either a number or a string");
                 }
@@ -286,7 +280,7 @@ void serializeSynchronousPropsToBuffers(
                 } else {
                   throw std::runtime_error("[Reanimated] Unsupported rotation unit: " + transformValueStr);
                 }
-                pushDouble(std::stof(transformValueStr.substr(0, transformValueStr.size() - 3)));
+                pushDouble(std::stod(transformValueStr.substr(0, transformValueStr.size() - 3)));
                 break;
               }
               case CMD_TRANSFORM_MATRIX: {

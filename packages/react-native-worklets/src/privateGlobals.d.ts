@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 'use strict';
 
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
@@ -64,6 +65,10 @@ declare global {
   ) => FlatShareableRef<object>;
   var __serializer: typeof makeShareableCloneOnUIRecursive;
   var __callMicrotasks: () => void;
+  /** Available only on the UI Runtime */
+  var __nativeRequestAnimationFrame: (
+    callback: (timestamp: number) => void
+  ) => void;
   /** Available only on RN Runtime */
   var __reportFatalRemoteError: typeof reportFatalRemoteError | undefined;
   var __valueUnpacker: ValueUnpacker;
@@ -107,7 +112,6 @@ declare global {
     unknown,
     unknown
   >;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   var __remoteFunctionRegistry: Map<number, Function>;
   /** Only in Bundle Mode on Worklet Runtimes. */
   var TurboModules: Map<string, unknown>;

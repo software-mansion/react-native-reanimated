@@ -1,10 +1,10 @@
 'use strict';
 
 import {
+  runOnRuntimeAsyncWithId as BundleRunOnRuntimeAsyncFromId,
   runOnRuntimeSyncWithId as BundleRunOnRuntimeSyncFromId,
   scheduleOnRuntimeWithId as BundleScheduleOnRuntimeFromId,
 } from '../runtimes';
-import { runOnUIAsync as BundleRuntimeRunOnUIAsync } from '../threads';
 import type { WorkletFunction } from '../types';
 import { createSerializable } from './serializable';
 import { serializableMappingCache } from './serializableMappingCache';
@@ -20,13 +20,13 @@ export function installShareableGuestUnpacker() {
   'worklet';
   'no-worklet-closure';
   let runOnRuntimeSyncFromId: typeof BundleRunOnRuntimeSyncFromId;
+  let runOnRuntimeAsyncFromId: typeof BundleRunOnRuntimeAsyncFromId;
   let memoize: (
     unpacked: Shareable<unknown>,
     serialized: SerializableRef<unknown>
   ) => void;
 
   let scheduleOnRuntimeFromId: typeof BundleScheduleOnRuntimeFromId;
-  let runOnUIAsync: typeof BundleRuntimeRunOnUIAsync;
   let serializer: (value: unknown) => SerializableRef<unknown>;
 
   if (
@@ -37,8 +37,8 @@ export function installShareableGuestUnpacker() {
     memoize = serializableMappingCache.set.bind(serializableMappingCache);
 
     runOnRuntimeSyncFromId = BundleRunOnRuntimeSyncFromId;
+    runOnRuntimeAsyncFromId = BundleRunOnRuntimeAsyncFromId;
     scheduleOnRuntimeFromId = BundleScheduleOnRuntimeFromId;
-    runOnUIAsync = BundleRuntimeRunOnUIAsync;
   } else {
     // Serializer can't be inlined here because it might be yet undefined
     // when the unpacker is installed.
@@ -76,11 +76,11 @@ export function installShareableGuestUnpacker() {
       );
     }) as typeof BundleScheduleOnRuntimeFromId;
 
-    runOnUIAsync = () => {
+    runOnRuntimeAsyncFromId = (() => {
       throw new Error(
-        '[Worklets] runOnUIAsync is not supported on Worklet Runtimes yet'
+        '[Worklets] `Shareable.getAsync` can only be called on the RN Runtime.'
       );
-    };
+    }) as typeof BundleRunOnRuntimeAsyncFromId;
   }
 
   function shareableGuestUnpacker<TValue>(
@@ -117,7 +117,7 @@ export function installShareableGuestUnpacker() {
     };
 
     shareableGuest.getAsync = () => {
-      return runOnUIAsync(get);
+      return runOnRuntimeAsyncFromId(hostId, get);
     };
 
     shareableGuest.getSync = () => {

@@ -81,6 +81,7 @@ const DefaultStaticFeatureFlags = {
   USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS: true,
   ENABLE_SHARED_ELEMENT_TRANSITIONS: false,
   FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS: true,
+  USE_ANIMATION_BACKEND: false,
 } as const satisfies typeof StaticFeatureFlagsJSON;
 
 type StaticFeatureFlagsSchema = {

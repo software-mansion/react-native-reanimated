@@ -11,7 +11,6 @@
 #include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
-#include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #ifndef NDEBUG
 #include <algorithm>
@@ -154,12 +153,12 @@ runOnRuntimeSync(jsi::Runtime &rt, const jsi::Value &workletRuntimeValue, const 
 inline jsi::Value createWorkletRuntime(
     jsi::Runtime &originRuntime,
     const std::shared_ptr<RuntimeManager> &runtimeManager,
-    const std::shared_ptr<const JSIWorkletsModuleProxy> &source,
+    const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,
     const std::string &name,
     std::shared_ptr<SerializableWorklet> &initializer,
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop) {
-  const auto workletRuntime = runtimeManager->createWorkletRuntime(source, name, initializer, queue, enableEventLoop);
+  const auto workletRuntime = runtimeManager->createWorkletRuntime(sourceProxy, name, initializer, queue);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
@@ -223,28 +222,6 @@ inline void registerCustomSerializable(
 }
 
 } // namespace
-
-JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
-    const bool isDevBundle,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
-    const std::shared_ptr<UIScheduler> &uiScheduler,
-    const std::shared_ptr<MemoryManager> &memoryManager,
-    const std::shared_ptr<RuntimeManager> &runtimeManager,
-    const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
-    const std::shared_ptr<RuntimeBindings> &runtimeBindings,
-    const BundleModeConfig &bundleModeConfig,
-    const std::shared_ptr<UnpackerLoader> &unpackerLoader,
-    const RuntimeData::RuntimeId hostRuntimeId)
-    : isDevBundle_(isDevBundle),
-      bundleModeConfig_(bundleModeConfig),
-      jsScheduler_(jsScheduler),
-      uiScheduler_(uiScheduler),
-      memoryManager_(memoryManager),
-      runtimeManager_(runtimeManager),
-      uiWorkletRuntime_(uiWorkletRuntime),
-      runtimeBindings_(runtimeBindings),
-      unpackerLoader_(unpackerLoader),
-      hostRuntimeId_(hostRuntimeId) {}
 
 jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   auto obj = jsi::Object(rt);
@@ -364,14 +341,14 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       "createSerializableNonWorkletFunction",
       [jsScheduler = jsScheduler_, hostRuntimeId = hostRuntimeId_](
           jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
-        auto fun = at<0>(args).asObject(rt).asFunction(rt);
-        auto name = at<2>(args).isUndefined() ? "" : at<2>(args).asString(rt).utf8(rt);
+        auto fun = at<0>(args).getObject(rt).getFunction(rt);
+        const auto name = at<2>(args).isUndefined() ? "" : at<2>(args).getString(rt).utf8(rt);
         if (fun.isHostFunction(rt)) {
           return makeSerializableHostFunction(
-              rt, fun.getHostFunction(rt), name, fun.getProperty(rt, "length").asNumber());
+              rt, fun.getHostFunction(rt), name, fun.getProperty(rt, "length").getNumber());
         }
         if (hostRuntimeId == RuntimeData::rnRuntimeId) {
-          auto remoteId = at<1>(args).asNumber();
+          const int remoteId = static_cast<int>(at<1>(args).getNumber());
           auto ref = makeSerializableRemoteFunction(rt, name, remoteId, jsScheduler);
           ref.asObject(rt).setProperty(rt, "__keepAlive", true);
           return ref;
@@ -400,6 +377,19 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   jsi_utils::addMethod<1>(
       rt, obj, "createSerializableSet", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         return makeSerializableSet(rt, at<0>(args).asObject(rt).asArray(rt));
+      });
+
+  jsi_utils::addMethod<3>(
+      rt, obj, "createSerializableError", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+        auto name = at<0>(args).getString(rt).utf8(rt);
+        auto message = at<1>(args).getString(rt).utf8(rt);
+
+        std::optional<std::string> stack{};
+        if (at<2>(args).isString()) {
+          stack = at<2>(args).getString(rt).utf8(rt);
+        }
+
+        return makeSerializableError(rt, name, message, stack);
       });
 
   jsi_utils::addMethod<2>(
@@ -554,6 +544,50 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   jsi_utils::addMethod<2>(
       rt,
       obj,
+      "scheduleOnRN",
+      [jsScheduler = jsScheduler_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        const auto &fun = at<0>(args).getObject(rt).getFunction(rt);
+        const auto &remoteArgs = at<1>(args);
+
+        auto serializableArgs = remoteArgs.isUndefined()
+            ? nullptr
+            : extractSerializableOrThrow<SerializableArray>(rt, remoteArgs, "[Worklets] Args must be an array.");
+
+        if (!fun.getProperty(rt, "__remoteFunction").isUndefined()) [[likely]] { // NOLINT(readability/braces)
+          const auto remoteFunction = extractSerializableOrThrow<SerializableRemoteFunction>(rt, fun);
+          jsScheduler->scheduleOnJS([remoteFunction, serializableArgs](jsi::Runtime &rnRuntime) {
+            const auto unpackedFun = remoteFunction->toJSValue(rnRuntime).getObject(rnRuntime).getFunction(rnRuntime);
+            if (serializableArgs == nullptr) {
+              // fast path for remote function w/o arguments
+              unpackedFun.call(rnRuntime);
+            } else {
+              const auto args = serializableArgs->getJSIValueArr(rnRuntime);
+              unpackedFun.call(rnRuntime, args.data(), args.size());
+            }
+          });
+        } else if (fun.isHostFunction(rt)) {
+          auto hostFun = fun.getHostFunction(rt);
+          jsScheduler->scheduleOnJS([hostFun = std::move(hostFun), serializableArgs](jsi::Runtime &rnRuntime) {
+            if (serializableArgs == nullptr) {
+              // fast path for host function w/o arguments
+              hostFun(rnRuntime, jsi::Value::undefined(), nullptr, 0);
+            } else {
+              const auto args = serializableArgs->getJSIValueArr(rnRuntime);
+              hostFun(rnRuntime, jsi::Value::undefined(), args.data(), args.size());
+            }
+          });
+        } else {
+          const auto fnName = fun.getProperty(rt, "name").getString(rt).utf8(rt);
+          const auto nameInError = fnName.empty() ? "" : " (" + fnName + ")";
+          throw std::runtime_error(
+              "[Worklets] Locally defined function passed to scheduleOnRN" + nameInError +
+              ". Only functions defined on the RN Runtime or host functions can be scheduled on the RN Runtime. Define the function on the RN Runtime and pass it as a reference. See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#locally-defined-function-passed-to-scheduleonrn for more details.");
+        }
+      });
+
+  jsi_utils::addMethod<2>(
+      rt,
+      obj,
       "scheduleOnUI",
       [uiWorkletRuntime = uiWorkletRuntime_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
 #ifndef NDEBUG
@@ -620,7 +654,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       rt,
       obj,
       "createWorkletRuntime",
-      [jsiWorkletsModuleProxy = shared_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[5]) {
+      [sourceProxy = shared_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[5]) {
         const auto name = at<0>(args).asString(rt).utf8(rt);
         auto serializableInitializer = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Initializer must be a worklet.");
@@ -634,10 +668,10 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
 
         const auto enableEventLoop = at<4>(args).asBool();
-        const auto runtimeManager = jsiWorkletsModuleProxy->runtimeManager_;
+        const auto runtimeManager = sourceProxy->getRuntimeManager();
 
         return createWorkletRuntime(
-            rt, runtimeManager, jsiWorkletsModuleProxy, name, serializableInitializer, asyncQueue, enableEventLoop);
+            rt, runtimeManager, sourceProxy, name, serializableInitializer, asyncQueue, enableEventLoop);
       });
 
   jsi_utils::addMethod<3>(

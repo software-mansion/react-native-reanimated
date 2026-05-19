@@ -1,3 +1,4 @@
+#include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
@@ -28,7 +29,8 @@ void WorkletsModuleProxy::start() {
    * We call additional `init` method here because
    * JSIWorkletsModuleProxy needs a weak_ptr to the UI Runtime.
    */
-  uiWorkletRuntime_->init(std::make_shared<JSIWorkletsModuleProxy>(*rnRuntimeProxy_, RuntimeData::uiRuntimeId));
+  const auto uiRuntimeProxy = JSIWorkletsModuleProxy::createForNewRuntime(rnRuntimeProxy_, RuntimeData::uiRuntimeId);
+  uiWorkletRuntime_->init(uiRuntimeProxy);
 
   animationFrameBatchinator_ =
       std::make_shared<AnimationFrameBatchinator>(uiWorkletRuntime_, runtimeBindings_->requestAnimationFrame);

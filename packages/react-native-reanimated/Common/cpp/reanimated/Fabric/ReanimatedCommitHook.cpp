@@ -57,6 +57,10 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   maybeInitializeLayoutAnimations(newRootShadowNode->getSurfaceId());
 
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    return newRootShadowNode;
+  }
+
   auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(newRootShadowNode);
 
   if (reaShadowNode->hasReanimatedCommitTrait()) {
