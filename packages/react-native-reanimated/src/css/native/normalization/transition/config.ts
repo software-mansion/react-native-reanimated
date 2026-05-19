@@ -5,6 +5,7 @@ import type {
   CSSTransitionProperties,
   CSSTransitionProperty,
 } from '../../../types';
+import { resolvePseudoKeyed } from '../../../utils/guards';
 import type {
   NormalizedCSSTransitionConfig,
   NormalizedSingleCSSTransitionSettings,
@@ -27,36 +28,6 @@ export const ERROR_MESSAGES = {
   ) => `Invalid transition property "${JSON.stringify(transitionProperty)}"`,
 };
 
-const PSEUDO_STATE_KEYS = new Set([
-  'default',
-  ':hover',
-  ':active',
-  ':active-deepest',
-  ':focus',
-  ':focus-within',
-]);
-
-// Pseudo-keyed transition* fields like { default: '500ms', ':hover': '200ms' }
-// are interpreted by the pseudo-selector path (per-selector resolution). The
-// regular CSS-transition path (this file) only sees scalar/array forms, so
-// flatten any pseudo-keyed object down to its `default` value here. The
-// pseudo path reads the original (un-flattened) shape elsewhere.
-function flattenPseudoKeyed(value: unknown): unknown {
-  if (
-    value === null ||
-    value === undefined ||
-    typeof value !== 'object' ||
-    Array.isArray(value)
-  ) {
-    return value;
-  }
-  const obj = value as Record<string, unknown>;
-  const looksPseudoKeyed = Object.keys(obj).some((k) =>
-    PSEUDO_STATE_KEYS.has(k)
-  );
-  return looksPseudoKeyed ? obj.default : value;
-}
-
 function getExpandedConfigProperties(
   config: CSSTransitionProperties
 ): ExpandedCSSTransitionConfigProperties {
@@ -65,7 +36,7 @@ function getExpandedConfigProperties(
     : createEmptyTransitionConfig();
 
   for (const [key, value] of Object.entries(config)) {
-    result[key] = convertPropertyToArray(flattenPseudoKeyed(value));
+    result[key] = convertPropertyToArray(resolvePseudoKeyed(value));
   }
 
   return result as ExpandedCSSTransitionConfigProperties;

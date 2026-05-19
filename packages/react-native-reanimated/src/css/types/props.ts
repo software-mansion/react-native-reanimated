@@ -25,6 +25,15 @@ export type PseudoSelectorKey =
   | ':focus'
   | ':focus-within';
 
+export const PSEUDO_STATE_KEYS: ReadonlySet<string> = new Set<string>([
+  'default',
+  ':hover',
+  ':active',
+  ':active-deepest',
+  ':focus',
+  ':focus-within',
+]);
+
 export type PseudoValue<T> = {
   default?: T;
 } & { [K in PseudoSelectorKey]?: T };

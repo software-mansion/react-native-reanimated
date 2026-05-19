@@ -25,6 +25,8 @@ import { normalizeCSSTransitionProperties } from '../native/normalization/transi
 import type { CSSTransitionConfig } from '../native/types';
 import { CSSManager } from '../platform';
 import type { CSSStyle, CSSTransitionProperties } from '../types';
+import type { PseudoSelectorKey } from '../types/props';
+import { resolvePseudoKeyed } from '../utils/guards';
 import {
   filterCSSAndStyleProperties,
   type PseudoStylesBySelector,
@@ -35,43 +37,6 @@ export type AnimatedComponentProps = Record<string, unknown> & {
   ref?: Ref<Component>;
   style?: StyleProp<PlainStyle>;
 };
-
-const PSEUDO_STATE_KEYS = new Set([
-  'default',
-  ':hover',
-  ':active',
-  ':active-deepest',
-  ':focus',
-  ':focus-within',
-]);
-
-// A transition* field at the component level may be a scalar/array (the
-// same for all pseudo states) or a pseudo-keyed object such as
-// { default: '500ms', ':hover': '200ms' } that overrides per state. This
-// resolves to the value that should apply when the given selector is the
-// "owner" of the transition being preconfigured. Falls back to `default` if
-// the selector key is missing, then leaves the value untouched if it isn't
-// a pseudo-keyed object.
-function resolveForSelector<T>(
-  value: T | undefined,
-  selector: string
-): T | undefined {
-  if (
-    value === null ||
-    value === undefined ||
-    typeof value !== 'object' ||
-    Array.isArray(value)
-  ) {
-    return value;
-  }
-  const obj = value as Record<string, unknown>;
-  const keys = Object.keys(obj);
-  const looksPseudoKeyed = keys.some((k) => PSEUDO_STATE_KEYS.has(k));
-  if (!looksPseudoKeyed) {
-    return value;
-  }
-  return (obj[selector] as T | undefined) ?? (obj.default as T | undefined);
-}
 
 // TODO - change these ugly underscore prefixed methods and properties to real
 // private/protected ones when possible (when changes from this repo are merged
@@ -215,15 +180,10 @@ export default class AnimatedComponent<
       const builtSelectorStyle = stylePropsBuilder.build(selectorStyle);
       const builtDefaultStyle = stylePropsBuilder.build(defaultStyle);
 
-      // Resolve each transition* field for this selector first (collapses
-      // pseudo-keyed objects like { default, ':hover' } down to a scalar/array
-      // for THIS selector), then run the result through the existing
-      // normalizeCSSTransitionProperties to honor per-property alignment with
-      // transitionProperty.
       const resolvedTransitionProperties: CSSTransitionProperties = {};
       if (transitionProperties) {
         for (const [key, value] of Object.entries(transitionProperties)) {
-          (resolvedTransitionProperties as AnyRecord)[key] = resolveForSelector(
+          (resolvedTransitionProperties as AnyRecord)[key] = resolvePseudoKeyed(
             value,
             selector
           );
@@ -258,7 +218,7 @@ export default class AnimatedComponent<
       }
 
       ReanimatedModule.registerPseudoStyle(shadowNodeWrapper, {
-        selector,
+        selector: selector as PseudoSelectorKey,
         selectorStyle: builtSelectorStyle,
         defaultStyle: builtDefaultStyle,
         transition,
@@ -278,6 +238,18 @@ export default class AnimatedComponent<
     this._pseudoStylesRegistered = false;
   }
 
+  _syncPseudoStyles() {
+    if (SHOULD_BE_USE_WEB || IS_JEST) {
+      return;
+    }
+    const [, transitionProperties, , pseudoStylesBySelector] =
+      filterCSSAndStyleProperties(this._cssStyle);
+    this._unregisterPseudoStyles();
+    if (pseudoStylesBySelector) {
+      this._registerPseudoStyles(pseudoStylesBySelector, transitionProperties);
+    }
+  }
+
   componentDidMount() {
     this._updateStyles(this.props);
 
@@ -295,16 +267,8 @@ export default class AnimatedComponent<
         this._getViewInfo(),
         this.ChildComponent.displayName
       );
-      const [, transitionProperties, , pseudoStylesBySelector] =
-        filterCSSAndStyleProperties(this._cssStyle);
       this._CSSManager?.update(this._cssStyle);
-
-      if (!SHOULD_BE_USE_WEB && pseudoStylesBySelector) {
-        this._registerPseudoStyles(
-          pseudoStylesBySelector,
-          transitionProperties
-        );
-      }
+      this._syncPseudoStyles();
     }
 
     this._willUnmount = false;
@@ -337,6 +301,7 @@ export default class AnimatedComponent<
 
     if (this._CSSManager) {
       this._CSSManager.update(this._cssStyle);
+      this._syncPseudoStyles();
     }
 
     // TODO - maybe check if the render is necessary instead of always returning true

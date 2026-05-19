@@ -17,6 +17,7 @@ import type {
   Repeat,
   TimeUnit,
 } from '../types';
+import { PSEUDO_STATE_KEYS } from '../types/props';
 
 const ANIMATION_PROPS_SET = new Set<string>(ANIMATION_PROPS);
 const TRANSITION_PROPS_SET = new Set<string>(TRANSITION_PROPS);
@@ -78,7 +79,20 @@ export const isPseudoSelectorValue = (
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return false;
   }
-  return Object.keys(value).some(
-    (key) => key === 'default' || key.startsWith(':')
-  );
+  const keys = Object.keys(value);
+  if (keys.length === 0) {
+    return false;
+  }
+  return keys.every((key) => PSEUDO_STATE_KEYS.has(key));
+};
+
+export const resolvePseudoKeyed = <T>(
+  value: T | undefined,
+  selector: string = 'default'
+): T | undefined => {
+  if (!isPseudoSelectorValue(value)) {
+    return value;
+  }
+  const obj = value as Record<string, unknown>;
+  return ((obj[selector] ?? obj.default) as T | undefined) ?? undefined;
 };

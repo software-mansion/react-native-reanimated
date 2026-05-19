@@ -16,6 +16,7 @@ import type {
   CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
 } from '../css/native';
+import type { PseudoSelectorKey } from '../css/types/props';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {
@@ -96,7 +97,7 @@ export interface ReanimatedModuleProxy {
   registerPseudoStyle(
     shadowNodeWrapper: ShadowNodeWrapper,
     config: {
-      selector: string;
+      selector: PseudoSelectorKey;
       selectorStyle: StyleProps;
       defaultStyle: StyleProps;
       transition: CSSTransitionConfig;
