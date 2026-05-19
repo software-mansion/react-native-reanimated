@@ -330,8 +330,8 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         return makeSerializableArray(rt, at<0>(args).asObject(rt).asArray(rt), at<1>(args));
       });
 
-  jsi_utils::addMethod<2>(
-      rt, obj, "createSerializableArrayBuffer", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+  jsi_utils::addMethod<1>(
+      rt, obj, "createSerializableArrayBuffer", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         const auto buffer = at<0>(args).getObject(rt).getArrayBuffer(rt);
         return makeSerializableArrayBuffer(rt, buffer);
       });
