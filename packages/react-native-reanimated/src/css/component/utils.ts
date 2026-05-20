@@ -3,7 +3,7 @@ import type { StyleProp } from 'react-native';
 
 import type { AnyRecord } from '../../common';
 import type { CSSStyle } from '../types';
-import { isCSSStyleProp } from '../utils/guards';
+import { isCSSStyleProp, isPseudoSelectorValue } from '../utils/guards';
 
 function filterNonCSSStylePropsRecursive(
   props: StyleProp<CSSStyle>
@@ -21,7 +21,14 @@ function filterNonCSSStylePropsRecursive(
   if (typeof props === 'object') {
     return Object.entries(props).reduce<AnyRecord>((acc, [key, value]) => {
       if (!isCSSStyleProp(key)) {
-        acc[key] = value;
+        if (isPseudoSelectorValue(value)) {
+          const defaultValue = (value as Record<string, unknown>).default;
+          if (defaultValue !== undefined) {
+            acc[key] = defaultValue;
+          }
+        } else {
+          acc[key] = value;
+        }
       }
       return acc;
     }, {});
