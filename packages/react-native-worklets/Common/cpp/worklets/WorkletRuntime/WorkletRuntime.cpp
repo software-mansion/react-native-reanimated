@@ -3,8 +3,8 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
-#include <worklets/WorkletRuntime/RequireInterceptor.h>
 #include <worklets/WorkletRuntime/RuntimeHolder.h>
+#include <worklets/WorkletRuntime/ScriptLoader.h>
 #include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
@@ -124,14 +124,7 @@ void WorkletRuntime::bundleModeInit(
     throw std::runtime_error("[Worklets] Expected to receive the bundle, but got nullptr instead.");
   }
 
-  interceptEntryPoints(rt);
-
-  rt.evaluateJavaScript(script, sourceUrl);
-
-  allowEntryPoints(rt);
-
-  const auto require = rt.global().getProperty(rt, "__r").getObject(rt).getFunction(rt);
-  require.call(rt, -2);
+  worklets::ScriptLoader::loadScript(rt, script, sourceUrl);
 
   WorkletRuntimeDecorator::postEvaluateScript(rt, runtimeBindings);
 }
