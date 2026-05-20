@@ -3,12 +3,35 @@
 #include <react/renderer/graphics/Transform.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
 
+#include <cctype>
 #include <string>
 #include <vector>
 
 using namespace facebook;
 
 namespace reanimated {
+
+std::string PropsDiffer::sourceKey(const char *name) {
+  std::string result = "current";
+  result += static_cast<char>(std::toupper(static_cast<unsigned char>(name[0])));
+  result += name + 1;
+  return result;
+}
+
+std::string PropsDiffer::targetKey(const char *name) {
+  std::string result = "target";
+  result += static_cast<char>(std::toupper(static_cast<unsigned char>(name[0])));
+  result += name + 1;
+  return result;
+}
+
+void PropsDiffer::setSource(jsi::Runtime &rt, const char *name, jsi::Value &&value) {
+  values_.setProperty(rt, sourceKey(name).c_str(), value);
+}
+
+void PropsDiffer::setTarget(jsi::Runtime &rt, const char *name, jsi::Value &&value) {
+  values_.setProperty(rt, targetKey(name).c_str(), value);
+}
 
 jsi::Object PropsDiffer::computeDiff(jsi::Runtime &runtime) {
   diffFrame(runtime);
@@ -19,10 +42,7 @@ jsi::Object PropsDiffer::computeDiff(jsi::Runtime &runtime) {
   diffShadow(runtime);
   diffBorder(runtime);
 
-  jsi::Object diff(runtime);
-  diff.setProperty(runtime, "source", sourceValues_);
-  diff.setProperty(runtime, "target", targetValues_);
-  return diff;
+  return std::move(values_);
 }
 
 void PropsDiffer::diffFrame(jsi::Runtime &rt) {
@@ -31,34 +51,34 @@ void PropsDiffer::diffFrame(jsi::Runtime &rt) {
   const auto &sourceOrigin = sourceFrame.origin;
   const auto &targetOrigin = targetFrame.origin;
 
-  sourceValues_.setProperty(rt, "originX", sourceOrigin.x);
-  targetValues_.setProperty(rt, "originX", targetOrigin.x);
-  sourceValues_.setProperty(rt, "globalOriginX", sourceOrigin.x);
-  targetValues_.setProperty(rt, "globalOriginX", targetOrigin.x);
+  setSource(rt, "originX", jsi::Value(sourceOrigin.x));
+  setTarget(rt, "originX", jsi::Value(targetOrigin.x));
+  setSource(rt, "globalOriginX", jsi::Value(sourceOrigin.x));
+  setTarget(rt, "globalOriginX", jsi::Value(targetOrigin.x));
 
-  sourceValues_.setProperty(rt, "originY", sourceOrigin.y);
-  targetValues_.setProperty(rt, "originY", targetOrigin.y);
-  sourceValues_.setProperty(rt, "globalOriginY", sourceOrigin.y);
-  targetValues_.setProperty(rt, "globalOriginY", targetOrigin.y);
+  setSource(rt, "originY", jsi::Value(sourceOrigin.y));
+  setTarget(rt, "originY", jsi::Value(targetOrigin.y));
+  setSource(rt, "globalOriginY", jsi::Value(sourceOrigin.y));
+  setTarget(rt, "globalOriginY", jsi::Value(targetOrigin.y));
 
   const auto &sourceSize = sourceFrame.size;
   const auto &targetSize = targetFrame.size;
 
-  sourceValues_.setProperty(rt, "width", sourceSize.width);
-  targetValues_.setProperty(rt, "width", targetSize.width);
+  setSource(rt, "width", jsi::Value(sourceSize.width));
+  setTarget(rt, "width", jsi::Value(targetSize.width));
 
-  sourceValues_.setProperty(rt, "height", sourceSize.height);
-  targetValues_.setProperty(rt, "height", targetSize.height);
+  setSource(rt, "height", jsi::Value(sourceSize.height));
+  setTarget(rt, "height", jsi::Value(targetSize.height));
 }
 
 void PropsDiffer::diffOpacity(jsi::Runtime &rt) {
-  sourceValues_.setProperty(rt, "opacity", sourceViewProps_.opacity);
-  targetValues_.setProperty(rt, "opacity", targetViewProps_.opacity);
+  setSource(rt, "opacity", jsi::Value(sourceViewProps_.opacity));
+  setTarget(rt, "opacity", jsi::Value(targetViewProps_.opacity));
 }
 
 void PropsDiffer::diffBackgroundColor(jsi::Runtime &rt) {
-  sourceValues_.setProperty(rt, "backgroundColor", react::toString(sourceViewProps_.backgroundColor));
-  targetValues_.setProperty(rt, "backgroundColor", react::toString(targetViewProps_.backgroundColor));
+  setSource(rt, "backgroundColor", jsi::String::createFromUtf8(rt, react::toString(sourceViewProps_.backgroundColor)));
+  setTarget(rt, "backgroundColor", jsi::String::createFromUtf8(rt, react::toString(targetViewProps_.backgroundColor)));
 }
 
 void PropsDiffer::diffTransform(jsi::Runtime &rt) {
@@ -73,8 +93,8 @@ void PropsDiffer::diffTransform(jsi::Runtime &rt) {
     jsi::Array sourceTransforms(rt, 1), targetTransforms(rt, 1);
     sourceTransforms.setValueAtIndex(rt, 0, sourceJsiOperations[0].currentValue);
     targetTransforms.setValueAtIndex(rt, 0, targetJsiOperations[0].currentValue);
-    sourceValues_.setProperty(rt, "transform", sourceTransforms);
-    targetValues_.setProperty(rt, "transform", targetTransforms);
+    setSource(rt, "transform", std::move(sourceTransforms));
+    setTarget(rt, "transform", std::move(targetTransforms));
     return;
   }
 
@@ -89,8 +109,8 @@ void PropsDiffer::diffTransform(jsi::Runtime &rt) {
     sourceTransforms.setValueAtIndex(rt, index, targetJsiOperations[i].defaultValue);
     targetTransforms.setValueAtIndex(rt, index, targetJsiOperations[i].currentValue);
   }
-  sourceValues_.setProperty(rt, "transform", sourceTransforms);
-  targetValues_.setProperty(rt, "transform", targetTransforms);
+  setSource(rt, "transform", std::move(sourceTransforms));
+  setTarget(rt, "transform", std::move(targetTransforms));
 }
 
 std::vector<TransformOperationWithDefault>
@@ -168,15 +188,15 @@ void PropsDiffer::diffTransformOrigin(jsi::Runtime &rt) {
   const auto &sourceTransformOrigin = sourceViewProps_.transformOrigin;
   const auto &targetTransformOrigin = targetViewProps_.transformOrigin;
 
-  addTransformOriginToDiff(rt, sourceTransformOrigin, sourceValues_, sourceView_);
-  addTransformOriginToDiff(rt, targetTransformOrigin, targetValues_, targetView_);
+  addTransformOriginToDiff(rt, sourceTransformOrigin, sourceView_, /*isTarget=*/false);
+  addTransformOriginToDiff(rt, targetTransformOrigin, targetView_, /*isTarget=*/true);
 }
 
 void PropsDiffer::addTransformOriginToDiff(
     jsi::Runtime &rt,
     const TransformOrigin &transformOrigin,
-    jsi::Object &jsiValues,
-    const ShadowView &view) {
+    const ShadowView &view,
+    bool isTarget) {
   jsi::Array transformOriginJsi(rt, 3);
 
   const auto &viewSize = view.layoutMetrics.frame.size;
@@ -200,7 +220,11 @@ void PropsDiffer::addTransformOriginToDiff(
 
   transformOriginJsi.setValueAtIndex(rt, 2, transformOrigin.z);
 
-  jsiValues.setProperty(rt, "transformOrigin", transformOriginJsi);
+  if (isTarget) {
+    setTarget(rt, "transformOrigin", std::move(transformOriginJsi));
+  } else {
+    setSource(rt, "transformOrigin", std::move(transformOriginJsi));
+  }
 }
 
 void PropsDiffer::diffShadow(jsi::Runtime &rt) {
@@ -214,8 +238,8 @@ void PropsDiffer::diffShadow(jsi::Runtime &rt) {
       sourceBoxShadowArray.setValueAtIndex(rt, i, sourceBoxShadows[i].currentValue);
       targetBoxShadowArray.setValueAtIndex(rt, i, targetBoxShadows[i].currentValue);
     }
-    sourceValues_.setProperty(rt, "boxShadow", sourceBoxShadowArray);
-    targetValues_.setProperty(rt, "boxShadow", targetBoxShadowArray);
+    setSource(rt, "boxShadow", std::move(sourceBoxShadowArray));
+    setTarget(rt, "boxShadow", std::move(targetBoxShadowArray));
   } else {
     const size_t size = sourceBoxShadows.size() + targetBoxShadows.size();
     jsi::Array sourceBoxShadowArray(rt, size), targetBoxShadowArray(rt, size);
@@ -228,12 +252,12 @@ void PropsDiffer::diffShadow(jsi::Runtime &rt) {
       sourceBoxShadowArray.setValueAtIndex(rt, index, targetBoxShadows[i].defaultValue);
       targetBoxShadowArray.setValueAtIndex(rt, index, targetBoxShadows[i].currentValue);
     }
-    sourceValues_.setProperty(rt, "boxShadow", sourceBoxShadowArray);
-    targetValues_.setProperty(rt, "boxShadow", targetBoxShadowArray);
+    setSource(rt, "boxShadow", std::move(sourceBoxShadowArray));
+    setTarget(rt, "boxShadow", std::move(targetBoxShadowArray));
   }
 
-  sourceValues_.setProperty(rt, "shadowColor", toString(sourceViewProps_.shadowColor));
-  targetValues_.setProperty(rt, "shadowColor", toString(targetViewProps_.shadowColor));
+  setSource(rt, "shadowColor", jsi::String::createFromUtf8(rt, toString(sourceViewProps_.shadowColor)));
+  setTarget(rt, "shadowColor", jsi::String::createFromUtf8(rt, toString(targetViewProps_.shadowColor)));
 
   {
     jsi::Object sourceShadowOffset(rt), targetShadowOffset(rt);
@@ -241,19 +265,19 @@ void PropsDiffer::diffShadow(jsi::Runtime &rt) {
     sourceShadowOffset.setProperty(rt, "height", sourceViewProps_.shadowOffset.height);
     targetShadowOffset.setProperty(rt, "width", targetViewProps_.shadowOffset.width);
     targetShadowOffset.setProperty(rt, "height", targetViewProps_.shadowOffset.height);
-    sourceValues_.setProperty(rt, "shadowOffset", sourceShadowOffset);
-    targetValues_.setProperty(rt, "shadowOffset", targetShadowOffset);
+    setSource(rt, "shadowOffset", std::move(sourceShadowOffset));
+    setTarget(rt, "shadowOffset", std::move(targetShadowOffset));
   }
 
-  sourceValues_.setProperty(rt, "shadowOpacity", sourceViewProps_.shadowOpacity);
-  targetValues_.setProperty(rt, "shadowOpacity", targetViewProps_.shadowOpacity);
+  setSource(rt, "shadowOpacity", jsi::Value(sourceViewProps_.shadowOpacity));
+  setTarget(rt, "shadowOpacity", jsi::Value(targetViewProps_.shadowOpacity));
 
-  sourceValues_.setProperty(rt, "shadowRadius", sourceViewProps_.shadowRadius);
-  targetValues_.setProperty(rt, "shadowRadius", targetViewProps_.shadowRadius);
+  setSource(rt, "shadowRadius", jsi::Value(sourceViewProps_.shadowRadius));
+  setTarget(rt, "shadowRadius", jsi::Value(targetViewProps_.shadowRadius));
 
 #ifdef ANDROID
-  sourceValues_.setProperty(rt, "elevation", sourceViewProps_.elevation);
-  targetValues_.setProperty(rt, "elevation", targetViewProps_.elevation);
+  setSource(rt, "elevation", jsi::Value(sourceViewProps_.elevation));
+  setTarget(rt, "elevation", jsi::Value(targetViewProps_.elevation));
 #endif
 }
 
@@ -344,29 +368,29 @@ void PropsDiffer::diffBorderRadius(
   // between units in percentages and pixels.
   if (targetValue.value_or(defaultValue).unit == UnitType::Percent) {
     if (sourceValue.has_value()) {
-      sourceValues_.setProperty(rt, name, std::to_string(source) + "%");
+      setSource(rt, name, jsi::String::createFromUtf8(rt, std::to_string(source) + "%"));
     } else {
       const auto &defaultRadius = sourceViewProps_.borderRadii.all.value_or(defaultValue).value;
-      sourceValues_.setProperty(rt, name, std::to_string(defaultRadius) + "%");
+      setSource(rt, name, jsi::String::createFromUtf8(rt, std::to_string(defaultRadius) + "%"));
     }
     if (targetValue.has_value()) {
-      targetValues_.setProperty(rt, name, std::to_string(target) + "%");
+      setTarget(rt, name, jsi::String::createFromUtf8(rt, std::to_string(target) + "%"));
     } else {
       const auto &defaultRadius = targetViewProps_.borderRadii.all.value_or(defaultValue).value;
-      targetValues_.setProperty(rt, name, std::to_string(defaultRadius) + "%");
+      setTarget(rt, name, jsi::String::createFromUtf8(rt, std::to_string(defaultRadius) + "%"));
     }
   } else {
     if (sourceValue.has_value()) {
-      sourceValues_.setProperty(rt, name, source);
+      setSource(rt, name, jsi::Value(source));
     } else {
       const auto &defaultRadius = sourceViewProps_.borderRadii.all.value_or(defaultValue).value;
-      sourceValues_.setProperty(rt, name, defaultRadius);
+      setSource(rt, name, jsi::Value(defaultRadius));
     }
     if (targetValue.has_value()) {
-      targetValues_.setProperty(rt, name, target);
+      setTarget(rt, name, jsi::Value(target));
     } else {
       const auto &defaultRadius = targetViewProps_.borderRadii.all.value_or(defaultValue).value;
-      targetValues_.setProperty(rt, name, defaultRadius);
+      setTarget(rt, name, jsi::Value(defaultRadius));
     }
   }
 }
@@ -379,15 +403,15 @@ void PropsDiffer::diffBorderWidth(
     float defaultSourceWidth,
     float defaultTargetWidth) {
   if (sourceValue.has_value()) {
-    sourceValues_.setProperty(rt, name, sourceValue.value());
+    setSource(rt, name, jsi::Value(sourceValue.value()));
   } else {
-    sourceValues_.setProperty(rt, name, defaultSourceWidth);
+    setSource(rt, name, jsi::Value(defaultSourceWidth));
   }
 
   if (targetValue.has_value()) {
-    targetValues_.setProperty(rt, name, targetValue.value());
+    setTarget(rt, name, jsi::Value(targetValue.value()));
   } else {
-    targetValues_.setProperty(rt, name, defaultTargetWidth);
+    setTarget(rt, name, jsi::Value(defaultTargetWidth));
   }
 }
 
@@ -398,17 +422,17 @@ void PropsDiffer::diffBorderColors(
     jsi::Runtime &rt) {
   SharedColor defaultValue;
   if (sourceValue.has_value()) {
-    sourceValues_.setProperty(rt, name, toString(sourceValue.value()));
+    setSource(rt, name, jsi::String::createFromUtf8(rt, toString(sourceValue.value())));
   } else {
     auto const &maybeDefaultColor = sourceViewProps_.borderColors.all.value_or(defaultValue);
-    sourceValues_.setProperty(rt, name, toString(maybeDefaultColor));
+    setSource(rt, name, jsi::String::createFromUtf8(rt, toString(maybeDefaultColor)));
   }
 
   if (targetValue.has_value()) {
-    targetValues_.setProperty(rt, name, toString(targetValue.value()));
+    setTarget(rt, name, jsi::String::createFromUtf8(rt, toString(targetValue.value())));
   } else {
     auto const &maybeDefaultColor = targetViewProps_.borderColors.all.value_or(defaultValue);
-    targetValues_.setProperty(rt, name, toString(maybeDefaultColor));
+    setTarget(rt, name, jsi::String::createFromUtf8(rt, toString(maybeDefaultColor)));
   }
 }
 

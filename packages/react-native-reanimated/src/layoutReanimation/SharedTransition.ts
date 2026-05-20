@@ -28,46 +28,57 @@ export enum SharedTransitionType {
 }
 
 /**
- * Properties available on both `source` and `target` snapshot objects.
- *
- * These are computed by `PropsDiffer::computeDiff()` in C++ and only include
- * properties whose values differ between the source and target views.
- *
- * Frame properties: `originX`, `originY`, `globalOriginX`, `globalOriginY`,
- * `width`, `height`.
- *
- * Visual properties: `opacity`, `backgroundColor`, `borderRadius` (and
- * per-corner variants), `borderWidth` (and per-side variants), `borderColor`
- * (and per-side variants), `transform`, `transformOrigin`, `boxShadow`,
- * `shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius`, `elevation`.
- */
-export interface SharedTransitionSnapshotValues {
-  originX: number;
-  originY: number;
-  globalOriginX: number;
-  globalOriginY: number;
-  width: number;
-  height: number;
-  opacity?: number;
-  backgroundColor?: string;
-  borderRadius?: number;
-  transform?: Array<Record<string, number | string>>;
-  transformOrigin?: number[];
-  [key: string]: unknown;
-}
-
-/**
  * Values passed to shared transition animation worklets.
  *
  * This is the exact shape of the object created by `PropsDiffer::computeDiff()`
- * in C++. It contains `source` and `target` snapshot objects with the
- * properties that differ between the two views, plus window dimensions.
+ * in C++. Each property is exposed as a `target<Prop>` / `current<Prop>` pair
+ * (current = source view).
+ *
+ * Frame: `targetOriginX`/`currentOriginX`, `targetOriginY`/`currentOriginY`,
+ * `targetGlobalOriginX`/`currentGlobalOriginX`,
+ * `targetGlobalOriginY`/`currentGlobalOriginY`, `targetWidth`/`currentWidth`,
+ * `targetHeight`/`currentHeight`.
+ *
+ * Visual: `targetOpacity`/`currentOpacity`,
+ * `targetBackgroundColor`/`currentBackgroundColor`,
+ * `targetBorderRadius`/`currentBorderRadius` (and per-corner variants),
+ * `targetBorderWidth`/`currentBorderWidth` (and per-side variants),
+ * `targetBorderColor`/`currentBorderColor` (and per-side variants),
+ * `targetTransform`/`currentTransform`,
+ * `targetTransformOrigin`/`currentTransformOrigin`,
+ * `targetBoxShadow`/`currentBoxShadow`,
+ * `targetShadowColor`/`currentShadowColor`,
+ * `targetShadowOffset`/`currentShadowOffset`,
+ * `targetShadowOpacity`/`currentShadowOpacity`,
+ * `targetShadowRadius`/`currentShadowRadius`,
+ * `targetElevation`/`currentElevation`.
  */
 export interface SharedTransitionAnimationsValues {
-  source: SharedTransitionSnapshotValues;
-  target: SharedTransitionSnapshotValues;
+  targetOriginX: number;
+  targetOriginY: number;
+  targetGlobalOriginX: number;
+  targetGlobalOriginY: number;
+  targetWidth: number;
+  targetHeight: number;
+  targetBorderRadius: number;
+  targetOpacity: number;
+  targetBackgroundColor: string;
+  targetTransform: Array<Record<string, number | string>>;
+  targetTransformOrigin: number[];
+  currentOriginX: number;
+  currentOriginY: number;
+  currentGlobalOriginX: number;
+  currentGlobalOriginY: number;
+  currentWidth: number;
+  currentHeight: number;
+  currentBorderRadius: number;
+  currentOpacity: number;
+  currentBackgroundColor: string;
+  currentTransform: Array<Record<string, number | string>>;
+  currentTransformOrigin: number[];
   windowWidth: number;
   windowHeight: number;
+  [key: string]: number | string | Array<unknown>;
 }
 
 /**
@@ -113,10 +124,10 @@ export class SharedTransition
    *   const transition = SharedTransition.custom((values) => {
    *     'worklet';
    *     return {
-   *       width: withSpring(values.target.width),
-   *       height: withSpring(values.target.height),
-   *       originX: withSpring(values.target.originX),
-   *       originY: withSpring(values.target.originY),
+   *       width: withSpring(values.targetWidth),
+   *       height: withSpring(values.targetHeight),
+   *       originX: withSpring(values.targetOriginX),
+   *       originY: withSpring(values.targetOriginY),
    *     };
    *   });
    *   ```;
@@ -143,14 +154,14 @@ export class SharedTransition
    *   const transition = SharedTransition.custom((values) => {
    *     'worklet';
    *     return {
-   *       width: withSpring(values.target.width),
-   *       height: withSpring(values.target.height),
+   *       width: withSpring(values.targetWidth),
+   *       height: withSpring(values.targetHeight),
    *     };
    *   }).progressAnimation((values, progress) => {
    *     'worklet';
    *     return {
-   *       width: values.source.width + progress * (values.target.width - values.source.width),
-   *       height: values.source.height + progress * (values.target.height - values.source.height),
+   *       width: values.currentWidth + progress * (values.targetWidth - values.currentWidth),
+   *       height: values.currentHeight + progress * (values.targetHeight - values.currentHeight),
    *     };
    *   });
    *   ```;
@@ -195,13 +206,14 @@ export class SharedTransition
         const values =
           valuesUntyped as unknown as SharedTransitionAnimationsValues;
 
-        // Get animations from the custom factory
         const animations = customAnimationFactory(values);
 
-        // Build initial values from source
         const initialValues: StyleProps = {};
-        for (const key in values.source) {
-          initialValues[key] = values.source[key];
+        for (const key in values) {
+          if (key.startsWith('current')) {
+            const prop = key[7].toLowerCase() + key.slice(8);
+            initialValues[prop] = values[key] as number | string;
+          }
         }
 
         return {
@@ -231,14 +243,20 @@ export class SharedTransition
       const initialValues: StyleProps = {};
       const animations: StyleProps = {};
 
-      for (const key in values.source) {
-        initialValues[key] = values.source[key];
+      for (const sourceKey in values) {
+        if (!sourceKey.startsWith('current')) {
+          continue;
+        }
+        const prop = sourceKey[7].toLowerCase() + sourceKey.slice(8);
+        const targetKey =
+          'target' + sourceKey[7].toUpperCase() + sourceKey.slice(8);
+        initialValues[prop] = values[sourceKey] as number | string;
 
-        const target = values.target[key];
+        const target = values[targetKey];
         if (Array.isArray(target)) {
-          if (key === 'transform') {
+          if (prop === 'transform') {
             // TODO (future): do proper transform interpolation
-            (animations as Record<string, unknown>)[key] = target.map(
+            (animations as Record<string, unknown>)[prop] = target.map(
               (item: Record<string, number | string>) => {
                 const transformKey = Object.keys(item)[0];
                 return {
@@ -246,8 +264,8 @@ export class SharedTransition
                 };
               }
             );
-          } else if (key === 'boxShadow') {
-            (animations as Record<string, unknown>)[key] = target.map(
+          } else if (prop === 'boxShadow') {
+            (animations as Record<string, unknown>)[prop] = target.map(
               (item: Record<string, number | string>) => {
                 const boxShadow: Record<string, unknown> = {};
                 for (const shadowKey of Object.keys(item)) {
@@ -256,15 +274,13 @@ export class SharedTransition
                 return boxShadow;
               }
             );
-          } else if (key === 'transformOrigin') {
-            animations[key] = target.map(animationFactory);
+          } else if (prop === 'transformOrigin') {
+            animations[prop] = target.map(animationFactory);
           } else {
-            logger.error(`Unexpected array in SharedTransition: ${key}`);
+            logger.error(`Unexpected array in SharedTransition: ${prop}`);
           }
         } else {
-          animations[key] = animationFactory(
-            values.target[key] as number | string
-          );
+          animations[prop] = animationFactory(target as number | string);
         }
       }
 
