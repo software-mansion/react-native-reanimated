@@ -58,8 +58,18 @@ fi
   # Compilation Database shape that both clangd and clang-tidy accept.
   if [ -f ".compile" ]; then
     node "$script_dir/clangd-filter-compile-commands.js"
-    cp "compile_commands.json" "../../../packages/react-native-reanimated/compile_commands.json"
-    cp "compile_commands.json" "../../../packages/react-native-worklets/compile_commands.json"
+
+    # Publish a per-package DB that merges the iOS DB with the latest
+    # gradle/cmake-produced Android DBs (if present). Each file's entry
+    # comes from the freshest source it appears in, so editing iOS-only
+    # files keeps working after an Android build and vice versa.
+    for pkg in react-native-reanimated react-native-worklets; do
+      pkg_dir="../../../packages/$pkg"
+      node "$script_dir/clangd-merge-compile-commands.js" \
+        "$pkg_dir/compile_commands.json" \
+        "compile_commands.json" \
+        "$pkg_dir/android/.cxx"
+    done
   fi
 ) &
 disown

@@ -2,7 +2,7 @@ require_relative '../node_modules/react-native-macos/scripts/react_native_pods'
 
 ENV['IS_REANIMATED_EXAMPLE_APP'] = '1'
 
-require_relative '../../../packages/react-native-reanimated/scripts/clangd-add-xcode-step.rb'
+require_relative '../../../scripts/clangd-add-xcode-step.rb'
 
 prepare_react_native_project!
 
