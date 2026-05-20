@@ -4,9 +4,18 @@ import type { RouteNames, Routes } from '@/apps/css/navigation/types';
 
 import routeCards from './routeCards';
 import {
+  Active as PseudoActive,
+  ActiveDeepest as PseudoActiveDeepest,
   AnimatedProperties,
+  ArbitraryWebSelectors as PseudoArbitraryWebSelectors,
+  Focus as PseudoFocus,
+  FocusWithin as PseudoFocusWithin,
+  Hover as PseudoHover,
+  HoverWithLoop as PseudoHoverWithLoop,
   miscellaneous,
+  PerStateTransitionConfig as PseudoPerStateTransitionConfig,
   realWorldExamples,
+  Showcase as PseudoShowcase,
   testExamples,
   transitionSettings,
 } from './screens';
@@ -84,6 +93,48 @@ const routes = {
       HamburgerMenuButtons: {
         name: 'Hamburger Menu Buttons',
         Component: realWorldExamples.HamburgerMenuButtons,
+      },
+    },
+  },
+  PseudoSelectors: {
+    name: 'Pseudo Selectors',
+    CardComponent: routeCards.PseudoSelectorsCard,
+    routes: {
+      PseudoHover: {
+        name: ':hover',
+        Component: PseudoHover,
+      },
+      PseudoActive: {
+        name: ':active',
+        Component: PseudoActive,
+      },
+      PseudoActiveDeepest: {
+        name: ':active-deepest',
+        Component: PseudoActiveDeepest,
+      },
+      PseudoFocus: {
+        name: ':focus',
+        Component: PseudoFocus,
+      },
+      PseudoFocusWithin: {
+        name: ':focus-within',
+        Component: PseudoFocusWithin,
+      },
+      PseudoHoverWithLoop: {
+        name: 'Looping transition + :hover',
+        Component: PseudoHoverWithLoop,
+      },
+      PseudoPerStateTransitionConfig: {
+        name: 'Per-state transition configs',
+        Component: PseudoPerStateTransitionConfig,
+      },
+      PseudoArbitraryWebSelectors: {
+        name: 'Arbitrary web selectors',
+        Component: PseudoArbitraryWebSelectors,
+      },
+      PseudoShowcase: {
+        name: 'Showcase',
+        Component: PseudoShowcase,
       },
     },
   },
