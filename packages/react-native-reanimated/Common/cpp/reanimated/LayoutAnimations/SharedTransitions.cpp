@@ -392,6 +392,9 @@ void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
         root->children.erase(root->children.begin() + i);
       }
     }
+    lightNodes_.erase(tag);
+    restoreMap_.erase(tag);
+    layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
   }
   sharedContainersToRemove_.clear();
 }
