@@ -163,6 +163,10 @@ export function createSerializable<TValue>(
     return cloneBigInt(value) as SerializableRef<TValue>;
   }
 
+  if (typeof value === 'symbol') {
+    return cloneString(String(value)) as SerializableRef<TValue>;
+  }
+
   if (value === undefined) {
     return cloneUndefined() as SerializableRef<TValue>;
   }
@@ -871,6 +875,13 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
 
     if (typeof value === 'bigint') {
       return globalThis._createSerializableBigInt(value);
+    }
+
+    if (typeof value === 'symbol') {
+      // TODO: add native support
+      return globalThis._createSerializableString(
+        String(value)
+      ) as FlatSerializableRef<TValue>;
     }
 
     if (value === undefined) {
