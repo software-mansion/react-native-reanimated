@@ -390,6 +390,55 @@ describe(filterCSSAndStyleProperties, () => {
         });
       });
     });
+
+    describe('arbitrary (web pass-through) selectors', () => {
+      test('extracts an arbitrary :nth-child selector alongside known ones', () => {
+        const style: CSSStyle = {
+          backgroundColor: {
+            default: 'white',
+            ':hover': 'lightblue',
+            ':nth-child(odd)': 'lightgray',
+          } as never,
+        };
+
+        const [, , filteredStyle, pseudoStylesBySelector] =
+          filterCSSAndStyleProperties(style);
+
+        expect(filteredStyle).toEqual({ backgroundColor: 'white' });
+        expect(pseudoStylesBySelector).toEqual({
+          ':hover': {
+            selectorStyle: { backgroundColor: 'lightblue' },
+            defaultStyle: { backgroundColor: 'white' },
+          },
+          ':nth-child(odd)': {
+            selectorStyle: { backgroundColor: 'lightgray' },
+            defaultStyle: { backgroundColor: 'white' },
+          },
+        });
+      });
+
+      test('extracts selectors with parentheses and arguments', () => {
+        const style: CSSStyle = {
+          borderColor: {
+            default: 'gray',
+            ':focus-visible': 'blue',
+            ':nth-of-type(2n+1)': 'red',
+          } as never,
+        };
+
+        const [, , , pseudoStylesBySelector] =
+          filterCSSAndStyleProperties(style);
+
+        expect(pseudoStylesBySelector).toMatchObject({
+          ':focus-visible': {
+            selectorStyle: { borderColor: 'blue' },
+          },
+          ':nth-of-type(2n+1)': {
+            selectorStyle: { borderColor: 'red' },
+          },
+        });
+      });
+    });
   });
 
   describe('all together', () => {
