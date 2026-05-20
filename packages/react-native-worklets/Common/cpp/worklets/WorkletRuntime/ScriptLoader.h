@@ -15,10 +15,11 @@ class ScriptLoader {
       facebook::jsi::Runtime &rt,
       const std::shared_ptr<const ScriptBuffer> &script,
       const std::string &sourceUrl) {
-    interceptEntryPoints(rt);
+    ScriptLoader loader{};
+    loader.interceptEntryPoints(rt);
     rt.evaluateJavaScript(script, sourceUrl);
-    allowEntryPoints(rt);
-    loadWorkletsEntryPoint(rt);
+    loader.allowEntryPoints(rt);
+    loader.loadWorkletsEntryPoint(rt);
   }
 
  private:
@@ -28,7 +29,7 @@ class ScriptLoader {
    *
    * This is necessary to prevent running the App and React Native entry-points when evaluating the bundle.
    */
-  static void interceptEntryPoints(facebook::jsi::Runtime &rt) {
+  void interceptEntryPoints(facebook::jsi::Runtime &rt) {
     facebook::jsi::Object descriptor(rt);
     descriptor.setProperty(rt, "configurable", true);
     descriptor.setProperty(rt, "enumerable", false);
@@ -55,9 +56,11 @@ class ScriptLoader {
             rt,
             facebook::jsi::PropNameID::forUtf8(rt, "set"),
             1,
-            [](facebook::jsi::Runtime &rt, const facebook::jsi::Value &, const facebook::jsi::Value *args, size_t count)
-                -> facebook::jsi::Value {
-              rt.global().setProperty(rt, requireSavedName, args[0]);
+            [&](facebook::jsi::Runtime &rt,
+                const facebook::jsi::Value &,
+                const facebook::jsi::Value *args,
+                size_t count) -> facebook::jsi::Value {
+              metroRequire_ = jsi::Value(rt, args[0]);
               return facebook::jsi::Value::undefined();
             }));
 
@@ -67,7 +70,7 @@ class ScriptLoader {
     defineProperty.call(
         rt,
         facebook::jsi::Value(rt, globalObj),
-        facebook::jsi::String::createFromUtf8(rt, requireName),
+        facebook::jsi::String::createFromUtf8(rt, kRequireName_),
         std::move(descriptor));
   }
 
@@ -75,14 +78,13 @@ class ScriptLoader {
    * Restores the original `require` function on the global object after evaluating the bundle.
    * This way we can use worklets as entry points.
    */
-  static void allowEntryPoints(facebook::jsi::Runtime &rt) {
+  void allowEntryPoints(facebook::jsi::Runtime &rt) {
     facebook::jsi::Object descriptor(rt);
-    const auto require = rt.global().getProperty(rt, requireSavedName).getObject(rt).getFunction(rt);
 
     descriptor.setProperty(rt, "configurable", true);
     descriptor.setProperty(rt, "enumerable", false);
     descriptor.setProperty(rt, "writable", true);
-    descriptor.setProperty(rt, "value", facebook::jsi::Value(rt, require));
+    descriptor.setProperty(rt, "value", std::move(metroRequire_));
 
     const auto globalObj = rt.global();
     const auto objectCtor = globalObj.getPropertyAsObject(rt, "Object");
@@ -90,19 +92,21 @@ class ScriptLoader {
     defineProperty.call(
         rt,
         facebook::jsi::Value(rt, globalObj),
-        facebook::jsi::String::createFromUtf8(rt, requireName),
+        facebook::jsi::String::createFromUtf8(rt, kRequireName_),
         std::move(descriptor));
   }
 
-  static void loadWorkletsEntryPoint(facebook::jsi::Runtime &rt) {
-
-    const auto require = rt.global().getProperty(rt, requireName).getObject(rt).getFunction(rt);
-    require.call(rt, workletsEntryPointId);
+  void loadWorkletsEntryPoint(facebook::jsi::Runtime &rt) {
+    const auto require = rt.global().getProperty(rt, kRequireName_).getObject(rt).getFunction(rt);
+    require.call(rt, kWorkletsEntryPointId_);
   }
 
-  static constexpr auto requireName = "__r";
-  static constexpr auto requireSavedName = "__e";
-  static constexpr auto workletsEntryPointId = -2;
+  ScriptLoader() = default;
+
+  jsi::Value metroRequire_{};
+
+  static constexpr auto kRequireName_ = "__r";
+  static constexpr auto kWorkletsEntryPointId_ = -2;
 };
 
 } // namespace worklets
