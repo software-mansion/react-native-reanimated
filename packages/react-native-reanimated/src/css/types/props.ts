@@ -18,20 +18,19 @@ type PickStyleProps<P> = Pick<
   }[keyof P]
 >;
 
-export type PseudoSelectorKey =
-  | ':hover'
-  | ':active'
-  | ':active-deepest'
-  | ':focus'
-  | ':focus-within';
-
-export const PSEUDO_STATE_KEYS: ReadonlySet<string> = new Set<string>([
-  'default',
+const PSEUDO_SELECTOR_KEYS = [
   ':hover',
   ':active',
   ':active-deepest',
   ':focus',
   ':focus-within',
+] as const;
+
+export type PseudoSelectorKey = (typeof PSEUDO_SELECTOR_KEYS)[number];
+
+export const PSEUDO_STATE_KEYS: ReadonlySet<string> = new Set<string>([
+  'default',
+  ...PSEUDO_SELECTOR_KEYS,
 ]);
 
 export type PseudoValue<T> = {
