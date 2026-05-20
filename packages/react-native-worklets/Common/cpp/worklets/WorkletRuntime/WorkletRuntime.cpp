@@ -227,6 +227,7 @@ void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
 
     auto lock = std::unique_lock<std::recursive_mutex>(*strongThis->runtimeMutex_);
     jsi::Runtime &runtime = strongThis->getJSIRuntime();
+    const auto scope = jsi::Scope(runtime);
     job(runtime);
   });
 }
