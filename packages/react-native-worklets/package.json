@@ -9,7 +9,7 @@
     "worklets"
   ],
   "scripts": {
-    "build": "yarn workspace babel-plugin-worklets build && yarn set-version && bob build",
+    "build": "yarn workspace babel-plugin-worklets build && yarn set-version && bob build && ts-add-js-extension --dir=lib/typescript --showprogress=false",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
     "find-unused-code:js": "knip",
     "format": "yarn format:js && yarn format:plugin && yarn format:common && yarn format:android && yarn format:apple",
@@ -93,6 +93,7 @@
     "react": "19.2.3",
     "react-native": "0.85.2",
     "react-native-builder-bob": "0.40.13",
+    "ts-add-js-extension": "1.6.6",
     "typescript": "5.9.3"
   },
   "main": "./lib/module/index",
