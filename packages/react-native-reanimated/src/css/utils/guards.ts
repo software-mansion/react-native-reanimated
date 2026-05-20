@@ -71,3 +71,27 @@ export const isCSSKeyframesObject = (
 
 export const isCSSKeyframesRule = (value: object): value is CSSKeyframesRule =>
   typeof value === 'object' && 'cssRules' in value && 'cssText' in value;
+
+export const isPseudoSelectorValue = (
+  value: unknown
+): value is Record<string, unknown> => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+  const keys = Object.keys(value);
+  if (keys.length === 0) {
+    return false;
+  }
+  return keys.every((key) => key === 'default' || key.startsWith(':'));
+};
+
+export const resolvePseudoKeyed = <T>(
+  value: T | undefined,
+  selector: string = 'default'
+): T | undefined => {
+  if (!isPseudoSelectorValue(value)) {
+    return value;
+  }
+  const obj = value as Record<string, unknown>;
+  return (obj[selector] ?? obj.default) as T | undefined;
+};

@@ -1,4 +1,5 @@
 'use strict';
+import type { PseudoStylesBySelector } from '../utils';
 import type { ExistingCSSAnimationProperties } from './animation';
 import type { CSSStyle } from './props';
 import type { CSSTransitionProperties } from './transition';
@@ -10,6 +11,11 @@ export interface ICSSAnimationsManager {
 
 export interface ICSSTransitionsManager {
   update(transitionProperties: CSSTransitionProperties | null): void;
+  unmountCleanup(): void;
+}
+
+export interface ICSSPseudoSelectorsManager {
+  update(pseudoStylesBySelector: PseudoStylesBySelector | null): void;
   unmountCleanup(): void;
 }
 

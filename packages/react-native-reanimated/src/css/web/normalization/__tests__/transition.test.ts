@@ -156,4 +156,22 @@ describe(normalizeCSSTransitionProperties, () => {
       transition: ['opacity 100ms ease-in, transform 1s linear 300ms'],
     });
   });
+
+  test('collapses pseudo-keyed timing fields down to their default branch', () => {
+    const config: CSSTransitionProperties = {
+      transitionProperty: 'opacity',
+      transitionDuration: { default: '150ms', ':hover': '300ms' },
+      transitionTimingFunction: { default: 'ease-in', ':hover': 'linear' },
+      transitionDelay: { default: '100ms', ':focus': '0ms' },
+      transitionBehavior: { default: 'allow-discrete', ':hover': 'normal' },
+    };
+
+    expect(normalizeCSSTransitionProperties(config)).toEqual({
+      transitionProperty: ['opacity'],
+      transitionDuration: ['150ms'],
+      transitionTimingFunction: ['ease-in'],
+      transitionDelay: ['100ms'],
+      transitionBehavior: ['allow-discrete'],
+    });
+  });
 });
