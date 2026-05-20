@@ -1,7 +1,20 @@
 import type { NodePath } from '@babel/core';
 import { booleanLiteral, type ExpressionStatement } from '@babel/types';
+import { join } from 'path';
 
 import type { WorkletsPluginPass } from './types';
+
+const WORKLETS_SRC_ENTRY_PATH = join(
+  'react-native-worklets',
+  'src',
+  'index.ts'
+);
+const WORKLETS_LIB_ENTRY_PATH = join(
+  'react-native-worklets',
+  'lib',
+  'module',
+  'index.js'
+);
 
 /**
  * This function replaces the `false` value in
@@ -19,8 +32,8 @@ export function toggleBundleMode(
 ) {
   if (
     !state.opts.bundleMode ||
-    (!state.filename?.endsWith('react-native-worklets/src/index.ts') &&
-      !state.filename?.endsWith('react-native-worklets/lib/module/index.js'))
+    (!state.filename?.endsWith(WORKLETS_SRC_ENTRY_PATH) &&
+      !state.filename?.endsWith(WORKLETS_LIB_ENTRY_PATH))
   ) {
     return;
   }

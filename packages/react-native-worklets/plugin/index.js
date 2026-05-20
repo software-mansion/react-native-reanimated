@@ -1349,9 +1349,12 @@ var require_bundleMode = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.toggleBundleMode = toggleBundleMode;
     var types_12 = require("@babel/types");
+    var path_1 = require("path");
+    var WORKLETS_SRC_ENTRY_PATH = (0, path_1.join)("react-native-worklets", "src", "index.ts");
+    var WORKLETS_LIB_ENTRY_PATH = (0, path_1.join)("react-native-worklets", "lib", "module", "index.js");
     function toggleBundleMode(path, state) {
       var _a, _b;
-      if (!state.opts.bundleMode || !((_a = state.filename) === null || _a === void 0 ? void 0 : _a.endsWith("react-native-worklets/src/index.ts")) && !((_b = state.filename) === null || _b === void 0 ? void 0 : _b.endsWith("react-native-worklets/lib/module/index.js"))) {
+      if (!state.opts.bundleMode || !((_a = state.filename) === null || _a === void 0 ? void 0 : _a.endsWith(WORKLETS_SRC_ENTRY_PATH)) && !((_b = state.filename) === null || _b === void 0 ? void 0 : _b.endsWith(WORKLETS_LIB_ENTRY_PATH))) {
         return;
       }
       const expressionPath = path.get("expression");

@@ -2,7 +2,15 @@ const path = require('path');
 
 const workletsPackageParentDir = path.resolve(__dirname, '../..');
 
-const workletsDirPath = path.join('react-native-worklets', '.worklets');
+const workletsPackageName = 'react-native-worklets';
+const workletsDirPath = path.join(workletsPackageName, '.worklets');
+const workletsSrcEntryPath = path.join(workletsPackageName, 'src', 'index.ts');
+const workletsLibEntryPath = path.join(
+  workletsPackageName,
+  'lib',
+  'module',
+  'index.js'
+);
 
 function bundleModeResolveRequest(
   /** @type {any} */ context,
@@ -67,15 +75,15 @@ function bundleModeCreateModuleIdFactory() {
     if (idFileMap.has(moduleName)) {
       return idFileMap.get(moduleName);
     }
-    if (moduleName.includes('react-native-worklets/')) {
+    if (moduleName.includes(workletsPackageName)) {
       if (
-        moduleName.endsWith('react-native-worklets/src/index.ts') ||
-        moduleName.endsWith('react-native-worklets/lib/module/index.js')
+        moduleName.endsWith(workletsSrcEntryPath) ||
+        moduleName.endsWith(workletsLibEntryPath)
       ) {
         const entryPointId = -2;
         idFileMap.set(moduleName, entryPointId);
         return entryPointId;
-      } else if (moduleName.includes('.worklets/')) {
+      } else if (moduleName.includes(workletsDirPath)) {
         const base = path.basename(moduleName, '.js');
         const id = Number(base);
         idFileMap.set(moduleName, id);
