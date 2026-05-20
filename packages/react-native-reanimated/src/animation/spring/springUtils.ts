@@ -304,43 +304,6 @@ export function calculateNewStiffnessToMatchDuration(
   });
 }
 
-export function overDampedSpringCalculations(
-  animation: InnerSpringAnimation,
-  precalculatedValues: {
-    zeta: number;
-    v0: number;
-    x0: number;
-    omega0: number;
-    t: number;
-  }
-): { position: number; velocity: number } {
-  'worklet';
-  const { toValue } = animation;
-  const { zeta, v0, x0, omega0, t } = precalculatedValues;
-
-  // Two distinct real characteristic roots for overdamped (zeta > 1).
-  const omega2 = omega0 * Math.sqrt(zeta ** 2 - 1);
-  const r1 = -zeta * omega0 + omega2; // closer to zero, slower-decaying mode
-  const r2 = -zeta * omega0 - omega2; // further from zero, fast-decaying mode
-
-  // Solve for C1, C2 from initial conditions:
-  //   C1 + C2 = x0        (initial displacement)
-  //   C1*r1 + C2*r2 = v0  (initial displacement velocity)
-  const C1 = (v0 - r2 * x0) / (r1 - r2);
-  const C2 = (r1 * x0 - v0) / (r1 - r2);
-
-  const exp1 = Math.exp(r1 * t);
-  const exp2 = Math.exp(r2 * t);
-
-  const displacement = C1 * exp1 + C2 * exp2;
-  const velocity = C1 * r1 * exp1 + C2 * r2 * exp2;
-
-  return {
-    position: toValue + displacement,
-    velocity,
-  };
-}
-
 export function criticallyDampedSpringCalculations(
   animation: InnerSpringAnimation,
   precalculatedValues: {

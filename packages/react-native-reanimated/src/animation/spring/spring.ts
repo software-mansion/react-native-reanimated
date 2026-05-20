@@ -104,7 +104,7 @@ export const withSpring = ((
       }
       const { lastTimestamp, velocity } = animation;
 
-      const deltaTime = Math.min(now - lastTimestamp, 64);
+      const deltaTime = Math.min(Math.max(now - lastTimestamp, 0), 64);
       animation.lastTimestamp = now;
 
       const t = deltaTime / 1000;
@@ -113,36 +113,22 @@ export const withSpring = ((
 
       const { zeta, omega0, omega1 } = animation;
 
-      let newPosition: number;
-      let newVelocity: number;
-      if (zeta < 1) {
-        ({ position: newPosition, velocity: newVelocity } =
-          underDampedSpringCalculations(animation, {
-            zeta,
-            v0,
-            x0,
-            omega0,
-            omega1,
-            t,
-          }));
-      } else if (zeta > 1) {
-        ({ position: newPosition, velocity: newVelocity } =
-          overDampedSpringCalculations(animation, {
-            zeta,
+      const { position: newPosition, velocity: newVelocity } =
+        zeta < 1
+          ? underDampedSpringCalculations(animation, {
+              zeta,
+              v0,
+              x0,
+              omega0,
+              omega1,
+              t,
+            })
+          : criticallyDampedSpringCalculations(animation, {
             v0,
             x0,
             omega0,
             t,
-          }));
-      } else {
-        ({ position: newPosition, velocity: newVelocity } =
-          criticallyDampedSpringCalculations(animation, {
-            v0,
-            x0,
-            omega0,
-            t,
-          }));
-      }
+          });
 
       animation.current = newPosition;
       animation.velocity = newVelocity;
