@@ -247,6 +247,9 @@ export function createSerializable<TValue>(
       return cloneCustom(value, pack, i) as SerializableRef<TValue>;
     }
   }
+  if (__DEV__ && value instanceof Promise) {
+    throw new Error('[Worklets] Promises cannot be converted to serializable.');
+  }
   return inaccessibleObject(value);
 }
 
@@ -838,6 +841,11 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
             ) as FlatSerializableRef<TValue>;
           }
         }
+      }
+      if (__DEV__ && value instanceof Promise) {
+        throw new Error(
+          '[Worklets] Promises cannot be converted to serializable.'
+        );
       }
       const toAdapt: Record<string, FlatSerializableRef<TValue>> = {};
       for (const [key, element] of Object.entries(value)) {

@@ -494,4 +494,13 @@ describe('Test createSerializableOnUI', () => {
       foo();
     }).toThrow();
   });
+
+  test('throws when trying to serialize a Promise', async () => {
+    await expect(() =>
+      runOnUISync(() => {
+        'worklet';
+        return Promise.resolve();
+      })
+    ).toThrow('Promises cannot be converted to serializable.');
+  });
 });
