@@ -24,7 +24,7 @@ class AnimationStyleInterpolatorFactory {
  private:
   const std::string nativeComponentName_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
-  const InterpolatorFactoriesRecord factories_;
+  const InterpolatorFactoriesRecord &factories_;
   std::shared_ptr<const PropertyInterpolatorsRecord> interpolatorsByProperty_;
   const std::unordered_set<std::string> allPropertyNames_;
 
