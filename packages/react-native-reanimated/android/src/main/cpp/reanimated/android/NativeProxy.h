@@ -9,8 +9,10 @@
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 
+#include <atomic>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -19,7 +21,7 @@ namespace reanimated {
 using namespace facebook;
 using namespace facebook::jni;
 
-class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_from_this<NativeProxy> {
+class NativeProxy : public jni::HybridClass<NativeProxy> {
  public:
   static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/NativeProxy;";
   static jni::local_ref<jhybriddata> initHybrid(
@@ -30,18 +32,18 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
 
   static void registerNatives();
 
-  ~NativeProxy() override;
-
  private:
   friend HybridBase;
+  // Shared with every lambda produced by `bindThis`. Flipped to false in
+  // `invalidateCpp` before tearing the rest down, so callbacks that fire on
+  // background/UI threads bail out instead of dereferencing a dying `this`.
+  std::shared_ptr<std::atomic<bool>> alive_;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
   std::shared_ptr<worklets::WorkletRuntime> uiRuntime_;
   std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
-#ifndef NDEBUG
   void checkJavaVersion();
   void injectCppVersion();
-#endif // NDEBUG
   // removed temporarily, event listener mechanism needs to be fixed on RN side
   // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
   // std::shared_ptr<EventListener> eventListener_;
@@ -75,17 +77,22 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
   void detachPseudoSelector(Tag tag, PseudoSelector selector);
 
   /***
-   * Wraps a method of `NativeProxy` in a function object capturing `this`
-   * @tparam TReturn return type of passed method
-   * @tparam TParams parameter types of passed method
-   * @param methodPtr pointer to method to be wrapped
-   * @return a function object with the same signature as the method, calling
-   * that method on `this`
+   * Wraps a method of `NativeProxy` in a function object that defends against
+   * `this` outliving the wrapped call. The returned lambda captures a shared
+   * "alive" flag (toggled off in `invalidateCpp`); if the flag is cleared by
+   * the time the lambda runs, the call is skipped and a default-constructed
+   * return value is produced.
    */
   template <class TReturn, class... TParams>
   std::function<TReturn(TParams...)> bindThis(TReturn (NativeProxy::*methodPtr)(TParams...)) {
-    // It's probably safe to pass `this` as reference here...
-    return [this, methodPtr](TParams &&...args) {
+    return [this, methodPtr, alive = alive_](TParams &&...args) -> TReturn {
+      if (!alive->load(std::memory_order_acquire)) {
+        if constexpr (std::is_void_v<TReturn>) {
+          return;
+        } else {
+          return TReturn{};
+        }
+      }
       return (this->*methodPtr)(std::forward<TParams>(args)...);
     };
   }
