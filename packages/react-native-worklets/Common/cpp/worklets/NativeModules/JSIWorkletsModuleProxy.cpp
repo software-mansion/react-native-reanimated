@@ -589,6 +589,23 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
 #endif // NDEBUG
       });
 
+  jsi_utils::addMethod<2>(
+      rt,
+      obj,
+      "handlePromise",
+      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        const auto fun = at<0>(args).getObject(rt).getFunction(rt);
+        // NOLINTNEXTLINE(readability/braces)
+        if (fun.getProperty(rt, "__remoteFunction").isUndefined()) [[unlikely]] {
+          // TODO: add a fast path for it in TypeScript
+          fun.call(rt, extractSerializableOrThrow(rt, at<1>(args))->toJSValue(rt));
+        } else {
+          auto resolveOrReject = extractSerializableOrThrow<SerializableRemoteFunction>(rt, at<0>(args));
+          auto valueOrError = extractSerializableOrThrow(rt, at<1>(args));
+          resolveOrReject->resolveOrRejectPromise(valueOrError, runtimeManager);
+        }
+      });
+
   jsi_utils::addMethod<3>(
       rt,
       obj,

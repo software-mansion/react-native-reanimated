@@ -62,6 +62,6 @@ export function createShareable<
   );
 }
 
-if (__DEV__ && globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
   addNoBundleModeGuardImplementation(createShareable);
 }

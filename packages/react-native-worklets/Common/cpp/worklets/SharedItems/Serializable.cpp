@@ -1,7 +1,9 @@
 #include <jsi/jsi.h>
+#include <react/debug/react_native_assert.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
+#include <worklets/WorkletRuntime/RuntimeManager.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
@@ -317,6 +319,29 @@ jsi::Value SerializableRemoteFunction::toJSValue(jsi::Runtime &rt) {
     auto holderFunction = getRemoteFunctionUnpacker(rt).call(rt, name).getObject(rt);
     holderFunction.setNativeState(rt, std::make_shared<SerializableJSRef>(shared_from_this()));
     return holderFunction;
+  }
+}
+
+// TODO: generalize it and merge with other scheduling methods
+void SerializableRemoteFunction::resolveOrRejectPromise(
+    const std::shared_ptr<Serializable> &resolveValue,
+    const std::shared_ptr<RuntimeManager> &runtimeManager) {
+  if (isHostedOnRNRuntime()) {
+    const auto &data = std::get<RNRuntimeData>(runtimeData_);
+    data.jsScheduler->scheduleOnJS([resolver = shared_from_this(), resolveValue](jsi::Runtime &rt) {
+      resolver->toJSValue(rt).getObject(rt).getFunction(rt).call(rt, resolveValue->toJSValue(rt));
+    });
+  } else {
+    const auto workletRuntime = runtimeManager->getRuntime(hostRuntimeId_);
+    // NOLINTNEXTLINE(readability/braces)
+    if (!workletRuntime) [[unlikely]] {
+      // Host runtime is dead, most likely we're the last owner of the Remote Function.
+      // Do nothing.
+    } else {
+      workletRuntime->schedule([resolver = shared_from_this(), resolveValue](jsi::Runtime &rt) {
+        resolver->toJSValue(rt).getObject(rt).getFunction(rt).call(rt, resolveValue->toJSValue(rt));
+      });
+    }
   }
 }
 

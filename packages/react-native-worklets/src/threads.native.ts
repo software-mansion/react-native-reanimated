@@ -1,16 +1,13 @@
 'use strict';
 
 import { getStaticFeatureFlag } from './featureFlags/featureFlags';
-import {
-  addGuardImplementation,
-  addNoBundleModeGuardImplementation,
-} from './guardImplementation';
+import { addNoBundleModeGuardImplementation } from './guardImplementation';
 import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
 } from './memory/serializable';
 import type { RemoteFunction, SerializableRef } from './memory/types';
-import { isRNRuntime, RuntimeKind } from './runtimeKind';
+import { RuntimeKind } from './runtimeKind';
 import type { WorkletFunction, WorkletImport } from './types';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsModule } from './WorkletsModule/NativeWorklets';
@@ -22,6 +19,7 @@ type UIJob<Args extends unknown[] = unknown[], ReturnValue = unknown> = [
   worklet: WorkletFunction<Args, ReturnValue>,
   args: Args,
   resolve: ((value: ReturnValue) => void) | undefined,
+  reject: ((reason: unknown) => void) | undefined,
   scheduleStack: string | undefined,
 ];
 
@@ -306,8 +304,6 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#javascript-runtime).
  * @returns A promise that resolves to the return value of the function passed
  *   as the first argument.
- * @throws If called from a runtime other than the [RN
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
  * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUIAsync
  */
 export function runOnUIAsync<Args extends unknown[], ReturnValue>(
@@ -320,13 +316,8 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
         '[Worklets] `runOnUIAsync` can only be used with worklets.'
       );
     }
-    if (!isRNRuntime()) {
-      throw new Error(
-        '[Worklets] `runOnUIAsync` can only be called on the RN Runtime.'
-      );
-    }
   }
-  return new Promise<ReturnValue>((resolve) => {
+  return new Promise<ReturnValue>((resolve, reject) => {
     if (__DEV__) {
       // in DEV mode we call serializable conversion here because in case the object
       // can't be converted, we will get a meaningful stack-trace as opposed to the
@@ -337,19 +328,25 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
       createSerializable(args);
     }
 
-    enqueueUI(worklet as WorkletFunction<Args, ReturnValue>, args, resolve);
+    enqueueUI(
+      worklet as WorkletFunction<Args, ReturnValue>,
+      args,
+      resolve,
+      reject
+    );
   });
 }
 
 function enqueueUI<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>,
   args: Args,
-  resolve?: (value: ReturnValue) => void
+  resolve?: (value: ReturnValue) => void,
+  reject?: (reason: unknown) => void
 ): void {
   const scheduleStack = SHOULD_CAPTURE_SCHEDULE_STACK
     ? new Error().stack
     : undefined;
-  const job = [worklet, args, resolve, scheduleStack] as UIJob<
+  const job = [worklet, args, resolve, reject, scheduleStack] as UIJob<
     Args,
     ReturnValue
   >;
@@ -364,17 +361,33 @@ function flushUIQueue(): void {
     const queue = runOnUIQueue;
     runOnUIQueue = [];
     const jobWorklets = queue.map(
-      ([workletFunction, workletArgs, jobResolve]) =>
+      ([workletFunction, workletArgs, resolve, reject]) =>
         createSerializable(() => {
           'worklet';
-          const result = workletFunction(...workletArgs);
-          if (jobResolve) {
-            scheduleOnRN(jobResolve, result);
+          try {
+            const result = workletFunction(...workletArgs);
+            if (resolve) {
+              const serializedResult = globalThis.__serializer(result);
+              globalThis.__workletsModuleProxy.handlePromise(
+                resolve,
+                serializedResult
+              );
+            }
+          } catch (error) {
+            if (reject) {
+              const serializedError = globalThis.__serializer(error);
+              globalThis.__workletsModuleProxy.handlePromise(
+                reject,
+                serializedError
+              );
+            } else {
+              throw error;
+            }
           }
         })
     );
     const scheduleStacks = SHOULD_CAPTURE_SCHEDULE_STACK
-      ? (queue.map(([, , , scheduleStack]) => scheduleStack) as string[])
+      ? (queue.map(([, , , , scheduleStack]) => scheduleStack) as string[])
       : undefined;
     WorkletsModule.scheduleOnUI(
       WorkletsModule.createSerializableArray(jobWorklets),
@@ -388,10 +401,7 @@ if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
    * QoL guards to give a meaningful error message when the user tries to call
    * these functions on Worklet Runtimes outside of the Bundle Mode.
    */
-  addGuardImplementation(
-    runOnUIAsync,
-    '`runOnUIAsync` can only be called on the RN Runtime.'
-  );
+  addNoBundleModeGuardImplementation(runOnUIAsync);
   addNoBundleModeGuardImplementation(runOnUISync);
   addNoBundleModeGuardImplementation(scheduleOnUI);
 }
