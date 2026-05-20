@@ -2,6 +2,46 @@
   "migIndex": 1,
   "data": [
     {
+      "path": "assets/fonts/DM_Sans/OFL.txt",
+      "sha1": "ecb6c92c112943464644f2d803491f9cb9bd1f91"
+    },
+    {
+      "path": "assets/fonts/DM_Sans/static/DMSans-Black.ttf",
+      "sha1": "928765ebc49e7c22a223052891a9b7e9c1ced790"
+    },
+    {
+      "path": "assets/fonts/DM_Sans/static/DMSans-Bold.ttf",
+      "sha1": "10e061ac7f01fd542e0c1956e89b12a272607f5d"
+    },
+    {
+      "path": "assets/fonts/DM_Sans/static/DMSans-ExtraBold.ttf",
+      "sha1": "283ba20eb28248c93a2f109c6694c2aaa1107561"
+    },
+    {
+      "path": "assets/fonts/DM_Sans/static/DMSans-ExtraLight.ttf",
+      "sha1": "c88b3ca1abf5b2073b98c8ad52747ba26230f755"
+    },
+    {
+      "path": "assets/fonts/DM_Sans/static/DMSans-Light.ttf",
+      "sha1": "5c144a0909fca26b32c9d5a42cd85e18f7ca924f"
+    },
+    {
+      "path": "assets/fonts/DM_Sans/static/DMSans-Medium.ttf",
+      "sha1": "dad2637623defedd4720447c5bbaa3d96b1594ee"
+    },
+    {
+      "path": "assets/fonts/DM_Sans/static/DMSans-Regular.ttf",
+      "sha1": "76c500a4e46a2ef4252e909109926e08272ac849"
+    },
+    {
+      "path": "assets/fonts/DM_Sans/static/DMSans-SemiBold.ttf",
+      "sha1": "d0f49c8f35f1155a2c0a945051319e134d3ba0cf"
+    },
+    {
+      "path": "assets/fonts/DM_Sans/static/DMSans-Thin.ttf",
+      "sha1": "064ce26456e9ec9ba9e8d01ef953ab2ec99fdc81"
+    },
+    {
       "path": "assets/fonts/Poppins/OFL.txt",
       "sha1": "8d6c34b70e3d638c82d7b5aba3f847f7d6d2c831"
     },

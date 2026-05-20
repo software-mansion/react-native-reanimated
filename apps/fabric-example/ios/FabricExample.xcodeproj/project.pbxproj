@@ -22,6 +22,15 @@
 		BDBBD9F50A6744649FFA1379 /* Poppins-Thin.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 849F4FC4D7AC4BA291D6C4B4 /* Poppins-Thin.ttf */; };
 		C2B18DAA2F753C7F0000399C /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = C2B18DA92F753C7F0000399C /* AppIcon.icon */; };
 		D509140DC52141079A0DB2B6 /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = C06453E54CB742B58CB6EFDC /* OFL.txt */; };
+		DA5A000000000000000000B1 /* DMSans-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DA5A000000000000000000A1 /* DMSans-Black.ttf */; };
+		DA5A000000000000000000B2 /* DMSans-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DA5A000000000000000000A2 /* DMSans-Bold.ttf */; };
+		DA5A000000000000000000B3 /* DMSans-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DA5A000000000000000000A3 /* DMSans-ExtraBold.ttf */; };
+		DA5A000000000000000000B4 /* DMSans-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DA5A000000000000000000A4 /* DMSans-ExtraLight.ttf */; };
+		DA5A000000000000000000B5 /* DMSans-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DA5A000000000000000000A5 /* DMSans-Light.ttf */; };
+		DA5A000000000000000000B6 /* DMSans-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DA5A000000000000000000A6 /* DMSans-Medium.ttf */; };
+		DA5A000000000000000000B7 /* DMSans-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DA5A000000000000000000A7 /* DMSans-Regular.ttf */; };
+		DA5A000000000000000000B8 /* DMSans-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DA5A000000000000000000A8 /* DMSans-SemiBold.ttf */; };
+		DA5A000000000000000000B9 /* DMSans-Thin.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DA5A000000000000000000A9 /* DMSans-Thin.ttf */; };
 		E218AE03408043D2A0CDC9E8 /* Poppins-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 973BD397ECB7436F828E47A9 /* Poppins-Bold.ttf */; };
 		F089D8C46C244B0FB512E5C3 /* Poppins-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 7DCAC1E7776A4A36A864F95E /* Poppins-SemiBold.ttf */; };
 		F4C3F7622BCFD500008A4CDE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F4C3F7612BCFD500008A4CDE /* PrivacyInfo.xcprivacy */; };
@@ -48,6 +57,16 @@
 		C06453E54CB742B58CB6EFDC /* OFL.txt */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = OFL.txt; path = ../assets/fonts/Poppins/OFL.txt; sourceTree = "<group>"; };
 		C200C1012D33B96D00F25439 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = FabricExample/AppDelegate.swift; sourceTree = "<group>"; };
 		C2B18DA92F753C7F0000399C /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
+		DA5A000000000000000000A1 /* DMSans-Black.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "DMSans-Black.ttf"; path = "../assets/fonts/DM_Sans/static/DMSans-Black.ttf"; sourceTree = "<group>"; };
+		DA5A000000000000000000A2 /* DMSans-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "DMSans-Bold.ttf"; path = "../assets/fonts/DM_Sans/static/DMSans-Bold.ttf"; sourceTree = "<group>"; };
+		DA5A000000000000000000A3 /* DMSans-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "DMSans-ExtraBold.ttf"; path = "../assets/fonts/DM_Sans/static/DMSans-ExtraBold.ttf"; sourceTree = "<group>"; };
+		DA5A000000000000000000A4 /* DMSans-ExtraLight.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "DMSans-ExtraLight.ttf"; path = "../assets/fonts/DM_Sans/static/DMSans-ExtraLight.ttf"; sourceTree = "<group>"; };
+		DA5A000000000000000000A5 /* DMSans-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "DMSans-Light.ttf"; path = "../assets/fonts/DM_Sans/static/DMSans-Light.ttf"; sourceTree = "<group>"; };
+		DA5A000000000000000000A6 /* DMSans-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "DMSans-Medium.ttf"; path = "../assets/fonts/DM_Sans/static/DMSans-Medium.ttf"; sourceTree = "<group>"; };
+		DA5A000000000000000000A7 /* DMSans-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "DMSans-Regular.ttf"; path = "../assets/fonts/DM_Sans/static/DMSans-Regular.ttf"; sourceTree = "<group>"; };
+		DA5A000000000000000000A8 /* DMSans-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "DMSans-SemiBold.ttf"; path = "../assets/fonts/DM_Sans/static/DMSans-SemiBold.ttf"; sourceTree = "<group>"; };
+		DA5A000000000000000000A9 /* DMSans-Thin.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "DMSans-Thin.ttf"; path = "../assets/fonts/DM_Sans/static/DMSans-Thin.ttf"; sourceTree = "<group>"; };
+		DA5A000000000000000000AA /* OFL.txt */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = OFL.txt; path = ../assets/fonts/DM_Sans/OFL.txt; sourceTree = "<group>"; };
 		E7907DF98A294F2D9672CB3E /* Poppins-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Regular.ttf"; path = "../assets/fonts/Poppins/Poppins-Regular.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F48B9C5F2C7F46D4AF205A72 /* Poppins-Black.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Black.ttf"; path = "../assets/fonts/Poppins/Poppins-Black.ttf"; sourceTree = "<group>"; };
@@ -94,6 +113,16 @@
 			children = (
 				03C802BD2D28A91E00625950 /* UbuntuMono-Regular.ttf */,
 				03C802BC2D28A91E00625950 /* UFL.txt */,
+				DA5A000000000000000000A1 /* DMSans-Black.ttf */,
+				DA5A000000000000000000A2 /* DMSans-Bold.ttf */,
+				DA5A000000000000000000A3 /* DMSans-ExtraBold.ttf */,
+				DA5A000000000000000000A4 /* DMSans-ExtraLight.ttf */,
+				DA5A000000000000000000A5 /* DMSans-Light.ttf */,
+				DA5A000000000000000000A6 /* DMSans-Medium.ttf */,
+				DA5A000000000000000000A7 /* DMSans-Regular.ttf */,
+				DA5A000000000000000000A8 /* DMSans-SemiBold.ttf */,
+				DA5A000000000000000000A9 /* DMSans-Thin.ttf */,
+				DA5A000000000000000000AA /* OFL.txt */,
 				F48B9C5F2C7F46D4AF205A72 /* Poppins-Black.ttf */,
 				973BD397ECB7436F828E47A9 /* Poppins-Bold.ttf */,
 				192DDE7394C0421AABAD1E39 /* Poppins-ExtraBold.ttf */,
@@ -210,6 +239,15 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				DA5A000000000000000000B1 /* DMSans-Black.ttf in Resources */,
+				DA5A000000000000000000B2 /* DMSans-Bold.ttf in Resources */,
+				DA5A000000000000000000B3 /* DMSans-ExtraBold.ttf in Resources */,
+				DA5A000000000000000000B4 /* DMSans-ExtraLight.ttf in Resources */,
+				DA5A000000000000000000B5 /* DMSans-Light.ttf in Resources */,
+				DA5A000000000000000000B6 /* DMSans-Medium.ttf in Resources */,
+				DA5A000000000000000000B7 /* DMSans-Regular.ttf in Resources */,
+				DA5A000000000000000000B8 /* DMSans-SemiBold.ttf in Resources */,
+				DA5A000000000000000000B9 /* DMSans-Thin.ttf in Resources */,
 				7E23737D7AB942FC9F2DB5BC /* Poppins-Black.ttf in Resources */,
 				F4C3F7622BCFD500008A4CDE /* PrivacyInfo.xcprivacy in Resources */,
 				03C802BF2D28A91F00625950 /* UbuntuMono-Regular.ttf in Resources */,
@@ -350,6 +388,7 @@
 				PRODUCT_NAME = FabricExample;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
@@ -375,6 +414,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = FabricExample;
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;

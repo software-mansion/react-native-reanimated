@@ -25,7 +25,7 @@
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
-	<true/>
+	<false/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
@@ -47,6 +47,15 @@
 	<true/>
 	<key>UIAppFonts</key>
 	<array>
+		<string>DMSans-Black.ttf</string>
+		<string>DMSans-Bold.ttf</string>
+		<string>DMSans-ExtraBold.ttf</string>
+		<string>DMSans-ExtraLight.ttf</string>
+		<string>DMSans-Light.ttf</string>
+		<string>DMSans-Medium.ttf</string>
+		<string>DMSans-Regular.ttf</string>
+		<string>DMSans-SemiBold.ttf</string>
+		<string>DMSans-Thin.ttf</string>
 		<string>Poppins-Black.ttf</string>
 		<string>Poppins-Bold.ttf</string>
 		<string>Poppins-ExtraBold.ttf</string>
