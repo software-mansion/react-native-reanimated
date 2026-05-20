@@ -22,7 +22,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     MountingTransaction::Number transactionNumber,
     const TransactionTelemetry &telemetry,
     ShadowViewMutationList mutations) const {
-  ReanimatedSystraceSection d("pullTransaction");
+  const ReanimatedSystraceSection d("pullTransaction");
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
@@ -45,7 +45,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     react_native_assert(root && "Root node not found");
     auto beforeTopScreen = topScreen[surfaceId];
     if (beforeTopScreen) {
-      ReanimatedSystraceSection s("find before elements");
+      const ReanimatedSystraceSection s("find before elements");
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, propsParserContext);
     }
 
@@ -54,7 +54,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     auto afterTopScreen = findTopScreen(root);
     topScreen[surfaceId] = afterTopScreen;
     if (afterTopScreen) {
-      ReanimatedSystraceSection s("find after elements");
+      const ReanimatedSystraceSection s("find after elements");
       findSharedElementsOnScreen(afterTopScreen, AFTER, propsParserContext);
 #ifdef __APPLE__
       forceScreenSnapshot_(afterTopScreen->current.tag);
@@ -112,7 +112,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
     const PropsParserContext &propsParserContext,
     const ShadowViewMutationList &mutations,
     ShadowViewMutationList &filteredMutations) const {
-  ReanimatedSystraceSection s("updateLightTree");
+  const ReanimatedSystraceSection s("updateLightTree");
   std::unordered_set<Tag> inserted, moved, deleted;
   for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
     const auto &mutation = *it;
@@ -234,7 +234,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
 std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::progressLayoutAnimation(
     int tag,
     const jsi::Object &newStyle) {
-  ReanimatedSystraceSection s("progressLayoutAnimation");
+  const ReanimatedSystraceSection s("progressLayoutAnimation");
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const auto layoutAnimationIt = layoutAnimations_.find(tag);
 
@@ -307,7 +307,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
 void LayoutAnimationsProxy_Experimental::handleRemovals(
     ShadowViewMutationList &filteredMutations,
     std::vector<std::shared_ptr<LightNode>> &roots) const {
-  ReanimatedSystraceSection s("handleRemovals");
+  const ReanimatedSystraceSection s("handleRemovals");
   // iterate from the end, so that children
   // with higher indices appear first in the mutations list
   for (auto it = roots.rbegin(); it != roots.rend(); it++) {
@@ -360,7 +360,7 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
 
 void LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList &mutations)
     const {
-  ReanimatedSystraceSection s1("addOngoingAnimations");
+  const ReanimatedSystraceSection s1("addOngoingAnimations");
   auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
 #ifdef ANDROID
   std::vector<int> tagsToUpdate;
@@ -617,7 +617,7 @@ void LayoutAnimationsProxy_Experimental::cleanupAnimations(
     ShadowViewMutationList &filteredMutations,
     const PropsParserContext &propsParserContext,
     SurfaceId surfaceId) const {
-  ReanimatedSystraceSection s("cleanupAnimations");
+  const ReanimatedSystraceSection s("cleanupAnimations");
   cleanupSharedTransitions(filteredMutations, propsParserContext, surfaceId);
 
 #ifdef ANDROID

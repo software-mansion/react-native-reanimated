@@ -36,14 +36,14 @@ class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_th
       double timestamp);
 
   void updateAndFlush(double timestamp, UpdatesBatch &updatesBatch) {
-    std::lock_guard<std::mutex> lock{mutex_};
+    const std::lock_guard<std::mutex> lock{mutex_};
     update(timestamp);
     flush(updatesBatch);
   }
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
   void updateAndFlush(facebook::react::AnimationTimestamp timestamp, UpdatesBatchAnimatedProps &updatesBatch) {
-    std::lock_guard<std::mutex> lock{mutex_};
+    const std::lock_guard<std::mutex> lock{mutex_};
     update(timestamp.count());
     flush(updatesBatch);
   }

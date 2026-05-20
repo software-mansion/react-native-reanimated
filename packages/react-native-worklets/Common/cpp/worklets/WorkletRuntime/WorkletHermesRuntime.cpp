@@ -12,7 +12,7 @@ WorkletHermesRuntime::WorkletHermesRuntime(std::unique_ptr<facebook::hermes::Her
     : jsi::WithRuntimeDecorator<WorkletsReentrancyCheck>(*runtime, reentrancyCheck_), runtime_(std::move(runtime)) {
 #ifndef NDEBUG
   facebook::hermes::HermesRuntime *wrappedRuntime = runtime_.get();
-  jsi::Value evalWithSourceMap = jsi::Function::createFromHostFunction(
+  const jsi::Value evalWithSourceMap = jsi::Function::createFromHostFunction(
       *runtime_,
       jsi::PropNameID::forAscii(*runtime_, "evalWithSourceMap"),
       3,

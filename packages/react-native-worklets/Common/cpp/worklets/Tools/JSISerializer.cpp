@@ -93,7 +93,7 @@ std::string JSISerializer::stringifyArray(const jsi::Array &arr) {
   ss << '[';
 
   for (size_t i = 0, length = arr.size(rt_); i < length; i++) {
-    jsi::Value element = arr.getValueAtIndex(rt_, i);
+    const jsi::Value element = arr.getValueAtIndex(rt_, i);
     ss << stringifyJSIValueRecursively(element);
     if (i != length - 1) {
       ss << ", ";
@@ -154,7 +154,7 @@ std::string JSISerializer::stringifyObject(const jsi::Object &object) {
   auto props = object.getPropertyNames(rt_);
 
   for (size_t i = 0, propsCount = props.size(rt_); i < propsCount; i++) {
-    jsi::String propName = props.getValueAtIndex(rt_, i).toString(rt_);
+    const jsi::String propName = props.getValueAtIndex(rt_, i).toString(rt_);
     ss << '"' << propName.utf8(rt_) << '"' << ": " << stringifyJSIValueRecursively(object.getProperty(rt_, propName));
     if (i != propsCount - 1) {
       ss << ", ";
@@ -175,8 +175,8 @@ std::string JSISerializer::stringifyError(const jsi::Object &object) {
 
 std::string JSISerializer::stringifySet(const jsi::Object &object) {
   std::stringstream ss;
-  jsi::Function arrayFrom = rt_.global().getPropertyAsObject(rt_, "Array").getPropertyAsFunction(rt_, "from");
-  jsi::Object result = arrayFrom.call(rt_, object).asObject(rt_);
+  const jsi::Function arrayFrom = rt_.global().getPropertyAsObject(rt_, "Array").getPropertyAsFunction(rt_, "from");
+  const jsi::Object result = arrayFrom.call(rt_, object).asObject(rt_);
 
   if (!result.isArray(rt_)) {
     return "[Set]";
@@ -199,8 +199,8 @@ std::string JSISerializer::stringifySet(const jsi::Object &object) {
 
 std::string JSISerializer::stringifyMap(const jsi::Object &object) {
   std::stringstream ss;
-  jsi::Function arrayFrom = rt_.global().getPropertyAsObject(rt_, "Array").getPropertyAsFunction(rt_, "from");
-  jsi::Object result = arrayFrom.call(rt_, object).asObject(rt_);
+  const jsi::Function arrayFrom = rt_.global().getPropertyAsObject(rt_, "Array").getPropertyAsFunction(rt_, "from");
+  const jsi::Object result = arrayFrom.call(rt_, object).asObject(rt_);
 
   if (!result.isArray(rt_)) {
     return "[Map]";
@@ -260,7 +260,7 @@ std::string JSISerializer::stringifyJSIValueRecursively(const jsi::Value &value,
     return "null";
   }
   if (value.isObject()) {
-    jsi::Object object = value.asObject(rt_);
+    const jsi::Object object = value.asObject(rt_);
 
     if (hasBeenVisited(object)) {
       return stringifyRecursiveType(object);

@@ -33,15 +33,15 @@ Quaternion Quaternion::interpolate(const double t, const Quaternion &other) cons
   if (cosHalfAngle > 1)
     cosHalfAngle = 1;
 
-  double sinHalfAngle = std::sqrt(1.0 - cosHalfAngle * cosHalfAngle);
+  const double sinHalfAngle = std::sqrt(1.0 - cosHalfAngle * cosHalfAngle);
   if (sinHalfAngle < kEpsilon) {
     // Quaternions share common axis and angle.
     return *this;
   }
 
-  double halfAngle = std::acos(cosHalfAngle);
-  double scale = std::sin((1 - t) * halfAngle) / sinHalfAngle;
-  double invscale = std::sin(t * halfAngle) / sinHalfAngle;
+  const double halfAngle = std::acos(cosHalfAngle);
+  const double scale = std::sin((1 - t) * halfAngle) / sinHalfAngle;
+  const double invscale = std::sin(t * halfAngle) / sinHalfAngle;
 
   return {
       copy.x * scale + other.x * invscale,

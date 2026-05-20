@@ -64,7 +64,7 @@ void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
     const auto &parent = node->parent.lock();
     react_native_assert(parent && "Parent node is nullptr");
 
-    int indexNum = static_cast<int>(index);
+    const int indexNum = static_cast<int>(index);
     transform[indexNum] = std::move(newTransform);
     snapshot[indexNum] = copy;
     parentTag[indexNum] = parent->current.tag;
@@ -180,7 +180,7 @@ void LayoutAnimationsProxy_Experimental::overrideTransform(
     ShadowView &shadowView,
     const std::optional<Transform> &transform,
     const PropsParserContext &propsParserContext) const {
-  ReanimatedSystraceSection s("overrideTransfrom");
+  const ReanimatedSystraceSection s("overrideTransfrom");
   if (!transform) {
     return;
   }
@@ -237,7 +237,7 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
     const ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext,
     SurfaceId surfaceId) const {
-  ReanimatedSystraceSection s1("LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart");
+  const ReanimatedSystraceSection s1("LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart");
 
   if (!beforeTopScreen || !afterTopScreen) {
     return;
@@ -281,7 +281,7 @@ void LayoutAnimationsProxy_Experimental::hideTransitioningViews(
     ShadowViewMutationList &filteredMutations,
     const PropsParserContext &propsParserContext) const {
   for (auto &[sharedTag, transition] : transitions_) {
-    int indexNum = static_cast<int>(index);
+    const int indexNum = static_cast<int>(index);
     const auto &shadowView = transition.snapshot[indexNum];
     const auto &parentTag = transition.parentTag[indexNum];
     auto m = ShadowViewMutation::UpdateMutation(
@@ -364,9 +364,9 @@ void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
     ShadowViewMutationList &filteredMutations,
     const PropsParserContext &propsParserContext,
     SurfaceId surfaceId) const {
-  ReanimatedSystraceSection s1("cleanupSharedTransitions");
+  const ReanimatedSystraceSection s1("cleanupSharedTransitions");
   for (auto &tag : tagsToRestore_) {
-    ReanimatedSystraceSection s("Restore tag");
+    const ReanimatedSystraceSection s("Restore tag");
     auto &node = lightNodes_[tag];
     if (node) {
       auto view = node->current;
@@ -380,7 +380,7 @@ void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
   }
   tagsToRestore_.clear();
 
-  ReanimatedSystraceSection s2("remove shared containers");
+  const ReanimatedSystraceSection s2("remove shared containers");
   for (auto &tag : sharedContainersToRemove_) {
     auto root = lightNodes_[surfaceId];
     for (int i = 0; i < root->children.size(); i++) {

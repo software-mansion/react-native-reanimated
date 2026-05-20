@@ -293,7 +293,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     strongThis->dispatchCommand(rt, shadowNodeValue, commandNameValue, argsValue);
   };
 
-  ProgressLayoutAnimationFunction progressLayoutAnimation =
+  const ProgressLayoutAnimationFunction progressLayoutAnimation =
       [weakThis = weak_from_this()](jsi::Runtime &rt, int tag, const jsi::Object &newStyle) {
         // Always on UI thread.
         auto strongThis = weakThis.lock();
@@ -309,7 +309,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
         strongThis->requestRenderForLayoutAnimations();
       };
 
-  EndLayoutAnimationFunction endLayoutAnimation = [weakThis = weak_from_this()](int tag, bool shouldRemove) {
+  const EndLayoutAnimationFunction endLayoutAnimation = [weakThis = weak_from_this()](int tag, bool shouldRemove) {
     // Always on UI thread.
     auto strongThis = weakThis.lock();
     if (!strongThis) {
@@ -392,11 +392,11 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
     const jsi::Value &emitterReactTag) {
   static uint64_t NEXT_EVENT_HANDLER_ID = 1;
 
-  uint64_t newRegistrationId = NEXT_EVENT_HANDLER_ID++;
+  const uint64_t newRegistrationId = NEXT_EVENT_HANDLER_ID++;
   auto eventNameStr = eventName.asString(rt).utf8(rt);
   auto handlerSerializable = extractSerializable(
       rt, worklet, "[Reanimated] Event handler must be a serializable worklet.", Serializable::ValueType::WorkletType);
-  int emitterReactTagInt = emitterReactTag.asNumber();
+  const int emitterReactTagInt = emitterReactTag.asNumber();
 
   scheduleOnUI(uiScheduler_, [=, weakThis = weak_from_this()]() {
     auto strongThis = weakThis.lock();
@@ -412,7 +412,7 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
 }
 
 void ReanimatedModuleProxy::unregisterEventHandler(jsi::Runtime &, const jsi::Value &registrationId) {
-  uint64_t id = registrationId.asNumber();
+  const uint64_t id = registrationId.asNumber();
   scheduleOnUI(uiScheduler_, [=, weakThis = weak_from_this()]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
@@ -425,7 +425,7 @@ void ReanimatedModuleProxy::unregisterEventHandler(jsi::Runtime &, const jsi::Va
 std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
     jsi::Runtime &rt,
     const std::string &propName,
-    const std::shared_ptr<const ShadowNode> &shadowNode) {
+    const std::shared_ptr<const ShadowNode> &shadowNode) const {
   auto newestCloneOfShadowNode = uiManager_->getNewestCloneOfShadowNode(*shadowNode);
 
   return PropValueProcessor::processPropValue(propName, newestCloneOfShadowNode, rt);
@@ -467,9 +467,9 @@ ReanimatedModuleProxy::setDynamicFeatureFlag(jsi::Runtime &rt, const jsi::Value 
 
 jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     jsi::Runtime &rt,
-    const jsi::Value &layoutAnimationsBatch) {
+    const jsi::Value &layoutAnimationsBatch) const {
   auto array = layoutAnimationsBatch.asObject(rt).asArray(rt);
-  size_t length = array.size(rt);
+  const size_t length = array.size(rt);
   std::vector<LayoutAnimationConfig> batch(length);
   for (int i = 0; i < length; i++) {
     auto item = array.getValueAtIndex(rt, i).asObject(rt);
@@ -495,11 +495,11 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
 void ReanimatedModuleProxy::setShouldAnimateExiting(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
-    const jsi::Value &shouldAnimate) {
+    const jsi::Value &shouldAnimate) const {
   layoutAnimationsManager_->setShouldAnimateExiting(viewTag.asNumber(), shouldAnimate.getBool());
 }
 
-bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) {
+bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) const {
   return eventHandlerRegistry_->isAnyHandlerWaitingForEvent(eventName, emitterReactTag);
 }
 
@@ -650,7 +650,7 @@ void ReanimatedModuleProxy::registerPseudoStyle(
       jsi::dynamicFromValue(rt, configObj.getProperty(rt, "defaultStyle")));
 }
 
-void ReanimatedModuleProxy::unregisterPseudoStyle(jsi::Runtime &, const jsi::Value &viewTag) {
+void ReanimatedModuleProxy::unregisterPseudoStyle(jsi::Runtime &, const jsi::Value &viewTag) const {
   pseudoStylesRegistry_->remove(viewTag.asNumber());
 }
 
@@ -674,8 +674,8 @@ bool ReanimatedModuleProxy::handleEvent(
     const std::string &eventName,
     const int emitterReactTag,
     const jsi::Value &payload,
-    double currentTime) {
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::handleEvent");
+    double currentTime) const {
+  const ReanimatedSystraceSection s("ReanimatedModuleProxy::handleEvent");
 
   eventHandlerRegistry_->processEvent(uiRuntime_, currentTime, eventName, emitterReactTag, payload);
 
@@ -685,7 +685,7 @@ bool ReanimatedModuleProxy::handleEvent(
 }
 
 bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double currentTime) {
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::handleRawEvent");
+  const ReanimatedSystraceSection s("ReanimatedModuleProxy::handleRawEvent");
 
   const EventTarget *eventTarget = rawEvent.eventTarget.get();
   if (eventTarget == nullptr) {
@@ -697,7 +697,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
     return false;
   }
 
-  int tag = eventTarget->getTag();
+  const int tag = eventTarget->getTag();
   auto eventType = rawEvent.type;
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
@@ -707,7 +707,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
     if (eventType == "onTransitionProgress") {
       jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
       const auto &eventPayload = rawEvent.eventPayload;
-      jsi::Object payload = eventPayload->asJSIValue(uiRuntime).asObject(uiRuntime);
+      const jsi::Object payload = eventPayload->asJSIValue(uiRuntime).asObject(uiRuntime);
       auto progress = payload.getProperty(uiRuntime, "progress").asNumber();
       auto closing = static_cast<bool>(payload.getProperty(uiRuntime, "closing").asNumber());
       auto goingForward = static_cast<bool>(payload.getProperty(uiRuntime, "goingForward").asNumber());
@@ -744,7 +744,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
 
   jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   const auto &eventPayload = rawEvent.eventPayload;
-  jsi::Value payload = eventPayload->asJSIValue(uiRuntime);
+  const jsi::Value payload = eventPayload->asJSIValue(uiRuntime);
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     return handleEventAndFlush(eventType, tag, payload, GrandCallbackSource::Event);
@@ -760,7 +760,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
 }
 
 void ReanimatedModuleProxy::executeLayoutAnimationsRequests() {
-  std::set<SurfaceId> flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
+  const std::set<SurfaceId> flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
   for (const auto surfaceId : flushRequestsCopy) {
     uiManager_->getShadowTreeRegistry().visit(
         surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
@@ -774,7 +774,7 @@ void ReanimatedModuleProxy::performOperations() {
     return;
   }
 
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
+  const ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
   executeLayoutAnimationsRequests();
 
@@ -782,7 +782,7 @@ void ReanimatedModuleProxy::performOperations() {
 
   UpdatesBatch updatesBatch;
   {
-    ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
+    const ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
 
     auto lock = updatesRegistryManager_->lock();
 
@@ -831,7 +831,7 @@ void ReanimatedModuleProxy::performOperations() {
 }
 
 void ReanimatedModuleProxy::performNonLayoutOperations() {
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::performNonLayoutOperations");
+  const ReanimatedSystraceSection s("ReanimatedModuleProxy::performNonLayoutOperations");
 
   UpdatesBatch updatesBatch = animatedPropsRegistry_->getPendingUpdates();
 
@@ -840,7 +840,7 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
 AnimationMutations ReanimatedModuleProxy::collectNonLayoutAnimationUpdates() {
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::collectNonLayoutAnimationUpdates");
+  const ReanimatedSystraceSection s("ReanimatedModuleProxy::collectNonLayoutAnimationUpdates");
 
   AnimationMutations mutations;
   {
@@ -851,7 +851,7 @@ AnimationMutations ReanimatedModuleProxy::collectNonLayoutAnimationUpdates() {
   return mutations;
 }
 
-std::shared_ptr<UIManagerAnimationBackend> ReanimatedModuleProxy::getAnimationBackend() {
+std::shared_ptr<UIManagerAnimationBackend> ReanimatedModuleProxy::getAnimationBackend() const {
   react_native_assert(
       uiManager_ != nullptr && "[Reanimated] Animation Backend used before the uiManager was registered");
   auto locked = uiManager_->unstable_getAnimationBackend().lock();
@@ -885,7 +885,7 @@ void ReanimatedModuleProxy::startBackendIfNeeded() {
 void ReanimatedModuleProxy::stopBackendIfIdle(const bool producedMutations) {
 #if REACT_NATIVE_VERSION_MINOR >= 85
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    bool hasWork = producedMutations || !pendingFrameCallbacks_.empty() ||
+    const bool hasWork = producedMutations || !pendingFrameCallbacks_.empty() ||
         pendingAnimationFrameCallbackFromWorklets_ != nullptr || cssTransitionsRegistry_->hasUpdates() ||
         cssAnimationsRegistry_->hasUpdates() || animatedPropsRegistry_->hasPendingAnimatedPropsUpdates() ||
         shouldFlushRegistry_ || !layoutAnimationFlushRequests_.empty();
@@ -925,7 +925,7 @@ AnimationMutations ReanimatedModuleProxy::mutationsFromAnimatedPropsBatch(
 AnimationMutations ReanimatedModuleProxy::runGrandCallback(
     const AnimationTimestamp timestamp,
     const GrandCallbackSource source) {
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::runGrandCallback");
+  const ReanimatedSystraceSection s("ReanimatedModuleProxy::runGrandCallback");
 
   switch (source) {
     case GrandCallbackSource::AnimationLoop: {
@@ -950,7 +950,7 @@ AnimationMutations ReanimatedModuleProxy::runGrandCallback(
 }
 
 void ReanimatedModuleProxy::executeOperationsLoop(const AnimationTimestamp timestamp) {
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::executeOperationsLoop");
+  const ReanimatedSystraceSection s("ReanimatedModuleProxy::executeOperationsLoop");
 
   auto pendingFrameCallbacks = std::exchange(pendingFrameCallbacks_, {});
   for (auto &cb : pendingFrameCallbacks) {
@@ -967,7 +967,7 @@ void ReanimatedModuleProxy::executeWorkletsForFrame(const AnimationTimestamp tim
 }
 
 AnimationMutations ReanimatedModuleProxy::executeOperationsAndCollectUpdates(const AnimationTimestamp timestamp) {
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::executeOperationsAndCollectUpdates");
+  const ReanimatedSystraceSection s("ReanimatedModuleProxy::executeOperationsAndCollectUpdates");
 
   UpdatesBatchAnimatedProps batch;
   auto lock = updatesRegistryManager_->lock();
@@ -980,7 +980,7 @@ AnimationMutations ReanimatedModuleProxy::executeOperationsAndCollectUpdates(con
 }
 
 AnimationMutations ReanimatedModuleProxy::collectEventUpdates() {
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::collectEventUpdates");
+  const ReanimatedSystraceSection s("ReanimatedModuleProxy::collectEventUpdates");
 
   UpdatesBatchAnimatedProps batch;
   auto lock = updatesRegistryManager_->lock();
@@ -1044,7 +1044,7 @@ void ReanimatedModuleProxy::requestFlushRegistry() {
 }
 
 void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch) {
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::commitUpdates");
+  const ReanimatedSystraceSection s("ReanimatedModuleProxy::commitUpdates");
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
 
@@ -1066,7 +1066,7 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
     }
   } else {
     for (auto const &[shadowNodeFamily, props] : updatesBatch) {
-      SurfaceId surfaceId = shadowNodeFamily->getSurfaceId();
+      const SurfaceId surfaceId = shadowNodeFamily->getSurfaceId();
       propsMapBySurface[surfaceId][shadowNodeFamily].emplace_back(props);
     }
   }
@@ -1108,10 +1108,10 @@ void ReanimatedModuleProxy::dispatchCommand(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue,
     const jsi::Value &commandNameValue,
-    const jsi::Value &argsValue) {
+    const jsi::Value &argsValue) const {
   const auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
-  std::string commandName = stringFromValue(rt, commandNameValue);
-  folly::dynamic args = commandArgsFromValue(rt, argsValue);
+  const std::string commandName = stringFromValue(rt, commandNameValue);
+  const folly::dynamic args = commandArgsFromValue(rt, argsValue);
   const auto &scheduler = static_cast<Scheduler *>(uiManager_->getDelegate());
 
   if (!scheduler) {
@@ -1126,8 +1126,10 @@ void ReanimatedModuleProxy::dispatchCommand(
   }
 }
 
-jsi::String
-ReanimatedModuleProxy::obtainProp(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &propName) {
+jsi::String ReanimatedModuleProxy::obtainProp(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &propName) const {
   jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   const auto propNameStr = propName.asString(rt).utf8(rt);
   const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
@@ -1135,7 +1137,7 @@ ReanimatedModuleProxy::obtainProp(jsi::Runtime &rt, const jsi::Value &shadowNode
   return jsi::String::createFromUtf8(rt, resultStr);
 }
 
-jsi::Value ReanimatedModuleProxy::measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
+jsi::Value ReanimatedModuleProxy::measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue) const {
   // based on implementation from UIManagerBinding.cpp
 
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
@@ -1151,7 +1153,7 @@ jsi::Value ReanimatedModuleProxy::measure(jsi::Runtime &rt, const jsi::Value &sh
   auto newestCloneOfShadowNode = uiManager_->getNewestCloneOfShadowNode(*shadowNode);
 
   auto layoutableShadowNode = dynamic_cast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
-  facebook::react::Point originRelativeToParent = layoutableShadowNode != nullptr
+  const facebook::react::Point originRelativeToParent = layoutableShadowNode != nullptr
       ? layoutableShadowNode->getLayoutMetrics().frame.origin
       : facebook::react::Point();
 

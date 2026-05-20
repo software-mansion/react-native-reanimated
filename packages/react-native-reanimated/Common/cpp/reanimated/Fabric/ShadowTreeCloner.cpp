@@ -9,7 +9,7 @@ namespace reanimated {
 
 Props::Shared
 mergeProps(const ShadowNode &shadowNode, const PropsMap &propsMap, const ShadowNodeFamily::Shared &family) {
-  ReanimatedSystraceSection s("ShadowTreeCloner::mergeProps");
+  const ReanimatedSystraceSection s("ShadowTreeCloner::mergeProps");
 
   const auto it = propsMap.find(family);
 
@@ -17,7 +17,7 @@ mergeProps(const ShadowNode &shadowNode, const PropsMap &propsMap, const ShadowN
     return ShadowNodeFragment::propsPlaceholder();
   }
 
-  PropsParserContext propsParserContext{shadowNode.getSurfaceId(), *shadowNode.getContextContainer()};
+  const PropsParserContext propsParserContext{shadowNode.getSurfaceId(), *shadowNode.getContextContainer()};
   const auto &propsVector = it->second;
   auto newProps = shadowNode.getProps();
 
@@ -60,12 +60,12 @@ std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
 }
 
 RootShadowNode::Unshared cloneShadowTreeWithNewProps(const RootShadowNode &oldRootNode, const PropsMap &propsMap) {
-  ReanimatedSystraceSection s("ShadowTreeCloner::cloneShadowTreeWithNewProps");
+  const ReanimatedSystraceSection s("ShadowTreeCloner::cloneShadowTreeWithNewProps");
 
   ChildrenMap childrenMap;
 
   {
-    ReanimatedSystraceSection s("ShadowTreeCloner::prepareChildrenMap");
+    const ReanimatedSystraceSection s("ShadowTreeCloner::prepareChildrenMap");
 
     for (const auto &[family, _] : propsMap) {
       const auto ancestors = family->getAncestors(oldRootNode);

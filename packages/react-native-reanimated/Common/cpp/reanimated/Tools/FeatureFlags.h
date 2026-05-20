@@ -15,8 +15,8 @@ class StaticFeatureFlags {
 #define TOSTRING(x) XTOSTRING(x)
 
   static constexpr bool getFlag(const std::string_view &name) {
-    std::string nameStr = name.data();
-    std::string featureFlags = TOSTRING(REANIMATED_FEATURE_FLAGS);
+    const std::string nameStr = name.data();
+    const std::string featureFlags = TOSTRING(REANIMATED_FEATURE_FLAGS);
     if (featureFlags.find("[" + nameStr + ":") == std::string::npos) {
       throw std::logic_error("Unable to recognize flag: " + nameStr);
     }

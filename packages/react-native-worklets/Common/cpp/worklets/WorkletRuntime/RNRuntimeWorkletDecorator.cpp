@@ -52,7 +52,7 @@ void RNRuntimeWorkletDecorator::decorate(
           }));
 
   jsi_utils::installJsiFunction(rnRuntime, "_stopProfiling", [](jsi::Runtime &rt) {
-    std::string path = stopProfiling(rt);
+    const std::string path = stopProfiling(rt);
     return jsi::String::createFromUtf8(rt, path);
   });
 }

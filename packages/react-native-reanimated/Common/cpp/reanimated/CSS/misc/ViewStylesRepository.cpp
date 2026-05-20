@@ -13,7 +13,7 @@ ViewStylesRepository::ViewStylesRepository(
 jsi::Value ViewStylesRepository::getNodeProp(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::string &propName) {
-  int tag = shadowNode->getTag();
+  const int tag = shadowNode->getTag();
 
   auto &cachedNode = shadowNodeCache_[tag];
   updateCacheIfNeeded(cachedNode, shadowNode);

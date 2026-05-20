@@ -30,7 +30,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " " << surfaceId << std::endl;
 #endif
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  PropsParserContext propsParserContext{surfaceId, *contextContainer_};
+  const PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
   auto &[deadNodes] = surfaceContext_[surfaceId];
 
@@ -79,7 +79,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::progressLayoutAnimation(i
 
   auto rawProps = std::make_shared<RawProps>(uiRuntime_, jsi::Value(uiRuntime_, newStyle));
 
-  PropsParserContext propsParserContext{layoutAnimation.finalView.surfaceId, *contextContainer_};
+  const PropsParserContext propsParserContext{layoutAnimation.finalView.surfaceId, *contextContainer_};
 #ifdef RN_SERIALIZABLE_STATE
   rawProps = std::make_shared<RawProps>(
       folly::dynamic::merge(layoutAnimation.finalView.props->rawProps, (folly::dynamic)*rawProps));
@@ -155,8 +155,9 @@ void LayoutAnimationsProxy_Legacy::parseRemoveMutations(
       auto unflattenedParentTag = parentTag; // temporary
 
       std::shared_ptr<MutationNode> mutationNode;
-      std::shared_ptr<Node> node = nodeForTag_[tag], parent = nodeForTag_[parentTag],
-                            unflattenedParent = nodeForTag_[unflattenedParentTag];
+      const std::shared_ptr<Node> node = nodeForTag_[tag];
+      std::shared_ptr<Node> parent = nodeForTag_[parentTag];
+      std::shared_ptr<Node> unflattenedParent = nodeForTag_[unflattenedParentTag];
 
       if (!node) {
         mutationNode = std::make_shared<MutationNode>(mutation);
@@ -274,7 +275,8 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
   for (auto &mutation : mutations) {
     maybeUpdateWindowDimensions(mutation, surfaceId);
 
-    Tag tag = mutation.type == ShadowViewMutation::Type::Create || mutation.type == ShadowViewMutation::Type::Insert
+    const Tag tag =
+        mutation.type == ShadowViewMutation::Type::Create || mutation.type == ShadowViewMutation::Type::Insert
         ? mutation.newChildShadowView.tag
         : mutation.oldChildShadowView.tag;
 
@@ -322,7 +324,7 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
         filteredMutations.push_back(mutation);
 
         // temporarily set opacity to 0 to prevent flickering on android
-        std::shared_ptr<ShadowView> newView = cloneViewWithoutOpacity(mutation, propsParserContext);
+        const std::shared_ptr<ShadowView> newView = cloneViewWithoutOpacity(mutation, propsParserContext);
 
         filteredMutations.push_back(
             ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, *newView, mutationParent));
@@ -485,7 +487,7 @@ bool LayoutAnimationsProxy_Legacy::startAnimationsRecursively(
 
   shouldAnimate = !isScreenPop && layoutAnimationsManager_->shouldAnimateExiting(node->tag, shouldAnimate);
 
-  bool hasExitAnimation =
+  const bool hasExitAnimation =
       shouldAnimate && layoutAnimationsManager_->hasLayoutAnimation(node->tag, LayoutAnimationType::EXITING);
   bool hasAnimatedChildren = false;
 
@@ -548,7 +550,7 @@ bool LayoutAnimationsProxy_Legacy::startAnimationsRecursively(
     return false;
   }
 
-  bool wantAnimateExit = hasExitAnimation || hasAnimatedChildren;
+  const bool wantAnimateExit = hasExitAnimation || hasAnimatedChildren;
 
   if (hasExitAnimation) {
     node->state = ExitingState_Legacy::ANIMATING;
@@ -651,9 +653,9 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
       window = strongThis->surfaceManager.getWindow(mutation.newChildShadowView.surfaceId);
     }
 
-    Snapshot values(mutation.newChildShadowView, window);
+    const Snapshot values(mutation.newChildShadowView, window);
     auto &uiRuntime = strongThis->uiRuntime_;
-    jsi::Object yogaValues(uiRuntime);
+    const jsi::Object yogaValues(uiRuntime);
     yogaValues.setProperty(uiRuntime, "targetOriginX", values.x);
     yogaValues.setProperty(uiRuntime, "targetGlobalOriginX", values.x);
     yogaValues.setProperty(uiRuntime, "targetOriginY", values.y);
@@ -688,10 +690,10 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
       window = strongThis->surfaceManager.getWindow(surfaceId);
     }
 
-    Snapshot values(oldView, window);
+    const Snapshot values(oldView, window);
 
     auto &uiRuntime = strongThis->uiRuntime_;
-    jsi::Object yogaValues(uiRuntime);
+    const jsi::Object yogaValues(uiRuntime);
     yogaValues.setProperty(uiRuntime, "currentOriginX", values.x);
     yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", values.x);
     yogaValues.setProperty(uiRuntime, "currentOriginY", values.y);
@@ -727,11 +729,11 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
       window = strongThis->surfaceManager.getWindow(surfaceId);
     }
 
-    Snapshot currentValues(oldView, window);
-    Snapshot targetValues(mutation.newChildShadowView, window);
+    const Snapshot currentValues(oldView, window);
+    const Snapshot targetValues(mutation.newChildShadowView, window);
 
     auto &uiRuntime = strongThis->uiRuntime_;
-    jsi::Object yogaValues(uiRuntime);
+    const jsi::Object yogaValues(uiRuntime);
     yogaValues.setProperty(uiRuntime, "currentOriginX", currentValues.x);
     yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", currentValues.x);
     yogaValues.setProperty(uiRuntime, "currentOriginY", currentValues.y);
@@ -790,7 +792,7 @@ std::shared_ptr<ShadowView> LayoutAnimationsProxy_Legacy::cloneViewWithoutOpacit
     facebook::react::ShadowViewMutation &mutation,
     const PropsParserContext &propsParserContext) const {
   auto newView = std::make_shared<ShadowView>(mutation.newChildShadowView);
-  folly::dynamic opacity = folly::dynamic::object("opacity", 0);
+  const folly::dynamic opacity = folly::dynamic::object("opacity", 0);
   auto newProps =
       getComponentDescriptorForShadowView(*newView).cloneProps(propsParserContext, newView->props, RawProps(opacity));
   newView->props = newProps;
@@ -828,7 +830,7 @@ void Node::applyMutationToIndices(const ShadowViewMutation &mutation) {
     return;
   }
 
-  int delta = mutation.type == ShadowViewMutation::Insert ? 1 : -1;
+  const int delta = mutation.type == ShadowViewMutation::Insert ? 1 : -1;
   for (const auto &child : std::views::reverse(children)) {
     if (child->mutation.index < mutation.index) {
       return;

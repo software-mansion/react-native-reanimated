@@ -525,42 +525,42 @@ std::pair<Vector3D, Vector3D> TransformMatrix3D::computeScaleAndSkew(std::array<
 }
 
 Quaternion TransformMatrix3D::computeQuaternion(std::array<Vector3D, 3> &rows) {
-  double m00 = rows[0][0];
-  double m01 = rows[0][1];
-  double m02 = rows[0][2];
+  const double m00 = rows[0][0];
+  const double m01 = rows[0][1];
+  const double m02 = rows[0][2];
 
-  double m10 = rows[1][0];
-  double m11 = rows[1][1];
-  double m12 = rows[1][2];
+  const double m10 = rows[1][0];
+  const double m11 = rows[1][1];
+  const double m12 = rows[1][2];
 
-  double m20 = rows[2][0];
-  double m21 = rows[2][1];
-  double m22 = rows[2][2];
+  const double m20 = rows[2][0];
+  const double m21 = rows[2][1];
+  const double m22 = rows[2][2];
 
   Quaternion q;
-  double trace = m00 + m11 + m22; // Trace of the matrix
+  const double trace = m00 + m11 + m22; // Trace of the matrix
 
   if (trace > 0.0) {
-    double s = 0.5 / sqrt(trace + 1.0);
+    const double s = 0.5 / sqrt(trace + 1.0);
     q.w = 0.25 / s;
     q.x = (m21 - m12) * s;
     q.y = (m02 - m20) * s;
     q.z = (m10 - m01) * s;
   } else {
     if (m00 > m11 && m00 > m22) {
-      double s = 2.0 * sqrt(1.0 + m00 - m11 - m22);
+      const double s = 2.0 * sqrt(1.0 + m00 - m11 - m22);
       q.w = (m21 - m12) / s;
       q.x = 0.25 * s;
       q.y = (m01 + m10) / s;
       q.z = (m02 + m20) / s;
     } else if (m11 > m22) {
-      double s = 2.0 * sqrt(1.0 + m11 - m00 - m22);
+      const double s = 2.0 * sqrt(1.0 + m11 - m00 - m22);
       q.w = (m02 - m20) / s;
       q.x = (m01 + m10) / s;
       q.y = 0.25 * s;
       q.z = (m12 + m21) / s;
     } else {
-      double s = 2.0 * sqrt(1.0 + m22 - m00 - m11);
+      const double s = 2.0 * sqrt(1.0 + m22 - m00 - m11);
       q.w = (m10 - m01) / s;
       q.x = (m02 + m20) / s;
       q.y = (m12 + m21) / s;

@@ -50,7 +50,7 @@ double solveCurveX(const double x, const double x1, const double x2, const doubl
 
 EasingFunction cubicBezier(const double x1, const double y1, const double x2, const double y2) {
   return [=](double x) {
-    double t = solveCurveX(x, x1, x2);
+    const double t = solveCurveX(x, x1, x2);
     return sampleCurveY(t, y1, y2);
   };
 }

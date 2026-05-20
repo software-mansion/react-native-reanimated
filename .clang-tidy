@@ -34,6 +34,8 @@ Checks:
   # - hicpp-*
   # - llvm-*
   # - misc-*
+  - misc-const-correctness
+  - misc-misplaced-const
 
   # - modernize-*
   - modernize-use-override
@@ -42,4 +44,6 @@ Checks:
   - performance-*
   # - portability-*
   # - readability-*
+  - readability-make-member-function-const
+  - readability-const-return-type
 WarningsAsErrors: '*'

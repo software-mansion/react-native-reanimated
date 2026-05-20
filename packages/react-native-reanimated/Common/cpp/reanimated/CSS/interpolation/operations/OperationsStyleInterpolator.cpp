@@ -60,7 +60,7 @@ folly::dynamic OperationsStyleInterpolator::interpolate(
         keyframe->toOperations.value_or(fallbackValue));
   }
 
-  double progress = progressProvider->getKeyframeProgress(keyframe->fromOffset, keyframe->toOffset);
+  const double progress = progressProvider->getKeyframeProgress(keyframe->fromOffset, keyframe->toOffset);
 
   if (keyframe->isDiscrete) {
     const auto &operations =

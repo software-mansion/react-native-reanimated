@@ -79,11 +79,11 @@ inline bool hasLayoutProps(const folly::dynamic &props) {
 }
 
 inline bool hasLayoutProps(facebook::jsi::Runtime &rt, const facebook::jsi::Value &value) {
-  facebook::jsi::Object obj = value.asObject(rt);
-  facebook::jsi::Array names = obj.getPropertyNames(rt);
+  const facebook::jsi::Object obj = value.asObject(rt);
+  const facebook::jsi::Array names = obj.getPropertyNames(rt);
   const size_t n = names.size(rt);
   for (size_t ki = 0; ki < n; ++ki) {
-    facebook::jsi::Value keyVal = names.getValueAtIndex(rt, ki);
+    const facebook::jsi::Value keyVal = names.getValueAtIndex(rt, ki);
     const auto keyStr = keyVal.asString(rt).utf8(rt);
     const auto propName = propNameFromString(keyStr);
     if (propName.has_value() && isLayoutProp(propName.value())) {
