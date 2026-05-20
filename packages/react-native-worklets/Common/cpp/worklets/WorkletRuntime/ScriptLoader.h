@@ -8,9 +8,9 @@ namespace worklets {
 class ScriptLoader {
 
  public:
-  /** 
- * Safely loads the bundle into the Worklet Runtime and executes Worklets' entry point.
-  */
+  /**
+   * Safely loads the bundle into the Worklet Runtime and executes Worklets' entry point.
+   */
   static void loadScript(
       facebook::jsi::Runtime &rt,
       const std::shared_ptr<const ScriptBuffer> &script,
@@ -25,8 +25,8 @@ class ScriptLoader {
   /**
    * Sets the `require` function on the global object with a noop getter
    * and a setter that saves the actual implementation of `require` for later use.
-  *
-  * This is necessary to prevent running the App and React Native entry-points when evaluating the bundle.
+   *
+   * This is necessary to prevent running the App and React Native entry-points when evaluating the bundle.
    */
   static void interceptEntryPoints(facebook::jsi::Runtime &rt) {
     facebook::jsi::Object descriptor(rt);
@@ -72,9 +72,9 @@ class ScriptLoader {
   }
 
   /**
-    * Restores the original `require` function on the global object after evaluating the bundle.
-    * This way we can use worklets as entry points.
- */
+   * Restores the original `require` function on the global object after evaluating the bundle.
+   * This way we can use worklets as entry points.
+   */
   static void allowEntryPoints(facebook::jsi::Runtime &rt) {
     facebook::jsi::Object descriptor(rt);
     const auto require = rt.global().getProperty(rt, requireSavedName).getObject(rt).getFunction(rt);

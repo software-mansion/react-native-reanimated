@@ -69,8 +69,8 @@ function bundleModeCreateModuleIdFactory() {
     }
     if (moduleName.includes('react-native-worklets/')) {
       if (
-        moduleName.endsWith('src/index.ts') ||
-        moduleName.endsWith('lib/module/index.js')
+        moduleName.endsWith('react-native-worklets/src/index.ts') ||
+        moduleName.endsWith('react-native-worklets/lib/module/index.js')
       ) {
         const entryPointId = -2;
         idFileMap.set(moduleName, entryPointId);

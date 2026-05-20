@@ -1351,7 +1351,7 @@ var require_bundleMode = __commonJS({
     var types_12 = require("@babel/types");
     function toggleBundleMode(path, state) {
       var _a, _b;
-      if (!state.opts.bundleMode || !((_a = state.filename) === null || _a === void 0 ? void 0 : _a.includes("react-native-worklets/src/index.ts")) && !((_b = state.filename) === null || _b === void 0 ? void 0 : _b.includes("react-native-worklets/lib/module/index.js"))) {
+      if (!state.opts.bundleMode || !((_a = state.filename) === null || _a === void 0 ? void 0 : _a.endsWith("react-native-worklets/src/index.ts")) && !((_b = state.filename) === null || _b === void 0 ? void 0 : _b.endsWith("react-native-worklets/lib/module/index.js"))) {
         return;
       }
       const expressionPath = path.get("expression");

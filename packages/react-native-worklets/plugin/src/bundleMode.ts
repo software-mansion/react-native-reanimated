@@ -8,10 +8,10 @@ import type { WorkletsPluginPass } from './types';
  *
  * `globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;`
  *
- * With `true` in the `workletRuntimeEntry` file when the `bundleMode` option is
+ * With `true` in the Worklets' entry-point file when the `bundleMode` option is
  * enabled in the Babel plugin.
  *
- * This way Bundle Mode is not accidentally set up in eager import environments,
+ * This way Bundle Mode is not accidentally set up in eager import environments.
  */
 export function toggleBundleMode(
   path: NodePath<ExpressionStatement>,
@@ -19,8 +19,8 @@ export function toggleBundleMode(
 ) {
   if (
     !state.opts.bundleMode ||
-    (!state.filename?.includes('react-native-worklets/src/index.ts') &&
-      !state.filename?.includes('react-native-worklets/lib/module/index.js'))
+    (!state.filename?.endsWith('react-native-worklets/src/index.ts') &&
+      !state.filename?.endsWith('react-native-worklets/lib/module/index.js'))
   ) {
     return;
   }

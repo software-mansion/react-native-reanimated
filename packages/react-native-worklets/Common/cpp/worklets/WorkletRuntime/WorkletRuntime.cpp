@@ -124,7 +124,7 @@ void WorkletRuntime::bundleModeInit(
     throw std::runtime_error("[Worklets] Expected to receive the bundle, but got nullptr instead.");
   }
 
-  worklets::ScriptLoader::loadScript(rt, script, sourceUrl);
+  ScriptLoader::loadScript(rt, script, sourceUrl);
 
   WorkletRuntimeDecorator::postEvaluateScript(rt, runtimeBindings);
 }
