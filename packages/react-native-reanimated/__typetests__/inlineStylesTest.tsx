@@ -133,6 +133,7 @@ function InlineStylesTest() {
     return (
       <>
         <Animated.View
+          // @ts-expect-error properly detects illegal type
           style={{
             shadowOffset: {
               width: sv.value,
@@ -140,6 +141,7 @@ function InlineStylesTest() {
           }}
         />
         <Animated.View
+          // @ts-expect-error properly detects illegal type
           style={{
             shadowOffset: {
               width: sv.get(),
@@ -175,11 +177,13 @@ function InlineStylesTest() {
     return (
       <>
         <Animated.View
+          // @ts-expect-error properly detects illegal type
           style={{
             shadowOffset: sv.value,
           }}
         />
         <Animated.View
+          // @ts-expect-error properly detects illegal type
           style={{
             shadowOffset: sv.get(),
           }}

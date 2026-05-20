@@ -6,7 +6,6 @@ import { Platform, StyleSheet } from 'react-native';
 
 import type { AnyComponent, UnknownRecord } from '../../common';
 import { IS_JEST, SHOULD_BE_USE_WEB } from '../../common';
-import { stylePropsBuilder } from '../../common/style';
 import type {
   InternalHostInstance,
   ShadowNodeWrapper,
@@ -20,18 +19,9 @@ import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import type { DefaultStyle } from '../../hook/commonTypes';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
-import { ReanimatedModule } from '../../ReanimatedModule';
 import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../native';
-import { normalizeCSSTransitionProperties } from '../native/normalization/transition';
-import type { CSSTransitionConfig } from '../native/types';
 import { CSSManager } from '../platform';
-import type { CSSStyle, CSSTransitionProperties } from '../types';
-import type { PseudoSelectorKey } from '../types/props';
-import { resolvePseudoKeyed } from '../utils/guards';
-import {
-  filterCSSAndStyleProperties,
-  type PseudoStylesBySelector,
-} from '../utils/props';
+import type { CSSStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
 
 export type AnimatedComponentProps = UnknownRecord & {
@@ -60,8 +50,6 @@ export default class AnimatedComponent<
   // Used only on web
   _componentDOMRef: HTMLElement | null = null;
   _willUnmount: boolean = false;
-  _pseudoStylesRegistered: boolean = false;
-  _lastPseudoSnapshot: string | null = null;
 
   constructor(ChildComponent: AnyComponent, props: P) {
     super(props);
@@ -172,100 +160,6 @@ export default class AnimatedComponent<
     ) ?? {}) as CSSStyle;
   }
 
-  _registerPseudoStyles(
-    pseudoStylesBySelector: PseudoStylesBySelector,
-    transitionProperties: CSSTransitionProperties | null
-  ) {
-    const { shadowNodeWrapper, viewTag } = this._getViewInfo();
-    if (!shadowNodeWrapper || typeof viewTag !== 'number') {
-      return;
-    }
-
-    for (const [selector, { selectorStyle, defaultStyle }] of Object.entries(
-      pseudoStylesBySelector
-    )) {
-      const builtSelectorStyle = stylePropsBuilder.build(selectorStyle);
-      const builtDefaultStyle = stylePropsBuilder.build(defaultStyle);
-
-      const resolvedTransitionProperties: CSSTransitionProperties = {};
-      if (transitionProperties) {
-        for (const [key, value] of Object.entries(transitionProperties)) {
-          (resolvedTransitionProperties as AnyRecord)[key] = resolvePseudoKeyed(
-            value,
-            selector
-          );
-        }
-      }
-      const normalized = normalizeCSSTransitionProperties(
-        resolvedTransitionProperties
-      );
-
-      const transition: CSSTransitionConfig = {};
-      const props = new Set([
-        ...Object.keys(builtSelectorStyle),
-        ...Object.keys(builtDefaultStyle),
-      ]);
-      for (const prop of props) {
-        const settings =
-          normalized &&
-          (!normalized.specificProperties ||
-            normalized.specificProperties.has(prop))
-            ? (normalized.settings[prop] ?? normalized.settings.all)
-            : null;
-
-        const fromValue = builtDefaultStyle[prop] ?? builtSelectorStyle[prop];
-        const toValue = builtSelectorStyle[prop] ?? builtDefaultStyle[prop];
-        transition[prop] = {
-          value: [fromValue, toValue],
-          duration: settings?.duration ?? 0,
-          delay: settings?.delay ?? 0,
-          timingFunction: settings?.timingFunction ?? 'ease',
-          allowDiscrete: settings?.allowDiscrete ?? false,
-        };
-      }
-
-      ReanimatedModule.registerPseudoStyle(shadowNodeWrapper, {
-        selector: selector as PseudoSelectorKey,
-        selectorStyle: builtSelectorStyle,
-        defaultStyle: builtDefaultStyle,
-        transition,
-      });
-    }
-    this._pseudoStylesRegistered = true;
-  }
-
-  _unregisterPseudoStyles() {
-    if (!this._pseudoStylesRegistered) {
-      return;
-    }
-    const viewTag = this._viewInfo?.viewTag;
-    if (typeof viewTag === 'number') {
-      ReanimatedModule.unregisterPseudoStyle(viewTag);
-    }
-    this._pseudoStylesRegistered = false;
-    this._lastPseudoSnapshot = null;
-  }
-
-  _syncPseudoStyles() {
-    if (SHOULD_BE_USE_WEB || IS_JEST) {
-      return;
-    }
-    const [, transitionProperties, , pseudoStylesBySelector] =
-      filterCSSAndStyleProperties(this._cssStyle);
-    const snapshot = JSON.stringify([
-      pseudoStylesBySelector,
-      transitionProperties,
-    ]);
-    if (snapshot === this._lastPseudoSnapshot) {
-      return;
-    }
-    this._unregisterPseudoStyles();
-    this._lastPseudoSnapshot = snapshot;
-    if (pseudoStylesBySelector) {
-      this._registerPseudoStyles(pseudoStylesBySelector, transitionProperties);
-    }
-  }
-
   componentDidMount() {
     this._updateStyles(this.props);
 
@@ -287,7 +181,6 @@ export default class AnimatedComponent<
         this.ChildComponent.displayName ?? this.ChildComponent.name
       );
       this._CSSManager?.update(this._cssStyle);
-      this._syncPseudoStyles();
     }
 
     this._willUnmount = false;
@@ -296,10 +189,6 @@ export default class AnimatedComponent<
   componentWillUnmount() {
     if (!IS_JEST && this._CSSManager) {
       this._CSSManager.unmountCleanup();
-    }
-
-    if (!IS_JEST && !SHOULD_BE_USE_WEB) {
-      this._unregisterPseudoStyles();
     }
 
     const wrapper = this._viewInfo?.shadowNodeWrapper;
@@ -320,7 +209,6 @@ export default class AnimatedComponent<
 
     if (this._CSSManager) {
       this._CSSManager.update(this._cssStyle);
-      this._syncPseudoStyles();
     }
 
     // TODO - maybe check if the render is necessary instead of always returning true

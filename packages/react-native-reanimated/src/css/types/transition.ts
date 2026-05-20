@@ -2,7 +2,7 @@
 import type { DefaultStyle } from '../../hook/commonTypes';
 import type { CSSTimingFunction } from '../easing';
 import type { TimeUnit } from './common';
-import type { AddArrayAndPseudoKeyedTypes } from './helpers';
+import type { AddArrayPropertyTypes } from './helpers';
 
 export type CSSTransitionProperty<S extends object = DefaultStyle> =
   | 'all'
@@ -59,7 +59,7 @@ export type SingleCSSTransitionConfig<S extends object = DefaultStyle> =
   };
 
 export type CSSTransitionSettings =
-  AddArrayAndPseudoKeyedTypes<SingleCSSTransitionSettings>;
+  AddArrayPropertyTypes<SingleCSSTransitionSettings>;
 
 export type CSSTransitionProperties<S extends object = DefaultStyle> =
   CSSTransitionSettings & {
