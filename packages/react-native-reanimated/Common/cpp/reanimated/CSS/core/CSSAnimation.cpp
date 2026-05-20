@@ -21,7 +21,7 @@ CSSAnimation::CSSAnimation(
       updatedViewTags_(updatedViewTags),
       revertedTags_(revertedTags),
       loop_(loop),
-      styleInterpolator_(cssKeyframesConfig.styleInterpolator),
+      styleInterpolator_(cssKeyframesConfig.styleInterpolatorFactory->create()),
       progressProvider_(std::make_shared<AnimationProgressProvider>(
           timestamp,
           settings.duration,
