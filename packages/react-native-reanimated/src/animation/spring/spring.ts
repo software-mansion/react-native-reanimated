@@ -123,11 +123,11 @@ export const withSpring = ((
               t,
             })
           : criticallyDampedSpringCalculations(animation, {
-            v0,
-            x0,
-            omega0,
-            t,
-          });
+              v0,
+              x0,
+              omega0,
+              t,
+            });
 
       animation.current = newPosition;
       animation.velocity = newVelocity;
