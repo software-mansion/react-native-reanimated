@@ -350,6 +350,7 @@ class JSReanimated implements IReanimatedModule {
   }
 
   registerPseudoStyle(): void {
+<<<<<<< HEAD
     throw new Error(
       '[Reanimated] `registerPseudoStyle` is not available in JSReanimated.'
     );
@@ -359,6 +360,13 @@ class JSReanimated implements IReanimatedModule {
     throw new Error(
       '[Reanimated] `unregisterPseudoStyle` is not available in JSReanimated.'
     );
+=======
+    // Web uses native CSS pseudo-selectors - no native registration needed.
+  }
+
+  unregisterPseudoStyle(): void {
+    // Web uses native CSS pseudo-selectors - no native registration needed.
+>>>>>>> d8de7cccf2 (feat: pseudo-selectors TypeScript frontend (no web))
   }
 }
 

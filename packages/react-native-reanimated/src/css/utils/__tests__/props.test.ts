@@ -21,6 +21,7 @@ describe(filterCSSAndStyleProperties, () => {
         null,
         null,
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -35,6 +36,7 @@ describe(filterCSSAndStyleProperties, () => {
         null,
         null,
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -49,6 +51,7 @@ describe(filterCSSAndStyleProperties, () => {
         null,
         null,
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -66,6 +69,7 @@ describe(filterCSSAndStyleProperties, () => {
         null,
         null,
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -92,6 +96,7 @@ describe(filterCSSAndStyleProperties, () => {
           null,
           null,
           {},
+          null,
         ]);
       });
     });
@@ -106,6 +111,7 @@ describe(filterCSSAndStyleProperties, () => {
         null,
         null,
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -123,6 +129,7 @@ describe(filterCSSAndStyleProperties, () => {
         null,
         null,
         expect.any(Object),
+        null,
       ]);
       expect(filterCSSAndStyleProperties(style2)).toEqual([
         expect.any(Object),
@@ -130,6 +137,7 @@ describe(filterCSSAndStyleProperties, () => {
         null,
         null,
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -147,6 +155,7 @@ describe(filterCSSAndStyleProperties, () => {
         null,
         null,
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -167,6 +176,7 @@ describe(filterCSSAndStyleProperties, () => {
           null,
           null,
           {},
+          null,
         ]);
       });
     });
@@ -480,6 +490,7 @@ describe(filterCSSAndStyleProperties, () => {
           width: 100,
           height: 100,
         },
+        null,
       ]);
     });
   });

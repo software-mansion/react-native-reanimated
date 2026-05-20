@@ -4,6 +4,7 @@ import { camelizeKebabCase, isPercentage } from '../../../../common';
 import type { ControlPoint, CSSTimingFunction } from '../../../easing';
 import { cubicBezier, linear, steps } from '../../../easing';
 import type { CSSTransitionProperties } from '../../../types';
+import type { StripPseudoKeyedTypes } from '../../../types/helpers';
 import {
   isArrayOfLength,
   isPredefinedTimingFunction,
@@ -15,7 +16,9 @@ import {
 
 export type ExpandedCSSTransitionConfigProperties = Required<
   ConvertValuesToArraysWithUndefined<
-    Omit<CSSTransitionProperties, 'transition' | 'transitionProperty'>
+    StripPseudoKeyedTypes<
+      Omit<CSSTransitionProperties, 'transition' | 'transitionProperty'>
+    >
   >
 > & {
   transitionProperty: string[];

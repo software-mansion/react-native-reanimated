@@ -246,7 +246,11 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   registerPseudoStyle(
     shadowNodeWrapper: ShadowNodeWrapper,
+<<<<<<< HEAD
     config: CSSPseudoStyleConfig
+=======
+    config: Parameters<ReanimatedModuleProxy['registerPseudoStyle']>[1]
+>>>>>>> d8de7cccf2 (feat: pseudo-selectors TypeScript frontend (no web))
   ) {
     this.#reanimatedModuleProxy.registerPseudoStyle(shadowNodeWrapper, config);
   }
