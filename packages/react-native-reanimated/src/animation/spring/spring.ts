@@ -24,7 +24,6 @@ import {
   getEnergy,
   initialCalculations,
   isAnimationTerminatingCalculation,
-  overDampedSpringCalculations,
   safeMergeConfigs,
   scaleZetaToMatchClamps,
   underDampedSpringCalculations,
