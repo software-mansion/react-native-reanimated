@@ -372,7 +372,7 @@ class SerializableBigInt : public Serializable {
  protected:
   /**
    * This member is used only when the BigInt fits into int64_t range.
-  */
+   */
   std::optional<int64_t> fastValue_{};
   std::string slowValue_{};
 };
