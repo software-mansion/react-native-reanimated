@@ -566,7 +566,7 @@ var require_closure = __commonJS({
           typePath.skip();
         },
         ReferencedIdentifier(idPath) {
-          if (idPath.isJSXIdentifier()) {
+          if (shouldSkipJSXIdentifier(idPath, state)) {
             return;
           }
           const name = idPath.node.name;
@@ -640,6 +640,16 @@ var require_closure = __commonJS({
       "react-native/Libraries/Core/setUpXHR"
       // for networking
     ];
+    function shouldSkipJSXIdentifier(idPath, state) {
+      if (!idPath.isJSXIdentifier()) {
+        return false;
+      }
+      if (!state.opts.bundleMode || !state.opts.bundleModeCaptureJsxComponents) {
+        return true;
+      }
+      const isJsxMemberProperty = idPath.parentPath.isJSXMemberExpression() && idPath.parentKey === "property";
+      return isJsxMemberProperty || types_12.react.isCompatTag(idPath.node.name);
+    }
   }
 });
 
