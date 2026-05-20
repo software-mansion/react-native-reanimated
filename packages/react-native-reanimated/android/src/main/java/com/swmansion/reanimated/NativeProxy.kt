@@ -214,6 +214,7 @@ open class NativeProxy {
         intBuffer: IntArray,
         doubleBuffer: DoubleArray,
     ) {
+        UiThreadUtil.assertOnUiThread()
         SynchronousPropsBufferParser.parse(intBuffer, doubleBuffer) { viewTag, props ->
             mFabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, props)
         }
