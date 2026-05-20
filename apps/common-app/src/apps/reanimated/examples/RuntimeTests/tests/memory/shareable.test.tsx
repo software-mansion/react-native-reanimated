@@ -594,7 +594,7 @@ describe('Shareable hosted on Worker Runtime', () => {
   });
 
   test.each(initModes)(
-    'getAsync as guest on UI Runtime throws (%s)',
+    'getAsync as guest on UI Runtime (%s)',
     async (initMode) => {
       const shareable = createShareable(
         host.runtimeId,
@@ -666,7 +666,7 @@ describe('Shareable hosted on Worker Runtime', () => {
   );
 
   test.each(initModes)(
-    'getAsync as guest on other Worker Runtime throws (%s)',
+    'getAsync as guest on other Worker Runtime (%s)',
     async (initMode) => {
       const shareable = createShareable(
         host.runtimeId,
