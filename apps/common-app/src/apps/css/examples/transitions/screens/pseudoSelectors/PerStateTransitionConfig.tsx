@@ -19,6 +19,7 @@ export default function PerStateTransitionConfig() {
           description="Different pseudo-selectors can drive different style properties on the same element. Use `transitionProperty` with aligned timing arrays to give each property its own speed/curve."
           title="Composing pseudo-selectors">
           <VerticalExampleCard
+            collapsedCode={`transitionDuration: '180ms'`}
             description="Hover changes the background; active scales it down. Both animate with the same duration."
             title="Two selectors, two properties, shared timing"
             code={`<Animated.View
@@ -27,19 +28,18 @@ export default function PerStateTransitionConfig() {
     transform:       { default: [{ scale: 1 }], ':active': [{ scale: 0.92 }] },
     transitionDuration: '180ms',
   }}
-/>`}
-            collapsedCode={`transitionDuration: '180ms'`}>
+/>`}>
             <Animated.View
               style={[
                 styles.box,
                 {
                   backgroundColor: {
-                    default: colors.primary,
                     ':hover': colors.primaryDark,
+                    default: colors.primary,
                   },
                   transform: {
-                    default: [{ scale: 1 }],
                     ':active': [{ scale: 0.92 }],
+                    default: [{ scale: 1 }],
                   },
                   transitionDuration: '180ms',
                 },
@@ -65,15 +65,15 @@ transitionDuration: ['250ms', '60ms']`}>
                 styles.box,
                 {
                   backgroundColor: {
-                    default: colors.primary,
                     ':hover': colors.primaryDark,
+                    default: colors.primary,
                   },
                   transform: {
-                    default: [{ scale: 1 }],
                     ':active': [{ scale: 0.92 }],
+                    default: [{ scale: 1 }],
                   },
-                  transitionProperty: ['backgroundColor', 'transform'],
                   transitionDuration: ['250ms', '60ms'],
+                  transitionProperty: ['backgroundColor', 'transform'],
                 },
               ]}
             />
@@ -99,23 +99,23 @@ transitionDuration: ['220ms', '160ms', '60ms']`}>
                 styles.input,
                 {
                   backgroundColor: {
-                    default: colors.primary,
                     ':hover': colors.primaryDark,
+                    default: colors.primary,
                   },
                   borderWidth: {
-                    default: 0,
                     ':focus': 3,
+                    default: 0,
                   },
                   transform: {
-                    default: [{ scale: 1 }],
                     ':active': [{ scale: 0.95 }],
+                    default: [{ scale: 1 }],
                   },
+                  transitionDuration: ['220ms', '160ms', '60ms'],
                   transitionProperty: [
                     'backgroundColor',
                     'borderWidth',
                     'transform',
                   ],
-                  transitionDuration: ['220ms', '160ms', '60ms'],
                 },
               ]}
             />
