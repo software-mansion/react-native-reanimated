@@ -591,9 +591,18 @@ describe('Test createSerializable', () => {
   });
 });
 
-const FREEZE_WARNING = 'Tried to modify key';
+describe('createSerializable for unsupported types', () => {
+  test('throws when trying to serialize a Promise', async () => {
+    const promise = Promise.resolve();
+    await expect(() => {
+      createSerializable(promise);
+    }).toThrow('Promises cannot be converted to serializable.');
+  });
+});
 
 describe('Test serializable freezing', () => {
+  const FREEZE_WARNING = 'Tried to modify key';
+
   test('warns when modifying converted array', async () => {
     const obj = [1, 2, 3];
     createSerializable(obj);
