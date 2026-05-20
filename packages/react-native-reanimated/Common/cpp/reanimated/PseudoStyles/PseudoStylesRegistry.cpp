@@ -112,7 +112,8 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
   }
 
   cssTransitionsRegistry_->run(shadowNode, valueChanges);
-  operationsLoop_->run();
+  // No need to call operationsLoop_->run() — the registry's `run` schedules the transition
+  // via loop_->schedule() which auto-kicks the loop via maybeScheduleFrame.
 }
 
 } // namespace reanimated
