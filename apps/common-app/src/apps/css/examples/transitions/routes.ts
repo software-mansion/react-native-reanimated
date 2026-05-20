@@ -7,6 +7,7 @@ import {
   Active as PseudoActive,
   ActiveDeepest as PseudoActiveDeepest,
   AnimatedProperties,
+  ArbitraryWebSelectors as PseudoArbitraryWebSelectors,
   Focus as PseudoFocus,
   FocusWithin as PseudoFocusWithin,
   Hover as PseudoHover,
@@ -126,6 +127,10 @@ const routes = {
       PseudoPerStateTransitionConfig: {
         name: 'Per-state transition configs',
         Component: PseudoPerStateTransitionConfig,
+      },
+      PseudoArbitraryWebSelectors: {
+        name: 'Arbitrary web selectors',
+        Component: PseudoArbitraryWebSelectors,
       },
       PseudoShowcase: {
         name: 'Showcase',

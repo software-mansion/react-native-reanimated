@@ -36,7 +36,7 @@ export const PSEUDO_STATE_KEYS: ReadonlySet<string> = new Set<string>([
 
 export type PseudoValue<T> = {
   default?: T;
-} & { [K in PseudoSelectorKey]?: T };
+} & { [K in PseudoSelectorKey]?: T } & { [K in `:${string}`]?: T };
 
 export type CSSStyle<S extends AnyRecord = PlainStyle> = {
   [K in keyof S]: S[K] | PseudoValue<NonNullable<S[K]>>;

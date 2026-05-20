@@ -83,7 +83,7 @@ export const isPseudoSelectorValue = (
   if (keys.length === 0) {
     return false;
   }
-  return keys.every((key) => PSEUDO_STATE_KEYS.has(key));
+  return keys.every((key) => PSEUDO_STATE_KEYS.has(key) || key.startsWith(':'));
 };
 
 export const resolvePseudoKeyed = <T>(

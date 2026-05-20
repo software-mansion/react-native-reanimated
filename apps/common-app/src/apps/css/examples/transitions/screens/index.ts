@@ -3,6 +3,7 @@ export { default as miscellaneous } from './miscellaneous';
 export {
   Active,
   ActiveDeepest,
+  ArbitraryWebSelectors,
   Focus,
   FocusWithin,
   Hover,
