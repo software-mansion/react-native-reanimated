@@ -9,16 +9,15 @@
 
 namespace worklets {
 
-const std::vector<std::string> SUPPORTED_ERROR_TYPES = {
-    "Error",
-    "AggregateError",
-    "EvalError",
-    "RangeError",
-    "ReferenceError",
-    "SyntaxError",
-    "TypeError",
-    "URIError",
-    "InternalError"};
+const std::vector<std::string> SUPPORTED_ERROR_TYPES = {"Error",
+                                                        "AggregateError",
+                                                        "EvalError",
+                                                        "RangeError",
+                                                        "ReferenceError",
+                                                        "SyntaxError",
+                                                        "TypeError",
+                                                        "URIError",
+                                                        "InternalError"};
 
 const std::vector<std::string> SUPPORTED_INDEXED_COLLECTION_TYPES = {
     "Int8Array",
@@ -71,8 +70,9 @@ static inline bool isInstanceOf(jsi::Runtime &rt, const jsi::Object &object, con
   return getObjectTypeName(rt, object) == type;
 }
 
-static inline bool
-isInstanceOfAny(jsi::Runtime &rt, const jsi::Object &object, const std::vector<std::string> &supportedTypes) {
+static inline bool isInstanceOfAny(jsi::Runtime &rt,
+                                   const jsi::Object &object,
+                                   const std::vector<std::string> &supportedTypes) {
   auto instanceType = getObjectTypeName(rt, object);
 
   return std::find(supportedTypes.begin(), supportedTypes.end(), instanceType) != supportedTypes.end();
