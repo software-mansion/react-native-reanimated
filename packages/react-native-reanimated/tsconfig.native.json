@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "exactOptionalPropertyTypes": true,
     "paths": {
       "react-native-reanimated": ["./src"]
     }

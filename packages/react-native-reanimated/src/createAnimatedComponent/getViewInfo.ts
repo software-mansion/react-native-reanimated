@@ -16,8 +16,8 @@ import type { HostInstance } from '../platform-specific/types';
 //                         Can be obtained on the C++ side by converting
 //                         reactViewName via componentNameByReactViewName().
 export function getViewInfo(element: HostInstance): {
-  reactViewName?: string;
-  viewTag?: number;
+  reactViewName?: string | undefined;
+  viewTag?: number | undefined;
 } {
   return {
     reactViewName: (element?._viewConfig?.uiViewClassName ??

@@ -42,7 +42,7 @@ export default class AnimatedComponent<
 
   _CSSManager?: CSSManager;
 
-  _viewInfo?: ViewInfo;
+  _viewInfo?: ViewInfo | undefined;
   _cssStyle: CSSStyle = {}; // RN style object with Reanimated CSS properties
   _componentRef: AnimatedComponentRef | HTMLElement | null = null;
   _hasAnimatedRef = false;
@@ -100,12 +100,13 @@ export default class AnimatedComponent<
         hostInstance
       );
     }
-    this._viewInfo = { viewTag, shadowNodeWrapper, reactViewName };
+    const viewInfo: ViewInfo = { viewTag, shadowNodeWrapper, reactViewName };
     if (DOMElement) {
-      this._viewInfo.DOMElement = DOMElement;
+      viewInfo.DOMElement = DOMElement;
     }
+    this._viewInfo = viewInfo;
 
-    return this._viewInfo;
+    return viewInfo;
   }
 
   _setComponentRef = (ref: Component | HTMLElement) => {

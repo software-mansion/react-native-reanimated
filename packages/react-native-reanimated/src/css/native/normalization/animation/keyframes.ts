@@ -74,7 +74,7 @@ export function normalizeKeyframeSelector(
 type ProcessedKeyframes = Array<{
   offset: number;
   props: UnknownRecord;
-  timingFunction?: CSSAnimationTimingFunction;
+  timingFunction?: CSSAnimationTimingFunction | undefined;
 }>;
 
 export function processKeyframes(
