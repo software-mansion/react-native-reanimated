@@ -3,6 +3,10 @@
 #include <jsi/jsi.h>
 #include <worklets/Tools/ScriptBuffer.h>
 
+#include <memory>
+#include <string>
+#include <utility>
+
 namespace worklets {
 
 class ScriptLoader {
