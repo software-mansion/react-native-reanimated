@@ -26,6 +26,11 @@ jsi::Value makeSerializableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint) {
   return SerializableJSRef::newNativeStateObject(rt, serializable);
 }
 
+jsi::Value makeSerializableSymbol(jsi::Runtime &rt, const std::optional<std::string> &description, bool isRegistered) {
+  const auto serializable = std::make_shared<SerializableSymbol>(description, isRegistered);
+  return SerializableJSRef::newNativeStateObject(rt, serializable);
+}
+
 jsi::Value makeSerializableUndefined(jsi::Runtime &rt) {
   const auto serializable = std::make_shared<SerializableScalar>();
   return SerializableJSRef::newNativeStateObject(rt, serializable);
@@ -110,6 +115,17 @@ jsi::Value makeSerializableError(
     const std::string &message,
     const std::optional<std::string> &stack) {
   auto serializable = std::make_shared<SerializableError>(name, message, stack);
+  return SerializableJSRef::newNativeStateObject(rt, serializable);
+}
+
+jsi::Value makeSerializableRegExp(jsi::Runtime &rt, const std::string &pattern, const std::string &flags) {
+  auto serializable = std::make_shared<SerializableRegExp>(pattern, flags);
+  return SerializableJSRef::newNativeStateObject(rt, serializable);
+}
+
+jsi::Value
+makeSerializableArrayBufferView(jsi::Runtime &rt, const std::string &typeName, const jsi::ArrayBuffer &arrayBuffer) {
+  auto serializable = std::make_shared<SerializableArrayBufferView>(rt, typeName, arrayBuffer);
   return SerializableJSRef::newNativeStateObject(rt, serializable);
 }
 

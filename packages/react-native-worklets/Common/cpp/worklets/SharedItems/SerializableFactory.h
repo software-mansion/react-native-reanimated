@@ -4,6 +4,7 @@
 #include <worklets/SharedItems/Serializable.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace worklets {
@@ -15,6 +16,8 @@ jsi::Value makeSerializableNumber(jsi::Runtime &rt, double number);
 jsi::Value makeSerializableBoolean(jsi::Runtime &rt, bool boolean);
 
 jsi::Value makeSerializableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint);
+
+jsi::Value makeSerializableSymbol(jsi::Runtime &rt, const std::optional<std::string> &description, bool isRegistered);
 
 jsi::Value makeSerializableUndefined(jsi::Runtime &rt);
 
@@ -48,6 +51,11 @@ jsi::Value makeSerializableError(
     const std::string &name,
     const std::string &message,
     const std::optional<std::string> &stack);
+
+jsi::Value makeSerializableRegExp(jsi::Runtime &rt, const std::string &pattern, const std::string &flags);
+
+jsi::Value
+makeSerializableArrayBufferView(jsi::Runtime &rt, const std::string &typeName, const jsi::ArrayBuffer &arrayBuffer);
 
 jsi::Value makeSerializableInitializer(jsi::Runtime &rt, const jsi::Object &initializerObject);
 

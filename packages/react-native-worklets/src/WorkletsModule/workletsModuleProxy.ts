@@ -43,6 +43,11 @@ export interface WorkletsModuleProxy {
 
   createSerializableBigInt(bigInt: bigint): SerializableRef<bigint>;
 
+  createSerializableSymbol(
+    description: string | undefined,
+    isRegistered: boolean
+  ): SerializableRef<symbol>;
+
   createSerializableUndefined(): SerializableRef<undefined>;
 
   createSerializableNull(): SerializableRef<null>;
@@ -86,6 +91,16 @@ export interface WorkletsModuleProxy {
     message: string,
     stack: string | undefined
   ): SerializableRef<Error>;
+
+  createSerializableRegExp(
+    pattern: string,
+    flags: string
+  ): SerializableRef<RegExp>;
+
+  createSerializableArrayBufferView<TValue extends ArrayBufferView>(
+    typeName: string,
+    buffer: ArrayBufferLike
+  ): SerializableRef<TValue>;
 
   createSerializableInitializer(obj: object): SerializableRef<object>;
 

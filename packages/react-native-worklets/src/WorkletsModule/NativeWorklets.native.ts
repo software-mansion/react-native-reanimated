@@ -88,6 +88,16 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.createSerializableBigInt(bigInt);
   }
 
+  createSerializableSymbol(
+    description: string | undefined,
+    isRegistered: boolean
+  ): SerializableRef<symbol> {
+    return this.#workletsModuleProxy.createSerializableSymbol(
+      description,
+      isRegistered
+    );
+  }
+
   createSerializableUndefined() {
     return this.#serializableUndefined;
   }
@@ -158,6 +168,23 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       name,
       message,
       stack
+    );
+  }
+
+  createSerializableRegExp(
+    pattern: string,
+    flags: string
+  ): SerializableRef<RegExp> {
+    return this.#workletsModuleProxy.createSerializableRegExp(pattern, flags);
+  }
+
+  createSerializableArrayBufferView<TValue extends ArrayBufferView>(
+    typeName: string,
+    buffer: ArrayBufferLike
+  ): SerializableRef<TValue> {
+    return this.#workletsModuleProxy.createSerializableArrayBufferView<TValue>(
+      typeName,
+      buffer
     );
   }
 

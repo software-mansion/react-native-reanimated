@@ -51,9 +51,11 @@ class Serializable {
     ImportType,
     SynchronizableType,
     CustomType,
-    SymbolType, /* unused */
+    SymbolType,
     ShareableType,
     ErrorType,
+    RegExpType,
+    ArrayBufferViewType,
   };
 
   explicit Serializable(ValueType valueType) : valueType_(valueType) {}
