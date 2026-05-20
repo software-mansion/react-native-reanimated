@@ -34,7 +34,7 @@
     "type:check:strict": "yarn type:check:strict:src && yarn type:check:strict:app",
     "type:check:strict:src": "yarn tsc --noEmit --customConditions react-native-strict-api",
     "type:check:strict:app": "yarn workspace common-app type:check:strict",
-    "build": "yarn workspace react-native-worklets build && yarn set-version && bob build",
+    "build": "yarn workspace react-native-worklets build && yarn set-version && bob build && echo '{\"type\":\"module\"}' > lib/typescript/package.json",
     "prepack": "yarn build",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
     "tree-shake:check:web": "yarn is-tree-shakable --resolution web",
