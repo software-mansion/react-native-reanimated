@@ -243,6 +243,25 @@ jsi::Value SerializableSet::toJSValue(jsi::Runtime &rt) {
   return set;
 }
 
+jsi::Value SerializableRegExp::toJSValue(jsi::Runtime &rt) {
+  return rt.global()
+      .getPropertyAsFunction(rt, "RegExp")
+      .callAsConstructor(rt, jsi::String::createFromUtf8(rt, pattern_), jsi::String::createFromUtf8(rt, flags_));
+}
+
+jsi::Value SerializableArrayBufferView::toJSValue(jsi::Runtime &rt) {
+  auto size = static_cast<int>(data_.size());
+  auto arrayBuffer =
+      rt.global().getPropertyAsFunction(rt, "ArrayBuffer").callAsConstructor(rt, size).getObject(rt).getArrayBuffer(rt);
+  memcpy(arrayBuffer.data(rt), data_.data(), size);
+
+  auto constructor = rt.global().getProperty(rt, jsi::String::createFromUtf8(rt, typeName_));
+  if (!constructor.isObject() || !constructor.asObject(rt).isFunction(rt)) {
+    throw jsi::JSError(rt, "[Worklets] Constructor for `" + typeName_ + "` not found.");
+  }
+  return constructor.asObject(rt).asFunction(rt).callAsConstructor(rt, std::move(arrayBuffer));
+}
+
 jsi::Value SerializableError::toJSValue(jsi::Runtime &rt) {
   auto error = rt.global()
                    .getPropertyAsFunction(rt, "Error")
@@ -381,6 +400,18 @@ jsi::Value SerializableBigInt::toJSValue(jsi::Runtime &rt) {
   } else {
     return rt.global().getPropertyAsFunction(rt, "BigInt").call(rt, jsi::String::createFromUtf8(rt, slowValue_));
   }
+}
+
+jsi::Value SerializableSymbol::toJSValue(jsi::Runtime &rt) {
+  auto symbolCtor = rt.global().getPropertyAsFunction(rt, "Symbol");
+  if (isRegistered_) {
+    return symbolCtor.getPropertyAsFunction(rt, "for").call(
+        rt, jsi::String::createFromUtf8(rt, description_.value_or("")));
+  }
+  if (description_.has_value()) {
+    return symbolCtor.call(rt, jsi::String::createFromUtf8(rt, description_.value()));
+  }
+  return symbolCtor.call(rt);
 }
 
 jsi::Value SerializableScalar::toJSValue(jsi::Runtime &) {

@@ -100,8 +100,7 @@ const testCases: Record<string, TestCase> = {
   },
   // Symbol is not serialized, loses type on transfer and arrives as {}
   symbol: {
-    bundleMode: '{}',
-    noBundleMode: 'Symbol(test)',
+    expected: '{}',
     factory: () => {
       'worklet';
       return Symbol('test');
@@ -256,8 +255,7 @@ const testCases: Record<string, TestCase> = {
     },
   },
   regExp: {
-    bundleMode: '/abc/gi',
-    noBundleMode: '{}',
+    expected: '/abc/gi',
     factory: () => {
       'worklet';
       return /abc/gi;

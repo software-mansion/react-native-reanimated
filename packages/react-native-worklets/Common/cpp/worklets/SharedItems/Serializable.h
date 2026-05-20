@@ -209,6 +209,32 @@ class SerializableError : public Serializable {
   const std::optional<std::string> stack_;
 };
 
+class SerializableRegExp : public Serializable {
+ public:
+  SerializableRegExp(const std::string &pattern, const std::string &flags)
+      : Serializable(ValueType::RegExpType), pattern_(pattern), flags_(flags) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  const std::string pattern_;
+  const std::string flags_;
+};
+
+class SerializableArrayBufferView : public Serializable {
+ public:
+  SerializableArrayBufferView(jsi::Runtime &rt, const std::string &typeName, const jsi::ArrayBuffer &arrayBuffer)
+      : Serializable(ValueType::ArrayBufferViewType),
+        typeName_(typeName),
+        data_(arrayBuffer.data(rt), arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  const std::string typeName_;
+  const std::vector<uint8_t> data_;
+};
+
 class SerializableHostObject : public Serializable {
  public:
   SerializableHostObject(jsi::Runtime &, const std::shared_ptr<jsi::HostObject> &hostObject)
@@ -382,6 +408,18 @@ class SerializableBigInt : public Serializable {
   */
   std::optional<int64_t> fastValue_{};
   std::string slowValue_{};
+};
+
+class SerializableSymbol : public Serializable {
+ public:
+  SerializableSymbol(const std::optional<std::string> &description, bool isRegistered)
+      : Serializable(ValueType::SymbolType), description_(description), isRegistered_(isRegistered) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  const std::optional<std::string> description_;
+  const bool isRegistered_;
 };
 
 class SerializableScalar : public Serializable {

@@ -163,6 +163,10 @@ export function createSerializable<TValue>(
     return cloneBigInt(value) as SerializableRef<TValue>;
   }
 
+  if (typeof value === 'symbol') {
+    return cloneSymbol(value) as SerializableRef<TValue>;
+  }
+
   if (value === undefined) {
     return cloneUndefined() as SerializableRef<TValue>;
   }
@@ -372,6 +376,14 @@ function cloneBoolean(value: boolean): SerializableRef<boolean> {
 
 function cloneBigInt(value: bigint): SerializableRef<bigint> {
   return WorkletsModule.createSerializableBigInt(value);
+}
+
+function cloneSymbol(value: symbol): SerializableRef<symbol> {
+  const key = Symbol.keyFor(value);
+  return WorkletsModule.createSerializableSymbol(
+    value.description,
+    typeof key === 'string'
+  );
 }
 
 function cloneUndefined(): SerializableRef<undefined> {
@@ -607,17 +619,12 @@ function cloneSet(value: Set<unknown>): SerializableRef<Set<unknown>> {
 }
 
 function cloneRegExp(value: RegExp): SerializableRef<RegExp> {
-  const pattern = value.source;
-  const flags = value.flags;
-  const handle = cloneInitializer({
-    __init: () => {
-      'worklet';
-      return new RegExp(pattern, flags);
-    },
-  }) as SerializableRef<RegExp>;
-  serializableMappingCache.set(value, handle);
-
-  return handle;
+  const clone = WorkletsModule.createSerializableRegExp(
+    value.source,
+    value.flags
+  );
+  serializableMappingCache.set(value, clone);
+  return clone;
 }
 
 function cloneError(value: Error): SerializableRef<Error> {
@@ -640,26 +647,16 @@ function cloneArrayBuffer(
 function cloneArrayBufferView<TValue extends ArrayBufferView>(
   value: TValue
 ): SerializableRef<TValue> {
-  const buffer = value.buffer;
   const typeName = value.constructor.name;
-  const handle = cloneInitializer({
-    __init: () => {
-      'worklet';
-      if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
-        throw new Error(`[Worklets] Invalid array view name \`${typeName}\`.`);
-      }
-      const constructor = global[typeName as keyof typeof global];
-      if (constructor === undefined) {
-        throw new Error(
-          `[Worklets] Constructor for \`${typeName}\` not found.`
-        );
-      }
-      return new constructor(buffer);
-    },
-  }) as unknown as SerializableRef<TValue>;
-  serializableMappingCache.set(value, handle);
-
-  return handle;
+  if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
+    throw new Error(`[Worklets] Invalid array view name \`${typeName}\`.`);
+  }
+  const clone = WorkletsModule.createSerializableArrayBufferView<TValue>(
+    typeName,
+    value.buffer
+  );
+  serializableMappingCache.set(value, clone);
+  return clone;
 }
 
 function cloneSynchronizable<TValue>(
@@ -816,6 +813,24 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
           stack
         ) as FlatSerializableRef<TValue>;
       }
+      if (value instanceof RegExp) {
+        return globalThis.__workletsModuleProxy.createSerializableRegExp(
+          value.source,
+          value.flags
+        ) as FlatSerializableRef<TValue>;
+      }
+      if (ArrayBuffer.isView(value)) {
+        const typeName = value.constructor.name;
+        if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
+          throw new Error(
+            `[Worklets] Invalid array view name \`${typeName}\`.`
+          );
+        }
+        return globalThis.__workletsModuleProxy.createSerializableArrayBufferView(
+          typeName,
+          value.buffer
+        ) as FlatSerializableRef<TValue>;
+      }
       if (value instanceof Map) {
         const keys: unknown[] = [];
         const values: unknown[] = [];
@@ -871,6 +886,14 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
 
     if (typeof value === 'bigint') {
       return globalThis._createSerializableBigInt(value);
+    }
+
+    if (typeof value === 'symbol') {
+      const key = Symbol.keyFor(value);
+      return globalThis.__workletsModuleProxy.createSerializableSymbol(
+        value.description,
+        typeof key === 'string'
+      ) as FlatSerializableRef<TValue>;
     }
 
     if (value === undefined) {

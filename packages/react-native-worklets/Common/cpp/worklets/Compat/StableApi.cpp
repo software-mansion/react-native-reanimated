@@ -81,11 +81,15 @@ std::shared_ptr<Serializable> extractSerializable(
     case Serializable::ValueType::CustomType:
       return extractSerializableOrThrow<CustomSerializable>(rt, value, errorMessage);
     case Serializable::ValueType::SymbolType:
-      throw std::runtime_error("[Worklets] Not implemented.");
+      return extractSerializableOrThrow<SerializableSymbol>(rt, value, errorMessage);
     case Serializable::ValueType::ShareableType:
       return extractSerializableOrThrow<Shareable>(rt, value, errorMessage);
     case Serializable::ValueType::ErrorType:
       return extractSerializableOrThrow<SerializableError>(rt, value, errorMessage);
+    case Serializable::ValueType::RegExpType:
+      return extractSerializableOrThrow<SerializableRegExp>(rt, value, errorMessage);
+    case Serializable::ValueType::ArrayBufferViewType:
+      return extractSerializableOrThrow<SerializableArrayBufferView>(rt, value, errorMessage);
     default:
       throw std::runtime_error("[Worklets] Invalid expected type provided to extractSerializable.");
   }
