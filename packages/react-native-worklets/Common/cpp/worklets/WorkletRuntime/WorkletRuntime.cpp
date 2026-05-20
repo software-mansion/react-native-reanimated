@@ -2,13 +2,16 @@
 #include <jsi/jsi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Tools/JSLogger.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RuntimeHolder.h>
+#include <worklets/WorkletRuntime/ScriptLoader.h>
 #include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -121,17 +124,7 @@ void WorkletRuntime::bundleModeInit(
     throw std::runtime_error("[Worklets] Expected to receive the bundle, but got nullptr instead.");
   }
 
-  try {
-    rt.evaluateJavaScript(script, sourceUrl);
-  } catch (facebook::jsi::JSError &error) {
-    const auto &message = error.getMessage();
-    const auto &stack = error.getStack();
-    if (!message.starts_with("[Worklets] Worklets initialized successfully")) {
-      const auto newMessage = "[Worklets] Failed to initialize runtime. Reason: " + message + " " + stack;
-      JSLogger::reportFatalErrorOnJS(jsScheduler, {.message = newMessage, .stack = stack, .name = "WorkletsError"});
-      return;
-    }
-  }
+  ScriptLoader::loadScript(rt, script, sourceUrl);
 
   WorkletRuntimeDecorator::postEvaluateScript(rt, runtimeBindings);
 }

@@ -28,7 +28,7 @@ import type { PluginOptions } from '../plugin';
 import plugin from '../plugin';
 
 const MOCK_LOCATION = 'test.js';
-const MOCK_WORKLET_RUNTIME_ENTRY = 'workletRuntimeEntry.native.ts';
+const MOCK_WORKLET_RUNTIME_ENTRY = 'react-native-worklets/src/index.ts';
 const MOCK_OTHER_FILE = 'someOtherFile.ts';
 
 const REQUIRE_PREFIX = 'require("react-native-worklets/.worklets/';
@@ -226,8 +226,8 @@ describe('babel plugin in bundleMode', () => {
     });
   });
 
-  describe('workletRuntimeEntry toggle', () => {
-    test('flips _WORKLETS_BUNDLE_MODE_ENABLED to true in workletRuntimeEntry', () => {
+  describe('worklet runtime entry-point toggle', () => {
+    test('flips _WORKLETS_BUNDLE_MODE_ENABLED to true in the entry-point', () => {
       const input = html`<script>
         globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;
       </script>`;
