@@ -12,8 +12,14 @@ import {
   isAnimationProp,
   isCSSKeyframesObject,
   isCSSKeyframesRule,
+  isPseudoSelectorValue,
   isTransitionProp,
 } from './guards';
+
+export type PseudoStylesBySelector = Record<
+  string,
+  { selectorStyle: PlainStyle; defaultStyle: PlainStyle }
+>;
 
 export function filterCSSAndStyleProperties<S extends object>(
   style: CSSStyle<S>
@@ -21,10 +27,12 @@ export function filterCSSAndStyleProperties<S extends object>(
   ExistingCSSAnimationProperties | null,
   CSSTransitionProperties | null,
   PlainStyle,
+  PseudoStylesBySelector | null,
 ] {
   const animationProperties: Partial<CSSAnimationProperties> = {};
   let transitionProperties: Partial<CSSTransitionProperties> = {};
   const filteredStyle: UnknownRecord = {};
+  const pseudoStylesBySelector: PseudoStylesBySelector = {};
 
   // The CSS / transition / animation buckets are strongly typed but at this
   // point we are dynamically splitting an opaque style object by prop name;
@@ -52,7 +60,30 @@ export function filterCSSAndStyleProperties<S extends object>(
         (transitionProperties as UnknownRecord)[prop] = value;
       }
     } else if (!isSharedValue(value)) {
-      filteredStyle[prop] = value;
+      if (isPseudoSelectorValue(value)) {
+        const defaultValue = value.default;
+        if (defaultValue !== undefined) {
+          filteredStyle[prop] = defaultValue;
+        }
+        for (const [selector, selectorValue] of Object.entries(value)) {
+          if (selector !== 'default' && selectorValue !== undefined) {
+            pseudoStylesBySelector[selector] ??= {
+              selectorStyle: {},
+              defaultStyle: {},
+            };
+            (pseudoStylesBySelector[selector].selectorStyle as UnknownRecord)[
+              prop
+            ] = selectorValue;
+            if (defaultValue !== undefined) {
+              (pseudoStylesBySelector[selector].defaultStyle as UnknownRecord)[
+                prop
+              ] = defaultValue;
+            }
+          }
+        }
+      } else {
+        filteredStyle[prop] = value;
+      }
     }
   }
 
@@ -85,10 +116,13 @@ export function filterCSSAndStyleProperties<S extends object>(
     validateCSSTransitionProps(transitionProperties);
   }
 
+  const hasPseudoStyles = Object.keys(pseudoStylesBySelector).length > 0;
+
   return [
     finalAnimationConfig,
     finalTransitionConfig,
     filteredStyle as PlainStyle,
+    hasPseudoStyles ? pseudoStylesBySelector : null,
   ];
 }
 

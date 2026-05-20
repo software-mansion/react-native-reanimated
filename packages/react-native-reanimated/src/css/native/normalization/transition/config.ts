@@ -5,6 +5,7 @@ import type {
   CSSTransitionProperties,
   CSSTransitionProperty,
 } from '../../../types';
+import { resolvePseudoKeyed } from '../../../utils/guards';
 import type {
   NormalizedCSSTransitionConfig,
   NormalizedSingleCSSTransitionSettings,
@@ -35,7 +36,7 @@ function getExpandedConfigProperties(
     : createEmptyTransitionConfig();
 
   for (const [key, value] of Object.entries(config)) {
-    result[key] = convertPropertyToArray(value);
+    result[key] = convertPropertyToArray(resolvePseudoKeyed(value));
   }
 
   return result as ExpandedCSSTransitionConfigProperties;

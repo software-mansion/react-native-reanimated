@@ -129,7 +129,7 @@ export function createUpdatesContainer() {
             : updateRequest.snapshot;
       } else {
         for (const prop of propsNames) {
-          update[prop] =
+          (update as Record<string, unknown>)[prop] =
             'update' in updateRequest
               ? updateRequest.update[prop as keyof OperationUpdate]
               : updateRequest.snapshot[prop as keyof OperationUpdate];
