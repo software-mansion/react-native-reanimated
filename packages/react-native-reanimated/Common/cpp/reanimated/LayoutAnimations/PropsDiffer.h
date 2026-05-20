@@ -34,10 +34,14 @@ class PropsDiffer {
   const ShadowView &targetView_;
   const ViewProps &sourceViewProps_;
   const ViewProps &targetViewProps_;
-  jsi::Object sourceValues_;
-  jsi::Object targetValues_;
+  jsi::Object values_;
   Transform sourceTransform_;
   Transform targetTransform_;
+
+  static std::string sourceKey(const char *name);
+  static std::string targetKey(const char *name);
+  void setSource(jsi::Runtime &rt, const char *name, jsi::Value &&value);
+  void setTarget(jsi::Runtime &rt, const char *name, jsi::Value &&value);
 
   void diffFrame(jsi::Runtime &rt);
 
@@ -56,11 +60,11 @@ class PropsDiffer {
       std::vector<TransformOperationWithDefault> &jsiOperations);
 
   void diffTransformOrigin(jsi::Runtime &rt);
-  static void addTransformOriginToDiff(
+  void addTransformOriginToDiff(
       jsi::Runtime &rt,
       const TransformOrigin &transformOrigin,
-      jsi::Object &jsiValues,
-      const ShadowView &view);
+      const ShadowView &view,
+      bool isTarget);
 
   void diffShadow(jsi::Runtime &rt);
   static std::vector<BoxShadowWithDefault> getBoxShadowsFromProps(jsi::Runtime &rt, const ViewProps &props);
@@ -92,8 +96,7 @@ class PropsDiffer {
         targetView_(targetView),
         sourceViewProps_(getViewProps(sourceView)),
         targetViewProps_(getViewProps(targetView)),
-        sourceValues_(rt),
-        targetValues_(rt) {}
+        values_(rt) {}
 
   jsi::Object computeDiff(jsi::Runtime &runtime);
 };
