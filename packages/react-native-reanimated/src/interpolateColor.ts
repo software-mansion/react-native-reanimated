@@ -337,6 +337,26 @@ function processColorRanges(
   return [processedInputRange, processedOutputRange];
 }
 
+// Identity-keyed memo of processColorRanges + getInterpolate* output (the
+// per-call regex parse + channel split). Reanimated callers pass stable
+// closure-captured ranges → hit; fresh arrays per call miss + recompute
+// (bit-identical to the un-memoized path; in-place mutation returns stale,
+// so callers must allocate a new array on logical change — already the
+// React-idiomatic pattern). Map (not WeakMap): worklets serializer supports
+// Map<object, …> via SerializableMap but rejects WeakMap. 256-entry soft cap
+// per layer guards pathological churn (real code uses a handful of ranges).
+type Prepared = {
+  inputRange: readonly number[];
+  rgb?: InterpolateRGB;
+  hsv?: InterpolateHSV;
+  lab?: InterpolateLAB;
+};
+const INTERPOLATE_COLOR_CACHE_MAX = 256;
+const interpolateColorCache = new Map<
+  object,
+  Map<object, Map<string, Prepared>>
+>();
+
 /**
  * Lets you map a value from a range of numbers to a range of colors using
  * linear interpolation.
@@ -379,37 +399,48 @@ export function interpolateColor(
   options: InterpolationOptions = {}
 ): string | number {
   'worklet';
-  const [processedInputRange, processedOutputRange] = processColorRanges(
-    inputRange,
-    outputRange
-  );
-
-  if (colorSpace === 'HSV') {
-    return interpolateColorsHSV(
-      value,
-      processedInputRange,
-      getInterpolateHSV(processedOutputRange),
-      options
-    );
-  } else if (colorSpace === 'RGB') {
-    return interpolateColorsRGB(
-      value,
-      processedInputRange,
-      getInterpolateRGB(processedOutputRange),
-      options
-    );
-  } else if (colorSpace === 'LAB') {
-    return interpolateColorsLAB(
-      value,
-      processedInputRange,
-      getInterpolateLAB(processedOutputRange),
-      options
-    );
+  const outerKey = outputRange as unknown as object;
+  const innerKey = inputRange as unknown as object;
+  let byInput = interpolateColorCache.get(outerKey);
+  let byCs = byInput?.get(innerKey);
+  let prep = byCs?.get(colorSpace);
+  if (prep === undefined) {
+    // Compute (and possibly throw) before mutating the cache so that a bad
+    // `outputRange` color or an invalid `colorSpace` doesn't leave empty
+    // `byInput`/`byCs` entries behind.
+    const [pin, pout] = processColorRanges(inputRange, outputRange);
+    if (colorSpace === 'HSV') {
+      prep = { inputRange: pin, hsv: getInterpolateHSV(pout) };
+    } else if (colorSpace === 'RGB') {
+      prep = { inputRange: pin, rgb: getInterpolateRGB(pout) };
+    } else if (colorSpace === 'LAB') {
+      prep = { inputRange: pin, lab: getInterpolateLAB(pout) };
+    } else {
+      throw new Error(
+        `[Reanimated] Invalid color space provided: ${
+          colorSpace as string
+        }. Supported values are: ['RGB', 'HSV', 'LAB'].`
+      );
+    }
+    if (byInput === undefined) {
+      if (interpolateColorCache.size >= INTERPOLATE_COLOR_CACHE_MAX) {
+        interpolateColorCache.clear();
+      }
+      byInput = new Map();
+      interpolateColorCache.set(outerKey, byInput);
+    }
+    if (byCs === undefined) {
+      if (byInput.size >= INTERPOLATE_COLOR_CACHE_MAX) byInput.clear();
+      byCs = new Map();
+      byInput.set(innerKey, byCs);
+    }
+    byCs.set(colorSpace, prep);
   }
 
-  throw new Error(
-    `[Reanimated] Invalid color space provided: ${
-      colorSpace as string
-    }. Supported values are: ['RGB', 'HSV', 'LAB'].`
-  );
+  if (colorSpace === 'HSV') {
+    return interpolateColorsHSV(value, prep.inputRange, prep.hsv!, options);
+  } else if (colorSpace === 'RGB') {
+    return interpolateColorsRGB(value, prep.inputRange, prep.rgb!, options);
+  }
+  return interpolateColorsLAB(value, prep.inputRange, prep.lab!, options);
 }
