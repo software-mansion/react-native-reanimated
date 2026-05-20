@@ -37,11 +37,11 @@ function getTheme(theme: boolean, disabled: boolean) {
   const customTransition = SharedTransition.custom((values) => {
     'worklet';
     return {
-      width: withSpring(values.target.width, config),
-      height: withSpring(values.target.height, config),
-      originX: withSpring(values.target.originX, config),
-      originY: withSpring(values.target.originY, config),
-      borderRadius: withSpring(values.target.borderRadius, config),
+      width: withSpring(values.targetWidth, config),
+      height: withSpring(values.targetHeight, config),
+      originX: withSpring(values.targetOriginX, config),
+      originY: withSpring(values.targetOriginY, config),
+      borderRadius: withSpring(values.targetBorderRadius, config),
     };
   })
     .progressAnimation((values, progress) => {
@@ -56,22 +56,22 @@ function getTheme(theme: boolean, disabled: boolean) {
         );
       };
       return {
-        width: getValue(progress, values.target.width, values.source.width),
-        height: getValue(progress, values.target.height, values.source.height),
+        width: getValue(progress, values.targetWidth, values.currentWidth),
+        height: getValue(progress, values.targetHeight, values.currentHeight),
         originX: getValue(
           progress,
-          values.target.originX,
-          values.source.originX
+          values.targetOriginX,
+          values.currentOriginX
         ),
         originY: getValue(
           progress,
-          values.target.originY,
-          values.source.originY
+          values.targetOriginY,
+          values.currentOriginY
         ),
         borderRadius: getValue(
           progress,
-          values.target.borderRadius,
-          values.source.borderRadius
+          values.targetBorderRadius,
+          values.currentBorderRadius
         ),
       };
     })
