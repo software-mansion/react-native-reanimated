@@ -22,9 +22,7 @@ const SELECTOR_ORDER = [
 // Used by the CSS :has() rule on :active-deepest elements
 const ACTIVE_MARKER = 'rps-active';
 
-export default class CSSPseudoSelectorsManager
-  implements ICSSPseudoSelectorsManager
-{
+export default class CSSPseudoSelectorsManager implements ICSSPseudoSelectorsManager {
   private readonly element: ReanimatedHTMLElement;
   private pseudoSelectorClassName: string | null = null;
 
