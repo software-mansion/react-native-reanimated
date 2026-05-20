@@ -416,8 +416,6 @@ export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
  * @param worklet - The worklet to run.
  * @param args - The arguments to pass to the worklet.
  * @returns A Promise that resolves to the return value of the worklet.
- * @throws If called from a runtime other than the [RN
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
  * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRuntimeAsync
  */
 // @ts-expect-error This overload is correct since it's what user sees in their code

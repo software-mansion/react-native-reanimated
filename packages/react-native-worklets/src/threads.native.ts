@@ -1,10 +1,7 @@
 'use strict';
 
 import { getStaticFeatureFlag } from './featureFlags/featureFlags';
-import {
-  addGuardImplementation,
-  addNoBundleModeGuardImplementation,
-} from './guardImplementation';
+import { addNoBundleModeGuardImplementation } from './guardImplementation';
 import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
@@ -406,10 +403,7 @@ if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
    * QoL guards to give a meaningful error message when the user tries to call
    * these functions on Worklet Runtimes outside of the Bundle Mode.
    */
-  addGuardImplementation(
-    runOnUIAsync,
-    '`runOnUIAsync` can only be called on the RN Runtime. Use `runOnRuntimeAsyncWithId` with `UIRuntimeId` instead.'
-  );
+  addNoBundleModeGuardImplementation(runOnUIAsync);
   addNoBundleModeGuardImplementation(runOnUISync);
   addNoBundleModeGuardImplementation(scheduleOnUI);
 }
