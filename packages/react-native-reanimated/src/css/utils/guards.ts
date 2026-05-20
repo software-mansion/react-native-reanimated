@@ -17,7 +17,6 @@ import type {
   Repeat,
   TimeUnit,
 } from '../types';
-import { PSEUDO_STATE_KEYS } from '../types/props';
 
 const ANIMATION_PROPS_SET = new Set<string>(ANIMATION_PROPS);
 const TRANSITION_PROPS_SET = new Set<string>(TRANSITION_PROPS);
@@ -83,7 +82,7 @@ export const isPseudoSelectorValue = (
   if (keys.length === 0) {
     return false;
   }
-  return keys.every((key) => PSEUDO_STATE_KEYS.has(key) || key.startsWith(':'));
+  return keys.every((key) => key === 'default' || key.startsWith(':'));
 };
 
 export const resolvePseudoKeyed = <T>(

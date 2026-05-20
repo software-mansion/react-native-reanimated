@@ -20,7 +20,7 @@ type PseudoKeyedTransitionValue<T> = { default?: T | T[] } & {
   [K in PseudoSelectorKey]?: T | T[];
 } & { [K in `:${string}`]?: T | T[] };
 
-export type AddPseudoKeyedTypes<T> = {
+export type AddArrayAndPseudoKeyedTypes<T> = {
   [P in keyof T]: T[P] extends undefined
     ? undefined
     : T[P] | NoUndef<T[P]>[] | PseudoKeyedTransitionValue<NoUndef<T[P]>>;

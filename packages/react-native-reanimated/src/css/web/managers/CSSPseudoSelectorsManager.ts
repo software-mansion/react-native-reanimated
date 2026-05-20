@@ -2,6 +2,7 @@
 import { webPropsBuilder } from '../../../common/web';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
 import type { ICSSPseudoSelectorsManager } from '../../types/interfaces';
+import type { PseudoSelectorKey } from '../../types/props';
 import type { PseudoStylesBySelector } from '../../utils';
 import { insertPseudoSelectorCSS, removePseudoSelectorCSS } from '../domUtils';
 
@@ -10,13 +11,13 @@ let pseudoSelectorCounter = 0;
 // CSS rules are injected in this order so that later rules override earlier ones
 // when multiple selectors are active simultaneously (last = highest priority):
 // :focus-within < :focus < :hover < :active-deepest < :active
-const SELECTOR_ORDER = [
+const SELECTOR_ORDER: readonly PseudoSelectorKey[] = [
   ':focus-within',
   ':focus',
   ':hover',
   ':active-deepest',
   ':active',
-] as const;
+];
 
 // Marker class added to every element that registers :active or :active-deepest
 // Used by the CSS :has() rule on :active-deepest elements
