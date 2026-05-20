@@ -878,6 +878,7 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
     }
 
     if (typeof value === 'symbol') {
+      // TODO: add native support
       return globalThis._createSerializableString(
         String(value)
       ) as FlatSerializableRef<TValue>;
