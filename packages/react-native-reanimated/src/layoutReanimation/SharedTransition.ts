@@ -29,31 +29,8 @@ export enum SharedTransitionType {
 
 /**
  * Values passed to shared transition animation worklets.
- *
- * This is the exact shape of the object created by `PropsDiffer::computeDiff()`
- * in C++. Each property is exposed as a `target<Prop>` / `current<Prop>` pair
- * (current = source view).
- *
- * Frame: `targetOriginX`/`currentOriginX`, `targetOriginY`/`currentOriginY`,
- * `targetGlobalOriginX`/`currentGlobalOriginX`,
- * `targetGlobalOriginY`/`currentGlobalOriginY`, `targetWidth`/`currentWidth`,
- * `targetHeight`/`currentHeight`.
- *
- * Visual: `targetOpacity`/`currentOpacity`,
- * `targetBackgroundColor`/`currentBackgroundColor`,
- * `targetBorderRadius`/`currentBorderRadius` (and per-corner variants),
- * `targetBorderWidth`/`currentBorderWidth` (and per-side variants),
- * `targetBorderColor`/`currentBorderColor` (and per-side variants),
- * `targetTransform`/`currentTransform`,
- * `targetTransformOrigin`/`currentTransformOrigin`,
- * `targetBoxShadow`/`currentBoxShadow`,
- * `targetShadowColor`/`currentShadowColor`,
- * `targetShadowOffset`/`currentShadowOffset`,
- * `targetShadowOpacity`/`currentShadowOpacity`,
- * `targetShadowRadius`/`currentShadowRadius`,
- * `targetElevation`/`currentElevation`.
  */
-export interface SharedTransitionAnimationsValues {
+export type SharedTransitionAnimationsValues = {
   targetOriginX: number;
   targetOriginY: number;
   targetGlobalOriginX: number;
@@ -63,7 +40,9 @@ export interface SharedTransitionAnimationsValues {
   targetBorderRadius: number;
   targetOpacity: number;
   targetBackgroundColor: string;
+  // TODO: check before merge
   targetTransform: Array<Record<string, number | string>>;
+  // TODO: check before merge
   targetTransformOrigin: number[];
   currentOriginX: number;
   currentOriginY: number;
@@ -74,11 +53,12 @@ export interface SharedTransitionAnimationsValues {
   currentBorderRadius: number;
   currentOpacity: number;
   currentBackgroundColor: string;
+  // TODO: check before merge
   currentTransform: Array<Record<string, number | string>>;
+  // TODO: check before merge
   currentTransformOrigin: number[];
   windowWidth: number;
   windowHeight: number;
-  [key: string]: number | string | Array<unknown>;
 }
 
 /**
@@ -194,8 +174,6 @@ export class SharedTransition
 
   build = (): LayoutAnimationFunction => {
     const customAnimationFactory = this.customAnimationFactory;
-    const progressAnimationFactory = this.progressAnimationFactory;
-    const transitionType = this.transitionType;
 
     // If we have a custom animation factory, use it
     if (customAnimationFactory) {
@@ -256,8 +234,9 @@ export class SharedTransition
         if (Array.isArray(target)) {
           if (prop === 'transform') {
             // TODO (future): do proper transform interpolation
-            (animations as Record<string, unknown>)[prop] = target.map(
-              (item: Record<string, number | string>) => {
+            const transforms = target as Array<Record<string, number | string>>;
+            (animations as Record<string, unknown>)[prop] = transforms.map(
+              (item) => {
                 const transformKey = Object.keys(item)[0];
                 return {
                   [transformKey]: animationFactory(item[transformKey]),
@@ -265,8 +244,9 @@ export class SharedTransition
               }
             );
           } else if (prop === 'boxShadow') {
-            (animations as Record<string, unknown>)[prop] = target.map(
-              (item: Record<string, number | string>) => {
+            const shadows = target as Array<Record<string, number | string>>;
+            (animations as Record<string, unknown>)[prop] = shadows.map(
+              (item) => {
                 const boxShadow: Record<string, unknown> = {};
                 for (const shadowKey of Object.keys(item)) {
                   boxShadow[shadowKey] = animationFactory(item[shadowKey]);
@@ -275,7 +255,8 @@ export class SharedTransition
               }
             );
           } else if (prop === 'transformOrigin') {
-            animations[prop] = target.map(animationFactory);
+            const origin = target as Array<number | string>;
+            animations[prop] = origin.map(animationFactory);
           } else {
             logger.error(`Unexpected array in SharedTransition: ${prop}`);
           }
