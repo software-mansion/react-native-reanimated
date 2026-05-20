@@ -3,9 +3,14 @@
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/common/values/CSSValue.h>
 
+#include <folly/dynamic.h>
+#include <jsi/jsi.h>
+
 #include <string>
 
 namespace reanimated::css {
+
+using namespace facebook;
 
 // Base class with common color value functionality
 

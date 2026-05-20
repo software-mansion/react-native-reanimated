@@ -5,6 +5,9 @@
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 
+#include <folly/dynamic.h>
+#include <jsi/jsi.h>
+
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -12,6 +15,8 @@
 #include <vector>
 
 namespace reanimated::css {
+
+using namespace facebook;
 
 class PropertyInterpolator {
  public:

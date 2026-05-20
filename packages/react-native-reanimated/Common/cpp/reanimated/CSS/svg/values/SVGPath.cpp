@@ -7,6 +7,7 @@
 #include <functional>
 #include <optional>
 #include <regex>
+#include <sstream>
 #include <string>
 
 namespace reanimated::css {

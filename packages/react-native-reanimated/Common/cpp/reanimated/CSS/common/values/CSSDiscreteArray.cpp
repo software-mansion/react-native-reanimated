@@ -1,5 +1,6 @@
 #include <reanimated/CSS/common/values/CSSDiscreteArray.h>
 
+#include <sstream>
 #include <string>
 #include <vector>
 
