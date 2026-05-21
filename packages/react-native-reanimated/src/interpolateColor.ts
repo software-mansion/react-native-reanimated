@@ -1,16 +1,8 @@
 'use strict';
-import {
-  blue,
-  green,
-  hsvToColor,
-  opacity,
-  red,
-  rgbaColor,
-  RGBtoHSV,
-} from './Colors';
+import { hsvToColor, opacity, rgbaColor, RGBtoHSV } from './Colors';
 import { processColor } from './common';
 import culori from './culori';
-import { Extrapolation, interpolate } from './interpolation';
+import { Extrapolation } from './interpolation';
 
 /** @deprecated Please use Extrapolation instead */
 export const Extrapolate = Extrapolation;
@@ -27,190 +19,13 @@ export type InterpolationOptions = {
   useCorrectedHSVInterpolation?: boolean;
 };
 
-const interpolateColorsHSV = (
-  value: number,
-  inputRange: readonly number[],
-  colors: InterpolateHSV,
-  options: InterpolationOptions
-) => {
-  'worklet';
-  let h = 0;
-  const { useCorrectedHSVInterpolation = true } = options;
-  if (useCorrectedHSVInterpolation) {
-    // if the difference between hues in a range is > 180 deg
-    // then move the hue at the right end of the range +/- 360 deg
-    // and add the next point in the original place + 0.00001 with original hue
-    // to not break the next range
-    const correctedInputRange = [inputRange[0]];
-    const originalH = colors.h;
-    const correctedH = [originalH[0]];
-
-    for (let i = 1; i < originalH.length; ++i) {
-      const d = originalH[i] - originalH[i - 1];
-      if (originalH[i] > originalH[i - 1] && d > 0.5) {
-        correctedInputRange.push(inputRange[i]);
-        correctedInputRange.push(inputRange[i] + 0.00001);
-        correctedH.push(originalH[i] - 1);
-        correctedH.push(originalH[i]);
-      } else if (originalH[i] < originalH[i - 1] && d < -0.5) {
-        correctedInputRange.push(inputRange[i]);
-        correctedInputRange.push(inputRange[i] + 0.00001);
-        correctedH.push(originalH[i] + 1);
-        correctedH.push(originalH[i]);
-      } else {
-        correctedInputRange.push(inputRange[i]);
-        correctedH.push(originalH[i]);
-      }
-    }
-    h =
-      (interpolate(
-        value,
-        correctedInputRange,
-        correctedH,
-        Extrapolation.CLAMP
-      ) +
-        1) %
-      1;
-  } else {
-    h = interpolate(value, inputRange, colors.h, Extrapolation.CLAMP);
-  }
-  const s = interpolate(value, inputRange, colors.s, Extrapolation.CLAMP);
-  const v = interpolate(value, inputRange, colors.v, Extrapolation.CLAMP);
-  const a = interpolate(value, inputRange, colors.a, Extrapolation.CLAMP);
-  return hsvToColor(h, s, v, a);
-};
-
-const toLinearSpace = (x: number[], gamma: number): number[] => {
-  'worklet';
-  return x.map((v) => Math.pow(v / 255, gamma));
-};
-
-const toGammaSpace = (x: number, gamma: number): number => {
-  'worklet';
-  return Math.round(Math.pow(x, 1 / gamma) * 255);
-};
-
-const interpolateColorsRGB = (
-  value: number,
-  inputRange: readonly number[],
-  colors: InterpolateRGB,
-  options: InterpolationOptions
-) => {
-  'worklet';
-  const { gamma = 2.2 } = options;
-  let { r: outputR, g: outputG, b: outputB } = colors;
-  if (gamma !== 1) {
-    outputR = toLinearSpace(outputR, gamma);
-    outputG = toLinearSpace(outputG, gamma);
-    outputB = toLinearSpace(outputB, gamma);
-  }
-  const r = interpolate(value, inputRange, outputR, Extrapolation.CLAMP);
-  const g = interpolate(value, inputRange, outputG, Extrapolation.CLAMP);
-  const b = interpolate(value, inputRange, outputB, Extrapolation.CLAMP);
-  const a = interpolate(value, inputRange, colors.a, Extrapolation.CLAMP);
-  if (gamma === 1) {
-    return rgbaColor(r, g, b, a);
-  }
-  return rgbaColor(
-    toGammaSpace(r, gamma),
-    toGammaSpace(g, gamma),
-    toGammaSpace(b, gamma),
-    a
-  );
-};
-
-const interpolateColorsLAB = (
-  value: number,
-  inputRange: readonly number[],
-  colors: InterpolateLAB,
-  _options: InterpolationOptions
-) => {
-  'worklet';
-  const l = interpolate(value, inputRange, colors.l, Extrapolation.CLAMP);
-  const a = interpolate(value, inputRange, colors.a, Extrapolation.CLAMP);
-  const b = interpolate(value, inputRange, colors.b, Extrapolation.CLAMP);
-  const alpha = interpolate(
-    value,
-    inputRange,
-    colors.alpha,
-    Extrapolation.CLAMP
-  );
-  const {
-    r: _r,
-    g: _g,
-    b: _b,
-    alpha: _alpha,
-  } = culori.oklab.convert.toRgb({ l, a, b, alpha });
-  return rgbaColor(_r, _g, _b, _alpha);
-};
-
-const _splitColorsIntoChannels = (
-  processedColors: readonly number[],
-  convFromRgb: (color: { r: number; g: number; b: number }) => {
-    ch1: number;
-    ch2: number;
-    ch3: number;
-  }
-): {
-  ch1: number[];
-  ch2: number[];
-  ch3: number[];
-  alpha: number[];
-} => {
-  'worklet';
-  const ch1: number[] = [];
-  const ch2: number[] = [];
-  const ch3: number[] = [];
-  const alpha: number[] = [];
-
-  for (const processedColor of processedColors) {
-    const convertedColor = convFromRgb({
-      r: red(processedColor),
-      g: green(processedColor),
-      b: blue(processedColor),
-    });
-
-    ch1.push(convertedColor.ch1);
-    ch2.push(convertedColor.ch2);
-    ch3.push(convertedColor.ch3);
-    alpha.push(opacity(processedColor));
-  }
-
-  return {
-    ch1,
-    ch2,
-    ch3,
-    alpha,
-  };
-};
-
+// Public types — re-exported from the package barrel for backward compat.
 export interface InterpolateRGB {
   r: number[];
   g: number[];
   b: number[];
   a: number[];
 }
-
-const getInterpolateRGB = (
-  processedColors: readonly number[]
-): InterpolateRGB => {
-  'worklet';
-  const { ch1, ch2, ch3, alpha } = _splitColorsIntoChannels(
-    processedColors,
-    (color) => ({
-      ch1: color.r,
-      ch2: color.g,
-      ch3: color.b,
-    })
-  );
-
-  return {
-    r: ch1,
-    g: ch2,
-    b: ch3,
-    a: alpha,
-  };
-};
 
 export interface InterpolateHSV {
   h: number[];
@@ -219,143 +34,213 @@ export interface InterpolateHSV {
   a: number[];
 }
 
-const getInterpolateHSV = (
-  processedColors: readonly number[]
-): InterpolateHSV => {
+const TRANSPARENCY_MASK = 0x00ffffff; // AARRGGBB → mask alpha byte off
+
+// Returns i such that the active bracket is (i, i+1). Mirrors
+// `interpolate()`'s right-of-range behavior so values past the last stop
+// map to the final segment.
+function findBracket(value: number, inputRange: readonly number[]): number {
   'worklet';
-  const { ch1, ch2, ch3, alpha } = _splitColorsIntoChannels(
-    processedColors,
-    (color) => {
-      const hsvColor = RGBtoHSV(color.r, color.g, color.b);
-      return {
-        ch1: hsvColor.h,
-        ch2: hsvColor.s,
-        ch3: hsvColor.v,
-      };
-    }
-  );
-
-  return {
-    h: ch1,
-    s: ch2,
-    v: ch3,
-    a: alpha,
-  };
-};
-
-interface InterpolateLAB {
-  l: number[];
-  a: number[];
-  b: number[];
-  alpha: number[];
-}
-
-const getInterpolateLAB = (
-  processedColors: readonly number[]
-): InterpolateLAB => {
-  'worklet';
-  const { ch1, ch2, ch3, alpha } = _splitColorsIntoChannels(
-    processedColors,
-    (color) => {
-      const labColor = culori.oklab.convert.fromRgb(color);
-      return {
-        ch1: labColor.l,
-        ch2: labColor.a,
-        ch3: labColor.b,
-      };
-    }
-  );
-
-  return {
-    l: ch1,
-    a: ch2,
-    b: ch3,
-    alpha,
-  };
-};
-
-const TRANSPARENCY_MASK = 0x00ffffff; // AARRGGBB
-
-/**
- * Processes color ranges to handle transparent color interpolation by replacing
- * 'transparent' values with RGBA values that preserve the RGB channels from
- * neighboring colors while setting alpha to 0.
- *
- * @example
- *   // Transparent between colors gets RGB from both neighbors
- *   ['red', 'transparent', 'blue'] → ['rgba(255, 0, 0, 1)', 'rgba(255, 0, 0, 0)', 'rgba(0, 0, 255, 0)', 'rgba(0, 0, 255, 1)']
- *
- *   // Consecutive transparent values are consolidated if possible
- *   ['transparent', 'transparent', 'red'] → ['rgba(255, 0, 0, 0)', 'rgba(255, 0, 0, 1)']
- */
-function processColorRanges(
-  inputRange: readonly number[],
-  outputRange: readonly (number | string)[]
-): [readonly number[], readonly number[]] {
-  'worklet';
-  const processedInputRange: number[] = [];
-  const processedOutputRange: number[] = [];
-  let isPrevTransparent = false;
-
-  for (let i = 0; i < inputRange.length; i++) {
-    const color = outputRange[i];
-    const processedColor = processColor(color);
-
-    const isTransparent = color === 'transparent';
-
-    if (!isTransparent) {
-      if (isPrevTransparent) {
-        // Ensure that we animate from the correct RGB values (the same as in the
-        // current color) with alpha 0 when animating from transparent to a color.
-        processedInputRange.push(inputRange[i - 1]);
-        processedOutputRange.push(processedColor & TRANSPARENCY_MASK);
-      }
-      // Add current color to the output range
-      processedInputRange.push(inputRange[i]);
-      processedOutputRange.push(processedColor);
-    } else if (!isPrevTransparent) {
-      // If the transparent color is encountered after the non-transparent color,
-      // then we add the last processed color with alpha 0 to the output range.
-      if (isTransparent && i > 0) {
-        const lastProcessedColor =
-          processedOutputRange[processedOutputRange.length - 1];
-        processedInputRange.push(inputRange[i]);
-        processedOutputRange.push(lastProcessedColor & TRANSPARENCY_MASK);
-      }
-    } else if (i === inputRange.length - 1 && !processedOutputRange.length) {
-      // If the end of the input range is reached, the previous color was transparent
-      // and the output range is empty, that means all colors were transparent,
-      // so we can add just 2 transparent colors to the output range.
-      const lastindex = inputRange.length - 1;
-      processedInputRange.push(inputRange[0], inputRange[lastindex]);
-      processedOutputRange.push(0, 0);
-    }
-
-    isPrevTransparent = isTransparent;
+  const length = inputRange.length;
+  if (value > inputRange[length - 1]) return length - 2;
+  let left = 1;
+  let right = length - 1;
+  while (left < right) {
+    const mid = Math.floor((left + right) / 2);
+    if (value <= inputRange[mid]) right = mid;
+    else left = mid + 1;
   }
-
-  return [processedInputRange, processedOutputRange];
+  return left - 1;
 }
 
-// Identity-keyed memo of processColorRanges + getInterpolate* output (the
-// per-call regex parse + channel split). Reanimated callers pass stable
-// closure-captured ranges → hit; fresh arrays per call miss + recompute
-// (bit-identical to the un-memoized path; in-place mutation returns stale,
-// so callers must allocate a new array on logical change — already the
-// React-idiomatic pattern). Map (not WeakMap): worklets serializer supports
-// Map<object, …> via SerializableMap but rejects WeakMap. 256-entry soft cap
-// per layer guards pathological churn (real code uses a handful of ranges).
-type Prepared = {
-  inputRange: readonly number[];
-  rgb?: InterpolateRGB;
-  hsv?: InterpolateHSV;
-  lab?: InterpolateLAB;
+function clamp01(t: number): number {
+  'worklet';
+  if (t < 0) return 0;
+  if (t > 1) return 1;
+  return t;
+}
+
+function lerp(a: number, b: number, t: number): number {
+  'worklet';
+  // Snap to endpoints so out-of-range CLAMP results are bit-identical to the
+  // pre-existing implementation's behavior (which returned the edge value
+  // directly from `interpolate`'s CLAMP branch).
+  if (t === 0) return a;
+  if (t === 1) return b;
+  return a + t * (b - a);
+}
+
+function findNonTransparentLeft(
+  outputRange: readonly (number | string)[],
+  startInclusive: number
+): number {
+  'worklet';
+  for (let j = startInclusive; j >= 0; j--) {
+    if (outputRange[j] !== 'transparent') return j;
+  }
+  return -1;
+}
+
+function findNonTransparentRight(
+  outputRange: readonly (number | string)[],
+  startInclusive: number
+): number {
+  'worklet';
+  const n = outputRange.length;
+  for (let j = startInclusive; j < n; j++) {
+    if (outputRange[j] !== 'transparent') return j;
+  }
+  return -1;
+}
+
+// Resolves the two RGBA endpoints for the active bracket (i, i+1).
+// Replicates the original processColorRanges transparency rules locally:
+//   (not-T, not-T): both endpoints carry their parsed RGB and alpha.
+//   (not-T, T)    : right endpoint = left RGB with alpha 0.
+//   (T, not-T)    : left  endpoint = right RGB with alpha 0.
+//   (T, T)        : use the nearest non-T neighbor on each side (alpha 0
+//                   throughout); fully-transparent runs collapse to 0.
+// Only the bracket plus an optional outward scan in the (T,T) case is read,
+// so this is O(1) for typical palettes (a single transparent stop never
+// neighbors another one).
+type Endpoints = {
+  rgbL: number; // 0x00RRGGBB
+  alphaL: number; // 0..1
+  rgbR: number;
+  alphaR: number;
 };
-const INTERPOLATE_COLOR_CACHE_MAX = 256;
-const interpolateColorCache = new Map<
-  object,
-  Map<object, Map<string, Prepared>>
->();
+
+function resolveEndpoints(
+  outputRange: readonly (number | string)[],
+  i: number
+): Endpoints {
+  'worklet';
+  const leftIsT = outputRange[i] === 'transparent';
+  const rightIsT = outputRange[i + 1] === 'transparent';
+
+  if (!leftIsT && !rightIsT) {
+    const cl = processColor(outputRange[i]) as number;
+    const cr = processColor(outputRange[i + 1]) as number;
+    return {
+      rgbL: cl & TRANSPARENCY_MASK,
+      alphaL: opacity(cl),
+      rgbR: cr & TRANSPARENCY_MASK,
+      alphaR: opacity(cr),
+    };
+  }
+  if (!leftIsT && rightIsT) {
+    const cl = processColor(outputRange[i]) as number;
+    const rgb = cl & TRANSPARENCY_MASK;
+    return { rgbL: rgb, alphaL: opacity(cl), rgbR: rgb, alphaR: 0 };
+  }
+  if (leftIsT && !rightIsT) {
+    const cr = processColor(outputRange[i + 1]) as number;
+    const rgb = cr & TRANSPARENCY_MASK;
+    return { rgbL: rgb, alphaL: 0, rgbR: rgb, alphaR: opacity(cr) };
+  }
+  const leftIdx = findNonTransparentLeft(outputRange, i - 1);
+  const rightIdx = findNonTransparentRight(outputRange, i + 2);
+  if (leftIdx < 0 && rightIdx < 0) {
+    return { rgbL: 0, alphaL: 0, rgbR: 0, alphaR: 0 };
+  }
+  if (leftIdx < 0) {
+    const rgb =
+      (processColor(outputRange[rightIdx]) as number) & TRANSPARENCY_MASK;
+    return { rgbL: rgb, alphaL: 0, rgbR: rgb, alphaR: 0 };
+  }
+  if (rightIdx < 0) {
+    const rgb =
+      (processColor(outputRange[leftIdx]) as number) & TRANSPARENCY_MASK;
+    return { rgbL: rgb, alphaL: 0, rgbR: rgb, alphaR: 0 };
+  }
+  const cl =
+    (processColor(outputRange[leftIdx]) as number) & TRANSPARENCY_MASK;
+  const cr =
+    (processColor(outputRange[rightIdx]) as number) & TRANSPARENCY_MASK;
+  return { rgbL: cl, alphaL: 0, rgbR: cr, alphaR: 0 };
+}
+
+function interpolateRGB(
+  t: number,
+  e: Endpoints,
+  options: InterpolationOptions
+): string | number {
+  'worklet';
+  const { gamma = 2.2 } = options;
+  const rL = (e.rgbL >> 16) & 255;
+  const gL = (e.rgbL >> 8) & 255;
+  const bL = e.rgbL & 255;
+  const rR = (e.rgbR >> 16) & 255;
+  const gR = (e.rgbR >> 8) & 255;
+  const bR = e.rgbR & 255;
+  const a = lerp(e.alphaL, e.alphaR, t);
+  if (gamma === 1) {
+    return rgbaColor(lerp(rL, rR, t), lerp(gL, gR, t), lerp(bL, bR, t), a);
+  }
+  const linR = lerp(Math.pow(rL / 255, gamma), Math.pow(rR / 255, gamma), t);
+  const linG = lerp(Math.pow(gL / 255, gamma), Math.pow(gR / 255, gamma), t);
+  const linB = lerp(Math.pow(bL / 255, gamma), Math.pow(bR / 255, gamma), t);
+  return rgbaColor(
+    Math.round(Math.pow(linR, 1 / gamma) * 255),
+    Math.round(Math.pow(linG, 1 / gamma) * 255),
+    Math.round(Math.pow(linB, 1 / gamma) * 255),
+    a
+  );
+}
+
+function interpolateHSV(
+  t: number,
+  e: Endpoints,
+  options: InterpolationOptions
+): string | number {
+  'worklet';
+  const { useCorrectedHSVInterpolation = true } = options;
+  const hsvL = RGBtoHSV(
+    (e.rgbL >> 16) & 255,
+    (e.rgbL >> 8) & 255,
+    e.rgbL & 255
+  );
+  const hsvR = RGBtoHSV(
+    (e.rgbR >> 16) & 255,
+    (e.rgbR >> 8) & 255,
+    e.rgbR & 255
+  );
+  let hR = hsvR.h;
+  if (useCorrectedHSVInterpolation) {
+    const d = hR - hsvL.h;
+    if (d > 0.5) hR -= 1;
+    else if (d < -0.5) hR += 1;
+  }
+  let h = lerp(hsvL.h, hR, t);
+  if (useCorrectedHSVInterpolation) h = (h + 1) % 1;
+  return hsvToColor(
+    h,
+    lerp(hsvL.s, hsvR.s, t),
+    lerp(hsvL.v, hsvR.v, t),
+    lerp(e.alphaL, e.alphaR, t)
+  );
+}
+
+function interpolateLAB(t: number, e: Endpoints): string | number {
+  'worklet';
+  const labL = culori.oklab.convert.fromRgb({
+    r: (e.rgbL >> 16) & 255,
+    g: (e.rgbL >> 8) & 255,
+    b: e.rgbL & 255,
+  });
+  const labR = culori.oklab.convert.fromRgb({
+    r: (e.rgbR >> 16) & 255,
+    g: (e.rgbR >> 8) & 255,
+    b: e.rgbR & 255,
+  });
+  const { r, g, b, alpha } = culori.oklab.convert.toRgb({
+    l: lerp(labL.l, labR.l, t),
+    a: lerp(labL.a, labR.a, t),
+    b: lerp(labL.b, labR.b, t),
+    alpha: lerp(e.alphaL, e.alphaR, t),
+  });
+  return rgbaColor(r, g, b, alpha);
+}
 
 /**
  * Lets you map a value from a range of numbers to a range of colors using
@@ -399,48 +284,25 @@ export function interpolateColor(
   options: InterpolationOptions = {}
 ): string | number {
   'worklet';
-  const outerKey = outputRange as unknown as object;
-  const innerKey = inputRange as unknown as object;
-  let byInput = interpolateColorCache.get(outerKey);
-  let byCs = byInput?.get(innerKey);
-  let prep = byCs?.get(colorSpace);
-  if (prep === undefined) {
-    // Compute (and possibly throw) before mutating the cache so that a bad
-    // `outputRange` color or an invalid `colorSpace` doesn't leave empty
-    // `byInput`/`byCs` entries behind.
-    const [pin, pout] = processColorRanges(inputRange, outputRange);
-    if (colorSpace === 'HSV') {
-      prep = { inputRange: pin, hsv: getInterpolateHSV(pout) };
-    } else if (colorSpace === 'RGB') {
-      prep = { inputRange: pin, rgb: getInterpolateRGB(pout) };
-    } else if (colorSpace === 'LAB') {
-      prep = { inputRange: pin, lab: getInterpolateLAB(pout) };
-    } else {
-      throw new Error(
-        `[Reanimated] Invalid color space provided: ${
-          colorSpace as string
-        }. Supported values are: ['RGB', 'HSV', 'LAB'].`
-      );
-    }
-    if (byInput === undefined) {
-      if (interpolateColorCache.size >= INTERPOLATE_COLOR_CACHE_MAX) {
-        interpolateColorCache.clear();
-      }
-      byInput = new Map();
-      interpolateColorCache.set(outerKey, byInput);
-    }
-    if (byCs === undefined) {
-      if (byInput.size >= INTERPOLATE_COLOR_CACHE_MAX) byInput.clear();
-      byCs = new Map();
-      byInput.set(innerKey, byCs);
-    }
-    byCs.set(colorSpace, prep);
+  if (inputRange.length < 2 || outputRange.length < 2) {
+    throw new Error(
+      '[Reanimated] Interpolation input and output ranges should contain at least two values.'
+    );
   }
-
-  if (colorSpace === 'HSV') {
-    return interpolateColorsHSV(value, prep.inputRange, prep.hsv!, options);
-  } else if (colorSpace === 'RGB') {
-    return interpolateColorsRGB(value, prep.inputRange, prep.rgb!, options);
-  }
-  return interpolateColorsLAB(value, prep.inputRange, prep.lab!, options);
+  // Lazy: binary-search the bracket first, parse only the two endpoint
+  // colors. O(log N) per call (HEAD parsed every stop every frame, O(N)).
+  // No cache; mutation-safe; pays no first-call O(N) tax.
+  const i = findBracket(value, inputRange);
+  const xl = inputRange[i];
+  const xr = inputRange[i + 1];
+  const t = xr === xl ? 0 : clamp01((value - xl) / (xr - xl));
+  const e = resolveEndpoints(outputRange, i);
+  if (colorSpace === 'RGB') return interpolateRGB(t, e, options);
+  if (colorSpace === 'HSV') return interpolateHSV(t, e, options);
+  if (colorSpace === 'LAB') return interpolateLAB(t, e);
+  throw new Error(
+    `[Reanimated] Invalid color space provided: ${
+      colorSpace as string
+    }. Supported values are: ['RGB', 'HSV', 'LAB'].`
+  );
 }
