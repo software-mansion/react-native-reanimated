@@ -41,7 +41,7 @@ export function GlobalOriginSourceSection({
   return (
     <View style={styles.section}>
       <Text style={styles.heading}>
-        4. globalOrigin is deprecated — use originX/Y
+        globalOrigin is deprecated — use originX/Y
       </Text>
       <Text style={styles.body}>
         values.targetGlobalOriginX/Y is always 0 in shared transitions. Use
