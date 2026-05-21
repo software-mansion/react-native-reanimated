@@ -1,14 +1,14 @@
 module.exports = {
-  source: "src",
-  output: "lib",
+  source: 'src',
+  output: 'lib',
   targets: [
     [
-      "module",
+      'module',
       {
         esm: true,
-        jsxRuntime: "automatic",
+        jsxRuntime: 'automatic',
       },
     ],
-    "typescript",
+    'typescript',
   ],
 };

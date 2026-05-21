@@ -1,1 +1,1 @@
-module.exports = require("../../bob.config.js");
+module.exports = require('../../bob.config.js');
