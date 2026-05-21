@@ -2,21 +2,9 @@ name: Lint clang-tidy
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/lint-clang-tidy.yml'
-      - 'scripts/clang-tidy-lint.sh'
-
-  merge_group:
-    branches:
-      - main
-
   pull_request:
     paths:
       - '.github/workflows/lint-clang-tidy.yml'
-      - 'scripts/clang-tidy-lint.sh'
   workflow_call:
   workflow_dispatch:
 
