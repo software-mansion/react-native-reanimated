@@ -1,4 +1,4 @@
-#include <reanimated/CSS/core/CSSLoopTransition.h>
+#include <reanimated/CSS/core/transition/CSSLoopTransition.h>
 
 #include <jsi/JSIDynamic.h>
 

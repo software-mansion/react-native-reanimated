@@ -1,7 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
-#include <reanimated/CSS/core/CSSTransition.h>
+#include <reanimated/CSS/core/transition/CSSTransition.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>

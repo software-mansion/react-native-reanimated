@@ -34,6 +34,7 @@ struct CSSTransitionConfig {
   std::vector<std::string> removedProperties;
 };
 
-CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config);
+CSSTransitionConfig
+parseCSSTransitionConfig(jsi::Runtime &rt, const std::string &componentName, const jsi::Value &config);
 
 } // namespace reanimated::css

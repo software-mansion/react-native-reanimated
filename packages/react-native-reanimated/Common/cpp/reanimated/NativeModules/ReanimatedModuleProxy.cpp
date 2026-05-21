@@ -588,7 +588,7 @@ void ReanimatedModuleProxy::runCSSTransition(
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &transitionConfig) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  const auto config = parseCSSTransitionConfig(rt, transitionConfig);
+  const auto config = parseCSSTransitionConfig(rt, shadowNode->getComponentName(), transitionConfig);
 
   auto lock = updatesRegistryManager_->lock();
   cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, config);
@@ -613,7 +613,8 @@ void ReanimatedModuleProxy::registerPseudoStyle(
     return;
   }
 
-  auto transitionConfig = css::parseCSSTransitionConfig(rt, configObj.getProperty(rt, "transition"));
+  auto transitionConfig =
+      css::parseCSSTransitionConfig(rt, shadowNode->getComponentName(), configObj.getProperty(rt, "transition"));
   // We want to provide only the default settings (we drop the diff not to run any transitions straight away.
   // The diff will be provided when `PseudoStylesRegistry::onSelectorStateChanged` is run).
   transitionConfig.changedProperties.clear();
