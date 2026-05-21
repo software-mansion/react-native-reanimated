@@ -97,9 +97,13 @@ export enum LayoutAnimationType {
   ENTERING = 1,
   EXITING = 2,
   LAYOUT = 3,
+  /** Keyed by view tag. */
   SHARED_ELEMENT_TRANSITION = 4,
+  /** Keyed by placeholder nativeID until the view mounts. */
   SHARED_ELEMENT_TRANSITION_NATIVE_ID = 5,
+  /** Keyed by view tag. */
   SHARED_ELEMENT_TRANSITION_PROGRESS = 6,
+  /** Keyed by placeholder nativeID until the view mounts. */
   SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID = 7,
 }
 
