@@ -28,6 +28,11 @@ import {
   OriginTargetScreen,
 } from './GlobalOrigin';
 import {
+  OpacitySourceSection,
+  OpacityTargetRoute,
+  OpacityTargetScreen,
+} from './Opacity';
+import {
   ProgressSourceSection,
   ProgressTargetRoute,
   ProgressTargetScreen,
@@ -43,6 +48,7 @@ function MenuContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
       <BorderRadiusSourceSection navigate={navigate} />
       <GlobalOriginSourceSection navigate={navigate} />
       <BackgroundColorSourceSection navigate={navigate} />
+      <OpacitySourceSection navigate={navigate} />
     </Animated.ScrollView>
   );
 }
@@ -86,6 +92,11 @@ export default function CustomTransitionExample() {
       <Stack.Screen
         name={BackgroundColorTargetRoute}
         component={BackgroundColorTargetScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={OpacityTargetRoute}
+        component={OpacityTargetScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
