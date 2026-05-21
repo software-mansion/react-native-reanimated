@@ -1,21 +1,21 @@
-#include <reanimated/CSS/core/CSSAnimationGroup.h>
+#include <reanimated/CSS/core/CSSAnimationsGroup.h>
 
 #include <utility>
 
 namespace reanimated::css {
 
-CSSAnimationGroup::CSSAnimationGroup(std::shared_ptr<const ShadowNode> shadowNode, CSSAnimationsVector animations)
+CSSAnimationsGroup::CSSAnimationsGroup(std::shared_ptr<const ShadowNode> shadowNode, CSSAnimationsVector animations)
     : shadowNode_(std::move(shadowNode)), animations_(std::move(animations)) {}
 
-const CSSAnimationsVector &CSSAnimationGroup::getAnimations() const {
+const CSSAnimationsVector &CSSAnimationsGroup::getAnimations() const {
   return animations_;
 }
 
-ShadowNodeFamily::Shared CSSAnimationGroup::getShadowNodeFamily() const {
+ShadowNodeFamily::Shared CSSAnimationsGroup::getShadowNodeFamily() const {
   return shadowNode_->getFamilyShared();
 }
 
-void CSSAnimationGroup::updateSettings(const CSSAnimationSettingsUpdatesMap &settingsUpdates, const double timestamp) {
+void CSSAnimationsGroup::updateSettings(const CSSAnimationSettingsUpdatesMap &settingsUpdates, const double timestamp) {
   for (size_t i = 0; i < animations_.size(); ++i) {
     const auto it = settingsUpdates.find(i);
     if (it != settingsUpdates.end()) {
@@ -24,19 +24,19 @@ void CSSAnimationGroup::updateSettings(const CSSAnimationSettingsUpdatesMap &set
   }
 }
 
-void CSSAnimationGroup::schedule() {
+void CSSAnimationsGroup::schedule(OperationsLoop &loop) {
   for (const auto &animation : animations_) {
-    animation->schedule();
+    animation->schedule(loop);
   }
 }
 
-void CSSAnimationGroup::unschedule() const {
+void CSSAnimationsGroup::unschedule(OperationsLoop &loop) const {
   for (const auto &animation : animations_) {
-    animation->unschedule();
+    animation->unschedule(loop);
   }
 }
 
-folly::dynamic CSSAnimationGroup::computeStyle(bool includeResetStyles) const {
+folly::dynamic CSSAnimationsGroup::computeStyle(bool includeResetStyles) const {
   folly::dynamic style = folly::dynamic::object;
 
   for (const auto &animation : animations_) {

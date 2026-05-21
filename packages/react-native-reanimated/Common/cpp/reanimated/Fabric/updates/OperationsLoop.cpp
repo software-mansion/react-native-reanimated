@@ -140,7 +140,7 @@ void OperationsLoop::activateDelayedOperations(double timestamp) {
 }
 
 void OperationsLoop::updateActiveOperations(double timestamp) {
-  std::erase_if(activeOps_, [&](auto &op) { return !op->update(timestamp); });
+  std::erase_if(activeOps_, [&](auto &op) { return !op->update(timestamp, *this); });
 }
 
 } // namespace reanimated

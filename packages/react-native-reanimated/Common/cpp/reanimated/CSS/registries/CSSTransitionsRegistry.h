@@ -41,11 +41,23 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
  private:
   using Registry = std::unordered_map<Tag, std::shared_ptr<CSSTransition>>;
 
+  class TransitionObserver : public CSSTransition::Observer {
+   public:
+    explicit TransitionObserver(CSSTransitionsRegistry &owner);
+    void onTransitionUpdate(Tag viewTag) override;
+
+   private:
+    CSSTransitionsRegistry &owner_;
+  };
+
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
   const std::shared_ptr<OperationsLoop> loop_;
 
+  TransitionObserver transitionObserver_{*this};
+
   Registry registry_;
-  std::shared_ptr<std::unordered_set<Tag>> updatedViewTags_;
+  // Tags reported by owned transitions between flushes.
+  std::unordered_set<Tag> updatedTags_;
 
   void removeTag(Tag viewTag) override;
   void updateInUpdatesRegistry(const std::shared_ptr<CSSTransition> &transition, const folly::dynamic &updates);

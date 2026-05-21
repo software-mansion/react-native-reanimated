@@ -1,6 +1,5 @@
 #pragma once
 
-#include <reanimated/Fabric/updates/LoopOperation.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <worklets/Compat/StableApi.h>
@@ -20,13 +19,17 @@ namespace reanimated {
 
 class OperationsLoop : public std::enable_shared_from_this<OperationsLoop> {
  public:
+  class LoopOperation {
+   public:
+    virtual ~LoopOperation() = default;
+    virtual bool update(double timestamp, OperationsLoop &loop) = 0;
+  };
+
   OperationsLoop(
       const std::shared_ptr<worklets::UIScheduler> &uiScheduler,
       const RequestRenderFunction &requestRender,
       const GetAnimationTimestampFunction &getTimestamp);
 
-  // Returns the cached frame timestamp if one is in flight, otherwise fetches
-  // a fresh one and schedules a frame to invalidate it.
   double resolveTimestamp();
 
   // True if anything is queued, active, or delayed in the loop.

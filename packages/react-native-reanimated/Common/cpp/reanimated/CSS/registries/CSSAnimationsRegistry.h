@@ -2,7 +2,7 @@
 
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
-#include <reanimated/CSS/core/CSSAnimationGroup.h>
+#include <reanimated/CSS/core/CSSAnimationsGroup.h>
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/utils/props.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
@@ -38,15 +38,28 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
 #endif
 
  private:
+  class AnimationObserver : public CSSAnimation::Observer {
+   public:
+    explicit AnimationObserver(CSSAnimationsRegistry &owner);
+    void onAnimationUpdate(Tag viewTag) override;
+    void onAnimationNeedsRevert(Tag viewTag) override;
+
+   private:
+    CSSAnimationsRegistry &owner_;
+  };
+
   const std::shared_ptr<OperationsLoop> loop_;
   const std::shared_ptr<CSSKeyframesRegistry> keyframesRegistry_;
 
-  std::unordered_map<Tag, CSSAnimationGroup> groups_;
-  std::shared_ptr<std::unordered_set<Tag>> updatedViewTags_;
-  std::shared_ptr<std::unordered_set<Tag>> revertedTags_;
+  AnimationObserver animationObserver_{*this};
+
+  std::unordered_map<Tag, CSSAnimationsGroup> groups_;
+  // Tags reported by owned animations between flushes.
+  std::unordered_set<Tag> updatedTags_;
+  std::unordered_set<Tag> pendingRevertTags_;
 
   void removeTag(Tag viewTag) override;
-  std::optional<CSSAnimationGroup> maybeBuildNewGroup(
+  std::optional<CSSAnimationsGroup> maybeBuildNewGroup(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const std::string &compoundComponentName,
       const std::optional<std::vector<std::string>> &updatedAnimationNames,

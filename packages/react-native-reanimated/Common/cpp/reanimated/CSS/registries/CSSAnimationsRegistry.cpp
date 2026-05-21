@@ -11,13 +11,10 @@ namespace reanimated::css {
 CSSAnimationsRegistry::CSSAnimationsRegistry(
     const std::shared_ptr<OperationsLoop> &loop,
     const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry)
-    : loop_(loop),
-      keyframesRegistry_(keyframesRegistry),
-      updatedViewTags_(std::make_shared<std::unordered_set<Tag>>()),
-      revertedTags_(std::make_shared<std::unordered_set<Tag>>()) {}
+    : loop_(loop), keyframesRegistry_(keyframesRegistry) {}
 
 bool CSSAnimationsRegistry::needsFlush() const {
-  return !updatedViewTags_->empty();
+  return !updatedTags_.empty();
 }
 
 void CSSAnimationsRegistry::apply(
@@ -31,7 +28,7 @@ void CSSAnimationsRegistry::apply(
   if (newGroup) {
     auto oldIt = groups_.find(viewTag);
     if (oldIt != groups_.end()) {
-      oldIt->second.unschedule();
+      oldIt->second.unschedule(*loop_);
     }
 
     if (newGroup->getAnimations().empty()) {
@@ -49,27 +46,18 @@ void CSSAnimationsRegistry::apply(
 
   auto &group = it->second;
   group.updateSettings(updates.settingsUpdates, loop_->resolveTimestamp());
-  group.schedule();
+  group.schedule(*loop_);
 
   // Set current style to updates registry to ensure that all old
   // styles are removed (replaced by the new style).
   setInUpdatesRegistry(group.getShadowNodeFamily(), group.computeStyle());
   // Mark always as updated to ensure that updates are committed
-  updatedViewTags_->insert(viewTag);
-}
-
-void CSSAnimationsRegistry::removeTag(const Tag viewTag) {
-  auto it = groups_.find(viewTag);
-  if (it != groups_.end()) {
-    it->second.unschedule();
-    groups_.erase(it);
-  }
-  removeFromUpdatesRegistry(viewTag);
-  updatedViewTags_->erase(viewTag);
+  updatedTags_.insert(viewTag);
 }
 
 void CSSAnimationsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
-  for (const auto viewTag : *updatedViewTags_) {
+  const auto tags = std::exchange(updatedTags_, {});
+  for (const auto viewTag : tags) {
     const auto it = groups_.find(viewTag);
     if (it == groups_.end()) {
       continue;
@@ -81,14 +69,14 @@ void CSSAnimationsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
     }
   }
 
-  updatedViewTags_->clear();
   UpdatesRegistry::flushUpdates(updatesBatch);
   updateRegistryForRevertedAnimations();
 }
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
 void CSSAnimationsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
-  for (const auto viewTag : *updatedViewTags_) {
+  const auto tags = std::exchange(updatedTags_, {});
+  for (const auto viewTag : tags) {
     const auto it = groups_.find(viewTag);
     if (it == groups_.end()) {
       continue;
@@ -103,13 +91,31 @@ void CSSAnimationsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatch
     }
   }
 
-  updatedViewTags_->clear();
   UpdatesRegistry::flushUpdates(updatesBatch);
   updateRegistryForRevertedAnimations();
 }
 #endif
 
-std::optional<CSSAnimationGroup> CSSAnimationsRegistry::maybeBuildNewGroup(
+CSSAnimationsRegistry::AnimationObserver::AnimationObserver(CSSAnimationsRegistry &owner) : owner_(owner) {}
+
+void CSSAnimationsRegistry::AnimationObserver::onAnimationUpdate(const Tag viewTag) {
+  owner_.updatedTags_.insert(viewTag);
+}
+
+void CSSAnimationsRegistry::AnimationObserver::onAnimationNeedsRevert(const Tag viewTag) {
+  owner_.pendingRevertTags_.insert(viewTag);
+}
+
+void CSSAnimationsRegistry::removeTag(const Tag viewTag) {
+  auto it = groups_.find(viewTag);
+  if (it != groups_.end()) {
+    it->second.unschedule(*loop_);
+    groups_.erase(it);
+  }
+  removeFromUpdatesRegistry(viewTag);
+}
+
+std::optional<CSSAnimationsGroup> CSSAnimationsRegistry::maybeBuildNewGroup(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::string &compoundComponentName,
     const std::optional<std::vector<std::string>> &updatedAnimationNames,
@@ -157,7 +163,7 @@ std::optional<CSSAnimationGroup> CSSAnimationsRegistry::maybeBuildNewGroup(
     }
   }
 
-  return CSSAnimationGroup(shadowNode, std::move(animations));
+  return CSSAnimationsGroup(shadowNode, std::move(animations));
 }
 
 std::shared_ptr<CSSAnimation> CSSAnimationsRegistry::createAnimation(
@@ -174,17 +180,17 @@ std::shared_ptr<CSSAnimation> CSSAnimationsRegistry::createAnimation(
   }
 
   return std::make_shared<CSSAnimation>(
-      shadowNode->getTag(), name, keyframesConfig->get(), settings, updatedViewTags_, revertedTags_, loop_, timestamp);
+      shadowNode->getTag(), name, keyframesConfig->get(), settings, animationObserver_, timestamp);
 }
 
 void CSSAnimationsRegistry::updateRegistryForRevertedAnimations() {
-  for (const auto viewTag : *revertedTags_) {
+  const auto tags = std::exchange(pendingRevertTags_, {});
+  for (const auto viewTag : tags) {
     const auto it = groups_.find(viewTag);
     if (it != groups_.end()) {
       setInUpdatesRegistry(it->second.getShadowNodeFamily(), it->second.computeStyle());
     }
   }
-  revertedTags_->clear();
 }
 
 } // namespace reanimated::css
