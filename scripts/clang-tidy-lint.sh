@@ -1,12 +1,12 @@
 #!/bin/bash
 
 if [ ! -f "compile_commands.json" ]; then
-  echo "info: missing compile_commands.json, generating one"
-  (
-    cd ../../apps/fabric-example || exit 1
-    yarn
-    cd android && ./gradlew :react-native-worklets:assembleDebug :react-native-reanimated:assembleDebug --build-cache -PreactNativeArchitectures=arm64-v8a
-  )
+  echo "error: compile_commands.json is missing in $(pwd)" >&2
+  echo "       build the package first so the compile database is generated:" >&2
+  echo "         - iOS:     pod install + a build of apps/fabric-example in Xcode" >&2
+  echo "         - Android: a gradle build of apps/fabric-example/android" >&2
+  echo "       see scripts/CLANGD.md" >&2
+  exit 1
 fi
 
 # Pick the clang-tidy that matches the toolchain in the compilation database.

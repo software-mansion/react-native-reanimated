@@ -1,10 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-# Invoked as an Xcode build phase from `apps/fabric-example/ios`.
-# Delegates to xcode-build-server, which parses Xcode's xcactivitylog
-# into `.compile` (a clang-compatible JSON array) and we then publish
-# that as `compile_commands.json` for clangd.
+# Invoked as an Xcode build phase from `apps/<app>/{ios,macos}`. Runs
+# xcode-build-server against the current build's xcactivitylog and then
+# publishes a merged compile_commands.json into each consumer package. See
+# scripts/CLANGD.md.
 
 # Xcode build phases inherit a minimal PATH; add Homebrew prefixes so
 # tools installed via `brew install` (xcode-build-server) are discoverable.
@@ -20,10 +20,9 @@ if [ -z "$xbs" ]; then
   exit 0
 fi
 
-# Resolve the DerivedData base directory.
-# Xcode honors a custom DerivedData location set in Preferences → Locations.
-# Build artifacts (OBJROOT/SYMROOT) may be redirected to a custom build
-# location, but xcactivitylog files always live under DerivedData.
+# Resolve the DerivedData base. A custom location set in Xcode Preferences →
+# Locations is honored; xcactivitylogs always live under DerivedData even
+# when build artifacts (OBJROOT/SYMROOT) are redirected elsewhere.
 dd_base="$(defaults read com.apple.dt.Xcode IDECustomDerivedDataLocation 2>/dev/null || true)"
 if [ -z "$dd_base" ] || [ ! -d "$dd_base" ]; then
   dd_base="$HOME/Library/Developer/Xcode/DerivedData"
@@ -35,39 +34,53 @@ if [ -z "$project" ]; then
   exit 0
 fi
 
-# Detach so the build phase returns immediately and so parse runs after Xcode
-# has flushed *this* build's xcactivitylog (script_phase fires before that
-# happens).
-(
-  sleep 3
+# Wait for the newest xcactivitylog under DerivedData to stop growing,
+# then echo its path on stdout. Replaces a fixed `sleep 3`.
+wait_for_stable_log() {
+  local prev_size=0 stable=0 i=0
+  local timeout_halfseconds=60   # 30s wall-clock
+  local log=""
+  while [ $i -lt $timeout_halfseconds ]; do
+    log=$(find "$dd_base" -maxdepth 4 \
+                -path "*/${project}-*/Logs/Build/*.xcactivitylog" \
+                -print0 2>/dev/null \
+          | xargs -0 stat -f '%m %N' 2>/dev/null \
+          | sort -rn | head -1 | cut -d' ' -f2-)
+    if [ -n "$log" ]; then
+      local size
+      size=$(stat -f '%z' "$log" 2>/dev/null || echo 0)
+      if [ "$size" = "$prev_size" ] && [ "$size" -gt 0 ]; then
+        stable=$((stable + 1))
+        if [ $stable -ge 2 ]; then
+          printf '%s' "$log"
+          return 0
+        fi
+      else
+        stable=0
+        prev_size=$size
+      fi
+    fi
+    sleep 0.5
+    i=$((i + 1))
+  done
+  return 1
+}
 
-  # Find the latest xcactivitylog under <dd-base>/<project>-<hash>/Logs/Build.
-  log=$(find "$dd_base" -maxdepth 4 \
-              -path "*/${project}-*/Logs/Build/*.xcactivitylog" \
-              -print0 2>/dev/null \
-        | xargs -0 stat -f '%m %N' 2>/dev/null \
-        | sort -rn | head -1 | cut -d' ' -f2-)
+(
+  log=$(wait_for_stable_log)
   if [ -z "$log" ]; then
-    echo "warning: no xcactivitylog for ${project} under ${dd_base}" >&2
+    echo "warning: timed out waiting for ${project}'s xcactivitylog under ${dd_base}" >&2
     exit 0
   fi
 
   "$xbs" parse "$log" </dev/null >/dev/null 2>&1 || true
 
-  # Filter xcode-build-server's BSP-style `.compile` into the standard JSON
-  # Compilation Database shape that both clangd and clang-tidy accept.
   if [ -f ".compile" ]; then
-    node "$script_dir/clangd-filter-compile-commands.js"
-
-    # Publish a per-package DB that merges the iOS DB with the latest
-    # gradle/cmake-produced Android DBs (if present). Each file's entry
-    # comes from the freshest source it appears in, so editing iOS-only
-    # files keeps working after an Android build and vice versa.
     for pkg in react-native-reanimated react-native-worklets; do
       pkg_dir="../../../packages/$pkg"
-      node "$script_dir/clangd-merge-compile-commands.js" \
+      node "$script_dir/clangd-publish.js" \
         "$pkg_dir/compile_commands.json" \
-        "compile_commands.json" \
+        ".compile" \
         "$pkg_dir/android/.cxx"
     done
   fi
