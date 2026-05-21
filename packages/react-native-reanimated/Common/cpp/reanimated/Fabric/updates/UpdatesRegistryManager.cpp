@@ -7,11 +7,27 @@
 
 namespace reanimated {
 
+namespace {
+thread_local bool tCurrentThreadHoldsLock = false;
+} // namespace
+
+UpdatesRegistryManager::ScopedLock::ScopedLock(std::mutex &mutex) : guard_(mutex) {
+  tCurrentThreadHoldsLock = true;
+}
+
+UpdatesRegistryManager::ScopedLock::~ScopedLock() {
+  tCurrentThreadHoldsLock = false;
+}
+
 UpdatesRegistryManager::UpdatesRegistryManager(const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)
     : staticPropsRegistry_(staticPropsRegistry) {}
 
-std::lock_guard<std::mutex> UpdatesRegistryManager::lock() const {
-  return std::lock_guard<std::mutex>{mutex_};
+UpdatesRegistryManager::ScopedLock UpdatesRegistryManager::lock() const {
+  return ScopedLock{mutex_};
+}
+
+bool UpdatesRegistryManager::isLockedByCurrentThread() {
+  return tCurrentThreadHoldsLock;
 }
 
 void UpdatesRegistryManager::addRegistry(const std::shared_ptr<UpdatesRegistry> &registry) {

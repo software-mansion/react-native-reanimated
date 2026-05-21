@@ -217,7 +217,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       pseudoStylesRegistry_(std::make_shared<PseudoStylesRegistry>(
           platformDepMethodsHolder.attachPseudoSelector,
           platformDepMethodsHolder.detachPseudoSelector,
-          cssTransitionsRegistry_)),
+          cssTransitionsRegistry_,
+          updatesRegistryManager_)),
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
@@ -247,7 +248,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 
 void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMethodsHolder) {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    // Override the requestRender_ function before passing it to the OperationsLoop
+    // Backend path: callbacks are drained later inside runGrandCallback under
+    // the manager lock; no wrap needed here.
     requestRender_ = [weakThis = weak_from_this()](std::function<void(const double)> callback) {
       auto strongThis = weakThis.lock();
       if (!strongThis) {
@@ -255,6 +257,18 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       }
       strongThis->pendingFrameCallbacks_.push_back(std::move(callback));
       strongThis->startBackendIfNeeded();
+    };
+  } else {
+    // Non-backend path: wrap the platform RAF callback so the subsystem work
+    // runs under the manager lock.
+    requestRender_ = [weakThis = weak_from_this(), platformRequestRender = platformDepMethodsHolder.requestRender](
+                         std::function<void(const double)> callback) {
+      platformRequestRender([weakThis, callback = std::move(callback)](const double timestamp) {
+        if (auto strongThis = weakThis.lock()) {
+          auto lock = strongThis->updatesRegistryManager_->lock();
+          callback(timestamp);
+        }
+      });
     };
   }
 
@@ -560,13 +574,12 @@ void ReanimatedModuleProxy::applyCSSAnimations(
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
 
-  {
-    auto lock = updatesRegistryManager_->lock();
-    cssAnimationsRegistry_->apply(shadowNode, compoundComponentName.asString(rt).utf8(rt), updates);
-  }
+  auto lock = updatesRegistryManager_->lock();
+  cssAnimationsRegistry_->apply(shadowNode, compoundComponentName.asString(rt).utf8(rt), updates);
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
+  auto lock = updatesRegistryManager_->lock();
   cssAnimationsRegistry_->remove(viewTag.asNumber());
 }
 
@@ -577,13 +590,12 @@ void ReanimatedModuleProxy::runCSSTransition(
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto config = parseCSSTransitionConfig(rt, transitionConfig);
 
-  {
-    auto lock = updatesRegistryManager_->lock();
-    cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, config);
-  }
+  auto lock = updatesRegistryManager_->lock();
+  cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, config);
 }
 
 void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) {
+  auto lock = updatesRegistryManager_->lock();
   cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
@@ -605,8 +617,9 @@ void ReanimatedModuleProxy::registerPseudoStyle(
   // We want to provide only the default settings (we drop the diff not to run any transitions straight away.
   // The diff will be provided when `PseudoStylesRegistry::onSelectorStateChanged` is run).
   transitionConfig.changedProperties.clear();
-  cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, transitionConfig);
 
+  auto lock = updatesRegistryManager_->lock();
+  cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, transitionConfig);
   pseudoStylesRegistry_->registerPseudoStyle(
       tag,
       shadowNode,
@@ -616,6 +629,7 @@ void ReanimatedModuleProxy::registerPseudoStyle(
 }
 
 void ReanimatedModuleProxy::unregisterPseudoStyle(jsi::Runtime &, const jsi::Value &viewTag) {
+  auto lock = updatesRegistryManager_->lock();
   pseudoStylesRegistry_->remove(viewTag.asNumber());
 }
 
@@ -794,7 +808,6 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performNonLayoutOperations");
 
   UpdatesBatch updatesBatch = animatedPropsRegistry_->getPendingUpdates();
-
   applySynchronousUpdates(updatesBatch, true);
 }
 
@@ -845,7 +858,7 @@ void ReanimatedModuleProxy::startBackendIfNeeded() {
 void ReanimatedModuleProxy::stopBackendIfIdle(const bool producedMutations) {
 #if REACT_NATIVE_VERSION_MINOR >= 85
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    bool hasWork = producedMutations || !pendingFrameCallbacks_.empty() ||
+    const bool hasWork = producedMutations || !pendingFrameCallbacks_.empty() ||
         pendingAnimationFrameCallbackFromWorklets_ != nullptr || operationsLoop_->hasOngoingOperations() ||
         animatedPropsRegistry_->hasPendingAnimatedPropsUpdates() || shouldFlushRegistry_ ||
         !layoutAnimationFlushRequests_.empty();
@@ -889,11 +902,19 @@ AnimationMutations ReanimatedModuleProxy::runGrandCallback(
 
   switch (source) {
     case GrandCallbackSource::AnimationLoop: {
+      // Worklet callbacks and layout animation flushes run outside the manager
+      // lock: they touch only UI-thread state and may re-enter the proxy (via
+      // requestAnimationFrame or the commit hook).
       executeWorkletsForFrame(timestamp);
-      executeOperationsLoop(timestamp);
       executeLayoutAnimationsRequests();
-      auto mutations = executeOperationsAndCollectUpdates(timestamp);
-      stopBackendIfIdle(!mutations.batch.empty());
+
+      AnimationMutations mutations;
+      {
+        auto lock = updatesRegistryManager_->lock();
+        executeOperationsLoop(timestamp);
+        mutations = executeOperationsAndCollectUpdates(timestamp);
+        stopBackendIfIdle(!mutations.batch.empty());
+      }
       return mutations;
     }
 
@@ -930,7 +951,6 @@ AnimationMutations ReanimatedModuleProxy::executeOperationsAndCollectUpdates(con
   ReanimatedSystraceSection s("ReanimatedModuleProxy::executeOperationsAndCollectUpdates");
 
   UpdatesBatchAnimatedProps batch;
-  auto lock = updatesRegistryManager_->lock();
 
   (void)timestamp;
   cssTransitionsRegistry_->flushUpdates(batch);

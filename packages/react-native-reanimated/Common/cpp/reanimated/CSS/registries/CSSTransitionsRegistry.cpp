@@ -1,4 +1,7 @@
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
+#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
+
+#include <react/debug/react_native_assert.h>
 
 #include <memory>
 #include <utility>
@@ -12,6 +15,7 @@ CSSTransitionsRegistry::CSSTransitionsRegistry(
     : viewStylesRepository_(viewStylesRepository), loop_(loop) {}
 
 bool CSSTransitionsRegistry::needsFlush() const {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   return !updatedTags_.empty();
 }
 
@@ -19,8 +23,7 @@ void CSSTransitionsRegistry::updateConfigOrRun(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const CSSTransitionConfig &config) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto viewTag = shadowNode->getTag();
 
   if (!registry_.contains(viewTag)) {
@@ -42,8 +45,7 @@ void CSSTransitionsRegistry::run(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const PropertyValueDiffsMap &propertyDiffs) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto viewTag = shadowNode->getTag();
   const auto &transition = registry_.at(viewTag);
 
@@ -53,8 +55,7 @@ void CSSTransitionsRegistry::run(
 void CSSTransitionsRegistry::run(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const PropertyValueDynamicDiffsMap &propertyDiffs) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto viewTag = shadowNode->getTag();
   const auto &transition = registry_.at(viewTag);
 
@@ -66,11 +67,11 @@ void CSSTransitionsRegistry::run(
   loop_->schedule(transition, timestamp + transition->getMinDelay(timestamp));
 
   updateInUpdatesRegistry(transition, initialUpdate);
-  // Mark for flush so the initial frame is pulled by the next flushUpdates.
   updatedTags_.insert(viewTag);
 }
 
 void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto tags = std::exchange(updatedTags_, {});
   for (const auto viewTag : tags) {
     const auto it = registry_.find(viewTag);
@@ -86,11 +87,12 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
     }
   }
 
-  UpdatesRegistry::flushUpdates(updatesBatch);
+  flush(updatesBatch);
 }
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
 void CSSTransitionsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto tags = std::exchange(updatedTags_, {});
   for (const auto viewTag : tags) {
     const auto it = registry_.find(viewTag);
@@ -109,7 +111,7 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatc
     }
   }
 
-  UpdatesRegistry::flushUpdates(updatesBatch);
+  flush(updatesBatch);
 }
 #endif
 
@@ -165,7 +167,6 @@ void CSSTransitionsRegistry::runTransition(
 
   loop_->schedule(transition, timestamp + transition->getMinDelay(timestamp));
   updateInUpdatesRegistry(transition, initialUpdate);
-  // Mark for flush so the initial frame is pulled by the next flushUpdates.
   updatedTags_.insert(viewTag);
 }
 
