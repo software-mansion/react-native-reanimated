@@ -371,6 +371,73 @@ export function interpolateColor(
   options?: InterpolationOptions
 ): number;
 
+// Binary-search the bracket of `inputRange` that contains `value`. Mirrors
+// `interpolate`'s right-of-range fall-through so a value past the last stop
+// maps to the final segment.
+function findBracketIndex(
+  value: number,
+  inputRange: readonly number[]
+): number {
+  'worklet';
+  const length = inputRange.length;
+  if (value > inputRange[length - 1]) {
+    return length - 2;
+  }
+  let left = 1;
+  let right = length - 1;
+  while (left < right) {
+    const mid = Math.floor((left + right) / 2);
+    if (value <= inputRange[mid]) {
+      right = mid;
+    } else {
+      left = mid + 1;
+    }
+  }
+  return left - 1;
+}
+
+// Scan outward from `fromIdx` in the given direction for the first
+// non-transparent stop, returning its RGB with alpha masked off.
+function findNonTransparentRgb(
+  outputRange: readonly (string | number)[],
+  fromIdx: number,
+  step: -1 | 1
+): number | null {
+  'worklet';
+  for (let j = fromIdx; j >= 0 && j < outputRange.length; j += step) {
+    if (outputRange[j] !== 'transparent') {
+      return processColor(outputRange[j]) & TRANSPARENCY_MASK;
+    }
+  }
+  return null;
+}
+
+// Build the 2-stop `(input, output)` slice for the active bracket so the
+// existing per-frame helpers do O(1) work on it instead of O(N) on the full
+// palette. A (T, T) bracket can't be expressed by a 2-element slice through
+// `processColorRanges`, so we replicate its outward-scan behaviour locally:
+// RGB lerps through the nearest non-transparent neighbours on either side
+// with alpha 0.
+function buildBracketSlice(
+  outputRange: readonly (string | number)[],
+  bracket: number,
+  xl: number,
+  xr: number
+): [readonly number[], readonly number[]] {
+  'worklet';
+  const cL = outputRange[bracket];
+  const cR = outputRange[bracket + 1];
+  if (cL === 'transparent' && cR === 'transparent') {
+    const leftRgb = findNonTransparentRgb(outputRange, bracket - 1, -1);
+    const rightRgb = findNonTransparentRgb(outputRange, bracket + 2, 1);
+    return [
+      [xl, xr],
+      [leftRgb ?? rightRgb ?? 0, rightRgb ?? leftRgb ?? 0],
+    ];
+  }
+  return processColorRanges([xl, xr], [cL, cR]);
+}
+
 export function interpolateColor(
   value: number,
   inputRange: readonly number[],
@@ -379,57 +446,15 @@ export function interpolateColor(
   options: InterpolationOptions = {}
 ): string | number {
   'worklet';
-  // Lazy bracket-find: only process the two endpoint stops every frame
-  // instead of every color in `outputRange` (O(log N) vs O(N) per call).
-  const length = inputRange.length;
-  let bracket: number;
-  if (value > inputRange[length - 1]) {
-    bracket = length - 2;
-  } else {
-    let left = 1;
-    let right = length - 1;
-    while (left < right) {
-      const mid = Math.floor((left + right) / 2);
-      if (value <= inputRange[mid]) {
-        right = mid;
-      } else {
-        left = mid + 1;
-      }
-    }
-    bracket = left - 1;
-  }
-  const xl = inputRange[bracket];
-  const xr = inputRange[bracket + 1];
-  const cL = outputRange[bracket];
-  const cR = outputRange[bracket + 1];
-
-  let processedInputRange: readonly number[];
-  let processedOutputRange: readonly number[];
-  if (cL === 'transparent' && cR === 'transparent') {
-    // Replicate `processColorRanges`'s outward scan for the (T, T) bracket:
-    // RGB lerps through the nearest non-transparent neighbors with alpha 0.
-    let lRGB: number | null = null;
-    let rRGB: number | null = null;
-    for (let j = bracket - 1; j >= 0; j--) {
-      if (outputRange[j] !== 'transparent') {
-        lRGB = processColor(outputRange[j]) & TRANSPARENCY_MASK;
-        break;
-      }
-    }
-    for (let j = bracket + 2; j < outputRange.length; j++) {
-      if (outputRange[j] !== 'transparent') {
-        rRGB = processColor(outputRange[j]) & TRANSPARENCY_MASK;
-        break;
-      }
-    }
-    processedInputRange = [xl, xr];
-    processedOutputRange = [lRGB ?? rRGB ?? 0, rRGB ?? lRGB ?? 0];
-  } else {
-    [processedInputRange, processedOutputRange] = processColorRanges(
-      [xl, xr],
-      [cL, cR]
-    );
-  }
+  // Lazy: bracket-find first, then only process the two endpoint stops
+  // every frame instead of every color in `outputRange` (O(log N) vs O(N)).
+  const bracket = findBracketIndex(value, inputRange);
+  const [processedInputRange, processedOutputRange] = buildBracketSlice(
+    outputRange,
+    bracket,
+    inputRange[bracket],
+    inputRange[bracket + 1]
+  );
 
   if (colorSpace === 'HSV') {
     return interpolateColorsHSV(
