@@ -6,6 +6,11 @@ import Animated from 'react-native-reanimated';
 
 import { withSharedTransitionBoundary } from '../withSharedTransitionBoundary';
 import {
+  BackgroundColorSourceSection,
+  BackgroundColorTargetRoute,
+  BackgroundColorTargetScreen,
+} from './BackgroundColor';
+import {
   BasicSourceSection,
   BasicTargetRoute,
   BasicTargetScreen,
@@ -37,6 +42,7 @@ function MenuContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
       <ProgressSourceSection navigate={navigate} />
       <BorderRadiusSourceSection navigate={navigate} />
       <GlobalOriginSourceSection navigate={navigate} />
+      <BackgroundColorSourceSection navigate={navigate} />
     </Animated.ScrollView>
   );
 }
@@ -75,6 +81,11 @@ export default function CustomTransitionExample() {
       <Stack.Screen
         name={OriginTargetRoute}
         component={OriginTargetScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={BackgroundColorTargetRoute}
+        component={BackgroundColorTargetScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
