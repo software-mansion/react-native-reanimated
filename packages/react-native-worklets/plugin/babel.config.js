@@ -2,7 +2,9 @@
 const workletsPlugin = require('./index.js');
 
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
-const workletsPluginOptions = {};
+const workletsPluginOptions = {
+  bundleMode: true,
+};
 
 /** @type {import('@babel/core').TransformOptions} */
 module.exports = {
