@@ -21,9 +21,10 @@ export function updateRelativeRequires(
         nodePath.get('callee').isIdentifier({ name: 'require' }) &&
         nodePath.get('arguments')[0]?.isStringLiteral()
       ) {
-        const requiredModule = nodePath.get('arguments')[0];
+        const requiredModule = nodePath.get(
+          'arguments'
+        )[0] as NodePath<StringLiteral>;
         if (
-          requiredModule.isStringLiteral() &&
           requiredModule.node.value.startsWith('.') &&
           isAllowedForRelativeImports(
             state.file.opts.filename || '',

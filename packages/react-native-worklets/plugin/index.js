@@ -569,7 +569,7 @@ var require_imports = __commonJS({
           var _a;
           if (nodePath.get("callee").isIdentifier({ name: "require" }) && ((_a = nodePath.get("arguments")[0]) === null || _a === void 0 ? void 0 : _a.isStringLiteral())) {
             const requiredModule = nodePath.get("arguments")[0];
-            if (requiredModule.isStringLiteral() && requiredModule.node.value.startsWith(".") && isAllowedForRelativeImports(state.file.opts.filename || "", state.opts.workletizableModules)) {
+            if (requiredModule.node.value.startsWith(".") && isAllowedForRelativeImports(state.file.opts.filename || "", state.opts.workletizableModules)) {
               requiredModule.replaceWith(createImportPathLiteral(requiredModule.node.value, state));
             }
           }
