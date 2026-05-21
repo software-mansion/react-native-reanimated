@@ -26,7 +26,7 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
       double iterationCount,
       AnimationDirection direction,
       EasingFunction easingFunction,
-      const std::shared_ptr<KeyframeEasingFunctions> &keyframeEasingFunctions);
+      const std::shared_ptr<KeyframeEasingConfigs> &keyframeEasingConfigs);
 
   void setIterationCount(double iterationCount);
   void setDirection(AnimationDirection direction);
@@ -51,7 +51,7 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   double iterationCount_;
   AnimationDirection direction_;
   EasingFunction easingFunction_;
-  std::shared_ptr<KeyframeEasingFunctions> keyframeEasingFunctions_;
+  std::shared_ptr<KeyframeEasingConfigs> keyframeEasingConfigs_;
 
   AnimationProgressState state_ = AnimationProgressState::Pending;
   unsigned currentIteration_ = 1;

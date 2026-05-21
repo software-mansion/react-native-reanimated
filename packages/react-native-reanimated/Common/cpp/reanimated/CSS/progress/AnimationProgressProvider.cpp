@@ -12,12 +12,12 @@ AnimationProgressProvider::AnimationProgressProvider(
     const double iterationCount,
     const AnimationDirection direction,
     EasingFunction easingFunction,
-    const std::shared_ptr<KeyframeEasingFunctions> &keyframeEasingFunctions)
+    const std::shared_ptr<KeyframeEasingConfigs> &keyframeEasingConfigs)
     : RawProgressProvider(timestamp, duration, delay),
       iterationCount_(iterationCount),
       direction_(direction),
       easingFunction_(std::move(easingFunction)),
-      keyframeEasingFunctions_(keyframeEasingFunctions) {}
+      keyframeEasingConfigs_(keyframeEasingConfigs) {}
 
 void AnimationProgressProvider::setIterationCount(double iterationCount) {
   iterationCount_ = iterationCount;
@@ -48,9 +48,9 @@ double AnimationProgressProvider::getKeyframeProgress(const double fromOffset, c
 
   // Use the overridden easing function if it was overridden for the
   // current keyframe
-  const auto easingFunctionIt = keyframeEasingFunctions_->find(fromOffset);
-  if (easingFunctionIt != keyframeEasingFunctions_->end()) {
-    return easingFunctionIt->second(keyframeProgress);
+  const auto easingConfigIt = keyframeEasingConfigs_->find(fromOffset);
+  if (easingConfigIt != keyframeEasingConfigs_->end()) {
+    return getEasingFunctionFromConfig(easingConfigIt->second)(keyframeProgress);
   }
 
   return easingFunction_(keyframeProgress);
