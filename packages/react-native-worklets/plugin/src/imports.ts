@@ -10,16 +10,34 @@ import { dirname, relative, resolve } from 'path';
 
 import { generatedWorkletsDir, type WorkletsPluginPass } from './types';
 
-const alwaysAllowed = [
-  'react-native-worklets',
-  'react-native/Libraries/Core/setUpXHR', // for networking
-];
-
-const generatedWorkletsDirPath = resolve(
-  dirname(require.resolve('react-native-worklets/package.json')),
-  generatedWorkletsDir
-);
-
+export function updateRelativeRequires(
+  node: FunctionExpression,
+  state: WorkletsPluginPass
+): void {
+  traverse(node, {
+    noScope: true,
+    CallExpression(nodePath) {
+      if (
+        nodePath.get('callee').isIdentifier({ name: 'require' }) &&
+        nodePath.get('arguments')[0]?.isStringLiteral()
+      ) {
+        const requiredModule = nodePath.get('arguments')[0];
+        if (
+          requiredModule.isStringLiteral() &&
+          requiredModule.node.value.startsWith('.') &&
+          isAllowedForRelativeImports(
+            state.file.opts.filename || '',
+            state.opts.workletizableModules
+          )
+        ) {
+          requiredModule.replaceWith(
+            createImportPathLiteral(requiredModule.node.value, state)
+          );
+        }
+      }
+    },
+  });
+}
 export function isImport(binding: Binding): boolean {
   return (
     binding.kind === 'module' &&
@@ -57,38 +75,20 @@ export function isWorkletizableModule(
   );
 }
 
-export function updateImportPath(
-  source: NodePath<StringLiteral>,
-  sourceFilename: string
-): void {
-  const resolved = resolve(dirname(sourceFilename), source.node.value);
-  const newPath = relative(generatedWorkletsDirPath, resolved);
-  source.replaceWith(stringLiteral(newPath));
+export function createImportPathLiteral(
+  originalPath: string,
+  state: WorkletsPluginPass
+): StringLiteral {
+  const generatedWorkletsDirPath = resolve(
+    dirname(require.resolve('react-native-worklets/package.json')),
+    generatedWorkletsDir
+  );
+
+  const resolved = resolve(dirname(state.file.opts.filename!), originalPath);
+  return stringLiteral(relative(generatedWorkletsDirPath, resolved));
 }
 
-export function updateRelativeRequires(
-  node: FunctionExpression,
-  state: WorkletsPluginPass
-): void {
-  traverse(node, {
-    noScope: true,
-    CallExpression(nodePath) {
-      if (
-        nodePath.get('callee').isIdentifier({ name: 'require' }) &&
-        nodePath.get('arguments')[0]?.isStringLiteral()
-      ) {
-        const requiredModule = nodePath.get('arguments')[0];
-        if (
-          requiredModule.isStringLiteral() &&
-          requiredModule.node.value.startsWith('.') &&
-          isAllowedForRelativeImports(
-            state.file.opts.filename || '',
-            state.opts.workletizableModules
-          )
-        ) {
-          updateImportPath(requiredModule, state.file.opts.filename!);
-        }
-      }
-    },
-  });
-}
+const alwaysAllowed = [
+  'react-native-worklets',
+  'react-native/Libraries/Core/setUpXHR', // for networking
+];

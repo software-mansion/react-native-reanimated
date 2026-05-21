@@ -552,22 +552,30 @@ var require_imports = __commonJS({
   "lib/imports.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.updateRelativeRequires = updateRelativeRequires;
     exports2.isImport = isImport;
     exports2.isImportRelative = isImportRelative;
     exports2.isAllowedForRelativeImports = isAllowedForRelativeImports;
     exports2.isWorkletizableModule = isWorkletizableModule;
-    exports2.updateImportPath = updateImportPath;
-    exports2.updateRelativeRequires = updateRelativeRequires;
+    exports2.createImportPathLiteral = createImportPathLiteral;
     var core_1 = require("@babel/core");
     var types_12 = require("@babel/types");
     var path_1 = require("path");
     var types_2 = require_types();
-    var alwaysAllowed = [
-      "react-native-worklets",
-      "react-native/Libraries/Core/setUpXHR"
-      // for networking
-    ];
-    var generatedWorkletsDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), types_2.generatedWorkletsDir);
+    function updateRelativeRequires(node, state) {
+      (0, core_1.traverse)(node, {
+        noScope: true,
+        CallExpression(nodePath) {
+          var _a;
+          if (nodePath.get("callee").isIdentifier({ name: "require" }) && ((_a = nodePath.get("arguments")[0]) === null || _a === void 0 ? void 0 : _a.isStringLiteral())) {
+            const requiredModule = nodePath.get("arguments")[0];
+            if (requiredModule.isStringLiteral() && requiredModule.node.value.startsWith(".") && isAllowedForRelativeImports(state.file.opts.filename || "", state.opts.workletizableModules)) {
+              requiredModule.replaceWith(createImportPathLiteral(requiredModule.node.value, state));
+            }
+          }
+        }
+      });
+    }
     function isImport(binding) {
       return binding.kind === "module" && binding.constant && (binding.path.isImportSpecifier() || binding.path.isImportDefaultSpecifier()) && binding.path.parentPath.isImportDeclaration();
     }
@@ -580,25 +588,16 @@ var require_imports = __commonJS({
     function isWorkletizableModule(source, workletizableModules) {
       return alwaysAllowed.some((module3) => source.startsWith(module3)) || !!(workletizableModules === null || workletizableModules === void 0 ? void 0 : workletizableModules.some((module3) => source.startsWith(module3)));
     }
-    function updateImportPath(source, sourceFilename) {
-      const resolved = (0, path_1.resolve)((0, path_1.dirname)(sourceFilename), source.node.value);
-      const newPath = (0, path_1.relative)(generatedWorkletsDirPath, resolved);
-      source.replaceWith((0, types_12.stringLiteral)(newPath));
+    function createImportPathLiteral(originalPath, state) {
+      const generatedWorkletsDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), types_2.generatedWorkletsDir);
+      const resolved = (0, path_1.resolve)((0, path_1.dirname)(state.file.opts.filename), originalPath);
+      return (0, types_12.stringLiteral)((0, path_1.relative)(generatedWorkletsDirPath, resolved));
     }
-    function updateRelativeRequires(node, state) {
-      (0, core_1.traverse)(node, {
-        noScope: true,
-        CallExpression(nodePath) {
-          var _a;
-          if (nodePath.get("callee").isIdentifier({ name: "require" }) && ((_a = nodePath.get("arguments")[0]) === null || _a === void 0 ? void 0 : _a.isStringLiteral())) {
-            const requiredModule = nodePath.get("arguments")[0];
-            if (requiredModule.isStringLiteral() && requiredModule.node.value.startsWith(".") && isAllowedForRelativeImports(state.file.opts.filename || "", state.opts.workletizableModules)) {
-              updateImportPath(requiredModule, state.file.opts.filename);
-            }
-          }
-        }
-      });
-    }
+    var alwaysAllowed = [
+      "react-native-worklets",
+      "react-native/Libraries/Core/setUpXHR"
+      // for networking
+    ];
   }
 });
 
@@ -696,16 +695,13 @@ var require_generate = __commonJS({
     var assert_1 = __importDefault(require("assert"));
     var fs_1 = require("fs");
     var path_1 = require("path");
+    var imports_1 = require_imports();
     var types_2 = require_types();
     function generateWorkletFile(libraryBindingsToImport, relativeBindingsToImport, factory, workletHash, state) {
       var _a;
       const libraryImports = Array.from(libraryBindingsToImport).filter((binding) => (binding.path.isImportSpecifier() || binding.path.isImportDefaultSpecifier()) && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
       const filesDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), types_2.generatedWorkletsDir);
-      const relativeImports = Array.from(relativeBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => {
-        const resolved = (0, path_1.resolve)((0, path_1.dirname)(state.file.opts.filename), binding.path.parentPath.node.source.value);
-        const importPath = (0, path_1.relative)(filesDirPath, resolved);
-        return (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(importPath));
-      });
+      const relativeImports = Array.from(relativeBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, imports_1.createImportPathLiteral)(binding.path.parentPath.node.source.value, state)));
       const imports = [...libraryImports, ...relativeImports];
       const newProg = (0, types_12.program)([...imports, (0, types_12.exportDefaultDeclaration)(factory)]);
       const transformedProg = (_a = (0, core_1.transformFromAstSync)(newProg, void 0, {
