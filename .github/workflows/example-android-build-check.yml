@@ -5,6 +5,8 @@ on:
   pull_request:
     paths:
       - .github/workflows/example-android-build-check.yml
+      - .clang-tidy
+      - scripts/clang-tidy-lint.sh
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
       - packages/react-native-worklets/android/**
@@ -19,6 +21,8 @@ on:
       - main
     paths:
       - .github/workflows/example-android-build-check.yml
+      - .clang-tidy
+      - scripts/clang-tidy-lint.sh
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
       - packages/react-native-worklets/android/**
@@ -66,3 +70,9 @@ jobs:
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}/android
         run: ./gradlew assembleDebug --build-cache -PreactNativeArchitectures=arm64-v8a
+
+      - name: Clang-tidy lint Worklets
+        run: yarn workspace react-native-worklets lint:clang-tidy
+
+      - name: Clang-tidy lint Reanimated
+        run: yarn workspace react-native-reanimated lint:clang-tidy
