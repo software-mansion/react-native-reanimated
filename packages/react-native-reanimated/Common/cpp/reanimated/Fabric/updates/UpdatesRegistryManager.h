@@ -18,15 +18,10 @@ using namespace css;
 
 class UpdatesRegistryManager {
  public:
-  // RAII guard for the manager mutex that also flips a thread-local flag so
-  // `isLockedByCurrentThread()` can be checked anywhere without holding a
-  // pointer to the manager.
   class [[nodiscard]] ScopedLock {
    public:
     explicit ScopedLock(std::mutex &mutex);
     ~ScopedLock();
-    ScopedLock(const ScopedLock &) = delete;
-    ScopedLock &operator=(const ScopedLock &) = delete;
 
    private:
     std::lock_guard<std::mutex> guard_;

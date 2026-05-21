@@ -8,8 +8,6 @@
 namespace reanimated {
 
 namespace {
-// Set while the current thread holds an UpdatesRegistryManager lock. Lives in
-// the .cpp so it stays a single translation-unit symbol.
 thread_local bool tCurrentThreadHoldsLock = false;
 } // namespace
 

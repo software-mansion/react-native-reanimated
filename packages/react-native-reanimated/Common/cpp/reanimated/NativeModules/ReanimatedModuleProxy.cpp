@@ -922,16 +922,22 @@ AnimationMutations ReanimatedModuleProxy::runGrandCallback(
 
   switch (source) {
     case GrandCallbackSource::AnimationLoop: {
-      // Boundary: backend frame work enters the CSS / animation subsystem here.
-      // Take the manager lock once; inner methods (executeOperationsLoop,
-      // executeOperationsAndCollectUpdates, stopBackendIfIdle) run under it and
-      // do not re-acquire.
-      auto lock = updatesRegistryManager_->lock();
+      // Worklet frame callbacks and layout animation flushes touch only
+      // UI-thread-only state; they run outside the manager lock so they can
+      // safely re-enter the proxy (e.g. requestAnimationFrame from a worklet,
+      // commit-hook callbacks from notifyDelegatesOfUpdates).
       executeWorkletsForFrame(timestamp);
-      executeOperationsLoop(timestamp);
+      AnimationMutations mutations;
+      {
+        auto lock = updatesRegistryManager_->lock();
+        executeOperationsLoop(timestamp);
+      }
       executeLayoutAnimationsRequests();
-      auto mutations = executeOperationsAndCollectUpdates(timestamp);
-      stopBackendIfIdle(!mutations.batch.empty());
+      {
+        auto lock = updatesRegistryManager_->lock();
+        mutations = executeOperationsAndCollectUpdates(timestamp);
+        stopBackendIfIdle(!mutations.batch.empty());
+      }
       return mutations;
     }
 
