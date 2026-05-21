@@ -46,7 +46,7 @@ export function TransformMatrixSourceSection({
   return (
     <View style={styles.section}>
       <Text style={styles.heading}>
-        7. transformMatrix is deprecated — use transform
+        transformMatrix is deprecated — use transform
       </Text>
       <Text style={styles.body}>
         currentTransformMatrix / targetTransformMatrix are undefined in v4.

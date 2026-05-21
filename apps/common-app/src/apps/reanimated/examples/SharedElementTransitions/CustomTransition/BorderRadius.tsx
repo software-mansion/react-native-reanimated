@@ -29,7 +29,7 @@ type Navigate = (route: string) => void;
 export function BorderRadiusSourceSection({ navigate }: { navigate: Navigate }) {
   return (
     <View style={styles.section}>
-      <Text style={styles.heading}>3. borderRadius</Text>
+      <Text style={styles.heading}>borderRadius</Text>
       <Text style={styles.body}>
         Same spring as the basic example, plus borderRadius read from
         values.currentBorderRadius → values.targetBorderRadius.

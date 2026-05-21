@@ -28,7 +28,7 @@ type Navigate = (route: string) => void;
 export function BasicSourceSection({ navigate }: { navigate: Navigate }) {
   return (
     <View style={styles.section}>
-      <Text style={styles.heading}>1. Basic .custom()</Text>
+      <Text style={styles.heading}>Basic .custom()</Text>
       <Text style={styles.body}>
         Spring-interpolates width/height/origin via withSpring. No
         progressAnimation — iOS swipe-back falls back to the system default.
