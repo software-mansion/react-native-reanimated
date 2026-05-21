@@ -42,13 +42,18 @@ void SharedTransitionValuesFactory::writeFrame(
 
   setProperty(values, "currentOriginX", jsi::Value(sourceOrigin.x));
   setProperty(values, "targetOriginX", jsi::Value(targetOrigin.x));
-  setProperty(values, "currentGlobalOriginX", jsi::Value(sourceOrigin.x));
-  setProperty(values, "targetGlobalOriginX", jsi::Value(targetOrigin.x));
-
   setProperty(values, "currentOriginY", jsi::Value(sourceOrigin.y));
   setProperty(values, "targetOriginY", jsi::Value(targetOrigin.y));
-  setProperty(values, "currentGlobalOriginY", jsi::Value(sourceOrigin.y));
-  setProperty(values, "targetGlobalOriginY", jsi::Value(targetOrigin.y));
+
+  // globalOriginX/Y is intentionally zero. It exists on the worklet values
+  // object for backward-compat with v3's type, but its value was always 0 on
+  // Android (the v3 SET snapshot constructor never assigned it) and only
+  // happened to mirror originX on iOS. v4 normalises both platforms to 0 to
+  // discourage use. Reach for originX/Y instead.
+  setProperty(values, "currentGlobalOriginX", jsi::Value(0));
+  setProperty(values, "targetGlobalOriginX", jsi::Value(0));
+  setProperty(values, "currentGlobalOriginY", jsi::Value(0));
+  setProperty(values, "targetGlobalOriginY", jsi::Value(0));
 
   const auto &sourceSize = sourceFrame.size;
   const auto &targetSize = targetFrame.size;

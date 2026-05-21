@@ -19,6 +19,8 @@ import {
   GlobalOriginSourceSection,
   GlobalOriginTargetRoute,
   GlobalOriginTargetScreen,
+  OriginTargetRoute,
+  OriginTargetScreen,
 } from './GlobalOrigin';
 import {
   ProgressSourceSection,
@@ -68,6 +70,11 @@ export default function CustomTransitionExample() {
       <Stack.Screen
         name={GlobalOriginTargetRoute}
         component={GlobalOriginTargetScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={OriginTargetRoute}
+        component={OriginTargetScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

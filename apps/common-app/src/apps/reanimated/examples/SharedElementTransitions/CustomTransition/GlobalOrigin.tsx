@@ -10,13 +10,19 @@ import Animated, {
 import { withSharedTransitionBoundary } from '../withSharedTransitionBoundary';
 import { styles } from './styles';
 
-const TAG = 'global-origin-tag';
-const TARGET_ROUTE = 'GlobalOriginScreen2';
+const ORIGIN_TAG = 'origin-tag';
+const GLOBAL_TAG = 'global-origin-tag';
+const ORIGIN_TARGET_ROUTE = 'OriginScreen2';
+const GLOBAL_TARGET_ROUTE = 'GlobalOriginScreen2';
 
-// Uses globalOriginX/Y (window-space) instead of originX/Y (local-space).
-// The source box is wrapped in an offset container, so its local origin
-// differs from its global origin — the transition should still land the
-// target in the right window-space position.
+const ORIGIN_TRANSITION = SharedTransition.custom((values) => {
+  'worklet';
+  return {
+    originX: withSpring(values.targetOriginX),
+    originY: withSpring(values.targetOriginY),
+  };
+});
+
 const GLOBAL_ORIGIN_TRANSITION = SharedTransition.custom((values) => {
   'worklet';
   return {
@@ -34,63 +40,105 @@ export function GlobalOriginSourceSection({
 }) {
   return (
     <View style={styles.section}>
-      <Text style={styles.heading}>4. globalOriginX / globalOriginY</Text>
-      <Text style={styles.body}>
-        origin = parent-relative; globalOrigin = window-relative. Use
-        globalOrigin when source and target have differently-positioned parents
-        (scroll views, headers, etc.) — otherwise use origin.
+      <Text style={styles.heading}>
+        4. globalOrigin is deprecated — use originX/Y
       </Text>
       <Text style={styles.body}>
-        Source is nested in an offset container. Expected: target lands at the
-        right on-screen position regardless of the parent offset.
+        values.targetGlobalOriginX/Y is always 0 in shared transitions. Use
+        targetOriginX/Y instead. In v3 globalOrigin is 0 on Android, on iOS it
+        was equal to regular origin. In v3 on iOS, origin is equal to
+        globalOrigin.
       </Text>
+
       <View style={offsetContainer}>
         <Animated.View
           style={styles.greenBoxSource}
-          sharedTransitionTag={TAG}
+          sharedTransitionTag={ORIGIN_TAG}
+          sharedTransitionStyle={ORIGIN_TRANSITION}
+        />
+      </View>
+      <Button
+        title='Open with originX/Y (works)'
+        onPress={() => navigate(ORIGIN_TARGET_ROUTE)}
+      />
+
+      <View style={[offsetContainer, gapTop]}>
+        <Animated.View
+          style={[styles.greenBoxSource, redBox]}
+          sharedTransitionTag={GLOBAL_TAG}
           sharedTransitionStyle={GLOBAL_ORIGIN_TRANSITION}
         />
       </View>
       <Button
-        title='Open global-origin target screen'
-        onPress={() => navigate(TARGET_ROUTE)}
+        title='Open with globalOriginX/Y (broken — animates to 0,0)'
+        onPress={() => navigate(GLOBAL_TARGET_ROUTE)}
       />
     </View>
   );
 }
 
-function TargetContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
+function OriginTargetContent({
+  navigation,
+}: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.flexOne}>
       <View style={styles.instructions}>
-        <Text style={styles.heading}>
-          globalOriginX / globalOriginY — target
-        </Text>
+        <Text style={styles.heading}>originX/Y — target</Text>
         <Text style={styles.body}>
-          Same 100×100 size as on the menu, positioned further down/right by
-          window-space origin only. Tap back to spring return to the
-          offset-nested source.
+          Expected: spring lands at the target position.
         </Text>
       </View>
-      <Animated.View
-        style={targetBox}
-        sharedTransitionTag={TAG}
-        sharedTransitionStyle={GLOBAL_ORIGIN_TRANSITION}
-      />
+      <View style={targetParent}>
+        <Animated.View
+          style={targetBox}
+          sharedTransitionTag={ORIGIN_TAG}
+          sharedTransitionStyle={ORIGIN_TRANSITION}
+        />
+      </View>
       <Button title='go back' onPress={() => navigation.goBack()} />
     </View>
   );
 }
 
-export const GlobalOriginTargetScreen =
-  withSharedTransitionBoundary(TargetContent);
-export const GlobalOriginTargetRoute = TARGET_ROUTE;
+function GlobalOriginTargetContent({
+  navigation,
+}: NativeStackScreenProps<ParamListBase>) {
+  return (
+    <View style={styles.flexOne}>
+      <View style={styles.instructions}>
+        <Text style={styles.heading}>globalOriginX/Y — target (broken)</Text>
+        <Text style={styles.body}>
+          Expected: red box springs to (0, 0) because globalOrigin is always 0.
+        </Text>
+      </View>
+      <View style={targetParent}>
+        <Animated.View
+          style={[targetBox, redBox]}
+          sharedTransitionTag={GLOBAL_TAG}
+          sharedTransitionStyle={GLOBAL_ORIGIN_TRANSITION}
+        />
+      </View>
+      <Button title='go back' onPress={() => navigation.goBack()} />
+    </View>
+  );
+}
+
+export const OriginTargetScreen =
+  withSharedTransitionBoundary(OriginTargetContent);
+export const OriginTargetRoute = ORIGIN_TARGET_ROUTE;
+export const GlobalOriginTargetScreen = withSharedTransitionBoundary(
+  GlobalOriginTargetContent,
+);
+export const GlobalOriginTargetRoute = GLOBAL_TARGET_ROUTE;
 
 const offsetContainer = { paddingLeft: 80, paddingTop: 24 };
+const gapTop = { marginTop: 16 };
+const redBox = { backgroundColor: 'crimson' as const };
 const targetBox = {
   width: 100,
   height: 100,
   marginLeft: 60,
-  marginTop: 200,
+  marginTop: 24,
   backgroundColor: 'green' as const,
 };
+const targetParent = { paddingTop: 300, paddingLeft: 0 };
