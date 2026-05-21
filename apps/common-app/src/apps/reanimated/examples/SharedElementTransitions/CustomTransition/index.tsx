@@ -33,6 +33,11 @@ import {
   OpacityTargetScreen,
 } from './Opacity';
 import {
+  TransformMatrixSourceSection,
+  TransformMatrixTargetRoute,
+  TransformMatrixTargetScreen,
+} from './TransformMatrix';
+import {
   ProgressSourceSection,
   ProgressTargetRoute,
   ProgressTargetScreen,
@@ -49,6 +54,7 @@ function MenuContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
       <GlobalOriginSourceSection navigate={navigate} />
       <BackgroundColorSourceSection navigate={navigate} />
       <OpacitySourceSection navigate={navigate} />
+      <TransformMatrixSourceSection navigate={navigate} />
     </Animated.ScrollView>
   );
 }
@@ -97,6 +103,11 @@ export default function CustomTransitionExample() {
       <Stack.Screen
         name={OpacityTargetRoute}
         component={OpacityTargetScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={TransformMatrixTargetRoute}
+        component={TransformMatrixTargetScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
