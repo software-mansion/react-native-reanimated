@@ -5,6 +5,8 @@ on:
   pull_request:
     paths:
       - .github/workflows/example-android-build-check.yml
+      - .clang-tidy
+      - scripts/clang-tidy-lint.sh
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
       - packages/react-native-worklets/android/**
@@ -19,6 +21,8 @@ on:
       - main
     paths:
       - .github/workflows/example-android-build-check.yml
+      - .clang-tidy
+      - scripts/clang-tidy-lint.sh
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
       - packages/react-native-worklets/android/**
