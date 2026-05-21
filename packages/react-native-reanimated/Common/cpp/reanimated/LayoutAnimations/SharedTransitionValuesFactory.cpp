@@ -71,18 +71,18 @@ jsi::Object SharedTransitionValuesFactory::create(const ShadowView &sourceView, 
 
   jsi::Object values(rt_);
 
-  diffFrame(values, sourceView, targetView);
-  diffOpacity(values, sourceViewProps, targetViewProps);
-  diffBackgroundColor(values, sourceViewProps, targetViewProps);
-  diffTransform(values, sourceViewProps, targetViewProps);
-  diffTransformOrigin(values, sourceView, targetView, sourceViewProps, targetViewProps);
-  diffShadow(values, sourceViewProps, targetViewProps);
-  diffBorder(values, sourceViewProps, targetViewProps);
+  writeFrame(values, sourceView, targetView);
+  writeOpacity(values, sourceViewProps, targetViewProps);
+  writeBackgroundColor(values, sourceViewProps, targetViewProps);
+  writeTransform(values, sourceViewProps, targetViewProps);
+  writeTransformOrigin(values, sourceView, targetView, sourceViewProps, targetViewProps);
+  writeShadow(values, sourceViewProps, targetViewProps);
+  writeBorder(values, sourceViewProps, targetViewProps);
 
   return values;
 }
 
-void SharedTransitionValuesFactory::diffFrame(
+void SharedTransitionValuesFactory::writeFrame(
     jsi::Object &values,
     const ShadowView &sourceView,
     const ShadowView &targetView) {
@@ -111,7 +111,7 @@ void SharedTransitionValuesFactory::diffFrame(
   setProperty(values, "targetHeight", jsi::Value(targetSize.height));
 }
 
-void SharedTransitionValuesFactory::diffOpacity(
+void SharedTransitionValuesFactory::writeOpacity(
     jsi::Object &values,
     const ViewProps &sourceViewProps,
     const ViewProps &targetViewProps) {
@@ -119,7 +119,7 @@ void SharedTransitionValuesFactory::diffOpacity(
   setProperty(values, "targetOpacity", jsi::Value(targetViewProps.opacity));
 }
 
-void SharedTransitionValuesFactory::diffBackgroundColor(
+void SharedTransitionValuesFactory::writeBackgroundColor(
     jsi::Object &values,
     const ViewProps &sourceViewProps,
     const ViewProps &targetViewProps) {
@@ -129,7 +129,7 @@ void SharedTransitionValuesFactory::diffBackgroundColor(
       values, "targetBackgroundColor", jsi::String::createFromUtf8(rt_, react::toString(targetViewProps.backgroundColor)));
 }
 
-void SharedTransitionValuesFactory::diffTransform(
+void SharedTransitionValuesFactory::writeTransform(
     jsi::Object &values,
     const ViewProps &sourceViewProps,
     const ViewProps &targetViewProps) {
@@ -183,31 +183,31 @@ std::vector<TransformOperationWithDefault> SharedTransitionValuesFactory::getTra
   for (const auto &operation : operations) {
     switch (operation.type) {
       case react::TransformOperationType::Perspective: {
-        maybeAddOperationToDiff("perspective", operation.x.value, 1, jsiOperations);
+        maybeWriteOperation("perspective", operation.x.value, 1, jsiOperations);
       } break;
 
       case react::TransformOperationType::Scale: {
-        maybeAddOperationToDiff("scaleX", operation.x.value, 1, jsiOperations);
-        maybeAddOperationToDiff("scaleY", operation.y.value, 1, jsiOperations);
-        maybeAddOperationToDiff("scaleZ", operation.z.value, 1, jsiOperations);
+        maybeWriteOperation("scaleX", operation.x.value, 1, jsiOperations);
+        maybeWriteOperation("scaleY", operation.y.value, 1, jsiOperations);
+        maybeWriteOperation("scaleZ", operation.z.value, 1, jsiOperations);
       } break;
 
       case react::TransformOperationType::Translate: {
-        maybeAddOperationToDiff("translateX", operation.x.value, 0, jsiOperations);
-        maybeAddOperationToDiff("translateY", operation.y.value, 0, jsiOperations);
-        maybeAddOperationToDiff("translateZ", operation.z.value, 0, jsiOperations);
+        maybeWriteOperation("translateX", operation.x.value, 0, jsiOperations);
+        maybeWriteOperation("translateY", operation.y.value, 0, jsiOperations);
+        maybeWriteOperation("translateZ", operation.z.value, 0, jsiOperations);
       } break;
 
       case react::TransformOperationType::Rotate: {
-        maybeAddOperationToDiff("rotateX", operation.x.value, 0, jsiOperations);
-        maybeAddOperationToDiff("rotateY", operation.y.value, 0, jsiOperations);
-        maybeAddOperationToDiff("rotateZ", operation.z.value, 0, jsiOperations);
+        maybeWriteOperation("rotateX", operation.x.value, 0, jsiOperations);
+        maybeWriteOperation("rotateY", operation.y.value, 0, jsiOperations);
+        maybeWriteOperation("rotateZ", operation.z.value, 0, jsiOperations);
       } break;
 
       case react::TransformOperationType::Skew: {
-        maybeAddOperationToDiff("skewX", operation.x.value, 0, jsiOperations);
-        maybeAddOperationToDiff("skewY", operation.y.value, 0, jsiOperations);
-        maybeAddOperationToDiff("skewZ", operation.z.value, 0, jsiOperations);
+        maybeWriteOperation("skewX", operation.x.value, 0, jsiOperations);
+        maybeWriteOperation("skewY", operation.y.value, 0, jsiOperations);
+        maybeWriteOperation("skewZ", operation.z.value, 0, jsiOperations);
       } break;
 
       default: {
@@ -217,7 +217,7 @@ std::vector<TransformOperationWithDefault> SharedTransitionValuesFactory::getTra
   return jsiOperations;
 }
 
-void SharedTransitionValuesFactory::maybeAddOperationToDiff(
+void SharedTransitionValuesFactory::maybeWriteOperation(
     const char *name,
     float value,
     float defaultValue,
@@ -232,48 +232,42 @@ void SharedTransitionValuesFactory::maybeAddOperationToDiff(
   jsiOperations.emplace_back(jsiValue, jsiDefaultDefault);
 }
 
-void SharedTransitionValuesFactory::diffTransformOrigin(
+void SharedTransitionValuesFactory::writeTransformOrigin(
     jsi::Object &values,
     const ShadowView &sourceView,
     const ShadowView &targetView,
     const ViewProps &sourceViewProps,
     const ViewProps &targetViewProps) {
-  addTransformOriginToDiff(values, sourceViewProps.transformOrigin, sourceView, "currentTransformOrigin");
-  addTransformOriginToDiff(values, targetViewProps.transformOrigin, targetView, "targetTransformOrigin");
+  auto buildOrigin = [&](const TransformOrigin &transformOrigin, const ShadowView &view) {
+    jsi::Array originJsi(rt_, 3);
+    const auto &viewSize = view.layoutMetrics.frame.size;
+
+    if (transformOrigin.xy[0].unit == UnitType::Percent) {
+      originJsi.setValueAtIndex(rt_, 0, viewSize.width * transformOrigin.xy[0].value / 100);
+    } else if (transformOrigin.xy[0].unit == UnitType::Undefined) {
+      // Unset transformOrigin defaults to "50% 50%" (view center), per CSS.
+      originJsi.setValueAtIndex(rt_, 0, viewSize.width * 0.5);
+    } else {
+      originJsi.setValueAtIndex(rt_, 0, transformOrigin.xy[0].value);
+    }
+
+    if (transformOrigin.xy[1].unit == UnitType::Percent) {
+      originJsi.setValueAtIndex(rt_, 1, viewSize.height * transformOrigin.xy[1].value / 100);
+    } else if (transformOrigin.xy[1].unit == UnitType::Undefined) {
+      originJsi.setValueAtIndex(rt_, 1, viewSize.height * 0.5);
+    } else {
+      originJsi.setValueAtIndex(rt_, 1, transformOrigin.xy[1].value);
+    }
+
+    originJsi.setValueAtIndex(rt_, 2, transformOrigin.z);
+    return originJsi;
+  };
+
+  setProperty(values, "currentTransformOrigin", buildOrigin(sourceViewProps.transformOrigin, sourceView));
+  setProperty(values, "targetTransformOrigin", buildOrigin(targetViewProps.transformOrigin, targetView));
 }
 
-void SharedTransitionValuesFactory::addTransformOriginToDiff(
-    jsi::Object &values,
-    const TransformOrigin &transformOrigin,
-    const ShadowView &view,
-    const char *name) {
-  jsi::Array transformOriginJsi(rt_, 3);
-
-  const auto &viewSize = view.layoutMetrics.frame.size;
-
-  if (transformOrigin.xy[0].unit == UnitType::Percent) {
-    transformOriginJsi.setValueAtIndex(rt_, 0, viewSize.width * transformOrigin.xy[0].value / 100);
-  } else if (transformOrigin.xy[0].unit == UnitType::Undefined) {
-    // Unset transformOrigin defaults to "50% 50%" (view center), per CSS.
-    transformOriginJsi.setValueAtIndex(rt_, 0, viewSize.width * 0.5);
-  } else {
-    transformOriginJsi.setValueAtIndex(rt_, 0, transformOrigin.xy[0].value);
-  }
-
-  if (transformOrigin.xy[1].unit == UnitType::Percent) {
-    transformOriginJsi.setValueAtIndex(rt_, 1, viewSize.height * transformOrigin.xy[1].value / 100);
-  } else if (transformOrigin.xy[1].unit == UnitType::Undefined) {
-    transformOriginJsi.setValueAtIndex(rt_, 1, viewSize.height * 0.5);
-  } else {
-    transformOriginJsi.setValueAtIndex(rt_, 1, transformOrigin.xy[1].value);
-  }
-
-  transformOriginJsi.setValueAtIndex(rt_, 2, transformOrigin.z);
-
-  setProperty(values, name, std::move(transformOriginJsi));
-}
-
-void SharedTransitionValuesFactory::diffShadow(
+void SharedTransitionValuesFactory::writeShadow(
     jsi::Object &values,
     const ViewProps &sourceViewProps,
     const ViewProps &targetViewProps) {
@@ -353,15 +347,15 @@ std::vector<BoxShadowWithDefault> SharedTransitionValuesFactory::getBoxShadowsFr
   return boxShadowsWithDefault;
 }
 
-void SharedTransitionValuesFactory::diffBorder(
+void SharedTransitionValuesFactory::writeBorder(
     jsi::Object &values,
     const ViewProps &sourceViewProps,
     const ViewProps &targetViewProps) {
   const auto &sourceBorderRadii = sourceViewProps.borderRadii;
   const auto &targetBorderRadii = targetViewProps.borderRadii;
-  diffBorderRadius(
+  writeBorderRadius(
       values, sourceBorderRadii.all, targetBorderRadii.all, "currentBorderRadius", "targetBorderRadius", sourceViewProps, targetViewProps);
-  diffBorderRadius(
+  writeBorderRadius(
       values,
       sourceBorderRadii.topLeft,
       targetBorderRadii.topLeft,
@@ -369,7 +363,7 @@ void SharedTransitionValuesFactory::diffBorder(
       "targetBorderTopLeftRadius",
       sourceViewProps,
       targetViewProps);
-  diffBorderRadius(
+  writeBorderRadius(
       values,
       sourceBorderRadii.topRight,
       targetBorderRadii.topRight,
@@ -377,7 +371,7 @@ void SharedTransitionValuesFactory::diffBorder(
       "targetBorderTopRightRadius",
       sourceViewProps,
       targetViewProps);
-  diffBorderRadius(
+  writeBorderRadius(
       values,
       sourceBorderRadii.bottomLeft,
       targetBorderRadii.bottomLeft,
@@ -385,7 +379,7 @@ void SharedTransitionValuesFactory::diffBorder(
       "targetBorderBottomLeftRadius",
       sourceViewProps,
       targetViewProps);
-  diffBorderRadius(
+  writeBorderRadius(
       values,
       sourceBorderRadii.bottomRight,
       targetBorderRadii.bottomRight,
@@ -393,7 +387,7 @@ void SharedTransitionValuesFactory::diffBorder(
       "targetBorderBottomRightRadius",
       sourceViewProps,
       targetViewProps);
-  diffBorderRadius(
+  writeBorderRadius(
       values,
       sourceBorderRadii.topStart,
       targetBorderRadii.topStart,
@@ -401,7 +395,7 @@ void SharedTransitionValuesFactory::diffBorder(
       "targetBorderTopStartRadius",
       sourceViewProps,
       targetViewProps);
-  diffBorderRadius(
+  writeBorderRadius(
       values,
       sourceBorderRadii.topEnd,
       targetBorderRadii.topEnd,
@@ -409,7 +403,7 @@ void SharedTransitionValuesFactory::diffBorder(
       "targetBorderTopEndRadius",
       sourceViewProps,
       targetViewProps);
-  diffBorderRadius(
+  writeBorderRadius(
       values,
       sourceBorderRadii.bottomStart,
       targetBorderRadii.bottomStart,
@@ -417,7 +411,7 @@ void SharedTransitionValuesFactory::diffBorder(
       "targetBorderBottomStartRadius",
       sourceViewProps,
       targetViewProps);
-  diffBorderRadius(
+  writeBorderRadius(
       values,
       sourceBorderRadii.bottomEnd,
       targetBorderRadii.bottomEnd,
@@ -425,7 +419,7 @@ void SharedTransitionValuesFactory::diffBorder(
       "targetBorderBottomEndRadius",
       sourceViewProps,
       targetViewProps);
-  diffBorderRadius(
+  writeBorderRadius(
       values,
       sourceBorderRadii.endEnd,
       targetBorderRadii.endEnd,
@@ -433,7 +427,7 @@ void SharedTransitionValuesFactory::diffBorder(
       "targetBorderEndEndRadius",
       sourceViewProps,
       targetViewProps);
-  diffBorderRadius(
+  writeBorderRadius(
       values,
       sourceBorderRadii.endStart,
       targetBorderRadii.endStart,
@@ -441,7 +435,7 @@ void SharedTransitionValuesFactory::diffBorder(
       "targetBorderEndStartRadius",
       sourceViewProps,
       targetViewProps);
-  diffBorderRadius(
+  writeBorderRadius(
       values,
       sourceBorderRadii.startEnd,
       targetBorderRadii.startEnd,
@@ -449,7 +443,7 @@ void SharedTransitionValuesFactory::diffBorder(
       "targetBorderStartEndRadius",
       sourceViewProps,
       targetViewProps);
-  diffBorderRadius(
+  writeBorderRadius(
       values,
       sourceBorderRadii.startStart,
       targetBorderRadii.startStart,
@@ -462,7 +456,7 @@ void SharedTransitionValuesFactory::diffBorder(
   const auto &targetBorderWidths = targetViewProps.getBorderWidths();
   const auto defaultSourceWidth = sourceBorderWidths.all.value_or(0);
   const auto defaultTargetWidth = targetBorderWidths.all.value_or(0);
-  diffBorderWidth(
+  writeBorderWidth(
       values,
       sourceBorderWidths.all,
       targetBorderWidths.all,
@@ -470,7 +464,7 @@ void SharedTransitionValuesFactory::diffBorder(
       "targetBorderWidth",
       defaultSourceWidth,
       defaultTargetWidth);
-  diffBorderWidth(
+  writeBorderWidth(
       values,
       sourceBorderWidths.left,
       targetBorderWidths.left,
@@ -478,7 +472,7 @@ void SharedTransitionValuesFactory::diffBorder(
       "targetBorderLeftWidth",
       defaultSourceWidth,
       defaultTargetWidth);
-  diffBorderWidth(
+  writeBorderWidth(
       values,
       sourceBorderWidths.right,
       targetBorderWidths.right,
@@ -486,7 +480,7 @@ void SharedTransitionValuesFactory::diffBorder(
       "targetBorderRightWidth",
       defaultSourceWidth,
       defaultTargetWidth);
-  diffBorderWidth(
+  writeBorderWidth(
       values,
       sourceBorderWidths.top,
       targetBorderWidths.top,
@@ -494,7 +488,7 @@ void SharedTransitionValuesFactory::diffBorder(
       "targetBorderTopWidth",
       defaultSourceWidth,
       defaultTargetWidth);
-  diffBorderWidth(
+  writeBorderWidth(
       values,
       sourceBorderWidths.bottom,
       targetBorderWidths.bottom,
@@ -505,7 +499,7 @@ void SharedTransitionValuesFactory::diffBorder(
 
   const auto &sourceBorderColors = sourceViewProps.borderColors;
   const auto &targetBorderColors = targetViewProps.borderColors;
-  diffBorderColors(
+  writeBorderColors(
       values,
       sourceBorderColors.all,
       targetBorderColors.all,
@@ -513,7 +507,7 @@ void SharedTransitionValuesFactory::diffBorder(
       "targetBorderColor",
       sourceViewProps,
       targetViewProps);
-  diffBorderColors(
+  writeBorderColors(
       values,
       sourceBorderColors.left,
       targetBorderColors.left,
@@ -521,7 +515,7 @@ void SharedTransitionValuesFactory::diffBorder(
       "targetBorderLeftColor",
       sourceViewProps,
       targetViewProps);
-  diffBorderColors(
+  writeBorderColors(
       values,
       sourceBorderColors.right,
       targetBorderColors.right,
@@ -529,7 +523,7 @@ void SharedTransitionValuesFactory::diffBorder(
       "targetBorderRightColor",
       sourceViewProps,
       targetViewProps);
-  diffBorderColors(
+  writeBorderColors(
       values,
       sourceBorderColors.top,
       targetBorderColors.top,
@@ -537,7 +531,7 @@ void SharedTransitionValuesFactory::diffBorder(
       "targetBorderTopColor",
       sourceViewProps,
       targetViewProps);
-  diffBorderColors(
+  writeBorderColors(
       values,
       sourceBorderColors.bottom,
       targetBorderColors.bottom,
@@ -547,7 +541,7 @@ void SharedTransitionValuesFactory::diffBorder(
       targetViewProps);
 }
 
-void SharedTransitionValuesFactory::diffBorderRadius(
+void SharedTransitionValuesFactory::writeBorderRadius(
     jsi::Object &values,
     const std::optional<react::ValueUnit> &sourceValue,
     const std::optional<react::ValueUnit> &targetValue,
@@ -590,7 +584,7 @@ void SharedTransitionValuesFactory::diffBorderRadius(
   }
 }
 
-void SharedTransitionValuesFactory::diffBorderWidth(
+void SharedTransitionValuesFactory::writeBorderWidth(
     jsi::Object &values,
     const std::optional<react::Float> &sourceValue,
     const std::optional<react::Float> &targetValue,
@@ -611,7 +605,7 @@ void SharedTransitionValuesFactory::diffBorderWidth(
   }
 }
 
-void SharedTransitionValuesFactory::diffBorderColors(
+void SharedTransitionValuesFactory::writeBorderColors(
     jsi::Object &values,
     const std::optional<react::SharedColor> &sourceValue,
     const std::optional<react::SharedColor> &targetValue,
