@@ -45,8 +45,6 @@ class CSSTransition : public LoopOperation, public std::enable_shared_from_this<
       const PropertiesSettingsMap &changedPropertiesSettings,
       const std::vector<std::string> &removedProperties);
 
-  // Compute the current interpolated style without ticking the loop forward.
-  // (from PR — useful for inspecting the transition state outside the frame loop.)
   folly::dynamic computeCurrentStyle();
 
  private:
