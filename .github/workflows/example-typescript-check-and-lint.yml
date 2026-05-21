@@ -54,8 +54,9 @@ jobs:
               - apps/fabric-example/**
             macos:
               - apps/macos-example/**
-            next:
-              - apps/next-example/**
+            # next-example does not have type:check yet
+            # next:
+            #   - apps/next-example/**
             web:
               - apps/web-example/**
       - name: Build matrix
@@ -79,7 +80,7 @@ jobs:
             [[ "$TVOS"   == "true" ]] && apps+=("apps/tvos-example")
             [[ "$FABRIC" == "true" ]] && apps+=("apps/fabric-example")
             [[ "$MACOS"  == "true" ]] && apps+=("apps/macos-example")
-            [[ "$NEXT"   == "true" ]] && apps+=("apps/next-example")
+            # [[ "$NEXT"   == "true" ]] && apps+=("apps/next-example")
             [[ "$WEB"    == "true" ]] && apps+=("apps/web-example")
             if [[ ${#apps[@]} -eq 0 ]]; then
               ts_apps='[]'
