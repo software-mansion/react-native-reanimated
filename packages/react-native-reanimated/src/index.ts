@@ -176,7 +176,6 @@ export type {
   ProgressSharedTransitionAnimation,
   ReanimatedKeyframe,
   SharedTransitionAnimationsValues,
-  SharedTransitionSnapshotValues,
 } from './layoutReanimation';
 export {
   BaseAnimationBuilder,
