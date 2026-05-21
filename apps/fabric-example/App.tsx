@@ -1,9 +1,19 @@
 import { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 const BASE_ORBIT = 80;
 const ORBIT_GAP = 91;
+
+const KEPLER_REFERENCE_PERIOD = 24000;
+const KEPLER_REFERENCE_AXIS = 131;
+function keplerPeriod(semiMajorAxis: number): `${number}ms` {
+  const ms = Math.round(
+    KEPLER_REFERENCE_PERIOD *
+      Math.pow(semiMajorAxis / KEPLER_REFERENCE_AXIS, 1.5)
+  );
+  return `${ms}ms`;
+}
 
 type OrbitConfig = {
   size: number;
@@ -20,7 +30,7 @@ type OrbitConfig = {
 const ORBITS: OrbitConfig[] = [
   {
     size: BASE_ORBIT + ORBIT_GAP * 0,
-    duration: '4500ms',
+    duration: keplerPeriod((BASE_ORBIT + ORBIT_GAP * 0) / 2),
     direction: 'normal',
     planetSize: 10,
     planetColor: '#fde68a',
@@ -30,7 +40,7 @@ const ORBITS: OrbitConfig[] = [
   },
   {
     size: BASE_ORBIT + ORBIT_GAP * 1,
-    duration: '7800ms',
+    duration: keplerPeriod((BASE_ORBIT + ORBIT_GAP * 1) / 2),
     direction: 'reverse',
     planetSize: 14,
     planetColor: '#67e8f9',
@@ -41,7 +51,7 @@ const ORBITS: OrbitConfig[] = [
   },
   {
     size: BASE_ORBIT + ORBIT_GAP * 2,
-    duration: '12000ms',
+    duration: keplerPeriod((BASE_ORBIT + ORBIT_GAP * 2) / 2),
     direction: 'normal',
     planetSize: 18,
     planetColor: '#c4b5fd',
@@ -51,7 +61,7 @@ const ORBITS: OrbitConfig[] = [
   },
   {
     size: BASE_ORBIT + ORBIT_GAP * 3,
-    duration: '18500ms',
+    duration: keplerPeriod((BASE_ORBIT + ORBIT_GAP * 3) / 2),
     direction: 'reverse',
     planetSize: 12,
     planetColor: '#fda4af',
@@ -65,7 +75,7 @@ const ORBITS: OrbitConfig[] = [
 const COMET = {
   Rx: 180,
   Ry: 100,
-  duration: '16000ms' as const,
+  duration: keplerPeriod(180),
   headSize: 6,
   headColor: '#ffffff',
   trailColor: 'rgba(178,238,255,0.95)',
@@ -84,12 +94,48 @@ const STARS = Array.from({ length: 60 }, (_, i) => {
   return { left, top, size, delay, duration, baseOpacity };
 });
 
+const ASTEROID_BELT_RADIUS = 215;
+const ASTEROIDS = Array.from({ length: 28 }, (_, i) => {
+  const seed = i * 41 + 7;
+  const radius = ASTEROID_BELT_RADIUS + (((seed * 3) % 24) - 12);
+  return {
+    radius,
+    startPhase: ((seed * 13) % 1000) / 1000,
+    size: 1 + ((seed * 5) % 18) / 10,
+    duration: keplerPeriod(radius),
+    direction: (i % 5 === 0 ? 'reverse' : 'normal') as 'reverse' | 'normal',
+    tint: i % 4 === 0 ? '#a89b86' : i % 4 === 1 ? '#b8a896' : '#c9b8a8',
+  };
+});
+
+const SCREEN = Dimensions.get('window');
+const SHOOTING_STARS = Array.from({ length: 3 }, (_, i) => {
+  const seed = i * 89 + 31;
+  const startX = -150 + ((seed * 17) % 120);
+  const startY = -150 + ((seed * 11) % 220);
+  const endX = SCREEN.width + 80 + ((seed * 19) % 160);
+  const endY = SCREEN.height * 0.4 + ((seed * 13) % (SCREEN.height * 0.5));
+  const angleRad = Math.atan2(endY - startY, endX - startX);
+  const angleDeg = Number(((angleRad * 180) / Math.PI).toFixed(3));
+  return {
+    startX,
+    startY,
+    endX,
+    endY,
+    angleDeg,
+    duration: (18000 + ((seed * 53) % 10000)) as number,
+    delay: ((seed * 71) % 14000) as number,
+    length: 38 + (seed % 26),
+  };
+});
+
 export default function App() {
   return (
     <View style={styles.container}>
       <View pointerEvents="none" style={styles.cosmicGlow} />
       <Starfield />
       <View style={styles.system}>
+        <AsteroidBelt />
         {ORBITS.map((orbit) => (
           <Orbit key={orbit.size} config={orbit} />
         ))}
@@ -111,6 +157,130 @@ export default function App() {
           ]}
         />
       </View>
+      <ShootingStars />
+      <Text style={styles.cornerLabel}>Reanimated CSS</Text>
+    </View>
+  );
+}
+
+function buildCircularKeyframes(radius: number, startPhase: number) {
+  const steps = 64;
+  const keyframes: Record<
+    string,
+    { transform: ({ translateX: number } | { translateY: number })[] }
+  > = {};
+  for (let i = 0; i <= steps; i++) {
+    const angle = startPhase * 2 * Math.PI + (i / steps) * 2 * Math.PI;
+    const x = Number((radius * Math.cos(angle)).toFixed(3));
+    const y = Number((radius * Math.sin(angle)).toFixed(3));
+    const percent = (i / steps) * 100;
+    const key = i === 0 ? '0%' : i === steps ? '100%' : `${percent.toFixed(4)}%`;
+    keyframes[key] = { transform: [{ translateX: x }, { translateY: y }] };
+  }
+  return keyframes;
+}
+
+function AsteroidBelt() {
+  return (
+    <>
+      {ASTEROIDS.map((a, i) => (
+        <Animated.View
+          key={i}
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            marginLeft: -a.size / 2,
+            marginTop: -a.size / 2,
+            width: a.size,
+            height: a.size,
+            borderRadius: a.size / 2,
+            backgroundColor: a.tint,
+            opacity: 0.65,
+            animationName: buildCircularKeyframes(a.radius, a.startPhase),
+            animationDuration: a.duration,
+            animationIterationCount: 'infinite',
+            animationTimingFunction: 'linear',
+            animationDirection: a.direction,
+          }}
+        />
+      ))}
+    </>
+  );
+}
+
+function ShootingStars() {
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+      }}>
+      {SHOOTING_STARS.map((s, i) => (
+        <Animated.View
+          key={i}
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            width: s.length,
+            height: 1.5,
+            borderRadius: 1,
+            experimental_backgroundImage:
+              'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 90%, rgba(255,255,255,1) 100%)',
+            animationName: {
+              '0%': {
+                opacity: 0,
+                transform: [
+                  { translateX: s.startX },
+                  { translateY: s.startY },
+                  { rotate: `${s.angleDeg}deg` },
+                ],
+              },
+              '4%': {
+                opacity: 1,
+                transform: [
+                  { translateX: s.startX },
+                  { translateY: s.startY },
+                  { rotate: `${s.angleDeg}deg` },
+                ],
+              },
+              '14%': {
+                opacity: 1,
+                transform: [
+                  { translateX: s.endX },
+                  { translateY: s.endY },
+                  { rotate: `${s.angleDeg}deg` },
+                ],
+              },
+              '18%': {
+                opacity: 0,
+                transform: [
+                  { translateX: s.endX },
+                  { translateY: s.endY },
+                  { rotate: `${s.angleDeg}deg` },
+                ],
+              },
+              '100%': {
+                opacity: 0,
+                transform: [
+                  { translateX: s.endX },
+                  { translateY: s.endY },
+                  { rotate: `${s.angleDeg}deg` },
+                ],
+              },
+            },
+            animationDuration: `${s.duration}ms`,
+            animationDelay: `${s.delay}ms`,
+            animationIterationCount: 'infinite',
+            animationTimingFunction: 'linear',
+          }}
+        />
+      ))}
     </View>
   );
 }
@@ -276,6 +446,8 @@ function buildCometKeyframes(
   const steps = 96;
   const e = COMET_C / COMET.Rx;
   const minDist = COMET.Rx - COMET_C;
+  const E0 = Math.PI + Math.PI / 3;
+  const M0 = E0 - e * Math.sin(E0);
   type Frame = {
     opacity?: number;
     shadowOpacity?: number;
@@ -289,9 +461,9 @@ function buildCometKeyframes(
   const k: Record<string, Frame> = {};
   let prevAngle: number | null = null;
   for (let i = 0; i <= steps; i++) {
-    const E = Math.PI + (2 * Math.PI * i) / steps;
+    const E = E0 + (2 * Math.PI * i) / steps;
     const M = E - e * Math.sin(E);
-    const t = (M - Math.PI) / (2 * Math.PI);
+    const t = (M - M0) / (2 * Math.PI);
     const x = COMET.Rx * Math.cos(E) - COMET_C;
     const y = COMET.Ry * Math.sin(E);
     let angleRad = Math.atan2(y, x);
@@ -395,6 +567,7 @@ function Comet() {
           animationDuration: COMET.duration,
           animationIterationCount: 'infinite',
           animationTimingFunction: 'linear',
+          animationFillMode: 'backwards',
         }}>
         <Animated.View
           pointerEvents="none"
@@ -513,5 +686,15 @@ const styles = StyleSheet.create({
     borderRadius: HALO_SIZE / 2,
     experimental_backgroundImage:
       'radial-gradient(circle, rgba(252,176,64,0.4), rgba(252,176,64,0) 70%)',
+  },
+  cornerLabel: {
+    position: 'absolute',
+    right: 36,
+    bottom: 30,
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 16,
+    letterSpacing: 1.5,
+    fontWeight: '500',
+    fontFamily: 'Aeonik',
   },
 });
