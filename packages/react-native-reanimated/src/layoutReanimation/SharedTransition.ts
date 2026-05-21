@@ -39,6 +39,12 @@ export type SharedTransitionAnimationsValues = {
   targetBackgroundColor: string;
   // TODO: check before merge
   targetTransform: Array<Record<string, number | string>>;
+  /**
+   * @deprecated Not populated in v4. Matrix-lerp degenerated non-translation
+   *   transforms and could not express 3D / perspective. Use
+   *   {@link targetTransform} (operation list) instead.
+   */
+  targetTransformMatrix?: number[];
   // TODO: check before merge
   targetTransformOrigin: number[];
   currentOriginX: number;
@@ -52,6 +58,11 @@ export type SharedTransitionAnimationsValues = {
   currentBackgroundColor: string;
   // TODO: check before merge
   currentTransform: Array<Record<string, number | string>>;
+  /**
+   * @deprecated Not populated in v4. See {@link targetTransformMatrix} for
+   *   the full rationale. Use {@link currentTransform} instead.
+   */
+  currentTransformMatrix?: number[];
   // TODO: check before merge
   currentTransformOrigin: number[];
   windowWidth: number;
