@@ -2,7 +2,7 @@ import type { ParamListBase } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
-import { Button, StyleSheet, View } from 'react-native';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   SharedTransition,
   SharedTransitionType,
@@ -51,6 +51,19 @@ const TRANSITION = SharedTransition.custom((values) => {
 function Screen1Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <Animated.ScrollView style={styles.flexOne}>
+      <View style={styles.instructions}>
+        <Text style={styles.heading}>width, height, originX, originY</Text>
+        <Text style={styles.body}>
+          Tap the button below. The green box should spring-animate from its
+          small position here (150×150, top-left) to a larger position on Screen
+          2 (200×300, lower and further right) — width, height and origin all
+          interpolated with withSpring.
+        </Text>
+        <Text style={styles.body}>
+          On iOS, start a swipe-back gesture from Screen 2: the box should track
+          your finger linearly (progressAnimation), not spring.
+        </Text>
+      </View>
       <Animated.View
         style={styles.greenBoxScreenOne}
         sharedTransitionTag='tag'
@@ -67,6 +80,13 @@ function Screen1Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
 function Screen2Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.flexOne}>
+      <View style={styles.instructions}>
+        <Text style={styles.body}>
+          The same green box should now sit at 200×300, lower and further right
+          than on Screen 1. Tap the back button to spring back, or (iOS only)
+          swipe from the left edge to scrub the transition with your finger.
+        </Text>
+      </View>
       <Animated.View
         style={styles.greenBoxScreenTwo}
         sharedTransitionTag='tag'
@@ -99,6 +119,20 @@ export default function CustomTransitionExample() {
 
 const styles = StyleSheet.create({
   flexOne: { flex: 1 },
+  instructions: {
+    padding: 16,
+    backgroundColor: '#f4f4f4',
+  },
+  heading: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  body: {
+    fontSize: 12,
+    lineHeight: 16,
+    marginBottom: 6,
+  },
   greenBoxScreenOne: {
     width: 150,
     height: 150,
