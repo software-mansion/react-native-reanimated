@@ -19,15 +19,6 @@ namespace reanimated::css {
 
 using CSSAnimationsMap = std::unordered_map<size_t, std::shared_ptr<CSSAnimation>>;
 
-/**
- * Thread-safety contract:
- *
- *   All public methods assume the caller holds `updatesRegistryManager_->lock()`.
- *
- * Enforced at the boundary points in ReanimatedModuleProxy (JSI proxy methods,
- * runGrandCallback, performOperations) and ReanimatedCommitHook (collectProps).
- * Inside this class everything is plain, single-threaded code.
- */
 class CSSAnimationsRegistry : public UpdatesRegistry {
  public:
   CSSAnimationsRegistry(
