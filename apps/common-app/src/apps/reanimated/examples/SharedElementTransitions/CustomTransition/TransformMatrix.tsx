@@ -54,7 +54,7 @@ export function TransformMatrixSourceSection({
         targetTransform (operation list) instead.
       </Text>
       <Animated.View
-        style={styles.greenBoxSource}
+        style={[styles.greenBoxSource, redBox]}
         sharedTransitionTag={TAG}
         sharedTransitionStyle={TRANSFORM_MATRIX_TRANSITION}
       />
@@ -78,7 +78,7 @@ function TargetContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
         </Text>
       </View>
       <Animated.View
-        style={styles.greenBoxTarget}
+        style={[styles.greenBoxTarget, redBox]}
         sharedTransitionTag={TAG}
         sharedTransitionStyle={TRANSFORM_MATRIX_TRANSITION}
       />
@@ -90,3 +90,5 @@ function TargetContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
 export const TransformMatrixTargetScreen =
   withSharedTransitionBoundary(TargetContent);
 export const TransformMatrixTargetRoute = TARGET_ROUTE;
+
+const redBox = { backgroundColor: 'crimson' as const };
