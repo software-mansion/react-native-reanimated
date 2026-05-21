@@ -618,8 +618,6 @@ void ReanimatedModuleProxy::registerPseudoStyle(
   // The diff will be provided when `PseudoStylesRegistry::onSelectorStateChanged` is run).
   transitionConfig.changedProperties.clear();
 
-  // Boundary: take manager lock once for the whole entry - covers the transition
-  // registry mutation and pseudo style registration as a single atomic update.
   auto lock = updatesRegistryManager_->lock();
   cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, transitionConfig);
   pseudoStylesRegistry_->registerPseudoStyle(
@@ -811,7 +809,6 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
 
   UpdatesBatch updatesBatch;
   {
-    // Boundary: serialize with JS-thread apply / UI-thread flushUpdates.
     auto lock = updatesRegistryManager_->lock();
     updatesBatch = animatedPropsRegistry_->getPendingUpdates();
   }

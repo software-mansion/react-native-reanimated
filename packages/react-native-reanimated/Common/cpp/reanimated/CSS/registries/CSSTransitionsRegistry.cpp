@@ -67,7 +67,6 @@ void CSSTransitionsRegistry::run(
   loop_->schedule(transition, timestamp + transition->getMinDelay(timestamp));
 
   updateInUpdatesRegistry(transition, initialUpdate);
-  // Mark for flush so the initial frame is pulled by the next flushUpdates.
   updatedTags_.insert(viewTag);
 }
 
@@ -168,7 +167,6 @@ void CSSTransitionsRegistry::runTransition(
 
   loop_->schedule(transition, timestamp + transition->getMinDelay(timestamp));
   updateInUpdatesRegistry(transition, initialUpdate);
-  // Mark for flush so the initial frame is pulled by the next flushUpdates.
   updatedTags_.insert(viewTag);
 }
 
