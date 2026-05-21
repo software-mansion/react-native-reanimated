@@ -13,7 +13,7 @@
 
 namespace reanimated::css {
 
-enum class TransitionProgressState : std::uint8_t { Pending, Running, Finished };
+enum class TransitionProgressState : std::uint8_t { Idle, Pending, Running };
 
 class TransitionPropertyProgressProvider final : public KeyframeProgressProvider, public RawProgressProvider {
  public:

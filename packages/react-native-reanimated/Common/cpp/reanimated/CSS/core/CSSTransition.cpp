@@ -11,14 +11,33 @@ namespace reanimated::css {
 
 CSSTransition::CSSTransition(
     std::shared_ptr<const ShadowNode> shadowNode,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+    const std::shared_ptr<std::unordered_set<Tag>> &updatedViewTags,
+    const std::shared_ptr<OperationsLoop> &loop)
     : shadowNode_(std::move(shadowNode)),
       viewStylesRepository_(viewStylesRepository),
+      updatedViewTags_(updatedViewTags),
+      loop_(loop),
       styleInterpolator_(TransitionStyleInterpolator(shadowNode_->getComponentName(), viewStylesRepository)),
       progressProvider_(TransitionProgressProvider()) {}
 
+bool CSSTransition::update(const double timestamp) {
+  progressProvider_.update(timestamp);
+  updatedViewTags_->insert(shadowNode_->getTag());
+
+  if (progressProvider_.getState() == TransitionProgressState::Pending) {
+    loop_->schedule(shared_from_this(), timestamp + progressProvider_.getMinDelay(timestamp));
+  }
+
+  return progressProvider_.getState() == TransitionProgressState::Running;
+}
+
 Tag CSSTransition::getViewTag() const {
   return shadowNode_->getTag();
+}
+
+ShadowNodeFamily::Shared CSSTransition::getShadowNodeFamily() const {
+  return shadowNode_->getFamilyShared();
 }
 
 std::shared_ptr<const ShadowNode> CSSTransition::getShadowNode() const {
@@ -45,8 +64,9 @@ folly::dynamic CSSTransition::run(
   // Update interpolators and progress providers for changed properties
   handleChangedProperties(
       rt, propertiesDiffs, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
-  // Return the first transition frame
-  return update(timestamp);
+  // Advance progress and return the first transition frame
+  progressProvider_.update(timestamp);
+  return computeCurrentStyle();
 }
 
 folly::dynamic CSSTransition::run(
@@ -55,7 +75,8 @@ folly::dynamic CSSTransition::run(
     const double timestamp) {
   handleChangedProperties(
       propertiesDiffs, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
-  return update(timestamp);
+  progressProvider_.update(timestamp);
+  return computeCurrentStyle();
 }
 
 void CSSTransition::updateConfig(
@@ -69,8 +90,7 @@ void CSSTransition::updateConfig(
   progressProvider_.setPropertySettings(changedPropertiesSettings);
 }
 
-folly::dynamic CSSTransition::update(const double timestamp) {
-  progressProvider_.update(timestamp);
+folly::dynamic CSSTransition::computeCurrentStyle() {
   auto result = styleInterpolator_.interpolate(shadowNode_, progressProvider_);
   // Remove interpolators for which interpolation has finished
   // (we won't need them anymore in the current transition)

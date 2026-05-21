@@ -112,7 +112,6 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
   }
 
   cssTransitionsRegistry_->run(shadowNode, valueChanges);
-  operationsLoop_->run();
 }
 
 } // namespace reanimated
