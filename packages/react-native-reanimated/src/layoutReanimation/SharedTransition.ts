@@ -5,7 +5,6 @@ import type {
   EntryAnimationsValues,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
-  LayoutAnimation,
   LayoutAnimationFunction,
   StyleProps,
 } from '../commonTypes';
@@ -53,9 +52,7 @@ export enum SharedTransitionType {
   PROGRESS_ANIMATION = 'progressAnimation',
 }
 
-/**
- * Values passed to shared transition animation worklets.
- */
+/** Values passed to shared transition animation worklets. */
 export type SharedTransitionAnimationsValues = {
   targetOriginX: number;
   targetOriginY: number;
@@ -85,7 +82,7 @@ export type SharedTransitionAnimationsValues = {
   currentTransformOrigin: number[];
   windowWidth: number;
   windowHeight: number;
-}
+};
 
 /**
  * A function that defines a custom shared transition animation. It receives the
@@ -267,26 +264,25 @@ export class SharedTransition
     if (customAnimationFactory) {
       const callback = this.callbackV;
 
-      return (valuesUntyped) => {
+      return (layoutAnimationValues) => {
         'worklet';
         const values =
-          valuesUntyped as unknown as SharedTransitionAnimationsValues;
-
+          layoutAnimationValues as SharedTransitionAnimationsValues;
         const animations = customAnimationFactory(values);
-
         const initialValues: StyleProps = {};
         for (const key in values) {
           if (key.startsWith('current')) {
-            const prop = key[7].toLowerCase() + key.slice(8);
-            initialValues[prop] = values[key] as number | string;
+            const prop = (key[7].toLowerCase() +
+              key.slice(8)) as keyof StyleProps;
+            initialValues[prop] =
+              values[key as keyof SharedTransitionAnimationsValues];
           }
         }
-
         return {
           initialValues,
           animations,
           callback,
-        } as LayoutAnimation;
+        };
       };
     }
 
@@ -301,6 +297,7 @@ export class SharedTransition
       'worklet';
       const values =
         valuesUntyped as unknown as SharedTransitionAnimationsValues;
+      const valuesRecord = values as unknown as Record<string, unknown>;
       const animationFactory = (
         value: number | string,
         contentOpacity = false
@@ -316,16 +313,16 @@ export class SharedTransition
       const initialValues: StyleProps = {};
       const animations: StyleProps = {};
 
-      for (const sourceKey in values) {
+      for (const sourceKey in valuesRecord) {
         if (!sourceKey.startsWith('current')) {
           continue;
         }
         const prop = sourceKey[7].toLowerCase() + sourceKey.slice(8);
         const targetKey =
           'target' + sourceKey[7].toUpperCase() + sourceKey.slice(8);
-        initialValues[prop] = values[sourceKey] as number | string;
+        initialValues[prop] = valuesRecord[sourceKey] as number | string;
 
-        const target = values[targetKey];
+        const target = valuesRecord[targetKey];
         if (Array.isArray(target)) {
           if (prop === 'transform') {
             // TODO (future): do proper transform interpolation
