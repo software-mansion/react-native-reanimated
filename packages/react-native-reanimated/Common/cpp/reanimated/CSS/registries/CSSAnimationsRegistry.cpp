@@ -1,4 +1,5 @@
 #include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
+#include <reanimated/Tools/FeatureFlags.h>
 
 #include <memory>
 #include <string>
@@ -9,12 +10,14 @@
 namespace reanimated::css {
 
 bool CSSAnimationsRegistry::isEmpty() const {
+  std::lock_guard<std::mutex> lock{mutex_};
   // The registry is empty if has no registered animations and no updates
   // stored in the updates registry
-  return UpdatesRegistry::isEmpty() && registry_.empty();
+  return updatesRegistry_.empty() && registry_.empty();
 }
 
 bool CSSAnimationsRegistry::hasUpdates() const {
+  std::lock_guard<std::mutex> lock{mutex_};
   return !runningAnimationIndicesMap_.empty() || !delayedAnimationsManager_.empty() || !animationsToRevertMap_.empty();
 }
 
@@ -25,11 +28,13 @@ void CSSAnimationsRegistry::apply(
     const CSSAnimationsMap &newAnimations,
     const CSSAnimationSettingsUpdatesMap &settingsUpdates,
     double timestamp) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
   auto animationsVector = buildAnimationsVector(rt, shadowNode, animationNames, newAnimations);
 
   const auto viewTag = shadowNode->getTag();
   if (animationsVector.empty()) {
-    remove(viewTag);
+    removeTag(viewTag);
     return;
   }
 
@@ -56,7 +61,7 @@ void CSSAnimationsRegistry::apply(
   applyViewAnimationsStyle(viewTag, timestamp);
 }
 
-void CSSAnimationsRegistry::remove(const Tag viewTag) {
+void CSSAnimationsRegistry::removeTag(const Tag viewTag) {
   removeViewAnimations(viewTag);
   removeFromUpdatesRegistry(viewTag);
   registry_.erase(viewTag);
@@ -161,7 +166,7 @@ void CSSAnimationsRegistry::updateAnimationSettings(
     const auto &animation = animationsVector[i];
     const auto it = settingsUpdates.find(i);
     if (it != settingsUpdates.end()) {
-      animation->updateSettings(it->second, timestamp);
+      animation->updateConfig(it->second, timestamp);
     }
   }
 }
@@ -171,7 +176,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     const std::vector<size_t> &animationIndices,
     const double timestamp,
     const bool addToBatch) {
-  folly::dynamic result = folly::dynamic::object;
+  folly::dynamic animatedProps = folly::dynamic::object;
   std::shared_ptr<const ShadowNode> shadowNode = nullptr;
   bool hasUpdates = false;
 
@@ -194,7 +199,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
       if (addToBatch && !animation->hasForwardsFillMode()) {
         //  We also have to manually commit style values
         // reverting the changes applied by the animation.
-        hasUpdates = addStyleUpdates(result, animation->getResetStyle(), false) || hasUpdates;
+        hasUpdates = addStyleUpdates(animatedProps, animation->getResetStyle(), false) || hasUpdates;
         updatesAddedToBatch = true;
         // We want to remove style changes applied by the animation that is
         // finished and has no forwards fill mode. We cannot simply remove
@@ -207,7 +212,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     }
 
     if (addToBatch && !updatesAddedToBatch) {
-      hasUpdates = addStyleUpdates(result, updates, true) || hasUpdates;
+      hasUpdates = addStyleUpdates(animatedProps, updates, true) || hasUpdates;
     }
     if (newState != AnimationProgressState::Running) {
       runningAnimationIndicesMap_[viewTag].erase(animationIndex);
@@ -215,7 +220,13 @@ void CSSAnimationsRegistry::updateViewAnimations(
   }
 
   if (hasUpdates) {
-    addUpdatesToBatch(shadowNode->getFamilyShared(), result);
+    if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+#if REACT_NATIVE_VERSION_MINOR >= 85
+      addRawPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), std::move(animatedProps));
+#endif
+    } else {
+      addUpdatesToBatch(shadowNode->getFamilyShared(), animatedProps);
+    }
   }
 }
 

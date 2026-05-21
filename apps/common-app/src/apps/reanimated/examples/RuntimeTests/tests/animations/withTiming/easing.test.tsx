@@ -1,7 +1,15 @@
 import React, { useEffect } from 'react';
 import { Easing as EasingRN, StyleSheet, View } from 'react-native';
-import type { EasingFunction, EasingFunctionFactory } from 'react-native-reanimated';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import type {
+  EasingFunction,
+  EasingFunctionFactory,
+} from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import {
   describe,
@@ -16,12 +24,19 @@ import {
 import { ErrorBoundary } from '../../../ReJest/RuntimeTestsRunner';
 import { EasingSnapshots } from './withTiming.snapshot';
 
-const ActiveAnimatedComponent = ({ easing }: { easing: EasingFunction | EasingFunctionFactory | undefined }) => {
+const ActiveAnimatedComponent = ({
+  easing,
+}: {
+  easing: EasingFunction | EasingFunctionFactory | undefined;
+}) => {
   const widthSV = useSharedValue(0);
 
   const style = useAnimatedStyle(() => {
     return {
-      width: withTiming(widthSV.value, easing ? { duration: 1000, easing } : { duration: 1000 }),
+      width: withTiming(
+        widthSV.value,
+        easing ? { duration: 1000, easing } : { duration: 1000 }
+      ),
     };
   });
 
@@ -36,7 +51,11 @@ const ActiveAnimatedComponent = ({ easing }: { easing: EasingFunction | EasingFu
   );
 };
 
-const PassiveAnimatedComponent = ({ easing }: { easing: EasingFunction | EasingFunctionFactory | undefined }) => {
+const PassiveAnimatedComponent = ({
+  easing,
+}: {
+  easing: EasingFunction | EasingFunctionFactory | undefined;
+}) => {
   const widthSV = useSharedValue(0);
 
   const style = useAnimatedStyle(() => {
@@ -46,7 +65,10 @@ const PassiveAnimatedComponent = ({ easing }: { easing: EasingFunction | EasingF
   });
 
   useEffect(() => {
-    widthSV.value = withTiming(100, easing ? { duration: 1000, easing } : { duration: 1000 });
+    widthSV.value = withTiming(
+      100,
+      easing ? { duration: 1000, easing } : { duration: 1000 }
+    );
   });
 
   return (
@@ -56,7 +78,9 @@ const PassiveAnimatedComponent = ({ easing }: { easing: EasingFunction | EasingF
   );
 };
 
-async function getSnapshotUpdates(easingFn: EasingFunction | EasingFunctionFactory | undefined) {
+async function getSnapshotUpdates(
+  easingFn: EasingFunction | EasingFunctionFactory | undefined
+) {
   await mockAnimationTimer();
   const updatesContainerActive = await recordAnimationUpdates();
   await render(<ActiveAnimatedComponent easing={easingFn} />);
@@ -76,7 +100,10 @@ async function getSnapshotUpdates(easingFn: EasingFunction | EasingFunctionFacto
   // 2. Once the sharedValue changed update the style
   // Therefore the first frame is not recorded and we have to hardcode it
 
-  const passiveUpdates = [{ width: 0 }, ...updatesContainerPassive.getUpdates()];
+  const passiveUpdates = [
+    { width: 0 },
+    ...updatesContainerPassive.getUpdates(),
+  ];
 
   return [activeUpdates, activeNaiveUpdates, passiveUpdates];
 }
@@ -88,10 +115,10 @@ describe('withTiming snapshots 📸, test EASING', () => {
         await render(
           <ErrorBoundary>
             <ActiveAnimatedComponent easing={EasingRN.linear} />
-          </ErrorBoundary>,
+          </ErrorBoundary>
         );
       }).toThrow(
-        'ReanimatedError: [Reanimated] The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.',
+        'ReanimatedError: [Reanimated] The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.'
       );
     });
 
@@ -104,16 +131,17 @@ describe('withTiming snapshots 📸, test EASING', () => {
                 return 42;
               }}
             />
-          </ErrorBoundary>,
+          </ErrorBoundary>
         );
       }).toThrow(
-        'ReanimatedError: [Reanimated] The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.',
+        'ReanimatedError: [Reanimated] The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.'
       );
     });
   });
 
   test('No easing function', async () => {
-    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(undefined);
+    const [activeUpdates, activeNativeUpdates, passiveUpdates] =
+      await getSnapshotUpdates(undefined);
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots.noEasing);
     expect(passiveUpdates).toMatchSnapshots(EasingSnapshots.noEasing);
 
@@ -134,21 +162,29 @@ describe('withTiming snapshots 📸, test EASING', () => {
     ['steps', Easing.steps, [7, true]],
     ['steps', Easing.steps, [1.5, true]],
     ['steps', Easing.steps, [1.5, false]],
-  ] as const)('Easing.${0}(${2})', async ([easingName, easing, argumentSet]) => {
-    const snapshotName = `${easingName}_${argumentSet.join('_').replace(/\./g, '$').replace(/-/g, '$')}`;
+  ] as const)(
+    'Easing.${0}(${2})',
+    async ([easingName, easing, argumentSet]) => {
+      const snapshotName = `${easingName}_${argumentSet.join('_').replace(/\./g, '$').replace(/-/g, '$')}`;
 
-    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(
-      // @ts-ignore This error is because various easing functions accept different number of arguments
-      easing(...argumentSet),
-    );
-    expect(activeUpdates).toMatchSnapshots(EasingSnapshots[snapshotName as keyof typeof EasingSnapshots]);
-    expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
+      const [activeUpdates, activeNativeUpdates, passiveUpdates] =
+        await getSnapshotUpdates(
+          // @ts-ignore This error is because various easing functions accept different number of arguments
+          easing(...argumentSet)
+        );
+      expect(activeUpdates).toMatchSnapshots(
+        EasingSnapshots[snapshotName as keyof typeof EasingSnapshots]
+      );
+      expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
 
-    if (easing !== Easing.steps) {
-      // passiveUpdates of steps don't record duplicated frames, so we execute this test only for constant motion, not for the quantified one
-      expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[snapshotName as keyof typeof EasingSnapshots]);
+      if (easing !== Easing.steps) {
+        // passiveUpdates of steps don't record duplicated frames, so we execute this test only for constant motion, not for the quantified one
+        expect(passiveUpdates).toMatchSnapshots(
+          EasingSnapshots[snapshotName as keyof typeof EasingSnapshots]
+        );
+      }
     }
-  });
+  );
 
   test.each([
     ['bounce', Easing.bounce],
@@ -159,17 +195,22 @@ describe('withTiming snapshots 📸, test EASING', () => {
     ['quad', Easing.quad],
     ['sin', Easing.sin],
   ] as const)('Easing.%p', async ([easingName, easing]) => {
-    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(easing);
+    const [activeUpdates, activeNativeUpdates, passiveUpdates] =
+      await getSnapshotUpdates(easing);
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots[easingName]);
     expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[easingName]);
     expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
   });
 
   test('Easing.exp', async () => {
-    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(Easing.exp);
+    const [activeUpdates, activeNativeUpdates, passiveUpdates] =
+      await getSnapshotUpdates(Easing.exp);
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots.exp);
     // TODO Investigate why easing.exp works different than other easings
-    expect(passiveUpdates).toMatchSnapshots([{ width: 0 }, ...EasingSnapshots.exp]);
+    expect(passiveUpdates).toMatchSnapshots([
+      { width: 0 },
+      ...EasingSnapshots.exp,
+    ]);
     expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
   });
 
@@ -177,12 +218,16 @@ describe('withTiming snapshots 📸, test EASING', () => {
     ['in', Easing.in],
     ['out', Easing.out],
     ['inOut', Easing.inOut],
-  ] as const)('Easing.${0}(Easing.elastic(10))', async ([easingName, easing]) => {
-    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(easing(Easing.elastic(10)));
-    expect(activeUpdates).toMatchSnapshots(EasingSnapshots[easingName]);
-    expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[easingName]);
-    expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
-  });
+  ] as const)(
+    'Easing.${0}(Easing.elastic(10))',
+    async ([easingName, easing]) => {
+      const [activeUpdates, activeNativeUpdates, passiveUpdates] =
+        await getSnapshotUpdates(easing(Easing.elastic(10)));
+      expect(activeUpdates).toMatchSnapshots(EasingSnapshots[easingName]);
+      expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[easingName]);
+      expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
+    }
+  );
 });
 
 const styles = StyleSheet.create({

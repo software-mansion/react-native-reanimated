@@ -2,7 +2,6 @@
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
-#include <react/renderer/animations/utils.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 
 #include <memory>

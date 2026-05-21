@@ -85,6 +85,18 @@ export function runOnRuntimeAsync(): never {
   throw new Error('[Worklets] `runOnRuntimeAsync` is not supported on web.');
 }
 
+export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): Promise<ReturnValue>;
+
+export function runOnRuntimeAsyncWithId(): never {
+  throw new Error(
+    '[Worklets] `runOnRuntimeAsyncWithId` is not supported on web.'
+  );
+}
+
 export function getUIRuntimeHolder(): object {
   throw new Error('[Worklets] `getUIRuntimeHolder` is not supported on web.');
 }

@@ -4,8 +4,6 @@
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
-#include <react/renderer/core/ComponentDescriptor.h>
-
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -33,19 +31,20 @@ void ReanimatedCommitHook::maybeInitializeLayoutAnimations(SurfaceId surfaceId) 
   if (surfaceId > currentMaxSurfaceId_) {
     // when a new surfaceId is observed we call setMountingOverrideDelegate
     // for all yet unseen surfaces
-    uiManager_->getShadowTreeRegistry().enumerate([strongThis = shared_from_this()](
-                                                      const ShadowTree &shadowTree, bool &stop) {
-      // Executed synchronously.
-      if (shadowTree.getSurfaceId() <= strongThis->currentMaxSurfaceId_) {
-        // the set function actually adds our delegate to a list, so we
-        // shouldn't invoke it twice for the same surface
-        return;
-      }
-      // TODO: We should consider registering a new instance of proxy for each surface.
-      // The current approach will encounter problems on platforms where it is more common to have multiple surfaces.
-      strongThis->layoutAnimationsProxy_->startSurface(shadowTree.getSurfaceId());
-      shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(strongThis->layoutAnimationsProxy_);
-    });
+    uiManager_->getShadowTreeRegistry().enumerate(
+        [strongThis = shared_from_this()](const ShadowTree &shadowTree, bool &stop) {
+          // Executed synchronously.
+          if (shadowTree.getSurfaceId() <= strongThis->currentMaxSurfaceId_) {
+            // the set function actually adds our delegate to a list, so we
+            // shouldn't invoke it twice for the same surface
+            return;
+          }
+          // TODO: We should consider registering a new instance of proxy for each surface.
+          // The current approach will encounter problems on platforms where it is more common to have multiple
+          // surfaces.
+          strongThis->layoutAnimationsProxy_->startSurface(shadowTree.getSurfaceId());
+          shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(strongThis->layoutAnimationsProxy_);
+        });
     currentMaxSurfaceId_ = surfaceId;
   }
 }
@@ -58,6 +57,10 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   ReanimatedSystraceSection s("ReanimatedCommitHook::shadowTreeWillCommit");
 
   maybeInitializeLayoutAnimations(newRootShadowNode->getSurfaceId());
+
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    return newRootShadowNode;
+  }
 
   auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(newRootShadowNode);
 

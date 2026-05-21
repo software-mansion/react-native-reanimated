@@ -525,7 +525,6 @@ var require_globals = __commonJS({
       // Worklets
       "_WORKLET"
     ];
-    var notCapturedIdentifiers_DEPRECATED = ["_IS_FABRIC"];
     function initializeState(state) {
       state.workletNumber = 1;
       state.classesToWorkletize = [];
@@ -534,7 +533,7 @@ var require_globals = __commonJS({
         addCustomGlobals(state);
       }
     }
-    exports2.defaultGlobals = new Set(notCapturedIdentifiers.concat(notCapturedIdentifiers_DEPRECATED));
+    exports2.defaultGlobals = new Set(notCapturedIdentifiers);
     function initializeGlobals() {
       exports2.globals = new Set(exports2.defaultGlobals);
     }
@@ -913,7 +912,7 @@ var require_workletFactory = __commonJS({
     var MOCK_VERSION = "x.y.z";
     function makeWorkletFactory(fun, state) {
       var _a;
-      const includeClosure = !hasDirective(fun, "no-worklet-closure");
+      const includeClosure = state.opts.bundleMode || !hasDirective(fun, "no-worklet-closure");
       const limitInitDataHoisting = hasDirective(fun, "limit-init-data-hoisting");
       stripWorkletDirectives(fun);
       (0, assert_1.strict)(state.file.opts.filename, "[Reanimated] `state.file.opts.filename` is undefined.");
@@ -1003,7 +1002,7 @@ var require_workletFactory = __commonJS({
       if (shouldIncludeInitData && !state.opts.bundleMode) {
         statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__initData"), false), (0, types_12.cloneNode)(initDataId, true))));
       }
-      if (!(0, utils_1.isRelease)()) {
+      if (!(0, utils_1.isRelease)() && !state.opts.bundleMode) {
         statements.unshift((0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)((0, types_12.identifier)("_e"), (0, types_12.arrayExpression)([
             (0, types_12.newExpression)((0, types_12.memberExpression)((0, types_12.identifier)("global"), (0, types_12.identifier)("Error")), []),
@@ -1350,9 +1349,12 @@ var require_bundleMode = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.toggleBundleMode = toggleBundleMode;
     var types_12 = require("@babel/types");
+    var path_1 = require("path");
+    var WORKLETS_SRC_ENTRY_PATH = (0, path_1.join)("react-native-worklets", "src", "index.ts");
+    var WORKLETS_LIB_ENTRY_PATH = (0, path_1.join)("react-native-worklets", "lib", "module", "index.js");
     function toggleBundleMode(path, state) {
-      var _a;
-      if (!state.opts.bundleMode || !((_a = state.filename) === null || _a === void 0 ? void 0 : _a.includes("workletRuntimeEntry"))) {
+      var _a, _b;
+      if (!state.opts.bundleMode || !((_a = state.filename) === null || _a === void 0 ? void 0 : _a.endsWith(WORKLETS_SRC_ENTRY_PATH)) && !((_b = state.filename) === null || _b === void 0 ? void 0 : _b.endsWith(WORKLETS_LIB_ENTRY_PATH))) {
         return;
       }
       const expressionPath = path.get("expression");

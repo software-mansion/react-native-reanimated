@@ -7,6 +7,7 @@
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <memory>
+#include <mutex>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -33,9 +34,20 @@ class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_th
       const CSSAnimationsMap &newAnimations,
       const CSSAnimationSettingsUpdatesMap &settingsUpdates,
       double timestamp);
-  void remove(Tag viewTag) override;
 
-  void update(double timestamp);
+  void updateAndFlush(double timestamp, UpdatesBatch &updatesBatch) {
+    std::lock_guard<std::mutex> lock{mutex_};
+    update(timestamp);
+    flush(updatesBatch);
+  }
+
+#if REACT_NATIVE_VERSION_MINOR >= 85
+  void updateAndFlush(facebook::react::AnimationTimestamp timestamp, UpdatesBatchAnimatedProps &updatesBatch) {
+    std::lock_guard<std::mutex> lock{mutex_};
+    update(timestamp.count());
+    flush(updatesBatch);
+  }
+#endif
 
  private:
   using AnimationToIndexMap = std::unordered_map<std::shared_ptr<CSSAnimation>, size_t>;
@@ -53,6 +65,9 @@ class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_th
   RunningAnimationIndicesMap runningAnimationIndicesMap_;
   AnimationsToRevertMap animationsToRevertMap_;
   DelayedItemsManager<std::shared_ptr<CSSAnimation>> delayedAnimationsManager_;
+
+  void removeTag(Tag viewTag) override;
+  void update(double timestamp);
 
   CSSAnimationsVector buildAnimationsVector(
       jsi::Runtime &rt,

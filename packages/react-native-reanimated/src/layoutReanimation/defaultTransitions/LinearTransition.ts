@@ -4,7 +4,7 @@ import type {
   LayoutAnimationFunction,
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
-import { ComplexAnimationBuilder } from '../animationBuilder';
+import { AnimationConfigBuilder } from '../animationBuilder';
 
 /**
  * Linearly transforms the layout from one position to another. You can modify
@@ -16,12 +16,7 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions#linear-transition
  */
 export class LinearTransition
-  extends ComplexAnimationBuilder<{
-    originX: number;
-    originY: number;
-    width: number;
-    height: number;
-  }>
+  extends AnimationConfigBuilder
   implements ILayoutAnimationBuilder
 {
   static presetName = 'LinearTransition';

@@ -2,6 +2,7 @@
 
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
+#include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <string>
 #include <unordered_map>
@@ -11,17 +12,25 @@
 namespace reanimated::css {
 
 struct CSSTransitionPropertySettings {
-  std::pair<jsi::Value, jsi::Value> value;
   double duration;
   EasingFunction easingFunction;
   double delay;
   bool allowDiscrete;
 };
 
-using CSSTransitionPropertiesSettings = std::unordered_map<std::string, CSSTransitionPropertySettings>;
+using PropertyValueDiff = std::pair<jsi::Value, jsi::Value>;
+/** TODO: unify folly::dynamic and jsi::value versions */
+using PropertyValueDynamicDiff = std::pair<folly::dynamic, folly::dynamic>;
+
+using PropertyValueDiffsMap = std::unordered_map<std::string, PropertyValueDiff>;
+/** TODO: unify folly::dynamic and jsi::value versions */
+using PropertyValueDynamicDiffsMap = std::unordered_map<std::string, PropertyValueDynamicDiff>;
+
+using PropertiesSettingsMap = std::unordered_map<std::string, CSSTransitionPropertySettings>;
 
 struct CSSTransitionConfig {
-  CSSTransitionPropertiesSettings changedProperties;
+  PropertiesSettingsMap changedPropertiesSettings;
+  PropertyValueDiffsMap changedProperties;
   std::vector<std::string> removedProperties;
 };
 

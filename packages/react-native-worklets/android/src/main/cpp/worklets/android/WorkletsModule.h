@@ -3,9 +3,7 @@
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
-#include <react/jni/JMessageQueueThread.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
-#include <worklets/Tools/Defs.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
@@ -28,7 +26,6 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jni::alias_ref<jhybridobject> jThis,
       jboolean bundleModeEnabled,
       jlong jsContext,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
       jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
       jni::alias_ref<JScriptBufferWrapper::javaobject> jScriptBufferWrapper);
@@ -44,7 +41,6 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jni::alias_ref<jhybridobject> jThis,
       const BundleModeConfig &bundleModeConfig,
       jsi::Runtime *rnRuntime,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler);
 
@@ -56,6 +52,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
   JMethod<Signature> getJniMethod(std::string const &methodName) {
     return javaPart_->getClass()->getMethod<Signature>(methodName.c_str());
   }
+
+  std::shared_ptr<RuntimeBindings> getRuntimeBindings(bool bundleModeEnabled, jsi::Runtime &rnRuntime);
 
   RuntimeBindings::RequestAnimationFrame getRequestAnimationFrame();
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED

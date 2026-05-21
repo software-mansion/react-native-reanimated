@@ -8,7 +8,7 @@ import type {
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 import type { Scale, TransformsConfig, TranslateX, TranslateY } from './types';
-import { pickTransformValues } from './utils';
+import { pickTransformValues, resolveTransformValue } from './utils';
 
 /**
  * Bounce entering animation. You can modify the behavior by chaining methods
@@ -45,6 +45,7 @@ export class BounceIn
     const duration = this.getDuration();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return () => {
       'worklet';
@@ -58,7 +59,10 @@ export class BounceIn
                   withTiming(1.2, { duration: duration * 0.55 }),
                   withTiming(0.9, { duration: duration * 0.15 }),
                   withTiming(1.1, { duration: duration * 0.15 }),
-                  withTiming(1, { duration: duration * 0.15 })
+                  withTiming(
+                    resolveTransformValue({ scale: 1 }, 0, targetValues),
+                    { duration: duration * 0.15 }
+                  )
                 )
               ),
             },
@@ -108,6 +112,7 @@ export class BounceInDown
     const duration = this.getDuration();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -121,7 +126,10 @@ export class BounceInDown
                   withTiming(-20, { duration: duration * 0.55 }),
                   withTiming(10, { duration: duration * 0.15 }),
                   withTiming(-10, { duration: duration * 0.15 }),
-                  withTiming(0, { duration: duration * 0.15 })
+                  withTiming(
+                    resolveTransformValue({ translateY: 0 }, 0, targetValues),
+                    { duration: duration * 0.15 }
+                  )
                 )
               ),
             },
@@ -174,6 +182,7 @@ export class BounceInUp
     const duration = this.getDuration();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -187,7 +196,10 @@ export class BounceInUp
                   withTiming(20, { duration: duration * 0.55 }),
                   withTiming(-10, { duration: duration * 0.15 }),
                   withTiming(10, { duration: duration * 0.15 }),
-                  withTiming(0, { duration: duration * 0.15 })
+                  withTiming(
+                    resolveTransformValue({ translateY: 0 }, 0, targetValues),
+                    { duration: duration * 0.15 }
+                  )
                 )
               ),
             },
@@ -240,6 +252,7 @@ export class BounceInLeft
     const duration = this.getDuration();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -253,7 +266,10 @@ export class BounceInLeft
                   withTiming(20, { duration: duration * 0.55 }),
                   withTiming(-10, { duration: duration * 0.15 }),
                   withTiming(10, { duration: duration * 0.15 }),
-                  withTiming(0, { duration: duration * 0.15 })
+                  withTiming(
+                    resolveTransformValue({ translateX: 0 }, 0, targetValues),
+                    { duration: duration * 0.15 }
+                  )
                 )
               ),
             },
@@ -306,6 +322,7 @@ export class BounceInRight
     const duration = this.getDuration();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -319,7 +336,10 @@ export class BounceInRight
                   withTiming(-20, { duration: duration * 0.55 }),
                   withTiming(10, { duration: duration * 0.15 }),
                   withTiming(-10, { duration: duration * 0.15 }),
-                  withTiming(0, { duration: duration * 0.15 })
+                  withTiming(
+                    resolveTransformValue({ translateX: 0 }, 0, targetValues),
+                    { duration: duration * 0.15 }
+                  )
                 )
               ),
             },
@@ -372,6 +392,7 @@ export class BounceOut
     const duration = this.getDuration();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return () => {
       'worklet';
@@ -385,7 +406,10 @@ export class BounceOut
                   withTiming(1.1, { duration: duration * 0.15 }),
                   withTiming(0.9, { duration: duration * 0.15 }),
                   withTiming(1.2, { duration: duration * 0.15 }),
-                  withTiming(0, { duration: duration * 0.55 })
+                  withTiming(
+                    resolveTransformValue({ scale: 0 }, 0, targetValues),
+                    { duration: duration * 0.55 }
+                  )
                 )
               ),
             },
@@ -435,6 +459,7 @@ export class BounceOutDown
     const duration = this.getDuration();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -448,9 +473,16 @@ export class BounceOutDown
                   withTiming(-10, { duration: duration * 0.15 }),
                   withTiming(10, { duration: duration * 0.15 }),
                   withTiming(-20, { duration: duration * 0.15 }),
-                  withTiming(values.windowHeight, {
-                    duration: duration * 0.55,
-                  })
+                  withTiming(
+                    resolveTransformValue(
+                      { translateY: values.windowHeight },
+                      0,
+                      targetValues
+                    ),
+                    {
+                      duration: duration * 0.55,
+                    }
+                  )
                 )
               ),
             },
@@ -500,6 +532,7 @@ export class BounceOutUp
     const duration = this.getDuration();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -513,9 +546,14 @@ export class BounceOutUp
                   withTiming(10, { duration: duration * 0.15 }),
                   withTiming(-10, { duration: duration * 0.15 }),
                   withTiming(20, { duration: duration * 0.15 }),
-                  withTiming(-values.windowHeight, {
-                    duration: duration * 0.55,
-                  })
+                  withTiming(
+                    resolveTransformValue(
+                      { translateY: -values.windowHeight },
+                      0,
+                      targetValues
+                    ),
+                    { duration: duration * 0.55 }
+                  )
                 )
               ),
             },
@@ -565,6 +603,7 @@ export class BounceOutLeft
     const duration = this.getDuration();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -578,9 +617,14 @@ export class BounceOutLeft
                   withTiming(10, { duration: duration * 0.15 }),
                   withTiming(-10, { duration: duration * 0.15 }),
                   withTiming(20, { duration: duration * 0.15 }),
-                  withTiming(-values.windowWidth, {
-                    duration: duration * 0.55,
-                  })
+                  withTiming(
+                    resolveTransformValue(
+                      { translateX: -values.windowWidth },
+                      0,
+                      targetValues
+                    ),
+                    { duration: duration * 0.55 }
+                  )
                 )
               ),
             },
@@ -630,6 +674,7 @@ export class BounceOutRight
     const duration = this.getDuration();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -643,9 +688,14 @@ export class BounceOutRight
                   withTiming(-10, { duration: duration * 0.15 }),
                   withTiming(10, { duration: duration * 0.15 }),
                   withTiming(-20, { duration: duration * 0.15 }),
-                  withTiming(values.windowWidth, {
-                    duration: duration * 0.55,
-                  })
+                  withTiming(
+                    resolveTransformValue(
+                      { translateX: values.windowWidth },
+                      0,
+                      targetValues
+                    ),
+                    { duration: duration * 0.55 }
+                  )
                 )
               ),
             },

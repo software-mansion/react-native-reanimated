@@ -28,17 +28,17 @@ export const CONFIG: TwoMethodsConfig[] = [
   ['requestAnimationFrame', 1, 'requestAnimationFrame', 2, RuntimeKind.Worker],
   incorrect(
     ['requestAnimationFrame', 1, 'setTimeout', 2, RuntimeKind.UI], // incorrect
-    ['requestAnimationFrame', 2, 'setTimeout', 1, RuntimeKind.UI], // correct
+    ['requestAnimationFrame', 2, 'setTimeout', 1, RuntimeKind.UI] // correct
   ),
   ['requestAnimationFrame', 2, 'setTimeout', 1, RuntimeKind.Worker],
   incorrect(
     ['requestAnimationFrame', 1, 'setImmediate', 2, RuntimeKind.UI], // incorrect
-    ['requestAnimationFrame', 2, 'setImmediate', 1, RuntimeKind.UI], // correct
+    ['requestAnimationFrame', 2, 'setImmediate', 1, RuntimeKind.UI] // correct
   ),
   ['requestAnimationFrame', 2, 'setImmediate', 1, RuntimeKind.Worker],
   incorrect(
     ['requestAnimationFrame', 1, 'setInterval', 2, RuntimeKind.UI], // incorrect
-    ['requestAnimationFrame', 2, 'setInterval', 1, RuntimeKind.UI], // correct
+    ['requestAnimationFrame', 2, 'setInterval', 1, RuntimeKind.UI] // correct
   ),
   ['requestAnimationFrame', 2, 'setInterval', 1, RuntimeKind.Worker],
   ['requestAnimationFrame', 2, 'queueMicrotask', 1, RuntimeKind.UI],

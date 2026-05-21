@@ -82,6 +82,7 @@ const DefaultStaticFeatureFlags = {
   ENABLE_SHARED_ELEMENT_TRANSITIONS: false,
   FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS: true,
   IOS_USE_NATIVE_LAYOUT_ANIMATIONS: false,
+  USE_ANIMATION_BACKEND: false,
 } as const satisfies typeof StaticFeatureFlagsJSON;
 
 type StaticFeatureFlagsSchema = {

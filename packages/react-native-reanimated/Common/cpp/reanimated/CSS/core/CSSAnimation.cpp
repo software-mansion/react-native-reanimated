@@ -92,7 +92,7 @@ folly::dynamic CSSAnimation::update(const double timestamp) {
   return styleInterpolator_->interpolate(shadowNode_, progressProvider_, FALLBACK_INTERPOLATION_THRESHOLD);
 }
 
-void CSSAnimation::updateSettings(const PartialCSSAnimationSettings &updatedSettings, const double timestamp) {
+void CSSAnimation::updateConfig(const PartialCSSAnimationSettings &updatedSettings, const double timestamp) {
   progressProvider_->resetProgress();
 
   if (updatedSettings.duration.has_value()) {

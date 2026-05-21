@@ -18,7 +18,7 @@ import type {
   TranslateX,
   TranslateY,
 } from './types';
-import { pickTransformValues } from './utils';
+import { animateTransformToValues, pickTransformValues } from './utils';
 
 /**
  * Scale from center animation. You can modify the behavior by chaining methods
@@ -43,16 +43,23 @@ export class ZoomIn
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(1, config)) }],
+          transform: animateTransformToValues(
+            [{ scale: 1 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           transform: pickTransformValues([{ scale: 0 }], initialValues),
@@ -86,20 +93,24 @@ export class ZoomInRotate
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const rotate = this.rotateV ? this.rotateV : '0.3';
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return () => {
       'worklet';
       return {
         animations: {
-          transform: [
-            { scale: delayFunction(delay, animation(1, config)) },
-            { rotate: delayFunction(delay, animation(0, config)) },
-          ],
+          transform: animateTransformToValues(
+            [{ scale: 1 }, { rotate: '0rad' }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           transform: pickTransformValues(
@@ -136,19 +147,23 @@ export class ZoomInLeft
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            { translateX: delayFunction(delay, animation(0, config)) },
-            { scale: delayFunction(delay, animation(1, config)) },
-          ],
+          transform: animateTransformToValues(
+            [{ translateX: 0 }, { scale: 1 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           transform: pickTransformValues(
@@ -185,19 +200,23 @@ export class ZoomInRight
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            { translateX: delayFunction(delay, animation(0, config)) },
-            { scale: delayFunction(delay, animation(1, config)) },
-          ],
+          transform: animateTransformToValues(
+            [{ translateX: 0 }, { scale: 1 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           transform: pickTransformValues(
@@ -234,19 +253,23 @@ export class ZoomInUp
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            { translateY: delayFunction(delay, animation(0, config)) },
-            { scale: delayFunction(delay, animation(1, config)) },
-          ],
+          transform: animateTransformToValues(
+            [{ translateY: 0 }, { scale: 1 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           transform: pickTransformValues(
@@ -283,19 +306,23 @@ export class ZoomInDown
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            { translateY: delayFunction(delay, animation(0, config)) },
-            { scale: delayFunction(delay, animation(1, config)) },
-          ],
+          transform: animateTransformToValues(
+            [{ translateY: 0 }, { scale: 1 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           transform: pickTransformValues(
@@ -332,19 +359,23 @@ export class ZoomInEasyUp
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            { translateY: delayFunction(delay, animation(0, config)) },
-            { scale: delayFunction(delay, animation(1, config)) },
-          ],
+          transform: animateTransformToValues(
+            [{ translateY: 0 }, { scale: 1 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           transform: pickTransformValues(
@@ -381,19 +412,23 @@ export class ZoomInEasyDown
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            { translateY: delayFunction(delay, animation(0, config)) },
-            { scale: delayFunction(delay, animation(1, config)) },
-          ],
+          transform: animateTransformToValues(
+            [{ translateY: 0 }, { scale: 1 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           transform: pickTransformValues(
@@ -430,16 +465,23 @@ export class ZoomOut
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
+          transform: animateTransformToValues(
+            [{ scale: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           transform: pickTransformValues([{ scale: 1 }], initialValues),
@@ -473,20 +515,24 @@ export class ZoomOutRotate
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const rotate = this.rotateV ? this.rotateV : '0.3';
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return () => {
       'worklet';
       return {
         animations: {
-          transform: [
-            { scale: delayFunction(delay, animation(0, config)) },
-            { rotate: delayFunction(delay, animation(rotate, config)) },
-          ],
+          transform: animateTransformToValues(
+            [{ scale: 0 }, { rotate }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           transform: pickTransformValues(
@@ -523,24 +569,23 @@ export class ZoomOutLeft
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            {
-              translateX: delayFunction(
-                delay,
-                animation(-values.windowWidth, config)
-              ),
-            },
-            { scale: delayFunction(delay, animation(0, config)) },
-          ],
+          transform: animateTransformToValues(
+            [{ translateX: -values.windowWidth }, { scale: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           transform: pickTransformValues(
@@ -577,24 +622,23 @@ export class ZoomOutRight
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            {
-              translateX: delayFunction(
-                delay,
-                animation(values.windowWidth, config)
-              ),
-            },
-            { scale: delayFunction(delay, animation(0, config)) },
-          ],
+          transform: animateTransformToValues(
+            [{ translateX: values.windowWidth }, { scale: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           transform: pickTransformValues(
@@ -631,24 +675,23 @@ export class ZoomOutUp
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            {
-              translateY: delayFunction(
-                delay,
-                animation(-values.windowHeight, config)
-              ),
-            },
-            { scale: delayFunction(delay, animation(0, config)) },
-          ],
+          transform: animateTransformToValues(
+            [{ translateY: -values.windowHeight }, { scale: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           transform: pickTransformValues(
@@ -685,24 +728,23 @@ export class ZoomOutDown
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            {
-              translateY: delayFunction(
-                delay,
-                animation(values.windowHeight, config)
-              ),
-            },
-            { scale: delayFunction(delay, animation(0, config)) },
-          ],
+          transform: animateTransformToValues(
+            [{ translateY: values.windowHeight }, { scale: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           transform: pickTransformValues(
@@ -739,24 +781,23 @@ export class ZoomOutEasyUp
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            {
-              translateY: delayFunction(
-                delay,
-                animation(-values.currentHeight, config)
-              ),
-            },
-            { scale: delayFunction(delay, animation(0, config)) },
-          ],
+          transform: animateTransformToValues(
+            [{ translateY: -values.currentHeight }, { scale: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           transform: pickTransformValues(
@@ -793,24 +834,23 @@ export class ZoomOutEasyDown
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            {
-              translateY: delayFunction(
-                delay,
-                animation(values.currentHeight, config)
-              ),
-            },
-            { scale: delayFunction(delay, animation(0, config)) },
-          ],
+          transform: animateTransformToValues(
+            [{ translateY: values.currentHeight }, { scale: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           transform: pickTransformValues(

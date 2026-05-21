@@ -90,7 +90,9 @@ class LayoutAnimationsManager {
   std::unordered_map<int, LayoutAnimationConfigEntry> exitingAnimations_;
   std::unordered_map<int, LayoutAnimationConfigEntry> layoutAnimations_;
   std::unordered_map<int, bool> shouldAnimateExitingForTag_;
-  mutable std::recursive_mutex animationsMutex_;
+  mutable std::recursive_mutex animationsMutex_; // Protects `enteringAnimationsForNativeID_`,
+  // `sharedTransitionsForNativeID_`, `sharedTransitions_`, `enteringAnimations_`, `exitingAnimations_`,
+  // `layoutAnimations_` and `shouldAnimateExitingForTag_`.
 
 #if __APPLE__
   RunCoreAnimationForView runCoreAnimationForView_;

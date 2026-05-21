@@ -9,12 +9,18 @@ import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
 import { isSynchronizable } from './isSynchronizable';
 import {
+  nextRemoteFunctionId,
+  registerRemoteFunction,
+} from './remoteFunctionRegistry';
+import {
   serializableMappingCache,
   serializableMappingFlag,
 } from './serializableMappingCache';
 import type {
   FlatSerializableRef,
+  RegisteredRemoteFunction,
   RegistrationData,
+  RemoteFunction,
   SerializableRef,
   SerializationData,
   Synchronizable,
@@ -48,8 +54,14 @@ function isPlainJSObject(object: object): object is Record<string, unknown> {
   return Object.getPrototypeOf(object) === Object.prototype;
 }
 
+/**
+ * RN has introduced a new representation of TurboModules as a JS object whose
+ * prototype is the host object. More details:
+ * https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp#L182
+ */
 function isTurboModuleLike(object: object): object is Record<string, unknown> {
-  return isHostObject(Object.getPrototypeOf(object));
+  const proto = Object.getPrototypeOf(object);
+  return proto !== null && isHostObject(proto);
 }
 
 function getFromCache(value: object) {
@@ -133,7 +145,6 @@ export function createSerializable<TValue>(
 ): SerializableRef<TValue> {
   detectCyclicObject(value, depth);
 
-  const isObject = typeof value === 'object';
   const isFunction = typeof value === 'function';
 
   if (typeof value === 'string') {
@@ -152,16 +163,16 @@ export function createSerializable<TValue>(
     return cloneBigInt(value) as SerializableRef<TValue>;
   }
 
+  if (typeof value === 'symbol') {
+    return cloneString(String(value)) as SerializableRef<TValue>;
+  }
+
   if (value === undefined) {
     return cloneUndefined() as SerializableRef<TValue>;
   }
 
   if (value === null) {
     return cloneNull() as SerializableRef<TValue>;
-  }
-
-  if ((!isObject && !isFunction) || value === null) {
-    return clonePrimitive(value, shouldPersistRemote);
   }
 
   const cached = getFromCache(value);
@@ -174,21 +185,22 @@ export function createSerializable<TValue>(
   }
   if (isFunction) {
     if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-      if ((value as RemoteFunction).__remoteFunction) {
-        // Remote functions are already serialized.
-        return (value as RemoteFunction)
-          .__remoteFunction as SerializableRef<TValue>;
+      if ((value as unknown as WorkletImport).__bundleData) {
+        return cloneImport(
+          value as unknown as WorkletImport
+        ) as SerializableRef<TValue>;
       }
-      if ((value as WorkletImport).__bundleData) {
-        return cloneImport(value as WorkletImport) as SerializableRef<TValue>;
-      }
+    }
+    if ((value as unknown as RemoteFunction).__remoteFunction) {
+      // Remote functions are already serialized.
+      return value as unknown as SerializableRef<TValue>;
     }
     if (!isWorkletFunction(value)) {
-      return cloneRemoteFunction(value);
+      return cloneNonWorkletFunction(
+        value as () => unknown
+      ) as SerializableRef<TValue>;
     }
   }
-  // RN has introduced a new representation of TurboModules as a JS object whose prototype is the host object
-  // More details: https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp#L182
   if (isTurboModuleLike(value)) {
     return cloneTurboModuleLike(value, shouldPersistRemote, depth);
   }
@@ -215,19 +227,19 @@ export function createSerializable<TValue>(
     return clonePlainJSObject(value, shouldPersistRemote, depth);
   }
   if (value instanceof Set) {
-    return cloneSet(value);
+    return cloneSet(value) as SerializableRef<TValue>;
   }
   if (value instanceof Map) {
-    return cloneMap(value);
+    return cloneMap(value) as SerializableRef<TValue>;
   }
   if (value instanceof RegExp) {
-    return cloneRegExp(value);
+    return cloneRegExp(value) as SerializableRef<TValue>;
   }
   if (value instanceof Error) {
-    return cloneError(value);
+    return cloneError(value) as SerializableRef<TValue>;
   }
   if (value instanceof ArrayBuffer) {
-    return cloneArrayBuffer(value, shouldPersistRemote);
+    return cloneArrayBuffer(value) as SerializableRef<TValue>;
   }
   if (ArrayBuffer.isView(value)) {
     // typed array (e.g. Int32Array, Uint8ClampedArray) or DataView
@@ -238,6 +250,9 @@ export function createSerializable<TValue>(
     if (determine(value)) {
       return cloneCustom(value, pack, i) as SerializableRef<TValue>;
     }
+  }
+  if (__DEV__ && value instanceof Promise) {
+    throw new Error('[Worklets] Promises cannot be converted to serializable.');
   }
   return inaccessibleObject(value);
 }
@@ -347,13 +362,6 @@ function detectCyclicObject(value: unknown, depth: number) {
   }
 }
 
-function clonePrimitive<T>(
-  value: T,
-  shouldPersistRemote: boolean
-): SerializableRef<T> {
-  return WorkletsModule.createSerializable(value, shouldPersistRemote);
-}
-
 function cloneString(value: string): SerializableRef<string> {
   return WorkletsModule.createSerializableString(value);
 }
@@ -432,14 +440,22 @@ function cloneArray<T extends unknown[]>(
   return clone;
 }
 
-function cloneRemoteFunction<TArgs extends unknown[], TReturn>(
-  value: (...args: TArgs) => TReturn
-): SerializableRef<TReturn> {
-  const clone = WorkletsModule.createSerializableFunction(value);
-  serializableMappingCache.set(value, clone);
+function cloneNonWorkletFunction<TArgs extends unknown[], TReturn>(
+  fun: (...args: TArgs) => TReturn
+): SerializableRef<(...args: TArgs) => TReturn> {
+  const functionId = nextRemoteFunctionId;
+  const clone = WorkletsModule.createSerializableNonWorkletFunction(
+    fun,
+    functionId,
+    __DEV__ ? fun.name : undefined
+  ) as SerializableRef<(...args: TArgs) => TReturn>;
+  if ((clone as RegisteredRemoteFunction).__keepAlive) {
+    registerRemoteFunction(fun);
+  }
+  serializableMappingCache.set(fun, clone);
   serializableMappingCache.set(clone);
 
-  freezeObjectInDev(value);
+  freezeObjectInDev(fun);
   return clone;
 }
 
@@ -564,19 +580,16 @@ function clonePlainJSObject<TValue extends object>(
   return clone;
 }
 
-function cloneMap<TValue extends Map<unknown, unknown>>(
-  value: TValue
-): SerializableRef<TValue> {
+function cloneMap(
+  value: Map<unknown, unknown>
+): SerializableRef<Map<unknown, unknown>> {
   const clonedKeys: unknown[] = [];
   const clonedValues: unknown[] = [];
   for (const [key, element] of value.entries()) {
     clonedKeys.push(createSerializable(key));
     clonedValues.push(createSerializable(element));
   }
-  const clone = WorkletsModule.createSerializableMap(
-    clonedKeys,
-    clonedValues
-  ) as SerializableRef<TValue>;
+  const clone = WorkletsModule.createSerializableMap(clonedKeys, clonedValues);
   serializableMappingCache.set(value, clone);
   serializableMappingCache.set(clone);
 
@@ -584,16 +597,12 @@ function cloneMap<TValue extends Map<unknown, unknown>>(
   return clone;
 }
 
-function cloneSet<TValue extends Set<unknown>>(
-  value: TValue
-): SerializableRef<TValue> {
+function cloneSet(value: Set<unknown>): SerializableRef<Set<unknown>> {
   const clonedElements: unknown[] = [];
   for (const element of value) {
     clonedElements.push(createSerializable(element));
   }
-  const clone = WorkletsModule.createSerializableSet(
-    clonedElements
-  ) as SerializableRef<TValue>;
+  const clone = WorkletsModule.createSerializableSet(clonedElements);
   serializableMappingCache.set(value, clone);
   serializableMappingCache.set(clone);
 
@@ -601,9 +610,7 @@ function cloneSet<TValue extends Set<unknown>>(
   return clone;
 }
 
-function cloneRegExp<TValue extends RegExp>(
-  value: TValue
-): SerializableRef<TValue> {
+function cloneRegExp(value: RegExp): SerializableRef<RegExp> {
   const pattern = value.source;
   const flags = value.flags;
   const handle = cloneInitializer({
@@ -611,41 +618,24 @@ function cloneRegExp<TValue extends RegExp>(
       'worklet';
       return new RegExp(pattern, flags);
     },
-  }) as unknown as SerializableRef<TValue>;
+  }) as SerializableRef<RegExp>;
   serializableMappingCache.set(value, handle);
 
   return handle;
 }
 
-function cloneError<TValue extends Error>(
-  value: TValue
-): SerializableRef<TValue> {
+function cloneError(value: Error): SerializableRef<Error> {
   const { name, message, stack } = value;
-  const handle = cloneInitializer({
-    __init: () => {
-      'worklet';
-      // eslint-disable-next-line reanimated/use-worklets-error
-      const error = new Error();
-      error.name = name;
-      error.message = message;
-      error.stack = stack;
-      return error;
-    },
-  });
-  serializableMappingCache.set(value, handle);
-  return handle as unknown as SerializableRef<TValue>;
+  const clone = WorkletsModule.createSerializableError(name, message, stack);
+  serializableMappingCache.set(value, clone);
+  return clone;
 }
 
-function cloneArrayBuffer<T extends ArrayBuffer>(
-  value: T,
-  shouldPersistRemote: boolean
-): SerializableRef<T> {
-  const clone = WorkletsModule.createSerializable(
-    value,
-    shouldPersistRemote,
-    value
-  );
-  serializableMappingCache.set(value, clone);
+function cloneArrayBuffer(
+  arrayBuffer: ArrayBuffer
+): SerializableRef<ArrayBuffer> {
+  const clone = WorkletsModule.createSerializableArrayBuffer(arrayBuffer);
+  serializableMappingCache.set(arrayBuffer, clone);
   serializableMappingCache.set(clone);
 
   return clone;
@@ -738,17 +728,6 @@ function getWorkletCode(value: WorkletFunction) {
   return code;
 }
 
-type RemoteFunction<TValue = unknown> = {
-  __remoteFunction: FlatSerializableRef<TValue>;
-};
-
-function isRemoteFunction<TValue>(value: {
-  __remoteFunction?: unknown;
-}): value is RemoteFunction<TValue> {
-  'worklet';
-  return !!value.__remoteFunction;
-}
-
 /**
  * We freeze
  *
@@ -801,28 +780,57 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
       if (isHostObject(value)) {
         // We call `_createSerializableClone` to wrap the provided HostObject
         // inside SerializableJSRef.
-        return global._createSerializableHostObject(
+        return globalThis._createSerializableHostObject(
           value
         ) as FlatSerializableRef<TValue>;
       }
-      if (isRemoteFunction<TValue>(value)) {
+      if ((value as Record<string, unknown>).__remoteFunction) {
         // RemoteFunctions are created by us therefore they are
         // a Serializable out of the box and there is no need to
         // call `_createSerializableClone`.
-        return value.__remoteFunction;
+        return value as FlatSerializableRef<TValue>;
       }
       if (Array.isArray(value)) {
-        return global._createSerializableArray(
+        return globalThis._createSerializableArray(
           value.map(cloneRecursive)
         ) as FlatSerializableRef<TValue>;
       }
       if ((value as Record<string, unknown>).__synchronizableRef) {
-        return global._createSerializableSynchronizable(
+        return globalThis._createSerializableSynchronizable(
           value
         ) as FlatSerializableRef<TValue>;
       }
       if ((value as Record<string, unknown>).__serializableRef) {
         return value as FlatSerializableRef<TValue>;
+      }
+      if (value instanceof Set) {
+        const values: unknown[] = [];
+        value.forEach((element) => {
+          values.push(cloneRecursive(element));
+        });
+        return globalThis.__workletsModuleProxy.createSerializableSet(
+          values
+        ) as FlatSerializableRef<TValue>;
+      }
+      if (value instanceof Error) {
+        const { name, message, stack } = value;
+        return globalThis.__workletsModuleProxy.createSerializableError(
+          name,
+          message,
+          stack
+        ) as FlatSerializableRef<TValue>;
+      }
+      if (value instanceof Map) {
+        const keys: unknown[] = [];
+        const values: unknown[] = [];
+        value.forEach((element, key) => {
+          keys.push(cloneRecursive(key));
+          values.push(cloneRecursive(element));
+        });
+        return globalThis.__workletsModuleProxy.createSerializableMap(
+          keys,
+          values
+        ) as FlatSerializableRef<TValue>;
       }
       if (Object.getPrototypeOf(value) !== Object.prototype) {
         const length = globalThis.__customSerializationRegistry.length;
@@ -831,48 +839,63 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
             globalThis.__customSerializationRegistry[i];
           if (determine(value)) {
             const packedData = pack(value);
-            return globalThis.__workletsModuleProxy?.createCustomSerializable(
+            return globalThis.__workletsModuleProxy.createCustomSerializable(
               cloneRecursive(packedData as TValue) as SerializableRef<object>,
               i
             ) as FlatSerializableRef<TValue>;
           }
         }
       }
+      if (__DEV__ && value instanceof Promise) {
+        throw new Error(
+          '[Worklets] Promises cannot be converted to serializable.'
+        );
+      }
       const toAdapt: Record<string, FlatSerializableRef<TValue>> = {};
       for (const [key, element] of Object.entries(value)) {
         toAdapt[key] = cloneRecursive(element);
       }
-      return global._createSerializable(
+      return globalThis.__workletsModuleProxy.createSerializableLEGACY(
         toAdapt,
         value
       ) as FlatSerializableRef<TValue>;
     }
 
     if (typeof value === 'string') {
-      return global._createSerializableString(value);
+      return globalThis._createSerializableString(value);
     }
 
     if (typeof value === 'number') {
-      return global._createSerializableNumber(value);
+      return globalThis._createSerializableNumber(value);
     }
 
     if (typeof value === 'boolean') {
-      return global._createSerializableBoolean(value);
+      return globalThis._createSerializableBoolean(value);
     }
 
     if (typeof value === 'bigint') {
-      return global._createSerializableBigInt(value);
+      return globalThis._createSerializableBigInt(value);
+    }
+
+    if (typeof value === 'symbol') {
+      // TODO: add native support
+      return globalThis._createSerializableString(
+        String(value)
+      ) as FlatSerializableRef<TValue>;
     }
 
     if (value === undefined) {
-      return global._createSerializableUndefined();
+      return globalThis._createSerializableUndefined();
     }
 
     if (value === null) {
-      return global._createSerializableNull();
+      return globalThis._createSerializableNull();
     }
 
-    return global._createSerializable(value, undefined);
+    return globalThis.__workletsModuleProxy.createSerializableLEGACY(
+      value,
+      undefined
+    ) as FlatSerializableRef<TValue>;
   }
   return cloneRecursive(value);
 }

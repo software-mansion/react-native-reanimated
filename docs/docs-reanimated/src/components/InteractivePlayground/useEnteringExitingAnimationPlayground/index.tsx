@@ -13,8 +13,10 @@ import { ENTERING_ANIMATIONS, EXITING_ANIMATIONS } from './Example';
 
 const MOBILE_WIDTH = 768;
 
-export interface EnteringExitingConfigProps
-  extends Omit<BaseLayoutAnimationConfig, 'easing'> {
+export interface EnteringExitingConfigProps extends Omit<
+  BaseLayoutAnimationConfig,
+  'easing'
+> {
   animation: string;
   delay?: number;
   easing?: string;

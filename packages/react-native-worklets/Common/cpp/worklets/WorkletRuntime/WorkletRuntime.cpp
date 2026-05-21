@@ -1,27 +1,20 @@
+#include <jsi/decorator.h>
+#include <jsi/jsi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
-#include <worklets/Tools/Defs.h>
-#include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RuntimeHolder.h>
+#include <worklets/WorkletRuntime/ScriptLoader.h>
+#include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
-#include <cxxreact/MessageQueueThread.h>
-#include <jsi/decorator.h>
-#include <jsi/jsi.h>
-
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
-
-#if JS_RUNTIME_HERMES
-#include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
-#else
-#include <jsc/JSCRuntime.h>
-#endif // JS_RUNTIME
 
 namespace worklets {
 
@@ -53,30 +46,22 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
         runtime_(std::move(runtime)) {}
 };
 
-static std::shared_ptr<jsi::Runtime> makeRuntime(
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::string &name,
-    const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
-  std::shared_ptr<jsi::Runtime> jsiRuntime;
-#if JS_RUNTIME_HERMES
+static std::shared_ptr<jsi::Runtime> makeRuntime(const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
   auto hermesRuntime = facebook::hermes::makeHermesRuntime();
-  jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime), jsQueue, name);
-#else
-  jsiRuntime = facebook::jsc::makeJSCRuntime();
-#endif
-
+  std::shared_ptr<jsi::Runtime> jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime));
   return std::make_shared<LockableRuntime>(jsiRuntime, runtimeMutex);
 }
 
 WorkletRuntime::WorkletRuntime(
     uint64_t runtimeId,
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
+    const RuntimeData::RuntimeKind runtimeKind,
     const std::string &name,
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop)
     : runtimeId_(runtimeId),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
-      runtime_(makeRuntime(jsQueue, name, runtimeMutex_)),
+      runtime_(makeRuntime(runtimeMutex_)),
+      runtimeKind_(runtimeKind),
       name_(name),
       queue_(queue) {
   jsi::Runtime &rt = *runtime_;
@@ -87,7 +72,7 @@ WorkletRuntime::WorkletRuntime(
   }
 }
 
-void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy) {
+void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy) {
   jsi::Runtime &rt = *runtime_;
 
   rt.setRuntimeData(
@@ -95,6 +80,7 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
       std::make_shared<WeakRuntimeHolder>(WeakRuntimeHolder{.weakRuntime = weak_from_this()}));
 
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
+  jsScheduler_ = jsScheduler;
   const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
   const auto memoryManager_ = jsiWorkletsModuleProxy->getMemoryManager();
   const auto script = jsiWorkletsModuleProxy->getScript();
@@ -102,11 +88,17 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
   const auto runtimeBindings = jsiWorkletsModuleProxy->getRuntimeBindings();
   const auto bundleModeEnabled = jsiWorkletsModuleProxy->isBundleModeEnabled();
   const auto unpackerLoader = jsiWorkletsModuleProxy->getUnpackerLoader();
-
-  auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
+  const auto &nativeLoggingHook = runtimeBindings->nativeLoggingHook;
 
   WorkletRuntimeDecorator::decorate(
-      rt, name_, jsScheduler, isDevBundle, std::move(optimizedJsiWorkletsModuleProxy), eventLoop_);
+      rt,
+      runtimeKind_,
+      name_,
+      jsScheduler,
+      isDevBundle,
+      jsiWorkletsModuleProxy->toOptimizedObject(rt),
+      eventLoop_,
+      nativeLoggingHook);
 
   if (bundleModeEnabled) {
     bundleModeInit(jsScheduler, script, sourceUrl, runtimeBindings);
@@ -132,18 +124,7 @@ void WorkletRuntime::bundleModeInit(
     throw std::runtime_error("[Worklets] Expected to receive the bundle, but got nullptr instead.");
   }
 
-  try {
-    rt.evaluateJavaScript(script, sourceUrl);
-  } catch (facebook::jsi::JSError &error) {
-    const auto &message = error.getMessage();
-    const auto &stack = error.getStack();
-    if (!message.starts_with("[Worklets] Worklets initialized successfully")) {
-      const auto newMessage = "[Worklets] Failed to initialize runtime. Reason: " + message + " " + stack;
-      JSLogger::reportFatalErrorOnJS(
-          jsScheduler, {.message = newMessage, .stack = stack, .name = "WorkletsError", .jsEngine = "Worklets"});
-      return;
-    }
-  }
+  ScriptLoader::loadScript(rt, script, sourceUrl);
 
   WorkletRuntimeDecorator::postEvaluateScript(rt, runtimeBindings);
 }
@@ -182,6 +163,37 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet) cons
     }
 
     strongThis->runSync(worklet);
+  });
+}
+
+#ifndef NDEBUG
+void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet, std::optional<std::string> scheduleStack)
+    const {
+  react_native_assert(
+      queue_ &&
+      "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
+      "async queue is not set. Recreate the runtime with a valid async queue.");
+
+  queue_->push([worklet = std::move(worklet), scheduleStack = std::move(scheduleStack), weakThis = weak_from_this()] {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    strongThis->runSyncWithStack(worklet, scheduleStack);
+  });
+}
+#endif // NDEBUG
+
+void WorkletRuntime::callMicrotasks() const {
+  runSync([](jsi::Runtime &rt) {
+    auto callMicrotasks = rt.global().getProperty(rt, "__callMicrotasks");
+    if (callMicrotasks.isObject()) {
+      auto callMicrotasksObject = callMicrotasks.asObject(rt);
+      if (callMicrotasksObject.isFunction(rt)) {
+        callMicrotasksObject.asFunction(rt).call(rt);
+      }
+    }
   });
 }
 
@@ -263,6 +275,21 @@ void scheduleOnRuntime(
   workletRuntime->schedule(serializableWorklet);
 }
 
+#ifndef NDEBUG
+void scheduleOnRuntime(
+    jsi::Runtime &rt,
+    const jsi::Value &workletRuntimeValue,
+    const jsi::Value &serializableWorkletValue,
+    const std::optional<std::string> &scheduleStack) {
+  auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
+  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
+      rt,
+      serializableWorkletValue,
+      "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
+  workletRuntime->schedule(serializableWorklet, scheduleStack);
+}
+#endif // NDEBUG
+
 std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
   auto runtimeData = rt.getRuntimeData(RuntimeData::weakRuntimeUUID);
   if (!runtimeData) [[unlikely]] {
@@ -294,31 +321,6 @@ jsi::Value WorkletRuntime::executeSync(std::function<jsi::Value(jsi::Runtime &)>
 jsi::Value WorkletRuntime::executeSync(const std::function<jsi::Value(jsi::Runtime &)> &job) const {
   return runSync(job);
 }
-
-#ifndef NDEBUG
-static const auto callGuardLambda = [](facebook::jsi::Runtime &rt,
-                                       const facebook::jsi::Value &thisVal,
-                                       const facebook::jsi::Value *args,
-                                       size_t count) {
-  return args[0].asObject(rt).asFunction(rt).call(rt, args + 1, count - 1);
-};
-
-jsi::Function WorkletRuntime::getCallGuard(jsi::Runtime &rt) {
-  auto callGuard = rt.global().getProperty(rt, "__callGuardDEV");
-  if (callGuard.isObject()) {
-    // Use JS implementation if `__callGuardDEV` has already been installed.
-    // This is the desired behavior.
-    return callGuard.asObject(rt).asFunction(rt);
-  }
-
-  // Otherwise, fallback to C++ JSI implementation. This is necessary so that we
-  // can install `__callGuardDEV` itself and should happen only once. Note that
-  // the C++ implementation doesn't intercept errors and simply throws them as
-  // C++ exceptions which crashes the app. We assume that installing the guard
-  // doesn't throw any errors.
-  return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "callGuard"), 1, callGuardLambda);
-}
-#endif // NDEBUG
 
 /* #endregion */
 

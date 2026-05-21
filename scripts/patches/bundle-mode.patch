@@ -29,7 +29,7 @@ index afe4c07b49..eece71ae7f 100644
  module.exports = wrapWithReanimatedMetroConfig(
    mergeConfig(defaultConfig, config)
 diff --git a/apps/fabric-example/package.json b/apps/fabric-example/package.json
-index e95d944cc1..e449361b2f 100644
+index db9b182ba2..870fdaf406 100644
 --- a/apps/fabric-example/package.json
 +++ b/apps/fabric-example/package.json
 @@ -45,7 +45,7 @@
@@ -42,13 +42,13 @@ index e95d944cc1..e449361b2f 100644
    }
  }
 diff --git a/package.json b/package.json
-index 3df798d778..95415975b0 100644
+index dfb4917fa6..373c8b83d9 100644
 --- a/package.json
 +++ b/package.json
-@@ -77,5 +77,9 @@
-     "react-native-builder-bob": "0.40.13",
+@@ -82,5 +82,9 @@
+     "remark-mdx": "3.1.0",
      "shelljs": "0.10.0",
-     "typescript": "5.8.3"
+     "typescript": "5.9.3"
 +  },
 +  "resolutions": {
 +    "metro": "patch:metro@npm%3A0.83.2#~/.yarn/patches/metro-npm-0.83.2-d09f48ca84.patch",

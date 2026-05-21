@@ -1,3 +1,4 @@
+#import <reanimated/Tools/FeatureFlags.h>
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
 #import <reanimated/apple/REACoreAnimationDelegate.h>
@@ -142,7 +143,11 @@ using namespace facebook::react;
       return;
     }
     eventHandler(event);
-    [strongSelf performOperations];
+    if constexpr (reanimated::StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+      // Flush already ran inside ReanimatedModuleProxy::handleEventAndFlush (see ReanimatedModule).
+    } else {
+      [strongSelf performOperations];
+    }
   });
 }
 

@@ -63,6 +63,10 @@ export default function ScrollToExample() {
       title: 'RNGHScrollView',
       component: RNGHScrollViewExample,
     },
+    {
+      title: 'FlatList with custom renderer',
+      component: FlatListWithCustomRendererExample,
+    },
   ];
 
   const Example = examples[currentExample].component;
@@ -268,6 +272,42 @@ const RNGHScrollViewExample = ({ animated, ref }: ExampleProps) => {
         </Text>
       ))}
     </AnimatedRNGHScrollView>
+  );
+};
+
+const FlatListWithCustomRendererExample = ({ animated, ref }: ExampleProps) => {
+  const aref = useAnimatedRef<Animated.FlatList<number>>();
+
+  useImperativeHandle(ref, () => ({
+    scrollFromJS() {
+      console.log(getRuntimeKind());
+      aref.current?.scrollToOffset({ offset: getRandomOffset(), animated });
+    },
+    scrollFromUI() {
+      scheduleOnUI(() => {
+        console.log(getRuntimeKind());
+        scrollTo(aref, 0, getRandomOffset(), animated);
+      });
+    },
+  }));
+
+  const renderItem = useCallback<FlatListRenderItem<number>>(
+    ({ item }) => <Text style={styles.text}>{item}</Text>,
+    []
+  );
+
+  const renderScrollComponent = useCallback((props: any) => {
+    return <Animated.ScrollView {...props} />;
+  }, []);
+
+  return (
+    <Animated.FlatList
+      ref={aref}
+      renderItem={renderItem}
+      data={DATA}
+      style={styles.fill}
+      renderScrollComponent={renderScrollComponent}
+    />
   );
 };
 

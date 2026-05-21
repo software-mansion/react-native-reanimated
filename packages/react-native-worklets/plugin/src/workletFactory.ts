@@ -61,7 +61,8 @@ export function makeWorkletFactory(
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
-  const includeClosure = !hasDirective(fun, 'no-worklet-closure');
+  const includeClosure =
+    state.opts.bundleMode || !hasDirective(fun, 'no-worklet-closure');
   const limitInitDataHoisting = hasDirective(fun, 'limit-init-data-hoisting');
   stripWorkletDirectives(fun);
 
@@ -304,7 +305,7 @@ export function makeWorkletFactory(
     );
   }
 
-  if (!isRelease()) {
+  if (!isRelease() && !state.opts.bundleMode) {
     statements.unshift(
       variableDeclaration('const', [
         variableDeclarator(

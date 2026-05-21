@@ -50,7 +50,6 @@ const Slider = () => {
     };
   });
 
-
   const animatedProps = useAnimatedProps(() => {
     return {
       text: `Box width: ${Math.round(boxWidth.value)}`,

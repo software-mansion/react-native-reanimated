@@ -3,7 +3,6 @@ import '../layoutReanimation/animationsManager';
 
 import type React from 'react';
 import { Fragment } from 'react';
-import { StyleSheet } from 'react-native';
 
 import { checkStyleOverwriting, maybeBuild } from '../animationBuilder';
 import { IS_JEST, IS_WEB, logger } from '../common';
@@ -424,14 +423,7 @@ export default class AnimatedComponent
         ? this.reanimatedID
         : this.getComponentViewTag(),
       type,
-      currentConfig &&
-        maybeBuild(
-          currentConfig,
-          type === LayoutAnimationType.LAYOUT
-            ? undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */
-            : this.props?.style,
-          this._displayName
-        ),
+      currentConfig && maybeBuild(currentConfig),
       undefined,
       undefined,
       currentConfig?.rawConfig
@@ -546,16 +538,11 @@ export default class AnimatedComponent
     }
 
     if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
-      const flatStyles = StyleSheet.flatten(filteredProps.style as object);
-      const mergedStyles = {
-        ...flatStyles,
-        ...this.state.settledProps,
-      };
       return super.render({
         nativeID,
         ...filteredProps,
         ...this.state.settledProps,
-        style: mergedStyles,
+        style: [...flattenArray(filteredProps.style), this.state.settledProps],
         ...jestProps,
       });
     }

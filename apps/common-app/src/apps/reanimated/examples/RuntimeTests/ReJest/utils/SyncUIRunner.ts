@@ -12,11 +12,12 @@ class WaitForUnlock {
 
   _waitForUnlock(maxWaitTime?: number) {
     const defaultPollingRate = 10;
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const startTime = performance.now();
       const interval = setInterval(() => {
         const currentTime = performance.now();
-        const waitTimeExceeded = maxWaitTime && maxWaitTime < currentTime - startTime;
+        const waitTimeExceeded =
+          maxWaitTime && maxWaitTime < currentTime - startTime;
         if (this._lock.lock !== true || waitTimeExceeded) {
           clearInterval(interval);
           resolve(this._lock.lock);

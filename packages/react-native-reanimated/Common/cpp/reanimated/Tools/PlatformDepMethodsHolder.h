@@ -1,5 +1,7 @@
 #pragma once
 
+#include <reanimated/PseudoStyles/PseudoSelector.h>
+
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <react/renderer/core/ReactPrimitives.h>
@@ -56,6 +58,10 @@ using RunCoreAnimationForView = std::function<void(
 //    const std::string &)>;
 
 using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
+
+using PlatformAttachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector, std::function<void(bool)>)>;
+using PlatformDetachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector)>;
+
 struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef ANDROID
@@ -75,6 +81,8 @@ struct PlatformDepMethodsHolder {
 #if __APPLE__
   RunCoreAnimationForView runCoreAnimationForView;
 #endif // __APPLE__
+  PlatformAttachPseudoSelectorFunction attachPseudoSelector;
+  PlatformDetachPseudoSelectorFunction detachPseudoSelector;
 };
 
 } // namespace reanimated

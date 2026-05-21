@@ -4,15 +4,22 @@ import React from 'react';
 import type { TextInputProps } from 'react-native';
 import { Button, TextInput, View } from 'react-native';
 import Animated, {
+  type CSSAnimationProperties,
+  type CSSTransitionProperties,
   useAnimatedProps,
   useSharedValue,
 } from 'react-native-reanimated';
+import { Circle, Svg } from 'react-native-svg';
 
 import type { JestAnimatedStyleHandle } from '../src/hook/commonTypes';
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+jest.mock('react-native-svg', () => require('../mock'));
 
 const animationDuration = 100;
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 interface BaseTextInputComponentProps {
   animatedProps: ComponentProps<typeof AnimatedTextInput>['animatedProps'];
@@ -303,6 +310,192 @@ describe('animatedProps', () => {
 
       removeMocks.forEach((mock) => {
         expect(mock).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('Plain object animatedProps', () => {
+    function PlainObjectComponent({
+      animatedProps,
+    }: {
+      animatedProps: Record<string, unknown>;
+    }) {
+      return (
+        <Svg height="100" width="100">
+          <AnimatedCircle
+            testID="circle"
+            cx="50"
+            cy="50"
+            animatedProps={animatedProps}
+          />
+        </Svg>
+      );
+    }
+
+    test('forwards values to the underlying component on initial render', () => {
+      const { getByTestId } = render(
+        <PlainObjectComponent animatedProps={{ r: 20, fill: 'blue' }} />
+      );
+
+      const circle = getByTestId('circle');
+      expect(circle.props.r).toBe(20);
+      expect(circle.props.fill).toBe('blue');
+    });
+
+    test('updates the rendered values when animatedProps change', () => {
+      const { getByTestId, rerender } = render(
+        <PlainObjectComponent animatedProps={{ r: 20, fill: 'blue' }} />
+      );
+
+      rerender(<PlainObjectComponent animatedProps={{ r: 50, fill: 'red' }} />);
+      expect(getByTestId('circle').props.r).toBe(50);
+      expect(getByTestId('circle').props.fill).toBe('red');
+    });
+
+    test('does not forward CSS transition config keys', () => {
+      const transitionConfig: Required<CSSTransitionProperties> = {
+        transitionProperty: 'all',
+        transitionDuration: '500ms',
+        transitionTimingFunction: 'ease-in',
+        transitionDelay: '0ms',
+        transitionBehavior: 'normal',
+        transition: 'all 500ms ease-in 0ms',
+      };
+
+      const { getByTestId } = render(
+        <PlainObjectComponent animatedProps={transitionConfig} />
+      );
+
+      const circle = getByTestId('circle');
+      for (const key of Object.keys(transitionConfig)) {
+        expect(circle.props[key]).toBeUndefined();
+      }
+    });
+
+    test('does not forward CSS animation config keys', () => {
+      const animationConfig: Required<CSSAnimationProperties> = {
+        animationName: 'none',
+        animationDuration: '1s',
+        animationTimingFunction: 'linear',
+        animationDelay: '0ms',
+        animationIterationCount: 1,
+        animationDirection: 'normal',
+        animationFillMode: 'none',
+        animationPlayState: 'running',
+      };
+
+      const { getByTestId } = render(
+        <PlainObjectComponent animatedProps={animationConfig} />
+      );
+
+      const circle = getByTestId('circle');
+      for (const key of Object.keys(animationConfig)) {
+        expect(circle.props[key]).toBeUndefined();
+      }
+    });
+  });
+
+  describe('Precedence over inline props', () => {
+    // animatedProps must win over inline props for the same key, regardless
+    // of JSX attribute order. Order is therefore load-bearing — do not
+    // reorder the JSX attributes in the tests below.
+
+    describe('useAnimatedProps', () => {
+      test('overrides inline value (animatedProps declared first)', () => {
+        function TestComponent() {
+          const animatedProps = useAnimatedProps(() => ({
+            placeholder: 'from-animated-props',
+          }));
+          return (
+            <AnimatedTextInput
+              testID="text"
+              animatedProps={animatedProps}
+              placeholder="from-inline"
+            />
+          );
+        }
+
+        const { getByTestId } = render(<TestComponent />);
+        const textInput = getByTestId('text');
+        expect(textInput.props.placeholder).toBe('from-animated-props');
+      });
+
+      test('overrides inline value (inline declared first)', () => {
+        function TestComponent() {
+          const animatedProps = useAnimatedProps(() => ({
+            placeholder: 'from-animated-props',
+          }));
+          return (
+            <AnimatedTextInput
+              testID="text"
+              placeholder="from-inline"
+              animatedProps={animatedProps}
+            />
+          );
+        }
+
+        const { getByTestId } = render(<TestComponent />);
+        const textInput = getByTestId('text');
+        expect(textInput.props.placeholder).toBe('from-animated-props');
+      });
+    });
+
+    describe('Plain object animatedProps', () => {
+      test('overrides inline value (animatedProps declared first)', () => {
+        const { getByTestId } = render(
+          <Svg height="100" width="100">
+            <AnimatedCircle
+              testID="circle"
+              cx="50"
+              cy="50"
+              animatedProps={{ r: 10, fill: 'blue' }}
+              r={40}
+              fill="red"
+            />
+          </Svg>
+        );
+
+        const circle = getByTestId('circle');
+        expect(circle.props.r).toBe(10);
+        expect(circle.props.fill).toBe('blue');
+      });
+
+      test('overrides inline value (inline declared first)', () => {
+        const { getByTestId } = render(
+          <Svg height="100" width="100">
+            <AnimatedCircle
+              testID="circle"
+              cx="50"
+              cy="50"
+              r={40}
+              fill="red"
+              animatedProps={{ r: 10, fill: 'blue' }}
+            />
+          </Svg>
+        );
+
+        const circle = getByTestId('circle');
+        expect(circle.props.r).toBe(10);
+        expect(circle.props.fill).toBe('blue');
+      });
+
+      test('inline props are kept for keys not present in animatedProps', () => {
+        const { getByTestId } = render(
+          <Svg height="100" width="100">
+            <AnimatedCircle
+              testID="circle"
+              cx="50"
+              cy="50"
+              r={40}
+              fill="red"
+              animatedProps={{ r: 10 }}
+            />
+          </Svg>
+        );
+
+        const circle = getByTestId('circle');
+        expect(circle.props.r).toBe(10);
+        expect(circle.props.fill).toBe('red');
       });
     });
   });
