@@ -34,35 +34,30 @@ class SharedTransitionValuesFactory {
 
   void setProperty(jsi::Object &values, const char *name, jsi::Value &&value);
 
-  void diffFrame(jsi::Object &values, const ShadowView &sourceView, const ShadowView &targetView);
-  void diffOpacity(jsi::Object &values, const ViewProps &sourceViewProps, const ViewProps &targetViewProps);
-  void diffBackgroundColor(jsi::Object &values, const ViewProps &sourceViewProps, const ViewProps &targetViewProps);
+  void writeFrame(jsi::Object &values, const ShadowView &sourceView, const ShadowView &targetView);
+  void writeOpacity(jsi::Object &values, const ViewProps &sourceViewProps, const ViewProps &targetViewProps);
+  void writeBackgroundColor(jsi::Object &values, const ViewProps &sourceViewProps, const ViewProps &targetViewProps);
 
-  void diffTransform(jsi::Object &values, const ViewProps &sourceViewProps, const ViewProps &targetViewProps);
+  void writeTransform(jsi::Object &values, const ViewProps &sourceViewProps, const ViewProps &targetViewProps);
   std::vector<TransformOperationWithDefault> getTransformOperationsFromProps(const ViewProps &props);
-  void maybeAddOperationToDiff(
+  void maybeWriteOperation(
       const char *name,
       float value,
       float defaultValue,
       std::vector<TransformOperationWithDefault> &jsiOperations);
 
-  void diffTransformOrigin(
+  void writeTransformOrigin(
       jsi::Object &values,
       const ShadowView &sourceView,
       const ShadowView &targetView,
       const ViewProps &sourceViewProps,
       const ViewProps &targetViewProps);
-  void addTransformOriginToDiff(
-      jsi::Object &values,
-      const TransformOrigin &transformOrigin,
-      const ShadowView &view,
-      const char *name);
 
-  void diffShadow(jsi::Object &values, const ViewProps &sourceViewProps, const ViewProps &targetViewProps);
+  void writeShadow(jsi::Object &values, const ViewProps &sourceViewProps, const ViewProps &targetViewProps);
   std::vector<BoxShadowWithDefault> getBoxShadowsFromProps(const ViewProps &props);
 
-  void diffBorder(jsi::Object &values, const ViewProps &sourceViewProps, const ViewProps &targetViewProps);
-  void diffBorderRadius(
+  void writeBorder(jsi::Object &values, const ViewProps &sourceViewProps, const ViewProps &targetViewProps);
+  void writeBorderRadius(
       jsi::Object &values,
       const std::optional<react::ValueUnit> &sourceValue,
       const std::optional<react::ValueUnit> &targetValue,
@@ -70,7 +65,7 @@ class SharedTransitionValuesFactory {
       const char *targetName,
       const ViewProps &sourceViewProps,
       const ViewProps &targetViewProps);
-  void diffBorderWidth(
+  void writeBorderWidth(
       jsi::Object &values,
       const std::optional<react::Float> &sourceValue,
       const std::optional<react::Float> &targetValue,
@@ -78,7 +73,7 @@ class SharedTransitionValuesFactory {
       const char *targetName,
       float defaultSourceWidth,
       float defaultTargetWidth);
-  void diffBorderColors(
+  void writeBorderColors(
       jsi::Object &values,
       const std::optional<react::SharedColor> &sourceValue,
       const std::optional<react::SharedColor> &targetValue,
