@@ -1,5 +1,5 @@
-#include <reanimated/CSS/core/CSSLoopTransition.h>
-#include <reanimated/CSS/core/CSSTransition.h>
+#include <reanimated/CSS/core/transition/CSSLoopTransition.h>
+#include <reanimated/CSS/core/transition/CSSTransition.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
 
 #include <memory>
