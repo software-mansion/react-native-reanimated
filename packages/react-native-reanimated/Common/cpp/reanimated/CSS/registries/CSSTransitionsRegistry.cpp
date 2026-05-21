@@ -1,7 +1,6 @@
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
-#include <cxxreact/ReactNativeVersion.h>
 #include <memory>
 #include <utility>
 #include <vector>

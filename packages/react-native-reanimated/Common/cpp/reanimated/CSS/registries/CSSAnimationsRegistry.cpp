@@ -1,6 +1,5 @@
 #include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
 
-#include <cxxreact/ReactNativeVersion.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
