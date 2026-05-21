@@ -16,6 +16,11 @@ import {
   BorderRadiusTargetScreen,
 } from './BorderRadius';
 import {
+  GlobalOriginSourceSection,
+  GlobalOriginTargetRoute,
+  GlobalOriginTargetScreen,
+} from './GlobalOrigin';
+import {
   ProgressSourceSection,
   ProgressTargetRoute,
   ProgressTargetScreen,
@@ -29,6 +34,7 @@ function MenuContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
       <BasicSourceSection navigate={navigate} />
       <ProgressSourceSection navigate={navigate} />
       <BorderRadiusSourceSection navigate={navigate} />
+      <GlobalOriginSourceSection navigate={navigate} />
     </Animated.ScrollView>
   );
 }
@@ -57,6 +63,11 @@ export default function CustomTransitionExample() {
       <Stack.Screen
         name={BorderRadiusTargetRoute}
         component={BorderRadiusTargetScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={GlobalOriginTargetRoute}
+        component={GlobalOriginTargetScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
