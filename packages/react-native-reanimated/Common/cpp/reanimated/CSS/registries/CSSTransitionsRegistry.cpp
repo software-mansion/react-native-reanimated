@@ -19,8 +19,6 @@ void CSSTransitionsRegistry::updateConfigOrRun(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const CSSTransitionConfig &config) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
   const auto viewTag = shadowNode->getTag();
 
   if (!registry_.contains(viewTag)) {
@@ -42,21 +40,24 @@ void CSSTransitionsRegistry::run(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const PropertyValueDiffsMap &propertyDiffs) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
   const auto viewTag = shadowNode->getTag();
-  const auto &transition = registry_.at(viewTag);
+  const auto it = registry_.find(viewTag);
+  if (it == registry_.end()) {
+    return;
+  }
 
-  runTransition(rt, transition, viewTag, propertyDiffs);
+  runTransition(rt, it->second, viewTag, propertyDiffs);
 }
 
 void CSSTransitionsRegistry::run(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const PropertyValueDynamicDiffsMap &propertyDiffs) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
   const auto viewTag = shadowNode->getTag();
-  const auto &transition = registry_.at(viewTag);
+  const auto it = registry_.find(viewTag);
+  if (it == registry_.end()) {
+    return;
+  }
+  const auto &transition = it->second;
 
   const auto &lastUpdates = getUpdatesFromRegistry(viewTag);
   const auto timestamp = loop_->resolveTimestamp();
@@ -86,7 +87,7 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
     }
   }
 
-  UpdatesRegistry::flushUpdates(updatesBatch);
+  flush(updatesBatch);
 }
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
@@ -109,7 +110,7 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatc
     }
   }
 
-  UpdatesRegistry::flushUpdates(updatesBatch);
+  flush(updatesBatch);
 }
 #endif
 

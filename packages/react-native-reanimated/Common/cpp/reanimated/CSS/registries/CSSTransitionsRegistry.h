@@ -12,6 +12,15 @@
 
 namespace reanimated::css {
 
+/**
+ * Thread-safety contract:
+ *
+ *   All public methods assume the caller holds `updatesRegistryManager_->lock()`.
+ *
+ * Enforced at the boundary points in ReanimatedModuleProxy (JSI proxy methods,
+ * runGrandCallback, performOperations), PseudoStylesRegistry
+ * (onSelectorStateChanged), and ReanimatedCommitHook (collectProps).
+ */
 class CSSTransitionsRegistry : public UpdatesRegistry {
  public:
   CSSTransitionsRegistry(

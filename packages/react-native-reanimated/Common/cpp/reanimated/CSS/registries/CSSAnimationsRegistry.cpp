@@ -69,7 +69,7 @@ void CSSAnimationsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
     }
   }
 
-  UpdatesRegistry::flushUpdates(updatesBatch);
+  flush(updatesBatch);
   updateRegistryForRevertedAnimations();
 }
 
@@ -91,7 +91,7 @@ void CSSAnimationsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatch
     }
   }
 
-  UpdatesRegistry::flushUpdates(updatesBatch);
+  flush(updatesBatch);
   updateRegistryForRevertedAnimations();
 }
 #endif

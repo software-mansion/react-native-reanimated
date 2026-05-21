@@ -10,10 +10,12 @@ using namespace facebook::react;
 PseudoStylesRegistry::PseudoStylesRegistry(
     PlatformAttachPseudoSelectorFunction attachFn,
     PlatformDetachPseudoSelectorFunction detachFn,
-    std::shared_ptr<css::CSSTransitionsRegistry> cssTransitionsRegistry)
+    std::shared_ptr<css::CSSTransitionsRegistry> cssTransitionsRegistry,
+    std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager)
     : attachFn_(std::move(attachFn)),
       detachFn_(std::move(detachFn)),
-      cssTransitionsRegistry_(std::move(cssTransitionsRegistry)) {}
+      cssTransitionsRegistry_(std::move(cssTransitionsRegistry)),
+      updatesRegistryManager_(std::move(updatesRegistryManager)) {}
 
 // static
 std::array<folly::dynamic, (1u << kPseudoSelectorBits)> PseudoStylesRegistry::recomputeAllStyles(
@@ -109,6 +111,9 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
     valueChanges.emplace(propName, std::make_pair(fromVal, toVal));
   }
 
+  // Boundary: take manager lock once around the registry mutation.
+  // CSSTransitionsRegistry::run kicks the OperationsLoop internally.
+  auto lock = updatesRegistryManager_->lock();
   cssTransitionsRegistry_->run(shadowNode, valueChanges);
 }
 
