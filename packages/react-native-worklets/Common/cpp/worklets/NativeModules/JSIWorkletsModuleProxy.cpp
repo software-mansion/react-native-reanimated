@@ -730,6 +730,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         react_native_assert(
             hostRuntimeId != RuntimeData::rnRuntimeId &&
             "createSerializableLEGACY should never be called on the React Native runtime.");
+        (void)hostRuntimeId;
         const auto &value = at<0>(args);
         const auto shouldRetainRemote = jsi::Value::undefined();
         const auto &nativeStateSource = at<1>(args);
