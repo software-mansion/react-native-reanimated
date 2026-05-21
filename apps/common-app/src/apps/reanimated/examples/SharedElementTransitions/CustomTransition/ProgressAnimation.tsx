@@ -54,7 +54,7 @@ type Navigate = (route: string) => void;
 export function ProgressSourceSection({ navigate }: { navigate: Navigate }) {
   return (
     <View style={styles.section}>
-      <Text style={styles.heading}>2. .progressAnimation()</Text>
+      <Text style={styles.heading}>.progressAnimation()</Text>
       <Text style={styles.body}>
         Same .custom() spring for tap-navigation, plus a linear
         progressAnimation used by gesture-driven transitions.
