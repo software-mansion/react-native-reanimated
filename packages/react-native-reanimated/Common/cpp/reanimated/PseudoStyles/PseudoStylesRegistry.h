@@ -12,7 +12,6 @@
 #include <array>
 #include <map>
 #include <memory>
-#include <mutex>
 #include <unordered_map>
 
 namespace reanimated {
@@ -20,6 +19,13 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
+/**
+ * Thread-safety contract:
+ *
+ *   `registerPseudoStyle` and `remove` assume the caller holds
+ *   `updatesRegistryManager_->lock()`. `onSelectorStateChanged` acquires the
+ *   lock itself (it is invoked from a platform callback that does not).
+ */
 class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesRegistry> {
  public:
   PseudoStylesRegistry(
@@ -53,7 +59,6 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
     PseudoSelectorMask activeMask = 0;
   };
 
-  std::mutex mutex_;
   std::unordered_map<Tag, TagEntry> registry_;
 
   PlatformAttachPseudoSelectorFunction attachFn_;

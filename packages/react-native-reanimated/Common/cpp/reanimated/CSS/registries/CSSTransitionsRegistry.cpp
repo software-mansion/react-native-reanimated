@@ -1,4 +1,7 @@
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
+#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
+
+#include <react/debug/react_native_assert.h>
 
 #include <memory>
 #include <utility>
@@ -12,6 +15,7 @@ CSSTransitionsRegistry::CSSTransitionsRegistry(
     : viewStylesRepository_(viewStylesRepository), loop_(loop) {}
 
 bool CSSTransitionsRegistry::needsFlush() const {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   return !updatedTags_.empty();
 }
 
@@ -19,6 +23,7 @@ void CSSTransitionsRegistry::updateConfigOrRun(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const CSSTransitionConfig &config) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto viewTag = shadowNode->getTag();
 
   if (!registry_.contains(viewTag)) {
@@ -40,6 +45,7 @@ void CSSTransitionsRegistry::run(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const PropertyValueDiffsMap &propertyDiffs) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto viewTag = shadowNode->getTag();
   const auto it = registry_.find(viewTag);
   if (it == registry_.end()) {
@@ -52,6 +58,7 @@ void CSSTransitionsRegistry::run(
 void CSSTransitionsRegistry::run(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const PropertyValueDynamicDiffsMap &propertyDiffs) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto viewTag = shadowNode->getTag();
   const auto it = registry_.find(viewTag);
   if (it == registry_.end()) {
@@ -72,6 +79,7 @@ void CSSTransitionsRegistry::run(
 }
 
 void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto tags = std::exchange(updatedTags_, {});
   for (const auto viewTag : tags) {
     const auto it = registry_.find(viewTag);
@@ -92,6 +100,7 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
 void CSSTransitionsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto tags = std::exchange(updatedTags_, {});
   for (const auto viewTag : tags) {
     const auto it = registry_.find(viewTag);

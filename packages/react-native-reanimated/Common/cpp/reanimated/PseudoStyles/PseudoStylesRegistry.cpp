@@ -1,5 +1,7 @@
 #include <reanimated/PseudoStyles/PseudoStylesRegistry.h>
 
+#include <react/debug/react_native_assert.h>
+
 #include <string>
 #include <utility>
 
@@ -49,13 +51,12 @@ void PseudoStylesRegistry::registerPseudoStyle(
     PseudoSelector selector,
     const folly::dynamic &selectorStyle,
     const folly::dynamic &defaultStyle) {
-  {
-    std::lock_guard<std::mutex> lock{mutex_};
-    auto &entry = registry_[tag];
-    entry.shadowNode = shadowNode;
-    entry.selectors[selector] = {selectorStyle, defaultStyle};
-    entry.precomputedStyles = recomputeAllStyles(entry);
-  }
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+
+  auto &entry = registry_[tag];
+  entry.shadowNode = shadowNode;
+  entry.selectors[selector] = {selectorStyle, defaultStyle};
+  entry.precomputedStyles = recomputeAllStyles(entry);
 
   attachFn_(
       tag,
@@ -68,41 +69,36 @@ void PseudoStylesRegistry::registerPseudoStyle(
 }
 
 void PseudoStylesRegistry::remove(Tag tag) {
-  std::map<PseudoSelector, SelectorData> selectorsToDetach;
-  {
-    std::lock_guard<std::mutex> lock{mutex_};
-    auto it = registry_.find(tag);
-    if (it == registry_.end()) {
-      return;
-    }
-    selectorsToDetach = std::move(it->second.selectors);
-    registry_.erase(it);
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+
+  auto it = registry_.find(tag);
+  if (it == registry_.end()) {
+    return;
   }
+  auto selectorsToDetach = std::move(it->second.selectors);
+  registry_.erase(it);
+
   for (const auto &[selector, data] : selectorsToDetach) {
     detachFn_(tag, selector);
   }
 }
 
 void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector selector, bool isActive) {
-  std::shared_ptr<const ShadowNode> shadowNode;
-  folly::dynamic fromStyle;
-  folly::dynamic toStyle;
-  {
-    std::lock_guard<std::mutex> lock{mutex_};
-    auto it = registry_.find(tag);
-    if (it == registry_.end()) {
-      return;
-    }
-    TagEntry &entry = it->second;
+  auto lock = updatesRegistryManager_->lock();
 
-    const PseudoSelectorMask oldMask = entry.activeMask;
-    const PseudoSelectorMask bit = 1u << static_cast<int>(selector);
-    entry.activeMask = isActive ? (oldMask | bit) : (oldMask & ~bit);
-
-    shadowNode = entry.shadowNode;
-    fromStyle = entry.precomputedStyles[oldMask];
-    toStyle = entry.precomputedStyles[entry.activeMask];
+  auto it = registry_.find(tag);
+  if (it == registry_.end()) {
+    return;
   }
+  TagEntry &entry = it->second;
+
+  const PseudoSelectorMask oldMask = entry.activeMask;
+  const PseudoSelectorMask bit = 1u << static_cast<int>(selector);
+  entry.activeMask = isActive ? (oldMask | bit) : (oldMask & ~bit);
+
+  const auto shadowNode = entry.shadowNode;
+  const auto &fromStyle = entry.precomputedStyles[oldMask];
+  const auto &toStyle = entry.precomputedStyles[entry.activeMask];
 
   std::unordered_map<std::string, std::pair<folly::dynamic, folly::dynamic>> valueChanges;
   for (const auto &[propKey, toVal] : toStyle.items()) {
@@ -111,9 +107,6 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
     valueChanges.emplace(propName, std::make_pair(fromVal, toVal));
   }
 
-  // Boundary: take manager lock once around the registry mutation.
-  // CSSTransitionsRegistry::run kicks the OperationsLoop internally.
-  auto lock = updatesRegistryManager_->lock();
   cssTransitionsRegistry_->run(shadowNode, valueChanges);
 }
 

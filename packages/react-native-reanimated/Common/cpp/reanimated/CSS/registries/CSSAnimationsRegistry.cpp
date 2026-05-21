@@ -1,4 +1,7 @@
 #include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
+#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
+
+#include <react/debug/react_native_assert.h>
 
 #include <memory>
 #include <string>
@@ -14,6 +17,7 @@ CSSAnimationsRegistry::CSSAnimationsRegistry(
     : loop_(loop), keyframesRegistry_(keyframesRegistry) {}
 
 bool CSSAnimationsRegistry::needsFlush() const {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   return !updatedTags_.empty();
 }
 
@@ -21,6 +25,7 @@ void CSSAnimationsRegistry::apply(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::string &compoundComponentName,
     const CSSAnimationUpdates &updates) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto viewTag = shadowNode->getTag();
   auto newGroup =
       maybeBuildNewGroup(shadowNode, compoundComponentName, updates.animationNames, updates.newAnimationSettings);
@@ -56,6 +61,7 @@ void CSSAnimationsRegistry::apply(
 }
 
 void CSSAnimationsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto tags = std::exchange(updatedTags_, {});
   for (const auto viewTag : tags) {
     const auto it = groups_.find(viewTag);
@@ -75,6 +81,7 @@ void CSSAnimationsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
 void CSSAnimationsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto tags = std::exchange(updatedTags_, {});
   for (const auto viewTag : tags) {
     const auto it = groups_.find(viewTag);
