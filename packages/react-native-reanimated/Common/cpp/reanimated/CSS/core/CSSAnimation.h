@@ -2,6 +2,7 @@
 
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/configs/CSSKeyframesConfig.h>
+#include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolator.h>
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
 
@@ -10,10 +11,10 @@
 
 namespace reanimated::css {
 
-class CSSAnimation : public OperationsLoop::LoopOperation, public std::enable_shared_from_this<CSSAnimation> {
- public:
-  static constexpr double FALLBACK_INTERPOLATION_THRESHOLD = 0.5;
+class CSSLoopAnimation;
 
+class CSSAnimation {
+ public:
   class Observer {
    public:
     virtual ~Observer() = default;
@@ -35,44 +36,32 @@ class CSSAnimation : public OperationsLoop::LoopOperation, public std::enable_sh
     return name_;
   }
 
-  double getStartTimestamp(double timestamp) const {
-    return progressProvider_->getStartTimestamp(timestamp);
-  }
-
-  AnimationProgressState getState() const {
-    return progressProvider_->getState();
-  }
+  AnimationProgressState getState() const;
 
   bool hasForwardsFillMode() const {
-    return fillMode_ == AnimationFillMode::Forwards || fillMode_ == AnimationFillMode::Both;
+    return settings_->hasForwardsFillMode();
   }
 
   bool hasBackwardsFillMode() const {
-    return fillMode_ == AnimationFillMode::Backwards || fillMode_ == AnimationFillMode::Both;
+    return settings_->hasBackwardsFillMode();
   }
-
-  bool isReversed() const;
 
   folly::dynamic getBackwardsFillStyle() const;
   folly::dynamic getCurrentInterpolationStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const;
   folly::dynamic getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const;
 
-  bool update(double timestamp, OperationsLoop &loop) override;
-
   void schedule(OperationsLoop &loop);
   void unschedule(OperationsLoop &loop);
 
-  void updateConfig(const PartialCSSAnimationSettings &updatedSettings, double timestamp);
+  void updateSettings(const PartialCSSAnimationSettings &updatedSettings, double timestamp);
 
  private:
-  const Tag viewTag_;
   const std::string name_;
-  AnimationFillMode fillMode_;
-
-  Observer &observer_;
-
+  const std::shared_ptr<CSSAnimationSettings> settings_;
   const std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;
-  const std::shared_ptr<AnimationProgressProvider> progressProvider_;
+  const std::shared_ptr<CSSLoopAnimation> loopAnimation_;
+
+  bool isReversed() const;
 };
 
 } // namespace reanimated::css

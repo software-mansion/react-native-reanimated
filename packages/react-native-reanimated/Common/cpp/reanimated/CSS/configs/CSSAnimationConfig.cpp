@@ -8,6 +8,14 @@
 
 namespace reanimated::css {
 
+bool CSSAnimationSettings::hasForwardsFillMode() const {
+  return fillMode == AnimationFillMode::Forwards || fillMode == AnimationFillMode::Both;
+}
+
+bool CSSAnimationSettings::hasBackwardsFillMode() const {
+  return fillMode == AnimationFillMode::Backwards || fillMode == AnimationFillMode::Both;
+}
+
 double getIterationCount(jsi::Runtime &rt, const jsi::Object &settings) {
   return settings.getProperty(rt, "iterationCount").asNumber();
 }

@@ -19,7 +19,7 @@ void CSSAnimationsGroup::updateSettings(const CSSAnimationSettingsUpdatesMap &se
   for (size_t i = 0; i < animations_.size(); ++i) {
     const auto it = settingsUpdates.find(i);
     if (it != settingsUpdates.end()) {
-      animations_[i]->updateConfig(it->second, timestamp);
+      animations_[i]->updateSettings(it->second, timestamp);
     }
   }
 }
