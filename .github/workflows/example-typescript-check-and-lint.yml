@@ -72,7 +72,7 @@ jobs:
           WEB: ${{ steps.filter.outputs.web }}
         run: |
           if [[ "$IS_PR" != "true" || "$SHARED" == "true" ]]; then
-            ts_apps='["apps/common-app","apps/tvos-example","apps/fabric-example","apps/macos-example","apps/next-example","apps/web-example"]'
+            ts_apps='["apps/common-app","apps/tvos-example","apps/fabric-example","apps/macos-example","apps/web-example"]'
             web=true
           else
             apps=()
