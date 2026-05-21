@@ -1,933 +1,517 @@
-import MaskedView from '@react-native-masked-view/masked-view';
-import {
-  DarkTheme,
-  DefaultTheme,
-  NavigationContainer,
-  useIsFocused,
-  useNavigation,
-} from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { createContext, useContext, useMemo, useState } from 'react';
-import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { Keyframe } from 'react-native-reanimated';
-import { LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
+import { useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
-type ThemeMode = 'dark' | 'light';
+const BASE_ORBIT = 80;
+const ORBIT_GAP = 91;
 
-type Palette = {
-  bg: string;
-  text: string;
-  setShadow: string;
-  navTheme: typeof DarkTheme;
-  auroraColors: [string, string, string, string, string];
-  dimColor: string;
-  dimColorAlpha0: string;
-  dimColorAlpha60: string;
-  toggleLabel: string;
-  toggleBg: string;
-  toggleText: string;
+type OrbitConfig = {
+  size: number;
+  duration: `${number}ms`;
+  direction: 'normal' | 'reverse';
+  planetSize: number;
+  planetColor: string;
+  planetGlow: string;
+  ringColor: string;
+  scaleY?: number;
+  rotation?: number;
 };
 
-const PALETTES: Record<ThemeMode, Palette> = {
-  dark: {
-    bg: '#000000',
-    text: '#ffffff',
-    setShadow: 'rgba(0,0,0,0.85)',
-    navTheme: DarkTheme,
-    auroraColors: [
-      'rgb(59,130,246)',
-      'rgb(165,180,252)',
-      'rgb(147,197,253)',
-      'rgb(221,214,254)',
-      'rgb(96,165,250)',
-    ],
-    dimColor: 'rgb(0,0,0)',
-    dimColorAlpha0: 'rgba(0,0,0,0)',
-    dimColorAlpha60: 'rgba(0,0,0,0.6)',
-    toggleLabel: '☀',
-    toggleBg: 'rgba(255,255,255,0.12)',
-    toggleText: '#ffffff',
+const ORBITS: OrbitConfig[] = [
+  {
+    size: BASE_ORBIT + ORBIT_GAP * 0,
+    duration: '4500ms',
+    direction: 'normal',
+    planetSize: 10,
+    planetColor: '#fde68a',
+    planetGlow: 'rgba(253,230,138,0.65)',
+    ringColor: 'rgba(253,230,138,0.22)',
+    scaleY: 0.92,
   },
-  light: {
-    bg: '#fff5ee',
-    text: '#1a1a2e',
-    setShadow: 'rgba(255,255,255,0.85)',
-    navTheme: DefaultTheme,
-    auroraColors: [
-      'rgb(244,114,182)',
-      'rgb(251,146,178)',
-      'rgb(254,205,170)',
-      'rgb(253,224,181)',
-      'rgb(248,180,150)',
-    ],
-    dimColor: 'rgb(255,245,238)',
-    dimColorAlpha0: 'rgba(255,245,238,0)',
-    dimColorAlpha60: 'rgba(255,245,238,0.6)',
-    toggleLabel: '☾',
-    toggleBg: 'rgba(0,0,0,0.08)',
-    toggleText: '#1a1a2e',
+  {
+    size: BASE_ORBIT + ORBIT_GAP * 1,
+    duration: '7800ms',
+    direction: 'reverse',
+    planetSize: 14,
+    planetColor: '#67e8f9',
+    planetGlow: 'rgba(103,232,249,0.65)',
+    ringColor: 'rgba(103,232,249,0.2)',
+    scaleY: 0.62,
+    rotation: -22,
   },
+  {
+    size: BASE_ORBIT + ORBIT_GAP * 2,
+    duration: '12000ms',
+    direction: 'normal',
+    planetSize: 18,
+    planetColor: '#c4b5fd',
+    planetGlow: 'rgba(196,181,253,0.55)',
+    ringColor: 'rgba(196,181,253,0.18)',
+    scaleY: 0.84,
+  },
+  {
+    size: BASE_ORBIT + ORBIT_GAP * 3,
+    duration: '18500ms',
+    direction: 'reverse',
+    planetSize: 12,
+    planetColor: '#fda4af',
+    planetGlow: 'rgba(253,164,175,0.55)',
+    ringColor: 'rgba(253,164,175,0.22)',
+    scaleY: 0.48,
+    rotation: 38,
+  },
+];
+
+const COMET = {
+  Rx: 180,
+  Ry: 100,
+  duration: '16000ms' as const,
+  headSize: 6,
+  headColor: '#ffffff',
+  trailColor: 'rgba(178,238,255,0.95)',
+  tailLength: 42,
+  tailWidth: 5,
 };
 
-const ThemeContext = createContext<{
-  mode: ThemeMode;
-  palette: Palette;
-  toggle: () => void;
-}>({
-  mode: 'dark',
-  palette: PALETTES.dark,
-  toggle: () => {},
+const STARS = Array.from({ length: 60 }, (_, i) => {
+  const seed = i * 31 + 13;
+  const left = ((seed * 17) % 1000) / 10;
+  const top = ((seed * 23) % 1000) / 10;
+  const size = 1 + ((seed * 7) % 30) / 10;
+  const delay = (seed * 11) % 4000;
+  const duration = 2200 + ((seed * 13) % 2800);
+  const baseOpacity = 0.2 + ((seed * 19) % 50) / 100;
+  return { left, top, size, delay, duration, baseOpacity };
 });
 
-type StackParamList = {
-  Home: undefined;
-  Details: undefined;
-};
-
-type AuroraNavigation = NativeStackNavigationProp<StackParamList, 'Home'>;
-
-const Stack = createNativeStackNavigator<StackParamList>();
-
-const fontFamily = 'DM Sans';
-
-function AppTextHover() {
-  return (
-    <Animated.Text
-      style={[
-        styles.word,
-        {
-          fontSize: {
-            default: 128,
-            ':hover': 192,
-          },
-          color: {
-            default: '#000',
-            ':hover': '#EBFCF7',
-          },
-          shadowColor: {
-            default: '#0003',
-            ':hover': '#57B495',
-          },
-          textShadowRadius: {
-            default: 5,
-            ':hover': 15,
-          },
-          textShadowOffset: {
-            default: { width: 0, height: 0 },
-            ':hover': { width: 5, height: 5 },
-          },
-          paddingHorizontal: 10,
-          marginHorizontal: -10,
-          shadowOpacity: 1,
-          overflow: 'visible',
-          transitionDuration: '250ms',
-          transitionTimingFunction: 'ease-in-out',
-        },
-      ]}>
-      {'App'.split('').map((char, index) => (
-        <Text key={index}>{char}</Text>
-      ))}
-    </Animated.Text>
-  );
-}
-
-function AppText() {
-  return (
-    <Animated.Text
-      style={[
-        styles.word,
-        {
-          fontSize: {
-            default: 128,
-            ':hover': 192,
-          },
-          shadowColor: '#0003',
-          paddingHorizontal: 10,
-          marginHorizontal: -10,
-          shadowOpacity: 1,
-          overflow: 'visible',
-          transitionDuration: '250ms',
-          transitionTimingFunction: 'ease-in-out',
-          animationName: {
-            from: {
-              textShadowRadius: 5,
-              textShadowOffset: { width: 0, height: 0 },
-            },
-            to: {
-              textShadowRadius: 15,
-              textShadowOffset: { width: 6, height: 6 },
-            },
-          },
-          animationTimingFunction: 'ease-in-out',
-          animationDuration: '1500ms',
-          animationIterationCount: 'infinite',
-          animationDirection: 'alternate',
-        },
-      ]}>
-      {'App'.split('').map((char, index) => (
-        <Text key={index}>{char}</Text>
-      ))}
-    </Animated.Text>
-  );
-}
-
-function JsTextHover() {
-  return (
-    <Animated.Text
-      style={[
-        styles.word,
-        {
-          fontSize: {
-            default: 128,
-            ':hover': 192,
-          },
-          color: {
-            default: '#000',
-            ':hover': '#EBFCF7',
-          },
-          shadowColor: {
-            default: 'transparent',
-            ':hover': '#57B495',
-          },
-          shadowRadius: {
-            default: 5,
-            ':hover': 15,
-          },
-          shadowOffset: {
-            default: { width: 0, height: 0 },
-            ':hover': { width: 5, height: 5 },
-          },
-          paddingHorizontal: 10,
-          marginHorizontal: -10,
-          shadowOpacity: 1,
-          overflow: 'visible',
-          transitionDuration: '250ms',
-          transitionTimingFunction: 'ease-in-out',
-        },
-      ]}>
-      {'js'.split('').map((char, index) => (
-        <Text key={index}>{char}</Text>
-      ))}
-    </Animated.Text>
-  );
-}
-
-function JsText() {
-  return (
-    <Animated.Text
-      style={[
-        styles.word,
-        {
-          fontSize: {
-            default: 128,
-            ':hover': 192,
-          },
-          paddingHorizontal: 10,
-          marginHorizontal: -10,
-          shadowOpacity: 1,
-          overflow: 'visible',
-          transitionDuration: '250ms',
-          transitionTimingFunction: 'ease-in-out',
-          animationName: {
-            from: {
-              color: '#000',
-              shadowColor: 'transparent',
-              shadowRadius: 5,
-              shadowOffset: { width: 0, height: 0 },
-            },
-            '70%': {
-              color: brandLight,
-            },
-            to: {
-              color: brandLight,
-              shadowColor: '#000000',
-              shadowRadius: 5,
-              shadowOffset: { width: 6, height: 6 },
-            },
-          },
-          animationTimingFunction: 'ease-in-out',
-          animationDuration: '1500ms',
-          animationIterationCount: 'infinite',
-          animationDirection: 'alternate',
-        },
-      ]}>
-      {'js'.split('').map((char, index) => (
-        <Text key={index}>{char}</Text>
-      ))}
-    </Animated.Text>
-  );
-}
-
-function Dot() {
-  return <Text style={styles.word}>.</Text>;
-}
-
-function Year2026TextHover() {
-  return (
-    <Animated.Text
-      style={{
-        textAlign: 'center',
-        minWidth: 256,
-        minHeight: 48,
-        fontSize: {
-          default: 1,
-          ':hover': 128,
-        },
-        fontFamily,
-        color: {
-          default: '#fff0',
-          ':hover': '#EBFCF7',
-        },
-        shadowColor: {
-          default: '#fff0',
-          ':hover': '#57B495',
-        },
-        shadowRadius: {
-          default: 0,
-          ':hover': 5,
-        },
-        shadowOffset: {
-          default: { width: 0, height: 0 },
-          ':hover': { width: 2, height: 2 },
-        },
-        overflow: 'visible',
-        shadowOpacity: 1,
-        transitionDuration: '250ms',
-        transitionTimingFunction: 'ease-in-out',
-      }}>
-      2026
-    </Animated.Text>
-  );
-}
-
-function Year2026Text() {
-  return (
-    <Animated.Text
-      style={{
-        textAlign: 'center',
-        minWidth: 256,
-        minHeight: 48,
-        fontSize: 128,
-        fontFamily,
-        fontWeight: '600',
-        shadowColor: '#0003',
-        shadowOpacity: 1,
-        overflow: 'visible',
-        animationName: {
-          from: {
-            textShadowRadius: 5,
-            textShadowOffset: { width: 0, height: 0 },
-          },
-          to: {
-            textShadowRadius: 15,
-            textShadowOffset: { width: 6, height: 6 },
-          },
-        },
-        animationTimingFunction: 'ease-in-out',
-        animationDuration: '1500ms',
-        animationIterationCount: 'infinite',
-        animationDirection: 'alternate',
-      }}>
-      2026
-    </Animated.Text>
-  );
-}
-
-const AnimatedGradient = Animated.createAnimatedComponent(LinearGradient);
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-
-function expandRepeating(
-  angle: string,
-  pattern: ReadonlyArray<[string, number]>,
-  span = 100
-): string {
-  const startPos = pattern[0][1];
-  const cycle = pattern[pattern.length - 1][1] - startPos;
-  const stops: string[] = [];
-  for (let offset = 0; offset <= span; offset += cycle) {
-    for (const [color, p] of pattern) {
-      const pos = p - startPos + offset;
-      if (pos > span) break;
-      stops.push(`${color} ${pos}%`);
-    }
-  }
-  return `linear-gradient(${angle}, ${stops.join(', ')})`;
-}
-
-// repeating-linear-gradient(100deg, rgb(0, 0, 0) 0%, rgb(0, 0, 0) 7%, rgba(0, 0, 0, 0) 10%, rgba(0, 0, 0, 0) 12%, rgb(0, 0, 0) 16%), repeating-linear-gradient(100deg, rgb(59, 130, 246) 10%, rgb(165, 180, 252) 15%, rgb(147, 197, 253) 20%, rgb(221, 214, 254) 25%, rgb(96, 165, 250) 30%)
-
-const cssFadeOut = new Keyframe({
-  0: { opacity: 1 },
-  100: { opacity: 0 },
-}).duration(200);
-
-const setFadeIn = new Keyframe({
-  0: { opacity: 0 },
-  100: { opacity: 1 },
-})
-  .duration(600)
-  .delay(400);
-
-function makeAuroraColors(palette: Palette): string {
-  const [a, b, c, d, e] = palette.auroraColors;
-  return expandRepeating('100deg', [
-    [a, 10],
-    [b, 14],
-    [c, 18],
-    [d, 22],
-    [e, 26],
-    [a, 30],
-  ]);
-}
-
-const DARK_AURORA_COLORS = makeAuroraColorsRaw(PALETTES.dark);
-const LIGHT_AURORA_COLORS = makeAuroraColorsRaw(PALETTES.light);
-const DARK_AURORA_MASK = makeAuroraMaskRaw(PALETTES.dark);
-const LIGHT_AURORA_MASK = makeAuroraMaskRaw(PALETTES.light);
-
-function makeAuroraColorsRaw(palette: Palette): string {
-  const [a, b, c, d, e] = palette.auroraColors;
-  return expandRepeating('100deg', [
-    [a, 10],
-    [b, 14],
-    [c, 18],
-    [d, 22],
-    [e, 26],
-    [a, 30],
-  ]);
-}
-
-function makeAuroraMaskRaw(palette: Palette): string {
-  return expandRepeating('100deg', [
-    [palette.dimColor, 0],
-    [palette.dimColor, 6],
-    [palette.dimColorAlpha0, 12],
-    [palette.dimColor, 18],
-    [palette.dimColor, 24],
-  ]);
-}
-
-function AuroraColorLayer({
-  gradient,
-  visible,
-}: {
-  gradient: string;
-  visible: boolean;
-}) {
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={{
-        position: 'absolute',
-        top: 0,
-        bottom: 0,
-        left: 0,
-        width: '600%',
-        opacity: visible ? 1 : 0,
-        transitionProperty: 'opacity',
-        transitionDuration: '1500ms',
-        transitionTimingFunction: 'ease-in-out',
-        experimental_backgroundImage: gradient,
-        animationName: {
-          from: { transform: [{ translateX: 0 }] },
-          to: { transform: [{ translateX: -1200 }] },
-        },
-        animationTimingFunction: 'linear',
-        animationDuration: '36000ms',
-        animationIterationCount: 'infinite',
-      }}
-    />
-  );
-}
-
-function AuroraMaskLayer({
-  gradient,
-  visible,
-}: {
-  gradient: string;
-  visible: boolean;
-}) {
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={{
-        position: 'absolute',
-        top: 0,
-        bottom: 0,
-        left: 0,
-        width: '600%',
-        opacity: visible ? 0.5 : 0,
-        transitionProperty: 'opacity',
-        transitionDuration: '1500ms',
-        transitionTimingFunction: 'ease-in-out',
-        experimental_backgroundImage: gradient,
-        animationName: {
-          from: { transform: [{ translateX: 0 }] },
-          to: { transform: [{ translateX: -900 }] },
-        },
-        animationTimingFunction: 'linear',
-        animationDuration: '54000ms',
-        animationIterationCount: 'infinite',
-      }}
-    />
-  );
-}
-
-function makeAuroraMask(palette: Palette): string {
-  return expandRepeating('100deg', [
-    [palette.dimColor, 0],
-    [palette.dimColor, 6],
-    [palette.dimColorAlpha0, 12],
-    [palette.dimColor, 18],
-    [palette.dimColor, 24],
-  ]);
-}
-const auroraTextMask = expandRepeating('100deg', [
-  ['rgba(255,255,255,0.55)', 0],
-  ['rgba(255,255,255,0.55)', 4],
-  ['rgb(255,255,255)', 12],
-  ['rgba(255,255,255,0.55)', 20],
-  ['rgba(255,255,255,0.55)', 24],
-]);
-
-//   repeating-linear-gradient(100deg, rgb(0, 0, 0) 0%, rgb(0, 0, 0) 7%, rgba(0, 0, 0, 0) 10%, rgba(0, 0, 0, 0) 12%, rgb(0, 0, 0) 16%), repeating-linear-gradient(100deg, rgb(59, 130, 246) 10%, rgb(165, 180, 252) 15%, rgb(147, 197, 253) 20%, rgb(221, 214, 254) 25%, rgb(96, 165, 250) 30%)
-
-function Aurora() {
-  const navigation = useNavigation<AuroraNavigation>();
-  const isFocused = useIsFocused();
-  const { mode, palette, toggle } = useContext(ThemeContext);
-  return (
-    <Animated.View
-      style={[
-        styles.auroraContainer,
-        {
-          backgroundColor: palette.bg,
-          transitionProperty: 'backgroundColor',
-          transitionDuration: '1500ms',
-          transitionTimingFunction: 'ease-in-out',
-        },
-      ]}>
-      <AuroraColorLayer gradient={DARK_AURORA_COLORS} visible={mode === 'dark'} />
-      <AuroraColorLayer gradient={LIGHT_AURORA_COLORS} visible={mode === 'light'} />
-      <AuroraMaskLayer gradient={DARK_AURORA_MASK} visible={mode === 'dark'} />
-      <AuroraMaskLayer gradient={LIGHT_AURORA_MASK} visible={mode === 'light'} />
-      <Svg
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: screenWidth,
-          height: screenHeight,
-        }}>
-        <AnimatedGradient
-          id="dimGradient"
-          x1="0%"
-          y1="0%"
-          x2="0%"
-          y2="100%"
-          animatedProps={{
-            animationName: {
-              from: {
-                gradient: [
-                  { color: palette.dimColor, offset: '0%', opacity: 0 },
-                  { color: palette.dimColor, offset: '75%', opacity: 1 },
-                ],
-              },
-              to: {
-                gradient: [
-                  { color: palette.dimColor, offset: '0%', opacity: 0 },
-                  { color: palette.dimColor, offset: '80%', opacity: 1 },
-                ],
-              },
-            },
-            animationTimingFunction: 'ease-in-out',
-            animationDuration: '16000ms',
-            animationIterationCount: 'infinite',
-            animationDirection: 'alternate',
-          }}>
-          <Stop offset="0%" stopColor={palette.dimColor} stopOpacity={0} />
-          <Stop offset="100%" stopColor={palette.dimColor} stopOpacity={1} />
-        </AnimatedGradient>
-        <Rect
-          x={0}
-          y={0}
-          width={screenWidth}
-          height={screenHeight}
-          fill="url(#dimGradient)"
-        />
-      </Svg>
-      <View style={styles.auroraTitleBottom}>
-        <Pressable onPress={() => navigation.navigate('Details')}>
-          <Animated.Text
-            sharedTransitionTag="reanimated-title"
-            style={[
-              styles.auroraTitle,
-              {
-                color: palette.text,
-                transitionProperty: 'color',
-                transitionDuration: '1500ms',
-                transitionTimingFunction: 'ease-in-out',
-              },
-            ]}>
-            Reanimated
-          </Animated.Text>
-        </Pressable>
-        {isFocused && (
-          <Animated.View entering={setFadeIn} exiting={cssFadeOut}>
-            <Pressable onPress={toggle}>
-              <MaskedView
-                maskElement={
-                  <Animated.View
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      bottom: 0,
-                      left: 0,
-                      width: '600%',
-                      experimental_backgroundImage: auroraTextMask,
-                      animationName: {
-                        from: { transform: [{ translateX: 0 }] },
-                        to: { transform: [{ translateX: -900 }] },
-                      },
-                      animationTimingFunction: 'linear',
-                      animationDuration: '54000ms',
-                      animationIterationCount: 'infinite',
-                    }}
-                  />
-                }>
-                <Animated.Text
-                  style={[
-                    styles.auroraCss,
-                    {
-                      color: palette.text,
-                      animationName: {
-                        from: { transform: [{ scale: 0.995 }] },
-                        to: { transform: [{ scale: 1.005 }] },
-                      },
-                      animationTimingFunction: 'ease-in-out',
-                      animationDuration: '2500ms',
-                      animationIterationCount: 'infinite',
-                      animationDirection: 'alternate',
-                    },
-                  ]}>
-                  CSS
-                </Animated.Text>
-              </MaskedView>
-            </Pressable>
-            <View
-              pointerEvents="none"
-              style={[
-                styles.auroraTitleDim,
-                {
-                  experimental_backgroundImage: `linear-gradient(180deg, ${palette.dimColorAlpha0} 0%, ${palette.dimColorAlpha0} 40%, ${palette.dimColorAlpha60} 100%)`,
-                },
-              ]}
-            />
-          </Animated.View>
-        )}
-      </View>
-    </Animated.View>
-  );
-}
-
 export default function App() {
-  const [mode, setMode] = useState<ThemeMode>('dark');
-  const palette = PALETTES[mode];
-  const contextValue = useMemo(
-    () => ({
-      mode,
-      palette,
-      toggle: () => setMode((m) => (m === 'dark' ? 'light' : 'dark')),
-    }),
-    [mode, palette]
-  );
-  return (
-    <ThemeContext.Provider value={contextValue}>
-      <NavigationContainer theme={palette.navTheme}>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Home" component={Aurora} />
-          <Stack.Screen name="Details" component={AuroraDetail} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </ThemeContext.Provider>
-  );
-}
-
-function AuroraDetail() {
-  const navigation = useNavigation<AuroraNavigation>();
-  const isFocused = useIsFocused();
-  const { mode, palette, toggle } = useContext(ThemeContext);
-  return (
-    <Animated.View
-      style={[
-        styles.detailContainer,
-        {
-          backgroundColor: palette.bg,
-          transitionProperty: 'backgroundColor',
-          transitionDuration: '1500ms',
-          transitionTimingFunction: 'ease-in-out',
-        },
-      ]}>
-      <AuroraColorLayer gradient={DARK_AURORA_COLORS} visible={mode === 'dark'} />
-      <AuroraColorLayer gradient={LIGHT_AURORA_COLORS} visible={mode === 'light'} />
-      <AuroraMaskLayer gradient={DARK_AURORA_MASK} visible={mode === 'dark'} />
-      <AuroraMaskLayer gradient={LIGHT_AURORA_MASK} visible={mode === 'light'} />
-      <View
-        pointerEvents="none"
-        style={[
-          styles.detailDim,
-          {
-            experimental_backgroundImage: `linear-gradient(0deg, ${palette.dimColorAlpha0} 0%, ${palette.dimColor} 45%)`,
-          },
-        ]}
-      />
-      <Pressable onPress={() => navigation.goBack()}>
-        <Animated.Text
-          sharedTransitionTag="reanimated-title"
-          style={[
-            styles.auroraTitle,
-            {
-              color: palette.text,
-              transitionProperty: 'color',
-              transitionDuration: '1500ms',
-              transitionTimingFunction: 'ease-in-out',
-            },
-          ]}>
-          Reanimated
-        </Animated.Text>
-      </Pressable>
-      {isFocused && (
-        <Animated.View entering={setFadeIn} exiting={cssFadeOut}>
-          <Pressable onPress={toggle}>
-            <MaskedView
-              maskElement={
-                <Animated.View
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    bottom: 0,
-                    left: 0,
-                    width: '600%',
-                    experimental_backgroundImage: auroraTextMask,
-                    animationName: {
-                      from: { transform: [{ translateX: 0 }] },
-                      to: { transform: [{ translateX: -900 }] },
-                    },
-                    animationTimingFunction: 'linear',
-                    animationDuration: '54000ms',
-                    animationIterationCount: 'infinite',
-                  }}
-                />
-              }>
-              <Animated.Text
-                style={[
-                  styles.detailSet,
-                  {
-                    color: palette.text,
-                    textShadowColor: palette.setShadow,
-                  },
-                ]}>
-                SET
-              </Animated.Text>
-            </MaskedView>
-            <View
-              pointerEvents="none"
-              style={[
-                styles.auroraSetDim,
-                {
-                  experimental_backgroundImage: `linear-gradient(0deg, ${palette.dimColorAlpha0} 0%, ${palette.dimColorAlpha0} 40%, ${palette.dimColorAlpha60} 100%)`,
-                },
-              ]}
-            />
-          </Pressable>
-        </Animated.View>
-      )}
-    </Animated.View>
-  );
-}
-
-function Pill() {
   return (
     <View style={styles.container}>
-      <Animated.View
-        style={[
-          styles.backgroundCircle,
-          {
-            animationName: {
-              from: { boxShadow: '0px 0px 5px 2px #000' },
-              to: { boxShadow: '6px 6px 16px 4px #000' },
-            },
-            animationTimingFunction: 'ease-in-out',
-            animationDuration: '1500ms',
-            animationIterationCount: 'infinite',
-            animationDirection: 'alternate',
-          },
-        ]}>
-        <Svg
-          style={{
-            position: 'absolute',
-            width: 1000,
-            height: 600,
-            top: 0,
-            left: 0,
-            overflow: 'hidden',
-          }}>
-          <AnimatedGradient
-            id="gradient"
-            x1="0%"
-            y1="0%"
-            x2="100%"
-            y2="50%"
-            animatedProps={{
+      <View pointerEvents="none" style={styles.cosmicGlow} />
+      <Starfield />
+      <View style={styles.system}>
+        {ORBITS.map((orbit) => (
+          <Orbit key={orbit.size} config={orbit} />
+        ))}
+        <Comet />
+        <View style={styles.sun} />
+        <Animated.View
+          style={[
+            styles.sunHalo,
+            {
               animationName: {
-                from: {
-                  gradient: [
-                    { color: brandDark, offset: '0%', opacity: 1 },
-                    { color: brandLight, offset: '20%', opacity: 1 },
-                    { color: brandLight, offset: '25%', opacity: 1 },
-                    { color: brandBlue, offset: '100%', opacity: 1 },
-                  ],
-                },
-                to: {
-                  gradient: [
-                    { color: brandDark, offset: '0%', opacity: 1 },
-                    { color: brandLight, offset: '35%', opacity: 1 },
-                    { color: brandLight, offset: '50%', opacity: 1 },
-                    { color: brandBlue, offset: '100%', opacity: 1 },
-                  ],
-                },
+                '0%': { transform: [{ scale: 1 }], opacity: 0.4 },
+                '50%': { transform: [{ scale: 1.35 }], opacity: 0.05 },
+                '100%': { transform: [{ scale: 1 }], opacity: 0.4 },
               },
-              animationTimingFunction: 'ease-in-out',
-              animationDuration: '1500ms',
+              animationDuration: '3200ms',
               animationIterationCount: 'infinite',
-              animationDirection: 'alternate',
-            }}>
-            <Stop offset="0%" stopColor={brandDark} />
-            <Stop offset="50%" stopColor={brandBlue} />
-            <Stop offset="70%" stopColor={brandLight} />
-          </AnimatedGradient>
-          <Rect x={0} y={0} width={1000} height={600} fill="url(#gradient)" />
-        </Svg>
-        <View style={styles.column}>
-          <View style={styles.row}>
-            <AppText />
-            <Dot />
-            <JsText />
-          </View>
-          <Year2026Text />
-        </View>
-      </Animated.View>
+              animationTimingFunction: 'ease-in-out',
+            },
+          ]}
+        />
+      </View>
     </View>
   );
 }
 
-const brandDark = '#001A72';
-const brandBlue = '#38ACDD';
-const brandLight = '#E1F3FA';
+function Starfield() {
+  return (
+    <View
+      pointerEvents="none"
+      style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+      {STARS.map((star, i) => (
+        <Animated.View
+          key={i}
+          style={{
+            position: 'absolute',
+            left: `${star.left}%`,
+            top: `${star.top}%`,
+            width: star.size,
+            height: star.size,
+            borderRadius: star.size / 2,
+            backgroundColor: '#ffffff',
+            opacity: star.baseOpacity,
+            animationName: {
+              '0%': { opacity: star.baseOpacity * 0.4 },
+              '50%': { opacity: 1 },
+              '100%': { opacity: star.baseOpacity * 0.4 },
+            },
+            animationDuration: `${star.duration}ms`,
+            animationDelay: `${star.delay}ms`,
+            animationIterationCount: 'infinite',
+            animationTimingFunction: 'ease-in-out',
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
+function Orbit({ config }: { config: OrbitConfig }) {
+  const scaleY = config.scaleY ?? 1;
+  const rotation = config.rotation ?? 0;
+  const Rx = config.size / 2;
+  const Ry = Rx * scaleY;
+  const keyframes = useMemo(
+    () => buildEllipseKeyframes(Rx, Ry, rotation),
+    [Rx, Ry, rotation]
+  );
+  const shimmerDuration = `${4200 + (config.size * 17) % 3800}ms` as const;
+  const shimmerDelay = `${(config.size * 23) % 5000}ms` as const;
+  return (
+    <>
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.orbit,
+          {
+            width: config.size,
+            height: config.size,
+            borderRadius: config.size / 2,
+            borderColor: config.ringColor,
+            marginLeft: -config.size / 2,
+            marginTop: -config.size / 2,
+            transform: [{ rotate: `${rotation}deg` }, { scaleY }],
+            animationName: {
+              '0%': { opacity: 0.75 },
+              '50%': { opacity: 1 },
+              '100%': { opacity: 0.75 },
+            },
+            animationDuration: shimmerDuration,
+            animationDelay: shimmerDelay,
+            animationIterationCount: 'infinite',
+            animationTimingFunction: 'ease-in-out',
+          },
+        ]}
+      />
+      <Animated.View
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          marginLeft: -config.planetSize / 2,
+          marginTop: -config.planetSize / 2,
+          width: config.planetSize,
+          height: config.planetSize,
+          borderRadius: config.planetSize / 2,
+          overflow: 'hidden',
+          backgroundColor: config.planetColor,
+          animationName: keyframes,
+          animationDuration: config.duration,
+          animationIterationCount: 'infinite',
+          animationTimingFunction: 'linear',
+          animationDirection: config.direction,
+        }}>
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            experimental_backgroundImage:
+              'linear-gradient(180deg, rgba(0,0,0,0) 10%, rgba(0,0,0,1) 100%)',
+          }}
+        />
+      </Animated.View>
+    </>
+  );
+}
+
+function buildEllipseKeyframes(Rx: number, Ry: number, rotationDeg = 0) {
+  const steps = 24;
+  const θ = (rotationDeg * Math.PI) / 180;
+  const cosθ = Math.cos(θ);
+  const sinθ = Math.sin(θ);
+  const keyframes: Record<
+    string,
+    {
+      transform: (
+        | { translateX: number }
+        | { translateY: number }
+        | { rotate: `${number}deg` }
+      )[];
+    }
+  > = {};
+  let prevPhase: number | null = null;
+  for (let i = 0; i <= steps; i++) {
+    const angle = (i / steps) * 2 * Math.PI;
+    const x0 = Rx * Math.sin(angle);
+    const y0 = -Ry * Math.cos(angle);
+    const x = x0 * cosθ - y0 * sinθ;
+    const y = x0 * sinθ + y0 * cosθ;
+    let phase = Math.atan2(-x, y);
+    if (prevPhase !== null) {
+      while (phase - prevPhase > Math.PI) phase -= 2 * Math.PI;
+      while (phase - prevPhase < -Math.PI) phase += 2 * Math.PI;
+    }
+    prevPhase = phase;
+    const phaseDeg = Number(((phase * 180) / Math.PI).toFixed(3));
+    const percent = (i / steps) * 100;
+    const key = i === 0 ? '0%' : i === steps ? '100%' : `${percent.toFixed(4)}%`;
+    keyframes[key] = {
+      transform: [
+        { translateX: x },
+        { translateY: y },
+        { rotate: `${phaseDeg}deg` },
+      ],
+    };
+  }
+  return keyframes;
+}
+
+const COMET_C = Math.sqrt(COMET.Rx * COMET.Rx - COMET.Ry * COMET.Ry);
+
+function buildCometKeyframes(
+  options: {
+    motion?: boolean;
+    fadeTail?: boolean;
+    fadeShadow?: boolean;
+    fadeBody?: boolean;
+    fadeHemisphere?: boolean;
+  } = {}
+) {
+  const steps = 96;
+  const e = COMET_C / COMET.Rx;
+  const minDist = COMET.Rx - COMET_C;
+  type Frame = {
+    opacity?: number;
+    shadowOpacity?: number;
+    shadowRadius?: number;
+    transform?: (
+      | { translateX: number }
+      | { translateY: number }
+      | { rotate: `${number}deg` }
+    )[];
+  };
+  const k: Record<string, Frame> = {};
+  let prevAngle: number | null = null;
+  for (let i = 0; i <= steps; i++) {
+    const E = Math.PI + (2 * Math.PI * i) / steps;
+    const M = E - e * Math.sin(E);
+    const t = (M - Math.PI) / (2 * Math.PI);
+    const x = COMET.Rx * Math.cos(E) - COMET_C;
+    const y = COMET.Ry * Math.sin(E);
+    let angleRad = Math.atan2(y, x);
+    if (prevAngle !== null) {
+      while (angleRad - prevAngle > Math.PI) angleRad -= 2 * Math.PI;
+      while (angleRad - prevAngle < -Math.PI) angleRad += 2 * Math.PI;
+    }
+    prevAngle = angleRad;
+    const angleDeg = Number(((angleRad * 180) / Math.PI).toFixed(3));
+    const percent = (t * 100).toFixed(4);
+    const key = i === 0 ? '0%' : i === steps ? '100%' : `${percent}%`;
+    const frame: Frame = {};
+    if (options.motion) {
+      frame.transform = [
+        { translateX: Number(x.toFixed(3)) },
+        { translateY: Number(y.toFixed(3)) },
+        { rotate: `${angleDeg}deg` },
+      ];
+    }
+    const dist = Math.sqrt(x * x + y * y);
+    if (options.fadeTail) {
+      const tailCutoff = minDist * 2.2;
+      if (dist >= tailCutoff) {
+        frame.opacity = 0;
+      } else {
+        const ratio = minDist / dist;
+        const cutoffFactor = (tailCutoff - dist) / (tailCutoff - minDist);
+        frame.opacity = Number((ratio * ratio * cutoffFactor).toFixed(3));
+      }
+    } else if (options.fadeBody) {
+      const ratio = minDist / dist;
+      frame.opacity = Number(
+        Math.max(0.05, Math.pow(ratio, 0.6)).toFixed(3)
+      );
+    }
+    if (options.fadeHemisphere) {
+      const ratio = minDist / dist;
+      frame.opacity = Number(Math.max(0, 1 - ratio).toFixed(3));
+    }
+    if (options.fadeShadow) {
+      const tailCutoff = minDist * 2.2;
+      if (dist >= tailCutoff) {
+        frame.shadowOpacity = 0;
+        frame.shadowRadius = 0;
+      } else {
+        const proximity = (tailCutoff - dist) / (tailCutoff - minDist);
+        const q = proximity * proximity;
+        frame.shadowOpacity = Number((0.7 * q).toFixed(3));
+        frame.shadowRadius = Number((1 + 7 * q).toFixed(3));
+      }
+    }
+    k[key] = frame;
+  }
+  return k;
+}
+
+function Comet() {
+  const motionKeyframes = useMemo(
+    () => buildCometKeyframes({ motion: true }),
+    []
+  );
+  const tailFadeKeyframes = useMemo(
+    () => buildCometKeyframes({ fadeTail: true }),
+    []
+  );
+  const headShadowKeyframes = useMemo(
+    () => buildCometKeyframes({ fadeShadow: true, fadeBody: true }),
+    []
+  );
+  const hemisphereKeyframes = useMemo(
+    () => buildCometKeyframes({ fadeHemisphere: true }),
+    []
+  );
+  return (
+    <>
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: COMET.Rx * 2,
+          height: COMET.Rx * 2,
+          borderRadius: COMET.Rx,
+          borderWidth: 0.5,
+          borderColor: 'rgba(255,255,255,0.06)',
+          marginLeft: -COMET.Rx - COMET_C,
+          marginTop: -COMET.Rx,
+          transform: [{ scaleY: COMET.Ry / COMET.Rx }],
+        }}
+      />
+      <Animated.View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: 0,
+          height: 0,
+          animationName: motionKeyframes,
+          animationDuration: COMET.duration,
+          animationIterationCount: 'infinite',
+          animationTimingFunction: 'linear',
+        }}>
+        <Animated.View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: -COMET.tailWidth / 2,
+            left: 0,
+            width: COMET.tailLength,
+            height: COMET.tailWidth,
+            borderRadius: COMET.tailWidth / 2,
+            experimental_backgroundImage: `linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(178,238,255,1) 12%, rgba(178,238,255,0) 100%)`,
+            animationName: tailFadeKeyframes,
+            animationDuration: COMET.duration,
+            animationIterationCount: 'infinite',
+            animationTimingFunction: 'linear',
+          }}
+        />
+        <Animated.View
+          style={{
+            position: 'absolute',
+            top: -COMET.headSize / 2,
+            left: -COMET.headSize / 2,
+            width: COMET.headSize,
+            height: COMET.headSize,
+            borderRadius: COMET.headSize / 2,
+            overflow: 'hidden',
+            backgroundColor: COMET.headColor,
+            shadowColor: COMET.trailColor,
+            shadowOffset: { width: 0, height: 0 },
+            animationName: headShadowKeyframes,
+            animationDuration: COMET.duration,
+            animationIterationCount: 'infinite',
+            animationTimingFunction: 'linear',
+          }}>
+          <Animated.View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              experimental_backgroundImage:
+                'linear-gradient(90deg, rgba(0,0,0,0) 10%, rgba(0,0,0,1) 100%)',
+              animationName: hemisphereKeyframes,
+              animationDuration: COMET.duration,
+              animationIterationCount: 'infinite',
+              animationTimingFunction: 'linear',
+            }}
+          />
+        </Animated.View>
+      </Animated.View>
+    </>
+  );
+}
+
+const SUN_SIZE = 48;
+const HALO_SIZE = 110;
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
     flex: 1,
+    backgroundColor: '#05050f',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  cosmicGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    experimental_backgroundImage:
+      'radial-gradient(circle at 50% 50%, rgba(76,29,149,0.35), rgba(5,5,15,0) 70%)',
+  },
+  system: {
+    width: 1,
+    height: 1,
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
+  orbit: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    borderWidth: 0.4,
   },
-  column: {
-    flexDirection: 'column',
-    alignItems: 'center',
+  planet: {
+    position: 'absolute',
   },
-  word: {
-    fontSize: 128,
-    fontWeight: '700',
-    fontFamily,
-  },
-  backgroundCircle: {
-    borderRadius: 9999,
-    padding: 40,
-    shadowColor: '#000',
-    shadowRadius: 40,
-    shadowOffset: { width: 0, height: 0 },
+  sun: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: SUN_SIZE,
+    height: SUN_SIZE,
+    marginLeft: -SUN_SIZE / 2,
+    marginTop: -SUN_SIZE / 2,
+    borderRadius: SUN_SIZE / 2,
+    experimental_backgroundImage:
+      'radial-gradient(circle at 35% 35%, rgb(255,243,191), rgb(252,176,64) 70%, rgb(220,90,30) 100%)',
+    shadowColor: 'rgba(252,176,64,0.9)',
     shadowOpacity: 1,
-    overflow: 'hidden',
-    boxShadow: '0px 0px 5px 2px #000',
+    shadowRadius: 36,
+    shadowOffset: { width: 0, height: 0 },
   },
-  auroraContainer: {
-    flex: 1,
-    overflow: 'hidden',
-    backgroundColor: '#000',
-  },
-  auroraTitleBottom: {
-    position: 'absolute',
-    bottom: 60,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  auroraTitle: {
-    textAlign: 'center',
-    color: '#fff',
-    fontFamily,
-    fontSize: 44,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  auroraCss: {
-    textAlign: 'center',
-    color: '#fff',
-    fontFamily,
-    fontSize: 110,
-    fontWeight: '900',
-    letterSpacing: 6,
-  },
-  auroraTitleDim: {
+  sunHalo: {
     position: 'absolute',
     top: 0,
-    bottom: 0,
     left: 0,
-    right: 0,
+    width: HALO_SIZE,
+    height: HALO_SIZE,
+    marginLeft: -HALO_SIZE / 2,
+    marginTop: -HALO_SIZE / 2,
+    borderRadius: HALO_SIZE / 2,
     experimental_backgroundImage:
-      'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.6) 100%)',
-  },
-  auroraSetDim: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    experimental_backgroundImage:
-      'linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.6) 100%)',
-  },
-  detailContainer: {
-    flex: 1,
-    overflow: 'hidden',
-    backgroundColor: '#000',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  detailDim: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    experimental_backgroundImage:
-      'linear-gradient(0deg, rgba(0,0,0,0) 0%, rgb(0,0,0) 45%)',
-  },
-  detailSet: {
-    marginTop: 8,
-    color: '#fff',
-    fontFamily,
-    fontSize: 128,
-    fontWeight: '900',
-    letterSpacing: 6,
-    textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.85)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 10,
+      'radial-gradient(circle, rgba(252,176,64,0.4), rgba(252,176,64,0) 70%)',
   },
 });
