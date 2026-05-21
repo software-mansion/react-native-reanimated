@@ -33,7 +33,7 @@ export function BackgroundColorSourceSection({
 }) {
   return (
     <View style={styles.section}>
-      <Text style={styles.heading}>5. backgroundColor</Text>
+      <Text style={styles.heading}>backgroundColor</Text>
       <Text style={styles.body}>
         Interpolates values.currentBackgroundColor → values.targetBackgroundColor.
         Expected: source is green, target is dodgerblue; color blends through
