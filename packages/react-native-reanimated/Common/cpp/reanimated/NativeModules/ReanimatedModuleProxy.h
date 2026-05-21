@@ -101,8 +101,6 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   jsi::Value configureLayoutAnimationBatch(jsi::Runtime &rt, const jsi::Value &layoutAnimationsBatch);
   void setShouldAnimateExiting(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &shouldAnimate);
 
-  void onRender(double timestampMs);
-
   bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
 
   bool
@@ -255,6 +253,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
 #endif
+  const std::shared_ptr<OperationsLoop> operationsLoop_;
   const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
@@ -262,7 +261,6 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   const std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
   const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
-  const std::shared_ptr<OperationsLoop> operationsLoop_;
   const std::shared_ptr<PseudoStylesRegistry> pseudoStylesRegistry_;
 
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;

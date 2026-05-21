@@ -10,12 +10,10 @@ using namespace facebook::react;
 PseudoStylesRegistry::PseudoStylesRegistry(
     PlatformAttachPseudoSelectorFunction attachFn,
     PlatformDetachPseudoSelectorFunction detachFn,
-    std::shared_ptr<css::CSSTransitionsRegistry> cssTransitionsRegistry,
-    std::shared_ptr<OperationsLoop> operationsLoop)
+    std::shared_ptr<css::CSSTransitionsRegistry> cssTransitionsRegistry)
     : attachFn_(std::move(attachFn)),
       detachFn_(std::move(detachFn)),
-      cssTransitionsRegistry_(std::move(cssTransitionsRegistry)),
-      operationsLoop_(std::move(operationsLoop)) {}
+      cssTransitionsRegistry_(std::move(cssTransitionsRegistry)) {}
 
 // static
 std::array<folly::dynamic, (1u << kPseudoSelectorBits)> PseudoStylesRegistry::recomputeAllStyles(
@@ -112,7 +110,6 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
   }
 
   cssTransitionsRegistry_->run(shadowNode, valueChanges);
-  operationsLoop_->run();
 }
 
 } // namespace reanimated

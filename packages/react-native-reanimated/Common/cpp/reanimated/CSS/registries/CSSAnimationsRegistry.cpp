@@ -1,6 +1,6 @@
 #include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
-#include <reanimated/Tools/FeatureFlags.h>
 
+#include <cxxreact/ReactNativeVersion.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -9,343 +9,191 @@
 
 namespace reanimated::css {
 
-bool CSSAnimationsRegistry::isEmpty() const {
-  std::lock_guard<std::mutex> lock{mutex_};
-  // The registry is empty if has no registered animations and no updates
-  // stored in the updates registry
-  return updatesRegistry_.empty() && registry_.empty();
-}
+CSSAnimationsRegistry::CSSAnimationsRegistry(
+    const std::shared_ptr<OperationsLoop> &loop,
+    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry)
+    : loop_(loop), keyframesRegistry_(keyframesRegistry) {}
 
-bool CSSAnimationsRegistry::hasUpdates() const {
-  std::lock_guard<std::mutex> lock{mutex_};
-  return !runningAnimationIndicesMap_.empty() || !delayedAnimationsManager_.empty() || !animationsToRevertMap_.empty();
+bool CSSAnimationsRegistry::needsFlush() const {
+  return !updatedTags_.empty();
 }
 
 void CSSAnimationsRegistry::apply(
-    jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
-    const std::optional<std::vector<std::string>> &animationNames,
-    const CSSAnimationsMap &newAnimations,
-    const CSSAnimationSettingsUpdatesMap &settingsUpdates,
-    double timestamp) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
-  auto animationsVector = buildAnimationsVector(rt, shadowNode, animationNames, newAnimations);
-
+    const std::string &compoundComponentName,
+    const CSSAnimationUpdates &updates) {
   const auto viewTag = shadowNode->getTag();
-  if (animationsVector.empty()) {
-    removeTag(viewTag);
+  auto newGroup =
+      maybeBuildNewGroup(shadowNode, compoundComponentName, updates.animationNames, updates.newAnimationSettings);
+
+  if (newGroup) {
+    auto oldIt = groups_.find(viewTag);
+    if (oldIt != groups_.end()) {
+      oldIt->second.unschedule(*loop_);
+    }
+
+    if (newGroup->getAnimations().empty()) {
+      remove(viewTag);
+      return;
+    }
+
+    groups_.insert_or_assign(viewTag, std::move(*newGroup));
+  }
+
+  auto it = groups_.find(viewTag);
+  if (it == groups_.end()) {
     return;
   }
 
-  runningAnimationIndicesMap_[viewTag].clear();
+  auto &group = it->second;
+  group.updateSettings(updates.settingsUpdates, loop_->resolveTimestamp());
+  group.schedule(*loop_);
 
-  std::vector<size_t> updatedIndices;
-  for (const auto &[index, _] : newAnimations) {
-    updatedIndices.push_back(index);
+  // Set current style to updates registry to ensure that all old
+  // styles are removed (replaced by the new style).
+  setInUpdatesRegistry(group.getShadowNodeFamily(), group.computeStyle());
+  // Mark always as updated to ensure that updates are committed
+  updatedTags_.insert(viewTag);
+}
+
+void CSSAnimationsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
+  const auto tags = std::exchange(updatedTags_, {});
+  for (const auto viewTag : tags) {
+    const auto it = groups_.find(viewTag);
+    if (it == groups_.end()) {
+      continue;
+    }
+
+    const auto updates = it->second.computeStyle(true);
+    if (!updates.empty()) {
+      addUpdatesToBatch(it->second.getShadowNodeFamily(), updates);
+    }
   }
-  for (const auto &[index, _] : settingsUpdates) {
-    updatedIndices.push_back(index);
+
+  UpdatesRegistry::flushUpdates(updatesBatch);
+  updateRegistryForRevertedAnimations();
+}
+
+#if REACT_NATIVE_VERSION_MINOR >= 85
+void CSSAnimationsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
+  const auto tags = std::exchange(updatedTags_, {});
+  for (const auto viewTag : tags) {
+    const auto it = groups_.find(viewTag);
+    if (it == groups_.end()) {
+      continue;
+    }
+
+    const auto updates = it->second.computeStyle(true);
+    if (!updates.empty()) {
+      addRawPropsToAnimatedPropsBatch(it->second.getShadowNodeFamily(), updates);
+      // Legacy flushes merge each frame into the updates registry; animated-props flushes do not.
+      // Keep the registry current so subsequent reads see the latest values.
+      setInUpdatesRegistry(it->second.getShadowNodeFamily(), updates);
+    }
   }
 
-  updateAnimationSettings(animationsVector, settingsUpdates, timestamp);
-  for (size_t i = 0; i < animationsVector.size(); ++i) {
-    scheduleOrActivateAnimation(i, animationsVector[i], timestamp);
-  }
+  UpdatesRegistry::flushUpdates(updatesBatch);
+  updateRegistryForRevertedAnimations();
+}
+#endif
 
-  auto animationToIndexMap = buildAnimationToIndexMap(animationsVector);
-  registry_.erase(viewTag);
-  registry_.emplace(viewTag, RegistryEntry{std::move(animationsVector), std::move(animationToIndexMap)});
+CSSAnimationsRegistry::AnimationObserver::AnimationObserver(CSSAnimationsRegistry &owner) : owner_(owner) {}
 
-  updateViewAnimations(viewTag, updatedIndices, timestamp, false);
-  applyViewAnimationsStyle(viewTag, timestamp);
+void CSSAnimationsRegistry::AnimationObserver::onAnimationUpdate(const Tag viewTag) {
+  owner_.updatedTags_.insert(viewTag);
+}
+
+void CSSAnimationsRegistry::AnimationObserver::onAnimationNeedsRevert(const Tag viewTag) {
+  owner_.pendingRevertTags_.insert(viewTag);
 }
 
 void CSSAnimationsRegistry::removeTag(const Tag viewTag) {
-  removeViewAnimations(viewTag);
+  auto it = groups_.find(viewTag);
+  if (it != groups_.end()) {
+    it->second.unschedule(*loop_);
+    groups_.erase(it);
+  }
   removeFromUpdatesRegistry(viewTag);
-  registry_.erase(viewTag);
+  // Stale entries in updatedTags_/pendingRevertTags_ are harmless: the flush
+  // path checks `groups_` before doing any work.
 }
 
-void CSSAnimationsRegistry::update(const double timestamp) {
-  // Activate all delayed animations that should start now
-  activateDelayedAnimations(timestamp);
-  // Update styles in the registry for views which animations were reverted
-  handleAnimationsToRevert(timestamp);
-
-  // Iterate over active animations and update them
-  for (auto it = runningAnimationIndicesMap_.begin(); it != runningAnimationIndicesMap_.end();) {
-    const auto viewTag = it->first;
-    const std::vector<size_t> animationIndices = {it->second.begin(), it->second.end()};
-    updateViewAnimations(viewTag, animationIndices, timestamp, true);
-
-    if (runningAnimationIndicesMap_[viewTag].empty()) {
-      it = runningAnimationIndicesMap_.erase(it);
-    } else {
-      ++it;
-    }
-  }
-}
-
-CSSAnimationsVector CSSAnimationsRegistry::buildAnimationsVector(
-    jsi::Runtime &rt,
+std::optional<CSSAnimationsGroup> CSSAnimationsRegistry::maybeBuildNewGroup(
     const std::shared_ptr<const ShadowNode> &shadowNode,
-    const std::optional<std::vector<std::string>> &animationNames,
-    const std::optional<CSSAnimationsMap> &newAnimations) const {
-  const auto registryIt = registry_.find(shadowNode->getTag());
+    const std::string &compoundComponentName,
+    const std::optional<std::vector<std::string>> &updatedAnimationNames,
+    const CSSAnimationSettingsMap &newAnimationSettings) {
+  // No animations added/removed/reordered — nothing to build
+  if (!updatedAnimationNames.has_value()) {
+    return std::nullopt;
+  }
 
-  // If animationNames has no value, that means no animations were added,
-  // removed or reordered, so we can return the current animations vector from
-  // the registry
-  if (!animationNames.has_value()) {
-    if (registryIt != registry_.end()) {
-      return registryIt->second.animationsVector;
+  const auto viewTag = shadowNode->getTag();
+  const auto groupIt = groups_.find(viewTag);
+
+  const auto &names = updatedAnimationNames.value();
+  const auto timestamp = loop_->resolveTimestamp();
+
+  // Index old animations by name (reversed for quick pop)
+  std::unordered_map<std::string, CSSAnimationsVector> oldByName;
+  if (groupIt != groups_.end()) {
+    for (auto it = groupIt->second.getAnimations().rbegin(); it != groupIt->second.getAnimations().rend(); ++it) {
+      oldByName[(*it)->getName()].emplace_back(*it);
     }
   }
 
-  CSSAnimationsVector animationsVector;
-  const auto &animationNamesVector = animationNames.value();
-  const auto animationNamesSize = animationNamesVector.size();
-  animationsVector.reserve(animationNamesSize);
+  // Build new vector — create new or reuse old
+  CSSAnimationsVector animations;
+  animations.reserve(names.size());
 
-  std::unordered_map<std::string, CSSAnimationsVector> oldAnimationsMap;
-  CSSAnimationsMap emptyAnimationsMap;
-  const auto &newAnimationsMap = newAnimations.value_or(emptyAnimationsMap);
+  for (size_t i = 0; i < names.size(); ++i) {
+    const auto &name = names[i];
+    const auto settingsIt = newAnimationSettings.find(i);
 
-  if (registryIt != registry_.end()) {
-    const auto &oldAnimations = registryIt->second.animationsVector;
-
-    // Fill the map while maintaining reverse order (for quick pop from the end)
-    for (auto it = oldAnimations.rbegin(); it != oldAnimations.rend(); ++it) {
-      oldAnimationsMap[(*it)->getName()].emplace_back(*it);
-    }
-  }
-
-  for (size_t i = 0; i < animationNamesSize; ++i) {
-    const auto &newAnimationIt = newAnimationsMap.find(i);
-    if (newAnimationIt != newAnimationsMap.end()) {
-      animationsVector.emplace_back(newAnimationIt->second);
-      continue;
-    }
-
-    const auto &name = animationNamesVector[i];
-    const auto &oldAnimationIt = oldAnimationsMap.find(name);
-
-    if (oldAnimationIt == oldAnimationsMap.end()) {
-      throw std::runtime_error(
-          "[Reanimated] There is no animation with name " + name + " available to use at index " + std::to_string(i));
-    }
-
-    animationsVector.emplace_back(oldAnimationIt->second.back());
-    oldAnimationIt->second.pop_back();
-
-    if (oldAnimationIt->second.empty()) {
-      oldAnimationsMap.erase(oldAnimationIt);
-    }
-  }
-
-  return animationsVector;
-}
-
-CSSAnimationsRegistry::AnimationToIndexMap CSSAnimationsRegistry::buildAnimationToIndexMap(
-    const CSSAnimationsVector &animationsVector) const {
-  AnimationToIndexMap animationToIndexMap;
-
-  for (size_t i = 0; i < animationsVector.size(); ++i) {
-    animationToIndexMap[animationsVector[i]] = i;
-  }
-
-  return animationToIndexMap;
-}
-
-void CSSAnimationsRegistry::updateAnimationSettings(
-    const CSSAnimationsVector &animationsVector,
-    const CSSAnimationSettingsUpdatesMap &settingsUpdates,
-    const double timestamp) {
-  for (size_t i = 0; i < animationsVector.size(); ++i) {
-    const auto &animation = animationsVector[i];
-    const auto it = settingsUpdates.find(i);
-    if (it != settingsUpdates.end()) {
-      animation->updateConfig(it->second, timestamp);
-    }
-  }
-}
-
-void CSSAnimationsRegistry::updateViewAnimations(
-    const Tag viewTag,
-    const std::vector<size_t> &animationIndices,
-    const double timestamp,
-    const bool addToBatch) {
-  folly::dynamic animatedProps = folly::dynamic::object;
-  std::shared_ptr<const ShadowNode> shadowNode = nullptr;
-  bool hasUpdates = false;
-
-  for (const auto animationIndex : animationIndices) {
-    const auto &animation = registry_[viewTag].animationsVector[animationIndex];
-    if (!shadowNode) {
-      shadowNode = animation->getShadowNode();
-    }
-    if (animation->getState(timestamp) == AnimationProgressState::Pending) {
-      animation->run(timestamp);
-    }
-
-    bool updatesAddedToBatch = false;
-    const auto updates = animation->update(timestamp);
-    const auto newState = animation->getState(timestamp);
-
-    if (newState == AnimationProgressState::Finished) {
-      // Revert changes applied during animation if there is no forwards fill
-      // mode
-      if (addToBatch && !animation->hasForwardsFillMode()) {
-        //  We also have to manually commit style values
-        // reverting the changes applied by the animation.
-        hasUpdates = addStyleUpdates(animatedProps, animation->getResetStyle(), false) || hasUpdates;
-        updatesAddedToBatch = true;
-        // We want to remove style changes applied by the animation that is
-        // finished and has no forwards fill mode. We cannot simply remove
-        // properties from the style in the registry as it may be overridden
-        // by the next animation. Instead, we are creating the new style
-        // object without reverted (finished without forwards fill mode)
-        // animations.
-        animationsToRevertMap_[viewTag].insert(animationIndex);
+    if (settingsIt != newAnimationSettings.end()) {
+      animations.emplace_back(createAnimation(shadowNode, name, compoundComponentName, settingsIt->second, timestamp));
+    } else {
+      auto oldIt = oldByName.find(name);
+      if (oldIt == oldByName.end()) {
+        throw std::runtime_error(
+            "[Reanimated] There is no animation with name " + name + " available to use at index " + std::to_string(i));
+      }
+      animations.emplace_back(oldIt->second.back());
+      oldIt->second.pop_back();
+      if (oldIt->second.empty()) {
+        oldByName.erase(oldIt);
       }
     }
-
-    if (addToBatch && !updatesAddedToBatch) {
-      hasUpdates = addStyleUpdates(animatedProps, updates, true) || hasUpdates;
-    }
-    if (newState != AnimationProgressState::Running) {
-      runningAnimationIndicesMap_[viewTag].erase(animationIndex);
-    }
   }
 
-  if (hasUpdates) {
-    if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-#if REACT_NATIVE_VERSION_MINOR >= 85
-      addRawPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), std::move(animatedProps));
-#endif
-    } else {
-      addUpdatesToBatch(shadowNode->getFamilyShared(), animatedProps);
-    }
-  }
+  return CSSAnimationsGroup(shadowNode, std::move(animations));
 }
 
-void CSSAnimationsRegistry::scheduleOrActivateAnimation(
-    const size_t animationIndex,
-    const std::shared_ptr<CSSAnimation> &animation,
+std::shared_ptr<CSSAnimation> CSSAnimationsRegistry::createAnimation(
+    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const std::string &name,
+    const std::string &compoundComponentName,
+    const CSSAnimationSettings &settings,
     const double timestamp) {
-  // Remove the animation from delayed (if it is already added to
-  // delayed animations)
-  delayedAnimationsManager_.remove(animation);
-
-  const auto startTimestamp = animation->getStartTimestamp(timestamp);
-
-  if (startTimestamp > timestamp) {
-    // If the animation is delayed, schedule it for activation
-    // (Only if it isn't paused)
-    if (animation->getState(timestamp) != AnimationProgressState::Paused) {
-      delayedAnimationsManager_.add(startTimestamp, animation);
-    }
-  } else {
-    const auto viewTag = animation->getShadowNode()->getTag();
-    runningAnimationIndicesMap_[viewTag].insert(animationIndex);
+  const auto keyframesConfig = keyframesRegistry_->get(name, compoundComponentName);
+  if (!keyframesConfig) {
+    throw std::runtime_error(
+        "[Reanimated] No keyframes with name `" + name + "` were registered for component `" +
+        splitCompoundComponentName(compoundComponentName).second + "` (" + shadowNode->getComponentName() + ")");
   }
+
+  return std::make_shared<CSSAnimation>(
+      shadowNode->getTag(), name, keyframesConfig->get(), settings, animationObserver_, timestamp);
 }
 
-void CSSAnimationsRegistry::removeViewAnimations(const Tag viewTag) {
-  const auto it = registry_.find(viewTag);
-  if (it == registry_.end()) {
-    return;
-  }
-
-  for (const auto &animation : it->second.animationsVector) {
-    delayedAnimationsManager_.remove(animation);
-  }
-  runningAnimationIndicesMap_.erase(viewTag);
-}
-
-void CSSAnimationsRegistry::applyViewAnimationsStyle(const Tag viewTag, const double timestamp) {
-  const auto it = registry_.find(viewTag);
-  // Remove the style from the registry if there are no animations for the view
-  if (it == registry_.end() || it->second.animationsVector.empty()) {
-    removeFromUpdatesRegistry(viewTag);
-    return;
-  }
-
-  folly::dynamic updatedStyle = folly::dynamic::object;
-  std::shared_ptr<const ShadowNode> shadowNode = nullptr;
-
-  for (const auto &animation : it->second.animationsVector) {
-    const auto startTimestamp = animation->getStartTimestamp(timestamp);
-
-    folly::dynamic style;
-    const auto &currentState = animation->getState(timestamp);
-    if (startTimestamp > timestamp && animation->hasBackwardsFillMode()) {
-      style = animation->getBackwardsFillStyle();
-    } else if (
-        currentState == AnimationProgressState::Running ||
-        // Animation is paused after start (was running before)
-        (currentState == AnimationProgressState::Paused && timestamp >= animation->getStartTimestamp(timestamp)) ||
-        // Animation is finished and has fill forwards fill mode
-        (currentState == AnimationProgressState::Finished && animation->hasForwardsFillMode())) {
-      style = animation->getCurrentInterpolationStyle();
-    }
-
-    if (!shadowNode) {
-      shadowNode = animation->getShadowNode();
-    }
-    if (style.isObject()) {
-      updatedStyle.update(style);
+void CSSAnimationsRegistry::updateRegistryForRevertedAnimations() {
+  const auto tags = std::exchange(pendingRevertTags_, {});
+  for (const auto viewTag : tags) {
+    const auto it = groups_.find(viewTag);
+    if (it != groups_.end()) {
+      setInUpdatesRegistry(it->second.getShadowNodeFamily(), it->second.computeStyle());
     }
   }
-
-  setInUpdatesRegistry(shadowNode->getFamilyShared(), updatedStyle);
-}
-
-void CSSAnimationsRegistry::activateDelayedAnimations(const double timestamp) {
-  while (!delayedAnimationsManager_.empty() && delayedAnimationsManager_.top().timestamp <= timestamp) {
-    const auto [_, animation] = delayedAnimationsManager_.pop();
-    const auto viewTag = animation->getShadowNode()->getTag();
-
-    // Add only these animations which weren't removed in the meantime
-    if (registry_.find(viewTag) == registry_.end()) {
-      continue;
-    }
-
-    const auto &animationToIndexMap = registry_[viewTag].animationToIndexMap;
-    if (animationToIndexMap.find(animation) == animationToIndexMap.end()) {
-      continue;
-    }
-
-    const auto animationIndex = animationToIndexMap.at(animation);
-    runningAnimationIndicesMap_[viewTag].insert(animationIndex);
-  }
-}
-
-void CSSAnimationsRegistry::handleAnimationsToRevert(const double timestamp) {
-  for (const auto &[viewTag, _] : animationsToRevertMap_) {
-    applyViewAnimationsStyle(viewTag, timestamp);
-  }
-  animationsToRevertMap_.clear();
-}
-
-bool CSSAnimationsRegistry::addStyleUpdates(
-    folly::dynamic &target,
-    const folly::dynamic &updates,
-    bool shouldOverride) {
-  if (!updates.isObject()) {
-    return false;
-  }
-
-  bool hasUpdates = false;
-  for (const auto &[propertyName, propertyValue] : updates.items()) {
-    if (shouldOverride || !target.count(propertyName) || target[propertyName].isNull()) {
-      target[propertyName] = propertyValue;
-      hasUpdates = true;
-    }
-  }
-
-  return hasUpdates;
 }
 
 } // namespace reanimated::css

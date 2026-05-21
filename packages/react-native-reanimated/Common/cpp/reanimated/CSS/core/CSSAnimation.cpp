@@ -1,4 +1,5 @@
 #include <reanimated/CSS/core/CSSAnimation.h>
+#include <reanimated/Fabric/updates/OperationsLoop.h>
 
 #include <memory>
 #include <string>
@@ -7,15 +8,16 @@
 namespace reanimated::css {
 
 CSSAnimation::CSSAnimation(
-    jsi::Runtime &rt,
-    std::shared_ptr<const ShadowNode> shadowNode,
+    const Tag viewTag,
     std::string animationName,
     const CSSKeyframesConfig &cssKeyframesConfig,
     const CSSAnimationSettings &settings,
+    Observer &observer,
     const double timestamp)
-    : name_(std::move(animationName)),
-      shadowNode_(std::move(shadowNode)),
+    : viewTag_(viewTag),
+      name_(std::move(animationName)),
       fillMode_(settings.fillMode),
+      observer_(observer),
       styleInterpolator_(cssKeyframesConfig.styleInterpolator),
       progressProvider_(std::make_shared<AnimationProgressProvider>(
           timestamp,
@@ -30,66 +32,43 @@ CSSAnimation::CSSAnimation(
   }
 }
 
-const std::string &CSSAnimation::getName() const {
-  return name_;
-}
-
-std::shared_ptr<const ShadowNode> CSSAnimation::getShadowNode() const {
-  return shadowNode_;
-}
-
-double CSSAnimation::getStartTimestamp(const double timestamp) const {
-  return progressProvider_->getStartTimestamp(timestamp);
-}
-
-AnimationProgressState CSSAnimation::getState(double timestamp) const {
-  return progressProvider_->getState(timestamp);
-}
-
 bool CSSAnimation::isReversed() const {
   const auto direction = progressProvider_->getDirection();
   return direction == AnimationDirection::Reverse || direction == AnimationDirection::AlternateReverse;
-}
-
-bool CSSAnimation::hasForwardsFillMode() const {
-  return fillMode_ == AnimationFillMode::Forwards || fillMode_ == AnimationFillMode::Both;
-}
-
-bool CSSAnimation::hasBackwardsFillMode() const {
-  return fillMode_ == AnimationFillMode::Backwards || fillMode_ == AnimationFillMode::Both;
-}
-
-folly::dynamic CSSAnimation::getCurrentInterpolationStyle() const {
-  return styleInterpolator_->interpolate(shadowNode_, progressProvider_, FALLBACK_INTERPOLATION_THRESHOLD);
 }
 
 folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
   return isReversed() ? styleInterpolator_->getLastKeyframeValue() : styleInterpolator_->getFirstKeyframeValue();
 }
 
-folly::dynamic CSSAnimation::getResetStyle() const {
-  return styleInterpolator_->getResetStyle(shadowNode_);
+folly::dynamic CSSAnimation::getCurrentInterpolationStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const {
+  return styleInterpolator_->interpolate(shadowNode, progressProvider_, FALLBACK_INTERPOLATION_THRESHOLD);
 }
 
-void CSSAnimation::run(const double timestamp) {
-  if (progressProvider_->getState(timestamp) == AnimationProgressState::Finished) {
-    return;
-  }
-  progressProvider_->play(timestamp);
+folly::dynamic CSSAnimation::getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const {
+  return styleInterpolator_->getResetStyle(shadowNode);
 }
 
-folly::dynamic CSSAnimation::update(const double timestamp) {
+bool CSSAnimation::update(const double timestamp, OperationsLoop & /*loop*/) {
   progressProvider_->update(timestamp);
+  observer_.onAnimationUpdate(viewTag_);
 
-  // Check if the animation has not started yet because of the delay
-  // (In general, it shouldn't be activated until the delay has passed but we
-  // add this check to make sure that animation doesn't start with the negative
-  // progress)
-  if (progressProvider_->getState(timestamp) == AnimationProgressState::Pending) {
-    return hasBackwardsFillMode() ? getBackwardsFillStyle() : folly::dynamic();
+  if (progressProvider_->getState() == AnimationProgressState::Finished && !hasForwardsFillMode()) {
+    observer_.onAnimationNeedsRevert(viewTag_);
   }
 
-  return styleInterpolator_->interpolate(shadowNode_, progressProvider_, FALLBACK_INTERPOLATION_THRESHOLD);
+  return progressProvider_->getState() == AnimationProgressState::Running;
+}
+
+void CSSAnimation::schedule(OperationsLoop &loop) {
+  if (progressProvider_->getState() != AnimationProgressState::Paused) {
+    const auto timestamp = loop.resolveTimestamp();
+    loop.schedule(shared_from_this(), progressProvider_->getStartTimestamp(timestamp));
+  }
+}
+
+void CSSAnimation::unschedule(OperationsLoop &loop) {
+  loop.remove(shared_from_this());
 }
 
 void CSSAnimation::updateConfig(const PartialCSSAnimationSettings &updatedSettings, const double timestamp) {
