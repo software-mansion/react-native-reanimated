@@ -1,4 +1,5 @@
 #include <reanimated/CSS/core/CSSTransition.h>
+#include <reanimated/Fabric/updates/OperationsLoop.h>
 
 #include <jsi/JSIDynamic.h>
 
@@ -12,37 +13,12 @@ namespace reanimated::css {
 CSSTransition::CSSTransition(
     std::shared_ptr<const ShadowNode> shadowNode,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const std::shared_ptr<std::unordered_set<Tag>> &updatedViewTags,
-    const std::shared_ptr<OperationsLoop> &loop)
+    Observer &observer)
     : shadowNode_(std::move(shadowNode)),
       viewStylesRepository_(viewStylesRepository),
-      updatedViewTags_(updatedViewTags),
-      loop_(loop),
+      observer_(observer),
       styleInterpolator_(TransitionStyleInterpolator(shadowNode_->getComponentName(), viewStylesRepository)),
       progressProvider_(TransitionProgressProvider()) {}
-
-bool CSSTransition::update(const double timestamp) {
-  progressProvider_.update(timestamp);
-  updatedViewTags_->insert(shadowNode_->getTag());
-
-  if (progressProvider_.getState() == TransitionProgressState::Pending) {
-    loop_->schedule(shared_from_this(), timestamp + progressProvider_.getMinDelay(timestamp));
-  }
-
-  return progressProvider_.getState() == TransitionProgressState::Running;
-}
-
-Tag CSSTransition::getViewTag() const {
-  return shadowNode_->getTag();
-}
-
-ShadowNodeFamily::Shared CSSTransition::getShadowNodeFamily() const {
-  return shadowNode_->getFamilyShared();
-}
-
-std::shared_ptr<const ShadowNode> CSSTransition::getShadowNode() const {
-  return shadowNode_;
-}
 
 double CSSTransition::getMinDelay(double timestamp) const {
   return progressProvider_.getMinDelay(timestamp);
@@ -52,8 +28,15 @@ TransitionProgressState CSSTransition::getState() const {
   return progressProvider_.getState();
 }
 
-TransitionProperties CSSTransition::getProperties() const {
-  return transitionProperties_;
+bool CSSTransition::update(const double timestamp, OperationsLoop &loop) {
+  progressProvider_.update(timestamp);
+  observer_.onTransitionUpdate(shadowNode_->getTag());
+
+  if (progressProvider_.getState() == TransitionProgressState::Pending) {
+    loop.schedule(shared_from_this(), timestamp + progressProvider_.getMinDelay(timestamp));
+  }
+
+  return progressProvider_.getState() == TransitionProgressState::Running;
 }
 
 folly::dynamic CSSTransition::run(

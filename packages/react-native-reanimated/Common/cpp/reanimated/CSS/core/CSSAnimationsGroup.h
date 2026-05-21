@@ -13,15 +13,15 @@ namespace reanimated::css {
 
 using CSSAnimationsVector = std::vector<std::shared_ptr<CSSAnimation>>;
 
-class CSSAnimationGroup {
+class CSSAnimationsGroup {
  public:
-  CSSAnimationGroup(std::shared_ptr<const ShadowNode> shadowNode, CSSAnimationsVector animations);
+  CSSAnimationsGroup(std::shared_ptr<const ShadowNode> shadowNode, CSSAnimationsVector animations);
 
   const CSSAnimationsVector &getAnimations() const;
   ShadowNodeFamily::Shared getShadowNodeFamily() const;
 
-  void schedule();
-  void unschedule() const;
+  void schedule(OperationsLoop &loop);
+  void unschedule(OperationsLoop &loop) const;
   void updateSettings(const CSSAnimationSettingsUpdatesMap &settingsUpdates, double timestamp);
   // Computes the combined style from all animations.
   // When includeResetStyles is true, finished animations without forwards fill

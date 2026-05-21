@@ -217,8 +217,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       pseudoStylesRegistry_(std::make_shared<PseudoStylesRegistry>(
           platformDepMethodsHolder.attachPseudoSelector,
           platformDepMethodsHolder.detachPseudoSelector,
-          cssTransitionsRegistry_,
-          operationsLoop_)),
+          cssTransitionsRegistry_)),
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),

@@ -1,5 +1,4 @@
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
-#include <reanimated/Tools/FeatureFlags.h>
 
 #include <memory>
 #include <utility>
@@ -10,12 +9,10 @@ namespace reanimated::css {
 CSSTransitionsRegistry::CSSTransitionsRegistry(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const std::shared_ptr<OperationsLoop> &loop)
-    : viewStylesRepository_(viewStylesRepository),
-      loop_(loop),
-      updatedViewTags_(std::make_shared<std::unordered_set<Tag>>()) {}
+    : viewStylesRepository_(viewStylesRepository), loop_(loop) {}
 
 bool CSSTransitionsRegistry::needsFlush() const {
-  return !updatedViewTags_->empty();
+  return !updatedTags_.empty();
 }
 
 void CSSTransitionsRegistry::updateConfigOrRun(
@@ -27,7 +24,7 @@ void CSSTransitionsRegistry::updateConfigOrRun(
   const auto viewTag = shadowNode->getTag();
 
   if (!registry_.contains(viewTag)) {
-    auto transition = std::make_shared<CSSTransition>(shadowNode, viewStylesRepository_, updatedViewTags_, loop_);
+    auto transition = std::make_shared<CSSTransition>(shadowNode, viewStylesRepository_, transitionObserver_);
     registry_.insert({viewTag, transition});
   }
 
@@ -66,31 +63,16 @@ void CSSTransitionsRegistry::run(
 
   auto initialUpdate = transition->run(propertyDiffs, lastUpdates, timestamp);
 
-  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-#if REACT_NATIVE_VERSION_MINOR >= 85
-    if (!initialUpdate.empty()) {
-      addRawPropsToAnimatedPropsBatch(transition->getShadowNode()->getFamilyShared(), initialUpdate);
-    }
-#endif
-  }
-
   loop_->schedule(transition, timestamp + transition->getMinDelay(timestamp));
 
   updateInUpdatesRegistry(transition, initialUpdate);
-}
-
-void CSSTransitionsRegistry::removeTag(const Tag viewTag) {
-  const auto it = registry_.find(viewTag);
-  if (it != registry_.end()) {
-    loop_->remove(it->second);
-  }
-  removeFromUpdatesRegistry(viewTag);
-  registry_.erase(viewTag);
-  updatedViewTags_->erase(viewTag);
+  // Mark for flush so the initial frame is pulled by the next flushUpdates.
+  updatedTags_.insert(viewTag);
 }
 
 void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
-  for (const auto viewTag : *updatedViewTags_) {
+  const auto tags = std::exchange(updatedTags_, {});
+  for (const auto viewTag : tags) {
     const auto it = registry_.find(viewTag);
     if (it == registry_.end()) {
       continue;
@@ -104,13 +86,13 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
     }
   }
 
-  updatedViewTags_->clear();
   UpdatesRegistry::flushUpdates(updatesBatch);
 }
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
 void CSSTransitionsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
-  for (const auto viewTag : *updatedViewTags_) {
+  const auto tags = std::exchange(updatedTags_, {});
+  for (const auto viewTag : tags) {
     const auto it = registry_.find(viewTag);
     if (it == registry_.end()) {
       continue;
@@ -127,10 +109,24 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatc
     }
   }
 
-  updatedViewTags_->clear();
   UpdatesRegistry::flushUpdates(updatesBatch);
 }
 #endif
+
+CSSTransitionsRegistry::TransitionObserver::TransitionObserver(CSSTransitionsRegistry &owner) : owner_(owner) {}
+
+void CSSTransitionsRegistry::TransitionObserver::onTransitionUpdate(const Tag viewTag) {
+  owner_.updatedTags_.insert(viewTag);
+}
+
+void CSSTransitionsRegistry::removeTag(const Tag viewTag) {
+  const auto it = registry_.find(viewTag);
+  if (it != registry_.end()) {
+    loop_->remove(it->second);
+  }
+  removeFromUpdatesRegistry(viewTag);
+  registry_.erase(viewTag);
+}
 
 void CSSTransitionsRegistry::updateInUpdatesRegistry(
     const std::shared_ptr<CSSTransition> &transition,
@@ -167,16 +163,10 @@ void CSSTransitionsRegistry::runTransition(
 
   auto initialUpdate = transition->run(rt, propertyDiffs, lastUpdates, timestamp);
 
-  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-#if REACT_NATIVE_VERSION_MINOR >= 85
-    if (!initialUpdate.empty()) {
-      addRawPropsToAnimatedPropsBatch(transition->getShadowNode()->getFamilyShared(), initialUpdate);
-    }
-#endif
-  }
-
   loop_->schedule(transition, timestamp + transition->getMinDelay(timestamp));
   updateInUpdatesRegistry(transition, initialUpdate);
+  // Mark for flush so the initial frame is pulled by the next flushUpdates.
+  updatedTags_.insert(viewTag);
 }
 
 } // namespace reanimated::css
