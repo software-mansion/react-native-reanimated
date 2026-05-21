@@ -11,6 +11,11 @@ import {
   BasicTargetScreen,
 } from './BasicCustom';
 import {
+  BorderRadiusSourceSection,
+  BorderRadiusTargetRoute,
+  BorderRadiusTargetScreen,
+} from './BorderRadius';
+import {
   ProgressSourceSection,
   ProgressTargetRoute,
   ProgressTargetScreen,
@@ -23,6 +28,7 @@ function MenuContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
     <Animated.ScrollView style={styles.flexOne}>
       <BasicSourceSection navigate={navigate} />
       <ProgressSourceSection navigate={navigate} />
+      <BorderRadiusSourceSection navigate={navigate} />
     </Animated.ScrollView>
   );
 }
@@ -46,6 +52,11 @@ export default function CustomTransitionExample() {
       <Stack.Screen
         name={ProgressTargetRoute}
         component={ProgressTargetScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={BorderRadiusTargetRoute}
+        component={BorderRadiusTargetScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
