@@ -15,7 +15,7 @@ on:
       - packages/react-native-reanimated/package.json
       - packages/react-native-worklets/src/**
       - packages/react-native-worklets/package.json
-      - "**/tsconfig*.json"
+      - '**/tsconfig*.json'
       - eslint.config.mjs
       - yarn.lock
   workflow_call:
@@ -104,7 +104,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          cache: "yarn"
+          cache: 'yarn'
       - name: Install monorepo node dependencies
         run: yarn install --immutable
       - name: Build packages
@@ -138,7 +138,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          cache: "yarn"
+          cache: 'yarn'
       - name: Clear annotations
         run: .github/workflows/helper/clear-annotations.sh
       - name: Install monorepo node dependencies
@@ -168,7 +168,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          cache: "yarn"
+          cache: 'yarn'
       - name: Install monorepo node dependencies
         run: yarn install --immutable
       - name: Download package build outputs
