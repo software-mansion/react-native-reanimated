@@ -86,8 +86,8 @@ SVGPath SVGPath::interpolate(const double progress, const SVGPath &to) const {
   const auto &longerPath = (subPaths.size() >= to.subPaths.size()) ? subPaths : to.subPaths;
   const auto &shorterPath = (subPaths.size() < to.subPaths.size()) ? subPaths : to.subPaths;
 
-  size_t longerSize = longerPath.size();
-  size_t shorterSize = shorterPath.size();
+  const size_t longerSize = longerPath.size();
+  const size_t shorterSize = shorterPath.size();
 
   if (shorterSize == 0) {
     return to;
@@ -99,13 +99,13 @@ SVGPath SVGPath::interpolate(const double progress, const SVGPath &to) const {
   fromRef.reserve(longerSize);
   toRef.reserve(longerSize);
 
-  size_t baseGroupSize = longerSize / shorterSize;
-  size_t remainder = longerSize % shorterSize;
+  const size_t baseGroupSize = longerSize / shorterSize;
+  const size_t remainder = longerSize % shorterSize;
 
   size_t longerPathIndex = 0;
 
   for (size_t i = 0; i < shorterSize; ++i) {
-    size_t currentGroupSize = baseGroupSize + (i < remainder ? 1 : 0);
+    const size_t currentGroupSize = baseGroupSize + (i < remainder ? 1 : 0);
 
     for (size_t j = 0; j < currentGroupSize; ++j) {
       if (subPaths.size() <= to.subPaths.size()) {
@@ -179,7 +179,8 @@ std::vector<SubPath> SVGPath::parseSVGPath(const std::string &value) const {
           buffer = SubPath(currPos);
         }
 
-        Point p0(currPos), p1, p2, p3;
+        const Point p0(currPos);
+        Point p1, p2, p3;
         if (!(ss >> p1[0] >> p1[1] >> p2[0] >> p2[1] >> p3[0] >> p3[1])) {
           throw std::invalid_argument("[Reanimated] Invalid coordinates for 'C' command in path: \"" + value + "\"");
         }
@@ -207,7 +208,7 @@ std::vector<SubPath> SVGPath::parseSVGPath(const std::string &value) const {
 std::vector<Cubic> SVGPath::splitCubic(Cubic cubic, int count) const {
   std::vector<Cubic> result;
   for (int i = 0; i < count; i++) {
-    double t = 1.0 / (count - i);
+    const double t = 1.0 / (count - i);
     auto [st, nd] = singleSplitCubic(cubic, t);
     result.push_back(st);
     cubic = nd;
@@ -216,26 +217,26 @@ std::vector<Cubic> SVGPath::splitCubic(Cubic cubic, int count) const {
 }
 
 SubPath SVGPath::interpolateSubPaths(const SubPath &from, const SubPath &to, double t) const {
-  Point newM = from.M.interpolate(t, to.M);
+  const Point newM = from.M.interpolate(t, to.M);
   SubPath result(newM);
 
   result.Z = t > 0.5 ? to.Z : from.Z;
 
-  size_t longerSize = std::max(from.C.size(), to.C.size());
-  size_t shorterSize = std::min(from.C.size(), to.C.size());
+  const size_t longerSize = std::max(from.C.size(), to.C.size());
+  const size_t shorterSize = std::min(from.C.size(), to.C.size());
 
   if (shorterSize == 0) {
     return result;
   }
 
-  size_t baseGroupSize = longerSize / shorterSize;
-  size_t remainder = longerSize % shorterSize;
+  const size_t baseGroupSize = longerSize / shorterSize;
+  const size_t remainder = longerSize % shorterSize;
 
   std::vector<Cubic> prolongatedShorter;
   prolongatedShorter.reserve(longerSize);
 
   for (size_t i = 0; i < shorterSize; ++i) {
-    size_t currentGroupSize = baseGroupSize + (i < remainder ? 1 : 0);
+    const size_t currentGroupSize = baseGroupSize + (i < remainder ? 1 : 0);
     std::vector<Cubic> x =
         from.C.size() <= to.C.size() ? splitCubic(from.C[i], currentGroupSize) : splitCubic(to.C[i], currentGroupSize);
     prolongatedShorter.insert(prolongatedShorter.end(), x.begin(), x.end());
@@ -286,8 +287,8 @@ Point SVGPath::applyDirectionalNudge(
     const Point &guide,
     const Point &altGuide,
     double epsilon) const {
-  double dx0 = target[0] - anchor[0];
-  double dy0 = target[1] - anchor[1];
+  const double dx0 = target[0] - anchor[0];
+  const double dy0 = target[1] - anchor[1];
 
   if (dx0 * dx0 + dy0 * dy0 < epsilon * epsilon) {
     Point v = Point(guide[0] - anchor[0], guide[1] - anchor[1]);
@@ -311,12 +312,12 @@ Point SVGPath::applyDirectionalNudge(
 }
 
 std::pair<Cubic, Cubic> SVGPath::singleSplitCubic(const Cubic &p, double t) const {
-  Point p01 = lineAt(p[0], p[1], t);
-  Point p12 = lineAt(p[1], p[2], t);
-  Point p23 = lineAt(p[2], p[3], t);
-  Point c0 = lineAt(p01, p12, t);
-  Point c1 = lineAt(p12, p23, t);
-  Point q = lineAt(c0, c1, t);
+  const Point p01 = lineAt(p[0], p[1], t);
+  const Point p12 = lineAt(p[1], p[2], t);
+  const Point p23 = lineAt(p[2], p[3], t);
+  const Point c0 = lineAt(p01, p12, t);
+  const Point c1 = lineAt(p12, p23, t);
+  const Point q = lineAt(c0, c1, t);
 
   return {{p[0], p01, c0, q}, {q, c1, p23, p[3]}};
 }

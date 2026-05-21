@@ -190,7 +190,7 @@ void WorkletRuntimeDecorator::decorate(
         scheduleOnRuntime(rt, workletRuntimeValue, serializableWorkletValue);
       });
 
-  jsi::Object performance(rt);
+  const jsi::Object performance(rt);
   performance.setProperty(
       rt,
       "now",
@@ -216,7 +216,7 @@ void WorkletRuntimeDecorator::decorate(
             return jsi::Value::undefined();
           }));
   jsi_utils::installJsiFunction(rt, "_stopProfiling", [](jsi::Runtime &rt) {
-    std::string path = stopProfiling(rt);
+    const std::string path = stopProfiling(rt);
     return jsi::String::createFromUtf8(rt, path);
   });
 

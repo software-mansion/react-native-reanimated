@@ -17,7 +17,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
     const jsi::Value &interval,
     const jsi::Value &iosReferenceFrame,
     const jsi::Value &sensorDataHandler) {
-  SensorType sensorType = static_cast<SensorType>(sensorTypeValue.asNumber());
+  const SensorType sensorType = static_cast<SensorType>(sensorTypeValue.asNumber());
 
   auto serializableHandler = extractSerializable(
       rnRuntime,
@@ -25,7 +25,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
       "[Reanimated] Sensor event handler must be a worklet.",
       Serializable::ValueType::WorkletType);
 
-  int sensorId = platformRegisterSensorFunction_(
+  const int sensorId = platformRegisterSensorFunction_(
       static_cast<int>(sensorType),
       interval.asNumber(),
       iosReferenceFrame.asNumber(),
@@ -37,7 +37,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
         }
 
         jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
-        jsi::Object value(uiRuntime);
+        const jsi::Object value(uiRuntime);
         if (sensorType == SensorType::ROTATION_VECTOR) {
           // TODO: timestamp should be provided by the platform implementation
           // such that the native side has a chance of providing a true event

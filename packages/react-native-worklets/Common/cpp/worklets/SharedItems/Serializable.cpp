@@ -272,7 +272,7 @@ jsi::Value SerializableWorklet::toJSValue(jsi::Runtime &rt) {
   react_native_assert(
       std::any_of(data_.cbegin(), data_.cend(), [](const auto &item) { return item.first == "__workletHash"; }) &&
       "SerializableWorklet doesn't have `__workletHash` property");
-  jsi::Value obj = SerializableObject::toJSValue(rt);
+  const jsi::Value obj = SerializableObject::toJSValue(rt);
   return getValueUnpacker(rt).call(rt, obj, jsi::String::createFromAscii(rt, "Worklet"));
 }
 
@@ -358,7 +358,7 @@ jsi::Value SerializableInitializer::toJSValue(jsi::Runtime &rt) {
     // If we put the lock on `getValueUnpacker` part (basically any part that
     // requires runtime) we would get a deadlock since UI thread would never
     // release it.
-    std::unique_lock<std::mutex> lock(initializationMutex_);
+    const std::lock_guard<std::mutex> lock(initializationMutex_);
     if (remoteValue_ == nullptr) {
       remoteValue_ = std::move(value);
       remoteRuntime_ = &rt;

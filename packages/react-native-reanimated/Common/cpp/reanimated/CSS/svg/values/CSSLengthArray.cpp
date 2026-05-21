@@ -70,15 +70,15 @@ CSSLengthArray CSSLengthArray::interpolate(
   const auto &fromLengths = lengths;
   const auto &toLengths = to.lengths;
 
-  size_t fromSize = fromLengths.size();
-  size_t toSize = toLengths.size();
-  size_t longerSize = std::max(fromSize, toSize);
+  const size_t fromSize = fromLengths.size();
+  const size_t toSize = toLengths.size();
+  const size_t longerSize = std::max(fromSize, toSize);
 
   std::vector<CSSLength> result;
   result.reserve(longerSize);
 
   for (size_t i = 0; i < longerSize; ++i) {
-    double ratio = (longerSize > 1) ? static_cast<double>(i) / (longerSize - 1.0) : 0.0;
+    const double ratio = (longerSize > 1) ? static_cast<double>(i) / (longerSize - 1.0) : 0.0;
 
     auto fromIdx = static_cast<size_t>(std::round(ratio * (fromSize - 1)));
     auto toIdx = static_cast<size_t>(std::round(ratio * (toSize - 1)));

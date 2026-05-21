@@ -57,8 +57,8 @@ std::vector<std::pair<double, jsi::Value>> PropertyInterpolator::parseJSIKeyfram
 
   // Insert all provided keyframes
   for (size_t i = 0; i < keyframesCount; ++i) {
-    jsi::Object keyframeObject = keyframeArray.getValueAtIndex(rt, i).asObject(rt);
-    double offset = keyframeObject.getProperty(rt, "offset").asNumber();
+    const jsi::Object keyframeObject = keyframeArray.getValueAtIndex(rt, i).asObject(rt);
+    const double offset = keyframeObject.getProperty(rt, "offset").asNumber();
     jsi::Value value = keyframeObject.getProperty(rt, "value");
 
     result.emplace_back(offset, std::move(value));

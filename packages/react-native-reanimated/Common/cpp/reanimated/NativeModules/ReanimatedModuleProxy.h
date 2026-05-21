@@ -98,15 +98,18 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   jsi::Value getStaticFeatureFlag(jsi::Runtime &rt, const jsi::Value &name);
   jsi::Value setDynamicFeatureFlag(jsi::Runtime &rt, const jsi::Value &name, const jsi::Value &value);
 
-  jsi::Value configureLayoutAnimationBatch(jsi::Runtime &rt, const jsi::Value &layoutAnimationsBatch);
-  void setShouldAnimateExiting(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &shouldAnimate);
+  jsi::Value configureLayoutAnimationBatch(jsi::Runtime &rt, const jsi::Value &layoutAnimationsBatch) const;
+  void setShouldAnimateExiting(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &shouldAnimate) const;
 
   void onRender(double timestampMs);
 
-  bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
+  bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) const;
 
-  bool
-  handleEvent(const std::string &eventName, const int emitterReactTag, const jsi::Value &payload, double currentTime);
+  bool handleEvent(
+      const std::string &eventName,
+      const int emitterReactTag,
+      const jsi::Value &payload,
+      double currentTime) const;
 
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
 
@@ -147,7 +150,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag);
 
   void registerPseudoStyle(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &config);
-  void unregisterPseudoStyle(jsi::Runtime &rt, const jsi::Value &viewTag);
+  void unregisterPseudoStyle(jsi::Runtime &rt, const jsi::Value &viewTag) const;
 
   jsi::Value getSettledUpdates(jsi::Runtime &rt);
 
@@ -155,11 +158,11 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeValue,
       const jsi::Value &commandNameValue,
-      const jsi::Value &argsValue);
+      const jsi::Value &argsValue) const;
 
-  jsi::String obtainProp(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &propName);
+  jsi::String obtainProp(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &propName) const;
 
-  jsi::Value measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue);
+  jsi::Value measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue) const;
 
   void initializeFabric(const std::shared_ptr<UIManager> &uiManager);
 
@@ -168,7 +171,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   std::string obtainPropFromShadowNode(
       jsi::Runtime &rt,
       const std::string &propName,
-      const std::shared_ptr<const ShadowNode> &shadowNode);
+      const std::shared_ptr<const ShadowNode> &shadowNode) const;
 
   jsi::Value registerSensor(
       jsi::Runtime &rt,
@@ -189,7 +192,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   void toggleSlowAnimationsOnUIRuntime() const;
 
-  inline LayoutAnimationsManager &layoutAnimationsManager() {
+  inline LayoutAnimationsManager &layoutAnimationsManager() const {
     return *layoutAnimationsManager_;
   }
 
@@ -218,7 +221,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   }
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
-  std::shared_ptr<UIManagerAnimationBackend> getAnimationBackend();
+  std::shared_ptr<UIManagerAnimationBackend> getAnimationBackend() const;
   AnimationMutations runGrandCallback(AnimationTimestamp timestamp, GrandCallbackSource source);
   void executeOperationsLoop(AnimationTimestamp timestamp);
   void executeWorkletsForFrame(AnimationTimestamp timestamp);

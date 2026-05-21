@@ -57,7 +57,7 @@ jsi::Value Shareable::toJSValue(jsi::Runtime &rt) {
 
 jsi::Value Shareable::hostJSValue() {
   if (!initSynchronously_ && !hostValue_) {
-    std::lock_guard lock(initializationMutex_);
+    const std::lock_guard lock(initializationMutex_);
     if (!hostValue_) {
       initHostValue();
     }

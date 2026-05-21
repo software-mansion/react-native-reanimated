@@ -86,8 +86,10 @@ std::optional<std::pair<StyleOperations, StyleOperations>> TransformsStyleInterp
         break;
       }
       // Case 3: Use default values if no conversion possible
-      bool toExistsLaterInFrom = lastIndexInFrom.count(toOperation->type) && lastIndexInFrom[toOperation->type] > i;
-      bool fromExistsLaterInTo = lastIndexInTo.count(fromOperation->type) && lastIndexInTo[fromOperation->type] > j;
+      const bool toExistsLaterInFrom =
+          lastIndexInFrom.count(toOperation->type) && lastIndexInFrom[toOperation->type] > i;
+      const bool fromExistsLaterInTo =
+          lastIndexInTo.count(fromOperation->type) && lastIndexInTo[fromOperation->type] > j;
 
       if (toExistsLaterInFrom == fromExistsLaterInTo) {
         // If neither exists later, or both exist later (were reordered), we

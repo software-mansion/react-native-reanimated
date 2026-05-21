@@ -53,7 +53,7 @@ class UpdatesRegistry {
   virtual bool isEmpty() const;
   folly::dynamic get(Tag tag) const;
   void remove(Tag tag) {
-    std::lock_guard<std::mutex> lock{mutex_};
+    const std::lock_guard<std::mutex> lock{mutex_};
     removeTag(tag);
   }
 
@@ -64,14 +64,14 @@ class UpdatesRegistry {
 
   // Drains pending style updates as folly::dynamic (acquires mutex_).
   void flushUpdates(UpdatesBatch &updatesBatch) {
-    std::lock_guard<std::mutex> lock{mutex_};
+    const std::lock_guard<std::mutex> lock{mutex_};
     flush(updatesBatch);
   }
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
   // Drains pending typed animated props (acquires mutex_).
   void flushUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
-    std::lock_guard<std::mutex> lock{mutex_};
+    const std::lock_guard<std::mutex> lock{mutex_};
     flush(updatesBatch);
   }
 

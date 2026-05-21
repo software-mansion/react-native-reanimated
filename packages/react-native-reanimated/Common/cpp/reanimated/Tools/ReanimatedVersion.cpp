@@ -26,7 +26,7 @@ void injectReanimatedCppVersion(jsi::Runtime &rnRuntime) {
 
 #ifndef NDEBUG
 bool matchVersion(const std::string &version1, const std::string &version2) {
-  std::regex pattern("^(\\d+)\\.(\\d+)\\.\\d+$");
+  const std::regex pattern("^(\\d+)\\.(\\d+)\\.\\d+$");
   std::smatch mv1;
   std::smatch mv2;
   if (std::regex_match(version1, mv1, pattern) && std::regex_match(version2, mv2, pattern)) {

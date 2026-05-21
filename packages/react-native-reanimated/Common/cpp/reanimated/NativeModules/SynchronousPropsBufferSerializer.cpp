@@ -286,7 +286,7 @@ void serializeSynchronousPropsToBuffers(
               case CMD_TRANSFORM_MATRIX: {
                 pushInt(transformCommand);
                 react_native_assert(transformValue.isArray() && "[Reanimated] Matrix must be an array");
-                int size = transformValue.size();
+                const int size = transformValue.size();
                 pushInt(size);
                 for (int i = 0; i < size; i++) {
                   pushDouble(transformValue[i].asDouble());

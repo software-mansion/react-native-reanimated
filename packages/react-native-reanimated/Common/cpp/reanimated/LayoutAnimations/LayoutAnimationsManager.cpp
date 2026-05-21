@@ -78,17 +78,17 @@ void LayoutAnimationsManager::startLayoutAnimation(
     config = getConfigsForType(type)[tag];
   }
   // TODO: cache the following!!
-  jsi::Value layoutAnimationRepositoryAsValue =
+  const jsi::Value layoutAnimationRepositoryAsValue =
       rt.global().getPropertyAsObject(rt, "global").getProperty(rt, "LayoutAnimationsManager");
-  jsi::Function startAnimationForTag =
+  const jsi::Function startAnimationForTag =
       layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(rt, "start");
   startAnimationForTag.call(rt, jsi::Value(tag), jsi::Value(static_cast<int>(type)), values, config->toJSValue(rt));
 }
 
 void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const {
-  jsi::Value layoutAnimationRepositoryAsValue =
+  const jsi::Value layoutAnimationRepositoryAsValue =
       rt.global().getPropertyAsObject(rt, "global").getProperty(rt, "LayoutAnimationsManager");
-  jsi::Function cancelLayoutAnimation =
+  const jsi::Function cancelLayoutAnimation =
       layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(rt, "stop");
   cancelLayoutAnimation.call(rt, jsi::Value(tag));
 }

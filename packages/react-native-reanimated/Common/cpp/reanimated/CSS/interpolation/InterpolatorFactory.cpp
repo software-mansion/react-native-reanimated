@@ -13,7 +13,7 @@ class RecordInterpolatorFactory : public PropertyInterpolatorFactory {
       : PropertyInterpolatorFactory(), factories_(factories) {}
 
   const CSSValue &getDefaultValue() const override {
-    static EmptyObjectValue emptyObjectValue;
+    static const EmptyObjectValue emptyObjectValue;
     return emptyObjectValue;
   }
 
@@ -45,7 +45,7 @@ class RecordInterpolatorFactory : public PropertyInterpolatorFactory {
 class ArrayLikeInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   const CSSValue &getDefaultValue() const override {
-    static EmptyArrayValue emptyArrayValue;
+    static const EmptyArrayValue emptyArrayValue;
     return emptyArrayValue;
   }
 
@@ -102,7 +102,7 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
       : PropertyInterpolatorFactory(), interpolators_(interpolators) {}
 
   const CSSValue &getDefaultValue() const override {
-    static EmptyTransformsValue emptyTransformsValue;
+    static const EmptyTransformsValue emptyTransformsValue;
     return emptyTransformsValue;
   }
 

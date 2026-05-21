@@ -150,7 +150,7 @@ typename TransformMatrixBase<TDerived, TDimension>::MatrixArray TransformMatrixB
 
   for (size_t i = 0; i < TDimension; ++i) {
     for (size_t k = 0; k < TDimension; ++k) {
-      double temp = matrix_[i * TDimension + k];
+      const double temp = matrix_[i * TDimension + k];
       for (size_t j = 0; j < TDimension; ++j) {
         result[i * TDimension + j] += temp * rhs[k * TDimension + j];
       }

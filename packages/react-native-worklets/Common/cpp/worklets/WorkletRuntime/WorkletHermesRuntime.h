@@ -23,7 +23,7 @@ struct WorkletsReentrancyCheck {
   WorkletsReentrancyCheck() : tid(std::thread::id()), depth(0) {}
 
   void before() {
-    std::thread::id this_id = std::this_thread::get_id();
+    const std::thread::id this_id = std::this_thread::get_id();
     std::thread::id expected = std::thread::id();
 
     // A note on memory ordering: the main purpose of these checks is
@@ -68,7 +68,7 @@ struct WorkletsReentrancyCheck {
     if (--depth == 0) {
       // If we decremented depth to zero, store no-thread into tid.
       std::thread::id expected = std::this_thread::get_id();
-      bool didWrite = tid.compare_exchange_strong(expected, std::thread::id(), std::memory_order_relaxed);
+      const bool didWrite = tid.compare_exchange_strong(expected, std::thread::id(), std::memory_order_relaxed);
       react_native_assert(didWrite && "[Worklets] Decremented to zero, but no tid write");
     }
   }

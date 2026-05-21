@@ -91,7 +91,7 @@ void OperationsLoop::remove(const std::shared_ptr<LoopOperation> &operation) {
 
 void OperationsLoop::enqueue(ScheduledOperation operation) {
   {
-    std::lock_guard<std::mutex> lock(queueMutex_);
+    const std::lock_guard<std::mutex> lock(queueMutex_);
     scheduledOperations_.emplace_back(std::move(operation));
   }
 
@@ -132,7 +132,7 @@ std::pair<std::vector<OperationsLoop::ScheduledOperation>, double> OperationsLoo
   {
     // Reset frameRequested_ together with the drain so an enqueue() can't slip a push
     // in between (which would see the flag still true and skip scheduling).
-    std::lock_guard<std::mutex> lock(queueMutex_);
+    const std::lock_guard<std::mutex> lock(queueMutex_);
     drained = std::exchange(scheduledOperations_, {});
     frameRequested_.store(false, std::memory_order_release);
   }

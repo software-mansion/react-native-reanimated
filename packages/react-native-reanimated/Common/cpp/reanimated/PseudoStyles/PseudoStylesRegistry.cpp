@@ -50,7 +50,7 @@ void PseudoStylesRegistry::registerPseudoStyle(
     const folly::dynamic &selectorStyle,
     const folly::dynamic &defaultStyle) {
   {
-    std::lock_guard<std::mutex> lock{mutex_};
+    const std::lock_guard<std::mutex> lock{mutex_};
     auto &entry = registry_[tag];
     entry.shadowNode = shadowNode;
     entry.selectors[selector] = {selectorStyle, defaultStyle};
@@ -70,7 +70,7 @@ void PseudoStylesRegistry::registerPseudoStyle(
 void PseudoStylesRegistry::remove(Tag tag) {
   std::map<PseudoSelector, SelectorData> selectorsToDetach;
   {
-    std::lock_guard<std::mutex> lock{mutex_};
+    const std::lock_guard<std::mutex> lock{mutex_};
     auto it = registry_.find(tag);
     if (it == registry_.end()) {
       return;
@@ -88,7 +88,7 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
   folly::dynamic fromStyle;
   folly::dynamic toStyle;
   {
-    std::lock_guard<std::mutex> lock{mutex_};
+    const std::lock_guard<std::mutex> lock{mutex_};
     auto it = registry_.find(tag);
     if (it == registry_.end()) {
       return;

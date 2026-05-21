@@ -10,14 +10,14 @@
 namespace reanimated::css {
 
 bool CSSAnimationsRegistry::isEmpty() const {
-  std::lock_guard<std::mutex> lock{mutex_};
+  const std::lock_guard<std::mutex> lock{mutex_};
   // The registry is empty if has no registered animations and no updates
   // stored in the updates registry
   return updatesRegistry_.empty() && registry_.empty();
 }
 
 bool CSSAnimationsRegistry::hasUpdates() const {
-  std::lock_guard<std::mutex> lock{mutex_};
+  const std::lock_guard<std::mutex> lock{mutex_};
   return !runningAnimationIndicesMap_.empty() || !delayedAnimationsManager_.empty() || !animationsToRevertMap_.empty();
 }
 
@@ -28,7 +28,7 @@ void CSSAnimationsRegistry::apply(
     const CSSAnimationsMap &newAnimations,
     const CSSAnimationSettingsUpdatesMap &settingsUpdates,
     double timestamp) {
-  std::lock_guard<std::mutex> lock{mutex_};
+  const std::lock_guard<std::mutex> lock{mutex_};
 
   auto animationsVector = buildAnimationsVector(rt, shadowNode, animationNames, newAnimations);
 
@@ -109,7 +109,7 @@ CSSAnimationsVector CSSAnimationsRegistry::buildAnimationsVector(
   animationsVector.reserve(animationNamesSize);
 
   std::unordered_map<std::string, CSSAnimationsVector> oldAnimationsMap;
-  CSSAnimationsMap emptyAnimationsMap;
+  const CSSAnimationsMap emptyAnimationsMap;
   const auto &newAnimationsMap = newAnimations.value_or(emptyAnimationsMap);
 
   if (registryIt != registry_.end()) {

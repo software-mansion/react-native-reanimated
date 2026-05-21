@@ -12,7 +12,7 @@ void SynchronizableAccess::getBlockingBefore() {
 }
 
 void SynchronizableAccess::getBlockingAfter() {
-  std::unique_lock<std::mutex> lock(accessLock_);
+  const std::lock_guard<std::mutex> lock(accessLock_);
   blockingReaders_--;
   if (blockingReaders_ == 0) {
     queue_.notify_all();
@@ -50,7 +50,7 @@ void SynchronizableAccess::setBlockingBefore() {
 }
 
 void SynchronizableAccess::setBlockingAfter() {
-  std::unique_lock<std::mutex> lock(accessLock_);
+  const std::lock_guard<std::mutex> lock(accessLock_);
   blockingWriter_ = false;
   queue_.notify_all();
 }
@@ -66,7 +66,7 @@ void SynchronizableAccess::lock() {
 }
 
 void SynchronizableAccess::unlock() {
-  std::unique_lock<std::mutex> lock(accessLock_);
+  const std::lock_guard<std::mutex> lock(accessLock_);
   if (imperativeOwner_ != pthread_self()) {
     return;
   }

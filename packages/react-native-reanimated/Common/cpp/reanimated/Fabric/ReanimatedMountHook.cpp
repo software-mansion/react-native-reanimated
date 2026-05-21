@@ -21,7 +21,7 @@ ReanimatedMountHook::~ReanimatedMountHook() noexcept {
 void ReanimatedMountHook::shadowTreeDidMount(
     const RootShadowNode::Shared &rootShadowNode,
     HighResTimeStamp mountTime) noexcept {
-  ReanimatedSystraceSection s("ReanimatedMountHook::shadowTreeDidMount");
+  const ReanimatedSystraceSection s("ReanimatedMountHook::shadowTreeDidMount");
 
   auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
       std::const_pointer_cast<RootShadowNode>(rootShadowNode));

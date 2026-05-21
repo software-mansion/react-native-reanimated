@@ -54,7 +54,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     RootShadowNode::Shared const &,
     RootShadowNode::Unshared const &newRootShadowNode,
     const ShadowTreeCommitOptions &commitOptions) noexcept {
-  ReanimatedSystraceSection s("ReanimatedCommitHook::shadowTreeWillCommit");
+  const ReanimatedSystraceSection s("ReanimatedCommitHook::shadowTreeWillCommit");
 
   maybeInitializeLayoutAnimations(newRootShadowNode->getSurfaceId());
 
@@ -89,7 +89,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   {
     auto lock = updatesRegistryManager_->lock();
 
-    PropsMap propsMap = updatesRegistryManager_->collectProps();
+    const PropsMap propsMap = updatesRegistryManager_->collectProps();
     updatesRegistryManager_->cancelCommitAfterPause();
 
     rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);

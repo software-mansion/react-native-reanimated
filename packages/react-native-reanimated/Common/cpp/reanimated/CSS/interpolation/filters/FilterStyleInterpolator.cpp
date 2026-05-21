@@ -25,9 +25,9 @@ std::optional<std::pair<StyleOperations, StyleOperations>> FilterStyleInterpolat
   StyleOperations fromOperationsResult, toOperationsResult;
   size_t i = 0;
 
-  size_t fromOperationsSize = fromOperations.size();
-  size_t toOperationsSize = toOperations.size();
-  size_t minSize = std::min(fromOperationsSize, toOperationsSize);
+  const size_t fromOperationsSize = fromOperations.size();
+  const size_t toOperationsSize = toOperations.size();
+  const size_t minSize = std::min(fromOperationsSize, toOperationsSize);
 
   for (; i < minSize; i++) {
     const auto &fromOperation = fromOperations[i];

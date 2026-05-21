@@ -13,7 +13,7 @@ namespace worklets {
 
 void AnimationFrameBatchinator::addToBatch(jsi::Function &&callback) {
   {
-    std::lock_guard<std::mutex> lock(callbacksMutex_);
+    const std::lock_guard<std::mutex> lock(callbacksMutex_);
     callbacks_.push_back(std::make_shared<const jsi::Function>(std::move(callback)));
   }
   flush();
@@ -52,7 +52,7 @@ void AnimationFrameBatchinator::flush() {
 }
 
 std::vector<std::shared_ptr<const jsi::Function>> AnimationFrameBatchinator::pullCallbacks() {
-  std::lock_guard<std::mutex> lock(callbacksMutex_);
+  const std::lock_guard<std::mutex> lock(callbacksMutex_);
   return std::move(callbacks_);
 }
 

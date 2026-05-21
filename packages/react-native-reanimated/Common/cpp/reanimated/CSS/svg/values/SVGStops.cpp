@@ -11,13 +11,13 @@
 namespace reanimated::css {
 
 SVGStops::SVGStops(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  jsi::Array array = jsiValue.asObject(rt).asArray(rt);
-  size_t length = array.size(rt);
+  const jsi::Array array = jsiValue.asObject(rt).asArray(rt);
+  const size_t length = array.size(rt);
 
   stops.reserve(length / 2);
 
   for (size_t i = 0; i < length; i += 2) {
-    double offset = array.getValueAtIndex(rt, i).asNumber();
+    const double offset = array.getValueAtIndex(rt, i).asNumber();
     auto colorVal = array.getValueAtIndex(rt, i + 1);
 
     stops.emplace_back(offset, SVGBrush(rt, colorVal));
@@ -28,7 +28,7 @@ SVGStops::SVGStops(const folly::dynamic &value) {
   stops.reserve(value.size() / 2);
 
   for (size_t i = 0; i < value.size(); i += 2) {
-    double offset = value[i].asDouble();
+    const double offset = value[i].asDouble();
     stops.emplace_back(offset, SVGBrush(value[i + 1]));
   }
 }
@@ -44,7 +44,7 @@ bool SVGStops::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   }
 
   auto array = obj.asArray(rt);
-  size_t length = array.size(rt);
+  const size_t length = array.size(rt);
 
   if (length == 0) {
     return true;
@@ -117,15 +117,15 @@ SVGStops SVGStops::interpolate(double progress, const SVGStops &to) const {
     return progress < 0.5 ? *this : to;
   }
 
-  size_t fromSize = fromStops.size();
-  size_t toSize = toStops.size();
-  size_t longerSize = std::max(toSize, fromSize);
+  const size_t fromSize = fromStops.size();
+  const size_t toSize = toStops.size();
+  const size_t longerSize = std::max(toSize, fromSize);
 
   std::vector<GradientStop> interpolatedStops;
   interpolatedStops.reserve(longerSize);
 
   for (size_t i = 0; i < longerSize; ++i) {
-    double ratio = (longerSize > 1) ? static_cast<double>(i) / (static_cast<double>(longerSize) - 1.0) : 0.0;
+    const double ratio = (longerSize > 1) ? static_cast<double>(i) / (static_cast<double>(longerSize) - 1.0) : 0.0;
 
     auto fromIdx = static_cast<size_t>(std::round(ratio * (fromSize - 1)));
     auto toIdx = static_cast<size_t>(std::round(ratio * (toSize - 1)));
@@ -133,7 +133,7 @@ SVGStops SVGStops::interpolate(double progress, const SVGStops &to) const {
     const auto &sFrom = fromStops[fromIdx];
     const auto &sTo = toStops[toIdx];
 
-    double mixedOffset = sFrom.offset + (sTo.offset - sFrom.offset) * progress;
+    const double mixedOffset = sFrom.offset + (sTo.offset - sFrom.offset) * progress;
 
     SVGBrush mixedBrush = sFrom.color.interpolate(progress, sTo.color);
 

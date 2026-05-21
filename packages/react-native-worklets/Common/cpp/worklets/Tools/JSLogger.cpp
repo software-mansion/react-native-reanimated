@@ -51,8 +51,8 @@ static std::string labelStackFrames(const std::string &rawStack, const std::stri
   std::string result;
   size_t pos = rawStack.find(sep);
   while (pos != std::string::npos) {
-    size_t next = rawStack.find(sep, pos + sep.size());
-    size_t end = (next == std::string::npos) ? rawStack.size() : next;
+    const size_t next = rawStack.find(sep, pos + sep.size());
+    const size_t end = (next == std::string::npos) ? rawStack.size() : next;
     result += "\n    at [" + label + "]:" + rawStack.substr(pos + sep.size(), end - (pos + sep.size()));
     pos = next;
   }

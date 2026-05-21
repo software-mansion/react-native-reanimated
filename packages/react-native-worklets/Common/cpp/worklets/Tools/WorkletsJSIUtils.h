@@ -155,7 +155,7 @@ template <typename Ret, typename... Args>
 void installJsiFunction(jsi::Runtime &rt, std::string_view name, const std::function<Ret(Args...)> &function) {
   auto clb = createHostFunction(function);
   auto argsCount = sizeof...(Args) - takes_runtime<Args...>::value;
-  jsi::Value jsiFunction =
+  const jsi::Value jsiFunction =
       jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, name.data()), argsCount, clb);
   rt.global().setProperty(rt, name.data(), jsiFunction);
 }

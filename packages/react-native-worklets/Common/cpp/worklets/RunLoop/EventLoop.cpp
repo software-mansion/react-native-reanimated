@@ -16,7 +16,7 @@ EventLoop::EventLoop(
 
 EventLoop::~EventLoop() {
   {
-    std::unique_lock<std::mutex> lock(timeoutsQueueState_->mutex);
+    const std::lock_guard<std::mutex> lock(timeoutsQueueState_->mutex);
     timeoutsQueueState_->running = false;
     timeoutsQueueState_->queue = {};
   }
@@ -85,7 +85,7 @@ void EventLoop::pushTask(std::function<void(jsi::Runtime &rt)> &&job) {
 
 void EventLoop::pushTimeout(std::function<void(jsi::Runtime &rt)> &&job, int64_t delay) {
   {
-    std::unique_lock<std::mutex> lock(timeoutsQueueState_->mutex);
+    const std::lock_guard<std::mutex> lock(timeoutsQueueState_->mutex);
     const auto targetTime = getCurrentTimeInMs() + delay;
     const auto timeout = Timeout{std::move(job), targetTime};
     auto &queue = timeoutsQueueState_->queue;
