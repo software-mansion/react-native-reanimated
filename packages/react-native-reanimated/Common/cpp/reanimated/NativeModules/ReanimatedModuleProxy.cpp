@@ -807,12 +807,7 @@ void ReanimatedModuleProxy::performOperations() {
 void ReanimatedModuleProxy::performNonLayoutOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performNonLayoutOperations");
 
-  UpdatesBatch updatesBatch;
-  {
-    auto lock = updatesRegistryManager_->lock();
-    updatesBatch = animatedPropsRegistry_->getPendingUpdates();
-  }
-
+  UpdatesBatch updatesBatch = animatedPropsRegistry_->getPendingUpdates();
   applySynchronousUpdates(updatesBatch, true);
 }
 
