@@ -847,9 +847,9 @@ void ReanimatedModuleProxy::stopBackendIfIdle(const bool producedMutations) {
 #if REACT_NATIVE_VERSION_MINOR >= 85
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     bool hasWork = producedMutations || !pendingFrameCallbacks_.empty() ||
-        pendingAnimationFrameCallbackFromWorklets_ != nullptr || cssTransitionsRegistry_->needsFlush() ||
-        cssAnimationsRegistry_->needsFlush() || animatedPropsRegistry_->hasPendingAnimatedPropsUpdates() ||
-        shouldFlushRegistry_ || !layoutAnimationFlushRequests_.empty();
+        pendingAnimationFrameCallbackFromWorklets_ != nullptr || operationsLoop_->hasOngoingOperations() ||
+        animatedPropsRegistry_->hasPendingAnimatedPropsUpdates() || shouldFlushRegistry_ ||
+        !layoutAnimationFlushRequests_.empty();
     if (!hasWork) {
       getAnimationBackend()->stop(animationBackendCallbackId_);
       isAnimationRunning_ = false;
@@ -933,11 +933,6 @@ AnimationMutations ReanimatedModuleProxy::executeOperationsAndCollectUpdates(con
   UpdatesBatchAnimatedProps batch;
   auto lock = updatesRegistryManager_->lock();
 
-  // OperationsLoop has already ticked the CSS transitions/animations on this frame
-  // (via the pendingFrameCallbacks_ drained in executeOperationsLoop). The registries
-  // just need to flush their accumulated changes into the animated-props batch.
-  // The `timestamp` arg is unused here; kept on the call-site for future symmetry
-  // with paths where we want to also force a tick.
   (void)timestamp;
   cssTransitionsRegistry_->flushUpdates(batch);
   animatedPropsRegistry_->flushUpdates(batch);

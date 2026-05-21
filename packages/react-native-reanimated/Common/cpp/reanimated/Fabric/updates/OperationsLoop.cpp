@@ -28,6 +28,11 @@ double OperationsLoop::resolveTimestamp() {
   return fresh;
 }
 
+bool OperationsLoop::hasOngoingOperations() const {
+  std::lock_guard<std::mutex> lock(queueMutex_);
+  return !scheduledOperations_.empty() || !activeOps_.empty() || !delayedOps_.empty();
+}
+
 void OperationsLoop::schedule(std::shared_ptr<LoopOperation> operation, double startTimestamp) {
   enqueue({std::move(operation), startTimestamp});
 }

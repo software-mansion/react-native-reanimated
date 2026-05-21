@@ -29,6 +29,9 @@ class OperationsLoop : public std::enable_shared_from_this<OperationsLoop> {
   // a fresh one and schedules a frame to invalidate it.
   double resolveTimestamp();
 
+  // True if anything is queued, active, or delayed in the loop.
+  bool hasOngoingOperations() const;
+
   void schedule(std::shared_ptr<LoopOperation> operation, double startTimestamp);
   void remove(const std::shared_ptr<LoopOperation> &operation);
 

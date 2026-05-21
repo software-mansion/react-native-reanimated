@@ -253,9 +253,6 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
 #endif
-  // operationsLoop_ MUST be declared before the CSS registries — they take it
-  // as a constructor argument, so it has to be initialized first. Declaration
-  // order must match the initializer list order (compiler enforces this).
   const std::shared_ptr<OperationsLoop> operationsLoop_;
   const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
