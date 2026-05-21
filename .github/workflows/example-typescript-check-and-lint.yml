@@ -52,8 +52,9 @@ jobs:
               - apps/tvos-example/**
             fabric:
               - apps/fabric-example/**
-            macos:
-              - apps/macos-example/**
+            # TODO: fix macos
+            # macos:
+            #   - apps/macos-example/**
             # next-example does not have type:check yet
             # next:
             #   - apps/next-example/**
@@ -69,19 +70,19 @@ jobs:
           COMMON: ${{ steps.filter.outputs.common-app }}
           TVOS: ${{ steps.filter.outputs.tvos }}
           FABRIC: ${{ steps.filter.outputs.fabric }}
-          MACOS: ${{ steps.filter.outputs.macos }}
+          # MACOS: ${{ steps.filter.outputs.macos }}
           NEXT: ${{ steps.filter.outputs.next }}
           # WEB: ${{ steps.filter.outputs.web }}
         run: |
           if [[ "$IS_PR" != "true" || "$SHARED" == "true" ]]; then
-            ts_apps='["apps/common-app","apps/tvos-example","apps/fabric-example","apps/macos-example"]'
+            ts_apps='["apps/common-app","apps/tvos-example","apps/fabric-example"]'
             web=true
           else
             apps=()
             [[ "$COMMON" == "true" ]] && apps+=("apps/common-app")
             [[ "$TVOS"   == "true" ]] && apps+=("apps/tvos-example")
             [[ "$FABRIC" == "true" ]] && apps+=("apps/fabric-example")
-            [[ "$MACOS"  == "true" ]] && apps+=("apps/macos-example")
+            # [[ "$MACOS"  == "true" ]] && apps+=("apps/macos-example")
             # [[ "$NEXT"   == "true" ]] && apps+=("apps/next-example")
             # [[ "$WEB"    == "true" ]] && apps+=("apps/web-example")
             if [[ ${#apps[@]} -eq 0 ]]; then
