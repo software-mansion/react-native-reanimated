@@ -2,9 +2,11 @@
 
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
-#include <reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h>
+#include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
+
+#include <react/renderer/core/ShadowNode.h>
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
@@ -14,7 +16,9 @@
 
 namespace reanimated::css {
 
-class CSSTransition : public OperationsLoop::LoopOperation, public std::enable_shared_from_this<CSSTransition> {
+class CSSLoopTransition;
+
+class CSSTransition {
  public:
   class Observer {
    public:
@@ -39,14 +43,12 @@ class CSSTransition : public OperationsLoop::LoopOperation, public std::enable_s
     return shadowNode_->getFamilyShared();
   }
 
-  TransitionProperties getProperties() const {
-    return transitionProperties_;
-  }
-
+  TransitionProperties getProperties() const;
   double getMinDelay(double timestamp) const;
   TransitionProgressState getState() const;
 
-  bool update(double timestamp, OperationsLoop &loop) override;
+  void schedule(OperationsLoop &loop);
+  void unschedule(OperationsLoop &loop);
 
   folly::dynamic run(
       jsi::Runtime &rt,
@@ -56,7 +58,7 @@ class CSSTransition : public OperationsLoop::LoopOperation, public std::enable_s
   /** TODO: unify folly::dynamic and jsi::value versions */
   folly::dynamic
   run(const PropertyValueDynamicDiffsMap &propertiesDiffs, const folly::dynamic &lastUpdateValue, double timestamp);
-  void updateConfig(
+  void updateSettings(
       const PropertiesSettingsMap &changedPropertiesSettings,
       const std::vector<std::string> &removedProperties);
 
@@ -64,26 +66,7 @@ class CSSTransition : public OperationsLoop::LoopOperation, public std::enable_s
 
  private:
   const std::shared_ptr<const ShadowNode> shadowNode_;
-  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
-
-  Observer &observer_;
-
-  TransitionProperties transitionProperties_;
-  TransitionStyleInterpolator styleInterpolator_;
-  TransitionProgressProvider progressProvider_;
-
-  void handleChangedProperties(
-      jsi::Runtime &rt,
-      const PropertyValueDiffsMap &propertiesDiffs,
-      const folly::dynamic &lastUpdateValue,
-      double timestamp);
-  /** TODO: unify folly::dynamic and jsi::value versions */
-  void handleChangedProperties(
-      const PropertyValueDynamicDiffsMap &propertiesDiffs,
-      const folly::dynamic &lastUpdateValue,
-      double timestamp);
-  void removeProperties(const std::vector<std::string> &propertyNames);
-  void removeProperty(const std::string &propertyName);
+  const std::shared_ptr<CSSLoopTransition> loopTransition_;
 };
 
 } // namespace reanimated::css

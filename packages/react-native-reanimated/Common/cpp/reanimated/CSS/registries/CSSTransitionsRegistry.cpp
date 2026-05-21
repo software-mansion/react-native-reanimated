@@ -34,7 +34,7 @@ void CSSTransitionsRegistry::updateConfigOrRun(
   const auto &transition = registry_.at(viewTag);
 
   if (config.changedPropertiesSettings.size() || config.removedProperties.size()) {
-    transition->updateConfig(config.changedPropertiesSettings, config.removedProperties);
+    transition->updateSettings(config.changedPropertiesSettings, config.removedProperties);
   }
   if (config.changedProperties.size()) {
     runTransition(rt, transition, viewTag, config.changedProperties);
@@ -64,7 +64,7 @@ void CSSTransitionsRegistry::run(
 
   auto initialUpdate = transition->run(propertyDiffs, lastUpdates, timestamp);
 
-  loop_->schedule(transition, timestamp + transition->getMinDelay(timestamp));
+  transition->schedule(*loop_);
 
   updateInUpdatesRegistry(transition, initialUpdate);
   updatedTags_.insert(viewTag);
@@ -124,7 +124,7 @@ void CSSTransitionsRegistry::TransitionObserver::onTransitionUpdate(const Tag vi
 void CSSTransitionsRegistry::removeTag(const Tag viewTag) {
   const auto it = registry_.find(viewTag);
   if (it != registry_.end()) {
-    loop_->remove(it->second);
+    it->second->unschedule(*loop_);
   }
   removeFromUpdatesRegistry(viewTag);
   registry_.erase(viewTag);
@@ -165,7 +165,7 @@ void CSSTransitionsRegistry::runTransition(
 
   auto initialUpdate = transition->run(rt, propertyDiffs, lastUpdates, timestamp);
 
-  loop_->schedule(transition, timestamp + transition->getMinDelay(timestamp));
+  transition->schedule(*loop_);
   updateInUpdatesRegistry(transition, initialUpdate);
   updatedTags_.insert(viewTag);
 }
