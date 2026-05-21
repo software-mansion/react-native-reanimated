@@ -1,15 +1,84 @@
 import MaskedView from '@react-native-masked-view/masked-view';
 import {
   DarkTheme,
+  DefaultTheme,
   NavigationContainer,
   useIsFocused,
   useNavigation,
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { createContext, useContext, useMemo, useState } from 'react';
 import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { Keyframe } from 'react-native-reanimated';
 import { LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
+
+type ThemeMode = 'dark' | 'light';
+
+type Palette = {
+  bg: string;
+  text: string;
+  setShadow: string;
+  navTheme: typeof DarkTheme;
+  auroraColors: [string, string, string, string, string];
+  dimColor: string;
+  dimColorAlpha0: string;
+  dimColorAlpha60: string;
+  toggleLabel: string;
+  toggleBg: string;
+  toggleText: string;
+};
+
+const PALETTES: Record<ThemeMode, Palette> = {
+  dark: {
+    bg: '#000000',
+    text: '#ffffff',
+    setShadow: 'rgba(0,0,0,0.85)',
+    navTheme: DarkTheme,
+    auroraColors: [
+      'rgb(59,130,246)',
+      'rgb(165,180,252)',
+      'rgb(147,197,253)',
+      'rgb(221,214,254)',
+      'rgb(96,165,250)',
+    ],
+    dimColor: 'rgb(0,0,0)',
+    dimColorAlpha0: 'rgba(0,0,0,0)',
+    dimColorAlpha60: 'rgba(0,0,0,0.6)',
+    toggleLabel: '☀',
+    toggleBg: 'rgba(255,255,255,0.12)',
+    toggleText: '#ffffff',
+  },
+  light: {
+    bg: '#fff5ee',
+    text: '#1a1a2e',
+    setShadow: 'rgba(255,255,255,0.85)',
+    navTheme: DefaultTheme,
+    auroraColors: [
+      'rgb(244,114,182)',
+      'rgb(251,146,178)',
+      'rgb(254,205,170)',
+      'rgb(253,224,181)',
+      'rgb(248,180,150)',
+    ],
+    dimColor: 'rgb(255,245,238)',
+    dimColorAlpha0: 'rgba(255,245,238,0)',
+    dimColorAlpha60: 'rgba(255,245,238,0.6)',
+    toggleLabel: '☾',
+    toggleBg: 'rgba(0,0,0,0.08)',
+    toggleText: '#1a1a2e',
+  },
+};
+
+const ThemeContext = createContext<{
+  mode: ThemeMode;
+  palette: Palette;
+  toggle: () => void;
+}>({
+  mode: 'dark',
+  palette: PALETTES.dark,
+  toggle: () => {},
+});
 
 type StackParamList = {
   Home: undefined;
@@ -301,21 +370,120 @@ const setFadeIn = new Keyframe({
   .duration(600)
   .delay(400);
 
-const auroraColors = expandRepeating('100deg', [
-  ['rgb(59,130,246)', 10],
-  ['rgb(165,180,252)', 14],
-  ['rgb(147,197,253)', 18],
-  ['rgb(221,214,254)', 22],
-  ['rgb(96,165,250)', 26],
-  ['rgb(59,130,246)', 30],
-]);
-const auroraMask = expandRepeating('100deg', [
-  ['rgb(0,0,0)', 0],
-  ['rgb(0,0,0)', 6],
-  ['rgba(0,0,0,0)', 12],
-  ['rgb(0,0,0)', 18],
-  ['rgb(0,0,0)', 24],
-]);
+function makeAuroraColors(palette: Palette): string {
+  const [a, b, c, d, e] = palette.auroraColors;
+  return expandRepeating('100deg', [
+    [a, 10],
+    [b, 14],
+    [c, 18],
+    [d, 22],
+    [e, 26],
+    [a, 30],
+  ]);
+}
+
+const DARK_AURORA_COLORS = makeAuroraColorsRaw(PALETTES.dark);
+const LIGHT_AURORA_COLORS = makeAuroraColorsRaw(PALETTES.light);
+const DARK_AURORA_MASK = makeAuroraMaskRaw(PALETTES.dark);
+const LIGHT_AURORA_MASK = makeAuroraMaskRaw(PALETTES.light);
+
+function makeAuroraColorsRaw(palette: Palette): string {
+  const [a, b, c, d, e] = palette.auroraColors;
+  return expandRepeating('100deg', [
+    [a, 10],
+    [b, 14],
+    [c, 18],
+    [d, 22],
+    [e, 26],
+    [a, 30],
+  ]);
+}
+
+function makeAuroraMaskRaw(palette: Palette): string {
+  return expandRepeating('100deg', [
+    [palette.dimColor, 0],
+    [palette.dimColor, 6],
+    [palette.dimColorAlpha0, 12],
+    [palette.dimColor, 18],
+    [palette.dimColor, 24],
+  ]);
+}
+
+function AuroraColorLayer({
+  gradient,
+  visible,
+}: {
+  gradient: string;
+  visible: boolean;
+}) {
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        top: 0,
+        bottom: 0,
+        left: 0,
+        width: '600%',
+        opacity: visible ? 1 : 0,
+        transitionProperty: 'opacity',
+        transitionDuration: '1500ms',
+        transitionTimingFunction: 'ease-in-out',
+        experimental_backgroundImage: gradient,
+        animationName: {
+          from: { transform: [{ translateX: 0 }] },
+          to: { transform: [{ translateX: -1200 }] },
+        },
+        animationTimingFunction: 'linear',
+        animationDuration: '36000ms',
+        animationIterationCount: 'infinite',
+      }}
+    />
+  );
+}
+
+function AuroraMaskLayer({
+  gradient,
+  visible,
+}: {
+  gradient: string;
+  visible: boolean;
+}) {
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        top: 0,
+        bottom: 0,
+        left: 0,
+        width: '600%',
+        opacity: visible ? 0.5 : 0,
+        transitionProperty: 'opacity',
+        transitionDuration: '1500ms',
+        transitionTimingFunction: 'ease-in-out',
+        experimental_backgroundImage: gradient,
+        animationName: {
+          from: { transform: [{ translateX: 0 }] },
+          to: { transform: [{ translateX: -900 }] },
+        },
+        animationTimingFunction: 'linear',
+        animationDuration: '54000ms',
+        animationIterationCount: 'infinite',
+      }}
+    />
+  );
+}
+
+function makeAuroraMask(palette: Palette): string {
+  return expandRepeating('100deg', [
+    [palette.dimColor, 0],
+    [palette.dimColor, 6],
+    [palette.dimColorAlpha0, 12],
+    [palette.dimColor, 18],
+    [palette.dimColor, 24],
+  ]);
+}
 const auroraTextMask = expandRepeating('100deg', [
   ['rgba(255,255,255,0.55)', 0],
   ['rgba(255,255,255,0.55)', 4],
@@ -329,43 +497,22 @@ const auroraTextMask = expandRepeating('100deg', [
 function Aurora() {
   const navigation = useNavigation<AuroraNavigation>();
   const isFocused = useIsFocused();
+  const { mode, palette, toggle } = useContext(ThemeContext);
   return (
-    <View style={styles.auroraContainer}>
-      <Animated.View
-        style={{
-          position: 'absolute',
-          top: 0,
-          bottom: 0,
-          left: 0,
-          width: '600%',
-          experimental_backgroundImage: auroraColors,
-          animationName: {
-            from: { transform: [{ translateX: 0 }] },
-            to: { transform: [{ translateX: -1200 }] },
-          },
-          animationTimingFunction: 'linear',
-          animationDuration: '36000ms',
-          animationIterationCount: 'infinite',
-        }}
-      />
-      <Animated.View
-        style={{
-          position: 'absolute',
-          top: 0,
-          bottom: 0,
-          left: 0,
-          width: '600%',
-          opacity: 0.5,
-          experimental_backgroundImage: auroraMask,
-          animationName: {
-            from: { transform: [{ translateX: 0 }] },
-            to: { transform: [{ translateX: -900 }] },
-          },
-          animationTimingFunction: 'linear',
-          animationDuration: '54000ms',
-          animationIterationCount: 'infinite',
-        }}
-      />
+    <Animated.View
+      style={[
+        styles.auroraContainer,
+        {
+          backgroundColor: palette.bg,
+          transitionProperty: 'backgroundColor',
+          transitionDuration: '1500ms',
+          transitionTimingFunction: 'ease-in-out',
+        },
+      ]}>
+      <AuroraColorLayer gradient={DARK_AURORA_COLORS} visible={mode === 'dark'} />
+      <AuroraColorLayer gradient={LIGHT_AURORA_COLORS} visible={mode === 'light'} />
+      <AuroraMaskLayer gradient={DARK_AURORA_MASK} visible={mode === 'dark'} />
+      <AuroraMaskLayer gradient={LIGHT_AURORA_MASK} visible={mode === 'light'} />
       <Svg
         style={{
           position: 'absolute',
@@ -384,14 +531,14 @@ function Aurora() {
             animationName: {
               from: {
                 gradient: [
-                  { color: 'rgb(0,0,0)', offset: '0%', opacity: 0 },
-                  { color: 'rgb(0,0,0)', offset: '75%', opacity: 1 },
+                  { color: palette.dimColor, offset: '0%', opacity: 0 },
+                  { color: palette.dimColor, offset: '75%', opacity: 1 },
                 ],
               },
               to: {
                 gradient: [
-                  { color: 'rgb(0,0,0)', offset: '0%', opacity: 0 },
-                  { color: 'rgb(0,0,0)', offset: '80%', opacity: 1 },
+                  { color: palette.dimColor, offset: '0%', opacity: 0 },
+                  { color: palette.dimColor, offset: '80%', opacity: 1 },
                 ],
               },
             },
@@ -400,8 +547,8 @@ function Aurora() {
             animationIterationCount: 'infinite',
             animationDirection: 'alternate',
           }}>
-          <Stop offset="0%" stopColor="rgb(0,0,0)" stopOpacity={0} />
-          <Stop offset="100%" stopColor="rgb(0,0,0)" stopOpacity={1} />
+          <Stop offset="0%" stopColor={palette.dimColor} stopOpacity={0} />
+          <Stop offset="100%" stopColor={palette.dimColor} stopOpacity={1} />
         </AnimatedGradient>
         <Rect
           x={0}
@@ -415,12 +562,145 @@ function Aurora() {
         <Pressable onPress={() => navigation.navigate('Details')}>
           <Animated.Text
             sharedTransitionTag="reanimated-title"
-            style={styles.auroraTitle}>
+            style={[
+              styles.auroraTitle,
+              {
+                color: palette.text,
+                transitionProperty: 'color',
+                transitionDuration: '1500ms',
+                transitionTimingFunction: 'ease-in-out',
+              },
+            ]}>
             Reanimated
           </Animated.Text>
         </Pressable>
         {isFocused && (
           <Animated.View entering={setFadeIn} exiting={cssFadeOut}>
+            <Pressable onPress={toggle}>
+              <MaskedView
+                maskElement={
+                  <Animated.View
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      bottom: 0,
+                      left: 0,
+                      width: '600%',
+                      experimental_backgroundImage: auroraTextMask,
+                      animationName: {
+                        from: { transform: [{ translateX: 0 }] },
+                        to: { transform: [{ translateX: -900 }] },
+                      },
+                      animationTimingFunction: 'linear',
+                      animationDuration: '54000ms',
+                      animationIterationCount: 'infinite',
+                    }}
+                  />
+                }>
+                <Animated.Text
+                  style={[
+                    styles.auroraCss,
+                    {
+                      color: palette.text,
+                      animationName: {
+                        from: { transform: [{ scale: 0.995 }] },
+                        to: { transform: [{ scale: 1.005 }] },
+                      },
+                      animationTimingFunction: 'ease-in-out',
+                      animationDuration: '2500ms',
+                      animationIterationCount: 'infinite',
+                      animationDirection: 'alternate',
+                    },
+                  ]}>
+                  CSS
+                </Animated.Text>
+              </MaskedView>
+            </Pressable>
+            <View
+              pointerEvents="none"
+              style={[
+                styles.auroraTitleDim,
+                {
+                  experimental_backgroundImage: `linear-gradient(180deg, ${palette.dimColorAlpha0} 0%, ${palette.dimColorAlpha0} 40%, ${palette.dimColorAlpha60} 100%)`,
+                },
+              ]}
+            />
+          </Animated.View>
+        )}
+      </View>
+    </Animated.View>
+  );
+}
+
+export default function App() {
+  const [mode, setMode] = useState<ThemeMode>('dark');
+  const palette = PALETTES[mode];
+  const contextValue = useMemo(
+    () => ({
+      mode,
+      palette,
+      toggle: () => setMode((m) => (m === 'dark' ? 'light' : 'dark')),
+    }),
+    [mode, palette]
+  );
+  return (
+    <ThemeContext.Provider value={contextValue}>
+      <NavigationContainer theme={palette.navTheme}>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Home" component={Aurora} />
+          <Stack.Screen name="Details" component={AuroraDetail} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </ThemeContext.Provider>
+  );
+}
+
+function AuroraDetail() {
+  const navigation = useNavigation<AuroraNavigation>();
+  const isFocused = useIsFocused();
+  const { mode, palette, toggle } = useContext(ThemeContext);
+  return (
+    <Animated.View
+      style={[
+        styles.detailContainer,
+        {
+          backgroundColor: palette.bg,
+          transitionProperty: 'backgroundColor',
+          transitionDuration: '1500ms',
+          transitionTimingFunction: 'ease-in-out',
+        },
+      ]}>
+      <AuroraColorLayer gradient={DARK_AURORA_COLORS} visible={mode === 'dark'} />
+      <AuroraColorLayer gradient={LIGHT_AURORA_COLORS} visible={mode === 'light'} />
+      <AuroraMaskLayer gradient={DARK_AURORA_MASK} visible={mode === 'dark'} />
+      <AuroraMaskLayer gradient={LIGHT_AURORA_MASK} visible={mode === 'light'} />
+      <View
+        pointerEvents="none"
+        style={[
+          styles.detailDim,
+          {
+            experimental_backgroundImage: `linear-gradient(0deg, ${palette.dimColorAlpha0} 0%, ${palette.dimColor} 45%)`,
+          },
+        ]}
+      />
+      <Pressable onPress={() => navigation.goBack()}>
+        <Animated.Text
+          sharedTransitionTag="reanimated-title"
+          style={[
+            styles.auroraTitle,
+            {
+              color: palette.text,
+              transitionProperty: 'color',
+              transitionDuration: '1500ms',
+              transitionTimingFunction: 'ease-in-out',
+            },
+          ]}>
+          Reanimated
+        </Animated.Text>
+      </Pressable>
+      {isFocused && (
+        <Animated.View entering={setFadeIn} exiting={cssFadeOut}>
+          <Pressable onPress={toggle}>
             <MaskedView
               maskElement={
                 <Animated.View
@@ -443,121 +723,28 @@ function Aurora() {
               }>
               <Animated.Text
                 style={[
-                  styles.auroraCss,
+                  styles.detailSet,
                   {
-                    animationName: {
-                      from: { transform: [{ scale: 0.995 }] },
-                      to: { transform: [{ scale: 1.005 }] },
-                    },
-                    animationTimingFunction: 'ease-in-out',
-                    animationDuration: '2500ms',
-                    animationIterationCount: 'infinite',
-                    animationDirection: 'alternate',
+                    color: palette.text,
+                    textShadowColor: palette.setShadow,
                   },
                 ]}>
-                CSS
+                SET
               </Animated.Text>
             </MaskedView>
-            <View pointerEvents="none" style={styles.auroraTitleDim} />
-          </Animated.View>
-        )}
-      </View>
-    </View>
-  );
-}
-
-export default function App() {
-  return (
-    <NavigationContainer theme={DarkTheme}>
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-        }}>
-        <Stack.Screen name="Home" component={Aurora} />
-        <Stack.Screen name="Details" component={AuroraDetail} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-}
-
-function AuroraDetail() {
-  const navigation = useNavigation<AuroraNavigation>();
-  const isFocused = useIsFocused();
-  return (
-    <View style={styles.detailContainer}>
-      <Animated.View
-        style={{
-          position: 'absolute',
-          top: 0,
-          bottom: 0,
-          left: 0,
-          width: '600%',
-          experimental_backgroundImage: auroraColors,
-          animationName: {
-            from: { transform: [{ translateX: 0 }] },
-            to: { transform: [{ translateX: -1200 }] },
-          },
-          animationTimingFunction: 'linear',
-          animationDuration: '36000ms',
-          animationIterationCount: 'infinite',
-        }}
-      />
-      <Animated.View
-        style={{
-          position: 'absolute',
-          top: 0,
-          bottom: 0,
-          left: 0,
-          width: '600%',
-          opacity: 0.5,
-          experimental_backgroundImage: auroraMask,
-          animationName: {
-            from: { transform: [{ translateX: 0 }] },
-            to: { transform: [{ translateX: -900 }] },
-          },
-          animationTimingFunction: 'linear',
-          animationDuration: '54000ms',
-          animationIterationCount: 'infinite',
-        }}
-      />
-      <View pointerEvents="none" style={styles.detailDim} />
-      <Pressable onPress={() => navigation.goBack()}>
-        <Animated.Text
-          sharedTransitionTag="reanimated-title"
-          style={styles.auroraTitle}>
-          Reanimated
-        </Animated.Text>
-      </Pressable>
-      {isFocused && (
-        <Animated.View entering={setFadeIn} exiting={cssFadeOut}>
-          <View>
-            <MaskedView
-              maskElement={
-                <Animated.View
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    bottom: 0,
-                    left: 0,
-                    width: '600%',
-                    experimental_backgroundImage: auroraTextMask,
-                    animationName: {
-                      from: { transform: [{ translateX: 0 }] },
-                      to: { transform: [{ translateX: -900 }] },
-                    },
-                    animationTimingFunction: 'linear',
-                    animationDuration: '54000ms',
-                    animationIterationCount: 'infinite',
-                  }}
-                />
-              }>
-              <Text style={styles.detailSet}>SET</Text>
-            </MaskedView>
-            <View pointerEvents="none" style={styles.auroraSetDim} />
-          </View>
+            <View
+              pointerEvents="none"
+              style={[
+                styles.auroraSetDim,
+                {
+                  experimental_backgroundImage: `linear-gradient(0deg, ${palette.dimColorAlpha0} 0%, ${palette.dimColorAlpha0} 40%, ${palette.dimColorAlpha60} 100%)`,
+                },
+              ]}
+            />
+          </Pressable>
         </Animated.View>
       )}
-    </View>
+    </Animated.View>
   );
 }
 
