@@ -29,7 +29,7 @@ type Navigate = (route: string) => void;
 export function OpacitySourceSection({ navigate }: { navigate: Navigate }) {
   return (
     <View style={styles.section}>
-      <Text style={styles.heading}>6. opacity</Text>
+      <Text style={styles.heading}>opacity</Text>
       <Text style={styles.body}>
         Interpolates values.currentOpacity → values.targetOpacity. Expected:
         source is fully opaque, target is 0.2; box fades during the transition.
