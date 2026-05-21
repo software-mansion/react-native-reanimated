@@ -1,6 +1,8 @@
+/* eslint-disable n/no-missing-require */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-require-imports */
 'use strict';
 
-import { createSerializable } from './serializable';
 import { type Synchronizable, type SynchronizableRef } from './types';
 
 export function installSynchronizableUnpacker() {
@@ -9,7 +11,7 @@ export function installSynchronizableUnpacker() {
   // TODO: Add cache for synchronizables.
   const serializer =
     globalThis.__RUNTIME_KIND === 1 || globalThis._WORKLETS_BUNDLE_MODE_ENABLED
-      ? createSerializable
+      ? require('./serializable').createSerializable
       : (value: unknown) => globalThis.__serializer(value);
 
   function synchronizableUnpacker<TValue>(
