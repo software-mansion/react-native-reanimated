@@ -866,8 +866,6 @@ void ReanimatedModuleProxy::startBackendIfNeeded() {
 void ReanimatedModuleProxy::stopBackendIfIdle(const bool producedMutations) {
 #if REACT_NATIVE_VERSION_MINOR >= 85
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    // Caller (runGrandCallback) holds the manager lock, so JS-thread mutations
-    // can't slip in between our checks and the stop decision.
     const bool hasWork = producedMutations || !pendingFrameCallbacks_.empty() ||
         pendingAnimationFrameCallbackFromWorklets_ != nullptr || operationsLoop_->hasOngoingOperations() ||
         animatedPropsRegistry_->hasPendingAnimatedPropsUpdates() || shouldFlushRegistry_ ||
@@ -960,7 +958,6 @@ void ReanimatedModuleProxy::executeWorkletsForFrame(const AnimationTimestamp tim
 AnimationMutations ReanimatedModuleProxy::executeOperationsAndCollectUpdates(const AnimationTimestamp timestamp) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::executeOperationsAndCollectUpdates");
 
-  // Caller (runGrandCallback) holds the manager lock.
   UpdatesBatchAnimatedProps batch;
 
   (void)timestamp;
