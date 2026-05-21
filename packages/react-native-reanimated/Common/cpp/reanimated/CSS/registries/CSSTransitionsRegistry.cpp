@@ -47,12 +47,9 @@ void CSSTransitionsRegistry::run(
     const PropertyValueDiffsMap &propertyDiffs) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto viewTag = shadowNode->getTag();
-  const auto it = registry_.find(viewTag);
-  if (it == registry_.end()) {
-    return;
-  }
+  const auto &transition = registry_.at(viewTag);
 
-  runTransition(rt, it->second, viewTag, propertyDiffs);
+  runTransition(rt, transition, viewTag, propertyDiffs);
 }
 
 void CSSTransitionsRegistry::run(
@@ -60,11 +57,7 @@ void CSSTransitionsRegistry::run(
     const PropertyValueDynamicDiffsMap &propertyDiffs) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto viewTag = shadowNode->getTag();
-  const auto it = registry_.find(viewTag);
-  if (it == registry_.end()) {
-    return;
-  }
-  const auto &transition = it->second;
+  const auto &transition = registry_.at(viewTag);
 
   const auto &lastUpdates = getUpdatesFromRegistry(viewTag);
   const auto timestamp = loop_->resolveTimestamp();

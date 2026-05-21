@@ -248,10 +248,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 
 void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMethodsHolder) {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    // Backend path: queue callbacks into pendingFrameCallbacks_ which are drained
-    // inside runGrandCallback's `executeOperationsLoop` step. runGrandCallback
-    // takes the manager lock at its top, so when these callbacks fire they
-    // already run under the manager lock - no extra wrap needed here.
+    // Backend path: callbacks are drained later inside runGrandCallback under
+    // the manager lock; no wrap needed here.
     requestRender_ = [weakThis = weak_from_this()](std::function<void(const double)> callback) {
       auto strongThis = weakThis.lock();
       if (!strongThis) {
@@ -261,23 +259,15 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       strongThis->startBackendIfNeeded();
     };
   } else {
-    // No-backend path: callbacks come from the platform RAF directly. Wrap the
-    // callback so it acquires the manager lock before invoking any subsystem
-    // work - this is the boundary where UI-thread frame callbacks enter the
-    // CSS / animation subsystem.
-    auto platformRequestRender = platformDepMethodsHolder.requestRender;
-    requestRender_ = [weakThis = weak_from_this(), platformRequestRender](std::function<void(const double)> callback) {
-      auto strongThis = weakThis.lock();
-      if (!strongThis) {
-        return;
-      }
+    // Non-backend path: wrap the platform RAF callback so the subsystem work
+    // runs under the manager lock.
+    requestRender_ = [weakThis = weak_from_this(), platformRequestRender = platformDepMethodsHolder.requestRender](
+                         std::function<void(const double)> callback) {
       platformRequestRender([weakThis, callback = std::move(callback)](const double timestamp) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
+        if (auto strongThis = weakThis.lock()) {
+          auto lock = strongThis->updatesRegistryManager_->lock();
+          callback(timestamp);
         }
-        auto lock = strongThis->updatesRegistryManager_->lock();
-        callback(timestamp);
       });
     };
   }
