@@ -153,7 +153,7 @@ describe('runOnUIAsync', () => {
 
       await waitForNotification(FAIL_NOTIFICATION);
       expect(reason).toInclude(
-        '`runOnUIAsync` can only be called on the RN Runtime'
+        '[Worklets] runOnUIAsync cannot be called on Worklet Runtimes outside of the Bundle Mode.'
       );
     });
 
@@ -175,7 +175,7 @@ describe('runOnUIAsync', () => {
 
       await waitForNotification(FAIL_NOTIFICATION);
       expect(reason).toInclude(
-        '`runOnUIAsync` can only be called on the RN Runtime'
+        '[Worklets] runOnUIAsync cannot be called on Worklet Runtimes outside of the Bundle Mode.'
       );
     });
   }

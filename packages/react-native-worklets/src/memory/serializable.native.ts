@@ -611,17 +611,12 @@ function cloneSet(value: Set<unknown>): SerializableRef<Set<unknown>> {
 }
 
 function cloneRegExp(value: RegExp): SerializableRef<RegExp> {
-  const pattern = value.source;
-  const flags = value.flags;
-  const handle = cloneInitializer({
-    __init: () => {
-      'worklet';
-      return new RegExp(pattern, flags);
-    },
-  }) as SerializableRef<RegExp>;
-  serializableMappingCache.set(value, handle);
-
-  return handle;
+  const clone = WorkletsModule.createSerializableRegExp(
+    value.source,
+    value.flags
+  );
+  serializableMappingCache.set(value, clone);
+  return clone;
 }
 
 function cloneError(value: Error): SerializableRef<Error> {
@@ -818,6 +813,12 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
           name,
           message,
           stack
+        ) as FlatSerializableRef<TValue>;
+      }
+      if (value instanceof RegExp) {
+        return globalThis.__workletsModuleProxy.createSerializableRegExp(
+          value.source,
+          value.flags
         ) as FlatSerializableRef<TValue>;
       }
       if (value instanceof Map) {

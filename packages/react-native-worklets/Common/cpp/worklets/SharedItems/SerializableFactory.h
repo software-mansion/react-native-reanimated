@@ -49,6 +49,8 @@ jsi::Value makeSerializableError(
     const std::string &message,
     const std::optional<std::string> &stack);
 
+jsi::Value makeSerializableRegExp(jsi::Runtime &rt, const std::string &pattern, const std::string &flags);
+
 jsi::Value makeSerializableInitializer(jsi::Runtime &rt, const jsi::Object &initializerObject);
 
 jsi::Value makeSerializableHostFunction(
