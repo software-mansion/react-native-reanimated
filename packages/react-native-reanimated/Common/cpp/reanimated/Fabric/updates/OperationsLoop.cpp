@@ -47,7 +47,6 @@ void OperationsLoop::remove(const std::shared_ptr<LoopOperation> &operation) {
 }
 
 void OperationsLoop::update() {
-  auto lock = updatesRegistryManager_->lock();
   auto [operations, timestamp] = beginFrame();
   applyScheduledOperations(std::move(operations), timestamp);
   activateDelayedOperations(timestamp);
@@ -146,6 +145,7 @@ void OperationsLoop::activateDelayedOperations(double timestamp) {
 }
 
 void OperationsLoop::updateActiveOperations(double timestamp) {
+  auto lock = updatesRegistryManager_->lock();
   std::erase_if(activeOps_, [&](auto &op) { return !op->update(timestamp, *this); });
 }
 

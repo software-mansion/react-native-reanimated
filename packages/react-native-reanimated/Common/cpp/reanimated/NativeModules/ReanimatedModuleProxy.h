@@ -227,7 +227,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 #endif
 
   const bool isReducedMotion_;
-  bool shouldFlushRegistry_ = false;
+  std::atomic<bool> shouldFlushRegistry_{false};
   std::shared_ptr<worklets::WorkletRuntime> uiRuntime_;
   std::shared_ptr<worklets::UIScheduler> uiScheduler_;
   std::shared_ptr<CallInvoker> jsInvoker_;

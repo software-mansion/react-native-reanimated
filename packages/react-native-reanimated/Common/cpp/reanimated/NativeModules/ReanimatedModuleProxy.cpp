@@ -205,21 +205,23 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #endif
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
-      operationsLoop_(std::make_shared<OperationsLoop>(
-          uiScheduler,
-          platformDepMethodsHolder.requestRender,
-          platformDepMethodsHolder.getAnimationTimestamp,
-          updatesRegistryManager_)),
+      operationsLoop_(
+          std::make_shared<OperationsLoop>(
+              uiScheduler,
+              platformDepMethodsHolder.requestRender,
+              platformDepMethodsHolder.getAnimationTimestamp,
+              updatesRegistryManager_)),
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(staticPropsRegistry_, animatedPropsRegistry_)),
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>(operationsLoop_, cssAnimationKeyframesRegistry_)),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(viewStylesRepository_, operationsLoop_)),
-      pseudoStylesRegistry_(std::make_shared<PseudoStylesRegistry>(
-          platformDepMethodsHolder.attachPseudoSelector,
-          platformDepMethodsHolder.detachPseudoSelector,
-          cssTransitionsRegistry_,
-          updatesRegistryManager_)),
+      pseudoStylesRegistry_(
+          std::make_shared<PseudoStylesRegistry>(
+              platformDepMethodsHolder.attachPseudoSelector,
+              platformDepMethodsHolder.detachPseudoSelector,
+              cssTransitionsRegistry_,
+              updatesRegistryManager_)),
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
@@ -783,14 +785,10 @@ void ReanimatedModuleProxy::performOperations() {
       // Update CSS animations and flush updates
       cssAnimationsRegistry_->flushUpdates(updatesBatch);
     }
+  }
 
-    if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
-      applySynchronousUpdates(updatesBatch, false);
-    }
-
-    if ((updatesBatch.size() > 0) && updatesRegistryManager_->shouldReanimatedSkipCommit()) {
-      updatesRegistryManager_->pleaseCommitAfterPause();
-    }
+  if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
+    applySynchronousUpdates(updatesBatch, false);
   }
 
   if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
@@ -799,6 +797,9 @@ void ReanimatedModuleProxy::performOperations() {
     // In this case, we should skip the commit here and let React Native do
     // it. The commit will include the current values from the updates manager
     // which will be applied in ReanimatedCommitHook.
+    if (!updatesBatch.empty()) {
+      updatesRegistryManager_->pleaseCommitAfterPause();
+    }
     return;
   }
 
@@ -1049,9 +1050,8 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
 #ifdef ANDROID
     updatesRegistryManager_->collectPropsToRevertBySurface(propsMapBySurface);
 #endif
-    flushRegistry = shouldFlushRegistry_;
+    flushRegistry = shouldFlushRegistry_.exchange(false);
     if (flushRegistry) {
-      shouldFlushRegistry_ = false;
       collectedProps = updatesRegistryManager_->collectProps();
     }
   }
