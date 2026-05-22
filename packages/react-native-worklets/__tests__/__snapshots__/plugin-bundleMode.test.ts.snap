@@ -66,6 +66,19 @@ exports[`babel plugin in bundleMode worklet file emission does not emit stack-tr
 });"
 `;
 
+exports[`babel plugin in bundleMode worklet file emission does not rebase relative requires from non-workletizable files 1`] = `
+"export default (function baz_fileTs1Factory({}) {
+  const baz = function () {
+    const helper = require('./helper');
+    return helper.foo();
+  };
+  baz.__closure = {};
+  baz.__workletHash = 13883068246308;
+  baz.__pluginVersion = "x.y.z";
+  return baz;
+});"
+`;
+
 exports[`babel plugin in bundleMode worklet file emission forwards closure variables from source to factory 1`] = `
 "const a = 1;
 const b = 2;
@@ -108,6 +121,19 @@ export default (function bar_testJs1Factory({}) {
   bar.__workletHash = 3872906538980;
   bar.__pluginVersion = "x.y.z";
   return bar;
+});"
+`;
+
+exports[`babel plugin in bundleMode worklet file emission rebases relative requires inside the worklet body against the worklets directory 1`] = `
+"export default (function baz_fileJs1Factory({}) {
+  const baz = function () {
+    const helper = require("../../some-library/helper");
+    return helper.foo();
+  };
+  baz.__closure = {};
+  baz.__workletHash = 2953408498938;
+  baz.__pluginVersion = "x.y.z";
+  return baz;
 });"
 `;
 

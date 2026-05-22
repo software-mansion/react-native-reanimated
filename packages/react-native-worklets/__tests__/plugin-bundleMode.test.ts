@@ -224,6 +224,45 @@ describe('babel plugin in bundleMode', () => {
       expect(files).toHaveLength(1);
       expect(files[0].content).toContain(`from "${expected}"`);
     });
+
+    test('rebases relative requires inside the worklet body against the worklets directory', () => {
+      const input = html`<script>
+        function baz() {
+          'worklet';
+          const helper = require('./helper');
+          return helper.foo();
+        }
+      </script>`;
+
+      const fakeFilename = path.relative(__dirname, 'some-library/file.js');
+      const { files } = runPlugin(
+        input,
+        {},
+        { workletizableModules: ['some-library'] },
+        fakeFilename
+      );
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toContain(
+        `require("../../some-library/helper")`
+      );
+      expect(files[0].content).toMatchSnapshot();
+    });
+
+    test('does not rebase relative requires from non-workletizable files', () => {
+      const input = html`<script>
+        function baz() {
+          'worklet';
+          const helper = require('./helper');
+          return helper.foo();
+        }
+      </script>`;
+
+      const fakeFilename = '/not-a-workletizable-package/src/file.ts';
+      const { files } = runPlugin(input, {}, {}, fakeFilename);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toContain(`require('./helper')`);
+      expect(files[0].content).toMatchSnapshot();
+    });
   });
 
   describe('worklet runtime entry-point toggle', () => {
