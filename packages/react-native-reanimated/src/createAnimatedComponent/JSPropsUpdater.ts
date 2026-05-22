@@ -77,6 +77,7 @@ type JSPropsUpdaterOptions =
   | typeof JSPropsUpdaterNative;
 
 let JSPropsUpdater: JSPropsUpdaterOptions;
+// is-tree-shakable-suppress
 if (SHOULD_BE_USE_WEB) {
   JSPropsUpdater = JSPropsUpdaterWeb;
 } else {

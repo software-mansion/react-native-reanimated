@@ -46,6 +46,7 @@ function createCircularDoublesBuffer(size: number) {
 
 const DEFAULT_BUFFER_SIZE = 20;
 
+// is-tree-shakable-suppress
 const AnimatedTextInput = createAnimatedComponent(TextInput);
 
 function loopAnimationFrame(fn: (lastTime: number, time: number) => void) {
@@ -181,6 +182,7 @@ export function PerformanceMonitor({
   );
 }
 
+// is-tree-shakable-suppress
 const styles = StyleSheet.create({
   monitor: {
     flexDirection: 'row',

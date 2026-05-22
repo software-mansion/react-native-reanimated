@@ -167,6 +167,20 @@ describe('Test createSerializable', () => {
         expect(result).toBe(true);
       });
 
+      test('createSerializableSymbol', async () => {
+        const symbolValue: unknown = Symbol('test');
+        scheduleOnTarget(() => {
+          'worklet';
+          const checks = [
+            typeof symbolValue === 'string',
+            symbolValue === 'Symbol(test)',
+          ];
+          scheduleOnRN(callbackPass, checks.every(Boolean));
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
+
       test('createSerializableHostObject', async () => {
         const hostObjectValue = globalThis.__reanimatedModuleProxy;
         const hostObjectKeys = Object.keys(hostObjectValue);

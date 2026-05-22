@@ -1,9 +1,10 @@
 #pragma once
 
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
-#include <reanimated/CSS/easing/EasingFunctions.h>
+#include <reanimated/CSS/core/transition/CSSTransition.h>
 #include <reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
+#include <reanimated/Fabric/updates/OperationsLoop.h>
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
@@ -13,35 +14,47 @@
 
 namespace reanimated::css {
 
-class CSSTransition {
+class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enable_shared_from_this<CSSLoopTransition> {
  public:
-  CSSTransition(
-      std::shared_ptr<const ShadowNode> shadowNode,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+  CSSLoopTransition(
+      Tag viewTag,
+      const std::string &componentName,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+      CSSTransition::Observer &observer);
 
-  Tag getViewTag() const;
-  std::shared_ptr<const ShadowNode> getShadowNode() const;
+  TransitionProperties getProperties() const {
+    return properties_;
+  }
+
   double getMinDelay(double timestamp) const;
   TransitionProgressState getState() const;
-  TransitionProperties getProperties() const;
+
+  bool update(double timestamp, OperationsLoop &loop) override;
 
   folly::dynamic run(
       jsi::Runtime &rt,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
       const PropertyValueDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
       double timestamp);
-  folly::dynamic
   /** TODO: unify folly::dynamic and jsi::value versions */
-  run(const PropertyValueDynamicDiffsMap &propertiesDiffs, const folly::dynamic &lastUpdateValue, double timestamp);
-  void updateConfig(
+  folly::dynamic run(
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const PropertyValueDynamicDiffsMap &propertiesDiffs,
+      const folly::dynamic &lastUpdateValue,
+      double timestamp);
+  void updateSettings(
       const PropertiesSettingsMap &changedPropertiesSettings,
       const std::vector<std::string> &removedProperties);
-  folly::dynamic update(double timestamp);
+
+  folly::dynamic computeCurrentStyle(const std::shared_ptr<const ShadowNode> &shadowNode);
 
  private:
-  const std::shared_ptr<const ShadowNode> shadowNode_;
-  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
-  TransitionProperties transitionProperties_;
+  const Tag viewTag_;
+  const std::string componentName_;
+  CSSTransition::Observer &observer_;
+
+  TransitionProperties properties_;
   TransitionStyleInterpolator styleInterpolator_;
   TransitionProgressProvider progressProvider_;
 

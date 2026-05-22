@@ -266,6 +266,9 @@ class SerializableImport : public Serializable {
   const std::string imported_;
 };
 
+/** Forward declaration */
+class RuntimeManager;
+
 class SerializableRemoteFunction : public Serializable,
                                    public std::enable_shared_from_this<SerializableRemoteFunction> {
  private:
@@ -312,6 +315,10 @@ class SerializableRemoteFunction : public Serializable,
 
   SerializableRemoteFunction(const SerializableRemoteFunction &) = delete;
   SerializableRemoteFunction &operator=(const SerializableRemoteFunction &) = delete;
+
+  void resolveOrRejectPromise(
+      const std::shared_ptr<Serializable> &resolveValue,
+      const std::shared_ptr<RuntimeManager> &runtimeManager);
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -372,7 +379,7 @@ class SerializableBigInt : public Serializable {
  protected:
   /**
    * This member is used only when the BigInt fits into int64_t range.
-  */
+   */
   std::optional<int64_t> fastValue_{};
   std::string slowValue_{};
 };

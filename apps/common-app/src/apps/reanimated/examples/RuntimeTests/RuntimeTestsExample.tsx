@@ -70,6 +70,7 @@ export default function RuntimeTestsExample() {
             require('./tests/runtimes/runOnRuntimeSync.test');
             require('./tests/runtimes/runOnUIAsync.test');
             require('./tests/runtimes/runOnRuntimeAsync.test');
+            require('./tests/runtimes/runOnRuntimeAsyncWithId.test');
             require('./tests/runtimes/runOnRuntimeSyncWithId.test');
             require('./tests/runtimes/scheduleOnRuntimeWithId.test');
           },

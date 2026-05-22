@@ -14,6 +14,7 @@ interface AnimatedScrollViewComplement extends ScrollView {
   getNode(): ScrollView;
 }
 
+// is-tree-shakable-suppress
 const AnimatedScrollViewComponent = createAnimatedComponent(ScrollView);
 
 export type AnimatedScrollViewProps = ComponentProps<

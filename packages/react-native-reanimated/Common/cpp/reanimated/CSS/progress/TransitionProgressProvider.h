@@ -13,7 +13,7 @@
 
 namespace reanimated::css {
 
-enum class TransitionProgressState : std::uint8_t { Pending, Running, Finished };
+enum class TransitionProgressState : std::uint8_t { Idle, Pending, Running };
 
 class TransitionPropertyProgressProvider final : public KeyframeProgressProvider, public RawProgressProvider {
  public:
@@ -66,7 +66,8 @@ class TransitionProgressProvider final {
  private:
   TransitionPropertyProgressProviders propertyProgressProviders_;
 
-  // TO DO: currently never cleaned by design - if the property has already been transitioned in the past, we might want to reuse the config (run without settings in the config).
+  // TO DO: currently never cleaned by design - if the property has already been transitioned in the past, we might want
+  // to reuse the config (run without settings in the config).
   /// We might want to add an option for clearing those settings in the future.
   PropertiesSettingsMap propertySettings_;
 

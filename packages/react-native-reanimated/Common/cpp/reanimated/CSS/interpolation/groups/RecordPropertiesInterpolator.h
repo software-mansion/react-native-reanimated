@@ -22,13 +22,14 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
   bool updateKeyframes(const folly::dynamic &fromValue, const folly::dynamic &toValue) override;
 
  protected:
+  PropertyInterpolatorsRecord interpolators_;
+
   folly::dynamic mapInterpolators(const std::function<folly::dynamic(PropertyInterpolator &)> &callback) const override;
 
   void maybeCreateInterpolator(const std::string &propertyName);
 
  private:
   const InterpolatorFactoriesRecord &factories_;
-  PropertyInterpolatorsRecord interpolators_;
 };
 
 } // namespace reanimated::css
