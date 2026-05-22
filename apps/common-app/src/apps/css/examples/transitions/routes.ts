@@ -63,6 +63,10 @@ const routes = {
         name: 'Reversing Shortening',
         Component: miscellaneous.ReversingShortening,
       },
+      OpacityGridFade: {
+        name: 'Opacity Grid Fade',
+        Component: miscellaneous.OpacityGridFade,
+      },
     },
   },
   RealWorldExamples: {
