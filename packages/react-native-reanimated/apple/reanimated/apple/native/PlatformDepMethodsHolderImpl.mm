@@ -221,7 +221,6 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       maybeFlushUIUpdatesQueueFunction,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
-      nullptr, // platformAnimationFactory - no Apple implementation yet
       cssCanRouteProperty,
       cssApplyTransition,
       cssRemoveTransition,
