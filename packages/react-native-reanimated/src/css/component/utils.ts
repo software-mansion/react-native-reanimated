@@ -20,8 +20,6 @@ function filterNonCSSStylePropsRecursive(
 
   if (typeof props === 'object') {
     return Object.entries(props).reduce<UnknownRecord>((acc, [key, value]) => {
-      // TODO: rename `isCSSStyleProp` to `isCSSConfigProp` — it filters CSS
-      // animation/transition config keys, not RN style props.
       if (isCSSStyleProp(key)) {
         return acc;
       }
