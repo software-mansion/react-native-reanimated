@@ -18,7 +18,7 @@ import {
 
 export type PseudoStylesBySelector = Record<
   string,
-  { selectorStyle: PlainStyle; defaultStyle: PlainStyle }
+  { selectorStyle: UnknownRecord; defaultStyle: UnknownRecord }
 >;
 
 export function filterCSSAndStyleProperties<S extends object>(
@@ -26,8 +26,8 @@ export function filterCSSAndStyleProperties<S extends object>(
 ): [
   ExistingCSSAnimationProperties | null,
   CSSTransitionProperties | null,
-  PlainStyle,
   PseudoStylesBySelector | null,
+  PlainStyle,
 ] {
   const animationProperties: Partial<CSSAnimationProperties> = {};
   let transitionProperties: Partial<CSSTransitionProperties> = {};
@@ -59,31 +59,28 @@ export function filterCSSAndStyleProperties<S extends object>(
       } else {
         (transitionProperties as UnknownRecord)[prop] = value;
       }
-    } else if (!isSharedValue(value)) {
-      if (isPseudoSelectorValue(value)) {
-        const defaultValue = value.default;
-        if (defaultValue !== undefined) {
-          filteredStyle[prop] = defaultValue;
-        }
-        for (const [selector, selectorValue] of Object.entries(value)) {
-          if (selector !== 'default' && selectorValue !== undefined) {
-            pseudoStylesBySelector[selector] ??= {
-              selectorStyle: {},
-              defaultStyle: {},
-            };
-            (pseudoStylesBySelector[selector].selectorStyle as UnknownRecord)[
-              prop
-            ] = selectorValue;
-            if (defaultValue !== undefined) {
-              (pseudoStylesBySelector[selector].defaultStyle as UnknownRecord)[
-                prop
-              ] = defaultValue;
-            }
-          }
-        }
-      } else {
-        filteredStyle[prop] = value;
+    } else if (isSharedValue(value)) {
+      continue;
+    } else if (isPseudoSelectorValue(value)) {
+      const defaultValue = value.default;
+      if (defaultValue !== undefined) {
+        filteredStyle[prop] = defaultValue;
       }
+      for (const [selector, selectorValue] of Object.entries(value)) {
+        if (selector === 'default' || selectorValue === undefined) {
+          continue;
+        }
+        const branch = (pseudoStylesBySelector[selector] ??= {
+          selectorStyle: {},
+          defaultStyle: {},
+        });
+        branch.selectorStyle[prop] = selectorValue;
+        if (defaultValue !== undefined) {
+          branch.defaultStyle[prop] = defaultValue;
+        }
+      }
+    } else {
+      filteredStyle[prop] = value;
     }
   }
 
@@ -111,18 +108,19 @@ export function filterCSSAndStyleProperties<S extends object>(
     ? transitionProperties
     : null;
 
+  const hasPseudoStyles = Object.keys(pseudoStylesBySelector).length > 0;
+  const finalPseudoStyles = hasPseudoStyles ? pseudoStylesBySelector : null;
+
   if (__DEV__) {
     validateCSSAnimationProps(animationProperties);
     validateCSSTransitionProps(transitionProperties);
   }
 
-  const hasPseudoStyles = Object.keys(pseudoStylesBySelector).length > 0;
-
   return [
     finalAnimationConfig,
     finalTransitionConfig,
+    finalPseudoStyles,
     filteredStyle as PlainStyle,
-    hasPseudoStyles ? pseudoStylesBySelector : null,
   ];
 }
 

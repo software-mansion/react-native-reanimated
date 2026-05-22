@@ -41,27 +41,14 @@ const timeToNumber = (duration?: CSSTransitionDuration): number => {
 type TimeUnit = CSSTransitionDelay;
 
 const getTimeUnit = (
-  timeUnit:
-    | Array<TimeUnit>
-    | TimeUnit
-    | { default?: TimeUnit | Array<TimeUnit> }
-    | undefined
+  timeUnit: Array<TimeUnit> | TimeUnit | undefined
 ): number => {
   if (!timeUnit) {
     return 0;
   }
-  // Pseudo-keyed transition* values are objects like { default, ':hover' }; for
-  // the timeout calculation, fall back to the `default` branch.
-  if (
-    typeof timeUnit === 'object' &&
-    !Array.isArray(timeUnit) &&
-    'default' in timeUnit
-  ) {
-    return getTimeUnit(timeUnit.default);
-  }
   return Array.isArray(timeUnit)
     ? Math.max(...timeUnit.map(timeToNumber))
-    : timeToNumber(timeUnit as TimeUnit);
+    : timeToNumber(timeUnit);
 };
 
 const getTimeout = (settings: CSSTransitionSettings): number => {

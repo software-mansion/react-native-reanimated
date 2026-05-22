@@ -28,5 +28,4 @@ export type {
   CSSTransitionShorthand,
   CSSTransitionTimingFunction,
   PseudoSelectorKey,
-  PseudoValue,
 } from './types';

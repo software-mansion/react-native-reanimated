@@ -472,10 +472,20 @@ type StyleWithCSS<TStyle> = TStyle extends object
 
 // Ideally we want AnimatedStyle to not be generic, but there are
 // so many dependencies on it being generic that it's not feasible at the moment.
+<<<<<<< HEAD
 export type AnimatedStyle<TStyle = DefaultStyle> =
   | StyleWithCSS<TStyle>
   | MaybeSharedValueRecursive<TStyle>
   | AnimatedStyleHandle<TStyle>;
+=======
+// TODO: drop `CSSPseudoSelectorStyle` from this union once `WithReanimatedCSS`
+// is fixed to pull all CSS-related props (incl. pseudo) — see PR #9472 review.
+export type AnimatedStyle<Style = DefaultStyle> =
+  | WithReanimatedCSS<Style>
+  | MaybeSharedValueRecursive<Style>
+  | AnimatedStyleHandle<Style>
+  | CSSPseudoSelectorStyle;
+>>>>>>> 9b67dfecc3 (Rebuild the files)
 
 export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']

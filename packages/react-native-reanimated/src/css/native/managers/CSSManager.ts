@@ -11,11 +11,13 @@ import type { ICSSManager } from '../../types/interfaces';
 import { filterCSSAndStyleProperties } from '../../utils';
 import { setViewStyle } from '../proxy';
 import CSSAnimationsManager from './CSSAnimationsManager';
+import CSSPseudoStylesManager from './CSSPseudoStylesManager';
 import CSSTransitionsManager from './CSSTransitionsManager';
 
 export default class CSSManager implements ICSSManager {
   private readonly cssAnimationsManager: CSSAnimationsManager;
   private readonly cssTransitionsManager: CSSTransitionsManager;
+  private readonly cssPseudoStylesManager: CSSPseudoStylesManager;
   private readonly viewTag: number;
   private readonly propsBuilder: ReturnType<typeof getPropsBuilder>;
   /**
@@ -45,11 +47,20 @@ export default class CSSManager implements ICSSManager {
       compoundComponentName
     );
     this.cssTransitionsManager = new CSSTransitionsManager(wrapper, tag);
+    this.cssPseudoStylesManager = new CSSPseudoStylesManager(
+      wrapper,
+      tag,
+      (style) => this.propsBuilder.build(style)
+    );
   }
 
   update(style: CSSStyle): void {
-    const [animationProperties, transitionProperties, filteredStyle] =
-      filterCSSAndStyleProperties(style);
+    const [
+      animationProperties,
+      transitionProperties,
+      pseudoStylesBySelector,
+      filteredStyle,
+    ] = filterCSSAndStyleProperties(style);
 
     const hasAnimation = animationProperties !== null;
     const hasTransition = transitionProperties !== null;
@@ -76,6 +87,10 @@ export default class CSSManager implements ICSSManager {
       normalizedStyle ?? {}
     );
     this.cssAnimationsManager.update(animationProperties);
+    this.cssPseudoStylesManager.update(
+      pseudoStylesBySelector,
+      transitionProperties
+    );
 
     this.hadTransitionLastUpdate = hasTransition;
   }
@@ -83,5 +98,6 @@ export default class CSSManager implements ICSSManager {
   unmountCleanup(): void {
     this.cssAnimationsManager.unmountCleanup();
     this.cssTransitionsManager.unmountCleanup();
+    this.cssPseudoStylesManager.unmountCleanup();
   }
 }

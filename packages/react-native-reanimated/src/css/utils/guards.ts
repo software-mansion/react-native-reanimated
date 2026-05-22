@@ -85,14 +85,3 @@ export const isPseudoSelectorValue = (
   }
   return keys.every((key) => key === 'default' || key.startsWith(':'));
 };
-
-export const resolvePseudoKeyed = <T>(
-  value: T | undefined,
-  selector: string = 'default'
-): T | undefined => {
-  if (!isPseudoSelectorValue(value)) {
-    return value;
-  }
-  const obj = value as Record<string, unknown>;
-  return (obj[selector] ?? obj.default) as T | undefined;
-};

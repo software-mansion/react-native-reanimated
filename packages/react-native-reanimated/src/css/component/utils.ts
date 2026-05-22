@@ -20,16 +20,19 @@ function filterNonCSSStylePropsRecursive(
 
   if (typeof props === 'object') {
     return Object.entries(props).reduce<UnknownRecord>((acc, [key, value]) => {
-      if (!isCSSStyleProp(key)) {
-        if (isPseudoSelectorValue(value)) {
-          const defaultValue = (value as Record<string, unknown>).default;
-          if (defaultValue !== undefined) {
-            acc[key] = defaultValue;
-          }
-        } else {
-          acc[key] = value;
-        }
+      // TODO: rename `isCSSStyleProp` to `isCSSConfigProp` — it filters CSS
+      // animation/transition config keys, not RN style props.
+      if (isCSSStyleProp(key)) {
+        return acc;
       }
+      if (isPseudoSelectorValue(value)) {
+        const defaultValue = (value as { default?: unknown }).default;
+        if (defaultValue !== undefined) {
+          acc[key] = defaultValue;
+        }
+        return acc;
+      }
+      acc[key] = value;
       return acc;
     }, {});
   }

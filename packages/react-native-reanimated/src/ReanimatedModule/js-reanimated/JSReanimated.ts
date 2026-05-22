@@ -342,11 +342,15 @@ class JSReanimated implements IReanimatedModule {
   }
 
   registerPseudoStyle(): void {
-    // Web uses native CSS pseudo-selectors - no native registration needed.
+    throw new Error(
+      '[Reanimated] `registerPseudoStyle` is not available in JSReanimated.'
+    );
   }
 
   unregisterPseudoStyle(): void {
-    // Web uses native CSS pseudo-selectors - no native registration needed.
+    throw new Error(
+      '[Reanimated] `unregisterPseudoStyle` is not available in JSReanimated.'
+    );
   }
 }
 

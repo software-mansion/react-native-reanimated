@@ -13,10 +13,10 @@ import type {
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSPseudoStyleConfig,
   CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
 } from '../css/native';
-import type { PseudoSelectorKey } from '../css/types/props';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {
@@ -96,12 +96,7 @@ export interface ReanimatedModuleProxy {
 
   registerPseudoStyle(
     shadowNodeWrapper: ShadowNodeWrapper,
-    config: {
-      selector: PseudoSelectorKey;
-      selectorStyle: StyleProps;
-      defaultStyle: StyleProps;
-      transition: CSSTransitionConfig;
-    }
+    config: CSSPseudoStyleConfig
   ): void;
 
   unregisterPseudoStyle(viewTag: number): void;
