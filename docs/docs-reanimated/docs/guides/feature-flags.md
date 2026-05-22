@@ -120,7 +120,7 @@ This flag is experimental and defaults to `false`. To use it, you must run React
 
 ### `EXPERIMENTAL_PLATFORM_CSS_ANIMATIONS`
 
-When enabled, Reanimated may route CSS animations and transitions to platform-native animation APIs (Core Animation on Apple platforms) instead of running them on the JS-driven animation loop. Platform-routed animations run on the platform's animation thread, which can improve smoothness for supported properties at the cost of a different runtime trade-off model. The set of supported properties is determined by the platform implementation and currently only iOS provides one. This feature flag is experimental and defaults to `false`.
+When enabled, Reanimated may route CSS transitions to platform-native animation APIs instead of running them on the JS-driven animation loop. Currently, only the `opacity` property is routed, and only on iOS, where the platform path uses Core Animation. Support for additional properties, CSS animations (not just transitions), and Android will be added in the future. This feature flag is experimental and defaults to `false`.
 
 ## Static feature flags
 
