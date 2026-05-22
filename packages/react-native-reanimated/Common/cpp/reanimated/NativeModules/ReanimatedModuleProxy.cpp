@@ -226,7 +226,6 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #endif // ANDROID
       subscribeForKeyboardEventsFunction_(platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
-  // No lock needed at construction - no other thread holds a reference yet.
   // Add registries in order of their priority (from the lowest to the
   // highest). CSS transitions should be overriden by animated style
   // animations; animated style animations should be overriden by CSS
@@ -1044,9 +1043,7 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
   PropsMap collectedProps;
   bool flushRegistry;
 
-  // Snapshot under the lock; shape propsMapBySurface afterwards. Lock must
-  // be released before shadowTree.commit below - it re-enters via
-  // ReanimatedCommitHook.
+  // Release the lock before shadowTree.commit - it re-enters via ReanimatedCommitHook.
   {
     auto lock = updatesRegistryManager_->lock();
 #ifdef ANDROID
