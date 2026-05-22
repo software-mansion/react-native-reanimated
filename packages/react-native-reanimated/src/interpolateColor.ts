@@ -337,8 +337,8 @@ function processColorRanges(
   return [processedInputRange, processedOutputRange];
 }
 
-// Binary-search the segment of `inputRange` that contains `value`, mirroring
-// the segment selection used by `interpolate`.
+// Binary search mirroring `interpolate`'s segment selection — returns the
+// bracket `k` such that `inputRange[k] <= value <= inputRange[k+1]`.
 function findBracketIndex(
   value: number,
   inputRange: readonly number[]
@@ -357,9 +357,8 @@ function findBracketIndex(
   return left - 1;
 }
 
-// Scan outward from `startIndex` in the given direction and return the first
-// non-transparent stop with its alpha cleared. `processColor` returns
-// AARRGGBB; `TRANSPARENCY_MASK` zeroes the alpha byte.
+// Scan outward for the nearest non-transparent stop; return its AARRGGBB
+// integer with alpha cleared so it can serve as a (T, T)-bracket shadow stop.
 function findNonTransparentRgb(
   outputRange: readonly (string | number)[],
   startIndex: number,
@@ -378,12 +377,8 @@ function findNonTransparentRgb(
   return null;
 }
 
-// Build the 2-stop slice for the bracket containing `value` so the existing
-// per-frame helpers operate on a length-2 input instead of the full palette.
-// `processColorRanges` handles three of the four transparency cases on a
-// 2-stop input; (transparent, transparent) would collapse to `[0, 0]`, so we
-// replicate its outward-scan behavior locally — lerping through the nearest
-// non-transparent neighbors on either side with alpha 0.
+// 2-stop slice for the active bracket. Color-space-agnostic — downstream
+// `getInterpolate{RGB,HSV,LAB}` consume the same AARRGGBB ints for any space.
 function buildBracketSlice(
   value: number,
   inputRange: readonly number[],
@@ -397,6 +392,8 @@ function buildBracketSlice(
   const rightColor = outputRange[bracket + 1];
 
   if (leftColor === 'transparent' && rightColor === 'transparent') {
+    // (T, T) can't go through `processColorRanges` (would collapse to [0, 0]);
+    // scan outward for non-transparent shadow stops instead.
     const leftRgb = findNonTransparentRgb(outputRange, bracket - 1, -1);
     const rightRgb = findNonTransparentRgb(outputRange, bracket + 2, 1);
     return [
@@ -450,8 +447,7 @@ export function interpolateColor(
   options: InterpolationOptions = {}
 ): string | number {
   'worklet';
-  // Lazy: only the two endpoint stops of the active bracket are processed
-  // per frame instead of every color in `outputRange` (O(log N) vs O(N)).
+  // Lazy: process only the bracket's two endpoints, not all N stops (O(log N)).
   const [processedInputRange, processedOutputRange] = buildBracketSlice(
     value,
     inputRange,
