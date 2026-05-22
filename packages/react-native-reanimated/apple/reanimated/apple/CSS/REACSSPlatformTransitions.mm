@@ -102,7 +102,16 @@ static id idFromPlatformValue(NSString *propertyName, const PlatformValue &value
     }
     anim.toValue = toValue;
     anim.duration = durationSec;
-    anim.beginTime = beginTime;
+    // CABasicAnimation.beginTime is read in the LAYER's local clock, which
+    // diverges from CACurrentMediaTime when any ancestor has a non-default
+    // `speed` / `timeOffset` / `beginTime` (RN Screens manipulates these
+    // during navigation transitions). convertTime: walks the ancestor chain
+    // and returns the absolute time expressed in the layer's local space;
+    // for an untouched hierarchy it returns the input unchanged. Without
+    // this, after a screen pop/push the animation can land in CA's "already
+    // complete" or "never starts" state and snap straight to toValue with no
+    // visible transition.
+    anim.beginTime = [layer convertTime:beginTime fromLayer:nil];
     anim.timingFunction = timing;
     // Persist so presentation holds the animated value before beginTime
     // (kCAFillModeBackwards) and after duration (kCAFillModeForwards),
