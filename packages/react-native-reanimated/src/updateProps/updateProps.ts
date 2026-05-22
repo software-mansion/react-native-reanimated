@@ -35,6 +35,7 @@ let updateProps: (
   isAnimatedProps?: boolean
 ) => void;
 
+// is-tree-shakable-suppress
 if (SHOULD_BE_USE_WEB) {
   updateProps = (viewDescriptors, updates, isAnimatedProps) => {
     'worklet';
@@ -175,6 +176,7 @@ function createUpdatePropsManager() {
   };
 }
 
+// is-tree-shakable-suppress
 if (SHOULD_BE_USE_WEB) {
   const maybeThrowError = () => {
     // Jest attempts to access a property of this object to check if it is a Jest mock

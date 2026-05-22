@@ -15,7 +15,9 @@ import type { AnimatedProps } from '../helperTypes';
 import { LayoutAnimationConfig } from './LayoutAnimationConfig';
 import { AnimatedView } from './View';
 
-const AnimatedFlatList = createAnimatedComponent(FlatList);
+const AnimatedFlatList =
+  /* is-tree-shakable-suppress */
+  createAnimatedComponent(FlatList);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface CellRendererComponentProps<ItemT = any> {

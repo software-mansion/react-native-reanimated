@@ -7,6 +7,7 @@ import type {
   WorkletRuntimeConfig,
 } from './types';
 
+// is-tree-shakable-suppress
 export const UIRuntimeId = RuntimeKind.UI;
 
 export function createWorkletRuntime(
