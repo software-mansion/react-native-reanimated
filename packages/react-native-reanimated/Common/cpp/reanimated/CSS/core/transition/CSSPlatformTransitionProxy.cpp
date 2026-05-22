@@ -1,8 +1,6 @@
 #include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
-#include <jsi/JSIDynamic.h>
-
 #include <utility>
 
 namespace reanimated::css {

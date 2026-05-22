@@ -38,7 +38,7 @@ void CSSTransitionsRegistry::updateConfigOrRun(
   // Split via the platform proxy: platform-routed props are handled inside
   // CSSTransition::splitForPlatformRouting; the returned config carries only
   // the loop-side settings + value diffs + removals.
-  auto loopConfig = transition->splitForPlatformRouting(rt, std::move(config));
+  auto loopConfig = transition->splitForPlatformRouting(rt, std::move(config), loop_->resolveTimestamp());
 
   if (loopConfig.changedPropertiesSettings.size() || loopConfig.removedProperties.size()) {
     transition->updateSettings(loopConfig.changedPropertiesSettings, loopConfig.removedProperties);

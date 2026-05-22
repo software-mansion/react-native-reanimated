@@ -4,6 +4,7 @@
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 #include <reanimated/CSS/progress/RawProgressProvider.h>
 #include <reanimated/CSS/utils/props.h>
+#include <reanimated/CSS/utils/reversingShortening.h>
 
 #include <memory>
 #include <string>
@@ -17,28 +18,25 @@ enum class TransitionProgressState : std::uint8_t { Idle, Pending, Running };
 
 class TransitionPropertyProgressProvider final : public KeyframeProgressProvider, public RawProgressProvider {
  public:
+  TransitionPropertyProgressProvider(double timestamp, double duration, double delay, EasingConfig easing);
   TransitionPropertyProgressProvider(
       double timestamp,
       double duration,
       double delay,
-      const EasingFunction &easingFunction);
-  TransitionPropertyProgressProvider(
-      double timestamp,
-      double duration,
-      double delay,
-      const EasingFunction &easingFunction,
+      EasingConfig easing,
       double reversingShorteningFactor);
 
   double getGlobalProgress() const override;
   double getKeyframeProgress(double fromOffset, double toOffset) const override;
   double getRemainingDelay(double timestamp) const;
-  double getReversingShorteningFactor() const;
+  ReversingState getReversingState() const;
   TransitionProgressState getState() const;
 
  protected:
   std::optional<double> calculateRawProgress(double timestamp) override;
 
  private:
+  EasingConfig easing_;
   EasingFunction easingFunction_;
   double reversingShorteningFactor_ = 1;
 
