@@ -174,7 +174,8 @@ function buildCircularKeyframes(radius: number, startPhase: number) {
     const x = Number((radius * Math.cos(angle)).toFixed(3));
     const y = Number((radius * Math.sin(angle)).toFixed(3));
     const percent = (i / steps) * 100;
-    const key = i === 0 ? '0%' : i === steps ? '100%' : `${percent.toFixed(4)}%`;
+    const key =
+      i === 0 ? '0%' : i === steps ? '100%' : `${percent.toFixed(4)}%`;
     keyframes[key] = { transform: [{ translateX: x }, { translateY: y }] };
   }
   return keyframes;
@@ -327,7 +328,7 @@ function Orbit({ config }: { config: OrbitConfig }) {
     () => buildEllipseKeyframes(Rx, Ry, rotation),
     [Rx, Ry, rotation]
   );
-  const shimmerDuration = `${4200 + (config.size * 17) % 3800}ms` as const;
+  const shimmerDuration = `${4200 + ((config.size * 17) % 3800)}ms` as const;
   const shimmerDelay = `${(config.size * 23) % 5000}ms` as const;
   return (
     <>
@@ -420,7 +421,8 @@ function buildEllipseKeyframes(Rx: number, Ry: number, rotationDeg = 0) {
     prevPhase = phase;
     const phaseDeg = Number(((phase * 180) / Math.PI).toFixed(3));
     const percent = (i / steps) * 100;
-    const key = i === 0 ? '0%' : i === steps ? '100%' : `${percent.toFixed(4)}%`;
+    const key =
+      i === 0 ? '0%' : i === steps ? '100%' : `${percent.toFixed(4)}%`;
     keyframes[key] = {
       transform: [
         { translateX: x },
@@ -495,9 +497,7 @@ function buildCometKeyframes(
       }
     } else if (options.fadeBody) {
       const ratio = minDist / dist;
-      frame.opacity = Number(
-        Math.max(0.05, Math.pow(ratio, 0.6)).toFixed(3)
-      );
+      frame.opacity = Number(Math.max(0.05, Math.pow(ratio, 0.6)).toFixed(3));
     }
     if (options.fadeHemisphere) {
       const ratio = minDist / dist;
