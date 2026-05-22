@@ -216,7 +216,13 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           operationsLoop_,
           cssAnimationKeyframesRegistry_,
           platformDepMethodsHolder.platformAnimationFactory)),
-      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(viewStylesRepository_, operationsLoop_)),
+      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
+          viewStylesRepository_,
+          operationsLoop_,
+          std::make_shared<CSSPlatformTransitionProxy>(
+              platformDepMethodsHolder.cssCanRouteProperty,
+              platformDepMethodsHolder.cssApplyTransition,
+              platformDepMethodsHolder.cssRemoveTransition))),
       pseudoStylesRegistry_(std::make_shared<PseudoStylesRegistry>(
           platformDepMethodsHolder.attachPseudoSelector,
           platformDepMethodsHolder.detachPseudoSelector,
@@ -591,10 +597,10 @@ void ReanimatedModuleProxy::runCSSTransition(
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &transitionConfig) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  const auto config = parseCSSTransitionConfig(rt, shadowNode->getComponentName(), transitionConfig);
+  auto config = parseCSSTransitionConfig(rt, shadowNode->getComponentName(), transitionConfig);
 
   auto lock = updatesRegistryManager_->lock();
-  cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, config);
+  cssTransitionsRegistry_->run(rt, shadowNode, std::move(config));
 }
 
 void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) {
@@ -618,9 +624,6 @@ void ReanimatedModuleProxy::registerPseudoStyle(
 
   auto transitionConfig =
       css::parseCSSTransitionConfig(rt, shadowNode->getComponentName(), configObj.getProperty(rt, "transition"));
-  // We want to provide only the default settings (we drop the diff not to run any transitions straight away.
-  // The diff will be provided when `PseudoStylesRegistry::onSelectorStateChanged` is run).
-  transitionConfig.changedProperties.clear();
 
   auto lock = updatesRegistryManager_->lock();
   cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, transitionConfig);

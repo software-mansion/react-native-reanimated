@@ -2,6 +2,8 @@
 #include <reanimated/CSS/configs/common.h>
 #include <reanimated/CSS/utils/props.h>
 
+#include <utility>
+
 namespace reanimated::css {
 
 bool getAllowDiscrete(jsi::Runtime &rt, const jsi::Object &config) {
@@ -39,16 +41,15 @@ parseCSSTransitionConfig(jsi::Runtime &rt, const std::string &componentName, con
     auto oldValue = valueArray.getValueAtIndex(rt, 0);
     auto newValue = valueArray.getValueAtIndex(rt, 1);
 
-    result.changedPropertiesSettings.emplace(
+    result.changedProperties.emplace(
         propertyName,
         CSSTransitionPropertySettings{
+            std::make_pair(std::move(oldValue), std::move(newValue)),
             getDuration(rt, propertySettingsObj),
             getEasingConfig(rt, propertySettingsObj),
             getDelay(rt, propertySettingsObj),
             allowDiscrete,
         });
-
-    result.changedProperties.emplace(propertyName, std::make_pair(std::move(oldValue), std::move(newValue)));
   }
 
   return result;

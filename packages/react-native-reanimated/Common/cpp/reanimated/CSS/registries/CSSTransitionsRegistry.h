@@ -16,21 +16,19 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
  public:
   CSSTransitionsRegistry(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const std::shared_ptr<OperationsLoop> &loop);
+      const std::shared_ptr<OperationsLoop> &loop,
+      const std::shared_ptr<CSSPlatformTransitionProxy> &platformTransitionProxy);
 
   bool needsFlush() const;
 
-  // TO DO: In the future we want to decouple config update and run
+  void run(jsi::Runtime &rt, const std::shared_ptr<const ShadowNode> &shadowNode, CSSTransitionConfig &&config);
+  /** Settings-only path for pseudo-selector registration: stores timing
+   * settings without running anything. Values arrive later via `run(dynamic)`. */
   void updateConfigOrRun(
       jsi::Runtime &rt,
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const CSSTransitionConfig &config);
-  /// run Should be called only after someone has already set settings with updateConfigOrRun
-  void run(
-      jsi::Runtime &rt,
-      const std::shared_ptr<const ShadowNode> &shadowNode,
-      const PropertyValueDiffsMap &propertyDiffs);
-  /** TODO: unify folly::dynamic and jsi::value versions */
+  /** Dynamic-typed values path used by `PseudoStylesRegistry`. */
   void run(const std::shared_ptr<const ShadowNode> &shadowNode, const PropertyValueDynamicDiffsMap &propertyDiffs);
 
   void flushUpdates(UpdatesBatch &updatesBatch);
@@ -52,6 +50,7 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
 
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
   const std::shared_ptr<OperationsLoop> loop_;
+  const std::shared_ptr<CSSPlatformTransitionProxy> platformTransitionProxy_;
 
   TransitionObserver transitionObserver_{*this};
 
@@ -61,11 +60,6 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
 
   void removeTag(Tag viewTag) override;
   void updateInUpdatesRegistry(const std::shared_ptr<CSSTransition> &transition, const folly::dynamic &updates);
-  void runTransition(
-      jsi::Runtime &rt,
-      const std::shared_ptr<CSSTransition> &transition,
-      const facebook::react::Tag &viewTag,
-      const PropertyValueDiffsMap &propertyDiffs);
 };
 
 } // namespace reanimated::css

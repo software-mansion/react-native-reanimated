@@ -5,7 +5,6 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
 namespace reanimated::css {
 
@@ -42,37 +41,26 @@ bool CSSLoopTransition::update(const double timestamp, OperationsLoop &loop) {
 folly::dynamic CSSLoopTransition::run(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
-    const PropertyValueDiffsMap &propertiesDiffs,
+    const CSSTransitionConfig &config,
     const folly::dynamic &lastUpdateValue,
     const double timestamp) {
-  // Update interpolators and progress providers for changed properties
-  handleChangedProperties(
-      rt, propertiesDiffs, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
-  // Advance progress and return the first transition frame
+  // Drop interpolators / progress providers for no-longer-transitioned props.
+  for (const auto &propertyName : config.removedProperties) {
+    removeProperty(propertyName);
+  }
+
+  // Bind through a local lvalue so the const& binds without forcing a copy of
+  // lastUpdateValue when it is non-empty.
+  const folly::dynamic emptyObject = folly::dynamic::object();
+  const folly::dynamic &lastUpdates = lastUpdateValue.empty() ? emptyObject : lastUpdateValue;
+
+  // Update interpolators and progress providers for changed properties.
+  for (const auto &[propertyName, propertySettings] : config.changedProperties) {
+    runProperty(rt, propertyName, propertySettings, lastUpdates, timestamp);
+  }
+
   progressProvider_.update(timestamp);
   return computeCurrentStyle(shadowNode);
-}
-
-folly::dynamic CSSLoopTransition::run(
-    const std::shared_ptr<const ShadowNode> &shadowNode,
-    const PropertyValueDynamicDiffsMap &propertiesDiffs,
-    const folly::dynamic &lastUpdateValue,
-    const double timestamp) {
-  handleChangedProperties(
-      propertiesDiffs, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
-  progressProvider_.update(timestamp);
-  return computeCurrentStyle(shadowNode);
-}
-
-void CSSLoopTransition::updateSettings(
-    const PropertiesSettingsMap &changedPropertiesSettings,
-    const std::vector<std::string> &removedProperties) {
-
-  // Remove interpolators and progress providers for no longer transitioned props
-  removeProperties(removedProperties);
-
-  // Update the settings saved in progress provider
-  progressProvider_.setPropertySettings(changedPropertiesSettings);
 }
 
 folly::dynamic CSSLoopTransition::computeCurrentStyle(const std::shared_ptr<const ShadowNode> &shadowNode) {
@@ -86,83 +74,93 @@ folly::dynamic CSSLoopTransition::computeCurrentStyle(const std::shared_ptr<cons
   return result;
 }
 
-void CSSLoopTransition::handleChangedProperties(
+void CSSLoopTransition::runProperty(
     jsi::Runtime &rt,
-    const PropertyValueDiffsMap &propertiesDiffs,
+    const std::string &propertyName,
+    const CSSTransitionPropertySettings &propertySettings,
     const folly::dynamic &lastUpdateValue,
     const double timestamp) {
-  const auto null = folly::dynamic();
-
-  for (const auto &[propertyName, propertyDiff] : propertiesDiffs) {
-    const auto allowDiscrete = progressProvider_.getPropertySettings(propertyName).allowDiscrete;
-
-    if (!allowDiscrete && isDiscreteProperty(propertyName, componentName_)) {
-      removeProperty(propertyName);
-      continue;
-    }
-
-    properties_.insert(propertyName);
-
-    // Update the transition style interpolator
-    bool isReversed;
-    if (lastUpdateValue.count(propertyName)) {
-      // TODO - get rid of lastValue dynamic in the future
-      isReversed = styleInterpolator_.createOrUpdateInterpolator(
-          rt, propertyName, jsi::valueFromDynamic(rt, lastUpdateValue.at(propertyName)), propertyDiff.second);
-    } else {
-      isReversed =
-          styleInterpolator_.createOrUpdateInterpolator(rt, propertyName, propertyDiff.first, propertyDiff.second);
-    }
-
-    // We still pass allowDiscrete to use correct threshold for interpolation between incompatible values
-    // (e.g. when someone passes a keyword and a numeric value - in this case we interpolate them as discrete values)
-    styleInterpolator_.setAllowDiscrete(propertyName, allowDiscrete);
-
-    // Update the transition progress provider
-    progressProvider_.runProgressProvider(propertyName, isReversed, timestamp);
+  if (!propertySettings.allowDiscrete && isDiscreteProperty(propertyName, componentName_)) {
+    removeProperty(propertyName);
+    return;
   }
+
+  properties_.insert(propertyName);
+
+  const auto &valueChange = propertySettings.value;
+
+  bool isReversed;
+  if (lastUpdateValue.count(propertyName)) {
+    // TODO - get rid of lastValue dynamic in the future
+    isReversed = styleInterpolator_.createOrUpdateInterpolator(
+        rt, propertyName, jsi::valueFromDynamic(rt, lastUpdateValue.at(propertyName)), valueChange.second);
+  } else {
+    isReversed = styleInterpolator_.createOrUpdateInterpolator(rt, propertyName, valueChange.first, valueChange.second);
+  }
+
+  // Pass allowDiscrete so the interpolator picks the right threshold for
+  // incompatible value pairs (e.g. keyword interpolated against numeric).
+  styleInterpolator_.setAllowDiscrete(propertyName, propertySettings.allowDiscrete);
+
+  progressProvider_.runProgressProvider(propertyName, propertySettings.timing(), isReversed, timestamp);
 }
 
-void CSSLoopTransition::handleChangedProperties(
+folly::dynamic CSSLoopTransition::run(
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const PropertyValueDynamicDiffsMap &propertiesDiffs,
     const folly::dynamic &lastUpdateValue,
     const double timestamp) {
+  const folly::dynamic emptyObject = folly::dynamic::object();
+  const folly::dynamic &lastUpdates = lastUpdateValue.empty() ? emptyObject : lastUpdateValue;
+
   for (const auto &[propertyName, propertyDiff] : propertiesDiffs) {
-    const auto allowDiscrete = progressProvider_.getPropertySettings(propertyName).allowDiscrete;
-
-    if (!allowDiscrete && isDiscreteProperty(propertyName, componentName_)) {
-      removeProperty(propertyName);
-      continue;
-    }
-
-    properties_.insert(propertyName);
-
-    bool isReversed;
-    if (lastUpdateValue.count(propertyName)) {
-      isReversed = styleInterpolator_.createOrUpdateInterpolator(
-          propertyName, lastUpdateValue.at(propertyName), propertyDiff.second);
-    } else {
-      isReversed = styleInterpolator_.createOrUpdateInterpolator(propertyName, propertyDiff.first, propertyDiff.second);
-    }
-
-    styleInterpolator_.setAllowDiscrete(propertyName, allowDiscrete);
-
-    progressProvider_.runProgressProvider(propertyName, isReversed, timestamp);
+    runPropertyDynamic(propertyName, propertyDiff, lastUpdates, timestamp);
   }
+
+  progressProvider_.update(timestamp);
+  return computeCurrentStyle(shadowNode);
 }
 
-void CSSLoopTransition::removeProperties(const std::vector<std::string> &propertyNames) {
-  styleInterpolator_.removeProperties(propertyNames);
-  progressProvider_.removeProperties(propertyNames);
-  for (const auto &propertyName : propertyNames) {
-    properties_.erase(propertyName);
+void CSSLoopTransition::runPropertyDynamic(
+    const std::string &propertyName,
+    const PropertyValueDynamicDiff &propertyDiff,
+    const folly::dynamic &lastUpdateValue,
+    const double timestamp) {
+  const auto timing = progressProvider_.getPropertySettings(propertyName);
+
+  if (!timing.allowDiscrete && isDiscreteProperty(propertyName, componentName_)) {
+    removeProperty(propertyName);
+    return;
   }
+
+  properties_.insert(propertyName);
+
+  bool isReversed;
+  if (lastUpdateValue.count(propertyName)) {
+    isReversed = styleInterpolator_.createOrUpdateInterpolator(
+        propertyName, lastUpdateValue.at(propertyName), propertyDiff.second);
+  } else {
+    isReversed = styleInterpolator_.createOrUpdateInterpolator(propertyName, propertyDiff.first, propertyDiff.second);
+  }
+
+  styleInterpolator_.setAllowDiscrete(propertyName, timing.allowDiscrete);
+
+  progressProvider_.runProgressProvider(propertyName, timing, isReversed, timestamp);
+}
+
+void CSSLoopTransition::updateSettings(
+    const PropertiesTimingSettingsMap &changedPropertiesSettings,
+    const std::vector<std::string> &removedProperties) {
+  for (const auto &propertyName : removedProperties) {
+    removeProperty(propertyName);
+  }
+  progressProvider_.setPropertySettings(changedPropertiesSettings);
 }
 
 void CSSLoopTransition::removeProperty(const std::string &propertyName) {
+  properties_.erase(propertyName);
   styleInterpolator_.removeProperty(propertyName);
   progressProvider_.removeProperty(propertyName);
-  properties_.erase(propertyName);
 }
 
 } // namespace reanimated::css
