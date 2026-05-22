@@ -13,8 +13,9 @@ namespace reanimated::css {
 
 CSSAnimationsRegistry::CSSAnimationsRegistry(
     const std::shared_ptr<OperationsLoop> &loop,
-    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry)
-    : loop_(loop), keyframesRegistry_(keyframesRegistry) {}
+    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
+    const std::shared_ptr<CSSPlatformAnimationFactory> &platformAnimationFactory)
+    : loop_(loop), keyframesRegistry_(keyframesRegistry), platformAnimationFactory_(platformAnimationFactory) {}
 
 bool CSSAnimationsRegistry::needsFlush() const {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
@@ -187,7 +188,13 @@ std::shared_ptr<CSSAnimation> CSSAnimationsRegistry::createAnimation(
   }
 
   return std::make_shared<CSSAnimation>(
-      shadowNode->getTag(), name, keyframesConfig->get(), settings, animationObserver_, timestamp);
+      shadowNode->getTag(),
+      name,
+      keyframesConfig->get(),
+      settings,
+      animationObserver_,
+      platformAnimationFactory_,
+      timestamp);
 }
 
 void CSSAnimationsRegistry::updateRegistryForRevertedAnimations() {

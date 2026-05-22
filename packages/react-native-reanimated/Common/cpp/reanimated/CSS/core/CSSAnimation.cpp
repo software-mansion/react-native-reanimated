@@ -12,8 +12,11 @@ CSSAnimation::CSSAnimation(
     const CSSKeyframesConfig &cssKeyframesConfig,
     const CSSAnimationSettings &settings,
     Observer &observer,
+    const std::shared_ptr<CSSPlatformAnimationFactory> &platformAnimationFactory,
     const double timestamp)
-    : name_(std::move(animationName)),
+    : viewTag_(viewTag),
+      name_(std::move(animationName)),
+      keyframesConfig_(cssKeyframesConfig),
       settings_(std::make_shared<CSSAnimationSettings>(settings)),
       styleInterpolator_(cssKeyframesConfig.styleInterpolatorFactory->create()),
       loopAnimation_(std::make_shared<CSSLoopAnimation>(
@@ -22,7 +25,10 @@ CSSAnimation::CSSAnimation(
           settings_,
           cssKeyframesConfig.keyframeEasingConfigs,
           observer,
-          timestamp)) {}
+          timestamp)),
+      platformAnimationFactory_(platformAnimationFactory) {
+  updatePropertyRouting();
+}
 
 AnimationProgressState CSSAnimation::getState() const {
   return loopAnimation_->getState();
@@ -37,15 +43,21 @@ folly::dynamic CSSAnimation::getCurrentInterpolationStyle(const std::shared_ptr<
 }
 
 folly::dynamic CSSAnimation::getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const {
-  return styleInterpolator_->getResetStyle(shadowNode);
+  return keyframesConfig_.styleInterpolatorFactory->getResetStyle(shadowNode);
 }
 
 void CSSAnimation::schedule(OperationsLoop &loop) {
   loopAnimation_->schedule(loop);
+  if (platformAnimation_) {
+    platformAnimation_->schedule(loop.resolveTimestamp() + settings_->delay);
+  }
 }
 
 void CSSAnimation::unschedule(OperationsLoop &loop) {
   loopAnimation_->unschedule(loop);
+  if (platformAnimation_) {
+    platformAnimation_->unschedule();
+  }
 }
 
 void CSSAnimation::updateSettings(const PartialCSSAnimationSettings &updatedSettings, const double timestamp) {
@@ -55,6 +67,16 @@ void CSSAnimation::updateSettings(const PartialCSSAnimationSettings &updatedSett
 bool CSSAnimation::isReversed() const {
   return settings_->direction == AnimationDirection::Reverse ||
       settings_->direction == AnimationDirection::AlternateReverse;
+}
+
+void CSSAnimation::updatePropertyRouting() {
+  if (!platformAnimationFactory_) {
+    return;
+  }
+  const auto &allProperties = keyframesConfig_.styleInterpolatorFactory->getAllPropertyNames();
+  auto result = platformAnimationFactory_->resolve(viewTag_, name_, allProperties, keyframesConfig_, settings_);
+  platformAnimation_ = result.animation;
+  loopAnimation_->setAnimatedProperties(result.remainingProperties);
 }
 
 } // namespace reanimated::css

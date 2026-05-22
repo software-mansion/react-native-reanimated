@@ -21,6 +21,8 @@ class AnimationStyleInterpolatorFactory {
 
   const std::unordered_set<std::string> &getAllPropertyNames() const;
 
+  folly::dynamic getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const;
+
  private:
   const std::string nativeComponentName_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;

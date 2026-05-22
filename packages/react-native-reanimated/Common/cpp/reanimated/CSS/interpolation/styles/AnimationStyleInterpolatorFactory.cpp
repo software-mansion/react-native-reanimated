@@ -65,4 +65,13 @@ std::unordered_set<std::string> AnimationStyleInterpolatorFactory::collectProper
   return propertyNames;
 }
 
+folly::dynamic AnimationStyleInterpolatorFactory::getResetStyle(
+    const std::shared_ptr<const ShadowNode> &shadowNode) const {
+  folly::dynamic style = folly::dynamic::object;
+  for (const auto &[name, interpolator] : *interpolatorsByProperty_) {
+    style[name] = interpolator->getResetStyle(shadowNode);
+  }
+  return style;
+}
+
 } // namespace reanimated::css
