@@ -19,7 +19,7 @@ Feature flags are available since Reanimated 4.
 | [`DISABLE_COMMIT_PAUSING_MECHANISM`](#disable_commit_pausing_mechanism)                             | [static](#static-feature-flags) |  4.0.0   |  –   |                  `false`                  |
 | [`ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#android_synchronously_update_ui_props)                   | [static](#static-feature-flags) |  4.0.0   |  –   |                  `false`                  |
 | [`IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#ios_synchronously_update_ui_props)                           | [static](#static-feature-flags) |  4.2.0   |  –   |                  `false`                  |
-| [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#experimental_css_animations_for_svg_components) | [static](#static-feature-flags) |  4.1.0   |  –   |                  `false`                  |
+| [`EXPERIMENTAL_PLATFORM_CSS_ANIMATIONS`](#experimental_platform_css_animations)                     | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
 | [`USE_SYNCHRONIZABLE_FOR_MUTABLES`](#use_synchronizable_for_mutables)                               | [static](#static-feature-flags) |  4.1.0   |  –   | `true` for 4.3.0+ <br/> `false` otherwise |
 | [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](#use_commit_hook_only_for_react_commits)                 | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.3.0+ <br/> `false` otherwise |
 | [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions)                           | [static](#static-feature-flags) |  4.2.0   |  –   |                  `false`                  |
@@ -96,9 +96,9 @@ This feature flag works only on Android and has no effect on iOS. For more detai
 
 When enabled, non-layout styles will be applied using the `[RCTSurfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:props:]` method (which doesn't involve layout recalculation) instead of than `ShadowTree::commit` method (which requires layout recalculation). Limitations and unwanted side effects are the same as for `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`. The set of supported styles is the same as for `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`, with the addition of `shadowOffset`, `shadowOpacity` and `shadowRadius`, which are iOS-only. For more details, see the original [PR #8367](https://github.com/software-mansion/react-native-reanimated/pull/8367).
 
-### `EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`
+### `EXPERIMENTAL_PLATFORM_CSS_ANIMATIONS`
 
-When enabled, CSS animations and transitions will also work for a limited set of props of several components from [`react-native-svg`](https://github.com/software-mansion/react-native-svg) library. Currently, `Circle`, `Ellipse`, `Line`, `Path` and `Rect` components are supported.
+When enabled, Reanimated may route CSS animations and transitions to platform-native animation APIs (Core Animation on Apple platforms) instead of running them on the JS-driven animation loop. Platform-routed animations run on the platform's animation thread, which can improve smoothness for supported properties at the cost of a different runtime trade-off model. The set of supported properties is determined by the platform implementation and currently only iOS provides one. This feature flag is experimental and defaults to `false`.
 
 ### `USE_SYNCHRONIZABLE_FOR_MUTABLES`
 
