@@ -76,8 +76,6 @@ export function unregisterCSSTransition(viewTag: number) {
   ReanimatedModule.unregisterCSSTransition(viewTag);
 }
 
-// PSEUDO STYLES
-
 export function registerPseudoStyle(
   shadowNodeWrapper: ShadowNodeWrapper,
   config: CSSPseudoStyleConfig

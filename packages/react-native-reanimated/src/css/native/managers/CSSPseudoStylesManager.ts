@@ -1,10 +1,12 @@
 'use strict';
 import type { NativePropsBuilder, UnknownRecord } from '../../../common';
+import { logger } from '../../../common';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
+import { NATIVE_PSEUDO_SELECTORS } from '../../constants';
 import type {
   CSSTransitionProperties,
   ICSSPseudoStylesManager,
-  PseudoSelectorKey,
+  NativePseudoSelectorKey,
 } from '../../types';
 import type { PseudoStylesBySelector } from '../../utils';
 import { deepEqual } from '../../utils';
@@ -63,15 +65,23 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
     for (const [selector, { selectorStyle, defaultStyle }] of Object.entries(
       pseudoStylesBySelector
     )) {
+      if (!NATIVE_PSEUDO_SELECTORS.has(selector as NativePseudoSelectorKey)) {
+        if (__DEV__) {
+          logger.warn(
+            `Pseudo selector "${selector}" is not supported on native and will be ignored.`
+          );
+        }
+        continue;
+      }
       const config = this.buildPseudoStyleConfig(
-        selector as PseudoSelectorKey,
+        selector as NativePseudoSelectorKey,
         selectorStyle,
         defaultStyle,
         normalizedTransition
       );
       registerPseudoStyle(this.shadowNodeWrapper, config);
+      this.isRegistered = true;
     }
-    this.isRegistered = true;
   }
 
   unmountCleanup(): void {
@@ -86,7 +96,7 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
   }
 
   private buildPseudoStyleConfig(
-    selector: PseudoSelectorKey,
+    selector: NativePseudoSelectorKey,
     selectorStyle: UnknownRecord,
     defaultStyle: UnknownRecord,
     normalizedTransition: NormalizedCSSTransitionConfig | null

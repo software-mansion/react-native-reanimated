@@ -74,9 +74,6 @@ export function filterCSSAndStyleProperties<S extends object>(
           selectorStyle: {},
           defaultStyle: {},
         });
-        // Forward `undefined` to the native side as-is — C++ injects the
-        // current default for the prop so we can animate between an actual
-        // value and the default.
         branch.selectorStyle[prop] = selectorValue;
         if (defaultValue !== undefined) {
           branch.defaultStyle[prop] = defaultValue;
