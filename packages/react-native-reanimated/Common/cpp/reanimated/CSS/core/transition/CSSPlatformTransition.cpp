@@ -2,6 +2,8 @@
 
 #include <jsi/JSIDynamic.h>
 
+#include <utility>
+
 namespace reanimated::css {
 
 CSSPlatformTransition::CSSPlatformTransition(
@@ -9,9 +11,9 @@ CSSPlatformTransition::CSSPlatformTransition(
     const std::shared_ptr<CSSPlatformTransitionProxy> &proxy)
     : viewTag_(viewTag), proxy_(proxy) {}
 
-void CSSPlatformTransition::run(jsi::Runtime &rt, const CSSPlatformTransitionConfig &config, const double timestamp) {
+void CSSPlatformTransition::run(jsi::Runtime &rt, const CSSPlatformTransitionConfig &config) {
   for (const auto &entry : config.changedProperties) {
-    runEntry(rt, entry, timestamp);
+    runEntry(rt, entry);
   }
 
   for (const auto &propertyName : config.removedProperties) {
@@ -19,10 +21,7 @@ void CSSPlatformTransition::run(jsi::Runtime &rt, const CSSPlatformTransitionCon
   }
 }
 
-void CSSPlatformTransition::runEntry(
-    jsi::Runtime &rt,
-    const CSSPlatformTransitionRawEntry &entry,
-    const double /*timestamp*/) {
+void CSSPlatformTransition::runEntry(jsi::Runtime &rt, const CSSPlatformTransitionRawEntry &entry) {
   // The platform driver only needs the destination value - duration/delay/easing
   // describe the trajectory it should animate along from the current presentation
   // value. We forward the jsi value pair's `second` (toValue) as folly::dynamic.

@@ -21,13 +21,13 @@ class CSSPlatformTransition {
 
   CSSPlatformTransition(const CSSPlatformTransition &) = delete;
 
-  void run(jsi::Runtime &rt, const CSSPlatformTransitionConfig &config, double timestamp);
+  void run(jsi::Runtime &rt, const CSSPlatformTransitionConfig &config);
 
   void cancel(const std::string &propertyName);
   void cancelAll();
 
  private:
-  void runEntry(jsi::Runtime &rt, const CSSPlatformTransitionRawEntry &entry, double timestamp);
+  void runEntry(jsi::Runtime &rt, const CSSPlatformTransitionRawEntry &entry);
 
   const Tag viewTag_;
   const std::shared_ptr<CSSPlatformTransitionProxy> proxy_;

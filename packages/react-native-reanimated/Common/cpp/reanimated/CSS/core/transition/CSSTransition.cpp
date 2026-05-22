@@ -73,13 +73,12 @@ void CSSTransition::updateSettings(
   loopTransition_->updateSettings(changedPropertiesSettings, removedProperties);
 }
 
-CSSTransitionConfig
-CSSTransition::splitForPlatformRouting(jsi::Runtime &rt, CSSTransitionConfig &&config, const double timestamp) {
+CSSTransitionConfig CSSTransition::splitForPlatformRouting(jsi::Runtime &rt, CSSTransitionConfig &&config) {
   auto processed = platformTransitionProxy_->processConfig(std::move(config), routing_);
   routing_ = std::move(processed.routing);
 
   if (!processed.platform.changedProperties.empty() || !processed.platform.removedProperties.empty()) {
-    ensurePlatformTransition().run(rt, processed.platform, timestamp);
+    ensurePlatformTransition().run(rt, processed.platform);
   }
 
   return std::move(processed.loop);
