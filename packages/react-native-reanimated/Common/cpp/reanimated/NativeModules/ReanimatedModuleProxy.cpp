@@ -226,16 +226,14 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #endif // ANDROID
       subscribeForKeyboardEventsFunction_(platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
-  {
-    auto lock = updatesRegistryManager_->lock();
-    // Add registries in order of their priority (from the lowest to the
-    // highest)
-    // CSS transitions should be overriden by animated style animations;
-    // animated style animations should be overriden by CSS animations.
-    updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
-    updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
-    updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
-  }
+  // No lock needed at construction - no other thread holds a reference yet.
+  // Add registries in order of their priority (from the lowest to the
+  // highest). CSS transitions should be overriden by animated style
+  // animations; animated style animations should be overriden by CSS
+  // animations.
+  updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
+  updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
+  updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
 
 #ifdef ANDROID
   // Pre-allocate the synchronous props buffers so the first frame doesn't pay
@@ -539,8 +537,8 @@ void ReanimatedModuleProxy::setViewStyle(jsi::Runtime &rt, const jsi::Value &vie
 }
 
 void ReanimatedModuleProxy::markNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) {
-  auto lock = updatesRegistryManager_->lock();
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  auto lock = updatesRegistryManager_->lock();
   updatesRegistryManager_->markNodeAsRemovable(shadowNode);
 }
 
@@ -578,10 +576,11 @@ void ReanimatedModuleProxy::applyCSSAnimations(
     const jsi::Value &compoundComponentName,
     const jsi::Value &animationUpdates) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  const auto compoundComponentNameStr = compoundComponentName.asString(rt).utf8(rt);
   const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
 
   auto lock = updatesRegistryManager_->lock();
-  cssAnimationsRegistry_->apply(shadowNode, compoundComponentName.asString(rt).utf8(rt), updates);
+  cssAnimationsRegistry_->apply(shadowNode, compoundComponentNameStr, updates);
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
@@ -828,9 +827,9 @@ AnimationMutations ReanimatedModuleProxy::collectNonLayoutAnimationUpdates() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::collectNonLayoutAnimationUpdates");
 
   AnimationMutations mutations;
+  jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   {
     auto lock = updatesRegistryManager_->lock();
-    jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
     animatedPropsRegistry_->flushNonLayoutUpdates(uiRuntime, mutations);
   }
   return mutations;
@@ -1042,29 +1041,34 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
 
   std::unordered_map<SurfaceId, PropsMap> propsMapBySurface;
+  PropsMap collectedProps;
+  bool flushRegistry;
 
-  // Release the lock before shadowTree.commit - it re-enters via ReanimatedCommitHook.
+  // Snapshot under the lock; shape propsMapBySurface afterwards. Lock must
+  // be released before shadowTree.commit below - it re-enters via
+  // ReanimatedCommitHook.
   {
     auto lock = updatesRegistryManager_->lock();
 #ifdef ANDROID
     updatesRegistryManager_->collectPropsToRevertBySurface(propsMapBySurface);
 #endif
-
-    if (shouldFlushRegistry_) {
+    flushRegistry = shouldFlushRegistry_;
+    if (flushRegistry) {
       shouldFlushRegistry_ = false;
-      const auto propsMap = updatesRegistryManager_->collectProps();
-      for (auto const &[family, props] : propsMap) {
-        const auto surfaceId = family->getSurfaceId();
-        auto &propsVector = propsMapBySurface[surfaceId][family];
-        for (const auto &prop : props) {
-          propsVector.emplace_back(prop);
-        }
+      collectedProps = updatesRegistryManager_->collectProps();
+    }
+  }
+
+  if (flushRegistry) {
+    for (auto const &[family, props] : collectedProps) {
+      auto &propsVector = propsMapBySurface[family->getSurfaceId()][family];
+      for (const auto &prop : props) {
+        propsVector.emplace_back(prop);
       }
-    } else {
-      for (auto const &[shadowNodeFamily, props] : updatesBatch) {
-        SurfaceId surfaceId = shadowNodeFamily->getSurfaceId();
-        propsMapBySurface[surfaceId][shadowNodeFamily].emplace_back(props);
-      }
+    }
+  } else {
+    for (auto const &[shadowNodeFamily, props] : updatesBatch) {
+      propsMapBySurface[shadowNodeFamily->getSurfaceId()][shadowNodeFamily].emplace_back(props);
     }
   }
 
