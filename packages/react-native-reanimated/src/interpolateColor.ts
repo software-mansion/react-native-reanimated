@@ -338,7 +338,8 @@ function processColorRanges(
 }
 
 // Binary search mirroring `interpolate`'s segment selection — returns the
-// bracket `k` such that `inputRange[k] <= value <= inputRange[k+1]`.
+// bracket `k` such that `inputRange[k] <= value <= inputRange[k+1]`, falling
+// through to the final segment when `value` is past the last stop.
 function findBracketIndex(
   value: number,
   inputRange: readonly number[]
