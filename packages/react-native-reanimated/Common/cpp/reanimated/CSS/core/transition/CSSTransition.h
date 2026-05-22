@@ -69,7 +69,7 @@ class CSSTransition {
   // Splits the incoming config via the platform proxy, applies the platform-side
   // entries directly, and returns the loop-side config (settings + value diffs)
   // for the caller to feed into updateSettings / run.
-  CSSTransitionConfig splitForPlatformRouting(jsi::Runtime &rt, CSSTransitionConfig &&config);
+  CSSTransitionConfig splitForPlatformRouting(jsi::Runtime &rt, CSSTransitionConfig &&config, double timestamp);
 
   folly::dynamic computeCurrentStyle();
 

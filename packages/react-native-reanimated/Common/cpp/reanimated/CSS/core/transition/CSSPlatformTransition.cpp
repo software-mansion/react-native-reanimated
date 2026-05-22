@@ -1,6 +1,6 @@
 #include <reanimated/CSS/core/transition/CSSPlatformTransition.h>
 
-#include <jsi/JSIDynamic.h>
+#include <reanimated/CSS/utils/reversingShortening.h>
 
 #include <utility>
 
@@ -11,9 +11,9 @@ CSSPlatformTransition::CSSPlatformTransition(
     const std::shared_ptr<CSSPlatformTransitionProxy> &proxy)
     : viewTag_(viewTag), proxy_(proxy) {}
 
-void CSSPlatformTransition::run(jsi::Runtime &rt, const CSSPlatformTransitionConfig &config) {
+void CSSPlatformTransition::run(jsi::Runtime &rt, const CSSPlatformTransitionConfig &config, const double timestamp) {
   for (const auto &entry : config.changedProperties) {
-    runEntry(rt, entry);
+    runEntry(rt, entry, timestamp);
   }
 
   for (const auto &propertyName : config.removedProperties) {
@@ -21,21 +21,31 @@ void CSSPlatformTransition::run(jsi::Runtime &rt, const CSSPlatformTransitionCon
   }
 }
 
-void CSSPlatformTransition::runEntry(jsi::Runtime &rt, const CSSPlatformTransitionRawEntry &entry) {
-  // The platform driver only needs the destination value - duration/delay/easing
-  // describe the trajectory it should animate along from the current presentation
-  // value. We forward the jsi value pair's `second` (toValue) as folly::dynamic.
-  auto toValue = jsi::dynamicFromValue(rt, entry.valueDiff.second);
+void CSSPlatformTransition::runEntry(
+    jsi::Runtime &rt,
+    const CSSPlatformTransitionRawEntry &entry,
+    const double timestamp) {
+  // null/undefined endpoints are resolved to the property's default inside
+  // parsePlatformValue; type mismatches and unsupported properties throw.
+  auto fromValue = parsePlatformValue(rt, entry.propertyName, entry.valueDiff.first);
+  auto toValue = parsePlatformValue(rt, entry.propertyName, entry.valueDiff.second);
+
+  const auto activeIt = activeProperties_.find(entry.propertyName);
+  auto *prev =
+      activeIt != activeProperties_.end() && toValue == activeIt->second.adjustedStart ? &activeIt->second : nullptr;
+  auto rs = prev
+      ? reverseShorten(
+            prev->previous, timestamp, entry.settings.duration, entry.settings.delay, entry.settings.easingConfig)
+      : makeReversingState(timestamp, entry.settings.duration, entry.settings.delay, entry.settings.easingConfig);
 
   proxy_->run(CSSPlatformTransitionPropertyConfig{
-      viewTag_,
-      entry.propertyName,
-      std::move(toValue),
-      entry.settings.duration,
-      entry.settings.delay,
-      entry.settings.easingConfig});
+      viewTag_, entry.propertyName, fromValue, toValue, rs.duration, rs.startTimestamp, entry.settings.easingConfig});
 
-  activeProperties_.insert(entry.propertyName);
+  activeProperties_[entry.propertyName] = ActiveProperty{
+      prev ? std::move(prev->adjustedEnd) : std::move(fromValue),
+      std::move(toValue),
+      std::move(rs),
+  };
 }
 
 void CSSPlatformTransition::cancel(const std::string &propertyName) {
@@ -45,7 +55,7 @@ void CSSPlatformTransition::cancel(const std::string &propertyName) {
 }
 
 void CSSPlatformTransition::cancelAll() {
-  for (const auto &propertyName : activeProperties_) {
+  for (const auto &[propertyName, _] : activeProperties_) {
     proxy_->remove(viewTag_, propertyName);
   }
   activeProperties_.clear();
