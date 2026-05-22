@@ -37,6 +37,7 @@ class ScriptBufferWrapper(
                     val assetURL = uri.substring(assetsPrefix.length)
                     initHybridFromAssets(assetManager, assetURL)
                 }
+                uri.startsWith("/") -> initHybridFromFile(uri)
                 else -> {
                     val scriptContent =
                         try {
