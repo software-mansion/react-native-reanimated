@@ -118,6 +118,7 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatc
 CSSTransitionsRegistry::TransitionObserver::TransitionObserver(CSSTransitionsRegistry &owner) : owner_(owner) {}
 
 void CSSTransitionsRegistry::TransitionObserver::onTransitionUpdate(const Tag viewTag) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   owner_.updatedTags_.insert(viewTag);
 }
 

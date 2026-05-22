@@ -12,7 +12,6 @@
 #endif
 
 #include <memory>
-#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -46,34 +45,26 @@ struct PropsToRevert {
 using PropsToRevertMap = std::unordered_map<Tag, PropsToRevert>;
 #endif
 
+// All public methods require `UpdatesRegistryManager::lock()` to be held.
 class UpdatesRegistry {
  public:
   virtual ~UpdatesRegistry() {}
 
   virtual bool isEmpty() const;
   folly::dynamic get(Tag tag) const;
-  void remove(Tag tag) {
-    std::lock_guard<std::mutex> lock{mutex_};
-    removeTag(tag);
-  }
+  void remove(Tag tag);
 
 #ifdef ANDROID
   bool hasPropsToRevert() const;
   void collectPropsToRevert(PropsToRevertMap &propsToRevertMap);
 #endif
 
-  // Drains pending style updates as folly::dynamic (acquires mutex_).
-  void flushUpdates(UpdatesBatch &updatesBatch) {
-    std::lock_guard<std::mutex> lock{mutex_};
-    flush(updatesBatch);
-  }
+  // Drains pending style updates as folly::dynamic.
+  void flushUpdates(UpdatesBatch &updatesBatch);
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
-  // Drains pending typed animated props (acquires mutex_).
-  void flushUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
-    std::lock_guard<std::mutex> lock{mutex_};
-    flush(updatesBatch);
-  }
+  // Drains pending typed animated props.
+  void flushUpdates(UpdatesBatchAnimatedProps &updatesBatch);
 
   // Get only non-layout updates (for android event handling) in the animation backend path.
   void flushNonLayoutUpdates(jsi::Runtime &rt, facebook::react::AnimationMutations &mutations);
@@ -93,7 +84,6 @@ class UpdatesRegistry {
   UpdatesBatch getPendingUpdates();
 
  protected:
-  mutable std::mutex mutex_;
   RegistryMap updatesRegistry_;
 
   /// Assumes the caller already locked the registry.

@@ -1,4 +1,5 @@
 #include <reanimated/Fabric/updates/OperationsLoop.h>
+#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 
 #include <utility>
 
@@ -7,8 +8,12 @@ namespace reanimated {
 OperationsLoop::OperationsLoop(
     const std::shared_ptr<worklets::UIScheduler> &uiScheduler,
     const RequestRenderFunction &requestRender,
-    const GetAnimationTimestampFunction &getTimestamp)
-    : uiScheduler_(uiScheduler), requestRender_(requestRender), getTimestamp_(getTimestamp) {}
+    const GetAnimationTimestampFunction &getTimestamp,
+    const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager)
+    : uiScheduler_(uiScheduler),
+      requestRender_(requestRender),
+      getTimestamp_(getTimestamp),
+      updatesRegistryManager_(updatesRegistryManager) {}
 
 double OperationsLoop::resolveTimestamp() {
   // Fast path: cache hit is lock-free.
@@ -42,6 +47,7 @@ void OperationsLoop::remove(const std::shared_ptr<LoopOperation> &operation) {
 }
 
 void OperationsLoop::update() {
+  auto lock = updatesRegistryManager_->lock();
   auto [operations, timestamp] = beginFrame();
   applyScheduledOperations(std::move(operations), timestamp);
   activateDelayedOperations(timestamp);
