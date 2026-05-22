@@ -395,8 +395,8 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
 
   jsi_utils::addMethod<2>(
       rt, obj, "createSerializableRegExp", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
-        auto pattern = at<0>(args).getString(rt).utf8(rt);
-        auto flags = at<1>(args).getString(rt).utf8(rt);
+        const auto pattern = at<0>(args).getString(rt).utf8(rt);
+        const auto flags = at<1>(args).getString(rt).utf8(rt);
         return makeSerializableRegExp(rt, pattern, flags);
       });
 
