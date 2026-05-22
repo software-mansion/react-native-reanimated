@@ -1,4 +1,5 @@
 #include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
+#include <reanimated/Tools/FeatureFlags.h>
 
 #include <jsi/JSIDynamic.h>
 
@@ -15,6 +16,9 @@ CSSPlatformTransitionProxy::CSSPlatformTransitionProxy(
       removeTransition_(std::move(removeTransition)) {}
 
 bool CSSPlatformTransitionProxy::canRoute(const std::string &propertyName, const EasingConfig &easing) const {
+  if constexpr (!StaticFeatureFlags::getFlag("EXPERIMENTAL_PLATFORM_CSS_ANIMATIONS")) {
+    return false;
+  }
   return canRoute_ && canRoute_(propertyName, easing);
 }
 
