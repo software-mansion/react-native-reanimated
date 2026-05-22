@@ -54,6 +54,7 @@ class Serializable {
     SymbolType, /* unused */
     ShareableType,
     ErrorType,
+    RegExpType,
   };
 
   explicit Serializable(ValueType valueType) : valueType_(valueType) {}

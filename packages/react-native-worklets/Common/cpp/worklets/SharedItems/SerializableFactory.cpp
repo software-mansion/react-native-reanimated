@@ -113,6 +113,11 @@ jsi::Value makeSerializableError(
   return SerializableJSRef::newNativeStateObject(rt, serializable);
 }
 
+jsi::Value makeSerializableRegExp(jsi::Runtime &rt, const std::string &pattern, const std::string &flags) {
+  auto serializable = std::make_shared<SerializableRegExp>(pattern, flags);
+  return SerializableJSRef::newNativeStateObject(rt, serializable);
+}
+
 jsi::Value makeSerializableHostObject(jsi::Runtime &rt, const std::shared_ptr<jsi::HostObject> &value) {
   const auto serializable = std::make_shared<SerializableHostObject>(rt, value);
   return SerializableJSRef::newNativeStateObject(rt, serializable);

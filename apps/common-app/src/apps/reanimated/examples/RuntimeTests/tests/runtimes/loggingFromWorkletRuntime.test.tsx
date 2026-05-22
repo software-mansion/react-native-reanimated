@@ -256,8 +256,7 @@ const testCases: Record<string, TestCase> = {
     },
   },
   regExp: {
-    bundleMode: '/abc/gi',
-    noBundleMode: '{}',
+    expected: '/abc/gi',
     factory: () => {
       'worklet';
       return /abc/gi;
