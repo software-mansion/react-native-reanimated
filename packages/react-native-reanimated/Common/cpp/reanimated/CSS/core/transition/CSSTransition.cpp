@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <utility>
+#include <vector>
 
 namespace reanimated::css {
 
@@ -13,8 +14,11 @@ CSSTransition::CSSTransition(
     Observer &observer,
     const std::shared_ptr<CSSPlatformTransitionProxy> &platformTransitionProxy)
     : shadowNode_(std::move(shadowNode)),
-      viewStylesRepository_(viewStylesRepository),
-      observer_(observer),
+      loopTransition_(std::make_shared<CSSLoopTransition>(
+          shadowNode_->getTag(),
+          shadowNode_->getComponentName(),
+          viewStylesRepository,
+          observer)),
       platformTransitionProxy_(platformTransitionProxy) {}
 
 CSSTransition::~CSSTransition() {
@@ -24,105 +28,72 @@ CSSTransition::~CSSTransition() {
 }
 
 TransitionProperties CSSTransition::getProperties() const {
-  TransitionProperties result;
-  result.reserve(routing_.loop.size() + routing_.platform.size());
-  result.insert(routing_.loop.begin(), routing_.loop.end());
+  // Loop-side properties are tracked by the loop transition; merge in any
+  // routed-to-platform names so callers see the full set.
+  TransitionProperties result = loopTransition_->getProperties();
   result.insert(routing_.platform.begin(), routing_.platform.end());
   return result;
 }
 
 double CSSTransition::getMinDelay(double timestamp) const {
-  return loopTransition_ ? loopTransition_->getMinDelay(timestamp) : 0;
+  return loopTransition_->getMinDelay(timestamp);
 }
 
 TransitionProgressState CSSTransition::getState() const {
-  return loopTransition_ ? loopTransition_->getState() : TransitionProgressState::Idle;
+  return loopTransition_->getState();
 }
 
 void CSSTransition::schedule(OperationsLoop &loop) {
-  if (!loopTransition_) {
-    return;
-  }
   const auto timestamp = loop.resolveTimestamp();
   loop.schedule(loopTransition_, timestamp + loopTransition_->getMinDelay(timestamp));
 }
 
 void CSSTransition::unschedule(OperationsLoop &loop) {
-  if (loopTransition_) {
-    loop.remove(loopTransition_);
-  }
+  loop.remove(loopTransition_);
 }
 
 folly::dynamic CSSTransition::run(
     jsi::Runtime &rt,
-    CSSTransitionConfig &&config,
+    const PropertyValueDiffsMap &propertiesDiffs,
     const folly::dynamic &lastUpdateValue,
     const double timestamp) {
-  const folly::dynamic emptyObject = folly::dynamic::object();
-  const folly::dynamic &lastUpdates = lastUpdateValue.empty() ? emptyObject : lastUpdateValue;
-
-  auto processed = platformTransitionProxy_->processConfig(rt, shadowNode_->getTag(), std::move(config), routing_);
-  routing_ = std::move(processed.routing);
-
-  folly::dynamic initialUpdate = folly::dynamic::object();
-  initialUpdate.update(runLoop(rt, processed.loop, lastUpdates, timestamp));
-  initialUpdate.update(runPlatform(processed.platform));
-  return initialUpdate;
+  return loopTransition_->run(rt, shadowNode_, propertiesDiffs, lastUpdateValue, timestamp);
 }
 
 folly::dynamic CSSTransition::run(
     const PropertyValueDynamicDiffsMap &propertiesDiffs,
     const folly::dynamic &lastUpdateValue,
     const double timestamp) {
-  // The dynamic path is used by `PseudoStylesRegistry` only; pseudo-driven
-  // transitions always stay on the loop side, so we skip the proxy entirely.
-  if (!loopTransition_) {
-    loopTransition_ = std::make_shared<CSSLoopTransition>(
-        shadowNode_->getTag(), shadowNode_->getComponentName(), viewStylesRepository_, observer_);
-  }
-  for (const auto &[propertyName, _] : propertiesDiffs) {
-    routing_.loop.insert(propertyName);
-  }
   return loopTransition_->run(shadowNode_, propertiesDiffs, lastUpdateValue, timestamp);
 }
 
 void CSSTransition::updateSettings(
-    const PropertiesTimingSettingsMap &changedPropertiesSettings,
+    const PropertiesSettingsMap &changedPropertiesSettings,
     const std::vector<std::string> &removedProperties) {
-  if (!loopTransition_) {
-    loopTransition_ = std::make_shared<CSSLoopTransition>(
-        shadowNode_->getTag(), shadowNode_->getComponentName(), viewStylesRepository_, observer_);
-  }
-  for (const auto &propertyName : removedProperties) {
-    routing_.loop.erase(propertyName);
-  }
   loopTransition_->updateSettings(changedPropertiesSettings, removedProperties);
 }
 
-folly::dynamic CSSTransition::computeCurrentStyle() {
-  if (!loopTransition_) {
-    return folly::dynamic::object();
+CSSTransitionConfig
+CSSTransition::splitForPlatformRouting(jsi::Runtime &rt, CSSTransitionConfig &&config, const double timestamp) {
+  auto processed = platformTransitionProxy_->processConfig(std::move(config), routing_);
+  routing_ = std::move(processed.routing);
+
+  if (!processed.platform.changedProperties.empty() || !processed.platform.removedProperties.empty()) {
+    ensurePlatformTransition().run(rt, processed.platform, timestamp);
   }
+
+  return std::move(processed.loop);
+}
+
+folly::dynamic CSSTransition::computeCurrentStyle() {
   return loopTransition_->computeCurrentStyle(shadowNode_);
 }
 
-folly::dynamic CSSTransition::runLoop(
-    jsi::Runtime &rt,
-    const CSSTransitionConfig &config,
-    const folly::dynamic &lastUpdates,
-    const double timestamp) {
-  if (!loopTransition_) {
-    loopTransition_ = std::make_shared<CSSLoopTransition>(
-        shadowNode_->getTag(), shadowNode_->getComponentName(), viewStylesRepository_, observer_);
-  }
-  return loopTransition_->run(rt, shadowNode_, config, lastUpdates, timestamp);
-}
-
-folly::dynamic CSSTransition::runPlatform(const CSSPlatformTransitionConfig &config) {
+CSSPlatformTransition &CSSTransition::ensurePlatformTransition() {
   if (!platformTransition_) {
     platformTransition_ = std::make_unique<CSSPlatformTransition>(shadowNode_->getTag(), platformTransitionProxy_);
   }
-  return platformTransition_->run(config);
+  return *platformTransition_;
 }
 
 } // namespace reanimated::css

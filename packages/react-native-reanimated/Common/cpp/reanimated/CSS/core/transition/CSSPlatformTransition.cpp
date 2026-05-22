@@ -1,5 +1,7 @@
 #include <reanimated/CSS/core/transition/CSSPlatformTransition.h>
 
+#include <jsi/JSIDynamic.h>
+
 namespace reanimated::css {
 
 CSSPlatformTransition::CSSPlatformTransition(
@@ -7,22 +9,34 @@ CSSPlatformTransition::CSSPlatformTransition(
     const std::shared_ptr<CSSPlatformTransitionProxy> &proxy)
     : viewTag_(viewTag), proxy_(proxy) {}
 
-folly::dynamic CSSPlatformTransition::run(const CSSPlatformTransitionConfig &config) {
-  folly::dynamic initialUpdate = folly::dynamic::object();
-
-  for (const auto &propertyConfig : config.changedProperties) {
-    // The model layer needs to settle on the toValue so RN's view stays at
-    // the final state once the native animation completes.
-    initialUpdate[propertyConfig.propertyName] = propertyConfig.toValue;
-    proxy_->run(propertyConfig);
-    activeProperties_.insert(propertyConfig.propertyName);
+void CSSPlatformTransition::run(jsi::Runtime &rt, const CSSPlatformTransitionConfig &config, const double timestamp) {
+  for (const auto &entry : config.changedProperties) {
+    runEntry(rt, entry, timestamp);
   }
 
   for (const auto &propertyName : config.removedProperties) {
     cancel(propertyName);
   }
+}
 
-  return initialUpdate;
+void CSSPlatformTransition::runEntry(
+    jsi::Runtime &rt,
+    const CSSPlatformTransitionRawEntry &entry,
+    const double /*timestamp*/) {
+  // The platform driver only needs the destination value - duration/delay/easing
+  // describe the trajectory it should animate along from the current presentation
+  // value. We forward the jsi value pair's `second` (toValue) as folly::dynamic.
+  auto toValue = jsi::dynamicFromValue(rt, entry.valueDiff.second);
+
+  proxy_->run(CSSPlatformTransitionPropertyConfig{
+      viewTag_,
+      entry.propertyName,
+      std::move(toValue),
+      entry.settings.duration,
+      entry.settings.delay,
+      entry.settings.easingConfig});
+
+  activeProperties_.insert(entry.propertyName);
 }
 
 void CSSPlatformTransition::cancel(const std::string &propertyName) {

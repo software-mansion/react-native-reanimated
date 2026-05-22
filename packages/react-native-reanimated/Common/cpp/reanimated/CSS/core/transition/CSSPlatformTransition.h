@@ -3,6 +3,7 @@
 #include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
 
 #include <folly/dynamic.h>
+#include <jsi/jsi.h>
 #include <react/renderer/core/ReactPrimitives.h>
 
 #include <memory>
@@ -20,12 +21,14 @@ class CSSPlatformTransition {
 
   CSSPlatformTransition(const CSSPlatformTransition &) = delete;
 
-  folly::dynamic run(const CSSPlatformTransitionConfig &config);
+  void run(jsi::Runtime &rt, const CSSPlatformTransitionConfig &config, double timestamp);
 
   void cancel(const std::string &propertyName);
   void cancelAll();
 
  private:
+  void runEntry(jsi::Runtime &rt, const CSSPlatformTransitionRawEntry &entry, double timestamp);
+
   const Tag viewTag_;
   const std::shared_ptr<CSSPlatformTransitionProxy> proxy_;
   std::unordered_set<std::string> activeProperties_;

@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <utility>
+#include <vector>
 
 namespace reanimated::css {
 
@@ -19,7 +20,7 @@ bool CSSTransitionsRegistry::needsFlush() const {
   return !updatedTags_.empty();
 }
 
-void CSSTransitionsRegistry::run(
+void CSSTransitionsRegistry::updateConfigOrRun(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
     CSSTransitionConfig &&config) {
@@ -33,42 +34,29 @@ void CSSTransitionsRegistry::run(
   }
 
   const auto &transition = registry_.at(viewTag);
-  const auto &lastUpdates = getUpdatesFromRegistry(viewTag);
-  const auto timestamp = loop_->resolveTimestamp();
 
-  auto initialUpdate = transition->run(rt, std::move(config), lastUpdates, timestamp);
+  // Split via the platform proxy: platform-routed props are handled inside
+  // CSSTransition::splitForPlatformRouting; the returned config carries only
+  // the loop-side settings + value diffs + removals.
+  auto loopConfig = transition->splitForPlatformRouting(rt, std::move(config), loop_->resolveTimestamp());
 
-  transition->schedule(*loop_);
-  updateInUpdatesRegistry(transition, initialUpdate);
-  updatedTags_.insert(viewTag);
+  if (loopConfig.changedPropertiesSettings.size() || loopConfig.removedProperties.size()) {
+    transition->updateSettings(loopConfig.changedPropertiesSettings, loopConfig.removedProperties);
+  }
+  if (loopConfig.changedProperties.size()) {
+    runTransition(rt, transition, viewTag, loopConfig.changedProperties);
+  }
 }
 
-void CSSTransitionsRegistry::updateConfigOrRun(
+void CSSTransitionsRegistry::run(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
-    const CSSTransitionConfig &config) {
+    const PropertyValueDiffsMap &propertyDiffs) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto viewTag = shadowNode->getTag();
-
-  if (!registry_.contains(viewTag)) {
-    auto transition = std::make_shared<CSSTransition>(
-        shadowNode, viewStylesRepository_, transitionObserver_, platformTransitionProxy_);
-    registry_.insert({viewTag, transition});
-  }
-
   const auto &transition = registry_.at(viewTag);
 
-  // Extract the timing parts only - value pairs are placeholders for pseudo
-  // registration (real value diffs arrive later via `run(dynamic)`).
-  PropertiesTimingSettingsMap timings;
-  timings.reserve(config.changedProperties.size());
-  for (const auto &[propertyName, propertySettings] : config.changedProperties) {
-    timings.emplace(propertyName, propertySettings.timing());
-  }
-
-  if (!timings.empty() || !config.removedProperties.empty()) {
-    transition->updateSettings(timings, config.removedProperties);
-  }
+  runTransition(rt, transition, viewTag, propertyDiffs);
 }
 
 void CSSTransitionsRegistry::run(
@@ -171,6 +159,21 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
   // to do additional filtering here
   filteredUpdates.update(updates);
   setInUpdatesRegistry(shadowNode->getFamilyShared(), filteredUpdates);
+}
+
+void CSSTransitionsRegistry::runTransition(
+    jsi::Runtime &rt,
+    const std::shared_ptr<CSSTransition> &transition,
+    const facebook::react::Tag &viewTag,
+    const PropertyValueDiffsMap &propertyDiffs) {
+  const auto &lastUpdates = getUpdatesFromRegistry(viewTag);
+  const auto timestamp = loop_->resolveTimestamp();
+
+  auto initialUpdate = transition->run(rt, propertyDiffs, lastUpdates, timestamp);
+
+  transition->schedule(*loop_);
+  updateInUpdatesRegistry(transition, initialUpdate);
+  updatedTags_.insert(viewTag);
 }
 
 } // namespace reanimated::css

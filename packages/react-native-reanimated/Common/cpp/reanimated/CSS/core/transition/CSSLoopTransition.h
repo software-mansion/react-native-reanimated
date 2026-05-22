@@ -34,18 +34,17 @@ class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enab
   folly::dynamic run(
       jsi::Runtime &rt,
       const std::shared_ptr<const ShadowNode> &shadowNode,
-      const CSSTransitionConfig &config,
+      const PropertyValueDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
       double timestamp);
-  /** Dynamic-typed path used by `PseudoStylesRegistry`: settings have already
-   * been seeded via `updateSettings`, only value diffs come through here. */
+  /** TODO: unify folly::dynamic and jsi::value versions */
   folly::dynamic run(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const PropertyValueDynamicDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
       double timestamp);
   void updateSettings(
-      const PropertiesTimingSettingsMap &changedPropertiesSettings,
+      const PropertiesSettingsMap &changedPropertiesSettings,
       const std::vector<std::string> &removedProperties);
 
   folly::dynamic computeCurrentStyle(const std::shared_ptr<const ShadowNode> &shadowNode);
@@ -59,17 +58,17 @@ class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enab
   TransitionStyleInterpolator styleInterpolator_;
   TransitionProgressProvider progressProvider_;
 
-  void runProperty(
+  void handleChangedProperties(
       jsi::Runtime &rt,
-      const std::string &propertyName,
-      const CSSTransitionPropertySettings &propertySettings,
+      const PropertyValueDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
       double timestamp);
-  void runPropertyDynamic(
-      const std::string &propertyName,
-      const PropertyValueDynamicDiff &propertyDiff,
+  /** TODO: unify folly::dynamic and jsi::value versions */
+  void handleChangedProperties(
+      const PropertyValueDynamicDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
       double timestamp);
+  void removeProperties(const std::vector<std::string> &propertyNames);
   void removeProperty(const std::string &propertyName);
 };
 

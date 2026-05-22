@@ -17,6 +17,7 @@ namespace reanimated::css {
 using namespace facebook;
 using namespace react;
 
+// Fully-parsed property config handed to the platform-side apply callback.
 struct CSSPlatformTransitionPropertyConfig {
   Tag viewTag;
   std::string propertyName;
@@ -26,9 +27,21 @@ struct CSSPlatformTransitionPropertyConfig {
   EasingConfig easing;
 };
 
-using CSSPlatformTransitionConfig = CSSTransitionConfigBase<std::vector<CSSPlatformTransitionPropertyConfig>>;
+// Raw entry the proxy hands off to CSSPlatformTransition before any value
+// parsing happens. Carries the original jsi value pair + timing settings so
+// the platform side can convert lazily and inspect both from/to if needed.
+struct CSSPlatformTransitionRawEntry {
+  std::string propertyName;
+  PropertyValueDiff valueDiff;
+  CSSTransitionPropertySettings settings;
+};
 
-using CSSCanRoutePropertyFunction = std::function<bool(const std::string &propertyName)>;
+struct CSSPlatformTransitionConfig {
+  std::vector<CSSPlatformTransitionRawEntry> changedProperties;
+  std::vector<std::string> removedProperties;
+};
+
+using CSSCanRoutePropertyFunction = std::function<bool(const std::string &propertyName, const EasingConfig &easing)>;
 using CSSApplyTransitionFunction = std::function<void(const CSSPlatformTransitionPropertyConfig &config)>;
 using CSSRemoveTransitionFunction = std::function<void(Tag viewTag, const std::string &propertyName)>;
 
@@ -53,23 +66,14 @@ class CSSPlatformTransitionProxy {
   void run(const CSSPlatformTransitionPropertyConfig &config) const;
   void remove(Tag viewTag, const std::string &propertyName) const;
 
-  // Splits the new config across loop/platform sides given the previous
-  // call's routing decisions. When a property's side flips compared to
-  // previousRouting, the old side receives an implicit cancel so two engines
-  // never drive the same prop.
-  ProcessedConfig processConfig(
-      jsi::Runtime &rt,
-      Tag viewTag,
-      CSSTransitionConfig &&config,
-      const CSSTransitionRouting &previousRouting) const;
+  // Filters the incoming config into loop / platform buckets and emits implicit
+  // cancels on the old side when a property migrates compared to previousRouting.
+  // The platform side does its own value parsing inside CSSPlatformTransition::run -
+  // the proxy only forwards the raw jsi value pair via the raw entry.
+  ProcessedConfig processConfig(CSSTransitionConfig &&config, const CSSTransitionRouting &previousRouting) const;
 
  private:
-  bool canRoute(const std::string &propertyName) const;
-  CSSPlatformTransitionPropertyConfig buildPropertyConfig(
-      jsi::Runtime &rt,
-      Tag viewTag,
-      const std::string &propertyName,
-      const CSSTransitionPropertySettings &propertySettings) const;
+  bool canRoute(const std::string &propertyName, const EasingConfig &easing) const;
 
   CSSCanRoutePropertyFunction canRoute_;
   CSSApplyTransitionFunction applyTransition_;

@@ -108,9 +108,11 @@ std::unordered_set<std::string> TransitionProgressProvider::getRemovedProperties
 
 void TransitionProgressProvider::runProgressProvider(
     const std::string &propertyName,
-    const CSSTransitionPropertyTimingSettings &settings,
     const bool isReversed,
     const double timestamp) {
+
+  const auto &settings = propertySettings_.at(propertyName);
+
   const auto providerIt = propertyProgressProviders_.find(propertyName);
 
   if (providerIt != propertyProgressProviders_.end()) {
@@ -130,6 +132,12 @@ void TransitionProgressProvider::runProgressProvider(
       propertyName,
       std::make_shared<TransitionPropertyProgressProvider>(
           timestamp, settings.duration, settings.delay, getEasingFunctionFromConfig(settings.easingConfig)));
+}
+
+void TransitionProgressProvider::removeProperties(const std::vector<std::string> &propertyNames) {
+  for (const auto &propertyName : propertyNames) {
+    propertyProgressProviders_.erase(propertyName);
+  }
 }
 
 void TransitionProgressProvider::removeProperty(const std::string &propertyName) {
@@ -160,7 +168,7 @@ void TransitionProgressProvider::update(const double timestamp) {
 std::shared_ptr<TransitionPropertyProgressProvider>
 TransitionProgressProvider::createReversingShorteningProgressProvider(
     const double timestamp,
-    const CSSTransitionPropertyTimingSettings &propertySettings,
+    const CSSTransitionPropertySettings &propertySettings,
     const TransitionPropertyProgressProvider &existingProgressProvider) {
   const auto oldProgress = existingProgressProvider.getKeyframeProgress(0, 1);
   const auto oldReversingShorteningFactor = existingProgressProvider.getReversingShorteningFactor();
@@ -174,14 +182,13 @@ TransitionProgressProvider::createReversingShorteningProgressProvider(
       newReversingShorteningFactor);
 }
 
-void TransitionProgressProvider::setPropertySettings(const PropertiesTimingSettingsMap &changedPropertiesSettings) {
+void TransitionProgressProvider::setPropertySettings(const PropertiesSettingsMap &changedPropertiesSettings) {
   for (const auto &[propertyName, propertySettings] : changedPropertiesSettings) {
     propertySettings_[propertyName] = propertySettings;
   }
 }
 
-CSSTransitionPropertyTimingSettings TransitionProgressProvider::getPropertySettings(
-    const std::string &propertyName) const {
+CSSTransitionPropertySettings TransitionProgressProvider::getPropertySettings(const std::string &propertyName) const {
   return propertySettings_.at(propertyName);
 }
 

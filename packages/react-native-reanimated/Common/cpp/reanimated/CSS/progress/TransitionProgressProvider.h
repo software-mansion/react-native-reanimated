@@ -9,6 +9,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 namespace reanimated::css {
 
@@ -54,29 +55,27 @@ class TransitionProgressProvider final {
   TransitionPropertyProgressProviders getPropertyProgressProviders() const;
   std::unordered_set<std::string> getRemovedProperties() const;
 
-  void runProgressProvider(
-      const std::string &propertyName,
-      const CSSTransitionPropertyTimingSettings &settings,
-      bool isReversed,
-      double timestamp);
+  void runProgressProvider(const std::string &propertyName, bool isReversed, double timestamp);
+  void removeProperties(const std::vector<std::string> &propertyNames);
   void removeProperty(const std::string &propertyName);
   void discardFinishedProgressProviders();
   void update(double timestamp);
-
-  // Cache used by the dynamic (folly::dynamic) run path - settings are
-  // supplied separately via updateConfigOrRun, then values arrive later.
-  void setPropertySettings(const PropertiesTimingSettingsMap &changedPropertiesSettings);
-  CSSTransitionPropertyTimingSettings getPropertySettings(const std::string &propertyName) const;
+  void setPropertySettings(const PropertiesSettingsMap &changedPropertiesSettings);
+  CSSTransitionPropertySettings getPropertySettings(const std::string &propertyName) const;
 
  private:
   TransitionPropertyProgressProviders propertyProgressProviders_;
-  PropertiesTimingSettingsMap propertySettings_;
+
+  // TO DO: currently never cleaned by design - if the property has already been transitioned in the past, we might want
+  // to reuse the config (run without settings in the config).
+  /// We might want to add an option for clearing those settings in the future.
+  PropertiesSettingsMap propertySettings_;
 
   std::unordered_set<std::string> removedProperties_;
 
   std::shared_ptr<TransitionPropertyProgressProvider> createReversingShorteningProgressProvider(
       double timestamp,
-      const CSSTransitionPropertyTimingSettings &propertySettings,
+      const CSSTransitionPropertySettings &propertySettings,
       const TransitionPropertyProgressProvider &existingProgressProvider);
 };
 

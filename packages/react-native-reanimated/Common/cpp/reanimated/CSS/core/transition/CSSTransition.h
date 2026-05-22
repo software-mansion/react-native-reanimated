@@ -54,35 +54,34 @@ class CSSTransition {
   void schedule(OperationsLoop &loop);
   void unschedule(OperationsLoop &loop);
 
-  folly::dynamic
-  run(jsi::Runtime &rt, CSSTransitionConfig &&config, const folly::dynamic &lastUpdateValue, double timestamp);
-  /** Dynamic-typed run used by `PseudoStylesRegistry`: bypasses platform
-   * routing - pseudo-driven transitions always stay on the loop side. */
+  folly::dynamic run(
+      jsi::Runtime &rt,
+      const PropertyValueDiffsMap &propertiesDiffs,
+      const folly::dynamic &lastUpdateValue,
+      double timestamp);
+  /** TODO: unify folly::dynamic and jsi::value versions */
   folly::dynamic
   run(const PropertyValueDynamicDiffsMap &propertiesDiffs, const folly::dynamic &lastUpdateValue, double timestamp);
   void updateSettings(
-      const PropertiesTimingSettingsMap &changedPropertiesSettings,
+      const PropertiesSettingsMap &changedPropertiesSettings,
       const std::vector<std::string> &removedProperties);
+
+  // Splits the incoming config via the platform proxy, applies the platform-side
+  // entries directly, and returns the loop-side config (settings + value diffs)
+  // for the caller to feed into updateSettings / run.
+  CSSTransitionConfig splitForPlatformRouting(jsi::Runtime &rt, CSSTransitionConfig &&config, double timestamp);
 
   folly::dynamic computeCurrentStyle();
 
  private:
-  folly::dynamic
-  runLoop(jsi::Runtime &rt, const CSSTransitionConfig &config, const folly::dynamic &lastUpdates, double timestamp);
-  folly::dynamic runPlatform(const CSSPlatformTransitionConfig &config);
-
   const std::shared_ptr<const ShadowNode> shadowNode_;
-  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
-  Observer &observer_;
+  const std::shared_ptr<CSSLoopTransition> loopTransition_;
   const std::shared_ptr<CSSPlatformTransitionProxy> platformTransitionProxy_;
 
   CSSTransitionRouting routing_;
-
-  // Lazily created so a transition that never routes to a side doesn't pay for
-  // the allocation. shared_ptr on the loop side because OperationsLoop holds
-  // strong refs while a frame is scheduled.
-  std::shared_ptr<CSSLoopTransition> loopTransition_;
   std::unique_ptr<CSSPlatformTransition> platformTransition_;
+
+  CSSPlatformTransition &ensurePlatformTransition();
 };
 
 } // namespace reanimated::css

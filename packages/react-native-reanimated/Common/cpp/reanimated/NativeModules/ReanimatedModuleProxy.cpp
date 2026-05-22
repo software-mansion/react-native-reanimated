@@ -600,7 +600,7 @@ void ReanimatedModuleProxy::runCSSTransition(
   auto config = parseCSSTransitionConfig(rt, shadowNode->getComponentName(), transitionConfig);
 
   auto lock = updatesRegistryManager_->lock();
-  cssTransitionsRegistry_->run(rt, shadowNode, std::move(config));
+  cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, std::move(config));
 }
 
 void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) {
@@ -626,7 +626,7 @@ void ReanimatedModuleProxy::registerPseudoStyle(
       css::parseCSSTransitionConfig(rt, shadowNode->getComponentName(), configObj.getProperty(rt, "transition"));
 
   auto lock = updatesRegistryManager_->lock();
-  cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, transitionConfig);
+  cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, std::move(transitionConfig));
   pseudoStylesRegistry_->registerPseudoStyle(
       tag,
       shadowNode,
