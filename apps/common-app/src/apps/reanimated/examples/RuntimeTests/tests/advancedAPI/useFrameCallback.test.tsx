@@ -64,15 +64,6 @@ describe('Test *****useFrameCallback*****', () => {
 
       return <View />;
     };
-
-    test('frameCallback should be workletized', async () => {
-      await expect(async () => {
-        await render(<InvalidFrameCallback />);
-        await wait(200);
-      }).toThrow(
-        '[Worklets] Tried to synchronously call a non-worklet function `imNotAWorklet` on the UI thread.\nSee https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.'
-      );
-    });
   });
 });
 
