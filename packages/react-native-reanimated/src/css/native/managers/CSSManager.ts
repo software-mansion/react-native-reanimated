@@ -50,7 +50,7 @@ export default class CSSManager implements ICSSManager {
     this.cssPseudoStylesManager = new CSSPseudoStylesManager(
       wrapper,
       tag,
-      (style) => this.propsBuilder.build(style)
+      this.propsBuilder
     );
   }
 

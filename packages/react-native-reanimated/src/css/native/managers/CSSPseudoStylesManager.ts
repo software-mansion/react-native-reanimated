@@ -1,5 +1,5 @@
 'use strict';
-import type { UnknownRecord } from '../../../common';
+import type { NativePropsBuilder, UnknownRecord } from '../../../common';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type {
   CSSTransitionProperties,
@@ -16,12 +16,10 @@ import type {
   NormalizedCSSTransitionConfig,
 } from '../types';
 
-type StyleBuilder = (style: UnknownRecord) => UnknownRecord;
-
 export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
   private readonly viewTag: number;
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
-  private readonly styleBuilder: StyleBuilder;
+  private readonly propsBuilder: NativePropsBuilder;
 
   private prevPseudoStylesBySelector: PseudoStylesBySelector | null = null;
   private prevTransitionProperties: CSSTransitionProperties | null = null;
@@ -30,11 +28,11 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
   constructor(
     shadowNodeWrapper: ShadowNodeWrapper,
     viewTag: number,
-    styleBuilder: StyleBuilder
+    propsBuilder: NativePropsBuilder
   ) {
     this.shadowNodeWrapper = shadowNodeWrapper;
     this.viewTag = viewTag;
-    this.styleBuilder = styleBuilder;
+    this.propsBuilder = propsBuilder;
   }
 
   update(
@@ -93,8 +91,8 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
     defaultStyle: UnknownRecord,
     normalizedTransition: NormalizedCSSTransitionConfig | null
   ): CSSPseudoStyleConfig {
-    const builtSelectorStyle = this.styleBuilder(selectorStyle);
-    const builtDefaultStyle = this.styleBuilder(defaultStyle);
+    const builtSelectorStyle = this.propsBuilder.build(selectorStyle);
+    const builtDefaultStyle = this.propsBuilder.build(defaultStyle);
 
     const transition: CSSTransitionConfig = {};
     const propsInTransition = new Set([
