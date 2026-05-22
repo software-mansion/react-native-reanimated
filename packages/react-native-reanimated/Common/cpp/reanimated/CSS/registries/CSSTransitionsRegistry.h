@@ -16,7 +16,8 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
  public:
   CSSTransitionsRegistry(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const std::shared_ptr<OperationsLoop> &loop);
+      const std::shared_ptr<OperationsLoop> &loop,
+      const std::shared_ptr<CSSPlatformTransitionProxy> &platformTransitionProxy);
 
   bool needsFlush() const;
 
@@ -24,7 +25,7 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
   void updateConfigOrRun(
       jsi::Runtime &rt,
       const std::shared_ptr<const ShadowNode> &shadowNode,
-      const CSSTransitionConfig &config);
+      CSSTransitionConfig &&config);
   /// run Should be called only after someone has already set settings with updateConfigOrRun
   void run(
       jsi::Runtime &rt,
@@ -52,6 +53,7 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
 
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
   const std::shared_ptr<OperationsLoop> loop_;
+  const std::shared_ptr<CSSPlatformTransitionProxy> platformTransitionProxy_;
 
   TransitionObserver transitionObserver_{*this};
 

@@ -11,8 +11,9 @@ namespace reanimated::css {
 
 CSSTransitionsRegistry::CSSTransitionsRegistry(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const std::shared_ptr<OperationsLoop> &loop)
-    : viewStylesRepository_(viewStylesRepository), loop_(loop) {}
+    const std::shared_ptr<OperationsLoop> &loop,
+    const std::shared_ptr<CSSPlatformTransitionProxy> &platformTransitionProxy)
+    : viewStylesRepository_(viewStylesRepository), loop_(loop), platformTransitionProxy_(platformTransitionProxy) {}
 
 bool CSSTransitionsRegistry::needsFlush() const {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
@@ -22,22 +23,28 @@ bool CSSTransitionsRegistry::needsFlush() const {
 void CSSTransitionsRegistry::updateConfigOrRun(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
-    const CSSTransitionConfig &config) {
+    CSSTransitionConfig &&config) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto viewTag = shadowNode->getTag();
 
   if (!registry_.contains(viewTag)) {
-    auto transition = std::make_shared<CSSTransition>(shadowNode, viewStylesRepository_, transitionObserver_);
+    auto transition = std::make_shared<CSSTransition>(
+        shadowNode, viewStylesRepository_, transitionObserver_, platformTransitionProxy_);
     registry_.insert({viewTag, transition});
   }
 
   const auto &transition = registry_.at(viewTag);
 
-  if (config.changedPropertiesSettings.size() || config.removedProperties.size()) {
-    transition->updateSettings(config.changedPropertiesSettings, config.removedProperties);
+  // Split via the platform proxy: platform-routed props are handled inside
+  // CSSTransition::splitForPlatformRouting; the returned config carries only
+  // the loop-side settings + value diffs + removals.
+  auto loopConfig = transition->splitForPlatformRouting(rt, std::move(config));
+
+  if (loopConfig.changedPropertiesSettings.size() || loopConfig.removedProperties.size()) {
+    transition->updateSettings(loopConfig.changedPropertiesSettings, loopConfig.removedProperties);
   }
-  if (config.changedProperties.size()) {
-    runTransition(rt, transition, viewTag, config.changedProperties);
+  if (loopConfig.changedProperties.size()) {
+    runTransition(rt, transition, viewTag, loopConfig.changedProperties);
   }
 }
 
@@ -65,7 +72,6 @@ void CSSTransitionsRegistry::run(
   auto initialUpdate = transition->run(propertyDiffs, lastUpdates, timestamp);
 
   transition->schedule(*loop_);
-
   updateInUpdatesRegistry(transition, initialUpdate);
   updatedTags_.insert(viewTag);
 }

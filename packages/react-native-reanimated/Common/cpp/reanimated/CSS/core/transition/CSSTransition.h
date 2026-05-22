@@ -1,6 +1,8 @@
 #pragma once
 
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
+#include <reanimated/CSS/core/transition/CSSPlatformTransition.h>
+#include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
@@ -29,7 +31,9 @@ class CSSTransition {
   CSSTransition(
       std::shared_ptr<const ShadowNode> shadowNode,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      Observer &observer);
+      Observer &observer,
+      const std::shared_ptr<CSSPlatformTransitionProxy> &platformTransitionProxy);
+  ~CSSTransition();
 
   Tag getViewTag() const {
     return shadowNode_->getTag();
@@ -62,11 +66,22 @@ class CSSTransition {
       const PropertiesSettingsMap &changedPropertiesSettings,
       const std::vector<std::string> &removedProperties);
 
+  // Splits the incoming config via the platform proxy, applies the platform-side
+  // entries directly, and returns the loop-side config (settings + value diffs)
+  // for the caller to feed into updateSettings / run.
+  CSSTransitionConfig splitForPlatformRouting(jsi::Runtime &rt, CSSTransitionConfig &&config);
+
   folly::dynamic computeCurrentStyle();
 
  private:
   const std::shared_ptr<const ShadowNode> shadowNode_;
   const std::shared_ptr<CSSLoopTransition> loopTransition_;
+  const std::shared_ptr<CSSPlatformTransitionProxy> platformTransitionProxy_;
+
+  CSSTransitionRouting routing_;
+  std::unique_ptr<CSSPlatformTransition> platformTransition_;
+
+  CSSPlatformTransition &ensurePlatformTransition();
 };
 
 } // namespace reanimated::css

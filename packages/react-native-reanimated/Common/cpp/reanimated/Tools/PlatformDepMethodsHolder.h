@@ -1,5 +1,6 @@
 #pragma once
 
+#include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
 #include <reanimated/PseudoStyles/PseudoSelector.h>
 
 #include <folly/dynamic.h>
@@ -70,6 +71,9 @@ struct PlatformDepMethodsHolder {
   PlatformAttachPseudoSelectorFunction attachPseudoSelector;
   PlatformDetachPseudoSelectorFunction detachPseudoSelector;
   std::shared_ptr<css::CSSPlatformAnimationFactory> platformAnimationFactory;
+  css::CSSCanRoutePropertyFunction cssCanRouteProperty;
+  css::CSSApplyTransitionFunction cssApplyTransition;
+  css::CSSRemoveTransitionFunction cssRemoveTransition;
 };
 
 } // namespace reanimated
