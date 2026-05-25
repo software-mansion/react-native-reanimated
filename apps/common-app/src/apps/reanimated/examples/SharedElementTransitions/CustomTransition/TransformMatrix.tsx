@@ -15,24 +15,13 @@ const TARGET_ROUTE = 'TransformMatrixScreen2';
 
 const TRANSFORM_MATRIX_TRANSITION = SharedTransition.custom((values) => {
   'worklet';
-  // values.currentTransformMatrix / values.targetTransformMatrix are
-  // deprecated. They are NOT populated in v4 — both will be undefined here.
-  // Logging is the whole point: this example demonstrates the absence of the
-  // value. For a real transform animation, use values.targetTransform (an
-  // operation list) instead.
-  console.log(
-    '[TransformMatrix] currentTransformMatrix:',
-    values.currentTransformMatrix,
-  );
-  console.log(
-    '[TransformMatrix] targetTransformMatrix:',
-    values.targetTransformMatrix,
-  );
+  const targetMatrix = values.targetTransformMatrix;
   return {
     width: withSpring(values.targetWidth),
     height: withSpring(values.targetHeight),
     originX: withSpring(values.targetOriginX),
     originY: withSpring(values.targetOriginY),
+    transform: [{ matrix: withSpring(targetMatrix) }],
   };
 });
 
@@ -46,12 +35,19 @@ export function TransformMatrixSourceSection({
   return (
     <View style={styles.section}>
       <Text style={styles.heading}>
-        transformMatrix is deprecated — use transform
+        transformMatrix (deprecated — use transform.matrix)
       </Text>
       <Text style={styles.body}>
-        currentTransformMatrix / targetTransformMatrix are undefined in v4.
-        Matrix-lerp degenerated non-translation transforms; use
-        targetTransform (operation list) instead.
+        Verifies that the v3-style `values.targetTransformMatrix` (flat
+        16-element 4×4) still works. Same matrix as
+        `values.targetTransform.matrix`; the deprecated alias is kept for
+        backward compatibility.
+      </Text>
+      <Text style={styles.body}>
+        Expected: matrix-interpolation from identity to rotate-30° + scale-1.2.
+        The intermediate frames are slightly degenerate (the box may wobble
+        mid-animation) — a documented limitation of the matrix-interpolation
+        path and the reason `transformMatrix` is deprecated.
       </Text>
       <Animated.View
         style={[styles.greenBoxSource, redBox]}
@@ -78,7 +74,7 @@ function TargetContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
         </Text>
       </View>
       <Animated.View
-        style={[styles.greenBoxTarget, redBox]}
+        style={[styles.greenBoxTarget, redBox, targetTransform]}
         sharedTransitionTag={TAG}
         sharedTransitionStyle={TRANSFORM_MATRIX_TRANSITION}
       />
@@ -92,3 +88,6 @@ export const TransformMatrixTargetScreen =
 export const TransformMatrixTargetRoute = TARGET_ROUTE;
 
 const redBox = { backgroundColor: 'crimson' as const };
+const targetTransform = {
+  transform: [{ rotate: '30deg' }, { scale: 1.2 }] as const,
+};
