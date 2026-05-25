@@ -87,103 +87,26 @@ void SharedTransitionValuesFactory::writeTransform(
     jsi::Object &values,
     const ViewProps &sourceViewProps,
     const ViewProps &targetViewProps) {
-  const auto &sourceJsiOperations = getTransformOperationsFromProps(sourceViewProps);
-  const auto &targetJsiOperations = getTransformOperationsFromProps(targetViewProps);
+  setProperty(values, "currentTransform", buildTransformObject(sourceViewProps));
+  setProperty(values, "targetTransform", buildTransformObject(targetViewProps));
 
-  if (sourceJsiOperations.size() == 1 && targetJsiOperations.size() == 1 &&
-      sourceJsiOperations[0].currentValue.hasProperty(rt_, "matrix") &&
-      targetJsiOperations[0].currentValue.hasProperty(rt_, "matrix")) {
-    jsi::Array sourceTransforms(rt_, 1), targetTransforms(rt_, 1);
-    sourceTransforms.setValueAtIndex(rt_, 0, sourceJsiOperations[0].currentValue);
-    targetTransforms.setValueAtIndex(rt_, 0, targetJsiOperations[0].currentValue);
-    setProperty(values, "currentTransform", std::move(sourceTransforms));
-    setProperty(values, "targetTransform", std::move(targetTransforms));
-    return;
-  }
-
-  jsi::Array sourceTransforms(rt_, sourceJsiOperations.size() + targetJsiOperations.size());
-  jsi::Array targetTransforms(rt_, sourceJsiOperations.size() + targetJsiOperations.size());
-  for (size_t i = 0; i < sourceJsiOperations.size(); i++) {
-    sourceTransforms.setValueAtIndex(rt_, i, sourceJsiOperations[i].currentValue);
-    targetTransforms.setValueAtIndex(rt_, i, sourceJsiOperations[i].defaultValue);
-  }
-  for (size_t i = 0; i < targetJsiOperations.size(); i++) {
-    size_t index = i + sourceJsiOperations.size();
-    sourceTransforms.setValueAtIndex(rt_, index, targetJsiOperations[i].defaultValue);
-    targetTransforms.setValueAtIndex(rt_, index, targetJsiOperations[i].currentValue);
-  }
-  setProperty(values, "currentTransform", std::move(sourceTransforms));
-  setProperty(values, "targetTransform", std::move(targetTransforms));
+  // Deprecated v3-style flat matrix arrays. Kept for backward compatibility
+  setProperty(values, "currentTransformMatrix", buildMatrixArray(sourceViewProps));
+  setProperty(values, "targetTransformMatrix", buildMatrixArray(targetViewProps));
 }
 
-std::vector<TransformOperationWithDefault> SharedTransitionValuesFactory::getTransformOperationsFromProps(
-    const ViewProps &props) {
-  std::vector<TransformOperationWithDefault> jsiOperations;
-  const auto &operations = props.transform.operations;
-
-  if (operations.size() == 1 && operations[0].type == react::TransformOperationType::Arbitrary) {
-    jsi::Array currentMatrix(rt_, 16), defaultMatrix(rt_, 16);
-    for (int i = 0; i < 16; i++) {
-      currentMatrix.setValueAtIndex(rt_, i, props.transform.matrix[i]);
-      defaultMatrix.setValueAtIndex(rt_, i, i % 5 == 0 ? 1 : 0);
-    }
-
-    jsi::Object currentValue(rt_), defaultValue(rt_);
-    currentValue.setProperty(rt_, "matrix", currentMatrix);
-    defaultValue.setProperty(rt_, "matrix", defaultMatrix);
-    jsiOperations.emplace_back(currentValue, defaultValue);
+jsi::Array SharedTransitionValuesFactory::buildMatrixArray(const ViewProps &props) {
+  jsi::Array matrixArray(rt_, 16);
+  for (int i = 0; i < 16; i++) {
+    matrixArray.setValueAtIndex(rt_, i, props.transform.matrix[i]);
   }
-
-  for (const auto &operation : operations) {
-    switch (operation.type) {
-      case react::TransformOperationType::Perspective: {
-        maybeWriteOperation("perspective", operation.x.value, 1, jsiOperations);
-      } break;
-
-      case react::TransformOperationType::Scale: {
-        maybeWriteOperation("scaleX", operation.x.value, 1, jsiOperations);
-        maybeWriteOperation("scaleY", operation.y.value, 1, jsiOperations);
-        maybeWriteOperation("scaleZ", operation.z.value, 1, jsiOperations);
-      } break;
-
-      case react::TransformOperationType::Translate: {
-        maybeWriteOperation("translateX", operation.x.value, 0, jsiOperations);
-        maybeWriteOperation("translateY", operation.y.value, 0, jsiOperations);
-        maybeWriteOperation("translateZ", operation.z.value, 0, jsiOperations);
-      } break;
-
-      case react::TransformOperationType::Rotate: {
-        maybeWriteOperation("rotateX", operation.x.value, 0, jsiOperations);
-        maybeWriteOperation("rotateY", operation.y.value, 0, jsiOperations);
-        maybeWriteOperation("rotateZ", operation.z.value, 0, jsiOperations);
-      } break;
-
-      case react::TransformOperationType::Skew: {
-        maybeWriteOperation("skewX", operation.x.value, 0, jsiOperations);
-        maybeWriteOperation("skewY", operation.y.value, 0, jsiOperations);
-        maybeWriteOperation("skewZ", operation.z.value, 0, jsiOperations);
-      } break;
-
-      default: {
-      }
-    }
-  }
-  return jsiOperations;
+  return matrixArray;
 }
 
-void SharedTransitionValuesFactory::maybeWriteOperation(
-    const char *name,
-    float value,
-    float defaultValue,
-    std::vector<TransformOperationWithDefault> &jsiOperations) {
-  if (value == defaultValue) {
-    return;
-  }
-  jsi::Object jsiValue(rt_);
-  jsiValue.setProperty(rt_, name, value);
-  jsi::Object jsiDefaultDefault(rt_);
-  jsiDefaultDefault.setProperty(rt_, name, defaultValue);
-  jsiOperations.emplace_back(jsiValue, jsiDefaultDefault);
+jsi::Object SharedTransitionValuesFactory::buildTransformObject(const ViewProps &props) {
+  jsi::Object entry(rt_);
+  entry.setProperty(rt_, "matrix", buildMatrixArray(props));
+  return entry;
 }
 
 void SharedTransitionValuesFactory::writeTransformOrigin(
