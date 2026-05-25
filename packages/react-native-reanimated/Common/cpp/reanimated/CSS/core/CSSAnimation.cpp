@@ -74,7 +74,7 @@ void CSSAnimation::updatePropertyRouting() {
   if (!platformAnimationFactory_) {
     return;
   }
-  if constexpr (!StaticFeatureFlags::getFlag("EXPERIMENTAL_PLATFORM_CSS_ANIMATIONS")) {
+  if constexpr (!StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
     return;
   }
   const auto &allProperties = keyframesConfig_.styleInterpolatorFactory->getAllPropertyNames();
