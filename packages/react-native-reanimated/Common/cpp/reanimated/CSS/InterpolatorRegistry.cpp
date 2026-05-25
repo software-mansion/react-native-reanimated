@@ -1,4 +1,5 @@
 #include <reanimated/CSS/InterpolatorRegistry.h>
+#include <reanimated/Tools/FeatureFlags.h>
 
 #include <reanimated/CSS/common/values/CSSAngle.h>
 #include <reanimated/CSS/common/values/CSSBoolean.h>
@@ -398,20 +399,24 @@ const InterpolatorFactoriesRecord SVG_TEXT_INTERPOLATORS = mergeInterpolators(
 // COMPONENT REGISTRY
 // ==================
 
+constexpr bool SVG_FEATURE_ENABLED = StaticFeatureFlags::getFlag("EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS");
+
 ComponentInterpolatorsMap initializeRegistry() {
   ComponentInterpolatorsMap registry = {};
 
-  // SVG Components
-  registry["RNSVGCircle"] = SVG_CIRCLE_INTERPOLATORS;
-  registry["RNSVGEllipse"] = SVG_ELLIPSE_INTERPOLATORS;
-  registry["RNSVGImage"] = SVG_IMAGE_INTERPOLATORS;
-  registry["RNSVGLine"] = SVG_LINE_INTERPOLATORS;
-  registry["RNSVGLinearGradient"] = SVG_LINEAR_GRADIENT_INTERPOLATORS;
-  registry["RNSVGPath"] = SVG_PATH_INTERPOLATORS;
-  registry["RNSVGPattern"] = SVG_PATTERN_INTERPOLATORS;
-  registry["RNSVGRect"] = SVG_RECT_INTERPOLATORS;
-  registry["RNSVGRadialGradient"] = SVG_RADIAL_GRADIENT_INTERPOLATORS;
-  registry["RNSVGText"] = SVG_TEXT_INTERPOLATORS;
+  if (SVG_FEATURE_ENABLED) {
+    // SVG Components
+    registry["RNSVGCircle"] = SVG_CIRCLE_INTERPOLATORS;
+    registry["RNSVGEllipse"] = SVG_ELLIPSE_INTERPOLATORS;
+    registry["RNSVGImage"] = SVG_IMAGE_INTERPOLATORS;
+    registry["RNSVGLine"] = SVG_LINE_INTERPOLATORS;
+    registry["RNSVGLinearGradient"] = SVG_LINEAR_GRADIENT_INTERPOLATORS;
+    registry["RNSVGPath"] = SVG_PATH_INTERPOLATORS;
+    registry["RNSVGPattern"] = SVG_PATTERN_INTERPOLATORS;
+    registry["RNSVGRect"] = SVG_RECT_INTERPOLATORS;
+    registry["RNSVGRadialGradient"] = SVG_RADIAL_GRADIENT_INTERPOLATORS;
+    registry["RNSVGText"] = SVG_TEXT_INTERPOLATORS;
+  }
 
   return registry;
 }
@@ -426,7 +431,7 @@ const InterpolatorFactoriesRecord &getComponentInterpolators(const std::string &
   }
 
   // Use SVG common interpolators as a fallback for unregistered SVG components
-  if (nativeComponentName.starts_with("RNSVG")) {
+  if (SVG_FEATURE_ENABLED && nativeComponentName.starts_with("RNSVG")) {
     return SVG_COMMON_INTERPOLATORS;
   }
 
