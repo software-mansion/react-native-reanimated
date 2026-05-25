@@ -15,22 +15,12 @@ const TARGET_ROUTE = 'TransformScreen2';
 
 const TRANSFORM_TRANSITION = SharedTransition.custom((values) => {
   'worklet';
-  // Note: in practice, Fabric composes multi-operation transforms into a
-  // single matrix before the values reach this worklet. Even when the user
-  // writes `transform: [{rotate: '45deg'}, {scale: 1.2}]`, both arrays end
-  // up as a single-entry [{matrix: [...16 numbers]}].
-  console.log({targetTransform: values.targetTransform})
-  const targetMatrix = (
-    values.targetTransform[0] as unknown as { matrix: number[] }
-  ).matrix;
   return {
     width: withSpring(values.targetWidth),
     height: withSpring(values.targetHeight),
     originX: withSpring(values.targetOriginX),
     originY: withSpring(values.targetOriginY),
-    transform: [{ matrix: withSpring(targetMatrix) }] as unknown as {
-      matrix: number[];
-    }[],
+    transform: [{ matrix: withSpring(values.targetTransform.matrix) }],
   };
 });
 

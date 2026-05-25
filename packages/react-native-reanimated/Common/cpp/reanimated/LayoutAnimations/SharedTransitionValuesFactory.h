@@ -15,13 +15,6 @@ using namespace facebook::react;
 
 namespace reanimated {
 
-struct TransformOperationWithDefault {
-  jsi::Object currentValue;
-  jsi::Object defaultValue;
-  TransformOperationWithDefault(jsi::Object &current, jsi::Object &defaultVal)
-      : currentValue(std::move(current)), defaultValue(std::move(defaultVal)) {}
-};
-
 struct BoxShadowWithDefault {
   jsi::Object currentValue;
   jsi::Object defaultValue;
@@ -39,12 +32,8 @@ class SharedTransitionValuesFactory {
   void writeBackgroundColor(jsi::Object &values, const ViewProps &sourceViewProps, const ViewProps &targetViewProps);
 
   void writeTransform(jsi::Object &values, const ViewProps &sourceViewProps, const ViewProps &targetViewProps);
-  std::vector<TransformOperationWithDefault> getTransformOperationsFromProps(const ViewProps &props);
-  void maybeWriteOperation(
-      const char *name,
-      float value,
-      float defaultValue,
-      std::vector<TransformOperationWithDefault> &jsiOperations);
+  jsi::Array buildMatrixArray(const ViewProps &props);
+  jsi::Object buildTransformObject(const ViewProps &props);
 
   void writeTransformOrigin(
       jsi::Object &values,

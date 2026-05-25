@@ -37,14 +37,12 @@ export type SharedTransitionAnimationsValues = {
   targetBorderRadius: number;
   targetOpacity: number;
   targetBackgroundColor: string;
-  // TODO: check before merge
-  targetTransform: Array<Record<string, number | string>>;
+  targetTransform: { matrix: number[] };
   /**
-   * @deprecated Not populated in v4. Matrix-lerp degenerated non-translation
-   *   transforms and could not express 3D / perspective. Use
-   *   {@link targetTransform} (operation list) instead.
+   * @deprecated Reanimated v3 compatibility. A flat 16-element column-major
+   *   4×4 matrix. New code should read `targetTransform.matrix` instead
    */
-  targetTransformMatrix?: number[];
+  targetTransformMatrix: number[];
   // TODO: check before merge
   targetTransformOrigin: number[];
   currentOriginX: number;
@@ -56,13 +54,12 @@ export type SharedTransitionAnimationsValues = {
   currentBorderRadius: number;
   currentOpacity: number;
   currentBackgroundColor: string;
-  // TODO: check before merge
-  currentTransform: Array<Record<string, number | string>>;
+  currentTransform: { matrix: number[] };
   /**
-   * @deprecated Not populated in v4. See {@link targetTransformMatrix} for
-   *   the full rationale. Use {@link currentTransform} instead.
+   * @deprecated Reanimated v3 compatibility. Use `currentTransform.matrix`
+   *   instead.
    */
-  currentTransformMatrix?: number[];
+  currentTransformMatrix: number[];
   // TODO: check before merge
   currentTransformOrigin: number[];
   windowWidth: number;
@@ -87,6 +84,39 @@ export type ProgressSharedTransitionAnimation = (
   values: SharedTransitionAnimationsValues,
   progress: number
 ) => StyleProps;
+
+
+function mapCurrentValuesToInitialStyle(
+  values: SharedTransitionAnimationsValues
+): StyleProps {
+  'worklet';
+  const initialValues: StyleProps = {};
+  const valuesRecord = values as unknown as Record<string, unknown>;
+  for (const key in valuesRecord) {
+    if (!key.startsWith('current')) {
+      continue;
+    }
+    switch (key) {
+      case 'currentTransform':
+        // `{matrix: number[]}` payload → `[{matrix: ...}]` style shape.
+        initialValues.transform = [
+          { matrix: values.currentTransform.matrix },
+        ];
+        break;
+      case 'currentTransformMatrix':
+        // Deprecated v3-compat field; the same matrix is already mapped to
+        // initialValues.transform via the `currentTransform` case. Skip.
+        break;
+      default: {
+        // Default passthrough: currentFoo → foo.
+        const styleKey = key[7].toLowerCase() + key.slice(8);
+        initialValues[styleKey] = valuesRecord[key];
+        break;
+      }
+    }
+  }
+  return initialValues;
+}
 
 export class SharedTransition
   extends ComplexAnimationBuilder
@@ -192,15 +222,7 @@ export class SharedTransition
         const values =
           layoutAnimationValues as SharedTransitionAnimationsValues;
         const animations = customAnimationFactory(values);
-        const initialValues: StyleProps = {};
-        for (const key in values) {
-          if (key.startsWith('current')) {
-            const prop = (key[7].toLowerCase() +
-              key.slice(8)) as keyof StyleProps;
-            initialValues[prop] =
-              values[key as keyof SharedTransitionAnimationsValues];
-          }
-        }
+        const initialValues = mapCurrentValuesToInitialStyle(values);
         return {
           initialValues,
           animations,
