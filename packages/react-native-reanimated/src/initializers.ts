@@ -6,6 +6,7 @@ import {
 
 import { IS_WEB, SHOULD_BE_USE_WEB } from './common';
 import { initSvgCssSupport } from './css/svg';
+import { getStaticFeatureFlag } from './featureFlags';
 import type { IReanimatedModule } from './ReanimatedModule';
 
 export function initializeReanimatedModule(
@@ -16,7 +17,9 @@ export function initializeReanimatedModule(
       '[Reanimated] Tried to initialize Reanimated without a valid ReanimatedModule'
     );
   }
-  initSvgCssSupport();
+  if (getStaticFeatureFlag('EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS')) {
+    initSvgCssSupport();
+  }
 }
 
 // is-tree-shakable-suppress
