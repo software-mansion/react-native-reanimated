@@ -28653,7 +28653,7 @@ __metadata:
     "@babel/core": "*"
     "@react-native/metro-config": "*"
     react: "*"
-    react-native: 0.81 - 0.85
+    react-native: 0.83 - 0.86
   languageName: unknown
   linkType: soft
 
