@@ -23,8 +23,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     window = UIWindow(frame: UIScreen.main.bounds)
 
+#if RUNTIME_TESTS
+    let moduleName = "FabricExampleRuntimeTests"
+#else
+    let moduleName = "FabricExample"
+#endif
+
     factory.startReactNative(
-      withModuleName: "FabricExample",
+      withModuleName: moduleName,
       in: window,
       launchOptions: launchOptions
     )
@@ -39,7 +45,9 @@ class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
   }
 
   override func bundleURL() -> URL? {
-#if DEBUG
+#if RUNTIME_TESTS
+    RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index.runtimeTests")
+#elseif DEBUG
     RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
 #else
     Bundle.main.url(forResource: "main", withExtension: "jsbundle")

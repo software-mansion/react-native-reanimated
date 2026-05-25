@@ -383,7 +383,7 @@ const RestoreStateExample: React.FC = () =>
   );
 const RuntimeTestsExample: React.FC = () =>
   React.createElement(
-    require('./RuntimeTests/RuntimeTestsExample').default as React.FC
+    require('../../../../runtime-tests/RuntimeTestsExample').default as React.FC
   );
 const ScreenStackExample: React.FC = () =>
   React.createElement(require('./ScreenStackExample').default as React.FC);

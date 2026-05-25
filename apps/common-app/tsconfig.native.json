@@ -6,6 +6,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "index.ts"],
+  "include": ["src", "index.ts", "runtimeTests.ts", "runtime-tests"],
   "exclude": ["**/*.web.ts", "**/*.web.tsx"]
 }

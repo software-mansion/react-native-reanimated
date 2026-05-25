@@ -1,5 +1,7 @@
 'use strict';
 
+console.log('????');
+
 import './publicGlobals';
 
 import { initializeReanimatedModule } from './initializers';

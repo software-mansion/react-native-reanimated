@@ -157,6 +157,7 @@ export class TestRunner {
       await this.runTestSuite(testSuite);
     }
     this._testSummary.printSummary();
+    return this._testSummary.getSummary();
   }
 
   private async runTestSuite(testSuite: TestSuite) {

@@ -6,6 +6,9 @@ import { FlatList } from 'react-native-gesture-handler';
 import { configure, runTests } from './RuntimeTestsApi';
 import { RenderLock } from './utils/SyncUIRunner';
 
+export { default as AutoRunRuntimeTestsRunner } from './AutoRunRuntimeTestsRunner';
+export type { AutoRunConfig } from './AutoRunRuntimeTestsRunner';
+
 export class ErrorBoundary extends React.Component<
   { children: React.JSX.Element | Array<React.JSX.Element> },
   { hasError: boolean }

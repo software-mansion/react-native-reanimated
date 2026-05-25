@@ -17,8 +17,8 @@ import {
   test,
   useTestRef,
   waitForNotification,
-} from '@/apps/reanimated/examples/RuntimeTests/ReJest/RuntimeTestsApi';
-import { ComparisonMode } from '@/apps/reanimated/examples/RuntimeTests/ReJest/types';
+} from '../../ReJest/RuntimeTestsApi';
+import { ComparisonMode } from '../../ReJest/types';
 
 const NOTIFICATION_NAME = 'UPDATE_BOX_SHADOW';
 

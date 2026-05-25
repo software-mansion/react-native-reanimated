@@ -6,6 +6,8 @@
     "build": "cd ios && bundle install && bundle exec pod update --no-repo-update",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
+    "ios:runtime-tests": "node ./scripts/runtime-tests-server.js --launch",
+    "runtime-tests:server": "node ./scripts/runtime-tests-server.js",
     "start": "react-native start",
     "format": "yarn run --top-level oxfmt .",
     "lint": "eslint . --max-warnings 0",
