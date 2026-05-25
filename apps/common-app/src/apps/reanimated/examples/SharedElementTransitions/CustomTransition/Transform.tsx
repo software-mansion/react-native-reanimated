@@ -15,21 +15,22 @@ const TARGET_ROUTE = 'TransformScreen2';
 
 const TRANSFORM_TRANSITION = SharedTransition.custom((values) => {
   'worklet';
-  // values.targetTransform is an aligned operation list — each entry is a
-  // single-key record like {rotate: 0.785} (radians) or {scaleX: 1.5}.
-  // Source and target arrays are the same length; missing operations on a
-  // side are filled with default values (0 for translate/rotate/skew, 1 for
-  // scale/perspective).
-  const animatedTransform = values.targetTransform.map((item) => {
-    const key = Object.keys(item)[0];
-    return { [key]: withSpring(item[key]) };
-  });
+  // Note: in practice, Fabric composes multi-operation transforms into a
+  // single matrix before the values reach this worklet. Even when the user
+  // writes `transform: [{rotate: '45deg'}, {scale: 1.2}]`, both arrays end
+  // up as a single-entry [{matrix: [...16 numbers]}].
+  console.log({targetTransform: values.targetTransform})
+  const targetMatrix = (
+    values.targetTransform[0] as unknown as { matrix: number[] }
+  ).matrix;
   return {
     width: withSpring(values.targetWidth),
     height: withSpring(values.targetHeight),
     originX: withSpring(values.targetOriginX),
     originY: withSpring(values.targetOriginY),
-    transform: animatedTransform,
+    transform: [{ matrix: withSpring(targetMatrix) }] as unknown as {
+      matrix: number[];
+    }[],
   };
 });
 
@@ -40,9 +41,9 @@ export function TransformSourceSection({ navigate }: { navigate: Navigate }) {
     <View style={styles.section}>
       <Text style={styles.heading}>transform (operation list)</Text>
       <Text style={styles.body}>
-        Iterates values.targetTransform — each entry is one operation
-        ({'{'}rotate{'}'}, {'{'}scale{'}'}, ...). Source has no transform,
-        target has rotate 45° + scale 1.2.
+        Iterates values.targetTransform — each entry is one operation ({'{'}
+        rotate{'}'}, {'{'}scale{'}'}, ...). Source has no transform, target has
+        rotate 45° + scale 1.2.
       </Text>
       <Text style={styles.body}>
         Expected: spring-rotates and scales smoothly with no mid-animation
