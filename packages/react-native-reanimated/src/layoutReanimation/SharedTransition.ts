@@ -81,7 +81,6 @@ export type ProgressSharedTransitionAnimation = (
   progress: number
 ) => StyleProps;
 
-
 function mapCurrentValuesToInitialStyle(
   values: SharedTransitionAnimationsValues
 ): StyleProps {
@@ -95,9 +94,7 @@ function mapCurrentValuesToInitialStyle(
     switch (key) {
       case 'currentTransform':
         // `{matrix: number[]}` payload → `[{matrix: ...}]` style shape.
-        initialValues.transform = [
-          { matrix: values.currentTransform.matrix },
-        ];
+        initialValues.transform = [{ matrix: values.currentTransform.matrix }];
         break;
       case 'currentTransformMatrix':
         // Deprecated v3-compat field; the same matrix is already mapped to
