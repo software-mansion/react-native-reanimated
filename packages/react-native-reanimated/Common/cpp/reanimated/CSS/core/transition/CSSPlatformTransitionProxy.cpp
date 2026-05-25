@@ -14,7 +14,7 @@ CSSPlatformTransitionProxy::CSSPlatformTransitionProxy(
       removeTransition_(std::move(removeTransition)) {}
 
 bool CSSPlatformTransitionProxy::canRoute(const std::string &propertyName, const EasingConfig &easing) const {
-  if constexpr (!StaticFeatureFlags::getFlag("IOS_USE_CORE_ANIMATION_FOR_CSS")) {
+  if constexpr (!StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
     return false;
   }
   return canRoute_ && canRoute_(propertyName, easing);
