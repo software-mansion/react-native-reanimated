@@ -25,7 +25,7 @@ Feature flags are available since Reanimated 4.
 | [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions)                           | [static](#static-feature-flags) |  4.2.0   |  –   |                  `false`                  |
 | [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#force_react_render_for_settled_animations)           | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.3.0+ <br/> `false` otherwise |
 | [`USE_ANIMATION_BACKEND`](#use_animation_backend)                                                   | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
-| [`IOS_USE_CORE_ANIMATION_FOR_CSS`](#ios_use_core_animation_for_css)                                 | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
+| [`IOS_CSS_CORE_ANIMATION`](#ios_css_core_animation)                                                 | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
 
 :::info
 
@@ -123,7 +123,7 @@ When enabled, Reanimated will use the React Native's new Animation Backend for a
 
 This flag is experimental and defaults to `false`. To use it, you must run React Native 0.85.2 or newer with `useSharedAnimatedBackend` feature flag enabled (which is achieved by using React Native's Experimental release level in development).
 
-### `IOS_USE_CORE_ANIMATION_FOR_CSS`
+### `IOS_CSS_CORE_ANIMATION`
 
 When enabled, Reanimated may route CSS transitions to platform-native animation APIs instead of running them on the JS-driven animation loop. Currently, only the `opacity` property is routed, and only on iOS, where the platform path uses Core Animation. Support for additional properties, CSS animations (not just transitions), and Android will be added in the future. This feature flag is experimental and defaults to `false`.
 
