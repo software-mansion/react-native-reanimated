@@ -100,8 +100,8 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "0.81 - 0.85",
-    "react-native-worklets": "*"
+    "react-native": "0.83 - 0.86",
+    "react-native-worklets": ">=0.9.0"
   },
   "devDependencies": {
     "@babel/core": "7.28.4",
@@ -135,7 +135,7 @@
     "react-native": "0.85.2",
     "react-native-svg": "15.15.4",
     "react-native-web": "0.21.1",
-    "react-native-worklets": "workspace:*",
+    "react-native-worklets": "0.9.0",
     "react-test-renderer": "19.2.3",
     "typescript": "5.9.3"
   },
