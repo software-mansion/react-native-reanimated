@@ -59,6 +59,7 @@ class LayoutAnimationsManager {
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
   void transferSharedConfig(const Tag from, const Tag to);
+  void clearSharedTransitionConfig(const int tag);
   std::shared_ptr<SharedTransitionManager> getSharedTransitionManager();
 
  private:

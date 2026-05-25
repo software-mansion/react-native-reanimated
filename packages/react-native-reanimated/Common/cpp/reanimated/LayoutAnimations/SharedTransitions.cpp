@@ -166,6 +166,9 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
       if (transitionState_ == TransitionState::CANCELLED) {
         tagsToRestore_.push_back(restoreMap_[tag][BEFORE]);
       }
+      // Progress transitions never call endLayoutAnimation, so we
+      // must clean up the synthetic container config here instead.
+      layoutAnimationsManager_->clearSharedTransitionConfig(tag);
     }
     if (transitionState_ == TransitionState::END) {
       topScreen[surfaceId] = lightNodes_[transitionTag_];
@@ -258,6 +261,18 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
       after.tag = containerTag;
 
       startSharedTransition(containerTag, before, after, surfaceId);
+    }
+
+    // Sweep: clear configs for any deleted views whose shared transition was not used
+    // (no matching element on the destination screen, or partial matches)
+    std::vector<Tag> deletedSharedTags;
+    for (const auto &[tag, _] : sharedTransitionManager_->tagToName_) {
+      if (!lightNodes_.contains(tag)) {
+        deletedSharedTags.push_back(tag);
+      }
+    }
+    for (const auto tag : deletedSharedTags) {
+      layoutAnimationsManager_->clearSharedTransitionConfig(tag);
     }
   } else if (!mutations.empty()) {
     for (auto &[sharedTag, transition] : transitions_) {

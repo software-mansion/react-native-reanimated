@@ -115,6 +115,12 @@ void LayoutAnimationsManager::transferSharedConfig(const Tag from, const Tag to)
   sharedTransitions_[to] = sharedTransitions_[from];
 }
 
+void LayoutAnimationsManager::clearSharedTransitionConfig(const int tag) {
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+  sharedTransitions_.erase(tag);
+  sharedTransitionManager_->tagToName_.erase(tag);
+}
+
 std::shared_ptr<SharedTransitionManager> LayoutAnimationsManager::getSharedTransitionManager() {
   return sharedTransitionManager_;
 }

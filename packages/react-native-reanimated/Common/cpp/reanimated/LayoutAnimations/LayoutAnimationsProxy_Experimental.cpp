@@ -290,6 +290,8 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
     sharedContainersToRemove_.push_back(tag);
     tagsToRestore_.push_back(restoreMap_[tag][1]);
     transformForNode_.clear();
+    // Clean the config for the synthetic tag
+    layoutAnimationsManager_->clearSharedTransitionConfig(tag);
   }
   if (!shouldRemove) {
     return surfaceId;
@@ -519,8 +521,7 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
     startExitingAnimation(node);
     lightNodes_[node->current.tag] = node;
   } else {
-    // TODO (future): add proper cleanup
-    //    layoutAnimationsManager_->clearLayoutAnimationConfig(node->tag);
+    maybeCancelAnimation(node->current.tag);
   }
 
   return wantAnimateExit;
@@ -532,6 +533,7 @@ void LayoutAnimationsProxy_Experimental::updateOngoingAnimationTarget(const int 
 }
 
 void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) const {
+  layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
   if (!layoutAnimations_.contains(tag)) {
     return;
   }
