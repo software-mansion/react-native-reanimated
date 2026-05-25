@@ -69,8 +69,6 @@ export type SharedTransitionAnimationsValues = {
    *   4×4 matrix. New code should read `targetTransform.matrix` instead
    */
   targetTransformMatrix: number[];
-  // TODO: check before merge
-  targetTransformOrigin: number[];
   currentOriginX: number;
   currentOriginY: number;
   currentGlobalOriginX: number;
@@ -86,8 +84,6 @@ export type SharedTransitionAnimationsValues = {
    *   instead.
    */
   currentTransformMatrix: number[];
-  // TODO: check before merge
-  currentTransformOrigin: number[];
   windowWidth: number;
   windowHeight: number;
 };
