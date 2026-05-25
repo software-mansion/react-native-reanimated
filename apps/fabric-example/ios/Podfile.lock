@@ -1931,7 +1931,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNReanimated (4.4.0-main):
+  - RNReanimated (4.4.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1953,11 +1953,11 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNReanimated/apple (= 4.4.0-main)
-    - RNReanimated/common (= 4.4.0-main)
+    - RNReanimated/apple (= 4.4.0)
+    - RNReanimated/common (= 4.4.0)
     - RNWorklets
     - Yoga
-  - RNReanimated/apple (4.4.0-main):
+  - RNReanimated/apple (4.4.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1981,7 +1981,7 @@ PODS:
     - ReactNativeDependencies
     - RNWorklets
     - Yoga
-  - RNReanimated/common (4.4.0-main):
+  - RNReanimated/common (4.4.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2097,7 +2097,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNWorklets (0.9.0):
+  - RNWorklets (0.9.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2119,10 +2119,10 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNWorklets/apple (= 0.9.0)
-    - RNWorklets/common (= 0.9.0)
+    - RNWorklets/apple (= 0.9.1)
+    - RNWorklets/common (= 0.9.1)
     - Yoga
-  - RNWorklets/apple (0.9.0):
+  - RNWorklets/apple (0.9.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2145,7 +2145,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNWorklets/common (0.9.0):
+  - RNWorklets/common (0.9.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2509,10 +2509,10 @@ SPEC CHECKSUMS:
   RNCClipboard: 715fa7c6c8366f17d00f05a439ee7488f390fa5f
   RNCMaskedView: eb2b2e538afa907f05a5848a1a1ac26092e6fec9
   RNGestureHandler: c84901d120acdae2f6f27b5889a7cf144e64e6ec
-  RNReanimated: f481de136ce2eb171bbc37fd0d4cbd81a6daa808
+  RNReanimated: 3a66e177330210538b1e0f9c5b8364a598ae1e44
   RNScreens: 01b065ded2dfe7987bcce770ff3a196be417ff41
   RNSVG: 04044c3abcf177fd674a1a3d13097efa1adebcbe
-  RNWorklets: 033c38ce2f645d186da51900c8f84cadcb01352c
+  RNWorklets: b8125e088703e97408e082f5b914bee4131a8a7a
   Yoga: 04bb4bfeb02c0000b940c1e6e89e856cd8de5a71
 
 PODFILE CHECKSUM: 5a5e231e2fd86b91c7e0a93852f5aa6de886161f
