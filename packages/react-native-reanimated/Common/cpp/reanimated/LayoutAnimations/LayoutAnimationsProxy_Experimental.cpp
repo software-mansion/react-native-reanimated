@@ -533,7 +533,6 @@ void LayoutAnimationsProxy_Experimental::updateOngoingAnimationTarget(const int 
 }
 
 void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) const {
-  layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
   if (!layoutAnimations_.contains(tag)) {
     return;
   }
@@ -546,6 +545,7 @@ void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) con
 
     auto &uiRuntime = strongThis->uiRuntime_;
     strongThis->layoutAnimationsManager_->cancelLayoutAnimation(uiRuntime, tag);
+    layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
   });
 }
 
