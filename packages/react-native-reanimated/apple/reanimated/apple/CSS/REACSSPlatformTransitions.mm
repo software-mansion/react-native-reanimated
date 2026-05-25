@@ -102,7 +102,10 @@ static id idFromPlatformValue(NSString *propertyName, const PlatformValue &value
     }
     anim.toValue = toValue;
     anim.duration = durationSec;
-    anim.beginTime = beginTime;
+    // beginTime is in the layer's local clock; convert from absolute time so
+    // ancestor speed/timeOffset (e.g. RN Screens during navigation) doesn't
+    // make the animation appear already complete or never-starting.
+    anim.beginTime = [layer convertTime:beginTime fromLayer:nil];
     anim.timingFunction = timing;
     // Backwards fill paints fromValue during the delay window; the animation
     // self-removes on completion and the layer reads the model below.
