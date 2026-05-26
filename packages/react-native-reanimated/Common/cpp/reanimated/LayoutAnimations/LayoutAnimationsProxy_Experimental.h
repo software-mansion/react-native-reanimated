@@ -190,12 +190,14 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   void maybeUpdateWindowDimensions(const facebook::react::ShadowViewMutation &mutation) const;
   ShadowView maybeCreateLayoutAnimation(ShadowView &before, const ShadowView &after, const Tag parentTag) const;
 
-  bool startAnimationsRecursively(
+  bool startExitingAnimationsRecursively(
       const std::shared_ptr<LightNode> &node,
       ShadowViewMutationList &mutations,
       StartAnimationsRecursivelyConfig config) const;
-  void endAnimationsRecursively(const std::shared_ptr<LightNode> &node, int index, ShadowViewMutationList &mutations)
-      const;
+  void endExitingAnimationsRecursively(
+      const std::shared_ptr<LightNode> &node,
+      int index,
+      ShadowViewMutationList &mutations) const;
   void maybeDropAncestors(const std::shared_ptr<LightNode> &node, ShadowViewMutationList &cleanupMutations) const;
 
   const ComponentDescriptor &getComponentDescriptorForShadowView(const ShadowView &shadowView) const;

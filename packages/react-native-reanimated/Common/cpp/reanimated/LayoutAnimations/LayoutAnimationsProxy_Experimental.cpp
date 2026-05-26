@@ -317,7 +317,7 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
         .isScreenPop = false,
     };
 
-    if (startAnimationsRecursively(newExitingRoot, outputMutations, config)) {
+    if (startExitingAnimationsRecursively(newExitingRoot, outputMutations, config)) {
       auto parentOfNewExitingRoot = newExitingRoot->parent.lock();
       react_native_assert(parentOfNewExitingRoot && "Parent node is nullptr");
       // TODO (future): figure out a better way to handle this
@@ -352,7 +352,7 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
       auto deadNodeIndex = parentOfDeadNode->removeChild(deadNode);
       react_native_assert(deadNodeIndex != -1 && "Dead node not found");
 
-      endAnimationsRecursively(deadNode, deadNodeIndex, outputMutations);
+      endExitingAnimationsRecursively(deadNode, deadNodeIndex, outputMutations);
       maybeDropAncestors(parentOfDeadNode, outputMutations);
     }
   }
@@ -415,7 +415,7 @@ void LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceI
   updateMap.clear();
 }
 
-void LayoutAnimationsProxy_Experimental::endAnimationsRecursively(
+void LayoutAnimationsProxy_Experimental::endExitingAnimationsRecursively(
     const std::shared_ptr<LightNode> &node,
     int index,
     ShadowViewMutationList &mutations) const {
@@ -428,7 +428,7 @@ void LayoutAnimationsProxy_Experimental::endAnimationsRecursively(
   for (int i = childrenSize - 1; i >= 0; i--) {
     auto &subNode = node->children[i];
     if (subNode->exitingState != DELETED) {
-      endAnimationsRecursively(subNode, i, mutations);
+      endExitingAnimationsRecursively(subNode, i, mutations);
     }
   }
   node->children.clear();
@@ -463,7 +463,7 @@ const ComponentDescriptor &LayoutAnimationsProxy_Experimental::getComponentDescr
   return componentDescriptorRegistry_->at(shadowView.componentHandle);
 }
 
-bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
+bool LayoutAnimationsProxy_Experimental::startExitingAnimationsRecursively(
     const std::shared_ptr<LightNode> &node,
     ShadowViewMutationList &mutations,
     StartAnimationsRecursivelyConfig config) const {
@@ -491,10 +491,10 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
       if (shouldAnimate && subNode->exitingState != DEAD) {
         hasAnimatedChildren = true;
       } else {
-        endAnimationsRecursively(subNode, index, mutations);
+        endExitingAnimationsRecursively(subNode, index, mutations);
         toBeRemoved.push_back(subNode);
       }
-    } else if (startAnimationsRecursively(subNode, mutations, config)) {
+    } else if (startExitingAnimationsRecursively(subNode, mutations, config)) {
       hasAnimatedChildren = true;
     } else if (shouldRemoveSubviewsWithoutAnimations) {
       maybeCancelAnimation(subNode->current.tag);
