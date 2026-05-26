@@ -1,5 +1,11 @@
 use oxc_ast::ast::Expression;
 
+/// Cap on chain-walking recursion in `contains_gesture_object` and
+/// `is_layout_animation_chainable_or_new`. Real-world animation/gesture chains
+/// stay well under this; anything longer is more likely to be a pathological
+/// input than legitimate code we should auto-workletize.
+const MAX_CHAIN_DEPTH: u32 = 64;
+
 const GESTURE_HANDLER_GESTURE_OBJECTS: &[&str] = &[
     "Tap", "Pan", "Pinch", "Rotation", "Fling", "LongPress", "ForceTouch", "Native", "Manual",
     "Race", "Simultaneous", "Exclusive", "Hover",
@@ -105,16 +111,19 @@ pub fn is_gesture_object_event_callback_method(callee: &Expression<'_>) -> bool 
     if !GESTURE_HANDLER_BUILDER_METHODS.contains(&name) {
         return false;
     }
-    contains_gesture_object(&member.object)
+    contains_gesture_object(&member.object, MAX_CHAIN_DEPTH)
 }
 
-fn contains_gesture_object(expr: &Expression<'_>) -> bool {
+fn contains_gesture_object(expr: &Expression<'_>, depth: u32) -> bool {
+    if depth == 0 {
+        return false;
+    }
     if is_gesture_object(expr) {
         return true;
     }
     if let Expression::CallExpression(call) = expr {
         if let Expression::StaticMemberExpression(member) = &call.callee {
-            if contains_gesture_object(&member.object) {
+            if contains_gesture_object(&member.object, depth - 1) {
                 return true;
             }
         }
@@ -146,10 +155,13 @@ pub fn is_layout_animation_callback_method(callee: &Expression<'_>) -> bool {
     if !LAYOUT_ANIMATION_CALLBACKS.contains(&member.property.name.as_str()) {
         return false;
     }
-    is_layout_animation_chainable_or_new(&member.object)
+    is_layout_animation_chainable_or_new(&member.object, MAX_CHAIN_DEPTH)
 }
 
-fn is_layout_animation_chainable_or_new(expr: &Expression<'_>) -> bool {
+fn is_layout_animation_chainable_or_new(expr: &Expression<'_>, depth: u32) -> bool {
+    if depth == 0 {
+        return false;
+    }
     match expr {
         Expression::Identifier(id) => {
             let n = id.name.as_str();
@@ -169,7 +181,7 @@ fn is_layout_animation_chainable_or_new(expr: &Expression<'_>) -> bool {
                     || COMPLEX_ANIMATION_CHAIN_METHODS.contains(&n)
                     || DEFAULT_TRANSITION_CHAIN_METHODS.contains(&n);
                 if valid_method {
-                    return is_layout_animation_chainable_or_new(&member.object);
+                    return is_layout_animation_chainable_or_new(&member.object, depth - 1);
                 }
             }
             false

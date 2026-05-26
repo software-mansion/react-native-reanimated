@@ -3,15 +3,13 @@
 
 use oxc_allocator::Box as ArenaBox;
 use oxc_ast::ast::{
-    BindingRestElement, FormalParameterRest, TSThisParameter, TSTypeAnnotation,
-    TSTypeParameterDeclaration, TSTypeParameterInstantiation,
+    BindingRestElement, FormalParameterRest, TSTypeAnnotation, TSTypeParameterDeclaration,
+    TSTypeParameterInstantiation,
 };
 
 pub type OptTypeArgs<'a> = Option<ArenaBox<'a, TSTypeParameterInstantiation<'a>>>;
 pub type OptTypeParams<'a> = Option<ArenaBox<'a, TSTypeParameterDeclaration<'a>>>;
 pub type OptReturnType<'a> = Option<ArenaBox<'a, TSTypeAnnotation<'a>>>;
-pub type OptTypeAnnot<'a> = Option<ArenaBox<'a, TSTypeAnnotation<'a>>>;
-pub type OptTSThisParam<'a> = Option<ArenaBox<'a, TSThisParameter<'a>>>;
 pub type OptFormalRest<'a> = Option<ArenaBox<'a, FormalParameterRest<'a>>>;
 
 #[inline]

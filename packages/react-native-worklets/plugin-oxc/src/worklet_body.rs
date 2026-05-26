@@ -16,6 +16,7 @@ use oxc_transformer::{
 };
 
 use crate::transformer::builders::no_rest;
+use crate::utils::rewrite_implicit_return;
 
 pub struct WorkletBodyOutput {
     pub code: String,
@@ -38,6 +39,7 @@ pub fn build_worklet_body_string<'a>(
     rewritten_classes: &[String],
     allocator: &'a Allocator,
     source_map_path: Option<&str>,
+    original_source_text: &'a str,
 ) -> WorkletBodyOutput {
     let builder = AstBuilder::new(allocator);
 
@@ -96,10 +98,14 @@ pub fn build_worklet_body_string<'a>(
 
     let mut stmts = builder.vec_with_capacity(1);
     stmts.push(Statement::FunctionDeclaration(fun));
+    // The cloned function nodes still carry spans into the original source
+    // file. oxc_codegen's source-map builder reads bytes at those spans, so
+    // the mini-program must be created with the real source text — passing
+    // `""` panics in debug and corrupts source-map tokens in release.
     let mut program = builder.program(
         SPAN,
         oxc_span::SourceType::default(),
-        "",
+        original_source_text,
         builder.vec(),
         None,
         builder.vec(),
@@ -167,18 +173,6 @@ fn lower_worklet_body<'a>(allocator: &'a Allocator, program: &mut oxc_ast::ast::
 
     let _ = Transformer::new(allocator, Path::new("worklet-body.js"), &options)
         .build_with_scoping(scoping, program);
-}
-
-fn rewrite_implicit_return<'a>(body: &mut FunctionBody<'a>, builder: AstBuilder<'a>) {
-    use oxc_allocator::TakeIn;
-    if body.statements.len() != 1 {
-        return;
-    }
-    let stmt = body.statements.first_mut().unwrap();
-    if let Statement::ExpressionStatement(es) = stmt {
-        let expr = es.expression.take_in(builder);
-        *stmt = builder.statement_return(SPAN, Some(expr));
-    }
 }
 
 /// Build `const <base> = <base>__classFactory();` — re-instantiates a

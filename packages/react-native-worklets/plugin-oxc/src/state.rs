@@ -38,9 +38,12 @@ pub struct State {
 
     pub workletizable_modules: HashSet<String>,
 
-    pub file_workletization: bool,
-
-    pub bundle_mode_active: bool,
+    /// Full original source text. The worklet-body codegen builds mini-programs
+    /// containing cloned AST nodes whose spans still index into the original
+    /// file. oxc_codegen's source-map builder asserts `span.end <= source_text
+    /// .len()` (and otherwise emits wrong tokens in release), so the mini-
+    /// program must be initialised with this string, not `""`.
+    pub source_text: String,
 
     /// Files the bundle-mode worklet pass wants to emit alongside the
     /// transformed source. `(path, content)` pairs.
@@ -55,7 +58,7 @@ pub struct State {
 }
 
 impl State {
-    pub fn new(opts: PluginOptions) -> Self {
+    pub fn new(opts: PluginOptions, source_text: String) -> Self {
         let strict_global = opts.strict_global.unwrap_or(false);
         let globals = if strict_global {
             HashSet::new()
@@ -77,15 +80,12 @@ impl State {
             .cloned()
             .collect();
 
-        let bundle_mode_active = opts.bundle_mode.unwrap_or(false);
-
         Self {
             opts,
             worklet_number: 1,
             globals,
             workletizable_modules,
-            file_workletization: false,
-            bundle_mode_active,
+            source_text,
             emitted_files: Vec::new(),
             imports_by_symbol: HashMap::new(),
         }

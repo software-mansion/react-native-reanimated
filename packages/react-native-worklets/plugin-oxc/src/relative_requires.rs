@@ -1,10 +1,12 @@
 use std::collections::HashSet;
-use std::path::{Component, Path, PathBuf};
+use std::path::PathBuf;
 
 use oxc_ast::AstBuilder;
-use oxc_ast::ast::{Argument, Expression, FunctionBody, Statement};
+use oxc_ast::ast::{Argument, Expression, FunctionBody};
 use oxc_ast_visit::{VisitMut, walk_mut::walk_function_body};
 use oxc_span::SPAN;
+
+use crate::utils::{normalize_path, pathdiff};
 
 /// Path resolution used when rewriting relative `require('./x')` calls inside
 /// a bundle-mode worklet body so that, after the body is hoisted into
@@ -17,7 +19,10 @@ pub fn rewrite_relative_requires<'a>(
     worklets_package_dir: Option<&str>,
     builder: AstBuilder<'a>,
 ) {
-    if !is_allowed_for_relative_imports(filename, workletizable_modules) {
+    if !crate::utils::is_allowed_for_relative_imports(
+        filename,
+        workletizable_modules.iter().map(String::as_str),
+    ) {
         return;
     }
     let mut visitor = RelativeRequireRewriter {
@@ -26,25 +31,6 @@ pub fn rewrite_relative_requires<'a>(
         builder,
     };
     walk_function_body(&mut visitor, body);
-}
-
-const ALWAYS_ALLOWED: &[&str] = &[
-    "react-native-worklets",
-    "react-native/Libraries/Core/setUpXHR",
-];
-
-fn is_allowed_for_relative_imports(
-    filename: &str,
-    workletizable_modules: &HashSet<String>,
-) -> bool {
-    if filename.is_empty() {
-        return false;
-    }
-    let norm = filename.replace('\\', "/");
-    if ALWAYS_ALLOWED.iter().any(|m| norm.contains(m)) {
-        return true;
-    }
-    workletizable_modules.iter().any(|m| norm.contains(m))
 }
 
 struct RelativeRequireRewriter<'a, 'b> {
@@ -95,10 +81,6 @@ impl<'a, 'b> VisitMut<'a> for RelativeRequireRewriter<'a, 'b> {
 /// Prefers `worklets_package_dir` (resolved by the JS shim via
 /// `require.resolve`) for filesystem-correct results, falling back to a
 /// substring-based heuristic on `filename` for direct napi callers (tests).
-pub fn rebase_to_worklets_dir(filename: &str, original: &str) -> Option<String> {
-    rebase_to_worklets_dir_with(filename, original, None)
-}
-
 pub fn rebase_to_worklets_dir_with(
     filename: &str,
     original: &str,
@@ -134,52 +116,3 @@ fn derive_worklets_root(filename: &str) -> PathBuf {
     }
     PathBuf::from("/react-native-worklets")
 }
-
-fn normalize_path(p: &Path) -> PathBuf {
-    let mut out = PathBuf::new();
-    for comp in p.components() {
-        match comp {
-            Component::ParentDir => {
-                out.pop();
-            }
-            Component::CurDir => {}
-            other => out.push(other.as_os_str()),
-        }
-    }
-    out
-}
-
-/// Lexical path diff: number of `..` segments to escape the common prefix +
-/// the remainder.
-fn pathdiff(from: &Path, to: &Path) -> Option<PathBuf> {
-    let from = normalize_path(from);
-    let to = normalize_path(to);
-
-    let from_comps: Vec<_> = from.components().collect();
-    let to_comps: Vec<_> = to.components().collect();
-
-    let mut common = 0;
-    while common < from_comps.len()
-        && common < to_comps.len()
-        && from_comps[common] == to_comps[common]
-    {
-        common += 1;
-    }
-
-    let mut result = PathBuf::new();
-    for _ in common..from_comps.len() {
-        result.push("..");
-    }
-    for comp in &to_comps[common..] {
-        result.push(comp.as_os_str());
-    }
-    if result.as_os_str().is_empty() {
-        Some(PathBuf::from("."))
-    } else {
-        Some(result)
-    }
-}
-
-/// Stub to keep imports tidy.
-#[allow(dead_code)]
-fn _supress(_: Statement<'_>) {}

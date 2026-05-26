@@ -17,7 +17,7 @@ use crate::naming::{WorkletNames, make_worklet_name};
 use crate::naming::worklet_hash;
 use crate::state::State;
 use crate::transformer::builders::no_rest;
-use crate::utils::is_release;
+use crate::utils::{body_has_directive, is_release, relativize, rewrite_implicit_return};
 use crate::worklet_body::{WorkletBodyOutput, build_worklet_body_string};
 
 const MOCK_VERSION: &str = "x.y.z";
@@ -58,22 +58,10 @@ impl<'a, 'b> WorkletInput<'a, 'b> {
     }
 }
 
-fn body_has_directive(body: &FunctionBody<'_>, name: &str) -> bool {
-    body.directives
-        .iter()
-        .any(|d| d.directive.as_str() == name)
-}
-
 pub struct FactoryOutput<'a> {
     pub init_data_decl: Option<Statement<'a>>,
     pub factory_call: Expression<'a>,
-    pub worklet_hash: u64,
     pub react_name: String,
-    /// In bundle mode, the factory body is split into its own
-    /// `react-native-worklets/.worklets/<hash>.js` file. The `(path, content)`
-    /// pair is bubbled up to the worklet pass to be returned via the napi
-    /// `files` field.
-    pub bundle_file: Option<(String, String)>,
     /// `true` when the worklet body had a `'limit-init-data-hoisting'`
     /// directive — `init_data_decl` should be placed at the start of the
     /// *parent function* body rather than at file-top-level.
@@ -99,8 +87,7 @@ pub fn make_worklet_factory<'a>(
         worklet_name,
         react_name,
     } = {
-        let n = state.worklet_number;
-        state.worklet_number += 1;
+        let n = state.next_worklet_number();
         make_worklet_name(input.self_name, filename, n)
     };
 
@@ -184,6 +171,7 @@ pub fn make_worklet_factory<'a>(
         &rewritten_classes,
         allocator,
         source_map_path,
+        &state.source_text,
     );
     let body_string = body_output.code;
 
@@ -259,7 +247,6 @@ pub fn make_worklet_factory<'a>(
         }
         let file_content = codegen_bundle_file(
             builder,
-            allocator,
             factory_expr,
             &closure.imports,
             filename,
@@ -301,9 +288,7 @@ pub fn make_worklet_factory<'a>(
     FactoryOutput {
         init_data_decl,
         factory_call,
-        worklet_hash: hash,
         react_name,
-        bundle_file: None,
         limit_init_data_hoisting,
         injected_ref_names,
     }
@@ -314,7 +299,6 @@ pub fn make_worklet_factory<'a>(
 ///   export default (<factory>);
 fn codegen_bundle_file<'a>(
     builder: AstBuilder<'a>,
-    allocator: &'a Allocator,
     factory: Expression<'a>,
     imports: &[crate::state::ImportInfo],
     filename: &str,
@@ -358,7 +342,6 @@ fn codegen_bundle_file<'a>(
     let printed = oxc_codegen::Codegen::new()
         .with_options(oxc_codegen::CodegenOptions::default())
         .build(&program);
-    let _ = allocator;
     printed.code
 }
 
@@ -588,6 +571,20 @@ fn build_factory_expression<'a>(
     let inject_stack_details = !is_release() && !state.opts.bundle_mode.unwrap_or(false);
 
     if inject_stack_details {
+        // `_e` records `[new Error(), <line_offset>, -27]` so the worklet runtime
+        // can subtract a known offset from the captured stack frame to recover
+        // the *worklet body*'s line number (the body lives inside the factory
+        // function body). Babel's plugin pins these constants — they depend on
+        // the structural shape of the emitted factory:
+        //   * `1` — base offset when the factory has no closure destructure
+        //     (no `const { … } = …` line before the inner fn declaration).
+        //   * `1 - len - 2` — when closure vars are present, codegen prints the
+        //     destructure pattern across `len + 2` extra lines (open brace,
+        //     trailing brace, one name per line in non-minified output), so
+        //     we walk back that far to land on the inner fn body.
+        //   * `-27` — fixed offset for the worklet body inside the inner fn.
+        //     Mirrors `STACK_DETAILS_LINE_OFFSET` in workletFactory.ts.
+        // Keep these in sync if the emitted factory layout changes.
         let line_offset = if closure_variables.is_empty() {
             1i32
         } else {
@@ -955,20 +952,6 @@ fn body_references_name(body: &FunctionBody<'_>, name: &str) -> bool {
     probe.found
 }
 
-/// Replace the body's single `ExpressionStatement` with a `ReturnStatement`
-/// to preserve the implicit return when converting `() => expr` → `function(){ ... }`.
-fn rewrite_implicit_return<'a>(body: &mut FunctionBody<'a>, builder: AstBuilder<'a>) {
-    use oxc_allocator::TakeIn;
-    if body.statements.len() != 1 {
-        return;
-    }
-    let stmt = body.statements.first_mut().unwrap();
-    if let Statement::ExpressionStatement(es) = stmt {
-        let expr = es.expression.take_in(builder);
-        *stmt = builder.statement_return(SPAN, Some(expr));
-    }
-}
-
 pub struct ClosureWalk<'a, 'b> {
     params: &'b FormalParameters<'a>,
     body: &'b FunctionBody<'a>,
@@ -990,39 +973,3 @@ impl<'a, 'b> crate::closure::WalkFunctionBody<'a> for ClosureWalk<'a, 'b> {
     }
 }
 
-/// Lexical path relativizer for `relativeSourceLocation`. Returns the path
-/// of `target` relative to `from`, falling back to `target` unchanged when
-/// either side is empty or they share no common root. Mirrors Node's
-/// `path.relative` for the cases we care about.
-fn relativize(from: &str, target: &str) -> String {
-    use std::path::{Component, PathBuf};
-    if from.is_empty() {
-        return target.to_string();
-    }
-    let from = PathBuf::from(from.replace('\\', "/"));
-    let target_path = PathBuf::from(target.replace('\\', "/"));
-    let from_comps: Vec<Component<'_>> = from.components().collect();
-    let target_comps: Vec<Component<'_>> = target_path.components().collect();
-    let mut i = 0;
-    while i < from_comps.len()
-        && i < target_comps.len()
-        && from_comps[i] == target_comps[i]
-    {
-        i += 1;
-    }
-    if i == 0 {
-        return target.to_string();
-    }
-    let mut out = PathBuf::new();
-    for _ in i..from_comps.len() {
-        out.push("..");
-    }
-    for c in &target_comps[i..] {
-        out.push(c.as_os_str());
-    }
-    if out.as_os_str().is_empty() {
-        ".".to_string()
-    } else {
-        out.to_string_lossy().into_owned()
-    }
-}

@@ -2,8 +2,8 @@ use oxc_allocator::Allocator;
 use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
 use oxc_ast::ast::{
-    Argument, Declaration, Expression, FunctionBody, ObjectExpression, ObjectPropertyKind,
-    Program, PropertyKey, Statement, VariableDeclarationKind, VariableDeclarator,
+    Argument, Declaration, Expression, ObjectExpression, ObjectPropertyKind, Program, PropertyKey,
+    Statement, VariableDeclarationKind, VariableDeclarator,
 };
 use oxc_semantic::Scoping;
 use oxc_span::SPAN;
@@ -14,6 +14,7 @@ use crate::auto_detect::{
 };
 use crate::context_object::process_context_object;
 use crate::state::State;
+use crate::utils::{has_worklet_directive, inject_worklet_directive};
 use crate::worklet_factory::{FactoryOutput, WorkletInput, make_worklet_factory};
 
 const FUNCTION_HOOKS_ARG0: &[&str] = &[
@@ -1020,24 +1021,6 @@ fn autoworkletize_function_arg<'a>(
     *arg = Argument::from(as_expr);
 }
 
-fn inject_worklet_directive<'a>(body: &mut FunctionBody<'a>, builder: AstBuilder<'a>) {
-    if has_worklet_directive(body) {
-        return;
-    }
-    let dir_str = builder.str("worklet");
-    let directive = builder.directive(
-        SPAN,
-        builder.string_literal(SPAN, dir_str, None),
-        dir_str,
-    );
-    let mut directives = builder.vec_with_capacity(body.directives.len() + 1);
-    directives.push(directive);
-    for d in body.directives.drain(..) {
-        directives.push(d);
-    }
-    body.directives = directives;
-}
-
 fn inject_worklet_directives_to_object_methods<'a>(
     obj: &mut ObjectExpression<'a>,
     builder: AstBuilder<'a>,
@@ -1053,12 +1036,6 @@ fn inject_worklet_directives_to_object_methods<'a>(
             }
         }
     }
-}
-
-fn has_worklet_directive(body: &FunctionBody<'_>) -> bool {
-    body.directives
-        .iter()
-        .any(|d| d.directive.as_str() == "worklet")
 }
 
 fn build_const_decl<'a>(

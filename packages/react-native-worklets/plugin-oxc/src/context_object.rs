@@ -3,7 +3,7 @@ use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
 use oxc_ast::ast::{
     Expression, FormalParameterKind, FunctionType, ObjectExpression, ObjectPropertyKind,
-    PropertyKey, PropertyKind, Statement,
+    PropertyKey, PropertyKind,
 };
 use oxc_ast_visit::Visit;
 use oxc_span::SPAN;

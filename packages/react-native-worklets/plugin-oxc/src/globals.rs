@@ -69,8 +69,6 @@ const NOT_CAPTURED_IDENTIFIERS: &[&str] = &[
     "Reflect",
     "Proxy",
     "Intl",
-    "null",
-    "this",
     "global",
     "window",
     "self",

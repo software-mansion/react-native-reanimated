@@ -2,21 +2,16 @@ use oxc_allocator::TakeIn;
 use oxc_ast::AstBuilder;
 use oxc_ast::ast::{
     Argument, ArrayExpression, ArrayExpressionElement, Expression, FormalParameterKind,
-    FormalParameterRest, JSXAttribute, JSXAttributeName, JSXAttributeValue, JSXExpression,
-    ObjectExpression, ObjectProperty, ObjectPropertyKind, PropertyKey, TSTypeAnnotation,
-    TSTypeParameterDeclaration, TSTypeParameterInstantiation,
+    JSXAttribute, JSXAttributeName, JSXAttributeValue, JSXExpression, ObjectExpression,
+    ObjectProperty, ObjectPropertyKind, PropertyKey,
 };
 use oxc_span::SPAN;
 use oxc_syntax::scope::ScopeFlags;
 use oxc_traverse::TraverseCtx;
 
 use crate::state::State;
+use crate::transformer::builders::{OptFormalRest, OptReturnType, OptTypeArgs, OptTypeParams};
 use crate::utils::is_release;
-
-type OptTypeArgs<'a> = Option<oxc_allocator::Box<'a, TSTypeParameterInstantiation<'a>>>;
-type OptTypeParams<'a> = Option<oxc_allocator::Box<'a, TSTypeParameterDeclaration<'a>>>;
-type OptReturnType<'a> = Option<oxc_allocator::Box<'a, TSTypeAnnotation<'a>>>;
-type OptRest<'a> = Option<oxc_allocator::Box<'a, FormalParameterRest<'a>>>;
 
 pub fn process_inline_styles_warning<'a>(
     attr: &mut JSXAttribute<'a>,
@@ -175,7 +170,7 @@ fn build_warning_iife<'a>(
         SPAN,
         FormalParameterKind::ArrowFormalParameters,
         builder.vec(),
-        OptRest::None,
+        OptFormalRest::None,
     );
     let scope_id = ctx.create_child_scope_of_current(ScopeFlags::Arrow | ScopeFlags::Function);
     let arrow = builder.expression_arrow_function_with_scope_id_and_pure_and_pife(

@@ -2,12 +2,10 @@ use std::collections::HashMap;
 
 use napi_derive::napi;
 use oxc_allocator::Allocator;
-use oxc_ast::ast::{
-    ImportDeclaration, ImportDeclarationSpecifier, ModuleDeclaration, Program, Statement,
-};
+use oxc_ast::ast::{ImportDeclaration, ImportDeclarationSpecifier, Program, Statement};
 use oxc_codegen::{Codegen, CodegenOptions};
 use oxc_parser::Parser;
-use oxc_semantic::{Scoping, SemanticBuilder};
+use oxc_semantic::SemanticBuilder;
 use oxc_span::SourceType;
 use oxc_syntax::symbol::SymbolId;
 
@@ -34,10 +32,7 @@ use transformer::Transformer;
 /// Walk top-level `import` statements and produce `SymbolId → ImportInfo` so
 /// bundle-mode emission can synthesise matching imports in each emitted
 /// `.worklets/<hash>.js` file.
-fn build_imports_index<'a>(
-    program: &Program<'a>,
-    scoping: &Scoping,
-) -> HashMap<SymbolId, ImportInfo> {
+fn build_imports_index<'a>(program: &Program<'a>) -> HashMap<SymbolId, ImportInfo> {
     let mut out = HashMap::new();
     for stmt in &program.body {
         let import: &ImportDeclaration = match stmt {
@@ -84,7 +79,6 @@ fn build_imports_index<'a>(
             }
         }
     }
-    let _ = scoping; // reserved for future use (e.g. cross-reference lookups)
     out
 }
 
@@ -127,8 +121,12 @@ fn run(
     // — accepts things like `x as any = y` and parameter properties — which
     // babel's stricter TS parser then rejects on the re-parse round trip.
     if source_type.is_typescript() {
+        // `with_enum_eval(true)` is required by oxc_transformer's TS enum pass —
+        // without it, transforming `enum Foo { … }` panics at
+        // `oxc_transformer/src/typescript/enum.rs`.
         let semantic_for_strip = SemanticBuilder::new()
             .with_check_syntax_error(false)
+            .with_enum_eval(true)
             .build(&program)
             .semantic
             .into_scoping();
@@ -153,7 +151,7 @@ fn run(
         .build(&program);
     let scoping = semantic_ret.semantic.into_scoping();
 
-    let state = State::new(options);
+    let state = State::new(options, source_text.to_string());
     let builder = oxc_ast::AstBuilder::new(&allocator);
 
     file_directive::process_file_directive(&mut program, builder);
@@ -170,7 +168,7 @@ fn run(
     // Index top-level imports so bundle-mode emission can re-emit them
     // into each `.worklets/<hash>.js` file. Done once, after TS strip + any
     // other AST mutations that may have happened above.
-    state.imports_by_symbol = build_imports_index(&program, &scoping_post);
+    state.imports_by_symbol = build_imports_index(&program);
 
     let emitted = worklet_pass::process_program(
         &mut program,

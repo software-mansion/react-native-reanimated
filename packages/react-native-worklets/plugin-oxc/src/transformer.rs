@@ -18,24 +18,12 @@ pub struct Transformer<'a> {
 }
 
 impl<'a> Transformer<'a> {
-    pub fn new(state: State, allocator: &'a Allocator, filename: String) -> Self {
-        Self {
-            state,
-            builder: AstBuilder::new(allocator),
-            filename,
-        }
-    }
-
     pub fn new_with_builder(state: State, builder: AstBuilder<'a>, filename: String) -> Self {
         Self {
             state,
             builder,
             filename,
         }
-    }
-
-    pub fn run(mut self, program: &mut Program<'a>, scoping: Scoping, allocator: &'a Allocator) {
-        traverse_mut(&mut self, allocator, program, scoping, ());
     }
 
     pub fn run_and_take(

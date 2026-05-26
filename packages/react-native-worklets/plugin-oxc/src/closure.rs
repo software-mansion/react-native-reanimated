@@ -10,6 +10,7 @@ use oxc_syntax::symbol::SymbolId;
 use oxc_syntax::scope::ScopeFlags;
 
 use crate::state::{ImportInfo, ImportShape, State};
+use crate::utils::{ALWAYS_ALLOWED, is_allowed_for_relative_imports};
 
 #[derive(Debug, Default)]
 pub struct ClosureResult {
@@ -93,7 +94,13 @@ pub fn closure_for_function<'a, B: WalkFunctionBody<'a>>(
                         let allowed_for_rel = is_rel
                             && is_allowed_for_relative_imports(
                                 filename,
-                                state.opts.workletizable_modules.as_deref(),
+                                state
+                                    .opts
+                                    .workletizable_modules
+                                    .as_deref()
+                                    .unwrap_or(&[])
+                                    .iter()
+                                    .map(String::as_str),
                             );
                         let lib_workletizable = !is_rel
                             && is_workletizable_module(
@@ -152,26 +159,6 @@ pub fn closure_for_function<'a, B: WalkFunctionBody<'a>>(
     }
 
     result
-}
-
-/// Modules whose files are always trusted to host worklets in bundle mode.
-/// Matches `alwaysAllowed` in babel-plugin-worklets/src/imports.ts.
-const ALWAYS_ALLOWED: &[&str] = &[
-    "react-native-worklets",
-    "react-native/Libraries/Core/setUpXHR",
-];
-
-fn is_allowed_for_relative_imports(filename: &str, workletizable: Option<&[String]>) -> bool {
-    if filename.is_empty() {
-        return false;
-    }
-    let norm = filename.replace('\\', "/");
-    if ALWAYS_ALLOWED.iter().any(|m| norm.contains(m)) {
-        return true;
-    }
-    workletizable
-        .map(|ms| ms.iter().any(|m| norm.contains(m)))
-        .unwrap_or(false)
 }
 
 fn is_workletizable_module(source: &str, workletizable: Option<&[String]>) -> bool {

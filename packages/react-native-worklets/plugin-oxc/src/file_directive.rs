@@ -1,12 +1,13 @@
 use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
 use oxc_ast::ast::{
-    Declaration, Expression, ExportDefaultDeclarationKind, FunctionBody, ObjectExpression,
-    ObjectPropertyKind, Program, PropertyKey, Statement, VariableDeclarator,
+    Declaration, Expression, ExportDefaultDeclarationKind, ObjectExpression, ObjectPropertyKind,
+    Program, PropertyKey, Statement, VariableDeclarator,
 };
 use oxc_span::SPAN;
 
 use crate::context_object::{CONTEXT_OBJECT_MARKER, is_implicit_context_object};
+use crate::utils::inject_worklet_directive;
 
 /// Implements `processIfWorkletFile` from file.ts: when the Program has a
 /// top-level `'worklet'` directive, treat every viable top-level entity as a
@@ -229,28 +230,6 @@ fn append_context_object_marker<'a>(obj: &mut ObjectExpression<'a>, builder: Ast
             false,
             false,
         ));
-}
-
-fn inject_worklet_directive<'a>(body: &mut FunctionBody<'a>, builder: AstBuilder<'a>) {
-    if body
-        .directives
-        .iter()
-        .any(|d| d.directive.as_str() == "worklet")
-    {
-        return;
-    }
-    let dir_str = builder.str("worklet");
-    let directive = builder.directive(
-        SPAN,
-        builder.string_literal(SPAN, dir_str, None),
-        dir_str,
-    );
-    let mut directives = builder.vec_with_capacity(body.directives.len() + 1);
-    directives.push(directive);
-    for d in body.directives.drain(..) {
-        directives.push(d);
-    }
-    body.directives = directives;
 }
 
 /// Move `module.exports = …` / `exports.x = …` statements to the end of the
