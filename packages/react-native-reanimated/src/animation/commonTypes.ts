@@ -13,32 +13,44 @@ export interface HigherOrderAnimation {
   isHigherOrder?: boolean;
 }
 
-export type NextAnimation<T extends AnimationObject> = T | (() => T);
+export type NextAnimation<TAnimation extends AnimationObject> =
+  | TAnimation
+  | (() => TAnimation);
 
-export interface ClampAnimation
-  extends Animation<ClampAnimation>, HigherOrderAnimation {
-  current: AnimatableValue;
+export interface ClampAnimation<
+  TValue extends AnimatableValue = AnimatableValue,
+>
+  extends Animation<ClampAnimation<TValue>>, HigherOrderAnimation {
+  current: TValue;
 }
 
-export interface DelayAnimation
-  extends Animation<DelayAnimation>, HigherOrderAnimation {
+export interface DelayAnimation<
+  TValue extends AnimatableValue = AnimatableValue,
+>
+  extends Animation<DelayAnimation<TValue>>, HigherOrderAnimation {
   startTime: Timestamp;
   started: boolean;
-  previousAnimation: DelayAnimation | null;
-  current: AnimatableValue;
+  previousAnimation: DelayAnimation<TValue> | null;
+  current: TValue;
 }
 
-export interface RepeatAnimation
-  extends Animation<RepeatAnimation>, HigherOrderAnimation {
+export interface RepeatAnimation<
+  TValue extends AnimatableValue = AnimatableValue,
+>
+  extends Animation<RepeatAnimation<TValue>>, HigherOrderAnimation {
   reps: number;
-  startValue: AnimatableValue;
-  toValue?: AnimatableValue;
-  previousAnimation?: RepeatAnimation;
+  startValue: TValue;
+  toValue?: TValue;
+  previousAnimation?: RepeatAnimation<TValue>;
+  current: TValue;
 }
 
-export interface SequenceAnimation
-  extends Animation<SequenceAnimation>, HigherOrderAnimation {
+export interface SequenceAnimation<
+  TValue extends AnimatableValue = AnimatableValue,
+>
+  extends Animation<SequenceAnimation<TValue>>, HigherOrderAnimation {
   animationIndex: number;
+  current: TValue;
 }
 
 export interface StyleLayoutAnimation extends HigherOrderAnimation {

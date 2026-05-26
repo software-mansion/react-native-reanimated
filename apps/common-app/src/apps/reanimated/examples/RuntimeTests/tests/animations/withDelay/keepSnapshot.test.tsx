@@ -53,7 +53,7 @@ const TestComponent = ({
   });
 
   const getBaseAnimation = useCallback(
-    (x: number): number => {
+    (x: number) => {
       'worklet';
       switch (testAnimation) {
         case TestAnimation.TIMING:

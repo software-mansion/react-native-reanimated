@@ -1,10 +1,10 @@
 'use strict';
+// React Native Web exports these untyped — keep `any` to mirror that shape so
+// callers passing RN style objects don't have to narrow.
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export let createReactDOMStyle: (style: any) => any;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export let createTransformValue: (transform: any) => any;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export let createTextShadowValue: (style: any) => void | string;

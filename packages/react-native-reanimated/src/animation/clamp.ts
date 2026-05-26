@@ -1,7 +1,6 @@
 'use strict';
 import { logger } from '../common';
 import type {
-  AnimatableValue,
   Animation,
   AnimationObject,
   ReduceMotion,
@@ -14,22 +13,14 @@ import {
   recognizePrefixSuffix,
 } from './util';
 
-type withClampType = <T extends number | string>(
-  config: {
-    min?: T;
-    max?: T;
-  },
-  clampedAnimation: T
-) => T;
-
-export const withClamp = function <T extends number | string>(
-  config: { min?: T; max?: T; reduceMotion?: ReduceMotion },
-  _animationToClamp: AnimationObject<T> | (() => AnimationObject<T>)
-): Animation<ClampAnimation> {
+export function withClamp<TValue extends number | string>(
+  config: { min?: TValue; max?: TValue; reduceMotion?: ReduceMotion },
+  _animationToClamp: AnimationObject<TValue> | (() => AnimationObject<TValue>)
+): Animation<ClampAnimation<TValue>> {
   'worklet';
-  return defineAnimation<ClampAnimation, AnimationObject<T>>(
+  return defineAnimation<ClampAnimation<TValue>, AnimationObject<TValue>>(
     _animationToClamp,
-    (): ClampAnimation => {
+    (): ClampAnimation<TValue> => {
       'worklet';
       const animationToClamp =
         typeof _animationToClamp === 'function'
@@ -47,7 +38,7 @@ export const withClamp = function <T extends number | string>(
           : recognizePrefixSuffix(config.max).strippedValue;
 
       function clampOnFrame(
-        animation: ClampAnimation,
+        animation: ClampAnimation<TValue>,
         now: Timestamp
       ): boolean {
         const finished = animationToClamp.onFrame(animationToClamp, now);
@@ -72,24 +63,23 @@ export const withClamp = function <T extends number | string>(
             newValue = strippedValue;
           }
 
-          animation.current =
+          animation.current = (
             typeof animationToClamp.current === 'number'
               ? newValue
               : `${prefix === undefined ? '' : prefix}${newValue}${
                   suffix === undefined ? '' : suffix
-                }`;
+                }`
+          ) as TValue;
         }
 
         return finished;
       }
 
       function onStart(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        animation: Animation<any>,
-        value: AnimatableValue,
+        animation: ClampAnimation<TValue>,
+        value: TValue,
         now: Timestamp,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        previousAnimation: Animation<any> | null
+        previousAnimation: AnimationObject | null
       ): void {
         animation.current = value;
         animation.previousAnimation = animationToClamp;
@@ -133,4 +123,4 @@ export const withClamp = function <T extends number | string>(
       };
     }
   );
-} as withClampType;
+}

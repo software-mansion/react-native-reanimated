@@ -67,12 +67,50 @@ export type MaybeInvalidKeyframeProps = Record<number, KeyframeProps> & {
 
 export type LayoutAnimation = {
   initialValues: StyleProps;
-  animations: StyleProps;
+  animations: AnimatedLayoutStyles;
   callback?: (finished: boolean) => void;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnimationFunction = (a?: any, b?: any, c?: any) => any; // this is just a temporary mock
+/**
+ * A single entry inside `AnimatedLayoutStyles.transform`. Each item is a
+ * one-key object whose value is the animation driving that transform. The
+ * optional `undefined` accepts entries inferred with sibling `?: undefined`
+ * exclusion fields (TypeScript's `MaximumOneOf<...>` style narrowing).
+ */
+export type AnimatedTransformItem = {
+  [transformName: string]: AnimationObject | undefined;
+};
+
+/**
+ * Style object passed to `LayoutAnimation.animations`. Each property holds an
+ * `AnimationObject` produced by `withTiming`, `withSpring`, etc.; `transform`
+ * holds an array of single-key objects whose values are animation objects.
+ */
+export interface AnimatedLayoutStyles {
+  transform?: AnimatedTransformItem[];
+  [key: string]: AnimationObject | AnimatedTransformItem[] | undefined;
+}
+
+/**
+ * Builder function that creates an animation — `withTiming`/`withSpring`/etc.
+ * assigned to this slot via a widening cast that collapses their generic value
+ * type to `AnimatableValue`.
+ */
+export type AnimationFunction = (
+  toValue: AnimatableValue,
+  config?: BaseBuilderAnimationConfig
+) => AnimationObject;
+
+/**
+ * Wrapper returned by `BaseAnimationBuilder.getDelayFunction()` — either delays
+ * an inner animation via `withDelay`, or stamps `reduceMotion` on it and passes
+ * it through.
+ */
+export type DelayFunction = (
+  delayMs: number,
+  animation: AnimationObject,
+  reduceMotion?: ReduceMotion
+) => AnimationObject;
 
 export type EntryAnimationsValues = TargetLayoutAnimationValues &
   WindowDimensions;
@@ -175,6 +213,9 @@ export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
 export interface StyleProps extends ViewStyle, TextStyle {
   originX?: number;
   originY?: number;
+  // RN style sub-objects flow through this index signature with shapes we
+  // can't fully enumerate (e.g. user-attached jsProps); `unknown` cascades
+  // through too many call sites that read these properties directly.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
@@ -189,13 +230,14 @@ export interface StyleProps extends ViewStyle, TextStyle {
  * [useSharedValue](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue)
  * hook. You access and modify shared values by their `.value` property.
  */
-export interface SharedValue<Value = unknown> {
-  value: Value;
-  get(): Value;
-  set(value: Value | ((value: Value) => Value)): void;
-  addListener: (listenerID: number, listener: (value: Value) => void) => void;
+export interface SharedValue<TValue = unknown> {
+  get value(): TValue;
+  set value(newValue: ReanimatedValue<TValue>);
+  get(): TValue;
+  set(value: ReanimatedValue<TValue> | ((value: TValue) => TValue)): void;
+  addListener: (listenerID: number, listener: (value: TValue) => void) => void;
   removeListener: (listenerID: number) => void;
-  modify: (modifier?: (value: Value) => Value, forceUpdate?: boolean) => void;
+  modify: (modifier?: (value: TValue) => TValue, forceUpdate?: boolean) => void;
 }
 
 /**
@@ -204,14 +246,14 @@ export interface SharedValue<Value = unknown> {
  * Instead of refactoring the code with small chances of success, we just
  * disable contravariance for `SharedValue` in this problematic case.
  */
-type SharedValueDisableContravariance<Value = unknown> = Omit<
-  SharedValue<Value>,
+type SharedValueDisableContravariance<TValue = unknown> = Omit<
+  SharedValue<TValue>,
   'set' | 'modify'
 >;
 
-export interface Mutable<Value = unknown> extends SharedValue<Value> {
+export interface Mutable<TValue = unknown> extends SharedValue<TValue> {
   _isReanimatedSharedValue: true;
-  _animation?: AnimationObject<Value> | null; // only in Native
+  _animation?: AnimationObject | null; // only in Native
   /**
    * `_value` prop should only be accessed by the `valueSetter` implementation
    * which may make the decision about updating the mutable value depending on
@@ -219,7 +261,7 @@ export interface Mutable<Value = unknown> extends SharedValue<Value> {
    * mutable by assigning to `value` prop directly or by calling the `set`
    * method.
    */
-  _value: Value;
+  _value: TValue;
   /**
    * Defined only when enabled with a feature flag
    * `USE_SYNCHRONIZABLE_FOR_MUTABLES`.
@@ -265,13 +307,15 @@ export type AnimatableValueObject = { [key: string]: Animatable };
 
 export type AnimatableValue = Animatable | AnimatableValueObject;
 
-export interface AnimationObject<T = AnimatableValue> {
+export interface AnimationObject<TValue = AnimatableValue> {
+  // The index signature lets concrete animation subtypes (and the runtime
+  // decorator in `animation/util.ts`) attach arbitrary fields without having
+  // to declare every one on the base. Kept as `any` — `unknown` cascades
+  // through every destructuring site of `Inner*Animation` extenders.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
   callback?: AnimationCallback;
-  current?: T;
-  toValue?: AnimationObject<T>['current'];
-  startValue?: AnimationObject<T>['current'];
+  current?: TValue;
   finished?: boolean;
   strippedCurrent?: number;
   cancelled?: boolean;
@@ -279,29 +323,58 @@ export interface AnimationObject<T = AnimatableValue> {
 
   __prefix?: string;
   __suffix?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onFrame: (animation: any, timestamp: Timestamp) => boolean;
-  onStart: (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    nextAnimation: any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    current: any,
-    timestamp: Timestamp,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    previousAnimation: any
-  ) => void;
-}
-
-export interface Animation<T extends AnimationObject> extends AnimationObject {
-  onFrame: (animation: T, timestamp: Timestamp) => boolean;
-  onStart: (
-    nextAnimation: T,
+  // Declared with `this: void` so the callsites in `animation/util.ts` that
+  // detach these methods (`const baseOnFrame = animation.onFrame`) don't trip
+  // the `unbound-method` lint, while method syntax preserves the parameter
+  // bivariance needed for concrete `Animation<T>` overrides.
+  onFrame(
+    this: void,
+    animation: AnimationObject,
+    timestamp: Timestamp
+  ): boolean;
+  onStart(
+    this: void,
+    nextAnimation: AnimationObject,
     current: AnimatableValue,
     timestamp: Timestamp,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    previousAnimation: Animation<any> | null | T
-  ) => void;
+    previousAnimation: AnimationObject | null
+  ): void;
 }
+
+/**
+ * The value type animated by an `AnimationObject` subtype, recovered from the
+ * subtype's `current` property. Used so that
+ * `Animation<TimingAnimation<number>>` is structurally an
+ * `AnimationObject<number>` — letting downstream hooks (`useDerivedValue`,
+ * etc.) infer the underlying value via `T extends AnimationObject<infer V>`.
+ */
+type AnimatedValueOf<TAnimation extends AnimationObject> = NonNullable<
+  TAnimation['current']
+>;
+
+export interface Animation<
+  TAnimation extends AnimationObject,
+> extends AnimationObject<AnimatedValueOf<TAnimation>> {
+  onFrame(this: void, animation: TAnimation, timestamp: Timestamp): boolean;
+  onStart(
+    this: void,
+    nextAnimation: TAnimation,
+    current: AnimatedValueOf<TAnimation>,
+    timestamp: Timestamp,
+    previousAnimation: AnimationObject | null
+  ): void;
+}
+
+/**
+ * A value that can be assigned to a Reanimated shared value: either a plain
+ * value, an animation object, or a factory producing one. The animation forms
+ * are recognized by `valueSetter` and trigger an animated transition instead of
+ * an immediate write.
+ */
+export type ReanimatedValue<TValue> =
+  | TValue
+  | AnimationObject<TValue>
+  | (() => AnimationObject<TValue>);
 
 export enum SensorType {
   ACCELEROMETER = 1,
@@ -435,25 +508,25 @@ export type TransformArrayItem = Extract<
   Array<unknown>
 >[number];
 
-type MaybeSharedValue<Value> =
-  | Value
-  | (Value extends AnimatableValue
-      ? SharedValueDisableContravariance<Value>
+type MaybeSharedValue<TValue> =
+  | TValue
+  | (TValue extends AnimatableValue
+      ? SharedValueDisableContravariance<TValue>
       : never);
 
-type MaybeSharedValueRecursive<Value> = Value extends readonly (infer Item)[]
+type MaybeSharedValueRecursive<TValue> = TValue extends readonly (infer TItem)[]
   ?
-      | SharedValueDisableContravariance<Item[]>
-      | (MaybeSharedValueRecursive<Item> | Item)[]
-  : Value extends object
+      | SharedValueDisableContravariance<TItem[]>
+      | (MaybeSharedValueRecursive<TItem> | TItem)[]
+  : TValue extends object
     ?
-        | SharedValueDisableContravariance<Value>
+        | SharedValueDisableContravariance<TValue>
         | {
-            [Key in keyof Value]:
-              | MaybeSharedValueRecursive<Value[Key]>
-              | Value[Key];
+            [TKey in keyof TValue]:
+              | MaybeSharedValueRecursive<TValue[TKey]>
+              | TValue[TKey];
           }
-    : MaybeSharedValue<Value>;
+    : MaybeSharedValue<TValue>;
 
 type ReanimatedCSSProps = Partial<
   CSSAnimationProperties & CSSTransitionProperties
@@ -464,18 +537,44 @@ type ReanimatedCSSProps = Partial<
 // `never`-collapse when a base style augmentation (e.g. Expo's
 // `expo-env.d.ts`) declares our CSS keys with conflicting types. See
 // https://github.com/software-mansion/react-native-reanimated/issues/9328
-type WithReanimatedCSS<Style> =
-  | (Style & ReanimatedCSSProps)
-  | (Style extends object
-      ? Omit<Style, keyof ReanimatedCSSProps> & ReanimatedCSSProps
+type WithReanimatedCSS<TStyle> =
+  | (TStyle & ReanimatedCSSProps)
+  | (TStyle extends object
+      ? Omit<TStyle, keyof ReanimatedCSSProps> & ReanimatedCSSProps
       : never);
 
 // Ideally we want AnimatedStyle to not be generic, but there are
 // so many dependencies on it being generic that it's not feasible at the moment.
-export type AnimatedStyle<Style = DefaultStyle> =
-  | WithReanimatedCSS<Style>
-  | MaybeSharedValueRecursive<Style>
-  | AnimatedStyleHandle<Style>;
+export type AnimatedStyle<TStyle = DefaultStyle> =
+  | WithReanimatedCSS<TStyle>
+  | MaybeSharedValueRecursive<TStyle>
+  | AnimatedStyleHandle<TStyle>
+  | AnimatedTopLevelStyle<TStyle>;
+
+/**
+ * Allows top-level style properties — including transform-array entries — to be
+ * `AnimationObject`s produced by `withTiming`, `withSpring`, etc., without
+ * widening nested style sub-objects (where animations don't apply).
+ */
+type AnimatedTopLevelStyle<TStyle> = TStyle extends object
+  ? {
+      [TKey in keyof TStyle]:
+        | TStyle[TKey]
+        | AnimationObject
+        | MaybeSharedValueRecursive<TStyle[TKey]>
+        | AnimatedArrayStyle<TStyle[TKey]>;
+    }
+  : never;
+
+type AnimatedArrayStyle<TStyle> =
+  Extract<TStyle, readonly unknown[]> extends readonly (infer TItem)[]
+    ? (
+        | TItem
+        | (TItem extends object
+            ? { [TKey in keyof TItem]: TItem[TKey] | AnimationObject }
+            : AnimationObject)
+      )[]
+    : never;
 
 export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
@@ -505,6 +604,8 @@ export type InternalHostInstance = Partial<
     getNativeScrollRef: () => Maybe<
       Partial<InternalHostInstance & typeof ScrollView>
     >;
+    // Returns an HTMLElement on web or the scroll component itself on native;
+    // typed as `any` to satisfy both call sites without per-site casts.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getScrollableNode: () => any;
     __internalInstanceHandle: AnyRecord;

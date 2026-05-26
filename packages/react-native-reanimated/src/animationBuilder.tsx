@@ -1,6 +1,7 @@
 'use strict';
 import { logger } from './common';
 import type {
+  AnimatedLayoutStyles,
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
   LayoutAnimationValues,
@@ -28,7 +29,7 @@ const mockTargetValues: LayoutAnimationValues = {
 };
 
 function getCommonProperties(
-  layoutStyle: StyleProps,
+  layoutStyle: AnimatedLayoutStyles,
   componentStyle: NestedArray<StyleProps>
 ) {
   let componentStyleFlat = Array.isArray(componentStyle)
@@ -79,7 +80,7 @@ export function checkStyleOverwriting(
 }
 
 function maybeReportOverwrittenProperties(
-  layoutAnimationStyle: StyleProps,
+  layoutAnimationStyle: AnimatedLayoutStyles,
   style: NestedArray<StyleProps>,
   displayName: string,
   onWarn: () => void

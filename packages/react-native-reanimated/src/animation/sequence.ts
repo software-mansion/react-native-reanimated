@@ -22,12 +22,14 @@ import { defineAnimation, getReduceMotionForAnimation } from './util';
  *   which holds the current state of the animation/
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSequence
  */
-export function withSequence<T extends AnimatableValue>(
+export function withSequence<TValue extends AnimatableValue>(
   _reduceMotion: ReduceMotion,
-  ...animations: T[]
-): T;
+  ...animations: NextAnimation<AnimationObject<TValue>>[]
+): Animation<SequenceAnimation<TValue>>;
 
-export function withSequence<T extends AnimatableValue>(...animations: T[]): T;
+export function withSequence<TValue extends AnimatableValue>(
+  ...animations: NextAnimation<AnimationObject<TValue>>[]
+): Animation<SequenceAnimation<TValue>>;
 
 export function withSequence(
   _reduceMotionOrFirstAnimation?: ReduceMotion | NextAnimation<AnimationObject>,
@@ -107,7 +109,7 @@ export function withSequence(
       function sequence(animation: SequenceAnimation, now: Timestamp): boolean {
         const currentAnim = animations[animation.animationIndex];
         const finished = currentAnim.onFrame(currentAnim, now);
-        animation.current = currentAnim.current;
+        animation.current = currentAnim.current!;
         if (finished) {
           // we want to call the callback after every single animation
           if (currentAnim.callback) {
@@ -119,7 +121,7 @@ export function withSequence(
           );
           if (animation.animationIndex < animations.length) {
             const nextAnim = animations[animation.animationIndex];
-            nextAnim.onStart(nextAnim, currentAnim.current, now, currentAnim);
+            nextAnim.onStart(nextAnim, currentAnim.current!, now, currentAnim);
             return false;
           }
           return true;

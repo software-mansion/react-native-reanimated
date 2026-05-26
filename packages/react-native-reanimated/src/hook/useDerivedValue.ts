@@ -4,19 +4,19 @@ import type { WorkletFunction } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
 import { SHOULD_BE_USE_WEB } from '../common';
-import type { SharedValue } from '../commonTypes';
+import type { ReanimatedValue, SharedValue } from '../commonTypes';
 import { makeMutable, startMapper, stopMapper } from '../core';
 import type { DependencyList } from './commonTypes';
 
-export interface DerivedValue<Value = unknown> extends Readonly<
-  Omit<SharedValue<Value>, 'set'>
+export interface DerivedValue<TValue = unknown> extends Readonly<
+  Omit<SharedValue<TValue>, 'set'>
 > {
   /**
    * @deprecated Derived values are readonly, don't use this method. It's here
    *   only to prevent breaking changes in TypeScript types. It will be removed
    *   in the future.
    */
-  set: SharedValue<Value>['set'];
+  set: SharedValue<TValue>['set'];
 }
 
 /**
@@ -32,16 +32,16 @@ export interface DerivedValue<Value = unknown> extends Readonly<
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useDerivedValue
  */
 // @ts-expect-error This overload is required by our API.
-export function useDerivedValue<Value>(
-  updater: () => Value,
+export function useDerivedValue<TValue>(
+  updater: () => ReanimatedValue<TValue>,
   dependencies?: DependencyList
-): DerivedValue<Value>;
+): DerivedValue<TValue>;
 
-export function useDerivedValue<Value>(
-  updater: WorkletFunction<[], Value>,
+export function useDerivedValue<TValue>(
+  updater: WorkletFunction<[], ReanimatedValue<TValue>>,
   dependencies?: DependencyList
-): DerivedValue<Value> {
-  const initRef = useRef<SharedValue<Value> | null>(null);
+): DerivedValue<TValue> {
+  const initRef = useRef<SharedValue<TValue> | null>(null);
   let inputs = Object.values(updater.__closure ?? {});
   if (SHOULD_BE_USE_WEB) {
     if (!inputs.length && dependencies?.length) {
@@ -58,10 +58,10 @@ export function useDerivedValue<Value>(
   }
 
   if (initRef.current === null) {
-    initRef.current = makeMutable(initialUpdaterRun(updater));
+    initRef.current = makeMutable(initialUpdaterRun(updater) as TValue);
   }
 
-  const sharedValue: SharedValue<Value> = initRef.current;
+  const sharedValue: SharedValue<TValue> = initRef.current;
 
   useEffect(() => {
     const fun = () => {

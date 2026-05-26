@@ -72,6 +72,8 @@ interface NestedObjectEntry<T> {
 }
 
 export function withStyleAnimation(
+  // The runtime walks this nested record dynamically; tightening the generic
+  // to `unknown` cascades through every property access in the body.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   styleAnimations: AnimatedStyle<any>
 ): StyleLayoutAnimation {
@@ -187,8 +189,7 @@ export function withStyleAnimation(
           );
           let prevVal = resolvePath(value, currentEntry.path);
           if (prevAnimation && !prevVal) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            prevVal = (prevAnimation as any).current;
+            prevVal = (prevAnimation as AnimationObject).current;
           }
           if (__DEV__) {
             if (prevVal === undefined) {
@@ -217,7 +218,7 @@ export function withStyleAnimation(
             currentAnimation = withTiming(
               currentEntry.value as AnimatableValue,
               { duration: 0 }
-            ) as AnimationObject; // TODO TYPESCRIPT this temporary cast is to get rid of .d.ts file.
+            );
             setPath(
               animation.styleAnimations,
               currentEntry.path,
@@ -228,9 +229,9 @@ export function withStyleAnimation(
           }
           currentAnimation.onStart(
             currentAnimation,
-            prevVal,
+            prevVal as AnimatableValue,
             now,
-            prevAnimation
+            prevAnimation as AnimationObject | null
           );
         }
       }

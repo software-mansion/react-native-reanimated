@@ -36,6 +36,8 @@ export type AnimatedComponentType<
   }
 ) => ReactNode;
 
+// React's `ComponentType<P>` constraint requires `any` here — `ComponentType<unknown>`
+// cascades through every consumer that destructures props from the wrapped instance.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnimatableComponent<C extends ComponentType<any>> = C & {
   jsProps?: string[];

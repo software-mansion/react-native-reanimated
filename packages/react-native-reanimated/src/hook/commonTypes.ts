@@ -45,6 +45,9 @@ export type ExtractElementRef<TRef> = TRef extends ElementType
 // For now, we need to support the old useAnimatedRef API as well, which uses the ElementType
 // as the type of the ref.
 type AnimatedRefCurrent<TRef> = ExtractElementRef<
+  // `AnimatedComponentType<P, Instance>` constrains `P extends AnyRecord`;
+  // narrowing to `unknown` here breaks downstream consumers that resolve
+  // generic props from the inferred component.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TRef extends AnimatedComponentType<any, infer Instance> ? Instance : TRef
 >;

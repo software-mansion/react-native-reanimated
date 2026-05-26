@@ -1,8 +1,10 @@
 'use strict';
 import { logger } from '../common';
 import type {
+  AnimatedLayoutStyles,
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
+  StyleProps,
 } from '../commonTypes';
 import type { BaseAnimationBuilder } from './animationBuilder';
 import { ComplexAnimationBuilder } from './animationBuilder';
@@ -37,10 +39,12 @@ export class SharedTransition
       const animationFactory = (value: number | string) => {
         return delayFunction(delay, animation(value, config));
       };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const initialValues: any = {};
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const animations: any = {};
+      // SharedTransition writes `boxShadow`/`transformOrigin` arrays whose
+      // entries are typed more loosely than RN's narrow `transform` union and
+      // `AnimatedLayoutStyles`; until the writer is restructured, use a loose
+      // record for the dynamic-key writes below.
+      const initialValues: Record<string, unknown> = {};
+      const animations: Record<string, unknown> = {};
       for (let key in values.source) {
         initialValues[key] = values.source[key];
 
@@ -77,8 +81,8 @@ export class SharedTransition
       }
 
       return {
-        initialValues,
-        animations,
+        initialValues: initialValues as StyleProps,
+        animations: animations as AnimatedLayoutStyles,
         callback,
       };
     };

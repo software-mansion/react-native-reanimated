@@ -130,15 +130,23 @@ class JSReanimated implements IReanimatedModule {
           if (this.platform === Platform.WEB_ANDROID) {
             [x, y, z] = [-x, -y, -z];
           }
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (eventHandler as any)({ x, y, z, interfaceOrientation: 0 });
+          (eventHandler as unknown as (data: Value3D) => void)({
+            x,
+            y,
+            z,
+            interfaceOrientation: 0,
+          });
         };
       case SensorType.GYROSCOPE:
       case SensorType.MAGNETIC_FIELD:
         return () => {
           const { x, y, z } = sensor;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (eventHandler as any)({ x, y, z, interfaceOrientation: 0 });
+          (eventHandler as unknown as (data: Value3D) => void)({
+            x,
+            y,
+            z,
+            interfaceOrientation: 0,
+          });
         };
       case SensorType.ROTATION:
         return () => {
@@ -160,8 +168,7 @@ class JSReanimated implements IReanimatedModule {
             2.0 * (qx * qy + qw * qz),
             qw * qw + qx * qx - qy * qy - qz * qz
           );
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (eventHandler as any)({
+          (eventHandler as unknown as (data: ValueRotation) => void)({
             qw,
             qx,
             qy,

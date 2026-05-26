@@ -10,15 +10,6 @@ import type {
 import type { RepeatAnimation } from './commonTypes';
 import { defineAnimation, getReduceMotionForAnimation } from './util';
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type withRepeatType = <T extends AnimatableValue>(
-  animation: T,
-  numberOfReps?: number,
-  reverse?: boolean,
-  callback?: AnimationCallback,
-  reduceMotion?: ReduceMotion
-) => T;
-
 /**
  * Lets you repeat an animation given number of times or run it indefinitely.
  *
@@ -36,18 +27,18 @@ type withRepeatType = <T extends AnimatableValue>(
  *   which holds the current state of the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withRepeat
  */
-export const withRepeat = function <T extends AnimationObject>(
-  _nextAnimation: T | (() => T),
+export function withRepeat<TValue extends AnimatableValue>(
+  _nextAnimation: AnimationObject<TValue> | (() => AnimationObject<TValue>),
   numberOfReps = 2,
   reverse = false,
   callback?: AnimationCallback,
   reduceMotion?: ReduceMotion
-): Animation<RepeatAnimation> {
+): Animation<RepeatAnimation<TValue>> {
   'worklet';
 
-  return defineAnimation<RepeatAnimation, T>(
+  return defineAnimation<RepeatAnimation<TValue>, AnimationObject<TValue>>(
     _nextAnimation,
-    (): RepeatAnimation => {
+    (): RepeatAnimation<TValue> => {
       'worklet';
 
       const nextAnimation =
@@ -55,9 +46,12 @@ export const withRepeat = function <T extends AnimationObject>(
           ? _nextAnimation()
           : _nextAnimation;
 
-      function repeat(animation: RepeatAnimation, now: Timestamp): boolean {
+      function repeat(
+        animation: RepeatAnimation<TValue>,
+        now: Timestamp
+      ): boolean {
         const finished = nextAnimation.onFrame(nextAnimation, now);
-        animation.current = nextAnimation.current;
+        animation.current = nextAnimation.current!;
         if (finished) {
           animation.reps += 1;
           // call inner animation's callback on every repetition
@@ -73,7 +67,7 @@ export const withRepeat = function <T extends AnimationObject>(
           }
 
           const startValue = reverse
-            ? (nextAnimation.current as number)
+            ? (nextAnimation.current as TValue)
             : animation.startValue;
           if (reverse) {
             nextAnimation.toValue = animation.startValue;
@@ -83,7 +77,7 @@ export const withRepeat = function <T extends AnimationObject>(
             nextAnimation,
             startValue,
             now,
-            nextAnimation.previousAnimation as RepeatAnimation
+            nextAnimation.previousAnimation as RepeatAnimation<TValue>
           );
           return false;
         }
@@ -101,11 +95,10 @@ export const withRepeat = function <T extends AnimationObject>(
       };
 
       function onStart(
-        animation: RepeatAnimation,
-        value: AnimatableValue,
+        animation: RepeatAnimation<TValue>,
+        value: TValue,
         now: Timestamp,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        previousAnimation: Animation<any> | null
+        previousAnimation: AnimationObject | null
       ): void {
         animation.startValue = value;
         animation.reps = 0;
@@ -135,11 +128,11 @@ export const withRepeat = function <T extends AnimationObject>(
         onFrame: repeat,
         onStart,
         reps: 0,
-        current: nextAnimation.current,
+        current: nextAnimation.current!,
         callback: repCallback,
-        startValue: 0,
+        startValue: 0 as TValue,
         reduceMotion: getReduceMotionForAnimation(reduceMotion),
       };
     }
   );
-} as withRepeatType;
+}

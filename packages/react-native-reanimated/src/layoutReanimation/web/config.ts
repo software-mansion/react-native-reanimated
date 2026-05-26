@@ -79,6 +79,9 @@ export interface CustomConfig {
   callbackV?: AnimationCallback;
   reversed?: boolean;
   definitions?: KeyframeDefinitions;
+  // `enteringV`/`exitingV` flow through `AnimationsData[entering]` as string
+  // keys and also as builder instances; consolidating to a single typed union
+  // would require restructuring every web consumer.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   enteringV?: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

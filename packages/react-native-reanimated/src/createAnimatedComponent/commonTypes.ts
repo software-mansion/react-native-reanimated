@@ -42,6 +42,9 @@ export interface IInlinePropManager {
 export type AnimatedComponentTypeInternal = Component &
   IAnimatedComponentInternal;
 
+// `AnimatedStyle<any>` here is load-bearing — consumers like `updateProps.ts`
+// read arbitrary keys (`updates.boxShadow`, `updates.filter`, etc.) without
+// narrowing.
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents, @typescript-eslint/no-explicit-any
 export type PropUpdates = StyleProps | AnimatedStyle<any>;
 
@@ -157,8 +160,7 @@ export interface IAnimatedComponentInternal extends IAnimatedComponentInternalBa
 
 export type NestedArray<T> = T | NestedArray<T>[];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyComponent = React.ComponentType<any>;
+export type AnyComponent = React.ComponentType<unknown>;
 
 export interface InitialComponentProps extends Record<string, unknown> {
   ref?: Ref<Component>;

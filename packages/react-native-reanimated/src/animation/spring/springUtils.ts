@@ -17,9 +17,11 @@ export interface SpringConfigInner {
   skipAnimation: boolean;
 }
 
-export interface SpringAnimation extends Animation<SpringAnimation> {
-  current: AnimatableValue;
-  toValue: AnimatableValue;
+export interface SpringAnimation<
+  TValue extends AnimatableValue = AnimatableValue,
+> extends Animation<SpringAnimation<TValue>> {
+  current: TValue;
+  toValue: TValue;
   velocity: number;
   lastTimestamp: Timestamp;
   startTimestamp: Timestamp;
@@ -159,8 +161,8 @@ export function initialCalculations(
  * of movement. According to theory this change is small and tests shows that we
  * can indeed ignore it.
  */
-export function scaleZetaToMatchClamps(
-  animation: SpringAnimation,
+export function scaleZetaToMatchClamps<TValue extends AnimatableValue>(
+  animation: SpringAnimation<TValue>,
   clamp: { min?: number; max?: number }
 ): number {
   'worklet';

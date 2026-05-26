@@ -5,15 +5,14 @@ import {
   getReduceMotionFromConfig,
 } from '../../animation/util';
 import type {
-  AnimationFunction,
+  AnimatedLayoutStyles,
+  DelayFunction,
   EasingFunction,
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
   KeyframeProps,
   MaybeInvalidKeyframeProps,
   StyleProps,
-  StylePropsWithArrayTransform,
-  TransformArrayItem,
   ValidKeyframeProps,
 } from '../../commonTypes';
 import { ReduceMotion } from '../../commonTypes';
@@ -211,7 +210,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     return this;
   }
 
-  private getDelayFunction(): AnimationFunction {
+  private getDelayFunction(): DelayFunction {
     const delay = this.delayV;
     const reduceMotion = this.reduceMotionV;
     return delay
@@ -228,7 +227,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
   }
 
   build = (): EntryExitAnimationFunction => {
-    const delay = this.delayV;
+    const delay = this.delayV ?? 0;
     const delayFunction = this.getDelayFunction();
     const { keyframes, initialValues } = this.parseDefinitions();
     const callback = this.callbackV;
@@ -239,7 +238,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
 
     this.parsedAnimation = () => {
       'worklet';
-      const animations: StylePropsWithArrayTransform = {};
+      const animations: AnimatedLayoutStyles = {};
 
       /*
             For each style property, an animations sequence is created that corresponds with its key points.
@@ -275,7 +274,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
           if (!('transform' in animations)) {
             animations.transform = [];
           }
-          animations.transform!.push(<TransformArrayItem>{
+          animations.transform!.push({
             [key.split(':')[1]]: animation,
           });
         } else {

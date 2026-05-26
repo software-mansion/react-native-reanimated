@@ -1,6 +1,7 @@
 'use strict';
 import { withSequence, withTiming } from '../../animation';
 import type {
+  AnimatedTransformItem,
   EntryExitAnimationFunction,
   EntryExitAnimationsValues,
   IEntryExitAnimationBuilder,
@@ -87,7 +88,7 @@ export class LightSpeedInRight
                 )
               ),
             },
-          ],
+          ] as AnimatedTransformItem[],
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
@@ -176,7 +177,7 @@ export class LightSpeedInLeft
                 )
               ),
             },
-          ],
+          ] as AnimatedTransformItem[],
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,

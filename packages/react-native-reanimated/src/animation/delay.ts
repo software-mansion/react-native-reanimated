@@ -9,13 +9,6 @@ import type {
 import type { DelayAnimation } from './commonTypes';
 import { defineAnimation, getReduceMotionForAnimation } from './util';
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type withDelayType = <T extends AnimatableValue>(
-  delayMs: number,
-  delayedAnimation: T,
-  reduceMotion?: ReduceMotion
-) => T;
-
 /**
  * An animation modifier that lets you start an animation with a delay.
  *
@@ -29,31 +22,34 @@ type withDelayType = <T extends AnimatableValue>(
  *   which holds the current state of the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withDelay
  */
-export const withDelay = function <T extends AnimationObject>(
+export function withDelay<TValue extends AnimatableValue>(
   delayMs: number,
-  _nextAnimation: T | (() => T),
+  _nextAnimation: AnimationObject<TValue> | (() => AnimationObject<TValue>),
   reduceMotion?: ReduceMotion
-): Animation<DelayAnimation> {
+): Animation<DelayAnimation<TValue>> {
   'worklet';
-  return defineAnimation<DelayAnimation, T>(
+  return defineAnimation<DelayAnimation<TValue>, AnimationObject<TValue>>(
     _nextAnimation,
-    (): DelayAnimation => {
+    (): DelayAnimation<TValue> => {
       'worklet';
       const nextAnimation =
         typeof _nextAnimation === 'function'
           ? _nextAnimation()
           : _nextAnimation;
 
-      function delay(animation: DelayAnimation, now: Timestamp): boolean {
+      function delay(
+        animation: DelayAnimation<TValue>,
+        now: Timestamp
+      ): boolean {
         const { startTime, started, previousAnimation } = animation;
-        const current: AnimatableValue = animation.current;
+        const current = animation.current;
         if (now - startTime >= delayMs || animation.reduceMotion) {
           if (!started) {
             nextAnimation.onStart(
               nextAnimation,
               current,
               now,
-              previousAnimation!
+              previousAnimation
             );
             animation.previousAnimation = null;
             animation.started = true;
@@ -74,12 +70,10 @@ export const withDelay = function <T extends AnimationObject>(
       }
 
       function onStart(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        animation: Animation<any>,
-        value: AnimatableValue,
+        animation: DelayAnimation<TValue>,
+        value: TValue,
         now: Timestamp,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        previousAnimation: Animation<any> | null
+        previousAnimation: AnimationObject | null
       ): void {
         animation.startTime = now;
         animation.started = false;
@@ -87,7 +81,8 @@ export const withDelay = function <T extends AnimationObject>(
         if (previousAnimation === animation) {
           animation.previousAnimation = previousAnimation.previousAnimation;
         } else {
-          animation.previousAnimation = previousAnimation;
+          animation.previousAnimation =
+            previousAnimation as DelayAnimation<TValue> | null;
         }
 
         // child animations inherit the setting, unless they already have it defined
@@ -116,4 +111,4 @@ export const withDelay = function <T extends AnimationObject>(
       };
     }
   );
-} as withDelayType;
+}

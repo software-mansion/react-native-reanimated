@@ -96,7 +96,8 @@ interface AnimatedFlatListComplement<T> extends FlatList<T> {
   getNode(): FlatList<T>;
 }
 
-// We need explicit any here, because this is the exact same type that is used in React Native types.
+// React Native's `FlatList<Item>` defaults `Item = any` — matching that here
+// keeps callers that omit the generic from changing inference.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const FlatListRender = function <Item = any>(
   props: ReanimatedFlatListPropsWithLayout<Item> & {
@@ -156,7 +157,7 @@ const FlatListRender = function <Item = any>(
 };
 
 export const ReanimatedFlatList = FlatListRender as <
-  // We need explicit any here, because this is the exact same type that is used in React Native types.
+  // React Native's FlatList types use `any` as the default item type.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ItemT = any,
 >(

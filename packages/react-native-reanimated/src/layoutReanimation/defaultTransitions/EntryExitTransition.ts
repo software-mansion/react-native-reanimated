@@ -3,11 +3,11 @@ import { withSequence, withTiming } from '../../animation';
 import { logger } from '../../common';
 import type {
   AnimatableValue,
+  AnimatedLayoutStyles,
   AnimationObject,
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
   LayoutAnimationValues,
-  StylePropsWithArrayTransform,
   TransformArrayItem,
 } from '../../commonTypes';
 import { BaseAnimationBuilder } from '../animationBuilder';
@@ -71,7 +71,7 @@ export class EntryExitTransition
       'worklet';
       const enteringValues = enteringAnimation(values);
       const exitingValues = exitingAnimation(values);
-      const animations: StylePropsWithArrayTransform = {
+      const animations: AnimatedLayoutStyles = {
         transform: [],
       };
 
@@ -86,40 +86,39 @@ export class EntryExitTransition
                 [transformProp]: delayFunction(
                   delay,
                   withSequence(
-                    value[transformProp as keyof TransformArrayItem],
+                    value[transformProp]!,
                     withTiming(
                       exitingValues.initialValues.transform
-                        ? // TODO TYPESCRIPT
-                          // @ts-ignore This line of code fails tragically
-                          // in newer versions of React Native, where they have
-                          // narrowed down the type of `transform` even further.
-                          // Since this piece of code improperly typed anyway
-                          // (e.g. it assumes types from RN Animated here) I'd rather
-                          // fix it in the future when types for animations
-                          // are properly defined.
-                          exitingValues.initialValues.transform[index][
-                            transformProp
-                          ]
+                        ? ((
+                            exitingValues.initialValues
+                              .transform as TransformArrayItem[]
+                          )[index][
+                            transformProp as keyof TransformArrayItem
+                          ] as AnimatableValue)
                         : 0,
                       { duration: 0 }
                     )
                   )
                 ),
-              } as TransformArrayItem);
+              });
             }
           });
         } else {
-          const sequence =
-            enteringValues.animations[prop] !== undefined
+          const exitingAnim = exitingValues.animations[prop] as AnimationObject;
+          const enteringAnim = enteringValues.animations[prop] as
+            | AnimationObject
+            | undefined;
+          const sequence: AnimationObject[] =
+            enteringAnim !== undefined
               ? [
-                  exitingValues.animations[prop],
+                  exitingAnim,
                   withTiming(enteringValues.initialValues[prop], {
                     duration: 0,
                   }),
-                  enteringValues.animations[prop],
+                  enteringAnim,
                 ]
               : [
-                  exitingValues.animations[prop],
+                  exitingAnim,
                   withTiming(
                     Object.keys(values).includes(prop)
                       ? values[prop as keyof LayoutAnimationValues]
@@ -153,12 +152,10 @@ export class EntryExitTransition
                         : 0,
                       { duration: exitingDuration }
                     ),
-                    value[
-                      transformProp as keyof TransformArrayItem
-                    ] as AnimatableValue
+                    value[transformProp]!
                   )
                 ),
-              } as TransformArrayItem);
+              });
             }
           });
         } else if (animations[prop] !== undefined) {
@@ -169,7 +166,7 @@ export class EntryExitTransition
             delay,
             withSequence(
               withTiming(enteringValues.initialValues[prop], { duration: 0 }),
-              enteringValues.animations[prop]
+              enteringValues.animations[prop] as AnimationObject
             )
           );
         }
@@ -183,18 +180,16 @@ export class EntryExitTransition
         (Array.isArray(enteringValues.animations.transform)
           ? enteringValues.animations.transform
           : []
-        ).map((value) => {
+        ).map((value): TransformArrayItem => {
           const objectKeys = Object.keys(value);
           if (objectKeys?.length < 1) {
             logger.error(`\${value} is not a valid Transform object`);
-            return value;
+            return { translateX: 0 } as TransformArrayItem;
           }
 
           const transformProp = objectKeys[0];
-          const current =
-            // TODO TYPESCRIPT
-            // @ts-ignore Read similar comment above.
-            (value[transformProp] as AnimationObject).current;
+          const animationAtProp = value[transformProp]!;
+          const current = animationAtProp.current;
           if (typeof current === 'string') {
             if (current.includes('deg')) {
               return {

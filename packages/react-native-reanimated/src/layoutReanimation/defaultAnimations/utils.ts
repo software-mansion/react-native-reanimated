@@ -2,7 +2,8 @@
 
 import type { UnknownRecord } from '../../common';
 import type {
-  AnimationFunction,
+  AnimatedTransformItem,
+  DelayFunction,
   LayoutAnimationAndConfig,
 } from '../../commonTypes';
 import type { TransformArray, TransformsConfig } from './types';
@@ -53,14 +54,14 @@ export function animateTransformToValues<
   defaults: TTransforms,
   values: Partial<TransformsConfig<TTransforms>> | undefined,
   [animation, config]: LayoutAnimationAndConfig,
-  delayFunction: AnimationFunction,
+  delayFunction: DelayFunction,
   delay: number
-): TTransforms {
+): AnimatedTransformItem[] {
   'worklet';
   return defaults.map((entry, index) => {
     const { key, value } = resolveTransformSlot(entry, index, values);
     return {
       [key]: delayFunction(delay, animation(value, config)),
     };
-  }) as unknown as TTransforms;
+  });
 }

@@ -39,6 +39,7 @@ export interface TransitionData {
   reversed?: boolean;
   easingX?: string;
   easingY?: string;
+  // See `CustomConfig.enteringV` / `.exitingV` in `./config.ts`.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   entering?: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

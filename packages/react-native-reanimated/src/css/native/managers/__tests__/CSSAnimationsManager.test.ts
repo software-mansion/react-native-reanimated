@@ -364,8 +364,11 @@ describe('CSSAnimationsManager', () => {
           ],
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const attachedAnimations = (manager as any).attachedAnimations;
+        const attachedAnimations = (
+          manager as unknown as {
+            attachedAnimations: { keyframesRule: { name: string } }[];
+          }
+        ).attachedAnimations;
         jest.clearAllMocks();
 
         // Run cleanup and test
@@ -387,8 +390,13 @@ describe('CSSAnimationsManager', () => {
         // doesn't necessarily mean that the component will be removed.
         // We handle this animations cleanup in the CPP implementation.
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        expect((manager as any).attachedAnimations).toEqual(attachedAnimations);
+        expect(
+          (
+            manager as unknown as {
+              attachedAnimations: { keyframesRule: { name: string } }[];
+            }
+          ).attachedAnimations
+        ).toEqual(attachedAnimations);
         expect(unregisterCSSAnimations).not.toHaveBeenCalled();
         expect(applyCSSAnimations).not.toHaveBeenCalled();
       });

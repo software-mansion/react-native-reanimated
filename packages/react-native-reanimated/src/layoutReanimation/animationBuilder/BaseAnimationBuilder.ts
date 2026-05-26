@@ -2,7 +2,7 @@
 import { withDelay } from '../../animation';
 import { getReduceMotionFromConfig } from '../../animation/util';
 import type {
-  AnimationFunction,
+  DelayFunction,
   EntryExitAnimationFunction,
   LayoutAnimationFunction,
 } from '../../commonTypes';
@@ -138,7 +138,7 @@ export class BaseAnimationBuilder {
     return this.reduceMotionV;
   }
 
-  getDelayFunction(): AnimationFunction {
+  getDelayFunction(): DelayFunction {
     const isDelayProvided = this.randomizeDelay || this.delayV;
     const reduceMotion = this.getReduceMotion();
     return isDelayProvided

@@ -17,12 +17,6 @@ import { isValidRubberBandConfig } from './utils';
 
 export type WithDecayConfig = DecayConfig;
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type withDecayType = (
-  userConfig: DecayConfig,
-  callback?: AnimationCallback
-) => number;
-
 function validateConfig(config: DefaultDecayConfig): void {
   'worklet';
   if (config.clamp) {
@@ -63,7 +57,7 @@ function validateConfig(config: DefaultDecayConfig): void {
  *   which holds the current state of the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withDecay
  */
-export const withDecay = function (
+export function withDecay(
   userConfig: DecayConfig,
   callback?: AnimationCallback
 ): Animation<DecayAnimation> {
@@ -76,14 +70,8 @@ export const withDecay = function (
       velocityFactor: 1,
       velocity: 0,
       rubberBandFactor: 0.6,
+      ...userConfig,
     };
-    if (userConfig) {
-      Object.keys(userConfig).forEach(
-        (key) =>
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ((config as any)[key] = userConfig[key as keyof typeof userConfig])
-      );
-    }
 
     const decay: (animation: InnerDecayAnimation, now: number) => boolean =
       isValidRubberBandConfig(config)
@@ -128,4 +116,4 @@ export const withDecay = function (
       reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
     } as DecayAnimation;
   });
-} as unknown as withDecayType;
+}

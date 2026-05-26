@@ -1,9 +1,14 @@
 'use strict';
-import type { AnimationObject, Mutable } from './commonTypes';
+import type {
+  AnimatableValue,
+  AnimationObject,
+  Mutable,
+  ReanimatedValue,
+} from './commonTypes';
 
-export function valueSetter<Value>(
-  mutable: Mutable<Value>,
-  value: Value,
+export function valueSetter<TValue>(
+  mutable: Mutable<TValue>,
+  value: ReanimatedValue<TValue>,
   forceUpdate = false
 ): void {
   'worklet';
@@ -16,15 +21,12 @@ export function valueSetter<Value>(
     typeof value === 'function' ||
     (value !== null &&
       typeof value === 'object' &&
-      // TODO TYPESCRIPT fix this after fixing AnimationObject type
-      (value as unknown as AnimationObject).onFrame !== undefined)
+      (value as AnimationObject).onFrame !== undefined)
   ) {
-    const animation: AnimationObject<Value> =
+    const animation: AnimationObject =
       typeof value === 'function'
-        ? // TODO TYPESCRIPT fix this after fixing AnimationObject type
-          (value as () => AnimationObject<Value>)()
-        : // TODO TYPESCRIPT fix this after fixing AnimationObject type
-          (value as unknown as AnimationObject<Value>);
+        ? (value as () => AnimationObject)()
+        : (value as AnimationObject);
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input
     // this happens when the animation's target value(stored in animation.current until animation.onStart is called) is set to the same value as a current one(this._value)
@@ -39,7 +41,15 @@ export function valueSetter<Value>(
     }
     // animated set
     const initializeAnimation = (timestamp: number) => {
-      animation.onStart(animation, mutable.value, timestamp, previousAnimation);
+      // Animations only run for `AnimatableValue`-typed shared values; the
+      // mutable's `TValue` generic isn't constrained here, so cast through to
+      // the animation framework's expected type.
+      animation.onStart(
+        animation,
+        mutable.value as AnimatableValue,
+        timestamp,
+        previousAnimation ?? null
+      );
     };
     const currentTimestamp =
       global.__frameTimestamp || global._getAnimationTimestamp();
@@ -53,10 +63,7 @@ export function valueSetter<Value>(
       const finished = animation.onFrame(animation, timestamp);
       animation.finished = true;
       animation.timestamp = timestamp;
-      // TODO TYPESCRIPT
-      // For now I'll assume that `animation.current` is always defined
-      // but actually need to dive into animations to understand it
-      mutable._value = animation.current!;
+      mutable._value = animation.current as TValue;
       if (finished) {
         animation.callback?.(true /* finished */);
       } else {
@@ -73,6 +80,6 @@ export function valueSetter<Value>(
     if (mutable._value === value && !forceUpdate) {
       return;
     }
-    mutable._value = value;
+    mutable._value = value as TValue;
   }
 }

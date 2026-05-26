@@ -5,6 +5,7 @@ import {
   GestureDetector,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
+import type { ReanimatedValue } from 'react-native-reanimated';
 import Animated, {
   ReducedMotionConfig,
   ReduceMotion,
@@ -193,7 +194,10 @@ function HookExample() {
   );
 }
 
-function Example(props: { animation: () => number; text: string }) {
+function Example(props: {
+  animation: () => ReanimatedValue<number>;
+  text: string;
+}) {
   const sv = useSharedValue(initialValue);
 
   const animatedStyle = useAnimatedStyle(() => ({

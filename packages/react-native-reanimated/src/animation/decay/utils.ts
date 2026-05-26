@@ -1,7 +1,6 @@
 'use strict';
 import { IS_WEB } from '../../common';
 import type {
-  AnimatableValue,
   Animation,
   AnimationObject,
   ReduceMotion,
@@ -17,7 +16,7 @@ export interface DecayAnimation extends Animation<DecayAnimation> {
   startTimestamp: Timestamp;
   initialVelocity: number;
   velocity: number;
-  current: AnimatableValue | undefined;
+  current: number | undefined;
 }
 
 export interface InnerDecayAnimation

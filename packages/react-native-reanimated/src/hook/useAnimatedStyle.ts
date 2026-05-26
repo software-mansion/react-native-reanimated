@@ -1,4 +1,8 @@
 'use strict';
+// The runtime walks the animated-style record dynamically (color subkeys,
+// transform indices, etc.) — every `AnimatedStyle<any>` in this file lets
+// those property accesses widen without a per-site cast.
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { RefObject } from 'react';
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
@@ -33,9 +37,7 @@ import { useSharedValue } from './useSharedValue';
 import { isAnimated, shallowEqual, validateAnimatedStyles } from './utils';
 
 interface AnimatedState {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   last: AnimatedStyle<any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animations: AnimatedStyle<any>;
   isAnimationRunning: boolean;
   isAnimationCancelled: boolean;
@@ -43,9 +45,7 @@ interface AnimatedState {
 
 interface AnimatedUpdaterData {
   initial: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: AnimatedStyle<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     updater: () => AnimatedStyle<any>;
   };
   remoteState: AnimatedState;
@@ -55,11 +55,8 @@ interface AnimatedUpdaterData {
 
 function prepareAnimation(
   frameTimestamp: number,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animatedProp: AnimatedStyle<any>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lastAnimation: AnimatedStyle<any>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lastValue: AnimatedStyle<any>
 ): void {
   'worklet';
@@ -117,11 +114,9 @@ function prepareAnimation(
 }
 
 function runAnimations(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animation: AnimatedStyle<any>,
   timestamp: Timestamp,
   key: number | string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   result: AnimatedStyle<any>,
   animationsActive: SharedValue<boolean>,
   forceCopyAnimation?: boolean
@@ -200,7 +195,6 @@ function runAnimations(
 
 function styleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
   state: AnimatedState,
   animationsActive: SharedValue<boolean>,
@@ -240,7 +234,6 @@ function styleUpdater(
         return;
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const updates: AnimatedStyle<any> = {};
       let allFinished = true;
       for (const propName in animations) {
@@ -310,17 +303,14 @@ function styleUpdater(
 
 function jestStyleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
   state: AnimatedState,
   animationsActive: SharedValue<boolean>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animatedValues: RefObject<AnimatedStyle<any>>,
   adapters: AnimatedPropsAdapterFunction[],
   forceUpdate?: boolean
 ): void {
   'worklet';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const animations: AnimatedStyle<any> = state.animations ?? {};
   const newValues = updater() ?? {};
   const oldValues = state.last;
@@ -353,7 +343,6 @@ function jestStyleUpdater(
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updates: AnimatedStyle<any> = {};
     let allFinished = true;
     Object.keys(animations).forEach((propName) => {
@@ -472,21 +461,26 @@ function buildWorkletsHash<Args extends unknown[], ReturnValue>(
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle
  */
 // @ts-expect-error Public type definition which strips internals.
-export function useAnimatedStyle<Style extends DefaultStyle>(
-  updater: () => Style,
+export function useAnimatedStyle(
+  updater: () => AnimatedStyle<DefaultStyle>,
   dependencies?: DependencyList | null
-): AnimatedStyleHandle<Style>;
+): AnimatedStyleHandle<DefaultStyle>;
 
-export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
+export function useAnimatedStyle<TStyle extends DefaultStyle>(
+  updater: () => AnimatedStyle<TStyle>,
+  dependencies?: DependencyList | null
+): AnimatedStyleHandle<TStyle>;
+
+export function useAnimatedStyle<TStyle extends DefaultStyle | AnimatedProps>(
   updater:
-    | WorkletFunction<[], Style>
-    | ((() => Style) & Record<string, unknown>),
+    | WorkletFunction<[], AnimatedStyle<TStyle>>
+    | ((() => AnimatedStyle<TStyle>) & Record<string, unknown>),
   dependencies?: DependencyList | null,
   adapters?: AnimatedPropsAdapterWorklet | AnimatedPropsAdapterWorklet[] | null,
   isAnimatedProps = false
 ):
-  | AnimatedStyleHandle<Style | AnimatedProps>
-  | JestAnimatedStyleHandle<Style | AnimatedProps> {
+  | AnimatedStyleHandle<TStyle | AnimatedProps>
+  | JestAnimatedStyleHandle<TStyle | AnimatedProps> {
   const animatedUpdaterData = useRef<AnimatedUpdaterData | null>(null);
   let inputs = Object.values(updater.__closure ?? {});
   if (SHOULD_BE_USE_WEB) {
@@ -513,8 +507,8 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
     : [];
   const adaptersHash = adapters ? buildWorkletsHash(adaptersArray) : null;
   const areAnimationsActive = useSharedValue<boolean>(true);
-  const jestAnimatedValues = useRef<Style | AnimatedProps>(
-    {} as Style | AnimatedProps
+  const jestAnimatedValues = useRef<TStyle | AnimatedProps>(
+    {} as TStyle | AnimatedProps
   );
 
   // build dependencies
@@ -564,7 +558,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
           adapter(newValues as Record<string, unknown>);
         });
         return newValues;
-      }) as WorkletFunction<[], Style>;
+      }) as typeof updater;
     }
 
     if (IS_JEST) {
@@ -615,8 +609,8 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   }
 
   const animatedStyleHandle = useRef<
-    | AnimatedStyleHandle<Style | AnimatedProps>
-    | JestAnimatedStyleHandle<Style | AnimatedProps>
+    | AnimatedStyleHandle<TStyle | AnimatedProps>
+    | JestAnimatedStyleHandle<TStyle | AnimatedProps>
     | null
   >(null);
 

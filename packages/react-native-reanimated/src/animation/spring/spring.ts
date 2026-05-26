@@ -3,6 +3,7 @@ import type {
   AnimatableValue,
   Animation,
   AnimationCallback,
+  AnimationObject,
   Timestamp,
 } from '../../commonTypes';
 import { defineAnimation, getReduceMotionForAnimation } from '../util';
@@ -29,13 +30,6 @@ import {
   underDampedSpringCalculations,
 } from './springUtils';
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type withSpringType = <T extends AnimatableValue>(
-  toValue: T,
-  userConfig?: SpringConfig,
-  callback?: AnimationCallback
-) => T;
-
 /**
  * Lets you create spring-based animations.
  *
@@ -53,14 +47,14 @@ type withSpringType = <T extends AnimatableValue>(
  *   which holds the current state of the animation
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring
  */
-export const withSpring = ((
-  toValue: AnimatableValue,
+export function withSpring<TValue extends AnimatableValue>(
+  toValue: TValue,
   userConfig?: SpringConfig,
   callback?: AnimationCallback
-): Animation<SpringAnimation> => {
+): Animation<SpringAnimation<TValue>> {
   'worklet';
 
-  return defineAnimation<SpringAnimation>(toValue, () => {
+  return defineAnimation<SpringAnimation<TValue>>(toValue, () => {
     'worklet';
     const defaultConfig: DefaultSpringConfig = {
       ...GentleSpringConfig,
@@ -144,8 +138,8 @@ export const withSpring = ((
     }
 
     function isTriggeredTwice(
-      previousAnimation: SpringAnimation | undefined,
-      animation: SpringAnimation
+      previousAnimation: SpringAnimation<TValue> | undefined,
+      animation: SpringAnimation<TValue>
     ) {
       return (
         previousAnimation?.lastTimestamp &&
@@ -157,47 +151,50 @@ export const withSpring = ((
     }
 
     function onStart(
-      animation: SpringAnimation,
-      value: number,
+      animation: SpringAnimation<TValue>,
+      value: TValue,
       now: Timestamp,
-      previousAnimation: SpringAnimation | undefined
+      previousAnimation: AnimationObject | null
     ): void {
       animation.current = value;
 
       let stiffness = config.stiffness;
-      const triggeredTwice = isTriggeredTwice(previousAnimation, animation);
+      const previousSpring = (previousAnimation ?? undefined) as
+        | SpringAnimation<TValue>
+        | undefined;
+      const triggeredTwice = isTriggeredTwice(previousSpring, animation);
 
       const duration = config.duration;
 
       const x0 = triggeredTwice
         ? // If animation is triggered twice we want to continue the previous animation
           // form the previous starting point
-          (previousAnimation?.startValue as number)
-        : value - (animation.toValue as number);
+          (previousSpring?.startValue as number)
+        : (value as number) - (animation.toValue as number);
 
       animation.startValue = x0;
 
-      if (previousAnimation) {
+      if (previousSpring) {
         animation.velocity =
           (triggeredTwice
-            ? previousAnimation?.velocity
-            : previousAnimation?.velocity + config.velocity) || 0;
+            ? previousSpring.velocity
+            : previousSpring.velocity + config.velocity) || 0;
       } else {
         animation.velocity = config.velocity || 0;
       }
 
       if (triggeredTwice) {
-        animation.zeta = previousAnimation?.zeta || 0;
-        animation.omega0 = previousAnimation?.omega0 || 0;
-        animation.omega1 = previousAnimation?.omega1 || 0;
+        animation.zeta = previousSpring?.zeta || 0;
+        animation.omega0 = previousSpring?.omega0 || 0;
+        animation.omega1 = previousSpring?.omega1 || 0;
       } else {
         if (config.useDuration) {
           const actualDuration = triggeredTwice
             ? // If animation is triggered twice we want to continue the previous animation
               // so we need to include the time that already elapsed
               duration -
-              ((previousAnimation?.lastTimestamp || 0) -
-                (previousAnimation?.startTimestamp || 0))
+              ((previousSpring?.lastTimestamp || 0) -
+                (previousSpring?.startTimestamp || 0))
             : duration;
 
           config.duration = actualDuration;
@@ -227,15 +224,18 @@ export const withSpring = ((
       );
       animation.initialEnergy = initialEnergy;
 
-      animation.lastTimestamp = previousAnimation?.lastTimestamp || now;
+      animation.lastTimestamp = previousSpring?.lastTimestamp || now;
 
       animation.startTimestamp = triggeredTwice
-        ? previousAnimation?.startTimestamp || now
+        ? previousSpring?.startTimestamp || now
         : now;
     }
 
     return {
-      onFrame: springOnFrame,
+      // `springOnFrame` operates on the *inner* numeric representation set up
+      // by the animation framework — typed here to satisfy the public
+      // `SpringAnimation<TValue>` contract.
+      onFrame: springOnFrame as SpringAnimation<TValue>['onFrame'],
       onStart,
       toValue,
       velocity: config.velocity || 0,
@@ -249,6 +249,6 @@ export const withSpring = ((
       omega1: 0,
       initialEnergy: 0,
       reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
-    } as SpringAnimation;
+    };
   });
-}) as withSpringType;
+}

@@ -3,6 +3,7 @@ import type {
   AnimatableValue,
   Animation,
   AnimationCallback,
+  AnimationObject,
   EasingFunction,
   ReduceMotion,
   Timestamp,
@@ -34,14 +35,16 @@ interface TimingConfig {
 
 export type WithTimingConfig = TimingConfig;
 
-export interface TimingAnimation extends Animation<TimingAnimation> {
+export interface TimingAnimation<
+  TValue extends AnimatableValue = AnimatableValue,
+> extends Animation<TimingAnimation<TValue>> {
   type: string;
   easing: EasingFunction;
-  startValue: AnimatableValue;
+  startValue: TValue;
   startTime: Timestamp;
   progress: number;
-  toValue: AnimatableValue;
-  current: AnimatableValue;
+  toValue: TValue;
+  current: TValue;
 }
 
 interface InnerTimingAnimation extends Omit<
@@ -51,13 +54,6 @@ interface InnerTimingAnimation extends Omit<
   toValue: number;
   current: number;
 }
-
-// TODO TYPESCRIPT This is temporary type put in here to get rid of our .d.ts file
-type withTimingType = <T extends AnimatableValue>(
-  toValue: T,
-  userConfig?: TimingConfig,
-  callback?: AnimationCallback
-) => T;
 
 /**
  * Lets you create an animation based on duration and easing.
@@ -73,30 +69,23 @@ type withTimingType = <T extends AnimatableValue>(
  *   which holds the current state of the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming
  */
-export const withTiming = function (
-  toValue: AnimatableValue,
+export function withTiming<TValue extends AnimatableValue>(
+  toValue: TValue,
   userConfig?: TimingConfig,
   callback?: AnimationCallback
-): Animation<TimingAnimation> {
+): Animation<TimingAnimation<TValue>> {
   'worklet';
 
   if (__DEV__ && userConfig?.easing) {
     assertEasingIsWorklet(userConfig.easing);
   }
 
-  return defineAnimation<TimingAnimation>(toValue, () => {
+  return defineAnimation<TimingAnimation<TValue>>(toValue, () => {
     'worklet';
     const config: Required<Omit<TimingConfig, 'reduceMotion'>> = {
-      duration: 300,
-      easing: Easing.inOut(Easing.quad),
+      duration: userConfig?.duration ?? 300,
+      easing: userConfig?.easing ?? Easing.inOut(Easing.quad),
     };
-    if (userConfig) {
-      Object.keys(userConfig).forEach(
-        (key) =>
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ((config as any)[key] = userConfig[key as keyof typeof userConfig])
-      );
-    }
 
     function timing(animation: InnerTimingAnimation, now: Timestamp): boolean {
       // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -116,24 +105,21 @@ export const withTiming = function (
     }
 
     function onStart(
-      animation: TimingAnimation,
-      value: number,
+      animation: TimingAnimation<TValue>,
+      value: TValue,
       now: Timestamp,
-      previousAnimation: Animation<TimingAnimation>
+      previousAnimation: AnimationObject | null
     ): void {
       if (
-        previousAnimation &&
-        (previousAnimation as TimingAnimation).type === 'timing' &&
-        (previousAnimation as TimingAnimation).toValue === toValue &&
-        (previousAnimation as TimingAnimation).startTime
+        previousAnimation?.type === 'timing' &&
+        previousAnimation.toValue === toValue &&
+        previousAnimation.startTime
       ) {
         // to maintain continuity of timing animations we check if we are starting
         // new timing over the old one with the same parameters. If so, we want
         // to copy animation timeline properties
-        animation.startTime = (previousAnimation as TimingAnimation).startTime;
-        animation.startValue = (
-          previousAnimation as TimingAnimation
-        ).startValue;
+        animation.startTime = previousAnimation.startTime;
+        animation.startValue = previousAnimation.startValue;
       } else {
         animation.startTime = now;
         animation.startValue = value;
@@ -148,16 +134,19 @@ export const withTiming = function (
 
     return {
       type: 'timing',
-      onFrame: timing,
-      onStart: onStart as (animation: TimingAnimation, now: number) => boolean,
+      // `onFrame` operates on the *inner* numeric representation set up by the
+      // animation framework — typed here to satisfy the public
+      // `TimingAnimation<TValue>` contract.
+      onFrame: timing as TimingAnimation<TValue>['onFrame'],
+      onStart,
       progress: 0,
       toValue,
-      startValue: 0,
+      startValue: toValue,
       startTime: 0,
       easing: () => 0,
       current: toValue,
       callback,
       reduceMotion: getReduceMotionForAnimation(userConfig?.reduceMotion),
-    } as TimingAnimation;
+    };
   });
-} as withTimingType;
+}
