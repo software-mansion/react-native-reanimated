@@ -84,8 +84,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   entering_.clear();
   layout_.clear();
 
-  handleRemovals(processedMutations, exiting_);
-  exiting_.clear();
+  handleRemovals(processedMutations, exitingRoots_);
+  exitingRoots_.clear();
 
   addOngoingAnimations(surfaceId, processedMutations);
 
@@ -211,7 +211,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
             "Indicies are wrong in Remove mutation");
 
         if (deleted.contains(tag) && !deleted.contains(parentTag)) {
-          exiting_.push_back(node);
+          exitingRoots_.push_back(node);
           processedMutations.push_back(mutation);
           parent->children.erase(parent->children.begin() + mutation.index);
         } else if (!deleted.contains(tag)) {
