@@ -102,14 +102,27 @@ static id idFromPlatformValue(NSString *propertyName, const PlatformValue &value
     }
     anim.toValue = toValue;
     anim.duration = durationSec;
-    anim.beginTime = beginTime;
+    // beginTime is in the layer's local clock; convert from absolute time so
+    // ancestor speed/timeOffset (e.g. RN Screens during navigation) doesn't
+    // make the animation appear already complete or never-starting.
+    anim.beginTime = [layer convertTime:beginTime fromLayer:nil];
     anim.timingFunction = timing;
-    // Persist so presentation holds the animated value before beginTime
-    // (kCAFillModeBackwards) and after duration (kCAFillModeForwards),
-    // overriding any concurrent model commits. Cleared in removeTransition.
-    anim.fillMode = kCAFillModeBoth;
-    anim.removedOnCompletion = NO;
+    // Backwards fill paints fromValue during the delay window; the animation
+    // self-removes on completion and the layer reads the model below.
+    anim.fillMode = kCAFillModeBackwards;
+    anim.removedOnCompletion = YES;
+
+    // Commit toValue to the model first (with implicit actions disabled), then
+    // add the animation in the same transaction. The model is correct for the
+    // entire lifetime of the animation; once the animation auto-removes the
+    // layer reads the model and there's no snap. This is what stops stale
+    // animations from outliving their view and bleeding onto layers that RN
+    // has since recycled onto unrelated components.
+    [CATransaction begin];
+    [CATransaction setDisableActions:YES];
+    [layer setValue:toValue forKeyPath:keyPath];
     [layer addAnimation:anim forKey:keyPath];
+    [CATransaction commit];
   });
 }
 

@@ -42,8 +42,8 @@ void CSSPlatformTransition::runEntry(
       viewTag_, entry.propertyName, fromValue, toValue, rs.duration, rs.startTimestamp, entry.settings.easingConfig});
 
   activeProperties_[entry.propertyName] = ActiveProperty{
-      prev ? std::move(prev->adjustedEnd) : std::move(fromValue),
-      std::move(toValue),
+      prev ? prev->adjustedEnd : fromValue,
+      toValue,
       std::move(rs),
   };
 }
