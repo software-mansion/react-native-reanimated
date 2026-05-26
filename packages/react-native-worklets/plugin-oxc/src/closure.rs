@@ -6,19 +6,20 @@ use oxc_semantic::Scoping;
 use oxc_syntax::reference::ReferenceFlags;
 use oxc_syntax::scope::ScopeId;
 use oxc_syntax::symbol::SymbolId;
+#[allow(unused_imports)]
+use oxc_syntax::scope::ScopeFlags;
 
-use crate::state::State;
+use crate::state::{ImportInfo, State};
 
 #[derive(Debug, Default)]
 pub struct ClosureResult {
     /// Names captured by the worklet's closure, in order of first reference.
     pub closure_variables: Vec<String>,
-    /// SymbolIds resolving to imports from workletizable library modules.
-    /// Bundle-mode only.
-    pub library_bindings: HashSet<SymbolId>,
-    /// SymbolIds resolving to relative imports inside a worklet-allowed file.
-    /// Bundle-mode only.
-    pub relative_bindings: HashSet<SymbolId>,
+    /// Imports the worklet body depends on. In bundle mode each is re-emitted
+    /// as an `import` declaration at the top of the `.worklets/<hash>.js` file
+    /// so the worklet body's references resolve at module load time on the
+    /// worklet runtime side.
+    pub imports: Vec<ImportInfo>,
 }
 
 /// Walk the function body, identify references that must be captured in the
@@ -38,6 +39,7 @@ pub fn closure_for_function<'a, B: WalkFunctionBody<'a>>(
     scoping: &Scoping,
     state: &State,
     force_capture: &HashSet<String>,
+    filename: &str,
 ) -> ClosureResult {
     let mut collector = ReferenceCollector {
         scoping,
@@ -70,11 +72,33 @@ pub fn closure_for_function<'a, B: WalkFunctionBody<'a>>(
 
                 let flags = scoping.symbol_flags(symbol_id);
                 if state.opts.bundle_mode.unwrap_or(false) && flags.is_import() {
-                    // TODO: classify import source (relative vs library) by walking
-                    // up to the parent ImportDeclaration. Until then, treat all as library.
-                    result.library_bindings.insert(symbol_id);
-                    seen.insert(r.name);
-                    continue;
+                    if let Some(info) = state.imports_by_symbol.get(&symbol_id) {
+                        // Re-emit as an `import` in the bundle file ONLY when:
+                        //   - relative + the current file lives inside a
+                        //     workletizable module (so `..` paths resolve),
+                        //   - or the import source itself is a workletizable
+                        //     module (library import).
+                        // Otherwise fall through to closure capture, matching
+                        // babel-plugin-worklets/src/closure.ts.
+                        let source = &info.source;
+                        let is_rel = source.starts_with('.');
+                        let allowed_for_rel = is_rel
+                            && is_allowed_for_relative_imports(
+                                filename,
+                                state.opts.workletizable_modules.as_deref(),
+                            );
+                        let lib_workletizable = !is_rel
+                            && is_workletizable_module(
+                                source,
+                                state.opts.workletizable_modules.as_deref(),
+                            );
+                        if allowed_for_rel || lib_workletizable {
+                            result.imports.push(info.clone());
+                            seen.insert(r.name);
+                            continue;
+                        }
+                        // Else: fall through to closure capture below.
+                    }
                 }
 
                 seen.insert(r.name.clone());
@@ -120,6 +144,35 @@ pub fn closure_for_function<'a, B: WalkFunctionBody<'a>>(
     }
 
     result
+}
+
+/// Modules whose files are always trusted to host worklets in bundle mode.
+/// Matches `alwaysAllowed` in babel-plugin-worklets/src/imports.ts.
+const ALWAYS_ALLOWED: &[&str] = &[
+    "react-native-worklets",
+    "react-native/Libraries/Core/setUpXHR",
+];
+
+fn is_allowed_for_relative_imports(filename: &str, workletizable: Option<&[String]>) -> bool {
+    if filename.is_empty() {
+        return false;
+    }
+    let norm = filename.replace('\\', "/");
+    if ALWAYS_ALLOWED.iter().any(|m| norm.contains(m)) {
+        return true;
+    }
+    workletizable
+        .map(|ms| ms.iter().any(|m| norm.contains(m)))
+        .unwrap_or(false)
+}
+
+fn is_workletizable_module(source: &str, workletizable: Option<&[String]>) -> bool {
+    if ALWAYS_ALLOWED.iter().any(|m| source.starts_with(m)) {
+        return true;
+    }
+    workletizable
+        .map(|ms| ms.iter().any(|m| source.starts_with(m)))
+        .unwrap_or(false)
 }
 
 /// `_worklet_<digits>_init_data` — names minted by `worklet_factory.rs` when

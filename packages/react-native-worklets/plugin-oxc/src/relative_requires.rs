@@ -91,7 +91,7 @@ impl<'a, 'b> VisitMut<'a> for RelativeRequireRewriter<'a, 'b> {
 /// compute the relative path lexically. This produces the same shape that the
 /// babel plugin emits (e.g. `'../helpers/foo'`), which is all the test
 /// snapshots key on.
-fn rebase_to_worklets_dir(filename: &str, original: &str) -> Option<String> {
+pub fn rebase_to_worklets_dir(filename: &str, original: &str) -> Option<String> {
     let filename_path = PathBuf::from(filename.replace('\\', "/"));
     let file_dir = filename_path.parent()?;
     let resolved = file_dir.join(original);

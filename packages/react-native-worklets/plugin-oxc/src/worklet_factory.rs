@@ -111,6 +111,7 @@ pub fn make_worklet_factory<'a>(
             scoping,
             state,
             force_capture,
+            filename,
         )
     };
     let limit_init_data_hoisting = input.limit_init_data_hoisting();
@@ -207,7 +208,9 @@ pub fn make_worklet_factory<'a>(
                 );
             }
         }
-        let file_content = codegen_bundle_file(builder, allocator, factory_expr);
+        let file_content = codegen_bundle_file(
+            builder, allocator, factory_expr, &closure.imports, filename,
+        );
         let file_path = format!("react-native-worklets/.worklets/{hash}.js");
         let require_call =
             build_require_factory_call(builder, &file_path, &closure.closure_variables);
@@ -247,20 +250,41 @@ pub fn make_worklet_factory<'a>(
     }
 }
 
-/// Render `export default (<factory>);` as a standalone JS file.
+/// Render a standalone JS file containing:
+///   import { … } from '<source>'   // for each library/relative import
+///   export default (<factory>);
 fn codegen_bundle_file<'a>(
     builder: AstBuilder<'a>,
     allocator: &'a Allocator,
     factory: Expression<'a>,
+    imports: &[crate::state::ImportInfo],
+    filename: &str,
 ) -> String {
     use oxc_ast::ast::ExportDefaultDeclarationKind;
+
+    let mut body = builder.vec_with_capacity(imports.len() + 1);
+    for info in imports {
+        // Relative import sources need rebasing — the bundle file lives at
+        // `react-native-worklets/.worklets/<hash>.js`, not at the original
+        // file's directory, so a literal `"../foo"` from the source would
+        // resolve to the wrong location.
+        let mut rebased = info.clone();
+        if rebased.source.starts_with('.') {
+            if let Some(p) = crate::relative_requires::rebase_to_worklets_dir(
+                filename,
+                &rebased.source,
+            ) {
+                rebased.source = p;
+            }
+        }
+        body.push(build_import_declaration(builder, &rebased));
+    }
     let export = builder.alloc_export_default_declaration(
         SPAN,
         ExportDefaultDeclarationKind::from(factory),
     );
-    let stmt = Statement::ExportDefaultDeclaration(export);
-    let mut body = builder.vec_with_capacity(1);
-    body.push(stmt);
+    body.push(Statement::ExportDefaultDeclaration(export));
+
     let program = builder.program(
         SPAN,
         oxc_span::SourceType::mjs(),
@@ -273,8 +297,53 @@ fn codegen_bundle_file<'a>(
     let printed = oxc_codegen::Codegen::new()
         .with_options(oxc_codegen::CodegenOptions::default())
         .build(&program);
-    let _ = allocator; // silence unused
+    let _ = allocator;
     printed.code
+}
+
+/// Build a single `import` declaration matching the given binding shape.
+fn build_import_declaration<'a>(
+    builder: AstBuilder<'a>,
+    info: &crate::state::ImportInfo,
+) -> Statement<'a> {
+    use crate::state::ImportShape;
+    use oxc_ast::ast::{ImportDeclarationSpecifier, ImportOrExportKind, ModuleExportName};
+
+    let local_atom = builder.ident(&info.local);
+    let local_binding = builder.binding_identifier(SPAN, local_atom);
+    let mut specifiers = builder.vec_with_capacity(1);
+    let specifier = match &info.shape {
+        ImportShape::Default => ImportDeclarationSpecifier::ImportDefaultSpecifier(
+            builder.alloc_import_default_specifier(SPAN, local_binding),
+        ),
+        ImportShape::Namespace => ImportDeclarationSpecifier::ImportNamespaceSpecifier(
+            builder.alloc_import_namespace_specifier(SPAN, local_binding),
+        ),
+        ImportShape::Named { imported } => {
+            let imported_atom = builder.ident(imported);
+            let imported_name =
+                ModuleExportName::IdentifierName(builder.identifier_name(SPAN, imported_atom));
+            ImportDeclarationSpecifier::ImportSpecifier(builder.alloc_import_specifier(
+                SPAN,
+                imported_name,
+                local_binding,
+                ImportOrExportKind::Value,
+            ))
+        }
+    };
+    specifiers.push(specifier);
+
+    let source_str = builder.str(&info.source);
+    let source = builder.string_literal(SPAN, source_str, None);
+    let decl = builder.alloc_import_declaration(
+        SPAN,
+        Some(specifiers),
+        source,
+        None,
+        NONE,
+        ImportOrExportKind::Value,
+    );
+    Statement::ImportDeclaration(decl)
 }
 
 /// Build `require(<path>).default(<param_pack>)`.

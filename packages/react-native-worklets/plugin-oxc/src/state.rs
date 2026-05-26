@@ -1,7 +1,32 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
+
+use oxc_syntax::symbol::SymbolId;
 
 use crate::globals::default_globals;
 use crate::options::PluginOptions;
+
+/// Shape of an import binding so we can re-emit it in a bundle-mode
+/// `.worklets/<hash>.js` file.
+#[derive(Debug, Clone)]
+pub enum ImportShape {
+    /// `import foo from 'x'`
+    Default,
+    /// `import { foo as local } from 'x'` — `imported` is the original name
+    /// in the module, `local` is what we capture as. `imported == local`
+    /// when not aliased.
+    Named { imported: String },
+    /// `import * as foo from 'x'`
+    Namespace,
+}
+
+#[derive(Debug, Clone)]
+pub struct ImportInfo {
+    /// `"react-native-worklets"` etc.
+    pub source: String,
+    /// Local-binding name (what the worklet body references).
+    pub local: String,
+    pub shape: ImportShape,
+}
 
 #[derive(Debug)]
 pub struct State {
@@ -33,6 +58,13 @@ pub struct State {
     /// Matches babel-plugin-worklets' inner-traversal pattern (only explicit
     /// `'worklet'`-directive functions get workletized below an outer worklet).
     pub inside_worklet_depth: u32,
+
+    /// Index from `SymbolId` of an import binding to its module shape.
+    /// Built once at file entry by scanning top-level `ImportDeclaration`s.
+    /// Used by bundle-mode emission to re-export imports into each
+    /// `.worklets/<hash>.js` file so worklet bodies that reference them
+    /// resolve at module-eval time.
+    pub imports_by_symbol: HashMap<SymbolId, ImportInfo>,
 }
 
 impl State {
@@ -70,6 +102,7 @@ impl State {
             emitted_files: Vec::new(),
             source_text: String::new(),
             inside_worklet_depth: 0,
+            imports_by_symbol: HashMap::new(),
         }
     }
 
