@@ -2,5 +2,8 @@
   "name": "npm",
   "devDependencies": {
     "patch-package": "8.0.0"
+  },
+  "dependencies": {
+    "metro": "0.84.4"
   }
 }
