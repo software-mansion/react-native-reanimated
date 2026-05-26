@@ -309,7 +309,7 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
   ReanimatedSystraceSection s("handleRemovals");
   // iterate from the end, so that children with higher indices appear first in the mutations list
   for (auto it = newExitingRoots.rbegin(); it != newExitingRoots.rend(); it++) {
-    auto &newExitingRoot = *it;
+    auto &rootToStartExiting = *it;
 
     const StartAnimationsRecursivelyConfig config = {
         .shouldRemoveSubviewsWithoutAnimations = true,
@@ -317,8 +317,8 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
         .isScreenPop = false,
     };
 
-    if (startAnimationsRecursively(newExitingRoot, outputMutations, config)) {
-      auto parentOfNewExitingRoot = newExitingRoot->parent.lock();
+    if (startAnimationsRecursively(rootToStartExiting, outputMutations, config)) {
+      auto parentOfNewExitingRoot = rootToStartExiting->parent.lock();
       react_native_assert(parentOfNewExitingRoot && "Parent node is nullptr");
       // TODO (future): figure out a better way to handle this
       // Currently we remove each view, and then if we want to animate it, reinsert it at the end.
@@ -327,21 +327,21 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
       // convenience of this approach is that it is much easier to maintain indices of animated views, and handle
       // reparentings.
 
-      auto exitingShadowView = newExitingRoot->current;
-      if (layoutAnimations_.contains(newExitingRoot->current.tag)) {
-        exitingShadowView = layoutAnimations_.at(newExitingRoot->current.tag).currentView;
+      auto exitingShadowView = rootToStartExiting->current;
+      if (layoutAnimations_.contains(rootToStartExiting->current.tag)) {
+        exitingShadowView = layoutAnimations_.at(rootToStartExiting->current.tag).currentView;
       }
       outputMutations.push_back(ShadowViewMutation::InsertMutation(
           parentOfNewExitingRoot->current.tag,
           exitingShadowView,
           static_cast<int>(parentOfNewExitingRoot->children.size())));
-      parentOfNewExitingRoot->children.push_back(newExitingRoot);
-      if (newExitingRoot->state == UNDEFINED) {
-        newExitingRoot->state = WAITING;
+      parentOfNewExitingRoot->children.push_back(rootToStartExiting);
+      if (rootToStartExiting->state == UNDEFINED) {
+        rootToStartExiting->state = WAITING;
       }
     } else {
-      maybeCancelAnimation(newExitingRoot->current.tag);
-      outputMutations.push_back(ShadowViewMutation::DeleteMutation(newExitingRoot->current));
+      maybeCancelAnimation(rootToStartExiting->current.tag);
+      outputMutations.push_back(ShadowViewMutation::DeleteMutation(rootToStartExiting->current));
     }
   }
 
