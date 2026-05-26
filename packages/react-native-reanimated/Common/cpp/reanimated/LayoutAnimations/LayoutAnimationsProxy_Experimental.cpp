@@ -27,7 +27,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   const PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList processedMutations;
   auto rootChildCount = static_cast<int>(lightNodes_[surfaceId]->children.size());
-  const std::vector<std::shared_ptr<MutationNode>> roots;
   const bool isInTransition = static_cast<bool>(transitionState_);
 
   if (isInTransition) {
