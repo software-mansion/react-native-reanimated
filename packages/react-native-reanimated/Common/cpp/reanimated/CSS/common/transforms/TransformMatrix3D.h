@@ -6,9 +6,13 @@
 #include <reanimated/CSS/common/transforms/vectors.h>
 
 #include <folly/dynamic.h>
+#include <jsi/jsi.h>
+
 #include <utility>
 
 namespace reanimated::css {
+
+using namespace facebook;
 
 static constexpr size_t MATRIX_3D_DIMENSION = 4; // 4x4 matrix
 

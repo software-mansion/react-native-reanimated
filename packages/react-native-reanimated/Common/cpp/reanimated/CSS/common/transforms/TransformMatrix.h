@@ -1,8 +1,7 @@
 #pragma once
 
-#include <reanimated/CSS/common/definitions.h>
-
 #include <folly/dynamic.h>
+
 #include <memory>
 #include <string>
 #include <utility>
