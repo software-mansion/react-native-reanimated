@@ -5,11 +5,17 @@ import type {
   RefObject,
   SetStateAction,
 } from 'react';
-import type {
-  AnimatedStyle,
-  LayoutAnimationStartFunction,
-  StyleProps,
-} from 'react-native-reanimated';
+
+// IMPORTANT: do not import from `react-native-reanimated` in this file (or anywhere reachable
+// from the auto-run entry's static graph). Some Babel/TS setups don't strip `import type`
+// statements aggressively, so the reanimated module gets evaluated at app boot, registers its
+// commit hook, and then crashes on mutations of views mounted before that point.
+//
+// These local stubs intentionally lose precision; the runtime-test framework only uses these
+// types in `unknown`-shaped slots, so it doesn't matter.
+type StyleProps = Record<string, unknown>;
+type AnimatedStyle<T> = T;
+type LayoutAnimationStartFunction = (...args: unknown[]) => unknown;
 
 export type CallTracker = {
   UICallsCount: number;
@@ -139,8 +145,15 @@ export type TestValue =
   | OperationUpdate
   | (() => unknown);
 
+export type TestProgress = {
+  current: number;
+  total: number;
+  currentName: string;
+};
+
 export type TestConfiguration = {
   render: Dispatch<SetStateAction<ReactNode | null>>;
+  onProgress?: (progress: TestProgress) => void;
 };
 
 export type Mismatch = {

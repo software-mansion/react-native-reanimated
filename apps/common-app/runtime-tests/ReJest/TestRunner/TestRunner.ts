@@ -8,6 +8,7 @@ import type {
   ValueWrapper,
   TestCase,
   TestConfiguration,
+  TestProgress,
   TestSuite,
   TestValue,
 } from '../types';
@@ -39,6 +40,9 @@ export class TestRunner {
   private _notificationRegistry = new NotificationRegistry();
   private _workletRuntimePool = new WorkletRuntimePool();
   private _testSuiteBuilder = new TestSuiteBuilder();
+  private _progressHook: ((progress: TestProgress) => void) | null = null;
+  private _progressIndex: number = 0;
+  private _progressTotal: number = 0;
 
   public getWindowDimensionsMocker() {
     return this._windowDimensionsMocker;
@@ -70,6 +74,7 @@ export class TestRunner {
 
   public configure(config: TestConfiguration) {
     this._renderHook = config.render;
+    this._progressHook = config.onProgress ?? null;
     return this._renderLock;
   }
 
@@ -153,6 +158,16 @@ export class TestRunner {
   public async runTests() {
     console.log('\n');
     await this._testSuiteBuilder.buildTests();
+    this._progressIndex = 0;
+    this._progressTotal = this._testSuiteBuilder
+      .getTestSuites()
+      .reduce(
+        (sum, suite) =>
+          suite.skip
+            ? sum
+            : sum + suite.testCases.filter((testCase) => !testCase.skip).length,
+        0
+      );
     for (const testSuite of this._testSuiteBuilder.getTestSuites()) {
       await this.runTestSuite(testSuite);
     }
@@ -188,16 +203,40 @@ export class TestRunner {
     this._callTrackerRegistry.resetRegistry();
     this._notificationRegistry.resetRegistry();
     this._currentTestCase = testCase;
+    this._progressIndex += 1;
+    this._progressHook?.({
+      current: this._progressIndex,
+      total: this._progressTotal,
+      currentName: testCase.name,
+    });
 
-    if (testSuite.beforeEach) {
-      await testSuite.beforeEach();
+    try {
+      if (testSuite.beforeEach) {
+        await testSuite.beforeEach();
+      }
+      await testCase.run();
+    } catch (error) {
+      // Convert an uncaught exception from a test body (or its beforeEach)
+      // into a recorded test failure so the rest of the suite still runs.
+      const message =
+        error instanceof Error
+          ? (error.stack ?? error.message)
+          : String(error);
+      testCase.errors.push(`[uncaught] ${message}`);
     }
-    await testCase.run();
 
     this._testSummary.showTestCaseSummary(testCase, testSuite.nestingLevel);
 
-    if (testSuite.afterEach) {
-      await testSuite.afterEach();
+    try {
+      if (testSuite.afterEach) {
+        await testSuite.afterEach();
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? (error.stack ?? error.message)
+          : String(error);
+      testCase.errors.push(`[uncaught in afterEach] ${message}`);
     }
 
     this._currentTestCase = null;

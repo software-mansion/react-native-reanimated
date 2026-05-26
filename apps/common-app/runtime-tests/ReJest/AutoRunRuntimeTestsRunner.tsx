@@ -30,6 +30,12 @@ interface AutoRunRuntimeTestsRunnerProps {
   autoRun: AutoRunConfig;
 }
 
+interface ProgressState {
+  current: number;
+  total: number;
+  currentName: string;
+}
+
 export default function AutoRunRuntimeTestsRunner({
   tests,
   autoRun,
@@ -38,6 +44,7 @@ export default function AutoRunRuntimeTestsRunner({
   const [status, setStatus] = useState<string>(
     `Connecting to ${autoRun.wsUrl}…`
   );
+  const [progress, setProgress] = useState<ProgressState | null>(null);
 
   useEffect(() => {
     if (renderLock) {
@@ -87,6 +94,7 @@ export default function AutoRunRuntimeTestsRunner({
         const { configure, runTests } = require('./RuntimeTestsApi') as {
           configure: (config: {
             render: (component: ReactNode) => void;
+            onProgress?: (p: ProgressState) => void;
           }) => RenderLock;
           runTests: () => Promise<{
             passed: number;
@@ -98,7 +106,10 @@ export default function AutoRunRuntimeTestsRunner({
         };
 
         selected.forEach((test) => test.importTest());
-        renderLock = configure({ render: setComponent });
+        renderLock = configure({
+          render: setComponent,
+          onProgress: setProgress,
+        });
         return runTests();
       },
     });
@@ -112,6 +123,16 @@ export default function AutoRunRuntimeTestsRunner({
   return (
     <View style={styles.flexOne}>
       <Text style={styles.statusText}>{status}</Text>
+      {progress ? (
+        <View style={styles.progressBlock}>
+          <Text style={styles.progressCount}>
+            Running test {progress.current} of {progress.total}
+          </Text>
+          <Text style={styles.progressName} numberOfLines={2}>
+            {progress.currentName}
+          </Text>
+        </View>
+      ) : null}
       {component || null}
     </View>
   );
@@ -127,5 +148,21 @@ const styles = StyleSheet.create({
     color: 'navy',
     alignSelf: 'center',
     paddingVertical: 6,
+  },
+  progressBlock: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  progressCount: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'navy',
+    textAlign: 'center',
+  },
+  progressName: {
+    fontSize: 12,
+    color: 'gray',
+    textAlign: 'center',
+    marginTop: 2,
   },
 });

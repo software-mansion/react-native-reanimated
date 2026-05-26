@@ -26,6 +26,13 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
+  // Defensive init: if reanimated was loaded after the surface was already
+  // mounted, we never saw the surface's Create mutation and lightNodes_[surfaceId]
+  // is a default-constructed (null) shared_ptr. Substitute an empty LightNode so
+  // the rest of this function can proceed without dereferencing null.
+  if (!lightNodes_[surfaceId]) {
+    lightNodes_[surfaceId] = std::make_shared<LightNode>();
+  }
   auto rootChildCount = static_cast<int>(lightNodes_[surfaceId]->children.size());
   const std::vector<std::shared_ptr<MutationNode>> roots;
   const bool isInTransition = static_cast<bool>(transitionState_);
@@ -144,7 +151,15 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
     switch (mutation.type) {
       case ShadowViewMutation::Update: {
         auto &node = lightNodes_[mutation.newChildShadowView.tag];
-        react_native_assert(node && "LightNode not found");
+        if (!node) {
+          // The commit hook missed the Create mutation for this tag — likely
+          // because reanimated was initialized after the view was already
+          // mounted (e.g. when the JS bundle imports reanimated lazily). Pass
+          // the mutation through unchanged; we just can't run any layout
+          // animation effects on this view.
+          filteredMutations.push_back(mutation);
+          break;
+        }
         node->previous = mutation.oldChildShadowView;
 #ifdef ANDROID
         // TODO (future): We don't merge the root view as the currently stored version might not be accurate, because of
@@ -189,6 +204,16 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         transferConfigFromNativeID(mutation.newChildShadowView.props->nativeId, mutation.newChildShadowView.tag);
         auto &node = lightNodes_[mutation.newChildShadowView.tag];
         auto &parent = lightNodes_[mutation.parentTag];
+        if (!node || !parent ||
+            static_cast<size_t>(mutation.index) > parent->children.size()) {
+          // We never saw the Create for one of these (reanimated mounted after
+          // the view was alive), or earlier sibling Inserts are missing so our
+          // children vector is shorter than React's. Pass the Insert through
+          // unchanged; we can't run any layout animation effects without a
+          // consistent LightNode tree.
+          filteredMutations.push_back(mutation);
+          break;
+        }
         parent->children.insert(parent->children.begin() + mutation.index, node);
         node->parent = parent;
         const auto tag = mutation.newChildShadowView.tag;
@@ -205,9 +230,19 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
       }
       case ShadowViewMutation::Remove: {
         const auto &node = lightNodes_[mutation.oldChildShadowView.tag];
-        const auto tag = node->current.tag;
         const auto parentTag = mutation.parentTag;
         const auto &parent = lightNodes_[parentTag];
+        if (!node || !parent ||
+            static_cast<size_t>(mutation.index) >= parent->children.size()) {
+          // Either the child or the parent was mounted before reanimated
+          // started observing the tree, or the parent's children vector is
+          // out of sync with React's (missed Inserts). Skip the bookkeeping
+          // but pass the mutation through so React Native still removes the
+          // view.
+          filteredMutations.push_back(mutation);
+          break;
+        }
+        const auto tag = node->current.tag;
         react_native_assert(
             parent->children[mutation.index]->current.tag == mutation.oldChildShadowView.tag &&
             "Indicies are wrong in Remove mutation");

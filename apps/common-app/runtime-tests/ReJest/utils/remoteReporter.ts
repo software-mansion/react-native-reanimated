@@ -149,18 +149,20 @@ export function runWithRemoteReporter({
     if (!errorUtils) return;
     previousGlobalErrorHandler = errorUtils.getGlobalHandler();
     errorUtils.setGlobalHandler((error, isFatal) => {
-      nativeWarn(
-        `[remoteReporter] uncaught error${isFatal ? ' (fatal)' : ''}:`,
-        error?.stack ?? error?.message ?? error
-      );
-      sendFinalEnvelope({
-        type: 'error',
-        message: `Uncaught${isFatal ? ' fatal' : ''} error: ${error?.message ?? String(error)}`,
-        stack: error?.stack,
+      // Forward the error to the host as a non-terminal `log` envelope so we
+      // see it in the run output but the run keeps going. Worklet-side errors
+      // (e.g. `runOnUISync` re-throws) come through here even when the JS
+      // thread otherwise catches them; treating each one as fatal would abort
+      // the entire run on the first such hiccup.
+      const message = `[uncaught${isFatal ? ' fatal' : ''}] ${error?.message ?? String(error)}`;
+      nativeWarn(`[remoteReporter] ${message}`, error?.stack ?? '');
+      safeSend({
+        type: 'log',
+        level: 'error',
+        args: formatArgs([message, error?.stack ?? '']),
       });
-      if (previousGlobalErrorHandler) {
-        previousGlobalErrorHandler(error, isFatal);
-      }
+      // Do NOT call the previous global handler — RN's default would re-raise
+      // a red box / propagate the fatal further. We've already surfaced it.
     });
   };
 
