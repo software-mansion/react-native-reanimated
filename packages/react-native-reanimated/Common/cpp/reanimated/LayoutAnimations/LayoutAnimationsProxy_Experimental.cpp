@@ -296,7 +296,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
   auto node = lightNodes_[tag];
   react_native_assert(node && "LightNode not found");
 
-  node->state = DEAD;
+  node->exitingState = DEAD;
   lightNodes_.erase(tag);
   deadNodes.insert(node);
 
@@ -309,7 +309,7 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
   ReanimatedSystraceSection s("handleRemovals");
   // iterate from the end, so that children with higher indices appear first in the mutations list
   for (auto it = newExitingRoots.rbegin(); it != newExitingRoots.rend(); it++) {
-    auto &rootToStartExiting = *it;
+    auto &newExitingRoot = *it;
 
     const StartAnimationsRecursivelyConfig config = {
         .shouldRemoveSubviewsWithoutAnimations = true,
@@ -317,8 +317,8 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
         .isScreenPop = false,
     };
 
-    if (startAnimationsRecursively(rootToStartExiting, outputMutations, config)) {
-      auto parentOfNewExitingRoot = rootToStartExiting->parent.lock();
+    if (startAnimationsRecursively(newExitingRoot, outputMutations, config)) {
+      auto parentOfNewExitingRoot = newExitingRoot->parent.lock();
       react_native_assert(parentOfNewExitingRoot && "Parent node is nullptr");
       // TODO (future): figure out a better way to handle this
       // Currently we remove each view, and then if we want to animate it, reinsert it at the end.
@@ -327,26 +327,26 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
       // convenience of this approach is that it is much easier to maintain indices of animated views, and handle
       // reparentings.
 
-      auto exitingShadowView = rootToStartExiting->current;
-      if (layoutAnimations_.contains(rootToStartExiting->current.tag)) {
-        exitingShadowView = layoutAnimations_.at(rootToStartExiting->current.tag).currentView;
+      auto exitingShadowView = newExitingRoot->current;
+      if (layoutAnimations_.contains(newExitingRoot->current.tag)) {
+        exitingShadowView = layoutAnimations_.at(newExitingRoot->current.tag).currentView;
       }
       outputMutations.push_back(ShadowViewMutation::InsertMutation(
           parentOfNewExitingRoot->current.tag,
           exitingShadowView,
           static_cast<int>(parentOfNewExitingRoot->children.size())));
-      parentOfNewExitingRoot->children.push_back(rootToStartExiting);
-      if (rootToStartExiting->state == UNDEFINED) {
-        rootToStartExiting->state = WAITING;
+      parentOfNewExitingRoot->children.push_back(newExitingRoot);
+      if (newExitingRoot->exitingState == UNDEFINED) {
+        newExitingRoot->exitingState = WAITING;
       }
     } else {
-      maybeCancelAnimation(rootToStartExiting->current.tag);
-      outputMutations.push_back(ShadowViewMutation::DeleteMutation(rootToStartExiting->current));
+      maybeCancelAnimation(newExitingRoot->current.tag);
+      outputMutations.push_back(ShadowViewMutation::DeleteMutation(newExitingRoot->current));
     }
   }
 
   for (const auto &deadNode : deadNodes) {
-    if (deadNode->state != DELETED) {
+    if (deadNode->exitingState != DELETED) {
       auto parentOfDeadNode = deadNode->parent.lock();
       react_native_assert(parentOfDeadNode && "Parent node is nullptr");
       auto deadNodeIndex = parentOfDeadNode->removeChild(deadNode);
@@ -420,14 +420,14 @@ void LayoutAnimationsProxy_Experimental::endAnimationsRecursively(
     int index,
     ShadowViewMutationList &mutations) const {
   maybeCancelAnimation(node->current.tag);
-  node->state = DELETED;
+  node->exitingState = DELETED;
   // iterate from the end, so that children
   // with higher indices appear first in the mutations list
 
   const int childrenSize = static_cast<int>(node->children.size());
   for (int i = childrenSize - 1; i >= 0; i--) {
     auto &subNode = node->children[i];
-    if (subNode->state != DELETED) {
+    if (subNode->exitingState != DELETED) {
       endAnimationsRecursively(subNode, i, mutations);
     }
   }
@@ -442,7 +442,7 @@ void LayoutAnimationsProxy_Experimental::endAnimationsRecursively(
 void LayoutAnimationsProxy_Experimental::maybeDropAncestors(
     const std::shared_ptr<LightNode> &node,
     ShadowViewMutationList &cleanupMutations) const {
-  if (node->children.size() != 0 || node->state == ANIMATING || node->state == UNDEFINED) {
+  if (node->children.size() != 0 || node->exitingState == ANIMATING || node->exitingState == UNDEFINED) {
     return;
   }
 
@@ -451,7 +451,7 @@ void LayoutAnimationsProxy_Experimental::maybeDropAncestors(
   auto index = parent->removeChild(node);
   react_native_assert(index != -1 && "Child node not found");
 
-  node->state = DELETED;
+  node->exitingState = DELETED;
   maybeCancelAnimation(node->current.tag);
   cleanupMutations.push_back(ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, index));
   cleanupMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
@@ -487,8 +487,8 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
   for (auto it = node->children.rbegin(); it != node->children.rend(); it++) {
     index--;
     auto &subNode = *it;
-    if (subNode->state != UNDEFINED) {
-      if (shouldAnimate && subNode->state != DEAD) {
+    if (subNode->exitingState != UNDEFINED) {
+      if (shouldAnimate && subNode->exitingState != DEAD) {
         hasAnimatedChildren = true;
       } else {
         endAnimationsRecursively(subNode, index, mutations);
@@ -500,10 +500,10 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
       maybeCancelAnimation(subNode->current.tag);
       mutations.push_back(ShadowViewMutation::RemoveMutation(node->current.tag, subNode->current, index));
       toBeRemoved.push_back(subNode);
-      subNode->state = DELETED;
+      subNode->exitingState = DELETED;
       mutations.push_back(ShadowViewMutation::DeleteMutation(subNode->current));
     } else {
-      subNode->state = WAITING;
+      subNode->exitingState = WAITING;
     }
   }
 
@@ -514,7 +514,7 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
   const bool wantAnimateExit = hasExitAnimation || hasAnimatedChildren;
 
   if (hasExitAnimation) {
-    node->state = ANIMATING;
+    node->exitingState = ANIMATING;
     startExitingAnimation(node);
     lightNodes_[node->current.tag] = node;
   } else {

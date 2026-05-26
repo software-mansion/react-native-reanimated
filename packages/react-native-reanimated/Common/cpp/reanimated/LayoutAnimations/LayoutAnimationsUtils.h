@@ -83,7 +83,7 @@ enum class Intent : std::uint8_t {
 struct LightNode {
   ShadowView previous;
   ShadowView current;
-  ExitingState state = ExitingState::UNDEFINED;
+  ExitingState exitingState = ExitingState::UNDEFINED;
   std::weak_ptr<LightNode> parent;
   std::vector<std::shared_ptr<LightNode>> children;
   int removeChild(const std::shared_ptr<LightNode> &child) {
