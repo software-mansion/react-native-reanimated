@@ -9,8 +9,10 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <shared_mutex>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace worklets {
@@ -37,11 +39,12 @@ class RuntimeManager {
 
   std::shared_ptr<WorkletRuntime> createUninitializedUIRuntime(const std::shared_ptr<AsyncQueue> &uiAsyncQueue);
 
-  /** Pauses registration of new Worklet Runtimes. */
-  void pause();
-
-  /** Resumes registration of new Worklet Runtimes. */
-  void resume();
+  /** Runs `fn` while registration of new Worklet Runtimes is paused. */
+  template <typename F>
+  void withRegistrationPaused(F &&fn) {
+    std::unique_lock<std::mutex> lock(registrationMutex_);
+    std::forward<F>(fn)();
+  }
 
  private:
   uint64_t getNextRuntimeId();
