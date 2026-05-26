@@ -6,6 +6,7 @@
 #include <react/debug/react_native_assert.h>
 
 #include <memory>
+#include <tuple>
 #include <utility>
 
 namespace reanimated {
