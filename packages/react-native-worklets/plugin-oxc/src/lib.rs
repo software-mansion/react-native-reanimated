@@ -153,8 +153,7 @@ fn run(
         .build(&program);
     let scoping = semantic_ret.semantic.into_scoping();
 
-    let mut state = State::new(options);
-    state.source_text = source_text.to_string();
+    let state = State::new(options);
     let builder = oxc_ast::AstBuilder::new(&allocator);
 
     file_directive::process_file_directive(&mut program, builder);

@@ -27,18 +27,56 @@ test('file-level directive turns object methods into worklets', () => {
 test('file-level directive: CJS exports get dehoisted to end', () => {
   const input = `
     'worklet';
-    module.exports = foo;
+    exports.foo = foo;
     function foo(x) { return x; }
   `;
   // Disable source maps so the sourcesContent embed doesn't appear in the
-  // output (it would contain the literal "module.exports = foo;" substring
-  // and confuse our positional check).
+  // output (it would contain the literal "exports.foo" substring and confuse
+  // our positional check).
   const { code } = transform(input, 'test.js', { disableSourceMaps: true });
   assert.match(code, /__workletHash/);
   const fooIdx = code.indexOf('function foo_testJs1Factory');
-  const exportIdx = code.indexOf('module.exports');
+  const exportIdx = code.indexOf('exports.foo');
   assert.ok(
     fooIdx >= 0 && exportIdx >= 0 && fooIdx < exportIdx,
-    `factory should be defined before module.exports. Got:\n${code}`
+    `factory should be defined before exports.foo. Got:\n${code}`
+  );
+});
+
+test('file-level directive: export default function is workletized', () => {
+  const input = `
+    'worklet';
+    export default function foo(x) { return x + 1; }
+  `;
+  const { code } = transform(input, 'test.js', { disableSourceMaps: true });
+  assert.match(code, /__workletHash/, `Got:\n${code}`);
+});
+
+test('file-level directive: implicit this-using object becomes context object', () => {
+  const input = `
+    'worklet';
+    const ctx = { counter: 0, bump() { this.counter += 1; } };
+  `;
+  const { code } = transform(input, 'test.js', { disableSourceMaps: true });
+  assert.match(
+    code,
+    /__workletContextObjectFactory/,
+    `expected context-object factory. Got:\n${code}`
+  );
+});
+
+test('file-level directive: module.exports is NOT dehoisted (matches TS)', () => {
+  const input = `
+    'worklet';
+    module.exports = foo;
+    function foo(x) { return x; }
+  `;
+  const { code } = transform(input, 'test.js', { disableSourceMaps: true });
+  // module.exports stays put — the TS plugin only dehoists `exports.*`.
+  const fooIdx = code.indexOf('function foo_testJs1Factory');
+  const exportIdx = code.indexOf('module.exports');
+  assert.ok(
+    exportIdx >= 0 && fooIdx > exportIdx,
+    `module.exports should appear before the factory. Got:\n${code}`
   );
 });

@@ -68,6 +68,34 @@ test('relative require inside bundle-mode worklet body gets rebased', () => {
   );
 });
 
+test('relativeSourceLocation rewrites __initData.location', () => {
+  const input = `function foo(x) { 'worklet'; return x; }`;
+  const { code } = transform(input, '/proj/src/foo.js', {
+    relativeSourceLocation: true,
+    cwd: '/proj',
+  });
+  assert.match(code, /location:\s*"src\/foo\.js"/, `Got:\n${code}`);
+});
+
+test('relativeSourceLocation also rewrites source map sources entry', () => {
+  const input = `function foo(x) { 'worklet'; return x; }`;
+  const { code } = transform(input, '/proj/src/foo.js', {
+    relativeSourceLocation: true,
+    cwd: '/proj',
+  });
+  const m = code.match(/sourceMap:\s*"((?:[^"\\]|\\.)*)"/);
+  assert.ok(m, `expected sourceMap. Got:\n${code}`);
+  const parsed = JSON.parse(JSON.parse('"' + m[1] + '"'));
+  assert.ok(
+    parsed.sources.includes('src/foo.js'),
+    `expected relative source. Got sources=${JSON.stringify(parsed.sources)}`
+  );
+  assert.ok(
+    !parsed.sources.includes('/proj/src/foo.js'),
+    `absolute path leaked. Got sources=${JSON.stringify(parsed.sources)}`
+  );
+});
+
 test('relative require in non-workletizable file is left alone', () => {
   const input = `
     function foo() {

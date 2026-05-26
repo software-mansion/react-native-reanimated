@@ -42,16 +42,20 @@ function getPluginVersion() {
 // paths (`react-native-worklets/.worklets/<hash>.js`) which the worklet
 // runtime resolves via `require()`; here on the build host we need a real
 // filesystem location to write to.
-let cachedWorkletsDir = null;
-function resolveWorkletsDir() {
-  if (cachedWorkletsDir !== null) return cachedWorkletsDir;
+let cachedWorkletsPkgDir = null;
+function resolveWorkletsPkgDir() {
+  if (cachedWorkletsPkgDir !== null) return cachedWorkletsPkgDir;
   try {
     const pkgJsonPath = require.resolve('react-native-worklets/package.json');
-    cachedWorkletsDir = path.join(path.dirname(pkgJsonPath), '.worklets');
+    cachedWorkletsPkgDir = path.dirname(pkgJsonPath);
   } catch {
-    cachedWorkletsDir = null;
+    cachedWorkletsPkgDir = null;
   }
-  return cachedWorkletsDir;
+  return cachedWorkletsPkgDir;
+}
+function resolveWorkletsDir() {
+  const pkg = resolveWorkletsPkgDir();
+  return pkg ? path.join(pkg, '.worklets') : null;
 }
 
 const WORKLETS_PREFIX = 'react-native-worklets/.worklets/';
@@ -150,6 +154,19 @@ function workletsPluginOxcBabelShim(babelApi) {
             if (opts.pluginVersion == null) {
               const v = getPluginVersion();
               if (v != null) opts.pluginVersion = v;
+            }
+            // Hand the resolved worklets package dir to the native layer so
+            // bundle-mode require rewriting can compute correct relative
+            // paths from <pkg>/.worklets/<hash>.js to the source file.
+            if (opts.workletsPackageDir == null) {
+              const pkgDir = resolveWorkletsPkgDir();
+              if (pkgDir != null) opts.workletsPackageDir = pkgDir;
+            }
+            // Hand over Babel's cwd so `relativeSourceLocation` can rewrite
+            // `__initData.location` and the embedded source map's `sources`
+            // entry to a project-relative path.
+            if (opts.cwd == null) {
+              opts.cwd = state.cwd || (state.file && state.file.opts && state.file.opts.cwd) || process.cwd();
             }
             result = oxc.transform(sourceText, filename, opts);
           } catch (e) {

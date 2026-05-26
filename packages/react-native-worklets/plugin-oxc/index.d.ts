@@ -3,10 +3,7 @@ export interface PluginOptions {
   disableInlineStylesWarning?: boolean;
   disableSourceMaps?: boolean;
   disableWorkletClasses?: boolean;
-  extraPlugins?: string[];
-  extraPresets?: string[];
   globals?: string[];
-  limitInitDataHoisting?: boolean;
   omitNativeOnlyData?: boolean;
   relativeSourceLocation?: boolean;
   strictGlobal?: boolean;
@@ -14,8 +11,14 @@ export interface PluginOptions {
   workletizableModules?: string[];
 }
 
+export interface EmittedFile {
+  path: string;
+  content: string;
+}
+
 export interface TransformResult {
   code: string;
+  files: EmittedFile[];
 }
 
 export function transform(

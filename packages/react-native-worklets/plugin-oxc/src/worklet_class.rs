@@ -11,17 +11,23 @@
 //! Foo__classFactory; return Foo; }` factory.
 //!
 //! The replacement statement is `const Foo = Foo__classFactory();`.
+//!
+//! KNOWN LIMITATION vs babel-plugin-worklets: worklet runtimes still on
+//! pre-Hermes JSC that don't grok native ES6 `class` syntax will not be able
+//! to evaluate the body string for classes declared with modern syntax.
+//! Modern Hermes and Web JSC are unaffected. Class-fields *inside* a worklet
+//! body still get lowered by `worklet_body.rs::lower_worklet_body` (oxc
+//! supports that pass), so `x = 1;` on a class member declared inside a
+//! worklet body works.
 
 use oxc_allocator::CloneIn;
 use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
 use oxc_ast::ast::{
-    AssignmentOperator, AssignmentTarget, BindingPattern, Class, ClassBody, ClassElement,
-    Expression, FormalParameterKind, FunctionType, PropertyKey, Statement,
-    VariableDeclarationKind,
+    AssignmentOperator, AssignmentTarget, Class, ClassBody, ClassElement, Expression,
+    FormalParameterKind, FunctionType, PropertyKey, Statement, VariableDeclarationKind,
 };
 use oxc_span::SPAN;
-use oxc_syntax::scope::ScopeFlags;
 
 const WORKLET_CLASS_MARKER: &str = "__workletClass";
 const CLASS_FACTORY_SUFFIX: &str = "__classFactory";
@@ -184,13 +190,5 @@ pub fn build_class_factory_pair<'a>(
         builder.alloc_variable_declaration(SPAN, VariableDeclarationKind::Const, decls2, false),
     );
 
-    // Suppress unused-warnings about params/scope tools.
-    let _ = (BindingPattern::dummy_placeholder, ScopeFlags::empty);
-
     Some((factory_decl, const_decl))
 }
-
-trait DummyPlaceholder {
-    fn dummy_placeholder() {}
-}
-impl<'a> DummyPlaceholder for BindingPattern<'a> {}

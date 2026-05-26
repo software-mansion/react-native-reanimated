@@ -1,12 +1,12 @@
 use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
 use oxc_ast::ast::{
-    Declaration, Expression, FunctionBody, ObjectExpression, ObjectPropertyKind, Program,
-    PropertyKey, Statement, VariableDeclarator,
+    Declaration, Expression, ExportDefaultDeclarationKind, FunctionBody, ObjectExpression,
+    ObjectPropertyKind, Program, PropertyKey, Statement, VariableDeclarator,
 };
 use oxc_span::SPAN;
 
-use crate::context_object::CONTEXT_OBJECT_MARKER;
+use crate::context_object::{CONTEXT_OBJECT_MARKER, is_implicit_context_object};
 
 /// Implements `processIfWorkletFile` from file.ts: when the Program has a
 /// top-level `'worklet'` directive, treat every viable top-level entity as a
@@ -50,7 +50,26 @@ fn process_top_level<'a>(stmt: &mut Statement<'a>, builder: AstBuilder<'a>) {
             }
             return;
         }
-        Statement::ExportDefaultDeclaration(_decl) => return,
+        Statement::ExportDefaultDeclaration(decl) => {
+            // `export default <thing>` — mirror TS file.ts:71-80 which treats
+            // the inner declaration/expression as the candidate.
+            match &mut decl.declaration {
+                ExportDefaultDeclarationKind::FunctionDeclaration(func) => {
+                    if let Some(body) = func.body.as_mut() {
+                        inject_worklet_directive(body, builder);
+                    }
+                }
+                ExportDefaultDeclarationKind::ClassDeclaration(class) => {
+                    inject_class_marker(&mut class.body, builder);
+                }
+                other => {
+                    if let Some(expr) = other.as_expression_mut() {
+                        inject_into_expression(expr, builder);
+                    }
+                }
+            }
+            return;
+        }
         s => s,
     };
     inject_into_statement(candidate, builder);
@@ -161,6 +180,13 @@ fn inject_into_expression<'a>(expr: &mut Expression<'a>, builder: AstBuilder<'a>
 }
 
 fn inject_into_object_expression<'a>(obj: &mut ObjectExpression<'a>, builder: AstBuilder<'a>) {
+    // Implicit context-object: any `this`-using method makes the whole object
+    // a context object. Only file-level worklet directive enables this rule —
+    // and we are only called from that context. Matches file.ts:91-94.
+    if is_implicit_context_object(obj) {
+        append_context_object_marker(obj, builder);
+        return;
+    }
     for prop in obj.properties.iter_mut() {
         if let ObjectPropertyKind::ObjectProperty(prop) = prop {
             if prop.method {
@@ -174,6 +200,35 @@ fn inject_into_object_expression<'a>(obj: &mut ObjectExpression<'a>, builder: As
             }
         }
     }
+}
+
+fn append_context_object_marker<'a>(obj: &mut ObjectExpression<'a>, builder: AstBuilder<'a>) {
+    // Don't double-add if the marker is already present.
+    let already = obj.properties.iter().any(|p| {
+        if let ObjectPropertyKind::ObjectProperty(prop) = p {
+            if let PropertyKey::StaticIdentifier(id) = &prop.key {
+                return id.name.as_str() == CONTEXT_OBJECT_MARKER;
+            }
+        }
+        false
+    });
+    if already {
+        return;
+    }
+    let key = PropertyKey::StaticIdentifier(
+        builder.alloc_identifier_name(SPAN, CONTEXT_OBJECT_MARKER),
+    );
+    let value = builder.expression_boolean_literal(SPAN, true);
+    obj.properties
+        .push(builder.object_property_kind_object_property(
+            SPAN,
+            oxc_ast::ast::PropertyKind::Init,
+            key,
+            value,
+            false,
+            false,
+            false,
+        ));
 }
 
 fn inject_worklet_directive<'a>(body: &mut FunctionBody<'a>, builder: AstBuilder<'a>) {
@@ -231,11 +286,6 @@ fn is_common_js_export(stmt: &Statement<'_>) -> bool {
     let Expression::Identifier(obj) = &member.object else {
         return false;
     };
-    obj.name.as_str() == "exports" || obj.name.as_str() == "module"
+    obj.name.as_str() == "exports"
 }
 
-/// Avoid clippy unused.
-#[allow(dead_code)]
-fn _suppress(_: &str) {
-    let _ = CONTEXT_OBJECT_MARKER;
-}

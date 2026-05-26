@@ -34,7 +34,15 @@ const FUNCTION_HOOKS_ARG0: &[&str] = &[
 const FUNCTION_HOOKS_ARG01: &[&str] = &["useAnimatedReaction"];
 
 /// Hooks whose worklet callback is at index 1 (`withDecay(config, callback)`).
-const FUNCTION_HOOKS_ARG1: &[&str] = &["withDecay"];
+const FUNCTION_HOOKS_ARG1: &[&str] = &[
+    "withDecay",
+    "runOnRuntime",
+    "runOnRuntimeSync",
+    "runOnRuntimeAsync",
+    "scheduleOnRuntime",
+    "runOnRuntimeSyncWithId",
+    "scheduleOnRuntimeWithId",
+];
 
 /// Hooks whose worklet callback is at index 2 (`withTiming(value, config, callback)`).
 const FUNCTION_HOOKS_ARG2: &[&str] = &["withTiming", "withSpring"];
@@ -228,12 +236,9 @@ fn process_top_level_statement<'a>(
                     // reference, so our closure analysis can force-capture
                     // them (they have no `reference_id`).
                     let injected = if let Some(body_mut) = func.body.as_mut() {
-                        state.inside_worklet_depth += 1;
-                        let r = process_body_with_frame(
+                        process_body_with_frame(
                             &mut body_mut.statements, ctx, state, scoping, builder, allocator, filename,
-                        );
-                        state.inside_worklet_depth -= 1;
-                        r
+                        )
                     } else {
                         std::collections::HashSet::new()
                     };
@@ -378,7 +383,45 @@ fn process_top_level_statement<'a>(
             use oxc_ast::ast::ExportDefaultDeclarationKind;
             match &mut decl.declaration {
                 ExportDefaultDeclarationKind::FunctionDeclaration(func) => {
-                    if let Some(body) = func.body.as_mut() {
+                    let is_worklet = func
+                        .body
+                        .as_ref()
+                        .map(|b| has_worklet_directive(b))
+                        .unwrap_or(false);
+                    if is_worklet {
+                        // `export default function foo() { 'worklet'; ... }`
+                        // becomes `export default <factory_call>`.
+                        let injected = if let Some(body_mut) = func.body.as_mut() {
+                            process_body_with_frame(
+                                &mut body_mut.statements, ctx, state, scoping, builder, allocator, filename,
+                            )
+                        } else {
+                            std::collections::HashSet::new()
+                        };
+                        let name = func.id.as_ref().map(|id| id.name.to_string());
+                        let scope_id = func
+                            .scope_id
+                            .get()
+                            .unwrap_or(scoping.root_scope_id());
+                        let body_ref = func.body.as_ref().unwrap();
+                        let input = WorkletInput {
+                            params: &func.params,
+                            body: body_ref,
+                            is_async: func.r#async,
+                            is_generator: func.generator,
+                            function_scope_id: scope_id,
+                            self_name: name.as_deref(),
+                            is_expression_body: false,
+                        };
+                        let mut out = make_worklet_factory(
+                            input, state, scoping, builder, allocator, filename, &injected,
+                        );
+                        ctx.record_injected_refs(out.injected_ref_names.iter().cloned());
+                        let init = out.init_data_decl.take();
+                        route_init_data(ctx, &out, init);
+                        decl.declaration =
+                            ExportDefaultDeclarationKind::from(out.factory_call);
+                    } else if let Some(body) = func.body.as_mut() {
                         process_body_with_frame(
                             &mut body.statements,
                             ctx,
@@ -624,7 +667,6 @@ fn process_expression<'a>(
             if has_worklet_directive(&arrow.body) {
                 // Process nested worklets first inside a fresh local frame so
                 // `'limit-init-data-hoisting'` items land in this arrow's body.
-                state.inside_worklet_depth += 1;
                 let injected = process_body_with_frame(
                     &mut arrow.body.statements,
                     ctx,
@@ -634,7 +676,6 @@ fn process_expression<'a>(
                     allocator,
                     filename,
                 );
-                state.inside_worklet_depth -= 1;
                 let scope_id = arrow.scope_id.get().unwrap_or(scoping.root_scope_id());
                 let input = WorkletInput {
                     params: &arrow.params,
@@ -730,15 +771,26 @@ fn process_expression<'a>(
             process_object_expression(obj, ctx, state, scoping, builder, allocator, filename);
         }
         Expression::CallExpression(call) => {
-            let callee_name = match &call.callee {
+            // Unwrap sequence-expression callees like `(0, runOnUI)(arg)` —
+            // bundlers emit these for ESM-as-CJS interop and the auto-detection
+            // must look at the final expression. Mirrors
+            // autoworkletization.ts:91-93.
+            let effective_callee: &Expression<'_> = match &call.callee {
+                Expression::SequenceExpression(seq) => seq
+                    .expressions
+                    .last()
+                    .unwrap_or(&call.callee),
+                other => other,
+            };
+            let callee_name = match effective_callee {
                 Expression::Identifier(id) => Some(id.name.to_string()),
                 Expression::StaticMemberExpression(m) => Some(m.property.name.to_string()),
                 _ => None,
             };
 
             // Gesture handler & layout animation callee patterns workletize all args.
-            let is_gesture_callee = is_gesture_object_event_callback_method(&call.callee);
-            let is_layout_animation_callee = is_layout_animation_callback_method(&call.callee);
+            let is_gesture_callee = is_gesture_object_event_callback_method(effective_callee);
+            let is_layout_animation_callee = is_layout_animation_callback_method(effective_callee);
 
             // We always autoworkletize, even inside an enclosing worklet's
             // body. Reason: a method like `close() { 'worklet'; if (_WORKLET)
@@ -749,10 +801,7 @@ fn process_expression<'a>(
             // (Babel achieves this via a separate re-traversal after factory
             // substitution. We achieve it by never suppressing the recursive
             // visit.)
-            let allow_auto = true;
-            let _ = state.inside_worklet_depth;
-
-            if allow_auto {
+            {
                 if let Some(name) = callee_name.as_deref() {
                     let arg_indices: &[usize] =
                         if FUNCTION_HOOKS_ARG0.contains(&name) || GESTURE_HANDLER_OBJECT_HOOKS.contains(&name) {

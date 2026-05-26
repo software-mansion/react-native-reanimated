@@ -17,8 +17,9 @@ pub fn worklet_hash(s: &str) -> u64 {
 
 /// Mirrors @babel/types `toIdentifier`:
 /// 1. replace every non `[A-Za-z0-9$_]` char with `-`
-/// 2. strip leading `-` / digit runs
-/// 3. camelize: `-x` → uppercased X, plain `-` runs (whitespace too) collapse
+/// 2. strip leading `-` runs (NOT digits — digits are preserved and the
+///    whole thing gets `_`-prefixed below)
+/// 3. camelize: `-x` → uppercased X, plain `-` runs collapse
 /// 4. if still not a valid identifier (starts with digit, is empty), prefix `_`
 pub fn to_identifier(input: &str) -> String {
     let mut buf = String::with_capacity(input.len());
@@ -30,11 +31,9 @@ pub fn to_identifier(input: &str) -> String {
         }
     }
 
-    // Strip leading "-" or digit runs.
-    let trimmed: String = buf
-        .chars()
-        .skip_while(|c| *c == '-' || c.is_ascii_digit())
-        .collect();
+    // Strip leading "-" runs only. Leading digits are preserved so they can
+    // be detected at the end and prefixed with `_`, matching babel.
+    let trimmed: String = buf.chars().skip_while(|c| *c == '-').collect();
 
     // Camelize "-x" / whitespace runs.
     let mut out = String::with_capacity(trimmed.len());
@@ -160,7 +159,7 @@ mod tests {
         assert_eq!(to_identifier("test.js1"), "testJs1");
         assert_eq!(to_identifier("foo_test.js1"), "foo_testJs1");
         assert_eq!(to_identifier("bar_test.js1"), "bar_testJs1");
-        assert_eq!(to_identifier("123abc"), "abc");
+        assert_eq!(to_identifier("123abc"), "_123abc");
         assert_eq!(to_identifier(""), "_");
     }
 

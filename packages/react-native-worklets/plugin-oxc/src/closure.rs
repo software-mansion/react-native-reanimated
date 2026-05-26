@@ -9,7 +9,7 @@ use oxc_syntax::symbol::SymbolId;
 #[allow(unused_imports)]
 use oxc_syntax::scope::ScopeFlags;
 
-use crate::state::{ImportInfo, State};
+use crate::state::{ImportInfo, ImportShape, State};
 
 #[derive(Debug, Default)]
 pub struct ClosureResult {
@@ -73,6 +73,14 @@ pub fn closure_for_function<'a, B: WalkFunctionBody<'a>>(
                 let flags = scoping.symbol_flags(symbol_id);
                 if state.opts.bundle_mode.unwrap_or(false) && flags.is_import() {
                     if let Some(info) = state.imports_by_symbol.get(&symbol_id) {
+                        // Skip namespace imports — TS `isImport` only accepts
+                        // ImportSpecifier / ImportDefaultSpecifier (imports.ts:46-48).
+                        // `import * as foo` falls through to plain closure capture.
+                        if matches!(info.shape, ImportShape::Namespace) {
+                            seen.insert(r.name.clone());
+                            result.closure_variables.push(r.name);
+                            continue;
+                        }
                         // Re-emit as an `import` in the bundle file ONLY when:
                         //   - relative + the current file lives inside a
                         //     workletizable module (so `..` paths resolve),

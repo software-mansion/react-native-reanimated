@@ -46,19 +46,6 @@ pub struct State {
     /// transformed source. `(path, content)` pairs.
     pub emitted_files: Vec<(String, String)>,
 
-    /// The full source text of the file being transformed, used to populate
-    /// `sources_content` in `__initData.sourceMap` so consumers don't need to
-    /// read the file from disk at runtime.
-    pub source_text: String,
-
-    /// Depth of enclosing-worklet recursion. While > 0 we are walking inside
-    /// a function body that is itself going to be serialized as a worklet —
-    /// autoworkletization of hook callbacks (`runOnUISync(<fn>)`, etc.) is
-    /// suppressed because those callbacks will run in worklet context anyway.
-    /// Matches babel-plugin-worklets' inner-traversal pattern (only explicit
-    /// `'worklet'`-directive functions get workletized below an outer worklet).
-    pub inside_worklet_depth: u32,
-
     /// Index from `SymbolId` of an import binding to its module shape.
     /// Built once at file entry by scanning top-level `ImportDeclaration`s.
     /// Used by bundle-mode emission to re-export imports into each
@@ -100,8 +87,6 @@ impl State {
             file_workletization: false,
             bundle_mode_active,
             emitted_files: Vec::new(),
-            source_text: String::new(),
-            inside_worklet_depth: 0,
             imports_by_symbol: HashMap::new(),
         }
     }

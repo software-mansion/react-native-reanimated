@@ -23,10 +23,11 @@ pub struct WorkletBodyOutput {
 }
 
 /// Build the stringified worklet body that lives in `__initData.code`.
-/// When `source_map_path` is `Some`, also emits a JSON source-map string
-/// for `__initData.sourceMap`, with `sources_content` populated from
-/// `original_source_text` so consumers (Flipper, devtools) can symbolicate
-/// without having to read the file from disk.
+/// When `source_map_path` is `Some`, also emits a JSON source-map string for
+/// `__initData.sourceMap`. We deliberately do NOT include `sources_content`
+/// (despite oxc making it available) to match `workletStringCode.ts:161`,
+/// which strips it for bandwidth — a file with many worklets would otherwise
+/// embed the full source text once per worklet.
 pub fn build_worklet_body_string<'a>(
     worklet_name: &str,
     params: &FormalParameters<'a>,
@@ -34,9 +35,9 @@ pub fn build_worklet_body_string<'a>(
     is_expression_body: bool,
     closure_variables: &[String],
     recursive_name: Option<&str>,
+    rewritten_classes: &[String],
     allocator: &'a Allocator,
     source_map_path: Option<&str>,
-    original_source_text: Option<&str>,
 ) -> WorkletBodyOutput {
     let builder = AstBuilder::new(allocator);
 
@@ -47,7 +48,7 @@ pub fn build_worklet_body_string<'a>(
         rewrite_implicit_return(&mut cloned_body, builder);
     }
 
-    let mut prepended: Vec<Statement<'a>> = Vec::with_capacity(2);
+    let mut prepended: Vec<Statement<'a>> = Vec::with_capacity(2 + rewritten_classes.len());
     if let Some(name) = recursive_name {
         // `const <name> = this._recur;` — so recursive calls inside the
         // workletized function resolve to the bound worklet function on the
@@ -57,6 +58,13 @@ pub fn build_worklet_body_string<'a>(
     }
     if !closure_variables.is_empty() {
         prepended.push(build_closure_destructure(builder, closure_variables));
+    }
+    // Rebuild any captured worklet-class bindings:
+    //   const Foo = Foo__classFactory();
+    // Mirrors workletStringCode.ts NewExpression handling. Must come AFTER
+    // the closure destructure (which introduces `Foo__classFactory`).
+    for base_name in rewritten_classes {
+        prepended.push(build_class_factory_init(builder, base_name));
     }
     if !prepended.is_empty() {
         let mut new_stmts = builder.vec_with_capacity(cloned_body.statements.len() + prepended.len());
@@ -109,12 +117,7 @@ pub fn build_worklet_body_string<'a>(
         ..Default::default()
     };
     let ret = Codegen::new().with_options(options).build(&program);
-    let source_map_json = ret.map.map(|mut m| {
-        if let Some(src) = original_source_text {
-            m.set_source_contents(vec![Some(src)]);
-        }
-        m.to_json_string()
-    });
+    let source_map_json = ret.map.map(|m| m.to_json_string());
     WorkletBodyOutput {
         code: ret.code,
         source_map_json,
@@ -176,6 +179,37 @@ fn rewrite_implicit_return<'a>(body: &mut FunctionBody<'a>, builder: AstBuilder<
         let expr = es.expression.take_in(builder);
         *stmt = builder.statement_return(SPAN, Some(expr));
     }
+}
+
+/// Build `const <base> = <base>__classFactory();` — re-instantiates a
+/// captured worklet class on the UI thread.
+fn build_class_factory_init<'a>(builder: AstBuilder<'a>, base_name: &str) -> Statement<'a> {
+    let factory_name = format!("{base_name}__classFactory");
+    let factory_ident = builder.ident(&factory_name);
+    let call = builder.expression_call(
+        SPAN,
+        builder.expression_identifier(SPAN, factory_ident),
+        NONE,
+        builder.vec(),
+        false,
+    );
+    let id_pat = builder.binding_pattern_binding_identifier(SPAN, builder.ident(base_name));
+    let declarator = builder.variable_declarator(
+        SPAN,
+        VariableDeclarationKind::Const,
+        id_pat,
+        NONE,
+        Some(call),
+        false,
+    );
+    let mut decls = builder.vec_with_capacity(1);
+    decls.push(declarator);
+    Statement::VariableDeclaration(builder.alloc_variable_declaration(
+        SPAN,
+        VariableDeclarationKind::Const,
+        decls,
+        false,
+    ))
 }
 
 /// Build `const <name> = this._recur;`.
