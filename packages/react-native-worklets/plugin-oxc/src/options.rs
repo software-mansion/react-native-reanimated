@@ -16,4 +16,11 @@ pub struct PluginOptions {
     pub strict_global: Option<bool>,
     pub substitute_web_platform_checks: Option<bool>,
     pub workletizable_modules: Option<Vec<String>>,
+
+    /// Internal: the `react-native-worklets` package version, injected by the
+    /// JS shim at transform time. Stamped onto every workletized function as
+    /// `__pluginVersion` so the runtime can refuse code that was workletized
+    /// by a mismatching plugin build. Falls back to `"x.y.z"` (the mock used
+    /// by snapshot tests) when not supplied.
+    pub plugin_version: Option<String>,
 }

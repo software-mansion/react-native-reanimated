@@ -26,12 +26,18 @@ pub struct ClosureResult {
 ///
 /// `function_scope_id` is the scope created by the function. Bindings owned by
 /// this scope or any descendant are local and skipped.
+///
+/// `force_capture` is a set of names that must always be captured (even
+/// under `strictGlobal`). Used to honour identifier names that the worklet
+/// pass synthesized into the body — e.g. closure-var parameters of an inner
+/// factory call — which have no `reference_id` for `oxc_semantic` to resolve.
 pub fn closure_for_function<'a, B: WalkFunctionBody<'a>>(
     body: B,
     function_scope_id: ScopeId,
     self_function_name: Option<&str>,
     scoping: &Scoping,
     state: &State,
+    force_capture: &HashSet<String>,
 ) -> ClosureResult {
     let mut collector = ReferenceCollector {
         scoping,
@@ -75,6 +81,32 @@ pub fn closure_for_function<'a, B: WalkFunctionBody<'a>>(
                 result.closure_variables.push(r.name);
             }
             None => {
+                // Synthesized identifier — has no SymbolId because it was
+                // minted by the worklet pass *after* semantic analysis.
+                // These include `_worklet_<hash>_init_data` and the closure
+                // vars injected into inner factory calls. Capture them so
+                // the body can dereference them on the UI thread, unless
+                // they shadow a binding local to this function.
+                let is_synthesized = is_synthesized_init_data(&r.name)
+                    || force_capture.contains(&r.name);
+                if is_synthesized {
+                    // Re-resolve by name against the original scoping. If the
+                    // name binds to a symbol inside our function's scope
+                    // (e.g. one of our own params), it's local and must NOT
+                    // be captured — capturing it would over-include the
+                    // function's args in __closure.
+                    if let Some(sym) = scoping
+                        .find_binding(function_scope_id, r.name.as_str().into())
+                    {
+                        let sym_scope = scoping.symbol_scope_id(sym);
+                        if scope_is_inside(scoping, sym_scope, function_scope_id) {
+                            continue;
+                        }
+                    }
+                    seen.insert(r.name.clone());
+                    result.closure_variables.push(r.name);
+                    continue;
+                }
                 if state.opts.strict_global.unwrap_or(false) {
                     continue;
                 }
@@ -88,6 +120,19 @@ pub fn closure_for_function<'a, B: WalkFunctionBody<'a>>(
     }
 
     result
+}
+
+/// `_worklet_<digits>_init_data` — names minted by `worklet_factory.rs` when
+/// hoisting init-data declarations to top-level. Such references appear inside
+/// outer-worklet bodies after we inline an inner worklet's factory call.
+fn is_synthesized_init_data(name: &str) -> bool {
+    let Some(rest) = name.strip_prefix("_worklet_") else {
+        return false;
+    };
+    let Some(digits) = rest.strip_suffix("_init_data") else {
+        return false;
+    };
+    !digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit())
 }
 
 fn scope_is_inside(scoping: &Scoping, inner: ScopeId, outer: ScopeId) -> bool {

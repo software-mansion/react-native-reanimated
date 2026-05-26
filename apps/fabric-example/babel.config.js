@@ -10,7 +10,7 @@ const workletsPluginOptions = {
 module.exports = {
   presets: ['module:@react-native/babel-preset'],
   plugins: [
-    ['react-native-worklets/plugin', workletsPluginOptions],
+    [require.resolve('worklets-plugin-oxc/babel'), workletsPluginOptions],
     [
       'module-resolver',
       {

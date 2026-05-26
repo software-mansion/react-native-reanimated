@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { copyFileSync, existsSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -31,4 +32,19 @@ if (!existsSync(src)) {
 }
 
 copyFileSync(src, dest);
+
+// On macOS the built cdylib has an absolute `install_name` pointing at the
+// original `target/release/libworklets_plugin_oxc.dylib`. When Node loads
+// the `.node` copy, dyld dutifully *also* loads the original via that path,
+// duplicating napi's static registrations and crashing the process at
+// import time. Rewrite the install_name so the loaded file references
+// itself, not its source.
+if (platform === 'darwin') {
+  execFileSync('install_name_tool', [
+    '-id',
+    `@rpath/worklets-plugin-oxc.${platform}-${arch}.node`,
+    dest,
+  ]);
+}
+
 console.log(`Copied ${src} → ${dest}`);

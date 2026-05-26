@@ -6,6 +6,7 @@ use oxc_traverse::{Traverse, TraverseCtx, traverse_mut};
 
 use crate::state::State;
 
+pub mod builders;
 mod bundle_mode;
 mod inline_styles_warning;
 mod web_optimization;
@@ -25,8 +26,26 @@ impl<'a> Transformer<'a> {
         }
     }
 
+    pub fn new_with_builder(state: State, builder: AstBuilder<'a>, filename: String) -> Self {
+        Self {
+            state,
+            builder,
+            filename,
+        }
+    }
+
     pub fn run(mut self, program: &mut Program<'a>, scoping: Scoping, allocator: &'a Allocator) {
         traverse_mut(&mut self, allocator, program, scoping, ());
+    }
+
+    pub fn run_and_take(
+        mut self,
+        program: &mut Program<'a>,
+        scoping: Scoping,
+        allocator: &'a Allocator,
+    ) -> State {
+        traverse_mut(&mut self, allocator, program, scoping, ());
+        self.state
     }
 }
 
