@@ -37,8 +37,8 @@ function useAnimatedRefBase<TRef extends InstanceOrElement>(
         wrapperRef.current = getWrapper(ref);
 
         // We have to unwrap the tag from the shadow node wrapper.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        fun.getTag = () => findNodeHandle(ref as any);
+        // @ts-expect-error this can't be typed well.
+        fun.getTag = () => ref.getScrollableNode?.() || findNodeHandle(ref);
         fun.current = ref;
 
         if (observers.size) {

@@ -4,7 +4,6 @@
  */
 
 #include <cxxreact/RecoverableError.h>
-#include <worklets/Tools/Defs.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/android/JScriptBufferWrapper.h>
 

@@ -39,6 +39,7 @@ import { basename, relative } from 'path';
 
 import { getClosure } from './closure';
 import { generateWorkletFile } from './generate';
+import { updateRelativeRequires } from './imports';
 import { workletTransformSync } from './transform';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
 import { workletClassFactorySuffix } from './types';
@@ -61,7 +62,8 @@ export function makeWorkletFactory(
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
-  const includeClosure = !hasDirective(fun, 'no-worklet-closure');
+  const includeClosure =
+    state.opts.bundleMode || !hasDirective(fun, 'no-worklet-closure');
   const limitInitDataHoisting = hasDirective(fun, 'limit-init-data-hoisting');
   stripWorkletDirectives(fun);
 
@@ -199,9 +201,10 @@ export function makeWorkletFactory(
     );
   }
 
-  const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
+  const shouldIncludeInitData =
+    !state.opts.omitNativeOnlyData && !state.opts.bundleMode;
 
-  if (shouldIncludeInitData && !state.opts.bundleMode) {
+  if (shouldIncludeInitData) {
     const initDataDeclaration = variableDeclaration('const', [
       variableDeclarator(initDataId, initDataObjectExpression),
     ]);
@@ -288,7 +291,7 @@ export function makeWorkletFactory(
     );
   }
 
-  if (shouldIncludeInitData && !state.opts.bundleMode) {
+  if (shouldIncludeInitData) {
     statements.push(
       expressionStatement(
         assignmentExpression(
@@ -304,7 +307,7 @@ export function makeWorkletFactory(
     );
   }
 
-  if (!isRelease()) {
+  if (!isRelease() && !state.opts.bundleMode) {
     statements.unshift(
       variableDeclaration('const', [
         variableDeclarator(
@@ -351,7 +354,7 @@ export function makeWorkletFactory(
     return clonedId;
   });
 
-  if (shouldIncludeInitData && !state.opts.bundleMode) {
+  if (shouldIncludeInitData) {
     factoryParams.unshift(cloneNode(initDataId, true));
   }
 
@@ -386,6 +389,8 @@ export function makeWorkletFactory(
   );
 
   if (state.opts.bundleMode) {
+    updateRelativeRequires(factory, state);
+
     generateWorkletFile(
       libraryBindingsToImport,
       relativeBindingsToImport,

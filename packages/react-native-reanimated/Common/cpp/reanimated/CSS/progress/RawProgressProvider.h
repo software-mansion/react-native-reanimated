@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+
 namespace reanimated::css {
 
 class RawProgressProvider {
@@ -11,12 +12,13 @@ class RawProgressProvider {
   void setDelay(double delay);
 
   virtual void resetProgress();
-  void update(double timestamp);
+  virtual void update(double timestamp);
 
  protected:
   double duration_;
   double delay_;
   double creationTimestamp_;
+  double lastTimestamp_{0};
 
   std::optional<double> rawProgress_;
 

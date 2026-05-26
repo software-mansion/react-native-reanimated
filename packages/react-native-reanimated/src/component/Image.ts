@@ -9,6 +9,7 @@ type AnimatedImageComplement = Image & {
   getNode(): Image;
 };
 
+// is-tree-shakable-suppress
 export const AnimatedImage = createAnimatedComponent(Image);
 
 export type AnimatedImage = typeof AnimatedImage & AnimatedImageComplement;

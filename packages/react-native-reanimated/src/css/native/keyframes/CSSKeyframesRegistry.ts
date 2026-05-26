@@ -15,7 +15,7 @@ type KeyframesEntry = {
  * last view that uses them.
  */
 class CSSKeyframesRegistry {
-  private readonly cssTextToNameMap_: Map<string, string> = new Map();
+  private readonly cssTextToNames_: Map<string, Set<string>> = new Map();
   private readonly nameToKeyframes_: Map<string, KeyframesEntry> = new Map();
 
   get(nameOrCssText: string) {
@@ -24,7 +24,10 @@ class CSSKeyframesRegistry {
       return result.keyframesRule;
     }
 
-    const animationName = this.cssTextToNameMap_.get(nameOrCssText);
+    const animationName = this.cssTextToNames_
+      .get(nameOrCssText)
+      ?.values()
+      .next().value;
     if (animationName) {
       return this.nameToKeyframes_.get(animationName)?.keyframesRule;
     }
@@ -61,8 +64,14 @@ class CSSKeyframesRegistry {
 
     // Store the keyframes to name mapping in order to reuse the same
     // animation name when possible (when the same inline keyframes object
-    // is used)
-    this.cssTextToNameMap_.set(keyframesRule.cssText, keyframesRule.name);
+    // is used). Multiple separately-constructed `CSSKeyframesRuleImpl`
+    // instances may share the same `cssText` but have different names, so
+    // every name with this content must be tracked to keep content-based
+    // lookup working until the last same-content rule is removed.
+    if (!this.cssTextToNames_.has(keyframesRule.cssText)) {
+      this.cssTextToNames_.set(keyframesRule.cssText, new Set());
+    }
+    this.cssTextToNames_.get(keyframesRule.cssText)?.add(keyframesRule.name);
 
     // Register animation keyframes only if they are not already registered
     // (when they are added for the first time)
@@ -95,13 +104,21 @@ class CSSKeyframesRegistry {
 
     if (Object.keys(keyframesEntry.usedBy).length === 0) {
       this.nameToKeyframes_.delete(animationName);
-      this.cssTextToNameMap_.delete(keyframesEntry.keyframesRule.cssText);
+      const namesForCssText = this.cssTextToNames_.get(
+        keyframesEntry.keyframesRule.cssText
+      );
+      if (namesForCssText) {
+        namesForCssText.delete(animationName);
+        if (namesForCssText.size === 0) {
+          this.cssTextToNames_.delete(keyframesEntry.keyframesRule.cssText);
+        }
+      }
     }
   }
 
   clear() {
     this.nameToKeyframes_.clear();
-    this.cssTextToNameMap_.clear();
+    this.cssTextToNames_.clear();
   }
 }
 

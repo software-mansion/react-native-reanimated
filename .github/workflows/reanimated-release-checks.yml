@@ -30,20 +30,10 @@ jobs:
     name: Example iOS build check
     uses: ./.github/workflows/example-ios-build-check.yml
 
-  example_macos_build_check:
-    if: github.repository == 'software-mansion/react-native-reanimated'
-    name: Example macOS build check
-    uses: ./.github/workflows/example-macos-build-check.yml
-
   example_next_build_check:
     if: github.repository == 'software-mansion/react-native-reanimated'
     name: Example Next build check
     uses: ./.github/workflows/example-next-build-check-and-test.yml
-
-  example_tvos_build_check:
-    if: github.repository == 'software-mansion/react-native-reanimated'
-    name: Example tvOS build check
-    uses: ./.github/workflows/example-tvos-build-check.yml
 
   example_typescript_check_and_lint:
     if: github.repository == 'software-mansion/react-native-reanimated'

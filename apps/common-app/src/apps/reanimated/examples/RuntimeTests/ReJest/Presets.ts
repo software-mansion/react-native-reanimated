@@ -1,24 +1,31 @@
 // #region numbers
 const INTEGERS = [
-  -1000000000, -1234567, -1000000, -1000, -10, -5, -3, -2, -1, -0, 0, +0, 1, 2, 3, 5, 10, 1000, 1000000, -1234567,
-  1000000000,
+  -1000000000, -1234567, -1000000, -1000, -10, -5, -3, -2, -1, -0, 0, +0, 1, 2,
+  3, 5, 10, 1000, 1000000, -1234567, 1000000000,
 ];
 
 const FLOATS = [
-  -1000000000.1234567, -1234567.1234567, -1000000.1234567, -1000.1234567, -10.1234567, -5.1234567, -3.1234567,
-  -2.1234567, -1.1234567, -0.1234567, 0.1234567, 1.1234567, 2.1234567, 3.1234567, 5.1234567, 10.1234567, 1000.1234567,
-  1000000.1234567, -1234567.1234567, 1000000000.1234567,
+  -1000000000.1234567, -1234567.1234567, -1000000.1234567, -1000.1234567,
+  -10.1234567, -5.1234567, -3.1234567, -2.1234567, -1.1234567, -0.1234567,
+  0.1234567, 1.1234567, 2.1234567, 3.1234567, 5.1234567, 10.1234567,
+  1000.1234567, 1000000.1234567, -1234567.1234567, 1000000000.1234567,
 ];
 
 const ENGINEERING_NOTATION = [
-  -9.275686287246587e38, -1234567e-7, -1000000e-7, -1000e-7, -10e-7, -5e-7, -3e-7, -2e-7, -1e-7, -0e-7,
-  -1.0780873447336499e-39, 1.0780873447336499e-39, 1e-7, 2e-7, 3e-7, 5e-7, 10e-7, 1000e-7, 1000000e-7, -1234567e-7,
+  -9.275686287246587e38, -1234567e-7, -1000000e-7, -1000e-7, -10e-7, -5e-7,
+  -3e-7, -2e-7, -1e-7, -0e-7, -1.0780873447336499e-39, 1.0780873447336499e-39,
+  1e-7, 2e-7, 3e-7, 5e-7, 10e-7, 1000e-7, 1000000e-7, -1234567e-7,
   1000000000e-7, 9.275686287246587e38,
 ];
 
-const HEXADECIMAL_NOTATION = [0xff, 0xab1234, 0x123456, 0xffbbdd, 0x8989aaaa, 0x1234567890abcd];
+const HEXADECIMAL_NOTATION = [
+  0xff, 0xab1234, 0x123456, 0xffbbdd, 0x8989aaaa, 0x1234567890abcd,
+];
 
-const BINARY_NOTATION = [0b1111111, 0b101010, 0b0001, 0b11001, 0b1111111111111111111111111111111111111111111111111111];
+const BINARY_NOTATION = [
+  0b1111111, 0b101010, 0b0001, 0b11001,
+  0b1111111111111111111111111111111111111111111111111111,
+];
 
 const OCTADECIMAL_NOTATION = [0o123456, 0o111111112];
 
@@ -36,8 +43,8 @@ const BIG_INTS = [
 ];
 
 const UNDERSCORE_SEPARATED_NUMBES = [
-  0b00_000_000_000_000_000_000_000_000_000_001, -1.07808734473_36499e-3_9, 1_0_00000000.1234567,
-  0b000000000_000000000000000000_0001,
+  0b00_000_000_000_000_000_000_000_000_000_001, -1.07808734473_36499e-3_9,
+  1_0_00000000.1234567, 0b000000000_000000000000000000_0001,
 ];
 
 const EXTREME_NUMBERS = [
@@ -52,12 +59,22 @@ const NOT_NUMBERS = [Infinity, -Infinity, NaN];
 // #endregion
 
 // #region strings
-const TYPICAL_STRINGS = ['Aaaaaaa\n \t\t \v aaaaaa', 'Super long'.repeat(10000000), '', 'A string primitive'];
+const TYPICAL_STRINGS = [
+  'Aaaaaaa\n \t\t \v aaaaaa',
+  'Super long'.repeat(10000000),
+  '',
+  'A string primitive',
+];
 
 // eslint-disable-next-line no-new-wrappers
 const STRING_OBJECTS = [new String('A String object')];
 
-const EMOJI_STRINGS = ['Emoji consisting of multiple sub-emojis 👨‍👨‍👧‍👦', '👨‍👨‍👧‍👦', '😎', '👩🏽‍🏫'];
+const EMOJI_STRINGS = [
+  'Emoji consisting of multiple sub-emojis 👨‍👨‍👧‍👦',
+  '👨‍👨‍👧‍👦',
+  '😎',
+  '👩🏽‍🏫',
+];
 
 const COMMON_CHARS_AND_LIGATURES = [
   'π',
@@ -71,7 +88,12 @@ const COMMON_CHARS_AND_LIGATURES = [
   'Naïve',
 ];
 
-const NON_DEFAULT_ALPHABETS = ['你好的話', 'ሰላም ቃላት', 'Բարև խոսքեր', 'Cześć świecie!'];
+const NON_DEFAULT_ALPHABETS = [
+  '你好的話',
+  'ሰላም ቃላት',
+  'Բարև խոսքեր',
+  'Cześć świecie!',
+];
 
 const MISC_CHARACTERS = [
   '𝕳𝖊𝖑𝖑𝖔 𝖜𝖔𝖗𝖉',
@@ -155,8 +177,14 @@ const DATES = [
   new Date(1999, 120, 17, 33, 54, 12),
 ];
 
-// eslint-disable-next-line prefer-regex-literals
-const REGEXPS = [/ab+c/i, new RegExp('ab+c', 'i'), new RegExp(/ab+c/, 'i'), /\d/y];
+/* eslint-disable prefer-regex-literals */
+const REGEXPS = [
+  /ab+c/i,
+  new RegExp('ab+c', 'i'),
+  new RegExp(/ab+c/, 'i'),
+  /\d/y,
+];
+/* eslint-enable prefer-regex-literals */
 
 // const MAX_SIZE_OF_ARRAY = Math.pow(2, 31) - 1;
 const MAX_SIZE_OF_ARRAY = 1000;
@@ -220,5 +248,11 @@ export const Presets = {
   dates: DATES,
   serializableObjects: [...OBJECTS, ...EMPTIES, ...REGEXPS, ...MAPS, ...SETS],
   serializableArrays: [...NUMERICAL_ARRAYS, ...VARIOUS_TYPE_ARRAYS],
-  arrays: [...INT_ARRAYS, ...UINT_ARRAYS, ...FLOAT_ARRAYS, ...NUMERICAL_ARRAYS, ...BUFFER_ARRAYS],
+  arrays: [
+    ...INT_ARRAYS,
+    ...UINT_ARRAYS,
+    ...FLOAT_ARRAYS,
+    ...NUMERICAL_ARRAYS,
+    ...BUFFER_ARRAYS,
+  ],
 };

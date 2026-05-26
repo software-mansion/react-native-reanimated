@@ -12,14 +12,14 @@
     "e2e": "start-server-and-test \"next start\" http://localhost:3000 \"cypress open --e2e\"",
     "e2e:headless": "start-server-and-test \"next start\" http://localhost:3000 \"cypress run --e2e\"",
     "lint": "eslint --max-warnings=0 .",
-    "format": "prettier --write --list-different ."
+    "format": "yarn run --top-level oxfmt ."
   },
   "dependencies": {
     "expo": "54.0.13",
     "next": "16.2.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-native": "0.85.0",
+    "react-native": "0.85.2",
     "react-native-reanimated": "workspace:*",
     "react-native-web": "0.21.1",
     "react-native-worklets": "workspace:*",
@@ -33,7 +33,6 @@
     "cypress": "patch:cypress@npm%3A15.4.0#~/.yarn/patches/cypress-npm-15.4.0-c92384506d.patch",
     "eslint": "9.37.0",
     "next-compose-plugins": "2.2.1",
-    "prettier": "3.6.2",
     "start-server-and-test": "2.1.2",
     "typescript": "5.9.3"
   },

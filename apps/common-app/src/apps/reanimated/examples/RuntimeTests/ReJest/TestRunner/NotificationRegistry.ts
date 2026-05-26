@@ -22,14 +22,16 @@ export class NotificationRegistry {
   public async waitForNotifications(names: string[], timeout?: number) {
     const beginTime = performance.now();
     const defaultPollingRate = 10;
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const interval = setInterval(() => {
-        if (names.every(name => notificationRegistry[name])) {
+        if (names.every((name) => notificationRegistry[name])) {
           clearInterval(interval);
           resolve(true);
         }
         if (timeout != undefined && performance.now() - beginTime > timeout) {
-          names.forEach(name => console.log(`Notification '${name}' timeout exceeded.`));
+          names.forEach((name) =>
+            console.log(`Notification '${name}' timeout exceeded.`)
+          );
           clearInterval(interval);
           resolve(false);
         }

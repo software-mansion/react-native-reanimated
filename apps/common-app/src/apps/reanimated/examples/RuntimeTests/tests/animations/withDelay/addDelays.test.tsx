@@ -1,6 +1,11 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from 'react-native-reanimated';
 
 import {
   clearRenderOutput,
@@ -26,7 +31,11 @@ enum ComponentType {
   INLINE = WIDTH_COMPONENT_INLINE_REF,
 }
 
-const ActiveWidthComponent = ({ delays }: { delays: [number] | [number, number, number] }) => {
+const ActiveWidthComponent = ({
+  delays,
+}: {
+  delays: [number] | [number, number, number];
+}) => {
   const widthActiveSV = useSharedValue(0);
   const refActive = useTestRef(ComponentType.ACTIVE);
 
@@ -34,10 +43,19 @@ const ActiveWidthComponent = ({ delays }: { delays: [number] | [number, number, 
     return {
       width:
         delays.length === 1
-          ? withDelay(delays[0], withTiming(widthActiveSV.value, { duration: 100 }))
+          ? withDelay(
+              delays[0],
+              withTiming(widthActiveSV.value, { duration: 100 })
+            )
           : withDelay(
               delays[0],
-              withDelay(delays[1], withDelay(delays[2], withTiming(widthActiveSV.value, { duration: 100 }))),
+              withDelay(
+                delays[1],
+                withDelay(
+                  delays[2],
+                  withTiming(widthActiveSV.value, { duration: 100 })
+                )
+              )
             ),
     };
   });
@@ -48,12 +66,23 @@ const ActiveWidthComponent = ({ delays }: { delays: [number] | [number, number, 
 
   return (
     <View style={styles.container}>
-      <Animated.View ref={refActive} style={[styles.animatedBox, { backgroundColor: 'powderblue' }, styleActive]} />
+      <Animated.View
+        ref={refActive}
+        style={[
+          styles.animatedBox,
+          { backgroundColor: 'powderblue' },
+          styleActive,
+        ]}
+      />
     </View>
   );
 };
 
-const NonActiveWidthComponents = ({ delays }: { delays: [number] | [number, number, number] }) => {
+const NonActiveWidthComponents = ({
+  delays,
+}: {
+  delays: [number] | [number, number, number];
+}) => {
   const widthPassiveSV = useSharedValue(0);
 
   const refPassive = useTestRef(ComponentType.PASSIVE);
@@ -69,30 +98,45 @@ const NonActiveWidthComponents = ({ delays }: { delays: [number] | [number, numb
     widthPassiveSV.value =
       delays.length === 1
         ? withDelay(delays[0], withTiming(300, { duration: 100 }))
-        : withDelay(delays[0], withDelay(delays[1], withDelay(delays[2], withTiming(300, { duration: 100 }))));
+        : withDelay(
+            delays[0],
+            withDelay(
+              delays[1],
+              withDelay(delays[2], withTiming(300, { duration: 100 }))
+            )
+          );
   });
 
   return (
     <View style={styles.container}>
       <Animated.View
         ref={refPassive}
-        style={[styles.animatedBox, { backgroundColor: 'cornflowerblue' }, stylePassive]}
+        style={[
+          styles.animatedBox,
+          { backgroundColor: 'cornflowerblue' },
+          stylePassive,
+        ]}
       />
       <Animated.View
         ref={refInline}
-        style={[styles.animatedBox, { backgroundColor: 'steelblue', width: widthPassiveSV }]}
+        style={[
+          styles.animatedBox,
+          { backgroundColor: 'steelblue', width: widthPassiveSV },
+        ]}
       />
     </View>
   );
 };
 
 /**
-    Make sure that
-    withDelay( A, withDelay( B, withDelay( C, some_animation) and
-    withDelay( A + B + C, some_animation) are equal.
+ * Make sure that withDelay( A, withDelay( B, withDelay( C, some_animation) and
+ * withDelay( A + B + C, some_animation) are equal.
  */
 describe('Compare a sequence of three delays, with one delay of their sum', () => {
-  async function getSnapshotUpdates(delays: [number] | [number, number, number], componentType: ComponentType) {
+  async function getSnapshotUpdates(
+    delays: [number] | [number, number, number],
+    componentType: ComponentType
+  ) {
     await mockAnimationTimer();
     const updatesContainer = await recordAnimationUpdates();
 
@@ -104,10 +148,17 @@ describe('Compare a sequence of three delays, with one delay of their sum', () =
     const delaySum = delays.reduce((current, sum) => sum + current, 0);
     await wait(150 + delaySum);
 
-    const updates = updatesContainer.getUpdates(getTestComponent(componentType));
-    const updatesNative = await updatesContainer.getNativeSnapshots(getTestComponent(componentType));
-    updatesNative.forEach(update => {
-      if ('width' in update && update.width === '[Reanimated] Unable to resolve view') {
+    const updates = updatesContainer.getUpdates(
+      getTestComponent(componentType)
+    );
+    const updatesNative = await updatesContainer.getNativeSnapshots(
+      getTestComponent(componentType)
+    );
+    updatesNative.forEach((update) => {
+      if (
+        'width' in update &&
+        update.width === '[Reanimated] Unable to resolve view'
+      ) {
         // We use this hack because component with inline props gets mounted a bit later
         update.width = 0;
       }
@@ -129,33 +180,36 @@ describe('Compare a sequence of three delays, with one delay of their sum', () =
     [40, 0, 0],
     [0, 55, 0],
     [0, 0, 0],
-  ] as Array<[number, number, number]>)('Sum of delays **%p** matches the delay of the sum', async delays => {
-    const delaySum = delays.reduce((current, sum) => sum + current, 0);
+  ] as Array<[number, number, number]>)(
+    'Sum of delays **%p** matches the delay of the sum',
+    async (delays) => {
+      const delaySum = delays.reduce((current, sum) => sum + current, 0);
 
-    for (const componentType of ['PASSIVE', 'ACTIVE', 'INLINE'] as const) {
-      const [updatesDelaySequence, nativeUpdatesDelaySequence] = await getSnapshotUpdates(
-        delays,
-        ComponentType[componentType],
-      );
-      const [updatesOneDelay, nativeUpdatesOneDelay] = await getSnapshotUpdates(
-        [delaySum],
-        ComponentType[componentType],
-      );
+      for (const componentType of ['PASSIVE', 'ACTIVE', 'INLINE'] as const) {
+        const [updatesDelaySequence, nativeUpdatesDelaySequence] =
+          await getSnapshotUpdates(delays, ComponentType[componentType]);
+        const [updatesOneDelay, nativeUpdatesOneDelay] =
+          await getSnapshotUpdates([delaySum], ComponentType[componentType]);
 
-      const fillerSize = updatesDelaySequence.length - updatesOneDelay.length;
-      const filler = Array.from({ length: fillerSize }, () => {
-        return {
-          width: 0,
-        };
-      });
+        const fillerSize = updatesDelaySequence.length - updatesOneDelay.length;
+        const filler = Array.from({ length: fillerSize }, () => {
+          return {
+            width: 0,
+          };
+        });
 
-      expect([...filler, ...updatesOneDelay]).toMatchSnapshots(updatesDelaySequence);
-      expect(fillerSize <= 1).toBe(true); // The additional delay should be at most of one frame
+        expect([...filler, ...updatesOneDelay]).toMatchSnapshots(
+          updatesDelaySequence
+        );
+        expect(fillerSize <= 1).toBe(true); // The additional delay should be at most of one frame
 
-      expect(updatesOneDelay).toMatchNativeSnapshots(nativeUpdatesOneDelay);
-      expect(updatesDelaySequence).toMatchNativeSnapshots(nativeUpdatesDelaySequence);
+        expect(updatesOneDelay).toMatchNativeSnapshots(nativeUpdatesOneDelay);
+        expect(updatesDelaySequence).toMatchNativeSnapshots(
+          nativeUpdatesDelaySequence
+        );
+      }
     }
-  });
+  );
 });
 
 const styles = StyleSheet.create({

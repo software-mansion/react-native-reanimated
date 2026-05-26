@@ -5,6 +5,8 @@ on:
   pull_request:
     paths:
       - .github/workflows/example-android-build-check.yml
+      - .clang-tidy
+      - scripts/clang-tidy-lint.sh
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
       - packages/react-native-worklets/android/**
@@ -19,6 +21,8 @@ on:
       - main
     paths:
       - .github/workflows/example-android-build-check.yml
+      - .clang-tidy
+      - scripts/clang-tidy-lint.sh
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
       - packages/react-native-worklets/android/**
@@ -45,10 +49,10 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Setup Java 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@17f84c3641ba7b8f6deff6309fc4c864478f5d62
         with:
           distribution: 'zulu'
           java-version: 17
@@ -66,3 +70,9 @@ jobs:
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}/android
         run: ./gradlew assembleDebug --build-cache -PreactNativeArchitectures=arm64-v8a
+
+      - name: Clang-tidy lint Worklets
+        run: yarn workspace react-native-worklets lint:clang-tidy
+
+      - name: Clang-tidy lint Reanimated
+        run: yarn workspace react-native-reanimated lint:clang-tidy

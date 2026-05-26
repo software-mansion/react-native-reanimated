@@ -4,7 +4,7 @@ import type { ShadowNodeWrapper } from '../../../../commonTypes';
 import { ANIMATION_NAME_PREFIX } from '../../../constants';
 import { CSSKeyframesRuleBase } from '../../../models';
 import type { CSSAnimationProperties } from '../../../types';
-import { cssKeyframesRegistry } from '../../keyframes';
+import { cssKeyframesRegistry, CSSKeyframesRuleImpl } from '../../keyframes';
 import { normalizeSingleCSSAnimationSettings } from '../../normalization';
 import {
   applyCSSAnimations,
@@ -178,6 +178,42 @@ describe('CSSAnimationsManager', () => {
         expect(keyframesRule2).toBeDefined();
 
         expect(keyframesRule2).toBe(keyframesRule1);
+      });
+
+      test('reuses a surviving same-content rule when a sibling unmounts', () => {
+        // Two pre-constructed rules share cssText but have different names.
+        // After one unmounts, inline keyframes of the same content must reuse
+        // the survivor instead of registering a duplicate.
+        const keyframes = { from: { opacity: 0 }, to: { opacity: 1 } };
+        const rule1 = new CSSKeyframesRuleImpl(keyframes);
+        const rule2 = new CSSKeyframesRuleImpl(keyframes);
+
+        const manager1 = new CSSAnimationsManager(
+          shadowNodeWrapper,
+          1,
+          COMPOUND_COMPONENT_NAME
+        );
+        const manager2 = new CSSAnimationsManager(
+          shadowNodeWrapper,
+          2,
+          COMPOUND_COMPONENT_NAME
+        );
+
+        manager1.update({ animationName: rule1 });
+        manager2.update({ animationName: rule2 });
+        expect(registerCSSKeyframes).toHaveBeenCalledTimes(2);
+
+        manager1.unmountCleanup();
+        // Re-attach manager1 with matching inline keyframes - should reuse
+        // rule2 instead of constructing and registering a third rule.
+        manager1.update({ animationName: keyframes });
+
+        expect(registerCSSKeyframes).toHaveBeenCalledTimes(2);
+        expect(applyCSSAnimations).toHaveBeenLastCalledWith(
+          shadowNodeWrapper,
+          COMPOUND_COMPONENT_NAME,
+          expect.objectContaining({ animationNames: [rule2.name] })
+        );
       });
 
       test('detaches an existing animation if the new config is empty', () => {

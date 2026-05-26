@@ -1,12 +1,19 @@
 import {
-  createWorkletRuntime,
   scheduleOnRN,
   scheduleOnRuntime,
   runOnRuntimeSyncWithId,
   scheduleOnUI,
   UIRuntimeId,
 } from 'react-native-worklets';
-import { describe, expect, notify, test, waitForNotification, beforeEach } from '../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  getWorkletRuntimeFromPool,
+  notify,
+  test,
+  waitForNotification,
+  beforeEach,
+} from '../../ReJest/RuntimeTestsApi';
 
 const PASS_NOTIFICATION = 'PASS';
 const FAIL_NOTIFICATION = 'FAIL';
@@ -25,16 +32,12 @@ describe('runOnRuntimeSyncWithId', () => {
     notify(FAIL_NOTIFICATION);
   };
 
-  const workletRuntime1 = createWorkletRuntime({ name: 'test1' });
-  const workletRuntime2 = createWorkletRuntime({ name: 'test2' });
+  const workletRuntime1 = getWorkletRuntimeFromPool('test');
+  const workletRuntime2 = getWorkletRuntimeFromPool('test2');
 
-  test('setup beforeEach', () => {
-    // TODO: there's a bug in ReJest and beforeEach has to be registered
-    // inside a test case.
-    beforeEach(() => {
-      value = 0;
-      reason = '';
-    });
+  beforeEach(() => {
+    value = 0;
+    reason = '';
   });
 
   test('from RN Runtime to UI Runtime', () => {
@@ -62,7 +65,9 @@ describe('runOnRuntimeSyncWithId', () => {
         return 42;
       });
 
-    await expect(fun).toThrow('[Worklets] runOnRuntimeSyncWithId: no worklet runtime found for id 9999');
+    await expect(fun).toThrow(
+      '[Worklets] runOnRuntimeSyncWithId: no worklet runtime found for id 9999'
+    );
   });
 
   if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
@@ -103,14 +108,19 @@ describe('runOnRuntimeSyncWithId', () => {
           });
           scheduleOnRN(callbackPass, result);
         } catch (error) {
-          scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+          scheduleOnRN(
+            callbackFail,
+            error instanceof Error ? error.message : String(error)
+          );
         }
       });
 
       await waitForNotification(FAIL_NOTIFICATION);
-      expect(reason).toBe('[Worklets] runOnRuntimeSyncWithId: no worklet runtime found for id 9999');
+      expect(reason).toBe(
+        '[Worklets] runOnRuntimeSyncWithId: no worklet runtime found for id 9999'
+      );
     });
-  } else {
+  } else if (__DEV__) {
     test('from UI Runtime to UI Runtime', async () => {
       scheduleOnUI(() => {
         'worklet';
@@ -121,13 +131,16 @@ describe('runOnRuntimeSyncWithId', () => {
           });
           scheduleOnRN(callbackPass, result);
         } catch (error) {
-          scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+          scheduleOnRN(
+            callbackFail,
+            error instanceof Error ? error.message : String(error)
+          );
         }
       });
 
       await waitForNotification(FAIL_NOTIFICATION);
       expect(reason).toBe(
-        '[Worklets] runOnRuntimeSyncWithId cannot be called on Worklet Runtimes outside of the Bundle Mode.',
+        '[Worklets] runOnRuntimeSyncWithId cannot be called on Worklet Runtimes outside of the Bundle Mode.'
       );
     });
 
@@ -135,19 +148,25 @@ describe('runOnRuntimeSyncWithId', () => {
       scheduleOnUI(() => {
         'worklet';
         try {
-          const result = runOnRuntimeSyncWithId(workletRuntime1.runtimeId, () => {
-            'worklet';
-            return 42;
-          });
+          const result = runOnRuntimeSyncWithId(
+            workletRuntime1.runtimeId,
+            () => {
+              'worklet';
+              return 42;
+            }
+          );
           scheduleOnRN(callbackPass, result);
         } catch (error) {
-          scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+          scheduleOnRN(
+            callbackFail,
+            error instanceof Error ? error.message : String(error)
+          );
         }
       });
 
       await waitForNotification(FAIL_NOTIFICATION);
       expect(reason).toBe(
-        '[Worklets] runOnRuntimeSyncWithId cannot be called on Worklet Runtimes outside of the Bundle Mode.',
+        '[Worklets] runOnRuntimeSyncWithId cannot be called on Worklet Runtimes outside of the Bundle Mode.'
       );
     });
 
@@ -161,13 +180,16 @@ describe('runOnRuntimeSyncWithId', () => {
           });
           scheduleOnRN(callbackPass, result);
         } catch (error) {
-          scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+          scheduleOnRN(
+            callbackFail,
+            error instanceof Error ? error.message : String(error)
+          );
         }
       });
 
       await waitForNotification(FAIL_NOTIFICATION);
       expect(reason).toBe(
-        '[Worklets] runOnRuntimeSyncWithId cannot be called on Worklet Runtimes outside of the Bundle Mode.',
+        '[Worklets] runOnRuntimeSyncWithId cannot be called on Worklet Runtimes outside of the Bundle Mode.'
       );
     });
   }
@@ -219,15 +241,20 @@ describe('runOnRuntimeSyncWithId', () => {
           });
           scheduleOnRN(callbackPass, result);
         } catch (error) {
-          scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+          scheduleOnRN(
+            callbackFail,
+            error instanceof Error ? error.message : String(error)
+          );
         }
       });
 
       await waitForNotification(FAIL_NOTIFICATION);
-      expect(reason).toBe('[Worklets] runOnRuntimeSyncWithId: no worklet runtime found for id 9999');
+      expect(reason).toBe(
+        '[Worklets] runOnRuntimeSyncWithId: no worklet runtime found for id 9999'
+      );
     });
-  } else {
-    test('from Worker Runtime to UI Runtime', async () => {
+  } else if (__DEV__) {
+    test('throws from Worker Runtime to UI Runtime', async () => {
       scheduleOnRuntime(workletRuntime1, () => {
         'worklet';
         try {
@@ -237,53 +264,68 @@ describe('runOnRuntimeSyncWithId', () => {
           });
           scheduleOnRN(callbackPass, result);
         } catch (error) {
-          scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+          scheduleOnRN(
+            callbackFail,
+            error instanceof Error ? error.message : String(error)
+          );
         }
       });
 
       await waitForNotification(FAIL_NOTIFICATION);
       expect(reason).toBe(
-        '[Worklets] runOnRuntimeSyncWithId cannot be called on Worklet Runtimes outside of the Bundle Mode.',
+        '[Worklets] runOnRuntimeSyncWithId cannot be called on Worklet Runtimes outside of the Bundle Mode.'
       );
     });
 
-    test('from Worker Runtime to self', async () => {
+    test('throws from Worker Runtime to self', async () => {
       scheduleOnRuntime(workletRuntime1, () => {
         'worklet';
         try {
-          const result = runOnRuntimeSyncWithId(workletRuntime1.runtimeId, () => {
-            'worklet';
-            return 42;
-          });
+          const result = runOnRuntimeSyncWithId(
+            workletRuntime1.runtimeId,
+            () => {
+              'worklet';
+              return 42;
+            }
+          );
           scheduleOnRN(callbackPass, result);
         } catch (error) {
-          scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+          scheduleOnRN(
+            callbackFail,
+            error instanceof Error ? error.message : String(error)
+          );
         }
       });
 
       await waitForNotification(FAIL_NOTIFICATION);
       expect(reason).toBe(
-        '[Worklets] runOnRuntimeSyncWithId cannot be called on Worklet Runtimes outside of the Bundle Mode.',
+        '[Worklets] runOnRuntimeSyncWithId cannot be called on Worklet Runtimes outside of the Bundle Mode.'
       );
     });
 
-    test('from Worker Runtime to other Worker Runtime', async () => {
+    test('throws from Worker Runtime to other Worker Runtime', async () => {
       scheduleOnRuntime(workletRuntime1, () => {
         'worklet';
         try {
-          const result = runOnRuntimeSyncWithId(workletRuntime2.runtimeId, () => {
-            'worklet';
-            return 42;
-          });
+          const result = runOnRuntimeSyncWithId(
+            workletRuntime2.runtimeId,
+            () => {
+              'worklet';
+              return 42;
+            }
+          );
           scheduleOnRN(callbackPass, result);
         } catch (error) {
-          scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+          scheduleOnRN(
+            callbackFail,
+            error instanceof Error ? error.message : String(error)
+          );
         }
       });
 
       await waitForNotification(FAIL_NOTIFICATION);
       expect(reason).toBe(
-        '[Worklets] runOnRuntimeSyncWithId cannot be called on Worklet Runtimes outside of the Bundle Mode.',
+        '[Worklets] runOnRuntimeSyncWithId cannot be called on Worklet Runtimes outside of the Bundle Mode.'
       );
     });
   }

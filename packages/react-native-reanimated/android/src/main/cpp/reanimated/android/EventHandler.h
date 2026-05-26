@@ -16,9 +16,13 @@ class EventHandler : public HybridClass<EventHandler> {
  public:
   static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/nativeProxy/EventHandler;";
 
-  void receiveEvent(jni::alias_ref<JString> eventKey, jint emitterReactTag, jni::alias_ref<react::WritableMap> event) {
+  void receiveEvent(
+      jni::alias_ref<JString> eventKey,
+      jint emitterReactTag,
+      jni::alias_ref<react::WritableMap> event,
+      jboolean isInDrawPass) {
     ReanimatedSystraceSection s("EventHandler::receiveEvent");
-    handler_(eventKey, emitterReactTag, event);
+    handler_(eventKey, emitterReactTag, event, isInDrawPass);
   }
 
   static void registerNatives() {
@@ -30,11 +34,14 @@ class EventHandler : public HybridClass<EventHandler> {
  private:
   friend HybridBase;
 
-  explicit EventHandler(
-      std::function<void(jni::alias_ref<JString>, jint emitterReactTag, jni::alias_ref<react::WritableMap>)> handler)
+  explicit EventHandler(std::function<void(
+                            jni::alias_ref<JString>,
+                            jint emitterReactTag,
+                            jni::alias_ref<react::WritableMap>,
+                            jboolean isInDrawPass)> handler)
       : handler_(std::move(handler)) {}
 
-  std::function<void(jni::alias_ref<JString>, jint, jni::alias_ref<react::WritableMap>)> handler_;
+  std::function<void(jni::alias_ref<JString>, jint, jni::alias_ref<react::WritableMap>, jboolean)> handler_;
 };
 
 } // namespace reanimated

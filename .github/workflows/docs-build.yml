@@ -22,7 +22,7 @@ jobs:
       WORKLETS_DOCS_DIR: docs/docs-worklets
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - name: Install monorepo node dependencies
         run: yarn install
 

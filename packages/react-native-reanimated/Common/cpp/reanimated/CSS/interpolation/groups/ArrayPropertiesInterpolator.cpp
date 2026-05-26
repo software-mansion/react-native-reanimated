@@ -49,6 +49,27 @@ bool ArrayPropertiesInterpolator::updateKeyframes(
   return areAllPropsReversed;
 }
 
+bool ArrayPropertiesInterpolator::updateKeyframes(const folly::dynamic &fromValue, const folly::dynamic &toValue) {
+  const auto fromIsArray = fromValue.isArray();
+  const auto toIsArray = toValue.isArray();
+
+  const size_t fromSize = fromIsArray ? fromValue.size() : 0;
+  const size_t toSize = toIsArray ? toValue.size() : 0;
+  const size_t valuesCount = std::max(fromSize, toSize);
+
+  resizeInterpolators(valuesCount);
+
+  bool areAllPropsReversed = true;
+
+  static const folly::dynamic kNull;
+  for (size_t i = 0; i < valuesCount; ++i) {
+    areAllPropsReversed &=
+        interpolators_[i]->updateKeyframes(i < fromSize ? fromValue[i] : kNull, i < toSize ? toValue[i] : kNull);
+  }
+
+  return areAllPropsReversed;
+}
+
 folly::dynamic ArrayPropertiesInterpolator::mapInterpolators(
     const std::function<folly::dynamic(PropertyInterpolator &)> &callback) const {
   auto result = folly::dynamic::array();

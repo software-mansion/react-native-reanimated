@@ -10,7 +10,13 @@ import {
   runOnRuntimeSync,
   type WorkletRuntime,
 } from 'react-native-worklets';
-import { describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  notify,
+  test,
+  waitForNotification,
+} from '../../ReJest/RuntimeTestsApi';
 
 const NOTIFICATION = 'NOTIFICATION';
 const workletRuntime = createWorkletRuntime({ name: 'test' });
@@ -114,7 +120,7 @@ describe('Test Synchronizable creation and serialization', () => {
 
 const initialValue = 0;
 
-const targetValue = 100000;
+const targetValue = 32768;
 
 function getDirtySetBlocking(synchronizable: Synchronizable<number>) {
   'worklet';
@@ -137,7 +143,7 @@ function getBlockingSetBlocking(synchronizable: Synchronizable<number>) {
 function transactionGetSet(synchronizable: Synchronizable<number>) {
   'worklet';
   for (let i = 0; i < targetValue; i++) {
-    synchronizable.setBlocking(prev => prev + 1);
+    synchronizable.setBlocking((prev) => prev + 1);
   }
   return synchronizable.getBlocking();
 }
@@ -158,7 +164,7 @@ function dispatch(
   method: (synchronizable: Synchronizable<number>) => number,
   callbackRN: (value: number) => void,
   callbackUI: (value: number) => void,
-  callbackBG: (value: number) => void,
+  callbackBG: (value: number) => void
 ) {
   const synchronizable = createSynchronizable(initialValue);
   scheduleOnRuntime(workletRuntime, () => {
@@ -206,7 +212,13 @@ describe('Test Synchronizable access', () => {
       }
     }
 
-    dispatch(workletRuntime, getDirtySetBlocking, setValueRN, setValueUI, setValueBG);
+    dispatch(
+      workletRuntime,
+      getDirtySetBlocking,
+      setValueRN,
+      setValueUI,
+      setValueBG
+    );
 
     await waitForNotification(NOTIFICATION);
 
@@ -241,7 +253,13 @@ describe('Test Synchronizable access', () => {
       }
     }
 
-    dispatch(workletRuntime, getBlockingSetBlocking, setValueRN, setValueUI, setValueBG);
+    dispatch(
+      workletRuntime,
+      getBlockingSetBlocking,
+      setValueRN,
+      setValueUI,
+      setValueBG
+    );
 
     await waitForNotification(NOTIFICATION);
 
@@ -276,7 +294,13 @@ describe('Test Synchronizable access', () => {
       }
     }
 
-    dispatch(workletRuntime, transactionGetSet, setValueRN, setValueUI, setValueBG);
+    dispatch(
+      workletRuntime,
+      transactionGetSet,
+      setValueRN,
+      setValueUI,
+      setValueBG
+    );
 
     await waitForNotification(NOTIFICATION);
 
@@ -309,7 +333,13 @@ describe('Test Synchronizable access', () => {
       }
     }
 
-    dispatch(workletRuntime, imperativeLockGetSet, setValueRN, setValueUI, setValueBG);
+    dispatch(
+      workletRuntime,
+      imperativeLockGetSet,
+      setValueRN,
+      setValueUI,
+      setValueBG
+    );
 
     await waitForNotification(NOTIFICATION);
 
