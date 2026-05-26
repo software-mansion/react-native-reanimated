@@ -305,12 +305,11 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
 
 void LayoutAnimationsProxy_Experimental::handleRemovals(
     ShadowViewMutationList &processedMutations,
-    std::vector<std::shared_ptr<LightNode>> &roots) const {
+    std::vector<std::shared_ptr<LightNode>> &exitingRoots) const {
   ReanimatedSystraceSection s("handleRemovals");
-  // iterate from the end, so that children
-  // with higher indices appear first in the mutations list
-  for (auto it = roots.rbegin(); it != roots.rend(); it++) {
-    auto &node = *it;
+  // iterate from the end, so that children with higher indices appear first in the mutations list
+  for (auto it = exitingRoots.rbegin(); it != exitingRoots.rend(); it++) {
+    auto &exitingRoot = *it;
 
     const StartAnimationsRecursivelyConfig config = {
         .shouldRemoveSubviewsWithoutAnimations = true,
@@ -318,9 +317,9 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
         .isScreenPop = false,
     };
 
-    if (startAnimationsRecursively(node, processedMutations, config)) {
-      auto parent = node->parent.lock();
-      react_native_assert(parent && "Parent node is nullptr");
+    if (startAnimationsRecursively(exitingRoot, processedMutations, config)) {
+      auto parentOfExitingRoot = exitingRoot->parent.lock();
+      react_native_assert(parentOfExitingRoot && "Parent node is nullptr");
       // TODO (future): figure out a better way to handle this
       // Currently we remove each view, and then if we want to animate it, reinsert it at the end.
       // This is nice, but introduces extra mutations (which could have some side effects, like making a snapshot in
@@ -328,31 +327,31 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
       // convenience of this approach is that it is much easier to maintain indices of animated views, and handle
       // reparentings.
 
-      auto current = node->current;
-      if (layoutAnimations_.contains(node->current.tag)) {
-        current = layoutAnimations_.at(node->current.tag).currentView;
+      auto exitingShadowView = exitingRoot->current;
+      if (layoutAnimations_.contains(exitingRoot->current.tag)) {
+        exitingShadowView = layoutAnimations_.at(exitingRoot->current.tag).currentView;
       }
-      processedMutations.push_back(
-          ShadowViewMutation::InsertMutation(parent->current.tag, current, static_cast<int>(parent->children.size())));
-      parent->children.push_back(node);
-      if (node->state == UNDEFINED) {
-        node->state = WAITING;
+      processedMutations.push_back(ShadowViewMutation::InsertMutation(
+          parentOfExitingRoot->current.tag, exitingShadowView, static_cast<int>(parentOfExitingRoot->children.size())));
+      parentOfExitingRoot->children.push_back(exitingRoot);
+      if (exitingRoot->state == UNDEFINED) {
+        exitingRoot->state = WAITING;
       }
     } else {
-      maybeCancelAnimation(node->current.tag);
-      processedMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
+      maybeCancelAnimation(exitingRoot->current.tag);
+      processedMutations.push_back(ShadowViewMutation::DeleteMutation(exitingRoot->current));
     }
   }
 
-  for (const auto &node : deadNodes) {
-    if (node->state != DELETED) {
-      auto parent = node->parent.lock();
-      react_native_assert(parent && "Parent node is nullptr");
-      auto index = parent->removeChild(node);
-      react_native_assert(index != -1 && "Dead node not found");
+  for (const auto &deadNode : deadNodes) {
+    if (deadNode->state != DELETED) {
+      auto parentOfDeadNode = deadNode->parent.lock();
+      react_native_assert(parentOfDeadNode && "Parent node is nullptr");
+      auto deadNodeIndex = parentOfDeadNode->removeChild(deadNode);
+      react_native_assert(deadNodeIndex != -1 && "Dead node not found");
 
-      endAnimationsRecursively(node, index, processedMutations);
-      maybeDropAncestors(parent, processedMutations);
+      endAnimationsRecursively(deadNode, deadNodeIndex, processedMutations);
+      maybeDropAncestors(parentOfDeadNode, processedMutations);
     }
   }
   deadNodes.clear();
