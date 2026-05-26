@@ -21,6 +21,7 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           cache: 'yarn'
+          node-version-file: '.nvmrc'
 
       - name: Install monorepo node dependencies
         run: yarn install

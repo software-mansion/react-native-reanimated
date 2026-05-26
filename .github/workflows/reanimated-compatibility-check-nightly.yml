@@ -51,6 +51,8 @@ jobs:
           java-version: '18'
       - name: Setup Node
         uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610
+        with:
+          node-version-file: '.nvmrc'
       - uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
         if: ${{ matrix.platform == 'iOS' }}
         with:
