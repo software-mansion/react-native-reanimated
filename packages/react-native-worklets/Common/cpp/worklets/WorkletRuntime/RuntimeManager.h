@@ -39,11 +39,9 @@ class RuntimeManager {
 
   std::shared_ptr<WorkletRuntime> createUninitializedUIRuntime(const std::shared_ptr<AsyncQueue> &uiAsyncQueue);
 
-  /** Runs `fn` while registration of new Worklet Runtimes is paused. */
-  template <typename F>
-  void withRegistrationPaused(F &&fn) {
+  void withRegistrationPaused(const std::function<void()> &fn) {
     std::unique_lock<std::mutex> lock(registrationMutex_);
-    std::forward<F>(fn)();
+    fn();
   }
 
  private:
