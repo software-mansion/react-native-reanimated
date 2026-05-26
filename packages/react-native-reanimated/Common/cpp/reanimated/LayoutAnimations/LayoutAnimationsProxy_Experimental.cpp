@@ -27,9 +27,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   const PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList processedMutations;
   auto rootChildCount = static_cast<int>(lightNodes_[surfaceId]->children.size());
-  const bool isInTransition = static_cast<bool>(transitionState_);
 
-  if (isInTransition) {
+  if (transitionState_ != TransitionState::NONE) {
     updateLightTree(propsParserContext, mutations, processedMutations);
     handleProgressTransition(processedMutations, mutations, propsParserContext, surfaceId);
   } else if (!synchronized_) {
