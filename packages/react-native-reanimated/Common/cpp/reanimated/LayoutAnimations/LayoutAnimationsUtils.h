@@ -96,6 +96,17 @@ struct LightNode {
     }
     return -1;
   }
+
+  int countExitingChildrenBeforeIndex(int index) const {
+    react_native_assert(index >= 0 && static_cast<std::size_t>(index) <= children.size() && "index out of range");
+    auto result = 0;
+    for (auto i = 0; i < index; i++) {
+      if (children[i]->exitingState != ExitingState::UNDEFINED) {
+        result++;
+      }
+    }
+    return result;
+  }
 };
 
 struct SurfaceManager {
