@@ -27,7 +27,6 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: '22'
           registry-url: https://registry.npmjs.org/
       - name: Setup Yarn
         # Sometimes `npx @react-native-community/cli init` fails at random.
