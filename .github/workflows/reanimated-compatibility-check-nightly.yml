@@ -18,6 +18,10 @@ jobs:
       react-native-versions: ${{ steps.set-outputs.outputs.react-native-versions }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Setup Node
+        uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610
+        with:
+          node-version-file: '.nvmrc'
       - name: Read compatibility.json
         run: node .github/workflows/helper/read-compatibility.js
       - name: Set outputs
