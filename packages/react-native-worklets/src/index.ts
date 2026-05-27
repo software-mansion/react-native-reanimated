@@ -1,18 +1,15 @@
 'use strict';
 
 import { init } from './initializers/initializers';
-import { bundleModeInit } from './initializers/workletRuntimeEntry';
+
+// Worklets Babel Plugin replaces `false` with `true` here
+// when Bundle Mode is enabled.
+globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;
 
 // is-tree-shakable-suppress
 init();
 
-// @ts-expect-error We must trick the bundler to include
-// the `workletRuntimeEntry` file the way it cannot optimize it out.
-if (globalThis._ALWAYS_FALSE) {
-  // Bundle mode.
-  bundleModeInit();
-}
-
+export { toggleSlowAnimationsOnUIRuntime } from './debug/slowAnimations';
 export {
   callMicrotasks,
   isShareableRef,
@@ -68,6 +65,7 @@ export {
   getUISchedulerHolder,
   runOnRuntime,
   runOnRuntimeAsync,
+  runOnRuntimeAsyncWithId,
   runOnRuntimeSync,
   runOnRuntimeSyncWithId,
   scheduleOnRuntime,

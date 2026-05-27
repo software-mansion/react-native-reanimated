@@ -2,9 +2,22 @@ import React from 'react';
 import type { ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
 import type { ComponentCoords } from 'react-native-reanimated';
-import Animated, { getRelativeCoords, measure, useAnimatedRef, useSharedValue } from 'react-native-reanimated';
+import Animated, {
+  getRelativeCoords,
+  measure,
+  useAnimatedRef,
+  useSharedValue,
+} from 'react-native-reanimated';
 
-import { describe, expect, getRegisteredValue, registerValue, render, test, wait } from '../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  getRegisteredValue,
+  registerValue,
+  render,
+  test,
+  wait,
+} from '../../ReJest/RuntimeTestsApi';
 import { scheduleOnUI } from 'react-native-worklets';
 
 const REGISTERED_VALUE_KEY = 'sv';
@@ -25,7 +38,11 @@ const CoordsComponent = ({
     scheduleOnUI(() => {
       const measured = measure(sRef);
       if (measured !== null) {
-        coordsSv.value = getRelativeCoords(bRef, measured.pageX, measured.pageY);
+        coordsSv.value = getRelativeCoords(
+          bRef,
+          measured.pageX,
+          measured.pageY
+        );
       }
     });
   };
@@ -38,13 +55,18 @@ const CoordsComponent = ({
   return (
     <Animated.View style={styles.container}>
       <Animated.View ref={bRef} style={[styles.bigBox, testStyles]}>
-        <Animated.View ref={sRef} style={styles.smallBox} onLayout={onLayoutMeasure} />
+        <Animated.View
+          ref={sRef}
+          style={styles.smallBox}
+          onLayout={onLayoutMeasure}
+        />
       </Animated.View>
     </Animated.View>
   );
 };
 
 describe('getRelativeCoords', () => {
+  // TODO: investigate and fix, on Android sometimes we receive 49s instead of 50s
   test.each([
     ['flex-start', 'flex-start', 0, 0],
     ['flex-start', 'center', 50, 0],
@@ -55,18 +77,29 @@ describe('getRelativeCoords', () => {
     ['flex-end', 'flex-start', 0, 100],
     ['flex-end', 'center', 50, 100],
     ['flex-end', 'flex-end', 100, 100],
-  ] as Array<[ViewStyle['justifyContent'], ViewStyle['alignItems'], number, number]>)(
+  ] as Array<
+    [ViewStyle['justifyContent'], ViewStyle['alignItems'], number, number]
+  >)(
     'getCoords %s',
     async ([justifyContent, alignItems, expectedValueX, expectedValueY]) => {
-      await render(<CoordsComponent justifyContent={justifyContent} alignItems={alignItems} />);
+      await render(
+        <CoordsComponent
+          justifyContent={justifyContent}
+          alignItems={alignItems}
+        />
+      );
       await wait(300);
       const coords = (await getRegisteredValue(REGISTERED_VALUE_KEY)).onUI;
       expect(coords).not.toBeNullable();
       if (coords) {
-        expect(Math.floor((coords as unknown as ComponentCoords).x)).toBe(expectedValueX);
-        expect(Math.floor((coords as unknown as ComponentCoords).y)).toBe(expectedValueY);
+        expect(Math.floor((coords as unknown as ComponentCoords).x)).toBe(
+          expectedValueX
+        );
+        expect(Math.floor((coords as unknown as ComponentCoords).y)).toBe(
+          expectedValueY
+        );
       }
-    },
+    }
   );
 });
 

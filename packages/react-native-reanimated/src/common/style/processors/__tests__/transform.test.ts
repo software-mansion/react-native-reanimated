@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../../errors';
 import type { TransformsArray } from '../../../types';
 import { ERROR_MESSAGES, processTransform } from '../transform';
 
@@ -418,7 +417,7 @@ describe(processTransform, () => {
       'throws an error for invalid input: $input',
       ({ input, errorMessage }) => {
         expect(() => processTransform(input)).toThrow(
-          new ReanimatedError(errorMessage)
+          new Error(`[Reanimated] ${errorMessage}`)
         );
       }
     );

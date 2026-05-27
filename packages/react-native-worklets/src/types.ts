@@ -20,9 +20,6 @@ declare global {
    */
   var _WORKLET_RUNTIME: ArrayBuffer;
 
-  /** @deprecated Don't use. */
-  var _IS_FABRIC: boolean | undefined;
-
   /**
    * This global variable is used to determine the kind of the current runtime.
    * You can use it directly to differentiate between runtimes. However, the
@@ -34,6 +31,16 @@ declare global {
    * - Value _3_: Worker Worklet Runtime
    */
   var __RUNTIME_KIND: RuntimeKind | 1 | 2 | 3;
+
+  /**
+   * Use it to schedule a function to be executed after all
+   * `requestAnimationFrame` callbacks but before the next frame is rendered.
+   * This is useful to collect all updates which happened when the animation
+   * frame queue was flushed.
+   *
+   * **Available only on the UI Runtime.**
+   */
+  var requestAnimationFrameFinalizer: (callback: () => void) => void;
 }
 
 export type WorkletRuntime = {
@@ -48,7 +55,7 @@ export type WorkletStackDetails = [
   columnOffset: number,
 ];
 
-export type WorkletClosure = Record<string, unknown>;
+type WorkletClosure = Record<string, unknown>;
 
 interface WorkletInitData {
   code: string;
@@ -98,8 +105,7 @@ export interface WorkletImport {
   };
 }
 
-/** Configuration object for creating a worklet runtime. */
-export type WorkletRuntimeConfig = {
+type WorkletRuntimeConfigBase = {
   /** The name of the worklet runtime. */
   name?: string;
   /**
@@ -120,33 +126,36 @@ export type WorkletRuntimeConfig = {
    * defaults to `true`.
    */
   enableEventLoop?: true;
-} & (
-  | {
-      /**
-       * If true, the runtime will use the default queue implementation for
-       * scheduling worklets. Defaults to true.
-       */
-      useDefaultQueue?: true;
-      /**
-       * An optional custom queue to be used for scheduling worklets.
-       *
-       * The queue has to implement the C++ `AsyncQueue` interface from
-       * `<worklets/RunLoop/AsyncQueue.h>`.
-       */
-      customQueue?: never;
-    }
-  | {
-      /**
-       * If true, the runtime will use the default queue implementation for
-       * scheduling worklets. Defaults to true.
-       */
-      useDefaultQueue: false;
-      /**
-       * An optional custom queue to be used for scheduling worklets.
-       *
-       * The queue has to implement the C++ `AsyncQueue` interface from
-       * `<worklets/RunLoop/AsyncQueue.h>`.
-       */
-      customQueue?: object;
-    }
-);
+};
+
+/** Configuration object for creating a worklet runtime. */
+export type WorkletRuntimeConfig = WorkletRuntimeConfigBase &
+  (
+    | {
+        /**
+         * The queue used for scheduling worklets on this runtime.
+         *
+         * - `'default'` (the default): use the built-in queue implementation.
+         * - An object implementing the C++ `AsyncQueue` interface from
+         *   `<worklets/RunLoop/AsyncQueue.h>`: use the provided custom queue.
+         * - `null`: do not attach any queue to the runtime.
+         */
+        queue?: 'default' | object | null;
+        useDefaultQueue?: never;
+        customQueue?: never;
+      }
+    | {
+        queue?: never;
+        /** @deprecated Use {@link queue} instead. */
+        useDefaultQueue?: true;
+        /** @deprecated Use {@link queue} instead. */
+        customQueue?: never;
+      }
+    | {
+        queue?: never;
+        /** @deprecated Use {@link queue} instead. */
+        useDefaultQueue: false;
+        /** @deprecated Use {@link queue} instead. */
+        customQueue?: object;
+      }
+  );

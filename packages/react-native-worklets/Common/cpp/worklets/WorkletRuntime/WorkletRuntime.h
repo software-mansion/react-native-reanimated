@@ -1,27 +1,29 @@
 #pragma once
 
-#include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
-#include <jsireact/JSIExecutor.h>
 #include <react/debug/react_native_assert.h>
-
 #include <worklets/RunLoop/AsyncQueue.h>
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 #include <worklets/RunLoop/EventLoop.h>
 #include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/UnpackerLoader.h>
+#include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/JSScheduler.h>
+#include <worklets/Tools/ScriptBuffer.h>
+#include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
+namespace worklets {
+
 using namespace facebook;
 using namespace react;
-
-namespace worklets {
 
 template <typename TCallable>
 concept ImplicitlySerializableCallable = std::is_assignable_v<const jsi::Function &, TCallable> ||
@@ -42,6 +44,9 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
  public:
   void schedule(jsi::Function &&function) const;
   void schedule(std::shared_ptr<SerializableWorklet> worklet) const;
+#ifndef NDEBUG
+  void schedule(std::shared_ptr<SerializableWorklet> worklet, std::optional<std::string> scheduleStack) const;
+#endif // NDEBUG
   void schedule(std::function<void()> job) const;
   void schedule(std::function<void(jsi::Runtime &)> job) const;
 
@@ -51,22 +56,33 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   std::invoke_result_t<TCallable, Args...> runSync(TCallable &&callable, Args &&...args) const;
   template <typename... Args>
   jsi::Value runSync(const jsi::Function &function, Args &&...args) const {
-    auto &rt = *runtime_;
-    // We only use callGuard in debug mode, otherwise we call the provided
-    // function directly. CallGuard provides a way of capturing exceptions in
-    // JavaScript and propagating them to the main React Native thread such that
-    // they can be presented using RN's LogBox.
 #ifndef NDEBUG
-    return getCallGuard(rt).call(rt, function, args...);
+    return callGuarded(function, std::nullopt, std::forward<Args>(args)...);
 #else
-    return function.call(rt, args...);
+    return function.call(*runtime_, args...);
 #endif // NDEBUG
   }
   template <typename... Args>
   jsi::Value runSync(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args) const {
+#ifndef NDEBUG
+    return runSyncWithStack(worklet, std::nullopt, std::forward<Args>(args)...);
+#else
     jsi::Runtime &rt = *runtime_;
-    return runSync(worklet->toJSValue(rt).asObject(rt).asFunction(rt), std::forward<Args>(args)...);
+    auto function = worklet->toJSValue(rt).asObject(rt).asFunction(rt);
+    return function.call(rt, args...);
+#endif // NDEBUG
   }
+#ifndef NDEBUG
+  template <typename... Args>
+  jsi::Value runSyncWithStack(
+      const std::shared_ptr<SerializableWorklet> &worklet,
+      const std::optional<std::string> &scheduleStack,
+      Args &&...args) const {
+    jsi::Runtime &rt = *runtime_;
+    auto function = worklet->toJSValue(rt).asObject(rt).asFunction(rt);
+    return callGuarded(function, scheduleStack, std::forward<Args>(args)...);
+  }
+#endif // NDEBUG
   template <RuntimeCallable TCallable>
   std::invoke_result_t<TCallable, jsi::Runtime &> runSync(TCallable &&job) const {
     jsi::Runtime &rt = getJSIRuntime();
@@ -75,6 +91,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   }
 
   /* #endregion */
+
+  void callMicrotasks() const;
 
   /* #region runSyncSerialized */
 
@@ -92,6 +110,23 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
         "must return a value serialized with `createSerializable`.");
     return serializableResult;
   }
+#ifndef NDEBUG
+  template <typename... Args>
+  std::shared_ptr<Serializable> runSyncSerializedWithStack(
+      const std::shared_ptr<SerializableWorklet> &worklet,
+      const std::optional<std::string> &scheduleStack,
+      Args &&...args) const {
+    jsi::Runtime &rt = getJSIRuntime();
+    auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
+    auto result = runSyncWithStack(worklet, scheduleStack, std::forward<Args>(args)...);
+    auto serializableResult = extractSerializableOrThrow(
+        rt,
+        result,
+        "[Worklets] Worklet passed to `runSyncSerialized`"
+        "must return a value serialized with `createSerializable`.");
+    return serializableResult;
+  }
+#endif // NDEBUG
   template <typename... Args>
   std::shared_ptr<Serializable> runSyncSerialized(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args)
       const {
@@ -105,7 +140,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
         "must return a value serialized with `createSerializable`.");
     return serializableResult;
   }
-
   /* #endregion */
 
   jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propName) override;
@@ -130,12 +164,12 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
   explicit WorkletRuntime(
       RuntimeData::RuntimeId runtimeId,
-      const std::shared_ptr<MessageQueueThread> &jsQueue,
+      RuntimeData::RuntimeKind runtimeKind,
       const std::string &name,
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
       bool enableEventLoop = true);
 
-  void init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy);
+  void init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy);
 
   /* #region deprecated */
 
@@ -158,24 +192,47 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
   /* #endregion */
 
-#if REACT_NATIVE_MINOR_VERSION >= 81
   /**
    * Retrieves a weak reference to the WorkletRuntime associated with the
    * provided jsi::Runtime.
    *
    * Throws when invoked with a non-worklet runtime.
+   *
+   * Available only on React Native 0.81 and higher.
    */
   static std::weak_ptr<WorkletRuntime> getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt);
-#endif // REACT_NATIVE_MINOR_VERSION >= 81
-
-#ifndef NDEBUG
-  static jsi::Function getCallGuard(jsi::Runtime &rt);
-#endif // NDEBUG
 
  private:
+#ifndef NDEBUG
+  // Wraps the provided function in a try/catch so an exception thrown on the
+  // worklet runtime can be reported on the RN Runtime LogBox with a
+  // stack pointing back to the JS call site that scheduled the worklet.
+  template <typename... Args>
+  jsi::Value callGuarded(const jsi::Function &function, const std::optional<std::string> &scheduleStack, Args &&...args)
+      const {
+    auto &rt = *runtime_;
+    try {
+      return function.call(rt, args...);
+    } catch (jsi::JSError &e) {
+      JSLogger::handleJSError(jsScheduler_, rt, name_, e, scheduleStack);
+      return jsi::Value::undefined();
+    }
+  }
+#endif // NDEBUG
+
+  void bundleModeInit(
+      const std::shared_ptr<JSScheduler> &jsScheduler,
+      const std::shared_ptr<const ScriptBuffer> &script,
+      const std::string &sourceUrl,
+      const std::shared_ptr<RuntimeBindings> &runtimeBindings);
+
+  void legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpackerLoader);
+
   const RuntimeData::RuntimeId runtimeId_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;
+  std::shared_ptr<JSScheduler> jsScheduler_;
+  const RuntimeData::RuntimeKind runtimeKind_;
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
   std::shared_ptr<EventLoop> eventLoop_;
@@ -189,29 +246,12 @@ void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &serializableWorkletValue);
-
-/**
- * @deprecated Use `WorkletRuntime::runSync` instead.
- */
-template <typename... Args>
-inline jsi::Value runOnRuntimeGuarded(jsi::Runtime &rt, const jsi::Function &function, Args &&...args) {
-  // We only use callGuard in debug mode, otherwise we call the provided
-  // function directly. CallGuard provides a way of capturing exceptions in
-  // JavaScript and propagating them to the main React Native thread such that
-  // they can be presented using RN's LogBox.
 #ifndef NDEBUG
-  return WorkletRuntime::getCallGuard(rt).call(rt, function, args...);
-#else
-  return function.call(rt, args...);
+void scheduleOnRuntime(
+    jsi::Runtime &rt,
+    const jsi::Value &workletRuntimeValue,
+    const jsi::Value &serializableWorkletValue,
+    const std::optional<std::string> &scheduleStack);
 #endif // NDEBUG
-}
-
-/**
- * @deprecated Use `WorkletRuntime::runSync` instead.
- */
-template <typename... Args>
-inline jsi::Value runOnRuntimeGuarded(jsi::Runtime &rt, const jsi::Value &function, Args &&...args) {
-  return runOnRuntimeGuarded(rt, function.asObject(rt).asFunction(rt), std::forward<Args>(args)...);
-}
 
 } // namespace worklets

@@ -39,7 +39,9 @@ package-lock.json
 # vscode
 jsconfig.json
 .project
-.vscode
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.template
 
 # BUCK
 buck-out/
@@ -80,3 +82,6 @@ build/
 test-results/
 playwright-report/
 playwright/.cache/
+
+# Claude
+.claude

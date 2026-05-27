@@ -41,11 +41,14 @@
 
 #include <limits>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace reanimated::css {
 
 namespace {
+
+using ComponentInterpolatorsMap = std::unordered_map<std::string, InterpolatorFactoriesRecord>;
 
 // Private implementation details
 const std::array<uint8_t, 4> BLACK = {0, 0, 0, 255};
@@ -352,6 +355,17 @@ const InterpolatorFactoriesRecord SVG_PATH_INTERPOLATORS = mergeInterpolators(
          {"d", value<SVGPath>("")},
      }});
 
+const InterpolatorFactoriesRecord SVG_PATTERN_INTERPOLATORS = mergeInterpolators(
+    {SVG_COMMON_INTERPOLATORS,
+     InterpolatorFactoriesRecord{
+         {"x", value<CSSLength>(0, {RelativeTo::Parent, "width"})},
+         {"y", value<CSSLength>(0, {RelativeTo::Parent, "height"})},
+         {"width", value<CSSLength>(0, {RelativeTo::Parent, "width"})},
+         {"height", value<CSSLength>(0, {RelativeTo::Parent, "height"})},
+         {"patternUnits", value<CSSIndex>(0)},
+         {"patternContentUnits", value<CSSIndex>(0)},
+     }});
+
 const InterpolatorFactoriesRecord SVG_RADIAL_GRADIENT_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
@@ -398,6 +412,7 @@ ComponentInterpolatorsMap initializeRegistry() {
     registry["RNSVGLine"] = SVG_LINE_INTERPOLATORS;
     registry["RNSVGLinearGradient"] = SVG_LINEAR_GRADIENT_INTERPOLATORS;
     registry["RNSVGPath"] = SVG_PATH_INTERPOLATORS;
+    registry["RNSVGPattern"] = SVG_PATTERN_INTERPOLATORS;
     registry["RNSVGRect"] = SVG_RECT_INTERPOLATORS;
     registry["RNSVGRadialGradient"] = SVG_RADIAL_GRADIENT_INTERPOLATORS;
     registry["RNSVGText"] = SVG_TEXT_INTERPOLATORS;
@@ -423,12 +438,6 @@ const InterpolatorFactoriesRecord &getComponentInterpolators(const std::string &
   // Use default style interpolators as a fallback for unknown components
   // (e.g. ExpoImage, which is not a RN component but should support RN Image styles)
   return STYLE_INTERPOLATORS;
-}
-
-void registerComponentInterpolators(
-    const std::string &nativeComponentName,
-    const InterpolatorFactoriesRecord &interpolators) {
-  registry[nativeComponentName] = interpolators;
 }
 
 } // namespace reanimated::css

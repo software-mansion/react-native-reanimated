@@ -1,0 +1,159 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`babel plugin in bundleMode nested worklets extracts each nested worklet into its own file 1`] = `"const foo = require("react-native-worklets/.worklets/3455030333622.js").default({});"`;
+
+exports[`babel plugin in bundleMode nested worklets extracts each nested worklet into its own file 2`] = `
+"export default (function testJs2Factory({}) {
+  const testJs2 = function () {
+    const bar = require("react-native-worklets/.worklets/11336869676092.js").default({});
+    return bar();
+  };
+  testJs2.__closure = {};
+  testJs2.__workletHash = 3455030333622;
+  testJs2.__pluginVersion = "x.y.z";
+  return testJs2;
+});"
+`;
+
+exports[`babel plugin in bundleMode source replacement replaces inline factory with a require to the worklet file 1`] = `"const foo = require("react-native-worklets/.worklets/10408705723983.js").default({});"`;
+
+exports[`babel plugin in bundleMode source replacement still captures closure even with "no-worklet-closure" directive 1`] = `
+"const x = 1;
+const foo = require("react-native-worklets/.worklets/16036484462760.js").default({
+  x
+});"
+`;
+
+exports[`babel plugin in bundleMode source replacement still captures closure even with "no-worklet-closure" directive 2`] = `
+"export default (function foo_testJs1Factory({
+  x
+}) {
+  const foo = function () {
+    return x;
+  };
+  foo.__closure = {
+    x
+  };
+  foo.__workletHash = 16036484462760;
+  foo.__pluginVersion = "x.y.z";
+  return foo;
+});"
+`;
+
+exports[`babel plugin in bundleMode worklet file emission does not emit init data 1`] = `"const foo = require("react-native-worklets/.worklets/10408705723983.js").default({});"`;
+
+exports[`babel plugin in bundleMode worklet file emission does not emit init data 2`] = `
+"export default (function foo_testJs1Factory({}) {
+  const foo = function () {
+    var x = 1;
+  };
+  foo.__closure = {};
+  foo.__workletHash = 10408705723983;
+  foo.__pluginVersion = "x.y.z";
+  return foo;
+});"
+`;
+
+exports[`babel plugin in bundleMode worklet file emission does not emit stack-trace machinery 1`] = `
+"export default (function foo_testJs1Factory({}) {
+  const foo = function () {
+    var x = 1;
+  };
+  foo.__closure = {};
+  foo.__workletHash = 10408705723983;
+  foo.__pluginVersion = "x.y.z";
+  return foo;
+});"
+`;
+
+exports[`babel plugin in bundleMode worklet file emission does not rebase relative requires from non-workletizable files 1`] = `
+"export default (function baz_fileTs1Factory({}) {
+  const baz = function () {
+    const helper = require('./helper');
+    return helper.foo();
+  };
+  baz.__closure = {};
+  baz.__workletHash = 13883068246308;
+  baz.__pluginVersion = "x.y.z";
+  return baz;
+});"
+`;
+
+exports[`babel plugin in bundleMode worklet file emission forwards closure variables from source to factory 1`] = `
+"const a = 1;
+const b = 2;
+const foo = require("react-native-worklets/.worklets/227435842223.js").default({
+  a,
+  b
+});"
+`;
+
+exports[`babel plugin in bundleMode worklet file emission forwards closure variables from source to factory 2`] = `
+"export default (function foo_testJs1Factory({
+  a,
+  b
+}) {
+  const foo = function () {
+    return a + b;
+  };
+  foo.__closure = {
+    a,
+    b
+  };
+  foo.__workletHash = 227435842223;
+  foo.__pluginVersion = "x.y.z";
+  return foo;
+});"
+`;
+
+exports[`babel plugin in bundleMode worklet file emission preserves workletizable library imports in the written worklet file 1`] = `
+"import { foo } from 'some-library';
+const bar = require("react-native-worklets/.worklets/3872906538980.js").default({});"
+`;
+
+exports[`babel plugin in bundleMode worklet file emission preserves workletizable library imports in the written worklet file 2`] = `
+"import { foo } from "some-library";
+export default (function bar_testJs1Factory({}) {
+  const bar = function () {
+    return foo();
+  };
+  bar.__closure = {};
+  bar.__workletHash = 3872906538980;
+  bar.__pluginVersion = "x.y.z";
+  return bar;
+});"
+`;
+
+exports[`babel plugin in bundleMode worklet file emission rebases relative requires inside the worklet body against the worklets directory 1`] = `
+"export default (function baz_fileJs1Factory({}) {
+  const baz = function () {
+    const helper = require("../../some-library/helper");
+    return helper.foo();
+  };
+  baz.__closure = {};
+  baz.__workletHash = 2953408498938;
+  baz.__pluginVersion = "x.y.z";
+  return baz;
+});"
+`;
+
+exports[`babel plugin in bundleMode worklet file emission written file content has factory shape 1`] = `
+"export default (function foo_testJs1Factory({}) {
+  const foo = function () {
+    var x = 1;
+    return x;
+  };
+  foo.__closure = {};
+  foo.__workletHash = 4225216281158;
+  foo.__pluginVersion = "x.y.z";
+  return foo;
+});"
+`;
+
+exports[`babel plugin in bundleMode worklet file emission written file path matches the require path 1`] = `"const foo = require("react-native-worklets/.worklets/10408705723983.js").default({});"`;
+
+exports[`babel plugin in bundleMode worklet runtime entry-point toggle does not flip the flag in unrelated files 1`] = `"globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;"`;
+
+exports[`babel plugin in bundleMode worklet runtime entry-point toggle does not flip the flag without bundleMode option 1`] = `"globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;"`;
+
+exports[`babel plugin in bundleMode worklet runtime entry-point toggle flips _WORKLETS_BUNDLE_MODE_ENABLED to true in the entry-point 1`] = `"globalThis._WORKLETS_BUNDLE_MODE_ENABLED = true;"`;

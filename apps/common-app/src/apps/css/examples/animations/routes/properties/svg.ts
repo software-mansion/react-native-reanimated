@@ -51,6 +51,10 @@ export const svgPropertiesRoutes = {
         Component: svgAnimatedProperties.Polyline,
         name: 'Polyline',
       },
+      Pattern: {
+        Component: svgAnimatedProperties.Pattern,
+        name: 'Pattern',
+      },
       LinearGradient: {
         Component: svgAnimatedProperties.LinearGradient,
         name: 'LinearGradient',

@@ -3,7 +3,6 @@ import '../layoutReanimation/animationsManager';
 
 import type React from 'react';
 import { Fragment } from 'react';
-import { StyleSheet } from 'react-native';
 
 import { checkStyleOverwriting, maybeBuild } from '../animationBuilder';
 import { IS_JEST, IS_WEB, logger } from '../common';
@@ -46,6 +45,7 @@ import { filterStyles, flattenArray } from './utils';
 
 let id = 0;
 
+// is-tree-shakable-suppress
 if (IS_WEB) {
   configureWebLayoutAnimations();
 }
@@ -536,16 +536,11 @@ export default class AnimatedComponent
     }
 
     if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
-      const flatStyles = StyleSheet.flatten(filteredProps.style as object);
-      const mergedStyles = {
-        ...flatStyles,
-        ...this.state.settledProps,
-      };
       return super.render({
         nativeID,
         ...filteredProps,
         ...this.state.settledProps,
-        style: mergedStyles,
+        style: [...flattenArray(filteredProps.style), this.state.settledProps],
         ...jestProps,
       });
     }

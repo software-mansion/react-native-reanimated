@@ -2,7 +2,7 @@
 id: ReducedMotionConfig
 title: ReducedMotionConfig
 sidebar_label: ReducedMotionConfig
-sidebar_position: 4
+sidebar_position: 3
 ---
 
 `ReducedMotionConfig` component let's you change behavior in response to the device's reduced motion accessibility setting. By default it disables all animation when the reduced motion is enabled on a device. You can adjust it for your specific use case. You can learn more about [Accessibility](/docs/guides/accessibility) and [`useReducedMotion`](/docs/device/useReducedMotion) in Reanimated.
@@ -29,20 +29,19 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-interface ReducedMotionConfigProps {
-  mode: ReduceMotion;
-}
+  ```typescript
+  interface ReducedMotionConfigProps {
+    mode: ReduceMotion;
+  }
 
-enum ReduceMotion {
-  System = 'system',
-  Always = 'always',
-  Never = 'never',
-}
-```
-
+  enum ReduceMotion {
+    System = 'system',
+    Always = 'always',
+    Never = 'never',
+  }
+  ```
 </details>
 
 ### Arguments
@@ -60,11 +59,8 @@ A parameter that determines how animations should behave in response to the devi
 import ReducedMotionConfig from '@site/src/examples/ReducedMotionConfig';
 import ReducedMotionConfigSrc from '!!raw-loader!@site/src/examples/ReducedMotionConfig';
 
-<InteractiveExample
-  src={ReducedMotionConfigSrc}
-  component={ReducedMotionConfig}
-/>
+<InteractiveExample src={ReducedMotionConfigSrc} component={ReducedMotionConfig}/>
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

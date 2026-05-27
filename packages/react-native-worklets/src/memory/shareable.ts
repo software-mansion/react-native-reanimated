@@ -1,33 +1,19 @@
 'use strict';
 
-import { WorkletsError } from '../debug/WorkletsError';
-import type { UIRuntimeId } from '../runtimes';
-import type { SerializableRef, Shareable, ShareableConfig } from './types';
-
-export function createShareable<
-  TValue = unknown,
-  THostDecorated = unknown,
-  TGuestDecorated = unknown,
->(
-  hostRuntimeId: typeof UIRuntimeId,
-  initial: TValue,
-  config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
-): Shareable<TValue, THostDecorated, TGuestDecorated>;
+import type { Shareable, ShareableConfig } from './types';
 
 /**
- * @deprecated Only UI host runtime is supported now. Use {@link UIRuntimeId} as
- *   the `hostRuntimeId` argument.
+ * Creates a new {@link Shareable} holding the provided initial value. You must
+ * explicitly declare which Worklet Runtime will host the Shareable by passing
+ * its `runtimeId`. To host on the UI Runtime, pass {@link UIRuntimeId}.
+ *
+ * @param hostRuntimeId - The `runtimeId` of the Worklet Runtime that will host
+ *   the Shareable.
+ * @param initial - The initial value of the Shareable.
+ * @param config - Optional advanced configuration.
+ * @returns The created {@link Shareable}.
+ * @see {@link https://docs.swmansion.com/react-native-worklets/docs/memory/createShareable | createShareable docs}
  */
-export function createShareable<
-  TValue = unknown,
-  THostDecorated = unknown,
-  TGuestDecorated = unknown,
->(
-  hostRuntimeId: number,
-  initial: SerializableRef<TValue>,
-  config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
-): Shareable<TValue, THostDecorated, TGuestDecorated>;
-
 export function createShareable<
   TValue = unknown,
   THostDecorated = unknown,
@@ -37,5 +23,5 @@ export function createShareable<
   _initial: TValue,
   _config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
 ): Shareable<TValue, THostDecorated, TGuestDecorated> {
-  throw new WorkletsError('`createShareable` is not supported on web.');
+  throw new Error('[Worklets] `createShareable` is not supported on web.');
 }

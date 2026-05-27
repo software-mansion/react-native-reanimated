@@ -1,5 +1,5 @@
 project(Reanimated)
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -11,11 +11,7 @@ set(CMAKE_CXX_STANDARD 20)
 include("${REACT_NATIVE_DIR}/ReactAndroid/cmake-utils/folly-flags.cmake")
 add_compile_options(${folly_FLAGS})
 
-string(
-  APPEND
-  CMAKE_CXX_FLAGS
-  " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}\
-    -DREANIMATED_VERSION=${REANIMATED_VERSION}\
+string(APPEND CMAKE_CXX_FLAGS " -DREANIMATED_VERSION=${REANIMATED_VERSION}\
     -DREANIMATED_FEATURE_FLAGS=\"${REANIMATED_FEATURE_FLAGS}\"")
 string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")
 # flags to optimize the binary size
@@ -49,6 +45,9 @@ find_package(react-native-worklets REQUIRED CONFIG)
 
 add_library(reanimated SHARED ${REANIMATED_COMMON_CPP_SOURCES}
                               ${REANIMATED_ANDROID_CPP_SOURCES})
+
+target_precompile_headers(reanimated PRIVATE
+                          "${ANDROID_CPP_DIR}/ReanimatedPCH.h")
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
   include(

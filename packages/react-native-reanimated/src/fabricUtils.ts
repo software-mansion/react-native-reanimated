@@ -1,6 +1,5 @@
 'use strict';
 
-import { ReanimatedError } from './common/errors';
 import type { InternalHostInstance, ShadowNodeWrapper } from './commonTypes';
 import { findHostInstance } from './platform-specific/findHostInstance';
 import type { HostInstance } from './platform-specific/types';
@@ -21,7 +20,7 @@ export function getShadowNodeWrapperFromRef(
     } else if ((ref as any)._reactInternals) {
       resolvedInstance = findHostInstance(ref).__internalInstanceHandle;
     } else {
-      throw new ReanimatedError(`Failed to find host instance for a ref.}`);
+      throw new Error(`[Reanimated] Failed to find host instance for a ref.`);
     }
   }
 

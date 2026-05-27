@@ -1,7 +1,13 @@
 #pragma once
 
-#include <cxxreact/JSBigString.h>
+#include <cxxreact/ReactNativeVersion.h>
 #include <jsi/jsi.h>
+
+#if REACT_NATIVE_VERSION_MINOR >= 84
+#include <cxxreact/JSBigString.h>
+#else
+#include <jsireact/JSIExecutor.h>
+#endif
 
 #include <memory>
 #include <utility>
@@ -12,8 +18,8 @@ using namespace facebook;
 using namespace facebook::react;
 
 /**
-  * Our custom copyable structure that is accepted by
-  * Hermes Runtime for evaluation.
+ * Our custom copyable structure that is accepted by
+ * Hermes Runtime for evaluation.
  */
 class ScriptBuffer : public jsi::Buffer {
  public:

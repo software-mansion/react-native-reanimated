@@ -1,7 +1,8 @@
-/* eslint-disable reanimated/use-worklets-error */
 'use strict';
 
-export function __installUnpacker() {
+export function installCustomSerializableUnpacker() {
+  'worklet';
+  'no-worklet-closure';
   if (!globalThis.__customSerializationRegistry) {
     globalThis.__customSerializationRegistry =
       [] as typeof globalThis.__customSerializationRegistry;

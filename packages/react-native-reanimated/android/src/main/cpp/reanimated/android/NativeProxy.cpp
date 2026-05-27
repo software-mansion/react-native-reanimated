@@ -1,13 +1,15 @@
 #include <react/fabric/Binding.h>
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
+#include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/ReanimatedVersion.h>
 #include <reanimated/android/AnimationFrameCallback.h>
 #include <reanimated/android/EventHandler.h>
 #include <reanimated/android/KeyboardWorkletWrapper.h>
 #include <reanimated/android/NativeProxy.h>
+#include <reanimated/android/PseudoSelectorCallback.h>
 #include <reanimated/android/SensorSetter.h>
-#include <worklets/Compat/Holders.h>
 
 #include <memory>
 #include <string>
@@ -71,16 +73,11 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto &rnRuntime = *reinterpret_cast<jsi::Runtime *>(jsContext); // NOLINT //(performance-no-int-to-ptr)
   const auto global = rnRuntime.global();
-
   const auto uiRuntime =
-      std::static_pointer_cast<WorkletRuntimeHolder>(
-          global.getProperty(rnRuntime, "__UI_WORKLET_RUNTIME_HOLDER").asObject(rnRuntime).getNativeState(rnRuntime))
-          ->runtime_;
+      getWorkletRuntimeFromHolder(rnRuntime, global.getPropertyAsObject(rnRuntime, "__UI_WORKLET_RUNTIME_HOLDER"));
 
   const auto uiScheduler =
-      std::static_pointer_cast<UISchedulerHolder>(
-          global.getProperty(rnRuntime, "__UI_SCHEDULER_HOLDER").asObject(rnRuntime).getNativeState(rnRuntime))
-          ->scheduler_;
+      getUISchedulerFromHolder(rnRuntime, global.getPropertyAsObject(rnRuntime, "__UI_SCHEDULER_HOLDER"));
 
   return makeCxxInstance(jThis, &rnRuntime, jsCallInvoker, fabricUIManager, uiRuntime, uiScheduler);
 }
@@ -120,20 +117,34 @@ void NativeProxy::injectCppVersion() {
 
 void NativeProxy::installJSIBindings() {
   jsi::Runtime &rnRuntime = *rnRuntime_;
-  RNRuntimeDecorator::decorate(rnRuntime, uiRuntime_->getJSIRuntime(), reanimatedModuleProxy_);
+  auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
+  RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, reanimatedModuleProxy_);
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) {
   return reanimatedModuleProxy_->isAnyHandlerWaitingForEvent(eventName, emitterReactTag);
 }
 
-void NativeProxy::performOperations(const bool isTriggeredByEvent) {
-  reanimatedModuleProxy_->performOperations(isTriggeredByEvent);
+void NativeProxy::performOperations() {
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    // We don't use performOperations in the backend path,
+    // but we don't have access to the feature flags in Kotlin, so we gate it here
+  } else {
+    reanimatedModuleProxy_->performOperations();
+  }
+}
+
+void NativeProxy::performNonLayoutOperations() {
+  reanimatedModuleProxy_->performNonLayoutOperations();
 }
 
 bool NativeProxy::getIsReducedMotion() {
   static const auto method = getJniMethod<jboolean()>("getIsReducedMotion");
   return method(javaPart_.get());
+}
+
+void NativeProxy::toggleSlowAnimationsOnUIRuntime() {
+  reanimatedModuleProxy_->toggleSlowAnimationsOnUIRuntime();
 }
 
 void NativeProxy::registerNatives() {
@@ -142,7 +153,9 @@ void NativeProxy::registerNatives() {
        makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
        makeNativeMethod("isAnyHandlerWaitingForEvent", NativeProxy::isAnyHandlerWaitingForEvent),
        makeNativeMethod("performOperations", NativeProxy::performOperations),
-       makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp)});
+       makeNativeMethod("performNonLayoutOperations", NativeProxy::performNonLayoutOperations),
+       makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp),
+       makeNativeMethod("toggleSlowAnimationsOnUIRuntime", NativeProxy::toggleSlowAnimationsOnUIRuntime)});
 }
 
 void NativeProxy::requestRender(std::function<void(double)> onRender) {
@@ -227,6 +240,20 @@ void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
   method(javaPart_.get(), listenerId);
 }
 
+void NativeProxy::attachPseudoSelector(Tag tag, PseudoSelector selector, std::function<void(bool)> callback) {
+  static const auto method = getJniMethod<void(int, int, PseudoSelectorCallback::javaobject)>("attachPseudoSelector");
+  method(
+      javaPart_.get(),
+      static_cast<int>(tag),
+      static_cast<int>(selector),
+      PseudoSelectorCallback::newObjectCxxArgs(std::move(callback)).get());
+}
+
+void NativeProxy::detachPseudoSelector(Tag tag, PseudoSelector selector) {
+  static const auto method = getJniMethod<void(int, int)>("detachPseudoSelector");
+  method(javaPart_.get(), static_cast<int>(tag), static_cast<int>(selector));
+}
+
 double NativeProxy::getAnimationTimestamp() {
   static const auto method = getJniMethod<jlong()>("getAnimationTimestamp");
   jlong output = method(javaPart_.get());
@@ -236,7 +263,8 @@ double NativeProxy::getAnimationTimestamp() {
 void NativeProxy::handleEvent(
     jni::alias_ref<JString> eventName,
     jint emitterReactTag,
-    jni::alias_ref<react::WritableMap> event) {
+    jni::alias_ref<react::WritableMap> event,
+    jboolean isInDrawPass) {
   // handles RCTEvents from RNGestureHandler
   if (event.get() == nullptr) {
     // Ignore events with null payload.
@@ -258,7 +286,7 @@ void NativeProxy::handleEvent(
     return;
   }
 
-  auto &uiRuntime = uiRuntime_->getJSIRuntime();
+  auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   jsi::Value payload;
   try {
     payload = jsi::Value::createFromJsonUtf8(uiRuntime, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
@@ -267,7 +295,15 @@ void NativeProxy::handleEvent(
     return;
   }
 
-  reanimatedModuleProxy_->handleEvent(eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    reanimatedModuleProxy_->handleEventAndFlush(
+        eventName->toString(),
+        emitterReactTag,
+        payload,
+        isInDrawPass ? GrandCallbackSource::EventInAndroidDraw : GrandCallbackSource::Event);
+  } else {
+    reanimatedModuleProxy_->handleEvent(eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
+  }
 }
 
 PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
@@ -291,6 +327,10 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto maybeFlushUiUpdatesQueueFunction = bindThis(&NativeProxy::maybeFlushUIUpdatesQueue);
 
+  auto attachPseudoSelectorFunction = bindThis(&NativeProxy::attachPseudoSelector);
+
+  auto detachPseudoSelectorFunction = bindThis(&NativeProxy::detachPseudoSelector);
+
   return {
       requestRender,
       preserveMountedTags,
@@ -302,6 +342,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUiUpdatesQueueFunction,
+      attachPseudoSelectorFunction,
+      detachPseudoSelectorFunction,
   };
 }
 

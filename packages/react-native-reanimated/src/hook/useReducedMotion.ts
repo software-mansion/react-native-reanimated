@@ -3,6 +3,7 @@ import { isReducedMotionEnabledInSystem } from '../ReducedMotion';
 
 const IS_REDUCED_MOTION_ENABLED_IN_SYSTEM = isReducedMotionEnabledInSystem();
 
+// is-tree-shakable-suppress
 /**
  * Lets you query the reduced motion system setting.
  *

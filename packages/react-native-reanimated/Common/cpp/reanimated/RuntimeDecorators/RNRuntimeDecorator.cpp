@@ -32,7 +32,7 @@ void RNRuntimeDecorator::decorate(
   rnRuntime.global().setProperty(rnRuntime, "_REANIMATED_IS_REDUCED_MOTION", reanimatedModuleProxy->isReducedMotion());
 
   rnRuntime.global().setProperty(
-      rnRuntime, "__reanimatedModuleProxy", jsi::Object::createFromHostObject(rnRuntime, reanimatedModuleProxy));
+      rnRuntime, "__reanimatedModuleProxy", reanimatedModuleProxy->toOptimizedObject(rnRuntime));
 }
 
 #ifdef IS_REANIMATED_EXAMPLE_APP

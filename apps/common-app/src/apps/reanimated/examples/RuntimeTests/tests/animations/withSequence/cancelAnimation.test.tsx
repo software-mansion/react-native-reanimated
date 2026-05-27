@@ -1,8 +1,21 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { cancelAnimation, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, {
+  cancelAnimation,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 
-import { describe, expect, getTestComponent, render, test, useTestRef, wait } from '../../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  getTestComponent,
+  render,
+  test,
+  useTestRef,
+  wait,
+} from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 
 describe(`Test cancelling animation `, () => {
@@ -20,7 +33,7 @@ describe(`Test cancelling animation `, () => {
       width.value = withSequence(
         withTiming(100, { duration: 130 }),
         withTiming(300, { duration: 130 }),
-        withTiming(50, { duration: 130 }),
+        withTiming(50, { duration: 130 })
       );
     });
     useEffect(() => {
@@ -43,21 +56,30 @@ describe(`Test cancelling animation `, () => {
     await render(<CancelComponent />);
     await wait(500);
     const component = getTestComponent(COMPONENT_REF);
-    expect(await component.getAnimatedStyle('width')).toBe(50, ComparisonMode.PIXEL);
+    expect(await component.getAnimatedStyle('width')).toBe(
+      50,
+      ComparisonMode.PIXEL
+    );
   });
 
   test('Cancelling animation with *****cancelAnimation***** finishes the whole sequence', async () => {
     await render(<CancelComponent shouldCancelAnimation />);
     await wait(500);
     const component = getTestComponent(COMPONENT_REF);
-    expect(await component.getAnimatedStyle('width')).not.toBe(50, ComparisonMode.PIXEL);
+    expect(await component.getAnimatedStyle('width')).not.toBe(
+      50,
+      ComparisonMode.PIXEL
+    );
   });
 
   test('Cancelling animation by *****starting new animation***** finishes the whole sequence', async () => {
     await render(<CancelComponent shouldStartNewAnimation />);
     await wait(500);
     const component = getTestComponent(COMPONENT_REF);
-    expect(await component.getAnimatedStyle('width')).not.toBe(50, ComparisonMode.PIXEL);
+    expect(await component.getAnimatedStyle('width')).not.toBe(
+      50,
+      ComparisonMode.PIXEL
+    );
   });
 });
 

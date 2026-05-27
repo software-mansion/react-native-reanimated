@@ -1,6 +1,5 @@
 #include <ReactCommon/CallInvoker.h>
 #include <folly/dynamic.h>
-#include <react/renderer/uimanager/UIManagerBinding.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 
@@ -64,7 +63,7 @@ void LayoutAnimationsProxyCommon::restoreOpacityInCaseOfFlakyEnteringAnimation(S
             for (const auto &[opacity, tag] : opacityToRestore) {
               const auto *targetShadowNode = findInShadowTreeByTag(rootShadowNode, tag);
               if (targetShadowNode != nullptr) {
-                propsMap[&targetShadowNode->getFamily()].emplace_back(folly::dynamic::object("opacity", opacity));
+                propsMap[targetShadowNode->getFamilyShared()].emplace_back(folly::dynamic::object("opacity", opacity));
               }
             }
             return cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);

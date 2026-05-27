@@ -21,12 +21,11 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function useAnimatedRef<T extends Component>(): AnimatedRef<T>;
-```
-
+  ```typescript
+  function useAnimatedRef<T extends Component>(): AnimatedRef<T>;
+  ```
 </details>
 
 ### Arguments
@@ -41,7 +40,7 @@ function useAnimatedRef<T extends Component>(): AnimatedRef<T>;
 
 import AnimatedRefSrc from '!!raw-loader!@site/src/examples/AnimatedRef';
 
-<CollapsibleCode showLines={[4, 23]} src={AnimatedRefSrc} />
+<CollapsibleCode showLines={[4, 23]} src={AnimatedRefSrc}/>
 
 ## Remarks
 
@@ -50,27 +49,25 @@ import AnimatedRefSrc from '!!raw-loader!@site/src/examples/AnimatedRef';
 - The value stored in the current property becomes available after the component is mounted.
 
 <Indent>
+  ```jsx
+  function App() {
+    const animatedRef = useAnimatedRef();
 
-```jsx
-function App() {
-  const animatedRef = useAnimatedRef();
+    console.log(animatedRef.current); // 🚩 Returns null
 
-  console.log(animatedRef.current); // 🚩 Returns null
+    useEffect(() => {
+      console.log(animatedRef.current); // ✅ Returns the component
+    }, []);
 
-  useEffect(() => {
-    console.log(animatedRef.current); // ✅ Returns the component
-  }, []);
+    return <View ref={animatedRef} />;
+  }
+  ```
 
-  return <View ref={animatedRef} />;
-}
-```
-
-Alternatively, you can get the value stored in the `current` in [event handlers](https://react.dev/learn/responding-to-events) or in a `onLayout` property.
-
+  Alternatively, you can get the value stored in the `current` in [event handlers](https://react.dev/learn/responding-to-events) or in a `onLayout` property.
 </Indent>
 
 - The value stored in the `current` property isn't available on the [UI thread](/docs/fundamentals/glossary#ui-thread).
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

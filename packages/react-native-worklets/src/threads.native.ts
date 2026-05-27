@@ -1,20 +1,26 @@
 'use strict';
 
-import { WorkletsError } from './debug/WorkletsError';
-import { addGuardImplementation } from './guardImplementation';
+import { getStaticFeatureFlag } from './featureFlags/featureFlags';
+import { addNoBundleModeGuardImplementation } from './guardImplementation';
 import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
 } from './memory/serializable';
+import type { RemoteFunction, SerializableRef } from './memory/types';
 import { RuntimeKind } from './runtimeKind';
 import type { WorkletFunction, WorkletImport } from './types';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsModule } from './WorkletsModule/NativeWorklets';
 
+const SHOULD_CAPTURE_SCHEDULE_STACK =
+  __DEV__ && getStaticFeatureFlag('ENABLE_CROSS_RUNTIME_STACK_TRACES');
+
 type UIJob<Args extends unknown[] = unknown[], ReturnValue = unknown> = [
   worklet: WorkletFunction<Args, ReturnValue>,
   args: Args,
-  resolve?: (value: ReturnValue) => void,
+  resolve: ((value: ReturnValue) => void) | undefined,
+  reject: ((reason: unknown) => void) | undefined,
+  scheduleStack: string | undefined,
 ];
 
 let runOnUIQueue: UIJob[] = [];
@@ -27,6 +33,7 @@ export function setupMicrotasks() {
   globalThis.queueMicrotask = (callback: () => void) => {
     microtasksQueue.push(callback);
   };
+  // TODO: Remove it after support for Reanimated 4.3 is dropped.
   globalThis._microtaskQueueFinalizers = [];
 
   globalThis.__callMicrotasks = () => {
@@ -82,7 +89,9 @@ export function scheduleOnUI<Args extends unknown[], ReturnValue>(
     !isWorkletFunction(worklet) &&
     !(worklet as unknown as WorkletImport).__bundleData
   ) {
-    throw new WorkletsError('`scheduleOnUI` can only be used with worklets.');
+    throw new Error(
+      '[Worklets] `scheduleOnUI` can only be used with worklets.'
+    );
   }
   if (__DEV__) {
     // in DEV mode we call serializable conversion here because in case the object
@@ -130,7 +139,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
     !isWorkletFunction(worklet) &&
     !(worklet as unknown as WorkletImport).__bundleData
   ) {
-    throw new WorkletsError('`runOnUI` can only be used with worklets.');
+    throw new Error('[Worklets] `runOnUI` can only be used with worklets.');
   }
   return (...args: Args) => {
     scheduleOnUI(worklet, ...args);
@@ -173,7 +182,8 @@ export function runOnUISync<Args extends unknown[], ReturnValue>(
       'worklet';
       const result = worklet(...args);
       return makeShareableCloneOnUIRecursive(result);
-    })
+    }),
+    SHOULD_CAPTURE_SCHEDULE_STACK ? (new Error().stack ?? '') : undefined
   );
 }
 
@@ -190,18 +200,6 @@ export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
     return runOnUISync(worklet, ...args);
   };
 }
-
-type ReleaseRemoteFunction<Args extends unknown[], ReturnValue> = {
-  (...args: Args): ReturnValue;
-};
-
-type DevRemoteFunction<Args extends unknown[], ReturnValue> = {
-  __remoteFunction: (...args: Args) => ReturnValue;
-};
-
-type RemoteFunction<Args extends unknown[], ReturnValue> =
-  | ReleaseRemoteFunction<Args, ReturnValue>
-  | DevRemoteFunction<Args, ReturnValue>;
 
 function runWorkletOnJS<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>,
@@ -236,12 +234,11 @@ function runWorkletOnJS<Args extends unknown[], ReturnValue>(
 export function scheduleOnRN<Args extends unknown[], ReturnValue>(
   fun:
     | ((...args: Args) => ReturnValue)
-    | RemoteFunction<Args, ReturnValue>
+    | RemoteFunction
     | WorkletFunction<Args, ReturnValue>,
   ...args: Args
 ): void {
   'worklet';
-  type FunDevRemote = Extract<typeof fun, DevRemoteFunction<Args, ReturnValue>>;
   if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
     // if we are already on the JS thread, we just schedule the worklet on the JS queue
     queueMicrotask(
@@ -249,31 +246,18 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
         ? () => (fun as (...args: Args) => ReturnValue)(...args)
         : (fun as () => ReturnValue)
     );
-    return;
-  }
-  if (isWorkletFunction<Args, ReturnValue>(fun)) {
+  } else if (isWorkletFunction<Args, ReturnValue>(fun)) {
     // If `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
     // and pass the worklet as a first argument followed by original arguments.
     scheduleOnRN(runWorkletOnJS<Args, ReturnValue>, fun, ...args);
-    return;
+  } else {
+    globalThis.__workletsModuleProxy.scheduleOnRN(
+      fun,
+      (args.length > 0
+        ? globalThis.__serializer(args)
+        : undefined) as SerializableRef<Args>
+    );
   }
-  if ((fun as FunDevRemote).__remoteFunction) {
-    // In development mode the function provided as `fun` throws an error message
-    // such that when someone accidentally calls it directly on the UI runtime, they
-    // see that they should use `runOnJS` instead. To facilitate that we put the
-    // reference to the original remote function in the `__remoteFunction` property.
-    fun = (fun as FunDevRemote).__remoteFunction;
-  }
-
-  const scheduleOnRNImpl =
-    typeof fun === 'function'
-      ? globalThis._scheduleHostFunctionOnJS
-      : globalThis._scheduleRemoteFunctionOnJS;
-
-  scheduleOnRNImpl(
-    fun as (...args: Args) => ReturnValue,
-    args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
-  );
 }
 
 /**
@@ -294,7 +278,7 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
 export function runOnJS<Args extends unknown[], ReturnValue>(
   fun:
     | ((...args: Args) => ReturnValue)
-    | RemoteFunction<Args, ReturnValue>
+    | RemoteFunction
     | WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => void {
   'worklet';
@@ -309,10 +293,10 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
  * functions on the [UI
  * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
  *
- * This method does not schedule the work immediately but instead waits for
- * other worklets to be scheduled within the same JS loop. It uses
- * queueMicrotask to schedule all the worklets at once making sure they will run
- * within the same frame boundaries on the UI thread.
+ * - This method does not schedule the work immediately but instead waits for
+ *   other worklets to be scheduled within the same JS loop. It uses
+ *   queueMicrotask to schedule all the worklets at once making sure they will
+ *   run within the same frame boundaries on the UI thread.
  *
  * @param fun - A reference to a function you want to execute on the [UI
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
@@ -326,10 +310,14 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue,
   ...args: Args
 ): Promise<ReturnValue> {
-  if (__DEV__ && !isWorkletFunction(worklet)) {
-    throw new WorkletsError('`runOnUIAsync` can only be used with worklets.');
+  if (__DEV__) {
+    if (!isWorkletFunction(worklet)) {
+      throw new Error(
+        '[Worklets] `runOnUIAsync` can only be used with worklets.'
+      );
+    }
   }
-  return new Promise<ReturnValue>((resolve) => {
+  return new Promise<ReturnValue>((resolve, reject) => {
     if (__DEV__) {
       // in DEV mode we call serializable conversion here because in case the object
       // can't be converted, we will get a meaningful stack-trace as opposed to the
@@ -340,16 +328,28 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
       createSerializable(args);
     }
 
-    enqueueUI(worklet as WorkletFunction<Args, ReturnValue>, args, resolve);
+    enqueueUI(
+      worklet as WorkletFunction<Args, ReturnValue>,
+      args,
+      resolve,
+      reject
+    );
   });
 }
 
 function enqueueUI<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>,
   args: Args,
-  resolve?: (value: ReturnValue) => void
+  resolve?: (value: ReturnValue) => void,
+  reject?: (reason: unknown) => void
 ): void {
-  const job = [worklet, args, resolve] as UIJob<Args, ReturnValue>;
+  const scheduleStack = SHOULD_CAPTURE_SCHEDULE_STACK
+    ? new Error().stack
+    : undefined;
+  const job = [worklet, args, resolve, reject, scheduleStack] as UIJob<
+    Args,
+    ReturnValue
+  >;
   runOnUIQueue.push(job as unknown as UIJob);
   if (runOnUIQueue.length === 1) {
     flushUIQueue();
@@ -360,17 +360,38 @@ function flushUIQueue(): void {
   queueMicrotask(() => {
     const queue = runOnUIQueue;
     runOnUIQueue = [];
-    WorkletsModule.scheduleOnUI(
-      createSerializable(() => {
-        'worklet';
-        queue.forEach(([workletFunction, workletArgs, jobResolve]) => {
-          const result = workletFunction(...workletArgs);
-          if (jobResolve) {
-            scheduleOnRN(jobResolve, result);
+    const jobWorklets = queue.map(
+      ([workletFunction, workletArgs, resolve, reject]) =>
+        createSerializable(() => {
+          'worklet';
+          try {
+            const result = workletFunction(...workletArgs);
+            if (resolve) {
+              const serializedResult = globalThis.__serializer(result);
+              globalThis.__workletsModuleProxy.handlePromise(
+                resolve,
+                serializedResult
+              );
+            }
+          } catch (error) {
+            if (reject) {
+              const serializedError = globalThis.__serializer(error);
+              globalThis.__workletsModuleProxy.handlePromise(
+                reject,
+                serializedError
+              );
+            } else {
+              throw error;
+            }
           }
-        });
-        globalThis.__callMicrotasks();
-      })
+        })
+    );
+    const scheduleStacks = SHOULD_CAPTURE_SCHEDULE_STACK
+      ? (queue.map(([, , , , scheduleStack]) => scheduleStack) as string[])
+      : undefined;
+    WorkletsModule.scheduleOnUI(
+      WorkletsModule.createSerializableArray(jobWorklets),
+      scheduleStacks
     );
   });
 }
@@ -380,7 +401,7 @@ if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
    * QoL guards to give a meaningful error message when the user tries to call
    * these functions on Worklet Runtimes outside of the Bundle Mode.
    */
-  addGuardImplementation(runOnUIAsync);
-  addGuardImplementation(runOnUISync);
-  addGuardImplementation(scheduleOnUI);
+  addNoBundleModeGuardImplementation(runOnUIAsync);
+  addNoBundleModeGuardImplementation(runOnUISync);
+  addNoBundleModeGuardImplementation(scheduleOnUI);
 }

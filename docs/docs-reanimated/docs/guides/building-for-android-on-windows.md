@@ -49,6 +49,8 @@ Make sure to use latest supported version of Reanimated, depending on the setup 
 
 | Expo SDK version | `react-native-reanimated` version | `react-native-worklets` version |
 | :--------------: | :-------------------------------: | :-----------------------------: |
+|       `56`       |             `4.3.1`               |             `0.8.3`             |
+|       `55`       |             `4.2.1`               |             `0.7.4`             |
 |       `54`       |             `~4.1.1`              |             `0.5.1`             |
 |       `53`       |             `~3.17.4`             |          don't install          |
 |       `52`       |             `~3.16.1`             |          don't install          |
@@ -68,7 +70,7 @@ For instance, Reanimated 4.0.x works only with React Native 0.78, 0.79, 0.80 or 
 [CMake](https://cmake.org/) is a build system used to compile the C++ part of Reanimated on your machine. Make sure to use CMake `3.22.1` or newer. CMake version can be customized with `CMAKE_VERSION` environmental variable, e.g. using `set CMAKE_VERSION=3.31.1`. If not set, CMake `3.22.1` is used.
 
 :::tip
-CMake will be installed automatically during app build. You can install a specific version of CMake directly from Android Studio (Tools &rarr; SDK Manager &rarr; SDK Tools &rarr; CMake).
+CMake will be installed automatically during app build. You can install a specific version of CMake directly from Android Studio (Tools → SDK Manager → SDK Tools → CMake).
 :::
 
 ### ✅ Use appropriate version of Ninja
@@ -84,7 +86,7 @@ See [this comment on GitHub](https://github.com/ninja-build/ninja/issues/1900#is
 Android NDK (Native Development Kit) is a set of tools used for building the native part of the app. You should use the same version of NDK as used in the official app template.
 
 :::tip
-Android NDK should be installed automatically during app build. You can install a specific version of Android NDK directly from Android Studio (Tools &rarr; SDK Manager &rarr; SDK Tools &rarr; "NDK (Side by side)").
+Android NDK should be installed automatically during app build. You can install a specific version of Android NDK directly from Android Studio (Tools → SDK Manager → SDK Tools → "NDK (Side by side)").
 :::
 
 ### ✅ Make sure `_JAVA_OPTIONS` environmental variable is not set
@@ -122,7 +124,7 @@ During app build, multiple compilation artifacts are saved in various paths, for
 
 Make sure to remove these directories and their contents before trying to build the app again.
 
-It is also recommended to invalidate Android Studio caches (File &rarr; Invalidate Caches&hellip; &rarr; Select all checkboxes &rarr; Invalidate and Restart).
+It is also recommended to invalidate Android Studio caches (File → Invalidate Caches… → Select all checkboxes → Invalidate and Restart).
 
 :::tip
 You can remove all untracked files in your repository using `git clean -fdX` command. Note that this command will remove all untracked files including hidden files like `.env` so please be extra careful and proceed with caution when doing so. You will also need to reinstall `node_modules` afterwards using your chosen package manager and rebuild the app.

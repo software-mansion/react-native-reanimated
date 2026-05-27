@@ -13,7 +13,7 @@
 
 namespace reanimated {
 
-enum BeforeOrAfter : std::uint8_t { BEFORE = 0, AFTER = 1 };
+enum BeforeOrAfter : std::uint8_t { BEFORE = 0, AFTER = 1 }; // NOLINT
 
 struct Rect {
   double width, height;
@@ -66,7 +66,7 @@ typedef enum class ExitingState : std::uint8_t {
 
 struct MutationNode;
 
-enum TransitionState : std::uint8_t {
+enum class TransitionState : std::uint8_t {
   NONE = 0,
   START = 1,
   ACTIVE = 2,
@@ -74,7 +74,7 @@ enum TransitionState : std::uint8_t {
   CANCELLED = 4,
 };
 
-enum Intent : std::uint8_t {
+enum class Intent : std::uint8_t {
   NO_INTENT = 0,
   TO_MOVE = 1,
   TO_DELETE = 2,

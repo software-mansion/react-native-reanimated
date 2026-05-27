@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../../errors';
 import { ValueProcessorTarget } from '../../../types';
 import { ERROR_MESSAGES, processColor, processColorsInProps } from '../colors';
 
@@ -87,7 +86,7 @@ describe(processColor, () => {
       'hwb(360, 100%, 50%, 0.5)',
     ])('throws an error for %p', (value) => {
       expect(() => processColor(value)).toThrow(
-        new ReanimatedError(ERROR_MESSAGES.invalidColor(value))
+        new Error(`[Reanimated] ${ERROR_MESSAGES.invalidColor(value)}`)
       );
     });
   });

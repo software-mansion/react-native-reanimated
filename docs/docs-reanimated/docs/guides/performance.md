@@ -20,7 +20,7 @@ Please note that downgrading your Expo SDK version or using an older release of 
 
 **Problem:** When scrolling a `FlatList` or `ScrollView`, you might notice flickering or jittering of animated components (e.g. sticky header) implemented using `useAnimatedScrollHandler` hook.
 
-**Solution:** You need to upgrade to React Native 0.81 (or newer), set experimental release level in order to enable `preventShadowTreeCommitExhaustion` feature flag and enable [`DISABLE_COMMIT_PAUSING_MECHANISM`](/docs/guides/feature-flags#disable_commit_pausing_mechanism) static feature flag as described [here](/docs/guides/feature-flags#disable_commit_pausing_mechanism).
+**Solution:** You need to upgrade to React Native 0.81 (or newer), enable `preventShadowTreeCommitExhaustion` React Native feature flag and enable [`DISABLE_COMMIT_PAUSING_MECHANISM`](/docs/guides/feature-flags#disable_commit_pausing_mechanism) static feature flag. For more details, click [here](/docs/guides/feature-flags#disable_commit_pausing_mechanism).
 
 ### ⚠️ Lower FPS while scrolling
 
@@ -127,6 +127,6 @@ const pan = useMemo(
 
 When implementing an animated number counter, don't use React state to periodically update the counter. Instead, store the number in a shared value and use an animated `TextInput` component to display the current value. For more details, see [this example](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/src/apps/reanimated/examples/CounterExample.tsx).
 
-```
+We are also working on adding support for animating text inside `Animated.Text` component using a shared value – see [PR #8595](https://github.com/software-mansion/react-native-reanimated/pull/8595).
 
-```
+You can also consider implementing your own native component with rolling ticket using `contentTransition(.numericText())` modifier in SwiftUI (requires iOS 16+).

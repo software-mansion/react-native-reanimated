@@ -155,3 +155,30 @@ button[class*='DocSearch-Button'] {
 [class*='headerWithBadges'] {
   align-items: baseline;
 }
+
+.theme-doc-sidebar-container [class*='_badge_'] {
+  font-size: 11px;
+  padding: 1px 5px;
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+.theme-doc-sidebar-container .menu__link {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+/* Tabs nested inside details: bump label contrast against the purple details background. */
+details .tabs__item {
+  color: var(--swm-details-color) !important;
+  opacity: 0.7;
+}
+
+details .tabs__item:hover {
+  opacity: 1;
+}
+
+details .tabs__item--active {
+  opacity: 1;
+  border-bottom-color: var(--swm-details-color) !important;
+}

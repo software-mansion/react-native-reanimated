@@ -74,7 +74,6 @@ function createLayoutAnimationManager(): {
         value._value = style.initialValues;
       }
 
-      // @ts-ignore The line below started failing because I added types to the method – don't have time to fix it right now
       const animation = withStyleAnimation(currentAnimation);
 
       animation.callback = (finished?: boolean) => {
@@ -102,6 +101,7 @@ function createLayoutAnimationManager(): {
   };
 }
 
+// is-tree-shakable-suppress
 if (!SHOULD_BE_USE_WEB) {
   runOnUISync(() => {
     'worklet';

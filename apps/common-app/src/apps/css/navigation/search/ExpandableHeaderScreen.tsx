@@ -36,7 +36,7 @@ export enum ExpandMode {
 
 type ExpandableHeaderScreenProps = {
   HeaderComponent: // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  React.ComponentType<any> | React.ReactElement | null | undefined;
+    React.ComponentType<any> | React.ReactElement | null | undefined;
   expandMode?: ExpandMode;
   headerContainerStyle?: StyleProp<ViewStyle>;
   children?:

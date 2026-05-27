@@ -5,7 +5,7 @@ import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction, makeShareable } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
-import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
+import { IS_JEST, SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedPropsAdapterWorklet,
@@ -30,12 +30,7 @@ import type {
   JestAnimatedStyleHandle,
 } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
-import {
-  buildWorkletsHash,
-  isAnimated,
-  shallowEqual,
-  validateAnimatedStyles,
-} from './utils';
+import { isAnimated, shallowEqual, validateAnimatedStyles } from './utils';
 
 interface AnimatedState {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -444,10 +439,24 @@ function checkSharedValueUsage(
     prop.value !== undefined
   ) {
     // if shared value is passed instead of its value, throw an error
-    throw new ReanimatedError(
-      `Invalid value passed to \`${currentKey}\`, maybe you forgot to use \`.value\`?`
+    throw new Error(
+      `[Reanimated] Invalid value passed to \`${currentKey}\`, maybe you forgot to use \`.value\`?`
     );
   }
+}
+
+// Builds one big hash from multiple worklets' hashes.
+function buildWorkletsHash<Args extends unknown[], ReturnValue>(
+  worklets:
+    | Record<string, WorkletFunction<Args, ReturnValue>>
+    | WorkletFunction<Args, ReturnValue>[]
+) {
+  // For arrays `Object.values` returns the array itself.
+  return Object.values(worklets).reduce(
+    (acc, worklet: WorkletFunction<Args, ReturnValue>) =>
+      acc + worklet.__workletHash.toString(),
+    ''
+  );
 }
 
 /**
@@ -491,8 +500,8 @@ export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
       !dependencies &&
       !isWorkletFunction(updater)
     ) {
-      throw new ReanimatedError(
-        `\`useAnimatedStyle\` was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel plugin.
+      throw new Error(
+        `[Reanimated] \`useAnimatedStyle\` was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel plugin.
 For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin\`.`
       );
     }

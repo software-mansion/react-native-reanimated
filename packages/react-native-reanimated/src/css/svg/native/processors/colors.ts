@@ -1,11 +1,7 @@
 'use strict';
 import type { ColorValue } from 'react-native';
 
-import {
-  processColorNumber,
-  ReanimatedError,
-  type ValueProcessor,
-} from '../../../../common';
+import { processColorNumber, type ValueProcessor } from '../../../../common';
 
 export const ERROR_MESSAGES = {
   invalidColor: (color: unknown) =>
@@ -22,16 +18,18 @@ export const processColorSVG: ValueProcessor<
     return 0;
   }
 
-  if (processed) {
+  if (processed !== null) {
+    // Same convention as the main `processColor`: the `transparent` keyword
+    // becomes the `false` sentinel; explicit zero-alpha colours pass through.
+    if (processed === 0 && value === 'transparent') {
+      return false;
+    }
     return processed;
   }
 
-  if (value === 'transparent') {
-    return false;
-  }
   if (value === 'currentColor') {
     return 'currentColor';
   }
 
-  throw new ReanimatedError(ERROR_MESSAGES.invalidColor(value));
+  throw new Error(`[Reanimated] ${ERROR_MESSAGES.invalidColor(value)}`);
 };

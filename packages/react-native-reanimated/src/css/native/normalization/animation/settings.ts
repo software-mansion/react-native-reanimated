@@ -1,5 +1,5 @@
 'use strict';
-import { isNumber, ReanimatedError } from '../../../../common';
+import { isNumber } from '../../../../common';
 import type {
   CSSAnimationDirection,
   CSSAnimationFillMode,
@@ -37,8 +37,8 @@ export function normalizeDirection(
   direction: CSSAnimationDirection = 'normal'
 ): CSSAnimationDirection {
   if (!VALID_ANIMATION_DIRECTIONS.has(direction)) {
-    throw new ReanimatedError(
-      ERROR_MESSAGES.invalidAnimationDirection(direction)
+    throw new Error(
+      `[Reanimated] ${ERROR_MESSAGES.invalidAnimationDirection(direction)}`
     );
   }
   return direction;
@@ -50,12 +50,12 @@ export function normalizeIterationCount(
   if (iterationCount === 'infinite' || iterationCount === Infinity) {
     return -1;
   } else if (!isNumber(iterationCount)) {
-    throw new ReanimatedError(
-      ERROR_MESSAGES.invalidIterationCount(iterationCount)
+    throw new Error(
+      `[Reanimated] ${ERROR_MESSAGES.invalidIterationCount(iterationCount)}`
     );
   } else if (iterationCount < 0) {
-    throw new ReanimatedError(
-      ERROR_MESSAGES.negativeIterationCount(iterationCount)
+    throw new Error(
+      `[Reanimated] ${ERROR_MESSAGES.negativeIterationCount(iterationCount)}`
     );
   }
   return iterationCount;
@@ -65,7 +65,7 @@ export function normalizeFillMode(
   fillMode: CSSAnimationFillMode = 'none'
 ): CSSAnimationFillMode {
   if (!VALID_FILL_MODES.has(fillMode)) {
-    throw new ReanimatedError(ERROR_MESSAGES.invalidFillMode(fillMode));
+    throw new Error(`[Reanimated] ${ERROR_MESSAGES.invalidFillMode(fillMode)}`);
   }
   return fillMode;
 }
@@ -74,7 +74,9 @@ export function normalizePlayState(
   playState: CSSAnimationPlayState = 'running'
 ): CSSAnimationPlayState {
   if (!VALID_PLAY_STATES.has(playState)) {
-    throw new ReanimatedError(ERROR_MESSAGES.invalidPlayState(playState));
+    throw new Error(
+      `[Reanimated] ${ERROR_MESSAGES.invalidPlayState(playState)}`
+    );
   }
   return playState;
 }

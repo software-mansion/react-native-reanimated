@@ -9,10 +9,7 @@ sidebar_position: 7
 import AnimationFillModeBasic from '@site/src/examples/css-animations/AnimationFillModeBasic';
 import AnimationFillModeBasicSrc from '!!raw-loader!@site/src/examples/css-animations/AnimationFillModeBasic';
 
-<InteractiveExample
-  src={AnimationFillModeBasicSrc}
-  component={AnimationFillModeBasic}
-/>
+<InteractiveExample src={AnimationFillModeBasicSrc} component={AnimationFillModeBasic}/>
 
 ## Reference
 
@@ -36,14 +33,13 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type CSSAnimationFillMode = 'none' | 'forwards' | 'backwards' | 'both';
+  ```typescript
+  type CSSAnimationFillMode = 'none' | 'forwards' | 'backwards' | 'both';
 
-animationFillMode: CSSAnimationFillMode | CSSAnimationFillMode[];
-```
-
+  animationFillMode: CSSAnimationFillMode | CSSAnimationFillMode[];
+  ```
 </details>
 
 ### Values
@@ -83,13 +79,11 @@ In the following example, `bounceIn` animation would persist the last keyframe o
 - The `forwards` and `both` fill mode options may not work correctly when combined with fractional `animationIterationCount`, particularly when relative units are used, and those relative values change after the animation ends.
 
 <Indent>
+  For instance, if a child view's size depends on its parent's size and the parent resizes after the animation ends, the child view may not reflect this change. This issue occurs when keyframes use a mix of relative (e.g., percentage-based) and absolute (numeric) units. Once the animation completes, the view retains the size from the last calculated keyframe and does not update according to the new parent size.
 
-For instance, if a child view's size depends on its parent's size and the parent resizes after the animation ends, the child view may not reflect this change. This issue occurs when keyframes use a mix of relative (e.g., percentage-based) and absolute (numeric) units. Once the animation completes, the view retains the size from the last calculated keyframe and does not update according to the new parent size.
-
-In such cases, the view remains static instead of adapting to the updated size as expected.
-
+  In such cases, the view remains static instead of adapting to the updated size as expected.
 </Indent>
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

@@ -1,6 +1,5 @@
 'use strict';
 
-import { WorkletsError } from './debug/WorkletsError';
 import { IS_JEST } from './platformChecker';
 import { mockedRequestAnimationFrame } from './runLoop/uiRuntime/mockedRequestAnimationFrame';
 
@@ -25,7 +24,7 @@ export function runOnUISync<Args extends unknown[], ReturnValue>(
 ): ReturnValue;
 
 export function runOnUISync(): never {
-  throw new WorkletsError('`runOnUISync` is not supported on web.');
+  throw new Error('[Worklets] `runOnUISync` is not supported on web.');
 }
 
 export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
@@ -33,7 +32,9 @@ export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
 ): (...args: Args) => ReturnValue;
 
 export function executeOnUIRuntimeSync(): never {
-  throw new WorkletsError('`executeOnUIRuntimeSync` is not supported on web.');
+  throw new Error(
+    '[Worklets] `executeOnUIRuntimeSync` is not supported on web.'
+  );
 }
 
 export function runOnJS<Args extends unknown[], ReturnValue>(

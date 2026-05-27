@@ -1,6 +1,5 @@
 'use strict';
 
-import { ReanimatedError } from '../../../../../common';
 import { ERROR_MESSAGES, processColorSVG } from '../colors';
 
 const COLOR_CASES: Array<[string, string | number, number]> = [
@@ -19,8 +18,22 @@ describe(processColorSVG, () => {
     }
   );
 
-  test('returns false for transparent string', () => {
+  test('returns false for the literal `transparent` keyword', () => {
     expect(processColorSVG('transparent')).toBe(false);
+  });
+
+  test.each([
+    ['rgba comma', 'rgba(0, 0, 0, 0)'],
+    ['rgba slash', 'rgba(0 0 0 / 0)'],
+    ['hsla comma', 'hsla(0, 0%, 0%, 0)'],
+    ['hsla slash', 'hsla(0 0% 0% / 0)'],
+    ['hex 8 with 00', '#00000000'],
+  ])('returns 0 for explicit zero-alpha input (%s)', (_label, input) => {
+    expect(processColorSVG(input)).toBe(0);
+  });
+
+  test('returns the literal ARGB integer for non-black transparent colours', () => {
+    expect(processColorSVG('rgba(0, 0, 255, 0)')).toBe(0x000000ff);
   });
 
   test('passes through currentColor keyword', () => {
@@ -30,7 +43,7 @@ describe(processColorSVG, () => {
   test('throws for unsupported values with proper message', () => {
     const invalidValue = 'url(#gradient)';
     expect(() => processColorSVG(invalidValue)).toThrow(
-      new ReanimatedError(ERROR_MESSAGES.invalidColor(invalidValue))
+      new Error(`[Reanimated] ${ERROR_MESSAGES.invalidColor(invalidValue)}`)
     );
   });
 });

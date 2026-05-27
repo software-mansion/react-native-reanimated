@@ -2,7 +2,6 @@
 
 export function setupRequestAnimationFrame() {
   'worklet';
-  const nativeRequestAnimationFrame = globalThis.requestAnimationFrame;
   const callMicrotasks = globalThis.__callMicrotasks;
 
   let queuedCallbacks: ((timestamp: number) => void)[] = [];
@@ -12,6 +11,8 @@ export function setupRequestAnimationFrame() {
   let flushedCallbacks = queuedCallbacks;
   let flushedCallbacksBegin = 0;
   let flushedCallbacksEnd = 0;
+
+  let queuedFinalizers: (() => void)[] = [];
 
   function executeQueue(timestamp: number) {
     flushedCallbacks = queuedCallbacks;
@@ -28,6 +29,12 @@ export function setupRequestAnimationFrame() {
     flushedCallbacksBegin = flushedCallbacksEnd;
 
     callMicrotasks();
+
+    const finalizers = queuedFinalizers;
+    queuedFinalizers = [];
+    for (const finalizer of finalizers) {
+      finalizer();
+    }
   }
 
   function requestAnimationFrame(
@@ -50,24 +57,31 @@ export function setupRequestAnimationFrame() {
     }
   }
 
+  function nativeFlushQueue(timestamp: number) {
+    flushQueue(timestamp);
+
+    /* Schedule next frame */
+    globalThis.__nativeRequestAnimationFrame(nativeFlushQueue);
+  }
+
   function flushQueue(timestamp: number) {
     globalThis.__frameTimestamp = timestamp;
     executeQueue(timestamp);
     globalThis.__frameTimestamp = undefined;
-
-    /* Schedule next frame */
-    nativeRequestAnimationFrame(flushQueue);
   }
 
   globalThis.requestAnimationFrame = requestAnimationFrame;
   globalThis.cancelAnimationFrame =
     cancelAnimationFrame as typeof globalThis.cancelAnimationFrame;
-  globalThis.__flushAnimationFrame = (eventTimestamp: number) => {
-    // TODO: Remove this in the future.
-    // Reanimated uses this method to trigger event synchronously.
-    flushQueue(eventTimestamp);
+  globalThis.requestAnimationFrameFinalizer = (callback: () => void) => {
+    queuedFinalizers.push(callback);
   };
 
   /* Start the loop */
-  nativeRequestAnimationFrame(flushQueue);
+  globalThis.__nativeRequestAnimationFrame(nativeFlushQueue);
+
+  // TODO: Remove it after support for Reanimated 4.3 is dropped.
+  globalThis.__flushAnimationFrame = (eventTimestamp: number) => {
+    flushQueue(eventTimestamp);
+  };
 }

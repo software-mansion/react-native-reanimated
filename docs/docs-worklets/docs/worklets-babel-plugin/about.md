@@ -78,7 +78,7 @@ const obj = {
 
 ### Reanimated terms
 
-#### [Experimental] Worklet Context Objects
+#### \[Experimental] Worklet Context Objects
 
 _Object methods_ called on UI thread lose their `this` binding.
 
@@ -105,11 +105,11 @@ const obj = {
 
 obj.foo = 2;
 obj.bar(); // Logs 2
-runOnUI(() => obj.bar())(); // Logs 1
+scheduleOnUI(() => obj.bar()); // Logs 1
 
-runOnUI(() => (obj.foo = 3))();
+scheduleOnUI(() => (obj.foo = 3));
 obj.bar(); // Logs 2
-runOnUI(() => obj.bar())(); // Logs 3
+scheduleOnUI(() => obj.bar()); // Logs 3
 ```
 
 `__workletContextObject` is a special property that marks an object as a Worklet Context Object. It's value doesn't matter, but it's a good practice to use `true` as a value. `'worklet'` directive in methods will be ignored if the object has this property.
@@ -124,7 +124,7 @@ const workletContextObject = {
 };
 ```
 
-#### [Experimental] Worklet Classes
+#### \[Experimental] Worklet Classes
 
 [Hermes](https://github.com/facebook/hermes), the JavaScript engine used by React Native, doesn't support classes. Class syntax requires [polyfilling](https://en.wikipedia.org/wiki/Polyfill_%28programming%29) before it can be used, which is problematic for the UI thread. To work around this, we coined the term of **Worklet Classes**. Worklet classes can be instantiated on the UI thread.
 
@@ -139,7 +139,7 @@ class Clazz {
   }
 }
 
-runOnUI(() => new Clazz().foo())(); // Logs 'Hello from WorkletClass'
+scheduleOnUI(() => new Clazz().foo()); // Logs 'Hello from WorkletClass'
 ```
 
 **Pitfalls:**
@@ -200,7 +200,7 @@ const handlerObject = {
 const handler = useAnimatedScrollHandler(handlerObject);
 ```
 
-### [Experimental] Workletizing whole files
+### \[Experimental] Workletizing whole files
 
 You can mark a file as a workletizable file by adding the `'worklet'` directive to the top of the file.
 

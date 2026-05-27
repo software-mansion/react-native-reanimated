@@ -1,6 +1,5 @@
 'use strict';
 
-import { ReanimatedError } from '../../errors';
 import type { ValueProcessor } from '../../types';
 import { ValueProcessorTarget } from '../../types';
 import createPropsBuilder from '../createPropsBuilder';
@@ -172,8 +171,8 @@ describe(createPropsBuilder, () => {
         width: 'loop',
       })
     ).toThrow(
-      new ReanimatedError(
-        'Max process depth for props builder reached for property width'
+      new Error(
+        '[Reanimated] Max process depth for props builder reached for property width'
       )
     );
   });

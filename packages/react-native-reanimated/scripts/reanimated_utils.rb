@@ -10,8 +10,6 @@ def find_config()
   result = {
     :is_reanimated_example_app => nil,
     :react_native_version => nil,
-    :react_native_minor_version => nil,
-    :is_tvos_target => nil,
     :react_native_node_modules_dir => nil,
     :react_native_common_dir => nil,
   }
@@ -36,12 +34,7 @@ def find_config()
 
 
   result[:is_reanimated_example_app] = ENV["IS_REANIMATED_EXAMPLE_APP"] != nil
-  result[:is_tvos_target] = react_native_json['name'] == 'react-native-tvos'
   result[:react_native_version] = react_native_json['version']
-  result[:react_native_minor_version] = react_native_json['version'].split('.')[1].to_i
-  if result[:react_native_minor_version] == 0 # nightly
-    result[:react_native_minor_version] = 1000
-  end
   result[:react_native_node_modules_dir] = File.expand_path(react_native_node_modules_dir)
 
   pods_root = Pod::Config.instance.project_pods_root
@@ -59,9 +52,12 @@ def assert_minimal_react_native_version(config)
   end
 end
 
-def assert_new_architecture_enabled(new_arch_enabled)
-  if !new_arch_enabled
-    raise "[Reanimated] Reanimated requires the New Architecture to be enabled. If you have `RCT_NEW_ARCH_ENABLED=0` set in your environment you should remove it."
+def assert_conflicting_feature_flags(feature_flags)
+  ios_sync_ui_props = feature_flags['IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS'] == 'true'
+  shared_element_transitions = feature_flags['ENABLE_SHARED_ELEMENT_TRANSITIONS'] == 'true'
+
+  if ios_sync_ui_props && shared_element_transitions
+    raise "[Reanimated] The feature flags `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. Please disable one of them in your package.json"
   end
 end
 
@@ -87,6 +83,8 @@ def get_static_feature_flags()
       end
     end
   end
+
+  assert_conflicting_feature_flags(feature_flags)
 
   return feature_flags.map { |key, value| "[#{key}:#{value}]" }.join('')
 end

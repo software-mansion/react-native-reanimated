@@ -21,7 +21,7 @@ jobs:
       WORKLETS_DOCS_DIR: docs/docs-worklets
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - name: Install monorepo node dependencies
         run: yarn install
 
@@ -41,7 +41,7 @@ jobs:
         run: yarn prepublish
 
       - name: Publish generated content to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@releases/v3
+        uses: JamesIves/github-pages-deploy-action@132898c54c57c7cc6b80eb3a89968de8fc283505
         with:
           FOLDER: ${{ env.REANIMATED_DOCS_DIR }}/build
           BRANCH: gh-pages
