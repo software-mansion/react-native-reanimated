@@ -1,10 +1,10 @@
 'use strict';
 import type { UnknownRecord } from '../types';
 import {
-  createNativePropsBuilder,
-  type NativePropsBuilder,
+  createPropsBuilder,
+  type PropsBuilder,
   type PropsBuilderConfig,
-  stylePropsBuilder,
+  defaultPropsBuilder,
 } from './propsBuilder';
 
 const DEFAULT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES = new Set<string>([
@@ -15,7 +15,7 @@ const DEFAULT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES = new Set<string>([
 ]);
 
 type PropsBuilderEntry = {
-  builder: NativePropsBuilder;
+  builder: PropsBuilder;
   separatelyInterpolatedNestedProperties?: ReadonlySet<string>;
 };
 
@@ -58,8 +58,8 @@ export function getCompoundComponentName(
 
 export function getPropsBuilder(
   compoundComponentName: string
-): NativePropsBuilder {
-  return findEntry(compoundComponentName)?.builder ?? stylePropsBuilder;
+): PropsBuilder {
+  return findEntry(compoundComponentName)?.builder ?? defaultPropsBuilder;
 }
 
 export function registerComponentPropsBuilder<P extends UnknownRecord>(
@@ -70,7 +70,7 @@ export function registerComponentPropsBuilder<P extends UnknownRecord>(
   } = {}
 ) {
   const entry: PropsBuilderEntry = {
-    builder: createNativePropsBuilder(config),
+    builder: createPropsBuilder(config),
     separatelyInterpolatedNestedProperties: options
       .separatelyInterpolatedNestedProperties?.length
       ? new Set(options.separatelyInterpolatedNestedProperties)

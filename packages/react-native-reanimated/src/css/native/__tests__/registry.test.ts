@@ -5,7 +5,7 @@ import {
   getSeparatelyInterpolatedNestedProperties,
   registerComponentPropsBuilder,
   STYLE_PROPERTIES_CONFIG,
-  stylePropsBuilder,
+  defaultPropsBuilder,
 } from '../../../common';
 
 describe('registry', () => {
@@ -17,14 +17,14 @@ describe('registry', () => {
           'UnregisteredComponentJS'
         )
       );
-      expect(propsBuilder).toBe(stylePropsBuilder);
+      expect(propsBuilder).toBe(defaultPropsBuilder);
     });
 
     test('returns default style props builder for RCT prefixed components', () => {
       const propsBuilder = getPropsBuilder(
         getCompoundComponentName('RCTView', 'View')
       );
-      expect(propsBuilder).toBe(stylePropsBuilder);
+      expect(propsBuilder).toBe(defaultPropsBuilder);
     });
 
     test('returns registered props builder for custom component', () => {
@@ -38,7 +38,7 @@ describe('registry', () => {
       );
 
       expect(typeof propsBuilder.build).toBe('function');
-      expect(propsBuilder).not.toBe(stylePropsBuilder);
+      expect(propsBuilder).not.toBe(defaultPropsBuilder);
     });
 
     test('returns registered props builder for custom compound component', () => {
@@ -58,7 +58,7 @@ describe('registry', () => {
       );
 
       expect(typeof propsBuilder.build).toBe('function');
-      expect(propsBuilder).not.toBe(stylePropsBuilder);
+      expect(propsBuilder).not.toBe(defaultPropsBuilder);
     });
 
     test('falls back to reactViewName key when looking up with different componentDisplayName', () => {
@@ -73,7 +73,7 @@ describe('registry', () => {
       );
 
       expect(typeof propsBuilder.build).toBe('function');
-      expect(propsBuilder).not.toBe(stylePropsBuilder);
+      expect(propsBuilder).not.toBe(defaultPropsBuilder);
     });
 
     test('returns registered props builder using standard config', () => {
@@ -86,7 +86,7 @@ describe('registry', () => {
       );
 
       expect(typeof propsBuilder.build).toBe('function');
-      expect(propsBuilder).not.toBe(stylePropsBuilder);
+      expect(propsBuilder).not.toBe(defaultPropsBuilder);
     });
 
     test('returns specific props builder registered for compound component name when getPropsBuilder is called with the appropriate reactViewName and componentDisplayName', () => {
@@ -131,7 +131,7 @@ describe('registry', () => {
       );
 
       expect(secondBuilder).not.toBe(firstBuilder);
-      expect(secondBuilder).not.toBe(stylePropsBuilder);
+      expect(secondBuilder).not.toBe(defaultPropsBuilder);
     });
 
     test('returns default style props builder for unregistered compound component', () => {
@@ -141,7 +141,7 @@ describe('registry', () => {
           'UnregisteredComponentChild'
         )
       );
-      expect(propsBuilder).toBe(stylePropsBuilder);
+      expect(propsBuilder).toBe(defaultPropsBuilder);
     });
   });
 

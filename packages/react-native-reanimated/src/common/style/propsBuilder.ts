@@ -25,7 +25,7 @@ export type PropsBuilderConfig<P extends UnknownRecord = UnknownRecord> = {
   [K in keyof Required<P>]: PropsBuilderPropertyConfig<P, K>;
 };
 
-export function createNativePropsBuilder<TProps extends UnknownRecord>(
+export function createPropsBuilder<TProps extends UnknownRecord>(
   config: PropsBuilderConfig<TProps>
 ) {
   return createBasePropsBuilder({
@@ -48,8 +48,8 @@ export function createNativePropsBuilder<TProps extends UnknownRecord>(
   });
 }
 
-export type NativePropsBuilder = ReturnType<typeof createNativePropsBuilder>;
+export type PropsBuilder = ReturnType<typeof createPropsBuilder>;
 
-export const stylePropsBuilder = createNativePropsBuilder<PlainStyle>(
+export const defaultPropsBuilder = createPropsBuilder<PlainStyle>(
   STYLE_PROPERTIES_CONFIG
 );

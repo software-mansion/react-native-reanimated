@@ -1,7 +1,7 @@
 'use strict';
 import type {
   AnyRecord,
-  NativePropsBuilder,
+  PropsBuilder,
   UnknownRecord,
 } from '../../../../common';
 import {
@@ -79,7 +79,7 @@ type ProcessedKeyframes = Array<{
 
 export function processKeyframes(
   keyframes: CSSAnimationKeyframes,
-  propsBuilder: NativePropsBuilder
+  propsBuilder: PropsBuilder
 ): ProcessedKeyframes {
   return Object.entries(keyframes)
     .flatMap(

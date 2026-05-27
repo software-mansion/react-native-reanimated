@@ -9,7 +9,7 @@ import {
   processTransform,
   processTransformOrigin,
   SHOULD_BE_USE_WEB,
-  stylePropsBuilder,
+  defaultPropsBuilder,
 } from '../common';
 import { processBoxShadowWeb, processFilterWeb } from '../common/web';
 import type {
@@ -73,7 +73,7 @@ if (SHOULD_BE_USE_WEB) {
       // Use props builder only for style updaters, since animated props
       // can contain any properties of different types, depending on the
       // component, which we cannot process properly with the props builder.
-      isAnimatedProps ? updates : stylePropsBuilder.build(updates)
+      isAnimatedProps ? updates : defaultPropsBuilder.build(updates)
     );
   };
 }

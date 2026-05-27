@@ -1,9 +1,9 @@
 'use strict';
 
 import { ValueProcessorTarget } from '../../types';
-import { createNativePropsBuilder } from '../propsBuilder';
+import { createPropsBuilder } from '../propsBuilder';
 
-describe('createNativePropsBuilder', () => {
+describe('createPropsBuilder', () => {
   describe('build without context', () => {
     test('creates builder with boolean config values', () => {
       type TestProps = {
@@ -12,7 +12,7 @@ describe('createNativePropsBuilder', () => {
         prop3: string;
       };
 
-      const builder = createNativePropsBuilder<TestProps>({
+      const builder = createPropsBuilder<TestProps>({
         prop1: true,
         prop2: false,
         prop3: true,
@@ -38,7 +38,7 @@ describe('createNativePropsBuilder', () => {
         unchanged: string;
       };
 
-      const builder = createNativePropsBuilder<TestProps>({
+      const builder = createPropsBuilder<TestProps>({
         value: {
           process: (val: number) => val * 2,
         },
@@ -64,7 +64,7 @@ describe('createNativePropsBuilder', () => {
         target: string;
       };
 
-      const builder = createNativePropsBuilder<TestProps>({
+      const builder = createPropsBuilder<TestProps>({
         source: { as: 'target' },
         target: { process: (val: string) => val.toUpperCase() },
       });
@@ -90,7 +90,7 @@ describe('createNativePropsBuilder', () => {
         aliased: number;
       };
 
-      const builder = createNativePropsBuilder<MixedProps>({
+      const builder = createPropsBuilder<MixedProps>({
         included: true,
         excluded: false,
         processed: {
@@ -122,7 +122,7 @@ describe('createNativePropsBuilder', () => {
         prop3: string;
       };
 
-      const builder = createNativePropsBuilder<NestedProps>({
+      const builder = createPropsBuilder<NestedProps>({
         prop1: {
           process: (val: string) => val.toUpperCase(),
         },
@@ -151,7 +151,7 @@ describe('createNativePropsBuilder', () => {
         width: number;
       };
 
-      const builder = createNativePropsBuilder<KnownProps>({
+      const builder = createPropsBuilder<KnownProps>({
         width: true,
       });
 
@@ -175,7 +175,7 @@ describe('createNativePropsBuilder', () => {
 
       let capturedContext: ValueProcessorTarget | undefined;
 
-      const builder = createNativePropsBuilder<TestProps>({
+      const builder = createPropsBuilder<TestProps>({
         testProp: {
           process: (val: string, context) => {
             capturedContext = context?.target;
@@ -199,7 +199,7 @@ describe('createNativePropsBuilder', () => {
 
       const contexts: ValueProcessorTarget[] = [];
 
-      const builder = createNativePropsBuilder<TestProps>({
+      const builder = createPropsBuilder<TestProps>({
         value: {
           process: (val: string, context) => {
             if (context) {
