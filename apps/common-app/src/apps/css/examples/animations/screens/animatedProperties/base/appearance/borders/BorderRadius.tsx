@@ -1,3 +1,4 @@
+import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type { CSSAnimationSettings } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -50,7 +51,7 @@ const SECTIONS = [
 
 export default function BorderRadius() {
   return (
-    <ExamplesScreen<{ propertyName: string }>
+    <ExamplesScreen<ViewStyle, { propertyName: string }>
       CardComponent={VerticalExampleCard}
       tabs={[
         {

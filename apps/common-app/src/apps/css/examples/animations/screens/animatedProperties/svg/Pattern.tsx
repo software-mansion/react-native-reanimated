@@ -27,11 +27,11 @@ const MIXED_UNITS_NOTE =
 export default function PatternExample() {
   return (
     <ExamplesScreen<
+      PatternProps,
       {
         keyframes: CSSAnimationKeyframes<PatternProps>;
         props?: PatternExtraProps;
-      },
-      PatternProps
+      }
     >
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',

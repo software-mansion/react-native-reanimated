@@ -125,11 +125,14 @@ const renderExample = ({
 
 export default function Margins() {
   return (
-    <ExamplesScreen<{
-      property?: string;
-      keyframes?: CSSAnimationKeyframes;
-      containerStyle?: ViewStyle;
-    }>
+    <ExamplesScreen<
+      ViewStyle,
+      {
+        property?: string;
+        keyframes?: CSSAnimationKeyframes;
+        containerStyle?: ViewStyle;
+      }
+    >
       renderExample={renderExample}
       tabs={[
         {

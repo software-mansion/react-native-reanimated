@@ -1,3 +1,4 @@
+import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -9,7 +10,7 @@ const BOX_COLORS = [colors.primaryLight, colors.primary, colors.primaryDark];
 
 export default function LayoutDirection({ labelTypes }: ExampleScreenProps) {
   return (
-    <ExamplesScreen
+    <ExamplesScreen<ViewStyle>
       CardComponent={VerticalExampleCard}
       buildAnimation={() => ({
         animationDirection: 'alternate',

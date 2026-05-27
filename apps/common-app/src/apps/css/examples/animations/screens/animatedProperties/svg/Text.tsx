@@ -11,7 +11,7 @@ const AnimatedText = Animated.createAnimatedComponent(Text);
 
 export default function TextExample() {
   return (
-    <ExamplesScreen<{ keyframes: CSSAnimationKeyframes<TextProps> }, TextProps>
+    <ExamplesScreen<TextProps, { keyframes: CSSAnimationKeyframes<TextProps> }>
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',
         animationDuration: '1s',

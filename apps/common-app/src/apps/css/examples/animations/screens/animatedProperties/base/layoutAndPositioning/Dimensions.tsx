@@ -1,4 +1,4 @@
-import type { DimensionValue } from 'react-native';
+import type { DimensionValue, ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
 import type { CSSAnimationSettings } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -59,11 +59,14 @@ const SECTIONS = [
 
 export default function Dimensions() {
   return (
-    <ExamplesScreen<{
-      property: string;
-      width?: DimensionValue;
-      height?: DimensionValue;
-    }>
+    <ExamplesScreen<
+      ViewStyle,
+      {
+        property: string;
+        width?: DimensionValue;
+        height?: DimensionValue;
+      }
+    >
       renderExample={({ animation, height = sizes.md, width = sizes.md }) => (
         <Animated.View style={[styles.box, animation, { height, width }]} />
       )}

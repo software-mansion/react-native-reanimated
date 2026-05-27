@@ -2,7 +2,6 @@ import type { ComponentType, JSX } from 'react';
 import type { CSSAnimationProperties } from 'react-native-reanimated';
 
 import { stringifyConfig } from '@/apps/css/utils';
-import type { PlainStyle } from '@/types';
 
 import Scroll from '../layout/Scroll';
 import { Section } from '../layout/Section';
@@ -10,8 +9,11 @@ import type { LabelType } from '../misc/Label';
 import type { ExampleCardProps } from './ExampleCard';
 import ExampleCard from './ExampleCard';
 
-export type ExamplesListProps<P extends object, S extends object> = Pick<
-  ExampleProps<P, S>,
+export type ExamplesListProps<
+  TStyle extends object,
+  TExampleProps extends object = object,
+> = Pick<
+  ExampleProps<TStyle, TExampleProps>,
   'buildAnimation' | 'renderExample'
 > & {
   CardComponent?: ComponentType<ExampleCardProps>;
@@ -24,20 +26,20 @@ export type ExamplesListProps<P extends object, S extends object> = Pick<
       {
         CardComponent?: ComponentType<ExampleCardProps>;
       } & Omit<ExampleCardProps, 'children' | 'code' | 'collapsedCode'> &
-        P
+        TExampleProps
     >;
   }>;
 };
 
 export default function ExamplesList<
-  P extends object,
-  S extends object = PlainStyle,
+  TStyle extends object,
+  TExampleProps extends object = object,
 >({
   buildAnimation,
   CardComponent = ExampleCard,
   renderExample,
   sections,
-}: ExamplesListProps<P, S>) {
+}: ExamplesListProps<TStyle, TExampleProps>) {
   return (
     <Scroll withBottomBarSpacing>
       {sections.map(
@@ -66,17 +68,19 @@ export default function ExamplesList<
   );
 }
 
-type ExampleProps<P, S extends object> = {
+type ExampleProps<TStyle extends object, TExampleProps> = {
   CardComponent: ComponentType<ExampleCardProps>;
   denseCode?: boolean;
-  buildAnimation: (props: P) => CSSAnimationProperties<S>;
+  buildAnimation: (props: TExampleProps) => CSSAnimationProperties<TStyle>;
   renderExample: (
-    props: Omit<P, 'animation'> & { animation: CSSAnimationProperties<S> }
+    props: Omit<TExampleProps, 'animation'> & {
+      animation: CSSAnimationProperties<TStyle>;
+    }
   ) => JSX.Element;
 } & Omit<ExampleCardProps, 'code'> &
-  P;
+  TExampleProps;
 
-function Example<P extends object, S extends object>({
+function Example<TStyle extends object, TExampleProps extends object>({
   buildAnimation,
   CardComponent,
   collapsedExampleHeight,
@@ -87,8 +91,8 @@ function Example<P extends object, S extends object>({
   showRestartButton,
   title,
   ...rest
-}: ExampleProps<P, S>) {
-  const userProps = rest as P;
+}: ExampleProps<TStyle, TExampleProps>) {
+  const userProps = rest as TExampleProps;
   const animation = buildAnimation(userProps);
 
   return (

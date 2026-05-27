@@ -11,7 +11,7 @@ const AnimatedLine = Animated.createAnimatedComponent(Line);
 
 export default function LineExample() {
   return (
-    <ExamplesScreen<{ keyframes: CSSAnimationKeyframes<LineProps> }, LineProps>
+    <ExamplesScreen<LineProps, { keyframes: CSSAnimationKeyframes<LineProps> }>
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',
         animationDuration: '1s',

@@ -1,3 +1,4 @@
+import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type {
   CSSAnimationKeyframes,
@@ -64,7 +65,7 @@ function renderExample({ animation }: { animation: CSSAnimationProperties }) {
 
 export default function Insets() {
   return (
-    <ExamplesScreen<{ property: string }>
+    <ExamplesScreen<ViewStyle, { property: string }>
       tabs={EXAMPLES.map(({ buildKeyframes, name }) => ({
         buildAnimation: ({ property }) => ({
           ...SHARED_SETTINGS,
