@@ -284,7 +284,8 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
           LOG(WARNING) << "@@@Remove mutation index mismatch: expected tag " << mutation.oldChildShadowView.tag
                        << " at actualIndex " << actualIndex << " under parent tag " << parentTag << ", but found tag "
                        << parent->children[actualIndex]->current.tag << " (rnIndex=" << mutation.index
-                       << "); children=[" << childTags << "]";
+                       << "); children=[" << childTags << "]"
+                       << " count=" << parent->countExitingChildrenBeforeIndex(mutation.index);
         }
         react_native_assert(
             parent->children[actualIndex]->current.tag == mutation.oldChildShadowView.tag &&

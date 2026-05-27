@@ -108,14 +108,20 @@ struct LightNode {
   }
 
   int countExitingChildrenBeforeIndex(int index) const {
-    react_native_assert(index >= 0 && static_cast<std::size_t>(index) <= children.size() && "index out of range");
-    auto result = 0;
-    for (auto i = 0; i < index; i++) {
+    react_native_assert(index >= 0 && "index must be non-negative");
+    int remainingNonExitingChildrenToCheck = index;
+    int exitingCount = 0;
+    for (std::size_t i = 0; i < children.size(); i++) {
       if (children[i]->exitingState != ExitingState::UNDEFINED) {
-        result++;
+        exitingCount++;
+        continue;
       }
+      if (remainingNonExitingChildrenToCheck == 0) {
+        return exitingCount;
+      }
+      remainingNonExitingChildrenToCheck--;
     }
-    return result;
+    return exitingCount;
   }
 };
 
