@@ -8,7 +8,7 @@ table {
 }
 
 @media (max-width: 1280px) {
-  table:not([class*="platform-compatibility"]) {
+  table:not([class*='platform-compatibility']) {
     display: block;
     width: 100%;
   }
@@ -62,7 +62,7 @@ table thead tr {
 
   mask: url(/static/img/github.svg) no-repeat 100% 100%;
   mask-size: cover;
-  content: "";
+  content: '';
 
   background-color: var(--ifm-navbar-link-color);
 }
@@ -78,23 +78,23 @@ table thead tr {
   background-color: var(--ifm-navbar-link-hover-color);
 }
 
-[class*="navbarLanding"] .header-github:before,
-[class*="navbarLanding"] .header-github:hover:before {
+[class*='navbarLanding'] .header-github:before,
+[class*='navbarLanding'] .header-github:hover:before {
   background-color: var(--swm-off-white);
 }
 
-[class*="codeBlockContent"] pre {
+[class*='codeBlockContent'] pre {
   border: 1px solid var(--swm-border);
 }
 
-[class*="codeBlockContent"] pre,
-[class*="codeBlockContent"] code {
+[class*='codeBlockContent'] pre,
+[class*='codeBlockContent'] code {
   border-radius: 0;
   background-color: var(--swm-off-background);
 }
 
 /* Add small padding, when some of the lines are too long in a code block */
-[class*="codeBlockLines"] span:last-of-type {
+[class*='codeBlockLines'] span:last-of-type {
   margin-right: 1em;
 }
 
@@ -112,48 +112,60 @@ table thead tr {
   margin-bottom: 25px;
 }
 
-[class*="DocCategoryGeneratedIndexPage"][class*="title"] {
+[class*='DocCategoryGeneratedIndexPage'][class*='title'] {
   font-size: var(--swm-h1-font-size);
 }
 
 /* TODO: Remove after @swmansion-t-rex-ui 0.0.11 patch */
-button[class*="DocSearch-Button"] {
+button[class*='DocSearch-Button'] {
   margin: 0 !important;
 }
 
 /* versions dropdown on landing */
 
-[class*="plugin-pages"] [class*="dropdown--right"] > a:first-child {
+[class*='plugin-pages'] [class*='dropdown--right'] > a:first-child {
   color: var(--swm-off-white) !important;
 }
 
-[class*="plugin-pages"] [class*="dropdown__menu"] a:hover {
+[class*='plugin-pages'] [class*='dropdown__menu'] a:hover {
   color: var(--swm-dropdown-versions-item-hover) !important;
 }
 
 /* examples sidebar */
 
-[class*="plugin-blog"] [class*="sidebar"]:not([class*="navbar-sidebar"]) {
+[class*='plugin-blog'] [class*='sidebar']:not([class*='navbar-sidebar']) {
   background-color: transparent;
 }
 
-[class*="yearGroupHeading"] {
+[class*='yearGroupHeading'] {
   display: none;
 }
 
 /* Center logo vertically in navbar items */
-.navbar__items a[href="/react-native-reanimated/"] img,
-.navbar__brand a[href="/react-native-reanimated/"] img,
+.navbar__items a[href='/react-native-reanimated/'] img,
+.navbar__brand a[href='/react-native-reanimated/'] img,
 .navbar__brand img {
   vertical-align: middle;
 }
 
-[class*="hireUsContainer"] {
+[class*='hireUsContainer'] {
   display: none;
 }
 
-[class*="headerWithBadges"] {
+[class*='headerWithBadges'] {
   align-items: baseline;
+}
+
+.theme-doc-sidebar-container [class*='_badge_'] {
+  font-size: 11px;
+  padding: 1px 5px;
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+.theme-doc-sidebar-container .menu__link {
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 /* Tabs nested inside details: bump label contrast against the purple details background. */
