@@ -1,11 +1,11 @@
-name: Main build [Nightly]
+name: Main branch build
 on:
   schedule:
     # 02:17 UTC — offset from other nightly crons to spread runner load
     - cron: '17 2 * * *'
   pull_request:
     paths:
-      - .github/workflows/main-build-nightly.yml
+      - .github/workflows/main-branch-build.yml
   workflow_dispatch:
 
 jobs:
