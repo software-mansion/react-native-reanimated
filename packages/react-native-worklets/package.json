@@ -57,6 +57,7 @@
   "homepage": "https://docs.swmansion.com/react-native-worklets",
   "peerDependencies": {
     "@babel/core": "*",
+    "@babel/types": "*",
     "@react-native/metro-config": "*",
     "react": "*",
     "react-native": "0.83 - 0.86"
