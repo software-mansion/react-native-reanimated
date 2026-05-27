@@ -220,6 +220,12 @@ const config = {
                   exclude: /\.yarn[\\/]unprocessed/,
                   use: 'babel-loader',
                 },
+                {
+                  test: /\.m?js$/,
+                  resolve: {
+                    fullySpecified: false,
+                  },
+                },
               ],
             },
             resolve: {
@@ -231,6 +237,7 @@ const config = {
                 ),
               },
               extensions: ['.web.js', '...'],
+              fullySpecified: false,
             },
             ignoreWarnings: [
               (error) => {
