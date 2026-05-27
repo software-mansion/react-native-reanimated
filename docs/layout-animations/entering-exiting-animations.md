@@ -1,0 +1,1369 @@
+# Entering/Exiting animations
+
+Entering/Exiting animations let you animate elements when they are added to or removed from the view hierarchy.
+
+Reanimated comes with a bunch of predefined animations you can customize. For more advanced use-cases, you can use [Keyframes](/docs/layout-animations/keyframe-animations) or create your own [custom entering/exiting animations](/docs/layout-animations/custom-animations).
+
+> **Info**
+>
+> Spring-based animations are yet to be introduced to the web. Due to that, playground doesn't cover `springify()` options but they can be applied to your animations on iOS and Android platforms.
+
+## Remarks
+
+* We recommend using layout animation builders outside of components or with `useMemo` to ensure the best performance.
+* `withInitialValues` and `withTargetValues` are typed per preset, so only props specific to the animation preset are accepted (see each preset's *Values & Type definitions* block).
+* &#x20;For transforms, prefer flat top-level props like `{ translateX: 50 }` over `transform: [{ translateX: 50 }]`. The `transform: [{ ... }]` tuple form still works but is deprecated since 4.4.0.
+* `withInitialValues` overrides the initial values of the animation (the state the element starts from).
+* &#x20;`withTargetValues` overrides the target values of the animation (the state the element animates to).
+* *Values & Type definitions* blocks after each animation preset show the exact type for both `withInitialValues` and `withTargetValues` (they accept the same props per preset). The deprecated `transform` prop also shows the order in which transforms are applied. In the flat form, object key order is ignored and the preset applies transforms in its built-in order.
+* If both forms are used, the flat prop wins for that transform slot; remaining slots fall back to the tuple value, then to the preset default. Mixing forms is supported but not recommended.
+* On the New Architecture:
+  * `nativeID` is used internally to configure entering animations, so overwriting it will result in entering animations not running. Some components (e.g. TouchableWithoutFeedback) overwrite `nativeID` of its children. To work around this issue wrap your animated children with a `View`.
+  * removing a non-animated view will trigger exiting animations in its children, but the non-animated view will not wait for the children's animations to finish. This is due to view flattening and can be mitigated by using `collapsable={false}`.
+
+## Fade
+
+`FadeX` lets you create a fading animation.
+
+```jsx
+import { FadeIn, FadeOut } from 'react-native-reanimated';
+
+function App() {
+  return <Animated.View entering={FadeIn} exiting={FadeOut} />;
+}
+```
+
+Available fade animations:
+
+### Entering
+
+* `FadeIn`
+
+* `FadeInRight`
+
+* `FadeInLeft`
+
+* `FadeInUp`
+
+* `FadeInDown`
+
+### Exiting
+
+* `FadeOut`
+
+* `FadeOutRight`
+
+* `FadeOutLeft`
+
+* `FadeOutUp`
+
+* `FadeOutDown`
+
+Values & Type definitions
+
+These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
+
+| Name           | Config                            |
+| -------------- | --------------------------------- |
+| `FadeIn`       | `{ opacity: 0 }`                  |
+| `FadeInDown`   | `{ opacity: 0, translateY: 25 }`  |
+| `FadeInLeft`   | `{ opacity: 0, translateX: -25 }` |
+| `FadeInRight`  | `{ opacity: 0, translateX: 25 }`  |
+| `FadeInUp`     | `{ opacity: 0, translateY: -25 }` |
+| `FadeOut`      | `{ opacity: 1 }`                  |
+| `FadeOutDown`  | `{ opacity: 1, translateY: 0 }`   |
+| `FadeOutLeft`  | `{ opacity: 1, translateX: 0 }`   |
+| `FadeOutRight` | `{ opacity: 1, translateX: 0 }`   |
+| `FadeOutUp`    | `{ opacity: 1, translateY: 0 }`   |
+
+&#x20;These are the default target values for each animation that can be customized with the `withTargetValues` modifier.
+
+| Name           | Config                            |
+| -------------- | --------------------------------- |
+| `FadeIn`       | `{ opacity: 1 }`                  |
+| `FadeInDown`   | `{ opacity: 1, translateY: 0 }`   |
+| `FadeInLeft`   | `{ opacity: 1, translateX: 0 }`   |
+| `FadeInRight`  | `{ opacity: 1, translateX: 0 }`   |
+| `FadeInUp`     | `{ opacity: 1, translateY: 0 }`   |
+| `FadeOut`      | `{ opacity: 0 }`                  |
+| `FadeOutDown`  | `{ opacity: 0, translateY: 25 }`  |
+| `FadeOutLeft`  | `{ opacity: 0, translateX: -25 }` |
+| `FadeOutRight` | `{ opacity: 0, translateX: 25 }`  |
+| `FadeOutUp`    | `{ opacity: 0, translateY: -25 }` |
+
+```typescript
+// FadeIn, FadeOut
+type FadeValues = { opacity?: number };
+
+// FadeInRight, FadeInLeft, FadeOutRight, FadeOutLeft
+type FadeXValues = {
+  opacity?: number;
+  translateX?: number | `${number}%`;
+  /** @deprecated Prefer flat top-level props. */
+  transform?: [{ translateX: number | `${number}%` }];
+};
+
+// FadeInUp, FadeInDown, FadeOutUp, FadeOutDown
+type FadeYValues = {
+  opacity?: number;
+  translateY?: number | `${number}%`;
+  /** @deprecated Prefer flat top-level props. */
+  transform?: [{ translateY: number | `${number}%` }];
+};
+```
+
+### Modifiers
+
+#### Time-based&#x20;
+
+Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+
+```javascript
+FadeOutLeft.duration(500).easing(Easing.ease);
+```
+
+* `.easing(easingFunction: EasingFunction)` is an easing function which defines the animation curve. Defaults to `Easing.inOut(Easing.quad)`
+
+> **Note**
+>
+> Time-based modifiers have no effect when `.springify()` is used.
+
+#### Spring-based&#x20;
+
+Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+
+```javascript
+FadeInUp.springify()
+  .damping(30)
+  .mass(5)
+  .stiffness(10)
+  .overshootClamping(false)
+  .energyThreshold(6e-8);
+```
+
+* `.springify()` enables the spring-based animation configuration.
+* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
+* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
+* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+* `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
+* `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
+
+#### Common&#x20;
+
+```javascript
+FadeInDown.delay(500)
+  .randomDelay()
+  .reduceMotion(ReduceMotion.Never)
+  .withInitialValues({ translateY: 420 })
+  .withTargetValues({ translateY: 0 })
+  .withCallback((finished) => {
+    console.log(`finished without interruptions: ${finished}`);
+  });
+```
+
+* `.duration(durationMs: number)` is the length of the animation (in milliseconds). Defaults to `300`.
+* `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
+* `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
+* `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the *Values & Type definitions* block above).
+* &#x20;`.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the *Values & Type definitions* block above).
+* `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
+
+## Bounce
+
+`BounceX` lets you create a bouncing animation.
+
+```jsx
+import { BounceIn, BounceOut } from 'react-native-reanimated';
+
+function App() {
+  return <Animated.View entering={BounceIn} exiting={BounceOut} />;
+}
+```
+
+Available bounce animations:
+
+### Entering
+
+* `BounceIn`
+
+* `BounceInRight`
+
+* `BounceInLeft`
+
+* `BounceInUp`
+
+* `BounceInDown`
+
+### Exiting
+
+* `BounceOut`
+
+* `BounceOutRight`
+
+* `BounceOutLeft`
+
+* `BounceOutUp`
+
+* `BounceOutDown`
+
+Values & Type definitions
+
+These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
+
+| Name             | Config                                 |
+| ---------------- | -------------------------------------- |
+| `BounceIn`       | `{ scale: 0 }`                         |
+| `BounceInRight`  | `{ translateX: values.windowWidth }`   |
+| `BounceInLeft`   | `{ translateX: -values.windowWidth }`  |
+| `BounceInUp`     | `{ translateY: -values.windowHeight }` |
+| `BounceInDown`   | `{ translateY: values.windowHeight }`  |
+| `BounceOut`      | `{ scale: 1 }`                         |
+| `BounceOutRight` | `{ translateX: 0 }`                    |
+| `BounceOutLeft`  | `{ translateX: 0 }`                    |
+| `BounceOutUp`    | `{ translateY: 0 }`                    |
+| `BounceOutDown`  | `{ translateY: 0 }`                    |
+
+&#x20;These are the default target values for each animation that can be customized with the `withTargetValues` modifier.
+
+| Name             | Config                                 |
+| ---------------- | -------------------------------------- |
+| `BounceIn`       | `{ scale: 1 }`                         |
+| `BounceInRight`  | `{ translateX: 0 }`                    |
+| `BounceInLeft`   | `{ translateX: 0 }`                    |
+| `BounceInUp`     | `{ translateY: 0 }`                    |
+| `BounceInDown`   | `{ translateY: 0 }`                    |
+| `BounceOut`      | `{ scale: 0 }`                         |
+| `BounceOutRight` | `{ translateX: values.windowWidth }`   |
+| `BounceOutLeft`  | `{ translateX: -values.windowWidth }`  |
+| `BounceOutUp`    | `{ translateY: -values.windowHeight }` |
+| `BounceOutDown`  | `{ translateY: values.windowHeight }`  |
+
+```typescript
+// BounceIn, BounceOut
+type BounceScaleValues = {
+  scale?: number;
+  /** @deprecated Prefer flat top-level props. */
+  transform?: [{ scale: number }];
+};
+
+// BounceInRight, BounceInLeft, BounceOutRight, BounceOutLeft
+type BounceXValues = {
+  translateX?: number | `${number}%`;
+  /** @deprecated Prefer flat top-level props. */
+  transform?: [{ translateX: number | `${number}%` }];
+};
+
+// BounceInUp, BounceInDown, BounceOutUp, BounceOutDown
+type BounceYValues = {
+  translateY?: number | `${number}%`;
+  /** @deprecated Prefer flat top-level props. */
+  transform?: [{ translateY: number | `${number}%` }];
+};
+```
+
+### Modifiers&#x20;
+
+```javascript
+BounceInDown.duration(500)
+  .delay(500)
+  .randomDelay()
+  .reduceMotion(ReduceMotion.Never)
+  .withInitialValues({ translateY: -420 })
+  .withTargetValues({ translateY: 0 })
+  .withCallback((finished) => {
+    console.log(`finished without interruptions: ${finished}`);
+  });
+```
+
+* `.duration(durationMs: number)` is the length of the animation (in milliseconds). Defaults to `600`.
+* `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
+* `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
+* `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the *Values & Type definitions* block above).
+* &#x20;`.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the *Values & Type definitions* block above).
+* `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
+
+## Flip
+
+`FlipX` lets you create animation based on rotation over specific axis.
+
+```jsx
+import { FlipInEasyX, FlipOutEasyX } from 'react-native-reanimated';
+
+function App() {
+  return <Animated.View entering={FlipInEasyX} exiting={FlipOutEasyX} />;
+}
+```
+
+Available flip animations:
+
+### Entering
+
+* `FlipInEasyX`
+
+* `FlipInEasyY`
+
+* `FlipInXDown`
+
+* `FlipInXUp`
+
+* `FlipInYLeft`
+
+* `FlipInYRight`
+
+### Exiting
+
+* `FlipOutEasyX`
+
+* `FlipOutEasyY`
+
+* `FlipOutXDown`
+
+* `FlipOutXUp`
+
+* `FlipOutYLeft`
+
+* `FlipOutYRight`
+
+Values & Type definitions
+
+These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
+
+| Name            | Config                                                                                  |
+| --------------- | --------------------------------------------------------------------------------------- |
+| `FlipInEasyX`   | `{ perspective: 500, rotateX: '90deg' }`                                                |
+| `FlipInEasyY`   | `{ perspective: 500, rotateY: '90deg' }`                                                |
+| `FlipInXDown`   | `{ perspective: 500, rotateX: '-90deg', translateY: targetValues.targetHeight }`        |
+| `FlipInXUp`     | `{ perspective: 500, rotateX: '90deg', translateY: -targetValues.targetHeight }`        |
+| `FlipInYLeft`   | `{ perspective: 500, rotateY: '-90deg', translateX: -targetValues.targetWidth }`        |
+| `FlipInYRight`  | `{ perspective: 500, rotateY: '90deg', translateX: targetValues.targetWidth }`          |
+| `FlipOutEasyX`  | `{ perspective: 500, rotateX: '0deg' }`                                                 |
+| `FlipOutEasyY`  | `{ perspective: 500, rotateY: '0deg' }`                                                 |
+| `FlipOutXDown`  | `{ perspective: 500, rotateX: '0deg', translateY: 0 }`                                  |
+| `FlipOutXUp`    | `{ perspective: 500, rotateX: '0deg', translateY: 0 }`                                  |
+| `FlipOutYLeft`  | `{ perspective: 500, rotateY: '0deg', translateX: 0 }`                                  |
+| `FlipOutYRight` | `{ perspective: 500, rotateY: '0deg', translateX: 0 }`                                  |
+
+&#x20;These are the default target values for each animation that can be customized with the `withTargetValues` modifier.
+
+| Name            | Config                                                                      |
+| --------------- | --------------------------------------------------------------------------- |
+| `FlipInEasyX`   | `{ perspective: 500, rotateX: '0deg' }`                                     |
+| `FlipInEasyY`   | `{ perspective: 500, rotateY: '0deg' }`                                     |
+| `FlipInXDown`   | `{ perspective: 500, rotateX: '0deg', translateY: 0 }`                      |
+| `FlipInXUp`     | `{ perspective: 500, rotateX: '0deg', translateY: 0 }`                      |
+| `FlipInYLeft`   | `{ perspective: 500, rotateY: '0deg', translateX: 0 }`                      |
+| `FlipInYRight`  | `{ perspective: 500, rotateY: '0deg', translateX: 0 }`                      |
+| `FlipOutEasyX`  | `{ perspective: 500, rotateX: '90deg' }`                                    |
+| `FlipOutEasyY`  | `{ perspective: 500, rotateY: '90deg' }`                                    |
+| `FlipOutXDown`  | `{ perspective: 500, rotateX: '-90deg', translateY: values.currentHeight }` |
+| `FlipOutXUp`    | `{ perspective: 500, rotateX: '90deg', translateY: -values.currentHeight }` |
+| `FlipOutYLeft`  | `{ perspective: 500, rotateY: '-90deg', translateX: -values.currentWidth }` |
+| `FlipOutYRight` | `{ perspective: 500, rotateY: '90deg', translateX: values.currentWidth }`   |
+
+```typescript
+// FlipInEasyX, FlipOutEasyX
+type FlipEasyXValues = {
+  perspective?: number;
+  rotateX?: string;
+  /** @deprecated Prefer flat top-level props. */
+  transform?: [{ perspective: number }, { rotateX: string }];
+};
+
+// FlipInEasyY, FlipOutEasyY
+type FlipEasyYValues = {
+  perspective?: number;
+  rotateY?: string;
+  /** @deprecated Prefer flat top-level props. */
+  transform?: [{ perspective: number }, { rotateY: string }];
+};
+
+// FlipInXDown, FlipInXUp, FlipOutXDown, FlipOutXUp
+type FlipXValues = {
+  perspective?: number;
+  rotateX?: string;
+  translateY?: number | `${number}%`;
+  /** @deprecated Prefer flat top-level props. */
+  transform?: [
+    { perspective: number },
+    { rotateX: string },
+    { translateY: number | `${number}%` },
+  ];
+};
+
+// FlipInYLeft, FlipInYRight, FlipOutYLeft, FlipOutYRight
+type FlipYValues = {
+  perspective?: number;
+  rotateY?: string;
+  translateX?: number | `${number}%`;
+  /** @deprecated Prefer flat top-level props. */
+  transform?: [
+    { perspective: number },
+    { rotateY: string },
+    { translateX: number | `${number}%` },
+  ];
+};
+```
+
+### Modifiers
+
+#### Time-based&#x20;
+
+Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+
+```javascript
+FlipOutYLeft.duration(500).easing(Easing.ease);
+```
+
+* `.easing(easingFunction: EasingFunction)` is an easing function which defines the animation curve. Defaults to `Easing.inOut(Easing.quad)`
+
+> **Note**
+>
+> Time-based modifiers have no effect when `.springify()` is used.
+
+#### Spring-based&#x20;
+
+Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+
+```javascript
+FlipInXUp.springify()
+  .damping(2)
+  .mass(3)
+  .stiffness(10)
+  .overshootClamping(false)
+  .energyThreshold(6e-8);
+```
+
+* `.springify()` enables the spring-based animation configuration.
+* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
+* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
+* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+* `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
+* `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
+
+#### Common&#x20;
+
+```javascript
+FlipInEasyY.delay(500)
+  .randomDelay()
+  .reduceMotion(ReduceMotion.Never)
+  .withInitialValues({ perspective: 100, rotateY: '123deg' })
+  .withTargetValues({ rotateY: '0deg' })
+  .withCallback((finished) => {
+    console.log(`finished without interruptions: ${finished}`);
+  });
+```
+
+* `.duration(durationMs: number)` is the length of the animation (in milliseconds). Defaults to `300`.
+* `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
+* `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
+* `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the *Values & Type definitions* block above).
+* &#x20;`.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the *Values & Type definitions* block above).
+* `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
+
+## LightSpeed
+
+`LightSpeedX` lets you create an animation of a horizontally moving object with a change of opacity and skew.
+
+```jsx
+import { LightSpeedInRight, LightSpeedOutLeft } from 'react-native-reanimated';
+
+function App() {
+  return (
+    <Animated.View entering={LightSpeedInRight} exiting={LightSpeedOutLeft} />
+  );
+}
+```
+
+Available lightspeed animations:
+
+### Entering
+
+* `LightSpeedInRight`
+
+* `LightSpeedInLeft`
+
+### Exiting
+
+* `LightSpeedOutRight`
+
+* `LightSpeedOutLeft`
+
+Values & Type definitions
+
+These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
+
+| Name                 | Config                                                               |
+| -------------------- | -------------------------------------------------------------------- |
+| `LightSpeedInLeft`   | `{ opacity: 0, translateX: -values.windowWidth, skewX: '45deg' }`    |
+| `LightSpeedInRight`  | `{ opacity: 0, translateX: values.windowWidth, skewX: '-45deg' }`    |
+| `LightSpeedOutLeft`  | `{ opacity: 1, translateX: 0, skewX: '0deg' }`                       |
+| `LightSpeedOutRight` | `{ opacity: 1, translateX: 0, skewX: '0deg' }`                       |
+
+&#x20;These are the default target values for each animation that can be customized with the `withTargetValues` modifier.
+
+| Name                 | Config                                                             |
+| -------------------- | ------------------------------------------------------------------ |
+| `LightSpeedInLeft`   | `{ opacity: 1, translateX: 0, skewX: '0deg' }`                     |
+| `LightSpeedInRight`  | `{ opacity: 1, translateX: 0, skewX: '0deg' }`                     |
+| `LightSpeedOutLeft`  | `{ opacity: 0, translateX: -values.windowWidth, skewX: '45deg' }`  |
+| `LightSpeedOutRight` | `{ opacity: 0, translateX: values.windowWidth, skewX: '-45deg' }`  |
+
+```typescript
+// All LightSpeed presets
+type LightSpeedValues = {
+  opacity?: number;
+  translateX?: number | `${number}%`;
+  skewX?: string;
+  /** @deprecated Prefer flat top-level props. */
+  transform?: [{ translateX: number | `${number}%` }, { skewX: string }];
+};
+```
+
+### Modifiers
+
+#### Time-based&#x20;
+
+Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+
+```javascript
+LightSpeedOutLeft.duration(500).easing(Easing.ease);
+```
+
+* `.easing(easingFunction: EasingFunction)` is an easing function which defines the animation curve. Defaults to `Easing.inOut(Easing.quad)`
+
+> **Note**
+>
+> Time-based modifiers have no effect when `.springify()` is used.
+
+#### Spring-based&#x20;
+
+Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+
+```javascript
+LightSpeedInLeft.springify()
+  .damping(30)
+  .mass(5)
+  .stiffness(10)
+  .overshootClamping(false)
+  .energyThreshold(6e-8);
+```
+
+* `.springify()` enables the spring-based animation configuration.
+* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
+* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
+* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+* `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
+* `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
+
+#### Common&#x20;
+
+```javascript
+LightSpeedInRight.delay(500)
+  .randomDelay()
+  .reduceMotion(ReduceMotion.Never)
+  .withInitialValues({ translateX: -100, skewX: '-10deg' })
+  .withTargetValues({ translateX: 0, skewX: '0deg' })
+  .withCallback((finished) => {
+    console.log(`finished without interruptions: ${finished}`);
+  });
+```
+
+* `.duration(durationMs: number)` is the length of the animation (in milliseconds). Defaults to `300`.
+* `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
+* `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
+* `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the *Values & Type definitions* block above).
+* &#x20;`.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the *Values & Type definitions* block above).
+* `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
+
+## Pinwheel
+
+`PinwheelX` lets you create an animation based on rotation, scale, and opacity.
+
+```jsx
+import { PinwheelIn, PinwheelOut } from 'react-native-reanimated';
+
+function App() {
+  return <Animated.View entering={PinwheelIn} exiting={PinwheelOut} />;
+}
+```
+
+Available pinwheel animations:
+
+### Entering
+
+* `PinwheelIn`
+
+### Exiting
+
+* `PinwheelOut`
+
+Values & Type definitions
+
+These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
+
+| Name          | Config                                  |
+| ------------- | --------------------------------------- |
+| `PinwheelIn`  | `{ opacity: 0, scale: 0, rotate: '5' }` |
+| `PinwheelOut` | `{ opacity: 1, scale: 1, rotate: '0' }` |
+
+&#x20;These are the default target values for each animation that can be customized with the `withTargetValues` modifier.
+
+| Name          | Config                                     |
+| ------------- | ------------------------------------------ |
+| `PinwheelIn`  | `{ opacity: 1, scale: 1, rotate: '0rad' }` |
+| `PinwheelOut` | `{ opacity: 0, scale: 0, rotate: '5rad' }` |
+
+```typescript
+// PinwheelIn, PinwheelOut
+type PinwheelValues = {
+  opacity?: number;
+  scale?: number;
+  rotate?: string;
+  /** @deprecated Prefer flat top-level props. */
+  transform?: [{ scale: number }, { rotate: string }];
+};
+```
+
+### Modifiers
+
+#### Time-based&#x20;
+
+Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+
+```javascript
+PinwheelOut.duration(500).easing(Easing.ease);
+```
+
+* `.easing(easingFunction: EasingFunction)` is an easing function which defines the animation curve. Defaults to `Easing.inOut(Easing.quad)`
+
+> **Note**
+>
+> Time-based modifiers have no effect when `.springify()` is used.
+
+#### Spring-based&#x20;
+
+Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+
+```javascript
+PinwheelIn.springify()
+  .damping(2)
+  .mass(5)
+  .stiffness(10)
+  .overshootClamping(false)
+  .energyThreshold(6e-8);
+```
+
+* `.springify()` enables the spring-based animation configuration.
+* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
+* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
+* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+* `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
+* `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
+
+#### Common&#x20;
+
+```javascript
+PinwheelIn.delay(500)
+  .randomDelay()
+  .reduceMotion(ReduceMotion.Never)
+  .withInitialValues({ scale: 0.8, rotate: '3' })
+  .withTargetValues({ scale: 1, rotate: '0rad' })
+  .withCallback((finished) => {
+    console.log(`finished without interruptions: ${finished}`);
+  });
+```
+
+* `.duration(durationMs: number)` is the length of the animation (in milliseconds). Defaults to `300`.
+* `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
+* `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
+* `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the *Values & Type definitions* block above).
+* &#x20;`.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the *Values & Type definitions* block above).
+* `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
+
+## Roll
+
+`RollX` lets you create an animation of a horizontally moving object with a rotation.
+
+```jsx
+import { RollInRight, RollOutLeft } from 'react-native-reanimated';
+
+function App() {
+  return <Animated.View entering={RollInRight} exiting={RollOutLeft} />;
+}
+```
+
+Available roll animations:
+
+### Entering
+
+* `RollInRight`
+
+* `RollInLeft`
+
+### Exiting
+
+* `RollOutRight`
+
+* `RollOutLeft`
+
+Values & Type definitions
+
+These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
+
+| Name           | Config                                                   |
+| -------------- | -------------------------------------------------------- |
+| `RollInLeft`   | `{ translateX: -values.windowWidth, rotate: '-180deg' }` |
+| `RollInRight`  | `{ translateX: values.windowWidth, rotate: '180deg' }`   |
+| `RollOutLeft`  | `{ translateX: 0, rotate: '0deg' }`                      |
+| `RollOutRight` | `{ translateX: 0, rotate: '0deg' }`                      |
+
+&#x20;These are the default target values for each animation that can be customized with the `withTargetValues` modifier.
+
+| Name           | Config                                                   |
+| -------------- | -------------------------------------------------------- |
+| `RollInLeft`   | `{ translateX: 0, rotate: '0deg' }`                      |
+| `RollInRight`  | `{ translateX: 0, rotate: '0deg' }`                      |
+| `RollOutLeft`  | `{ translateX: -values.windowWidth, rotate: '-180deg' }` |
+| `RollOutRight` | `{ translateX: values.windowWidth, rotate: '180deg' }`   |
+
+```typescript
+// All Roll presets
+type RollValues = {
+  translateX?: number | `${number}%`;
+  rotate?: string;
+  /** @deprecated Prefer flat top-level props. */
+  transform?: [{ translateX: number | `${number}%` }, { rotate: string }];
+};
+```
+
+### Modifiers
+
+#### Time-based&#x20;
+
+Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+
+```javascript
+RollOutLeft.duration(500).easing(Easing.ease);
+```
+
+* `.easing(easingFunction: EasingFunction)` is an easing function which defines the animation curve. Defaults to `Easing.inOut(Easing.quad)`
+
+> **Note**
+>
+> Time-based modifiers have no effect when `.springify()` is used.
+
+#### Spring-based&#x20;
+
+Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+
+```javascript
+RollInLeft.springify()
+  .damping(30)
+  .mass(5)
+  .stiffness(10)
+  .overshootClamping(false)
+  .energyThreshold(6e-8);
+```
+
+* `.springify()` enables the spring-based animation configuration.
+* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
+* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
+* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+* `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
+* `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
+
+#### Common&#x20;
+
+```javascript
+RollInRight.delay(500)
+  .randomDelay()
+  .reduceMotion(ReduceMotion.Never)
+  .withInitialValues({ translateX: 100, rotate: '-45deg' })
+  .withTargetValues({ translateX: 0, rotate: '0deg' })
+  .withCallback((finished) => {
+    console.log(`finished without interruptions: ${finished}`);
+  });
+```
+
+* `.duration(durationMs: number)` is the length of the animation (in milliseconds). Defaults to `300`.
+* `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
+* `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
+* `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the *Values & Type definitions* block above).
+* &#x20;`.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the *Values & Type definitions* block above).
+* `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
+
+## Rotate
+
+`RotateX` lets you create a rotation animation.
+
+```jsx
+import { RotateInDownLeft, RotateOutDownLeft } from 'react-native-reanimated';
+
+function App() {
+  return (
+    <Animated.View entering={RotateInDownLeft} exiting={RotateOutDownLeft} />
+  );
+}
+```
+
+Available rotate animations:
+
+### Entering
+
+* `RotateInDownLeft`
+
+* `RotateInDownRight`
+
+* `RotateInUpLeft`
+
+* `RotateInUpRight`
+
+### Exiting
+
+* `RotateOutDownLeft`
+
+* `RotateOutDownRight`
+
+* `RotateOutUpLeft`
+
+* `RotateOutUpRight`
+
+Values & Type definitions
+
+These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
+
+| Name                 | Config                                                                                                                                                              |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RotateInDownLeft`   | `{ opacity: 0, rotate: '-90deg', translateX: values.targetWidth / 2 - values.targetHeight / 2, translateY: -(values.targetWidth / 2 - values.targetHeight / 2) }`   |
+| `RotateInDownRight`  | `{ opacity: 0, rotate: '90deg', translateX: -(values.targetWidth / 2 - values.targetHeight / 2), translateY: -(values.targetWidth / 2 - values.targetHeight / 2) }` |
+| `RotateInUpLeft`     | `{ opacity: 0, rotate: '90deg', translateX: values.targetWidth / 2 - values.targetHeight / 2, translateY: values.targetWidth / 2 - values.targetHeight / 2 }`       |
+| `RotateInUpRight`    | `{ opacity: 0, rotate: '-90deg', translateX: -(values.targetWidth / 2 - values.targetHeight / 2), translateY: values.targetWidth / 2 - values.targetHeight / 2 }`   |
+| `RotateOutDownLeft`  | `{ opacity: 1, rotate: '0deg', translateX: 0, translateY: 0 }`                                                                                                      |
+| `RotateOutDownRight` | `{ opacity: 1, rotate: '0deg', translateX: 0, translateY: 0 }`                                                                                                      |
+| `RotateOutUpLeft`    | `{ opacity: 1, rotate: '0deg', translateX: 0, translateY: 0 }`                                                                                                      |
+| `RotateOutUpRight`   | `{ opacity: 1, rotate: '0deg', translateX: 0, translateY: 0 }`                                                                                                      |
+
+&#x20;These are the default target values for each animation that can be customized with the `withTargetValues` modifier.
+
+| Name                 | Config                                                                                                                                                                  |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RotateInDownLeft`   | `{ opacity: 1, rotate: '0deg', translateX: 0, translateY: 0 }`                                                                                                          |
+| `RotateInDownRight`  | `{ opacity: 1, rotate: '0deg', translateX: 0, translateY: 0 }`                                                                                                          |
+| `RotateInUpLeft`     | `{ opacity: 1, rotate: '0deg', translateX: 0, translateY: 0 }`                                                                                                          |
+| `RotateInUpRight`    | `{ opacity: 1, rotate: '0deg', translateX: 0, translateY: 0 }`                                                                                                          |
+| `RotateOutDownLeft`  | `{ opacity: 0, rotate: '90deg', translateX: values.currentWidth / 2 - values.currentHeight / 2, translateY: values.currentWidth / 2 - values.currentHeight / 2 }`       |
+| `RotateOutDownRight` | `{ opacity: 0, rotate: '-90deg', translateX: -(values.currentWidth / 2 - values.currentHeight / 2), translateY: values.currentWidth / 2 - values.currentHeight / 2 }`   |
+| `RotateOutUpLeft`    | `{ opacity: 0, rotate: '-90deg', translateX: values.currentWidth / 2 - values.currentHeight / 2, translateY: -(values.currentWidth / 2 - values.currentHeight / 2) }`   |
+| `RotateOutUpRight`   | `{ opacity: 0, rotate: '90deg', translateX: -(values.currentWidth / 2 - values.currentHeight / 2), translateY: -(values.currentWidth / 2 - values.currentHeight / 2) }` |
+
+```typescript
+// All Rotate presets
+type RotateValues = {
+  opacity?: number;
+  rotate?: string;
+  translateX?: number | `${number}%`;
+  translateY?: number | `${number}%`;
+  /** @deprecated Prefer flat top-level props. */
+  transform?: [
+    { rotate: string },
+    { translateX: number | `${number}%` },
+    { translateY: number | `${number}%` },
+  ];
+};
+```
+
+### Modifiers
+
+#### Time-based&#x20;
+
+Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+
+```javascript
+RotateOutDownRight.duration(500).easing(Easing.ease);
+```
+
+* `.easing(easingFunction: EasingFunction)` is an easing function which defines the animation curve. Defaults to `Easing.inOut(Easing.quad)`
+
+> **Note**
+>
+> Time-based modifiers have no effect when `.springify()` is used.
+
+#### Spring-based&#x20;
+
+Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+
+```javascript
+RotateInUpLeft.springify()
+  .damping(30)
+  .mass(5)
+  .stiffness(10)
+  .overshootClamping(false)
+  .energyThreshold(6e-8);
+```
+
+* `.springify()` enables the spring-based animation configuration.
+* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
+* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
+* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+* `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
+* `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
+
+#### Common&#x20;
+
+```javascript
+RotateInDownLeft.delay(500)
+  .randomDelay()
+  .reduceMotion(ReduceMotion.Never)
+  .withInitialValues({ rotate: '-90deg', translateX: 100, translateY: 100 })
+  .withTargetValues({ rotate: '0deg', translateX: 0, translateY: 0 })
+  .withCallback((finished) => {
+    console.log(`finished without interruptions: ${finished}`);
+  });
+```
+
+* `.duration(durationMs: number)` is the length of the animation (in milliseconds). Defaults to `300`.
+* `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
+* `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
+* `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the *Values & Type definitions* block above).
+* &#x20;`.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the *Values & Type definitions* block above).
+* `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
+
+## Slide
+
+`SlideX` lets you create an animation of horizontal or vertical moving object.
+
+```jsx
+import { SlideInRight, SlideOutLeft } from 'react-native-reanimated';
+
+function App() {
+  return <Animated.View entering={SlideInRight} exiting={SlideOutLeft} />;
+}
+```
+
+Available slide animations:
+
+### Entering
+
+* `SlideInRight`
+
+* `SlideInLeft`
+
+* `SlideInUp`
+
+* `SlideInDown`
+
+### Exiting
+
+* `SlideOutRight`
+
+* `SlideOutLeft`
+
+* `SlideOutUp`
+
+* `SlideOutDown`
+
+Values & Type definitions
+
+These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
+
+| Name            | Config                                                    |
+| --------------- | --------------------------------------------------------- |
+| `SlideInDown`   | `{ originY: values.targetOriginY + values.windowHeight }` |
+| `SlideInLeft`   | `{ originX: values.targetOriginX - values.windowWidth }`  |
+| `SlideInRight`  | `{ originX: values.targetOriginX + values.windowWidth }`  |
+| `SlideInUp`     | `{ originY: -values.windowHeight }`                       |
+| `SlideOutDown`  | `{ originY: values.currentOriginY }`                      |
+| `SlideOutLeft`  | `{ originX: values.currentOriginX }`                      |
+| `SlideOutRight` | `{ originX: values.currentOriginX }`                      |
+| `SlideOutUp`    | `{ originY: values.currentOriginY }`                      |
+
+&#x20;These are the default target values for each animation that can be customized with the `withTargetValues` modifier.
+
+| Name            | Config                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------ |
+| `SlideInDown`   | `{ originY: values.targetOriginY }`                                                        |
+| `SlideInLeft`   | `{ originX: values.targetOriginX }`                                                        |
+| `SlideInRight`  | `{ originX: values.targetOriginX }`                                                        |
+| `SlideInUp`     | `{ originY: values.targetOriginY }`                                                        |
+| `SlideOutDown`  | `{ originY: Math.max(values.currentOriginY + values.windowHeight, values.windowHeight) }`  |
+| `SlideOutLeft`  | `{ originX: Math.min(values.currentOriginX - values.windowWidth, -values.windowWidth) }`   |
+| `SlideOutRight` | `{ originX: Math.max(values.currentOriginX + values.windowWidth, values.windowWidth) }`    |
+| `SlideOutUp`    | `{ originY: Math.min(values.currentOriginY - values.windowHeight, -values.windowHeight) }` |
+
+```typescript
+// SlideInLeft, SlideInRight, SlideOutLeft, SlideOutRight
+type SlideXValues = { originX?: number };
+
+// SlideInUp, SlideInDown, SlideOutUp, SlideOutDown
+type SlideYValues = { originY?: number };
+```
+
+### Modifiers
+
+#### Time-based&#x20;
+
+Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+
+```javascript
+SlideOutLeft.duration(500).easing(Easing.ease);
+```
+
+* `.easing(easingFunction: EasingFunction)` is an easing function which defines the animation curve. Defaults to `Easing.inOut(Easing.quad)`
+
+> **Note**
+>
+> Time-based modifiers have no effect when `.springify()` is used.
+
+#### Spring-based&#x20;
+
+Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+
+```javascript
+SlideInUp.springify()
+  .damping(30)
+  .mass(5)
+  .stiffness(10)
+  .overshootClamping(false)
+  .energyThreshold(6e-8);
+```
+
+* `.springify()` enables the spring-based animation configuration.
+* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
+* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
+* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+* `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
+* `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
+
+#### Common&#x20;
+
+```javascript
+SlideInDown.delay(500)
+  .randomDelay()
+  .reduceMotion(ReduceMotion.Never)
+  .withInitialValues({ originY: 420 })
+  .withTargetValues({ originY: 0 })
+  .withCallback((finished) => {
+    console.log(`finished without interruptions: ${finished}`);
+  });
+```
+
+* `.duration(durationMs: number)` is the length of the animation (in milliseconds). Defaults to `300`.
+* `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
+* `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
+* `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the *Values & Type definitions* block above).
+* &#x20;`.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the *Values & Type definitions* block above).
+* `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
+
+## Stretch
+
+`StretchX` lets you create an animation based on scaling in X or Y axis.
+
+```jsx
+import { StretchInX, StretchOutY } from 'react-native-reanimated';
+
+function App() {
+  return <Animated.View entering={StretchInX} exiting={StretchOutY} />;
+}
+```
+
+Available stretch animations:
+
+### Entering
+
+* `StretchInX`
+
+* `StretchInY`
+
+### Exiting
+
+* `StretchOutX`
+
+* `StretchOutY`
+
+Values & Type definitions
+
+These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
+
+| Name          | Config          |
+| ------------- | --------------- |
+| `StretchInX`  | `{ scaleX: 0 }` |
+| `StretchInY`  | `{ scaleY: 0 }` |
+| `StretchOutX` | `{ scaleX: 1 }` |
+| `StretchOutY` | `{ scaleY: 1 }` |
+
+&#x20;These are the default target values for each animation that can be customized with the `withTargetValues` modifier.
+
+| Name          | Config          |
+| ------------- | --------------- |
+| `StretchInX`  | `{ scaleX: 1 }` |
+| `StretchInY`  | `{ scaleY: 1 }` |
+| `StretchOutX` | `{ scaleX: 0 }` |
+| `StretchOutY` | `{ scaleY: 0 }` |
+
+```typescript
+// StretchInX, StretchOutX
+type StretchXValues = {
+  scaleX?: number;
+  /** @deprecated Prefer flat top-level props. */
+  transform?: [{ scaleX: number }];
+};
+
+// StretchInY, StretchOutY
+type StretchYValues = {
+  scaleY?: number;
+  /** @deprecated Prefer flat top-level props. */
+  transform?: [{ scaleY: number }];
+};
+```
+
+### Modifiers
+
+#### Time-based&#x20;
+
+Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+
+```javascript
+StretchOutX.duration(500).easing(Easing.ease);
+```
+
+* `.easing(easingFunction: EasingFunction)` is an easing function which defines the animation curve. Defaults to `Easing.inOut(Easing.quad)`
+
+> **Note**
+>
+> Time-based modifiers have no effect when `.springify()` is used.
+
+#### Spring-based&#x20;
+
+Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+
+```javascript
+StretchInX.springify()
+  .damping(30)
+  .mass(5)
+  .stiffness(10)
+  .overshootClamping(false)
+  .energyThreshold(6e-8);
+```
+
+* `.springify()` enables the spring-based animation configuration.
+* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
+* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
+* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+* `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
+* `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
+
+#### Common&#x20;
+
+```javascript
+StretchInY.delay(500)
+  .randomDelay()
+  .reduceMotion(ReduceMotion.Never)
+  .withInitialValues({ scaleY: 0.5 })
+  .withTargetValues({ scaleY: 1 })
+  .withCallback((finished) => {
+    console.log(`finished without interruptions: ${finished}`);
+  });
+```
+
+* `.duration(durationMs: number)` is the length of the animation (in milliseconds). Defaults to `300`.
+* `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
+* `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
+* `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the *Values & Type definitions* block above).
+* &#x20;`.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the *Values & Type definitions* block above).
+* `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
+
+## Zoom
+
+`ZoomX` lets you create an animation based on scale.
+
+```jsx
+import { ZoomIn, ZoomOut } from 'react-native-reanimated';
+
+function App() {
+  return <Animated.View entering={ZoomIn} exiting={ZoomOut} />;
+}
+```
+
+Available zoom animations:
+
+### Entering
+
+* `ZoomIn`
+
+* `ZoomInDown`
+
+* `ZoomInEasyDown`
+
+* `ZoomInEasyUp`
+
+* `ZoomInLeft`
+
+* `ZoomInRight`
+
+* `ZoomInRotate`
+
+* `ZoomInUp`
+
+### Exiting
+
+* `ZoomOut`
+
+* `ZoomOutDown`
+
+* `ZoomOutEasyDown`
+
+* `ZoomOutEasyUp`
+
+* `ZoomOutLeft`
+
+* `ZoomOutRight`
+
+* `ZoomOutRotate`
+
+* `ZoomOutUp`
+
+Values & Type definitions
+
+These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
+
+| Name              | Config                                            |
+| ----------------- | ------------------------------------------------- |
+| `ZoomIn`          | `{ scale: 0 }`                                    |
+| `ZoomInDown`      | `{ translateY: values.windowHeight, scale: 0 }`   |
+| `ZoomInEasyDown`  | `{ translateY: values.targetHeight, scale: 0 }`   |
+| `ZoomInEasyUp`    | `{ translateY: -values.targetHeight, scale: 0 }`  |
+| `ZoomInLeft`      | `{ translateX: -values.windowWidth, scale: 0 }`   |
+| `ZoomInRight`     | `{ translateX: values.windowWidth, scale: 0 }`    |
+| `ZoomInRotate`    | `{ scale: 0, rotate: rotate }`                    |
+| `ZoomInUp`        | `{ translateY: -values.windowHeight, scale: 0 }`  |
+| `ZoomOut`         | `{ scale: 1 }`                                    |
+| `ZoomOutDown`     | `{ translateY: 0, scale: 1 }`                     |
+| `ZoomOutEasyDown` | `{ translateY: 0, scale: 1 }`                     |
+| `ZoomOutEasyUp`   | `{ translateY: 0, scale: 1 }`                     |
+| `ZoomOutLeft`     | `{ translateX: 0, scale: 1 }`                     |
+| `ZoomOutRight`    | `{ translateX: 0, scale: 1 }`                     |
+| `ZoomOutRotate`   | `{ scale: 1, rotate: '0' }`                       |
+| `ZoomOutUp`       | `{ translateY: 0, scale: 1 }`                     |
+
+&#x20;These are the default target values for each animation that can be customized with the `withTargetValues` modifier.
+
+| Name              | Config                                            |
+| ----------------- | ------------------------------------------------- |
+| `ZoomIn`          | `{ scale: 1 }`                                    |
+| `ZoomInDown`      | `{ translateY: 0, scale: 1 }`                     |
+| `ZoomInEasyDown`  | `{ translateY: 0, scale: 1 }`                     |
+| `ZoomInEasyUp`    | `{ translateY: 0, scale: 1 }`                     |
+| `ZoomInLeft`      | `{ translateX: 0, scale: 1 }`                     |
+| `ZoomInRight`     | `{ translateX: 0, scale: 1 }`                     |
+| `ZoomInRotate`    | `{ scale: 1, rotate: '0rad' }`                    |
+| `ZoomInUp`        | `{ translateY: 0, scale: 1 }`                     |
+| `ZoomOut`         | `{ scale: 0 }`                                    |
+| `ZoomOutDown`     | `{ translateY: values.windowHeight, scale: 0 }`   |
+| `ZoomOutEasyDown` | `{ translateY: values.currentHeight, scale: 0 }`  |
+| `ZoomOutEasyUp`   | `{ translateY: -values.currentHeight, scale: 0 }` |
+| `ZoomOutLeft`     | `{ translateX: -values.windowWidth, scale: 0 }`   |
+| `ZoomOutRight`    | `{ translateX: values.windowWidth, scale: 0 }`    |
+| `ZoomOutRotate`   | `{ scale: 0, rotate: '0.3' }`                     |
+| `ZoomOutUp`       | `{ translateY: -values.windowHeight, scale: 0 }`  |
+
+```typescript
+// ZoomIn, ZoomOut
+type ZoomScaleValues = {
+  scale?: number;
+  /** @deprecated Prefer flat top-level props. */
+  transform?: [{ scale: number }];
+};
+
+// ZoomInLeft, ZoomInRight, ZoomOutLeft, ZoomOutRight
+type ZoomXValues = {
+  translateX?: number | `${number}%`;
+  scale?: number;
+  /** @deprecated Prefer flat top-level props. */
+  transform?: [{ translateX: number | `${number}%` }, { scale: number }];
+};
+
+// ZoomInUp, ZoomInDown, ZoomInEasyUp, ZoomInEasyDown,
+// ZoomOutUp, ZoomOutDown, ZoomOutEasyUp, ZoomOutEasyDown
+type ZoomYValues = {
+  translateY?: number | `${number}%`;
+  scale?: number;
+  /** @deprecated Prefer flat top-level props. */
+  transform?: [{ translateY: number | `${number}%` }, { scale: number }];
+};
+
+// ZoomInRotate, ZoomOutRotate
+type ZoomRotateValues = {
+  scale?: number;
+  rotate?: string;
+  /** @deprecated Prefer flat top-level props. */
+  transform?: [{ scale: number }, { rotate: string }];
+};
+```
+
+### Modifiers
+
+#### Time-based&#x20;
+
+Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+
+```javascript
+ZoomOutLeft.duration(500).easing(Easing.ease);
+```
+
+* `.easing(easingFunction: EasingFunction)` is an easing function which defines the animation curve. Defaults to `Easing.inOut(Easing.quad)`
+
+> **Note**
+>
+> Time-based modifiers have no effect when `.springify()` is used.
+
+#### Spring-based&#x20;
+
+Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+
+```javascript
+ZoomInRotate.springify()
+  .damping(30)
+  .mass(5)
+  .stiffness(10)
+  .overshootClamping(false)
+  .energyThreshold(6e-8);
+```
+
+* `.springify()` enables the spring-based animation configuration.
+* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
+* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
+* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+* `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
+* `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
+
+#### Common&#x20;
+
+```javascript
+ZoomIn.delay(500)
+  .randomDelay()
+  .reduceMotion(ReduceMotion.Never)
+  .withInitialValues({ scale: 0.5 })
+  .withTargetValues({ scale: 1 })
+  .withCallback((finished) => {
+    console.log(`finished without interruptions: ${finished}`);
+  });
+```
+
+* `.duration(durationMs: number)` is the length of the animation (in milliseconds). Defaults to `300`.
+* `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
+* `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
+* `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the *Values & Type definitions* block above).
+* &#x20;`.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the *Values & Type definitions* block above).
+* `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
+
+## Platform compatibility

@@ -1,0 +1,50 @@
+# runOnRuntimeSyncWithId
+
+`runOnRuntimeSyncWithId` is a variant of [runOnRuntimeSync](/docs/threading/runOnRuntimeSync) where you use the runtime's id instead of the runtime object. It's useful when you don't have access to the runtime object, but you know its id.
+
+## Reference
+
+```javascript
+import { runOnRuntimeSyncWithId, createWorkletRuntime } from 'react-native-worklets';
+
+const workletRuntime = createWorkletRuntime({ name: 'background' });
+
+const result = runOnRuntimeSyncWithId(workletRuntime.runtimeId, () => {
+  'worklet';
+  return 2 + 2;
+}); // This will block the RN Runtime until the worklet is finished
+
+console.log(result); // 4
+```
+
+Type definitions
+
+```typescript
+function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): ReturnValue;
+```
+
+## Arguments
+
+### runtimeId
+
+The id of the [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) to run the worklet on. You can get the id from the runtime object by accessing its `runtimeId` property.
+
+### worklet
+
+A reference to a function you want to execute on the [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime).
+
+### args
+
+Arguments to the function you want to execute on the [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime).
+
+## Remarks
+
+* `runOnRuntimeSyncWithId` can target the UI Runtime by passing [UIRuntimeId](/docs/threading/uiRuntimeId) as the runtime id.
+
+## Call table
+
+## Platform compatibility

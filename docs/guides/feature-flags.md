@@ -1,0 +1,180 @@
+Feature flags allow developers to opt-in for experimental changes or opt-out from recent changes that have already been made default. Feature flags serve as a tool for incremental rollout of new implementation without affecting the general stability of the library, allowing to gather feedback from early adopters. There are two types of feature flags: static and dynamic.
+
+> **Info**
+>
+> Feature flags are available since Reanimated 4.
+
+## Summary of available feature flags
+
+| Feature flag name                                                                                   |              Type               | Added in | Removed in |               Default value               |
+| --------------------------------------------------------------------------------------------------- | :-----------------------------: | :------: | :--------: | :---------------------------------------: |
+| [`DISABLE_COMMIT_PAUSING_MECHANISM`](#disable_commit_pausing_mechanism)                             | [static](#static-feature-flags) |  4.0.0   |  –   |                  `false`                  |
+| [`ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#android_synchronously_update_ui_props)                   | [static](#static-feature-flags) |  4.0.0   |  –   |                  `false`                  |
+| [`IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#ios_synchronously_update_ui_props)                           | [static](#static-feature-flags) |  4.2.0   |  –   |                  `false`                  |
+| [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#experimental_css_animations_for_svg_components) | [static](#static-feature-flags) |  4.1.0   |  –   | `true` for 4.4.0+  `false` otherwise |
+| [`USE_SYNCHRONIZABLE_FOR_MUTABLES`](#use_synchronizable_for_mutables)                               | [static](#static-feature-flags) |  4.1.0   |  –   | `true` for 4.3.0+  `false` otherwise |
+| [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](#use_commit_hook_only_for_react_commits)                 | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.3.0+  `false` otherwise |
+| [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions)                           | [static](#static-feature-flags) |  4.2.0   |  –   |                  `false`                  |
+| [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#force_react_render_for_settled_animations)           | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.3.0+  `false` otherwise |
+| [`USE_ANIMATION_BACKEND`](#use_animation_backend)                                                   | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
+| [`IOS_CSS_CORE_ANIMATION`](#ios_css_core_animation)                                                 | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
+
+> **Info**
+>
+> Feature flags available in `react-native-worklets` are listed [on this page](https://docs.swmansion.com/react-native-worklets/docs/guides/feature-flags).
+
+## Description of available feature flags
+
+### `DISABLE_COMMIT_PAUSING_MECHANISM`
+
+When enabled, this feature flag is supposed to eliminate jittering of animated components like sticky header while scrolling. This feature flag is safe to enable only if `preventShadowTreeCommitExhaustion` feature flag from `react-native` (available since React Native 0.81) is also enabled – see instructions below. In all other cases it can lead to unresponsiveness of the app due to the starvation of React commits. For more details, see [PR #7852](https://github.com/software-mansion/react-native-reanimated/pull/7852).
+
+> **Note**
+>
+> We no longer recommend setting experimental React Native release level because it also enables other unrelated flags, for instance `fixTextClippingAndroid15useBoundsForWidth`, which supposedly causes incorrect text clipping on Android 15. Instead, you should enable only the `preventShadowTreeCommitExhaustion` feature flag according to the instructions below.
+
+Here's how you can enable `preventShadowTreeCommitExhaustion` feature flag from React Native.
+
+First, please apply the following change in `ReactNativeFeatureFlagsDefaults.h`:
+
+```diff
+   bool preventShadowTreeCommitExhaustion() override {
+-    return false;
++    return true;
+   }
+```
+
+It is recommended to make a patch after applying this change to make it persistent using tools like [patch-package](https://www.npmjs.com/package/patch-package), [yarn patch](https://yarnpkg.com/cli/patch) or [pnpm patch](https://pnpm.io/cli/patch).
+
+You also need to build React Native from source in order for this change to take effect.
+
+For Android, please add the following lines in `android/settings.gradle` according to the instructions [here](https://reactnative.dev/contributing/how-to-build-from-source#update-your-project-to-build-from-source):
+
+```gradle
+includeBuild('../node_modules/react-native') {
+    dependencySubstitution {
+        substitute(module("com.facebook.react:react-android")).using(project(":packages:react-native:ReactAndroid"))
+        substitute(module("com.facebook.react:react-native")).using(project(":packages:react-native:ReactAndroid"))
+        substitute(module("com.facebook.react:hermes-android")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
+        substitute(module("com.facebook.react:hermes-engine")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
+    }
+}
+```
+
+For iOS, add the following lines in `ios/Podfile` according to the instructions [here](https://reactnative.dev/blog/2026/02/11/react-native-0.84#precompiled-binaries-on-ios-by-default).
+
+```rb
+ENV['RCT_USE_PREBUILT_RNCORE'] = '0'
+```
+
+> **Tip**
+>
+> Flickering/jittering while scrolling will be ultimately fixed by branching mechanism which was introduced in [this PR to React Native](https://github.com/facebook/react-native/pull/54835). Currently it's under testing and should be out in some future release of React Native.
+
+### `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`
+
+When enabled, non-layout styles will be applied using the `synchronouslyUpdateViewOnUIThread` method (which doesn't involve layout recalculation) instead of than `ShadowTree::commit` method (which requires layout recalculation). In an artificial benchmark, it can lead to up to 4x increase of frames per second. Even though we don't expect such high speedups in the production apps, there should be a visible improvements in the smoothness of some animations. However, there are some unwanted side effects that one needs to take into account and properly compensate for:
+
+1. The changes applied via `synchronouslyUpdateViewOnUIThread` are not respected by the touch gesture system of Fabric renderer which can lead to incorrect behavior, in particular if transforms are applied. In that case, it's advisable to use `Pressable` or `Touchable` component from `react-native-gesture-handler` (which attaches to the underlying platform view rather than using `ShadowTree` to determine the component present at given point) rather than its original counterpart from `react-native`.
+
+2. The changes are applied via `synchronouslyUpdateViewOnUIThread` are not synchronized with changes applied by `ShadowTree::commit` which may lead to minor inconsistencies of animated styles or animated components in a single animation frame.
+
+Currently, the following styles can be updated using the fast path: `opacity`, `elevation`, `zIndex`, `backgroundColor` (excluding `PlatformColor` values, same for all color props), `tintColor`, `placeholderTextColor`, `shadowColor`, `borderColor` (all sides, including `borderBlockColor`, `borderBlockStartColor` and `borderBlockEndColor`), `borderRadius` (all sides), `outlineColor`, `outlineOffset`, `outlineWidth` and `transform` (all transforms). All remaining styles, if present, will be updated via `ShadowTree::commit`.
+
+This feature flag works only on Android and has no effect on iOS. For more details, see the original [PR #7823](https://github.com/software-mansion/react-native-reanimated/pull/7823).
+
+### `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS`
+
+When enabled, non-layout styles will be applied using the `[RCTSurfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:props:]` method (which doesn't involve layout recalculation) instead of than `ShadowTree::commit` method (which requires layout recalculation). Limitations and unwanted side effects are the same as for `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`. The set of supported styles is the same as for `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`, with the addition of `shadowOffset`, `shadowOpacity` and `shadowRadius`, which are iOS-only. For more details, see the original [PR #8367](https://github.com/software-mansion/react-native-reanimated/pull/8367).
+
+### `EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`
+
+When enabled, CSS animations and transitions will also work for a limited set of props of several components from [`react-native-svg`](https://github.com/software-mansion/react-native-svg) library. Currently, `Circle`, `Ellipse`, `Line`, `Path` and `Rect` components are supported.
+
+### `USE_SYNCHRONIZABLE_FOR_MUTABLES`
+
+This feature flag is supposed to speedup shared value reads on the RN runtime by reducing the number of calls to `executeOnUIRuntimeSync`. When enabled, mutables (which are the primitives behind shared values) use [Synchronizable](https://docs.swmansion.com/react-native-worklets/docs/memory/synchronizable) state to check if they should sync with the UI Runtime. For more details, see [PR #8080](https://github.com/software-mansion/react-native-reanimated/pull/8080).
+
+### `USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`
+
+This feature flag is supposed to fix performance regressions of animations while scrolling. When enabled, `ReanimatedCommitHook` applies latest animated styles and props only for React commits, which means the logic will be skipped for other commits, including state updates.
+
+### `ENABLE_SHARED_ELEMENT_TRANSITIONS`
+
+When enabled, Shared Element Transitions are available to use, also the synchronous prop update flags are disabled. The feature is not yet production ready, and may have some limitations or bugs. For more details, see [PR #7466](https://github.com/software-mansion/react-native-reanimated/pull/7466).
+
+### `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`
+
+This feature flag enables a mechanism that periodically synchronizes animated style updates back to React by triggering a React render for animated components with accumulated animated styles and evicting them from the registry on the C++ side. It is supposed to improve performance by decreasing the number of `ShadowNode` clone operations in `ReanimatedCommitHook` for React commits. When enabled, it also alters the behavior when detaching animated styles from animated components—the animated styles are not reverted to the original styles. If your app depends on that previous behavior, set this flag to `false` in `reanimated.staticFeatureFlags` in your app's `package.json`.
+
+### `USE_ANIMATION_BACKEND`
+
+When enabled, Reanimated will use the React Native's new Animation Backend for applying animated changes. The backend will now be responsible for keeping animation changes in sync with the current React tree. This is meant to help with long-term stability and unlock new performance optimizations.
+
+This flag is experimental and defaults to `false`. To use it, you must run React Native 0.85.2 or newer with `useSharedAnimatedBackend` feature flag enabled (which is achieved by using React Native's Experimental release level in development).
+
+### `IOS_CSS_CORE_ANIMATION`
+
+When enabled, Reanimated may route CSS transitions to platform-native animation APIs instead of running them on the JS-driven animation loop. Currently, only the `opacity` property is routed, and only on iOS, where the platform path uses Core Animation. Support for additional properties, CSS animations (not just transitions), and Android will be added in the future. This feature flag is experimental and defaults to `false`.
+
+## Static feature flags
+
+Static flags are intended to be resolved during code compilation and cannot be changed during application runtime. To enable a static feature flag, you need to:
+
+1. Add the following lines to `package.json` of your app
+
+```json
+{
+  // ...
+  "reanimated": {
+    "staticFeatureFlags": {
+      "EXAMPLE_STATIC_FLAG": true
+    }
+  }
+}
+```
+
+2. Run `pod install` (iOS only)
+3. Rebuild the native app
+
+> **Warning**
+>
+> Static feature flags are not supported in environments where Reanimated is prebuilt with the default configuration of flags, like for instance in [Expo Go](https://expo.dev/go) and [RNRepo](https://rnrepo.org/).
+>
+> * It's not possible to modify static feature flags in Expo Go. Please consider using [Expo Prebuild](https://docs.expo.dev/workflow/continuous-native-generation/) instead.
+> * If your project uses RNRepo, you need to force building Reanimated and Worklets from source by adding `react-native-reanimated` and `react-native-worklets` to the deny list as described in [RNRepo's documentation](https://github.com/software-mansion/rnrepo/blob/main/TROUBLESHOOTING.md#deny-list-configuration).
+
+To read a static feature flag value in JavaScript, you can use `getStaticFeatureFlag` function.
+
+## Dynamic feature flags
+
+Dynamic flags can be modified during runtime and their values can change at any moment of app lifetime. To enable or disable a dynamic feature flag, you need to call `setDynamicFeatureFlag` function.
+
+```tsx
+import { setDynamicFeatureFlag } from 'react-native-reanimated';
+
+setDynamicFeatureFlag('EXAMPLE_DYNAMIC_FLAG', true);
+```
+
+To read a dynamic feature flag value in JavaScript, you can use `getDynamicFeatureFlag` function.
+
+## Comparison of static and dynamic feature flags
+
+|                                             | Static feature flags | Dynamic feature flags |
+| ------------------------------------------- | :------------------: | :-------------------: |
+| Value is known during app build             |          ✅          |          ❌           |
+| Value may change during app lifetime        |          ❌          |          ✅           |
+| Value change requires app rebuild           |          ✅          |          ❌           |
+| Can be changed via public JavaScript API    |          ❌          |          ✅           |
+| Can be changed via app's `package.json`     |          ✅          |          ❌           |
+| Can be changed when using Expo Go or RNRepo |          ❌          |          ✅           |
+
+## Remarks for contributors
+
+* Feature flags should switch the implementation to the new experimental behavior only when enabled.
+* Initially, the default value should be false, allowing users to opt-in for the experimental behavior when desired.
+* When the experimental behavior is considered stable, the default value should be set to true, while still allowing users to opt-out if needed.
+* After some period, the feature flag which is enabled by default should be removed from the codebase.
+* Both static and dynamic feature flags should follow upper snake case, i.e. `EXAMPLE_FEATURE_FLAG`.
+* The name of the feature flag should not contain the expression `FEATURE_FLAG` itself.
+* It is recommended to explicitly use `ENABLE_` or `DISABLE_` prefix for feature flags that enable or disable certain parts of the code for the sake of clarity.
