@@ -12,6 +12,7 @@
 - [getting-started](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/getting-started)
 - [glossary](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary)
 - [runtimeKinds](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds)
+- [Sharing memory](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/sharing-memory)
 
 ## guides
 
