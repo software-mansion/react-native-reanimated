@@ -2,7 +2,7 @@
   "label": "Memory",
   "position": 4,
   "link": {
-    "type": "doc",
-    "id": "fundamentals/sharing-memory"
+    "type": "generated-index",
+    "description": "Reference for the memory primitives. For an overview of the memory topic, see [Sharing memory](/docs/fundamentals/sharing-memory)."
   }
 }
