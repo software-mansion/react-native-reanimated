@@ -28,7 +28,7 @@ construction.
 ## Parallelism and memory
 
 So what exactly happens when we add another thread into the equation? The naive approach: just tell two threads to do
-some work on the same Runtime. They might work for a short while, but very soon we'll hit an EXC_BAD_ACCESS exception —
+some work on the same Runtime. They might work for a short while, but very soon we'll hit an EXC\_BAD\_ACCESS exception —
 at some point one thread is bound to change some underlying reference that the other thread assumes is stable.
 
 The only thing we can do at this point is to give each thread its own Runtime. The crashes go away, everything runs in
@@ -75,7 +75,7 @@ need to create Serializables directly.
 ### Unbound memory — Synchronizable
 
 The simpler type of memory that is actually shared — meaning that changes to it on Runtime A will be seen by Runtime B
-and all the other Runtimes — but not tied to any particular Runtime, *unbound*. This is achieved by keeping the actual
+and all the other Runtimes — but not tied to any particular Runtime, _unbound_. This is achieved by keeping the actual
 "real" value outside of any Runtime, in C++, guarded by mutexes and other synchronization primitives. Each JavaScript
 Runtime holds just a specific kind of reference to the C++ value. Each read or write means crossing the boundary between
 JavaScript and C++. Because the memory is thread-safe, each Runtime can safely access it at its own discretion. **This
@@ -96,8 +96,8 @@ an object with a prototype chain, because it wouldn't make sense in another Runt
 
 ### Bound memory — Shareable
 
-This more complex type of shared memory overcomes some issues of unbound memory, but at the cost of being *asymmetric and
-bound to a particular Runtime*.
+This more complex type of shared memory overcomes some issues of unbound memory, but at the cost of being _asymmetric and
+bound to a particular Runtime_.
 
 Operations on unbound memory are much more expensive than operations on plain JavaScript values, because each access has
 to cross the boundary between JavaScript and C++ via JSI. Runtime-bound memory optimizes access time on a single
