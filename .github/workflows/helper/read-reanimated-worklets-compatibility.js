@@ -29,6 +29,13 @@ function toRange(version) {
   return version.includes('x') ? version : `${version}.x`;
 }
 
+const MIN_REACT_NATIVE_MINOR = 83;
+
+function rnMinorIsSupported(rnMinor) {
+  const minor = parseInt(rnMinor.split('.')[1], 10);
+  return minor >= MIN_REACT_NATIVE_MINOR;
+}
+
 const compatibilityPath = path.join(
   __dirname,
   '..',
@@ -93,9 +100,9 @@ for (const [reanimatedRange, details] of Object.entries(fabricCompatibility)) {
       continue;
     }
 
-    const commonReactNativeVersions = reactNativeVersions.filter((version) =>
-      workletsReactNativeVersions.includes(version)
-    );
+    const commonReactNativeVersions = reactNativeVersions
+      .filter((version) => workletsReactNativeVersions.includes(version))
+      .filter(rnMinorIsSupported);
 
     if (commonReactNativeVersions.length === 0) {
       continue;
