@@ -1,5 +1,4 @@
 'use strict';
-import type { PlainStyle } from '../../common';
 import { hasSuffix } from '../../common';
 import { webPropsBuilder } from '../../common/web';
 import type {
@@ -28,11 +27,13 @@ export function processKeyframeDefinitions(definitions: CSSAnimationKeyframes) {
     .join(' ');
 }
 
-function processKeyframeBlock({
+function processKeyframeBlock<S extends object>({
   animationTimingFunction,
   ...rules
-}: CSSAnimationKeyframeBlock<PlainStyle>): string | null {
-  const style = webPropsBuilder.build(rules);
+}: CSSAnimationKeyframeBlock<S>): string | null {
+  const style = webPropsBuilder.build(
+    rules as Parameters<typeof webPropsBuilder.build>[0]
+  );
 
   if (!style) {
     return null;

@@ -4,7 +4,7 @@ import { Component } from 'react';
 import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 
-import type { AnyComponent, PlainStyle, UnknownRecord } from '../../common';
+import type { AnyComponent, UnknownRecord } from '../../common';
 import { IS_JEST, SHOULD_BE_USE_WEB } from '../../common';
 import type {
   InternalHostInstance,
@@ -17,6 +17,7 @@ import type {
 } from '../../createAnimatedComponent/commonTypes';
 import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
+import type { DefaultStyle } from '../../hook/commonTypes';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
 import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../native';
 import { CSSManager } from '../platform';
@@ -25,7 +26,7 @@ import { filterNonCSSStyleProps } from './utils';
 
 export type AnimatedComponentProps = UnknownRecord & {
   ref?: Ref<Component>;
-  style?: StyleProp<PlainStyle>;
+  style?: StyleProp<DefaultStyle>;
 };
 
 // TODO - change these ugly underscore prefixed methods and properties to real
@@ -154,9 +155,8 @@ export default class AnimatedComponent<
   };
 
   _updateStyles(props: P) {
-    this._cssStyle = (StyleSheet.flatten(
-      props.style as StyleProp<PlainStyle>
-    ) ?? {}) as CSSStyle;
+    this._cssStyle =
+      StyleSheet.flatten(props.style as StyleProp<CSSStyle>) ?? {};
   }
 
   componentDidMount() {
