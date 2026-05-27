@@ -3,14 +3,16 @@ const fs = require('fs');
 const { normalize } = require('./normalize');
 const { expandInput } = require('./inputs');
 
-/** @typedef {import('./normalize').CompileEntry} CompileEntry */
-
-const USAGE =
-  'usage: clangd-publish.js [--verbose] [--dry-run] <output> <input...>';
+const USAGE = 'usage: emit.js [--verbose] [--dry-run] <output> <input...>';
 
 /**
  * @param {string[]} argv
- * @returns {{ output: string, inputArgs: string[], verbose: boolean, dryRun: boolean } | null}
+ * @returns {{
+ *   output: string;
+ *   inputArgs: string[];
+ *   verbose: boolean;
+ *   dryRun: boolean;
+ * } | null}
  */
 function parseArgs(argv) {
   const verbose = argv.includes('--verbose') || argv.includes('-v');
@@ -23,25 +25,21 @@ function parseArgs(argv) {
 
 /**
  * @param {string} path
- * @returns {CompileEntry[] | null}
+ * @returns {unknown[] | null}
  */
 function loadDb(path) {
   let raw;
   try {
     raw = fs.readFileSync(path, 'utf8');
   } catch (err) {
-    console.error(
-      `error: cannot read ${path}: ${/** @type {Error} */ (err).message}`
-    );
+    console.error(`error: cannot read ${path}: ${err}`);
     return null;
   }
   let data;
   try {
     data = JSON.parse(raw);
   } catch (err) {
-    console.error(
-      `error: invalid JSON in ${path}: ${/** @type {Error} */ (err).message}`
-    );
+    console.error(`error: invalid JSON in ${path}: ${err}`);
     return null;
   }
   if (!Array.isArray(data)) {
@@ -53,7 +51,7 @@ function loadDb(path) {
 
 /**
  * @param {string[]} argv
- * @returns {number} Exit code.
+ * @returns {number}
  */
 function main(argv) {
   const opts = parseArgs(argv);
@@ -63,7 +61,6 @@ function main(argv) {
   }
   const { output, inputArgs, verbose, dryRun } = opts;
 
-  /** @type {string[]} */
   const inputs = inputArgs.flatMap(expandInput);
   if (inputs.length === 0) {
     console.error('warning: no compile_commands.json or .compile files found');
@@ -73,7 +70,6 @@ function main(argv) {
   // Oldest first so the freshest source's entries overwrite earlier ones.
   inputs.sort((a, b) => fs.statSync(a).mtimeMs - fs.statSync(b).mtimeMs);
 
-  /** @type {Map<string, CompileEntry>} */
   const merged = new Map();
   let droppedEntries = 0;
   for (const p of inputs) {

@@ -5,7 +5,7 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
-require_relative '../../../scripts/clangd-add-xcode-step.rb'
+require_relative '../../../scripts/llvm-tools/add-xcode-step.rb'
 
 ENV['IS_REANIMATED_EXAMPLE_APP'] = '1'
 ENV['IS_REANIMATED_PROFILING'] = '1'
@@ -44,5 +44,5 @@ target 'FabricExample' do
     )
   end
 
-  add_clangd_generation_step()
+  add_compile_metadata_step()
 end

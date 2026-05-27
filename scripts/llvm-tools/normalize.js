@@ -1,16 +1,15 @@
+/* eslint-disable jsdoc/require-property-description */
+
 /**
  * @typedef {object} CompileEntry
- * @property {string} [directory] Working directory of the compile invocation.
- * @property {string} file Source file being compiled.
- * @property {string} [command] Whole compile command as a single string.
- * @property {string[]} [arguments] Whole compile command as an argv array.
- * @property {string} [output] Output file produced by the invocation.
+ * @property {string} [directory]
+ * @property {string} file
+ * @property {string} [command]
+ * @property {string[]} [arguments]
+ * @property {string} [output]
  */
 
-const KEEP = new Set(['directory', 'file', 'command', 'arguments', 'output']);
-
-// Apple's clang accepts these; upstream LLVM (clangd/clang-tidy from brew or
-// LLVM-built-from-source) rejects them with "unknown argument".
+// Apple's clang accepts these; upstream LLVM rejects them as "unknown argument".
 const DROP_FLAGS_WITH_VALUE = [
   '-index-store-path',
   '-index-unit-output-path',
@@ -55,42 +54,26 @@ function cleanArgs(args) {
       skip = true;
       continue;
     }
-    if (DROP_FLAGS_WITH_VALUE.some((f) => a.startsWith(`${f}=`))) {
-      continue;
-    }
+    if (DROP_FLAGS_WITH_VALUE.some((f) => a.startsWith(`${f}=`))) continue;
     out.push(a);
   }
   return out;
 }
 
 /**
- * Returns the entry stripped to the standard JSON-Compilation-Database
- * shape with Apple-only flags removed, or `null` if the raw input lacks
- * a `file` field (e.g. Swift module entries in xcode-build-server output).
- *
  * @param {unknown} raw
  * @returns {CompileEntry | null}
  */
 function normalize(raw) {
-  if (
-    !raw ||
-    typeof raw !== 'object' ||
-    typeof (/** @type {Record<string, unknown>} */ (raw)).file !== 'string'
-  ) {
-    return null;
-  }
+  if (!raw || typeof raw !== 'object') return null;
   const src = /** @type {Record<string, unknown>} */ (raw);
+  if (typeof src.file !== 'string') return null;
   /** @type {CompileEntry} */
-  const e = { file: /** @type {string} */ (src.file) };
+  const e = { file: src.file };
   if (typeof src.directory === 'string') e.directory = src.directory;
   if (typeof src.output === 'string') e.output = src.output;
   if (typeof src.command === 'string') e.command = cleanCommand(src.command);
-  if (Array.isArray(src.arguments))
-    e.arguments = cleanArgs(/** @type {string[]} */ (src.arguments));
-  for (const k of Object.keys(e)) {
-    if (!KEEP.has(k))
-      delete /** @type {Record<string, unknown>} */ (e)[k];
-  }
+  if (Array.isArray(src.arguments)) e.arguments = cleanArgs(src.arguments);
   return e;
 }
 

@@ -5,23 +5,19 @@ on:
       - main
     paths:
       - '.github/workflows/common-validation.yml'
-      - '.github/actions/setup-cpp-lint/**'
       - '.github/actions/common-validation/**'
-      - 'packages/react-native-reanimated/scripts/cpplint.sh'
+      - 'scripts/llvm-tools/**'
       - 'packages/react-native-reanimated/scripts/validate-includes.sh'
       - 'packages/react-native-reanimated/Common/cpp/**'
-      - 'packages/react-native-worklets/scripts/cpplint.sh'
       - 'packages/react-native-worklets/scripts/validate-includes.sh'
       - 'packages/react-native-worklets/Common/cpp/**'
   pull_request:
     paths:
       - '.github/workflows/common-validation.yml'
-      - '.github/actions/setup-cpp-lint/**'
       - '.github/actions/common-validation/**'
-      - 'packages/react-native-reanimated/scripts/cpplint.sh'
+      - 'scripts/llvm-tools/**'
       - 'packages/react-native-reanimated/scripts/validate-includes.sh'
       - 'packages/react-native-reanimated/Common/cpp/**'
-      - 'packages/react-native-worklets/scripts/cpplint.sh'
       - 'packages/react-native-worklets/scripts/validate-includes.sh'
       - 'packages/react-native-worklets/Common/cpp/**'
   merge_group:

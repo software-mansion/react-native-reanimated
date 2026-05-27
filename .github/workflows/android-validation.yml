@@ -8,10 +8,9 @@ on:
     paths:
       - '.github/workflows/android-validation.yml'
       - '.github/actions/android-validation/**'
-      - '.github/actions/setup-cpp-lint/**'
+      - 'scripts/llvm-tools/**'
       - 'packages/react-native-reanimated/android/src/main/java/**'
       - 'packages/react-native-reanimated/android/build.gradle'
-      - 'packages/react-native-reanimated/scripts/cpplint.sh'
       - 'packages/react-native-reanimated/Common/cpp/**'
       - 'packages/react-native-worklets/android/src/**'
       - 'packages/react-native-worklets/android/build.gradle'
@@ -20,10 +19,9 @@ on:
     paths:
       - '.github/workflows/android-validation.yml'
       - '.github/actions/android-validation/**'
-      - '.github/actions/setup-cpp-lint/**'
+      - 'scripts/llvm-tools/**'
       - 'packages/react-native-reanimated/android/src/main/java/**'
       - 'packages/react-native-reanimated/android/build.gradle'
-      - 'packages/react-native-reanimated/scripts/cpplint.sh'
       - 'packages/react-native-reanimated/Common/cpp/**'
       - 'packages/react-native-worklets/android/src/**'
       - 'packages/react-native-worklets/android/build.gradle'

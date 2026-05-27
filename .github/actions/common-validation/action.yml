@@ -9,12 +9,31 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Set up C++ lint tools
-      uses: ./.github/actions/setup-cpp-lint
+    - name: Setup Java 17
+      uses: actions/setup-java@17f84c3641ba7b8f6deff6309fc4c864478f5d62
+      with:
+        distribution: 'zulu'
+        java-version: 17
+
+    - name: Use Node.js
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      with:
+        cache: 'yarn'
+
+    - name: Install clang-tidy
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang-tidy
 
     - name: Install monorepo node dependencies
       shell: bash
       run: yarn install --immutable
+
+    - name: Generate Android compile database
+      shell: bash
+      working-directory: apps/fabric-example/android
+      run: ./gradlew :react-native-reanimated:assembleDebug :react-native-worklets:assembleDebug --build-cache -PreactNativeArchitectures=arm64-v8a
 
     - name: Lint Common
       shell: bash

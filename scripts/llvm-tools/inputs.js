@@ -1,17 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
-// Files we accept as compile databases. xcode-build-server writes `.compile`,
-// CMake and gradle write `compile_commands.json`.
 const INPUT_BASENAMES = new Set(['compile_commands.json', '.compile']);
+const SKIP_DIRS = new Set(['node_modules', 'Pods', 'build']);
 
 /**
- * Expands one CLI argument into the concrete files we should read. A plain
- * file path returns itself (no filter — the caller is explicit). A directory
- * is walked recursively for any file matching {@link INPUT_BASENAMES}. A
- * non-existent path returns an empty list (lets the caller pass speculative
- * sources without ever erroring on the missing-platform case).
- *
  * @param {string} arg
  * @returns {string[]}
  */
@@ -36,9 +29,11 @@ function expandInput(arg) {
       return;
     }
     for (const entry of entries) {
-      const p = path.join(d, entry.name);
-      if (entry.isDirectory()) walk(p);
-      else if (entry.isFile() && INPUT_BASENAMES.has(entry.name)) found.push(p);
+      if (entry.isDirectory()) {
+        if (!SKIP_DIRS.has(entry.name)) walk(path.join(d, entry.name));
+      } else if (entry.isFile() && INPUT_BASENAMES.has(entry.name)) {
+        found.push(path.join(d, entry.name));
+      }
     }
   }
   walk(arg);

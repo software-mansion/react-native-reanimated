@@ -24,10 +24,13 @@ runs:
       with:
         cache: 'yarn'
 
-    - name: Set up C++ lint tools
-      uses: ./.github/actions/setup-cpp-lint
-      with:
-        install-cmakelang: 'true'
+    - name: Install clang-tidy and cmakelang
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang-tidy
+        python -m pip install --upgrade pip
+        python -m pip install cmakelang==0.6.13
 
     - name: Clear annotations
       shell: bash
@@ -42,6 +45,11 @@ runs:
       shell: bash
       working-directory: ${{ inputs.package-dir }}
       run: yarn build
+
+    - name: Generate Android compile database
+      shell: bash
+      working-directory: apps/fabric-example/android
+      run: ./gradlew :react-native-reanimated:assembleDebug :react-native-worklets:assembleDebug --build-cache -PreactNativeArchitectures=arm64-v8a
 
     - name: Lint Android
       shell: bash

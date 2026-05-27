@@ -274,9 +274,8 @@ android {
         }
     }
 
-    // The hook lives in this monorepo only; npm consumers never see it.
     if (IS_REANIMATED_EXAMPLE_APP) {
-        apply(from = "../../../scripts/clangd-android-hook.gradle.kts")
+        apply(from = "../../../scripts/llvm-tools/android-hook.gradle.kts")
     }
 }
 
