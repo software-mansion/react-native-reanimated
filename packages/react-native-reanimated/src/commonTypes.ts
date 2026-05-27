@@ -455,7 +455,7 @@ type MaybeSharedValueRecursive<Value> = Value extends readonly (infer Item)[]
           }
     : MaybeSharedValue<Value>;
 
-type CSSConfigProps<TStyle extends object = DefaultStyle> = Partial<
+type CSSConfigProps<TStyle extends object> = Partial<
   CSSAnimationProperties<TStyle> & CSSTransitionProperties<TStyle>
 >;
 
@@ -465,13 +465,14 @@ type CSSConfigProps<TStyle extends object = DefaultStyle> = Partial<
 // `expo-env.d.ts`) declares our CSS keys with conflicting types. See
 // https://github.com/software-mansion/react-native-reanimated/issues/9328
 type StyleWithCSS<TStyle> = TStyle extends object
-  ? Omit<TStyle, keyof CSSConfigProps> & CSSConfigProps<TStyle>
+  ?
+      | (TStyle & CSSConfigProps<TStyle>)
+      | (Omit<TStyle, keyof CSSConfigProps<TStyle>> & CSSConfigProps<TStyle>)
   : never;
 
 // Ideally we want AnimatedStyle to not be generic, but there are
 // so many dependencies on it being generic that it's not feasible at the moment.
 export type AnimatedStyle<TStyle = DefaultStyle> =
-  | TStyle
   | StyleWithCSS<TStyle>
   | MaybeSharedValueRecursive<TStyle>
   | AnimatedStyleHandle<TStyle>;
