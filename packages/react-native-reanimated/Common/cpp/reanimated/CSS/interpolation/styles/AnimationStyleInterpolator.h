@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_set>
 
 namespace reanimated::css {
 
@@ -13,14 +14,15 @@ namespace reanimated::css {
 // same as interpolating record properties
 class AnimationStyleInterpolator : public RecordPropertiesInterpolator {
  public:
-  explicit AnimationStyleInterpolator(
-      jsi::Runtime &rt,
-      const jsi::Value &keyframes,
+  AnimationStyleInterpolator(
       const std::string &nativeComponentName,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      : RecordPropertiesInterpolator(getComponentInterpolators(nativeComponentName), {}, viewStylesRepository) {
-    updateKeyframes(rt, keyframes);
-  }
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+      const std::shared_ptr<const PropertyInterpolatorsRecord> &allInterpolators);
+
+  void setActiveProperties(const std::unordered_set<std::string> &propertyNames);
+
+ private:
+  const std::shared_ptr<const PropertyInterpolatorsRecord> allInterpolators_;
 };
 
 } // namespace reanimated::css

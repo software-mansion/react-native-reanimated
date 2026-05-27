@@ -1,17 +1,17 @@
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
+#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 
-#include <memory>
+#include <react/debug/react_native_assert.h>
+
 #include <string>
 #include <utility>
 
 namespace reanimated::css {
 
-CSSKeyframesRegistry::CSSKeyframesRegistry(const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : viewStylesRepository_(viewStylesRepository) {}
-
 std::optional<std::reference_wrapper<const CSSKeyframesConfig>> CSSKeyframesRegistry::get(
     const std::string &animationName,
     const std::string &compoundComponentName) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto registryIt = registry_.find(animationName);
   if (registryIt == registry_.end()) {
     return std::nullopt;
@@ -30,10 +30,12 @@ void CSSKeyframesRegistry::set(
     const std::string &animationName,
     const std::string &compoundComponentName,
     CSSKeyframesConfig &&config) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   registry_[animationName][compoundComponentName] = std::move(config);
 }
 
 void CSSKeyframesRegistry::remove(const std::string &animationName, const std::string &compoundComponentName) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   registry_[animationName].erase(compoundComponentName);
   if (registry_[animationName].empty()) {
     registry_.erase(animationName);

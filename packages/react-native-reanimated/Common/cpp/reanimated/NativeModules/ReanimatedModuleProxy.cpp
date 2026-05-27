@@ -1,19 +1,32 @@
+#include <cxxreact/ReactNativeVersion.h>
+#include <jsi/JSIDynamic.h>
+#include <jsi/jsi.h>
+#include <react/debug/react_native_assert.h>
+#include <react/featureflags/ReactNativeFeatureFlags.h>
+#include <react/renderer/core/RawProps.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
+#include <react/renderer/uimanager/primitives.h>
+#include <reanimated/CSS/configs/CSSTransitionConfig.h>
+#include <reanimated/CSS/easing/EasingFunctions.h>
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
+#include <reanimated/Fabric/updates/PropsLayoutFilter.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
+#include <reanimated/NativeModules/SynchronousPropsBufferSerializer.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
+#include <reanimated/Tools/ReaJSIUtils.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
-#include <worklets/SharedItems/Serializable.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
 
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <string>
@@ -26,13 +39,150 @@ namespace reanimated {
 
 using namespace worklets;
 
-#if REACT_NATIVE_MINOR_VERSION >= 81
 static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper) {
   return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
 }
+
+namespace {
+
+#if REACT_NATIVE_VERSION_MINOR >= 85
+void mergeAnimatedProps(AnimatedProps &target, AnimatedProps &&source) {
+  if (source.rawProps) {
+    if (target.rawProps) {
+      auto mergedRawProps = target.rawProps->toDynamic();
+      mergedRawProps.merge_patch(source.rawProps->toDynamic());
+      target.rawProps = std::make_unique<RawProps>(std::move(mergedRawProps));
+    } else {
+      target.rawProps = std::move(source.rawProps);
+    }
+  }
+
+  for (auto &prop : source.props) {
+    target.props.push_back(std::move(prop));
+  }
+}
 #endif
+
+#ifdef ANDROID
+constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
+  return StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
+      !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS");
+}
+#elif __APPLE__
+constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
+  return StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
+      !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS");
+}
+#else
+constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
+  return false;
+}
+#endif
+
+std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
+    const UpdatesBatch &updatesBatch,
+    const bool allowPartialUpdates) {
+  static const std::unordered_set<std::string> synchronousPropNames = {
+      "opacity",
+      "elevation",
+      "zIndex",
+      "shadowColor",
+#if __APPLE__
+      "shadowOffset",
+      "shadowOpacity",
+      "shadowRadius",
+#endif // __APPLE__
+      "backgroundColor",
+      // "color", // not supported
+      "tintColor",
+      "placeholderTextColor",
+      "borderRadius",
+      "borderTopLeftRadius",
+      "borderTopRightRadius",
+      "borderTopStartRadius",
+      "borderTopEndRadius",
+      "borderBottomLeftRadius",
+      "borderBottomRightRadius",
+      "borderBottomStartRadius",
+      "borderBottomEndRadius",
+      "borderStartStartRadius",
+      "borderStartEndRadius",
+      "borderEndStartRadius",
+      "borderEndEndRadius",
+      "borderColor",
+      "borderTopColor",
+      "borderBottomColor",
+      "borderLeftColor",
+      "borderRightColor",
+      "borderStartColor",
+      "borderEndColor",
+      "borderBlockColor",
+      "borderBlockStartColor",
+      "borderBlockEndColor",
+      "outlineColor",
+      "outlineOffset",
+      "outlineWidth",
+      "transform",
+  };
+
+  const auto isSynchronous = [&](const std::string &keyStr, [[maybe_unused]] const folly::dynamic &value) {
+    if (!synchronousPropNames.contains(keyStr)) {
+      return false;
+    }
+#ifdef ANDROID
+    // The Android synchronous path serializes color props into an int buffer via `value.asInt()`,
+    // so non-numeric color values (e.g. PlatformColor) must fall back to the shadow tree commit path.
+    const bool isColorProp = keyStr.find("Color") != std::string::npos;
+    if (isColorProp && !value.isNumber()) {
+      return false;
+    }
+#endif // ANDROID
+    return true;
+  };
+
+  UpdatesBatch synchronousUpdatesBatch;
+  UpdatesBatch shadowTreeUpdatesBatch;
+
+  for (const auto &[shadowNodeFamily, props] : updatesBatch) {
+    if (allowPartialUpdates) {
+      folly::dynamic synchronousProps = folly::dynamic::object();
+      folly::dynamic shadowTreeProps = folly::dynamic::object();
+
+      for (const auto &[key, value] : props.items()) {
+        const auto keyStr = key.asString();
+        if (isSynchronous(keyStr, value)) {
+          synchronousProps[keyStr] = value;
+        } else {
+          shadowTreeProps[keyStr] = value;
+        }
+      }
+
+      if (!synchronousProps.empty()) {
+        synchronousUpdatesBatch.emplace_back(shadowNodeFamily, std::move(synchronousProps));
+      }
+
+      if (!shadowTreeProps.empty()) {
+        shadowTreeUpdatesBatch.emplace_back(shadowNodeFamily, std::move(shadowTreeProps));
+      }
+    } else {
+      const bool hasOnlySynchronousProps = std::all_of(props.items().begin(), props.items().end(), [&](const auto &kv) {
+        return isSynchronous(kv.first.asString(), kv.second);
+      });
+
+      if (hasOnlySynchronousProps) {
+        synchronousUpdatesBatch.emplace_back(shadowNodeFamily, props);
+      } else {
+        shadowTreeUpdatesBatch.emplace_back(shadowNodeFamily, props);
+      }
+    }
+  }
+
+  return {std::move(synchronousUpdatesBatch), std::move(shadowTreeUpdatesBatch)};
+}
+
+} // namespace
 
 ReanimatedModuleProxy::ReanimatedModuleProxy(
     const std::shared_ptr<WorkletRuntime> &uiRuntime,
@@ -41,10 +191,10 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
     const std::shared_ptr<CallInvoker> &jsCallInvoker,
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
     const bool isReducedMotion)
-    : ReanimatedModuleProxySpec(jsCallInvoker),
-      isReducedMotion_(isReducedMotion),
+    : isReducedMotion_(isReducedMotion),
       uiRuntime_(uiRuntime),
       uiScheduler_(uiScheduler),
+      jsInvoker_(jsCallInvoker),
       eventHandlerRegistry_(std::make_unique<UIEventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       animatedSensorModule_(platformDepMethodsHolder),
@@ -53,40 +203,81 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #ifdef __APPLE__
       forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
 #endif
-      animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
+      operationsLoop_(std::make_shared<OperationsLoop>(
+          uiScheduler,
+          platformDepMethodsHolder.requestRender,
+          platformDepMethodsHolder.getAnimationTimestamp,
+          updatesRegistryManager_)),
+      animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(staticPropsRegistry_, animatedPropsRegistry_)),
-      cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>(viewStylesRepository_)),
-      cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
-      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(getAnimationTimestamp_, viewStylesRepository_)),
+      cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
+      cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>(
+          operationsLoop_,
+          cssAnimationKeyframesRegistry_,
+          platformDepMethodsHolder.platformAnimationFactory)),
+      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
+          viewStylesRepository_,
+          operationsLoop_,
+          std::make_shared<CSSPlatformTransitionProxy>(
+              platformDepMethodsHolder.cssCanRouteProperty,
+              platformDepMethodsHolder.cssApplyTransition,
+              platformDepMethodsHolder.cssRemoveTransition))),
+      pseudoStylesRegistry_(std::make_shared<PseudoStylesRegistry>(
+          platformDepMethodsHolder.attachPseudoSelector,
+          platformDepMethodsHolder.detachPseudoSelector,
+          cssTransitionsRegistry_,
+          updatesRegistryManager_)),
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
 #endif // ANDROID
       subscribeForKeyboardEventsFunction_(platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
-  auto lock = updatesRegistryManager_->lock();
   // Add registries in order of their priority (from the lowest to the
-  // highest)
-  // CSS transitions should be overriden by animated style animations;
-  // animated style animations should be overriden by CSS animations
+  // highest). CSS transitions should be overriden by animated style
+  // animations; animated style animations should be overriden by CSS
+  // animations.
   updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
   updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
   updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
+
+#ifdef ANDROID
+  // Pre-allocate the synchronous props buffers so the first frame doesn't pay
+  // for vector growth allocations.
+  if constexpr (StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
+    synchronousPropsIntBuffer_.reserve(1024);
+    synchronousPropsDoubleBuffer_.reserve(1024);
+  }
+#endif // ANDROID
 }
 
 void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMethodsHolder) {
-  auto onRenderCallback = [weakThis = weak_from_this()](const double timestampMs) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-
-    strongThis->renderRequested_ = false;
-    strongThis->onRender(timestampMs);
-  };
-  onRenderCallback_ = std::move(onRenderCallback);
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    // Backend path: callbacks are drained later inside runGrandCallback under
+    // the manager lock; no wrap needed here.
+    requestRender_ = [weakThis = weak_from_this()](std::function<void(const double)> callback) {
+      auto strongThis = weakThis.lock();
+      if (!strongThis) {
+        return;
+      }
+      strongThis->pendingFrameCallbacks_.push_back(std::move(callback));
+      strongThis->startBackendIfNeeded();
+    };
+  } else {
+    // Non-backend path: wrap the platform RAF callback so the subsystem work
+    // runs under the manager lock.
+    requestRender_ = [weakThis = weak_from_this(), platformRequestRender = platformDepMethodsHolder.requestRender](
+                         std::function<void(const double)> callback) {
+      platformRequestRender([weakThis, callback = std::move(callback)](const double timestamp) {
+        if (auto strongThis = weakThis.lock()) {
+          auto lock = strongThis->updatesRegistryManager_->lock();
+          callback(timestamp);
+        }
+      });
+    };
+  }
 
   auto updateProps = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &operations) {
     auto strongThis = weakThis.lock();
@@ -95,6 +286,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     }
 
     const auto timestamp = strongThis->getAnimationTimestamp_();
+    auto lock = strongThis->updatesRegistryManager_->lock();
     strongThis->animatedPropsRegistry_->update(rt, operations, timestamp);
   };
 
@@ -118,8 +310,10 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
 
     strongThis->dispatchCommand(rt, shadowNodeValue, commandNameValue, argsValue);
   };
+
   ProgressLayoutAnimationFunction progressLayoutAnimation =
       [weakThis = weak_from_this()](jsi::Runtime &rt, int tag, const jsi::Object &newStyle) {
+        // Always on UI thread.
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
@@ -129,18 +323,12 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
           return;
         }
         strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
+
+        strongThis->requestRenderForLayoutAnimations();
       };
 
-  auto requestLayoutAnimationRender = [weakThis = weak_from_this()](double) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-    strongThis->layoutAnimationRenderRequested_ = false;
-  };
-
-  EndLayoutAnimationFunction endLayoutAnimation = [weakThis = weak_from_this(), requestLayoutAnimationRender](
-                                                      int tag, bool shouldRemove) {
+  EndLayoutAnimationFunction endLayoutAnimation = [weakThis = weak_from_this()](int tag, bool shouldRemove) {
+    // Always on UI thread.
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -148,12 +336,11 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
 
     auto surfaceId = strongThis->layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
 
-    if (!strongThis->layoutAnimationRenderRequested_) {
-      strongThis->layoutAnimationRenderRequested_ = true;
-      // if an animation has duration 0, performOperations would not get
-      // called for it so we call requestRender to have it called in the
-      // next frame
-      strongThis->requestRender_(requestLayoutAnimationRender);
+    if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+      // in the backend path this is called from runGrandCallback,
+      // we are guaranteed to have the changes flushed
+    } else {
+      strongThis->requestRenderForLayoutAnimations();
     }
 
     if (!surfaceId) {
@@ -172,7 +359,30 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     return strongThis->obtainProp(rt, shadowNodeWrapper, propName);
   };
 
-  jsi::Runtime &uiRuntime = uiRuntime_->getJSIRuntime();
+  std::optional<worklets::RequestAnimationFrameHostFunction> requestAnimationFrame;
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    requestAnimationFrame = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &callback) {
+      auto strongThis = weakThis.lock();
+      if (!strongThis) {
+        return;
+      }
+
+      auto callbackFunction = std::make_shared<jsi::Function>(callback.asObject(rt).asFunction(rt));
+      strongThis->pendingAnimationFrameCallbackFromWorklets_ =
+          [callbackFunction = std::move(callbackFunction),
+           weakRuntime = getWeakRuntimeFromJSIRuntime(rt)](double timestamp) {
+            auto runtime = weakRuntime.lock();
+            if (!runtime) {
+              return;
+            }
+
+            runSyncOnRuntime(runtime, *callbackFunction, jsi::Value(timestamp));
+          };
+      strongThis->startBackendIfNeeded();
+    };
+  }
+
+  jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   UIRuntimeDecorator::decorate(
       uiRuntime,
       obtainProp,
@@ -183,7 +393,8 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       platformDepMethodsHolder.setGestureStateFunction,
       progressLayoutAnimation,
       endLayoutAnimation,
-      platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction);
+      platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction,
+      requestAnimationFrame);
 }
 
 ReanimatedModuleProxy::~ReanimatedModuleProxy() {
@@ -201,11 +412,11 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
 
   uint64_t newRegistrationId = NEXT_EVENT_HANDLER_ID++;
   auto eventNameStr = eventName.asString(rt).utf8(rt);
-  auto handlerSerializable = extractSerializableOrThrow<SerializableWorklet>(
-      rt, worklet, "[Reanimated] Event handler must be a serializable worklet.");
+  auto handlerSerializable = extractSerializable(
+      rt, worklet, "[Reanimated] Event handler must be a serializable worklet.", Serializable::ValueType::WorkletType);
   int emitterReactTagInt = emitterReactTag.asNumber();
 
-  uiScheduler_->scheduleOnUI([=, weakThis = weak_from_this()]() {
+  scheduleOnUI(uiScheduler_, [=, weakThis = weak_from_this()]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -220,7 +431,7 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
 
 void ReanimatedModuleProxy::unregisterEventHandler(jsi::Runtime &, const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
-  uiScheduler_->scheduleOnUI([=, weakThis = weak_from_this()]() {
+  scheduleOnUI(uiScheduler_, [=, weakThis = weak_from_this()]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -246,12 +457,12 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
   const auto propNameStr = propName.asString(rnRuntime).utf8(rnRuntime);
   const auto funPtr = std::make_shared<jsi::Function>(callback.getObject(rnRuntime).asFunction(rnRuntime));
   const auto shadowNode = shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
-  uiScheduler_->scheduleOnUI([=, weakThis = weak_from_this()]() {
+  scheduleOnUI(uiScheduler_, [=, weakThis = weak_from_this()]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
     }
-    jsi::Runtime &uiRuntime = strongThis->uiRuntime_->getJSIRuntime();
+    jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(strongThis->uiRuntime_);
     const auto resultStr = strongThis->obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
 
     strongThis->jsInvoker_->invokeAsync([=](jsi::Runtime &rnRuntime) {
@@ -287,8 +498,8 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     if (config.isUndefined()) {
       batchItem.config = nullptr;
     } else {
-      batchItem.config = extractSerializableOrThrow<SerializableObject>(
-          rt, config, "[Reanimated] Layout animation config must be an object.");
+      batchItem.config = extractSerializable(
+          rt, config, "[Reanimated] Layout animation config must be an object.", Serializable::ValueType::ObjectType);
     }
     auto sharedTag = item.getProperty(rt, "sharedTransitionTag");
     if (!sharedTag.isUndefined()) {
@@ -310,18 +521,6 @@ bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(const std::string &event
   return eventHandlerRegistry_->isAnyHandlerWaitingForEvent(eventName, emitterReactTag);
 }
 
-void ReanimatedModuleProxy::maybeRequestRender() {
-  if (!renderRequested_) {
-    renderRequested_ = true;
-    requestRender_(onRenderCallback_);
-  }
-}
-
-void ReanimatedModuleProxy::onRender(double timestampMs) {
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::onRender");
-  // NOOP
-}
-
 jsi::Value ReanimatedModuleProxy::registerSensor(
     jsi::Runtime &rt,
     const jsi::Value &sensorType,
@@ -341,16 +540,13 @@ void ReanimatedModuleProxy::cleanupSensors() {
 }
 
 void ReanimatedModuleProxy::setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle) {
-  const auto tag = viewTag.asNumber();
-  staticPropsRegistry_->set(rt, tag, viewStyle);
-  if (staticPropsRegistry_->hasObservers(tag)) {
-    maybeRunCSSLoop();
-  }
+  auto lock = updatesRegistryManager_->lock();
+  staticPropsRegistry_->set(rt, viewTag.asNumber(), viewStyle);
 }
 
 void ReanimatedModuleProxy::markNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) {
-  auto lock = updatesRegistryManager_->lock();
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  auto lock = updatesRegistryManager_->lock();
   updatesRegistryManager_->markNodeAsRemovable(shadowNode);
 }
 
@@ -365,16 +561,19 @@ void ReanimatedModuleProxy::registerCSSKeyframes(
     const jsi::Value &compoundComponentName,
     const jsi::Value &keyframesConfig) {
   const auto compoundComponentNameStr = compoundComponentName.asString(rt).utf8(rt);
+  auto parsedConfig =
+      parseCSSAnimationKeyframesConfig(rt, keyframesConfig, compoundComponentNameStr, viewStylesRepository_);
+
+  auto lock = updatesRegistryManager_->lock();
   cssAnimationKeyframesRegistry_->set(
-      animationName.asString(rt).utf8(rt),
-      compoundComponentNameStr,
-      parseCSSAnimationKeyframesConfig(rt, keyframesConfig, compoundComponentNameStr, viewStylesRepository_));
+      animationName.asString(rt).utf8(rt), compoundComponentNameStr, std::move(parsedConfig));
 }
 
 void ReanimatedModuleProxy::unregisterCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
     const jsi::Value &compoundComponentName) {
+  auto lock = updatesRegistryManager_->lock();
   cssAnimationKeyframesRegistry_->remove(
       animationName.asString(rt).utf8(rt), compoundComponentName.asString(rt).utf8(rt));
 }
@@ -385,50 +584,15 @@ void ReanimatedModuleProxy::applyCSSAnimations(
     const jsi::Value &compoundComponentName,
     const jsi::Value &animationUpdates) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  const auto timestamp = getCssTimestamp();
+  const auto compoundComponentNameStr = compoundComponentName.asString(rt).utf8(rt);
   const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
 
-  CSSAnimationsMap newAnimations;
-
-  if (!updates.newAnimationSettings.empty()) {
-    // animationNames always exists when newAnimationSettings is not empty
-    const auto animationNames = updates.animationNames.value();
-    const auto animationNamesCount = animationNames.size();
-
-    for (const auto &[index, settings] : updates.newAnimationSettings) {
-      if (index >= animationNamesCount) {
-        throw std::invalid_argument("[Reanimated] index is out of bounds of animationNames");
-      }
-
-      const auto &animationName = animationNames[index];
-      const auto nativeComponentName = shadowNode->getComponentName();
-      const auto compoundComponentNameStr = compoundComponentName.asString(rt).utf8(rt);
-      const auto keyframesConfigOpt = cssAnimationKeyframesRegistry_->get(animationName, compoundComponentNameStr);
-
-      if (!keyframesConfigOpt) {
-        throw std::runtime_error(
-            "[Reanimated] No keyframes with name `" + animationName + "` were registered for component `" +
-            splitCompoundComponentName(compoundComponentNameStr).second + "` (" + nativeComponentName + ")");
-      }
-
-      newAnimations.emplace(
-          index,
-          std::make_shared<CSSAnimation>(
-              rt, shadowNode, animationName, keyframesConfigOpt->get(), settings, timestamp));
-    }
-  }
-
-  {
-    auto lock = cssAnimationsRegistry_->lock();
-    cssAnimationsRegistry_->apply(
-        rt, shadowNode, updates.animationNames, newAnimations, updates.settingsUpdates, timestamp);
-  }
-
-  maybeRunCSSLoop();
+  auto lock = updatesRegistryManager_->lock();
+  cssAnimationsRegistry_->apply(shadowNode, compoundComponentNameStr, updates);
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
-  auto lock = cssAnimationsRegistry_->lock();
+  auto lock = updatesRegistryManager_->lock();
   cssAnimationsRegistry_->remove(viewTag.asNumber());
 }
 
@@ -437,19 +601,47 @@ void ReanimatedModuleProxy::runCSSTransition(
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &transitionConfig) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  const auto config = parseCSSTransitionConfig(rt, transitionConfig);
+  auto config = parseCSSTransitionConfig(rt, shadowNode->getComponentName(), transitionConfig);
 
-  {
-    auto lock = cssTransitionsRegistry_->lock();
-    cssTransitionsRegistry_->run(rt, shadowNode, config);
-  }
-
-  maybeRunCSSLoop();
+  auto lock = updatesRegistryManager_->lock();
+  cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, std::move(config));
 }
 
 void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) {
-  auto lock = cssTransitionsRegistry_->lock();
+  auto lock = updatesRegistryManager_->lock();
   cssTransitionsRegistry_->remove(viewTag.asNumber());
+}
+
+void ReanimatedModuleProxy::registerPseudoStyle(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &config) {
+  const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  const auto tag = shadowNode->getTag();
+  const auto configObj = config.asObject(rt);
+
+  const auto selectorStr = stringFromValue(rt, configObj.getProperty(rt, "selector"));
+  const auto selectorEnum = pseudoSelectorFromString(selectorStr);
+  if (!selectorEnum) {
+    return;
+  }
+
+  auto transitionConfig =
+      css::parseCSSTransitionConfig(rt, shadowNode->getComponentName(), configObj.getProperty(rt, "transition"));
+
+  auto lock = updatesRegistryManager_->lock();
+  cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, std::move(transitionConfig));
+  pseudoStylesRegistry_->registerPseudoStyle(
+      tag,
+      shadowNode,
+      *selectorEnum,
+      jsi::dynamicFromValue(rt, configObj.getProperty(rt, "selectorStyle")),
+      jsi::dynamicFromValue(rt, configObj.getProperty(rt, "defaultStyle")));
+}
+
+void ReanimatedModuleProxy::unregisterPseudoStyle(jsi::Runtime &, const jsi::Value &viewTag) {
+  auto lock = updatesRegistryManager_->lock();
+  pseudoStylesRegistry_->remove(viewTag.asNumber());
 }
 
 jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
@@ -460,15 +652,13 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
   // TODO(future): use unified timestamp
   const auto currentTimestamp = getAnimationTimestamp_();
 
-  const auto lock = animatedPropsRegistry_->lock();
-
   // TODO: fix bug when threshold difference is smaller than 1 second
   // TODO(future): flush updates from CSS animations and CSS transitions registries
-  animatedPropsRegistry_->removeUpdatesOlderThanTimestamp(currentTimestamp - 2000); // 2 seconds
-
   // TODO(future): find a better way to obtain timestamp for removing updates
   // TODO(future): move removing old updates to separate method
-  return animatedPropsRegistry_->getUpdatesOlderThanTimestamp(rt, currentTimestamp - 1000); // 1 second
+  auto lock = updatesRegistryManager_->lock();
+  return animatedPropsRegistry_->getUpdatesOlderThanTimestamp(
+      rt, currentTimestamp - 1000 /* 1 second */, currentTimestamp - 2000 /* 2 seconds */);
 }
 
 bool ReanimatedModuleProxy::handleEvent(
@@ -506,7 +696,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     if (eventType == "onTransitionProgress") {
-      jsi::Runtime &uiRuntime = uiRuntime_->getJSIRuntime();
+      jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
       const auto &eventPayload = rawEvent.eventPayload;
       jsi::Object payload = eventPayload->asJSIValue(uiRuntime).asObject(uiRuntime);
       auto progress = payload.getProperty(uiRuntime, "progress").asNumber();
@@ -543,76 +733,43 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
     return false;
   }
 
-  jsi::Runtime &uiRuntime = uiRuntime_->getJSIRuntime();
+  jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   const auto &eventPayload = rawEvent.eventPayload;
   jsi::Value payload = eventPayload->asJSIValue(uiRuntime);
+
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    return handleEventAndFlush(eventType, tag, payload, GrandCallbackSource::Event);
+  }
 
   auto res = handleEvent(eventType, tag, payload, currentTime);
   // TODO: we should call performOperations conditionally if event is handled
   // (res == true), but for now handleEvent always returns false. Thankfully,
   // performOperations does not trigger a lot of code if there is nothing to
   // be done so this is fine for now.
-  performOperations(true);
+  performOperations();
   return res;
 }
 
-void ReanimatedModuleProxy::cssLoopCallback(const double /*timestampMs*/) {
-  shouldUpdateCssAnimations_ = true;
-  if (cssAnimationsRegistry_->hasUpdates() || cssTransitionsRegistry_->hasUpdates()
-#ifdef ANDROID
-      || updatesRegistryManager_->hasPropsToRevert()
-#endif // ANDROID
-  ) {
-    requestRender_([weakThis = weak_from_this()](const double newTimestampMs) {
-      if (auto strongThis = weakThis.lock()) {
-        strongThis->cssLoopCallback(newTimestampMs);
-      }
-    });
-  } else {
-    cssLoopRunning_ = false;
+void ReanimatedModuleProxy::executeLayoutAnimationsRequests() {
+  std::set<SurfaceId> flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
+  for (const auto surfaceId : flushRequestsCopy) {
+    uiManager_->getShadowTreeRegistry().visit(
+        surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
   }
 }
 
-void ReanimatedModuleProxy::maybeRunCSSLoop() {
-  if (cssLoopRunning_) {
+void ReanimatedModuleProxy::performOperations() {
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    react_native_assert(
+        false && "[Reanimated] performOperations must not be called when USE_ANIMATION_BACKEND is enabled");
     return;
   }
 
-  cssLoopRunning_ = true;
-
-  uiScheduler_->scheduleOnUI([=, weakThis = weak_from_this()]() {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-    strongThis->requestRender_([weakThis](const double timestampMs) {
-      if (auto strongThis = weakThis.lock()) {
-        strongThis->cssLoopCallback(timestampMs);
-      }
-    });
-  });
-}
-
-double ReanimatedModuleProxy::getCssTimestamp() {
-  if (cssLoopRunning_) {
-    return currentCssTimestamp_;
-  }
-  currentCssTimestamp_ = getAnimationTimestamp_();
-  return currentCssTimestamp_;
-}
-
-void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
-  if (!isTriggeredByEvent) {
-    auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
-    for (const auto surfaceId : flushRequestsCopy) {
-      uiManager_->getShadowTreeRegistry().visit(
-          surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
-    }
-  }
+  executeLayoutAnimationsRequests();
 
-  jsi::Runtime &uiRuntime = uiRuntime_->getJSIRuntime();
+  jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
 
   UpdatesBatch updatesBatch;
   {
@@ -620,485 +777,22 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
 
     auto lock = updatesRegistryManager_->lock();
 
-    if (shouldUpdateCssAnimations_) {
-      currentCssTimestamp_ = getAnimationTimestamp_();
-      auto lock = cssTransitionsRegistry_->lock();
+    if (cssTransitionsRegistry_->needsFlush()) {
       // Update CSS transitions and flush updates
-      cssTransitionsRegistry_->update(currentCssTimestamp_);
       cssTransitionsRegistry_->flushUpdates(updatesBatch);
     }
 
-    {
-      auto lock = animatedPropsRegistry_->lock();
-      // Flush all animated props updates
-      animatedPropsRegistry_->flushUpdates(updatesBatch);
-    }
+    // Flush all animated props updates
+    animatedPropsRegistry_->flushUpdates(updatesBatch);
 
-    if (shouldUpdateCssAnimations_) {
-      auto lock = cssAnimationsRegistry_->lock();
+    if (cssAnimationsRegistry_->needsFlush()) {
       // Update CSS animations and flush updates
-      cssAnimationsRegistry_->update(currentCssTimestamp_);
       cssAnimationsRegistry_->flushUpdates(updatesBatch);
     }
+  }
 
-    shouldUpdateCssAnimations_ = false;
-
-#ifdef ANDROID
-    if constexpr (
-        StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
-        !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-      static const std::unordered_set<std::string> synchronousProps = {
-          "opacity",
-          "elevation",
-          "zIndex",
-          // "shadowOpacity", // not supported on Android
-          // "shadowRadius", // not supported on Android
-          "backgroundColor",
-          // "color", // TODO: fix animating color of Animated.Text
-          "tintColor",
-          "borderRadius",
-          "borderTopLeftRadius",
-          "borderTopRightRadius",
-          "borderTopStartRadius",
-          "borderTopEndRadius",
-          "borderBottomLeftRadius",
-          "borderBottomRightRadius",
-          "borderBottomStartRadius",
-          "borderBottomEndRadius",
-          "borderStartStartRadius",
-          "borderStartEndRadius",
-          "borderEndStartRadius",
-          "borderEndEndRadius",
-          "borderColor",
-          "borderTopColor",
-          "borderBottomColor",
-          "borderLeftColor",
-          "borderRightColor",
-          "borderStartColor",
-          "borderEndColor",
-          "transform",
-      };
-
-      // NOTE: Keep in sync with NativeProxy.java
-      static constexpr auto CMD_START_OF_VIEW = 1;
-      static constexpr auto CMD_START_OF_TRANSFORM = 2;
-      static constexpr auto CMD_END_OF_TRANSFORM = 3;
-      static constexpr auto CMD_END_OF_VIEW = 4;
-
-      static constexpr auto CMD_OPACITY = 10;
-      static constexpr auto CMD_ELEVATION = 11;
-      static constexpr auto CMD_Z_INDEX = 12;
-      static constexpr auto CMD_SHADOW_OPACITY = 13;
-      static constexpr auto CMD_SHADOW_RADIUS = 14;
-      static constexpr auto CMD_BACKGROUND_COLOR = 15;
-      static constexpr auto CMD_COLOR = 16;
-      static constexpr auto CMD_TINT_COLOR = 17;
-
-      static constexpr auto CMD_BORDER_RADIUS = 20;
-      static constexpr auto CMD_BORDER_TOP_LEFT_RADIUS = 21;
-      static constexpr auto CMD_BORDER_TOP_RIGHT_RADIUS = 22;
-      static constexpr auto CMD_BORDER_TOP_START_RADIUS = 23;
-      static constexpr auto CMD_BORDER_TOP_END_RADIUS = 24;
-      static constexpr auto CMD_BORDER_BOTTOM_LEFT_RADIUS = 25;
-      static constexpr auto CMD_BORDER_BOTTOM_RIGHT_RADIUS = 26;
-      static constexpr auto CMD_BORDER_BOTTOM_START_RADIUS = 27;
-      static constexpr auto CMD_BORDER_BOTTOM_END_RADIUS = 28;
-      static constexpr auto CMD_BORDER_START_START_RADIUS = 29;
-      static constexpr auto CMD_BORDER_START_END_RADIUS = 30;
-      static constexpr auto CMD_BORDER_END_START_RADIUS = 31;
-      static constexpr auto CMD_BORDER_END_END_RADIUS = 32;
-
-      static constexpr auto CMD_BORDER_COLOR = 40;
-      static constexpr auto CMD_BORDER_TOP_COLOR = 41;
-      static constexpr auto CMD_BORDER_BOTTOM_COLOR = 42;
-      static constexpr auto CMD_BORDER_LEFT_COLOR = 43;
-      static constexpr auto CMD_BORDER_RIGHT_COLOR = 44;
-      static constexpr auto CMD_BORDER_START_COLOR = 45;
-      static constexpr auto CMD_BORDER_END_COLOR = 46;
-
-      static constexpr auto CMD_TRANSFORM_TRANSLATE_X = 100;
-      static constexpr auto CMD_TRANSFORM_TRANSLATE_Y = 101;
-      static constexpr auto CMD_TRANSFORM_SCALE = 102;
-      static constexpr auto CMD_TRANSFORM_SCALE_X = 103;
-      static constexpr auto CMD_TRANSFORM_SCALE_Y = 104;
-      static constexpr auto CMD_TRANSFORM_ROTATE = 105;
-      static constexpr auto CMD_TRANSFORM_ROTATE_X = 106;
-      static constexpr auto CMD_TRANSFORM_ROTATE_Y = 107;
-      static constexpr auto CMD_TRANSFORM_ROTATE_Z = 108;
-      static constexpr auto CMD_TRANSFORM_SKEW_X = 109;
-      static constexpr auto CMD_TRANSFORM_SKEW_Y = 110;
-      static constexpr auto CMD_TRANSFORM_MATRIX = 111;
-      static constexpr auto CMD_TRANSFORM_PERSPECTIVE = 112;
-
-      static constexpr auto CMD_UNIT_DEG = 200;
-      static constexpr auto CMD_UNIT_RAD = 201;
-      static constexpr auto CMD_UNIT_PX = 202;
-      static constexpr auto CMD_UNIT_PERCENT = 203;
-
-      const auto propNameToCommand = [](const std::string &name) {
-        if (name == "opacity")
-          return CMD_OPACITY;
-
-        if (name == "elevation")
-          return CMD_ELEVATION;
-
-        if (name == "zIndex")
-          return CMD_Z_INDEX;
-
-        if (name == "shadowOpacity")
-          return CMD_SHADOW_OPACITY;
-
-        if (name == "shadowRadius")
-          return CMD_SHADOW_RADIUS;
-
-        if (name == "backgroundColor")
-          return CMD_BACKGROUND_COLOR;
-
-        if (name == "color")
-          return CMD_COLOR;
-
-        if (name == "tintColor")
-          return CMD_TINT_COLOR;
-
-        if (name == "borderRadius")
-          return CMD_BORDER_RADIUS;
-
-        if (name == "borderTopLeftRadius")
-          return CMD_BORDER_TOP_LEFT_RADIUS;
-
-        if (name == "borderTopRightRadius")
-          return CMD_BORDER_TOP_RIGHT_RADIUS;
-
-        if (name == "borderTopStartRadius")
-          return CMD_BORDER_TOP_START_RADIUS;
-
-        if (name == "borderTopEndRadius")
-          return CMD_BORDER_TOP_END_RADIUS;
-
-        if (name == "borderBottomLeftRadius")
-          return CMD_BORDER_BOTTOM_LEFT_RADIUS;
-
-        if (name == "borderBottomRightRadius")
-          return CMD_BORDER_BOTTOM_RIGHT_RADIUS;
-
-        if (name == "borderBottomStartRadius")
-          return CMD_BORDER_BOTTOM_START_RADIUS;
-
-        if (name == "borderBottomEndRadius")
-          return CMD_BORDER_BOTTOM_END_RADIUS;
-
-        if (name == "borderStartStartRadius")
-          return CMD_BORDER_START_START_RADIUS;
-
-        if (name == "borderStartEndRadius")
-          return CMD_BORDER_START_END_RADIUS;
-
-        if (name == "borderEndStartRadius")
-          return CMD_BORDER_END_START_RADIUS;
-
-        if (name == "borderEndEndRadius")
-          return CMD_BORDER_END_END_RADIUS;
-
-        if (name == "borderColor")
-          return CMD_BORDER_COLOR;
-
-        if (name == "borderTopColor")
-          return CMD_BORDER_TOP_COLOR;
-
-        if (name == "borderBottomColor")
-          return CMD_BORDER_BOTTOM_COLOR;
-
-        if (name == "borderLeftColor")
-          return CMD_BORDER_LEFT_COLOR;
-
-        if (name == "borderRightColor")
-          return CMD_BORDER_RIGHT_COLOR;
-
-        if (name == "borderStartColor")
-          return CMD_BORDER_START_COLOR;
-
-        if (name == "borderEndColor")
-          return CMD_BORDER_END_COLOR;
-
-        if (name == "transform")
-          return CMD_START_OF_TRANSFORM; // TODO: use CMD_TRANSFORM?
-
-        throw std::runtime_error("[Reanimated] Unsupported style: " + name);
-      };
-
-      const auto transformNameToCommand = [](const std::string &name) {
-        if (name == "translateX")
-          return CMD_TRANSFORM_TRANSLATE_X;
-
-        if (name == "translateY")
-          return CMD_TRANSFORM_TRANSLATE_Y;
-
-        if (name == "scale")
-          return CMD_TRANSFORM_SCALE;
-
-        if (name == "scaleX")
-          return CMD_TRANSFORM_SCALE_X;
-
-        if (name == "scaleY")
-          return CMD_TRANSFORM_SCALE_Y;
-
-        if (name == "rotate")
-          return CMD_TRANSFORM_ROTATE;
-
-        if (name == "rotateX")
-          return CMD_TRANSFORM_ROTATE_X;
-
-        if (name == "rotateY")
-          return CMD_TRANSFORM_ROTATE_Y;
-
-        if (name == "rotateZ")
-          return CMD_TRANSFORM_ROTATE_Z;
-
-        if (name == "skewX")
-          return CMD_TRANSFORM_SKEW_X;
-
-        if (name == "skewY")
-          return CMD_TRANSFORM_SKEW_Y;
-
-        if (name == "matrix")
-          return CMD_TRANSFORM_MATRIX;
-
-        if (name == "perspective")
-          return CMD_TRANSFORM_PERSPECTIVE;
-
-        throw std::runtime_error("[Reanimated] Unsupported transform: " + name);
-      };
-
-      UpdatesBatch synchronousUpdatesBatch, shadowTreeUpdatesBatch;
-
-      for (const auto &[shadowNode, props] : updatesBatch) {
-        bool hasOnlySynchronousProps = true;
-        for (const auto &[key, value] : props.items()) {
-          const auto keyStr = key.asString();
-          if (!synchronousProps.contains(keyStr) ||
-              ((keyStr == "color" || keyStr.find("Color") != std::string::npos) && !value.isInt())) {
-            hasOnlySynchronousProps = false;
-            break;
-          }
-        }
-        if (hasOnlySynchronousProps) {
-          synchronousUpdatesBatch.emplace_back(shadowNode, props);
-        } else {
-          shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
-        }
-      }
-
-      if (!synchronousUpdatesBatch.empty()) {
-        std::vector<int> intBuffer;
-        std::vector<double> doubleBuffer;
-        intBuffer.reserve(1024);
-        doubleBuffer.reserve(1024);
-
-        for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
-          intBuffer.push_back(CMD_START_OF_VIEW);
-          intBuffer.push_back(shadowNode->getTag());
-          for (const auto &[key, value] : props.items()) {
-            const auto command = propNameToCommand(key.getString());
-            switch (command) {
-              case CMD_OPACITY:
-              case CMD_ELEVATION:
-              case CMD_Z_INDEX:
-              case CMD_SHADOW_OPACITY:
-              case CMD_SHADOW_RADIUS:
-                intBuffer.push_back(command);
-                doubleBuffer.push_back(value.asDouble());
-                break;
-
-              case CMD_BACKGROUND_COLOR:
-              case CMD_COLOR:
-              case CMD_TINT_COLOR:
-              case CMD_BORDER_COLOR:
-              case CMD_BORDER_TOP_COLOR:
-              case CMD_BORDER_BOTTOM_COLOR:
-              case CMD_BORDER_LEFT_COLOR:
-              case CMD_BORDER_RIGHT_COLOR:
-              case CMD_BORDER_START_COLOR:
-              case CMD_BORDER_END_COLOR:
-                intBuffer.push_back(command);
-                intBuffer.push_back(value.asInt());
-                break;
-
-              case CMD_BORDER_RADIUS:
-              case CMD_BORDER_TOP_LEFT_RADIUS:
-              case CMD_BORDER_TOP_RIGHT_RADIUS:
-              case CMD_BORDER_TOP_START_RADIUS:
-              case CMD_BORDER_TOP_END_RADIUS:
-              case CMD_BORDER_BOTTOM_LEFT_RADIUS:
-              case CMD_BORDER_BOTTOM_RIGHT_RADIUS:
-              case CMD_BORDER_BOTTOM_START_RADIUS:
-              case CMD_BORDER_BOTTOM_END_RADIUS:
-              case CMD_BORDER_START_START_RADIUS:
-              case CMD_BORDER_START_END_RADIUS:
-              case CMD_BORDER_END_START_RADIUS:
-              case CMD_BORDER_END_END_RADIUS:
-                intBuffer.push_back(command);
-                if (value.isDouble()) {
-                  intBuffer.push_back(CMD_UNIT_PX);
-                  doubleBuffer.push_back(value.getDouble());
-                } else if (value.isString()) {
-                  const auto &valueStr = value.getString();
-                  if (!valueStr.ends_with("%")) {
-                    throw std::runtime_error("[Reanimated] Border radius string must be a percentage");
-                  }
-                  intBuffer.push_back(CMD_UNIT_PERCENT);
-                  doubleBuffer.push_back(std::stof(valueStr.substr(0, -1)));
-                } else {
-                  throw std::runtime_error("[Reanimated] Border radius value must be either a number or a string");
-                }
-                break;
-
-              case CMD_START_OF_TRANSFORM:
-                intBuffer.push_back(command);
-                react_native_assert(value.isArray() && "[Reanimated] Transform value must be an array");
-                for (const auto &item : value) {
-                  react_native_assert(item.isObject() && "[Reanimated] Transform array item must be an object");
-                  react_native_assert(
-                      item.size() == 1 && "[Reanimated] Transform array item must have exactly one key-value pair");
-                  const auto transformCommand = transformNameToCommand(item.keys().begin()->getString());
-                  const auto &transformValue = *item.values().begin();
-                  switch (transformCommand) {
-                    case CMD_TRANSFORM_SCALE:
-                    case CMD_TRANSFORM_SCALE_X:
-                    case CMD_TRANSFORM_SCALE_Y:
-                    case CMD_TRANSFORM_PERSPECTIVE: {
-                      intBuffer.push_back(transformCommand);
-                      doubleBuffer.push_back(transformValue.asDouble());
-                      break;
-                    }
-
-                    case CMD_TRANSFORM_TRANSLATE_X:
-                    case CMD_TRANSFORM_TRANSLATE_Y: {
-                      intBuffer.push_back(transformCommand);
-                      if (transformValue.isDouble()) {
-                        intBuffer.push_back(CMD_UNIT_PX);
-                        doubleBuffer.push_back(transformValue.getDouble());
-                      } else if (transformValue.isString()) {
-                        const auto &transformValueStr = transformValue.getString();
-                        if (!transformValueStr.ends_with("%")) {
-                          throw std::runtime_error("[Reanimated] String translate must be a percentage");
-                        }
-                        intBuffer.push_back(CMD_UNIT_PERCENT);
-                        doubleBuffer.push_back(std::stof(transformValueStr.substr(0, -1)));
-                      } else {
-                        throw std::runtime_error("[Reanimated] Translate value must be either a number or a string");
-                      }
-                      break;
-                    }
-
-                    case CMD_TRANSFORM_ROTATE:
-                    case CMD_TRANSFORM_ROTATE_X:
-                    case CMD_TRANSFORM_ROTATE_Y:
-                    case CMD_TRANSFORM_ROTATE_Z:
-                    case CMD_TRANSFORM_SKEW_X:
-                    case CMD_TRANSFORM_SKEW_Y: {
-                      const auto &transformValueStr = transformValue.getString();
-                      intBuffer.push_back(transformCommand);
-                      if (transformValueStr.ends_with("deg")) {
-                        intBuffer.push_back(CMD_UNIT_DEG);
-                      } else if (transformValueStr.ends_with("rad")) {
-                        intBuffer.push_back(CMD_UNIT_RAD);
-                      } else {
-                        throw std::runtime_error("[Reanimated] Unsupported rotation unit: " + transformValueStr);
-                      }
-                      doubleBuffer.push_back(std::stof(transformValueStr.substr(0, -3)));
-                      break;
-                    }
-
-                    case CMD_TRANSFORM_MATRIX: {
-                      intBuffer.push_back(transformCommand);
-                      react_native_assert(transformValue.isArray() && "[Reanimated] Matrix must be an array");
-                      int size = transformValue.size();
-                      intBuffer.push_back(size);
-                      for (int i = 0; i < size; i++) {
-                        doubleBuffer.push_back(transformValue[i].asDouble());
-                      }
-                      break;
-                    }
-                  }
-                }
-                intBuffer.push_back(CMD_END_OF_TRANSFORM);
-                break;
-            }
-          }
-          intBuffer.push_back(CMD_END_OF_VIEW);
-        }
-        synchronouslyUpdateUIPropsFunction_(intBuffer, doubleBuffer);
-      }
-
-      updatesBatch = std::move(shadowTreeUpdatesBatch);
-    }
-#endif // ANDROID
-
-#if __APPLE__
-    if constexpr (
-        StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
-        !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-      static const std::unordered_set<std::string> synchronousProps = {
-          "opacity",
-          "elevation",
-          "zIndex",
-          "shadowOpacity",
-          "shadowRadius",
-          "backgroundColor",
-          // "color", // TODO: fix animating color of Animated.Text
-          "tintColor",
-          "borderRadius",
-          "borderTopLeftRadius",
-          "borderTopRightRadius",
-          "borderTopStartRadius",
-          "borderTopEndRadius",
-          "borderBottomLeftRadius",
-          "borderBottomRightRadius",
-          "borderBottomStartRadius",
-          "borderBottomEndRadius",
-          "borderStartStartRadius",
-          "borderStartEndRadius",
-          "borderEndStartRadius",
-          "borderEndEndRadius",
-          "borderColor",
-          "borderTopColor",
-          "borderBottomColor",
-          "borderLeftColor",
-          "borderRightColor",
-          "borderStartColor",
-          "borderEndColor",
-          "transform",
-      };
-
-      UpdatesBatch synchronousUpdatesBatch, shadowTreeUpdatesBatch;
-
-      for (const auto &[shadowNode, props] : updatesBatch) {
-        bool hasOnlySynchronousProps = true;
-        for (const auto &key : props.keys()) {
-          const auto keyStr = key.asString();
-          if (!synchronousProps.contains(keyStr)) {
-            hasOnlySynchronousProps = false;
-            break;
-          }
-        }
-        if (hasOnlySynchronousProps) {
-          synchronousUpdatesBatch.emplace_back(shadowNode, props);
-        } else {
-          shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
-        }
-      }
-
-      for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
-        synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
-      }
-
-      updatesBatch = std::move(shadowTreeUpdatesBatch);
-    }
-#endif // __APPLE__
-
-    if ((updatesBatch.size() > 0) && updatesRegistryManager_->shouldReanimatedSkipCommit()) {
-      updatesRegistryManager_->pleaseCommitAfterPause();
-    }
+  if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
+    applySynchronousUpdates(updatesBatch, false);
   }
 
   if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
@@ -1107,6 +801,9 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
     // In this case, we should skip the commit here and let React Native do
     // it. The commit will include the current values from the updates manager
     // which will be applied in ReanimatedCommitHook.
+    if (!updatesBatch.empty()) {
+      updatesRegistryManager_->pleaseCommitAfterPause();
+    }
     return;
   }
 
@@ -1118,12 +815,228 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
   viewStylesRepository_->clearNodesCache();
 }
 
-void ReanimatedModuleProxy::requestFlushRegistry() {
-  requestRender_([weakThis = weak_from_this()](const double timestamp) {
-    if (auto strongThis = weakThis.lock()) {
-      strongThis->shouldFlushRegistry_ = true;
+void ReanimatedModuleProxy::performNonLayoutOperations() {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::performNonLayoutOperations");
+
+  UpdatesBatch updatesBatch;
+  {
+    auto lock = updatesRegistryManager_->lock();
+    updatesBatch = animatedPropsRegistry_->getPendingUpdates();
+  }
+  applySynchronousUpdates(updatesBatch, true);
+}
+
+#if REACT_NATIVE_VERSION_MINOR >= 85
+AnimationMutations ReanimatedModuleProxy::collectNonLayoutAnimationUpdates() {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::collectNonLayoutAnimationUpdates");
+
+  AnimationMutations mutations;
+  jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
+  {
+    auto lock = updatesRegistryManager_->lock();
+    animatedPropsRegistry_->flushNonLayoutUpdates(uiRuntime, mutations);
+  }
+  return mutations;
+}
+
+std::shared_ptr<UIManagerAnimationBackend> ReanimatedModuleProxy::getAnimationBackend() {
+  react_native_assert(
+      uiManager_ != nullptr && "[Reanimated] Animation Backend used before the uiManager was registered");
+  auto locked = uiManager_->unstable_getAnimationBackend().lock();
+  // UIManager owns the backend, so this is just a sanity check.
+  react_native_assert(
+      locked != nullptr &&
+      "[Reanimated] Animation Backend is null (UIManager not wired to a backend yet or already torn down)");
+  return locked;
+}
+#endif
+
+void ReanimatedModuleProxy::startBackendIfNeeded() {
+#if REACT_NATIVE_VERSION_MINOR >= 85
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    if (isAnimationRunning_) {
+      return;
     }
+    animationBackendCallbackId_ =
+        getAnimationBackend()->start([weakThis = weak_from_this()](AnimationTimestamp timestamp) {
+          auto strongThis = weakThis.lock();
+          if (!strongThis) {
+            return AnimationMutations{};
+          }
+          return strongThis->runGrandCallback(timestamp, GrandCallbackSource::AnimationLoop);
+        });
+    isAnimationRunning_ = true;
+  }
+#endif
+}
+
+void ReanimatedModuleProxy::stopBackendIfIdle(const bool producedMutations) {
+#if REACT_NATIVE_VERSION_MINOR >= 85
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    const bool hasWork = producedMutations || !pendingFrameCallbacks_.empty() ||
+        pendingAnimationFrameCallbackFromWorklets_ != nullptr || operationsLoop_->hasOngoingOperations() ||
+        animatedPropsRegistry_->hasPendingAnimatedPropsUpdates() || shouldFlushRegistry_ ||
+        !layoutAnimationFlushRequests_.empty();
+    if (!hasWork) {
+      getAnimationBackend()->stop(animationBackendCallbackId_);
+      isAnimationRunning_ = false;
+    }
+  }
+#endif
+}
+
+#if REACT_NATIVE_VERSION_MINOR >= 85
+AnimationMutations ReanimatedModuleProxy::mutationsFromAnimatedPropsBatch(
+    UpdatesBatchAnimatedProps &&animatedPropsBatch) {
+  // This is a temporary fix, in reanimated we can sometimes produce multiple updates for the same view
+  // In that case Animation Backend will only apply the last one.
+  // Until the fix is implemented there, we will keep the merging logic here.
+  AnimationMutations mutations;
+  mutations.batch.reserve(animatedPropsBatch.size());
+  std::unordered_map<Tag, size_t> mutationIndexByTag;
+  for (auto &[shadowNodeFamily, animatedProps, hasLayoutUpdates] : animatedPropsBatch) {
+    const auto tag = shadowNodeFamily->getTag();
+
+    const auto it = mutationIndexByTag.find(tag);
+    if (it == mutationIndexByTag.end()) {
+      mutationIndexByTag.emplace(tag, mutations.batch.size());
+      mutations.batch.push_back(AnimationMutation{tag, shadowNodeFamily, std::move(animatedProps), hasLayoutUpdates});
+    } else {
+      auto &mutation = mutations.batch[it->second];
+      mutation.hasLayoutUpdates |= hasLayoutUpdates;
+      mergeAnimatedProps(mutation.props, std::move(animatedProps));
+    }
+  }
+  return mutations;
+}
+
+AnimationMutations ReanimatedModuleProxy::runGrandCallback(
+    const AnimationTimestamp timestamp,
+    const GrandCallbackSource source) {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::runGrandCallback");
+
+  switch (source) {
+    case GrandCallbackSource::AnimationLoop: {
+      // Worklet callbacks and layout animation flushes run outside the manager
+      // lock: they touch only UI-thread state and may re-enter the proxy (via
+      // requestAnimationFrame or the commit hook).
+      executeWorkletsForFrame(timestamp);
+      executeLayoutAnimationsRequests();
+
+      AnimationMutations mutations;
+      {
+        auto lock = updatesRegistryManager_->lock();
+        executeOperationsLoop(timestamp);
+        mutations = executeOperationsAndCollectUpdates(timestamp);
+        stopBackendIfIdle(!mutations.batch.empty());
+      }
+      return mutations;
+    }
+
+    case GrandCallbackSource::Event: {
+      executeLayoutAnimationsRequests();
+      return collectEventUpdates();
+    }
+
+    case GrandCallbackSource::EventInAndroidDraw:
+      return collectNonLayoutAnimationUpdates();
+  }
+
+  return AnimationMutations{};
+}
+
+void ReanimatedModuleProxy::executeOperationsLoop(const AnimationTimestamp timestamp) {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::executeOperationsLoop");
+
+  auto pendingFrameCallbacks = std::exchange(pendingFrameCallbacks_, {});
+  for (auto &cb : pendingFrameCallbacks) {
+    cb(timestamp.count());
+  }
+}
+
+void ReanimatedModuleProxy::executeWorkletsForFrame(const AnimationTimestamp timestamp) {
+  if (!pendingAnimationFrameCallbackFromWorklets_) {
+    return;
+  }
+  auto cb = std::exchange(pendingAnimationFrameCallbackFromWorklets_, nullptr);
+  cb(timestamp.count());
+}
+
+AnimationMutations ReanimatedModuleProxy::executeOperationsAndCollectUpdates(const AnimationTimestamp timestamp) {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::executeOperationsAndCollectUpdates");
+
+  UpdatesBatchAnimatedProps batch;
+
+  (void)timestamp;
+  cssTransitionsRegistry_->flushUpdates(batch);
+  animatedPropsRegistry_->flushUpdates(batch);
+  cssAnimationsRegistry_->flushUpdates(batch);
+
+  return mutationsFromAnimatedPropsBatch(std::move(batch));
+}
+
+AnimationMutations ReanimatedModuleProxy::collectEventUpdates() {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::collectEventUpdates");
+
+  UpdatesBatchAnimatedProps batch;
+  auto lock = updatesRegistryManager_->lock();
+  animatedPropsRegistry_->flushUpdates(batch);
+
+  return mutationsFromAnimatedPropsBatch(std::move(batch));
+}
+#endif
+
+bool ReanimatedModuleProxy::handleEventAndFlush(
+    const std::string &eventName,
+    const int emitterReactTag,
+    const jsi::Value &payload,
+    const GrandCallbackSource source) {
+  bool handled = false;
+#if REACT_NATIVE_VERSION_MINOR >= 85 && (REACT_NATIVE_VERSION_MINOR > 85 || REACT_NATIVE_VERSION_PATCH >= 2)
+  getAnimationBackend()->pushAnimationMutations([&, source](AnimationTimestamp timestamp) {
+    handled = handleEvent(eventName, emitterReactTag, payload, timestamp.count());
+    return runGrandCallback(timestamp, source);
   });
+#else
+  (void)eventName;
+  (void)emitterReactTag;
+  (void)payload;
+  (void)source;
+#endif
+  return handled;
+}
+
+void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, const bool allowPartialUpdates) {
+  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] = partitionUpdates(updatesBatch, allowPartialUpdates);
+
+#ifdef ANDROID
+  if (!synchronousUpdatesBatch.empty()) {
+    serializeSynchronousPropsToBuffers(
+        synchronousUpdatesBatch, synchronousPropsIntBuffer_, synchronousPropsDoubleBuffer_);
+    synchronouslyUpdateUIPropsFunction_(synchronousPropsIntBuffer_, synchronousPropsDoubleBuffer_);
+  }
+#endif // ANDROID
+
+#if __APPLE__
+  for (const auto &[shadowNodeFamily, props] : synchronousUpdatesBatch) {
+    synchronouslyUpdateUIPropsFunction_(shadowNodeFamily->getTag(), props);
+  }
+#endif // __APPLE__
+
+  updatesBatch = std::move(shadowTreeUpdatesBatch);
+}
+
+void ReanimatedModuleProxy::requestFlushRegistry() {
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    shouldFlushRegistry_ = true;
+    startBackendIfNeeded();
+  } else {
+    requestRender_([weakThis = weak_from_this()](const double) {
+      if (auto strongThis = weakThis.lock()) {
+        strongThis->shouldFlushRegistry_ = true;
+      }
+    });
+  }
 }
 
 void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch) {
@@ -1132,27 +1045,31 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
 
   std::unordered_map<SurfaceId, PropsMap> propsMapBySurface;
+  PropsMap collectedProps;
+  bool flushRegistry;
 
+  // Release the lock before shadowTree.commit - it re-enters via ReanimatedCommitHook.
+  {
+    auto lock = updatesRegistryManager_->lock();
 #ifdef ANDROID
-  updatesRegistryManager_->collectPropsToRevertBySurface(propsMapBySurface);
+    updatesRegistryManager_->collectPropsToRevertBySurface(propsMapBySurface);
 #endif
+    flushRegistry = shouldFlushRegistry_.exchange(false);
+    if (flushRegistry) {
+      collectedProps = updatesRegistryManager_->collectProps();
+    }
+  }
 
-  if (shouldFlushRegistry_) {
-    shouldFlushRegistry_ = false;
-    const auto propsMap = updatesRegistryManager_->collectProps();
-    for (auto const &[family, props] : propsMap) {
-      const auto surfaceId = family->getSurfaceId();
-      auto &propsVector = propsMapBySurface[surfaceId][family];
+  if (flushRegistry) {
+    for (auto const &[family, props] : collectedProps) {
+      auto &propsVector = propsMapBySurface[family->getSurfaceId()][family];
       for (const auto &prop : props) {
         propsVector.emplace_back(prop);
       }
     }
   } else {
-    for (auto const &[shadowNode, props] : updatesBatch) {
-      SurfaceId surfaceId = shadowNode->getSurfaceId();
-      auto family = &shadowNode->getFamily();
-      react_native_assert(family->getSurfaceId() == surfaceId);
-      propsMapBySurface[surfaceId][family].emplace_back(props);
+    for (auto const &[shadowNodeFamily, props] : updatesBatch) {
+      propsMapBySurface[shadowNodeFamily->getSurfaceId()][shadowNodeFamily].emplace_back(props);
     }
   }
 
@@ -1180,6 +1097,7 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
 
 #ifdef ANDROID
       if (status == ShadowTree::CommitStatus::Succeeded) {
+        auto lock = updatesRegistryManager_->lock();
         updatesRegistryManager_->clearPropsToRevert(surfaceId);
       }
 #else
@@ -1213,7 +1131,7 @@ void ReanimatedModuleProxy::dispatchCommand(
 
 jsi::String
 ReanimatedModuleProxy::obtainProp(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &propName) {
-  jsi::Runtime &uiRuntime = uiRuntime_->getJSIRuntime();
+  jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   const auto propNameStr = propName.asString(rt).utf8(rt);
   const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto resultStr = obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
@@ -1256,6 +1174,23 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
   uiManager_ = uiManager;
   viewStylesRepository_->setUIManager(uiManager_);
 
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    react_native_assert(
+        (REACT_NATIVE_VERSION_MINOR > 85 || (REACT_NATIVE_VERSION_MINOR == 85 && REACT_NATIVE_VERSION_PATCH >= 2)) &&
+        "[Reanimated] USE_ANIMATION_BACKEND requires React Native 0.85.2 or newer.");
+
+#if REACT_NATIVE_VERSION_MINOR >= 85
+    if (!ReactNativeFeatureFlags::useSharedAnimatedBackend()) {
+      react_native_assert(
+          false &&
+          "[Reanimated] USE_ANIMATION_BACKEND flag is enabled, "
+          "but ReactNativeFeatureFlags::useSharedAnimatedBackend is disabled. "
+          "Enable the Experimental Release level in React Native, "
+          "or disable the Reanimated Feature Flag");
+    }
+#endif
+  }
+
   initializeLayoutAnimationsProxy();
 
   const std::function<void()> request = [weakThis = weak_from_this()]() {
@@ -1266,7 +1201,14 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
 
     strongThis->requestFlushRegistry();
   };
-  mountHook_ = std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, request);
+
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    // TODO: we don't use the mount hook here, but we still need a way to handleNodeRemovals
+    // for now we leave this to leak the memory, a fix will come in a follow-up
+  } else {
+    mountHook_ = std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, request);
+  }
+
   commitHook_ = std::make_shared<ReanimatedCommitHook>(uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
 }
 
@@ -1283,7 +1225,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
           layoutAnimationsManager_,
           componentDescriptorRegistry,
           scheduler->getContextContainer(),
-          uiRuntime_->getJSIRuntime(),
+          getJSIRuntimeFromWorkletRuntime(uiRuntime_),
           uiScheduler_
 #ifdef ANDROID
           ,
@@ -1301,7 +1243,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
           layoutAnimationsManager_,
           componentDescriptorRegistry,
           scheduler->getContextContainer(),
-          uiRuntime_->getJSIRuntime(),
+          getJSIRuntimeFromWorkletRuntime(uiRuntime_),
           uiScheduler_
 #ifdef ANDROID
           ,
@@ -1332,6 +1274,7 @@ std::function<std::string()> ReanimatedModuleProxy::createRegistriesLeakCheck() 
 
     std::string result = "";
 
+    auto lock = strongThis->updatesRegistryManager_->lock();
     result += "AnimatedPropsRegistry: " + format(strongThis->animatedPropsRegistry_->isEmpty());
     result += "\nCSSAnimationsRegistry: " + format(strongThis->cssAnimationsRegistry_->isEmpty());
     result += "\nCSSTransitionsRegistry: " + format(strongThis->cssTransitionsRegistry_->isEmpty());
@@ -1348,15 +1291,18 @@ jsi::Value ReanimatedModuleProxy::subscribeForKeyboardEvents(
     const jsi::Value &handlerWorklet,
     const jsi::Value &isStatusBarTranslucent,
     const jsi::Value &isNavigationBarTranslucent) {
-  auto serializableHandler = extractSerializableOrThrow<SerializableWorklet>(
-      rt, handlerWorklet, "[Reanimated] Keyboard event handler must be a worklet.");
+  auto serializableHandler = extractSerializable(
+      rt,
+      handlerWorklet,
+      "[Reanimated] Keyboard event handler must be a worklet.",
+      Serializable::ValueType::WorkletType);
   return subscribeForKeyboardEventsFunction_(
       [=, weakThis = weak_from_this()](int keyboardState, int height) {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
         }
-        strongThis->uiRuntime_->runSync(serializableHandler, jsi::Value(keyboardState), jsi::Value(height));
+        runSyncOnRuntime(strongThis->uiRuntime_, serializableHandler, jsi::Value(keyboardState), jsi::Value(height));
       },
       isStatusBarTranslucent.getBool(),
       isNavigationBarTranslucent.getBool());
@@ -1364,6 +1310,298 @@ jsi::Value ReanimatedModuleProxy::subscribeForKeyboardEvents(
 
 void ReanimatedModuleProxy::unsubscribeFromKeyboardEvents(jsi::Runtime &, const jsi::Value &listenerId) {
   unsubscribeFromKeyboardEventsFunction_(listenerId.asNumber());
+}
+
+void ReanimatedModuleProxy::toggleSlowAnimationsOnUIRuntime() const {
+  this->jsInvoker_->invokeAsync([](jsi::Runtime &rt) {
+    const auto toggleFn = rt.global().getProperty(rt, "__toggleSlowAnimationsOnUIRuntime");
+    if (!(toggleFn.isObject() && toggleFn.asObject(rt).isFunction(rt))) [[unlikely]] {
+      throw std::runtime_error("[Reanimated] __toggleSlowAnimationsOnUIRuntime function missing on global.");
+    }
+
+    toggleFn.asObject(rt).asFunction(rt).call(rt);
+  });
+}
+
+jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
+  using jsi_utils::addMethod;
+  using jsi_utils::at;
+
+  auto obj = jsi::Object(rt);
+
+  addMethod<3>(
+      rt,
+      obj,
+      "registerEventHandler",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value::undefined();
+        }
+        return strongThis->registerEventHandler(rt, at<0>(args), at<1>(args), at<2>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "unregisterEventHandler",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->unregisterEventHandler(rt, at<0>(args));
+      });
+
+  addMethod<3>(
+      rt,
+      obj,
+      "getViewProp",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value::undefined();
+        }
+        return strongThis->getViewProp(rt, at<0>(args), at<1>(args), at<2>(args));
+      });
+
+  addMethod<4>(
+      rt,
+      obj,
+      "registerSensor",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[4]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value::undefined();
+        }
+        return strongThis->registerSensor(rt, at<0>(args), at<1>(args), at<2>(args), at<3>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "unregisterSensor",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->unregisterSensor(rt, at<0>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "getStaticFeatureFlag",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value::undefined();
+        }
+        return strongThis->getStaticFeatureFlag(rt, at<0>(args));
+      });
+
+  addMethod<2>(
+      rt,
+      obj,
+      "setDynamicFeatureFlag",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value::undefined();
+        }
+        return strongThis->setDynamicFeatureFlag(rt, at<0>(args), at<1>(args));
+      });
+
+  addMethod<3>(
+      rt,
+      obj,
+      "subscribeForKeyboardEvents",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value::undefined();
+        }
+        return strongThis->subscribeForKeyboardEvents(rt, at<0>(args), at<1>(args), at<2>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "unsubscribeFromKeyboardEvents",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->unsubscribeFromKeyboardEvents(rt, at<0>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "configureLayoutAnimationBatch",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value::undefined();
+        }
+        return strongThis->configureLayoutAnimationBatch(rt, at<0>(args));
+      });
+
+  addMethod<2>(
+      rt,
+      obj,
+      "setShouldAnimateExitingForTag",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->setShouldAnimateExiting(rt, at<0>(args), at<1>(args));
+      });
+
+  addMethod<2>(
+      rt,
+      obj,
+      "setViewStyle",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->setViewStyle(rt, at<0>(args), at<1>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "markNodeAsRemovable",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->markNodeAsRemovable(rt, at<0>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "unmarkNodeAsRemovable",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->unmarkNodeAsRemovable(rt, at<0>(args));
+      });
+
+  addMethod<3>(
+      rt,
+      obj,
+      "registerCSSKeyframes",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->registerCSSKeyframes(rt, at<0>(args), at<1>(args), at<2>(args));
+      });
+
+  addMethod<2>(
+      rt,
+      obj,
+      "unregisterCSSKeyframes",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->unregisterCSSKeyframes(rt, at<0>(args), at<1>(args));
+      });
+
+  addMethod<3>(
+      rt,
+      obj,
+      "applyCSSAnimations",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->applyCSSAnimations(rt, at<0>(args), at<1>(args), at<2>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "unregisterCSSAnimations",
+      [weakThis = weak_from_this()](jsi::Runtime &, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->unregisterCSSAnimations(at<0>(args));
+      });
+
+  addMethod<2>(
+      rt,
+      obj,
+      "runCSSTransition",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->runCSSTransition(rt, at<0>(args), at<1>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "unregisterCSSTransition",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->unregisterCSSTransition(rt, at<0>(args));
+      });
+
+  addMethod<0>(rt, obj, "getSettledUpdates", [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return jsi::Value::undefined();
+    }
+    return strongThis->getSettledUpdates(rt);
+  });
+
+  addMethod<2>(
+      rt,
+      obj,
+      "registerPseudoStyle",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->registerPseudoStyle(rt, at<0>(args), at<1>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "unregisterPseudoStyle",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->unregisterPseudoStyle(rt, at<0>(args));
+      });
+
+  return obj;
 }
 
 } // namespace reanimated

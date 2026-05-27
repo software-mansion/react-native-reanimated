@@ -3,9 +3,11 @@
 #include <jsi/jsi.h>
 #include <react/debug/react_native_assert.h>
 
+#include <concepts>
 #include <memory>
 #include <string>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 using namespace facebook;
@@ -75,7 +77,7 @@ inline std::tuple<T, Rest...> convertArgs(jsi::Runtime &rt, const jsi::Value *ar
 // native C++ types needed to call `function`
 template <typename Ret, typename... Args>
 std::tuple<Args...>
-getArgsForFunction(std::function<Ret(Args...)>, jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
+getArgsForFunction(const std::function<Ret(Args...)> &, jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
   react_native_assert(sizeof...(Args) == count && "Argument list has different length than expected");
   return convertArgs<Args...>(rt, args);
 }
@@ -85,7 +87,7 @@ getArgsForFunction(std::function<Ret(Args...)>, jsi::Runtime &rt, const jsi::Val
 // passing `rt` as the first argument
 template <typename Ret, typename... Args>
 std::tuple<jsi::Runtime &, Args...> getArgsForFunction(
-    std::function<Ret(jsi::Runtime &, Args...)>,
+    const std::function<Ret(jsi::Runtime &, Args...)> &,
     jsi::Runtime &rt,
     const jsi::Value *args,
     const size_t count) {
@@ -117,7 +119,7 @@ inline jsi::Value apply(std::function<void(Args...)> function, std::tuple<Args..
 // returns a function with JSI calling convention
 // from a native function `function`
 template <typename Fun>
-jsi::HostFunctionType createHostFunction(Fun function) {
+jsi::HostFunctionType createHostFunction(const Fun &function) {
   return [function](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, const size_t count) {
     auto argz = getArgsForFunction(function, rt, args, count);
     return apply(function, std::move(argz));
@@ -127,7 +129,7 @@ jsi::HostFunctionType createHostFunction(Fun function) {
 // returns a function with JSI calling convention
 // from a native function `function` returning a string
 template <typename... Args>
-jsi::HostFunctionType createHostFunction(std::function<std::string(Args...)> function) {
+jsi::HostFunctionType createHostFunction(const std::function<std::string(Args...)> &function) {
   return [function](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, const size_t count) {
     auto argz = getArgsForFunction(function, rt, args, count);
     return apply(rt, function, std::move(argz));
@@ -151,7 +153,7 @@ struct takes_runtime<jsi::Runtime &, Rest...> {
 // and installs it as a global function named `name`
 // in the `rt` JS runtime
 template <typename Ret, typename... Args>
-void installJsiFunction(jsi::Runtime &rt, std::string_view name, std::function<Ret(Args...)> function) {
+void installJsiFunction(jsi::Runtime &rt, std::string_view name, const std::function<Ret(Args...)> &function) {
   auto clb = createHostFunction(function);
   auto argsCount = sizeof...(Args) - takes_runtime<Args...>::value;
   jsi::Value jsiFunction =
@@ -168,5 +170,58 @@ void installJsiFunction(jsi::Runtime &rt, std::string_view name, Fun function) {
 jsi::Array convertStringToArray(jsi::Runtime &rt, const std::string &value, const unsigned int expectedSize);
 
 jsi::Object optimizedFromHostObject(jsi::Runtime &rt, std::shared_ptr<jsi::HostObject> &&hostObject);
+
+template <size_t TIndex, size_t TLength>
+  requires(TIndex < TLength)
+constexpr const jsi::Value &at(const jsi::Value (&args)[TLength]) noexcept {
+  return args[TIndex];
+}
+
+template <size_t TLength, typename TFun>
+  requires(TLength > 0) &&
+    std::is_invocable_v<TFun &&, jsi::Runtime &, const jsi::Value &, const jsi::Value (&)[TLength]>
+void addMethod(jsi::Runtime &rt, jsi::Object &obj, const char *name, TFun &&func) {
+  obj.setProperty(
+      rt,
+      name,
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, name),
+          TLength,
+          [func = std::forward<TFun>(func)](
+              jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *args, size_t) mutable -> jsi::Value {
+            using TReturn =
+                std::invoke_result_t<TFun &, jsi::Runtime &, const jsi::Value &, const jsi::Value(&)[TLength]>;
+            auto &typed = *reinterpret_cast<const jsi::Value(*)[TLength]>(args);
+            if constexpr (std::is_void_v<TReturn>) {
+              func(rt, thisVal, typed);
+              return jsi::Value::undefined();
+            } else {
+              return func(rt, thisVal, typed);
+            }
+          }));
+}
+
+template <size_t TLength, typename TFun>
+  requires(TLength == 0) && std::is_invocable_v<TFun &&, jsi::Runtime &, const jsi::Value &>
+void addMethod(jsi::Runtime &rt, jsi::Object &obj, const char *name, TFun &&func) {
+  obj.setProperty(
+      rt,
+      name,
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, name),
+          0,
+          [func = std::forward<TFun>(func)](
+              jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *, size_t) mutable -> jsi::Value {
+            using TReturn = std::invoke_result_t<TFun &, jsi::Runtime &, const jsi::Value &>;
+            if constexpr (std::is_void_v<TReturn>) {
+              func(rt, thisVal);
+              return jsi::Value::undefined();
+            } else {
+              return func(rt, thisVal);
+            }
+          }));
+}
 
 } // namespace reanimated::jsi_utils

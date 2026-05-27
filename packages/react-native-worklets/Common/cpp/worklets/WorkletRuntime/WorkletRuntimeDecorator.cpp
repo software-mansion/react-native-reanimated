@@ -1,16 +1,43 @@
+#include <jsi/jsi.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/PlatformLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
-#include <worklets/WorkletRuntime/RuntimeKind.h>
+#include <worklets/WorkletRuntime/HermesProfiling.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
+#ifdef ANDROID
+#include <android/trace.h>
+#endif
+
+#if defined(__APPLE__)
+#include <os/trace_base.h>
+#if OS_LOG_TARGET_HAS_10_15_FEATURES
+#include <os/log.h>
+#include <os/signpost.h>
+#endif
+#endif
+
+#include <chrono>
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
+
+#if defined(__APPLE__) && OS_LOG_TARGET_HAS_10_15_FEATURES
+static os_log_t workletsInstrumentsLogHandle = nullptr;
+static thread_local os_signpost_id_t tls_signpostId = OS_SIGNPOST_ID_INVALID;
+static thread_local std::string tls_signpostName;
+
+static os_log_t getWorkletsInstrumentsLogHandle() {
+  if (!workletsInstrumentsLogHandle) {
+    workletsInstrumentsLogHandle = os_log_create("dev.worklets.instruments", OS_LOG_CATEGORY_POINTS_OF_INTEREST);
+  }
+  return workletsInstrumentsLogHandle;
+}
+#endif
 
 namespace worklets {
 
@@ -23,41 +50,23 @@ static inline double performanceNow() {
   return duration / NANOSECONDS_IN_MILLISECOND;
 }
 
-static inline std::vector<jsi::Value> parseArgs(
-    jsi::Runtime &rt,
-    const std::shared_ptr<SerializableArray> &serializableArgs) {
-  if (serializableArgs == nullptr) {
-    return {};
-  }
-
-  auto argsArray = serializableArgs->toJSValue(rt).asObject(rt).asArray(rt);
-  auto argsSize = argsArray.size(rt);
-  std::vector<jsi::Value> result(argsSize);
-  for (size_t i = 0; i < argsSize; i++) {
-    result[i] = argsArray.getValueAtIndex(rt, i);
-  }
-  return result;
-}
-
 void WorkletRuntimeDecorator::decorate(
     jsi::Runtime &rt,
+    const RuntimeData::RuntimeKind runtimeKind,
     const std::string &name,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const bool isDevBundle,
     jsi::Object &&jsiWorkletsModuleProxy,
-    const std::shared_ptr<EventLoop> &eventLoop) {
+    const std::shared_ptr<EventLoop> &eventLoop,
+    const RuntimeBindings::NativeLoggingHook &nativeLoggingHook) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
-  rt.global().setProperty(rt, runtimeKindBindingName, static_cast<int>(RuntimeKind::Worker));
+  rt.global().setProperty(rt, RuntimeData::runtimeKindBindingName, static_cast<int>(runtimeKind));
 
   rt.global().setProperty(rt, "_WORKLET", true);
 
-  rt.global().setProperty(rt, "_LABEL", jsi::String::createFromAscii(rt, name));
-
-  // TODO: Remove _IS_FABRIC sometime in the future
-  // react-native-screens 4.9.0 depends on it
-  rt.global().setProperty(rt, "_IS_FABRIC", true);
+  rt.global().setProperty(rt, RuntimeData::runtimeNameBindingName, jsi::String::createFromAscii(rt, name));
 
   rt.global().setProperty(rt, "__DEV__", isDevBundle);
 
@@ -83,15 +92,44 @@ void WorkletRuntimeDecorator::decorate(
   jsi_utils::installJsiFunction(
       rt, "_log", [](jsi::Runtime &rt, const jsi::Value &value) { PlatformLogger::log(stringifyJSIValue(rt, value)); });
 
+  if (nativeLoggingHook) {
+    rt.global().setProperty(
+        rt,
+        "nativeLoggingHook",
+        jsi::Function::createFromHostFunction(
+            rt, jsi::PropNameID::forAscii(rt, "nativeLoggingHook"), 2, nativeLoggingHook));
+  }
+
   jsi_utils::installJsiFunction(rt, "_toString", [](jsi::Runtime &rt, const jsi::Value &value) {
     return jsi::String::createFromUtf8(rt, stringifyJSIValue(rt, value));
   });
 
-  jsi_utils::installJsiFunction(
-      rt, "_createSerializable", [](jsi::Runtime &rt, const jsi::Value &value, const jsi::Value &nativeStateSource) {
-        auto shouldRetainRemote = jsi::Value::undefined();
-        return makeSerializableClone(rt, value, shouldRetainRemote, nativeStateSource);
-      });
+  jsi_utils::installJsiFunction(rt, "_beginSection", [](jsi::Runtime &rt, const jsi::Value &nameValue) {
+#ifdef ANDROID
+    ATrace_beginSection(nameValue.asString(rt).utf8(rt).c_str());
+#elif defined(__APPLE__) && OS_LOG_TARGET_HAS_10_15_FEATURES
+    os_log_t logHandle = getWorkletsInstrumentsLogHandle();
+    if (os_signpost_enabled(logHandle)) {
+      tls_signpostName = nameValue.asString(rt).utf8(rt);
+      tls_signpostId = os_signpost_id_make_with_pointer(logHandle, &tls_signpostId);
+      os_signpost_interval_begin(logHandle, tls_signpostId, "Worklets", "%s", tls_signpostName.c_str());
+    }
+#endif
+    return jsi::Value::undefined();
+  });
+
+  jsi_utils::installJsiFunction(rt, "_endSection", [](jsi::Runtime &rt) {
+#ifdef ANDROID
+    ATrace_endSection();
+#elif defined(__APPLE__) && OS_LOG_TARGET_HAS_10_15_FEATURES
+    os_log_t logHandle = getWorkletsInstrumentsLogHandle();
+    if (os_signpost_enabled(logHandle) && tls_signpostId != OS_SIGNPOST_ID_INVALID) {
+      os_signpost_interval_end(logHandle, tls_signpostId, "Worklets", "%s end", tls_signpostName.c_str());
+      tls_signpostId = OS_SIGNPOST_ID_INVALID;
+    }
+#endif
+    return jsi::Value::undefined();
+  });
 
   jsi_utils::installJsiFunction(rt, "_createSerializableHostObject", [](jsi::Runtime &rt, const jsi::Value &value) {
     return makeSerializableHostObject(rt, value.asObject(rt).asHostObject(rt));
@@ -141,54 +179,9 @@ void WorkletRuntimeDecorator::decorate(
     return makeSerializableInitializer(rt, value.asObject(rt));
   });
 
-  jsi_utils::installJsiFunction(rt, "_createSerializableFunction", [](jsi::Runtime &rt, const jsi::Value &value) {
-    return makeSerializableFunction(rt, value.asObject(rt).asFunction(rt));
-  });
-
   jsi_utils::installJsiFunction(rt, "_createSerializableSynchronizable", [](jsi::Runtime &rt, const jsi::Value &value) {
     return SerializableJSRef::newNativeStateObject(rt, extractSerializableOrThrow(rt, value));
   });
-
-  jsi_utils::installJsiFunction(
-      rt,
-      "_scheduleRemoteFunctionOnJS",
-      [jsScheduler](jsi::Runtime &rt, const jsi::Value &funValue, const jsi::Value &argsValue) {
-        auto serializableRemoteFun = extractSerializableOrThrow<SerializableRemoteFunction>(
-            rt,
-            funValue,
-            "[Worklets] Incompatible object passed to scheduleOnJS. It is only allowed to schedule worklets or functions defined on the React Native JS runtime this way.");
-
-        auto serializableArgs = argsValue.isUndefined()
-            ? nullptr
-            : extractSerializableOrThrow<SerializableArray>(rt, argsValue, "[Worklets] Args must be an array.");
-
-        jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
-          auto fun = serializableRemoteFun->toJSValue(rt).asObject(rt).asFunction(rt);
-          if (serializableArgs == nullptr) {
-            // fast path for remote function w/o arguments
-            fun.call(rt);
-          } else {
-            auto args = parseArgs(rt, serializableArgs);
-            fun.call(rt, const_cast<const jsi::Value *>(args.data()), args.size());
-          }
-        });
-      });
-
-  jsi_utils::installJsiFunction(
-      rt,
-      "_scheduleHostFunctionOnJS",
-      [jsScheduler](jsi::Runtime &rt, const jsi::Value &hostFunValue, const jsi::Value &argsValue) {
-        auto hostFun = hostFunValue.asObject(rt).asFunction(rt).getHostFunction(rt);
-
-        auto serializableArgs = argsValue.isUndefined()
-            ? nullptr
-            : extractSerializableOrThrow<SerializableArray>(rt, argsValue, "[Worklets] Args must be an array.");
-
-        jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
-          auto args = parseArgs(rt, serializableArgs);
-          hostFun(rt, jsi::Value::undefined(), const_cast<const jsi::Value *>(args.data()), args.size());
-        });
-      });
 
   jsi_utils::installJsiFunction(
       rt,
@@ -210,6 +203,23 @@ void WorkletRuntimeDecorator::decorate(
           }));
   rt.global().setProperty(rt, "performance", performance);
 
+  rt.global().setProperty(
+      rt,
+      "_startProfiling",
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, "_startProfiling"),
+          1,
+          [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t count) {
+            const double meanHzFreq = (count > 0 && !args[0].isUndefined()) ? args[0].asNumber() : 100.0;
+            startProfiling(rt, meanHzFreq);
+            return jsi::Value::undefined();
+          }));
+  jsi_utils::installJsiFunction(rt, "_stopProfiling", [](jsi::Runtime &rt) {
+    std::string path = stopProfiling(rt);
+    return jsi::String::createFromUtf8(rt, path);
+  });
+
   jsi_utils::installJsiFunction(
       rt,
       "_scheduleTimeoutCallback",
@@ -227,7 +237,6 @@ void WorkletRuntimeDecorator::decorate(
       });
 }
 
-#ifdef WORKLETS_BUNDLE_MODE_ENABLED
 void WorkletRuntimeDecorator::postEvaluateScript(
     jsi::Runtime &rt,
     const std::shared_ptr<RuntimeBindings> &runtimeBindings) {
@@ -307,6 +316,5 @@ void WorkletRuntimeDecorator::installNetworking(
   Networking.asObject(rt).setProperty(rt, "clearCookies", std::move(jsiClearCookies));
 }
 #endif // WORKLETS_FETCH_PREVIEW_ENABLED
-#endif // WORKLETS_BUNDLE_MODE_ENABLED
 
 } // namespace worklets

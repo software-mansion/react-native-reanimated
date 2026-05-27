@@ -14,16 +14,15 @@
     "@typescript-eslint/parser": "8.37.0",
     "esbuild": "0.25.10",
     "eslint": "9.37.0",
-    "prettier": "3.6.2",
     "tsc-watch": "7.2.0",
-    "typescript": "5.8.3"
+    "typescript": "5.9.3"
   },
   "license": "MIT",
   "readmeFilename": "README.md",
   "scripts": {
     "build": "yarn tsc && yarn bundle && yarn format && cp types/options.d.ts index.d.ts",
     "bundle": "node bundle.js",
-    "format": "prettier --write --ignore-path '' --log-level silent types/options.d.ts && prettier --write --list-different src",
+    "format": "yarn run --top-level oxfmt --ignore-path '' src types/options.d.ts",
     "watch": "tsc-watch --onSuccess \"yarn bundle\"",
     "lint": "eslint --max-warnings=0 src",
     "type:check": "tsc --noEmit"

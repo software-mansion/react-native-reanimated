@@ -4,7 +4,7 @@ title: Synchronizable
 sidebar_position: 42 # Use alphabetical order
 ---
 
-# Synchronizable <AvailableFrom version="0.6.0" />
+# Synchronizable <AvailableFrom version="0.6.0"/>
 
 Synchronizable is a type of shared memory not tied to any JavaScript Runtime. It can be accessed from any JavaScript Runtime and C++. The value held by Synchronizable behaves like a standard JavaScript value.
 
@@ -19,18 +19,17 @@ Synchronizable can be accessed both non-exclusively or exclusively - meaning tha
 </figcaption>
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type Synchronizable<TValue = unknown> = {
-  getDirty(): TValue;
-  getBlocking(): TValue;
-  setBlocking(value: TValue | ((prev: TValue) => TValue)): void;
-  lock(): void;
-  unlock(): void;
-};
-```
-
+  ```typescript
+  type Synchronizable<TValue = unknown> = {
+    getDirty(): TValue;
+    getBlocking(): TValue;
+    setBlocking(value: TValue | ((prev: TValue) => TValue)): void;
+    lock(): void;
+    unlock(): void;
+  };
+  ```
 </details>
 
 ## Reference

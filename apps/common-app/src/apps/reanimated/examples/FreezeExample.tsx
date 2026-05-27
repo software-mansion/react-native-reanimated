@@ -10,11 +10,12 @@ import Animated, {
   Easing,
   useAnimatedStyle,
   useSharedValue,
-  withDelay,
   withTiming,
 } from 'react-native-reanimated';
 
 import { NukeContext } from '@/components';
+
+const DEMO_DURATION_MS = 10_000;
 
 type RootStackParamList = {
   screen1: undefined;
@@ -83,10 +84,10 @@ const AnimatedStyleAnimation = () => {
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
       {
-        translateX: withDelay(
-          1000,
-          withTiming(sv.value, { duration: 10000, easing: Easing.linear })
-        ),
+        translateX: withTiming(sv.value, {
+          duration: DEMO_DURATION_MS,
+          easing: Easing.linear,
+        }),
       },
     ],
   }));
@@ -178,15 +179,7 @@ type StackParamList = {
   screen3: undefined;
 };
 
-const Stack = createNativeStackNavigator<StackParamList>({
-  initialRouteName: 'home',
-  screens: {
-    home: HomeScreen,
-    screen1: Screen1,
-    screen2: Screen2,
-    screen3: Screen3,
-  },
-});
+const Stack = createNativeStackNavigator<StackParamList>();
 
 export default function App() {
   return (
@@ -224,9 +217,8 @@ const styles = css.create({
   animationBox: {
     width: 100,
     height: 50,
-    animationDelay: '1s',
-    animationDuration: '10s',
-    animationFillMode: 'forwards',
+    animationDuration: DEMO_DURATION_MS,
+    animationFillMode: 'both',
     animationTimingFunction: 'linear',
     animationName: {
       from: {
@@ -243,8 +235,7 @@ const styles = css.create({
     width: 100,
     height: 50,
     backgroundColor: 'blue',
-    transitionDelay: '1s',
-    transitionDuration: '10s',
+    transitionDuration: DEMO_DURATION_MS,
     transitionProperty: 'left',
     transitionTimingFunction: 'linear',
   },

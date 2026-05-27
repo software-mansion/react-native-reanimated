@@ -3,7 +3,7 @@ title: registerCustomSerializable
 sidebar_position: 42 # Use alphabetical order
 ---
 
-# registerCustomSerializable <AvailableFrom version="0.7.0" />
+# registerCustomSerializable <AvailableFrom version="0.7.0"/>
 
 `registerCustomSerializable` lets you register your own pre-serialization and post-deserialization logic. This is necessary for objects with prototypes different than just `Object.prototype` or some other built-in prototypes like `Map` etc. Worklets can't handle such objects by default to convert into [Serializables](/docs/memory/serializable) hence you need to register them as **Custom Serializables**. This way you can tell Worklets how to transfer your custom data structures between different Runtimes without manually serializing and deserializing them every time.
 
@@ -36,22 +36,21 @@ registerCustomSerializable({
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function registerCustomSerializable<
-  TValue extends object,
-  TPacked extends object,
->(registrationData: RegistrationData<TValue, TPacked>): void;
+  ```typescript
+  function registerCustomSerializable<
+    TValue extends object,
+    TPacked extends object,
+  >(registrationData: RegistrationData<TValue, TPacked>): void;
 
-type RegistrationData<TValue extends object, TPacked = unknown> = {
-  name: string;
-  determine: (value: object) => value is TValue;
-  pack: (value: TValue) => TPacked;
-  unpack: (value: TPacked) => TValue;
-};
-```
-
+  type RegistrationData<TValue extends object, TPacked = unknown> = {
+    name: string;
+    determine: (value: object) => value is TValue;
+    pack: (value: TValue) => TPacked;
+    unpack: (value: TPacked) => TValue;
+  };
+  ```
 </details>
 
 ## Arguments
@@ -76,94 +75,89 @@ Custom prototypes are bound to a single Runtime and don't exist in other Runtime
 Consider the following examples:
 
 <table>
-<tr style={{padding: '20px'}}>
-<td>
+  <tr style={{padding: '20px'}}>
+    <td>
+      ```typescript
+      const obj = {};
 
-```typescript
-const obj = {};
+      // because why not
+      Object.setPrototypeOf(obj, console);
 
-// because why not
-Object.setPrototypeOf(obj, console);
+      scheduleOnUI(() => {
+        // This will throw because `obj`
+        // had a custom prototype and
+        // it couldn't be serialized.
+        obj.log('Hello!');
+      });
+      ```
+    </td>
 
-scheduleOnUI(() => {
-  // This will throw because `obj`
-  // had a custom prototype and
-  // it couldn't be serialized.
-  obj.log('Hello!');
-});
-```
+    <td style={{textAlign: 'center', flex: 1}}>
+      ```mermaid
+      flowchart TD
+          A[obj] -->|automatic serialization| B[no known serialization method, serialized as a dummy value]
+          B -->|scheduleOnUI| C[transferred to UI Runtime]
+          C -->|automatic deserialization| D[deserialized from a dummy value]
+          D -->|"obj.log('Hello!')"| E["<b>Error: serialization failed</b>"]
+          style E fill:#ff000022,stroke:#990000
+      ```
+    </td>
+  </tr>
 
-</td>
-<td style={{textAlign: 'center', flex: 1}}>
+  <tr>
+    <td>
+      ```typescript
+      const obj = {};
 
-```mermaid
-flowchart TD
-    A[obj] -->|automatic serialization| B[no known serialization method, serialized as a dummy value]
-    B -->|scheduleOnUI| C[transferred to UI Runtime]
-    C -->|automatic deserialization| D[deserialized from a dummy value]
-    D -->|"obj.log('Hello!')"| E["<b>Error: serialization failed</b>"]
-    style E fill:#ff000022,stroke:#990000
-```
+      // because why not
+      Object.setPrototypeOf(obj, console);
 
-</td>
-</tr>
-<tr>
-<td>
+      type ConsoleLike = typeof console;
 
-```typescript
-const obj = {};
+      registerCustomSerializable({
+        name: 'ConsoleLike',
+        determine(value: object): value is ConsoleLike {
+          'worklet';
+          return Object.getPrototypeOf(value) === console;
+        },
+        pack(value: ConsoleLike) {
+          'worklet';
+          // We don't need to transfer any data,
+          // so we can pack it to an empty object.
+          return {};
+        },
+        unpack(value: object) {
+          'worklet';
+          // We can recreate the original object.
+          return Object.create(console);
+        },
+      });
 
-// because why not
-Object.setPrototypeOf(obj, console);
+      scheduleOnUI(() => {
+        obj.log('Hello!'); // prints 'Hello!'
+      });
+      ```
+    </td>
 
-type ConsoleLike = typeof console;
-
-registerCustomSerializable({
-  name: 'ConsoleLike',
-  determine(value: object): value is ConsoleLike {
-    'worklet';
-    return Object.getPrototypeOf(value) === console;
-  },
-  pack(value: ConsoleLike) {
-    'worklet';
-    // We don't need to transfer any data,
-    // so we can pack it to an empty object.
-    return {};
-  },
-  unpack(value: object) {
-    'worklet';
-    // We can recreate the original object.
-    return Object.create(console);
-  },
-});
-
-scheduleOnUI(() => {
-  obj.log('Hello!'); // prints 'Hello!'
-});
-```
-
-</td>
-<td style={{textAlign: 'center', flex: 1}}>
-
-```mermaid
-flowchart TD
-  A[obj] -->|automatic serialization| B[identified as a Custom Serializable '<i>ConsoleLike</i>']
-  subgraph S1 [ ]
-    B -->|pack| C[packed with Custom Serializable's pack method]
-  end
-  C -->|actual serialization| D[serialized packed object as a default supported type]
-    D -->|scheduleOnUI| E[transferred to Runtime B]
-    E -->|automatic deserialization| F[deserialized to the packed object]
-    F -->|unpack| G
-  subgraph S2 [ ]
-    G[unpacked with Custom Serializable's unpack method]
-  end
-    G -->|"obj.log('Hello!')"| H["<b>'Hello!'</b> printed to console"]
-    style H fill:#00ff0022,stroke:#009900
-```
-
-</td>
-</tr>
+    <td style={{textAlign: 'center', flex: 1}}>
+      ```mermaid
+      flowchart TD
+        A[obj] -->|automatic serialization| B[identified as a Custom Serializable '<i>ConsoleLike</i>']
+        subgraph S1 [ ]
+          B -->|pack| C[packed with Custom Serializable's pack method]
+        end
+        C -->|actual serialization| D[serialized packed object as a default supported type]
+          D -->|scheduleOnUI| E[transferred to Runtime B]
+          E -->|automatic deserialization| F[deserialized to the packed object]
+          F -->|unpack| G
+        subgraph S2 [ ]
+          G[unpacked with Custom Serializable's unpack method]
+        end
+          G -->|"obj.log('Hello!')"| H["<b>'Hello!'</b> printed to console"]
+          style H fill:#00ff0022,stroke:#009900
+      ```
+    </td>
+  </tr>
 </table>
 
 ## Remarks

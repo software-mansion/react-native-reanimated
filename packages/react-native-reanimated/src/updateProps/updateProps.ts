@@ -8,7 +8,6 @@ import {
   processColorsInProps,
   processTransform,
   processTransformOrigin,
-  ReanimatedError,
   SHOULD_BE_USE_WEB,
   stylePropsBuilder,
 } from '../common';
@@ -23,9 +22,12 @@ import type {
   PropUpdates,
 } from '../createAnimatedComponent/commonTypes';
 import jsPropsUpdater from '../createAnimatedComponent/JSPropsUpdater';
+import { getStaticFeatureFlag } from '../featureFlags';
 import type { Descriptor } from '../hook/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
+
+const USE_ANIMATION_BACKEND = getStaticFeatureFlag('USE_ANIMATION_BACKEND');
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
@@ -33,6 +35,7 @@ let updateProps: (
   isAnimatedProps?: boolean
 ) => void;
 
+// is-tree-shakable-suppress
 if (SHOULD_BE_USE_WEB) {
   updateProps = (viewDescriptors, updates, isAnimatedProps) => {
     'worklet';
@@ -151,7 +154,7 @@ function createUpdatePropsManager() {
         }
 
         if (!flushPending && (nativePropUpdates || jsPropUpdates)) {
-          queueMicrotask(this.flush);
+          global.__requestMapperRunFinalizer(this.flush);
           flushPending = true;
         }
       });
@@ -166,17 +169,21 @@ function createUpdatePropsManager() {
         jsOperations.length = 0;
       }
       flushPending = false;
+      if (!USE_ANIMATION_BACKEND) {
+        global._maybeFlushUIUpdatesQueue();
+      }
     },
   };
 }
 
+// is-tree-shakable-suppress
 if (SHOULD_BE_USE_WEB) {
   const maybeThrowError = () => {
     // Jest attempts to access a property of this object to check if it is a Jest mock
     // so we can't throw an error in the getter.
     if (!IS_JEST) {
-      throw new ReanimatedError(
-        '`UpdatePropsManager` is not available on non-native platform.'
+      throw new Error(
+        '[Reanimated] `UpdatePropsManager` is not available on non-native platform.'
       );
     }
   };

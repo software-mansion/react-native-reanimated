@@ -1,10 +1,6 @@
-#include <glog/logging.h>
-#include <react/renderer/animations/utils.h>
-#include <react/renderer/core/ConcreteState.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
-#include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <algorithm>
@@ -32,7 +28,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   ShadowViewMutationList filteredMutations;
   auto rootChildCount = static_cast<int>(lightNodes_[surfaceId]->children.size());
   const std::vector<std::shared_ptr<MutationNode>> roots;
-  const bool isInTransition = transitionState_;
+  const bool isInTransition = static_cast<bool>(transitionState_);
 
   if (isInTransition) {
     updateLightTree(propsParserContext, mutations, filteredMutations);
@@ -151,7 +147,8 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         react_native_assert(node && "LightNode not found");
         node->previous = mutation.oldChildShadowView;
 #ifdef ANDROID
-        // TODO (future): We don't merge the root view as the currently stored version might not be accurate, because of the inconsequential initialization order of proxy and the surface
+        // TODO (future): We don't merge the root view as the currently stored version might not be accurate, because of
+        // the inconsequential initialization order of proxy and the surface
         if (!isRoot(node) && node->current.props) {
           // On android rawProps are used to store the diffed props so we need to merge them
           // This should soon be replaced in RN with Props 2.0 (the diffing will be done at the end of the pipeline)
@@ -328,9 +325,10 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
       react_native_assert(parent && "Parent node is nullptr");
       // TODO (future): figure out a better way to handle this
       // Currently we remove each view, and then if we want to animate it, reinsert it at the end.
-      // This is nice, but introduces extra mutations (which could have some side effects, like making a snapshot in RNScreens),
-      // and it changes the zIndex of animated views, which is different from what've had.
-      // The biggest convenience of this approach is that it is much easier to maintain indices of animated views, and handle reparentings.
+      // This is nice, but introduces extra mutations (which could have some side effects, like making a snapshot in
+      // RNScreens), and it changes the zIndex of animated views, which is different from what've had. The biggest
+      // convenience of this approach is that it is much easier to maintain indices of animated views, and handle
+      // reparentings.
 
       auto current = node->current;
       if (layoutAnimations_.contains(node->current.tag)) {
@@ -538,7 +536,7 @@ void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) con
     return;
   }
   layoutAnimations_.erase(tag);
-  uiScheduler_->scheduleOnUI([weakThis = weak_from_this(), tag]() {
+  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -679,8 +677,8 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::share
   react_native_assert(parent && "Parent node is nullptr");
   const auto parentTag = parent->current.tag;
 
-  uiScheduler_->scheduleOnUI(
-      [weakThis = weak_from_this(), finalView, currentView, newChildShadowView, parentTag, opacity]() {
+  scheduleOnUI(
+      uiScheduler_, [weakThis = weak_from_this(), finalView, currentView, newChildShadowView, parentTag, opacity]() {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
@@ -724,7 +722,7 @@ void LayoutAnimationsProxy_Experimental::startExitingAnimation(const std::shared
   react_native_assert(parent && "Parent node is nullptr");
   const auto parentTag = parent->current.tag;
 
-  uiScheduler_->scheduleOnUI([weakThis = weak_from_this(), tag, parentTag, oldChildShadowView, surfaceId]() {
+  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag, parentTag, oldChildShadowView, surfaceId]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -766,8 +764,8 @@ void LayoutAnimationsProxy_Experimental::startLayoutAnimation(const std::shared_
   react_native_assert(parent && "Parent node is nullptr");
   const auto parentTag = parent->current.tag;
 
-  uiScheduler_->scheduleOnUI(
-      [weakThis = weak_from_this(), surfaceId, oldChildShadowView, newChildShadowView, parentTag, tag]() {
+  scheduleOnUI(
+      uiScheduler_, [weakThis = weak_from_this(), surfaceId, oldChildShadowView, newChildShadowView, parentTag, tag]() {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
@@ -811,7 +809,7 @@ void LayoutAnimationsProxy_Experimental::startSharedTransition(
     const ShadowView &before,
     const ShadowView &after,
     SurfaceId surfaceId) const {
-  uiScheduler_->scheduleOnUI([weakThis = weak_from_this(), before, after, surfaceId, tag]() {
+  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), before, after, surfaceId, tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -844,7 +842,7 @@ void LayoutAnimationsProxy_Experimental::startProgressTransition(
     const ShadowView &before,
     const ShadowView &after,
     SurfaceId surfaceId) const {
-  uiScheduler_->scheduleOnUI([weakThis = weak_from_this(), before, after, surfaceId]() {
+  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), before, after, surfaceId]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;

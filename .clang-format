@@ -56,7 +56,7 @@ PenaltyBreakString: 1000
 PenaltyExcessCharacter: 1000000
 PenaltyReturnTypeOnItsOwnLine: 200
 PointerAlignment: Right
-ReflowComments: false
+ReflowComments: true
 RequiresExpressionIndentation: OuterScope
 SortIncludes: true
 SpaceAfterCStyleCast: false

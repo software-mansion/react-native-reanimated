@@ -22,18 +22,17 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function scheduleOnRN<Args extends unknown[], ReturnValue>(
-  fun:
-    | ((...args: Args) => ReturnValue)
-    | RemoteFunction<Args, ReturnValue>
-    | WorkletFunction<Args, ReturnValue>,
-  ...args: Args
-): void;
-```
-
+  ```typescript
+  function scheduleOnRN<Args extends unknown[], ReturnValue>(
+    fun:
+      | ((...args: Args) => ReturnValue)
+      | RemoteFunction<Args, ReturnValue>
+      | WorkletFunction<Args, ReturnValue>,
+    ...args: Args
+  ): void;
+  ```
 </details>
 
 ### Arguments
@@ -51,30 +50,71 @@ Arguments to the function you want to execute on the [RN Runtime](/docs/fundamen
 import ScheduleOnRN from '@site/src/examples/ScheduleOnRN';
 import ScheduleOnRNsrc from '!!raw-loader!@site/src/examples/ScheduleOnRN';
 
-<InteractiveExample src={ScheduleOnRNsrc} component={ScheduleOnRN} />
+<InteractiveExample src={ScheduleOnRNsrc} component={ScheduleOnRN}/>
 
 ## Remarks
 
-- Functions passed to `scheduleOnRN` must be defined in the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime) scope, i.e. in the component body or the global scope. The code below won't work because `myFunction` is defined in the `runOnUI` callback, which is only executed in the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime):
+### What functions can be passed to `scheduleOnRN`?
 
-<Indent>
+Functions passed to `scheduleOnRN` must be defined on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime) scope, i.e. in the component body or the global scope. The code below won't work because `myFunction` is defined in the `scheduleOnUI` callback, which is only executed on the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime).
 
 ```jsx
-import { runOnUI, scheduleOnRN } from 'react-native-worklets';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
-runOnUI(() => {
-  // myFunction is defined on the UI thread 🚨
-  const myFunction = () => {
-    // ...
-  };
-  scheduleOnRN(myFunction); // 💥
-})();
+function App() {
+  //... component code
+
+  scheduleOnUI(() => {
+    // callback is defined on the UI Runtime 🚨
+    // highlight-next-line
+    scheduleOnRN(() => {}); // 💥
+  });
+
+  //... other component code
+}
 ```
 
-</Indent>
+To fix it, you have to move the function definition to the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime) scope:
+
+```jsx
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
+
+function App() {
+  //... component code
+
+  // myFunction is defined on the RN Runtime ✅
+  // highlight-next-line
+  const myFunction = () => {};
+
+  scheduleOnUI(() => {
+    scheduleOnRN(myFunction); // 🥳
+  });
+
+  //... other component code
+}
+```
 
 ## Implementation Details
 
 - Scheduling function from the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime) (we are already on RN Runtime) simply
   uses `queueMicrotask`.
 - When functions need to be scheduled from a [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime), they rely on React Native's scheduling model to forward the function call to the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
+
+## Call table
+
+<CallTable
+  bundleMode={{
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
+  noBundleMode={{
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
+/>
+
+## Platform compatibility
+
+<PlatformTable native={true} web={true}/>

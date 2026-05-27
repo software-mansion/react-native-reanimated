@@ -1,20 +1,23 @@
+#include <cxxreact/ReactNativeVersion.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
+#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/Tools/FeatureFlags.h>
+
+#include <react/debug/react_native_assert.h>
 
 #include <memory>
 #include <utility>
 
 namespace reanimated {
 
-#if REACT_NATIVE_MINOR_VERSION >= 81
 static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper) {
   return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
 }
-#endif
 
 void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operations, const double timestamp) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   auto operationsArray = operations.asObject(rt).asArray(rt);
 
   for (size_t i = 0, length = operationsArray.size(rt); i < length; ++i) {
@@ -22,8 +25,15 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     auto shadowNodeWrapper = item.getProperty(rt, "shadowNodeWrapper");
     auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
-    const jsi::Value &updates = item.getProperty(rt, "updates");
-    addUpdatesToBatch(shadowNode, jsi::dynamicFromValue(rt, updates));
+    jsi::Value updates = item.getProperty(rt, "updates");
+
+    if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+#if REACT_NATIVE_VERSION_MINOR >= 85
+      addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updates);
+#endif
+    } else {
+      addUpdatesToBatch(shadowNode->getFamilyShared(), jsi::dynamicFromValue(rt, updates));
+    }
 
     if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
       timestampMap_[shadowNode->getTag()] = timestamp;
@@ -31,12 +41,13 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
   }
 }
 
-void AnimatedPropsRegistry::remove(const Tag tag) {
-  updatesRegistry_.erase(tag);
-  timestampMap_.erase(tag);
-}
+jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(
+    jsi::Runtime &rt,
+    const double timestamp,
+    const double cleanupTimestamp) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  removeUpdatesOlderThanTimestamp(cleanupTimestamp);
 
-jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt, const double timestamp) {
   std::vector<std::pair<Tag, std::reference_wrapper<const folly::dynamic>>> updates;
 
   for (const auto &[viewTag, pair] : updatesRegistry_) {
@@ -69,6 +80,11 @@ void AnimatedPropsRegistry::removeUpdatesOlderThanTimestamp(const double timesta
       it++;
     }
   }
+}
+
+void AnimatedPropsRegistry::removeTag(const Tag tag) {
+  updatesRegistry_.erase(tag);
+  timestampMap_.erase(tag);
 }
 
 } // namespace reanimated

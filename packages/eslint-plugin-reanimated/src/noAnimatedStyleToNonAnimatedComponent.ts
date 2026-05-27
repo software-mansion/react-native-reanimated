@@ -84,7 +84,7 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
 
           return variableNameTokenIds.some(
             (idx) =>
-              /* 
+              /*
               Lets count tokens from variable name to its definition, e.g.:
               ╭───────────┬───────┬───────┬───────┬────────────────╮
               │ Code      │ const │  sv   │   =   │ useSharedValue │

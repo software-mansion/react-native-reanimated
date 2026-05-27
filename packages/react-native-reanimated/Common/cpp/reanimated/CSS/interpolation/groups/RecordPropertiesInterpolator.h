@@ -18,15 +18,18 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   bool updateKeyframes(jsi::Runtime &rt, const jsi::Value &fromValue, const jsi::Value &toValue) override;
+  /** TODO: unify folly::dynamic and jsi::value versions */
+  bool updateKeyframes(const folly::dynamic &fromValue, const folly::dynamic &toValue) override;
 
  protected:
+  PropertyInterpolatorsRecord interpolators_;
+
   folly::dynamic mapInterpolators(const std::function<folly::dynamic(PropertyInterpolator &)> &callback) const override;
 
   void maybeCreateInterpolator(const std::string &propertyName);
 
  private:
   const InterpolatorFactoriesRecord &factories_;
-  PropertyInterpolatorsRecord interpolators_;
 };
 
 } // namespace reanimated::css

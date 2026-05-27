@@ -1,14 +1,14 @@
+/* eslint-disable n/no-missing-require */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-require-imports */
 'use strict';
 
-import { WorkletsError } from '../debug/WorkletsError';
-import {
-  runOnRuntimeSyncWithId as BundleRunOnRuntimeSyncFromId,
-  scheduleOnRuntimeWithId as BundleScheduleOnRuntimeFromId,
+import type {
+  runOnRuntimeAsyncWithId as BundleRunOnRuntimeAsyncWithId,
+  runOnRuntimeSyncWithId as BundleRunOnRuntimeSyncWithId,
+  scheduleOnRuntimeWithId as BundleScheduleOnRuntimeWithId,
 } from '../runtimes';
-import { runOnUIAsync as BundleRuntimeRunOnUIAsync } from '../threads';
 import type { WorkletFunction } from '../types';
-import { createSerializable } from './serializable';
-import { serializableMappingCache } from './serializableMappingCache';
 import type {
   SerializableRef,
   Shareable,
@@ -17,27 +17,30 @@ import type {
   ShareableHost,
 } from './types';
 
-export function __installUnpacker() {
-  let runOnRuntimeSyncFromId: typeof BundleRunOnRuntimeSyncFromId;
+export function installShareableGuestUnpacker() {
+  'worklet';
+  'no-worklet-closure';
+  let runOnRuntimeSyncFromId: typeof BundleRunOnRuntimeSyncWithId;
+  let runOnRuntimeAsyncFromId: typeof BundleRunOnRuntimeAsyncWithId;
   let memoize: (
     unpacked: Shareable<unknown>,
     serialized: SerializableRef<unknown>
   ) => void;
 
-  let scheduleOnRuntimeFromId: typeof BundleScheduleOnRuntimeFromId;
-  let runOnUIAsync: typeof BundleRuntimeRunOnUIAsync;
+  let scheduleOnRuntimeFromId: typeof BundleScheduleOnRuntimeWithId;
   let serializer: (value: unknown) => SerializableRef<unknown>;
 
   if (
     globalThis.__RUNTIME_KIND === 1 ||
     globalThis._WORKLETS_BUNDLE_MODE_ENABLED
   ) {
-    serializer = createSerializable;
+    serializer = require('./serializable').createSerializable;
+    const { serializableMappingCache } = require('./serializableMappingCache');
     memoize = serializableMappingCache.set.bind(serializableMappingCache);
 
-    runOnRuntimeSyncFromId = BundleRunOnRuntimeSyncFromId;
-    scheduleOnRuntimeFromId = BundleScheduleOnRuntimeFromId;
-    runOnUIAsync = BundleRuntimeRunOnUIAsync;
+    runOnRuntimeSyncFromId = require('../runtimes').runOnRuntimeSyncWithId;
+    runOnRuntimeAsyncFromId = require('../runtimes').runOnRuntimeAsyncWithId;
+    scheduleOnRuntimeFromId = require('../runtimes').scheduleOnRuntimeWithId;
   } else {
     // Serializer can't be inlined here because it might be yet undefined
     // when the unpacker is installed.
@@ -54,10 +57,11 @@ export function __installUnpacker() {
     ) => {
       const serializedWorklet = serializer(() => {
         'worklet';
+        'limit-init-data-hoisting';
         return globalThis.__serializer(worklet(...args));
       });
       return proxy.runOnRuntimeSyncWithId(hostId, serializedWorklet);
-    }) as typeof BundleRunOnRuntimeSyncFromId;
+    }) as typeof BundleRunOnRuntimeSyncWithId;
 
     scheduleOnRuntimeFromId = ((
       hostId: number,
@@ -68,16 +72,17 @@ export function __installUnpacker() {
         hostId,
         serializer(() => {
           'worklet';
+          'limit-init-data-hoisting';
           return globalThis.__serializer(worklet(...args));
         })
       );
-    }) as typeof BundleScheduleOnRuntimeFromId;
+    }) as typeof BundleScheduleOnRuntimeWithId;
 
-    runOnUIAsync = () => {
-      throw new WorkletsError(
-        'runOnUIAsync is not supported on Worklet Runtimes yet'
+    runOnRuntimeAsyncFromId = (() => {
+      throw new Error(
+        '[Worklets] `Shareable.getAsync` can only be called on the RN Runtime.'
       );
-    };
+    }) as typeof BundleRunOnRuntimeAsyncWithId;
   }
 
   function shareableGuestUnpacker<TValue>(
@@ -95,23 +100,26 @@ export function __installUnpacker() {
 
     const get = () => {
       'worklet';
+      'limit-init-data-hoisting';
       return (shareableGuest as Host).value;
     };
 
     const setWithValue = (value: TValue) => {
       'worklet';
+      'limit-init-data-hoisting';
       (shareableGuest as Host).value = value;
     };
 
     const setWithSetter = (setter: (prev: TValue) => TValue) => {
       'worklet';
+      'limit-init-data-hoisting';
       const currentValue = (shareableGuest as Host).value;
       const newValue = setter(currentValue);
       (shareableGuest as Host).value = newValue;
     };
 
     shareableGuest.getAsync = () => {
-      return runOnUIAsync(get);
+      return runOnRuntimeAsyncFromId(hostId, get);
     };
 
     shareableGuest.getSync = () => {

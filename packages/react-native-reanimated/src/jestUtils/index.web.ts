@@ -23,4 +23,4 @@ export function getAnimatedStyle() {
   // NOOP
 }
 
-export { worklet } from './common';
+export { cloneWorklet, worklet } from './common';

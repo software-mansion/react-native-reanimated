@@ -8,6 +8,8 @@ import type {
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
+import type { Rotate, TransformsConfig, TranslateX, TranslateY } from './types';
+import { animateTransformToValues, pickTransformValues } from './utils';
 
 /**
  * Rotate to bottom from left edge. You can modify the behavior by chaining
@@ -19,7 +21,9 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateInDownLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[Rotate, TranslateX, TranslateY]>
+  >
   implements IEntryAnimationBuilder
 {
   static presetName = 'RotateInDownLeft';
@@ -32,30 +36,41 @@ export class RotateInDownLeft
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
-          transform: [
-            { rotate: delayFunction(delay, animation('0deg', config)) },
-            { translateX: delayFunction(delay, animation(0, config)) },
-            { translateY: delayFunction(delay, animation(0, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
+          transform: animateTransformToValues(
+            [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          opacity: 0,
-          transform: [
-            { rotate: '-90deg' },
-            { translateX: values.targetWidth / 2 - values.targetHeight / 2 },
-            { translateY: -(values.targetWidth / 2 - values.targetHeight / 2) },
-          ],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 0,
+          transform: pickTransformValues(
+            [
+              { rotate: '-90deg' },
+              { translateX: values.targetWidth / 2 - values.targetHeight / 2 },
+              {
+                translateY: -(values.targetWidth / 2 - values.targetHeight / 2),
+              },
+            ],
+            initialValues
+          ),
         },
         callback,
       };
@@ -73,7 +88,9 @@ export class RotateInDownLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateInDownRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[Rotate, TranslateX, TranslateY]>
+  >
   implements IEntryAnimationBuilder
 {
   static presetName = 'RotateInDownRight';
@@ -86,30 +103,43 @@ export class RotateInDownRight
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
-          transform: [
-            { rotate: delayFunction(delay, animation('0deg', config)) },
-            { translateX: delayFunction(delay, animation(0, config)) },
-            { translateY: delayFunction(delay, animation(0, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
+          transform: animateTransformToValues(
+            [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          opacity: 0,
-          transform: [
-            { rotate: '90deg' },
-            { translateX: -(values.targetWidth / 2 - values.targetHeight / 2) },
-            { translateY: -(values.targetWidth / 2 - values.targetHeight / 2) },
-          ],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 0,
+          transform: pickTransformValues(
+            [
+              { rotate: '90deg' },
+              {
+                translateX: -(values.targetWidth / 2 - values.targetHeight / 2),
+              },
+              {
+                translateY: -(values.targetWidth / 2 - values.targetHeight / 2),
+              },
+            ],
+            initialValues
+          ),
         },
         callback,
       };
@@ -127,7 +157,9 @@ export class RotateInDownRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateInUpLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[Rotate, TranslateX, TranslateY]>
+  >
   implements IEntryAnimationBuilder
 {
   static presetName = 'RotateInUpLeft';
@@ -140,30 +172,39 @@ export class RotateInUpLeft
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
-          transform: [
-            { rotate: delayFunction(delay, animation('0deg', config)) },
-            { translateX: delayFunction(delay, animation(0, config)) },
-            { translateY: delayFunction(delay, animation(0, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
+          transform: animateTransformToValues(
+            [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          opacity: 0,
-          transform: [
-            { rotate: '90deg' },
-            { translateX: values.targetWidth / 2 - values.targetHeight / 2 },
-            { translateY: values.targetWidth / 2 - values.targetHeight / 2 },
-          ],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 0,
+          transform: pickTransformValues(
+            [
+              { rotate: '90deg' },
+              { translateX: values.targetWidth / 2 - values.targetHeight / 2 },
+              { translateY: values.targetWidth / 2 - values.targetHeight / 2 },
+            ],
+            initialValues
+          ),
         },
         callback,
       };
@@ -181,7 +222,9 @@ export class RotateInUpLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateInUpRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[Rotate, TranslateX, TranslateY]>
+  >
   implements IEntryAnimationBuilder
 {
   static presetName = 'RotateInUpRight';
@@ -194,30 +237,41 @@ export class RotateInUpRight
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
-          transform: [
-            { rotate: delayFunction(delay, animation('0deg', config)) },
-            { translateX: delayFunction(delay, animation(0, config)) },
-            { translateY: delayFunction(delay, animation(0, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
+          transform: animateTransformToValues(
+            [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          opacity: 0,
-          transform: [
-            { rotate: '-90deg' },
-            { translateX: -(values.targetWidth / 2 - values.targetHeight / 2) },
-            { translateY: values.targetWidth / 2 - values.targetHeight / 2 },
-          ],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 0,
+          transform: pickTransformValues(
+            [
+              { rotate: '-90deg' },
+              {
+                translateX: -(values.targetWidth / 2 - values.targetHeight / 2),
+              },
+              { translateY: values.targetWidth / 2 - values.targetHeight / 2 },
+            ],
+            initialValues
+          ),
         },
         callback,
       };
@@ -235,7 +289,9 @@ export class RotateInUpRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateOutDownLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[Rotate, TranslateX, TranslateY]>
+  >
   implements IExitAnimationBuilder
 {
   static presetName = 'RotateOutDownLeft';
@@ -248,42 +304,43 @@ export class RotateOutDownLeft
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
-          transform: [
-            { rotate: delayFunction(delay, animation('90deg', config)) },
-            {
-              translateX: delayFunction(
-                delay,
-                animation(
-                  values.currentWidth / 2 - values.currentHeight / 2,
-                  config
-                )
-              ),
-            },
-            {
-              translateY: delayFunction(
-                delay,
-                animation(
-                  values.currentWidth / 2 - values.currentHeight / 2,
-                  config
-                )
-              ),
-            },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
+          transform: animateTransformToValues(
+            [
+              { rotate: '90deg' },
+              {
+                translateX: values.currentWidth / 2 - values.currentHeight / 2,
+              },
+              {
+                translateY: values.currentWidth / 2 - values.currentHeight / 2,
+              },
+            ],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          opacity: 1,
-          transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: pickTransformValues(
+            [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -301,7 +358,9 @@ export class RotateOutDownLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateOutDownRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[Rotate, TranslateX, TranslateY]>
+  >
   implements IExitAnimationBuilder
 {
   static presetName = 'RotateOutDownRight';
@@ -314,42 +373,46 @@ export class RotateOutDownRight
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
-          transform: [
-            { rotate: delayFunction(delay, animation('-90deg', config)) },
-            {
-              translateX: delayFunction(
-                delay,
-                animation(
-                  -(values.currentWidth / 2 - values.currentHeight / 2),
-                  config
-                )
-              ),
-            },
-            {
-              translateY: delayFunction(
-                delay,
-                animation(
-                  values.currentWidth / 2 - values.currentHeight / 2,
-                  config
-                )
-              ),
-            },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
+          transform: animateTransformToValues(
+            [
+              { rotate: '-90deg' },
+              {
+                translateX: -(
+                  values.currentWidth / 2 -
+                  values.currentHeight / 2
+                ),
+              },
+              {
+                translateY: values.currentWidth / 2 - values.currentHeight / 2,
+              },
+            ],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          opacity: 1,
-          transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: pickTransformValues(
+            [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -367,7 +430,9 @@ export class RotateOutDownRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateOutUpLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[Rotate, TranslateX, TranslateY]>
+  >
   implements IExitAnimationBuilder
 {
   static presetName = 'RotateOutUpLeft';
@@ -380,42 +445,46 @@ export class RotateOutUpLeft
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
-          transform: [
-            { rotate: delayFunction(delay, animation('-90deg', config)) },
-            {
-              translateX: delayFunction(
-                delay,
-                animation(
-                  values.currentWidth / 2 - values.currentHeight / 2,
-                  config
-                )
-              ),
-            },
-            {
-              translateY: delayFunction(
-                delay,
-                animation(
-                  -(values.currentWidth / 2 - values.currentHeight / 2),
-                  config
-                )
-              ),
-            },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
+          transform: animateTransformToValues(
+            [
+              { rotate: '-90deg' },
+              {
+                translateX: values.currentWidth / 2 - values.currentHeight / 2,
+              },
+              {
+                translateY: -(
+                  values.currentWidth / 2 -
+                  values.currentHeight / 2
+                ),
+              },
+            ],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          opacity: 1,
-          transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: pickTransformValues(
+            [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -433,7 +502,9 @@ export class RotateOutUpLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateOutUpRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[Rotate, TranslateX, TranslateY]>
+  >
   implements IExitAnimationBuilder
 {
   static presetName = 'RotateOutUpRight';
@@ -446,42 +517,49 @@ export class RotateOutUpRight
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
-          transform: [
-            { rotate: delayFunction(delay, animation('90deg', config)) },
-            {
-              translateX: delayFunction(
-                delay,
-                animation(
-                  -(values.currentWidth / 2 - values.currentHeight / 2),
-                  config
-                )
-              ),
-            },
-            {
-              translateY: delayFunction(
-                delay,
-                animation(
-                  -(values.currentWidth / 2 - values.currentHeight / 2),
-                  config
-                )
-              ),
-            },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
+          transform: animateTransformToValues(
+            [
+              { rotate: '90deg' },
+              {
+                translateX: -(
+                  values.currentWidth / 2 -
+                  values.currentHeight / 2
+                ),
+              },
+              {
+                translateY: -(
+                  values.currentWidth / 2 -
+                  values.currentHeight / 2
+                ),
+              },
+            ],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
-          opacity: 1,
-          transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: pickTransformValues(
+            [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+            initialValues
+          ),
         },
         callback,
       };

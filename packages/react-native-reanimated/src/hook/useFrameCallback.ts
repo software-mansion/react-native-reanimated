@@ -17,6 +17,8 @@ export type FrameCallback = {
   isActive: boolean;
   callbackId: number;
 };
+
+// is-tree-shakable-suppress
 const frameCallbackRegistry = new FrameCallbackRegistryJS();
 
 /**

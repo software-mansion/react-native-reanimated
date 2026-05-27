@@ -46,6 +46,7 @@ function createCircularDoublesBuffer(size: number) {
 
 const DEFAULT_BUFFER_SIZE = 20;
 
+// is-tree-shakable-suppress
 const AnimatedTextInput = createAnimatedComponent(TextInput);
 
 function loopAnimationFrame(fn: (lastTime: number, time: number) => void) {
@@ -165,8 +166,7 @@ export type PerformanceMonitorProps = {
 };
 
 /**
- * A component that lets you measure fps values on JS and UI threads on both the
- * Paper and Fabric architectures.
+ * A component that lets you measure fps values on JS and UI threads.
  *
  * @param smoothingFrames - Determines amount of saved frames which will be used
  *   for fps value smoothing. Defaults to `20`.
@@ -182,6 +182,7 @@ export function PerformanceMonitor({
   );
 }
 
+// is-tree-shakable-suppress
 const styles = StyleSheet.create({
   monitor: {
     flexDirection: 'row',

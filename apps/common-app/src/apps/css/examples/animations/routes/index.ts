@@ -96,6 +96,10 @@ const routes = {
         Component: realWorldExamples.SquishySquashy,
         name: 'Squishy Squashy',
       },
+      SVGReleaseExample: {
+        Component: realWorldExamples.SVGReleaseExample,
+        name: 'SVG Release (4.3.0)',
+      },
     },
   },
   TestExamples: {

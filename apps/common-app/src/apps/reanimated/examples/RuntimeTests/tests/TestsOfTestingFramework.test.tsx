@@ -1,6 +1,11 @@
 import React, { useEffect } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
-import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import {
   callTracker,
@@ -11,6 +16,7 @@ import {
   getRegisteredValue,
   getTestComponent,
   getTrackerCallCount,
+  getWorkletRuntimeFromPool,
   notify,
   Presets,
   registerValue,
@@ -25,7 +31,7 @@ import {
 } from '../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../ReJest/types';
 import { Snapshots } from './TestsOfTestingFramework.snapshot';
-import { createWorkletRuntime, scheduleOnRuntime, scheduleOnUI } from 'react-native-worklets';
+import { scheduleOnRuntime, scheduleOnUI } from 'react-native-worklets';
 
 const AnimatedComponent = () => {
   const widthSV = useSharedValue(0);
@@ -35,7 +41,11 @@ const AnimatedComponent = () => {
   const animatedStyle1 = useAnimatedStyle(() => {
     callTracker('useAnimatedStyleTracker');
     return {
-      width: withTiming(widthSV.value, { duration: 500 }, callTrackerFn('withTimingTracker')),
+      width: withTiming(
+        widthSV.value,
+        { duration: 500 },
+        callTrackerFn('withTimingTracker')
+      ),
     };
   });
 
@@ -52,8 +62,14 @@ const AnimatedComponent = () => {
 
   return (
     <View style={styles.container}>
-      <Animated.View ref={ref} style={[styles.brownComponent, animatedStyle1]} />
-      <Animated.View ref={ref2} style={[styles.greenComponent, animatedStyle2]} />
+      <Animated.View
+        ref={ref}
+        style={[styles.brownComponent, animatedStyle1]}
+      />
+      <Animated.View
+        ref={ref2}
+        style={[styles.greenComponent, animatedStyle2]}
+      />
     </View>
   );
 };
@@ -97,7 +113,11 @@ const LayoutAnimation = () => {
 
   return (
     <View style={styles.container}>
-      <Animated.View ref={ref} entering={FadeIn} style={styles.layoutAnimationComponent} />
+      <Animated.View
+        ref={ref}
+        entering={FadeIn}
+        style={styles.layoutAnimationComponent}
+      />
     </View>
   );
 };
@@ -198,7 +218,9 @@ describe('Tests of Test Framework', () => {
     expect('cornflowerblue').not.toBe('#6495edff');
     expect('cornflowerblue').toBe('#6495edff', ComparisonMode.COLOR);
 
-    expect({ backgroundColor: 'cornflowerblue' }).toBe({ backgroundColor: '#6495edff' });
+    expect({ backgroundColor: 'cornflowerblue' }).toBe({
+      backgroundColor: '#6495edff',
+    });
     expect({ width: 'cornflowerblue' }).not.toBe({ width: '#6495edff' });
 
     expect(2).toBeWithinRange(1, 3);
@@ -219,7 +241,10 @@ describe('Tests of Test Framework', () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('BrownComponent');
     await wait(600);
-    expect(await component.getAnimatedStyle('width')).toBe(123, ComparisonMode.NUMBER);
+    expect(await component.getAnimatedStyle('width')).toBe(
+      123,
+      ComparisonMode.NUMBER
+    );
   });
 
   test('withTiming - ❌', async () => {
@@ -408,7 +433,7 @@ describe('Tests of Test Framework', () => {
 
       const [state3, setState3] = createTestValue('not_ok');
       const notification3 = 'notification3';
-      const rt = createWorkletRuntime({ name: 'test' });
+      const rt = getWorkletRuntimeFromPool('test');
       scheduleOnRuntime(rt, () => {
         'worklet';
         setState3('ok', notification3);

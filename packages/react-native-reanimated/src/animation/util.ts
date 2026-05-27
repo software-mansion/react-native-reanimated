@@ -17,7 +17,7 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
-import { logger, ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
+import { logger, SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatableValue,
   AnimatableValueObject,
@@ -53,6 +53,7 @@ import {
  */
 const IN_STYLE_UPDATER = { current: false };
 const IN_STYLE_UPDATER_UI = createSerializable({ current: false });
+// is-tree-shakable-suppress
 serializableMappingCache.set(IN_STYLE_UPDATER, IN_STYLE_UPDATER_UI);
 
 const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
@@ -75,6 +76,7 @@ export function isValidLayoutAnimationProp(prop: string) {
   return (prop as LayoutAnimationProp) in LAYOUT_ANIMATION_SUPPORTED_PROPS;
 }
 
+// is-tree-shakable-suppress
 if (__DEV__ && ReducedMotionManager.jsValue) {
   logger.warn(
     `Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device.`
@@ -100,8 +102,8 @@ export function assertEasingIsWorklet(
   }
 
   if (!isWorkletFunction(easing)) {
-    throw new ReanimatedError(
-      'The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.'
+    throw new Error(
+      '[Reanimated] The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.'
     );
   }
 }
@@ -128,7 +130,7 @@ export function recognizePrefixSuffix(
       /([A-Za-z]*)(-?\d*\.?\d*)([eE][-+]?[0-9]+)?([A-Za-z%]*)/
     );
     if (!match) {
-      throw new ReanimatedError("Couldn't parse animation value.");
+      throw new Error("[Reanimated] Couldn't parse animation value.");
     }
     const prefix = match[1];
     const suffix = match[4];

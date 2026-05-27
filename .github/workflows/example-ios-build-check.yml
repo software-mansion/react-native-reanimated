@@ -55,8 +55,8 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v4
-      - uses: ruby/setup-ruby@v1
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
         with:
           ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
@@ -65,7 +65,7 @@ jobs:
         run: yarn install --immutable
       - name: Toggle Bundle Mode
         if: ${{ inputs.bundleMode }}
-        run: ./scripts/toggle-bundle-mode.sh
+        run: yarn toggle-bundle-mode
       - name: Build Reanimated package
         working-directory: ${{ env.REANIMATED_DIR }}
         run: yarn build
