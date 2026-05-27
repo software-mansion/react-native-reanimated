@@ -28426,6 +28426,7 @@ __metadata:
     "@babel/plugin-transform-template-literals": "npm:^7.27.1"
     "@babel/plugin-transform-unicode-regex": "npm:^7.27.1"
     "@babel/preset-typescript": "npm:^7.28.5"
+    "@babel/types": "npm:^7.27.1"
     "@react-native-community/cli": "npm:20.1.0"
     "@react-native/eslint-config": "npm:0.83.0"
     "@react-native/jest-preset": "patch:@react-native/jest-preset@npm%3A0.85.2#~/.yarn/patches/@react-native-jest-preset-npm-0.85.2-d3275e8971.patch"
