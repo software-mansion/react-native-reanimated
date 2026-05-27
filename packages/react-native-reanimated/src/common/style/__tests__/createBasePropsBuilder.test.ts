@@ -2,7 +2,7 @@
 
 import type { ValueProcessor } from '../../types';
 import { ValueProcessorTarget } from '../../types';
-import createPropsBuilder from '../createPropsBuilder';
+import createBasePropsBuilder from '../createBasePropsBuilder';
 
 type TestStyle = {
   width?: number;
@@ -35,7 +35,7 @@ const BASE_CONFIG: TestConfig = {
 const createBuilder = (configOverrides: Partial<TestConfig>) => {
   const config: TestConfig = { ...BASE_CONFIG, ...configOverrides };
 
-  return createPropsBuilder<TestStyle, TestConfig>({
+  return createBasePropsBuilder<TestStyle, TestConfig>({
     config,
     processConfigValue(configValue) {
       if (configValue === true) {
@@ -61,7 +61,7 @@ const createBuilder = (configOverrides: Partial<TestConfig>) => {
   });
 };
 
-describe(createPropsBuilder, () => {
+describe(createBasePropsBuilder, () => {
   test('ignores properties not present in config', () => {
     const builder = createBuilder({ width: true });
 

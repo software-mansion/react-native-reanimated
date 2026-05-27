@@ -1,5 +1,5 @@
 'use strict';
-import { createPropsBuilder } from '../../style';
+import { createBasePropsBuilder } from '../../style';
 import type { PlainStyle, UnknownRecord } from '../../types';
 import {
   hasValueProcessor,
@@ -20,7 +20,7 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
 ) {
   const usedRuleBuilders = new Set<RuleBuilder<TProps>>();
 
-  const propsBuilder = createPropsBuilder({
+  const propsBuilder = createBasePropsBuilder({
     config,
     processConfigValue(configValue, propertyKey) {
       // Handle true - include unchanged

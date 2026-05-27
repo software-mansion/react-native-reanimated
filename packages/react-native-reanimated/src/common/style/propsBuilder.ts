@@ -7,7 +7,7 @@ import type {
 } from '../types';
 import { hasValueProcessor, isConfigPropertyAlias } from '../utils';
 import { STYLE_PROPERTIES_CONFIG } from './config';
-import createPropsBuilder from './createPropsBuilder';
+import createBasePropsBuilder from './createBasePropsBuilder';
 
 type PropsBuilderPropertyConfig<
   TProps extends UnknownRecord = UnknownRecord,
@@ -28,7 +28,7 @@ export type PropsBuilderConfig<P extends UnknownRecord = UnknownRecord> = {
 export function createNativePropsBuilder<TProps extends UnknownRecord>(
   config: PropsBuilderConfig<TProps>
 ) {
-  return createPropsBuilder({
+  return createBasePropsBuilder({
     config,
     processConfigValue(configValue) {
       if (configValue === true) {

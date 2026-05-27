@@ -27,7 +27,7 @@ type PropsBuilderResult<TProps> = {
   ): UnknownRecord;
 };
 
-export default function createPropsBuilder<
+export default function createBasePropsBuilder<
   TProps extends UnknownRecord,
   TPropsConfig extends UnknownRecord,
 >({

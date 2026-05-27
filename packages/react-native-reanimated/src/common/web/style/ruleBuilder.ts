@@ -1,5 +1,5 @@
 'use strict';
-import { createPropsBuilder } from '../../style';
+import { createBasePropsBuilder } from '../../style';
 import type { UnknownRecord } from '../../types';
 import {
   hasValueProcessor,
@@ -23,7 +23,7 @@ export function createWebRuleBuilder<
   // Track name aliases for custom property names
   const nameAliases = new Map<string, string>();
 
-  const propsBuilder = createPropsBuilder({
+  const propsBuilder = createBasePropsBuilder({
     config,
     processConfigValue(configValue, propertyKey) {
       // Handle suffix config (e.g., 'px')
