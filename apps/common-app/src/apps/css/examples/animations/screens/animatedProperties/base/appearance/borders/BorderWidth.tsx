@@ -7,7 +7,7 @@ import { colors, radius, sizes } from '@/theme';
 
 export default function BorderWidth() {
   return (
-    <ExamplesScreen<ViewStyle, { propertyName: string }>
+    <ExamplesScreen<ViewStyle, { propertyName: keyof ViewStyle }>
       buildAnimation={({ propertyName }) => ({
         animationDirection: 'alternate',
         animationDuration: '1s',

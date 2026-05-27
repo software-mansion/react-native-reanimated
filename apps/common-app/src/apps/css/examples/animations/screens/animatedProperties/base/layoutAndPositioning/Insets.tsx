@@ -18,7 +18,7 @@ const SHARED_SETTINGS: CSSAnimationSettings = {
 
 const EXAMPLES = [
   {
-    buildKeyframes: ({ property }: { property: string }) => ({
+    buildKeyframes: ({ property }: { property: keyof ViewStyle }) => ({
       from: {
         [property]: 0,
       },
@@ -29,7 +29,7 @@ const EXAMPLES = [
     name: 'Absolute',
   },
   {
-    buildKeyframes: ({ property }: { property: string }) => ({
+    buildKeyframes: ({ property }: { property: keyof ViewStyle }) => ({
       from: {
         [property]: '0%',
       },
@@ -40,7 +40,7 @@ const EXAMPLES = [
     name: 'Relative',
   },
   {
-    buildKeyframes: ({ property }: { property: string }) => ({
+    buildKeyframes: ({ property }: { property: keyof ViewStyle }) => ({
       from: {
         [property]: 50,
       },
@@ -51,7 +51,11 @@ const EXAMPLES = [
     name: 'Mixed',
   },
 ] satisfies Array<{
-  buildKeyframes: ({ property }: { property: string }) => CSSAnimationKeyframes;
+  buildKeyframes: ({
+    property,
+  }: {
+    property: keyof ViewStyle;
+  }) => CSSAnimationKeyframes;
   name: string;
 }>;
 
@@ -69,7 +73,7 @@ function renderExample({
 
 export default function Insets() {
   return (
-    <ExamplesScreen<ViewStyle, { property: string }>
+    <ExamplesScreen<ViewStyle, { property: keyof ViewStyle }>
       tabs={EXAMPLES.map(({ buildKeyframes, name }) => ({
         buildAnimation: ({ property }) => ({
           ...SHARED_SETTINGS,

@@ -12,7 +12,16 @@ const SHARED_SETTINGS: CSSAnimationSettings = {
   animationIterationCount: 'infinite',
 };
 
-const SECTIONS = [
+const SECTIONS: Array<{
+  examples: Array<{
+    property: keyof ViewStyle;
+    title: string;
+    description?: string;
+    width?: DimensionValue;
+    height?: DimensionValue;
+  }>;
+  title: string;
+}> = [
   {
     examples: [
       {
@@ -62,7 +71,7 @@ export default function Dimensions() {
     <ExamplesScreen<
       ViewStyle,
       {
-        property: string;
+        property: keyof ViewStyle;
         width?: DimensionValue;
         height?: DimensionValue;
       }

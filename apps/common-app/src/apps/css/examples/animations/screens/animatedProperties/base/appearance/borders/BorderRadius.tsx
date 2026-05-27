@@ -12,7 +12,14 @@ const SHARED_SETTINGS: CSSAnimationSettings = {
   animationIterationCount: 'infinite',
 };
 
-const SECTIONS = [
+const SECTIONS: Array<{
+  examples: Array<{
+    propertyName: keyof ViewStyle;
+    title: string;
+    description?: string;
+  }>;
+  title: string;
+}> = [
   {
     examples: [
       {
@@ -51,7 +58,7 @@ const SECTIONS = [
 
 export default function BorderRadius() {
   return (
-    <ExamplesScreen<ViewStyle, { propertyName: string }>
+    <ExamplesScreen<ViewStyle, { propertyName: keyof ViewStyle }>
       CardComponent={VerticalExampleCard}
       tabs={[
         {

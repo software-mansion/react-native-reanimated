@@ -95,7 +95,7 @@ const EXAMPLES = [
     title: 'Vertical Margin',
   },
 ] satisfies Array<{
-  property?: string;
+  property?: keyof ViewStyle;
   containerStyle?: ViewStyle;
   description: Array<string> | string;
   title: string;
@@ -128,7 +128,7 @@ export default function Margins() {
     <ExamplesScreen<
       ViewStyle,
       {
-        property?: string;
+        property?: keyof ViewStyle;
         keyframes?: CSSAnimationKeyframes;
         containerStyle?: ViewStyle;
       }

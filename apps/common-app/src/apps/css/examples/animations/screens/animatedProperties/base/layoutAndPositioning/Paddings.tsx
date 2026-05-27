@@ -15,7 +15,11 @@ const SHARED_SETTINGS: CSSAnimationSettings = {
   animationIterationCount: 'infinite',
 };
 
-const SHARED_EXAMPLES = [
+const SHARED_EXAMPLES: Array<{
+  property: keyof ViewStyle;
+  title: string;
+  description?: Array<string>;
+}> = [
   {
     property: 'padding',
     title: 'Padding',
@@ -66,7 +70,7 @@ function renderExample({
 
 export default function Paddings() {
   return (
-    <ExamplesScreen<ViewStyle, { property: string }>
+    <ExamplesScreen<ViewStyle, { property: keyof ViewStyle }>
       tabs={[
         {
           buildAnimation: ({ property }) => ({
