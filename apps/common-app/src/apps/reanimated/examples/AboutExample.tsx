@@ -69,6 +69,7 @@ const staticFlagsReanimated = [
   'DISABLE_COMMIT_PAUSING_MECHANISM',
   'ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS',
   'IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS',
+  'EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS',
   'IOS_CSS_CORE_ANIMATION',
   'USE_SYNCHRONIZABLE_FOR_MUTABLES',
   'USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS',
@@ -77,7 +78,11 @@ const staticFlagsReanimated = [
   'USE_ANIMATION_BACKEND',
 ] as const;
 
-const staticFlagsWorklets = ['IOS_DYNAMIC_FRAMERATE_ENABLED'] as const;
+const staticFlagsWorklets = [
+  'FETCH_PREVIEW_ENABLED',
+  'IOS_DYNAMIC_FRAMERATE_ENABLED',
+  'ENABLE_CROSS_RUNTIME_STACK_TRACES',
+] as const;
 
 interface ItemProps {
   label: string;
@@ -125,6 +130,7 @@ export default function AboutExample() {
           <Item label="JS runtime" value={getRuntime()} />
           <Item label="RN version" value={getReactNativeVersion()} />
           <Item label="Bundle mode" value={isBundleModeEnabled()} />
+          <Text style={styles.sectionHeader}>Reanimated static flags</Text>
           {staticFlagsReanimated.map((name) => (
             <Item
               key={name}
@@ -132,6 +138,8 @@ export default function AboutExample() {
               value={getStaticFeatureFlagReanimated(name)}
             />
           ))}
+          <View style={styles.hr} />
+          <Text style={styles.sectionHeader}>Worklets static flags</Text>
           {staticFlagsWorklets.map((name) => (
             <Item
               key={name}
@@ -139,6 +147,7 @@ export default function AboutExample() {
               value={getStaticFeatureFlagWorklets(name)}
             />
           ))}
+          <View style={styles.hr} />
           <Item
             label="EXAMPLE_DYNAMIC_FLAG"
             value={getDynamicFeatureFlagReanimated('EXAMPLE_DYNAMIC_FLAG')}
@@ -174,5 +183,18 @@ const styles = StyleSheet.create({
   },
   false: {
     color: 'firebrick',
+  },
+  hr: {
+    height: 2,
+    backgroundColor: '#333',
+    marginVertical: 8,
+  },
+  sectionHeader: {
+    fontSize: 14,
+    fontWeight: '600',
+    paddingHorizontal: 15,
+    paddingTop: 12,
+    paddingBottom: 4,
+    color: '#333',
   },
 });
