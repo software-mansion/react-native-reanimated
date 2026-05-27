@@ -536,14 +536,9 @@ describe('Test createSerializable', () => {
         }
         const inaccessibleObject = new Inaccessible();
 
-        await expect(() => {
-          scheduleOnTarget(() => {
-            'worklet';
-            inaccessibleObject.access();
-          });
-        }).toThrow(
-          '[Worklets] Cannot copy value of type `Inaccessible` to the UI runtime.'
-        );
+        expect(() => {
+          createSerializable(inaccessibleObject);
+        }).toThrow('Cannot copy value of type `Inaccessible`.');
       });
 
       test('createSerializableRemoteNamedFunctionSyncCall', async () => {
@@ -599,7 +594,14 @@ if (__DEV__) {
       const promise = Promise.resolve();
       await expect(() => {
         createSerializable(promise);
-      }).toThrow('[Worklets] Cannot copy value of type `Promise`');
+      }).toThrow('Cannot copy value of type `Promise`');
+    });
+
+    test('throws when trying to serialize a Proxy', async () => {
+      const proxy = new Proxy({ a: 1 }, { getPrototypeOf: () => null });
+      await expect(() => {
+        createSerializable(proxy);
+      }).toThrow('Cannot copy value of type');
     });
   });
 

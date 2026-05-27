@@ -454,18 +454,18 @@ describe('Test createSerializableOnUI', () => {
   // });
 
   test('createSerializableOnUIInaccessibleObject', async () => {
-    await expect(() => {
-      runOnUISync(() => {
-        'worklet';
-        class Clazz {
-          method() {}
-        }
+    const clazz = runOnUISync(() => {
+      'worklet';
+      class Clazz {
+        method() {}
+      }
 
-        return new Clazz();
-      });
-    }).toThrow(
-      '[Worklets] Cannot copy value of type `Clazz` to the UI runtime.'
-    );
+      return new Clazz();
+    });
+
+    await expect(() => {
+      clazz.method();
+    }).toThrow();
   });
 
   test('createSerializableOnUIRemoteNamedFunctionSyncCall', async () => {
@@ -501,7 +501,7 @@ describe('Test createSerializableOnUI', () => {
           'worklet';
           return Promise.resolve();
         })
-      ).toThrow('[Worklets] Cannot copy value of type `Promise`');
+      ).toThrow('Promises cannot be converted to serializable.');
     });
   }
 });

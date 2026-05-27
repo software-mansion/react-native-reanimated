@@ -206,25 +206,12 @@ export function createSerializable<TValue>(
       return cloneCustom(value, pack, i) as SerializableRef<TValue>;
     }
   }
-  // eslint-disable-next-line reanimated/use-worklets-error -- prefix is built inside uncopyableValueMessage
-  throw new Error(uncopyableValueMessage(value));
-}
-
-function uncopyableValueMessage(value: unknown): string {
-  'worklet';
   const constructorName =
-    (value as { constructor?: { name?: string } })?.constructor?.name ??
+    (value as { constructor?: { name?: string } })?.constructor?.name ||
     'unknown';
-  let keysPreview = '';
-  if (value && typeof value === 'object') {
-    const keys = Object.keys(value);
-    if (keys.length > 0) {
-      keysPreview = ` (keys: ${keys.slice(0, 8).join(', ')}${
-        keys.length > 8 ? ', …' : ''
-      })`;
-    }
-  }
-  return `[Worklets] Cannot copy value of type \`${constructorName}\`${keysPreview} to the UI runtime.`;
+  throw new Error(
+    `[Worklets] Cannot copy value of type \`${constructorName}\`.`
+  );
 }
 
 if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
@@ -800,14 +787,11 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
             ) as FlatSerializableRef<TValue>;
           }
         }
-        if (
-          typeof value !== 'function' &&
-          !(value instanceof ArrayBuffer) &&
-          !ArrayBuffer.isView(value)
-        ) {
-          // eslint-disable-next-line reanimated/use-worklets-error -- prefix is built inside uncopyableValueMessage
-          throw new Error(uncopyableValueMessage(value));
-        }
+      }
+      if (__DEV__ && value instanceof Promise) {
+        throw new Error(
+          '[Worklets] Promises cannot be converted to serializable.'
+        );
       }
       const toAdapt: Record<string, FlatSerializableRef<TValue>> = {};
       for (const [key, element] of Object.entries(value)) {
