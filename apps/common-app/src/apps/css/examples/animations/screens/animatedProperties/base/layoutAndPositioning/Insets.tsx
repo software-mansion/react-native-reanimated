@@ -55,7 +55,11 @@ const EXAMPLES = [
   name: string;
 }>;
 
-function renderExample({ animation }: { animation: CSSAnimationProperties }) {
+function renderExample({
+  animation,
+}: {
+  animation: CSSAnimationProperties<ViewStyle>;
+}) {
   return (
     <View style={StyleSheet.absoluteFill}>
       <Animated.View style={[styles.box, animation]} />

@@ -52,7 +52,11 @@ const SHARED_EXAMPLES = [
   },
 ];
 
-function renderExample({ animation }: { animation: CSSAnimationProperties }) {
+function renderExample({
+  animation,
+}: {
+  animation: CSSAnimationProperties<ViewStyle>;
+}) {
   return (
     <Animated.View style={[styles.box, animation]}>
       <View style={styles.boxInner} />
