@@ -1,4 +1,3 @@
-import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -7,7 +6,7 @@ import { colors, flex, radius, sizes, spacing } from '@/theme';
 
 export default function Position() {
   return (
-    <ExamplesScreen<ViewStyle>
+    <ExamplesScreen
       CardComponent={VerticalExampleCard}
       buildAnimation={() => ({
         animationDuration: '3s',

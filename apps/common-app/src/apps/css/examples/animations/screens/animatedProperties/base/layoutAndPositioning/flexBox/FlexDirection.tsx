@@ -1,4 +1,3 @@
-import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -9,7 +8,7 @@ const BOX_COLORS = [colors.primaryLight, colors.primary, colors.primaryDark];
 
 export default function FlexDirection() {
   return (
-    <ExamplesScreen<ViewStyle>
+    <ExamplesScreen
       CardComponent={VerticalExampleCard}
       buildAnimation={() => ({
         animationDuration: '4s',

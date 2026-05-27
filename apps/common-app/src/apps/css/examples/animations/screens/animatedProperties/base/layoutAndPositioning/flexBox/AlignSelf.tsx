@@ -1,4 +1,3 @@
-import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -7,7 +6,7 @@ import { colors, radius, sizes } from '@/theme';
 
 export default function AlignSelf() {
   return (
-    <ExamplesScreen<ViewStyle>
+    <ExamplesScreen
       CardComponent={VerticalExampleCard}
       buildAnimation={() => ({
         animationDuration: '5s',

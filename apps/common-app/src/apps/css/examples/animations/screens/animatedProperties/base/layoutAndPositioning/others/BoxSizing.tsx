@@ -1,4 +1,3 @@
-import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -8,7 +7,7 @@ import { colors, radius, sizes, spacing } from '@/theme';
 
 export default function BoxSizing({ labelTypes }: ExampleScreenProps) {
   return (
-    <ExamplesScreen<ViewStyle>
+    <ExamplesScreen
       CardComponent={VerticalExampleCard}
       buildAnimation={() => ({
         animationDuration: '1s',
