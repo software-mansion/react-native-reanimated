@@ -342,14 +342,17 @@ function OtherColors() {
   );
 }
 
-type ExampleProps<S> = {
+type ExampleProps<S extends object> = {
   style?: S;
   labelTypes?: Array<LabelType>;
-  animation: CSSAnimationProperties;
-  renderExample: (animation: CSSAnimationProperties, style?: S) => JSX.Element;
+  animation: CSSAnimationProperties<S>;
+  renderExample: (
+    animation: CSSAnimationProperties<S>,
+    style?: S
+  ) => JSX.Element;
 } & Omit<ExampleCardProps, 'code'>;
 
-function Example<S>({
+function Example<S extends object>({
   animation,
   renderExample,
   style,
@@ -365,7 +368,10 @@ function Example<S>({
   );
 }
 
-type ConcreteExampleProps<S> = Omit<ExampleProps<S>, 'renderExample'>;
+type ConcreteExampleProps<S extends object> = Omit<
+  ExampleProps<S>,
+  'renderExample'
+>;
 
 const ViewExample = (props: ConcreteExampleProps<ViewStyle>) => (
   <Example

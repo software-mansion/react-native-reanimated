@@ -1,3 +1,4 @@
+import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -7,7 +8,7 @@ import { colors, radius, sizes } from '@/theme';
 
 export default function Start({ labelTypes }: ExampleScreenProps) {
   return (
-    <ExamplesScreen<{ direction: 'ltr' | 'rtl' }>
+    <ExamplesScreen<ViewStyle, { direction: 'ltr' | 'rtl' }>
       CardComponent={VerticalExampleCard}
       buildAnimation={() => ({
         animationDirection: 'alternate',

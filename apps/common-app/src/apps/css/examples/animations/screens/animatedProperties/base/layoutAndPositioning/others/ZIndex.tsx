@@ -23,7 +23,7 @@ const BOX_STYLES = Array.from(
 
 export default function ZIndex() {
   return (
-    <ExamplesScreen
+    <ExamplesScreen<ViewStyle>
       CardComponent={VerticalExampleCard}
       buildAnimation={() => ({
         animationDuration: '3s',

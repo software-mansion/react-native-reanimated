@@ -1,3 +1,4 @@
+import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type {
   CSSAnimationProperties,
@@ -61,7 +62,7 @@ function renderExample({ animation }: { animation: CSSAnimationProperties }) {
 
 export default function Paddings() {
   return (
-    <ExamplesScreen<{ property: string }>
+    <ExamplesScreen<ViewStyle, { property: string }>
       tabs={[
         {
           buildAnimation: ({ property }) => ({
