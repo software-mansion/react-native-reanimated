@@ -41,6 +41,10 @@ on:
         required: false
         type: boolean
         default: false
+      configuration:
+        required: false
+        type: string
+        default: Debug
   workflow_dispatch:
 
 jobs:
@@ -50,8 +54,9 @@ jobs:
     env:
       WORKING_DIRECTORY: apps/fabric-example
       REANIMATED_DIR: packages/react-native-reanimated
+      CONFIGURATION: ${{ inputs.configuration || 'Debug' }}
     concurrency:
-      group: ios-${{ github.ref }}-${{ inputs.bundleMode }}
+      group: ios-${{ github.ref }}-${{ inputs.bundleMode }}-${{ inputs.configuration || 'Debug' }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -85,4 +90,4 @@ jobs:
 
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}/ios
-        run: xcodebuild -workspace FabricExample.xcworkspace -configuration Debug -scheme "Debug FabricExample" -destination "generic/platform=iOS Simulator" -quiet
+        run: xcodebuild -workspace FabricExample.xcworkspace -configuration "$CONFIGURATION" -scheme "$CONFIGURATION FabricExample" -destination "generic/platform=iOS Simulator" -quiet

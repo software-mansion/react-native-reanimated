@@ -1,0 +1,34 @@
+name: Main build [Nightly Release]
+on:
+  schedule:
+    # 02:17 UTC — offset from other nightly crons to spread runner load
+    - cron: '17 2 * * *'
+  pull_request:
+    paths:
+      - .github/workflows/main-build-nightly.yml
+  workflow_dispatch:
+
+jobs:
+  android:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    uses: ./.github/workflows/example-android-build-check.yml
+    with:
+      configuration: Release
+
+  ios:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    uses: ./.github/workflows/example-ios-build-check.yml
+    with:
+      configuration: Release
+
+  macos:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    uses: ./.github/workflows/example-macos-build-check.yml
+    with:
+      configuration: Release
+
+  tvos:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    uses: ./.github/workflows/example-tvos-build-check.yml
+    with:
+      configuration: Release

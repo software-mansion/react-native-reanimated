@@ -8,6 +8,11 @@ on:
   schedule:
     - cron: '37 19 * * *'
   workflow_call:
+    inputs:
+      configuration:
+        required: false
+        type: string
+        default: Debug
   workflow_dispatch:
 
 jobs:
@@ -17,8 +22,9 @@ jobs:
     env:
       WORKING_DIRECTORY: apps/macos-example
       REANIMATED_DIR: packages/react-native-reanimated
+      CONFIGURATION: ${{ inputs.configuration || 'Debug' }}
     concurrency:
-      group: macos-${{ github.ref }}
+      group: macos-${{ github.ref }}-${{ inputs.configuration || 'Debug' }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -49,4 +55,4 @@ jobs:
 
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}/macos
-        run: xcodebuild -workspace MacOSExample.xcworkspace -configuration Debug -scheme "Debug MacOSExample" -destination "generic/platform=macOS" -quiet
+        run: xcodebuild -workspace MacOSExample.xcworkspace -configuration "$CONFIGURATION" -scheme "$CONFIGURATION MacOSExample" -destination "generic/platform=macOS" -quiet
