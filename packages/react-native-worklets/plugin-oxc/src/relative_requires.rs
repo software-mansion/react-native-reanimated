@@ -1,0 +1,118 @@
+use std::collections::HashSet;
+use std::path::PathBuf;
+
+use oxc_ast::AstBuilder;
+use oxc_ast::ast::{Argument, Expression, FunctionBody};
+use oxc_ast_visit::{VisitMut, walk_mut::walk_function_body};
+use oxc_span::SPAN;
+
+use crate::utils::{normalize_path, pathdiff};
+
+/// Path resolution used when rewriting relative `require('./x')` calls inside
+/// a bundle-mode worklet body so that, after the body is hoisted into
+/// `react-native-worklets/.worklets/<hash>.js`, the require still resolves to
+/// the same module.
+pub fn rewrite_relative_requires<'a>(
+    body: &mut FunctionBody<'a>,
+    filename: &str,
+    workletizable_modules: &HashSet<String>,
+    worklets_package_dir: Option<&str>,
+    builder: AstBuilder<'a>,
+) {
+    if !crate::utils::is_allowed_for_relative_imports(
+        filename,
+        workletizable_modules.iter().map(String::as_str),
+    ) {
+        return;
+    }
+    let mut visitor = RelativeRequireRewriter {
+        filename,
+        worklets_package_dir,
+        builder,
+    };
+    walk_function_body(&mut visitor, body);
+}
+
+struct RelativeRequireRewriter<'a, 'b> {
+    filename: &'b str,
+    worklets_package_dir: Option<&'b str>,
+    builder: AstBuilder<'a>,
+}
+
+impl<'a, 'b> VisitMut<'a> for RelativeRequireRewriter<'a, 'b> {
+    fn visit_call_expression(
+        &mut self,
+        call: &mut oxc_ast::ast::CallExpression<'a>,
+    ) {
+        oxc_ast_visit::walk_mut::walk_call_expression(self, call);
+
+        let Expression::Identifier(callee) = &call.callee else {
+            return;
+        };
+        if callee.name.as_str() != "require" {
+            return;
+        }
+        let Some(Argument::StringLiteral(arg)) = call.arguments.first_mut() else {
+            return;
+        };
+        let value = arg.value.as_str();
+        if !value.starts_with('.') {
+            return;
+        }
+
+        let Some(rebased) = rebase_to_worklets_dir_with(
+            self.filename,
+            value,
+            self.worklets_package_dir,
+        ) else {
+            return;
+        };
+        let new_str = self.builder.str(&rebased);
+        *arg = self
+            .builder
+            .alloc_string_literal(SPAN, new_str, None);
+    }
+}
+
+/// Compute the relative path from
+/// `<react-native-worklets package root>/.worklets/`
+/// to `<directory of current file>/<original relative path>`.
+///
+/// Prefers `worklets_package_dir` (resolved by the JS shim via
+/// `require.resolve`) for filesystem-correct results, falling back to a
+/// substring-based heuristic on `filename` for direct napi callers (tests).
+pub fn rebase_to_worklets_dir_with(
+    filename: &str,
+    original: &str,
+    worklets_package_dir: Option<&str>,
+) -> Option<String> {
+    let filename_path = PathBuf::from(filename.replace('\\', "/"));
+    let file_dir = filename_path.parent()?;
+    let resolved = file_dir.join(original);
+    let resolved = normalize_path(&resolved);
+
+    let worklets_pkg_root = worklets_package_dir
+        .map(|s| PathBuf::from(s.replace('\\', "/")))
+        .unwrap_or_else(|| derive_worklets_root(filename));
+    let worklets_dir = worklets_pkg_root.join(".worklets");
+
+    let rel = pathdiff(&worklets_dir, &resolved)?;
+    let mut out = rel.to_string_lossy().into_owned();
+    if !out.starts_with('.') && !out.starts_with('/') {
+        out = format!("./{out}");
+    }
+    Some(out)
+}
+
+fn derive_worklets_root(filename: &str) -> PathBuf {
+    let norm = filename.replace('\\', "/");
+    if let Some(idx) = norm.find("/react-native-worklets/") {
+        let end = idx + "/react-native-worklets".len();
+        return PathBuf::from(&norm[..end]);
+    }
+    if let Some(idx) = norm.find("/react-native-worklets") {
+        let end = idx + "/react-native-worklets".len();
+        return PathBuf::from(&norm[..end]);
+    }
+    PathBuf::from("/react-native-worklets")
+}

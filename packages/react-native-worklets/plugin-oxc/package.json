@@ -1,0 +1,33 @@
+{
+  "name": "worklets-plugin-oxc",
+  "version": "0.0.0",
+  "private": true,
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "*.node"
+  ],
+  "napi": {
+    "binaryName": "worklets-plugin-oxc",
+    "targets": [
+      "aarch64-apple-darwin",
+      "x86_64-apple-darwin",
+      "x86_64-unknown-linux-gnu",
+      "aarch64-unknown-linux-gnu",
+      "x86_64-pc-windows-msvc"
+    ]
+  },
+  "scripts": {
+    "build": "cargo build --release && node scripts/post-build.mjs release",
+    "build:debug": "cargo build && node scripts/post-build.mjs debug",
+    "test": "yarn build:debug && node --test test/*.test.mjs"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "3.4.0"
+  },
+  "installConfig": {
+    "selfReferences": false
+  }
+}
