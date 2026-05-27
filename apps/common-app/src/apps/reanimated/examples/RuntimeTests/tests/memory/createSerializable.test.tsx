@@ -536,7 +536,7 @@ describe('Test createSerializable', () => {
         }
         const inaccessibleObject = new Inaccessible();
 
-        expect(() => {
+        await expect(() => {
           createSerializable(inaccessibleObject);
         }).toThrow('Cannot copy value of type `Inaccessible`.');
       });
