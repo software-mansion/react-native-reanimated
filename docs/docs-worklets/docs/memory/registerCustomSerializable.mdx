@@ -4,7 +4,7 @@ sidebar_position: 42 # Use alphabetical order
 ---
 
 <Badges version="0.7.0">
-# registerCustomSerializable
+  # registerCustomSerializable
 </Badges>
 
 `registerCustomSerializable` lets you register your own pre-serialization and post-deserialization logic. This is necessary for objects with prototypes different than just `Object.prototype` or some other built-in prototypes like `Map` etc. Worklets can't handle such objects by default to convert into [Serializables](/docs/memory/serializable) hence you need to register them as **Custom Serializables**. This way you can tell Worklets how to transfer your custom data structures between different Runtimes without manually serializing and deserializing them every time.
