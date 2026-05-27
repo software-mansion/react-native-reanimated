@@ -73,51 +73,6 @@ function getFromCache(value: object) {
   return cached;
 }
 
-// The below object is used as a replacement for objects that cannot be transferred
-// as serializable values. In createSerializable we detect if an object is of
-// a plain Object.prototype and only allow such objects to be transferred. This lets
-// us avoid all sorts of react internals from leaking into the UI runtime. To make it
-// possible to catch errors when someone actually tries to access such object on the UI
-// runtime, we use the below Proxy object which is instantiated on the UI runtime and
-// throws whenever someone tries to access its fields.
-const INACCESSIBLE_OBJECT = {
-  __init: () => {
-    'worklet';
-    return new Proxy(
-      {},
-      {
-        get: (_: unknown, prop: string | symbol) => {
-          if (
-            prop === '_isReanimatedSharedValue' ||
-            prop === '__remoteFunction' ||
-            prop === '__synchronizableRef'
-          ) {
-            // not very happy about this check here, but we need to allow for
-            // "inaccessible" objects to be tested with isSerializableRef check
-            // as it is being used in the mappers when extracting inputs recursively
-            // as well as with isRemoteFunction when cloning objects recursively.
-            // Apparently we can't check if a key exists there as HostObjects always
-            // return true for such tests, so the only possibility for us is to
-            // actually access that key and see if it is set to true. We therefore
-            // need to allow for this key to be accessed here.
-            return false;
-          }
-          throw new Error(
-            `[Worklets] Trying to access property \`${String(
-              prop
-            )}\` of an object which cannot be sent to the UI runtime.`
-          );
-        },
-        set: () => {
-          throw new Error(
-            '[Worklets] Trying to write to an object which cannot be sent to the UI runtime.'
-          );
-        },
-      }
-    );
-  },
-};
-
 const VALID_ARRAY_VIEWS_NAMES = [
   'Int8Array',
   'Uint8Array',
@@ -251,10 +206,25 @@ export function createSerializable<TValue>(
       return cloneCustom(value, pack, i) as SerializableRef<TValue>;
     }
   }
-  if (__DEV__ && value instanceof Promise) {
-    throw new Error('[Worklets] Promises cannot be converted to serializable.');
+  // eslint-disable-next-line reanimated/use-worklets-error -- prefix is built inside uncopyableValueMessage
+  throw new Error(uncopyableValueMessage(value));
+}
+
+function uncopyableValueMessage(value: unknown): string {
+  'worklet';
+  const constructorName =
+    (value as { constructor?: { name?: string } })?.constructor?.name ??
+    'unknown';
+  let keysPreview = '';
+  if (value && typeof value === 'object') {
+    const keys = Object.keys(value);
+    if (keys.length > 0) {
+      keysPreview = ` (keys: ${keys.slice(0, 8).join(', ')}${
+        keys.length > 8 ? ', …' : ''
+      })`;
+    }
   }
-  return inaccessibleObject(value);
+  return `[Worklets] Cannot copy value of type \`${constructorName}\`${keysPreview} to the UI runtime.`;
 }
 
 if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
@@ -694,22 +664,6 @@ function cloneCustom<TValue extends object, TPacked = unknown>(
   ) as SerializableRef<TValue>;
 }
 
-function inaccessibleObject<TValue extends object>(
-  value: TValue
-): SerializableRef<TValue> {
-  // This is reached for object types that are not of plain Object.prototype.
-  // We don't support such objects from being transferred as serializables to
-  // the UI runtime and hence we replace them with "inaccessible object"
-  // which is implemented as a Proxy object that throws on any attempt
-  // of accessing its fields. We argue that such objects can sometimes leak
-  // as attributes of objects being captured by worklets but should never
-  // be used on the UI runtime regardless. If they are being accessed, the user
-  // will get an appropriate error message.
-  const clone = createSerializable<TValue>(INACCESSIBLE_OBJECT as TValue);
-  serializableMappingCache.set(value, clone);
-  return clone;
-}
-
 const WORKLET_CODE_THRESHOLD = 255;
 
 function getWorkletCode(value: WorkletFunction) {
@@ -846,11 +800,14 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
             ) as FlatSerializableRef<TValue>;
           }
         }
-      }
-      if (__DEV__ && value instanceof Promise) {
-        throw new Error(
-          '[Worklets] Promises cannot be converted to serializable.'
-        );
+        if (
+          typeof value !== 'function' &&
+          !(value instanceof ArrayBuffer) &&
+          !ArrayBuffer.isView(value)
+        ) {
+          // eslint-disable-next-line reanimated/use-worklets-error -- prefix is built inside uncopyableValueMessage
+          throw new Error(uncopyableValueMessage(value));
+        }
       }
       const toAdapt: Record<string, FlatSerializableRef<TValue>> = {};
       for (const [key, element] of Object.entries(value)) {
