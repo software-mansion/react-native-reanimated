@@ -62,6 +62,7 @@ typedef enum class ExitingState : std::uint8_t {
   ANIMATING = 3,
   DEAD = 4,
   DELETED = 5,
+  CANDIDATE = 6,
 } ExitingState;
 
 struct MutationNode;
@@ -91,6 +92,15 @@ struct LightNode {
     for (auto i = children.size() - 1; i >= 0; i--) {
       if (children[i]->current.tag == child->current.tag) {
         children.erase(children.begin() + i);
+        return static_cast<int>(i);
+      }
+    }
+    return -1;
+  }
+
+  int findChildIndexByTag(Tag tag) const {
+    for (std::size_t i = 0; i < children.size(); i++) {
+      if (children[i]->current.tag == tag) {
         return static_cast<int>(i);
       }
     }

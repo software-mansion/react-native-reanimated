@@ -53,7 +53,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable TransitionMap transitionMap_;
   mutable Transitions transitions_;
   mutable bool synchronized_ = true;
-  mutable std::vector<std::shared_ptr<LightNode>> entering_, layout_, exitingRootsToProcess_;
+  mutable std::vector<std::shared_ptr<LightNode>> entering_, layout_, potentialExitingRoots_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::vector<std::shared_ptr<LightNode>> containersToInsert_;
