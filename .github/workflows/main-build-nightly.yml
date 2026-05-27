@@ -29,15 +29,8 @@ jobs:
     with:
       configuration: ${{ matrix.configuration }}
 
-  macos:
-    if: github.repository == 'software-mansion/react-native-reanimated'
-    strategy:
-      fail-fast: false
-      matrix:
-        configuration: [Debug, Release]
-    uses: ./.github/workflows/example-macos-build-check.yml
-    with:
-      configuration: ${{ matrix.configuration }}
+  # macOS is skipped: react-native-macos has not been updated for
+  # React Native 0.83. Re-enable once react-native-macos catches up.
 
   tvos:
     if: github.repository == 'software-mansion/react-native-reanimated'
