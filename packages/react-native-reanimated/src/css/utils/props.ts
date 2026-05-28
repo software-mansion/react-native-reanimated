@@ -12,19 +12,27 @@ import {
   isAnimationProp,
   isCSSKeyframesObject,
   isCSSKeyframesRule,
+  isPseudoSelectorValue,
   isTransitionProp,
 } from './guards';
+
+export type PseudoStylesBySelector = Record<
+  string,
+  { selectorStyle: UnknownRecord; defaultStyle: UnknownRecord }
+>;
 
 export function filterCSSAndStyleProperties<S extends object>(
   style: CSSStyle<S>
 ): [
   ExistingCSSAnimationProperties | null,
   CSSTransitionProperties | null,
+  PseudoStylesBySelector | null,
   PlainStyle,
 ] {
   const animationProperties: Partial<CSSAnimationProperties> = {};
   let transitionProperties: Partial<CSSTransitionProperties> = {};
   const filteredStyle: UnknownRecord = {};
+  const pseudoStylesBySelector: PseudoStylesBySelector = {};
 
   // The CSS / transition / animation buckets are strongly typed but at this
   // point we are dynamically splitting an opaque style object by prop name;
@@ -51,7 +59,27 @@ export function filterCSSAndStyleProperties<S extends object>(
       } else {
         (transitionProperties as UnknownRecord)[prop] = value;
       }
-    } else if (!isSharedValue(value)) {
+    } else if (isSharedValue(value)) {
+      continue;
+    } else if (isPseudoSelectorValue(value)) {
+      const defaultValue = value.default;
+      if (defaultValue !== undefined) {
+        filteredStyle[prop] = defaultValue;
+      }
+      for (const [selector, selectorValue] of Object.entries(value)) {
+        if (selector === 'default') {
+          continue;
+        }
+        const branch = (pseudoStylesBySelector[selector] ??= {
+          selectorStyle: {},
+          defaultStyle: {},
+        });
+        branch.selectorStyle[prop] = selectorValue;
+        if (defaultValue !== undefined) {
+          branch.defaultStyle[prop] = defaultValue;
+        }
+      }
+    } else {
       filteredStyle[prop] = value;
     }
   }
@@ -80,6 +108,9 @@ export function filterCSSAndStyleProperties<S extends object>(
     ? transitionProperties
     : null;
 
+  const hasPseudoStyles = Object.keys(pseudoStylesBySelector).length > 0;
+  const finalPseudoStyles = hasPseudoStyles ? pseudoStylesBySelector : null;
+
   if (__DEV__) {
     validateCSSAnimationProps(animationProperties);
     validateCSSTransitionProps(transitionProperties);
@@ -88,6 +119,7 @@ export function filterCSSAndStyleProperties<S extends object>(
   return [
     finalAnimationConfig,
     finalTransitionConfig,
+    finalPseudoStyles,
     filteredStyle as PlainStyle,
   ];
 }
