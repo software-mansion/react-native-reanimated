@@ -21,6 +21,7 @@ import type {
   CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
 } from '../../css/native';
+import { DefaultStaticFeatureFlags } from '../../featureFlags/staticFeatureFlags';
 import { assertWorkletsVersion } from '../../platform-specific/workletsVersion';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
@@ -258,9 +259,16 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
-  getStaticFeatureFlag(): boolean {
-    // mock implementation
-    return false;
+  getStaticFeatureFlag(name: string): boolean {
+    // Tests run against this module too; keep every flag off there to preserve
+    // existing snapshots. The real web runtime reads the shared defaults that
+    // mirror `staticFlags.json`.
+    if (IS_JEST) {
+      return false;
+    }
+    return (
+      (DefaultStaticFeatureFlags as Record<string, boolean>)[name] ?? false
+    );
   }
 
   setDynamicFeatureFlag(): void {

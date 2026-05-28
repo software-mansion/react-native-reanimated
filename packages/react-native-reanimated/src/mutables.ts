@@ -13,7 +13,7 @@ import {
   UIRuntimeId,
 } from 'react-native-worklets';
 
-import { IS_JEST, logger, SHOULD_BE_USE_WEB } from './common';
+import { IS_JEST, IS_WEB, logger, SHOULD_BE_USE_WEB } from './common';
 import type { Mutable } from './commonTypes';
 import { getStaticFeatureFlag } from './featureFlags';
 import { isFirstReactRender, isReactRendering } from './reactUtils';
@@ -183,9 +183,10 @@ function mutableHostDecorator<TValue>(
   return mutable;
 }
 
-const USE_SYNCHRONIZABLE_FOR_MUTABLES = getStaticFeatureFlag(
-  'USE_SYNCHRONIZABLE_FOR_MUTABLES'
-);
+// Synchronizable mutables rely on native machinery that web doesn't have, so
+// keep them off on web (the flag now resolves to its real default there).
+const USE_SYNCHRONIZABLE_FOR_MUTABLES =
+  getStaticFeatureFlag('USE_SYNCHRONIZABLE_FOR_MUTABLES') && !IS_WEB;
 
 function mutableGuestDecorator<TValue>(
   initial: TValue,
