@@ -38,7 +38,8 @@ type WebPseudoSelectorKey =
   | ':last-of-type'
   | ':only-of-type'
   | ':root'
-  | ':fullscreen';
+  | ':fullscreen'
+  | `:${'nth-child' | 'nth-last-child' | 'nth-of-type' | 'nth-last-of-type'}(${string})`;
 
 export type PseudoSelectorKey = NativePseudoSelectorKey | WebPseudoSelectorKey;
 
