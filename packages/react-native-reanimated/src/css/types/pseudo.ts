@@ -9,7 +9,7 @@ export type NativePseudoSelectorKey =
   | ':focus'
   | ':focus-within';
 
-export type WebPseudoSelectorKey =
+type WebPseudoSelectorKey =
   | ':focus-visible'
   | ':link'
   | ':visited'
