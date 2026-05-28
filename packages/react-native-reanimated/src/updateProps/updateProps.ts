@@ -4,12 +4,12 @@ import type { RefObject } from 'react';
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import {
+  defaultPropsBuilder,
   IS_JEST,
   processColorsInProps,
   processTransform,
   processTransformOrigin,
   SHOULD_BE_USE_WEB,
-  defaultPropsBuilder,
 } from '../common';
 import { processBoxShadowWeb, processFilterWeb } from '../common/web';
 import type {

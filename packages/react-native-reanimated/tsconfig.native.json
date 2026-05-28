@@ -5,11 +5,5 @@
       "react-native-reanimated": ["./src"]
     }
   },
-  "include": ["src"],
-  "exclude": [
-    "**/*.web.ts",
-    "**/*.web.tsx",
-    "**/*.web.test.ts",
-    "**/*.web.test.tsx"
-  ]
+  "include": ["src"]
 }

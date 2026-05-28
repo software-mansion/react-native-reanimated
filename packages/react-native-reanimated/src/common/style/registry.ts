@@ -2,9 +2,9 @@
 import type { UnknownRecord } from '../types';
 import {
   createPropsBuilder,
+  defaultPropsBuilder,
   type PropsBuilder,
   type PropsBuilderConfig,
-  defaultPropsBuilder,
 } from './propsBuilder';
 
 const DEFAULT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES = new Set<string>([
@@ -56,9 +56,7 @@ export function getCompoundComponentName(
   return `${reactViewName}$${componentDisplayName}`;
 }
 
-export function getPropsBuilder(
-  compoundComponentName: string
-): PropsBuilder {
+export function getPropsBuilder(compoundComponentName: string): PropsBuilder {
   return findEntry(compoundComponentName)?.builder ?? defaultPropsBuilder;
 }
 

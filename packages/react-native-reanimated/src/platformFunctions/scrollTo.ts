@@ -1,54 +1,31 @@
 'use strict';
-import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
+import type { ComponentRef } from 'react';
+import type { ScrollView } from 'react-native';
+
+import { logger } from '../common';
 import type { InstanceOrElement } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
-import { dispatchCommand } from './dispatchCommand';
 
-type ScrollTo = <TRef extends InstanceOrElement>(
-  animatedRef: AnimatedRef<TRef>,
-  x: number,
-  y: number,
-  animated: boolean
-) => void;
-
-/**
- * Lets you synchronously scroll to a given position of a `ScrollView`.
- *
- * @param animatedRef - An [animated
- *   ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef)
- *   attached to an `Animated.ScrollView` component.
- * @param x - The x position you want to scroll to.
- * @param y - The y position you want to scroll to.
- * @param animated - Whether the scrolling should be smooth or instant.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/scroll/scrollTo
- */
-export let scrollTo: ScrollTo;
-
-function scrollToNative<TRef extends InstanceOrElement>(
+// Constraint matches the native signature (`InstanceOrElement`, wider than
+// `InternalHostInstance`) so consumer types stay consistent across platforms
+// even though the runtime impl only touches DOM-shaped refs.
+export function scrollTo<TRef extends InstanceOrElement>(
   animatedRef: AnimatedRef<TRef>,
   x: number,
   y: number,
   animated: boolean
 ) {
-  'worklet';
-  dispatchCommand(animatedRef, 'scrollTo', [x, y, animated]);
-}
+  const element = animatedRef();
 
-function scrollToJest() {
-  logger.warn('scrollTo() is not supported with Jest.');
-}
+  // This prevents crashes if ref has not been set yet
+  if (!element) {
+    logger.warn(
+      'Called scrollTo() with an uninitialized ref. Make sure to pass the animated ref to the scrollable component before calling scrollTo().'
+    );
+    return;
+  }
 
-function scrollToDefault() {
-  logger.warn('scrollTo() is not supported on this configuration.');
-}
-
-if (!SHOULD_BE_USE_WEB) {
-  // Those assertions are actually correct since on Native platforms `AnimatedRef` is
-  // mapped as a different function in `serializableMappingCache` and
-  // TypeScript is not able to infer that.
-  scrollTo = scrollToNative as unknown as ScrollTo;
-} else if (IS_JEST) {
-  scrollTo = scrollToJest;
-} else {
-  scrollTo = scrollToDefault;
+  // By ScrollView we mean any scrollable component
+  const scrollView = element as unknown as ComponentRef<typeof ScrollView>;
+  scrollView?.scrollTo({ x, y, animated });
 }

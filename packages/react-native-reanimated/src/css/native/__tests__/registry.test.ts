@@ -1,11 +1,11 @@
 'use strict';
 import {
+  defaultPropsBuilder,
   getCompoundComponentName,
   getPropsBuilder,
   getSeparatelyInterpolatedNestedProperties,
   registerComponentPropsBuilder,
   STYLE_PROPERTIES_CONFIG,
-  defaultPropsBuilder,
 } from '../../../common';
 
 describe('registry', () => {
