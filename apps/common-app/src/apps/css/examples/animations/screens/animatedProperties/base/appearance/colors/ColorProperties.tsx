@@ -342,22 +342,22 @@ function OtherColors() {
   );
 }
 
-type ExampleProps<S extends object> = {
-  style?: S;
+type ExampleProps<TStyle extends object> = {
+  style?: TStyle;
   labelTypes?: Array<LabelType>;
-  animation: CSSAnimationProperties<S>;
+  animation: CSSAnimationProperties<TStyle>;
   renderExample: (
-    animation: CSSAnimationProperties<S>,
-    style?: S
+    animation: CSSAnimationProperties<TStyle>,
+    style?: TStyle
   ) => JSX.Element;
 } & Omit<ExampleCardProps, 'code'>;
 
-function Example<S extends object>({
+function Example<TStyle extends object>({
   animation,
   renderExample,
   style,
   ...cardProps
-}: ExampleProps<S>) {
+}: ExampleProps<TStyle>) {
   return (
     <VerticalExampleCard
       code={stringifyConfig(animation)}
@@ -368,8 +368,8 @@ function Example<S extends object>({
   );
 }
 
-type ConcreteExampleProps<S extends object> = Omit<
-  ExampleProps<S>,
+type ConcreteExampleProps<TStyle extends object> = Omit<
+  ExampleProps<TStyle>,
   'renderExample'
 >;
 
