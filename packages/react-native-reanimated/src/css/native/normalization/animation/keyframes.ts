@@ -109,8 +109,7 @@ export function processKeyframes(
 function processProps(
   offset: number,
   props: object,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  keyframeProps: Record<string, any>,
+  keyframeProps: UnknownRecord,
   separatelyInterpolatedNestedProperties: ReadonlySet<string>
 ) {
   Object.entries(props).forEach(([property, value]) => {
@@ -129,7 +128,7 @@ function processProps(
       processProps(
         offset,
         value,
-        keyframeProps[property],
+        keyframeProps[property] as UnknownRecord,
         separatelyInterpolatedNestedProperties
       );
       return;
@@ -138,7 +137,9 @@ function processProps(
     if (!keyframeProps[property]) {
       keyframeProps[property] = [];
     }
-    keyframeProps[property].push({ offset, value });
+    (keyframeProps[property] as Array<{ offset: number; value: unknown }>).push(
+      { offset, value }
+    );
   });
 }
 

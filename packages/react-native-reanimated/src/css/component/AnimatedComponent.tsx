@@ -4,7 +4,7 @@ import { Component } from 'react';
 import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 
-import type { AnyComponent, PlainStyle } from '../../common';
+import type { AnyComponent, PlainStyle, UnknownRecord } from '../../common';
 import { IS_JEST, SHOULD_BE_USE_WEB } from '../../common';
 import type {
   InternalHostInstance,
@@ -23,7 +23,7 @@ import { CSSManager } from '../platform';
 import type { CSSStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
 
-export type AnimatedComponentProps = Record<string, unknown> & {
+export type AnimatedComponentProps = UnknownRecord & {
   ref?: Ref<Component>;
   style?: StyleProp<PlainStyle>;
 };
@@ -34,7 +34,7 @@ export type AnimatedComponentProps = Record<string, unknown> & {
 export default class AnimatedComponent<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   P extends Record<string, any> = AnimatedComponentProps,
-  S extends object = Record<string, unknown>,
+  S extends object = UnknownRecord,
 >
   extends Component<P, S>
   implements IAnimatedComponentInternalBase
