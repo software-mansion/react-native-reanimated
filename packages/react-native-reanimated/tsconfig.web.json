@@ -1,8 +1,5 @@
 {
   "extends": "./tsconfig.native.json",
-  "compilerOptions": {
-    "moduleSuffixes": [".web.test", ".web", ""]
-  },
   "exclude": [
     "**/*.native.ts",
     "**/*.native.tsx",
