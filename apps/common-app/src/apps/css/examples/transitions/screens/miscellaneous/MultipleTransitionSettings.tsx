@@ -26,7 +26,7 @@ import {
 import { colors, flex, radius, sizes, spacing } from '@/theme';
 
 const DEFAULT_TRANSITION_CONFIG: SelectableConfig<
-  Partial<CSSTransitionProperties>
+  Partial<CSSTransitionProperties<ViewStyle>>
 > = {
   $transitionProperty: {
     maxNumberOfValues: 3,
@@ -89,9 +89,7 @@ export default function MultipleTransitionSettings() {
   const [currentStyleIndex, setCurrentStyleIndex] = useState(0);
   const [displayStyleChanges, setDisplayStyleChanges] = useState(true);
 
-  const transition = useSelectableConfig(
-    selectableConfig
-  ) as CSSTransitionProperties;
+  const transition = useSelectableConfig(selectableConfig);
 
   return (
     <ScrollScreen>
