@@ -29,18 +29,17 @@ import { IS_ANDROID } from '@/utils';
 const filterPaddingAndMarginProps = (
   style: ViewStyle
 ): [ViewStyle, ViewStyle] => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const paddingAndMargin: Record<string, any> = {};
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rest: Record<string, any> = {};
+  const paddingAndMargin: ViewStyle = {};
+  const rest: ViewStyle = {};
 
   for (const key in style) {
     const k = key as keyof ViewStyle;
-    if (key.startsWith('padding') || key.startsWith('margin')) {
-      paddingAndMargin[key] = style[k];
-    } else {
-      rest[key] = style[k];
-    }
+    Object.assign(
+      key.startsWith('padding') || key.startsWith('margin')
+        ? paddingAndMargin
+        : rest,
+      { [k]: style[k] }
+    );
   }
 
   return [paddingAndMargin, rest];

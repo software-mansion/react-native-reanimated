@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { memo, useMemo, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -33,11 +32,11 @@ import RotatableChevron from './RotatableChevron';
 const convertSelectableConfigToConfig = <T extends object>(
   config: SelectableConfig<T>
 ): T => {
-  const convertedConfig: Record<string, any> = {};
+  const convertedConfig: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(config)) {
     if (key.startsWith('$')) {
-      const options = value as SelectableConfigPropertyOptions<T>;
+      const options = value as SelectableConfigPropertyOptions<unknown>;
       if (!options.disabled) {
         convertedConfig[key.slice(1)] = options.value;
       }
@@ -45,7 +44,7 @@ const convertSelectableConfigToConfig = <T extends object>(
       convertedConfig[key] = value;
     } else {
       convertedConfig[key] = convertSelectableConfigToConfig(
-        value as Record<string, any>
+        value as SelectableConfig<object>
       );
     }
   }
@@ -128,7 +127,7 @@ type BlockProps<T extends object> = {
   objectKey: string;
   dropdownStyle?: StyleProp<ViewStyle>;
   blockStyle?: StyleProp<ViewStyle>;
-  onChange: (key: string, config: Record<string, any>) => void;
+  onChange: (key: string, config: Record<string, unknown>) => void;
 };
 
 const Block = typedMemo(function Block<T extends object>({
@@ -139,7 +138,7 @@ const Block = typedMemo(function Block<T extends object>({
   onChange,
 }: BlockProps<T>) {
   const stableOnChange = useStableCallback(
-    (key: string, newValue: Record<string, any>) => {
+    (key: string, newValue: Record<string, unknown>) => {
       onChange(objectKey, { ...config, [key]: newValue });
     }
   );
@@ -179,7 +178,7 @@ const Block = typedMemo(function Block<T extends object>({
 
         return (
           <CollapsibleBlock
-            config={value as Record<string, any>}
+            config={value as SelectableConfig<object>}
             formattedKey={formattedKey}
             key={key}
             objectKey={key}
@@ -193,9 +192,9 @@ const Block = typedMemo(function Block<T extends object>({
 
 type CollapsibleBlockProps = {
   formattedKey: string;
-  config: Record<string, any>;
+  config: SelectableConfig<object>;
   objectKey: string;
-  onChange: (key: string, config: Record<string, any>) => void;
+  onChange: (key: string, config: Record<string, unknown>) => void;
 };
 
 const CollapsibleBlock = memo(function CollapsibleBlock({
@@ -244,7 +243,7 @@ type SelectableOptionRowProps<T> = {
   formattedKey: string;
   objectKey: string;
   dropdownStyle?: StyleProp<ViewStyle>;
-  onChange: (key: string, config: Record<string, any>) => void;
+  onChange: (key: string, config: Record<string, unknown>) => void;
 };
 
 const SelectableOptionRow = memo(function SelectableOptionRow<T>({
@@ -335,7 +334,7 @@ type MultipleOptionsOptionSelectorProps<T> = {
   dropdownStyle?: StyleProp<ViewStyle>;
   options: SelectableConfigPropertyOptions<T>;
   objectKey: string;
-  onChange: (key: string, config: Record<string, any>) => void;
+  onChange: (key: string, config: Record<string, unknown>) => void;
 };
 
 const MultipleOptionsOptionSelector = typedMemo(

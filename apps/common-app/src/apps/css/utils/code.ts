@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-
 export function isValidPropertyName(propertyName: string): boolean {
   const validPropertyNamePattern = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
   return validPropertyNamePattern.test(propertyName);
@@ -43,9 +39,8 @@ export const formatLeafValue = (
 
 export const MAX_NOT_WRAPPED_LENGTH = 48;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const stringifyConfigObject = <T extends Record<string, any>>(
-  object: T,
+const stringifyConfigObject = <T extends object>(
+  inputObject: T,
   dense = false,
   depth = 0
 ): string => {
@@ -53,36 +48,36 @@ const stringifyConfigObject = <T extends Record<string, any>>(
     throw new Error('Object nesting is too deep');
   }
 
-  if ('cssRules' in object) {
-    object = object.cssRules;
-  }
+  const object: Record<string, unknown> = (
+    'cssRules' in inputObject ? inputObject.cssRules : inputObject
+  ) as Record<string, unknown>;
 
   const formatValue = (
     key: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    value: any,
+    value: unknown,
     currentDepth: number,
     makeDense: boolean
-  ) => {
+  ): string => {
     const nextTab = '  '.repeat(currentDepth);
 
     if (key === 'animationName') {
       return Array.isArray(value) && value.length > 0
         ? `[\n${nextTab}  ${value
-            .map((item) => stringifyConfigObject(item, makeDense, depth + 2))
+            .map((item: object) =>
+              stringifyConfigObject(item, makeDense, depth + 2)
+            )
             .join(`,\n${nextTab}  `)}\n${nextTab}]`
-        : stringifyConfigObject(value, makeDense, currentDepth);
+        : stringifyConfigObject(value as object, makeDense, currentDepth);
     }
 
     return isLeafValue(value)
       ? formatLeafValue(value, nextTab, makeDense)
-      : stringifyConfigObject(value, makeDense, currentDepth);
+      : stringifyConfigObject(value as object, makeDense, currentDepth);
   };
 
   const formatLine = (
     key: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    value: any,
+    value: unknown,
     depth_: number,
     makeDense: boolean
   ) => {
@@ -107,8 +102,7 @@ const stringifyConfigObject = <T extends Record<string, any>>(
     .join(',\n')}\n${currentTab}}`;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const stringifyConfig = <T extends Record<string, any>>(
+export const stringifyConfig = <T extends object>(
   object: 'none' | T,
   dense = false,
   depth = 0
@@ -118,20 +112,16 @@ export const stringifyConfig = <T extends Record<string, any>>(
     : stringifyConfigObject(object, dense, depth);
 };
 
-export const getCodeWithOverrides = <
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  C extends Record<string, any>,
-  O extends object,
->(
+export const getCodeWithOverrides = <C extends object, O extends object>(
   sharedConfig: C,
   overrides: Array<O> = [],
   excludeKeys: Array<string> = []
 ): string => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const propertyOverrides: Record<string, any> = {};
+  const propertyOverrides: Record<string, Array<unknown>> = {};
   const excludeSet = new Set(excludeKeys);
+  const sharedConfigRecord = sharedConfig as Record<string, unknown>;
 
-  const isQuoted = (value: unknown) =>
+  const isQuoted = (value: unknown): value is string =>
     typeof value === 'string' && value[0] === '"' && value.slice(-1) === '"';
 
   const parseOverrideValue = (value: unknown) => {
@@ -150,10 +140,11 @@ export const getCodeWithOverrides = <
   };
 
   for (const item of overrides) {
+    const itemRecord = item as Record<string, unknown>;
     for (const key in item) {
       if (!excludeSet.has(key)) {
         propertyOverrides[key] ??= [];
-        propertyOverrides[key].push(parseOverride(item[key]));
+        propertyOverrides[key].push(parseOverride(itemRecord[key]));
       }
     }
   }
@@ -167,11 +158,12 @@ export const getCodeWithOverrides = <
       ]),
     ]
       .map((key) => {
-        const value = sharedConfig[key] ?? propertyOverrides[key]?.[0] ?? '';
+        const value =
+          sharedConfigRecord[key] ?? propertyOverrides[key]?.[0] ?? '';
 
         let parsedValue;
         if (key === 'animationName') {
-          parsedValue = stringifyConfig(value, false, 0);
+          parsedValue = stringifyConfig(value as 'none' | object, false, 0);
         } else if (isLeafValue(value)) {
           const formatLine = (makeDense: boolean) =>
             `${key}: ${formatLeafValue(value, '', makeDense)}`;
