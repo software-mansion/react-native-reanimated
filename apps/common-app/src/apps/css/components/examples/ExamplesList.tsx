@@ -80,7 +80,11 @@ type ExampleProps<TStyle extends object, TExampleProps> = {
   ) => CSSAnimationProperties<NoInfer<TStyle>>;
   renderExample: (
     props: Omit<TExampleProps, 'animation'> & {
-      animation: CSSAnimationProperties<TStyle>;
+      // Intersection with `TStyle` (rather than bare `CSSAnimationProperties`)
+      // so the animation fits the typed style slot of the component the user
+      // forwards it to — e.g. `<Animated.View style={[..., animation]}>` where
+      // the slot accepts `ViewStyle & CSSConfigProps<ViewStyle>`.
+      animation: TStyle & CSSAnimationProperties<TStyle>;
     }
   ) => JSX.Element;
 } & Omit<ExampleCardProps, 'code'> &
@@ -99,7 +103,8 @@ function Example<TStyle extends object, TExampleProps extends object>({
   ...rest
 }: ExampleProps<TStyle, TExampleProps>) {
   const userProps = rest as TExampleProps;
-  const animation = buildAnimation(userProps);
+  const animation = buildAnimation(userProps) as TStyle &
+    CSSAnimationProperties<TStyle>;
 
   return (
     <CardComponent

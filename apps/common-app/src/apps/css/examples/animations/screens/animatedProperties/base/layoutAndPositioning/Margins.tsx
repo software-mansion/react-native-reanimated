@@ -105,7 +105,7 @@ const renderExample = ({
   animation,
   containerStyle,
 }: {
-  animation: CSSAnimationProperties<ViewStyle>;
+  animation: ViewStyle & CSSAnimationProperties<ViewStyle>;
   containerStyle?: ViewStyle;
 }) => (
   <View style={[styles.container, containerStyle]}>

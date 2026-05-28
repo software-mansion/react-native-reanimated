@@ -62,7 +62,7 @@ const EXAMPLES = [
 function renderExample({
   animation,
 }: {
-  animation: CSSAnimationProperties<ViewStyle>;
+  animation: ViewStyle & CSSAnimationProperties<ViewStyle>;
 }) {
   return (
     <View style={StyleSheet.absoluteFill}>

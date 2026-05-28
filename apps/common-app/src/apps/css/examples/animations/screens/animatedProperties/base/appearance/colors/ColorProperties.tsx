@@ -347,7 +347,7 @@ type ExampleProps<TStyle extends object> = {
   labelTypes?: Array<LabelType>;
   animation: CSSAnimationProperties<TStyle>;
   renderExample: (
-    animation: CSSAnimationProperties<TStyle>,
+    animation: TStyle & CSSAnimationProperties<TStyle>,
     style?: TStyle
   ) => JSX.Element;
 } & Omit<ExampleCardProps, 'code'>;
@@ -363,7 +363,10 @@ function Example<TStyle extends object>({
       code={stringifyConfig(animation)}
       collapsedCode={stringifyConfig(animation.animationName, true)}
       {...cardProps}>
-      {renderExample(animation, style)}
+      {renderExample(
+        animation as TStyle & CSSAnimationProperties<TStyle>,
+        style
+      )}
     </VerticalExampleCard>
   );
 }

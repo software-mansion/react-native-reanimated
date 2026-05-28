@@ -30,7 +30,7 @@ export default function TransitionProperty() {
         },
       ]}
       renderExample={(
-        exampleConfig: CSSTransitionProperties<ViewStyle>,
+        exampleConfig: ViewStyle & CSSTransitionProperties<ViewStyle>,
         style: StyleProps
       ) => (
         <View style={styles.wrapper}>

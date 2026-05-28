@@ -108,7 +108,8 @@ export default function MultipleTransitionSettings() {
             <Animated.View
               style={[
                 styles.box,
-                transition,
+                transition as ViewStyle &
+                  Partial<CSSTransitionProperties<ViewStyle>>,
                 TRANSITION_STYLES[currentStyleIndex],
               ]}
             />

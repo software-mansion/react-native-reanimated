@@ -37,7 +37,7 @@ export default function TransitionDelay() {
         },
       ]}
       renderExample={(
-        exampleConfig: CSSTransitionProperties<ViewStyle>,
+        exampleConfig: ViewStyle & CSSTransitionProperties<ViewStyle>,
         style: StyleProps
       ) => (
         <View style={styles.wrapper}>

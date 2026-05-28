@@ -138,7 +138,8 @@ export default function UpdatingTransitionSettings() {
               <Animated.View
                 style={[
                   styles.box,
-                  transitionProperties,
+                  transitionProperties as ViewStyle &
+                    CSSTransitionProperties<ViewStyle>,
                   TRANSITION_STYLES[currentStyleIndex],
                 ]}
               />

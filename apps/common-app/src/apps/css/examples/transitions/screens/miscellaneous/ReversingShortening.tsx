@@ -153,7 +153,8 @@ export default function ReversingShortening() {
                         <Animated.View
                           style={[
                             styles.box,
-                            transition,
+                            transition as ViewStyle &
+                              CSSTransitionProperties<ViewStyle>,
                             exampleTransitionStyles[currentStyleIndex],
                           ]}
                         />

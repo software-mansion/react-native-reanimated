@@ -27,7 +27,7 @@ export default function TransitionBehavior() {
         },
       ]}
       renderExample={(
-        exampleConfig: CSSTransitionProperties<ViewStyle>,
+        exampleConfig: ViewStyle & CSSTransitionProperties<ViewStyle>,
         style: StyleProps
       ) => (
         <Animated.View style={[styles.wrapper, exampleConfig, style]}>
