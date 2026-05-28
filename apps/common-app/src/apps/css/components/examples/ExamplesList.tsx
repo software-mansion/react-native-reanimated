@@ -72,7 +72,7 @@ type ExampleProps<TStyle extends object, TExampleProps> = {
   CardComponent: ComponentType<ExampleCardProps>;
   denseCode?: boolean;
   // `NoInfer` keeps `buildAnimation`'s body from contributing to `TStyle`
-  // inference — the keyframes literal is often narrow and would otherwise
+  // inference - the keyframes literal is often narrow and would otherwise
   // hijack inference. `TStyle` is instead solved from `renderExample`'s
   // contextual flow (i.e. the component the user passes `animation` to).
   //
