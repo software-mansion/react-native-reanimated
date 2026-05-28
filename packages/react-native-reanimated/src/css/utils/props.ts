@@ -1,5 +1,5 @@
 'use strict';
-import type { AnyRecord, PlainStyle } from '../../common';
+import type { PlainStyle, UnknownRecord } from '../../common';
 import { logger } from '../../common';
 import { isSharedValue } from '../../isSharedValue';
 import type {
@@ -15,7 +15,7 @@ import {
   isTransitionProp,
 } from './guards';
 
-export function filterCSSAndStyleProperties<S extends AnyRecord>(
+export function filterCSSAndStyleProperties<S extends object>(
   style: CSSStyle<S>
 ): [
   ExistingCSSAnimationProperties | null,
@@ -24,8 +24,11 @@ export function filterCSSAndStyleProperties<S extends AnyRecord>(
 ] {
   const animationProperties: Partial<CSSAnimationProperties> = {};
   let transitionProperties: Partial<CSSTransitionProperties> = {};
-  const filteredStyle: AnyRecord = {};
+  const filteredStyle: UnknownRecord = {};
 
+  // The CSS / transition / animation buckets are strongly typed but at this
+  // point we are dynamically splitting an opaque style object by prop name;
+  // values are validated downstream by the normalizers.
   for (const [prop, value] of Object.entries(style)) {
     if (value === undefined) {
       // If the user explicitly sets a property to undefined (e.g. when they want
@@ -36,15 +39,17 @@ export function filterCSSAndStyleProperties<S extends AnyRecord>(
 
     if (isAnimationProp(prop)) {
       // TODO - add support for animation shorthand
-      animationProperties[prop] = value;
+      (animationProperties as UnknownRecord)[prop] = value;
     } else if (isTransitionProp(prop)) {
       // If there is a shorthand `transition` property, all properties specified
       // before are ignored and only these specified later are taken into account
       // and override ones from the shorthand
       if (prop === 'transition') {
-        transitionProperties = { transition: value };
+        transitionProperties = {
+          transition: value as CSSTransitionProperties['transition'],
+        };
       } else {
-        transitionProperties[prop] = value;
+        (transitionProperties as UnknownRecord)[prop] = value;
       }
     } else if (!isSharedValue(value)) {
       filteredStyle[prop] = value;
@@ -80,7 +85,11 @@ export function filterCSSAndStyleProperties<S extends AnyRecord>(
     validateCSSTransitionProps(transitionProperties);
   }
 
-  return [finalAnimationConfig, finalTransitionConfig, filteredStyle];
+  return [
+    finalAnimationConfig,
+    finalTransitionConfig,
+    filteredStyle as PlainStyle,
+  ];
 }
 
 function validateCSSAnimationProps(props: Partial<CSSAnimationProperties>) {

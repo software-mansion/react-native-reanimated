@@ -1,9 +1,5 @@
 'use strict';
-import type {
-  AnyRecord,
-  NativePropsBuilder,
-  UnknownRecord,
-} from '../../../../common';
+import type { NativePropsBuilder, UnknownRecord } from '../../../../common';
 import {
   getPropsBuilder,
   getSeparatelyInterpolatedNestedProperties,
@@ -110,15 +106,17 @@ export function processKeyframes(
     }, []);
 }
 
+type KeyframeLeafEntries = Array<{ offset: number; value: unknown }>;
+
 function processProps(
   offset: number,
   props: object,
-  keyframeProps: AnyRecord,
+  keyframeProps: UnknownRecord,
   separatelyInterpolatedNestedProperties: ReadonlySet<string>
 ) {
-  Object.entries(props).forEach(([property, value]) => {
+  for (const [property, value] of Object.entries(props)) {
     if (!isDefined(value)) {
-      return;
+      continue;
     }
 
     if (
@@ -126,23 +124,21 @@ function processProps(
       typeof value === 'object' &&
       separatelyInterpolatedNestedProperties.has(property)
     ) {
-      if (!keyframeProps[property]) {
-        keyframeProps[property] = Array.isArray(value) ? [] : {};
-      }
+      const subBuilder = (keyframeProps[property] ??= Array.isArray(value)
+        ? []
+        : {}) as UnknownRecord;
       processProps(
         offset,
         value,
-        keyframeProps[property],
+        subBuilder,
         separatelyInterpolatedNestedProperties
       );
-      return;
+      continue;
     }
 
-    if (!keyframeProps[property]) {
-      keyframeProps[property] = [];
-    }
-    keyframeProps[property].push({ offset, value });
-  });
+    const entries = (keyframeProps[property] ??= []) as KeyframeLeafEntries;
+    entries.push({ offset, value });
+  }
 }
 
 export function normalizeAnimationKeyframes(
