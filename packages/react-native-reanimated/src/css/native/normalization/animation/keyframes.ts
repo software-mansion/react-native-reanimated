@@ -1,9 +1,5 @@
 'use strict';
-import type {
-  AnyRecord,
-  NativePropsBuilder,
-  UnknownRecord,
-} from '../../../../common';
+import type { NativePropsBuilder, UnknownRecord } from '../../../../common';
 import {
   getPropsBuilder,
   getSeparatelyInterpolatedNestedProperties,
@@ -113,7 +109,8 @@ export function processKeyframes(
 function processProps(
   offset: number,
   props: object,
-  keyframeProps: AnyRecord,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  keyframeProps: Record<string, any>,
   separatelyInterpolatedNestedProperties: ReadonlySet<string>
 ) {
   Object.entries(props).forEach(([property, value]) => {

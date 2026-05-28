@@ -1,5 +1,5 @@
 'use strict';
-import type { AnyRecord, PlainStyle } from '../../common';
+import type { PlainStyle } from '../../common';
 import { logger } from '../../common';
 import { isSharedValue } from '../../isSharedValue';
 import type {
@@ -15,7 +15,7 @@ import {
   isTransitionProp,
 } from './guards';
 
-export function filterCSSAndStyleProperties<S extends AnyRecord>(
+export function filterCSSAndStyleProperties<S extends object>(
   style: CSSStyle<S>
 ): [
   ExistingCSSAnimationProperties | null,
@@ -24,9 +24,15 @@ export function filterCSSAndStyleProperties<S extends AnyRecord>(
 ] {
   const animationProperties: Partial<CSSAnimationProperties> = {};
   let transitionProperties: Partial<CSSTransitionProperties> = {};
-  const filteredStyle: AnyRecord = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const filteredStyle: Record<string, any> = {};
 
-  for (const [prop, value] of Object.entries(style)) {
+  // The CSS / transition / animation buckets are strongly typed but at this
+  // point we are dynamically splitting an opaque style object by prop name;
+  // values are validated downstream by the normalizers.
+  for (const [prop, rawValue] of Object.entries(style)) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const value = rawValue as any;
     if (value === undefined) {
       // If the user explicitly sets a property to undefined (e.g. when they want
       // to remove CSS transition or animation), we treat the property as if it was not

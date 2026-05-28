@@ -4,7 +4,7 @@ import { Component } from 'react';
 import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 
-import type { AnyComponent, AnyRecord, PlainStyle } from '../../common';
+import type { AnyComponent, PlainStyle } from '../../common';
 import { IS_JEST, SHOULD_BE_USE_WEB } from '../../common';
 import type {
   InternalHostInstance,
@@ -32,8 +32,9 @@ export type AnimatedComponentProps = Record<string, unknown> & {
 // private/protected ones when possible (when changes from this repo are merged
 // to the main one)
 export default class AnimatedComponent<
-  P extends AnyRecord = AnimatedComponentProps,
-  S extends AnyRecord = Record<string, unknown>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  P extends Record<string, any> = AnimatedComponentProps,
+  S extends object = Record<string, unknown>,
 >
   extends Component<P, S>
   implements IAnimatedComponentInternalBase
