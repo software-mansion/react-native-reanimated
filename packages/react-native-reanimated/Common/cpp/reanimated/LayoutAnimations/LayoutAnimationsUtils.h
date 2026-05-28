@@ -93,10 +93,10 @@ struct LightNode {
   std::vector<std::shared_ptr<LightNode>> children;
 
   int removeChild(const std::shared_ptr<LightNode> &child) {
-    for (auto i = children.size() - 1; i >= 0; i--) {
+    for (int i = static_cast<int>(children.size()) - 1; i >= 0; i--) {
       if (children[i]->current.tag == child->current.tag) {
         children.erase(children.begin() + i);
-        return static_cast<int>(i);
+        return i;
       }
     }
     return -1;

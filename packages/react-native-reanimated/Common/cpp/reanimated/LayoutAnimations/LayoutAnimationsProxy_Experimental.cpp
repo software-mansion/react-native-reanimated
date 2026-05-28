@@ -181,8 +181,13 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
       }
       case ShadowViewMutation::Delete: {
         const auto deletedTag = mutation.oldChildShadowView.tag;
-        if (lightNodes_[deletedTag]->exitingState != ExitingState::TRIAGE) {
-          lightNodes_.erase(deletedTag);
+        const auto it = lightNodes_.find(deletedTag);
+        react_native_assert(it != lightNodes_.end() && "Delete mutation for unknown tag");
+        if (it == lightNodes_.end()) {
+          break;
+        }
+        if (it->second->exitingState != ExitingState::TRIAGE) {
+          lightNodes_.erase(it);
         }
         break;
       }
@@ -353,9 +358,8 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
       maybeCancelAnimation(potentialExitingRoot->current.tag);
       auto parent = potentialExitingRoot->parent.lock();
       react_native_assert(parent && "Parent node is nullptr");
-      auto actualIndex = parent->findChildIndexByTag(potentialExitingRoot->current.tag);
+      auto actualIndex = parent->removeChild(potentialExitingRoot);
       react_native_assert(actualIndex != -1 && "actualIndex == -1");
-      parent->removeChild(potentialExitingRoot);
       lightNodes_.erase(potentialExitingRoot->current.tag);
       outputMutations.push_back(
           ShadowViewMutation::RemoveMutation(parent->current.tag, potentialExitingRoot->current, actualIndex));
