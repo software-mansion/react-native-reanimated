@@ -156,11 +156,7 @@ export default class AnimatedComponent<
 
   _updateStyles(props: P) {
     this._cssStyle = (StyleSheet.flatten(
-      // The cast is a no-op against the non-strict RN types but required in
-      // strict-api mode where `flatten` takes a narrower internal type than
-      // our `CSSStyle` (which carries `PseudoValue<T>` value positions).
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-      props.style as Parameters<typeof StyleSheet.flatten>[0]
+      props.style as StyleProp<DefaultStyle>
     ) ?? {}) as CSSStyle;
   }
 
