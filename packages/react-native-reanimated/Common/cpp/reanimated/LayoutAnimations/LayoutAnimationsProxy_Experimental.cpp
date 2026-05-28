@@ -294,10 +294,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         if (deleted.contains(tag) && !deleted.contains(parentTag)) {
           potentialExitingRoots_.push_back(node);
           node->exitingState = ExitingState::CANDIDATE;
-          // don't remove the view yet because reanimated needs to animate the exit
           LOG(INFO) << "@@@PotentialExitingRoot. Not sending remove mutation yet. tag=" << tag;
-          // outputMutations.push_back(ShadowViewMutation::RemoveMutation(parentTag, node->current, actualIndex));
-          // parent->children.erase(parent->children.begin() + actualIndex);
         } else if (!deleted.contains(tag)) {
           // removing to change parent
           LOG(INFO) << "@@@emit Remove(reparent) tag=" << tag << " parentTag=" << parentTag
@@ -407,22 +404,6 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
     if (startExitingAnimationsRecursively(potentialExitingRoot, outputMutations, config)) {
       auto parentOfNewExitingRoot = potentialExitingRoot->parent.lock();
       react_native_assert(parentOfNewExitingRoot && "Parent node is nullptr");
-      // TODO (future): figure out a better way to handle this
-      // Currently we remove each view, and then if we want to animate it, reinsert it at the end.
-      // This is nice, but introduces extra mutations (which could have some side effects, like making a snapshot in
-      // RNScreens), and it changes the zIndex of animated views, which is different from what've had. The biggest
-      // convenience of this approach is that it is much easier to maintain indices of animated views, and handle
-      // reparentings.
-
-      // auto exitingShadowView = newExitingRoot->current;
-      // if (layoutAnimations_.contains(newExitingRoot->current.tag)) {
-      //   exitingShadowView = layoutAnimations_.at(newExitingRoot->current.tag).currentView;
-      // }
-      // outputMutations.push_back(ShadowViewMutation::InsertMutation(
-      //     parentOfNewExitingRoot->current.tag,
-      //     exitingShadowView,
-      //     static_cast<int>(parentOfNewExitingRoot->children.size())));
-      // parentOfNewExitingRoot->children.push_back(newExitingRoot);
       if (potentialExitingRoot->exitingState == UNDEFINED) {
         potentialExitingRoot->exitingState = WAITING;
       }
