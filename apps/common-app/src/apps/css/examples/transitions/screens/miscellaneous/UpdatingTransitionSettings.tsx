@@ -58,7 +58,7 @@ const TRANSITION_STYLES: Array<StyleProps> = [
 
 export default function UpdatingTransitionSettings() {
   const [transitionProperties, setTransitionProperties] = useState<
-    CSSTransitionProperties<ViewStyle>
+    ViewStyle & CSSTransitionProperties<ViewStyle>
   >({
     transitionProperty: 'all',
     ...DEFAULT_SETTINGS,
@@ -138,8 +138,7 @@ export default function UpdatingTransitionSettings() {
               <Animated.View
                 style={[
                   styles.box,
-                  transitionProperties as ViewStyle &
-                    CSSTransitionProperties<ViewStyle>,
+                  transitionProperties,
                   TRANSITION_STYLES[currentStyleIndex],
                 ]}
               />

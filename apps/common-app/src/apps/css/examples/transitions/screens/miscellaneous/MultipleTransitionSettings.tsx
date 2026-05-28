@@ -26,7 +26,7 @@ import {
 import { colors, flex, radius, sizes, spacing } from '@/theme';
 
 const DEFAULT_TRANSITION_CONFIG: SelectableConfig<
-  Partial<CSSTransitionProperties<ViewStyle>>
+  ViewStyle & Partial<CSSTransitionProperties<ViewStyle>>
 > = {
   $transitionProperty: {
     maxNumberOfValues: 3,
@@ -108,8 +108,7 @@ export default function MultipleTransitionSettings() {
             <Animated.View
               style={[
                 styles.box,
-                transition as ViewStyle &
-                  Partial<CSSTransitionProperties<ViewStyle>>,
+                transition,
                 TRANSITION_STYLES[currentStyleIndex],
               ]}
             />

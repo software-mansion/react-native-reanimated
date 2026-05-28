@@ -345,7 +345,7 @@ function OtherColors() {
 type ExampleProps<TStyle extends object> = {
   style?: TStyle;
   labelTypes?: Array<LabelType>;
-  animation: CSSAnimationProperties<TStyle>;
+  animation: TStyle & CSSAnimationProperties<TStyle>;
   renderExample: (
     animation: TStyle & CSSAnimationProperties<TStyle>,
     style?: TStyle
@@ -363,10 +363,7 @@ function Example<TStyle extends object>({
       code={stringifyConfig(animation)}
       collapsedCode={stringifyConfig(animation.animationName, true)}
       {...cardProps}>
-      {renderExample(
-        animation as TStyle & CSSAnimationProperties<TStyle>,
-        style
-      )}
+      {renderExample(animation, style)}
     </VerticalExampleCard>
   );
 }

@@ -29,7 +29,7 @@ import {
 import { colors, flex, radius, sizes, spacing } from '@/theme';
 
 const DEFAULT_TRANSITION_CONFIG: SelectableConfig<
-  CSSTransitionProperties<ViewStyle>
+  ViewStyle & CSSTransitionProperties<ViewStyle>
 > = {
   transitionProperty: 'all',
   $transitionDuration: {
@@ -153,8 +153,7 @@ export default function ReversingShortening() {
                         <Animated.View
                           style={[
                             styles.box,
-                            transition as ViewStyle &
-                              CSSTransitionProperties<ViewStyle>,
+                            transition,
                             exampleTransitionStyles[currentStyleIndex],
                           ]}
                         />

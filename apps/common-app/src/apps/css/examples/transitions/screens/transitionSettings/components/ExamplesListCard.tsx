@@ -205,7 +205,7 @@ const Example = memo(function Example({
               transitionProperty: 'all',
               ...transitionProperties,
               ...rest,
-            } as ViewStyle & CSSTransitionProperties<ViewStyle>,
+            },
             currentTransitionStyle
           )}
         </View>
