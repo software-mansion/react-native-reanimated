@@ -11,8 +11,8 @@ import type { PredefinedTimingFunction, StepsModifier } from '../easing/types';
 import type {
   CSSAnimationKeyframes,
   CSSAnimationProp,
+  CSSConfigProp,
   CSSKeyframesRule,
-  CSSStyleProp,
   CSSTransitionProp,
   Repeat,
   TimeUnit,
@@ -49,7 +49,7 @@ export const isTransitionProp = (key: string): key is CSSTransitionProp =>
 export const isStepsModifier = (value: string): value is StepsModifier =>
   VALID_STEPS_MODIFIERS_SET.has(value);
 
-export const isCSSStyleProp = (key: string): key is CSSStyleProp =>
+export const isCSSConfigProp = (key: string): key is CSSConfigProp =>
   isTransitionProp(key) || isAnimationProp(key);
 
 export const isTimeUnit = (value: unknown): value is TimeUnit =>

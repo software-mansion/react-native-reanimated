@@ -27,7 +27,5 @@ export type {
   CSSTransitionSettings,
   CSSTransitionShorthand,
   CSSTransitionTimingFunction,
-  NativePseudoSelectorKey,
   PseudoSelectorKey,
-  WebPseudoSelectorKey,
 } from './types';
