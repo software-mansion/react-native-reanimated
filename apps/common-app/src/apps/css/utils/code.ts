@@ -1,3 +1,5 @@
+import type { UnknownRecord } from '@/types';
+
 export function isValidPropertyName(propertyName: string): boolean {
   const validPropertyNamePattern = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
   return validPropertyNamePattern.test(propertyName);
@@ -48,9 +50,9 @@ const stringifyConfigObject = <T extends object>(
     throw new Error('Object nesting is too deep');
   }
 
-  const object: Record<string, unknown> = (
+  const object: UnknownRecord = (
     'cssRules' in inputObject ? inputObject.cssRules : inputObject
-  ) as Record<string, unknown>;
+  ) as UnknownRecord;
 
   const formatValue = (
     key: string,
@@ -119,7 +121,7 @@ export const getCodeWithOverrides = <C extends object, O extends object>(
 ): string => {
   const propertyOverrides: Record<string, Array<unknown>> = {};
   const excludeSet = new Set(excludeKeys);
-  const sharedConfigRecord = sharedConfig as Record<string, unknown>;
+  const sharedConfigRecord = sharedConfig as UnknownRecord;
 
   const isQuoted = (value: unknown): value is string =>
     typeof value === 'string' && value[0] === '"' && value.slice(-1) === '"';
@@ -140,7 +142,7 @@ export const getCodeWithOverrides = <C extends object, O extends object>(
   };
 
   for (const item of overrides) {
-    const itemRecord = item as Record<string, unknown>;
+    const itemRecord = item as UnknownRecord;
     for (const key in item) {
       if (!excludeSet.has(key)) {
         propertyOverrides[key] ??= [];

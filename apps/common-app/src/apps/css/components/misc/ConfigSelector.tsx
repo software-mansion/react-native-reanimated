@@ -20,7 +20,7 @@ import {
 } from '@/apps/css/utils';
 import { useStableCallback } from '@/hooks';
 import { colors, flex, radius, sizes, spacing } from '@/theme';
-import type { UnpackArray } from '@/types';
+import type { UnknownRecord, UnpackArray } from '@/types';
 import { deepEqual, typedMemo } from '@/utils';
 
 import Text from '../core/Text';
@@ -32,7 +32,7 @@ import RotatableChevron from './RotatableChevron';
 const convertSelectableConfigToConfig = <T extends object>(
   config: SelectableConfig<T>
 ): T => {
-  const convertedConfig: Record<string, unknown> = {};
+  const convertedConfig: UnknownRecord = {};
 
   for (const [key, value] of Object.entries(config)) {
     if (key.startsWith('$')) {
@@ -127,7 +127,7 @@ type BlockProps<T extends object> = {
   objectKey: string;
   dropdownStyle?: StyleProp<ViewStyle>;
   blockStyle?: StyleProp<ViewStyle>;
-  onChange: (key: string, config: Record<string, unknown>) => void;
+  onChange: (key: string, config: UnknownRecord) => void;
 };
 
 const Block = typedMemo(function Block<T extends object>({
@@ -138,7 +138,7 @@ const Block = typedMemo(function Block<T extends object>({
   onChange,
 }: BlockProps<T>) {
   const stableOnChange = useStableCallback(
-    (key: string, newValue: Record<string, unknown>) => {
+    (key: string, newValue: UnknownRecord) => {
       onChange(objectKey, { ...config, [key]: newValue });
     }
   );
@@ -194,7 +194,7 @@ type CollapsibleBlockProps = {
   formattedKey: string;
   config: SelectableConfig<object>;
   objectKey: string;
-  onChange: (key: string, config: Record<string, unknown>) => void;
+  onChange: (key: string, config: UnknownRecord) => void;
 };
 
 const CollapsibleBlock = memo(function CollapsibleBlock({
@@ -243,7 +243,7 @@ type SelectableOptionRowProps<T> = {
   formattedKey: string;
   objectKey: string;
   dropdownStyle?: StyleProp<ViewStyle>;
-  onChange: (key: string, config: Record<string, unknown>) => void;
+  onChange: (key: string, config: UnknownRecord) => void;
 };
 
 const SelectableOptionRow = memo(function SelectableOptionRow<T>({
@@ -334,7 +334,7 @@ type MultipleOptionsOptionSelectorProps<T> = {
   dropdownStyle?: StyleProp<ViewStyle>;
   options: SelectableConfigPropertyOptions<T>;
   objectKey: string;
-  onChange: (key: string, config: Record<string, unknown>) => void;
+  onChange: (key: string, config: UnknownRecord) => void;
 };
 
 const MultipleOptionsOptionSelector = typedMemo(

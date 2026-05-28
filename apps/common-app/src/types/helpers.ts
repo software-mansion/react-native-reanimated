@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
 
+export type UnknownRecord = Record<string, unknown>;
+
 export type AnyFunction = (...args: Array<any>) => any;
 
 export type Transforms = ViewStyle['transform'];
