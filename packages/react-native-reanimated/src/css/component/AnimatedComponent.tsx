@@ -109,10 +109,6 @@ export default class AnimatedComponent<
   }
 
   _setComponentRef = (ref: Component | HTMLElement) => {
-    // `forwardedRef` is injected dynamically by the createAnimatedComponent
-    // wrapper and isn't declared on `AnimatedComponentProps` (it can be any
-    // ref shape — function, RefObject, or `AnimatedRef`), so we read it
-    // through a narrow cast rather than via the generic constraint.
     const forwardedRef = this.props.forwardedRef as
       | ((ref: Component | HTMLElement) => void)
       | { current: Component | HTMLElement | null }
@@ -158,11 +154,6 @@ export default class AnimatedComponent<
   };
 
   _updateStyles(props: P) {
-    // `props.style` is `unknown` because `P` is generic and subclasses pass
-    // incompatible prop shapes (the legacy `AnimatedComponent` uses
-    // `NestedArray<StyleProps>` here, with an `overflow: 'scroll'` value not
-    // present in `PlainStyle`). Cast to `StyleProp<CSSStyle>` — the widest
-    // shape `flatten` consumes — at the call site.
     this._cssStyle =
       StyleSheet.flatten(props.style as StyleProp<CSSStyle>) ?? {};
   }
