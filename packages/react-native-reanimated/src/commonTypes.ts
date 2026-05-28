@@ -11,7 +11,7 @@ import type {
 } from 'react-native';
 import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 
-import type { AnyRecord, Maybe } from './common';
+import type { Maybe } from './common';
 import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
 import type { EasingFunctionFactory } from './Easing';
 import type { AnimatedStyleHandle, DefaultStyle } from './hook/commonTypes';
@@ -507,7 +507,7 @@ export type InternalHostInstance = Partial<
     >;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getScrollableNode: () => any;
-    __internalInstanceHandle: AnyRecord;
+    __internalInstanceHandle: Record<string, unknown>;
   }
 >;
 

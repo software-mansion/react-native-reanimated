@@ -209,6 +209,18 @@ class SerializableError : public Serializable {
   const std::optional<std::string> stack_;
 };
 
+class SerializableRegExp : public Serializable {
+ public:
+  SerializableRegExp(const std::string &pattern, const std::string &flags)
+      : Serializable(ValueType::RegExpType), pattern_(pattern), flags_(flags) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  const std::string pattern_;
+  const std::string flags_;
+};
+
 class SerializableHostObject : public Serializable {
  public:
   SerializableHostObject(jsi::Runtime &, const std::shared_ptr<jsi::HostObject> &hostObject)
@@ -379,7 +391,7 @@ class SerializableBigInt : public Serializable {
  protected:
   /**
    * This member is used only when the BigInt fits into int64_t range.
-  */
+   */
   std::optional<int64_t> fastValue_{};
   std::string slowValue_{};
 };

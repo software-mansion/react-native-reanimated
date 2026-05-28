@@ -86,6 +86,8 @@ std::shared_ptr<Serializable> extractSerializable(
       return extractSerializableOrThrow<Shareable>(rt, value, errorMessage);
     case Serializable::ValueType::ErrorType:
       return extractSerializableOrThrow<SerializableError>(rt, value, errorMessage);
+    case Serializable::ValueType::RegExpType:
+      return extractSerializableOrThrow<SerializableRegExp>(rt, value, errorMessage);
     default:
       throw std::runtime_error("[Worklets] Invalid expected type provided to extractSerializable.");
   }

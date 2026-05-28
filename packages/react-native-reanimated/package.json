@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "4.4.0-main",
+  "version": "4.5.0-main",
   "description": "More powerful alternative to Animated library for React Native.",
   "keywords": [
     "react-native",
@@ -34,7 +34,7 @@
     "type:check:strict": "yarn type:check:strict:src && yarn type:check:strict:app",
     "type:check:strict:src": "yarn tsc --noEmit --customConditions react-native-strict-api",
     "type:check:strict:app": "yarn workspace common-app type:check:strict",
-    "build": "yarn workspace react-native-worklets build && yarn set-version && bob build",
+    "build": "yarn workspace react-native-worklets build && yarn set-version && yarn run --top-level bob build",
     "prepack": "yarn build",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
     "tree-shake:check:web": "yarn is-tree-shakable --resolution web",
@@ -100,7 +100,7 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "0.81 - 0.85",
+    "react-native": "0.83 - 0.86",
     "react-native-worklets": "*"
   },
   "devDependencies": {
@@ -133,26 +133,11 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.85.2",
-    "react-native-builder-bob": "0.40.13",
     "react-native-svg": "15.15.4",
     "react-native-web": "0.21.1",
     "react-native-worklets": "workspace:*",
     "react-test-renderer": "19.2.3",
     "typescript": "5.9.3"
-  },
-  "react-native-builder-bob": {
-    "source": "src",
-    "output": "lib",
-    "targets": [
-      [
-        "module",
-        {
-          "esm": false,
-          "jsxRuntime": "automatic"
-        }
-      ],
-      "typescript"
-    ]
   },
   "codegenConfig": {
     "name": "rnreanimated",

@@ -58,6 +58,7 @@ const config = {
         theme: { customCss: require.resolve('./src/css/index.css') },
       }),
     ],
+    require.resolve('@swmansion/t-rex-ui/preset'),
   ],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */

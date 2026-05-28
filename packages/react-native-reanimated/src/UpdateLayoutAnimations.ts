@@ -59,6 +59,7 @@ export let updateLayoutAnimations: (
   sharedTransitionTag?: string
 ) => void;
 
+// is-tree-shakable-suppress
 if (SHOULD_BE_USE_WEB) {
   updateLayoutAnimations = () => {
     // no-op

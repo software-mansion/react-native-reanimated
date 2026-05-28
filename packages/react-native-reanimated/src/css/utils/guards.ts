@@ -20,6 +20,7 @@ import type {
 
 const ANIMATION_PROPS_SET = new Set<string>(ANIMATION_PROPS);
 const TRANSITION_PROPS_SET = new Set<string>(TRANSITION_PROPS);
+// is-tree-shakable-suppress
 const VALID_STEPS_MODIFIERS_SET = new Set<string>(VALID_STEPS_MODIFIERS);
 
 const VALID_PREDEFINED_TIMING_FUNCTIONS_SET = new Set<string>(

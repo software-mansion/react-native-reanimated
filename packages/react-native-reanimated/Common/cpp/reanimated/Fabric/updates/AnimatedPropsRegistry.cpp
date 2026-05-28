@@ -1,6 +1,9 @@
 #include <cxxreact/ReactNativeVersion.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
+#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/Tools/FeatureFlags.h>
+
+#include <react/debug/react_native_assert.h>
 
 #include <memory>
 #include <utility>
@@ -14,9 +17,9 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
 }
 
 void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operations, const double timestamp) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   auto operationsArray = operations.asObject(rt).asArray(rt);
 
-  std::lock_guard<std::mutex> lock{mutex_};
   for (size_t i = 0, length = operationsArray.size(rt); i < length; ++i) {
     auto item = operationsArray.getValueAtIndex(rt, i).asObject(rt);
     auto shadowNodeWrapper = item.getProperty(rt, "shadowNodeWrapper");
@@ -42,7 +45,7 @@ jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(
     jsi::Runtime &rt,
     const double timestamp,
     const double cleanupTimestamp) {
-  std::lock_guard<std::mutex> lock{mutex_};
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   removeUpdatesOlderThanTimestamp(cleanupTimestamp);
 
   std::vector<std::pair<Tag, std::reference_wrapper<const folly::dynamic>>> updates;

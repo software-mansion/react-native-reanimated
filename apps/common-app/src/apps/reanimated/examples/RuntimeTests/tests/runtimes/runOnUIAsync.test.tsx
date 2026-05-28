@@ -134,7 +134,7 @@ describe('runOnUIAsync', () => {
       await waitForNotification(FAIL_NOTIFICATION);
       expect(reason).toBe('test error');
     });
-  } else {
+  } else if (__DEV__) {
     test('throws when scheduling on UI Runtime to UI Runtime without worklets bundle mode enabled', async () => {
       scheduleOnUI(() => {
         'worklet';
@@ -153,7 +153,7 @@ describe('runOnUIAsync', () => {
 
       await waitForNotification(FAIL_NOTIFICATION);
       expect(reason).toInclude(
-        '`runOnUIAsync` can only be called on the RN Runtime'
+        '[Worklets] runOnUIAsync cannot be called on Worklet Runtimes outside of the Bundle Mode.'
       );
     });
 
@@ -175,7 +175,7 @@ describe('runOnUIAsync', () => {
 
       await waitForNotification(FAIL_NOTIFICATION);
       expect(reason).toInclude(
-        '`runOnUIAsync` can only be called on the RN Runtime'
+        '[Worklets] runOnUIAsync cannot be called on Worklet Runtimes outside of the Bundle Mode.'
       );
     });
   }

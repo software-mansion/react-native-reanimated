@@ -1,84 +1,41 @@
 #include <reanimated/Fabric/updates/OperationsLoop.h>
-
-#include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
-#include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
-
-#include <worklets/Compat/StableApi.h>
 
 #include <utility>
 
 namespace reanimated {
 
-using namespace worklets;
-
 OperationsLoop::OperationsLoop(
     const std::shared_ptr<worklets::UIScheduler> &uiScheduler,
     const RequestRenderFunction &requestRender,
     const GetAnimationTimestampFunction &getTimestamp,
-    const std::shared_ptr<css::CSSAnimationsRegistry> &cssAnimationsRegistry,
-    const std::shared_ptr<css::CSSTransitionsRegistry> &cssTransitionsRegistry,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager)
     : uiScheduler_(uiScheduler),
       requestRender_(requestRender),
       getTimestamp_(getTimestamp),
-      cssAnimationsRegistry_(cssAnimationsRegistry),
-      cssTransitionsRegistry_(cssTransitionsRegistry),
       updatesRegistryManager_(updatesRegistryManager) {}
 
 double OperationsLoop::resolveTimestamp() {
-  if (running_) {
-    return currentTimestamp_;
-  }
-  currentTimestamp_ = getTimestamp_();
-  return currentTimestamp_;
-}
-
-void OperationsLoop::run() {
-  if (running_) {
-    return;
-  }
-  running_ = true;
-
-  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this()]() {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-    strongThis->requestRender_([weakThis](double /*timestampMs*/) {
-      if (auto strongThis = weakThis.lock()) {
-        strongThis->onRender();
-      }
-    });
-  });
-}
-
-void OperationsLoop::clearShouldUpdateCssAnimations() {
-  shouldUpdateCssAnimations_ = false;
-}
-
-bool OperationsLoop::hasPendingUpdates() const {
-  return cssAnimationsRegistry_->hasUpdates() || cssTransitionsRegistry_->hasUpdates()
-#ifdef ANDROID
-      || updatesRegistryManager_->hasPropsToRevert()
-#endif // ANDROID
-      ;
-}
-
-void OperationsLoop::onRender() {
-  currentTimestamp_ = getTimestamp_();
-
-  shouldUpdateCssAnimations_ = true;
-  if (!hasPendingUpdates()) {
-    running_ = false;
-    return;
+  // Fast path: cache hit is lock-free.
+  if (const double cached = currentTimestamp_.load(std::memory_order_acquire); cached > 0) {
+    return cached;
   }
 
-  requestRender_([weakThis = weak_from_this()](double /*timestampMs*/) {
-    if (auto strongThis = weakThis.lock()) {
-      strongThis->onRender();
-    }
-  });
+  // Slow path: try to win the cache fill. If someone else already filled it, use theirs.
+  const double fresh = getTimestamp_();
+  double expected = 0;
+  if (!currentTimestamp_.compare_exchange_strong(expected, fresh, std::memory_order_acq_rel)) {
+    return expected;
+  }
+
+  // We filled the cache - make sure a frame is scheduled to invalidate it.
+  maybeScheduleFrame();
+  return fresh;
+}
+
+bool OperationsLoop::hasOngoingOperations() const {
+  std::lock_guard<std::mutex> lock(queueMutex_);
+  return !scheduledOperations_.empty() || !activeOps_.empty() || !delayedOps_.empty();
 }
 
 void OperationsLoop::schedule(std::shared_ptr<LoopOperation> operation, double startTimestamp) {
@@ -87,6 +44,14 @@ void OperationsLoop::schedule(std::shared_ptr<LoopOperation> operation, double s
 
 void OperationsLoop::remove(const std::shared_ptr<LoopOperation> &operation) {
   enqueue({operation, std::nullopt});
+}
+
+void OperationsLoop::update() {
+  auto [operations, timestamp] = beginFrame();
+  applyScheduledOperations(std::move(operations), timestamp);
+  activateDelayedOperations(timestamp);
+  updateActiveOperations(timestamp);
+  endFrame();
 }
 
 void OperationsLoop::enqueue(ScheduledOperation operation) {
@@ -117,14 +82,6 @@ void OperationsLoop::maybeScheduleFrame() {
   });
 }
 
-void OperationsLoop::update() {
-  auto [operations, timestamp] = beginFrame();
-  applyScheduledOperations(std::move(operations), timestamp);
-  activateDelayedOperations(timestamp);
-  updateActiveOperations(timestamp);
-  endFrame();
-}
-
 std::pair<std::vector<OperationsLoop::ScheduledOperation>, double> OperationsLoop::beginFrame() {
   const double freshTimestamp = getTimestamp_();
 
@@ -137,6 +94,8 @@ std::pair<std::vector<OperationsLoop::ScheduledOperation>, double> OperationsLoo
     frameRequested_.store(false, std::memory_order_release);
   }
 
+  currentTimestamp_.store(freshTimestamp, std::memory_order_release);
+
   return {std::move(drained), freshTimestamp};
 }
 
@@ -144,37 +103,31 @@ void OperationsLoop::endFrame() {
   // activeOps_ / delayedOps_ are touched only on the UI thread, so we can read them lock-free.
   // We don't check the scheduledOperations_ queue: enqueue() schedules its own frame, so any
   // pushes that arrived during update() have already requested a frame on their own.
-  if (!activeOps_.empty() || !delayedOps_.empty()) {
+  const bool hasOngoingOperations = !activeOps_.empty() || !delayedOps_.empty();
+
+  currentTimestamp_.store(0, std::memory_order_release);
+
+  if (hasOngoingOperations) {
     maybeScheduleFrame();
   }
 }
 
 void OperationsLoop::applyScheduledOperations(std::vector<ScheduledOperation> operations, double timestamp) {
   for (auto &op : operations) {
-    // Remove from prior placement. delayedLookup_ tells us where: if it's
-    // there, the op is delayed and we extract the tree node (so we can reuse
-    // it below); otherwise we just erase it from the active operations set.
-    std::set<DelayedEntry>::node_type node;
+    // Remove any prior scheduling for this operation.
+    activeOps_.erase(op.operation);
     if (auto it = delayedLookup_.find(op.operation); it != delayedLookup_.end()) {
-      node = delayedOps_.extract(it->second);
+      delayedOps_.erase(it->second);
       delayedLookup_.erase(it);
-    } else {
-      activeOps_.erase(op.operation);
     }
 
-    // Skip if the operation is scheduled for removal.
-    if (op.insertAt == std::nullopt) {
+    if (!op.insertAt) {
       continue;
     }
 
-    const double insertAt = op.insertAt.value();
+    const double insertAt = *op.insertAt;
     if (insertAt <= timestamp) {
       activeOps_.insert(std::move(op.operation));
-    } else if (node) {
-      // Reuse the extracted node
-      node.value().activateAt = insertAt;
-      auto it = delayedOps_.insert(std::move(node)).position;
-      delayedLookup_.emplace(std::move(op.operation), it);
     } else {
       auto it = delayedOps_.insert({insertAt, op.operation}).first;
       delayedLookup_.emplace(std::move(op.operation), it);
@@ -192,7 +145,8 @@ void OperationsLoop::activateDelayedOperations(double timestamp) {
 }
 
 void OperationsLoop::updateActiveOperations(double timestamp) {
-  std::erase_if(activeOps_, [&](auto &op) { return !op->update(timestamp); });
+  auto lock = updatesRegistryManager_->lock();
+  std::erase_if(activeOps_, [&](auto &op) { return !op->update(timestamp, *this); });
 }
 
 } // namespace reanimated
