@@ -32,8 +32,7 @@ export type AnimatedComponentProps = UnknownRecord & {
 // private/protected ones when possible (when changes from this repo are merged
 // to the main one)
 export default class AnimatedComponent<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  P extends Record<string, any> = AnimatedComponentProps,
+  P extends UnknownRecord = AnimatedComponentProps,
   S extends object = UnknownRecord,
 >
   extends Component<P, S>
@@ -110,7 +109,13 @@ export default class AnimatedComponent<
   }
 
   _setComponentRef = (ref: Component | HTMLElement) => {
-    const forwardedRef = this.props.forwardedRef;
+    // `forwardedRef` is injected dynamically by the createAnimatedComponent
+    // wrapper and isn't declared on every subclass' props, so we read it
+    // through a narrow cast rather than via the generic constraint.
+    const forwardedRef = this.props.forwardedRef as
+      | ((ref: Component | HTMLElement) => void)
+      | { current: Component | HTMLElement | null }
+      | undefined;
     // Forward to user ref prop (if one has been specified)
     if (typeof forwardedRef === 'function') {
       // Handle function-based refs. String-based refs are handled as functions.
@@ -152,7 +157,8 @@ export default class AnimatedComponent<
   };
 
   _updateStyles(props: P) {
-    this._cssStyle = StyleSheet.flatten(props.style) ?? {};
+    this._cssStyle =
+      StyleSheet.flatten(props.style as StyleProp<CSSStyle>) ?? {};
   }
 
   componentDidMount() {
@@ -219,7 +225,9 @@ export default class AnimatedComponent<
       <ChildComponent
         {...(props ?? this.props)}
         {...platformProps}
-        style={filterNonCSSStyleProps(props?.style ?? this.props.style)}
+        style={filterNonCSSStyleProps(
+          (props?.style ?? this.props.style) as StyleProp<CSSStyle>
+        )}
         // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
         // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
         ref={this._setComponentRef as (ref: Component) => void}

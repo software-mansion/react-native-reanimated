@@ -507,8 +507,7 @@ export type InternalHostInstance = Partial<
     >;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getScrollableNode: () => any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    __internalInstanceHandle: Record<string, any>;
+    __internalInstanceHandle: Record<string, unknown>;
   }
 >;
 
