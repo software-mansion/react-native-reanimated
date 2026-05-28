@@ -154,8 +154,9 @@ export default class AnimatedComponent<
   };
 
   _updateStyles(props: P) {
-    this._cssStyle =
-      StyleSheet.flatten(props.style as StyleProp<CSSStyle>) ?? {};
+    this._cssStyle = (StyleSheet.flatten(
+      props.style as StyleProp<PlainStyle>
+    ) ?? {}) as CSSStyle;
   }
 
   componentDidMount() {
