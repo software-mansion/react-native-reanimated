@@ -1,7 +1,7 @@
 'use strict';
 import type { StyleProp } from 'react-native';
 
-import type { AnyRecord, PlainStyle } from '../../common';
+import type { PlainStyle } from '../../common';
 import type { CSSAnimationProperties } from './animation';
 import type { CSSTransitionProperties } from './transition';
 
@@ -18,7 +18,7 @@ type PickStyleProps<P> = Pick<
   }[keyof P]
 >;
 
-export type CSSStyle<S extends AnyRecord = PlainStyle> = S &
+export type CSSStyle<S extends object = PlainStyle> = S &
   Partial<CSSAnimationProperties<S>> &
   Partial<CSSTransitionProperties<S>>;
 

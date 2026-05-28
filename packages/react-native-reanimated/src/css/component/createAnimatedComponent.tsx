@@ -3,7 +3,6 @@ import type { ComponentRef, ComponentType, ReactNode, Ref } from 'react';
 import type React from 'react';
 import type { FlatList, FlatListProps } from 'react-native';
 
-import type { AnyRecord } from '../../common';
 import type { InitialComponentProps } from '../../createAnimatedComponent/commonTypes';
 import type { AnimatedProps } from '../../helperTypes';
 import type { AnimatedRef } from '../../hook';
@@ -12,7 +11,7 @@ import type { AnimatedComponentProps } from './AnimatedComponent';
 import AnimatedComponentImpl from './AnimatedComponent';
 
 type AnimatedComponentType<
-  Props extends AnyRecord = object,
+  Props extends object = object,
   Instance = unknown,
 > = (
   props: Omit<CSSProps<Props>, 'ref'> & {
