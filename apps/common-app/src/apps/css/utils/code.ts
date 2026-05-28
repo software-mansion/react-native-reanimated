@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
-import type { AnyRecord } from '@/types';
 
 export function isValidPropertyName(propertyName: string): boolean {
   const validPropertyNamePattern = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
@@ -44,7 +43,8 @@ export const formatLeafValue = (
 
 export const MAX_NOT_WRAPPED_LENGTH = 48;
 
-const stringifyConfigObject = <T extends AnyRecord>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const stringifyConfigObject = <T extends Record<string, any>>(
   object: T,
   dense = false,
   depth = 0
@@ -107,7 +107,8 @@ const stringifyConfigObject = <T extends AnyRecord>(
     .join(',\n')}\n${currentTab}}`;
 };
 
-export const stringifyConfig = <T extends AnyRecord>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const stringifyConfig = <T extends Record<string, any>>(
   object: 'none' | T,
   dense = false,
   depth = 0
@@ -117,12 +118,17 @@ export const stringifyConfig = <T extends AnyRecord>(
     : stringifyConfigObject(object, dense, depth);
 };
 
-export const getCodeWithOverrides = <C extends AnyRecord, O extends AnyRecord>(
+export const getCodeWithOverrides = <
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  C extends Record<string, any>,
+  O extends object,
+>(
   sharedConfig: C,
   overrides: Array<O> = [],
   excludeKeys: Array<string> = []
 ): string => {
-  const propertyOverrides: AnyRecord = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const propertyOverrides: Record<string, any> = {};
   const excludeSet = new Set(excludeKeys);
 
   const isQuoted = (value: unknown) =>

@@ -24,14 +24,15 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { radius, spacing } from '@/theme';
-import type { AnyRecord } from '@/types';
 import { IS_ANDROID } from '@/utils';
 
 const filterPaddingAndMarginProps = (
   style: ViewStyle
 ): [ViewStyle, ViewStyle] => {
-  const paddingAndMargin: AnyRecord = {};
-  const rest: AnyRecord = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const paddingAndMargin: Record<string, any> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rest: Record<string, any> = {};
 
   for (const key in style) {
     const k = key as keyof ViewStyle;
