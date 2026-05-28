@@ -444,6 +444,7 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
       }
       // parent->children.erase(parent->children.begin() + actualIndex);
       parent->removeChild(potentialExitingRoot);
+      lightNodes_.erase(potentialExitingRoot->current.tag);
       LOG(INFO) << "@@@ Postponed remove and delete: tag=" << potentialExitingRoot->current.tag
                 << " parentTag=" << parent->current.tag << " index=" << actualIndex << " parentChildren=[" << childTags
                 << "]";
