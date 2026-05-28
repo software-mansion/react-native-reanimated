@@ -58,11 +58,15 @@ struct Snapshot {
 
 typedef enum class ExitingState : std::uint8_t {
   UNDEFINED = 1,
-  WAITING = 2,
-  ANIMATING = 3,
-  DEAD = 4,
-  DELETED = 5,
-  CANDIDATE = 6,
+  /**
+   * RN requested removal but Reanimated suppressed the Remove mutation. Reanimated needs to decide whether to
+   * play an exit animation or remove and delete the node.
+   */
+  TRIAGE = 2,
+  WAITING = 3,
+  ANIMATING = 4,
+  DEAD = 5,
+  DELETED = 6,
 } ExitingState;
 
 struct MutationNode;

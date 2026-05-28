@@ -139,32 +139,6 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
 
   for (const auto &mutation : mutations) {
     maybeUpdateWindowDimensions(mutation);
-    const char *typeName = "Unknown";
-    Tag logTag = 0;
-    switch (mutation.type) {
-      case ShadowViewMutation::Create:
-        typeName = "Create";
-        logTag = mutation.newChildShadowView.tag;
-        break;
-      case ShadowViewMutation::Delete:
-        typeName = "Delete";
-        logTag = mutation.oldChildShadowView.tag;
-        break;
-      case ShadowViewMutation::Insert:
-        typeName = "Insert";
-        logTag = mutation.newChildShadowView.tag;
-        break;
-      case ShadowViewMutation::Remove:
-        typeName = "Remove";
-        logTag = mutation.oldChildShadowView.tag;
-        break;
-      case ShadowViewMutation::Update:
-        typeName = "Update";
-        logTag = mutation.newChildShadowView.tag;
-        break;
-    }
-    LOG(INFO) << "@@@mutation " << typeName << " tag=" << logTag << " parentTag=" << mutation.parentTag
-              << " index=" << mutation.index;
     switch (mutation.type) {
       case ShadowViewMutation::Update: {
         auto &node = lightNodes_[mutation.newChildShadowView.tag];
@@ -192,8 +166,6 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         if (layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
           layout_.push_back(node);
         } else {
-          LOG(INFO) << "@@@emit Update tag=" << tag << " parentTag=" << mutation.parentTag
-                    << " index=" << mutation.index;
           outputMutations.push_back(mutation);
         }
         break;
@@ -204,8 +176,6 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         react_native_assert(!lightNodes_.contains(mutation.newChildShadowView.tag) && "LightNode already exists");
 
         lightNodes_[mutation.newChildShadowView.tag] = node;
-        LOG(INFO) << "@@@emit Create tag=" << mutation.newChildShadowView.tag << " parentTag=" << mutation.parentTag
-                  << " index=" << mutation.index;
         outputMutations.push_back(mutation);
         break;
       }
@@ -235,30 +205,19 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
               childTags += "(exiting)";
             }
           }
-          LOG(INFO) << "@@@Insert index shifted by exiting children: tag " << mutation.newChildShadowView.tag
-                    << " under parent " << mutation.parentTag << " rnIndex=" << mutation.index
-                    << " actualIndex=" << actualIndex
-                    << " exitingBefore=" << parent->countExitingChildrenBeforeIndex(mutation.index) << " children=["
-                    << childTags << "]";
         }
 
         parent->children.insert(parent->children.begin() + actualIndex, node);
         node->parent = parent;
         const auto tag = mutation.newChildShadowView.tag;
         if (moved.contains(tag) && layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
-          LOG(INFO) << "@@@emit Insert(moved/layout) tag=" << tag << " parentTag=" << mutation.parentTag
-                    << " actualIndex=" << actualIndex;
           outputMutations.push_back(
               ShadowViewMutation::InsertMutation(mutation.parentTag, node->previous, actualIndex));
         } else if (layoutAnimationsManager_->hasLayoutAnimation(tag, ENTERING)) {
           entering_.push_back(node);
-          LOG(INFO) << "@@@emit Insert(entering) tag=" << tag << " parentTag=" << mutation.parentTag
-                    << " actualIndex=" << actualIndex;
           outputMutations.push_back(
               ShadowViewMutation::InsertMutation(mutation.parentTag, mutation.newChildShadowView, actualIndex));
         } else {
-          LOG(INFO) << "@@@emit Insert tag=" << tag << " parentTag=" << mutation.parentTag
-                    << " actualIndex=" << actualIndex;
           outputMutations.push_back(
               ShadowViewMutation::InsertMutation(mutation.parentTag, mutation.newChildShadowView, actualIndex));
         }
@@ -270,6 +229,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         const auto parentTag = mutation.parentTag;
         const auto &parent = lightNodes_[parentTag];
         const auto actualIndex = mutation.index + parent->countExitingChildrenBeforeIndex(mutation.index);
+
         if (parent->children[actualIndex]->current.tag != mutation.oldChildShadowView.tag) {
           std::string childTags;
           for (std::size_t i = 0; i < parent->children.size(); i++) {
@@ -281,7 +241,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
               childTags += "(exiting)";
             }
           }
-          LOG(WARNING) << "@@@Remove mutation index mismatch: expected tag " << mutation.oldChildShadowView.tag
+          LOG(WARNING) << "Remove mutation index mismatch: expected tag " << mutation.oldChildShadowView.tag
                        << " at actualIndex " << actualIndex << " under parent tag " << parentTag << ", but found tag "
                        << parent->children[actualIndex]->current.tag << " (rnIndex=" << mutation.index
                        << "); children=[" << childTags << "]"
@@ -293,12 +253,9 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
 
         if (deleted.contains(tag) && !deleted.contains(parentTag)) {
           potentialExitingRoots_.push_back(node);
-          node->exitingState = ExitingState::CANDIDATE;
-          LOG(INFO) << "@@@PotentialExitingRoot. Not sending remove mutation yet. tag=" << tag;
+          node->exitingState = ExitingState::TRIAGE;
         } else if (!deleted.contains(tag)) {
-          // removing to change parent
-          LOG(INFO) << "@@@emit Remove(reparent) tag=" << tag << " parentTag=" << parentTag
-                    << " actualIndex=" << actualIndex;
+          // reparenting
           outputMutations.push_back(ShadowViewMutation::RemoveMutation(parentTag, node->current, actualIndex));
           parent->children.erase(parent->children.begin() + actualIndex);
         }
@@ -423,17 +380,10 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
           childTags += "(exiting)";
         }
       }
-      // parent->children.erase(parent->children.begin() + actualIndex);
       parent->removeChild(potentialExitingRoot);
       lightNodes_.erase(potentialExitingRoot->current.tag);
-      LOG(INFO) << "@@@ Postponed remove and delete: tag=" << potentialExitingRoot->current.tag
-                << " parentTag=" << parent->current.tag << " index=" << actualIndex << " parentChildren=[" << childTags
-                << "]";
-      LOG(INFO) << "@@@emit Remove(handleRemovals) tag=" << potentialExitingRoot->current.tag
-                << " parentTag=" << parent->current.tag << " actualIndex=" << actualIndex;
       outputMutations.push_back(
           ShadowViewMutation::RemoveMutation(parent->current.tag, potentialExitingRoot->current, actualIndex));
-      LOG(INFO) << "@@@emit Delete(handleRemovals) tag=" << potentialExitingRoot->current.tag;
       outputMutations.push_back(ShadowViewMutation::DeleteMutation(potentialExitingRoot->current));
     }
   }
@@ -528,10 +478,7 @@ void LayoutAnimationsProxy_Experimental::endExitingAnimationsRecursively(
 
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
-  LOG(INFO) << "@@@emit Remove(endExitingAnimations) tag=" << node->current.tag << " parentTag=" << parent->current.tag
-            << " index=" << index;
   outputMutations.push_back(ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, index));
-  LOG(INFO) << "@@@emit Delete(endExitingAnimations) tag=" << node->current.tag;
   outputMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
 }
 
