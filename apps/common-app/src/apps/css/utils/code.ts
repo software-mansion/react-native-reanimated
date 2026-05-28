@@ -18,6 +18,13 @@ export const isLeafValue = (value: unknown): boolean =>
   'normalize' in value ||
   'normalizedKeyframes' in value;
 
+const isObjectRecord = (value: unknown): value is UnknownRecord =>
+  typeof value === 'object' &&
+  value !== null &&
+  !Array.isArray(value) &&
+  !('normalize' in value) &&
+  !('normalizedKeyframes' in value);
+
 export const formatLeafValue = (
   value: unknown,
   nextTab = '',
@@ -41,8 +48,8 @@ export const formatLeafValue = (
 
 export const MAX_NOT_WRAPPED_LENGTH = 48;
 
-const stringifyConfigObject = <T extends object>(
-  inputObject: T,
+const stringifyConfigObject = (
+  inputObject: UnknownRecord,
   dense = false,
   depth = 0
 ): string => {
@@ -50,9 +57,9 @@ const stringifyConfigObject = <T extends object>(
     throw new Error('Object nesting is too deep');
   }
 
-  const object: UnknownRecord = (
-    'cssRules' in inputObject ? inputObject.cssRules : inputObject
-  ) as UnknownRecord;
+  const object = isObjectRecord(inputObject.cssRules)
+    ? inputObject.cssRules
+    : inputObject;
 
   const formatValue = (
     key: string,
@@ -63,18 +70,23 @@ const stringifyConfigObject = <T extends object>(
     const nextTab = '  '.repeat(currentDepth);
 
     if (key === 'animationName') {
-      return Array.isArray(value) && value.length > 0
-        ? `[\n${nextTab}  ${value
-            .map((item: object) =>
-              stringifyConfigObject(item, makeDense, depth + 2)
-            )
-            .join(`,\n${nextTab}  `)}\n${nextTab}]`
-        : stringifyConfigObject(value as object, makeDense, currentDepth);
+      if (Array.isArray(value) && value.length > 0) {
+        return `[\n${nextTab}  ${value
+          .map((item) =>
+            isObjectRecord(item)
+              ? stringifyConfigObject(item, makeDense, depth + 2)
+              : formatLeafValue(item, nextTab, makeDense)
+          )
+          .join(`,\n${nextTab}  `)}\n${nextTab}]`;
+      }
+      return isObjectRecord(value)
+        ? stringifyConfigObject(value, makeDense, currentDepth)
+        : formatLeafValue(value, nextTab, makeDense);
     }
 
-    return isLeafValue(value)
-      ? formatLeafValue(value, nextTab, makeDense)
-      : stringifyConfigObject(value as object, makeDense, currentDepth);
+    return isObjectRecord(value)
+      ? stringifyConfigObject(value, makeDense, currentDepth)
+      : formatLeafValue(value, nextTab, makeDense);
   };
 
   const formatLine = (
@@ -104,14 +116,17 @@ const stringifyConfigObject = <T extends object>(
     .join(',\n')}\n${currentTab}}`;
 };
 
-export const stringifyConfig = <T extends object>(
-  object: 'none' | T,
+export const stringifyConfig = (
+  object: unknown,
   dense = false,
   depth = 0
 ): string => {
-  return object === 'none'
-    ? 'none'
-    : stringifyConfigObject(object, dense, depth);
+  if (object === 'none') {
+    return 'none';
+  }
+  return isObjectRecord(object)
+    ? stringifyConfigObject(object, dense, depth)
+    : formatLeafValue(object, '  '.repeat(depth), dense);
 };
 
 export const getCodeWithOverrides = <C extends object, O extends object>(
@@ -119,9 +134,14 @@ export const getCodeWithOverrides = <C extends object, O extends object>(
   overrides: Array<O> = [],
   excludeKeys: Array<string> = []
 ): string => {
+  // The generic constraint accepts any object shape from callers; treat it
+  // as an indexable record once at the boundary so the dynamic prop reads
+  // inside don't each need their own cast.
+  const config = sharedConfig as UnknownRecord;
+  const items = overrides as Array<UnknownRecord>;
+
   const propertyOverrides: Record<string, Array<unknown>> = {};
   const excludeSet = new Set(excludeKeys);
-  const sharedConfigRecord = sharedConfig as UnknownRecord;
 
   const isQuoted = (value: unknown): value is string =>
     typeof value === 'string' && value[0] === '"' && value.slice(-1) === '"';
@@ -141,31 +161,24 @@ export const getCodeWithOverrides = <C extends object, O extends object>(
     return parseOverrideValue(value);
   };
 
-  for (const item of overrides) {
-    const itemRecord = item as UnknownRecord;
+  for (const item of items) {
     for (const key in item) {
       if (!excludeSet.has(key)) {
         propertyOverrides[key] ??= [];
-        propertyOverrides[key].push(parseOverride(itemRecord[key]));
+        propertyOverrides[key].push(parseOverride(item[key]));
       }
     }
   }
 
   return (
     '{\n  ' +
-    [
-      ...new Set([
-        ...Object.keys(sharedConfig),
-        ...Object.keys(propertyOverrides),
-      ]),
-    ]
+    [...new Set([...Object.keys(config), ...Object.keys(propertyOverrides)])]
       .map((key) => {
-        const value =
-          sharedConfigRecord[key] ?? propertyOverrides[key]?.[0] ?? '';
+        const value = config[key] ?? propertyOverrides[key]?.[0] ?? '';
 
         let parsedValue;
         if (key === 'animationName') {
-          parsedValue = stringifyConfig(value as 'none' | object, false, 0);
+          parsedValue = stringifyConfig(value, false, 0);
         } else if (isLeafValue(value)) {
           const formatLine = (makeDense: boolean) =>
             `${key}: ${formatLeafValue(value, '', makeDense)}`;
