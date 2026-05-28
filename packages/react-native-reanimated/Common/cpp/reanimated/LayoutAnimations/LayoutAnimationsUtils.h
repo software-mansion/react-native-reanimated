@@ -111,7 +111,7 @@ struct LightNode {
     return -1;
   }
 
-  int countExitingChildrenBeforeIndex(int index) const {
+  int countExitingChildrenAffectingIndex(int index) const {
     react_native_assert(index >= 0 && "index must be non-negative");
     int remainingNonExitingChildrenToCheck = index;
     int exitingCount = 0;

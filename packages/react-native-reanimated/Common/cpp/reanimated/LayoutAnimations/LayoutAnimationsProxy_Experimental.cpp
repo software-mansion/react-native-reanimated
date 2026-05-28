@@ -181,9 +181,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
       }
       case ShadowViewMutation::Delete: {
         const auto deletedTag = mutation.oldChildShadowView.tag;
-        const bool isPotentialExitingRoot = std::ranges::any_of(
-            potentialExitingRoots_, [deletedTag](const auto &node) { return node->current.tag == deletedTag; });
-        if (!isPotentialExitingRoot) {
+        if (lightNodes_[deletedTag]->exitingState != ExitingState::TRIAGE) {
           lightNodes_.erase(deletedTag);
         }
         break;
@@ -192,21 +190,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         transferConfigFromNativeID(mutation.newChildShadowView.props->nativeId, mutation.newChildShadowView.tag);
         auto &node = lightNodes_[mutation.newChildShadowView.tag];
         auto &parent = lightNodes_[mutation.parentTag];
-        const auto actualIndex = mutation.index + parent->countExitingChildrenBeforeIndex(mutation.index);
-
-        if (parent->countExitingChildrenBeforeIndex(mutation.index) > 0) {
-          std::string childTags;
-          for (std::size_t i = 0; i < parent->children.size(); i++) {
-            if (i > 0) {
-              childTags += ", ";
-            }
-            childTags += std::to_string(parent->children[i]->current.tag);
-            if (parent->children[i]->exitingState != ExitingState::UNDEFINED) {
-              childTags += "(exiting)";
-            }
-          }
-        }
-
+        const auto actualIndex = mutation.index + parent->countExitingChildrenAffectingIndex(mutation.index);
         parent->children.insert(parent->children.begin() + actualIndex, node);
         node->parent = parent;
         const auto tag = mutation.newChildShadowView.tag;
@@ -228,7 +212,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         const auto tag = node->current.tag;
         const auto parentTag = mutation.parentTag;
         const auto &parent = lightNodes_[parentTag];
-        const auto actualIndex = mutation.index + parent->countExitingChildrenBeforeIndex(mutation.index);
+        const auto actualIndex = mutation.index + parent->countExitingChildrenAffectingIndex(mutation.index);
 
         if (parent->children[actualIndex]->current.tag != mutation.oldChildShadowView.tag) {
           std::string childTags;
@@ -245,7 +229,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
                        << " at actualIndex " << actualIndex << " under parent tag " << parentTag << ", but found tag "
                        << parent->children[actualIndex]->current.tag << " (rnIndex=" << mutation.index
                        << "); children=[" << childTags << "]"
-                       << " count=" << parent->countExitingChildrenBeforeIndex(mutation.index);
+                       << " count=" << parent->countExitingChildrenAffectingIndex(mutation.index);
         }
         react_native_assert(
             parent->children[actualIndex]->current.tag == mutation.oldChildShadowView.tag &&
@@ -359,9 +343,10 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
     };
 
     if (startExitingAnimationsRecursively(potentialExitingRoot, outputMutations, config)) {
-      auto parentOfNewExitingRoot = potentialExitingRoot->parent.lock();
-      react_native_assert(parentOfNewExitingRoot && "Parent node is nullptr");
-      if (potentialExitingRoot->exitingState == UNDEFINED) {
+      auto parentOfPotentialExitingRoot = potentialExitingRoot->parent.lock();
+      react_native_assert(parentOfPotentialExitingRoot && "Parent node is nullptr");
+      if (potentialExitingRoot->exitingState == UNDEFINED ||
+          potentialExitingRoot->exitingState == ExitingState::TRIAGE) {
         potentialExitingRoot->exitingState = WAITING;
       }
     } else {
@@ -370,16 +355,6 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
       react_native_assert(parent && "Parent node is nullptr");
       auto actualIndex = parent->findChildIndexByTag(potentialExitingRoot->current.tag);
       react_native_assert(actualIndex != -1 && "actualIndex == -1");
-      std::string childTags;
-      for (std::size_t i = 0; i < parent->children.size(); i++) {
-        if (i > 0) {
-          childTags += ", ";
-        }
-        childTags += std::to_string(parent->children[i]->current.tag);
-        if (parent->children[i]->exitingState != ExitingState::UNDEFINED) {
-          childTags += "(exiting)";
-        }
-      }
       parent->removeChild(potentialExitingRoot);
       lightNodes_.erase(potentialExitingRoot->current.tag);
       outputMutations.push_back(
