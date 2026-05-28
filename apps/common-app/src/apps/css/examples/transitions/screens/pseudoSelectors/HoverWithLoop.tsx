@@ -53,7 +53,6 @@ transitionDuration: ['1500ms', '200ms'],`}>
                     ':hover': [{ scale: 1.2 }],
                     default: [{ scale: 1 }],
                   },
-                  transitionDelay: '0ms',
                   transitionDuration: ['1500ms', '200ms'],
                   transitionProperty: ['backgroundColor', 'transform'],
                   transitionTimingFunction: ['linear', 'ease-in-out'],

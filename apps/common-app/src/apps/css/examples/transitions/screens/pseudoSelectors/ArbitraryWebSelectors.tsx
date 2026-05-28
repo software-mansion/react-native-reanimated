@@ -22,7 +22,6 @@ export default function ArbitraryWebSelectors() {
           description="Keys that aren't one of the five built-in selectors are passed through to the web layer as raw CSS pseudo-classes. On native they're ignored, so these examples only animate on web."
           title="Arbitrary CSS pseudo-classes (web only)">
           <VerticalExampleCard
-            collapsedCode={`':nth-child(odd)': colors.primaryDark`}
             description=":nth-child(odd) targets every other element. Each row receives the same style block; only those at odd DOM positions take the highlighted background."
             title=":nth-child(odd)"
             code={`<Animated.View
@@ -33,7 +32,11 @@ export default function ArbitraryWebSelectors() {
     },
     transitionDuration: '200ms',
   }}
-/>`}>
+/>`}
+            collapsedCode={`backgroundColor: {
+  default: colors.primaryLight,
+  ':nth-child(odd)': colors.primaryDark,
+},`}>
             <View style={styles.list}>
               {[0, 1, 2, 3, 4].map((i) => (
                 <Animated.View
@@ -66,8 +69,11 @@ export default function ArbitraryWebSelectors() {
     transitionDuration: '200ms',
   }}
 />`}
-            collapsedCode={`':first-child': colors.primary,
-':last-child': colors.primaryDark`}>
+            collapsedCode={`backgroundColor: {
+  default: colors.primaryLight,
+  ':first-child': colors.primary,
+  ':last-child': colors.primaryDark,
+},`}>
             <View style={styles.list}>
               {[0, 1, 2, 3, 4].map((i) => (
                 <Animated.View
@@ -89,7 +95,6 @@ export default function ArbitraryWebSelectors() {
           </VerticalExampleCard>
 
           <VerticalExampleCard
-            collapsedCode={`':nth-child(3n)': colors.primary`}
             description=":nth-child(3n) targets every third element."
             title=":nth-child(3n)"
             code={`<Animated.View
@@ -100,7 +105,11 @@ export default function ArbitraryWebSelectors() {
     },
     transitionDuration: '200ms',
   }}
-/>`}>
+/>`}
+            collapsedCode={`backgroundColor: {
+  default: colors.primaryLight,
+  ':nth-child(3n)': colors.primary,
+},`}>
             <View style={styles.list}>
               {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                 <Animated.View
@@ -121,7 +130,6 @@ export default function ArbitraryWebSelectors() {
           </VerticalExampleCard>
 
           <VerticalExampleCard
-            collapsedCode={`':placeholder-shown': borderWidth 3`}
             description=":placeholder-shown fires while the input has no value (placeholder visible). Type to see the border collapse."
             title=":placeholder-shown"
             code={`<AnimatedTextInput
@@ -134,7 +142,11 @@ export default function ArbitraryWebSelectors() {
     },
     transitionDuration: '200ms',
   }}
-/>`}>
+/>`}
+            collapsedCode={`borderWidth: {
+  default: 1,
+  ':placeholder-shown': 3,
+},`}>
             <AnimatedTextInput
               placeholder="Type something..."
               value={value}
@@ -153,7 +165,6 @@ export default function ArbitraryWebSelectors() {
           </VerticalExampleCard>
 
           <VerticalExampleCard
-            collapsedCode={`':focus-visible': borderColor primary`}
             description=":focus-visible fires only when focus arrives via the keyboard (Tab), not when the input is clicked. The built-in :focus would fire either way - this is a distinct selector that the web layer passes through unchanged."
             title=":focus-visible (keyboard focus only)"
             code={`<AnimatedTextInput
@@ -164,7 +175,11 @@ export default function ArbitraryWebSelectors() {
     },
     transitionDuration: '150ms',
   }}
-/>`}>
+/>`}
+            collapsedCode={`borderColor: {
+  default: colors.foreground3,
+  ':focus-visible': colors.primary,
+},`}>
             <AnimatedTextInput
               placeholder="Tab vs click to compare"
               style={[
