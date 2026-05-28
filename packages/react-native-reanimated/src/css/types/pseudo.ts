@@ -1,5 +1,4 @@
 'use strict';
-import type { PlainStyle } from '../../common';
 import type { CSSStyle } from './props';
 
 export type NativePseudoSelectorKey =
@@ -47,4 +46,4 @@ export type PseudoValue<T> = { default?: T } & {
   [K in PseudoSelectorKey]?: T;
 };
 
-export type CSSPseudoSelectorStyle = Partial<CSSStyle<PlainStyle>>;
+export type CSSPseudoSelectorStyle = Partial<CSSStyle>;
