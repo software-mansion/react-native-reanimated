@@ -1,4 +1,15 @@
 'use strict';
 export * from './configs/circle';
 export * from './configs/common';
+export * from './configs/ellipse';
+export * from './configs/image';
+export * from './configs/line';
+export * from './configs/linearGradient';
+export * from './configs/path';
+export * from './configs/pattern';
+export * from './configs/polygon';
+export * from './configs/polyline';
+export * from './configs/radialGradient';
+export * from './configs/rect';
+export * from './configs/text';
 export * from './registry';
