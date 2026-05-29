@@ -7,12 +7,7 @@
 namespace reanimated::css {
 
 struct CSSLengthArray : public CSSLengthVector<CSSLengthArray> {
-  static constexpr char kOpenBracket = '[';
-  static constexpr char kCloseBracket = ']';
-
-  // The default value is a single zero so that "to"-only animations
-  // interpolate from 0. An explicitly empty list is also accepted and treated
-  // as zero by `interpolate`.
+  // Defaults to a single zero; an empty list is also treated as zero.
   CSSLengthArray() : CSSLengthVector(std::vector<CSSLength>{CSSLength(0.0)}) {}
   using CSSLengthVector::CSSLengthVector;
 

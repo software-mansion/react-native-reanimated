@@ -11,8 +11,7 @@ CSSLengthArray CSSLengthArray::interpolate(
     double progress,
     const CSSLengthArray &to,
     const ResolvableValueInterpolationContext &context) const {
-  // An empty list behaves as a single zero so that interpolation between lists
-  // of different sizes (and against the default value) stays in bounds.
+  // Treat an empty list as a single zero.
   static const std::vector<CSSLength> fallback{CSSLength(0.0)};
   const auto &fromLengths = values.empty() ? fallback : values;
   const auto &toLengths = to.values.empty() ? fallback : to.values;

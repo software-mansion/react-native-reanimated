@@ -65,14 +65,14 @@ folly::dynamic CSSLengthVector<Derived>::toDynamic() const {
 template <typename Derived>
 std::string CSSLengthVector<Derived>::toString() const {
   std::stringstream ss;
-  ss << Derived::kOpenBracket;
+  ss << '[';
   for (size_t i = 0; i < values.size(); ++i) {
     if (i > 0) {
       ss << ", ";
     }
     ss << values[i].toString();
   }
-  ss << Derived::kCloseBracket;
+  ss << ']';
   return ss.str();
 }
 

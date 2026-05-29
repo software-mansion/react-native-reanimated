@@ -5,9 +5,6 @@
 namespace reanimated::css {
 
 struct SVGStrokeDashArray : public CSSLengthVector<SVGStrokeDashArray> {
-  static constexpr char kOpenBracket = '{';
-  static constexpr char kCloseBracket = '}';
-
   using CSSLengthVector::CSSLengthVector;
 
   SVGStrokeDashArray interpolate(
