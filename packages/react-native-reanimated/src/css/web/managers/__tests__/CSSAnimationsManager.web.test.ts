@@ -136,10 +136,6 @@ describe('CSSAnimationsManager (web)', () => {
       jest.useFakeTimers();
     });
 
-    afterEach(() => {
-      jest.useRealTimers();
-    });
-
     test('removes the keyframes from the stylesheet after the cleanup timeout', () => {
       manager.update(animation());
       const attachedName = element.style.animationName;

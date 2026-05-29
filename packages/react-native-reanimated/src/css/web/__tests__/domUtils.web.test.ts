@@ -61,9 +61,11 @@ describe('domUtils (web CSS animations stylesheet)', () => {
       const name = uniqueName();
       insertCSSAnimation(
         name,
-        '0% { opacity: 0; transform: translateX(0px) } ' +
-          '50% { opacity: 0.5; width: 20px } ' +
-          '100% { opacity: 1; transform: translateX(100px) }'
+        `
+          0% { opacity: 0; transform: translateX(0px) }
+          50% { opacity: 0.5; width: 20px }
+          100% { opacity: 1; transform: translateX(100px) }
+        `
       );
 
       const blocks = blocksOf(findRule(name)!);
