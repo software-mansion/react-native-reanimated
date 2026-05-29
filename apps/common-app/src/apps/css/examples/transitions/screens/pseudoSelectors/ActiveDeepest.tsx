@@ -25,7 +25,7 @@ export default function ActiveDeepest() {
     <Screen>
       <Scroll contentContainerStyle={styles.content} withBottomBarSpacing>
         <Section
-          description="':active-deepest' fires only on the bottommost element that captures the press, without propagating to ancestors. Useful when you want only the exact pressed element to react."
+          description="`:active-deepest` fires only on the bottommost element that captures the press, without propagating to ancestors. Useful when you want only the exact pressed element to react."
           title=":active-deepest">
           <VerticalExampleCard
             collapsedExampleHeight={180}
