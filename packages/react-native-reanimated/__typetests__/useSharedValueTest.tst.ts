@@ -1,52 +1,48 @@
+/* eslint-disable @typescript-eslint/unbound-method -- type-testing methods requires referencing them unbound */
 import { useRef } from 'react';
-import { describe, test } from 'tstyche';
+import { describe, expect, test } from 'tstyche';
 
+import type { SharedValue } from '..';
 import { useAnimatedStyle, useSharedValue, withTiming } from '..';
 
 describe('useSharedValue', () => {
-  test('reads via .value and .get()', () => {
-    const sv = useSharedValue(0);
-    const ref = useRef(0);
-    ref.current = sv.value;
-    ref.current = sv.get();
+  test('infers a SharedValue of the initial value type', () => {
+    expect(useSharedValue(0)).type.toBe<SharedValue<number>>();
+    expect(useSharedValue<number[]>([1, 2, 3])).type.toBe<
+      SharedValue<number[]>
+    >();
   });
 
-  test('writes via .value and .set()', () => {
+  test('.value and .get() are typed as the value', () => {
+    const sv = useSharedValue(0);
+    expect(sv.value).type.toBe<number>();
+    expect(sv.get()).type.toBe<number>();
+  });
+
+  test('.value is writable, including compound assignment', () => {
     const sv = useSharedValue(0);
     const ref = useRef(0);
     sv.value = ref.current;
-    sv.set(ref.current);
-  });
-
-  test('supports compound assignment and functional set', () => {
-    const sv = useSharedValue(0);
-    const ref = useRef(0);
     sv.value += ref.current;
-    sv.value -= ref.current;
-    sv.value *= ref.current;
-    sv.value /= ref.current;
-    sv.value %= ref.current;
-    sv.value **= ref.current;
-    sv.set((value) => value + ref.current);
   });
 
-  test('is usable with withTiming', () => {
+  test('.set accepts a value or an updater', () => {
     const sv = useSharedValue(0);
-    withTiming(sv.value);
-    withTiming(sv.get());
+    expect(sv.set).type.toBeCallableWith(0);
+    expect(sv.set).type.toBeCallableWith((value: number) => value + 1);
   });
 
-  test('is usable inside useAnimatedStyle', () => {
-    const sv = useSharedValue(0);
-    useAnimatedStyle(() => ({ width: sv.value, height: sv.value }));
-    useAnimatedStyle(() => ({ width: sv.get(), height: sv.get() }));
-  });
-
-  test('modify receives and returns the value', () => {
+  test('.modify accepts a modifier returning the value', () => {
     const sv = useSharedValue<number[]>([1, 2, 3]);
-    sv.modify((value) => {
-      'worklet';
-      return value;
-    });
+    expect(sv.modify).type.toBeCallableWith((value: number[]) => value);
+  });
+
+  test('.value is usable as an animation and style value', () => {
+    const sv = useSharedValue(0);
+    expect(withTiming).type.toBeCallableWith(sv.value);
+    expect(useAnimatedStyle).type.toBeCallableWith(() => ({
+      width: sv.value,
+      height: sv.get(),
+    }));
   });
 });

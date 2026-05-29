@@ -1,11 +1,20 @@
-import { describe, test } from 'tstyche';
+import { describe, expect, test } from 'tstyche';
 
+import type { DerivedValue } from '..';
 import { useDerivedValue, useSharedValue } from '..';
 
 describe('useDerivedValue', () => {
-  test('the returned value is readonly', () => {
+  test('infers a DerivedValue of the result type', () => {
+    const progress = useSharedValue(0);
+    expect(useDerivedValue(() => progress.value * 250)).type.toBe<
+      DerivedValue<number>
+    >();
+  });
+
+  test('value is readonly and typed as the result', () => {
     const progress = useSharedValue(0);
     const width = useDerivedValue(() => progress.value * 250);
+    expect(width.value).type.toBe<number>();
     // @ts-expect-error Cannot assign to 'value' because it is a read-only property
     width.value = 100;
   });
