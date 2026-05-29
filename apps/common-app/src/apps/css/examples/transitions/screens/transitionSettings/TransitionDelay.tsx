@@ -1,3 +1,4 @@
+import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type {
   CSSTransitionProperties,
@@ -36,7 +37,7 @@ export default function TransitionDelay() {
         },
       ]}
       renderExample={(
-        exampleConfig: CSSTransitionProperties,
+        exampleConfig: CSSTransitionProperties<ViewStyle>,
         style: StyleProps
       ) => (
         <View style={styles.wrapper}>
