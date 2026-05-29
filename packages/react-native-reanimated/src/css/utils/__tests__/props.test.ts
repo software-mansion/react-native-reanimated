@@ -20,6 +20,7 @@ describe(filterCSSAndStyleProperties, () => {
         expect.any(Object),
         null,
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -33,6 +34,7 @@ describe(filterCSSAndStyleProperties, () => {
         expect.any(Object),
         null,
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -46,6 +48,7 @@ describe(filterCSSAndStyleProperties, () => {
         expect.any(Object),
         null,
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -62,6 +65,7 @@ describe(filterCSSAndStyleProperties, () => {
         expect.any(Object),
         null,
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -87,6 +91,7 @@ describe(filterCSSAndStyleProperties, () => {
           null,
           null,
           {},
+          null,
         ]);
       });
     });
@@ -100,6 +105,7 @@ describe(filterCSSAndStyleProperties, () => {
         null,
         null,
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -116,12 +122,14 @@ describe(filterCSSAndStyleProperties, () => {
         style1,
         null,
         expect.any(Object),
+        null,
       ]);
       expect(filterCSSAndStyleProperties(style2)).toEqual([
         expect.any(Object),
         style2,
         null,
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -138,6 +146,7 @@ describe(filterCSSAndStyleProperties, () => {
         { transition: 'opacity 2s ease-in' },
         null,
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -157,6 +166,7 @@ describe(filterCSSAndStyleProperties, () => {
           expect.objectContaining({ [key]: value }),
           null,
           {},
+          null,
         ]);
       });
     });
@@ -187,6 +197,7 @@ describe(filterCSSAndStyleProperties, () => {
           },
         },
         { opacity: 1, backgroundColor: 'blue' },
+        null,
       ]);
     });
 
@@ -249,6 +260,7 @@ describe(filterCSSAndStyleProperties, () => {
           },
         },
         { opacity: 1, borderRadius: 8 },
+        null,
       ]);
     });
   });
@@ -467,7 +479,75 @@ describe(filterCSSAndStyleProperties, () => {
           width: 100,
           height: 100,
         },
+        null,
       ]);
+    });
+  });
+
+  describe('transition callbacks', () => {
+    test('returns null when no callback props are present', () => {
+      const style: CSSStyle = {
+        transitionProperty: 'opacity',
+        transitionDuration: 100,
+      };
+      expect(filterCSSAndStyleProperties(style)).toEqual([
+        null,
+        expect.any(Object),
+        null,
+        expect.any(Object),
+        null,
+      ]);
+    });
+
+    test('extracts callback props and keeps them out of the style object', () => {
+      const onTransitionEnd = jest.fn();
+      const onTransitionRun = jest.fn();
+      const style: CSSStyle = {
+        width: 100,
+        transitionProperty: 'opacity',
+        transitionDuration: 100,
+        onTransitionRun,
+        onTransitionEnd,
+      };
+
+      const [, transitionConfig, , filteredStyle, transitionCallbacks] =
+        filterCSSAndStyleProperties(style);
+
+      expect(transitionCallbacks).toEqual({ onTransitionRun, onTransitionEnd });
+      // Callbacks must not leak into the plain style nor the transition config.
+      expect(filteredStyle).toEqual({ width: 100 });
+      expect(transitionConfig).not.toHaveProperty('onTransitionRun');
+      expect(transitionConfig).not.toHaveProperty('onTransitionEnd');
+    });
+  });
+
+  describe('transition callbacks validation (dev)', () => {
+    beforeEach(() => {
+      (console.warn as jest.Mock).mockClear();
+    });
+
+    test('warns when transition callbacks are used without any transition props', () => {
+      filterCSSAndStyleProperties({ onTransitionEnd: jest.fn() } as CSSStyle);
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('onTransitionEnd')
+      );
+    });
+
+    test('does not warn when a transition is configured alongside callbacks', () => {
+      filterCSSAndStyleProperties({
+        transitionProperty: 'opacity',
+        transitionDuration: 100,
+        onTransitionEnd: jest.fn(),
+      } as CSSStyle);
+      expect(console.warn).not.toHaveBeenCalled();
+    });
+
+    test('does not warn when only the transition shorthand is provided', () => {
+      filterCSSAndStyleProperties({
+        transition: 'opacity 2s',
+        onTransitionEnd: jest.fn(),
+      } as CSSStyle);
+      expect(console.warn).not.toHaveBeenCalled();
     });
   });
 });

@@ -4,7 +4,10 @@ import type { StyleProp } from 'react-native';
 import type { PlainStyle } from '../../common';
 import type { CSSAnimationProperties } from './animation';
 import type { PseudoValue } from './pseudo';
-import type { CSSTransitionProperties } from './transition';
+import type {
+  CSSTransitionCallbacks,
+  CSSTransitionProperties,
+} from './transition';
 
 /*
   Style type properties (properties that extends StyleProp<ViewStyle>)
@@ -22,7 +25,8 @@ type PickStyleProps<P> = Pick<
 export type CSSStyle<S extends object = PlainStyle> = {
   [K in keyof S]: S[K] | PseudoValue<S[K]>;
 } & Partial<CSSAnimationProperties<S>> &
-  Partial<CSSTransitionProperties<S>>;
+  Partial<CSSTransitionProperties<S>> &
+  Partial<CSSTransitionCallbacks>;
 
 type StylePropsWithCSS<P extends object> = {
   [K in keyof PickStyleProps<P>]: P[K] extends StyleProp<infer U>
