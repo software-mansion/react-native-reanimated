@@ -1,74 +1,21 @@
 #include <reanimated/CSS/svg/values/CSSLengthArray.h>
 
 #include <algorithm>
-#include <sstream>
+#include <cmath>
+#include <utility>
+#include <vector>
 
 namespace reanimated::css {
-
-CSSLengthArray::CSSLengthArray(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  const auto &array = jsiValue.asObject(rt).asArray(rt);
-  const auto arraySize = array.size(rt);
-  lengths.reserve(arraySize);
-  for (size_t i = 0; i < arraySize; ++i) {
-    lengths.emplace_back(rt, array.getValueAtIndex(rt, i));
-  }
-  ensureLengthsNonempty();
-}
-
-CSSLengthArray::CSSLengthArray(const folly::dynamic &value) {
-  lengths.reserve(value.size());
-  for (const auto &item : value) {
-    lengths.emplace_back(item);
-  }
-  ensureLengthsNonempty();
-}
-
-bool CSSLengthArray::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  if (!jsiValue.isObject() || !jsiValue.asObject(rt).isArray(rt)) {
-    return false;
-  }
-  const auto &array = jsiValue.asObject(rt).asArray(rt);
-  for (size_t i = 0; i < array.size(rt); ++i) {
-    if (!CSSLength::canConstruct(rt, array.getValueAtIndex(rt, i))) {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool CSSLengthArray::canConstruct(const folly::dynamic &value) {
-  return value.isArray() &&
-      std::all_of(value.begin(), value.end(), [](const auto &item) { return CSSLength::canConstruct(item); });
-}
-
-folly::dynamic CSSLengthArray::toDynamic() const {
-  folly::dynamic array = folly::dynamic::array;
-  array.reserve(lengths.size());
-  for (const auto &length : lengths) {
-    array.push_back(length.toDynamic());
-  }
-  return array;
-}
-
-std::string CSSLengthArray::toString() const {
-  std::stringstream ss;
-  ss << "[";
-  for (const auto &length : lengths) {
-    ss << length.toString();
-    if (&length != &lengths.back()) {
-      ss << ", ";
-    }
-  }
-  ss << "]";
-  return ss.str();
-}
 
 CSSLengthArray CSSLengthArray::interpolate(
     double progress,
     const CSSLengthArray &to,
     const ResolvableValueInterpolationContext &context) const {
-  const auto &fromLengths = lengths;
-  const auto &toLengths = to.lengths;
+  // An empty list behaves as a single zero so that interpolation between lists
+  // of different sizes (and against the default value) stays in bounds.
+  static const std::vector<CSSLength> fallback{CSSLength(0.0)};
+  const auto &fromLengths = values.empty() ? fallback : values;
+  const auto &toLengths = to.values.empty() ? fallback : to.values;
 
   size_t fromSize = fromLengths.size();
   size_t toSize = toLengths.size();
@@ -89,10 +36,6 @@ CSSLengthArray CSSLengthArray::interpolate(
   return CSSLengthArray(std::move(result));
 }
 
-bool CSSLengthArray::operator==(const CSSLengthArray &other) const {
-  return lengths == other.lengths;
-}
-
 #ifndef NDEBUG
 
 std::ostream &operator<<(std::ostream &os, const CSSLengthArray &value) {
@@ -101,11 +44,5 @@ std::ostream &operator<<(std::ostream &os, const CSSLengthArray &value) {
 }
 
 #endif // NDEBUG
-
-void CSSLengthArray::ensureLengthsNonempty() {
-  if (lengths.empty()) {
-    lengths.emplace_back(0);
-  }
-}
 
 } // namespace reanimated::css

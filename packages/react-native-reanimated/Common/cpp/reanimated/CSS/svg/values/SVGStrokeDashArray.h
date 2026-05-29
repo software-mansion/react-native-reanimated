@@ -1,32 +1,19 @@
 #pragma once
 
-#include <reanimated/CSS/common/values/CSSLength.h>
-
-#include <numeric>
-#include <string>
-#include <vector>
+#include <reanimated/CSS/svg/values/CSSLengthVector.h>
 
 namespace reanimated::css {
 
-struct SVGStrokeDashArray : public CSSResolvableValue<SVGStrokeDashArray> {
-  std::vector<CSSLength> values;
+struct SVGStrokeDashArray : public CSSLengthVector<SVGStrokeDashArray> {
+  static constexpr char kOpenBracket = '{';
+  static constexpr char kCloseBracket = '}';
 
-  SVGStrokeDashArray();
-  explicit SVGStrokeDashArray(const std::vector<CSSLength> &values);
-  explicit SVGStrokeDashArray(jsi::Runtime &rt, const jsi::Value &jsiValue);
-  explicit SVGStrokeDashArray(const folly::dynamic &value);
+  using CSSLengthVector::CSSLengthVector;
 
-  static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);
-  static bool canConstruct(const folly::dynamic &value);
-
-  folly::dynamic toDynamic() const override;
-  std::string toString() const override;
   SVGStrokeDashArray interpolate(
       double progress,
       const SVGStrokeDashArray &to,
       const ResolvableValueInterpolationContext &context) const override;
-
-  bool operator==(const SVGStrokeDashArray &other) const;
 
 #ifndef NDEBUG
   friend std::ostream &operator<<(std::ostream &os, const SVGStrokeDashArray &strokeDashArray);
