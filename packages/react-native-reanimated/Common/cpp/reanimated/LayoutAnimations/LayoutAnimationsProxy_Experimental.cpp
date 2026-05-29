@@ -1,3 +1,4 @@
+#include <glog/logging.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
@@ -257,7 +258,12 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::progressLayoutAnima
   auto newProps = getComponentDescriptorForShadowView(layoutAnimation.finalView)
                       .cloneProps(propsParserContext, layoutAnimation.finalView.props, std::move(*rawProps));
   auto &updateMap = surfaceManager.getUpdateMap(layoutAnimation.finalView.surfaceId);
-  updateMap.insert_or_assign(tag, UpdateValues{newProps, Frame(uiRuntime_, newStyle)});
+  auto frame = Frame(uiRuntime_, newStyle);
+  if (sharedTransitionManager_->tagToName_.contains(tag)) {
+    LOG(INFO) << "@@ progressLayoutAnimation (TIME DRIVEN) containerTag=" << tag << " x=" << frame.x.value_or(0)
+              << " y=" << frame.y.value_or(0) << " w=" << frame.width.value_or(0) << " h=" << frame.height.value_or(0);
+  }
+  updateMap.insert_or_assign(tag, UpdateValues{newProps, frame});
 
   return layoutAnimation.finalView.surfaceId;
 }
@@ -832,6 +838,11 @@ void LayoutAnimationsProxy_Experimental::startSharedTransition(
     propsDiff.setProperty(uiRuntime, "windowWidth", window.width);
     propsDiff.setProperty(uiRuntime, "windowHeight", window.height);
 
+    LOG(INFO) << "@@@ startSharedTransition (TIME DRIVEN) containerTag=" << tag << " surfaceId=" << surfaceId
+              << " before=(" << before.layoutMetrics.frame.origin.x << "," << before.layoutMetrics.frame.origin.y << ","
+              << before.layoutMetrics.frame.size.width << "x" << before.layoutMetrics.frame.size.height << ")"
+              << " after=(" << after.layoutMetrics.frame.origin.x << "," << after.layoutMetrics.frame.origin.y << ","
+              << after.layoutMetrics.frame.size.width << "x" << after.layoutMetrics.frame.size.height << ")";
     strongThis->layoutAnimationsManager_->startLayoutAnimation(
         uiRuntime, tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION, propsDiff);
   });

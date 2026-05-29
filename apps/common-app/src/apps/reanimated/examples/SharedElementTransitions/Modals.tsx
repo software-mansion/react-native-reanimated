@@ -77,7 +77,7 @@ function Card({
 function Screen1({ navigation }: NativeStackScreenProps<ParamList, 'Screen1'>) {
   return (
     <Animated.ScrollView style={styles.flexOne}>
-      {[...Array(6)].map((_, i) => (
+      {[...Array(3)].map((_, i) => (
         <Card
           key={i}
           navigation={navigation}
@@ -172,7 +172,7 @@ export default function ModalsExample() {
   return (
     <Stack.Navigator
       screenOptions={{
-        presentation: 'transparentModal',
+        presentation: 'modal',
         headerShown: false,
         animation: 'fade',
       }}>
