@@ -40,7 +40,7 @@ export default function TransitionDuration() {
         },
       ]}
       renderExample={(
-        exampleConfig: ViewStyle & CSSTransitionProperties<ViewStyle>,
+        exampleConfig: CSSTransitionProperties<ViewStyle>,
         style: StyleProps
       ) => (
         <View style={styles.wrapper}>

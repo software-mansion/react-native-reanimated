@@ -113,7 +113,7 @@ export default function ChangingTransitionProperty() {
       ? transitionProperty.includes(propertyName)
       : transitionProperty === propertyName;
 
-  const transitionProperties: ViewStyle & CSSTransitionProperties<ViewStyle> = {
+  const transitionProperties: CSSTransitionProperties<ViewStyle> = {
     transitionProperty: transitionProperty as CSSTransitionProperty<ViewStyle>,
     ...transitionSettings,
   };

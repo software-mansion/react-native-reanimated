@@ -29,7 +29,7 @@ import {
 import { colors, flex, radius, sizes, spacing } from '@/theme';
 
 const DEFAULT_TRANSITION_CONFIG: SelectableConfig<
-  ViewStyle & CSSTransitionProperties<ViewStyle>
+  CSSTransitionProperties<ViewStyle>
 > = {
   transitionProperty: 'all',
   $transitionDuration: {

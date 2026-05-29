@@ -59,7 +59,7 @@ const SHARED_EXAMPLES: Array<{
 function renderExample({
   animation,
 }: {
-  animation: ViewStyle & CSSAnimationProperties<ViewStyle>;
+  animation: CSSAnimationProperties<ViewStyle>;
 }) {
   return (
     <Animated.View style={[styles.box, animation]}>

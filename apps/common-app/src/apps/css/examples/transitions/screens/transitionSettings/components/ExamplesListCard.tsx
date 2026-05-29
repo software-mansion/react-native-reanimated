@@ -67,7 +67,7 @@ type ExamplesListCardProps = {
   items: Array<ExampleItemProps>;
   displayStyleChanges: boolean;
   renderExample: (
-    transition: ViewStyle & CSSTransitionProperties<ViewStyle>,
+    transition: CSSTransitionProperties<ViewStyle>,
     style: StyleProps
   ) => JSX.Element;
 };
@@ -139,7 +139,7 @@ type ExampleProps = {
   item: ExampleItemProps;
   displayStyleChanges: boolean;
   renderExample: (
-    config: ViewStyle & CSSTransitionProperties<ViewStyle>,
+    config: CSSTransitionProperties<ViewStyle>,
     style: StyleProps
   ) => JSX.Element;
   ref: React.Ref<ExampleRef>;

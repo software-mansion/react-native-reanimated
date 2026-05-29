@@ -26,7 +26,7 @@ import {
 import { colors, flex, radius, sizes, spacing } from '@/theme';
 
 const DEFAULT_TRANSITION_CONFIG: SelectableConfig<
-  ViewStyle & Partial<CSSTransitionProperties<ViewStyle>>
+  CSSTransitionProperties<ViewStyle>
 > = {
   $transitionProperty: {
     maxNumberOfValues: 3,

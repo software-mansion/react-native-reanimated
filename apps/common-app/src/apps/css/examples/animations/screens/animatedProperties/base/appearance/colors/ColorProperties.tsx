@@ -345,9 +345,9 @@ function OtherColors() {
 type ExampleProps<TStyle extends object> = {
   style?: TStyle;
   labelTypes?: Array<LabelType>;
-  animation: TStyle & CSSAnimationProperties<TStyle>;
+  animation: CSSAnimationProperties<TStyle>;
   renderExample: (
-    animation: TStyle & CSSAnimationProperties<TStyle>,
+    animation: CSSAnimationProperties<TStyle>,
     style?: TStyle
   ) => JSX.Element;
 } & Omit<ExampleCardProps, 'code'>;

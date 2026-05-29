@@ -32,7 +32,7 @@ type ExampleScreenContentProps = {
   transitionStyles: Array<StyleProps>;
   displayStyleChanges?: boolean;
   renderExample: (
-    transition: ViewStyle & CSSTransitionProperties<ViewStyle>,
+    transition: CSSTransitionProperties<ViewStyle>,
     style: StyleProps
   ) => JSX.Element;
 };

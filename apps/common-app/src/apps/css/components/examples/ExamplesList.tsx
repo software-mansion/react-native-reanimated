@@ -75,19 +75,12 @@ type ExampleProps<TStyle extends object, TExampleProps> = {
   // inference - the keyframes literal is often narrow and would otherwise
   // hijack inference. `TStyle` is instead solved from `renderExample`'s
   // contextual flow (i.e. the component the user passes `animation` to).
-  //
-  // The return type is intersected with `TStyle` (rather than bare
-  // `CSSAnimationProperties`) so the animation fits the typed style slot of
-  // the component `renderExample` forwards it to. `TStyle`'s properties are
-  // all optional, so user-written callbacks like
-  // `() => ({ animationName, animationDuration: '1s' })` still typecheck
-  // against this without needing any cast in the callback body.
   buildAnimation: (
     props: TExampleProps
-  ) => NoInfer<TStyle> & CSSAnimationProperties<NoInfer<TStyle>>;
+  ) => CSSAnimationProperties<NoInfer<TStyle>>;
   renderExample: (
     props: Omit<TExampleProps, 'animation'> & {
-      animation: TStyle & CSSAnimationProperties<TStyle>;
+      animation: CSSAnimationProperties<TStyle>;
     }
   ) => JSX.Element;
 } & Omit<ExampleCardProps, 'code'> &

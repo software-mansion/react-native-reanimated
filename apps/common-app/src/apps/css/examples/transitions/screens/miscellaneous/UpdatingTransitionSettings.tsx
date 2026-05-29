@@ -58,7 +58,7 @@ const TRANSITION_STYLES: Array<StyleProps> = [
 
 export default function UpdatingTransitionSettings() {
   const [transitionProperties, setTransitionProperties] = useState<
-    ViewStyle & CSSTransitionProperties<ViewStyle>
+    CSSTransitionProperties<ViewStyle>
   >({
     transitionProperty: 'all',
     ...DEFAULT_SETTINGS,

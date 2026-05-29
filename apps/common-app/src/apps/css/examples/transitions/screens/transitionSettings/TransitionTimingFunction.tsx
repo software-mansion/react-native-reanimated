@@ -22,7 +22,7 @@ export default function TransitionTimingFunction() {
   ];
 
   const renderExample = (
-    exampleConfig: ViewStyle & CSSTransitionProperties<ViewStyle>,
+    exampleConfig: CSSTransitionProperties<ViewStyle>,
     style: StyleProps
   ) => (
     <View style={styles.outerWrapper}>
