@@ -521,33 +521,56 @@ describe(filterCSSAndStyleProperties, () => {
     });
   });
 
-  describe('transition callbacks validation (dev)', () => {
+  describe('transition callbacks validation', () => {
+    const globalWithDev = globalThis as unknown as { __DEV__: boolean };
+    const originalDev = globalWithDev.__DEV__;
+
     beforeEach(() => {
       (console.warn as jest.Mock).mockClear();
     });
-
-    test('warns when transition callbacks are used without any transition props', () => {
-      filterCSSAndStyleProperties({ onTransitionEnd: jest.fn() } as CSSStyle);
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining('onTransitionEnd')
-      );
+    afterEach(() => {
+      globalWithDev.__DEV__ = originalDev;
     });
 
-    test('does not warn when a transition is configured alongside callbacks', () => {
-      filterCSSAndStyleProperties({
-        transitionProperty: 'opacity',
-        transitionDuration: 100,
-        onTransitionEnd: jest.fn(),
-      } as CSSStyle);
-      expect(console.warn).not.toHaveBeenCalled();
+    describe('in development (__DEV__)', () => {
+      beforeEach(() => {
+        globalWithDev.__DEV__ = true;
+      });
+
+      test('warns when transition callbacks are used without any transition props', () => {
+        filterCSSAndStyleProperties({ onTransitionEnd: jest.fn() } as CSSStyle);
+        expect(console.warn).toHaveBeenCalledWith(
+          expect.stringContaining('onTransitionEnd')
+        );
+      });
+
+      test('does not warn when a transition is configured alongside callbacks', () => {
+        filterCSSAndStyleProperties({
+          transitionProperty: 'opacity',
+          transitionDuration: 100,
+          onTransitionEnd: jest.fn(),
+        } as CSSStyle);
+        expect(console.warn).not.toHaveBeenCalled();
+      });
+
+      test('does not warn when only the transition shorthand is provided', () => {
+        filterCSSAndStyleProperties({
+          transition: 'opacity 2s',
+          onTransitionEnd: jest.fn(),
+        } as CSSStyle);
+        expect(console.warn).not.toHaveBeenCalled();
+      });
     });
 
-    test('does not warn when only the transition shorthand is provided', () => {
-      filterCSSAndStyleProperties({
-        transition: 'opacity 2s',
-        onTransitionEnd: jest.fn(),
-      } as CSSStyle);
-      expect(console.warn).not.toHaveBeenCalled();
+    describe('in production (!__DEV__)', () => {
+      beforeEach(() => {
+        globalWithDev.__DEV__ = false;
+      });
+
+      test('skips validation entirely - never warns, even without transition props', () => {
+        filterCSSAndStyleProperties({ onTransitionEnd: jest.fn() } as CSSStyle);
+        expect(console.warn).not.toHaveBeenCalled();
+      });
     });
   });
 });
