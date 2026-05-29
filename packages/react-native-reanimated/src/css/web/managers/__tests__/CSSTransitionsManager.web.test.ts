@@ -15,11 +15,11 @@ const transition = (
   }) as CSSTransitionProperties;
 
 const transitionEvent = (
-  type: string,
+  eventType: string,
   propertyName: string,
   elapsedTime: number
 ): Event =>
-  Object.assign(new Event(type, { bubbles: true }), {
+  Object.assign(new Event(eventType, { bubbles: true }), {
     propertyName,
     elapsedTime,
   });
@@ -83,22 +83,20 @@ describe('CSSTransitionsManager (web)', () => {
   });
 
   describe('transition callbacks', () => {
-    test('attaches a DOM listener only while its callback is set', () => {
+    test('attaches a listener when its callback is set and detaches the same one when it is removed', () => {
       const addSpy = jest.spyOn(element, 'addEventListener');
       const removeSpy = jest.spyOn(element, 'removeEventListener');
 
       manager.update(transition(), { onTransitionEnd: jest.fn() });
-      expect(addSpy).toHaveBeenCalledWith(
-        'transitionend',
-        expect.any(Function)
-      );
+      const handler = addSpy.mock.calls.find(
+        (call) => call[0] === 'transitionend'
+      )?.[1];
+      expect(handler).toEqual(expect.any(Function));
 
-      // Callback removed on the next update -> listener detached.
+      // Removing the callback on the next update must detach that exact listener
+      // (removeEventListener only works with the same function reference).
       manager.update(transition(), {});
-      expect(removeSpy).toHaveBeenCalledWith(
-        'transitionend',
-        expect.any(Function)
-      );
+      expect(removeSpy).toHaveBeenCalledWith('transitionend', handler);
     });
 
     test('subscribes to the matching DOM event for each callback prop', () => {
@@ -165,7 +163,8 @@ describe('CSSTransitionsManager (web)', () => {
       expect(second).toHaveBeenCalledTimes(1);
     });
 
-    test('detaches all listeners on unmount cleanup', () => {
+    test('detaches the same listeners it attached on unmount cleanup', () => {
+      const addSpy = jest.spyOn(element, 'addEventListener');
       const removeSpy = jest.spyOn(element, 'removeEventListener');
 
       manager.update(transition(), {
@@ -174,14 +173,12 @@ describe('CSSTransitionsManager (web)', () => {
       });
       manager.unmountCleanup();
 
-      expect(removeSpy).toHaveBeenCalledWith(
-        'transitionstart',
-        expect.any(Function)
-      );
-      expect(removeSpy).toHaveBeenCalledWith(
-        'transitionend',
-        expect.any(Function)
-      );
+      for (const eventName of ['transitionstart', 'transitionend']) {
+        const handler = addSpy.mock.calls.find(
+          (call) => call[0] === eventName
+        )?.[1];
+        expect(removeSpy).toHaveBeenCalledWith(eventName, handler);
+      }
     });
   });
 });
