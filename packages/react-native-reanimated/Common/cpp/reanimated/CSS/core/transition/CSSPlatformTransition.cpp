@@ -3,6 +3,7 @@
 #include <reanimated/CSS/utils/reversingShortening.h>
 
 #include <utility>
+#include <vector>
 
 namespace reanimated::css {
 
