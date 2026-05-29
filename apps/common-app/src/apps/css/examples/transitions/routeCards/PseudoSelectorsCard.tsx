@@ -113,6 +113,9 @@ function Showcase() {
       return () => {
         clearInterval(interval);
         timeouts.forEach(clearTimeout);
+        // Rest in the default state while the screen isn't focused, so the card
+        // always renders its default look when not actively animating.
+        setPhase('default');
       };
     }, [])
   );
