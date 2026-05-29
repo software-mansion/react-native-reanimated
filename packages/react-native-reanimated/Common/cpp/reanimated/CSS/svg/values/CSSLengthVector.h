@@ -22,7 +22,7 @@ struct CSSLengthVector : public CSSResolvableValue<Derived> {
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
 
-  bool operator==(const Derived &other) const;
+  bool operator==(const CSSLengthVector &other) const;
 };
 
 } // namespace reanimated::css

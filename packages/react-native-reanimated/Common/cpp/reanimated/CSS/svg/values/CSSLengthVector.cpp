@@ -77,7 +77,7 @@ std::string CSSLengthVector<Derived>::toString() const {
 }
 
 template <typename Derived>
-bool CSSLengthVector<Derived>::operator==(const Derived &other) const {
+bool CSSLengthVector<Derived>::operator==(const CSSLengthVector &other) const {
   return values == other.values;
 }
 
