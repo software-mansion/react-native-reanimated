@@ -80,7 +80,7 @@ transitionDuration: ['250ms', '60ms']`}>
           </VerticalExampleCard>
 
           <VerticalExampleCard
-            description="Three pseudo-selectors driving three different properties on a text input. Hover lightens the background, focus thickens the border, active scales it down — each on its own timing."
+            description="Three pseudo-selectors driving three different properties on a text input. Hover darkens the background, focus thickens the border, active scales it down - each on its own timing."
             title="Three selectors, three properties"
             code={`<AnimatedTextInput
   style={{
