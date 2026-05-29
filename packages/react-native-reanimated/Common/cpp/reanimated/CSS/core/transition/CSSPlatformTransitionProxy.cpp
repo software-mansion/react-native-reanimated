@@ -60,8 +60,12 @@ CSSPlatformTransitionProxy::ProcessedConfig CSSPlatformTransitionProxy::processC
       if (valueIt != config.changedProperties.end()) {
         auto valueNode = config.changedProperties.extract(valueIt);
         result.platform.changedProperties.push_back(
-            CSSPlatformTransitionRawEntry{propertyName, std::move(valueNode.mapped()), settingsNode.mapped()});
+            CSSPlatformTransitionRawEntry{propertyName, std::move(valueNode.mapped()), settings});
       }
+      // Persist settings on the platform side regardless of whether a value diff
+      // is present, so a later dynamic run (pseudo-selector trigger) can drive
+      // the platform transition with the timing configured at registration.
+      result.platform.changedPropertiesSettings.insert(std::move(settingsNode));
     } else {
       // platform -> loop migration: cancel on platform.
       if (result.routing.platform.erase(propertyName) > 0) {

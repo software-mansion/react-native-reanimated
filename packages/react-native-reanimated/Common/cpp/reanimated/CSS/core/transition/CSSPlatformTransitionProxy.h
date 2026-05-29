@@ -38,6 +38,10 @@ struct CSSPlatformTransitionRawEntry {
 };
 
 struct CSSPlatformTransitionConfig {
+  // Settings for every routed property, persisted even when no value diff is
+  // present (e.g. pseudo-selector registration clears the value diffs and only
+  // configures timing up front; the diff arrives later via the dynamic run).
+  PropertiesSettingsMap changedPropertiesSettings;
   std::vector<CSSPlatformTransitionRawEntry> changedProperties;
   std::vector<std::string> removedProperties;
 };

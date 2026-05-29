@@ -28,4 +28,15 @@ PlatformValue parsePlatformValue(jsi::Runtime &rt, const std::string &propertyNa
   return PlatformValue{};
 }
 
+PlatformValue parsePlatformValue(const std::string &propertyName, const folly::dynamic &value) {
+  if (value.isNull()) {
+    const auto it = kDefaults.find(propertyName);
+    return it != kDefaults.end() ? it->second : PlatformValue{};
+  }
+  if (propertyName == "opacity") {
+    return value.isNumber() ? PlatformValue(value.asDouble()) : PlatformValue{};
+  }
+  return PlatformValue{};
+}
+
 } // namespace reanimated::css
