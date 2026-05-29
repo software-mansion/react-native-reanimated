@@ -111,13 +111,13 @@ describe('CSSTransitionsManager (web)', () => {
         onTransitionCancel: jest.fn(),
       });
 
-      for (const type of [
+      for (const eventName of [
         'transitionrun',
         'transitionstart',
         'transitionend',
         'transitioncancel',
       ]) {
-        expect(addSpy).toHaveBeenCalledWith(type, expect.any(Function));
+        expect(addSpy).toHaveBeenCalledWith(eventName, expect.any(Function));
       }
     });
 
@@ -156,7 +156,7 @@ describe('CSSTransitionsManager (web)', () => {
       manager.update(transition(), { onTransitionEnd: second });
 
       const endSubscriptions = addSpy.mock.calls.filter(
-        ([type]) => type === 'transitionend'
+        ([eventName]) => eventName === 'transitionend'
       );
       expect(endSubscriptions).toHaveLength(1);
 

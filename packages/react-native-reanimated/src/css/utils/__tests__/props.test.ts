@@ -523,13 +523,9 @@ describe(filterCSSAndStyleProperties, () => {
 
   describe('transition callbacks validation', () => {
     const globalWithDev = globalThis as unknown as { __DEV__: boolean };
-    const originalDev = globalWithDev.__DEV__;
 
     beforeEach(() => {
       (console.warn as jest.Mock).mockClear();
-    });
-    afterEach(() => {
-      globalWithDev.__DEV__ = originalDev;
     });
 
     describe('in development (__DEV__)', () => {
