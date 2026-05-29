@@ -23,6 +23,9 @@ using namespace facebook::react;
   REAPerformOperations _performOperations;
   NSMutableArray<NSNumber *> *_pendingReparentContainerTags;
   NSMutableArray<NSNumber *> *_pendingRestoreContainerTags;
+  NSMutableDictionary<NSNumber *, UIView *> *_surfaceRootByContainerTag;
+  UIView *_debugRedRectangle;
+  UIWindow *_overlayWindow;
 }
 
 - (READisplayLink *)getDisplayLink
@@ -62,6 +65,7 @@ using namespace facebook::react;
     _onAnimationCallbacks = [NSMutableArray new];
     _pendingReparentContainerTags = [NSMutableArray new];
     _pendingRestoreContainerTags = [NSMutableArray new];
+    _surfaceRootByContainerTag = [NSMutableDictionary new];
     _eventHandler = ^(id<RCTEvent> event) {
       // no-op
     };
@@ -202,7 +206,35 @@ using namespace facebook::react;
     return;
   }
   NSLog(@"@@@ willMountComponentsWithRootTag:%ld pending restore tags=%@", (long)rootTag, _pendingRestoreContainerTags);
-  // TODO: look up each tag in componentViewRegistry and reparent back to surface root.
+
+  // Real restore disabled while debugging. Just remove the debug red rectangle
+  // to confirm the cleanup path fires.
+  if (_debugRedRectangle != nil) {
+    [_debugRedRectangle removeFromSuperview];
+    _debugRedRectangle = nil;
+    NSLog(@"@@@ debug: removed red rectangle");
+  }
+
+  // RCTComponentViewRegistry *componentViewRegistry = _surfacePresenter.mountingManager.componentViewRegistry;
+  //
+  // for (NSNumber *tag in _pendingRestoreContainerTags) {
+  //   UIView *container = [componentViewRegistry findComponentViewWithTag:static_cast<Tag>(tag.integerValue)];
+  //   UIView *surfaceRoot = _surfaceRootByContainerTag[tag];
+  //   [_surfaceRootByContainerTag removeObjectForKey:tag];
+  //
+  //   if (container == nil || surfaceRoot == nil) {
+  //     NSLog(@"@@@ restore: tag=%@ container=%@ surfaceRoot=%@, skipping", tag, container, surfaceRoot);
+  //     continue;
+  //   }
+  //
+  //   // Reverse the compensating transform and move back so RN's Remove/Delete
+  //   // mutations (about to be processed) find the view under the surface root.
+  //   container.layer.transform = CATransform3DIdentity;
+  //   container.userInteractionEnabled = YES;
+  //   [surfaceRoot addSubview:container];
+  //   NSLog(@"@@@ restore: tag=%@ moved back to surface root", tag);
+  // }
+
   [_pendingRestoreContainerTags removeAllObjects];
 }
 
@@ -212,7 +244,65 @@ using namespace facebook::react;
     return;
   }
   NSLog(@"@@@ didMountComponentsWithRootTag:%ld pending reparent tags=%@", (long)rootTag, _pendingReparentContainerTags);
-  // TODO: look up each tag in componentViewRegistry and reparent to window.
+
+  // Real reparent disabled while debugging. Drop a red rectangle on the window
+  // so we can visually confirm something gets layered above the modal.
+  UIWindowScene *targetScene = nil;
+  for (UIScene *scene in UIApplication.sharedApplication.connectedScenes) {
+    if ([scene isKindOfClass:[UIWindowScene class]] && scene.activationState == UISceneActivationStateForegroundActive) {
+      targetScene = (UIWindowScene *)scene;
+      break;
+    }
+  }
+  if (targetScene == nil) {
+    NSLog(@"@@@ debug: no foreground active window scene");
+    [_pendingReparentContainerTags removeAllObjects];
+    return;
+  }
+  if (_overlayWindow == nil) {
+    _overlayWindow = [[UIWindow alloc] initWithWindowScene:targetScene];
+    _overlayWindow.windowLevel = UIWindowLevelAlert + 1;
+    _overlayWindow.backgroundColor = [UIColor clearColor];
+    _overlayWindow.userInteractionEnabled = NO;
+    _overlayWindow.rootViewController = [UIViewController new];
+    _overlayWindow.hidden = NO;
+    NSLog(@"@@@ debug: created overlay window level=%.1f frame=%@", _overlayWindow.windowLevel, NSStringFromCGRect(_overlayWindow.frame));
+  }
+  if (_debugRedRectangle == nil) {
+    _debugRedRectangle = [[UIView alloc] initWithFrame:CGRectMake(40, 100, 120, 120)];
+    _debugRedRectangle.backgroundColor = [UIColor redColor];
+    _debugRedRectangle.userInteractionEnabled = NO;
+  }
+  [_overlayWindow addSubview:_debugRedRectangle];
+  NSLog(@"@@@ debug: added red rectangle to overlay window subviews=%@", _overlayWindow.subviews);
+
+  // RCTComponentViewRegistry *componentViewRegistry = _surfacePresenter.mountingManager.componentViewRegistry;
+  //
+  // for (NSNumber *tag in _pendingReparentContainerTags) {
+  //   UIView *container = [componentViewRegistry findComponentViewWithTag:static_cast<Tag>(tag.integerValue)];
+  //   if (container == nil) {
+  //     NSLog(@"@@@ reparent: container tag=%@ not found in registry, skipping", tag);
+  //     continue;
+  //   }
+  //   UIView *surfaceRoot = container.superview;
+  //   UIWindow *windowForContainer = surfaceRoot.window;
+  //   if (surfaceRoot == nil || windowForContainer == nil) {
+  //     NSLog(@"@@@ reparent: container tag=%@ has no window (superview=%@, window=%@), skipping", tag, surfaceRoot, windowForContainer);
+  //     continue;
+  //   }
+  //
+  //   CGPoint surfaceOriginInWindow = [surfaceRoot convertPoint:CGPointZero toView:windowForContainer];
+  //   NSLog(
+  //       @"@@@ reparent: tag=%@ moving to window; surfaceOriginInWindow=(%.1f,%.1f)",
+  //       tag,
+  //       surfaceOriginInWindow.x,
+  //       surfaceOriginInWindow.y);
+  //   _surfaceRootByContainerTag[tag] = surfaceRoot;
+  //   [windowForContainer addSubview:container];
+  //   container.layer.transform = CATransform3DMakeTranslation(surfaceOriginInWindow.x, surfaceOriginInWindow.y, 0);
+  //   container.userInteractionEnabled = NO;
+  // }
+
   [_pendingReparentContainerTags removeAllObjects];
 }
 
