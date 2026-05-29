@@ -141,7 +141,7 @@ css::CSSRemoveTransitionFunction makeCSSRemoveTransition(REACSSPlatformTransitio
   };
 }
 
-ReparentSharedTransitionContainersToWindowFunction makeReparentSharedTransitionContainersToWindowFunction(
+QueueSharedTransitionContainersForReparentingFunction makeQueueSharedTransitionContainersForReparentingFunction(
     REANodesManager *nodesManager)
 {
   return [nodesManager](const std::vector<Tag> &containerTags) {
@@ -149,7 +149,7 @@ ReparentSharedTransitionContainersToWindowFunction makeReparentSharedTransitionC
     for (auto tag : containerTags) {
       [tags addObject:@(tag)];
     }
-    [nodesManager reparentSharedTransitionContainersToWindow:tags];
+    [nodesManager queueSharedTransitionContainersForReparenting:tags];
   };
 }
 
@@ -189,8 +189,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   auto forceScreenSnapshotFunction = makeForceScreenSnapshotFunction(nodesManager);
 
-  auto reparentSharedTransitionContainersToWindowFunction =
-      makeReparentSharedTransitionContainersToWindowFunction(nodesManager);
+  auto queueSharedTransitionContainersForReparentingFunction =
+      makeQueueSharedTransitionContainersForReparentingFunction(nodesManager);
 
   auto synchronouslyUpdateUIPropsFunction = makeSynchronouslyUpdateUIPropsFunction(nodesManager);
 
@@ -226,7 +226,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       forceScreenSnapshotFunction,
-      reparentSharedTransitionContainersToWindowFunction,
+      queueSharedTransitionContainersForReparentingFunction,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       registerSensorFunction,

@@ -61,7 +61,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
 
   mutable ForceScreenSnapshotFunction forceScreenSnapshot_;
 #ifdef __APPLE__
-  mutable ReparentSharedTransitionContainersToWindowFunction reparentSharedTransitionContainersToWindow_;
+  mutable QueueSharedTransitionContainersForReparentingFunction queueSharedTransitionContainersForReparenting_;
   mutable std::vector<Tag> containerTagsToReparent_;
 #endif
 
@@ -133,9 +133,9 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   void setForceScreenSnapshotFunction(ForceScreenSnapshotFunction forceScreenSnapshot) {
     forceScreenSnapshot_ = std::move(forceScreenSnapshot);
   }
-  void setReparentSharedTransitionContainersToWindowFunction(
-      ReparentSharedTransitionContainersToWindowFunction reparent) {
-    reparentSharedTransitionContainersToWindow_ = std::move(reparent);
+  void setQueueSharedTransitionContainersForReparentingFunction(
+      QueueSharedTransitionContainersForReparentingFunction reparent) {
+    queueSharedTransitionContainersForReparenting_ = std::move(reparent);
   }
 #endif
 

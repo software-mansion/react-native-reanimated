@@ -7,15 +7,21 @@
 #import <React/RCTComponentViewProtocol.h>
 #import <React/RCTComponentViewRegistry.h>
 #import <React/RCTMountingManager.h>
+#import <React/RCTSurfacePresenter.h>
+#import <React/RCTSurfacePresenterStub.h>
 #import <React/RCTUtils.h>
 
 using namespace facebook::react;
+
+@interface REANodesManager () <RCTSurfacePresenterObserver>
+@end
 
 @implementation REANodesManager {
   READisplayLink *_displayLink;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   REAEventHandler _eventHandler;
   REAPerformOperations _performOperations;
+  NSMutableArray<NSNumber *> *_pendingReparentContainerTags;
 }
 
 - (READisplayLink *)getDisplayLink
@@ -53,6 +59,7 @@ using namespace facebook::react;
 
   if ((self = [super init])) {
     _onAnimationCallbacks = [NSMutableArray new];
+    _pendingReparentContainerTags = [NSMutableArray new];
     _eventHandler = ^(id<RCTEvent> event) {
       // no-op
     };
@@ -158,9 +165,34 @@ using namespace facebook::react;
   }
 }
 
-- (void)reparentSharedTransitionContainersToWindow:(NSArray<NSNumber *> *)containerTags
+- (void)setSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter
 {
-  NSLog(@"@@@ reparentSharedTransitionContainersToWindow: %@", containerTags);
+  if (_surfacePresenter == surfacePresenter) {
+    return;
+  }
+  [_surfacePresenter removeObserver:self];
+  _surfacePresenter = surfacePresenter;
+  [_surfacePresenter addObserver:self];
+}
+
+- (void)queueSharedTransitionContainersForReparenting:(NSArray<NSNumber *> *)containerTags
+{
+  // Called from C++ at the end of pullTransaction. The UIViews don't exist yet —
+  // queue tags and process them once the mounting transaction has been applied.
+  [_pendingReparentContainerTags addObjectsFromArray:containerTags];
+  NSLog(@"@@@ queued reparent for tags: %@ (pending=%lu)", containerTags, (unsigned long)_pendingReparentContainerTags.count);
+}
+
+#pragma mark - RCTSurfacePresenterObserver
+
+- (void)didMountComponentsWithRootTag:(NSInteger)rootTag
+{
+  if (_pendingReparentContainerTags.count == 0) {
+    return;
+  }
+  NSLog(@"@@@ didMountComponentsWithRootTag:%ld pending reparent tags=%@", (long)rootTag, _pendingReparentContainerTags);
+  // TODO: look up each tag in componentViewRegistry and reparent to window.
+  [_pendingReparentContainerTags removeAllObjects];
 }
 
 - (void)synchronouslyUpdateUIProps:(ReactTag)viewTag props:(const folly::dynamic &)props

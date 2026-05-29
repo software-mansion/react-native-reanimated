@@ -100,8 +100,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   insertContainers(filteredMutations, rootChildCount, surfaceId);
 
 #ifdef __APPLE__
-  if (!containerTagsToReparent_.empty() && reparentSharedTransitionContainersToWindow_) {
-    reparentSharedTransitionContainersToWindow_(containerTagsToReparent_);
+  if (!containerTagsToReparent_.empty() && queueSharedTransitionContainersForReparenting_) {
+    queueSharedTransitionContainersForReparenting_(containerTagsToReparent_);
     containerTagsToReparent_.clear();
   }
 #endif

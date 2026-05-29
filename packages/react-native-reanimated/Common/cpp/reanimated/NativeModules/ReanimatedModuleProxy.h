@@ -252,7 +252,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
-  ReparentSharedTransitionContainersToWindowFunction reparentSharedTransitionContainersToWindow_;
+  QueueSharedTransitionContainersForReparentingFunction queueSharedTransitionContainersForReparenting_;
 #endif
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;

@@ -49,7 +49,7 @@ using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 
 using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
 
-using ReparentSharedTransitionContainersToWindowFunction = std::function<void(const std::vector<Tag> &containerTags)>;
+using QueueSharedTransitionContainersForReparentingFunction = std::function<void(const std::vector<Tag> &containerTags)>;
 
 using PlatformAttachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector, std::function<void(bool)>)>;
 using PlatformDetachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector)>;
@@ -61,7 +61,7 @@ struct PlatformDepMethodsHolder {
 #endif // ANDROID
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshotFunction;
-  ReparentSharedTransitionContainersToWindowFunction reparentSharedTransitionContainersToWindowFunction;
+  QueueSharedTransitionContainersForReparentingFunction queueSharedTransitionContainersForReparentingFunction;
 #endif
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
   GetAnimationTimestampFunction getAnimationTimestamp;
