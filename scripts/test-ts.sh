@@ -6,6 +6,10 @@ FILES=()
 for path in "${ARGS[@]}"; do
   if [ -d "$path" ]; then
     for file in "$path"/*.ts "$path"/*.tsx "$path"/*.d.ts; do
+      # Skip TSTyche type tests; those run via the `tstyche` runner.
+      case "$file" in
+        *.tst.ts | *.tst.tsx) continue ;;
+      esac
       if [ -f "$file" ]; then
         FILES+=("$file")
       fi

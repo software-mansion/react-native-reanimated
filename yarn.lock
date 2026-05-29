@@ -28184,6 +28184,7 @@ __metadata:
     remark-gfm: "npm:4.0.1"
     remark-mdx: "npm:3.1.0"
     shelljs: "npm:0.10.0"
+    tstyche: "npm:4.1.0"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -32030,6 +32031,20 @@ __metadata:
   version: 2.8.1
   resolution: "tslib@npm:2.8.1"
   checksum: 10/3e2e043d5c2316461cb54e5c7fe02c30ef6dccb3384717ca22ae5c6b5bc95232a6241df19c622d9c73b809bea33b187f6dbc73030963e29950c2141bc32a79f7
+  languageName: node
+  linkType: hard
+
+"tstyche@npm:4.1.0":
+  version: 4.1.0
+  resolution: "tstyche@npm:4.1.0"
+  peerDependencies:
+    typescript: ">=4.7"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  bin:
+    tstyche: ./build/bin.js
+  checksum: 10/9cc0b8b28a82ece0abc4838df08b64d200839cd832e15cb3654ba07ab38d53d2782f7cc36c94d2a4541b4d3b40a7e57ac58524bdffc990280302dbcbd4b5ac09
   languageName: node
   linkType: hard
 
