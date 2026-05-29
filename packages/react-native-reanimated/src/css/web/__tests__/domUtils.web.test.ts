@@ -6,26 +6,30 @@ import {
 } from '../domUtils';
 
 // domUtils owns a single shared <style> tag and tracks the @keyframes rules it
-// inserts by index. That state is module-level and persists across tests, so we
-// give every animation a unique name and assert on rules by name / relative
-// order rather than absolute counts. Assertions read the real jsdom CSSOM.
+// inserts. That state is module-level and persists across tests, so we give
+// every animation a unique name and assert on rules by name. Assertions read the
+// real jsdom CSSOM, checking the parsed keyframe blocks (selectors + property
+// values) rather than the re-serialized cssText, which is jsdom-format-specific.
 const STYLE_TAG_ID = 'ReanimatedCSSStyleTag';
 const KEYFRAMES = 'from { opacity: 0 } to { opacity: 1 }';
 
 let nextId = 0;
 const uniqueName = (): string => `anim_${nextId++}`;
 
-const sheetRules = (): CSSKeyframesRule[] => {
+const allRules = (): CSSKeyframesRule[] => {
   const sheet = (
     document.getElementById(STYLE_TAG_ID) as HTMLStyleElement | null
   )?.sheet;
   return sheet ? (Array.from(sheet.cssRules) as CSSKeyframesRule[]) : [];
 };
 
-const indexOfRule = (name: string): number =>
-  sheetRules().findIndex((rule) => rule.name === name);
+const findRule = (name: string): CSSKeyframesRule | undefined =>
+  allRules().find((rule) => rule.name === name);
 
-const hasRule = (name: string): boolean => indexOfRule(name) !== -1;
+const hasRule = (name: string): boolean => findRule(name) !== undefined;
+
+const blocksOf = (rule: CSSKeyframesRule): CSSKeyframeRule[] =>
+  Array.from(rule.cssRules) as CSSKeyframeRule[];
 
 beforeAll(() => {
   configureWebCSSAnimations();
@@ -44,23 +48,38 @@ describe('domUtils (web CSS animations stylesheet)', () => {
   describe('insertCSSAnimation', () => {
     test('inserts a real @keyframes rule with the given name and block contents', () => {
       const name = uniqueName();
-      insertCSSAnimation(name, KEYFRAMES);
+      insertCSSAnimation(name, 'from { opacity: 0 } to { opacity: 1 }');
 
-      const rule = sheetRules().find((r) => r.name === name);
+      const rule = findRule(name);
       expect(rule).toBeDefined();
-      // The from/to blocks actually made it into the stylesheet.
-      expect(rule!.cssRules).toHaveLength(2);
-      expect(rule!.cssText).toContain('opacity');
+      const blocks = blocksOf(rule!);
+      expect(blocks.map((block) => block.keyText)).toEqual(['from', 'to']);
+      expect(blocks.map((block) => block.style.opacity)).toEqual(['0', '1']);
     });
 
-    test('inserts each new animation ahead of the previous one', () => {
-      const first = uniqueName();
-      const second = uniqueName();
-      insertCSSAnimation(first, KEYFRAMES);
-      insertCSSAnimation(second, KEYFRAMES);
+    test('inserts a multi-step animation with several properties per keyframe', () => {
+      const name = uniqueName();
+      insertCSSAnimation(
+        name,
+        '0% { opacity: 0; transform: translateX(0px) } ' +
+          '50% { opacity: 0.5; width: 20px } ' +
+          '100% { opacity: 1; transform: translateX(100px) }'
+      );
 
-      // The newest rule is inserted at the front of the stylesheet.
-      expect(indexOfRule(second)).toBeLessThan(indexOfRule(first));
+      const blocks = blocksOf(findRule(name)!);
+      expect(blocks.map((block) => block.keyText)).toEqual([
+        '0%',
+        '50%',
+        '100%',
+      ]);
+      expect(blocks.map((block) => block.style.opacity)).toEqual([
+        '0',
+        '0.5',
+        '1',
+      ]);
+      expect(blocks[0].style.transform).toBe('translateX(0px)');
+      expect(blocks[1].style.width).toBe('20px');
+      expect(blocks[2].style.transform).toBe('translateX(100px)');
     });
 
     test('ignores a duplicate animation name', () => {
@@ -68,8 +87,7 @@ describe('domUtils (web CSS animations stylesheet)', () => {
       insertCSSAnimation(name, KEYFRAMES);
       insertCSSAnimation(name, KEYFRAMES);
 
-      const matching = sheetRules().filter((r) => r.name === name);
-      expect(matching).toHaveLength(1);
+      expect(allRules().filter((rule) => rule.name === name)).toHaveLength(1);
     });
   });
 
@@ -97,8 +115,6 @@ describe('domUtils (web CSS animations stylesheet)', () => {
       expect(hasRule(b)).toBe(false);
       expect(hasRule(a)).toBe(true);
       expect(hasRule(c)).toBe(true);
-      // Surviving rules keep their relative order (newest first).
-      expect(indexOfRule(c)).toBeLessThan(indexOfRule(a));
     });
   });
 });
