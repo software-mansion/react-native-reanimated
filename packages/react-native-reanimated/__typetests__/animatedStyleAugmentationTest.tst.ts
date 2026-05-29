@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import type { ImageStyle, StyleProp, TextStyle, ViewStyle } from 'react-native';
+import { describe, test } from 'tstyche';
 
 import type { AnimatedStyle } from '..';
 import { cubicBezier, linear, steps } from '..';
@@ -15,6 +16,9 @@ import { cubicBezier, linear, steps } from '..';
 // `AnimatedStyle`, the intersection collapsed conflicting properties to
 // `never` and surfaced as "Type … is not assignable to 'undefined'" on inline
 // `style={{ ... }}` for `Animated.View`/`Animated.Text`/`Animated.Image`.
+//
+// These are compile-only checks: each typed assignment must type-check, which
+// TSTyche enforces by type-checking the whole test file.
 
 type ExpoStyleAugmentation = {
   animationName?: string;
@@ -42,8 +46,8 @@ type AugmentedViewStyle = ViewStyle & ExpoStyleAugmentation;
 type AugmentedTextStyle = TextStyle & ExpoStyleAugmentation;
 type AugmentedImageStyle = ImageStyle & ExpoStyleAugmentation;
 
-function AnimatedStyleAugmentationTest() {
-  function ParametrizedTimingFunctionsOnAugmentedView() {
+describe('AnimatedStyle with Expo-augmented RN styles', () => {
+  test('parametrized timing functions on an augmented view style', () => {
     const cubic: AnimatedStyle<AugmentedViewStyle> = {
       width: 100,
       backgroundColor: 'red',
@@ -67,16 +71,16 @@ function AnimatedStyleAugmentationTest() {
       animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
       animationTimingFunction: steps(4),
     };
-  }
+  });
 
-  function PredefinedTimingFunctionsOnAugmentedView() {
+  test('predefined timing functions on an augmented view style', () => {
     const s: AnimatedStyle<AugmentedViewStyle> = {
       animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
       animationTimingFunction: 'ease-in-out',
     };
-  }
+  });
 
-  function ArrayShorthandsOnAugmentedView() {
+  test('array shorthands on an augmented view style', () => {
     const s: AnimatedStyle<AugmentedViewStyle> = {
       animationName: [
         { from: { opacity: 0 }, to: { opacity: 1 } },
@@ -88,9 +92,9 @@ function AnimatedStyleAugmentationTest() {
       animationDuration: ['1s', '2s'],
       animationTimingFunction: [cubicBezier(0.25, 0.1, 0.25, 1), 'ease'],
     };
-  }
+  });
 
-  function CSSTransitionsOnAugmentedView() {
+  test('CSS transitions on an augmented view style', () => {
     const s: AnimatedStyle<AugmentedViewStyle> = {
       width: 100,
       transitionProperty: 'width',
@@ -99,25 +103,25 @@ function AnimatedStyleAugmentationTest() {
       transitionDelay: 0,
       transitionBehavior: 'allow-discrete',
     };
-  }
+  });
 
-  function CSSAnimationOnAugmentedText() {
+  test('CSS animation on an augmented text style', () => {
     const s: AnimatedStyle<AugmentedTextStyle> = {
       color: 'black',
       animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
       animationTimingFunction: cubicBezier(0.25, 0.1, 0.25, 1),
     };
-  }
+  });
 
-  function CSSAnimationOnAugmentedImage() {
+  test('CSS animation on an augmented image style', () => {
     const s: AnimatedStyle<AugmentedImageStyle> = {
       resizeMode: 'cover',
       animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
       animationTimingFunction: cubicBezier(0.25, 0.1, 0.25, 1),
     };
-  }
+  });
 
-  function NonCSSStylesUnaffected() {
+  test('non-CSS styles are unaffected', () => {
     const s: AnimatedStyle<AugmentedViewStyle> = {
       width: 100,
       height: 100,
@@ -125,24 +129,20 @@ function AnimatedStyleAugmentationTest() {
       transform: [{ translateX: 10 }, { scale: 2 }],
       opacity: 0.5,
     };
-  }
+  });
 
-  // Sanity-check: plain `ViewStyle` without the augmented CSS fields still works.
-  function PlainViewStyleStillWorks() {
+  test('plain ViewStyle without augmented fields still works', () => {
     const s: AnimatedStyle<ViewStyle> = {
       width: 100,
       animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
       animationTimingFunction: cubicBezier(0.25, 0.1, 0.25, 1),
     };
-  }
+  });
 
-  // `AnimatedStyle<StyleProp<…>>` is a union (null, arrays, etc.); the Omit
-  // must distribute over union members to strip augmented CSS keys from the
-  // object member — this is the exact shape that fails in the issue's repro.
-  function StylePropUnionMirrorsRealRepro() {
+  test('StyleProp union mirrors the real repro', () => {
     const s: AnimatedStyle<StyleProp<AugmentedViewStyle>> = {
       animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
       animationTimingFunction: cubicBezier(0, 0, 0, 0),
     };
-  }
-}
+  });
+});
