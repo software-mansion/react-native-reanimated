@@ -1,31 +1,27 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { describe, expect, test } from 'tstyche';
 
-import { Easing, withTiming } from '..';
+import { Easing, useAnimatedStyle, useSharedValue, withTiming } from '..';
 
 describe('withTiming', () => {
-  test('animates a numeric toValue to a numeric result', () => {
-    expect(
-      withTiming(50, {
-        duration: 500,
-        easing: Easing.bezierFn(0.25, 0.1, 0.25, 1),
-      })
-    ).type.toBeAssignableTo<number>();
+  test('animates width with a numeric toValue', () => {
+    const width = useSharedValue(50);
+    expect(useAnimatedStyle).type.toBeCallableWith(() => ({
+      width: withTiming(
+        width.value,
+        { duration: 500, easing: Easing.bezierFn(0.25, 0.1, 0.25, 1) },
+        (_finished) => {}
+      ),
+    }));
   });
 
-  test('animates a color string toValue to a string result', () => {
-    expect(
-      withTiming('rgba(255,105,180,0)', {
-        duration: 500,
-        easing: Easing.bezierFn(0.25, 0.1, 0.25, 1),
-      })
-    ).type.toBeAssignableTo<string>();
-  });
-
-  test('accepts an animation callback', () => {
-    expect(withTiming).type.toBeCallableWith(
-      50,
-      {},
-      (_finished?: boolean) => undefined
-    );
+  test('animates backgroundColor with a color string toValue', () => {
+    expect(useAnimatedStyle).type.toBeCallableWith(() => ({
+      backgroundColor: withTiming(
+        'rgba(255,105,180,0)',
+        { duration: 500, easing: Easing.bezierFn(0.25, 0.1, 0.25, 1) },
+        (_finished) => {}
+      ),
+    }));
   });
 });
