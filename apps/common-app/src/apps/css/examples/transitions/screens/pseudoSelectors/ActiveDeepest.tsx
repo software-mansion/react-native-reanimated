@@ -43,8 +43,8 @@ export default function ActiveDeepest() {
 </Animated.View>`}
             collapsedCode={`
 backgroundColor: {
-  default: '#fce8e8',
-  ':active-deepest': '#f7bdbd',
+  default: '#e53935',
+  ':active-deepest': '#b71c1c',
 },
 transform: {
   default: [{ scale: 1 }],
@@ -124,8 +124,12 @@ transform: {
 </Animated.View>`}
             collapsedCode={`
 backgroundColor: {
-  default: '#e8f4fd',
-  ':active': '#bdddf7',
+  default: '#1976d2',
+  ':active': '#0d47a1',
+},
+transform: {
+  default: [{ scale: 1 }],
+  ':active': [{ scale: 0.9 }],
 },`}>
             <View style={styles.nestedContainer}>
               <Animated.View
@@ -181,11 +185,11 @@ backgroundColor: {
           <VerticalExampleCard
             collapsedExampleHeight={230}
             title="Mixed: :active and :active-deepest"
-            code={`<Animated.View style={{ backgroundColor: { default: '#e8f5e9', ':active': '#c8e6c9' }, ... }}>
+            code={`
+<Animated.View style={{ backgroundColor: { default: '#e8f5e9', ':active': '#c8e6c9' }, ... }}>
   <Animated.View style={{ backgroundColor: { default: '#ffcdd2', ':active-deepest': '#ef9a9a' }, ... }}>
     <Animated.View style={{ backgroundColor: { default: '#e3f2fd', ':active': '#90caf9' }, ... }}>
       <Animated.View
-        onStartShouldSetResponder={() => true}
         style={{
           backgroundColor: { default: '#e53935', ':active-deepest': '#b71c1c' },
           transform: { default: [{ scale: 1 }], ':active-deepest': [{ scale: 0.9 }] },
@@ -194,13 +198,15 @@ backgroundColor: {
     </Animated.View>
   </Animated.View>
 </Animated.View>`}
-            collapsedCode={`<Animated.View style={{ ':active': '#c8e6c9' }}>
-  <Animated.View style={{ ':active-deepest': '#ef9a9a' }}>
-    <Animated.View style={{ ':active': '#90caf9' }}>
-      <Animated.View style={{ ':active-deepest': '#b71c1c' }} />
-    </Animated.View>
-  </Animated.View>
-</Animated.View>`}>
+            collapsedCode={`
+backgroundColor: {
+  default: '#e53935',
+  ':active-deepest': '#b71c1c',
+},
+transform: {
+  default: [{ scale: 1 }],
+  ':active-deepest': [{ scale: 0.9 }],
+},`}>
             <View style={styles.nestedContainer}>
               <Animated.View
                 style={[
