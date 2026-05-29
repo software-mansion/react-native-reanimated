@@ -22,6 +22,7 @@ using namespace facebook::react;
   REAEventHandler _eventHandler;
   REAPerformOperations _performOperations;
   NSMutableArray<NSNumber *> *_pendingReparentContainerTags;
+  NSMutableArray<NSNumber *> *_pendingRestoreContainerTags;
 }
 
 - (READisplayLink *)getDisplayLink
@@ -60,6 +61,7 @@ using namespace facebook::react;
   if ((self = [super init])) {
     _onAnimationCallbacks = [NSMutableArray new];
     _pendingReparentContainerTags = [NSMutableArray new];
+    _pendingRestoreContainerTags = [NSMutableArray new];
     _eventHandler = ^(id<RCTEvent> event) {
       // no-op
     };
@@ -183,7 +185,26 @@ using namespace facebook::react;
   NSLog(@"@@@ queued reparent for tags: %@ (pending=%lu)", containerTags, (unsigned long)_pendingReparentContainerTags.count);
 }
 
+- (void)queueSharedTransitionContainersForRestoring:(NSArray<NSNumber *> *)containerTags
+{
+  // Called from C++ at the end of pullTransaction. The Remove/Delete mutations
+  // for these tags are in the same transaction that's about to be mounted, so we
+  // must restore the original parent BEFORE the mount runs (in willMount).
+  [_pendingRestoreContainerTags addObjectsFromArray:containerTags];
+  NSLog(@"@@@ queued restore for tags: %@ (pending=%lu)", containerTags, (unsigned long)_pendingRestoreContainerTags.count);
+}
+
 #pragma mark - RCTSurfacePresenterObserver
+
+- (void)willMountComponentsWithRootTag:(NSInteger)rootTag
+{
+  if (_pendingRestoreContainerTags.count == 0) {
+    return;
+  }
+  NSLog(@"@@@ willMountComponentsWithRootTag:%ld pending restore tags=%@", (long)rootTag, _pendingRestoreContainerTags);
+  // TODO: look up each tag in componentViewRegistry and reparent back to surface root.
+  [_pendingRestoreContainerTags removeAllObjects];
+}
 
 - (void)didMountComponentsWithRootTag:(NSInteger)rootTag
 {

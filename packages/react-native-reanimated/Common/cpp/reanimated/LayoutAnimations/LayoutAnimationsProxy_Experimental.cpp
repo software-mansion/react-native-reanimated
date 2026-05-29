@@ -104,6 +104,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     queueSharedTransitionContainersForReparenting_(containerTagsToReparent_);
     containerTagsToReparent_.clear();
   }
+  if (!containerTagsToRestore_.empty() && queueSharedTransitionContainersForRestoring_) {
+    queueSharedTransitionContainersForRestoring_(containerTagsToRestore_);
+    containerTagsToRestore_.clear();
+  }
 #endif
 
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};

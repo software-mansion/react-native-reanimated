@@ -62,7 +62,9 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable ForceScreenSnapshotFunction forceScreenSnapshot_;
 #ifdef __APPLE__
   mutable QueueSharedTransitionContainersForReparentingFunction queueSharedTransitionContainersForReparenting_;
+  mutable QueueSharedTransitionContainersForRestoringFunction queueSharedTransitionContainersForRestoring_;
   mutable std::vector<Tag> containerTagsToReparent_;
+  mutable std::vector<Tag> containerTagsToRestore_;
 #endif
 
   LayoutAnimationsProxy_Experimental(
@@ -136,6 +138,10 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   void setQueueSharedTransitionContainersForReparentingFunction(
       QueueSharedTransitionContainersForReparentingFunction reparent) {
     queueSharedTransitionContainersForReparenting_ = std::move(reparent);
+  }
+  void setQueueSharedTransitionContainersForRestoringFunction(
+      QueueSharedTransitionContainersForRestoringFunction restore) {
+    queueSharedTransitionContainersForRestoring_ = std::move(restore);
   }
 #endif
 

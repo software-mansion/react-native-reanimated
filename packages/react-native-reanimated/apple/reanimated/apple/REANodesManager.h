@@ -22,5 +22,6 @@ typedef void (^REAPerformOperations)();
 - (void)registerPerformOperations:(REAPerformOperations)performOperations;
 - (void)maybeFlushUIUpdatesQueue;
 - (void)queueSharedTransitionContainersForReparenting:(NSArray<NSNumber *> *)containerTags;
+- (void)queueSharedTransitionContainersForRestoring:(NSArray<NSNumber *> *)containerTags;
 
 @end

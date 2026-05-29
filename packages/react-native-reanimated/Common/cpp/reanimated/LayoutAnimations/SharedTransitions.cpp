@@ -407,6 +407,9 @@ void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
   ReanimatedSystraceSection s2("remove shared containers");
   for (auto &tag : sharedContainersToRemove_) {
     LOG(INFO) << "@@@ cleanupSharedTransitions: removing container tag=" << tag;
+#ifdef __APPLE__
+    containerTagsToRestore_.push_back(tag);
+#endif
     auto root = lightNodes_[surfaceId];
     for (int i = 0; i < root->children.size(); i++) {
       auto &child = root->children[i];
