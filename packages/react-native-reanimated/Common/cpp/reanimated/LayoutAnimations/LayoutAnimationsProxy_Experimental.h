@@ -60,6 +60,10 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable std::unordered_map<Tag, react::Transform> transformForNode_;
 
   mutable ForceScreenSnapshotFunction forceScreenSnapshot_;
+#ifdef __APPLE__
+  mutable ReparentSharedTransitionContainersToWindowFunction reparentSharedTransitionContainersToWindow_;
+  mutable std::vector<Tag> containerTagsToReparent_;
+#endif
 
   LayoutAnimationsProxy_Experimental(
       const std::shared_ptr<LayoutAnimationsManager> &layoutAnimationsManager,
@@ -128,6 +132,10 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
 #ifdef __APPLE__
   void setForceScreenSnapshotFunction(ForceScreenSnapshotFunction forceScreenSnapshot) {
     forceScreenSnapshot_ = std::move(forceScreenSnapshot);
+  }
+  void setReparentSharedTransitionContainersToWindowFunction(
+      ReparentSharedTransitionContainersToWindowFunction reparent) {
+    reparentSharedTransitionContainersToWindow_ = std::move(reparent);
   }
 #endif
 

@@ -21,5 +21,6 @@ typedef void (^REAPerformOperations)();
 - (void)synchronouslyUpdateUIProps:(ReactTag)viewTag props:(const folly::dynamic &)props;
 - (void)registerPerformOperations:(REAPerformOperations)performOperations;
 - (void)maybeFlushUIUpdatesQueue;
+- (void)reparentSharedTransitionContainersToWindow:(NSArray<NSNumber *> *)containerTags;
 
 @end

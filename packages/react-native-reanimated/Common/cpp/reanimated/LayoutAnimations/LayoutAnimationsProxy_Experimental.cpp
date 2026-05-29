@@ -99,6 +99,13 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
 
   insertContainers(filteredMutations, rootChildCount, surfaceId);
 
+#ifdef __APPLE__
+  if (!containerTagsToReparent_.empty() && reparentSharedTransitionContainersToWindow_) {
+    reparentSharedTransitionContainersToWindow_(containerTagsToReparent_);
+    containerTagsToReparent_.clear();
+  }
+#endif
+
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
 

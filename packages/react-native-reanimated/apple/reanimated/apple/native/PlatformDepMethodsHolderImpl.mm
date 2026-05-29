@@ -141,6 +141,18 @@ css::CSSRemoveTransitionFunction makeCSSRemoveTransition(REACSSPlatformTransitio
   };
 }
 
+ReparentSharedTransitionContainersToWindowFunction makeReparentSharedTransitionContainersToWindowFunction(
+    REANodesManager *nodesManager)
+{
+  return [nodesManager](const std::vector<Tag> &containerTags) {
+    NSMutableArray<NSNumber *> *tags = [NSMutableArray arrayWithCapacity:containerTags.size()];
+    for (auto tag : containerTags) {
+      [tags addObject:@(tag)];
+    }
+    [nodesManager reparentSharedTransitionContainersToWindow:tags];
+  };
+}
+
 ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager)
 {
   auto forceScreenSnapshot = [=](Tag tag) {
@@ -177,6 +189,9 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   auto forceScreenSnapshotFunction = makeForceScreenSnapshotFunction(nodesManager);
 
+  auto reparentSharedTransitionContainersToWindowFunction =
+      makeReparentSharedTransitionContainersToWindowFunction(nodesManager);
+
   auto synchronouslyUpdateUIPropsFunction = makeSynchronouslyUpdateUIPropsFunction(nodesManager);
 
   auto getAnimationTimestamp = makeGetAnimationTimestamp();
@@ -211,6 +226,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       forceScreenSnapshotFunction,
+      reparentSharedTransitionContainersToWindowFunction,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       registerSensorFunction,

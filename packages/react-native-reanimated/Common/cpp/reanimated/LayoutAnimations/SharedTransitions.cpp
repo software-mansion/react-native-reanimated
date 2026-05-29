@@ -237,6 +237,9 @@ Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
     sharedTransitionManager_->containerTags_[sharedTag] = containerTag;
     LOG(INFO) << "@@@ created a new helper container: containerTag=" << containerTag << " sharedTag=" << sharedTag
               << " parent=surfaceId(" << surfaceId << ")";
+#ifdef __APPLE__
+    containerTagsToReparent_.push_back(containerTag);
+#endif
   } else {
     LOG(INFO) << "@@@ reusing container: containerTag=" << containerTag << " sharedTag=" << sharedTag;
   }

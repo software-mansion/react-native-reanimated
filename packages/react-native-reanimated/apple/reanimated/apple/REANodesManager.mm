@@ -158,6 +158,11 @@ using namespace facebook::react;
   }
 }
 
+- (void)reparentSharedTransitionContainersToWindow:(NSArray<NSNumber *> *)containerTags
+{
+  NSLog(@"@@@ reparentSharedTransitionContainersToWindow: %@", containerTags);
+}
+
 - (void)synchronouslyUpdateUIProps:(ReactTag)viewTag props:(const folly::dynamic &)props
 {
   RCTAssertMainQueue();
