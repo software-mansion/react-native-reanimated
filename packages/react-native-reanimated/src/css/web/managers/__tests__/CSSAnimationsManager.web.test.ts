@@ -1,23 +1,21 @@
 'use strict';
 import type { ReanimatedHTMLElement } from '../../../../ReanimatedModule/js-reanimated';
 import type { ExistingCSSAnimationProperties } from '../../../types';
+import { processKeyframeDefinitions } from '../../animationParser';
+import { insertCSSAnimation, removeCSSAnimation } from '../../domUtils';
 import CSSAnimationsManager from '../CSSAnimationsManager';
 
-// These tests run end to end against the real jsdom CSSOM: the manager inserts
-// real @keyframes rules into the shared <style> tag that domUtils creates, so we
-// assert on the actual stylesheet instead of on mocked stylesheet helpers. That
-// tag is a single app-wide stylesheet, so we assert on rules by their (unique,
-// generated) name rather than on the total rule count.
-const STYLE_TAG_ID = 'ReanimatedCSSStyleTag';
-
-const keyframeNames = (): string[] => {
-  const sheet = (
-    document.getElementById(STYLE_TAG_ID) as HTMLStyleElement | null
-  )?.sheet;
-  return sheet
-    ? Array.from(sheet.cssRules).map((rule) => (rule as CSSKeyframesRule).name)
-    : [];
-};
+// The manager's job is orchestration: hand the processed keyframes to the
+// domUtils stylesheet helpers and write the animation longhands onto the
+// element. We mock that apply boundary (mirroring how the native manager test
+// mocks the `proxy` apply functions) and assert on the calls. The stylesheet
+// mechanics are covered by domUtils.web.test.ts and the keyframe string format
+// by animationParser.test.ts.
+jest.mock('../../domUtils', () => ({
+  configureWebCSSAnimations: jest.fn(),
+  insertCSSAnimation: jest.fn(),
+  removeCSSAnimation: jest.fn(),
+}));
 
 const keyframes = { from: { opacity: 0 }, to: { opacity: 1 } };
 
@@ -35,12 +33,13 @@ describe('CSSAnimationsManager (web)', () => {
   let manager: CSSAnimationsManager;
 
   beforeEach(() => {
+    jest.clearAllMocks();
     element = document.createElement('div') as unknown as ReanimatedHTMLElement;
     manager = new CSSAnimationsManager(element);
   });
 
   describe('update', () => {
-    test('inserts a real @keyframes rule and writes the animation longhands to the element', () => {
+    test('hands the processed keyframes to domUtils and writes the animation longhands to the element', () => {
       manager.update(
         animation({
           animationTimingFunction: 'ease-in-out',
@@ -49,19 +48,21 @@ describe('CSSAnimationsManager (web)', () => {
         })
       );
 
-      // The generated name is written to the element and exists as an actual
-      // @keyframes rule in the stylesheet.
-      expect(element.style.animationName.length).toBeGreaterThan(0);
-      expect(keyframeNames()).toContain(element.style.animationName);
+      // Boundary: the manager inserts the processed keyframes under the same
+      // name it writes to the element.
+      expect(insertCSSAnimation).toHaveBeenCalledTimes(1);
+      expect(insertCSSAnimation).toHaveBeenCalledWith(
+        element.style.animationName,
+        processKeyframeDefinitions(keyframes)
+      );
+      // Element longhands.
       expect(element.style.animationDuration).toBe('200ms');
       expect(element.style.animationTimingFunction).toBe('ease-in-out');
       expect(element.style.animationIterationCount).toBe('2');
       expect(element.style.animationDirection).toBe('reverse');
     });
 
-    test('inserts a real @keyframes rule for each of multiple comma-separated animations', () => {
-      const before = new Set(keyframeNames());
-
+    test('inserts every one of multiple comma-separated animations', () => {
       manager.update(
         animation({
           animationName: [
@@ -72,24 +73,24 @@ describe('CSSAnimationsManager (web)', () => {
         })
       );
 
-      const inserted = keyframeNames().filter((name) => !before.has(name));
-      expect(inserted).toHaveLength(2);
-      // Both inserted rules are referenced by the element's animationName.
-      inserted.forEach((name) => {
+      expect(insertCSSAnimation).toHaveBeenCalledTimes(2);
+      const insertedNames = (insertCSSAnimation as jest.Mock).mock.calls.map(
+        (call) => call[0]
+      );
+      insertedNames.forEach((name) => {
         expect(element.style.animationName).toContain(name);
       });
       expect(element.style.animationDuration).toContain('200ms');
       expect(element.style.animationDuration).toContain('300ms');
     });
 
-    test('removes the previous @keyframes rule when switching to a different animation', () => {
+    test('removes the previous animation when switching to a different one', () => {
       manager.update(
         animation({
           animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
         })
       );
       const previousName = element.style.animationName;
-      expect(keyframeNames()).toContain(previousName);
 
       manager.update(
         animation({
@@ -97,39 +98,36 @@ describe('CSSAnimationsManager (web)', () => {
         })
       );
 
-      expect(keyframeNames()).not.toContain(previousName);
-      expect(keyframeNames()).toContain(element.style.animationName);
+      expect(removeCSSAnimation).toHaveBeenCalledWith(previousName);
     });
   });
 
   describe('detach', () => {
-    test('clears the element animation and removes the @keyframes rule on update(null)', () => {
+    test('removes the keyframes and clears the element animation on update(null)', () => {
       manager.update(animation());
       const attachedName = element.style.animationName;
-      expect(keyframeNames()).toContain(attachedName);
 
       manager.update(null);
 
+      expect(removeCSSAnimation).toHaveBeenCalledWith(attachedName);
+      // removeElementAnimation (not mocked) clears the element longhands.
       expect(element.style.animationName).toBe('');
-      expect(keyframeNames()).not.toContain(attachedName);
     });
 
     test('treats an empty animation name list as a detach', () => {
       manager.update(animation());
       const attachedName = element.style.animationName;
-      expect(attachedName.length).toBeGreaterThan(0);
 
       manager.update(animation({ animationName: [] }));
 
+      expect(removeCSSAnimation).toHaveBeenCalledWith(attachedName);
       expect(element.style.animationName).toBe('');
-      expect(keyframeNames()).not.toContain(attachedName);
     });
 
     test('is a no-op when no animation was ever attached', () => {
-      const before = keyframeNames();
+      manager.update(null);
 
-      expect(() => manager.update(null)).not.toThrow();
-      expect(keyframeNames()).toEqual(before);
+      expect(removeCSSAnimation).not.toHaveBeenCalled();
     });
   });
 
@@ -142,17 +140,16 @@ describe('CSSAnimationsManager (web)', () => {
       jest.useRealTimers();
     });
 
-    test('removes the @keyframes rule from the stylesheet after the cleanup timeout', () => {
+    test('removes the keyframes from the stylesheet after the cleanup timeout', () => {
       manager.update(animation());
       const attachedName = element.style.animationName;
-      expect(keyframeNames()).toContain(attachedName);
 
       manager.unmountCleanup();
-      // Removal is deferred to the end of the event loop, so the rule remains.
-      expect(keyframeNames()).toContain(attachedName);
+      // Removal is deferred to the end of the event loop, so nothing happens yet.
+      expect(removeCSSAnimation).not.toHaveBeenCalled();
 
       jest.runAllTimers();
-      expect(keyframeNames()).not.toContain(attachedName);
+      expect(removeCSSAnimation).toHaveBeenCalledWith(attachedName);
     });
   });
 });
