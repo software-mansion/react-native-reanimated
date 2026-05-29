@@ -23,8 +23,6 @@ void CSSPlatformTransition::run(jsi::Runtime &rt, const CSSPlatformTransitionCon
 
 void CSSPlatformTransition::run(const PropertyValueDynamicDiffsMap &propertiesDiffs, const double timestamp) {
   for (const auto &[propertyName, propertyDiff] : propertiesDiffs) {
-    // Settings were configured up front via updateSettings (routing decided the
-    // property belongs here), so they must be present by the time a diff arrives.
     const auto &settings = settings_.at(propertyName);
     auto fromValue = parsePlatformValue(propertyName, propertyDiff.first);
     auto toValue = parsePlatformValue(propertyName, propertyDiff.second);

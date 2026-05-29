@@ -26,8 +26,6 @@ class CSSPlatformTransition {
   /** TODO: unify folly::dynamic and jsi::value versions */
   void run(const PropertyValueDynamicDiffsMap &propertiesDiffs, double timestamp);
 
-  // Persists per-property timing settings up front so a later (value-only)
-  // dynamic run can animate without the settings travelling with each diff.
   void updateSettings(
       const PropertiesSettingsMap &changedPropertiesSettings,
       const std::vector<std::string> &removedProperties);
@@ -43,8 +41,6 @@ class CSSPlatformTransition {
   };
 
   void runEntry(jsi::Runtime &rt, const CSSPlatformTransitionRawEntry &entry, double timestamp);
-  // Shared core: given already-parsed endpoints + settings, applies (or reverse-
-  // shortens) the platform animation and records its active state.
   void applyEntry(
       const std::string &propertyName,
       PlatformValue fromValue,

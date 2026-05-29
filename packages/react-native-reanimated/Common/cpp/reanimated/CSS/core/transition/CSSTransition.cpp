@@ -64,10 +64,6 @@ folly::dynamic CSSTransition::run(
     const PropertyValueDynamicDiffsMap &propertiesDiffs,
     const folly::dynamic &lastUpdateValue,
     const double timestamp) {
-  // Route each diff the same way splitForPlatformRouting does on the jsi path:
-  // platform-routed properties (e.g. opacity on iOS Core Animation) are driven
-  // by the platform transition, the rest by the loop. Routing was decided at
-  // registration (splitForPlatformRouting), so here we only dispatch.
   PropertyValueDynamicDiffsMap loopDiffs;
   PropertyValueDynamicDiffsMap platformDiffs;
   for (const auto &[propertyName, propertyDiff] : propertiesDiffs) {
@@ -96,9 +92,6 @@ CSSTransition::splitForPlatformRouting(jsi::Runtime &rt, CSSTransitionConfig &&c
   auto processed = platformTransitionProxy_->processConfig(std::move(config), routing_);
   routing_ = std::move(processed.routing);
 
-  // Persist timing settings (and drop migrated-away ones) so a later dynamic run
-  // can drive these properties even when this call carried no value diffs (the
-  // pseudo-selector registration path clears them up front).
   if (!processed.platform.changedPropertiesSettings.empty() || !processed.platform.removedProperties.empty()) {
     ensurePlatformTransition().updateSettings(
         processed.platform.changedPropertiesSettings, processed.platform.removedProperties);

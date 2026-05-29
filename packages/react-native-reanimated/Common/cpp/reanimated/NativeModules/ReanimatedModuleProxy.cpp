@@ -628,9 +628,7 @@ void ReanimatedModuleProxy::registerPseudoStyle(
 
   auto transitionConfig =
       css::parseCSSTransitionConfig(rt, shadowNode->getComponentName(), configObj.getProperty(rt, "transition"));
-  // Register only the timing settings; drop the value diffs so no transition runs
-  // at registration time. The actual diff is supplied later, when
-  // `PseudoStylesRegistry::onSelectorStateChanged` triggers a state change.
+
   transitionConfig.changedProperties.clear();
 
   auto lock = updatesRegistryManager_->lock();
