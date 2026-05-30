@@ -108,9 +108,13 @@ function Showcase() {
           );
         }
       };
-      runCycle();
+      // Keep the first render in `default` (no press on mount): the hand eases
+      // in with a hover 650ms before the first beat, then the interval drives
+      // the synced cycle so `active` lands on the heartbeat rather than at mount.
+      const leadIn = setTimeout(() => setPhase('hover'), PERIOD - 650);
       const interval = setInterval(runCycle, PERIOD);
       return () => {
+        clearTimeout(leadIn);
         clearInterval(interval);
         timeouts.forEach(clearTimeout);
         // Rest in the default state while the screen isn't focused, so the card
