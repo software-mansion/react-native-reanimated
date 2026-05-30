@@ -19,7 +19,7 @@ export default function FocusWithin() {
         keyboardShouldPersistTaps="handled"
         withBottomBarSpacing>
         <Section
-          description="`:focus-within` fires on any View when any descendant text input gains focus. Useful for animating a container when its fields are active."
+          description="':focus-within' fires on any View when any descendant text input gains focus. Useful for animating a container when its fields are active."
           title=":focus-within">
           <VerticalExampleCard
             collapsedExampleHeight={160}

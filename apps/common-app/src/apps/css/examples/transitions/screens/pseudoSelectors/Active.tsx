@@ -14,7 +14,7 @@ export default function Active() {
     <Screen>
       <Scroll contentContainerStyle={styles.content} withBottomBarSpacing>
         <Section
-          description="The `:active` selector fires while the user is pressing a view. It propagates up to all ancestor views that also have ':active' defined."
+          description="The ':active' selector fires while the user is pressing a view. It propagates up to all ancestor views that also have ':active' defined."
           title=":active">
           <VerticalExampleCard
             title="Scale"

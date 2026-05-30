@@ -19,7 +19,7 @@ export default function Focus() {
         keyboardShouldPersistTaps="handled"
         withBottomBarSpacing>
         <Section
-          description="The `:focus` selector fires when a text input directly gains focus. Tap a field to see the transition."
+          description="The ':focus' selector fires when a text input directly gains focus. Tap a field to see the transition."
           title=":focus">
           <VerticalExampleCard
             collapsedExampleHeight={80}
