@@ -7,10 +7,10 @@ import { useAnimatedStyle, useSharedValue, withTiming } from '..';
 
 describe('useSharedValue', () => {
   test('infers a SharedValue of the initial value type', () => {
-    expect(useSharedValue(0)).type.toBe<SharedValue<number>>();
-    expect(useSharedValue<number[]>([1, 2, 3])).type.toBe<
-      SharedValue<number[]>
-    >();
+    const sharedNumber = useSharedValue(0);
+    const sharedList = useSharedValue<number[]>([1, 2, 3]);
+    expect(sharedNumber).type.toBe<SharedValue<number>>();
+    expect(sharedList).type.toBe<SharedValue<number[]>>();
   });
 
   test('.value and .get() are typed as the value', () => {
