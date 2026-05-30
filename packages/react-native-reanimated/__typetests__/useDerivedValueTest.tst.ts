@@ -14,9 +14,7 @@ describe('useDerivedValue', () => {
   test('value is readonly and typed as the result', () => {
     const progress = useSharedValue(0);
     const width = useDerivedValue(() => progress.value * 250);
-    expect(width.value).type.toBe<number>();
-    // @ts-expect-error Cannot assign to 'value' because it is a read-only property
-    width.value = 100;
+    expect(pick(width, 'value')).type.toBe<{ readonly value: number }>()
   });
 
   test('set is still allowed for now (deprecated)', () => {
