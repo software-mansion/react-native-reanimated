@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'tstyche';
+import { describe, expect, pick, test } from 'tstyche';
 
 import type { DerivedValue } from '..';
 import { useDerivedValue, useSharedValue } from '..';
