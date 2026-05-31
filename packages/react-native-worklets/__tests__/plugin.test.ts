@@ -105,6 +105,31 @@ describe('babel plugin', () => {
       );
     });
 
+    test('strips queries from filename when injecting source maps', () => {
+      process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '0'; // don't mock source maps
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var foo = 'bar';
+        }
+      </script>`;
+
+      const queries = [
+        '?query',
+        '#hash',
+        '?query#hash'
+      ];
+
+      for (const query of queries) {
+        const filename = MOCK_LOCATION + query;
+
+        const { code } = runPlugin(input, {}, {}, filename);
+
+        expect(code).toMatch(/sourceMap: /gm);
+        expect(code).toContain(filename)
+      }
+    });
+
     test('uses relative source location when `relativeSourceLocation` is set to `true`', () => {
       process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '0'; // don't mock source maps
       const input = html`<script>
