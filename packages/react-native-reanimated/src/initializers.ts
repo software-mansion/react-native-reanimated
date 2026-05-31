@@ -7,6 +7,7 @@ import {
 import { IS_WEB, SHOULD_BE_USE_WEB } from './common';
 import { initSvgCssSupport } from './css/svg';
 import { getStaticFeatureFlag } from './featureFlags';
+import { initializeMapperRegistry } from './mappers';
 import type { IReanimatedModule } from './ReanimatedModule';
 
 export function initializeReanimatedModule(
@@ -29,5 +30,6 @@ if (!SHOULD_BE_USE_WEB) {
   runOnUISync(() => {
     'worklet';
     global._tagToJSPropNamesMapping = {};
+    initializeMapperRegistry();
   });
 }

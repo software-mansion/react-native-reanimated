@@ -239,6 +239,20 @@ function createMapperRegistry() {
   };
 }
 
+function getMapperRegistry() {
+  'worklet';
+  let mapperRegistry = global.__mapperRegistry;
+  if (mapperRegistry === undefined) {
+    mapperRegistry = global.__mapperRegistry = createMapperRegistry();
+  }
+  return mapperRegistry;
+}
+
+export function initializeMapperRegistry(): void {
+  'worklet';
+  getMapperRegistry();
+}
+
 let MAPPER_ID = 9999;
 
 export function startMapper(
@@ -249,10 +263,7 @@ export function startMapper(
   const mapperID = (MAPPER_ID += 1);
 
   scheduleOnUI(() => {
-    let mapperRegistry = global.__mapperRegistry;
-    if (mapperRegistry === undefined) {
-      mapperRegistry = global.__mapperRegistry = createMapperRegistry();
-    }
+    const mapperRegistry = getMapperRegistry();
     mapperRegistry.start(mapperID, worklet, inputs, outputs);
   });
 
