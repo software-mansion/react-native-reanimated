@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 'use strict';
 
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
-import type { callGuardDEV } from './callGuard';
 import type { reportFatalRemoteError } from './debug/errors';
 import type { CustomSerializableUnpacker } from './memory/customSerializableUnpacker';
+import type { RemoteFunctionUnpacker } from './memory/remoteFunctionUnpacker';
 import type { makeShareableCloneOnUIRecursive } from './memory/serializable';
 import type { ShareableGuestUnpacker } from './memory/shareableGuestUnpacker';
 import type { ShareableHostUnpacker } from './memory/shareableHostUnpacker';
@@ -19,15 +20,20 @@ declare global {
   var __r: ((moduleId: number) => Record<string, unknown>) &
     Record<string, unknown>;
 
+  /**
+   * The name of the current runtime, used in debugging.
+   *
+   * - "RN" for the RN Runtime.
+   * - "UI" for the UI Runtime.
+   * - A custom name for Worker Runtimes.
+   */
+  var __RUNTIME_NAME: string;
+
   var _toString: (value: unknown) => string;
   var __workletsModuleProxy: WorkletsModuleProxy;
   var _WORKLETS_BUNDLE_MODE_ENABLED: boolean | undefined;
   var _WORKLETS_VERSION_CPP: string | undefined;
   var _WORKLETS_VERSION_JS: string | undefined;
-  var _createSerializable: <T>(
-    value: T,
-    nativeStateSource?: object
-  ) => FlatSerializableRef<T>;
   var _createSerializableString: (value: string) => FlatSerializableRef<string>;
   var _createSerializableNumber: (value: number) => FlatSerializableRef<number>;
   var _createSerializableBoolean: (
@@ -57,18 +63,19 @@ declare global {
   var _createSerializableSynchronizable: (
     value: object
   ) => FlatShareableRef<object>;
-  /** Only outside of Bundle Mode on Worklet Runtimes. */
   var __serializer: typeof makeShareableCloneOnUIRecursive;
   var __callMicrotasks: () => void;
-  var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
-  var _scheduleRemoteFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
+  /** Available only on the UI Runtime */
+  var __nativeRequestAnimationFrame: (
+    callback: (timestamp: number) => void
+  ) => void;
   /** Available only on RN Runtime */
   var __reportFatalRemoteError: typeof reportFatalRemoteError | undefined;
   var __valueUnpacker: ValueUnpacker;
   var __synchronizableUnpacker: SynchronizableUnpacker;
   var __customSerializationRegistry: CustomSerializationRegistry;
   var __customSerializableUnpacker: CustomSerializableUnpacker;
-  var __callGuardDEV: typeof callGuardDEV | undefined;
+  var __remoteFunctionUnpacker: RemoteFunctionUnpacker;
   /**
    * @deprecated Kept for backwards compatibility. Remove it after support for
    *   Reanimated 4.3 is dropped. Reanimated uses it to handle event updates
@@ -105,6 +112,7 @@ declare global {
     unknown,
     unknown
   >;
+  var __remoteFunctionRegistry: Map<number, Function>;
   /** Only in Bundle Mode on Worklet Runtimes. */
   var TurboModules: Map<string, unknown>;
   /**

@@ -164,6 +164,9 @@ function Navigator() {
         options={{
           headerTitle: '🐎 Reanimated examples',
           title: 'Reanimated examples',
+          headerStyle: globalThis._WORKLETS_BUNDLE_MODE_ENABLED
+            ? { backgroundColor: '#f9f9d9' }
+            : undefined,
         }}
       />
       {EXAMPLES_NAMES.map((name) => (

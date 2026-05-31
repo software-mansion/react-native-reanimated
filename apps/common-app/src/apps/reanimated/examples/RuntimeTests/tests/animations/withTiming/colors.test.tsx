@@ -1,14 +1,33 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from 'react-native-reanimated';
 
-import { describe, expect, getTestComponent, render, test, useTestRef, wait } from '../../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  getTestComponent,
+  render,
+  test,
+  useTestRef,
+  wait,
+} from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 
 const COMPONENT_REF_ACTIVE = 'ColorComponentPassive';
 const COMPONENT_REF_PASSIVE = 'ColorComponentPassive';
 
-const ColorComponent = ({ color1, color2 }: { color1: string | number; color2: string | number }) => {
+const ColorComponent = ({
+  color1,
+  color2,
+}: {
+  color1: string | number;
+  color2: string | number;
+}) => {
   const colorActiveSV = useSharedValue(color1);
   const colorPassiveSV = useSharedValue(color1);
 
@@ -18,7 +37,10 @@ const ColorComponent = ({ color1, color2 }: { color1: string | number; color2: s
   // @ts-ignore - number is not a valid color without react-native-strict-api enabled
   const styleActive = useAnimatedStyle(() => {
     return {
-      backgroundColor: withDelay(100, withTiming(colorActiveSV.value, { duration: 400 })),
+      backgroundColor: withDelay(
+        100,
+        withTiming(colorActiveSV.value, { duration: 400 })
+      ),
     };
   });
 
@@ -34,13 +56,22 @@ const ColorComponent = ({ color1, color2 }: { color1: string | number; color2: s
   }, [colorActiveSV, color2]);
 
   useEffect(() => {
-    colorPassiveSV.value = withDelay(100, withTiming(color2, { duration: 400 }));
+    colorPassiveSV.value = withDelay(
+      100,
+      withTiming(color2, { duration: 400 })
+    );
   }, [colorPassiveSV, color2]);
 
   return (
     <View style={styles.container}>
-      <Animated.View ref={refActive} style={[styles.animatedBox, styleActive]} />
-      <Animated.View ref={refPassive} style={[styles.animatedBox, stylePassive]} />
+      <Animated.View
+        ref={refActive}
+        style={[styles.animatedBox, styleActive]}
+      />
+      <Animated.View
+        ref={refPassive}
+        style={[styles.animatedBox, stylePassive]}
+      />
     </View>
   );
 };
@@ -56,28 +87,52 @@ describe('withTiming animation of COLOR 🎨', () => {
     'cornflowerblue',
   ];
 
-  test.each(OPAQUE_COLORS)('Animate FROM color as %s', async color => {
+  test.each(OPAQUE_COLORS)('Animate FROM color as %s', async (color) => {
     await render(<ColorComponent color1={color} color2="coral" />);
     const componentActive = getTestComponent(COMPONENT_REF_ACTIVE);
     const componentPassive = getTestComponent(COMPONENT_REF_PASSIVE);
 
-    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe('#6495ed', ComparisonMode.COLOR);
-    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe('#6495ed', ComparisonMode.COLOR);
+    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(
+      '#6495ed',
+      ComparisonMode.COLOR
+    );
+    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(
+      '#6495ed',
+      ComparisonMode.COLOR
+    );
     await wait(1000);
-    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe('#ff7f50', ComparisonMode.COLOR);
-    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe('#ff7f50', ComparisonMode.COLOR);
+    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(
+      '#ff7f50',
+      ComparisonMode.COLOR
+    );
+    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(
+      '#ff7f50',
+      ComparisonMode.COLOR
+    );
   });
 
-  test.each(OPAQUE_COLORS)('Animate TO color as %s', async color => {
+  test.each(OPAQUE_COLORS)('Animate TO color as %s', async (color) => {
     await render(<ColorComponent color1="coral" color2={color} />);
     const componentActive = getTestComponent(COMPONENT_REF_ACTIVE);
     const componentPassive = getTestComponent(COMPONENT_REF_PASSIVE);
 
-    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe('#ff7f50', ComparisonMode.COLOR);
-    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe('#ff7f50', ComparisonMode.COLOR);
+    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(
+      '#ff7f50',
+      ComparisonMode.COLOR
+    );
+    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(
+      '#ff7f50',
+      ComparisonMode.COLOR
+    );
     await wait(1000);
-    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe('#6495ed', ComparisonMode.COLOR);
-    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe('#6495ed', ComparisonMode.COLOR);
+    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(
+      '#6495ed',
+      ComparisonMode.COLOR
+    );
+    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(
+      '#6495ed',
+      ComparisonMode.COLOR
+    );
   });
 
   test("Animating colors as number doesn't work and doesn't crash", async () => {
@@ -85,11 +140,23 @@ describe('withTiming animation of COLOR 🎨', () => {
     const componentActive = getTestComponent(COMPONENT_REF_ACTIVE);
     const componentPassive = getTestComponent(COMPONENT_REF_PASSIVE);
 
-    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe('#ff7f50', ComparisonMode.COLOR);
-    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe('#ff7f50', ComparisonMode.COLOR);
+    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(
+      '#ff7f50',
+      ComparisonMode.COLOR
+    );
+    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(
+      '#ff7f50',
+      ComparisonMode.COLOR
+    );
     await wait(1000);
-    expect(await componentActive.getAnimatedStyle('backgroundColor')).not.toBe('#6495ed', ComparisonMode.COLOR);
-    expect(await componentPassive.getAnimatedStyle('backgroundColor')).not.toBe('#6495ed', ComparisonMode.COLOR);
+    expect(await componentActive.getAnimatedStyle('backgroundColor')).not.toBe(
+      '#6495ed',
+      ComparisonMode.COLOR
+    );
+    expect(await componentPassive.getAnimatedStyle('backgroundColor')).not.toBe(
+      '#6495ed',
+      ComparisonMode.COLOR
+    );
   });
 
   test.each([
@@ -105,11 +172,23 @@ describe('withTiming animation of COLOR 🎨', () => {
     const componentActive = getTestComponent(COMPONENT_REF_ACTIVE);
     const componentPassive = getTestComponent(COMPONENT_REF_PASSIVE);
 
-    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(from, ComparisonMode.COLOR);
-    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(from, ComparisonMode.COLOR);
+    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(
+      from,
+      ComparisonMode.COLOR
+    );
+    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(
+      from,
+      ComparisonMode.COLOR
+    );
     await wait(1000);
-    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(to, ComparisonMode.COLOR);
-    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(to, ComparisonMode.COLOR);
+    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(
+      to,
+      ComparisonMode.COLOR
+    );
+    expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(
+      to,
+      ComparisonMode.COLOR
+    );
   });
 });
 

@@ -1,17 +1,30 @@
 import type { NodePath } from '@babel/core';
 import { booleanLiteral, type ExpressionStatement } from '@babel/types';
+import { join } from 'path';
 
 import type { WorkletsPluginPass } from './types';
+
+const WORKLETS_SRC_ENTRY_PATH = join(
+  'react-native-worklets',
+  'src',
+  'index.ts'
+);
+const WORKLETS_LIB_ENTRY_PATH = join(
+  'react-native-worklets',
+  'lib',
+  'module',
+  'index.js'
+);
 
 /**
  * This function replaces the `false` value in
  *
  * `globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;`
  *
- * With `true` in the `workletRuntimeEntry` file when the `bundleMode` option is
+ * With `true` in the Worklets' entry-point file when the `bundleMode` option is
  * enabled in the Babel plugin.
  *
- * This way Bundle Mode is not accidentally set up in eager import environments,
+ * This way Bundle Mode is not accidentally set up in eager import environments.
  */
 export function toggleBundleMode(
   path: NodePath<ExpressionStatement>,
@@ -19,7 +32,8 @@ export function toggleBundleMode(
 ) {
   if (
     !state.opts.bundleMode ||
-    !state.filename?.includes('workletRuntimeEntry')
+    (!state.filename?.endsWith(WORKLETS_SRC_ENTRY_PATH) &&
+      !state.filename?.endsWith(WORKLETS_LIB_ENTRY_PATH))
   ) {
     return;
   }

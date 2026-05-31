@@ -3,10 +3,15 @@
 import { checkCppVersion } from '../debug/checkCppVersion';
 import { jsVersion } from '../debug/jsVersion';
 import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
+import { installRemoteFunctionUnpacker } from '../memory/remoteFunctionUnpacker';
 import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
 import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
 import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
-import type { SerializableRef, SynchronizableRef } from '../memory/types';
+import type {
+  RemoteFunction,
+  SerializableRef,
+  SynchronizableRef,
+} from '../memory/types';
 import { installValueUnpacker } from '../memory/valueUnpacker';
 import { isRNRuntime } from '../runtimeKind';
 import { WorkletsTurboModule } from '../specs';
@@ -58,18 +63,6 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       this.#workletsModuleProxy.createSerializableBoolean(true);
     this.#serializableFalse =
       this.#workletsModuleProxy.createSerializableBoolean(false);
-  }
-
-  createSerializable<TValue>(
-    value: TValue,
-    shouldPersistRemote: boolean,
-    nativeStateSource?: object
-  ) {
-    return this.#workletsModuleProxy.createSerializable(
-      value,
-      shouldPersistRemote,
-      nativeStateSource
-    );
   }
 
   createSerializableImport<TValue>(
@@ -129,11 +122,18 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.createSerializableHostObject(obj);
   }
 
-  createSerializableArray(array: unknown[], shouldRetainRemote: boolean) {
+  createSerializableArray(
+    array: unknown[],
+    shouldRetainRemote: boolean = false
+  ) {
     return this.#workletsModuleProxy.createSerializableArray(
       array,
       shouldRetainRemote
     );
+  }
+
+  createSerializableArrayBuffer(arrayBuffer: ArrayBuffer) {
+    return this.#workletsModuleProxy.createSerializableArrayBuffer(arrayBuffer);
   }
 
   createSerializableMap<TKey, TValue>(
@@ -149,14 +149,39 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.createSerializableSet(values);
   }
 
+  createSerializableError(
+    name: string,
+    message: string,
+    stack: string | undefined
+  ): SerializableRef<Error> {
+    return this.#workletsModuleProxy.createSerializableError(
+      name,
+      message,
+      stack
+    );
+  }
+
+  createSerializableRegExp(
+    pattern: string,
+    flags: string
+  ): SerializableRef<RegExp> {
+    return this.#workletsModuleProxy.createSerializableRegExp(pattern, flags);
+  }
+
   createSerializableInitializer(obj: object) {
     return this.#workletsModuleProxy.createSerializableInitializer(obj);
   }
 
-  createSerializableFunction<TArgs extends unknown[], TReturn>(
-    func: (...args: TArgs) => TReturn
-  ) {
-    return this.#workletsModuleProxy.createSerializableFunction(func);
+  createSerializableNonWorkletFunction<TArgs extends unknown[], TReturn>(
+    fun: (...args: TArgs) => TReturn,
+    functionId: number,
+    functionName: string | undefined
+  ): SerializableRef<(...args: TArgs) => TReturn> {
+    return this.#workletsModuleProxy.createSerializableNonWorkletFunction(
+      fun,
+      functionId,
+      functionName
+    );
   }
 
   createSerializableWorklet(worklet: object, shouldPersistRemote: boolean) {
@@ -203,11 +228,21 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
+  scheduleOnRN<TArgs extends unknown[]>(
+    fun: RemoteFunction | ((...args: TArgs) => unknown),
+    args: SerializableRef<TArgs> | undefined
+  ): void {
+    this.#workletsModuleProxy.scheduleOnRN(fun, args);
+  }
+
   scheduleOnUI<TValue>(
-    serializable: SerializableRef<TValue>,
-    scheduleStack: string | undefined
+    serializableArrayOfWorklets: SerializableRef<TValue[]>,
+    scheduleStacks: string[] | undefined
   ) {
-    return this.#workletsModuleProxy.scheduleOnUI(serializable, scheduleStack);
+    return this.#workletsModuleProxy.scheduleOnUI(
+      serializableArrayOfWorklets,
+      scheduleStacks
+    );
   }
 
   runOnUISync<TValue, TReturn>(
@@ -278,6 +313,18 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       runtimeId,
       worklet,
       scheduleStack
+    );
+  }
+
+  handlePromise<TValue>(
+    resolveOrReject:
+      | ((value: TValue | PromiseLike<TValue>) => void)
+      | RemoteFunction,
+    valueOrError: SerializableRef<TValue>
+  ) {
+    return this.#workletsModuleProxy.handlePromise(
+      resolveOrReject,
+      valueOrError
     );
   }
 
@@ -372,6 +419,11 @@ function installUnpackers(workletsModuleProxy: WorkletsModuleProxy) {
     (installShareableGuestUnpacker as WorkletFunction).__initData!.location ??
       '',
     (installShareableGuestUnpacker as WorkletFunction).__initData!.sourceMap ??
+      '',
+    (installRemoteFunctionUnpacker as WorkletFunction).__initData!.code,
+    (installRemoteFunctionUnpacker as WorkletFunction).__initData!.location ??
+      '',
+    (installRemoteFunctionUnpacker as WorkletFunction).__initData!.sourceMap ??
       ''
   );
 }

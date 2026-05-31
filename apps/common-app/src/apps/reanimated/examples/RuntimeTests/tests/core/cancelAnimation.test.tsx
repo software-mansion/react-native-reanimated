@@ -46,10 +46,14 @@ describe('Test *****cancelAnimation*****', () => {
 
       useEffect(() => {
         const startTime = performance.now();
-        width.value = withTiming(300, { duration: animationDuration, easing: Easing.linear }, () => {
-          const stopTime = performance.now();
-          elapsedTime.value = stopTime - startTime;
-        });
+        width.value = withTiming(
+          300,
+          { duration: animationDuration, easing: Easing.linear },
+          () => {
+            const stopTime = performance.now();
+            elapsedTime.value = stopTime - startTime;
+          }
+        );
 
         setTimeout(() => {
           cancelAnimation(width);
@@ -58,7 +62,10 @@ describe('Test *****cancelAnimation*****', () => {
 
       return (
         <View style={styles.container}>
-          <Animated.View ref={ref} style={[styles.animatedBox, animatedStyle]} />
+          <Animated.View
+            ref={ref}
+            style={[styles.animatedBox, animatedStyle]}
+          />
         </View>
       );
     };
@@ -71,22 +78,37 @@ describe('Test *****cancelAnimation*****', () => {
       [1000, 400],
       [10000, 400],
       [2000, 300],
-    ])('Stop after **${1}**ms, full animation is **${0}**ms long ', async ([animationDuration, timeToStop]) => {
-      await render(<CancelAfterDelayComponent animationDuration={animationDuration} timeToStop={timeToStop} />);
-      const animatedComponent = getTestComponent(CANCEL_AFTER_DELAY_REF);
+    ])(
+      'Stop after **${1}**ms, full animation is **${0}**ms long ',
+      async ([animationDuration, timeToStop]) => {
+        await render(
+          <CancelAfterDelayComponent
+            animationDuration={animationDuration}
+            timeToStop={timeToStop}
+          />
+        );
+        const animatedComponent = getTestComponent(CANCEL_AFTER_DELAY_REF);
 
-      await wait(timeToStop + 200);
+        await wait(timeToStop + 200);
 
-      const timeElapsed = (await getRegisteredValue(ELAPSED_TIME_REF)).onJS as number;
-      const expectedWidth = 300 * (timeElapsed / animationDuration);
-      expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(expectedWidth - 4, expectedWidth + 4);
-    });
+        const timeElapsed = (await getRegisteredValue(ELAPSED_TIME_REF))
+          .onJS as number;
+        const expectedWidth = 300 * (timeElapsed / animationDuration);
+        expect(
+          await animatedComponent.getAnimatedStyle('width')
+        ).toBeWithinRange(expectedWidth - 4, expectedWidth + 4);
+      }
+    );
   });
 
   describe('Test canceling animation _after fulfilling condition_ of reaching a predefined value', () => {
     const CANCEL_AFTER_CONDITION_REF = 'CancelAfterDelayComponent';
 
-    const CancelAfterConditionComponent = ({ stopValue }: { stopValue: number }) => {
+    const CancelAfterConditionComponent = ({
+      stopValue,
+    }: {
+      stopValue: number;
+    }) => {
       const width = useSharedValue(0);
       const ref = useTestRef(CANCEL_AFTER_CONDITION_REF);
 
@@ -107,19 +129,27 @@ describe('Test *****cancelAnimation*****', () => {
 
       return (
         <View style={styles.container}>
-          <Animated.View ref={ref} style={[styles.animatedBox, animatedStyle]} />
+          <Animated.View
+            ref={ref}
+            style={[styles.animatedBox, animatedStyle]}
+          />
         </View>
       );
     };
 
-    test.each([100, 150, 200, 300])('Stop after width equals **%p**', async stopValue => {
-      await render(<CancelAfterConditionComponent stopValue={stopValue} />);
-      const animatedComponent = getTestComponent(CANCEL_AFTER_CONDITION_REF);
+    test.each([100, 150, 200, 300])(
+      'Stop after width equals **%p**',
+      async (stopValue) => {
+        await render(<CancelAfterConditionComponent stopValue={stopValue} />);
+        const animatedComponent = getTestComponent(CANCEL_AFTER_CONDITION_REF);
 
-      await wait(320);
+        await wait(320);
 
-      expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(stopValue, stopValue + 17);
-    });
+        expect(
+          await animatedComponent.getAnimatedStyle('width')
+        ).toBeWithinRange(stopValue, stopValue + 17);
+      }
+    );
   });
 
   describe('Test canceling animation _from callback_ after finishing other animation', () => {
@@ -149,15 +179,25 @@ describe('Test *****cancelAnimation*****', () => {
       });
 
       useEffect(() => {
-        width1.value = withTiming(300, { duration: animationDuration, easing: Easing.linear });
-        width2.value = withTiming(300, { duration: timeToStop, easing: Easing.linear }, () => {
-          cancelAnimation(width1);
+        width1.value = withTiming(300, {
+          duration: animationDuration,
+          easing: Easing.linear,
         });
+        width2.value = withTiming(
+          300,
+          { duration: timeToStop, easing: Easing.linear },
+          () => {
+            cancelAnimation(width1);
+          }
+        );
       });
 
       return (
         <View style={styles.container}>
-          <Animated.View ref={ref} style={[styles.animatedBox, animatedStyle1]} />
+          <Animated.View
+            ref={ref}
+            style={[styles.animatedBox, animatedStyle1]}
+          />
           <Animated.View style={[styles.animatedBox, animatedStyle2]} />
         </View>
       );
@@ -166,15 +206,25 @@ describe('Test *****cancelAnimation*****', () => {
     test.each([
       [300, 1000],
       [30, 1000],
-    ])('Stop after width equals **%p**', async ([timeToStop, animationDuration]) => {
-      await render(<CancelFromCallbackComponent animationDuration={animationDuration} timeToStop={timeToStop} />);
-      const animatedComponent = getTestComponent(CANCEL_FROM_CALLBACK_REF);
+    ])(
+      'Stop after width equals **%p**',
+      async ([timeToStop, animationDuration]) => {
+        await render(
+          <CancelFromCallbackComponent
+            animationDuration={animationDuration}
+            timeToStop={timeToStop}
+          />
+        );
+        const animatedComponent = getTestComponent(CANCEL_FROM_CALLBACK_REF);
 
-      await wait(timeToStop + 100);
-      const expectedWidth = (timeToStop / animationDuration) * 300;
+        await wait(timeToStop + 100);
+        const expectedWidth = (timeToStop / animationDuration) * 300;
 
-      expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(expectedWidth, expectedWidth + 5);
-    });
+        expect(
+          await animatedComponent.getAnimatedStyle('width')
+        ).toBeWithinRange(expectedWidth, expectedWidth + 5);
+      }
+    );
   });
 });
 

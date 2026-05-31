@@ -3,6 +3,7 @@ import type { ShadowNodeWrapper, StyleProps } from '../../commonTypes';
 import { ReanimatedModule } from '../../ReanimatedModule';
 import type {
   CSSAnimationUpdates,
+  CSSPseudoStyleConfig,
   CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
 } from './types';
@@ -73,4 +74,15 @@ export function runCSSTransition(
 
 export function unregisterCSSTransition(viewTag: number) {
   ReanimatedModule.unregisterCSSTransition(viewTag);
+}
+
+export function registerPseudoStyle(
+  shadowNodeWrapper: ShadowNodeWrapper,
+  config: CSSPseudoStyleConfig
+) {
+  ReanimatedModule.registerPseudoStyle(shadowNodeWrapper, config);
+}
+
+export function unregisterPseudoStyle(viewTag: number) {
+  ReanimatedModule.unregisterPseudoStyle(viewTag);
 }

@@ -674,37 +674,6 @@ var Foo = function () {
 }();"
 `;
 
-exports[`babel plugin for closure capturing captures locally bound variables named like globals 1`] = `
-"const console = {
-  log: () => 42
-};
-const _worklet_1380037982666_init_data = {
-  code: "function f_null1(){const{console}=this.__closure;console.log(console);}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const f = function f_null1Factory({
-  _worklet_1380037982666_init_data,
-  console
-}) {
-  const _e = [new global.Error(), -2, -27];
-  const f = function () {
-    console.log(console);
-  };
-  f.__closure = {
-    console
-  };
-  f.__workletHash = 1380037982666;
-  f.__pluginVersion = "x.y.z";
-  f.__initData = _worklet_1380037982666_init_data;
-  f.__stackDetails = _e;
-  return f;
-}({
-  _worklet_1380037982666_init_data,
-  console
-});"
-`;
-
 exports[`babel plugin for closure capturing captures worklets environment 1`] = `
 "const x = 5;
 const objX = {
@@ -787,30 +756,6 @@ const f = function f_null1Factory({
   return f;
 }({
   _worklet_11658370598384_init_data
-});"
-`;
-
-exports[`babel plugin for closure capturing doesn't capture default globals 1`] = `
-"const _worklet_9451494835104_init_data = {
-  code: "function f_null1(){console.log('test');}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const f = function f_null1Factory({
-  _worklet_9451494835104_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const f = function () {
-    console.log('test');
-  };
-  f.__closure = {};
-  f.__workletHash = 9451494835104;
-  f.__pluginVersion = "x.y.z";
-  f.__initData = _worklet_9451494835104_init_data;
-  f.__stackDetails = _e;
-  return f;
-}({
-  _worklet_9451494835104_init_data
 });"
 `;
 
@@ -1124,128 +1069,6 @@ const foo = useAnimatedStyle(function null1Factory({
 }({
   _worklet_8623346549410_init_data
 }));"
-`;
-
-exports[`babel plugin for explicit worklets workletizes ArrowFunctionExpression 1`] = `
-"const _worklet_2294411833184_init_data = {
-  code: "function null1(x){return x+2;}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function null1Factory({
-  _worklet_2294411833184_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function (x) {
-    return x + 2;
-  };
-  null1.__closure = {};
-  null1.__workletHash = 2294411833184;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_2294411833184_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_2294411833184_init_data
-});"
-`;
-
-exports[`babel plugin for explicit worklets workletizes FunctionDeclaration 1`] = `
-"const _worklet_2156194750585_init_data = {
-  code: "function foo_null1(x){return x+2;}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_2156194750585_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const foo = function (x) {
-    return x + 2;
-  };
-  foo.__closure = {};
-  foo.__workletHash = 2156194750585;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_2156194750585_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}({
-  _worklet_2156194750585_init_data
-});"
-`;
-
-exports[`babel plugin for explicit worklets workletizes ObjectMethod 1`] = `
-"const _worklet_10686480819086_init_data = {
-  code: "function bar_null1(x){return x+2;}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = {
-  bar: function bar_null1Factory({
-    _worklet_10686480819086_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const bar = function (x) {
-      return x + 2;
-    };
-    bar.__closure = {};
-    bar.__workletHash = 10686480819086;
-    bar.__pluginVersion = "x.y.z";
-    bar.__initData = _worklet_10686480819086_init_data;
-    bar.__stackDetails = _e;
-    return bar;
-  }({
-    _worklet_10686480819086_init_data
-  })
-};"
-`;
-
-exports[`babel plugin for explicit worklets workletizes named FunctionExpression 1`] = `
-"const _worklet_2156194750585_init_data = {
-  code: "function foo_null1(x){return x+2;}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_2156194750585_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const foo = function (x) {
-    return x + 2;
-  };
-  foo.__closure = {};
-  foo.__workletHash = 2156194750585;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_2156194750585_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}({
-  _worklet_2156194750585_init_data
-});"
-`;
-
-exports[`babel plugin for explicit worklets workletizes unnamed FunctionExpression 1`] = `
-"const _worklet_2294411833184_init_data = {
-  code: "function null1(x){return x+2;}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function null1Factory({
-  _worklet_2294411833184_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function (x) {
-    return x + 2;
-  };
-  null1.__closure = {};
-  null1.__workletHash = 2294411833184;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_2294411833184_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_2294411833184_init_data
-});"
 `;
 
 exports[`babel plugin for file workletization doesn't workletize function outside of top level scope 1`] = `
@@ -2372,30 +2195,6 @@ const bar = function null2Factory({
 }({
   _worklet_17530869641357_init_data
 });"
-`;
-
-exports[`babel plugin for function hooks workletizes hook wrapped ArrowFunctionExpression automatically 1`] = `
-"const _worklet_1392490775014_init_data = {
-  code: "function null1(){return{width:50};}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const animatedStyle = useAnimatedStyle(function null1Factory({
-  _worklet_1392490775014_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = () => ({
-    width: 50
-  });
-  null1.__closure = {};
-  null1.__workletHash = 1392490775014;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_1392490775014_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_1392490775014_init_data
-}));"
 `;
 
 exports[`babel plugin for function hooks workletizes hook wrapped named FunctionExpression automatically 1`] = `

@@ -24,5 +24,5 @@ export function getShadowNodeWrapperFromRef(
     }
   }
 
-  return resolvedInstance!.stateNode.node as ShadowNodeWrapper;
+  return (resolvedInstance!.stateNode as { node: ShadowNodeWrapper }).node;
 }

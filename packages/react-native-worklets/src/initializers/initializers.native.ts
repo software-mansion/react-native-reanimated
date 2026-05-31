@@ -6,11 +6,11 @@ import {
   silenceHMRWarnings,
 } from '../bundleMode/metroOverrides';
 import { initializeNetworking } from '../bundleMode/network';
-import { setupCallGuard } from '../callGuard';
 import { registerReportFatalRemoteError } from '../debug/errors';
 import { getStaticFeatureFlag } from '../featureFlags/featureFlags';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
 import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
+import { installRemoteFunctionUnpacker } from '../memory/remoteFunctionUnpacker';
 import { makeShareableCloneOnUIRecursive } from '../memory/serializable';
 import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
 import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
@@ -150,6 +150,7 @@ function initializeRuntime() {
   installCustomSerializableUnpacker();
   installShareableHostUnpacker();
   installShareableGuestUnpacker();
+  installRemoteFunctionUnpacker();
 }
 
 /** A function that should be run only on React Native runtime. */
@@ -171,8 +172,6 @@ function initializeRNRuntime() {
 /** A function that should be run only on Worklet runtimes. */
 function initializeWorkletRuntime() {
   if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-    setupCallGuard();
-
     if (__DEV__) {
       silenceHMRWarnings();
       disallowRNImports();
@@ -194,11 +193,6 @@ function installRNBindingsOnUIRuntime() {
     throw new Error(
       '[Worklets] Worklets are trying to initialize the UI runtime without a valid WorkletsModule'
     );
-  }
-
-  if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-    /** In Bundle Mode Runtimes setup their callGuard themselves. */
-    runOnUISync(setupCallGuard);
   }
 
   const runtimeBoundCapturableConsole =

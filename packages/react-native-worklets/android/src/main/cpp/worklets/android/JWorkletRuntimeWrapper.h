@@ -16,7 +16,7 @@ using namespace facebook::react;
 using namespace facebook::jni;
 
 /**
-    * JNI wrapper around WorkletRuntime to expose its methods to Java.
+ * JNI wrapper around WorkletRuntime to expose its methods to Java.
  */
 class JWorkletRuntimeWrapper : public jni::HybridClass<JWorkletRuntimeWrapper> {
  public:

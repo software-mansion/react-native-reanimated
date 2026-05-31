@@ -4,7 +4,7 @@ import { Component } from 'react';
 import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 
-import type { AnyComponent, AnyRecord, PlainStyle } from '../../common';
+import type { AnyComponent, PlainStyle, UnknownRecord } from '../../common';
 import { IS_JEST, SHOULD_BE_USE_WEB } from '../../common';
 import type {
   InternalHostInstance,
@@ -23,7 +23,7 @@ import { CSSManager } from '../platform';
 import type { CSSStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
 
-export type AnimatedComponentProps = Record<string, unknown> & {
+export type AnimatedComponentProps = UnknownRecord & {
   ref?: Ref<Component>;
   style?: StyleProp<PlainStyle>;
 };
@@ -32,9 +32,9 @@ export type AnimatedComponentProps = Record<string, unknown> & {
 // private/protected ones when possible (when changes from this repo are merged
 // to the main one)
 export default class AnimatedComponent<
-    P extends AnyRecord = AnimatedComponentProps,
-    S extends AnyRecord = Record<string, unknown>,
-  >
+  P extends UnknownRecord = AnimatedComponentProps,
+  S extends object = UnknownRecord,
+>
   extends Component<P, S>
   implements IAnimatedComponentInternalBase
 {
@@ -82,7 +82,7 @@ export default class AnimatedComponent<
     } else {
       const hostInstance = findHostInstance(this);
       if (!hostInstance) {
-        /* 
+        /*
           findHostInstance can return null for a component that doesn't render anything 
           (render function returns null). Example: 
           svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
@@ -109,7 +109,10 @@ export default class AnimatedComponent<
   }
 
   _setComponentRef = (ref: Component | HTMLElement) => {
-    const forwardedRef = this.props.forwardedRef;
+    const forwardedRef = this.props.forwardedRef as
+      | ((ref: Component | HTMLElement) => void)
+      | { current: Component | HTMLElement | null }
+      | undefined;
     // Forward to user ref prop (if one has been specified)
     if (typeof forwardedRef === 'function') {
       // Handle function-based refs. String-based refs are handled as functions.
@@ -151,7 +154,9 @@ export default class AnimatedComponent<
   };
 
   _updateStyles(props: P) {
-    this._cssStyle = StyleSheet.flatten(props.style) ?? {};
+    this._cssStyle = (StyleSheet.flatten(
+      props.style as StyleProp<PlainStyle>
+    ) ?? {}) as CSSStyle;
   }
 
   componentDidMount() {
@@ -218,7 +223,9 @@ export default class AnimatedComponent<
       <ChildComponent
         {...(props ?? this.props)}
         {...platformProps}
-        style={filterNonCSSStyleProps(props?.style ?? this.props.style)}
+        style={filterNonCSSStyleProps(
+          (props?.style ?? this.props.style) as StyleProp<CSSStyle>
+        )}
         // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
         // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
         ref={this._setComponentRef as (ref: Component) => void}

@@ -1,7 +1,5 @@
-#include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
-#include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/android/AnimationFrameCallback.h>
 #include <worklets/android/WorkletsModule.h>
@@ -31,31 +29,22 @@ WorkletsModule::WorkletsModule(
     jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
     const BundleModeConfig &bundleModeConfig,
     jsi::Runtime *rnRuntime,
-    jni::alias_ref<JavaMessageQueueThread::javaobject>
-        messageQueueThread, // NOLINT //(performance-unnecessary-value-param)
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       workletsModuleProxy_(std::make_shared<WorkletsModuleProxy>(
           *rnRuntime,
-          std::make_shared<JMessageQueueThread>(messageQueueThread),
           jsCallInvoker,
           uiScheduler,
           getIsOnJSQueueThread(),
           getRuntimeBindings(bundleModeConfig.enabled, *rnRuntime),
-          bundleModeConfig)) {
-  auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
-  RNRuntimeWorkletDecorator::decorate(
-      *rnRuntime_, jsiWorkletsModuleProxy->toOptimizedObject(*rnRuntime_), workletsModuleProxy_->getJSLogger());
-}
+          bundleModeConfig)) {}
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
     jboolean bundleModeEnabled,
     jlong jsContext,
-    jni::alias_ref<JavaMessageQueueThread::javaobject>
-        messageQueueThread, // NOLINT //(performance-unnecessary-value-param)
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
     jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
     jni::alias_ref<JScriptBufferWrapper::javaobject>
@@ -81,7 +70,6 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
           .sourceURL = sourceURL,
       },
       rnRuntime,
-      messageQueueThread,
       jsCallInvoker,
       uiScheduler);
 }

@@ -11,8 +11,8 @@ import type { PredefinedTimingFunction, StepsModifier } from '../easing/types';
 import type {
   CSSAnimationKeyframes,
   CSSAnimationProp,
+  CSSConfigProp,
   CSSKeyframesRule,
-  CSSStyleProp,
   CSSTransitionProp,
   Repeat,
   TimeUnit,
@@ -20,6 +20,7 @@ import type {
 
 const ANIMATION_PROPS_SET = new Set<string>(ANIMATION_PROPS);
 const TRANSITION_PROPS_SET = new Set<string>(TRANSITION_PROPS);
+// is-tree-shakable-suppress
 const VALID_STEPS_MODIFIERS_SET = new Set<string>(VALID_STEPS_MODIFIERS);
 
 const VALID_PREDEFINED_TIMING_FUNCTIONS_SET = new Set<string>(
@@ -48,7 +49,7 @@ export const isTransitionProp = (key: string): key is CSSTransitionProp =>
 export const isStepsModifier = (value: string): value is StepsModifier =>
   VALID_STEPS_MODIFIERS_SET.has(value);
 
-export const isCSSStyleProp = (key: string): key is CSSStyleProp =>
+export const isCSSConfigProp = (key: string): key is CSSConfigProp =>
   isTransitionProp(key) || isAnimationProp(key);
 
 export const isTimeUnit = (value: unknown): value is TimeUnit =>
@@ -71,3 +72,16 @@ export const isCSSKeyframesObject = (
 
 export const isCSSKeyframesRule = (value: object): value is CSSKeyframesRule =>
   typeof value === 'object' && 'cssRules' in value && 'cssText' in value;
+
+export const isPseudoSelectorValue = (
+  value: unknown
+): value is Record<string, unknown> => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+  const keys = Object.keys(value);
+  if (keys.length === 0) {
+    return false;
+  }
+  return keys.every((key) => key === 'default' || key.startsWith(':'));
+};

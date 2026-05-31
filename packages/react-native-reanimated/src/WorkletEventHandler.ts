@@ -23,9 +23,9 @@ function jsListener<Event extends object>(
   };
 }
 
-class WorkletEventHandlerNative<Event extends object>
-  implements IWorkletEventHandler<Event>
-{
+class WorkletEventHandlerNative<
+  Event extends object,
+> implements IWorkletEventHandler<Event> {
   eventNames: string[];
   worklet: (event: ReanimatedEvent<Event>) => void;
   #viewTags: Set<number>;
@@ -90,9 +90,9 @@ class WorkletEventHandlerNative<Event extends object>
   }
 }
 
-class WorkletEventHandlerWeb<Event extends object>
-  implements IWorkletEventHandler<Event>
-{
+class WorkletEventHandlerWeb<
+  Event extends object,
+> implements IWorkletEventHandler<Event> {
   eventNames: string[];
   listeners:
     | Record<string, (event: ReanimatedEvent<ReanimatedEvent<Event>>) => void>

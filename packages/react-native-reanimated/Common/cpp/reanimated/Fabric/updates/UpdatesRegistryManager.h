@@ -6,6 +6,7 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
+#include <atomic>
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -17,9 +18,19 @@ using namespace css;
 
 class UpdatesRegistryManager {
  public:
+  class [[nodiscard]] ScopedLock {
+   public:
+    explicit ScopedLock(std::mutex &mutex);
+    ~ScopedLock();
+
+   private:
+    std::lock_guard<std::mutex> guard_;
+  };
+
   explicit UpdatesRegistryManager(const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry);
 
-  std::lock_guard<std::mutex> lock() const;
+  ScopedLock lock() const;
+  static bool isLockedByCurrentThread();
 
   // TODO - ensure that other sublibraries can easily hook into this registry
   // manager (e.g. add priority to registries)
