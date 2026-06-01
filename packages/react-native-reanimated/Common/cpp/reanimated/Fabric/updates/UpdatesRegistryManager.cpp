@@ -1,17 +1,35 @@
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
+#include <react/debug/react_native_assert.h>
+
 #include <memory>
 #include <utility>
 #include <vector>
 
 namespace reanimated {
 
+namespace {
+thread_local bool tCurrentThreadHoldsLock = false;
+} // namespace
+
+UpdatesRegistryManager::ScopedLock::ScopedLock(std::mutex &mutex) : guard_(mutex) {
+  tCurrentThreadHoldsLock = true;
+}
+
+UpdatesRegistryManager::ScopedLock::~ScopedLock() {
+  tCurrentThreadHoldsLock = false;
+}
+
 UpdatesRegistryManager::UpdatesRegistryManager(const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)
     : staticPropsRegistry_(staticPropsRegistry) {}
 
-std::lock_guard<std::mutex> UpdatesRegistryManager::lock() const {
-  return std::lock_guard<std::mutex>{mutex_};
+UpdatesRegistryManager::ScopedLock UpdatesRegistryManager::lock() const {
+  return ScopedLock{mutex_};
+}
+
+bool UpdatesRegistryManager::isLockedByCurrentThread() {
+  return tCurrentThreadHoldsLock;
 }
 
 void UpdatesRegistryManager::addRegistry(const std::shared_ptr<UpdatesRegistry> &registry) {
@@ -48,14 +66,17 @@ bool UpdatesRegistryManager::shouldCommitAfterPause() {
 }
 
 void UpdatesRegistryManager::markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode) {
+  react_native_assert(isLockedByCurrentThread());
   removableShadowNodes_[shadowNode->getTag()] = shadowNode->getFamilyShared();
 }
 
 void UpdatesRegistryManager::unmarkNodeAsRemovable(Tag viewTag) {
+  react_native_assert(isLockedByCurrentThread());
   removableShadowNodes_.erase(viewTag);
 }
 
 void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadowNode) {
+  react_native_assert(isLockedByCurrentThread());
   RemovableShadowNodes remainingShadowNodes;
 
   for (const auto &[tag, shadowNodeFamily] : removableShadowNodes_) {
@@ -77,6 +98,7 @@ void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadow
 }
 
 PropsMap UpdatesRegistryManager::collectProps() {
+  react_native_assert(isLockedByCurrentThread());
   PropsMap propsMap;
   for (auto &registry : registries_) {
     registry->collectProps(propsMap);
@@ -87,6 +109,7 @@ PropsMap UpdatesRegistryManager::collectProps() {
 #ifdef ANDROID
 
 bool UpdatesRegistryManager::hasPropsToRevert() {
+  react_native_assert(isLockedByCurrentThread());
   for (auto &registry : registries_) {
     if (registry->hasPropsToRevert()) {
       return true;
@@ -111,6 +134,7 @@ void UpdatesRegistryManager::addToPropsMap(
 }
 
 void UpdatesRegistryManager::collectPropsToRevertBySurface(std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface) {
+  react_native_assert(isLockedByCurrentThread());
   for (const auto &registry : registries_) {
     registry->collectPropsToRevert(propsToRevertMap_);
   }
@@ -146,6 +170,7 @@ void UpdatesRegistryManager::collectPropsToRevertBySurface(std::unordered_map<Su
 }
 
 void UpdatesRegistryManager::clearPropsToRevert(const SurfaceId surfaceId) {
+  react_native_assert(isLockedByCurrentThread());
   for (auto it = propsToRevertMap_.begin(); it != propsToRevertMap_.end();) {
     if (it->second.shadowNodeFamily->getSurfaceId() == surfaceId) {
       it = propsToRevertMap_.erase(it);

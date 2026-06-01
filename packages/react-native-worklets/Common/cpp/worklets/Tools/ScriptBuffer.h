@@ -18,8 +18,8 @@ using namespace facebook;
 using namespace facebook::react;
 
 /**
-  * Our custom copyable structure that is accepted by
-  * Hermes Runtime for evaluation.
+ * Our custom copyable structure that is accepted by
+ * Hermes Runtime for evaluation.
  */
 class ScriptBuffer : public jsi::Buffer {
  public:

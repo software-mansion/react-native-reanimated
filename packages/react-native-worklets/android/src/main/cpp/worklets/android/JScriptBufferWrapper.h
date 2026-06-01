@@ -14,7 +14,7 @@ using namespace facebook;
 using namespace facebook::react;
 
 /**
- * JScriptBufferWrapper is a JNI wrapper class that holds a ScriptBuffer containing 
+ * JScriptBufferWrapper is a JNI wrapper class that holds a ScriptBuffer containing
  * JavaScript code and its source URL, to be evaluated on a WorkletRuntime.
  */
 class JScriptBufferWrapper : public jni::HybridClass<JScriptBufferWrapper> {

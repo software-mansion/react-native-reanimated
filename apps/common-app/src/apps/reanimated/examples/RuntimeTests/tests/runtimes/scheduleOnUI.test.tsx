@@ -72,7 +72,7 @@ describe('scheduleOnUI', () => {
       await waitForNotification(PASS_NOTIFICATION);
       expect(value).toBe(42);
     });
-  } else {
+  } else if (__DEV__) {
     test('throws when scheduling on UI Runtime to UI Runtime', async () => {
       scheduleOnUI(() => {
         'worklet';

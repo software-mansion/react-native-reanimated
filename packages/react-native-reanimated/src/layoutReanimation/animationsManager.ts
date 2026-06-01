@@ -101,6 +101,7 @@ function createLayoutAnimationManager(): {
   };
 }
 
+// is-tree-shakable-suppress
 if (!SHOULD_BE_USE_WEB) {
   runOnUISync(() => {
     'worklet';

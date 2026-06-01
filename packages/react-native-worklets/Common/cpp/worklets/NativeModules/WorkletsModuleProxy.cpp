@@ -19,10 +19,10 @@ bool isDevBundleFromRNRuntime(jsi::Runtime &rnRuntime) {
 }
 
 /**
-* This method is required outside of Bundle Mode to make sure we start creating
-* Worklet Runtimes only after unpackers code was loaded from the RN Runtime.
-*
-* In Bundle Mode unpackers are installed during bundle evaluation instead.
+ * This method is required outside of Bundle Mode to make sure we start creating
+ * Worklet Runtimes only after unpackers code was loaded from the RN Runtime.
+ *
+ * In Bundle Mode unpackers are installed during bundle evaluation instead.
  */
 void WorkletsModuleProxy::start() {
   /**

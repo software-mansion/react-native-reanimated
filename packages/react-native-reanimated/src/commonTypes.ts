@@ -11,7 +11,7 @@ import type {
 } from 'react-native';
 import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 
-import type { AnyRecord, Maybe } from './common';
+import type { Maybe } from './common';
 import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
 import type { EasingFunctionFactory } from './Easing';
 import type { AnimatedStyleHandle, DefaultStyle } from './hook/commonTypes';
@@ -455,8 +455,8 @@ type MaybeSharedValueRecursive<Value> = Value extends readonly (infer Item)[]
           }
     : MaybeSharedValue<Value>;
 
-type ReanimatedCSSProps = Partial<
-  CSSAnimationProperties & CSSTransitionProperties
+type CSSConfigProps<TStyle extends object> = Partial<
+  CSSAnimationProperties<TStyle> & CSSTransitionProperties<TStyle>
 >;
 
 // Two candidates — the static intersection keeps generic inference working
@@ -464,18 +464,18 @@ type ReanimatedCSSProps = Partial<
 // `never`-collapse when a base style augmentation (e.g. Expo's
 // `expo-env.d.ts`) declares our CSS keys with conflicting types. See
 // https://github.com/software-mansion/react-native-reanimated/issues/9328
-type WithReanimatedCSS<Style> =
-  | (Style & ReanimatedCSSProps)
-  | (Style extends object
-      ? Omit<Style, keyof ReanimatedCSSProps> & ReanimatedCSSProps
-      : never);
+type StyleWithCSS<TStyle> = TStyle extends object
+  ?
+      | (TStyle & CSSConfigProps<TStyle>)
+      | (Omit<TStyle, keyof CSSConfigProps<TStyle>> & CSSConfigProps<TStyle>)
+  : never;
 
 // Ideally we want AnimatedStyle to not be generic, but there are
 // so many dependencies on it being generic that it's not feasible at the moment.
-export type AnimatedStyle<Style = DefaultStyle> =
-  | WithReanimatedCSS<Style>
-  | MaybeSharedValueRecursive<Style>
-  | AnimatedStyleHandle<Style>;
+export type AnimatedStyle<TStyle = DefaultStyle> =
+  | StyleWithCSS<TStyle>
+  | MaybeSharedValueRecursive<TStyle>
+  | AnimatedStyleHandle<TStyle>;
 
 export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
@@ -507,7 +507,7 @@ export type InternalHostInstance = Partial<
     >;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getScrollableNode: () => any;
-    __internalInstanceHandle: AnyRecord;
+    __internalInstanceHandle: Record<string, unknown>;
   }
 >;
 
