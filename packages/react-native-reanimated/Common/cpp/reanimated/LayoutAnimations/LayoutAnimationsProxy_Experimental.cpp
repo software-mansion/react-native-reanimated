@@ -278,12 +278,15 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         } else if (!deleted.contains(tag)) {
           filteredMutations.push_back(mutation);
           kids.erase(kids.begin() + childIndex);
-        } else {
-          // tag and its parent are both being deleted: React tears down the subtree wholesale
-          // so we must not re-emit this Remove, but we still erase it from the light tree to
-          // keep the mirror in sync with native (the previous code left it, drifting the root).
-          kids.erase(kids.begin() + childIndex);
         }
+        // else: tag and its parent are both being deleted. React tears down the subtree
+        // wholesale, so we must neither re-emit this Remove nor erase the node from the light
+        // tree here. handleRemovals walks the still-present light-tree children of the exiting
+        // parent and emits each child's native RemoveMutation/DeleteMutation (see
+        // startAnimationsRecursively, which iterates node->children). Erasing the child here
+        // drops it before that walk, so its native view is never removed and is stranded on
+        // screen as stale, overlapping content (e.g. the examples list bleeding through a
+        // pushed screen). Leaving it lets handleRemovals remove it and keep the mirror synced.
         break;
       }
       default: {
