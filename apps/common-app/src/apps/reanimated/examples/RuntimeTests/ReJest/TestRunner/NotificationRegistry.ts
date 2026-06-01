@@ -1,5 +1,3 @@
-import { RuntimeKind, scheduleOnRN } from 'react-native-worklets';
-
 let notificationRegistry: Record<string, boolean> = {};
 function notifyJS(name: string) {
   notificationRegistry[name] = true;
@@ -8,11 +6,7 @@ function notifyJS(name: string) {
 export class NotificationRegistry {
   public notify(name: string) {
     'worklet';
-    if (globalThis.__RUNTIME_KIND != RuntimeKind.ReactNative) {
-      scheduleOnRN(notifyJS, name);
-    } else {
-      notifyJS(name);
-    }
+    notifyJS(name);
   }
 
   public async waitForNotification(name: string, timeout?: number) {

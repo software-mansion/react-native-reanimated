@@ -1237,6 +1237,40 @@ fn process_expression<'a>(
                 process_expression(e, ctx, state, scoping, builder, allocator, filename);
             }
         }
+        Expression::AwaitExpression(a) => {
+            process_expression(&mut a.argument, ctx, state, scoping, builder, allocator, filename);
+        }
+        Expression::YieldExpression(y) => {
+            if let Some(arg) = &mut y.argument {
+                process_expression(arg, ctx, state, scoping, builder, allocator, filename);
+            }
+        }
+        Expression::UnaryExpression(u) => {
+            process_expression(&mut u.argument, ctx, state, scoping, builder, allocator, filename);
+        }
+        Expression::ParenthesizedExpression(p) => {
+            process_expression(&mut p.expression, ctx, state, scoping, builder, allocator, filename);
+        }
+        Expression::ChainExpression(c) => {
+            if let oxc_ast::ast::ChainElement::CallExpression(call) = &mut c.expression {
+                process_expression(
+                    &mut call.callee, ctx, state, scoping, builder, allocator, filename,
+                );
+                for arg in call.arguments.iter_mut() {
+                    if let Some(arg_expr) = arg.as_expression_mut() {
+                        process_expression(
+                            arg_expr, ctx, state, scoping, builder, allocator, filename,
+                        );
+                    }
+                }
+            }
+        }
+        Expression::TaggedTemplateExpression(t) => {
+            process_expression(&mut t.tag, ctx, state, scoping, builder, allocator, filename);
+            for e in t.quasi.expressions.iter_mut() {
+                process_expression(e, ctx, state, scoping, builder, allocator, filename);
+            }
+        }
         _ => {}
     }
 }

@@ -10,6 +10,7 @@ import type {
   TestValue,
 } from './types';
 import { DescribeDecorator, TestDecorator } from './types';
+import { scheduleOnRN, RuntimeKind } from 'react-native-worklets';
 
 export { Presets } from './Presets';
 
@@ -161,7 +162,11 @@ export async function waitForAnimationUpdates(updatesCount: number) {
 const testRunnerNotifyFn = notificationRegistry.notify;
 export function notify(name: string) {
   'worklet';
-  return testRunnerNotifyFn(name);
+  if (globalThis.__RUNTIME_KIND != RuntimeKind.ReactNative) {
+    scheduleOnRN(testRunnerNotifyFn, name);
+  } else {
+    testRunnerNotifyFn(name);
+  }
 }
 
 export async function waitForNotification(
