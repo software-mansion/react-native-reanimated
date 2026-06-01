@@ -350,7 +350,14 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
   finishedAnimationTags_.push_back(tag);
   auto surfaceId = layoutAnimation.finalView.surfaceId;
 
-  if (sharedTransitionManager_->tagToName_.contains(tag)) {
+  // Only run the shared-transition container teardown when this ending animation actually belongs
+  // to a container we created. Previously this checked tagToName_.contains(tag), which is also true
+  // for a regular shared-element source view (registered via transferConfigFromNativeID). A view
+  // that has both a sharedTransitionTag and layout={Layout} would then, on every layout-animation
+  // end, be wrongly scheduled into sharedContainersToRemove_ and erased from lightNodes_ while still
+  // mounted - stranding it in its parent's children and causing a double-remove (NSRangeException)
+  // on a later teardown. Reproduced with [SET] Change theme: toggle a few times, then press back.
+  if (ownedContainers_.contains(tag)) {
     auto sharedTag = sharedTransitionManager_->tagToName_[tag];
     sharedTransitionManager_->containerTags_.erase(sharedTag);
 

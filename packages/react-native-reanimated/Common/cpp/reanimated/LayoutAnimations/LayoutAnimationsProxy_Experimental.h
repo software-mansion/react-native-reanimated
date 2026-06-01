@@ -48,6 +48,12 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable std::unordered_map<SurfaceId, std::shared_ptr<LightNode>> topScreen;
   mutable int containerTag_ = 10000002;
   mutable std::vector<Tag> sharedContainersToRemove_;
+  // Tags of the synthetic shared-transition container views we created (getOrCreateContainer).
+  // Needed to tell a real container apart from a regular shared-element source view: both end up in
+  // sharedTransitionManager_->tagToName_ (containers via getOrCreateContainer, source views via
+  // transferConfigFromNativeID), so tagToName_ membership alone misclassifies a source view that
+  // also runs a layout animation as a container in endLayoutAnimation.
+  mutable std::unordered_set<Tag> ownedContainers_;
   mutable std::unordered_map<Tag, Tag[2]> restoreMap_;
   mutable std::vector<Tag> tagsToRestore_;
   mutable TransitionMap transitionMap_;

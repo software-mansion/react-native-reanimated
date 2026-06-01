@@ -269,6 +269,9 @@ Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
 
     sharedTransitionManager_->containerTags_[sharedTag] = containerTag;
   }
+  // Record this as a container we own (idempotent for the reuse path) so endLayoutAnimation can
+  // distinguish it from a regular shared-element source view that merely shares tagToName_.
+  ownedContainers_.insert(containerTag);
   return containerTag;
 }
 
@@ -441,21 +444,29 @@ void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
   ReanimatedSystraceSection s2("remove shared containers");
   for (auto &tag : sharedContainersToRemove_) {
     auto root = lightNodes_[surfaceId];
+    bool found = false;
     for (int i = 0; i < root->children.size(); i++) {
       auto &child = root->children[i];
       if (child->current.tag == tag) {
         filteredMutations.push_back(ShadowViewMutation::RemoveMutation(surfaceId, child->current, i));
         filteredMutations.push_back(ShadowViewMutation::DeleteMutation(child->current));
         root->children.erase(root->children.begin() + i);
+        found = true;
         break;
       }
     }
-    // The container's native view is now deleted - keep the light tree (the proxy's
-    // mirror of the registry) in sync so stale references can't survive and produce
-    // mutations for an unregistered tag on a later commit.
-    lightNodes_.erase(tag);
-    sharedTransitionManager_->tagToName_.erase(tag);
-    restoreMap_.erase(tag);
+    // Only erase a tag from the maps if it really was a container at the surface root. A non-
+    // container tag reaching here (defense-in-depth against future regressions) must NOT be erased
+    // from lightNodes_, or a still-mounted shared-element view would be stranded in its parent's
+    // children and removed twice on a later teardown. The container's native view is now deleted,
+    // so keeping the light tree in sync prevents stale references from producing mutations for an
+    // unregistered tag on a later commit.
+    if (found) {
+      lightNodes_.erase(tag);
+      sharedTransitionManager_->tagToName_.erase(tag);
+      restoreMap_.erase(tag);
+      ownedContainers_.erase(tag);
+    }
   }
   sharedContainersToRemove_.clear();
 }
