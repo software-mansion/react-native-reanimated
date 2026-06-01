@@ -138,13 +138,27 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
       }
     }
   }
+  // Record which views are being unmounted in THIS transaction so hideTransitioningViews can
+  // still hide a shared-element source whose light-tree node we are about to erase below (its
+  // native view is removed later in the same transaction, so the hide is safe), without
+  // resurrecting genuinely-stale views.
+  deletedThisTransaction_ = deleted;
 
   for (const auto &mutation : mutations) {
     maybeUpdateWindowDimensions(mutation);
     switch (mutation.type) {
       case ShadowViewMutation::Update: {
-        auto &node = lightNodes_[mutation.newChildShadowView.tag];
-        react_native_assert(node && "LightNode not found");
+        auto nodeIt = lightNodes_.find(mutation.newChildShadowView.tag);
+        if (nodeIt == lightNodes_.end() || !nodeIt->second) {
+          // The light tree (our mirror of the native registry) can fall out of sync with
+          // React's shadow tree when a shared transition overlaps a view remount - React
+          // then emits an Update for a tag we no longer track. Pass the mutation through so
+          // React still applies it, and skip the light-tree bookkeeping instead of
+          // dereferencing a missing node (which otherwise aborts/segfaults the mount).
+          filteredMutations.push_back(mutation);
+          break;
+        }
+        auto &node = nodeIt->second;
         node->previous = mutation.oldChildShadowView;
 #ifdef ANDROID
         // TODO (future): We don't merge the root view as the currently stored version might not be accurate, because of
@@ -175,8 +189,11 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
       case ShadowViewMutation::Create: {
         const auto &node = std::make_shared<LightNode>();
         node->current = mutation.newChildShadowView;
-        react_native_assert(!lightNodes_.contains(mutation.newChildShadowView.tag) && "LightNode already exists");
-
+        // Normally the tag must not already be tracked. If the light tree drifted from
+        // React (a stale entry left behind when the mirror desynced under an overlapping
+        // shared transition + remount), overwrite it with the fresh node instead of
+        // aborting - the assignment below already replaces any stale entry, so this just
+        // makes the debug build degrade as gracefully as release does.
         lightNodes_[mutation.newChildShadowView.tag] = node;
         filteredMutations.push_back(mutation);
         break;
@@ -187,8 +204,18 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
       }
       case ShadowViewMutation::Insert: {
         transferConfigFromNativeID(mutation.newChildShadowView.props->nativeId, mutation.newChildShadowView.tag);
-        auto &node = lightNodes_[mutation.newChildShadowView.tag];
-        auto &parent = lightNodes_[mutation.parentTag];
+        auto nodeIt = lightNodes_.find(mutation.newChildShadowView.tag);
+        auto parentIt = lightNodes_.find(mutation.parentTag);
+        if (nodeIt == lightNodes_.end() || !nodeIt->second || parentIt == lightNodes_.end() || !parentIt->second ||
+            mutation.index > static_cast<int>(parentIt->second->children.size())) {
+          // Light tree out of sync with React (overlapping shared transition + remount): the
+          // view or its parent is no longer tracked. Apply the insert to React but skip the
+          // light-tree linking rather than dereferencing a missing node.
+          filteredMutations.push_back(mutation);
+          break;
+        }
+        auto &node = nodeIt->second;
+        auto &parent = parentIt->second;
         parent->children.insert(parent->children.begin() + mutation.index, node);
         node->parent = parent;
         const auto tag = mutation.newChildShadowView.tag;
@@ -204,21 +231,58 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         break;
       }
       case ShadowViewMutation::Remove: {
-        const auto &node = lightNodes_[mutation.oldChildShadowView.tag];
+        auto nodeIt = lightNodes_.find(mutation.oldChildShadowView.tag);
+        auto parentIt = lightNodes_.find(mutation.parentTag);
+        if (nodeIt == lightNodes_.end() || !nodeIt->second || parentIt == lightNodes_.end() || !parentIt->second) {
+          // Light tree out of sync with React: apply the removal to React but skip the
+          // light-tree erase rather than dereferencing a missing node/parent.
+          filteredMutations.push_back(mutation);
+          break;
+        }
+        const auto &node = nodeIt->second;
         const auto tag = node->current.tag;
         const auto parentTag = mutation.parentTag;
-        const auto &parent = lightNodes_[parentTag];
-        react_native_assert(
-            parent->children[mutation.index]->current.tag == mutation.oldChildShadowView.tag &&
-            "Indicies are wrong in Remove mutation");
+        const auto &parent = parentIt->second;
+        // Locate the child in the light tree BY TAG, not by mutation.index. React's index is
+        // relative to React's shadow tree, which excludes the synthetic shared-transition
+        // containers we append to parents (and can drift after an earlier desync); erasing by
+        // a stale index would remove the wrong child or, worse, leave the removed child in the
+        // light tree. Keeping the light tree exactly in sync with native is essential: the
+        // container-removal index in cleanupSharedTransitions is derived from the light-tree
+        // root children, so a stale (too-large) root child count makes a later container
+        // RemoveMutation index run past the native children array - the NSRangeException in
+        // -[RCTViewComponentView unmountChildComponentView:index:] seen when pressing Back.
+        auto &kids = parent->children;
+        int childIndex = -1;
+        if (mutation.index >= 0 && mutation.index < static_cast<int>(kids.size()) && kids[mutation.index] &&
+            kids[mutation.index]->current.tag == mutation.oldChildShadowView.tag) {
+          childIndex = mutation.index;
+        } else {
+          for (int k = 0; k < static_cast<int>(kids.size()); k++) {
+            if (kids[k] && kids[k]->current.tag == mutation.oldChildShadowView.tag) {
+              childIndex = k;
+              break;
+            }
+          }
+        }
+        if (childIndex < 0) {
+          // The child isn't tracked under this parent in the light tree; let React apply it.
+          filteredMutations.push_back(mutation);
+          break;
+        }
 
         if (deleted.contains(tag) && !deleted.contains(parentTag)) {
           exiting_.push_back(node);
           filteredMutations.push_back(mutation);
-          parent->children.erase(parent->children.begin() + mutation.index);
+          kids.erase(kids.begin() + childIndex);
         } else if (!deleted.contains(tag)) {
           filteredMutations.push_back(mutation);
-          parent->children.erase(parent->children.begin() + mutation.index);
+          kids.erase(kids.begin() + childIndex);
+        } else {
+          // tag and its parent are both being deleted: React tears down the subtree wholesale
+          // so we must not re-emit this Remove, but we still erase it from the light tree to
+          // keep the mirror in sync with native (the previous code left it, drifting the root).
+          kids.erase(kids.begin() + childIndex);
         }
         break;
       }
@@ -398,6 +462,16 @@ void LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceI
     const auto layoutAnimationIt = layoutAnimations_.find(tag);
 
     if (layoutAnimationIt == layoutAnimations_.end()) {
+      continue;
+    }
+
+    // The animated view (or shared-transition container) may have been unmounted while
+    // its animation was still ongoing - e.g. when a navigator removes a screen mid
+    // shared transition, which happens when transitioning across tabs/detached screens.
+    // Emitting an UpdateMutation for a tag whose native view is no longer registered
+    // aborts the Fabric mount with "Attempt to query unregistered component". Skip it.
+    const auto nodeIt = lightNodes_.find(tag);
+    if (nodeIt == lightNodes_.end() || !nodeIt->second) {
       continue;
     }
 

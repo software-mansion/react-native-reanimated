@@ -54,6 +54,13 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable Transitions transitions_;
   mutable bool synchronized_ = true;
   mutable std::vector<std::shared_ptr<LightNode>> entering_, layout_, exiting_;
+  // Tags whose native view is being unmounted in the transaction currently being processed.
+  // A shared-element source can have its light-tree node erased here while its native view is
+  // still mounted (the Remove/Delete is emitted later in the same transaction), so it is still
+  // safe - and necessary - to emit its opacity-hide. This lets hideTransitioningViews tell that
+  // case apart from a stale, already-unmounted view (where emitting a hide would resurrect a
+  // ghost or query an unregistered component).
+  mutable std::unordered_set<Tag> deletedThisTransaction_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::vector<std::shared_ptr<LightNode>> containersToInsert_;

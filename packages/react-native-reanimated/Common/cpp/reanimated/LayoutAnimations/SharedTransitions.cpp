@@ -34,9 +34,18 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findTopScreen(
 #elif defined(HAS_SCREENS_PROPS)
     isActive = std::static_pointer_cast<const RNSScreenProps>(node->current.props)->activityState == 2.0f;
 #endif
-    if (isActive) {
-      result = node;
+    if (!isActive) {
+      // An inactive RNSScreen is not on the user's current (focused) path - for example
+      // a non-focused tab in a bottom-tab navigator, whose own nested stack still reports
+      // its top screen as active. Descending into it made findTopScreen return a screen the
+      // user is not looking at (and short-circuit there), so cross-tab shared element
+      // transitions only fired for whichever inactive tab's nested screen the reverse DFS
+      // happened to reach first. Prune the whole subtree so the search continues to the
+      // actually-focused screen. On Android isActive is hardcoded true (activityState is
+      // unreliable there) so this never prunes and the previous behavior is preserved.
+      return nullptr;
     }
+    result = node;
   }
   for (const auto &child : std::views::reverse(node->children)) {
     auto top = findTopScreen(child);
@@ -285,6 +294,22 @@ void LayoutAnimationsProxy_Experimental::hideTransitioningViews(
     int indexNum = static_cast<int>(index);
     const auto &shadowView = transition.snapshot[indexNum];
     const auto &parentTag = transition.parentTag[indexNum];
+    // Hide the transitioning view if it is still tracked in the light tree, OR if it is being
+    // unmounted in THIS transaction. The latter is the shared-element SOURCE on a pop: its
+    // light-tree node was just erased by updateLightTree (its screen is popping), but its native
+    // view is still mounted - the Remove/Delete is emitted later in this same transaction - so
+    // the opacity-hide lands before the removal and is exactly what stops the source box from
+    // staying visible alongside the destination while its screen slides away.
+    //
+    // Skip ONLY a genuinely-stale view (gone in a previous transaction - e.g. a detached/
+    // unmounted screen kept alive only by the stale `topScreen` light-tree subtree). Emitting an
+    // UpdateMutation for that resurrects a ghost view or aborts the mount with
+    // "Attempt to query unregistered component".
+    const auto nodeIt = lightNodes_.find(shadowView.tag);
+    const bool nodePresent = nodeIt != lightNodes_.end() && nodeIt->second;
+    if (!nodePresent && !deletedThisTransaction_.contains(shadowView.tag)) {
+      continue;
+    }
     auto m = ShadowViewMutation::UpdateMutation(
         shadowView, cloneViewWithoutOpacity(shadowView, propsParserContext), parentTag);
     filteredMutations.push_back(m);
@@ -390,8 +415,15 @@ void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
         filteredMutations.push_back(ShadowViewMutation::RemoveMutation(surfaceId, child->current, i));
         filteredMutations.push_back(ShadowViewMutation::DeleteMutation(child->current));
         root->children.erase(root->children.begin() + i);
+        break;
       }
     }
+    // The container's native view is now deleted - keep the light tree (the proxy's
+    // mirror of the registry) in sync so stale references can't survive and produce
+    // mutations for an unregistered tag on a later commit.
+    lightNodes_.erase(tag);
+    sharedTransitionManager_->tagToName_.erase(tag);
+    restoreMap_.erase(tag);
   }
   sharedContainersToRemove_.clear();
 }
