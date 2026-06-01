@@ -1,9 +1,21 @@
-export { default as Active } from './Active';
-export { default as ActiveDeepest } from './ActiveDeepest';
-export { default as ArbitraryWebSelectors } from './ArbitraryWebSelectors';
-export { default as Focus } from './Focus';
-export { default as FocusWithin } from './FocusWithin';
-export { default as Hover } from './Hover';
-export { default as HoverWithLoop } from './HoverWithLoop';
-export { default as PerStateTransitionConfig } from './PerStateTransitionConfig';
-export { default as Showcase } from './Showcase';
+import Active from './Active';
+import ActiveDeepest from './ActiveDeepest';
+import ArbitraryWebSelectors from './ArbitraryWebSelectors';
+import Focus from './Focus';
+import FocusWithin from './FocusWithin';
+import Hover from './Hover';
+import HoverWithLoop from './HoverWithLoop';
+import PerStateTransitionConfig from './PerStateTransitionConfig';
+import Showcase from './Showcase';
+
+export default {
+  Active,
+  ActiveDeepest,
+  ArbitraryWebSelectors,
+  Focus,
+  FocusWithin,
+  Hover,
+  HoverWithLoop,
+  PerStateTransitionConfig,
+  Showcase,
+};

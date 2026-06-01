@@ -4,18 +4,10 @@ import type { RouteNames, Routes } from '@/apps/css/navigation/types';
 
 import routeCards from './routeCards';
 import {
-  Active as PseudoActive,
-  ActiveDeepest as PseudoActiveDeepest,
   AnimatedProperties,
-  ArbitraryWebSelectors as PseudoArbitraryWebSelectors,
-  Focus as PseudoFocus,
-  FocusWithin as PseudoFocusWithin,
-  Hover as PseudoHover,
-  HoverWithLoop as PseudoHoverWithLoop,
   miscellaneous,
-  PerStateTransitionConfig as PseudoPerStateTransitionConfig,
+  pseudoSelectors,
   realWorldExamples,
-  Showcase as PseudoShowcase,
   testExamples,
   transitionSettings,
 } from './screens';
@@ -102,39 +94,39 @@ const routes = {
     routes: {
       PseudoHover: {
         name: ':hover',
-        Component: PseudoHover,
+        Component: pseudoSelectors.Hover,
       },
       PseudoActive: {
         name: ':active',
-        Component: PseudoActive,
+        Component: pseudoSelectors.Active,
       },
       PseudoActiveDeepest: {
         name: ':active-deepest',
-        Component: PseudoActiveDeepest,
+        Component: pseudoSelectors.ActiveDeepest,
       },
       PseudoFocus: {
         name: ':focus',
-        Component: PseudoFocus,
+        Component: pseudoSelectors.Focus,
       },
       PseudoFocusWithin: {
         name: ':focus-within',
-        Component: PseudoFocusWithin,
+        Component: pseudoSelectors.FocusWithin,
       },
       PseudoHoverWithLoop: {
         name: 'Looping transition + :hover',
-        Component: PseudoHoverWithLoop,
+        Component: pseudoSelectors.HoverWithLoop,
       },
       PseudoPerStateTransitionConfig: {
         name: 'Per-state transition configs',
-        Component: PseudoPerStateTransitionConfig,
+        Component: pseudoSelectors.PerStateTransitionConfig,
       },
       PseudoArbitraryWebSelectors: {
         name: 'Arbitrary web selectors',
-        Component: PseudoArbitraryWebSelectors,
+        Component: pseudoSelectors.ArbitraryWebSelectors,
       },
       PseudoShowcase: {
         name: 'Showcase',
-        Component: PseudoShowcase,
+        Component: pseudoSelectors.Showcase,
       },
     },
   },
