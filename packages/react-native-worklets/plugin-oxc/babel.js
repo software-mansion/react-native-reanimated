@@ -109,6 +109,8 @@ const WORKLET_TOKENS = [
   'runOnRuntimeSync',
   'runOnRuntimeAsync',
   'scheduleOnRuntime',
+  'runOnRuntimeSyncWithId',
+  'scheduleOnRuntimeWithId',
   'withTiming',
   'withSpring',
   'withDecay',
@@ -170,12 +172,16 @@ function workletsPluginOxcBabelShim(babelApi) {
             }
             result = oxc.transform(sourceText, filename, opts);
           } catch (e) {
-            // If OXC fails to parse the file (Flow, exotic syntax, etc.),
-            // fall through and leave the AST untouched. If the file actually
-            // contained worklets, they won't be transformed — but the
-            // pre-filter already screens out most such cases, and surfacing
-            // the error would break unrelated dependencies.
-            return;
+            // Only swallow parse errors — Flow / exotic syntax that OXC can't
+            // chew through but Babel's downstream chain can. Internal plugin
+            // bugs (closure analysis failures, codegen panics surfaced via
+            // napi::Error) MUST propagate, otherwise broken workletization
+            // looks like "worklets just don't run" with no diagnostic.
+            const msg = (e && e.message) || '';
+            if (msg.includes('Parse error in')) {
+              return;
+            }
+            throw e;
           }
 
           // Side effect: bundle-mode file emission. Done BEFORE replacing the

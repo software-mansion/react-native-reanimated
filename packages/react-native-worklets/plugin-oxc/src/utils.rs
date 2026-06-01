@@ -1,6 +1,5 @@
 use std::env;
 use std::path::{Component, Path, PathBuf};
-use std::sync::OnceLock;
 
 use oxc_allocator::TakeIn;
 use oxc_ast::AstBuilder;
@@ -16,20 +15,19 @@ pub const ALWAYS_ALLOWED: &[&str] = &[
     "react-native/Libraries/Core/setUpXHR",
 ];
 
-/// Cached `BABEL_ENV`/`NODE_ENV` release check. Reading env vars on every call
-/// shows up under hot transform loops, so resolve once.
+/// `BABEL_ENV`/`NODE_ENV` release check. Read fresh on every call: Jest /
+/// Metro flip the env between transforms inside the same Node process, so a
+/// process-lifetime cache would lock the first-seen mode forever (parity
+/// with TS `utils.ts:11-17`).
 pub fn is_release() -> bool {
-    static CACHED: OnceLock<bool> = OnceLock::new();
-    *CACHED.get_or_init(|| {
-        let matches = |key: &str| match env::var(key) {
-            Ok(v) => {
-                let lower = v.to_ascii_lowercase();
-                RELEASE_NEEDLES.iter().any(|n| lower.contains(*n))
-            }
-            Err(_) => false,
-        };
-        matches("BABEL_ENV") || matches("NODE_ENV")
-    })
+    let matches = |key: &str| match env::var(key) {
+        Ok(v) => {
+            let lower = v.to_ascii_lowercase();
+            RELEASE_NEEDLES.iter().any(|n| lower.contains(*n))
+        }
+        Err(_) => false,
+    };
+    matches("BABEL_ENV") || matches("NODE_ENV")
 }
 
 /// Whether `body` carries the directive string `name`.
@@ -37,6 +35,214 @@ pub fn body_has_directive(body: &FunctionBody<'_>, name: &str) -> bool {
     body.directives
         .iter()
         .any(|d| d.directive.as_str() == name)
+}
+
+/// Plugin-only directives that exist to communicate intent from source to
+/// this transform; they have no meaning at runtime and would survive into
+/// the stringified worklet body if not stripped from every nested function /
+/// arrow / class method along the way (mirrors
+/// `workletFactory.ts:433-446 stripWorkletDirectives`).
+const WORKLET_DIRECTIVES: &[&str] = &[
+    "worklet",
+    "no-worklet-closure",
+    "limit-init-data-hoisting",
+    "workletContext",
+];
+
+/// Recursively strip every plugin-only directive from `body` and from the
+/// bodies of any nested function / arrow / object-method / class-method. The
+/// outermost `worklet` directive on the function being workletized is also
+/// stripped — its presence on the body would round-trip into `__initData.code`
+/// and trigger the runtime to attempt a second workletization at eval time.
+pub fn strip_worklet_directives_in_body<'a>(
+    body: &mut FunctionBody<'a>,
+    builder: AstBuilder<'a>,
+) {
+    use oxc_ast::ast::{
+        ClassElement, Expression, ObjectPropertyKind, Statement,
+    };
+    // Strip directives on this body. `Directive` isn't `Clone`, so drain the
+    // existing arena vec, keep the ones we want, and put them back.
+    let old = std::mem::replace(&mut body.directives, builder.vec());
+    let mut new_directives = builder.vec_with_capacity(old.len());
+    for d in old {
+        if !WORKLET_DIRECTIVES.contains(&d.directive.as_str()) {
+            new_directives.push(d);
+        }
+    }
+    body.directives = new_directives;
+
+    for stmt in body.statements.iter_mut() {
+        strip_in_statement(stmt, builder);
+    }
+
+    fn strip_in_statement<'a>(stmt: &mut Statement<'a>, builder: AstBuilder<'a>) {
+        match stmt {
+            Statement::FunctionDeclaration(func) => {
+                if let Some(b) = func.body.as_mut() {
+                    strip_worklet_directives_in_body(b, builder);
+                }
+            }
+            Statement::BlockStatement(block) => {
+                for s in block.body.iter_mut() {
+                    strip_in_statement(s, builder);
+                }
+            }
+            Statement::ClassDeclaration(class) => {
+                for el in class.body.body.iter_mut() {
+                    strip_in_class_element(el, builder);
+                }
+            }
+            Statement::ExpressionStatement(es) => strip_in_expression(&mut es.expression, builder),
+            Statement::VariableDeclaration(vd) => {
+                for d in vd.declarations.iter_mut() {
+                    if let Some(init) = &mut d.init {
+                        strip_in_expression(init, builder);
+                    }
+                }
+            }
+            Statement::IfStatement(s) => {
+                strip_in_statement(&mut s.consequent, builder);
+                if let Some(a) = &mut s.alternate {
+                    strip_in_statement(a, builder);
+                }
+            }
+            Statement::WhileStatement(s) => strip_in_statement(&mut s.body, builder),
+            Statement::DoWhileStatement(s) => strip_in_statement(&mut s.body, builder),
+            Statement::ForStatement(s) => strip_in_statement(&mut s.body, builder),
+            Statement::ForInStatement(s) => strip_in_statement(&mut s.body, builder),
+            Statement::ForOfStatement(s) => strip_in_statement(&mut s.body, builder),
+            Statement::TryStatement(s) => {
+                for st in s.block.body.iter_mut() {
+                    strip_in_statement(st, builder);
+                }
+                if let Some(h) = &mut s.handler {
+                    for st in h.body.body.iter_mut() {
+                        strip_in_statement(st, builder);
+                    }
+                }
+                if let Some(f) = &mut s.finalizer {
+                    for st in f.body.iter_mut() {
+                        strip_in_statement(st, builder);
+                    }
+                }
+            }
+            Statement::SwitchStatement(s) => {
+                for c in s.cases.iter_mut() {
+                    for st in c.consequent.iter_mut() {
+                        strip_in_statement(st, builder);
+                    }
+                }
+            }
+            Statement::LabeledStatement(s) => strip_in_statement(&mut s.body, builder),
+            Statement::ReturnStatement(r) => {
+                if let Some(arg) = &mut r.argument {
+                    strip_in_expression(arg, builder);
+                }
+            }
+            Statement::ThrowStatement(t) => strip_in_expression(&mut t.argument, builder),
+            _ => {}
+        }
+    }
+
+    fn strip_in_class_element<'a>(el: &mut ClassElement<'a>, builder: AstBuilder<'a>) {
+        match el {
+            ClassElement::MethodDefinition(m) => {
+                if let Some(b) = m.value.body.as_mut() {
+                    strip_worklet_directives_in_body(b, builder);
+                }
+            }
+            ClassElement::PropertyDefinition(p) => {
+                if let Some(v) = &mut p.value {
+                    strip_in_expression(v, builder);
+                }
+            }
+            ClassElement::AccessorProperty(a) => {
+                if let Some(v) = &mut a.value {
+                    strip_in_expression(v, builder);
+                }
+            }
+            ClassElement::StaticBlock(b) => {
+                for s in b.body.iter_mut() {
+                    strip_in_statement(s, builder);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn strip_in_expression<'a>(expr: &mut Expression<'a>, builder: AstBuilder<'a>) {
+        match expr {
+            Expression::FunctionExpression(func) => {
+                if let Some(b) = func.body.as_mut() {
+                    strip_worklet_directives_in_body(b, builder);
+                }
+            }
+            Expression::ArrowFunctionExpression(arrow) => {
+                strip_worklet_directives_in_body(&mut arrow.body, builder);
+            }
+            Expression::ClassExpression(class) => {
+                for el in class.body.body.iter_mut() {
+                    strip_in_class_element(el, builder);
+                }
+            }
+            Expression::ObjectExpression(obj) => {
+                for prop in obj.properties.iter_mut() {
+                    if let ObjectPropertyKind::ObjectProperty(p) = prop {
+                        strip_in_expression(&mut p.value, builder);
+                    }
+                }
+            }
+            Expression::ArrayExpression(arr) => {
+                for el in arr.elements.iter_mut() {
+                    if let Some(e) = el.as_expression_mut() {
+                        strip_in_expression(e, builder);
+                    }
+                }
+            }
+            Expression::CallExpression(c) => {
+                strip_in_expression(&mut c.callee, builder);
+                for a in c.arguments.iter_mut() {
+                    if let Some(e) = a.as_expression_mut() {
+                        strip_in_expression(e, builder);
+                    }
+                }
+            }
+            Expression::NewExpression(n) => {
+                strip_in_expression(&mut n.callee, builder);
+                for a in n.arguments.iter_mut() {
+                    if let Some(e) = a.as_expression_mut() {
+                        strip_in_expression(e, builder);
+                    }
+                }
+            }
+            Expression::AssignmentExpression(a) => strip_in_expression(&mut a.right, builder),
+            Expression::ConditionalExpression(c) => {
+                strip_in_expression(&mut c.test, builder);
+                strip_in_expression(&mut c.consequent, builder);
+                strip_in_expression(&mut c.alternate, builder);
+            }
+            Expression::LogicalExpression(l) => {
+                strip_in_expression(&mut l.left, builder);
+                strip_in_expression(&mut l.right, builder);
+            }
+            Expression::BinaryExpression(b) => {
+                strip_in_expression(&mut b.left, builder);
+                strip_in_expression(&mut b.right, builder);
+            }
+            Expression::SequenceExpression(s) => {
+                for e in s.expressions.iter_mut() {
+                    strip_in_expression(e, builder);
+                }
+            }
+            Expression::StaticMemberExpression(m) => strip_in_expression(&mut m.object, builder),
+            Expression::ComputedMemberExpression(m) => {
+                strip_in_expression(&mut m.object, builder);
+                strip_in_expression(&mut m.expression, builder);
+            }
+            _ => {}
+        }
+    }
 }
 
 /// Whether `body` is marked `'worklet'`.
@@ -69,7 +275,9 @@ pub fn rewrite_implicit_return<'a>(body: &mut FunctionBody<'a>, builder: AstBuil
     if body.statements.len() != 1 {
         return;
     }
-    let stmt = body.statements.first_mut().unwrap();
+    let Some(stmt) = body.statements.first_mut() else {
+        return;
+    };
     if let Statement::ExpressionStatement(es) = stmt {
         let expr = es.expression.take_in(builder);
         *stmt = builder.statement_return(SPAN, Some(expr));
@@ -141,9 +349,14 @@ pub fn pathdiff(from: &Path, to: &Path) -> Option<PathBuf> {
 /// String wrapper around `pathdiff` for the `relativeSourceLocation` rewrite.
 /// Falls back to `target` unchanged when `from` is empty or the paths share
 /// no common root (matching Node's `path.relative` behaviour we care about).
+///
+/// Always returns forward-slash-separated paths regardless of host platform:
+/// the output ends up embedded into runtime strings (e.g.
+/// `__initData.location`) and inside source-map `sources` arrays which both
+/// expect POSIX-style separators on every platform.
 pub fn relativize(from: &str, target: &str) -> String {
     if from.is_empty() {
-        return target.to_string();
+        return to_posix(target);
     }
     let from_path = PathBuf::from(from.replace('\\', "/"));
     let target_path = PathBuf::from(target.replace('\\', "/"));
@@ -154,10 +367,16 @@ pub fn relativize(from: &str, target: &str) -> String {
         && !target_comps.is_empty()
         && from_comps[0] == target_comps[0];
     if !shares_prefix {
-        return target.to_string();
+        return to_posix(target);
     }
 
     pathdiff(&from_path, &target_path)
-        .map(|p| p.to_string_lossy().into_owned())
-        .unwrap_or_else(|| target.to_string())
+        .map(|p| to_posix(&p.to_string_lossy()))
+        .unwrap_or_else(|| to_posix(target))
+}
+
+/// Normalise backslashes to forward slashes so emitted code stays valid on
+/// Windows (Metro / `require()` accept `/` everywhere; `\` only sometimes).
+pub fn to_posix(s: &str) -> String {
+    s.replace('\\', "/")
 }

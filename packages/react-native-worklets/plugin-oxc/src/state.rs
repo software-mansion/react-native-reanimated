@@ -55,6 +55,20 @@ pub struct State {
     /// `.worklets/<hash>.js` file so worklet bodies that reference them
     /// resolve at module-eval time.
     pub imports_by_symbol: HashMap<SymbolId, ImportInfo>,
+
+    /// Names already used for `_worklet_<hash>_init_data` top-level decls in
+    /// this file. Two worklets with identical body strings produce identical
+    /// hashes — without this guard they'd both mint the same identifier and
+    /// the codegen would emit a `const` re-declaration. We append `_2`, `_3`,
+    /// … on collision, mirroring Babel's `scope.generateUidIdentifier`.
+    pub seen_init_data_ids: HashSet<String>,
+
+    /// Symbol IDs of top-level declarations passed (by identifier reference)
+    /// as an auto-workletizable argument somewhere in the file. The worklet
+    /// pass uses this to retroactively inject the `'worklet'` directive on
+    /// referenced declarations so plain `const f = () => {...}; useAnimatedStyle(f);`
+    /// gets workletized. Mirrors `referencedWorklets.ts`.
+    pub referenced_worklet_symbols: HashSet<SymbolId>,
 }
 
 impl State {
@@ -88,6 +102,8 @@ impl State {
             source_text,
             emitted_files: Vec::new(),
             imports_by_symbol: HashMap::new(),
+            seen_init_data_ids: HashSet::new(),
+            referenced_worklet_symbols: HashSet::new(),
         }
     }
 
@@ -95,5 +111,21 @@ impl State {
         let n = self.worklet_number;
         self.worklet_number += 1;
         n
+    }
+
+    /// Reserve a `_worklet_<hash>_init_data` identifier, suffixing `_2`/`_3`/…
+    /// when the same base has already been used in this file.
+    pub fn reserve_init_data_id(&mut self, base: &str) -> String {
+        if self.seen_init_data_ids.insert(base.to_string()) {
+            return base.to_string();
+        }
+        let mut n: u32 = 2;
+        loop {
+            let candidate = format!("{base}_{n}");
+            if self.seen_init_data_ids.insert(candidate.clone()) {
+                return candidate;
+            }
+            n += 1;
+        }
     }
 }

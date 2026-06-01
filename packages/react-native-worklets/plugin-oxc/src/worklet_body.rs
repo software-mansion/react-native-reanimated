@@ -33,6 +33,8 @@ pub fn build_worklet_body_string<'a>(
     worklet_name: &str,
     params: &FormalParameters<'a>,
     body: &FunctionBody<'a>,
+    is_async: bool,
+    is_generator: bool,
     is_expression_body: bool,
     closure_variables: &[String],
     recursive_name: Option<&str>,
@@ -45,7 +47,12 @@ pub fn build_worklet_body_string<'a>(
 
     let cloned_params: FormalParameters<'a> = params.clone_in(allocator);
     let mut cloned_body: FunctionBody<'a> = body.clone_in(allocator);
-    cloned_body.directives = builder.vec();
+    // Strip every worklet-only directive *recursively* — top-level `worklet`
+    // (which would round-trip into `__initData.code` and cause double
+    // workletization on eval) as well as nested `no-worklet-closure` /
+    // `limit-init-data-hoisting` directives on inner functions whose bodies
+    // are now part of our stringified output.
+    crate::utils::strip_worklet_directives_in_body(&mut cloned_body, builder);
     if is_expression_body {
         rewrite_implicit_return(&mut cloned_body, builder);
     }
@@ -86,8 +93,8 @@ pub fn build_worklet_body_string<'a>(
         SPAN,
         FunctionType::FunctionDeclaration,
         Some(id),
-        false,
-        false,
+        is_generator,
+        is_async,
         false,
         NONE,
         NONE,
@@ -138,10 +145,15 @@ pub fn build_worklet_body_string<'a>(
 ///   * optional chaining     ✓ via `es2020.optional_chaining`
 ///   * nullish coalescing    ✓ via `es2020.nullish_coalescing_operator`
 ///   * class properties      ✓ via `es2022.class_properties`
-/// Not yet available in this oxc version:
-///   * template literals
+/// Not yet available in oxc 0.132:
+///   * template literals     — `ES2015Options` has only `arrow_function`;
+///                             template-literal lowering isn't yet exposed
+///                             by `oxc_transformer`. Hermes and modern JSC
+///                             handle template literals natively; if support
+///                             for an ancient JSC engine is needed, bump oxc
+///                             once the transform is upstream.
 ///   * ES6 class declarations themselves
-///   * shorthand properties
+///   * shorthand properties — same situation
 fn lower_worklet_body<'a>(allocator: &'a Allocator, program: &mut oxc_ast::ast::Program<'a>) {
     // Semantic info is required by the transformer.
     let scoping = SemanticBuilder::new()

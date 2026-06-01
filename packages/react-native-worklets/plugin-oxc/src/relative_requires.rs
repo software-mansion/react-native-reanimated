@@ -97,7 +97,10 @@ pub fn rebase_to_worklets_dir_with(
     let worklets_dir = worklets_pkg_root.join(".worklets");
 
     let rel = pathdiff(&worklets_dir, &resolved)?;
-    let mut out = rel.to_string_lossy().into_owned();
+    // `require()` / Metro want forward slashes on every platform — `to_posix`
+    // converts whatever `PathBuf` reconstructed natively into a clean URL-ish
+    // string before we hand it to codegen.
+    let mut out = crate::utils::to_posix(&rel.to_string_lossy());
     if !out.starts_with('.') && !out.starts_with('/') {
         out = format!("./{out}");
     }
@@ -106,10 +109,6 @@ pub fn rebase_to_worklets_dir_with(
 
 fn derive_worklets_root(filename: &str) -> PathBuf {
     let norm = filename.replace('\\', "/");
-    if let Some(idx) = norm.find("/react-native-worklets/") {
-        let end = idx + "/react-native-worklets".len();
-        return PathBuf::from(&norm[..end]);
-    }
     if let Some(idx) = norm.find("/react-native-worklets") {
         let end = idx + "/react-native-worklets".len();
         return PathBuf::from(&norm[..end]);

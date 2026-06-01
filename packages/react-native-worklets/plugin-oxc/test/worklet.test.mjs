@@ -11,9 +11,6 @@ test('FunctionDeclaration with worklet directive is workletized', () => {
     }
   `;
   const { code } = transform(input, 'test.js', {});
-  console.log('--- output ---');
-  console.log(code);
-  console.log('--- end ---');
   assert.match(code, /__workletHash/);
   assert.match(code, /__closure/);
 });
@@ -26,9 +23,6 @@ test('ArrowFunctionExpression with worklet directive is workletized', () => {
     };
   `;
   const { code } = transform(input, 'test.js', {});
-  console.log('--- arrow output ---');
-  console.log(code);
-  console.log('--- end ---');
   assert.match(code, /__workletHash/);
 });
 
@@ -42,9 +36,6 @@ test('worklet captures closure variables', () => {
     }
   `;
   const { code } = transform(input, 'test.js', {});
-  console.log('--- closure output ---');
-  console.log(code);
-  console.log('--- end ---');
   assert.match(code, /__closure/);
 });
 
@@ -56,9 +47,6 @@ test('useAnimatedStyle callback is auto-workletized', () => {
     }
   `;
   const { code } = transform(input, 'test.js', {});
-  console.log('--- autoworklet output ---');
-  console.log(code);
-  console.log('--- end ---');
   assert.match(code, /__workletHash/);
 });
 

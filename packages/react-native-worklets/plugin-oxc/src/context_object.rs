@@ -12,11 +12,18 @@ pub const CONTEXT_OBJECT_MARKER: &str = "__workletContextObject";
 pub const CONTEXT_OBJECT_FACTORY_KEY: &str = "__workletContextObjectFactory";
 
 /// An ObjectExpression is *implicitly* a worklet context object if any of its
-/// methods reference `this`. The plugin turns it into a self-cloning factory.
+/// methods (including getters and setters) reference `this`. The plugin turns
+/// it into a self-cloning factory.
+///
+/// Treats `{ baz() {} }`, `{ get foo() {} }`, and `{ set bar(v) {} }` as
+/// methods — matching `@babel/types` `isObjectMethod()` which the TS
+/// counterpart (`file.ts:180-192`) uses.
 pub fn is_implicit_context_object(obj: &ObjectExpression<'_>) -> bool {
     obj.properties.iter().any(|p| {
         if let ObjectPropertyKind::ObjectProperty(prop) = p {
-            if prop.method {
+            let is_method_like =
+                prop.method || matches!(prop.kind, PropertyKind::Get | PropertyKind::Set);
+            if is_method_like {
                 if let Expression::FunctionExpression(func) = &prop.value {
                     if let Some(body) = &func.body {
                         let mut probe = ThisProbe { found: false };

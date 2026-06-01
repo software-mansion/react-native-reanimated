@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use napi_derive::napi;
 use oxc_allocator::Allocator;
@@ -99,13 +100,48 @@ pub struct TransformResult {
     pub files: Vec<EmittedFile>,
 }
 
+/// Emit a one-time warning when the user passes `extraPlugins`/`extraPresets`,
+/// since the OXC transform can't dispatch arbitrary Babel plugins. Quiet for
+/// empty/missing values so the common case stays silent.
+fn maybe_warn_extras(options: &PluginOptions) {
+    static WARNED: AtomicBool = AtomicBool::new(false);
+    let has_extras = options
+        .extra_plugins
+        .as_ref()
+        .map(|v| !v.is_empty())
+        .unwrap_or(false)
+        || options
+            .extra_presets
+            .as_ref()
+            .map(|v| !v.is_empty())
+            .unwrap_or(false);
+    if !has_extras {
+        return;
+    }
+    if WARNED.swap(true, Ordering::Relaxed) {
+        return;
+    }
+    eprintln!(
+        "[worklets-plugin-oxc] `extraPlugins`/`extraPresets` are accepted for option-surface \
+         compatibility with `react-native-worklets/plugin` but ignored — the OXC transform \
+         cannot dispatch arbitrary Babel plugins. Compose them around this plugin in \
+         babel.config.js instead."
+    );
+}
+
 fn run(
     source_text: &str,
     filename: &str,
     options: PluginOptions,
 ) -> Result<TransformResult, String> {
+    maybe_warn_extras(&options);
     let allocator = Allocator::default();
-    let source_type = SourceType::from_path(filename).unwrap_or(SourceType::tsx());
+    // `SourceType::from_path` recognises `.ts`/`.tsx`/`.js`/`.jsx`/`.mjs`/`.cjs`.
+    // For genuinely unknown extensions we fall back to plain JS — falling back
+    // to TSX accidentally lets `.cjs`/`.mjs` files (handled correctly above) be
+    // re-parsed as TSX in error paths and breaks user files with type-cast-like
+    // identifiers (e.g. `a as b`).
+    let source_type = SourceType::from_path(filename).unwrap_or_else(|_| SourceType::cjs());
 
     let parsed = Parser::new(&allocator, source_text, source_type).parse();
 
@@ -201,7 +237,33 @@ pub fn transform(
     options: Option<PluginOptions>,
 ) -> napi::Result<TransformResult> {
     let opts = options.unwrap_or_default();
-    run(&source_text, &filename, opts).map_err(|msg| {
-        napi::Error::from_reason(format!("[Worklets] Babel plugin exception: {msg}"))
-    })
+    // Catch panics so a bug in any sub-pass becomes a recoverable napi error
+    // instead of aborting the bundler process. `run` only touches the
+    // arguments passed in (no shared mutable state), so `AssertUnwindSafe`
+    // is sound here.
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        run(&source_text, &filename, opts)
+    }));
+    match result {
+        Ok(Ok(value)) => Ok(value),
+        Ok(Err(msg)) => Err(napi::Error::from_reason(format!(
+            "[Worklets] Babel plugin exception: {msg}"
+        ))),
+        Err(payload) => {
+            let msg = panic_payload_to_string(payload);
+            Err(napi::Error::from_reason(format!(
+                "[Worklets] Babel plugin exception (panic): {msg} (file: {filename})"
+            )))
+        }
+    }
+}
+
+fn panic_payload_to_string(payload: Box<dyn std::any::Any + Send>) -> String {
+    if let Some(s) = payload.downcast_ref::<&'static str>() {
+        return (*s).to_string();
+    }
+    if let Some(s) = payload.downcast_ref::<String>() {
+        return s.clone();
+    }
+    "unknown panic".to_string()
 }

@@ -5,6 +5,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "files": [
+    "babel.js",
     "index.js",
     "index.d.ts",
     "*.node"

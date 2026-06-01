@@ -51,7 +51,12 @@ const FUNCTION_HOOKS_ARG2: &[&str] = &["withTiming", "withSpring"];
 /// Hooks whose worklet callback is at index 3 (`withRepeat(animation, n, reverse, callback)`).
 const FUNCTION_HOOKS_ARG3: &[&str] = &["withRepeat"];
 
-const OBJECT_HOOKS_ARG0: &[&str] = &["useAnimatedScrollHandler"];
+/// Hooks whose arg 0 is an object literal whose methods should each be
+/// workletized. Matches `reanimatedObjectHooks` in `autoworkletization.ts:16-19`.
+fn is_object_hook_at_arg0(name: &str) -> bool {
+    name == "useAnimatedScrollHandler"
+        || crate::auto_detect::GESTURE_HANDLER_OBJECT_HOOKS.contains(&name)
+}
 
 /// Tracks pending statements to prepend at two scopes:
 ///   * `top` — file top level (default destination for init-data declarations)
@@ -121,6 +126,12 @@ pub fn process_program<'a>(
     allocator: &'a Allocator,
     filename: &str,
 ) -> Vec<(String, String)> {
+    // Resolve identifier references that hit auto-workletizable arg slots
+    // back to their binding symbols. The main pass then injects the
+    // `'worklet'` directive on those bindings so plain
+    // `const f = () => {...}; useAnimatedStyle(f);` workletizes `f`.
+    state.referenced_worklet_symbols = collect_referenced_worklet_symbols(program, scoping);
+
     let old_body = std::mem::replace(&mut program.body, builder.vec());
     let mut new_body = builder.vec_with_capacity(old_body.len());
 
@@ -137,6 +148,243 @@ pub fn process_program<'a>(
 
     program.body = new_body;
     std::mem::take(&mut state.emitted_files)
+}
+
+/// One-shot walk: collect the `SymbolId`s of every top-level identifier
+/// declaration that's referenced from an auto-workletizable argument slot.
+/// Mirrors `referencedWorklets.ts` — but cheaper, since we leverage
+/// `oxc_semantic`'s reference graph instead of replicating babel's scope walk.
+fn collect_referenced_worklet_symbols<'a>(
+    program: &Program<'a>,
+    scoping: &Scoping,
+) -> std::collections::HashSet<oxc_syntax::symbol::SymbolId> {
+    use oxc_ast::ast::{CallExpression, Expression};
+    use oxc_ast_visit::Visit;
+    use oxc_syntax::symbol::SymbolId;
+
+    struct Pre<'s> {
+        scoping: &'s Scoping,
+        found: std::collections::HashSet<SymbolId>,
+    }
+
+    impl<'a, 's> Pre<'s> {
+        fn note_arg_identifier(&mut self, arg: &Argument<'a>) {
+            if let Argument::Identifier(id) = arg {
+                if let Some(rid) = id.reference_id.get() {
+                    if let Some(sid) = self.scoping.get_reference(rid).symbol_id() {
+                        self.found.insert(sid);
+                    }
+                }
+            }
+        }
+
+        /// Object-hook arg0 like `useAnimatedScrollHandler({ onScroll: fn })`.
+        /// Each property's value can be an identifier referencing a worklet —
+        /// mirrors `processWorkletizableObject` in `objectWorklets.ts:35-57`.
+        fn note_object_arg_property_idents(&mut self, arg: &Argument<'a>) {
+            let Argument::ObjectExpression(obj) = arg else {
+                return;
+            };
+            for prop in obj.properties.iter() {
+                if let oxc_ast::ast::ObjectPropertyKind::ObjectProperty(p) = prop {
+                    if let Expression::Identifier(id) = &p.value {
+                        if let Some(rid) = id.reference_id.get() {
+                            if let Some(sid) = self.scoping.get_reference(rid).symbol_id() {
+                                self.found.insert(sid);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    impl<'a, 's> Visit<'a> for Pre<'s> {
+        fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+            // Recurse first so nested calls register before we inspect ours.
+            oxc_ast_visit::walk::walk_call_expression(self, call);
+
+            let effective_callee: &Expression<'_> = match &call.callee {
+                Expression::SequenceExpression(seq) => seq
+                    .expressions
+                    .last()
+                    .unwrap_or(&call.callee),
+                other => other,
+            };
+            let name = match effective_callee {
+                Expression::Identifier(id) => Some(id.name.as_str().to_string()),
+                Expression::StaticMemberExpression(m) => Some(m.property.name.as_str().to_string()),
+                _ => None,
+            };
+
+            let arg_indices_buf: Vec<usize>;
+            let arg_indices: &[usize] = if let Some(name) = name.as_deref() {
+                if FUNCTION_HOOKS_ARG0.contains(&name)
+                    || crate::auto_detect::GESTURE_HANDLER_OBJECT_HOOKS.contains(&name)
+                {
+                    &[0]
+                } else if FUNCTION_HOOKS_ARG01.contains(&name) {
+                    &[0, 1]
+                } else if FUNCTION_HOOKS_ARG1.contains(&name) {
+                    &[1]
+                } else if FUNCTION_HOOKS_ARG2.contains(&name) {
+                    &[2]
+                } else if FUNCTION_HOOKS_ARG3.contains(&name) {
+                    &[3]
+                } else {
+                    &[]
+                }
+            } else {
+                &[]
+            };
+
+            for &i in arg_indices {
+                if let Some(arg) = call.arguments.get(i) {
+                    self.note_arg_identifier(arg);
+                }
+            }
+
+            // Object hooks (`useAnimatedScrollHandler({ onScroll: fn })`) —
+            // identifier-valued properties on arg0 reference workletizable
+            // functions; record their symbols too.
+            if let Some(name) = name.as_deref() {
+                if is_object_hook_at_arg0(name) {
+                    if let Some(arg0) = call.arguments.first() {
+                        self.note_object_arg_property_idents(arg0);
+                    }
+                }
+            }
+
+            // Gesture-handler + layout-animation chain methods workletize
+            // *all* args. Identifier args at any position get registered;
+            // object-literal args have their property-value identifiers
+            // recorded too (`Gesture.Tap().onUpdate({ run: fn })`).
+            if is_gesture_object_event_callback_method(effective_callee)
+                || is_layout_animation_callback_method(effective_callee)
+            {
+                arg_indices_buf = (0..call.arguments.len()).collect();
+                for &i in &arg_indices_buf {
+                    if let Some(arg) = call.arguments.get(i) {
+                        self.note_arg_identifier(arg);
+                        self.note_object_arg_property_idents(arg);
+                    }
+                }
+            }
+        }
+    }
+
+    let mut pre = Pre {
+        scoping,
+        found: std::collections::HashSet::new(),
+    };
+    pre.visit_program(program);
+    let mut found = pre.found;
+
+    // Fixed-point expansion: chase identifier aliases like
+    //   const f = otherWorklet;
+    //   useAnimatedStyle(f);          // <- direct hit (already in `found`)
+    // so that `otherWorklet`'s own definition gets marked too. Mirrors
+    // `referencedWorklets.ts`'s recursive `findReferencedWorklet`. Bounded by
+    // number of bindings in the file.
+    expand_aliases(program, scoping, &mut found);
+    found
+}
+
+/// Walk every `VariableDeclarator { id: BindingIdentifier(x), init: Identifier(y) }`
+/// and every `AssignmentExpression { left: Identifier(x), right: Identifier(y) }`,
+/// recording `(x_symbol, y_symbol)` pairs. Then propagate set membership across
+/// pairs until stable: if `x ∈ set` then `y ∈ set`. Mirrors the recursive
+/// `findReferencedWorklet` chain in `referencedWorklets.ts`.
+fn expand_aliases<'a>(
+    program: &Program<'a>,
+    scoping: &Scoping,
+    set: &mut std::collections::HashSet<oxc_syntax::symbol::SymbolId>,
+) {
+    use oxc_ast::ast::{
+        AssignmentExpression, AssignmentTarget, BindingPattern, Expression, VariableDeclarator,
+    };
+    use oxc_ast_visit::Visit;
+    use oxc_syntax::symbol::SymbolId;
+
+    struct Aliases<'s> {
+        scoping: &'s Scoping,
+        edges: Vec<(SymbolId, SymbolId)>,
+    }
+
+    impl<'s> Aliases<'s> {
+        fn resolve_ref(&self, ident: &oxc_ast::ast::IdentifierReference<'_>) -> Option<SymbolId> {
+            let rid = ident.reference_id.get()?;
+            self.scoping.get_reference(rid).symbol_id()
+        }
+    }
+
+    impl<'a, 's> Visit<'a> for Aliases<'s> {
+        fn visit_variable_declarator(&mut self, vd: &VariableDeclarator<'a>) {
+            oxc_ast_visit::walk::walk_variable_declarator(self, vd);
+            let BindingPattern::BindingIdentifier(lhs) = &vd.id else {
+                return;
+            };
+            let Some(lhs_sid) = lhs.symbol_id.get() else {
+                return;
+            };
+            let Some(Expression::Identifier(rhs)) = &vd.init else {
+                return;
+            };
+            if let Some(rhs_sid) = self.resolve_ref(rhs) {
+                self.edges.push((lhs_sid, rhs_sid));
+            }
+        }
+
+        fn visit_assignment_expression(&mut self, ae: &AssignmentExpression<'a>) {
+            oxc_ast_visit::walk::walk_assignment_expression(self, ae);
+            let AssignmentTarget::AssignmentTargetIdentifier(lhs) = &ae.left else {
+                return;
+            };
+            let Some(lhs_sid) = self.resolve_ref(lhs) else {
+                return;
+            };
+            let Expression::Identifier(rhs) = &ae.right else {
+                return;
+            };
+            if let Some(rhs_sid) = self.resolve_ref(rhs) {
+                self.edges.push((lhs_sid, rhs_sid));
+            }
+        }
+    }
+
+    let mut visitor = Aliases {
+        scoping,
+        edges: Vec::new(),
+    };
+    visitor.visit_program(program);
+
+    loop {
+        let before = set.len();
+        for (lhs, rhs) in &visitor.edges {
+            if set.contains(lhs) {
+                set.insert(*rhs);
+            }
+        }
+        if set.len() == before {
+            break;
+        }
+    }
+}
+
+/// If this `BindingIdentifier`'s symbol was referenced from an
+/// auto-workletizable argument slot, inject the `'worklet'` directive on the
+/// supplied body so the main pass treats it as an explicit worklet.
+fn maybe_inject_referenced_directive<'a>(
+    binding_symbol: Option<oxc_syntax::symbol::SymbolId>,
+    body: &mut oxc_ast::ast::FunctionBody<'a>,
+    state: &State,
+    builder: AstBuilder<'a>,
+) {
+    let Some(sid) = binding_symbol else { return };
+    if !state.referenced_worklet_symbols.contains(&sid) {
+        return;
+    }
+    inject_worklet_directive(body, builder);
 }
 
 /// Drop `init_data_decl` into the right bucket: file-top-level by default,
@@ -205,7 +453,12 @@ fn process_top_level_statement<'a>(
                     && !state.opts.disable_worklet_classes.unwrap_or(false)
                     && !state.opts.bundle_mode.unwrap_or(false);
             if is_worklet {
-                let class_name = class.id.as_ref().unwrap().name.to_string();
+                let class_name = class
+                    .id
+                    .as_ref()
+                    .expect("class.id.is_some() checked in is_worklet guard")
+                    .name
+                    .to_string();
                 if let Some((factory_decl, const_decl)) =
                     crate::worklet_class::build_class_factory_pair(
                         &mut class,
@@ -227,6 +480,13 @@ fn process_top_level_statement<'a>(
             Statement::ClassDeclaration(class)
         }
         Statement::FunctionDeclaration(mut func) => {
+            // If this declaration was referenced from an auto-workletize arg
+            // slot somewhere in the file, retroactively inject the worklet
+            // directive on its body — `referencedWorklets.ts` parity.
+            let func_id_sym = func.id.as_ref().and_then(|id| id.symbol_id.get());
+            if let Some(body) = func.body.as_mut() {
+                maybe_inject_referenced_directive(func_id_sym, body, state, builder);
+            }
             if let Some(body) = &func.body {
                 if has_worklet_directive(body) {
                     // Inner-first inside a fresh local-prepend frame: nested
@@ -245,7 +505,10 @@ fn process_top_level_statement<'a>(
                     };
                     let name = func.id.as_ref().map(|id| id.name.to_string());
                     let scope_id = func.scope_id.get().unwrap_or(scoping.root_scope_id());
-                    let body_ref = func.body.as_ref().unwrap();
+                    let body_ref = func
+                        .body
+                        .as_ref()
+                        .expect("function body presence checked above");
                     let input = WorkletInput {
                         params: &func.params,
                         body: body_ref,
@@ -404,7 +667,10 @@ fn process_top_level_statement<'a>(
                             .scope_id
                             .get()
                             .unwrap_or(scoping.root_scope_id());
-                        let body_ref = func.body.as_ref().unwrap();
+                        let body_ref = func
+                        .body
+                        .as_ref()
+                        .expect("function body presence checked above");
                         let input = WorkletInput {
                             params: &func.params,
                             body: body_ref,
@@ -477,7 +743,10 @@ fn process_top_level_statement<'a>(
                             .scope_id
                             .get()
                             .unwrap_or(scoping.root_scope_id());
-                        let body_ref = func.body.as_ref().unwrap();
+                        let body_ref = func
+                        .body
+                        .as_ref()
+                        .expect("function body presence checked above");
                         let input = WorkletInput {
                             params: &func.params,
                             body: body_ref,
@@ -648,6 +917,28 @@ fn process_variable_declarator<'a>(
     allocator: &'a Allocator,
     filename: &str,
 ) {
+    // `const f = () => {…}; useAnimatedStyle(f);` — pre-pass found `f`'s
+    // symbol via the call site; inject the worklet directive here so the
+    // expression walker treats `f`'s body as an explicit worklet.
+    let binding_symbol = match &declarator.id {
+        oxc_ast::ast::BindingPattern::BindingIdentifier(bid) => bid.symbol_id.get(),
+        _ => None,
+    };
+    if let (Some(sid), Some(init)) = (binding_symbol, declarator.init.as_mut()) {
+        if state.referenced_worklet_symbols.contains(&sid) {
+            match init {
+                oxc_ast::ast::Expression::ArrowFunctionExpression(arrow) => {
+                    inject_worklet_directive(&mut arrow.body, builder);
+                }
+                oxc_ast::ast::Expression::FunctionExpression(func) => {
+                    if let Some(body) = func.body.as_mut() {
+                        inject_worklet_directive(body, builder);
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
     let Some(init) = &mut declarator.init else {
         return;
     };
@@ -728,7 +1019,10 @@ fn process_expression<'a>(
                     };
                     let name = func.id.as_ref().map(|id| id.name.to_string());
                     let scope_id = func.scope_id.get().unwrap_or(scoping.root_scope_id());
-                    let body_ref = func.body.as_ref().unwrap();
+                    let body_ref = func
+                        .body
+                        .as_ref()
+                        .expect("function body presence checked above");
                     let input = WorkletInput {
                         params: &func.params,
                         body: body_ref,
@@ -825,7 +1119,7 @@ fn process_expression<'a>(
                             );
                         }
                     }
-                    if OBJECT_HOOKS_ARG0.contains(&name) {
+                    if is_object_hook_at_arg0(name) {
                         if let Some(arg0) = call.arguments.get_mut(0) {
                             if let Argument::ObjectExpression(obj) = arg0 {
                                 inject_worklet_directives_to_object_methods(obj, builder);
@@ -840,9 +1134,19 @@ fn process_expression<'a>(
                 if is_gesture_callee || is_layout_animation_callee {
                     for i in 0..call.arguments.len() {
                         if let Some(arg) = call.arguments.get_mut(i) {
-                            autoworkletize_function_arg(
-                                arg, ctx, state, scoping, builder, allocator, filename,
-                            );
+                            // TS `processArgs(args, state, true, true)` —
+                            // gesture builder methods accept either a worklet
+                            // function or an object literal full of worklets.
+                            if let Argument::ObjectExpression(obj) = arg {
+                                inject_worklet_directives_to_object_methods(obj, builder);
+                                process_object_expression(
+                                    obj, ctx, state, scoping, builder, allocator, filename,
+                                );
+                            } else {
+                                autoworkletize_function_arg(
+                                    arg, ctx, state, scoping, builder, allocator, filename,
+                                );
+                            }
                         }
                     }
                 }
@@ -888,6 +1192,30 @@ fn process_expression<'a>(
             }
         }
         Expression::AssignmentExpression(assign) => {
+            // `let f; f = function() {}; useAnimatedStyle(f);` — when the LHS
+            // identifier's symbol was registered as a referenced worklet, the
+            // function expression on the RHS becomes an implicit worklet.
+            // Mirrors `findReferencedWorkletFromAssignmentExpression` in
+            // `referencedWorklets.ts`.
+            if let oxc_ast::ast::AssignmentTarget::AssignmentTargetIdentifier(lhs) = &assign.left {
+                if let Some(rid) = lhs.reference_id.get() {
+                    if let Some(sid) = scoping.get_reference(rid).symbol_id() {
+                        if state.referenced_worklet_symbols.contains(&sid) {
+                            match &mut assign.right {
+                                Expression::ArrowFunctionExpression(arrow) => {
+                                    inject_worklet_directive(&mut arrow.body, builder);
+                                }
+                                Expression::FunctionExpression(func) => {
+                                    if let Some(body) = func.body.as_mut() {
+                                        inject_worklet_directive(body, builder);
+                                    }
+                                }
+                                _ => {}
+                            }
+                        }
+                    }
+                }
+            }
             process_expression(&mut assign.right, ctx, state, scoping, builder, allocator, filename);
         }
         Expression::ConditionalExpression(cond) => {
@@ -942,7 +1270,10 @@ fn process_object_expression<'a>(
                                 std::collections::HashSet::new()
                             };
                             let scope_id = func.scope_id.get().unwrap_or(scoping.root_scope_id());
-                            let body_ref = func.body.as_ref().unwrap();
+                            let body_ref = func
+                        .body
+                        .as_ref()
+                        .expect("function body presence checked above");
                             let method_name_ref = method_name.as_deref();
                             let input = WorkletInput {
                                 params: &func.params,

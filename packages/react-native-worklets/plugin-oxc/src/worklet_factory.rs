@@ -22,6 +22,22 @@ use crate::worklet_body::{WorkletBodyOutput, build_worklet_body_string};
 
 const MOCK_VERSION: &str = "x.y.z";
 
+/// Baked at build time from `../package.json` (see `build.rs`). Mirrors the
+/// `REAL_VERSION = require('../../package.json').version` constant in
+/// `workletFactory.ts:50`. Used as the fallback when `opts.pluginVersion`
+/// isn't supplied by the JS shim (e.g. raw napi callers).
+const REAL_VERSION: &str = env!("WORKLETS_PACKAGE_VERSION");
+
+/// Set by the snapshot suite (and by tests that pin a deterministic version
+/// into the codegen output) to ignore any real `pluginVersion` and stamp the
+/// `__pluginVersion` field with `MOCK_VERSION` instead. Matches the env gate
+/// in `workletFactory.ts:288, 448-452`.
+fn mock_version_active() -> bool {
+    std::env::var("REANIMATED_JEST_SHOULD_MOCK_VERSION")
+        .map(|v| v == "1")
+        .unwrap_or(false)
+}
+
 /// Suffix appended to a worklet-class binding name when it appears in
 /// `new <Class>(...)` inside a worklet body. Mirrors
 /// `workletClassFactorySuffix` in babel-plugin-worklets' types.ts.
@@ -152,9 +168,11 @@ pub fn make_worklet_factory<'a>(
     };
     // Detect whether the worklet body recursively references its own name —
     // if so, we'll prepend `const <reactName> = this._recur;` to the body
-    // string so the call resolves on the UI thread.
+    // string so the call resolves on the UI thread. Scope-aware: a local
+    // shadowing binding (e.g. `function foo() { let foo = 1; foo(); }`) MUST
+    // NOT trigger the `_recur` injection.
     let recursive_name = input.self_name.and_then(|name| {
-        if body_references_name(input.body, name) {
+        if body_references_name(input.body, name, scoping, input.function_scope_id) {
             Some(react_name.as_str())
         } else {
             None
@@ -165,6 +183,8 @@ pub fn make_worklet_factory<'a>(
         &worklet_name,
         input.params,
         input.body,
+        input.is_async,
+        input.is_generator,
         input.is_expression_body,
         &closure.closure_variables,
         recursive_name,
@@ -181,7 +201,11 @@ pub fn make_worklet_factory<'a>(
     let omit_native_only_data = state.opts.omit_native_only_data.unwrap_or(false);
     let should_include_init_data = !omit_native_only_data && !bundle_mode;
 
-    let init_data_id = format!("_worklet_{hash}_init_data");
+    // Reserve a unique init-data identifier. Two worklets with byte-identical
+    // body strings hash to the same value; without this we'd emit two
+    // `const _worklet_<hash>_init_data = …` declarations at the top level and
+    // tank the file with a SyntaxError on re-declaration.
+    let init_data_id = state.reserve_init_data_id(&format!("_worklet_{hash}_init_data"));
 
     let init_data_decl = if should_include_init_data {
         // `relativeSourceLocation` rewrites `__initData.location` to a path
@@ -308,6 +332,21 @@ fn codegen_bundle_file<'a>(
 
     let mut body = builder.vec_with_capacity(imports.len() + 1);
     for info in imports {
+        // Mirror the TS plugin's `generate.ts` filter (`generate.ts:31-34, 52-55`):
+        //   * library bindings: only `ImportSpecifier` + `ImportDefaultSpecifier`
+        //   * relative bindings: only `ImportSpecifier`
+        // `Namespace` never makes it this far (closure.rs falls through to
+        // closure capture). Default imports for **relative** sources are
+        // silently dropped — the TS plugin has the same behaviour.
+        let is_rel = info.source.starts_with('.');
+        let keep = match (&info.shape, is_rel) {
+            (crate::state::ImportShape::Namespace, _) => false,
+            (crate::state::ImportShape::Default, true) => false,
+            _ => true,
+        };
+        if !keep {
+            continue;
+        }
         // Relative import sources need rebasing — the bundle file lives at
         // `react-native-worklets/.worklets/<hash>.js`, not at the original
         // file's directory, so a literal `"../foo"` from the source would
@@ -615,14 +654,21 @@ fn build_factory_expression<'a>(
     ));
 
     if !is_release() {
-        // Prefer the version the JS shim sniffed from
-        // `react-native-worklets/package.json`. Fall back to the test mock
-        // when nothing was supplied (snapshot tests, direct napi calls).
-        let version = state
-            .opts
-            .plugin_version
-            .as_deref()
-            .unwrap_or(MOCK_VERSION);
+        // Version resolution order, matching `workletFactory.ts:288, 448-452`:
+        //   1. `REANIMATED_JEST_SHOULD_MOCK_VERSION=1` → MOCK_VERSION ("x.y.z")
+        //   2. `opts.pluginVersion` (set by the JS shim from
+        //      `react-native-worklets/package.json` at runtime)
+        //   3. `REAL_VERSION` baked from `../package.json` at build time
+        //
+        // The baked fallback mirrors TS — the TS plugin lives inside the
+        // worklets package so `REAL_VERSION` is always available; the Rust
+        // build does the same lookup at compile time so raw napi callers
+        // get a real version instead of a silently-missing `__pluginVersion`.
+        let version: &str = if mock_version_active() {
+            MOCK_VERSION
+        } else {
+            state.opts.plugin_version.as_deref().unwrap_or(REAL_VERSION)
+        };
         let version_str = builder.str(version);
         stmts.push(build_member_assign(
             builder,
@@ -733,7 +779,11 @@ fn build_inner_fn_decl<'a>(
 ) -> Statement<'a> {
     let params_clone: FormalParameters<'a> = input.params.clone_in(allocator);
     let mut body_clone: FunctionBody<'a> = input.body.clone_in(allocator);
-    body_clone.directives = builder.vec();
+    // Strip worklet-only directives recursively. Skipping only the top-level
+    // directive (the old behaviour) left a stray `'no-worklet-closure'` /
+    // `'limit-init-data-hoisting'` on any nested function/arrow that the
+    // outer factory then printed verbatim.
+    crate::utils::strip_worklet_directives_in_body(&mut body_clone, builder);
     if input.is_expression_body {
         rewrite_implicit_return(&mut body_clone, builder);
     }
@@ -900,12 +950,21 @@ fn build_factory_call<'a>(
 /// Mirrors workletStringCode.ts:71-105 — when a worklet captures a class
 /// constructor that's itself a worklet class, we have to rewrite the closure
 /// entry so the runtime can re-build the class on the UI thread.
+///
+/// Critically, this only collects `new X()` sites that belong to **this**
+/// worklet body. Nested inner worklets have already been replaced with their
+/// factory calls by the inner-first pass; what's left of a nested
+/// `function/arrow` here is either non-worklet helper code (which is still
+/// part of the outer body) or the worklet body of an unrelated inner factory.
+/// We don't descend into nested function/arrow bodies because their closure
+/// vars are managed by their own factory generation.
 fn collect_new_expression_class_names<'a>(
     body: &FunctionBody<'a>,
     captured: &std::collections::HashSet<&str>,
 ) -> std::collections::HashSet<String> {
-    use oxc_ast::ast::NewExpression;
+    use oxc_ast::ast::{ArrowFunctionExpression, Function, NewExpression};
     use oxc_ast_visit::Visit;
+    use oxc_syntax::scope::ScopeFlags;
     struct Probe<'c, 'n> {
         captured: &'c std::collections::HashSet<&'n str>,
         found: std::collections::HashSet<String>,
@@ -921,6 +980,11 @@ fn collect_new_expression_class_names<'a>(
             // Continue walking so nested `new X(new Y())` both register.
             oxc_ast_visit::walk::walk_new_expression(self, it);
         }
+        // Do NOT descend into nested function / arrow bodies. They've either
+        // already been replaced with factory calls (inner worklets) or are
+        // unrelated helpers whose own closure analysis owns those `new X()`s.
+        fn visit_function(&mut self, _func: &Function<'a>, _flags: ScopeFlags) {}
+        fn visit_arrow_function_expression(&mut self, _arrow: &ArrowFunctionExpression<'a>) {}
     }
     let mut probe = Probe {
         captured,
@@ -930,26 +994,71 @@ fn collect_new_expression_class_names<'a>(
     probe.found
 }
 
-/// Quick AST scan: does any identifier-reference in `body` have the given
-/// name? Used to decide whether to prepend a `const <name> = this._recur;`
-/// binding so recursive calls inside a workletized function still resolve.
-fn body_references_name(body: &FunctionBody<'_>, name: &str) -> bool {
+/// Scope-aware: does any identifier-reference in `body` resolve to the
+/// function's own binding (not a shadowing inner declaration)?
+///
+/// A reference is considered self-recursive only when the symbol it binds to
+/// lives **outside** the function's scope. Inner `let`/`function`/parameter
+/// shadows (whose symbols live inside the function scope) are not real
+/// self-references and must not trigger the `const <name> = this._recur;`
+/// injection — doing so would mask the local in the workletized form.
+///
+/// References with no resolved symbol (unbound free identifiers) still count
+/// as potential self-references — they may resolve to a parent scope binding
+/// the codegen will later inject.
+fn body_references_name(
+    body: &FunctionBody<'_>,
+    name: &str,
+    scoping: &Scoping,
+    function_scope_id: ScopeId,
+) -> bool {
     use oxc_ast::ast::IdentifierReference;
     use oxc_ast_visit::Visit;
-    struct Probe<'n> {
+    struct Probe<'n, 's> {
         name: &'n str,
+        scoping: &'s Scoping,
+        function_scope_id: ScopeId,
         found: bool,
     }
-    impl<'a, 'n> Visit<'a> for Probe<'n> {
+    impl<'a, 'n, 's> Visit<'a> for Probe<'n, 's> {
         fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
-            if !self.found && it.name.as_str() == self.name {
-                self.found = true;
+            if self.found || it.name.as_str() != self.name {
+                return;
+            }
+            let symbol_id = it
+                .reference_id
+                .get()
+                .and_then(|rid| self.scoping.get_reference(rid).symbol_id());
+            match symbol_id {
+                Some(sid) => {
+                    let sym_scope = self.scoping.symbol_scope_id(sid);
+                    if !scope_is_inside(self.scoping, sym_scope, self.function_scope_id) {
+                        self.found = true;
+                    }
+                }
+                None => {
+                    // Unresolved free identifier — assume the worklet body
+                    // will resolve it against the same name at runtime.
+                    self.found = true;
+                }
             }
         }
     }
-    let mut probe = Probe { name, found: false };
+    let mut probe = Probe {
+        name,
+        scoping,
+        function_scope_id,
+        found: false,
+    };
     probe.visit_function_body(body);
     probe.found
+}
+
+fn scope_is_inside(scoping: &Scoping, inner: ScopeId, outer: ScopeId) -> bool {
+    if inner == outer {
+        return true;
+    }
+    scoping.scope_ancestors(inner).any(|s| s == outer)
 }
 
 pub struct ClosureWalk<'a, 'b> {

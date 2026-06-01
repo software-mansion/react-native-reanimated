@@ -217,6 +217,14 @@ impl<'a, 's> Visit<'a> for ReferenceCollector<'s> {
             flags,
         });
     }
+
+    // JSX element / member-expression names walk into IdentifierReference by
+    // default in oxc, which would over-capture every `<Foo>` / `<Foo.Bar>` in
+    // a worklet body that returns JSX. The TS plugin filters these out
+    // explicitly (`closure.ts:35-37`). Skip the entire element-name subtree;
+    // JSX attribute *values* (JSXExpressionContainer) are still walked because
+    // those contain regular Expressions whose references must be captured.
+    fn visit_jsx_element_name(&mut self, _it: &oxc_ast::ast::JSXElementName<'a>) {}
 }
 
 /// Drives visitor walks over a function's body + params, regardless of whether
