@@ -15,13 +15,18 @@ const workletsLibEntryPath = path.join(
 function bundleModeResolveRequest(
   /** @type {any} */ context,
   /** @type {string} */ moduleName,
-  /** @type {any} */ platform
+  /** @type {any} */ platform,
+  /** @type {any} */ userConfigResolveRequest
 ) {
   if (moduleName.startsWith(workletsDirPath)) {
     const fullModuleName = path.join(workletsPackageParentDir, moduleName);
     return { type: 'sourceFile', filePath: fullModuleName };
   }
-  return context.resolveRequest(context, moduleName, platform);
+  return (userConfigResolveRequest || context.resolveRequest)(
+    context,
+    moduleName,
+    platform
+  );
 }
 
 /** Use in React Native Community projects. */
@@ -49,7 +54,18 @@ const bundleModeMetroConfig = {
 function getBundleModeMetroConfig(/** @type {any} */ config) {
   config.serializer.createModuleIdFactory = bundleModeCreateModuleIdFactory;
 
-  config.resolver.resolveRequest = bundleModeResolveRequest;
+  const currentResolveRequest = config?.resolver?.resolveRequest;
+  config.resolver.resolveRequest = (
+    /** @type {any} */ context,
+    /** @type {string} */ moduleName,
+    /** @type {any} */ platform
+  ) =>
+    bundleModeResolveRequest(
+      context,
+      moduleName,
+      platform,
+      currentResolveRequest
+    );
 
   const currentGetTransformOptions = config?.transformer?.getTransformOptions;
   config.transformer.getTransformOptions = async () => {
