@@ -2,7 +2,7 @@ import type { ComponentType, JSX } from 'react';
 import type { CSSAnimationProperties } from 'react-native-reanimated';
 
 import { stringifyConfig } from '@/apps/css/utils';
-import type { AnyRecord, PlainStyle } from '@/types';
+import type { PlainStyle } from '@/types';
 
 import Scroll from '../layout/Scroll';
 import { Section } from '../layout/Section';
@@ -10,7 +10,7 @@ import type { LabelType } from '../misc/Label';
 import type { ExampleCardProps } from './ExampleCard';
 import ExampleCard from './ExampleCard';
 
-export type ExamplesListProps<P extends AnyRecord, S extends AnyRecord> = Pick<
+export type ExamplesListProps<P extends object, S extends object> = Pick<
   ExampleProps<P, S>,
   'buildAnimation' | 'renderExample'
 > & {
@@ -30,8 +30,8 @@ export type ExamplesListProps<P extends AnyRecord, S extends AnyRecord> = Pick<
 };
 
 export default function ExamplesList<
-  P extends AnyRecord,
-  S extends AnyRecord = PlainStyle,
+  P extends object,
+  S extends object = PlainStyle,
 >({
   buildAnimation,
   CardComponent = ExampleCard,
@@ -66,7 +66,7 @@ export default function ExamplesList<
   );
 }
 
-type ExampleProps<P, S extends AnyRecord> = {
+type ExampleProps<P, S extends object> = {
   CardComponent: ComponentType<ExampleCardProps>;
   denseCode?: boolean;
   buildAnimation: (props: P) => CSSAnimationProperties<S>;
@@ -76,7 +76,7 @@ type ExampleProps<P, S extends AnyRecord> = {
 } & Omit<ExampleCardProps, 'code'> &
   P;
 
-function Example<P extends AnyRecord, S extends AnyRecord>({
+function Example<P extends object, S extends object>({
   buildAnimation,
   CardComponent,
   collapsedExampleHeight,

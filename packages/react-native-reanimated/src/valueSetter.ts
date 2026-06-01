@@ -17,7 +17,8 @@ export function valueSetter<Value>(
     (value !== null &&
       typeof value === 'object' &&
       // TODO TYPESCRIPT fix this after fixing AnimationObject type
-      (value as unknown as AnimationObject).onFrame !== undefined)
+      (value as unknown as AnimationObject).onFrame !== undefined &&
+      (value as unknown as AnimationObject).onStart !== undefined)
   ) {
     const animation: AnimationObject<Value> =
       typeof value === 'function'

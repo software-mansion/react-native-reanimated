@@ -100,7 +100,7 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
   const auto &fromStyle = entry.precomputedStyles[oldMask];
   const auto &toStyle = entry.precomputedStyles[entry.activeMask];
 
-  std::unordered_map<std::string, std::pair<folly::dynamic, folly::dynamic>> valueChanges;
+  css::PropertyValueDynamicDiffsMap valueChanges;
   for (const auto &[propKey, toVal] : toStyle.items()) {
     const auto propName = propKey.asString();
     const folly::dynamic &fromVal = fromStyle.count(propName) ? fromStyle[propName] : toVal;

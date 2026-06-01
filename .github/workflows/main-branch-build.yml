@@ -1,0 +1,43 @@
+name: Main branch build
+on:
+  schedule:
+    # 02:17 UTC — offset from other nightly crons to spread runner load
+    - cron: '17 2 * * *'
+  pull_request:
+    paths:
+      - .github/workflows/main-branch-build.yml
+  workflow_dispatch:
+
+jobs:
+  android:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+    uses: ./.github/workflows/example-android-build-check.yml
+    with:
+      configuration: ${{ matrix.configuration }}
+
+  ios:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+    uses: ./.github/workflows/example-ios-build-check.yml
+    with:
+      configuration: ${{ matrix.configuration }}
+
+  # macOS is skipped: react-native-macos has not been updated for
+  # React Native 0.83. Re-enable once react-native-macos catches up.
+
+  tvos:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+    uses: ./.github/workflows/example-tvos-build-check.yml
+    with:
+      configuration: ${{ matrix.configuration }}

@@ -1,12 +1,12 @@
 'use strict';
-import type { AnyRecord, ConfigPropertyAlias, ValueProcessor } from '../types';
+import type { ConfigPropertyAlias, ValueProcessor } from '../types';
 
-type PropertyValueConfigBase<P extends AnyRecord> =
+type PropertyValueConfigBase<P extends object> =
   | boolean // true - included, false - excluded
   | ConfigPropertyAlias<P>; // alias for another property
 
 type PropsBuilderPropertyConfig<
-  P extends AnyRecord,
+  P extends object,
   K extends keyof P = keyof P,
 > =
   | PropertyValueConfigBase<P>
@@ -18,6 +18,6 @@ type PropsBuilderPropertyConfig<
       process: ValueProcessor<Required<P>[K], any>; // for custom value processing
     };
 
-export type PropsBuilderConfig<P extends AnyRecord = AnyRecord> = {
+export type PropsBuilderConfig<P extends object> = {
   [K in keyof Required<P>]: PropsBuilderPropertyConfig<P, K>;
 };

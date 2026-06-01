@@ -107,10 +107,12 @@ void CSSAnimationsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatch
 CSSAnimationsRegistry::AnimationObserver::AnimationObserver(CSSAnimationsRegistry &owner) : owner_(owner) {}
 
 void CSSAnimationsRegistry::AnimationObserver::onAnimationUpdate(const Tag viewTag) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   owner_.updatedTags_.insert(viewTag);
 }
 
 void CSSAnimationsRegistry::AnimationObserver::onAnimationNeedsRevert(const Tag viewTag) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   owner_.pendingRevertTags_.insert(viewTag);
 }
 

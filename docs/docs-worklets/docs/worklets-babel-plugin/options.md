@@ -105,7 +105,9 @@ Defaults to `false`.
 
 This option turns off the source map generation for worklets. Mostly used for testing purposes.
 
-### disableWorkletClasses <AvailableFrom version="0.7.0"/>
+<Badges version="0.7.0">
+### disableWorkletClasses
+</Badges>
 
 Defaults to `false`.
 
@@ -201,7 +203,9 @@ Defaults to `false`.
 
 This option dictates the passed file location for a worklet's source map. If you enable this option, the file paths will be relative to `process.cwd` (the current directory where Babel executes). This can be handy for Jest test snapshots to ensure consistent results across machines.
 
-### strictGlobal <AvailableFrom version="0.8.0"/>
+<Badges version="0.8.0">
+### strictGlobal
+</Badges>
 
 :::note
 We highly recommend enabling this option as it will be enabled by default in the future.

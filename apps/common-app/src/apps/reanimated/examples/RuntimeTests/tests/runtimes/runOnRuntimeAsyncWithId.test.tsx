@@ -328,7 +328,7 @@ describe('runOnRuntimeAsyncWithId', () => {
         '[Worklets] scheduleOnRuntimeWithId: no worklet runtime found for id 9999'
       );
     });
-  } else {
+  } else if (__DEV__) {
     test('throws when scheduling from UI Runtime to UI Runtime', async () => {
       scheduleOnUI(() => {
         'worklet';

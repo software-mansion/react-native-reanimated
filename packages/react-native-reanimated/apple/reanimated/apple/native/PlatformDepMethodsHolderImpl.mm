@@ -1,4 +1,5 @@
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
+#import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/REASlowAnimations.h>
@@ -120,6 +121,26 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
   return unsubscribeFromKeyboardEventsFunction;
 }
 
+css::CSSCanRoutePropertyFunction makeCSSCanRouteProperty()
+{
+  return &canRouteCSSProperty;
+}
+
+css::CSSApplyTransitionFunction makeCSSApplyTransition(REACSSPlatformTransitions *platformTransitions)
+{
+  return [platformTransitions](const css::CSSPlatformTransitionPropertyConfig &config) {
+    [platformTransitions applyTransition:config];
+  };
+}
+
+css::CSSRemoveTransitionFunction makeCSSRemoveTransition(REACSSPlatformTransitions *platformTransitions)
+{
+  return [platformTransitions](Tag viewTag, const std::string &propertyName) {
+    [platformTransitions removeTransitionForTag:viewTag
+                                   propertyName:[NSString stringWithUTF8String:propertyName.c_str()]];
+  };
+}
+
 ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager)
 {
   auto forceScreenSnapshot = [=](Tag tag) {
@@ -181,6 +202,12 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto attachPseudoSelectorFunction = makeAttachPseudoSelectorFunction(attachQueue);
   auto detachPseudoSelectorFunction = makeDetachPseudoSelectorFunction(attachQueue);
 
+  REACSSPlatformTransitions *platformTransitions =
+      [[REACSSPlatformTransitions alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
+  auto cssCanRouteProperty = makeCSSCanRouteProperty();
+  auto cssApplyTransition = makeCSSApplyTransition(platformTransitions);
+  auto cssRemoveTransition = makeCSSRemoveTransition(platformTransitions);
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       forceScreenSnapshotFunction,
@@ -194,6 +221,9 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       maybeFlushUIUpdatesQueueFunction,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
+      cssCanRouteProperty,
+      cssApplyTransition,
+      cssRemoveTransition,
   };
   return platformDepMethodsHolder;
 }

@@ -154,11 +154,11 @@ const sharedStyles = StyleSheet.create({
   },
 });
 
-const SHARED_CONFIG: CSSTransitionProperties = {
+const SHARED_CONFIG = {
   transitionDuration: 300,
   transitionProperty: 'all',
   transitionTimingFunction: 'ease-out',
-};
+} satisfies CSSTransitionProperties;
 
 function Simple({ open }: ExampleComponentProps) {
   const lineStyle = [sharedStyles.line, SHARED_CONFIG];

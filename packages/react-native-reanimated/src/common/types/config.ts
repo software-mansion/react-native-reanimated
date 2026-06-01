@@ -1,6 +1,6 @@
 'use strict';
 
-import type { AnyRecord, NonMutable } from './helpers';
+import type { NonMutable } from './helpers';
 
 export enum ValueProcessorTarget {
   CSS = 'css',
@@ -16,6 +16,6 @@ export type ValueProcessor<V = unknown, R = V> = (
   context?: ValueProcessorContext
 ) => R | Record<string, R>;
 
-export type ConfigPropertyAlias<P extends AnyRecord> = {
+export type ConfigPropertyAlias<P extends object> = {
   as: keyof P;
 };

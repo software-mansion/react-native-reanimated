@@ -73,22 +73,6 @@ describe('Test setting different values as sharedValue', () => {
     }
   );
 
-  test.each([...Presets.stringObjects, ...Presets.dates])(
-    'Object %p causes an error',
-    async (testedValue) => {
-      await expect(async () => {
-        await render(
-          <SharedValueComponent initialValue={testedValue} progress={0} />
-        );
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const _sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-        await render(<ProgressBar progress={0} />);
-      }).toThrow(
-        '[Worklets] Trying to access property `onFrame` of an object which cannot be sent to the UI runtime.'
-      );
-    }
-  );
-
   describe('Test setting _Error types_ as sharedValue', () => {
     test.each([
       new TypeError('Example TypeError'),

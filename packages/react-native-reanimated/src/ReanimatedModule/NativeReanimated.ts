@@ -19,6 +19,7 @@ import type {
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSPseudoStyleConfig,
   CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
 } from '../css/native';
@@ -242,6 +243,17 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   getSettledUpdates(): SettledUpdate[] {
     return this.#reanimatedModuleProxy.getSettledUpdates();
   }
+
+  registerPseudoStyle(
+    shadowNodeWrapper: ShadowNodeWrapper,
+    config: CSSPseudoStyleConfig
+  ) {
+    this.#reanimatedModuleProxy.registerPseudoStyle(shadowNodeWrapper, config);
+  }
+
+  unregisterPseudoStyle(viewTag: number) {
+    this.#reanimatedModuleProxy.unregisterPseudoStyle(viewTag);
+  }
 }
 
 class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
@@ -284,6 +296,9 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   getSettledUpdates(): SettledUpdate[] {
     return [];
   }
+
+  registerPseudoStyle(): void {}
+  unregisterPseudoStyle(): void {}
 }
 
 function installTurboModule() {

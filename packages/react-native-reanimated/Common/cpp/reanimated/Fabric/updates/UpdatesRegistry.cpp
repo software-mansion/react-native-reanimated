@@ -1,6 +1,9 @@
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <reanimated/Fabric/updates/PropsLayoutFilter.h>
+#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
+
+#include <react/debug/react_native_assert.h>
 
 #include <jsi/jsi.h>
 #include <memory>
@@ -12,18 +15,27 @@
 namespace reanimated {
 
 bool UpdatesRegistry::isEmpty() const {
-  std::lock_guard<std::mutex> lock{mutex_};
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   return updatesRegistry_.empty();
 }
 
 folly::dynamic UpdatesRegistry::get(const Tag tag) const {
-  std::lock_guard<std::mutex> lock{mutex_};
-
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   auto it = updatesRegistry_.find(tag);
   if (it == updatesRegistry_.cend()) {
     return nullptr;
   }
   return it->second.second;
+}
+
+void UpdatesRegistry::remove(const Tag tag) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  removeTag(tag);
+}
+
+void UpdatesRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  flush(updatesBatch);
 }
 
 void UpdatesRegistry::flush(UpdatesBatch &updatesBatch) {
@@ -39,6 +51,11 @@ void UpdatesRegistry::flush(UpdatesBatch &updatesBatch) {
 }
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
+void UpdatesRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  flush(updatesBatch);
+}
+
 void UpdatesRegistry::flush(UpdatesBatchAnimatedProps &updatesBatch) {
   auto copiedUpdatesBatch = std::move(updatesBatchAnimatedProps_);
   updatesBatchAnimatedProps_.clear();
@@ -49,7 +66,7 @@ void UpdatesRegistry::flush(UpdatesBatchAnimatedProps &updatesBatch) {
 }
 
 void UpdatesRegistry::flushNonLayoutUpdates(jsi::Runtime &rt, AnimationMutations &mutations) {
-  std::lock_guard<std::mutex> lock{mutex_};
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
 
   UpdatesBatchAnimatedProps remaining;
 
@@ -107,7 +124,7 @@ void UpdatesRegistry::flushNonLayoutUpdates(jsi::Runtime &rt, AnimationMutations
 }
 
 bool UpdatesRegistry::hasPendingAnimatedPropsUpdates() const {
-  std::lock_guard<std::mutex> lock{mutex_};
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   return !updatesBatchAnimatedProps_.empty();
 }
 
@@ -146,7 +163,7 @@ void UpdatesRegistry::addJSIPropsToAnimatedPropsBatch(
 #endif
 
 UpdatesBatch UpdatesRegistry::getPendingUpdates() {
-  std::lock_guard<std::mutex> lock{mutex_};
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   flushUpdatesToRegistry(updatesBatch_);
 
   UpdatesBatch updatesBatch;
@@ -158,7 +175,7 @@ UpdatesBatch UpdatesRegistry::getPendingUpdates() {
 }
 
 void UpdatesRegistry::collectProps(PropsMap &propsMap) {
-  std::lock_guard<std::mutex> lock{mutex_};
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
 
   auto copiedRegistry = updatesRegistry_;
   for (const auto &[tag, pair] : copiedRegistry) {
@@ -220,12 +237,12 @@ void UpdatesRegistry::flushUpdatesToRegistry(const UpdatesBatch &updatesBatch) {
 #ifdef ANDROID
 
 bool UpdatesRegistry::hasPropsToRevert() const {
-  std::lock_guard<std::mutex> lock{mutex_};
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   return !propsToRevertMap_.empty();
 }
 
 void UpdatesRegistry::collectPropsToRevert(PropsToRevertMap &propsToRevertMap) {
-  std::lock_guard<std::mutex> lock{mutex_};
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
 
   for (const auto &[tag, pair] : propsToRevertMap_) {
     const auto &[shadowNodeFamily, props] = pair;

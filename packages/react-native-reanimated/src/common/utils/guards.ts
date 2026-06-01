@@ -1,5 +1,5 @@
 'use strict';
-import type { AnyRecord, ConfigPropertyAlias, UnknownRecord } from '../types';
+import type { ConfigPropertyAlias, UnknownRecord } from '../types';
 
 export const isDefined = <T>(value: T): value is NonNullable<T> =>
   value !== undefined && value !== null;
@@ -38,7 +38,7 @@ export const isRecord = <T extends UnknownRecord = UnknownRecord>(
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 };
 
-export const isConfigPropertyAlias = <P extends AnyRecord>(
+export const isConfigPropertyAlias = <P extends object>(
   value: unknown
 ): value is ConfigPropertyAlias<P> =>
   !!value &&

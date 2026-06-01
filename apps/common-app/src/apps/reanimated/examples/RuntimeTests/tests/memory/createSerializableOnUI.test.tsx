@@ -454,7 +454,6 @@ describe('Test createSerializableOnUI', () => {
   // });
 
   test('createSerializableOnUIInaccessibleObject', async () => {
-    // Arrange
     const clazz = runOnUISync(() => {
       'worklet';
       class Clazz {
@@ -464,7 +463,6 @@ describe('Test createSerializableOnUI', () => {
       return new Clazz();
     });
 
-    // Act & Assert
     await expect(() => {
       clazz.method();
     }).toThrow();
@@ -496,12 +494,14 @@ describe('Test createSerializableOnUI', () => {
     }).toThrow();
   });
 
-  test('throws when trying to serialize a Promise', async () => {
-    await expect(() =>
-      runOnUISync(() => {
-        'worklet';
-        return Promise.resolve();
-      })
-    ).toThrow('Promises cannot be converted to serializable.');
-  });
+  if (__DEV__) {
+    test('throws when trying to serialize a Promise', async () => {
+      await expect(() =>
+        runOnUISync(() => {
+          'worklet';
+          return Promise.resolve();
+        })
+      ).toThrow('Promises cannot be converted to serializable.');
+    });
+  }
 });

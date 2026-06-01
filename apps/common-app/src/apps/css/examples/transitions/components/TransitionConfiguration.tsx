@@ -1,7 +1,7 @@
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { memo, useCallback } from 'react';
-import type { ListRenderItem } from 'react-native';
+import type { ListRenderItem, ViewStyle } from 'react-native';
 import { FlatList, StyleSheet, View } from 'react-native';
 import type {
   CSSTransitionProperties,
@@ -20,7 +20,7 @@ import { colors, flex, radius, spacing } from '@/theme';
 import { iconSizes } from '@/theme/icons';
 
 type TransitionConfigurationProps = {
-  transitionProperties: Partial<CSSTransitionProperties>;
+  transitionProperties: Partial<CSSTransitionProperties<ViewStyle>>;
   transitionStyles: Array<StyleProps>;
   stylesTitle?: string;
   settingsTitle?: string;

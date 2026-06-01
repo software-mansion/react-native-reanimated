@@ -2,7 +2,7 @@
 
 import { initialUpdaterRun } from '../animation';
 import type { StyleProps } from '../commonTypes';
-import { isCSSStyleProp } from '../css/utils';
+import { isCSSConfigProp } from '../css/utils';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import { isSharedValue } from '../isSharedValue';
 import { WorkletEventHandler } from '../WorkletEventHandler';
@@ -108,7 +108,7 @@ export class PropsFilter implements IPropsFilter {
           }
         } else {
           for (const animatedPropKey in animatedProps) {
-            if (!isCSSStyleProp(animatedPropKey)) {
+            if (!isCSSConfigProp(animatedPropKey)) {
               props[animatedPropKey] = animatedProps[animatedPropKey];
             }
           }

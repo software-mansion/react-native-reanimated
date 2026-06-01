@@ -227,7 +227,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 #endif
 
   const bool isReducedMotion_;
-  bool shouldFlushRegistry_ = false;
+  std::atomic<bool> shouldFlushRegistry_{false};
   std::shared_ptr<worklets::WorkletRuntime> uiRuntime_;
   std::shared_ptr<worklets::UIScheduler> uiScheduler_;
   std::shared_ptr<CallInvoker> jsInvoker_;
@@ -253,10 +253,10 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
 #endif
-  const std::shared_ptr<OperationsLoop> operationsLoop_;
-  const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
+  const std::shared_ptr<OperationsLoop> operationsLoop_;
+  const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
   const std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
   const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;

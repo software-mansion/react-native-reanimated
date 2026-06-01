@@ -13,6 +13,7 @@ This repository contains two main packages:
 
 ## Nightly CI state
 
+[![Main branch build](https://github.com/software-mansion/react-native-reanimated/actions/workflows/main-branch-build.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/main-branch-build.yml)
 [![NPM Reanimated publish \[Nightly\]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish.yml)
 [![NPM Worklets publish \[Nightly\]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish.yml)
 [![Reanimated + Worklets compatibility check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-worklets-compatibility-check.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-worklets-compatibility-check.yml)

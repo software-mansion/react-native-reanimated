@@ -24,22 +24,22 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { radius, spacing } from '@/theme';
-import type { AnyRecord } from '@/types';
 import { IS_ANDROID } from '@/utils';
 
 const filterPaddingAndMarginProps = (
   style: ViewStyle
 ): [ViewStyle, ViewStyle] => {
-  const paddingAndMargin: AnyRecord = {};
-  const rest: AnyRecord = {};
+  const paddingAndMargin: ViewStyle = {};
+  const rest: ViewStyle = {};
 
   for (const key in style) {
     const k = key as keyof ViewStyle;
-    if (key.startsWith('padding') || key.startsWith('margin')) {
-      paddingAndMargin[key] = style[k];
-    } else {
-      rest[key] = style[k];
-    }
+    Object.assign(
+      key.startsWith('padding') || key.startsWith('margin')
+        ? paddingAndMargin
+        : rest,
+      { [k]: style[k] }
+    );
   }
 
   return [paddingAndMargin, rest];

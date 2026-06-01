@@ -120,7 +120,7 @@ describe('runOnRuntimeSyncWithId', () => {
         '[Worklets] runOnRuntimeSyncWithId: no worklet runtime found for id 9999'
       );
     });
-  } else {
+  } else if (__DEV__) {
     test('from UI Runtime to UI Runtime', async () => {
       scheduleOnUI(() => {
         'worklet';
@@ -253,8 +253,8 @@ describe('runOnRuntimeSyncWithId', () => {
         '[Worklets] runOnRuntimeSyncWithId: no worklet runtime found for id 9999'
       );
     });
-  } else {
-    test('from Worker Runtime to UI Runtime', async () => {
+  } else if (__DEV__) {
+    test('throws from Worker Runtime to UI Runtime', async () => {
       scheduleOnRuntime(workletRuntime1, () => {
         'worklet';
         try {
@@ -277,7 +277,7 @@ describe('runOnRuntimeSyncWithId', () => {
       );
     });
 
-    test('from Worker Runtime to self', async () => {
+    test('throws from Worker Runtime to self', async () => {
       scheduleOnRuntime(workletRuntime1, () => {
         'worklet';
         try {
@@ -303,7 +303,7 @@ describe('runOnRuntimeSyncWithId', () => {
       );
     });
 
-    test('from Worker Runtime to other Worker Runtime', async () => {
+    test('throws from Worker Runtime to other Worker Runtime', async () => {
       scheduleOnRuntime(workletRuntime1, () => {
         'worklet';
         try {

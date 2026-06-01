@@ -513,8 +513,8 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
     : [];
   const adaptersHash = adapters ? buildWorkletsHash(adaptersArray) : null;
   const areAnimationsActive = useSharedValue<boolean>(true);
-  const jestAnimatedValues = useRef<Style | AnimatedProps>(
-    {} as Style | AnimatedProps
+  const jestAnimatedValues = useRef<AnimatedStyle<Style | AnimatedProps>>(
+    {} as AnimatedStyle<Style | AnimatedProps>
   );
 
   // build dependencies
