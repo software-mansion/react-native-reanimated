@@ -20,9 +20,11 @@ export default function ArbitraryWebSelectors() {
       <Scroll contentContainerStyle={styles.content} withBottomBarSpacing>
         <Section
           description="Keys that aren't one of the five built-in selectors are passed through to the web layer as raw CSS pseudo-classes. On native they're ignored, so these examples only animate on web."
+          labelTypes={['web']}
           title="Arbitrary CSS pseudo-classes (web only)">
           <VerticalExampleCard
             description=":nth-child(odd) targets every other element. Each row receives the same style block; only those at odd DOM positions take the highlighted background."
+            labelTypes={['web']}
             title=":nth-child(odd)"
             code={`<Animated.View
   style={{
@@ -58,6 +60,7 @@ export default function ArbitraryWebSelectors() {
 
           <VerticalExampleCard
             description=":first-child and :last-child highlight the ends of a list with different colors."
+            labelTypes={['web']}
             title=":first-child / :last-child"
             code={`<Animated.View
   style={{
@@ -96,6 +99,7 @@ export default function ArbitraryWebSelectors() {
 
           <VerticalExampleCard
             description=":nth-child(3n) targets every third element."
+            labelTypes={['web']}
             title=":nth-child(3n)"
             code={`<Animated.View
   style={{
@@ -131,6 +135,7 @@ export default function ArbitraryWebSelectors() {
 
           <VerticalExampleCard
             description=":placeholder-shown fires while the input has no value (placeholder visible). Type to see the border collapse."
+            labelTypes={['web']}
             title=":placeholder-shown"
             code={`<AnimatedTextInput
   placeholder="Type something..."
@@ -166,6 +171,7 @@ export default function ArbitraryWebSelectors() {
 
           <VerticalExampleCard
             description=":focus-visible fires only when focus arrives via the keyboard (Tab), not when the input is clicked. The built-in :focus would fire either way - this is a distinct selector that the web layer passes through unchanged."
+            labelTypes={['web']}
             title=":focus-visible (keyboard focus only)"
             code={`<AnimatedTextInput
   style={{
