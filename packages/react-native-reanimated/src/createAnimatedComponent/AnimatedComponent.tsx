@@ -444,6 +444,12 @@ export default class AnimatedComponent
           undefined
         );
         this._sharedTransitionTag = undefined;
+        // Clear the cached builder too. The re-register guard below keys on
+        // `this._sharedTransition` identity; if we leave the stale builder here,
+        // re-adding the tag resolves `sharedTransition` back to it via `?? this._sharedTransition ??`,
+        // the guard sees no change, and the element is never re-registered (tagToName_ stays erased).
+        // That makes selection toggles (e.g. share-all -> share-green -> share-all) silently drop elements.
+        this._sharedTransition = undefined;
       }
       return;
     }
