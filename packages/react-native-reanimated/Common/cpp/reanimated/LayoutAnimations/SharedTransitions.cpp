@@ -170,12 +170,28 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
       // interpolating between them morphs the shared element's full transform.
       const auto startTransform = std::static_pointer_cast<const ViewProps>(layoutAnimation.startView.props)->transform;
       const auto finalTransform = std::static_pointer_cast<const ViewProps>(layoutAnimation.finalView.props)->transform;
-      react::Size interpolatedSize;
-      interpolatedSize.width = width;
-      interpolatedSize.height = height;
-      auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));
-      viewProps->transform =
-          Transform::Interpolate(transitionProgress_, startTransform, finalTransform, interpolatedSize);
+      // Transform::Interpolate short-circuits to Identity() the moment either side contains an
+      // Arbitrary operation. A nested shared element whose ancestors are themselves transformed has
+      // its transform composed into a single Arbitrary matrix by parseParentTransforms, which we
+      // cannot interpolate - and flattening it to identity mid-transition looks worse than holding
+      // the destination transform that cloneProps already gave us. So only override when both ends
+      // are interpolable operation lists; otherwise leave newProps' destination transform in place.
+      const auto hasArbitrary = [](const Transform &t) {
+        for (const auto &op : t.operations) {
+          if (op.type == TransformOperationType::Arbitrary) {
+            return true;
+          }
+        }
+        return false;
+      };
+      if (!hasArbitrary(startTransform) && !hasArbitrary(finalTransform)) {
+        react::Size interpolatedSize;
+        interpolatedSize.width = width;
+        interpolatedSize.height = height;
+        auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));
+        viewProps->transform =
+            Transform::Interpolate(transitionProgress_, startTransform, finalTransform, interpolatedSize);
+      }
 #endif
 
       updateMap.insert_or_assign(tag, UpdateValues{newProps, {x, y, width, height}});
