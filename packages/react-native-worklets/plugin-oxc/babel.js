@@ -126,7 +126,25 @@ function mightContainWorklets(sourceText) {
   return false;
 }
 
-function workletsPluginOxcBabelShim(babelApi) {
+// The Rust plugin only implements bundle mode. When `bundleMode` is not set
+// (or explicitly false) we delegate the whole file to the legacy TS plugin so
+// projects that haven't migrated keep working unchanged. This makes
+// `worklets-plugin-oxc/babel` a drop-in replacement for
+// `react-native-worklets/plugin`.
+let cachedLegacyPlugin = null;
+function loadLegacyPlugin() {
+  if (cachedLegacyPlugin !== null) return cachedLegacyPlugin;
+  cachedLegacyPlugin = require('react-native-worklets/plugin');
+  return cachedLegacyPlugin;
+}
+
+function workletsPluginOxcBabelShim(babelApi, options) {
+  const opts = options || {};
+  if (opts.bundleMode !== true) {
+    // Bundleless mode → legacy TS plugin. Forward args verbatim.
+    return loadLegacyPlugin()(babelApi, options);
+  }
+
   const { parse } = babelApi || require('@babel/core');
 
   return {

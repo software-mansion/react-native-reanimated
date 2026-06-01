@@ -1,4 +1,11 @@
 export interface PluginOptions {
+  /**
+   * Switches the babel shim between the OXC-native bundle-mode pipeline
+   * (`true`) and the legacy TS plugin (`false`/unset). The OXC transform
+   * only supports bundle mode; bundleless mode delegates to the original
+   * `react-native-worklets/plugin`.
+   */
+  bundleMode?: boolean;
   disableInlineStylesWarning?: boolean;
   disableSourceMaps?: boolean;
   disableWorkletClasses?: boolean;
