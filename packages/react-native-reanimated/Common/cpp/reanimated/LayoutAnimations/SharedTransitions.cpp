@@ -72,7 +72,11 @@ void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
     parentTag[indexNum] = parent->current.tag;
 
     if (parentTag[BEFORE] && parentTag[AFTER]) {
-      LOG(INFO) << "@@@ found a potential transition: sharedTag=" << sharedTag;
+      const auto &beforeOrigin = snapshot[BEFORE].layoutMetrics.frame.origin;
+      const auto &afterOrigin = snapshot[AFTER].layoutMetrics.frame.origin;
+      LOG(INFO) << "@@@ found a potential transition: sharedTag=" << sharedTag << " before.abs=(" << beforeOrigin.x
+                << "," << beforeOrigin.y << ")"
+                << " after.abs=(" << afterOrigin.x << "," << afterOrigin.y << ")";
       transitions_.emplace_back(sharedTag, transition);
     } else if (parentTag[AFTER]) {
       // TODO (future): this is adding unnecessary views to the list
@@ -427,6 +431,13 @@ void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
 
 std::vector<react::Point> LayoutAnimationsProxy_Experimental::getAbsolutePositionsForRootPathView(
     const std::shared_ptr<LightNode> &node) const {
+  bool hasModalAncestor = false;
+  for (auto scan = node; scan; scan = scan->parent.lock()) {
+    if (scan->current.componentName && !strcmp(scan->current.componentName, "RNSModalScreen")) {
+      hasModalAncestor = true;
+      break;
+    }
+  }
   std::vector<react::Point> viewsAbsolutePositions;
   auto currentNode = node;
   while (currentNode) {
@@ -438,13 +449,21 @@ std::vector<react::Point> LayoutAnimationsProxy_Experimental::getAbsolutePositio
       auto data = state->getData();
       viewPosition -= data.contentOffset;
     }
-    if (!strcmp(componentName, "RNSScreen") && currentNode->children.size() >= 2) {
+    if (!hasModalAncestor && !strcmp(componentName, "RNSScreen") && currentNode->children.size() >= 2) {
       const auto &parent = currentNode->parent.lock();
       react_native_assert(parent && "Parent node is nullptr");
 
       const float headerHeight =
           parent->current.layoutMetrics.frame.size.height - currentNode->current.layoutMetrics.frame.size.height;
       viewPosition.y += headerHeight;
+    }
+    if (!strcmp(componentName, "RNSModalScreen")) {
+      auto rootIt = lightNodes_.find(currentNode->current.surfaceId);
+      if (rootIt != lightNodes_.end() && rootIt->second) {
+        const float surfaceHeight = rootIt->second->current.layoutMetrics.frame.size.height;
+        const float modalHeight = currentNode->current.layoutMetrics.frame.size.height;
+        viewPosition.y += surfaceHeight - modalHeight;
+      }
     }
     viewPosition += currentNode->current.layoutMetrics.frame.origin;
     viewsAbsolutePositions.emplace_back(viewPosition);
