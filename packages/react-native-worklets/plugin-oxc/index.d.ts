@@ -1,5 +1,4 @@
 export interface PluginOptions {
-  bundleMode?: boolean;
   disableInlineStylesWarning?: boolean;
   disableSourceMaps?: boolean;
   disableWorkletClasses?: boolean;
@@ -20,7 +19,6 @@ export interface PluginOptions {
    */
   limitInitDataHoisting?: boolean;
   omitNativeOnlyData?: boolean;
-  relativeSourceLocation?: boolean;
   strictGlobal?: boolean;
   substituteWebPlatformChecks?: boolean;
   workletizableModules?: string[];

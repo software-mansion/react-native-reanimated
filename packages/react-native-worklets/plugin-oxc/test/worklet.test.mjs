@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 import plugin from '../index.js';
 const { transform } = plugin;
 
+// Bundle-only mode: the inner factory definition (with `__workletHash`,
+// `__closure`, etc.) lives in `result.files[0].content`. The main `code`
+// only contains `require("react-native-worklets/.worklets/<hash>.js").default(...)`.
+
 test('FunctionDeclaration with worklet directive is workletized', () => {
   const input = `
     function foo(x) {
@@ -10,9 +14,11 @@ test('FunctionDeclaration with worklet directive is workletized', () => {
       return x + 2;
     }
   `;
-  const { code } = transform(input, 'test.js', {});
-  assert.match(code, /__workletHash/);
-  assert.match(code, /__closure/);
+  const { code, files } = transform(input, 'test.js', {});
+  assert.match(code, /require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
+  assert.equal(files.length, 1);
+  assert.match(files[0].content, /__workletHash/);
+  assert.match(files[0].content, /__closure/);
 });
 
 test('ArrowFunctionExpression with worklet directive is workletized', () => {
@@ -22,8 +28,9 @@ test('ArrowFunctionExpression with worklet directive is workletized', () => {
       return x + 2;
     };
   `;
-  const { code } = transform(input, 'test.js', {});
-  assert.match(code, /__workletHash/);
+  const { code, files } = transform(input, 'test.js', {});
+  assert.match(code, /require\(.*\)\.default/);
+  assert.match(files[0].content, /__workletHash/);
 });
 
 test('worklet captures closure variables', () => {
@@ -35,8 +42,9 @@ test('worklet captures closure variables', () => {
       return a + b;
     }
   `;
-  const { code } = transform(input, 'test.js', {});
-  assert.match(code, /__closure/);
+  const { code, files } = transform(input, 'test.js', {});
+  assert.match(code, /\.default\(\{\s*a,\s*b\s*\}\)/);
+  assert.match(files[0].content, /__closure/);
 });
 
 test('useAnimatedStyle callback is auto-workletized', () => {
@@ -46,8 +54,9 @@ test('useAnimatedStyle callback is auto-workletized', () => {
       const style = useAnimatedStyle(() => ({ width: 100 }));
     }
   `;
-  const { code } = transform(input, 'test.js', {});
-  assert.match(code, /__workletHash/);
+  const { code, files } = transform(input, 'test.js', {});
+  assert.match(code, /useAnimatedStyle\(require\(.*\)\.default/);
+  assert.match(files[0].content, /__workletHash/);
 });
 
 test('non-worklet code passes through unchanged', () => {
@@ -56,7 +65,8 @@ test('non-worklet code passes through unchanged', () => {
       var x = 1;
     }
   `;
-  const { code } = transform(input, 'test.js', {});
+  const { code, files } = transform(input, 'test.js', {});
   assert.doesNotMatch(code, /__workletHash/);
+  assert.equal(files.length, 0);
   assert.match(code, /function foo/);
 });

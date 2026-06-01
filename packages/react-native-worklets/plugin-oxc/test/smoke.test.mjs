@@ -25,7 +25,6 @@ test('parse error surfaces with [Worklets] prefix', () => {
 
 test('accepts all PluginOptions fields without throwing', () => {
   const { code } = transform('const a = 1;', 'test.ts', {
-    bundleMode: true,
     disableInlineStylesWarning: true,
     disableSourceMaps: true,
     disableWorkletClasses: false,
@@ -34,7 +33,6 @@ test('accepts all PluginOptions fields without throwing', () => {
     globals: ['myHostFn'],
     limitInitDataHoisting: true,
     omitNativeOnlyData: true,
-    relativeSourceLocation: true,
     strictGlobal: false,
     substituteWebPlatformChecks: false,
     workletizableModules: ['my-lib'],
@@ -64,18 +62,21 @@ test('substituteWebPlatformChecks off by default', () => {
 });
 
 test('toggleBundleMode flips false to true in worklets entry-point', () => {
+  // Bundle mode is the only mode this plugin supports; the toggle fires
+  // unconditionally in the worklets package entry-point so the runtime sees
+  // the flag set regardless of which entry-point variant was bundled.
   const input = 'globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;';
   const { code } = transform(
     input,
     '/some/path/react-native-worklets/src/index.ts',
-    { bundleMode: true }
+    {}
   );
   assert.match(code, /_WORKLETS_BUNDLE_MODE_ENABLED = true/);
 });
 
 test('toggleBundleMode is a no-op in unrelated files', () => {
   const input = 'globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;';
-  const { code } = transform(input, '/some/other/file.ts', { bundleMode: true });
+  const { code } = transform(input, '/some/other/file.ts', {});
   assert.match(code, /_WORKLETS_BUNDLE_MODE_ENABLED = false/);
 });
 

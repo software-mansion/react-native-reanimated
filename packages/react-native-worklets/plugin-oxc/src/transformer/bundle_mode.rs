@@ -8,16 +8,15 @@ const WORKLETS_SRC_ENTRY: &str = "react-native-worklets/src/index.ts";
 const WORKLETS_LIB_ENTRY: &str = "react-native-worklets/lib/module/index.js";
 
 /// Replaces `globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;` with `... = true;`
-/// in the Worklets entry-point file when `bundleMode` is enabled.
+/// in the Worklets entry-point file. Bundle mode is the only mode this plugin
+/// supports — the toggle exists so the runtime side sees the flag set
+/// regardless of which entry-point variant was bundled.
 pub fn toggle_bundle_mode<'a>(
     node: &mut ExpressionStatement<'a>,
-    state: &State,
+    _state: &State,
     filename: &str,
     builder: AstBuilder<'a>,
 ) {
-    if !state.opts.bundle_mode.unwrap_or(false) {
-        return;
-    }
     let normalized = filename.replace('\\', "/");
     if !normalized.ends_with(WORKLETS_SRC_ENTRY) && !normalized.ends_with(WORKLETS_LIB_ENTRY) {
         return;

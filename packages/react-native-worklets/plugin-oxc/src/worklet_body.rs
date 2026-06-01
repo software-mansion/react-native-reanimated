@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use oxc_allocator::{Allocator, CloneIn};
 use oxc_ast::AstBuilder;
@@ -8,12 +8,7 @@ use oxc_ast::ast::{
     Statement, VariableDeclarationKind,
 };
 use oxc_codegen::{Codegen, CodegenOptions};
-use oxc_semantic::SemanticBuilder;
 use oxc_span::SPAN;
-use oxc_transformer::{
-    ArrowFunctionsOptions, ClassPropertiesOptions, ES2015Options, ES2020Options, ES2022Options,
-    EnvOptions, TransformOptions, Transformer,
-};
 
 use crate::transformer::builders::no_rest;
 use crate::utils::rewrite_implicit_return;
@@ -109,7 +104,7 @@ pub fn build_worklet_body_string<'a>(
     // file. oxc_codegen's source-map builder reads bytes at those spans, so
     // the mini-program must be created with the real source text — passing
     // `""` panics in debug and corrupts source-map tokens in release.
-    let mut program = builder.program(
+    let program = builder.program(
         SPAN,
         oxc_span::SourceType::default(),
         original_source_text,
@@ -119,10 +114,12 @@ pub fn build_worklet_body_string<'a>(
         stmts,
     );
 
-    // Lower modern syntax so the body string can run in conservative worklet
-    // runtimes (pre-Hermes JSC, etc.). Matches the subset of transforms that
-    // babel-plugin-worklets runs over the worklet body.
-    lower_worklet_body(allocator, &mut program);
+    // No lowering pass: bundle-only mode emits the worklet body verbatim
+    // into a regular JS file that goes through Metro / the host bundler,
+    // which handles modern syntax natively. The body string this function
+    // produces is used only for hashing — the actual emitted code uses the
+    // raw AST nodes (see `build_inner_fn_decl`).
+    let _ = allocator;
 
     let options = CodegenOptions {
         minify: true,
@@ -137,55 +134,6 @@ pub fn build_worklet_body_string<'a>(
     }
 }
 
-/// Run the oxc transformer over the synthesized body program, lowering the
-/// subset of modern syntax that older worklet runtimes (pre-Hermes JSC) may
-/// not support. Mirrors `babel-plugin-worklets`' `extraPlugins` list, modulo
-/// what oxc supports at our pinned version:
-///   * arrow functions       ✓ via `ArrowFunctionConverter`
-///   * optional chaining     ✓ via `es2020.optional_chaining`
-///   * nullish coalescing    ✓ via `es2020.nullish_coalescing_operator`
-///   * class properties      ✓ via `es2022.class_properties`
-/// Not yet available in oxc 0.132:
-///   * template literals     — `ES2015Options` has only `arrow_function`;
-///                             template-literal lowering isn't yet exposed
-///                             by `oxc_transformer`. Hermes and modern JSC
-///                             handle template literals natively; if support
-///                             for an ancient JSC engine is needed, bump oxc
-///                             once the transform is upstream.
-///   * ES6 class declarations themselves
-///   * shorthand properties — same situation
-fn lower_worklet_body<'a>(allocator: &'a Allocator, program: &mut oxc_ast::ast::Program<'a>) {
-    // Semantic info is required by the transformer.
-    let scoping = SemanticBuilder::new()
-        .with_check_syntax_error(false)
-        .build(program)
-        .semantic
-        .into_scoping();
-
-    let env = EnvOptions {
-        es2015: ES2015Options {
-            arrow_function: Some(ArrowFunctionsOptions::default()),
-        },
-        es2020: ES2020Options {
-            nullish_coalescing_operator: true,
-            optional_chaining: true,
-            ..Default::default()
-        },
-        es2022: ES2022Options {
-            class_properties: Some(ClassPropertiesOptions::default()),
-            ..Default::default()
-        },
-        ..Default::default()
-    };
-
-    let options = TransformOptions {
-        env,
-        ..Default::default()
-    };
-
-    let _ = Transformer::new(allocator, Path::new("worklet-body.js"), &options)
-        .build_with_scoping(scoping, program);
-}
 
 /// Build `const <base> = <base>__classFactory();` — re-instantiates a
 /// captured worklet class on the UI thread.

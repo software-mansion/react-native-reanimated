@@ -346,35 +346,6 @@ pub fn pathdiff(from: &Path, to: &Path) -> Option<PathBuf> {
     }
 }
 
-/// String wrapper around `pathdiff` for the `relativeSourceLocation` rewrite.
-/// Falls back to `target` unchanged when `from` is empty or the paths share
-/// no common root (matching Node's `path.relative` behaviour we care about).
-///
-/// Always returns forward-slash-separated paths regardless of host platform:
-/// the output ends up embedded into runtime strings (e.g.
-/// `__initData.location`) and inside source-map `sources` arrays which both
-/// expect POSIX-style separators on every platform.
-pub fn relativize(from: &str, target: &str) -> String {
-    if from.is_empty() {
-        return to_posix(target);
-    }
-    let from_path = PathBuf::from(from.replace('\\', "/"));
-    let target_path = PathBuf::from(target.replace('\\', "/"));
-
-    let from_comps: Vec<Component<'_>> = from_path.components().collect();
-    let target_comps: Vec<Component<'_>> = target_path.components().collect();
-    let shares_prefix = !from_comps.is_empty()
-        && !target_comps.is_empty()
-        && from_comps[0] == target_comps[0];
-    if !shares_prefix {
-        return to_posix(target);
-    }
-
-    pathdiff(&from_path, &target_path)
-        .map(|p| to_posix(&p.to_string_lossy()))
-        .unwrap_or_else(|| to_posix(target))
-}
-
 /// Normalise backslashes to forward slashes so emitted code stays valid on
 /// Windows (Metro / `require()` accept `/` everywhere; `\` only sometimes).
 pub fn to_posix(s: &str) -> String {

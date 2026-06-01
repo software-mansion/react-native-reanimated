@@ -446,12 +446,13 @@ fn process_top_level_statement<'a>(
 ) -> Statement<'a> {
     match stmt {
         Statement::ClassDeclaration(mut class) => {
-            // Only handle named, marked, top-level classes.
-            let is_worklet =
-                crate::worklet_class::is_worklet_class(&class)
-                    && class.id.is_some()
-                    && !state.opts.disable_worklet_classes.unwrap_or(false)
-                    && !state.opts.bundle_mode.unwrap_or(false);
+            // Worklet classes are not supported in bundle-only mode — strip
+            // the marker so it doesn't leak into the emitted code, then fall
+            // through. Mirrors `class.ts:49`'s `/* temporary */` short-circuit.
+            if crate::worklet_class::is_worklet_class(&class) {
+                crate::worklet_class::remove_worklet_class_marker(&mut class.body, builder);
+            }
+            let is_worklet = false;
             if is_worklet {
                 let class_name = class
                     .id

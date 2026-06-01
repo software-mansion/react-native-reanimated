@@ -3,7 +3,6 @@ use napi_derive::napi;
 #[napi(object)]
 #[derive(Default, Clone, Debug)]
 pub struct PluginOptions {
-    pub bundle_mode: Option<bool>,
     pub disable_inline_styles_warning: Option<bool>,
     pub disable_source_maps: Option<bool>,
     pub disable_worklet_classes: Option<bool>,
@@ -19,7 +18,6 @@ pub struct PluginOptions {
     /// the `'limit-init-data-hoisting'` directive, not as a file-wide flag.
     pub limit_init_data_hoisting: Option<bool>,
     pub omit_native_only_data: Option<bool>,
-    pub relative_source_location: Option<bool>,
     pub strict_global: Option<bool>,
     pub substitute_web_platform_checks: Option<bool>,
     pub workletizable_modules: Option<Vec<String>>,
@@ -38,9 +36,4 @@ pub struct PluginOptions {
     /// source. Without it we fall back to a substring-based heuristic that
     /// only works for files already living inside the worklets package.
     pub worklets_package_dir: Option<String>,
-
-    /// Internal: current working directory, injected by the JS shim. Used
-    /// when `relativeSourceLocation` is set to compute the path stored in
-    /// `__initData.location` (and rewritten inside the embedded source map).
-    pub cwd: Option<String>,
 }

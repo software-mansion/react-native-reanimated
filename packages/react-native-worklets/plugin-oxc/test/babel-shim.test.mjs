@@ -14,21 +14,41 @@ try {
 }
 
 test('babel shim runs the OXC transform when used as a babel plugin', { skip: !babelCore }, () => {
-  const shim = require_('../babel.js');
-  const result = babelCore.transformSync(
-    `function foo(x) { 'worklet'; return x + 1; }`,
-    {
-      filename: 'test.js',
-      babelrc: false,
-      configFile: false,
-      plugins: [[shim, { disableSourceMaps: true }]],
-    }
-  );
-  assert.ok(result && result.code);
-  assert.match(result.code, /__workletHash/, `got:\n${result?.code}`);
+  // Stub fs.writeFileSync so the test doesn't try to write to the real
+  // react-native-worklets/.worklets/ directory during transform.
+  const fs = require_('fs');
+  const originalWrite = fs.writeFileSync;
+  const originalMkdir = fs.mkdirSync;
+  fs.writeFileSync = () => {};
+  fs.mkdirSync = () => {};
+  try {
+    delete require_.cache[require_.resolve('../babel.js')];
+    const shim = require_('../babel.js');
+    const result = babelCore.transformSync(
+      `function foo(x) { 'worklet'; return x + 1; }`,
+      {
+        filename: 'test.js',
+        babelrc: false,
+        configFile: false,
+        plugins: [[shim, { disableSourceMaps: true }]],
+      }
+    );
+    assert.ok(result && result.code);
+    // Bundle-only output: the main code only contains the require-factory
+    // call site; the worklet body lives in the emitted file.
+    assert.match(
+      result.code,
+      /require\(["']react-native-worklets\/\.worklets\/\d+\.js["']\)\.default/,
+      `got:\n${result?.code}`
+    );
+  } finally {
+    fs.writeFileSync = originalWrite;
+    fs.mkdirSync = originalMkdir;
+    delete require_.cache[require_.resolve('../babel.js')];
+  }
 });
 
-test('babel shim writes bundle-mode files to disk', { skip: !babelCore }, () => {
+test('babel shim writes emitted bundle files to disk', { skip: !babelCore }, () => {
   // Stub the directory resolution by intercepting writeFileSync. The shim
   // uses require('fs').writeFileSync internally; we monkey-patch it for the
   // duration of this test.
@@ -52,7 +72,7 @@ test('babel shim writes bundle-mode files to disk', { skip: !babelCore }, () => 
         filename: 'test.js',
         babelrc: false,
         configFile: false,
-        plugins: [[shim, { bundleMode: true }]],
+        plugins: [[shim, {}]],
       }
     );
   } finally {

@@ -3,14 +3,22 @@ import assert from 'node:assert/strict';
 import plugin from '../index.js';
 const { transform } = plugin;
 
+// Bundle-only mode: each workletized function becomes one emitted file.
+// `__workletHash` is asserted against the joined files content.
+
+function joinedFiles(files) {
+  return files.map((f) => f.content).join('\n');
+}
+
 test('gesture handler callback is workletized', () => {
   const input = `
     const g = Gesture.Tap().onEnd((event) => {
       console.log(event);
     });
   `;
-  const { code } = transform(input, 'test.js', {});
-  assert.match(code, /__workletHash/, `expected workletization. Got:\n${code}`);
+  const { files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 1);
+  assert.match(joinedFiles(files), /__workletHash/);
 });
 
 test('gesture handler chained methods all workletize', () => {
@@ -20,9 +28,8 @@ test('gesture handler chained methods all workletize', () => {
       .onUpdate((e) => { console.log('update'); })
       .onEnd((e) => { console.log('end'); });
   `;
-  const { code } = transform(input, 'test.js', {});
-  const matches = code.match(/__workletHash/g) || [];
-  assert.equal(matches.length, 3, `expected 3 worklets. Got:\n${code}`);
+  const { files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 3, `expected 3 worklets. Got files=${files.length}`);
 });
 
 test('layout animation callback is workletized', () => {
@@ -31,8 +38,9 @@ test('layout animation callback is workletized', () => {
       console.log(finished);
     });
   `;
-  const { code } = transform(input, 'test.js', {});
-  assert.match(code, /__workletHash/, `expected workletization. Got:\n${code}`);
+  const { files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 1);
+  assert.match(joinedFiles(files), /__workletHash/);
 });
 
 test('context object: explicit __workletContextObject marker turns obj into factory', () => {
@@ -60,15 +68,15 @@ test('useAnimatedReaction workletizes both args', () => {
   const input = `
     useAnimatedReaction(() => x.value, (curr, prev) => { console.log(curr, prev); });
   `;
-  const { code } = transform(input, 'test.js', {});
-  const matches = code.match(/__workletHash/g) || [];
-  assert.equal(matches.length, 2, `expected 2 worklets. Got:\n${code}`);
+  const { files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 2, `expected 2 worklets. Got files=${files.length}`);
 });
 
 test('withDecay workletizes arg 1', () => {
   const input = `
     withDecay({ velocity: 1 }, (finished) => { console.log(finished); });
   `;
-  const { code } = transform(input, 'test.js', {});
-  assert.match(code, /__workletHash/, `Got:\n${code}`);
+  const { files } = transform(input, 'test.js', {});
+  assert.equal(files.length, 1);
+  assert.match(joinedFiles(files), /__workletHash/);
 });

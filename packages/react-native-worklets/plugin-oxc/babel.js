@@ -65,7 +65,7 @@ function writeEmittedFiles(files) {
   const dir = resolveWorkletsDir();
   if (!dir) {
     throw new Error(
-      "[worklets-plugin-oxc] bundleMode emitted files but couldn't find " +
+      "[worklets-plugin-oxc] emitted bundle files but couldn't find " +
         "the react-native-worklets package on disk. Make sure it's installed."
     );
   }
@@ -158,17 +158,11 @@ function workletsPluginOxcBabelShim(babelApi) {
               if (v != null) opts.pluginVersion = v;
             }
             // Hand the resolved worklets package dir to the native layer so
-            // bundle-mode require rewriting can compute correct relative
-            // paths from <pkg>/.worklets/<hash>.js to the source file.
+            // require rewriting can compute correct relative paths from
+            // <pkg>/.worklets/<hash>.js to the source file.
             if (opts.workletsPackageDir == null) {
               const pkgDir = resolveWorkletsPkgDir();
               if (pkgDir != null) opts.workletsPackageDir = pkgDir;
-            }
-            // Hand over Babel's cwd so `relativeSourceLocation` can rewrite
-            // `__initData.location` and the embedded source map's `sources`
-            // entry to a project-relative path.
-            if (opts.cwd == null) {
-              opts.cwd = state.cwd || (state.file && state.file.opts && state.file.opts.cwd) || process.cwd();
             }
             result = oxc.transform(sourceText, filename, opts);
           } catch (e) {

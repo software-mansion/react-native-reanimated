@@ -72,7 +72,7 @@ pub fn closure_for_function<'a, B: WalkFunctionBody<'a>>(
                 }
 
                 let flags = scoping.symbol_flags(symbol_id);
-                if state.opts.bundle_mode.unwrap_or(false) && flags.is_import() {
+                if flags.is_import() {
                     if let Some(info) = state.imports_by_symbol.get(&symbol_id) {
                         // Skip namespace imports — TS `isImport` only accepts
                         // ImportSpecifier / ImportDefaultSpecifier (imports.ts:46-48).

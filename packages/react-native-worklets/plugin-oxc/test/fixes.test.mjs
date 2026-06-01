@@ -6,6 +6,17 @@ const { transform } = plugin;
 // Coverage for the fixes applied alongside this file. Each block targets a
 // concrete bug the smoke tests didn't catch — keep them surgical so a future
 // regression diff points at the right block.
+//
+// Bundle-only mode: the inner factory definition lives in
+// `result.files[<n>].content`. The main `code` only contains
+// `require("react-native-worklets/.worklets/<hash>.js").default(...)`
+// calls. Assertions therefore target whichever output owns the signal.
+
+const REQUIRE_FACTORY = /require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/;
+
+function joinedFiles(files) {
+  return files.map((f) => f.content).join('\n');
+}
 
 test('referenced worklet: const f = () => {...}; useAnimatedStyle(f) workletizes f', () => {
   const input = `
@@ -16,8 +27,8 @@ test('referenced worklet: const f = () => {...}; useAnimatedStyle(f) workletizes
     }
   `;
   const { code } = transform(input, 'test.js', {});
-  // The `handler` declaration itself must be transformed into a factory call.
-  assert.match(code, /handler = .*\.__workletHash/s);
+  // The `handler` declaration itself must be replaced with a factory require.
+  assert.match(code, /const handler = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
 });
 
 test('referenced worklet: function declaration handler', () => {
@@ -28,8 +39,9 @@ test('referenced worklet: function declaration handler', () => {
       const style = useAnimatedStyle(handler);
     }
   `;
-  const { code } = transform(input, 'test.js', {});
-  assert.match(code, /__workletHash/);
+  const { code, files } = transform(input, 'test.js', {});
+  assert.match(code, REQUIRE_FACTORY);
+  assert.match(joinedFiles(files), /__workletHash/);
 });
 
 test('async worklet preserves async on inner factory function', () => {
@@ -39,9 +51,9 @@ test('async worklet preserves async on inner factory function', () => {
       return await Promise.resolve(1);
     }
   `;
-  const { code } = transform(input, 'test.js', {});
-  // Inner-fn declaration inside the factory should be \`async function\`.
-  assert.match(code, /const fetchSomething = async function/);
+  const { files } = transform(input, 'test.js', {});
+  // Inner-fn declaration inside the factory should be `async function`.
+  assert.match(joinedFiles(files), /const fetchSomething = async function/);
 });
 
 test('generator worklet preserves generator on inner factory function', () => {
@@ -51,24 +63,8 @@ test('generator worklet preserves generator on inner factory function', () => {
       yield 1;
     }
   `;
-  const { code } = transform(input, 'test.js', {});
-  assert.match(code, /const iterator = function\*/);
-});
-
-test('async worklet body string keeps async keyword', () => {
-  const input = `
-    async function fetchSomething() {
-      'worklet';
-      return await Promise.resolve(1);
-    }
-  `;
-  const { code } = transform(input, 'test.js', {});
-  // The __initData.code string must contain \`async function\` for the UI
-  // runtime to evaluate it correctly. The string is inside double quotes —
-  // a single \`async function\` token is the simplest signal.
-  const initDataMatch = code.match(/code:\s*"([^"]+)"/);
-  assert.ok(initDataMatch, '__initData.code string not found');
-  assert.match(initDataMatch[1], /async function/);
+  const { files } = transform(input, 'test.js', {});
+  assert.match(joinedFiles(files), /const iterator = function\*/);
 });
 
 test('no-worklet-closure directive is stripped from outer body', () => {
@@ -79,13 +75,14 @@ test('no-worklet-closure directive is stripped from outer body', () => {
       return 1;
     }
   `;
-  const { code } = transform(input, 'test.js', { disableSourceMaps: true });
+  const { files } = transform(input, 'test.js', { disableSourceMaps: true });
+  const content = joinedFiles(files);
   // Directive must not survive into the stringified worklet body. Source
   // maps embed the original source verbatim (which contains the directive),
   // so disable them when grepping the output for parity.
-  assert.doesNotMatch(code, /no-worklet-closure/);
+  assert.doesNotMatch(content, /no-worklet-closure/);
   // __closure must be empty literal.
-  assert.match(code, /__closure\s*=\s*\{\s*\}/);
+  assert.match(content, /__closure\s*=\s*\{\s*\}/);
 });
 
 test('no-worklet-closure directive is stripped from nested inner function', () => {
@@ -99,60 +96,35 @@ test('no-worklet-closure directive is stripped from nested inner function', () =
       return inner();
     }
   `;
-  const { code } = transform(input, 'test.js', { disableSourceMaps: true });
-  assert.doesNotMatch(code, /no-worklet-closure/);
+  const { files } = transform(input, 'test.js', { disableSourceMaps: true });
+  assert.doesNotMatch(joinedFiles(files), /no-worklet-closure/);
 });
 
 test('idempotent: running plugin twice equals running once', () => {
   const input = `
     function foo() { 'worklet'; return 1; }
   `;
-  const first = transform(input, 'test.js', {}).code;
-  const second = transform(first, 'test.js', {}).code;
-  assert.equal(second, first);
+  const first = transform(input, 'test.js', {});
+  const second = transform(first.code, 'test.js', {});
+  assert.equal(second.code, first.code);
+  assert.equal(second.files.length, 0, 'idempotent second pass should not re-emit');
 });
 
-test('init_data_id collision uniquified with _2 suffix', () => {
-  // Two functions with identical bodies → identical hashes → would-collide
-  // _worklet_<hash>_init_data names. Both must end up emitted; the
-  // second one gets a `_2` suffix.
-  const input = `
-    function a() { 'worklet'; return 1; }
-    function b() { 'worklet'; return 1; }
-  `;
-  const { code } = transform(input, 'test.js', {});
-  const idMatches = code.match(/_worklet_\d+_init_data(?:_\d+)?/g) || [];
-  const unique = new Set(idMatches);
-  // At least two distinct init-data ids — collision avoided.
-  assert.ok(
-    unique.size >= 2,
-    `expected at least 2 distinct init-data ids, got ${unique.size}: ${[...unique].join(',')}`
-  );
-});
-
-test('shadowed self-reference does NOT trigger this._recur injection', () => {
-  // Inner `let foo` shadows the function name — recursion-detection must
-  // be scope-aware and NOT inject `const foo = this._recur;`.
-  const input = `
-    function foo() {
-      'worklet';
-      let foo = 1;
-      return foo;
-    }
-  `;
-  const { code } = transform(input, 'test.js', {});
-  assert.doesNotMatch(code, /this\._recur/);
-});
-
-test('real self-reference DOES trigger this._recur injection', () => {
+test('recursive worklet emits inner-fn binding that resolves naturally', () => {
+  // Bundle mode keeps the inner factory in a real JS file, so recursive
+  // references to the worklet name resolve via the inner `const fact = ...`
+  // binding directly — no `this._recur` indirection needed (that was a
+  // workaround for the old body-string-evaluated-on-UI-thread path).
   const input = `
     function fact(n) {
       'worklet';
       return n <= 1 ? 1 : n * fact(n - 1);
     }
   `;
-  const { code } = transform(input, 'test.js', {});
-  assert.match(code, /this\._recur/);
+  const { files } = transform(input, 'test.js', {});
+  const content = joinedFiles(files);
+  assert.match(content, /const fact = function/);
+  assert.match(content, /fact\(n - 1\)/);
 });
 
 test('JSX element name is not captured into closure', () => {
@@ -164,9 +136,9 @@ test('JSX element name is not captured into closure', () => {
       return <Custom />;
     }
   `;
-  const { code } = transform(input, 'test.tsx', {});
+  const { files } = transform(input, 'test.tsx', {});
   // Custom is a JSX element name — should not show up in __closure.
-  const closureMatch = code.match(/__closure\s*=\s*\{([^}]*)\}/);
+  const closureMatch = joinedFiles(files).match(/__closure\s*=\s*\{([^}]*)\}/);
   assert.ok(closureMatch, '__closure not found');
   assert.doesNotMatch(closureMatch[1], /Custom/);
 });
@@ -178,8 +150,8 @@ test('globals (null, this) are not captured into closure', () => {
       return null;
     }
   `;
-  const { code } = transform(input, 'test.js', {});
-  const closureMatch = code.match(/__closure\s*=\s*\{([^}]*)\}/);
+  const { files } = transform(input, 'test.js', {});
+  const closureMatch = joinedFiles(files).match(/__closure\s*=\s*\{([^}]*)\}/);
   assert.ok(closureMatch);
   assert.doesNotMatch(closureMatch[1], /\bnull\b/);
 });
@@ -193,7 +165,7 @@ test('shorthand-method getter using `this` triggers context-object detection', (
   `;
   const { code } = transform(input, 'test.js', {});
   // File-level worklet directive + implicit context-object detection should
-  // mint a __workletContextObjectFactory.
+  // mint a __workletContextObjectFactory. The factory call site is in `code`.
   assert.match(code, /__workletContextObjectFactory/);
 });
 
@@ -201,24 +173,25 @@ test('extraPlugins option does not throw and emits a stderr warning', () => {
   const input = `function foo() { 'worklet'; return 1; }`;
   // The warning is emitted to stderr once per process. Just ensure transform
   // doesn't reject the option.
-  const { code } = transform(input, 'test.js', { extraPlugins: ['babel-plugin-foo'] });
-  assert.match(code, /__workletHash/);
+  const { files } = transform(input, 'test.js', { extraPlugins: ['babel-plugin-foo'] });
+  assert.match(joinedFiles(files), /__workletHash/);
 });
 
 test('MOCK_VERSION env gate: without env, __pluginVersion comes from opts', () => {
   delete process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION;
   const input = `function foo() { 'worklet'; return 1; }`;
-  const { code } = transform(input, 'test.js', { pluginVersion: '1.2.3' });
-  assert.match(code, /__pluginVersion\s*=\s*"1\.2\.3"/);
-  assert.doesNotMatch(code, /__pluginVersion\s*=\s*"x\.y\.z"/);
+  const { files } = transform(input, 'test.js', { pluginVersion: '1.2.3' });
+  const content = joinedFiles(files);
+  assert.match(content, /__pluginVersion\s*=\s*"1\.2\.3"/);
+  assert.doesNotMatch(content, /__pluginVersion\s*=\s*"x\.y\.z"/);
 });
 
 test('MOCK_VERSION env gate: with env=1, mock wins', () => {
   process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION = '1';
   try {
     const input = `function foo() { 'worklet'; return 1; }`;
-    const { code } = transform(input, 'test.js', { pluginVersion: '1.2.3' });
-    assert.match(code, /__pluginVersion\s*=\s*"x\.y\.z"/);
+    const { files } = transform(input, 'test.js', { pluginVersion: '1.2.3' });
+    assert.match(joinedFiles(files), /__pluginVersion\s*=\s*"x\.y\.z"/);
   } finally {
     delete process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION;
   }
@@ -231,8 +204,8 @@ test('MOCK_VERSION env gate: no env, no pluginVersion → fall back to baked ver
   // a real version string instead of a silently-missing `__pluginVersion`.
   delete process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION;
   const input = `function foo() { 'worklet'; return 1; }`;
-  const { code } = transform(input, 'test.js', {});
-  assert.match(code, /__pluginVersion\s*=\s*"[^"]+"/);
+  const { files } = transform(input, 'test.js', {});
+  assert.match(joinedFiles(files), /__pluginVersion\s*=\s*"[^"]+"/);
 });
 
 test('gesture object hook (useTapGesture) workletizes object-arg methods', () => {
@@ -244,8 +217,9 @@ test('gesture object hook (useTapGesture) workletizes object-arg methods', () =>
       });
     }
   `;
-  const { code } = transform(input, 'test.js', {});
-  assert.match(code, /__workletHash/);
+  const { code, files } = transform(input, 'test.js', {});
+  assert.match(code, REQUIRE_FACTORY);
+  assert.match(joinedFiles(files), /__workletHash/);
 });
 
 test('gesture chain methods accept object literals (Gesture.Tap().onUpdate({...}))', () => {
@@ -256,8 +230,9 @@ test('gesture chain methods accept object literals (Gesture.Tap().onUpdate({...}
       });
     }
   `;
-  const { code } = transform(input, 'test.js', {});
-  assert.match(code, /__workletHash/);
+  const { code, files } = transform(input, 'test.js', {});
+  assert.match(code, REQUIRE_FACTORY);
+  assert.match(joinedFiles(files), /__workletHash/);
 });
 
 test('referenced worklet survives through gesture chain', () => {
@@ -268,7 +243,7 @@ test('referenced worklet survives through gesture chain', () => {
     }
   `;
   const { code } = transform(input, 'test.js', {});
-  assert.match(code, /handler = .*\.__workletHash/s);
+  assert.match(code, /const handler = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
 });
 
 test('referenced worklet: alias chain through identifier-only assignment', () => {
@@ -285,7 +260,7 @@ test('referenced worklet: alias chain through identifier-only assignment', () =>
     }
   `;
   const { code } = transform(input, 'test.js', {});
-  assert.match(code, /handler = .*\.__workletHash/s);
+  assert.match(code, /const handler = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
 });
 
 test('referenced worklet: object-hook arg0 identifier-valued property', () => {
@@ -299,7 +274,7 @@ test('referenced worklet: object-hook arg0 identifier-valued property', () => {
     }
   `;
   const { code } = transform(input, 'test.js', {});
-  assert.match(code, /onScroll = .*\.__workletHash/s);
+  assert.match(code, /const onScroll = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/);
 });
 
 test('referenced worklet: non-const binding via assignment expression', () => {
@@ -314,8 +289,8 @@ test('referenced worklet: non-const binding via assignment expression', () => {
       const style = useAnimatedStyle(handler);
     }
   `;
-  const { code } = transform(input, 'test.js', {});
-  assert.match(code, /__workletHash/);
+  const { files } = transform(input, 'test.js', {});
+  assert.match(joinedFiles(files), /__workletHash/);
 });
 
 test('cjs file extension parses as plain JS (no TSX cast handling)', () => {
