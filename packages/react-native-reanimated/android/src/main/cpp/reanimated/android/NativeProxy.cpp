@@ -1,4 +1,6 @@
+#include <jsi/JSIDynamic.h>
 #include <react/fabric/Binding.h>
+#include <react/jni/WritableNativeMap.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
@@ -270,30 +272,19 @@ void NativeProxy::handleEvent(
     // Ignore events with null payload.
     return;
   }
-  // TODO: convert event directly to jsi::Value without JSON serialization
-  std::string eventAsString;
-  try {
-    eventAsString = event->toString();
-  } catch (...) {
-    // Events from other libraries may contain NaN or INF values which
-    // cannot be represented in JSON. See
-    // https://github.com/software-mansion/react-native-reanimated/issues/1776
-    // for details.
+
+  if (!event->isInstanceOf(react::WritableNativeMap::javaClassStatic())) {
     return;
   }
-  std::string eventJSON = eventAsString;
-  if (eventJSON == "null") {
+
+  auto nativeMap = jni::static_ref_cast<react::WritableNativeMap::javaobject>(jni::static_ref_cast<jobject>(event));
+  auto eventPayload = nativeMap->cthis()->consume();
+  if (eventPayload.isNull()) {
     return;
   }
 
   auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
-  jsi::Value payload;
-  try {
-    payload = jsi::Value::createFromJsonUtf8(uiRuntime, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
-  } catch (std::exception &) {
-    // Ignore events with malformed JSON payload.
-    return;
-  }
+  jsi::Value payload = jsi::valueFromDynamic(uiRuntime, eventPayload);
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     reanimatedModuleProxy_->handleEventAndFlush(
