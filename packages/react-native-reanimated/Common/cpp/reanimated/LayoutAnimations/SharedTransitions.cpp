@@ -57,6 +57,28 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findTopScreen(
   return result;
 }
 
+bool LayoutAnimationsProxy_Experimental::isModalScreen(const std::shared_ptr<LightNode> &node) const {
+#if defined(HAS_SCREENS_PROPS)
+  if (!node || !isRNSScreen(node)) {
+    return false;
+  }
+  const auto presentation = std::static_pointer_cast<const RNSScreenProps>(node->current.props)->stackPresentation;
+  // The VC-presented variants are shown in a separate UIViewController that sits above the surface
+  // root, so the shared-transition containers (which we mount at the surface root) render BEHIND
+  // them - the shared views morph for a frame, get covered as the modal slides up, then the real
+  // destination snaps in. Until SET can host its containers above the modal's presentation layer we
+  // skip the morph for these so the modal just presents/dismisses cleanly. The "contained" variants
+  // stay inside the surface hierarchy, so they are left to SET as usual.
+  return presentation == RNSScreenStackPresentation::Modal ||
+      presentation == RNSScreenStackPresentation::TransparentModal ||
+      presentation == RNSScreenStackPresentation::FullScreenModal ||
+      presentation == RNSScreenStackPresentation::FormSheet || presentation == RNSScreenStackPresentation::PageSheet;
+#else
+  (void)node;
+  return false;
+#endif
+}
+
 void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
     const std::shared_ptr<LightNode> &node,
     BeforeOrAfter index,
@@ -109,7 +131,10 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
     auto root = lightNodes_[surfaceId];
     auto beforeTopScreen = topScreen[surfaceId];
     auto afterTopScreen = lightNodes_[transitionTag_];
-    if (beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen) {
+    // Skip the progress-driven morph for modal presentations - see isModalScreen / the forward
+    // path: SET containers render behind a VC-presented modal, so a clean present/dismiss is better.
+    if (beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen && !isModalScreen(beforeTopScreen) &&
+        !isModalScreen(afterTopScreen)) {
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, propsParserContext);
       findSharedElementsOnScreen(afterTopScreen, AFTER, propsParserContext);
       hideTransitioningViews(BEFORE, filteredMutations, propsParserContext);

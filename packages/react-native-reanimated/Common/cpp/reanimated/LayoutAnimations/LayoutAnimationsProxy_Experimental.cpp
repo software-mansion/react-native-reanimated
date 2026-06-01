@@ -60,7 +60,13 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
       forceScreenSnapshot_(afterTopScreen->current.tag);
 #endif
     }
-    const bool hasScreenChanged = beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen;
+    // Skip the morph when either end of the transition is a modal presented in its own
+    // UIViewController: SET mounts its container views at the surface root, which renders behind
+    // such a modal, so the morph would flash then be covered. Letting the modal present/dismiss
+    // without SET is the clean fallback. Non-modal transitions are unaffected.
+    const bool involvesModal = isModalScreen(beforeTopScreen) || isModalScreen(afterTopScreen);
+    const bool hasScreenChanged =
+        beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen && !involvesModal;
 
     if (hasScreenChanged) {
       // We want to add mutations to hide the views that will start their transitions.
@@ -73,8 +79,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
       std::swap(filteredMutations, mergedMutations);
     }
 
-    handleSharedTransitionsStart(
-        afterTopScreen, beforeTopScreen, filteredMutations, mutations, propsParserContext, surfaceId);
+    if (!involvesModal) {
+      handleSharedTransitionsStart(
+          afterTopScreen, beforeTopScreen, filteredMutations, mutations, propsParserContext, surfaceId);
+    }
   }
 
   for (auto &node : entering_) {

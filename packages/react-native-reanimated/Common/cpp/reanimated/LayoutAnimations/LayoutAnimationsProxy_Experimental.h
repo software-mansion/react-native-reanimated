@@ -160,6 +160,11 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
 
   std::shared_ptr<LightNode> findTopScreen(const std::shared_ptr<LightNode> &node) const;
 
+  // True if the screen is presented in its own UIViewController above the surface (modal,
+  // fullScreenModal, formSheet, pageSheet, transparentModal). SET containers live at the surface
+  // root and would render behind such a presentation, so we skip the morph for these transitions.
+  bool isModalScreen(const std::shared_ptr<LightNode> &node) const;
+
   void findSharedElementsOnScreen(
       const std::shared_ptr<LightNode> &node,
       BeforeOrAfter index,
