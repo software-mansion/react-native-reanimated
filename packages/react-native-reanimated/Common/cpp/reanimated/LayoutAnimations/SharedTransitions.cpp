@@ -153,13 +153,29 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
           folly::dynamic::object("borderRadius", beforeRadius + transitionProgress_ * (afterRadius - beforeRadius));
 
 #ifdef RN_SERIALIZABLE_STATE
-      // TODO (future): Support borderRadius on Android.
+      // TODO (future): Support borderRadius and transform interpolation on Android.
       const Props::Shared newProps = nullptr;
 #else
       auto rawProps = RawProps(std::move(borderRadiusDynamic));
 
       auto newProps = getComponentDescriptorForShadowView(layoutAnimation.finalView)
                           .cloneProps(propsParserContext, layoutAnimation.finalView.props, std::move(rawProps));
+
+      // Interpolate the transform too. cloneProps above copies finalView's (destination)
+      // transform, so without this the container keeps the destination rotate/skew/scale for the
+      // whole progress-driven (back/gesture) transition while only the frame animates - any
+      // transform then snaps instead of morphing. This is very visible on [SET] Nested
+      // Transforms when the outer, heavily-transformed box is shared. startView/finalView already
+      // carry the parent-composed transforms (set via overrideTransform at START), so
+      // interpolating between them morphs the shared element's full transform.
+      const auto startTransform = std::static_pointer_cast<const ViewProps>(layoutAnimation.startView.props)->transform;
+      const auto finalTransform = std::static_pointer_cast<const ViewProps>(layoutAnimation.finalView.props)->transform;
+      react::Size interpolatedSize;
+      interpolatedSize.width = width;
+      interpolatedSize.height = height;
+      auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));
+      viewProps->transform =
+          Transform::Interpolate(transitionProgress_, startTransform, finalTransform, interpolatedSize);
 #endif
 
       updateMap.insert_or_assign(tag, UpdateValues{newProps, {x, y, width, height}});
