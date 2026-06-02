@@ -101,8 +101,7 @@ jsi::Value makeSerializableArrayBufferView(
     const std::string &typeName,
     size_t byteOffset,
     size_t byteLength) {
-  auto serializable = std::make_shared<SerializableArrayBuffer>(
-      rt, arrayBuffer, typeName, byteOffset, byteLength);
+  auto serializable = std::make_shared<SerializableArrayBuffer>(rt, arrayBuffer, typeName, byteOffset, byteLength);
   return SerializableJSRef::newNativeStateObject(rt, serializable);
 }
 

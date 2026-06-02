@@ -260,9 +260,7 @@ class SerializableArrayBuffer : public Serializable {
       size_t byteLength)
       : Serializable(ValueType::ArrayBufferType),
         typeName_(typeName),
-        data_(
-            arrayBuffer.data(rt) + byteOffset,
-            arrayBuffer.data(rt) + byteOffset + byteLength) {}
+        data_(arrayBuffer.data(rt) + byteOffset, arrayBuffer.data(rt) + byteOffset + byteLength) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
