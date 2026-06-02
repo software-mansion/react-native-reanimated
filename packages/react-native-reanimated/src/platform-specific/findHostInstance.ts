@@ -55,13 +55,10 @@ export function findHostInstance(
   resolveFindHostInstance_DEPRECATED();
   /*
     The Fabric implementation of `findHostInstance_DEPRECATED` requires a React ref as an argument
-    rather than a native ref. If a component implements the `getAnimatableRef` method, it must use 
-    the ref provided by this method. It is the component's responsibility to ensure that this is 
-    a valid React ref.
+    rather than a native ref. Prefer the resolved component ref when available so components can
+    forward their ref to the host view that should be animated.
   */
   return findHostInstance_DEPRECATED(
-    (ref as IAnimatedComponentInternalBase)._hasAnimatedRef
-      ? (ref as IAnimatedComponentInternalBase)._componentRef
-      : ref
+    (ref as IAnimatedComponentInternalBase)._componentRef ?? ref
   );
 }
