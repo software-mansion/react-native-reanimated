@@ -286,16 +286,6 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         return makeSerializableBigInt(rt, at<0>(args).asBigInt(rt));
       });
 
-  jsi_utils::addMethod<2>(
-      rt, obj, "createSerializableSymbol", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
-        std::optional<std::string> description{};
-        if (at<0>(args).isString()) {
-          description = at<0>(args).getString(rt).utf8(rt);
-        }
-        auto isRegistered = at<1>(args).getBool();
-        return makeSerializableSymbol(rt, description, isRegistered);
-      });
-
   jsi_utils::addMethod<1>(
       rt, obj, "createSerializableBoolean", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         return makeSerializableBoolean(rt, at<0>(args).asBool());
@@ -415,7 +405,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         auto typeName = at<0>(args).getString(rt).utf8(rt);
         auto arrayBuffer = at<1>(args).getObject(rt).getArrayBuffer(rt);
-        return makeSerializableArrayBufferView(rt, typeName, arrayBuffer);
+        return makeSerializableArrayBuffer(rt, arrayBuffer, typeName);
       });
 
   jsi_utils::addMethod<2>(

@@ -164,7 +164,7 @@ export function createSerializable<TValue>(
   }
 
   if (typeof value === 'symbol') {
-    return cloneSymbol(value) as SerializableRef<TValue>;
+    return cloneString(String(value)) as SerializableRef<TValue>;
   }
 
   if (value === undefined) {
@@ -376,14 +376,6 @@ function cloneBoolean(value: boolean): SerializableRef<boolean> {
 
 function cloneBigInt(value: bigint): SerializableRef<bigint> {
   return WorkletsModule.createSerializableBigInt(value);
-}
-
-function cloneSymbol(value: symbol): SerializableRef<symbol> {
-  const key = Symbol.keyFor(value);
-  return WorkletsModule.createSerializableSymbol(
-    value.description,
-    typeof key === 'string'
-  );
 }
 
 function cloneUndefined(): SerializableRef<undefined> {
@@ -889,10 +881,9 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
     }
 
     if (typeof value === 'symbol') {
-      const key = Symbol.keyFor(value);
-      return globalThis.__workletsModuleProxy.createSerializableSymbol(
-        value.description,
-        typeof key === 'string'
+      // TODO: add native support
+      return globalThis._createSerializableString(
+        String(value)
       ) as FlatSerializableRef<TValue>;
     }
 

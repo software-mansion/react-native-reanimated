@@ -89,27 +89,6 @@ describe('Test createSerializableOnUI', () => {
     expect(bigIntValue).toBe(BigInt(123));
   });
 
-  test('createSerializableOnUISymbol', () => {
-    const symbolValue = runOnUISync(() => {
-      'worklet';
-      return Symbol('test');
-    });
-
-    expect(typeof symbolValue).toBe('symbol');
-    expect(symbolValue.description).toBe('test');
-  });
-
-  test('createSerializableOnUISymbol registered (Symbol.for)', () => {
-    const symbolValue = runOnUISync(() => {
-      'worklet';
-      return Symbol.for('shared-key');
-    });
-
-    expect(typeof symbolValue).toBe('symbol');
-    expect(symbolValue.description).toBe('shared-key');
-    expect(Symbol.keyFor(symbolValue)).toBe('shared-key');
-  });
-
   test('createSerializableOnUIHostObject', () => {
     // Arrange & Act
     // Prototype of TurboModule is a host object

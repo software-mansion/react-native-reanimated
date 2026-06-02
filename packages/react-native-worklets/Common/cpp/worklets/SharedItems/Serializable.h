@@ -221,20 +221,6 @@ class SerializableRegExp : public Serializable {
   const std::string flags_;
 };
 
-class SerializableArrayBufferView : public Serializable {
- public:
-  SerializableArrayBufferView(jsi::Runtime &rt, const std::string &typeName, const jsi::ArrayBuffer &arrayBuffer)
-      : Serializable(ValueType::ArrayBufferViewType),
-        typeName_(typeName),
-        data_(arrayBuffer.data(rt), arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
-
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
-
- protected:
-  const std::string typeName_;
-  const std::vector<uint8_t> data_;
-};
-
 class SerializableHostObject : public Serializable {
  public:
   SerializableHostObject(jsi::Runtime &, const std::shared_ptr<jsi::HostObject> &hostObject)
@@ -261,13 +247,15 @@ class SerializableHostFunction : public Serializable {
 
 class SerializableArrayBuffer : public Serializable {
  public:
-  SerializableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer)
+  SerializableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer, const std::string &typeName = "")
       : Serializable(ValueType::ArrayBufferType),
+        typeName_(typeName),
         data_(arrayBuffer.data(rt), arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
+  const std::string typeName_;
   const std::vector<uint8_t> data_;
 };
 
@@ -405,21 +393,9 @@ class SerializableBigInt : public Serializable {
  protected:
   /**
    * This member is used only when the BigInt fits into int64_t range.
-  */
+   */
   std::optional<int64_t> fastValue_{};
   std::string slowValue_{};
-};
-
-class SerializableSymbol : public Serializable {
- public:
-  SerializableSymbol(const std::optional<std::string> &description, bool isRegistered)
-      : Serializable(ValueType::SymbolType), description_(description), isRegistered_(isRegistered) {}
-
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
-
- protected:
-  const std::optional<std::string> description_;
-  const bool isRegistered_;
 };
 
 class SerializableScalar : public Serializable {

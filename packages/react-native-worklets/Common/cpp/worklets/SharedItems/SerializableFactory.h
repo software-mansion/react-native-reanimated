@@ -17,8 +17,6 @@ jsi::Value makeSerializableBoolean(jsi::Runtime &rt, bool boolean);
 
 jsi::Value makeSerializableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint);
 
-jsi::Value makeSerializableSymbol(jsi::Runtime &rt, const std::optional<std::string> &description, bool isRegistered);
-
 jsi::Value makeSerializableUndefined(jsi::Runtime &rt);
 
 jsi::Value makeSerializableNull(jsi::Runtime &rt);
@@ -40,7 +38,8 @@ jsi::Value makeSerializableHostObject(jsi::Runtime &rt, const std::shared_ptr<js
 
 jsi::Value makeSerializableArray(jsi::Runtime &rt, const jsi::Array &array, const jsi::Value &shouldRetainRemote);
 
-jsi::Value makeSerializableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer);
+jsi::Value
+makeSerializableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer, const std::string &typeName = "");
 
 jsi::Value makeSerializableMap(jsi::Runtime &rt, const jsi::Array &keys, const jsi::Array &values);
 
@@ -53,9 +52,6 @@ jsi::Value makeSerializableError(
     const std::optional<std::string> &stack);
 
 jsi::Value makeSerializableRegExp(jsi::Runtime &rt, const std::string &pattern, const std::string &flags);
-
-jsi::Value
-makeSerializableArrayBufferView(jsi::Runtime &rt, const std::string &typeName, const jsi::ArrayBuffer &arrayBuffer);
 
 jsi::Value makeSerializableInitializer(jsi::Runtime &rt, const jsi::Object &initializerObject);
 

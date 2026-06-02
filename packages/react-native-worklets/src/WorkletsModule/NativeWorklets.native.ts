@@ -88,16 +88,6 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.createSerializableBigInt(bigInt);
   }
 
-  createSerializableSymbol(
-    description: string | undefined,
-    isRegistered: boolean
-  ): SerializableRef<symbol> {
-    return this.#workletsModuleProxy.createSerializableSymbol(
-      description,
-      isRegistered
-    );
-  }
-
   createSerializableUndefined() {
     return this.#serializableUndefined;
   }

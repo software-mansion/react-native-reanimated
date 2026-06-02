@@ -43,11 +43,6 @@ export interface WorkletsModuleProxy {
 
   createSerializableBigInt(bigInt: bigint): SerializableRef<bigint>;
 
-  createSerializableSymbol(
-    description: string | undefined,
-    isRegistered: boolean
-  ): SerializableRef<symbol>;
-
   createSerializableUndefined(): SerializableRef<undefined>;
 
   createSerializableNull(): SerializableRef<null>;
