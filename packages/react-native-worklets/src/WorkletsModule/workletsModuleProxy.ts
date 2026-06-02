@@ -94,7 +94,9 @@ export interface WorkletsModuleProxy {
 
   createSerializableArrayBufferView<TValue extends ArrayBufferView>(
     typeName: string,
-    buffer: ArrayBufferLike
+    buffer: ArrayBuffer,
+    byteOffset: number,
+    byteLength: number
   ): SerializableRef<TValue>;
 
   createSerializableInitializer(obj: object): SerializableRef<object>;

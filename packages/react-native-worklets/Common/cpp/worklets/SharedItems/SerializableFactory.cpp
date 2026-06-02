@@ -95,6 +95,17 @@ makeSerializableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffe
   return SerializableJSRef::newNativeStateObject(rt, serializable);
 }
 
+jsi::Value makeSerializableArrayBufferView(
+    jsi::Runtime &rt,
+    const jsi::ArrayBuffer &arrayBuffer,
+    const std::string &typeName,
+    size_t byteOffset,
+    size_t byteLength) {
+  auto serializable = std::make_shared<SerializableArrayBuffer>(
+      rt, arrayBuffer, typeName, byteOffset, byteLength);
+  return SerializableJSRef::newNativeStateObject(rt, serializable);
+}
+
 jsi::Value makeSerializableMap(jsi::Runtime &rt, const jsi::Array &keys, const jsi::Array &values) {
   auto serializable = std::make_shared<SerializableMap>(rt, keys, values);
   return SerializableJSRef::newNativeStateObject(rt, serializable);

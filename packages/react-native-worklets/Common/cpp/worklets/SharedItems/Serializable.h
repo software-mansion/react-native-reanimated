@@ -252,6 +252,18 @@ class SerializableArrayBuffer : public Serializable {
         typeName_(typeName),
         data_(arrayBuffer.data(rt), arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
 
+  SerializableArrayBuffer(
+      jsi::Runtime &rt,
+      const jsi::ArrayBuffer &arrayBuffer,
+      const std::string &typeName,
+      size_t byteOffset,
+      size_t byteLength)
+      : Serializable(ValueType::ArrayBufferType),
+        typeName_(typeName),
+        data_(
+            arrayBuffer.data(rt) + byteOffset,
+            arrayBuffer.data(rt) + byteOffset + byteLength) {}
+
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:

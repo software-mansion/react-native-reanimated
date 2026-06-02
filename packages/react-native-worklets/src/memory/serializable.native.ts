@@ -251,7 +251,7 @@ export function createSerializable<TValue>(
       return cloneCustom(value, pack, i) as SerializableRef<TValue>;
     }
   }
-  if (__DEV__ && value instanceof Promise) {
+  if (value instanceof Promise) {
     throw new Error('[Worklets] Promises cannot be converted to serializable.');
   }
   return inaccessibleObject(value);
@@ -645,7 +645,9 @@ function cloneArrayBufferView<TValue extends ArrayBufferView>(
   }
   const clone = WorkletsModule.createSerializableArrayBufferView<TValue>(
     typeName,
-    value.buffer
+    value.buffer as ArrayBuffer,
+    value.byteOffset,
+    value.byteLength
   );
   serializableMappingCache.set(value, clone);
   return clone;
@@ -820,7 +822,9 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
         }
         return globalThis.__workletsModuleProxy.createSerializableArrayBufferView(
           typeName,
-          value.buffer
+          value.buffer as ArrayBuffer,
+          value.byteOffset,
+          value.byteLength
         ) as FlatSerializableRef<TValue>;
       }
       if (value instanceof Map) {
@@ -849,7 +853,7 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
           }
         }
       }
-      if (__DEV__ && value instanceof Promise) {
+      if (value instanceof Promise) {
         throw new Error(
           '[Worklets] Promises cannot be converted to serializable.'
         );

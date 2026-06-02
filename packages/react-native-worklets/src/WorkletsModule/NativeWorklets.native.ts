@@ -170,11 +170,15 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   createSerializableArrayBufferView<TValue extends ArrayBufferView>(
     typeName: string,
-    buffer: ArrayBufferLike
+    buffer: ArrayBuffer,
+    byteOffset: number,
+    byteLength: number
   ): SerializableRef<TValue> {
     return this.#workletsModuleProxy.createSerializableArrayBufferView<TValue>(
       typeName,
-      buffer
+      buffer,
+      byteOffset,
+      byteLength
     );
   }
 
