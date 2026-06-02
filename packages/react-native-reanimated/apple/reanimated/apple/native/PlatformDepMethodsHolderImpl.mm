@@ -57,6 +57,9 @@
   NSMutableArray<NSNumber *> *_tags; // container tags to mirror, in begin order
   NSMutableDictionary<NSNumber *, CALayer *> *_mirrors; // tag -> mirror layer
   NSMutableDictionary<NSNumber *, NSNumber *> *_missingFrames; // tag -> consecutive frames the view was missing
+  NSMutableDictionary<NSNumber *, NSNumber *> *_destTags; // container tag -> real destination view tag
+  NSMutableDictionary<NSNumber *, NSValue *> *_destCenters; // container tag -> destination center (surface coords)
+  NSMutableDictionary<NSNumber *, NSValue *> *_smoothedOffsets; // container tag -> eased destination offset (window)
   CADisplayLink *_displayLink;
 }
 
@@ -74,6 +77,9 @@
     _tags = [NSMutableArray array];
     _mirrors = [NSMutableDictionary dictionary];
     _missingFrames = [NSMutableDictionary dictionary];
+    _destTags = [NSMutableDictionary dictionary];
+    _destCenters = [NSMutableDictionary dictionary];
+    _smoothedOffsets = [NSMutableDictionary dictionary];
   }
   return self;
 }
@@ -86,17 +92,31 @@
 // Start mirroring a container tag. Idempotent across the reuse path / repeated commits. The container
 // view is usually not mounted yet (its CreateMutation is applied after this transaction), so we just
 // register the tag and let the display link pick it up once it appears.
-- (void)beginMirroringTag:(NSInteger)tag
+- (void)beginMirroringTag:(NSInteger)tag destTag:(NSInteger)destTag destCenter:(CGPoint)destCenter
 {
   NSNumber *key = @(tag);
   if (![_tags containsObject:key]) {
     [_tags addObject:key];
   }
   _missingFrames[key] = @(0);
+  _destTags[key] = @(destTag);
+  _destCenters[key] = [NSValue valueWithCGPoint:destCenter];
   if (_displayLink == nil) {
     _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(tick)];
     [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
   }
+}
+
+// The real destination view's center in window coordinates, or {valid:NO} if it isn't mounted yet.
+- (CGPoint)windowCenterForTag:(NSInteger)tag valid:(BOOL *)valid
+{
+  UIView *view = [[self registry] findComponentViewWithTag:tag];
+  if (view == nil || view.window == nil) {
+    *valid = NO;
+    return CGPointZero;
+  }
+  *valid = YES;
+  return [view convertPoint:CGPointMake(CGRectGetMidX(view.bounds), CGRectGetMidY(view.bounds)) toView:nil];
 }
 
 - (UIWindow *)ensureOverlayAnchoredTo:(UIView *)anchor
@@ -178,6 +198,35 @@
     // space) into the overlay's space via window base coordinates - the container and the overlay live
     // in different (full-screen, aligned) windows, so a two-step window conversion is robust.
     CGPoint posInWindow = [superview convertPoint:container.center toView:nil];
+    // Anchor the morph to where the real destination view actually is on screen. An iOS modal CARD is
+    // presented inset from the top (and a screen's layout can differ source-vs-destination), so the
+    // container mounted at the surface root sits in the wrong place. The target offset is (real
+    // destination window position - its surface-root center, in window space); it is zero for a
+    // non-inset destination and until the destination mounts in a window. The modal presents
+    // asynchronously, so the destination only becomes measurable partway through the morph - ease the
+    // offset in so the shared element glides onto the card instead of snapping when it appears.
+    CGPoint targetOffset = CGPointZero;
+    NSNumber *destTag = _destTags[key];
+    NSValue *destCenterValue = _destCenters[key];
+    if (destTag != nil && destCenterValue != nil) {
+      BOOL destValid = NO;
+      CGPoint destReal = [self windowCenterForTag:destTag.integerValue valid:&destValid];
+      if (destValid) {
+        CGPoint destCenterInWindow = [superview convertPoint:destCenterValue.CGPointValue toView:nil];
+        targetOffset.x = destReal.x - destCenterInWindow.x;
+        targetOffset.y = destReal.y - destCenterInWindow.y;
+      }
+    }
+    CGPoint offset = targetOffset;
+    NSValue *prevOffset = _smoothedOffsets[key];
+    if (prevOffset != nil) {
+      CGPoint p = prevOffset.CGPointValue;
+      offset.x = p.x + (targetOffset.x - p.x) * 0.25;
+      offset.y = p.y + (targetOffset.y - p.y) * 0.25;
+    }
+    _smoothedOffsets[key] = [NSValue valueWithCGPoint:offset];
+    posInWindow.x += offset.x;
+    posInWindow.y += offset.y;
     CGPoint posInOverlay = [overlayRoot convertPoint:posInWindow fromView:nil];
 
     [CATransaction begin];
@@ -205,6 +254,9 @@
   [_mirrors[key] removeFromSuperlayer];
   [_mirrors removeObjectForKey:key];
   [_missingFrames removeObjectForKey:key];
+  [_destTags removeObjectForKey:key];
+  [_destCenters removeObjectForKey:key];
+  [_smoothedOffsets removeObjectForKey:key];
   [_tags removeObject:key];
 }
 
@@ -223,6 +275,9 @@
   }
   [_mirrors removeAllObjects];
   [_missingFrames removeAllObjects];
+  [_destTags removeAllObjects];
+  [_destCenters removeAllObjects];
+  [_smoothedOffsets removeAllObjects];
   [_tags removeAllObjects];
   _overlayWindow.hidden = YES;
 }
@@ -369,19 +424,20 @@ ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nod
 BeginModalMirrorFunction makeBeginModalMirrorFunction(REANodesManager *nodesManager)
 {
 #if !TARGET_OS_OSX
-  return [nodesManager](Tag tag) {
+  return [nodesManager](Tag tag, Tag destTag, double destCenterX, double destCenterY) {
     // May run off the main thread; UIKit + CADisplayLink work must happen on main. The container view
     // is typically not mounted yet (its CreateMutation is applied after this transaction), so the
     // manager only registers the tag here - its display link starts mirroring once the view appears.
+    CGPoint destCenter = CGPointMake(destCenterX, destCenterY);
     dispatch_async(dispatch_get_main_queue(), ^{
       REASETMirrorManager *manager = [REASETMirrorManager sharedManager];
       manager.nodesManager = nodesManager;
-      [manager beginMirroringTag:(NSInteger)tag];
+      [manager beginMirroringTag:(NSInteger)tag destTag:(NSInteger)destTag destCenter:destCenter];
     });
   };
 #else
   (void)nodesManager;
-  return [](Tag) {
+  return [](Tag, Tag, double, double) {
   };
 #endif // !TARGET_OS_OSX
 }

@@ -165,9 +165,12 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
         auto containerTag = getOrCreateContainer(before, sharedTag, filteredMutations, surfaceId);
 #ifdef __APPLE__
         // Mirror the container above the modal's presentation layer so the back-gesture morph is
-        // visible. Once per container (the loop can revisit a reused container across frames).
+        // visible. Once per container (the loop can revisit a reused container across frames). Pass the
+        // real destination tag + its surface-root center so the mirror can offset the morph onto the
+        // inset modal card. after.tag is still the original destination tag here (reassigned below).
         if (involvesModal && beginModalMirror_ && !mirroredContainers_.contains(containerTag)) {
-          beginModalMirror_(containerTag);
+          const auto &df = after.layoutMetrics.frame;
+          beginModalMirror_(containerTag, after.tag, df.origin.x + df.size.width / 2, df.origin.y + df.size.height / 2);
           mirroredContainers_.insert(containerTag);
         }
 #endif
@@ -355,8 +358,11 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
       auto containerTag = getOrCreateContainer(before, sharedTag, filteredMutations, surfaceId);
 #ifdef __APPLE__
       // Begin mirroring the container above the modal once (idempotent across the reuse path / frames).
+      // Pass the real destination tag + its surface-root center so the mirror can offset the morph onto
+      // the inset modal card. after.tag is still the original destination tag here (reassigned below).
       if (involvesModal && beginModalMirror_ && !mirroredContainers_.contains(containerTag)) {
-        beginModalMirror_(containerTag);
+        const auto &df = after.layoutMetrics.frame;
+        beginModalMirror_(containerTag, after.tag, df.origin.x + df.size.width / 2, df.origin.y + df.size.height / 2);
         mirroredContainers_.insert(containerTag);
       }
 #endif

@@ -56,7 +56,14 @@ using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
 // live MIRROR of the given container tag into a high-windowLevel overlay window above the modal (each
 // frame copies the real container's rendered pixels + geometry) so the morph is visible. The real
 // container view is never moved, so Fabric's unmount/cleanup is unaffected.
-using BeginModalMirrorFunction = std::function<void(Tag)>;
+// containerTag: the synthetic container to mirror. destTag + destCenter{X,Y}: the real destination
+// shared view's tag and its light-tree (surface-root) center. The mirror measures destTag's actual
+// on-screen window position each frame; an iOS modal CARD is presented inset from the top, so the
+// container's surface-root target misses that inset and the morph would land too high. The mirror adds
+// (measured destination position - destCenter) so the morph lands exactly on the inset card. When the
+// destination isn't a VC-presented card the measured position equals destCenter, so the offset is zero.
+using BeginModalMirrorFunction =
+    std::function<void(Tag containerTag, Tag destTag, double destCenterX, double destCenterY)>;
 // Tears down ALL active container mirrors and stops the per-frame copy. Called once from
 // cleanupSharedTransitions when the transition ends. No-arg (ends all).
 using EndModalMirrorsFunction = std::function<void()>;
