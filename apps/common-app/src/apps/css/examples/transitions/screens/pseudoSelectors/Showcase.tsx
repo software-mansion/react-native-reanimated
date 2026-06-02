@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { Screen, Scroll, Text } from '@/apps/css/components';
 import { colors, radius, spacing } from '@/theme';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const CARDS = [
   {
@@ -54,7 +56,7 @@ function ActionButton({
   onToggle: () => void;
 }) {
   return (
-    <Animated.View
+    <AnimatedPressable
       style={[
         styles.actionBtn,
         {
@@ -78,8 +80,7 @@ function ActionButton({
           transitionTimingFunction: 'ease-in-out',
         },
       ]}
-      onResponderRelease={onToggle}
-      onStartShouldSetResponder={() => true}>
+      onPress={onToggle}>
       <Text
         style={{ color: active ? color : colors.foreground2 }}
         variant="label2">
@@ -87,7 +88,7 @@ function ActionButton({
         {'  '}
         {label}
       </Text>
-    </Animated.View>
+    </AnimatedPressable>
   );
 }
 
