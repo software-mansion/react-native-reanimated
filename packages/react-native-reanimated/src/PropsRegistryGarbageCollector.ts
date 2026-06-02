@@ -1,6 +1,12 @@
 'use strict';
 
 import {
+  AppState,
+  type AppStateStatus,
+  type NativeEventSubscription,
+} from 'react-native';
+
+import {
   unprocessColor,
   unprocessColorsInProps,
 } from './common/style/processors/colors';
@@ -14,6 +20,7 @@ export const PropsRegistryGarbageCollector = {
   viewsCount: 0,
   viewsMap: new Map<number, IAnimatedComponentInternal>(),
   intervalId: null as NodeJS.Timeout | null,
+  appStateSubscription: null as NativeEventSubscription | null,
 
   registerView(viewTag: number, component: IAnimatedComponentInternal) {
     if (this.viewsMap.has(viewTag)) {
@@ -56,12 +63,26 @@ export const PropsRegistryGarbageCollector = {
       this.syncPropsBackToReact.bind(this),
       FLUSH_INTERVAL_MS
     );
+    this.appStateSubscription = AppState.addEventListener(
+      'change',
+      this.handleAppStateChange.bind(this)
+    );
   },
 
   unregisterInterval() {
     if (this.intervalId !== null) {
       clearInterval(this.intervalId);
       this.intervalId = null;
+    }
+    this.appStateSubscription?.remove();
+    this.appStateSubscription = null;
+  },
+
+  handleAppStateChange(nextAppState: AppStateStatus) {
+    if (nextAppState === 'active') {
+      // Sync immediately on resume so React state catches up before the next
+      // polling tick can reapply an outdated settled snapshot.
+      this.syncPropsBackToReact();
     }
   },
 };
