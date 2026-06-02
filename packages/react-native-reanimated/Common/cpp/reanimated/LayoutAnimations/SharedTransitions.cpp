@@ -59,20 +59,31 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findTopScreen(
 
 bool LayoutAnimationsProxy_Experimental::isModalScreen(const std::shared_ptr<LightNode> &node) const {
 #if defined(HAS_SCREENS_PROPS)
-  if (!node || !isRNSScreen(node)) {
-    return false;
+  // react-navigation's native-stack nests each modal's content in a SEPARATE RNSScreenStack, so the
+  // screen returned by findTopScreen is the modal's CONTENT screen, which reports stackPresentation ==
+  // Push. The actual modal presentation lives on an ANCESTOR RNSScreen, so a node-only check misses it
+  // and the transition is treated as a regular push. Walk up the tree and treat the screen as modal if
+  // the node itself or any RNSScreen ancestor uses a VC-presented variant.
+  for (auto current = node; current; current = current->parent.lock()) {
+    if (!isRNSScreen(current)) {
+      continue;
+    }
+    const auto presentation = std::static_pointer_cast<const RNSScreenProps>(current->current.props)->stackPresentation;
+    // The VC-presented variants are shown in a separate UIViewController that sits above the surface
+    // root, so the shared-transition containers (which we mount at the surface root) render BEHIND
+    // them - the shared views morph for a frame, get covered as the modal slides up, then the real
+    // destination snaps in. Until SET can host its containers above the modal's presentation layer we
+    // skip the morph for these so the modal just presents/dismisses cleanly. The "contained" variants
+    // stay inside the surface hierarchy, so they are left to SET as usual.
+    if (presentation == RNSScreenStackPresentation::Modal ||
+        presentation == RNSScreenStackPresentation::TransparentModal ||
+        presentation == RNSScreenStackPresentation::FullScreenModal ||
+        presentation == RNSScreenStackPresentation::FormSheet ||
+        presentation == RNSScreenStackPresentation::PageSheet) {
+      return true;
+    }
   }
-  const auto presentation = std::static_pointer_cast<const RNSScreenProps>(node->current.props)->stackPresentation;
-  // The VC-presented variants are shown in a separate UIViewController that sits above the surface
-  // root, so the shared-transition containers (which we mount at the surface root) render BEHIND
-  // them - the shared views morph for a frame, get covered as the modal slides up, then the real
-  // destination snaps in. Until SET can host its containers above the modal's presentation layer we
-  // skip the morph for these so the modal just presents/dismisses cleanly. The "contained" variants
-  // stay inside the surface hierarchy, so they are left to SET as usual.
-  return presentation == RNSScreenStackPresentation::Modal ||
-      presentation == RNSScreenStackPresentation::TransparentModal ||
-      presentation == RNSScreenStackPresentation::FullScreenModal ||
-      presentation == RNSScreenStackPresentation::FormSheet || presentation == RNSScreenStackPresentation::PageSheet;
+  return false;
 #else
   (void)node;
   return false;
