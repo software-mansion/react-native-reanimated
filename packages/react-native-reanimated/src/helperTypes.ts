@@ -42,16 +42,8 @@ type PickStyleProps<Props> = Pick<
   }[keyof Props]
 >;
 
-/*
- * Each style prop accepts the regular animated style or a pseudo-selector style
- * (`CSSStyle`, which widens every property value to `value | PseudoValue`).
- */
 type AnimatedStyleProps<Props extends object> = {
-  [Key in keyof PickStyleProps<Props>]: Props[Key] extends StyleProp<infer U>
-    ? U extends object
-      ? StyleProp<AnimatedStyle<Props[Key]> | CSSStyle<U>>
-      : StyleProp<AnimatedStyle<Props[Key]>>
-    : StyleProp<AnimatedStyle<Props[Key]>>;
+  [Key in keyof PickStyleProps<Props>]: StyleProp<AnimatedStyle<Props[Key]>>;
 };
 
 /** Component props that are not specially handled by us. */
