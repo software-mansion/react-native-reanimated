@@ -92,6 +92,7 @@ function writeEmittedFiles(files) {
 const WORKLET_TOKENS = [
   "'worklet'",
   '"worklet"',
+  '_WORKLETS_BUNDLE_MODE_ENABLED',
   '__workletClass',
   'useAnimatedStyle',
   'useAnimatedProps',

@@ -260,7 +260,7 @@ describe('babel plugin in bundleMode', () => {
       const fakeFilename = '/not-a-workletizable-package/src/file.ts';
       const { files } = runPlugin(input, {}, {}, fakeFilename);
       expect(files).toHaveLength(1);
-      expect(files[0].content).toContain(`require('./helper')`);
+      expect(files[0].content).toMatch(/require\(["']\.\/helper["']\)/);
       expect(files[0].content).toMatchSnapshot();
     });
   });
