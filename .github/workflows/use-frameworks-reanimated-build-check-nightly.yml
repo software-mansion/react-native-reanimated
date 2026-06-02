@@ -24,11 +24,16 @@ jobs:
       matrix:
         type: [static, dynamic]
     steps:
+      - name: Checkout .nvmrc
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          sparse-checkout: .nvmrc
+          sparse-checkout-cone-mode: false
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: '22'
           registry-url: https://registry.npmjs.org/
+          node-version-file: '.nvmrc'
       - name: Setup Yarn
         # Sometimes `npx @react-native-community/cli init` fails at random.
         # Pre-installing it with Yarn seems to improve stability.
