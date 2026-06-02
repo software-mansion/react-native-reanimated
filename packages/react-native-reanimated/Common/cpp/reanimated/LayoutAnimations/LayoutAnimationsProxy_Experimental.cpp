@@ -60,13 +60,13 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
       forceScreenSnapshot_(afterTopScreen->current.tag);
 #endif
     }
-    // Skip the morph when either end of the transition is a modal presented in its own
-    // UIViewController: SET mounts its container views at the surface root, which renders behind
-    // such a modal, so the morph would flash then be covered. Letting the modal present/dismiss
-    // without SET is the clean fallback. Non-modal transitions are unaffected.
-    const bool involvesModal = isModalScreen(beforeTopScreen) || isModalScreen(afterTopScreen);
-    const bool hasScreenChanged =
-        beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen && !involvesModal;
+    // We run the morph even when an end of the transition is a modal presented in its own
+    // UIViewController. SET mounts its container views at the surface root, which renders BEHIND such
+    // a modal; handleSharedTransitionsStart compensates by hoisting each container's native view into
+    // a high-windowLevel overlay window (see beginModalMirror_) so it morphs above the modal, and
+    // cleanupSharedTransitions restores it before the container is removed. Non-modal transitions are
+    // unaffected (no hoist/restore fires, mirroredContainers_ stays empty).
+    const bool hasScreenChanged = beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen;
 
     if (hasScreenChanged) {
       // We want to add mutations to hide the views that will start their transitions.
@@ -79,10 +79,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
       std::swap(filteredMutations, mergedMutations);
     }
 
-    if (!involvesModal) {
-      handleSharedTransitionsStart(
-          afterTopScreen, beforeTopScreen, filteredMutations, mutations, propsParserContext, surfaceId);
-    }
+    handleSharedTransitionsStart(
+        afterTopScreen, beforeTopScreen, filteredMutations, mutations, propsParserContext, surfaceId);
   }
 
   for (auto &node : entering_) {

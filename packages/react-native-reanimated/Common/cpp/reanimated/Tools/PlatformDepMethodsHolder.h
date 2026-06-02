@@ -49,6 +49,18 @@ using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 
 using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
 
+// iOS-only. Shared Element Transitions mount their synthetic container views at the surface root.
+// When the source/destination screen is a modal presented in its own UIViewController (RNSScreen
+// stackPresentation modal/formSheet/pageSheet/fullScreenModal/transparentModal), that VC sits above
+// the surface root, so a root-mounted container renders behind it. BeginModalMirror starts drawing a
+// live MIRROR of the given container tag into a high-windowLevel overlay window above the modal (each
+// frame copies the real container's rendered pixels + geometry) so the morph is visible. The real
+// container view is never moved, so Fabric's unmount/cleanup is unaffected.
+using BeginModalMirrorFunction = std::function<void(Tag)>;
+// Tears down ALL active container mirrors and stops the per-frame copy. Called once from
+// cleanupSharedTransitions when the transition ends. No-arg (ends all).
+using EndModalMirrorsFunction = std::function<void()>;
+
 using PlatformAttachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector, std::function<void(bool)>)>;
 using PlatformDetachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector)>;
 
@@ -59,6 +71,8 @@ struct PlatformDepMethodsHolder {
 #endif // ANDROID
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshotFunction;
+  BeginModalMirrorFunction beginModalMirrorFunction;
+  EndModalMirrorsFunction endModalMirrorsFunction;
 #endif
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
   GetAnimationTimestampFunction getAnimationTimestamp;

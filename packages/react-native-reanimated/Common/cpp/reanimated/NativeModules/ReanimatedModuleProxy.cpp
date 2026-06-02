@@ -202,6 +202,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
 #ifdef __APPLE__
       forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
+      beginModalMirror_(platformDepMethodsHolder.beginModalMirrorFunction),
+      endModalMirrors_(platformDepMethodsHolder.endModalMirrorsFunction),
 #endif
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
@@ -1236,6 +1238,8 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
       );
 #ifdef __APPLE__
       layoutAnimationsProxyExperimental->setForceScreenSnapshotFunction(forceScreenSnapshot_);
+      layoutAnimationsProxyExperimental->setBeginModalMirrorFunction(beginModalMirror_);
+      layoutAnimationsProxyExperimental->setEndModalMirrorsFunction(endModalMirrors_);
 #endif
       layoutAnimationsProxy_ = std::move(layoutAnimationsProxyExperimental);
     } else {
