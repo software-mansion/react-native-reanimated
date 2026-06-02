@@ -58,7 +58,6 @@ runs:
       if: ${{ runner.os == 'macOS' }}
       uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
       with:
-        ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
     - name: Install Pods (iOS)
