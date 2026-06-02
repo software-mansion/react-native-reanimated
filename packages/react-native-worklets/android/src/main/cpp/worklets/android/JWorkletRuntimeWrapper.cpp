@@ -13,10 +13,10 @@ using namespace facebook::jni;
 
 local_ref<JWorkletRuntimeWrapper::JavaPart> JWorkletRuntimeWrapper::makeJWorkletRuntimeWrapper(
     std::shared_ptr<WorkletRuntime> workletRuntime) {
-  return JWorkletRuntimeWrapper::newObjectCxxArgs(std::move(workletRuntime), workletRuntime->getRuntimeId());
+  return JWorkletRuntimeWrapper::newObjectCxxArgs(std::move(workletRuntime));
 }
 
-JWorkletRuntimeWrapper::JWorkletRuntimeWrapper(std::shared_ptr<WorkletRuntime> workletRuntime, uint64_t runtimeId)
+JWorkletRuntimeWrapper::JWorkletRuntimeWrapper(std::shared_ptr<WorkletRuntime> workletRuntime)
     : workletRuntime_(std::move(workletRuntime)) {}
 
 void JWorkletRuntimeWrapper::cxxEmitDeviceEvent(
