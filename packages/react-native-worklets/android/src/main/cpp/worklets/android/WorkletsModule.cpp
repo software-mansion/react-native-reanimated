@@ -174,7 +174,8 @@ RuntimeBindings::SendRequest WorkletsModule::getSendRequest() {
 
 std::function<bool()> WorkletsModule::getIsOnJSQueueThread() {
   return [javaPart = javaPart_]() -> bool {
-    return javaPart->getClass()->getMethod<jboolean()>("isOnJSQueueThread").operator()(javaPart);
+    static const auto jIsOnJSQueueThread = javaPart->getClass()->getMethod<jboolean()>("isOnJSQueueThread");
+    return jIsOnJSQueueThread(javaPart);
   };
 }
 
