@@ -454,7 +454,6 @@ describe('Test createSerializableOnUI', () => {
   // });
 
   test('createSerializableOnUIInaccessibleObject', async () => {
-    // Arrange
     const clazz = runOnUISync(() => {
       'worklet';
       class Clazz {
@@ -464,7 +463,6 @@ describe('Test createSerializableOnUI', () => {
       return new Clazz();
     });
 
-    // Act & Assert
     await expect(() => {
       clazz.method();
     }).toThrow();

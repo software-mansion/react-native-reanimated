@@ -340,6 +340,18 @@ class JSReanimated implements IReanimatedModule {
       '[Reanimated] `getSettledUpdates` is not available in JSReanimated.'
     );
   }
+
+  registerPseudoStyle(): void {
+    throw new Error(
+      '[Reanimated] `registerPseudoStyle` is not available in JSReanimated.'
+    );
+  }
+
+  unregisterPseudoStyle(): void {
+    throw new Error(
+      '[Reanimated] `unregisterPseudoStyle` is not available in JSReanimated.'
+    );
+  }
 }
 
 // Lack of this export breaks TypeScript generation since

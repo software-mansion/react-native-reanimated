@@ -83,12 +83,4 @@ void RuntimeManager::registerRuntime(const uint64_t runtimeId, const std::shared
   weakRuntimes_[runtimeId] = workletRuntime;
 }
 
-void RuntimeManager::pause() {
-  registrationMutex_.lock();
-}
-
-void RuntimeManager::resume() {
-  registrationMutex_.unlock();
-}
-
 } // namespace worklets

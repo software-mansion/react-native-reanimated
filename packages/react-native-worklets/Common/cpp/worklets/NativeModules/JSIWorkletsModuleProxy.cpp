@@ -212,14 +212,12 @@ inline void registerCustomSerializable(
     const int typeId) {
   const SerializationData data{.determine = determine, .pack = pack, .unpack = unpack, .typeId = typeId};
   // Prevent registering new worklet runtimes while we are updating existing ones to prevent inconsistencies.
-  runtimeManager->pause();
-
-  memoryManager->registerCustomSerializable(data);
-  for (const auto &runtime : runtimeManager->getAllRuntimes()) {
-    memoryManager->loadCustomSerializable(runtime, data);
-  }
-
-  runtimeManager->resume();
+  runtimeManager->withRegistrationPaused([&] {
+    memoryManager->registerCustomSerializable(data);
+    for (const auto &runtime : runtimeManager->getAllRuntimes()) {
+      memoryManager->loadCustomSerializable(runtime, data);
+    }
+  });
 }
 
 } // namespace
