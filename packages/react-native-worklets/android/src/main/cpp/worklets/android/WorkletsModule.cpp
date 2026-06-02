@@ -31,7 +31,8 @@ WorkletsModule::WorkletsModule(
     jsi::Runtime *rnRuntime,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler)
-    : javaPart_(jni::make_global(jThis)),
+    : alive_(std::make_shared<std::atomic<bool>>(true)),
+      javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       workletsModuleProxy_(std::make_shared<WorkletsModuleProxy>(
           *rnRuntime,
@@ -91,7 +92,10 @@ std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(
 }
 
 RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame() {
-  return [javaPart = javaPart_](std::function<void(const double)> &&callback) -> void {
+  return [javaPart = javaPart_, alive = alive_](std::function<void(const double)> &&callback) -> void {
+    if (!alive->load(std::memory_order_acquire)) {
+      return;
+    }
     static const auto jRequestAnimationFrame =
         javaPart->getClass()->getMethod<void(AnimationFrameCallback::javaobject)>("requestAnimationFrame");
     jRequestAnimationFrame(javaPart.get(), AnimationFrameCallback::newObjectCxxArgs(std::move(callback)).get());
@@ -100,15 +104,24 @@ RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame(
 
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
 RuntimeBindings::AbortRequest WorkletsModule::getAbortRequest() {
-  return [javaPart = javaPart_](jsi::Runtime &rt, double requestId) -> void {
-    static const auto jAbortRequest = javaPart->getClass()->getMethod<void(int, double)>("abortRequest");
+  return [javaPart = javaPart_, alive = alive_](jsi::Runtime &rt, double requestId) -> void {
+    if (!alive->load(std::memory_order_acquire)) {
+      return;
+    }
     auto workletRuntime = WorkletRuntime::getWeakRuntimeFromJSIRuntime(rt).lock();
+    if (!workletRuntime) {
+      return;
+    }
+    static const auto jAbortRequest = javaPart->getClass()->getMethod<void(int, double)>("abortRequest");
     jAbortRequest(javaPart.get(), static_cast<int>(workletRuntime->getRuntimeId()), requestId);
   };
 }
 
 RuntimeBindings::ClearCookies WorkletsModule::getClearCookies() {
-  return [javaPart = javaPart_](jsi::Runtime &rt, jsi::Function &&responseSender) {
+  return [javaPart = javaPart_, alive = alive_](jsi::Runtime &rt, jsi::Function &&responseSender) {
+    if (!alive->load(std::memory_order_acquire)) {
+      return;
+    }
     static const auto jClearCookies = javaPart->getClass()->getMethod<void(JCallback::javaobject)>("clearCookies");
     auto jsiFunction = std::make_shared<jsi::Function>(std::move(responseSender));
     auto workletRuntime = WorkletRuntime::getWeakRuntimeFromJSIRuntime(rt);
@@ -130,7 +143,7 @@ RuntimeBindings::ClearCookies WorkletsModule::getClearCookies() {
 }
 
 RuntimeBindings::SendRequest WorkletsModule::getSendRequest() {
-  return [javaPart = javaPart_](
+  return [javaPart = javaPart_, alive = alive_](
              jsi::Runtime &rt,
              jsi::String &method,
              jsi::String &url,
@@ -141,6 +154,13 @@ RuntimeBindings::SendRequest WorkletsModule::getSendRequest() {
              bool incrementalUpdates,
              double timeout,
              bool withCredentials) {
+    if (!alive->load(std::memory_order_acquire)) {
+      return;
+    }
+    auto workletRuntime = WorkletRuntime::getWeakRuntimeFromJSIRuntime(rt).lock();
+    if (!workletRuntime) {
+      return;
+    }
     static const auto jSendRequest = javaPart->getClass()
                                          ->getMethod<void(
                                              JWorkletRuntimeWrapper::javaobject,
@@ -154,8 +174,6 @@ RuntimeBindings::SendRequest WorkletsModule::getSendRequest() {
                                              double /* timeout */,
                                              bool /* withCredentials */
                                              )>("sendRequest");
-    auto workletRuntime = WorkletRuntime::getWeakRuntimeFromJSIRuntime(rt).lock();
-
     jSendRequest(
         javaPart.get(),
         JWorkletRuntimeWrapper::makeJWorkletRuntimeWrapper(workletRuntime).get(),
@@ -173,17 +191,29 @@ RuntimeBindings::SendRequest WorkletsModule::getSendRequest() {
 #endif // WORKLETS_FETCH_PREVIEW_ENABLED
 
 std::function<bool()> WorkletsModule::getIsOnJSQueueThread() {
-  return [javaPart = javaPart_]() -> bool {
+  return [javaPart = javaPart_, alive = alive_]() -> bool {
+    if (!alive->load(std::memory_order_acquire)) {
+      return false;
+    }
     return javaPart->getClass()->getMethod<jboolean()>("isOnJSQueueThread").operator()(javaPart);
   };
 }
 
 void WorkletsModule::invalidateCpp() {
-  javaPart_.reset();
+  // Flip the shared flag first so binding lambdas captured into
+  // RuntimeBindings short-circuit before touching the JNI side.
+  alive_->store(false, std::memory_order_release);
+  // Drop the proxy (and everything it transitively owns — runtimes, event
+  // loops, async queues) before clearing the Java reference, so any JNI
+  // callbacks fired during teardown still see a live Java side.
   workletsModuleProxy_.reset();
+  javaPart_.reset();
 }
 
 void WorkletsModule::startCpp() {
+  if (!workletsModuleProxy_) {
+    return;
+  }
   workletsModuleProxy_->start();
 }
 

@@ -2,6 +2,7 @@
 
 #include <fbjni/fbjni.h>
 
+#include <algorithm>
 #include <utility>
 
 namespace reanimated {
@@ -14,9 +15,14 @@ class SensorSetter : public HybridClass<SensorSetter> {
   static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/nativeProxy/SensorSetter;";
 
   void sensorSetter(jni::alias_ref<JArrayFloat> value, int orientationDegrees) {
-    size_t size = value->size();
+    // The Android sensor APIs feeding this callback emit at most 7 floats
+    // (rotation vector with heading accuracy is the largest payload). Clamp
+    // defensively so a malformed JArrayFloat can't overflow the stack
+    // buffer below.
+    constexpr size_t kMaxSensorValues = 7;
+    size_t size = std::min<size_t>(value->size(), kMaxSensorValues);
     auto elements = value->getRegion(0, size);
-    double array[7];
+    double array[kMaxSensorValues];
     for (size_t i = 0; i < size; i++) {
       array[i] = elements[i];
     }
