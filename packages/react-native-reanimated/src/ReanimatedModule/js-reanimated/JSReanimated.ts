@@ -260,12 +260,6 @@ class JSReanimated implements IReanimatedModule {
   }
 
   getStaticFeatureFlag(name: string): boolean {
-    // Under Jest this module substitutes for the native one but doesn't
-    // implement native-only methods such as `getSettledUpdates`. Some flags
-    // (e.g. `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`) route code into those
-    // methods, so keep every flag off in tests to stay on the JS-compatible
-    // paths. The real web runtime reads the shared defaults that mirror
-    // `staticFlags.json`.
     if (IS_JEST) {
       return false;
     }
