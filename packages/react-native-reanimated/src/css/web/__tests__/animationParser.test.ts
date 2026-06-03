@@ -13,8 +13,6 @@ beforeAll(() => {
   registerWebSvgPropsBuilder('Polygon', SVG_POLYGON_WEB_PROPERTIES_CONFIG);
 });
 
-// Integration only: confirms the SVG processors are wired into the keyframe
-// pipeline. Per-processor behavior is covered in svg/web/processors/__tests__.
 describe(processKeyframeDefinitions, () => {
   test('synthesizes a strokeDasharray start and serializes the array', () => {
     const result = processKeyframeDefinitions(
