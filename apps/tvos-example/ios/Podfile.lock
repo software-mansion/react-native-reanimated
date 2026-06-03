@@ -1786,7 +1786,7 @@ PODS:
     - React-utils (= 0.85.3-0)
     - ReactNativeDependencies
   - ReactNativeDependencies (0.85.3)
-  - RNReanimated (4.4.0):
+  - RNReanimated (4.4.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1808,11 +1808,11 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNReanimated/apple (= 4.4.0)
-    - RNReanimated/common (= 4.4.0)
+    - RNReanimated/apple (= 4.4.1)
+    - RNReanimated/common (= 4.4.1)
     - RNWorklets
     - Yoga
-  - RNReanimated/apple (4.4.0):
+  - RNReanimated/apple (4.4.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1836,7 +1836,7 @@ PODS:
     - ReactNativeDependencies
     - RNWorklets
     - Yoga
-  - RNReanimated/common (4.4.0):
+  - RNReanimated/common (4.4.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2169,7 +2169,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   FBLazyVector: d530cbf79a7670e8620cacb47d1804e66685f3c5
-  hermes-engine: 8edaaf1e0ace9bd0f005b8ea32433da242b04444
+  hermes-engine: ccd86fddff309098a7b529fb363a3184b779ca8f
   RCTDeprecation: 40ab3b5cc410e721785f9f7a720f54332b23a83f
   RCTRequired: f43f0af2c182ffd928a63484083f9c6085be0cc3
   RCTSwiftUI: 259305c2d96dd73682562215eba9e1b30486cfe5
@@ -2178,7 +2178,7 @@ SPEC CHECKSUMS:
   React: e8b7bd0882e50d8e4d37f79c8b1ed99b464e8345
   React-callinvoker: d5690d217d7290d423416a8b2c98c20316e301ff
   React-Core: 4b7a3357649ca6d11b50e0d86683cb19677a43c9
-  React-Core-prebuilt: 3bcf308c15d7ce8a365093214d82f48c24bb174d
+  React-Core-prebuilt: ffb8444455db90c88cb9325dbd1cc83777f98161
   React-CoreModules: 81eefd4e15b21a862e56e5028dbdb693f253f8a4
   React-cxxreact: 3db9d82778f0fc639bca1342cb0c84617a55181c
   React-debug: b2870555dbee7129cf332c7ffaf80e9643a23afb
@@ -2240,8 +2240,8 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: 96408f4be2ec6b31bcae9c3571b58d6bff9f7e4a
   ReactCodegen: 01efb0e862440b4a3e183301c4049638d5e4ac1d
   ReactCommon: 52f9c5c30dda0eb591550d5d1adb265176e1ecc8
-  ReactNativeDependencies: b07a5237fb5cae39dc2b5874f8fa4d839e400c94
-  RNReanimated: 42466567998d9c98583a5736823a5cc78473185a
+  ReactNativeDependencies: aee42daab6527537474957690257bf80d3826f27
+  RNReanimated: 7f4a911af30f98836769accaee62c65a0224fb63
   RNWorklets: 341394f28aa7c8966ca9a341c2bdf1213e2c6bf1
   Yoga: 861ef0ae75949f7330bfa80d9ce24250e963f66c
 
