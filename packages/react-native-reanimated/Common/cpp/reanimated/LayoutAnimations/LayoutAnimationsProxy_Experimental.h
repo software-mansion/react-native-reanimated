@@ -54,11 +54,12 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   // transferConfigFromNativeID), so tagToName_ membership alone misclassifies a source view that
   // also runs a layout animation as a container in endLayoutAnimation.
   mutable std::unordered_set<Tag> ownedContainers_;
-  // iOS only. Container tags whose native view we hoisted into the overlay window so the morph
-  // renders above a presented modal (see beginModalMirror_ / endModalMirrors_). Tracked so we
-  // restore exactly the views we moved, restore each only once, and - critically - leave this set
-  // empty (and fire no hoist/restore) for every non-modal transition, keeping that path unchanged.
-  mutable std::unordered_set<Tag> mirroredContainers_;
+  // iOS only. When a transition targets an opaque modal, the SET container is inserted into the MODAL
+  // (after) screen's light node instead of the surface root, so it actually mounts (the surface-root
+  // subtree is non-displaying behind the modal -> the container never mounts there) and renders above
+  // the modal where the worklet can drive its morph. Set per-transition in handleSharedTransitionsStart;
+  // nullptr => insert at the surface root (the normal non-modal path, unchanged).
+  mutable std::shared_ptr<LightNode> containerParentOverride_;
   mutable std::unordered_map<Tag, Tag[2]> restoreMap_;
   mutable std::vector<Tag> tagsToRestore_;
   mutable TransitionMap transitionMap_;
@@ -78,8 +79,6 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable std::unordered_map<Tag, react::Transform> transformForNode_;
 
   mutable ForceScreenSnapshotFunction forceScreenSnapshot_;
-  mutable BeginModalMirrorFunction beginModalMirror_;
-  mutable EndModalMirrorsFunction endModalMirrors_;
 
   LayoutAnimationsProxy_Experimental(
       const std::shared_ptr<LayoutAnimationsManager> &layoutAnimationsManager,
@@ -148,12 +147,6 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
 #ifdef __APPLE__
   void setForceScreenSnapshotFunction(ForceScreenSnapshotFunction forceScreenSnapshot) {
     forceScreenSnapshot_ = std::move(forceScreenSnapshot);
-  }
-  void setBeginModalMirrorFunction(BeginModalMirrorFunction fn) {
-    beginModalMirror_ = std::move(fn);
-  }
-  void setEndModalMirrorsFunction(EndModalMirrorsFunction fn) {
-    endModalMirrors_ = std::move(fn);
   }
 #endif
 

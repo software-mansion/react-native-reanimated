@@ -142,15 +142,6 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
     auto root = lightNodes_[surfaceId];
     auto beforeTopScreen = topScreen[surfaceId];
     auto afterTopScreen = lightNodes_[transitionTag_];
-    // The progress-driven (back/dismiss gesture) morph runs for modal presentations too. The
-    // container is mounted at the surface root and would render behind a VC-presented modal, so when
-    // either end is a modal we mirror the container into an overlay window above it (and tear the
-    // mirrors down in cleanupSharedTransitions). Non-modal transitions take the mirror branch's
-    // condition as false and stay unchanged. (This whole path only executes on iOS - onTransitionProgress
-    // gates it on !isAndroid - but the references are guarded for the Android translation unit anyway.)
-#ifdef __APPLE__
-    const bool involvesModal = isModalScreen(beforeTopScreen) || isModalScreen(afterTopScreen);
-#endif
     if (beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen) {
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, propsParserContext);
       findSharedElementsOnScreen(afterTopScreen, AFTER, propsParserContext);
@@ -163,17 +154,6 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
         overrideTransform(before, transform[BEFORE], propsParserContext);
         overrideTransform(after, transform[AFTER], propsParserContext);
         auto containerTag = getOrCreateContainer(before, sharedTag, filteredMutations, surfaceId);
-#ifdef __APPLE__
-        // Mirror the container above the modal's presentation layer so the back-gesture morph is
-        // visible. Once per container (the loop can revisit a reused container across frames). Pass the
-        // real destination tag + its surface-root center so the mirror can offset the morph onto the
-        // inset modal card. after.tag is still the original destination tag here (reassigned below).
-        if (involvesModal && beginModalMirror_ && !mirroredContainers_.contains(containerTag)) {
-          const auto &df = after.layoutMetrics.frame;
-          beginModalMirror_(containerTag, after.tag, df.origin.x + df.size.width / 2, df.origin.y + df.size.height / 2);
-          mirroredContainers_.insert(containerTag);
-        }
-#endif
         transferConfigToContainer(containerTag, before.tag);
 
         restoreMap_[containerTag][BEFORE] = before.tag;
@@ -309,14 +289,19 @@ Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
   if (shouldCreateContainer) {
     containerTag = containerTag_;
     containerTag_ += 2;
-    auto &root = lightNodes_[surfaceId];
+    // Insert into the modal (after) screen for opaque-modal transitions (containerParentOverride_), else
+    // the surface root. The modal screen stays mounted while the modal is up, so the container actually
+    // mounts there (it never mounts at the surface root behind an opaque modal) and the worklet can drive
+    // its morph above the modal content.
+    auto parentNode = containerParentOverride_ ? containerParentOverride_ : lightNodes_[surfaceId];
     ShadowView container = before;
     sharedTransitionManager_->tagToName_[containerTag] = sharedTag;
 
     container.tag = containerTag;
     auto node = std::make_shared<LightNode>();
     node->current = std::move(container);
-    root->children.push_back(node);
+    node->parent = parentNode;
+    parentNode->children.push_back(node);
     containersToInsert_.push_back(node);
     lightNodes_[containerTag] = std::move(node);
 
@@ -342,11 +327,13 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
   }
 
 #ifdef __APPLE__
-  // If either end of the transition is a modal presented in its own UIViewController, the container we
-  // mount at the surface root renders behind it. Mirror each container into an overlay window above the
-  // modal so the forward morph is visible; endModalMirrors_ tears the mirrors down at cleanup. iOS
-  // only: isModalScreen / beginModalMirror_ are no-ops/absent elsewhere.
+  // If either end of the transition is a modal presented in its own UIViewController, a container we
+  // mount at the surface root renders behind it. iOS only: isModalScreen is false elsewhere.
   const bool involvesModal = isModalScreen(beforeTopScreen) || isModalScreen(afterTopScreen);
+  // Over-modal containers are inserted into the modal (after) screen so they MOUNT and the worklet drives
+  // their morph above the modal (the surface-root subtree is non-displaying behind an opaque modal, so a
+  // root-mounted container never mounts and never animates). Cleared at the end of this function.
+  containerParentOverride_ = involvesModal ? afterTopScreen : nullptr;
 #endif
 
   if (beforeTopScreen != afterTopScreen) {
@@ -356,16 +343,6 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
       overrideTransform(before, transform[BEFORE], propsParserContext);
       overrideTransform(after, transform[AFTER], propsParserContext);
       auto containerTag = getOrCreateContainer(before, sharedTag, filteredMutations, surfaceId);
-#ifdef __APPLE__
-      // Begin mirroring the container above the modal once (idempotent across the reuse path / frames).
-      // Pass the real destination tag + its surface-root center so the mirror can offset the morph onto
-      // the inset modal card. after.tag is still the original destination tag here (reassigned below).
-      if (involvesModal && beginModalMirror_ && !mirroredContainers_.contains(containerTag)) {
-        const auto &df = after.layoutMetrics.frame;
-        beginModalMirror_(containerTag, after.tag, df.origin.x + df.size.width / 2, df.origin.y + df.size.height / 2);
-        mirroredContainers_.insert(containerTag);
-      }
-#endif
 
       transferConfigToContainer(containerTag, before.tag);
       restoreMap_[containerTag][1] = after.tag;
@@ -390,6 +367,9 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
       }
     }
   }
+#ifdef __APPLE__
+  containerParentOverride_ = nullptr;
+#endif
 }
 
 void LayoutAnimationsProxy_Experimental::hideTransitioningViews(
@@ -483,10 +463,25 @@ void LayoutAnimationsProxy_Experimental::insertContainers(
   ShadowViewMutationList currentMutations;
   std::swap(currentMutations, filteredMutations);
   filteredMutations.reserve(containersToInsert_.size() * 2);
-  auto root = lightNodes_[surfaceId];
   for (auto &node : containersToInsert_) {
+    auto parent = node->parent.lock();
+    Tag parentTag = (parent && parent->current.tag != surfaceId) ? parent->current.tag : surfaceId;
+    int index;
+    if (parentTag != surfaceId) {
+      // Modal-screen container: insert at its position among the screen's children (appended last in
+      // getOrCreateContainer, so it lands at the end of the screen's native children).
+      index = 0;
+      for (size_t i = 0; i < parent->children.size(); i++) {
+        if (parent->children[i] == node) {
+          index = static_cast<int>(i);
+          break;
+        }
+      }
+    } else {
+      index = rootChildCount++;
+    }
     filteredMutations.push_back(ShadowViewMutation::CreateMutation(node->current));
-    filteredMutations.push_back(ShadowViewMutation::InsertMutation(surfaceId, node->current, rootChildCount++));
+    filteredMutations.push_back(ShadowViewMutation::InsertMutation(parentTag, node->current, index));
   }
   filteredMutations.insert(filteredMutations.end(), currentMutations.begin(), currentMutations.end());
   containersToInsert_.clear();
@@ -513,26 +508,25 @@ void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
   tagsToRestore_.clear();
 
   ReanimatedSystraceSection s2("remove shared containers");
-#ifdef __APPLE__
-  // Modal case: while the transition ran we mirrored some/all of these containers into an overlay
-  // window above the modal (the real container views were never moved, only copied per frame). The
-  // morph is over now, so tear every mirror down. Because the real container views stayed exactly
-  // where Fabric mounted them, the Remove/Delete mutations emitted below unmount them normally - there
-  // is no superview/index juggling and no ordering constraint between this and the mirror teardown.
-  if (!mirroredContainers_.empty() && endModalMirrors_) {
-    endModalMirrors_();
-    mirroredContainers_.clear();
-  }
-#endif
   for (auto &tag : sharedContainersToRemove_) {
-    auto root = lightNodes_[surfaceId];
+    // Remove from the container's ACTUAL parent (the modal screen for over-modal containers, else the
+    // surface root) using its current index there, so the Remove/Delete index matches native.
+    std::shared_ptr<LightNode> parent;
+    auto nodeIt = lightNodes_.find(tag);
+    if (nodeIt != lightNodes_.end() && nodeIt->second) {
+      parent = nodeIt->second->parent.lock();
+    }
+    if (!parent) {
+      parent = lightNodes_[surfaceId];
+    }
+    Tag parentTag = parent->current.tag;
     bool found = false;
-    for (int i = 0; i < root->children.size(); i++) {
-      auto &child = root->children[i];
+    for (int i = 0; i < parent->children.size(); i++) {
+      auto &child = parent->children[i];
       if (child->current.tag == tag) {
-        filteredMutations.push_back(ShadowViewMutation::RemoveMutation(surfaceId, child->current, i));
+        filteredMutations.push_back(ShadowViewMutation::RemoveMutation(parentTag, child->current, i));
         filteredMutations.push_back(ShadowViewMutation::DeleteMutation(child->current));
-        root->children.erase(root->children.begin() + i);
+        parent->children.erase(parent->children.begin() + i);
         found = true;
         break;
       }
@@ -548,10 +542,6 @@ void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
       sharedTransitionManager_->tagToName_.erase(tag);
       restoreMap_.erase(tag);
       ownedContainers_.erase(tag);
-#ifdef __APPLE__
-      // Defense-in-depth: if the restore above didn't run for some reason, don't leak the tag.
-      mirroredContainers_.erase(tag);
-#endif
     }
   }
   sharedContainersToRemove_.clear();

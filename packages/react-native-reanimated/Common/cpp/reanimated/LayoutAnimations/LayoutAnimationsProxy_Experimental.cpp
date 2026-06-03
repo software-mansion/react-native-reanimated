@@ -62,10 +62,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     }
     // We run the morph even when an end of the transition is a modal presented in its own
     // UIViewController. SET mounts its container views at the surface root, which renders BEHIND such
-    // a modal; handleSharedTransitionsStart compensates by hoisting each container's native view into
-    // a high-windowLevel overlay window (see beginModalMirror_) so it morphs above the modal, and
-    // cleanupSharedTransitions restores it before the container is removed. Non-modal transitions are
-    // unaffected (no hoist/restore fires, mirroredContainers_ stays empty).
+    // a modal; handleSharedTransitionsStart compensates by inserting each container into the modal
+    // (after) screen's light node (see containerParentOverride_) so it mounts there and morphs above
+    // the modal. Non-modal transitions are unaffected (containerParentOverride_ stays null).
     const bool hasScreenChanged = beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen;
 
     if (hasScreenChanged) {
