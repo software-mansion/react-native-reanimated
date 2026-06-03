@@ -142,7 +142,10 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
     auto root = lightNodes_[surfaceId];
     auto beforeTopScreen = topScreen[surfaceId];
     auto afterTopScreen = lightNodes_[transitionTag_];
-    if (beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen) {
+    // Skip the progress (back/dismiss) morph for VC-presented modals, mirroring the forward path - the
+    // container can't be hosted above the modal, so let it dismiss cleanly. Non-modal is unaffected.
+    const bool involvesModal = isModalScreen(beforeTopScreen) || isModalScreen(afterTopScreen);
+    if (beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen && !involvesModal) {
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, propsParserContext);
       findSharedElementsOnScreen(afterTopScreen, AFTER, propsParserContext);
       hideTransitioningViews(BEFORE, filteredMutations, propsParserContext);
@@ -463,27 +466,35 @@ void LayoutAnimationsProxy_Experimental::insertContainers(
   ShadowViewMutationList currentMutations;
   std::swap(currentMutations, filteredMutations);
   filteredMutations.reserve(containersToInsert_.size() * 2);
+  // Modal-screen containers must be inserted AFTER the rest of this transaction's mutations: the modal
+  // (after) screen is typically created/mounted in this same transaction, and a child Insert emitted
+  // before its parent's Create aborts the mount (componentViewDescriptorWithTag on the missing parent).
+  // Surface-root containers stay prepended (the root is always mounted, and their rootChildCount index
+  // is computed against the pre-transaction child count).
+  ShadowViewMutationList deferredMutations;
   for (auto &node : containersToInsert_) {
     auto parent = node->parent.lock();
     Tag parentTag = (parent && parent->current.tag != surfaceId) ? parent->current.tag : surfaceId;
-    int index;
     if (parentTag != surfaceId) {
-      // Modal-screen container: insert at its position among the screen's children (appended last in
-      // getOrCreateContainer, so it lands at the end of the screen's native children).
-      index = 0;
+      // Dormant: this modal-screen insertion path is currently gated off (modals skip the morph - see
+      // pullTransaction) because the modal screen mounts in a later transaction than this insert. Kept
+      // as the basis for a future cross-transaction deferral. Index = the node's position in its parent.
+      int index = 0;
       for (size_t i = 0; i < parent->children.size(); i++) {
         if (parent->children[i] == node) {
           index = static_cast<int>(i);
           break;
         }
       }
+      deferredMutations.push_back(ShadowViewMutation::CreateMutation(node->current));
+      deferredMutations.push_back(ShadowViewMutation::InsertMutation(parentTag, node->current, index));
     } else {
-      index = rootChildCount++;
+      filteredMutations.push_back(ShadowViewMutation::CreateMutation(node->current));
+      filteredMutations.push_back(ShadowViewMutation::InsertMutation(surfaceId, node->current, rootChildCount++));
     }
-    filteredMutations.push_back(ShadowViewMutation::CreateMutation(node->current));
-    filteredMutations.push_back(ShadowViewMutation::InsertMutation(parentTag, node->current, index));
   }
   filteredMutations.insert(filteredMutations.end(), currentMutations.begin(), currentMutations.end());
+  filteredMutations.insert(filteredMutations.end(), deferredMutations.begin(), deferredMutations.end());
   containersToInsert_.clear();
 }
 

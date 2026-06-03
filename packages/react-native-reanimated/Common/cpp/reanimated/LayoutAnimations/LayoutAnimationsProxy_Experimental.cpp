@@ -60,12 +60,15 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
       forceScreenSnapshot_(afterTopScreen->current.tag);
 #endif
     }
-    // We run the morph even when an end of the transition is a modal presented in its own
-    // UIViewController. SET mounts its container views at the surface root, which renders BEHIND such
-    // a modal; handleSharedTransitionsStart compensates by inserting each container into the modal
-    // (after) screen's light node (see containerParentOverride_) so it mounts there and morphs above
-    // the modal. Non-modal transitions are unaffected (containerParentOverride_ stays null).
-    const bool hasScreenChanged = beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen;
+    // Skip the morph when either end is a modal presented in its own UIViewController (RNScreen
+    // modal/fullScreenModal/pageSheet/formSheet/transparentModal). SET mounts its container at the
+    // surface root, which renders behind such a modal and never mounts there; inserting it into the
+    // modal (after) screen instead aborts the mount because that screen mounts in a LATER transaction.
+    // Letting the modal present/dismiss without the SET morph is the clean, crash-free fallback.
+    // Non-modal transitions are unaffected.
+    const bool involvesModal = isModalScreen(beforeTopScreen) || isModalScreen(afterTopScreen);
+    const bool hasScreenChanged =
+        beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen && !involvesModal;
 
     if (hasScreenChanged) {
       // We want to add mutations to hide the views that will start their transitions.
@@ -78,8 +81,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
       std::swap(filteredMutations, mergedMutations);
     }
 
-    handleSharedTransitionsStart(
-        afterTopScreen, beforeTopScreen, filteredMutations, mutations, propsParserContext, surfaceId);
+    if (!involvesModal) {
+      handleSharedTransitionsStart(
+          afterTopScreen, beforeTopScreen, filteredMutations, mutations, propsParserContext, surfaceId);
+    }
   }
 
   for (auto &node : entering_) {
