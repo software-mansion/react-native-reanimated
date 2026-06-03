@@ -33,6 +33,15 @@ struct StartAnimationsRecursivelyConfig {
   bool isScreenPop;
 };
 
+// A dest shared view whose opacity-hide is deferred until its modal screen mounts (see
+// emitPendingModalContainers). `original`/`hidden` are the visible / opacity-0 snapshots for the hide
+// UpdateMutation; `parentTag` is its parent in the modal screen.
+struct PendingModalHide {
+  ShadowView original;
+  ShadowView hidden;
+  Tag parentTag;
+};
+
 struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
                                             public std::enable_shared_from_this<LayoutAnimationsProxy_Experimental> {
   mutable std::recursive_mutex mutex;
@@ -76,9 +85,18 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::vector<std::shared_ptr<LightNode>> containersToInsert_;
+  // iOS over-modal containers whose Create+Insert is DEFERRED until their modal screen's native view
+  // exists (it mounts/recycles a transaction or two after the transition starts; inserting earlier
+  // aborts the mount). Pair = {container light node, modal screen tag}. Drained by
+  // emitPendingModalContainers each pullTransaction once isViewMounted_(modalScreenTag) is true.
+  mutable std::vector<std::pair<std::shared_ptr<LightNode>, Tag>> pendingModalContainers_;
+  // Dest-view opacity-hides deferred alongside the over-modal containers (their modal screen isn't
+  // mounted at hide time). Drained by emitPendingModalContainers once each dest view is mounted.
+  mutable std::vector<PendingModalHide> pendingModalHides_;
   mutable std::unordered_map<Tag, react::Transform> transformForNode_;
 
   mutable ForceScreenSnapshotFunction forceScreenSnapshot_;
+  mutable IsViewMountedFunction isViewMounted_;
 
   LayoutAnimationsProxy_Experimental(
       const std::shared_ptr<LayoutAnimationsManager> &layoutAnimationsManager,
@@ -148,6 +166,9 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   void setForceScreenSnapshotFunction(ForceScreenSnapshotFunction forceScreenSnapshot) {
     forceScreenSnapshot_ = std::move(forceScreenSnapshot);
   }
+  void setIsViewMountedFunction(IsViewMountedFunction isViewMounted) {
+    isViewMounted_ = std::move(isViewMounted);
+  }
 #endif
 
   void hideTransitioningViews(
@@ -177,6 +198,9 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
       const PropsParserContext &propsParserContext) const;
 
   void insertContainers(ShadowViewMutationList &filteredMutations, int &rootChildCount, SurfaceId surfaceId) const;
+
+  // Emit Create+Insert for any deferred over-modal container whose modal screen is now natively mounted.
+  void emitPendingModalContainers(ShadowViewMutationList &filteredMutations) const;
 
   std::vector<react::Point> getAbsolutePositionsForRootPathView(const std::shared_ptr<LightNode> &node) const;
 

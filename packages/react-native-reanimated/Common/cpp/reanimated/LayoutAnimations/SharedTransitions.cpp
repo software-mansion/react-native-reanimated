@@ -305,9 +305,16 @@ Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
     auto node = std::make_shared<LightNode>();
     node->current = std::move(container);
     node->parent = parentNode;
-    parentNode->children.push_back(node);
-    containersToInsert_.push_back(node);
-    lightNodes_[containerTag] = std::move(node);
+    lightNodes_[containerTag] = node;
+    if (containerParentOverride_) {
+      // Over-modal: defer the Create+Insert until the modal screen's native view exists (it mounts a
+      // transaction or two after this one). emitPendingModalContainers adds it to parentNode->children
+      // and emits the mutations once isViewMounted_(modalScreenTag) is true.
+      pendingModalContainers_.push_back({node, parentNode->current.tag});
+    } else {
+      parentNode->children.push_back(node);
+      containersToInsert_.push_back(node);
+    }
 
     sharedTransitionManager_->containerTags_[sharedTag] = containerTag;
   }
@@ -344,6 +351,16 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
     for (auto &[sharedTag, transition] : transitions_) {
       auto &[before, after] = transition.snapshot;
       const auto &transform = transition.transform;
+#ifdef __APPLE__
+      if (containerParentOverride_) {
+        // Defer the dest view's opacity-hide - it lives on the not-yet-mounted modal screen, so hiding it
+        // now aborts the mount. Capture the RAW snapshot (pre-overrideTransform, like the normal hide
+        // path); emitPendingModalContainers emits it once the dest is mounted so it doesn't show
+        // statically beside the morphing container.
+        pendingModalHides_.push_back(
+            {after, cloneViewWithoutOpacity(after, propsParserContext), transition.parentTag[AFTER]});
+      }
+#endif
       overrideTransform(before, transform[BEFORE], propsParserContext);
       overrideTransform(after, transform[AFTER], propsParserContext);
       auto containerTag = getOrCreateContainer(before, sharedTag, filteredMutations, surfaceId);
@@ -497,6 +514,59 @@ void LayoutAnimationsProxy_Experimental::insertContainers(
   filteredMutations.insert(filteredMutations.end(), currentMutations.begin(), currentMutations.end());
   filteredMutations.insert(filteredMutations.end(), deferredMutations.begin(), deferredMutations.end());
   containersToInsert_.clear();
+}
+
+void LayoutAnimationsProxy_Experimental::emitPendingModalContainers(ShadowViewMutationList &filteredMutations) const {
+#ifdef __APPLE__
+  if (isViewMounted_ && !pendingModalHides_.empty()) {
+    // Emit deferred over-modal dest-hides whose view has now mounted (opacity-0, so only the morphing
+    // container shows). The normal restore path un-hides them when the container is torn down.
+    std::vector<PendingModalHide> stillHides;
+    for (auto &h : pendingModalHides_) {
+      if (isViewMounted_(h.original.tag)) {
+        filteredMutations.push_back(ShadowViewMutation::UpdateMutation(h.original, h.hidden, h.parentTag));
+      } else {
+        stillHides.push_back(h);
+      }
+    }
+    pendingModalHides_ = std::move(stillHides);
+  }
+  if (pendingModalContainers_.empty() || !isViewMounted_) {
+    return;
+  }
+  std::vector<std::pair<std::shared_ptr<LightNode>, Tag>> stillPending;
+  for (auto &[node, parentTag] : pendingModalContainers_) {
+    if (!isViewMounted_(parentTag)) {
+      // Modal screen not natively registered yet - keep waiting (checked again next transaction).
+      stillPending.push_back({node, parentTag});
+      continue;
+    }
+    auto parentIt = lightNodes_.find(parentTag);
+    if (parentIt == lightNodes_.end() || !parentIt->second) {
+      // Modal screen left the light tree before we could mount (dismissed mid-present) - drop it.
+      continue;
+    }
+    auto &parentNode = parentIt->second;
+    auto modalAbs = getAbsolutePositionsForRootPathView(parentNode);
+    // Rebase the container's surface-absolute frame into the modal screen's coordinate space (a
+    // pageSheet is inset and modalAbs reflects that inset), so it renders at the right place inside the
+    // screen instead of being pushed off the bottom. addOngoingAnimations applies the same rebase per
+    // frame (the worklet drives surface-absolute frames).
+    if (!modalAbs.empty()) {
+      node->current.layoutMetrics.frame.origin.x -= modalAbs[0].x;
+      node->current.layoutMetrics.frame.origin.y -= modalAbs[0].y;
+    }
+    // Append as the LAST child of the modal screen = top z-order, above the (opacity-hidden) real
+    // shared views, so the worklet-driven morph is visible over the modal content.
+    int index = static_cast<int>(parentNode->children.size());
+    parentNode->children.push_back(node);
+    filteredMutations.push_back(ShadowViewMutation::CreateMutation(node->current));
+    filteredMutations.push_back(ShadowViewMutation::InsertMutation(parentTag, node->current, index));
+  }
+  pendingModalContainers_ = std::move(stillPending);
+#else
+  (void)filteredMutations;
+#endif
 }
 
 void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(

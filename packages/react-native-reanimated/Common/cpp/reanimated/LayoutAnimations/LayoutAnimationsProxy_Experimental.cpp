@@ -60,15 +60,12 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
       forceScreenSnapshot_(afterTopScreen->current.tag);
 #endif
     }
-    // Skip the morph when either end is a modal presented in its own UIViewController (RNScreen
-    // modal/fullScreenModal/pageSheet/formSheet/transparentModal). SET mounts its container at the
-    // surface root, which renders behind such a modal and never mounts there; inserting it into the
-    // modal (after) screen instead aborts the mount because that screen mounts in a LATER transaction.
-    // Letting the modal present/dismiss without the SET morph is the clean, crash-free fallback.
-    // Non-modal transitions are unaffected.
-    const bool involvesModal = isModalScreen(beforeTopScreen) || isModalScreen(afterTopScreen);
-    const bool hasScreenChanged =
-        beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen && !involvesModal;
+    // For an opaque modal, the SET container is mounted INTO the modal (after) screen so it renders
+    // above the modal content (a surface-root container would be hidden behind the modal). Because the
+    // modal screen mounts a transaction or two later, getOrCreateContainer DEFERS the container's
+    // Create+Insert until its view exists (pendingModalContainers_ / emitPendingModalContainers);
+    // handleSharedTransitionsStart sets containerParentOverride_ = afterTopScreen for these.
+    const bool hasScreenChanged = beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen;
 
     if (hasScreenChanged) {
       // We want to add mutations to hide the views that will start their transitions.
@@ -77,14 +74,18 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
       std::vector<ShadowViewMutation> mergedMutations;
       hideTransitioningViews(BEFORE, mergedMutations, propsParserContext);
       mergedMutations.insert(mergedMutations.end(), filteredMutations.begin(), filteredMutations.end());
-      hideTransitioningViews(AFTER, mergedMutations, propsParserContext);
+      // For an opaque modal the AFTER (dest) views live on the modal screen, which is NOT natively
+      // mounted yet at this point - emitting their opacity-hide aborts the mount
+      // (componentViewDescriptorWithTag on the missing view). Skip it for modals; the deferred container
+      // renders the morph on top. TODO: defer the dest-hide too so they don't flash their final state.
+      if (!isModalScreen(afterTopScreen)) {
+        hideTransitioningViews(AFTER, mergedMutations, propsParserContext);
+      }
       std::swap(filteredMutations, mergedMutations);
     }
 
-    if (!involvesModal) {
-      handleSharedTransitionsStart(
-          afterTopScreen, beforeTopScreen, filteredMutations, mutations, propsParserContext, surfaceId);
-    }
+    handleSharedTransitionsStart(
+        afterTopScreen, beforeTopScreen, filteredMutations, mutations, propsParserContext, surfaceId);
   }
 
   for (auto &node : entering_) {
@@ -107,6 +108,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   transitions_.clear();
 
   insertContainers(filteredMutations, rootChildCount, surfaceId);
+
+  // Drain any deferred over-modal containers whose modal screen has since mounted natively. Runs every
+  // transaction (incl. during an active transition) so the container appears once its parent exists.
+  emitPendingModalContainers(filteredMutations);
 
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
@@ -495,6 +500,15 @@ void LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceI
       continue;
     }
 
+#ifdef __APPLE__
+    // A deferred over-modal container lives in lightNodes_ but is NOT yet natively mounted (its Insert
+    // is held by emitPendingModalContainers until the modal screen exists). Driving it with an
+    // UpdateMutation now aborts the mount (componentViewDescriptorWithTag); skip until it is mounted.
+    if (isViewMounted_ && !isViewMounted_(tag)) {
+      continue;
+    }
+#endif
+
     auto &layoutAnimation = layoutAnimationIt->second;
     layoutAnimation.isViewAlreadyMounted = true;
     auto newView = layoutAnimation.finalView;
@@ -502,6 +516,22 @@ void LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceI
       newView.props = updateValues.newProps;
     }
     updateLayoutMetrics(newView.layoutMetrics, updateValues.frame);
+
+#ifdef __APPLE__
+    // Over-modal SET container: its animation frame is surface-absolute, but the container lives inside
+    // the (inset) modal screen, so rebase into that screen's coordinate space each frame - matching the
+    // mount-time rebase in emitPendingModalContainers. Only SET containers parented to a modal screen
+    // (parent != surface root); normal animated views and surface-root containers are untouched.
+    if (ownedContainers_.contains(tag)) {
+      if (auto parent = nodeIt->second->parent.lock(); parent && parent->current.tag != surfaceId) {
+        auto parentAbs = getAbsolutePositionsForRootPathView(parent);
+        if (!parentAbs.empty()) {
+          newView.layoutMetrics.frame.origin.x -= parentAbs[0].x;
+          newView.layoutMetrics.frame.origin.y -= parentAbs[0].y;
+        }
+      }
+    }
+#endif
 
     mutations.push_back(
         ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));

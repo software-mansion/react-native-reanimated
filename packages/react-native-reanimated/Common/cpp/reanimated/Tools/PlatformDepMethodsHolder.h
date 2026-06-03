@@ -48,6 +48,9 @@ using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 
 using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
+// True if a native component view is currently registered for `tag`. Used by SET to defer mounting a
+// shared-transition container into a modal screen until that screen's view actually exists.
+using IsViewMountedFunction = std::function<bool(Tag tag)>;
 
 using PlatformAttachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector, std::function<void(bool)>)>;
 using PlatformDetachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector)>;
@@ -59,6 +62,7 @@ struct PlatformDepMethodsHolder {
 #endif // ANDROID
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshotFunction;
+  IsViewMountedFunction isViewMountedFunction;
 #endif
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
   GetAnimationTimestampFunction getAnimationTimestamp;
