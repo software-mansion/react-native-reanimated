@@ -23,6 +23,12 @@ type CSSConfigProps<TStyle extends object = UnknownRecord> = Partial<
   CSSAnimationProperties<TStyle> & CSSTransitionProperties<TStyle>
 >;
 
+// The CSS config keys (animation/transition settings) are ours, so we
+// `Omit` them from `TStyle` before pseudo-widening and merge them back
+// via `CSSConfigProps`. Widening them inline would collapse to `never`
+// if a base style augmentation (e.g. Expo's `expo-env.d.ts`) redeclares
+// those keys with conflicting types. See
+// https://github.com/software-mansion/react-native-reanimated/issues/9328
 export type CSSStyle<TStyle = PlainStyle> = TStyle extends object
   ? StyleWithPseudoValues<Omit<TStyle, keyof CSSConfigProps>> &
       CSSConfigProps<TStyle>
