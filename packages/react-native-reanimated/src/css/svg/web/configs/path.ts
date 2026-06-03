@@ -7,9 +7,6 @@ import type { ValueProcessor } from '../../../../common/web';
 import type { SvgStyleBuilderConfig } from './common';
 import { SVG_COMMON_WEB_PROPERTIES_CONFIG } from './common';
 
-// CSS `d` property requires the path string wrapped in `path("...")`.
-// SVG attribute `d` accepts the raw string directly; in keyframes we must
-// emit the CSS form for the browser to interpolate.
 const processPathD: ValueProcessor<string> = (value) => `path("${value}")`;
 
 export const SVG_PATH_WEB_PROPERTIES_CONFIG: SvgStyleBuilderConfig<PathProps> =

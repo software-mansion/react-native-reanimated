@@ -7,8 +7,6 @@ import { pointsToPathD } from '../processors';
 import type { SvgStyleBuilderConfig } from './common';
 import { SVG_COMMON_WEB_PROPERTIES_CONFIG } from './common';
 
-// RNSVG renders Polygon as a <path> on web, so animate the geometry via the
-// CSS-animatable `d`: alias `points` to `d` and build a closed path from it.
 export const SVG_POLYGON_WEB_PROPERTIES_CONFIG: SvgStyleBuilderConfig<PolygonProps> =
   {
     ...SVG_COMMON_WEB_PROPERTIES_CONFIG,
