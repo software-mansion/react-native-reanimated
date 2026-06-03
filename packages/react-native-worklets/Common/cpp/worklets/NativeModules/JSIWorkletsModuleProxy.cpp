@@ -407,7 +407,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         auto arrayBuffer = at<1>(args).getObject(rt).getArrayBuffer(rt);
         auto byteOffset = static_cast<size_t>(at<2>(args).asNumber());
         auto length = static_cast<size_t>(at<3>(args).asNumber());
-        return makeSerializableArrayBufferView(rt, arrayBuffer, typeName, byteOffset, length);
+        return makeSerializableArrayBuffer(rt, arrayBuffer, typeName, byteOffset, length);
       });
 
   jsi_utils::addMethod<2>(
