@@ -45,7 +45,6 @@ export default class AnimatedComponent<
   _viewInfo?: ViewInfo;
   _cssStyle: CSSStyle = {}; // RN style object with Reanimated CSS properties
   _componentRef: AnimatedComponentRef | HTMLElement | null = null;
-  _hasAnimatedRef = false;
   // Used only on web
   _componentDOMRef: HTMLElement | null = null;
   _willUnmount: boolean = false;
@@ -139,7 +138,6 @@ export default class AnimatedComponent<
     // Component can specify ref which should be animated when animated version of the component is created.
     // Otherwise, we animate the component itself.
     if (componentRef && componentRef.getAnimatableRef) {
-      this._hasAnimatedRef = true;
       return componentRef.getAnimatableRef();
     }
     // Case for SVG components on Web
