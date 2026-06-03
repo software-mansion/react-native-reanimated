@@ -15,9 +15,13 @@ import type { PropsBuilderConfig, RuleBuilder } from './types';
 type WebPropsBuilderConfig<P extends UnknownRecord = UnknownRecord> =
   PropsBuilderConfig<P>;
 
+export type WebPropsBuilder<P extends UnknownRecord = UnknownRecord> = {
+  build(props: Partial<P>): string | null;
+};
+
 export function createWebPropsBuilder<TProps extends UnknownRecord>(
   config: WebPropsBuilderConfig<TProps>
-) {
+): WebPropsBuilder<TProps> {
   const usedRuleBuilders = new Set<RuleBuilder<TProps>>();
 
   const propsBuilder = createPropsBuilder({
