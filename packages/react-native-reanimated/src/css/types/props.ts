@@ -1,9 +1,9 @@
 'use strict';
 import type { StyleProp } from 'react-native';
 
-import type { PlainStyle } from '../../common';
+import type { PlainStyle, UnknownRecord } from '../../common';
 import type { CSSAnimationProperties } from './animation';
-import type { PseudoValue } from './pseudo';
+import type { StyleWithPseudoValues } from './pseudo';
 import type { CSSTransitionProperties } from './transition';
 
 /*
@@ -19,10 +19,14 @@ type PickStyleProps<P> = Pick<
   }[keyof P]
 >;
 
-export type CSSStyle<S extends object = PlainStyle> = {
-  [K in keyof S]: S[K] | PseudoValue<S[K]>;
-} & Partial<CSSAnimationProperties<S>> &
-  Partial<CSSTransitionProperties<S>>;
+type CSSConfigProps<TStyle extends object = UnknownRecord> = Partial<
+  CSSAnimationProperties<TStyle> & CSSTransitionProperties<TStyle>
+>;
+
+export type CSSStyle<TStyle = PlainStyle> = TStyle extends object
+  ? StyleWithPseudoValues<Omit<TStyle, keyof CSSConfigProps>> &
+      CSSConfigProps<TStyle>
+  : never;
 
 type StylePropsWithCSS<P extends object> = {
   [K in keyof PickStyleProps<P>]: P[K] extends StyleProp<infer U>
