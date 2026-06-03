@@ -13,6 +13,7 @@ import type {
 } from 'react-native-svg';
 
 import { processColor, type PropsBuilderConfig } from '../../../../common/web';
+import { processStrokeDashArray, processVectorEffect } from '../processors';
 
 const colorAttributes = { process: processColor };
 
@@ -30,11 +31,12 @@ const strokeProps: PropsBuilderConfig<StrokeProps> = {
   stroke: colorAttributes,
   strokeWidth: 'px',
   strokeOpacity: true,
-  strokeDasharray: 'px',
+  strokeDasharray: { process: processStrokeDashArray },
   strokeDashoffset: 'px',
   strokeLinecap: true,
   strokeLinejoin: true,
   strokeMiterlimit: true,
+  vectorEffect: { process: processVectorEffect },
 };
 
 const transformProps: PropsBuilderConfig<TransformProps> = {

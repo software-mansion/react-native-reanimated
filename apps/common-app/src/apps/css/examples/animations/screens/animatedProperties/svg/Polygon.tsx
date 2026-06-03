@@ -123,6 +123,7 @@ export default function PolygonExample() {
                   title: 'Pentagon to triangle',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Different Number of Points',
             },
           ],

@@ -9,8 +9,8 @@ import type {
 } from '../types';
 import { parseTimingFunction } from './utils';
 
-export function processKeyframeDefinitions(
-  definitions: CSSAnimationKeyframes,
+export function processKeyframeDefinitions<TStyle extends object>(
+  definitions: CSSAnimationKeyframes<TStyle>,
   componentName = ''
 ) {
   const propsBuilder = getWebSvgPropsBuilder(componentName) ?? webPropsBuilder;

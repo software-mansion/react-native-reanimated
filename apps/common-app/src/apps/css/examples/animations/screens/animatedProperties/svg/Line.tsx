@@ -73,6 +73,7 @@ export default function LineExample() {
                   title: 'Start X (x1) - Mixed',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Start X Position (x1)',
             },
             {
@@ -112,6 +113,7 @@ export default function LineExample() {
                   title: 'Start Y (y1) - Mixed',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Start Y Position (y1)',
             },
           ],
@@ -156,6 +158,7 @@ export default function LineExample() {
                   title: 'End X (x2) - Mixed',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'End X Position (x2)',
             },
             {
@@ -195,6 +198,7 @@ export default function LineExample() {
                   title: 'End Y (y2) - Mixed',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'End Y Position (y2)',
             },
           ],
