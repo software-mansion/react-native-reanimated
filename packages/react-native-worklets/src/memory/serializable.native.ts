@@ -600,11 +600,15 @@ function cloneArrayBufferView<TValue extends ArrayBufferView>(
   if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
     throw new Error(`[Worklets] Invalid array view name \`${typeName}\`.`);
   }
+  const length =
+    typeName === 'DataView'
+      ? value.byteLength
+      : (value as unknown as { length: number }).length;
   const clone = WorkletsModule.createSerializableArrayBufferView<TValue>(
     typeName,
     value.buffer as ArrayBuffer,
     value.byteOffset,
-    value.byteLength
+    length
   );
   serializableMappingCache.set(value, clone);
   return clone;
@@ -754,6 +758,11 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
           value.flags
         ) as FlatSerializableRef<TValue>;
       }
+      if (value instanceof ArrayBuffer) {
+        return globalThis.__workletsModuleProxy.createSerializableArrayBuffer(
+          value
+        ) as FlatSerializableRef<TValue>;
+      }
       if (ArrayBuffer.isView(value)) {
         const typeName = value.constructor.name;
         if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
@@ -761,11 +770,15 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
             `[Worklets] Invalid array view name \`${typeName}\`.`
           );
         }
+        const length =
+          typeName === 'DataView'
+            ? value.byteLength
+            : (value as unknown as { length: number }).length;
         return globalThis.__workletsModuleProxy.createSerializableArrayBufferView(
           typeName,
           value.buffer as ArrayBuffer,
           value.byteOffset,
-          value.byteLength
+          length
         ) as FlatSerializableRef<TValue>;
       }
       if (value instanceof Map) {

@@ -96,7 +96,7 @@ export interface WorkletsModuleProxy {
     typeName: string,
     buffer: ArrayBuffer,
     byteOffset: number,
-    byteLength: number
+    length: number
   ): SerializableRef<TValue>;
 
   createSerializableInitializer(obj: object): SerializableRef<object>;

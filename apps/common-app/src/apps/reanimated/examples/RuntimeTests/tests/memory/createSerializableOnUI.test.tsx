@@ -317,6 +317,25 @@ describe('Test createSerializableOnUI', () => {
     expect(typedArrayValue[1]).toBe(42);
   });
 
+  test('createSerializableOnUITypedArraySubrange', () => {
+    const typedArrayValue = runOnUISync(() => {
+      'worklet';
+      const buf = new ArrayBuffer(16);
+      const full = new Uint16Array(buf);
+      for (let i = 0; i < full.length; i++) {
+        full[i] = i + 1;
+      }
+      return new Uint16Array(buf, 4, 2);
+    });
+
+    expect(typedArrayValue instanceof Uint16Array).toBe(true);
+    expect(typedArrayValue.length).toBe(2);
+    expect(typedArrayValue.byteOffset).toBe(4);
+    expect(typedArrayValue.buffer.byteLength).toBe(16);
+    expect(typedArrayValue[0]).toBe(3);
+    expect(typedArrayValue[1]).toBe(4);
+  });
+
   test('createSerializableOnUIDataView', () => {
     const dataViewValue = runOnUISync(() => {
       'worklet';
@@ -504,7 +523,6 @@ describe('Test createSerializableOnUI', () => {
   // });
 
   test('createSerializableOnUIInaccessibleObject', async () => {
-    // Arrange
     const clazz = runOnUISync(() => {
       'worklet';
       class Clazz {
@@ -514,7 +532,6 @@ describe('Test createSerializableOnUI', () => {
       return new Clazz();
     });
 
-    // Act & Assert
     await expect(() => {
       clazz.method();
     }).toThrow();

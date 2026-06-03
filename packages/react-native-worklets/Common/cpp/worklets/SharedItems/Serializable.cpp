@@ -164,11 +164,8 @@ jsi::Value SerializableArrayBuffer::toJSValue(jsi::Runtime &rt) {
     return arrayBuffer;
   }
 
-  auto constructor = rt.global().getProperty(rt, jsi::String::createFromUtf8(rt, typeName_));
-  if (!constructor.isObject() || !constructor.asObject(rt).isFunction(rt)) {
-    throw jsi::JSError(rt, "[Worklets] Constructor for `" + typeName_ + "` not found.");
-  }
-  return constructor.asObject(rt).asFunction(rt).callAsConstructor(rt, std::move(arrayBuffer));
+  auto constructor = rt.global().getPropertyAsFunction(rt, typeName_.c_str());
+  return constructor.callAsConstructor(rt, arrayBuffer, static_cast<double>(byteOffset_), static_cast<double>(length_));
 }
 
 SerializableObject::SerializableObject(jsi::Runtime &rt, const jsi::Object &object)

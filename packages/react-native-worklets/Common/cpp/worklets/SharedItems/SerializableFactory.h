@@ -38,15 +38,14 @@ jsi::Value makeSerializableHostObject(jsi::Runtime &rt, const std::shared_ptr<js
 
 jsi::Value makeSerializableArray(jsi::Runtime &rt, const jsi::Array &array, const jsi::Value &shouldRetainRemote);
 
-jsi::Value
-makeSerializableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer, const std::string &typeName = "");
+jsi::Value makeSerializableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer);
 
 jsi::Value makeSerializableArrayBufferView(
     jsi::Runtime &rt,
     const jsi::ArrayBuffer &arrayBuffer,
     const std::string &typeName,
     size_t byteOffset,
-    size_t byteLength);
+    size_t length);
 
 jsi::Value makeSerializableMap(jsi::Runtime &rt, const jsi::Array &keys, const jsi::Array &values);
 

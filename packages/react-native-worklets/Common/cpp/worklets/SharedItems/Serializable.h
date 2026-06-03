@@ -247,9 +247,8 @@ class SerializableHostFunction : public Serializable {
 
 class SerializableArrayBuffer : public Serializable {
  public:
-  SerializableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer, const std::string &typeName = "")
+  SerializableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer)
       : Serializable(ValueType::ArrayBufferType),
-        typeName_(typeName),
         data_(arrayBuffer.data(rt), arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
 
   SerializableArrayBuffer(
@@ -257,15 +256,19 @@ class SerializableArrayBuffer : public Serializable {
       const jsi::ArrayBuffer &arrayBuffer,
       const std::string &typeName,
       size_t byteOffset,
-      size_t byteLength)
+      size_t length)
       : Serializable(ValueType::ArrayBufferType),
         typeName_(typeName),
-        data_(arrayBuffer.data(rt) + byteOffset, arrayBuffer.data(rt) + byteOffset + byteLength) {}
+        byteOffset_(byteOffset),
+        length_(length),
+        data_(arrayBuffer.data(rt), arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
   const std::string typeName_;
+  const size_t byteOffset_{0};
+  const size_t length_{0};
   const std::vector<uint8_t> data_;
 };
 
