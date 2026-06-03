@@ -807,7 +807,7 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
           }
         }
       }
-      if (value instanceof Promise) {
+      if (__DEV__ && value instanceof Promise) {
         throw new Error(
           '[Worklets] Promises cannot be converted to serializable.'
         );
