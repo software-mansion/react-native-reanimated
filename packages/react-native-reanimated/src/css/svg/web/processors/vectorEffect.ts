@@ -1,7 +1,5 @@
 'use strict';
 
-// CSS `vector-effect` uses kebab-case keywords; map the react-native-svg prop
-// values onto them (the native side maps the same values onto integer enums).
 const VECTOR_EFFECT_CSS_VALUES: Record<string, string> = {
   none: 'none',
   default: 'none',
