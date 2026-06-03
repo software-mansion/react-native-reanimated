@@ -69,14 +69,15 @@ bool LayoutAnimationsProxy_Experimental::isModalScreen(const std::shared_ptr<Lig
       continue;
     }
     const auto presentation = std::static_pointer_cast<const RNSScreenProps>(current->current.props)->stackPresentation;
-    // The VC-presented variants are shown in a separate UIViewController that sits above the surface
-    // root, so the shared-transition containers (which we mount at the surface root) render BEHIND
-    // them - the shared views morph for a frame, get covered as the modal slides up, then the real
-    // destination snaps in. Until SET can host its containers above the modal's presentation layer we
-    // skip the morph for these so the modal just presents/dismisses cleanly. The "contained" variants
-    // stay inside the surface hierarchy, so they are left to SET as usual.
+    // The OPAQUE VC-presented variants are shown in a separate UIViewController whose view fully
+    // covers (or dims-over, for the sheets) the surface root, so a shared-transition container mounted
+    // at the surface root renders BEHIND them - the shared views morph for a frame, get covered as the
+    // modal slides up, then the real destination snaps in. Until SET can host its containers above the
+    // modal's presentation layer we skip the morph for these so the modal just presents/dismisses
+    // cleanly. TransparentModal is deliberately EXCLUDED: its presentation layer is see-through, so a
+    // surface-root container stays visible through it and the morph renders correctly at the root. The
+    // "contained" variants also stay inside the surface hierarchy, so both are left to SET as usual.
     if (presentation == RNSScreenStackPresentation::Modal ||
-        presentation == RNSScreenStackPresentation::TransparentModal ||
         presentation == RNSScreenStackPresentation::FullScreenModal ||
         presentation == RNSScreenStackPresentation::FormSheet ||
         presentation == RNSScreenStackPresentation::PageSheet) {
