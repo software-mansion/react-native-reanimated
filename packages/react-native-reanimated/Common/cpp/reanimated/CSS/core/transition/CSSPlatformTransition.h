@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace reanimated::css {
 
@@ -23,6 +24,12 @@ class CSSPlatformTransition {
   CSSPlatformTransition(const CSSPlatformTransition &) = delete;
 
   void run(jsi::Runtime &rt, const CSSPlatformTransitionConfig &config, double timestamp);
+  /** TODO: unify folly::dynamic and jsi::value versions */
+  void run(const PropertyValueDynamicDiffsMap &propertiesDiffs, double timestamp);
+
+  void updateSettings(
+      const PropertiesSettingsMap &changedPropertiesSettings,
+      const std::vector<std::string> &removedProperties);
 
   void cancel(const std::string &propertyName);
   void cancelAll();
@@ -35,10 +42,17 @@ class CSSPlatformTransition {
   };
 
   void runEntry(jsi::Runtime &rt, const CSSPlatformTransitionRawEntry &entry, double timestamp);
+  void applyEntry(
+      const std::string &propertyName,
+      PlatformValue fromValue,
+      PlatformValue toValue,
+      const CSSTransitionPropertySettings &settings,
+      double timestamp);
 
   const Tag viewTag_;
   const std::shared_ptr<CSSPlatformTransitionProxy> proxy_;
   std::unordered_map<std::string, ActiveProperty> activeProperties_;
+  PropertiesSettingsMap settings_;
 };
 
 } // namespace reanimated::css

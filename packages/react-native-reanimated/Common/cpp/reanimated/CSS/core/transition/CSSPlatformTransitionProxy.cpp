@@ -60,8 +60,9 @@ CSSPlatformTransitionProxy::ProcessedConfig CSSPlatformTransitionProxy::processC
       if (valueIt != config.changedProperties.end()) {
         auto valueNode = config.changedProperties.extract(valueIt);
         result.platform.changedProperties.push_back(
-            CSSPlatformTransitionRawEntry{propertyName, std::move(valueNode.mapped()), settingsNode.mapped()});
+            CSSPlatformTransitionRawEntry{propertyName, std::move(valueNode.mapped()), settings});
       }
+      result.platform.changedPropertiesSettings.insert(std::move(settingsNode));
     } else {
       // platform -> loop migration: cancel on platform.
       if (result.routing.platform.erase(propertyName) > 0) {
