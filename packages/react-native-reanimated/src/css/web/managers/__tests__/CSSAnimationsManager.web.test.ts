@@ -5,12 +5,6 @@ import { processKeyframeDefinitions } from '../../animationParser';
 import { insertCSSAnimation, removeCSSAnimation } from '../../domUtils';
 import CSSAnimationsManager from '../CSSAnimationsManager';
 
-// The manager's job is orchestration: hand the processed keyframes to the
-// domUtils stylesheet helpers and write the animation longhands onto the
-// element. We mock that apply boundary (mirroring how the native manager test
-// mocks the `proxy` apply functions) and assert on the calls. The stylesheet
-// mechanics are covered by domUtils.web.test.ts and the keyframe string format
-// by animationParser.test.ts.
 jest.mock('../../domUtils', () => ({
   configureWebCSSAnimations: jest.fn(),
   insertCSSAnimation: jest.fn(),
