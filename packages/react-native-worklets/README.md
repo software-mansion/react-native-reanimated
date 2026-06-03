@@ -1,8 +1,8 @@
 <img src="https://github.com/user-attachments/assets/41b37472-e55a-4c54-9064-31258e03870c" alt="React Native Worklets by Software Mansion" width="100%">
 
-[![Ad](https://swm-delivery.com/www/images/zone-gh-react-native-worklets-1?n=1)](https://swm-delivery.com/www/delivery/ck-slug.php?zoneid=zone-gh-react-native-worklets-1&n=1)
-[![Ad](https://swm-delivery.com/www/images/zone-gh-react-native-worklets-2?n=1)](https://swm-delivery.com/www/delivery/ck-slug.php?zoneid=zone-gh-react-native-worklets-2&n=1)
-[![Ad](https://swm-delivery.com/www/images/zone-gh-react-native-worklets-3?n=1)](https://swm-delivery.com/www/delivery/ck-slug.php?zoneid=zone-gh-react-native-worklets-3&n=1)
+[![Ad](https://swm-delivery.com/www/images/zone-gh-react-native-worklets-1?n=1)](https://swm-delivery.com/www/delivery/ck-slug.php?zoneid=zone-gh-react-native-worklets-1\&n=1)
+[![Ad](https://swm-delivery.com/www/images/zone-gh-react-native-worklets-2?n=1)](https://swm-delivery.com/www/delivery/ck-slug.php?zoneid=zone-gh-react-native-worklets-2\&n=1)
+[![Ad](https://swm-delivery.com/www/images/zone-gh-react-native-worklets-3?n=1)](https://swm-delivery.com/www/delivery/ck-slug.php?zoneid=zone-gh-react-native-worklets-3\&n=1)
 
 ### The React Native multithreading library
 
