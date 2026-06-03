@@ -99,6 +99,7 @@ export default function RadialGradientExample() {
                   title: 'The Stop Shuffle',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Changing colors',
             },
             {
@@ -129,6 +130,7 @@ export default function RadialGradientExample() {
                   title: 'Night and day',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Changing number of stops',
             },
             {
@@ -173,6 +175,7 @@ export default function RadialGradientExample() {
                   title: 'Opacity calculation',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Opacity',
             },
           ],
@@ -281,6 +284,7 @@ export default function RadialGradientExample() {
                   title: 'Focal point pos - mix',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Focal point',
             },
             {
@@ -360,6 +364,7 @@ export default function RadialGradientExample() {
                   title: 'Gradient center pos - mix',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Gradient position',
             },
             {
@@ -391,6 +396,7 @@ export default function RadialGradientExample() {
                   title: 'Movement combination',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Gradient and focal point position',
             },
           ],
@@ -459,6 +465,7 @@ export default function RadialGradientExample() {
                   title: 'Interpolating unit systems',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Coordinate Systems',
             },
           ],
@@ -537,6 +544,7 @@ export default function RadialGradientExample() {
                   title: 'Mixed stops',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Stops as props or as children',
             },
           ],
