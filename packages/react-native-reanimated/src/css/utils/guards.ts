@@ -1,11 +1,8 @@
 'use strict';
 import { isNumber, isPercentage } from '../../common';
 import {
-  ANIMATION_PROPS,
-  TRANSITION_PROPS,
   VALID_PARAMETRIZED_TIMING_FUNCTIONS,
   VALID_PREDEFINED_TIMING_FUNCTIONS,
-  VALID_STEPS_MODIFIERS,
 } from '../constants';
 import type { PredefinedTimingFunction, StepsModifier } from '../easing/types';
 import type {
@@ -18,36 +15,58 @@ import type {
   TimeUnit,
 } from '../types';
 
-const ANIMATION_PROPS_SET = new Set<string>(ANIMATION_PROPS);
-const TRANSITION_PROPS_SET = new Set<string>(TRANSITION_PROPS);
-// is-tree-shakable-suppress
-const VALID_STEPS_MODIFIERS_SET = new Set<string>(VALID_STEPS_MODIFIERS);
-
-const VALID_PREDEFINED_TIMING_FUNCTIONS_SET = new Set<string>(
-  VALID_PREDEFINED_TIMING_FUNCTIONS
-);
-
-const VALID_PARAMETRIZED_TIMING_FUNCTIONS_SET = new Set<string>(
-  VALID_PARAMETRIZED_TIMING_FUNCTIONS
-);
-
 export const isPredefinedTimingFunction = (
   value: string
 ): value is PredefinedTimingFunction =>
-  VALID_PREDEFINED_TIMING_FUNCTIONS_SET.has(value);
+  (VALID_PREDEFINED_TIMING_FUNCTIONS as readonly string[]).includes(value);
 
 export const smellsLikeTimingFunction = (value: string) =>
-  VALID_PREDEFINED_TIMING_FUNCTIONS_SET.has(value) ||
-  VALID_PARAMETRIZED_TIMING_FUNCTIONS_SET.has(value.split('(')[0].trim());
+  isPredefinedTimingFunction(value) ||
+  VALID_PARAMETRIZED_TIMING_FUNCTIONS.includes(value.split('(')[0].trim());
 
-export const isAnimationProp = (key: string): key is CSSAnimationProp =>
-  ANIMATION_PROPS_SET.has(key);
+export const isAnimationProp = (key: string): key is CSSAnimationProp => {
+  switch (key) {
+    case 'animationName':
+    case 'animationDuration':
+    case 'animationTimingFunction':
+    case 'animationDelay':
+    case 'animationIterationCount':
+    case 'animationDirection':
+    case 'animationFillMode':
+    case 'animationPlayState':
+      return true;
+    default:
+      return false;
+  }
+};
 
-export const isTransitionProp = (key: string): key is CSSTransitionProp =>
-  TRANSITION_PROPS_SET.has(key);
+export const isTransitionProp = (key: string): key is CSSTransitionProp => {
+  switch (key) {
+    case 'transitionProperty':
+    case 'transitionDuration':
+    case 'transitionTimingFunction':
+    case 'transitionDelay':
+    case 'transitionBehavior':
+    case 'transition':
+      return true;
+    default:
+      return false;
+  }
+};
 
-export const isStepsModifier = (value: string): value is StepsModifier =>
-  VALID_STEPS_MODIFIERS_SET.has(value);
+export const isStepsModifier = (value: string): value is StepsModifier => {
+  switch (value) {
+    case 'jump-start':
+    case 'start':
+    case 'jump-end':
+    case 'end':
+    case 'jump-none':
+    case 'jump-both':
+      return true;
+    default:
+      return false;
+  }
+};
 
 export const isCSSConfigProp = (key: string): key is CSSConfigProp =>
   isTransitionProp(key) || isAnimationProp(key);
