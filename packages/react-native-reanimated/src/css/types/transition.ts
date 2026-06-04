@@ -21,7 +21,7 @@ export type CSSTransitionShorthand = string;
  */
 export type CSSTransitionEvent = {
   // TODO: add a JS-side view ref (e.g. `target`) once the right ref type is
-  // decided (AnimatedComponentRef isn't it; the shadow node is useless in JS).
+  // decided.
   /** The transitioning property, camelCased (e.g. `opacity`). */
   propertyName: string;
   /**
@@ -34,7 +34,7 @@ export type CSSTransitionEvent = {
 export type CSSTransitionCallback = (event: CSSTransitionEvent) => void;
 
 export type CSSTransitionCallbacks = {
-  /** Fired when the transition is created, before any `transitionDelay`. */
+  /** Fired when the transition is triggered, before any `transitionDelay`. */
   onTransitionRun?: CSSTransitionCallback;
   /** Fired after `transitionDelay`, when the property starts animating. */
   onTransitionStart?: CSSTransitionCallback;

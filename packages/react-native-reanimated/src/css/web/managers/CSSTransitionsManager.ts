@@ -27,7 +27,7 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   private isAttached = false;
 
   private callbacks: CSSTransitionCallbacks = {};
-  private readonly attachedHandlers = new Map<
+  private readonly attachedStateListeners = new Map<
     CSSTransitionCallbackProp,
     EventListener
   >();
@@ -42,7 +42,7 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   ) {
     // Keep listeners tied to callback presence (not transition presence) so a
     // `transitioncancel` emitted while detaching still reaches the user.
-    this.syncListeners(callbacks ?? {});
+    this.syncStateListeners(callbacks ?? {});
 
     if (!transitionProperties) {
       this.detach();
@@ -54,7 +54,7 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   }
 
   unmountCleanup() {
-    this.syncListeners({});
+    this.syncStateListeners({});
   }
 
   private detach() {
@@ -73,26 +73,26 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     this.isAttached = false;
   }
 
-  private syncListeners(callbacks: CSSTransitionCallbacks) {
+  private syncStateListeners(callbacks: CSSTransitionCallbacks) {
     this.callbacks = callbacks;
 
     for (const prop of CALLBACK_PROPS) {
       const eventName = TRANSITION_EVENT_NAME[prop];
       const hasCallback = typeof callbacks[prop] === 'function';
-      const handler = this.attachedHandlers.get(prop);
+      const listener = this.attachedStateListeners.get(prop);
 
-      if (hasCallback && !handler) {
-        const newHandler = this.createHandler(prop);
-        this.attachedHandlers.set(prop, newHandler);
-        this.element.addEventListener(eventName, newHandler);
-      } else if (!hasCallback && handler) {
-        this.element.removeEventListener(eventName, handler);
-        this.attachedHandlers.delete(prop);
+      if (hasCallback && !listener) {
+        const newListener = this.createStateListener(prop);
+        this.attachedStateListeners.set(prop, newListener);
+        this.element.addEventListener(eventName, newListener);
+      } else if (!hasCallback && listener) {
+        this.element.removeEventListener(eventName, listener);
+        this.attachedStateListeners.delete(prop);
       }
     }
   }
 
-  private createHandler(prop: CSSTransitionCallbackProp): EventListener {
+  private createStateListener(prop: CSSTransitionCallbackProp): EventListener {
     return (event: Event) => {
       const transitionEvent = event as TransitionEvent;
       // Transition events bubble; only handle this element's own transitions.

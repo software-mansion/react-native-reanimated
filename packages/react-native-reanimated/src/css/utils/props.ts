@@ -30,8 +30,8 @@ export function filterCSSAndStyleProperties<S extends object>(
   ExistingCSSAnimationProperties | null,
   CSSTransitionProperties | null,
   PseudoStylesBySelector | null,
-  PlainStyle,
   CSSTransitionCallbacks | null,
+  PlainStyle,
 ] {
   const animationProperties: Partial<CSSAnimationProperties> = {};
   let transitionProperties: Partial<CSSTransitionProperties> = {};
@@ -133,8 +133,8 @@ export function filterCSSAndStyleProperties<S extends object>(
     finalAnimationConfig,
     finalTransitionConfig,
     finalPseudoStyles,
-    filteredStyle as PlainStyle,
     finalTransitionCallbacks,
+    filteredStyle as PlainStyle,
   ];
 }
 
