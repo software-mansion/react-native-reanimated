@@ -11,9 +11,7 @@ def worklets_find_config()
     :feature_flags_flag => nil,
     :fetch_preview_flag => nil,
     :is_reanimated_example_app => nil,
-    :is_tvos_target => nil,
     :react_native_version => nil,
-    :react_native_minor_version => nil,
     :react_native_node_modules_dir => nil,
     :react_native_common_dir => nil,
   }
@@ -32,12 +30,7 @@ def worklets_find_config()
   end
 
   result[:is_reanimated_example_app] = ENV["IS_REANIMATED_EXAMPLE_APP"] != nil
-  result[:is_tvos_target] = react_native_json['name'] == 'react-native-tvos'
   result[:react_native_version] = react_native_json['version']
-  result[:react_native_minor_version] = react_native_json['version'].split('.')[1].to_i
-  if result[:react_native_minor_version] == 0 # nightly
-    result[:react_native_minor_version] = 1000
-  end
   result[:react_native_node_modules_dir] = File.expand_path(react_native_node_modules_dir)
 
   pods_root = Pod::Config.instance.project_pods_root
@@ -56,12 +49,6 @@ def worklets_assert_minimal_react_native_version(config)
   validate_react_native_version_script = File.expand_path(File.join(__dir__, 'validate-react-native-version.js'))
   unless system("node \"#{validate_react_native_version_script}\" #{config[:react_native_version]}")
     raise "[Worklets] Your installed version of React Native is not compatible with installed version of Worklets. See the documentation for the list of supported versions: https://docs.swmansion.com/react-native-worklets/docs/guides/compatibility/"
-  end
-end
-
-def worklets_assert_new_architecture_enabled(new_arch_enabled)
-  if !new_arch_enabled
-    raise "[Worklets] Worklets require the New Architecture to be enabled. If you have `RCT_NEW_ARCH_ENABLED=0` set in your environment you should remove it."
   end
 end
 

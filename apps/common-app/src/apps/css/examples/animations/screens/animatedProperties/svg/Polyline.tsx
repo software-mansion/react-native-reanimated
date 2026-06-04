@@ -125,6 +125,7 @@ export default function PolylineExample() {
                   title: 'Shrinking polyline',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Different Number of Points',
             },
           ],

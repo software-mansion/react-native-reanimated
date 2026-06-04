@@ -36,6 +36,7 @@ export class SlideInRight
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
@@ -43,7 +44,7 @@ export class SlideInRight
         animations: {
           originX: delayFunction(
             delay,
-            animation(values.targetOriginX, config)
+            animation(targetValues?.originX ?? values.targetOriginX, config)
           ),
         },
         initialValues: {
@@ -83,6 +84,7 @@ export class SlideInLeft
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
@@ -90,7 +92,7 @@ export class SlideInLeft
         animations: {
           originX: delayFunction(
             delay,
-            animation(values.targetOriginX, config)
+            animation(targetValues?.originX ?? values.targetOriginX, config)
           ),
         },
         initialValues: {
@@ -130,6 +132,7 @@ export class SlideOutRight
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
@@ -138,10 +141,11 @@ export class SlideOutRight
           originX: delayFunction(
             delay,
             animation(
-              Math.max(
-                values.currentOriginX + values.windowWidth,
-                values.windowWidth
-              ),
+              targetValues?.originX ??
+                Math.max(
+                  values.currentOriginX + values.windowWidth,
+                  values.windowWidth
+                ),
               config
             )
           ),
@@ -183,6 +187,7 @@ export class SlideOutLeft
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
@@ -191,10 +196,11 @@ export class SlideOutLeft
           originX: delayFunction(
             delay,
             animation(
-              Math.min(
-                values.currentOriginX - values.windowWidth,
-                -values.windowWidth
-              ),
+              targetValues?.originX ??
+                Math.min(
+                  values.currentOriginX - values.windowWidth,
+                  -values.windowWidth
+                ),
               config
             )
           ),
@@ -236,6 +242,7 @@ export class SlideInUp
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
@@ -243,7 +250,7 @@ export class SlideInUp
         animations: {
           originY: delayFunction(
             delay,
-            animation(values.targetOriginY, config)
+            animation(targetValues?.originY ?? values.targetOriginY, config)
           ),
         },
         initialValues: {
@@ -283,6 +290,7 @@ export class SlideInDown
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
@@ -290,7 +298,7 @@ export class SlideInDown
         animations: {
           originY: delayFunction(
             delay,
-            animation(values.targetOriginY, config)
+            animation(targetValues?.originY ?? values.targetOriginY, config)
           ),
         },
         initialValues: {
@@ -330,6 +338,7 @@ export class SlideOutUp
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
@@ -338,10 +347,11 @@ export class SlideOutUp
           originY: delayFunction(
             delay,
             animation(
-              Math.min(
-                values.currentOriginY - values.windowHeight,
-                -values.windowHeight
-              ),
+              targetValues?.originY ??
+                Math.min(
+                  values.currentOriginY - values.windowHeight,
+                  -values.windowHeight
+                ),
               config
             )
           ),
@@ -380,6 +390,7 @@ export class SlideOutDown
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
@@ -388,10 +399,11 @@ export class SlideOutDown
           originY: delayFunction(
             delay,
             animation(
-              Math.max(
-                values.currentOriginY + values.windowHeight,
-                values.windowHeight
-              ),
+              targetValues?.originY ??
+                Math.max(
+                  values.currentOriginY + values.windowHeight,
+                  values.windowHeight
+                ),
               config
             )
           ),

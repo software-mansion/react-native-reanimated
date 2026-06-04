@@ -13,10 +13,13 @@ export default class CSSManager implements ICSSManager {
   private readonly animationsManager: CSSAnimationsManager;
   private readonly transitionsManager: CSSTransitionsManager;
 
-  constructor(viewInfo: ViewInfo) {
+  constructor(viewInfo: ViewInfo, componentDisplayName = '') {
     this.element = viewInfo.DOMElement as ReanimatedHTMLElement;
 
-    this.animationsManager = new CSSAnimationsManager(this.element);
+    this.animationsManager = new CSSAnimationsManager(
+      this.element,
+      componentDisplayName
+    );
     this.transitionsManager = new CSSTransitionsManager(this.element);
   }
 

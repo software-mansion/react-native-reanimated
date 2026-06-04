@@ -80,7 +80,6 @@ LinearTransition.springify()
 ```javascript
 LinearTransition.delay(500)
   .reduceMotion(ReduceMotion.Never)
-  .withInitialValues({ transform: [{ translateY: 420 }] })
   .withCallback((finished) => {
     console.log(`finished without interruptions: ${finished}`);
   });
@@ -89,7 +88,6 @@ LinearTransition.delay(500)
 - `.duration(duration: number)` sets length of the animation (in milliseconds). Defaults to '300'.
 - `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
-- `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ### Example

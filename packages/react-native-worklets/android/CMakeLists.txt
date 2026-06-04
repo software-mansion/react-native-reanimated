@@ -1,9 +1,14 @@
 project(Worklets)
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_STANDARD 20)
+
+# Consume shared libraries and headers from prefabs
+find_package(fbjni REQUIRED CONFIG)
+find_package(ReactAndroid REQUIRED CONFIG)
+find_package(hermes-engine REQUIRED CONFIG)
 
 # default CMAKE_CXX_FLAGS: "-g -DANDROID -fdata-sections -ffunction-sections
 # -funwind-tables -fstack-protector-strong -no-canonical-prefixes
@@ -11,16 +16,12 @@ set(CMAKE_CXX_STANDARD 20)
 include("${REACT_NATIVE_DIR}/ReactAndroid/cmake-utils/folly-flags.cmake")
 add_compile_options(${folly_FLAGS})
 
-string(
-  APPEND
-  CMAKE_CXX_FLAGS
-  " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}\
-    -DWORKLETS_VERSION=${WORKLETS_VERSION}\
+string(APPEND CMAKE_CXX_FLAGS " -DWORKLETS_VERSION=${WORKLETS_VERSION}\
     -DWORKLETS_FEATURE_FLAGS=\"${WORKLETS_FEATURE_FLAGS}\"")
 
 # HERMES_V1_ENABLED is centralized in react-native-flags.cmake for RN >= 84.
 # Only define manually for older versions to avoid macro redefinition error.
-if(REACT_NATIVE_MINOR_VERSION LESS 84)
+if(ReactAndroid_VERSION_MINOR LESS 84)
   string(APPEND CMAKE_CXX_FLAGS " -DHERMES_V1_ENABLED=${HERMES_V1_ENABLED}")
 endif()
 
@@ -40,14 +41,6 @@ if(NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")
   string(APPEND CMAKE_CXX_FLAGS " -DNDEBUG")
 endif()
 
-if(${JS_RUNTIME} STREQUAL "hermes")
-  string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_HERMES=1")
-elseif(${JS_RUNTIME} STREQUAL "jsc")
-  string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_JSC=1")
-else()
-  message(FATAL_ERROR "Unknown JS runtime ${JS_RUNTIME}.")
-endif()
-
 set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 set(ANDROID_CPP_DIR "${CMAKE_SOURCE_DIR}/src/main/cpp")
 set(COMMON_CPP_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp")
@@ -57,16 +50,10 @@ file(GLOB_RECURSE WORKLETS_COMMON_CPP_SOURCES CONFIGURE_DEPENDS
 file(GLOB_RECURSE WORKLETS_ANDROID_CPP_SOURCES CONFIGURE_DEPENDS
      "${ANDROID_CPP_DIR}/worklets/*.cpp")
 
-# Consume shared libraries and headers from prefabs
-find_package(fbjni REQUIRED CONFIG)
-find_package(ReactAndroid REQUIRED CONFIG)
-
-if(${JS_RUNTIME} STREQUAL "hermes")
-  find_package(hermes-engine REQUIRED CONFIG)
-endif()
-
 add_library(worklets SHARED ${WORKLETS_COMMON_CPP_SOURCES}
                             ${WORKLETS_ANDROID_CPP_SOURCES})
+
+target_precompile_headers(worklets PRIVATE "${ANDROID_CPP_DIR}/WorkletsPCH.h")
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
   include(
@@ -99,18 +86,12 @@ set_target_properties(worklets PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(worklets android log ReactAndroid::reactnative
                       ReactAndroid::jsi fbjni::fbjni)
 
-if(${JS_RUNTIME} STREQUAL "hermes")
-  if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 82)
-    target_link_libraries(worklets hermes-engine::hermesvm)
-  else()
-    target_link_libraries(worklets hermes-engine::libhermes)
-  endif()
+if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 82)
+  target_link_libraries(worklets hermes-engine::hermesvm)
+else()
+  target_link_libraries(worklets hermes-engine::libhermes)
+endif()
 
-  if(${HERMES_ENABLE_DEBUGGER})
-    string(APPEND CMAKE_CXX_FLAGS " -DHERMES_ENABLE_DEBUGGER=1")
-
-    target_link_libraries(worklets ReactAndroid::hermestooling)
-  endif()
-elseif(${JS_RUNTIME} STREQUAL "jsc")
-  target_link_libraries(worklets ReactAndroid::jsctooling)
+if(${HERMES_ENABLE_DEBUGGER})
+  string(APPEND CMAKE_CXX_FLAGS " -DHERMES_ENABLE_DEBUGGER=1")
 endif()

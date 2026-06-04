@@ -9,7 +9,7 @@ import type {
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 import type { Rotate, TransformsConfig, TranslateX, TranslateY } from './types';
-import { pickTransformValues } from './utils';
+import { animateTransformToValues, pickTransformValues } from './utils';
 
 /**
  * Rotate to bottom from left edge. You can modify the behavior by chaining
@@ -36,21 +36,28 @@ export class RotateInDownLeft
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
-          transform: [
-            { rotate: delayFunction(delay, animation('0deg', config)) },
-            { translateX: delayFunction(delay, animation(0, config)) },
-            { translateY: delayFunction(delay, animation(0, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
+          transform: animateTransformToValues(
+            [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
@@ -96,21 +103,28 @@ export class RotateInDownRight
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
-          transform: [
-            { rotate: delayFunction(delay, animation('0deg', config)) },
-            { translateX: delayFunction(delay, animation(0, config)) },
-            { translateY: delayFunction(delay, animation(0, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
+          transform: animateTransformToValues(
+            [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
@@ -158,21 +172,28 @@ export class RotateInUpLeft
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
-          transform: [
-            { rotate: delayFunction(delay, animation('0deg', config)) },
-            { translateX: delayFunction(delay, animation(0, config)) },
-            { translateY: delayFunction(delay, animation(0, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
+          transform: animateTransformToValues(
+            [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
@@ -216,21 +237,28 @@ export class RotateInUpRight
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
-          transform: [
-            { rotate: delayFunction(delay, animation('0deg', config)) },
-            { translateX: delayFunction(delay, animation(0, config)) },
-            { translateY: delayFunction(delay, animation(0, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
+          transform: animateTransformToValues(
+            [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
@@ -276,37 +304,36 @@ export class RotateOutDownLeft
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
-          transform: [
-            { rotate: delayFunction(delay, animation('90deg', config)) },
-            {
-              translateX: delayFunction(
-                delay,
-                animation(
-                  values.currentWidth / 2 - values.currentHeight / 2,
-                  config
-                )
-              ),
-            },
-            {
-              translateY: delayFunction(
-                delay,
-                animation(
-                  values.currentWidth / 2 - values.currentHeight / 2,
-                  config
-                )
-              ),
-            },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
+          transform: animateTransformToValues(
+            [
+              { rotate: '90deg' },
+              {
+                translateX: values.currentWidth / 2 - values.currentHeight / 2,
+              },
+              {
+                translateY: values.currentWidth / 2 - values.currentHeight / 2,
+              },
+            ],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,
@@ -346,37 +373,39 @@ export class RotateOutDownRight
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
-          transform: [
-            { rotate: delayFunction(delay, animation('-90deg', config)) },
-            {
-              translateX: delayFunction(
-                delay,
-                animation(
-                  -(values.currentWidth / 2 - values.currentHeight / 2),
-                  config
-                )
-              ),
-            },
-            {
-              translateY: delayFunction(
-                delay,
-                animation(
-                  values.currentWidth / 2 - values.currentHeight / 2,
-                  config
-                )
-              ),
-            },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
+          transform: animateTransformToValues(
+            [
+              { rotate: '-90deg' },
+              {
+                translateX: -(
+                  values.currentWidth / 2 -
+                  values.currentHeight / 2
+                ),
+              },
+              {
+                translateY: values.currentWidth / 2 - values.currentHeight / 2,
+              },
+            ],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,
@@ -416,37 +445,39 @@ export class RotateOutUpLeft
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
-          transform: [
-            { rotate: delayFunction(delay, animation('-90deg', config)) },
-            {
-              translateX: delayFunction(
-                delay,
-                animation(
-                  values.currentWidth / 2 - values.currentHeight / 2,
-                  config
-                )
-              ),
-            },
-            {
-              translateY: delayFunction(
-                delay,
-                animation(
-                  -(values.currentWidth / 2 - values.currentHeight / 2),
-                  config
-                )
-              ),
-            },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
+          transform: animateTransformToValues(
+            [
+              { rotate: '-90deg' },
+              {
+                translateX: values.currentWidth / 2 - values.currentHeight / 2,
+              },
+              {
+                translateY: -(
+                  values.currentWidth / 2 -
+                  values.currentHeight / 2
+                ),
+              },
+            ],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,
@@ -486,37 +517,42 @@ export class RotateOutUpRight
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
-          transform: [
-            { rotate: delayFunction(delay, animation('90deg', config)) },
-            {
-              translateX: delayFunction(
-                delay,
-                animation(
-                  -(values.currentWidth / 2 - values.currentHeight / 2),
-                  config
-                )
-              ),
-            },
-            {
-              translateY: delayFunction(
-                delay,
-                animation(
-                  -(values.currentWidth / 2 - values.currentHeight / 2),
-                  config
-                )
-              ),
-            },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
+          transform: animateTransformToValues(
+            [
+              { rotate: '90deg' },
+              {
+                translateX: -(
+                  values.currentWidth / 2 -
+                  values.currentHeight / 2
+                ),
+              },
+              {
+                translateY: -(
+                  values.currentWidth / 2 -
+                  values.currentHeight / 2
+                ),
+              },
+            ],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,

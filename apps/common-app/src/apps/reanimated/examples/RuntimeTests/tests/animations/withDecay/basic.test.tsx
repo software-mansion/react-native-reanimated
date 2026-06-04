@@ -30,7 +30,10 @@ describe('withDecay animation, test various config', () => {
     );
   };
 
-  async function getSnapshotUpdates(snapshotName: keyof typeof Snapshots, config: WithDecayConfig) {
+  async function getSnapshotUpdates(
+    snapshotName: keyof typeof Snapshots,
+    config: WithDecayConfig
+  ) {
     await mockAnimationTimer();
     const updatesContainer = await recordAnimationUpdates();
     await render(<DecayComponent config={config} />);
@@ -51,8 +54,13 @@ describe('withDecay animation, test various config', () => {
     { velocity: 900, clamp: [0, 150] },
     { velocity: 900, clamp: [0, 150], rubberBandEffect: true },
     { velocity: 2000, clamp: [0, 150], rubberBandEffect: true },
-    { velocity: 2000, clamp: [0, 150], rubberBandEffect: true, rubberBandFactor: 2 },
-  ] as Array<WithDecayConfig>)('Config ${0}', async config => {
+    {
+      velocity: 2000,
+      clamp: [0, 150],
+      rubberBandEffect: true,
+      rubberBandFactor: 2,
+    },
+  ] as Array<WithDecayConfig>)('Config ${0}', async (config) => {
     const snapshotName = ('decay_' +
       Object.entries(config)
         .map(([key, val]) => {
@@ -60,7 +68,10 @@ describe('withDecay animation, test various config', () => {
         })
         .join('$')) as keyof typeof Snapshots;
 
-    const [updates, nativeUpdates] = await getSnapshotUpdates(snapshotName, config);
+    const [updates, nativeUpdates] = await getSnapshotUpdates(
+      snapshotName,
+      config
+    );
     expect(updates).toMatchSnapshots(Snapshots[snapshotName]);
     expect(updates).toMatchNativeSnapshots(nativeUpdates);
   });

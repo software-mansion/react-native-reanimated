@@ -39,6 +39,7 @@ runs:
         touch yarn.lock
         yarn set version berry
         yarn config set nodeLinker node-modules
+        yarn config set approvedGitRepositories --json '["https://github.com/software-mansion/react-native-reanimated.git"]'
     - name: Install Reanimated
       working-directory: ${{ inputs.app-name }}
       shell: bash
@@ -49,9 +50,9 @@ runs:
       run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
     - name: Setup Ruby (iOS)
       if: ${{ inputs.platform == 'iOS' }}
-      uses: ruby/setup-ruby@v1
+      uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
       with:
-        ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
+        ruby-version: '3.3'
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
     - name: Install Pods (iOS)
       if: ${{ inputs.platform == 'iOS' }}

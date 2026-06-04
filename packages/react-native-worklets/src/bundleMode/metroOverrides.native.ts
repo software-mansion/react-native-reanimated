@@ -49,7 +49,6 @@ export function disallowRNImports() {
             `You tried to import '${String(
               prop
             )}' from 'react-native' module on a Worklet Runtime. Using 'react-native' module on a Worklet Runtime is not allowed.`,
-            // eslint-disable-next-line reanimated/use-worklets-error
             new Error().stack
           );
           return {

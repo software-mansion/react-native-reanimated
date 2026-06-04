@@ -9,8 +9,10 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <shared_mutex>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace worklets {
@@ -29,21 +31,19 @@ class RuntimeManager {
   std::shared_ptr<WorkletRuntime> getUIRuntime();
 
   std::shared_ptr<WorkletRuntime> createWorkletRuntime(
-      std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
+      const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,
       const std::string &name,
       const std::shared_ptr<SerializableWorklet> &initializer = nullptr,
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
       bool enableEventLoop = true);
 
-  std::shared_ptr<WorkletRuntime> createUninitializedUIRuntime(
-      const std::shared_ptr<MessageQueueThread> &jsQueue,
-      const std::shared_ptr<AsyncQueue> &uiAsyncQueue);
+  std::shared_ptr<WorkletRuntime> createUninitializedUIRuntime(const std::shared_ptr<AsyncQueue> &uiAsyncQueue);
 
-  /** Pauses registration of new Worklet Runtimes. */
-  void pause();
-
-  /** Resumes registration of new Worklet Runtimes. */
-  void resume();
+  template <class Fn>
+  decltype(auto) withRegistrationPaused(Fn &&fn) {
+    std::unique_lock lock(registrationMutex_);
+    return std::forward<Fn>(fn)();
+  }
 
  private:
   uint64_t getNextRuntimeId();

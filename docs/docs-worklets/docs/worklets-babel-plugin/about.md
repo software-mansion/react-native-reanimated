@@ -105,11 +105,11 @@ const obj = {
 
 obj.foo = 2;
 obj.bar(); // Logs 2
-runOnUI(() => obj.bar())(); // Logs 1
+scheduleOnUI(() => obj.bar()); // Logs 1
 
-runOnUI(() => (obj.foo = 3))();
+scheduleOnUI(() => (obj.foo = 3));
 obj.bar(); // Logs 2
-runOnUI(() => obj.bar())(); // Logs 3
+scheduleOnUI(() => obj.bar()); // Logs 3
 ```
 
 `__workletContextObject` is a special property that marks an object as a Worklet Context Object. It's value doesn't matter, but it's a good practice to use `true` as a value. `'worklet'` directive in methods will be ignored if the object has this property.
@@ -139,7 +139,7 @@ class Clazz {
   }
 }
 
-runOnUI(() => new Clazz().foo())(); // Logs 'Hello from WorkletClass'
+scheduleOnUI(() => new Clazz().foo()); // Logs 'Hello from WorkletClass'
 ```
 
 **Pitfalls:**

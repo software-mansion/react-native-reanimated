@@ -1,0 +1,13 @@
+diff --git a/apps/fabric-example/babel.config.js b/apps/fabric-example/babel.config.js
+index ea4ad7a5f8..785611658a 100644
+--- a/apps/fabric-example/babel.config.js
++++ b/apps/fabric-example/babel.config.js
+@@ -2,7 +2,7 @@
+ const workletsPluginOptions = {
+   strictGlobal: true,
+   // Uncomment the following to enable bundle mode.
+-  // bundleMode: true,
++  bundleMode: true,
+   // workletizableModules: ['axios'],
+ };
+ 

@@ -3,7 +3,9 @@ title: createShareable
 sidebar_position: 42 # Use alphabetical order
 ---
 
-# createShareable <AvailableFrom version="0.8.0"/>
+<Badges version="0.8.0">
+  # createShareable
+</Badges>
 
 :::note
 This page describes the API to create the new [Shareable](/docs/memory/shareable) type, which is a different concept from the old deprecated one coming from `react-native-reanimated`, available with the [makeShareable](/docs/memory/makeShareable) function.
@@ -16,10 +18,18 @@ You have to explicitly declare which [Worklet Runtime](/docs/fundamentals/runtim
 ## Reference
 
 ```tsx
-import { createShareable, UIRuntimeId } from 'react-native-worklets';
+import {
+  createShareable,
+  createWorkletRuntime,
+  UIRuntimeId,
+} from 'react-native-worklets';
 
 // Shareable hosted on the UI Runtime
-const shareable = createShareable(UIRuntimeId, 42);
+const uiShareable = createShareable(UIRuntimeId, 'hello');
+
+// Shareable hosted on a Worker Runtime
+const workerRuntime = createWorkletRuntime({ name: 'background' });
+const workerShareable = createShareable(workerRuntime.runtimeId, 'hello');
 ```
 
 <details>
@@ -57,7 +67,9 @@ const shareable = createShareable(UIRuntimeId, 42);
 
 ### hostRuntimeId
 
-The **runtimeId** of the [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) that will host the Shareable. **Currently, only hosting a Shareable on the UI Runtime is supported.** You can obtain the UI Runtime's id from the exported constant [UIRuntimeId](/docs/threading/uiRuntimeId).
+The **runtimeId** of the [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) that will host the Shareable. To host on the UI Runtime, use the exported constant [UIRuntimeId](/docs/threading/uiRuntimeId). To host on a Worker Runtime created with [createWorkletRuntime](/docs/threading/createWorkletRuntime), pass its `runtimeId` property.
+
+Hosting on runtimes other than the UI Runtime is available since version 0.9.0.
 
 ### initial
 

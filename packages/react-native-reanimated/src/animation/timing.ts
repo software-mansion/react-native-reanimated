@@ -44,8 +44,10 @@ export interface TimingAnimation extends Animation<TimingAnimation> {
   current: AnimatableValue;
 }
 
-interface InnerTimingAnimation
-  extends Omit<TimingAnimation, 'toValue' | 'current'> {
+interface InnerTimingAnimation extends Omit<
+  TimingAnimation,
+  'toValue' | 'current'
+> {
   toValue: number;
   current: number;
 }

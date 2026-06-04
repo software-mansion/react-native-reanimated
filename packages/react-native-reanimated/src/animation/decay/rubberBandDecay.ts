@@ -12,7 +12,7 @@ export function rubberBandDecay(
   'worklet';
   const { lastTimestamp, startTimestamp, current, velocity } = animation;
 
-  const deltaTime = Math.min(now - lastTimestamp, 64);
+  const deltaTime = Math.min(Math.max(now - lastTimestamp, 0), 64);
   const clampIndex =
     Math.abs(current - config.clamp[0]) < Math.abs(current - config.clamp[1])
       ? 0

@@ -1,12 +1,21 @@
 import React, { useEffect } from 'react';
-import { Platform, ScrollView, StyleSheet, Text } from 'react-native';
+import {
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+} from 'react-native';
 import Animated, {
   interpolateColor,
+  useAnimatedProps,
   useDerivedValue,
   useSharedValue,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 export default function SynchronousPropsExample() {
   const sv = useSharedValue(0);
@@ -33,6 +42,11 @@ export default function SynchronousPropsExample() {
     [sv]
   );
 
+  const shadowOffsetSv = useDerivedValue(
+    () => ({ width: tenSv.value, height: tenSv.value }),
+    [sv]
+  );
+
   const perspectiveSv = useDerivedValue(
     () => Math.pow(2, sv.value * 3 + 4.5),
     [sv]
@@ -42,6 +56,10 @@ export default function SynchronousPropsExample() {
     () => [sv.value * 2, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 10, 1],
     [sv]
   );
+
+  const placeholderTextColorAnimatedProps = useAnimatedProps(() => ({
+    placeholderTextColor: colorSv.value,
+  }));
 
   return (
     <ScrollView
@@ -96,6 +114,18 @@ export default function SynchronousPropsExample() {
         }}
       />
 
+      <Text>shadowOffset (not supported on Android)</Text>
+      <Animated.View
+        style={{
+          width: 50,
+          height: 50,
+          borderWidth: 1,
+          shadowRadius: 2,
+          shadowOpacity: 1,
+          shadowOffset: shadowOffsetSv,
+        }}
+      />
+
       <Text>shadowOpacity (not supported on Android)</Text>
       <Animated.View
         style={{
@@ -115,6 +145,19 @@ export default function SynchronousPropsExample() {
           borderWidth: 1,
           shadowRadius: tenSv,
           shadowOpacity: 1,
+        }}
+      />
+
+      <Text>shadowColor</Text>
+      <Animated.View
+        style={{
+          width: 50,
+          height: 50,
+          borderWidth: 1,
+          elevation: 2,
+          shadowRadius: 2,
+          shadowOpacity: 1,
+          shadowColor: colorSv,
         }}
       />
 
@@ -141,6 +184,13 @@ export default function SynchronousPropsExample() {
       <Animated.Image
         style={{ width: 50, height: 50, tintColor: colorSv }}
         source={require('./assets/logo.png')}
+      />
+
+      <Text>placeholderTextColor</Text>
+      <AnimatedTextInput
+        style={{ width: 200, height: 40, borderWidth: 1, padding: 8 }}
+        placeholder="Placeholder text"
+        animatedProps={placeholderTextColorAnimatedProps}
       />
 
       {[
@@ -188,6 +238,9 @@ export default function SynchronousPropsExample() {
         'borderRightColor',
         'borderStartColor',
         'borderEndColor',
+        'borderBlockColor',
+        'borderBlockStartColor',
+        'borderBlockEndColor',
       ].map((prop) => (
         <React.Fragment key={prop}>
           <Text>{prop}</Text>
@@ -202,6 +255,40 @@ export default function SynchronousPropsExample() {
           />
         </React.Fragment>
       ))}
+
+      <Text>outlineColor</Text>
+      <Animated.View
+        style={{
+          width: 50,
+          height: 50,
+          borderWidth: 1,
+          outlineWidth: 2,
+          outlineColor: colorSv,
+        }}
+      />
+
+      <Text>outlineOffset</Text>
+      <Animated.View
+        style={{
+          width: 50,
+          height: 50,
+          borderWidth: 1,
+          outlineWidth: 2,
+          outlineColor: 'gray',
+          outlineOffset: tenSv,
+        }}
+      />
+
+      <Text>outlineWidth</Text>
+      <Animated.View
+        style={{
+          width: 50,
+          height: 50,
+          borderWidth: 1,
+          outlineColor: 'gray',
+          outlineWidth: tenSv,
+        }}
+      />
 
       {(['translateX', 'translateY'] as const).map((prop) => (
         <React.Fragment key={prop}>

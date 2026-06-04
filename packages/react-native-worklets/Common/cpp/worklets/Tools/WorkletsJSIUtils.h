@@ -2,9 +2,11 @@
 
 #include <jsi/jsi.h>
 #include <react/debug/react_native_assert.h>
+#include <concepts>
 #include <memory>
 #include <string>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 using namespace facebook;
@@ -166,6 +168,57 @@ void installJsiFunction(jsi::Runtime &rt, std::string_view name, Fun function) {
 
 jsi::Array convertStringToArray(jsi::Runtime &rt, const std::string &value, const unsigned int expectedSize);
 
-jsi::Object optimizedFromHostObject(jsi::Runtime &rt, const std::shared_ptr<jsi::HostObject> &hostObject);
+template <size_t TIndex, size_t TLength>
+  requires(TIndex < TLength)
+constexpr const jsi::Value &at(const jsi::Value (&args)[TLength]) noexcept {
+  return args[TIndex];
+}
+
+template <size_t TLength, typename TFun>
+  requires(TLength > 0) &&
+    std::is_invocable_v<TFun &&, jsi::Runtime &, const jsi::Value &, const jsi::Value (&)[TLength]>
+void addMethod(jsi::Runtime &rt, jsi::Object &obj, const char *name, TFun &&func) {
+  obj.setProperty(
+      rt,
+      name,
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, name),
+          TLength,
+          [func = std::forward<TFun>(func)](
+              jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *args, size_t) mutable -> jsi::Value {
+            using TReturn =
+                std::invoke_result_t<TFun &, jsi::Runtime &, const jsi::Value &, const jsi::Value(&)[TLength]>;
+            auto &typed = *reinterpret_cast<const jsi::Value(*)[TLength]>(args);
+            if constexpr (std::is_void_v<TReturn>) {
+              func(rt, thisVal, typed);
+              return jsi::Value::undefined();
+            } else {
+              return func(rt, thisVal, typed);
+            }
+          }));
+}
+
+template <size_t TLength, typename TFun>
+  requires(TLength == 0) && std::is_invocable_v<TFun &&, jsi::Runtime &, const jsi::Value &>
+void addMethod(jsi::Runtime &rt, jsi::Object &obj, const char *name, TFun &&func) {
+  obj.setProperty(
+      rt,
+      name,
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, name),
+          0,
+          [func = std::forward<TFun>(func)](
+              jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *, size_t) mutable -> jsi::Value {
+            using TReturn = std::invoke_result_t<TFun &, jsi::Runtime &, const jsi::Value &>;
+            if constexpr (std::is_void_v<TReturn>) {
+              func(rt, thisVal);
+              return jsi::Value::undefined();
+            } else {
+              return func(rt, thisVal);
+            }
+          }));
+}
 
 } // namespace worklets::jsi_utils

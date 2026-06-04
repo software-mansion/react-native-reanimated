@@ -1,50 +1,74 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useDerivedValue,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
-import { describe, expect, getTestComponent, render, test, useTestRef, wait } from '../../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  getTestComponent,
+  render,
+  test,
+  useTestRef,
+  wait,
+} from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 
-const COMPONENT_REF_ARRAY = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+const COMPONENT_REF_ARRAY = [
+  'zero',
+  'one',
+  'two',
+  'three',
+  'four',
+  'five',
+  'six',
+  'seven',
+  'eight',
+  'nine',
+];
 
 const allDerivedFunctions: Array<(x: number) => number> = [
-  x => {
+  (x) => {
     'worklet';
     return 2 * x + 50;
   },
-  x => {
+  (x) => {
     'worklet';
     return 100 + 50 * Math.cos(x / 25);
   },
-  x => {
+  (x) => {
     'worklet';
     return Math.exp(x / 30);
   },
-  x => {
+  (x) => {
     'worklet';
     return Math.log(x) * 30 + 40;
   },
-  x => {
+  (x) => {
     'worklet';
     return (x * x) / 200;
   },
-  x => {
+  (x) => {
     'worklet';
     return Math.cbrt(x * 20000);
   },
-  x => {
+  (x) => {
     'worklet';
     return 100 + (x * (1 + Math.cos(x / 5))) / 2;
   },
-  x => {
+  (x) => {
     'worklet';
     return 300 - x;
   },
-  x => {
+  (x) => {
     'worklet';
     return Math.ceil(x / 40) * 40;
   },
-  x => {
+  (x) => {
     'worklet';
     return x * x * 0.002 + x * x * x * 0.000005;
   },
@@ -53,16 +77,36 @@ const allDerivedFunctions: Array<(x: number) => number> = [
 const ChainComponent = () => {
   const basicValue = useSharedValue(20);
 
-  const derivedValue0 = useDerivedValue(() => allDerivedFunctions[0](basicValue.value));
-  const derivedValue1 = useDerivedValue(() => allDerivedFunctions[1](derivedValue0.value));
-  const derivedValue2 = useDerivedValue(() => allDerivedFunctions[2](derivedValue1.value));
-  const derivedValue3 = useDerivedValue(() => allDerivedFunctions[3](derivedValue2.value));
-  const derivedValue4 = useDerivedValue(() => allDerivedFunctions[4](derivedValue3.value));
-  const derivedValue5 = useDerivedValue(() => allDerivedFunctions[5](derivedValue4.value));
-  const derivedValue6 = useDerivedValue(() => allDerivedFunctions[6](derivedValue5.value));
-  const derivedValue7 = useDerivedValue(() => allDerivedFunctions[7](derivedValue6.value));
-  const derivedValue8 = useDerivedValue(() => allDerivedFunctions[8](derivedValue7.value));
-  const derivedValue9 = useDerivedValue(() => allDerivedFunctions[9](derivedValue8.value));
+  const derivedValue0 = useDerivedValue(() =>
+    allDerivedFunctions[0](basicValue.value)
+  );
+  const derivedValue1 = useDerivedValue(() =>
+    allDerivedFunctions[1](derivedValue0.value)
+  );
+  const derivedValue2 = useDerivedValue(() =>
+    allDerivedFunctions[2](derivedValue1.value)
+  );
+  const derivedValue3 = useDerivedValue(() =>
+    allDerivedFunctions[3](derivedValue2.value)
+  );
+  const derivedValue4 = useDerivedValue(() =>
+    allDerivedFunctions[4](derivedValue3.value)
+  );
+  const derivedValue5 = useDerivedValue(() =>
+    allDerivedFunctions[5](derivedValue4.value)
+  );
+  const derivedValue6 = useDerivedValue(() =>
+    allDerivedFunctions[6](derivedValue5.value)
+  );
+  const derivedValue7 = useDerivedValue(() =>
+    allDerivedFunctions[7](derivedValue6.value)
+  );
+  const derivedValue8 = useDerivedValue(() =>
+    allDerivedFunctions[8](derivedValue7.value)
+  );
+  const derivedValue9 = useDerivedValue(() =>
+    allDerivedFunctions[9](derivedValue8.value)
+  );
 
   const style0 = useAnimatedStyle(() => {
     return { width: derivedValue0.value };
@@ -130,18 +174,24 @@ describe('Test chained useDerivedValue', () => {
   test('Test chain of 10 components', async () => {
     await render(<ChainComponent />);
     await wait(1000);
-    const components = COMPONENT_REF_ARRAY.map(refString => getTestComponent(refString));
+    const components = COMPONENT_REF_ARRAY.map((refString) =>
+      getTestComponent(refString)
+    );
 
-    const expectedValues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(idx => {
+    const expectedValues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((idx) => {
       const functionsToApply = allDerivedFunctions.slice(0, idx + 1);
       return functionsToApply.reduce(
-        (currentValOfFunctionComposition, currentFunction) => currentFunction(currentValOfFunctionComposition),
-        100,
+        (currentValOfFunctionComposition, currentFunction) =>
+          currentFunction(currentValOfFunctionComposition),
+        100
       );
     });
 
     for (let i = 0; i < 10; i++) {
-      expect(await components[i].getAnimatedStyle('width')).toBe(expectedValues[i], ComparisonMode.PIXEL);
+      expect(await components[i].getAnimatedStyle('width')).toBe(
+        expectedValues[i],
+        ComparisonMode.PIXEL
+      );
     }
   });
 });

@@ -1,22 +1,17 @@
 #pragma once
 
-#include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
-#include <react/renderer/uimanager/UIManagerBinding.h>
-#include <react/renderer/uimanager/primitives.h>
 #include <worklets/SharedItems/MemoryManager.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/UnpackerLoader.h>
-#include <worklets/Tools/Defs.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
-#include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #include <memory>
 #include <string>
-#include <vector>
 
 using namespace facebook;
 
@@ -24,11 +19,10 @@ namespace worklets {
 
 class WorkletRuntime;
 
-class JSIWorkletsModuleProxy : public jsi::HostObject {
+class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsModuleProxy> {
  public:
   explicit JSIWorkletsModuleProxy(
       const bool isDevBundle,
-      const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const std::shared_ptr<MemoryManager> &memoryManager,
@@ -36,19 +30,40 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
       const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
       const std::shared_ptr<RuntimeBindings> &runtimeBindings,
       const BundleModeConfig &bundleModeConfig,
-      const std::shared_ptr<UnpackerLoader> &unpackerLoader);
+      const std::shared_ptr<UnpackerLoader> &unpackerLoader,
+      RuntimeData::RuntimeId hostRuntimeId)
+      : isDevBundle_(isDevBundle),
+        bundleModeConfig_(bundleModeConfig),
+        jsScheduler_(jsScheduler),
+        uiScheduler_(uiScheduler),
+        memoryManager_(memoryManager),
+        runtimeManager_(runtimeManager),
+        uiWorkletRuntime_(uiWorkletRuntime),
+        runtimeBindings_(runtimeBindings),
+        unpackerLoader_(unpackerLoader),
+        hostRuntimeId_(hostRuntimeId) {}
 
-  JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other) = default;
-
-  ~JSIWorkletsModuleProxy() override;
-
-  std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
-
-  jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propName) override;
-
-  [[nodiscard]] std::shared_ptr<MessageQueueThread> getJSQueue() const {
-    return jsQueue_;
+  static std::shared_ptr<JSIWorkletsModuleProxy> createForNewRuntime(
+      const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,
+      RuntimeData::RuntimeId hostRuntimeId) {
+    return std::make_shared<JSIWorkletsModuleProxy>(
+        sourceProxy->isDevBundle_,
+        sourceProxy->jsScheduler_,
+        sourceProxy->uiScheduler_,
+        sourceProxy->memoryManager_,
+        sourceProxy->runtimeManager_,
+        sourceProxy->uiWorkletRuntime_,
+        sourceProxy->runtimeBindings_,
+        sourceProxy->bundleModeConfig_,
+        sourceProxy->unpackerLoader_,
+        hostRuntimeId);
   }
+
+  /** No copy constructor to prevent making JSIWorkletsModuleProxy with wrong hostRuntimeId. */
+  JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other) = delete;
+
+  [[nodiscard]]
+  jsi::Object toOptimizedObject(jsi::Runtime &rt) const;
 
   [[nodiscard]] std::shared_ptr<JSScheduler> getJSScheduler() const {
     return jsScheduler_;
@@ -93,7 +108,6 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
  private:
   const bool isDevBundle_;
   const BundleModeConfig bundleModeConfig_;
-  const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   const std::shared_ptr<MemoryManager> memoryManager_;
@@ -101,6 +115,7 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
   const std::weak_ptr<WorkletRuntime> uiWorkletRuntime_;
   const std::shared_ptr<RuntimeBindings> runtimeBindings_;
   const std::shared_ptr<UnpackerLoader> unpackerLoader_;
+  const RuntimeData::RuntimeId hostRuntimeId_;
 };
 
 } // namespace worklets

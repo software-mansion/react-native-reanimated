@@ -1,12 +1,14 @@
 'use strict';
 import type {
+  AnimationConfigFunction,
   EntryExitAnimationFunction,
+  ExitAnimationsValues,
   IEntryExitAnimationBuilder,
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 import type { TransformsConfig, TranslateX, TranslateY } from './types';
-import { pickTransformValues } from './utils';
+import { animateTransformToValues, pickTransformValues } from './utils';
 
 /**
  * Fade in animation. You can modify the behavior by chaining methods like
@@ -34,12 +36,17 @@ export class FadeIn
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
+
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
@@ -75,18 +82,28 @@ export class FadeInRight
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
+
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
-          transform: [
-            { translateX: delayFunction(delay, animation(0, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
+          transform: animateTransformToValues(
+            [{ translateX: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
@@ -123,18 +140,28 @@ export class FadeInLeft
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
+
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
-          transform: [
-            { translateX: delayFunction(delay, animation(0, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
+          transform: animateTransformToValues(
+            [{ translateX: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
@@ -171,18 +198,28 @@ export class FadeInUp
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
+
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
-          transform: [
-            { translateY: delayFunction(delay, animation(0, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
+          transform: animateTransformToValues(
+            [{ translateY: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
@@ -219,18 +256,28 @@ export class FadeInDown
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
+
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
-          transform: [
-            { translateY: delayFunction(delay, animation(0, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
+          transform: animateTransformToValues(
+            [{ translateY: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
@@ -268,12 +315,17 @@ export class FadeOut
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
+
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,
@@ -309,18 +361,28 @@ export class FadeOutRight
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
+
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
-          transform: [
-            { translateX: delayFunction(delay, animation(25, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
+          transform: animateTransformToValues(
+            [{ translateX: 25 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,
@@ -357,18 +419,28 @@ export class FadeOutLeft
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
+
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
-          transform: [
-            { translateX: delayFunction(delay, animation(-25, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
+          transform: animateTransformToValues(
+            [{ translateX: -25 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,
@@ -404,18 +476,28 @@ export class FadeOutUp
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
+
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
-          transform: [
-            { translateY: delayFunction(delay, animation(-25, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
+          transform: animateTransformToValues(
+            [{ translateY: -25 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,
@@ -450,20 +532,30 @@ export class FadeOutDown
     return new FadeOutDown() as InstanceType<T>;
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
+
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
-          transform: [
-            { translateY: delayFunction(delay, animation(25, config)) },
-          ],
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
+          transform: animateTransformToValues(
+            [{ translateY: 25 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,

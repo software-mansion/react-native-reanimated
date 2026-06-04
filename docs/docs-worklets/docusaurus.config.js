@@ -58,6 +58,7 @@ const config = {
         theme: { customCss: require.resolve('./src/css/index.css') },
       }),
     ],
+    require.resolve('@swmansion/t-rex-ui/preset'),
   ],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
@@ -173,7 +174,11 @@ const config = {
               rules: [
                 { test: /\.txt$/, type: 'asset/source' },
                 { test: /\.tsx?$/, use: 'babel-loader' },
-                { test: /\.js$/, exclude: /\.yarn[\\/]unprocessed/, use: 'babel-loader' },
+                {
+                  test: /\.js$/,
+                  exclude: /\.yarn[\\/]unprocessed/,
+                  use: 'babel-loader',
+                },
               ],
             },
             resolve: {
