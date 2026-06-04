@@ -12,7 +12,7 @@ function findHostInstanceFastPath(maybeNativeRef: HostInstance | undefined) {
   if (
     maybeNativeRef.__internalInstanceHandle &&
     maybeNativeRef.__nativeTag &&
-    (maybeNativeRef.__viewConfig ?? maybeNativeRef._viewConfig)
+    maybeNativeRef.__viewConfig
   ) {
     return maybeNativeRef;
   }

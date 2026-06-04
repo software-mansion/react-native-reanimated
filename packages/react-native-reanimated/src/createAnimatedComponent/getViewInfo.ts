@@ -21,7 +21,6 @@ export function getViewInfo(element: HostInstance): {
 } {
   return {
     reactViewName: (element?.__viewConfig?.uiViewClassName ??
-      element?._viewConfig?.uiViewClassName ??
       element?.__internalInstanceHandle?.type ??
       element?.__internalInstanceHandle?.elementType) as string,
     viewTag: element?.__nativeTag,
