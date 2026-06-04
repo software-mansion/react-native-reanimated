@@ -8,6 +8,9 @@ import {
 import { removeElementAnimation } from '../../../common/web';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
 import type {
+  CSSAnimationCallbackProp,
+  CSSAnimationCallbacks,
+  CSSAnimationEvent,
   CSSAnimationKeyframes,
   CSSAnimationSettings,
   ExistingCSSAnimationProperties,
@@ -19,6 +22,17 @@ import { insertCSSAnimation, removeCSSAnimation } from '../domUtils';
 import { CSSKeyframesRuleImpl } from '../keyframes';
 import { normalizeIterationCount } from '../normalization';
 import { maybeAddSuffixes, parseTimingFunction } from '../utils';
+
+const ANIMATION_EVENT_NAME: Record<CSSAnimationCallbackProp, string> = {
+  onAnimationStart: 'animationstart',
+  onAnimationEnd: 'animationend',
+  onAnimationIteration: 'animationiteration',
+  onAnimationCancel: 'animationcancel',
+};
+
+const CALLBACK_PROPS = Object.keys(
+  ANIMATION_EVENT_NAME
+) as CSSAnimationCallbackProp[];
 
 const isCSSKeyframesRuleImpl = (
   keyframes: ExistingCSSAnimationProperties['animationName']
@@ -42,12 +56,25 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   private attachedAnimations: Record<string, ProcessedAnimation> = {};
   private unmountCleanupCalled = false;
 
+  private callbacks: CSSAnimationCallbacks = {};
+  private readonly attachedStateListeners = new Map<
+    CSSAnimationCallbackProp,
+    EventListener
+  >();
+
   constructor(element: ReanimatedHTMLElement, componentName = '') {
     this.element = element;
     this.componentName = componentName;
   }
 
-  update(animationProperties: ExistingCSSAnimationProperties | null) {
+  update(
+    animationProperties: ExistingCSSAnimationProperties | null,
+    callbacks: CSSAnimationCallbacks | null = null
+  ) {
+    // Keep listeners tied to callback presence (not animation presence) so an
+    // `animationcancel` emitted while detaching still reaches the user.
+    this.syncStateListeners(callbacks ?? {});
+
     if (!animationProperties) {
       this.detach();
       return;
@@ -113,6 +140,8 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   }
 
   unmountCleanup(): void {
+    this.syncStateListeners({});
+
     if (!this.unmountCleanupCalled) {
       this.unmountCleanupCalled = true;
       // We use setTimeout to ensure that the animation is removed after the
@@ -139,6 +168,41 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     this.removeAnimationsFromStyleSheet(attachedAnimations);
     this.unmountCleanupCalled = false;
     this.attachedAnimations = {};
+  }
+
+  private syncStateListeners(callbacks: CSSAnimationCallbacks) {
+    this.callbacks = callbacks;
+
+    for (const prop of CALLBACK_PROPS) {
+      const eventName = ANIMATION_EVENT_NAME[prop];
+      const hasCallback = typeof callbacks[prop] === 'function';
+      const listener = this.attachedStateListeners.get(prop);
+
+      if (hasCallback && !listener) {
+        const newListener = this.createStateListener(prop);
+        this.attachedStateListeners.set(prop, newListener);
+        this.element.addEventListener(eventName, newListener);
+      } else if (!hasCallback && listener) {
+        this.element.removeEventListener(eventName, listener);
+        this.attachedStateListeners.delete(prop);
+      }
+    }
+  }
+
+  private createStateListener(prop: CSSAnimationCallbackProp): EventListener {
+    return (event: Event) => {
+      const animationEvent = event as AnimationEvent;
+      // Animation events bubble; only handle this element's own animations.
+      if (animationEvent.target !== this.element) {
+        return;
+      }
+
+      const payload: CSSAnimationEvent = {
+        animationName: animationEvent.animationName,
+        elapsedTime: animationEvent.elapsedTime,
+      };
+      this.callbacks[prop]?.(payload);
+    };
   }
 
   private updateAttachedAnimations(processedAnimations: ProcessedAnimation[]) {

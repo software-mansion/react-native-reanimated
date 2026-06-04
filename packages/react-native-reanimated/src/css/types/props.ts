@@ -3,7 +3,10 @@ import type { StyleProp } from 'react-native';
 
 import type { UnknownRecord } from '../../common';
 import type { DefaultStyle } from '../../hook/commonTypes';
-import type { CSSAnimationProperties } from './animation';
+import type {
+  CSSAnimationCallbacks,
+  CSSAnimationProperties,
+} from './animation';
 import type { StyleWithPseudoValues } from './pseudo';
 import type {
   CSSTransitionCallbacks,
@@ -25,6 +28,7 @@ type PickStyleProps<P> = Pick<
 
 type CSSConfigProps<TStyle extends object = UnknownRecord> = Partial<
   CSSAnimationProperties<TStyle> &
+    CSSAnimationCallbacks &
     CSSTransitionProperties<TStyle> &
     CSSTransitionCallbacks
 >;
