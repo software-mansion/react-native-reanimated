@@ -2,11 +2,7 @@
 
 #include <jsi/jsi.h>
 
-#ifndef NDEBUG
-// Nothing
-#else
 #include <memory>
-#endif // NDEBUG
 #include <string>
 
 namespace worklets {
@@ -64,21 +60,12 @@ class UnpackerLoader {
     }
 
 #ifndef NDEBUG
-    auto evalWithSourceMap = rt.global().getPropertyAsFunction(rt, "evalWithSourceMap");
-    evalWithSourceMap.call(rt, valueUnpacker_.code, valueUnpacker_.location, valueUnpacker_.sourceMap);
-    evalWithSourceMap.call(
-        rt, synchronizableUnpacker_.code, synchronizableUnpacker_.location, synchronizableUnpacker_.sourceMap);
-    evalWithSourceMap.call(
-        rt,
-        customSerializableUnpacker_.code,
-        customSerializableUnpacker_.location,
-        customSerializableUnpacker_.sourceMap);
-    evalWithSourceMap.call(
-        rt, shareableHostUnpacker_.code, shareableHostUnpacker_.location, shareableHostUnpacker_.sourceMap);
-    evalWithSourceMap.call(
-        rt, shareableGuestUnpacker_.code, shareableGuestUnpacker_.location, shareableGuestUnpacker_.sourceMap);
-    evalWithSourceMap.call(
-        rt, remoteFunctionUnpacker_.code, remoteFunctionUnpacker_.location, remoteFunctionUnpacker_.sourceMap);
+    installUnpacker(rt, valueUnpacker_);
+    installUnpacker(rt, synchronizableUnpacker_);
+    installUnpacker(rt, customSerializableUnpacker_);
+    installUnpacker(rt, shareableHostUnpacker_);
+    installUnpacker(rt, shareableGuestUnpacker_);
+    installUnpacker(rt, remoteFunctionUnpacker_);
 #else
     rt.evaluateJavaScript(std::make_shared<facebook::jsi::StringBuffer>(valueUnpacker_.code), valueUnpacker_.location);
     rt.evaluateJavaScript(
@@ -96,6 +83,18 @@ class UnpackerLoader {
   }
 
  private:
+#ifndef NDEBUG
+  static void installUnpacker(facebook::jsi::Runtime &rt, const Unpacker &unpacker) {
+    if (unpacker.sourceMap.empty()) {
+      rt.evaluateJavaScript(std::make_shared<facebook::jsi::StringBuffer>(unpacker.code), unpacker.location);
+      return;
+    }
+
+    auto evalWithSourceMap = rt.global().getPropertyAsFunction(rt, "evalWithSourceMap");
+    evalWithSourceMap.call(rt, unpacker.code, unpacker.location, unpacker.sourceMap);
+  }
+#endif // NDEBUG
+
   Unpacker valueUnpacker_;
   Unpacker synchronizableUnpacker_;
   Unpacker customSerializableUnpacker_;

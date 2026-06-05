@@ -23,15 +23,15 @@ export function installValueUnpacker() {
       let workletFun = workletsCache.get(workletHash);
       if (workletFun === undefined) {
         const initData = objectToUnpack.__initData;
-        if (globalThis.evalWithSourceMap) {
+        if (globalThis.evalWithSourceMap && initData?.sourceMap) {
           // if the runtime (hermes only for now) supports loading source maps
           // we want to use the proper filename for the location as it guarantees
           // that debugger understands and loads the source code of the file where
           // the worklet is defined.
           workletFun = globalThis.evalWithSourceMap(
-            '(' + initData!.code + '\n)',
-            initData!.location!,
-            initData!.sourceMap!
+            '(' + initData.code + '\n)',
+            initData.location ?? '',
+            initData.sourceMap
           );
         } else if (globalThis.evalWithSourceUrl) {
           // if the runtime doesn't support loading source maps, in dev mode we
