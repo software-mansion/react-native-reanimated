@@ -8,7 +8,7 @@ index 035d3de9af..75ced6b69b 100644
      "typescript": "5.9.3"
 +  },
 +  "resolutions": {
-+    "metro@0.84.x": "patch:metro@npm%3A0.84.4#~/.yarn/patches/metro-npm-0.84.4-68d21d57b4.patch",
-+    "metro-runtime@0.84.x": "patch:metro-runtime@npm%3A0.84.4#~/.yarn/patches/metro-runtime-npm-0.84.4-9533293c73.patch"
++    "metro": "patch:metro@npm%3A0.84.4#~/.yarn/patches/metro-npm-0.84.4-68d21d57b4.patch",
++    "metro-runtime": "patch:metro-runtime@npm%3A0.84.4#~/.yarn/patches/metro-runtime-npm-0.84.4-9533293c73.patch"
    }
  }

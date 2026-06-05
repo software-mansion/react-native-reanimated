@@ -214,4 +214,46 @@ describe.each([
       expect(result.code).toMatchSnapshot();
     });
   });
+
+  describe('state environment flavor detection', () => {
+    const sampleInput = html`<script>
+      function foo() {
+        'worklet';
+        return 1;
+      }
+    </script>`.replace(/<\/?script[^>]*>/g, '');
+
+    function transformWithEnvName(envName: string): string {
+      const transformed = transformSync(sampleInput, {
+        filename: MOCK_LOCATION,
+        compact: false,
+        babelrc: false,
+        configFile: false,
+        envName,
+        plugins: [
+          [
+            plugin,
+            {
+              bundleMode,
+              disableSourceMaps: true,
+              relativeSourceLocation: true,
+            },
+          ],
+        ],
+      });
+      return bundleMode
+        ? capturedFiles.map((f) => f.content).join('\n')
+        : (transformed?.code ?? '');
+    }
+
+    test('envName "production" is detected as release', () => {
+      expect(transformWithEnvName('production')).not.toContain(
+        '__pluginVersion'
+      );
+    });
+
+    test('envName "development" is not detected as release', () => {
+      expect(transformWithEnvName('development')).toContain('__pluginVersion');
+    });
+  });
 });
