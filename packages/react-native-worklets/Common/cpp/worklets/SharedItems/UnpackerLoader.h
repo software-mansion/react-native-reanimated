@@ -25,24 +25,30 @@ struct ShareableUnpackers {
 class UnpackerLoader {
  public:
   void loadUnpackers(const ShareableUnpackers &unpackers) {
-    valueUnpacker_ = {"(" + unpackers.valueUnpacker.code + ")();",
-                      unpackers.valueUnpacker.location,
-                      unpackers.valueUnpacker.sourceMap};
-    synchronizableUnpacker_ = {"(" + unpackers.synchronizableUnpacker.code + ")();",
-                               unpackers.synchronizableUnpacker.location,
-                               unpackers.synchronizableUnpacker.sourceMap};
-    customSerializableUnpacker_ = {"(" + unpackers.customSerializableUnpacker.code + ")();",
-                                   unpackers.customSerializableUnpacker.location,
-                                   unpackers.customSerializableUnpacker.sourceMap};
-    shareableHostUnpacker_ = {"(" + unpackers.shareableHostUnpacker.code + ")();",
-                              unpackers.shareableHostUnpacker.location,
-                              unpackers.shareableHostUnpacker.sourceMap};
-    shareableGuestUnpacker_ = {"(" + unpackers.shareableGuestUnpacker.code + ")();",
-                               unpackers.shareableGuestUnpacker.location,
-                               unpackers.shareableGuestUnpacker.sourceMap};
-    remoteFunctionUnpacker_ = {"(" + unpackers.remoteFunctionUnpacker.code + ")();",
-                               unpackers.remoteFunctionUnpacker.location,
-                               unpackers.remoteFunctionUnpacker.sourceMap};
+    valueUnpacker_ = {
+        "(" + unpackers.valueUnpacker.code + ")();",
+        unpackers.valueUnpacker.location,
+        unpackers.valueUnpacker.sourceMap};
+    synchronizableUnpacker_ = {
+        "(" + unpackers.synchronizableUnpacker.code + ")();",
+        unpackers.synchronizableUnpacker.location,
+        unpackers.synchronizableUnpacker.sourceMap};
+    customSerializableUnpacker_ = {
+        "(" + unpackers.customSerializableUnpacker.code + ")();",
+        unpackers.customSerializableUnpacker.location,
+        unpackers.customSerializableUnpacker.sourceMap};
+    shareableHostUnpacker_ = {
+        "(" + unpackers.shareableHostUnpacker.code + ")();",
+        unpackers.shareableHostUnpacker.location,
+        unpackers.shareableHostUnpacker.sourceMap};
+    shareableGuestUnpacker_ = {
+        "(" + unpackers.shareableGuestUnpacker.code + ")();",
+        unpackers.shareableGuestUnpacker.location,
+        unpackers.shareableGuestUnpacker.sourceMap};
+    remoteFunctionUnpacker_ = {
+        "(" + unpackers.remoteFunctionUnpacker.code + ")();",
+        unpackers.remoteFunctionUnpacker.location,
+        unpackers.remoteFunctionUnpacker.sourceMap};
   }
 
   void installUnpackers(facebook::jsi::Runtime &rt) const {
@@ -65,10 +71,11 @@ class UnpackerLoader {
       evalWithSourceMap.call(rt, valueUnpacker_.code, valueUnpacker_.location, valueUnpacker_.sourceMap);
       evalWithSourceMap.call(
           rt, synchronizableUnpacker_.code, synchronizableUnpacker_.location, synchronizableUnpacker_.sourceMap);
-      evalWithSourceMap.call(rt,
-                             customSerializableUnpacker_.code,
-                             customSerializableUnpacker_.location,
-                             customSerializableUnpacker_.sourceMap);
+      evalWithSourceMap.call(
+          rt,
+          customSerializableUnpacker_.code,
+          customSerializableUnpacker_.location,
+          customSerializableUnpacker_.sourceMap);
       evalWithSourceMap.call(
           rt, shareableHostUnpacker_.code, shareableHostUnpacker_.location, shareableHostUnpacker_.sourceMap);
       evalWithSourceMap.call(
@@ -76,18 +83,22 @@ class UnpackerLoader {
       evalWithSourceMap.call(
           rt, remoteFunctionUnpacker_.code, remoteFunctionUnpacker_.location, remoteFunctionUnpacker_.sourceMap);
     } else {
-      rt.evaluateJavaScript(std::make_shared<facebook::jsi::StringBuffer>(valueUnpacker_.code),
-                            valueUnpacker_.location);
-      rt.evaluateJavaScript(std::make_shared<facebook::jsi::StringBuffer>(synchronizableUnpacker_.code),
-                            synchronizableUnpacker_.location);
-      rt.evaluateJavaScript(std::make_shared<facebook::jsi::StringBuffer>(customSerializableUnpacker_.code),
-                            customSerializableUnpacker_.location);
-      rt.evaluateJavaScript(std::make_shared<facebook::jsi::StringBuffer>(shareableHostUnpacker_.code),
-                            shareableHostUnpacker_.location);
-      rt.evaluateJavaScript(std::make_shared<facebook::jsi::StringBuffer>(shareableGuestUnpacker_.code),
-                            shareableGuestUnpacker_.location);
-      rt.evaluateJavaScript(std::make_shared<facebook::jsi::StringBuffer>(remoteFunctionUnpacker_.code),
-                            remoteFunctionUnpacker_.location);
+      rt.evaluateJavaScript(
+          std::make_shared<facebook::jsi::StringBuffer>(valueUnpacker_.code), valueUnpacker_.location);
+      rt.evaluateJavaScript(
+          std::make_shared<facebook::jsi::StringBuffer>(synchronizableUnpacker_.code),
+          synchronizableUnpacker_.location);
+      rt.evaluateJavaScript(
+          std::make_shared<facebook::jsi::StringBuffer>(customSerializableUnpacker_.code),
+          customSerializableUnpacker_.location);
+      rt.evaluateJavaScript(
+          std::make_shared<facebook::jsi::StringBuffer>(shareableHostUnpacker_.code), shareableHostUnpacker_.location);
+      rt.evaluateJavaScript(
+          std::make_shared<facebook::jsi::StringBuffer>(shareableGuestUnpacker_.code),
+          shareableGuestUnpacker_.location);
+      rt.evaluateJavaScript(
+          std::make_shared<facebook::jsi::StringBuffer>(remoteFunctionUnpacker_.code),
+          remoteFunctionUnpacker_.location);
     }
   }
 
