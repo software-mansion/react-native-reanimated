@@ -69,9 +69,15 @@ export function generateWorkletFile(
 
   const newProg = program([...imports, exportDefaultDeclaration(factory)]);
 
+  const reactPreset = require.resolve('@babel/preset-react');
+  const reactPresetOptions = {
+    development: false,
+    runtime: 'automatic',
+  };
+
   const transformedProg = transformFromAstSync(newProg, undefined, {
     filename: state.file.opts.filename,
-    presets: ['@babel/preset-typescript'],
+    presets: ['@babel/preset-typescript', [reactPreset, reactPresetOptions]],
     plugins: [state.autoworkletizationPlugin],
     ast: false,
     babelrc: false,

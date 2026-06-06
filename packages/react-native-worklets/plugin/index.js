@@ -733,9 +733,14 @@ var require_generate = __commonJS({
       const relativeImports = Array.from(relativeBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, imports_1.createImportPathLiteral)(binding.path.parentPath.node.source.value, state)));
       const imports = [...libraryImports, ...relativeImports];
       const newProg = (0, types_12.program)([...imports, (0, types_12.exportDefaultDeclaration)(factory)]);
+      const reactPreset = require.resolve("@babel/preset-react");
+      const reactPresetOptions = {
+        development: false,
+        runtime: "automatic"
+      };
       const transformedProg = (_a = (0, core_1.transformFromAstSync)(newProg, void 0, {
         filename: state.file.opts.filename,
-        presets: ["@babel/preset-typescript"],
+        presets: ["@babel/preset-typescript", [reactPreset, reactPresetOptions]],
         plugins: [state.autoworkletizationPlugin],
         ast: false,
         babelrc: false,

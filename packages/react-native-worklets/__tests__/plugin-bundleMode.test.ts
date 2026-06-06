@@ -2,11 +2,13 @@ import '../plugin/src/jestMatchers';
 
 import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
+import { isFunctionExpression, isVariableDeclaration } from '@babel/types';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
 import * as path from 'path';
 
 import { countOccurrences } from '../jest/pluginTestUtils';
+import type { WorkletsPluginPass } from '../plugin/src/types';
 
 type CapturedFile = { path: string; content: string };
 
@@ -22,6 +24,8 @@ jest.mock('fs', () => {
   };
 });
 
+// eslint-disable-next-line import/first
+import { generateWorkletFile } from '../plugin/src/generate';
 // eslint-disable-next-line import/first
 import type { PluginOptions } from '../plugin';
 // eslint-disable-next-line import/first
@@ -198,6 +202,43 @@ describe('babel plugin in bundleMode', () => {
       expect(files).toHaveLength(1);
       expect(code).toMatchSnapshot();
       expect(files[0].content).toMatchSnapshot();
+    });
+
+    test('lowers JSX in written worklet files', () => {
+      const transformed = transformSync(
+        html`<script>
+          const factory = function () {
+            return <ImportedComponent __self={this} />;
+          };
+        </script>`.replace(/<\/?script[^>]*>/g, ''),
+        {
+          ast: true,
+          babelrc: false,
+          code: false,
+          configFile: false,
+          plugins: ['@babel/plugin-syntax-jsx'],
+        }
+      );
+      assert(transformed);
+      assert(transformed.ast);
+
+      const statement = transformed.ast.program.body[0];
+      assert(isVariableDeclaration(statement));
+
+      const factory = statement.declarations[0].init;
+      assert(isFunctionExpression(factory));
+
+      const autoworkletizationPlugin = { visitor: {} };
+      const state = {
+        file: { opts: { filename: MOCK_LOCATION } },
+        autoworkletizationPlugin,
+      } as WorkletsPluginPass;
+
+      generateWorkletFile(new Set(), new Set(), factory, 1, state);
+      const files = capturedFiles;
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toContain('react/jsx-runtime');
+      expect(files[0].content).not.toContain('<ImportedComponent');
     });
 
     test('rebases relative imports against the worklets directory', () => {
