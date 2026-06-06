@@ -690,11 +690,17 @@ var require_closure = __commonJS({
             binding = idPath.scope.getBinding(name);
           }
           if (!binding) {
+            if (idPath.isJSXIdentifier()) {
+              return;
+            }
             if (state.opts.strictGlobal || globals_12.globals.has(name)) {
               return;
             }
             capturedNames.add(name);
             closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
+            return;
+          }
+          if (shouldSkipBundleModeJSXIdentifier(idPath, binding, state)) {
             return;
           }
           if ("id" in funPath.node) {
@@ -737,11 +743,27 @@ var require_closure = __commonJS({
       if (!idPath.isJSXIdentifier()) {
         return false;
       }
-      if (!state.opts.bundleMode || !state.opts.bundleModeCaptureJsxComponents) {
+      if (!state.opts.bundleMode) {
         return true;
       }
       const isJsxMemberProperty = idPath.parentPath.isJSXMemberExpression() && idPath.parentKey === "property";
       return isJsxMemberProperty || types_12.react.isCompatTag(idPath.node.name);
+    }
+    function shouldSkipBundleModeJSXIdentifier(idPath, binding, state) {
+      if (!idPath.isJSXIdentifier()) {
+        return false;
+      }
+      if (!(0, imports_1.isImport)(binding)) {
+        return true;
+      }
+      if ((0, imports_1.isImportRelative)(binding)) {
+        const isAllowed2 = (0, imports_1.isAllowedForRelativeImports)(state.filename, state.opts.workletizableModules);
+        return !isAllowed2;
+      }
+      const parentPath = binding.path.parentPath;
+      const source = parentPath.node.source.value;
+      const isAllowed = (0, imports_1.isWorkletizableModule)(source, state.opts.workletizableModules);
+      return !isAllowed;
     }
   }
 });

@@ -424,41 +424,32 @@ describe('babel plugin', () => {
   });
 
   describe('for closure capturing', () => {
-    test("doesn't capture JSX component imports in bundle mode by default", () => {
+    test("doesn't capture JSX component imports outside bundle mode", () => {
       const input = html`<script>
-        import { Text, View } from 'react-native';
+        import { ImportedComponent } from 'some-library';
 
         function renderView() {
           'worklet';
-          return (
-            <View>
-              <Text>Test</Text>
-            </View>
-          );
+          return <ImportedComponent />;
         }
       </script>`;
 
-      const { libraryBindingsToImport } = getClosureData(
-        input,
-        {
-          bundleMode: true,
-          workletizableModules: ['react-native'],
-        }
-      );
+      const { libraryBindingsToImport } = getClosureData(input);
 
-      expect(Array.from(libraryBindingsToImport)).toEqual([]);
+      const bindingsToImport = Array.from(libraryBindingsToImport);
+      expect(bindingsToImport).toEqual([]);
     });
 
-    test('captures JSX component imports in bundle mode when enabled', () => {
+    test('captures JSX component imports from workletizable modules in bundle mode', () => {
       const input = html`<script>
-        import { Text, View } from 'react-native';
+        import { ImportedComponent, OtherImportedComponent } from 'some-library';
 
         function renderView() {
           'worklet';
           return (
-            <View>
-              <Text>Test</Text>
-            </View>
+            <ImportedComponent>
+              <OtherImportedComponent />
+            </ImportedComponent>
           );
         }
       </script>`;
@@ -467,8 +458,7 @@ describe('babel plugin', () => {
         input,
         {
           bundleMode: true,
-          bundleModeCaptureJsxComponents: true,
-          workletizableModules: ['react-native'],
+          workletizableModules: ['some-library'],
         }
       );
 
@@ -476,7 +466,29 @@ describe('babel plugin', () => {
         Array.from(libraryBindingsToImport)
           .map((binding) => binding.identifier.name)
           .sort()
-      ).toEqual(['Text', 'View']);
+      ).toEqual(['ImportedComponent', 'OtherImportedComponent']);
+    });
+
+    test("doesn't capture JSX component imports from non-workletizable modules in bundle mode", () => {
+      const input = html`<script>
+        import { ImportedComponent } from 'some-library';
+
+        function renderView() {
+          'worklet';
+          return <ImportedComponent />;
+        }
+      </script>`;
+
+      const { closureVariables, libraryBindingsToImport } = getClosureData(
+        input,
+        {
+          bundleMode: true,
+        }
+      );
+
+      const bindingsToImport = Array.from(libraryBindingsToImport);
+      expect(bindingsToImport).toEqual([]);
+      expect(closureVariables).toEqual([]);
     });
 
     test('captures worklets environment', () => {

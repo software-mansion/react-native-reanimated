@@ -60,6 +60,10 @@ export function getClosure(
         }
 
         if (!binding) {
+          if (idPath.isJSXIdentifier()) {
+            return;
+          }
+
           /**
            * The variable is unbound - it's either a mistake or implicit capture
            * from the global scope. In this case we have to avoid capturing
@@ -70,6 +74,10 @@ export function getClosure(
           }
           capturedNames.add(name);
           closureVariables.push(cloneNode(idPath.node as Identifier, true));
+          return;
+        }
+
+        if (shouldSkipBundleModeJSXIdentifier(idPath, binding, state)) {
           return;
         }
 
@@ -140,7 +148,7 @@ function shouldSkipJSXIdentifier(
     return false;
   }
 
-  if (!state.opts.bundleMode || !state.opts.bundleModeCaptureJsxComponents) {
+  if (!state.opts.bundleMode) {
     return true;
   }
 
@@ -149,4 +157,34 @@ function shouldSkipJSXIdentifier(
     idPath.parentKey === 'property';
 
   return isJsxMemberProperty || react.isCompatTag(idPath.node.name);
+}
+
+function shouldSkipBundleModeJSXIdentifier(
+  idPath: NodePath<Identifier | JSXIdentifier>,
+  binding: Binding,
+  state: WorkletsPluginPass
+): boolean {
+  if (!idPath.isJSXIdentifier()) {
+    return false;
+  }
+
+  if (!isImport(binding)) {
+    return true;
+  }
+
+  if (isImportRelative(binding)) {
+    const isAllowed = isAllowedForRelativeImports(
+      state.filename,
+      state.opts.workletizableModules
+    );
+    return !isAllowed;
+  }
+
+  const parentPath = binding.path.parentPath as NodePath<ImportDeclaration>;
+  const source = parentPath.node.source.value;
+  const isAllowed = isWorkletizableModule(
+    source,
+    state.opts.workletizableModules
+  );
+  return !isAllowed;
 }
