@@ -65,9 +65,6 @@ Defaults to `false`.
 
 Enables the [Bundle Mode](/docs/bundleMode/).
 
-In Bundle Mode, JSX component identifiers are preserved when they come from
-modules allowed for bundle-mode imports.
-
 ### disableInlineStylesWarning
 
 Defaults to `false`.
