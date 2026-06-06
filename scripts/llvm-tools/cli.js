@@ -63,7 +63,9 @@ function main(argv) {
 
   const inputs = inputArgs.flatMap(expandInput);
   if (inputs.length === 0) {
-    console.error('warning: no compile_commands.json or .compile files found');
+    console.error(
+      'warning: no compile_commands.json or .xcode-compile-metadata files found'
+    );
     return 0;
   }
 

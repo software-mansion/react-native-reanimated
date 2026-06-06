@@ -33,7 +33,7 @@ runs:
     - name: Generate Android compile database
       shell: bash
       working-directory: apps/fabric-example/android
-      run: ./gradlew :react-native-reanimated:assembleDebug :react-native-worklets:assembleDebug --build-cache -PreactNativeArchitectures=arm64-v8a
+      run: ./gradlew :react-native-reanimated:configureCMakeDebug :react-native-worklets:configureCMakeDebug -PreactNativeArchitectures=arm64-v8a
 
     - name: Lint Common
       shell: bash

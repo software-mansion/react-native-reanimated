@@ -29,6 +29,10 @@ runs:
       run: |
         sudo apt-get update
         sudo apt-get install -y clang-tidy
+
+    - name: Install cmakelang
+      shell: bash
+      run: |
         python -m pip install --upgrade pip
         python -m pip install cmakelang==0.6.13
 
@@ -49,7 +53,7 @@ runs:
     - name: Generate Android compile database
       shell: bash
       working-directory: apps/fabric-example/android
-      run: ./gradlew :react-native-reanimated:assembleDebug :react-native-worklets:assembleDebug --build-cache -PreactNativeArchitectures=arm64-v8a
+      run: ./gradlew :react-native-reanimated:configureCMakeDebug :react-native-worklets:configureCMakeDebug -PreactNativeArchitectures=arm64-v8a
 
     - name: Lint Android
       shell: bash

@@ -1,7 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const INPUT_BASENAMES = new Set(['compile_commands.json', '.compile']);
+const INPUT_BASENAMES = new Set([
+  'compile_commands.json',
+  '.xcode-compile-metadata',
+]);
 const SKIP_DIRS = new Set(['node_modules', 'Pods', 'build']);
 
 /**

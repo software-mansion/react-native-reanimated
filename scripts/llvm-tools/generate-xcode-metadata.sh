@@ -83,15 +83,15 @@ wait_for_stable_log() {
     exit 0
   fi
 
-  "$xbs" parse "$log" </dev/null >/dev/null 2>&1 || true
+  "$xbs" parse "$log" -o ".xcode-compile-metadata" </dev/null >/dev/null 2>&1 || true
 
-  if [ -f ".compile" ]; then
+  if [ -f ".xcode-compile-metadata" ]; then
     for cpp_dir in "$repo_root"/packages/*/Common/cpp; do
       [ -d "$cpp_dir" ] || continue
       pkg_dir="${cpp_dir%/Common/cpp}"
       node "$script_dir/emit.js" \
         "$pkg_dir/compile_commands.json" \
-        ".compile" \
+        ".xcode-compile-metadata" \
         "$pkg_dir/android/.cxx"
     done
   fi
