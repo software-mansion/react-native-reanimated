@@ -1,4 +1,5 @@
 #!/bin/bash
+# THIS FILE WAS ENTIRELY AI GENERATED.
 
 # Usage: clang-tidy-lint.sh [scope-regex] [platform] [--verbose]
 #   scope-regex: "." (the package directory) or a literal regex.

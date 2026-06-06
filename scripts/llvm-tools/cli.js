@@ -1,3 +1,5 @@
+/* THIS FILE WAS ENTIRELY AI GENERATED. */
+
 const fs = require('fs');
 
 const { normalize } = require('./normalize');

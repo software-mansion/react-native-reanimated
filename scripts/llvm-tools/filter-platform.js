@@ -1,3 +1,5 @@
+/* THIS FILE WAS ENTIRELY AI GENERATED. */
+
 const fs = require('fs');
 
 const [input, platform, output] = process.argv.slice(2);
@@ -8,11 +10,12 @@ if (!input || !platform || !output) {
 
 const data = JSON.parse(fs.readFileSync(input, 'utf8'));
 
-const APPLE = /Xcode\.app|XcodeDefault\.xctoolchain|-apple-(?:ios|tvos|macos|watchos|xros)/;
+const APPLE =
+  /Xcode\.app|XcodeDefault\.xctoolchain|-apple-(?:ios|tvos|macos|watchos|xros)/;
 const ANDROID = /\/Android\/(?:sdk\/)?ndk\/|-(?:none-)?linux-android/;
 
 /**
- * @param {{ command?: unknown, arguments?: unknown }} entry
+ * @param {{ command?: unknown; arguments?: unknown }} entry
  * @returns {string}
  */
 function commandString(entry) {
@@ -21,7 +24,8 @@ function commandString(entry) {
   return '';
 }
 
-const matcher = platform === 'ios' ? APPLE : platform === 'android' ? ANDROID : null;
+const matcher =
+  platform === 'ios' ? APPLE : platform === 'android' ? ANDROID : null;
 if (!matcher) {
   console.error(`unknown platform '${platform}', expected 'ios' or 'android'`);
   process.exit(1);

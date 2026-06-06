@@ -1,4 +1,4 @@
-/* eslint-disable jsdoc/require-property-description */
+/* THIS FILE WAS ENTIRELY AI GENERATED. */
 
 /**
  * @typedef {object} CompileEntry

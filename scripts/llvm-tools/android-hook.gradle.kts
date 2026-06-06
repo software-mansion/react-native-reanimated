@@ -1,3 +1,5 @@
+/* THIS FILE WAS ENTIRELY AI GENERATED. */
+
 project.tasks.configureEach {
     if (!javaClass.name.startsWith("com.android.build.gradle.tasks.ExternalNativeBuildJsonTask")) {
         return@configureEach

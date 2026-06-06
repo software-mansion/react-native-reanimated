@@ -1,4 +1,6 @@
 #!/bin/bash
+# THIS FILE WAS ENTIRELY AI GENERATED.
+
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "$0")" && pwd)"
