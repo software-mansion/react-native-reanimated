@@ -1,6 +1,9 @@
 'use strict';
 import type { CSSAnimationProp } from './animation';
-import type { CSSTransitionProp } from './transition';
+import type {
+  CSSTransitionCallbackProp,
+  CSSTransitionProp,
+} from './transition';
 
 export type * from './animation';
 export type * from './common';
@@ -11,4 +14,7 @@ export type * from './props';
 export type * from './pseudo';
 export type * from './transition';
 
-export type CSSConfigProp = CSSTransitionProp | CSSAnimationProp;
+export type CSSConfigProp =
+  | CSSTransitionProp
+  | CSSAnimationProp
+  | CSSTransitionCallbackProp;

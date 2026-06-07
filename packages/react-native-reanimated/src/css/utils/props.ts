@@ -5,6 +5,8 @@ import { isSharedValue } from '../../isSharedValue';
 import type {
   CSSAnimationProperties,
   CSSStyle,
+  CSSTransitionCallback,
+  CSSTransitionCallbacks,
   CSSTransitionProperties,
   ExistingCSSAnimationProperties,
 } from '../types';
@@ -13,6 +15,7 @@ import {
   isCSSKeyframesObject,
   isCSSKeyframesRule,
   isPseudoSelectorValue,
+  isTransitionCallbackProp,
   isTransitionProp,
 } from './guards';
 
@@ -27,10 +30,12 @@ export function filterCSSAndStyleProperties<S extends object>(
   ExistingCSSAnimationProperties | null,
   CSSTransitionProperties | null,
   PseudoStylesBySelector | null,
+  CSSTransitionCallbacks | null,
   UnknownRecord,
 ] {
   const animationProperties: Partial<CSSAnimationProperties> = {};
   let transitionProperties: Partial<CSSTransitionProperties> = {};
+  const transitionCallbacks: CSSTransitionCallbacks = {};
   const filteredStyle: UnknownRecord = {};
   const pseudoStylesBySelector: PseudoStylesBySelector = {};
 
@@ -59,6 +64,8 @@ export function filterCSSAndStyleProperties<S extends object>(
       } else {
         (transitionProperties as UnknownRecord)[prop] = value;
       }
+    } else if (isTransitionCallbackProp(prop)) {
+      transitionCallbacks[prop] = value as CSSTransitionCallback;
     } else if (isSharedValue(value)) {
       continue;
     } else if (isPseudoSelectorValue(value)) {
@@ -111,15 +118,22 @@ export function filterCSSAndStyleProperties<S extends object>(
   const hasPseudoStyles = Object.keys(pseudoStylesBySelector).length > 0;
   const finalPseudoStyles = hasPseudoStyles ? pseudoStylesBySelector : null;
 
+  const hasTransitionCallbacks = Object.keys(transitionCallbacks).length > 0;
+  const finalTransitionCallbacks = hasTransitionCallbacks
+    ? transitionCallbacks
+    : null;
+
   if (__DEV__) {
     validateCSSAnimationProps(animationProperties);
     validateCSSTransitionProps(transitionProperties);
+    validateCSSTransitionCallbacks(transitionCallbacks, hasTransitionConfig);
   }
 
   return [
     finalAnimationConfig,
     finalTransitionConfig,
     finalPseudoStyles,
+    finalTransitionCallbacks,
     filteredStyle,
   ];
 }
@@ -142,4 +156,23 @@ function validateCSSTransitionProps(props: Partial<CSSTransitionProperties>) {
         'Have you forgotten to pass the transitionDuration?'
     );
   }
+}
+
+function validateCSSTransitionCallbacks(
+  callbacks: CSSTransitionCallbacks,
+  hasTransitionConfig: boolean
+) {
+  // Transition callbacks are driven by an actual CSS transition; without any
+  // transition property configured there is nothing that could ever fire them.
+  const callbackNames = Object.keys(callbacks);
+  if (callbackNames.length === 0 || hasTransitionConfig) {
+    return;
+  }
+
+  const isPlural = callbackNames.length > 1;
+  logger.warn(
+    `CSS transition ${isPlural ? 'callbacks' : 'callback'} (${callbackNames.join(', ')}) ` +
+      `${isPlural ? 'were' : 'was'} provided without any CSS transition properties ` +
+      `(e.g. transitionDuration), so ${isPlural ? 'they' : 'it'} will never be called.`
+  );
 }

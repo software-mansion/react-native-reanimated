@@ -94,6 +94,7 @@ export default function TextExample() {
                   title: 'Mixed values (from 30 to 75%)',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'X Position',
             },
             {
@@ -138,6 +139,7 @@ export default function TextExample() {
                   title: 'Mixed values (from 20 to 80%)',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Y Position',
             },
             {
@@ -173,6 +175,7 @@ export default function TextExample() {
                   title: 'Per-glyph spread',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'DX (Horizontal Offset)',
             },
             {
@@ -198,6 +201,7 @@ export default function TextExample() {
                   title: 'Per-glyph wave',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'DY (Vertical Offset)',
             },
           ],
@@ -227,6 +231,7 @@ export default function TextExample() {
                   title: 'Per-glyph cascade',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Rotation',
             },
           ],

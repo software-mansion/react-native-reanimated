@@ -629,6 +629,9 @@ void ReanimatedModuleProxy::registerPseudoStyle(
   auto transitionConfig =
       css::parseCSSTransitionConfig(rt, shadowNode->getComponentName(), configObj.getProperty(rt, "transition"));
 
+  // TODO - clean up pseudo selectors registration not to have to clear the changedProperties object
+  transitionConfig.changedProperties.clear();
+
   auto lock = updatesRegistryManager_->lock();
   cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, std::move(transitionConfig));
   pseudoStylesRegistry_->registerPseudoStyle(

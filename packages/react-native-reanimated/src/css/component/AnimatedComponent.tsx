@@ -175,7 +175,10 @@ export default class AnimatedComponent<
     if (!IS_JEST) {
       this._CSSManager ??= new CSSManager(
         this._getViewInfo(),
-        this.ChildComponent.displayName
+        // `react-native-svg`'s web classes don't set `static displayName`
+        // (only the native side does), so fall back to the class `name` which
+        // matches the React `displayName` pattern used elsewhere.
+        this.ChildComponent.displayName ?? this.ChildComponent.name
       );
       this._CSSManager?.update(this._cssStyle);
     }

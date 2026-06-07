@@ -219,7 +219,9 @@ SubPath SVGPath::interpolateSubPaths(const SubPath &from, const SubPath &to, dou
   Point newM = from.M.interpolate(t, to.M);
   SubPath result(newM);
 
-  result.Z = t > 0.5 ? to.Z : from.Z;
+  // Closepath is structural, so a pair can't smoothly open<->close: render the
+  // segment closed if either endpoint is closed (matches the web normalizer).
+  result.Z = from.Z || to.Z;
 
   size_t longerSize = std::max(from.C.size(), to.C.size());
   size_t shorterSize = std::min(from.C.size(), to.C.size());

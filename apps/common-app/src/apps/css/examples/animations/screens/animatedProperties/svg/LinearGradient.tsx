@@ -157,6 +157,7 @@ export default function LinearGradientExample() {
                   title: 'Liquid Rise',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Movement and colors',
             },
             {
@@ -234,6 +235,7 @@ export default function LinearGradientExample() {
                   title: 'Twilight over the ocean',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Changing number of stops',
             },
             {
@@ -280,6 +282,7 @@ export default function LinearGradientExample() {
                   title: 'Opacity calculation',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Opacity',
             },
           ],
@@ -348,6 +351,7 @@ export default function LinearGradientExample() {
                   title: 'Start pos - percentage',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Start Point (x1, y1)',
             },
             {
@@ -382,6 +386,7 @@ export default function LinearGradientExample() {
                   title: 'End point sweep',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'End Point (x2, y2)',
             },
             {
@@ -416,6 +421,7 @@ export default function LinearGradientExample() {
                   title: 'Parallel Slide',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Combined Vector Motion',
             },
           ],
@@ -492,6 +498,7 @@ export default function LinearGradientExample() {
                   title: 'Interpolating unit systems',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Coordinate Systems',
             },
           ],
@@ -568,6 +575,7 @@ export default function LinearGradientExample() {
                   title: 'Mixed stops',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Stops as props or as children',
             },
           ],

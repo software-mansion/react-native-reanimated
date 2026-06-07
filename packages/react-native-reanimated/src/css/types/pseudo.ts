@@ -1,5 +1,5 @@
 'use strict';
-import type { CSSStyle } from './props';
+import type { RequireAtLeastOne, Simplify } from '../../common';
 
 export type NativePseudoSelectorKey =
   | ':hover'
@@ -37,13 +37,16 @@ type WebPseudoSelectorKey =
   | ':last-of-type'
   | ':only-of-type'
   | ':root'
-  | ':fullscreen'
-  | `:${'nth-child' | 'nth-last-child' | 'nth-of-type' | 'nth-last-of-type'}(${string})`;
+  | ':fullscreen';
 
-export type PseudoSelectorKey = NativePseudoSelectorKey | WebPseudoSelectorKey;
+export type CSSPseudoSelectorKey = Simplify<
+  'default' | NativePseudoSelectorKey | WebPseudoSelectorKey
+>;
 
-export type PseudoValue<T> = { default?: T } & {
-  [K in PseudoSelectorKey]?: T;
+type CSSPseudoValue<T> = RequireAtLeastOne<{
+  [K in CSSPseudoSelectorKey]?: T;
+}>;
+
+export type StyleWithPseudoValues<TStyle extends object> = {
+  [K in keyof TStyle]: TStyle[K] | CSSPseudoValue<TStyle[K]>;
 };
-
-export type CSSPseudoSelectorStyle = Partial<CSSStyle>;

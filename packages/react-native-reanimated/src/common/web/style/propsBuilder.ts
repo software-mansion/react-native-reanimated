@@ -8,17 +8,24 @@ import {
   kebabizeCamelCase,
   maybeAddSuffix,
 } from '../../utils';
-import { isRuleBuilder } from '../utils';
+import { hasNameAlias, isRuleBuilder } from '../utils';
 import { PROPERTIES_CONFIG } from './config';
 import type { PropsBuilderConfig, RuleBuilder } from './types';
 
 type WebPropsBuilderConfig<P extends UnknownRecord = UnknownRecord> =
   PropsBuilderConfig<P>;
 
+export type WebPropsBuilder<P extends UnknownRecord = UnknownRecord> = {
+  build(props: Partial<P>): string | null;
+};
+
 export function createWebPropsBuilder<TProps extends UnknownRecord>(
   config: WebPropsBuilderConfig<TProps>
-) {
+): WebPropsBuilder<TProps> {
   const usedRuleBuilders = new Set<RuleBuilder<TProps>>();
+  // Maps a prop key to the CSS property it should be emitted under (e.g. a
+  // Polygon's `points` is emitted as `d`).
+  const nameAliases = new Map<string, string>();
 
   const propsBuilder = createPropsBuilder({
     config,
@@ -55,9 +62,20 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
         };
       }
 
+      // Handle name alias (emit under a different CSS property), optionally
+      // combined with a value processor.
+      const isNameAlias = hasNameAlias(configValue);
+      if (isNameAlias) {
+        nameAliases.set(propertyKey as string, configValue.name);
+      }
+
       // Handle value processor
       if (hasValueProcessor(configValue)) {
         return configValue.process;
+      }
+
+      if (isNameAlias) {
+        return (value) => String(value);
       }
     },
   });
@@ -78,7 +96,8 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
       const cssString = Object.entries(processedProps)
         .reduce<string[]>((acc, [key, value]) => {
           if (isDefined(value)) {
-            acc.push(`${kebabizeCamelCase(key)}: ${value as string}`);
+            const name = nameAliases.get(key) ?? key;
+            acc.push(`${kebabizeCamelCase(name)}: ${value as string}`);
           }
           return acc;
         }, [])

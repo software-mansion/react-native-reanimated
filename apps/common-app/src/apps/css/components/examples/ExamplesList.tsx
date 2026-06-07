@@ -92,6 +92,7 @@ function Example<TStyle extends object, TExampleProps extends object>({
   collapsedExampleHeight,
   denseCode = true,
   description,
+  labelTypes,
   minExampleHeight,
   renderExample,
   showRestartButton,
@@ -107,6 +108,7 @@ function Example<TStyle extends object, TExampleProps extends object>({
       collapsedCode={stringifyConfig(animation.animationName, denseCode)}
       collapsedExampleHeight={collapsedExampleHeight}
       description={description}
+      labelTypes={labelTypes}
       minExampleHeight={minExampleHeight}
       showRestartButton={showRestartButton}
       title={title}>
