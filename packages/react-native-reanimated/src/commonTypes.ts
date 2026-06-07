@@ -11,7 +11,7 @@ import type {
 } from 'react-native';
 import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 
-import type { Maybe } from './common';
+import type { Maybe, MutuallyExclusiveUnion } from './common';
 import type { CSSStyle } from './css';
 import type { EasingFunctionFactory } from './Easing';
 import type { AnimatedStyleHandle } from './hook/commonTypes';
@@ -42,19 +42,16 @@ export interface KeyframeProps extends StyleProps {
   easing?: EasingFunction | EasingFunctionFactory;
 }
 
-type FirstFrame =
-  | {
-      0: KeyframeProps & { easing?: never };
-      from?: never;
-    }
-  | {
-      0?: never;
-      from: KeyframeProps & { easing?: never };
-    };
+// `easing` describes the transition into a keyframe, so the first frame can't have it.
+type FirstKeyframe = KeyframeProps & { easing?: never };
 
-type LastFrame =
-  | { 100?: KeyframeProps; to?: never }
-  | { 100?: never; to: KeyframeProps };
+type FirstFrame = MutuallyExclusiveUnion<
+  [{ 0: FirstKeyframe }, { from: FirstKeyframe }]
+>;
+
+type LastFrame = MutuallyExclusiveUnion<
+  [{ 100?: KeyframeProps }, { to: KeyframeProps }]
+>;
 
 export type ValidKeyframeProps = FirstFrame &
   LastFrame &
