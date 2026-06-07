@@ -11,8 +11,8 @@ const AnimatedPath = Animated.createAnimatedComponent(Path);
 export default function PathExample() {
   return (
     <ExamplesScreen<
-      { keyframes: CSSAnimationKeyframes<PathProps>; viewBox?: string },
-      PathProps
+      PathProps,
+      { keyframes: CSSAnimationKeyframes<PathProps>; viewBox?: string }
     >
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',
