@@ -16,9 +16,13 @@ export type UnknownRecord = Record<string, unknown>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyComponent = ComponentType<any>;
 
-type Simplify<T> = {
+export type Simplify<T> = {
   [K in keyof T]: T[K];
 } & {};
+
+export type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = {
+  [K in Keys]-?: Required<Pick<T, K>> & Partial<Omit<T, K>>;
+}[Keys];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ConvertValueToArray<T> = Simplify<(T extends any[] ? T[number] : T)[]>;

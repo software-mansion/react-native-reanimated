@@ -12,9 +12,9 @@ import type {
 import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 
 import type { Maybe } from './common';
-import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
+import type { CSSStyle } from './css';
 import type { EasingFunctionFactory } from './Easing';
-import type { AnimatedStyleHandle, DefaultStyle } from './hook/commonTypes';
+import type { AnimatedStyleHandle } from './hook/commonTypes';
 
 type LayoutAnimationOptions =
   | 'originX'
@@ -455,25 +455,8 @@ type MaybeSharedValueRecursive<Value> = Value extends readonly (infer Item)[]
           }
     : MaybeSharedValue<Value>;
 
-type CSSConfigProps<TStyle extends object> = Partial<
-  CSSAnimationProperties<TStyle> & CSSTransitionProperties<TStyle>
->;
-
-// Two candidates — the static intersection keeps generic inference working
-// (e.g. `useAnimatedStyle<Style>`); the stripped fallback sidesteps the
-// `never`-collapse when a base style augmentation (e.g. Expo's
-// `expo-env.d.ts`) declares our CSS keys with conflicting types. See
-// https://github.com/software-mansion/react-native-reanimated/issues/9328
-type StyleWithCSS<TStyle> = TStyle extends object
-  ?
-      | (TStyle & CSSConfigProps<TStyle>)
-      | (Omit<TStyle, keyof CSSConfigProps<TStyle>> & CSSConfigProps<TStyle>)
-  : never;
-
-// Ideally we want AnimatedStyle to not be generic, but there are
-// so many dependencies on it being generic that it's not feasible at the moment.
-export type AnimatedStyle<TStyle = DefaultStyle> =
-  | StyleWithCSS<TStyle>
+export type AnimatedStyle<TStyle> =
+  | CSSStyle<TStyle>
   | MaybeSharedValueRecursive<TStyle>
   | AnimatedStyleHandle<TStyle>;
 
