@@ -1,7 +1,8 @@
 'use strict';
 import type { StyleProp } from 'react-native';
 
-import type { PlainStyle, UnknownRecord } from '../../common';
+import type { UnknownRecord } from '../../common';
+import type { DefaultStyle } from '../../hook/commonTypes';
 import type { CSSAnimationProperties } from './animation';
 import type { StyleWithPseudoValues } from './pseudo';
 import type {
@@ -34,7 +35,7 @@ type CSSConfigProps<TStyle extends object = UnknownRecord> = Partial<
 // `never` if a base style augmentation (e.g. Expo's `expo-env.d.ts`)
 // redeclares those keys with conflicting types. See
 // https://github.com/software-mansion/react-native-reanimated/issues/9328
-export type CSSStyle<TStyle = PlainStyle> = TStyle extends object
+export type CSSStyle<TStyle = DefaultStyle> = TStyle extends object
   ? StyleWithPseudoValues<Omit<TStyle, keyof CSSConfigProps>> &
       CSSConfigProps<TStyle>
   : never;

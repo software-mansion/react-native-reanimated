@@ -1,6 +1,6 @@
 'use strict';
 import { createPropsBuilder } from '../../style';
-import type { PlainStyle, UnknownRecord } from '../../types';
+import type { UnknownRecord } from '../../types';
 import {
   hasValueProcessor,
   isConfigPropertyAlias,
@@ -108,5 +108,4 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
   };
 }
 
-export const webPropsBuilder =
-  createWebPropsBuilder<PlainStyle>(PROPERTIES_CONFIG);
+export const webPropsBuilder = createWebPropsBuilder(PROPERTIES_CONFIG);
