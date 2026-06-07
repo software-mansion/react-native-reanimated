@@ -38,6 +38,7 @@ struct CSSPlatformTransitionRawEntry {
 };
 
 struct CSSPlatformTransitionConfig {
+  PropertiesSettingsMap changedPropertiesSettings;
   std::vector<CSSPlatformTransitionRawEntry> changedProperties;
   std::vector<std::string> removedProperties;
 };

@@ -82,6 +82,7 @@ function Example<P extends object, S extends object>({
   collapsedExampleHeight,
   denseCode = true,
   description,
+  labelTypes,
   minExampleHeight,
   renderExample,
   showRestartButton,
@@ -97,6 +98,7 @@ function Example<P extends object, S extends object>({
       collapsedCode={stringifyConfig(animation.animationName, denseCode)}
       collapsedExampleHeight={collapsedExampleHeight}
       description={description}
+      labelTypes={labelTypes}
       minExampleHeight={minExampleHeight}
       showRestartButton={showRestartButton}
       title={title}>

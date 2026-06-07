@@ -147,6 +147,21 @@ jobs:
           reanimated-version: ${{ matrix.reanimatedVersion }}
           worklets-version: ${{ matrix.workletsVersion }}
 
+      # RN >= 0.83 needs Xcode 26.3 because of a bug
+      # See https://github.com/fmtlib/fmt/issues/4740
+      - name: Select Xcode for older React Native
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        env:
+          RN_VERSION: ${{ matrix.reactNativeVersion }}
+        run: |
+          RN_MINOR="$(echo "${RN_VERSION}" | cut -d. -f2)"
+          if [ "${RN_MINOR}" -lt 83 ]; then
+            echo "React Native ${RN_VERSION} < 0.83, pinning Xcode 26.3"
+            echo "DEVELOPER_DIR=/Applications/Xcode_26.3.app/Contents/Developer" >> "$GITHUB_ENV"
+          else
+            echo "React Native ${RN_VERSION} >= 0.83, using default Xcode"
+          fi
+
       - name: Build app (iOS Debug)
         if: steps.result-cache.outputs.cache-hit != 'true'
         working-directory: ${{ env.APP_NAME }}/ios
