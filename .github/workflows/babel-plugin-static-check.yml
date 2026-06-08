@@ -4,8 +4,8 @@ env:
 on:
   pull_request:
     paths:
-      - ".github/workflows/babel-plugin-static-check.yml"
-      - "packages/react-native-worklets/plugin/**"
+      - '.github/workflows/babel-plugin-static-check.yml'
+      - 'packages/react-native-worklets/plugin/**'
   merge_group:
     branches:
       - main
@@ -13,8 +13,8 @@ on:
     branches:
       - main
     paths:
-      - ".github/workflows/babel-plugin-static-check.yml"
-      - "packages/react-native-worklets/plugin/**"
+      - '.github/workflows/babel-plugin-static-check.yml'
+      - 'packages/react-native-worklets/plugin/**'
   workflow_call:
   workflow_dispatch:
 
@@ -28,7 +28,7 @@ jobs:
           - os: ubuntu-latest
             bundle_output: /dev/null
           - os: windows-latest
-            bundle_output: "NUL"
+            bundle_output: 'NUL'
     runs-on: ${{ matrix.os }}
     concurrency:
       group: babel-plugin-static-check-${{ matrix.os }}-${{ github.ref }}
@@ -43,7 +43,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          cache: "yarn"
+          cache: 'yarn'
       - name: Clear annotations
         shell: bash
         run: .github/workflows/helper/clear-annotations.sh
