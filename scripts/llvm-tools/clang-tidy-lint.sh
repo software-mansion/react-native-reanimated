@@ -155,7 +155,10 @@ fi
   -extra-arg=-Wno-unused-command-line-argument \
   -header-filter="$header_regex" "$file_regex" 2>&1 \
   | awk -v label="$label" -v verbose="$verbose" '
+      # Progress lines: upstream LLVM run-clang-tidy uses "[N/M][time]" prefix;
+      # the NDK variant just prints the bare clang-tidy invocation per file.
       /^\[[ ]*[0-9]+\/[0-9]+\]\[/ { files++; if (verbose) print $NF; next }
+      /^[^ ]*\/clang-tidy /       { files++; if (verbose) print $NF; next }
       /^[0-9]+ warnings? generated\.?$/ { next }
       /^[[:space:]]*$/ { next }
       /: error: /   { errors++;   print; next }
