@@ -76,6 +76,7 @@ react-native-reanimated-tests.js
 CompilationDatabase
 compile_commands.json
 .xcode-compile-metadata
+.derived-data-log-*
 buildServer.json
 
 build/

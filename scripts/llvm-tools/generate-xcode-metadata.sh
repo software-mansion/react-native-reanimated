@@ -125,11 +125,11 @@ wait_for_stable_log() {
   return 1
 }
 
-(
+run_pipeline() {
   log=$(wait_for_stable_log)
   if [ -z "$log" ]; then
     echo "warning: timed out waiting for ${project}'s xcactivitylog under ${dd_proj}" >&2
-    exit 0
+    return 0
   fi
 
   "$xbs" parse "$log" -o ".xcode-compile-metadata" </dev/null >/dev/null 2>&1 || true
@@ -144,5 +144,19 @@ wait_for_stable_log() {
         "$pkg_dir/android/.cxx"
     done
   fi
-) &
-disown
+}
+
+# Decide foreground vs background.
+# - On CI the script is invoked as a standalone workflow step after
+#   xcodebuild (the build phase is unregistered by add-xcode-step.rb in that
+#   environment). We run inline so the DB is on disk by the time the step
+#   exits — backgrounding would just get SIGTERM'd when the step ends.
+# - Locally the script runs from Xcode's build phase, which blocks the build
+#   until we exit. wait_for_stable_log can't complete until the build does,
+#   so backgrounding is mandatory to avoid deadlock.
+if [ "${CI:-}" = "true" ] || [ -n "${GITHUB_ACTIONS:-}" ]; then
+  run_pipeline
+else
+  run_pipeline &
+  disown
+fi

@@ -115,9 +115,13 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}/ios
         run: xcodebuild -workspace FabricExample.xcworkspace -configuration "$CONFIGURATION" -scheme "$CONFIGURATION FabricExample" -destination "generic/platform=iOS Simulator" -quiet
 
-      - name: Wait for compile_commands.json
+      - name: Generate iOS compilation metadata
         if: steps.result-cache.outputs.cache-hit != 'true'
-        run: scripts/llvm-tools/wait-for-compile-commands.sh
+        working-directory: ${{ env.WORKING_DIRECTORY }}/ios
+        env:
+          PROJECT_NAME: FabricExample
+          WORKSPACE_DIR: ${{ github.workspace }}/${{ env.WORKING_DIRECTORY }}/ios
+        run: ${{ github.workspace }}/scripts/llvm-tools/generate-xcode-metadata.sh
 
       - name: Clang-tidy lint Worklets
         if: steps.result-cache.outputs.cache-hit != 'true'
