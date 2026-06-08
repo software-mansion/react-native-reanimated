@@ -380,10 +380,10 @@ var require_utils = __commonJS({
     exports2.isRelease = isRelease;
     exports2.replaceWithFactoryCall = replaceWithFactoryCall;
     var types_12 = require("@babel/types");
-    function isRelease() {
-      var _a, _b;
+    function isRelease(state) {
+      var _a, _b, _c;
       const pattern = /(prod|release|stag[ei])/i;
-      return !!(((_a = process.env.BABEL_ENV) === null || _a === void 0 ? void 0 : _a.match(pattern)) || ((_b = process.env.NODE_ENV) === null || _b === void 0 ? void 0 : _b.match(pattern)));
+      return !!(((_a = state.file.opts.envName) === null || _a === void 0 ? void 0 : _a.match(pattern)) || ((_b = process.env.BABEL_ENV) === null || _b === void 0 ? void 0 : _b.match(pattern)) || ((_c = process.env.NODE_ENV) === null || _c === void 0 ? void 0 : _c.match(pattern)));
     }
     function replaceWithFactoryCall(toReplace, name, factoryCall) {
       if (!name || !needsDeclaration(toReplace)) {
@@ -839,7 +839,7 @@ var require_workletStringCode = __commonJS({
       const workletFunction = (0, types_12.functionExpression)((0, types_12.identifier)(workletName), expression.params, expression.body, expression.generator, expression.async);
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "[Reanimated] `inputMap` is undefined.");
-      const includeSourceMap = !((0, utils_1.isRelease)() || state.opts.disableSourceMaps);
+      const includeSourceMap = !((0, utils_1.isRelease)(state) || state.opts.disableSourceMaps);
       if (includeSourceMap) {
         inputMap.sourcesContent = [];
         for (const sourceFile of inputMap.sources) {
@@ -999,7 +999,7 @@ var require_workletFactory = __commonJS({
       const initDataObjectExpression = (0, types_12.objectExpression)([
         (0, types_12.objectProperty)((0, types_12.identifier)("code"), (0, types_12.stringLiteral)(funString))
       ]);
-      const shouldInjectLocation = !(0, utils_1.isRelease)();
+      const shouldInjectLocation = !(0, utils_1.isRelease)(state);
       if (shouldInjectLocation) {
         let location = state.file.opts.filename;
         if (state.opts.relativeSourceLocation) {
@@ -1031,14 +1031,14 @@ var require_workletFactory = __commonJS({
         (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(closureVariables.map((variable) => !state.opts.bundleMode && variable.name.endsWith(types_2.workletClassFactorySuffix) ? (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.memberExpression)((0, types_12.identifier)(variable.name.slice(0, variable.name.length - types_2.workletClassFactorySuffix.length)), (0, types_12.identifier)(variable.name))) : (0, types_12.objectProperty)((0, types_12.cloneNode)(variable, true), (0, types_12.cloneNode)(variable, true), false, true))))),
         (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__workletHash"), false), (0, types_12.numericLiteral)(workletHash)))
       ];
-      const shouldInjectVersion = !(0, utils_1.isRelease)();
+      const shouldInjectVersion = !(0, utils_1.isRelease)(state);
       if (shouldInjectVersion) {
         statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__pluginVersion")), (0, types_12.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION))));
       }
       if (shouldIncludeInitData) {
         statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__initData"), false), (0, types_12.cloneNode)(initDataId, true))));
       }
-      if (!(0, utils_1.isRelease)() && !state.opts.bundleMode) {
+      if (!(0, utils_1.isRelease)(state) && !state.opts.bundleMode) {
         statements.unshift((0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)((0, types_12.identifier)("_e"), (0, types_12.arrayExpression)([
             (0, types_12.newExpression)((0, types_12.memberExpression)((0, types_12.identifier)("global"), (0, types_12.identifier)("Error")), []),
@@ -1823,7 +1823,7 @@ var require_inlineStylesWarning = __commonJS({
       }
     }
     function processInlineStylesWarning(path, state) {
-      if ((0, utils_1.isRelease)()) {
+      if ((0, utils_1.isRelease)(state)) {
         return;
       }
       if (state.opts.disableInlineStylesWarning) {

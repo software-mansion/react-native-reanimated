@@ -152,7 +152,7 @@ struct takes_runtime<jsi::Runtime &, Rest...> {
 template <typename Ret, typename... Args>
 void installJsiFunction(jsi::Runtime &rt, std::string_view name, const std::function<Ret(Args...)> &function) {
   auto clb = createHostFunction(function);
-  auto argsCount = static_cast<int>(sizeof...(Args) - takes_runtime<Args...>::value);
+  auto argsCount = static_cast<unsigned int>(sizeof...(Args) - takes_runtime<Args...>::value);
   jsi::Value jsiFunction =
       jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, name.data()), argsCount, clb);
   rt.global().setProperty(rt, name.data(), jsiFunction);

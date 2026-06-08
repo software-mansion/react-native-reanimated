@@ -1,5 +1,5 @@
 'use strict';
-import type { PlainStyle, UnknownRecord } from '../../common';
+import type { UnknownRecord } from '../../common';
 import { logger } from '../../common';
 import { isSharedValue } from '../../isSharedValue';
 import type {
@@ -31,7 +31,7 @@ export function filterCSSAndStyleProperties<S extends object>(
   CSSTransitionProperties | null,
   PseudoStylesBySelector | null,
   CSSTransitionCallbacks | null,
-  PlainStyle,
+  UnknownRecord,
 ] {
   const animationProperties: Partial<CSSAnimationProperties> = {};
   let transitionProperties: Partial<CSSTransitionProperties> = {};
@@ -134,7 +134,7 @@ export function filterCSSAndStyleProperties<S extends object>(
     finalTransitionConfig,
     finalPseudoStyles,
     finalTransitionCallbacks,
-    filteredStyle as PlainStyle,
+    filteredStyle,
   ];
 }
 

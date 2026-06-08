@@ -12,8 +12,8 @@ const AnimatedEllipse = Animated.createAnimatedComponent(Ellipse);
 export default function EllipseExample() {
   return (
     <ExamplesScreen<
-      { keyframes: CSSAnimationKeyframes<EllipseProps> },
-      EllipseProps
+      EllipseProps,
+      { keyframes: CSSAnimationKeyframes<EllipseProps> }
     >
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',

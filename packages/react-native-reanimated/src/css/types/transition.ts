@@ -1,10 +1,10 @@
 'use strict';
-import type { PlainStyle } from '../../common';
+import type { DefaultStyle } from '../../hook/commonTypes';
 import type { CSSTimingFunction } from '../easing';
 import type { TimeUnit } from './common';
 import type { AddArrayPropertyTypes } from './helpers';
 
-export type CSSTransitionProperty<S extends object = PlainStyle> =
+export type CSSTransitionProperty<S extends object = DefaultStyle> =
   | 'all'
   | 'none'
   | keyof S
@@ -53,7 +53,7 @@ type SingleCSSTransitionSettings = {
   transitionBehavior?: CSSTransitionBehavior;
 };
 
-export type SingleCSSTransitionConfig<S extends object = PlainStyle> =
+export type SingleCSSTransitionConfig<S extends object = DefaultStyle> =
   SingleCSSTransitionSettings & {
     transitionProperty?: CSSTransitionProperty<S>;
   };
@@ -61,7 +61,7 @@ export type SingleCSSTransitionConfig<S extends object = PlainStyle> =
 export type CSSTransitionSettings =
   AddArrayPropertyTypes<SingleCSSTransitionSettings>;
 
-export type CSSTransitionProperties<S extends object = PlainStyle> =
+export type CSSTransitionProperties<S extends object = DefaultStyle> =
   CSSTransitionSettings & {
     transitionProperty?: CSSTransitionProperty<S>;
     transition?: CSSTransitionShorthand;
