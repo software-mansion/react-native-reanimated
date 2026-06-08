@@ -405,11 +405,17 @@ var require_utils = __commonJS({
 var require_globals = __commonJS({
   "lib/globals.js"(exports2) {
     "use strict";
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.globals = exports2.defaultGlobals = void 0;
     exports2.initializeState = initializeState;
+    exports2.isGeneratedWorkletFile = isGeneratedWorkletFile;
     exports2.initializeGlobals = initializeGlobals;
     exports2.addCustomGlobals = addCustomGlobals;
+    var path_1 = __importDefault(require("path"));
+    var types_12 = require_types();
     var notCapturedIdentifiers = [
       // Based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
       // Note that objects' properties don't need to be listed since we always only capture the whole object,
@@ -526,12 +532,23 @@ var require_globals = __commonJS({
       "_WORKLET"
     ];
     function initializeState(state) {
+      state.skipFile = isGeneratedWorkletFile(state.file.opts.filename);
+      if (state.skipFile) {
+        return;
+      }
       state.workletNumber = 1;
       state.classesToWorkletize = [];
       if (!state.opts.strictGlobal) {
         initializeGlobals();
         addCustomGlobals(state);
       }
+    }
+    function isGeneratedWorkletFile(filename) {
+      if (!filename) {
+        return false;
+      }
+      const generatedWorkletsDirPath = path_1.default.join("react-native-worklets", types_12.generatedWorkletsDir);
+      return filename.includes(generatedWorkletsDirPath);
     }
     exports2.defaultGlobals = new Set(notCapturedIdentifiers);
     function initializeGlobals() {
@@ -1884,7 +1901,10 @@ var types_1 = require_types();
 var webOptimization_1 = require_webOptimization();
 var workletSubstitution_1 = require_workletSubstitution();
 module.exports = function WorkletsBabelPlugin() {
-  function runWithTaggedExceptions(fun) {
+  function runWithTaggedExceptions(state, fun) {
+    if (state.skipFile) {
+      return;
+    }
     try {
       fun();
     } catch (e) {
@@ -1897,14 +1917,14 @@ module.exports = function WorkletsBabelPlugin() {
   return {
     name: "worklets",
     pre() {
-      runWithTaggedExceptions(() => {
+      runWithTaggedExceptions(this, () => {
         (0, globals_1.initializeState)(this);
       });
     },
     visitor: {
       CallExpression: {
         enter(path, state) {
-          runWithTaggedExceptions(() => {
+          runWithTaggedExceptions(state, () => {
             (0, autoworkletization_1.processCalleesAutoworkletizableCallbacks)(path, state);
             if (state.opts.substituteWebPlatformChecks) {
               (0, webOptimization_1.substituteWebCallExpression)(path);
@@ -1914,19 +1934,19 @@ module.exports = function WorkletsBabelPlugin() {
       },
       [types_1.WorkletizableFunction]: {
         enter(path, state) {
-          runWithTaggedExceptions(() => (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state) || (0, autoworkletization_1.processIfAutoworkletizableCallback)(path, state));
+          runWithTaggedExceptions(state, () => (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state) || (0, autoworkletization_1.processIfAutoworkletizableCallback)(path, state));
         }
       },
       ObjectExpression: {
         enter(path, state) {
-          runWithTaggedExceptions(() => {
+          runWithTaggedExceptions(state, () => {
             (0, contextObject_1.processIfWorkletContextObject)(path, state);
           });
         }
       },
       ClassDeclaration: {
         enter(path, state) {
-          runWithTaggedExceptions(() => {
+          runWithTaggedExceptions(state, () => {
             if (state.opts.disableWorkletClasses) {
               return;
             }
@@ -1936,21 +1956,21 @@ module.exports = function WorkletsBabelPlugin() {
       },
       Program: {
         enter(path, state) {
-          runWithTaggedExceptions(() => {
+          runWithTaggedExceptions(state, () => {
             (0, file_1.processIfWorkletFile)(path, state);
           });
         }
       },
       ExpressionStatement: {
         enter(path, state) {
-          runWithTaggedExceptions(() => {
+          runWithTaggedExceptions(state, () => {
             (0, bundleMode_1.toggleBundleMode)(path, state);
           });
         }
       },
       JSXAttribute: {
         enter(path, state) {
-          runWithTaggedExceptions(() => (0, inlineStylesWarning_1.processInlineStylesWarning)(path, state));
+          runWithTaggedExceptions(state, () => (0, inlineStylesWarning_1.processInlineStylesWarning)(path, state));
         }
       }
     }

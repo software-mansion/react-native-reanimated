@@ -370,4 +370,24 @@ describe('babel plugin in bundleMode', () => {
       expect(code).toContain(REQUIRE_PREFIX);
     });
   });
+
+  describe('bail-out on already-generated worklet files', () => {
+    test('does not re-process a file inside the .worklets directory', () => {
+      const generatedFilename = path.join(
+        path.dirname(require.resolve('react-native-worklets/package.json')),
+        '.worklets',
+        '12345.js'
+      );
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var x = 1;
+        }
+      </script>`;
+
+      const { code, files } = runPlugin(input, {}, {}, generatedFilename);
+      expect(files).toHaveLength(0);
+      expect(code).not.toContain(REQUIRE_PREFIX);
+    });
+  });
 });
