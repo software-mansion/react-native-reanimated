@@ -13,6 +13,7 @@
 # fallback), and lints only those entries.
 
 set -e
+set -o pipefail
 
 verbose=0
 positional=()
