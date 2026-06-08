@@ -74,6 +74,7 @@ export default function RuntimeTestsExample() {
             require('./tests/runtimes/runOnRuntimeAsyncWithId.test');
             require('./tests/runtimes/runOnRuntimeSyncWithId.test');
             require('./tests/runtimes/scheduleOnRuntimeWithId.test');
+            require('./tests/runtimes/reactNativeImportShim.test');
           },
         },
         {
