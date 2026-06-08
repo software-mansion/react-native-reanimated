@@ -266,10 +266,10 @@ class SerializableArrayBuffer : public Serializable {
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
-  const std::string typeName_;
-  const size_t byteOffset_{0};
-  const size_t length_{0};
-  const std::vector<uint8_t> data_;
+  std::string typeName_;
+  size_t byteOffset_{0};
+  size_t length_{0};
+  std::vector<uint8_t> data_;
 };
 
 class SerializableWorklet : public SerializableObject {
