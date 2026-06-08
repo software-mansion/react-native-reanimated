@@ -30,6 +30,16 @@ runs:
       shell: bash
       run: yarn install --immutable
 
+    - name: Install Android NDK matching the example app's pin
+      shell: bash
+      run: |
+        set -e
+        NDK_VERSION="$(grep -oE 'ndkVersion\s*=\s*"[^"]+"' apps/fabric-example/android/build.gradle | sed -E 's/.*"([^"]+)".*/\1/')"
+        echo "installing ndk;$NDK_VERSION"
+        SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+        yes | "$SDKMANAGER" --licenses > /dev/null
+        "$SDKMANAGER" --install "ndk;$NDK_VERSION"
+
     - name: Generate Android compile database
       shell: bash
       working-directory: apps/fabric-example/android

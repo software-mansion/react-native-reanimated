@@ -29,15 +29,6 @@ if [ -z "$xbs" ]; then
 fi
 echo "info: using xcode-build-server at $xbs" >&2
 
-dd_base_custom="$(defaults read com.apple.dt.Xcode IDECustomDerivedDataLocation 2>/dev/null || true)"
-if [ -n "$dd_base_custom" ] && [ -d "$dd_base_custom" ]; then
-  dd_base="$dd_base_custom"
-  echo "info: using custom DerivedData at $dd_base" >&2
-else
-  dd_base="$HOME/Library/Developer/Xcode/DerivedData"
-  echo "info: using default DerivedData at $dd_base" >&2
-fi
-
 project="${PROJECT_NAME:-}"
 if [ -z "$project" ]; then
   echo "warning: PROJECT_NAME not set; skipping" >&2
@@ -45,17 +36,73 @@ if [ -z "$project" ]; then
 fi
 echo "info: project is $project" >&2
 
-# Polls for the project's newest .xcactivitylog under DerivedData and waits
-# for its size to stop growing — Xcode writes the log mid-build, so this
-# build phase fires before it's fully flushed. Echoes the resolved path.
+# Resolve the workspace file Xcode is building. WORKSPACE_DIR is the dir
+# that contains it; the file itself is conventionally <ProjectName>.xcworkspace
+# (with .xcodeproj as a fallback for non-workspace projects).
+workspace_dir="${WORKSPACE_DIR:-$(pwd)}"
+workspace_path=""
+for candidate in \
+    "$workspace_dir/${project}.xcworkspace" \
+    "$workspace_dir/${project}.xcodeproj"; do
+  if [ -e "$candidate" ]; then
+    workspace_path="$candidate"
+    break
+  fi
+done
+if [ -z "$workspace_path" ]; then
+  echo "warning: could not locate workspace file for ${project} under ${workspace_dir}; skipping" >&2
+  exit 0
+fi
+echo "info: workspace is $workspace_path" >&2
+
+# Resolve the per-workspace DerivedData folder by checking every plausible
+# DerivedData base for a `${project}-<hash>` folder whose info.plist's
+# WorkspacePath matches the workspace we're building. This is necessary
+# because Xcode disambiguates concurrent workspaces (e.g. git worktrees with
+# the same project name) only by the hash suffix; a naive `${project}-*`
+# glob would also match the other worktrees' folders.
+#
+# Searched bases, in order:
+#   1. Custom DerivedData location set in Xcode → Preferences → Locations.
+#   2. Workspace-relative DerivedData (`<workspace-dir>/DerivedData/`),
+#      used when Xcode's Derived Data option is set to "Relative".
+#   3. The default `~/Library/Developer/Xcode/DerivedData/`.
+custom_dd="$(defaults read com.apple.dt.Xcode IDECustomDerivedDataLocation 2>/dev/null || true)"
+dd_bases=()
+[ -n "$custom_dd" ] && [ -d "$custom_dd" ] && dd_bases+=("$custom_dd")
+[ -d "$workspace_dir/DerivedData" ] && dd_bases+=("$workspace_dir/DerivedData")
+[ -d "$HOME/Library/Developer/Xcode/DerivedData" ] && dd_bases+=("$HOME/Library/Developer/Xcode/DerivedData")
+
+dd_proj=""
+for base in "${dd_bases[@]:+${dd_bases[@]}}"; do
+  for candidate in "$base"/"${project}"-*; do
+    [ -d "$candidate" ] || continue
+    plist="$candidate/info.plist"
+    [ -f "$plist" ] || continue
+    plist_workspace="$(plutil -extract WorkspacePath raw "$plist" 2>/dev/null || true)"
+    if [ "$plist_workspace" = "$workspace_path" ]; then
+      dd_proj="$candidate"
+      break 2
+    fi
+  done
+done
+
+if [ -z "$dd_proj" ]; then
+  echo "warning: could not find DerivedData folder matching $workspace_path; skipping" >&2
+  echo "         (searched: ${dd_bases[*]:-(no candidates)})" >&2
+  exit 0
+fi
+echo "info: using DerivedData $dd_proj" >&2
+
+# Polls $dd_proj/Logs/Build/ for the newest .xcactivitylog and waits for its
+# size to stop growing — Xcode writes the log mid-build, so this build phase
+# fires before it's fully flushed. Echoes the resolved path.
 wait_for_stable_log() {
   local prev_size=0 stable=0 i=0
   local timeout_halfseconds=60   # 30s wall-clock
   local log=""
   while [ $i -lt $timeout_halfseconds ]; do
-    log=$(find "$dd_base" -maxdepth 4 \
-                -path "*/${project}-*/Logs/Build/*.xcactivitylog" \
-                -print0 2>/dev/null \
+    log=$(find "$dd_proj/Logs/Build" -maxdepth 1 -name '*.xcactivitylog' -print0 2>/dev/null \
           | xargs -0 stat -f '%m %N' 2>/dev/null \
           | sort -rn | head -1 | cut -d' ' -f2-)
     if [ -n "$log" ]; then
@@ -81,7 +128,7 @@ wait_for_stable_log() {
 (
   log=$(wait_for_stable_log)
   if [ -z "$log" ]; then
-    echo "warning: timed out waiting for ${project}'s xcactivitylog under ${dd_base}" >&2
+    echo "warning: timed out waiting for ${project}'s xcactivitylog under ${dd_proj}" >&2
     exit 0
   fi
 
