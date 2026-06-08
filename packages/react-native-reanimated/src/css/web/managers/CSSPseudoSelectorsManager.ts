@@ -1,6 +1,7 @@
 'use strict';
 import { webPropsBuilder } from '../../../common/web';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
+import { ANIMATION_NAME_PREFIX } from '../../constants';
 import type { CSSPseudoSelectorKey } from '../../types/pseudo';
 import type { PseudoStylesBySelector } from '../../utils';
 import { insertPseudoSelectorCSS, removePseudoSelectorCSS } from '../domUtils';
@@ -15,11 +16,62 @@ const SELECTOR_ORDER: readonly CSSPseudoSelectorKey[] = [
   ':active-deepest',
 ];
 
-const ACTIVE_MARKER = 'rps-active';
+const VIEW_ATTRIBUTE = `data-${ANIMATION_NAME_PREFIX}rps`;
+const ACTIVE_MARKER_ATTRIBUTE = `data-${ANIMATION_NAME_PREFIX}rps-active`;
+
+function withImportant(css: string): string {
+  return css
+    .split('; ')
+    .map((declaration) => `${declaration} !important`)
+    .join('; ');
+}
+
+// Known selectors first (in cascade-priority order), then any arbitrary ones the
+// web layer passes through unchanged. Order matters: later rules win on overlap.
+function orderSelectors(
+  pseudoStylesBySelector: PseudoStylesBySelector
+): string[] {
+  const known = SELECTOR_ORDER.filter((sel) => sel in pseudoStylesBySelector);
+  const unknown = Object.keys(pseudoStylesBySelector).filter(
+    (sel) => !(SELECTOR_ORDER as readonly string[]).includes(sel)
+  );
+  return [...known, ...unknown];
+}
+
+function buildSelectorRule(
+  viewId: string,
+  selector: string,
+  pseudoStylesBySelector: PseudoStylesBySelector
+): string | null {
+  const css = webPropsBuilder.build(
+    pseudoStylesBySelector[selector].selectorStyle
+  );
+  if (!css) {
+    return null;
+  }
+  const declarations = withImportant(css);
+  const base = `[${VIEW_ATTRIBUTE}="${viewId}"]`;
+
+  if (selector === ':active-deepest') {
+    return `${base}:active:not(:has([${ACTIVE_MARKER_ATTRIBUTE}="true"]:active)) { ${declarations} }`;
+  }
+  return `${base}${selector} { ${declarations} }`;
+}
+
+function buildRules(
+  viewId: string,
+  pseudoStylesBySelector: PseudoStylesBySelector
+): string[] {
+  return orderSelectors(pseudoStylesBySelector)
+    .map((selector) =>
+      buildSelectorRule(viewId, selector, pseudoStylesBySelector)
+    )
+    .filter((rule): rule is string => rule !== null);
+}
 
 export default class CSSPseudoSelectorsManager {
   private readonly element: ReanimatedHTMLElement;
-  private pseudoSelectorClassName: string | null = null;
+  private viewId: string | null = null;
 
   constructor(element: ReanimatedHTMLElement) {
     this.element = element;
@@ -31,53 +83,39 @@ export default class CSSPseudoSelectorsManager {
       return;
     }
 
-    if (!this.pseudoSelectorClassName) {
-      this.pseudoSelectorClassName = `rps-${pseudoSelectorCounter++}`;
-      this.element.classList.add(this.pseudoSelectorClassName);
+    const viewId = this.ensureViewId();
+    this.syncActiveMarker(pseudoStylesBySelector);
+    insertPseudoSelectorCSS(viewId, buildRules(viewId, pseudoStylesBySelector));
+    this.ensureTransitionProperty();
+  }
+
+  unmountCleanup(): void {
+    this.detach();
+  }
+
+  private ensureViewId(): string {
+    if (this.viewId === null) {
+      this.viewId = String(pseudoSelectorCounter++);
+      this.element.setAttribute(VIEW_ATTRIBUTE, this.viewId);
     }
+    return this.viewId;
+  }
 
-    const className = this.pseudoSelectorClassName;
-
+  private syncActiveMarker(
+    pseudoStylesBySelector: PseudoStylesBySelector
+  ): void {
     const hasAnyActive =
       ':active' in pseudoStylesBySelector ||
       ':active-deepest' in pseudoStylesBySelector;
 
     if (hasAnyActive) {
-      this.element.classList.add(ACTIVE_MARKER);
+      this.element.setAttribute(ACTIVE_MARKER_ATTRIBUTE, 'true');
     } else {
-      this.element.classList.remove(ACTIVE_MARKER);
+      this.element.removeAttribute(ACTIVE_MARKER_ATTRIBUTE);
     }
+  }
 
-    const knownSelectors = SELECTOR_ORDER.filter(
-      (sel) => sel in pseudoStylesBySelector
-    );
-    const unknownSelectors = Object.keys(pseudoStylesBySelector).filter(
-      (sel) => !(SELECTOR_ORDER as readonly string[]).includes(sel)
-    );
-    const orderedSelectors = [...knownSelectors, ...unknownSelectors];
-
-    const rules = orderedSelectors
-      .map((selector) => {
-        const { selectorStyle } = pseudoStylesBySelector[selector];
-        const css = webPropsBuilder.build(selectorStyle);
-        if (!css) {
-          return null;
-        }
-        const cssWithImportant = css
-          .split('; ')
-          .map((decl) => `${decl} !important`)
-          .join('; ');
-
-        if (selector === ':active-deepest') {
-          return `.${className}:active:not(:has(.${ACTIVE_MARKER}:active)) { ${cssWithImportant} }`;
-        }
-        return `.${className}${selector} { ${cssWithImportant} }`;
-      })
-      .filter(Boolean)
-      .join('\n');
-
-    insertPseudoSelectorCSS(className, rules);
-
+  private ensureTransitionProperty(): void {
     if (
       !this.element.style.transitionProperty &&
       this.element.style.transitionDuration
@@ -86,16 +124,12 @@ export default class CSSPseudoSelectorsManager {
     }
   }
 
-  unmountCleanup(): void {
-    this.detach();
-  }
-
   private detach(): void {
-    if (this.pseudoSelectorClassName) {
-      this.element.classList.remove(this.pseudoSelectorClassName);
-      this.element.classList.remove(ACTIVE_MARKER);
-      removePseudoSelectorCSS(this.pseudoSelectorClassName);
-      this.pseudoSelectorClassName = null;
+    if (this.viewId !== null) {
+      this.element.removeAttribute(VIEW_ATTRIBUTE);
+      this.element.removeAttribute(ACTIVE_MARKER_ATTRIBUTE);
+      removePseudoSelectorCSS(this.viewId);
+      this.viewId = null;
     }
   }
 }

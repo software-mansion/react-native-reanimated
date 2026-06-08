@@ -3,10 +3,6 @@ import { IS_WINDOW_AVAILABLE, logger } from '../../common';
 
 const CSS_ANIMATIONS_STYLE_TAG_ID = 'ReanimatedCSSStyleTag';
 
-// Since we cannot remove keyframe from DOM by its name, we have to store its id
-const cssNameToIndex = new Map<string, number>();
-const cssNameList: string[] = [];
-
 export function configureWebCSSAnimations() {
   if (
     !IS_WINDOW_AVAILABLE || // Without this check SSR crashes because document is undefined (NextExample on CI)
@@ -37,91 +33,107 @@ function getStyleSheet() {
   );
 }
 
-export function insertCSSAnimation(animationName: string, keyframes: string) {
+// Shared registry over the single Reanimated stylesheet. Rules are appended in
+// insertion order (callers that depend on source order - e.g. pseudo-selector
+// cascade priority - get it) and tracked by a string key so they can be removed
+// later even though CSSOM rule indices shift when earlier rules are deleted.
+const ruleIndexByKey = new Map<string, number>();
+const orderedRuleKeys: string[] = [];
+
+function insertSheetRule(key: string, cssText: string): boolean {
   // Without window availability check SSR crashes because document is undefined
-  // (NextExample on CI)
-  if (!IS_WINDOW_AVAILABLE || cssNameToIndex.has(animationName)) {
-    return;
+  // (NextExample on CI).
+  if (!IS_WINDOW_AVAILABLE || ruleIndexByKey.has(key)) {
+    return false;
   }
 
+  configureWebCSSAnimations();
   const sheet = getStyleSheet();
 
   if (!sheet) {
-    logger.error('Failed to create CSS animations stylesheet.');
+    logger.error('Failed to create CSS stylesheet.');
+    return false;
+  }
+
+  const index = orderedRuleKeys.length;
+  try {
+    sheet.insertRule(cssText, index);
+  } catch {
+    // Browsers throw on rules they can't parse (e.g. unsupported selectors).
+    // Stay lenient and skip the rule instead of breaking the whole update.
+    logger.warn(`Failed to insert CSS rule: ${cssText}`);
+    return false;
+  }
+
+  orderedRuleKeys.push(key);
+  ruleIndexByKey.set(key, index);
+  return true;
+}
+
+function removeSheetRule(key: string): void {
+  // Without this check SSR crashes because document is undefined (NextExample on CI).
+  if (!IS_WINDOW_AVAILABLE) {
     return;
   }
 
-  const animation = `@keyframes ${animationName} { ${keyframes} }`;
-
-  sheet.insertRule(animation, 0);
-  cssNameList.unshift(animationName);
-  cssNameToIndex.set(animationName, 0);
-
-  for (let i = 1; i < cssNameList.length; ++i) {
-    const nextCSSName = cssNameList[i];
-    const nextCSSIndex = cssNameToIndex.get(nextCSSName);
-
-    if (nextCSSIndex === undefined) {
-      throw new Error('[Reanimated] Failed to obtain CSS animation index.');
-    }
-
-    cssNameToIndex.set(cssNameList[i], nextCSSIndex + 1);
+  const index = ruleIndexByKey.get(key);
+  if (index === undefined) {
+    return;
   }
+
+  getStyleSheet()?.deleteRule(index);
+  orderedRuleKeys.splice(index, 1);
+  ruleIndexByKey.delete(key);
+
+  // Deleting a rule shifts every later rule down by one.
+  for (let i = index; i < orderedRuleKeys.length; ++i) {
+    ruleIndexByKey.set(orderedRuleKeys[i], i);
+  }
+}
+
+export function insertCSSAnimation(animationName: string, keyframes: string) {
+  insertSheetRule(
+    animationName,
+    `@keyframes ${animationName} { ${keyframes} }`
+  );
 }
 
 export function removeCSSAnimation(animationName: string) {
-  // Without this check SSR crashes because document is undefined (NextExample on CI)
+  removeSheetRule(animationName);
+}
+
+// Each owner (a view's `data-rps` id) maps to the keys of the rules it inserted,
+// so an update can replace them and unmount can remove them.
+const pseudoRuleKeysByOwner = new Map<string, string[]>();
+
+export function insertPseudoSelectorCSS(owner: string, rules: string[]): void {
   if (!IS_WINDOW_AVAILABLE) {
     return;
   }
 
-  const sheet = getStyleSheet();
-  const currentCSSIndex = cssNameToIndex.get(animationName);
+  // Replace any rules previously inserted for this owner.
+  removePseudoSelectorCSS(owner);
 
-  if (currentCSSIndex === undefined) {
-    throw new Error('[Reanimated] Failed to obtain CSS animation index.');
-  }
-
-  sheet?.deleteRule(currentCSSIndex);
-  cssNameList.splice(currentCSSIndex, 1);
-  cssNameToIndex.delete(animationName);
-
-  for (let i = currentCSSIndex; i < cssNameList.length; ++i) {
-    const nextCSSName = cssNameList[i];
-    const nextCSSIndex = cssNameToIndex.get(nextCSSName);
-
-    if (nextCSSIndex === undefined) {
-      throw new Error('[Reanimated] Failed to obtain CSS animation index.');
+  const keys: string[] = [];
+  rules.forEach((rule, i) => {
+    const key = `${owner}#${i}`;
+    if (insertSheetRule(key, rule)) {
+      keys.push(key);
     }
-
-    cssNameToIndex.set(cssNameList[i], nextCSSIndex - 1);
-  }
+  });
+  pseudoRuleKeysByOwner.set(owner, keys);
 }
 
-const pseudoSelectorStyleElements = new Map<string, HTMLStyleElement>();
-
-export function insertPseudoSelectorCSS(name: string, cssText: string): void {
+export function removePseudoSelectorCSS(owner: string): void {
   if (!IS_WINDOW_AVAILABLE) {
     return;
   }
-  const existing = pseudoSelectorStyleElements.get(name);
-  if (existing) {
-    existing.textContent = cssText;
-    return;
-  }
-  const el = document.createElement('style');
-  el.textContent = cssText;
-  document.head.append(el);
-  pseudoSelectorStyleElements.set(name, el);
-}
 
-export function removePseudoSelectorCSS(name: string): void {
-  if (!IS_WINDOW_AVAILABLE) {
+  const keys = pseudoRuleKeysByOwner.get(owner);
+  if (!keys) {
     return;
   }
-  const el = pseudoSelectorStyleElements.get(name);
-  if (el) {
-    el.remove();
-    pseudoSelectorStyleElements.delete(name);
-  }
+
+  keys.forEach(removeSheetRule);
+  pseudoRuleKeysByOwner.delete(owner);
 }

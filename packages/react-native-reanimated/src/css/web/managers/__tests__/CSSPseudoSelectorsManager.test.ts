@@ -1,5 +1,6 @@
 'use strict';
 import type { ReanimatedHTMLElement } from '../../../../ReanimatedModule/js-reanimated';
+import { ANIMATION_NAME_PREFIX } from '../../../constants';
 import {
   insertPseudoSelectorCSS,
   removePseudoSelectorCSS,
@@ -15,19 +16,16 @@ const insertMock = insertPseudoSelectorCSS as jest.Mock;
 const removeMock = removePseudoSelectorCSS as jest.Mock;
 
 const createElement = (): ReanimatedHTMLElement => {
-  const classNames: string[] = [];
+  const attributes = new Map<string, string>();
   return {
     style: {} as CSSStyleDeclaration,
-    classList: {
-      add: jest.fn((c: string) => classNames.push(c)),
-      remove: jest.fn((c: string) => {
-        const i = classNames.indexOf(c);
-        if (i >= 0) {
-          classNames.splice(i, 1);
-        }
-      }),
-      contains: (c: string) => classNames.includes(c),
-    } as unknown as DOMTokenList,
+    setAttribute: jest.fn((name: string, value: string) => {
+      attributes.set(name, value);
+    }),
+    removeAttribute: jest.fn((name: string) => {
+      attributes.delete(name);
+    }),
+    getAttribute: (name: string) => attributes.get(name) ?? null,
   } as unknown as ReanimatedHTMLElement;
 };
 
@@ -49,7 +47,7 @@ describe(CSSPseudoSelectorsManager, () => {
     });
 
     expect(insertMock).toHaveBeenCalledTimes(1);
-    const [, css] = insertMock.mock.calls[0];
+    const css = (insertMock.mock.calls[0][1] as string[]).join('\n');
     expect(css).toMatch(/:nth-child\(odd\)/);
     expect(css).toMatch(/background-color: red !important/);
     expect(css).not.toMatch(/:has\(/);
@@ -70,7 +68,7 @@ describe(CSSPseudoSelectorsManager, () => {
       },
     });
 
-    const [, css] = insertMock.mock.calls[0];
+    const css = (insertMock.mock.calls[0][1] as string[]).join('\n');
     const hoverIdx = css.indexOf(':hover');
     const nthIdx = css.indexOf(':nth-child(odd)');
     expect(hoverIdx).toBeGreaterThanOrEqual(0);
@@ -92,7 +90,7 @@ describe(CSSPseudoSelectorsManager, () => {
       },
     });
 
-    const [, css] = insertMock.mock.calls[0];
+    const css = (insertMock.mock.calls[0][1] as string[]).join('\n');
     expect(css).toMatch(/:hover/);
     expect(css).toMatch(/:focus-visible/);
   });
@@ -131,7 +129,9 @@ describe(CSSPseudoSelectorsManager, () => {
       },
     });
 
-    const [, css] = insertMock.mock.calls[0];
-    expect(css).toMatch(/:active:not\(:has\(\.rps-active:active\)\)/);
+    const css = (insertMock.mock.calls[0][1] as string[]).join('\n');
+    expect(css).toContain(
+      `:active:not(:has([data-${ANIMATION_NAME_PREFIX}rps-active="true"]:active))`
+    );
   });
 });
