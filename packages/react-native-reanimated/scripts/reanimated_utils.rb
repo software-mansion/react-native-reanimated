@@ -1,8 +1,8 @@
 module ReanimatedUtils
   module_function
 
-  def try_to_parse_react_native_package_json(react-native-dir)
-    react_native_package_json_path = File.join(react-native-dir, 'package.json')
+  def try_to_parse_react_native_package_json(react_native_dir)
+    react_native_package_json_path = File.join(react_native_dir, 'package.json')
     if !File.exist?(react_native_package_json_path)
       return nil
     end
