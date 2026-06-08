@@ -40,15 +40,17 @@ type ProcessedSettings = ConvertValuesToArrays<CSSAnimationSettings>;
 
 export default class CSSAnimationsManager implements ICSSAnimationsManager {
   private readonly element: ReanimatedHTMLElement;
+  private readonly componentName: string;
 
   // Keys are processed keyframes
   private attachedAnimations: Record<string, ProcessedAnimation> = {};
   private unmountCleanupCalled = false;
 
-  constructor(element: ReanimatedHTMLElement) {
+  constructor(element: ReanimatedHTMLElement, componentName = '') {
     configureWebCSSAnimations();
 
     this.element = element;
+    this.componentName = componentName;
   }
 
   update(animationProperties: ExistingCSSAnimationProperties | null) {
@@ -81,7 +83,10 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
       } else {
         // If keyframes was defined as an object, the additional processing is needed
         const keyframes = definition as CSSAnimationKeyframes;
-        const processedKeyframes = processKeyframeDefinitions(keyframes);
+        const processedKeyframes = processKeyframeDefinitions(
+          keyframes,
+          this.componentName
+        );
 
         // If the animation with the same keyframes was already attached, we can reuse it
         // Otherwise, we need to create a new CSSKeyframesRule object

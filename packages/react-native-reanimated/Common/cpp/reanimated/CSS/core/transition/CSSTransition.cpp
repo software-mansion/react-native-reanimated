@@ -64,7 +64,21 @@ folly::dynamic CSSTransition::run(
     const PropertyValueDynamicDiffsMap &propertiesDiffs,
     const folly::dynamic &lastUpdateValue,
     const double timestamp) {
-  return loopTransition_->run(shadowNode_, propertiesDiffs, lastUpdateValue, timestamp);
+  PropertyValueDynamicDiffsMap loopDiffs;
+  PropertyValueDynamicDiffsMap platformDiffs;
+  for (const auto &[propertyName, propertyDiff] : propertiesDiffs) {
+    if (routing_.platform.contains(propertyName)) {
+      platformDiffs.emplace(propertyName, propertyDiff);
+    } else {
+      loopDiffs.emplace(propertyName, propertyDiff);
+    }
+  }
+
+  if (!platformDiffs.empty()) {
+    ensurePlatformTransition().run(platformDiffs, timestamp);
+  }
+
+  return loopTransition_->run(shadowNode_, loopDiffs, lastUpdateValue, timestamp);
 }
 
 void CSSTransition::updateSettings(
@@ -78,6 +92,10 @@ CSSTransition::splitForPlatformRouting(jsi::Runtime &rt, CSSTransitionConfig &&c
   auto processed = platformTransitionProxy_->processConfig(std::move(config), routing_);
   routing_ = std::move(processed.routing);
 
+  if (!processed.platform.changedPropertiesSettings.empty() || !processed.platform.removedProperties.empty()) {
+    ensurePlatformTransition().updateSettings(
+        processed.platform.changedPropertiesSettings, processed.platform.removedProperties);
+  }
   if (!processed.platform.changedProperties.empty() || !processed.platform.removedProperties.empty()) {
     ensurePlatformTransition().run(rt, processed.platform, timestamp);
   }

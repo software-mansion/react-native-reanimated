@@ -1,4 +1,5 @@
 import React from 'react';
+import type { ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -8,7 +9,7 @@ import type { Transforms } from '@/types';
 
 export default function Skew() {
   return (
-    <ExamplesScreen<{ from: Transforms; to: Transforms }>
+    <ExamplesScreen<ViewStyle, { from: Transforms; to: Transforms }>
       buildAnimation={({ from, to }) => ({
         animationDirection: 'alternate',
         animationDuration: '1s',

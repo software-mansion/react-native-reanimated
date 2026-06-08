@@ -12,8 +12,8 @@ const AnimatedPolygon = Animated.createAnimatedComponent(Polygon);
 export default function PolygonExample() {
   return (
     <ExamplesScreen<
-      { keyframes: CSSAnimationKeyframes<PolygonProps> },
-      PolygonProps
+      PolygonProps,
+      { keyframes: CSSAnimationKeyframes<PolygonProps> }
     >
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',
@@ -123,6 +123,7 @@ export default function PolygonExample() {
                   title: 'Pentagon to triangle',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Different Number of Points',
             },
           ],

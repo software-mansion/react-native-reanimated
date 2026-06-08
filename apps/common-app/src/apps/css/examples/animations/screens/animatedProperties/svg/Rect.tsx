@@ -11,7 +11,7 @@ const AnimatedRect = Animated.createAnimatedComponent(Rect);
 
 export default function RectExample() {
   return (
-    <ExamplesScreen<{ keyframes: CSSAnimationKeyframes<RectProps> }, RectProps>
+    <ExamplesScreen<RectProps, { keyframes: CSSAnimationKeyframes<RectProps> }>
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',
         animationDuration: '0.5s',

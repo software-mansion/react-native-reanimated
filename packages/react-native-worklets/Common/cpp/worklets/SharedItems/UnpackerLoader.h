@@ -2,11 +2,7 @@
 
 #include <jsi/jsi.h>
 
-#ifndef NDEBUG
-// Nothing
-#else
 #include <memory>
-#endif // NDEBUG
 #include <string>
 
 namespace worklets {
@@ -63,36 +59,47 @@ class UnpackerLoader {
           "[Worklets] UnpackerLoader tried to install unpackers but the code for unpackers was not loaded.");
     }
 
+    const auto useSourceMaps =
 #ifndef NDEBUG
-    auto evalWithSourceMap = rt.global().getPropertyAsFunction(rt, "evalWithSourceMap");
-    evalWithSourceMap.call(rt, valueUnpacker_.code, valueUnpacker_.location, valueUnpacker_.sourceMap);
-    evalWithSourceMap.call(
-        rt, synchronizableUnpacker_.code, synchronizableUnpacker_.location, synchronizableUnpacker_.sourceMap);
-    evalWithSourceMap.call(
-        rt,
-        customSerializableUnpacker_.code,
-        customSerializableUnpacker_.location,
-        customSerializableUnpacker_.sourceMap);
-    evalWithSourceMap.call(
-        rt, shareableHostUnpacker_.code, shareableHostUnpacker_.location, shareableHostUnpacker_.sourceMap);
-    evalWithSourceMap.call(
-        rt, shareableGuestUnpacker_.code, shareableGuestUnpacker_.location, shareableGuestUnpacker_.sourceMap);
-    evalWithSourceMap.call(
-        rt, remoteFunctionUnpacker_.code, remoteFunctionUnpacker_.location, remoteFunctionUnpacker_.sourceMap);
+        !valueUnpacker_.sourceMap.empty();
 #else
-    rt.evaluateJavaScript(std::make_shared<facebook::jsi::StringBuffer>(valueUnpacker_.code), valueUnpacker_.location);
-    rt.evaluateJavaScript(
-        std::make_shared<facebook::jsi::StringBuffer>(synchronizableUnpacker_.code), synchronizableUnpacker_.location);
-    rt.evaluateJavaScript(
-        std::make_shared<facebook::jsi::StringBuffer>(customSerializableUnpacker_.code),
-        customSerializableUnpacker_.location);
-    rt.evaluateJavaScript(
-        std::make_shared<facebook::jsi::StringBuffer>(shareableHostUnpacker_.code), shareableHostUnpacker_.location);
-    rt.evaluateJavaScript(
-        std::make_shared<facebook::jsi::StringBuffer>(shareableGuestUnpacker_.code), shareableGuestUnpacker_.location);
-    rt.evaluateJavaScript(
-        std::make_shared<facebook::jsi::StringBuffer>(remoteFunctionUnpacker_.code), remoteFunctionUnpacker_.location);
+        false;
 #endif // NDEBUG
+
+    if (useSourceMaps) {
+      const auto evalWithSourceMap = rt.global().getPropertyAsFunction(rt, "evalWithSourceMap");
+      evalWithSourceMap.call(rt, valueUnpacker_.code, valueUnpacker_.location, valueUnpacker_.sourceMap);
+      evalWithSourceMap.call(
+          rt, synchronizableUnpacker_.code, synchronizableUnpacker_.location, synchronizableUnpacker_.sourceMap);
+      evalWithSourceMap.call(
+          rt,
+          customSerializableUnpacker_.code,
+          customSerializableUnpacker_.location,
+          customSerializableUnpacker_.sourceMap);
+      evalWithSourceMap.call(
+          rt, shareableHostUnpacker_.code, shareableHostUnpacker_.location, shareableHostUnpacker_.sourceMap);
+      evalWithSourceMap.call(
+          rt, shareableGuestUnpacker_.code, shareableGuestUnpacker_.location, shareableGuestUnpacker_.sourceMap);
+      evalWithSourceMap.call(
+          rt, remoteFunctionUnpacker_.code, remoteFunctionUnpacker_.location, remoteFunctionUnpacker_.sourceMap);
+    } else {
+      rt.evaluateJavaScript(
+          std::make_shared<facebook::jsi::StringBuffer>(valueUnpacker_.code), valueUnpacker_.location);
+      rt.evaluateJavaScript(
+          std::make_shared<facebook::jsi::StringBuffer>(synchronizableUnpacker_.code),
+          synchronizableUnpacker_.location);
+      rt.evaluateJavaScript(
+          std::make_shared<facebook::jsi::StringBuffer>(customSerializableUnpacker_.code),
+          customSerializableUnpacker_.location);
+      rt.evaluateJavaScript(
+          std::make_shared<facebook::jsi::StringBuffer>(shareableHostUnpacker_.code), shareableHostUnpacker_.location);
+      rt.evaluateJavaScript(
+          std::make_shared<facebook::jsi::StringBuffer>(shareableGuestUnpacker_.code),
+          shareableGuestUnpacker_.location);
+      rt.evaluateJavaScript(
+          std::make_shared<facebook::jsi::StringBuffer>(remoteFunctionUnpacker_.code),
+          remoteFunctionUnpacker_.location);
+    }
   }
 
  private:

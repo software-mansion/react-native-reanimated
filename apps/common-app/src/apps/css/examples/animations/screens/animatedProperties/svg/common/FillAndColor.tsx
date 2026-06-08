@@ -57,13 +57,13 @@ function PolygonExample({
 export default function FillAndColorExample() {
   return (
     <ExamplesScreen<
+      CircleProps,
       {
         keyframes: CSSAnimationKeyframes<CircleProps>;
         render: <T extends object>(
           animation: CSSAnimationProperties<T>
         ) => JSX.Element;
-      },
-      CircleProps
+      }
     >
       renderExample={({ animation, render }) => render(animation)}
       buildAnimation={({ keyframes }) => ({

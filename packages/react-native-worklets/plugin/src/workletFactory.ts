@@ -178,7 +178,7 @@ export function makeWorkletFactory(
   // When testing with jest I noticed that environment variables are set later
   // than some functions are evaluated. E.g. this cannot be above this function
   // because it would always evaluate to true.
-  const shouldInjectLocation = !isRelease();
+  const shouldInjectLocation = !isRelease(state);
   if (shouldInjectLocation) {
     let location = state.file.opts.filename;
     if (state.opts.relativeSourceLocation) {
@@ -275,7 +275,7 @@ export function makeWorkletFactory(
     ),
   ];
 
-  const shouldInjectVersion = !isRelease();
+  const shouldInjectVersion = !isRelease(state);
   if (shouldInjectVersion) {
     statements.push(
       expressionStatement(
@@ -307,7 +307,7 @@ export function makeWorkletFactory(
     );
   }
 
-  if (!isRelease() && !state.opts.bundleMode) {
+  if (!isRelease(state) && !state.opts.bundleMode) {
     statements.unshift(
       variableDeclaration('const', [
         variableDeclarator(
