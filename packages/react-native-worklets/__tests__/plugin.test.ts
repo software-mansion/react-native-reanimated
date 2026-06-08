@@ -27,10 +27,13 @@ jest.mock('fs', () => {
 
 expect.addSnapshotSerializer({
   test: (v: unknown): v is string =>
-    typeof v === 'string' && v.includes('\\\\'),
+    typeof v === 'string' &&
+    (v.includes('\\\\') || /(?<![A-Za-z])[A-Za-z]:[/\\]/.test(v)),
   serialize: (v, c, i, d, r, printer) =>
     printer(
-      (v as string).replace(/[A-Za-z]:\\\\/g, '/').replace(/\\\\/g, '/'),
+      (v as string)
+        .replace(/(?<![A-Za-z])[A-Za-z]:[\\/]+/g, '/')
+        .replace(/\\\\/g, '/'),
       c,
       i,
       d,

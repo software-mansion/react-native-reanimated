@@ -1022,8 +1022,9 @@ var require_workletFactory = __commonJS({
         let location = state.file.opts.filename;
         if (state.opts.relativeSourceLocation) {
           location = (0, path_1.relative)(state.cwd, location);
-          sourceMapString = sourceMapString === null || sourceMapString === void 0 ? void 0 : sourceMapString.replace(state.file.opts.filename, location);
+          sourceMapString = sourceMapString === null || sourceMapString === void 0 ? void 0 : sourceMapString.replace(toPosix(state.file.opts.filename), toPosix(location));
         }
+        location = toPosix(location);
         initDataObjectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)("location"), (0, types_12.stringLiteral)(location)));
       }
       if (sourceMapString) {
@@ -1149,6 +1150,9 @@ var require_workletFactory = __commonJS({
       const workletName = reactName ? (0, types_12.toIdentifier)(`${reactName}_${suffix}`) : (0, types_12.toIdentifier)(suffix);
       reactName = reactName || (0, types_12.toIdentifier)(suffix);
       return { workletName, reactName };
+    }
+    function toPosix(p) {
+      return path_1.sep === "/" ? p : p.split(path_1.sep).join("/");
     }
     var extraPlugins = [
       require.resolve("@babel/plugin-transform-shorthand-properties"),
