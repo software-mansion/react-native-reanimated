@@ -1,3 +1,4 @@
+import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -50,10 +51,13 @@ const EXAMPLES = [
 
 export default function FlexBasis() {
   return (
-    <ExamplesScreen<{
-      keyframes: CSSAnimationKeyframes;
-      flexDirection: 'column' | 'row';
-    }>
+    <ExamplesScreen<
+      ViewStyle,
+      {
+        keyframes: CSSAnimationKeyframes;
+        flexDirection: 'column' | 'row';
+      }
+    >
       CardComponent={VerticalExampleCard}
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',

@@ -11,10 +11,10 @@ import type {
 } from 'react-native';
 import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 
-import type { Maybe } from './common';
-import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
+import type { Maybe, MutuallyExclusiveUnion } from './common';
+import type { CSSStyle } from './css';
 import type { EasingFunctionFactory } from './Easing';
-import type { AnimatedStyleHandle, DefaultStyle } from './hook/commonTypes';
+import type { AnimatedStyleHandle } from './hook/commonTypes';
 
 type LayoutAnimationOptions =
   | 'originX'
@@ -42,19 +42,16 @@ export interface KeyframeProps extends StyleProps {
   easing?: EasingFunction | EasingFunctionFactory;
 }
 
-type FirstFrame =
-  | {
-      0: KeyframeProps & { easing?: never };
-      from?: never;
-    }
-  | {
-      0?: never;
-      from: KeyframeProps & { easing?: never };
-    };
+// `easing` describes the transition into a keyframe, so the first frame can't have it.
+type FirstKeyframe = KeyframeProps & { easing?: never };
 
-type LastFrame =
-  | { 100?: KeyframeProps; to?: never }
-  | { 100?: never; to: KeyframeProps };
+type FirstFrame = MutuallyExclusiveUnion<
+  [{ 0: FirstKeyframe }, { from: FirstKeyframe }]
+>;
+
+type LastFrame = MutuallyExclusiveUnion<
+  [{ 100?: KeyframeProps }, { to: KeyframeProps }]
+>;
 
 export type ValidKeyframeProps = FirstFrame &
   LastFrame &
@@ -455,25 +452,8 @@ type MaybeSharedValueRecursive<Value> = Value extends readonly (infer Item)[]
           }
     : MaybeSharedValue<Value>;
 
-type CSSConfigProps<TStyle extends object> = Partial<
-  CSSAnimationProperties<TStyle> & CSSTransitionProperties<TStyle>
->;
-
-// Two candidates — the static intersection keeps generic inference working
-// (e.g. `useAnimatedStyle<Style>`); the stripped fallback sidesteps the
-// `never`-collapse when a base style augmentation (e.g. Expo's
-// `expo-env.d.ts`) declares our CSS keys with conflicting types. See
-// https://github.com/software-mansion/react-native-reanimated/issues/9328
-type StyleWithCSS<TStyle> = TStyle extends object
-  ?
-      | (TStyle & CSSConfigProps<TStyle>)
-      | (Omit<TStyle, keyof CSSConfigProps<TStyle>> & CSSConfigProps<TStyle>)
-  : never;
-
-// Ideally we want AnimatedStyle to not be generic, but there are
-// so many dependencies on it being generic that it's not feasible at the moment.
-export type AnimatedStyle<TStyle = DefaultStyle> =
-  | StyleWithCSS<TStyle>
+export type AnimatedStyle<TStyle> =
+  | CSSStyle<TStyle>
   | MaybeSharedValueRecursive<TStyle>
   | AnimatedStyleHandle<TStyle>;
 

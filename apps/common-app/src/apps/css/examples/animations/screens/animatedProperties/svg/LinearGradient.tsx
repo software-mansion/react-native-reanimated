@@ -14,8 +14,8 @@ const AnimatedGrad = Animated.createAnimatedComponent(LinearGradient);
 export default function LinearGradientExample() {
   return (
     <ExamplesScreen<
-      { keyframes: CSSAnimationKeyframes<CSSLinearGradientProps> },
-      CSSLinearGradientProps
+      CSSLinearGradientProps,
+      { keyframes: CSSAnimationKeyframes<CSSLinearGradientProps> }
     >
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',

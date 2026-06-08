@@ -1,7 +1,6 @@
 'use strict';
 import type {
   ConfigPropertyAlias,
-  PlainStyle,
   UnknownRecord,
   ValueProcessor,
 } from '../types';
@@ -50,6 +49,6 @@ export function createNativePropsBuilder<TProps extends UnknownRecord>(
 
 export type NativePropsBuilder = ReturnType<typeof createNativePropsBuilder>;
 
-export const stylePropsBuilder = createNativePropsBuilder<PlainStyle>(
+export const stylePropsBuilder = createNativePropsBuilder(
   STYLE_PROPERTIES_CONFIG
 );
