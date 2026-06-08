@@ -1,4 +1,5 @@
 'use strict';
+import { logger } from '../../../common';
 import { webPropsBuilder } from '../../../common/web';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
 import { ANIMATION_NAME_PREFIX } from '../../constants';
@@ -38,11 +39,20 @@ function orderSelectors(
   return [...known, ...unknown];
 }
 
+const SELECTOR_INJECTION_PATTERN = /[{};,]/;
+
 function buildSelectorRule(
   viewId: string,
   selector: string,
   pseudoStylesBySelector: PseudoStylesBySelector
 ): string | null {
+  if (SELECTOR_INJECTION_PATTERN.test(selector)) {
+    if (__DEV__) {
+      logger.warn(`Ignoring unsupported pseudo-selector "${selector}".`);
+    }
+    return null;
+  }
+
   const css = webPropsBuilder.build(
     pseudoStylesBySelector[selector].selectorStyle
   );

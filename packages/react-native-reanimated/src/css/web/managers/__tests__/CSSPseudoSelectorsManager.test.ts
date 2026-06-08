@@ -110,6 +110,22 @@ describe(CSSPseudoSelectorsManager, () => {
     expect(removeMock).toHaveBeenCalledTimes(1);
   });
 
+  test('skips a selector that would break out of the element scope (CSS injection)', () => {
+    const element = createElement();
+    const manager = new CSSPseudoSelectorsManager(element);
+
+    manager.update({
+      ':hover, body': {
+        selectorStyle: { backgroundColor: 'red' },
+        defaultStyle: { backgroundColor: 'blue' },
+      },
+    });
+
+    const rules = insertMock.mock.calls[0][1] as string[];
+    expect(rules.join('\n')).not.toContain('body');
+    expect(rules).toHaveLength(0);
+  });
+
   test('skips inserting when called with null', () => {
     const element = createElement();
     const manager = new CSSPseudoSelectorsManager(element);
