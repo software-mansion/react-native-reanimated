@@ -80,9 +80,11 @@ jobs:
         with:
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
-      - name: Install LLVM tools (xcode-build-server + llvm clang-tidy)
+      - name: Install build tools (xcode-build-server, llvm, xcpretty)
         if: steps.result-cache.outputs.cache-hit != 'true'
-        run: brew install xcode-build-server llvm
+        run: |
+          brew install xcode-build-server llvm
+          gem install xcpretty
 
       - name: Install monorepo node dependencies
         if: steps.result-cache.outputs.cache-hit != 'true'
@@ -113,7 +115,8 @@ jobs:
       - name: Build app
         if: steps.result-cache.outputs.cache-hit != 'true'
         working-directory: ${{ env.WORKING_DIRECTORY }}/ios
-        run: xcodebuild -workspace FabricExample.xcworkspace -configuration "$CONFIGURATION" -scheme "$CONFIGURATION FabricExample" -destination "generic/platform=iOS Simulator" -quiet
+        shell: bash -eo pipefail {0}
+        run: xcodebuild -workspace FabricExample.xcworkspace -configuration "$CONFIGURATION" -scheme "$CONFIGURATION FabricExample" -destination "generic/platform=iOS Simulator" | xcpretty
 
       - name: Generate iOS compilation metadata
         if: steps.result-cache.outputs.cache-hit != 'true'
