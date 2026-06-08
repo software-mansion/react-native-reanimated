@@ -3,6 +3,11 @@
 
 set -euo pipefail
 
+# Diagnostic: print the line that triggered an unexpected non-zero exit so
+# CI failures don't look like silent abort-after-info-lines. Remove once
+# the pipeline is stable.
+trap 'echo "error: generate-xcode-metadata.sh exited at line $LINENO (last cmd: $BASH_COMMAND)" >&2' ERR
+
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 repo_root="$(cd "$script_dir/../.." && pwd)"
 
