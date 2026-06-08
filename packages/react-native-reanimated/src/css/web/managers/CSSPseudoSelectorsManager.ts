@@ -1,13 +1,13 @@
 'use strict';
 import { webPropsBuilder } from '../../../common/web';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
-import type { PseudoSelectorKey } from '../../types/pseudo';
+import type { CSSPseudoSelectorKey } from '../../types/pseudo';
 import type { PseudoStylesBySelector } from '../../utils';
 import { insertPseudoSelectorCSS, removePseudoSelectorCSS } from '../domUtils';
 
 let pseudoSelectorCounter = 0;
 
-const SELECTOR_ORDER: readonly PseudoSelectorKey[] = [
+const SELECTOR_ORDER: readonly CSSPseudoSelectorKey[] = [
   ':focus-within',
   ':focus',
   ':hover',
