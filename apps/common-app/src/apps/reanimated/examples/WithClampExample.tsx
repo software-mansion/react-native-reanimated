@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import type { ViewStyle } from 'react-native';
-import { Button, StyleSheet, Text, View } from 'react-native';
+import { Button, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -25,7 +24,7 @@ function Example({
   testedStyle,
   description,
 }: {
-  testedStyle: AnimatedStyle;
+  testedStyle: AnimatedStyle<ViewStyle>;
   description: string;
 }) {
   return (

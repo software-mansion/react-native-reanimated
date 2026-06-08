@@ -116,7 +116,7 @@ export function buildWorkletString(
 
   assert(inputMap, '[Reanimated] `inputMap` is undefined.');
 
-  const includeSourceMap = !(isRelease() || state.opts.disableSourceMaps);
+  const includeSourceMap = !(isRelease(state) || state.opts.disableSourceMaps);
 
   if (includeSourceMap) {
     // Clear contents array (should be empty anyways)
