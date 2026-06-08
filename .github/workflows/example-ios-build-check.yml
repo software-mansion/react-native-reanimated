@@ -80,6 +80,10 @@ jobs:
         with:
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
+      - name: Install LLVM tools (xcode-build-server + llvm clang-tidy)
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        run: brew install xcode-build-server llvm
+
       - name: Install monorepo node dependencies
         if: steps.result-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
