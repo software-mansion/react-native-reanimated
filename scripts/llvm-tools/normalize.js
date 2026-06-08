@@ -34,6 +34,12 @@ function cleanCommand(cmd) {
     cmd = cmd.replace(new RegExp(`\\s+${esc}\\s+\\S+`, 'g'), '');
     cmd = cmd.replace(new RegExp(`\\s+${esc}=\\S+`, 'g'), '');
   }
+  // CMake emits `-Xclang -include-pch -Xclang <pch>` to feed a precompiled
+  // header. The PCH file only exists after a full build; configureCMakeDebug
+  // skips that step, so clang-tidy can't find the PCH on CI. Strip the 4
+  // tokens — a sibling `-include <header>` survives and provides the same
+  // prefix-header content uncached.
+  cmd = cmd.replace(/\s+-Xclang\s+-include-pch\s+-Xclang\s+\S+/g, '');
   return cmd;
 }
 
@@ -44,14 +50,18 @@ function cleanCommand(cmd) {
 function cleanArgs(args) {
   /** @type {string[]} */
   const out = [];
-  let skip = false;
-  for (const a of args) {
-    if (skip) {
-      skip = false;
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (
+      a === '-Xclang' &&
+      args[i + 1] === '-include-pch' &&
+      args[i + 2] === '-Xclang'
+    ) {
+      i += 3;
       continue;
     }
     if (DROP_FLAGS_WITH_VALUE.includes(a)) {
-      skip = true;
+      i += 1;
       continue;
     }
     if (DROP_FLAGS_WITH_VALUE.some((f) => a.startsWith(`${f}=`))) continue;
