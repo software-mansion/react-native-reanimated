@@ -37,7 +37,7 @@ runs:
         NDK_VERSION="$(grep -oE 'ndkVersion\s*=\s*"[^"]+"' apps/fabric-example/android/build.gradle | sed -E 's/.*"([^"]+)".*/\1/')"
         echo "installing ndk;$NDK_VERSION"
         SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-        yes | "$SDKMANAGER" --licenses > /dev/null
+        printf 'y\n%.0s' $(seq 50) | "$SDKMANAGER" --licenses > /dev/null
         "$SDKMANAGER" --install "ndk;$NDK_VERSION"
 
     - name: Generate Android compile database
