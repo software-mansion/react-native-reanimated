@@ -2,7 +2,9 @@
 import {
   configureWebCSSAnimations,
   insertCSSAnimation,
+  insertPseudoSelectorCSS,
   removeCSSAnimation,
+  removePseudoSelectorCSS,
 } from '../domUtils';
 
 // domUtils owns a single shared <style> tag and tracks the @keyframes rules it
@@ -118,5 +120,84 @@ describe('domUtils (web CSS animations stylesheet)', () => {
       expect(hasRule(a)).toBe(true);
       expect(hasRule(c)).toBe(true);
     });
+  });
+});
+
+describe('domUtils (web pseudo-selector rules)', () => {
+  // Pseudo rules are regular style rules in the same shared sheet, so we read
+  // them back from the real CSSOM by selector text.
+  const styleSelectors = (): string[] => {
+    const sheet = (
+      document.getElementById(STYLE_TAG_ID) as HTMLStyleElement | null
+    )?.sheet;
+    if (!sheet) {
+      return [];
+    }
+    return Array.from(sheet.cssRules)
+      .filter((rule): rule is CSSStyleRule => 'selectorText' in rule)
+      .map((rule) => rule.selectorText);
+  };
+
+  let nextOwner = 0;
+  const uniqueOwner = (): string => `owner-${nextOwner++}`;
+
+  test('inserts each of an owner rules into the shared sheet', () => {
+    const owner = uniqueOwner();
+    insertPseudoSelectorCSS(owner, [
+      `[data-${owner}]:hover { color: red }`,
+      `[data-${owner}]:focus { color: blue }`,
+    ]);
+
+    const selectors = styleSelectors();
+    expect(selectors).toContain(`[data-${owner}]:hover`);
+    expect(selectors).toContain(`[data-${owner}]:focus`);
+  });
+
+  test('replaces the owner rules on a subsequent insert', () => {
+    const owner = uniqueOwner();
+    insertPseudoSelectorCSS(owner, [`[data-${owner}]:hover { color: red }`]);
+    insertPseudoSelectorCSS(owner, [`[data-${owner}]:focus { color: blue }`]);
+
+    const selectors = styleSelectors();
+    expect(selectors).toContain(`[data-${owner}]:focus`);
+    expect(selectors).not.toContain(`[data-${owner}]:hover`);
+  });
+
+  test('removes all rules belonging to an owner', () => {
+    const owner = uniqueOwner();
+    insertPseudoSelectorCSS(owner, [
+      `[data-${owner}]:hover { color: red }`,
+      `[data-${owner}]:focus { color: blue }`,
+    ]);
+    expect(styleSelectors()).toContain(`[data-${owner}]:hover`);
+
+    removePseudoSelectorCSS(owner);
+
+    const selectors = styleSelectors();
+    expect(selectors).not.toContain(`[data-${owner}]:hover`);
+    expect(selectors).not.toContain(`[data-${owner}]:focus`);
+  });
+
+  test('removing an owner keeps surrounding rules intact (index shifting)', () => {
+    const before = uniqueName();
+    const owner = uniqueOwner();
+    const after = uniqueName();
+
+    // Animation, then pseudo rules, then another animation - so the pseudo
+    // rules sit between two tracked rules in the shared sheet.
+    insertCSSAnimation(before, KEYFRAMES);
+    insertPseudoSelectorCSS(owner, [
+      `[data-${owner}]:hover { color: red }`,
+      `[data-${owner}]:focus { color: blue }`,
+    ]);
+    insertCSSAnimation(after, KEYFRAMES);
+
+    removePseudoSelectorCSS(owner);
+
+    // Both animations must survive the deletion + index re-sync.
+    expect(hasRule(before)).toBe(true);
+    expect(hasRule(after)).toBe(true);
+    expect(styleSelectors()).not.toContain(`[data-${owner}]:hover`);
+    expect(styleSelectors()).not.toContain(`[data-${owner}]:focus`);
   });
 });

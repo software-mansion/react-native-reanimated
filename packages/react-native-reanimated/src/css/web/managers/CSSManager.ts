@@ -25,11 +25,15 @@ export default class CSSManager implements ICSSManager {
   }
 
   update(style: CSSStyle): void {
-    const [animationProperties, transitionProperties, pseudoStylesBySelector] =
-      filterCSSAndStyleProperties(style);
+    const [
+      animationProperties,
+      transitionProperties,
+      pseudoStylesBySelector,
+      transitionCallbacks,
+    ] = filterCSSAndStyleProperties(style);
 
     this.animationsManager.update(animationProperties);
-    this.transitionsManager.update(transitionProperties);
+    this.transitionsManager.update(transitionProperties, transitionCallbacks);
     this.pseudoSelectorsManager.update(pseudoStylesBySelector);
   }
 
