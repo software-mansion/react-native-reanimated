@@ -224,6 +224,7 @@ describe.each([
     </script>`.replace(/<\/?script[^>]*>/g, '');
 
     function transformWithEnvName(envName: string): string {
+      capturedFiles.length = 0;
       const transformed = transformSync(sampleInput, {
         filename: MOCK_LOCATION,
         compact: false,
@@ -241,9 +242,10 @@ describe.each([
           ],
         ],
       });
+      assert(transformed);
       return bundleMode
         ? capturedFiles.map((f) => f.content).join('\n')
-        : (transformed?.code ?? '');
+        : (transformed.code ?? '');
     }
 
     test('envName "production" is detected as release', () => {
