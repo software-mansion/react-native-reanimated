@@ -1,11 +1,14 @@
 #!/bin/bash
 # THIS FILE WAS ENTIRELY AI GENERATED.
 
-# Usage: clang-tidy-lint.sh [scope-regex] [--platform=ios|android] [--verbose]
+# Usage: clang-tidy-lint.sh [scope-regex] [--platform=ios|android] [--strict] [--verbose]
 #   scope-regex:        "." (the package directory) or a literal regex.
 #   --platform=PLATFORM "ios" | "android" — filter compile_commands.json to
 #                       entries built for that platform. Omit to lint every
 #                       entry in the DB.
+#   --strict            Treat a missing compile_commands.json as a hard error
+#                       instead of warn-and-skip. CI passes this to enforce
+#                       that builds produced the expected DB.
 #   --verbose, -v       Echo each file being linted (otherwise progress lines
 #                       are suppressed and only diagnostics + a final summary
 #                       print).
@@ -19,10 +22,12 @@ set -o pipefail
 
 verbose=0
 platform=""
+strict=0
 positional=()
 while [ $# -gt 0 ]; do
   case "$1" in
     --verbose|-v) verbose=1 ;;
+    --strict) strict=1 ;;
     --platform=*) platform="${1#--platform=}" ;;
     --platform) platform="${2:-}"; shift ;;
     *) positional+=("$1") ;;
@@ -35,12 +40,18 @@ scope="${positional[0]:-.}"
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 
 if [ ! -f "compile_commands.json" ]; then
-  echo "error: compile_commands.json is missing in $(pwd)" >&2
-  echo "       build the package first so the compile database is generated:" >&2
-  echo "         - iOS:     pod install + a build of apps/fabric-example in Xcode" >&2
-  echo "         - Android: a gradle build of apps/fabric-example/android" >&2
-  echo "       see scripts/llvm-tools/README.md" >&2
-  exit 1
+  msg="compile_commands.json is missing in $(pwd)"
+  detail="(iOS DB is produced by a build of apps/fabric-example in Xcode;
+          Android DB by a gradle configuration of apps/fabric-example/android)
+       see scripts/llvm-tools/README.md"
+  if [ "$strict" = "1" ]; then
+    echo "error: $msg" >&2
+    echo "       $detail" >&2
+    exit 1
+  fi
+  echo "warning: $msg; skipping clang-tidy" >&2
+  echo "         $detail" >&2
+  exit 0
 fi
 
 case "$platform" in

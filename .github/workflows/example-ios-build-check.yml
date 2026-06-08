@@ -121,11 +121,11 @@ jobs:
 
       - name: Clang-tidy lint Worklets
         if: steps.result-cache.outputs.cache-hit != 'true'
-        run: yarn workspace react-native-worklets lint:clang-tidy:ios
+        run: yarn workspace react-native-worklets lint:clang-tidy:ios --strict
 
       - name: Clang-tidy lint Reanimated
         if: steps.result-cache.outputs.cache-hit != 'true'
-        run: yarn workspace react-native-reanimated lint:clang-tidy:ios
+        run: yarn workspace react-native-reanimated lint:clang-tidy:ios --strict
 
       - name: Mark build successful
         if: steps.result-cache.outputs.cache-hit != 'true'

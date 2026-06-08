@@ -63,3 +63,8 @@ runs:
       shell: bash
       working-directory: ${{ inputs.package-dir }}
       run: yarn lint:android
+
+    - name: Lint Android (clang-tidy)
+      shell: bash
+      working-directory: ${{ inputs.package-dir }}
+      run: yarn lint:clang-tidy:android --strict
