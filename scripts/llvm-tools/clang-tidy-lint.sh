@@ -1,31 +1,36 @@
 #!/bin/bash
 # THIS FILE WAS ENTIRELY AI GENERATED.
 
-# Usage: clang-tidy-lint.sh [scope-regex] [platform] [--verbose]
-#   scope-regex: "." (the package directory) or a literal regex.
-#   platform:    "ios" | "android" | "" (no filtering — uses every DB entry).
-#   --verbose:   echo each file being linted (otherwise progress lines are
-#                suppressed and only diagnostics + a final summary print).
+# Usage: clang-tidy-lint.sh [scope-regex] [--platform=ios|android] [--verbose]
+#   scope-regex:        "." (the package directory) or a literal regex.
+#   --platform=PLATFORM "ios" | "android" — filter compile_commands.json to
+#                       entries built for that platform. Omit to lint every
+#                       entry in the DB.
+#   --verbose, -v       Echo each file being linted (otherwise progress lines
+#                       are suppressed and only diagnostics + a final summary
+#                       print).
 #
-# When platform is set, the script filters compile_commands.json to entries
-# built for that platform, picks the toolchain best suited for it (LLVM for
-# iOS — Apple's toolchain ships no clang-tidy; NDK for Android with LLVM
-# fallback), and lints only those entries.
+# When --platform is set, the script picks the toolchain best suited for it
+# (LLVM for iOS — Apple's toolchain ships no clang-tidy; NDK for Android with
+# LLVM fallback).
 
 set -e
 set -o pipefail
 
 verbose=0
+platform=""
 positional=()
-for arg in "$@"; do
-  case "$arg" in
+while [ $# -gt 0 ]; do
+  case "$1" in
     --verbose|-v) verbose=1 ;;
-    *) positional+=("$arg") ;;
+    --platform=*) platform="${1#--platform=}" ;;
+    --platform) platform="${2:-}"; shift ;;
+    *) positional+=("$1") ;;
   esac
+  shift
 done
 
 scope="${positional[0]:-.}"
-platform="${positional[1]:-}"
 
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 

@@ -44,12 +44,6 @@ runs:
       shell: bash
       run: yarn install --immutable
 
-    - name: Build package
-      if: ${{ inputs.build-package == 'true' }}
-      shell: bash
-      working-directory: ${{ inputs.package-dir }}
-      run: yarn build
-
     - name: Generate Android compile database
       shell: bash
       working-directory: apps/fabric-example/android
