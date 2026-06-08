@@ -115,6 +115,10 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}/ios
         run: xcodebuild -workspace FabricExample.xcworkspace -configuration "$CONFIGURATION" -scheme "$CONFIGURATION FabricExample" -destination "generic/platform=iOS Simulator" -quiet
 
+      - name: Wait for compile_commands.json
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        run: scripts/llvm-tools/wait-for-compile-commands.sh
+
       - name: Clang-tidy lint Worklets
         if: steps.result-cache.outputs.cache-hit != 'true'
         run: yarn workspace react-native-worklets lint:clang-tidy:ios
