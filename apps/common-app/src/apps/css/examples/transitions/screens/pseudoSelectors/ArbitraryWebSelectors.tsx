@@ -19,9 +19,9 @@ export default function ArbitraryWebSelectors() {
     <Screen>
       <Scroll contentContainerStyle={styles.content} withBottomBarSpacing>
         <Section
-          description="Keys that aren't one of the five built-in selectors are passed through to the web layer as raw CSS pseudo-classes. On native they're ignored, so these examples only animate on web."
+          description="All selectors here are web-only (native ignores them). The first example uses an ARBITRARY selector that isn't in the public CSSPseudoSelectorKey types - TypeScript rejects it, so we opt in with @ts-expect-error; it isn't officially supported, but the web layer forwards raw CSS pseudo-classes so it still works in the browser. The remaining examples use selectors that ARE part of the typed API."
           labelTypes={['web']}
-          title="Arbitrary CSS pseudo-classes (web only)">
+          title="Web-only CSS pseudo-classes">
           <VerticalExampleCard
             description=":nth-child(odd) targets every other element. Each row receives the same style block; only those at odd DOM positions take the highlighted background."
             labelTypes={['web']}
@@ -47,6 +47,7 @@ export default function ArbitraryWebSelectors() {
                     styles.row,
                     {
                       backgroundColor: {
+                        // @ts-expect-error -- arbitrary web pseudo-classes aren't in the public CSSPseudoSelectorKey types (#9597); the web layer still forwards them (native ignores them).
                         ':nth-child(odd)': colors.primaryDark,
                         default: colors.primaryLight,
                       },
@@ -98,37 +99,38 @@ export default function ArbitraryWebSelectors() {
           </VerticalExampleCard>
 
           <VerticalExampleCard
-            description=":nth-child(3n) targets every third element."
+            description=":empty matches elements with no children. Here the even rows are empty and animate; the odd rows contain a child element and stay put."
             labelTypes={['web']}
-            title=":nth-child(3n)"
+            title=":empty"
             code={`<Animated.View
   style={{
     backgroundColor: {
       default: colors.primaryLight,
-      ':nth-child(3n)': colors.primary,
+      ':empty': colors.primaryDark,
     },
     transitionDuration: '200ms',
   }}
 />`}
             collapsedCode={`backgroundColor: {
   default: colors.primaryLight,
-  ':nth-child(3n)': colors.primary,
+  ':empty': colors.primaryDark,
 },`}>
             <View style={styles.list}>
-              {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              {[0, 1, 2, 3].map((i) => (
                 <Animated.View
                   key={i}
                   style={[
                     styles.row,
                     {
                       backgroundColor: {
-                        ':nth-child(3n)': colors.primary,
+                        ':empty': colors.primaryDark,
                         default: colors.primaryLight,
                       },
                       transitionDuration: '200ms',
                     },
-                  ]}
-                />
+                  ]}>
+                  {i % 2 === 1 ? <View style={styles.rowChild} /> : null}
+                </Animated.View>
               ))}
             </View>
           </VerticalExampleCard>
@@ -228,5 +230,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     height: sizes.xs,
     width: sizes.xxl,
+  },
+  rowChild: {
+    height: '100%',
+    width: spacing.xs,
   },
 });
