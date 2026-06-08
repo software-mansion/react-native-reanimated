@@ -608,7 +608,8 @@ var require_imports = __commonJS({
     function createImportPathLiteral(originalPath, state) {
       const generatedWorkletsDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), types_2.generatedWorkletsDir);
       const resolved = (0, path_1.resolve)((0, path_1.dirname)(state.file.opts.filename), originalPath);
-      return (0, types_12.stringLiteral)((0, path_1.relative)(generatedWorkletsDirPath, resolved));
+      const relativePath = (0, path_1.relative)(generatedWorkletsDirPath, resolved);
+      return (0, types_12.stringLiteral)(path_1.sep === "/" ? relativePath : relativePath.split(path_1.sep).join("/"));
     }
     var alwaysAllowed = [
       "react-native-worklets",
@@ -1131,7 +1132,7 @@ var require_workletFactory = __commonJS({
       if (state.file.opts.filename) {
         const filepath = state.file.opts.filename;
         source = (0, path_1.basename)(filepath);
-        const splitFilepath = filepath.split("/");
+        const splitFilepath = filepath.split(/[\\/]/);
         const nodeModulesIndex = splitFilepath.indexOf("node_modules");
         if (nodeModulesIndex !== -1) {
           const libraryName = splitFilepath[nodeModulesIndex + 1];

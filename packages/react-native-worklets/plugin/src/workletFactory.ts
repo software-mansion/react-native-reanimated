@@ -479,7 +479,7 @@ function makeWorkletName(
     source = basename(filepath);
 
     // Get the library name from the path.
-    const splitFilepath = filepath.split('/');
+    const splitFilepath = filepath.split(/[\\/]/);
     const nodeModulesIndex = splitFilepath.indexOf('node_modules');
     if (nodeModulesIndex !== -1) {
       const libraryName = splitFilepath[nodeModulesIndex + 1];
