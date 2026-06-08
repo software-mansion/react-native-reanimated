@@ -1,5 +1,9 @@
 'use strict';
 import type { ReanimatedHTMLElement } from '../../../../ReanimatedModule/js-reanimated';
+import {
+  registerWebSvgPropsBuilder,
+  SVG_POLYGON_WEB_PROPERTIES_CONFIG,
+} from '../../../svg/web';
 import type { ExistingCSSAnimationProperties } from '../../../types';
 import { processKeyframeDefinitions } from '../../animationParser';
 import { insertCSSAnimation, removeCSSAnimation } from '../../domUtils';
@@ -76,6 +80,27 @@ describe('CSSAnimationsManager (web)', () => {
       });
       expect(element.style.animationDuration).toContain('200ms');
       expect(element.style.animationDuration).toContain('300ms');
+    });
+
+    test('builds SVG keyframes with the SVG props builder for SVG components', () => {
+      // Polygon aliases `points` -> `d` (path()), a transform only the SVG
+      // builder does - so this verifies the manager threads its componentName
+      // into the keyframe pipeline for SVG components (not just the generic one).
+      registerWebSvgPropsBuilder('Polygon', SVG_POLYGON_WEB_PROPERTIES_CONFIG);
+      const svgManager = new CSSAnimationsManager(element, 'Polygon');
+
+      svgManager.update({
+        animationName: {
+          from: { points: '0,0 10,10 20,0' },
+          to: { points: '0,0 10,20 20,0' },
+        },
+        animationDuration: 200,
+      } as unknown as ExistingCSSAnimationProperties);
+
+      expect(insertCSSAnimation).toHaveBeenCalledWith(
+        element.style.animationName,
+        expect.stringContaining('d: path(')
+      );
     });
 
     test('removes the previous animation when switching to a different one', () => {

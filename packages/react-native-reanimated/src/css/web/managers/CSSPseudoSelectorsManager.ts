@@ -1,8 +1,9 @@
 'use strict';
 import { logger } from '../../../common';
-import { webPropsBuilder } from '../../../common/web';
+import { type WebPropsBuilder, webPropsBuilder } from '../../../common/web';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
 import { ANIMATION_NAME_PREFIX } from '../../constants';
+import { getWebSvgPropsBuilder } from '../../svg/web';
 import type { CSSPseudoSelectorKey } from '../../types/pseudo';
 import type { PseudoStylesBySelector } from '../../utils';
 import { insertPseudoSelectorCSS, removePseudoSelectorCSS } from '../domUtils';
@@ -44,7 +45,8 @@ const SELECTOR_INJECTION_PATTERN = /[{};,]/;
 function buildSelectorRule(
   viewId: string,
   selector: string,
-  pseudoStylesBySelector: PseudoStylesBySelector
+  pseudoStylesBySelector: PseudoStylesBySelector,
+  propsBuilder: WebPropsBuilder
 ): string | null {
   if (SELECTOR_INJECTION_PATTERN.test(selector)) {
     if (__DEV__) {
@@ -53,7 +55,7 @@ function buildSelectorRule(
     return null;
   }
 
-  const css = webPropsBuilder.build(
+  const css = propsBuilder.build(
     pseudoStylesBySelector[selector].selectorStyle
   );
   if (!css) {
@@ -70,21 +72,24 @@ function buildSelectorRule(
 
 function buildRules(
   viewId: string,
-  pseudoStylesBySelector: PseudoStylesBySelector
+  pseudoStylesBySelector: PseudoStylesBySelector,
+  propsBuilder: WebPropsBuilder
 ): string[] {
   return orderSelectors(pseudoStylesBySelector)
     .map((selector) =>
-      buildSelectorRule(viewId, selector, pseudoStylesBySelector)
+      buildSelectorRule(viewId, selector, pseudoStylesBySelector, propsBuilder)
     )
     .filter((rule): rule is string => rule !== null);
 }
 
 export default class CSSPseudoSelectorsManager {
   private readonly element: ReanimatedHTMLElement;
+  private readonly componentName: string;
   private viewId: string | null = null;
 
-  constructor(element: ReanimatedHTMLElement) {
+  constructor(element: ReanimatedHTMLElement, componentName = '') {
     this.element = element;
+    this.componentName = componentName;
   }
 
   update(pseudoStylesBySelector: PseudoStylesBySelector | null): void {
@@ -93,9 +98,15 @@ export default class CSSPseudoSelectorsManager {
       return;
     }
 
+    const propsBuilder =
+      getWebSvgPropsBuilder(this.componentName) ?? webPropsBuilder;
+
     const viewId = this.ensureViewId();
     this.syncActiveMarker(pseudoStylesBySelector);
-    insertPseudoSelectorCSS(viewId, buildRules(viewId, pseudoStylesBySelector));
+    insertPseudoSelectorCSS(
+      viewId,
+      buildRules(viewId, pseudoStylesBySelector, propsBuilder)
+    );
     this.ensureTransitionProperty();
   }
 

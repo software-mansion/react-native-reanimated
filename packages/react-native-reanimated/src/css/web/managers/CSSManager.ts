@@ -21,7 +21,10 @@ export default class CSSManager implements ICSSManager {
       componentDisplayName
     );
     this.transitionsManager = new CSSTransitionsManager(element);
-    this.pseudoSelectorsManager = new CSSPseudoSelectorsManager(element);
+    this.pseudoSelectorsManager = new CSSPseudoSelectorsManager(
+      element,
+      componentDisplayName
+    );
   }
 
   update(style: CSSStyle): void {
