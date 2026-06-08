@@ -33,6 +33,7 @@
     "lint:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run lint",
     "lint:root": "eslint . --ignore-pattern 'packages/**' --ignore-pattern 'apps/**' --ignore-pattern 'docs/**' && yarn run --top-level oxfmt --check --ignore-path .prettiereslintignore .",
     "prepare-vscode": "bash ./scripts/prepare-vscode.sh",
+    "type:check:tstyche": "tstyche",
     "toggle-bundle-mode": "bash ./scripts/toggle-bundle-mode.sh"
   },
   "devDependencies": {
