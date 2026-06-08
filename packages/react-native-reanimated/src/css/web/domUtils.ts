@@ -69,34 +69,6 @@ export function insertCSSAnimation(animationName: string, keyframes: string) {
   }
 }
 
-const pseudoSelectorStyleElements = new Map<string, HTMLStyleElement>();
-
-export function insertPseudoSelectorCSS(name: string, cssText: string): void {
-  if (!IS_WINDOW_AVAILABLE) {
-    return;
-  }
-  const existing = pseudoSelectorStyleElements.get(name);
-  if (existing) {
-    existing.textContent = cssText;
-    return;
-  }
-  const el = document.createElement('style');
-  el.textContent = cssText;
-  document.head.append(el);
-  pseudoSelectorStyleElements.set(name, el);
-}
-
-export function removePseudoSelectorCSS(name: string): void {
-  if (!IS_WINDOW_AVAILABLE) {
-    return;
-  }
-  const el = pseudoSelectorStyleElements.get(name);
-  if (el) {
-    el.remove();
-    pseudoSelectorStyleElements.delete(name);
-  }
-}
-
 export function removeCSSAnimation(animationName: string) {
   // Without this check SSR crashes because document is undefined (NextExample on CI)
   if (!IS_WINDOW_AVAILABLE) {
@@ -123,5 +95,33 @@ export function removeCSSAnimation(animationName: string) {
     }
 
     cssNameToIndex.set(cssNameList[i], nextCSSIndex - 1);
+  }
+}
+
+const pseudoSelectorStyleElements = new Map<string, HTMLStyleElement>();
+
+export function insertPseudoSelectorCSS(name: string, cssText: string): void {
+  if (!IS_WINDOW_AVAILABLE) {
+    return;
+  }
+  const existing = pseudoSelectorStyleElements.get(name);
+  if (existing) {
+    existing.textContent = cssText;
+    return;
+  }
+  const el = document.createElement('style');
+  el.textContent = cssText;
+  document.head.append(el);
+  pseudoSelectorStyleElements.set(name, el);
+}
+
+export function removePseudoSelectorCSS(name: string): void {
+  if (!IS_WINDOW_AVAILABLE) {
+    return;
+  }
+  const el = pseudoSelectorStyleElements.get(name);
+  if (el) {
+    el.remove();
+    pseudoSelectorStyleElements.delete(name);
   }
 }
