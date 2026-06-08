@@ -5,29 +5,25 @@ import { transformSync } from '@babel/core';
 import traverse from '@babel/traverse';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
-import * as fs from 'fs';
-import fsPath from 'path';
 
 import { version as packageVersion } from '../package.json';
 import type { PluginOptions } from '../plugin';
 import plugin from '../plugin';
 
 const MOCK_LOCATION = '/dev/null';
-const RESOLVED_MOCK_LOCATION = fsPath.resolve(MOCK_LOCATION);
 
-const realReadFileSync = fs.readFileSync;
-jest.spyOn(fs, 'readFileSync').mockImplementation(((
-  file: unknown,
-  ...args: unknown[]
-) => {
-  if (
-    typeof file === 'string' &&
-    fsPath.resolve(file) === RESOLVED_MOCK_LOCATION
-  ) {
-    return Buffer.from('');
-  }
-  return (realReadFileSync as (...a: unknown[]) => unknown)(file, ...args);
-}) as typeof fs.readFileSync);
+jest.mock('fs', () => {
+  const actual = jest.requireActual('fs');
+  const nodePath = jest.requireActual('path');
+  const target = nodePath.resolve('/dev/null');
+  return {
+    ...actual,
+    readFileSync: (file: unknown, ...args: unknown[]) =>
+      typeof file === 'string' && nodePath.resolve(file) === target
+        ? Buffer.from('')
+        : actual.readFileSync(file, ...args),
+  };
+});
 
 expect.addSnapshotSerializer({
   test: (v: unknown): v is string =>
