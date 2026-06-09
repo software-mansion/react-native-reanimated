@@ -85,3 +85,4 @@ playwright/.cache/
 
 # Claude
 .claude
+CLAUDE.md
