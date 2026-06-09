@@ -133,6 +133,12 @@ run_pipeline() {
   log=$(wait_for_stable_log)
   if [ -z "$log" ]; then
     echo "warning: timed out waiting for ${project}'s xcactivitylog under ${dd_proj}" >&2
+    echo "diagnostic: $dd_proj contents:" >&2
+    ls -la "$dd_proj/" >&2 || true
+    echo "diagnostic: $dd_proj/Logs contents (recursive):" >&2
+    ls -laR "$dd_proj/Logs/" >&2 || true
+    echo "diagnostic: any xcactivitylog under $dd_proj:" >&2
+    find "$dd_proj" -name '*.xcactivitylog' >&2 || true
     return 0
   fi
 
