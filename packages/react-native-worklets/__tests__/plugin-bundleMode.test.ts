@@ -392,5 +392,36 @@ describe('babel plugin in bundleMode', () => {
       expect(files).toHaveLength(0);
       expect(code).not.toContain(REQUIRE_PREFIX);
     });
+
+    test('emitted worklet file has scheduling callbacks autoworkletized after a full plugin lifecycle', () => {
+      // Simulates Metro's two-pass lifecycle: the plugin runs on the source
+      // file, then again on each emitted worklet file. By the end of that
+      // lifecycle, scheduling callbacks nested in a worklet body must be
+      // extracted into their own worklet files — regardless of which pass
+      // does the work. Pre-bail-out, pass 2 extracted them; with the
+      // bail-out, pass 2 is a no-op and pass 1 has to pre-process the
+      // emitted file so the result still converges.
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          scheduleOnUI(() => {
+            return 1;
+          });
+        }
+      </script>`;
+
+      const { files: firstPass } = runPlugin(input);
+      assert(firstPass.length >= 1);
+      const outerFile = firstPass[firstPass.length - 1];
+
+      const { code: rePassedCode } = runPlugin(
+        outerFile.content,
+        {},
+        {},
+        outerFile.path
+      );
+
+      expect(rePassedCode).toContain(REQUIRE_PREFIX);
+    });
   });
 });
