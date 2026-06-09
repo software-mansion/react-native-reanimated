@@ -80,9 +80,9 @@ jobs:
         with:
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
-      - name: Install build tools (bear + llvm clang-tidy)
+      - name: Install LLVM tools (xcode-build-server + llvm clang-tidy)
         if: steps.result-cache.outputs.cache-hit != 'true'
-        run: brew install bear llvm
+        run: brew install xcode-build-server llvm
 
       - name: Install monorepo node dependencies
         if: steps.result-cache.outputs.cache-hit != 'true'
@@ -110,10 +110,11 @@ jobs:
           working-directory: ${{ env.WORKING_DIRECTORY }}
           pod-directory: ios
 
-      - name: Build app (wrapped with bear)
+      - name: Build app (piped through xcode-build-server)
         if: steps.result-cache.outputs.cache-hit != 'true'
         working-directory: ${{ env.WORKING_DIRECTORY }}/ios
-        run: bear --output compile_commands.json -- xcodebuild -workspace FabricExample.xcworkspace -configuration "$CONFIGURATION" -scheme "$CONFIGURATION FabricExample" -destination "generic/platform=iOS Simulator"
+        shell: bash -eo pipefail {0}
+        run: xcodebuild -workspace FabricExample.xcworkspace -configuration "$CONFIGURATION" -scheme "$CONFIGURATION FabricExample" -destination "generic/platform=iOS Simulator" 2>&1 | xcode-build-server parse -o compile_commands.json
 
       - name: Generate per-package compile_commands.json
         if: steps.result-cache.outputs.cache-hit != 'true'
