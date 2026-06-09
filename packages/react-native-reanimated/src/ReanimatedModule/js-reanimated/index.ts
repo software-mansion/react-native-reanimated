@@ -6,7 +6,7 @@ import {
   createReactDOMStyle,
   createTextShadowValue,
   createTransformValue,
-} from './webUtils';
+} from './webUtils/index';
 
 export { createJSReanimatedModule } from './JSReanimated';
 
