@@ -104,8 +104,18 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
     const builtSelectorStyle = this.propsBuilder.build(selectorStyle);
     const builtDefaultStyle = this.propsBuilder.build(defaultStyle);
 
-    reinstateResolvedUndefinedProps(selectorStyle, builtSelectorStyle);
-    reinstateResolvedUndefinedProps(defaultStyle, builtDefaultStyle);
+    const supportedSelectorKeys = new Set(Object.keys(builtSelectorStyle));
+    const supportedDefaultKeys = new Set(Object.keys(builtDefaultStyle));
+    reinstateResolvedUndefinedProps(
+      selectorStyle,
+      builtSelectorStyle,
+      supportedDefaultKeys
+    );
+    reinstateResolvedUndefinedProps(
+      defaultStyle,
+      builtDefaultStyle,
+      supportedSelectorKeys
+    );
 
     const transition: CSSTransitionConfig = {};
     const propsInTransition = new Set([
@@ -136,13 +146,16 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
   }
 }
 
-// Useful cause interpolator in c++ treats null as "assign default value".
+/* Re-adds keys that were undefined because those should be interpreted as 'default value' in C++,
+ * We filter them by using only those that are present in `supportedKeys`
+ */
 function reinstateResolvedUndefinedProps(
   source: UnknownRecord,
-  built: UnknownRecord
+  built: UnknownRecord,
+  supportedKeys: Set<string>
 ): void {
   for (const key in source) {
-    if (source[key] === undefined) {
+    if (source[key] === undefined && supportedKeys.has(key)) {
       built[key] = null;
     }
   }

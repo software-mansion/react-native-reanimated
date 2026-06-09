@@ -243,6 +243,33 @@ describe(filterCSSAndStyleProperties, () => {
       expect(pseudoStylesBySelector).toBeNull();
     });
 
+    test('keeps the prop in defaultStyle (as undefined) when a selector has no default', () => {
+      const style: CSSStyle = {
+        opacity: { ':active': 0.3 } as never,
+      };
+
+      const [, , pseudoStylesBySelector] = filterCSSAndStyleProperties(style);
+
+      expect(pseudoStylesBySelector?.[':active'].defaultStyle).toHaveProperty(
+        'opacity'
+      );
+      expect(
+        pseudoStylesBySelector?.[':active'].defaultStyle.opacity
+      ).toBeUndefined();
+    });
+
+    test('throws on an empty object value', () => {
+      expect(() =>
+        filterCSSAndStyleProperties({ opacity: {} } as never)
+      ).toThrow(/empty object is not a valid style value/);
+    });
+
+    test('does not throw for a pseudo value that has a selector but no default', () => {
+      expect(() =>
+        filterCSSAndStyleProperties({ opacity: { ':active': 0.3 } } as never)
+      ).not.toThrow();
+    });
+
     test('mixes pseudoselector and regular props with transition config', () => {
       const style: CSSStyle = {
         transitionDuration: '150ms',

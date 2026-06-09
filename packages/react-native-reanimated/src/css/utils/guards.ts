@@ -121,3 +121,9 @@ export const isPseudoSelectorValue = (
   }
   return keys.every((key) => key === 'default' || key.startsWith(':'));
 };
+
+export const isEmptyObject = (value: unknown): boolean =>
+  !!value &&
+  typeof value === 'object' &&
+  !Array.isArray(value) &&
+  Object.keys(value).length === 0;

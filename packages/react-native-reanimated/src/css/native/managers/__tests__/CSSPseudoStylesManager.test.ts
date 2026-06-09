@@ -365,6 +365,40 @@ describe('CSSPseudoStylesManager', () => {
       );
     });
 
+    test('does not revive an undefined value for a prop the builder drops as unsupported', () => {
+      // Mimics the real builder: drops `undefined`, AND drops a prop it does not
+      // support ('unsupportedProp') even when it has a concrete value.
+      const builderDroppingUnsupported = {
+        build: jest.fn((style: UnknownRecord) => {
+          const out: UnknownRecord = {};
+          for (const key in style) {
+            if (key !== 'unsupportedProp' && style[key] !== undefined) {
+              out[key] = style[key];
+            }
+          }
+          return out;
+        }),
+      } as unknown as NativePropsBuilder;
+      const droppingManager = new CSSPseudoStylesManager(
+        shadowNodeWrapper,
+        viewTag,
+        builderDroppingUnsupported
+      );
+
+      pushStyle(droppingManager, {
+        // supported prop, explicit undefined selector -> revived to null
+        opacity: { default: 1, ':active': undefined },
+        // unsupported prop, explicit undefined selector -> must NOT be revived,
+        // otherwise the native interpolator factory would throw on it.
+        unsupportedProp: { default: 'x', ':active': undefined },
+      } as never);
+
+      const config = (registerPseudoStyle as jest.Mock).mock.calls[0][1];
+      expect(config.selectorStyle).toEqual({ opacity: null });
+      expect(config.selectorStyle).not.toHaveProperty('unsupportedProp');
+      expect(config.defaultStyle).not.toHaveProperty('unsupportedProp');
+    });
+
     test('does not turn a genuinely unsupported (dropped) prop into null', () => {
       // A prop the builder drops for reasons OTHER than being `undefined`
       // (here, value present but builder returns nothing) must NOT be revived.

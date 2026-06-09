@@ -14,6 +14,7 @@ import {
   isAnimationProp,
   isCSSKeyframesObject,
   isCSSKeyframesRule,
+  isEmptyObject,
   isPseudoSelectorValue,
   isTransitionCallbackProp,
   isTransitionProp,
@@ -84,6 +85,10 @@ export function filterCSSAndStyleProperties<S extends object>(
         branch.selectorStyle[prop] = selectorValue;
         branch.defaultStyle[prop] = defaultValue;
       }
+    } else if (isEmptyObject(value)) {
+      throw new Error(
+        `[Reanimated] Invalid value for "${prop}": an empty object is not a valid style value.`
+      );
     } else {
       filteredStyle[prop] = value;
     }
