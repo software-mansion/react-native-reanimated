@@ -243,19 +243,22 @@ describe(filterCSSAndStyleProperties, () => {
       expect(pseudoStylesBySelector).toBeNull();
     });
 
-    test('keeps the prop in defaultStyle (as undefined) when a selector has no default', () => {
+    test('keeps the missing default as an explicit undefined in defaultStyle', () => {
       const style: CSSStyle = {
         opacity: { ':active': 0.3 } as never,
+        width: 100,
       };
 
-      const [, , pseudoStylesBySelector] = filterCSSAndStyleProperties(style);
+      const [, , pseudoStylesBySelector, , filteredStyle] =
+        filterCSSAndStyleProperties(style);
 
-      expect(pseudoStylesBySelector?.[':active'].defaultStyle).toHaveProperty(
-        'opacity'
-      );
-      expect(
-        pseudoStylesBySelector?.[':active'].defaultStyle.opacity
-      ).toBeUndefined();
+      expect(filteredStyle).toStrictEqual({ width: 100 });
+      expect(pseudoStylesBySelector).toStrictEqual({
+        ':active': {
+          selectorStyle: { opacity: 0.3 },
+          defaultStyle: { opacity: undefined },
+        },
+      });
     });
 
     test('throws on an empty object value', () => {
