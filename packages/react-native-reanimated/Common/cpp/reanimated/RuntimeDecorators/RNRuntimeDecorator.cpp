@@ -39,7 +39,7 @@ void RNRuntimeDecorator::decorate(
 void RNRuntimeDecorator::installDebugBindings(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<ReanimatedModuleProxy> &reanimatedModuleProxy) {
-#if defined(TARGET_OS_X) && TARGET_OS_X
+#if TARGET_OS_X
   jsi_utils::installJsiFunction(
       rnRuntime, "__getTagFromShadowNodeWrapper", [](jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) {
         auto node = Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
