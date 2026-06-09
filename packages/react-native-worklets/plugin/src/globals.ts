@@ -1,5 +1,8 @@
+import type { NodePath } from '@babel/core';
+import type { CallExpression } from '@babel/types';
 import path from 'path';
 
+import { processCalleesAutoworkletizableCallbacks } from './autoworkletization';
 import { generatedWorkletsDir, type WorkletsPluginPass } from './types';
 
 const notCapturedIdentifiers = [
@@ -142,6 +145,16 @@ export function initializeState(state: WorkletsPluginPass) {
   }
   state.workletNumber = 1;
   state.classesToWorkletize = [];
+  state.autoworkletizationPlugin = {
+    name: 'worklets-autoworkletization',
+    visitor: {
+      CallExpression: {
+        enter(nodePath: NodePath<CallExpression>) {
+          processCalleesAutoworkletizableCallbacks(nodePath, state);
+        },
+      },
+    },
+  };
   if (!state.opts.strictGlobal) {
     initializeGlobals();
     addCustomGlobals(state);
