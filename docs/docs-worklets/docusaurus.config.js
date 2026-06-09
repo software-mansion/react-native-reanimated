@@ -179,6 +179,16 @@ const config = {
                   exclude: /\.yarn[\\/]unprocessed/,
                   use: 'babel-loader',
                 },
+                {
+                  test: /\.m?js$/,
+                  resolve: {
+                    fullySpecified: false,
+                  },
+                },
+                {
+                  test: /react-native-(worklets|reanimated)[\\/]lib[\\/]module[\\/].*\.js$/,
+                  type: 'javascript/auto',
+                },
               ],
             },
             resolve: {
