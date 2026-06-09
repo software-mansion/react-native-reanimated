@@ -238,8 +238,8 @@ SubPath SVGPath::interpolateSubPaths(const SubPath &from, const SubPath &to, dou
 
   for (size_t i = 0; i < shorterSize; ++i) {
     size_t currentGroupSize = baseGroupSize + (i < remainder ? 1 : 0);
-    std::vector<Cubic> x =
-        from.C.size() <= to.C.size() ? splitCubic(from.C[i], currentGroupSize) : splitCubic(to.C[i], currentGroupSize);
+    const auto count = static_cast<int>(currentGroupSize);
+    std::vector<Cubic> x = from.C.size() <= to.C.size() ? splitCubic(from.C[i], count) : splitCubic(to.C[i], count);
     prolongatedShorter.insert(prolongatedShorter.end(), x.begin(), x.end());
   }
 
