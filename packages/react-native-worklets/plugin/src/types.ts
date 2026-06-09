@@ -25,6 +25,7 @@ export interface WorkletsPluginPass {
   filename: string | undefined;
   workletNumber: number;
   classesToWorkletize: { node: BabelNode; name: string }[];
+  skipFile: boolean;
 }
 
 export type WorkletizableFunction =
