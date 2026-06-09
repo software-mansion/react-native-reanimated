@@ -1,0 +1,6 @@
+diff --git a/lib/module/package.json b/lib/module/package.json
+deleted file mode 100644
+--- a/lib/module/package.json
++++ /dev/null
+@@ -1 +0,0 @@
+-{"type":"module"}

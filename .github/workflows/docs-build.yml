@@ -7,6 +7,7 @@ on:
       - '.github/workflows/docs-build.yml'
       - '.github/workflows/docs-publish.yml'
       - '.github/actions/docs-build/**'
+      - 'scripts/validate-docs-versions.js'
       - docs/docs-reanimated/**
       - packages/react-native-reanimated/compatibility.json
       - docs/docs-worklets/**
