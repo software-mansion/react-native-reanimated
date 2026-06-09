@@ -1,5 +1,5 @@
 'use strict';
-import type { NativePropsBuilder } from '../../../../common';
+import type { NativePropsBuilder, UnknownRecord } from '../../../../common';
 import type { ShadowNodeWrapper } from '../../../../commonTypes';
 import type { CSSStyle } from '../../../types';
 import { filterCSSAndStyleProperties } from '../../../utils';
@@ -155,7 +155,7 @@ describe('CSSPseudoStylesManager', () => {
       );
     });
 
-    test('forwards undefined selector values so C++ can inject the default', () => {
+    test('forwards undefined selector values to native as null so C++ can inject the default', () => {
       pushStyle(manager, {
         backgroundColor: { default: 'red', ':hover': undefined },
       });
@@ -163,9 +163,32 @@ describe('CSSPseudoStylesManager', () => {
       expect(registerPseudoStyle).toHaveBeenCalledWith(
         shadowNodeWrapper,
         expect.objectContaining({
+          selector: ':hover',
+          selectorStyle: { backgroundColor: null },
+          defaultStyle: { backgroundColor: 'red' },
           transition: {
             backgroundColor: expect.objectContaining({
-              value: ['red', undefined],
+              value: ['red', null],
+            }),
+          },
+        })
+      );
+    });
+
+    test('forwards an omitted default to native as null so C++ can inject the default', () => {
+      pushStyle(manager, {
+        backgroundColor: { ':hover': 'red' },
+      });
+
+      expect(registerPseudoStyle).toHaveBeenCalledWith(
+        shadowNodeWrapper,
+        expect.objectContaining({
+          selector: ':hover',
+          selectorStyle: { backgroundColor: 'red' },
+          defaultStyle: { backgroundColor: null },
+          transition: {
+            backgroundColor: expect.objectContaining({
+              value: [null, 'red'],
             }),
           },
         })
@@ -284,6 +307,85 @@ describe('CSSPseudoStylesManager', () => {
           selector: ':active',
           defaultStyle: { transform: [{ scale: 1 }] },
           selectorStyle: { transform: [{ scale: 0.95 }] },
+        })
+      );
+    });
+  });
+
+  describe('undefined / missing-default resolution (against a stripping builder)', () => {
+    const strippingBuilder = {
+      build: jest.fn((style: UnknownRecord) => {
+        const out: UnknownRecord = {};
+        for (const key in style) {
+          if (style[key] !== undefined) {
+            out[key] = style[key];
+          }
+        }
+        return out;
+      }),
+    } as unknown as NativePropsBuilder;
+
+    let strippingManager: CSSPseudoStylesManager;
+
+    beforeEach(() => {
+      strippingManager = new CSSPseudoStylesManager(
+        shadowNodeWrapper,
+        viewTag,
+        strippingBuilder
+      );
+    });
+
+    test('explicit `:active: undefined` survives the builder as null', () => {
+      pushStyle(strippingManager, {
+        backgroundColor: { default: 'red', ':active': undefined },
+      });
+
+      expect(registerPseudoStyle).toHaveBeenCalledWith(
+        shadowNodeWrapper,
+        expect.objectContaining({
+          selector: ':active',
+          selectorStyle: { backgroundColor: null },
+          defaultStyle: { backgroundColor: 'red' },
+        })
+      );
+    });
+
+    test('an omitted default survives the builder as null', () => {
+      pushStyle(strippingManager, {
+        opacity: { ':active': 0.5 },
+      });
+
+      expect(registerPseudoStyle).toHaveBeenCalledWith(
+        shadowNodeWrapper,
+        expect.objectContaining({
+          selector: ':active',
+          selectorStyle: { opacity: 0.5 },
+          defaultStyle: { opacity: null },
+        })
+      );
+    });
+
+    test('does not turn a genuinely unsupported (dropped) prop into null', () => {
+      // A prop the builder drops for reasons OTHER than being `undefined`
+      // (here, value present but builder returns nothing) must NOT be revived.
+      const pickyBuilder = {
+        build: jest.fn(() => ({})),
+      } as unknown as NativePropsBuilder;
+      const pickyManager = new CSSPseudoStylesManager(
+        shadowNodeWrapper,
+        viewTag,
+        pickyBuilder
+      );
+
+      pushStyle(pickyManager, {
+        opacity: { default: 0, ':active': 1 },
+      });
+
+      expect(registerPseudoStyle).toHaveBeenCalledWith(
+        shadowNodeWrapper,
+        expect.objectContaining({
+          selectorStyle: {},
+          defaultStyle: {},
         })
       );
     });

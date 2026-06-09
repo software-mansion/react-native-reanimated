@@ -82,9 +82,7 @@ export function filterCSSAndStyleProperties<S extends object>(
           defaultStyle: {},
         });
         branch.selectorStyle[prop] = selectorValue;
-        if (defaultValue !== undefined) {
-          branch.defaultStyle[prop] = defaultValue;
-        }
+        branch.defaultStyle[prop] = defaultValue;
       }
     } else {
       filteredStyle[prop] = value;
