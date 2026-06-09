@@ -146,8 +146,9 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
   }
 }
 
-/* Re-adds keys that were undefined because those should be interpreted as 'default value' in C++,
- * We filter them by using only those that are present in `supportedKeys`
+/* Re-adds keys whose value was `undefined` in the source style (and thus dropped by the props builder)
+ * as `null`, which is interpreted on the C++ side as “use default value”.
+ * Only keys present in `supportedKeys` are revived.
  */
 function reinstateResolvedUndefinedProps(
   source: UnknownRecord,
