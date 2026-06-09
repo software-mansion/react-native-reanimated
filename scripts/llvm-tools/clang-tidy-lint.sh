@@ -73,6 +73,20 @@ if [ -n "$platform" ]; then
   db_dir="$filtered_dir"
 fi
 
+# Detect an empty database (file present but no entries, or none for the
+# requested platform). Without this, clang-tidy would print
+# "linted 0 files, 0 errors, 0 warnings" and exit 0 — a misleading green.
+db_entry_count="$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).length)' "$db_dir/compile_commands.json")"
+if [ "$db_entry_count" = "0" ]; then
+  msg="compile_commands.json in $(pwd) has 0 entries${platform:+ (platform: $platform)}"
+  if [ "$strict" = "1" ]; then
+    echo "error: $msg" >&2
+    exit 1
+  fi
+  echo "warning: $msg; skipping clang-tidy" >&2
+  exit 0
+fi
+
 # Pick the clang-tidy binary.
 # - iOS: Apple's toolchain has no clang-tidy → always fall back to PATH (LLVM).
 # - Android: prefer NDK's clang-tidy if available (it understands the NDK's

@@ -7,6 +7,7 @@ on:
       - .github/workflows/example-ios-build-check.yml
       - .github/actions/install-pods/**
       - .github/actions/cache-derived-data/**
+      - scripts/llvm-tools/**
       - packages/react-native-reanimated/RNReanimated.podspec
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
@@ -26,6 +27,7 @@ on:
       - .github/workflows/example-ios-build-check.yml
       - .github/actions/install-pods/**
       - .github/actions/cache-derived-data/**
+      - scripts/llvm-tools/**
       - packages/react-native-reanimated/RNReanimated.podspec
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
