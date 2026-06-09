@@ -1,5 +1,6 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 
+#include <react/debug/react_native_assert.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 
 #include <memory>
@@ -42,12 +43,16 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
 #ifdef ANDROID
   restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId);
 #endif // ANDROID
-  for (const auto tag : finishedAnimationTags_) {
-    auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
-    layoutAnimations_.erase(tag);
+  auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+  for (const auto tag : maybeSettledAnimationTags_) {
+    const auto layoutAnimationIt = layoutAnimations_.find(tag);
+    if (layoutAnimationIt == layoutAnimations_.end() || !layoutAnimationIt->second.isSettled()) {
+      continue;
+    }
+    layoutAnimations_.erase(layoutAnimationIt);
     updateMap.erase(tag);
   }
-  finishedAnimationTags_.clear();
+  maybeSettledAnimationTags_.clear();
 
   parseRemoveMutations(movedViews, mutations, roots);
 
@@ -109,11 +114,10 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
   // one after the other, so we need to keep count of how many
   // were actually triggered, so that we don't cleanup necessary
   // structures too early
-  if (layoutAnimation.count > 1) {
-    layoutAnimation.count--;
+  if (--layoutAnimation.count > 0) {
     return {};
   }
-  finishedAnimationTags_.push_back(tag);
+  maybeSettledAnimationTags_.insert(tag);
   auto surfaceId = layoutAnimation.finalView.surfaceId;
 
   if (!shouldRemove || !nodeForTag_.contains(tag)) {
@@ -121,6 +125,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
   }
 
   auto node = nodeForTag_[tag];
+  react_native_assert(node->isMutationNode() && "exiting tag must map to a MutationNode");
   auto mutationNode = std::static_pointer_cast<MutationNode>(node);
   mutationNode->state = ExitingState_Legacy::DEAD;
   auto &[deadNodes] = surfaceContext_[surfaceId];
@@ -294,7 +299,7 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
 
         if (movedViews.contains(tag)) {
           auto layoutAnimationIt = layoutAnimations_.find(tag);
-          if (layoutAnimationIt == layoutAnimations_.end()) {
+          if (layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isSettled()) {
             if (oldShadowViewsForReparentings.contains(tag)) {
               filteredMutations.push_back(ShadowViewMutation::InsertMutation(
                   mutationParent, oldShadowViewsForReparentings[tag], mutation.index));
@@ -331,8 +336,11 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
 
       case ShadowViewMutation::Type::Update: {
         auto shouldAnimate = hasLayoutChanged(mutation);
+        const auto layoutAnimationIt = layoutAnimations_.find(tag);
+        const auto hasOngoingAnimation =
+            layoutAnimationIt != layoutAnimations_.end() && !layoutAnimationIt->second.isSettled();
         if (!layoutAnimationsManager_->hasLayoutAnimation(tag, LayoutAnimationType::LAYOUT) ||
-            (!shouldAnimate && !layoutAnimations_.contains(tag))) {
+            (!shouldAnimate && !hasOngoingAnimation)) {
           // We should cancel any ongoing animation here to ensure that the
           // proper final state is reached for this view However, due to how
           // RNSScreens handle adding headers (a second commit is triggered to
@@ -406,7 +414,7 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(SurfaceId surfaceId, Sha
 
     auto layoutAnimationIt = layoutAnimations_.find(tag);
 
-    if (layoutAnimationIt == layoutAnimations_.end()) {
+    if (layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isSettled()) {
       continue;
     }
 
@@ -757,10 +765,15 @@ void LayoutAnimationsProxy_Legacy::updateOngoingAnimationTarget(const int tag, c
 }
 
 void LayoutAnimationsProxy_Legacy::maybeCancelAnimation(const int tag) const {
-  if (!layoutAnimations_.contains(tag)) {
+  const auto layoutAnimationIt = layoutAnimations_.find(tag);
+  if (layoutAnimationIt == layoutAnimations_.end()) {
     return;
   }
-  layoutAnimations_.erase(tag);
+  const auto wasSettled = layoutAnimationIt->second.isSettled();
+  layoutAnimations_.erase(layoutAnimationIt);
+  if (wasSettled) {
+    return;
+  }
   scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {

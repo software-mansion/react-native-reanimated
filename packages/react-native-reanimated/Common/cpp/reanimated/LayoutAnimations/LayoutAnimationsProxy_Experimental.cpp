@@ -276,11 +276,10 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
   // one after the other, so we need to keep count of how many
   // were actually triggered, so that we don't cleanup necessary
   // structures too early
-  if (layoutAnimation.count > 1) {
-    layoutAnimation.count--;
+  if (--layoutAnimation.count > 0) {
     return {};
   }
-  finishedAnimationTags_.push_back(tag);
+  maybeSettledAnimationTags_.insert(tag);
   auto surfaceId = layoutAnimation.finalView.surfaceId;
 
   if (sharedTransitionManager_->tagToName_.contains(tag)) {
@@ -331,8 +330,9 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
       // reparentings.
 
       auto current = node->current;
-      if (layoutAnimations_.contains(node->current.tag)) {
-        current = layoutAnimations_.at(node->current.tag).currentView;
+      const auto layoutAnimationIt = layoutAnimations_.find(node->current.tag);
+      if (layoutAnimationIt != layoutAnimations_.end() && !layoutAnimationIt->second.isSettled()) {
+        current = layoutAnimationIt->second.currentView;
       }
       filteredMutations.push_back(
           ShadowViewMutation::InsertMutation(parent->current.tag, current, static_cast<int>(parent->children.size())));
@@ -397,7 +397,7 @@ void LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceI
 
     const auto layoutAnimationIt = layoutAnimations_.find(tag);
 
-    if (layoutAnimationIt == layoutAnimations_.end()) {
+    if (layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isSettled()) {
       continue;
     }
 
@@ -532,10 +532,15 @@ void LayoutAnimationsProxy_Experimental::updateOngoingAnimationTarget(const int 
 }
 
 void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) const {
-  if (!layoutAnimations_.contains(tag)) {
+  const auto layoutAnimationIt = layoutAnimations_.find(tag);
+  if (layoutAnimationIt == layoutAnimations_.end()) {
     return;
   }
-  layoutAnimations_.erase(tag);
+  const auto wasSettled = layoutAnimationIt->second.isSettled();
+  layoutAnimations_.erase(layoutAnimationIt);
+  if (wasSettled) {
+    return;
+  }
   scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
@@ -625,12 +630,17 @@ void LayoutAnimationsProxy_Experimental::cleanupAnimations(
 #ifdef ANDROID
   restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId);
 #endif // ANDROID
-  for (const auto tag : finishedAnimationTags_) {
-    auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
-    layoutAnimations_.erase(tag);
+  auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+  for (const auto tag : maybeSettledAnimationTags_) {
+    // Skip tags re-animated since they settled (count back above 0).
+    const auto layoutAnimationIt = layoutAnimations_.find(tag);
+    if (layoutAnimationIt == layoutAnimations_.end() || !layoutAnimationIt->second.isSettled()) {
+      continue;
+    }
+    layoutAnimations_.erase(layoutAnimationIt);
     updateMap.erase(tag);
   }
-  finishedAnimationTags_.clear();
+  maybeSettledAnimationTags_.clear();
 }
 
 // MARK: Start Animation
