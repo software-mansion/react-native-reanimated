@@ -1,7 +1,7 @@
 #!/bin/bash
 # THIS FILE WAS ENTIRELY AI GENERATED.
 
-set -euETo pipefail
+set -euo pipefail
 set -x
 
 trap 'echo "error: generate-xcode-metadata.sh exited at line $LINENO (last cmd: $BASH_COMMAND)" >&2' ERR
