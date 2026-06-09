@@ -9,7 +9,7 @@
 #import <reanimated/apple/REAUIView.h>
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 
-typedef NS_ENUM(NSUInteger, KeyboardState) { // NOLINT(performance-enum-size)
+typedef NS_ENUM(NSUInteger, KeyboardState) { // NOLINT(performance-enum-size,cppcoreguidelines-use-enum-class)
   UNKNOWN = 0,
   OPENING = 1,
   OPEN = 2,
@@ -424,6 +424,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) { // NOLINT(performance-enum-size)
 - (REAUIView *_Nullable)getKeyboardView
 {
   if (!_keyboardView) {
+    // NOLINTNEXTLINE(clang-diagnostic-deprecated-declarations)
     auto window = [self findView:[UIApplication sharedApplication].windows
                        condition:[self withPrefix:@[ @"<UITextEffectsWindow" ]]];
     auto container = [self findView:window.subviews
