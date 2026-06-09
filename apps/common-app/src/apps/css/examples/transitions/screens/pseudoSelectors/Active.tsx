@@ -2,7 +2,7 @@ import type { ComponentType } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
 // TODO: Fix me
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
 // @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
 import { Circle, Svg } from 'react-native-svg';
 
@@ -206,9 +206,14 @@ transform: {
           </VerticalExampleCard>
 
           <VerticalExampleCard
+            description="Currenlty Pseudoselectors in SVG are only supported on the Web."
+            labelTypes={['web']}
             title="SVG fill"
-            code={`<AnimatedCircle
+            code={`// Base geometry stays as real props so it renders at rest;
+// the ':active' style only swaps the changing prop.
+<AnimatedCircle
   cx={20} cy={20} r={18}
+  fill={colors.primary}
   style={{
     fill: { default: colors.primary, ':active': colors.primaryDark },
     transitionDuration: '200ms',
@@ -223,6 +228,7 @@ transform: {
               <AnimatedCircle
                 cx={sizes.md / 2}
                 cy={sizes.md / 2}
+                fill={colors.primary}
                 r={sizes.md / 2 - 2}
                 style={{
                   fill: {
@@ -237,9 +243,12 @@ transform: {
           </VerticalExampleCard>
 
           <VerticalExampleCard
+            labelTypes={['web']}
             title="SVG radius"
-            code={`<AnimatedCircle
+            code={`// r needs a base prop value, otherwise it renders at 0.
+<AnimatedCircle
   cx={25} cy={25} fill={colors.primary}
+  r={12}
   style={{
     r: { default: 12, ':active': 24 },
     transitionDuration: '200ms',
@@ -255,6 +264,7 @@ transform: {
                 cx={sizes.md / 2}
                 cy={sizes.md / 2}
                 fill={colors.primary}
+                r={sizes.md / 4}
                 style={{
                   r: { ':active': sizes.md / 2 - 2, default: sizes.md / 4 },
                   transitionDuration: '200ms',
