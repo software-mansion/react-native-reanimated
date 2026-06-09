@@ -35,7 +35,7 @@ import {
   variableDeclarator,
 } from '@babel/types';
 import { strict as assert } from 'assert';
-import { basename, relative } from 'path';
+import { basename, relative, sep } from 'path';
 
 import { getClosure } from './closure';
 import { generateWorkletFile } from './generate';
@@ -185,10 +185,11 @@ export function makeWorkletFactory(
       location = relative(state.cwd, location);
       // It seems there is no designated option to use relative paths in generated sourceMap
       sourceMapString = sourceMapString?.replace(
-        state.file.opts.filename,
-        location
+        toPosix(state.file.opts.filename),
+        toPosix(location)
       );
     }
+    location = toPosix(location);
 
     initDataObjectExpression.properties.push(
       objectProperty(identifier('location'), stringLiteral(location))
@@ -479,7 +480,7 @@ function makeWorkletName(
     source = basename(filepath);
 
     // Get the library name from the path.
-    const splitFilepath = filepath.split('/');
+    const splitFilepath = filepath.split(/[\\/]/);
     const nodeModulesIndex = splitFilepath.indexOf('node_modules');
     if (nodeModulesIndex !== -1) {
       const libraryName = splitFilepath[nodeModulesIndex + 1];
@@ -507,6 +508,10 @@ function makeWorkletName(
   reactName = reactName || toIdentifier(suffix);
 
   return { workletName, reactName };
+}
+
+function toPosix(p: string): string {
+  return sep === '/' ? p : p.split(sep).join('/');
 }
 
 const extraPlugins = [

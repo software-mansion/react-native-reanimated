@@ -608,7 +608,8 @@ var require_imports = __commonJS({
     function createImportPathLiteral(originalPath, state) {
       const generatedWorkletsDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), types_2.generatedWorkletsDir);
       const resolved = (0, path_1.resolve)((0, path_1.dirname)(state.file.opts.filename), originalPath);
-      return (0, types_12.stringLiteral)((0, path_1.relative)(generatedWorkletsDirPath, resolved));
+      const relativePath = (0, path_1.relative)(generatedWorkletsDirPath, resolved);
+      return (0, types_12.stringLiteral)(path_1.sep === "/" ? relativePath : relativePath.split(path_1.sep).join("/"));
     }
     var alwaysAllowed = [
       "react-native-worklets",
@@ -1021,8 +1022,9 @@ var require_workletFactory = __commonJS({
         let location = state.file.opts.filename;
         if (state.opts.relativeSourceLocation) {
           location = (0, path_1.relative)(state.cwd, location);
-          sourceMapString = sourceMapString === null || sourceMapString === void 0 ? void 0 : sourceMapString.replace(state.file.opts.filename, location);
+          sourceMapString = sourceMapString === null || sourceMapString === void 0 ? void 0 : sourceMapString.replace(toPosix(state.file.opts.filename), toPosix(location));
         }
+        location = toPosix(location);
         initDataObjectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)("location"), (0, types_12.stringLiteral)(location)));
       }
       if (sourceMapString) {
@@ -1131,7 +1133,7 @@ var require_workletFactory = __commonJS({
       if (state.file.opts.filename) {
         const filepath = state.file.opts.filename;
         source = (0, path_1.basename)(filepath);
-        const splitFilepath = filepath.split("/");
+        const splitFilepath = filepath.split(/[\\/]/);
         const nodeModulesIndex = splitFilepath.indexOf("node_modules");
         if (nodeModulesIndex !== -1) {
           const libraryName = splitFilepath[nodeModulesIndex + 1];
@@ -1148,6 +1150,9 @@ var require_workletFactory = __commonJS({
       const workletName = reactName ? (0, types_12.toIdentifier)(`${reactName}_${suffix}`) : (0, types_12.toIdentifier)(suffix);
       reactName = reactName || (0, types_12.toIdentifier)(suffix);
       return { workletName, reactName };
+    }
+    function toPosix(p) {
+      return path_1.sep === "/" ? p : p.split(path_1.sep).join("/");
     }
     var extraPlugins = [
       require.resolve("@babel/plugin-transform-shorthand-properties"),

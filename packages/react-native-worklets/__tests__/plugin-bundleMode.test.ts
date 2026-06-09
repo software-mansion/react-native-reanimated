@@ -220,7 +220,10 @@ describe('babel plugin in bundleMode', () => {
         path.dirname(require.resolve('react-native-worklets/package.json')),
         '.worklets'
       );
-      const expected = path.relative(filesDirPath, '/some-library/src/bar');
+      const expected = path
+        .relative(filesDirPath, '/some-library/src/bar')
+        .split(path.sep)
+        .join('/');
       expect(files).toHaveLength(1);
       expect(files[0].content).toContain(`from "${expected}"`);
     });
