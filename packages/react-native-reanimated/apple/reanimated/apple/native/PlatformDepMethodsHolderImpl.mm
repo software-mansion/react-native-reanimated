@@ -38,7 +38,7 @@ SetGestureStateFunction makeSetGestureStateFunction(RCTModuleRegistry *moduleReg
 
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
 {
-  auto requestRender = [nodesManager](std::function<void(double)> onRender) {
+  auto requestRender = [nodesManager](const std::function<void(double)> &onRender) {
     [nodesManager postOnAnimation:^(READisplayLink *displayLink) {
 #if !TARGET_OS_OSX
       auto targetTimestamp = displayLink.targetTimestamp;
@@ -81,7 +81,10 @@ MaybeFlushUIUpdatesQueueFunction makeMaybeFlushUIUpdatesQueueFunction(REANodesMa
 RegisterSensorFunction makeRegisterSensorFunction(ReanimatedSensorContainer *reanimatedSensorContainer)
 {
   auto registerSensorFunction =
-      [=](int sensorType, int interval, int iosReferenceFrame, std::function<void(double[], int)> setter) -> int {
+      [=](int sensorType,
+          int interval,
+          int iosReferenceFrame,
+          const std::function<void(double[], int)> &setter) -> int {
     return [reanimatedSensorContainer
            registerSensor:(ReanimatedSensorType)sensorType
                  interval:interval
@@ -102,7 +105,7 @@ UnregisterSensorFunction makeUnregisterSensorFunction(ReanimatedSensorContainer 
 KeyboardEventSubscribeFunction makeSubscribeForKeyboardEventsFunction(REAKeyboardEventObserver *keyboardObserver)
 {
   auto subscribeForKeyboardEventsFunction =
-      [=](std::function<void(int keyboardState, int height)> keyboardEventDataUpdater,
+      [=](const std::function<void(int keyboardState, int height)> &keyboardEventDataUpdater,
           bool isStatusBarTranslucent,
           bool isNavigationBarTranslucent) {
         // ignore isStatusBarTranslucent and isNavigationBarTranslucent - those are Android only
@@ -149,7 +152,7 @@ ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nod
     REAUIView<RCTComponentViewProtocol> *maybeRNSScreenView = [componentViewRegistry findComponentViewWithTag:tag];
     SEL setSnapshotAfterUpdatesSelector = @selector(setSnapshotAfterUpdates:);
     if ([maybeRNSScreenView respondsToSelector:setSnapshotAfterUpdatesSelector]) {
-      [(id<RNScreenViewOptionalProtocol>)maybeRNSScreenView setSnapshotAfterUpdates:YES];
+      [static_cast<id<RNScreenViewOptionalProtocol>>(maybeRNSScreenView) setSnapshotAfterUpdates:YES];
     }
   };
   return forceScreenSnapshot;

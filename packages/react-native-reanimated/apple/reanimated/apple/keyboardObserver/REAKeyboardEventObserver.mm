@@ -9,7 +9,7 @@
 #import <reanimated/apple/REAUIView.h>
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 
-typedef NS_ENUM(NSUInteger, KeyboardState) {
+typedef NS_ENUM(NSUInteger, KeyboardState) { // NOLINT(performance-enum-size)
   UNKNOWN = 0,
   OPENING = 1,
   OPEN = 2,
@@ -93,7 +93,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 - (void)runListeners:(float)keyboardHeight
 {
   for (NSString *key in _listeners.allKeys) {
-    ((KeyboardEventListenerBlock)_listeners[key])(_state, keyboardHeight);
+    ((KeyboardEventListenerBlock)_listeners[key])(static_cast<int>(_state), keyboardHeight);
   }
 }
 
