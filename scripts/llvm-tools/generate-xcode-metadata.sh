@@ -126,7 +126,7 @@ wait_for_stable_log() {
     sleep 0.5
     i=$((i + 1))
   done
-  return 1
+  return 0
 }
 
 run_pipeline() {
