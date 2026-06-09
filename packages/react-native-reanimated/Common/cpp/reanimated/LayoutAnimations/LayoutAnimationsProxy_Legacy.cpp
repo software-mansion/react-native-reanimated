@@ -53,6 +53,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
     updateMap.erase(tag);
   }
   maybeSettledAnimationTags_.clear();
+  // Past this point no animation can be settled - we hold the mutex for the whole
+  // transaction, so no end callback can run until we return.
 
   parseRemoveMutations(movedViews, mutations, roots);
 
@@ -299,7 +301,7 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
 
         if (movedViews.contains(tag)) {
           auto layoutAnimationIt = layoutAnimations_.find(tag);
-          if (layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isSettled()) {
+          if (layoutAnimationIt == layoutAnimations_.end()) {
             if (oldShadowViewsForReparentings.contains(tag)) {
               filteredMutations.push_back(ShadowViewMutation::InsertMutation(
                   mutationParent, oldShadowViewsForReparentings[tag], mutation.index));
@@ -336,11 +338,8 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
 
       case ShadowViewMutation::Type::Update: {
         auto shouldAnimate = hasLayoutChanged(mutation);
-        const auto layoutAnimationIt = layoutAnimations_.find(tag);
-        const auto hasOngoingAnimation =
-            layoutAnimationIt != layoutAnimations_.end() && !layoutAnimationIt->second.isSettled();
         if (!layoutAnimationsManager_->hasLayoutAnimation(tag, LayoutAnimationType::LAYOUT) ||
-            (!shouldAnimate && !hasOngoingAnimation)) {
+            (!shouldAnimate && !layoutAnimations_.contains(tag))) {
           // We should cancel any ongoing animation here to ensure that the
           // proper final state is reached for this view However, due to how
           // RNSScreens handle adding headers (a second commit is triggered to

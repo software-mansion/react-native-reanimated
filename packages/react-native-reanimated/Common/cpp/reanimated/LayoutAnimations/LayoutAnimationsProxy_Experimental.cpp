@@ -330,9 +330,8 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
       // reparentings.
 
       auto current = node->current;
-      const auto layoutAnimationIt = layoutAnimations_.find(node->current.tag);
-      if (layoutAnimationIt != layoutAnimations_.end() && !layoutAnimationIt->second.isSettled()) {
-        current = layoutAnimationIt->second.currentView;
+      if (layoutAnimations_.contains(node->current.tag)) {
+        current = layoutAnimations_.at(node->current.tag).currentView;
       }
       filteredMutations.push_back(
           ShadowViewMutation::InsertMutation(parent->current.tag, current, static_cast<int>(parent->children.size())));
