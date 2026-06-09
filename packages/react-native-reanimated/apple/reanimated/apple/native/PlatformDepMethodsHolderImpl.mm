@@ -80,11 +80,10 @@ MaybeFlushUIUpdatesQueueFunction makeMaybeFlushUIUpdatesQueueFunction(REANodesMa
 
 RegisterSensorFunction makeRegisterSensorFunction(ReanimatedSensorContainer *reanimatedSensorContainer)
 {
-  auto registerSensorFunction =
-      [=](int sensorType,
-          int interval,
-          int iosReferenceFrame,
-          const std::function<void(double[], int)> &setter) -> int {
+  auto registerSensorFunction = [=](int sensorType,
+                                    int interval,
+                                    int iosReferenceFrame,
+                                    const std::function<void(double[], int)> &setter) -> int {
     return [reanimatedSensorContainer
            registerSensor:(ReanimatedSensorType)sensorType
                  interval:interval
