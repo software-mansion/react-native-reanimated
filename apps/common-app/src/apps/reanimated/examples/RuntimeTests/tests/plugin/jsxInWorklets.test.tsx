@@ -26,7 +26,6 @@ describe('Test JSX in worklets', () => {
 
         function renderView() {
           'worklet';
-          // @ts-expect-error Uses an imported function as JSX to check capture.
           return <ImportedComponent />;
         }
 
