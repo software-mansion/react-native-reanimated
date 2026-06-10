@@ -17,10 +17,7 @@ for path in "${ARGS[@]}"; do
       fi
     done
   else
-    case "$path" in
-      *.tst.ts | *.tst.tsx) TSTYCHE_FILES+=("$path") ;;
-      *) FILES+=("$path") ;;
-    esac
+    FILES+=("$path")
   fi
 done
 
