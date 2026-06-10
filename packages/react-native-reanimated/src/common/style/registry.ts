@@ -16,7 +16,7 @@ const DEFAULT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES = new Set<string>([
 
 type PropsBuilderEntry = {
   builder: NativePropsBuilder;
-  separatelyInterpolatedNestedProperties?: ReadonlySet<string>;
+  separatelyInterpolatedNestedProperties?: ReadonlySet<string> | undefined;
 };
 
 const PROPS_BUILDERS = new Map<string, PropsBuilderEntry>();

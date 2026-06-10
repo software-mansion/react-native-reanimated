@@ -65,7 +65,7 @@ export default class AnimatedComponent
   >
   implements IAnimatedComponentInternal
 {
-  _options?: Options<InitialComponentProps>;
+  _options?: Options<InitialComponentProps> | undefined;
   _displayName: string;
   _animatedStyles: StyleProps[] = [];
   _prevAnimatedStyles: StyleProps[] = [];
@@ -77,13 +77,13 @@ export default class AnimatedComponent
   jestAnimatedProps: { value: AnimatedProps } = { value: {} };
   _InlinePropManager = new InlinePropManager();
   _PropsFilter = new PropsFilter();
-  _NativeEventsManager?: INativeEventsManager;
-  _hasWarnedAboutLayoutAnimationStyleOverwriting?: boolean;
+  _NativeEventsManager?: INativeEventsManager | undefined;
+  _hasWarnedAboutLayoutAnimationStyleOverwriting?: boolean | undefined;
   static contextType = SkipEnteringContext;
   context!: React.ContextType<typeof SkipEnteringContext>;
   reanimatedID = id++;
-  _sharedTransition?: SharedTransition;
-  _sharedTransitionTag?: string;
+  _sharedTransition?: SharedTransition | undefined;
+  _sharedTransitionTag?: string | undefined;
 
   constructor(
     ChildComponent: AnyComponent,
