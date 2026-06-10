@@ -535,11 +535,11 @@ void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) con
   if (layoutAnimationIt == layoutAnimations_.end()) {
     return;
   }
-  const auto wasSettled = layoutAnimationIt->second.isSettled();
-  layoutAnimations_.erase(layoutAnimationIt);
-  if (wasSettled) {
+  if (layoutAnimationIt->second.isSettled()) {
+    // Already settled - cleanupAnimations will erase it together with its updateMap entry.
     return;
   }
+  layoutAnimations_.erase(layoutAnimationIt);
   scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {

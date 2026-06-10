@@ -58,14 +58,10 @@ export default function ExitingTagReuseStressExample() {
   const [visibleIds, setVisibleIds] = useState<Set<number>>(() => new Set());
   const [spikeIds, setSpikeIds] = useState<number[]>([]);
   const [running, setRunning] = useState(true);
-  const [countdown, setCountdown] = useState<number | null>(null);
   const cursorRef = useRef(0);
   const spikeCounterRef = useRef(0);
   const itemIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const spikeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
-    null
-  );
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const mountNext = useCallback(() => {
@@ -92,7 +88,6 @@ export default function ExitingTagReuseStressExample() {
       () => spikeCounterRef.current++
     );
     setSpikeIds((prev) => [...prev, ...ids]);
-    setCountdown(SPIKE_INTERVAL_MS / 1000);
   }, []);
 
   const removeSpikeId = useCallback((id: number) => {
@@ -127,33 +122,16 @@ export default function ExitingTagReuseStressExample() {
         spikeIntervalRef.current = null;
       }
 
-      if (countdownIntervalRef.current) {
-        clearInterval(countdownIntervalRef.current);
-        countdownIntervalRef.current = null;
-      }
-
-      setCountdown(null);
       setSpikeIds([]);
       return;
     }
 
-    setCountdown(SPIKE_INTERVAL_MS / 1000);
     spikeIntervalRef.current = setInterval(fireSpike, SPIKE_INTERVAL_MS);
-    countdownIntervalRef.current = setInterval(() => {
-      setCountdown((value) =>
-        value !== null && value > 1 ? value - 1 : SPIKE_INTERVAL_MS / 1000
-      );
-    }, 1000);
 
     return () => {
       if (spikeIntervalRef.current) {
         clearInterval(spikeIntervalRef.current);
         spikeIntervalRef.current = null;
-      }
-
-      if (countdownIntervalRef.current) {
-        clearInterval(countdownIntervalRef.current);
-        countdownIntervalRef.current = null;
       }
     };
   }, [fireSpike, running]);
@@ -209,7 +187,7 @@ export default function ExitingTagReuseStressExample() {
       </View>
 
       <Text style={styles.spikeLabel}>
-        {countdown === null ? 'Stopped' : `Next spike in ${countdown}s`}
+        {running ? `Running - spike every ${SPIKE_INTERVAL_MS}ms` : 'Stopped'}
       </Text>
 
       <ScrollView contentContainerStyle={styles.grid}>
