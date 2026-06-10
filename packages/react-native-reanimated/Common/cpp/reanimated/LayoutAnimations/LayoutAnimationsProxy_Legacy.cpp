@@ -768,11 +768,7 @@ void LayoutAnimationsProxy_Legacy::maybeCancelAnimation(const int tag) const {
   if (layoutAnimationIt == layoutAnimations_.end()) {
     return;
   }
-  const auto wasSettled = layoutAnimationIt->second.isSettled();
   layoutAnimations_.erase(layoutAnimationIt);
-  if (wasSettled) {
-    return;
-  }
   scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
