@@ -38,8 +38,17 @@ fi
 
 # TSTyche resolves paths and its config file relative to the working
 # directory, so invoke the binary directly with package-relative paths.
+# The default run checks against the native type surface (the nearest
+# tsconfig.json); a second run with tsconfig.web.json mirrors the web
+# moduleSuffixes pass above.
 if [ ${#TSTYCHE_FILES[@]} -gt 0 ]; then
   "$ROOT_DIR/node_modules/.bin/tstyche" "${TSTYCHE_FILES[@]}" || STATUS=1
+  for path in "${ARGS[@]}"; do
+    if [ -f "$path/tsconfig.web.json" ]; then
+      "$ROOT_DIR/node_modules/.bin/tstyche" --tsconfig "./$path/tsconfig.web.json" "${TSTYCHE_FILES[@]}" || STATUS=1
+      break
+    fi
+  done
 fi
 
 exit $STATUS
