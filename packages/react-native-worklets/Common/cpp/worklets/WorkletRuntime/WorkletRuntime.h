@@ -31,7 +31,6 @@ concept ImplicitlySerializableCallable = std::is_assignable_v<const jsi::Functio
 
 template <typename TCallable>
 concept RuntimeCallable = requires(TCallable &&callable, jsi::Runtime &rt) {
-  // NOLINTNEXTLINE(readability/braces) cpplint doesn't understand concepts
   { callable(rt) };
 } || ImplicitlySerializableCallable<TCallable>;
 
