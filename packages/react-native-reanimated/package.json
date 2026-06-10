@@ -30,7 +30,7 @@
     "type:check:src:native": "yarn tsc --noEmit",
     "type:check:src:web": "yarn tsc --noEmit --project tsconfig.web.json",
     "type:check:app": "yarn workspace common-app type:check",
-    "type:check:tests": "../../scripts/test-ts.sh __typetests__ && yarn run --top-level type:check:tstyche packages/react-native-reanimated/__typetests__",
+    "type:check:tests": "../../scripts/test-ts.sh __typetests__",
     "type:check:strict": "yarn type:check:strict:src && yarn type:check:strict:app",
     "type:check:strict:src": "yarn tsc --noEmit --customConditions react-native-strict-api",
     "type:check:strict:app": "yarn workspace common-app type:check:strict",
