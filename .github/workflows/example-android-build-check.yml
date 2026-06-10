@@ -6,7 +6,7 @@ on:
     paths:
       - .github/workflows/example-android-build-check.yml
       - .clang-tidy
-      - scripts/clang-tidy-lint.sh
+      - scripts/llvm-tools/**
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
       - packages/react-native-worklets/android/**
@@ -22,7 +22,7 @@ on:
     paths:
       - .github/workflows/example-android-build-check.yml
       - .clang-tidy
-      - scripts/clang-tidy-lint.sh
+      - scripts/llvm-tools/**
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
       - packages/react-native-worklets/android/**
@@ -100,11 +100,11 @@ jobs:
 
       - name: Clang-tidy lint Worklets
         if: steps.result-cache.outputs.cache-hit != 'true'
-        run: yarn workspace react-native-worklets lint:clang-tidy
+        run: yarn workspace react-native-worklets lint:clang-tidy:android --strict
 
       - name: Clang-tidy lint Reanimated
         if: steps.result-cache.outputs.cache-hit != 'true'
-        run: yarn workspace react-native-reanimated lint:clang-tidy
+        run: yarn workspace react-native-reanimated lint:clang-tidy:android --strict
 
       - name: Mark build successful
         if: steps.result-cache.outputs.cache-hit != 'true'
