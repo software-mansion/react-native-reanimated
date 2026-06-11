@@ -51,7 +51,6 @@ class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enab
   const std::string componentName_;
   OnUpdateCallback onUpdate_;
 
-  TransitionProperties properties_;
   TransitionStyleInterpolator styleInterpolator_;
   TransitionProgressProvider progressProvider_;
 

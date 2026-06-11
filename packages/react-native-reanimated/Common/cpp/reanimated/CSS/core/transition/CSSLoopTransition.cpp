@@ -97,8 +97,6 @@ void CSSLoopTransition::handleChangedProperties(
       continue;
     }
 
-    properties_.insert(propertyName);
-
     // Update the transition style interpolator
     bool isReversed;
     if (lastUpdateValue.count(propertyName)) {
@@ -131,8 +129,6 @@ void CSSLoopTransition::handleChangedProperties(
       continue;
     }
 
-    properties_.insert(propertyName);
-
     bool isReversed;
     if (lastUpdateValue.count(propertyName)) {
       isReversed = styleInterpolator_.createOrUpdateInterpolator(
@@ -150,15 +146,11 @@ void CSSLoopTransition::handleChangedProperties(
 void CSSLoopTransition::removeProperties(const std::vector<std::string> &propertyNames) {
   styleInterpolator_.removeProperties(propertyNames);
   progressProvider_.removeProperties(propertyNames);
-  for (const auto &propertyName : propertyNames) {
-    properties_.erase(propertyName);
-  }
 }
 
 void CSSLoopTransition::removeProperty(const std::string &propertyName) {
   styleInterpolator_.removeProperty(propertyName);
   progressProvider_.removeProperty(propertyName);
-  properties_.erase(propertyName);
 }
 
 } // namespace reanimated::css
