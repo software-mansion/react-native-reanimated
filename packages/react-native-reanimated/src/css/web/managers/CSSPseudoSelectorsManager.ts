@@ -1,5 +1,5 @@
 'use strict';
-import { logger } from '../../../common';
+import { kebabizeCamelCase, logger } from '../../../common';
 import { type WebPropsBuilder, webPropsBuilder } from '../../../common/web';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
 import {
@@ -47,12 +47,17 @@ function buildSelectorRule(
     return null;
   }
 
+  const { selectorStyle } = pseudoStylesBySelector[selector];
+
   // !important is required so the pseudo styles override the element's inline
   // styles (where the default values live).
-  const declarations = propsBuilder.build(
-    pseudoStylesBySelector[selector].selectorStyle,
-    { important: true }
-  );
+  const built = propsBuilder.build(selectorStyle, { important: true });
+  const resets = Object.keys(selectorStyle)
+    .filter((prop) => selectorStyle[prop] === undefined)
+    .map((prop) => `${kebabizeCamelCase(prop)}: unset !important`)
+    .join('; ');
+
+  const declarations = [built, resets].filter(Boolean).join('; ');
   if (!declarations) {
     return null;
   }

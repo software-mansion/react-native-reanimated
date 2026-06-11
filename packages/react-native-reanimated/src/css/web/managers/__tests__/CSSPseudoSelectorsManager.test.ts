@@ -114,6 +114,38 @@ describe(CSSPseudoSelectorsManager, () => {
     expect(removeMock).toHaveBeenCalledTimes(1);
   });
 
+  test('emits `unset` for an undefined selector value (resolve to default)', () => {
+    const element = createElement();
+    const manager = new CSSPseudoSelectorsManager(element);
+
+    manager.update({
+      ':active': {
+        selectorStyle: { opacity: 0.5, transform: undefined },
+        defaultStyle: { opacity: 1, transform: [{ scale: 1.3 }] },
+      },
+    });
+
+    const css = (insertMock.mock.calls[0][1] as string[]).join('\n');
+    expect(css).toContain('opacity: 0.5 !important');
+    expect(css).toContain('transform: unset !important');
+  });
+
+  test('emits a rule when every selector value is undefined', () => {
+    const element = createElement();
+    const manager = new CSSPseudoSelectorsManager(element);
+
+    manager.update({
+      ':active': {
+        selectorStyle: { transform: undefined },
+        defaultStyle: { transform: [{ scale: 1.3 }] },
+      },
+    });
+
+    expect(insertMock).toHaveBeenCalledTimes(1);
+    const css = (insertMock.mock.calls[0][1] as string[]).join('\n');
+    expect(css).toContain('transform: unset !important');
+  });
+
   test('skips the CSSOM update when pseudo styles are deeply equal', () => {
     const element = createElement();
     const manager = new CSSPseudoSelectorsManager(element);
