@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    marginBottom: 30,
+    marginBottom: 25,
   },
   tabularNums: {
     fontVariant: ['tabular-nums'],
