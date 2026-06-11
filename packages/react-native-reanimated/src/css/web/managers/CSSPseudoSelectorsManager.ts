@@ -2,40 +2,32 @@
 import { logger } from '../../../common';
 import { type WebPropsBuilder, webPropsBuilder } from '../../../common/web';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
-import { ANIMATION_NAME_PREFIX } from '../../constants';
+import {
+  ANIMATION_NAME_PREFIX,
+  NATIVE_PSEUDO_SELECTORS,
+  NATIVE_PSEUDO_SELECTORS_PRIORITY,
+} from '../../constants';
 import { getWebSvgPropsBuilder } from '../../svg/web';
-import type { CSSPseudoSelectorKey } from '../../types/pseudo';
+import type { NativePseudoSelectorKey } from '../../types/pseudo';
 import type { PseudoStylesBySelector } from '../../utils';
+import { deepEqual } from '../../utils';
 import { insertPseudoSelectorCSS, removePseudoSelectorCSS } from '../domUtils';
 
 let pseudoSelectorCounter = 0;
 
-const SELECTOR_ORDER: readonly CSSPseudoSelectorKey[] = [
-  ':focus-within',
-  ':focus',
-  ':hover',
-  ':active',
-  ':active-deepest',
-];
-
 const VIEW_ATTRIBUTE = `data-${ANIMATION_NAME_PREFIX}rps`;
 const ACTIVE_MARKER_ATTRIBUTE = `data-${ANIMATION_NAME_PREFIX}rps-active`;
-
-function withImportant(css: string): string {
-  return css
-    .split('; ')
-    .map((declaration) => `${declaration} !important`)
-    .join('; ');
-}
 
 // Known selectors first (in cascade-priority order), then any arbitrary ones the
 // web layer passes through unchanged. Order matters: later rules win on overlap.
 function orderSelectors(
   pseudoStylesBySelector: PseudoStylesBySelector
 ): string[] {
-  const known = SELECTOR_ORDER.filter((sel) => sel in pseudoStylesBySelector);
+  const known = NATIVE_PSEUDO_SELECTORS_PRIORITY.filter(
+    (sel) => sel in pseudoStylesBySelector
+  );
   const unknown = Object.keys(pseudoStylesBySelector).filter(
-    (sel) => !(SELECTOR_ORDER as readonly string[]).includes(sel)
+    (sel) => !NATIVE_PSEUDO_SELECTORS.has(sel as NativePseudoSelectorKey)
   );
   return [...known, ...unknown];
 }
@@ -55,13 +47,15 @@ function buildSelectorRule(
     return null;
   }
 
-  const css = propsBuilder.build(
-    pseudoStylesBySelector[selector].selectorStyle
+  // !important is required so the pseudo styles override the element's inline
+  // styles (where the default values live).
+  const declarations = propsBuilder.build(
+    pseudoStylesBySelector[selector].selectorStyle,
+    { important: true }
   );
-  if (!css) {
+  if (!declarations) {
     return null;
   }
-  const declarations = withImportant(css);
   const base = `[${VIEW_ATTRIBUTE}="${viewId}"]`;
 
   if (selector === ':active-deepest') {
@@ -86,6 +80,7 @@ export default class CSSPseudoSelectorsManager {
   private readonly element: ReanimatedHTMLElement;
   private readonly componentName: string;
   private viewId: string | null = null;
+  private prevPseudoStylesBySelector: PseudoStylesBySelector | null = null;
 
   constructor(element: ReanimatedHTMLElement, componentName = '') {
     this.element = element;
@@ -93,6 +88,11 @@ export default class CSSPseudoSelectorsManager {
   }
 
   update(pseudoStylesBySelector: PseudoStylesBySelector | null): void {
+    if (deepEqual(pseudoStylesBySelector, this.prevPseudoStylesBySelector)) {
+      return;
+    }
+    this.prevPseudoStylesBySelector = pseudoStylesBySelector;
+
     if (!pseudoStylesBySelector) {
       this.detach();
       return;
@@ -107,7 +107,6 @@ export default class CSSPseudoSelectorsManager {
       viewId,
       buildRules(viewId, pseudoStylesBySelector, propsBuilder)
     );
-    this.ensureTransitionProperty();
   }
 
   unmountCleanup(): void {
@@ -125,6 +124,9 @@ export default class CSSPseudoSelectorsManager {
   private syncActiveMarker(
     pseudoStylesBySelector: PseudoStylesBySelector
   ): void {
+    // The marker is set for both :active and :active-deepest registrants, so
+    // an ancestor's :active-deepest yields to a pressed descendant that has
+    // either of them (matches the iOS arbitration in REAPseudoSelectorObserver).
     const hasAnyActive =
       ':active' in pseudoStylesBySelector ||
       ':active-deepest' in pseudoStylesBySelector;
@@ -133,15 +135,6 @@ export default class CSSPseudoSelectorsManager {
       this.element.setAttribute(ACTIVE_MARKER_ATTRIBUTE, 'true');
     } else {
       this.element.removeAttribute(ACTIVE_MARKER_ATTRIBUTE);
-    }
-  }
-
-  private ensureTransitionProperty(): void {
-    if (
-      !this.element.style.transitionProperty &&
-      this.element.style.transitionDuration
-    ) {
-      this.element.style.transitionProperty = 'all';
     }
   }
 

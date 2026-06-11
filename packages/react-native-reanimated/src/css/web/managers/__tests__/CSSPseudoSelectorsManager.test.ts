@@ -114,6 +114,31 @@ describe(CSSPseudoSelectorsManager, () => {
     expect(removeMock).toHaveBeenCalledTimes(1);
   });
 
+  test('skips the CSSOM update when pseudo styles are deeply equal', () => {
+    const element = createElement();
+    const manager = new CSSPseudoSelectorsManager(element);
+    const styles = () => ({
+      ':hover': {
+        selectorStyle: { color: 'red' },
+        defaultStyle: { color: 'black' },
+      },
+    });
+
+    manager.update(styles());
+    manager.update(styles()); // new object, same content - must be a no-op
+
+    expect(insertMock).toHaveBeenCalledTimes(1);
+
+    manager.update({
+      ':hover': {
+        selectorStyle: { color: 'green' },
+        defaultStyle: { color: 'black' },
+      },
+    });
+
+    expect(insertMock).toHaveBeenCalledTimes(2);
+  });
+
   test('skips a selector that would break out of the element scope (CSS injection)', () => {
     const element = createElement();
     const manager = new CSSPseudoSelectorsManager(element);
