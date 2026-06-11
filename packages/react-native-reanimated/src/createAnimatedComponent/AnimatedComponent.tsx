@@ -5,7 +5,7 @@ import type React from 'react';
 import { Fragment } from 'react';
 
 import { checkStyleOverwriting, maybeBuild } from '../animationBuilder';
-import { IS_JEST, IS_WEB, logger, ReanimatedError } from '../common';
+import { IS_JEST, IS_WEB, logger } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
@@ -527,8 +527,8 @@ export default class AnimatedComponent
       filteredProps.text !== undefined
     ) {
       if (filteredProps.children !== undefined) {
-        throw new ReanimatedError(
-          '<Animated.Text> component with animated prop `text` must be empty.'
+        throw new Error(
+          '[Reanimated] <Animated.Text> component with animated prop `text` must be empty.'
         );
       }
       // TODO: handle case when `text` property is not present during initial render but appears later on
