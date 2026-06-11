@@ -60,7 +60,15 @@ function extractSharedValuesMapFromProps(
   props: AnimatedComponentProps<
     Record<string, unknown> /* Initial component props */
   >
-): Record<string, unknown> {
+): {
+  inlineStyles: Record<string, unknown>;
+  inlineProps: Record<string, unknown>;
+} {
+  // Values extracted from the `style` prop are style properties and must be
+  // processed with the style props builder, while shared values passed as
+  // top-level props (e.g. `text` on Animated.Text) can be arbitrary component
+  // props and must skip it, hence we keep them in two separate maps.
+  const inlineStyles: Record<string, unknown> = {};
   const inlineProps: Record<string, unknown> = {};
 
   for (const key in props) {
@@ -76,12 +84,12 @@ function extractSharedValuesMapFromProps(
         }
         for (const [styleKey, styleValue] of Object.entries(style)) {
           if (isSharedValue(styleValue)) {
-            inlineProps[styleKey] = styleValue;
+            inlineStyles[styleKey] = styleValue;
           } else if (
             styleKey === 'transform' &&
             isInlineStyleTransform(styleValue)
           ) {
-            inlineProps[styleKey] = styleValue;
+            inlineStyles[styleKey] = styleValue;
           }
         }
       });
@@ -90,7 +98,7 @@ function extractSharedValuesMapFromProps(
     }
   }
 
-  return inlineProps;
+  return { inlineStyles, inlineProps };
 }
 
 export function hasInlineStyles(style: StyleProps): boolean {
@@ -128,15 +136,18 @@ export function getInlineStyle(
 export class InlinePropManager implements IInlinePropManager {
   _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
   _inlinePropsMapperId: number | null = null;
+  _inlineStyles: StyleProps = {};
   _inlineProps: StyleProps = {};
 
   public attachInlineProps(
     animatedComponent: AnimatedComponentTypeInternal,
     viewInfo: ViewInfo
   ) {
-    const newInlineProps: Record<string, unknown> =
+    const { inlineStyles: newInlineStyles, inlineProps: newInlineProps } =
       extractSharedValuesMapFromProps(animatedComponent.props);
-    const hasChanged = inlinePropsHasChanged(newInlineProps, this._inlineProps);
+    const hasChanged =
+      inlinePropsHasChanged(newInlineStyles, this._inlineStyles) ||
+      inlinePropsHasChanged(newInlineProps, this._inlineProps);
 
     if (hasChanged) {
       if (!this._inlinePropsViewDescriptors) {
@@ -152,21 +163,38 @@ export class InlinePropManager implements IInlinePropManager {
       const shareableViewDescriptors =
         this._inlinePropsViewDescriptors.shareableViewDescriptors;
 
+      const hasInlineStyleUpdates = Object.keys(newInlineStyles).length > 0;
+      const hasInlinePropUpdates = Object.keys(newInlineProps).length > 0;
+
       const updaterFunction = () => {
         'worklet';
-        const update = getInlinePropsUpdate(newInlineProps);
-        updateProps(shareableViewDescriptors, update);
+        if (hasInlineStyleUpdates) {
+          updateProps(
+            shareableViewDescriptors,
+            getInlinePropsUpdate(newInlineStyles) as StyleProps
+          );
+        }
+        if (hasInlinePropUpdates) {
+          // Pass `isAnimatedProps` so that non-style props (e.g. `text` on
+          // Animated.Text) are not dropped by the style props builder.
+          updateProps(
+            shareableViewDescriptors,
+            getInlinePropsUpdate(newInlineProps) as StyleProps,
+            true
+          );
+        }
       };
+      this._inlineStyles = newInlineStyles;
       this._inlineProps = newInlineProps;
       if (this._inlinePropsMapperId) {
         stopMapper(this._inlinePropsMapperId);
       }
       this._inlinePropsMapperId = null;
-      if (Object.keys(newInlineProps).length) {
-        this._inlinePropsMapperId = startMapper(
-          updaterFunction,
-          Object.values(newInlineProps)
-        );
+      if (hasInlineStyleUpdates || hasInlinePropUpdates) {
+        this._inlinePropsMapperId = startMapper(updaterFunction, [
+          ...Object.values(newInlineStyles),
+          ...Object.values(newInlineProps),
+        ]);
       }
     }
   }

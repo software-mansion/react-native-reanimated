@@ -61,7 +61,6 @@ export default function AnimatedTextExample() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Animated text is an inline prop */}
-      {/* TODO: fix this example not working after fast refresh */}
       <View style={styles.row}>
         <Text>Before</Text>
         <Animated.Text
