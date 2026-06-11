@@ -35,6 +35,12 @@ export class AnimationUpdatesRecorder {
         recordLayoutAnimationUpdates(tag, value);
         originalNotifyAboutProgress(tag, value);
       };
+
+      // Start recording the mutations Reanimated sends to the platform. This is
+      // the source of truth for native values on the new architecture. No-op
+      // when the `RUNTIME_TEST_FLAG` static feature flag is disabled.
+      global._clearRecordedNativeMutations?.();
+      global._startRecordingNativeMutations?.();
     });
     return updatesContainer;
   }
@@ -50,6 +56,7 @@ export class AnimationUpdatesRecorder {
         global._notifyAboutProgress = global.originalNotifyAboutProgress;
         global.originalNotifyAboutProgress = undefined;
       }
+      global._stopRecordingNativeMutations?.();
     });
   }
 

@@ -105,6 +105,7 @@ function updateJSProps(operations: JSPropsOperation[]) {
 }
 
 type NativePropsOperation = {
+  tag: number;
   shadowNodeWrapper: ShadowNodeWrapper;
   updates: StyleProps;
 };
@@ -142,6 +143,10 @@ function createUpdatePropsManager() {
 
         if (nativePropUpdates) {
           nativeOperations.push({
+            // `tag` lets the ReJest testing framework group recorded updates by
+            // view. The native side ignores it (it derives the tag from the
+            // shadow node wrapper).
+            tag: viewTag,
             shadowNodeWrapper,
             updates: nativePropUpdates,
           });

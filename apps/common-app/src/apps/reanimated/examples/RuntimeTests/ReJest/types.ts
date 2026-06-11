@@ -152,6 +152,24 @@ export type Mismatch = {
 export type DefaultValue = 'not_ok' | 'ok';
 export type ValueWrapper<T> = { value: T | DefaultValue };
 
+/**
+ * A single native update recorded by the `NativeMutationsRegistry` (C++) - the
+ * value that was actually sent to the platform mounting layer. Either a
+ * `snapshot` of the view's props (from a `ShadowViewMutation`) or a Core
+ * Animation `descriptor` (for props routed straight to the `CALayer`).
+ */
+export type RecordedNativeMutation = {
+  tag: number;
+  index: number;
+  snapshot?: Record<string, string>;
+  descriptor?: {
+    property: string;
+    from: number;
+    to: number;
+    duration: number;
+  };
+};
+
 declare global {
   var mockedAnimationTimestamp: number | undefined;
   var framesCount: number | undefined;
@@ -175,6 +193,18 @@ declare global {
     value: Record<string, unknown>
   ) => void;
   var _obtainProp: (shadowNodeWrapper: unknown, propName: string) => string;
+  // ReJest native-mutation recording (installed only when the
+  // `RUNTIME_TEST_FLAG` static feature flag is enabled). See
+  // `NativeMutationsRegistry` on the native side.
+  var _startRecordingNativeMutations: (() => void) | undefined;
+  var _stopRecordingNativeMutations: (() => void) | undefined;
+  var _clearRecordedNativeMutations: (() => void) | undefined;
+  var _getRecordedNativeMutations: (() => RecordedNativeMutation[]) | undefined;
+  // Reads the latest value of `propName` actually sent to the platform for the
+  // given view. Mirrors `_obtainProp` but reflects the recorded mutation stream.
+  var _obtainLatestRecordedProp:
+    | ((shadowNodeWrapper: unknown, propName: string) => string)
+    | undefined;
   var __flushAnimationFrame: (frameTimestamp: number) => void;
   var LayoutAnimationsManager: {
     start: LayoutAnimationStartFunction;

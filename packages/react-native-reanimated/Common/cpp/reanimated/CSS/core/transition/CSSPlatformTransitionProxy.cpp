@@ -2,16 +2,19 @@
 #include <reanimated/Tools/FeatureFlags.h>
 
 #include <utility>
+#include <variant>
 
 namespace reanimated::css {
 
 CSSPlatformTransitionProxy::CSSPlatformTransitionProxy(
     CSSCanRoutePropertyFunction canRoute,
     CSSApplyTransitionFunction applyTransition,
-    CSSRemoveTransitionFunction removeTransition)
+    CSSRemoveTransitionFunction removeTransition,
+    CSSRecordTransitionDescriptorFunction recordDescriptor)
     : canRoute_(std::move(canRoute)),
       applyTransition_(std::move(applyTransition)),
-      removeTransition_(std::move(removeTransition)) {}
+      removeTransition_(std::move(removeTransition)),
+      recordDescriptor_(std::move(recordDescriptor)) {}
 
 bool CSSPlatformTransitionProxy::canRoute(const std::string &propertyName, const EasingConfig &easing) const {
   if constexpr (!StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
@@ -21,6 +24,16 @@ bool CSSPlatformTransitionProxy::canRoute(const std::string &propertyName, const
 }
 
 void CSSPlatformTransitionProxy::run(const CSSPlatformTransitionPropertyConfig &config) const {
+  // Testing-only (ReJest): record the descriptor handed to Core Animation. These
+  // transitions run on the platform's CALayer and emit no per-frame mutation, so
+  // this is the only point where the animation's from/to/duration is observable.
+  if (recordDescriptor_) {
+    const auto *fromValue = std::get_if<double>(&config.fromValue);
+    const auto *toValue = std::get_if<double>(&config.toValue);
+    if (fromValue != nullptr && toValue != nullptr) {
+      recordDescriptor_(config.viewTag, config.propertyName, *fromValue, *toValue, config.durationMs);
+    }
+  }
   if (applyTransition_) {
     applyTransition_(config);
   }

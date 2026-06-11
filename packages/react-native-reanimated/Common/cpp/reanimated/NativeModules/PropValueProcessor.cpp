@@ -39,11 +39,30 @@ std::string PropValueProcessor::processPropValue(
       std::string("Getting property `" + propName + "` with function `getViewProp` is not supported"));
 }
 
+std::string
+PropValueProcessor::processPropValue(const std::string &propName, const ShadowView &shadowView, jsi::Runtime &rt) {
+  if (isLayoutProp(propName)) {
+    return processLayoutPropFromFrame(propName, shadowView.layoutMetrics.frame);
+  } else if (isStyleProp(propName)) {
+    auto viewProps = std::static_pointer_cast<const ViewProps>(shadowView.props);
+    if (!viewProps) {
+      throw std::runtime_error("ShadowView has no props for style property: " + propName);
+    }
+    return processStyleProp(propName, viewProps, rt);
+  }
+
+  throw std::runtime_error(std::string("Getting property `" + propName + "` from a ShadowView is not supported"));
+}
+
 std::string PropValueProcessor::processLayoutProp(
     const std::string &propName,
     const LayoutableShadowNode *layoutableShadowNode) {
-  const auto &frame = layoutableShadowNode->layoutMetrics_.frame;
+  return processLayoutPropFromFrame(propName, layoutableShadowNode->layoutMetrics_.frame);
+}
 
+std::string PropValueProcessor::processLayoutPropFromFrame(
+    const std::string &propName,
+    const facebook::react::Rect &frame) {
   if (propName == "width") {
     return std::to_string(frame.size.width);
   } else if (propName == "height") {

@@ -1,8 +1,10 @@
 #pragma once
 
 #include <react/renderer/components/view/ViewProps.h>
+#include <react/renderer/core/LayoutMetrics.h>
 #include <react/renderer/core/LayoutableShadowNode.h>
 #include <react/renderer/core/ShadowNode.h>
+#include <react/renderer/mounting/ShadowView.h>
 
 #include <memory>
 #include <string>
@@ -21,8 +23,17 @@ class PropValueProcessor {
   static std::string
   processPropValue(const std::string &propName, const std::shared_ptr<const ShadowNode> &shadowNode, jsi::Runtime &rt);
 
+  // Overload that reads a prop value directly from a `ShadowView` (the snapshot
+  // carried by a `ShadowViewMutation`). Used by `NativeMutationsRegistry` to
+  // read the value that is actually being sent to the platform. Style props are
+  // read from `shadowView.props` and layout props from
+  // `shadowView.layoutMetrics.frame`.
+  static std::string processPropValue(const std::string &propName, const ShadowView &shadowView, jsi::Runtime &rt);
+
  private:
   static std::string processLayoutProp(const std::string &propName, const LayoutableShadowNode *layoutableShadowNode);
+
+  static std::string processLayoutPropFromFrame(const std::string &propName, const facebook::react::Rect &frame);
 
   static std::string
   processStyleProp(const std::string &propName, const std::shared_ptr<const ViewProps> &viewProps, jsi::Runtime &rt);

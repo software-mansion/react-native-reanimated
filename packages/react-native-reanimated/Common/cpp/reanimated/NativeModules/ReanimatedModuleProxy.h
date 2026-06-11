@@ -20,6 +20,7 @@
 #include <reanimated/Fabric/ReanimatedMountHook.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
+#include <reanimated/Fabric/updates/NativeMutationsRegistry.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
@@ -243,6 +244,11 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   const std::shared_ptr<OperationsLoop> operationsLoop_;
   const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
+  // Testing-only (ReJest). Records the mutations / Core Animation descriptors
+  // sent to the platform when the `RUNTIME_TEST_FLAG` static feature flag is
+  // enabled. Declared before the CSS registries so it can be wired into the
+  // CSS transition proxy at construction.
+  const std::shared_ptr<NativeMutationsRegistry> nativeMutationsRegistry_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
   const std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
   const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;

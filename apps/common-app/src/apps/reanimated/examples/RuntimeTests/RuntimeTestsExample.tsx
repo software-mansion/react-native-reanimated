@@ -46,6 +46,12 @@ export default function RuntimeTestsExample() {
           },
         },
         {
+          testSuiteName: 'native updates',
+          importTest: () => {
+            require('./tests/nativeUpdates/nativeMutationsRecording.test');
+          },
+        },
+        {
           testSuiteName: 'memory',
           importTest: () => {
             require('./tests/memory/createSerializable.test');

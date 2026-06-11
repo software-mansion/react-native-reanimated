@@ -46,6 +46,10 @@ struct CSSPlatformTransitionConfig {
 using CSSCanRoutePropertyFunction = std::function<bool(const std::string &propertyName, const EasingConfig &easing)>;
 using CSSApplyTransitionFunction = std::function<void(const CSSPlatformTransitionPropertyConfig &config)>;
 using CSSRemoveTransitionFunction = std::function<void(Tag viewTag, const std::string &propertyName)>;
+// Testing-only (ReJest). Records the descriptor of a transition routed to the
+// platform (Core Animation) before it is handed off. Null in normal builds.
+using CSSRecordTransitionDescriptorFunction = std::function<
+    void(Tag viewTag, const std::string &propertyName, double fromValue, double toValue, double durationMs)>;
 
 struct CSSTransitionRouting {
   TransitionProperties loop;
@@ -63,7 +67,8 @@ class CSSPlatformTransitionProxy {
   CSSPlatformTransitionProxy(
       CSSCanRoutePropertyFunction canRoute,
       CSSApplyTransitionFunction applyTransition,
-      CSSRemoveTransitionFunction removeTransition);
+      CSSRemoveTransitionFunction removeTransition,
+      CSSRecordTransitionDescriptorFunction recordDescriptor = nullptr);
 
   void run(const CSSPlatformTransitionPropertyConfig &config) const;
   void remove(Tag viewTag, const std::string &propertyName) const;
@@ -80,6 +85,7 @@ class CSSPlatformTransitionProxy {
   CSSCanRoutePropertyFunction canRoute_;
   CSSApplyTransitionFunction applyTransition_;
   CSSRemoveTransitionFunction removeTransition_;
+  CSSRecordTransitionDescriptorFunction recordDescriptor_;
 };
 
 } // namespace reanimated::css
