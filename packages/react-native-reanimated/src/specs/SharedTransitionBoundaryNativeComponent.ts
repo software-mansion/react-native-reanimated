@@ -7,6 +7,6 @@ interface NativeProps extends ViewProps {
 }
 
 export default codegenNativeComponent<NativeProps>(
-  'RNReanimatedSharedTransitionBoundary',
+  'REASharedTransitionBoundary',
   { interfaceOnly: true }
 ) as HostComponent<NativeProps>;

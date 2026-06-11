@@ -15,14 +15,12 @@
 
 namespace facebook::react {
 
-class RNReanimatedSharedTransitionBoundaryState {
+class REASharedTransitionBoundaryState {
  public:
-  RNReanimatedSharedTransitionBoundaryState() = default;
+  REASharedTransitionBoundaryState() = default;
 
 #ifdef ANDROID
-  RNReanimatedSharedTransitionBoundaryState(
-      RNReanimatedSharedTransitionBoundaryState const &previousState,
-      folly::dynamic data) {}
+  REASharedTransitionBoundaryState(REASharedTransitionBoundaryState const &previousState, folly::dynamic data) {}
   folly::dynamic getDynamic() const {
     return {};
   }

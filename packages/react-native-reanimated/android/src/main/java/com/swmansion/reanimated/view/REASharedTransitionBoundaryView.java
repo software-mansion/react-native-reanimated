@@ -3,8 +3,8 @@ package com.swmansion.reanimated.view;
 import android.content.Context;
 import android.view.ViewGroup;
 
-public class RNReanimatedSharedTransitionBoundaryView extends ViewGroup {
-  public RNReanimatedSharedTransitionBoundaryView(Context context) {
+public class REASharedTransitionBoundaryView extends ViewGroup {
+  public REASharedTransitionBoundaryView(Context context) {
     super(context);
     // The boundary uses `display: contents`, so this view has an empty frame
     // while its children are laid out in the coordinate space of its parent.

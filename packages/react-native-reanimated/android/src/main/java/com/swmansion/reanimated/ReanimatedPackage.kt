@@ -10,7 +10,7 @@ import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.module.model.ReactModuleInfo
 import com.facebook.react.module.model.ReactModuleInfoProvider
 import com.facebook.react.uimanager.ViewManager
-import com.swmansion.reanimated.view.RNReanimatedSharedTransitionBoundaryManager
+import com.swmansion.reanimated.view.REASharedTransitionBoundaryManager
 import java.util.HashMap
 import java.util.Objects
 
@@ -27,7 +27,7 @@ class ReanimatedPackage :
         }
 
     override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> =
-        listOf(RNReanimatedSharedTransitionBoundaryManager())
+        listOf(REASharedTransitionBoundaryManager())
 
     override fun getReactModuleInfoProvider(): ReactModuleInfoProvider {
         val moduleList: Array<Class<out NativeModule>> = arrayOf(ReanimatedModule::class.java)

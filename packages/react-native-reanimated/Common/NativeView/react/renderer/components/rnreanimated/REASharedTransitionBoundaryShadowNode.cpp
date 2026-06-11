@@ -1,10 +1,10 @@
-#include "RNReanimatedSharedTransitionBoundaryShadowNode.h"
+#include "REASharedTransitionBoundaryShadowNode.h"
 
 namespace facebook::react {
 
-extern const char RNReanimatedSharedTransitionBoundaryComponentName[] = "RNReanimatedSharedTransitionBoundary";
+extern const char REASharedTransitionBoundaryComponentName[] = "REASharedTransitionBoundary";
 
-void RNReanimatedSharedTransitionBoundaryShadowNode::initialize() {
+void REASharedTransitionBoundaryShadowNode::initialize() {
   // The boundary uses `display: contents` so it doesn't affect layout,
   // but React would flatten such a view away. Unsetting this trait keeps
   // the view in the native tree, so it shows up in mutations and can be

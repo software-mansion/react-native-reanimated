@@ -13,15 +13,15 @@
 
 #include <react/renderer/core/ConcreteComponentDescriptor.h>
 
-#include "RNReanimatedSharedTransitionBoundaryShadowNode.h"
+#include "REASharedTransitionBoundaryShadowNode.h"
 
 namespace facebook::react {
 
-class RNReanimatedSharedTransitionBoundaryComponentDescriptor final
-    : public ConcreteComponentDescriptor<RNReanimatedSharedTransitionBoundaryShadowNode> {
+class REASharedTransitionBoundaryComponentDescriptor final
+    : public ConcreteComponentDescriptor<REASharedTransitionBoundaryShadowNode> {
   using ConcreteComponentDescriptor::ConcreteComponentDescriptor;
   void adopt(ShadowNode &shadowNode) const override {
-    react_native_assert(dynamic_cast<RNReanimatedSharedTransitionBoundaryShadowNode *>(&shadowNode));
+    react_native_assert(dynamic_cast<REASharedTransitionBoundaryShadowNode *>(&shadowNode));
 
     ConcreteComponentDescriptor::adopt(shadowNode);
   }

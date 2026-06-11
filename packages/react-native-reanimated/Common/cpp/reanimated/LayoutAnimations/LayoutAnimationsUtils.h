@@ -144,11 +144,11 @@ static inline std::shared_ptr<LightNode> findParentRNSScreen(const std::shared_p
 }
 
 static inline bool isSETBoundary(const std::shared_ptr<LightNode> &node) {
-  return !std::strcmp(node->current.componentName, "RNReanimatedSharedTransitionBoundary");
+  return !std::strcmp(node->current.componentName, "REASharedTransitionBoundary");
 }
 
 static inline bool isBoundaryActive(const std::shared_ptr<LightNode> &node) {
-  auto boundaryProps = std::static_pointer_cast<const RNReanimatedSharedTransitionBoundaryProps>(node->current.props);
+  auto boundaryProps = std::static_pointer_cast<const REASharedTransitionBoundaryProps>(node->current.props);
   return boundaryProps->isActive;
 }
 

@@ -1,4 +1,4 @@
-#import <reanimated/apple/view/RNReanimatedSharedTransitionBoundaryView.h>
+#import <reanimated/apple/view/REASharedTransitionBoundaryView.h>
 
 #import <Common/NativeView/react/renderer/components/rnreanimated/ComponentDescriptors.h>
 #import <React/RCTConversions.h>
@@ -8,11 +8,11 @@
 
 using namespace facebook::react;
 
-@implementation RNReanimatedSharedTransitionBoundaryView
+@implementation REASharedTransitionBoundaryView
 
 + (ComponentDescriptorProvider)componentDescriptorProvider
 {
-  return concreteComponentDescriptorProvider<RNReanimatedSharedTransitionBoundaryComponentDescriptor>();
+  return concreteComponentDescriptorProvider<REASharedTransitionBoundaryComponentDescriptor>();
 }
 
 - (void)updateLayoutMetrics:(const facebook::react::LayoutMetrics &)layoutMetrics

@@ -14,6 +14,6 @@
 #include <react/renderer/components/rnreanimated/ShadowNodes.h>
 #include <react/renderer/core/ConcreteComponentDescriptor.h>
 
-#include "RNReanimatedSharedTransitionBoundaryComponentDescriptor.h"
+#include "REASharedTransitionBoundaryComponentDescriptor.h"
 
 namespace facebook::react {} // namespace facebook::react

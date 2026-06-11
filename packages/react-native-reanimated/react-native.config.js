@@ -3,7 +3,7 @@ module.exports = {
     platforms: {
       android: {
         componentDescriptors: [
-          'RNReanimatedSharedTransitionBoundaryComponentDescriptor',
+          'REASharedTransitionBoundaryComponentDescriptor',
         ],
         cmakeListsPath: '../Common/NativeView/CMakeLists.txt',
       },

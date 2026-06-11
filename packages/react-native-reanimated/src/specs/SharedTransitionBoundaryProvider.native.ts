@@ -1,4 +1,4 @@
 'use strict';
-import RNReanimatedSharedTransitionBoundary from './SharedTransitionBoundaryNativeComponent';
+import REASharedTransitionBoundary from './SharedTransitionBoundaryNativeComponent';
 
-export default RNReanimatedSharedTransitionBoundary;
+export default REASharedTransitionBoundary;

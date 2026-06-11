@@ -163,7 +163,7 @@
     },
     "ios": {
       "componentProvider": {
-        "RNReanimatedSharedTransitionBoundary": "RNReanimatedSharedTransitionBoundaryView"
+        "REASharedTransitionBoundary": "REASharedTransitionBoundaryView"
       }
     }
   },
