@@ -32,6 +32,13 @@ struct CSSTransitionConfig {
   PropertiesSettingsMap changedPropertiesSettings;
   PropertyValueDiffsMap changedProperties;
   std::vector<std::string> removedProperties;
+
+  bool hasSettingsUpdates() const {
+    return !changedPropertiesSettings.empty() || !removedProperties.empty();
+  }
+  bool hasValueUpdates() const {
+    return !changedProperties.empty();
+  }
 };
 
 CSSTransitionConfig

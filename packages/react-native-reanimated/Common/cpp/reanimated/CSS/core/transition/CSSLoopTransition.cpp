@@ -13,10 +13,10 @@ CSSLoopTransition::CSSLoopTransition(
     const Tag viewTag,
     const std::string &componentName,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    CSSTransition::Observer &observer)
+    OnUpdateCallback onUpdate)
     : viewTag_(viewTag),
       componentName_(componentName),
-      observer_(observer),
+      onUpdate_(std::move(onUpdate)),
       styleInterpolator_(TransitionStyleInterpolator(componentName_, viewStylesRepository)),
       progressProvider_(TransitionProgressProvider()) {}
 
@@ -24,13 +24,9 @@ double CSSLoopTransition::getMinDelay(double timestamp) const {
   return progressProvider_.getMinDelay(timestamp);
 }
 
-TransitionProgressState CSSLoopTransition::getState() const {
-  return progressProvider_.getState();
-}
-
 bool CSSLoopTransition::update(const double timestamp, OperationsLoop &loop) {
   progressProvider_.update(timestamp);
-  observer_.onTransitionUpdate(viewTag_);
+  onUpdate_(viewTag_);
 
   if (progressProvider_.getState() == TransitionProgressState::Pending) {
     loop.schedule(shared_from_this(), timestamp + progressProvider_.getMinDelay(timestamp));
