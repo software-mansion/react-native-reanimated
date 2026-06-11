@@ -22,6 +22,12 @@ type BaseAnimatedTextProps = Omit<
 
 type BaseAnimatedProps = Partial<AnimatedProps<TextProps>>;
 
+type AnimatedTextChild =
+  | string
+  | number
+  | SharedValue<string>
+  | SharedValue<number>;
+
 type AnimatedTextProps =
   | (Omit<BaseAnimatedTextProps, 'children'> & {
       animatedProps?: AddArrayPropertyType<
@@ -32,7 +38,7 @@ type AnimatedTextProps =
     })
   | (Omit<BaseAnimatedTextProps, 'children'> & {
       animatedProps?: AddArrayPropertyType<BaseAnimatedProps>;
-      children: SharedValue<string> | SharedValue<number>;
+      children: SharedValue<string> | SharedValue<number> | AnimatedTextChild[];
     })
   | (BaseAnimatedTextProps & {
       animatedProps?: AddArrayPropertyType<BaseAnimatedProps>;

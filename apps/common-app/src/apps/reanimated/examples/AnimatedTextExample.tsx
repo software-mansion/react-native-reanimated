@@ -10,7 +10,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-// TODO: add support for the following syntax: <Animated.Text>Before {sharedValue} After</Animated.Text>
 // TODO: add TypeScript validation that allows <Animated.Text> to either have children or have `text` animated prop
 // TODO: add gauges example
 // TODO: sync `text` prop updates back to React as `children` prop
@@ -76,6 +75,13 @@ export default function AnimatedTextExample() {
           {textSv}
         </Animated.Text>
         <Text>After</Text>
+      </View>
+
+      {/* Mixed children: static text with a shared value */}
+      <View style={styles.row}>
+        <Animated.Text style={[styles.tabularNums, styles.color9]}>
+          Before{textSv}After
+        </Animated.Text>
       </View>
 
       {/* Animated text is a string */}
@@ -231,5 +237,8 @@ const styles = StyleSheet.create({
   },
   color8: {
     backgroundColor: 'lightsalmon',
+  },
+  color9: {
+    backgroundColor: 'paleturquoise',
   },
 });
