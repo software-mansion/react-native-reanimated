@@ -12,7 +12,6 @@ import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import { getStaticFeatureFlag } from '../featureFlags';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
-import { isSharedValue } from '../isSharedValue';
 import { type BaseAnimationBuilder } from '../layoutReanimation';
 import { SharedTransition } from '../layoutReanimation/SharedTransition';
 import {
@@ -73,7 +72,6 @@ export default class AnimatedComponent
   _animatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[] = [];
   _prevAnimatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[] = [];
   _isFirstRender = true;
-  _initialInlineTextProp: unknown;
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps } = { value: {} };
   jestAnimatedProps: { value: AnimatedProps } = { value: {} };
@@ -524,32 +522,35 @@ export default class AnimatedComponent
       nativeID = `${this.reanimatedID}`;
     }
 
-    if (this.ChildComponent.displayName === 'Text') {
-      if (isSharedValue(this.props.text)) {
-        // PropsFilter includes inline shared value props only on the first render,
-        // so we keep the first value and re-commit it on every subsequent render.
-        // Committing a different value would create a new RawText shadow node with
-        // a new family (text instances are immutable in persistent mode), which
-        // would detach the animated `text` updates, while committing no children
-        // at all would unmount the RawText node. The commit hook re-applies the
-        // latest animated value on top of each React commit anyway.
-        if (this._initialInlineTextProp === undefined) {
-          this._initialInlineTextProp = filteredProps.text;
-        }
-        filteredProps.text = this._initialInlineTextProp;
+    if (
+      this.ChildComponent.displayName === 'Text' &&
+      filteredProps.text !== undefined
+    ) {
+      if (filteredProps.children !== undefined) {
+        throw new Error(
+          '[Reanimated] <Animated.Text> component with animated prop `text` must be empty.'
+        );
       }
-      if (filteredProps.text !== undefined) {
-        if (filteredProps.children !== undefined) {
-          throw new Error(
-            '[Reanimated] <Animated.Text> component with animated prop `text` must be empty.'
-          );
-        }
-        // TODO: handle case when `text` property is not present during initial render but appears later on
+      // TODO: handle case when `text` property is not present during initial render but appears later on
 
-        // Pass the current value of animated prop `text` as `children` so that the text displays correctly during first render
-        filteredProps.children = normalizeTextProp(filteredProps.text);
-      }
+      // Pass the current value of animated prop `text` as `children` so that the text displays correctly during first render
+      filteredProps.children = normalizeTextProp(filteredProps.text);
     }
+
+    // if (
+    //   this.ChildComponent.displayName === 'Text' &&
+    //   isSharedValue(this.props.text)
+    // ) {
+    //   filteredProps.children = normalizeTextProp(filteredProps.text);
+    // }
+
+    // if (this.ChildComponent.displayName === 'Text') {
+    //   console.log(filteredProps.text);
+    // }
+
+    // if (this.ChildComponent.displayName === 'Circle') {
+    //   console.log('filteredProps', filteredProps);
+    // }
 
     // TODO: Remove need for this \/\/\/\/.
     // RNSVG expects Gradient elem to have stops passed as children. When we want to animate them,
