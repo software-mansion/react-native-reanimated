@@ -71,10 +71,13 @@ react-native-reanimated-tests.js
 # pre-commit
 .husky/log.txt
 
-# clangd
+# LLVM tools
 .cache
 CompilationDatabase
 compile_commands.json
+.xcode-compile-metadata
+.derived-data-log-*
+buildServer.json
 
 build/
 

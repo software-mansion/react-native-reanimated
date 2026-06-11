@@ -1,8 +1,8 @@
 module ReanimatedUtils
   module_function
 
-  def try_to_parse_react_native_package_json(node_modules_dir)
-    react_native_package_json_path = File.join(node_modules_dir, 'react-native/package.json')
+  def try_to_parse_react_native_package_json(react_native_dir)
+    react_native_package_json_path = File.join(react_native_dir, 'package.json')
     if !File.exist?(react_native_package_json_path)
       return nil
     end
@@ -13,17 +13,17 @@ module ReanimatedUtils
     result = {
       :is_reanimated_example_app => nil,
       :react_native_version => nil,
-      :react_native_node_modules_dir => nil,
+      :react_native_dir => nil,
       :react_native_common_dir => nil,
     }
 
-    react_native_node_modules_dir = File.join(File.dirname(`cd "#{Pod::Config.instance.installation_root.to_s}" && node --print "require.resolve('react-native/package.json')"`), '..')
-    react_native_json = try_to_parse_react_native_package_json(react_native_node_modules_dir)
+    react_native_dir = File.dirname(`cd "#{Pod::Config.instance.installation_root.to_s}" && node --print "require.resolve('react-native/package.json')"`)
+    react_native_json = try_to_parse_react_native_package_json(react_native_dir)
 
     if react_native_json == nil
       # user configuration, just in case
       node_modules_dir = ENV["REACT_NATIVE_NODE_MODULES_DIR"]
-      react_native_json = try_to_parse_react_native_package_json(node_modules_dir)
+      react_native_json = try_to_parse_react_native_package_json(File.join(node_modules_dir, 'react-native'))
     end
 
     if react_native_json == nil
@@ -38,10 +38,10 @@ module ReanimatedUtils
 
     result[:is_reanimated_example_app] = ENV["IS_REANIMATED_EXAMPLE_APP"] != nil
     result[:react_native_version] = react_native_json['version']
-    result[:react_native_node_modules_dir] = File.expand_path(react_native_node_modules_dir)
+    result[:react_native_dir] = File.expand_path(react_native_dir)
 
     pods_root = Pod::Config.instance.project_pods_root
-    react_native_common_dir_absolute = File.join(react_native_node_modules_dir, 'react-native', 'ReactCommon')
+    react_native_common_dir_absolute = File.join(react_native_dir, 'ReactCommon')
     react_native_common_dir_relative = Pathname.new(react_native_common_dir_absolute).relative_path_from(pods_root).to_s
     result[:react_native_common_dir] = react_native_common_dir_relative
 
