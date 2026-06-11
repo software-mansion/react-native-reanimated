@@ -11,7 +11,6 @@ import Animated, {
 } from 'react-native-reanimated';
 
 // TODO: sync `text` prop updates back to React as `children` prop
-// TODO: convert docs examples from AnimatedTextInput to Animated.Text
 
 export default function AnimatedTextExample() {
   const sv = useSharedValue(0);
