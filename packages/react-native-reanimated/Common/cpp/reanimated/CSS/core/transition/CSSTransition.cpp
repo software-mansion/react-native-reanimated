@@ -43,24 +43,19 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
 
   if (!processed.platform.empty()) {
     auto &platformTransition = ensurePlatformTransition();
-    if (!processed.platform.changedPropertiesSettings.empty() || !processed.platform.removedProperties.empty()) {
-      platformTransition.updateSettings(
-          processed.platform.changedPropertiesSettings, processed.platform.removedProperties);
-    }
-    if (!processed.platform.changedProperties.empty() || !processed.platform.removedProperties.empty()) {
-      platformTransition.run(rt, processed.platform, timestamp);
-    }
+    platformTransition.updateSettings(
+        processed.platform.changedPropertiesSettings, processed.platform.removedProperties);
+    platformTransition.run(rt, processed.platform, timestamp);
   }
 
   const auto &loopConfig = processed.loop;
-  if (!loopConfig.hasSettingsUpdates() && !loopConfig.hasValueUpdates()) {
+  if (loopConfig.empty()) {
     return folly::dynamic::object();
   }
 
   auto &loopTransition = ensureLoopTransition();
-  if (loopConfig.hasSettingsUpdates()) {
-    loopTransition.updateSettings(loopConfig.changedPropertiesSettings, loopConfig.removedProperties);
-  }
+  loopTransition.updateSettings(loopConfig.changedPropertiesSettings, loopConfig.removedProperties);
+
   // Settings-only configs reconfigure without running.
   if (!loopConfig.hasValueUpdates()) {
     return folly::dynamic::object();

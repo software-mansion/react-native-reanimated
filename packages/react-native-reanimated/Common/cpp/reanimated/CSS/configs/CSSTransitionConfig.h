@@ -39,6 +39,9 @@ struct CSSTransitionConfig {
   bool hasValueUpdates() const {
     return !changedProperties.empty();
   }
+  bool empty() const {
+    return !hasSettingsUpdates() && !hasValueUpdates();
+  }
 };
 
 CSSTransitionConfig
