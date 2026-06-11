@@ -322,9 +322,9 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
         if (!surfaceId) {
           return;
         }
+        // The flush set is drained by `executeLayoutAnimationsRequests`, driven
+        // by `runGrandCallback` (backend) or a JS `requestAnimationFrameFinalizer` (non-backend).
         strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
-
-        strongThis->requestRenderForLayoutAnimations();
       };
 
   EndLayoutAnimationFunction endLayoutAnimation = [weakThis = weak_from_this()](int tag, bool shouldRemove) {
@@ -335,14 +335,6 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     }
 
     auto surfaceId = strongThis->layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
-
-    if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-      // in the backend path this is called from runGrandCallback,
-      // we are guaranteed to have the changes flushed
-    } else {
-      strongThis->requestRenderForLayoutAnimations();
-    }
-
     if (!surfaceId) {
       return;
     }

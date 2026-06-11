@@ -6,7 +6,7 @@ import {
   type StringLiteral,
   stringLiteral,
 } from '@babel/types';
-import { dirname, relative, resolve } from 'path';
+import { dirname, relative, resolve, sep } from 'path';
 
 import { generatedWorkletsDir, type WorkletsPluginPass } from './types';
 
@@ -86,7 +86,10 @@ export function createImportPathLiteral(
   );
 
   const resolved = resolve(dirname(state.file.opts.filename!), originalPath);
-  return stringLiteral(relative(generatedWorkletsDirPath, resolved));
+  const relativePath = relative(generatedWorkletsDirPath, resolved);
+  return stringLiteral(
+    sep === '/' ? relativePath : relativePath.split(sep).join('/')
+  );
 }
 
 const alwaysAllowed = [

@@ -1,5 +1,10 @@
+import type { ComponentType } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
+// TODO: Fix me
+/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+// @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
+import { Circle, Svg } from 'react-native-svg';
 
 import {
   Screen,
@@ -8,6 +13,10 @@ import {
   VerticalExampleCard,
 } from '@/apps/css/components';
 import { colors, radius, sizes, spacing } from '@/theme';
+
+const AnimatedCircle = Animated.createAnimatedComponent(
+  Circle
+) as ComponentType<Record<string, unknown>>;
 
 export default function Active() {
   return (
@@ -194,6 +203,75 @@ transform: {
               ]}
               onStartShouldSetResponder={() => true}
             />
+          </VerticalExampleCard>
+
+          <VerticalExampleCard
+            description="Currenlty Pseudoselectors in SVG are only supported on the Web."
+            labelTypes={['web']}
+            title="SVG fill"
+            code={`// Base geometry stays as real props so it renders at rest;
+// the ':active' style only swaps the changing prop.
+<AnimatedCircle
+  cx={20} cy={20} r={18}
+  fill={colors.primary}
+  style={{
+    fill: { default: colors.primary, ':active': colors.primaryDark },
+    transitionDuration: '200ms',
+  }}
+  onStartShouldSetResponder={() => true}
+/>`}
+            collapsedCode={`fill: {
+  default: colors.primary,
+  ':active': colors.primaryDark,
+},`}>
+            <Svg height={sizes.md} width={sizes.md}>
+              <AnimatedCircle
+                cx={sizes.md / 2}
+                cy={sizes.md / 2}
+                fill={colors.primary}
+                r={sizes.md / 2 - 2}
+                style={{
+                  fill: {
+                    ':active': colors.primaryDark,
+                    default: colors.primary,
+                  },
+                  transitionDuration: '200ms',
+                }}
+                onStartShouldSetResponder={() => true}
+              />
+            </Svg>
+          </VerticalExampleCard>
+
+          <VerticalExampleCard
+            labelTypes={['web']}
+            title="SVG radius"
+            code={`// r needs a base prop value, otherwise it renders at 0.
+<AnimatedCircle
+  cx={25} cy={25} fill={colors.primary}
+  r={12}
+  style={{
+    r: { default: 12, ':active': 24 },
+    transitionDuration: '200ms',
+  }}
+  onStartShouldSetResponder={() => true}
+/>`}
+            collapsedCode={`r: {
+  default: 12,
+  ':active': 24,
+},`}>
+            <Svg height={sizes.md} width={sizes.md}>
+              <AnimatedCircle
+                cx={sizes.md / 2}
+                cy={sizes.md / 2}
+                fill={colors.primary}
+                r={sizes.md / 4}
+                style={{
+                  r: { ':active': sizes.md / 2 - 2, default: sizes.md / 4 },
+                  transitionDuration: '200ms',
+                }}
+                onStartShouldSetResponder={() => true}
+              />
+            </Svg>
           </VerticalExampleCard>
         </Section>
 

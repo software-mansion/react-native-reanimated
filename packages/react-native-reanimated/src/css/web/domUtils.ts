@@ -35,15 +35,16 @@ function getStyleSheet() {
 
 // Shared registry over the single Reanimated stylesheet. Rules are appended in
 // insertion order (callers that depend on source order - e.g. pseudo-selector
-// cascade priority - get it) and tracked by a string key so they can be removed
-// later even though CSSOM rule indices shift when earlier rules are deleted.
-const ruleIndexByKey = new Map<string, number>();
-const orderedRuleKeys: string[] = [];
+// cascade priority - get it) and tracked by a string key. We keep the CSSRule
+// object itself and resolve its index at removal time, so the registry cannot
+// drift from the actual sheet (rule indices shift when earlier rules are
+// deleted, and the style tag can be replaced externally, e.g. by HMR).
+const ruleByKey = new Map<string, CSSRule>();
 
 function insertSheetRule(key: string, cssText: string): boolean {
   // Without window availability check SSR crashes because document is undefined
   // (NextExample on CI).
-  if (!IS_WINDOW_AVAILABLE || ruleIndexByKey.has(key)) {
+  if (!IS_WINDOW_AVAILABLE || ruleByKey.has(key)) {
     return false;
   }
 
@@ -55,9 +56,9 @@ function insertSheetRule(key: string, cssText: string): boolean {
     return false;
   }
 
-  const index = orderedRuleKeys.length;
+  let index: number;
   try {
-    sheet.insertRule(cssText, index);
+    index = sheet.insertRule(cssText, sheet.cssRules.length);
   } catch {
     // Browsers throw on rules they can't parse (e.g. unsupported selectors).
     // Stay lenient and skip the rule instead of breaking the whole update.
@@ -65,8 +66,7 @@ function insertSheetRule(key: string, cssText: string): boolean {
     return false;
   }
 
-  orderedRuleKeys.push(key);
-  ruleIndexByKey.set(key, index);
+  ruleByKey.set(key, sheet.cssRules[index]);
   return true;
 }
 
@@ -76,18 +76,22 @@ function removeSheetRule(key: string): void {
     return;
   }
 
-  const index = ruleIndexByKey.get(key);
-  if (index === undefined) {
+  const rule = ruleByKey.get(key);
+  if (rule === undefined) {
+    return;
+  }
+  ruleByKey.delete(key);
+
+  const sheet = getStyleSheet();
+  if (!sheet) {
     return;
   }
 
-  getStyleSheet()?.deleteRule(index);
-  orderedRuleKeys.splice(index, 1);
-  ruleIndexByKey.delete(key);
-
-  // Deleting a rule shifts every later rule down by one.
-  for (let i = index; i < orderedRuleKeys.length; ++i) {
-    ruleIndexByKey.set(orderedRuleKeys[i], i);
+  // Resolve the rule's current index at removal time - it shifts when earlier
+  // rules are deleted (and the rule may be gone if the sheet was replaced).
+  const index = Array.prototype.indexOf.call(sheet.cssRules, rule);
+  if (index !== -1) {
+    sheet.deleteRule(index);
   }
 }
 

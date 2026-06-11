@@ -1,4 +1,4 @@
-import type { BabelFile, NodePath } from '@babel/core';
+import type { BabelFile, NodePath, PluginItem } from '@babel/core';
 import type {
   ArrowFunctionExpression,
   FunctionDeclaration,
@@ -25,6 +25,8 @@ export interface WorkletsPluginPass {
   filename: string | undefined;
   workletNumber: number;
   classesToWorkletize: { node: BabelNode; name: string }[];
+  skipFile: boolean;
+  autoworkletizationPlugin: PluginItem;
 }
 
 export type WorkletizableFunction =

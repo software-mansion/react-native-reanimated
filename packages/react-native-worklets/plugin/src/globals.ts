@@ -1,4 +1,9 @@
-import type { WorkletsPluginPass } from './types';
+import type { NodePath } from '@babel/core';
+import type { CallExpression } from '@babel/types';
+import path from 'path';
+
+import { processCalleesAutoworkletizableCallbacks } from './autoworkletization';
+import { generatedWorkletsDir, type WorkletsPluginPass } from './types';
 
 const notCapturedIdentifiers = [
   // Based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
@@ -134,12 +139,39 @@ const notCapturedIdentifiers = [
 ];
 
 export function initializeState(state: WorkletsPluginPass) {
+  state.skipFile = isGeneratedWorkletFile(state.file.opts.filename);
+  if (state.skipFile) {
+    return;
+  }
   state.workletNumber = 1;
   state.classesToWorkletize = [];
+  state.autoworkletizationPlugin = {
+    name: 'worklets-autoworkletization',
+    visitor: {
+      CallExpression: {
+        enter(nodePath: NodePath<CallExpression>) {
+          processCalleesAutoworkletizableCallbacks(nodePath, state);
+        },
+      },
+    },
+  };
   if (!state.opts.strictGlobal) {
     initializeGlobals();
     addCustomGlobals(state);
   }
+}
+
+export function isGeneratedWorkletFile(
+  filename: string | undefined | null
+): boolean {
+  if (!filename) {
+    return false;
+  }
+  const generatedWorkletsDirPath = path.join(
+    'react-native-worklets',
+    generatedWorkletsDir
+  );
+  return filename.includes(generatedWorkletsDirPath);
 }
 
 export const defaultGlobals = new Set(notCapturedIdentifiers);
