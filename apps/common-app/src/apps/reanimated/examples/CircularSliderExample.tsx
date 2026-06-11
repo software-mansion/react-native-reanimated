@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ColorValue } from 'react-native';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   interpolate,
