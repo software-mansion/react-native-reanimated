@@ -1,34 +1,26 @@
 #pragma once
 
+#include <reanimated/LayoutAnimations/LayoutAnimationType.h>
+#include <reanimated/LayoutAnimations/NativeLayoutAnimationPreset.h>
 #include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include "reanimated/LayoutAnimations/LayoutAnimationType.h"
-#include "reanimated/LayoutAnimations/NativeLayoutAnimationPreset.h"
 
 namespace reanimated {
 
 class NativeLayoutAnimationPresetFactory {
  public:
-  using PresetCreator =
-      std::function<std::unique_ptr<NativeLayoutAnimationPreset>()>;
+  using PresetCreator = std::function<std::unique_ptr<NativeLayoutAnimationPreset>()>;
 
   static NativeLayoutAnimationPresetFactory &instance();
 
-  void registerPreset(
-      LayoutAnimationType type,
-      const std::string &name,
-      PresetCreator creator);
+  void registerPreset(LayoutAnimationType type, const std::string &name, PresetCreator creator);
 
-  std::unique_ptr<NativeLayoutAnimationPreset> create(
-      LayoutAnimationType type,
-      const std::string &name) const;
+  std::unique_ptr<NativeLayoutAnimationPreset> create(LayoutAnimationType type, const std::string &name) const;
 
-  NativeLayoutAnimationPresetFactory(
-      const NativeLayoutAnimationPresetFactory &) = delete;
-  NativeLayoutAnimationPresetFactory &operator=(
-      const NativeLayoutAnimationPresetFactory &) = delete;
+  NativeLayoutAnimationPresetFactory(const NativeLayoutAnimationPresetFactory &) = delete;
+  NativeLayoutAnimationPresetFactory &operator=(const NativeLayoutAnimationPresetFactory &) = delete;
 
  private:
   NativeLayoutAnimationPresetFactory();

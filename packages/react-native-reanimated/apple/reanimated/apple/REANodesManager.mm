@@ -279,9 +279,7 @@ using namespace facebook::react;
 
   REACoreAnimationDelegate *delegate =
       [REACoreAnimationDelegate delegateWithStart:nil
-                                             stop:^(CAAnimation *animation, BOOL finished) {
-                                               completion(finished);
-                                             }];
+                                             stop:^(CAAnimation *animation, BOOL finished) { completion(finished); }];
 
   int i = 0;
   for (const auto &anim : animations) {

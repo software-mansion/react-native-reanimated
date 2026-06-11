@@ -1,7 +1,7 @@
 #pragma once
 
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
-#include <worklets/SharedItems/Serializable.h>
 #include <memory>
 #include <optional>
 #include <string>

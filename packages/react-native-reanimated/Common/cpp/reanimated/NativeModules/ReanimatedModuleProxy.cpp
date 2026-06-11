@@ -239,7 +239,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #else
           std::make_shared<LayoutAnimationsManager>()
 #endif
-          ),
+              ),
       subscribeForKeyboardEventsFunction_(platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
   // Add registries in order of their priority (from the lowest to the
@@ -512,10 +512,8 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
       batchItem.rawConfig = nullptr;
     } else {
       const LayoutAnimationRawConfig &rawConfigObject =
-          LayoutAnimationsManager::extractRawConfigValues(
-              rt, rawConfig.asObject(rt));
-      batchItem.rawConfig =
-          std::make_shared<LayoutAnimationRawConfig>(rawConfigObject);
+          LayoutAnimationsManager::extractRawConfigValues(rt, rawConfig.asObject(rt));
+      batchItem.rawConfig = std::make_shared<LayoutAnimationRawConfig>(rawConfigObject);
     }
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);

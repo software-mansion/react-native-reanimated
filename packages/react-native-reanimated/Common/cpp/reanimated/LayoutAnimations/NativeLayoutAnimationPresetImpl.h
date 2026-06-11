@@ -1,10 +1,10 @@
 #pragma once
 
+#include <reanimated/LayoutAnimations/NativeLayoutAnimation.h>
+#include <reanimated/LayoutAnimations/NativeLayoutAnimationPreset.h>
 #include <functional>
 #include <string>
 #include <vector>
-#include "reanimated/LayoutAnimations/NativeLayoutAnimation.h"
-#include "reanimated/LayoutAnimations/NativeLayoutAnimationPreset.h"
 
 namespace reanimated {
 
@@ -26,16 +26,16 @@ class SlideInLeftPreset : public NativeLayoutAnimationPreset {
 
     result.push_back(NativeLayoutAnimation{
         "position.x",
-        [newFrame,
-         centerOffsetX](const facebook::react::Rect &baseFrame) -> double {
+        [newFrame, centerOffsetX](const facebook::react::Rect &baseFrame) -> double {
           return newFrame.origin.x + centerOffsetX - newFrame.size.width;
         },
         newFrame.origin.x + centerOffsetX});
 
     result.push_back(NativeLayoutAnimation{
         "position.y",
-        [newFrame, centerOffsetY](const facebook::react::Rect &baseFrame)
-            -> double { return newFrame.origin.y + centerOffsetY; },
+        [newFrame, centerOffsetY](const facebook::react::Rect &baseFrame) -> double {
+          return newFrame.origin.y + centerOffsetY;
+        },
         newFrame.origin.y + centerOffsetY});
 
     return result;

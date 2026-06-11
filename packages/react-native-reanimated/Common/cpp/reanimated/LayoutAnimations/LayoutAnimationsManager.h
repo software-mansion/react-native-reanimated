@@ -44,13 +44,10 @@ using Transitions = std::vector<std::pair<SharedTag, Transition>>;
 
 class LayoutAnimationsManager {
  public:
-  LayoutAnimationsManager()
-      : sharedTransitionManager_(std::make_shared<SharedTransitionManager>()) {
-  }
+  LayoutAnimationsManager() : sharedTransitionManager_(std::make_shared<SharedTransitionManager>()) {}
 
 #if __APPLE__
-  explicit LayoutAnimationsManager(RunCoreAnimationForView runCoreAnimationForView)
-      : LayoutAnimationsManager() {
+  explicit LayoutAnimationsManager(RunCoreAnimationForView runCoreAnimationForView) : LayoutAnimationsManager() {
     runCoreAnimationForView_ = std::move(runCoreAnimationForView);
   }
 #endif

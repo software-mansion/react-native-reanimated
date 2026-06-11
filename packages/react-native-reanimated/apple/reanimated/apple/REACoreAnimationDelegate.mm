@@ -1,4 +1,4 @@
-#import "REACoreAnimationDelegate.h"
+#import <reanimated/apple/REACoreAnimationDelegate.h>
 
 @interface REACoreAnimationDelegate ()
 @property (nonatomic, copy, nullable) AnimationStartBlock startBlock;
