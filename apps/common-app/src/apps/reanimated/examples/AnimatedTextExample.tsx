@@ -24,6 +24,10 @@ export default function AnimatedTextExample() {
     return String(Math.round(sv.value * 100));
   });
 
+  const numberSv = useDerivedValue(() => {
+    return Math.round(sv.value * 100);
+  });
+
   const stringAnimatedProps = useAnimatedProps(() => {
     return {
       text: `${Math.round(sv.value * 100)}%`, // string
@@ -54,7 +58,7 @@ export default function AnimatedTextExample() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Animated text is an inline prop */}
+      {/* Animated text is an inline prop (string shared value) */}
       <View style={styles.row}>
         <Text>Before</Text>
         <Animated.Text
@@ -64,19 +68,52 @@ export default function AnimatedTextExample() {
         <Text>After</Text>
       </View>
 
-      {/* Animated text is a shared value passed as children */}
+      {/* Animated text is an inline prop (number shared value) */}
       <View style={styles.row}>
         <Text>Before</Text>
-        <Animated.Text style={[styles.tabularNums, styles.color1]}>
+        <Animated.Text
+          text={numberSv}
+          style={[styles.tabularNums, styles.color1]}
+        />
+        <Text>After</Text>
+      </View>
+
+      {/* Animated text is a shared value passed as children (string) */}
+      <View style={styles.row}>
+        <Text>Before</Text>
+        <Animated.Text style={[styles.tabularNums, styles.color2]}>
           {textSv}
         </Animated.Text>
         <Text>After</Text>
       </View>
 
-      {/* Mixed children: static text with a shared value */}
+      {/* Animated text is a shared value passed as children (number) */}
       <View style={styles.row}>
-        <Animated.Text style={[styles.tabularNums, styles.color2]}>
+        <Text>Before</Text>
+        <Animated.Text style={[styles.tabularNums, styles.color3]}>
+          {numberSv}
+        </Animated.Text>
+        <Text>After</Text>
+      </View>
+
+      {/* Mixed children: static text with a string shared value */}
+      <View style={styles.row}>
+        <Animated.Text style={[styles.tabularNums, styles.color4]}>
           Before{textSv}After
+        </Animated.Text>
+      </View>
+
+      {/* Mixed children: static text with a number shared value */}
+      <View style={styles.row}>
+        <Animated.Text style={[styles.tabularNums, styles.color5]}>
+          Before{numberSv}After
+        </Animated.Text>
+      </View>
+
+      {/* Mixed children: static text with multiple shared values */}
+      <View style={styles.row}>
+        <Animated.Text style={[styles.tabularNums, styles.color6]}>
+          Before{textSv}Middle{numberSv}After
         </Animated.Text>
       </View>
 
@@ -85,7 +122,7 @@ export default function AnimatedTextExample() {
         <Text>Before</Text>
         <Animated.Text
           animatedProps={stringAnimatedProps}
-          style={[styles.tabularNums, styles.color3]}
+          style={[styles.tabularNums, styles.color7]}
         />
         <Text>After</Text>
       </View>
@@ -95,7 +132,7 @@ export default function AnimatedTextExample() {
         <Text>Before</Text>
         <Animated.Text
           animatedProps={numberAnimatedProps}
-          style={[styles.tabularNums, styles.color4]}
+          style={[styles.tabularNums, styles.color8]}
         />
         <Text>After</Text>
       </View>
@@ -105,7 +142,7 @@ export default function AnimatedTextExample() {
         <Text>Before</Text>
         <Animated.Text
           animatedProps={emptyAnimatedProps}
-          style={[styles.tabularNums, styles.color5]}
+          style={[styles.tabularNums, styles.color9]}
         />
         <Text>After</Text>
       </View>
@@ -115,7 +152,7 @@ export default function AnimatedTextExample() {
         <Text>Before</Text>
         <Animated.Text
           animatedProps={numberAnimatedProps}
-          style={[styles.tabularNums, styles.color6, animatedStyle]}
+          style={[styles.tabularNums, styles.color10, animatedStyle]}
         />
         <Text>After</Text>
       </View>
@@ -126,7 +163,7 @@ export default function AnimatedTextExample() {
           Before
           <Animated.Text
             animatedProps={numberAnimatedProps}
-            style={[styles.tabularNums, styles.color7]}
+            style={[styles.tabularNums, styles.color11]}
           />
           After
         </Text>
@@ -138,7 +175,7 @@ export default function AnimatedTextExample() {
           Before
           <Animated.Text
             animatedProps={numberAnimatedProps}
-            style={[styles.tabularNums, styles.color8]}
+            style={[styles.tabularNums, styles.color12]}
           />
           After
         </Animated.Text>
@@ -150,7 +187,7 @@ export default function AnimatedTextExample() {
           Before
           <Animated.Text
             animatedProps={numberAnimatedProps}
-            style={[styles.tabularNums, styles.color9]}
+            style={[styles.tabularNums, styles.color13]}
           />
           After
         </Animated.Text>
@@ -199,7 +236,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    marginBottom: 25,
+    marginBottom: 16,
   },
   tabularNums: {
     fontVariant: ['tabular-nums'],
@@ -217,24 +254,36 @@ const styles = StyleSheet.create({
     backgroundColor: 'sandybrown',
   },
   color3: {
-    backgroundColor: 'khaki',
+    backgroundColor: 'navajowhite',
   },
   color4: {
-    backgroundColor: 'lightgreen',
+    backgroundColor: 'khaki',
   },
   color5: {
-    backgroundColor: 'turquoise',
+    backgroundColor: 'lightgreen',
   },
   color6: {
-    backgroundColor: 'lightskyblue',
+    backgroundColor: 'mediumaquamarine',
   },
   color7: {
-    backgroundColor: 'cornflowerblue',
+    backgroundColor: 'turquoise',
   },
   color8: {
-    backgroundColor: 'violet',
+    backgroundColor: 'powderblue',
   },
   color9: {
+    backgroundColor: 'lightskyblue',
+  },
+  color10: {
+    backgroundColor: 'cornflowerblue',
+  },
+  color11: {
+    backgroundColor: 'mediumpurple',
+  },
+  color12: {
+    backgroundColor: 'violet',
+  },
+  color13: {
     backgroundColor: 'lightpink',
   },
 });
