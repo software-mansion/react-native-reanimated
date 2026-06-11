@@ -10,7 +10,7 @@
 
 #include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationConfig.h>
-#include <reanimated/LayoutAnimations/NativeLayoutAnimation.h>
+#include <reanimated/LayoutAnimations/NativeLayoutAnimationDescriptor.h>
 
 #include <memory>
 #include <string>
@@ -50,14 +50,16 @@ using SetGestureStateFunction = std::function<void(int, int)>;
 using KeyboardEventSubscribeFunction = std::function<int(std::function<void(int, int)>, bool, bool)>;
 using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
-using RunCoreAnimationForView = std::function<void(
-    const int,
-    const facebook::react::Rect &,
-    const std::vector<NativeLayoutAnimation> &animations,
-    const reanimated::LayoutAnimationRawConfig &,
-    const bool,
-    std::function<void(bool)> &&)>;
-//    const std::string &)>;
+// Plays a pre-sampled, generic layout-animation descriptor on the platform's
+// native animation engine (Core Animation on iOS, `android.animation` on
+// Android). `usePresentationLayer` requests a seamless start from the view's
+// currently rendered state when interrupting an in-flight animation. The
+// completion is invoked with `true` when the animation finished naturally.
+using RunNativeLayoutAnimation = std::function<void(
+    const int tag,
+    const NativeLayoutAnimationDescriptor &descriptor,
+    const bool usePresentationLayer,
+    std::function<void(bool)> &&completion)>;
 
 using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
 
@@ -80,9 +82,8 @@ struct PlatformDepMethodsHolder {
   KeyboardEventSubscribeFunction subscribeForKeyboardEvents;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEvents;
   MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction;
-#if __APPLE__
-  RunCoreAnimationForView runCoreAnimationForView;
-#endif // __APPLE__
+  // Native layout-animation player. Provided on both iOS and Android.
+  RunNativeLayoutAnimation runNativeLayoutAnimation;
   PlatformAttachPseudoSelectorFunction attachPseudoSelector;
   PlatformDetachPseudoSelectorFunction detachPseudoSelector;
   css::CSSCanRoutePropertyFunction cssCanRouteProperty;

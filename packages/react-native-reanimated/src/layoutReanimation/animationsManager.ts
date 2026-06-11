@@ -13,6 +13,8 @@ import type {
 import { LayoutAnimationType } from '../commonTypes';
 import { getStaticFeatureFlag } from '../featureFlags';
 import { makeMutableUI } from '../mutables';
+import type { NativeLayoutAnimationDescriptor } from './nativeAnimationDescriptor';
+import { buildNativeLayoutAnimationDescriptor } from './nativeAnimationDescriptor';
 
 const TAG_OFFSET = 1e9;
 
@@ -45,6 +47,12 @@ function stopObservingProgress(
 function createLayoutAnimationManager(): {
   start: LayoutAnimationStartFunction;
   stop: (tag: number) => void;
+  computeNativeDescriptor: (
+    tag: number,
+    type: LayoutAnimationType,
+    yogaValues: Partial<LayoutAnimationValues>,
+    config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
+  ) => NativeLayoutAnimationDescriptor;
 } {
   'worklet';
   const currentAnimationForTag = new Map();
@@ -125,6 +133,23 @@ function createLayoutAnimationManager(): {
         return;
       }
       stopObservingProgress(tag, value, scheduleFlush);
+    },
+    /**
+     * Native layout-animation backend entry point. Invoked from C++ (instead of
+     * `start`) when the native layout-animations feature flag is enabled. Runs
+     * the preset builder for the given runtime values and samples it into a
+     * generic keyframe descriptor that the platform plays via Core Animation
+     * (iOS) / `android.animation` (Android). Unlike `start`, it neither mutates
+     * shared values nor drives the animation per-frame from JS.
+     */
+    computeNativeDescriptor(
+      _tag: number,
+      _type: LayoutAnimationType,
+      yogaValues: Partial<LayoutAnimationValues>,
+      config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
+    ): NativeLayoutAnimationDescriptor {
+      const style = config(yogaValues);
+      return buildNativeLayoutAnimationDescriptor(style);
     },
   };
 }

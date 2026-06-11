@@ -17,8 +17,10 @@ import com.facebook.soloader.SoLoader
 import com.swmansion.common.GestureHandlerStateManager
 import com.swmansion.reanimated.keyboard.KeyboardAnimationManager
 import com.swmansion.reanimated.keyboard.KeyboardWorkletWrapper
+import com.swmansion.reanimated.layoutReanimation.NativeLayoutAnimator
 import com.swmansion.reanimated.nativeProxy.AnimationFrameCallback
 import com.swmansion.reanimated.nativeProxy.EventHandler
+import com.swmansion.reanimated.nativeProxy.LayoutAnimationCallback
 import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
 import com.swmansion.reanimated.nativeProxy.SensorSetter
 import com.swmansion.reanimated.nativeProxy.SynchronousPropsBufferParser
@@ -163,6 +165,37 @@ open class NativeProxy {
         tag: Int,
         selector: Int,
     ) = pseudoSelectorManager.detach(tag, selector)
+
+    @DoNotStrip
+    fun runNativeLayoutAnimation(
+        tag: Int,
+        durationMs: Double,
+        usePresentationLayer: Boolean,
+        keyPaths: String,
+        keyframeCounts: IntArray,
+        offsets: DoubleArray,
+        values: DoubleArray,
+        callback: LayoutAnimationCallback,
+    ) {
+        UiThreadUtil.runOnUiThread {
+            val view = mFabricUIManager.resolveView(tag)
+            if (view == null) {
+                callback.onAnimationEnd(false)
+                return@runOnUiThread
+            }
+            NativeLayoutAnimator.run(
+                view,
+                tag,
+                durationMs,
+                usePresentationLayer,
+                keyPaths,
+                keyframeCounts,
+                offsets,
+                values,
+                callback,
+            )
+        }
+    }
 
     @DoNotStrip
     fun requestRender(callback: AnimationFrameCallback) {
