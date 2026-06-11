@@ -77,10 +77,10 @@ type MenuButtonProps = {
 };
 
 function MenuButton({ open }: MenuButtonProps) {
-  const transitionProperties: CSSTransitionProperties = {
+  const transitionProperties = {
     transitionDuration: 200,
     transitionProperty: 'all',
-  };
+  } satisfies CSSTransitionProperties;
   const lineStyle = [transitionProperties, styles.menuButtonLine];
 
   return (

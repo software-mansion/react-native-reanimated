@@ -57,10 +57,12 @@ export const svgPropertiesRoutes = {
       },
       LinearGradient: {
         Component: svgAnimatedProperties.LinearGradient,
+        labelTypes: ['iOS', 'Android'],
         name: 'LinearGradient',
       },
       RadialGradient: {
         Component: svgAnimatedProperties.RadialGradient,
+        labelTypes: ['iOS', 'Android'],
         name: 'RadialGradient',
       },
       Group: {

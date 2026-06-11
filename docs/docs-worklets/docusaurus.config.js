@@ -58,6 +58,7 @@ const config = {
         theme: { customCss: require.resolve('./src/css/index.css') },
       }),
     ],
+    require.resolve('@swmansion/t-rex-ui/preset'),
   ],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
@@ -177,6 +178,16 @@ const config = {
                   test: /\.js$/,
                   exclude: /\.yarn[\\/]unprocessed/,
                   use: 'babel-loader',
+                },
+                {
+                  test: /\.m?js$/,
+                  resolve: {
+                    fullySpecified: false,
+                  },
+                },
+                {
+                  test: /react-native-(worklets|reanimated)[\\/]lib[\\/]module[\\/].*\.js$/,
+                  type: 'javascript/auto',
                 },
               ],
             },

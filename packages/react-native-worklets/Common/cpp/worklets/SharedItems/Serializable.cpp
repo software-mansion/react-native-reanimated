@@ -243,6 +243,12 @@ jsi::Value SerializableSet::toJSValue(jsi::Runtime &rt) {
   return set;
 }
 
+jsi::Value SerializableRegExp::toJSValue(jsi::Runtime &rt) {
+  return rt.global()
+      .getPropertyAsFunction(rt, "RegExp")
+      .callAsConstructor(rt, jsi::String::createFromUtf8(rt, pattern_), jsi::String::createFromUtf8(rt, flags_));
+}
+
 jsi::Value SerializableError::toJSValue(jsi::Runtime &rt) {
   auto error = rt.global()
                    .getPropertyAsFunction(rt, "Error")

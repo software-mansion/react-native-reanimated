@@ -1,34 +1,138 @@
 name: Example Typescript check and lint
 env:
   YARN_ENABLE_HARDENED_MODE: 0
-  TYPE_CHECK_DIRECTORIES: >-
-    apps/common-app
-    apps/tvos-example
 on:
   pull_request:
-  merge_group:
-    branches:
-      - main
-  push:
-    branches:
-      - main
+    paths:
+      - .github/workflows/example-typescript-check-and-lint.yml
+      - apps/common-app/**
+      - apps/tvos-example/**
+      - apps/web-example/**
+      - apps/fabric-example/**
+      - apps/macos-example/**
+      - apps/next-example/**
+      - packages/react-native-reanimated/src/**
+      - packages/react-native-reanimated/package.json
+      - packages/react-native-worklets/src/**
+      - packages/react-native-worklets/package.json
+      - '**/tsconfig*.json'
+      - eslint.config.mjs
+      - yarn.lock
   workflow_call:
   workflow_dispatch:
 
 jobs:
-  example-typescript-check-and-lint:
+  changes:
     if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: ubuntu-latest
+    outputs:
+      ts-apps: ${{ steps.matrix.outputs.ts-apps }}
+      web: ${{ steps.matrix.outputs.web }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Detect changed paths
+        id: filter
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@6852f92c20ea7fd3b0c25de3b5112db3a98da050
+        with:
+          filters: |
+            shared:
+              - .github/workflows/example-typescript-check-and-lint.yml
+              - packages/react-native-reanimated/src/**
+              - packages/react-native-reanimated/package.json
+              - packages/react-native-worklets/src/**
+              - packages/react-native-worklets/package.json
+              - '**/tsconfig*.json'
+              - eslint.config.mjs
+              - yarn.lock
+            common-app:
+              - apps/common-app/**
+            tvos:
+              - apps/tvos-example/**
+            # TODO: fix fabric-example
+            # fabric:
+            #   - apps/fabric-example/**
+            # TODO: fix macos-example
+            # macos:
+            #   - apps/macos-example/**
+            # next-example does not have type:check yet
+            # next:
+            #   - apps/next-example/**
+            # web-example uses a hack in tsconfig, it will fail the CI
+            # web:
+            #   - apps/web-example/**
+      - name: Build matrix
+        id: matrix
+        env:
+          IS_PR: ${{ github.event_name == 'pull_request' }}
+          SHARED: ${{ steps.filter.outputs.shared }}
+          COMMON: ${{ steps.filter.outputs.common-app }}
+          TVOS: ${{ steps.filter.outputs.tvos }}
+          # FABRIC: ${{ steps.filter.outputs.fabric }}
+          # MACOS: ${{ steps.filter.outputs.macos }}
+          # NEXT: ${{ steps.filter.outputs.next }}
+          # WEB: ${{ steps.filter.outputs.web }}
+        run: |
+          if [[ "$IS_PR" != "true" || "$SHARED" == "true" ]]; then
+            ts_apps='["apps/common-app","apps/tvos-example"]'
+            web=true
+          else
+            apps=()
+            [[ "$COMMON" == "true" ]] && apps+=("apps/common-app")
+            [[ "$TVOS"   == "true" ]] && apps+=("apps/tvos-example")
+            # [[ "$FABRIC" == "true" ]] && apps+=("apps/fabric-example")
+            # [[ "$MACOS"  == "true" ]] && apps+=("apps/macos-example")
+            # [[ "$NEXT"   == "true" ]] && apps+=("apps/next-example")
+            # [[ "$WEB"    == "true" ]] && apps+=("apps/web-example")
+            if [[ ${#apps[@]} -eq 0 ]]; then
+              ts_apps='[]'
+            else
+              ts_apps=$(jq -nc '$ARGS.positional' --args "${apps[@]}")
+            fi
+            web=$([[ "$WEB" == "true" ]] && echo true || echo false)
+          fi
+          echo "ts-apps=$ts_apps" >> "$GITHUB_OUTPUT"
+          echo "web=$web" >> "$GITHUB_OUTPUT"
+
+  build-packages:
+    needs: changes
+    if: needs.changes.outputs.ts-apps != '[]' || needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: typescript-build-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Use Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          cache: 'yarn'
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
+      - name: Build packages
+        run: yarn build
+      - name: Upload package build outputs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: packages-build
+          path: |
+            packages/react-native-reanimated/lib
+            packages/react-native-worklets/lib
+            packages/react-native-worklets/plugin/index.js
+            packages/react-native-worklets/plugin/index.js.map
+            packages/react-native-worklets/plugin/index.d.ts
+          retention-days: 1
+          if-no-files-found: error
+
+  example-typescript-check-and-lint:
+    needs: [changes, build-packages]
+    if: needs.changes.outputs.ts-apps != '[]'
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        working-directory: [
-            apps/common-app,
-            apps/fabric-example,
-            apps/macos-example,
-            # apps/next-example, # next-example doesn't use TypeScript.
-            apps/tvos-example,
-            apps/web-example,
-          ]
+        working-directory: ${{ fromJSON(needs.changes.outputs.ts-apps) }}
     concurrency:
       group: typescript-${{ matrix.working-directory }}-${{ github.ref }}
       cancel-in-progress: true
@@ -41,21 +145,41 @@ jobs:
           cache: 'yarn'
       - name: Clear annotations
         run: .github/workflows/helper/clear-annotations.sh
-
       - name: Install monorepo node dependencies
         run: yarn install --immutable
-      - name: Build packages
-        run: yarn build
-
+      - name: Download package build outputs
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: packages-build
+          path: packages
       - name: Check types
         working-directory: ${{ matrix.working-directory }}
-        if: ${{ contains(env.TYPE_CHECK_DIRECTORIES, matrix.working-directory) }}
         run: yarn type:check
       - name: Lint
         working-directory: ${{ matrix.working-directory }}
-        if: ${{ contains(env.TYPE_CHECK_DIRECTORIES, matrix.working-directory) }}
         run: yarn lint
+
+  example-web-build:
+    needs: [changes, build-packages]
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: typescript-web-example-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Use Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          cache: 'yarn'
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
+      - name: Download package build outputs
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: packages-build
+          path: packages
       - name: Build WebExample
-        working-directory: ${{ matrix.working-directory }}
-        if: ${{ matrix.working-directory == 'apps/web-example' }}
+        working-directory: apps/web-example
         run: yarn build

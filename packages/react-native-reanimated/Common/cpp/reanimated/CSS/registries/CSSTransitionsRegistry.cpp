@@ -1,5 +1,7 @@
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
-#include <reanimated/Tools/FeatureFlags.h>
+#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
+
+#include <react/debug/react_native_assert.h>
 
 #include <memory>
 #include <utility>
@@ -8,43 +10,41 @@
 namespace reanimated::css {
 
 CSSTransitionsRegistry::CSSTransitionsRegistry(
-    const GetAnimationTimestampFunction &getCurrentTimestamp,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : getCurrentTimestamp_(getCurrentTimestamp), viewStylesRepository_(viewStylesRepository) {}
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+    const std::shared_ptr<OperationsLoop> &loop,
+    const std::shared_ptr<CSSPlatformTransitionProxy> &platformTransitionProxy)
+    : viewStylesRepository_(viewStylesRepository), loop_(loop), platformTransitionProxy_(platformTransitionProxy) {}
 
-bool CSSTransitionsRegistry::isEmpty() const {
-  std::lock_guard<std::mutex> lock{mutex_};
-  // The registry is empty if has no registered animations and no updates
-  // stored in the updates registry
-  return updatesRegistry_.empty() && registry_.empty();
-}
-
-bool CSSTransitionsRegistry::hasUpdates() const {
-  std::lock_guard<std::mutex> lock{mutex_};
-  return !runningTransitionTags_.empty() || !delayedTransitionsManager_.empty();
+bool CSSTransitionsRegistry::needsFlush() const {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  return !updatedTags_.empty();
 }
 
 void CSSTransitionsRegistry::updateConfigOrRun(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
-    const CSSTransitionConfig &config) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
+    CSSTransitionConfig &&config) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto viewTag = shadowNode->getTag();
 
   if (!registry_.contains(viewTag)) {
-    // Create new transition
-    auto transition = std::make_shared<CSSTransition>(shadowNode, viewStylesRepository_);
+    auto transition = std::make_shared<CSSTransition>(
+        shadowNode, viewStylesRepository_, transitionObserver_, platformTransitionProxy_);
     registry_.insert({viewTag, transition});
   }
 
   const auto &transition = registry_.at(viewTag);
 
-  if (config.changedPropertiesSettings.size() || config.removedProperties.size()) {
-    transition->updateConfig(config.changedPropertiesSettings, config.removedProperties);
+  // Split via the platform proxy: platform-routed props are handled inside
+  // CSSTransition::splitForPlatformRouting; the returned config carries only
+  // the loop-side settings + value diffs + removals.
+  auto loopConfig = transition->splitForPlatformRouting(rt, std::move(config), loop_->resolveTimestamp());
+
+  if (loopConfig.changedPropertiesSettings.size() || loopConfig.removedProperties.size()) {
+    transition->updateSettings(loopConfig.changedPropertiesSettings, loopConfig.removedProperties);
   }
-  if (config.changedProperties.size()) {
-    runTransition(rt, transition, viewTag, config.changedProperties);
+  if (loopConfig.changedProperties.size()) {
+    runTransition(rt, transition, viewTag, loopConfig.changedProperties);
   }
 }
 
@@ -52,8 +52,7 @@ void CSSTransitionsRegistry::run(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const PropertyValueDiffsMap &propertyDiffs) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto viewTag = shadowNode->getTag();
   const auto &transition = registry_.at(viewTag);
 
@@ -63,98 +62,79 @@ void CSSTransitionsRegistry::run(
 void CSSTransitionsRegistry::run(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const PropertyValueDynamicDiffsMap &propertyDiffs) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto viewTag = shadowNode->getTag();
   const auto &transition = registry_.at(viewTag);
 
   const auto &lastUpdates = getUpdatesFromRegistry(viewTag);
-  const auto timestamp = getCurrentTimestamp_();
+  const auto timestamp = loop_->resolveTimestamp();
 
   auto initialUpdate = transition->run(propertyDiffs, lastUpdates, timestamp);
 
-  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-#if REACT_NATIVE_VERSION_MINOR >= 85
-    if (!initialUpdate.empty()) {
-      addRawPropsToAnimatedPropsBatch(transition->getShadowNode()->getFamilyShared(), initialUpdate);
+  transition->schedule(*loop_);
+  updateInUpdatesRegistry(transition, initialUpdate);
+  updatedTags_.insert(viewTag);
+}
+
+void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  const auto tags = std::exchange(updatedTags_, {});
+  for (const auto viewTag : tags) {
+    const auto it = registry_.find(viewTag);
+    if (it == registry_.end()) {
+      continue;
     }
-#endif
+
+    auto &transition = it->second;
+    const auto updates = transition->computeCurrentStyle();
+
+    if (!updates.empty()) {
+      addUpdatesToBatch(transition->getShadowNodeFamily(), updates);
+    }
   }
 
-  scheduleOrActivateTransition(transition);
-  updateInUpdatesRegistry(transition, initialUpdate);
+  flush(updatesBatch);
+}
+
+#if REACT_NATIVE_VERSION_MINOR >= 85
+void CSSTransitionsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  const auto tags = std::exchange(updatedTags_, {});
+  for (const auto viewTag : tags) {
+    const auto it = registry_.find(viewTag);
+    if (it == registry_.end()) {
+      continue;
+    }
+
+    auto &transition = it->second;
+    const auto updates = transition->computeCurrentStyle();
+
+    if (!updates.empty()) {
+      addRawPropsToAnimatedPropsBatch(transition->getShadowNodeFamily(), updates);
+      // Legacy flushes merge each frame into the updates registry; animated-props flushes do not.
+      // Keep the registry current so the next transition reads a real "from" value, not the first frame only.
+      updateInUpdatesRegistry(transition, updates);
+    }
+  }
+
+  flush(updatesBatch);
+}
+#endif
+
+CSSTransitionsRegistry::TransitionObserver::TransitionObserver(CSSTransitionsRegistry &owner) : owner_(owner) {}
+
+void CSSTransitionsRegistry::TransitionObserver::onTransitionUpdate(const Tag viewTag) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  owner_.updatedTags_.insert(viewTag);
 }
 
 void CSSTransitionsRegistry::removeTag(const Tag viewTag) {
+  const auto it = registry_.find(viewTag);
+  if (it != registry_.end()) {
+    it->second->unschedule(*loop_);
+  }
   removeFromUpdatesRegistry(viewTag);
-  delayedTransitionsManager_.remove(viewTag);
-  runningTransitionTags_.erase(viewTag);
   registry_.erase(viewTag);
-}
-
-void CSSTransitionsRegistry::update(const double timestamp) {
-  // Activate all delayed transitions that should start now
-  activateDelayedTransitions(timestamp);
-
-  // Iterate over active transitions and update them
-  for (auto it = runningTransitionTags_.begin(); it != runningTransitionTags_.end();) {
-    const auto &viewTag = *it;
-    const auto &transition = registry_[viewTag];
-
-    const folly::dynamic &updates = transition->update(timestamp);
-    if (!updates.empty()) {
-      if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-#if REACT_NATIVE_VERSION_MINOR >= 85
-        addRawPropsToAnimatedPropsBatch(transition->getShadowNode()->getFamilyShared(), updates);
-        // Legacy flushes merge each frame into the updates registry; animated-props flushes do not.
-        // Keep the registry current so the next transition reads a real "from" value, not the first frame only.
-        updateInUpdatesRegistry(transition, updates);
-#endif
-      } else {
-        addUpdatesToBatch(transition->getShadowNode()->getFamilyShared(), updates);
-      }
-    }
-
-    // We remove transition from running and schedule it when animation of one
-    // of properties has finished and the other one is still delayed
-    const auto &minDelay = transition->getMinDelay(timestamp);
-    if (minDelay > 0) {
-      delayedTransitionsManager_.add(timestamp + transition->getMinDelay(timestamp), viewTag);
-    }
-
-    if (transition->getState() != TransitionProgressState::Running) {
-      it = runningTransitionTags_.erase(it);
-    } else {
-      ++it;
-    }
-  }
-}
-
-void CSSTransitionsRegistry::activateDelayedTransitions(const double timestamp) {
-  while (!delayedTransitionsManager_.empty() && delayedTransitionsManager_.top().timestamp <= timestamp) {
-    const auto [_, viewTag] = delayedTransitionsManager_.pop();
-
-    // Add only these transitions which weren't removed in the meantime
-    if (registry_.find(viewTag) != registry_.end()) {
-      runningTransitionTags_.insert(viewTag);
-    }
-  }
-}
-
-void CSSTransitionsRegistry::scheduleOrActivateTransition(const std::shared_ptr<CSSTransition> &transition) {
-  const auto viewTag = transition->getViewTag();
-  const auto currentTimestamp = getCurrentTimestamp_();
-  const auto minDelay = transition->getMinDelay(currentTimestamp);
-
-  // Remove transition from delayed (if it is already added to delayed
-  // transitions)
-  delayedTransitionsManager_.remove(viewTag);
-
-  if (minDelay > 0) {
-    delayedTransitionsManager_.add(currentTimestamp + minDelay, viewTag);
-  } else {
-    runningTransitionTags_.insert(viewTag);
-  }
 }
 
 void CSSTransitionsRegistry::updateInUpdatesRegistry(
@@ -188,12 +168,13 @@ void CSSTransitionsRegistry::runTransition(
     const facebook::react::Tag &viewTag,
     const PropertyValueDiffsMap &propertyDiffs) {
   const auto &lastUpdates = getUpdatesFromRegistry(viewTag);
-  const auto timestamp = getCurrentTimestamp_();
+  const auto timestamp = loop_->resolveTimestamp();
 
   auto initialUpdate = transition->run(rt, propertyDiffs, lastUpdates, timestamp);
 
-  scheduleOrActivateTransition(transition);
+  transition->schedule(*loop_);
   updateInUpdatesRegistry(transition, initialUpdate);
+  updatedTags_.insert(viewTag);
 }
 
 } // namespace reanimated::css

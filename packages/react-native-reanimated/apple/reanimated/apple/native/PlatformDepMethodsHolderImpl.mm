@@ -1,4 +1,5 @@
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
+#import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/REASlowAnimations.h>
@@ -37,7 +38,7 @@ SetGestureStateFunction makeSetGestureStateFunction(RCTModuleRegistry *moduleReg
 
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
 {
-  auto requestRender = [nodesManager](std::function<void(double)> onRender) {
+  auto requestRender = [nodesManager](const std::function<void(double)> &onRender) {
     [nodesManager postOnAnimation:^(READisplayLink *displayLink) {
 #if !TARGET_OS_OSX
       auto targetTimestamp = displayLink.targetTimestamp;
@@ -79,8 +80,10 @@ MaybeFlushUIUpdatesQueueFunction makeMaybeFlushUIUpdatesQueueFunction(REANodesMa
 
 RegisterSensorFunction makeRegisterSensorFunction(ReanimatedSensorContainer *reanimatedSensorContainer)
 {
-  auto registerSensorFunction =
-      [=](int sensorType, int interval, int iosReferenceFrame, std::function<void(double[], int)> setter) -> int {
+  auto registerSensorFunction = [=](int sensorType,
+                                    int interval,
+                                    int iosReferenceFrame,
+                                    const std::function<void(double[], int)> &setter) -> int {
     return [reanimatedSensorContainer
            registerSensor:(ReanimatedSensorType)sensorType
                  interval:interval
@@ -101,7 +104,7 @@ UnregisterSensorFunction makeUnregisterSensorFunction(ReanimatedSensorContainer 
 KeyboardEventSubscribeFunction makeSubscribeForKeyboardEventsFunction(REAKeyboardEventObserver *keyboardObserver)
 {
   auto subscribeForKeyboardEventsFunction =
-      [=](std::function<void(int keyboardState, int height)> keyboardEventDataUpdater,
+      [=](const std::function<void(int keyboardState, int height)> &keyboardEventDataUpdater,
           bool isStatusBarTranslucent,
           bool isNavigationBarTranslucent) {
         // ignore isStatusBarTranslucent and isNavigationBarTranslucent - those are Android only
@@ -147,6 +150,26 @@ RunCoreAnimationForView makeRunCoreAnimationForView(REANodesManager *nodesManage
   return runCoreAnimationForView;
 }
 
+css::CSSCanRoutePropertyFunction makeCSSCanRouteProperty()
+{
+  return &canRouteCSSProperty;
+}
+
+css::CSSApplyTransitionFunction makeCSSApplyTransition(REACSSPlatformTransitions *platformTransitions)
+{
+  return [platformTransitions](const css::CSSPlatformTransitionPropertyConfig &config) {
+    [platformTransitions applyTransition:config];
+  };
+}
+
+css::CSSRemoveTransitionFunction makeCSSRemoveTransition(REACSSPlatformTransitions *platformTransitions)
+{
+  return [platformTransitions](Tag viewTag, const std::string &propertyName) {
+    [platformTransitions removeTransitionForTag:viewTag
+                                   propertyName:[NSString stringWithUTF8String:propertyName.c_str()]];
+  };
+}
+
 ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager)
 {
   auto forceScreenSnapshot = [=](Tag tag) {
@@ -155,7 +178,7 @@ ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nod
     REAUIView<RCTComponentViewProtocol> *maybeRNSScreenView = [componentViewRegistry findComponentViewWithTag:tag];
     SEL setSnapshotAfterUpdatesSelector = @selector(setSnapshotAfterUpdates:);
     if ([maybeRNSScreenView respondsToSelector:setSnapshotAfterUpdatesSelector]) {
-      [(id<RNScreenViewOptionalProtocol>)maybeRNSScreenView setSnapshotAfterUpdates:YES];
+      [static_cast<id<RNScreenViewOptionalProtocol>>(maybeRNSScreenView) setSnapshotAfterUpdates:YES];
     }
   };
   return forceScreenSnapshot;
@@ -210,6 +233,12 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto attachPseudoSelectorFunction = makeAttachPseudoSelectorFunction(attachQueue);
   auto detachPseudoSelectorFunction = makeDetachPseudoSelectorFunction(attachQueue);
 
+  REACSSPlatformTransitions *platformTransitions =
+      [[REACSSPlatformTransitions alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
+  auto cssCanRouteProperty = makeCSSCanRouteProperty();
+  auto cssApplyTransition = makeCSSApplyTransition(platformTransitions);
+  auto cssRemoveTransition = makeCSSRemoveTransition(platformTransitions);
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       forceScreenSnapshotFunction,
@@ -224,6 +253,9 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       runCoreAnimationForView,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
+      cssCanRouteProperty,
+      cssApplyTransition,
+      cssRemoveTransition,
   };
   return platformDepMethodsHolder;
 }

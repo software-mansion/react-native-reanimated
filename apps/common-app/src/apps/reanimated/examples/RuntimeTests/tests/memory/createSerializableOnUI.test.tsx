@@ -257,30 +257,31 @@ describe('Test createSerializableOnUI', () => {
     expect(setValue.has(true)).toBe(true);
   });
 
-  // test('createSerializableOnUIInitializer', async () => {
-  //   // Arrange
-  //   const regExpValue = runOnUISync(() => {
-  //     'worklet';
-  //     return /a/;
-  //   })();
+  test('createSerializableOnUIRegExp', () => {
+    const regExpValue = runOnUISync(() => {
+      'worklet';
+      return /a/;
+    });
 
-  //   // Act
-  //   await render(
-  //     <ValueComponent
-  //       validationFunction={() => {
-  //         'worklet';
-  //         const checks = [regExpValue instanceof RegExp, regExpValue.test('a')];
-  //         return checks.every(Boolean);
-  //       }}
-  //     />,
-  //   );
-  //   await wait(100);
+    expect(regExpValue instanceof RegExp).toBe(true);
+    expect(regExpValue.source).toBe('a');
+    expect(regExpValue.test('a')).toBe(true);
+    expect(regExpValue.test('b')).toBe(false);
+  });
 
-  //   // Assert
-  //   const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-  //   expect(sharedValue.onUI).toBe('ok');
-  //   expect(sharedValue.onJS).toBe('ok');
-  // });
+  test('createSerializableOnUIRegExp preserves flags', () => {
+    const regExpValue = runOnUISync(() => {
+      'worklet';
+      return /foo.bar/gim;
+    });
+
+    expect(regExpValue instanceof RegExp).toBe(true);
+    expect(regExpValue.source).toBe('foo.bar');
+    expect(regExpValue.global).toBe(true);
+    expect(regExpValue.ignoreCase).toBe(true);
+    expect(regExpValue.multiline).toBe(true);
+    expect(regExpValue.test('FOO-BAR')).toBe(true);
+  });
 
   test('createSerializableOnUIPlainObject', () => {
     // Arrange & Act
@@ -453,7 +454,6 @@ describe('Test createSerializableOnUI', () => {
   // });
 
   test('createSerializableOnUIInaccessibleObject', async () => {
-    // Arrange
     const clazz = runOnUISync(() => {
       'worklet';
       class Clazz {
@@ -463,7 +463,6 @@ describe('Test createSerializableOnUI', () => {
       return new Clazz();
     });
 
-    // Act & Assert
     await expect(() => {
       clazz.method();
     }).toThrow();
@@ -495,12 +494,14 @@ describe('Test createSerializableOnUI', () => {
     }).toThrow();
   });
 
-  test('throws when trying to serialize a Promise', async () => {
-    await expect(() =>
-      runOnUISync(() => {
-        'worklet';
-        return Promise.resolve();
-      })
-    ).toThrow('Promises cannot be converted to serializable.');
-  });
+  if (__DEV__) {
+    test('throws when trying to serialize a Promise', async () => {
+      await expect(() =>
+        runOnUISync(() => {
+          'worklet';
+          return Promise.resolve();
+        })
+      ).toThrow('Cannot copy value of type `Promise`');
+    });
+  }
 });

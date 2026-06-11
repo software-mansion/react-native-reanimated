@@ -79,7 +79,7 @@ describe('runOnRuntimeSync', () => {
       await waitForNotification(PASS_NOTIFICATION);
       expect(value).toBe(42);
     });
-  } else {
+  } else if (__DEV__) {
     test('throws when scheduling on UI Runtime to a Worker Runtime', async () => {
       scheduleOnUI(() => {
         'worklet';

@@ -61,6 +61,7 @@ export let updateLayoutAnimations: (
   rawConfig?: AnimationRawConfig
 ) => void;
 
+// is-tree-shakable-suppress
 if (SHOULD_BE_USE_WEB) {
   updateLayoutAnimations = () => {
     // no-op

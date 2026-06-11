@@ -220,9 +220,51 @@ describe('babel plugin in bundleMode', () => {
         path.dirname(require.resolve('react-native-worklets/package.json')),
         '.worklets'
       );
-      const expected = path.relative(filesDirPath, '/some-library/src/bar');
+      const expected = path
+        .relative(filesDirPath, '/some-library/src/bar')
+        .split(path.sep)
+        .join('/');
       expect(files).toHaveLength(1);
       expect(files[0].content).toContain(`from "${expected}"`);
+    });
+
+    test('rebases relative requires inside the worklet body against the worklets directory', () => {
+      const input = html`<script>
+        function baz() {
+          'worklet';
+          const helper = require('./helper');
+          return helper.foo();
+        }
+      </script>`;
+
+      const fakeFilename = path.relative(__dirname, 'some-library/file.js');
+      const { files } = runPlugin(
+        input,
+        {},
+        { workletizableModules: ['some-library'] },
+        fakeFilename
+      );
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toContain(
+        `require("../../some-library/helper")`
+      );
+      expect(files[0].content).toMatchSnapshot();
+    });
+
+    test('does not rebase relative requires from non-workletizable files', () => {
+      const input = html`<script>
+        function baz() {
+          'worklet';
+          const helper = require('./helper');
+          return helper.foo();
+        }
+      </script>`;
+
+      const fakeFilename = '/not-a-workletizable-package/src/file.ts';
+      const { files } = runPlugin(input, {}, {}, fakeFilename);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toContain(`require('./helper')`);
+      expect(files[0].content).toMatchSnapshot();
     });
   });
 
@@ -329,6 +371,50 @@ describe('babel plugin in bundleMode', () => {
       );
       expect(files).toHaveLength(1);
       expect(code).toContain(REQUIRE_PREFIX);
+    });
+  });
+
+  describe('bail-out on already-generated worklet files', () => {
+    test('does not re-process a file inside the .worklets directory', () => {
+      const generatedFilename = path.join(
+        path.dirname(require.resolve('react-native-worklets/package.json')),
+        '.worklets',
+        '12345.js'
+      );
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var x = 1;
+        }
+      </script>`;
+
+      const { code, files } = runPlugin(input, {}, {}, generatedFilename);
+      expect(files).toHaveLength(0);
+      expect(code).not.toContain(REQUIRE_PREFIX);
+    });
+
+    test('autoworkletization fires before emitting a file', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          scheduleOnUI(() => {
+            return 1;
+          });
+        }
+      </script>`;
+
+      const { files: firstPass } = runPlugin(input);
+      assert(firstPass.length >= 1);
+      const outerFile = firstPass[firstPass.length - 1];
+
+      const { code: rePassedCode } = runPlugin(
+        outerFile.content,
+        {},
+        {},
+        outerFile.path
+      );
+
+      expect(rePassedCode).toContain(REQUIRE_PREFIX);
     });
   });
 });
