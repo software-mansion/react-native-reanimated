@@ -67,7 +67,7 @@ export default function AnimatedTextExample() {
       {/* Animated text is a shared value passed as children */}
       <View style={styles.row}>
         <Text>Before</Text>
-        <Animated.Text style={[styles.tabularNums, styles.color8]}>
+        <Animated.Text style={[styles.tabularNums, styles.color1]}>
           {textSv}
         </Animated.Text>
         <Text>After</Text>
@@ -75,7 +75,7 @@ export default function AnimatedTextExample() {
 
       {/* Mixed children: static text with a shared value */}
       <View style={styles.row}>
-        <Animated.Text style={[styles.tabularNums, styles.color9]}>
+        <Animated.Text style={[styles.tabularNums, styles.color2]}>
           Before{textSv}After
         </Animated.Text>
       </View>
@@ -85,7 +85,7 @@ export default function AnimatedTextExample() {
         <Text>Before</Text>
         <Animated.Text
           animatedProps={stringAnimatedProps}
-          style={[styles.tabularNums, styles.color1]}
+          style={[styles.tabularNums, styles.color3]}
         />
         <Text>After</Text>
       </View>
@@ -95,7 +95,7 @@ export default function AnimatedTextExample() {
         <Text>Before</Text>
         <Animated.Text
           animatedProps={numberAnimatedProps}
-          style={[styles.tabularNums, styles.color2]}
+          style={[styles.tabularNums, styles.color4]}
         />
         <Text>After</Text>
       </View>
@@ -105,7 +105,7 @@ export default function AnimatedTextExample() {
         <Text>Before</Text>
         <Animated.Text
           animatedProps={emptyAnimatedProps}
-          style={[styles.tabularNums, styles.color3]}
+          style={[styles.tabularNums, styles.color5]}
         />
         <Text>After</Text>
       </View>
@@ -115,7 +115,7 @@ export default function AnimatedTextExample() {
         <Text>Before</Text>
         <Animated.Text
           animatedProps={numberAnimatedProps}
-          style={[styles.tabularNums, styles.color4, animatedStyle]}
+          style={[styles.tabularNums, styles.color6, animatedStyle]}
         />
         <Text>After</Text>
       </View>
@@ -126,7 +126,7 @@ export default function AnimatedTextExample() {
           Before
           <Animated.Text
             animatedProps={numberAnimatedProps}
-            style={[styles.tabularNums, styles.color5]}
+            style={[styles.tabularNums, styles.color7]}
           />
           After
         </Text>
@@ -138,7 +138,7 @@ export default function AnimatedTextExample() {
           Before
           <Animated.Text
             animatedProps={numberAnimatedProps}
-            style={[styles.tabularNums, styles.color6]}
+            style={[styles.tabularNums, styles.color8]}
           />
           After
         </Animated.Text>
@@ -150,7 +150,7 @@ export default function AnimatedTextExample() {
           Before
           <Animated.Text
             animatedProps={numberAnimatedProps}
-            style={[styles.tabularNums, styles.color7]}
+            style={[styles.tabularNums, styles.color9]}
           />
           After
         </Animated.Text>
@@ -208,33 +208,33 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   color0: {
-    backgroundColor: 'burlywood',
+    backgroundColor: 'salmon',
   },
   color1: {
-    backgroundColor: 'pink',
+    backgroundColor: 'coral',
   },
   color2: {
-    backgroundColor: 'peachpuff',
+    backgroundColor: 'sandybrown',
   },
   color3: {
     backgroundColor: 'khaki',
   },
   color4: {
-    backgroundColor: 'palegreen',
+    backgroundColor: 'lightgreen',
   },
   color5: {
-    backgroundColor: 'lightskyblue',
+    backgroundColor: 'turquoise',
   },
   color6: {
-    backgroundColor: 'lightsteelblue',
+    backgroundColor: 'lightskyblue',
   },
   color7: {
-    backgroundColor: 'thistle',
+    backgroundColor: 'cornflowerblue',
   },
   color8: {
-    backgroundColor: 'lightsalmon',
+    backgroundColor: 'violet',
   },
   color9: {
-    backgroundColor: 'paleturquoise',
+    backgroundColor: 'lightpink',
   },
 });
