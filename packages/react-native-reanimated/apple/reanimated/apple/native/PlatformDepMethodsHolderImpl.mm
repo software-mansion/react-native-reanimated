@@ -134,7 +134,8 @@ RunCoreAnimationForView makeRunCoreAnimationForView(REANodesManager *nodesManage
                                      std::function<void(bool)> completion) {
     //                                     const std::string &animationKey) {
     // Create an Objective-C block that will retain the completion handler // TODO: There is probably a better way?
-    void (^completionBlock)(bool) = ^(bool finished) { completion(finished); };
+    auto retainedCompletion = std::move(completion);
+    void (^completionBlock)(bool) = ^(bool finished) { retainedCompletion(finished); };
 
     [nodesManager runCoreAnimationForView:viewTag
                              initialFrame:initialFrame
