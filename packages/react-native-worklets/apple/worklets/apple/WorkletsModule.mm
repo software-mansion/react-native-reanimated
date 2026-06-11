@@ -41,12 +41,6 @@ using namespace worklets;
   return workletsModuleProxy_;
 }
 
-- (void)checkBridgeless
-{
-  auto isBridgeless = ![self.bridge isKindOfClass:[RCTCxxBridge class]];
-  react_native_assert(isBridgeless && "[Worklets] react-native-worklets only supports bridgeless mode");
-}
-
 @synthesize bundleManager = bundleManager_;
 @synthesize callInvoker = callInvoker_;
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
@@ -58,7 +52,6 @@ RCT_EXPORT_MODULE(WorkletsModule);
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnabled)
 {
   react_native_assert(self.bridge != nullptr);
-  [self checkBridgeless];
   react_native_assert(self.bridge.runtime != nullptr);
 
   AssertJavaScriptQueue();
@@ -127,7 +120,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
     (const facebook::react::ObjCTurboModule::InitParams &)params
 {
-  [self checkBridgeless];
   AssertJavaScriptQueue();
   return std::make_shared<facebook::react::NativeWorkletsModuleSpecJSI>(params);
 }

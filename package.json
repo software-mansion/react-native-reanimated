@@ -20,7 +20,7 @@
   },
   "private": true,
   "scripts": {
-    "build": "husky && yarn build-packages",
+    "build": "husky && yarn prepare-vscode && yarn build-packages",
     "build-all": "husky && yarn workspaces foreach --all --parallel --topological-dev run build",
     "build-apps": "yarn workspaces foreach --all --parallel --topological-dev --include '{common-app,*-example}' run build",
     "build-docs": "yarn workspaces foreach --all --parallel --topological-dev --include 'docs-*' run build",
@@ -32,6 +32,7 @@
     "lint": "yarn lint:root && yarn lint:workspaces",
     "lint:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run lint",
     "lint:root": "eslint . --ignore-pattern 'packages/**' --ignore-pattern 'apps/**' --ignore-pattern 'docs/**' && yarn run --top-level oxfmt --check --ignore-path .prettiereslintignore .",
+    "prepare-vscode": "bash ./scripts/prepare-vscode.sh",
     "toggle-bundle-mode": "bash ./scripts/toggle-bundle-mode.sh"
   },
   "devDependencies": {
@@ -75,12 +76,17 @@
     "oxfmt": "0.45.0",
     "react": "19.2.3",
     "react-native": "0.85.2",
-    "react-native-builder-bob": "0.40.13",
+    "react-native-builder-bob": "0.41.0",
     "remark-cli": "12.0.1",
     "remark-frontmatter": "5.0.0",
     "remark-gfm": "4.0.1",
     "remark-mdx": "3.1.0",
     "shelljs": "0.10.0",
+    "tstyche": "7.2.1",
     "typescript": "5.9.3"
+  },
+  "resolutions": {
+    "metro": "patch:metro@npm%3A0.84.4#~/.yarn/patches/metro-npm-0.84.4-68d21d57b4.patch",
+    "metro-runtime": "patch:metro-runtime@npm%3A0.84.4#~/.yarn/patches/metro-runtime-npm-0.84.4-9533293c73.patch"
   }
 }

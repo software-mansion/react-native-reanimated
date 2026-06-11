@@ -1,10 +1,7 @@
 'use strict';
 
 import { getStaticFeatureFlag } from './featureFlags/featureFlags';
-import {
-  addGuardImplementation,
-  addNoBundleModeGuardImplementation,
-} from './guardImplementation';
+import { addNoBundleModeGuardImplementation } from './guardImplementation';
 import {
   getMemorySafeCapturableConsole,
   setupConsole,
@@ -16,9 +13,9 @@ import {
   makeShareableCloneOnUIRecursive,
 } from './memory/serializable';
 import { serializableMappingCache } from './memory/serializableMappingCache';
+import type { SerializableRef } from './memory/types';
 import { setupRunLoop } from './runLoop/workletRuntime';
 import { RuntimeKind } from './runtimeKind';
-import { scheduleOnRN } from './threads';
 import type {
   WorkletFunction,
   WorkletRuntime,
@@ -80,8 +77,7 @@ export function createWorkletRuntime(
 
   let name: string;
   let initializerFn: (() => void) | undefined;
-  let useDefaultQueue = true;
-  let customQueue: object | undefined;
+  let queue: 'default' | object | null = 'default';
   let animationQueuePollingRate: number;
   let enableEventLoop = true;
   if (typeof nameOrConfig === 'string') {
@@ -91,13 +87,20 @@ export function createWorkletRuntime(
     // TODO: Make anonymous name globally unique.
     name = nameOrConfig?.name ?? 'anonymous';
     initializerFn = nameOrConfig?.initializer;
-    useDefaultQueue = nameOrConfig?.useDefaultQueue ?? true;
-    customQueue = nameOrConfig?.customQueue;
+    if (nameOrConfig?.queue !== undefined) {
+      queue = nameOrConfig.queue;
+    } else if (nameOrConfig?.useDefaultQueue === false) {
+      queue = nameOrConfig.customQueue ?? null;
+    }
     animationQueuePollingRate = Math.round(
       nameOrConfig?.animationQueuePollingRate ?? 16
     );
     enableEventLoop = nameOrConfig?.enableEventLoop ?? true;
   }
+
+  const useDefaultQueue = queue === 'default';
+  const customQueue =
+    typeof queue === 'object' && queue !== null ? queue : undefined;
 
   if (initializerFn && !isWorkletFunction(initializerFn)) {
     throw new Error(
@@ -413,8 +416,6 @@ export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
  * @param worklet - The worklet to run.
  * @param args - The arguments to pass to the worklet.
  * @returns A Promise that resolves to the return value of the worklet.
- * @throws If called from a runtime other than the [RN
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
  * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRuntimeAsync
  */
 // @ts-expect-error This overload is correct since it's what user sees in their code
@@ -431,11 +432,6 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
   ...args: Args
 ): Promise<ReturnValue> {
   if (__DEV__) {
-    if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
-      throw new Error(
-        '[Worklets] `runOnRuntimeAsync` can only be called on the RN Runtime.'
-      );
-    }
     if (!isWorkletFunction(worklet)) {
       throw new Error(
         '[Worklets] The function passed to `runOnRuntimeAsync` is not a worklet.'
@@ -443,19 +439,15 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
     }
   }
 
-  const scheduleStack = SHOULD_CAPTURE_SCHEDULE_STACK
-    ? new Error().stack
-    : undefined;
   return new Promise<ReturnValue>((resolve, reject) => {
     if (__DEV__) {
-      // in DEV mode we call serializable conversion here because in case the object
-      // can't be converted, we will get a meaningful stack-trace as opposed to the
-      // situation when conversion is only done via microtask queue. This does not
-      // make the app particularily less efficient as converted objects are cached
-      // and for a given worklet the conversion only happens once.
       createSerializable(worklet);
       createSerializable(args);
     }
+
+    const scheduleStack = SHOULD_CAPTURE_SCHEDULE_STACK
+      ? new Error().stack
+      : undefined;
 
     WorkletsModule.scheduleOnRuntime(
       workletRuntime,
@@ -463,9 +455,94 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
         'worklet';
         try {
           const result = worklet(...args);
-          scheduleOnRN(resolve, result);
+          const serializedResult = globalThis.__serializer(
+            result
+          ) as SerializableRef<ReturnValue>;
+          globalThis.__workletsModuleProxy.handlePromise(
+            resolve,
+            serializedResult
+          );
         } catch (error) {
-          scheduleOnRN(reject, error);
+          const serializedError = globalThis.__serializer(error);
+          globalThis.__workletsModuleProxy.handlePromise(
+            reject,
+            serializedError
+          );
+        }
+        globalThis.__callMicrotasks?.();
+      }),
+      scheduleStack
+    );
+  });
+}
+
+/**
+ * Lets you asynchronously run a
+ * [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)
+ * on a [Worker
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime)
+ * identified by the runtime's id.
+ *
+ * Check
+ * {@link https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds}
+ * for more information about the different runtime kinds.
+ *
+ * - The worklet is scheduled on the Worker Runtime's [Async
+ *   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
+ *
+ * @param runtimeId - The id of the runtime to schedule the worklet on.
+ * @param worklet - The worklet to schedule.
+ * @param args - The arguments to pass to the worklet.
+ * @returns The return value of the worklet.
+ */
+// @ts-expect-error This overload is correct since it's what user sees in their code
+// before it's transformed by Worklets Babel plugin.
+export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): Promise<ReturnValue>;
+
+export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: WorkletFunction<Args, ReturnValue>,
+  ...args: Args
+): Promise<ReturnValue> {
+  if (__DEV__ && !isWorkletFunction(worklet)) {
+    throw new Error(
+      '[Worklets] The function passed to `runOnRuntimeAsyncWithId` is not a worklet.'
+    );
+  }
+
+  return new Promise<ReturnValue>((resolve, reject) => {
+    if (__DEV__) {
+      createSerializable(worklet);
+      createSerializable(args);
+    }
+
+    const scheduleStack = SHOULD_CAPTURE_SCHEDULE_STACK
+      ? new Error().stack
+      : undefined;
+
+    WorkletsModule.scheduleOnRuntimeWithId(
+      runtimeId,
+      createSerializable(() => {
+        'worklet';
+        try {
+          const result = worklet(...args);
+          const serializedResult = globalThis.__serializer(
+            result
+          ) as SerializableRef<ReturnValue>;
+          globalThis.__workletsModuleProxy.handlePromise(
+            resolve,
+            serializedResult
+          );
+        } catch (error) {
+          const serializedError = globalThis.__serializer(error);
+          globalThis.__workletsModuleProxy.handlePromise(
+            reject,
+            serializedError
+          );
         }
         globalThis.__callMicrotasks?.();
       }),
@@ -479,10 +556,8 @@ if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
    * QoL guards to give a meaningful error message when the user tries to call
    * these functions on Worklet Runtimes outside of the Bundle Mode.
    */
-  addGuardImplementation(
-    runOnRuntimeAsync,
-    '`runOnRuntimeAsync` can only be called on the RN Runtime.'
-  );
+  addNoBundleModeGuardImplementation(runOnRuntimeAsync);
+  addNoBundleModeGuardImplementation(runOnRuntimeAsyncWithId);
   addNoBundleModeGuardImplementation(runOnRuntimeSync);
   addNoBundleModeGuardImplementation(runOnRuntimeSyncWithId);
 }

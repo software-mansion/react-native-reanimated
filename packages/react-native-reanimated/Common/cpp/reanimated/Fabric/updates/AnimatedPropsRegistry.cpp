@@ -1,5 +1,9 @@
+#include <cxxreact/ReactNativeVersion.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
+#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/Tools/FeatureFlags.h>
+
+#include <react/debug/react_native_assert.h>
 
 #include <memory>
 #include <utility>
@@ -13,42 +17,49 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
 }
 
 void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operations, const double timestamp) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   auto operationsArray = operations.asObject(rt).asArray(rt);
 
-  std::lock_guard<std::mutex> lock{mutex_};
   for (size_t i = 0, length = operationsArray.size(rt); i < length; ++i) {
     auto item = operationsArray.getValueAtIndex(rt, i).asObject(rt);
     auto shadowNodeWrapper = item.getProperty(rt, "shadowNodeWrapper");
     auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
-    const jsi::Value &updates = item.getProperty(rt, "updates");
-    auto props = jsi::dynamicFromValue(rt, updates);
+    jsi::Value updates = item.getProperty(rt, "updates");
 
-    if (!strcmp(shadowNode->getComponentName(), "Paragraph") || !strcmp(shadowNode->getComponentName(), "Text")) {
-      bool hasTextProp = false;
-      for (const auto &[key, value] : props.items()) {
-        if (key == "text") {
-          hasTextProp = true;
-          // Pass the text prop to child component
-          const auto &children = shadowNode->getChildren();
-          react_native_assert(children.size() > 0);
-          const auto &childShadowNode = children[0];
-          react_native_assert(!strcmp(childShadowNode->getComponentName(), "RawText"));
-          addUpdatesToBatch(childShadowNode->getFamilyShared(), folly::dynamic::object("text", value.asString()));
-          if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
-            timestampMap_[childShadowNode->getTag()] = timestamp;
+    if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+#if REACT_NATIVE_VERSION_MINOR >= 85
+      addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updates);
+#endif
+    } else {
+      auto props = jsi::dynamicFromValue(rt, updates);
+
+      if (!strcmp(shadowNode->getComponentName(), "Paragraph") || !strcmp(shadowNode->getComponentName(), "Text")) {
+        bool hasTextProp = false;
+        for (const auto &[key, value] : props.items()) {
+          if (key == "text") {
+            hasTextProp = true;
+            // Pass the text prop to child component
+            const auto &children = shadowNode->getChildren();
+            react_native_assert(children.size() > 0);
+            const auto &childShadowNode = children[0];
+            react_native_assert(!strcmp(childShadowNode->getComponentName(), "RawText"));
+            addUpdatesToBatch(childShadowNode->getFamilyShared(), folly::dynamic::object("text", value.asString()));
+            if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
+              timestampMap_[childShadowNode->getTag()] = timestamp;
+            }
+            break;
           }
-          break;
         }
+        if (hasTextProp && props.size() == 1) {
+          // Skip adding empty batch for the parent component
+          continue;
+        }
+        props.erase("text");
       }
-      if (hasTextProp && props.size() == 1) {
-        // Skip adding empty batch for the parent component
-        continue;
-      }
-      props.erase("text");
-    }
 
-    addUpdatesToBatch(shadowNode->getFamilyShared(), props);
+      addUpdatesToBatch(shadowNode->getFamilyShared(), props);
+    }
 
     if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
       timestampMap_[shadowNode->getTag()] = timestamp;
@@ -60,7 +71,7 @@ jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(
     jsi::Runtime &rt,
     const double timestamp,
     const double cleanupTimestamp) {
-  std::lock_guard<std::mutex> lock{mutex_};
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   removeUpdatesOlderThanTimestamp(cleanupTimestamp);
 
   std::vector<std::pair<Tag, std::reference_wrapper<const folly::dynamic>>> updates;

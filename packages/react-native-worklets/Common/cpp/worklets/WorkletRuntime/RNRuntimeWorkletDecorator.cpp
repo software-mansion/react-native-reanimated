@@ -2,7 +2,6 @@
 #include <worklets/Tools/WorkletsVersion.h>
 #include <worklets/WorkletRuntime/HermesProfiling.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
-#include <worklets/WorkletRuntime/RuntimeKind.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 
 #include <memory>
@@ -15,7 +14,13 @@ void RNRuntimeWorkletDecorator::decorate(
     jsi::Runtime &rnRuntime,
     jsi::Object &&jsiWorkletsModuleProxy,
     const std::shared_ptr<JSLogger> &jsLogger) {
-  rnRuntime.global().setProperty(rnRuntime, runtimeKindBindingName, static_cast<int>(RuntimeKind::ReactNative));
+  rnRuntime.global().setProperty(
+      rnRuntime, RuntimeData::runtimeKindBindingName, static_cast<int>(RuntimeData::RuntimeKind::ReactNative));
+
+  rnRuntime.global().setProperty(
+      rnRuntime,
+      RuntimeData::runtimeNameBindingName,
+      jsi::String::createFromUtf8(rnRuntime, RuntimeData::rnRuntimeName));
 
   rnRuntime.global().setProperty(rnRuntime, "_WORKLET", false);
 

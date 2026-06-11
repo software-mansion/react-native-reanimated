@@ -1,4 +1,5 @@
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
+#import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/REASlowAnimations.h>
@@ -6,6 +7,7 @@
 #import <reanimated/apple/RNGestureHandlerStateManager.h>
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 #import <reanimated/apple/native/SetGestureState.h>
+#import <reanimated/apple/pseudoSelectors/REAPseudoSelectorAttachQueue.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 
 #import <React/RCTComponentViewProtocol.h>
@@ -36,7 +38,7 @@ SetGestureStateFunction makeSetGestureStateFunction(RCTModuleRegistry *moduleReg
 
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
 {
-  auto requestRender = [nodesManager](std::function<void(double)> onRender) {
+  auto requestRender = [nodesManager](const std::function<void(double)> &onRender) {
     [nodesManager postOnAnimation:^(READisplayLink *displayLink) {
 #if !TARGET_OS_OSX
       auto targetTimestamp = displayLink.targetTimestamp;
@@ -78,8 +80,10 @@ MaybeFlushUIUpdatesQueueFunction makeMaybeFlushUIUpdatesQueueFunction(REANodesMa
 
 RegisterSensorFunction makeRegisterSensorFunction(ReanimatedSensorContainer *reanimatedSensorContainer)
 {
-  auto registerSensorFunction =
-      [=](int sensorType, int interval, int iosReferenceFrame, std::function<void(double[], int)> setter) -> int {
+  auto registerSensorFunction = [=](int sensorType,
+                                    int interval,
+                                    int iosReferenceFrame,
+                                    const std::function<void(double[], int)> &setter) -> int {
     return [reanimatedSensorContainer
            registerSensor:(ReanimatedSensorType)sensorType
                  interval:interval
@@ -100,7 +104,7 @@ UnregisterSensorFunction makeUnregisterSensorFunction(ReanimatedSensorContainer 
 KeyboardEventSubscribeFunction makeSubscribeForKeyboardEventsFunction(REAKeyboardEventObserver *keyboardObserver)
 {
   auto subscribeForKeyboardEventsFunction =
-      [=](std::function<void(int keyboardState, int height)> keyboardEventDataUpdater,
+      [=](const std::function<void(int keyboardState, int height)> &keyboardEventDataUpdater,
           bool isStatusBarTranslucent,
           bool isNavigationBarTranslucent) {
         // ignore isStatusBarTranslucent and isNavigationBarTranslucent - those are Android only
@@ -119,6 +123,26 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
   return unsubscribeFromKeyboardEventsFunction;
 }
 
+css::CSSCanRoutePropertyFunction makeCSSCanRouteProperty()
+{
+  return &canRouteCSSProperty;
+}
+
+css::CSSApplyTransitionFunction makeCSSApplyTransition(REACSSPlatformTransitions *platformTransitions)
+{
+  return [platformTransitions](const css::CSSPlatformTransitionPropertyConfig &config) {
+    [platformTransitions applyTransition:config];
+  };
+}
+
+css::CSSRemoveTransitionFunction makeCSSRemoveTransition(REACSSPlatformTransitions *platformTransitions)
+{
+  return [platformTransitions](Tag viewTag, const std::string &propertyName) {
+    [platformTransitions removeTransitionForTag:viewTag
+                                   propertyName:[NSString stringWithUTF8String:propertyName.c_str()]];
+  };
+}
+
 ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager)
 {
   auto forceScreenSnapshot = [=](Tag tag) {
@@ -127,10 +151,26 @@ ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nod
     REAUIView<RCTComponentViewProtocol> *maybeRNSScreenView = [componentViewRegistry findComponentViewWithTag:tag];
     SEL setSnapshotAfterUpdatesSelector = @selector(setSnapshotAfterUpdates:);
     if ([maybeRNSScreenView respondsToSelector:setSnapshotAfterUpdatesSelector]) {
-      [(id<RNScreenViewOptionalProtocol>)maybeRNSScreenView setSnapshotAfterUpdates:YES];
+      [static_cast<id<RNScreenViewOptionalProtocol>>(maybeRNSScreenView) setSnapshotAfterUpdates:YES];
     }
   };
   return forceScreenSnapshot;
+}
+
+PlatformAttachPseudoSelectorFunction makeAttachPseudoSelectorFunction(REAPseudoSelectorAttachQueue *attachQueue)
+{
+  return [attachQueue](Tag tag, PseudoSelector selector, std::function<void(bool)> callback) {
+    auto sharedCallback = std::make_shared<std::function<void(bool)>>(std::move(callback));
+    dispatch_async(
+        dispatch_get_main_queue(), ^{ [attachQueue attachTag:tag selector:selector sharedCallback:sharedCallback]; });
+  };
+}
+
+PlatformDetachPseudoSelectorFunction makeDetachPseudoSelectorFunction(REAPseudoSelectorAttachQueue *attachQueue)
+{
+  return [attachQueue](Tag tag, PseudoSelector selector) {
+    dispatch_async(dispatch_get_main_queue(), ^{ [attachQueue detachTag:tag selector:selector]; });
+  };
 }
 
 PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleRegistry, REANodesManager *nodesManager)
@@ -159,6 +199,17 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   auto maybeFlushUIUpdatesQueueFunction = makeMaybeFlushUIUpdatesQueueFunction(nodesManager);
 
+  REAPseudoSelectorAttachQueue *attachQueue =
+      [[REAPseudoSelectorAttachQueue alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
+  auto attachPseudoSelectorFunction = makeAttachPseudoSelectorFunction(attachQueue);
+  auto detachPseudoSelectorFunction = makeDetachPseudoSelectorFunction(attachQueue);
+
+  REACSSPlatformTransitions *platformTransitions =
+      [[REACSSPlatformTransitions alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
+  auto cssCanRouteProperty = makeCSSCanRouteProperty();
+  auto cssApplyTransition = makeCSSApplyTransition(platformTransitions);
+  auto cssRemoveTransition = makeCSSRemoveTransition(platformTransitions);
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       forceScreenSnapshotFunction,
@@ -170,6 +221,11 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUIUpdatesQueueFunction,
+      attachPseudoSelectorFunction,
+      detachPseudoSelectorFunction,
+      cssCanRouteProperty,
+      cssApplyTransition,
+      cssRemoveTransition,
   };
   return platformDepMethodsHolder;
 }

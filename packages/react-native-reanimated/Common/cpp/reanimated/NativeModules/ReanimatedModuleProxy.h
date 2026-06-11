@@ -1,12 +1,13 @@
 #pragma once
 
 #include <ReactCommon/CallInvoker.h>
+#include <cxxreact/ReactNativeVersion.h>
 #include <react/renderer/componentregistry/componentNameByReactViewName.h>
 #include <react/renderer/core/ShadowNode.h>
 #include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
-#include <reanimated/CSS/core/CSSTransition.h>
+#include <reanimated/CSS/core/transition/CSSTransition.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
@@ -24,10 +25,18 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
+#include <reanimated/PseudoStyles/PseudoStylesRegistry.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/SingleInstanceChecker.h>
 
+#if REACT_NATIVE_VERSION_MINOR >= 85
+#include <react/renderer/animationbackend/AnimationBackend.h>
+#include <react/renderer/uimanager/UIManagerAnimationBackend.h>
+#endif
+
 #include <atomic>
+#include <cstdint>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <set>
@@ -40,6 +49,18 @@ namespace reanimated {
 using namespace facebook;
 using namespace facebook::react;
 using namespace css;
+
+enum class GrandCallbackSource : std::uint8_t {
+  // Used when a new vsync signal is triggered
+  AnimationLoop,
+
+  // Used when handling an event (excluding the draw pass)
+  Event,
+
+  // Used when handling an event originating from the Android draw pass,
+  // the info is used to avoid performing Tree Hierarchy updates when this could break the app
+  EventInAndroidDraw,
+};
 
 class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModuleProxy> {
  public:
@@ -80,8 +101,6 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   jsi::Value configureLayoutAnimationBatch(jsi::Runtime &rt, const jsi::Value &layoutAnimationsBatch);
   void setShouldAnimateExiting(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &shouldAnimate);
 
-  void onRender(double timestampMs);
-
   bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
 
   bool
@@ -91,6 +110,16 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   void performOperations();
   void performNonLayoutOperations();
+  void executeLayoutAnimationsRequests();
+
+  bool handleEventAndFlush(
+      const std::string &eventName,
+      int emitterReactTag,
+      const jsi::Value &payload,
+      GrandCallbackSource source);
+
+  void startBackendIfNeeded();
+  void stopBackendIfIdle(bool producedMutations);
 
   void setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle);
 
@@ -114,6 +143,9 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   void runCSSTransition(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &transitionConfig);
   void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag);
+
+  void registerPseudoStyle(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &config);
+  void unregisterPseudoStyle(jsi::Runtime &rt, const jsi::Value &viewTag);
 
   jsi::Value getSettledUpdates(jsi::Runtime &rt);
 
@@ -166,37 +198,66 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void requestFlushRegistry();
   std::function<std::string()> createRegistriesLeakCheck();
 
- private:
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
-  void applySynchronousUpdates(UpdatesBatch &updatesBatch, bool allowPartialUpdates = false);
+  void applySynchronousUpdates(UpdatesBatch &updatesBatch, bool allowPartialUpdates);
+
+#if REACT_NATIVE_VERSION_MINOR >= 85
+  std::shared_ptr<UIManagerAnimationBackend> getAnimationBackend();
+  AnimationMutations runGrandCallback(AnimationTimestamp timestamp, GrandCallbackSource source);
+  void executeOperationsLoop(AnimationTimestamp timestamp);
+  void executeWorkletsForFrame(AnimationTimestamp timestamp);
+  AnimationMutations executeOperationsAndCollectUpdates(AnimationTimestamp timestamp);
+  AnimationMutations collectEventUpdates();
+  AnimationMutations collectNonLayoutAnimationUpdates();
+  AnimationMutations mutationsFromAnimatedPropsBatch(UpdatesBatchAnimatedProps &&animatedPropsBatch);
+#endif
 
   const bool isReducedMotion_;
-  bool shouldFlushRegistry_ = false;
+  std::atomic<bool> shouldFlushRegistry_{false};
   std::shared_ptr<worklets::WorkletRuntime> uiRuntime_;
   std::shared_ptr<worklets::UIScheduler> uiScheduler_;
   std::shared_ptr<CallInvoker> jsInvoker_;
 
   std::unique_ptr<UIEventHandlerRegistry> eventHandlerRegistry_;
-  const RequestRenderFunction requestRender_;
-  std::function<void(const double)> onRenderCallback_;
+  RequestRenderFunction requestRender_;
+  bool isAnimationRunning_{false};
+
+#if REACT_NATIVE_VERSION_MINOR >= 85
+  CallbackId animationBackendCallbackId_{0};
+#endif
+
+  // Callbacks queued by OperationsLoop via the requestRender_ override when
+  // USE_ANIMATION_BACKEND is on. They are drained at the start of each
+  // runGrandCallback(AnimationLoop) tick, so the backend plays the role of the
+  // platform frame source for the loop.
+  std::vector<std::function<void(double)>> pendingFrameCallbacks_;
   AnimatedSensorModule animatedSensorModule_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
+  std::function<void(double)> pendingAnimationFrameCallbackFromWorklets_;
+
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
 #endif
-  std::shared_ptr<OperationsLoop> operationsLoop_;
-
-  const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
+  const std::shared_ptr<OperationsLoop> operationsLoop_;
+  const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
   const std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
   const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
+  const std::shared_ptr<PseudoStylesRegistry> pseudoStylesRegistry_;
 
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
   const PreserveMountedTagsFunction filterUnmountedTagsFunction_;
+
+#ifdef ANDROID
+  // Reused across `applySynchronousUpdates` calls to avoid per-frame heap
+  // allocations. Access only on the UI thread.
+  std::vector<int> synchronousPropsIntBuffer_;
+  std::vector<double> synchronousPropsDoubleBuffer_;
+#endif // ANDROID
 
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<LayoutAnimationsProxyCommon> layoutAnimationsProxy_;
@@ -204,8 +265,6 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   std::shared_ptr<ReanimatedMountHook> mountHook_;
   /// Access only on UI thread.
   std::set<SurfaceId> layoutAnimationFlushRequests_;
-  /// Access only on UI thread.
-  bool layoutAnimationRenderRequested_;
 
   const KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction_;
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;

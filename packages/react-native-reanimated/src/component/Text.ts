@@ -34,6 +34,7 @@ type AnimatedTextProps =
       animatedProps?: AddArrayPropertyType<BaseAnimatedProps>;
     });
 
+// is-tree-shakable-suppress
 export const AnimatedText = createAnimatedComponent(Text) as (
   props: AnimatedTextProps & {
     ref?: AnimatedComponentRef<typeof Text>;

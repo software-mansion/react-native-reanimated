@@ -1,11 +1,11 @@
 'use strict';
-import type { PlainStyle } from '../../../common';
+import type { DefaultStyle } from '../../../hook/commonTypes';
 import { CSSKeyframesRuleBase } from '../../models';
 import type { CSSAnimationKeyframes } from '../../types';
 import { processKeyframeDefinitions } from '../animationParser';
 
 export default class CSSKeyframesRuleImpl<
-  S extends PlainStyle = PlainStyle,
+  S extends object = DefaultStyle,
 > extends CSSKeyframesRuleBase<S> {
   private processedKeyframes_: string;
 

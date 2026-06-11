@@ -1,12 +1,16 @@
+#include <jsi/JSIDynamic.h>
 #include <react/fabric/Binding.h>
+#include <react/jni/WritableNativeMap.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
+#include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/ReanimatedVersion.h>
 #include <reanimated/android/AnimationFrameCallback.h>
 #include <reanimated/android/EventHandler.h>
 #include <reanimated/android/KeyboardWorkletWrapper.h>
 #include <reanimated/android/NativeProxy.h>
+#include <reanimated/android/PseudoSelectorCallback.h>
 #include <reanimated/android/SensorSetter.h>
 
 #include <memory>
@@ -124,7 +128,12 @@ bool NativeProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, cons
 }
 
 void NativeProxy::performOperations() {
-  reanimatedModuleProxy_->performOperations();
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    // We don't use performOperations in the backend path,
+    // but we don't have access to the feature flags in Kotlin, so we gate it here
+  } else {
+    reanimatedModuleProxy_->performOperations();
+  }
 }
 
 void NativeProxy::performNonLayoutOperations() {
@@ -233,6 +242,20 @@ void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
   method(javaPart_.get(), listenerId);
 }
 
+void NativeProxy::attachPseudoSelector(Tag tag, PseudoSelector selector, std::function<void(bool)> callback) {
+  static const auto method = getJniMethod<void(int, int, PseudoSelectorCallback::javaobject)>("attachPseudoSelector");
+  method(
+      javaPart_.get(),
+      static_cast<int>(tag),
+      static_cast<int>(selector),
+      PseudoSelectorCallback::newObjectCxxArgs(std::move(callback)).get());
+}
+
+void NativeProxy::detachPseudoSelector(Tag tag, PseudoSelector selector) {
+  static const auto method = getJniMethod<void(int, int)>("detachPseudoSelector");
+  method(javaPart_.get(), static_cast<int>(tag), static_cast<int>(selector));
+}
+
 double NativeProxy::getAnimationTimestamp() {
   static const auto method = getJniMethod<jlong()>("getAnimationTimestamp");
   jlong output = method(javaPart_.get());
@@ -242,38 +265,36 @@ double NativeProxy::getAnimationTimestamp() {
 void NativeProxy::handleEvent(
     jni::alias_ref<JString> eventName,
     jint emitterReactTag,
-    jni::alias_ref<react::WritableMap> event) {
+    jni::alias_ref<react::WritableMap> event,
+    jboolean isInDrawPass) {
   // handles RCTEvents from RNGestureHandler
   if (event.get() == nullptr) {
     // Ignore events with null payload.
     return;
   }
-  // TODO: convert event directly to jsi::Value without JSON serialization
-  std::string eventAsString;
-  try {
-    eventAsString = event->toString();
-  } catch (...) {
-    // Events from other libraries may contain NaN or INF values which
-    // cannot be represented in JSON. See
-    // https://github.com/software-mansion/react-native-reanimated/issues/1776
-    // for details.
+
+  if (!event->isInstanceOf(react::WritableNativeMap::javaClassStatic())) {
     return;
   }
-  std::string eventJSON = eventAsString;
-  if (eventJSON == "null") {
+
+  auto nativeMap = jni::static_ref_cast<react::WritableNativeMap::javaobject>(jni::static_ref_cast<jobject>(event));
+  auto eventPayload = nativeMap->cthis()->consume();
+  if (eventPayload.isNull()) {
     return;
   }
 
   auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
-  jsi::Value payload;
-  try {
-    payload = jsi::Value::createFromJsonUtf8(uiRuntime, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
-  } catch (std::exception &) {
-    // Ignore events with malformed JSON payload.
-    return;
-  }
+  jsi::Value payload = jsi::valueFromDynamic(uiRuntime, eventPayload);
 
-  reanimatedModuleProxy_->handleEvent(eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    reanimatedModuleProxy_->handleEventAndFlush(
+        eventName->toString(),
+        emitterReactTag,
+        payload,
+        isInDrawPass ? GrandCallbackSource::EventInAndroidDraw : GrandCallbackSource::Event);
+  } else {
+    reanimatedModuleProxy_->handleEvent(eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
+  }
 }
 
 PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
@@ -297,6 +318,10 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto maybeFlushUiUpdatesQueueFunction = bindThis(&NativeProxy::maybeFlushUIUpdatesQueue);
 
+  auto attachPseudoSelectorFunction = bindThis(&NativeProxy::attachPseudoSelector);
+
+  auto detachPseudoSelectorFunction = bindThis(&NativeProxy::detachPseudoSelector);
+
   return {
       requestRender,
       preserveMountedTags,
@@ -308,6 +333,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUiUpdatesQueueFunction,
+      attachPseudoSelectorFunction,
+      detachPseudoSelectorFunction,
   };
 }
 

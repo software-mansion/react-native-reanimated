@@ -5,6 +5,7 @@ import {
   Children,
   cloneElement,
   memo,
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -12,7 +13,6 @@ import {
 import { Dimensions, StyleSheet, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
-  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -101,13 +101,13 @@ const TabView: TabViewComponent = ({ children }: TabViewProps) => {
   const previousSelectedTabIndex = useSharedValue(0);
   const selectedTabIndex = useSharedValue(0);
 
-  useAnimatedReaction(
-    () => selectedTabName,
-    (name) => {
-      const index = tabNames.indexOf(name);
+  const handleSelectTab = useCallback(
+    (name: string) => {
       previousSelectedTabIndex.value = selectedTabIndex.value;
-      selectedTabIndex.value = index;
-    }
+      selectedTabIndex.value = tabNames.indexOf(name);
+      setSelectedTabName(name);
+    },
+    [tabNames, previousSelectedTabIndex, selectedTabIndex]
   );
 
   useEffect(() => {
@@ -125,7 +125,7 @@ const TabView: TabViewComponent = ({ children }: TabViewProps) => {
         <TabSelector
           selectedTab={selectedTabName}
           tabs={tabNames}
-          onSelectTab={setSelectedTabName}
+          onSelectTab={handleSelectTab}
         />
       </View>
       <View style={flex.fill}>

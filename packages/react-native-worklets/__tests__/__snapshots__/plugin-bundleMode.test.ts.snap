@@ -66,6 +66,19 @@ exports[`babel plugin in bundleMode worklet file emission does not emit stack-tr
 });"
 `;
 
+exports[`babel plugin in bundleMode worklet file emission does not rebase relative requires from non-workletizable files 1`] = `
+"export default (function baz_fileTs1Factory({}) {
+  const baz = function () {
+    const helper = require('./helper');
+    return helper.foo();
+  };
+  baz.__closure = {};
+  baz.__workletHash = 13883068246308;
+  baz.__pluginVersion = "x.y.z";
+  return baz;
+});"
+`;
+
 exports[`babel plugin in bundleMode worklet file emission forwards closure variables from source to factory 1`] = `
 "const a = 1;
 const b = 2;
@@ -111,6 +124,19 @@ export default (function bar_testJs1Factory({}) {
 });"
 `;
 
+exports[`babel plugin in bundleMode worklet file emission rebases relative requires inside the worklet body against the worklets directory 1`] = `
+"export default (function baz_fileJs1Factory({}) {
+  const baz = function () {
+    const helper = require("../../some-library/helper");
+    return helper.foo();
+  };
+  baz.__closure = {};
+  baz.__workletHash = 2953408498938;
+  baz.__pluginVersion = "x.y.z";
+  return baz;
+});"
+`;
+
 exports[`babel plugin in bundleMode worklet file emission written file content has factory shape 1`] = `
 "export default (function foo_testJs1Factory({}) {
   const foo = function () {
@@ -126,8 +152,8 @@ exports[`babel plugin in bundleMode worklet file emission written file content h
 
 exports[`babel plugin in bundleMode worklet file emission written file path matches the require path 1`] = `"const foo = require("react-native-worklets/.worklets/10408705723983.js").default({});"`;
 
-exports[`babel plugin in bundleMode workletRuntimeEntry toggle does not flip the flag in unrelated files 1`] = `"globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;"`;
+exports[`babel plugin in bundleMode worklet runtime entry-point toggle does not flip the flag in unrelated files 1`] = `"globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;"`;
 
-exports[`babel plugin in bundleMode workletRuntimeEntry toggle does not flip the flag without bundleMode option 1`] = `"globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;"`;
+exports[`babel plugin in bundleMode worklet runtime entry-point toggle does not flip the flag without bundleMode option 1`] = `"globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;"`;
 
-exports[`babel plugin in bundleMode workletRuntimeEntry toggle flips _WORKLETS_BUNDLE_MODE_ENABLED to true in workletRuntimeEntry 1`] = `"globalThis._WORKLETS_BUNDLE_MODE_ENABLED = true;"`;
+exports[`babel plugin in bundleMode worklet runtime entry-point toggle flips _WORKLETS_BUNDLE_MODE_ENABLED to true in the entry-point 1`] = `"globalThis._WORKLETS_BUNDLE_MODE_ENABLED = true;"`;

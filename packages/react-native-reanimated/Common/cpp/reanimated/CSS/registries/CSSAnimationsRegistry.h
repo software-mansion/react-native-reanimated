@@ -2,13 +2,14 @@
 
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
-#include <reanimated/CSS/utils/DelayedItemsManager.h>
+#include <reanimated/CSS/core/CSSAnimationsGroup.h>
+#include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
+#include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/utils/props.h>
+#include <reanimated/Fabric/updates/OperationsLoop.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <memory>
-#include <mutex>
-#include <set>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -18,70 +19,61 @@
 namespace reanimated::css {
 
 using CSSAnimationsMap = std::unordered_map<size_t, std::shared_ptr<CSSAnimation>>;
-using CSSAnimationsVector = std::vector<std::shared_ptr<CSSAnimation>>;
 
-class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_this<CSSAnimationsRegistry> {
+class CSSAnimationsRegistry : public UpdatesRegistry {
  public:
-  using SettingsUpdates = std::vector<std::pair<size_t, PartialCSSAnimationSettings>>;
+  CSSAnimationsRegistry(
+      const std::shared_ptr<OperationsLoop> &loop,
+      const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
+      const std::shared_ptr<CSSPlatformAnimationFactory> &platformAnimationFactory);
 
-  bool isEmpty() const override;
-  bool hasUpdates() const;
+  bool needsFlush() const;
 
   void apply(
-      jsi::Runtime &rt,
       const std::shared_ptr<const ShadowNode> &shadowNode,
-      const std::optional<std::vector<std::string>> &animationNames,
-      const CSSAnimationsMap &newAnimations,
-      const CSSAnimationSettingsUpdatesMap &settingsUpdates,
-      double timestamp);
+      const std::string &compoundComponentName,
+      const CSSAnimationUpdates &updates);
 
-  void updateAndFlush(double timestamp, UpdatesBatch &updatesBatch) {
-    std::lock_guard<std::mutex> lock{mutex_};
-    update(timestamp);
-    flush(updatesBatch);
-  }
+  void flushUpdates(UpdatesBatch &updatesBatch);
+#if REACT_NATIVE_VERSION_MINOR >= 85
+  void flushUpdates(UpdatesBatchAnimatedProps &updatesBatch);
+#endif
 
  private:
-  using AnimationToIndexMap = std::unordered_map<std::shared_ptr<CSSAnimation>, size_t>;
-  using RunningAnimationIndicesMap = std::unordered_map<Tag, std::set<size_t>>;
-  using AnimationsToRevertMap = std::unordered_map<Tag, std::unordered_set<size_t>>;
-  struct RegistryEntry {
-    const CSSAnimationsVector animationsVector;
-    const AnimationToIndexMap animationToIndexMap;
+  class AnimationObserver : public CSSAnimation::Observer {
+   public:
+    explicit AnimationObserver(CSSAnimationsRegistry &owner);
+    void onAnimationUpdate(Tag viewTag) override;
+    void onAnimationNeedsRevert(Tag viewTag) override;
+
+   private:
+    CSSAnimationsRegistry &owner_;
   };
 
-  using Registry = std::unordered_map<Tag, RegistryEntry>;
+  const std::shared_ptr<OperationsLoop> loop_;
+  const std::shared_ptr<CSSKeyframesRegistry> keyframesRegistry_;
+  const std::shared_ptr<CSSPlatformAnimationFactory> platformAnimationFactory_;
 
-  Registry registry_;
+  AnimationObserver animationObserver_{*this};
 
-  RunningAnimationIndicesMap runningAnimationIndicesMap_;
-  AnimationsToRevertMap animationsToRevertMap_;
-  DelayedItemsManager<std::shared_ptr<CSSAnimation>> delayedAnimationsManager_;
+  std::unordered_map<Tag, CSSAnimationsGroup> groups_;
+  // Tags reported by owned animations between flushes.
+  std::unordered_set<Tag> updatedTags_;
+  std::unordered_set<Tag> pendingRevertTags_;
 
   void removeTag(Tag viewTag) override;
-  void update(double timestamp);
-
-  CSSAnimationsVector buildAnimationsVector(
-      jsi::Runtime &rt,
+  std::optional<CSSAnimationsGroup> maybeBuildNewGroup(
       const std::shared_ptr<const ShadowNode> &shadowNode,
-      const std::optional<std::vector<std::string>> &animationNames,
-      const std::optional<CSSAnimationsMap> &newAnimations) const;
-  AnimationToIndexMap buildAnimationToIndexMap(const CSSAnimationsVector &animationsVector) const;
-  void updateAnimationSettings(
-      const CSSAnimationsVector &animationsVector,
-      const CSSAnimationSettingsUpdatesMap &settingsUpdates,
+      const std::string &compoundComponentName,
+      const std::optional<std::vector<std::string>> &updatedAnimationNames,
+      const CSSAnimationSettingsMap &newAnimationSettings);
+  std::shared_ptr<CSSAnimation> createAnimation(
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const std::string &name,
+      const std::string &compoundComponentName,
+      const CSSAnimationSettings &settings,
       double timestamp);
-
-  void
-  updateViewAnimations(Tag viewTag, const std::vector<size_t> &animationIndices, double timestamp, bool addToBatch);
-  void
-  scheduleOrActivateAnimation(size_t animationIndex, const std::shared_ptr<CSSAnimation> &animation, double timestamp);
-  void removeViewAnimations(Tag viewTag);
-  void applyViewAnimationsStyle(Tag viewTag, double timestamp);
-  void activateDelayedAnimations(double timestamp);
-  void handleAnimationsToRevert(double timestamp);
-
-  static bool addStyleUpdates(folly::dynamic &target, const folly::dynamic &updates, bool shouldOverride);
+  void updateRegistryForRevertedAnimations();
 };
 
 } // namespace reanimated::css

@@ -12,6 +12,35 @@ import plugin from '../plugin';
 
 const MOCK_LOCATION = '/dev/null';
 
+jest.mock('fs', () => {
+  const actual = jest.requireActual('fs');
+  const nodePath = jest.requireActual('path');
+  const target = nodePath.resolve('/dev/null');
+  return {
+    ...actual,
+    readFileSync: (file: unknown, ...args: unknown[]) =>
+      typeof file === 'string' && nodePath.resolve(file) === target
+        ? Buffer.from('')
+        : actual.readFileSync(file, ...args),
+  };
+});
+
+expect.addSnapshotSerializer({
+  test: (v: unknown): v is string =>
+    typeof v === 'string' &&
+    (v.includes('\\\\') || /(?<![A-Za-z])[A-Za-z]:[/\\]/.test(v)),
+  serialize: (v, c, i, d, r, printer) =>
+    printer(
+      (v as string)
+        .replace(/(?<![A-Za-z])[A-Za-z]:[\\/]+/g, '/')
+        .replace(/\\\\/g, '/'),
+      c,
+      i,
+      d,
+      r
+    ),
+});
+
 function runPlugin(
   input: string,
   transformOpts: TransformOptions = {},

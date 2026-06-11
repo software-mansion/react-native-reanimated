@@ -1,5 +1,4 @@
 import {
-  createWorkletRuntime,
   runOnRuntimeSync,
   scheduleOnRN,
   scheduleOnRuntime,
@@ -9,6 +8,7 @@ import {
   beforeEach,
   describe,
   expect,
+  getWorkletRuntimeFromPool,
   notify,
   test,
   waitForNotification,
@@ -20,8 +20,8 @@ describe('runOnRuntimeSync', () => {
   let value = 0;
   let reason = '';
 
-  const workletRuntime1 = createWorkletRuntime({ name: 'test1' });
-  const workletRuntime2 = createWorkletRuntime({ name: 'test2' });
+  const workletRuntime1 = getWorkletRuntimeFromPool('test');
+  const workletRuntime2 = getWorkletRuntimeFromPool('test2');
 
   const callbackPass = (num: number) => {
     value = num;
@@ -79,7 +79,7 @@ describe('runOnRuntimeSync', () => {
       await waitForNotification(PASS_NOTIFICATION);
       expect(value).toBe(42);
     });
-  } else {
+  } else if (__DEV__) {
     test('throws when scheduling on UI Runtime to a Worker Runtime', async () => {
       scheduleOnUI(() => {
         'worklet';

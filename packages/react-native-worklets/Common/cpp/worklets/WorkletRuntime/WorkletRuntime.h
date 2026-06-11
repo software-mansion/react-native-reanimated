@@ -31,7 +31,6 @@ concept ImplicitlySerializableCallable = std::is_assignable_v<const jsi::Functio
 
 template <typename TCallable>
 concept RuntimeCallable = requires(TCallable &&callable, jsi::Runtime &rt) {
-  // NOLINTNEXTLINE(readability/braces) cpplint doesn't understand concepts
   { callable(rt) };
 } || ImplicitlySerializableCallable<TCallable>;
 
@@ -164,6 +163,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
   explicit WorkletRuntime(
       RuntimeData::RuntimeId runtimeId,
+      RuntimeData::RuntimeKind runtimeKind,
       const std::string &name,
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
       bool enableEventLoop = true);
@@ -231,6 +231,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;
   std::shared_ptr<JSScheduler> jsScheduler_;
+  const RuntimeData::RuntimeKind runtimeKind_;
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
   std::shared_ptr<EventLoop> eventLoop_;

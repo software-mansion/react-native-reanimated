@@ -11,10 +11,10 @@ import type {
 } from 'react-native';
 import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 
-import type { AnyRecord, Maybe } from './common';
-import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
+import type { Maybe, MutuallyExclusiveUnion } from './common';
+import type { CSSStyle } from './css';
 import type { EasingFunctionFactory } from './Easing';
-import type { AnimatedStyleHandle, DefaultStyle } from './hook/commonTypes';
+import type { AnimatedStyleHandle } from './hook/commonTypes';
 
 type LayoutAnimationOptions =
   | 'originX'
@@ -42,19 +42,16 @@ export interface KeyframeProps extends StyleProps {
   easing?: EasingFunction | EasingFunctionFactory;
 }
 
-type FirstFrame =
-  | {
-      0: KeyframeProps & { easing?: never };
-      from?: never;
-    }
-  | {
-      0?: never;
-      from: KeyframeProps & { easing?: never };
-    };
+// `easing` describes the transition into a keyframe, so the first frame can't have it.
+type FirstKeyframe = KeyframeProps & { easing?: never };
 
-type LastFrame =
-  | { 100?: KeyframeProps; to?: never }
-  | { 100?: never; to: KeyframeProps };
+type FirstFrame = MutuallyExclusiveUnion<
+  [{ 0: FirstKeyframe }, { from: FirstKeyframe }]
+>;
+
+type LastFrame = MutuallyExclusiveUnion<
+  [{ 100?: KeyframeProps }, { to: KeyframeProps }]
+>;
 
 export type ValidKeyframeProps = FirstFrame &
   LastFrame &
@@ -455,12 +452,10 @@ type MaybeSharedValueRecursive<Value> = Value extends readonly (infer Item)[]
           }
     : MaybeSharedValue<Value>;
 
-// Ideally we want AnimatedStyle to not be generic, but there are
-// so many dependencies on it being generic that it's not feasible at the moment.
-export type AnimatedStyle<Style = DefaultStyle> =
-  | (Style & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) // TODO - maybe add css animation config somewhere else
-  | MaybeSharedValueRecursive<Style>
-  | AnimatedStyleHandle<Style>;
+export type AnimatedStyle<TStyle> =
+  | CSSStyle<TStyle>
+  | MaybeSharedValueRecursive<TStyle>
+  | AnimatedStyleHandle<TStyle>;
 
 export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
@@ -492,7 +487,7 @@ export type InternalHostInstance = Partial<
     >;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getScrollableNode: () => any;
-    __internalInstanceHandle: AnyRecord;
+    __internalInstanceHandle: Record<string, unknown>;
   }
 >;
 

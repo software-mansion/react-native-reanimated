@@ -4,6 +4,12 @@ import type { Identifier, ImportDeclaration } from '@babel/types';
 import { cloneNode } from '@babel/types';
 
 import { globals } from './globals';
+import {
+  isAllowedForRelativeImports,
+  isImport,
+  isImportRelative,
+  isWorkletizableModule,
+} from './imports';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
 
 export function getClosure(
@@ -116,45 +122,3 @@ export function getClosure(
     relativeBindingsToImport,
   };
 }
-
-function isImport(binding: Binding): boolean {
-  return (
-    binding.kind === 'module' &&
-    binding.constant &&
-    (binding.path.isImportSpecifier() ||
-      binding.path.isImportDefaultSpecifier()) &&
-    binding.path.parentPath.isImportDeclaration()
-  );
-}
-
-function isImportRelative(imported: Binding): boolean {
-  return (
-    imported.path.parentPath as NodePath<ImportDeclaration>
-  ).node.source.value.startsWith('.');
-}
-
-function isAllowedForRelativeImports(
-  filename: string | undefined,
-  workletizableModules?: string[]
-): boolean {
-  return (
-    !!filename &&
-    (alwaysAllowed.some((module) => filename.includes(module)) ||
-      !!workletizableModules?.some((module) => filename.includes(module)))
-  );
-}
-
-function isWorkletizableModule(
-  source: string,
-  workletizableModules?: string[]
-): boolean {
-  return (
-    alwaysAllowed.some((module) => source.startsWith(module)) ||
-    !!workletizableModules?.some((module) => source.startsWith(module))
-  );
-}
-
-const alwaysAllowed = [
-  'react-native-worklets',
-  'react-native/Libraries/Core/setUpXHR', // for networking
-];

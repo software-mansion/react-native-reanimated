@@ -13,6 +13,7 @@ import type {
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSPseudoStyleConfig,
   CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
 } from '../css/native';
@@ -92,6 +93,13 @@ export interface ReanimatedModuleProxy {
   unregisterCSSTransition(viewTag: number): void;
 
   getSettledUpdates(): SettledUpdate[];
+
+  registerPseudoStyle(
+    shadowNodeWrapper: ShadowNodeWrapper,
+    config: CSSPseudoStyleConfig
+  ): void;
+
+  unregisterPseudoStyle(viewTag: number): void;
 }
 
 export interface IReanimatedModule extends Omit<

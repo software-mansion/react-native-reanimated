@@ -73,6 +73,7 @@ const jsDocRules = {
   'jsdoc/require-param-description': 'off',
   'jsdoc/require-returns-description': 'off',
   'jsdoc/require-jsdoc': 'off',
+  'jsdoc/require-property-description': 'off',
 };
 
 /** @type {import('typescript-eslint').ConfigWithExtends['rules']} */

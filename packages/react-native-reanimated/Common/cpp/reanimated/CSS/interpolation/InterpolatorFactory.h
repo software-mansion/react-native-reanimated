@@ -190,8 +190,8 @@ std::shared_ptr<PropertyInterpolatorFactory> transforms(
     const std::unordered_map<std::string, std::shared_ptr<StyleOperationInterpolator>> &interpolators);
 
 /**
-* Filter interpolators
-*/
+ * Filter interpolators
+ */
 std::shared_ptr<PropertyInterpolatorFactory> filters(
     const std::unordered_map<std::string, std::shared_ptr<StyleOperationInterpolator>> &interpolators);
 

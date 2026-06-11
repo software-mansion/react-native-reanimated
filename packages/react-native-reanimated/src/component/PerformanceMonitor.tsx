@@ -169,6 +169,7 @@ export function PerformanceMonitor({
   );
 }
 
+// is-tree-shakable-suppress
 const styles = StyleSheet.create({
   monitor: {
     flexDirection: 'row',

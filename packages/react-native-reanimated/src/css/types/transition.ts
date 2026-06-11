@@ -1,10 +1,10 @@
 'use strict';
-import type { PlainStyle } from '../../common';
+import type { DefaultStyle } from '../../hook/commonTypes';
 import type { CSSTimingFunction } from '../easing';
 import type { TimeUnit } from './common';
 import type { AddArrayPropertyTypes } from './helpers';
 
-export type CSSTransitionProperty<S extends object = PlainStyle> =
+export type CSSTransitionProperty<S extends object = DefaultStyle> =
   | 'all'
   | 'none'
   | keyof S
@@ -15,6 +15,37 @@ export type CSSTransitionDelay = TimeUnit;
 export type CSSTransitionBehavior = 'normal' | 'allow-discrete';
 export type CSSTransitionShorthand = string;
 
+/**
+ * Payload for a CSS transition callback, dispatched once per transitioning
+ * property.
+ */
+export type CSSTransitionEvent = {
+  // TODO: add a JS-side view ref (e.g. `target`) once the right ref type is
+  // decided.
+  /** The transitioning property, camelCased (e.g. `opacity`). */
+  propertyName: string;
+  /**
+   * The amount of time the transition had been running, in seconds, when the
+   * event fired.
+   */
+  elapsedTime: number;
+};
+
+export type CSSTransitionCallback = (event: CSSTransitionEvent) => void;
+
+export type CSSTransitionCallbacks = {
+  /** Fired when the transition is triggered, before any `transitionDelay`. */
+  onTransitionRun?: CSSTransitionCallback;
+  /** Fired after `transitionDelay`, when the property starts animating. */
+  onTransitionStart?: CSSTransitionCallback;
+  /** Fired when the transition completes. */
+  onTransitionEnd?: CSSTransitionCallback;
+  /** Fired when the transition is interrupted before completing. */
+  onTransitionCancel?: CSSTransitionCallback;
+};
+
+export type CSSTransitionCallbackProp = keyof CSSTransitionCallbacks;
+
 type SingleCSSTransitionSettings = {
   transitionDuration?: CSSTransitionDuration;
   transitionTimingFunction?: CSSTransitionTimingFunction;
@@ -22,7 +53,7 @@ type SingleCSSTransitionSettings = {
   transitionBehavior?: CSSTransitionBehavior;
 };
 
-export type SingleCSSTransitionConfig<S extends object = PlainStyle> =
+export type SingleCSSTransitionConfig<S extends object = DefaultStyle> =
   SingleCSSTransitionSettings & {
     transitionProperty?: CSSTransitionProperty<S>;
   };
@@ -30,7 +61,7 @@ export type SingleCSSTransitionConfig<S extends object = PlainStyle> =
 export type CSSTransitionSettings =
   AddArrayPropertyTypes<SingleCSSTransitionSettings>;
 
-export type CSSTransitionProperties<S extends object = PlainStyle> =
+export type CSSTransitionProperties<S extends object = DefaultStyle> =
   CSSTransitionSettings & {
     transitionProperty?: CSSTransitionProperty<S>;
     transition?: CSSTransitionShorthand;

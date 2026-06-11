@@ -45,6 +45,7 @@ import { filterStyles, flattenArray } from './utils';
 
 let id = 0;
 
+// is-tree-shakable-suppress
 if (IS_WEB) {
   configureWebLayoutAnimations();
 }
