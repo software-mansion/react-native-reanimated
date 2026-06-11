@@ -58,10 +58,15 @@ struct Snapshot {
 
 typedef enum class ExitingState : std::uint8_t {
   UNDEFINED = 1,
-  WAITING = 2,
-  ANIMATING = 3,
-  DEAD = 4,
-  DELETED = 5,
+  /**
+   * RN requested removal but Reanimated suppressed the Remove mutation. Reanimated needs to decide whether to
+   * play an exit animation or remove and delete the node.
+   */
+  TRIAGE = 2,
+  WAITING = 3,
+  ANIMATING = 4,
+  DEAD = 5,
+  DELETED = 6,
 } ExitingState;
 
 struct MutationNode;
@@ -83,17 +88,44 @@ enum class Intent : std::uint8_t {
 struct LightNode {
   ShadowView previous;
   ShadowView current;
-  ExitingState state = ExitingState::UNDEFINED;
+  ExitingState exitingState = ExitingState::UNDEFINED;
   std::weak_ptr<LightNode> parent;
   std::vector<std::shared_ptr<LightNode>> children;
+
   int removeChild(const std::shared_ptr<LightNode> &child) {
-    for (int i = children.size() - 1; i >= 0; i--) {
+    for (int i = static_cast<int>(children.size()) - 1; i >= 0; i--) {
       if (children[i]->current.tag == child->current.tag) {
         children.erase(children.begin() + i);
         return i;
       }
     }
     return -1;
+  }
+
+  int findChildIndexByTag(Tag tag) const {
+    for (std::size_t i = 0; i < children.size(); i++) {
+      if (children[i]->current.tag == tag) {
+        return static_cast<int>(i);
+      }
+    }
+    return -1;
+  }
+
+  int countExitingChildrenAffectingIndex(int index) const {
+    react_native_assert(index >= 0 && "index must be non-negative");
+    int remainingNonExitingChildrenToCheck = index;
+    int exitingCount = 0;
+    for (std::size_t i = 0; i < children.size(); i++) {
+      if (children[i]->exitingState != ExitingState::UNDEFINED) {
+        exitingCount++;
+        continue;
+      }
+      if (remainingNonExitingChildrenToCheck == 0) {
+        return exitingCount;
+      }
+      remainingNonExitingChildrenToCheck--;
+    }
+    return exitingCount;
   }
 };
 

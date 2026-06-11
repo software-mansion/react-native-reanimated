@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   Button,
   StyleSheet,
+  Text,
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
@@ -42,8 +43,11 @@ export default function BBExample() {
           entering={FadeInUp}
           layout={LinearTransition.duration(2000)}
           exiting={RotateOutDownLeft}
-          style={[styles.refresher, { width: show ? 200 : 100 }]}
-        />
+          style={[styles.refresher, { width: show ? 200 : 100 }]}>
+          <Text style={styles.label}>
+            This item should be on top of the red one
+          </Text>
+        </Animated.View>
       )}
     </View>
   );
@@ -73,5 +77,11 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     backgroundColor: 'blue',
+  },
+  label: {
+    color: 'white',
+    padding: 4,
+    width: 100,
+    height: 100
   },
 });
