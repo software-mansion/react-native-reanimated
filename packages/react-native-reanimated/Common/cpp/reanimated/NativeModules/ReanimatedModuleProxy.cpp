@@ -203,6 +203,13 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       runCoreAnimationForViewFunction_(platformDepMethodsHolder.runCoreAnimationForView),
       forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
 #endif
+      layoutAnimationsManager_(
+#ifdef __APPLE__
+          std::make_shared<LayoutAnimationsManager>(runCoreAnimationForViewFunction_)
+#else
+          std::make_shared<LayoutAnimationsManager>()
+#endif
+              ),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
       operationsLoop_(std::make_shared<OperationsLoop>(
@@ -233,13 +240,6 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
 #endif // ANDROID
-      layoutAnimationsManager_(
-#ifdef __APPLE__
-          std::make_shared<LayoutAnimationsManager>(runCoreAnimationForViewFunction_)
-#else
-          std::make_shared<LayoutAnimationsManager>()
-#endif
-              ),
       subscribeForKeyboardEventsFunction_(platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
   // Add registries in order of their priority (from the lowest to the

@@ -637,7 +637,7 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
   auto &viewProps = static_cast<const ViewProps &>(*mutation.newChildShadowView.props);
   auto opacity = viewProps.opacity;
 
-  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), finalView, current, mutation, opacity, tag, this]() {
+  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), finalView, current, mutation, opacity, tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -656,6 +656,7 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
     auto oldView = mutation.oldChildShadowView;
     auto newView = mutation.newChildShadowView;
 
+#if __APPLE__
     if constexpr (StaticFeatureFlags::getFlag("IOS_USE_NATIVE_LAYOUT_ANIMATIONS")) {
       strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
           tag,
@@ -668,6 +669,7 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
 
       return;
     }
+#endif
 
     Snapshot values(mutation.newChildShadowView, window);
     auto &uiRuntime = strongThis->uiRuntime_;
@@ -691,7 +693,7 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
 #endif
   auto surfaceId = mutation.oldChildShadowView.surfaceId;
 
-  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag, mutation, surfaceId, this]() {
+  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag, mutation, surfaceId]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -706,6 +708,7 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
       window = strongThis->surfaceManager.getWindow(surfaceId);
     }
 
+#if __APPLE__
     if constexpr (StaticFeatureFlags::getFlag("IOS_USE_NATIVE_LAYOUT_ANIMATIONS")) {
       strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
           tag,
@@ -713,7 +716,9 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
           oldView.layoutMetrics.frame,
           oldView.layoutMetrics.frame,
           [strongThis, tag](bool finished) { strongThis->endLayoutAnimation(tag, finished); });
-    } else {
+    } else
+#endif
+    {
       Snapshot values(oldView, window);
 
       auto &uiRuntime = strongThis->uiRuntime_;
@@ -739,7 +744,7 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
 #endif
   auto surfaceId = mutation.oldChildShadowView.surfaceId;
 
-  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), mutation, surfaceId, tag, this]() {
+  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), mutation, surfaceId, tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -755,6 +760,7 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
       window = strongThis->surfaceManager.getWindow(surfaceId);
     }
 
+#if __APPLE__
     if constexpr (StaticFeatureFlags::getFlag("IOS_USE_NATIVE_LAYOUT_ANIMATIONS")) {
       strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
           tag,
@@ -765,6 +771,7 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
 
       return;
     }
+#endif
 
     Snapshot currentValues(oldView, window);
     Snapshot targetValues(mutation.newChildShadowView, window);

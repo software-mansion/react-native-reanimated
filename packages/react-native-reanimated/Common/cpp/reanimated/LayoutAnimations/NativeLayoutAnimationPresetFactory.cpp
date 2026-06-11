@@ -40,13 +40,27 @@ NativeLayoutAnimationPresetFactory::PresetMap &NativeLayoutAnimationPresetFactor
       return exitingPresets_;
     case LayoutAnimationType::LAYOUT:
       return layoutPresets_;
+    case LayoutAnimationType::SHARED_ELEMENT_TRANSITION:
+    case LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID:
+      break;
   }
   throw std::runtime_error("Invalid animation type");
 }
 
 const NativeLayoutAnimationPresetFactory::PresetMap &NativeLayoutAnimationPresetFactory::getRegistry(
     LayoutAnimationType type) const {
-  return const_cast<NativeLayoutAnimationPresetFactory *>(this)->getRegistry(type);
+  switch (type) {
+    case LayoutAnimationType::ENTERING:
+      return enteringPresets_;
+    case LayoutAnimationType::EXITING:
+      return exitingPresets_;
+    case LayoutAnimationType::LAYOUT:
+      return layoutPresets_;
+    case LayoutAnimationType::SHARED_ELEMENT_TRANSITION:
+    case LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID:
+      break;
+  }
+  throw std::runtime_error("Invalid animation type");
 }
 
 void NativeLayoutAnimationPresetFactory::registerBuiltInPresets() {
