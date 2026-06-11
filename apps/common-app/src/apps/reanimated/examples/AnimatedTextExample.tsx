@@ -10,7 +10,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-// TODO: add gauges example
 // TODO: sync `text` prop updates back to React as `children` prop
 // TODO: convert docs examples from AnimatedTextInput to Animated.Text
 
