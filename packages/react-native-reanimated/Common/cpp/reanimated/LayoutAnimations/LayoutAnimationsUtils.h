@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Common/NativeView/react/renderer/components/rnreanimated/RNReanimatedSharedTransitionBoundaryShadowNode.h>
+#include <react/renderer/components/rnreanimated/Props.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
@@ -144,16 +144,19 @@ static inline std::shared_ptr<LightNode> findParentRNSScreen(const std::shared_p
 }
 
 static inline bool isSETBoundary(const std::shared_ptr<LightNode> &node) {
-  return !std::strcmp(node->current.componentName, RNReanimatedSharedTransitionBoundaryComponentName);
+  return !std::strcmp(node->current.componentName, "RNReanimatedSharedTransitionBoundary");
 }
 
-static inline bool isInsideInactiveSETBoundary(const std::shared_ptr<LightNode> &node) {
+static inline bool isBoundaryActive(const std::shared_ptr<LightNode> &node) {
+  auto boundaryProps = std::static_pointer_cast<const RNReanimatedSharedTransitionBoundaryProps>(node->current.props);
+  return boundaryProps->isActive;
+}
+
+static inline bool isInsideInactiveBoundary(const std::shared_ptr<LightNode> &node) {
   auto current = node->parent.lock();
   while (current) {
     if (isSETBoundary(current)) {
-      auto boundaryProps =
-          std::static_pointer_cast<const RNReanimatedSharedTransitionBoundaryProps>(current->current.props);
-      return !boundaryProps->isActive;
+      return !isBoundaryActive(current);
     }
     current = current->parent.lock();
   }

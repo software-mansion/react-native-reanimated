@@ -15,11 +15,6 @@ using namespace facebook::react;
   return concreteComponentDescriptorProvider<RNReanimatedSharedTransitionBoundaryComponentDescriptor>();
 }
 
-- (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps
-{
-  [super updateProps:props oldProps:oldProps];
-}
-
 - (void)updateLayoutMetrics:(const facebook::react::LayoutMetrics &)layoutMetrics
            oldLayoutMetrics:(const facebook::react::LayoutMetrics &)oldLayoutMetrics
 {

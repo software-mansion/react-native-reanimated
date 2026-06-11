@@ -3,13 +3,15 @@ import { StyleSheet } from 'react-native';
 
 import RNReanimatedSharedTransitionBoundary from '../specs/SharedTransitionBoundaryProvider';
 
-export type SharedTransitionBoundaryProps = React.PropsWithChildren<{
+export interface SharedTransitionBoundaryProps {
   isActive: boolean;
-}>;
+  children?: React.ReactNode;
+}
 
-export function SharedTransitionBoundary(props: SharedTransitionBoundaryProps) {
-  const { isActive, children } = props;
-
+export function SharedTransitionBoundary({
+  isActive,
+  children,
+}: SharedTransitionBoundaryProps) {
   return (
     <RNReanimatedSharedTransitionBoundary
       style={styles.contents}

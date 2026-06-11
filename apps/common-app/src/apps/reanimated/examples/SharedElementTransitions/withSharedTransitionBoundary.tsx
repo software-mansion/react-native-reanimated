@@ -10,6 +10,7 @@ export function withSharedTransitionBoundary<P extends object>(
 
   return function WithSharedTransitionBoundary(props: P) {
     const isFocused = useIsFocused();
+
     return (
       <SharedTransitionBoundary isActive={isFocused}>
         <MemoizedContent {...props} />

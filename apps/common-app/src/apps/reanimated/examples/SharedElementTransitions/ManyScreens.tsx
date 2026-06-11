@@ -1,4 +1,4 @@
-import { type ParamListBase } from '@react-navigation/native';
+import type { ParamListBase } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';

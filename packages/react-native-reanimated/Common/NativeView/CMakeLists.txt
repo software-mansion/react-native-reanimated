@@ -26,7 +26,7 @@ add_library(
 )
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
- target_compile_reactnative_options(react_codegen_rnreanimated PRIVATE)
+  target_compile_reactnative_options(react_codegen_rnreanimated PRIVATE)
 endif()
 
 target_include_directories(

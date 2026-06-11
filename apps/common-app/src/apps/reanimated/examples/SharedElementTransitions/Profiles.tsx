@@ -25,7 +25,7 @@ import Animated, {
 
 import leavesBackground from './assets/nature/leaves.jpg';
 import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
-import { runOnJS, scheduleOnRN } from 'react-native-worklets';
+import { scheduleOnRN } from 'react-native-worklets';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -388,7 +388,6 @@ function DetailsScreenContent({
       ) {
         if (!runOnlyOnce.value) {
           runOnlyOnce.value = true;
-          // Note: runOnJS removed here as it's not imported
           scheduleOnRN(goBack);
         }
       }

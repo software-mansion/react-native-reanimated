@@ -57,9 +57,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
       ReanimatedSystraceSection s("find after elements");
       findSharedElementsOnScreen(afterTopScreen, AFTER, propsParserContext);
 #ifdef __APPLE__
-      // this is a temporary workaround for RNScreens on iOS, which takes
-      // the snapshot of the popped screen before we hide the shared element,
-      // the issue should be gone with the new stack implementation
+      // TODO (future): this is a temporary workaround for RNScreens on iOS,
+      // which takes the snapshot of the popped screen before we hide the
+      // shared element, the issue should be gone with the new stack
+      // implementation
       if (auto screen = findParentRNSScreen(afterTopScreen)) {
         forceScreenSnapshot_(screen->current.tag);
       }
@@ -202,7 +203,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         } else if (layoutAnimationsManager_->hasLayoutAnimation(tag, ENTERING)) {
           entering_.push_back(node);
           filteredMutations.push_back(mutation);
-        } else if (sharedTransitionManager_->tagToName_.contains(tag) && isInsideInactiveSETBoundary(node)) {
+        } else if (sharedTransitionManager_->tagToName_.contains(tag) && isInsideInactiveBoundary(node)) {
           filteredMutations.push_back(mutation);
           auto hiddenView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
           filteredMutations.push_back(

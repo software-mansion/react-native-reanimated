@@ -10,17 +10,14 @@ namespace reanimated {
 
 // MARK: Shared Element Transitions
 
+// A boundary is active when its `isActive` prop (controlled from JS,
+// e.g. with `useIsFocused`) is true and it's not currently exiting.
 std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findActiveBoundary(
     const std::shared_ptr<LightNode> &node) const {
   std::shared_ptr<LightNode> result = nullptr;
 
-  if (isSETBoundary(node)) {
-    auto boundaryProps = std::static_pointer_cast<const RNReanimatedSharedTransitionBoundaryProps>(node->current.props);
-    auto isActive = boundaryProps->isActive;
-    if (isActive && node->state == ExitingState::UNDEFINED) {
-      result = node;
-      return result;
-    }
+  if (isSETBoundary(node) && isBoundaryActive(node) && node->state == ExitingState::UNDEFINED) {
+    return node;
   }
   for (const auto &child : std::views::reverse(node->children)) {
     auto top = findActiveBoundary(child);

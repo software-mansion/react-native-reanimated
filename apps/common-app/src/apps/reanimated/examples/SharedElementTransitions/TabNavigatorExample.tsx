@@ -78,6 +78,7 @@ function FakeScreen({
   children: React.ReactNode;
 }) {
   const isFocused = useIsFocused();
+
   return (
     <SharedTransitionBoundary isActive={isFocused && isActive}>
       <View style={styles.fakeScreen}>{children}</View>
