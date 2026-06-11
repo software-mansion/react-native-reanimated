@@ -415,6 +415,7 @@ var require_globals = __commonJS({
     exports2.initializeGlobals = initializeGlobals;
     exports2.addCustomGlobals = addCustomGlobals;
     var path_1 = __importDefault(require("path"));
+    var autoworkletization_12 = require_autoworkletization();
     var types_12 = require_types();
     var notCapturedIdentifiers = [
       // Based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
@@ -538,6 +539,16 @@ var require_globals = __commonJS({
       }
       state.workletNumber = 1;
       state.classesToWorkletize = [];
+      state.autoworkletizationPlugin = {
+        name: "worklets-autoworkletization",
+        visitor: {
+          CallExpression: {
+            enter(nodePath) {
+              (0, autoworkletization_12.processCalleesAutoworkletizableCallbacks)(nodePath, state);
+            }
+          }
+        }
+      };
       if (!state.opts.strictGlobal) {
         initializeGlobals();
         addCustomGlobals(state);
@@ -725,7 +736,7 @@ var require_generate = __commonJS({
       const transformedProg = (_a = (0, core_1.transformFromAstSync)(newProg, void 0, {
         filename: state.file.opts.filename,
         presets: ["@babel/preset-typescript"],
-        plugins: [],
+        plugins: [state.autoworkletizationPlugin],
         ast: false,
         babelrc: false,
         configFile: false,

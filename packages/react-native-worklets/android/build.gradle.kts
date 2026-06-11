@@ -1,4 +1,3 @@
-import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 import groovy.json.JsonSlurper
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -279,24 +278,8 @@ android {
         }
     }
 
-    project.tasks.withType<ExternalNativeBuildJsonTask>().configureEach {
-        val isExampleApp = IS_REANIMATED_EXAMPLE_APP
-        val pkgDir = packageDir
-        val cxxRoot = File(project.buildDir.parentFile, ".cxx")
-        doLast {
-            if (!isExampleApp) {
-                return@doLast
-            }
-            val generated = cxxRoot.walkTopDown()
-                .filter { it.name == "compile_commands.json" && it.isFile }
-                .maxByOrNull { it.lastModified() }
-            if (generated == null) {
-                logger.warn("Failed to generate clangd metadata: no compile_commands.json under $cxxRoot")
-                return@doLast
-            }
-            File("$pkgDir/compile_commands.json").writeText(generated.readText())
-            logger.info("Generated clangd metadata from $generated.")
-        }
+    if (IS_REANIMATED_EXAMPLE_APP) {
+        apply(from = "../../../scripts/llvm-tools/android-hook.gradle.kts")
     }
 }
 

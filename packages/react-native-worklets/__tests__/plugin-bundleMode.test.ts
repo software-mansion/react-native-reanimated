@@ -392,5 +392,29 @@ describe('babel plugin in bundleMode', () => {
       expect(files).toHaveLength(0);
       expect(code).not.toContain(REQUIRE_PREFIX);
     });
+
+    test('autoworkletization fires before emitting a file', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          scheduleOnUI(() => {
+            return 1;
+          });
+        }
+      </script>`;
+
+      const { files: firstPass } = runPlugin(input);
+      assert(firstPass.length >= 1);
+      const outerFile = firstPass[firstPass.length - 1];
+
+      const { code: rePassedCode } = runPlugin(
+        outerFile.content,
+        {},
+        {},
+        outerFile.path
+      );
+
+      expect(rePassedCode).toContain(REQUIRE_PREFIX);
+    });
   });
 });
