@@ -12,6 +12,7 @@ import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import { getStaticFeatureFlag } from '../featureFlags';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
+import { isSharedValue } from '../isSharedValue';
 import { type BaseAnimationBuilder } from '../layoutReanimation';
 import { SharedTransition } from '../layoutReanimation/SharedTransition';
 import {
@@ -522,19 +523,23 @@ export default class AnimatedComponent
       nativeID = `${this.reanimatedID}`;
     }
 
-    if (
-      this.ChildComponent.displayName === 'Text' &&
-      filteredProps.text !== undefined
-    ) {
-      if (filteredProps.children !== undefined) {
-        throw new Error(
-          '[Reanimated] <Animated.Text> component with animated prop `text` must be empty.'
-        );
-      }
-      // TODO: handle case when `text` property is not present during initial render but appears later on
+    if (this.ChildComponent.displayName === 'Text') {
+      if (filteredProps.text !== undefined) {
+        if (filteredProps.children !== undefined) {
+          throw new Error(
+            '[Reanimated] <Animated.Text> component with animated prop `text` must be empty.'
+          );
+        }
+        // TODO: handle case when `text` property is not present during initial render but appears later on
 
-      // Pass the current value of animated prop `text` as `children` so that the text displays correctly during first render
-      filteredProps.children = normalizeTextProp(filteredProps.text);
+        // Pass the current value of animated prop `text` as `children` so that the text displays correctly during first render
+        filteredProps.children = normalizeTextProp(filteredProps.text);
+      } else if (isSharedValue(this.props.children)) {
+        // A shared value passed as children animates the text like the `text`
+        // prop - normalize the initial value passed by PropsFilter so that
+        // an empty string doesn't collapse the text content shadow node.
+        filteredProps.children = normalizeTextProp(filteredProps.children);
+      }
     }
 
     // TODO: Remove need for this \/\/\/\/.

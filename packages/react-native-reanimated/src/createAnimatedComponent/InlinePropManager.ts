@@ -145,6 +145,17 @@ export class InlinePropManager implements IInlinePropManager {
   ) {
     const { inlineStyles: newInlineStyles, inlineProps: newInlineProps } =
       extractSharedValuesMapFromProps(animatedComponent.props);
+
+    if (
+      newInlineProps.children !== undefined &&
+      animatedComponent.ChildComponent.displayName === 'Text'
+    ) {
+      // A shared value passed as children of <Animated.Text> animates the text
+      // content like the `text` prop, so we send its updates as `text` updates.
+      newInlineProps.text = newInlineProps.children;
+      delete newInlineProps.children;
+    }
+
     const hasChanged =
       inlinePropsHasChanged(newInlineStyles, this._inlineStyles) ||
       inlinePropsHasChanged(newInlineProps, this._inlineProps);

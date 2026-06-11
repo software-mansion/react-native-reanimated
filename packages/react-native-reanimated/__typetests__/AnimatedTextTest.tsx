@@ -25,6 +25,16 @@ function AnimatedTextTest() {
     return <Animated.Text text={sv} />;
   }
 
+  function ChildrenStringTest() {
+    const sv = useSharedValue('string');
+    return <Animated.Text>{sv}</Animated.Text>;
+  }
+
+  function ChildrenNumberTest() {
+    const sv = useSharedValue(123);
+    return <Animated.Text>{sv}</Animated.Text>;
+  }
+
   function AnimatedPropsWithChildrenTest() {
     const animatedProps = useAnimatedProps(() => ({ text: 'string' }));
     // @ts-expect-error We don't want to accept text in animatedProps when children are present
@@ -35,5 +45,11 @@ function AnimatedTextTest() {
     const sv = useSharedValue('string');
     // @ts-expect-error We don't want to accept text prop when children are present
     return <Animated.Text text={sv}>Hello</Animated.Text>;
+  }
+
+  function InlinePropWithSharedValueChildrenTest() {
+    const sv = useSharedValue('string');
+    // @ts-expect-error We don't want to accept text prop when children are present
+    return <Animated.Text text={sv}>{sv}</Animated.Text>;
   }
 }

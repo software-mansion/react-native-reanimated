@@ -30,6 +30,10 @@ type AnimatedTextProps =
       text?: SharedValue<string> | SharedValue<number>;
       children?: never;
     })
+  | (Omit<BaseAnimatedTextProps, 'children'> & {
+      animatedProps?: AddArrayPropertyType<BaseAnimatedProps>;
+      children: SharedValue<string> | SharedValue<number>;
+    })
   | (BaseAnimatedTextProps & {
       animatedProps?: AddArrayPropertyType<BaseAnimatedProps>;
     });
