@@ -2,7 +2,7 @@
 
 import type React from 'react';
 
-import Animated, { useAnimatedProps, useSharedValue } from '../..';
+import Animated, { useAnimatedProps, useSharedValue } from '..';
 
 function AnimatedTextTest() {
   function AnimatedPropsStringTest() {
