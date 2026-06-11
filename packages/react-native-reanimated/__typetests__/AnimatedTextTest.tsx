@@ -68,4 +68,11 @@ function AnimatedTextTest() {
     // @ts-expect-error We don't want to accept text prop when children are present
     return <Animated.Text text={sv}>Before {sv} After</Animated.Text>;
   }
+
+  function AnimatedPropsWithSharedValueChildrenTest() {
+    const sv = useSharedValue('string');
+    const animatedProps = useAnimatedProps(() => ({ text: 'string' }));
+    // @ts-expect-error We don't want to accept text in animatedProps when children are present
+    return <Animated.Text animatedProps={animatedProps}>{sv}</Animated.Text>;
+  }
 }

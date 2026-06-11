@@ -10,7 +10,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-// TODO: add TypeScript validation that allows <Animated.Text> to either have children or have `text` animated prop
 // TODO: add gauges example
 // TODO: sync `text` prop updates back to React as `children` prop
 // TODO: add docs about Animated.Text
