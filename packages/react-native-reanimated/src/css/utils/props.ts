@@ -1,6 +1,6 @@
 'use strict';
 import type { UnknownRecord } from '../../common';
-import { logger } from '../../common';
+import { isEmptyObject, logger } from '../../common';
 import { isSharedValue } from '../../isSharedValue';
 import type {
   CSSAnimationProperties,
@@ -14,7 +14,6 @@ import {
   isAnimationProp,
   isCSSKeyframesObject,
   isCSSKeyframesRule,
-  isEmptyObject,
   isPseudoSelectorValue,
   isTransitionCallbackProp,
   isTransitionProp,
