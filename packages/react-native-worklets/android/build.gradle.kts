@@ -212,7 +212,6 @@ android {
 
     externalNativeBuild {
         cmake {
-            this.version = System.getenv("CMAKE_VERSION") ?: "3.22.1"
             path = file("CMakeLists.txt")
         }
     }

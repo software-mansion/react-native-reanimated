@@ -111,14 +111,8 @@ export interface PluginOptions {
    * - Defaults to `false`.
    */
   substituteWebPlatformChecks?: boolean;
-  /**
-   * This option allows you to register modules as safe to use on Worklet
-   * Runtimes in the [Bundle
-   * Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode).
-   *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#workletizablemodules}
-   *
-   * - Defaults to an empty array `[]`.
-   */
-  workletizableModules?: string[];
+  importForwarding?: {
+    moduleNames?: string[];
+    relativePaths?: string[];
+  };
 }
