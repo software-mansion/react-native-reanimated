@@ -5,6 +5,7 @@
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/Compat/WorkletsApi.h>
+#include <reanimated/Fabric/updates/NativeMutationsRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
@@ -59,7 +60,15 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   virtual std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) = 0;
   virtual void startSurface(const SurfaceId surfaceId);
 
+  // Testing-only (ReJest). Set when the `RUNTIME_TEST_FLAG` static feature flag
+  // is enabled so `pullTransaction` can record the mutations sent to the
+  // platform. Null in production builds.
+  void setNativeMutationsRegistry(const std::shared_ptr<NativeMutationsRegistry> &nativeMutationsRegistry) {
+    nativeMutationsRegistry_ = nativeMutationsRegistry;
+  }
+
  protected:
+  std::shared_ptr<NativeMutationsRegistry> nativeMutationsRegistry_;
   mutable std::vector<Tag> finishedAnimationTags_;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;

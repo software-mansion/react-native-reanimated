@@ -1,6 +1,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 
 #include <react/renderer/mounting/ShadowViewMutation.h>
+#include <reanimated/Tools/FeatureFlags.h>
 
 #include <memory>
 #include <ranges>
@@ -58,6 +59,12 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   handleUpdatesAndEnterings(filteredMutations, movedViews, mutations, propsParserContext, surfaceId);
 
   addOngoingAnimations(surfaceId, filteredMutations);
+
+  if constexpr (StaticFeatureFlags::getFlag("RUNTIME_TEST_FLAG")) {
+    if (nativeMutationsRegistry_) {
+      nativeMutationsRegistry_->record(filteredMutations);
+    }
+  }
 
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }

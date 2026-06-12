@@ -1,6 +1,7 @@
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
+#include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <algorithm>
@@ -97,6 +98,12 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   transitions_.clear();
 
   insertContainers(filteredMutations, rootChildCount, surfaceId);
+
+  if constexpr (StaticFeatureFlags::getFlag("RUNTIME_TEST_FLAG")) {
+    if (nativeMutationsRegistry_) {
+      nativeMutationsRegistry_->record(filteredMutations);
+    }
+  }
 
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }

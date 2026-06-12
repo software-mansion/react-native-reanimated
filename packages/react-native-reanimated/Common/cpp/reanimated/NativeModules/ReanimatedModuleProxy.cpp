@@ -45,6 +45,21 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
   return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
 }
 
+// Testing-only (ReJest). Returns a recorder that captures Core Animation
+// transition descriptors (from/to/duration) routed to the iOS `CALayer`, which
+// otherwise emit no per-frame mutations. Null (and compiled out) unless the
+// `RUNTIME_TEST_FLAG` static feature flag is enabled.
+static css::CSSRecordTransitionDescriptorFunction makeCoreAnimationDescriptorRecorder(
+    const std::shared_ptr<NativeMutationsRegistry> &registry) {
+  if constexpr (StaticFeatureFlags::getFlag("RUNTIME_TEST_FLAG")) {
+    return [registry](Tag tag, const std::string &propName, double from, double to, double durationMs) {
+      registry->recordCoreAnimationDescriptor(tag, propName, from, to, durationMs);
+    };
+  } else {
+    return nullptr;
+  }
+}
+
 namespace {
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
@@ -211,6 +226,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           platformDepMethodsHolder.getAnimationTimestamp,
           updatesRegistryManager_)),
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
+      nativeMutationsRegistry_(std::make_shared<NativeMutationsRegistry>()),
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(staticPropsRegistry_, animatedPropsRegistry_)),
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>(
@@ -223,7 +239,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           std::make_shared<CSSPlatformTransitionProxy>(
               platformDepMethodsHolder.cssCanRouteProperty,
               platformDepMethodsHolder.cssApplyTransition,
-              platformDepMethodsHolder.cssRemoveTransition))),
+              platformDepMethodsHolder.cssRemoveTransition,
+              makeCoreAnimationDescriptorRecorder(nativeMutationsRegistry_)))),
       pseudoStylesRegistry_(std::make_shared<PseudoStylesRegistry>(
           platformDepMethodsHolder.attachPseudoSelector,
           platformDepMethodsHolder.detachPseudoSelector,
@@ -374,6 +391,66 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     };
   }
 
+  // ReJest native-mutation recording globals. Built only under the
+  // `RUNTIME_TEST_FLAG` static feature flag; the empty struct is harmless
+  // otherwise (the install in `UIRuntimeDecorator` is also compiled out).
+  NativeMutationsRecorderFunctions nativeMutationsRecorderFunctions;
+  if constexpr (StaticFeatureFlags::getFlag("RUNTIME_TEST_FLAG")) {
+    nativeMutationsRecorderFunctions.startRecording = [weakThis = weak_from_this()]() {
+      if (auto strongThis = weakThis.lock()) {
+        strongThis->nativeMutationsRegistry_->start();
+      }
+    };
+    nativeMutationsRecorderFunctions.stopRecording = [weakThis = weak_from_this()]() {
+      if (auto strongThis = weakThis.lock()) {
+        strongThis->nativeMutationsRegistry_->stop();
+      }
+    };
+    nativeMutationsRecorderFunctions.clearRecording = [weakThis = weak_from_this()]() {
+      if (auto strongThis = weakThis.lock()) {
+        strongThis->nativeMutationsRegistry_->clear();
+      }
+    };
+    nativeMutationsRecorderFunctions.getRecordedMutations = [weakThis =
+                                                                 weak_from_this()](jsi::Runtime &rt) -> jsi::Value {
+      auto strongThis = weakThis.lock();
+      if (!strongThis) {
+        return jsi::Array(rt, 0);
+      }
+      // Must never throw - this runs inside a UI worklet whose exception would
+      // prevent the test's unlock callback from firing and hang the run.
+      try {
+        return strongThis->nativeMutationsRegistry_->getRecordedMutations(rt);
+      } catch (...) {
+        return jsi::Array(rt, 0);
+      }
+    };
+    nativeMutationsRecorderFunctions.obtainLatestRecordedProp =
+        [weakThis = weak_from_this()](
+            jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &propName) -> jsi::Value {
+      auto strongThis = weakThis.lock();
+      if (!strongThis) {
+        return jsi::String::createFromUtf8(rt, "");
+      }
+      // Must never throw - see note above. `shadowNodeFromValue` throws for an
+      // invalid/undefined wrapper, and the fallback may throw for an
+      // unsupported prop; swallow both and return an empty string.
+      try {
+        const auto propNameStr = propName.asString(rt).utf8(rt);
+        const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+        auto result = strongThis->nativeMutationsRegistry_->obtainLatestProp(rt, shadowNode->getTag(), propNameStr);
+        if (result.empty()) {
+          // No mutation recorded for this tag yet (e.g. the first frame or a
+          // Core-Animation-routed prop). Fall back to reading the shadow node.
+          result = strongThis->obtainPropFromShadowNode(rt, propNameStr, shadowNode);
+        }
+        return jsi::String::createFromUtf8(rt, result);
+      } catch (...) {
+        return jsi::String::createFromUtf8(rt, "");
+      }
+    };
+  }
+
   jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   UIRuntimeDecorator::decorate(
       uiRuntime,
@@ -386,7 +463,8 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       progressLayoutAnimation,
       endLayoutAnimation,
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction,
-      requestAnimationFrame);
+      requestAnimationFrame,
+      nativeMutationsRecorderFunctions);
 }
 
 ReanimatedModuleProxy::~ReanimatedModuleProxy() {
@@ -1232,6 +1310,9 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
 #ifdef __APPLE__
       layoutAnimationsProxyExperimental->setForceScreenSnapshotFunction(forceScreenSnapshot_);
 #endif
+      if constexpr (StaticFeatureFlags::getFlag("RUNTIME_TEST_FLAG")) {
+        layoutAnimationsProxyExperimental->setNativeMutationsRegistry(nativeMutationsRegistry_);
+      }
       layoutAnimationsProxy_ = std::move(layoutAnimationsProxyExperimental);
     } else {
       auto layoutAnimationsProxyLegacy = std::make_shared<LayoutAnimationsProxy_Legacy>(
@@ -1249,6 +1330,9 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
       );
       // TODO (future): support in experimental
       uiManager_->setAnimationDelegate(layoutAnimationsProxyLegacy.get());
+      if constexpr (StaticFeatureFlags::getFlag("RUNTIME_TEST_FLAG")) {
+        layoutAnimationsProxyLegacy->setNativeMutationsRegistry(nativeMutationsRegistry_);
+      }
       layoutAnimationsProxy_ = std::move(layoutAnimationsProxyLegacy);
     }
   }
