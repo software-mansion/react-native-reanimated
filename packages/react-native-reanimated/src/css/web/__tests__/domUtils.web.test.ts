@@ -1,6 +1,6 @@
 'use strict';
 import {
-  configureWebCSSAnimations,
+  configureWebCSS,
   insertCSSAnimation,
   insertPseudoSelectorCSS,
   removeCSSAnimation,
@@ -34,14 +34,14 @@ const blocksOf = (rule: CSSKeyframesRule): CSSKeyframeRule[] =>
   Array.from(rule.cssRules) as CSSKeyframeRule[];
 
 beforeAll(() => {
-  configureWebCSSAnimations();
+  configureWebCSS();
 });
 
 describe('domUtils (web CSS animations stylesheet)', () => {
-  describe('configureWebCSSAnimations', () => {
+  describe('configureWebCSS', () => {
     test('creates a single shared style tag in the document head', () => {
       // Idempotent: calling it again must not add a second tag.
-      configureWebCSSAnimations();
+      configureWebCSS();
 
       expect(document.querySelectorAll(`#${STYLE_TAG_ID}`)).toHaveLength(1);
     });

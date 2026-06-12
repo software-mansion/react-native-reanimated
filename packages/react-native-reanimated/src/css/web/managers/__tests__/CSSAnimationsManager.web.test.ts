@@ -10,7 +10,6 @@ import { insertCSSAnimation, removeCSSAnimation } from '../../domUtils';
 import CSSAnimationsManager from '../CSSAnimationsManager';
 
 jest.mock('../../domUtils', () => ({
-  configureWebCSSAnimations: jest.fn(),
   insertCSSAnimation: jest.fn(),
   removeCSSAnimation: jest.fn(),
 }));

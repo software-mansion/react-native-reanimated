@@ -4,6 +4,7 @@ import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanima
 import type { CSSStyle } from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
 import { filterCSSAndStyleProperties } from '../../utils';
+import { configureWebCSS } from '../domUtils';
 import CSSAnimationsManager from './CSSAnimationsManager';
 import CSSPseudoSelectorsManager from './CSSPseudoSelectorsManager';
 import CSSTransitionsManager from './CSSTransitionsManager';
@@ -14,6 +15,8 @@ export default class CSSManager implements ICSSManager {
   private readonly pseudoSelectorsManager: CSSPseudoSelectorsManager;
 
   constructor(viewInfo: ViewInfo, componentDisplayName = '') {
+    configureWebCSS();
+
     const element = viewInfo.DOMElement as ReanimatedHTMLElement;
 
     this.animationsManager = new CSSAnimationsManager(

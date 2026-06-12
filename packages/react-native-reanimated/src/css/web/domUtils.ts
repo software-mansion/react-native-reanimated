@@ -1,22 +1,22 @@
 'use strict';
 import { IS_WINDOW_AVAILABLE, logger } from '../../common';
 
-const CSS_ANIMATIONS_STYLE_TAG_ID = 'ReanimatedCSSStyleTag';
+const CSS_STYLE_TAG_ID = 'ReanimatedCSSStyleTag';
 
-export function configureWebCSSAnimations() {
+export function configureWebCSS() {
   if (
     !IS_WINDOW_AVAILABLE || // Without this check SSR crashes because document is undefined (NextExample on CI)
-    document.getElementById(CSS_ANIMATIONS_STYLE_TAG_ID) !== null
+    document.getElementById(CSS_STYLE_TAG_ID) !== null
   ) {
     return;
   }
 
   const cssStyleTag = document.createElement('style');
-  cssStyleTag.id = CSS_ANIMATIONS_STYLE_TAG_ID;
+  cssStyleTag.id = CSS_STYLE_TAG_ID;
 
   cssStyleTag.onload = () => {
     if (!cssStyleTag.sheet) {
-      logger.error('Failed to create CSS animations stylesheet.');
+      logger.error('Failed to create CSS stylesheet.');
     }
   };
 
@@ -25,11 +25,8 @@ export function configureWebCSSAnimations() {
 
 function getStyleSheet() {
   return (
-    (
-      document.getElementById(
-        CSS_ANIMATIONS_STYLE_TAG_ID
-      ) as HTMLStyleElement | null
-    )?.sheet ?? null
+    (document.getElementById(CSS_STYLE_TAG_ID) as HTMLStyleElement | null)
+      ?.sheet ?? null
   );
 }
 
@@ -48,7 +45,6 @@ function insertSheetRule(key: string, cssText: string): boolean {
     return false;
   }
 
-  configureWebCSSAnimations();
   const sheet = getStyleSheet();
 
   if (!sheet) {
