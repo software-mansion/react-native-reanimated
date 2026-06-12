@@ -578,7 +578,10 @@ var require_globals = __commonJS({
       exports2.globals = new Set(exports2.defaultGlobals);
     }
     var defaultAllowedPaths = ["react-native-worklets"];
-    var defaultAllowedModules = ["react-native/Libraries/Core/setUpXHR"];
+    var defaultAllowedModules = [
+      "react-native-worklets",
+      "react-native/Libraries/Core/setUpXHR"
+    ];
     function addCustomGlobals(state) {
       if (state.opts && Array.isArray(state.opts.globals)) {
         state.opts.globals.forEach((name) => {

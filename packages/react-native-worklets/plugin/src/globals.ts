@@ -195,7 +195,10 @@ export function initializeGlobals() {
 }
 
 const defaultAllowedPaths = ['react-native-worklets'];
-const defaultAllowedModules = ['react-native/Libraries/Core/setUpXHR'];
+const defaultAllowedModules = [
+  'react-native-worklets',
+  'react-native/Libraries/Core/setUpXHR',
+];
 
 /**
  * This function allows to add custom globals such as host-functions. Those
