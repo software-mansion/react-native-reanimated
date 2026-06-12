@@ -1,10 +1,10 @@
 diff --git a/package.json b/package.json
-index 035d3de9af..75ced6b69b 100644
+index fa3012c727..7bbbfdac1c 100644
 --- a/package.json
 +++ b/package.json
-@@ -83,5 +83,9 @@
-     "remark-mdx": "3.1.0",
+@@ -84,5 +84,9 @@
      "shelljs": "0.10.0",
+     "tstyche": "7.2.1",
      "typescript": "5.9.3"
 +  },
 +  "resolutions": {
