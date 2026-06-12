@@ -3,16 +3,20 @@
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingConfigs.h>
+#include <reanimated/CSS/misc/ViewStylesRepository.h>
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <react/renderer/core/ReactPrimitives.h>
+#include <react/renderer/core/ShadowNode.h>
 
 #include <array>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -66,8 +70,14 @@ struct CSSPlatformTransitionConfig {
   }
 };
 
-/// Whether the platform can animate the property natively for the given easing.
-using CSSCanRoutePropertyFunction = std::function<bool(const std::string &propertyName, const EasingConfig &easing)>;
+/// Whether the platform can animate the property natively. shadowNode carries the
+/// view's latest committed props; transitioningProperties lists the co-changing
+/// properties, so platforms can reject ones whose rendering depends on siblings.
+using CSSCanRoutePropertyFunction = std::function<bool(
+    const std::string &propertyName,
+    const EasingConfig &easing,
+    const ShadowNode &shadowNode,
+    const std::unordered_set<std::string> &transitioningProperties)>;
 /// Parses an extracted endpoint into the platform's value representation. An
 /// empty endpoint resolves to the property's CSS default; nullopt means the
 /// value is not expressible natively and the property runs on the loop.
@@ -98,7 +108,8 @@ class CSSPlatformTransitionProxy {
       CSSCanRoutePropertyFunction canRoute,
       CSSParseValueFunction parseValue,
       CSSApplyTransitionFunction applyTransition,
-      CSSRemoveTransitionFunction removeTransition);
+      CSSRemoveTransitionFunction removeTransition,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
   void run(const CSSPlatformTransitionPropertyConfig &config) const;
   void remove(Tag viewTag, const std::string &propertyName) const;
@@ -106,8 +117,11 @@ class CSSPlatformTransitionProxy {
   /// Filters the config into loop / platform buckets, emitting implicit cancels
   /// on the old side when a property migrates vs previousRouting. A property
   /// routes to the platform only when canRoute holds and both endpoints parse.
-  ProcessedConfig
-  processConfig(jsi::Runtime &rt, CSSTransitionConfig &&config, const CSSTransitionRouting &previousRouting) const;
+  ProcessedConfig processConfig(
+      jsi::Runtime &rt,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      CSSTransitionConfig &&config,
+      const CSSTransitionRouting &previousRouting) const;
 
   /// Splits already-routed pseudo-selector toggle diffs into loop / platform
   /// buckets, parsing the platform endpoints; values the platform cannot
@@ -117,13 +131,18 @@ class CSSPlatformTransitionProxy {
       const PropertyValueDynamicDiffsMap &propertyDiffs) const;
 
  private:
-  bool canRoute(const std::string &propertyName, const EasingConfig &easing) const;
+  bool canRoute(
+      const std::string &propertyName,
+      const EasingConfig &easing,
+      const ShadowNode &shadowNode,
+      const std::unordered_set<std::string> &transitioningProperties) const;
   std::optional<PlatformValue> parseValue(const std::string &propertyName, const CSSEndpointValue &value) const;
 
   CSSCanRoutePropertyFunction canRoute_;
   CSSParseValueFunction parseValue_;
   CSSApplyTransitionFunction applyTransition_;
   CSSRemoveTransitionFunction removeTransition_;
+  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 };
 
 } // namespace reanimated::css

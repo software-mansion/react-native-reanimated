@@ -38,7 +38,7 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
 
   // CSSTransition owns routing: platform-routed props run immediately on the platform
   // transition; the loop-routed remainder is applied to the loop transition below.
-  auto processed = platformTransitionProxy_->processConfig(rt, std::move(config), routing_);
+  auto processed = platformTransitionProxy_->processConfig(rt, shadowNode_, std::move(config), routing_);
   routing_ = std::move(processed.routing);
 
   if (!processed.platform.empty()) {

@@ -74,6 +74,15 @@ folly::dynamic ViewStylesRepository::getStyleProp(const Tag tag, const PropertyP
   return getPropertyValue(staticPropsRegistry_->get(tag), propertyPath);
 }
 
+std::shared_ptr<const ShadowNode> ViewStylesRepository::getNewestShadowNode(
+    const std::shared_ptr<const ShadowNode> &shadowNode) {
+  if (!uiManager_) {
+    return shadowNode;
+  }
+  auto newestClone = uiManager_->getNewestCloneOfShadowNode(*shadowNode);
+  return newestClone ? newestClone : shadowNode;
+}
+
 void ViewStylesRepository::clearNodesCache() {
   shadowNodeCache_.clear();
 }
