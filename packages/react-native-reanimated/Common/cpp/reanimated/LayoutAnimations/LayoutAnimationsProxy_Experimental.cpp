@@ -765,46 +765,46 @@ void LayoutAnimationsProxy_Experimental::startExitingAnimation(const std::shared
        handle
 #endif
   ]() {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
 
-    auto oldView = oldChildShadowView;
-    Rect window{};
-    {
-      auto &mutex = strongThis->mutex;
-      auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+        auto oldView = oldChildShadowView;
+        Rect window{};
+        {
+          auto &mutex = strongThis->mutex;
+          auto lock = std::unique_lock<std::recursive_mutex>(mutex);
 #ifdef ANDROID
-      if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
-        // the view was removed (e.g. its subtree was force-ended by a screen
-        // pop) before this start could run — its Remove+Delete are already on
-        // their way to the mounting layer, so starting the animation now
-        // would emit updates for a view that's about to be deleted
-        strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
-        return;
-      }
+          if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
+            // the view was removed (e.g. its subtree was force-ended by a screen
+            // pop) before this start could run — its Remove+Delete are already on
+            // their way to the mounting layer, so starting the animation now
+            // would emit updates for a view that's about to be deleted
+            strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
+            return;
+          }
 #endif
-      oldView = strongThis->maybeCreateLayoutAnimation(oldView, oldView, parentTag);
-      window = strongThis->surfaceManager.getWindow(surfaceId);
-    }
+          oldView = strongThis->maybeCreateLayoutAnimation(oldView, oldView, parentTag);
+          window = strongThis->surfaceManager.getWindow(surfaceId);
+        }
 
-    const Snapshot values(oldView, window);
+        const Snapshot values(oldView, window);
 
-    auto &uiRuntime = strongThis->uiRuntime_;
-    const jsi::Object yogaValues(uiRuntime);
-    yogaValues.setProperty(uiRuntime, "currentOriginX", values.x);
-    yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", values.x);
-    yogaValues.setProperty(uiRuntime, "currentOriginY", values.y);
-    yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", values.y);
-    yogaValues.setProperty(uiRuntime, "currentWidth", values.width);
-    yogaValues.setProperty(uiRuntime, "currentHeight", values.height);
-    yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
-    yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
-    strongThis->layoutAnimationsManager_->startLayoutAnimation(
-        uiRuntime, tag, LayoutAnimationType::EXITING, yogaValues);
-    strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
-  });
+        auto &uiRuntime = strongThis->uiRuntime_;
+        const jsi::Object yogaValues(uiRuntime);
+        yogaValues.setProperty(uiRuntime, "currentOriginX", values.x);
+        yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", values.x);
+        yogaValues.setProperty(uiRuntime, "currentOriginY", values.y);
+        yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", values.y);
+        yogaValues.setProperty(uiRuntime, "currentWidth", values.width);
+        yogaValues.setProperty(uiRuntime, "currentHeight", values.height);
+        yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
+        yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
+        strongThis->layoutAnimationsManager_->startLayoutAnimation(
+            uiRuntime, tag, LayoutAnimationType::EXITING, yogaValues);
+        strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
+      });
 }
 
 void LayoutAnimationsProxy_Experimental::startLayoutAnimation(const std::shared_ptr<LightNode> &node) const {
