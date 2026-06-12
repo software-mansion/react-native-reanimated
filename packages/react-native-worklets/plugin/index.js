@@ -413,7 +413,6 @@ var require_globals = __commonJS({
     exports2.initializeState = initializeState;
     exports2.isGeneratedWorkletFile = isGeneratedWorkletFile;
     exports2.initializeGlobals = initializeGlobals;
-    exports2.initializeAlwaysAllowed = initializeAlwaysAllowed;
     exports2.addCustomGlobals = addCustomGlobals;
     var path_1 = __importDefault(require("path"));
     var autoworkletization_12 = require_autoworkletization();
@@ -534,6 +533,7 @@ var require_globals = __commonJS({
       "_WORKLET"
     ];
     function initializeState(state) {
+      var _a, _b;
       state.skipFile = isGeneratedWorkletFile(state.file.opts.filename);
       if (state.skipFile) {
         return;
@@ -554,7 +554,17 @@ var require_globals = __commonJS({
         initializeGlobals();
         addCustomGlobals(state);
       }
-      initializeAlwaysAllowed(state);
+      const userImportForwarding = state.opts.importForwarding;
+      state.opts.importForwarding = {
+        relativePaths: [
+          ...defaultAllowedPaths,
+          ...(_a = userImportForwarding === null || userImportForwarding === void 0 ? void 0 : userImportForwarding.relativePaths) !== null && _a !== void 0 ? _a : []
+        ],
+        moduleNames: [
+          ...defaultAllowedModules,
+          ...(_b = userImportForwarding === null || userImportForwarding === void 0 ? void 0 : userImportForwarding.moduleNames) !== null && _b !== void 0 ? _b : []
+        ]
+      };
     }
     function isGeneratedWorkletFile(filename) {
       if (!filename) {
@@ -569,17 +579,6 @@ var require_globals = __commonJS({
     }
     var defaultAllowedPaths = ["react-native-worklets"];
     var defaultAllowedModules = ["react-native/Libraries/Core/setUpXHR"];
-    function initializeAlwaysAllowed(state) {
-      var _a, _b;
-      state.opts.workletizablePaths = [
-        ...defaultAllowedPaths,
-        ...(_a = state.opts.workletizablePaths) !== null && _a !== void 0 ? _a : []
-      ];
-      state.opts.workletizableModules = [
-        ...defaultAllowedModules,
-        ...(_b = state.opts.workletizableModules) !== null && _b !== void 0 ? _b : []
-      ];
-    }
     function addCustomGlobals(state) {
       if (state.opts && Array.isArray(state.opts.globals)) {
         state.opts.globals.forEach((name) => {
@@ -598,8 +597,8 @@ var require_imports = __commonJS({
     exports2.updateRelativeRequires = updateRelativeRequires;
     exports2.isImport = isImport;
     exports2.isImportRelative = isImportRelative;
-    exports2.isAllowedForRelativeImports = isAllowedForRelativeImports;
-    exports2.isWorkletizableModule = isWorkletizableModule;
+    exports2.canForwardModuleImport = canForwardModuleImport;
+    exports2.canForwardRelativeImport = canForwardRelativeImport;
     exports2.createImportPathLiteral = createImportPathLiteral;
     var core_1 = require("@babel/core");
     var types_12 = require("@babel/types");
@@ -612,7 +611,7 @@ var require_imports = __commonJS({
           var _a;
           if (nodePath.get("callee").isIdentifier({ name: "require" }) && ((_a = nodePath.get("arguments")[0]) === null || _a === void 0 ? void 0 : _a.isStringLiteral())) {
             const requiredModule = nodePath.get("arguments")[0];
-            if (requiredModule.node.value.startsWith(".") && isAllowedForRelativeImports(state.file.opts.filename || "", state.opts.workletizablePaths)) {
+            if (requiredModule.node.value.startsWith(".") && canForwardRelativeImport(state.file.opts.filename || "", state.opts.importForwarding.relativePaths)) {
               requiredModule.replaceWith(createImportPathLiteral(requiredModule.node.value, state));
             }
           }
@@ -625,14 +624,11 @@ var require_imports = __commonJS({
     function isImportRelative(imported) {
       return imported.path.parentPath.node.source.value.startsWith(".");
     }
-    function isAllowedForRelativeImports(filename, workletizablePaths) {
-      return !!filename && !!(workletizablePaths === null || workletizablePaths === void 0 ? void 0 : workletizablePaths.some((allowedPath) => matchesFilenameSegment(filename, allowedPath)));
+    function canForwardModuleImport(moduleName, forwardableModuleNames) {
+      return forwardableModuleNames.some((forwardableModuleName) => moduleName === forwardableModuleName || moduleName.startsWith(forwardableModuleName + "/"));
     }
-    function isWorkletizableModule(source, workletizableModules) {
-      return !!(workletizableModules === null || workletizableModules === void 0 ? void 0 : workletizableModules.some((module3) => matchesSourcePackage(source, module3)));
-    }
-    function matchesSourcePackage(source, allowedPath) {
-      return source === allowedPath || source.startsWith(allowedPath + "/");
+    function canForwardRelativeImport(modulePath, relativePaths) {
+      return !!modulePath && relativePaths.some((relativePath) => matchesFilenameSegment(modulePath, relativePath));
     }
     function matchesFilenameSegment(filename, allowedPath) {
       const pkgSegments = allowedPath.split(path_1.posix.sep);
@@ -669,7 +665,7 @@ var require_closure = __commonJS({
     function getClosure(funPath, state) {
       const capturedNames = /* @__PURE__ */ new Set();
       const closureVariables = new Array();
-      const libraryBindingsToImport = /* @__PURE__ */ new Set();
+      const moduleBindingsToImport = /* @__PURE__ */ new Set();
       const relativeBindingsToImport = /* @__PURE__ */ new Set();
       let recrawled = false;
       funPath.traverse({
@@ -712,15 +708,15 @@ var require_closure = __commonJS({
             scope = scope.parent;
           }
           if (state.opts.bundleMode && (0, imports_1.isImport)(binding)) {
-            if ((0, imports_1.isImportRelative)(binding) && (0, imports_1.isAllowedForRelativeImports)(state.filename, state.opts.workletizablePaths)) {
+            if ((0, imports_1.isImportRelative)(binding) && (0, imports_1.canForwardRelativeImport)(state.filename, state.opts.importForwarding.relativePaths)) {
               capturedNames.add(name);
               relativeBindingsToImport.add(binding);
               return;
             }
             const source = binding.path.parentPath.node.source.value;
-            if ((0, imports_1.isWorkletizableModule)(source, state.opts.workletizableModules)) {
+            if ((0, imports_1.canForwardModuleImport)(source, state.opts.importForwarding.moduleNames)) {
               capturedNames.add(name);
-              libraryBindingsToImport.add(binding);
+              moduleBindingsToImport.add(binding);
               return;
             }
           }
@@ -730,7 +726,7 @@ var require_closure = __commonJS({
       }, state);
       return {
         closureVariables,
-        libraryBindingsToImport,
+        moduleBindingsToImport,
         relativeBindingsToImport
       };
     }
@@ -753,9 +749,9 @@ var require_generate = __commonJS({
     var path_1 = require("path");
     var imports_1 = require_imports();
     var types_2 = require_types();
-    function generateWorkletFile(libraryBindingsToImport, relativeBindingsToImport, factory, workletHash, state) {
+    function generateWorkletFile(moduleBindingsToImport, relativeBindingsToImport, factory, workletHash, state) {
       var _a;
-      const libraryImports = Array.from(libraryBindingsToImport).filter((binding) => (binding.path.isImportSpecifier() || binding.path.isImportDefaultSpecifier()) && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
+      const libraryImports = Array.from(moduleBindingsToImport).filter((binding) => (binding.path.isImportSpecifier() || binding.path.isImportDefaultSpecifier()) && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
       const filesDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), types_2.generatedWorkletsDir);
       const relativeImports = Array.from(relativeBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, imports_1.createImportPathLiteral)(binding.path.parentPath.node.source.value, state)));
       const imports = [...libraryImports, ...relativeImports];
@@ -1024,9 +1020,9 @@ var require_workletFactory = __commonJS({
       });
       (0, assert_1.strict)(transformed, "[Reanimated] `transformed` is undefined.");
       (0, assert_1.strict)(transformed.ast, "[Reanimated] `transformed.ast` is undefined.");
-      const { closureVariables, libraryBindingsToImport, relativeBindingsToImport } = includeClosure ? (0, closure_1.getClosure)(fun, state) : {
+      const { closureVariables, moduleBindingsToImport, relativeBindingsToImport } = includeClosure ? (0, closure_1.getClosure)(fun, state) : {
         closureVariables: [],
-        libraryBindingsToImport: /* @__PURE__ */ new Set(),
+        moduleBindingsToImport: /* @__PURE__ */ new Set(),
         relativeBindingsToImport: /* @__PURE__ */ new Set()
       };
       const clone = (0, types_12.cloneNode)(fun.node);
@@ -1123,7 +1119,7 @@ var require_workletFactory = __commonJS({
       const factoryCallParamPack = (0, types_12.objectExpression)(factoryCallArgs.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
       if (state.opts.bundleMode) {
         (0, imports_1.updateRelativeRequires)(factory, state);
-        (0, generate_1.generateWorkletFile)(libraryBindingsToImport, relativeBindingsToImport, factory, workletHash, state);
+        (0, generate_1.generateWorkletFile)(moduleBindingsToImport, relativeBindingsToImport, factory, workletHash, state);
       }
       factory.workletized = true;
       return { factory, factoryCallParamPack, workletHash };

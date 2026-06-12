@@ -122,32 +122,12 @@ export interface PluginOptions {
    */
   substituteWebPlatformChecks?: boolean;
 
-  /**
-   * Exact modules names whose **imports** are safe to use on Worklet Runtimes
-   * in the [Bundle
-   * Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode).
-   *
-   * Visit the documentation for more details and examples of how to use this
-   * option.
-   *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#workletizablemodules}
-   *
-   * - Defaults to an empty array `[]`.
-   */
-  workletizableModules?: string[];
+  // TODO: Fill when adding docs.
+  importForwarding?: {
+    // TODO: Fill when adding docs.
+    moduleNames?: string[];
 
-  /**
-   * Package names (or path segments) that identify **files** whose relative
-   * imports should be rewritten when those files are bundled into a worklet in
-   * the [Bundle
-   * Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode).
-   *
-   * Visit the documentation for more details and examples of how to use this
-   * option.
-   *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#workletizablepaths}
-   *
-   * - Defaults to an empty array `[]`.
-   */
-  workletizablePaths?: string[];
+    // TODO: Fill when adding docs.
+    relativePaths?: string[];
+  };
 }

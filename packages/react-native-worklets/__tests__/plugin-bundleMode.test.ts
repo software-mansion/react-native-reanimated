@@ -193,7 +193,7 @@ describe('babel plugin in bundleMode', () => {
       const { code, files } = runPlugin(
         input,
         {},
-        { workletizableModules: ['some-library'] }
+        { importForwarding: { moduleNames: ['some-library'] } }
       );
       expect(files).toHaveLength(1);
       expect(code).toMatchSnapshot();
@@ -213,7 +213,7 @@ describe('babel plugin in bundleMode', () => {
       const { files } = runPlugin(
         input,
         {},
-        { workletizablePaths: ['some-library'] },
+        { importForwarding: { relativePaths: ['some-library'] } },
         fakeFilename
       );
       const filesDirPath = path.resolve(
@@ -241,7 +241,7 @@ describe('babel plugin in bundleMode', () => {
       const { files } = runPlugin(
         input,
         {},
-        { workletizablePaths: ['some-library'] },
+        { importForwarding: { relativePaths: ['some-library'] } },
         fakeFilename
       );
       expect(files).toHaveLength(1);

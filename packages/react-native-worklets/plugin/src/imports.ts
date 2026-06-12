@@ -26,9 +26,9 @@ export function updateRelativeRequires(
         )[0] as NodePath<StringLiteral>;
         if (
           requiredModule.node.value.startsWith('.') &&
-          isAllowedForRelativeImports(
+          canForwardRelativeImport(
             state.file.opts.filename || '',
-            state.opts.workletizablePaths
+            state.opts.importForwarding.relativePaths
           )
         ) {
           requiredModule.replaceWith(
@@ -55,29 +55,27 @@ export function isImportRelative(imported: Binding): boolean {
   ).node.source.value.startsWith('.');
 }
 
-export function isAllowedForRelativeImports(
-  filename: string | undefined | null,
-  workletizablePaths?: string[]
+export function canForwardModuleImport(
+  moduleName: string,
+  forwardableModuleNames: string[]
+): boolean {
+  return forwardableModuleNames.some(
+    (forwardableModuleName) =>
+      moduleName === forwardableModuleName ||
+      moduleName.startsWith(forwardableModuleName + '/')
+  );
+}
+
+export function canForwardRelativeImport(
+  modulePath: string | undefined | null,
+  relativePaths: string[]
 ): boolean {
   return (
-    !!filename &&
-    !!workletizablePaths?.some((allowedPath) =>
-      matchesFilenameSegment(filename, allowedPath)
+    !!modulePath &&
+    relativePaths.some((relativePath) =>
+      matchesFilenameSegment(modulePath, relativePath)
     )
   );
-}
-
-export function isWorkletizableModule(
-  source: string,
-  workletizableModules?: string[]
-): boolean {
-  return !!workletizableModules?.some((module) =>
-    matchesSourcePackage(source, module)
-  );
-}
-
-function matchesSourcePackage(source: string, allowedPath: string): boolean {
-  return source === allowedPath || source.startsWith(allowedPath + '/');
 }
 
 function matchesFilenameSegment(

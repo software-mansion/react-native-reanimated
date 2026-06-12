@@ -5,10 +5,10 @@ import { cloneNode } from '@babel/types';
 
 import { globals } from './globals';
 import {
-  isAllowedForRelativeImports,
+  canForwardModuleImport,
+  canForwardRelativeImport,
   isImport,
   isImportRelative,
-  isWorkletizableModule,
 } from './imports';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
 
@@ -17,12 +17,12 @@ export function getClosure(
   state: WorkletsPluginPass
 ): {
   closureVariables: Identifier[];
-  libraryBindingsToImport: Set<Binding>;
+  moduleBindingsToImport: Set<Binding>;
   relativeBindingsToImport: Set<Binding>;
 } {
   const capturedNames = new Set<string>();
   const closureVariables = new Array<Identifier>();
-  const libraryBindingsToImport = new Set<Binding>();
+  const moduleBindingsToImport = new Set<Binding>();
   const relativeBindingsToImport = new Set<Binding>();
   let recrawled = false;
 
@@ -89,9 +89,9 @@ export function getClosure(
         if (state.opts.bundleMode && isImport(binding)) {
           if (
             isImportRelative(binding) &&
-            isAllowedForRelativeImports(
+            canForwardRelativeImport(
               state.filename,
-              state.opts.workletizablePaths
+              state.opts.importForwarding.relativePaths
             )
           ) {
             capturedNames.add(name);
@@ -102,9 +102,14 @@ export function getClosure(
             binding.path.parentPath as NodePath<ImportDeclaration>
           ).node.source.value;
 
-          if (isWorkletizableModule(source, state.opts.workletizableModules)) {
+          if (
+            canForwardModuleImport(
+              source,
+              state.opts.importForwarding.moduleNames
+            )
+          ) {
             capturedNames.add(name);
-            libraryBindingsToImport.add(binding);
+            moduleBindingsToImport.add(binding);
             return;
           }
         }
@@ -118,7 +123,7 @@ export function getClosure(
 
   return {
     closureVariables,
-    libraryBindingsToImport,
+    moduleBindingsToImport,
     relativeBindingsToImport,
   };
 }
