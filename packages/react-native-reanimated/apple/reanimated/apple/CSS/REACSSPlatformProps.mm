@@ -40,6 +40,8 @@ const CSSPropertyTraits *traitsFor(const std::string &propertyName)
 {
   static const std::unordered_map<std::string, CSSPropertyTraits> kProperties = {
       {"opacity", {CSSValueKind::Scalar, 1.0}},
+      {"borderWidth", {CSSValueKind::Scalar, 0.0}},
+      {"borderRadius", {CSSValueKind::Scalar, 0.0}},
       {"shadowOpacity", {CSSValueKind::Scalar, 1.0}},
       {"shadowRadius", {CSSValueKind::Scalar, 0.0}},
       {"shadowOffset", {CSSValueKind::Size, std::array<double, 2>{0, 0}}},
@@ -73,12 +75,25 @@ CGColorSpaceRef sharedSRGBColorSpace()
   return space;
 }
 
-// Per-side colors subvert the uniform borderColor when they transition with
-// it - RN then draws the border through its custom path, where main-layer
-// animations are invisible.
-bool hasPerSideBorderColorSibling(const std::unordered_set<std::string> &transitioningProperties)
+template <size_t N>
+bool anyPresent(const std::array<std::string_view, N> &siblings, const std::unordered_set<std::string> &candidates)
 {
-  static constexpr std::array<std::string_view, 9> kSiblings = {
+  for (const auto &sibling : siblings) {
+    if (candidates.contains(std::string(sibling))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Per-side / per-corner siblings subvert a uniform border-family property when
+// they transition with it - RN then draws the border through its custom path,
+// where main-layer animations are invisible.
+bool hasNonUniformBorderSibling(
+    const std::string &propertyName,
+    const std::unordered_set<std::string> &transitioningProperties)
+{
+  static constexpr std::array<std::string_view, 9> kColorSiblings = {
       "borderTopColor",
       "borderRightColor",
       "borderBottomColor",
@@ -89,12 +104,46 @@ bool hasPerSideBorderColorSibling(const std::unordered_set<std::string> &transit
       "borderBlockStartColor",
       "borderBlockEndColor",
   };
-  for (const auto &sibling : kSiblings) {
-    if (transitioningProperties.contains(std::string(sibling))) {
-      return true;
-    }
+  static constexpr std::array<std::string_view, 6> kWidthSiblings = {
+      "borderTopWidth",
+      "borderRightWidth",
+      "borderBottomWidth",
+      "borderLeftWidth",
+      "borderStartWidth",
+      "borderEndWidth",
+  };
+  static constexpr std::array<std::string_view, 12> kRadiusSiblings = {
+      "borderTopLeftRadius",
+      "borderTopRightRadius",
+      "borderBottomLeftRadius",
+      "borderBottomRightRadius",
+      "borderTopStartRadius",
+      "borderTopEndRadius",
+      "borderBottomStartRadius",
+      "borderBottomEndRadius",
+      "borderStartStartRadius",
+      "borderStartEndRadius",
+      "borderEndStartRadius",
+      "borderEndEndRadius",
+  };
+  if (propertyName == "borderColor") {
+    return anyPresent(kColorSiblings, transitioningProperties);
+  }
+  if (propertyName == "borderWidth") {
+    return anyPresent(kWidthSiblings, transitioningProperties);
+  }
+  if (propertyName == "borderRadius") {
+    return anyPresent(kRadiusSiblings, transitioningProperties);
   }
   return false;
+}
+
+// Properties drawn by RN's custom border path when Core Animation border
+// rendering is off.
+bool requiresCoreAnimationBorderRendering(const std::string &propertyName)
+{
+  return propertyName == "backgroundColor" || propertyName == "borderColor" || propertyName == "borderWidth" ||
+      propertyName == "borderRadius";
 }
 
 // Mirrors useCoreAnimationBorderRendering in RN's RCTViewComponentView: when
@@ -136,13 +185,12 @@ bool canRouteCSSProperty(
   if (!std::holds_alternative<LinearEasing>(easing) && !std::holds_alternative<CubicBezierEasing>(easing)) {
     return false;
   }
-  // Background and border colors live on the main layer only while RN uses
+  // Background and border properties live on the main layer only while RN uses
   // Core Animation border rendering for this view.
-  if ((propertyName == "backgroundColor" || propertyName == "borderColor") &&
-      !usesCoreAnimationBorderRendering(shadowNode)) {
+  if (requiresCoreAnimationBorderRendering(propertyName) && !usesCoreAnimationBorderRendering(shadowNode)) {
     return false;
   }
-  if (propertyName == "borderColor" && hasPerSideBorderColorSibling(transitioningProperties)) {
+  if (hasNonUniformBorderSibling(propertyName, transitioningProperties)) {
     return false;
   }
   return true;
@@ -182,6 +230,14 @@ id idFromPlatformValue(const PlatformValue &value)
   const CGFloat components[4] = {color[0], color[1], color[2], color[3]};
   // CGColorCreate returns +1 retained; __bridge_transfer hands the retain to ARC.
   return (__bridge_transfer id)CGColorCreate(sharedSRGBColorSpace(), components);
+}
+
+NSString *keyPathForCSSProperty(const std::string &propertyName)
+{
+  if (propertyName == "borderRadius") {
+    return @"cornerRadius";
+  }
+  return [NSString stringWithUTF8String:propertyName.c_str()];
 }
 
 CAMediaTimingFunction *makeCSSTimingFunction(const EasingConfig &easing)

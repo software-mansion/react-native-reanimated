@@ -37,7 +37,7 @@ using namespace reanimated::css;
 {
   // Capture everything up front; CALayer access must happen on the main thread.
   Tag viewTag = config.viewTag;
-  NSString *keyPath = [NSString stringWithUTF8String:config.propertyName.c_str()];
+  NSString *keyPath = keyPathForCSSProperty(config.propertyName);
   id toValue = idFromPlatformValue(config.toValue);
   id fromValue = idFromPlatformValue(config.fromValue);
   double durationSec = config.durationMs / 1000.0;
@@ -88,7 +88,7 @@ using namespace reanimated::css;
 
 - (void)removeTransitionForTag:(Tag)viewTag propertyName:(const std::string &)propertyName
 {
-  NSString *keyPath = [NSString stringWithUTF8String:propertyName.c_str()];
+  NSString *keyPath = keyPathForCSSProperty(propertyName);
   __weak __typeof__(self) weakSelf = self;
   RCTExecuteOnMainQueue(^{
     __typeof__(self) strongSelf = weakSelf;

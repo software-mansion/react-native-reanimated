@@ -35,6 +35,10 @@ std::optional<PlatformValue> parsePlatformValue(const std::string &propertyName,
 /// (NSNumber, NSValue, or CGColor).
 id idFromPlatformValue(const PlatformValue &value);
 
+/// CSS property name -> CALayer keypath. The names match except borderRadius,
+/// which CALayer calls cornerRadius.
+NSString *keyPathForCSSProperty(const std::string &propertyName);
+
 CAMediaTimingFunction *makeCSSTimingFunction(const EasingConfig &easing);
 
 } // namespace reanimated::css
