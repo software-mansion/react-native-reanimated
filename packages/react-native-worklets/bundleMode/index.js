@@ -72,9 +72,9 @@ function getBundleModeMetroConfig(/** @type {any} */ config) {
     );
 
   const currentGetTransformOptions = config?.transformer?.getTransformOptions;
-  config.transformer.getTransformOptions = async () => {
+  config.transformer.getTransformOptions = async (...args) => {
     const options = currentGetTransformOptions
-      ? await currentGetTransformOptions()
+      ? await currentGetTransformOptions(...args)
       : {};
     return {
       ...options,
