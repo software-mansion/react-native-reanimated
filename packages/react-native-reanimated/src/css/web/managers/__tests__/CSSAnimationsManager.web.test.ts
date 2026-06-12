@@ -99,7 +99,7 @@ describe('CSSAnimationsManager (web)', () => {
 
       expect(insertCSSAnimation).toHaveBeenCalledWith(
         element.style.animationName,
-        expect.stringContaining('d: path(')
+        'from { d: path("M0,0 10,10 20,0Z") } to { d: path("M0,0 10,20 20,0Z") }'
       );
     });
 
