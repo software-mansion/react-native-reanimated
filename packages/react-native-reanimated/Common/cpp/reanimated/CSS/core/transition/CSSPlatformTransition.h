@@ -1,10 +1,8 @@
 #pragma once
 
 #include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
-#include <reanimated/CSS/utils/platform.h>
 #include <reanimated/CSS/utils/reversingShortening.h>
 
-#include <jsi/jsi.h>
 #include <react/renderer/core/ReactPrimitives.h>
 
 #include <memory>
@@ -23,9 +21,8 @@ class CSSPlatformTransition {
 
   CSSPlatformTransition(const CSSPlatformTransition &) = delete;
 
-  void run(jsi::Runtime &rt, const CSSPlatformTransitionConfig &config, double timestamp);
-  /** TODO: unify folly::dynamic and jsi::value versions */
-  void run(const PropertyValueDynamicDiffsMap &propertiesDiffs, double timestamp);
+  void run(const CSSPlatformTransitionConfig &config, double timestamp);
+  void run(const ParsedPlatformDiffs &propertiesDiffs, double timestamp);
 
   void updateSettings(
       const PropertiesSettingsMap &changedPropertiesSettings,
@@ -41,7 +38,6 @@ class CSSPlatformTransition {
     ReversingState previous;
   };
 
-  void runEntry(jsi::Runtime &rt, const CSSPlatformTransitionRawEntry &entry, double timestamp);
   void applyEntry(
       const std::string &propertyName,
       PlatformValue fromValue,

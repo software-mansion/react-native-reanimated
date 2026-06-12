@@ -12,9 +12,9 @@ CSSPlatformTransition::CSSPlatformTransition(
     const std::shared_ptr<CSSPlatformTransitionProxy> &proxy)
     : viewTag_(viewTag), proxy_(proxy) {}
 
-void CSSPlatformTransition::run(jsi::Runtime &rt, const CSSPlatformTransitionConfig &config, const double timestamp) {
+void CSSPlatformTransition::run(const CSSPlatformTransitionConfig &config, const double timestamp) {
   for (const auto &entry : config.changedProperties) {
-    runEntry(rt, entry, timestamp);
+    applyEntry(entry.propertyName, entry.fromValue, entry.toValue, entry.settings, timestamp);
   }
 
   for (const auto &propertyName : config.removedProperties) {
@@ -22,12 +22,12 @@ void CSSPlatformTransition::run(jsi::Runtime &rt, const CSSPlatformTransitionCon
   }
 }
 
-void CSSPlatformTransition::run(const PropertyValueDynamicDiffsMap &propertiesDiffs, const double timestamp) {
+void CSSPlatformTransition::run(const ParsedPlatformDiffs &propertiesDiffs, const double timestamp) {
   for (const auto &[propertyName, propertyDiff] : propertiesDiffs) {
+    // The routing layer only sends properties registered here, so missing
+    // settings are an invariant violation.
     const auto &settings = settings_.at(propertyName);
-    auto fromValue = parsePlatformValue(propertyName, propertyDiff.first);
-    auto toValue = parsePlatformValue(propertyName, propertyDiff.second);
-    applyEntry(propertyName, fromValue, toValue, settings, timestamp);
+    applyEntry(propertyName, propertyDiff.first, propertyDiff.second, settings, timestamp);
   }
 }
 
@@ -40,17 +40,6 @@ void CSSPlatformTransition::updateSettings(
   for (const auto &[propertyName, propertySettings] : changedPropertiesSettings) {
     settings_[propertyName] = propertySettings;
   }
-}
-
-void CSSPlatformTransition::runEntry(
-    jsi::Runtime &rt,
-    const CSSPlatformTransitionRawEntry &entry,
-    const double timestamp) {
-  // null/undefined endpoints are resolved to the property's default inside
-  // parsePlatformValue; type mismatches and unsupported properties throw.
-  auto fromValue = parsePlatformValue(rt, entry.propertyName, entry.valueDiff.first);
-  auto toValue = parsePlatformValue(rt, entry.propertyName, entry.valueDiff.second);
-  applyEntry(entry.propertyName, fromValue, toValue, entry.settings, timestamp);
 }
 
 void CSSPlatformTransition::applyEntry(

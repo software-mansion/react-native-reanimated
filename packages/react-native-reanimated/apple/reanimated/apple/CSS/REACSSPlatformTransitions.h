@@ -6,6 +6,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import <string>
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface REACSSPlatformTransitions : NSObject
@@ -13,10 +15,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter;
 
 - (void)applyTransition:(const reanimated::css::CSSPlatformTransitionPropertyConfig &)config;
-- (void)removeTransitionForTag:(facebook::react::Tag)viewTag propertyName:(NSString *)propertyName;
+- (void)removeTransitionForTag:(facebook::react::Tag)viewTag propertyName:(const std::string &)propertyName;
 
 @end
-
-bool canRouteCSSProperty(const std::string &propertyName, const reanimated::css::EasingConfig &easing);
 
 NS_ASSUME_NONNULL_END

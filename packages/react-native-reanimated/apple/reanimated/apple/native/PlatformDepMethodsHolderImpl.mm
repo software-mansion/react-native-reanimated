@@ -1,4 +1,5 @@
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
+#import <reanimated/apple/CSS/REACSSPlatformProps.h>
 #import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
@@ -125,7 +126,12 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
 
 css::CSSCanRoutePropertyFunction makeCSSCanRouteProperty()
 {
-  return &canRouteCSSProperty;
+  return &css::canRouteCSSProperty;
+}
+
+css::CSSParseValueFunction makeCSSParseValue()
+{
+  return &css::parsePlatformValue;
 }
 
 css::CSSApplyTransitionFunction makeCSSApplyTransition(REACSSPlatformTransitions *platformTransitions)
@@ -138,8 +144,7 @@ css::CSSApplyTransitionFunction makeCSSApplyTransition(REACSSPlatformTransitions
 css::CSSRemoveTransitionFunction makeCSSRemoveTransition(REACSSPlatformTransitions *platformTransitions)
 {
   return [platformTransitions](Tag viewTag, const std::string &propertyName) {
-    [platformTransitions removeTransitionForTag:viewTag
-                                   propertyName:[NSString stringWithUTF8String:propertyName.c_str()]];
+    [platformTransitions removeTransitionForTag:viewTag propertyName:propertyName];
   };
 }
 
@@ -207,6 +212,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   REACSSPlatformTransitions *platformTransitions =
       [[REACSSPlatformTransitions alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
   auto cssCanRouteProperty = makeCSSCanRouteProperty();
+  auto cssParseValue = makeCSSParseValue();
   auto cssApplyTransition = makeCSSApplyTransition(platformTransitions);
   auto cssRemoveTransition = makeCSSRemoveTransition(platformTransitions);
 
@@ -224,6 +230,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
       cssCanRouteProperty,
+      cssParseValue,
       cssApplyTransition,
       cssRemoveTransition,
   };

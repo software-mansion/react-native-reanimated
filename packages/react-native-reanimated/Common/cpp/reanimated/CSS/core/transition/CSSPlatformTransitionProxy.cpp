@@ -1,5 +1,4 @@
 #include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
-#include <reanimated/Tools/FeatureFlags.h>
 
 #include <react/debug/react_native_assert.h>
 
@@ -7,19 +6,62 @@
 
 namespace reanimated::css {
 
+namespace {
+
+// Reduces a jsi::Value transition endpoint to the representation-agnostic shape
+// the platform parses (a number, a size, or monostate for null / absent).
+CSSEndpointValue endpointFromJSI(jsi::Runtime &rt, const jsi::Value &value) {
+  if (value.isNumber()) {
+    return value.asNumber();
+  }
+  if (value.isObject()) {
+    const auto object = value.asObject(rt);
+    const auto width = object.getProperty(rt, "width");
+    const auto height = object.getProperty(rt, "height");
+    return std::array<double, 2>{
+        width.isNumber() ? width.asNumber() : 0.0,
+        height.isNumber() ? height.asNumber() : 0.0,
+    };
+  }
+  return std::monostate{};
+}
+
+// The same reduction for the runtime-free pseudo-selector toggle path.
+CSSEndpointValue endpointFromDynamic(const folly::dynamic &value) {
+  if (value.isNumber()) {
+    return value.asDouble();
+  }
+  if (value.isObject()) {
+    const auto *width = value.get_ptr("width");
+    const auto *height = value.get_ptr("height");
+    return std::array<double, 2>{
+        width != nullptr && width->isNumber() ? width->asDouble() : 0.0,
+        height != nullptr && height->isNumber() ? height->asDouble() : 0.0,
+    };
+  }
+  return std::monostate{};
+}
+
+} // namespace
+
 CSSPlatformTransitionProxy::CSSPlatformTransitionProxy(
     CSSCanRoutePropertyFunction canRoute,
+    CSSParseValueFunction parseValue,
     CSSApplyTransitionFunction applyTransition,
     CSSRemoveTransitionFunction removeTransition)
     : canRoute_(std::move(canRoute)),
+      parseValue_(std::move(parseValue)),
       applyTransition_(std::move(applyTransition)),
       removeTransition_(std::move(removeTransition)) {}
 
 bool CSSPlatformTransitionProxy::canRoute(const std::string &propertyName, const EasingConfig &easing) const {
-  if constexpr (!StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
-    return false;
-  }
   return canRoute_ && canRoute_(propertyName, easing);
+}
+
+std::optional<PlatformValue> CSSPlatformTransitionProxy::parseValue(
+    const std::string &propertyName,
+    const CSSEndpointValue &value) const {
+  return parseValue_ ? parseValue_(propertyName, value) : std::nullopt;
 }
 
 void CSSPlatformTransitionProxy::run(const CSSPlatformTransitionPropertyConfig &config) const {
@@ -34,25 +76,32 @@ void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &pr
   }
 }
 
-// Splits the new split-shape config into loop / platform buckets. result.routing
-// starts as a copy of the previous call's routing and is updated as we route
-// each prop; erasing from the *other* side's set returns nonzero exactly when
-// the prop is migrating sides - that's how we emit cancels.
+// Erasing from the other side's routing set returns nonzero exactly when the
+// property migrates sides - that's when the old side gets a cancel.
 CSSPlatformTransitionProxy::ProcessedConfig CSSPlatformTransitionProxy::processConfig(
+    jsi::Runtime &rt,
     CSSTransitionConfig &&config,
     const CSSTransitionRouting &previousRouting) const {
   ProcessedConfig result;
   result.routing = previousRouting;
 
-  // Drain changedPropertiesSettings; for each, decide routing and bucket.
-  // extract() preserves move-only PropertyValueDiff (jsi::Value pair).
+  // extract() preserves the move-only jsi::Value diffs.
   while (!config.changedPropertiesSettings.empty()) {
     auto settingsNode = config.changedPropertiesSettings.extract(config.changedPropertiesSettings.begin());
     const auto &propertyName = settingsNode.key();
     const auto &settings = settingsNode.mapped();
     const auto valueIt = config.changedProperties.find(propertyName);
 
-    if (canRoute(propertyName, settings.easingConfig)) {
+    bool routable = canRoute(propertyName, settings.easingConfig);
+    std::optional<PlatformValue> fromValue;
+    std::optional<PlatformValue> toValue;
+    if (routable && valueIt != config.changedProperties.end()) {
+      fromValue = parseValue(propertyName, endpointFromJSI(rt, valueIt->second.first));
+      toValue = parseValue(propertyName, endpointFromJSI(rt, valueIt->second.second));
+      routable = fromValue.has_value() && toValue.has_value();
+    }
+
+    if (routable) {
       // loop -> platform migration: cancel on loop.
       if (result.routing.loop.erase(propertyName) > 0) {
         result.loop.removedProperties.push_back(propertyName);
@@ -60,9 +109,9 @@ CSSPlatformTransitionProxy::ProcessedConfig CSSPlatformTransitionProxy::processC
       result.routing.platform.insert(propertyName);
 
       if (valueIt != config.changedProperties.end()) {
-        auto valueNode = config.changedProperties.extract(valueIt);
+        config.changedProperties.erase(valueIt);
         result.platform.changedProperties.push_back(
-            CSSPlatformTransitionRawEntry{propertyName, std::move(valueNode.mapped()), settings});
+            CSSPlatformTransitionEntry{propertyName, *fromValue, *toValue, settings});
       }
       result.platform.changedPropertiesSettings.insert(std::move(settingsNode));
     } else {
@@ -84,8 +133,7 @@ CSSPlatformTransitionProxy::ProcessedConfig CSSPlatformTransitionProxy::processC
   // have consumed all of changedProperties.
   react_native_assert(config.changedProperties.empty() && "[Reanimated] CSS transition value diff without settings");
 
-  // Props JS asked to stop transitioning: look up the owning side in routing
-  // and forward the cancel there.
+  // Forward removal cancels to the side that owns the property.
   for (auto &propertyName : config.removedProperties) {
     if (result.routing.platform.erase(propertyName) > 0) {
       result.platform.removedProperties.push_back(std::move(propertyName));
@@ -94,6 +142,27 @@ CSSPlatformTransitionProxy::ProcessedConfig CSSPlatformTransitionProxy::processC
     }
   }
 
+  return result;
+}
+
+CSSPlatformTransitionProxy::ProcessedDynamicDiffs CSSPlatformTransitionProxy::processDynamicDiffs(
+    const CSSTransitionRouting &routing,
+    const PropertyValueDynamicDiffsMap &propertyDiffs) const {
+  ProcessedDynamicDiffs result;
+  for (const auto &[propertyName, propertyDiff] : propertyDiffs) {
+    // The routing was decided when the transition was registered; here we only
+    // re-parse the toggled endpoints. Values the platform cannot express fall
+    // back to the loop.
+    if (routing.platform.contains(propertyName)) {
+      auto fromValue = parseValue(propertyName, endpointFromDynamic(propertyDiff.first));
+      auto toValue = parseValue(propertyName, endpointFromDynamic(propertyDiff.second));
+      if (fromValue && toValue) {
+        result.platform.emplace(propertyName, std::make_pair(*fromValue, *toValue));
+        continue;
+      }
+    }
+    result.loop.emplace(propertyName, propertyDiff);
+  }
   return result;
 }
 

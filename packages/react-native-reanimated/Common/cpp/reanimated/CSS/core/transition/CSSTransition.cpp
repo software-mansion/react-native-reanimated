@@ -38,14 +38,14 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
 
   // CSSTransition owns routing: platform-routed props run immediately on the platform
   // transition; the loop-routed remainder is applied to the loop transition below.
-  auto processed = platformTransitionProxy_->processConfig(std::move(config), routing_);
+  auto processed = platformTransitionProxy_->processConfig(rt, std::move(config), routing_);
   routing_ = std::move(processed.routing);
 
   if (!processed.platform.empty()) {
     auto &platformTransition = ensurePlatformTransition();
     platformTransition.updateSettings(
         processed.platform.changedPropertiesSettings, processed.platform.removedProperties);
-    platformTransition.run(rt, processed.platform, timestamp);
+    platformTransition.run(processed.platform, timestamp);
   }
 
   const auto &loopConfig = processed.loop;
@@ -71,24 +71,16 @@ folly::dynamic CSSTransition::run(
     const folly::dynamic &lastUpdates) {
   const auto timestamp = loop_->resolveTimestamp();
 
-  PropertyValueDynamicDiffsMap loopDiffs;
-  PropertyValueDynamicDiffsMap platformDiffs;
-  for (const auto &[propertyName, propertyDiff] : propertyDiffs) {
-    if (routing_.platform.contains(propertyName)) {
-      platformDiffs.emplace(propertyName, propertyDiff);
-    } else {
-      loopDiffs.emplace(propertyName, propertyDiff);
-    }
-  }
+  auto processed = platformTransitionProxy_->processDynamicDiffs(routing_, propertyDiffs);
 
-  if (!platformDiffs.empty()) {
-    ensurePlatformTransition().run(platformDiffs, timestamp);
+  if (!processed.platform.empty()) {
+    ensurePlatformTransition().run(processed.platform, timestamp);
   }
-  if (loopDiffs.empty() && !loopTransition_) {
+  if (processed.loop.empty() && !loopTransition_) {
     return folly::dynamic::object();
   }
 
-  auto initialUpdate = ensureLoopTransition().run(shadowNode_, loopDiffs, lastUpdates, timestamp);
+  auto initialUpdate = ensureLoopTransition().run(shadowNode_, processed.loop, lastUpdates, timestamp);
   scheduleLoop(timestamp);
   return initialUpdate;
 }
