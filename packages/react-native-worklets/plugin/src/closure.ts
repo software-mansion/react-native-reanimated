@@ -91,7 +91,7 @@ export function getClosure(
             isImportRelative(binding) &&
             isAllowedForRelativeImports(
               state.filename,
-              state.opts.workletizableModules
+              state.opts.workletizablePaths
             )
           ) {
             capturedNames.add(name);

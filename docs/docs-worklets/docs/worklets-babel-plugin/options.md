@@ -25,6 +25,7 @@ interface PluginOptions {
   strictGlobal?: boolean;
   substituteWebPlatformChecks?: boolean;
   workletizableModules?: string[];
+  workletizablePaths?: string[];
 }
 ```
 
@@ -263,4 +264,10 @@ This option can also be useful for Web apps. In Reanimated, there are numerous c
 
 Defaults to an empty array.
 
-This option allows you to register modules as safe to use on Worklet Runtimes in the [Bundle Mode](/docs/bundleMode/).
+This option lets you register exact package names whose **imports** are safe to use on Worklet Runtimes in the [Bundle Mode](/docs/bundleMode/). Each entry is matched as a whole package name against the import source, so `'react-native'` matches `import x from 'react-native/Foo'` but not `'react-native-reanimated'`.
+
+### workletizablePaths
+
+Defaults to an empty array.
+
+This option lets you register package names (or path segments) that identify **files** whose relative imports should be rewritten when bundled into a worklet. Each entry is matched as a consecutive segment in the file's absolute path, so `'react-native'` matches files inside a `react-native` directory but not files in a sibling `react-native-reanimated` directory. Use this when files inside one of your packages contain `'worklet'`-directed functions whose relative imports need to follow them into the worklet bundle.
