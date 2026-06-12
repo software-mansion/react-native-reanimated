@@ -24,7 +24,10 @@ interface PluginOptions {
   relativeSourceLocation?: boolean;
   strictGlobal?: boolean;
   substituteWebPlatformChecks?: boolean;
-  workletizableModules?: string[];
+  importForwarding?: {
+    moduleNames?: string[];
+    relativePaths?: string[];
+  };
 }
 ```
 
@@ -259,8 +262,18 @@ Defaults to `false`.
 
 This option can also be useful for Web apps. In Reanimated, there are numerous checks to determine the right function implementation for a specific target platform. Enabling this option changes all the checks that identify if the target is a Web app to `true`. This alteration can aid in tree-shaking and contribute to reducing the bundle size.
 
-### workletizableModules
+### importForwarding
+
+Configures which imports inside worklet bodies are forwarded into the generated worklet file in the [Bundle Mode](/docs/bundleMode/). Holds two arrays:
+
+#### importForwarding.moduleNames
 
 Defaults to an empty array.
 
-This option allows you to register modules as safe to use on Worklet Runtimes in the [Bundle Mode](/docs/bundleMode/).
+Exact package names whose **imports** are safe to use on Worklet Runtimes. Each entry is matched as a whole package name against the import source, so `'react-native'` matches `import x from 'react-native/Foo'` but not `'react-native-reanimated'`.
+
+#### importForwarding.relativePaths
+
+Defaults to an empty array.
+
+Package names (or path segments) that identify **files** whose relative imports should be rewritten when bundled into a worklet. Each entry is matched as a consecutive segment in the file's absolute path, so `'react-native'` matches files inside a `react-native` directory but not files in a sibling `react-native-reanimated` directory. Use this when files inside one of your packages contain `'worklet'`-directed functions whose relative imports need to follow them into the worklet bundle.
