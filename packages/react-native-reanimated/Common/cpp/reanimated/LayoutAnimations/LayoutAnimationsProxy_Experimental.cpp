@@ -531,6 +531,13 @@ void LayoutAnimationsProxy_Experimental::updateOngoingAnimationTarget(const int 
 }
 
 void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) const {
+#ifdef ANDROID
+  // also invalidate animation starts that are scheduled but haven't run yet,
+  // so they don't re-create the animation after this cancellation
+  if (const auto it = pendingStarts_.find(tag); it != pendingStarts_.end()) {
+    it->second.handle++;
+  }
+#endif
   if (!layoutAnimations_.contains(tag)) {
     return;
   }
@@ -675,9 +682,24 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::share
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
   const auto parentTag = parent->current.tag;
+#ifdef ANDROID
+  const auto handle = pendingStarts_[newChildShadowView.tag].handle;
+  pendingStarts_[newChildShadowView.tag].count++;
+#endif
 
   scheduleOnUI(
-      uiScheduler_, [weakThis = weak_from_this(), finalView, currentView, newChildShadowView, parentTag, opacity]() {
+      uiScheduler_,
+      [weakThis = weak_from_this(),
+       finalView,
+       currentView,
+       newChildShadowView,
+       parentTag,
+       opacity
+#ifdef ANDROID
+       ,
+       handle
+#endif
+  ]() {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
@@ -687,6 +709,12 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::share
         const auto tag = newChildShadowView.tag;
         {
           auto lock = std::unique_lock<std::recursive_mutex>(strongThis->mutex);
+#ifdef ANDROID
+          if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
+            // the view was removed before this start could run
+            return;
+          }
+#endif
           strongThis->layoutAnimations_[tag] = {
               .finalView = newChildShadowView,
               .currentView = newChildShadowView,
@@ -720,8 +748,23 @@ void LayoutAnimationsProxy_Experimental::startExitingAnimation(const std::shared
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
   const auto parentTag = parent->current.tag;
+#ifdef ANDROID
+  const auto handle = pendingStarts_[tag].handle;
+  pendingStarts_[tag].count++;
+#endif
 
-  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag, parentTag, oldChildShadowView, surfaceId]() {
+  scheduleOnUI(
+      uiScheduler_,
+      [weakThis = weak_from_this(),
+       tag,
+       parentTag,
+       oldChildShadowView,
+       surfaceId
+#ifdef ANDROID
+       ,
+       handle
+#endif
+  ]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -732,6 +775,16 @@ void LayoutAnimationsProxy_Experimental::startExitingAnimation(const std::shared
     {
       auto &mutex = strongThis->mutex;
       auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+#ifdef ANDROID
+      if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
+        // the view was removed (e.g. its subtree was force-ended by a screen
+        // pop) before this start could run — its Remove+Delete are already on
+        // their way to the mounting layer, so starting the animation now
+        // would emit updates for a view that's about to be deleted
+        strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
+        return;
+      }
+#endif
       oldView = strongThis->maybeCreateLayoutAnimation(oldView, oldView, parentTag);
       window = strongThis->surfaceManager.getWindow(surfaceId);
     }
@@ -762,9 +815,24 @@ void LayoutAnimationsProxy_Experimental::startLayoutAnimation(const std::shared_
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
   const auto parentTag = parent->current.tag;
+#ifdef ANDROID
+  const auto handle = pendingStarts_[tag].handle;
+  pendingStarts_[tag].count++;
+#endif
 
   scheduleOnUI(
-      uiScheduler_, [weakThis = weak_from_this(), surfaceId, oldChildShadowView, newChildShadowView, parentTag, tag]() {
+      uiScheduler_,
+      [weakThis = weak_from_this(),
+       surfaceId,
+       oldChildShadowView,
+       newChildShadowView,
+       parentTag,
+       tag
+#ifdef ANDROID
+       ,
+       handle
+#endif
+  ]() {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
@@ -775,6 +843,12 @@ void LayoutAnimationsProxy_Experimental::startLayoutAnimation(const std::shared_
         {
           auto &mutex = strongThis->mutex;
           auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+#ifdef ANDROID
+          if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
+            // the view was removed before this start could run
+            return;
+          }
+#endif
           oldView = strongThis->maybeCreateLayoutAnimation(oldView, newChildShadowView, parentTag);
           window = strongThis->surfaceManager.getWindow(surfaceId);
         }

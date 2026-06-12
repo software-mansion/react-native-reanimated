@@ -233,6 +233,10 @@ const InvalidValueAccessExample: React.FC = () =>
   React.createElement(
     require('./InvalidValueAccessExample').default as React.FC
   );
+const InterruptedExitingExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/InterruptedExitingExample').default as React.FC
+  );
 const InvertedFlatListExample: React.FC = () =>
   React.createElement(require('./InvertedFlatListExample').default as React.FC);
 const KeyframeAnimation: React.FC = () =>
@@ -1066,6 +1070,10 @@ export const EXAMPLES: Record<string, Example> = {
   DeleteAncestorOfExiting: {
     title: '[LA] Deleting view with an exiting animation',
     screen: DeleteAncestorOfExiting,
+  },
+  InterruptedExiting: {
+    title: '[LA] Interrupted exiting animation (#7493)',
+    screen: InterruptedExitingExample,
   },
   NestedNativeStacksWithLayout: {
     title: '[LA] Nested NativeStacks with layout',
