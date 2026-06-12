@@ -3,13 +3,21 @@
 #import <reanimated/CSS/utils/props.h>
 #import <reanimated/Tools/FeatureFlags.h>
 
+#import <react/renderer/components/view/ViewProps.h>
+#import <react/renderer/core/LayoutableShadowNode.h>
+#import <react/renderer/graphics/Color.h>
+
 #import <array>
 #import <cstdint>
+#import <memory>
 #import <string>
+#import <string_view>
 #import <unordered_map>
 #import <variant>
 
 namespace reanimated::css {
+
+using namespace facebook::react;
 
 namespace {
 
@@ -32,6 +40,12 @@ const CSSPropertyTraits *traitsFor(const std::string &propertyName)
 {
   static const std::unordered_map<std::string, CSSPropertyTraits> kProperties = {
       {"opacity", {CSSValueKind::Scalar, 1.0}},
+      {"shadowOpacity", {CSSValueKind::Scalar, 1.0}},
+      {"shadowRadius", {CSSValueKind::Scalar, 0.0}},
+      {"shadowOffset", {CSSValueKind::Size, std::array<double, 2>{0, 0}}},
+      {"shadowColor", {CSSValueKind::Color, kBlackColor}},
+      {"backgroundColor", {CSSValueKind::Color, kTransparentColor}},
+      {"borderColor", {CSSValueKind::Color, kBlackColor}},
   };
   const auto it = kProperties.find(propertyName);
   return it != kProperties.end() ? &it->second : nullptr;
@@ -59,13 +73,57 @@ CGColorSpaceRef sharedSRGBColorSpace()
   return space;
 }
 
+// Per-side colors subvert the uniform borderColor when they transition with
+// it - RN then draws the border through its custom path, where main-layer
+// animations are invisible.
+bool hasPerSideBorderColorSibling(const std::unordered_set<std::string> &transitioningProperties)
+{
+  static constexpr std::array<std::string_view, 9> kSiblings = {
+      "borderTopColor",
+      "borderRightColor",
+      "borderBottomColor",
+      "borderLeftColor",
+      "borderStartColor",
+      "borderEndColor",
+      "borderBlockColor",
+      "borderBlockStartColor",
+      "borderBlockEndColor",
+  };
+  for (const auto &sibling : kSiblings) {
+    if (transitioningProperties.contains(std::string(sibling))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Mirrors useCoreAnimationBorderRendering in RN's RCTViewComponentView: when
+// it is false, RN draws the background and border into dedicated sublayers
+// that are rebuilt (and stripped of animations) on every commit, so main-layer
+// animations of those properties would be invisible.
+bool usesCoreAnimationBorderRendering(const ShadowNode &shadowNode)
+{
+  const auto *layoutableShadowNode = dynamic_cast<const LayoutableShadowNode *>(&shadowNode);
+  if (layoutableShadowNode == nullptr) {
+    return false;
+  }
+  const auto viewProps = std::static_pointer_cast<const ViewProps>(shadowNode.getProps());
+  const auto borderMetrics = viewProps->resolveBorderMetrics(layoutableShadowNode->getLayoutMetrics());
+  return borderMetrics.borderColors.isUniform() && borderMetrics.borderWidths.isUniform() &&
+      borderMetrics.borderStyles.isUniform() && borderMetrics.borderStyles.left == BorderStyle::Solid &&
+      borderMetrics.borderRadii.isUniform() &&
+      (borderMetrics.borderWidths.left == 0 || viewProps->getClipsContentToBounds() ||
+       (colorComponentsFromColor(borderMetrics.borderColors.left).alpha == 0 &&
+        (*borderMetrics.borderColors.left).getUIColor() != nullptr));
+}
+
 } // namespace
 
 bool canRouteCSSProperty(
     const std::string &propertyName,
     const EasingConfig &easing,
-    const facebook::react::ShadowNode & /*shadowNode*/,
-    const std::unordered_set<std::string> & /*transitioningProperties*/)
+    const ShadowNode &shadowNode,
+    const std::unordered_set<std::string> &transitioningProperties)
 {
   if constexpr (!StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
     return false;
@@ -75,7 +133,19 @@ bool canRouteCSSProperty(
   }
   // CAMediaTimingFunction can express only linear and cubic-bezier curves;
   // steps / linear-stops easings have to interpolate per-frame on the loop.
-  return std::holds_alternative<LinearEasing>(easing) || std::holds_alternative<CubicBezierEasing>(easing);
+  if (!std::holds_alternative<LinearEasing>(easing) && !std::holds_alternative<CubicBezierEasing>(easing)) {
+    return false;
+  }
+  // Background and border colors live on the main layer only while RN uses
+  // Core Animation border rendering for this view.
+  if ((propertyName == "backgroundColor" || propertyName == "borderColor") &&
+      !usesCoreAnimationBorderRendering(shadowNode)) {
+    return false;
+  }
+  if (propertyName == "borderColor" && hasPerSideBorderColorSibling(transitioningProperties)) {
+    return false;
+  }
+  return true;
 }
 
 std::optional<PlatformValue> parsePlatformValue(const std::string &propertyName, const CSSEndpointValue &value)
