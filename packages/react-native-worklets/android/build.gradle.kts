@@ -1,6 +1,8 @@
 import groovy.json.JsonSlurper
+import com.android.Version
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Properties
 import javax.inject.Inject
 
@@ -8,7 +10,6 @@ plugins {
     id("com.android.library")
     id("maven-publish")
     id("com.diffplug.spotless") version "8.1.0"
-    id("org.jetbrains.kotlin.android")
 }
 
 fun safeExtGet(prop: String, fallback: Any?): Any? =
@@ -114,6 +115,16 @@ fun isFlagEnabled(featureFlags: Map<String, String>, flagName: String): Boolean 
 
 if (project != rootProject) {
     apply(plugin = "com.facebook.react")
+}
+
+val AGP_MAJOR_VERSION: Int = Version.ANDROID_GRADLE_PLUGIN_VERSION.substringBefore('.').toIntOrNull() ?: Int.MAX_VALUE
+val IS_BUILT_IN_KOTLIN_ENABLED: Boolean? =
+  providers.gradleProperty("android.builtInKotlin").orNull?.toBooleanStrictOrNull() ?: false
+val IS_AGP_8_OR_LOWER: Boolean = AGP_MAJOR_VERSION <= 8
+val SHOULD_ENABLE_AGP_FALLBACK: Boolean = IS_AGP_8_OR_LOWER || (IS_BUILT_IN_KOTLIN_ENABLED == false)
+
+if (SHOULD_ENABLE_AGP_FALLBACK) {
+    apply(plugin = "org.jetbrains.kotlin.android")
 }
 
 val featureFlags = getStaticFeatureFlags()
@@ -267,11 +278,11 @@ android {
 
     sourceSets {
         getByName("main") {
-            java {
+            kotlin {
                 if (FETCH_PREVIEW_ENABLED) {
-                    srcDir("src/networking")
+                    directories.add("src/networking")
                 } else {
-                    srcDir("src/no-networking")
+                    directories.add("src/no-networking")
                 }
             }
         }
@@ -282,8 +293,8 @@ android {
     }
 }
 
-if (project != rootProject) {
-    kotlin {
+if (project != rootProject && SHOULD_ENABLE_AGP_FALLBACK) {
+    tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {
             jvmTarget = JvmTarget.fromTarget("17")
         }
