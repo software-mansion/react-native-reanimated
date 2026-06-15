@@ -15,11 +15,7 @@ import type {
 } from '../../types';
 import { normalizeTimeUnit } from '../../utils';
 import { processKeyframeDefinitions } from '../animationParser';
-import {
-  configureWebCSSAnimations,
-  insertCSSAnimation,
-  removeCSSAnimation,
-} from '../domUtils';
+import { insertCSSAnimation, removeCSSAnimation } from '../domUtils';
 import { CSSKeyframesRuleImpl } from '../keyframes';
 import { normalizeIterationCount } from '../normalization';
 import { maybeAddSuffixes, parseTimingFunction } from '../utils';
@@ -47,8 +43,6 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   private unmountCleanupCalled = false;
 
   constructor(element: ReanimatedHTMLElement, componentName = '') {
-    configureWebCSSAnimations();
-
     this.element = element;
     this.componentName = componentName;
   }

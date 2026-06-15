@@ -159,6 +159,18 @@ export function initializeState(state: WorkletsPluginPass) {
     initializeGlobals();
     addCustomGlobals(state);
   }
+
+  const userImportForwarding = state.opts.importForwarding;
+  state.opts.importForwarding = {
+    relativePaths: [
+      ...defaultAllowedPaths,
+      ...(userImportForwarding?.relativePaths ?? []),
+    ],
+    moduleNames: [
+      ...defaultAllowedModules,
+      ...(userImportForwarding?.moduleNames ?? []),
+    ],
+  };
 }
 
 export function isGeneratedWorkletFile(
@@ -181,6 +193,12 @@ export let globals: Set<string>;
 export function initializeGlobals() {
   globals = new Set(defaultGlobals);
 }
+
+const defaultAllowedPaths = ['react-native-worklets'];
+const defaultAllowedModules = [
+  'react-native-worklets',
+  'react-native/Libraries/Core/setUpXHR',
+];
 
 /**
  * This function allows to add custom globals such as host-functions. Those

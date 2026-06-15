@@ -141,7 +141,7 @@ const config = tsEslint.config(
     languageOptions: {
       globals: {
         React: true,
-        ...reactNative.environments['react-native']['react-native'],
+        ...reactNative.environments['react-native'].globals,
         ...jest.environments.globals.globals,
         ...globals.node,
       },

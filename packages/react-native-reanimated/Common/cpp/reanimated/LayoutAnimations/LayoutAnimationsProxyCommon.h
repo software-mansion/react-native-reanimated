@@ -11,6 +11,7 @@
 #include <memory>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace reanimated {
@@ -22,6 +23,10 @@ struct LayoutAnimation {
   bool isViewAlreadyMounted = false;
   int count = 1;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
+
+  bool isSettled() const {
+    return count == 0;
+  }
 };
 
 class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDelegate {
@@ -60,7 +65,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   virtual void startSurface(const SurfaceId surfaceId);
 
  protected:
-  mutable std::vector<Tag> finishedAnimationTags_;
+  mutable std::unordered_set<Tag> maybeSettledAnimationTags_;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   std::shared_ptr<const ContextContainer> contextContainer_;

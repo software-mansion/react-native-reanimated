@@ -1,22 +1,25 @@
 'use strict';
-import {
-  configureWebCSSAnimations,
-  insertCSSAnimation,
-  insertPseudoSelectorCSS,
-  removeCSSAnimation,
-  removePseudoSelectorCSS,
-} from '../domUtils';
+import type * as DomUtilsModule from '../domUtils';
 
-// domUtils owns a single shared <style> tag and tracks the @keyframes rules it
-// inserts. That state is module-level and persists across tests, so we give
-// every animation a unique name and assert on rules by name. Assertions read the
-// real jsdom CSSOM, checking the parsed keyframe blocks (selectors + property
-// values) rather than the re-serialized cssText, which is jsdom-format-specific.
+// domUtils owns a single shared <style> tag and a module-level rule registry.
+// To keep test cases independent, every test gets a fresh module instance
+// (jest.resetModules) and a clean document head, so rules from one test can
+// never leak into another. Assertions read the real jsdom CSSOM, checking the
+// parsed rules (selectors + property values) rather than the re-serialized
+// cssText, which is jsdom-format-specific.
 const STYLE_TAG_ID = 'ReanimatedCSSStyleTag';
 const KEYFRAMES = 'from { opacity: 0 } to { opacity: 1 }';
 
-let nextId = 0;
-const uniqueName = (): string => `anim_${nextId++}`;
+type DomUtils = typeof DomUtilsModule;
+
+let domUtils: DomUtils;
+
+beforeEach(() => {
+  jest.resetModules();
+  document.getElementById(STYLE_TAG_ID)?.remove();
+  domUtils = jest.requireActual<DomUtils>('../domUtils');
+  domUtils.configureWebCSS();
+});
 
 const allRules = (): CSSKeyframesRule[] => {
   const sheet = (
@@ -33,15 +36,11 @@ const hasRule = (name: string): boolean => findRule(name) !== undefined;
 const blocksOf = (rule: CSSKeyframesRule): CSSKeyframeRule[] =>
   Array.from(rule.cssRules) as CSSKeyframeRule[];
 
-beforeAll(() => {
-  configureWebCSSAnimations();
-});
-
 describe('domUtils (web CSS animations stylesheet)', () => {
-  describe('configureWebCSSAnimations', () => {
+  describe('configureWebCSS', () => {
     test('creates a single shared style tag in the document head', () => {
       // Idempotent: calling it again must not add a second tag.
-      configureWebCSSAnimations();
+      domUtils.configureWebCSS();
 
       expect(document.querySelectorAll(`#${STYLE_TAG_ID}`)).toHaveLength(1);
     });
@@ -49,10 +48,12 @@ describe('domUtils (web CSS animations stylesheet)', () => {
 
   describe('insertCSSAnimation', () => {
     test('inserts a real @keyframes rule with the given name and block contents', () => {
-      const name = uniqueName();
-      insertCSSAnimation(name, 'from { opacity: 0 } to { opacity: 1 }');
+      domUtils.insertCSSAnimation(
+        'fade',
+        'from { opacity: 0 } to { opacity: 1 }'
+      );
 
-      const rule = findRule(name);
+      const rule = findRule('fade');
       expect(rule).toBeDefined();
       const blocks = blocksOf(rule!);
       expect(blocks.map((block) => block.keyText)).toEqual(['from', 'to']);
@@ -60,9 +61,8 @@ describe('domUtils (web CSS animations stylesheet)', () => {
     });
 
     test('inserts a multi-step animation with several properties per keyframe', () => {
-      const name = uniqueName();
-      insertCSSAnimation(
-        name,
+      domUtils.insertCSSAnimation(
+        'slide',
         `
           0% { opacity: 0; transform: translateX(0px) }
           50% { opacity: 0.5; width: 20px }
@@ -70,7 +70,7 @@ describe('domUtils (web CSS animations stylesheet)', () => {
         `
       );
 
-      const blocks = blocksOf(findRule(name)!);
+      const blocks = blocksOf(findRule('slide')!);
       expect(blocks.map((block) => block.keyText)).toEqual([
         '0%',
         '50%',
@@ -87,38 +87,33 @@ describe('domUtils (web CSS animations stylesheet)', () => {
     });
 
     test('ignores a duplicate animation name', () => {
-      const name = uniqueName();
-      insertCSSAnimation(name, KEYFRAMES);
-      insertCSSAnimation(name, KEYFRAMES);
+      domUtils.insertCSSAnimation('fade', KEYFRAMES);
+      domUtils.insertCSSAnimation('fade', KEYFRAMES);
 
-      expect(allRules().filter((rule) => rule.name === name)).toHaveLength(1);
+      expect(allRules().filter((rule) => rule.name === 'fade')).toHaveLength(1);
     });
   });
 
   describe('removeCSSAnimation', () => {
     test('removes the matching @keyframes rule from the stylesheet', () => {
-      const name = uniqueName();
-      insertCSSAnimation(name, KEYFRAMES);
-      expect(hasRule(name)).toBe(true);
+      domUtils.insertCSSAnimation('fade', KEYFRAMES);
+      expect(hasRule('fade')).toBe(true);
 
-      removeCSSAnimation(name);
+      domUtils.removeCSSAnimation('fade');
 
-      expect(hasRule(name)).toBe(false);
+      expect(hasRule('fade')).toBe(false);
     });
 
     test('removes only the targeted rule when several are present', () => {
-      const a = uniqueName();
-      const b = uniqueName();
-      const c = uniqueName();
-      insertCSSAnimation(a, KEYFRAMES);
-      insertCSSAnimation(b, KEYFRAMES);
-      insertCSSAnimation(c, KEYFRAMES);
+      domUtils.insertCSSAnimation('first', KEYFRAMES);
+      domUtils.insertCSSAnimation('second', KEYFRAMES);
+      domUtils.insertCSSAnimation('third', KEYFRAMES);
 
-      removeCSSAnimation(b);
+      domUtils.removeCSSAnimation('second');
 
-      expect(hasRule(b)).toBe(false);
-      expect(hasRule(a)).toBe(true);
-      expect(hasRule(c)).toBe(true);
+      expect(hasRule('second')).toBe(false);
+      expect(hasRule('first')).toBe(true);
+      expect(hasRule('third')).toBe(true);
     });
   });
 });
@@ -138,66 +133,57 @@ describe('domUtils (web pseudo-selector rules)', () => {
       .map((rule) => rule.selectorText);
   };
 
-  let nextOwner = 0;
-  const uniqueOwner = (): string => `owner-${nextOwner++}`;
-
   test('inserts each of an owner rules into the shared sheet', () => {
-    const owner = uniqueOwner();
-    insertPseudoSelectorCSS(owner, [
-      `[data-${owner}]:hover { color: red }`,
-      `[data-${owner}]:focus { color: blue }`,
+    domUtils.insertPseudoSelectorCSS('0', [
+      '[data-rps="0"]:hover { color: red }',
+      '[data-rps="0"]:focus { color: blue }',
     ]);
 
     const selectors = styleSelectors();
-    expect(selectors).toContain(`[data-${owner}]:hover`);
-    expect(selectors).toContain(`[data-${owner}]:focus`);
+    expect(selectors).toContain('[data-rps="0"]:hover');
+    expect(selectors).toContain('[data-rps="0"]:focus');
   });
 
   test('replaces the owner rules on a subsequent insert', () => {
-    const owner = uniqueOwner();
-    insertPseudoSelectorCSS(owner, [`[data-${owner}]:hover { color: red }`]);
-    insertPseudoSelectorCSS(owner, [`[data-${owner}]:focus { color: blue }`]);
+    domUtils.insertPseudoSelectorCSS('0', [
+      '[data-rps="0"]:hover { color: red }',
+    ]);
+    domUtils.insertPseudoSelectorCSS('0', [
+      '[data-rps="0"]:focus { color: blue }',
+    ]);
 
     const selectors = styleSelectors();
-    expect(selectors).toContain(`[data-${owner}]:focus`);
-    expect(selectors).not.toContain(`[data-${owner}]:hover`);
+    expect(selectors).toContain('[data-rps="0"]:focus');
+    expect(selectors).not.toContain('[data-rps="0"]:hover');
   });
 
   test('removes all rules belonging to an owner', () => {
-    const owner = uniqueOwner();
-    insertPseudoSelectorCSS(owner, [
-      `[data-${owner}]:hover { color: red }`,
-      `[data-${owner}]:focus { color: blue }`,
+    domUtils.insertPseudoSelectorCSS('0', [
+      '[data-rps="0"]:hover { color: red }',
+      '[data-rps="0"]:focus { color: blue }',
     ]);
-    expect(styleSelectors()).toContain(`[data-${owner}]:hover`);
+    expect(styleSelectors()).toContain('[data-rps="0"]:hover');
 
-    removePseudoSelectorCSS(owner);
+    domUtils.removePseudoSelectorCSS('0');
 
-    const selectors = styleSelectors();
-    expect(selectors).not.toContain(`[data-${owner}]:hover`);
-    expect(selectors).not.toContain(`[data-${owner}]:focus`);
+    expect(styleSelectors()).toHaveLength(0);
   });
 
   test('removing an owner keeps surrounding rules intact (index shifting)', () => {
-    const before = uniqueName();
-    const owner = uniqueOwner();
-    const after = uniqueName();
-
     // Animation, then pseudo rules, then another animation - so the pseudo
     // rules sit between two tracked rules in the shared sheet.
-    insertCSSAnimation(before, KEYFRAMES);
-    insertPseudoSelectorCSS(owner, [
-      `[data-${owner}]:hover { color: red }`,
-      `[data-${owner}]:focus { color: blue }`,
+    domUtils.insertCSSAnimation('before', KEYFRAMES);
+    domUtils.insertPseudoSelectorCSS('0', [
+      '[data-rps="0"]:hover { color: red }',
+      '[data-rps="0"]:focus { color: blue }',
     ]);
-    insertCSSAnimation(after, KEYFRAMES);
+    domUtils.insertCSSAnimation('after', KEYFRAMES);
 
-    removePseudoSelectorCSS(owner);
+    domUtils.removePseudoSelectorCSS('0');
 
     // Both animations must survive the deletion + index re-sync.
-    expect(hasRule(before)).toBe(true);
-    expect(hasRule(after)).toBe(true);
-    expect(styleSelectors()).not.toContain(`[data-${owner}]:hover`);
-    expect(styleSelectors()).not.toContain(`[data-${owner}]:focus`);
+    expect(hasRule('before')).toBe(true);
+    expect(hasRule('after')).toBe(true);
+    expect(styleSelectors()).toHaveLength(0);
   });
 });
