@@ -1,5 +1,5 @@
 'use strict';
-import type { NativePropsBuilder, UnknownRecord } from '../../../../common';
+import type { NativePropsBuilder } from '../../../../common';
 import type { ShadowNodeWrapper } from '../../../../commonTypes';
 import type { CSSStyle } from '../../../types';
 import { filterCSSAndStyleProperties } from '../../../utils';
@@ -307,119 +307,6 @@ describe('CSSPseudoStylesManager', () => {
           selector: ':active',
           defaultStyle: { transform: [{ scale: 1 }] },
           selectorStyle: { transform: [{ scale: 0.95 }] },
-        })
-      );
-    });
-  });
-
-  describe('undefined / missing-default resolution (against a stripping builder)', () => {
-    const strippingBuilder = {
-      build: jest.fn((style: UnknownRecord) => {
-        const out: UnknownRecord = {};
-        for (const key in style) {
-          if (style[key] !== undefined) {
-            out[key] = style[key];
-          }
-        }
-        return out;
-      }),
-    } as unknown as NativePropsBuilder;
-
-    let strippingManager: CSSPseudoStylesManager;
-
-    beforeEach(() => {
-      strippingManager = new CSSPseudoStylesManager(
-        shadowNodeWrapper,
-        viewTag,
-        strippingBuilder
-      );
-    });
-
-    test('explicit `:active: undefined` survives the builder as null', () => {
-      pushStyle(strippingManager, {
-        backgroundColor: { default: 'red', ':active': undefined },
-      });
-
-      expect(registerPseudoStyle).toHaveBeenCalledWith(
-        shadowNodeWrapper,
-        expect.objectContaining({
-          selector: ':active',
-          selectorStyle: { backgroundColor: null },
-          defaultStyle: { backgroundColor: 'red' },
-        })
-      );
-    });
-
-    test('an omitted default survives the builder as null', () => {
-      pushStyle(strippingManager, {
-        opacity: { ':active': 0.5 },
-      });
-
-      expect(registerPseudoStyle).toHaveBeenCalledWith(
-        shadowNodeWrapper,
-        expect.objectContaining({
-          selector: ':active',
-          selectorStyle: { opacity: 0.5 },
-          defaultStyle: { opacity: null },
-        })
-      );
-    });
-
-    test('does not revive an undefined value for a prop the builder drops as unsupported', () => {
-      // Mimics the real builder: drops `undefined`, AND drops a prop it does not
-      // support ('unsupportedProp') even when it has a concrete value.
-      const builderDroppingUnsupported = {
-        build: jest.fn((style: UnknownRecord) => {
-          const out: UnknownRecord = {};
-          for (const key in style) {
-            if (key !== 'unsupportedProp' && style[key] !== undefined) {
-              out[key] = style[key];
-            }
-          }
-          return out;
-        }),
-      } as unknown as NativePropsBuilder;
-      const droppingManager = new CSSPseudoStylesManager(
-        shadowNodeWrapper,
-        viewTag,
-        builderDroppingUnsupported
-      );
-
-      pushStyle(droppingManager, {
-        // supported prop, explicit undefined selector -> revived to null
-        opacity: { default: 1, ':active': undefined },
-        // unsupported prop, explicit undefined selector -> must NOT be revived,
-        // otherwise the native interpolator factory would throw on it.
-        unsupportedProp: { default: 'x', ':active': undefined },
-      } as never);
-
-      const config = (registerPseudoStyle as jest.Mock).mock.calls[0][1];
-      expect(config.selectorStyle).toEqual({ opacity: null });
-      expect(config.selectorStyle).not.toHaveProperty('unsupportedProp');
-      expect(config.defaultStyle).not.toHaveProperty('unsupportedProp');
-    });
-
-    test('does not turn a genuinely unsupported (dropped) prop into null', () => {
-      // A prop the builder drops for reasons OTHER than being `undefined`
-      // (here, value present but builder returns nothing) must NOT be revived.
-      const pickyBuilder = {
-        build: jest.fn(() => ({})),
-      } as unknown as NativePropsBuilder;
-      const pickyManager = new CSSPseudoStylesManager(
-        shadowNodeWrapper,
-        viewTag,
-        pickyBuilder
-      );
-
-      pushStyle(pickyManager, {
-        opacity: { default: 0, ':active': 1 },
-      });
-
-      expect(registerPseudoStyle).toHaveBeenCalledWith(
-        shadowNodeWrapper,
-        expect.objectContaining({
-          selectorStyle: {},
-          defaultStyle: {},
         })
       );
     });

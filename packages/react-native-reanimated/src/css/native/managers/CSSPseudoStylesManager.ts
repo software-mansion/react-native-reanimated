@@ -101,21 +101,15 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
     defaultStyle: UnknownRecord,
     normalizedTransition: NormalizedCSSTransitionConfig | null
   ): CSSPseudoStyleConfig {
-    const builtSelectorStyle = this.propsBuilder.build(selectorStyle);
-    const builtDefaultStyle = this.propsBuilder.build(defaultStyle);
+    const builtSelectorStyle = this.propsBuilder.build(selectorStyle, {
+      includeUnprocessed: true,
+    });
+    const builtDefaultStyle = this.propsBuilder.build(defaultStyle, {
+      includeUnprocessed: true,
+    });
 
-    const supportedSelectorKeys = new Set(Object.keys(builtSelectorStyle));
-    const supportedDefaultKeys = new Set(Object.keys(builtDefaultStyle));
-    reinstateResolvedUndefinedProps(
-      selectorStyle,
-      builtSelectorStyle,
-      supportedDefaultKeys
-    );
-    reinstateResolvedUndefinedProps(
-      defaultStyle,
-      builtDefaultStyle,
-      supportedSelectorKeys
-    );
+    nullifyUndefinedValues(builtSelectorStyle);
+    nullifyUndefinedValues(builtDefaultStyle);
 
     const transition: CSSTransitionConfig = {};
     const propsInTransition = new Set([
@@ -146,18 +140,10 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
   }
 }
 
-/* Re-adds keys whose value was `undefined` in the source style (and thus dropped by the props builder)
- * as `null`, which is interpreted on the C++ side as “use default value”.
- * Only keys present in `supportedKeys` are revived.
- */
-function reinstateResolvedUndefinedProps(
-  source: UnknownRecord,
-  built: UnknownRecord,
-  supportedKeys: Set<string>
-): void {
-  for (const key in source) {
-    if (source[key] === undefined && supportedKeys.has(key)) {
-      built[key] = null;
+function nullifyUndefinedValues(style: UnknownRecord): void {
+  for (const key in style) {
+    if (style[key] === undefined) {
+      style[key] = null;
     }
   }
 }
