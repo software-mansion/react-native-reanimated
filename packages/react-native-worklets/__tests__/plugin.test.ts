@@ -434,9 +434,9 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { libraryBindingsToImport } = getClosureData(input);
+      const { moduleBindingsToImport } = getClosureData(input);
 
-      const bindingsToImport = Array.from(libraryBindingsToImport);
+      const bindingsToImport = Array.from(moduleBindingsToImport);
       expect(bindingsToImport).toEqual([]);
     });
 
@@ -454,16 +454,18 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { libraryBindingsToImport } = getClosureData(
+      const { moduleBindingsToImport } = getClosureData(
         input,
         {
           bundleMode: true,
-          workletizableModules: ['some-library'],
+          importForwarding: {
+            moduleNames: ['some-library'],
+          },
         }
       );
 
       expect(
-        Array.from(libraryBindingsToImport)
+        Array.from(moduleBindingsToImport)
           .map((binding) => binding.identifier.name)
           .sort()
       ).toEqual(['ImportedComponent', 'OtherImportedComponent']);
@@ -479,14 +481,14 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { closureVariables, libraryBindingsToImport } = getClosureData(
+      const { closureVariables, moduleBindingsToImport } = getClosureData(
         input,
         {
           bundleMode: true,
         }
       );
 
-      const bindingsToImport = Array.from(libraryBindingsToImport);
+      const bindingsToImport = Array.from(moduleBindingsToImport);
       expect(bindingsToImport).toEqual([]);
       expect(closureVariables).toEqual([]);
     });

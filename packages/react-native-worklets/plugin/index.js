@@ -757,12 +757,12 @@ var require_closure = __commonJS({
         return true;
       }
       if ((0, imports_1.isImportRelative)(binding)) {
-        const isAllowed2 = (0, imports_1.isAllowedForRelativeImports)(state.filename, state.opts.workletizableModules);
+        const isAllowed2 = (0, imports_1.canForwardRelativeImport)(state.filename, state.opts.importForwarding.relativePaths);
         return !isAllowed2;
       }
       const parentPath = binding.path.parentPath;
       const source = parentPath.node.source.value;
-      const isAllowed = (0, imports_1.isWorkletizableModule)(source, state.opts.workletizableModules);
+      const isAllowed = (0, imports_1.canForwardModuleImport)(source, state.opts.importForwarding.moduleNames);
       return !isAllowed;
     }
   }
@@ -794,7 +794,7 @@ var require_generate = __commonJS({
       const transformedProg = (_a = (0, core_1.transformFromAstSync)(newProg, void 0, {
         filename: state.file.opts.filename,
         presets: ["@babel/preset-typescript"],
-        plugins: [state.autoworkletizationPlugin],
+        plugins: [state.autoworkletizationPlugin, stripJsxDevAttributesPlugin],
         ast: false,
         babelrc: false,
         configFile: false,
@@ -804,6 +804,21 @@ var require_generate = __commonJS({
       const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
       (0, fs_1.writeFileSync)(dedicatedFilePath, transformedProg);
     }
+    var stripJsxDevAttributesPlugin = {
+      name: "worklets-strip-jsx-dev-attributes",
+      visitor: {
+        JSXAttribute(path) {
+          const name = path.node.name;
+          if (name.type !== "JSXIdentifier") {
+            return;
+          }
+          if (name.name !== "__self" && name.name !== "__source") {
+            return;
+          }
+          path.remove();
+        }
+      }
+    };
   }
 });
 

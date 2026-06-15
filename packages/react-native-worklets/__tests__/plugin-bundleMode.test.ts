@@ -2,6 +2,7 @@ import '../plugin/src/jestMatchers';
 
 import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
+import { isFunctionExpression, isVariableDeclaration } from '@babel/types';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
 import * as path from 'path';
@@ -26,6 +27,10 @@ jest.mock('fs', () => {
 import type { PluginOptions } from '../plugin';
 // eslint-disable-next-line import/first
 import plugin from '../plugin';
+// eslint-disable-next-line import/first
+import { generateWorkletFile } from '../plugin/src/generate';
+// eslint-disable-next-line import/first
+import type { WorkletsPluginPass } from '../plugin/src/types';
 
 const MOCK_LOCATION = 'test.js';
 const MOCK_WORKLET_RUNTIME_ENTRY = 'react-native-worklets/src/index.ts';
@@ -198,6 +203,44 @@ describe('babel plugin in bundleMode', () => {
       expect(files).toHaveLength(1);
       expect(code).toMatchSnapshot();
       expect(files[0].content).toMatchSnapshot();
+    });
+
+    test('strips JSX dev attributes in written worklet files', () => {
+      const transformed = transformSync(
+        html`<script>
+          const factory = function () {
+            return <ImportedComponent __self={this} __source={{}} />;
+          };
+        </script>`.replace(/<\/?script[^>]*>/g, ''),
+        {
+          ast: true,
+          babelrc: false,
+          code: false,
+          configFile: false,
+          plugins: ['@babel/plugin-syntax-jsx'],
+        }
+      );
+      assert(transformed);
+      assert(transformed.ast);
+
+      const statement = transformed.ast.program.body[0];
+      assert(isVariableDeclaration(statement));
+
+      const factory = statement.declarations[0].init;
+      assert(isFunctionExpression(factory));
+
+      const autoworkletizationPlugin = { visitor: {} };
+      const state = {
+        file: { opts: { filename: MOCK_LOCATION } },
+        autoworkletizationPlugin,
+      } as WorkletsPluginPass;
+
+      generateWorkletFile(new Set(), new Set(), factory, 1, state);
+      const files = capturedFiles;
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toContain('return <ImportedComponent />;');
+      expect(files[0].content).not.toContain('__self');
+      expect(files[0].content).not.toContain('__source');
     });
 
     test('rebases relative imports against the worklets directory', () => {

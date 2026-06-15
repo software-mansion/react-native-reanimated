@@ -173,18 +173,18 @@ function shouldSkipBundleModeJSXIdentifier(
   }
 
   if (isImportRelative(binding)) {
-    const isAllowed = isAllowedForRelativeImports(
+    const isAllowed = canForwardRelativeImport(
       state.filename,
-      state.opts.workletizableModules
+      state.opts.importForwarding.relativePaths
     );
     return !isAllowed;
   }
 
   const parentPath = binding.path.parentPath as NodePath<ImportDeclaration>;
   const source = parentPath.node.source.value;
-  const isAllowed = isWorkletizableModule(
+  const isAllowed = canForwardModuleImport(
     source,
-    state.opts.workletizableModules
+    state.opts.importForwarding.moduleNames
   );
   return !isAllowed;
 }
