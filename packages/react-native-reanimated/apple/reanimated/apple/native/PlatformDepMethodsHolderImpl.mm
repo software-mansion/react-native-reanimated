@@ -39,6 +39,7 @@ SetGestureStateFunction makeSetGestureStateFunction(RCTModuleRegistry *moduleReg
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
 {
   auto requestRender = [nodesManager](std::function<void(double)> onRender) {
+    auto sharedOnRender = std::make_shared<std::function<void(double)>>(std::move(onRender));
     [nodesManager postOnAnimation:^(READisplayLink *displayLink) {
 #if !TARGET_OS_OSX
       auto targetTimestamp = displayLink.targetTimestamp;
@@ -47,7 +48,7 @@ RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
       auto targetTimestamp = displayLink.timestamp + displayLink.duration;
 #endif
       const double frameTimestamp = calculateTimestampWithSlowAnimations(targetTimestamp) * 1000;
-      onRender(frameTimestamp);
+      (*sharedOnRender)(frameTimestamp);
     }];
   };
 
@@ -80,15 +81,14 @@ MaybeFlushUIUpdatesQueueFunction makeMaybeFlushUIUpdatesQueueFunction(REANodesMa
 
 RegisterSensorFunction makeRegisterSensorFunction(ReanimatedSensorContainer *reanimatedSensorContainer)
 {
-  auto registerSensorFunction = [=](int sensorType,
-                                    int interval,
-                                    int iosReferenceFrame,
-                                    std::function<void(double[], int)> setter) -> int {
+  auto registerSensorFunction =
+      [=](int sensorType, int interval, int iosReferenceFrame, std::function<void(double[], int)> setter) -> int {
+    auto sharedSetter = std::make_shared<std::function<void(double[], int)>>(std::move(setter));
     return [reanimatedSensorContainer
            registerSensor:(ReanimatedSensorType)sensorType
                  interval:interval
         iosReferenceFrame:iosReferenceFrame
-                   setter:^(double *data, int orientationDegrees) { setter(data, orientationDegrees); }];
+                   setter:^(double *data, int orientationDegrees) { (*sharedSetter)(data, orientationDegrees); }];
   };
   return registerSensorFunction;
 }
@@ -107,10 +107,9 @@ KeyboardEventSubscribeFunction makeSubscribeForKeyboardEventsFunction(REAKeyboar
       [=](std::function<void(int keyboardState, int height)> keyboardEventDataUpdater,
           bool isStatusBarTranslucent,
           bool isNavigationBarTranslucent) {
-        // ignore isStatusBarTranslucent and isNavigationBarTranslucent - those are Android only
-        return [keyboardObserver subscribeForKeyboardEvents:^(int keyboardState, int height) {
-          keyboardEventDataUpdater(keyboardState, height);
-        }];
+        auto sharedUpdater = std::make_shared<std::function<void(int, int)>>(std::move(keyboardEventDataUpdater));
+        return [keyboardObserver
+            subscribeForKeyboardEvents:^(int keyboardState, int height) { (*sharedUpdater)(keyboardState, height); }];
       };
   return subscribeForKeyboardEventsFunction;
 }
