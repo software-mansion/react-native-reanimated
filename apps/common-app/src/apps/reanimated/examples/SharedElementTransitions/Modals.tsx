@@ -43,17 +43,20 @@ function Card({
     <Pressable
       onPress={() => {
         goNext?.();
-      }}>
+      }}
+    >
       <Animated.View
         style={
           isOpen
             ? { height: 500, marginTop: 50, backgroundColor: 'green' }
             : { height: 120, marginTop: 20, backgroundColor: 'green' }
         }
-        sharedTransitionTag={transitionTag + '1'}>
+        sharedTransitionTag={transitionTag + '1'}
+      >
         <Animated.Text
           sharedTransitionTag={transitionTag + '2'}
-          style={[styles.fullWidth, { height: 20 }]}>
+          style={[styles.fullWidth, { height: 20 }]}
+        >
           {title}
         </Animated.Text>
         <Animated.Image
@@ -63,7 +66,8 @@ function Card({
         />
         <Animated.Text
           sharedTransitionTag={transitionTag + '4'}
-          style={[styles.fullWidth, { height: isOpen ? 100 : 0 }]}>
+          style={[styles.fullWidth, { height: isOpen ? 100 : 0 }]}
+        >
           Lorem ipsum dolor sit amet consectetur adipisicing elit. Quas aliquid,
           earum non, dignissimos fugit rerum exercitationem ab consequatur,
           error animi veritatis delectus. Nostrum sapiente distinctio possimus
@@ -77,13 +81,13 @@ function Card({
 function Screen1({ navigation }: NativeStackScreenProps<ParamList, 'Screen1'>) {
   return (
     <Animated.ScrollView style={styles.flexOne}>
-      {[...Array(6)].map((_, i) => (
+      {[...Array(3)].map((_, i) => (
         <Card
           key={i}
           navigation={navigation}
           title={'Title' + i}
           transitionTag={'sharedTag' + i}
-          nextScreen="Screen2"
+          nextScreen='Screen2'
           goNext={() =>
             navigation.navigate('Screen2', {
               title: 'Title' + i,
@@ -160,7 +164,7 @@ function Screen2({
           title={title}
           transitionTag={sharedTransitionTag}
           isOpen={true}
-          nextScreen="Screen1"
+          nextScreen='Screen1'
           goNext={goNext}
         />
       </Animated.View>
@@ -172,12 +176,13 @@ export default function ModalsExample() {
   return (
     <Stack.Navigator
       screenOptions={{
-        presentation: 'transparentModal',
+        presentation: 'modal',
         headerShown: false,
-        animation: 'fade',
-      }}>
-      <Stack.Screen name="Screen1" component={Screen1} />
-      <Stack.Screen name="Screen2" component={Screen2} />
+        animation: 'default',
+      }}
+    >
+      <Stack.Screen name='Screen1' component={Screen1} />
+      <Stack.Screen name='Screen2' component={Screen2} />
     </Stack.Navigator>
   );
 }

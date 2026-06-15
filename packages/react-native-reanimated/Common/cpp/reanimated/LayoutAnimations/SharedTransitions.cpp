@@ -10,6 +10,7 @@
 #endif // !ANDROID
 
 #include <folly/dynamic.h>
+#include <glog/logging.h>
 
 #include <ranges>
 
@@ -71,6 +72,11 @@ void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
     parentTag[indexNum] = parent->current.tag;
 
     if (parentTag[BEFORE] && parentTag[AFTER]) {
+      const auto &beforeOrigin = snapshot[BEFORE].layoutMetrics.frame.origin;
+      const auto &afterOrigin = snapshot[AFTER].layoutMetrics.frame.origin;
+      LOG(INFO) << "@@@ found a potential transition: sharedTag=" << sharedTag << " before.abs=(" << beforeOrigin.x
+                << "," << beforeOrigin.y << ")"
+                << " after.abs=(" << afterOrigin.x << "," << afterOrigin.y << ")";
       transitions_.emplace_back(sharedTag, transition);
     } else if (parentTag[AFTER]) {
       // TODO (future): this is adding unnecessary views to the list
@@ -100,6 +106,7 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
     auto root = lightNodes_[surfaceId];
     auto beforeTopScreen = topScreen[surfaceId];
     auto afterTopScreen = lightNodes_[transitionTag_];
+    LOG(INFO) << "@@@ transition started: surfaceId=" << surfaceId;
     if (beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen) {
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, propsParserContext);
       findSharedElementsOnScreen(afterTopScreen, AFTER, propsParserContext);
@@ -124,6 +131,8 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
       }
     }
   } else if (transitionState_ == TransitionState::ACTIVE) {
+    LOG(INFO) << "@@@ transition active progress=" << transitionProgress_
+              << " activeTransitions=" << activeTransitions_.size();
     for (auto tag : activeTransitions_) {
       auto layoutAnimation = layoutAnimations_[tag];
       auto &updateMap = surfaceManager.getUpdateMap(layoutAnimation.finalView.surfaceId);
@@ -153,6 +162,8 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
                           .cloneProps(propsParserContext, layoutAnimation.finalView.props, std::move(rawProps));
 #endif
 
+      LOG(INFO) << "@@@ progress update (GESTURE DRIVEN) containerTag=" << tag << " progress=" << transitionProgress_
+                << " frame=(" << x << "," << y << "," << width << "x" << height << ")";
       updateMap.insert_or_assign(tag, UpdateValues{newProps, {x, y, width, height}});
     }
   }
@@ -160,6 +171,7 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
   if (transitionState_ == TransitionState::START) {
     transitionState_ = TransitionState::ACTIVE;
   } else if (transitionState_ == TransitionState::END || transitionState_ == TransitionState::CANCELLED) {
+    LOG(INFO) << "@@@ transition ended or was cancelled";
     for (auto tag : activeTransitions_) {
       sharedContainersToRemove_.push_back(tag);
       tagsToRestore_.push_back(restoreMap_[tag][AFTER]);
@@ -231,6 +243,13 @@ Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
     lightNodes_[containerTag] = std::move(node);
 
     sharedTransitionManager_->containerTags_[sharedTag] = containerTag;
+    LOG(INFO) << "@@@ created a new helper container: containerTag=" << containerTag << " sharedTag=" << sharedTag
+              << " parent=surfaceId(" << surfaceId << ")";
+#ifdef __APPLE__
+    containerTagsToReparent_.push_back(containerTag);
+#endif
+  } else {
+    LOG(INFO) << "@@@ reusing container: containerTag=" << containerTag << " sharedTag=" << sharedTag;
   }
   return containerTag;
 }
@@ -249,6 +268,9 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
   }
 
   if (beforeTopScreen != afterTopScreen) {
+    LOG(INFO) << "@@@ starting shared transition (screens changed) surfaceId=" << surfaceId
+              << " old screen tag=" << (beforeTopScreen ? beforeTopScreen->current.tag : -1)
+              << " new screen tag=" << (afterTopScreen ? afterTopScreen->current.tag : -1);
     for (auto &[sharedTag, transition] : transitions_) {
       auto &[before, after] = transition.snapshot;
       const auto &transform = transition.transform;
@@ -290,6 +312,8 @@ void LayoutAnimationsProxy_Experimental::hideTransitioningViews(
     int indexNum = static_cast<int>(index);
     const auto &shadowView = transition.snapshot[indexNum];
     const auto &parentTag = transition.parentTag[indexNum];
+    LOG(INFO) << "@@@ hideTransitioningViews: " << (index == BEFORE ? "old_screen" : "new_screen")
+              << " sharedTag=" << sharedTag << " tag=" << shadowView.tag << " parent=" << parentTag;
     auto m = ShadowViewMutation::UpdateMutation(
         shadowView, cloneViewWithoutOpacity(shadowView, propsParserContext), parentTag);
     filteredMutations.push_back(m);
@@ -359,6 +383,8 @@ void LayoutAnimationsProxy_Experimental::insertContainers(
   filteredMutations.reserve(containersToInsert_.size() * 2);
   auto root = lightNodes_[surfaceId];
   for (auto &node : containersToInsert_) {
+    LOG(INFO) << "@@@ insert helper containers to the root: containerTag=" << node->current.tag << " parent=surfaceId("
+              << surfaceId << ") index=" << rootChildCount;
     filteredMutations.push_back(ShadowViewMutation::CreateMutation(node->current));
     filteredMutations.push_back(ShadowViewMutation::InsertMutation(surfaceId, node->current, rootChildCount++));
   }
@@ -375,6 +401,7 @@ void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
     ReanimatedSystraceSection s("Restore tag");
     auto &node = lightNodes_[tag];
     if (node) {
+      LOG(INFO) << "@@@ cleanupSharedTransitions: restoring opacity for tag=" << tag;
       auto view = node->current;
       const auto &parent = node->parent.lock();
       react_native_assert(parent && "Parent node is nullptr");
@@ -388,6 +415,10 @@ void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
 
   ReanimatedSystraceSection s2("remove shared containers");
   for (auto &tag : sharedContainersToRemove_) {
+    LOG(INFO) << "@@@ cleanupSharedTransitions: removing container tag=" << tag;
+#ifdef __APPLE__
+    containerTagsToRestore_.push_back(tag);
+#endif
     auto root = lightNodes_[surfaceId];
     for (int i = 0; i < root->children.size(); i++) {
       auto &child = root->children[i];
@@ -405,6 +436,13 @@ void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
 
 std::vector<react::Point> LayoutAnimationsProxy_Experimental::getAbsolutePositionsForRootPathView(
     const std::shared_ptr<LightNode> &node) const {
+  bool hasModalAncestor = false;
+  for (auto scan = node; scan; scan = scan->parent.lock()) {
+    if (scan->current.componentName && !strcmp(scan->current.componentName, "RNSModalScreen")) {
+      hasModalAncestor = true;
+      break;
+    }
+  }
   std::vector<react::Point> viewsAbsolutePositions;
   auto currentNode = node;
   while (currentNode) {
@@ -416,13 +454,21 @@ std::vector<react::Point> LayoutAnimationsProxy_Experimental::getAbsolutePositio
       auto data = state->getData();
       viewPosition -= data.contentOffset;
     }
-    if (!strcmp(componentName, "RNSScreen") && currentNode->children.size() >= 2) {
+    if (!hasModalAncestor && !strcmp(componentName, "RNSScreen") && currentNode->children.size() >= 2) {
       const auto &parent = currentNode->parent.lock();
       react_native_assert(parent && "Parent node is nullptr");
 
       const float headerHeight =
           parent->current.layoutMetrics.frame.size.height - currentNode->current.layoutMetrics.frame.size.height;
       viewPosition.y += headerHeight;
+    }
+    if (!strcmp(componentName, "RNSModalScreen")) {
+      auto rootIt = lightNodes_.find(currentNode->current.surfaceId);
+      if (rootIt != lightNodes_.end() && rootIt->second) {
+        const float surfaceHeight = rootIt->second->current.layoutMetrics.frame.size.height;
+        const float modalHeight = currentNode->current.layoutMetrics.frame.size.height;
+        viewPosition.y += surfaceHeight - modalHeight;
+      }
     }
     viewPosition += currentNode->current.layoutMetrics.frame.origin;
     viewsAbsolutePositions.emplace_back(viewPosition);

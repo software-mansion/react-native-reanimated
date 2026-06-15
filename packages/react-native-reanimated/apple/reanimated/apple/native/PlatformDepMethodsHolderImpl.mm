@@ -143,6 +143,30 @@ css::CSSRemoveTransitionFunction makeCSSRemoveTransition(REACSSPlatformTransitio
   };
 }
 
+QueueSharedTransitionContainersForReparentingFunction makeQueueSharedTransitionContainersForReparentingFunction(
+    REANodesManager *nodesManager)
+{
+  return [nodesManager](const std::vector<Tag> &containerTags) {
+    NSMutableArray<NSNumber *> *tags = [NSMutableArray arrayWithCapacity:containerTags.size()];
+    for (auto tag : containerTags) {
+      [tags addObject:@(tag)];
+    }
+    [nodesManager queueSharedTransitionContainersForReparenting:tags];
+  };
+}
+
+QueueSharedTransitionContainersForRestoringFunction makeQueueSharedTransitionContainersForRestoringFunction(
+    REANodesManager *nodesManager)
+{
+  return [nodesManager](const std::vector<Tag> &containerTags) {
+    NSMutableArray<NSNumber *> *tags = [NSMutableArray arrayWithCapacity:containerTags.size()];
+    for (auto tag : containerTags) {
+      [tags addObject:@(tag)];
+    }
+    [nodesManager queueSharedTransitionContainersForRestoring:tags];
+  };
+}
+
 ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager)
 {
   auto forceScreenSnapshot = [=](Tag tag) {
@@ -179,6 +203,12 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   auto forceScreenSnapshotFunction = makeForceScreenSnapshotFunction(nodesManager);
 
+  auto queueSharedTransitionContainersForReparentingFunction =
+      makeQueueSharedTransitionContainersForReparentingFunction(nodesManager);
+
+  auto queueSharedTransitionContainersForRestoringFunction =
+      makeQueueSharedTransitionContainersForRestoringFunction(nodesManager);
+
   auto synchronouslyUpdateUIPropsFunction = makeSynchronouslyUpdateUIPropsFunction(nodesManager);
 
   auto getAnimationTimestamp = makeGetAnimationTimestamp();
@@ -213,6 +243,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       forceScreenSnapshotFunction,
+      queueSharedTransitionContainersForReparentingFunction,
+      queueSharedTransitionContainersForRestoringFunction,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       registerSensorFunction,

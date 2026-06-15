@@ -10,7 +10,7 @@ typedef void (^REAPerformOperations)();
 
 @interface REANodesManager : NSObject
 
-@property (weak) RCTSurfacePresenter *surfacePresenter;
+@property (nonatomic, weak) RCTSurfacePresenter *surfacePresenter;
 
 - (nonnull instancetype)init;
 - (void)invalidate;
@@ -21,5 +21,7 @@ typedef void (^REAPerformOperations)();
 - (void)synchronouslyUpdateUIProps:(ReactTag)viewTag props:(const folly::dynamic &)props;
 - (void)registerPerformOperations:(REAPerformOperations)performOperations;
 - (void)maybeFlushUIUpdatesQueue;
+- (void)queueSharedTransitionContainersForReparenting:(NSArray<NSNumber *> *)containerTags;
+- (void)queueSharedTransitionContainersForRestoring:(NSArray<NSNumber *> *)containerTags;
 
 @end
