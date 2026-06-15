@@ -45,7 +45,6 @@ function insertSheetRule(key: string, cssText: string): boolean {
     return false;
   }
 
-  configureWebCSSAnimations();
   const sheet = getStyleSheet();
 
   if (!sheet) {
