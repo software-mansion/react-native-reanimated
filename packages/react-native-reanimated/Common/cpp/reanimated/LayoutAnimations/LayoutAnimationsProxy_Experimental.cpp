@@ -34,11 +34,11 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     updateLightTree(propsParserContext, mutations, filteredMutations);
     handleProgressTransition(filteredMutations, mutations, propsParserContext, surfaceId);
   } else if (!synchronized_) {
-    auto actualTop = topScreen[surfaceId];
     updateLightTree(propsParserContext, mutations, filteredMutations);
-    auto reactTop = findTopScreen(lightNodes_[surfaceId]);
-    if (reactTop == actualTop) {
+    if (!lightNodes_.contains(closingScreenTag_)) {
+      topScreen[surfaceId] = findActiveBoundary(lightNodes_[surfaceId]);
       synchronized_ = true;
+      closingScreenTag_ = -1;
     }
   } else if (!mutations.empty()) {
     auto root = lightNodes_[surfaceId];
@@ -51,13 +51,19 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
 
     updateLightTree(propsParserContext, mutations, filteredMutations);
 
-    auto afterTopScreen = findTopScreen(root);
+    auto afterTopScreen = findActiveBoundary(root);
     topScreen[surfaceId] = afterTopScreen;
     if (afterTopScreen) {
       ReanimatedSystraceSection s("find after elements");
       findSharedElementsOnScreen(afterTopScreen, AFTER, propsParserContext);
 #ifdef __APPLE__
-      forceScreenSnapshot_(afterTopScreen->current.tag);
+      // TODO (future): this is a temporary workaround for RNScreens on iOS,
+      // which takes the snapshot of the popped screen before we hide the
+      // shared element, the issue should be gone with the new stack
+      // implementation
+      if (auto screen = findParentRNSScreen(afterTopScreen)) {
+        forceScreenSnapshot_(screen->current.tag);
+      }
 #endif
     }
     const bool hasScreenChanged = beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen;
@@ -198,6 +204,11 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         } else if (layoutAnimationsManager_->hasLayoutAnimation(tag, ENTERING)) {
           entering_.push_back(node);
           filteredMutations.push_back(mutation);
+        } else if (sharedTransitionManager_->tagToName_.contains(tag) && isInsideInactiveBoundary(node)) {
+          filteredMutations.push_back(mutation);
+          auto hiddenView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
+          filteredMutations.push_back(
+              ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, hiddenView, mutation.parentTag));
         } else {
           filteredMutations.push_back(mutation);
         }
@@ -276,11 +287,10 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
   // one after the other, so we need to keep count of how many
   // were actually triggered, so that we don't cleanup necessary
   // structures too early
-  if (layoutAnimation.count > 1) {
-    layoutAnimation.count--;
+  if (--layoutAnimation.count > 0) {
     return {};
   }
-  finishedAnimationTags_.push_back(tag);
+  maybeSettledAnimationTags_.insert(tag);
   auto surfaceId = layoutAnimation.finalView.surfaceId;
 
   if (sharedTransitionManager_->tagToName_.contains(tag)) {
@@ -397,7 +407,7 @@ void LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceI
 
     const auto layoutAnimationIt = layoutAnimations_.find(tag);
 
-    if (layoutAnimationIt == layoutAnimations_.end()) {
+    if (layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isSettled()) {
       continue;
     }
 
@@ -516,11 +526,10 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
 
   if (hasExitAnimation) {
     node->state = ANIMATING;
-    startExitingAnimation(node);
     lightNodes_[node->current.tag] = node;
+    startExitingAnimation(node);
   } else {
-    // TODO (future): add proper cleanup
-    //    layoutAnimationsManager_->clearLayoutAnimationConfig(node->tag);
+    layoutAnimationsManager_->clearLayoutAnimationConfig(node->current.tag);
   }
 
   return wantAnimateExit;
@@ -532,10 +541,15 @@ void LayoutAnimationsProxy_Experimental::updateOngoingAnimationTarget(const int 
 }
 
 void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) const {
-  if (!layoutAnimations_.contains(tag)) {
+  const auto layoutAnimationIt = layoutAnimations_.find(tag);
+  if (layoutAnimationIt == layoutAnimations_.end()) {
     return;
   }
-  layoutAnimations_.erase(tag);
+  if (layoutAnimationIt->second.isSettled()) {
+    // Already settled - cleanupAnimations will erase it together with its updateMap entry.
+    return;
+  }
+  layoutAnimations_.erase(layoutAnimationIt);
   scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
@@ -574,6 +588,8 @@ ShadowView LayoutAnimationsProxy_Experimental::cloneViewWithoutOpacity(
   const folly::dynamic opacity = folly::dynamic::object("opacity", 0);
   auto newProps =
       getComponentDescriptorForShadowView(newView).cloneProps(propsParserContext, newView.props, RawProps(opacity));
+  auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));
+  viewProps->opacity = 0;
   newView.props = newProps;
   return newView;
 }
@@ -625,12 +641,17 @@ void LayoutAnimationsProxy_Experimental::cleanupAnimations(
 #ifdef ANDROID
   restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId);
 #endif // ANDROID
-  for (const auto tag : finishedAnimationTags_) {
-    auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
-    layoutAnimations_.erase(tag);
+  auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+  for (const auto tag : maybeSettledAnimationTags_) {
+    // Skip tags re-animated since they settled (count back above 0).
+    const auto layoutAnimationIt = layoutAnimations_.find(tag);
+    if (layoutAnimationIt == layoutAnimations_.end() || !layoutAnimationIt->second.isSettled()) {
+      continue;
+    }
+    layoutAnimations_.erase(layoutAnimationIt);
     updateMap.erase(tag);
   }
-  finishedAnimationTags_.clear();
+  maybeSettledAnimationTags_.clear();
 }
 
 // MARK: Start Animation

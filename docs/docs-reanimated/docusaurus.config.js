@@ -226,6 +226,10 @@ const config = {
                     fullySpecified: false,
                   },
                 },
+                {
+                  test: /react-native-(worklets|reanimated)[\\/]lib[\\/]module[\\/].*\.js$/,
+                  type: 'javascript/auto',
+                },
               ],
             },
             resolve: {

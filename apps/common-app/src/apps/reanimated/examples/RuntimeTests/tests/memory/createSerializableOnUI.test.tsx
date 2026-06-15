@@ -570,7 +570,7 @@ describe('Test createSerializableOnUI', () => {
           'worklet';
           return Promise.resolve();
         })
-      ).toThrow('Promises cannot be converted to serializable.');
+      ).toThrow('Cannot copy value of type `Promise`');
     });
   }
 });

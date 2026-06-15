@@ -21,13 +21,13 @@ import type { WorkletsPluginPass } from './types';
 import { generatedWorkletsDir } from './types';
 
 export function generateWorkletFile(
-  libraryBindingsToImport: Set<Binding>,
+  moduleBindingsToImport: Set<Binding>,
   relativeBindingsToImport: Set<Binding>,
   factory: FunctionExpression,
   workletHash: number,
   state: WorkletsPluginPass
 ) {
-  const libraryImports = Array.from(libraryBindingsToImport)
+  const libraryImports = Array.from(moduleBindingsToImport)
     .filter(
       (binding) =>
         (binding.path.isImportSpecifier() ||
@@ -72,7 +72,7 @@ export function generateWorkletFile(
   const transformedProg = transformFromAstSync(newProg, undefined, {
     filename: state.file.opts.filename,
     presets: ['@babel/preset-typescript'],
-    plugins: [],
+    plugins: [state.autoworkletizationPlugin],
     ast: false,
     babelrc: false,
     configFile: false,

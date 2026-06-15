@@ -1,5 +1,6 @@
 'use strict';
 
+import type { MutuallyExclusiveUnion, Simplify } from '../../common';
 import type { ReduceMotion } from '../../commonTypes';
 
 export const Reanimated3DefaultSpringConfig = {
@@ -74,25 +75,21 @@ export const SnappySpringConfigWithDuration = {
  *   {@link ReduceMotion}.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring/#config-
  */
-export type SpringConfig = {
-  mass?: number;
-  overshootClamping?: boolean;
-  energyThreshold?: number;
-  velocity?: number;
-  reduceMotion?: ReduceMotion;
-} & (
-  | {
-      stiffness?: number;
-      damping?: number;
-      duration?: never;
-      dampingRatio?: never;
-      clamp?: never;
-    }
-  | {
-      stiffness?: never;
-      damping?: never;
-      duration?: number;
-      dampingRatio?: number;
-      clamp?: { min?: number; max?: number };
-    }
-);
+export type SpringConfig = Simplify<
+  {
+    mass?: number;
+    overshootClamping?: boolean;
+    energyThreshold?: number;
+    velocity?: number;
+    reduceMotion?: ReduceMotion;
+  } & MutuallyExclusiveUnion<
+    [
+      { stiffness?: number; damping?: number },
+      {
+        duration?: number;
+        dampingRatio?: number;
+        clamp?: { min?: number; max?: number };
+      },
+    ]
+  >
+>;

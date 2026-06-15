@@ -73,6 +73,7 @@ const jsDocRules = {
   'jsdoc/require-param-description': 'off',
   'jsdoc/require-returns-description': 'off',
   'jsdoc/require-jsdoc': 'off',
+  'jsdoc/require-property-description': 'off',
 };
 
 /** @type {import('typescript-eslint').ConfigWithExtends['rules']} */
@@ -140,7 +141,7 @@ const config = tsEslint.config(
     languageOptions: {
       globals: {
         React: true,
-        ...reactNative.environments['react-native']['react-native'],
+        ...reactNative.environments['react-native'].globals,
         ...jest.environments.globals.globals,
         ...globals.node,
       },

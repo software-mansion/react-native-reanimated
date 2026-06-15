@@ -4,7 +4,7 @@ import { Component } from 'react';
 import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 
-import type { AnyComponent, PlainStyle, UnknownRecord } from '../../common';
+import type { AnyComponent, UnknownRecord } from '../../common';
 import { IS_JEST, SHOULD_BE_USE_WEB } from '../../common';
 import type {
   InternalHostInstance,
@@ -17,6 +17,7 @@ import type {
 } from '../../createAnimatedComponent/commonTypes';
 import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
+import type { DefaultStyle } from '../../hook/commonTypes';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
 import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../native';
 import { CSSManager } from '../platform';
@@ -25,7 +26,7 @@ import { filterNonCSSStyleProps } from './utils';
 
 export type AnimatedComponentProps = UnknownRecord & {
   ref?: Ref<Component>;
-  style?: StyleProp<PlainStyle>;
+  style?: StyleProp<DefaultStyle>;
 };
 
 // TODO - change these ugly underscore prefixed methods and properties to real
@@ -45,7 +46,6 @@ export default class AnimatedComponent<
   _viewInfo?: ViewInfo;
   _cssStyle: CSSStyle = {}; // RN style object with Reanimated CSS properties
   _componentRef: AnimatedComponentRef | HTMLElement | null = null;
-  _hasAnimatedRef = false;
   // Used only on web
   _componentDOMRef: HTMLElement | null = null;
   _willUnmount: boolean = false;
@@ -139,7 +139,6 @@ export default class AnimatedComponent<
     // Component can specify ref which should be animated when animated version of the component is created.
     // Otherwise, we animate the component itself.
     if (componentRef && componentRef.getAnimatableRef) {
-      this._hasAnimatedRef = true;
       return componentRef.getAnimatableRef();
     }
     // Case for SVG components on Web
@@ -155,7 +154,7 @@ export default class AnimatedComponent<
 
   _updateStyles(props: P) {
     this._cssStyle = (StyleSheet.flatten(
-      props.style as StyleProp<PlainStyle>
+      props.style as StyleProp<DefaultStyle>
     ) ?? {}) as CSSStyle;
   }
 
@@ -174,7 +173,10 @@ export default class AnimatedComponent<
     if (!IS_JEST) {
       this._CSSManager ??= new CSSManager(
         this._getViewInfo(),
-        this.ChildComponent.displayName
+        // `react-native-svg`'s web classes don't set `static displayName`
+        // (only the native side does), so fall back to the class `name` which
+        // matches the React `displayName` pattern used elsewhere.
+        this.ChildComponent.displayName ?? this.ChildComponent.name
       );
       this._CSSManager?.update(this._cssStyle);
     }

@@ -171,6 +171,11 @@ const DurationZeroExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/DurationZero').default as React.FC
   );
+const ExitingTagReuseStressExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/ExitingTagReuseStressExample')
+      .default as React.FC
+  );
 const DynamicColorIOSExample: React.FC = () =>
   React.createElement(require('./DynamicColorIOSExample').default as React.FC);
 const EmojiWaterfallExample: React.FC = () =>
@@ -385,6 +390,8 @@ const RuntimeTestsExample: React.FC = () =>
   React.createElement(
     require('./RuntimeTests/RuntimeTestsExample').default as React.FC
   );
+const ScreenlessBasic: React.FC = () =>
+  React.createElement(require('./SharedElementTransitions/ScreenlessBasic').default as React.FC);
 const ScreenStackExample: React.FC = () =>
   React.createElement(require('./ScreenStackExample').default as React.FC);
 const ScreenStackHeaderConfigBackgroundColorExample: React.FC = () =>
@@ -479,6 +486,8 @@ const WithoutBabelPluginExample: React.FC = () =>
   );
 const WobbleExample: React.FC = () =>
   React.createElement(require('./WobbleExample').default as React.FC);
+
+
 
 export const REAPlatform = {
   IOS: 'ios',
@@ -1199,6 +1208,10 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] Duration zero',
     screen: DurationZeroExample,
   },
+  ExitingTagReuseStressExample: {
+    title: '[LA] Exiting tag reuse stress',
+    screen: ExitingTagReuseStressExample,
+  },
   DefaultAnimationsOverrides: {
     title: '[LA] Default layout animations overrides',
     screen: DefaultAnimationsOverrides,
@@ -1330,9 +1343,16 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[SET] Tab Navigator',
     screen: TabNavigatorExample,
     shouldWork: {
-      // not implemented
-      ios: false,
-      android: false,
+      ios: true,
+      android: true,
+    },
+  },
+  ScreenlessBasic: {
+    title: '[SET] Screenless Basic',
+    screen: ScreenlessBasic,
+    shouldWork: {
+      ios: true,
+      android: true,
     },
   },
 } as const;

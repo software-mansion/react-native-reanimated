@@ -25,10 +25,17 @@ jobs:
       group: ${{ matrix.platform }}-react-native-nightly-${{ github.ref }}
       cancel-in-progress: true
     steps:
+      - name: Checkout version files
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          sparse-checkout: |
+            .nvmrc
+            .ruby-version
+          sparse-checkout-cone-mode: false
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: '22'
+          node-version-file: '.nvmrc'
       - name: Setup Yarn
         # Sometimes `npx @react-native-community/cli init` fails at random.
         # Pre-installing it with Yarn seems to improve stability.
@@ -65,7 +72,6 @@ jobs:
       - uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
         if: ${{ matrix.platform == 'iOS' }}
         with:
-          ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
       - name: Install Fabric Pods (iOS)
         if: ${{ matrix.platform == 'iOS' }}

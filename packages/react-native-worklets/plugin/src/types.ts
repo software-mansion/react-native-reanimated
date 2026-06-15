@@ -1,4 +1,4 @@
-import type { BabelFile, NodePath } from '@babel/core';
+import type { BabelFile, NodePath, PluginItem } from '@babel/core';
 import type {
   ArrowFunctionExpression,
   FunctionDeclaration,
@@ -20,11 +20,13 @@ import type { PluginOptions } from './options';
 export interface WorkletsPluginPass {
   file: BabelFile;
   key: string;
-  opts: PluginOptions;
+  opts: InitializedPluginOptions;
   cwd: string;
   filename: string | undefined;
   workletNumber: number;
   classesToWorkletize: { node: BabelNode; name: string }[];
+  skipFile: boolean;
+  autoworkletizationPlugin: PluginItem;
 }
 
 export type WorkletizableFunction =
@@ -77,3 +79,10 @@ export function isWorkletizableObjectNode(
 export const workletClassFactorySuffix = '__classFactory';
 
 export const generatedWorkletsDir = '.worklets';
+
+export type InitializedPluginOptions = Omit<
+  PluginOptions,
+  'importForwarding'
+> & {
+  importForwarding: Required<NonNullable<PluginOptions['importForwarding']>>;
+};

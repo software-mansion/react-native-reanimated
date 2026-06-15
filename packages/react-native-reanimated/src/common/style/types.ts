@@ -1,5 +1,22 @@
 'use strict';
+import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
+
 import type { ConfigPropertyAlias, ValueProcessor } from '../types';
+
+/**
+ * Intersection of every React Native style type with deprecated props stripped.
+ * Used internally by the props builder configs to enforce that the configs
+ * cover every valid style key. Not part of the public API.
+ */
+export type AllStyleProps = Omit<
+  ViewStyle & TextStyle & ImageStyle,
+  | 'transformMatrix'
+  | 'rotation'
+  | 'scaleX'
+  | 'scaleY'
+  | 'translateX'
+  | 'translateY'
+>;
 
 type PropertyValueConfigBase<P extends object> =
   | boolean // true - included, false - excluded

@@ -6,7 +6,7 @@ import {
   type StringLiteral,
   stringLiteral,
 } from '@babel/types';
-import { dirname, relative, resolve } from 'path';
+import { dirname, posix, relative, resolve, sep } from 'path';
 
 import { generatedWorkletsDir, type WorkletsPluginPass } from './types';
 
@@ -26,9 +26,9 @@ export function updateRelativeRequires(
         )[0] as NodePath<StringLiteral>;
         if (
           requiredModule.node.value.startsWith('.') &&
-          isAllowedForRelativeImports(
+          canForwardRelativeImport(
             state.file.opts.filename || '',
-            state.opts.workletizableModules
+            state.opts.importForwarding.relativePaths
           )
         ) {
           requiredModule.replaceWith(
@@ -55,25 +55,49 @@ export function isImportRelative(imported: Binding): boolean {
   ).node.source.value.startsWith('.');
 }
 
-export function isAllowedForRelativeImports(
-  filename: string | undefined | null,
-  workletizableModules?: string[]
+export function canForwardModuleImport(
+  moduleName: string,
+  forwardableModuleNames: string[]
 ): boolean {
-  return (
-    !!filename &&
-    (alwaysAllowed.some((module) => filename.includes(module)) ||
-      !!workletizableModules?.some((module) => filename.includes(module)))
+  return forwardableModuleNames.some(
+    (forwardableModuleName) =>
+      moduleName === forwardableModuleName ||
+      moduleName.startsWith(forwardableModuleName + '/')
   );
 }
 
-export function isWorkletizableModule(
-  source: string,
-  workletizableModules?: string[]
+export function canForwardRelativeImport(
+  modulePath: string | undefined | null,
+  relativePaths: string[]
 ): boolean {
   return (
-    alwaysAllowed.some((module) => source.startsWith(module)) ||
-    !!workletizableModules?.some((module) => source.startsWith(module))
+    !!modulePath &&
+    relativePaths.some((relativePath) =>
+      matchesFilenameSegment(modulePath, relativePath)
+    )
   );
+}
+
+function matchesFilenameSegment(
+  filename: string,
+  allowedPath: string
+): boolean {
+  const pkgSegments = allowedPath.split(posix.sep);
+  let fileSegments = filename.split(sep);
+  const lastNodeModules = fileSegments.lastIndexOf('node_modules');
+  if (lastNodeModules !== -1) {
+    fileSegments = fileSegments.slice(lastNodeModules + 1);
+  }
+  for (let i = 0; i <= fileSegments.length - pkgSegments.length; i++) {
+    if (
+      pkgSegments.every(
+        (segment, segmentIndex) => fileSegments[i + segmentIndex] === segment
+      )
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 export function createImportPathLiteral(
@@ -86,10 +110,8 @@ export function createImportPathLiteral(
   );
 
   const resolved = resolve(dirname(state.file.opts.filename!), originalPath);
-  return stringLiteral(relative(generatedWorkletsDirPath, resolved));
+  const relativePath = relative(generatedWorkletsDirPath, resolved);
+  return stringLiteral(
+    sep === '/' ? relativePath : relativePath.split(sep).join('/')
+  );
 }
-
-const alwaysAllowed = [
-  'react-native-worklets',
-  'react-native/Libraries/Core/setUpXHR', // for networking
-];
