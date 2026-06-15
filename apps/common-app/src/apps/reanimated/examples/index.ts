@@ -171,6 +171,11 @@ const DurationZeroExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/DurationZero').default as React.FC
   );
+const ExitingTagReuseStressExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/ExitingTagReuseStressExample')
+      .default as React.FC
+  );
 const DynamicColorIOSExample: React.FC = () =>
   React.createElement(require('./DynamicColorIOSExample').default as React.FC);
 const EmojiWaterfallExample: React.FC = () =>
@@ -1206,6 +1211,10 @@ export const EXAMPLES: Record<string, Example> = {
   DurationZeroExample: {
     title: '[LA] Duration zero',
     screen: DurationZeroExample,
+  },
+  ExitingTagReuseStressExample: {
+    title: '[LA] Exiting tag reuse stress',
+    screen: ExitingTagReuseStressExample,
   },
   DefaultAnimationsOverrides: {
     title: '[LA] Default layout animations overrides',

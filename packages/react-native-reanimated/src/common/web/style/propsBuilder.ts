@@ -15,8 +15,14 @@ import type { PropsBuilderConfig, RuleBuilder } from './types';
 type WebPropsBuilderConfig<P extends UnknownRecord = UnknownRecord> =
   PropsBuilderConfig<P>;
 
+type WebPropsBuilderOptions = {
+  // Appends ' !important' to every emitted declaration (e.g. pseudo-selector
+  // rules that must override the element's inline styles).
+  important?: boolean;
+};
+
 export type WebPropsBuilder<P extends UnknownRecord = UnknownRecord> = {
-  build(props: Partial<P>): string | null;
+  build(props: Partial<P>, options?: WebPropsBuilderOptions): string | null;
 };
 
 export function createWebPropsBuilder<TProps extends UnknownRecord>(
@@ -81,7 +87,10 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
   });
 
   return {
-    build(props: Partial<TProps>): string | null {
+    build(
+      props: Partial<TProps>,
+      options?: WebPropsBuilderOptions
+    ): string | null {
       usedRuleBuilders.clear();
 
       // Build props - rule builders are fed during processing
@@ -93,11 +102,14 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
       }
 
       // Convert to CSS string
+      const importance = options?.important ? ' !important' : '';
       const cssString = Object.entries(processedProps)
         .reduce<string[]>((acc, [key, value]) => {
           if (isDefined(value)) {
             const name = nameAliases.get(key) ?? key;
-            acc.push(`${kebabizeCamelCase(name)}: ${value as string}`);
+            acc.push(
+              `${kebabizeCamelCase(name)}: ${value as string}${importance}`
+            );
           }
           return acc;
         }, [])

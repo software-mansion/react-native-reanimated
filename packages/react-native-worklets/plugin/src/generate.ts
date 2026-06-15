@@ -21,13 +21,13 @@ import type { WorkletsPluginPass } from './types';
 import { generatedWorkletsDir } from './types';
 
 export function generateWorkletFile(
-  libraryBindingsToImport: Set<Binding>,
+  moduleBindingsToImport: Set<Binding>,
   relativeBindingsToImport: Set<Binding>,
   factory: FunctionExpression,
   workletHash: number,
   state: WorkletsPluginPass
 ) {
-  const libraryImports = Array.from(libraryBindingsToImport)
+  const libraryImports = Array.from(moduleBindingsToImport)
     .filter(
       (binding) =>
         (binding.path.isImportSpecifier() ||

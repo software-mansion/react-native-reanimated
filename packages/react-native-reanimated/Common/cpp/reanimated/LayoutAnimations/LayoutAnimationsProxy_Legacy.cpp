@@ -1,5 +1,6 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 
+#include <react/debug/react_native_assert.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 
 #include <memory>
@@ -42,12 +43,18 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
 #ifdef ANDROID
   restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId);
 #endif // ANDROID
-  for (const auto tag : finishedAnimationTags_) {
-    auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
-    layoutAnimations_.erase(tag);
+  auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+  for (const auto tag : maybeSettledAnimationTags_) {
+    const auto layoutAnimationIt = layoutAnimations_.find(tag);
+    if (layoutAnimationIt == layoutAnimations_.end() || !layoutAnimationIt->second.isSettled()) {
+      continue;
+    }
+    layoutAnimations_.erase(layoutAnimationIt);
     updateMap.erase(tag);
   }
-  finishedAnimationTags_.clear();
+  maybeSettledAnimationTags_.clear();
+  // Past this point no animation can be settled - we hold the mutex for the whole
+  // transaction, so no end callback can run until we return.
 
   parseRemoveMutations(movedViews, mutations, roots);
 
@@ -109,11 +116,10 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
   // one after the other, so we need to keep count of how many
   // were actually triggered, so that we don't cleanup necessary
   // structures too early
-  if (layoutAnimation.count > 1) {
-    layoutAnimation.count--;
+  if (--layoutAnimation.count > 0) {
     return {};
   }
-  finishedAnimationTags_.push_back(tag);
+  maybeSettledAnimationTags_.insert(tag);
   auto surfaceId = layoutAnimation.finalView.surfaceId;
 
   if (!shouldRemove || !nodeForTag_.contains(tag)) {
@@ -121,6 +127,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
   }
 
   auto node = nodeForTag_[tag];
+  react_native_assert(node->isMutationNode() && "exiting tag must map to a MutationNode");
   auto mutationNode = std::static_pointer_cast<MutationNode>(node);
   mutationNode->state = ExitingState_Legacy::DEAD;
   auto &[deadNodes] = surfaceContext_[surfaceId];
@@ -406,7 +413,7 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(SurfaceId surfaceId, Sha
 
     auto layoutAnimationIt = layoutAnimations_.find(tag);
 
-    if (layoutAnimationIt == layoutAnimations_.end()) {
+    if (layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isSettled()) {
       continue;
     }
 
@@ -830,10 +837,11 @@ void LayoutAnimationsProxy_Legacy::maybeCancelAnimation(const int tag) const {
     it->second.handle++;
   }
 #endif
-  if (!layoutAnimations_.contains(tag)) {
+  const auto layoutAnimationIt = layoutAnimations_.find(tag);
+  if (layoutAnimationIt == layoutAnimations_.end()) {
     return;
   }
-  layoutAnimations_.erase(tag);
+  layoutAnimations_.erase(layoutAnimationIt);
   scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
