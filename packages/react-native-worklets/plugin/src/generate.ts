@@ -14,19 +14,20 @@ import {
 } from '@babel/types';
 import assert from 'assert';
 import { writeFileSync } from 'fs';
-import { dirname, relative, resolve } from 'path';
+import { dirname, resolve } from 'path';
 
+import { createImportPathLiteral } from './imports';
 import type { WorkletsPluginPass } from './types';
 import { generatedWorkletsDir } from './types';
 
 export function generateWorkletFile(
-  libraryBindingsToImport: Set<Binding>,
+  moduleBindingsToImport: Set<Binding>,
   relativeBindingsToImport: Set<Binding>,
   factory: FunctionExpression,
   workletHash: number,
   state: WorkletsPluginPass
 ) {
-  const libraryImports = Array.from(libraryBindingsToImport)
+  const libraryImports = Array.from(moduleBindingsToImport)
     .filter(
       (binding) =>
         (binding.path.isImportSpecifier() ||
@@ -53,19 +54,16 @@ export function generateWorkletFile(
         binding.path.isImportSpecifier() &&
         binding.path.parentPath.isImportDeclaration()
     )
-    .map((binding) => {
-      const resolved = resolve(
-        dirname(state.file.opts.filename!),
-        (binding.path.parentPath! as NodePath<ImportDeclaration>).node.source
-          .value
-      );
-      const importPath = relative(filesDirPath, resolved);
-
-      return importDeclaration(
+    .map((binding) =>
+      importDeclaration(
         [cloneNode(binding.path.node as ImportSpecifier, true)],
-        stringLiteral(importPath)
-      );
-    });
+        createImportPathLiteral(
+          (binding.path.parentPath! as NodePath<ImportDeclaration>).node.source
+            .value,
+          state
+        )
+      )
+    );
 
   const imports = [...libraryImports, ...relativeImports];
 
@@ -74,7 +72,7 @@ export function generateWorkletFile(
   const transformedProg = transformFromAstSync(newProg, undefined, {
     filename: state.file.opts.filename,
     presets: ['@babel/preset-typescript'],
-    plugins: [],
+    plugins: [state.autoworkletizationPlugin],
     ast: false,
     babelrc: false,
     configFile: false,

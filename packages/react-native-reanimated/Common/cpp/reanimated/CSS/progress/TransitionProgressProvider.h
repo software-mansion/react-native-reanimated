@@ -4,6 +4,7 @@
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 #include <reanimated/CSS/progress/RawProgressProvider.h>
 #include <reanimated/CSS/utils/props.h>
+#include <reanimated/CSS/utils/reversingShortening.h>
 
 #include <memory>
 #include <string>
@@ -13,32 +14,29 @@
 
 namespace reanimated::css {
 
-enum class TransitionProgressState : std::uint8_t { Pending, Running, Finished };
+enum class TransitionProgressState : std::uint8_t { Idle, Pending, Running };
 
 class TransitionPropertyProgressProvider final : public KeyframeProgressProvider, public RawProgressProvider {
  public:
+  TransitionPropertyProgressProvider(double timestamp, double duration, double delay, EasingConfig easing);
   TransitionPropertyProgressProvider(
       double timestamp,
       double duration,
       double delay,
-      const EasingFunction &easingFunction);
-  TransitionPropertyProgressProvider(
-      double timestamp,
-      double duration,
-      double delay,
-      const EasingFunction &easingFunction,
+      EasingConfig easing,
       double reversingShorteningFactor);
 
   double getGlobalProgress() const override;
   double getKeyframeProgress(double fromOffset, double toOffset) const override;
   double getRemainingDelay(double timestamp) const;
-  double getReversingShorteningFactor() const;
+  ReversingState getReversingState() const;
   TransitionProgressState getState() const;
 
  protected:
   std::optional<double> calculateRawProgress(double timestamp) override;
 
  private:
+  EasingConfig easing_;
   EasingFunction easingFunction_;
   double reversingShorteningFactor_ = 1;
 
@@ -66,7 +64,8 @@ class TransitionProgressProvider final {
  private:
   TransitionPropertyProgressProviders propertyProgressProviders_;
 
-  // TO DO: currently never cleaned by design - if the property has already been transitioned in the past, we might want to reuse the config (run without settings in the config).
+  // TO DO: currently never cleaned by design - if the property has already been transitioned in the past, we might want
+  // to reuse the config (run without settings in the config).
   /// We might want to add an option for clearing those settings in the future.
   PropertiesSettingsMap propertySettings_;
 

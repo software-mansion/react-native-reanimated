@@ -153,7 +153,8 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         react_native_assert(node && "LightNode not found");
         node->previous = mutation.oldChildShadowView;
 #ifdef ANDROID
-        // TODO (future): We don't merge the root view as the currently stored version might not be accurate, because of the inconsequential initialization order of proxy and the surface
+        // TODO (future): We don't merge the root view as the currently stored version might not be accurate, because of
+        // the inconsequential initialization order of proxy and the surface
         if (!isRoot(node) && node->current.props) {
           // On android rawProps are used to store the diffed props so we need to merge them
           // This should soon be replaced in RN with Props 2.0 (the diffing will be done at the end of the pipeline)
@@ -286,11 +287,10 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
   // one after the other, so we need to keep count of how many
   // were actually triggered, so that we don't cleanup necessary
   // structures too early
-  if (layoutAnimation.count > 1) {
-    layoutAnimation.count--;
+  if (--layoutAnimation.count > 0) {
     return {};
   }
-  finishedAnimationTags_.push_back(tag);
+  maybeSettledAnimationTags_.insert(tag);
   auto surfaceId = layoutAnimation.finalView.surfaceId;
 
   if (sharedTransitionManager_->tagToName_.contains(tag)) {
@@ -335,9 +335,10 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
       react_native_assert(parent && "Parent node is nullptr");
       // TODO (future): figure out a better way to handle this
       // Currently we remove each view, and then if we want to animate it, reinsert it at the end.
-      // This is nice, but introduces extra mutations (which could have some side effects, like making a snapshot in RNScreens),
-      // and it changes the zIndex of animated views, which is different from what've had.
-      // The biggest convenience of this approach is that it is much easier to maintain indices of animated views, and handle reparentings.
+      // This is nice, but introduces extra mutations (which could have some side effects, like making a snapshot in
+      // RNScreens), and it changes the zIndex of animated views, which is different from what've had. The biggest
+      // convenience of this approach is that it is much easier to maintain indices of animated views, and handle
+      // reparentings.
 
       auto current = node->current;
       if (layoutAnimations_.contains(node->current.tag)) {
@@ -406,7 +407,7 @@ void LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceI
 
     const auto layoutAnimationIt = layoutAnimations_.find(tag);
 
-    if (layoutAnimationIt == layoutAnimations_.end()) {
+    if (layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isSettled()) {
       continue;
     }
 
@@ -525,11 +526,10 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
 
   if (hasExitAnimation) {
     node->state = ANIMATING;
-    startExitingAnimation(node);
     lightNodes_[node->current.tag] = node;
+    startExitingAnimation(node);
   } else {
-    // TODO (future): add proper cleanup
-    //    layoutAnimationsManager_->clearLayoutAnimationConfig(node->tag);
+    layoutAnimationsManager_->clearLayoutAnimationConfig(node->current.tag);
   }
 
   return wantAnimateExit;
@@ -541,10 +541,15 @@ void LayoutAnimationsProxy_Experimental::updateOngoingAnimationTarget(const int 
 }
 
 void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) const {
-  if (!layoutAnimations_.contains(tag)) {
+  const auto layoutAnimationIt = layoutAnimations_.find(tag);
+  if (layoutAnimationIt == layoutAnimations_.end()) {
     return;
   }
-  layoutAnimations_.erase(tag);
+  if (layoutAnimationIt->second.isSettled()) {
+    // Already settled - cleanupAnimations will erase it together with its updateMap entry.
+    return;
+  }
+  layoutAnimations_.erase(layoutAnimationIt);
   scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
@@ -636,12 +641,17 @@ void LayoutAnimationsProxy_Experimental::cleanupAnimations(
 #ifdef ANDROID
   restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId);
 #endif // ANDROID
-  for (const auto tag : finishedAnimationTags_) {
-    auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
-    layoutAnimations_.erase(tag);
+  auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+  for (const auto tag : maybeSettledAnimationTags_) {
+    // Skip tags re-animated since they settled (count back above 0).
+    const auto layoutAnimationIt = layoutAnimations_.find(tag);
+    if (layoutAnimationIt == layoutAnimations_.end() || !layoutAnimationIt->second.isSettled()) {
+      continue;
+    }
+    layoutAnimations_.erase(layoutAnimationIt);
     updateMap.erase(tag);
   }
-  finishedAnimationTags_.clear();
+  maybeSettledAnimationTags_.clear();
 }
 
 // MARK: Start Animation

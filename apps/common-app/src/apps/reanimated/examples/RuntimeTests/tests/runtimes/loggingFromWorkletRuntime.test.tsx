@@ -156,11 +156,11 @@ const testCases: Record<string, TestCase> = {
     },
   },
   hostFunction: {
-    bundleMode: '[Function: createSerializable]',
+    bundleMode: '[Function: createSerializableNumber]',
     noBundleMode: '{}',
     factory: () => {
       'worklet';
-      return globalThis.__workletsModuleProxy.createSerializable;
+      return globalThis.__workletsModuleProxy.createSerializableNumber;
     },
   },
   generatorFunction: {
@@ -198,7 +198,7 @@ const testCases: Record<string, TestCase> = {
   },
   error: {
     bundleMode: '[Error: oops]',
-    noBundleMode: '{}',
+    noBundleMode: "{ [Error: oops] name: 'Error' }",
     factory: () => {
       'worklet';
       return new Error('oops');
@@ -206,13 +206,14 @@ const testCases: Record<string, TestCase> = {
   },
   rangeError: {
     bundleMode: '[RangeError: out of range]',
-    noBundleMode: '{}',
+    noBundleMode: "{ [RangeError: out of range] name: 'RangeError' }",
     factory: () => {
       'worklet';
       return new RangeError('out of range');
     },
   },
   map: {
+    // This logs correctly but only in Metro...
     expected: '{}',
     factory: () => {
       'worklet';
@@ -220,6 +221,7 @@ const testCases: Record<string, TestCase> = {
     },
   },
   set: {
+    // This logs correctly but only in Metro...
     expected: '{}',
     factory: () => {
       'worklet';
@@ -235,6 +237,7 @@ const testCases: Record<string, TestCase> = {
   },
   promise: {
     expected: '{ _x: 0, _y: 1, _z: undefined, _A: null }',
+    errorsOnNoBundleMode: true,
     factory: () => {
       'worklet';
       return new Promise<void>((r) => {
@@ -253,8 +256,7 @@ const testCases: Record<string, TestCase> = {
     },
   },
   regExp: {
-    bundleMode: '/abc/gi',
-    noBundleMode: '{}',
+    expected: '/abc/gi',
     factory: () => {
       'worklet';
       return /abc/gi;
@@ -301,7 +303,9 @@ const testCases: Record<string, TestCase> = {
     factory: () => {
       'worklet';
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (globalThis.__workletsModuleProxy as any).createSerializable(42);
+      return (globalThis.__workletsModuleProxy as any).createSerializableNumber(
+        42
+      );
     },
   },
   shareable: {

@@ -1,11 +1,11 @@
 'use strict';
-import type { AnyRecord, ConvertValuesToArrays } from '../types';
+import type { ConvertValuesToArrays } from '../types';
 
 export function convertPropertyToArray<T>(value: T | undefined): T[] {
   return value !== undefined ? (Array.isArray(value) ? value : [value]) : [];
 }
 
-export function convertPropertiesToArrays<T extends AnyRecord>(config: T) {
+export function convertPropertiesToArrays<T extends object>(config: T) {
   return Object.fromEntries(
     Object.entries(config).map(([key, value]) => [
       key,

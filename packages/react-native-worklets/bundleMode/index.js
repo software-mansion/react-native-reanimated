@@ -1,42 +1,82 @@
-/* eslint-disable */
-// @ts-nocheck
 const path = require('path');
 
-let getDefaultConfig = () => ({});
-try {
-  getDefaultConfig = require('@react-native/metro-config').getDefaultConfig;
-} catch {
-  /* empty */
+const workletsPackageParentDir = path.resolve(__dirname, '../..');
+const reactNativeShimPath = path.join(__dirname, 'shims', 'reactNativeShim.js');
+const turboModuleRegistryShimPath = path.join(
+  __dirname,
+  'shims',
+  'turboModuleRegistryShim.js'
+);
+const turboModuleRegistryModuleName =
+  'react-native/Libraries/TurboModule/TurboModuleRegistry';
+const turboModuleRegistryFileSuffix = path.join(
+  'react-native',
+  'Libraries',
+  'TurboModule',
+  'TurboModuleRegistry.js'
+);
+
+function isResolvedTurboModuleRegistry(/** @type {any} */ result) {
+  return (
+    result?.type === 'sourceFile' &&
+    typeof result.filePath === 'string' &&
+    result.filePath.endsWith(turboModuleRegistryFileSuffix)
+  );
 }
 
-const workletsPackageParentDir = path.resolve(__dirname, '../..');
-
-const defaults = getDefaultConfig(__dirname);
-
-const workletsDirPath = path.join('react-native-worklets', '.worklets');
+const workletsPackageName = 'react-native-worklets';
+const workletsDirPath = path.posix.join(workletsPackageName, '.worklets');
+const workletsSrcEntryPath = path.posix.join(
+  workletsPackageName,
+  'src',
+  'index.ts'
+);
+const workletsLibEntryPath = path.posix.join(
+  workletsPackageName,
+  'lib',
+  'module',
+  'index.js'
+);
 
 function bundleModeResolveRequest(
   /** @type {any} */ context,
   /** @type {string} */ moduleName,
-  /** @type {any} */ platform
+  /** @type {any} */ platform,
+  /** @type {any} */ userConfigResolveRequest
 ) {
   if (moduleName.startsWith(workletsDirPath)) {
     const fullModuleName = path.join(workletsPackageParentDir, moduleName);
     return { type: 'sourceFile', filePath: fullModuleName };
   }
-  return context.resolveRequest(context, moduleName, platform);
+  if (
+    moduleName === 'react-native' &&
+    context.originModulePath !== reactNativeShimPath
+  ) {
+    return { type: 'sourceFile', filePath: reactNativeShimPath };
+  }
+  if (
+    moduleName === turboModuleRegistryModuleName &&
+    context.originModulePath !== turboModuleRegistryShimPath
+  ) {
+    return { type: 'sourceFile', filePath: turboModuleRegistryShimPath };
+  }
+  const resolved = (userConfigResolveRequest || context.resolveRequest)(
+    context,
+    moduleName,
+    platform
+  );
+  if (
+    context.originModulePath !== turboModuleRegistryShimPath &&
+    isResolvedTurboModuleRegistry(resolved)
+  ) {
+    return { type: 'sourceFile', filePath: turboModuleRegistryShimPath };
+  }
+  return resolved;
 }
 
 /** Use in React Native Community projects. */
 const bundleModeMetroConfig = {
   serializer: {
-    getModulesRunBeforeMainModule(/** @type {string} dirname */ dirname) {
-      return [
-        ...getEntryPoints(),
-        ...(defaults?.serializer?.getModulesRunBeforeMainModule?.(dirname) ||
-          []),
-      ];
-    },
     createModuleIdFactory: bundleModeCreateModuleIdFactory,
   },
   resolver: {
@@ -49,26 +89,47 @@ const bundleModeMetroConfig = {
         const fullModuleName = path.join(workletsPackageParentDir, moduleName);
         return { type: 'sourceFile', filePath: fullModuleName };
       }
-      return context.resolveRequest(context, moduleName, platform);
+      if (
+        moduleName === 'react-native' &&
+        context.originModulePath !== reactNativeShimPath
+      ) {
+        return { type: 'sourceFile', filePath: reactNativeShimPath };
+      }
+      if (
+        moduleName === turboModuleRegistryModuleName &&
+        context.originModulePath !== turboModuleRegistryShimPath
+      ) {
+        return { type: 'sourceFile', filePath: turboModuleRegistryShimPath };
+      }
+      const resolved = context.resolveRequest(context, moduleName, platform);
+      if (
+        context.originModulePath !== turboModuleRegistryShimPath &&
+        isResolvedTurboModuleRegistry(resolved)
+      ) {
+        return { type: 'sourceFile', filePath: turboModuleRegistryShimPath };
+      }
+      return resolved;
     },
   },
 };
 
+// eslint-disable-next-line jsdoc/require-param, jsdoc/require-returns
 /** Use in Expo projects. */
-function getBundleModeMetroConfig(config) {
-  const currentGetModulesRunBeforeMainModule =
-    config?.serializer?.getModulesRunBeforeMainModule;
-
-  config.serializer.getModulesRunBeforeMainModule = (
-    /** @type {string} dirname */ dirname
-  ) => [
-    ...getEntryPoints(),
-    ...(currentGetModulesRunBeforeMainModule?.(dirname) || []),
-  ];
-
+function getBundleModeMetroConfig(/** @type {any} */ config) {
   config.serializer.createModuleIdFactory = bundleModeCreateModuleIdFactory;
 
-  config.resolver.resolveRequest = bundleModeResolveRequest;
+  const currentResolveRequest = config?.resolver?.resolveRequest;
+  config.resolver.resolveRequest = (
+    /** @type {any} */ context,
+    /** @type {string} */ moduleName,
+    /** @type {any} */ platform
+  ) =>
+    bundleModeResolveRequest(
+      context,
+      moduleName,
+      platform,
+      currentResolveRequest
+    );
 
   const currentGetTransformOptions = config?.transformer?.getTransformOptions;
   config.transformer.getTransformOptions = async () => {
@@ -87,25 +148,6 @@ function getBundleModeMetroConfig(config) {
   return config;
 }
 
-function getEntryPoints() {
-  const entryPoints = [];
-  try {
-    entryPoints.push(
-      require.resolve('react-native-worklets/src/initializers/workletRuntimeEntry.native.ts')
-    );
-  } catch {
-    /* empty */
-  }
-  try {
-    entryPoints.push(
-      require.resolve('react-native-worklets/lib/module/initializers/workletRuntimeEntry.native.js')
-    );
-  } catch {
-    /* empty */
-  }
-  return entryPoints;
-}
-
 function bundleModeCreateModuleIdFactory() {
   let nextId = 0;
   const idFileMap = new Map();
@@ -113,11 +155,20 @@ function bundleModeCreateModuleIdFactory() {
     if (idFileMap.has(moduleName)) {
       return idFileMap.get(moduleName);
     }
-    if (moduleName.includes(workletsDirPath)) {
-      const base = path.basename(moduleName, '.js');
-      const id = Number(base);
-      idFileMap.set(moduleName, id);
-      return id;
+    if (moduleName.includes(workletsPackageName)) {
+      if (
+        moduleName.endsWith(workletsSrcEntryPath) ||
+        moduleName.endsWith(workletsLibEntryPath)
+      ) {
+        const entryPointId = -2;
+        idFileMap.set(moduleName, entryPointId);
+        return entryPointId;
+      } else if (moduleName.includes(workletsDirPath)) {
+        const base = path.basename(moduleName, '.js');
+        const id = Number(base);
+        idFileMap.set(moduleName, id);
+        return id;
+      }
     }
     idFileMap.set(moduleName, nextId++);
     return idFileMap.get(moduleName);

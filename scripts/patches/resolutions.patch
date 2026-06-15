@@ -1,0 +1,14 @@
+diff --git a/package.json b/package.json
+index fa3012c727..7bbbfdac1c 100644
+--- a/package.json
++++ b/package.json
+@@ -84,5 +84,9 @@
+     "shelljs": "0.10.0",
+     "tstyche": "7.2.1",
+     "typescript": "5.9.3"
++  },
++  "resolutions": {
++    "metro": "patch:metro@npm%3A0.84.4#~/.yarn/patches/metro-npm-0.84.4-68d21d57b4.patch",
++    "metro-runtime": "patch:metro-runtime@npm%3A0.84.4#~/.yarn/patches/metro-runtime-npm-0.84.4-9533293c73.patch"
+   }
+ }

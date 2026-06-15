@@ -1,3 +1,4 @@
+import type { ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
 import type {
   CSSTransitionProperties,
@@ -26,7 +27,7 @@ export default function TransitionBehavior() {
         },
       ]}
       renderExample={(
-        exampleConfig: CSSTransitionProperties,
+        exampleConfig: CSSTransitionProperties<ViewStyle>,
         style: StyleProps
       ) => (
         <Animated.View style={[styles.wrapper, exampleConfig, style]}>

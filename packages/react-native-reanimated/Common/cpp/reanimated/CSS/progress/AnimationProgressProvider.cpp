@@ -12,12 +12,12 @@ AnimationProgressProvider::AnimationProgressProvider(
     const double iterationCount,
     const AnimationDirection direction,
     EasingFunction easingFunction,
-    const std::shared_ptr<KeyframeEasingFunctions> &keyframeEasingFunctions)
+    const std::shared_ptr<KeyframeEasingConfigs> &keyframeEasingConfigs)
     : RawProgressProvider(timestamp, duration, delay),
       iterationCount_(iterationCount),
       direction_(direction),
       easingFunction_(std::move(easingFunction)),
-      keyframeEasingFunctions_(keyframeEasingFunctions) {}
+      keyframeEasingConfigs_(keyframeEasingConfigs) {}
 
 void AnimationProgressProvider::setIterationCount(double iterationCount) {
   iterationCount_ = iterationCount;
@@ -39,30 +39,6 @@ double AnimationProgressProvider::getGlobalProgress() const {
   return applyAnimationDirection(rawProgress_.value_or(0));
 }
 
-AnimationProgressState AnimationProgressProvider::getState(const double timestamp) const {
-  if (shouldFinish(timestamp)) {
-    return AnimationProgressState::Finished;
-  }
-  if (pauseTimestamp_ > 0) {
-    return AnimationProgressState::Paused;
-  }
-  if (timestamp < getStartTimestamp(timestamp) || !rawProgress_.has_value()) {
-    return AnimationProgressState::Pending;
-  }
-  return AnimationProgressState::Running;
-}
-
-double AnimationProgressProvider::getTotalPausedTime(const double timestamp) const {
-  return pauseTimestamp_ > 0 ? (totalPausedTime_ + (timestamp - pauseTimestamp_)) : totalPausedTime_;
-}
-
-double AnimationProgressProvider::getStartTimestamp(const double timestamp) const {
-  // Start timestamp is the timestamp when the first animation keyframe
-  // should be applied (it depends on the animation delay and the total
-  // time when the animation was paused)
-  return creationTimestamp_ + delay_ + getTotalPausedTime(timestamp);
-}
-
 double AnimationProgressProvider::getKeyframeProgress(const double fromOffset, const double toOffset) const {
   if (fromOffset == toOffset) {
     return 1;
@@ -72,12 +48,23 @@ double AnimationProgressProvider::getKeyframeProgress(const double fromOffset, c
 
   // Use the overridden easing function if it was overridden for the
   // current keyframe
-  const auto easingFunctionIt = keyframeEasingFunctions_->find(fromOffset);
-  if (easingFunctionIt != keyframeEasingFunctions_->end()) {
-    return easingFunctionIt->second(keyframeProgress);
+  const auto easingConfigIt = keyframeEasingConfigs_->find(fromOffset);
+  if (easingConfigIt != keyframeEasingConfigs_->end()) {
+    return getEasingFunctionFromConfig(easingConfigIt->second)(keyframeProgress);
   }
 
   return easingFunction_(keyframeProgress);
+}
+
+AnimationProgressState AnimationProgressProvider::getState() const {
+  return state_;
+}
+
+double AnimationProgressProvider::getStartTimestamp(const double timestamp) const {
+  // Start timestamp is the timestamp when the first animation keyframe
+  // should be applied (it depends on the animation delay and the total
+  // time when the animation was paused)
+  return creationTimestamp_ + delay_ + getTotalPausedTime(timestamp);
 }
 
 void AnimationProgressProvider::pause(const double timestamp) {
@@ -91,26 +78,21 @@ void AnimationProgressProvider::play(const double timestamp) {
   pauseTimestamp_ = 0;
 }
 
+void AnimationProgressProvider::update(const double timestamp) {
+  RawProgressProvider::update(timestamp);
+  state_ = computeState(timestamp);
+}
+
 void AnimationProgressProvider::resetProgress() {
   RawProgressProvider::resetProgress();
   currentIteration_ = 1;
   previousIterationsDuration_ = 0;
-}
-
-bool AnimationProgressProvider::shouldFinish(const double timestamp) const {
-  if (iterationCount_ == 0) {
-    return true;
-  }
-  if (iterationCount_ == -1) {
-    return false;
-  }
-  const auto elapsedDuration = timestamp - getStartTimestamp(timestamp);
-  return elapsedDuration >= duration_ * iterationCount_;
+  state_ = AnimationProgressState::Pending;
 }
 
 std::optional<double> AnimationProgressProvider::calculateRawProgress(const double timestamp) {
-  const double currentIterationElapsedTime =
-      timestamp - (creationTimestamp_ + delay_ + previousIterationsDuration_ + getTotalPausedTime(timestamp));
+  const double startTimestamp = getStartTimestamp(timestamp);
+  const double currentIterationElapsedTime = timestamp - (startTimestamp + previousIterationsDuration_);
 
   if (currentIterationElapsedTime < 0) {
     return std::nullopt;
@@ -126,6 +108,37 @@ std::optional<double> AnimationProgressProvider::calculateRawProgress(const doub
   }
 
   return iterationProgress;
+}
+
+double AnimationProgressProvider::getTotalPausedTime(const double timestamp) const {
+  if (pauseTimestamp_ > 0) {
+    return totalPausedTime_ + (timestamp - pauseTimestamp_);
+  }
+  return totalPausedTime_;
+}
+
+bool AnimationProgressProvider::shouldFinish(const double timestamp) const {
+  if (iterationCount_ == 0) {
+    return true;
+  }
+  if (iterationCount_ == -1) {
+    return false;
+  }
+  const auto elapsedDuration = timestamp - getStartTimestamp(timestamp);
+  return elapsedDuration >= duration_ * iterationCount_;
+}
+
+AnimationProgressState AnimationProgressProvider::computeState(const double timestamp) const {
+  if (shouldFinish(timestamp)) {
+    return AnimationProgressState::Finished;
+  }
+  if (pauseTimestamp_ > 0) {
+    return AnimationProgressState::Paused;
+  }
+  if (timestamp < getStartTimestamp(timestamp) || !rawProgress_.has_value()) {
+    return AnimationProgressState::Pending;
+  }
+  return AnimationProgressState::Running;
 }
 
 double AnimationProgressProvider::updateIterationProgress(const double currentIterationElapsedTime) {

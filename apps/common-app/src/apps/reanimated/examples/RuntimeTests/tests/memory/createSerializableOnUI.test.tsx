@@ -2,6 +2,7 @@ import { TurboModuleRegistry } from 'react-native';
 import { runOnUISync } from 'react-native-worklets';
 
 import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
+import type { TestValue } from '../../ReJest/types';
 
 describe('Test createSerializableOnUI', () => {
   test('createSerializableOnUIString', () => {
@@ -193,56 +194,94 @@ describe('Test createSerializableOnUI', () => {
     expect(typeof arrayValue[index.arrayBuffer]).toBe('object');
   });
 
-  // These types are not supported yet
-  // test('createSerializableOnUIError', async () => {
-  //   // Arrange
-  //   const errorValue = runOnUISync(() => {
-  //     'worklet';
-  //     return new Error('test');
-  //   })();
+  test('createSerializableOnUIError', () => {
+    const errorValue = runOnUISync(() => {
+      'worklet';
+      return new Error('test');
+    });
 
-  //   // Act
-  //   await render(
-  //     <ValueComponent
-  //       validationFunction={() => {
-  //         'worklet';
-  //         const checks = [errorValue instanceof Error, String(errorValue).includes('test')];
-  //         return checks.every(Boolean);
-  //       }}
-  //     />,
-  //   );
-  //   await wait(100);
+    expect(errorValue instanceof Error).toBe(true);
+    expect(errorValue.name).toBe('Error');
+    expect(errorValue.message).toBe('test');
+  });
 
-  //   // Assert
-  //   const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-  //   expect(sharedValue.onUI).toBe('ok');
-  //   expect(sharedValue.onJS).toBe('ok');
-  // });
+  test('createSerializableOnUIError preserves custom name', () => {
+    const errorValue = runOnUISync(() => {
+      'worklet';
+      const e = new Error('boom');
+      e.name = 'CustomError';
+      return e;
+    });
 
-  // test('createSerializableOnUIInitializer', async () => {
-  //   // Arrange
-  //   const regExpValue = runOnUISync(() => {
-  //     'worklet';
-  //     return /a/;
-  //   })();
+    expect(errorValue instanceof Error).toBe(true);
+    expect(errorValue.name).toBe('CustomError');
+    expect(errorValue.message).toBe('boom');
+  });
 
-  //   // Act
-  //   await render(
-  //     <ValueComponent
-  //       validationFunction={() => {
-  //         'worklet';
-  //         const checks = [regExpValue instanceof RegExp, regExpValue.test('a')];
-  //         return checks.every(Boolean);
-  //       }}
-  //     />,
-  //   );
-  //   await wait(100);
+  test('createSerializableOnUIError from Error subclass', () => {
+    const errorValue = runOnUISync(() => {
+      'worklet';
+      return new TypeError('bad type');
+    });
 
-  //   // Assert
-  //   const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
-  //   expect(sharedValue.onUI).toBe('ok');
-  //   expect(sharedValue.onJS).toBe('ok');
-  // });
+    expect(errorValue instanceof Error).toBe(true);
+    expect(errorValue.name).toBe('TypeError');
+    expect(errorValue.message).toBe('bad type');
+  });
+
+  test('createSerializableOnUIMap', () => {
+    const mapValue = runOnUISync(() => {
+      'worklet';
+      return new Map<string, TestValue>([
+        ['a', 1],
+        ['b', 'two'],
+      ]);
+    });
+
+    expect(mapValue instanceof Map).toBe(true);
+    expect(mapValue.size).toBe(2);
+    expect(mapValue.get('a')).toBe(1);
+    expect(mapValue.get('b')).toBe('two');
+  });
+
+  test('createSerializableOnUISet', () => {
+    const setValue = runOnUISync(() => {
+      'worklet';
+      return new Set<unknown>([1, '1', true]);
+    });
+
+    expect(setValue instanceof Set).toBe(true);
+    expect(setValue.size).toBe(3);
+    expect(setValue.has(1)).toBe(true);
+    expect(setValue.has('1')).toBe(true);
+    expect(setValue.has(true)).toBe(true);
+  });
+
+  test('createSerializableOnUIRegExp', () => {
+    const regExpValue = runOnUISync(() => {
+      'worklet';
+      return /a/;
+    });
+
+    expect(regExpValue instanceof RegExp).toBe(true);
+    expect(regExpValue.source).toBe('a');
+    expect(regExpValue.test('a')).toBe(true);
+    expect(regExpValue.test('b')).toBe(false);
+  });
+
+  test('createSerializableOnUIRegExp preserves flags', () => {
+    const regExpValue = runOnUISync(() => {
+      'worklet';
+      return /foo.bar/gim;
+    });
+
+    expect(regExpValue instanceof RegExp).toBe(true);
+    expect(regExpValue.source).toBe('foo.bar');
+    expect(regExpValue.global).toBe(true);
+    expect(regExpValue.ignoreCase).toBe(true);
+    expect(regExpValue.multiline).toBe(true);
+    expect(regExpValue.test('FOO-BAR')).toBe(true);
+  });
 
   test('createSerializableOnUIPlainObject', () => {
     // Arrange & Act
@@ -415,7 +454,6 @@ describe('Test createSerializableOnUI', () => {
   // });
 
   test('createSerializableOnUIInaccessibleObject', async () => {
-    // Arrange
     const clazz = runOnUISync(() => {
       'worklet';
       class Clazz {
@@ -425,7 +463,6 @@ describe('Test createSerializableOnUI', () => {
       return new Clazz();
     });
 
-    // Act & Assert
     await expect(() => {
       clazz.method();
     }).toThrow();
@@ -456,4 +493,15 @@ describe('Test createSerializableOnUI', () => {
       foo();
     }).toThrow();
   });
+
+  if (__DEV__) {
+    test('throws when trying to serialize a Promise', async () => {
+      await expect(() =>
+        runOnUISync(() => {
+          'worklet';
+          return Promise.resolve();
+        })
+      ).toThrow('Cannot copy value of type `Promise`');
+    });
+  }
 });

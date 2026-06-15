@@ -80,6 +80,7 @@ const config = {
         },
       }),
     ],
+    require.resolve('@swmansion/t-rex-ui/preset'),
   ],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
@@ -219,6 +220,16 @@ const config = {
                   exclude: /\.yarn[\\/]unprocessed/,
                   use: 'babel-loader',
                 },
+                {
+                  test: /\.m?js$/,
+                  resolve: {
+                    fullySpecified: false,
+                  },
+                },
+                {
+                  test: /react-native-(worklets|reanimated)[\\/]lib[\\/]module[\\/].*\.js$/,
+                  type: 'javascript/auto',
+                },
               ],
             },
             resolve: {
@@ -230,6 +241,7 @@ const config = {
                 ),
               },
               extensions: ['.web.js', '...'],
+              fullySpecified: false,
             },
             ignoreWarnings: [
               (error) => {

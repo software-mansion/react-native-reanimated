@@ -1,7 +1,7 @@
 'use strict';
 import { logger } from '../common';
 import { ReanimatedModule } from '../ReanimatedModule';
-import type StaticFeatureFlagsJSON from './staticFlags.json';
+import type { StaticFeatureFlagsSchema } from './staticFeatureFlags';
 
 type DynamicFlagsType = {
   EXAMPLE_DYNAMIC_FLAG: boolean;
@@ -64,29 +64,6 @@ export function setDynamicFeatureFlag(
 export function getDynamicFeatureFlag(name: DynamicFlagName): boolean {
   return DynamicFlags.getFlag(name);
 }
-
-/**
- * This constant is needed for typechecking and preserving static typechecks in
- * generated .d.ts files. Without it, the static flags resolve to an object
- * without specific keys.
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const DefaultStaticFeatureFlags = {
-  RUNTIME_TEST_FLAG: false,
-  DISABLE_COMMIT_PAUSING_MECHANISM: false,
-  ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS: false,
-  IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS: false,
-  EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS: false,
-  USE_SYNCHRONIZABLE_FOR_MUTABLES: true,
-  USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS: true,
-  ENABLE_SHARED_ELEMENT_TRANSITIONS: false,
-  FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS: true,
-  USE_ANIMATION_BACKEND: false,
-} as const satisfies typeof StaticFeatureFlagsJSON;
-
-type StaticFeatureFlagsSchema = {
-  -readonly [K in keyof typeof DefaultStaticFeatureFlags]: boolean;
-};
 
 const staticFeatureFlags: Partial<StaticFeatureFlagsSchema> = {};
 

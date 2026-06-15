@@ -1,13 +1,14 @@
+/* eslint-disable n/no-missing-require */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-require-imports */
 'use strict';
 
-import {
-  runOnRuntimeAsyncWithId as BundleRunOnRuntimeAsyncFromId,
-  runOnRuntimeSyncWithId as BundleRunOnRuntimeSyncFromId,
-  scheduleOnRuntimeWithId as BundleScheduleOnRuntimeFromId,
+import type {
+  runOnRuntimeAsyncWithId as BundleRunOnRuntimeAsyncWithId,
+  runOnRuntimeSyncWithId as BundleRunOnRuntimeSyncWithId,
+  scheduleOnRuntimeWithId as BundleScheduleOnRuntimeWithId,
 } from '../runtimes';
 import type { WorkletFunction } from '../types';
-import { createSerializable } from './serializable';
-import { serializableMappingCache } from './serializableMappingCache';
 import type {
   SerializableRef,
   Shareable,
@@ -19,26 +20,27 @@ import type {
 export function installShareableGuestUnpacker() {
   'worklet';
   'no-worklet-closure';
-  let runOnRuntimeSyncFromId: typeof BundleRunOnRuntimeSyncFromId;
-  let runOnRuntimeAsyncFromId: typeof BundleRunOnRuntimeAsyncFromId;
+  let runOnRuntimeSyncFromId: typeof BundleRunOnRuntimeSyncWithId;
+  let runOnRuntimeAsyncFromId: typeof BundleRunOnRuntimeAsyncWithId;
   let memoize: (
     unpacked: Shareable<unknown>,
     serialized: SerializableRef<unknown>
   ) => void;
 
-  let scheduleOnRuntimeFromId: typeof BundleScheduleOnRuntimeFromId;
+  let scheduleOnRuntimeFromId: typeof BundleScheduleOnRuntimeWithId;
   let serializer: (value: unknown) => SerializableRef<unknown>;
 
   if (
     globalThis.__RUNTIME_KIND === 1 ||
     globalThis._WORKLETS_BUNDLE_MODE_ENABLED
   ) {
-    serializer = createSerializable;
+    serializer = require('./serializable').createSerializable;
+    const { serializableMappingCache } = require('./serializableMappingCache');
     memoize = serializableMappingCache.set.bind(serializableMappingCache);
 
-    runOnRuntimeSyncFromId = BundleRunOnRuntimeSyncFromId;
-    runOnRuntimeAsyncFromId = BundleRunOnRuntimeAsyncFromId;
-    scheduleOnRuntimeFromId = BundleScheduleOnRuntimeFromId;
+    runOnRuntimeSyncFromId = require('../runtimes').runOnRuntimeSyncWithId;
+    runOnRuntimeAsyncFromId = require('../runtimes').runOnRuntimeAsyncWithId;
+    scheduleOnRuntimeFromId = require('../runtimes').scheduleOnRuntimeWithId;
   } else {
     // Serializer can't be inlined here because it might be yet undefined
     // when the unpacker is installed.
@@ -59,7 +61,7 @@ export function installShareableGuestUnpacker() {
         return globalThis.__serializer(worklet(...args));
       });
       return proxy.runOnRuntimeSyncWithId(hostId, serializedWorklet);
-    }) as typeof BundleRunOnRuntimeSyncFromId;
+    }) as typeof BundleRunOnRuntimeSyncWithId;
 
     scheduleOnRuntimeFromId = ((
       hostId: number,
@@ -74,13 +76,13 @@ export function installShareableGuestUnpacker() {
           return globalThis.__serializer(worklet(...args));
         })
       );
-    }) as typeof BundleScheduleOnRuntimeFromId;
+    }) as typeof BundleScheduleOnRuntimeWithId;
 
     runOnRuntimeAsyncFromId = (() => {
       throw new Error(
         '[Worklets] `Shareable.getAsync` can only be called on the RN Runtime.'
       );
-    }) as typeof BundleRunOnRuntimeAsyncFromId;
+    }) as typeof BundleRunOnRuntimeAsyncWithId;
   }
 
   function shareableGuestUnpacker<TValue>(

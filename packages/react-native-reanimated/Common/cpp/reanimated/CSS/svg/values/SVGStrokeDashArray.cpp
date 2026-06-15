@@ -1,68 +1,9 @@
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
-#include <string>
+#include <numeric>
 #include <vector>
 
 namespace reanimated::css {
-
-SVGStrokeDashArray::SVGStrokeDashArray() : values() {}
-
-SVGStrokeDashArray::SVGStrokeDashArray(const std::vector<CSSLength> &values) : values(values) {}
-
-SVGStrokeDashArray::SVGStrokeDashArray(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  const auto &array = jsiValue.asObject(rt).asArray(rt);
-  const auto arraySize = array.size(rt);
-  values.reserve(arraySize);
-  for (size_t i = 0; i < arraySize; ++i) {
-    values.emplace_back(rt, array.getValueAtIndex(rt, i));
-  }
-}
-
-SVGStrokeDashArray::SVGStrokeDashArray(const folly::dynamic &value) {
-  for (const auto &value : value) {
-    values.emplace_back(value);
-  }
-}
-
-bool SVGStrokeDashArray::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  if (!jsiValue.isObject() || !jsiValue.asObject(rt).isArray(rt)) {
-    return false;
-  }
-  const auto &array = jsiValue.asObject(rt).asArray(rt);
-  for (size_t i = 0; i < array.size(rt); ++i) {
-    if (!CSSLength::canConstruct(rt, array.getValueAtIndex(rt, i))) {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool SVGStrokeDashArray::canConstruct(const folly::dynamic &value) {
-  return value.isArray() &&
-      std::all_of(value.begin(), value.end(), [](const auto &value) { return CSSLength::canConstruct(value); });
-}
-
-folly::dynamic SVGStrokeDashArray::toDynamic() const {
-  folly::dynamic array = folly::dynamic::array;
-  array.reserve(values.size());
-  for (const auto &value : values) {
-    array.push_back(value.toDynamic());
-  }
-  return array;
-}
-
-std::string SVGStrokeDashArray::toString() const {
-  std::stringstream ss;
-  ss << "{";
-  for (const auto &value : values) {
-    ss << value.toString();
-    if (&value != &values.back()) {
-      ss << ", ";
-    }
-  }
-  ss << "}";
-  return ss.str();
-}
 
 SVGStrokeDashArray SVGStrokeDashArray::interpolate(
     double progress,
@@ -95,10 +36,6 @@ SVGStrokeDashArray SVGStrokeDashArray::interpolate(
   }
 
   return SVGStrokeDashArray(result);
-}
-
-bool SVGStrokeDashArray::operator==(const SVGStrokeDashArray &other) const {
-  return values == other.values;
 }
 
 #ifndef NDEBUG

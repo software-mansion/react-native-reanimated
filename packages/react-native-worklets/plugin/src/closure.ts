@@ -4,6 +4,12 @@ import type { Identifier, ImportDeclaration } from '@babel/types';
 import { cloneNode } from '@babel/types';
 
 import { globals } from './globals';
+import {
+  canForwardModuleImport,
+  canForwardRelativeImport,
+  isImport,
+  isImportRelative,
+} from './imports';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
 
 export function getClosure(
@@ -11,12 +17,12 @@ export function getClosure(
   state: WorkletsPluginPass
 ): {
   closureVariables: Identifier[];
-  libraryBindingsToImport: Set<Binding>;
+  moduleBindingsToImport: Set<Binding>;
   relativeBindingsToImport: Set<Binding>;
 } {
   const capturedNames = new Set<string>();
   const closureVariables = new Array<Identifier>();
-  const libraryBindingsToImport = new Set<Binding>();
+  const moduleBindingsToImport = new Set<Binding>();
   const relativeBindingsToImport = new Set<Binding>();
   let recrawled = false;
 
@@ -83,9 +89,9 @@ export function getClosure(
         if (state.opts.bundleMode && isImport(binding)) {
           if (
             isImportRelative(binding) &&
-            isAllowedForRelativeImports(
+            canForwardRelativeImport(
               state.filename,
-              state.opts.workletizableModules
+              state.opts.importForwarding.relativePaths
             )
           ) {
             capturedNames.add(name);
@@ -96,9 +102,14 @@ export function getClosure(
             binding.path.parentPath as NodePath<ImportDeclaration>
           ).node.source.value;
 
-          if (isWorkletizableModule(source, state.opts.workletizableModules)) {
+          if (
+            canForwardModuleImport(
+              source,
+              state.opts.importForwarding.moduleNames
+            )
+          ) {
             capturedNames.add(name);
-            libraryBindingsToImport.add(binding);
+            moduleBindingsToImport.add(binding);
             return;
           }
         }
@@ -112,49 +123,7 @@ export function getClosure(
 
   return {
     closureVariables,
-    libraryBindingsToImport,
+    moduleBindingsToImport,
     relativeBindingsToImport,
   };
 }
-
-function isImport(binding: Binding): boolean {
-  return (
-    binding.kind === 'module' &&
-    binding.constant &&
-    (binding.path.isImportSpecifier() ||
-      binding.path.isImportDefaultSpecifier()) &&
-    binding.path.parentPath.isImportDeclaration()
-  );
-}
-
-function isImportRelative(imported: Binding): boolean {
-  return (
-    imported.path.parentPath as NodePath<ImportDeclaration>
-  ).node.source.value.startsWith('.');
-}
-
-function isAllowedForRelativeImports(
-  filename: string | undefined,
-  workletizableModules?: string[]
-): boolean {
-  return (
-    !!filename &&
-    (alwaysAllowed.some((module) => filename.includes(module)) ||
-      !!workletizableModules?.some((module) => filename.includes(module)))
-  );
-}
-
-function isWorkletizableModule(
-  source: string,
-  workletizableModules?: string[]
-): boolean {
-  return (
-    alwaysAllowed.some((module) => source.startsWith(module)) ||
-    !!workletizableModules?.some((module) => source.startsWith(module))
-  );
-}
-
-const alwaysAllowed = [
-  'react-native-worklets',
-  'react-native/Libraries/Core/setUpXHR', // for networking
-];
