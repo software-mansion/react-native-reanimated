@@ -19,6 +19,7 @@ export function SharedTransitionBoundary({
   );
 }
 
+// is-tree-shakable-suppress
 const styles = StyleSheet.create({
   contents: {
     overflow: 'visible',

@@ -20,7 +20,7 @@ class REASharedTransitionBoundaryState {
   REASharedTransitionBoundaryState() = default;
 
 #ifdef ANDROID
-  REASharedTransitionBoundaryState(REASharedTransitionBoundaryState const &previousState, folly::dynamic data) {}
+  REASharedTransitionBoundaryState(REASharedTransitionBoundaryState const &previousState, folly::dynamic const &data) {}
   folly::dynamic getDynamic() const {
     return {};
   }
