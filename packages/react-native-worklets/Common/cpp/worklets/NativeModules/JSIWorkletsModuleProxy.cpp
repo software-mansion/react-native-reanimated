@@ -571,6 +571,18 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       });
 
   jsi_utils::addMethod<3>(
+      rt, obj, "scheduleOnRuntime3", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+        auto workletRuntime = extractWorkletRuntime(rt, at<0>(args));
+        auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
+            rt, at<1>(args), "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
+        auto serArg = extractSerializableOrThrow(rt, at<2>(args));
+        workletRuntime->schedule([workletRuntime, serializableWorklet, serArg](jsi::Runtime &wrt) {
+          auto jsArg = serArg->toJSValue(wrt);
+          workletRuntime->runSync(serializableWorklet, jsArg);
+        });
+      });
+
+  jsi_utils::addMethod<3>(
       rt,
       obj,
       "scheduleOnRuntimeWithId",

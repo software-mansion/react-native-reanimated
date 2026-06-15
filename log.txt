@@ -1,0 +1,122 @@
+(lldb) watchpoint command add 1
+Enter your debugger command(s).  Type 'DONE' to end.
+> bt 12
+> p *(long*)((char*)0x000000011dabd0c0 + 8) + 1
+> continue
+> DONE
+(lldb) c
+Process 46834 resuming
+* thread #1, queue = 'com.apple.main-thread', stop reason = watchpoint 1
+  * frame #0: 0x00000001802f431c libc++.1.dylib`std::__1::__shared_weak_count::lock() + 32
+    frame #1: 0x0000000107a7c1a0 FabricExample.debug.dylib`std::__1::shared_ptr<worklets::SerializableRemoteFunction>::shared_ptr[abi:dee210106]<worklets::SerializableRemoteFunction, 0>(this=0x000000016b78bb50, __r=std::__1::weak_ptr<worklets::SerializableRemoteFunction>::element_type @ 0x0000000118d69200 strong=2 weak=2) at shared_ptr.h:500:67
+    frame #2: 0x0000000107a7c144 FabricExample.debug.dylib`std::__1::shared_ptr<worklets::SerializableRemoteFunction>::shared_ptr[abi:dee210106]<worklets::SerializableRemoteFunction, 0>(this=0x000000016b78bb50, __r=std::__1::weak_ptr<worklets::SerializableRemoteFunction>::element_type @ 0x0000000118d69200 strong=2 weak=2) at shared_ptr.h:500:90
+    frame #3: 0x0000000107a6b6e8 FabricExample.debug.dylib`std::__1::enable_shared_from_this<worklets::SerializableRemoteFunction>::shared_from_this[abi:dee210106](this=0x0000000118d69210) at shared_ptr.h:1448:69
+    frame #4: 0x0000000107a6b12c FabricExample.debug.dylib`worklets::SerializableRemoteFunction::toJSValue(this=0x0000000118d69200, rt=0x0000000118e42658) at Serializable.cpp:356:75
+    frame #5: 0x0000000107a6af5c FabricExample.debug.dylib`worklets::SerializableRemoteFunction::toJSValue(this=0x0000000112b2dcd8, rt=0x0000000118e42658) at Serializable.cpp:344:22
+    frame #6: 0x0000000107a67444 FabricExample.debug.dylib`worklets::SerializableArray::toJSValue(this=0x000000010cfa6558, rt=0x0000000118e42658) at Serializable.cpp:154:42
+    frame #7: 0x0000000107a68260 FabricExample.debug.dylib`worklets::SerializableObject::toJSValue(this=0x000000011984f498, rt=0x0000000118e42658) at Serializable.cpp:192:77
+    frame #8: 0x0000000107a68260 FabricExample.debug.dylib`worklets::SerializableObject::toJSValue(this=0x0000000116e82468, rt=0x0000000118e42658) at Serializable.cpp:192:77
+    frame #9: 0x0000000107a69e5c FabricExample.debug.dylib`worklets::SerializableWorklet::toJSValue(this=0x0000000116e82468, rt=0x0000000118e42658) at Serializable.cpp:282:40
+    frame #10: 0x0000000107a80d64 FabricExample.debug.dylib`worklets::RetainingSerializable<worklets::SerializableWorklet>::toJSValue(this=0x0000000116e82468, rt=0x0000000118e42658) at Serializable.h:58:31
+    frame #11: 0x0000000107a431cc FabricExample.debug.dylib`facebook::jsi::Value worklets::WorkletRuntime::runSyncWithStack<>(this=0x0000000118f4ed18, worklet=std::__1::shared_ptr<worklets::SerializableWorklet>::element_type @ 0x0000000116e82488 strong=3 weak=0, scheduleStack= Has Value=true ) const at WorkletRuntime.h:81:30
+(long) 2
+Process 46834 resuming
+Command #3 'continue' continued the target.
+* thread #1, queue = 'com.apple.main-thread', stop reason = watchpoint 1
+  * frame #0: 0x0000000107432d9c FabricExample.debug.dylib`long std::__1::__libcpp_atomic_refcount_increment[abi:dee210106]<long>(__t=0x000000011dabd0c8) at shared_count.h:56:10
+    frame #3: 0x000000010755a928 FabricExample.debug.dylib`std::__1::shared_ptr<worklets::Serializable>::shared_ptr[abi:dee210106](this=0x000000011dafb2c0, __r=std::__1::shared_ptr<worklets::Serializable>::element_type @ 0x0000000118d69200 strong=3 weak=2) at shared_ptr.h:478:17
+    frame #4: 0x0000000107559804 FabricExample.debug.dylib`std::__1::shared_ptr<worklets::Serializable>::shared_ptr[abi:dee210106](this=0x000000011dafb2c0, __r=std::__1::shared_ptr<worklets::Serializable>::element_type @ 0x0000000118d69200 strong=3 weak=2) at shared_ptr.h:476:114
+    frame #5: 0x0000000107a4cdfc FabricExample.debug.dylib`worklets::SerializableJSRef::SerializableJSRef(this=0x000000011dafb2b8, value=std::__1::shared_ptr<worklets::Serializable>::element_type @ 0x0000000118d69200 strong=3 weak=2) at Serializable.h:79:76
+    frame #6: 0x0000000107a4cdac FabricExample.debug.dylib`worklets::SerializableJSRef::SerializableJSRef(this=0x000000011dafb2b8, value=std::__1::shared_ptr<worklets::Serializable>::element_type @ 0x0000000118d69200 strong=3 weak=2) at Serializable.h:79:90
+    frame #7: 0x0000000107a7cc8c FabricExample.debug.dylib`worklets::SerializableJSRef* std::__1::construct_at[abi:dee210106]<worklets::SerializableJSRef, std::__1::shared_ptr<worklets::SerializableRemoteFunction>, worklets::SerializableJSRef*>(__location=0x000000011dafb2b8, __args=nullptr) at construct_at.h:38:49
+    frame #9: 0x0000000107a7cc08 FabricExample.debug.dylib`void std::__1::allocator_traits<std::__1::allocator<worklets::SerializableJSRef>>::construct[abi:dee210106]<worklets::SerializableJSRef, std::__1::shared_ptr<worklets::SerializableRemoteFunction>, 0>((null)=0x000000016b78b9bb, __p=0x000000011dafb2b8, __args=nullptr) at allocator_traits.h:302:5
+(long) 3
+Process 46834 resuming
+Command #3 'continue' continued the target.
+* thread #1, queue = 'com.apple.main-thread', stop reason = watchpoint 1
+  * frame #0: 0x00000001074325e0 FabricExample.debug.dylib`long std::__1::__libcpp_atomic_refcount_decrement[abi:dee210106]<long>(__t=0x000000011dabd0c8) at shared_count.h:65:10
+    frame #3: 0x000000010755a858 FabricExample.debug.dylib`std::__1::shared_ptr<worklets::Serializable>::~shared_ptr[abi:dee210106](this=0x000000016b78b930) at shared_ptr.h:561:17
+    frame #4: 0x0000000107559988 FabricExample.debug.dylib`std::__1::shared_ptr<worklets::Serializable>::~shared_ptr[abi:dee210106](this=0x000000016b78b930) at shared_ptr.h:559:39
+    frame #5: 0x0000000107a7cc98 FabricExample.debug.dylib`worklets::SerializableJSRef* std::__1::construct_at[abi:dee210106]<worklets::SerializableJSRef, std::__1::shared_ptr<worklets::SerializableRemoteFunction>, worklets::SerializableJSRef*>(__location=0x000000011dafb2b8, __args=nullptr) at construct_at.h:38:3
+    frame #7: 0x0000000107a7cc08 FabricExample.debug.dylib`void std::__1::allocator_traits<std::__1::allocator<worklets::SerializableJSRef>>::construct[abi:dee210106]<worklets::SerializableJSRef, std::__1::shared_ptr<worklets::SerializableRemoteFunction>, 0>((null)=0x000000016b78b9bb, __p=0x000000011dafb2b8, __args=nullptr) at allocator_traits.h:302:5
+    frame #10: 0x0000000107a7ca64 FabricExample.debug.dylib`std::__1::shared_ptr<worklets::SerializableJSRef> std::__1::allocate_shared[abi:dee210106]<worklets::SerializableJSRef, std::__1::allocator<worklets::SerializableJSRef>, std::__1::shared_ptr<worklets::SerializableRemoteFunction>, 0>(__a=0x000000016b78babf, __args=nullptr) at shared_ptr.h:736:51
+    frame #11: 0x0000000107a6bb30 FabricExample.debug.dylib`std::__1::shared_ptr<worklets::SerializableJSRef> std::__1::make_shared[abi:dee210106]<worklets::SerializableJSRef, std::__1::shared_ptr<worklets::SerializableRemoteFunction>, 0>(__args=nullptr) at shared_ptr.h:744:10
+(long) 2
+Process 46834 resuming
+Command #3 'continue' continued the target.
+* thread #1, queue = 'com.apple.main-thread', stop reason = watchpoint 1
+  * frame #0: 0x00000001074325e0 FabricExample.debug.dylib`long std::__1::__libcpp_atomic_refcount_decrement[abi:dee210106]<long>(__t=0x000000011dabd0c8) at shared_count.h:65:10
+    frame #3: 0x0000000107a3d934 FabricExample.debug.dylib`std::__1::shared_ptr<worklets::SerializableRemoteFunction>::~shared_ptr[abi:dee210106](this=0x000000016b78bdc0) at shared_ptr.h:561:17
+    frame #4: 0x0000000107a3b048 FabricExample.debug.dylib`std::__1::shared_ptr<worklets::SerializableRemoteFunction>::~shared_ptr[abi:dee210106](this=0x000000016b78bdc0) at shared_ptr.h:559:39
+    frame #5: 0x0000000107a6af68 FabricExample.debug.dylib`worklets::SerializableRemoteFunction::toJSValue(this=0x0000000112b2dcd8, rt=0x0000000118e42658) at Serializable.cpp:345:5
+    frame #6: 0x0000000107a67444 FabricExample.debug.dylib`worklets::SerializableArray::toJSValue(this=0x000000010cfa6558, rt=0x0000000118e42658) at Serializable.cpp:154:42
+    frame #7: 0x0000000107a68260 FabricExample.debug.dylib`worklets::SerializableObject::toJSValue(this=0x000000011984f498, rt=0x0000000118e42658) at Serializable.cpp:192:77
+    frame #8: 0x0000000107a68260 FabricExample.debug.dylib`worklets::SerializableObject::toJSValue(this=0x0000000116e82468, rt=0x0000000118e42658) at Serializable.cpp:192:77
+    frame #9: 0x0000000107a69e5c FabricExample.debug.dylib`worklets::SerializableWorklet::toJSValue(this=0x0000000116e82468, rt=0x0000000118e42658) at Serializable.cpp:282:40
+    frame #10: 0x0000000107a80d64 FabricExample.debug.dylib`worklets::RetainingSerializable<worklets::SerializableWorklet>::toJSValue(this=0x0000000116e82468, rt=0x0000000118e42658) at Serializable.h:58:31
+    frame #11: 0x0000000107a431cc FabricExample.debug.dylib`facebook::jsi::Value worklets::WorkletRuntime::runSyncWithStack<>(this=0x0000000118f4ed18, worklet=std::__1::shared_ptr<worklets::SerializableWorklet>::element_type @ 0x0000000116e82488 strong=3 weak=0, scheduleStack= Has Value=true ) const at WorkletRuntime.h:81:30
+(long) 1
+Process 46834 resuming
+Command #3 'continue' continued the target.
+* thread #1, queue = 'com.apple.main-thread', stop reason = watchpoint 1
+  * frame #0: 0x0000000107432d9c FabricExample.debug.dylib`long std::__1::__libcpp_atomic_refcount_increment[abi:dee210106]<long>(__t=0x000000011dabd0c8) at shared_count.h:56:10
+    frame #3: 0x000000010755a928 FabricExample.debug.dylib`std::__1::shared_ptr<worklets::Serializable>::shared_ptr[abi:dee210106](this=0x000000016b78ad98, __r=std::__1::shared_ptr<worklets::Serializable>::element_type @ 0x0000000118d69200 strong=2 weak=2) at shared_ptr.h:478:17
+    frame #4: 0x0000000107559804 FabricExample.debug.dylib`std::__1::shared_ptr<worklets::Serializable>::shared_ptr[abi:dee210106](this=0x000000016b78ad98, __r=std::__1::shared_ptr<worklets::Serializable>::element_type @ 0x0000000118d69200 strong=2 weak=2) at shared_ptr.h:476:114
+    frame #5: 0x0000000107a66f1c FabricExample.debug.dylib`worklets::SerializableJSRef::value(this=0x000000011dafb2b8) const at Serializable.h:84:12
+    frame #6: 0x0000000107a66cec FabricExample.debug.dylib`worklets::extractSerializableOrThrow(rt=0x0000000118e42658, maybeSerializableValue=0x000000016b78afa8, errorMessage="[Worklets] Provided serializable object is of an incompatible type.") at Serializable.cpp:128:71
+    frame #7: 0x0000000107a3ae7c FabricExample.debug.dylib`std::__1::shared_ptr<worklets::SerializableRemoteFunction> worklets::extractSerializableOrThrow<worklets::SerializableRemoteFunction>(rt=0x0000000118e42658, serializableRef=0x000000016b78afa8, errorMessage="[Worklets] Provided serializable object is of an incompatible type.") at Serializable.h:133:55
+    frame #8: 0x0000000107a3a7b4 FabricExample.debug.dylib`worklets::JSIWorkletsModuleProxy::toOptimizedObject(facebook::jsi::Runtime&) const::$_22::operator()(this=0x0000000118d3fc48, rt=0x0000000118e42658, (null)=0x000000016b78b600, args=0x000000016b78b680) const at JSIWorkletsModuleProxy.cpp:440:39
+    frame #9: 0x0000000107a3a5e8 FabricExample.debug.dylib`void worklets::jsi_utils::addMethod<2ul, worklets::JSIWorkletsModuleProxy::toOptimizedObject(facebook::jsi::Runtime&) const::$_22>(facebook::jsi::Runtime&, facebook::jsi::Object&, char const*, worklets::JSIWorkletsModuleProxy::toOptimizedObject(facebook::jsi::Runtime&) const::$_22&&)::'lambda'(facebook::jsi::Runtime&, facebook::jsi::Value const&, facebook::jsi::Value const*, unsigned long)::operator()(this=0x0000000118d3fc48, rt=0x0000000118e42658, thisVal=0x000000016b78b600, args=0x000000016b78b680, (null)=2) at WorkletsJSIUtils.h:192:15
+(long) 2
+Process 46834 resuming
+Command #3 'continue' continued the target.
+* thread #1, queue = 'com.apple.main-thread', stop reason = watchpoint 1
+  * frame #0: 0x0000000107432d9c FabricExample.debug.dylib`long std::__1::__libcpp_atomic_refcount_increment[abi:dee210106]<long>(__t=0x000000011dabd0c8) at shared_count.h:56:10
+    frame #3: 0x0000000107a3b51c FabricExample.debug.dylib`std::__1::shared_ptr<worklets::SerializableRemoteFunction>::shared_ptr[abi:dee210106](this=0x000000016b78af00, __r=std::__1::shared_ptr<worklets::SerializableRemoteFunction>::element_type @ 0x0000000118d69200 strong=3 weak=2) at shared_ptr.h:478:17
+    frame #4: 0x0000000107a3af88 FabricExample.debug.dylib`std::__1::shared_ptr<worklets::SerializableRemoteFunction>::shared_ptr[abi:dee210106](this=0x000000016b78af00, __r=std::__1::shared_ptr<worklets::SerializableRemoteFunction>::element_type @ 0x0000000118d69200 strong=3 weak=2) at shared_ptr.h:476:114
+    frame #5: 0x0000000107a3a7dc FabricExample.debug.dylib`worklets::JSIWorkletsModuleProxy::toOptimizedObject(facebook::jsi::Runtime&) const::$_22::operator()(this=0x0000000118d3fc48, rt=0x0000000118e42658, (null)=0x000000016b78b600, args=0x000000016b78b680) const at JSIWorkletsModuleProxy.cpp:441:38
+    frame #6: 0x0000000107a3a5e8 FabricExample.debug.dylib`void worklets::jsi_utils::addMethod<2ul, worklets::JSIWorkletsModuleProxy::toOptimizedObject(facebook::jsi::Runtime&) const::$_22>(facebook::jsi::Runtime&, facebook::jsi::Object&, char const*, worklets::JSIWorkletsModuleProxy::toOptimizedObject(facebook::jsi::Runtime&) const::$_22&&)::'lambda'(facebook::jsi::Runtime&, facebook::jsi::Value const&, facebook::jsi::Value const*, unsigned long)::operator()(this=0x0000000118d3fc48, rt=0x0000000118e42658, thisVal=0x000000016b78b600, args=0x000000016b78b680, (null)=2) at WorkletsJSIUtils.h:192:15
+(long) 3
+Process 46834 resuming
+Command #3 'continue' continued the target.
+* thread #1, queue = 'com.apple.main-thread', stop reason = watchpoint 1
+  * frame #0: 0x0000000107432d9c FabricExample.debug.dylib`long std::__1::__libcpp_atomic_refcount_increment[abi:dee210106]<long>(__t=0x000000011dabd0c8) at shared_count.h:56:10
+    frame #3: 0x0000000107a3b51c FabricExample.debug.dylib`std::__1::shared_ptr<worklets::SerializableRemoteFunction>::shared_ptr[abi:dee210106](this=0x000000011dafb368, __r=std::__1::shared_ptr<worklets::SerializableRemoteFunction>::element_type @ 0x0000000118d69200 strong=4 weak=2) at shared_ptr.h:478:17
+    frame #4: 0x0000000107a3af88 FabricExample.debug.dylib`std::__1::shared_ptr<worklets::SerializableRemoteFunction>::shared_ptr[abi:dee210106](this=0x000000011dafb368, __r=std::__1::shared_ptr<worklets::SerializableRemoteFunction>::element_type @ 0x0000000118d69200 strong=4 weak=2) at shared_ptr.h:476:114
+    frame #5: 0x0000000107a3b988 FabricExample.debug.dylib`worklets::JSIWorkletsModuleProxy::toOptimizedObject(this=0x000000011dafb368, (null)=0x000000016b78af00) const::$_22::operator()(facebook::jsi::Runtime&, facebook::jsi::Value const&, facebook::jsi::Value const (&) [2]) const::'lambda'(facebook::jsi::Runtime&)::('lambda'(facebook::jsi::Runtime&)&&) at JSIWorkletsModuleProxy.cpp:441:37
+    frame #6: 0x0000000107a3b754 FabricExample.debug.dylib`worklets::JSIWorkletsModuleProxy::toOptimizedObject(this=0x000000011dafb368, (null)=0x000000016b78af00) const::$_22::operator()(facebook::jsi::Runtime&, facebook::jsi::Value const&, facebook::jsi::Value const (&) [2]) const::'lambda'(facebook::jsi::Runtime&)::('lambda'(facebook::jsi::Runtime&)&&) at JSIWorkletsModuleProxy.cpp:441:37
+    frame #11: 0x0000000107a3b5bc FabricExample.debug.dylib`std::__1::function<void (facebook::jsi::Runtime&)>::function<worklets::JSIWorkletsModuleProxy::toOptimizedObject(facebook::jsi::Runtime&) const::$_22::operator()(facebook::jsi::Runtime&, facebook::jsi::Value const&, facebook::jsi::Value const (&) [2]) const::'lambda'(facebook::jsi::Runtime&), void>(this=0x000000016b78b048, __f=(unnamed class) @ 0x000000016b78af00) at function.h:729:50
+(long) 4
+Process 46834 resuming
+Command #3 'continue' continued the target.
+* thread #1, queue = 'com.apple.main-thread', stop reason = watchpoint 1
+  * frame #0: 0x00000001074325e0 FabricExample.debug.dylib`long std::__1::__libcpp_atomic_refcount_decrement[abi:dee210106]<long>(__t=0x000000011dabd0c8) at shared_count.h:65:10
+    frame #3: 0x0000000107a3d934 FabricExample.debug.dylib`std::__1::shared_ptr<worklets::SerializableRemoteFunction>::~shared_ptr[abi:dee210106](this=0x000000016b78af00) at shared_ptr.h:561:17
+    frame #4: 0x0000000107a3b048 FabricExample.debug.dylib`std::__1::shared_ptr<worklets::SerializableRemoteFunction>::~shared_ptr[abi:dee210106](this=0x000000016b78af00) at shared_ptr.h:559:39
+    frame #5: 0x0000000107a3d8ec FabricExample.debug.dylib`worklets::JSIWorkletsModuleProxy::toOptimizedObject(facebook::jsi::Runtime&) const::$_22::operator()(facebook::jsi::Runtime&, facebook::jsi::Value const&, facebook::jsi::Value const (&) [2]) const::'lambda'(facebook::jsi::Runtime&)::~(this=0x000000016b78af00) at JSIWorkletsModuleProxy.cpp:441:37
+    frame #6: 0x0000000107a3b01c FabricExample.debug.dylib`worklets::JSIWorkletsModuleProxy::toOptimizedObject(facebook::jsi::Runtime&) const::$_22::operator()(facebook::jsi::Runtime&, facebook::jsi::Value const&, facebook::jsi::Value const (&) [2]) const::'lambda'(facebook::jsi::Runtime&)::~(this=0x000000016b78af00) at JSIWorkletsModuleProxy.cpp:441:37
+    frame #7: 0x0000000107a3a81c FabricExample.debug.dylib`worklets::JSIWorkletsModuleProxy::toOptimizedObject(facebook::jsi::Runtime&) const::$_22::operator()(this=0x0000000118d3fc48, rt=0x0000000118e42658, (null)=0x000000016b78b600, args=0x000000016b78b680) const at JSIWorkletsModuleProxy.cpp:441:11
+    frame #8: 0x0000000107a3a5e8 FabricExample.debug.dylib`void worklets::jsi_utils::addMethod<2ul, worklets::JSIWorkletsModuleProxy::toOptimizedObject(facebook::jsi::Runtime&) const::$_22>(facebook::jsi::Runtime&, facebook::jsi::Object&, char const*, worklets::JSIWorkletsModuleProxy::toOptimizedObject(facebook::jsi::Runtime&) const::$_22&&)::'lambda'(facebook::jsi::Runtime&, facebook::jsi::Value const&, facebook::jsi::Value const*, unsigned long)::operator()(this=0x0000000118d3fc48, rt=0x0000000118e42658, thisVal=0x000000016b78b600, args=0x000000016b78b680, (null)=2) at WorkletsJSIUtils.h:192:15
+(long) 3
+Process 46834 resuming
+Command #3 'continue' continued the target.
+* thread #1, queue = 'com.apple.main-thread', stop reason = watchpoint 1
+  * frame #0: 0x00000001074325e0 FabricExample.debug.dylib`long std::__1::__libcpp_atomic_refcount_decrement[abi:dee210106]<long>(__t=0x000000011dabd0c8) at shared_count.h:65:10
+    frame #3: 0x0000000107a3d934 FabricExample.debug.dylib`std::__1::shared_ptr<worklets::SerializableRemoteFunction>::~shared_ptr[abi:dee210106](this=0x000000016b78af38) at shared_ptr.h:561:17
+    frame #4: 0x0000000107a3b048 FabricExample.debug.dylib`std::__1::shared_ptr<worklets::SerializableRemoteFunction>::~shared_ptr[abi:dee210106](this=0x000000016b78af38) at shared_ptr.h:559:39
+    frame #5: 0x0000000107a3a824 FabricExample.debug.dylib`worklets::JSIWorkletsModuleProxy::toOptimizedObject(facebook::jsi::Runtime&) const::$_22::operator()(this=0x0000000118d3fc48, rt=0x0000000118e42658, (null)=0x000000016b78b600, args=0x000000016b78b680) const at JSIWorkletsModuleProxy.cpp:451:9
+    frame #6: 0x0000000107a3a5e8 FabricExample.debug.dylib`void worklets::jsi_utils::addMethod<2ul, worklets::JSIWorkletsModuleProxy::toOptimizedObject(facebook::jsi::Runtime&) const::$_22>(facebook::jsi::Runtime&, facebook::jsi::Object&, char const*, worklets::JSIWorkletsModuleProxy::toOptimizedObject(facebook::jsi::Runtime&) const::$_22&&)::'lambda'(facebook::jsi::Runtime&, facebook::jsi::Value const&, facebook::jsi::Value const*, unsigned long)::operator()(this=0x0000000118d3fc48, rt=0x0000000118e42658, thisVal=0x000000016b78b600, args=0x000000016b78b680, (null)=2) at WorkletsJSIUtils.h:192:15
+(long) 2
+Process 46834 resuming
+Command #3 'continue' continued the target.
+SocketStream read error [0x109a42bc0]: 1 54
+Button pressed!
+  thread #10, name = 'com.facebook.react.runtime.JavaScript', stop reason = watchpoint 1
+    frame #0: 0x00000001074325e0 FabricExample.debug.dylib`long std::__1::__libcpp_atomic_refcount_decrement[abi:dee210106]<long>(__t=0x000000011dabd0c8) at shared_count.h:65:10
+    frame #3: 0x0000000107a3d934 FabricExample.debug.dylib`std::__1::shared_ptr<worklets::SerializableRemoteFunction>::~shared_ptr[abi:dee210106](this=0x000000011dafb368) at shared_ptr.h:561:17
+    frame #4: 0x0000000107a3b048 FabricExample.debug.dylib`std::__1::shared_ptr<worklets::SerializableRemoteFunction>::~shared_ptr[abi:dee210106](this=0x000000011dafb368) at shared_ptr.h:559:39
+    frame #5: 0x0000000107a3d8ec FabricExample.debug.dylib`worklets::JSIWorkletsModuleProxy::toOptimizedObject(facebook::jsi::Runtime&) const::$_22::operator()(facebook::jsi::Runtime&, facebook::jsi::Value const&, facebook::jsi::Value const (&) [2]) const::'lambda'(facebook::jsi::Runtime&)::~(this=0x000000011dafb368) at JSIWorkletsModuleProxy.cpp:441:37
+    frame #6: 0x0000000107a3b01c FabricExample.debug.dylib`worklets::JSIWorkletsModuleProxy::toOptimizedObject(facebook::jsi::Runtime&) const::$_22::operator()(facebook::jsi::Runtime&, facebook::jsi::Value const&, facebook::jsi::Value const (&) [2]) const::'lambda'(facebook::jsi::Runtime&)::~(this=0x000000011dafb368) at JSIWorkletsModuleProxy.cpp:441:37
+(long) 1
+Process 46834 resuming
+Command #3 'continue' continued the target.

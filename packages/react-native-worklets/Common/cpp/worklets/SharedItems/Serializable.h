@@ -7,6 +7,7 @@
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <utility>
@@ -29,11 +30,7 @@ inline void freeWithoutCallingDestructor(std::unique_ptr<jsi::Value> &value) {
   ::operator delete(value.release());
 }
 
-inline void cleanupRuntimeAware(jsi::Runtime *rt, std::unique_ptr<jsi::Value> &value) {
-  if (rt != nullptr && !WorkletRuntimeRegistry::isRuntimeAlive(rt)) {
-    freeWithoutCallingDestructor(value);
-  }
-}
+void cleanupRuntimeAware(jsi::Runtime *rt, std::unique_ptr<jsi::Value> &value);
 
 template <typename BaseClass>
 class RetainingSerializable : virtual public BaseClass {
@@ -287,16 +284,23 @@ class SerializableRemoteFunction : public Serializable,
   struct RNRuntimeData {
     const int remoteId;
     const std::shared_ptr<JSScheduler> jsScheduler;
+    std::weak_ptr<SerializableRemoteFunction> workletSideMirror;
+    std::unique_ptr<std::mutex> mutex = std::make_unique<std::mutex>();
   };
 
   struct WorkletRuntimeData {
     std::unique_ptr<jsi::Value> function;
+    std::shared_ptr<SerializableRemoteFunction> rnSide;
   };
 
   jsi::Runtime *hostRuntime_;
   const RuntimeData::RuntimeId hostRuntimeId_;
   std::variant<RNRuntimeData, WorkletRuntimeData> runtimeData_;
   const std::string name_;
+
+  struct WorkletMirrorTag {};
+
+  SerializableRemoteFunction(WorkletMirrorTag, const std::shared_ptr<SerializableRemoteFunction> &rnSide);
 
  public:
   /** Creates RN Runtime Remote Function. */
