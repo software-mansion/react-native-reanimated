@@ -38,8 +38,8 @@ SetGestureStateFunction makeSetGestureStateFunction(RCTModuleRegistry *moduleReg
 
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
 {
+  // NOLINTNEXTLINE(performance-unnecessary-value-param)
   auto requestRender = [nodesManager](std::function<void(double)> onRender) {
-    auto sharedOnRender = std::make_shared<std::function<void(double)>>(std::move(onRender));
     [nodesManager postOnAnimation:^(READisplayLink *displayLink) {
 #if !TARGET_OS_OSX
       auto targetTimestamp = displayLink.targetTimestamp;
@@ -48,7 +48,7 @@ RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
       auto targetTimestamp = displayLink.timestamp + displayLink.duration;
 #endif
       const double frameTimestamp = calculateTimestampWithSlowAnimations(targetTimestamp) * 1000;
-      (*sharedOnRender)(frameTimestamp);
+      onRender(frameTimestamp);
     }];
   };
 
@@ -81,14 +81,16 @@ MaybeFlushUIUpdatesQueueFunction makeMaybeFlushUIUpdatesQueueFunction(REANodesMa
 
 RegisterSensorFunction makeRegisterSensorFunction(ReanimatedSensorContainer *reanimatedSensorContainer)
 {
-  auto registerSensorFunction =
-      [=](int sensorType, int interval, int iosReferenceFrame, std::function<void(double[], int)> setter) -> int {
-    auto sharedSetter = std::make_shared<std::function<void(double[], int)>>(std::move(setter));
+  auto registerSensorFunction = [=](int sensorType,
+                                    int interval,
+                                    int iosReferenceFrame,
+                                    // NOLINTNEXTLINE(performance-unnecessary-value-param)
+                                    std::function<void(double[], int)> setter) -> int {
     return [reanimatedSensorContainer
            registerSensor:(ReanimatedSensorType)sensorType
                  interval:interval
         iosReferenceFrame:iosReferenceFrame
-                   setter:^(double *data, int orientationDegrees) { (*sharedSetter)(data, orientationDegrees); }];
+                   setter:^(double *data, int orientationDegrees) { setter(data, orientationDegrees); }];
   };
   return registerSensorFunction;
 }
@@ -104,12 +106,14 @@ UnregisterSensorFunction makeUnregisterSensorFunction(ReanimatedSensorContainer 
 KeyboardEventSubscribeFunction makeSubscribeForKeyboardEventsFunction(REAKeyboardEventObserver *keyboardObserver)
 {
   auto subscribeForKeyboardEventsFunction =
+      // NOLINTNEXTLINE(performance-unnecessary-value-param)
       [=](std::function<void(int keyboardState, int height)> keyboardEventDataUpdater,
           bool isStatusBarTranslucent,
           bool isNavigationBarTranslucent) {
-        auto sharedUpdater = std::make_shared<std::function<void(int, int)>>(std::move(keyboardEventDataUpdater));
-        return [keyboardObserver
-            subscribeForKeyboardEvents:^(int keyboardState, int height) { (*sharedUpdater)(keyboardState, height); }];
+        // ignore isStatusBarTranslucent and isNavigationBarTranslucent - those are Android only
+        return [keyboardObserver subscribeForKeyboardEvents:^(int keyboardState, int height) {
+          keyboardEventDataUpdater(keyboardState, height);
+        }];
       };
   return subscribeForKeyboardEventsFunction;
 }
