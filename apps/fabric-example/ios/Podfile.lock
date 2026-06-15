@@ -1955,6 +1955,7 @@ PODS:
     - ReactNativeDependencies
     - RNReanimated/apple (= 4.5.0-main)
     - RNReanimated/common (= 4.5.0-main)
+    - RNReanimated/view (= 4.5.0-main)
     - RNWorklets
     - Yoga
   - RNReanimated/apple (4.5.0-main):
@@ -1982,6 +1983,30 @@ PODS:
     - RNWorklets
     - Yoga
   - RNReanimated/common (4.5.0-main):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - RNWorklets
+    - Yoga
+  - RNReanimated/view (4.5.0-main):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2509,7 +2534,7 @@ SPEC CHECKSUMS:
   RNCClipboard: 715fa7c6c8366f17d00f05a439ee7488f390fa5f
   RNCMaskedView: eb2b2e538afa907f05a5848a1a1ac26092e6fec9
   RNGestureHandler: c84901d120acdae2f6f27b5889a7cf144e64e6ec
-  RNReanimated: f1b0894300d71176483114e4b57541dd451e2e7b
+  RNReanimated: 7fcc0f8061874ebb2c9237c28f35a55211cb903f
   RNScreens: 01b065ded2dfe7987bcce770ff3a196be417ff41
   RNSVG: 04044c3abcf177fd674a1a3d13097efa1adebcbe
   RNWorklets: 0f358268fe0ff10612d347bc7607129bff3a3c8b
