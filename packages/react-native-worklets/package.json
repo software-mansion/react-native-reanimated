@@ -110,6 +110,7 @@
     "compatibility.json",
     "bundleMode/index.js",
     "bundleMode/index.d.ts",
+    "bundleMode/shims/*.js",
     "scripts/worklets_utils.rb",
     "scripts/validate-react-native-version.js",
     "jest",
