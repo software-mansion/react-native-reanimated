@@ -51,7 +51,7 @@ function buildSelectorRule(
   // styles (where the default values live).
   const declarations = propsBuilder.build(
     pseudoStylesBySelector[selector].selectorStyle,
-    { important: true }
+    { important: true, includeUnprocessed: true }
   );
   if (!declarations) {
     return null;
