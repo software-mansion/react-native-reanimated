@@ -70,6 +70,7 @@ import HermesSamplingProfilerExample from './HermesSamplingProfilerExample';
 import IPodExample from './IPodExample';
 import ImageStackExample from './SharedElementTransitions/ImageStack';
 import InstanceDiscoveryExample from './InstanceDiscoveryExample';
+import InterruptedExitingExample from './LayoutAnimations/InterruptedExitingExample';
 import InvalidValueAccessExample from './InvalidValueAccessExample';
 import InvertedFlatListExample from './InvertedFlatListExample';
 import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
@@ -748,6 +749,10 @@ export const EXAMPLES: Record<string, Example> = {
   DeleteAncestorOfExiting: {
     title: '[LA] Deleting view with an exiting animation',
     screen: DeleteAncestorOfExiting,
+  },
+  InterruptedExiting: {
+    title: '[LA] Interrupted exiting animation (#7493)',
+    screen: InterruptedExitingExample,
   },
   NestedNativeStacksWithLayout: {
     title: '[LA] Nested NativeStacks with layout',
