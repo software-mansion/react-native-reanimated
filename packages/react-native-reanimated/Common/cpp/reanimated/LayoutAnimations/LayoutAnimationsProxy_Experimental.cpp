@@ -34,11 +34,11 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     updateLightTree(propsParserContext, mutations, filteredMutations);
     handleProgressTransition(filteredMutations, mutations, propsParserContext, surfaceId);
   } else if (!synchronized_) {
-    auto actualTop = topScreen[surfaceId];
     updateLightTree(propsParserContext, mutations, filteredMutations);
-    auto reactTop = findTopScreen(lightNodes_[surfaceId]);
-    if (reactTop == actualTop) {
+    if (!lightNodes_.contains(closingScreenTag_)) {
+      topScreen[surfaceId] = findActiveBoundary(lightNodes_[surfaceId]);
       synchronized_ = true;
+      closingScreenTag_ = -1;
     }
   } else if (!mutations.empty()) {
     auto root = lightNodes_[surfaceId];
@@ -51,13 +51,19 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
 
     updateLightTree(propsParserContext, mutations, filteredMutations);
 
-    auto afterTopScreen = findTopScreen(root);
+    auto afterTopScreen = findActiveBoundary(root);
     topScreen[surfaceId] = afterTopScreen;
     if (afterTopScreen) {
       ReanimatedSystraceSection s("find after elements");
       findSharedElementsOnScreen(afterTopScreen, AFTER, propsParserContext);
 #ifdef __APPLE__
-      forceScreenSnapshot_(afterTopScreen->current.tag);
+      // TODO (future): this is a temporary workaround for RNScreens on iOS,
+      // which takes the snapshot of the popped screen before we hide the
+      // shared element, the issue should be gone with the new stack
+      // implementation
+      if (auto screen = findParentRNSScreen(afterTopScreen)) {
+        forceScreenSnapshot_(screen->current.tag);
+      }
 #endif
     }
     const bool hasScreenChanged = beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen;
@@ -198,6 +204,11 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         } else if (layoutAnimationsManager_->hasLayoutAnimation(tag, ENTERING)) {
           entering_.push_back(node);
           filteredMutations.push_back(mutation);
+        } else if (sharedTransitionManager_->tagToName_.contains(tag) && isInsideInactiveBoundary(node)) {
+          filteredMutations.push_back(mutation);
+          auto hiddenView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
+          filteredMutations.push_back(
+              ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, hiddenView, mutation.parentTag));
         } else {
           filteredMutations.push_back(mutation);
         }
@@ -577,6 +588,8 @@ ShadowView LayoutAnimationsProxy_Experimental::cloneViewWithoutOpacity(
   const folly::dynamic opacity = folly::dynamic::object("opacity", 0);
   auto newProps =
       getComponentDescriptorForShadowView(newView).cloneProps(propsParserContext, newView.props, RawProps(opacity));
+  auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));
+  viewProps->opacity = 0;
   newView.props = newProps;
   return newView;
 }
