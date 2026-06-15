@@ -398,6 +398,18 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         return makeSerializableRegExp(rt, pattern, flags);
       });
 
+  jsi_utils::addMethod<4>(
+      rt,
+      obj,
+      "createSerializableArrayBufferView",
+      [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[4]) {
+        const auto typeName = at<0>(args).getString(rt).utf8(rt);
+        const auto arrayBuffer = at<1>(args).getObject(rt).getArrayBuffer(rt);
+        const auto byteOffset = static_cast<size_t>(at<2>(args).getNumber());
+        const auto length = static_cast<size_t>(at<3>(args).getNumber());
+        return makeSerializableArrayBuffer(rt, arrayBuffer, ArrayBufferMetadata{typeName, byteOffset, length});
+      });
+
   jsi_utils::addMethod<2>(
       rt, obj, "createSerializableWorklet", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         return makeSerializableWorklet(rt, at<0>(args).getObject(rt), at<1>(args).getBool());

@@ -4,6 +4,7 @@
 #include <worklets/SharedItems/Serializable.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace worklets {
@@ -37,7 +38,10 @@ jsi::Value makeSerializableHostObject(jsi::Runtime &rt, const std::shared_ptr<js
 
 jsi::Value makeSerializableArray(jsi::Runtime &rt, const jsi::Array &array, const jsi::Value &shouldRetainRemote);
 
-jsi::Value makeSerializableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer);
+jsi::Value makeSerializableArrayBuffer(
+    jsi::Runtime &rt,
+    const jsi::ArrayBuffer &arrayBuffer,
+    std::optional<ArrayBufferMetadata> metadata = std::nullopt);
 
 jsi::Value makeSerializableMap(jsi::Runtime &rt, const jsi::Array &keys, const jsi::Array &values);
 

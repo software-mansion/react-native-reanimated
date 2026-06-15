@@ -160,7 +160,13 @@ jsi::Value SerializableArrayBuffer::toJSValue(jsi::Runtime &rt) {
   auto arrayBuffer =
       rt.global().getPropertyAsFunction(rt, "ArrayBuffer").callAsConstructor(rt, size).getObject(rt).getArrayBuffer(rt);
   memcpy(arrayBuffer.data(rt), data_.data(), size);
-  return arrayBuffer;
+  if (!metadata_.has_value()) {
+    return arrayBuffer;
+  }
+
+  auto constructor = rt.global().getPropertyAsFunction(rt, metadata_->typeName.c_str());
+  return constructor.callAsConstructor(
+      rt, arrayBuffer, static_cast<double>(metadata_->byteOffset), static_cast<double>(metadata_->length));
 }
 
 SerializableObject::SerializableObject(jsi::Runtime &rt, const jsi::Object &object)
