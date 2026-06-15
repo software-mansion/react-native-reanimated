@@ -38,7 +38,7 @@ SetGestureStateFunction makeSetGestureStateFunction(RCTModuleRegistry *moduleReg
 
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
 {
-  auto requestRender = [nodesManager](const std::function<void(double)> &onRender) {
+  auto requestRender = [nodesManager](std::function<void(double)> onRender) {
     [nodesManager postOnAnimation:^(READisplayLink *displayLink) {
 #if !TARGET_OS_OSX
       auto targetTimestamp = displayLink.targetTimestamp;
@@ -83,7 +83,7 @@ RegisterSensorFunction makeRegisterSensorFunction(ReanimatedSensorContainer *rea
   auto registerSensorFunction = [=](int sensorType,
                                     int interval,
                                     int iosReferenceFrame,
-                                    const std::function<void(double[], int)> &setter) -> int {
+                                    std::function<void(double[], int)> setter) -> int {
     return [reanimatedSensorContainer
            registerSensor:(ReanimatedSensorType)sensorType
                  interval:interval
@@ -104,7 +104,7 @@ UnregisterSensorFunction makeUnregisterSensorFunction(ReanimatedSensorContainer 
 KeyboardEventSubscribeFunction makeSubscribeForKeyboardEventsFunction(REAKeyboardEventObserver *keyboardObserver)
 {
   auto subscribeForKeyboardEventsFunction =
-      [=](const std::function<void(int keyboardState, int height)> &keyboardEventDataUpdater,
+      [=](std::function<void(int keyboardState, int height)> keyboardEventDataUpdater,
           bool isStatusBarTranslucent,
           bool isNavigationBarTranslucent) {
         // ignore isStatusBarTranslucent and isNavigationBarTranslucent - those are Android only
