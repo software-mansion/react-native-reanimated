@@ -245,30 +245,26 @@ class SerializableHostFunction : public Serializable {
   const unsigned int paramCount_;
 };
 
+struct ArrayBufferMetadata {
+  std::string typeName;
+  size_t byteOffset;
+  size_t length;
+};
+
 class SerializableArrayBuffer : public Serializable {
  public:
-  SerializableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer)
-      : Serializable(ValueType::ArrayBufferType),
-        data_(arrayBuffer.data(rt), arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
-
   SerializableArrayBuffer(
       jsi::Runtime &rt,
       const jsi::ArrayBuffer &arrayBuffer,
-      const std::string &typeName,
-      size_t byteOffset,
-      size_t length)
+      std::optional<ArrayBufferMetadata> metadata = std::nullopt)
       : Serializable(ValueType::ArrayBufferType),
-        typeName_(typeName),
-        byteOffset_(byteOffset),
-        length_(length),
+        metadata_(std::move(metadata)),
         data_(arrayBuffer.data(rt), arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
-  std::string typeName_;
-  size_t byteOffset_{0};
-  size_t length_{0};
+  std::optional<ArrayBufferMetadata> metadata_;
   std::vector<uint8_t> data_;
 };
 

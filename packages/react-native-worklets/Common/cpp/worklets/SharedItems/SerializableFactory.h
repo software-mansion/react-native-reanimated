@@ -41,9 +41,7 @@ jsi::Value makeSerializableArray(jsi::Runtime &rt, const jsi::Array &array, cons
 jsi::Value makeSerializableArrayBuffer(
     jsi::Runtime &rt,
     const jsi::ArrayBuffer &arrayBuffer,
-    std::optional<std::string> typeName = std::nullopt,
-    std::optional<size_t> byteOffset = std::nullopt,
-    std::optional<size_t> length = std::nullopt);
+    std::optional<ArrayBufferMetadata> metadata = std::nullopt);
 
 jsi::Value makeSerializableMap(jsi::Runtime &rt, const jsi::Array &keys, const jsi::Array &values);
 

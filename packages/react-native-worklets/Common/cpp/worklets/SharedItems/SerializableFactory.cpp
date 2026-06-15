@@ -92,16 +92,8 @@ jsi::Value makeSerializableArray(jsi::Runtime &rt, const jsi::Array &array, cons
 jsi::Value makeSerializableArrayBuffer(
     jsi::Runtime &rt,
     const jsi::ArrayBuffer &arrayBuffer,
-    std::optional<std::string> typeName,
-    std::optional<size_t> byteOffset,
-    std::optional<size_t> length) {
-  std::shared_ptr<SerializableArrayBuffer> serializable;
-  if (typeName.has_value()) {
-    serializable = std::make_shared<SerializableArrayBuffer>(
-        rt, arrayBuffer, *typeName, byteOffset.value_or(0), length.value_or(0));
-  } else {
-    serializable = std::make_shared<SerializableArrayBuffer>(rt, arrayBuffer);
-  }
+    std::optional<ArrayBufferMetadata> metadata) {
+  auto serializable = std::make_shared<SerializableArrayBuffer>(rt, arrayBuffer, std::move(metadata));
   return SerializableJSRef::newNativeStateObject(rt, serializable);
 }
 

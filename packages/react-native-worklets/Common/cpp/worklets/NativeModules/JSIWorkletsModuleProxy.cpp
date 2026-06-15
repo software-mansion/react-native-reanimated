@@ -403,11 +403,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       obj,
       "createSerializableArrayBufferView",
       [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[4]) {
-        auto typeName = at<0>(args).getString(rt).utf8(rt);
-        auto arrayBuffer = at<1>(args).getObject(rt).getArrayBuffer(rt);
-        auto byteOffset = static_cast<size_t>(at<2>(args).asNumber());
-        auto length = static_cast<size_t>(at<3>(args).asNumber());
-        return makeSerializableArrayBuffer(rt, arrayBuffer, typeName, byteOffset, length);
+        const auto typeName = at<0>(args).getString(rt).utf8(rt);
+        const auto arrayBuffer = at<1>(args).getObject(rt).getArrayBuffer(rt);
+        const auto byteOffset = static_cast<size_t>(at<2>(args).getNumber());
+        const auto length = static_cast<size_t>(at<3>(args).getNumber());
+        return makeSerializableArrayBuffer(rt, arrayBuffer, ArrayBufferMetadata{typeName, byteOffset, length});
       });
 
   jsi_utils::addMethod<2>(
