@@ -3,6 +3,7 @@ import { withSpring, withTiming } from '../../animation';
 import { assertEasingIsWorklet } from '../../animation/util';
 import type {
   AnimationFunction,
+  AnimationRawConfig,
   BaseBuilderAnimationConfig,
   EasingFunction,
   LayoutAnimationAndConfig,
@@ -29,6 +30,22 @@ export class AnimationConfigBuilder extends BaseAnimationBuilder {
   stiffnessV?: number;
   overshootClampingV?: number;
   energyThresholdV?: number;
+  rawConfig?: AnimationRawConfig;
+
+  applyRawConfig(
+    presetName: string,
+    config: BaseBuilderAnimationConfig,
+    delay: number | undefined
+  ) {
+    this.rawConfig = {
+      presetName,
+      values: {
+        ...config,
+        delay,
+      },
+    };
+  }
+
   static createInstance: <T extends typeof BaseAnimationBuilder>(
     this: T
   ) => InstanceType<T>;

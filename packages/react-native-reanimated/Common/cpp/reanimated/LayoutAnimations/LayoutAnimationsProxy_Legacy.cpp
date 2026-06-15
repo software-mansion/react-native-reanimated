@@ -1,4 +1,6 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
+#include <reanimated/NativeModules/ReanimatedModuleProxy.h>
+#include <reanimated/Tools/FeatureFlags.h>
 
 #include <react/debug/react_native_assert.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
@@ -30,6 +32,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   LOG(INFO) << std::endl;
   LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " " << surfaceId << std::endl;
 #endif
+
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
@@ -99,7 +102,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::progressLayoutAnimation(i
   return layoutAnimation.finalView.surfaceId;
 }
 
-std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int tag, bool shouldRemove) {
+std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int tag, bool shouldRemove) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "end layout animation for " << tag << " - should remove " << shouldRemove << std::endl;
 #endif
@@ -657,6 +660,23 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
               .finalView = finalView, .currentView = current, .parentTag = mutation.parentTag, .opacity = opacity});
       window = strongThis->surfaceManager.getWindow(mutation.newChildShadowView.surfaceId);
     }
+    auto oldView = mutation.oldChildShadowView;
+    auto newView = mutation.newChildShadowView;
+
+#if __APPLE__
+    if constexpr (StaticFeatureFlags::getFlag("IOS_USE_NATIVE_LAYOUT_ANIMATIONS")) {
+      strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
+          tag,
+          LayoutAnimationType::ENTERING,
+          // old view does not really exist here with proper data so we just
+          // pass new view
+          newView.layoutMetrics.frame,
+          newView.layoutMetrics.frame,
+          [strongThis, tag](bool finished) { strongThis->endLayoutAnimation(tag, false); });
+
+      return;
+    }
+#endif
 
     Snapshot values(mutation.newChildShadowView, window);
     auto &uiRuntime = strongThis->uiRuntime_;
@@ -695,20 +715,32 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
       window = strongThis->surfaceManager.getWindow(surfaceId);
     }
 
-    Snapshot values(oldView, window);
+#if __APPLE__
+    if constexpr (StaticFeatureFlags::getFlag("IOS_USE_NATIVE_LAYOUT_ANIMATIONS")) {
+      strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
+          tag,
+          LayoutAnimationType::EXITING,
+          oldView.layoutMetrics.frame,
+          oldView.layoutMetrics.frame,
+          [strongThis, tag](bool finished) { strongThis->endLayoutAnimation(tag, finished); });
+    } else
+#endif
+    {
+      Snapshot values(oldView, window);
 
-    auto &uiRuntime = strongThis->uiRuntime_;
-    jsi::Object yogaValues(uiRuntime);
-    yogaValues.setProperty(uiRuntime, "currentOriginX", values.x);
-    yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", values.x);
-    yogaValues.setProperty(uiRuntime, "currentOriginY", values.y);
-    yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", values.y);
-    yogaValues.setProperty(uiRuntime, "currentWidth", values.width);
-    yogaValues.setProperty(uiRuntime, "currentHeight", values.height);
-    yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
-    yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
-    strongThis->layoutAnimationsManager_->startLayoutAnimation(
-        uiRuntime, tag, LayoutAnimationType::EXITING, yogaValues);
+      auto &uiRuntime = strongThis->uiRuntime_;
+      jsi::Object yogaValues(uiRuntime);
+      yogaValues.setProperty(uiRuntime, "currentOriginX", values.x);
+      yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", values.x);
+      yogaValues.setProperty(uiRuntime, "currentOriginY", values.y);
+      yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", values.y);
+      yogaValues.setProperty(uiRuntime, "currentWidth", values.width);
+      yogaValues.setProperty(uiRuntime, "currentHeight", values.height);
+      yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
+      yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
+      strongThis->layoutAnimationsManager_->startLayoutAnimation(
+          uiRuntime, tag, LayoutAnimationType::EXITING, yogaValues);
+    }
     strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
   });
 }
@@ -726,6 +758,7 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
     }
 
     auto oldView = mutation.oldChildShadowView;
+    auto newView = mutation.newChildShadowView;
     Rect window{};
     {
       auto &mutex = strongThis->mutex;
@@ -733,6 +766,19 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
       strongThis->createLayoutAnimation(mutation, oldView, surfaceId, tag);
       window = strongThis->surfaceManager.getWindow(surfaceId);
     }
+
+#if __APPLE__
+    if constexpr (StaticFeatureFlags::getFlag("IOS_USE_NATIVE_LAYOUT_ANIMATIONS")) {
+      strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
+          tag,
+          LayoutAnimationType::LAYOUT,
+          oldView.layoutMetrics.frame,
+          newView.layoutMetrics.frame,
+          [strongThis, tag](bool finished) { strongThis->endLayoutAnimation(tag, false); });
+
+      return;
+    }
+#endif
 
     Snapshot currentValues(oldView, window);
     Snapshot targetValues(mutation.newChildShadowView, window);

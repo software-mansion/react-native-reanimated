@@ -123,6 +123,32 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
   return unsubscribeFromKeyboardEventsFunction;
 }
 
+RunCoreAnimationForView makeRunCoreAnimationForView(REANodesManager *nodesManager)
+{
+  auto runCoreAnimationForView = [nodesManager](
+                                     const int viewTag,
+                                     const facebook::react::Rect &initialFrame,
+                                     const std::vector<reanimated::NativeLayoutAnimation> &animations,
+                                     const reanimated::LayoutAnimationRawConfig &config,
+                                     const bool usePresentationLayer,
+                                     std::function<void(bool)> completion) {
+    //                                     const std::string &animationKey) {
+    // Create an Objective-C block that will retain the completion handler // TODO: There is probably a better way?
+    auto retainedCompletion = std::move(completion);
+    void (^completionBlock)(bool) = ^(bool finished) { retainedCompletion(finished); };
+
+    [nodesManager runCoreAnimationForView:viewTag
+                             initialFrame:initialFrame
+                               animations:animations
+                                   config:config
+                     usePresentationLayer:usePresentationLayer
+                               completion:completionBlock];
+    //                             animationKey:[NSString stringWithCString:animationKey.c_str()
+    //                                                             encoding:[NSString defaultCStringEncoding]]];
+  };
+  return runCoreAnimationForView;
+}
+
 css::CSSCanRoutePropertyFunction makeCSSCanRouteProperty()
 {
   return &canRouteCSSProperty;
@@ -199,6 +225,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   auto maybeFlushUIUpdatesQueueFunction = makeMaybeFlushUIUpdatesQueueFunction(nodesManager);
 
+  auto runCoreAnimationForView = makeRunCoreAnimationForView(nodesManager);
+
   REAPseudoSelectorAttachQueue *attachQueue =
       [[REAPseudoSelectorAttachQueue alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
   auto attachPseudoSelectorFunction = makeAttachPseudoSelectorFunction(attachQueue);
@@ -221,6 +249,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUIUpdatesQueueFunction,
+      runCoreAnimationForView,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
       cssCanRouteProperty,

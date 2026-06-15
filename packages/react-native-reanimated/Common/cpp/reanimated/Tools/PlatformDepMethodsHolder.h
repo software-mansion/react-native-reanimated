@@ -6,7 +6,11 @@
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <react/renderer/core/ReactPrimitives.h>
+#include <react/renderer/graphics/Rect.h>
+
 #include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationConfig.h>
+#include <reanimated/LayoutAnimations/NativeLayoutAnimation.h>
 
 #include <memory>
 #include <string>
@@ -46,6 +50,14 @@ using SetGestureStateFunction = std::function<void(int, int)>;
 using KeyboardEventSubscribeFunction = std::function<int(std::function<void(int, int)>, bool, bool)>;
 using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
+using RunCoreAnimationForView = std::function<void(
+    const int,
+    const facebook::react::Rect &,
+    const std::vector<NativeLayoutAnimation> &animations,
+    const reanimated::LayoutAnimationRawConfig &,
+    const bool,
+    std::function<void(bool)> &&)>;
+//    const std::string &)>;
 
 using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
 
@@ -68,6 +80,9 @@ struct PlatformDepMethodsHolder {
   KeyboardEventSubscribeFunction subscribeForKeyboardEvents;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEvents;
   MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction;
+#if __APPLE__
+  RunCoreAnimationForView runCoreAnimationForView;
+#endif // __APPLE__
   PlatformAttachPseudoSelectorFunction attachPseudoSelector;
   PlatformDetachPseudoSelectorFunction detachPseudoSelector;
   css::CSSCanRoutePropertyFunction cssCanRouteProperty;

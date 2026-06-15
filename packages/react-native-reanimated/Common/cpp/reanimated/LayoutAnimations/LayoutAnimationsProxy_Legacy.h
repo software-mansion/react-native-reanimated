@@ -145,7 +145,7 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
 
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) override;
-  std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
+  std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) const override;
   void maybeCancelAnimation(const int tag) const;
 
   void parseRemoveMutations(
