@@ -203,13 +203,26 @@ describe('babel plugin in bundleMode', () => {
 
     test('strips JSX dev attributes in written worklet files', () => {
       const input = html`<script>
-        import { isUIRuntime as ImportedComponent } from 'react-native-worklets';
+        import { ImportedComponent } from 'react-native-worklets';
 
         function renderView() {
           'worklet';
-          return <ImportedComponent __self={this} __source={{}} />;
+          return <ImportedComponent />;
         }
       </script>`;
+
+      const control = transformSync(input.replace(/<\/?script[^>]*>/g, ''), {
+        filename: MOCK_TSX_LOCATION,
+        compact: false,
+        babelrc: false,
+        configFile: false,
+        presets: [
+          ['@babel/preset-react', { runtime: 'classic', development: true }],
+        ],
+        envName: 'development',
+      })!.code;
+      expect(control).toContain('__self');
+      expect(control).toContain('__source');
 
       const { files } = runPlugin(
         input,
