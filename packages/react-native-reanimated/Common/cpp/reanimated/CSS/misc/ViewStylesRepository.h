@@ -36,6 +36,10 @@ class ViewStylesRepository {
   jsi::Value getParentNodeProp(const std::shared_ptr<const ShadowNode> &shadowNode, const std::string &propName);
   folly::dynamic getStyleProp(Tag tag, const PropertyPath &propertyPath);
 
+  // Resolves the latest committed clone of the node (the caller's reference may
+  // be stale); falls back to the given node when no newer clone exists.
+  std::shared_ptr<const ShadowNode> getNewestShadowNode(const std::shared_ptr<const ShadowNode> &shadowNode);
+
   void clearNodesCache();
 
  private:

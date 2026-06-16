@@ -61,7 +61,11 @@ CGColorSpaceRef sharedSRGBColorSpace()
 
 } // namespace
 
-bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &easing)
+bool canRouteCSSProperty(
+    const std::string &propertyName,
+    const EasingConfig &easing,
+    const facebook::react::ShadowNode & /*shadowNode*/,
+    const std::unordered_set<std::string> & /*transitioningProperties*/)
 {
   if constexpr (!StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
     return false;

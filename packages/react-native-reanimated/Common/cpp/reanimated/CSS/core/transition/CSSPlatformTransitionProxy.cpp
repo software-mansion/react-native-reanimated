@@ -2,6 +2,7 @@
 
 #include <react/debug/react_native_assert.h>
 
+#include <unordered_set>
 #include <utility>
 
 namespace reanimated::css {
@@ -48,14 +49,20 @@ CSSPlatformTransitionProxy::CSSPlatformTransitionProxy(
     CSSCanRoutePropertyFunction canRoute,
     CSSParseValueFunction parseValue,
     CSSApplyTransitionFunction applyTransition,
-    CSSRemoveTransitionFunction removeTransition)
+    CSSRemoveTransitionFunction removeTransition,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : canRoute_(std::move(canRoute)),
       parseValue_(std::move(parseValue)),
       applyTransition_(std::move(applyTransition)),
-      removeTransition_(std::move(removeTransition)) {}
+      removeTransition_(std::move(removeTransition)),
+      viewStylesRepository_(viewStylesRepository) {}
 
-bool CSSPlatformTransitionProxy::canRoute(const std::string &propertyName, const EasingConfig &easing) const {
-  return canRoute_ && canRoute_(propertyName, easing);
+bool CSSPlatformTransitionProxy::canRoute(
+    const std::string &propertyName,
+    const EasingConfig &easing,
+    const ShadowNode &shadowNode,
+    const std::unordered_set<std::string> &transitioningProperties) const {
+  return canRoute_ && canRoute_(propertyName, easing, shadowNode, transitioningProperties);
 }
 
 std::optional<PlatformValue> CSSPlatformTransitionProxy::parseValue(
@@ -80,10 +87,20 @@ void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &pr
 // property migrates sides - that's when the old side gets a cancel.
 CSSPlatformTransitionProxy::ProcessedConfig CSSPlatformTransitionProxy::processConfig(
     jsi::Runtime &rt,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     CSSTransitionConfig &&config,
     const CSSTransitionRouting &previousRouting) const {
   ProcessedConfig result;
   result.routing = previousRouting;
+
+  // Routing eligibility is decided against the view's latest committed props.
+  const auto newestShadowNode = viewStylesRepository_->getNewestShadowNode(shadowNode);
+
+  std::unordered_set<std::string> transitioningProperties;
+  transitioningProperties.reserve(config.changedPropertiesSettings.size());
+  for (const auto &entry : config.changedPropertiesSettings) {
+    transitioningProperties.insert(entry.first);
+  }
 
   // extract() preserves the move-only jsi::Value diffs.
   while (!config.changedPropertiesSettings.empty()) {
@@ -92,7 +109,7 @@ CSSPlatformTransitionProxy::ProcessedConfig CSSPlatformTransitionProxy::processC
     const auto &settings = settingsNode.mapped();
     const auto valueIt = config.changedProperties.find(propertyName);
 
-    bool routable = canRoute(propertyName, settings.easingConfig);
+    bool routable = canRoute(propertyName, settings.easingConfig, *newestShadowNode, transitioningProperties);
     std::optional<PlatformValue> fromValue;
     std::optional<PlatformValue> toValue;
     if (routable && valueIt != config.changedProperties.end()) {
