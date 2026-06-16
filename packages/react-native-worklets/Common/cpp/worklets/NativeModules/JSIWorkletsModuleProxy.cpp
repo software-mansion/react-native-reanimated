@@ -5,6 +5,7 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
+#include <worklets/SharedItems/SerializableRemoteFunction.h>
 #include <worklets/SharedItems/Shareable.h>
 #include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/FeatureFlags.h>
@@ -348,11 +349,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
         if (hostRuntimeId == RuntimeData::rnRuntimeId) {
           const int remoteId = static_cast<int>(at<1>(args).getNumber());
-          auto ref = makeSerializableRemoteFunction(rt, name, remoteId, jsScheduler);
+          auto ref = makeRNOriginSerializableRemoteFunction(rt, name, remoteId, jsScheduler);
           ref.asObject(rt).setProperty(rt, "__keepAlive", true);
           return ref;
         }
-        return makeSerializableRemoteFunction(rt, name, std::move(fun), hostRuntimeId);
+        return makeWorkletOriginSerializableRemoteFunction(rt, name, std::move(fun), hostRuntimeId);
       });
 
   jsi_utils::addMethod<2>(
@@ -568,18 +569,6 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
 #else
         worklets::scheduleOnRuntime(rt, at<0>(args), at<1>(args));
 #endif // NDEBUG
-      });
-
-  jsi_utils::addMethod<3>(
-      rt, obj, "scheduleOnRuntime3", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
-        auto workletRuntime = extractWorkletRuntime(rt, at<0>(args));
-        auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
-            rt, at<1>(args), "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
-        auto serArg = extractSerializableOrThrow(rt, at<2>(args));
-        workletRuntime->schedule([workletRuntime, serializableWorklet, serArg](jsi::Runtime &wrt) {
-          auto jsArg = serArg->toJSValue(wrt);
-          workletRuntime->runSync(serializableWorklet, jsArg);
-        });
       });
 
   jsi_utils::addMethod<3>(

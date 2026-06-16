@@ -23,18 +23,6 @@ jsi::Function getValueUnpacker(jsi::Runtime &rt) {
   return valueUnpacker.asObject(rt).asFunction(rt);
 }
 
-jsi::Function getRemoteFunctionUnpacker(jsi::Runtime &rt) {
-  auto remoteFunctionUnpacker = rt.global().getProperty(rt, "__remoteFunctionUnpacker");
-  react_native_assert(remoteFunctionUnpacker.isObject() && "remoteFunctionUnpacker not found");
-  return remoteFunctionUnpacker.asObject(rt).asFunction(rt);
-}
-
-jsi::Object getRemoteFunctionRegistry(jsi::Runtime &rt) {
-  auto registry = rt.global().getProperty(rt, "__remoteFunctionRegistry");
-  react_native_assert(registry.isObject() && "remoteFunctionRegistry not found");
-  return registry.getObject(rt);
-}
-
 } // namespace
 
 jsi::Value makeSerializableClone(
@@ -297,92 +285,6 @@ jsi::Value SerializableImport::toJSValue(jsi::Runtime &rt) {
   return metroRequire.asObject(rt).asFunction(rt).call(rt, source_).asObject(rt).getProperty(rt, imported);
 }
 
-SerializableRemoteFunction::SerializableRemoteFunction(
-    SerializableRemoteFunction::WorkletMirrorTag,
-    const std::shared_ptr<SerializableRemoteFunction> &rnSide)
-    : Serializable(ValueType::RemoteFunctionType),
-      hostRuntime_(nullptr),
-      hostRuntimeId_(rnSide->hostRuntimeId_),
-      runtimeData_(WorkletRuntimeData{.function = nullptr, .rnSide = rnSide}),
-      name_(rnSide->name_) {}
-
-SerializableRemoteFunction::~SerializableRemoteFunction() {
-  if (std::holds_alternative<RNRuntimeData>(runtimeData_)) {
-    return;
-  }
-  auto &workletData = std::get<WorkletRuntimeData>(runtimeData_);
-  if (workletData.rnSide) {
-    if (std::holds_alternative<RNRuntimeData>(workletData.rnSide->runtimeData_)) {
-      const auto &rnData = std::get<RNRuntimeData>(workletData.rnSide->runtimeData_);
-      rnData.jsScheduler->scheduleOnJS([id = rnData.remoteId](jsi::Runtime &rt) {
-        const auto registry = getRemoteFunctionRegistry(rt);
-        registry.getPropertyAsFunction(rt, "delete").callWithThis(rt, registry, jsi::Value(id));
-      });
-    }
-  } else {
-    cleanupRuntimeAware(hostRuntime_, workletData.function);
-  }
-}
-
-jsi::Value SerializableRemoteFunction::toJSValue(jsi::Runtime &rt) {
-  if (std::holds_alternative<RNRuntimeData>(runtimeData_)) {
-    auto &rnData = std::get<RNRuntimeData>(runtimeData_);
-    if (&rt == hostRuntime_) {
-      const auto registry = getRemoteFunctionRegistry(rt);
-      return registry.getPropertyAsFunction(rt, "get").callWithThis(rt, registry, jsi::Value(rnData.remoteId));
-    } else {
-      std::shared_ptr<SerializableRemoteFunction> mirror;
-      {
-        std::lock_guard<std::mutex> lock(*rnData.mutex);
-        mirror = rnData.workletSideMirror.lock();
-        if (!mirror) {
-          mirror = std::shared_ptr<SerializableRemoteFunction>(
-              new SerializableRemoteFunction(WorkletMirrorTag{}, shared_from_this()));
-          rnData.workletSideMirror = mirror;
-        }
-      }
-      return mirror->toJSValue(rt);
-    }
-  } else {
-    const auto &workletData = std::get<WorkletRuntimeData>(runtimeData_);
-    if (workletData.rnSide && &rt == workletData.rnSide->hostRuntime_) {
-      return workletData.rnSide->toJSValue(rt);
-    }
-    if (!workletData.rnSide && &rt == hostRuntime_) {
-      return jsi::Value(rt, *workletData.function);
-    }
-    const auto name = name_.empty() ? jsi::Value::undefined() : jsi::String::createFromUtf8(rt, name_);
-    auto holderFunction = getRemoteFunctionUnpacker(rt).call(rt, name).getObject(rt);
-    holderFunction.setNativeState(rt, std::make_shared<SerializableJSRef>(shared_from_this()));
-    return holderFunction;
-  }
-}
-
-void SerializableRemoteFunction::resolveOrRejectPromise(
-    const std::shared_ptr<Serializable> &resolveValue,
-    const std::shared_ptr<RuntimeManager> &runtimeManager) {
-  if (std::holds_alternative<RNRuntimeData>(runtimeData_)) {
-    const auto &data = std::get<RNRuntimeData>(runtimeData_);
-    data.jsScheduler->scheduleOnJS([resolver = shared_from_this(), resolveValue](jsi::Runtime &rt) {
-      resolver->toJSValue(rt).getObject(rt).getFunction(rt).call(rt, resolveValue->toJSValue(rt));
-    });
-    return;
-  }
-  const auto &workletData = std::get<WorkletRuntimeData>(runtimeData_);
-  if (workletData.rnSide) {
-    workletData.rnSide->resolveOrRejectPromise(resolveValue, runtimeManager);
-    return;
-  }
-  const auto workletRuntime = runtimeManager->getRuntime(hostRuntimeId_);
-  // NOLINTNEXTLINE(readability/braces)
-  if (!workletRuntime) [[unlikely]] {
-    return;
-  }
-  workletRuntime->schedule([resolver = shared_from_this(), resolveValue](jsi::Runtime &rt) {
-    resolver->toJSValue(rt).getObject(rt).getFunction(rt).call(rt, resolveValue->toJSValue(rt));
-  });
-}
-
 jsi::Value SerializableInitializer::toJSValue(jsi::Runtime &rt) {
   if (remoteValue_ == nullptr) {
     auto initObj = initializer_->toJSValue(rt);
@@ -459,12 +361,6 @@ jsi::Value CustomSerializable::toJSValue(jsi::Runtime &rt) {
   } catch (jsi::JSError &e) {
     throw std::runtime_error(
         std::string("[Worklets] Failed to deserialize CustomSerializable. Reason: ") + e.getMessage());
-  }
-}
-
-void cleanupRuntimeAware(jsi::Runtime *rt, std::unique_ptr<jsi::Value> &value) {
-  if (rt != nullptr && !WorkletRuntimeRegistry::isRuntimeAlive(rt)) {
-    freeWithoutCallingDestructor(value);
   }
 }
 
