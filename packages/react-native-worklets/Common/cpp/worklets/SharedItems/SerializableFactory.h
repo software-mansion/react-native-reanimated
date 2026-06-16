@@ -63,15 +63,13 @@ jsi::Value makeSerializableHostFunction(
     const std::string &name,
     unsigned int paramCount);
 
-/** Creates RN Runtime Remote Function. */
-jsi::Value makeSerializableRemoteFunction(
+jsi::Value makeRNOriginSerializableRemoteFunction(
     jsi::Runtime &rnRuntime,
     const std::string &name,
     int remoteId,
     const std::shared_ptr<JSScheduler> &jsScheduler);
 
-/** Creates Worklet Runtime Remote Function. */
-jsi::Value makeSerializableRemoteFunction(
+jsi::Value makeWorkletOriginSerializableRemoteFunction(
     jsi::Runtime &workletRuntime,
     const std::string &name,
     jsi::Function &&function,
