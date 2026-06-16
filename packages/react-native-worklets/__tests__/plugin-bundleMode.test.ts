@@ -226,7 +226,12 @@ describe('babel plugin in bundleMode', () => {
 
       const { files } = runPlugin(
         input,
-        { plugins: ['@babel/plugin-syntax-jsx'] },
+        {
+          presets: [
+            ['@babel/preset-react', { runtime: 'classic', development: true }],
+          ],
+          envName: 'development',
+        },
         { importForwarding: { moduleNames: ['react-native-worklets'] } },
         MOCK_TSX_LOCATION
       );
