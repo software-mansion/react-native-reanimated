@@ -1,48 +1,47 @@
-import React, { useEffect } from 'react';
-import { useSharedValue } from 'react-native-reanimated';
+import React from 'react';
 
 import {
+  beforeEach,
   describe,
   expect,
-  getRegisteredValue,
-  registerValue,
-  render,
+  notify,
   test,
-  wait,
+  waitForNotification,
 } from '../../ReJest/RuntimeTestsApi';
 import {
   isUIRuntime as ImportedComponent,
+  scheduleOnRN,
   scheduleOnUI,
 } from 'react-native-worklets';
 
-const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
-
 describe('Test JSX in worklets', () => {
+  const PASS_NOTIFICATION = 'PASS';
+  let result = false;
+
+  const callbackPass = (value: boolean) => {
+    result = value;
+    notify(PASS_NOTIFICATION);
+  };
+
+  beforeEach(() => {
+    result = false;
+  });
+
   if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     test('worklets with JSX work on Worklet runtime', async () => {
-      const ExampleComponent = () => {
-        const output = useSharedValue(false);
-        registerValue(SHARED_VALUE_REF, output);
+      function renderView() {
+        'worklet';
+        return <ImportedComponent />;
+      }
 
-        function renderView() {
-          'worklet';
-          return <ImportedComponent />;
-        }
+      scheduleOnUI(() => {
+        'worklet';
+        const element = renderView() as React.ReactElement;
+        scheduleOnRN(callbackPass, typeof element.type === 'function');
+      });
 
-        useEffect(() => {
-          scheduleOnUI(() => {
-            const element = renderView() as React.ReactElement;
-            output.value = typeof element.type === 'function';
-          });
-        });
-
-        return null;
-      };
-
-      await render(<ExampleComponent />);
-      await wait(100);
-      const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-      expect(sharedValue.onUI).toBe(true);
+      await waitForNotification(PASS_NOTIFICATION);
+      expect(result).toBe(true);
     });
   }
 });
