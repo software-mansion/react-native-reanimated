@@ -11,28 +11,27 @@ import CodeBlock from '@theme/CodeBlock';
 Our plugin offers several optional functionalities that you may need to employ advanced APIs:
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-interface PluginOptions {
-  bundleMode?: boolean;
-  disableInlineStylesWarning?: boolean;
-  disableSourceMaps?: boolean;
-  disableWorkletClasses?: boolean;
-  extraPlugins?: string[];
-  extraPresets?: string[];
-  globals?: string[];
-  omitNativeOnlyData?: boolean;
-  relativeSourceLocation?: boolean;
-  strictGlobal?: boolean;
-  substituteWebPlatformChecks?: boolean;
-  importForwarding?: {
-    moduleNames?: string[];
-    relativePaths?: string[];
-  };
-}
-```
-
+  ```typescript
+  interface PluginOptions {
+    bundleMode?: boolean;
+    disableInlineStylesWarning?: boolean;
+    disableSourceMaps?: boolean;
+    disableWorkletClasses?: boolean;
+    extraPlugins?: string[];
+    extraPresets?: string[];
+    globals?: string[];
+    omitNativeOnlyData?: boolean;
+    relativeSourceLocation?: boolean;
+    strictGlobal?: boolean;
+    substituteWebPlatformChecks?: boolean;
+    importForwarding?: {
+      moduleNames?: string[];
+      relativePaths?: string[];
+    };
+  }
+  ```
 </details>
 
 ## How to use
@@ -111,7 +110,7 @@ Defaults to `false`.
 This option turns off the source map generation for worklets. Mostly used for testing purposes.
 
 <Badges version="0.7.0">
-### disableWorkletClasses
+  ### disableWorkletClasses
 </Badges>
 
 Defaults to `false`.
@@ -209,7 +208,7 @@ Defaults to `false`.
 This option dictates the passed file location for a worklet's source map. If you enable this option, the file paths will be relative to `process.cwd` (the current directory where Babel executes). This can be handy for Jest test snapshots to ensure consistent results across machines.
 
 <Badges version="0.8.0">
-### strictGlobal
+  ### strictGlobal
 </Badges>
 
 :::note
@@ -315,12 +314,18 @@ function foo() {
     <th style={{textAlign: 'center', width: '50%'}}>Before</th>
     <th style={{textAlign: 'center', width: '50%'}}>After (conceptually)</th>
   </tr>
+
   <tr>
     <td style={{verticalAlign: 'top'}}>
-      <CodeBlock language="javascript">{importForwardingBefore}</CodeBlock>
+      <CodeBlock language="javascript">
+        {importForwardingBefore}
+      </CodeBlock>
     </td>
+
     <td style={{verticalAlign: 'top'}}>
-      <CodeBlock language="javascript">{importForwardingAfter}</CodeBlock>
+      <CodeBlock language="javascript">
+        {importForwardingAfter}
+      </CodeBlock>
     </td>
   </tr>
 </table>
@@ -355,12 +360,18 @@ function foo() {
     <th style={{textAlign: 'center', width: '50%'}}>Before</th>
     <th style={{textAlign: 'center', width: '50%'}}>After (conceptually)</th>
   </tr>
+
   <tr>
     <td style={{verticalAlign: 'top'}}>
-      <CodeBlock language="javascript">{importForwardingExactBefore}</CodeBlock>
+      <CodeBlock language="javascript">
+        {importForwardingExactBefore}
+      </CodeBlock>
     </td>
+
     <td style={{verticalAlign: 'top'}}>
-      <CodeBlock language="javascript">{importForwardingExactAfter}</CodeBlock>
+      <CodeBlock language="javascript">
+        {importForwardingExactAfter}
+      </CodeBlock>
     </td>
   </tr>
 </table>
@@ -424,12 +435,18 @@ function foo() {
     <th style={{textAlign: 'center', width: '50%'}}>Before</th>
     <th style={{textAlign: 'center', width: '50%'}}>After (conceptually)</th>
   </tr>
+
   <tr>
     <td style={{verticalAlign: 'top'}}>
-      <CodeBlock language="javascript">{relativeImportForwardingBefore}</CodeBlock>
+      <CodeBlock language="javascript">
+        {relativeImportForwardingBefore}
+      </CodeBlock>
     </td>
+
     <td style={{verticalAlign: 'top'}}>
-      <CodeBlock language="javascript">{relativeImportForwardingAfter}</CodeBlock>
+      <CodeBlock language="javascript">
+        {relativeImportForwardingAfter}
+      </CodeBlock>
     </td>
   </tr>
 </table>
