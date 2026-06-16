@@ -5,6 +5,7 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
+#include <worklets/SharedItems/SerializableRemoteFunction.h>
 #include <worklets/SharedItems/Shareable.h>
 #include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/FeatureFlags.h>
@@ -348,11 +349,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
         if (hostRuntimeId == RuntimeData::rnRuntimeId) {
           const int remoteId = static_cast<int>(at<1>(args).getNumber());
-          auto ref = makeSerializableRemoteFunction(rt, name, remoteId, jsScheduler);
+          auto ref = makeRNOriginSerializableRemoteFunction(rt, name, remoteId, jsScheduler);
           ref.asObject(rt).setProperty(rt, "__keepAlive", true);
           return ref;
         }
-        return makeSerializableRemoteFunction(rt, name, std::move(fun), hostRuntimeId);
+        return makeWorkletOriginSerializableRemoteFunction(rt, name, std::move(fun), hostRuntimeId);
       });
 
   jsi_utils::addMethod<2>(
