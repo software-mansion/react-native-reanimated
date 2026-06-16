@@ -77,6 +77,14 @@ export default function RuntimeTestsExample() {
           },
         },
         {
+          testSuiteName: 'bundle mode core',
+          importTest: () => {
+            require('./tests/runtimes/reactNativeImportShim.test');
+            require('./tests/runtimes/turboModuleRegistryShim.test');
+          },
+          disabled: !globalThis._WORKLETS_BUNDLE_MODE_ENABLED,
+        },
+        {
           testSuiteName: 'run loop',
           importTest: () => {
             require('./tests/runLoop/requestAnimationFrame.test');
@@ -175,8 +183,10 @@ export default function RuntimeTestsExample() {
           testSuiteName: 'babel plugin',
           importTest: () => {
             require('./tests/plugin/fileWorkletization.test');
-            require('./tests/plugin/contextObjects.test');
-            require('./tests/plugin/workletClasses.test');
+            if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+              require('./tests/plugin/contextObjects.test');
+              require('./tests/plugin/workletClasses.test');
+            }
             require('./tests/plugin/recursion.test');
             require('./tests/plugin/versionMismatch.test');
           },

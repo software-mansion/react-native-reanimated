@@ -19,6 +19,7 @@ describe(filterCSSAndStyleProperties, () => {
         null,
         expect.any(Object),
         null,
+        null,
         expect.any(Object),
       ]);
     });
@@ -32,6 +33,7 @@ describe(filterCSSAndStyleProperties, () => {
         null,
         expect.any(Object),
         null,
+        null,
         expect.any(Object),
       ]);
     });
@@ -44,6 +46,7 @@ describe(filterCSSAndStyleProperties, () => {
       expect(filterCSSAndStyleProperties(style)).toEqual([
         style,
         expect.any(Object),
+        null,
         null,
         expect.any(Object),
       ]);
@@ -60,6 +63,7 @@ describe(filterCSSAndStyleProperties, () => {
       expect(filterCSSAndStyleProperties(style)).toEqual([
         style,
         expect.any(Object),
+        null,
         null,
         expect.any(Object),
       ]);
@@ -86,6 +90,7 @@ describe(filterCSSAndStyleProperties, () => {
           expect.objectContaining({ [key]: value }),
           null,
           null,
+          null,
           {},
         ]);
       });
@@ -97,6 +102,7 @@ describe(filterCSSAndStyleProperties, () => {
       const style: CSSStyle = {};
       expect(filterCSSAndStyleProperties(style)).toEqual([
         expect.any(Object),
+        null,
         null,
         null,
         expect.any(Object),
@@ -115,11 +121,13 @@ describe(filterCSSAndStyleProperties, () => {
         expect.any(Object),
         style1,
         null,
+        null,
         expect.any(Object),
       ]);
       expect(filterCSSAndStyleProperties(style2)).toEqual([
         expect.any(Object),
         style2,
+        null,
         null,
         expect.any(Object),
       ]);
@@ -136,6 +144,7 @@ describe(filterCSSAndStyleProperties, () => {
       expect(filterCSSAndStyleProperties(config)).toEqual([
         expect.any(Object),
         { transition: 'opacity 2s ease-in' },
+        null,
         null,
         expect.any(Object),
       ]);
@@ -155,6 +164,7 @@ describe(filterCSSAndStyleProperties, () => {
         expect(filterCSSAndStyleProperties(style)).toEqual([
           null,
           expect.objectContaining({ [key]: value }),
+          null,
           null,
           {},
         ]);
@@ -186,6 +196,7 @@ describe(filterCSSAndStyleProperties, () => {
             defaultStyle: { backgroundColor: 'blue' },
           },
         },
+        null,
         { opacity: 1, backgroundColor: 'blue' },
       ]);
     });
@@ -196,7 +207,7 @@ describe(filterCSSAndStyleProperties, () => {
         width: 100,
       };
 
-      const [, , , filteredStyle] = filterCSSAndStyleProperties(style);
+      const [, , , , filteredStyle] = filterCSSAndStyleProperties(style);
 
       expect(filteredStyle).toEqual({ opacity: 0.8, width: 100 });
     });
@@ -207,7 +218,7 @@ describe(filterCSSAndStyleProperties, () => {
         width: 100,
       };
 
-      const [, , pseudoStylesBySelector, filteredStyle] =
+      const [, , pseudoStylesBySelector, , filteredStyle] =
         filterCSSAndStyleProperties(style);
 
       expect(filteredStyle).toEqual({ width: 100 });
@@ -225,11 +236,41 @@ describe(filterCSSAndStyleProperties, () => {
         width: 100,
       };
 
-      const [, , pseudoStylesBySelector, filteredStyle] =
+      const [, , pseudoStylesBySelector, , filteredStyle] =
         filterCSSAndStyleProperties(style);
 
       expect(filteredStyle).toEqual({ opacity: 0.8, width: 100 });
       expect(pseudoStylesBySelector).toBeNull();
+    });
+
+    test('keeps the missing default as an explicit undefined in defaultStyle', () => {
+      const style: CSSStyle = {
+        opacity: { ':active': 0.3 } as never,
+        width: 100,
+      };
+
+      const [, , pseudoStylesBySelector, , filteredStyle] =
+        filterCSSAndStyleProperties(style);
+
+      expect(filteredStyle).toStrictEqual({ width: 100 });
+      expect(pseudoStylesBySelector).toStrictEqual({
+        ':active': {
+          selectorStyle: { opacity: 0.3 },
+          defaultStyle: { opacity: undefined },
+        },
+      });
+    });
+
+    test('throws on an empty object value', () => {
+      expect(() =>
+        filterCSSAndStyleProperties({ opacity: {} } as never)
+      ).toThrow(/empty object is not a valid style value/);
+    });
+
+    test('does not throw for a pseudo value that has a selector but no default', () => {
+      expect(() =>
+        filterCSSAndStyleProperties({ opacity: { ':active': 0.3 } } as never)
+      ).not.toThrow();
     });
 
     test('mixes pseudoselector and regular props with transition config', () => {
@@ -248,6 +289,7 @@ describe(filterCSSAndStyleProperties, () => {
             defaultStyle: { opacity: 1 },
           },
         },
+        null,
         { opacity: 1, borderRadius: 8 },
       ]);
     });
@@ -262,7 +304,7 @@ describe(filterCSSAndStyleProperties, () => {
           borderWidth: { default: 0, ':focus': 2 },
         };
 
-        const [, , pseudoStylesBySelector, filteredStyle] =
+        const [, , pseudoStylesBySelector, , filteredStyle] =
           filterCSSAndStyleProperties(style);
 
         expect(filteredStyle).toEqual({
@@ -294,7 +336,7 @@ describe(filterCSSAndStyleProperties, () => {
           height: 100,
         };
 
-        const [, , pseudoStylesBySelector, filteredStyle] =
+        const [, , pseudoStylesBySelector, , filteredStyle] =
           filterCSSAndStyleProperties(style);
 
         expect(filteredStyle).toEqual({
@@ -327,7 +369,7 @@ describe(filterCSSAndStyleProperties, () => {
           },
         };
 
-        const [, , pseudoStylesBySelector, filteredStyle] =
+        const [, , pseudoStylesBySelector, , filteredStyle] =
           filterCSSAndStyleProperties(style);
 
         expect(filteredStyle).toEqual({ opacity: 1 });
@@ -353,7 +395,7 @@ describe(filterCSSAndStyleProperties, () => {
           backgroundColor: { default: 'white', ':active': 'red' },
         };
 
-        const [, , pseudoStylesBySelector, filteredStyle] =
+        const [, , pseudoStylesBySelector, , filteredStyle] =
           filterCSSAndStyleProperties(style);
 
         expect(filteredStyle).toEqual({ opacity: 1, backgroundColor: 'white' });
@@ -374,7 +416,7 @@ describe(filterCSSAndStyleProperties, () => {
           opacity: { ':active': 0.5, ':hover': 0.8 } as never,
         };
 
-        const [, , pseudoStylesBySelector, filteredStyle] =
+        const [, , pseudoStylesBySelector, , filteredStyle] =
           filterCSSAndStyleProperties(style);
 
         expect(filteredStyle).toEqual({});
@@ -401,7 +443,7 @@ describe(filterCSSAndStyleProperties, () => {
           } as never,
         };
 
-        const [, , pseudoStylesBySelector, filteredStyle] =
+        const [, , pseudoStylesBySelector, , filteredStyle] =
           filterCSSAndStyleProperties(style);
 
         expect(filteredStyle).toEqual({ backgroundColor: 'white' });
@@ -463,11 +505,98 @@ describe(filterCSSAndStyleProperties, () => {
           transitionDuration: style.transitionDuration,
         }),
         null,
+        null,
         {
           width: 100,
           height: 100,
         },
       ]);
+    });
+  });
+
+  describe('transition callbacks', () => {
+    test('returns null when no callback props are present', () => {
+      const style: CSSStyle = {
+        transitionProperty: 'opacity',
+        transitionDuration: 100,
+      };
+      expect(filterCSSAndStyleProperties(style)).toEqual([
+        null,
+        expect.any(Object),
+        null,
+        null,
+        expect.any(Object),
+      ]);
+    });
+
+    test('extracts callback props and keeps them out of the style object', () => {
+      const onTransitionEnd = jest.fn();
+      const onTransitionRun = jest.fn();
+      const style: CSSStyle = {
+        width: 100,
+        transitionProperty: 'opacity',
+        transitionDuration: 100,
+        onTransitionRun,
+        onTransitionEnd,
+      };
+
+      const [, transitionConfig, , transitionCallbacks, filteredStyle] =
+        filterCSSAndStyleProperties(style);
+
+      expect(transitionCallbacks).toEqual({ onTransitionRun, onTransitionEnd });
+      // Callbacks must not leak into the plain style nor the transition config.
+      expect(filteredStyle).toEqual({ width: 100 });
+      expect(transitionConfig).not.toHaveProperty('onTransitionRun');
+      expect(transitionConfig).not.toHaveProperty('onTransitionEnd');
+    });
+  });
+
+  describe('transition callbacks validation', () => {
+    const globalWithDev = globalThis as unknown as { __DEV__: boolean };
+
+    beforeEach(() => {
+      (console.warn as jest.Mock).mockClear();
+    });
+
+    describe('in development (__DEV__)', () => {
+      beforeEach(() => {
+        globalWithDev.__DEV__ = true;
+      });
+
+      test('warns when transition callbacks are used without any transition props', () => {
+        filterCSSAndStyleProperties({ onTransitionEnd: jest.fn() } as CSSStyle);
+        expect(console.warn).toHaveBeenCalledWith(
+          expect.stringContaining('onTransitionEnd')
+        );
+      });
+
+      test('does not warn when a transition is configured alongside callbacks', () => {
+        filterCSSAndStyleProperties({
+          transitionProperty: 'opacity',
+          transitionDuration: 100,
+          onTransitionEnd: jest.fn(),
+        } as CSSStyle);
+        expect(console.warn).not.toHaveBeenCalled();
+      });
+
+      test('does not warn when only the transition shorthand is provided', () => {
+        filterCSSAndStyleProperties({
+          transition: 'opacity 2s',
+          onTransitionEnd: jest.fn(),
+        } as CSSStyle);
+        expect(console.warn).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('in production (!__DEV__)', () => {
+      beforeEach(() => {
+        globalWithDev.__DEV__ = false;
+      });
+
+      test('skips validation entirely - never warns, even without transition props', () => {
+        filterCSSAndStyleProperties({ onTransitionEnd: jest.fn() } as CSSStyle);
+        expect(console.warn).not.toHaveBeenCalled();
+      });
     });
   });
 });

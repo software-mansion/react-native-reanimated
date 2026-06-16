@@ -1,6 +1,8 @@
 #include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
+#include <react/debug/react_native_assert.h>
+
 #include <utility>
 
 namespace reanimated::css {
@@ -60,8 +62,9 @@ CSSPlatformTransitionProxy::ProcessedConfig CSSPlatformTransitionProxy::processC
       if (valueIt != config.changedProperties.end()) {
         auto valueNode = config.changedProperties.extract(valueIt);
         result.platform.changedProperties.push_back(
-            CSSPlatformTransitionRawEntry{propertyName, std::move(valueNode.mapped()), settingsNode.mapped()});
+            CSSPlatformTransitionRawEntry{propertyName, std::move(valueNode.mapped()), settings});
       }
+      result.platform.changedPropertiesSettings.insert(std::move(settingsNode));
     } else {
       // platform -> loop migration: cancel on platform.
       if (result.routing.platform.erase(propertyName) > 0) {
@@ -77,15 +80,9 @@ CSSPlatformTransitionProxy::ProcessedConfig CSSPlatformTransitionProxy::processC
     }
   }
 
-  // Any value diffs without matching settings - forward to whichever side they
-  // were last on. (Practically rare: parser emits settings + values together.)
-  while (!config.changedProperties.empty()) {
-    auto valueNode = config.changedProperties.extract(config.changedProperties.begin());
-    if (!result.routing.platform.contains(valueNode.key())) {
-      result.routing.loop.insert(valueNode.key());
-      result.loop.changedProperties.insert(std::move(valueNode));
-    }
-  }
+  // The parser pairs every value diff with settings, so the drain above must
+  // have consumed all of changedProperties.
+  react_native_assert(config.changedProperties.empty() && "[Reanimated] CSS transition value diff without settings");
 
   // Props JS asked to stop transitioning: look up the owning side in routing
   // and forward the cancel there.

@@ -111,7 +111,7 @@
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
 				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
-				4C85C07126FAAAEC85520EB3 /* [CP-User] Generate metadata for clangd */,
+				E0D3C69E217F468BCEA2BCA0 /* [CP-User] Generate compile metadata for LLVM tools */,
 			);
 			buildRules = (
 			);
@@ -200,17 +200,6 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TVOSExample/Pods-TVOSExample-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		4C85C07126FAAAEC85520EB3 /* [CP-User] Generate metadata for clangd */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = true;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			name = "[CP-User] Generate metadata for clangd";
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/bash;
-			shellScript = "../../../packages/react-native-reanimated/scripts/clangd-generate-xcode-metadata.sh";
-		};
 		C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -232,6 +221,17 @@
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
+		};
+		E0D3C69E217F468BCEA2BCA0 /* [CP-User] Generate compile metadata for LLVM tools */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = true;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "[CP-User] Generate compile metadata for LLVM tools";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "../../../scripts/llvm-tools/generate-xcode-metadata.sh";
 		};
 		E235C05ADACE081382539298 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;

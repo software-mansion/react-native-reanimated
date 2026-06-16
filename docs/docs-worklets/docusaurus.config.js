@@ -53,7 +53,11 @@ const config = {
           sidebarCollapsible: false,
           editUrl:
             'https://github.com/software-mansion/react-native-reanimated/edit/main/docs/docs-worklets',
-          versions: { current: { label: '0.x' } },
+          lastVersion: 'current',
+          versions: {
+            current: { label: '0.9' },
+            '0.10': { label: '0.10 (unreleased)', banner: 'unreleased' },
+          },
         },
         theme: { customCss: require.resolve('./src/css/index.css') },
       }),
@@ -178,6 +182,16 @@ const config = {
                   test: /\.js$/,
                   exclude: /\.yarn[\\/]unprocessed/,
                   use: 'babel-loader',
+                },
+                {
+                  test: /\.m?js$/,
+                  resolve: {
+                    fullySpecified: false,
+                  },
+                },
+                {
+                  test: /react-native-(worklets|reanimated)[\\/]lib[\\/]module[\\/].*\.js$/,
+                  type: 'javascript/auto',
                 },
               ],
             },

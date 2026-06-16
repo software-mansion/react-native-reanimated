@@ -4,14 +4,13 @@ import {
   getPropsBuilder,
   getSeparatelyInterpolatedNestedProperties,
   isDefined,
-  isNumber,
 } from '../../../../common';
-import { PERCENTAGE_REGEX } from '../../../constants';
 import type {
   CSSAnimationKeyframes,
   CSSAnimationKeyframeSelector,
   CSSAnimationTimingFunction,
 } from '../../../types';
+import { offsetOf } from '../../../utils';
 import type {
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSKeyframeTimingFunctions,
@@ -34,23 +33,10 @@ export function normalizeKeyframeSelector(
       ? keyframeSelector.split(',').map((k) => k.trim())
       : [keyframeSelector];
 
-  const offsets = selectors.map((selector) => {
-    if (selector === 'from') {
-      return 0;
-    }
-    if (selector === 'to') {
-      return 1;
-    }
+  return selectors.map((selector) => {
+    const offset = offsetOf(selector);
 
-    let offset: number | undefined;
-
-    if (typeof selector === 'number' || !isNaN(+selector)) {
-      offset = +selector;
-    } else if (PERCENTAGE_REGEX.test(selector)) {
-      offset = parseFloat(selector) / 100;
-    }
-
-    if (!isNumber(offset)) {
+    if (offset === null) {
       throw new Error(
         `[Reanimated] ${ERROR_MESSAGES.invalidOffsetType(selector)}`
       );
@@ -63,8 +49,6 @@ export function normalizeKeyframeSelector(
 
     return offset;
   });
-
-  return offsets;
 }
 
 type ProcessedKeyframes = Array<{
