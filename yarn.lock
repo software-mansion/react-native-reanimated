@@ -13905,7 +13905,7 @@ __metadata:
     react-native-mmkv: "npm:4.3.0"
     react-native-nitro-modules: "patch:react-native-nitro-modules@npm%3A0.35.2#~/.yarn/patches/react-native-nitro-modules-npm-0.35.2-717188fdb0.patch"
     react-native-reanimated: "workspace:*"
-    react-native-safe-area-context: "npm:5.7.0"
+    react-native-safe-area-context: "patch:react-native-safe-area-context@npm%3A5.7.0#~/.yarn/patches/react-native-safe-area-context-npm-5.7.0-fcff6bf187.patch"
     react-native-screens: "npm:4.24.0"
     react-native-svg: "npm:15.15.4"
     react-native-worklets: "workspace:*"
@@ -28257,6 +28257,16 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10/9f5d3469c18c90c527c4068560ce4dcc7689e9fc8ddc68b8a5e76c94a6eafdba975ced89a48e08fecfd1303331e8c2498722bc249fcd87b1c5ea64ef3abd1d00
+  languageName: node
+  linkType: hard
+
+"react-native-safe-area-context@patch:react-native-safe-area-context@npm%3A5.7.0#~/.yarn/patches/react-native-safe-area-context-npm-5.7.0-fcff6bf187.patch":
+  version: 5.7.0
+  resolution: "react-native-safe-area-context@patch:react-native-safe-area-context@npm%3A5.7.0#~/.yarn/patches/react-native-safe-area-context-npm-5.7.0-fcff6bf187.patch::version=5.7.0&hash=53727e"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10/9b196df01fbbfb69a0f542a0a0e4b3b977a17c8348e8a8cf8b28dd2714ce8e57669b4a3fbab319e984d6db31f2c9c6ab70df7e67e9079bee43869ac733fd07e5
   languageName: node
   linkType: hard
 
