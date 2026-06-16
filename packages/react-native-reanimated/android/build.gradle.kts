@@ -1,7 +1,6 @@
 import groovy.json.JsonSlurper
 import com.android.Version
 import org.apache.tools.ant.taskdefs.condition.Os
-import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Properties
@@ -107,13 +106,17 @@ if (project != rootProject) {
     apply(plugin = "com.facebook.react")
 }
 
-val AGP_MAJOR_VERSION: Int = Version.ANDROID_GRADLE_PLUGIN_VERSION.substringBefore('.').toIntOrNull() ?: Int.MAX_VALUE
-val IS_BUILT_IN_KOTLIN_ENABLED: Boolean? =
-  providers.gradleProperty("android.builtInKotlin").orNull?.toBooleanStrictOrNull() ?: false
-val IS_AGP_8_OR_LOWER: Boolean = AGP_MAJOR_VERSION <= 8
-val SHOULD_ENABLE_AGP_FALLBACK: Boolean = IS_AGP_8_OR_LOWER || (IS_BUILT_IN_KOTLIN_ENABLED == false)
+fun shouldEnableAgpFallback(): Boolean {
+    val agpMajorVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION.substringBefore('.').toIntOrNull() ?: Int.MAX_VALUE
+    if (agpMajorVersion <= 8) {
+        return true
+    }
 
-if (SHOULD_ENABLE_AGP_FALLBACK) {
+    val isBuiltInKotlinEnabled = providers.gradleProperty("android.builtInKotlin").orNull?.toBooleanStrictOrNull() ?: true
+    return !isBuiltInKotlinEnabled
+}
+
+if (shouldEnableAgpFallback()) {
     apply(plugin = "org.jetbrains.kotlin.android")
 }
 
@@ -249,7 +252,7 @@ android {
     }
 }
 
-if (project != rootProject && SHOULD_ENABLE_AGP_FALLBACK) {
+if (project != rootProject && shouldEnableAgpFallback()) {
     tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {
             jvmTarget = JvmTarget.fromTarget("17")
