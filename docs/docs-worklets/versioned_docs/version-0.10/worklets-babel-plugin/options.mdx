@@ -9,25 +9,24 @@ sidebar_label: 'Options'
 Our plugin offers several optional functionalities that you may need to employ advanced APIs:
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-interface PluginOptions {
-  bundleMode?: boolean;
-  disableInlineStylesWarning?: boolean;
-  disableSourceMaps?: boolean;
-  disableWorkletClasses?: boolean;
-  extraPlugins?: string[];
-  extraPresets?: string[];
-  globals?: string[];
-  omitNativeOnlyData?: boolean;
-  relativeSourceLocation?: boolean;
-  strictGlobal?: boolean;
-  substituteWebPlatformChecks?: boolean;
-  workletizableModules?: string[];
-}
-```
-
+  ```typescript
+  interface PluginOptions {
+    bundleMode?: boolean;
+    disableInlineStylesWarning?: boolean;
+    disableSourceMaps?: boolean;
+    disableWorkletClasses?: boolean;
+    extraPlugins?: string[];
+    extraPresets?: string[];
+    globals?: string[];
+    omitNativeOnlyData?: boolean;
+    relativeSourceLocation?: boolean;
+    strictGlobal?: boolean;
+    substituteWebPlatformChecks?: boolean;
+    workletizableModules?: string[];
+  }
+  ```
 </details>
 
 ## How to use
@@ -106,7 +105,7 @@ Defaults to `false`.
 This option turns off the source map generation for worklets. Mostly used for testing purposes.
 
 <Badges version="0.7.0">
-### disableWorkletClasses
+  ### disableWorkletClasses
 </Badges>
 
 Defaults to `false`.
@@ -204,7 +203,7 @@ Defaults to `false`.
 This option dictates the passed file location for a worklet's source map. If you enable this option, the file paths will be relative to `process.cwd` (the current directory where Babel executes). This can be handy for Jest test snapshots to ensure consistent results across machines.
 
 <Badges version="0.8.0">
-### strictGlobal
+  ### strictGlobal
 </Badges>
 
 :::note
