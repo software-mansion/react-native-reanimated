@@ -35,7 +35,7 @@
     "fuse.js": "patch:fuse.js@npm%3A7.1.0#~/.yarn/patches/fuse.js-npm-7.1.0-5dcae892a6.patch",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-native-gesture-handler": "3.0.1",
+    "react-native-gesture-handler": "2.32.0",
     "react-native-mmkv": "4.3.0",
     "react-native-nitro-modules": "patch:react-native-nitro-modules@npm%3A0.35.2#~/.yarn/patches/react-native-nitro-modules-npm-0.35.2-717188fdb0.patch",
     "react-native-reanimated": "workspace:*",
