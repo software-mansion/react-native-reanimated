@@ -101,8 +101,15 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
     defaultStyle: UnknownRecord,
     normalizedTransition: NormalizedCSSTransitionConfig | null
   ): CSSPseudoStyleConfig {
-    const builtSelectorStyle = this.propsBuilder.build(selectorStyle);
-    const builtDefaultStyle = this.propsBuilder.build(defaultStyle);
+    const builtSelectorStyle = this.propsBuilder.build(selectorStyle, {
+      includeUnprocessed: true,
+    });
+    const builtDefaultStyle = this.propsBuilder.build(defaultStyle, {
+      includeUnprocessed: true,
+    });
+
+    nullifyUndefinedValues(builtSelectorStyle);
+    nullifyUndefinedValues(builtDefaultStyle);
 
     const transition: CSSTransitionConfig = {};
     const propsInTransition = new Set([
@@ -130,6 +137,14 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
       defaultStyle: builtDefaultStyle,
       transition,
     };
+  }
+}
+
+function nullifyUndefinedValues(style: UnknownRecord): void {
+  for (const key in style) {
+    if (style[key] === undefined) {
+      style[key] = null;
+    }
   }
 }
 

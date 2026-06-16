@@ -155,7 +155,7 @@ describe('CSSPseudoStylesManager', () => {
       );
     });
 
-    test('forwards undefined selector values so C++ can inject the default', () => {
+    test('forwards undefined selector values to native as null so C++ can inject the default', () => {
       pushStyle(manager, {
         backgroundColor: { default: 'red', ':hover': undefined },
       });
@@ -163,9 +163,32 @@ describe('CSSPseudoStylesManager', () => {
       expect(registerPseudoStyle).toHaveBeenCalledWith(
         shadowNodeWrapper,
         expect.objectContaining({
+          selector: ':hover',
+          selectorStyle: { backgroundColor: null },
+          defaultStyle: { backgroundColor: 'red' },
           transition: {
             backgroundColor: expect.objectContaining({
-              value: ['red', undefined],
+              value: ['red', null],
+            }),
+          },
+        })
+      );
+    });
+
+    test('forwards an omitted default to native as null so C++ can inject the default', () => {
+      pushStyle(manager, {
+        backgroundColor: { ':hover': 'red' },
+      });
+
+      expect(registerPseudoStyle).toHaveBeenCalledWith(
+        shadowNodeWrapper,
+        expect.objectContaining({
+          selector: ':hover',
+          selectorStyle: { backgroundColor: 'red' },
+          defaultStyle: { backgroundColor: null },
+          transition: {
+            backgroundColor: expect.objectContaining({
+              value: [null, 'red'],
             }),
           },
         })
