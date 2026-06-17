@@ -3,7 +3,7 @@ import type { ReanimatedHTMLElement } from '../../../../ReanimatedModule/js-rean
 import { ANIMATION_NAME_PREFIX } from '../../../constants';
 import {
   registerWebSvgPropsBuilder,
-  SVG_POLYGON_WEB_PROPERTIES_CONFIG,
+  SVG_PATH_WEB_PROPERTIES_CONFIG,
 } from '../../../svg/web';
 import {
   insertPseudoSelectorCSS,
@@ -173,26 +173,23 @@ describe(CSSPseudoSelectorsManager, () => {
   });
 
   test('uses the SVG props builder for SVG components', () => {
-    // Polygon aliases `points` -> `d` and wraps it in path() - a transform only
-    // the SVG builder does, so it proves the SVG builder (not the generic one)
-    // is used for pseudo styles on SVG components.
-    registerWebSvgPropsBuilder(
-      'TestPolygon',
-      SVG_POLYGON_WEB_PROPERTIES_CONFIG
-    );
+    // Path wraps `d` in path() - a transform only the SVG builder does, so it
+    // proves the SVG builder (not the generic one) is used for pseudo styles on
+    // SVG components.
+    registerWebSvgPropsBuilder('TestPath', SVG_PATH_WEB_PROPERTIES_CONFIG);
     const element = createElement();
-    const manager = new CSSPseudoSelectorsManager(element, 'TestPolygon');
+    const manager = new CSSPseudoSelectorsManager(element, 'TestPath');
 
     manager.update({
       ':hover': {
-        selectorStyle: { points: '0,0 10,10 20,0' },
-        defaultStyle: { points: '0,0 0,0 0,0' },
+        selectorStyle: { d: 'M0,0 L10,10' },
+        defaultStyle: { d: 'M0,0 L0,0' },
       },
     });
 
     const rules = (insertMock.mock.calls[0][1] as string[]).join('\n');
     expect(rules).toContain('d: path(');
-    expect(rules).not.toContain('points:');
+    expect(rules).toContain('M0,0 L10,10');
   });
 
   test('skips inserting when called with null', () => {

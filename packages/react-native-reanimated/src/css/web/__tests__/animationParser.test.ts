@@ -3,14 +3,12 @@ import {
   registerWebSvgPropsBuilder,
   SVG_COMMON_WEB_PROPERTIES_CONFIG,
   SVG_PATH_WEB_PROPERTIES_CONFIG,
-  SVG_POLYGON_WEB_PROPERTIES_CONFIG,
 } from '../../svg/web';
 import { processKeyframeDefinitions } from '../animationParser';
 
 beforeAll(() => {
   registerWebSvgPropsBuilder('TestStroke', SVG_COMMON_WEB_PROPERTIES_CONFIG);
   registerWebSvgPropsBuilder('Path', SVG_PATH_WEB_PROPERTIES_CONFIG);
-  registerWebSvgPropsBuilder('Polygon', SVG_POLYGON_WEB_PROPERTIES_CONFIG);
 });
 
 describe(processKeyframeDefinitions, () => {
@@ -21,18 +19,6 @@ describe(processKeyframeDefinitions, () => {
     );
     expect(result).toContain('from { stroke-dasharray: 10px }');
     expect(result).toContain('to { stroke-dasharray: 10px 20px 30px }');
-  });
-
-  test('emits Polygon points as an animatable `d` path', () => {
-    const result = processKeyframeDefinitions(
-      {
-        from: { points: '0,0 10,10 20,0' },
-        to: { points: '0,0 10,20 20,0' },
-      },
-      'Polygon'
-    );
-    expect(result).toContain('from { d: path("M0,0 10,10 20,0Z") }');
-    expect(result).toContain('to { d: path("M0,0 10,20 20,0Z") }');
   });
 
   test('pads a trailing Z so an open->closed path morph interpolates', () => {
