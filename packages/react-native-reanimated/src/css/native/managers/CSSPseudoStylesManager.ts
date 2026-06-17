@@ -47,15 +47,23 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
     ) {
       return;
     }
+    const removedSelector = hasRemovedNativeSelector(
+      this.prevPseudoStylesBySelector,
+      pseudoStylesBySelector
+    );
+
     this.prevPseudoStylesBySelector = pseudoStylesBySelector;
     this.prevTransitionProperties = transitionProperties;
 
-    if (this.isRegistered) {
-      this.detach();
+    if (!pseudoStylesBySelector) {
+      if (this.isRegistered) {
+        this.detach();
+      }
+      return;
     }
 
-    if (!pseudoStylesBySelector) {
-      return;
+    if (this.isRegistered && removedSelector) {
+      this.detach();
     }
 
     const normalizedTransition = transitionProperties
@@ -138,6 +146,21 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
       transition,
     };
   }
+}
+
+function hasRemovedNativeSelector(
+  prev: PseudoStylesBySelector | null,
+  next: PseudoStylesBySelector | null
+): boolean {
+  if (!prev) {
+    return false;
+  }
+  const nextKeys = next ? new Set(Object.keys(next)) : new Set<string>();
+  return Object.keys(prev).some(
+    (selector) =>
+      NATIVE_PSEUDO_SELECTORS.has(selector as NativePseudoSelectorKey) &&
+      !nextKeys.has(selector)
+  );
 }
 
 function nullifyUndefinedValues(style: UnknownRecord): void {

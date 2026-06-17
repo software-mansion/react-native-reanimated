@@ -55,17 +55,20 @@ void PseudoStylesRegistry::registerPseudoStyle(
 
   auto &entry = registry_[tag];
   entry.shadowNode = shadowNode;
+  const bool isNewSelector = !entry.selectors.contains(selector);
   entry.selectors[selector] = {selectorStyle, defaultStyle};
   entry.precomputedStyles = recomputeAllStyles(entry);
 
-  attachFn_(
-      tag,
-      selector,
-      [weakThis = std::weak_ptr<PseudoStylesRegistry>(shared_from_this()), tag, selector](bool isActive) {
-        if (auto strongThis = weakThis.lock()) {
-          strongThis->onSelectorStateChanged(tag, selector, isActive);
-        }
-      });
+  if (isNewSelector) {
+    attachFn_(
+        tag,
+        selector,
+        [weakThis = std::weak_ptr<PseudoStylesRegistry>(shared_from_this()), tag, selector](bool isActive) {
+          if (auto strongThis = weakThis.lock()) {
+            strongThis->onSelectorStateChanged(tag, selector, isActive);
+          }
+        });
+  }
 }
 
 void PseudoStylesRegistry::remove(Tag tag) {
