@@ -1,0 +1,88 @@
+/* Preview and code sit side by side, and wrap to a stacked layout (preview above
+   code, each full width) as soon as the row can no longer hold both min-widths
+   plus the gap: 240 + 340 + 24 = 604px. */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: stretch;
+  margin: 16px 0;
+}
+
+.preview {
+  flex: 1 1 0;
+  min-width: 240px;
+  display: flex;
+}
+
+.code {
+  flex: 2 1 0;
+  /* Wrap before the code column gets too narrow to read. */
+  min-width: 340px;
+  display: flex;
+}
+
+/* Make the preview and the code fill their columns so the two sit at the same
+   height; the child selector raises specificity to drop the inner cards' margins. */
+.row > .preview > *,
+.row > .code > * {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+}
+
+/* Live (web-animatable) preview, rendered directly without InteractiveExample's
+   chrome. Mirrors the video card so both preview kinds look the same. */
+.liveCard {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--swm-border);
+  background-color: var(--swm-off-background);
+}
+
+.loading {
+  margin: auto;
+  padding: 24px;
+}
+
+.videoCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--swm-border);
+  background-color: var(--swm-off-background);
+}
+
+/* Hide the iOS Dynamic Island at the top of the recording. The clip's backdrop
+   is the same theme color, so this strip blends in seamlessly. */
+.videoCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8%;
+  z-index: 1;
+  background-color: var(--swm-off-background);
+}
+
+/* Fill the full-height card with the recording (cover), cropping only the empty
+   side margins. The clip stays anchored at the top, so the masking strip keeps
+   the Dynamic Island covered. */
+.video {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  object-fit: cover;
+}
+
+[data-theme='light'] .videoDark {
+  display: none;
+}
+
+[data-theme='dark'] .videoLight {
+  display: none;
+}

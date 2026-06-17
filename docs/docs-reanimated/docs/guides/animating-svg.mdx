@@ -1,0 +1,204 @@
+---
+id: animating-svg
+title: Animating SVG
+sidebar_label: Animating SVG
+---
+
+Reanimated can animate [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components - both their geometry (`cx`, `r`, `d`, `points`, ...) and their appearance (`fill`, `stroke`, `opacity`, ...). You can drive them with [inline props](/docs/fundamentals/animating-styles-and-props#animating-props), the [`useAnimatedProps`](/docs/core/useAnimatedProps) hook, or the modern, declarative [CSS animations](/docs/css-animations/animation-name) and [CSS transitions](/docs/css-transitions/transition-property).
+
+:::info
+
+CSS animations and transitions for SVG are an experimental feature, enabled by default from Reanimated 4.4. You can opt out with the [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](/docs/guides/feature-flags#experimental_css_animations_for_svg_components) feature flag. Animating SVG with [`useAnimatedProps`](/docs/core/useAnimatedProps) or inline [shared values](/docs/fundamentals/glossary#shared-value) doesn't require it.
+
+:::
+
+## Setup
+
+Install [`react-native-svg`](https://github.com/software-mansion/react-native-svg). SVG components aren't built into Reanimated, so wrap the ones you animate with [`createAnimatedComponent`](/docs/core/createAnimatedComponent):
+
+```tsx
+import Animated from 'react-native-reanimated';
+import { Circle } from 'react-native-svg';
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+```
+
+## Animating SVG values
+
+SVG attributes like `cx`, `r`, `d`, and `fill` are **component props**, not React Native `style` keys, so they animate through props rather than `style`. There are three ways to drive them:
+
+- **[Inline](/docs/fundamentals/animating-styles-and-props#animating-props)** - pass a [shared value](/docs/fundamentals/glossary#shared-value) straight to the prop: `<AnimatedCircle r={r} />`.
+- **[`useAnimatedProps`](/docs/core/useAnimatedProps)** - compute the props in a worklet and hand the result to the `animatedProps` prop.
+- **CSS** - keep the SVG props as normal props and add `animationName` or `transitionProperty` (with their settings) to `animatedProps`.
+
+CSS transitions can be triggered by a prop passed inline or through `animatedProps` - changing it from either place starts the transition. If a prop is set in both, `animatedProps` takes precedence:
+
+```tsx
+// r passed inline - changing it triggers the transition
+<AnimatedCircle
+  r={grown ? 50 : 20}
+  animatedProps={{ transitionProperty: 'r', transitionDuration: 300 }}
+/>
+
+// r passed through animatedProps - same effect
+<AnimatedCircle
+  animatedProps={{ r: grown ? 50 : 20, transitionProperty: 'r', transitionDuration: 300 }}
+/>
+```
+
+## With useAnimatedProps
+
+Drive an attribute with a [shared value](/docs/fundamentals/glossary#shared-value) through [`useAnimatedProps`](/docs/core/useAnimatedProps):
+
+import SideBySideExample from '@site/src/components/SideBySideExample';
+import SvgUseAnimatedProps from '@site/src/examples/svg/SvgUseAnimatedProps';
+import SvgUseAnimatedPropsSrc from '!!raw-loader!@site/src/examples/svg/SvgUseAnimatedProps';
+
+<SideBySideExample
+  src={SvgUseAnimatedPropsSrc}
+  component={SvgUseAnimatedProps}
+  showLines={[14, 41]}
+/>
+
+## With CSS animations
+
+The same animation expressed as a [CSS keyframe animation](/docs/css-animations/animation-name):
+
+import SvgCssAnimation from '@site/src/examples/svg/SvgCssAnimation';
+import SvgCssAnimationSrc from '!!raw-loader!@site/src/examples/svg/SvgCssAnimation';
+
+<SideBySideExample
+  src={SvgCssAnimationSrc}
+  component={SvgCssAnimation}
+  showLines={[10, 27]}
+/>
+
+## With CSS transitions
+
+A [CSS transition](/docs/css-transitions/transition-property) runs whenever a transitioned value changes between renders - including a plain value from `useState` or props, with no shared value involved. Just change the prop:
+
+import SvgCssTransition from '@site/src/examples/svg/SvgCssTransition';
+import SvgCssTransitionSrc from '!!raw-loader!@site/src/examples/svg/SvgCssTransition';
+
+<SideBySideExample
+  src={SvgCssTransitionSrc}
+  component={SvgCssTransition}
+  showLines={[13, 26]}
+/>
+
+The first render never animates (there is no previous value); each later change of `r` transitions from the old value to the new one.
+
+## Morphing paths
+
+A `Path` morphs between two shapes when both use the same sequence of commands. Because `d` maps to a real CSS property, this runs on the web as well:
+
+import SvgPathMorph from '@site/src/examples/svg/SvgPathMorph';
+import SvgPathMorphSrc from '!!raw-loader!@site/src/examples/svg/SvgPathMorph';
+
+<SideBySideExample
+  src={SvgPathMorphSrc}
+  component={SvgPathMorph}
+  showLines={[6, 36]}
+/>
+
+## Supported components and properties
+
+The tables below cover what **CSS animations and transitions** can animate, and on which platforms. Every component animates the [common appearance properties](#common-appearance-properties); shape components also animate their [geometry](#geometry-by-component). Properties that aren't listed aren't supported by CSS - use [`useAnimatedProps`](/docs/core/useAnimatedProps) for those, since it can drive any animatable prop the component accepts.
+
+### Common appearance properties
+
+Every `react-native-svg` component supports these props, so they can animate on any of them:
+
+<div className="compatibility fixed">
+
+| Property           | Android | iOS    | Web    |
+| ------------------ | ------- | ------ | ------ |
+| `color`            | <Yes/>  | <Yes/> | <Yes/> |
+| `fill`             | <Yes/>  | <Yes/> | <Yes/> |
+| `fillOpacity`      | <Yes/>  | <Yes/> | <Yes/> |
+| `fillRule`         | <Yes/>  | <Yes/> | <Yes/> |
+| `stroke`           | <Yes/>  | <Yes/> | <Yes/> |
+| `strokeWidth`      | <Yes/>  | <Yes/> | <Yes/> |
+| `strokeOpacity`    | <Yes/>  | <Yes/> | <Yes/> |
+| `strokeDasharray`  | <Yes/>  | <Yes/> | <Yes/> |
+| `strokeDashoffset` | <Yes/>  | <Yes/> | <Yes/> |
+| `strokeLinecap`    | <Yes/>  | <Yes/> | <Yes/> |
+| `strokeLinejoin`   | <Yes/>  | <Yes/> | <Yes/> |
+| `vectorEffect`     | <Yes/>  | <Yes/> | <Yes/> |
+| `opacity`          | <Yes/>  | <Yes/> | <Yes/> |
+| `pointerEvents`    | <Yes/>  | <Yes/> | <Yes/> |
+| `clipPath`         | <Yes/>  | <Yes/> | <No/>  |
+| `clipRule`         | <Yes/>  | <Yes/> | <No/>  |
+| `mask`             | <Yes/>  | <Yes/> | <No/>  |
+| `filter`           | <Yes/>  | <Yes/> | <No/>  |
+| `marker`           | <Yes/>  | <Yes/> | <No/>  |
+
+</div>
+
+### Geometry by component
+
+These components animate their geometry on iOS and Android. The **Web** column shows whether that geometry animates there too.
+
+| Component             | Geometry props                                                       | Web |
+| --------------------- | ------------------------------------------------------------------- | --- |
+| `Circle`              | `cx`, `cy`, `r`                                                      | ✅  |
+| `Ellipse`             | `cx`, `cy`, `rx`, `ry`                                               | ✅  |
+| `Rect`                | `x`, `y`, `width`, `height`, `rx`, `ry`                             | ✅  |
+| `Image`               | `x`, `y`, `width`, `height`                                          | ✅  |
+| `Path`                | `d`                                                                 | ✅¹ |
+| `Polygon`, `Polyline` | `points`                                                            | ✅¹ |
+| `Line`                | `x1`, `y1`, `x2`, `y2`                                              | ❌  |
+| `Text`                | `x`, `y`, `dx`, `dy`, `rotate`                                      | ❌  |
+| `Pattern`             | `x`, `y`, `width`, `height`, `patternUnits`, `patternContentUnits` | ❌  |
+| `LinearGradient`      | `x1`, `y1`, `x2`, `y2`, `gradient`, `gradientUnits`                | ❌  |
+| `RadialGradient`      | `cx`, `cy`, `r`, `rx`, `ry`, `fx`, `fy`, `gradient`, `gradientUnits` | ❌  |
+
+¹ On Web, `Path` `d` only morphs between paths with matching command structure, and `points` only between equal point counts; mismatches snap. iOS and Android morph freely.
+
+The remaining components - `G`, `Use`, `Symbol`, `Defs`, `ClipPath`, `Mask`, `Marker`, `TSpan`, `TextPath`, and `ForeignObject` - have no animatable geometry; they animate only the [common appearance properties](#common-appearance-properties). On Web, only `G` is supported among them.
+
+`Pattern` `x`/`y` are iOS only - `react-native-svg` doesn't support them on Android, even outside animations. `Text` `x`, `y`, `dx`, `dy`, and `rotate` also accept per-glyph arrays.
+
+## Remarks
+
+### Morphing paths and points
+
+`d` (Path) and `points` (Polygon/Polyline) interpolate smoothly when the start and end share the same topology - the same path command structure, or the same number of points. On iOS and Android, mismatched shapes still morph; on Web they snap to the target, because CSS only interpolates `d`/`points` between matching structures.
+
+### Stepped properties
+
+Some properties step between discrete values rather than interpolating: `strokeLinecap`, `strokeLinejoin`, `fillRule`, `vectorEffect`, `gradientUnits`, and `patternUnits`. This matches native SVG and CSS behavior.
+
+### Units
+
+Geometry props (`cx`, `r`, `x`, `width`, ...) accept plain numbers or percentage strings (`'50%'`), and a single animation can mix the two: an absolute value and a percentage are resolved to the same unit first, so `r` animates smoothly even from `10` to `'50%'`.
+
+Gradient and pattern **coordinates** are the exception: there, a percentage string (`'50%'`) and a `0`-`1` fraction don't interpolate into each other, so a single animation has to use one or the other.
+
+### Gradients
+
+`react-native-svg` defines gradient stops with `<Stop>` children, which can't be animated. To animate them, Reanimated adds a `gradient` prop - an array of `{ offset, color, opacity }` stops that replaces the children. Each stop's `offset`, `color`, and `opacity` can animate, and even the number of stops can differ between `from` and `to`. The gradient's geometry animates too: `x1`/`y1`/`x2`/`y2` for `LinearGradient`, and `cx`/`cy`/`r`/`fx`/`fy`/`rx`/`ry` for `RadialGradient`.
+
+Here, a `RadialGradient` morphs from a two-stop "sun" to a four-stop "sunset". Gradients don't animate on the web, so this is recorded on iOS:
+
+import SvgGradientSrc from '!!raw-loader!@site/src/examples/svg/SvgGradient';
+
+<SideBySideExample
+  src={SvgGradientSrc}
+  showLines={[11, 49]}
+  video={{
+    light: '/recordings/examples/svg_radial_gradient_light.mp4',
+    dark: '/recordings/examples/svg_radial_gradient_dark.mp4',
+  }}
+/>
+
+A few caveats:
+
+- You can't mix `<Stop>` children and the `gradient` prop - if both are present, the `gradient` prop wins.
+- `gradientUnits` is a [stepped property](#stepped-properties) (it jumps).
+- Gradient coordinates can't mix percentage strings and `0`-`1` fractions in one animation (see [Units](#units)).
+- Gradients animate on **native platforms only** (not the web). `RadialGradient` `fx`/`fy` animate on iOS only - `react-native-svg` can't apply the focal point on Android.
+
+### Web
+
+On Web, Reanimated drives SVG through CSS, so an attribute animates only if it maps to a real CSS property. Attributes that have no CSS equivalent - `Line` endpoints, `Text`/`Pattern`/gradient coordinates, and gradient stops - can't animate via CSS on Web; use [`useAnimatedProps`](/docs/core/useAnimatedProps) for those.
