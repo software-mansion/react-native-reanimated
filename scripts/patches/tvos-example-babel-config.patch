@@ -1,0 +1,13 @@
+diff --git a/apps/tvos-example/babel.config.js b/apps/tvos-example/babel.config.js
+index 9a5bbba857..0f9dee35f8 100644
+--- a/apps/tvos-example/babel.config.js
++++ b/apps/tvos-example/babel.config.js
+@@ -1,7 +1,7 @@
+ /** @type {import('react-native-worklets/plugin').PluginOptions} */
+ const workletsPluginOptions = {
+   strictGlobal: true,
+-  bundleMode: false,
++  bundleMode: true,
+ };
+ 
+ /** @type {import('@babel/core').TransformOptions} */
