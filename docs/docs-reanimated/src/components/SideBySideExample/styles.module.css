@@ -54,6 +54,10 @@
   overflow: hidden;
   border: 1px solid var(--swm-border);
   background-color: var(--swm-off-background);
+  /* Fill a normal (collapsed) code block, but cap the height so the portrait
+     recording doesn't balloon to match an expanded block; it tops out here and
+     stays top-aligned, leaving empty space beside the longer code. */
+  max-height: 900px;
 }
 
 /* Hide the iOS Dynamic Island at the top of the recording. The clip's backdrop
