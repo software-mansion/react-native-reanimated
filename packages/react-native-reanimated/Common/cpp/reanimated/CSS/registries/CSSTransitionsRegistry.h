@@ -28,6 +28,8 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
       CSSTransitionConfig &&config);
   void run(const std::shared_ptr<const ShadowNode> &shadowNode, const PropertyValueDynamicDiffsMap &propertyDiffs);
 
+  void setPseudoLockedProperties(Tag viewTag, const TransitionProperties &properties);
+
   void flushUpdates(UpdatesBatch &updatesBatch);
 #if REACT_NATIVE_VERSION_MINOR >= 85
   void flushUpdates(UpdatesBatchAnimatedProps &updatesBatch);

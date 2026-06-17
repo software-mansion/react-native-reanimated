@@ -100,6 +100,19 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
   const auto &fromStyle = entry.precomputedStyles[oldMask];
   const auto &toStyle = entry.precomputedStyles[entry.activeMask];
 
+  css::TransitionProperties lockedProperties;
+  for (const auto &[sel, data] : entry.selectors) {
+    if (!(entry.activeMask & (1u << static_cast<int>(sel)))) {
+      continue;
+    }
+    for (const auto &[propKey, val] : data.selectorStyle.items()) {
+      if (!val.isNull()) {
+        lockedProperties.insert(propKey.asString());
+      }
+    }
+  }
+  cssTransitionsRegistry_->setPseudoLockedProperties(tag, lockedProperties);
+
   css::PropertyValueDynamicDiffsMap valueChanges;
   for (const auto &[propKey, toVal] : toStyle.items()) {
     const auto propName = propKey.asString();

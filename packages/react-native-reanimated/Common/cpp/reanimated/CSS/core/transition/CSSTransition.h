@@ -55,6 +55,8 @@ class CSSTransition {
   folly::dynamic run(const PropertyValueDynamicDiffsMap &propertyDiffs, const folly::dynamic &lastUpdates);
   void cancel();
 
+  void setPseudoLockedProperties(TransitionProperties properties);
+
  private:
   const std::shared_ptr<const ShadowNode> shadowNode_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
@@ -63,6 +65,7 @@ class CSSTransition {
   Observer &observer_;
 
   CSSTransitionRouting routing_;
+  TransitionProperties pseudoLockedProperties_;
   std::unique_ptr<CSSPlatformTransition> platformTransition_;
   std::shared_ptr<CSSLoopTransition> loopTransition_;
 
