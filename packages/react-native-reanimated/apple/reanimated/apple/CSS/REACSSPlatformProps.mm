@@ -37,7 +37,7 @@ const CSSPropertyTraits *traitsFor(const std::string &propertyName)
       {"borderRadius", {CSSValueKind::Scalar, 0.0}},
       {"borderWidth", {CSSValueKind::Scalar, 0.0}},
       {"shadowColor", {CSSValueKind::Color, kBlackColor}},
-      {"shadowOpacity", {CSSValueKind::Scalar, 0.0}},
+      {"shadowOpacity", {CSSValueKind::Scalar, 1.0}},
       {"shadowRadius", {CSSValueKind::Scalar, 0.0}},
       {"shadowOffset", {CSSValueKind::Size, std::array<double, 2>{0.0, 0.0}}},
   };
