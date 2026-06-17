@@ -4,6 +4,8 @@ title: 'Options'
 sidebar_label: 'Options'
 ---
 
+import CodeBlock from '@theme/CodeBlock';
+
 # Options for Worklets Babel Plugin
 
 Our plugin offers several optional functionalities that you may need to employ advanced APIs:
@@ -24,7 +26,10 @@ Our plugin offers several optional functionalities that you may need to employ a
     relativeSourceLocation?: boolean;
     strictGlobal?: boolean;
     substituteWebPlatformChecks?: boolean;
-    workletizableModules?: string[];
+    importForwarding?: {
+      moduleNames?: string[];
+      relativePaths?: string[];
+    };
   }
   ```
 </details>
@@ -258,8 +263,198 @@ Defaults to `false`.
 
 This option can also be useful for Web apps. In Reanimated, there are numerous checks to determine the right function implementation for a specific target platform. Enabling this option changes all the checks that identify if the target is a Web app to `true`. This alteration can aid in tree-shaking and contribute to reducing the bundle size.
 
-### workletizableModules
+### importForwarding
+
+Defaults to no forwarding (an empty object).
+
+Configures [import forwarding](../bundleMode/importForwarding.mdx) for Bundle
+Mode. See the dedicated page for the full overview.
+
+#### importForwarding.moduleNames
 
 Defaults to an empty array.
 
-This option allows you to register modules as safe to use on Worklet Runtimes in the [Bundle Mode](/docs/bundleMode/).
+List of exact module names that should be forwarded as imports inside worklets.
+
+For example, to use all exports from `my-library` directly on the Worklet
+Runtime, add it to the list:
+
+```javascript
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  // ...
+  importForwarding: { moduleNames: ['my-library'] },
+};
+```
+
+At bundle time, when a worklet imports from `my-library`, the plugin forwards
+that import into the worklet body:
+
+export const importForwardingBefore = `
+import { someExport } from 'my-library';
+
+function foo() {
+  'worklet';
+
+  someExport();
+}`;
+
+export const importForwardingAfter = `// Preserved in case it's used outside the worklet.
+import { someExport } from 'my-library';
+
+function foo() {
+  'worklet';
+  // highlight-next-line
+  import { someExport } from 'my-library';
+  someExport(); // Forwarded.
+}`;
+
+<table style={{width: '100%', tableLayout: 'fixed'}}>
+  <tr>
+    <th style={{textAlign: 'center', width: '50%'}}>Before</th>
+    <th style={{textAlign: 'center', width: '50%'}}>After (conceptually)</th>
+  </tr>
+
+  <tr>
+    <td style={{verticalAlign: 'top'}}>
+      <CodeBlock language="javascript">
+        {importForwardingBefore}
+      </CodeBlock>
+    </td>
+
+    <td style={{verticalAlign: 'top'}}>
+      <CodeBlock language="javascript">
+        {importForwardingAfter}
+      </CodeBlock>
+    </td>
+  </tr>
+</table>
+
+The module name has to be an exact match — with `my-library` in the list, an
+import from `my-library/some-file` won't be forwarded:
+
+export const importForwardingExactBefore = `import { someExport } from 'my-library';
+import { someOtherExport } from 'my-library/some-file';
+
+function foo() {
+  'worklet';
+
+  someExport();
+  someOtherExport();
+}`;
+
+export const importForwardingExactAfter = `import { someExport } from 'my-library';
+import { someOtherExport } from 'my-library/some-file';
+
+function foo() {
+  'worklet';
+  // highlight-next-line
+  import { someExport } from 'my-library';
+  someExport(); // Forwarded.
+  // highlight-next-line
+  someOtherExport(); // NOT forwarded (captured from closure).
+}`;
+
+<table style={{width: '100%', tableLayout: 'fixed'}}>
+  <tr>
+    <th style={{textAlign: 'center', width: '50%'}}>Before</th>
+    <th style={{textAlign: 'center', width: '50%'}}>After (conceptually)</th>
+  </tr>
+
+  <tr>
+    <td style={{verticalAlign: 'top'}}>
+      <CodeBlock language="javascript">
+        {importForwardingExactBefore}
+      </CodeBlock>
+    </td>
+
+    <td style={{verticalAlign: 'top'}}>
+      <CodeBlock language="javascript">
+        {importForwardingExactAfter}
+      </CodeBlock>
+    </td>
+  </tr>
+</table>
+
+#### importForwarding.relativePaths
+
+Defaults to an empty array.
+
+List of paths that determine whether a module should forward its **relative**
+imports inside worklets. If a module's path matches any of the provided paths,
+all relative imports inside that module's worklets will be forwarded.
+
+Use this when authoring a library that calls helpers via relative imports
+inside its own worklets:
+
+```javascript title="my-library/index.js"
+import { someExport } from './utils';
+
+function foo() {
+  'worklet';
+
+  // We want it forwarded.
+  someExport();
+}
+```
+
+Add the library's path to `relativePaths`:
+
+```javascript
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  // ...
+  importForwarding: { relativePaths: ['my-library'] },
+};
+```
+
+At bundle time, the plugin forwards relative imports inside `my-library` into
+the worklet body:
+
+export const relativeImportForwardingBefore = `
+import { someExport } from './utils';
+
+function foo() {
+  'worklet';
+
+  someExport();
+}`;
+
+export const relativeImportForwardingAfter = `// Preserved in case it's used outside the worklet.
+import { someExport } from './utils';
+
+function foo() {
+  'worklet';
+  // highlight-next-line
+  import { someExport } from './utils';
+  someExport(); // Forwarded.
+}`;
+
+<table style={{width: '100%', tableLayout: 'fixed'}}>
+  <tr>
+    <th style={{textAlign: 'center', width: '50%'}}>Before</th>
+    <th style={{textAlign: 'center', width: '50%'}}>After (conceptually)</th>
+  </tr>
+
+  <tr>
+    <td style={{verticalAlign: 'top'}}>
+      <CodeBlock language="javascript">
+        {relativeImportForwardingBefore}
+      </CodeBlock>
+    </td>
+
+    <td style={{verticalAlign: 'top'}}>
+      <CodeBlock language="javascript">
+        {relativeImportForwardingAfter}
+      </CodeBlock>
+    </td>
+  </tr>
+</table>
+
+You can also narrow the path to a subdirectory — e.g. `my-library/src` or
+`my-library/src/utils` — to forward imports from only part of the library.
+
+`moduleNames` won't work here: adding `'./utils'` to it would forward every
+`'./utils'` import across the bundle, potentially breaking other libraries
+with a file at the same relative path. `relativePaths` scopes forwarding to a
+specific package.
