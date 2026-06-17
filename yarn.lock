@@ -8652,9 +8652,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swmansion/t-rex-ui@npm:1.3.2":
-  version: 1.3.2
-  resolution: "@swmansion/t-rex-ui@npm:1.3.2"
+"@swmansion/t-rex-ui@npm:1.3.3":
+  version: 1.3.3
+  resolution: "@swmansion/t-rex-ui@npm:1.3.3"
   dependencies:
     "@docusaurus/core": "npm:3.9.2"
     "@docusaurus/module-type-aliases": "npm:3.9.2"
@@ -8678,7 +8678,7 @@ __metadata:
     react: "*"
     react-dom: "*"
     react-icons: "*"
-  checksum: 10/b967537293a9369f1fd00f8a420b016aa1ce95a70cd6840d96f6ca6366b64059e4e85bdc5629f84be83314ee94bae6a92f952b3204b8f891dd3c9c5504c0838c
+  checksum: 10/8f54dbd22dae69f8b0880ea588867764d443c7ff1cd1e6317922b6650a56fb9655ccfd1532e203714936a9321f339255ae78d78218ac5be262b15ffe822458ac
   languageName: node
   linkType: hard
 
@@ -15630,7 +15630,7 @@ __metadata:
     "@mui/material": "npm:7.1.0"
     "@react-native/assets-registry": "npm:0.83.0"
     "@shopify/flash-list": "npm:2.1.0"
-    "@swmansion/t-rex-ui": "npm:1.3.2"
+    "@swmansion/t-rex-ui": "npm:1.3.3"
     "@types/raf": "npm:3.4.3"
     "@types/react": "npm:19.2.2"
     "@vercel/og": "npm:0.6.2"
@@ -15695,7 +15695,7 @@ __metadata:
     "@mui/material": "npm:7.1.0"
     "@react-native/assets-registry": "npm:0.83.0"
     "@shopify/flash-list": "npm:2.1.0"
-    "@swmansion/t-rex-ui": "npm:1.3.2"
+    "@swmansion/t-rex-ui": "npm:1.3.3"
     "@types/raf": "npm:3.4.3"
     "@types/react": "npm:19.2.2"
     "@vercel/og": "npm:0.6.2"
