@@ -9,12 +9,9 @@ import {
 } from '@/apps/css/components';
 import { colors, spacing } from '@/theme';
 
-// Elliptical orbit kept tight so the planets stay on screen; wider than tall
-// fakes the "tilted into the screen" look.
 const ORBIT_RX = 90;
 const ORBIT_RY = 40;
 const ORBIT_DURATION = '12s';
-// Smoothness of the path the planet's frame is moved along.
 const ORBIT_STEPS = 36;
 
 const PLANETS = [
@@ -29,9 +26,6 @@ const PLANE_HEIGHT = 2 * ORBIT_RY + MAX_PLANET_SIZE;
 const CENTER_X = PLANE_WIDTH / 2;
 const CENTER_Y = PLANE_HEIGHT / 2;
 
-// The orbit is driven by animating left/top (layout) rather than a transform.
-// On iOS the touch hit-area follows animated layout but NOT an animated
-// transform, so this keeps the orbiting planets tappable (:active) there.
 function makeOrbit(offsetDeg: number, size: number) {
   const frames: Record<string, { left: number; top: number }> = {};
   for (let step = 0; step <= ORBIT_STEPS; step++) {
@@ -54,7 +48,7 @@ export default function Planets() {
     <Screen>
       <Scroll contentContainerStyle={styles.content} withBottomBarSpacing>
         <Section
-          description="Three differently sized planets orbit the screen center on a tilted (elliptical) path. Each planet's name is hidden until you press it, which activates its ':active' pseudo-selector; hovering (pointer) enlarges it with a colored glow."
+          description="Three differently sized planets orbit the screen center on a tilted (elliptical) path. Each planet's name is hidden until you press it, which activates its ':active' pseudo-selector; hovering enlarges it with a colored glow."
           title="Planets">
           <VerticalExampleCard
             title="Press a planet to reveal its name"
@@ -89,12 +83,10 @@ export default function Planets() {
                         borderRadius: planet.size / 2,
                         height: planet.size,
                         width: planet.size,
-                        // Glow matches the planet color; grows on hover.
                         elevation: { ':hover': 12, default: 0 },
                         shadowColor: planet.color,
                         shadowOpacity: { ':hover': 0.9, default: 0 },
                         shadowRadius: { ':hover': 18, default: 0 },
-                        // Enlarge 10% on hover (pointer only).
                         transform: {
                           ':hover': [{ scale: 1.1 }],
                           default: [{ scale: 1 }],
@@ -106,10 +98,6 @@ export default function Planets() {
                       style={[
                         styles.nameWrapper,
                         {
-                          // Default is a hair above 0 (not 0) on purpose: UIKit
-                          // hit-testing skips views with alpha < 0.01, so a true
-                          // opacity-0 target isn't pressable on iOS (it is on
-                          // Android). 0.02 is invisible but still hit-tested.
                           opacity: { ':active': 1, default: 0.02 },
                           transitionDuration: '200ms',
                         },
