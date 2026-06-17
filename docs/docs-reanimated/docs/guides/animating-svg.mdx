@@ -54,11 +54,7 @@ import SideBySideExample from '@site/src/components/SideBySideExample';
 import SvgUseAnimatedProps from '@site/src/examples/svg/SvgUseAnimatedProps';
 import SvgUseAnimatedPropsSrc from '!!raw-loader!@site/src/examples/svg/SvgUseAnimatedProps';
 
-<SideBySideExample
-  src={SvgUseAnimatedPropsSrc}
-  component={SvgUseAnimatedProps}
-  showLines={[14, 41]}
-/>
+<SideBySideExample src={SvgUseAnimatedPropsSrc} component={SvgUseAnimatedProps} showLines={[14, 41]}/>
 
 ## With CSS animations
 
@@ -67,11 +63,7 @@ The same animation expressed as a [CSS keyframe animation](/docs/css-animations/
 import SvgCssAnimation from '@site/src/examples/svg/SvgCssAnimation';
 import SvgCssAnimationSrc from '!!raw-loader!@site/src/examples/svg/SvgCssAnimation';
 
-<SideBySideExample
-  src={SvgCssAnimationSrc}
-  component={SvgCssAnimation}
-  showLines={[10, 27]}
-/>
+<SideBySideExample src={SvgCssAnimationSrc} component={SvgCssAnimation} showLines={[10, 27]}/>
 
 ## With CSS transitions
 
@@ -80,11 +72,7 @@ A [CSS transition](/docs/css-transitions/transition-property) runs whenever a tr
 import SvgCssTransition from '@site/src/examples/svg/SvgCssTransition';
 import SvgCssTransitionSrc from '!!raw-loader!@site/src/examples/svg/SvgCssTransition';
 
-<SideBySideExample
-  src={SvgCssTransitionSrc}
-  component={SvgCssTransition}
-  showLines={[13, 26]}
-/>
+<SideBySideExample src={SvgCssTransitionSrc} component={SvgCssTransition} showLines={[13, 26]}/>
 
 The first render never animates (there is no previous value); each later change of `r` transitions from the old value to the new one.
 
@@ -95,11 +83,7 @@ A `Path` morphs between two shapes when both use the same sequence of commands. 
 import SvgPathMorph from '@site/src/examples/svg/SvgPathMorph';
 import SvgPathMorphSrc from '!!raw-loader!@site/src/examples/svg/SvgPathMorph';
 
-<SideBySideExample
-  src={SvgPathMorphSrc}
-  component={SvgPathMorph}
-  showLines={[6, 36]}
-/>
+<SideBySideExample src={SvgPathMorphSrc} component={SvgPathMorph} showLines={[6, 36]}/>
 
 ## Supported components and properties
 
@@ -110,29 +94,27 @@ The tables below cover what **CSS animations and transitions** can animate, and 
 Every `react-native-svg` component supports these props, so they can animate on any of them:
 
 <div className="compatibility fixed">
-
-| Property           | Android | iOS    | Web    |
-| ------------------ | ------- | ------ | ------ |
-| `color`            | <Yes/>  | <Yes/> | <Yes/> |
-| `fill`             | <Yes/>  | <Yes/> | <Yes/> |
-| `fillOpacity`      | <Yes/>  | <Yes/> | <Yes/> |
-| `fillRule`         | <Yes/>  | <Yes/> | <Yes/> |
-| `stroke`           | <Yes/>  | <Yes/> | <Yes/> |
-| `strokeWidth`      | <Yes/>  | <Yes/> | <Yes/> |
-| `strokeOpacity`    | <Yes/>  | <Yes/> | <Yes/> |
-| `strokeDasharray`  | <Yes/>  | <Yes/> | <Yes/> |
-| `strokeDashoffset` | <Yes/>  | <Yes/> | <Yes/> |
-| `strokeLinecap`    | <Yes/>  | <Yes/> | <Yes/> |
-| `strokeLinejoin`   | <Yes/>  | <Yes/> | <Yes/> |
-| `vectorEffect`     | <Yes/>  | <Yes/> | <Yes/> |
-| `opacity`          | <Yes/>  | <Yes/> | <Yes/> |
-| `pointerEvents`    | <Yes/>  | <Yes/> | <Yes/> |
-| `clipPath`         | <Yes/>  | <Yes/> | <No/>  |
-| `clipRule`         | <Yes/>  | <Yes/> | <No/>  |
-| `mask`             | <Yes/>  | <Yes/> | <No/>  |
-| `filter`           | <Yes/>  | <Yes/> | <No/>  |
-| `marker`           | <Yes/>  | <Yes/> | <No/>  |
-
+  | Property           | Android | iOS    | Web    |
+  | ------------------ | ------- | ------ | ------ |
+  | `color`            | <Yes/>  | <Yes/> | <Yes/> |
+  | `fill`             | <Yes/>  | <Yes/> | <Yes/> |
+  | `fillOpacity`      | <Yes/>  | <Yes/> | <Yes/> |
+  | `fillRule`         | <Yes/>  | <Yes/> | <Yes/> |
+  | `stroke`           | <Yes/>  | <Yes/> | <Yes/> |
+  | `strokeWidth`      | <Yes/>  | <Yes/> | <Yes/> |
+  | `strokeOpacity`    | <Yes/>  | <Yes/> | <Yes/> |
+  | `strokeDasharray`  | <Yes/>  | <Yes/> | <Yes/> |
+  | `strokeDashoffset` | <Yes/>  | <Yes/> | <Yes/> |
+  | `strokeLinecap`    | <Yes/>  | <Yes/> | <Yes/> |
+  | `strokeLinejoin`   | <Yes/>  | <Yes/> | <Yes/> |
+  | `vectorEffect`     | <Yes/>  | <Yes/> | <Yes/> |
+  | `opacity`          | <Yes/>  | <Yes/> | <Yes/> |
+  | `pointerEvents`    | <Yes/>  | <Yes/> | <Yes/> |
+  | `clipPath`         | <Yes/>  | <Yes/> | <No/>  |
+  | `clipRule`         | <Yes/>  | <Yes/> | <No/>  |
+  | `mask`             | <Yes/>  | <Yes/> | <No/>  |
+  | `filter`           | <Yes/>  | <Yes/> | <No/>  |
+  | `marker`           | <Yes/>  | <Yes/> | <No/>  |
 </div>
 
 ### Geometry by component
@@ -187,9 +169,9 @@ import SvgGradientSrc from '!!raw-loader!@site/src/examples/svg/SvgGradient';
   src={SvgGradientSrc}
   showLines={[11, 49]}
   video={{
-    light: '/recordings/examples/svg_radial_gradient_light.mp4',
-    dark: '/recordings/examples/svg_radial_gradient_dark.mp4',
-  }}
+  light: '/recordings/examples/svg_radial_gradient_light.mp4',
+  dark: '/recordings/examples/svg_radial_gradient_dark.mp4',
+}}
 />
 
 A few caveats:
