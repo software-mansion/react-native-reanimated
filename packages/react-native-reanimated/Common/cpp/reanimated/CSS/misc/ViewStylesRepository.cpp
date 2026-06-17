@@ -74,6 +74,40 @@ folly::dynamic ViewStylesRepository::getStyleProp(const Tag tag, const PropertyP
   return getPropertyValue(staticPropsRegistry_->get(tag), propertyPath);
 }
 
+std::optional<std::array<double, 3>> ViewStylesRepository::getTransformOriginOffset(
+    const std::shared_ptr<const ShadowNode> &shadowNode) {
+  auto &cachedNode = shadowNodeCache_[shadowNode->getTag()];
+  updateCacheIfNeeded(cachedNode, shadowNode);
+  // No cached props means the node isn't mounted yet; transitions only
+  // trigger on prop changes of mounted views, so assume the default origin.
+  if (cachedNode.viewProps == nullptr || !cachedNode.viewProps->transformOrigin.isSet()) {
+    return std::nullopt;
+  }
+
+  // Mirror RN's getTranslateForTransformOrigin (BaseViewProps.cpp): resolve each
+  // axis against the laid-out frame, then express it relative to the view center
+  // - the layer's default anchor point, about which the transform stack pivots.
+  const auto &origin = cachedNode.viewProps->transformOrigin;
+  const std::array<double, 2> dimensions = {
+      cachedNode.layoutMetrics.frame.size.width, cachedNode.layoutMetrics.frame.size.height};
+  std::array<double, 3> offset = {0.0, 0.0, origin.z};
+  for (size_t i = 0; i < dimensions.size(); ++i) {
+    const double center = dimensions[i] / 2.0;
+    double resolved = center;
+    if (origin.xy[i].unit == UnitType::Point) {
+      resolved = origin.xy[i].value;
+    } else if (origin.xy[i].unit == UnitType::Percent) {
+      resolved = dimensions[i] * origin.xy[i].value / 100.0;
+    }
+    offset[i] = resolved - center;
+  }
+
+  if (offset[0] == 0.0 && offset[1] == 0.0 && offset[2] == 0.0) {
+    return std::nullopt;
+  }
+  return offset;
+}
+
 void ViewStylesRepository::clearNodesCache() {
   shadowNodeCache_.clear();
 }

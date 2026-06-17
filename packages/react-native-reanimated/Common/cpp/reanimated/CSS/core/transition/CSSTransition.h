@@ -44,6 +44,15 @@ class CSSTransition {
 
   TransitionProperties getProperties() const;
 
+  /// Properties currently animating on the platform (renderer) side. The registry
+  /// uses this to keep their pinned target values out of the loop-frame pruning.
+  TransitionProperties getPlatformRoutedProperties() const;
+
+  /// Current target value of the property's platform run (operations array for
+  /// transform), or null. Distinguishes pseudo-state pins (which re-assert the
+  /// renderer-committed value on RN re-commits) from stale loop frames.
+  folly::dynamic getPlatformTargetValue(const std::string &propertyName) const;
+
   folly::dynamic computeCurrentLoopStyle();
 
   /// Applies a config: routes props between the platform and loop sides and runs them.

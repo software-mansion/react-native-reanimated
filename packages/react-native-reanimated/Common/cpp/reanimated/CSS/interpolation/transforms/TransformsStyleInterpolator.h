@@ -15,7 +15,9 @@ class TransformsStyleInterpolator final : public OperationsStyleInterpolatorBase
       const std::shared_ptr<StyleOperationInterpolators> &interpolators,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
- protected:
+  /// Public (unlike the protected base declaration): the platform transition path
+  /// reuses the exact pairing logic to decide how a transform transition maps to
+  /// Core Animation primitives (see utils/transformAnimation.cpp).
   std::optional<std::pair<StyleOperations, StyleOperations>> createInterpolationPair(
       const StyleOperations &fromOperations,
       const StyleOperations &toOperations) const override;

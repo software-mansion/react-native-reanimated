@@ -8,7 +8,9 @@
 #include <react/renderer/core/LayoutableShadowNode.h>
 #include <react/renderer/dom/DOM.h>
 
+#include <array>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 
@@ -35,6 +37,12 @@ class ViewStylesRepository {
   jsi::Value getNodeProp(const std::shared_ptr<const ShadowNode> &shadowNode, const std::string &propName);
   jsi::Value getParentNodeProp(const std::shared_ptr<const ShadowNode> &shadowNode, const std::string &propName);
   folly::dynamic getStyleProp(Tag tag, const PropertyPath &propertyPath);
+  /// The view's transform-origin expressed as a translate relative to the layer
+  /// center (the default anchor point), resolved against the laid-out frame -
+  /// mirrors RN's getTranslateForTransformOrigin. Returns nullopt for the
+  /// default/center origin so callers skip the no-op bake.
+  std::optional<std::array<double, 3>> getTransformOriginOffset(
+      const std::shared_ptr<const ShadowNode> &shadowNode);
 
   void clearNodesCache();
 

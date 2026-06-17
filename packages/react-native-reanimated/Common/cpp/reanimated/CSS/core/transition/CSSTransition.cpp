@@ -32,7 +32,11 @@ TransitionProperties CSSTransition::getProperties() const {
 folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config, const folly::dynamic &lastUpdates) {
   const auto timestamp = loop_->resolveTimestamp();
 
-  auto loopConfig = platformTransitionProxy_->processConfig(rt, getViewTag(), config, routing_, timestamp);
+  // Mutable copy so the proxy can record the in-flight values of properties
+  // migrating platform -> loop; the loop run below reads them as from values.
+  folly::dynamic loopLastUpdates = lastUpdates;
+  auto loopConfig = platformTransitionProxy_->processConfig(
+      rt, getViewTag(), config, routing_, timestamp, shadowNode_, viewStylesRepository_, loopLastUpdates);
   if (loopConfig.empty()) {
     return folly::dynamic::object();
   }
@@ -45,7 +49,7 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
     return folly::dynamic::object();
   }
 
-  auto initialUpdate = loopTransition.run(rt, shadowNode_, loopConfig.changedProperties, lastUpdates, timestamp);
+  auto initialUpdate = loopTransition.run(rt, shadowNode_, loopConfig.changedProperties, loopLastUpdates, timestamp);
   scheduleLoop(timestamp);
   return initialUpdate;
 }
@@ -55,14 +59,24 @@ folly::dynamic CSSTransition::run(
     const folly::dynamic &lastUpdates) {
   const auto timestamp = loop_->resolveTimestamp();
 
-  auto loopDiffs = platformTransitionProxy_->processDynamicDiffs(getViewTag(), propertyDiffs, routing_, timestamp);
+  folly::dynamic loopLastUpdates = lastUpdates;
+  auto loopDiffs = platformTransitionProxy_->processDynamicDiffs(
+      getViewTag(), propertyDiffs, routing_, timestamp, shadowNode_, viewStylesRepository_, loopLastUpdates);
   if (loopDiffs.empty() && !loopTransition_) {
     return folly::dynamic::object();
   }
 
-  auto initialUpdate = ensureLoopTransition().run(shadowNode_, loopDiffs, lastUpdates, timestamp);
+  auto initialUpdate = ensureLoopTransition().run(shadowNode_, loopDiffs, loopLastUpdates, timestamp);
   scheduleLoop(timestamp);
   return initialUpdate;
+}
+
+TransitionProperties CSSTransition::getPlatformRoutedProperties() const {
+  return routing_.platform;
+}
+
+folly::dynamic CSSTransition::getPlatformTargetValue(const std::string &propertyName) const {
+  return platformTransitionProxy_->getTargetValue(getViewTag(), propertyName);
 }
 
 folly::dynamic CSSTransition::computeCurrentLoopStyle() {
