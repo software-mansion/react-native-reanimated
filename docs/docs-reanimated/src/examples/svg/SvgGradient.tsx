@@ -1,6 +1,7 @@
-import Animated from 'react-native-reanimated';
-import { Circle, RadialGradient, Svg } from 'react-native-svg';
+import React from 'react';
 import { StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { Circle, Defs, RadialGradient, Svg } from 'react-native-svg';
 
 const AnimatedRadialGradient = Animated.createAnimatedComponent(RadialGradient);
 
@@ -10,7 +11,8 @@ export default function App() {
   return (
     <View style={styles.container}>
       <Svg height={SIZE} width={SIZE}>
-        <AnimatedRadialGradient
+        <Defs>
+          <AnimatedRadialGradient
           id="grad"
           cx="50%"
           cy="50%"
@@ -40,7 +42,8 @@ export default function App() {
             animationDirection: 'alternate',
             animationTimingFunction: 'ease-in-out',
           }}
-        />
+          />
+        </Defs>
         <Circle
           cx={SIZE / 2}
           cy={SIZE / 2}
