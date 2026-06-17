@@ -76,6 +76,8 @@ import SvgCssTransitionSrc from '!!raw-loader!@site/src/examples/svg/SvgCssTrans
 
 The first render never animates (there is no previous value); each later change of `r` transitions from the old value to the new one.
 
+A transition only reacts to props changing between renders - updating a [shared value](/docs/fundamentals/glossary#shared-value) (`r.value = ...`) won't trigger one. To animate from a shared value, drive the prop with [`useAnimatedProps`](/docs/core/useAnimatedProps) instead.
+
 ## Morphing paths
 
 A `Path` morphs between two shapes when both use the same sequence of commands. Because `d` maps to a real CSS property, this runs on the web as well:

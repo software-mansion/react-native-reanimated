@@ -1,6 +1,3 @@
-/* Preview and code sit side by side, and wrap to a stacked layout (preview above
-   code, each full width) as soon as the row can no longer hold both min-widths
-   plus the gap: 240 + 340 + 24 = 604px. */
 .row {
   display: flex;
   flex-wrap: wrap;
@@ -17,13 +14,10 @@
 
 .code {
   flex: 2 1 0;
-  /* Wrap before the code column gets too narrow to read. */
   min-width: 340px;
   display: flex;
 }
 
-/* Make the preview and the code fill their columns so the two sit at the same
-   height; the child selector raises specificity to drop the inner cards' margins. */
 .row > .preview > *,
 .row > .code > * {
   flex: 1;
@@ -32,8 +26,6 @@
   margin: 0;
 }
 
-/* Live (web-animatable) preview, rendered directly without InteractiveExample's
-   chrome. Mirrors the video card so both preview kinds look the same. */
 .liveCard {
   display: flex;
   flex-direction: column;
@@ -47,8 +39,6 @@
   padding: 24px;
 }
 
-/* The card fills the column to match the code block's height; the cropped
-   recording (see .video) is centered inside it. */
 .videoCard {
   display: flex;
   flex-direction: column;
@@ -58,8 +48,6 @@
   background-color: var(--swm-off-background);
 }
 
-/* A square cropped to the centre of the recording (the gradient), trimming the
-   empty space and status bar above and below it. */
 .video {
   width: 100%;
   max-height: 100%;
