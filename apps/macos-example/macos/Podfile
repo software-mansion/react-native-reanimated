@@ -21,6 +21,23 @@ target 'MacOSExample-macOS' do
 
   post_install do |installer|
     react_native_post_install(installer)
+
+    # Xcode 26 (Apple clang 21) miscompiles fmt 11.0.2's `consteval` path
+    # (fmtlib/fmt#4740, fixed in fmt 11.1+). react-native-macos 0.81 pins 11.0.2,
+    # so widen fmt's "disable consteval on old Apple clang" guard to all Apple
+    # clang. Remove once the bundled fmt is >= 11.1.
+    fmt_base = File.join(__dir__, 'Pods', 'fmt', 'include', 'fmt', 'base.h')
+    if File.exist?(fmt_base)
+      source = File.read(fmt_base)
+      needle = '#elif defined(__apple_build_version__) && __apple_build_version__ < 14000029L'
+      if source.include?(needle)
+        File.chmod(0644, fmt_base)
+        File.write(fmt_base, source.sub(needle, '#elif defined(__apple_build_version__)'))
+      elsif !source.include?('#elif defined(__apple_build_version__)')
+        Pod::UI.warn('[macos-example] fmt consteval guard not found in fmt/base.h; ' \
+                     'macOS may fail to build on Xcode 26 (see fmtlib/fmt#4740).')
+      end
+    end
   end
 
   add_compile_metadata_step()
