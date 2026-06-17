@@ -20,11 +20,16 @@ namespace {
 [[maybe_unused]] constexpr std::array<double, 4> kTransparentColor = {0, 0, 0, 0};
 [[maybe_unused]] constexpr std::array<double, 4> kBlackColor = {0, 0, 0, 1};
 
-enum class CSSValueKind : std::uint8_t { Scalar, Color, Size };
+// Transform is special-cased: it is not a PlatformValue (the renderer receives a
+// pre-built TransformAnimationPlan from common C++). The Transform kind only flags
+// the property as routable for canRouteCSSProperty; parsePlatformValue returns
+// nullopt and the common-C++ transform path handles the value.
+enum class CSSValueKind : std::uint8_t { Scalar, Color, Size, Transform };
 
 struct CSSPropertyTraits {
   CSSValueKind kind;
-  // CSS-spec default applied when an endpoint is null.
+  // CSS-spec default applied when an endpoint is null. Unused for the Transform
+  // kind (transform endpoints resolve through the C++ interpolator instead).
   PlatformValue defaultValue;
 };
 
@@ -34,6 +39,9 @@ const CSSPropertyTraits *traitsFor(const std::string &propertyName)
 {
   static const std::unordered_map<std::string, CSSPropertyTraits> kProperties = {
       {"opacity", {CSSValueKind::Scalar, 1.0}},
+      // Placeholder default; never read (transform "none" is materialized by
+      // resolveTransformEndpoints). See the Transform note above.
+      {"transform", {CSSValueKind::Transform, 0.0}},
   };
   const auto it = kProperties.find(propertyName);
   return it != kProperties.end() ? &it->second : nullptr;
@@ -103,6 +111,10 @@ parsePlatformValue(jsi::Runtime &rt, const std::string &propertyName, const jsi:
           height.isNumber() ? height.asNumber() : 0.0,
       };
     }
+    case CSSValueKind::Transform:
+      // Transform is not a PlatformValue; the common-C++ transform path builds a
+      // plan and hands it to REACSSPlatformTransitions (see CSSPlatformTransitionProxy).
+      return std::nullopt;
   }
   return std::nullopt;
 }
@@ -132,6 +144,8 @@ std::optional<PlatformValue> parsePlatformValue(const std::string &propertyName,
           height != nullptr && height->isNumber() ? height->asDouble() : 0.0,
       };
     }
+    case CSSValueKind::Transform:
+      return std::nullopt;
   }
   return std::nullopt;
 }

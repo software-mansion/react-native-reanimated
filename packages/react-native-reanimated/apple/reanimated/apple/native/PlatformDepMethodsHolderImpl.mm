@@ -175,6 +175,22 @@ css::CSSRemoveTransitionFunction makeCSSRemoveTransition(REACSSPlatformTransitio
   };
 }
 
+css::CSSAnimateTransformFunction makeCSSAnimateTransform(REACSSPlatformTransitions *platformTransitions)
+{
+  return [platformTransitions](
+             Tag viewTag,
+             const css::TransformAnimationPlan &plan,
+             double durationMs,
+             double startTimeMs,
+             const css::EasingConfig &easing) {
+    [platformTransitions animateTransformForTag:viewTag
+                                           plan:plan
+                                     durationMs:durationMs
+                                    startTimeMs:startTimeMs
+                                         easing:easing];
+  };
+}
+
 ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager)
 {
   auto forceScreenSnapshot = [=](Tag tag) {
@@ -242,6 +258,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto cssApplyTransitionJSI = makeCSSApplyTransitionJSI(platformTransitions);
   auto cssApplyTransitionDynamic = makeCSSApplyTransitionDynamic(platformTransitions);
   auto cssRemoveTransition = makeCSSRemoveTransition(platformTransitions);
+  auto cssAnimateTransform = makeCSSAnimateTransform(platformTransitions);
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
@@ -260,6 +277,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       cssApplyTransitionJSI,
       cssApplyTransitionDynamic,
       cssRemoveTransition,
+      cssAnimateTransform,
   };
   return platformDepMethodsHolder;
 }

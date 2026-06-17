@@ -58,6 +58,10 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
   void removeTag(Tag viewTag) override;
   const std::shared_ptr<CSSTransition> &getOrCreateTransition(const std::shared_ptr<const ShadowNode> &shadowNode);
   void updateInUpdatesRegistry(const std::shared_ptr<CSSTransition> &transition, const folly::dynamic &updates);
+  /// Drops stale loop-written values of platform-routed properties from the
+  /// updates registry; left pinned, they would override the React-committed
+  /// final value on later commits.
+  void prunePlatformPropertiesFromRegistry(const std::shared_ptr<CSSTransition> &transition);
   void recordInitialUpdate(const std::shared_ptr<CSSTransition> &transition, const folly::dynamic &initialUpdate);
 };
 

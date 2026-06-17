@@ -74,6 +74,7 @@ struct PlatformDepMethodsHolder {
   css::CSSApplyTransitionJSIFunction cssApplyTransitionJSI;
   css::CSSApplyTransitionDynamicFunction cssApplyTransitionDynamic;
   css::CSSRemoveTransitionFunction cssRemoveTransition;
+  css::CSSAnimateTransformFunction cssAnimateTransform;
   // Last so platform initializers that don't supply it (iOS, Android today)
   // can omit it and rely on value-init (= null shared_ptr).
   std::shared_ptr<css::CSSPlatformAnimationFactory> platformAnimationFactory;

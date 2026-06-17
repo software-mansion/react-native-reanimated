@@ -27,6 +27,9 @@ void CSSTransitionsRegistry::updateConfigOrRun(
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto &transition = getOrCreateTransition(shadowNode);
   auto initialUpdate = transition->run(rt, std::move(config), getUpdatesFromRegistry(transition->getViewTag()));
+  // Drop stale loop frames of platform-routed props left pinned in the registry;
+  // they would otherwise override the React-committed final value on later commits.
+  prunePlatformPropertiesFromRegistry(transition);
   recordInitialUpdate(transition, initialUpdate);
 }
 
@@ -36,6 +39,7 @@ void CSSTransitionsRegistry::run(
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto &transition = getOrCreateTransition(shadowNode);
   auto initialUpdate = transition->run(propertyDiffs, getUpdatesFromRegistry(transition->getViewTag()));
+  prunePlatformPropertiesFromRegistry(transition);
   recordInitialUpdate(transition, initialUpdate);
 }
 
@@ -104,16 +108,24 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
   const auto &shadowNode = transition->getShadowNode();
   const auto &lastUpdates = getUpdatesFromRegistry(shadowNode->getTag());
   const auto &transitionProperties = transition->getProperties();
+  const auto &platformProperties = transition->getPlatformRoutedProperties();
 
   folly::dynamic filteredUpdates = folly::dynamic::object;
 
   if (!lastUpdates.empty()) {
     // Otherwise, we keep only allowed properties from the last updates
-    // and update the object with the new transition starting values
+    // and update the object with the new transition starting values.
+    // Platform-routed properties are kept only when they hold the platform
+    // run's current target (a pseudo-state pin that must survive RN commits);
+    // anything else is a stale loop frame and gets dropped.
     for (const auto &prop : transitionProperties) {
-      if (lastUpdates.count(prop)) {
-        filteredUpdates[prop] = lastUpdates[prop];
+      if (!lastUpdates.count(prop)) {
+        continue;
       }
+      if (platformProperties.contains(prop) && lastUpdates[prop] != transition->getPlatformTargetValue(prop)) {
+        continue;
+      }
+      filteredUpdates[prop] = lastUpdates[prop];
     }
   }
 
@@ -121,6 +133,39 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
   // to do additional filtering here
   filteredUpdates.update(updates);
   setInUpdatesRegistry(shadowNode->getFamilyShared(), filteredUpdates);
+}
+
+void CSSTransitionsRegistry::prunePlatformPropertiesFromRegistry(const std::shared_ptr<CSSTransition> &transition) {
+  const auto &platformProperties = transition->getPlatformRoutedProperties();
+  if (platformProperties.empty()) {
+    return;
+  }
+
+  auto lastUpdates = getUpdatesFromRegistry(transition->getViewTag());
+  if (!lastUpdates.isObject()) {
+    return;
+  }
+
+  size_t erasedCount = 0;
+  for (const auto &propertyName : platformProperties) {
+    // Keep values matching the platform run's current target - those are
+    // pseudo-state pins that re-assert the renderer-committed value when RN
+    // re-commits the view; only stale loop frames are dropped.
+    if (lastUpdates.count(propertyName) &&
+        lastUpdates[propertyName] == transition->getPlatformTargetValue(propertyName)) {
+      continue;
+    }
+    erasedCount += lastUpdates.erase(propertyName);
+  }
+  if (erasedCount == 0) {
+    return;
+  }
+
+  if (lastUpdates.empty()) {
+    removeFromUpdatesRegistry(transition->getViewTag());
+  } else {
+    setInUpdatesRegistry(transition->getShadowNodeFamily(), lastUpdates);
+  }
 }
 
 const std::shared_ptr<CSSTransition> &CSSTransitionsRegistry::getOrCreateTransition(
