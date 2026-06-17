@@ -9,11 +9,8 @@ import {
   SVG_RECT_WEB_PROPERTIES_CONFIG,
 } from './web';
 
-// Components that animate only the common appearance props on web: the container
-// (G), and shapes whose geometry is an SVG attribute rather than a CSS property -
-// Line endpoints, Pattern/Text/gradient coordinates, and Polygon/Polyline `points`
-// (react-native-svg renders them as native <polygon>/<polyline>, whose `points`
-// CSS cannot animate). They fall back to the shared common config.
+// Components with no CSS-animatable geometry on web: any geometry they expose is
+// an SVG attribute, not a CSS property. They fall back to the shared common config.
 const COMMON_ONLY_COMPONENTS = [
   'G',
   'Line',
