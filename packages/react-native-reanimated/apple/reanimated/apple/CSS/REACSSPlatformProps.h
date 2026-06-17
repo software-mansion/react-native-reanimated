@@ -29,6 +29,8 @@ id idFromPlatformValue(const PlatformValue &value);
 
 CAMediaTimingFunction *makeCSSTimingFunction(const EasingConfig &easing);
 
+NSString *caLayerKeyPathForCSSProperty(const std::string &propertyName);
+
 } // namespace reanimated::css
 
 NS_ASSUME_NONNULL_END
