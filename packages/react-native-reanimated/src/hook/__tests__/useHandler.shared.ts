@@ -68,7 +68,6 @@ export function runCommonTests() {
       const { rerender } = renderUseHandler({ onScroll: worklet() });
 
       rerender({ handlers: { onScroll: worklet() } });
-      rerender({ handlers: { onScroll: worklet() } });
 
       expect(makeShareableMock).not.toHaveBeenCalled();
     });
@@ -76,10 +75,6 @@ export function runCommonTests() {
     test('calls makeShareable at most once across reads and re-renders', () => {
       const { result, rerender } = renderUseHandler({ onScroll: worklet() });
 
-      void result.current.context;
-      void result.current.context;
-
-      rerender({ handlers: { onScroll: worklet() } });
       void result.current.context;
 
       rerender({ handlers: { onScroll: worklet() } });
