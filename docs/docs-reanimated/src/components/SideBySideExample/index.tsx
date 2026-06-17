@@ -3,7 +3,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 import CollapsibleCode from '@site/src/components/CollapsibleCode';
 import ReducedMotionWarning from '@site/src/components/ReducedMotionWarning';
 import clsx from 'clsx';
-import type React from 'react';
+import React from 'react';
 import { useReducedMotion } from 'react-native-reanimated';
 
 import styles from './styles.module.css';
