@@ -1,11 +1,11 @@
-"use strict";
-import React, { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+'use strict';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   FadeOut,
   LayoutAnimationConfig,
-} from "react-native-reanimated";
-import { runOnUI } from "react-native-worklets";
+} from 'react-native-reanimated';
+import { runOnUI } from 'react-native-worklets';
 
 // Repro for https://github.com/software-mansion/react-native-reanimated/issues/7493
 //
@@ -44,7 +44,7 @@ export default function InterruptedExitingExample() {
         // Stall the UI thread. Everything below happens on the JS thread
         // before the UI thread gets to run again.
         runOnUI(() => {
-          "worklet";
+          'worklet';
           const start = performance.now();
           while (performance.now() - start < 600) {
             // burn
@@ -100,19 +100,19 @@ export default function InterruptedExitingExample() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  title: { padding: 16, fontWeight: "bold" },
-  stage: { height: 130, alignItems: "center", justifyContent: "center" },
+  title: { padding: 16, fontWeight: 'bold' },
+  stage: { height: 130, alignItems: 'center', justifyContent: 'center' },
   screen: {
     width: 220,
     height: 120,
-    backgroundColor: "#eee",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: '#eee',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   box: {
     width: 90,
     height: 90,
-    backgroundColor: "rebeccapurple",
+    backgroundColor: 'rebeccapurple',
     borderRadius: 8,
   },
   scroll: { flex: 1 },
