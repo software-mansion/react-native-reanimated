@@ -144,8 +144,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void runCSSTransition(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &transitionConfig);
   void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag);
 
-  void registerPseudoStyle(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &config);
-  void unregisterPseudoStyle(jsi::Runtime &rt, const jsi::Value &viewTag);
+  void registerPseudoStyles(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &config);
+  void unregisterPseudoStyles(jsi::Runtime &rt, const jsi::Value &viewTag);
 
   jsi::Value getSettledUpdates(jsi::Runtime &rt);
 

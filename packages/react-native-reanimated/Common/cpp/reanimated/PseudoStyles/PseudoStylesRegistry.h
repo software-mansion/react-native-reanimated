@@ -13,6 +13,7 @@
 #include <map>
 #include <memory>
 #include <unordered_map>
+#include <vector>
 
 namespace reanimated {
 
@@ -27,12 +28,16 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
       std::shared_ptr<css::CSSTransitionsRegistry> cssTransitionsRegistry,
       std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager);
 
-  void registerPseudoStyle(
+  struct SelectorRegistration {
+    PseudoSelector selector;
+    folly::dynamic selectorStyle;
+  };
+
+  void registerPseudoStyles(
       Tag tag,
       const std::shared_ptr<const ShadowNode> &shadowNode,
-      PseudoSelector selector,
-      const folly::dynamic &selectorStyle,
-      const folly::dynamic &defaultStyle);
+      const folly::dynamic &defaults,
+      const std::vector<SelectorRegistration> &selectors);
 
   void remove(Tag tag);
 

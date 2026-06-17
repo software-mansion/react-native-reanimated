@@ -11,9 +11,9 @@ import type {
 import type { PseudoStylesBySelector } from '../../utils';
 import { deepEqual } from '../../utils';
 import { normalizeCSSTransitionProperties } from '../normalization';
-import { registerPseudoStyle, unregisterPseudoStyle } from '../proxy';
+import { registerPseudoStyles, unregisterPseudoStyles } from '../proxy';
 import type {
-  CSSPseudoStyleConfig,
+  CSSPseudoStyleEntry,
   CSSTransitionConfig,
   NormalizedCSSTransitionConfig,
 } from '../types';
@@ -75,6 +75,7 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
     });
     nullifyUndefinedValues(builtDefaultStyle);
 
+    const selectors: CSSPseudoStyleEntry[] = [];
     for (const [selector, { selectorStyle }] of Object.entries(
       pseudoStylesBySelector
     )) {
@@ -86,13 +87,21 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
         }
         continue;
       }
-      const config = this.buildPseudoStyleConfig(
-        selector as NativePseudoSelectorKey,
-        selectorStyle,
-        builtDefaultStyle,
-        normalizedTransition
+      selectors.push(
+        this.buildPseudoStyleEntry(
+          selector as NativePseudoSelectorKey,
+          selectorStyle,
+          builtDefaultStyle,
+          normalizedTransition
+        )
       );
-      registerPseudoStyle(this.shadowNodeWrapper, config);
+    }
+
+    if (selectors.length > 0) {
+      registerPseudoStyles(this.shadowNodeWrapper, {
+        defaultStyle: builtDefaultStyle,
+        selectors,
+      });
       this.isRegistered = true;
     }
   }
@@ -104,16 +113,16 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
   }
 
   private detach() {
-    unregisterPseudoStyle(this.viewTag);
+    unregisterPseudoStyles(this.viewTag);
     this.isRegistered = false;
   }
 
-  private buildPseudoStyleConfig(
+  private buildPseudoStyleEntry(
     selector: NativePseudoSelectorKey,
     selectorStyle: UnknownRecord,
     mergedDefaultStyle: UnknownRecord,
     normalizedTransition: NormalizedCSSTransitionConfig | null
-  ): CSSPseudoStyleConfig {
+  ): CSSPseudoStyleEntry {
     const builtSelectorStyle = this.propsBuilder.build(selectorStyle, {
       includeUnprocessed: true,
     });
@@ -138,7 +147,6 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
     return {
       selector,
       selectorStyle: builtSelectorStyle,
-      defaultStyle: mergedDefaultStyle,
       transition,
     };
   }

@@ -40,28 +40,32 @@ std::array<folly::dynamic, (1u << kPseudoSelectorBits)> PseudoStylesRegistry::re
   return newPrecomputedStyles;
 }
 
-void PseudoStylesRegistry::registerPseudoStyle(
+void PseudoStylesRegistry::registerPseudoStyles(
     Tag tag,
     const std::shared_ptr<const ShadowNode> &shadowNode,
-    PseudoSelector selector,
-    const folly::dynamic &selectorStyle,
-    const folly::dynamic &defaultStyle) {
+    const folly::dynamic &defaults,
+    const std::vector<SelectorRegistration> &selectors) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
 
   auto &entry = registry_[tag];
   entry.shadowNode = shadowNode;
-  entry.defaults = defaultStyle;
-  entry.selectors[selector] = {selectorStyle};
+  entry.defaults = defaults;
+  for (const auto &registration : selectors) {
+    entry.selectors[registration.selector] = {registration.selectorStyle};
+  }
   entry.precomputedStyles = recomputeAllStyles(entry);
 
-  attachFn_(
-      tag,
-      selector,
-      [weakThis = std::weak_ptr<PseudoStylesRegistry>(shared_from_this()), tag, selector](bool isActive) {
-        if (auto strongThis = weakThis.lock()) {
-          strongThis->onSelectorStateChanged(tag, selector, isActive);
-        }
-      });
+  for (const auto &registration : selectors) {
+    const auto selector = registration.selector;
+    attachFn_(
+        tag,
+        selector,
+        [weakThis = std::weak_ptr<PseudoStylesRegistry>(shared_from_this()), tag, selector](bool isActive) {
+          if (auto strongThis = weakThis.lock()) {
+            strongThis->onSelectorStateChanged(tag, selector, isActive);
+          }
+        });
+  }
 }
 
 void PseudoStylesRegistry::remove(Tag tag) {
