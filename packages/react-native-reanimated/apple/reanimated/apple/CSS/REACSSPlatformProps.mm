@@ -168,7 +168,7 @@ CAMediaTimingFunction *makeCSSTimingFunction(const EasingConfig &easing)
   return [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
 }
 
-NSString *keyPathForCSSProperty(const std::string &propertyName)
+NSString *caLayerKeyPathForCSSProperty(const std::string &propertyName)
 {
   // CALayer names rounded corners "cornerRadius"; every other routed property maps
   // to its CALayer keyPath 1:1.
