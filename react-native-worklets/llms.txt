@@ -2,6 +2,7 @@
 
 ## bundleMode
 
+- [Import forwarding](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/importForwarding)
 - [overview](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/overview)
 - [setup](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/setup)
 - [usage](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/usage)
