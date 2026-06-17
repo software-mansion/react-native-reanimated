@@ -77,11 +77,9 @@ bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &ea
   if (traitsFor(propertyName) == nullptr) {
     return false;
   }
-  // TODO: backgroundColor and border{Color,Width,Radius} are routed unconditionally,
-  // but RN rasterizes the border (stripping the CA animation, so the value snaps)
-  // whenever a view fails useCoreAnimationBorderRendering. Gate them on committed
-  // ViewProps eligibility + commit-hook re-routing so platform animation only starts
-  // when it can produce correct results (follow-up PR).
+  // TODO: border props route unconditionally, but snap when RN rasterizes the
+  // border (view fails useCoreAnimationBorderRendering); they should route only
+  // when the platform can render them correctly (follow-up PR).
   // CAMediaTimingFunction can express only linear and cubic-bezier curves;
   // steps / linear-stops easings have to interpolate per-frame on the loop.
   return std::holds_alternative<LinearEasing>(easing) || std::holds_alternative<CubicBezierEasing>(easing);
