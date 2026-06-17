@@ -39,12 +39,12 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
  private:
   struct SelectorData {
     folly::dynamic selectorStyle;
-    folly::dynamic defaultStyle;
   };
 
   struct TagEntry {
     std::shared_ptr<const ShadowNode> shadowNode;
 
+    folly::dynamic defaults = folly::dynamic::object();
     std::map<PseudoSelector, SelectorData> selectors;
 
     std::array<folly::dynamic, (1u << kPseudoSelectorBits)> precomputedStyles;

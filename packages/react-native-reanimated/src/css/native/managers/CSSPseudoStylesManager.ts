@@ -62,7 +62,20 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
       ? normalizeCSSTransitionProperties(transitionProperties)
       : null;
 
-    for (const [selector, { selectorStyle, defaultStyle }] of Object.entries(
+    const mergedDefaultStyle: UnknownRecord = {};
+    for (const [selector, { defaultStyle }] of Object.entries(
+      pseudoStylesBySelector
+    )) {
+      if (NATIVE_PSEUDO_SELECTORS.has(selector as NativePseudoSelectorKey)) {
+        Object.assign(mergedDefaultStyle, defaultStyle);
+      }
+    }
+    const builtDefaultStyle = this.propsBuilder.build(mergedDefaultStyle, {
+      includeUnprocessed: true,
+    });
+    nullifyUndefinedValues(builtDefaultStyle);
+
+    for (const [selector, { selectorStyle }] of Object.entries(
       pseudoStylesBySelector
     )) {
       if (!NATIVE_PSEUDO_SELECTORS.has(selector as NativePseudoSelectorKey)) {
@@ -76,7 +89,7 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
       const config = this.buildPseudoStyleConfig(
         selector as NativePseudoSelectorKey,
         selectorStyle,
-        defaultStyle,
+        builtDefaultStyle,
         normalizedTransition
       );
       registerPseudoStyle(this.shadowNodeWrapper, config);
@@ -98,32 +111,23 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
   private buildPseudoStyleConfig(
     selector: NativePseudoSelectorKey,
     selectorStyle: UnknownRecord,
-    defaultStyle: UnknownRecord,
+    mergedDefaultStyle: UnknownRecord,
     normalizedTransition: NormalizedCSSTransitionConfig | null
   ): CSSPseudoStyleConfig {
     const builtSelectorStyle = this.propsBuilder.build(selectorStyle, {
       includeUnprocessed: true,
     });
-    const builtDefaultStyle = this.propsBuilder.build(defaultStyle, {
-      includeUnprocessed: true,
-    });
 
     nullifyUndefinedValues(builtSelectorStyle);
-    nullifyUndefinedValues(builtDefaultStyle);
 
     const transition: CSSTransitionConfig = {};
-    const propsInTransition = new Set([
-      ...Object.keys(builtSelectorStyle),
-      ...Object.keys(builtDefaultStyle),
-    ]);
-
-    for (const prop of propsInTransition) {
+    for (const prop of Object.keys(builtSelectorStyle)) {
       const settings = getPropertyTransitionSettings(
         prop,
         normalizedTransition
       );
       transition[prop] = {
-        value: [builtDefaultStyle[prop], builtSelectorStyle[prop]],
+        value: [mergedDefaultStyle[prop], builtSelectorStyle[prop]],
         duration: settings?.duration ?? 0,
         delay: settings?.delay ?? 0,
         timingFunction: settings?.timingFunction ?? 'ease',
@@ -134,7 +138,7 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
     return {
       selector,
       selectorStyle: builtSelectorStyle,
-      defaultStyle: builtDefaultStyle,
+      defaultStyle: mergedDefaultStyle,
       transition,
     };
   }
