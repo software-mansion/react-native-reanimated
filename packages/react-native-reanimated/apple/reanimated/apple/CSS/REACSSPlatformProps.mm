@@ -15,8 +15,7 @@ using namespace facebook;
 
 namespace {
 
-// kBlackColor is the shadowColor default; kTransparentColor is consumed once
-// backgroundColor / borderColor join the catalog (deferred), hence [[maybe_unused]].
+// kTransparentColor is consumed once backgroundColor / borderColor land (deferred).
 [[maybe_unused]] constexpr std::array<double, 4> kTransparentColor = {0, 0, 0, 0};
 constexpr std::array<double, 4> kBlackColor = {0, 0, 0, 1};
 
@@ -34,18 +33,11 @@ const CSSPropertyTraits *traitsFor(const std::string &propertyName)
 {
   static const std::unordered_map<std::string, CSSPropertyTraits> kProperties = {
       {"opacity", {CSSValueKind::Scalar, 1.0}},
-      // Shadows are main-layer properties, independent of RN's border/background
-      // fast path, so their routing is correct without committed-sibling context.
       {"shadowColor", {CSSValueKind::Color, kBlackColor}},
       {"shadowOpacity", {CSSValueKind::Scalar, 0.0}},
       {"shadowRadius", {CSSValueKind::Scalar, 0.0}},
       {"shadowOffset", {CSSValueKind::Size, std::array<double, 2>{0.0, 0.0}}},
-      // TODO: backgroundColor + border{Color,Width,Radius} are intentionally
-      // omitted. Their Core Animation eligibility depends on RN's border /
-      // background fast path - sibling props that may not be committed yet when
-      // the transition routes - so they need shadow-node-aware canRoute plus
-      // commit-hook re-routing to stay correct. Add them as one unit in that
-      // routing refactor; until then they run on the loop.
+      // TODO: backgroundColor + border* need eligibility + commit-hook re-routing.
   };
   const auto it = kProperties.find(propertyName);
   return it != kProperties.end() ? &it->second : nullptr;
