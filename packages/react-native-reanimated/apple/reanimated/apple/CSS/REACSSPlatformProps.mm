@@ -15,8 +15,7 @@ using namespace facebook;
 
 namespace {
 
-// kTransparentColor is consumed once backgroundColor / borderColor land (deferred).
-[[maybe_unused]] constexpr std::array<double, 4> kTransparentColor = {0, 0, 0, 0};
+constexpr std::array<double, 4> kTransparentColor = {0, 0, 0, 0};
 constexpr std::array<double, 4> kBlackColor = {0, 0, 0, 1};
 
 enum class CSSValueKind : std::uint8_t { Scalar, Color, Size };
@@ -33,11 +32,14 @@ const CSSPropertyTraits *traitsFor(const std::string &propertyName)
 {
   static const std::unordered_map<std::string, CSSPropertyTraits> kProperties = {
       {"opacity", {CSSValueKind::Scalar, 1.0}},
+      {"backgroundColor", {CSSValueKind::Color, kTransparentColor}},
+      {"borderColor", {CSSValueKind::Color, kBlackColor}},
+      {"borderRadius", {CSSValueKind::Scalar, 0.0}},
+      {"borderWidth", {CSSValueKind::Scalar, 0.0}},
       {"shadowColor", {CSSValueKind::Color, kBlackColor}},
       {"shadowOpacity", {CSSValueKind::Scalar, 0.0}},
       {"shadowRadius", {CSSValueKind::Scalar, 0.0}},
       {"shadowOffset", {CSSValueKind::Size, std::array<double, 2>{0.0, 0.0}}},
-      // TODO: backgroundColor + border* need eligibility + commit-hook re-routing.
   };
   const auto it = kProperties.find(propertyName);
   return it != kProperties.end() ? &it->second : nullptr;
@@ -75,6 +77,11 @@ bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &ea
   if (traitsFor(propertyName) == nullptr) {
     return false;
   }
+  // TODO: backgroundColor and border{Color,Width,Radius} are routed unconditionally,
+  // but RN rasterizes the border (stripping the CA animation, so the value snaps)
+  // whenever a view fails useCoreAnimationBorderRendering. Gate them on committed
+  // ViewProps eligibility + commit-hook re-routing so platform animation only starts
+  // when it can produce correct results (follow-up PR).
   // CAMediaTimingFunction can express only linear and cubic-bezier curves;
   // steps / linear-stops easings have to interpolate per-frame on the loop.
   return std::holds_alternative<LinearEasing>(easing) || std::holds_alternative<CubicBezierEasing>(easing);
@@ -161,6 +168,16 @@ CAMediaTimingFunction *makeCSSTimingFunction(const EasingConfig &easing)
     return [CAMediaTimingFunction functionWithControlPoints:(float)cb.x1:(float)cb.y1:(float)cb.x2:(float)cb.y2];
   }
   return [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
+}
+
+NSString *keyPathForCSSProperty(const std::string &propertyName)
+{
+  // CALayer names rounded corners "cornerRadius"; every other routed property maps
+  // to its CALayer keyPath 1:1.
+  if (propertyName == "borderRadius") {
+    return @"cornerRadius";
+  }
+  return [NSString stringWithUTF8String:propertyName.c_str()];
 }
 
 } // namespace reanimated::css

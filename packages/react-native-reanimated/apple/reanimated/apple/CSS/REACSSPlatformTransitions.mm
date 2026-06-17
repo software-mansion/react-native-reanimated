@@ -148,7 +148,7 @@ struct ActiveTransition {
             easing:(const EasingConfig &)easing
 {
   // Capture everything up front; CALayer access must happen on the main thread.
-  NSString *keyPath = [NSString stringWithUTF8String:propertyName.c_str()];
+  NSString *keyPath = keyPathForCSSProperty(propertyName);
   id fromId = idFromPlatformValue(fromValue);
   id toId = idFromPlatformValue(toValue);
   double durationSec = durationMs / 1000.0;
@@ -207,7 +207,7 @@ struct ActiveTransition {
     }
   }
 
-  NSString *keyPath = [NSString stringWithUTF8String:propertyName.c_str()];
+  NSString *keyPath = keyPathForCSSProperty(propertyName);
   __weak __typeof__(self) weakSelf = self;
   RCTExecuteOnMainQueue(^{
     __typeof__(self) strongSelf = weakSelf;
