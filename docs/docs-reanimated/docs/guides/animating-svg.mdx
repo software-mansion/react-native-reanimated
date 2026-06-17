@@ -145,14 +145,14 @@ These components animate their geometry on iOS and Android. The **Web** column s
 | `Rect`                | `x`, `y`, `width`, `height`, `rx`, `ry`                             | ✅  |
 | `Image`               | `x`, `y`, `width`, `height`                                          | ✅  |
 | `Path`                | `d`                                                                 | ✅¹ |
-| `Polygon`, `Polyline` | `points`                                                            | ✅¹ |
+| `Polygon`, `Polyline` | `points`                                                            | ❌  |
 | `Line`                | `x1`, `y1`, `x2`, `y2`                                              | ❌  |
 | `Text`                | `x`, `y`, `dx`, `dy`, `rotate`                                      | ❌  |
 | `Pattern`             | `x`, `y`, `width`, `height`, `patternUnits`, `patternContentUnits` | ❌  |
 | `LinearGradient`      | `x1`, `y1`, `x2`, `y2`, `gradient`, `gradientUnits`                | ❌  |
 | `RadialGradient`      | `cx`, `cy`, `r`, `rx`, `ry`, `fx`, `fy`, `gradient`, `gradientUnits` | ❌  |
 
-¹ On Web, `Path` `d` only morphs between paths with matching command structure, and `points` only between equal point counts; mismatches snap. iOS and Android morph freely.
+¹ On Web, `Path` `d` only morphs between paths with matching command structure; mismatches snap. iOS and Android morph freely.
 
 The remaining components - `G`, `Use`, `Symbol`, `Defs`, `ClipPath`, `Mask`, `Marker`, `TSpan`, `TextPath`, and `ForeignObject` - have no animatable geometry; they animate only the [common appearance properties](#common-appearance-properties). On Web, only `G` is supported among them.
 
@@ -162,7 +162,7 @@ The remaining components - `G`, `Use`, `Symbol`, `Defs`, `ClipPath`, `Mask`, `Ma
 
 ### Morphing paths and points
 
-`d` (Path) and `points` (Polygon/Polyline) interpolate smoothly when the start and end share the same topology - the same path command structure, or the same number of points. On iOS and Android, mismatched shapes still morph; on Web they snap to the target, because CSS only interpolates `d`/`points` between matching structures.
+`d` (Path) and `points` (Polygon/Polyline) morph freely between any shapes on iOS and Android. On Web, only `Path` morphs: its `d` interpolates between paths that share the same command structure, and mismatched structures snap. `Polygon` and `Polyline` `points` don't animate on Web at all, because `react-native-svg` renders them as native `<polygon>`/`<polyline>` elements whose `points` is not a CSS property (so the keyframes Reanimated generates have nothing to drive).
 
 ### Stepped properties
 
@@ -198,4 +198,4 @@ A few caveats:
 
 ### Web
 
-On Web, Reanimated drives SVG through CSS, so an attribute animates only if it maps to a real CSS property. Attributes that have no CSS equivalent - `Line` endpoints, `Text`/`Pattern`/gradient coordinates, and gradient stops - can't animate via CSS on Web; use [`useAnimatedProps`](/docs/core/useAnimatedProps) for those.
+On Web, Reanimated drives SVG through CSS, so an attribute animates only if it maps to a real CSS property. Attributes that have no CSS equivalent - `Polygon`/`Polyline` `points`, `Line` endpoints, `Text`/`Pattern`/gradient coordinates, and gradient stops - can't animate via CSS on Web; use [`useAnimatedProps`](/docs/core/useAnimatedProps) for those.
