@@ -25,7 +25,8 @@ if(ReactAndroid_VERSION_MINOR LESS 84)
   string(APPEND CMAKE_CXX_FLAGS " -DHERMES_V1_ENABLED=${HERMES_V1_ENABLED}")
 else()
   # Reference the value so CMake records it as used, otherwise it warns:
-  # "Manually-specified variables were not used by the project: HERMES_V1_ENABLED"
+  # "Manually-specified variables were not used by the project:
+  # HERMES_V1_ENABLED"
   set(HERMES_V1_ENABLED "${HERMES_V1_ENABLED}")
 endif()
 

@@ -19,6 +19,8 @@ type WebPropsBuilderOptions = {
   // Appends ' !important' to every emitted declaration (e.g. pseudo-selector
   // rules that must override the element's inline styles).
   important?: boolean;
+  // Emits `<prop>: initial` for props whose input value is `undefined`
+  includeUnprocessed?: boolean;
 };
 
 export type WebPropsBuilder<P extends UnknownRecord = UnknownRecord> = {
@@ -94,7 +96,9 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
       usedRuleBuilders.clear();
 
       // Build props - rule builders are fed during processing
-      const processedProps = propsBuilder.build(props);
+      const processedProps = propsBuilder.build(props, {
+        includeUnprocessed: options?.includeUnprocessed,
+      });
 
       // Build only used rule builders and merge their results
       for (const builder of usedRuleBuilders) {
@@ -105,11 +109,16 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
       const importance = options?.important ? ' !important' : '';
       const cssString = Object.entries(processedProps)
         .reduce<string[]>((acc, [key, value]) => {
+          const name = nameAliases.get(key) ?? key;
           if (isDefined(value)) {
-            const name = nameAliases.get(key) ?? key;
             acc.push(
               `${kebabizeCamelCase(name)}: ${value as string}${importance}`
             );
+          } else if (
+            options?.includeUnprocessed &&
+            props[key as keyof TProps] === undefined
+          ) {
+            acc.push(`${kebabizeCamelCase(name)}: initial${importance}`);
           }
           return acc;
         }, [])

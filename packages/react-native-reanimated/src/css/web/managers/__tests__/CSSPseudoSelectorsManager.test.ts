@@ -57,6 +57,23 @@ describe(CSSPseudoSelectorsManager, () => {
     expect(css).not.toMatch(/:has\(/);
   });
 
+  test('resets a property to initial when its selector value is undefined', () => {
+    const element = createElement();
+    const manager = new CSSPseudoSelectorsManager(element);
+
+    manager.update({
+      ':active': {
+        selectorStyle: { backgroundColor: undefined },
+        defaultStyle: { backgroundColor: 'blue' },
+      },
+    });
+
+    expect(insertMock).toHaveBeenCalledTimes(1);
+    const css = (insertMock.mock.calls[0][1] as string[]).join('\n');
+    expect(css).toMatch(/:active/);
+    expect(css).toMatch(/background-color: initial !important/);
+  });
+
   test('orders known selectors before arbitrary ones (last wins on overlap)', () => {
     const element = createElement();
     const manager = new CSSPseudoSelectorsManager(element);
