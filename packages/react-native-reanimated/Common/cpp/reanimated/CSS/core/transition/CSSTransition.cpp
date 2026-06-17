@@ -4,7 +4,6 @@
 
 #include <memory>
 #include <utility>
-#include <vector>
 
 namespace reanimated::css {
 
@@ -21,14 +20,11 @@ CSSTransition::CSSTransition(
       observer_(observer) {}
 
 CSSTransition::~CSSTransition() {
-  if (platformTransition_) {
-    platformTransition_->cancelAll();
-  }
+  platformTransitionProxy_->cancelAll(getViewTag(), routing_.platform);
 }
 
 TransitionProperties CSSTransition::getProperties() const {
   TransitionProperties result = routing_.loop;
-  result.reserve(routing_.loop.size() + routing_.platform.size());
   result.insert(routing_.platform.begin(), routing_.platform.end());
   return result;
 }
@@ -36,19 +32,7 @@ TransitionProperties CSSTransition::getProperties() const {
 folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config, const folly::dynamic &lastUpdates) {
   const auto timestamp = loop_->resolveTimestamp();
 
-  // CSSTransition owns routing: platform-routed props run immediately on the platform
-  // transition; the loop-routed remainder is applied to the loop transition below.
-  auto processed = platformTransitionProxy_->processConfig(std::move(config), routing_);
-  routing_ = std::move(processed.routing);
-
-  if (!processed.platform.empty()) {
-    auto &platformTransition = ensurePlatformTransition();
-    platformTransition.updateSettings(
-        processed.platform.changedPropertiesSettings, processed.platform.removedProperties);
-    platformTransition.run(rt, processed.platform, timestamp);
-  }
-
-  const auto &loopConfig = processed.loop;
+  auto loopConfig = platformTransitionProxy_->processConfig(rt, getViewTag(), config, routing_, timestamp);
   if (loopConfig.empty()) {
     return folly::dynamic::object();
   }
@@ -71,19 +55,7 @@ folly::dynamic CSSTransition::run(
     const folly::dynamic &lastUpdates) {
   const auto timestamp = loop_->resolveTimestamp();
 
-  PropertyValueDynamicDiffsMap loopDiffs;
-  PropertyValueDynamicDiffsMap platformDiffs;
-  for (const auto &[propertyName, propertyDiff] : propertyDiffs) {
-    if (routing_.platform.contains(propertyName)) {
-      platformDiffs.emplace(propertyName, propertyDiff);
-    } else {
-      loopDiffs.emplace(propertyName, propertyDiff);
-    }
-  }
-
-  if (!platformDiffs.empty()) {
-    ensurePlatformTransition().run(platformDiffs, timestamp);
-  }
+  auto loopDiffs = platformTransitionProxy_->processDynamicDiffs(getViewTag(), propertyDiffs, routing_, timestamp);
   if (loopDiffs.empty() && !loopTransition_) {
     return folly::dynamic::object();
   }
@@ -104,16 +76,7 @@ void CSSTransition::cancel() {
   if (loopTransition_) {
     loop_->remove(loopTransition_);
   }
-  if (platformTransition_) {
-    platformTransition_->cancelAll();
-  }
-}
-
-CSSPlatformTransition &CSSTransition::ensurePlatformTransition() {
-  if (!platformTransition_) {
-    platformTransition_ = std::make_unique<CSSPlatformTransition>(shadowNode_->getTag(), platformTransitionProxy_);
-  }
-  return *platformTransition_;
+  platformTransitionProxy_->cancelAll(getViewTag(), routing_.platform);
 }
 
 CSSLoopTransition &CSSTransition::ensureLoopTransition() {

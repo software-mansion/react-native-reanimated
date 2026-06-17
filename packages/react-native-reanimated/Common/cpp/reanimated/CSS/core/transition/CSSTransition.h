@@ -2,7 +2,6 @@
 
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/core/transition/CSSLoopTransition.h>
-#include <reanimated/CSS/core/transition/CSSPlatformTransition.h>
 #include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
@@ -12,8 +11,6 @@
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <memory>
-#include <string>
-#include <vector>
 
 namespace reanimated::css {
 
@@ -63,10 +60,8 @@ class CSSTransition {
   Observer &observer_;
 
   CSSTransitionRouting routing_;
-  std::unique_ptr<CSSPlatformTransition> platformTransition_;
   std::shared_ptr<CSSLoopTransition> loopTransition_;
 
-  CSSPlatformTransition &ensurePlatformTransition();
   CSSLoopTransition &ensureLoopTransition();
   void scheduleLoop(double timestamp);
 };
