@@ -13,7 +13,9 @@ function findHostInstanceFastPath(maybeNativeRef: HostInstance | undefined) {
   if (
     maybeNativeRef.__internalInstanceHandle &&
     maybeNativeRef.__nativeTag &&
-    maybeNativeRef.__viewConfig
+    // ReactFabricHostComponent (e.g. react-native-macos) exposes `_viewConfig`;
+    // ReactNativeElement uses `__viewConfig`.
+    (maybeNativeRef.__viewConfig || maybeNativeRef._viewConfig)
   ) {
     return maybeNativeRef;
   }
