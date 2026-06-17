@@ -7,6 +7,7 @@ import type {
   WorkletRuntimeConfig,
 } from './types';
 
+// is-tree-shakable-suppress
 export const UIRuntimeId = RuntimeKind.UI;
 
 export function createWorkletRuntime(
@@ -83,6 +84,18 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
 
 export function runOnRuntimeAsync(): never {
   throw new Error('[Worklets] `runOnRuntimeAsync` is not supported on web.');
+}
+
+export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): Promise<ReturnValue>;
+
+export function runOnRuntimeAsyncWithId(): never {
+  throw new Error(
+    '[Worklets] `runOnRuntimeAsyncWithId` is not supported on web.'
+  );
 }
 
 export function getUIRuntimeHolder(): object {

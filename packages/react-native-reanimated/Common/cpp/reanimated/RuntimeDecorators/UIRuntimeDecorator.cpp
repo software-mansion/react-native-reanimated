@@ -13,7 +13,8 @@ void UIRuntimeDecorator::decorate(
     const SetGestureStateFunction &setGestureState,
     const ProgressLayoutAnimationFunction &progressLayoutAnimation,
     const EndLayoutAnimationFunction &endLayoutAnimation,
-    const MaybeFlushUIUpdatesQueueFunction &maybeFlushUIUpdatesQueue) {
+    const MaybeFlushUIUpdatesQueueFunction &maybeFlushUIUpdatesQueue,
+    const std::optional<worklets::RequestAnimationFrameHostFunction> &requestAnimationFrame) {
 
   jsi_utils::installJsiFunction(uiRuntime, "_updateProps", updateProps);
   jsi_utils::installJsiFunction(uiRuntime, "_dispatchCommand", dispatchCommand);
@@ -24,6 +25,9 @@ void UIRuntimeDecorator::decorate(
   jsi_utils::installJsiFunction(uiRuntime, "_setGestureState", setGestureState);
   jsi_utils::installJsiFunction(uiRuntime, "_obtainProp", obtainPropFunction);
   jsi_utils::installJsiFunction(uiRuntime, "_maybeFlushUIUpdatesQueue", maybeFlushUIUpdatesQueue);
+  if (requestAnimationFrame.has_value()) {
+    worklets::installRequestAnimationFrame(uiRuntime, *requestAnimationFrame);
+  }
 }
 
 } // namespace reanimated

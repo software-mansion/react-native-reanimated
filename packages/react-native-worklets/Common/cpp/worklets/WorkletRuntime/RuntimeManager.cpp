@@ -1,4 +1,5 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 
 #include <memory>
@@ -36,17 +37,18 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::getUIRuntime() {
 }
 
 std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
-    const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy,
+    const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,
     const std::string &name,
     const std::shared_ptr<SerializableWorklet> &initializer,
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop) {
   const auto runtimeId = getNextRuntimeId();
-  const auto jsQueue = jsiWorkletsModuleProxy->getJSQueue();
 
-  auto workletRuntime = std::make_shared<WorkletRuntime>(runtimeId, jsQueue, name, queue, enableEventLoop);
+  const auto workletRuntime =
+      std::make_shared<WorkletRuntime>(runtimeId, RuntimeData::RuntimeKind::Worker, name, queue, enableEventLoop);
+  const auto targetProxy = JSIWorkletsModuleProxy::createForNewRuntime(sourceProxy, runtimeId);
 
-  workletRuntime->init(jsiWorkletsModuleProxy);
+  workletRuntime->init(targetProxy);
 
   if (initializer) {
     workletRuntime->runSync(initializer);
@@ -58,11 +60,10 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
 }
 
 std::shared_ptr<WorkletRuntime> RuntimeManager::createUninitializedUIRuntime(
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<AsyncQueue> &uiAsyncQueue) {
   const auto uiRuntime = std::make_shared<WorkletRuntime>(
       RuntimeData::uiRuntimeId,
-      jsQueue,
+      RuntimeData::RuntimeKind::UI,
       RuntimeData::uiRuntimeName,
       uiAsyncQueue,
       /*enableEventLoop*/ false);
@@ -80,14 +81,6 @@ void RuntimeManager::registerRuntime(const uint64_t runtimeId, const std::shared
   std::unique_lock registrationLock(registrationMutex_);
   std::unique_lock lock(weakRuntimesMutex_);
   weakRuntimes_[runtimeId] = workletRuntime;
-}
-
-void RuntimeManager::pause() {
-  registrationMutex_.lock();
-}
-
-void RuntimeManager::resume() {
-  registrationMutex_.unlock();
 }
 
 } // namespace worklets

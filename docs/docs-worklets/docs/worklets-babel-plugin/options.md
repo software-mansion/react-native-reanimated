@@ -105,7 +105,9 @@ Defaults to `false`.
 
 This option turns off the source map generation for worklets. Mostly used for testing purposes.
 
-### disableWorkletClasses <AvailableFrom version="0.7.0"/>
+<Badges version="0.7.0">
+### disableWorkletClasses
+</Badges>
 
 Defaults to `false`.
 
@@ -172,13 +174,13 @@ function readFromUI() {
 
 function run() {
   setOnJS();
-  runOnUI(setOnUI)();
+  scheduleOnUI(setOnUI);
   readFromJS();
-  runOnUI(readFromUI)();
+  scheduleOnUI(readFromUI);
 }
 ```
 
-Without `global` as an blocklisted identifier in this case, you'd only get:
+Without `global` as a blocklisted identifier in this case, you'd only get:
 
 ```
 JS THREAD
@@ -201,7 +203,9 @@ Defaults to `false`.
 
 This option dictates the passed file location for a worklet's source map. If you enable this option, the file paths will be relative to `process.cwd` (the current directory where Babel executes). This can be handy for Jest test snapshots to ensure consistent results across machines.
 
-### strictGlobal <AvailableFrom version="0.8.0"/>
+<Badges version="0.8.0">
+### strictGlobal
+</Badges>
 
 :::note
 We highly recommend enabling this option as it will be enabled by default in the future.
@@ -260,3 +264,15 @@ This option can also be useful for Web apps. In Reanimated, there are numerous c
 Defaults to an empty array.
 
 This option allows you to register modules as safe to use on Worklet Runtimes in the [Bundle Mode](/docs/bundleMode/).
+
+### importForwarding
+
+Configures [import forwarding](/docs/0.10/bundleMode/importForwarding) for Bundle Mode. See the [0.10 docs](/docs/0.10/worklets-babel-plugin/plugin-options#importforwarding) for the full reference.
+
+#### importForwarding.moduleNames
+
+See the [0.10 docs](/docs/0.10/worklets-babel-plugin/plugin-options#importforwardingmodulenames).
+
+#### importForwarding.relativePaths
+
+See the [0.10 docs](/docs/0.10/worklets-babel-plugin/plugin-options#importforwardingrelativepaths).

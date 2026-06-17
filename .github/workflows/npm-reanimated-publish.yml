@@ -59,4 +59,4 @@ jobs:
       release-type: ${{ github.event_name == 'schedule' && 'nightly' || inputs.release-type || 'nightly' }}
       version: ${{ inputs.version }}
       npm-tag: ${{ inputs.npm-tag }}
-      publish: ${{ inputs.publish || false }}
+      publish: ${{ github.event_name == 'schedule' || inputs.publish || false }}

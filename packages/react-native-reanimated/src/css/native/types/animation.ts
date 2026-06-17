@@ -13,7 +13,7 @@ type CSSPropKeyframe<V> = {
 }[];
 
 export type PropsWithKeyframes<TProps = UnknownRecord> = {
-  [P in keyof TProps]: TProps[P] extends infer U | undefined
+  [P in keyof TProps]: TProps[P] extends (infer U) | undefined
     ? U extends object
       ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
         U extends Array<any>

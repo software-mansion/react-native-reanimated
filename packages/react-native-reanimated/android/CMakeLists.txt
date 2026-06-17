@@ -1,5 +1,5 @@
 project(Reanimated)
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -11,11 +11,7 @@ set(CMAKE_CXX_STANDARD 20)
 include("${REACT_NATIVE_DIR}/ReactAndroid/cmake-utils/folly-flags.cmake")
 add_compile_options(${folly_FLAGS})
 
-string(
-  APPEND
-  CMAKE_CXX_FLAGS
-  " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}\
-    -DREANIMATED_VERSION=${REANIMATED_VERSION}\
+string(APPEND CMAKE_CXX_FLAGS " -DREANIMATED_VERSION=${REANIMATED_VERSION}\
     -DREANIMATED_FEATURE_FLAGS=\"${REANIMATED_FEATURE_FLAGS}\"")
 string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")
 # flags to optimize the binary size
@@ -37,18 +33,28 @@ endif()
 set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 set(ANDROID_CPP_DIR "${CMAKE_SOURCE_DIR}/src/main/cpp")
 set(COMMON_CPP_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp")
+set(NATIVEVIEW_DIR "${CMAKE_SOURCE_DIR}/../Common/NativeView")
+set(PACKAGE_ROOT_DIR "${CMAKE_SOURCE_DIR}/..")
+set(CODEGEN_OUTPUT_DIR "${BUILD_DIR}/generated/source/codegen/jni")
 
 file(GLOB_RECURSE REANIMATED_COMMON_CPP_SOURCES CONFIGURE_DEPENDS
      "${COMMON_CPP_DIR}/reanimated/*.cpp")
 file(GLOB_RECURSE REANIMATED_ANDROID_CPP_SOURCES CONFIGURE_DEPENDS
      "${ANDROID_CPP_DIR}/reanimated/*.cpp")
+file(GLOB_RECURSE REANIMATED_NATIVEVIEW_CPP_SOURCES CONFIGURE_DEPENDS
+     "${NATIVEVIEW_DIR}/react/renderer/components/rnreanimated/*.cpp")
 
 find_package(fbjni REQUIRED CONFIG)
 find_package(ReactAndroid REQUIRED CONFIG)
 find_package(react-native-worklets REQUIRED CONFIG)
 
-add_library(reanimated SHARED ${REANIMATED_COMMON_CPP_SOURCES}
-                              ${REANIMATED_ANDROID_CPP_SOURCES})
+add_library(
+  reanimated SHARED
+  ${REANIMATED_COMMON_CPP_SOURCES} ${REANIMATED_ANDROID_CPP_SOURCES}
+  ${REANIMATED_NATIVEVIEW_CPP_SOURCES})
+
+target_precompile_headers(reanimated PRIVATE
+                          "${ANDROID_CPP_DIR}/ReanimatedPCH.h")
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
   include(
@@ -63,6 +69,8 @@ target_include_directories(
   reanimated
   PRIVATE "${COMMON_CPP_DIR}"
           "${ANDROID_CPP_DIR}"
+          "${PACKAGE_ROOT_DIR}"
+          "${CODEGEN_OUTPUT_DIR}"
           "${REACT_NATIVE_DIR}/ReactCommon"
           "${REACT_NATIVE_DIR}/ReactCommon/yoga"
           "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule"

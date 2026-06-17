@@ -2,7 +2,6 @@
 
 export function setupRequestAnimationFrame() {
   'worklet';
-  const nativeRequestAnimationFrame = globalThis.requestAnimationFrame;
   const callMicrotasks = globalThis.__callMicrotasks;
 
   let queuedCallbacks: ((timestamp: number) => void)[] = [];
@@ -62,7 +61,7 @@ export function setupRequestAnimationFrame() {
     flushQueue(timestamp);
 
     /* Schedule next frame */
-    nativeRequestAnimationFrame(nativeFlushQueue);
+    globalThis.__nativeRequestAnimationFrame(nativeFlushQueue);
   }
 
   function flushQueue(timestamp: number) {
@@ -79,7 +78,7 @@ export function setupRequestAnimationFrame() {
   };
 
   /* Start the loop */
-  nativeRequestAnimationFrame(nativeFlushQueue);
+  globalThis.__nativeRequestAnimationFrame(nativeFlushQueue);
 
   // TODO: Remove it after support for Reanimated 4.3 is dropped.
   globalThis.__flushAnimationFrame = (eventTimestamp: number) => {

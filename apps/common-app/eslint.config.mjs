@@ -3,7 +3,6 @@ import jsEslint from '@eslint/js';
 import importPlugin from 'eslint-plugin-import';
 import noRelativeImportPaths from 'eslint-plugin-no-relative-import-paths';
 import perfectionist from 'eslint-plugin-perfectionist';
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import react from 'eslint-plugin-react';
 // eslint-disable-next-line import/default
 import reactHooks from 'eslint-plugin-react-hooks';
@@ -19,7 +18,6 @@ export default config(
   jsEslint.configs.recommended,
   react.configs.flat.recommended,
   importPlugin.flatConfigs.recommended,
-  eslintPluginPrettierRecommended,
   {
     languageOptions: {
       parserOptions: {
@@ -39,7 +37,7 @@ export default config(
       globals: {
         React: true,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        ...reactNative.environments['react-native']['react-native'],
+        ...reactNative.environments['react-native'].globals,
         ...globals.node,
       },
     },
@@ -237,7 +235,6 @@ export default config(
       'perfectionist/sort-named-imports': 'off',
       'perfectionist/sort-object-types': 'off',
       'perfectionist/sort-objects': 'warn',
-      'prettier/prettier': 'error',
       radix: ['error', 'as-needed'],
       'react-hooks/exhaustive-deps': 'warn',
       'react-hooks/rules-of-hooks': 'error',

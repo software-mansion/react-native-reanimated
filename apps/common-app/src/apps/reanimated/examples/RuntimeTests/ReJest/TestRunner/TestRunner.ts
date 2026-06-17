@@ -6,7 +6,6 @@ import { TestComponent } from '../TestComponent';
 import type {
   DefaultValue,
   ValueWrapper,
-  MaybeAsync,
   TestCase,
   TestConfiguration,
   TestSuite,
@@ -14,28 +13,31 @@ import type {
 } from '../types';
 import { RenderLock } from '../utils/SyncUIRunner';
 import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
-import { assertTestCase, assertTestSuite } from './Asserts';
+import { assertTestCase } from './Asserts';
 import { CallTrackerRegistry } from './CallTrackerRegistry';
 import { NotificationRegistry } from './NotificationRegistry';
 import { TestSuiteBuilder } from './TestSuiteBuilder';
 import { TestSummaryLogger } from './TestSummaryLogger';
 import { ValueRegistry } from './ValueRegistry';
 import { WindowDimensionsMocker } from './WindowDimensionsMocker';
+import { WorkletRuntimePool } from './WorkletRuntimePool';
 import { scheduleOnRN } from 'react-native-worklets';
 
 export { Presets } from '../Presets';
 
 export class TestRunner {
-  private _currentTestSuite: TestSuite | null = null;
   private _currentTestCase: TestCase | null = null;
-  private _renderHook: (component: ReactElement<Component> | null) => void = () => {};
+  private _renderHook: (component: ReactElement<Component> | null) => void =
+    () => {};
   private _renderLock: RenderLock = new RenderLock();
   private _testSummary: TestSummaryLogger = new TestSummaryLogger();
-  private _windowDimensionsMocker: WindowDimensionsMocker = new WindowDimensionsMocker();
+  private _windowDimensionsMocker: WindowDimensionsMocker =
+    new WindowDimensionsMocker();
   private _animationRecorder = new AnimationUpdatesRecorder();
   private _valueRegistry = new ValueRegistry();
   private _callTrackerRegistry = new CallTrackerRegistry();
   private _notificationRegistry = new NotificationRegistry();
+  private _workletRuntimePool = new WorkletRuntimePool();
   private _testSuiteBuilder = new TestSuiteBuilder();
 
   public getWindowDimensionsMocker() {
@@ -58,6 +60,10 @@ export class TestRunner {
     return this._notificationRegistry;
   }
 
+  public getWorkletRuntimePool() {
+    return this._workletRuntimePool;
+  }
+
   public getTestSuiteBuilder() {
     return this._testSuiteBuilder;
   }
@@ -69,12 +75,18 @@ export class TestRunner {
 
   public createTestValue<T = DefaultValue>(
     defaultValue: T | DefaultValue,
-    customSetter?: (prev: T, current: T) => T,
-  ): [ValueWrapper<T>, (value?: T | DefaultValue, notificationName?: string) => void] {
+    customSetter?: (prev: T, current: T) => T
+  ): [
+    ValueWrapper<T>,
+    (value?: T | DefaultValue, notificationName?: string) => void,
+  ] {
     const state: ValueWrapper<T> = {
       value: defaultValue,
     };
-    const jsSetter = (value: T | DefaultValue = 'ok', notificationName?: string) => {
+    const jsSetter = (
+      value: T | DefaultValue = 'ok',
+      notificationName?: string
+    ) => {
       if (customSetter) {
         state.value = customSetter(state.value as T, value as T);
       } else {
@@ -154,7 +166,6 @@ export class TestRunner {
       return;
     }
 
-    this._currentTestSuite = testSuite;
     this._testSummary.logRunningTestSuite(testSuite);
 
     if (testSuite.beforeAll) {
@@ -170,7 +181,6 @@ export class TestRunner {
     if (testSuite.afterAll) {
       await testSuite.afterAll();
     }
-    this._currentTestSuite = null;
   }
 
   private async runTestCase(testSuite: TestSuite, testCase: TestCase) {
@@ -198,25 +208,5 @@ export class TestRunner {
   public expect(currentValue: TestValue): Matchers {
     assertTestCase(this._currentTestCase);
     return new Matchers(currentValue, this._currentTestCase);
-  }
-
-  public beforeAll(job: MaybeAsync<void>) {
-    assertTestSuite(this._currentTestSuite);
-    this._currentTestSuite.beforeAll = job;
-  }
-
-  public afterAll(job: MaybeAsync<void>) {
-    assertTestSuite(this._currentTestSuite);
-    this._currentTestSuite.afterAll = job;
-  }
-
-  public beforeEach(job: MaybeAsync<void>) {
-    assertTestSuite(this._currentTestSuite);
-    this._currentTestSuite.beforeEach = job;
-  }
-
-  public afterEach(job: MaybeAsync<void>) {
-    assertTestSuite(this._currentTestSuite);
-    this._currentTestSuite.afterEach = job;
   }
 }

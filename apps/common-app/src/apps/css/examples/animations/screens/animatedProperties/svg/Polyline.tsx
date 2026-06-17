@@ -12,8 +12,8 @@ const AnimatedPolyline = Animated.createAnimatedComponent(Polyline);
 export default function PolylineExample() {
   return (
     <ExamplesScreen<
-      { keyframes: CSSAnimationKeyframes<PolylineProps> },
-      PolylineProps
+      PolylineProps,
+      { keyframes: CSSAnimationKeyframes<PolylineProps> }
     >
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',
@@ -125,6 +125,7 @@ export default function PolylineExample() {
                   title: 'Shrinking polyline',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Different Number of Points',
             },
           ],

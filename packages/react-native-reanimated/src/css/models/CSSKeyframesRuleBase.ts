@@ -1,11 +1,10 @@
 'use strict';
-import type { PlainStyle } from '../../common';
 import { ANIMATION_NAME_PREFIX } from '../constants';
 import type { CSSAnimationKeyframes, CSSKeyframesRule } from '../types';
 
-export default abstract class CSSKeyframesRuleBase<S extends PlainStyle>
-  implements CSSKeyframesRule
-{
+export default abstract class CSSKeyframesRuleBase<
+  S extends object,
+> implements CSSKeyframesRule {
   private static currentAnimationID = 0;
 
   // TODO - change cssRules prop to match specification

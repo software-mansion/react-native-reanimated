@@ -4,7 +4,6 @@ import tsEslint from 'typescript-eslint';
 import reactNative from 'eslint-plugin-react-native';
 import { fixupPluginRules } from '@eslint/compat';
 import { globalIgnores } from 'eslint/config';
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import reanimated from 'eslint-plugin-reanimated';
 // @ts-expect-error No types for this package.
 import noInlineStyles from 'eslint-plugin-no-inline-styles';
@@ -16,7 +15,6 @@ import jest from 'eslint-plugin-jest';
 export default tsEslint.config(
   jsEslint.configs.recommended,
   react.configs.flat.recommended,
-  eslintPluginPrettierRecommended,
   {
     languageOptions: {
       parserOptions: {

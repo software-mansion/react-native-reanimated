@@ -2,24 +2,21 @@ require "json"
 require_relative './scripts/reanimated_utils'
 
 reanimated_package_json = JSON.parse(File.read(File.join(__dir__, "package.json")))
-$config = find_config()
-assert_minimal_react_native_version($config)
-
-$new_arch_enabled = ENV['RCT_NEW_ARCH_ENABLED'] != '0'
-assert_new_architecture_enabled($new_arch_enabled)
+config = ReanimatedUtils.find_config()
+ReanimatedUtils.assert_minimal_react_native_version(config)
 
 boost_compiler_flags = '-Wno-documentation'
-example_flag = $config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_APP' : ''
+example_flag = config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_APP' : ''
 reanimated_profiling_flag = ENV['IS_REANIMATED_PROFILING'] ? '-DREANIMATED_PROFILING' : ''
-version_flags = "-DREACT_NATIVE_MINOR_VERSION=#{$config[:react_native_minor_version]} -DREANIMATED_VERSION=#{reanimated_package_json['version']}"
+version_flag = "-DREANIMATED_VERSION=#{reanimated_package_json['version']}"
 ios_min_version = '13.4'
 
 # Directory in which data for further processing for clangd will be stored.
 compilation_metadata_dir = "CompilationDatabase"
 # We want generate the metadata only within the monorepo of Reanimated.
-compilation_metadata_generation_flag = $config[:is_reanimated_example_app] ? "-gen-cdb-fragment-path #{compilation_metadata_dir}" : ''
+compilation_metadata_generation_flag = config[:is_reanimated_example_app] ? "-gen-cdb-fragment-path #{compilation_metadata_dir}" : ''
 
-feature_flags = "-DREANIMATED_FEATURE_FLAGS=\"#{get_static_feature_flags()}\""
+feature_flags = "-DREANIMATED_FEATURE_FLAGS=\"#{ReanimatedUtils.get_static_feature_flags()}\""
 
 Pod::Spec.new do |s|
 
@@ -49,6 +46,12 @@ Pod::Spec.new do |s|
     ss.source_files = "apple/reanimated/**/*.{mm,h,m}"
     ss.public_header_files = "apple/reanimated/**/*.h"
     ss.header_mappings_dir = "apple/reanimated"
+  end
+
+  s.subspec "view" do |ss|
+    ss.source_files = "Common/NativeView/**/*.{mm,h,cpp}"
+    ss.header_dir = ""
+    ss.header_mappings_dir = "Common/NativeView"
   end
 
   s.pod_target_xcconfig = {
@@ -81,18 +84,15 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/Headers/Public/hermes-engine"',
       '"$(PODS_ROOT)/Headers/Public/RNWorklets"',
       # for static frameworks
-      "\"$(PODS_ROOT)/#{$config[:react_native_common_dir]}\"",
-      "\"$(PODS_ROOT)/#{$config[:react_native_common_dir]}/jsitooling\"",
+      "\"$(PODS_ROOT)/#{config[:react_native_common_dir]}\"",
+      "\"$(PODS_ROOT)/#{config[:react_native_common_dir]}/jsitooling\"",
     ].join(' '),
-    "OTHER_CFLAGS" => "$(inherited) #{example_flag} #{version_flags} #{compilation_metadata_generation_flag} #{feature_flags} #{reanimated_profiling_flag}",
+    "OTHER_CFLAGS" => "$(inherited) #{example_flag} #{version_flag} #{compilation_metadata_generation_flag} #{feature_flags} #{reanimated_profiling_flag}",
   }
   s.requires_arc = true
 
   install_modules_dependencies(s)
 
   s.dependency 'React-jsi'
-  using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
-  if using_hermes && !$config[:is_tvos_target]
-    s.dependency 'React-hermes'
-  end
+  s.dependency 'React-hermes'
 end

@@ -32,14 +32,14 @@ void RNRuntimeDecorator::decorate(
   rnRuntime.global().setProperty(rnRuntime, "_REANIMATED_IS_REDUCED_MOTION", reanimatedModuleProxy->isReducedMotion());
 
   rnRuntime.global().setProperty(
-      rnRuntime, "__reanimatedModuleProxy", jsi::Object::createFromHostObject(rnRuntime, reanimatedModuleProxy));
+      rnRuntime, "__reanimatedModuleProxy", reanimatedModuleProxy->toOptimizedObject(rnRuntime));
 }
 
 #ifdef IS_REANIMATED_EXAMPLE_APP
 void RNRuntimeDecorator::installDebugBindings(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<ReanimatedModuleProxy> &reanimatedModuleProxy) {
-#if TARGET_OS_X
+#if defined(TARGET_OS_X) && TARGET_OS_X
   jsi_utils::installJsiFunction(
       rnRuntime, "__getTagFromShadowNodeWrapper", [](jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) {
         auto node = Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
