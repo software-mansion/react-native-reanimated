@@ -1,10 +1,6 @@
 import type { NodePath } from '@babel/core';
 import type { Binding } from '@babel/traverse';
-import type {
-  Identifier,
-  ImportDeclaration,
-  JSXIdentifier,
-} from '@babel/types';
+import type { Identifier, ImportDeclaration } from '@babel/types';
 import { cloneNode } from '@babel/types';
 
 import { globals } from './globals';
@@ -60,10 +56,6 @@ export function getClosure(
         }
 
         if (!binding) {
-          if (idPath.isJSXIdentifier()) {
-            return;
-          }
-
           /**
            * The variable is unbound - it's either a mistake or implicit capture
            * from the global scope. In this case we have to avoid capturing
@@ -74,10 +66,6 @@ export function getClosure(
           }
           capturedNames.add(name);
           closureVariables.push(cloneNode(idPath.node as Identifier, true));
-          return;
-        }
-
-        if (shouldSkipBundleModeJSXIdentifier(idPath, binding, state)) {
           return;
         }
 
@@ -138,34 +126,4 @@ export function getClosure(
     moduleBindingsToImport,
     relativeBindingsToImport,
   };
-}
-
-function shouldSkipBundleModeJSXIdentifier(
-  idPath: NodePath<Identifier | JSXIdentifier>,
-  binding: Binding,
-  state: WorkletsPluginPass
-): boolean {
-  if (!idPath.isJSXIdentifier()) {
-    return false;
-  }
-
-  if (!isImport(binding)) {
-    return true;
-  }
-
-  if (isImportRelative(binding)) {
-    const isAllowed = canForwardRelativeImport(
-      state.filename,
-      state.opts.importForwarding.relativePaths
-    );
-    return !isAllowed;
-  }
-
-  const parentPath = binding.path.parentPath as NodePath<ImportDeclaration>;
-  const source = parentPath.node.source.value;
-  const isAllowed = canForwardModuleImport(
-    source,
-    state.opts.importForwarding.moduleNames
-  );
-  return !isAllowed;
 }
