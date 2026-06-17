@@ -16,19 +16,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 namespace reanimated::css {
 
-// Whether Core Animation can drive the property natively for the given easing.
+// Can Core Animation drive this property with the given easing?
 bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &easing);
 
-// Parses a transition endpoint into the platform value representation. A null /
-// undefined endpoint resolves to the property's CSS default; nullopt means the
-// value is not expressible natively and the property runs on the loop. One
-// overload per value source: jsi::Value (config path) and folly::dynamic (toggle).
+// Parses a transition endpoint into a platform value. Null/undefined falls back
+// to the property's CSS default; nullopt means it can't be animated natively and
+// runs on the loop. Two overloads: jsi::Value (config) and folly::dynamic (toggle).
 std::optional<PlatformValue>
 parsePlatformValue(facebook::jsi::Runtime &rt, const std::string &propertyName, const facebook::jsi::Value &value);
 std::optional<PlatformValue> parsePlatformValue(const std::string &propertyName, const folly::dynamic &value);
 
-// Converts a parsed platform value to its Core Animation representation
-// (NSNumber, NSValue, or CGColor).
+// Converts a platform value to its Core Animation type (NSNumber, NSValue, or CGColor).
 id idFromPlatformValue(const PlatformValue &value);
 
 CAMediaTimingFunction *makeCSSTimingFunction(const EasingConfig &easing);
