@@ -352,7 +352,9 @@ void removeTransformAnimations(CALayer *layer, NSString *keyPath)
       // opposite to what presentation.transform reports via KVC), so adding
       // op[N-1] first down to op[0] last makes the GPU render
       // op[N-1] * ... * op[0] = matrixFromOperations3D, matching the loop and
-      // preserving operation order, duplicates and rotation count.
+      // preserving operation order, duplicates and rotation count. This ordering
+      // is observed Core Animation behavior, not a documented contract - it was
+      // pinned down by on-device pixel testing; re-verify on device if it regresses.
       CABasicAnimation *base = [CABasicAnimation animationWithKeyPath:keyPath];
       base.fromValue = base.toValue = [NSValue valueWithCATransform3D:CATransform3DIdentity];
       configureTiming(base);
