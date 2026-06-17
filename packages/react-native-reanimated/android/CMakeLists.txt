@@ -48,9 +48,10 @@ find_package(fbjni REQUIRED CONFIG)
 find_package(ReactAndroid REQUIRED CONFIG)
 find_package(react-native-worklets REQUIRED CONFIG)
 
-add_library(reanimated SHARED ${REANIMATED_COMMON_CPP_SOURCES}
-                              ${REANIMATED_ANDROID_CPP_SOURCES}
-                              ${REANIMATED_NATIVEVIEW_CPP_SOURCES})
+add_library(
+  reanimated SHARED
+  ${REANIMATED_COMMON_CPP_SOURCES} ${REANIMATED_ANDROID_CPP_SOURCES}
+  ${REANIMATED_NATIVEVIEW_CPP_SOURCES})
 
 target_precompile_headers(reanimated PRIVATE
                           "${ANDROID_CPP_DIR}/ReanimatedPCH.h")
