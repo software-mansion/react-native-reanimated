@@ -18,9 +18,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter;
 
-// Config path: animates the property natively and remembers its settings for
-// later toggles. Returns NO if the value can't be animated natively, in which
-// case it runs on the loop instead.
+/// Config path: animates the property natively and remembers its settings for
+/// later toggles. Returns NO if the value can't be animated natively, in which
+/// case it runs on the loop instead.
 - (BOOL)applyTransitionForTag:(facebook::react::Tag)viewTag
                  propertyName:(const std::string &)propertyName
                     fromValue:(const facebook::jsi::Value &)fromValue
@@ -29,9 +29,9 @@ NS_ASSUME_NONNULL_BEGIN
                      settings:(const reanimated::css::CSSTransitionPropertySettings &)settings
                     timestamp:(double)timestamp;
 
-// Toggle path: a runtime-free version that reuses the settings stored by the
-// config apply. Returns NO if there are no stored settings or the value can't be
-// animated natively.
+/// Toggle path: a runtime-free version that reuses the settings stored by the
+/// config apply. Returns NO if there are no stored settings or the value can't be
+/// animated natively.
 - (BOOL)applyDynamicTransitionForTag:(facebook::react::Tag)viewTag
                         propertyName:(const std::string &)propertyName
                            fromValue:(const folly::dynamic &)fromValue
