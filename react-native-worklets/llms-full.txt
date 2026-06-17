@@ -17,11 +17,17 @@ docs](/docs/0.10/bundleMode/importForwarding).
 
 # Overview
 
-Bundle Mode is an experimental feature that gives worklets access to your whole JavaScript bundle - meaning that any code that's present in the bundle can be executed in any worklet and on any runtime. This means that third party libraries can be used in worklets without the need to patch them. It's also a performance improvement as worklets' code can benefit from all the optimizations that pre-compiled bytecode offers.
+Bundle Mode is a feature that gives worklets access to your whole JavaScript bundle - meaning that any code that's present in the bundle can be executed in any worklet and on any runtime. This means that third party libraries can be used in worklets without the need to patch them. It's also a performance improvement as worklets' code can benefit from all the optimizations that pre-compiled bytecode offers.
 
-**We envision the Bundle Mode to be the default way of using worklets in the future.**
+**Bundle Mode is considered stable as of version 0.10.0.**
+
+**Bundle Mode will be the default way of using worklets in the future.**
 
 Instructions on how to enable it can be found [here](/docs/bundleMode/setup).
+
+## Legacy Eval Mode
+
+The former way of using worklets - where each worklet is serialized as a string and evaluated individually on the Worklet Runtime - is referred to as **Legacy Eval Mode**. It's still the default mode of running worklets, but we strongly recommend opting out of it with the Bundle Mode.
 
 
 ---
@@ -718,7 +724,7 @@ Call tables are quick references that show **where a given scheduling function c
 
 ### Why does Bundle Mode matter?
 
-Without Bundle Mode, Worklet Runtimes only have a subset of functionalities of the RN Runtime, due to limitations of serialization of worklets. With Bundle Mode enabled, every runtime has access to the full JavaScript bundle, so most threading APIs become available on all runtimes.
+In [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode), Worklet Runtimes only have a subset of functionalities of the RN Runtime, due to limitations of serialization of worklets. With Bundle Mode enabled, every runtime has access to the full JavaScript bundle, so most threading APIs become available on all runtimes.
 
 ### How to read a call table
 
@@ -1237,7 +1243,7 @@ The JavaScript value to be converted into a Serializable reference. It must be o
 * This function is rarely used as in almost all cases Worklets handle the creation of Serializables for you.
 * This function includes cycle detection to prevent infinite recursion.
 * `jsi::NativeState` of a passed value is preserved during serialization.
-* Outside of [Bundle Mode](/docs/bundleMode/), `createSerializable` can be called only on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime). In Bundle Mode, it can be called from any Runtime. If you need to create a Serializable on a [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) outside of Bundle Mode, use deprecated [makeShareableCloneOnUIRecursive](/docs/memory/makeShareableCloneOnUIRecursive) instead.
+* In [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode), `createSerializable` can be called only on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime). In Bundle Mode, it can be called from any Runtime. If you need to create a Serializable on a [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) in Legacy Eval Mode, use deprecated [makeShareableCloneOnUIRecursive](/docs/memory/makeShareableCloneOnUIRecursive) instead.
 
 
 ---
@@ -1465,7 +1471,7 @@ The initial value to be held by the created Synchronizable. As it has to be seri
 
 ## Remarks
 
-* Outside of [Bundle Mode](/docs/bundleMode/), `createSynchronizable` can be called only on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime). In Bundle Mode, it can be called from any Runtime.
+* In [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode), `createSynchronizable` can be called only on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime). In Bundle Mode, it can be called on any Runtime.
 
 
 ---

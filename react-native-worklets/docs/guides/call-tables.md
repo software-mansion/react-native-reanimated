@@ -4,7 +4,7 @@ Call tables are quick references that show **where a given scheduling function c
 
 ### Why does Bundle Mode matter?
 
-Without Bundle Mode, Worklet Runtimes only have a subset of functionalities of the RN Runtime, due to limitations of serialization of worklets. With Bundle Mode enabled, every runtime has access to the full JavaScript bundle, so most threading APIs become available on all runtimes.
+In [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode), Worklet Runtimes only have a subset of functionalities of the RN Runtime, due to limitations of serialization of worklets. With Bundle Mode enabled, every runtime has access to the full JavaScript bundle, so most threading APIs become available on all runtimes.
 
 ### How to read a call table
 
