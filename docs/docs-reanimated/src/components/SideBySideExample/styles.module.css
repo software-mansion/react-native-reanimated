@@ -47,32 +47,23 @@
   padding: 24px;
 }
 
-/* The recording is a tall phone screen with the gradient centered in a lot of
-   empty space. Frame the card as a square and crop to the center (see .video) so
-   only the gradient shows, centered. The card hugs that square and tops out at
-   the column height, so it never balloons to match an expanded code block. */
-.row > .preview > .videoCard {
-  flex: 0 1 auto;
-  align-self: center;
-  width: 100%;
-  max-height: 100%;
-  aspect-ratio: 1 / 1;
-}
-
+/* The card fills the column to match the code block's height; the cropped
+   recording (see .video) is centered inside it. */
 .videoCard {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   overflow: hidden;
   border: 1px solid var(--swm-border);
   background-color: var(--swm-off-background);
 }
 
-/* Crop to the centre of the recording (the gradient), trimming the empty space
-   and the status bar above and below it. */
+/* A square cropped to the centre of the recording (the gradient), trimming the
+   empty space and status bar above and below it. */
 .video {
-  flex: 1;
   width: 100%;
-  min-height: 0;
+  max-height: 100%;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
 }
 
