@@ -244,15 +244,15 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     return this.#reanimatedModuleProxy.getSettledUpdates();
   }
 
-  registerPseudoStyle(
+  registerPseudoStyles(
     shadowNodeWrapper: ShadowNodeWrapper,
     config: CSSPseudoStyleConfig
   ) {
-    this.#reanimatedModuleProxy.registerPseudoStyle(shadowNodeWrapper, config);
+    this.#reanimatedModuleProxy.registerPseudoStyles(shadowNodeWrapper, config);
   }
 
-  unregisterPseudoStyle(viewTag: number) {
-    this.#reanimatedModuleProxy.unregisterPseudoStyle(viewTag);
+  unregisterPseudoStyles(viewTag: number) {
+    this.#reanimatedModuleProxy.unregisterPseudoStyles(viewTag);
   }
 }
 
@@ -297,8 +297,8 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
     return [];
   }
 
-  registerPseudoStyle(): void {}
-  unregisterPseudoStyle(): void {}
+  registerPseudoStyles(): void {}
+  unregisterPseudoStyles(): void {}
 }
 
 function installTurboModule() {

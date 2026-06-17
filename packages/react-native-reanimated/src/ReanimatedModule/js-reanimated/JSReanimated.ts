@@ -349,15 +349,15 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
-  registerPseudoStyle(): void {
+  registerPseudoStyles(): void {
     throw new Error(
-      '[Reanimated] `registerPseudoStyle` is not available in JSReanimated.'
+      '[Reanimated] `registerPseudoStyles` is not available in JSReanimated.'
     );
   }
 
-  unregisterPseudoStyle(): void {
+  unregisterPseudoStyles(): void {
     throw new Error(
-      '[Reanimated] `unregisterPseudoStyle` is not available in JSReanimated.'
+      '[Reanimated] `unregisterPseudoStyles` is not available in JSReanimated.'
     );
   }
 }

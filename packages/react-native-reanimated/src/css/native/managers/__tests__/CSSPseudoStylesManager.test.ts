@@ -3,12 +3,12 @@ import type { NativePropsBuilder } from '../../../../common';
 import type { ShadowNodeWrapper } from '../../../../commonTypes';
 import type { CSSStyle } from '../../../types';
 import { filterCSSAndStyleProperties } from '../../../utils';
-import { registerPseudoStyle, unregisterPseudoStyle } from '../../proxy';
+import { registerPseudoStyles, unregisterPseudoStyles } from '../../proxy';
 import CSSPseudoStylesManager from '../CSSPseudoStylesManager';
 
 jest.mock('../../proxy.ts', () => ({
-  registerPseudoStyle: jest.fn(),
-  unregisterPseudoStyle: jest.fn(),
+  registerPseudoStyles: jest.fn(),
+  unregisterPseudoStyles: jest.fn(),
 }));
 
 function pushStyle(manager: CSSPseudoStylesManager, style: CSSStyle) {
@@ -44,18 +44,22 @@ describe('CSSPseudoStylesManager', () => {
         opacity: { default: 0, ':hover': 1 },
       });
 
-      expect(registerPseudoStyle).toHaveBeenCalledTimes(1);
-      expect(registerPseudoStyle).toHaveBeenCalledWith(
+      expect(registerPseudoStyles).toHaveBeenCalledTimes(1);
+      expect(registerPseudoStyles).toHaveBeenCalledWith(
         shadowNodeWrapper,
         expect.objectContaining({
-          selector: ':hover',
-          selectorStyle: { opacity: 1 },
           defaultStyle: { opacity: 0 },
+          selectors: [
+            expect.objectContaining({
+              selector: ':hover',
+              selectorStyle: { opacity: 1 },
+            }),
+          ],
         })
       );
     });
 
-    test('registers each supported selector separately', () => {
+    test('registers all supported selectors in one batch', () => {
       pushStyle(manager, {
         opacity: {
           default: 0,
@@ -64,21 +68,21 @@ describe('CSSPseudoStylesManager', () => {
         },
       });
 
-      expect(registerPseudoStyle).toHaveBeenCalledTimes(2);
-      expect(registerPseudoStyle).toHaveBeenCalledWith(
-        shadowNodeWrapper,
-        expect.objectContaining({ selector: ':hover' })
-      );
-      expect(registerPseudoStyle).toHaveBeenCalledWith(
-        shadowNodeWrapper,
-        expect.objectContaining({ selector: ':active' })
+      expect(registerPseudoStyles).toHaveBeenCalledTimes(1);
+      const { selectors } = (registerPseudoStyles as jest.Mock).mock
+        .calls[0][1];
+      expect(selectors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ selector: ':hover' }),
+          expect.objectContaining({ selector: ':active' }),
+        ])
       );
     });
 
     test('does not register when there are no pseudo styles', () => {
       pushStyle(manager, { opacity: 0.5 });
 
-      expect(registerPseudoStyle).not.toHaveBeenCalled();
+      expect(registerPseudoStyles).not.toHaveBeenCalled();
     });
 
     test('skips selectors not supported on native', () => {
@@ -86,7 +90,7 @@ describe('CSSPseudoStylesManager', () => {
         color: { default: 'black', ':visited': 'red' },
       });
 
-      expect(registerPseudoStyle).not.toHaveBeenCalled();
+      expect(registerPseudoStyles).not.toHaveBeenCalled();
     });
 
     test('applies transition settings to selector props', () => {
@@ -96,16 +100,20 @@ describe('CSSPseudoStylesManager', () => {
         transitionDuration: '300ms',
       });
 
-      expect(registerPseudoStyle).toHaveBeenCalledWith(
+      expect(registerPseudoStyles).toHaveBeenCalledWith(
         shadowNodeWrapper,
         expect.objectContaining({
-          selector: ':hover',
-          transition: {
-            opacity: expect.objectContaining({
-              value: [0, 1],
-              duration: 300,
+          selectors: [
+            expect.objectContaining({
+              selector: ':hover',
+              transition: {
+                opacity: expect.objectContaining({
+                  value: [0, 1],
+                  duration: 300,
+                }),
+              },
             }),
-          },
+          ],
         })
       );
     });
@@ -115,18 +123,22 @@ describe('CSSPseudoStylesManager', () => {
         opacity: { default: 0, ':hover': 1 },
       });
 
-      expect(registerPseudoStyle).toHaveBeenCalledWith(
+      expect(registerPseudoStyles).toHaveBeenCalledWith(
         shadowNodeWrapper,
         expect.objectContaining({
-          transition: {
-            opacity: expect.objectContaining({
-              value: [0, 1],
-              duration: 0,
-              delay: 0,
-              timingFunction: 'ease',
-              allowDiscrete: false,
+          selectors: [
+            expect.objectContaining({
+              transition: {
+                opacity: expect.objectContaining({
+                  value: [0, 1],
+                  duration: 0,
+                  delay: 0,
+                  timingFunction: 'ease',
+                  allowDiscrete: false,
+                }),
+              },
             }),
-          },
+          ],
         })
       );
     });
@@ -141,16 +153,20 @@ describe('CSSPseudoStylesManager', () => {
         transitionDuration: '150ms',
       });
 
-      expect(registerPseudoStyle).toHaveBeenCalledWith(
+      expect(registerPseudoStyles).toHaveBeenCalledWith(
         shadowNodeWrapper,
         expect.objectContaining({
-          selector: ':hover',
-          transition: {
-            transform: expect.objectContaining({
-              value: [[{ scale: 1 }], [{ scale: 1.1 }]],
-              duration: 150,
+          selectors: [
+            expect.objectContaining({
+              selector: ':hover',
+              transition: {
+                transform: expect.objectContaining({
+                  value: [[{ scale: 1 }], [{ scale: 1.1 }]],
+                  duration: 150,
+                }),
+              },
             }),
-          },
+          ],
         })
       );
     });
@@ -160,17 +176,21 @@ describe('CSSPseudoStylesManager', () => {
         backgroundColor: { default: 'red', ':hover': undefined },
       });
 
-      expect(registerPseudoStyle).toHaveBeenCalledWith(
+      expect(registerPseudoStyles).toHaveBeenCalledWith(
         shadowNodeWrapper,
         expect.objectContaining({
-          selector: ':hover',
-          selectorStyle: { backgroundColor: null },
           defaultStyle: { backgroundColor: 'red' },
-          transition: {
-            backgroundColor: expect.objectContaining({
-              value: ['red', null],
+          selectors: [
+            expect.objectContaining({
+              selector: ':hover',
+              selectorStyle: { backgroundColor: null },
+              transition: {
+                backgroundColor: expect.objectContaining({
+                  value: ['red', null],
+                }),
+              },
             }),
-          },
+          ],
         })
       );
     });
@@ -180,17 +200,21 @@ describe('CSSPseudoStylesManager', () => {
         backgroundColor: { ':hover': 'red' },
       });
 
-      expect(registerPseudoStyle).toHaveBeenCalledWith(
+      expect(registerPseudoStyles).toHaveBeenCalledWith(
         shadowNodeWrapper,
         expect.objectContaining({
-          selector: ':hover',
-          selectorStyle: { backgroundColor: 'red' },
           defaultStyle: { backgroundColor: null },
-          transition: {
-            backgroundColor: expect.objectContaining({
-              value: [null, 'red'],
+          selectors: [
+            expect.objectContaining({
+              selector: ':hover',
+              selectorStyle: { backgroundColor: 'red' },
+              transition: {
+                backgroundColor: expect.objectContaining({
+                  value: [null, 'red'],
+                }),
+              },
             }),
-          },
+          ],
         })
       );
     });
@@ -207,19 +231,23 @@ describe('CSSPseudoStylesManager', () => {
         transitionTimingFunction: ['linear', 'ease-in-out'],
       });
 
-      expect(registerPseudoStyle).toHaveBeenCalledWith(
+      expect(registerPseudoStyles).toHaveBeenCalledWith(
         shadowNodeWrapper,
         expect.objectContaining({
-          transition: {
-            backgroundColor: expect.objectContaining({
-              duration: 1500,
-              timingFunction: 'linear',
+          selectors: [
+            expect.objectContaining({
+              transition: {
+                backgroundColor: expect.objectContaining({
+                  duration: 1500,
+                  timingFunction: 'linear',
+                }),
+                transform: expect.objectContaining({
+                  duration: 200,
+                  timingFunction: 'ease-in-out',
+                }),
+              },
             }),
-            transform: expect.objectContaining({
-              duration: 200,
-              timingFunction: 'ease-in-out',
-            }),
-          },
+          ],
         })
       );
     });
@@ -236,29 +264,29 @@ describe('CSSPseudoStylesManager', () => {
         transitionTimingFunction: ['linear', 'ease-in-out'],
       });
 
-      expect(registerPseudoStyle).toHaveBeenCalledWith(
-        shadowNodeWrapper,
-        expect.objectContaining({
-          selector: ':hover',
-          transition: {
-            backgroundColor: expect.objectContaining({
-              duration: 1500,
-              timingFunction: 'linear',
-            }),
-          },
-        })
-      );
-      expect(registerPseudoStyle).toHaveBeenCalledWith(
-        shadowNodeWrapper,
-        expect.objectContaining({
-          selector: ':active',
-          transition: {
-            transform: expect.objectContaining({
-              duration: 200,
-              timingFunction: 'ease-in-out',
-            }),
-          },
-        })
+      const { selectors } = (registerPseudoStyles as jest.Mock).mock
+        .calls[0][1];
+      expect(selectors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            selector: ':hover',
+            transition: {
+              backgroundColor: expect.objectContaining({
+                duration: 1500,
+                timingFunction: 'linear',
+              }),
+            },
+          }),
+          expect.objectContaining({
+            selector: ':active',
+            transition: {
+              transform: expect.objectContaining({
+                duration: 200,
+                timingFunction: 'ease-in-out',
+              }),
+            },
+          }),
+        ])
       );
     });
 
@@ -270,16 +298,20 @@ describe('CSSPseudoStylesManager', () => {
         transitionDuration: '300ms',
       });
 
-      expect(registerPseudoStyle).toHaveBeenCalledWith(
+      expect(registerPseudoStyles).toHaveBeenCalledWith(
         shadowNodeWrapper,
         expect.objectContaining({
-          transition: {
-            opacity: expect.objectContaining({ duration: 300 }),
-            backgroundColor: expect.objectContaining({
-              duration: 0,
-              timingFunction: 'ease',
+          selectors: [
+            expect.objectContaining({
+              transition: {
+                opacity: expect.objectContaining({ duration: 300 }),
+                backgroundColor: expect.objectContaining({
+                  duration: 0,
+                  timingFunction: 'ease',
+                }),
+              },
             }),
-          },
+          ],
         })
       );
     });
@@ -293,21 +325,19 @@ describe('CSSPseudoStylesManager', () => {
         },
       });
 
-      expect(registerPseudoStyle).toHaveBeenCalledWith(
-        shadowNodeWrapper,
-        expect.objectContaining({
-          selector: ':hover',
-          defaultStyle: { transform: [{ scale: 1 }] },
-          selectorStyle: { transform: [{ scale: 0.97 }] },
-        })
-      );
-      expect(registerPseudoStyle).toHaveBeenCalledWith(
-        shadowNodeWrapper,
-        expect.objectContaining({
-          selector: ':active',
-          defaultStyle: { transform: [{ scale: 1 }] },
-          selectorStyle: { transform: [{ scale: 0.95 }] },
-        })
+      const config = (registerPseudoStyles as jest.Mock).mock.calls[0][1];
+      expect(config.defaultStyle).toEqual({ transform: [{ scale: 1 }] });
+      expect(config.selectors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            selector: ':hover',
+            selectorStyle: { transform: [{ scale: 0.97 }] },
+          }),
+          expect.objectContaining({
+            selector: ':active',
+            selectorStyle: { transform: [{ scale: 0.95 }] },
+          }),
+        ])
       );
     });
   });
@@ -322,8 +352,8 @@ describe('CSSPseudoStylesManager', () => {
       jest.clearAllMocks();
       pushStyle(manager, { ...style });
 
-      expect(registerPseudoStyle).not.toHaveBeenCalled();
-      expect(unregisterPseudoStyle).not.toHaveBeenCalled();
+      expect(registerPseudoStyles).not.toHaveBeenCalled();
+      expect(unregisterPseudoStyles).not.toHaveBeenCalled();
     });
 
     test('detaches and re-registers when selector style changes', () => {
@@ -336,11 +366,13 @@ describe('CSSPseudoStylesManager', () => {
         opacity: { default: 0, ':hover': 0.5 },
       });
 
-      expect(unregisterPseudoStyle).toHaveBeenCalledWith(viewTag);
-      expect(registerPseudoStyle).toHaveBeenCalledWith(
+      expect(unregisterPseudoStyles).toHaveBeenCalledWith(viewTag);
+      expect(registerPseudoStyles).toHaveBeenCalledWith(
         shadowNodeWrapper,
         expect.objectContaining({
-          selectorStyle: { opacity: 0.5 },
+          selectors: [
+            expect.objectContaining({ selectorStyle: { opacity: 0.5 } }),
+          ],
         })
       );
     });
@@ -359,13 +391,17 @@ describe('CSSPseudoStylesManager', () => {
         transitionDuration: '500ms',
       });
 
-      expect(unregisterPseudoStyle).toHaveBeenCalledWith(viewTag);
-      expect(registerPseudoStyle).toHaveBeenCalledWith(
+      expect(unregisterPseudoStyles).toHaveBeenCalledWith(viewTag);
+      expect(registerPseudoStyles).toHaveBeenCalledWith(
         shadowNodeWrapper,
         expect.objectContaining({
-          transition: {
-            opacity: expect.objectContaining({ duration: 500 }),
-          },
+          selectors: [
+            expect.objectContaining({
+              transition: {
+                opacity: expect.objectContaining({ duration: 500 }),
+              },
+            }),
+          ],
         })
       );
     });
@@ -380,15 +416,15 @@ describe('CSSPseudoStylesManager', () => {
 
       pushStyle(manager, { opacity: 0 });
 
-      expect(unregisterPseudoStyle).toHaveBeenCalledWith(viewTag);
-      expect(registerPseudoStyle).not.toHaveBeenCalled();
+      expect(unregisterPseudoStyles).toHaveBeenCalledWith(viewTag);
+      expect(registerPseudoStyles).not.toHaveBeenCalled();
     });
 
     test('does not unregister when never registered', () => {
       pushStyle(manager, { opacity: 0 });
       pushStyle(manager, { opacity: 1 });
 
-      expect(unregisterPseudoStyle).not.toHaveBeenCalled();
+      expect(unregisterPseudoStyles).not.toHaveBeenCalled();
     });
   });
 
@@ -401,13 +437,13 @@ describe('CSSPseudoStylesManager', () => {
 
       manager.unmountCleanup();
 
-      expect(unregisterPseudoStyle).toHaveBeenCalledWith(viewTag);
+      expect(unregisterPseudoStyles).toHaveBeenCalledWith(viewTag);
     });
 
     test('does nothing when never registered', () => {
       manager.unmountCleanup();
 
-      expect(unregisterPseudoStyle).not.toHaveBeenCalled();
+      expect(unregisterPseudoStyles).not.toHaveBeenCalled();
     });
 
     test('does not double-unregister when called after explicit detach', () => {
@@ -419,7 +455,7 @@ describe('CSSPseudoStylesManager', () => {
 
       manager.unmountCleanup();
 
-      expect(unregisterPseudoStyle).not.toHaveBeenCalled();
+      expect(unregisterPseudoStyles).not.toHaveBeenCalled();
     });
   });
 });
