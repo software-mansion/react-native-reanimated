@@ -273,11 +273,23 @@ void NativeProxy::handleEvent(
     return;
   }
 
+  auto eventNameStr = eventName->toString();
+  if (!reanimatedModuleProxy_->isAnyHandlerWaitingForEvent(eventNameStr, emitterReactTag)) {
+    return;
+  }
+
   if (!event->isInstanceOf(react::WritableNativeMap::javaClassStatic())) {
     return;
   }
 
-  auto nativeMap = jni::static_ref_cast<react::WritableNativeMap::javaobject>(jni::static_ref_cast<jobject>(event));
+  // Consume a copy of the payload so the original map stays intact for the downstream
+  // dispatch to JS. The map is owned by the RN event and reused across dispatch targets,
+  // so consuming it directly throws ObjectAlreadyConsumedException for events that return
+  // a cached getEventData() map.
+  static const auto copyMethod =
+      react::WritableMap::javaClassStatic()->getMethod<react::WritableMap::javaobject()>("copy");
+  auto nativeMap = jni::static_ref_cast<react::WritableNativeMap::javaobject>(
+      jni::static_ref_cast<jobject>(copyMethod(event)));
   auto eventPayload = nativeMap->cthis()->consume();
   if (eventPayload.isNull()) {
     return;
@@ -288,12 +300,12 @@ void NativeProxy::handleEvent(
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     reanimatedModuleProxy_->handleEventAndFlush(
-        eventName->toString(),
+        eventNameStr,
         emitterReactTag,
         payload,
         isInDrawPass ? GrandCallbackSource::EventInAndroidDraw : GrandCallbackSource::Event);
   } else {
-    reanimatedModuleProxy_->handleEvent(eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
+    reanimatedModuleProxy_->handleEvent(eventNameStr, emitterReactTag, payload, getAnimationTimestamp());
   }
 }
 
