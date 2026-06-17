@@ -11,9 +11,9 @@ import type {
 import type { PseudoStylesBySelector } from '../../utils';
 import { deepEqual } from '../../utils';
 import { normalizeCSSTransitionProperties } from '../normalization';
-import { registerPseudoStyle, unregisterPseudoStyle } from '../proxy';
+import { registerPseudoStyles, unregisterPseudoStyles } from '../proxy';
 import type {
-  CSSPseudoStyleConfig,
+  CSSPseudoStyleEntry,
   CSSTransitionConfig,
   NormalizedCSSTransitionConfig,
 } from '../types';
@@ -62,7 +62,21 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
       ? normalizeCSSTransitionProperties(transitionProperties)
       : null;
 
-    for (const [selector, { selectorStyle, defaultStyle }] of Object.entries(
+    const mergedDefaultStyle: UnknownRecord = {};
+    for (const [selector, { defaultStyle }] of Object.entries(
+      pseudoStylesBySelector
+    )) {
+      if (NATIVE_PSEUDO_SELECTORS.has(selector as NativePseudoSelectorKey)) {
+        Object.assign(mergedDefaultStyle, defaultStyle);
+      }
+    }
+    const builtDefaultStyle = this.propsBuilder.build(mergedDefaultStyle, {
+      includeUnprocessed: true,
+    });
+    nullifyUndefinedValues(builtDefaultStyle);
+
+    const selectors: CSSPseudoStyleEntry[] = [];
+    for (const [selector, { selectorStyle }] of Object.entries(
       pseudoStylesBySelector
     )) {
       if (!NATIVE_PSEUDO_SELECTORS.has(selector as NativePseudoSelectorKey)) {
@@ -73,13 +87,21 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
         }
         continue;
       }
-      const config = this.buildPseudoStyleConfig(
-        selector as NativePseudoSelectorKey,
-        selectorStyle,
-        defaultStyle,
-        normalizedTransition
+      selectors.push(
+        this.buildPseudoStyleEntry(
+          selector as NativePseudoSelectorKey,
+          selectorStyle,
+          builtDefaultStyle,
+          normalizedTransition
+        )
       );
-      registerPseudoStyle(this.shadowNodeWrapper, config);
+    }
+
+    if (selectors.length > 0) {
+      registerPseudoStyles(this.shadowNodeWrapper, {
+        defaultStyle: builtDefaultStyle,
+        selectors,
+      });
       this.isRegistered = true;
     }
   }
@@ -91,39 +113,30 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
   }
 
   private detach() {
-    unregisterPseudoStyle(this.viewTag);
+    unregisterPseudoStyles(this.viewTag);
     this.isRegistered = false;
   }
 
-  private buildPseudoStyleConfig(
+  private buildPseudoStyleEntry(
     selector: NativePseudoSelectorKey,
     selectorStyle: UnknownRecord,
-    defaultStyle: UnknownRecord,
+    mergedDefaultStyle: UnknownRecord,
     normalizedTransition: NormalizedCSSTransitionConfig | null
-  ): CSSPseudoStyleConfig {
+  ): CSSPseudoStyleEntry {
     const builtSelectorStyle = this.propsBuilder.build(selectorStyle, {
-      includeUnprocessed: true,
-    });
-    const builtDefaultStyle = this.propsBuilder.build(defaultStyle, {
       includeUnprocessed: true,
     });
 
     nullifyUndefinedValues(builtSelectorStyle);
-    nullifyUndefinedValues(builtDefaultStyle);
 
     const transition: CSSTransitionConfig = {};
-    const propsInTransition = new Set([
-      ...Object.keys(builtSelectorStyle),
-      ...Object.keys(builtDefaultStyle),
-    ]);
-
-    for (const prop of propsInTransition) {
+    for (const prop of Object.keys(builtSelectorStyle)) {
       const settings = getPropertyTransitionSettings(
         prop,
         normalizedTransition
       );
       transition[prop] = {
-        value: [builtDefaultStyle[prop], builtSelectorStyle[prop]],
+        value: [mergedDefaultStyle[prop], builtSelectorStyle[prop]],
         duration: settings?.duration ?? 0,
         delay: settings?.delay ?? 0,
         timingFunction: settings?.timingFunction ?? 'ease',
@@ -134,7 +147,6 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
     return {
       selector,
       selectorStyle: builtSelectorStyle,
-      defaultStyle: builtDefaultStyle,
       transition,
     };
   }
