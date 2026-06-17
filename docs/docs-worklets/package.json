@@ -18,6 +18,7 @@
     "lint": "yarn run --top-level oxfmt --check docs src",
     "format": "yarn run --top-level oxfmt docs src"
   },
+  "//": "Kept in sync with docs-reanimated, which is pinned to a nightly for its SVG examples. TODO: bump react-native-reanimated and react-native-worklets back to stable once 4.5.0 is released.",
   "dependencies": {
     "@babel/core": "7.28.4",
     "@babel/plugin-proposal-class-properties": "7.18.6",
@@ -59,10 +60,10 @@
     "react-dom": "19.1.1",
     "react-native": "0.83.0",
     "react-native-gesture-handler": "2.28.0",
-    "react-native-reanimated": "4.4.1",
+    "react-native-reanimated": "4.5.0-nightly-20260614-41c1d1a75",
     "react-native-svg": "15.15.4",
     "react-native-web": "0.21.2",
-    "react-native-worklets": "0.9.1",
+    "react-native-worklets": "0.10.0-nightly-20260614-41c1d1a75",
     "source-map": "0.7.4",
     "source-map-loader": "4.0.1",
     "typescript": "5.9.3",
