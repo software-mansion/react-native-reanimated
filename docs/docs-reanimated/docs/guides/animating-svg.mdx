@@ -29,21 +29,28 @@ SVG attributes like `cx`, `r`, `d`, and `fill` are **component props**, not Reac
 
 - **[Inline](/docs/fundamentals/animating-styles-and-props#animating-props)** - pass a [shared value](/docs/fundamentals/glossary#shared-value) straight to the prop: `<AnimatedCircle r={r} />`.
 - **[`useAnimatedProps`](/docs/core/useAnimatedProps)** - compute the props in a worklet and hand the result to the `animatedProps` prop.
-- **CSS** - keep the SVG props as normal props and add `animationName` or `transitionProperty` (with their settings) to `animatedProps`.
+- **CSS** - keep the SVG props as plain values and add `animationName` or `transitionProperty` (with their settings) to `animatedProps`.
 
-CSS transitions can be triggered by a prop passed inline or through `animatedProps` - changing it from either place starts the transition. If a prop is set in both, `animatedProps` takes precedence:
+The first two drive the prop with a **shared value**: you animate it imperatively (`withTiming`, `withRepeat`, ...) and the prop follows, all on the UI thread. **CSS** is declarative - you describe the animation and Reanimated runs it. They're separate mechanisms; here's the same pulsing circle each way:
 
 ```tsx
-// r passed inline - changing it triggers the transition
-<AnimatedCircle
-  r={grown ? 50 : 20}
-  animatedProps={{ transitionProperty: 'r', transitionDuration: 300 }}
-/>
+// Shared value (imperative): you animate r, the prop follows it
+const r = useSharedValue(20);
+r.value = withRepeat(withTiming(50), -1, true); // e.g. inside an effect
+<AnimatedCircle r={r} cx="50%" cy="50%" />;
 
-// r passed through animatedProps - same effect
+// CSS animation (declarative): the keyframes animate r for you
 <AnimatedCircle
-  animatedProps={{ r: grown ? 50 : 20, transitionProperty: 'r', transitionDuration: 300 }}
-/>
+  cx="50%"
+  cy="50%"
+  r={20}
+  animatedProps={{
+    animationName: { from: { r: 20 }, to: { r: 50 } },
+    animationDuration: '1s',
+    animationIterationCount: 'infinite',
+    animationDirection: 'alternate',
+  }}
+/>;
 ```
 
 ## With useAnimatedProps
@@ -74,9 +81,22 @@ import SvgCssTransitionSrc from '!!raw-loader!@site/src/examples/svg/SvgCssTrans
 
 <SideBySideExample src={SvgCssTransitionSrc} component={SvgCssTransition} showLines={[13, 26]}/>
 
-The first render never animates (there is no previous value); each later change of `r` transitions from the old value to the new one.
+The first render never animates (there is no previous value); each later change of `r` transitions from the old value to the new one. You can pass the prop inline or through `animatedProps`; changing it from either place starts the transition, and if both set it, `animatedProps` wins:
 
-A transition only reacts to props changing between renders - updating a [shared value](/docs/fundamentals/glossary#shared-value) (`r.value = ...`) won't trigger one. To animate from a shared value, drive the prop with [`useAnimatedProps`](/docs/core/useAnimatedProps) instead.
+```tsx
+// inline - changing r triggers the transition
+<AnimatedCircle
+  r={grown ? 50 : 20}
+  animatedProps={{ transitionProperty: 'r', transitionDuration: 300 }}
+/>
+
+// through animatedProps - same effect
+<AnimatedCircle
+  animatedProps={{ r: grown ? 50 : 20, transitionProperty: 'r', transitionDuration: 300 }}
+/>
+```
+
+A [shared value](/docs/fundamentals/glossary#shared-value) is the exception: updating `r.value` doesn't re-render, so it never starts a transition. To animate a prop from a shared value, pass it inline (`r={r}`) or via [`useAnimatedProps`](/docs/core/useAnimatedProps) instead.
 
 ## Morphing paths
 
