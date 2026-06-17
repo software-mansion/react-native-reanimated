@@ -288,8 +288,8 @@ void NativeProxy::handleEvent(
   // a cached getEventData() map.
   static const auto copyMethod =
       react::WritableMap::javaClassStatic()->getMethod<react::WritableMap::javaobject()>("copy");
-  auto nativeMap = jni::static_ref_cast<react::WritableNativeMap::javaobject>(
-      jni::static_ref_cast<jobject>(copyMethod(event)));
+  auto nativeMap =
+      jni::static_ref_cast<react::WritableNativeMap::javaobject>(jni::static_ref_cast<jobject>(copyMethod(event)));
   auto eventPayload = nativeMap->cthis()->consume();
   if (eventPayload.isNull()) {
     return;
