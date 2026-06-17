@@ -17,6 +17,7 @@
     "lint": "yarn run --top-level oxfmt --check docs src versioned_docs versioned_docs",
     "format": "yarn run --top-level oxfmt docs src versioned_docs versioned_docs"
   },
+  "//": "react-native-reanimated and react-native-worklets are pinned to a nightly so the SVG docs examples animate on web. TODO: bump both back to stable once 4.5.0 is released.",
   "dependencies": {
     "@babel/core": "7.28.4",
     "@babel/plugin-proposal-class-properties": "7.18.6",
