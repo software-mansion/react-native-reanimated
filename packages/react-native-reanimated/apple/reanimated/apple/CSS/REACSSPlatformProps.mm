@@ -15,10 +15,9 @@ using namespace facebook;
 
 namespace {
 
-// Defined here with the rest of the parse machinery; first consumed once color
-// properties join the catalog, hence [[maybe_unused]] for the earlier subset.
+// kTransparentColor is consumed once backgroundColor / borderColor land (deferred).
 [[maybe_unused]] constexpr std::array<double, 4> kTransparentColor = {0, 0, 0, 0};
-[[maybe_unused]] constexpr std::array<double, 4> kBlackColor = {0, 0, 0, 1};
+constexpr std::array<double, 4> kBlackColor = {0, 0, 0, 1};
 
 enum class CSSValueKind : std::uint8_t { Scalar, Color, Size };
 
@@ -34,6 +33,11 @@ const CSSPropertyTraits *traitsFor(const std::string &propertyName)
 {
   static const std::unordered_map<std::string, CSSPropertyTraits> kProperties = {
       {"opacity", {CSSValueKind::Scalar, 1.0}},
+      {"shadowColor", {CSSValueKind::Color, kBlackColor}},
+      {"shadowOpacity", {CSSValueKind::Scalar, 0.0}},
+      {"shadowRadius", {CSSValueKind::Scalar, 0.0}},
+      {"shadowOffset", {CSSValueKind::Size, std::array<double, 2>{0.0, 0.0}}},
+      // TODO: backgroundColor + border* need eligibility + commit-hook re-routing.
   };
   const auto it = kProperties.find(propertyName);
   return it != kProperties.end() ? &it->second : nullptr;
