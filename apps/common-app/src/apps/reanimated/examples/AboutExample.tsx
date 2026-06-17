@@ -12,7 +12,10 @@ import {
   getStaticFeatureFlag as getStaticFeatureFlagReanimated,
   setDynamicFeatureFlag as setDynamicFeatureFlagReanimated,
 } from 'react-native-reanimated';
-import { getStaticFeatureFlag as getStaticFeatureFlagWorklets } from 'react-native-worklets';
+import {
+  getStaticFeatureFlag as getStaticFeatureFlagWorklets,
+  isBundleModeEnabled,
+} from 'react-native-worklets';
 
 function isWeb() {
   return Platform.OS === 'web';
@@ -59,10 +62,6 @@ function getReactNativeVersion() {
   const { major, minor, patch, prerelease } =
     Platform.constants.reactNativeVersion;
   return `${major}.${minor}.${patch}${prerelease ? `-${prerelease}` : ''}`;
-}
-
-function isBundleModeEnabled() {
-  return !!globalThis._WORKLETS_BUNDLE_MODE_ENABLED;
 }
 
 const staticFlagsReanimated = [
