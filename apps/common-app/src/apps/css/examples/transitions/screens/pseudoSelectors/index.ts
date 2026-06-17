@@ -7,6 +7,7 @@ import FocusWithin from './FocusWithin';
 import Hover from './Hover';
 import HoverWithLoop from './HoverWithLoop';
 import PerStateTransitionConfig from './PerStateTransitionConfig';
+import Planets from './Planets';
 import Showcase from './Showcase';
 
 export default {
@@ -19,5 +20,6 @@ export default {
   Hover,
   HoverWithLoop,
   PerStateTransitionConfig,
+  Planets,
   Showcase,
 };

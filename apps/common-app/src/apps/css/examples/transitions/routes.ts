@@ -124,6 +124,10 @@ const routes = {
         name: 'Per-state transition configs',
         Component: pseudoSelectors.PerStateTransitionConfig,
       },
+      PseudoPlanets: {
+        name: 'Planets',
+        Component: pseudoSelectors.Planets,
+      },
       PseudoArbitraryWebSelectors: {
         name: 'Arbitrary web selectors',
         Component: pseudoSelectors.ArbitraryWebSelectors,
