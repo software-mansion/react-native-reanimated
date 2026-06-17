@@ -18,10 +18,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter;
 
-/// Config path. Parses the jsi endpoints, animates the property natively
-/// (reverse-shortening against any in-flight transition) and stores the settings
-/// for later toggles. Returns NO when the value can't be expressed natively, so
-/// the property falls back to the loop.
+// Config path: parses the jsi endpoints, animates natively (reverse-shortening
+// any in-flight transition), and stores settings for later toggles. Returns NO
+// if the value isn't natively expressible, so the property runs on the loop.
 - (BOOL)applyTransitionForTag:(facebook::react::Tag)viewTag
                  propertyName:(const std::string &)propertyName
                     fromValue:(const facebook::jsi::Value &)fromValue
@@ -30,9 +29,8 @@ NS_ASSUME_NONNULL_BEGIN
                      settings:(const reanimated::css::CSSTransitionPropertySettings &)settings
                     timestamp:(double)timestamp;
 
-/// Toggle path. The runtime-free folly counterpart; reuses the settings stored
-/// by the config apply. Returns NO when the value can't be expressed natively or
-/// the property was never config-applied (so no settings are known).
+// Toggle path: runtime-free folly counterpart that reuses the settings from the
+// config apply. Returns NO if the value isn't expressible or was never config-applied.
 - (BOOL)applyDynamicTransitionForTag:(facebook::react::Tag)viewTag
                         propertyName:(const std::string &)propertyName
                            fromValue:(const folly::dynamic &)fromValue

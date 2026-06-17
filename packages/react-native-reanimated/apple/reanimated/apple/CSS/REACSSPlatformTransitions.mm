@@ -23,10 +23,9 @@ using namespace reanimated::css;
 
 namespace {
 
-// Per-property native transition state. The platform owns it (shared code is
-// value-agnostic): adjustedStart/adjustedEnd + the reversing snapshot drive
-// reverse-shortening when a transition is interrupted, and settings are reused
-// on the runtime-free toggle path (which carries no settings of its own).
+// Per-property native transition state, owned platform-side (shared code is
+// value-agnostic). adjustedStart/adjustedEnd + the reversing snapshot drive
+// reverse-shortening on interruption; settings are reused by the toggle path.
 struct ActiveTransition {
   PlatformValue adjustedStart;
   PlatformValue adjustedEnd;
