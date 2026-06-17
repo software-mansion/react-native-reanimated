@@ -54,10 +54,6 @@
   overflow: hidden;
   border: 1px solid var(--swm-border);
   background-color: var(--swm-off-background);
-  /* Fill a normal (collapsed) code block, but cap the height so the portrait
-     recording doesn't balloon to match an expanded block; it tops out here and
-     stays top-aligned, leaving empty space beside the longer code. */
-  max-height: 900px;
 }
 
 /* Hide the iOS Dynamic Island at the top of the recording. The clip's backdrop
@@ -73,14 +69,16 @@
   background-color: var(--swm-off-background);
 }
 
-/* Fill the full-height card with the recording (cover), cropping only the empty
-   side margins. The clip stays anchored at the top, so the masking strip keeps
-   the Dynamic Island covered. */
+/* Fit the whole recording inside the card without cropping or overflowing it.
+   The card can be taller than the clip (e.g. when the code is expanded), so the
+   clip stays anchored at the top, keeping the masking strip over its Dynamic
+   Island. */
 .video {
   flex: 1;
   width: 100%;
   min-height: 0;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center top;
 }
 
 [data-theme='light'] .videoDark {
