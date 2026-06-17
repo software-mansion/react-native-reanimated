@@ -162,7 +162,7 @@ The remaining components - `G`, `Use`, `Symbol`, `Defs`, `ClipPath`, `Mask`, `Ma
 
 ### Morphing paths and points
 
-`d` (Path) and `points` (Polygon/Polyline) morph freely between any shapes on iOS and Android. On Web, only `Path` morphs: its `d` interpolates between paths that share the same command structure, and mismatched structures snap. `Polygon` and `Polyline` `points` don't animate on Web at all, because `react-native-svg` renders them as native `<polygon>`/`<polyline>` elements whose `points` is not a CSS property (so the keyframes Reanimated generates have nothing to drive).
+`d` (Path) and `points` (Polygon/Polyline) morph freely between any shapes on iOS and Android. On Web, only `Path` morphs: its `d` interpolates between paths that share the same command structure, and mismatched structures snap. `Polygon` and `Polyline` `points` don't animate on Web at all, because `react-native-svg` renders them as native `<polygon>`/`<polyline>` elements whose `points` is not a CSS property.
 
 ### Stepped properties
 
