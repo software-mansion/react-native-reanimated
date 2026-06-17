@@ -13,35 +13,35 @@ export default function App() {
       <Svg height={SIZE} width={SIZE}>
         <Defs>
           <AnimatedRadialGradient
-          id="grad"
-          cx="50%"
-          cy="50%"
-          r="65%"
-          animatedProps={{
-            // highlight-start
-            // Morph from a 2-stop "sun" to a 4-stop "sunset"
-            animationName: {
-              from: {
-                gradient: [
-                  { offset: '0%', color: '#fdbb2d' },
-                  { offset: '100%', color: '#22c1c3' },
-                ],
+            id="grad"
+            cx="50%"
+            cy="50%"
+            r="65%"
+            animatedProps={{
+              // highlight-start
+              // Morph from a 2-stop "sun" to a 4-stop "sunset"
+              animationName: {
+                from: {
+                  gradient: [
+                    { offset: '0%', color: '#fdbb2d' },
+                    { offset: '100%', color: '#22c1c3' },
+                  ],
+                },
+                to: {
+                  gradient: [
+                    { offset: '0%', color: '#fdbb2d' },
+                    { offset: '30%', color: '#b21f1f' },
+                    { offset: '60%', color: '#1a2a6c' },
+                    { offset: '100%', color: '#000000' },
+                  ],
+                },
               },
-              to: {
-                gradient: [
-                  { offset: '0%', color: '#fdbb2d' },
-                  { offset: '30%', color: '#b21f1f' },
-                  { offset: '60%', color: '#1a2a6c' },
-                  { offset: '100%', color: '#000000' },
-                ],
-              },
-            },
-            // highlight-end
-            animationDuration: '2s',
-            animationIterationCount: 'infinite',
-            animationDirection: 'alternate',
-            animationTimingFunction: 'ease-in-out',
-          }}
+              // highlight-end
+              animationDuration: '2s',
+              animationIterationCount: 'infinite',
+              animationDirection: 'alternate',
+              animationTimingFunction: 'ease-in-out',
+            }}
           />
         </Defs>
         <Circle
