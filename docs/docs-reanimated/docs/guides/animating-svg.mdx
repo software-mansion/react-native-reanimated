@@ -31,25 +31,20 @@ SVG attributes like `cx`, `r`, `d`, and `fill` are **component props**, not Reac
 - **[`useAnimatedProps`](/docs/core/useAnimatedProps)** - compute the props in a worklet and hand the result to the `animatedProps` prop.
 - **CSS** - keep the SVG props as plain values and add `animationName` or `transitionProperty` (with their settings) to `animatedProps`.
 
-The first two drive the prop with a **shared value**: you animate it imperatively (`withTiming`, `withRepeat`, ...) and the prop follows, all on the UI thread. **CSS** is declarative - you describe the animation and Reanimated runs it. They're separate mechanisms; here's the same pulsing circle each way:
+There's one catch with **CSS transitions**: a CSS transition only runs when the prop changes **between renders**. A plain value does that, so the CSS transition runs. An inline [shared value](/docs/fundamentals/glossary#shared-value) doesn't re-render - each `r.value` change updates the `r` prop directly - so the CSS transition never runs:
 
 ```tsx
-// Shared value (imperative): you animate r, the prop follows it
-const r = useSharedValue(20);
-r.value = withRepeat(withTiming(50), -1, true); // e.g. inside an effect
-<AnimatedCircle r={r} cx="50%" cy="50%" />;
-
-// CSS animation (declarative): the keyframes animate r for you
+// Plain value: it changes on re-render, which triggers the CSS transition
 <AnimatedCircle
-  cx="50%"
-  cy="50%"
-  r={20}
-  animatedProps={{
-    animationName: { from: { r: 20 }, to: { r: 50 } },
-    animationDuration: '1s',
-    animationIterationCount: 'infinite',
-    animationDirection: 'alternate',
-  }}
+  r={grown ? 50 : 20}
+  animatedProps={{ transitionProperty: 'r', transitionDuration: 300 }}
+/>;
+
+// Shared value: r.value changes don't trigger the CSS transition - they update the r prop directly
+const r = useSharedValue(20);
+<AnimatedCircle
+  r={r}
+  animatedProps={{ transitionProperty: 'r', transitionDuration: 300 }}
 />;
 ```
 
