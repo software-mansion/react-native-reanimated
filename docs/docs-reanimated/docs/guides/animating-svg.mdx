@@ -165,14 +165,12 @@ Here, a `RadialGradient` morphs from a two-stop "sun" to a four-stop "sunset". G
 
 import SvgGradientSrc from '!!raw-loader!@site/src/examples/svg/SvgGradient';
 
-<SideBySideExample
-  src={SvgGradientSrc}
-  showLines={[11, 49]}
-  video={{
+export const gradientVideo = {
   light: '/recordings/examples/svg_radial_gradient_light.mp4',
   dark: '/recordings/examples/svg_radial_gradient_dark.mp4',
-}}
-/>
+};
+
+<SideBySideExample src={SvgGradientSrc} showLines={[11, 49]} video={gradientVideo}/>
 
 A few caveats:
 
