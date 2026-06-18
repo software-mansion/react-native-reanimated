@@ -7,42 +7,44 @@
 namespace reanimated::css {
 
 CSSPlatformTransitionProxy::CSSPlatformTransitionProxy(
-    CSSCanRoutePropertyFunction canRoute,
-    CSSApplyTransitionJSIFunction applyJSI,
-    CSSApplyTransitionDynamicFunction applyDynamic,
+    CSSApplyPlatformTransitionFunction applyTransition,
     CSSRemoveTransitionFunction removeTransition)
-    : canRoute_(std::move(canRoute)),
-      applyJSI_(std::move(applyJSI)),
-      applyDynamic_(std::move(applyDynamic)),
-      removeTransition_(std::move(removeTransition)) {}
+    : applyTransition_(std::move(applyTransition)), removeTransition_(std::move(removeTransition)) {}
 
-bool CSSPlatformTransitionProxy::canRoute(const std::string &propertyName, const EasingConfig &easing) const {
-  return canRoute_ && canRoute_(propertyName, easing);
-}
-
-bool CSSPlatformTransitionProxy::apply(
-    jsi::Runtime &rt,
+void CSSPlatformTransitionProxy::applyPlatform(
     const Tag viewTag,
     const std::string &propertyName,
-    const jsi::Value &fromValue,
-    const jsi::Value &toValue,
+    const PlatformValue &fromValue,
+    const PlatformValue &toValue,
     const CSSTransitionPropertySettings &settings,
     const double timestamp) const {
-  return applyJSI_ && applyJSI_(rt, viewTag, propertyName, fromValue, toValue, settings, timestamp);
-}
+  auto &properties = activeTransitions_[viewTag];
+  const auto activeIt = properties.find(propertyName);
+  // Targeting the in-flight transition's start value means this is a reversal.
+  const ActiveTransition *previous =
+      (activeIt != properties.end() && toValue == activeIt->second.adjustedStart) ? &activeIt->second : nullptr;
+  ReversingState reversing = previous
+      ? reverseShorten(previous->reversing, timestamp, settings.duration, settings.delay, settings.easingConfig)
+      : makeReversingState(timestamp, settings.duration, settings.delay, settings.easingConfig);
 
-bool CSSPlatformTransitionProxy::apply(
-    const Tag viewTag,
-    const std::string &propertyName,
-    const folly::dynamic &fromValue,
-    const folly::dynamic &toValue,
-    const double timestamp) const {
-  return applyDynamic_ && applyDynamic_(viewTag, propertyName, fromValue, toValue, timestamp);
+  const PlatformValue adjustedStart = previous ? previous->adjustedEnd : fromValue;
+  if (applyTransition_) {
+    applyTransition_(
+        viewTag, propertyName, fromValue, toValue, reversing.duration, reversing.startTimestamp, settings.easingConfig);
+  }
+  properties[propertyName] = ActiveTransition{adjustedStart, toValue, std::move(reversing), settings};
 }
 
 void CSSPlatformTransitionProxy::remove(const Tag viewTag, const std::string &propertyName) const {
   if (removeTransition_) {
     removeTransition_(viewTag, propertyName);
+  }
+  const auto tagIt = activeTransitions_.find(viewTag);
+  if (tagIt != activeTransitions_.end()) {
+    tagIt->second.erase(propertyName);
+    if (tagIt->second.empty()) {
+      activeTransitions_.erase(tagIt);
+    }
   }
 }
 
@@ -62,9 +64,16 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
       ++matchedValues;
     }
 
-    bool routable = canRoute(propertyName, settings.easingConfig);
+    bool routable = canRouteCSSProperty(propertyName, settings.easingConfig);
     if (routable && hasValue) {
-      routable = apply(rt, viewTag, propertyName, valueIt->second.first, valueIt->second.second, settings, timestamp);
+      const auto from = parsePlatformValue(rt, propertyName, valueIt->second.first);
+      const auto to = parsePlatformValue(rt, propertyName, valueIt->second.second);
+      if (from && to) {
+        applyPlatform(viewTag, propertyName, *from, *to, settings, timestamp);
+      } else {
+        // Can't be expressed natively, so it runs on the loop instead.
+        routable = false;
+      }
     } else if (routable) {
       // Settings-only: stay on the platform only if already animating there.
       routable = routing.platform.contains(propertyName);
@@ -116,8 +125,22 @@ PropertyValueDynamicDiffsMap CSSPlatformTransitionProxy::processDynamicDiffs(
     // A platform-routed property keeps animating natively while the platform can
     // still express the toggled value; otherwise it migrates to the loop.
     if (routing.platform.contains(propertyName)) {
-      if (apply(viewTag, propertyName, propertyDiff.first, propertyDiff.second, timestamp)) {
-        continue;
+      const ActiveTransition *active = nullptr;
+      if (const auto tagIt = activeTransitions_.find(viewTag); tagIt != activeTransitions_.end()) {
+        if (const auto activeIt = tagIt->second.find(propertyName); activeIt != tagIt->second.end()) {
+          active = &activeIt->second;
+        }
+      }
+      if (active != nullptr) {
+        const auto from = parsePlatformValue(propertyName, propertyDiff.first);
+        const auto to = parsePlatformValue(propertyName, propertyDiff.second);
+        if (from && to) {
+          // Copy: applyPlatform re-assigns this property's active entry below. The
+          // toggle diff carries no settings of its own, so reuse the stored ones.
+          const CSSTransitionPropertySettings settings = active->settings;
+          applyPlatform(viewTag, propertyName, *from, *to, settings, timestamp);
+          continue;
+        }
       }
       routing.platform.erase(propertyName);
       remove(viewTag, propertyName);

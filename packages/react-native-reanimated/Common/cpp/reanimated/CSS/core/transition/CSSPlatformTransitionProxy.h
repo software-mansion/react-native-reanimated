@@ -3,6 +3,8 @@
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingConfigs.h>
+#include <reanimated/CSS/utils/platform.h>
+#include <reanimated/CSS/utils/reversingShortening.h>
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
@@ -10,32 +12,25 @@
 
 #include <functional>
 #include <string>
+#include <unordered_map>
 
 namespace reanimated::css {
 
 using namespace facebook;
 using namespace react;
 
-/// Whether the platform can animate the property natively for the given easing.
-using CSSCanRoutePropertyFunction = std::function<bool(const std::string &propertyName, const EasingConfig &easing)>;
-/// Animates a routed property natively; a false (no-op) return means the platform
-/// can't express the value, so it falls back to the loop. The jsi overload is the
-/// config path (carries a runtime + settings); the folly overload, the toggle path.
-using CSSApplyTransitionJSIFunction = std::function<bool(
-    jsi::Runtime &rt,
+/// Animates a property natively to its parsed target value over the given window.
+/// The proxy does the parsing, routing, and reverse-shortening; the platform only
+/// drives the native animation. An absent hook keeps every property on the loop.
+using CSSApplyPlatformTransitionFunction = std::function<void(
     Tag viewTag,
     const std::string &propertyName,
-    const jsi::Value &fromValue,
-    const jsi::Value &toValue,
-    const CSSTransitionPropertySettings &settings,
-    double timestamp)>;
-using CSSApplyTransitionDynamicFunction = std::function<bool(
-    Tag viewTag,
-    const std::string &propertyName,
-    const folly::dynamic &fromValue,
-    const folly::dynamic &toValue,
-    double timestamp)>;
-/// Cancels the property's native transition and drops its platform-side state.
+    const PlatformValue &fromValue,
+    const PlatformValue &toValue,
+    double durationMs,
+    double startTimeMs,
+    const EasingConfig &easing)>;
+/// Cancels the property's native transition.
 using CSSRemoveTransitionFunction = std::function<void(Tag viewTag, const std::string &propertyName)>;
 
 /// A view's transition partition: which properties animate on the platform vs the
@@ -45,16 +40,15 @@ struct CSSTransitionRouting {
   TransitionProperties loop;
 };
 
-/// Stateless, shared routing engine: per property it routes a view's CSS transition
-/// to the platform (animated natively via the hooks above) or the C++ loop, never
-/// seeing the value - it forwards the raw JS source to the platform. Per-view routing
-/// state is passed in; an absent hook keeps that property on the loop.
+/// Shared routing engine: per property it routes a view's CSS transition to the
+/// platform or to the C++ loop. For platform-routed properties it parses the JS
+/// endpoints into native values, reverse-shortens interruptions, and owns the
+/// in-flight native transition state per view; the platform hook only animates.
+/// A property that can't be expressed natively migrates to the loop.
 class CSSPlatformTransitionProxy {
  public:
   CSSPlatformTransitionProxy(
-      CSSCanRoutePropertyFunction canRoute,
-      CSSApplyTransitionJSIFunction applyJSI,
-      CSSApplyTransitionDynamicFunction applyDynamic,
+      CSSApplyPlatformTransitionFunction applyTransition,
       CSSRemoveTransitionFunction removeTransition);
 
   /// Routes the config between platform and loop, updating `routing` and returning
@@ -78,27 +72,33 @@ class CSSPlatformTransitionProxy {
   void cancelAll(Tag viewTag, const TransitionProperties &properties) const;
 
  private:
-  bool canRoute(const std::string &propertyName, const EasingConfig &easing) const;
-  bool apply(
-      jsi::Runtime &rt,
+  /// In-flight native transition for one property. adjustedStart/adjustedEnd and
+  /// the reversing snapshot drive interruption handling; settings are reused by
+  /// the toggle path, which carries none of its own.
+  struct ActiveTransition {
+    PlatformValue adjustedStart;
+    PlatformValue adjustedEnd;
+    ReversingState reversing;
+    CSSTransitionPropertySettings settings;
+  };
+
+  /// Reverse-shortens against any in-flight transition, animates natively, and
+  /// records the new active state. fromValue/toValue are already parsed.
+  void applyPlatform(
       Tag viewTag,
       const std::string &propertyName,
-      const jsi::Value &fromValue,
-      const jsi::Value &toValue,
+      const PlatformValue &fromValue,
+      const PlatformValue &toValue,
       const CSSTransitionPropertySettings &settings,
-      double timestamp) const;
-  bool apply(
-      Tag viewTag,
-      const std::string &propertyName,
-      const folly::dynamic &fromValue,
-      const folly::dynamic &toValue,
       double timestamp) const;
   void remove(Tag viewTag, const std::string &propertyName) const;
 
-  CSSCanRoutePropertyFunction canRoute_;
-  CSSApplyTransitionJSIFunction applyJSI_;
-  CSSApplyTransitionDynamicFunction applyDynamic_;
+  CSSApplyPlatformTransitionFunction applyTransition_;
   CSSRemoveTransitionFunction removeTransition_;
+
+  // viewTag -> propertyName -> active transition. Accessed only on the thread that
+  // drives routing.
+  mutable std::unordered_map<Tag, std::unordered_map<std::string, ActiveTransition>> activeTransitions_;
 };
 
 } // namespace reanimated::css

@@ -1,11 +1,10 @@
 #pragma once
 
-#import <reanimated/CSS/configs/CSSTransitionConfig.h>
+#import <reanimated/CSS/easing/EasingConfigs.h>
+#import <reanimated/CSS/utils/platform.h>
 
 #import <React/RCTSurfacePresenter.h>
 
-#import <folly/dynamic.h>
-#import <jsi/jsi.h>
 #import <react/renderer/core/ReactPrimitives.h>
 
 #import <Foundation/Foundation.h>
@@ -18,25 +17,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter;
 
-/// Config path: animates the property natively and remembers its settings for
-/// later toggles. Returns NO if the value can't be animated natively, in which
-/// case it runs on the loop instead.
-- (BOOL)applyTransitionForTag:(facebook::react::Tag)viewTag
-                 propertyName:(const std::string &)propertyName
-                    fromValue:(const facebook::jsi::Value &)fromValue
-                      toValue:(const facebook::jsi::Value &)toValue
-                      runtime:(facebook::jsi::Runtime &)runtime
-                     settings:(const reanimated::css::CSSTransitionPropertySettings &)settings
-                    timestamp:(double)timestamp;
-
-/// Toggle path: a runtime-free version that reuses the settings stored by the
-/// config apply. Returns NO if there are no stored settings or the value can't be
-/// animated natively.
-- (BOOL)applyDynamicTransitionForTag:(facebook::react::Tag)viewTag
-                        propertyName:(const std::string &)propertyName
-                           fromValue:(const folly::dynamic &)fromValue
-                             toValue:(const folly::dynamic &)toValue
-                           timestamp:(double)timestamp;
+/// Animates the property natively from `fromValue` to `toValue` over the given
+/// window. Parsing, routing, and reverse-shortening already happened in common;
+/// this only drives Core Animation.
+- (void)animateForTag:(facebook::react::Tag)viewTag
+         propertyName:(const std::string &)propertyName
+            fromValue:(const reanimated::css::PlatformValue &)fromValue
+              toValue:(const reanimated::css::PlatformValue &)toValue
+           durationMs:(double)durationMs
+          startTimeMs:(double)startTimeMs
+               easing:(const reanimated::css::EasingConfig &)easing;
 
 - (void)removeTransitionForTag:(facebook::react::Tag)viewTag propertyName:(const std::string &)propertyName;
 

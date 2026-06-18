@@ -221,9 +221,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           viewStylesRepository_,
           operationsLoop_,
           std::make_shared<CSSPlatformTransitionProxy>(
-              platformDepMethodsHolder.cssCanRouteProperty,
-              platformDepMethodsHolder.cssApplyTransitionJSI,
-              platformDepMethodsHolder.cssApplyTransitionDynamic,
+              platformDepMethodsHolder.cssApplyTransition,
               platformDepMethodsHolder.cssRemoveTransition))),
       pseudoStylesRegistry_(std::make_shared<PseudoStylesRegistry>(
           platformDepMethodsHolder.attachPseudoSelector,
