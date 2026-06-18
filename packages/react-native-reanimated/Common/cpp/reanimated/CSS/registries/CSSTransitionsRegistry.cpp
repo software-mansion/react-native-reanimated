@@ -12,8 +12,8 @@ namespace reanimated::css {
 CSSTransitionsRegistry::CSSTransitionsRegistry(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const std::shared_ptr<OperationsLoop> &loop,
-    const std::shared_ptr<CSSPlatformTransitionProxy> &platformTransitionProxy)
-    : viewStylesRepository_(viewStylesRepository), loop_(loop), platformTransitionProxy_(platformTransitionProxy) {}
+    const std::shared_ptr<CSSPlatformTransitionRouter> &platformTransitionRouter)
+    : viewStylesRepository_(viewStylesRepository), loop_(loop), platformTransitionRouter_(platformTransitionRouter) {}
 
 bool CSSTransitionsRegistry::needsFlush() const {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
@@ -130,7 +130,7 @@ const std::shared_ptr<CSSTransition> &CSSTransitionsRegistry::getOrCreateTransit
     registry_.emplace(
         viewTag,
         std::make_shared<CSSTransition>(
-            shadowNode, viewStylesRepository_, platformTransitionProxy_, loop_, transitionObserver_));
+            shadowNode, viewStylesRepository_, platformTransitionRouter_, loop_, transitionObserver_));
   }
   return registry_.at(viewTag);
 }

@@ -10,17 +10,17 @@ namespace reanimated::css {
 CSSTransition::CSSTransition(
     std::shared_ptr<const ShadowNode> shadowNode,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const std::shared_ptr<CSSPlatformTransitionProxy> &platformTransitionProxy,
+    const std::shared_ptr<CSSPlatformTransitionRouter> &platformTransitionRouter,
     const std::shared_ptr<OperationsLoop> &loop,
     Observer &observer)
     : shadowNode_(std::move(shadowNode)),
       viewStylesRepository_(viewStylesRepository),
-      platformTransitionProxy_(platformTransitionProxy),
+      platformTransitionRouter_(platformTransitionRouter),
       loop_(loop),
       observer_(observer) {}
 
 CSSTransition::~CSSTransition() {
-  platformTransitionProxy_->cancelAll(getViewTag(), routing_.platform);
+  platformTransitionRouter_->cancelAll(getViewTag(), routing_.platform);
 }
 
 TransitionProperties CSSTransition::getProperties() const {
@@ -32,7 +32,7 @@ TransitionProperties CSSTransition::getProperties() const {
 folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config, const folly::dynamic &lastUpdates) {
   const auto timestamp = loop_->resolveTimestamp();
 
-  auto loopConfig = platformTransitionProxy_->processConfig(rt, getViewTag(), config, routing_, timestamp);
+  auto loopConfig = platformTransitionRouter_->processConfig(rt, getViewTag(), config, routing_, timestamp);
   if (loopConfig.empty()) {
     return folly::dynamic::object();
   }
@@ -55,7 +55,7 @@ folly::dynamic CSSTransition::run(
     const folly::dynamic &lastUpdates) {
   const auto timestamp = loop_->resolveTimestamp();
 
-  auto loopDiffs = platformTransitionProxy_->processDynamicDiffs(getViewTag(), propertyDiffs, routing_, timestamp);
+  auto loopDiffs = platformTransitionRouter_->processDynamicDiffs(getViewTag(), propertyDiffs, routing_, timestamp);
   if (loopDiffs.empty() && !loopTransition_) {
     return folly::dynamic::object();
   }
@@ -76,7 +76,7 @@ void CSSTransition::cancel() {
   if (loopTransition_) {
     loop_->remove(loopTransition_);
   }
-  platformTransitionProxy_->cancelAll(getViewTag(), routing_.platform);
+  platformTransitionRouter_->cancelAll(getViewTag(), routing_.platform);
 }
 
 CSSLoopTransition &CSSTransition::ensureLoopTransition() {

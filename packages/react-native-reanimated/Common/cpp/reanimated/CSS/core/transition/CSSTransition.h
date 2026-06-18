@@ -2,7 +2,7 @@
 
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/core/transition/CSSLoopTransition.h>
-#include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
+#include <reanimated/CSS/core/transition/CSSPlatformTransitionRouter.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
 
@@ -25,7 +25,7 @@ class CSSTransition {
   CSSTransition(
       std::shared_ptr<const ShadowNode> shadowNode,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const std::shared_ptr<CSSPlatformTransitionProxy> &platformTransitionProxy,
+      const std::shared_ptr<CSSPlatformTransitionRouter> &platformTransitionRouter,
       const std::shared_ptr<OperationsLoop> &loop,
       Observer &observer);
   ~CSSTransition();
@@ -55,7 +55,7 @@ class CSSTransition {
  private:
   const std::shared_ptr<const ShadowNode> shadowNode_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
-  const std::shared_ptr<CSSPlatformTransitionProxy> platformTransitionProxy_;
+  const std::shared_ptr<CSSPlatformTransitionRouter> platformTransitionRouter_;
   const std::shared_ptr<OperationsLoop> loop_;
   Observer &observer_;
 

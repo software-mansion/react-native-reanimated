@@ -17,7 +17,7 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
   CSSTransitionsRegistry(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const std::shared_ptr<OperationsLoop> &loop,
-      const std::shared_ptr<CSSPlatformTransitionProxy> &platformTransitionProxy);
+      const std::shared_ptr<CSSPlatformTransitionRouter> &platformTransitionRouter);
 
   bool needsFlush() const;
 
@@ -47,7 +47,7 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
 
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
   const std::shared_ptr<OperationsLoop> loop_;
-  const std::shared_ptr<CSSPlatformTransitionProxy> platformTransitionProxy_;
+  const std::shared_ptr<CSSPlatformTransitionRouter> platformTransitionRouter_;
 
   TransitionObserver transitionObserver_{*this};
 
