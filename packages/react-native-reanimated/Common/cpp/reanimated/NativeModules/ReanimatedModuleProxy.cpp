@@ -820,6 +820,10 @@ void ReanimatedModuleProxy::performOperations() {
 void ReanimatedModuleProxy::performNonLayoutOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performNonLayoutOperations");
 
+  if constexpr (!shouldUseSynchronousUpdatesInPerformOperations()) {
+    return;
+  }
+
   UpdatesBatch updatesBatch;
   {
     auto lock = updatesRegistryManager_->lock();
