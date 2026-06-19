@@ -25,7 +25,12 @@ id idFromPlatformValue(const PlatformValue &value)
     return @(*scalar);
   }
   if (const auto *size = std::get_if<std::array<double, 2>>(&value)) {
+    // +[NSValue valueWithCGSize:] is UIKit-only; AppKit boxes the same CGSize via valueWithSize:.
+#if TARGET_OS_OSX
+    return [NSValue valueWithSize:NSMakeSize((*size)[0], (*size)[1])];
+#else
     return [NSValue valueWithCGSize:CGSizeMake((*size)[0], (*size)[1])];
+#endif
   }
   const auto &color = std::get<std::array<double, 4>>(value);
   const CGFloat components[4] = {color[0], color[1], color[2], color[3]};
