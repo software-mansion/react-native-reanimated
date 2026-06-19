@@ -230,9 +230,10 @@ open class NativeProxy {
     }
 
     private val updatePropsSynchronouslyMethod by lazy {
-        mountingManager.javaClass.methods.first {
-            it.name.startsWith("updatePropsSynchronously") && it.parameterTypes.size == 2
-        }.apply { isAccessible = true }
+        mountingManager.javaClass.methods
+            .first {
+                it.name.startsWith("updatePropsSynchronously") && it.parameterTypes.size == 2
+            }.apply { isAccessible = true }
     }
 
     @DoNotStrip
