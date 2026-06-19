@@ -163,6 +163,10 @@ jsi::Value SerializableArrayBuffer::toJSValue(jsi::Runtime &rt) {
   return arrayBuffer;
 }
 
+jsi::Value SerializableTransferableArrayBuffer::toJSValue(jsi::Runtime &rt) {
+  return makeTransferableArrayBuffer(rt, buffer_);
+}
+
 SerializableObject::SerializableObject(jsi::Runtime &rt, const jsi::Object &object)
     : Serializable(ValueType::ObjectType) {
   auto propertyNames = object.getPropertyNames(rt);

@@ -29,6 +29,7 @@ export { isShareable } from './memory/isShareable';
 export { isSynchronizable } from './memory/isSynchronizable';
 export {
   createSerializable,
+  createTransferableArrayBuffer,
   isSerializableRef,
   registerCustomSerializable,
 } from './memory/serializable';
@@ -50,6 +51,7 @@ export type {
   ShareableHostProps,
   Synchronizable,
   SynchronizableRef,
+  TransferableArrayBuffer,
 } from './memory/types';
 export {
   getRuntimeKind,

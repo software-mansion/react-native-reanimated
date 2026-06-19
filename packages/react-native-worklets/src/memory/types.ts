@@ -14,6 +14,12 @@ export type SerializableRef<TValue = unknown> = {
   __nativeStateSerializableJSRef: TValue;
 };
 
+export interface TransferableArrayBuffer extends ArrayBuffer {
+  readonly transferable: true;
+  readonly detached: boolean;
+  transfer(newByteLength?: number): TransferableArrayBuffer;
+}
+
 // In case of objects with depth or arrays of objects or arrays of arrays etc.
 // we add this utility type that makes it a `SharaebleRef` of the outermost type.
 export type FlatSerializableRef<TValue> =

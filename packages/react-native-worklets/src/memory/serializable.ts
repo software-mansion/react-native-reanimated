@@ -28,6 +28,12 @@ export function makeShareable<TValue>(value: TValue): TValue {
   return value;
 }
 
+export function createTransferableArrayBuffer(byteLength: number): ArrayBuffer {
+  const buf = new ArrayBuffer(byteLength);
+  buf.transferable = true;
+  return buf;
+}
+
 export function registerCustomSerializable<
   TValue extends object,
   TPacked extends object,

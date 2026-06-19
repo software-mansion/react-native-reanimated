@@ -4,6 +4,7 @@ import type {
   RemoteFunction,
   SerializableRef,
   SynchronizableRef,
+  TransferableArrayBuffer,
 } from '../memory/types';
 import type { WorkletRuntime } from '../types';
 
@@ -69,6 +70,12 @@ export interface WorkletsModuleProxy {
   ): SerializableRef<unknown[]>;
 
   createSerializableArrayBuffer(
+    arrayBuffer: ArrayBuffer
+  ): SerializableRef<ArrayBuffer>;
+
+  createTransferableArrayBuffer(byteLength: number): TransferableArrayBuffer;
+
+  createSerializableTransferableArrayBuffer(
     arrayBuffer: ArrayBuffer
   ): SerializableRef<ArrayBuffer>;
 

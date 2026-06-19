@@ -39,6 +39,10 @@ jsi::Value makeSerializableArray(jsi::Runtime &rt, const jsi::Array &array, cons
 
 jsi::Value makeSerializableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer);
 
+jsi::Value makeSerializableTransferableArrayBuffer(
+    jsi::Runtime &rt,
+    std::shared_ptr<TransferableArrayBuffer> buffer);
+
 jsi::Value makeSerializableMap(jsi::Runtime &rt, const jsi::Array &keys, const jsi::Array &values);
 
 jsi::Value makeSerializableSet(jsi::Runtime &rt, const jsi::Array &values);

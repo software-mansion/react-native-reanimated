@@ -3,10 +3,12 @@
 #include <worklets/Compat/Holders.h>
 #include <worklets/Compat/StableApi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
+#include <worklets/SharedItems/HermesArrayBufferDetach.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
 #include <worklets/SharedItems/Shareable.h>
 #include <worklets/SharedItems/Synchronizable.h>
+#include <worklets/SharedItems/TransferableArrayBuffer.h>
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
@@ -332,6 +334,26 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       rt, obj, "createSerializableArrayBuffer", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         const auto buffer = at<0>(args).getObject(rt).getArrayBuffer(rt);
         return makeSerializableArrayBuffer(rt, buffer);
+      });
+
+  jsi_utils::addMethod<1>(
+      rt, obj, "createTransferableArrayBuffer", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        const auto byteLength = static_cast<size_t>(at<0>(args).asNumber());
+        return makeTransferableArrayBuffer(rt, std::make_shared<TransferableArrayBuffer>(byteLength));
+      });
+
+  jsi_utils::addMethod<1>(
+      rt,
+      obj,
+      "createSerializableTransferableArrayBuffer",
+      [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto store = getTransferableArrayBufferStore(rt, at<0>(args).asObject(rt));
+        if (store == nullptr) {
+          // TODO: think if this is truly neeeded. It's an internal lib function.
+          // We control what is passed here.
+          throw jsi::JSError(rt, "[Worklets] Value is not a transferable ArrayBuffer.");
+        }
+        return makeSerializableTransferableArrayBuffer(rt, std::move(store));
       });
 
   jsi_utils::addMethod<3>(

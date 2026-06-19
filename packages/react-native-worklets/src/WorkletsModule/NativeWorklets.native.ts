@@ -136,6 +136,16 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.createSerializableArrayBuffer(arrayBuffer);
   }
 
+  createTransferableArrayBuffer(byteLength: number) {
+    return this.#workletsModuleProxy.createTransferableArrayBuffer(byteLength);
+  }
+
+  createSerializableTransferableArrayBuffer(arrayBuffer: ArrayBuffer) {
+    return this.#workletsModuleProxy.createSerializableTransferableArrayBuffer(
+      arrayBuffer
+    );
+  }
+
   createSerializableMap<TKey, TValue>(
     keys: TKey[],
     values: TValue[]

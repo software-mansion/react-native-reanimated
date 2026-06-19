@@ -3,6 +3,7 @@
 #include <jsi/jsi.h>
 #include <worklets/Compat/StableApi.h>
 #include <worklets/Registries/WorkletRuntimeRegistry.h>
+#include <worklets/SharedItems/TransferableArrayBuffer.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
@@ -255,6 +256,17 @@ class SerializableArrayBuffer : public Serializable {
 
  protected:
   const std::vector<uint8_t> data_;
+};
+
+class SerializableTransferableArrayBuffer : public Serializable {
+ public:
+  SerializableTransferableArrayBuffer(jsi::Runtime &, std::shared_ptr<TransferableArrayBuffer> buffer)
+      : Serializable(ValueType::ArrayBufferType), buffer_(std::move(buffer)) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  const std::shared_ptr<TransferableArrayBuffer> buffer_;
 };
 
 class SerializableWorklet : public SerializableObject {

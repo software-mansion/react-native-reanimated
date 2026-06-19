@@ -24,6 +24,7 @@ import type {
   SerializableRef,
   SerializationData,
   Synchronizable,
+  TransferableArrayBuffer,
 } from './types';
 
 const MAGIC_KEY = 'REANIMATED_MAGIC_KEY';
@@ -194,6 +195,9 @@ export function createSerializable<TValue>(
     return cloneError(value) as SerializableRef<TValue>;
   }
   if (value instanceof ArrayBuffer) {
+    if ('__transferable' in value) {
+      return cloneTransferableArrayBuffer(value) as SerializableRef<TValue>;
+    }
     return cloneArrayBuffer(value) as SerializableRef<TValue>;
   }
   if (ArrayBuffer.isView(value)) {
@@ -212,6 +216,25 @@ export function createSerializable<TValue>(
   throw new Error(
     `[Worklets] Cannot copy value of type \`${constructorName}\`.`
   );
+}
+
+/**
+ * Allocates a transferable `ArrayBuffer` of `byteLength` bytes. It is a real
+ * `ArrayBuffer` (so `new Uint8Array(buffer)` is valid) augmented with a
+ * `transferable` flag and a `transfer()` method. It is backed by a shared C++
+ * store, so passing it into a different runtime avoids copying.
+ *
+ * Call `buf.transfer(newByteLength?)` to move the bytes into a fresh
+ * transferable and detach this one (`byteLength` becomes `0` and views over it
+ * go empty).
+ *
+ * @param byteLength - Size of the buffer in bytes.
+ * @returns A {@link TransferableArrayBuffer}.
+ */
+export function createTransferableArrayBuffer(
+  byteLength: number
+): TransferableArrayBuffer {
+  return WorkletsModule.createTransferableArrayBuffer(byteLength);
 }
 
 if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
@@ -587,6 +610,17 @@ function cloneArrayBuffer(
   arrayBuffer: ArrayBuffer
 ): SerializableRef<ArrayBuffer> {
   const clone = WorkletsModule.createSerializableArrayBuffer(arrayBuffer);
+  serializableMappingCache.set(arrayBuffer, clone);
+  serializableMappingCache.set(clone);
+
+  return clone;
+}
+
+function cloneTransferableArrayBuffer(
+  arrayBuffer: ArrayBuffer
+): SerializableRef<ArrayBuffer> {
+  const clone =
+    WorkletsModule.createSerializableTransferableArrayBuffer(arrayBuffer);
   serializableMappingCache.set(arrayBuffer, clone);
   serializableMappingCache.set(clone);
 
