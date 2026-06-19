@@ -1,6 +1,8 @@
 import groovy.json.JsonSlurper
+import com.android.Version
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Properties
 import javax.inject.Inject
 
@@ -8,7 +10,6 @@ plugins {
     id("com.android.library")
     id("maven-publish")
     id("com.diffplug.spotless") version "8.4.0"
-    id("org.jetbrains.kotlin.android")
 }
 
 fun safeExtGet(prop: String, fallback: Any?): Any? =
@@ -103,6 +104,20 @@ fun validateConflictingFeatureFlags(featureFlags: HashMap<String, String>) {
 
 if (project != rootProject) {
     apply(plugin = "com.facebook.react")
+}
+
+fun shouldEnableAgpFallback(): Boolean {
+    val agpMajorVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION.substringBefore('.').toIntOrNull() ?: Int.MAX_VALUE
+    if (agpMajorVersion <= 8) {
+        return true
+    }
+
+    val isBuiltInKotlinEnabled = providers.gradleProperty("android.builtInKotlin").orNull?.toBooleanStrictOrNull() ?: true
+    return !isBuiltInKotlinEnabled
+}
+
+if (shouldEnableAgpFallback()) {
+    apply(plugin = "org.jetbrains.kotlin.android")
 }
 
 val packageDir: File = project.projectDir.parentFile
@@ -244,8 +259,8 @@ android {
     }
 }
 
-if (project != rootProject) {
-    kotlin {
+if (project != rootProject && shouldEnableAgpFallback()) {
+    tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {
             jvmTarget = JvmTarget.fromTarget("17")
         }
