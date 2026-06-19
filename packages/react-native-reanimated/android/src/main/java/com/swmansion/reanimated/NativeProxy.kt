@@ -222,13 +222,26 @@ open class NativeProxy {
         return true
     }
 
+    private val mountingManager: Any by lazy {
+        FabricUIManager::class.java.getDeclaredField("mMountingManager").run {
+            isAccessible = true
+            get(mFabricUIManager)
+        }
+    }
+
+    private val updatePropsSynchronouslyMethod by lazy {
+        mountingManager.javaClass.methods.first {
+            it.name.startsWith("updatePropsSynchronously") && it.parameterTypes.size == 2
+        }.apply { isAccessible = true }
+    }
+
     @DoNotStrip
     fun synchronouslyUpdateUIProps(
         intBuffer: IntArray,
         doubleBuffer: DoubleArray,
     ) {
         SynchronousPropsBufferParser.parse(intBuffer, doubleBuffer) { viewTag, props ->
-            mFabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, props)
+            updatePropsSynchronouslyMethod.invoke(mountingManager, viewTag, props)
         }
     }
 
