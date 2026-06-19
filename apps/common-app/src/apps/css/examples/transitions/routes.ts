@@ -128,9 +128,18 @@ const routes = {
         name: 'Arbitrary web selectors',
         Component: pseudoSelectors.ArbitraryWebSelectors,
       },
-      PseudoShowcase: {
+      Showcase: {
         name: 'Showcase',
-        Component: pseudoSelectors.Showcase,
+        routes: {
+          PseudoPlanets: {
+            name: 'Planets',
+            Component: pseudoSelectors.Planets,
+          },
+          PseudoForm: {
+            name: 'Form',
+            Component: pseudoSelectors.Form,
+          },
+        },
       },
     },
   },
