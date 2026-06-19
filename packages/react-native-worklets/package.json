@@ -81,7 +81,7 @@
     "@babel/core": "7.28.4",
     "@react-native-community/cli": "20.1.0",
     "@react-native/eslint-config": "0.83.0",
-    "@react-native/jest-preset": "patch:@react-native/jest-preset@npm%3A0.85.2#~/.yarn/patches/@react-native-jest-preset-npm-0.85.2-d3275e8971.patch",
+    "@react-native/jest-preset": "patch:@react-native/jest-preset@npm%3A0.86.0#~/.yarn/patches/@react-native-jest-preset-npm-0.86.0-7a936108b4.patch",
     "@types/jest": "30.0.0",
     "@types/node": "24.7.0",
     "@types/react": "19.2.2",
@@ -93,7 +93,7 @@
     "knip": "5.61.3",
     "madge": "8.0.0",
     "react": "19.2.3",
-    "react-native": "0.85.2",
+    "react-native": "0.86.0",
     "typescript": "5.9.3"
   },
   "main": "./lib/module/index",
