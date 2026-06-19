@@ -3,6 +3,7 @@ package com.swmansion.reanimated
 import android.content.ContentResolver
 import android.os.SystemClock
 import android.provider.Settings
+import android.util.Log
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
 import com.facebook.react.bridge.NativeModule
@@ -222,6 +223,11 @@ open class NativeProxy {
         return true
     }
 
+    // TODO(#9681): Temporary workaround. Since RN 0.86, overrideBySynchronousMountPropsAtMountingAndroid
+    // defaults on, so RN's only public synchronous-update API (synchronouslyUpdateViewOnUIThread) seeds
+    // the tagToSynchronousMountProps cache that then clamps later commits and freezes animations. We call
+    // MountingManager.updatePropsSynchronously directly (apply without seeding) via reflection because
+    // MountingManager is internal. Remove once RN exposes a non-seeding synchronous-update API.
     private val mountingManager: Any by lazy {
         FabricUIManager::class.java.getDeclaredField("mMountingManager").run {
             isAccessible = true
@@ -236,13 +242,25 @@ open class NativeProxy {
             }.apply { isAccessible = true }
     }
 
+    private val getViewExistsMethod by lazy {
+        mountingManager.javaClass.methods
+            .first {
+                it.name.startsWith("getViewExists") && it.parameterTypes.size == 1
+            }.apply { isAccessible = true }
+    }
+
     @DoNotStrip
     fun synchronouslyUpdateUIProps(
         intBuffer: IntArray,
         doubleBuffer: DoubleArray,
     ) {
         SynchronousPropsBufferParser.parse(intBuffer, doubleBuffer) { viewTag, props ->
-            updatePropsSynchronouslyMethod.invoke(mountingManager, viewTag, props)
+            if (getViewExistsMethod.invoke(mountingManager, viewTag) == true) {
+                try {
+                    updatePropsSynchronouslyMethod.invoke(mountingManager, viewTag, props)
+                } catch (ignored: Exception) {
+                }
+            }
         }
     }
 
