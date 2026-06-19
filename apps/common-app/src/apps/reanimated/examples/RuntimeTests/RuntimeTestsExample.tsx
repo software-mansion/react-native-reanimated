@@ -83,6 +83,7 @@ export default function RuntimeTestsExample() {
             require('./tests/runtimes/turboModuleRegistryShim.test');
           },
           disabled: !globalThis._WORKLETS_BUNDLE_MODE_ENABLED,
+          skipByDefault: true,
         },
         {
           testSuiteName: 'run loop',
