@@ -53,10 +53,18 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
     CSSTransitionRouting &routing,
     const double timestamp) const {
   CSSTransitionConfig loopConfig;
+#ifndef NDEBUG
+  size_t matchedValues = 0;
+#endif // NDEBUG
 
   for (const auto &[propertyName, settings] : config.changedPropertiesSettings) {
     const auto valueIt = config.changedProperties.find(propertyName);
     const bool hasValue = valueIt != config.changedProperties.end();
+#ifndef NDEBUG
+    if (hasValue) {
+      ++matchedValues;
+    }
+#endif // NDEBUG
 
     bool routable = canRoute(propertyName, settings.easingConfig);
     if (routable && hasValue) {
