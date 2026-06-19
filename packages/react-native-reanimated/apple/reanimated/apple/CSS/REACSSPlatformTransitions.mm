@@ -1,8 +1,8 @@
 #import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
 
+#import <reanimated/CSS/utils/platform.h>
 #import <reanimated/CSS/utils/reversingShortening.h>
 #import <reanimated/apple/CSS/REACSSPlatformProps.h>
-#import <reanimated/apple/CSS/REACSSPlatformValue.h>
 #import <reanimated/apple/REAUIView.h>
 
 #import <React/RCTComponentViewProtocol.h>

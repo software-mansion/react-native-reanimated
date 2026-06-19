@@ -1,5 +1,5 @@
+#import <reanimated/CSS/utils/platform.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
-#import <reanimated/apple/CSS/REACSSPlatformProps.h>
 #import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
