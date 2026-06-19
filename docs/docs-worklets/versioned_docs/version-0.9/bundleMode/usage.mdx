@@ -8,7 +8,7 @@ sidebar_position: 3
 
 Third party libraries have to be on an allow-list to use them in worklets. This is because libraries can come with side-effects that would break a Worklet Runtime. For instance, a library that imports something from React Native can't be used on a Worklet Runtime. This would load a second instance of React Native and break your app.
 
-To add a library to the allow-list you only need to set `importForwarding.moduleNames` in the Worklets Babel plugin options. It's an array of library names. For instance, if you want to use `my-library` on a Worklet Runtime.
+To add a library to the allow-list you only need to set the `workletizableModules` option in Worklets Babel plugin, which is an array of library names. For instance, if you want to use `my-library` on a Worklet Runtime.
 
 ```javascript
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
@@ -16,11 +16,11 @@ const workletsPluginOptions = {
   bundleMode: true,
   strictGlobal: true, // optional, but recommended
   // highlight-next-line
-  importForwarding: { moduleNames: ['my-library'] },
+  workletizableModules: ['my-library'],
 };
 ```
 
-The `importForwarding` API is temporary and will be replaced with a more robust solution in the future.
+`workletizableModules` API is temporary and will be replaced with a more robust solution in the future.
 
 ## Running network requests in Worklets
 

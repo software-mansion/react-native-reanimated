@@ -267,12 +267,12 @@ This option allows you to register modules as safe to use on Worklet Runtimes in
 
 ### importForwarding
 
-Configures [import forwarding](/docs/0.10/bundleMode/importForwarding) for Bundle Mode. See the [0.10 docs](/docs/0.10/worklets-babel-plugin/plugin-options#importforwarding) for the full reference.
+Configures [import forwarding](/docs/bundleMode/importForwarding) for Bundle Mode. See the [0.10 docs](/docs/worklets-babel-plugin/plugin-options#importforwarding) for the full reference.
 
 #### importForwarding.moduleNames
 
-See the [0.10 docs](/docs/0.10/worklets-babel-plugin/plugin-options#importforwardingmodulenames).
+See the [0.10 docs](/docs/worklets-babel-plugin/plugin-options#importforwardingmodulenames).
 
 #### importForwarding.relativePaths
 
-See the [0.10 docs](/docs/0.10/worklets-babel-plugin/plugin-options#importforwardingrelativepaths).
+See the [0.10 docs](/docs/worklets-babel-plugin/plugin-options#importforwardingrelativepaths).
