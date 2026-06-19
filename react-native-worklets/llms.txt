@@ -2,7 +2,7 @@
 
 ## bundleMode
 
-- [Import forwarding](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/importForwarding)
+- [importForwarding](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/importForwarding)
 - [overview](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/overview)
 - [setup](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/setup)
 - [usage](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/usage)
@@ -61,6 +61,7 @@
 ## utility
 
 - [getRuntimeKind](https://docs.swmansion.com/react-native-worklets/docs/utility/getRuntimeKind)
+- [isBundleModeEnabled](https://docs.swmansion.com/react-native-worklets/docs/utility/isBundleModeEnabled)
 - [isRNRuntime](https://docs.swmansion.com/react-native-worklets/docs/utility/isRNRuntime)
 - [isUIRuntime](https://docs.swmansion.com/react-native-worklets/docs/utility/isUIRuntime)
 - [isWorkerRuntime](https://docs.swmansion.com/react-native-worklets/docs/utility/isWorkerRuntime)

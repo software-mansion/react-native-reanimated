@@ -17,7 +17,10 @@ interface PluginOptions {
   relativeSourceLocation?: boolean;
   strictGlobal?: boolean;
   substituteWebPlatformChecks?: boolean;
-  workletizableModules?: string[];
+  importForwarding?: {
+    moduleNames?: string[];
+    relativePaths?: string[];
+  };
 }
 ```
 
@@ -246,20 +249,84 @@ Defaults to `false`.
 
 This option can also be useful for Web apps. In Reanimated, there are numerous checks to determine the right function implementation for a specific target platform. Enabling this option changes all the checks that identify if the target is a Web app to `true`. This alteration can aid in tree-shaking and contribute to reducing the bundle size.
 
-### workletizableModules
-
-Defaults to an empty array.
-
-This option allows you to register modules as safe to use on Worklet Runtimes in the [Bundle Mode](/docs/bundleMode/).
-
 ### importForwarding
 
-Configures [import forwarding](/docs/0.10/bundleMode/importForwarding) for Bundle Mode. See the [0.10 docs](/docs/0.10/worklets-babel-plugin/plugin-options#importforwarding) for the full reference.
+Defaults to no forwarding (an empty object).
+
+Configures [import forwarding](../bundleMode/importForwarding.mdx) for Bundle
+Mode. See the dedicated page for the full overview.
 
 #### importForwarding.moduleNames
 
-See the [0.10 docs](/docs/0.10/worklets-babel-plugin/plugin-options#importforwardingmodulenames).
+Defaults to an empty array.
+
+List of exact module names that should be forwarded as imports inside worklets.
+
+For example, to use all exports from `my-library` directly on the Worklet
+Runtime, add it to the list:
+
+```javascript
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  // ...
+  importForwarding: { moduleNames: ['my-library'] },
+};
+```
+
+At bundle time, when a worklet imports from `my-library`, the plugin forwards
+that import into the worklet body:
+
+Before
+After (conceptually)
+
+The module name has to be an exact match — with `my-library` in the list, an
+import from `my-library/some-file` won't be forwarded:
+
+Before
+After (conceptually)
 
 #### importForwarding.relativePaths
 
-See the [0.10 docs](/docs/0.10/worklets-babel-plugin/plugin-options#importforwardingrelativepaths).
+Defaults to an empty array.
+
+List of paths that determine whether a module should forward its **relative**
+imports inside worklets. If a module's path matches any of the provided paths,
+all relative imports inside that module's worklets will be forwarded.
+
+Use this when authoring a library that calls helpers via relative imports
+inside its own worklets:
+
+```javascript title="my-library/index.js"
+import { someExport } from './utils';
+
+function foo() {
+  'worklet';
+
+  // We want it forwarded.
+  someExport();
+}
+```
+
+Add the library's path to `relativePaths`:
+
+```javascript
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  // ...
+  importForwarding: { relativePaths: ['my-library'] },
+};
+```
+
+At bundle time, the plugin forwards relative imports inside `my-library` into
+the worklet body:
+
+Before
+After (conceptually)
+
+You can also narrow the path to a subdirectory — e.g. `my-library/src` or
+`my-library/src/utils` — to forward imports from only part of the library.
+
+`moduleNames` won't work here: adding `'./utils'` to it would forward every
+`'./utils'` import across the bundle, potentially breaking other libraries
+with a file at the same relative path. `relativePaths` scopes forwarding to a
+specific package.

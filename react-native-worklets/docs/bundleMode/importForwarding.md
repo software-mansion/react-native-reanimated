@@ -1,4 +1,207 @@
 # Import forwarding
 
-Import forwarding is documented in the [0.10
-docs](/docs/0.10/bundleMode/importForwarding).
+Import forwarding is a feature of Bundle Mode that lets you use third-party
+libraries inside worklets without adding boilerplate code.
+
+To understand the motivation behind this feature, let's look at the ambiguity
+of using imports inside worklets.
+
+## Motivation
+
+Say you have the following code:
+
+```javascript
+import { foo } from 'my-library';
+
+function worklet() {
+  'worklet';
+  foo();
+}
+
+scheduleOnUI(worklet);
+```
+
+Your intent is clearly to invoke `foo` from `my-library` inside the worklet —
+there shouldn't be any ambiguity. But consider another example.
+
+Say `my-library` is a library that provides a counter:
+
+```javascript title="my-library/index.js"
+let value = 0;
+
+export function incrementValue() {
+  value++;
+}
+
+export function getValue() {
+  return value;
+}
+```
+
+And then you use it like this:
+
+```javascript
+import { incrementValue, getValue } from 'my-library';
+
+incrementValue();
+
+function worklet() {
+  'worklet';
+  const value = getValue();
+  console.log(value);
+}
+
+scheduleOnUI(worklet); // does it log 0 or 1?
+```
+
+Different JavaScript Runtimes don't share any state, so the invocation of
+`incrementValue` on the RN Runtime didn't affect the `value` variable on the
+Worklet Runtime.
+
+So what's the intent behind the `getValue` invocation inside the worklet here?
+Did the author want to print the state of the RN Runtime or the Worklet Runtime?
+Both interpretations are valid, but during static analysis of the code — which
+the Worklets Babel plugin does — it's impossible to tell which one is correct.
+
+## Disambiguating manually
+
+You can write the same code explicitly, without ambiguity.
+
+### Printing RN Runtime state
+
+```javascript
+import { incrementValue, getValue } from 'my-library';
+
+incrementValue();
+const value = getValue();
+
+function worklet() {
+  'worklet';
+  console.log(value);
+}
+
+scheduleOnUI(worklet); // logs 1
+```
+
+Here you explicitly assigned the result of `getValue` to a variable and passed
+that variable as a closure of the worklet. It's clear that you wanted to print
+the state of the RN Runtime.
+
+### Printing Worklet Runtime state
+
+```javascript
+import { incrementValue } from 'my-library';
+
+incrementValue();
+
+function worklet() {
+  'worklet';
+  const { getValue } = require('my-library');
+  const value = getValue();
+  console.log(value);
+}
+
+scheduleOnUI(worklet); // logs 0
+```
+
+You used `require` to import `getValue` inside the worklet. There's no doubt
+that you wanted to print the state of the Worklet Runtime.
+
+### The cost of explicit disambiguation
+
+Writing your code exactly as in the previous example requires you to
+re-specify all the imports in each worklet, which adds a lot of boilerplate:
+
+```javascript
+function incrementOnce() {
+  'worklet';
+  const { getValue, incrementValue } = require('my-library');
+  incrementValue();
+  const value = getValue();
+  console.log(value);
+}
+
+function incrementTwice() {
+  'worklet';
+  const { getValue, incrementValue } = require('my-library');
+  incrementValue();
+  incrementValue();
+  const value = getValue();
+  console.log(value);
+}
+
+// etc...
+```
+
+## Using import forwarding
+
+Import forwarding lets you state which imports used inside worklets should be
+forwarded into the worklet body automatically, so you can drop that boilerplate.
+
+You can configure it via the
+[`importForwarding`](/docs/worklets-babel-plugin/plugin-options#importforwarding)
+option of the Worklets Babel plugin.
+
+### Dropping boilerplate
+
+You can rewrite the code from the [Printing Worklet Runtime
+state](#printing-worklet-runtime-state) example without boilerplate. First,
+configure the Worklets Babel plugin:
+
+```javascript
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  // ...
+  importForwarding: { moduleNames: ['my-library'] },
+};
+```
+
+Then rewrite the code like this:
+
+```javascript
+import { incrementValue, getValue } from 'my-library';
+
+incrementValue();
+
+function worklet() {
+  'worklet';
+  const value = getValue();
+  console.log(value);
+}
+
+scheduleOnUI(worklet); // logs 0
+```
+
+This works because you explicitly stated all imports from `my-library` should
+be forwarded into worklets — the worklet gets its own copy of `my-library`'s
+state.
+
+### Explicit closure capture
+
+What if you wanted to print the state of both the RN Runtime and the Worklet
+Runtime? The same closure pattern still works:
+
+```javascript
+import { incrementValue, getValue } from 'my-library';
+
+incrementValue();
+
+const value = getValue();
+
+function printRN() {
+  'worklet';
+  console.log(value);
+}
+
+function printWorklet() {
+  'worklet';
+  const value = getValue();
+  console.log(value);
+}
+
+scheduleOnUI(printRN); // logs 1
+scheduleOnUI(printWorklet); // logs 0
+```
+
+To learn more about closures, see [this section](/docs/fundamentals/closures)
+of the Worklets documentation.
