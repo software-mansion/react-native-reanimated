@@ -72,6 +72,12 @@ export interface PluginOptions {
    */
   globals?: string[];
 
+  /** // TODO: */
+  hermesBytecode?: boolean;
+
+  /** // TODO: */
+  getHBCBinary?: () => string;
+
   /** Temporary internal option to create ShareableUnpacker. */
   limitInitDataHoisting?: boolean;
 

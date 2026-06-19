@@ -18,6 +18,7 @@ import { WorkletsTurboModule } from '../specs';
 import type { WorkletFunction, WorkletRuntime } from '../types';
 import type {
   IWorkletsModule,
+  UnpackerData,
   WorkletsModuleProxy,
 } from './workletsModuleProxy';
 
@@ -409,35 +410,23 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
 export const WorkletsModule: IWorkletsModule = new NativeWorklets();
 
+function toUnpackerData(unpacker: () => void): UnpackerData {
+  const initData = (unpacker as WorkletFunction).__initData!;
+  return {
+    code: initData.code,
+    bytecode: initData.bytecode,
+    location: initData.location ?? '',
+    sourceMap: initData.sourceMap ?? '',
+  };
+}
+
 function installUnpackers(workletsModuleProxy: WorkletsModuleProxy) {
   workletsModuleProxy.loadUnpackers(
-    (installValueUnpacker as WorkletFunction).__initData!.code,
-    (installValueUnpacker as WorkletFunction).__initData!.location ?? '',
-    (installValueUnpacker as WorkletFunction).__initData!.sourceMap ?? '',
-    (installSynchronizableUnpacker as WorkletFunction).__initData!.code,
-    (installSynchronizableUnpacker as WorkletFunction).__initData!.location ??
-      '',
-    (installSynchronizableUnpacker as WorkletFunction).__initData!.sourceMap ??
-      '',
-    (installCustomSerializableUnpacker as WorkletFunction).__initData!.code,
-    (installCustomSerializableUnpacker as WorkletFunction).__initData!
-      .location ?? '',
-    (installCustomSerializableUnpacker as WorkletFunction).__initData!
-      .sourceMap ?? '',
-    (installShareableHostUnpacker as WorkletFunction).__initData!.code,
-    (installShareableHostUnpacker as WorkletFunction).__initData!.location ??
-      '',
-    (installShareableHostUnpacker as WorkletFunction).__initData!.sourceMap ??
-      '',
-    (installShareableGuestUnpacker as WorkletFunction).__initData!.code,
-    (installShareableGuestUnpacker as WorkletFunction).__initData!.location ??
-      '',
-    (installShareableGuestUnpacker as WorkletFunction).__initData!.sourceMap ??
-      '',
-    (installRemoteFunctionUnpacker as WorkletFunction).__initData!.code,
-    (installRemoteFunctionUnpacker as WorkletFunction).__initData!.location ??
-      '',
-    (installRemoteFunctionUnpacker as WorkletFunction).__initData!.sourceMap ??
-      ''
+    toUnpackerData(installValueUnpacker),
+    toUnpackerData(installSynchronizableUnpacker),
+    toUnpackerData(installCustomSerializableUnpacker),
+    toUnpackerData(installShareableHostUnpacker),
+    toUnpackerData(installShareableGuestUnpacker),
+    toUnpackerData(installRemoteFunctionUnpacker)
   );
 }

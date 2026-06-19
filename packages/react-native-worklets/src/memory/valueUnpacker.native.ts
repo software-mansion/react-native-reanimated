@@ -9,6 +9,9 @@ declare global {
   var evalWithSourceUrl:
     | ((js: string, sourceURL: string) => () => unknown)
     | undefined;
+  var evalBytecode:
+    | ((bytecode: ArrayBuffer, sourceURL: string) => () => unknown)
+    | undefined;
 }
 
 export function installValueUnpacker() {
@@ -23,7 +26,20 @@ export function installValueUnpacker() {
       let workletFun = workletsCache.get(workletHash);
       if (workletFun === undefined) {
         const initData = objectToUnpack.__initData;
-        if (globalThis.evalWithSourceMap) {
+        if (initData!.bytecode !== undefined) {
+          // in production we may ship the worklet as precompiled Hermes
+          // bytecode instead of a source string; the native runtime evaluates
+          // the bytecode buffer directly without parsing/compiling at runtime
+          if (!globalThis.evalBytecode) {
+            throw new Error(
+              '[Worklets] Bytecode worklet requires a Hermes runtime with `evalBytecode` support.'
+            );
+          }
+          workletFun = globalThis.evalBytecode(
+            initData!.bytecode,
+            `worklet_${workletHash}`
+          );
+        } else if (globalThis.evalWithSourceMap) {
           // if the runtime (hermes only for now) supports loading source maps
           // we want to use the proper filename for the location as it guarantees
           // that debugger understands and loads the source code of the file where

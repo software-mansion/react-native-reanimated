@@ -7,27 +7,26 @@ import type {
 } from '../memory/types';
 import type { WorkletRuntime } from '../types';
 
+/**
+ * Data needed to install a single unpacker. An unpacker ships either as a
+ * source string (`code`) or as precompiled Hermes bytecode (`bytecode`).
+ */
+export interface UnpackerData {
+  code?: string;
+  bytecode?: ArrayBuffer;
+  location: string;
+  sourceMap: string;
+}
+
 /** Type of `__workletsModuleProxy` injected with JSI. */
 export interface WorkletsModuleProxy {
   loadUnpackers(
-    valueUnpackerCode: string,
-    valueUnpackerLocation: string,
-    valueUnpackerSourceMap: string,
-    synchronizableUnpackerCode: string,
-    synchronizableUnpackerLocation: string,
-    synchronizableUnpackerSourceMap: string,
-    customSerializableUnpackerCode: string,
-    customSerializableUnpackerLocation: string,
-    customSerializableUnpackerSourceMap: string,
-    shareableHostUnpackerCode: string,
-    shareableHostUnpackerLocation: string,
-    shareableHostUnpackerSourceMap: string,
-    shareableGuestUnpackerCode: string,
-    shareableGuestUnpackerLocation: string,
-    shareableGuestUnpackerSourceMap: string,
-    remoteFunctionUnpackerCode: string,
-    remoteFunctionUnpackerLocation: string,
-    remoteFunctionUnpackerSourceMap: string
+    valueUnpacker: UnpackerData,
+    synchronizableUnpacker: UnpackerData,
+    customSerializableUnpacker: UnpackerData,
+    shareableHostUnpacker: UnpackerData,
+    shareableGuestUnpacker: UnpackerData,
+    remoteFunctionUnpacker: UnpackerData
   ): void;
 
   createSerializableImport<TValue>(

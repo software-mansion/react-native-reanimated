@@ -30,6 +30,28 @@ namespace worklets {
 
 namespace {
 
+Unpacker parseUnpacker(jsi::Runtime &rt, const jsi::Object &object) {
+  Unpacker unpacker;
+  const auto code = object.getProperty(rt, "code");
+  if (code.isString()) {
+    unpacker.code = code.asString(rt).utf8(rt);
+  }
+  const auto bytecode = object.getProperty(rt, "bytecode");
+  if (bytecode.isObject() && bytecode.asObject(rt).isArrayBuffer(rt)) {
+    const auto buffer = bytecode.asObject(rt).getArrayBuffer(rt);
+    unpacker.bytecode = std::vector<uint8_t>(buffer.data(rt), buffer.data(rt) + buffer.size(rt));
+  }
+  const auto location = object.getProperty(rt, "location");
+  if (location.isString()) {
+    unpacker.location = location.asString(rt).utf8(rt);
+  }
+  const auto sourceMap = object.getProperty(rt, "sourceMap");
+  if (sourceMap.isString()) {
+    unpacker.sourceMap = sourceMap.asString(rt).utf8(rt);
+  }
+  return unpacker;
+}
+
 inline void scheduleOnUI(
     const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
     jsi::Runtime &rt,
@@ -227,58 +249,18 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   auto obj = jsi::Object(rt);
   using jsi_utils::at;
 
-  jsi_utils::addMethod<18>(
+  jsi_utils::addMethod<6>(
       rt,
       obj,
       "loadUnpackers",
-      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[18]) {
-        const auto valueUnpackerCode = at<0>(args).asString(rt).utf8(rt);
-        const auto valueUnpackerLocation = at<1>(args).asString(rt).utf8(rt);
-        const auto valueUnpackerSourceMap = at<2>(args).asString(rt).utf8(rt);
-
-        const auto synchronizableUnpackerCode = at<3>(args).asString(rt).utf8(rt);
-        const auto synchronizableUnpackerLocation = at<4>(args).asString(rt).utf8(rt);
-        const auto synchronizableUnpackerSourceMap = at<5>(args).asString(rt).utf8(rt);
-
-        const auto customSerializableUnpackerCode = at<6>(args).asString(rt).utf8(rt);
-        const auto customSerializableUnpackerLocation = at<7>(args).asString(rt).utf8(rt);
-        const auto customSerializableUnpackerSourceMap = at<8>(args).asString(rt).utf8(rt);
-
-        const auto shareableHostUnpackerCode = at<9>(args).asString(rt).utf8(rt);
-        const auto shareableHostUnpackerLocation = at<10>(args).asString(rt).utf8(rt);
-        const auto shareableHostUnpackerSourceMap = at<11>(args).asString(rt).utf8(rt);
-
-        const auto shareableGuestUnpackerCode = at<12>(args).asString(rt).utf8(rt);
-        const auto shareableGuestUnpackerLocation = at<13>(args).asString(rt).utf8(rt);
-        const auto shareableGuestUnpackerSourceMap = at<14>(args).asString(rt).utf8(rt);
-
-        const auto remoteFunctionUnpackerCode = args[15].asString(rt).utf8(rt);
-        const auto remoteFunctionUnpackerLocation = args[16].asString(rt).utf8(rt);
-        const auto remoteFunctionUnpackerSourceMap = args[17].asString(rt).utf8(rt);
-
+      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[6]) {
         unpackerLoader->loadUnpackers(ShareableUnpackers{
-            .valueUnpacker =
-                {.code = valueUnpackerCode, .location = valueUnpackerLocation, .sourceMap = valueUnpackerSourceMap},
-            .synchronizableUnpacker =
-                {.code = synchronizableUnpackerCode,
-                 .location = synchronizableUnpackerLocation,
-                 .sourceMap = synchronizableUnpackerSourceMap},
-            .customSerializableUnpacker =
-                {.code = customSerializableUnpackerCode,
-                 .location = customSerializableUnpackerLocation,
-                 .sourceMap = customSerializableUnpackerSourceMap},
-            .shareableHostUnpacker =
-                {.code = shareableHostUnpackerCode,
-                 .location = shareableHostUnpackerLocation,
-                 .sourceMap = shareableHostUnpackerSourceMap},
-            .shareableGuestUnpacker =
-                {.code = shareableGuestUnpackerCode,
-                 .location = shareableGuestUnpackerLocation,
-                 .sourceMap = shareableGuestUnpackerSourceMap},
-            .remoteFunctionUnpacker =
-                {.code = remoteFunctionUnpackerCode,
-                 .location = remoteFunctionUnpackerLocation,
-                 .sourceMap = remoteFunctionUnpackerSourceMap},
+            .valueUnpacker = parseUnpacker(rt, at<0>(args).asObject(rt)),
+            .synchronizableUnpacker = parseUnpacker(rt, at<1>(args).asObject(rt)),
+            .customSerializableUnpacker = parseUnpacker(rt, at<2>(args).asObject(rt)),
+            .shareableHostUnpacker = parseUnpacker(rt, at<3>(args).asObject(rt)),
+            .shareableGuestUnpacker = parseUnpacker(rt, at<4>(args).asObject(rt)),
+            .remoteFunctionUnpacker = parseUnpacker(rt, at<5>(args).asObject(rt)),
         });
       });
 

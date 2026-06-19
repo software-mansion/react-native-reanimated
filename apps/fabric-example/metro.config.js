@@ -32,9 +32,6 @@ let config = {
 
 config = mergeConfig(defaultConfig, config);
 
-const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
-config = mergeConfig(config, bundleModeMetroConfig);
-
 module.exports = wrapWithReanimatedMetroConfig(
   mergeConfig(defaultConfig, config)
 );
