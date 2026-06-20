@@ -18,6 +18,8 @@ class PseudoSelectorManager(
 
     private val touchListenerViews = HashSet<View>()
 
+    private val hover = TouchHoverCoordinator()
+
     fun attach(
         tag: Int,
         selector: Int,
@@ -85,18 +87,13 @@ class PseudoSelectorManager(
         key: String,
         callback: PseudoSelectorCallback,
     ) {
-        val listener =
-            View.OnHoverListener { _, event ->
-                val action = event.actionMasked
-                if (action == MotionEvent.ACTION_HOVER_ENTER) {
-                    callback.onSelectorStateChanged(true)
-                } else if (action == MotionEvent.ACTION_HOVER_EXIT) {
-                    callback.onSelectorStateChanged(false)
-                }
-                false
+        ensureTouchListener(view)
+        hover.register(view, callback)
+        detachActions[key] =
+            Runnable {
+                hover.unregister(view)
+                maybeRemoveTouchListener(view)
             }
-        view.setOnHoverListener(listener)
-        detachActions[key] = Runnable { view.setOnHoverListener(null) }
     }
 
     private fun attachActive(
@@ -140,10 +137,16 @@ class PseudoSelectorManager(
                             it.onSelectorStateChanged(true)
                         }
                     }
+                    hover.recompute(event.rawX, event.rawY)
                 }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                MotionEvent.ACTION_UP -> {
                     fireActiveCallbacksUpTree(view, false)
                     deepestCallbacks[view]?.onSelectorStateChanged(false)
+                }
+                MotionEvent.ACTION_CANCEL -> {
+                    fireActiveCallbacksUpTree(view, false)
+                    deepestCallbacks[view]?.onSelectorStateChanged(false)
+                    hover.clearAll()
                 }
             }
             false
@@ -151,7 +154,7 @@ class PseudoSelectorManager(
     }
 
     private fun maybeRemoveTouchListener(view: View) {
-        if (view !in activeCallbacks && view !in deepestCallbacks) {
+        if (view !in activeCallbacks && view !in deepestCallbacks && !hover.isRegistered(view)) {
             touchListenerViews.remove(view)
             view.setOnTouchListener(null)
         }
