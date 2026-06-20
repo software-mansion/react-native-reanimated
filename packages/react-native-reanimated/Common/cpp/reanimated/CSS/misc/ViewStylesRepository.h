@@ -18,11 +18,6 @@ namespace reanimated::css {
 using namespace facebook;
 using namespace react;
 
-struct CachedShadowNode {
-  LayoutMetrics layoutMetrics;
-  std::shared_ptr<const ViewProps> viewProps;
-};
-
 class ViewStylesRepository {
  public:
   ViewStylesRepository(
@@ -40,16 +35,12 @@ class ViewStylesRepository {
   /// (the AB-BA deadlock).
   void setLastMountedRoot(const RootShadowNode::Shared &rootShadowNode);
 
-  void clearNodesCache();
-
  private:
   std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
 
-  std::unordered_map<int, CachedShadowNode> shadowNodeCache_;
   std::unordered_map<SurfaceId, RootShadowNode::Shared> lastMountedRootBySurface_;
 
-  void updateCacheIfNeeded(CachedShadowNode &cachedNode, const std::shared_ptr<const ShadowNode> &shadowNode);
   std::shared_ptr<const ShadowNode> getNewestNode(const std::shared_ptr<const ShadowNode> &shadowNode) const;
   std::shared_ptr<const ShadowNode> getParentNode(const std::shared_ptr<const ShadowNode> &shadowNode) const;
 

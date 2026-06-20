@@ -13,13 +13,16 @@ ViewStylesRepository::ViewStylesRepository(
 jsi::Value ViewStylesRepository::getNodeProp(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::string &propName) {
-  int tag = shadowNode->getTag();
-
-  auto &cachedNode = shadowNodeCache_[tag];
-  updateCacheIfNeeded(cachedNode, shadowNode);
+  // Resolve against the last mounted tree (captured by the mount hook) rather
+  // than the live ShadowTree. This avoids taking the ShadowTree revision lock
+  // here, which would deadlock against a Fabric commit that holds it and waits
+  // for the updates-registry lock we are holding.
+  const auto newestNode = getNewestNode(shadowNode);
+  const auto *layoutableShadowNode =
+      newestNode ? dynamic_cast<const LayoutableShadowNode *>(newestNode.get()) : nullptr;
 
   if (propName == "width" || propName == "height" || propName == "top" || propName == "left") {
-    const auto &layoutMetrics = cachedNode.layoutMetrics;
+    const auto layoutMetrics = layoutableShadowNode ? layoutableShadowNode->layoutMetrics_ : LayoutMetrics{};
 
     if (propName == "width") {
       return {layoutMetrics.frame.size.width};
@@ -31,7 +34,10 @@ jsi::Value ViewStylesRepository::getNodeProp(
       return {layoutMetrics.frame.origin.x};
     }
   } else {
-    const auto &viewProps = cachedNode.viewProps;
+    if (!layoutableShadowNode) {
+      return jsi::Value::undefined();
+    }
+    const auto viewProps = std::static_pointer_cast<const ViewProps>(newestNode->getProps());
     if (!viewProps) {
       return jsi::Value::undefined();
     }
@@ -101,34 +107,6 @@ folly::dynamic ViewStylesRepository::getStyleProp(const Tag tag, const PropertyP
   }
 
   return getPropertyValue(staticPropsRegistry_->get(tag), propertyPath);
-}
-
-void ViewStylesRepository::clearNodesCache() {
-  shadowNodeCache_.clear();
-}
-
-void ViewStylesRepository::updateCacheIfNeeded(
-    CachedShadowNode &cachedNode,
-    const std::shared_ptr<const ShadowNode> &shadowNode) {
-  // Resolve against the last mounted tree (captured by the mount hook) rather than
-  // the live ShadowTree. This avoids taking the ShadowTree revision lock here,
-  // which would deadlock against a Fabric commit that holds it and waits for the
-  // updates-registry lock we are holding.
-  auto newestCloneOfShadowNode = getNewestNode(shadowNode);
-
-  // Check if newestCloneOfShadowNode is valid (is already mounted / not
-  // yet unmounted)
-  if (!newestCloneOfShadowNode) {
-    return;
-  }
-
-  auto layoutableShadowNode = dynamic_cast<const LayoutableShadowNode *>(newestCloneOfShadowNode.get());
-  if (!layoutableShadowNode) {
-    return;
-  }
-
-  cachedNode.layoutMetrics = layoutableShadowNode->layoutMetrics_;
-  cachedNode.viewProps = std::static_pointer_cast<const ViewProps>(newestCloneOfShadowNode->getProps());
 }
 
 folly::dynamic ViewStylesRepository::getPropertyValue(const folly::dynamic &value, const PropertyPath &propertyPath) {
