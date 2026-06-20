@@ -18,11 +18,22 @@ class PseudoSelectorManager(
 
     private val activeDeepestViews = LinkedHashSet<View>()
 
-    // For "virtual" children that don't receive native touches themselves (e.g.
-    // react-native-svg elements): the compound host view (the SvgView) -> map of
-    // react tag -> (childView, callback). One touch listener per host dispatches
-    // to the right child via `reactTagForTouch`.
-    private val compoundActive = HashMap<View, HashMap<Int, Pair<View, PseudoSelectorCallback>>>()
+    // "Virtual" children (react-native-svg shapes) get no native touches, so we listen on
+    // their compound host: host -> tag -> entry, one listener routing presses via
+    // `reactTagForTouch`. :active and :active-deepest share it (one OnTouchListener per host).
+    private class CompoundActiveEntry(
+        val child: View,
+        val callback: PseudoSelectorCallback,
+        val isDeepest: Boolean,
+    )
+
+    private val compoundActive = HashMap<View, HashMap<Int, CompoundActiveEntry>>()
+
+    private val compoundHover = HashMap<View, HashMap<Int, Pair<View, PseudoSelectorCallback>>>()
+
+    // A shape can carry several selectors (e.g. :active and :hover), each marking it
+    // "responsible". Ref-count so detaching one doesn't unmark it while another needs it.
+    private val responsibleRefCounts = HashMap<View, Int>()
 
     fun attach(
         tag: Int,
@@ -37,16 +48,15 @@ class PseudoSelectorManager(
                 1 -> attachFocus(view, key, callback)
                 2 -> attachHoverWhenReady(tag, view, key, callback)
                 3 -> attachActiveWhenReady(tag, view, key, callback)
-                4 -> attachActiveDeepest(view, key, callback)
+                4 -> attachActiveDeepestWhenReady(tag, view, key, callback)
             }
         }
     }
 
     /**
-     * Returns the nearest ancestor that owns touch handling for "virtual" children
-     * (a [ReactCompoundView], e.g. react-native-svg's SvgView), or null when the
-     * view receives touches itself. Virtual children such as RNSVGCircle are not
-     * real touchable Android views, so a listener attached to them never fires.
+     * Nearest [ReactCompoundView] ancestor (e.g. react-native-svg's SvgView) that owns
+     * touch handling, or null if the view receives touches itself. Virtual children like
+     * RNSVGCircle aren't touchable Android views, so a listener on them never fires.
      */
     private fun compoundTouchHost(view: View): View? {
         var parent: ViewParent? = view.parent
@@ -60,11 +70,9 @@ class PseudoSelectorManager(
     }
 
     /**
-     * Routes _:active_ either to the compound host (for virtual SVG children) or to
-     * the view itself. When the view has not yet been inserted into its host (which
-     * is common at registration time, before the mounting layer attaches it), the
-     * decision is deferred until the view attaches to the window so the host chain
-     * is resolvable.
+     * Routes :active to the compound host (virtual SVG children) or the view itself.
+     * At registration the view often isn't attached yet, so the choice is deferred
+     * until it attaches and its host chain is resolvable.
      */
     private fun attachActiveWhenReady(
         tag: Int,
@@ -97,9 +105,27 @@ class PseudoSelectorManager(
     }
 
     /**
-     * Invokes [action] with the compound touch host once it can be resolved. If the
-     * view is already attached, runs synchronously; otherwise waits for the view to
-     * attach so a virtual child's host (the SvgView) is present in its parent chain.
+     * Routes :active-deepest to the compound host (virtual SVG children) or the view itself,
+     * deferring the choice until the view attaches and its host chain is resolvable.
+     */
+    private fun attachActiveDeepestWhenReady(
+        tag: Int,
+        view: View,
+        key: String,
+        callback: PseudoSelectorCallback,
+    ) {
+        whenHostResolvable(view, key) { host ->
+            if (host != null) {
+                attachActiveDeepestCompound(tag, view, host, key, callback)
+            } else {
+                attachActiveDeepest(view, key, callback)
+            }
+        }
+    }
+
+    /**
+     * Invokes [action] with the compound touch host once resolvable: synchronously if
+     * the view is attached, otherwise after it attaches and its host is in the parent chain.
      */
     private fun whenHostResolvable(
         view: View,
@@ -124,22 +150,50 @@ class PseudoSelectorManager(
     }
 
     /**
-     * react-native-svg only resolves a touch to an individual shape once that shape is
-     * marked "responsible" - normally the side effect of attaching a touch handler such
-     * as `onStartShouldSetResponder`. A pseudo selector targets the shape directly, so we
-     * set the flag ourselves through the public `setResponsible` hook and invalidate the
-     * host to rebuild its hit-testing state. Reflection avoids a hard dependency on
-     * react-native-svg; the call is a no-op for any other kind of compound child.
+     * react-native-svg only hit-tests a shape once marked "responsible" (normally via
+     * `onStartShouldSetResponder`, which a pseudo selector doesn't add), so we set it and
+     * invalidate the host. Reflection avoids a hard rn-svg dependency; no-op for other hosts.
      */
     private fun enableCompoundHitTesting(
         host: View,
         child: View,
     ) {
+        val count = responsibleRefCounts.getOrDefault(child, 0)
+        responsibleRefCounts[child] = count + 1
+        if (count > 0) {
+            return
+        }
+        setChildResponsible(child, true)
+        host.invalidate()
+    }
+
+    /**
+     * Reverts [enableCompoundHitTesting]'s `setResponsible(true)` when the child's last selector
+     * detaches; otherwise the shape stays touch-responsible forever, altering app hit-testing.
+     * SvgView's `mResponsible` latch can't be cleared, so reverting the child is all we can undo.
+     */
+    private fun disableCompoundHitTesting(
+        host: View,
+        child: View,
+    ) {
+        val count = responsibleRefCounts.getOrDefault(child, 0)
+        if (count <= 1) {
+            responsibleRefCounts.remove(child)
+            setChildResponsible(child, false)
+            host.invalidate()
+        } else {
+            responsibleRefCounts[child] = count - 1
+        }
+    }
+
+    private fun setChildResponsible(
+        child: View,
+        responsible: Boolean,
+    ) {
         try {
             child.javaClass
                 .getMethod("setResponsible", java.lang.Boolean.TYPE)
-                .invoke(child, true)
-            host.invalidate()
+                .invoke(child, responsible)
         } catch (e: Exception) {
         }
     }
@@ -151,20 +205,48 @@ class PseudoSelectorManager(
         key: String,
         callback: PseudoSelectorCallback,
     ) {
-        // Keep the child in activeCallbacks so :active still propagates up the tree.
-        activeCallbacks[childView] = callback
+        registerCompoundActiveEntry(tag, childView, host, key, callback, isDeepest = false)
+    }
+
+    private fun attachActiveDeepestCompound(
+        tag: Int,
+        childView: View,
+        host: View,
+        key: String,
+        callback: PseudoSelectorCallback,
+    ) {
+        registerCompoundActiveEntry(tag, childView, host, key, callback, isDeepest = true)
+    }
+
+    private fun registerCompoundActiveEntry(
+        tag: Int,
+        childView: View,
+        host: View,
+        key: String,
+        callback: PseudoSelectorCallback,
+        isDeepest: Boolean,
+    ) {
+        // :active entries live in activeCallbacks (fired by fireActiveCallbacksUpTree); :active-deepest
+        // entries fire their own callback explicitly and only propagate to ANCESTOR :active views, so
+        // they stay out of activeCallbacks (mirrors the plain-view model; also avoids a double-fire).
+        if (!isDeepest) {
+            activeCallbacks[childView] = callback
+        }
         enableCompoundHitTesting(host, childView)
         val byTag =
             compoundActive.getOrPut(host) {
-                val map = HashMap<Int, Pair<View, PseudoSelectorCallback>>()
+                val map = HashMap<Int, CompoundActiveEntry>()
                 host.setOnTouchListener(compoundActiveListener(host, map))
                 map
             }
-        byTag[tag] = childView to callback
+        // Keyed by tag: a shape carrying BOTH :active and :active-deepest keeps only the
+        // last-registered entry. That combo is near-redundant, so it isn't supported.
+        byTag[tag] = CompoundActiveEntry(childView, callback, isDeepest)
         detachActions[key] =
             Runnable {
                 activeCallbacks.remove(childView)
                 byTag.remove(tag)
+                disableCompoundHitTesting(host, childView)
                 if (byTag.isEmpty()) {
                     compoundActive.remove(host)
                     host.setOnTouchListener(null)
@@ -172,24 +254,39 @@ class PseudoSelectorManager(
             }
     }
 
+    /**
+     * One touch listener per host, shared by :active and :active-deepest. SvgView's
+     * `reactTagForTouch` gives the deepest responsible shape under the point (per-path, z-order) -
+     * the natural :active-deepest arbiter, no bounds needed. On DOWN: ancestor :active views light
+     * up via [fireActiveCallbacksUpTree] from the hit shape, and the hit shape's :active-deepest
+     * fires only if that shape is itself a deepest entry.
+     */
     private fun compoundActiveListener(
         host: View,
-        byTag: Map<Int, Pair<View, PseudoSelectorCallback>>,
+        byTag: Map<Int, CompoundActiveEntry>,
     ): View.OnTouchListener {
+        val compound = host as ReactCompoundView
         var activeChild: View? = null
+        var deepestCallback: PseudoSelectorCallback? = null
         return View.OnTouchListener { _, event ->
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
-                    val hitTag = (host as ReactCompoundView).reactTagForTouch(event.x, event.y)
+                    val hitTag = compound.reactTagForTouch(event.x, event.y)
                     val entry = byTag[hitTag]
                     if (entry != null) {
-                        activeChild = entry.first
-                        fireActiveCallbacksUpTree(entry.first, true)
+                        activeChild = entry.child
+                        fireActiveCallbacksUpTree(entry.child, true)
+                        if (entry.isDeepest) {
+                            deepestCallback = entry.callback
+                            entry.callback.onSelectorStateChanged(true)
+                        }
                     }
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     activeChild?.let { fireActiveCallbacksUpTree(it, false) }
+                    deepestCallback?.onSelectorStateChanged(false)
                     activeChild = null
+                    deepestCallback = null
                 }
             }
             false
@@ -203,25 +300,46 @@ class PseudoSelectorManager(
         key: String,
         callback: PseudoSelectorCallback,
     ) {
-        var isHovered = false
-        val listener =
-            View.OnHoverListener { _, event ->
-                val hitTag = (host as ReactCompoundView).reactTagForTouch(event.x, event.y)
-                val over =
-                    hitTag == tag &&
-                        event.actionMasked != MotionEvent.ACTION_HOVER_EXIT
-                if (over && !isHovered) {
-                    isHovered = true
-                    callback.onSelectorStateChanged(true)
-                } else if (!over && isHovered) {
-                    isHovered = false
-                    callback.onSelectorStateChanged(false)
-                }
-                false
-            }
         enableCompoundHitTesting(host, childView)
-        host.setOnHoverListener(listener)
-        detachActions[key] = Runnable { host.setOnHoverListener(null) }
+        val byTag =
+            compoundHover.getOrPut(host) {
+                val map = HashMap<Int, Pair<View, PseudoSelectorCallback>>()
+                host.setOnHoverListener(compoundHoverListener(host, map))
+                map
+            }
+        byTag[tag] = childView to callback
+        detachActions[key] =
+            Runnable {
+                byTag.remove(tag)
+                disableCompoundHitTesting(host, childView)
+                if (byTag.isEmpty()) {
+                    compoundHover.remove(host)
+                    host.setOnHoverListener(null)
+                }
+            }
+    }
+
+    private fun compoundHoverListener(
+        host: View,
+        byTag: Map<Int, Pair<View, PseudoSelectorCallback>>,
+    ): View.OnHoverListener {
+        val compound = host as ReactCompoundView
+        var hoveredTag: Int? = null
+        return View.OnHoverListener { _, event ->
+            val hitTag =
+                if (event.actionMasked == MotionEvent.ACTION_HOVER_EXIT) {
+                    null
+                } else {
+                    compound.reactTagForTouch(event.x, event.y)
+                }
+            val newTag = if (hitTag != null && byTag.containsKey(hitTag)) hitTag else null
+            if (newTag != hoveredTag) {
+                hoveredTag?.let { byTag[it]?.second?.onSelectorStateChanged(false) }
+                newTag?.let { byTag[it]?.second?.onSelectorStateChanged(true) }
+                hoveredTag = newTag
+            }
+            false
+        }
     }
 
     private fun attachFocusWithin(
@@ -347,9 +465,8 @@ class PseudoSelectorManager(
     }
 
     /**
-     * Returns true if any view in `activeDeepestViews` is a strict descendant of `ancestor`
-     * and contains the screen point (`rawX`, `rawY`).
-     * Used by _:active-deepest_ to yield priority to deeper registered views.
+     * True if any `activeDeepestViews` entry is a strict descendant of `ancestor` and
+     * contains (`rawX`, `rawY`). Lets :active-deepest yield to deeper registered views.
      */
     private fun hasDeepestDescendantAt(
         ancestor: View,
@@ -357,7 +474,7 @@ class PseudoSelectorManager(
         rawY: Float,
     ): Boolean {
         val loc = IntArray(2)
-        // TODO: Optimize so we don't iterate over all the views with :active-deepest every time.
+        // TODO: O(n) per touch; also wrong for SVG (hit area is per-path, not view bounds).
         for (candidate in activeDeepestViews) {
             if (candidate === ancestor) continue
             if (!isDescendantOf(candidate, ancestor)) continue
@@ -372,8 +489,7 @@ class PseudoSelectorManager(
     }
 
     /**
-     * Walk up its ancestor chain and fire
-     * the callback for every ancestor that has _:active_ registered.
+     * Fire the callback for `source` and every ancestor that has :active registered.
      */
     private fun fireActiveCallbacksUpTree(
         source: View,

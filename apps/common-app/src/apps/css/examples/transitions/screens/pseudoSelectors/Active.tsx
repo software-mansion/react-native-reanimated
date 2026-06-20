@@ -4,7 +4,7 @@ import Animated from 'react-native-reanimated';
 // TODO: Fix me
 /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
 // @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
-import { Circle, Svg } from 'react-native-svg';
+import { Circle, G, Svg } from 'react-native-svg';
 
 import {
   Screen,
@@ -206,8 +206,6 @@ transform: {
           </VerticalExampleCard>
 
           <VerticalExampleCard
-            description="Currenlty Pseudoselectors in SVG are only supported on the Web."
-            labelTypes={['web']}
             title="SVG fill"
             code={`// Base geometry stays as real props so it renders at rest;
 // the ':active' style only swaps the changing prop.
@@ -218,7 +216,6 @@ transform: {
     fill: { default: colors.primary, ':active': colors.primaryDark },
     transitionDuration: '200ms',
   }}
-  onStartShouldSetResponder={() => true}
 />`}
             collapsedCode={`fill: {
   default: colors.primary,
@@ -237,40 +234,102 @@ transform: {
                   },
                   transitionDuration: '200ms',
                 }}
-                onStartShouldSetResponder={() => true}
               />
             </Svg>
           </VerticalExampleCard>
 
           <VerticalExampleCard
-            labelTypes={['web']}
             title="SVG radius"
             code={`// r needs a base prop value, otherwise it renders at 0.
 <AnimatedCircle
-  cx={25} cy={25} fill={colors.primary}
-  r={12}
+  cx={30} cy={30} fill={colors.primary}
+  r={20}
   style={{
-    r: { default: 12, ':active': 24 },
+    r: { default: 20, ':active': 28 },
     transitionDuration: '200ms',
   }}
-  onStartShouldSetResponder={() => true}
 />`}
             collapsedCode={`r: {
-  default: 12,
-  ':active': 24,
+  default: 20,
+  ':active': 28,
 },`}>
-            <Svg height={sizes.md} width={sizes.md}>
+            <Svg height={sizes.lg} width={sizes.lg}>
+              <AnimatedCircle
+                cx={sizes.lg / 2}
+                cy={sizes.lg / 2}
+                fill={colors.primary}
+                r={sizes.lg / 3}
+                style={{
+                  r: { ':active': sizes.lg / 2 - 2, default: sizes.lg / 3 },
+                  transitionDuration: '200ms',
+                }}
+              />
+            </Svg>
+          </VerticalExampleCard>
+
+          <VerticalExampleCard
+            collapsedCode={`// two circles, each with its own ':active' fill`}
+            description="Two shapes under one Svg - pressing one animates only that shape."
+            title="Multiple SVG shapes (independent)"
+            code={`<Svg>
+  <AnimatedCircle ... style={{ fill: { default, ':active' } }} />
+  <AnimatedCircle ... style={{ fill: { default, ':active' } }} />
+</Svg>`}>
+            <Svg height={sizes.md} width={sizes.xl}>
               <AnimatedCircle
                 cx={sizes.md / 2}
                 cy={sizes.md / 2}
                 fill={colors.primary}
-                r={sizes.md / 4}
+                r={sizes.md / 2 - 2}
                 style={{
-                  r: { ':active': sizes.md / 2 - 2, default: sizes.md / 4 },
+                  fill: {
+                    ':active': colors.primaryDark,
+                    default: colors.primary,
+                  },
                   transitionDuration: '200ms',
                 }}
-                onStartShouldSetResponder={() => true}
               />
+              <AnimatedCircle
+                cx={sizes.xl - sizes.md / 2}
+                cy={sizes.md / 2}
+                fill={colors.primary}
+                r={sizes.md / 2 - 2}
+                style={{
+                  fill: {
+                    ':active': colors.primaryDark,
+                    default: colors.primary,
+                  },
+                  transitionDuration: '200ms',
+                }}
+              />
+            </Svg>
+          </VerticalExampleCard>
+
+          <VerticalExampleCard
+            collapsedCode="<G><AnimatedCircle ... /></G>"
+            description="A circle nested inside a <G> still resolves ':active' through the SvgView host."
+            title="SVG nested group"
+            code={`<Svg>
+  <G>
+    <AnimatedCircle ... style={{ fill: { default, ':active' } }} />
+  </G>
+</Svg>`}>
+            <Svg height={sizes.md} width={sizes.md}>
+              <G>
+                <AnimatedCircle
+                  cx={sizes.md / 2}
+                  cy={sizes.md / 2}
+                  fill={colors.primary}
+                  r={sizes.md / 2 - 2}
+                  style={{
+                    fill: {
+                      ':active': colors.primaryDark,
+                      default: colors.primary,
+                    },
+                    transitionDuration: '200ms',
+                  }}
+                />
+              </G>
             </Svg>
           </VerticalExampleCard>
         </Section>

@@ -25,11 +25,9 @@ typedef NSGestureRecognizer REAGestureRecognizer;
 
 @implementation REAPseudoSelectorObserver {
   __weak REAUIView *_view;
-  // The view the gesture recognizer is actually attached to. Usually `_view`,
-  // but for views that are never user-interactive themselves (e.g. SVG elements
-  // like RNSVGCircle, whose `isUserInteractionEnabled` is hardcoded to NO) it is
-  // the nearest interactive ancestor; touches are then scoped back to `_view`'s
-  // bounds in the gesture handlers.
+  // View the recognizer is attached to: `_view` for normal views, or the nearest
+  // interactive ancestor for non-interactive ones (e.g. SVG elements). See
+  // `interactionViewForView:`.
   __weak REAUIView *_interactionView;
   reanimated::PseudoSelector _selector;
 #if !TARGET_OS_OSX
@@ -85,24 +83,20 @@ typedef NSGestureRecognizer REAGestureRecognizer;
   }
 }
 
-// Returns the view the gesture recognizer should be attached to.
+// Returns the view the recognizer should attach to.
 //
-// react-native-svg elements never receive touches on their own (their
-// `isUserInteractionEnabled` getter is hardcoded to NO), and react-native-svg's
-// container views swallow touches that don't hit a "responsible" node, so a
-// recognizer attached to them (or to the SVG elements) never fires. To make
-// pseudo selectors work on SVG elements without requiring the user to add a
-// responder prop, we attach the recognizer to the nearest regular (non-SVG)
-// interactive ancestor - which reliably receives the touch - and scope the
-// gesture back to the element's bounds in `isTouchInScope:`. For regular views
-// this resolves to the view itself, preserving the existing behaviour.
+// SVG elements force `isUserInteractionEnabled` to NO and their container
+// swallows touches that miss a "responsible" node, so a recognizer on the SVG
+// element never fires. To support pseudo selectors on SVG without a responder
+// prop, attach to the nearest non-SVG interactive ancestor and scope the touch
+// back to the element's bounds in `isTouchInScope:`. Regular views resolve to
+// themselves.
 - (REAUIView *)interactionViewForView:(REAUIView *)view
 {
 #if !TARGET_OS_OSX
   REAUIView *candidate = view;
   while (candidate != nil &&
-         (!candidate.isUserInteractionEnabled ||
-          [NSStringFromClass([candidate class]) hasPrefix:@"RNSVG"])) {
+         (!candidate.isUserInteractionEnabled || [NSStringFromClass([candidate class]) hasPrefix:@"RNSVG"])) {
     candidate = candidate.superview;
   }
   return candidate ?: view;
@@ -111,9 +105,9 @@ typedef NSGestureRecognizer REAGestureRecognizer;
 #endif
 }
 
-// When the recognizer is attached to an ancestor (the SVG case), only treat the
-// gesture as targeting this element when the touch falls within the element's
-// bounds. For directly-attached recognizers there is nothing to scope.
+// When the recognizer is on an ancestor (SVG case), the gesture targets this
+// element only if the touch lands within its bounds. Directly-attached
+// recognizers are always in scope.
 - (BOOL)isTouchInScope:(REAGestureRecognizer *)recognizer
 {
   REAUIView *element = _view;
@@ -162,10 +156,10 @@ typedef NSGestureRecognizer REAGestureRecognizer;
 }
 
 #if !TARGET_OS_OSX
-// Fires only when this view's own text input gains focus.
-// On iOS, resolveView returns the Fabric wrapper (RCTTextInputComponentView), not the inner
-// UITextField/UITextView. The notification object is always the inner UITextField/UITextView,
-// which is always a direct child of the wrapper - so superview == strongView is sufficient.
+// Fires only when this view's own text input gains focus. resolveView returns
+// the Fabric wrapper (RCTTextInputComponentView); the notification object is
+// the inner UITextField/UITextView, a direct child of the wrapper, so
+// `superview == strongView` is the right test.
 - (void)attachFocusToView:(REAUIView *)view
 {
   __weak REAUIView *weakView = view;
@@ -305,9 +299,8 @@ static int _focusObserverContext;
   switch (recognizer.state) {
     case UIGestureRecognizerStateBegan:
     case UIGestureRecognizerStateChanged:
-      // When attached to an ancestor (SVG case) the pointer can move on and off
-      // the element while still inside the ancestor, so re-evaluate scope on
-      // every change. For directly-attached recognizers isTouchInScope is YES.
+      // The pointer can move on and off the element within the ancestor, so
+      // re-evaluate scope on every change (always YES when directly attached).
       _callback([self isTouchInScope:recognizer]);
       break;
     case UIGestureRecognizerStateEnded:
@@ -367,25 +360,23 @@ static int _focusObserverContext;
 
 #endif // TARGET_OS_OSX
 
-#if !TARGET_OS_OSX
-- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
-#else
-- (BOOL)gestureRecognizerShouldBegin:(NSGestureRecognizer *)gestureRecognizer
-#endif
+- (BOOL)gestureRecognizerShouldBegin:(REAGestureRecognizer *)gestureRecognizer
 {
   REAUIView *view = _view;
   if (!view) {
     return NO;
   }
-  // The descendant walk below is only meaningful for :active-deepest.
-  // :active always allows, and any other selector (e.g. :hover, which shares
-  // this delegate) never participates in deepest arbitration.
+  // The descendant walk is only for :active-deepest; every other selector
+  // sharing this delegate (e.g. :active, :hover) always allows.
   if (_selector != reanimated::PseudoSelector::ActiveDeepest) {
     return YES;
   }
-  // for :active-deepest walk up from the hit view: if any descendant
-  // already has an :active-deepest or :active gesture recognizer, that descendant
-  // owns the touch.
+  // TODO: doesn't arbitrate :active-deepest among overlapping/nested SVG shapes. For SVG,
+  // _interactionView is a shared ancestor and [view hitTest:] is per-path (self-or-nil), so no
+  // descendant recognizer is found and every SVG observer returns YES (all overlapping fire).
+  // Fix via RNSVGSvgView's child-walking hit-test (as Android does); needs on-device check. Follow-up.
+  // Walk up from the hit view: if a descendant already has an :active-deepest
+  // or :active recognizer, it owns the touch.
   CGPoint location = [gestureRecognizer locationInView:view];
 #if !TARGET_OS_OSX
   UIView *current = [view hitTest:location withEvent:nil];
@@ -415,21 +406,14 @@ static int _focusObserverContext;
   return YES;
 }
 
-#if !TARGET_OS_OSX
-- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer
-    shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
-#else
-- (BOOL)gestureRecognizer:(NSGestureRecognizer *)gestureRecognizer
-    shouldRecognizeSimultaneouslyWithGestureRecognizer:(NSGestureRecognizer *)otherGestureRecognizer
-#endif
+- (BOOL)gestureRecognizer:(REAGestureRecognizer *)gestureRecognizer
+    shouldRecognizeSimultaneouslyWithGestureRecognizer:(REAGestureRecognizer *)otherGestureRecognizer
 {
   return YES;
 }
 
 - (void)detach
 {
-  // The recognizer is attached to _interactionView (which equals _view for
-  // normal views, or an ancestor for SVG elements).
   REAUIView *gestureHost = _interactionView ?: _view;
   if (_gestureRecognizer && gestureHost) {
     [gestureHost removeGestureRecognizer:_gestureRecognizer];
