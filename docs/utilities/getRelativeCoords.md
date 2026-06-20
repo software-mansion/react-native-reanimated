@@ -5,28 +5,31 @@
 ## Reference
 
 ```tsx
-import { getRelativeCoords } from 'react-native-reanimated';
+import Animated, {
+  getRelativeCoords,
+  useAnimatedRef,
+} from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 const Comp = () => {
   const animatedRef = useAnimatedRef();
   // ...
 
-  const gestureHandler = useAnimatedGestureHandler({
-    onEnd: (event) => {
-      const coords = getRelativeCoords(
-        animatedRef,
-        event.absoluteX,
-        event.absoluteY
-      );
-    },
+  const panGesture = Gesture.Pan().onEnd((event) => {
+    const coords = getRelativeCoords(
+      animatedRef,
+      event.absoluteX,
+      event.absoluteY
+    );
+    if (coords) {
+      // use coords.x and coords.y
+    }
   });
 
   return (
-    <View ref={animatedRef}>
-      <PanGestureHandler onGestureEvent={gestureHandler}>
-        <Animated.View style={[styles.box]} />
-      </PanGestureHandler>
-    </View>
+    <GestureDetector gesture={panGesture}>
+      <Animated.View ref={animatedRef} style={[styles.box]} />
+    </GestureDetector>
   );
 };
 ```
@@ -62,7 +65,7 @@ Number which is an absolute `y` coordinate.
 
 ### Returns
 
-Object which contains relative coordinates
+An object which contains the relative coordinates, or `null` if the measurement fails.
 
 * `x`
 * `y`
