@@ -113,6 +113,11 @@ const layoutAndPositioningRoutes = {
     Component: baseAnimatedProperties.layoutAndPositioning.Margins,
     name: 'Margins',
   },
+  Paddings: {
+    Component: baseAnimatedProperties.layoutAndPositioning.Paddings,
+    name: 'Paddings',
+  },
+  // eslint-disable-next-line perfectionist/sort-objects -- "Others" stays last
   Others: {
     name: 'Others',
     routes: {
@@ -143,10 +148,6 @@ const layoutAndPositioningRoutes = {
         name: 'Z-index',
       },
     },
-  },
-  Paddings: {
-    Component: baseAnimatedProperties.layoutAndPositioning.Paddings,
-    name: 'Paddings',
   },
 } satisfies Routes;
 
@@ -184,23 +185,6 @@ const appearanceRoutes = {
   Filter: {
     Component: baseAnimatedProperties.appearance.Filter,
     name: 'Filter',
-  },
-  Others: {
-    name: 'Others',
-    routes: {
-      BackfaceVisibility: {
-        Component: baseAnimatedProperties.appearance.others.BackfaceVisibility,
-        name: 'Backface Visibility',
-      },
-      MixBlendMode: {
-        Component: baseAnimatedProperties.appearance.others.MixBlendMode,
-        name: 'Mix Blend Mode',
-      },
-      Opacity: {
-        Component: baseAnimatedProperties.appearance.others.Opacity,
-        name: 'Opacity',
-      },
-    },
   },
   Outlines: {
     name: 'Outlines',
@@ -341,6 +325,24 @@ const appearanceRoutes = {
       },
     },
   },
+  // eslint-disable-next-line perfectionist/sort-objects -- "Others" stays last
+  Others: {
+    name: 'Others',
+    routes: {
+      BackfaceVisibility: {
+        Component: baseAnimatedProperties.appearance.others.BackfaceVisibility,
+        name: 'Backface Visibility',
+      },
+      MixBlendMode: {
+        Component: baseAnimatedProperties.appearance.others.MixBlendMode,
+        name: 'Mix Blend Mode',
+      },
+      Opacity: {
+        Component: baseAnimatedProperties.appearance.others.Opacity,
+        name: 'Opacity',
+      },
+    },
+  },
 } satisfies Routes;
 
 const typographyRoutes = {
@@ -366,21 +368,6 @@ const typographyRoutes = {
       FontWeight: {
         Component: baseAnimatedProperties.typography.font.FontWeight,
         name: 'Font Weight',
-      },
-    },
-  },
-  Others: {
-    name: 'Others',
-    routes: {
-      IncludeFontPadding: {
-        Component: baseAnimatedProperties.typography.others.IncludeFontPadding,
-        labelTypes: ['Android'],
-        name: 'Include Font Padding',
-      },
-      UserSelect: {
-        Component: baseAnimatedProperties.typography.others.UserSelect,
-        labelTypes: ['web'],
-        name: 'User Select',
       },
     },
   },
@@ -438,6 +425,22 @@ const typographyRoutes = {
       },
     },
   },
+  // eslint-disable-next-line perfectionist/sort-objects -- "Others" stays last
+  Others: {
+    name: 'Others',
+    routes: {
+      IncludeFontPadding: {
+        Component: baseAnimatedProperties.typography.others.IncludeFontPadding,
+        labelTypes: ['Android'],
+        name: 'Include Font Padding',
+      },
+      UserSelect: {
+        Component: baseAnimatedProperties.typography.others.UserSelect,
+        labelTypes: ['web'],
+        name: 'User Select',
+      },
+    },
+  },
 } satisfies Routes;
 
 const othersRoutes = {
@@ -475,12 +478,13 @@ export const basePropertiesRoutes = {
     name: 'Layout and Positioning',
     routes: layoutAndPositioningRoutes,
   },
-  Others: {
-    name: 'Others',
-    routes: othersRoutes,
-  },
   Typography: {
     name: 'Typography',
     routes: typographyRoutes,
+  },
+  // eslint-disable-next-line perfectionist/sort-objects -- "Others" stays last
+  Others: {
+    name: 'Others',
+    routes: othersRoutes,
   },
 } satisfies Routes;
