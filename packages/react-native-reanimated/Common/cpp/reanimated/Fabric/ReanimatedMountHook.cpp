@@ -9,8 +9,12 @@ namespace reanimated {
 ReanimatedMountHook::ReanimatedMountHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
+    const std::shared_ptr<css::ViewStylesRepository> &viewStylesRepository,
     const std::function<void()> &requestFlush)
-    : uiManager_(uiManager), updatesRegistryManager_(updatesRegistryManager), requestFlush_(requestFlush) {
+    : uiManager_(uiManager),
+      updatesRegistryManager_(updatesRegistryManager),
+      viewStylesRepository_(viewStylesRepository),
+      requestFlush_(requestFlush) {
   uiManager_->registerMountHook(*this);
 }
 
@@ -37,6 +41,10 @@ void ReanimatedMountHook::shadowTreeDidMount(
 
   {
     auto lock = updatesRegistryManager_->lock();
+    // Snapshot the freshly mounted (laid-out) tree under the updates-registry lock,
+    // so relative-length resolution can read layout from it without taking the
+    // ShadowTree revision lock (the AB-BA deadlock with Fabric commits).
+    viewStylesRepository_->setLastMountedRoot(rootShadowNode);
     updatesRegistryManager_->handleNodeRemovals(*rootShadowNode);
 
     // When commit from React Native has finished, we reset the skip commit flag

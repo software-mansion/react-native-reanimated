@@ -32,6 +32,9 @@ jsi::Value ViewStylesRepository::getNodeProp(
     }
   } else {
     const auto &viewProps = cachedNode.viewProps;
+    if (!viewProps) {
+      return jsi::Value::undefined();
+    }
 
     if (propName == "opacity") {
       return {viewProps->opacity};
@@ -48,21 +51,47 @@ jsi::Value ViewStylesRepository::getNodeProp(
 jsi::Value ViewStylesRepository::getParentNodeProp(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::string &propName) {
-  const auto surfaceId = shadowNode->getSurfaceId();
-  const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
-
-  std::shared_ptr<const ShadowNode> parentNode = nullptr;
-
-  shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
-    auto currentRevision = shadowTree.getCurrentRevision();
-    parentNode = dom::getParentNode(currentRevision.rootShadowNode, *shadowNode);
-  });
+  const auto parentNode = getParentNode(shadowNode);
 
   if (!parentNode) {
     return jsi::Value::undefined();
   }
 
   return getNodeProp(parentNode, propName);
+}
+
+std::shared_ptr<const ShadowNode> ViewStylesRepository::getNewestNode(
+    const std::shared_ptr<const ShadowNode> &shadowNode) const {
+  const auto it = lastMountedRootBySurface_.find(shadowNode->getSurfaceId());
+  if (it == lastMountedRootBySurface_.end()) {
+    return nullptr;
+  }
+  const auto &root = it->second;
+
+  if (ShadowNode::sameFamily(*root, *shadowNode)) {
+    return root;
+  }
+
+  const auto ancestors = shadowNode->getFamily().getAncestors(*root);
+  if (ancestors.empty()) {
+    return nullptr;
+  }
+
+  const auto &deepest = ancestors.back();
+  return deepest.first.get().getChildren().at(deepest.second);
+}
+
+std::shared_ptr<const ShadowNode> ViewStylesRepository::getParentNode(
+    const std::shared_ptr<const ShadowNode> &shadowNode) const {
+  const auto it = lastMountedRootBySurface_.find(shadowNode->getSurfaceId());
+  if (it == lastMountedRootBySurface_.end()) {
+    return nullptr;
+  }
+  return dom::getParentNode(it->second, *shadowNode);
+}
+
+void ViewStylesRepository::setLastMountedRoot(const RootShadowNode::Shared &rootShadowNode) {
+  lastMountedRootBySurface_[rootShadowNode->getSurfaceId()] = rootShadowNode;
 }
 
 folly::dynamic ViewStylesRepository::getStyleProp(const Tag tag, const PropertyPath &propertyPath) {
@@ -81,7 +110,11 @@ void ViewStylesRepository::clearNodesCache() {
 void ViewStylesRepository::updateCacheIfNeeded(
     CachedShadowNode &cachedNode,
     const std::shared_ptr<const ShadowNode> &shadowNode) {
-  auto newestCloneOfShadowNode = uiManager_->getNewestCloneOfShadowNode(*shadowNode);
+  // Resolve against the last mounted tree (captured by the mount hook) rather than
+  // the live ShadowTree. This avoids taking the ShadowTree revision lock here,
+  // which would deadlock against a Fabric commit that holds it and waits for the
+  // updates-registry lock we are holding.
+  auto newestCloneOfShadowNode = getNewestNode(shadowNode);
 
   // Check if newestCloneOfShadowNode is valid (is already mounted / not
   // yet unmounted)
