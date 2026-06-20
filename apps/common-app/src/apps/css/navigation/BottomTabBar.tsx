@@ -82,16 +82,17 @@ export default function BottomTabBar({
     []
   );
 
-  // The gradient veils list content scrolling behind the floating tab bar on
-  // navigation screens. On final example screens there is no list to veil, so we
-  // fade it out to keep the example unobstructed.
+  // On navigation screens the gradient hides list content scrolling behind the
+  // floating tab bar. Example screens have no such list, so we fade it out.
+  // Paths are stored as an array rather than a Set: a Set is not preserved when
+  // captured into a worklet on native, so the check uses `includes`.
   const exampleScreenPaths = useMemo(
-    () => getExampleScreenPaths(routes),
+    () => [...getExampleScreenPaths(routes)],
     [routes]
   );
   const isExampleScreen = useDerivedValue(() => {
     const path = currentRoute.value;
-    return path !== undefined && exampleScreenPaths.has(path);
+    return path !== undefined && exampleScreenPaths.includes(path);
   });
   const gradientStyle = useAnimatedStyle(() => ({
     opacity: withTiming(isExampleScreen.value ? 0 : 1),

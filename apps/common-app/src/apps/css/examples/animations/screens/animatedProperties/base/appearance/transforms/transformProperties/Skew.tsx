@@ -58,7 +58,6 @@ export default function Skew() {
               to: [{ skewY: `${Math.PI / 3}rad` }],
             },
           ],
-          labelTypes: ['iOS', 'web'],
           title: 'Y skew',
         },
       ]}

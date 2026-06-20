@@ -105,7 +105,7 @@ const routes = {
   TestExamples: {
     CardComponent: routeCards.TestExamplesCard,
     name: 'Test Examples',
-    /* eslint-disable perfectionist/sort-objects -- Keep the Playground first for quick access */
+    /* eslint-disable perfectionist/sort-objects */
     routes: {
       Playground: {
         Component: testExamples.Playground,

@@ -117,7 +117,7 @@ const layoutAndPositioningRoutes = {
     Component: baseAnimatedProperties.layoutAndPositioning.Paddings,
     name: 'Paddings',
   },
-  // eslint-disable-next-line perfectionist/sort-objects -- "Others" stays last
+  // eslint-disable-next-line perfectionist/sort-objects
   Others: {
     name: 'Others',
     routes: {
@@ -325,7 +325,7 @@ const appearanceRoutes = {
       },
     },
   },
-  // eslint-disable-next-line perfectionist/sort-objects -- "Others" stays last
+  // eslint-disable-next-line perfectionist/sort-objects
   Others: {
     name: 'Others',
     routes: {
@@ -425,7 +425,7 @@ const typographyRoutes = {
       },
     },
   },
-  // eslint-disable-next-line perfectionist/sort-objects -- "Others" stays last
+  // eslint-disable-next-line perfectionist/sort-objects
   Others: {
     name: 'Others',
     routes: {
@@ -482,7 +482,7 @@ export const basePropertiesRoutes = {
     name: 'Typography',
     routes: typographyRoutes,
   },
-  // eslint-disable-next-line perfectionist/sort-objects -- "Others" stays last
+  // eslint-disable-next-line perfectionist/sort-objects
   Others: {
     name: 'Others',
     routes: othersRoutes,
