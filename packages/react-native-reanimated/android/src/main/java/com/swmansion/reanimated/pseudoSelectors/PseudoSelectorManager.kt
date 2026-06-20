@@ -91,17 +91,10 @@ class PseudoSelectorManager(
         key: String,
         callback: PseudoSelectorCallback,
     ) {
-        // Android dispatches a hover event to a single target view, so moving the pointer onto a
-        // hoverable descendant fires ACTION_HOVER_EXIT on its ancestors. CSS `:hover`, however,
-        // stays active on an element while the pointer is over any of its descendants. To match
-        // that, recompute every registered view's hover state from the pointer position instead of
-        // toggling only the view that received the event - an ancestor whose bounds contain a
-        // descendant the pointer is over stays hovered.
-        //
-        // Only ENTER/EXIT are handled, not the per-frame ACTION_HOVER_MOVE: hover state can only
-        // change when the pointer crosses a registered view's edge, and that always surfaces as an
-        // enter/exit pair. Recomputing on MOVE would repeat the same work every frame for no state
-        // change.
+        // Android sends a hover event to one target, so moving onto a hoverable descendant fires
+        // ACTION_HOVER_EXIT on its ancestors - but CSS :hover must stay active over descendants.
+        // So recompute all registered views from the pointer position, not just the event's view.
+        // Only ENTER/EXIT can flip state (always an edge crossing); MOVE is ignored.
         hoverCallbacks[view] = callback
         val listener =
             View.OnHoverListener { _, event ->
@@ -226,12 +219,9 @@ class PseudoSelectorManager(
     }
 
     /**
-     * Recompute the _:hover_ state of every registered view against the pointer position and
-     * fire the callback only for views whose state changed. A view is hovered when the point
-     * lies within its on-screen bounds, which stays true for an ancestor while the pointer is
-     * over a descendant. Uses the live (possibly mid-animation) bounds via `getLocationOnScreen`.
-     * Runs only on hover enter/exit, so the per-view bounds checks happen on boundary crossings,
-     * not every frame.
+     * Recompute every registered view's _:hover_ state from the pointer position, firing only on
+     * change. A view is hovered while the point is in its on-screen bounds - true for an ancestor
+     * while the pointer is over a descendant. Uses live (mid-animation) `getLocationOnScreen` bounds.
      */
     private fun updateHoverStates(
         rawX: Float,
