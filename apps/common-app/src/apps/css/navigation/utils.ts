@@ -4,14 +4,8 @@ export function isRouteWithRoutes(route: Route): route is RouteWithRoutes {
   return route && typeof route === 'object' && 'routes' in route;
 }
 
-// Collects the navigation paths of all leaf example screens (routes that render
-// a component rather than a nested list), keyed for O(1) worklet lookup. Used to
-// tell apart final example screens from the navigation list screens. The path
-// prefix matches the focused route name set in the navigator (`<tab>/<...keys>`).
-export function getExampleScreenPaths(
-  tabRoutes: Array<TabRoute>
-): Record<string, true> {
-  const paths: Record<string, true> = {};
+export function getExampleScreenPaths(tabRoutes: Array<TabRoute>): Set<string> {
+  const paths = new Set<string>();
 
   const collect = (routes: Routes, prefix: string) => {
     for (const [key, route] of Object.entries(routes)) {
@@ -19,7 +13,7 @@ export function getExampleScreenPaths(
       if (isRouteWithRoutes(route)) {
         collect(route.routes, path);
       } else {
-        paths[path] = true;
+        paths.add(path);
       }
     }
   };

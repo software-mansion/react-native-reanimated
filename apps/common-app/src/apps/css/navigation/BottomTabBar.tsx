@@ -91,7 +91,7 @@ export default function BottomTabBar({
   );
   const isExampleScreen = useDerivedValue(() => {
     const path = currentRoute.value;
-    return path !== undefined && exampleScreenPaths[path] === true;
+    return path !== undefined && exampleScreenPaths.has(path);
   });
   const gradientStyle = useAnimatedStyle(() => ({
     opacity: withTiming(isExampleScreen.value ? 0 : 1),
