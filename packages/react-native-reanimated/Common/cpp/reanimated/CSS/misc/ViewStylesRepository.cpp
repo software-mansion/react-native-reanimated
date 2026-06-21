@@ -13,8 +13,6 @@ ViewStylesRepository::ViewStylesRepository(
 jsi::Value ViewStylesRepository::getNodeProp(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::string &propName) {
-  // Resolve against the freshly mounted node; getNewestNode falls back to the passed
-  // node before the first mount snapshots this surface (or for a removed node).
   const auto resolvedNode = getNewestNode(shadowNode);
   const auto *layoutableShadowNode = dynamic_cast<const LayoutableShadowNode *>(resolvedNode.get());
 
@@ -65,11 +63,10 @@ jsi::Value ViewStylesRepository::getParentNodeProp(
 
 std::shared_ptr<const ShadowNode> ViewStylesRepository::getNewestNode(
     const std::shared_ptr<const ShadowNode> &shadowNode) const {
-  // Find this family's node in the last mounted root (the same walk as RN's private
-  // UIManager::getShadowNodeInSubtree), so we never take the ShadowTree lock that the
-  // public getNewestCloneOfShadowNode would (the AB-BA deadlock with Fabric commits).
-  // Fall back to the passed node, which still holds its last layout, until the first
-  // mount snapshots this surface (or if it is no longer in the tree).
+  // Resolve shadowNode against the last mounted root without the ShadowTree lock (the
+  // deadlock) that getNewestCloneOfShadowNode takes, falling back to the passed node.
+  // Mirrors RN's getShadowNodeInSubtree:
+  // https://github.com/facebook/react-native/blob/v0.86.0-rc.3/packages/react-native/ReactCommon/react/renderer/uimanager/UIManager.cpp#L339
   const auto it = lastMountedRootBySurface_.find(shadowNode->getSurfaceId());
   if (it == lastMountedRootBySurface_.end()) {
     return shadowNode;
