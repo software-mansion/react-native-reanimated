@@ -41,9 +41,8 @@ void ReanimatedMountHook::shadowTreeDidMount(
 
   {
     auto lock = updatesRegistryManager_->lock();
-    // Record the freshly mounted tree so relative-length resolution can read layout
-    // from it. This must run for every mount, including Reanimated's own: during an
-    // animation those are usually the only mounts, and they carry the latest layout.
+    // Record the mounted tree for relative-length resolution. Must run for every mount,
+    // including Reanimated's own - during an animation those are usually the only mounts.
     viewStylesRepository_->setLastMountedRoot(rootShadowNode);
 
     if (isReanimatedMount) {

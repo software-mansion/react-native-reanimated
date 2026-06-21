@@ -1169,6 +1169,7 @@ jsi::Value ReanimatedModuleProxy::measure(jsi::Runtime &rt, const jsi::Value &sh
 
 void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
+  viewStylesRepository_->setUIManager(uiManager_);
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     react_native_assert(
@@ -1198,15 +1199,10 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
     strongThis->requestFlushRegistry();
   };
 
-  viewStylesRepository_->setUIManager(uiManager_);
-
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    // Backend mode resolves relative lengths against the live tree (its commit hook is
-    // disabled, so that can't deadlock), so it needs no mount hook for that.
-    // TODO: handleNodeRemovals is still missing here and leaks - fix in a follow-up.
+    // TODO: we don't use the mount hook here, but we still need a way to handleNodeRemovals
+    // for now we leave this to leak the memory, a fix will come in a follow-up
   } else {
-    // The mount hook records the last mounted tree so relative-length resolution can
-    // read layout from it without taking the ShadowTree lock, and runs handleNodeRemovals.
     mountHook_ =
         std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, viewStylesRepository_, request);
   }
