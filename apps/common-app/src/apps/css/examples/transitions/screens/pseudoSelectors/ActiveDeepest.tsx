@@ -4,7 +4,7 @@ import Animated from 'react-native-reanimated';
 // TODO: Fix me
 /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
 // @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
-import { Circle, G, Rect, Svg } from 'react-native-svg';
+import { Circle, Svg } from 'react-native-svg';
 
 import {
   Screen,
@@ -18,9 +18,6 @@ import { colors, radius, sizes, spacing } from '@/theme';
 const AnimatedCircle = Animated.createAnimatedComponent(
   Circle
 ) as ComponentType<Record<string, unknown>>;
-const AnimatedRect = Animated.createAnimatedComponent(Rect) as ComponentType<
-  Record<string, unknown>
->;
 
 function LayerLabel({ children }: { children: string }) {
   return (
@@ -330,73 +327,6 @@ transform: {
                   transitionDuration: '200ms',
                 }}
               />
-            </Svg>
-          </VerticalExampleCard>
-
-          <VerticalExampleCard
-            collapsedCode={`// rect + overlapping circle, each ':active-deepest'`}
-            description="A small Circle drawn on top of a Rect, both ':active-deepest'. Pressing inside the circle activates only the circle; pressing the rect elsewhere activates only the rect."
-            title="Circle over Rect (per-path)"
-            code={`<Svg>
-  <AnimatedRect ... style={{ fill: { default, ':active-deepest' } }} />
-  <AnimatedCircle ... style={{ fill: { default, ':active-deepest' } }} />
-</Svg>`}>
-            <Svg height={sizes.lg} width={sizes.lg}>
-              <AnimatedRect
-                height={sizes.lg}
-                rx={radius.sm}
-                width={sizes.lg}
-                x={0}
-                y={0}
-                style={{
-                  fill: {
-                    ':active-deepest': '#ef9a9a',
-                    default: '#ffcdd2',
-                  },
-                  transitionDuration: '200ms',
-                }}
-              />
-              <AnimatedCircle
-                cx={sizes.lg / 2}
-                cy={sizes.lg / 2}
-                fill="#e53935"
-                r={sizes.lg / 4}
-                style={{
-                  fill: {
-                    ':active-deepest': '#b71c1c',
-                    default: '#e53935',
-                  },
-                  transitionDuration: '200ms',
-                }}
-              />
-            </Svg>
-          </VerticalExampleCard>
-
-          <VerticalExampleCard
-            collapsedCode="<G><AnimatedCircle ... /></G>"
-            description="A circle nested inside a <G> still resolves ':active-deepest' through the SvgView host's per-path hit-test."
-            title="SVG nested group"
-            code={`<Svg>
-  <G>
-    <AnimatedCircle ... style={{ fill: { default, ':active-deepest' } }} />
-  </G>
-</Svg>`}>
-            <Svg height={sizes.md} width={sizes.md}>
-              <G>
-                <AnimatedCircle
-                  cx={sizes.md / 2}
-                  cy={sizes.md / 2}
-                  fill="#e53935"
-                  r={sizes.md / 2 - 2}
-                  style={{
-                    fill: {
-                      ':active-deepest': '#b71c1c',
-                      default: '#e53935',
-                    },
-                    transitionDuration: '200ms',
-                  }}
-                />
-              </G>
             </Svg>
           </VerticalExampleCard>
         </Section>
