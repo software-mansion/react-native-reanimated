@@ -30,21 +30,28 @@ void ReanimatedMountHook::shadowTreeDidMount(
   auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
       std::const_pointer_cast<RootShadowNode>(rootShadowNode));
 
-  if (reaShadowNode->hasReanimatedMountTrait()) {
+  const bool isReanimatedMount = reaShadowNode->hasReanimatedMountTrait();
+  if (isReanimatedMount) {
     // We mark reanimated commits with ReanimatedMountTrait. We don't want other
     // shadow nodes to use this trait, but since this rootShadowNode is Shared,
     // we don't have that guarantee. That's why we also unset this trait in the
     // commit hook. We remove it here mainly for the sake of cleanliness.
     reaShadowNode->unsetReanimatedMountTrait();
-    return;
   }
 
   {
     auto lock = updatesRegistryManager_->lock();
-    // Snapshot the freshly mounted (laid-out) tree under the updates-registry lock,
-    // so relative-length resolution can read layout from it without taking the
-    // ShadowTree revision lock (the AB-BA deadlock with Fabric commits).
+    // Record the freshly mounted (laid-out) tree under the updates-registry lock so
+    // relative-length resolution can read layout from it without taking the ShadowTree
+    // revision lock (the AB-BA deadlock with Fabric commits). This must run for every
+    // mount, including Reanimated's own: during an animation those carry the latest
+    // layout and are usually the only mounts there are.
     viewStylesRepository_->setLastMountedRoot(rootShadowNode);
+
+    if (isReanimatedMount) {
+      return;
+    }
+
     updatesRegistryManager_->handleNodeRemovals(*rootShadowNode);
 
     // When commit from React Native has finished, we reset the skip commit flag
