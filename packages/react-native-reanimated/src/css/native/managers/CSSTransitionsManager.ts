@@ -30,10 +30,13 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     this.shadowNodeWrapper = shadowNodeWrapper;
   }
 
+  // Returns whether a running transition was detached this update (its props were
+  // removed, or normalized to an empty config such as a '0ms' duration). CSSManager
+  // uses this to record the revert base so a detach can't flash the view to defaults.
   update(
     transitionProperties: CSSTransitionProperties | null,
     nextProps: UnknownRecord = {}
-  ): void {
+  ): boolean {
     const transitionConfig =
       transitionProperties &&
       normalizeCSSTransitionProperties(transitionProperties);
@@ -47,8 +50,9 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     if (!prevProps || !transitionConfig) {
       if (this.hasTransition) {
         this.detach();
+        return true;
       }
-      return;
+      return false;
     }
 
     // Trigger transition for changed properties only
@@ -62,6 +66,8 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
       runCSSTransition(this.shadowNodeWrapper, config);
       this.hasTransition = true;
     }
+
+    return false;
   }
 
   unmountCleanup(): void {
