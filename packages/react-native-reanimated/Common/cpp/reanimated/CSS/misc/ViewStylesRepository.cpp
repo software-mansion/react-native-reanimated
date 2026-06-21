@@ -13,11 +13,9 @@ ViewStylesRepository::ViewStylesRepository(
 jsi::Value ViewStylesRepository::getNodeProp(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::string &propName) {
-  // Resolve against the freshly mounted node (recorded by the mount hook); before the
-  // first mount snapshots this surface, or for a removed node, fall back to the passed
-  // node, which still carries its last layout.
-  const auto newestNode = getNewestNode(shadowNode);
-  const auto &resolvedNode = newestNode ? newestNode : shadowNode;
+  // Resolve against the freshly mounted node; getNewestNode falls back to the passed
+  // node before the first mount snapshots this surface (or for a removed node).
+  const auto resolvedNode = getNewestNode(shadowNode);
   const auto *layoutableShadowNode = dynamic_cast<const LayoutableShadowNode *>(resolvedNode.get());
 
   if (propName == "width" || propName == "height" || propName == "top" || propName == "left") {
@@ -67,13 +65,14 @@ jsi::Value ViewStylesRepository::getParentNodeProp(
 
 std::shared_ptr<const ShadowNode> ViewStylesRepository::getNewestNode(
     const std::shared_ptr<const ShadowNode> &shadowNode) const {
-  // Same walk as RN's UIManager::getShadowNodeInSubtree (which is private): find this
-  // family's node inside the given root. We resolve against the last mounted root
-  // rather than the live tree so we never take the ShadowTree lock that the public
-  // getNewestCloneOfShadowNode would (the AB-BA deadlock with Fabric commits).
+  // Find this family's node in the last mounted root (the same walk as RN's private
+  // UIManager::getShadowNodeInSubtree), so we never take the ShadowTree lock that the
+  // public getNewestCloneOfShadowNode would (the AB-BA deadlock with Fabric commits).
+  // Fall back to the passed node, which still holds its last layout, until the first
+  // mount snapshots this surface (or if it is no longer in the tree).
   const auto it = lastMountedRootBySurface_.find(shadowNode->getSurfaceId());
   if (it == lastMountedRootBySurface_.end()) {
-    return nullptr;
+    return shadowNode;
   }
   const auto &root = it->second;
 
@@ -83,7 +82,7 @@ std::shared_ptr<const ShadowNode> ViewStylesRepository::getNewestNode(
 
   const auto ancestors = shadowNode->getFamily().getAncestors(*root);
   if (ancestors.empty()) {
-    return nullptr;
+    return shadowNode;
   }
 
   const auto &deepest = ancestors.back();
