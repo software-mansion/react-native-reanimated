@@ -22,6 +22,13 @@ jsi::Value ViewStylesRepository::getNodeProp(
       newestNode ? dynamic_cast<const LayoutableShadowNode *>(newestNode.get()) : nullptr;
 
   if (propName == "width" || propName == "height" || propName == "top" || propName == "left") {
+    // The node can be missing from the last mounted tree while its CSS animation
+    // is still flushing: on unmount the view is only marked removable and the
+    // animation stays registered until handleNodeRemovals prunes it at the next
+    // non-Reanimated mount. Resolve relative lengths against a zero frame in that
+    // window; returning a number (not undefined) keeps resolve() from returning
+    // nullopt, which would make relative transform ops (translateX/Y %,
+    // transformOrigin %) throw.
     const auto layoutMetrics = layoutableShadowNode ? layoutableShadowNode->layoutMetrics_ : LayoutMetrics{};
 
     if (propName == "width") {
