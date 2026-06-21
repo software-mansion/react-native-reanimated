@@ -14,8 +14,9 @@ class PseudoSelectorManager(
     private val detachActions = HashMap<String, Runnable>()
 
     private val activeCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
+    private val deepestCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
 
-    private val activeDeepestViews = LinkedHashSet<View>()
+    private val touchListenerViews = HashSet<View>()
 
     fun attach(
         tag: Int,
@@ -104,21 +105,11 @@ class PseudoSelectorManager(
         callback: PseudoSelectorCallback,
     ) {
         activeCallbacks[view] = callback
-        val listener =
-            View.OnTouchListener { _, event ->
-                val action = event.actionMasked
-                if (action == MotionEvent.ACTION_DOWN) {
-                    fireActiveCallbacksUpTree(view, true)
-                } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-                    fireActiveCallbacksUpTree(view, false)
-                }
-                false
-            }
-        view.setOnTouchListener(listener)
+        ensureTouchListener(view)
         detachActions[key] =
             Runnable {
                 activeCallbacks.remove(view)
-                view.setOnTouchListener(null)
+                maybeRemoveTouchListener(view)
             }
     }
 
@@ -127,27 +118,43 @@ class PseudoSelectorManager(
         key: String,
         callback: PseudoSelectorCallback,
     ) {
-        activeDeepestViews.add(view)
-        val listener =
-            View.OnTouchListener { _, event ->
-                val action = event.actionMasked
-                if (action == MotionEvent.ACTION_DOWN) {
-                    if (!hasDeepestDescendantAt(view, event.rawX, event.rawY)) {
-                        callback.onSelectorStateChanged(true)
-                    }
-                    fireActiveCallbacksUpTree(view, true)
-                } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-                    callback.onSelectorStateChanged(false)
-                    fireActiveCallbacksUpTree(view, false)
-                }
-                false
-            }
-        view.setOnTouchListener(listener)
+        deepestCallbacks[view] = callback
+        ensureTouchListener(view)
         detachActions[key] =
             Runnable {
-                activeDeepestViews.remove(view)
-                view.setOnTouchListener(null)
+                deepestCallbacks.remove(view)
+                maybeRemoveTouchListener(view)
             }
+    }
+
+    private fun ensureTouchListener(view: View) {
+        if (!touchListenerViews.add(view)) {
+            return
+        }
+        view.setOnTouchListener { _, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    fireActiveCallbacksUpTree(view, true)
+                    deepestCallbacks[view]?.let {
+                        if (!hasDeepestDescendantAt(view, event.rawX, event.rawY)) {
+                            it.onSelectorStateChanged(true)
+                        }
+                    }
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    fireActiveCallbacksUpTree(view, false)
+                    deepestCallbacks[view]?.onSelectorStateChanged(false)
+                }
+            }
+            false
+        }
+    }
+
+    private fun maybeRemoveTouchListener(view: View) {
+        if (view !in activeCallbacks && view !in deepestCallbacks) {
+            touchListenerViews.remove(view)
+            view.setOnTouchListener(null)
+        }
     }
 
     fun detach(
@@ -158,18 +165,22 @@ class PseudoSelectorManager(
     }
 
     /**
-     * Returns true if any view in `activeDeepestViews` is a strict descendant of `ancestor`
-     * and contains the screen point (`rawX`, `rawY`).
-     * Used by _:active-deepest_ to yield priority to deeper registered views.
+     * Returns true if any view registered for _:active-deepest_ is a strict descendant of
+     * `ancestor` and contains the screen point (`rawX`, `rawY`), so the ancestor yields priority
+     * to the deeper view.
      */
     private fun hasDeepestDescendantAt(
         ancestor: View,
         rawX: Float,
         rawY: Float,
     ): Boolean {
+        // With fewer than two registered views the only candidate is the ancestor itself.
+        if (deepestCallbacks.size < 2) {
+            return false
+        }
         val loc = IntArray(2)
         // TODO: Optimize so we don't iterate over all the views with :active-deepest every time.
-        for (candidate in activeDeepestViews) {
+        for (candidate in deepestCallbacks.keys) {
             if (candidate === ancestor) continue
             if (!isDescendantOf(candidate, ancestor)) continue
             candidate.getLocationOnScreen(loc)
