@@ -1198,13 +1198,12 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
     strongThis->requestFlushRegistry();
   };
 
-  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    // TODO: we don't use the mount hook here, but we still need a way to handleNodeRemovals
-    // for now we leave this to leak the memory, a fix will come in a follow-up
-  } else {
-    mountHook_ =
-        std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, viewStylesRepository_, request);
-  }
+  // The mount hook records the last mounted tree (so relative CSS lengths resolve
+  // without taking the ShadowTree lock) and runs handleNodeRemovals; both are
+  // needed in every mode including the animation backend, so register it
+  // unconditionally.
+  mountHook_ =
+      std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, viewStylesRepository_, request);
 
   commitHook_ = std::make_shared<ReanimatedCommitHook>(uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
 }
