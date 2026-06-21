@@ -87,4 +87,10 @@ void AnimatedPropsRegistry::removeTag(const Tag tag) {
   timestampMap_.erase(tag);
 }
 
+void AnimatedPropsRegistry::removeAll() {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  updatesRegistry_.clear();
+  timestampMap_.clear();
+}
+
 } // namespace reanimated
