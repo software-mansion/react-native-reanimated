@@ -13,19 +13,14 @@ ViewStylesRepository::ViewStylesRepository(
 jsi::Value ViewStylesRepository::getNodeProp(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::string &propName) {
-  // Resolve against the last mounted tree (captured by the mount hook) rather
-  // than the live ShadowTree. This avoids taking the ShadowTree revision lock
-  // here, which would deadlock against a Fabric commit that holds it and waits
-  // for the updates-registry lock we are holding.
+  // Resolve against the freshly mounted node (recorded by the mount hook); before the
+  // first mount snapshots this surface, or for a removed node, fall back to the passed
+  // node, which still carries its last layout.
   const auto newestNode = getNewestNode(shadowNode);
-  const auto *layoutableShadowNode =
-      newestNode ? dynamic_cast<const LayoutableShadowNode *>(newestNode.get()) : nullptr;
+  const auto &resolvedNode = newestNode ? newestNode : shadowNode;
+  const auto *layoutableShadowNode = dynamic_cast<const LayoutableShadowNode *>(resolvedNode.get());
 
   if (propName == "width" || propName == "height" || propName == "top" || propName == "left") {
-    // newestNode is null only before the first mount records a snapshot for this
-    // surface, or for a node already removed from the tree. Fall back to a zero
-    // frame; returning a number (not undefined) keeps resolve() from yielding
-    // nullopt, which would make relative transform ops throw.
     const auto layoutMetrics = layoutableShadowNode ? layoutableShadowNode->layoutMetrics_ : LayoutMetrics{};
 
     if (propName == "width") {
@@ -41,7 +36,7 @@ jsi::Value ViewStylesRepository::getNodeProp(
     if (!layoutableShadowNode) {
       return jsi::Value::undefined();
     }
-    const auto viewProps = std::static_pointer_cast<const ViewProps>(newestNode->getProps());
+    const auto viewProps = std::static_pointer_cast<const ViewProps>(resolvedNode->getProps());
     if (!viewProps) {
       return jsi::Value::undefined();
     }
@@ -72,6 +67,10 @@ jsi::Value ViewStylesRepository::getParentNodeProp(
 
 std::shared_ptr<const ShadowNode> ViewStylesRepository::getNewestNode(
     const std::shared_ptr<const ShadowNode> &shadowNode) const {
+  // Same walk as RN's UIManager::getShadowNodeInSubtree (which is private): find this
+  // family's node inside the given root. We resolve against the last mounted root
+  // rather than the live tree so we never take the ShadowTree lock that the public
+  // getNewestCloneOfShadowNode would (the AB-BA deadlock with Fabric commits).
   const auto it = lastMountedRootBySurface_.find(shadowNode->getSurfaceId());
   if (it == lastMountedRootBySurface_.end()) {
     return nullptr;
