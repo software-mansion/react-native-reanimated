@@ -91,10 +91,9 @@ class PseudoSelectorManager(
         key: String,
         callback: PseudoSelectorCallback,
     ) {
-        // Android sends a hover event to one target, so moving onto a hoverable descendant fires
-        // ACTION_HOVER_EXIT on its ancestors - but CSS :hover must stay active over descendants.
-        // So recompute all registered views from the pointer position, not just the event's view.
-        // Only ENTER/EXIT can flip state (always an edge crossing); MOVE is ignored.
+        // Android fires ACTION_HOVER_EXIT on an ancestor when the pointer moves onto a
+        // hoverable descendant, but CSS :hover must stay active there. So on enter/exit
+        // (not per-frame MOVE) recompute every registered view from the pointer position.
         hoverCallbacks[view] = callback
         val listener =
             View.OnHoverListener { _, event ->
