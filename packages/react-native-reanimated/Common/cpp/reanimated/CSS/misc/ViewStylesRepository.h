@@ -28,11 +28,6 @@ class ViewStylesRepository {
   jsi::Value getParentNodeProp(const std::shared_ptr<const ShadowNode> &shadowNode, const std::string &propName);
   folly::dynamic getStyleProp(Tag tag, const PropertyPath &propertyPath);
 
-  /// Records the latest mounted shadow tree for a surface. Called from the mount
-  /// hook (which holds the updates-registry lock). Relative-length resolution
-  /// reads layout from this snapshot instead of the live ShadowTree, so it never
-  /// takes the ShadowTree revision lock while the updates-registry lock is held
-  /// (the AB-BA deadlock).
   void setLastMountedRoot(const RootShadowNode::Shared &rootShadowNode);
 
  private:

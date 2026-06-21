@@ -41,11 +41,9 @@ void ReanimatedMountHook::shadowTreeDidMount(
 
   {
     auto lock = updatesRegistryManager_->lock();
-    // Record the freshly mounted (laid-out) tree under the updates-registry lock so
-    // relative-length resolution can read layout from it without taking the ShadowTree
-    // revision lock (the AB-BA deadlock with Fabric commits). This must run for every
-    // mount, including Reanimated's own: during an animation those carry the latest
-    // layout and are usually the only mounts there are.
+    // Record the freshly mounted tree so relative-length resolution can read layout
+    // from it. This must run for every mount, including Reanimated's own: during an
+    // animation those are usually the only mounts, and they carry the latest layout.
     viewStylesRepository_->setLastMountedRoot(rootShadowNode);
 
     if (isReanimatedMount) {
