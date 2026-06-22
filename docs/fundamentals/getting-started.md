@@ -114,29 +114,4 @@ cd ios && pod install && cd ..
 
 For building apps that target web using [react-native-web](https://www.npmjs.com/package/react-native-web) we highly recommend to use [Expo](https://expo.dev/).
 
-To use Reanimated on the web all you need to do is to install and add [`@babel/plugin-proposal-export-namespace-from`](https://babeljs.io/docs/en/babel-plugin-proposal-export-namespace-from) Babel plugin to your `babel.config.js`.
-
-```bash
-npm install @babel/plugin-proposal-export-namespace-from
-```
-
-```bash
-yarn add @babel/plugin-proposal-export-namespace-from
-```
-
-```js {7}
-  module.exports = {
-      presets: [
-        ... // don't add it here :)
-      ],
-      plugins: [
-          ...
-          '@babel/plugin-proposal-export-namespace-from',
-          'react-native-worklets/plugin',
-      ],
-  };
-```
-
-Make sure to list `react-native-worklets/plugin` last.
-
 More advanced use cases such as running Reanimated with `webpack` or with `Next.js` are explained in a separate [Web Support](/docs/guides/web-support) guide.
