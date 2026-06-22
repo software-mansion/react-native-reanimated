@@ -14,8 +14,16 @@ class PseudoSelectorManager(
     private val detachActions = HashMap<String, Runnable>()
 
     private val activeCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
+    private val deepestCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
 
-    private val activeDeepestViews = LinkedHashSet<View>()
+    private val touchListenerViews = HashSet<View>()
+
+    private val hoverCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
+
+    private val hoveredViews = LinkedHashSet<View>()
+
+    // Reused by updateHoverStates to avoid allocating on every hover event (UI thread only).
+    private val hoverLocationBuffer = IntArray(2)
 
     fun attach(
         tag: Int,
@@ -84,18 +92,28 @@ class PseudoSelectorManager(
         key: String,
         callback: PseudoSelectorCallback,
     ) {
+        // Android fires ACTION_HOVER_EXIT on an ancestor when the pointer moves onto a
+        // hoverable descendant, but CSS :hover must stay active there. So on enter/exit
+        // (not per-frame MOVE) recompute every registered view from the pointer position.
+        hoverCallbacks[view] = callback
         val listener =
             View.OnHoverListener { _, event ->
-                val action = event.actionMasked
-                if (action == MotionEvent.ACTION_HOVER_ENTER) {
-                    callback.onSelectorStateChanged(true)
-                } else if (action == MotionEvent.ACTION_HOVER_EXIT) {
-                    callback.onSelectorStateChanged(false)
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_HOVER_ENTER,
+                    MotionEvent.ACTION_HOVER_EXIT,
+                    -> updateHoverStates(event.rawX, event.rawY)
                 }
                 false
             }
         view.setOnHoverListener(listener)
-        detachActions[key] = Runnable { view.setOnHoverListener(null) }
+        detachActions[key] =
+            Runnable {
+                hoverCallbacks.remove(view)
+                if (hoveredViews.remove(view)) {
+                    callback.onSelectorStateChanged(false)
+                }
+                view.setOnHoverListener(null)
+            }
     }
 
     private fun attachActive(
@@ -104,21 +122,11 @@ class PseudoSelectorManager(
         callback: PseudoSelectorCallback,
     ) {
         activeCallbacks[view] = callback
-        val listener =
-            View.OnTouchListener { _, event ->
-                val action = event.actionMasked
-                if (action == MotionEvent.ACTION_DOWN) {
-                    fireActiveCallbacksUpTree(view, true)
-                } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-                    fireActiveCallbacksUpTree(view, false)
-                }
-                false
-            }
-        view.setOnTouchListener(listener)
+        ensureTouchListener(view)
         detachActions[key] =
             Runnable {
                 activeCallbacks.remove(view)
-                view.setOnTouchListener(null)
+                maybeRemoveTouchListener(view)
             }
     }
 
@@ -127,27 +135,43 @@ class PseudoSelectorManager(
         key: String,
         callback: PseudoSelectorCallback,
     ) {
-        activeDeepestViews.add(view)
-        val listener =
-            View.OnTouchListener { _, event ->
-                val action = event.actionMasked
-                if (action == MotionEvent.ACTION_DOWN) {
-                    if (!hasDeepestDescendantAt(view, event.rawX, event.rawY)) {
-                        callback.onSelectorStateChanged(true)
-                    }
-                    fireActiveCallbacksUpTree(view, true)
-                } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-                    callback.onSelectorStateChanged(false)
-                    fireActiveCallbacksUpTree(view, false)
-                }
-                false
-            }
-        view.setOnTouchListener(listener)
+        deepestCallbacks[view] = callback
+        ensureTouchListener(view)
         detachActions[key] =
             Runnable {
-                activeDeepestViews.remove(view)
-                view.setOnTouchListener(null)
+                deepestCallbacks.remove(view)
+                maybeRemoveTouchListener(view)
             }
+    }
+
+    private fun ensureTouchListener(view: View) {
+        if (!touchListenerViews.add(view)) {
+            return
+        }
+        view.setOnTouchListener { _, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    fireActiveCallbacksUpTree(view, true)
+                    deepestCallbacks[view]?.let {
+                        if (!hasDeepestDescendantAt(view, event.rawX, event.rawY)) {
+                            it.onSelectorStateChanged(true)
+                        }
+                    }
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    fireActiveCallbacksUpTree(view, false)
+                    deepestCallbacks[view]?.onSelectorStateChanged(false)
+                }
+            }
+            false
+        }
+    }
+
+    private fun maybeRemoveTouchListener(view: View) {
+        if (view !in activeCallbacks && view !in deepestCallbacks) {
+            touchListenerViews.remove(view)
+            view.setOnTouchListener(null)
+        }
     }
 
     fun detach(
@@ -158,18 +182,22 @@ class PseudoSelectorManager(
     }
 
     /**
-     * Returns true if any view in `activeDeepestViews` is a strict descendant of `ancestor`
-     * and contains the screen point (`rawX`, `rawY`).
-     * Used by _:active-deepest_ to yield priority to deeper registered views.
+     * Returns true if any view registered for _:active-deepest_ is a strict descendant of
+     * `ancestor` and contains the screen point (`rawX`, `rawY`), so the ancestor yields priority
+     * to the deeper view.
      */
     private fun hasDeepestDescendantAt(
         ancestor: View,
         rawX: Float,
         rawY: Float,
     ): Boolean {
+        // With fewer than two registered views the only candidate is the ancestor itself.
+        if (deepestCallbacks.size < 2) {
+            return false
+        }
         val loc = IntArray(2)
         // TODO: Optimize so we don't iterate over all the views with :active-deepest every time.
-        for (candidate in activeDeepestViews) {
+        for (candidate in deepestCallbacks.keys) {
             if (candidate === ancestor) continue
             if (!isDescendantOf(candidate, ancestor)) continue
             candidate.getLocationOnScreen(loc)
@@ -197,6 +225,32 @@ class PseudoSelectorManager(
                 activeCallbacks[parent]?.onSelectorStateChanged(isActive)
             }
             parent = parent.parent
+        }
+    }
+
+    /**
+     * Recompute every registered view's _:hover_ state from the pointer position, firing only on
+     * change. A view is hovered while the point is in its on-screen bounds - true for an ancestor
+     * while the pointer is over a descendant. Uses live (mid-animation) `getLocationOnScreen` bounds.
+     */
+    private fun updateHoverStates(
+        rawX: Float,
+        rawY: Float,
+    ) {
+        val loc = hoverLocationBuffer
+        for ((view, callback) in hoverCallbacks) {
+            view.getLocationOnScreen(loc)
+            val contains =
+                rawX >= loc[0] && rawX <= loc[0] + view.width &&
+                    rawY >= loc[1] && rawY <= loc[1] + view.height
+            val wasHovered = hoveredViews.contains(view)
+            if (contains && !wasHovered) {
+                hoveredViews.add(view)
+                callback.onSelectorStateChanged(true)
+            } else if (!contains && wasHovered) {
+                hoveredViews.remove(view)
+                callback.onSelectorStateChanged(false)
+            }
         }
     }
 
