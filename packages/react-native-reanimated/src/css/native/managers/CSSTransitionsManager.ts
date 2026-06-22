@@ -32,7 +32,7 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
 
   /**
    * @returns Whether this update detached a running transition (its props were
-   *   removed, or normalized to an empty config such as a '0ms' duration).
+   *   removed, or normalized to an empty config, e.g. when duration is 0).
    */
   update(
     transitionProperties: CSSTransitionProperties | null,
