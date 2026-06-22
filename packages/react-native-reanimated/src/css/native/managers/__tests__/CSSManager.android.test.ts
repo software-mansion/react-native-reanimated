@@ -22,10 +22,10 @@ const TRANSITION = {
 } as const;
 
 // Runs in the android jest project (Platform.OS === 'android'), so IS_ANDROID is
-// true: on a transition detach, CSSManager must call the props setter
-// (setViewStyle) with the committed style so the native Android revert restores
-// the inline values instead of interpolator defaults.
-describe('CSSManager (Android revert base)', () => {
+// true. The revert subsystem is Android-only, so unlike other platforms a
+// transition detach records the committed style via the props setter
+// (setViewStyle) for the native revert to restore.
+describe('CSSManager (Android)', () => {
   let manager: CSSManager;
 
   beforeEach(() => {
@@ -37,6 +37,36 @@ describe('CSSManager (Android revert base)', () => {
     manager.update({ opacity: 0, ...TRANSITION });
     manager.update({ opacity: 1, ...TRANSITION });
   };
+
+  test('records the committed base style when an animation is attached', () => {
+    manager.update({
+      opacity: 0.5,
+      animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
+      animationDuration: '1s',
+    });
+
+    expect(setViewStyle).toHaveBeenCalledWith(
+      viewTag,
+      expect.objectContaining({ opacity: 0.5 })
+    );
+  });
+
+  test('does not call the props setter for a plain style update', () => {
+    manager.update({ opacity: 0.5 });
+
+    expect(setViewStyle).not.toHaveBeenCalled();
+  });
+
+  // The base is recorded only on a detach, not for every transition update, so a
+  // still-running transition must stay silent even on Android.
+  test('does not call the props setter while a transition keeps running', () => {
+    manager.update({ opacity: 0, ...TRANSITION });
+    jest.clearAllMocks();
+
+    manager.update({ opacity: 1, ...TRANSITION });
+
+    expect(setViewStyle).not.toHaveBeenCalled();
+  });
 
   test('records the committed style when a 0ms config detaches a running transition', () => {
     attachRunningTransition();
@@ -65,16 +95,5 @@ describe('CSSManager (Android revert base)', () => {
       viewTag,
       expect.objectContaining({ opacity: 1 })
     );
-  });
-
-  // Even on Android the base is recorded only on a detach, not for every
-  // transition update, so a still-running transition must stay silent.
-  test('does not call the props setter while a transition keeps running', () => {
-    manager.update({ opacity: 0, ...TRANSITION });
-    jest.clearAllMocks();
-
-    manager.update({ opacity: 1, ...TRANSITION });
-
-    expect(setViewStyle).not.toHaveBeenCalled();
   });
 });

@@ -60,7 +60,7 @@ describe('CSSManager', () => {
 
   // The same detach records a base on Android (see CSSManager.android.test.ts);
   // here the revert subsystem is absent, so the platform gate keeps it silent.
-  test('does not call the props setter when a transition detaches off Android', () => {
+  test('does not call the props setter when a transition detaches (non-Android)', () => {
     manager.update({ opacity: 0, ...TRANSITION });
     manager.update({ opacity: 1, ...TRANSITION });
     jest.clearAllMocks();
