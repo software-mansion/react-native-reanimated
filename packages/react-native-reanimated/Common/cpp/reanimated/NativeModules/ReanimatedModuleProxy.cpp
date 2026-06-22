@@ -810,11 +810,6 @@ void ReanimatedModuleProxy::performOperations() {
   }
 
   commitUpdates(uiRuntime, updatesBatch);
-
-  // Clear the entire cache after the commit
-  // (we don't know if the view is updated from outside of Reanimated
-  // so we have to clear the entire cache)
-  viewStylesRepository_->clearNodesCache();
 }
 
 void ReanimatedModuleProxy::performNonLayoutOperations() {
@@ -1208,7 +1203,8 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
     // TODO: we don't use the mount hook here, but we still need a way to handleNodeRemovals
     // for now we leave this to leak the memory, a fix will come in a follow-up
   } else {
-    mountHook_ = std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, request);
+    mountHook_ =
+        std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, viewStylesRepository_, request);
   }
 
   commitHook_ = std::make_shared<ReanimatedCommitHook>(uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
