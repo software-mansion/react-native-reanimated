@@ -66,4 +66,15 @@ describe('CSSManager (Android revert base)', () => {
       expect.objectContaining({ opacity: 1 })
     );
   });
+
+  // Even on Android the base is recorded only on a detach, not for every
+  // transition update, so a still-running transition must stay silent.
+  test('does not call the props setter while a transition keeps running', () => {
+    manager.update({ opacity: 0, ...TRANSITION });
+    jest.clearAllMocks();
+
+    manager.update({ opacity: 1, ...TRANSITION });
+
+    expect(setViewStyle).not.toHaveBeenCalled();
+  });
 });

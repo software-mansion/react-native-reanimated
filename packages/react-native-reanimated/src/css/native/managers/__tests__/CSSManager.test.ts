@@ -42,14 +42,30 @@ describe('CSSManager', () => {
     );
   });
 
-  // The revert base is recorded only on Android (the revert subsystem is
-  // Android-only). On this iOS-default project a transition detach must not call
-  // setViewStyle; the Android behavior is covered in CSSManager.android.test.ts.
-  test('does not record a base on a transition-only detach (non-Android)', () => {
+  test('does not call the props setter for a plain style update', () => {
+    manager.update({ opacity: 0.5 });
+
+    expect(setViewStyle).not.toHaveBeenCalled();
+  });
+
+  test('does not call the props setter while a transition is running', () => {
+    manager.update({ opacity: 0, ...TRANSITION });
+    jest.clearAllMocks();
+
+    // Triggers a running transition - there is no base to record for it.
+    manager.update({ opacity: 1, ...TRANSITION });
+
+    expect(setViewStyle).not.toHaveBeenCalled();
+  });
+
+  // The same detach records a base on Android (see CSSManager.android.test.ts);
+  // here the revert subsystem is absent, so the platform gate keeps it silent.
+  test('does not call the props setter when a transition detaches off Android', () => {
     manager.update({ opacity: 0, ...TRANSITION });
     manager.update({ opacity: 1, ...TRANSITION });
     jest.clearAllMocks();
 
+    // The 0ms duration normalizes to an empty config and detaches the transition.
     manager.update({
       opacity: 1,
       transitionProperty: 'opacity',
