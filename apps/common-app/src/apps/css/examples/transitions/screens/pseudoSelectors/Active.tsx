@@ -206,8 +206,6 @@ transform: {
           </VerticalExampleCard>
 
           <VerticalExampleCard
-            description="Currenlty Pseudoselectors in SVG are only supported on the Web."
-            labelTypes={['web']}
             title="SVG fill"
             code={`// Base geometry stays as real props so it renders at rest;
 // the ':active' style only swaps the changing prop.
@@ -218,7 +216,6 @@ transform: {
     fill: { default: colors.primary, ':active': colors.primaryDark },
     transitionDuration: '200ms',
   }}
-  onStartShouldSetResponder={() => true}
 />`}
             collapsedCode={`fill: {
   default: colors.primary,
@@ -237,39 +234,35 @@ transform: {
                   },
                   transitionDuration: '200ms',
                 }}
-                onStartShouldSetResponder={() => true}
               />
             </Svg>
           </VerticalExampleCard>
 
           <VerticalExampleCard
-            labelTypes={['web']}
             title="SVG radius"
             code={`// r needs a base prop value, otherwise it renders at 0.
 <AnimatedCircle
-  cx={25} cy={25} fill={colors.primary}
-  r={12}
+  cx={30} cy={30} fill={colors.primary}
+  r={20}
   style={{
-    r: { default: 12, ':active': 24 },
+    r: { default: 20, ':active': 28 },
     transitionDuration: '200ms',
   }}
-  onStartShouldSetResponder={() => true}
 />`}
             collapsedCode={`r: {
-  default: 12,
-  ':active': 24,
+  default: 20,
+  ':active': 28,
 },`}>
-            <Svg height={sizes.md} width={sizes.md}>
+            <Svg height={sizes.lg} width={sizes.lg}>
               <AnimatedCircle
-                cx={sizes.md / 2}
-                cy={sizes.md / 2}
+                cx={sizes.lg / 2}
+                cy={sizes.lg / 2}
                 fill={colors.primary}
-                r={sizes.md / 4}
+                r={sizes.lg / 3}
                 style={{
-                  r: { ':active': sizes.md / 2 - 2, default: sizes.md / 4 },
+                  r: { ':active': sizes.lg / 2 - 2, default: sizes.lg / 3 },
                   transitionDuration: '200ms',
                 }}
-                onStartShouldSetResponder={() => true}
               />
             </Svg>
           </VerticalExampleCard>
