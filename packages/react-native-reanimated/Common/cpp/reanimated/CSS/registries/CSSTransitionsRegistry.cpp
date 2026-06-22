@@ -11,8 +11,9 @@ namespace reanimated::css {
 
 CSSTransitionsRegistry::CSSTransitionsRegistry(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const std::shared_ptr<OperationsLoop> &loop)
-    : viewStylesRepository_(viewStylesRepository), loop_(loop) {}
+    const std::shared_ptr<OperationsLoop> &loop,
+    const std::shared_ptr<CSSPlatformTransitionProxy> &platformTransitionProxy)
+    : viewStylesRepository_(viewStylesRepository), loop_(loop), platformTransitionProxy_(platformTransitionProxy) {}
 
 bool CSSTransitionsRegistry::needsFlush() const {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
@@ -22,52 +23,20 @@ bool CSSTransitionsRegistry::needsFlush() const {
 void CSSTransitionsRegistry::updateConfigOrRun(
     jsi::Runtime &rt,
     const std::shared_ptr<const ShadowNode> &shadowNode,
-    const CSSTransitionConfig &config) {
+    CSSTransitionConfig &&config) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
-  const auto viewTag = shadowNode->getTag();
-
-  if (!registry_.contains(viewTag)) {
-    auto transition = std::make_shared<CSSTransition>(shadowNode, viewStylesRepository_, transitionObserver_);
-    registry_.insert({viewTag, transition});
-  }
-
-  const auto &transition = registry_.at(viewTag);
-
-  if (config.changedPropertiesSettings.size() || config.removedProperties.size()) {
-    transition->updateSettings(config.changedPropertiesSettings, config.removedProperties);
-  }
-  if (config.changedProperties.size()) {
-    runTransition(rt, transition, viewTag, config.changedProperties);
-  }
-}
-
-void CSSTransitionsRegistry::run(
-    jsi::Runtime &rt,
-    const std::shared_ptr<const ShadowNode> &shadowNode,
-    const PropertyValueDiffsMap &propertyDiffs) {
-  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
-  const auto viewTag = shadowNode->getTag();
-  const auto &transition = registry_.at(viewTag);
-
-  runTransition(rt, transition, viewTag, propertyDiffs);
+  const auto &transition = getOrCreateTransition(shadowNode);
+  auto initialUpdate = transition->run(rt, std::move(config), getUpdatesFromRegistry(transition->getViewTag()));
+  recordInitialUpdate(transition, initialUpdate);
 }
 
 void CSSTransitionsRegistry::run(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const PropertyValueDynamicDiffsMap &propertyDiffs) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
-  const auto viewTag = shadowNode->getTag();
-  const auto &transition = registry_.at(viewTag);
-
-  const auto &lastUpdates = getUpdatesFromRegistry(viewTag);
-  const auto timestamp = loop_->resolveTimestamp();
-
-  auto initialUpdate = transition->run(propertyDiffs, lastUpdates, timestamp);
-
-  transition->schedule(*loop_);
-
-  updateInUpdatesRegistry(transition, initialUpdate);
-  updatedTags_.insert(viewTag);
+  const auto &transition = getOrCreateTransition(shadowNode);
+  auto initialUpdate = transition->run(propertyDiffs, getUpdatesFromRegistry(transition->getViewTag()));
+  recordInitialUpdate(transition, initialUpdate);
 }
 
 void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
@@ -80,8 +49,7 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
     }
 
     auto &transition = it->second;
-    const auto updates = transition->computeCurrentStyle();
-
+    const auto updates = transition->computeCurrentLoopStyle();
     if (!updates.empty()) {
       addUpdatesToBatch(transition->getShadowNodeFamily(), updates);
     }
@@ -101,8 +69,7 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatc
     }
 
     auto &transition = it->second;
-    const auto updates = transition->computeCurrentStyle();
-
+    const auto updates = transition->computeCurrentLoopStyle();
     if (!updates.empty()) {
       addRawPropsToAnimatedPropsBatch(transition->getShadowNodeFamily(), updates);
       // Legacy flushes merge each frame into the updates registry; animated-props flushes do not.
@@ -118,13 +85,14 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatc
 CSSTransitionsRegistry::TransitionObserver::TransitionObserver(CSSTransitionsRegistry &owner) : owner_(owner) {}
 
 void CSSTransitionsRegistry::TransitionObserver::onTransitionUpdate(const Tag viewTag) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   owner_.updatedTags_.insert(viewTag);
 }
 
 void CSSTransitionsRegistry::removeTag(const Tag viewTag) {
   const auto it = registry_.find(viewTag);
   if (it != registry_.end()) {
-    it->second->unschedule(*loop_);
+    it->second->cancel();
   }
   removeFromUpdatesRegistry(viewTag);
   registry_.erase(viewTag);
@@ -155,19 +123,26 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
   setInUpdatesRegistry(shadowNode->getFamilyShared(), filteredUpdates);
 }
 
-void CSSTransitionsRegistry::runTransition(
-    jsi::Runtime &rt,
+const std::shared_ptr<CSSTransition> &CSSTransitionsRegistry::getOrCreateTransition(
+    const std::shared_ptr<const ShadowNode> &shadowNode) {
+  const auto viewTag = shadowNode->getTag();
+  if (!registry_.contains(viewTag)) {
+    registry_.emplace(
+        viewTag,
+        std::make_shared<CSSTransition>(
+            shadowNode, viewStylesRepository_, platformTransitionProxy_, loop_, transitionObserver_));
+  }
+  return registry_.at(viewTag);
+}
+
+void CSSTransitionsRegistry::recordInitialUpdate(
     const std::shared_ptr<CSSTransition> &transition,
-    const facebook::react::Tag &viewTag,
-    const PropertyValueDiffsMap &propertyDiffs) {
-  const auto &lastUpdates = getUpdatesFromRegistry(viewTag);
-  const auto timestamp = loop_->resolveTimestamp();
-
-  auto initialUpdate = transition->run(rt, propertyDiffs, lastUpdates, timestamp);
-
-  transition->schedule(*loop_);
+    const folly::dynamic &initialUpdate) {
+  if (initialUpdate.empty()) {
+    return;
+  }
   updateInUpdatesRegistry(transition, initialUpdate);
-  updatedTags_.insert(viewTag);
+  updatedTags_.insert(transition->getViewTag());
 }
 
 } // namespace reanimated::css

@@ -296,6 +296,88 @@ describe('Test createSerializable', () => {
         expect(result).toBe(true);
       });
 
+      test('createSerializableTypedArray', async () => {
+        const typedArrayValue = new Uint8Array(4);
+        typedArrayValue[0] = 1;
+        typedArrayValue[1] = 2;
+        typedArrayValue[2] = 3;
+        typedArrayValue[3] = 4;
+        scheduleOnTarget(() => {
+          'worklet';
+          const checks = [
+            typedArrayValue instanceof Uint8Array,
+            typedArrayValue.length === 4,
+            typedArrayValue[0] === 1,
+            typedArrayValue[1] === 2,
+            typedArrayValue[2] === 3,
+            typedArrayValue[3] === 4,
+          ];
+          scheduleOnRN(callbackPass, checks.every(Boolean));
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
+
+      test('createSerializableInt32Array', async () => {
+        const typedArrayValue = new Int32Array(2);
+        typedArrayValue[0] = -1;
+        typedArrayValue[1] = 42;
+        scheduleOnTarget(() => {
+          'worklet';
+          const checks = [
+            typedArrayValue instanceof Int32Array,
+            typedArrayValue.length === 2,
+            typedArrayValue[0] === -1,
+            typedArrayValue[1] === 42,
+          ];
+          scheduleOnRN(callbackPass, checks.every(Boolean));
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
+
+      test('createSerializableTypedArraySubrange', async () => {
+        const buf = new ArrayBuffer(16);
+        const full = new Uint16Array(buf);
+        for (let i = 0; i < full.length; i++) {
+          full[i] = i + 1;
+        }
+        const typedArrayValue = new Uint16Array(buf, 4, 2);
+        scheduleOnTarget(() => {
+          'worklet';
+          const checks = [
+            typedArrayValue instanceof Uint16Array,
+            typedArrayValue.length === 2,
+            typedArrayValue.byteOffset === 4,
+            typedArrayValue.buffer.byteLength === 16,
+            typedArrayValue[0] === 3,
+            typedArrayValue[1] === 4,
+          ];
+          scheduleOnRN(callbackPass, checks.every(Boolean));
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
+
+      test('createSerializableDataView', async () => {
+        const buf = new ArrayBuffer(4);
+        const dataViewValue = new DataView(buf);
+        dataViewValue.setUint8(0, 0xab);
+        dataViewValue.setUint8(1, 0xcd);
+        scheduleOnTarget(() => {
+          'worklet';
+          const checks = [
+            dataViewValue instanceof DataView,
+            dataViewValue.byteLength === 4,
+            dataViewValue.getUint8(0) === 0xab,
+            dataViewValue.getUint8(1) === 0xcd,
+          ];
+          scheduleOnRN(callbackPass, checks.every(Boolean));
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
+      });
+
       test('createSerializableSet', async () => {
         const setValue = new Set([1, '1', true]);
         scheduleOnTarget(() => {
@@ -524,12 +606,8 @@ describe('Test createSerializable', () => {
         cyclicArray.push(cyclicArray);
 
         await expect(() => {
-          scheduleOnTarget(() => {
-            'worklet';
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const _test = cyclicArray[1];
-          });
-        }).toThrow();
+          createSerializable(cyclicArray);
+        }).toThrow('Trying to convert a cyclic object');
       });
 
       test('createSerializableInaccessibleObject', async () => {
@@ -540,22 +618,9 @@ describe('Test createSerializable', () => {
         }
         const inaccessibleObject = new Inaccessible();
 
-        scheduleOnTarget(() => {
-          'worklet';
-          try {
-            inaccessibleObject.access();
-            scheduleOnRN(callbackPass, false);
-          } catch (error) {
-            scheduleOnRN(
-              callbackFail,
-              error instanceof Error ? error.message : String(error)
-            );
-          }
-        });
-        await waitForNotification(FAIL_NOTIFICATION);
-        expect(errorMessage).toInclude(
-          '[Worklets] Trying to access property `access` of an object which cannot be sent to the UI runtime.'
-        );
+        await expect(() => {
+          createSerializable(inaccessibleObject);
+        }).toThrow('Cannot copy value of type `Inaccessible`.');
       });
 
       test('createSerializableRemoteNamedFunctionSyncCall', async () => {
@@ -576,7 +641,7 @@ describe('Test createSerializable', () => {
         expect(errorMessage).toInclude(
           'Tried to synchronously call a Remote Function.'
         );
-        expect(errorMessage).toInclude('fooFunction');
+        expect(errorMessage).toInclude(__DEV__ ? 'fooFunction' : 'anonymous');
         expect(errorMessage).toInclude('on the ' + runtimeName + ' Runtime');
       });
 
@@ -605,100 +670,113 @@ describe('Test createSerializable', () => {
   });
 });
 
-describe('createSerializable for unsupported types', () => {
-  test('throws when trying to serialize a Promise', async () => {
-    const promise = Promise.resolve();
-    await expect(() => {
-      createSerializable(promise);
-    }).toThrow('Promises cannot be converted to serializable.');
-  });
-});
-
-describe('Test serializable freezing', () => {
-  const FREEZE_WARNING = 'Tried to modify key';
-
-  test('warns when modifying converted array', async () => {
-    const obj = [1, 2, 3];
-    createSerializable(obj);
-    await expect(() => {
-      obj[0] = 2;
-    }).toThrow(FREEZE_WARNING);
-  });
-
-  test('warns when modifying converted remote function', async () => {
-    const obj = () => {};
-    obj.prop = 1;
-    createSerializable(obj);
-    await expect(() => {
-      obj.prop = 2;
-    }).toThrow(FREEZE_WARNING);
-  });
-
-  test('does not warn when modifying converted host object', async () => {
-    const obj = TurboModuleRegistry.get('Clipboard');
-    if (!obj) {
-      return;
-    }
-    createSerializable(obj);
-    await expect(() => {
-      (obj as any).prop = 2;
-    }).not.toThrow();
-  });
-
-  test('warns when modifying converted plain object', async () => {
-    const obj = { prop: 1 };
-    createSerializable(obj);
-    await expect(() => {
-      obj.prop = 2;
-    }).toThrow(FREEZE_WARNING);
-  });
-
-  test('does not warn when modifying converted RegExp literal', async () => {
-    const obj = /a/;
-    createSerializable(obj);
-    await expect(() => {
-      (obj as any).prop = 2;
-    }).not.toThrow();
-  });
-
-  test('does not warn when modifying converted RegExp instance', async () => {
-    // eslint-disable-next-line prefer-regex-literals
-    const obj = new RegExp('a');
-    createSerializable(obj);
-    await expect(() => {
-      (obj as any).prop = 2;
-    }).not.toThrow();
-  });
-
-  test('does not warn when modifying converted ArrayBuffer', async () => {
-    const obj = new ArrayBuffer(8);
-    createSerializable(obj);
-    await expect(() => {
-      (obj as any).prop = 2;
-    }).not.toThrow();
-  });
-
-  test('does not warn when modifying converted Int32Array', async () => {
-    const obj = new Int32Array(2);
-    createSerializable(obj);
-    await expect(() => {
-      obj[1] = 2;
-    }).not.toThrow();
-  });
-
-  test('handles unconfigurable object without throwing', async () => {
-    const obj = {};
-    Object.defineProperty(obj, 'prop', {
-      value: 1,
-      writable: false,
-      enumerable: true,
-      configurable: false,
+if (__DEV__) {
+  describe('createSerializable for unsupported types', () => {
+    test('throws when trying to serialize a Promise', async () => {
+      const promise = Promise.resolve();
+      await expect(() => {
+        createSerializable(promise);
+      }).toThrow(
+        globalThis._WORKLETS_BUNDLE_MODE_ENABLED
+          ? 'Cannot copy value of type `Promise`'
+          : 'Promises cannot be converted to serializable.'
+      );
     });
-    await expect(() => {
-      createSerializable(obj);
-    }).not.toThrow();
+
+    test('throws when trying to serialize a Proxy', async () => {
+      const proxy = new Proxy({ a: 1 }, { getPrototypeOf: () => null });
+      await expect(() => {
+        createSerializable(proxy);
+      }).toThrow('Cannot copy value of type');
+    });
   });
-});
+
+  describe('Test serializable freezing', () => {
+    const FREEZE_WARNING = 'Tried to modify key';
+
+    test('warns when modifying converted array', async () => {
+      const obj = [1, 2, 3];
+      createSerializable(obj);
+      await expect(() => {
+        obj[0] = 2;
+      }).toThrow(FREEZE_WARNING);
+    });
+
+    test('warns when modifying converted remote function', async () => {
+      const obj = () => {};
+      obj.prop = 1;
+      createSerializable(obj);
+      await expect(() => {
+        obj.prop = 2;
+      }).toThrow(FREEZE_WARNING);
+    });
+
+    test('does not warn when modifying converted host object', async () => {
+      const obj = TurboModuleRegistry.get('Clipboard');
+      if (!obj) {
+        return;
+      }
+      createSerializable(obj);
+      await expect(() => {
+        (obj as any).prop = 2;
+      }).not.toThrow();
+    });
+
+    test('warns when modifying converted plain object', async () => {
+      const obj = { prop: 1 };
+      createSerializable(obj);
+      await expect(() => {
+        obj.prop = 2;
+      }).toThrow(FREEZE_WARNING);
+    });
+
+    test('does not warn when modifying converted RegExp literal', async () => {
+      const obj = /a/;
+      createSerializable(obj);
+      await expect(() => {
+        (obj as any).prop = 2;
+      }).not.toThrow();
+    });
+
+    test('does not warn when modifying converted RegExp instance', async () => {
+      // eslint-disable-next-line prefer-regex-literals
+      const obj = new RegExp('a');
+      createSerializable(obj);
+      await expect(() => {
+        (obj as any).prop = 2;
+      }).not.toThrow();
+    });
+
+    test('does not warn when modifying converted ArrayBuffer', async () => {
+      const obj = new ArrayBuffer(8);
+      createSerializable(obj);
+      await expect(() => {
+        (obj as any).prop = 2;
+      }).not.toThrow();
+    });
+
+    test('does not warn when modifying converted Int32Array', async () => {
+      const obj = new Int32Array(2);
+      createSerializable(obj);
+      await expect(() => {
+        obj[1] = 2;
+      }).not.toThrow();
+    });
+
+    test('handles unconfigurable object without throwing', async () => {
+      const obj = {};
+      Object.defineProperty(obj, 'prop', {
+        value: 1,
+        writable: false,
+        enumerable: true,
+        configurable: false,
+      });
+      await expect(() => {
+        createSerializable(obj);
+      }).not.toThrow();
+    });
+  });
+}
 
 declare global {
   var __reanimatedModuleProxy: Record<string, unknown>;

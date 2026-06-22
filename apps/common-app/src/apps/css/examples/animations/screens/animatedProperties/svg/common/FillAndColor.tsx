@@ -10,7 +10,6 @@ import type { CircleProps, PolygonProps } from 'react-native-svg';
 import { Circle, Polygon, Svg } from 'react-native-svg';
 
 import { ExamplesScreen } from '@/apps/css/components';
-import type { AnyRecord } from '@/types';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedPolygon = Animated.createAnimatedComponent(Polygon);
@@ -58,13 +57,13 @@ function PolygonExample({
 export default function FillAndColorExample() {
   return (
     <ExamplesScreen<
+      CircleProps,
       {
         keyframes: CSSAnimationKeyframes<CircleProps>;
-        render: <T extends AnyRecord>(
+        render: <T extends object>(
           animation: CSSAnimationProperties<T>
         ) => JSX.Element;
-      },
-      CircleProps
+      }
     >
       renderExample={({ animation, render }) => render(animation)}
       buildAnimation={({ keyframes }) => ({

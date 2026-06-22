@@ -19,6 +19,7 @@ import type { TabRoute } from '@/apps/css/navigation/types';
 import { colors, flex, spacing, text } from '@/theme';
 
 import { useLocalNavigationRef } from './LocalNavigationProvider';
+import { getExampleScreenPaths } from './utils';
 
 const TABS_GAP = spacing.xxs;
 
@@ -64,8 +65,9 @@ export default function BottomTabBar({
         {/* @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801 */}
         <Defs>
           <LinearGradient id="bottom-tab-bar" x1="0" x2="0" y1="0" y2="1">
-            <Stop offset="0" stopColor={colors.black} stopOpacity="0" />
-            <Stop offset="1" stopColor={colors.black} stopOpacity="0.2" />
+            <Stop offset="0" stopColor={colors.white} stopOpacity="0" />
+            <Stop offset="0.8" stopColor={colors.white} stopOpacity="1" />
+            <Stop offset="1" stopColor={colors.white} stopOpacity="1" />
           </LinearGradient>
         </Defs>
         <Rect
@@ -79,6 +81,22 @@ export default function BottomTabBar({
     ),
     []
   );
+
+  // On navigation screens the gradient hides list content scrolling behind the
+  // floating tab bar. Example screens have no such list, so we fade it out.
+  // Paths are stored as an array rather than a Set: a Set is not preserved when
+  // captured into a worklet on native, so the check uses `includes`.
+  const exampleScreenPaths = useMemo(
+    () => [...getExampleScreenPaths(routes)],
+    [routes]
+  );
+  const isExampleScreen = useDerivedValue(() => {
+    const path = currentRoute.value;
+    return path !== undefined && exampleScreenPaths.includes(path);
+  });
+  const gradientStyle = useAnimatedStyle(() => ({
+    opacity: withTiming(isExampleScreen.value ? 0 : 1),
+  }));
 
   const handleMeasure = useCallback(
     (width: number, idx: number) => {
@@ -97,7 +115,11 @@ export default function BottomTabBar({
 
   return (
     <View style={[styles.wrapper, { height: BOTTOM_BAR_HEIGHT + inset }]}>
-      <View style={StyleSheet.absoluteFill}>{gradient}</View>
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.gradient, gradientStyle]}>
+        {gradient}
+      </Animated.View>
       <View style={styles.container}>
         <View style={[flex.row, { gap: TABS_GAP }]}>
           <Animated.View
@@ -211,11 +233,19 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.background1,
     borderRadius: spacing.md,
+    boxShadow: '0px 6px 16px -4px rgba(0, 0, 0, 0.2)',
     flexDirection: 'row',
     gap: spacing.xxs,
     marginBottom: spacing.xxs,
     marginHorizontal: spacing.md,
     padding: spacing.xs,
+  },
+  gradient: {
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: -BOTTOM_BAR_HEIGHT,
   },
   iconOverlay: {
     position: 'absolute',

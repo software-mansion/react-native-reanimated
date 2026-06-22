@@ -29,6 +29,9 @@ const createReactNativeProject = (config = {}) =>
     preset: '@react-native/jest-preset',
     testEnvironment: 'node',
     resolver: 'react-native-worklets/jest/resolver',
+    transformIgnorePatterns: [
+      'node_modules/(?!((jest-)?react-native|@react-native(-community)?|react-native-worklets)/)',
+    ],
     ...config,
   });
 

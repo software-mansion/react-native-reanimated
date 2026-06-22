@@ -11,11 +11,13 @@ import type { ICSSManager } from '../../types/interfaces';
 import { filterCSSAndStyleProperties } from '../../utils';
 import { setViewStyle } from '../proxy';
 import CSSAnimationsManager from './CSSAnimationsManager';
+import CSSPseudoStylesManager from './CSSPseudoStylesManager';
 import CSSTransitionsManager from './CSSTransitionsManager';
 
 export default class CSSManager implements ICSSManager {
   private readonly cssAnimationsManager: CSSAnimationsManager;
   private readonly cssTransitionsManager: CSSTransitionsManager;
+  private readonly cssPseudoStylesManager: CSSPseudoStylesManager;
   private readonly viewTag: number;
   private readonly propsBuilder: ReturnType<typeof getPropsBuilder>;
   /**
@@ -45,11 +47,21 @@ export default class CSSManager implements ICSSManager {
       compoundComponentName
     );
     this.cssTransitionsManager = new CSSTransitionsManager(wrapper, tag);
+    this.cssPseudoStylesManager = new CSSPseudoStylesManager(
+      wrapper,
+      tag,
+      this.propsBuilder
+    );
   }
 
   update(style: CSSStyle): void {
-    const [animationProperties, transitionProperties, filteredStyle] =
-      filterCSSAndStyleProperties(style);
+    const [
+      animationProperties,
+      transitionProperties,
+      pseudoStylesBySelector,
+      ,
+      filteredStyle,
+    ] = filterCSSAndStyleProperties(style);
 
     const hasAnimation = animationProperties !== null;
     const hasTransition = transitionProperties !== null;
@@ -61,21 +73,25 @@ export default class CSSManager implements ICSSManager {
         ? this.propsBuilder.build(filteredStyle)
         : undefined;
 
+    const transitionDetached = this.cssTransitionsManager.update(
+      transitionProperties,
+      normalizedStyle ?? {}
+    );
+
+    // Record the committed style as the base so animations and (on Android) a
+    // detaching transition can revert to it instead of interpolator defaults.
     if (
       normalizedStyle &&
-      (hasAnimation ||
-        // We also need to update the current style on Android when the
-        // transition is detached.
-        (IS_ANDROID && !hasTransition && this.hadTransitionLastUpdate))
+      (hasAnimation || (IS_ANDROID && transitionDetached))
     ) {
       setViewStyle(this.viewTag, normalizedStyle);
     }
 
-    this.cssTransitionsManager.update(
-      transitionProperties,
-      normalizedStyle ?? {}
-    );
     this.cssAnimationsManager.update(animationProperties);
+    this.cssPseudoStylesManager.update(
+      pseudoStylesBySelector,
+      transitionProperties
+    );
 
     this.hadTransitionLastUpdate = hasTransition;
   }
@@ -83,5 +99,6 @@ export default class CSSManager implements ICSSManager {
   unmountCleanup(): void {
     this.cssAnimationsManager.unmountCleanup();
     this.cssTransitionsManager.unmountCleanup();
+    this.cssPseudoStylesManager.unmountCleanup();
   }
 }

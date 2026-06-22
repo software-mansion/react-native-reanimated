@@ -46,7 +46,7 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           cache: 'yarn'
-          node-version: 22
+          node-version-file: '.nvmrc'
 
       - name: Build and publish ${{ inputs.package-name }}
         uses: software-mansion/npm-package-publish@264013301cc21350186b190f1f6dd10ae4c8ee04

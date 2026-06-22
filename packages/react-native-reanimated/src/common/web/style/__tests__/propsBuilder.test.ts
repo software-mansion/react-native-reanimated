@@ -229,6 +229,49 @@ describe(createWebPropsBuilder, () => {
     });
   });
 
+  describe('build with includeUnprocessed', () => {
+    test('emits `initial` for undefined props when includeUnprocessed is set', () => {
+      const builder = createWebPropsBuilder({
+        width: 'px',
+        height: 'px',
+      });
+
+      const result = builder.build(
+        { width: 100, height: undefined },
+        { includeUnprocessed: true }
+      );
+
+      expect(result).toBe('width: 100px; height: initial');
+    });
+
+    test('combines the reset with the important flag', () => {
+      const builder = createWebPropsBuilder({
+        width: 'px',
+        height: 'px',
+      });
+
+      const result = builder.build(
+        { width: 100, height: undefined },
+        { includeUnprocessed: true, important: true }
+      );
+
+      expect(result).toBe(
+        'width: 100px !important; height: initial !important'
+      );
+    });
+
+    test('still drops undefined props when includeUnprocessed is not set', () => {
+      const builder = createWebPropsBuilder({
+        width: 'px',
+        height: 'px',
+      });
+
+      const result = builder.build({ width: 100, height: undefined });
+
+      expect(result).toBe('width: 100px');
+    });
+  });
+
   describe('build with mixed config', () => {
     test('handles combination of all config types', () => {
       const shadowBuilder = createWebRuleBuilder(

@@ -1,6 +1,10 @@
 fun reactNativeArchitectures(): List<String> {
     val value = project.findProperty("reactNativeArchitectures") as String?
-    return value?.split(",") ?: listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")
+    return value?.split(",")
+        ?.map { it.trim() }
+        ?.filter { it.isNotEmpty() }
+        ?.ifEmpty { null }
+        ?: listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")
 }
 
 tasks.configureEach {

@@ -148,6 +148,26 @@ button[class*='DocSearch-Button'] {
   vertical-align: middle;
 }
 
+[class*='hireUsContainer'] {
+  display: none;
+}
+
+[class*='headerWithBadges'] {
+  align-items: baseline;
+}
+
+.theme-doc-sidebar-container [class*='_badge_'] {
+  font-size: 11px;
+  padding: 1px 5px;
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+.theme-doc-sidebar-container .menu__link {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
 /* Tabs nested inside details: bump label contrast against the purple details background. */
 details .tabs__item {
   color: var(--swm-details-color) !important;

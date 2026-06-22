@@ -1,3 +1,4 @@
+import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type {
   CSSAnimationProperties,
@@ -14,7 +15,11 @@ const SHARED_SETTINGS: CSSAnimationSettings = {
   animationIterationCount: 'infinite',
 };
 
-const SHARED_EXAMPLES = [
+const SHARED_EXAMPLES: Array<{
+  property: keyof ViewStyle;
+  title: string;
+  description?: Array<string>;
+}> = [
   {
     property: 'padding',
     title: 'Padding',
@@ -51,7 +56,11 @@ const SHARED_EXAMPLES = [
   },
 ];
 
-function renderExample({ animation }: { animation: CSSAnimationProperties }) {
+function renderExample({
+  animation,
+}: {
+  animation: CSSAnimationProperties<ViewStyle>;
+}) {
   return (
     <Animated.View style={[styles.box, animation]}>
       <View style={styles.boxInner} />
@@ -61,7 +70,7 @@ function renderExample({ animation }: { animation: CSSAnimationProperties }) {
 
 export default function Paddings() {
   return (
-    <ExamplesScreen<{ property: string }>
+    <ExamplesScreen<ViewStyle, { property: keyof ViewStyle }>
       tabs={[
         {
           buildAnimation: ({ property }) => ({

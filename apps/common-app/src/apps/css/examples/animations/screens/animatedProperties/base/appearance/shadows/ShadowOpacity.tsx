@@ -1,3 +1,4 @@
+import type { ViewStyle } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -8,7 +9,7 @@ import { colors, radius, sizes } from '@/theme';
 
 export default function ShadowOpacity({ labelTypes }: ExampleScreenProps) {
   return (
-    <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
+    <ExamplesScreen<ViewStyle, { keyframes: CSSAnimationKeyframes<ViewStyle> }>
       CardComponent={VerticalExampleCard}
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',

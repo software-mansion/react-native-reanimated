@@ -103,13 +103,13 @@ function createMapperRegistry() {
         updateMappersOrder();
       }
       if (isAnyMapperDirty) {
+        isAnyMapperDirty = false;
         for (const mapper of sortedMappers) {
           if (mapper.dirty) {
             mapper.dirty = false;
             mapper.worklet();
           }
         }
-        isAnyMapperDirty = false;
       }
     } finally {
       processingMappers = false;
