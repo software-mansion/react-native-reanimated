@@ -174,6 +174,7 @@ export function makeWorkletFactory(
 
   const shouldEmitBytecode =
     !!state.opts.hermesBytecode && isRelease(state) && shouldIncludeInitData;
+
   const bytecode = shouldEmitBytecode
     ? compileWorkletToHbc(funString, workletHash, state)
     : null;
@@ -196,10 +197,7 @@ export function makeWorkletFactory(
       : [objectProperty(identifier('code'), stringLiteral(funString))]
   );
 
-  // When testing with jest I noticed that environment variables are set later
-  // than some functions are evaluated. E.g. this cannot be above this function
-  // because it would always evaluate to true.
-  const shouldInjectLocation = !bytecode && !isRelease(state);
+  const shouldInjectLocation = !isRelease(state);
   if (shouldInjectLocation) {
     let location = state.file.opts.filename;
     if (state.opts.relativeSourceLocation) {

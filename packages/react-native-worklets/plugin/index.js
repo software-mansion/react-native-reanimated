@@ -798,33 +798,6 @@ var require_hermesBytecode = __commonJS({
     exports2.compileWorkletToHbc = compileWorkletToHbc;
     var core_1 = require("@babel/core");
     var child_process_1 = require("child_process");
-    var MAX_BYTECODE_BYTES = 256 * 1024 * 1024;
-    var compilationCache = /* @__PURE__ */ new Map();
-    var warnedMessages = /* @__PURE__ */ new Set();
-    function warnOnce(message) {
-      if (warnedMessages.has(message)) {
-        return;
-      }
-      warnedMessages.add(message);
-      console.warn(`[Worklets] ${message}`);
-    }
-    function resolveHbcBinary(state) {
-      const getHBCBinary = state.opts.getHBCBinary;
-      if (!getHBCBinary) {
-        warnOnce("The `getHBCBinary` plugin option is required to compile worklets to Hermes bytecode. Falling back to shipping worklets as source strings.");
-        return null;
-      }
-      try {
-        const binary = getHBCBinary();
-        if (!binary) {
-          throw new Error("`getHBCBinary` returned an empty path.");
-        }
-        return binary;
-      } catch (error) {
-        warnOnce(`Calling \`getHBCBinary\` failed, falling back to a source string. ${error instanceof Error ? error.message : String(error)}`);
-        return null;
-      }
-    }
     function compileWorkletToHbc(funString, workletHash, state) {
       if (compilationCache.has(workletHash)) {
         return compilationCache.get(workletHash);
@@ -853,6 +826,33 @@ var require_hermesBytecode = __commonJS({
           }
         }
         return warnFallback(error);
+      }
+    }
+    var MAX_BYTECODE_BYTES = 256 * 1024 * 1024;
+    var compilationCache = /* @__PURE__ */ new Map();
+    var warnedMessages = /* @__PURE__ */ new Set();
+    function warnOnce(message) {
+      if (warnedMessages.has(message)) {
+        return;
+      }
+      warnedMessages.add(message);
+      console.warn(`[Worklets] ${message}`);
+    }
+    function resolveHbcBinary(state) {
+      const getHBCBinary = state.opts.getHBCBinary;
+      if (!getHBCBinary) {
+        warnOnce("The `getHBCBinary` plugin option is required to compile worklets to Hermes bytecode. Falling back to shipping worklets as source strings.");
+        return null;
+      }
+      try {
+        const binary = getHBCBinary();
+        if (!binary) {
+          throw new Error("`getHBCBinary` returned an empty path.");
+        }
+        return binary;
+      } catch (error) {
+        warnOnce(`Calling \`getHBCBinary\` failed, falling back to a source string. ${error instanceof Error ? error.message : String(error)}`);
+        return null;
       }
     }
     function runHermesc(hermesc, source) {
@@ -1191,7 +1191,7 @@ var require_workletFactory = __commonJS({
           (0, types_12.arrayExpression)(Array.from(bytecode, (byte) => (0, types_12.numericLiteral)(byte)))
         ]), (0, types_12.identifier)("buffer")))
       ] : [(0, types_12.objectProperty)((0, types_12.identifier)("code"), (0, types_12.stringLiteral)(funString))]);
-      const shouldInjectLocation = !bytecode && !(0, utils_1.isRelease)(state);
+      const shouldInjectLocation = !(0, utils_1.isRelease)(state);
       if (shouldInjectLocation) {
         let location = state.file.opts.filename;
         if (state.opts.relativeSourceLocation) {

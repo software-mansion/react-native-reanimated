@@ -41,12 +41,9 @@ describe('worklets babel plugin - hermesBytecode', () => {
 
   beforeEach(() => {
     mockExecFileSync.mockReset();
-    // hermesc writes the bytecode binary to stdout, which `execFileSync`
-    // returns as a Buffer.
     mockExecFileSync.mockReturnValue(
       Buffer.from([0xc6, 0x1f, 0xbc, 0x03, 0x01, 0x02, 0x03])
     );
-    // `isRelease` checks BABEL_ENV/NODE_ENV/envName for prod/release/staging.
     process.env.BABEL_ENV = 'production';
   });
 
@@ -54,8 +51,6 @@ describe('worklets babel plugin - hermesBytecode', () => {
     process.env.BABEL_ENV = originalBabelEnv;
   });
 
-  // The compiler memoizes by worklet hash, so each test uses a unique body to
-  // avoid sharing cached results across tests.
   const worklet = (marker: number) => html`<script>
     function foo() {
       'worklet';
@@ -73,13 +68,15 @@ describe('worklets babel plugin - hermesBytecode', () => {
     expect(mockExecFileSync).toHaveBeenCalledWith(
       FAKE_HERMESC,
       expect.arrayContaining(['-emit-binary', '-']),
-      expect.objectContaining({ input: expect.stringContaining('function foo') })
+      expect.objectContaining({
+        input: expect.stringContaining('function foo'),
+      })
     );
   });
 
   test('falls back to a source string when compilation fails', () => {
     mockExecFileSync.mockImplementation(() => {
-      throw new Error('hermesc boom');
+      throw new Error();
     });
     const { code } = runPlugin(worklet(2), { hermesBytecode: true });
     assert(code);

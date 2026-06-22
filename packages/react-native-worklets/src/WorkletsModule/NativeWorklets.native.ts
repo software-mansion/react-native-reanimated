@@ -18,7 +18,6 @@ import { WorkletsTurboModule } from '../specs';
 import type { WorkletFunction, WorkletRuntime } from '../types';
 import type {
   IWorkletsModule,
-  UnpackerData,
   WorkletsModuleProxy,
 } from './workletsModuleProxy';
 
@@ -410,23 +409,54 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
 export const WorkletsModule: IWorkletsModule = new NativeWorklets();
 
-function toUnpackerData(unpacker: () => void): UnpackerData {
-  const initData = (unpacker as WorkletFunction).__initData!;
-  return {
-    code: initData.code,
-    bytecode: initData.bytecode,
-    location: initData.location ?? '',
-    sourceMap: initData.sourceMap ?? '',
-  };
-}
-
 function installUnpackers(workletsModuleProxy: WorkletsModuleProxy) {
-  workletsModuleProxy.loadUnpackers(
-    toUnpackerData(installValueUnpacker),
-    toUnpackerData(installSynchronizableUnpacker),
-    toUnpackerData(installCustomSerializableUnpacker),
-    toUnpackerData(installShareableHostUnpacker),
-    toUnpackerData(installShareableGuestUnpacker),
-    toUnpackerData(installRemoteFunctionUnpacker)
-  );
+  const value = (installValueUnpacker as WorkletFunction).__initData!;
+  const synchronizable = (installSynchronizableUnpacker as WorkletFunction)
+    .__initData!;
+  const customSerializable = (
+    installCustomSerializableUnpacker as WorkletFunction
+  ).__initData!;
+  const shareableHost = (installShareableHostUnpacker as WorkletFunction)
+    .__initData!;
+  const shareableGuest = (installShareableGuestUnpacker as WorkletFunction)
+    .__initData!;
+  const remoteFunction = (installRemoteFunctionUnpacker as WorkletFunction)
+    .__initData!;
+
+  if (value.bytecode !== undefined) {
+    if (__DEV__) {
+      throw new Error(
+        '[Worklets] Unpackers were compiled to Hermes bytecode in a development build, which is not supported.'
+      );
+    }
+    workletsModuleProxy.loadUnpackersWithBytecode(
+      value.bytecode,
+      synchronizable.bytecode!,
+      customSerializable.bytecode!,
+      shareableHost.bytecode!,
+      shareableGuest.bytecode!,
+      remoteFunction.bytecode!
+    );
+  } else {
+    workletsModuleProxy.loadUnpackersWithCode(
+      value.code!,
+      value.location ?? '',
+      value.sourceMap ?? '',
+      synchronizable.code!,
+      synchronizable.location ?? '',
+      synchronizable.sourceMap ?? '',
+      customSerializable.code!,
+      customSerializable.location ?? '',
+      customSerializable.sourceMap ?? '',
+      shareableHost.code!,
+      shareableHost.location ?? '',
+      shareableHost.sourceMap ?? '',
+      shareableGuest.code!,
+      shareableGuest.location ?? '',
+      shareableGuest.sourceMap ?? '',
+      remoteFunction.code!,
+      remoteFunction.location ?? '',
+      remoteFunction.sourceMap ?? ''
+    );
+  }
 }

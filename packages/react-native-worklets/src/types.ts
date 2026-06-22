@@ -58,12 +58,7 @@ export type WorkletStackDetails = [
 type WorkletClosure = Record<string, unknown>;
 
 interface WorkletInitData {
-  /** Absent when the worklet is shipped as Hermes bytecode. */
   code?: string;
-  /**
-   * Precompiled Hermes bytecode of the worklet. Only present in release builds
-   * with the `hermesBytecode` plugin option enabled.
-   */
   bytecode?: ArrayBuffer;
   /** Only in dev builds. */
   location?: string;

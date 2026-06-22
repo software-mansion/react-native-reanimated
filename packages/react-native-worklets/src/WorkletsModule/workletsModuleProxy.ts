@@ -7,26 +7,36 @@ import type {
 } from '../memory/types';
 import type { WorkletRuntime } from '../types';
 
-/**
- * Data needed to install a single unpacker. An unpacker ships either as a
- * source string (`code`) or as precompiled Hermes bytecode (`bytecode`).
- */
-export interface UnpackerData {
-  code?: string;
-  bytecode?: ArrayBuffer;
-  location: string;
-  sourceMap: string;
-}
-
 /** Type of `__workletsModuleProxy` injected with JSI. */
 export interface WorkletsModuleProxy {
-  loadUnpackers(
-    valueUnpacker: UnpackerData,
-    synchronizableUnpacker: UnpackerData,
-    customSerializableUnpacker: UnpackerData,
-    shareableHostUnpacker: UnpackerData,
-    shareableGuestUnpacker: UnpackerData,
-    remoteFunctionUnpacker: UnpackerData
+  loadUnpackersWithCode(
+    valueUnpackerCode: string,
+    valueUnpackerLocation: string,
+    valueUnpackerSourceMap: string,
+    synchronizableUnpackerCode: string,
+    synchronizableUnpackerLocation: string,
+    synchronizableUnpackerSourceMap: string,
+    customSerializableUnpackerCode: string,
+    customSerializableUnpackerLocation: string,
+    customSerializableUnpackerSourceMap: string,
+    shareableHostUnpackerCode: string,
+    shareableHostUnpackerLocation: string,
+    shareableHostUnpackerSourceMap: string,
+    shareableGuestUnpackerCode: string,
+    shareableGuestUnpackerLocation: string,
+    shareableGuestUnpackerSourceMap: string,
+    remoteFunctionUnpackerCode: string,
+    remoteFunctionUnpackerLocation: string,
+    remoteFunctionUnpackerSourceMap: string
+  ): void;
+
+  loadUnpackersWithBytecode(
+    valueUnpackerBytecode: ArrayBuffer,
+    synchronizableUnpackerBytecode: ArrayBuffer,
+    customSerializableUnpackerBytecode: ArrayBuffer,
+    shareableHostUnpackerBytecode: ArrayBuffer,
+    shareableGuestUnpackerBytecode: ArrayBuffer,
+    remoteFunctionUnpackerBytecode: ArrayBuffer
   ): void;
 
   createSerializableImport<TValue>(
@@ -225,7 +235,10 @@ export interface WorkletsModuleProxy {
   ): SerializableRef<TValue>;
 }
 
-type InternalMethods = 'loadUnpackers' | 'createSerializableLEGACY';
+type InternalMethods =
+  | 'loadUnpackersWithCode'
+  | 'loadUnpackersWithBytecode'
+  | 'createSerializableLEGACY';
 
 type TurboModulePublic = {
   toggleSlowAnimationsOnUIRuntime(): boolean;

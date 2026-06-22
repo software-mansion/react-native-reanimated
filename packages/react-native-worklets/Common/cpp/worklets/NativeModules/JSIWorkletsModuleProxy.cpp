@@ -30,28 +30,6 @@ namespace worklets {
 
 namespace {
 
-Unpacker parseUnpacker(jsi::Runtime &rt, const jsi::Object &object) {
-  Unpacker unpacker;
-  const auto code = object.getProperty(rt, "code");
-  if (code.isString()) {
-    unpacker.code = code.asString(rt).utf8(rt);
-  }
-  const auto bytecode = object.getProperty(rt, "bytecode");
-  if (bytecode.isObject() && bytecode.asObject(rt).isArrayBuffer(rt)) {
-    const auto buffer = bytecode.asObject(rt).getArrayBuffer(rt);
-    unpacker.bytecode = std::vector<uint8_t>(buffer.data(rt), buffer.data(rt) + buffer.size(rt));
-  }
-  const auto location = object.getProperty(rt, "location");
-  if (location.isString()) {
-    unpacker.location = location.asString(rt).utf8(rt);
-  }
-  const auto sourceMap = object.getProperty(rt, "sourceMap");
-  if (sourceMap.isString()) {
-    unpacker.sourceMap = sourceMap.asString(rt).utf8(rt);
-  }
-  return unpacker;
-}
-
 inline void scheduleOnUI(
     const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
     jsi::Runtime &rt,
@@ -249,18 +227,40 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   auto obj = jsi::Object(rt);
   using jsi_utils::at;
 
+  jsi_utils::addMethod<18>(
+      rt,
+      obj,
+      "loadUnpackersWithCode",
+      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[18]) {
+        const auto str = [&](size_t i) {
+          return args[i].getString(rt).utf8(rt);
+        };
+        unpackerLoader->loadUnpackers(ShareableUnpackers{
+            .valueUnpacker = {.source = str(0), .location = str(1), .sourceMap = str(2)},
+            .synchronizableUnpacker = {.source = str(3), .location = str(4), .sourceMap = str(5)},
+            .customSerializableUnpacker = {.source = str(6), .location = str(7), .sourceMap = str(8)},
+            .shareableHostUnpacker = {.source = str(9), .location = str(10), .sourceMap = str(11)},
+            .shareableGuestUnpacker = {.source = str(12), .location = str(13), .sourceMap = str(14)},
+            .remoteFunctionUnpacker = {.source = str(15), .location = str(16), .sourceMap = str(17)},
+        });
+      });
+
   jsi_utils::addMethod<6>(
       rt,
       obj,
-      "loadUnpackers",
+      "loadUnpackersWithBytecode",
       [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[6]) {
+        const auto bytecode = [&](size_t i) {
+          const auto buffer = args[i].getObject(rt).getArrayBuffer(rt);
+          return std::vector<uint8_t>(buffer.data(rt), buffer.data(rt) + buffer.size(rt));
+        };
         unpackerLoader->loadUnpackers(ShareableUnpackers{
-            .valueUnpacker = parseUnpacker(rt, at<0>(args).asObject(rt)),
-            .synchronizableUnpacker = parseUnpacker(rt, at<1>(args).asObject(rt)),
-            .customSerializableUnpacker = parseUnpacker(rt, at<2>(args).asObject(rt)),
-            .shareableHostUnpacker = parseUnpacker(rt, at<3>(args).asObject(rt)),
-            .shareableGuestUnpacker = parseUnpacker(rt, at<4>(args).asObject(rt)),
-            .remoteFunctionUnpacker = parseUnpacker(rt, at<5>(args).asObject(rt)),
+            .valueUnpacker = {.source = bytecode(0)},
+            .synchronizableUnpacker = {.source = bytecode(1)},
+            .customSerializableUnpacker = {.source = bytecode(2)},
+            .shareableHostUnpacker = {.source = bytecode(3)},
+            .shareableGuestUnpacker = {.source = bytecode(4)},
+            .remoteFunctionUnpacker = {.source = bytecode(5)},
         });
       });
 
