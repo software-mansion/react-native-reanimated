@@ -3,19 +3,7 @@ import type { ShadowNodeWrapper } from '../../../../commonTypes';
 import { setViewStyle } from '../../proxy';
 import CSSManager from '../CSSManager';
 
-jest.mock('../../proxy.ts', () => ({
-  setViewStyle: jest.fn(),
-  applyCSSAnimations: jest.fn(),
-  unregisterCSSAnimations: jest.fn(),
-  registerCSSKeyframes: jest.fn(),
-  unregisterCSSKeyframes: jest.fn(),
-  runCSSTransition: jest.fn(),
-  unregisterCSSTransition: jest.fn(),
-  registerPseudoStyles: jest.fn(),
-  unregisterPseudoStyles: jest.fn(),
-  markNodeAsRemovable: jest.fn(),
-  unmarkNodeAsRemovable: jest.fn(),
-}));
+jest.mock('../../proxy');
 
 const viewTag = 1;
 const newManager = () =>
