@@ -276,11 +276,10 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
   // one after the other, so we need to keep count of how many
   // were actually triggered, so that we don't cleanup necessary
   // structures too early
-  if (layoutAnimation.count > 1) {
-    layoutAnimation.count--;
+  if (--layoutAnimation.count > 0) {
     return {};
   }
-  finishedAnimationTags_.push_back(tag);
+  maybeSettledAnimationTags_.insert(tag);
   auto surfaceId = layoutAnimation.finalView.surfaceId;
 
   if (sharedTransitionManager_->tagToName_.contains(tag)) {
@@ -397,7 +396,7 @@ void LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceI
 
     const auto layoutAnimationIt = layoutAnimations_.find(tag);
 
-    if (layoutAnimationIt == layoutAnimations_.end()) {
+    if (layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isSettled()) {
       continue;
     }
 
@@ -532,10 +531,22 @@ void LayoutAnimationsProxy_Experimental::updateOngoingAnimationTarget(const int 
 }
 
 void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) const {
-  if (!layoutAnimations_.contains(tag)) {
+#ifdef ANDROID
+  // also invalidate animation starts that are scheduled but haven't run yet,
+  // so they don't re-create the animation after this cancellation
+  if (const auto it = pendingStarts_.find(tag); it != pendingStarts_.end()) {
+    it->second.handle++;
+  }
+#endif
+  const auto layoutAnimationIt = layoutAnimations_.find(tag);
+  if (layoutAnimationIt == layoutAnimations_.end()) {
     return;
   }
-  layoutAnimations_.erase(tag);
+  if (layoutAnimationIt->second.isSettled()) {
+    // Already settled - cleanupAnimations will erase it together with its updateMap entry.
+    return;
+  }
+  layoutAnimations_.erase(layoutAnimationIt);
   scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
@@ -625,12 +636,17 @@ void LayoutAnimationsProxy_Experimental::cleanupAnimations(
 #ifdef ANDROID
   restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId);
 #endif // ANDROID
-  for (const auto tag : finishedAnimationTags_) {
-    auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
-    layoutAnimations_.erase(tag);
+  auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+  for (const auto tag : maybeSettledAnimationTags_) {
+    // Skip tags re-animated since they settled (count back above 0).
+    const auto layoutAnimationIt = layoutAnimations_.find(tag);
+    if (layoutAnimationIt == layoutAnimations_.end() || !layoutAnimationIt->second.isSettled()) {
+      continue;
+    }
+    layoutAnimations_.erase(layoutAnimationIt);
     updateMap.erase(tag);
   }
-  finishedAnimationTags_.clear();
+  maybeSettledAnimationTags_.clear();
 }
 
 // MARK: Start Animation
@@ -676,9 +692,24 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::share
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
   const auto parentTag = parent->current.tag;
+#ifdef ANDROID
+  const auto handle = pendingStarts_[newChildShadowView.tag].handle;
+  pendingStarts_[newChildShadowView.tag].count++;
+#endif
 
   scheduleOnUI(
-      uiScheduler_, [weakThis = weak_from_this(), finalView, currentView, newChildShadowView, parentTag, opacity]() {
+      uiScheduler_,
+      [weakThis = weak_from_this(),
+       finalView,
+       currentView,
+       newChildShadowView,
+       parentTag,
+       opacity
+#ifdef ANDROID
+       ,
+       handle
+#endif
+  ]() {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
@@ -688,6 +719,12 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::share
         const auto tag = newChildShadowView.tag;
         {
           auto lock = std::unique_lock<std::recursive_mutex>(strongThis->mutex);
+#ifdef ANDROID
+          if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
+            // the view was removed before this start could run
+            return;
+          }
+#endif
           strongThis->layoutAnimations_[tag] = {
               .finalView = newChildShadowView,
               .currentView = newChildShadowView,
@@ -721,51 +758,23 @@ void LayoutAnimationsProxy_Experimental::startExitingAnimation(const std::shared
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
   const auto parentTag = parent->current.tag;
-
-  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag, parentTag, oldChildShadowView, surfaceId]() {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-
-    auto oldView = oldChildShadowView;
-    Rect window{};
-    {
-      auto &mutex = strongThis->mutex;
-      auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-      oldView = strongThis->maybeCreateLayoutAnimation(oldView, oldView, parentTag);
-      window = strongThis->surfaceManager.getWindow(surfaceId);
-    }
-
-    const Snapshot values(oldView, window);
-
-    auto &uiRuntime = strongThis->uiRuntime_;
-    const jsi::Object yogaValues(uiRuntime);
-    yogaValues.setProperty(uiRuntime, "currentOriginX", values.x);
-    yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", values.x);
-    yogaValues.setProperty(uiRuntime, "currentOriginY", values.y);
-    yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", values.y);
-    yogaValues.setProperty(uiRuntime, "currentWidth", values.width);
-    yogaValues.setProperty(uiRuntime, "currentHeight", values.height);
-    yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
-    yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
-    strongThis->layoutAnimationsManager_->startLayoutAnimation(
-        uiRuntime, tag, LayoutAnimationType::EXITING, yogaValues);
-    strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
-  });
-}
-
-void LayoutAnimationsProxy_Experimental::startLayoutAnimation(const std::shared_ptr<LightNode> &node) const {
-  auto oldChildShadowView = node->previous;
-  auto newChildShadowView = node->current;
-  auto surfaceId = oldChildShadowView.surfaceId;
-  const auto tag = oldChildShadowView.tag;
-  const auto &parent = node->parent.lock();
-  react_native_assert(parent && "Parent node is nullptr");
-  const auto parentTag = parent->current.tag;
+#ifdef ANDROID
+  const auto handle = pendingStarts_[tag].handle;
+  pendingStarts_[tag].count++;
+#endif
 
   scheduleOnUI(
-      uiScheduler_, [weakThis = weak_from_this(), surfaceId, oldChildShadowView, newChildShadowView, parentTag, tag]() {
+      uiScheduler_,
+      [weakThis = weak_from_this(),
+       tag,
+       parentTag,
+       oldChildShadowView,
+       surfaceId
+#ifdef ANDROID
+       ,
+       handle
+#endif
+  ]() {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
@@ -776,6 +785,80 @@ void LayoutAnimationsProxy_Experimental::startLayoutAnimation(const std::shared_
         {
           auto &mutex = strongThis->mutex;
           auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+#ifdef ANDROID
+          if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
+            // the view was removed (e.g. its subtree was force-ended by a screen
+            // pop) before this start could run — its Remove+Delete are already on
+            // their way to the mounting layer, so starting the animation now
+            // would emit updates for a view that's about to be deleted
+            strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
+            return;
+          }
+#endif
+          oldView = strongThis->maybeCreateLayoutAnimation(oldView, oldView, parentTag);
+          window = strongThis->surfaceManager.getWindow(surfaceId);
+        }
+
+        const Snapshot values(oldView, window);
+
+        auto &uiRuntime = strongThis->uiRuntime_;
+        const jsi::Object yogaValues(uiRuntime);
+        yogaValues.setProperty(uiRuntime, "currentOriginX", values.x);
+        yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", values.x);
+        yogaValues.setProperty(uiRuntime, "currentOriginY", values.y);
+        yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", values.y);
+        yogaValues.setProperty(uiRuntime, "currentWidth", values.width);
+        yogaValues.setProperty(uiRuntime, "currentHeight", values.height);
+        yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
+        yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
+        strongThis->layoutAnimationsManager_->startLayoutAnimation(
+            uiRuntime, tag, LayoutAnimationType::EXITING, yogaValues);
+        strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
+      });
+}
+
+void LayoutAnimationsProxy_Experimental::startLayoutAnimation(const std::shared_ptr<LightNode> &node) const {
+  auto oldChildShadowView = node->previous;
+  auto newChildShadowView = node->current;
+  auto surfaceId = oldChildShadowView.surfaceId;
+  const auto tag = oldChildShadowView.tag;
+  const auto &parent = node->parent.lock();
+  react_native_assert(parent && "Parent node is nullptr");
+  const auto parentTag = parent->current.tag;
+#ifdef ANDROID
+  const auto handle = pendingStarts_[tag].handle;
+  pendingStarts_[tag].count++;
+#endif
+
+  scheduleOnUI(
+      uiScheduler_,
+      [weakThis = weak_from_this(),
+       surfaceId,
+       oldChildShadowView,
+       newChildShadowView,
+       parentTag,
+       tag
+#ifdef ANDROID
+       ,
+       handle
+#endif
+  ]() {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+
+        auto oldView = oldChildShadowView;
+        Rect window{};
+        {
+          auto &mutex = strongThis->mutex;
+          auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+#ifdef ANDROID
+          if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
+            // the view was removed before this start could run
+            return;
+          }
+#endif
           oldView = strongThis->maybeCreateLayoutAnimation(oldView, newChildShadowView, parentTag);
           window = strongThis->surfaceManager.getWindow(surfaceId);
         }
