@@ -151,20 +151,4 @@ cd ios && pod install && cd ..
 
 For building apps that target web using [react-native-web](https://www.npmjs.com/package/react-native-web) we highly recommend to use [Expo](https://expo.dev/).
 
-No extra Babel plugins are required for the web. Just make sure the `react-native-worklets/plugin` you already added is listed in your `babel.config.js`.
-
-```js {7}
-  module.exports = {
-      presets: [
-        ... // don't add it here :)
-      ],
-      plugins: [
-          ...
-          'react-native-worklets/plugin',
-      ],
-  };
-```
-
-Make sure to list `react-native-worklets/plugin` last.
-
 More advanced use cases such as running Reanimated with `webpack` or with `Next.js` are explained in a separate [Web Support](/docs/guides/web-support) guide.
