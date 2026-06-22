@@ -17,6 +17,13 @@ class PseudoSelectorManager(
 
     private val activeDeepestViews = LinkedHashSet<View>()
 
+    private val hoverCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
+
+    private val hoveredViews = LinkedHashSet<View>()
+
+    // Reused by updateHoverStates to avoid allocating on every hover event (UI thread only).
+    private val hoverLocationBuffer = IntArray(2)
+
     fun attach(
         tag: Int,
         selector: Int,
@@ -84,18 +91,28 @@ class PseudoSelectorManager(
         key: String,
         callback: PseudoSelectorCallback,
     ) {
+        // Android fires ACTION_HOVER_EXIT on an ancestor when the pointer moves onto a
+        // hoverable descendant, but CSS :hover must stay active there. So on enter/exit
+        // (not per-frame MOVE) recompute every registered view from the pointer position.
+        hoverCallbacks[view] = callback
         val listener =
             View.OnHoverListener { _, event ->
-                val action = event.actionMasked
-                if (action == MotionEvent.ACTION_HOVER_ENTER) {
-                    callback.onSelectorStateChanged(true)
-                } else if (action == MotionEvent.ACTION_HOVER_EXIT) {
-                    callback.onSelectorStateChanged(false)
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_HOVER_ENTER,
+                    MotionEvent.ACTION_HOVER_EXIT,
+                    -> updateHoverStates(event.rawX, event.rawY)
                 }
                 false
             }
         view.setOnHoverListener(listener)
-        detachActions[key] = Runnable { view.setOnHoverListener(null) }
+        detachActions[key] =
+            Runnable {
+                hoverCallbacks.remove(view)
+                if (hoveredViews.remove(view)) {
+                    callback.onSelectorStateChanged(false)
+                }
+                view.setOnHoverListener(null)
+            }
     }
 
     private fun attachActive(
@@ -197,6 +214,32 @@ class PseudoSelectorManager(
                 activeCallbacks[parent]?.onSelectorStateChanged(isActive)
             }
             parent = parent.parent
+        }
+    }
+
+    /**
+     * Recompute every registered view's _:hover_ state from the pointer position, firing only on
+     * change. A view is hovered while the point is in its on-screen bounds - true for an ancestor
+     * while the pointer is over a descendant. Uses live (mid-animation) `getLocationOnScreen` bounds.
+     */
+    private fun updateHoverStates(
+        rawX: Float,
+        rawY: Float,
+    ) {
+        val loc = hoverLocationBuffer
+        for ((view, callback) in hoverCallbacks) {
+            view.getLocationOnScreen(loc)
+            val contains =
+                rawX >= loc[0] && rawX <= loc[0] + view.width &&
+                    rawY >= loc[1] && rawY <= loc[1] + view.height
+            val wasHovered = hoveredViews.contains(view)
+            if (contains && !wasHovered) {
+                hoveredViews.add(view)
+                callback.onSelectorStateChanged(true)
+            } else if (!contains && wasHovered) {
+                hoveredViews.remove(view)
+                callback.onSelectorStateChanged(false)
+            }
         }
     }
 
