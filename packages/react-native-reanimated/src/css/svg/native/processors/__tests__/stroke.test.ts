@@ -3,9 +3,9 @@ import { ERROR_MESSAGES, processStrokeDashArray } from '../stroke';
 
 describe(processStrokeDashArray, () => {
   describe('single value', () => {
-    test('converts length value to a single-element array', () => {
-      expect(processStrokeDashArray(10)).toEqual([10]);
-      expect(processStrokeDashArray('10%')).toEqual(['10%']);
+    test('duplicates a length value to an even-length array', () => {
+      expect(processStrokeDashArray(10)).toEqual([10, 10]);
+      expect(processStrokeDashArray('10%')).toEqual(['10%', '10%']);
     });
 
     test('returns "none" for "none" value', () => {
@@ -28,9 +28,9 @@ describe(processStrokeDashArray, () => {
       );
     });
 
-    describe('duplicates the array if it has an odd number of elements (only if there are more than 2 elements)', () => {
+    describe('duplicates the array if it has an odd number of elements', () => {
       test.each([
-        [[10], [10]],
+        [[10], [10, 10]],
         [
           [10, 20],
           [10, 20],
