@@ -193,6 +193,15 @@
 
 - (void)recomputeAtScreenPoint:(CGPoint)onScreen
 {
+  // Hit-test the topmost view: :hover applies to it and its ancestors only (matching CSS), so views
+  // that merely overlap the hit branch no longer all activate. hitTest already honors z-order,
+  // userInteractionEnabled, hidden and alpha, and returns nil over blank space (clears all :hover).
+  UIView *hit = nil;
+  UIWindow *window = _observedWindow;
+  if (window != nil) {
+    CGPoint inWindow = [window convertPoint:onScreen fromCoordinateSpace:window.screen.coordinateSpace];
+    hit = [window hitTest:inWindow withEvent:nil];
+  }
   NSMutableArray<REATouchHoverEntry *> *dead = nil;
   for (REATouchHoverEntry *entry in _entries) {
     UIView *view = entry->view;
@@ -205,9 +214,11 @@
       continue;
     }
     BOOL wantHover = NO;
-    if (view.window != nil && !view.hidden && view.alpha > 0.01) {
-      CGPoint local = [view convertPoint:onScreen fromCoordinateSpace:view.window.screen.coordinateSpace];
-      wantHover = [view pointInside:local withEvent:nil];
+    for (UIView *current = hit; current != nil; current = current.superview) {
+      if (current == view) {
+        wantHover = YES;
+        break;
+      }
     }
     [self setEntry:entry hovered:wantHover];
   }

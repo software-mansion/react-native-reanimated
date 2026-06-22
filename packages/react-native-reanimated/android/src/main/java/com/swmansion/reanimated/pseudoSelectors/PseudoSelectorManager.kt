@@ -137,7 +137,7 @@ class PseudoSelectorManager(
                             it.onSelectorStateChanged(true)
                         }
                     }
-                    hover.recompute(event.rawX, event.rawY)
+                    hover.recompute(view, event.rawX, event.rawY)
                 }
                 MotionEvent.ACTION_UP -> {
                     fireActiveCallbacksUpTree(view, false)
