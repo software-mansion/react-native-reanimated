@@ -19,7 +19,7 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
   jsi::Value getUpdatesOlderThanTimestamp(jsi::Runtime &rt, double timestamp, double cleanupTimestamp);
 
   /// Drops every entry. Called by the JS-side GC once the last animated view
-  /// unmounts, when every remaining entry is an orphan no other sweep collects.
+  /// unmount.
   void removeAll();
 
  private:
