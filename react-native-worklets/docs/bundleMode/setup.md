@@ -1,20 +1,8 @@
 # Setup
 
-## Package installation
-
-Install `react-native-worklets` package with the `bundle-mode-preview` tag:
-
-```bash
-npm i react-native-worklets@bundle-mode-preview
-```
-
-```bash
-yarn add react-native-worklets@bundle-mode-preview
-```
+To use `react-native-worklets`'s Bundle Mode feature, you need to make the following changes in your repository:
 
 ## Configure Babel
-
-To use `react-native-worklets`'s Bundle Mode feature, you need to make the following changes in your repository:
 
 1. **Modify your Babel configuration**. [Worklets Babel Plugin](/docs/worklets-babel-plugin/about) needs to know that it has to prepare your code for the Bundle Mode. This is also the source of truth for your app to know if the Bundle Mode is enabled. In your `babel.config.js` file, add the following:
 
