@@ -32,8 +32,9 @@ class TouchHoverCoordinator {
     ) {
         view.setOnHoverListener { _, event ->
             when (event.actionMasked) {
-                MotionEvent.ACTION_HOVER_ENTER -> callback.onSelectorStateChanged(true)
-                MotionEvent.ACTION_HOVER_EXIT -> callback.onSelectorStateChanged(false)
+                MotionEvent.ACTION_HOVER_ENTER,
+                MotionEvent.ACTION_HOVER_EXIT,
+                -> recompute(event.rawX, event.rawY)
             }
             false
         }
@@ -43,8 +44,10 @@ class TouchHoverCoordinator {
 
     fun unregister(view: View) {
         view.setOnHoverListener(null)
-        hoverCallbacks.remove(view)
-        hoveredViews.remove(view)
+        val callback = hoverCallbacks.remove(view)
+        if (hoveredViews.remove(view)) {
+            callback?.onSelectorStateChanged(false)
+        }
         if (hoverCallbacks.isEmpty()) {
             removeWindowObserver()
         }

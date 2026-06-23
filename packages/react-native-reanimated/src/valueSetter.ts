@@ -10,6 +10,7 @@ export function valueSetter<Value>(
   const previousAnimation = mutable._animation;
   if (previousAnimation) {
     previousAnimation.cancelled = true;
+    previousAnimation.callback?.(false);
     mutable._animation = null;
   }
   if (
@@ -48,15 +49,11 @@ export function valueSetter<Value>(
 
     const step = (timestamp: number) => {
       if (animation.cancelled) {
-        animation.callback?.(false /* finished */);
         return;
       }
       const finished = animation.onFrame(animation, timestamp);
       animation.finished = true;
       animation.timestamp = timestamp;
-      // TODO TYPESCRIPT
-      // For now I'll assume that `animation.current` is always defined
-      // but actually need to dive into animations to understand it
       mutable._value = animation.current!;
       if (finished) {
         animation.callback?.(true /* finished */);
