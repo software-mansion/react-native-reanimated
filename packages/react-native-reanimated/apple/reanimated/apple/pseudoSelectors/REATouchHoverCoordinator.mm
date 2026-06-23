@@ -191,6 +191,20 @@
   }
 }
 
+// Visible only if the whole superview chain is, mirroring Android's View.isShown().
+- (BOOL)isViewVisibleOnScreen:(UIView *)view
+{
+  if (view.window == nil) {
+    return NO;
+  }
+  for (UIView *current = view; current != nil; current = current.superview) {
+    if (current.hidden || current.alpha <= 0.01) {
+      return NO;
+    }
+  }
+  return YES;
+}
+
 - (void)recomputeAtScreenPoint:(CGPoint)onScreen
 {
   NSMutableArray<REATouchHoverEntry *> *dead = nil;
@@ -205,7 +219,7 @@
       continue;
     }
     BOOL wantHover = NO;
-    if (view.window != nil && !view.hidden && view.alpha > 0.01) {
+    if ([self isViewVisibleOnScreen:view]) {
       CGPoint local = [view convertPoint:onScreen fromCoordinateSpace:view.window.screen.coordinateSpace];
       wantHover = [view pointInside:local withEvent:nil];
     }
