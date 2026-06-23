@@ -9,6 +9,18 @@
 
 namespace worklets {
 
+namespace {
+void evaluateModuleUpdate(
+    const std::shared_ptr<WorkletRuntime> &workletRuntime,
+    const std::string &code,
+    const std::string &sourceUrl) {
+  workletRuntime->runSync([&code, &sourceUrl](jsi::Runtime &rt) -> void {
+    const auto buffer = std::make_shared<jsi::StringBuffer>(code);
+    rt.evaluateJavaScript(buffer, sourceUrl);
+  });
+}
+} // namespace
+
 std::shared_ptr<WorkletRuntime> RuntimeManager::getRuntime(uint64_t runtimeId) {
   std::shared_lock lock(weakRuntimesMutex_);
   if (weakRuntimes_.contains(runtimeId)) {
@@ -54,9 +66,29 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
     workletRuntime->runSync(initializer);
   }
 
+#ifndef NDEBUG
+  withRegistrationPaused([&] { loadModuleUpdates(workletRuntime); });
+#endif // NDEBUG
+
   registerRuntime(runtimeId, workletRuntime);
 
   return workletRuntime;
+}
+
+void RuntimeManager::propagateModuleUpdate(const std::string &code, const std::string &sourceUrl) {
+  std::unique_lock registrationLock(registrationMutex_);
+
+  moduleUpdates_.push_back(ModuleUpdate{.sourceUrl = sourceUrl, .code = code});
+
+  for (const auto &runtime : getAllRuntimes()) {
+    evaluateModuleUpdate(runtime, code, sourceUrl);
+  }
+}
+
+void RuntimeManager::loadModuleUpdates(const std::shared_ptr<WorkletRuntime> &workletRuntime) {
+  for (const auto &update : moduleUpdates_) {
+    evaluateModuleUpdate(workletRuntime, update.code, update.sourceUrl);
+  }
 }
 
 std::shared_ptr<WorkletRuntime> RuntimeManager::createUninitializedUIRuntime(
