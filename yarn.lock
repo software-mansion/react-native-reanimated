@@ -15653,10 +15653,10 @@ __metadata:
     react-dom: "npm:19.1.1"
     react-native: "npm:0.83.0"
     react-native-gesture-handler: "npm:2.28.0"
-    react-native-reanimated: "npm:4.5.0-nightly-20260614-41c1d1a75"
+    react-native-reanimated: "npm:4.5.0"
     react-native-svg: "npm:15.15.4"
     react-native-web: "npm:0.21.2"
-    react-native-worklets: "npm:0.10.0-nightly-20260614-41c1d1a75"
+    react-native-worklets: "npm:0.10.0"
     source-map: "npm:0.7.4"
     source-map-loader: "npm:4.0.1"
     typescript: "npm:5.9.3"
@@ -15718,10 +15718,10 @@ __metadata:
     react-dom: "npm:19.1.1"
     react-native: "npm:0.83.0"
     react-native-gesture-handler: "npm:2.28.0"
-    react-native-reanimated: "npm:4.5.0-nightly-20260614-41c1d1a75"
+    react-native-reanimated: "npm:4.5.0"
     react-native-svg: "npm:15.15.4"
     react-native-web: "npm:0.21.2"
-    react-native-worklets: "npm:0.10.0-nightly-20260614-41c1d1a75"
+    react-native-worklets: "npm:0.10.0"
     source-map: "npm:0.7.4"
     source-map-loader: "npm:4.0.1"
     typescript: "npm:5.9.3"
@@ -28189,17 +28189,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"react-native-reanimated@npm:4.5.0-nightly-20260614-41c1d1a75":
-  version: 4.5.0-nightly-20260614-41c1d1a75
-  resolution: "react-native-reanimated@npm:4.5.0-nightly-20260614-41c1d1a75"
+"react-native-reanimated@npm:4.5.0":
+  version: 4.5.0
+  resolution: "react-native-reanimated@npm:4.5.0"
   dependencies:
     react-native-is-edge-to-edge: "npm:^1.3.1"
     semver: "npm:^7.7.3"
   peerDependencies:
     react: "*"
     react-native: 0.83 - 0.86
-    react-native-worklets: "*"
-  checksum: 10/fc7dd1a604ce5b97f89e997862ee8302e41f01c61d11da42cab54380b4c834fa8eb6e45209f777ded16cf180cc18dd3a7d3ce9bf43c377f5881a61383c6fe36c
+    react-native-worklets: 0.10.x
+  checksum: 10/eb1c77c19aa514e7573d93528ece858b748a5984a66ce819eda06459080734aa7c5c79bcf045040bb8afecc19e708874fb6404b9269bfd1076cdd088750a2cff
   languageName: node
   linkType: hard
 
@@ -28325,9 +28325,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-worklets@npm:0.10.0-nightly-20260614-41c1d1a75":
-  version: 0.10.0-nightly-20260614-41c1d1a75
-  resolution: "react-native-worklets@npm:0.10.0-nightly-20260614-41c1d1a75"
+"react-native-worklets@npm:0.10.0":
+  version: 0.10.0
+  resolution: "react-native-worklets@npm:0.10.0"
   dependencies:
     "@babel/plugin-transform-arrow-functions": "npm:^7.27.1"
     "@babel/plugin-transform-class-properties": "npm:^7.28.6"
@@ -28346,7 +28346,7 @@ __metadata:
     "@react-native/metro-config": "*"
     react: "*"
     react-native: 0.83 - 0.86
-  checksum: 10/3a13f5e19d0b0b1ba703141739a4cd96296a0e7dad3b804f8b225ae1ba2097fda7479dc27bff35b2d77ba9d8b451f9f041a662c65ace7c4cceaa4264eea57e72
+  checksum: 10/b273e618bc73344adb9048619363c7366ebb02784c7fa350b535e49cda8cc63f200424d7e4ed82506d1e9628ffa0354d29de5d4b3357f0574ea7ab4e7cf17f23
   languageName: node
   linkType: hard
 
