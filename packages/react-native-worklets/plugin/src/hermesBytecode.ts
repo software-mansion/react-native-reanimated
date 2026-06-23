@@ -55,7 +55,7 @@ function warnOnce(message: string) {
 }
 
 function resolveHbcBinary(state: WorkletsPluginPass): string | null {
-  const getHBCBinary = state.opts.getHBCBinary;
+  const { getHBCBinary } = state.opts;
   if (!getHBCBinary) {
     warnOnce(
       'The `getHBCBinary` plugin option is required to compile worklets to Hermes bytecode. Falling back to shipping worklets as source strings.'

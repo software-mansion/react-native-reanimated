@@ -1,7 +1,7 @@
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
 const workletsPluginOptions = {
   strictGlobal: true,
-  bundleMode: false,
+  bundleMode: true,
 };
 
 /** @type {import('@babel/core').TransformOptions} */

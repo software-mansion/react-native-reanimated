@@ -72,10 +72,23 @@ export interface PluginOptions {
    */
   globals?: string[];
 
-  /** // TODO: */
+  /**
+   * _EXPERIMENTAL_
+   *
+   * This options enabled compilation of worklets to Hermes bytecode. The
+   * compilation is used only for production builds.
+   *
+   * This setting applies only to Legacy Eval Mode and has no effect on Bundle
+   * Mode.
+   */
   hermesBytecode?: boolean;
 
-  /** // TODO: */
+  /**
+   * _EXPERIMENTAL_
+   *
+   * This option is required to specify the path to the Hermes bytecode compiler
+   * binary. It is used only when `hermesBytecode` is enabled.
+   */
   getHBCBinary?: () => string;
 
   /** Temporary internal option to create ShareableUnpacker. */

@@ -18,9 +18,7 @@ function getHBCBinary() {
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
 const workletsPluginOptions = {
   strictGlobal: true,
-  bundleMode: false,
-  hermesBytecode: true,
-  getHBCBinary,
+  bundleMode: true,
 };
 
 /** @type {import('@babel/core').TransformOptions} */

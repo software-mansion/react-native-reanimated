@@ -31,8 +31,7 @@ WorkletHermesRuntime::WorkletHermesRuntime(std::unique_ptr<facebook::hermes::Her
         return wrappedRuntime->evaluateJavaScriptWithSourceMap(code, sourceMap, sourceURL);
       });
   runtime_->global().setProperty(*runtime_, "evalWithSourceMap", evalWithSourceMap);
-#endif // NDEBUG
-
+#else
   auto evalBytecode = [](facebook::jsi::Runtime &rt,
                          const facebook::jsi::Value &,
                          const facebook::jsi::Value *args,
@@ -46,6 +45,7 @@ WorkletHermesRuntime::WorkletHermesRuntime(std::unique_ptr<facebook::hermes::Her
       "evalBytecode",
       facebook::jsi::Function::createFromHostFunction(
           *runtime_, facebook::jsi::PropNameID::forAscii(*runtime_, "evalBytecode"), 1, evalBytecode));
+#endif // NDEBUG
 }
 
 WorkletHermesRuntime::~WorkletHermesRuntime() = default;

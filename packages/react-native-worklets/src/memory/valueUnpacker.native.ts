@@ -25,12 +25,7 @@ export function installValueUnpacker() {
       if (workletFun === undefined) {
         const initData = objectToUnpack.__initData;
         if (initData!.bytecode !== undefined) {
-          if (!globalThis.evalBytecode) {
-            throw new Error(
-              '[Worklets] No `evalBytecode` function found on the global object.'
-            );
-          }
-          workletFun = globalThis.evalBytecode(initData!.bytecode);
+          workletFun = globalThis.evalBytecode!(initData!.bytecode);
         } else if (globalThis.evalWithSourceMap) {
           // if the runtime (hermes only for now) supports loading source maps
           // we want to use the proper filename for the location as it guarantees

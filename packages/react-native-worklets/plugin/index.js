@@ -839,7 +839,7 @@ var require_hermesBytecode = __commonJS({
       console.warn(`[Worklets] ${message}`);
     }
     function resolveHbcBinary(state) {
-      const getHBCBinary = state.opts.getHBCBinary;
+      const { getHBCBinary } = state.opts;
       if (!getHBCBinary) {
         warnOnce("The `getHBCBinary` plugin option is required to compile worklets to Hermes bytecode. Falling back to shipping worklets as source strings.");
         return null;

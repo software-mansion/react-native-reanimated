@@ -235,13 +235,13 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         const auto str = [&](size_t i) {
           return args[i].getString(rt).utf8(rt);
         };
-        unpackerLoader->loadUnpackers(ShareableUnpackers{
-            .valueUnpacker = {.source = str(0), .location = str(1), .sourceMap = str(2)},
-            .synchronizableUnpacker = {.source = str(3), .location = str(4), .sourceMap = str(5)},
-            .customSerializableUnpacker = {.source = str(6), .location = str(7), .sourceMap = str(8)},
-            .shareableHostUnpacker = {.source = str(9), .location = str(10), .sourceMap = str(11)},
-            .shareableGuestUnpacker = {.source = str(12), .location = str(13), .sourceMap = str(14)},
-            .remoteFunctionUnpacker = {.source = str(15), .location = str(16), .sourceMap = str(17)},
+        unpackerLoader->loadCodeUnpackers({
+            CodeUnpacker{.code = str(0), .location = str(1), .sourceMap = str(2)},
+            CodeUnpacker{.code = str(3), .location = str(4), .sourceMap = str(5)},
+            CodeUnpacker{.code = str(6), .location = str(7), .sourceMap = str(8)},
+            CodeUnpacker{.code = str(9), .location = str(10), .sourceMap = str(11)},
+            CodeUnpacker{.code = str(12), .location = str(13), .sourceMap = str(14)},
+            CodeUnpacker{.code = str(15), .location = str(16), .sourceMap = str(17)},
         });
       });
 
@@ -254,13 +254,13 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
           const auto buffer = args[i].getObject(rt).getArrayBuffer(rt);
           return std::vector<uint8_t>(buffer.data(rt), buffer.data(rt) + buffer.size(rt));
         };
-        unpackerLoader->loadUnpackers(ShareableUnpackers{
-            .valueUnpacker = {.source = bytecode(0)},
-            .synchronizableUnpacker = {.source = bytecode(1)},
-            .customSerializableUnpacker = {.source = bytecode(2)},
-            .shareableHostUnpacker = {.source = bytecode(3)},
-            .shareableGuestUnpacker = {.source = bytecode(4)},
-            .remoteFunctionUnpacker = {.source = bytecode(5)},
+        unpackerLoader->loadBytecodeUnpackers({
+            BytecodeUnpacker{.bytecode = bytecode(0)},
+            BytecodeUnpacker{.bytecode = bytecode(1)},
+            BytecodeUnpacker{.bytecode = bytecode(2)},
+            BytecodeUnpacker{.bytecode = bytecode(3)},
+            BytecodeUnpacker{.bytecode = bytecode(4)},
+            BytecodeUnpacker{.bytecode = bytecode(5)},
         });
       });
 

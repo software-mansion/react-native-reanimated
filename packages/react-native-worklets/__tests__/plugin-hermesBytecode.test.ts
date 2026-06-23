@@ -38,6 +38,8 @@ function runPlugin(
 
 describe('worklets babel plugin - hermesBytecode', () => {
   const originalBabelEnv = process.env.BABEL_ENV;
+  let warnSpy: jest.SpyInstance;
+  let errorSpy: jest.SpyInstance;
 
   beforeEach(() => {
     mockExecFileSync.mockReset();
@@ -45,6 +47,13 @@ describe('worklets babel plugin - hermesBytecode', () => {
       Buffer.from([0xc6, 0x1f, 0xbc, 0x03, 0x01, 0x02, 0x03])
     );
     process.env.BABEL_ENV = 'production';
+    warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    warnSpy.mockRestore();
+    errorSpy.mockRestore();
   });
 
   afterAll(() => {
@@ -72,6 +81,8 @@ describe('worklets babel plugin - hermesBytecode', () => {
         input: expect.stringContaining('function foo'),
       })
     );
+    expect(warnSpy).not.toHaveBeenCalled();
+    expect(errorSpy).not.toHaveBeenCalled();
   });
 
   test('falls back to a source string when compilation fails', () => {
@@ -82,6 +93,8 @@ describe('worklets babel plugin - hermesBytecode', () => {
     assert(code);
     expect(code).toContain('code: "function');
     expect(code).not.toContain('bytecode:');
+    expect(warnSpy).toHaveBeenCalled();
+    expect(errorSpy).not.toHaveBeenCalled();
   });
 
   test('falls back to a source string when getHBCBinary is not provided', () => {
@@ -93,6 +106,8 @@ describe('worklets babel plugin - hermesBytecode', () => {
     expect(code).toContain('code: "function');
     expect(code).not.toContain('bytecode:');
     expect(mockExecFileSync).not.toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalled();
+    expect(errorSpy).not.toHaveBeenCalled();
   });
 
   test('does not emit bytecode when the option is disabled', () => {
@@ -100,6 +115,8 @@ describe('worklets babel plugin - hermesBytecode', () => {
     assert(code);
     expect(code).not.toContain('bytecode:');
     expect(mockExecFileSync).not.toHaveBeenCalled();
+    expect(warnSpy).not.toHaveBeenCalled();
+    expect(errorSpy).not.toHaveBeenCalled();
   });
 
   test('does not emit bytecode outside of release builds', () => {
@@ -108,5 +125,7 @@ describe('worklets babel plugin - hermesBytecode', () => {
     assert(code);
     expect(code).not.toContain('bytecode:');
     expect(mockExecFileSync).not.toHaveBeenCalled();
+    expect(warnSpy).not.toHaveBeenCalled();
+    expect(errorSpy).not.toHaveBeenCalled();
   });
 });
