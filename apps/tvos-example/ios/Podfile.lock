@@ -44,7 +44,7 @@ PODS:
     - React-utils
     - ReactNativeDependencies
     - Yoga
-  - React-Core-prebuilt (0.86.0-0):
+  - React-Core-prebuilt (0.86.0-1):
     - ReactNativeDependencies
   - React-Core/CoreModulesHeaders (0.86.0-1):
     - hermes-engine
@@ -1921,7 +1921,7 @@ PODS:
     - ReactNativeDependencies
     - RNWorklets
     - Yoga
-  - RNWorklets (0.10.0-main):
+  - RNWorklets (0.10.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1943,10 +1943,10 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNWorklets/apple (= 0.10.0-main)
-    - RNWorklets/common (= 0.10.0-main)
+    - RNWorklets/apple (= 0.10.0)
+    - RNWorklets/common (= 0.10.0)
     - Yoga
-  - RNWorklets/apple (0.10.0-main):
+  - RNWorklets/apple (0.10.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1969,7 +1969,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNWorklets/common (0.10.0-main):
+  - RNWorklets/common (0.10.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2233,7 +2233,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   FBLazyVector: 100e8b32d1fdc10711177c09562acc71be47bb05
-  hermes-engine: abb59e53b7733a25e7ad150b68050717ce0a0b91
+  hermes-engine: 92b7c0bc55cd63164170168e94ebe11fed5e8964
   RCTDeprecation: ba1610d0889408090861cd2c23a2601825085b01
   RCTRequired: 1780932b53a72771e01d3ee3b3521271427c073d
   RCTSwiftUI: c05aab26e3da179ddaa83d478e23382203175d39
@@ -2242,7 +2242,7 @@ SPEC CHECKSUMS:
   React: bfa165714c0b346b69be02d310877cbc2f4c905a
   React-callinvoker: 309d3fb7f5a3bcd7c4a19dfac759eddda75f6bfc
   React-Core: 1906423dbbab54a3cbcb84a403a8776ec4d78450
-  React-Core-prebuilt: 190258826c66c9a9c3df6a44b332607a203d968f
+  React-Core-prebuilt: 6679529d9efa5320acb93bd84d6e6b2397d028b9
   React-CoreModules: 53605912251c3c020fba00dfeccd32db54763ff0
   React-cxxreact: 1d86eb36250cdd73c537fdb15924dc7d6f59c512
   React-debug: dba00845d4d837ef9504b9a485e65417a8915e0e
@@ -2307,7 +2307,7 @@ SPEC CHECKSUMS:
   ReactCommon: 6f4ba85738bbfcb7ff2c9f07d18ecf5b9ea70bcf
   ReactNativeDependencies: 623d00f77ed478f2c124086e59fb962e0923822a
   RNReanimated: 0dc30943b51d232a439e1aa7fafc4f08ec666d86
-  RNWorklets: 33acdaa3156cac5f01a1cb90ba9bfd581352f36e
+  RNWorklets: e6f4e2f2334f68fc7fc3281e3f9b507b8a6ed71f
   Yoga: cd32a3bf945ae6b16cb7d32c8e3bb73fb150326d
 
 PODFILE CHECKSUM: 969564fe20813ed734d37b432240c1cd0480ae3a

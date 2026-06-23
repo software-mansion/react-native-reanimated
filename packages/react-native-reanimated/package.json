@@ -136,7 +136,7 @@
     "react-native": "0.86.0",
     "react-native-svg": "15.15.4",
     "react-native-web": "0.21.1",
-    "react-native-worklets": "workspace:*",
+    "react-native-worklets": "0.10.0",
     "react-test-renderer": "19.2.3",
     "typescript": "5.9.3"
   },
