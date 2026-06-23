@@ -3,10 +3,15 @@ package com.swmansion.reanimated.pseudoSelectors
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewParent
+import com.facebook.react.bridge.UIManager
+import com.facebook.react.bridge.UIManagerListener
 import com.facebook.react.bridge.UiThreadUtil
+import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
+import com.facebook.react.uimanager.IllegalViewOperationException
 import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
 
+@OptIn(UnstableReactNativeAPI::class)
 class PseudoSelectorManager(
     private val fabricUIManager: FabricUIManager,
 ) {
@@ -25,21 +30,85 @@ class PseudoSelectorManager(
     // Reused by updateHoverStates to avoid allocating on every hover event (UI thread only).
     private val hoverLocationBuffer = IntArray(2)
 
+    private val pendingAttaches = LinkedHashMap<String, PendingAttach>()
+    private var mountListenerRegistered = false
+
+    private data class PendingAttach(
+        val tag: Int,
+        val selector: Int,
+        val callback: PseudoSelectorCallback,
+    )
+
+    private val mountListener =
+        object : UIManagerListener {
+            override fun didMountItems(uiManager: UIManager) = flushPendingAttaches()
+
+            override fun willMountItems(uiManager: UIManager) = Unit
+
+            override fun willDispatchViewUpdates(uiManager: UIManager) = Unit
+
+            override fun didDispatchMountItems(uiManager: UIManager) = Unit
+
+            override fun didScheduleMountItems(uiManager: UIManager) = Unit
+        }
+
     fun attach(
         tag: Int,
         selector: Int,
         callback: PseudoSelectorCallback,
     ) {
         UiThreadUtil.runOnUiThread {
-            val view = fabricUIManager.resolveView(tag) ?: return@runOnUiThread
-            val key = "$tag:$selector"
-            when (selector) {
-                0 -> attachFocusWithin(view, key, callback)
-                1 -> attachFocus(view, key, callback)
-                2 -> attachHover(view, key, callback)
-                3 -> attachActive(view, key, callback)
-                4 -> attachActiveDeepest(view, key, callback)
+            val view = tryResolveView(tag)
+            if (view != null) {
+                attachToView(view, tag, selector, callback)
+            } else {
+                pendingAttaches["$tag:$selector"] = PendingAttach(tag, selector, callback)
+                ensureMountListener()
             }
+        }
+    }
+
+    private fun attachToView(
+        view: View,
+        tag: Int,
+        selector: Int,
+        callback: PseudoSelectorCallback,
+    ) {
+        val key = "$tag:$selector"
+        when (selector) {
+            0 -> attachFocusWithin(view, key, callback)
+            1 -> attachFocus(view, key, callback)
+            2 -> attachHover(view, key, callback)
+            3 -> attachActive(view, key, callback)
+            4 -> attachActiveDeepest(view, key, callback)
+        }
+    }
+
+    private fun tryResolveView(tag: Int): View? =
+        try {
+            fabricUIManager.resolveView(tag)
+        } catch (e: IllegalViewOperationException) {
+            null
+        }
+
+    private fun ensureMountListener() {
+        if (mountListenerRegistered) {
+            return
+        }
+        mountListenerRegistered = true
+        fabricUIManager.addUIManagerEventListener(mountListener)
+    }
+
+    private fun flushPendingAttaches() {
+        if (pendingAttaches.isEmpty()) {
+            return
+        }
+        val iterator = pendingAttaches.values.iterator()
+        while (iterator.hasNext()) {
+            val pending = iterator.next()
+            val view = tryResolveView(pending.tag) ?: continue
+            iterator.remove()
+            attachToView(view, pending.tag, pending.selector, pending.callback)
         }
     }
 
@@ -178,7 +247,11 @@ class PseudoSelectorManager(
         tag: Int,
         selector: Int,
     ) {
-        UiThreadUtil.runOnUiThread { detachActions.remove("$tag:$selector")?.run() }
+        UiThreadUtil.runOnUiThread {
+            val key = "$tag:$selector"
+            pendingAttaches.remove(key)
+            detachActions.remove(key)?.run()
+        }
     }
 
     /**
