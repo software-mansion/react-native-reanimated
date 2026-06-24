@@ -14,6 +14,7 @@ import { Dimensions, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -37,6 +38,13 @@ const SWIPE_DISTANCE_THRESHOLD = WINDOW_WIDTH * 0.2;
 const SWIPE_VELOCITY_THRESHOLD = 500;
 // Rubber-band factor applied when dragging past the first / last tab.
 const EDGE_RESISTANCE = 0.2;
+// Scale applied to a tab one screen away from the active one.
+const INACTIVE_TAB_SCALE = 0.9;
+
+function clamp(value: number, min: number, max: number): number {
+  'worklet';
+  return Math.min(Math.max(value, min), max);
+}
 
 type TabProps = PropsWithChildren<{
   name: string;
@@ -45,42 +53,32 @@ type TabProps = PropsWithChildren<{
 type TabPropsInternal = {
   index: number;
   rendered: boolean;
-  selectedTabIndex: SharedValue<number>;
-  previousSelectedTabIndex: SharedValue<number>;
-  dragTranslateX: SharedValue<number>;
+  tabProgress: SharedValue<number>;
 } & TabProps;
 
 const Tab = memo(function Tab({
   children,
-  dragTranslateX,
   index,
-  previousSelectedTabIndex,
   rendered,
-  selectedTabIndex,
+  tabProgress,
 }: TabPropsInternal): ReactElement {
-  const animatedTabStyle = useAnimatedStyle(() => ({
-    opacity:
-      index === selectedTabIndex.value ||
-      index === previousSelectedTabIndex.value ||
-      // While swiping, also reveal the neighbour the finger is dragging towards.
-      (dragTranslateX.value !== 0 &&
-        Math.abs(index - selectedTabIndex.value) === 1)
-        ? 1
-        : 0,
-    transform: [
-      {
-        translateX:
-          withTiming(Math.sign(index - selectedTabIndex.value) * WINDOW_WIDTH) +
-          dragTranslateX.value,
-      },
-      {
-        translateY: withTiming(-sizes.md * +(index !== selectedTabIndex.value)),
-      },
-      {
-        scale: withTiming(index === selectedTabIndex.value ? 1 : 0.9),
-      },
-    ],
-  }));
+  const animatedTabStyle = useAnimatedStyle(() => {
+    // Signed distance (in tabs) between this tab and the live active position.
+    // Clamped so tabs further than one screen away stay parked off-screen
+    // instead of sliding arbitrarily far during multi-tab transitions.
+    const distance = clamp(index - tabProgress.value, -1, 1);
+    const offset = Math.abs(distance);
+
+    return {
+      // Fade neighbours out as they move away from the active position.
+      opacity: 1 - offset,
+      transform: [
+        { translateX: distance * WINDOW_WIDTH },
+        { translateY: -sizes.md * offset },
+        { scale: 1 - (1 - INACTIVE_TAB_SCALE) * offset },
+      ],
+    };
+  });
 
   return (
     <Animated.View style={[styles.tab, animatedTabStyle]}>
@@ -116,18 +114,23 @@ const TabView: TabViewComponent = ({ children }: TabViewProps) => {
   const [screenTransitionFinished, setScreenTransitionFinished] =
     useState(IS_WEB);
 
-  const previousSelectedTabIndex = useSharedValue(0);
+  // Committed tab index. Drives the tab-bar selection and the swipe logic.
   const selectedTabIndex = useSharedValue(0);
-  // Live horizontal offset of the finger while swiping between tabs.
-  const dragTranslateX = useSharedValue(0);
+  // Live, fractional tab index that all the tab animations interpolate from.
+  // Animated with timing on tap / swipe release, set directly while dragging.
+  const tabProgress = useSharedValue(0);
+  // tabProgress at the moment a drag starts, so an interrupted animation
+  // continues from where it was instead of snapping to the committed index.
+  const dragStartProgress = useSharedValue(0);
 
   const handleSelectTab = useCallback(
     (name: string) => {
-      previousSelectedTabIndex.value = selectedTabIndex.value;
-      selectedTabIndex.value = tabNames.indexOf(name);
+      const index = tabNames.indexOf(name);
+      selectedTabIndex.value = index;
+      tabProgress.value = withTiming(index);
       setSelectedTabName(name);
     },
-    [tabNames, previousSelectedTabIndex, selectedTabIndex]
+    [tabNames, selectedTabIndex, tabProgress]
   );
 
   const numberOfTabs = tabNames.length;
@@ -138,15 +141,25 @@ const TabView: TabViewComponent = ({ children }: TabViewProps) => {
         .enabled(numberOfTabs > 1)
         .activeOffsetX([-SWIPE_ACTIVATION_DISTANCE, SWIPE_ACTIVATION_DISTANCE])
         .failOffsetY([-SWIPE_FAIL_DISTANCE, SWIPE_FAIL_DISTANCE])
+        .onStart(() => {
+          // Take over any in-flight settle so the drag continues seamlessly.
+          cancelAnimation(tabProgress);
+          dragStartProgress.value = tabProgress.value;
+        })
         .onUpdate((event) => {
-          const atStart = selectedTabIndex.value === 0;
-          const atEnd = selectedTabIndex.value === numberOfTabs - 1;
-          const overscrolling =
-            (atStart && event.translationX > 0) ||
-            (atEnd && event.translationX < 0);
-          dragTranslateX.value = overscrolling
-            ? event.translationX * EDGE_RESISTANCE
-            : event.translationX;
+          const lastIndex = numberOfTabs - 1;
+          // Dragging left (negative translation) moves towards the next tab.
+          const raw =
+            dragStartProgress.value - event.translationX / WINDOW_WIDTH;
+          // Rubber-band the part of the drag that goes before the first or past
+          // the last tab.
+          if (raw < 0) {
+            tabProgress.value = raw * EDGE_RESISTANCE;
+          } else if (raw > lastIndex) {
+            tabProgress.value = lastIndex + (raw - lastIndex) * EDGE_RESISTANCE;
+          } else {
+            tabProgress.value = raw;
+          }
         })
         .onEnd((event) => {
           const current = selectedTabIndex.value;
@@ -162,21 +175,13 @@ const TabView: TabViewComponent = ({ children }: TabViewProps) => {
           const target = goNext ? current + 1 : goPrev ? current - 1 : current;
 
           if (target !== current) {
-            // Retarget the slide on the UI thread so it continues seamlessly
-            // from the finger position, then sync the React state.
-            previousSelectedTabIndex.value = current;
             selectedTabIndex.value = target;
             scheduleOnRN(setSelectedTabName, tabNames[target]);
           }
-          dragTranslateX.value = withTiming(0);
+          // Settle onto the target tab, continuing from the finger position.
+          tabProgress.value = withTiming(target);
         }),
-    [
-      numberOfTabs,
-      tabNames,
-      dragTranslateX,
-      previousSelectedTabIndex,
-      selectedTabIndex,
-    ]
+    [numberOfTabs, tabNames, tabProgress, dragStartProgress, selectedTabIndex]
   );
 
   useEffect(() => {
@@ -193,6 +198,7 @@ const TabView: TabViewComponent = ({ children }: TabViewProps) => {
       <View style={styles.tabBar}>
         <TabSelector
           selectedTab={selectedTabName}
+          tabProgress={tabProgress}
           tabs={tabNames}
           onSelectTab={handleSelectTab}
         />
@@ -201,12 +207,10 @@ const TabView: TabViewComponent = ({ children }: TabViewProps) => {
         <View style={flex.fill}>
           {childrenArray.map((child, index) =>
             cloneElement(child, {
-              dragTranslateX,
               index,
               key: index,
-              previousSelectedTabIndex,
               rendered: index === 0 || screenTransitionFinished,
-              selectedTabIndex,
+              tabProgress,
             })
           )}
         </View>
