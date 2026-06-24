@@ -5,11 +5,6 @@ type CallbackMap<Prop extends string, Payload> = Partial<
   Record<Prop, ((payload: Payload) => void) | undefined>
 >;
 
-/**
- * Backs CSS animation/transition callbacks with DOM event listeners on a single
- * element. The lifecycle is shared between the two kinds; only the event names
- * and the payload shape differ, so those are injected.
- */
 export class CSSCallbackListeners<Prop extends string, Payload> {
   private callbacks: CallbackMap<Prop, Payload> = {};
   private readonly attachedListeners = new Map<Prop, EventListener>();
