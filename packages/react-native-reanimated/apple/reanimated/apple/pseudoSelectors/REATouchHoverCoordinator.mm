@@ -37,14 +37,9 @@
 {
   [self.coordinator observeTouchMoved:touches.anyObject];
 }
-- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
-{
-  self.state = UIGestureRecognizerStateFailed;
-}
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
   [self.coordinator observeTouchCancelled];
-  self.state = UIGestureRecognizerStateFailed;
 }
 @end
 
