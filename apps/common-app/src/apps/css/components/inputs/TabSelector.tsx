@@ -25,14 +25,11 @@ import { typedMemo } from '@/utils';
 import Text from '../core/Text';
 
 const TABS_GAP = spacing.xxxs;
-// Extra horizontal stretch applied to the selection pill mid-travel (peaks
-// halfway between two tabs, settles back to 1 when resting on a tab).
 const PILL_SQUASH = 0.12;
 
 type TabSelectorProps<T extends string> = {
   tabs: Readonly<Array<T>>;
   selectedTab: T;
-  // Live, fractional tab index driving the sliding selection pill.
   tabProgress: SharedValue<number>;
   onSelectTab: (tab: T) => void;
 };
@@ -58,7 +55,6 @@ function TabSelector<T extends string>({
   );
 
   const tabCount = tabs.length;
-  // True once every tab has reported its width, so the pill can be positioned.
   const widthsReady = useDerivedValue(
     () =>
       tabWidths.value.length === tabCount &&
@@ -110,7 +106,7 @@ function TabSelector<T extends string>({
     const widths = tabWidths.value;
 
     const lastIndex = tabCount - 1;
-    // Geometry stays within the valid tab range while the content rubber-bands.
+    // Clamp so rubber-band overshoot can't index past the first / last tab.
     const progress = Math.min(Math.max(tabProgress.value, 0), lastIndex);
     const from = Math.floor(progress);
     const to = Math.min(from + 1, lastIndex);
@@ -258,7 +254,6 @@ type TabProps = {
 
 function Tab({ index, onMeasure, onPress, tabProgress, title }: TabProps) {
   const animatedTextStyle = useAnimatedStyle(() => {
-    // 1 when the pill fully covers this tab, 0 once a full tab away.
     const coverage = Math.min(
       Math.max(1 - Math.abs(index - tabProgress.value), 0),
       1

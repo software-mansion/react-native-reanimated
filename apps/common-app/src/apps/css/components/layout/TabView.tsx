@@ -28,17 +28,11 @@ import TabSelector from '../inputs/TabSelector';
 
 const WINDOW_WIDTH = Dimensions.get('screen').width;
 
-// Horizontal finger travel before the swipe takes over the touch (keeps taps
-// and the inner vertical scroll working).
 const SWIPE_ACTIVATION_DISTANCE = 15;
-// Vertical finger travel that hands the touch back to the inner scroll view.
 const SWIPE_FAIL_DISTANCE = 15;
-// How far / fast a swipe must be on release to commit to the neighbouring tab.
 const SWIPE_DISTANCE_THRESHOLD = WINDOW_WIDTH * 0.2;
 const SWIPE_VELOCITY_THRESHOLD = 500;
-// Rubber-band factor applied when dragging past the first / last tab.
 const EDGE_RESISTANCE = 0.2;
-// Scale applied to a tab one screen away from the active one.
 const INACTIVE_TAB_SCALE = 0.9;
 
 function clamp(value: number, min: number, max: number): number {
@@ -63,14 +57,12 @@ const Tab = memo(function Tab({
   tabProgress,
 }: TabPropsInternal): ReactElement {
   const animatedTabStyle = useAnimatedStyle(() => {
-    // Signed distance (in tabs) between this tab and the live active position.
-    // Clamped so tabs further than one screen away stay parked off-screen
-    // instead of sliding arbitrarily far during multi-tab transitions.
+    // Clamped so tabs more than one screen away stay parked off-screen rather
+    // than sliding arbitrarily far during multi-tab transitions.
     const distance = clamp(index - tabProgress.value, -1, 1);
     const offset = Math.abs(distance);
 
     return {
-      // Fade neighbours out as they move away from the active position.
       opacity: 1 - offset,
       transform: [
         { translateX: distance * WINDOW_WIDTH },
@@ -114,13 +106,12 @@ const TabView: TabViewComponent = ({ children }: TabViewProps) => {
   const [screenTransitionFinished, setScreenTransitionFinished] =
     useState(IS_WEB);
 
-  // Committed tab index. Drives the tab-bar selection and the swipe logic.
+  // Committed integer index; drives the tab bar and the swipe decisions.
   const selectedTabIndex = useSharedValue(0);
-  // Live, fractional tab index that all the tab animations interpolate from.
-  // Animated with timing on tap / swipe release, set directly while dragging.
+  // Live fractional index every tab animation reads (timing on tap/release,
+  // set directly while dragging).
   const tabProgress = useSharedValue(0);
-  // tabProgress at the moment a drag starts, so an interrupted animation
-  // continues from where it was instead of snapping to the committed index.
+  // Captured at drag start so an interrupted settle continues from where it is.
   const dragStartProgress = useSharedValue(0);
 
   const handleSelectTab = useCallback(
@@ -142,17 +133,14 @@ const TabView: TabViewComponent = ({ children }: TabViewProps) => {
         .activeOffsetX([-SWIPE_ACTIVATION_DISTANCE, SWIPE_ACTIVATION_DISTANCE])
         .failOffsetY([-SWIPE_FAIL_DISTANCE, SWIPE_FAIL_DISTANCE])
         .onStart(() => {
-          // Take over any in-flight settle so the drag continues seamlessly.
           cancelAnimation(tabProgress);
           dragStartProgress.value = tabProgress.value;
         })
         .onUpdate((event) => {
           const lastIndex = numberOfTabs - 1;
-          // Dragging left (negative translation) moves towards the next tab.
           const raw =
             dragStartProgress.value - event.translationX / WINDOW_WIDTH;
-          // Rubber-band the part of the drag that goes before the first or past
-          // the last tab.
+          // Rubber-band past the first / last tab.
           if (raw < 0) {
             tabProgress.value = raw * EDGE_RESISTANCE;
           } else if (raw > lastIndex) {
@@ -178,7 +166,6 @@ const TabView: TabViewComponent = ({ children }: TabViewProps) => {
             selectedTabIndex.value = target;
             scheduleOnRN(setSelectedTabName, tabNames[target]);
           }
-          // Settle onto the target tab, continuing from the finger position.
           tabProgress.value = withTiming(target);
         }),
     [numberOfTabs, tabNames, tabProgress, dragStartProgress, selectedTabIndex]
