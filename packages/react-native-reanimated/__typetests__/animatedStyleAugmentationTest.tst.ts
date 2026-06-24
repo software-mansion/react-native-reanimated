@@ -16,9 +16,6 @@ import { cubicBezier, linear, steps } from '..';
 // `AnimatedStyle`, the intersection collapsed conflicting properties to
 // `never` and surfaced as "Type … is not assignable to 'undefined'" on inline
 // `style={{ ... }}` for `Animated.View`/`Animated.Text`/`Animated.Image`.
-//
-// These are compile-only checks: each typed assignment must type-check, which
-// TSTyche enforces by type-checking the whole test file.
 
 type ExpoStyleAugmentation = {
   animationName?: string;
