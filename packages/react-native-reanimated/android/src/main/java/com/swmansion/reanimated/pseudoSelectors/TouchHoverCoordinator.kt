@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.Window
 import com.facebook.react.bridge.ReactContext
 import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
@@ -113,11 +114,31 @@ class TouchHoverCoordinator {
         // The Activity (and its window) can be replaced; re-bind onto the live one.
         removeWindowObserver()
         val original = window.callback ?: return
+        val slop = ViewConfiguration.get(view.context).scaledTouchSlop.toFloat()
         val wrapper =
             object : Window.Callback by original {
+                private var startX = 0f
+                private var startY = 0f
+                private var slopExceeded = false
+
                 override fun dispatchTouchEvent(event: MotionEvent): Boolean {
                     when (event.actionMasked) {
-                        MotionEvent.ACTION_DOWN -> recompute(event.rawX, event.rawY)
+                        MotionEvent.ACTION_DOWN -> {
+                            startX = event.rawX
+                            startY = event.rawY
+                            slopExceeded = false
+                            recompute(event.rawX, event.rawY)
+                        }
+                        // A scroll/drag past slop dismisses sticky :hover, matching iOS.
+                        MotionEvent.ACTION_MOVE ->
+                            if (!slopExceeded) {
+                                val dx = event.rawX - startX
+                                val dy = event.rawY - startY
+                                if (dx * dx + dy * dy > slop * slop) {
+                                    slopExceeded = true
+                                    clearAll()
+                                }
+                            }
                         MotionEvent.ACTION_CANCEL -> clearAll()
                     }
                     return original.dispatchTouchEvent(event)
