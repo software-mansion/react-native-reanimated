@@ -31,7 +31,6 @@ class TransitionPropertyProgressProvider final : public KeyframeProgressProvider
   double getRemainingDelay(double timestamp) const;
   ReversingState getReversingState() const;
   TransitionProgressState getState() const;
-  void anchorToFirstRenderedFrame(double timestamp, double stallThreshold);
 
  protected:
   std::optional<double> calculateRawProgress(double timestamp) override;
@@ -40,7 +39,6 @@ class TransitionPropertyProgressProvider final : public KeyframeProgressProvider
   EasingConfig easing_;
   EasingFunction easingFunction_;
   double reversingShorteningFactor_ = 1;
-  bool pendingFirstFrameAnchor_ = true;
 
   double getElapsedTime(double timestamp) const;
 };
@@ -60,7 +58,6 @@ class TransitionProgressProvider final {
   void removeProperty(const std::string &propertyName);
   void discardFinishedProgressProviders();
   void update(double timestamp);
-  void anchorToFirstRenderedFrame(double timestamp, double stallThreshold);
   void setPropertySettings(const PropertiesSettingsMap &changedPropertiesSettings);
   CSSTransitionPropertySettings getPropertySettings(const std::string &propertyName) const;
 

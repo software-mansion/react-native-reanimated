@@ -30,8 +30,7 @@ TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     : RawProgressProvider(timestamp, duration, delay),
       easing_(std::move(easing)),
       easingFunction_(getEasingFunctionFromConfig(easing_)),
-      reversingShorteningFactor_(reversingShorteningFactor),
-      pendingFirstFrameAnchor_(false) {}
+      reversingShorteningFactor_(reversingShorteningFactor) {}
 
 double TransitionPropertyProgressProvider::getGlobalProgress() const {
   return rawProgress_.value_or(0);
@@ -73,20 +72,6 @@ std::optional<double> TransitionPropertyProgressProvider::calculateRawProgress(c
 
 double TransitionPropertyProgressProvider::getElapsedTime(const double timestamp) const {
   return timestamp - (creationTimestamp_ + delay_);
-}
-
-void TransitionPropertyProgressProvider::anchorToFirstRenderedFrame(
-    const double timestamp,
-    const double stallThreshold) {
-  if (!pendingFirstFrameAnchor_) {
-    return;
-  }
-  pendingFirstFrameAnchor_ = false;
-
-  const double elapsed = getElapsedTime(timestamp);
-  if (elapsed > stallThreshold) {
-    creationTimestamp_ += elapsed;
-  }
 }
 
 // TransitionProgressProvider
@@ -182,12 +167,6 @@ void TransitionProgressProvider::update(const double timestamp) {
     if (propertyProgressProvider->getState() == TransitionProgressState::Idle) {
       removedProperties_.insert(propertyName);
     }
-  }
-}
-
-void TransitionProgressProvider::anchorToFirstRenderedFrame(const double timestamp, const double stallThreshold) {
-  for (const auto &[_, propertyProgressProvider] : propertyProgressProviders_) {
-    propertyProgressProvider->anchorToFirstRenderedFrame(timestamp, stallThreshold);
   }
 }
 

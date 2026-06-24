@@ -9,10 +9,6 @@
 
 namespace reanimated::css {
 
-namespace {
-constexpr double kFirstFrameStallThresholdMs = 100;
-} // namespace
-
 CSSLoopTransition::CSSLoopTransition(
     const Tag viewTag,
     const std::string &componentName,
@@ -29,7 +25,6 @@ double CSSLoopTransition::getMinDelay(double timestamp) const {
 }
 
 bool CSSLoopTransition::update(const double timestamp, OperationsLoop &loop) {
-  progressProvider_.anchorToFirstRenderedFrame(timestamp, kFirstFrameStallThresholdMs);
   progressProvider_.update(timestamp);
   onUpdate_(viewTag_);
 
