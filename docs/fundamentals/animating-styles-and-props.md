@@ -103,6 +103,8 @@ In a function which `useAnimatedProps` takes as an argument, we return an object
 
 Check out the full example below:
 
+For a complete guide to animating `react-native-svg` - including CSS animations and transitions and which props are supported - see [Animating SVG](/docs/guides/animating-svg).
+
 ## Summary
 
 In this section, we went through the differences between animating styles and props and how to use `useAnimatedStyle` and `useAnimatedProps`. To sum up:

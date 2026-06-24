@@ -72,5 +72,6 @@ No animation.
 
 * At minimum 1 keyframe is required to create an animation. Reanimated will take the current state of the element as the first keyframe.
 * If multiple animations target the same property, the animation later in the array will override changes from the previous one.
+* You can animate [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components too - see [Animating SVG](/docs/guides/animating-svg).
 
 ## Platform compatibility

@@ -2,6 +2,8 @@
 
 Not all CSS properties are available and animatable in React Native. The following table describes which style properties can be animated on which platform.
 
+For animating `react-native-svg` components, see [Animating SVG](/docs/guides/animating-svg).
+
 | Property                | Android | iOS    | Web    |
 | ----------------------- | ------- | ------ | ------ |
 | flex                    |   |  |  |

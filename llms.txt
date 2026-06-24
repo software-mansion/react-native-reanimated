@@ -87,6 +87,7 @@
 ## guides
 
 - [accessibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility)
+- [Animating SVG](https://docs.swmansion.com/react-native-reanimated/docs/guides/animating-svg)
 - [Building for Android on Windows](https://docs.swmansion.com/react-native-reanimated/docs/guides/building-for-android-on-windows)
 - [compatibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility)
 - [Contributing](https://docs.swmansion.com/react-native-reanimated/docs/guides/contributing)

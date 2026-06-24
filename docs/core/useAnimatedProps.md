@@ -106,5 +106,6 @@ function App() {
 
 * You can share animated props between components to avoid code duplication.
 * We recommend to create adapters outside of the component's body to avoid unnecessary recalculations.
+* For animating [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components, see [Animating SVG](/docs/guides/animating-svg).
 
 ## Platform compatibility

@@ -70,4 +70,6 @@ No properties will transition.
 
 * We discourage the use of `all` property as it can lead to performance issues.
 
+* You can also transition [`react-native-svg`](https://github.com/software-mansion/react-native-svg) props - see [Animating SVG](/docs/guides/animating-svg).
+
 ## Platform compatibility
