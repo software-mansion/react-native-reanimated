@@ -43,6 +43,8 @@
 }
 @end
 
+static const CGFloat kTouchHoverSlop = 10.0;
+
 @implementation REATouchHoverCoordinator {
   NSMutableArray<REATouchHoverEntry *> *_entries;
   REAHoverTouchObserver *_windowObserver;
@@ -176,7 +178,7 @@
   CGPoint onScreen = [window convertPoint:inWindow toCoordinateSpace:window.screen.coordinateSpace];
   CGFloat dx = onScreen.x - _windowTouchStartScreen.x;
   CGFloat dy = onScreen.y - _windowTouchStartScreen.y;
-  if (dx * dx + dy * dy > 100.0) {
+  if (dx * dx + dy * dy > kTouchHoverSlop * kTouchHoverSlop) {
     [self clearAll];
   }
 }
