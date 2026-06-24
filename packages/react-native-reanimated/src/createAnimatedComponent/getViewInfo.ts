@@ -20,7 +20,9 @@ export function getViewInfo(element: HostInstance): {
   viewTag?: number;
 } {
   return {
-    reactViewName: (element?._viewConfig?.uiViewClassName ??
+    reactViewName: (element?.__viewConfig?.uiViewClassName ??
+      // ReactFabricHostComponent (e.g. react-native-macos) exposes `_viewConfig`.
+      element?._viewConfig?.uiViewClassName ??
       element?.__internalInstanceHandle?.type ??
       element?.__internalInstanceHandle?.elementType) as string,
     viewTag: element?.__nativeTag,
