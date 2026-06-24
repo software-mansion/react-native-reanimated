@@ -110,8 +110,6 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
     if (this.isRegistered) {
       this.detach();
     }
-    // Reset the baseline so a reused instance (e.g. a frozen subtree thawing) re-registers
-    // on the next identical `update` instead of hitting the `deepEqual` early-return.
     this.prevPseudoStylesBySelector = null;
     this.prevTransitionProperties = null;
   }
