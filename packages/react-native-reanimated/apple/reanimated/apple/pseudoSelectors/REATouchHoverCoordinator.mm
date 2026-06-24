@@ -37,14 +37,9 @@
 {
   [self.coordinator observeTouchMoved:touches.anyObject];
 }
-- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
-{
-  self.state = UIGestureRecognizerStateFailed;
-}
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
   [self.coordinator observeTouchCancelled];
-  self.state = UIGestureRecognizerStateFailed;
 }
 @end
 
@@ -52,7 +47,7 @@
   NSMutableArray<REATouchHoverEntry *> *_entries;
   REAHoverTouchObserver *_windowObserver;
   __weak UIWindow *_observedWindow;
-  CGPoint _windowTouchStartScreen;
+  CGPoint _windowTouchStart;
 }
 
 + (instancetype)sharedCoordinator
@@ -154,9 +149,8 @@
     return;
   }
   CGPoint inWindow = [touch locationInView:window];
-  CGPoint onScreen = [window convertPoint:inWindow toCoordinateSpace:window.screen.coordinateSpace];
-  _windowTouchStartScreen = onScreen;
-  [self recomputeAtScreenPoint:onScreen];
+  _windowTouchStart = inWindow;
+  [self recomputeAtWindowPoint:inWindow];
 }
 
 - (void)observeTouchMoved:(UITouch *)touch
@@ -167,9 +161,8 @@
     return;
   }
   CGPoint inWindow = [touch locationInView:window];
-  CGPoint onScreen = [window convertPoint:inWindow toCoordinateSpace:window.screen.coordinateSpace];
-  CGFloat dx = onScreen.x - _windowTouchStartScreen.x;
-  CGFloat dy = onScreen.y - _windowTouchStartScreen.y;
+  CGFloat dx = inWindow.x - _windowTouchStart.x;
+  CGFloat dy = inWindow.y - _windowTouchStart.y;
   if (dx * dx + dy * dy > 100.0) {
     [self clearAll];
   }
@@ -191,7 +184,7 @@
   }
 }
 
-- (void)recomputeAtScreenPoint:(CGPoint)onScreen
+- (void)recomputeAtWindowPoint:(CGPoint)inWindow
 {
   // Hit-test the topmost view: :hover applies to it and its ancestors only (matching CSS), so views
   // that merely overlap the hit branch no longer all activate. hitTest already honors z-order,
@@ -199,7 +192,6 @@
   UIView *hit = nil;
   UIWindow *window = _observedWindow;
   if (window != nil) {
-    CGPoint inWindow = [window convertPoint:onScreen fromCoordinateSpace:window.screen.coordinateSpace];
     hit = [window hitTest:inWindow withEvent:nil];
   }
   NSMutableArray<REATouchHoverEntry *> *dead = nil;
