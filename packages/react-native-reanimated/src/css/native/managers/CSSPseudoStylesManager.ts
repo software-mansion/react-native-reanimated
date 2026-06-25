@@ -110,6 +110,8 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
     if (this.isRegistered) {
       this.detach();
     }
+    this.prevPseudoStylesBySelector = null;
+    this.prevTransitionProperties = null;
   }
 
   private detach() {
