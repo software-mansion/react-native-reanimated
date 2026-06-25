@@ -1,6 +1,6 @@
 'use strict';
 import type { UnknownRecord } from '../../common';
-import { isEmptyObject, logger } from '../../common';
+import { isEmptyObject, isSupportedStyleProp, logger } from '../../common';
 import { isSharedValue } from '../../isSharedValue';
 import type {
   CSSAnimationCallback,
@@ -91,7 +91,7 @@ export function filterCSSAndStyleProperties<S extends object>(
         branch.selectorStyle[prop] = selectorValue;
         branch.defaultStyle[prop] = defaultValue;
       }
-    } else if (isEmptyObject(value)) {
+    } else if (isEmptyObject(value) && isSupportedStyleProp(prop)) {
       throw new Error(
         `[Reanimated] Invalid value for "${prop}": an empty object is not a valid style value.`
       );

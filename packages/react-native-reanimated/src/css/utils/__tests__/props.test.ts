@@ -284,6 +284,18 @@ describe(filterCSSAndStyleProperties, () => {
       ).not.toThrow();
     });
 
+    test('does not throw for an empty object on an unrecognized property', () => {
+      // Libraries like Unistyles attach metadata keys (e.g. `unistyles_<hash>`)
+      // to style objects - an empty object on such a foreign key must not crash.
+      const foreignKey = 'unistyles_abc123';
+      const style = { opacity: 0.5, [foreignKey]: {} } as never;
+
+      expect(() => filterCSSAndStyleProperties(style)).not.toThrow();
+
+      const [, , , , filteredStyle] = filterCSSAndStyleProperties(style);
+      expect(filteredStyle).toStrictEqual({ opacity: 0.5, [foreignKey]: {} });
+    });
+
     test('mixes pseudoselector and regular props with transition config', () => {
       const style: CSSStyle = {
         transitionDuration: '150ms',
