@@ -59,8 +59,6 @@ void PseudoStylesRegistry::registerPseudoStyles(
   }
   entry.precomputedStyles = recomputeAllStyles(entry);
 
-  // Only attach observers for genuinely new selectors so re-registering on a render
-  // (without an intervening detach) doesn't stack duplicate native gesture observers.
   for (const auto selector : newSelectors) {
     attachFn_(
         tag,
@@ -120,9 +118,7 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
   css::PropertyValueDynamicDiffsMap valueChanges;
   for (const auto &[propKey, toVal] : toStyle.items()) {
     const auto propName = propKey.asString();
-    // Null `from`: let each side resolve the live current value itself - the platform reads
-    // the layer's presentation value (a smooth mid-animation hand-off instead of a snap from a
-    // stale precomputed start), and the loop falls back to its last interpolated output.
+    // Null `from`: let each side resolve the live current value itself
     valueChanges.emplace(propName, std::make_pair(folly::dynamic(), toVal));
   }
 
