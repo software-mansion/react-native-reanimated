@@ -1057,8 +1057,7 @@ var require_workletStringCode = __commonJS({
           delete sourceMap.sourcesContent;
         }
       }
-      const wrappedCode = `(${transformed.code})
-`;
+      const wrappedCode = `(${transformed.code})`;
       return [wrappedCode, JSON.stringify(sourceMap)];
     }
     function restoreRecursiveCalls(file, newName) {

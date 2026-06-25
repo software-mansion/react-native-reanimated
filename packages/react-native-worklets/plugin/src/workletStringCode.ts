@@ -162,7 +162,7 @@ export function buildWorkletString(
     }
   }
 
-  const wrappedCode = `(${transformed.code})\n`;
+  const wrappedCode = `(${transformed.code})`;
 
   return [wrappedCode, JSON.stringify(sourceMap)];
 }
