@@ -1,18 +1,25 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React from "react";
+import { StyleSheet, Text } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
+
+// Repro: with Reduce Motion enabled, a view with an `entering` animation stays
+// invisible (stuck at the animation's initial opacity 0).
 
 export default function EmptyExample() {
   return (
-    <View style={styles.container}>
-      <Text>Hello world!</Text>
-    </View>
+    <Animated.View entering={FadeIn} style={styles.box}>
+      <Text style={styles.text}>This text should be visible</Text>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+  box: {
+    margin: 32,
+    padding: 32,
+    backgroundColor: "salmon",
+  },
+  text: {
+    fontSize: 24,
   },
 });
