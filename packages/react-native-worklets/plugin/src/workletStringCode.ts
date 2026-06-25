@@ -162,7 +162,9 @@ export function buildWorkletString(
     }
   }
 
-  return [transformed.code, JSON.stringify(sourceMap)];
+  const wrappedCode = `(${transformed.code})\n`;
+
+  return [wrappedCode, JSON.stringify(sourceMap)];
 }
 
 /**

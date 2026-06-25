@@ -25,7 +25,7 @@ function runPlugin(
 ) {
   const strippedInput = input.replace(/<\/?script[^>]*>/g, '');
   const transformed = transformSync(strippedInput, {
-    filename: '/dev/null',
+    filename: __filename,
     compact: false,
     babelrc: false,
     configFile: false,
@@ -73,7 +73,7 @@ describe('worklets babel plugin - hermesBytecode', () => {
     expect(code).toContain('bytecode:');
     expect(code).toContain('new Uint8Array(');
     expect(code).toContain('.buffer');
-    expect(code).not.toContain('code: "function');
+    expect(code).not.toContain('code: "(function');
     expect(mockExecFileSync).toHaveBeenCalledWith(
       FAKE_HERMESC,
       expect.arrayContaining(['-emit-binary', '-']),
@@ -91,7 +91,7 @@ describe('worklets babel plugin - hermesBytecode', () => {
     });
     const { code } = runPlugin(worklet(2), { hermesBytecode: true });
     assert(code);
-    expect(code).toContain('code: "function');
+    expect(code).toContain('code: "(function');
     expect(code).not.toContain('bytecode:');
     expect(warnSpy).toHaveBeenCalled();
     expect(errorSpy).not.toHaveBeenCalled();
@@ -103,7 +103,7 @@ describe('worklets babel plugin - hermesBytecode', () => {
       getHBCBinary: undefined,
     });
     assert(code);
-    expect(code).toContain('code: "function');
+    expect(code).toContain('code: "(function');
     expect(code).not.toContain('bytecode:');
     expect(mockExecFileSync).not.toHaveBeenCalled();
     expect(warnSpy).toHaveBeenCalled();

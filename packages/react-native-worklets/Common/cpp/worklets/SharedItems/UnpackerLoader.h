@@ -26,9 +26,6 @@ struct BytecodeUnpacker {
 class UnpackerLoader {
  public:
   void loadCodeUnpackers(std::array<CodeUnpacker, 6> unpackers) {
-    for (auto &unpacker : unpackers) {
-      unpacker.code = "(" + unpacker.code + ")();";
-    }
     codeUnpackers_ = std::move(unpackers);
   }
 
@@ -56,11 +53,17 @@ class UnpackerLoader {
     if (!unpacker.sourceMap.empty()) {
       rt.global()
           .getPropertyAsFunction(rt, "evalWithSourceMap")
-          .call(rt, unpacker.code, unpacker.location, unpacker.sourceMap);
+          .call(rt, unpacker.code, unpacker.location, unpacker.sourceMap)
+          .getObject(rt)
+          .getFunction(rt)
+          .call(rt);
       return;
     }
 #endif // NDEBUG
-    rt.evaluateJavaScript(std::make_shared<facebook::jsi::StringBuffer>(unpacker.code), unpacker.location);
+    rt.evaluateJavaScript(std::make_shared<facebook::jsi::StringBuffer>(unpacker.code), unpacker.location)
+        .getObject(rt)
+        .getFunction(rt)
+        .call(rt);
   }
 
   static void installUnpacker(facebook::jsi::Runtime &rt, const BytecodeUnpacker &unpacker) {

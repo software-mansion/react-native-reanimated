@@ -32,7 +32,7 @@ export function installValueUnpacker() {
           // that debugger understands and loads the source code of the file where
           // the worklet is defined.
           workletFun = globalThis.evalWithSourceMap(
-            '(' + initData!.code + '\n)',
+            initData!.code!,
             initData!.location!,
             initData!.sourceMap!
           );
@@ -42,13 +42,13 @@ export function installValueUnpacker() {
           // the actual file location we use worklet hash, as it the allows us to
           // properly symbolicate traces (see errors.ts for details)
           workletFun = globalThis.evalWithSourceUrl(
-            '(' + initData!.code + '\n)',
+            initData!.code!,
             `worklet_${workletHash}`
           );
         } else {
           // in release we use the regular eval to save on JSI calls
           // eslint-disable-next-line no-eval
-          workletFun = eval('(' + initData!.code + '\n)');
+          workletFun = eval(initData!.code!);
         }
         workletsCache.set(workletHash, workletFun!);
       }

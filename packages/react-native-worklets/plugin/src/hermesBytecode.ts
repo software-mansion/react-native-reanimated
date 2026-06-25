@@ -79,7 +79,7 @@ function resolveHbcBinary(state: WorkletsPluginPass): string | null {
 }
 
 function runHermesc(hermesc: string, source: string): Buffer {
-  return execFileSync(hermesc, ['-emit-binary', '-O', '-w', '-'], {
+  return execFileSync(hermesc, ['-g0', '-emit-binary', '-O', '-w', '-'], {
     input: source,
     maxBuffer: MAX_BYTECODE_BYTES,
     stdio: ['pipe', 'pipe', 'pipe'],

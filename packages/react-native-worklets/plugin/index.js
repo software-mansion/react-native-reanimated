@@ -856,7 +856,7 @@ var require_hermesBytecode = __commonJS({
       }
     }
     function runHermesc(hermesc, source) {
-      return (0, child_process_1.execFileSync)(hermesc, ["-emit-binary", "-O", "-w", "-"], {
+      return (0, child_process_1.execFileSync)(hermesc, ["-g0", "-emit-binary", "-O", "-w", "-"], {
         input: source,
         maxBuffer: MAX_BYTECODE_BYTES,
         stdio: ["pipe", "pipe", "pipe"]
@@ -1057,7 +1057,9 @@ var require_workletStringCode = __commonJS({
           delete sourceMap.sourcesContent;
         }
       }
-      return [transformed.code, JSON.stringify(sourceMap)];
+      const wrappedCode = `(${transformed.code})
+`;
+      return [wrappedCode, JSON.stringify(sourceMap)];
     }
     function restoreRecursiveCalls(file, newName) {
       (0, core_1.traverse)(file, {
