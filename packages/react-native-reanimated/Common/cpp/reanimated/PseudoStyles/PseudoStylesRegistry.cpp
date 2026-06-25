@@ -100,6 +100,7 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
   entry.activeMask = isActive ? (oldMask | bit) : (oldMask & ~bit);
 
   const auto shadowNode = entry.shadowNode;
+  const auto &fromStyle = entry.precomputedStyles[oldMask];
   const auto &toStyle = entry.precomputedStyles[entry.activeMask];
 
   css::TransitionProperties lockedProperties;
@@ -118,8 +119,11 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
   css::PropertyValueDynamicDiffsMap valueChanges;
   for (const auto &[propKey, toVal] : toStyle.items()) {
     const auto propName = propKey.asString();
-    // Null `from`: let each side resolve the live current value itself
-    valueChanges.emplace(propName, std::make_pair(folly::dynamic(), toVal));
+    // The precomputed previous value is the `from` fallback. The platform/loop still prefer the
+    // live current value when one exists (presentation layer / last interpolated output) for a
+    // smooth interruption; this value is used on the first run when there is nothing live to read.
+    const folly::dynamic &fromVal = fromStyle.count(propName) ? fromStyle[propName] : toVal;
+    valueChanges.emplace(propName, std::make_pair(fromVal, toVal));
   }
 
   cssTransitionsRegistry_->run(shadowNode, valueChanges);
