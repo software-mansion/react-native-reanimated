@@ -18,15 +18,13 @@ export default class CSSManager implements ICSSManager {
     configureWebCSS();
 
     const element = viewInfo.DOMElement as ReanimatedHTMLElement;
+    const svgElementTag = element?.tagName ?? componentDisplayName;
 
-    this.animationsManager = new CSSAnimationsManager(
-      element,
-      componentDisplayName
-    );
+    this.animationsManager = new CSSAnimationsManager(element, svgElementTag);
     this.transitionsManager = new CSSTransitionsManager(element);
     this.pseudoSelectorsManager = new CSSPseudoSelectorsManager(
       element,
-      componentDisplayName
+      svgElementTag
     );
   }
 
