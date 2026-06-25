@@ -5,6 +5,8 @@
 #include <reanimated/CSS/interpolation/transforms/operations/skew.h>
 #include <reanimated/CSS/interpolation/transforms/operations/translate.h>
 
+#include <cmath>
+#include <limits>
 #include <utility>
 
 namespace reanimated::css {
@@ -31,14 +33,19 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<PerspectiveOperat
     const std::shared_ptr<StyleOperation> &from,
     const std::shared_ptr<StyleOperation> &to,
     const StyleOperationsInterpolationContext & /* context */) const {
-  // TODO - check if this implementation is correct
   const auto &fromValue = std::static_pointer_cast<PerspectiveOperation>(from)->value;
   const auto &toValue = std::static_pointer_cast<PerspectiveOperation>(to)->value;
 
-  if (fromValue.value == 0)
-    return std::make_unique<PerspectiveOperation>(toValue);
-  if (toValue.value == 0)
-    return std::make_unique<PerspectiveOperation>(fromValue);
+  // The default "no perspective" is infinity, so interpolating the distance
+  // directly gives inf + t*(d - inf) = NaN. Interpolate in reciprocal space
+  // instead (1/inf = 0, matching how perspective enters the matrix as -1/d).
+  if (std::isinf(fromValue.value) || std::isinf(toValue.value)) {
+    const double fromReciprocal = 1.0 / fromValue.value;
+    const double toReciprocal = 1.0 / toValue.value;
+    const double reciprocal = fromReciprocal + progress * (toReciprocal - fromReciprocal);
+    return std::make_unique<PerspectiveOperation>(
+        reciprocal == 0.0 ? std::numeric_limits<double>::infinity() : 1.0 / reciprocal);
+  }
 
   return std::make_unique<PerspectiveOperation>(fromValue.interpolate(progress, toValue));
 }
