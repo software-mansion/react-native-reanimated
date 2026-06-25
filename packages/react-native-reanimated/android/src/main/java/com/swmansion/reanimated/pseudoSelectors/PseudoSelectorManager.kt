@@ -23,12 +23,7 @@ class PseudoSelectorManager(
 
     private val touchListenerViews = HashSet<View>()
 
-    private val hoverCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
-
-    private val hoveredViews = LinkedHashSet<View>()
-
-    // Reused by updateHoverStates to avoid allocating on every hover event (UI thread only).
-    private val hoverLocationBuffer = IntArray(2)
+    private val hover = TouchHoverCoordinator()
 
     private val pendingAttaches = LinkedHashMap<String, PendingAttach>()
     private var mountListenerRegistered = false
@@ -161,27 +156,12 @@ class PseudoSelectorManager(
         key: String,
         callback: PseudoSelectorCallback,
     ) {
-        // Android fires ACTION_HOVER_EXIT on an ancestor when the pointer moves onto a
-        // hoverable descendant, but CSS :hover must stay active there. So on enter/exit
-        // (not per-frame MOVE) recompute every registered view from the pointer position.
-        hoverCallbacks[view] = callback
-        val listener =
-            View.OnHoverListener { _, event ->
-                when (event.actionMasked) {
-                    MotionEvent.ACTION_HOVER_ENTER,
-                    MotionEvent.ACTION_HOVER_EXIT,
-                    -> updateHoverStates(event.rawX, event.rawY)
-                }
-                false
-            }
-        view.setOnHoverListener(listener)
+        ensureTouchListener(view)
+        hover.register(view, callback)
         detachActions[key] =
             Runnable {
-                hoverCallbacks.remove(view)
-                if (hoveredViews.remove(view)) {
-                    callback.onSelectorStateChanged(false)
-                }
-                view.setOnHoverListener(null)
+                hover.unregister(view)
+                maybeRemoveTouchListener(view)
             }
     }
 
@@ -226,10 +206,16 @@ class PseudoSelectorManager(
                             it.onSelectorStateChanged(true)
                         }
                     }
+                    hover.recompute(event.rawX, event.rawY)
                 }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                MotionEvent.ACTION_UP -> {
                     fireActiveCallbacksUpTree(view, false)
                     deepestCallbacks[view]?.onSelectorStateChanged(false)
+                }
+                MotionEvent.ACTION_CANCEL -> {
+                    fireActiveCallbacksUpTree(view, false)
+                    deepestCallbacks[view]?.onSelectorStateChanged(false)
+                    hover.clearAll()
                 }
             }
             false
@@ -237,7 +223,7 @@ class PseudoSelectorManager(
     }
 
     private fun maybeRemoveTouchListener(view: View) {
-        if (view !in activeCallbacks && view !in deepestCallbacks) {
+        if (view !in activeCallbacks && view !in deepestCallbacks && !hover.isRegistered(view)) {
             touchListenerViews.remove(view)
             view.setOnTouchListener(null)
         }
@@ -298,32 +284,6 @@ class PseudoSelectorManager(
                 activeCallbacks[parent]?.onSelectorStateChanged(isActive)
             }
             parent = parent.parent
-        }
-    }
-
-    /**
-     * Recompute every registered view's _:hover_ state from the pointer position, firing only on
-     * change. A view is hovered while the point is in its on-screen bounds - true for an ancestor
-     * while the pointer is over a descendant. Uses live (mid-animation) `getLocationOnScreen` bounds.
-     */
-    private fun updateHoverStates(
-        rawX: Float,
-        rawY: Float,
-    ) {
-        val loc = hoverLocationBuffer
-        for ((view, callback) in hoverCallbacks) {
-            view.getLocationOnScreen(loc)
-            val contains =
-                rawX >= loc[0] && rawX <= loc[0] + view.width &&
-                    rawY >= loc[1] && rawY <= loc[1] + view.height
-            val wasHovered = hoveredViews.contains(view)
-            if (contains && !wasHovered) {
-                hoveredViews.add(view)
-                callback.onSelectorStateChanged(true)
-            } else if (!contains && wasHovered) {
-                hoveredViews.remove(view)
-                callback.onSelectorStateChanged(false)
-            }
         }
     }
 
