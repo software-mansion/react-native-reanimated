@@ -35,10 +35,11 @@ export default class CSSManager implements ICSSManager {
       animationProperties,
       transitionProperties,
       pseudoStylesBySelector,
+      animationCallbacks,
       transitionCallbacks,
     ] = filterCSSAndStyleProperties(style);
 
-    this.animationsManager.update(animationProperties);
+    this.animationsManager.update(animationProperties, animationCallbacks);
     this.transitionsManager.update(transitionProperties, transitionCallbacks);
     this.pseudoSelectorsManager.update(pseudoStylesBySelector);
   }
