@@ -20,11 +20,18 @@ namespace {
 
 // MapBuffer keys. Keep in sync with SynchronousPropsBufferParser.kt.
 //
+// Each view is a single, flat (depth-1) MapBuffer. Transform ops are stored as
+// indexed key pairs rather than a nested list of sub-maps: op `i` (in order)
+// occupies key (KEY_TRANSFORM_OP_BASE + 2*i) = transform type code and key
+// (KEY_TRANSFORM_OP_BASE + 2*i + 1) = its value. This keeps serialization to one
+// builder per view and lets the parser reconstruct everything in a single linear
+// pass with no per-op sub-buffer allocations.
+//
 // Layout:
-//   root map:      { KEY_VIEWS: [ viewMap, ... ] }
-//   viewMap:       { KEY_VIEW_TAG: int, <propKey>: value, ..., KEY_TRANSFORM: [ transformMap, ... ] }
-//   transformMap:  { <transformKey>: value }   (exactly one entry)
-//   matrixMap:     { 0: double, 1: double, ... }
+//   root map: { KEY_VIEWS: [ viewMap, ... ] }
+//   viewMap:  { KEY_VIEW_TAG: int, <propKey>: value, ...,
+//               OP(0): typeCode, VAL(0): value, OP(1): typeCode, VAL(1): value, ... }
+//   matrix value: nested Map keyed by index { 0: double, 1: double, ... }
 //
 // The MapBuffer `DataType` of each value carries what the old command stream
 // encoded with explicit unit markers:
@@ -33,10 +40,10 @@ namespace {
 //   - percentages and angles        -> String (the original "50%" / "90deg" / "1rad")
 //   - transform matrix              -> nested Map keyed by index
 enum Key : std::uint8_t {
-  // Reserved keys (must not collide with the prop/transform keys below).
+  // Reserved keys (must not collide with the prop/transform-code values below).
   KEY_VIEWS = 0,
   KEY_VIEW_TAG = 1,
-  KEY_TRANSFORM = 2,
+  KEY_TRANSFORM = 2, // sentinel for the "transform" prop; never written as a key
 
   KEY_OPACITY = 10,
   KEY_ELEVATION = 11,
@@ -89,6 +96,10 @@ enum Key : std::uint8_t {
   KEY_TRANSFORM_MATRIX = 111,
   KEY_TRANSFORM_PERSPECTIVE = 112,
 };
+
+// Base for the indexed transform-op key pairs. Chosen well above the prop keys
+// (10-52) so the two key spaces never collide within a view map.
+constexpr MapBuffer::Key KEY_TRANSFORM_OP_BASE = 1000;
 
 const std::unordered_map<std::string_view, Key> kPropNameToKey = {
     {"opacity", KEY_OPACITY},
@@ -159,12 +170,12 @@ Key transformNameToKey(const std::string &name) {
   return it->second;
 }
 
-std::vector<MapBuffer> serializeTransform(const folly::dynamic &value) {
+// Flattens the transform array directly into the view builder: op `i` becomes
+// the key pair (KEY_TRANSFORM_OP_BASE + 2*i) = type code, (... + 1) = value.
+void serializeTransform(MapBufferBuilder &viewBuilder, const folly::dynamic &value) {
   react_native_assert(value.isArray() && "[Reanimated] Transform value must be an array");
 
-  std::vector<MapBuffer> transformMaps;
-  transformMaps.reserve(value.size());
-
+  MapBuffer::Key slot = 0;
   for (const auto &item : value) {
     react_native_assert(item.isObject() && "[Reanimated] Transform array item must be an object");
     react_native_assert(item.size() == 1 && "[Reanimated] Transform array item must have exactly one key-value pair");
@@ -172,25 +183,28 @@ std::vector<MapBuffer> serializeTransform(const folly::dynamic &value) {
     const auto transformKey = transformNameToKey(transformName);
     const auto &transformValue = *item.values().begin();
 
-    MapBufferBuilder transformBuilder(1);
+    const MapBuffer::Key typeKey = KEY_TRANSFORM_OP_BASE + 2 * slot;
+    const MapBuffer::Key valueKey = typeKey + 1;
+    viewBuilder.putInt(typeKey, transformKey);
+
     switch (transformKey) {
       case KEY_TRANSFORM_SCALE:
       case KEY_TRANSFORM_SCALE_X:
       case KEY_TRANSFORM_SCALE_Y:
       case KEY_TRANSFORM_PERSPECTIVE: {
-        transformBuilder.putDouble(transformKey, transformValue.asDouble());
+        viewBuilder.putDouble(valueKey, transformValue.asDouble());
         break;
       }
       case KEY_TRANSFORM_TRANSLATE_X:
       case KEY_TRANSFORM_TRANSLATE_Y: {
         if (transformValue.isDouble()) {
-          transformBuilder.putDouble(transformKey, transformValue.getDouble());
+          viewBuilder.putDouble(valueKey, transformValue.getDouble());
         } else if (transformValue.isString()) {
           const auto &transformValueStr = transformValue.getString();
           if (!transformValueStr.ends_with("%")) {
             throw std::runtime_error("[Reanimated] String translate must be a percentage");
           }
-          transformBuilder.putString(transformKey, transformValueStr);
+          viewBuilder.putString(valueKey, transformValueStr);
         } else {
           throw std::runtime_error("[Reanimated] Translate value must be either a number or a string");
         }
@@ -206,7 +220,7 @@ std::vector<MapBuffer> serializeTransform(const folly::dynamic &value) {
         if (!transformValueStr.ends_with("deg") && !transformValueStr.ends_with("rad")) {
           throw std::runtime_error("[Reanimated] Unsupported rotation unit: " + transformValueStr);
         }
-        transformBuilder.putString(transformKey, transformValueStr);
+        viewBuilder.putString(valueKey, transformValueStr);
         break;
       }
       case KEY_TRANSFORM_MATRIX: {
@@ -216,16 +230,14 @@ std::vector<MapBuffer> serializeTransform(const folly::dynamic &value) {
         for (MapBuffer::Key i = 0; i < size; i++) {
           matrixBuilder.putDouble(i, transformValue[i].asDouble());
         }
-        transformBuilder.putMapBuffer(transformKey, matrixBuilder.build());
+        viewBuilder.putMapBuffer(valueKey, matrixBuilder.build());
         break;
       }
       default:
         throw std::runtime_error("[Reanimated] Unsupported transform: " + transformName);
     }
-    transformMaps.push_back(transformBuilder.build());
+    slot++;
   }
-
-  return transformMaps;
 }
 
 MapBuffer serializeView(const Tag tag, const folly::dynamic &props) {
@@ -289,7 +301,7 @@ MapBuffer serializeView(const Tag tag, const folly::dynamic &props) {
         break;
 
       case KEY_TRANSFORM:
-        viewBuilder.putMapBufferList(KEY_TRANSFORM, serializeTransform(value));
+        serializeTransform(viewBuilder, value);
         break;
 
       default:

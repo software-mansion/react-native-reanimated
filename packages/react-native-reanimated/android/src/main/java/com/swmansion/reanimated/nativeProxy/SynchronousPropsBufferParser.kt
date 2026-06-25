@@ -8,11 +8,17 @@ import com.facebook.react.common.mapbuffer.ReadableMapBuffer
 internal object SynchronousPropsBufferParser {
     // MapBuffer keys. Keep in sync with SynchronousPropsBufferSerializer.cpp.
     //
+    // Each view is a single flat (depth-1) map. Transform op `i` (in order) is
+    // stored as the key pair (KEY_TRANSFORM_OP_BASE + 2*i) = type code,
+    // (KEY_TRANSFORM_OP_BASE + 2*i + 1) = value. Because entries arrive sorted by
+    // key, a type key is always immediately followed by its value key and ops
+    // stay in order, so one linear pass reconstructs everything.
+    //
     // Layout:
-    //   root map:      { KEY_VIEWS: [ viewMap, ... ] }
-    //   viewMap:       { KEY_VIEW_TAG: int, <propKey>: value, ..., KEY_TRANSFORM: [ transformMap, ... ] }
-    //   transformMap:  { <transformKey>: value }   (exactly one entry)
-    //   matrixMap:     { 0: double, 1: double, ... }
+    //   root map: { KEY_VIEWS: [ viewMap, ... ] }
+    //   viewMap:  { KEY_VIEW_TAG: int, <propKey>: value, ...,
+    //              OP(0): typeCode, VAL(0): value, OP(1): typeCode, VAL(1): value, ... }
+    //   matrix value: nested Map keyed by index { 0: double, 1: double, ... }
     //
     // The MapBuffer DataType of each value tells us how to reconstruct it:
     //   DOUBLE -> plain number / px length
@@ -21,7 +27,7 @@ internal object SynchronousPropsBufferParser {
     //   MAP    -> transform matrix (only for the matrix transform)
     private const val KEY_VIEWS = 0
     private const val KEY_VIEW_TAG = 1
-    private const val KEY_TRANSFORM = 2
+    private const val KEY_TRANSFORM_OP_BASE = 1000
 
     private const val KEY_OPACITY = 10
     private const val KEY_ELEVATION = 11
@@ -137,12 +143,39 @@ internal object SynchronousPropsBufferParser {
         for (viewMap in mapBuffer.getMapBufferList(KEY_VIEWS)) {
             var viewTag = -1
             val props = JavaOnlyMap()
+            var transform: JavaOnlyArray? = null
+            var pendingType = -1
+
             for (entry in viewMap) {
-                when (entry.key) {
-                    KEY_VIEW_TAG -> viewTag = entry.intValue
-                    KEY_TRANSFORM -> props.putArray("transform", parseTransform(viewMap.getMapBufferList(KEY_TRANSFORM)))
+                val key = entry.key
+                when {
+                    key == KEY_VIEW_TAG -> viewTag = entry.intValue
+
+                    key >= KEY_TRANSFORM_OP_BASE -> {
+                        if ((key - KEY_TRANSFORM_OP_BASE) % 2 == 0) {
+                            // type-code key: remember which op this is
+                            pendingType = entry.intValue
+                        } else {
+                            // value key: pair it with the type seen just before
+                            val arr = transform ?: JavaOnlyArray().also { transform = it }
+                            val name = transformKeyToString(pendingType)
+                            when (entry.type) {
+                                MapBuffer.DataType.DOUBLE -> arr.pushMap(JavaOnlyMap.of(name, entry.doubleValue))
+                                MapBuffer.DataType.STRING -> arr.pushMap(JavaOnlyMap.of(name, entry.stringValue))
+                                MapBuffer.DataType.MAP -> {
+                                    val matrix = JavaOnlyArray()
+                                    for (element in entry.mapBufferValue) {
+                                        matrix.pushDouble(element.doubleValue)
+                                    }
+                                    arr.pushMap(JavaOnlyMap.of(name, matrix))
+                                }
+                                else -> throw RuntimeException("Unexpected value type for transform $name: ${entry.type}")
+                            }
+                        }
+                    }
+
                     else -> {
-                        val name = keyToString(entry.key)
+                        val name = keyToString(key)
                         when (entry.type) {
                             MapBuffer.DataType.DOUBLE -> props.putDouble(name, entry.doubleValue)
                             MapBuffer.DataType.INT -> props.putInt(name, entry.intValue)
@@ -152,29 +185,9 @@ internal object SynchronousPropsBufferParser {
                     }
                 }
             }
+
+            transform?.let { props.putArray("transform", it) }
             applyProps(viewTag, props)
         }
-    }
-
-    private fun parseTransform(transformMaps: List<MapBuffer>): JavaOnlyArray {
-        val transform = JavaOnlyArray()
-        for (transformMap in transformMaps) {
-            // Each transform map has exactly one entry: <transformKey> -> value.
-            val entry = transformMap.iterator().next()
-            val name = transformKeyToString(entry.key)
-            when (entry.type) {
-                MapBuffer.DataType.DOUBLE -> transform.pushMap(JavaOnlyMap.of(name, entry.doubleValue))
-                MapBuffer.DataType.STRING -> transform.pushMap(JavaOnlyMap.of(name, entry.stringValue))
-                MapBuffer.DataType.MAP -> {
-                    val matrix = JavaOnlyArray()
-                    for (element in entry.mapBufferValue) {
-                        matrix.pushDouble(element.doubleValue)
-                    }
-                    transform.pushMap(JavaOnlyMap.of(name, matrix))
-                }
-                else -> throw RuntimeException("Unexpected value type for transform $name: ${entry.type}")
-            }
-        }
-        return transform
     }
 }
