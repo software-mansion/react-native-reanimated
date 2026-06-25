@@ -8,7 +8,7 @@ import { processKeyframeDefinitions } from '../animationParser';
 
 beforeAll(() => {
   registerWebSvgPropsBuilder('TestStroke', SVG_COMMON_WEB_PROPERTIES_CONFIG);
-  registerWebSvgPropsBuilder('Path', SVG_PATH_WEB_PROPERTIES_CONFIG);
+  registerWebSvgPropsBuilder('path', SVG_PATH_WEB_PROPERTIES_CONFIG);
 });
 
 describe(processKeyframeDefinitions, () => {
@@ -24,7 +24,7 @@ describe(processKeyframeDefinitions, () => {
   test('pads a trailing Z so an open->closed path morph interpolates', () => {
     const result = processKeyframeDefinitions(
       { from: { d: 'M0,0 L10,10' }, to: { d: 'M0,0 L20,5 Z' } },
-      'Path'
+      'path'
     );
     expect(result).toContain('from { d: path("M0,0 L10,10Z") }');
     expect(result).toContain('to { d: path("M0,0 L20,5 Z") }');
