@@ -6,6 +6,9 @@
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <react/renderer/core/ReactPrimitives.h>
+#ifdef ANDROID
+#include <react/renderer/mapbuffer/MapBuffer.h>
+#endif // ANDROID
 #include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
 
 #include <memory>
@@ -30,7 +33,7 @@ using MeasureFunction = std::function<jsi::Value(jsi::Runtime &rt, const jsi::Va
 
 using RequestRenderFunction = std::function<void(std::function<void(const double)>)>;
 #ifdef ANDROID
-using SynchronouslyUpdateUIPropsFunction = std::function<void(const std::vector<int> &, const std::vector<double> &)>;
+using SynchronouslyUpdateUIPropsFunction = std::function<void(facebook::react::MapBuffer &&)>;
 #elif __APPLE__
 using SynchronouslyUpdateUIPropsFunction = std::function<void(const int, const folly::dynamic &)>;
 #endif // ANDROID

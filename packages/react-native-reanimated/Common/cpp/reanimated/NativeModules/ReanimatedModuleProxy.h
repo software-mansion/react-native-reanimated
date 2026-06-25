@@ -252,13 +252,6 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
   const PreserveMountedTagsFunction filterUnmountedTagsFunction_;
 
-#ifdef ANDROID
-  // Reused across `applySynchronousUpdates` calls to avoid per-frame heap
-  // allocations. Access only on the UI thread.
-  std::vector<int> synchronousPropsIntBuffer_;
-  std::vector<double> synchronousPropsDoubleBuffer_;
-#endif // ANDROID
-
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<LayoutAnimationsProxyCommon> layoutAnimationsProxy_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;

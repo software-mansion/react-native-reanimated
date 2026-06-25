@@ -4,14 +4,12 @@
 
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
-#include <vector>
+#include <react/renderer/mapbuffer/MapBuffer.h>
 
 namespace reanimated {
 
-void serializeSynchronousPropsToBuffers(
-    const UpdatesBatch &synchronousUpdatesBatch,
-    std::vector<int> &intBuffer,
-    std::vector<double> &doubleBuffer);
+facebook::react::MapBuffer serializeSynchronousPropsToMapBuffer(
+    const UpdatesBatch &synchronousUpdatesBatch);
 
 } // namespace reanimated
 

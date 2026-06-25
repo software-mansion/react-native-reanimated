@@ -1,3 +1,4 @@
+#include <react/common/mapbuffer/JReadableMapBuffer.h>
 #include <react/fabric/Binding.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
@@ -196,16 +197,11 @@ std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(std::vect
   return region;
 }
 
-void NativeProxy::synchronouslyUpdateUIProps(
-    const std::vector<int> &intBuffer,
-    const std::vector<double> &doubleBuffer) {
-  static const auto method = getJniMethod<void(jni::alias_ref<jni::JArrayInt>, jni::alias_ref<jni::JArrayDouble>)>(
-      "synchronouslyUpdateUIProps");
-  auto jArrayInt = jni::JArrayInt::newArray(intBuffer.size());
-  auto jArrayDouble = jni::JArrayDouble::newArray(doubleBuffer.size());
-  jArrayInt->setRegion(0, intBuffer.size(), intBuffer.data());
-  jArrayDouble->setRegion(0, doubleBuffer.size(), doubleBuffer.data());
-  method(javaPart_.get(), jArrayInt, jArrayDouble);
+void NativeProxy::synchronouslyUpdateUIProps(facebook::react::MapBuffer &&mapBuffer) {
+  static const auto method =
+      getJniMethod<void(jni::alias_ref<JReadableMapBuffer::jhybridobject>)>("synchronouslyUpdateUIProps");
+  auto readableMapBuffer = JReadableMapBuffer::createWithContents(std::move(mapBuffer));
+  method(javaPart_.get(), readableMapBuffer);
 }
 
 int NativeProxy::registerSensor(int sensorType, int interval, int, std::function<void(double[], int)> setter) {

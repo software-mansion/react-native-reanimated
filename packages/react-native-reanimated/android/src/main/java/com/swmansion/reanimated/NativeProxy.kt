@@ -10,6 +10,7 @@ import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.common.annotations.FrameworkAPI
+import com.facebook.react.common.mapbuffer.ReadableMapBuffer
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl
 import com.facebook.react.uimanager.IllegalViewOperationException
@@ -246,11 +247,8 @@ open class NativeProxy {
     }
 
     @DoNotStrip
-    fun synchronouslyUpdateUIProps(
-        intBuffer: IntArray,
-        doubleBuffer: DoubleArray,
-    ) {
-        SynchronousPropsBufferParser.parse(intBuffer, doubleBuffer) { viewTag, props ->
+    fun synchronouslyUpdateUIProps(mapBuffer: ReadableMapBuffer) {
+        SynchronousPropsBufferParser.parse(mapBuffer) { viewTag, props ->
             if (BuildConfig.IS_REACT_NATIVE_86_OR_NEWER) {
                 try {
                     updatePropsSynchronouslyMethod.invoke(mountingManager, viewTag, props)
