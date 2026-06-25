@@ -60,6 +60,7 @@ export default class CSSManager implements ICSSManager {
       transitionProperties,
       pseudoStylesBySelector,
       ,
+      ,
       filteredStyle,
     ] = filterCSSAndStyleProperties(style);
 
