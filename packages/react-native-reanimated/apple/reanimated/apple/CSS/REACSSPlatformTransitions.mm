@@ -65,6 +65,7 @@ struct ActiveTransition {
             toValue:(const PlatformValue &)toValue
            settings:(const CSSTransitionPropertySettings &)settings
           timestamp:(double)timestamp
+         persistent:(BOOL)persistent
 {
   auto &properties = _active[viewTag];
   const auto activeIt = properties.find(propertyName);
@@ -82,7 +83,8 @@ struct ActiveTransition {
            toValue:toValue
         durationMs:reversing.duration
        startTimeMs:reversing.startTimestamp
-            easing:settings.easingConfig];
+            easing:settings.easingConfig
+        persistent:persistent];
   properties[propertyName] = ActiveTransition{adjustedStart, toValue, std::move(reversing), settings};
 }
 
@@ -104,7 +106,8 @@ struct ActiveTransition {
           fromValue:*from
             toValue:*to
            settings:settings
-          timestamp:timestamp];
+          timestamp:timestamp
+         persistent:NO];
   return YES;
 }
 
@@ -135,7 +138,8 @@ struct ActiveTransition {
           fromValue:*from
             toValue:*to
            settings:settings
-          timestamp:timestamp];
+          timestamp:timestamp
+         persistent:YES];
   return YES;
 }
 
@@ -146,6 +150,7 @@ struct ActiveTransition {
         durationMs:(double)durationMs
        startTimeMs:(double)startTimeMs
             easing:(const EasingConfig &)easing
+        persistent:(BOOL)persistent
 {
   // Capture everything up front; CALayer access must happen on the main thread.
   NSString *keyPath = caLayerKeyPathForCSSProperty(propertyName);
@@ -167,24 +172,25 @@ struct ActiveTransition {
     }
 
     CABasicAnimation *anim = [CABasicAnimation animationWithKeyPath:keyPath];
-    // On interruption, start from the live presentation value; the implicit
-    // fromValue would race RN's model commit.
-    if ([[layer animationForKey:keyPath] isKindOfClass:[CABasicAnimation class]]) {
-      id presentationValue = [[layer presentationLayer] valueForKeyPath:keyPath];
-      anim.fromValue = presentationValue ?: fromId;
-    } else {
-      anim.fromValue = fromId;
-    }
+    // Always start from the layer's live presentation value: mid-animation it gives a smooth
+    // hand-off (e.g. a pseudo-selector toggling while a render transition is running), and at
+    // rest it equals the model value. A passed fromValue would otherwise race RN's model commit
+    // or be a placeholder - pseudo toggles send a null `from`, which resolves to the property
+    // default. Fall back to fromId only if the layer has not been presented yet.
+    id presentationValue = [[layer presentationLayer] valueForKeyPath:keyPath];
+    anim.fromValue = presentationValue ?: fromId;
     anim.toValue = toId;
     anim.duration = durationSec;
     // beginTime is in the layer's local clock; converting keeps ancestor
     // speed/timeOffset (e.g. RN Screens during navigation) from shifting it.
     anim.beginTime = [layer convertTime:beginTime fromLayer:nil];
     anim.timingFunction = timing;
-    // Backwards fill paints fromValue during the delay window; the animation
-    // self-removes on completion and the layer reads the model below.
-    anim.fillMode = kCAFillModeBackwards;
-    anim.removedOnCompletion = YES;
+    // Backwards fill covers the delay window. Non-persistent transitions self-remove on
+    // completion and the layer reads the model below; persistent ones (pseudo toggles) keep
+    // their presentation so an RN re-commit of the base prop can't snap the value back to the
+    // rendered default at the transition's end.
+    anim.fillMode = persistent ? kCAFillModeBoth : kCAFillModeBackwards;
+    anim.removedOnCompletion = persistent ? NO : YES;
 
     // Commit toValue to the model and add the animation in one transaction
     // (implicit actions off): on auto-removal the layer shows the final model

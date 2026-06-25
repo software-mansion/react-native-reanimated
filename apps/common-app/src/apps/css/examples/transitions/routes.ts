@@ -101,7 +101,7 @@ const routes = {
         Component: pseudoSelectors.Active,
       },
       PseudoActiveBlocksRender: {
-        name: ':active blocks render transition',
+        name: 'selectors block render transition',
         Component: pseudoSelectors.ActiveBlocksRender,
       },
       PseudoActiveDeepest: {

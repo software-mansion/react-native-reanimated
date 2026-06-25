@@ -50,13 +50,18 @@ void PseudoStylesRegistry::registerPseudoStyles(
   auto &entry = registry_[tag];
   entry.shadowNode = shadowNode;
   entry.defaults = defaults;
+  std::vector<PseudoSelector> newSelectors;
   for (const auto &registration : selectors) {
+    if (!entry.selectors.contains(registration.selector)) {
+      newSelectors.push_back(registration.selector);
+    }
     entry.selectors[registration.selector] = {registration.selectorStyle};
   }
   entry.precomputedStyles = recomputeAllStyles(entry);
 
-  for (const auto &registration : selectors) {
-    const auto selector = registration.selector;
+  // Only attach observers for genuinely new selectors so re-registering on a render
+  // (without an intervening detach) doesn't stack duplicate native gesture observers.
+  for (const auto selector : newSelectors) {
     attachFn_(
         tag,
         selector,
@@ -97,14 +102,28 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
   entry.activeMask = isActive ? (oldMask | bit) : (oldMask & ~bit);
 
   const auto shadowNode = entry.shadowNode;
-  const auto &fromStyle = entry.precomputedStyles[oldMask];
   const auto &toStyle = entry.precomputedStyles[entry.activeMask];
+
+  css::TransitionProperties lockedProperties;
+  for (const auto &[sel, data] : entry.selectors) {
+    if (!(entry.activeMask & (1u << static_cast<int>(sel)))) {
+      continue;
+    }
+    for (const auto &[propKey, val] : data.selectorStyle.items()) {
+      if (!val.isNull()) {
+        lockedProperties.insert(propKey.asString());
+      }
+    }
+  }
+  cssTransitionsRegistry_->setPseudoLockedProperties(tag, lockedProperties);
 
   css::PropertyValueDynamicDiffsMap valueChanges;
   for (const auto &[propKey, toVal] : toStyle.items()) {
     const auto propName = propKey.asString();
-    const folly::dynamic &fromVal = fromStyle.count(propName) ? fromStyle[propName] : toVal;
-    valueChanges.emplace(propName, std::make_pair(fromVal, toVal));
+    // Null `from`: let each side resolve the live current value itself - the platform reads
+    // the layer's presentation value (a smooth mid-animation hand-off instead of a snap from a
+    // stale precomputed start), and the loop falls back to its last interpolated output.
+    valueChanges.emplace(propName, std::make_pair(folly::dynamic(), toVal));
   }
 
   cssTransitionsRegistry_->run(shadowNode, valueChanges);
