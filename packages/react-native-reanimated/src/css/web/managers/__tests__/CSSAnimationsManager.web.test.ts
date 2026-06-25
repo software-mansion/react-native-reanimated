@@ -83,10 +83,11 @@ describe('CSSAnimationsManager (web)', () => {
 
     test('builds SVG keyframes with the SVG props builder for SVG components', () => {
       // Path wraps `d` in path() - a transform only the SVG builder does - so
-      // this verifies the manager threads its componentName into the keyframe
-      // pipeline for SVG components (not just the generic one).
-      registerWebSvgPropsBuilder('Path', SVG_PATH_WEB_PROPERTIES_CONFIG);
-      const svgManager = new CSSAnimationsManager(element, 'Path');
+      // this verifies the manager threads its svgElementTag into the keyframe
+      // pipeline for SVG components (not just the generic one). The tag is the
+      // rendered element's lowercase DOM tag name (`<path>`).
+      registerWebSvgPropsBuilder('path', SVG_PATH_WEB_PROPERTIES_CONFIG);
+      const svgManager = new CSSAnimationsManager(element, 'path');
 
       svgManager.update({
         animationName: {
