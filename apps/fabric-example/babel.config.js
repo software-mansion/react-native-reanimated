@@ -2,6 +2,8 @@
 const workletsPluginOptions = {
   strictGlobal: true,
   bundleMode: true,
+  hermesBytecode: false,
+  getHBCBinary,
 };
 
 /** @type {import('@babel/core').TransformOptions} */
