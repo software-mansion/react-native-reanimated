@@ -71,8 +71,6 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     animationProperties: ExistingCSSAnimationProperties | null,
     callbacks: CSSAnimationCallbacks | null = null
   ) {
-    // Keep listeners tied to callback presence (not animation presence) so an
-    // `animationcancel` emitted while detaching still reaches the user.
     this.syncStateListeners(callbacks ?? {});
 
     if (!animationProperties) {
