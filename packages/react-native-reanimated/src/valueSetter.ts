@@ -10,8 +10,10 @@ export function valueSetter<Value>(
   const previousAnimation = mutable._animation;
   if (previousAnimation) {
     mutable._animation = null;
-    previousAnimation.cancelled = true;
-    previousAnimation.callback?.(false);
+    if (!previousAnimation.finished) {
+      previousAnimation.cancelled = true;
+      previousAnimation.callback?.(false);
+    }
   }
   if (
     typeof value === 'function' ||
@@ -52,10 +54,10 @@ export function valueSetter<Value>(
         return;
       }
       const finished = animation.onFrame(animation, timestamp);
-      animation.finished = true;
       animation.timestamp = timestamp;
       mutable._value = animation.current!;
       if (finished) {
+        animation.finished = true;
         animation.callback?.(true /* finished */);
       } else {
         requestAnimationFrame(step);
