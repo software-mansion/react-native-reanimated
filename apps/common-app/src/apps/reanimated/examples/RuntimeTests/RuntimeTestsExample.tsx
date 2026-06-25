@@ -98,6 +98,7 @@ export default function RuntimeTestsExample() {
             // TODO: update expected values
             // require('./tests/core/cancelAnimation.test');
             // TODO: speed up useSharedValue tests, they have unnecessarily long delays
+            require('./tests/core/useSharedValue/animationAssigning.test');
             require('./tests/core/useSharedValue/synchronization.test');
             require('./tests/core/useSharedValue/numbers.test');
             require('./tests/core/useSharedValue/arrays.test');

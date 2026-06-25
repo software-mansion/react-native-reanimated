@@ -9,9 +9,11 @@ export function valueSetter<Value>(
   'worklet';
   const previousAnimation = mutable._animation;
   if (previousAnimation) {
-    previousAnimation.cancelled = true;
-    previousAnimation.callback?.(false);
     mutable._animation = null;
+    if (!previousAnimation.finished) {
+      previousAnimation.cancelled = true;
+      previousAnimation.callback?.(false);
+    }
   }
   if (
     typeof value === 'function' ||
@@ -52,10 +54,10 @@ export function valueSetter<Value>(
         return;
       }
       const finished = animation.onFrame(animation, timestamp);
-      animation.finished = true;
       animation.timestamp = timestamp;
       mutable._value = animation.current!;
       if (finished) {
+        animation.finished = true;
         animation.callback?.(true /* finished */);
       } else {
         requestAnimationFrame(step);
