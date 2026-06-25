@@ -50,7 +50,7 @@ type ProcessedSettings = ConvertValuesToArrays<CSSAnimationSettings>;
 
 export default class CSSAnimationsManager implements ICSSAnimationsManager {
   private readonly element: ReanimatedHTMLElement;
-  private readonly componentName: string;
+  private readonly svgElementTag: string;
 
   // Keys are processed keyframes
   private attachedAnimations: Record<string, ProcessedAnimation> = {};
@@ -62,9 +62,9 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     EventListener
   >();
 
-  constructor(element: ReanimatedHTMLElement, componentName = '') {
+  constructor(element: ReanimatedHTMLElement, svgElementTag = '') {
     this.element = element;
-    this.componentName = componentName;
+    this.svgElementTag = svgElementTag;
   }
 
   update(
@@ -104,7 +104,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
         const keyframes = definition as CSSAnimationKeyframes;
         const processedKeyframes = processKeyframeDefinitions(
           keyframes,
-          this.componentName
+          this.svgElementTag
         );
 
         // If the animation with the same keyframes was already attached, we can reuse it
