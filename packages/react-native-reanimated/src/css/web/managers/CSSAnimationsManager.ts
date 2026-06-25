@@ -192,7 +192,6 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   private createStateListener(prop: CSSAnimationCallbackProp): EventListener {
     return (event: Event) => {
       const animationEvent = event as AnimationEvent;
-      // Animation events bubble; only handle this element's own animations.
       if (animationEvent.target !== this.element) {
         return;
       }
