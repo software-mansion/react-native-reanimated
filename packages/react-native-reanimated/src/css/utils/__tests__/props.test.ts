@@ -292,7 +292,7 @@ describe(filterCSSAndStyleProperties, () => {
 
       expect(() => filterCSSAndStyleProperties(style)).not.toThrow();
 
-      const [, , , , filteredStyle] = filterCSSAndStyleProperties(style);
+      const [, , , , , filteredStyle] = filterCSSAndStyleProperties(style);
       expect(filteredStyle).toStrictEqual({ opacity: 0.5, [foreignKey]: {} });
     });
 
