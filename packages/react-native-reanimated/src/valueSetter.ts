@@ -9,9 +9,9 @@ export function valueSetter<Value>(
   'worklet';
   const previousAnimation = mutable._animation;
   if (previousAnimation) {
+    mutable._animation = null;
     previousAnimation.cancelled = true;
     previousAnimation.callback?.(false);
-    mutable._animation = null;
   }
   if (
     typeof value === 'function' ||
