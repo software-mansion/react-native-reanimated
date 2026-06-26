@@ -128,6 +128,8 @@ class SerializableRemoteFunction::WorkletOrigin final : public SerializableRemot
 class SerializableRemoteFunction::RNOrigin::RNOriginProxy final : public SerializableRemoteFunction {
  public:
   explicit RNOriginProxy(const std::shared_ptr<RNOrigin> &origin);
+  RNOriginProxy(const RNOriginProxy &) = delete;
+  RNOriginProxy &operator=(const RNOriginProxy &) = delete;
 
   ~RNOriginProxy() override;
 
