@@ -53,6 +53,7 @@ import {
  */
 const IN_STYLE_UPDATER = { current: false };
 const IN_STYLE_UPDATER_UI = createSerializable({ current: false });
+// is-tree-shakable-suppress
 serializableMappingCache.set(IN_STYLE_UPDATER, IN_STYLE_UPDATER_UI);
 
 const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
@@ -75,6 +76,7 @@ export function isValidLayoutAnimationProp(prop: string) {
   return (prop as LayoutAnimationProp) in LAYOUT_ANIMATION_SUPPORTED_PROPS;
 }
 
+// is-tree-shakable-suppress
 if (__DEV__ && ReducedMotionManager.jsValue) {
   logger.warn(
     `Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device.`

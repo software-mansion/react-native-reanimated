@@ -127,7 +127,6 @@ export interface AnimatedComponentRef extends Component {
 export interface IAnimatedComponentInternalBase {
   ChildComponent: AnyComponent;
   _componentRef: AnimatedComponentRef | HTMLElement | null;
-  _hasAnimatedRef: boolean;
   _viewInfo?: ViewInfo;
 
   /**
@@ -137,8 +136,7 @@ export interface IAnimatedComponentInternalBase {
   getComponentViewTag: () => number;
 }
 
-export interface IAnimatedComponentInternal
-  extends IAnimatedComponentInternalBase {
+export interface IAnimatedComponentInternal extends IAnimatedComponentInternalBase {
   _animatedStyles: StyleProps[];
   _prevAnimatedStyles: StyleProps[];
   _animatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[];

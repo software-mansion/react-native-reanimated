@@ -2,7 +2,15 @@ import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 
-import { describe, expect, getRegisteredValue, registerValue, render, test, wait } from '../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  getRegisteredValue,
+  registerValue,
+  render,
+  test,
+  wait,
+} from '../../ReJest/RuntimeTestsApi';
 import { scheduleOnUI } from 'react-native-worklets';
 
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
@@ -52,7 +60,8 @@ describe('Test worklet classes', () => {
       registerValue(SHARED_VALUE_REF, output);
       const clazz = new WorkletClass();
 
-      output.value = clazz.getTwo() + clazz.getIncremented() + clazz.getIncremented();
+      output.value =
+        clazz.getTwo() + clazz.getIncremented() + clazz.getIncremented();
 
       return <View />;
     };

@@ -9,20 +9,31 @@ const COMPARATORS: {
   [Key: string]: (expected: TestValue, value: TestValue) => boolean;
 } = {
   [ComparisonMode.STRING]: (expected, value) => {
-    return typeof expected === 'string' && typeof value === 'string' && value === expected;
+    return (
+      typeof expected === 'string' &&
+      typeof value === 'string' &&
+      value === expected
+    );
   },
 
   [ComparisonMode.NUMBER]: (expected, value) => {
-    const bothAreNumbers = typeof value === 'number' && typeof expected === 'number';
-    const bothAreBigInts = typeof value === 'bigint' && typeof expected === 'bigint';
+    const bothAreNumbers =
+      typeof value === 'number' && typeof expected === 'number';
+    const bothAreBigInts =
+      typeof value === 'bigint' && typeof expected === 'bigint';
     const bothAreNaNs = bothAreNumbers && isNaN(value) && isNaN(expected);
-    return bothAreNaNs || ((bothAreNumbers || bothAreBigInts) && value === expected);
+    return (
+      bothAreNaNs || ((bothAreNumbers || bothAreBigInts) && value === expected)
+    );
   },
 
   [ComparisonMode.FLOAT]: (expected, value) => {
-    const bothAreNumbers = typeof value === 'number' && typeof expected === 'number';
+    const bothAreNumbers =
+      typeof value === 'number' && typeof expected === 'number';
     const bothAreNaNs = bothAreNumbers && isNaN(value) && isNaN(expected);
-    return bothAreNaNs || Math.abs(Number(value) - Number(expected)) < Number.EPSILON;
+    return (
+      bothAreNaNs || Math.abs(Number(value) - Number(expected)) < Number.EPSILON
+    );
   },
 
   [ComparisonMode.COLOR]: (expected, value) => {
@@ -34,11 +45,15 @@ const COMPARATORS: {
 
   [ComparisonMode.PIXEL]: (expected, value) => {
     const valueAsNumber = Number(value);
-    return !isNaN(valueAsNumber) && Math.abs(valueAsNumber - Number(expected)) < DISTANCE_TOLERANCE;
+    return (
+      !isNaN(valueAsNumber) &&
+      Math.abs(valueAsNumber - Number(expected)) < DISTANCE_TOLERANCE
+    );
   },
 
   [ComparisonMode.FLOAT_DISTANCE]: (expected, value) => {
-    const bothAreNumbers = typeof value === 'number' && typeof expected === 'number';
+    const bothAreNumbers =
+      typeof value === 'number' && typeof expected === 'number';
     const bothAreNaNs = bothAreNumbers && isNaN(value) && isNaN(expected);
     return bothAreNaNs || Math.abs(Number(value) - Number(expected)) < 0.00001;
   },
@@ -51,7 +66,12 @@ const COMPARATORS: {
       return false;
     }
     for (let i = 0; i < expected.length; i++) {
-      if (!COMPARATORS[ComparisonMode.AUTO](expected[i] as TestValue, value[i] as TestValue)) {
+      if (
+        !COMPARATORS[ComparisonMode.AUTO](
+          expected[i] as TestValue,
+          value[i] as TestValue
+        )
+      ) {
         return false;
       }
     }
@@ -75,8 +95,15 @@ const COMPARATORS: {
       return false;
     }
     for (const key of expectedKeys) {
-      const comparisonMode = isValidPropName(key) ? getComparisonModeForProp(key) : ComparisonMode.AUTO;
-      if (!COMPARATORS[comparisonMode](expected[key as keyof typeof expected], value[key as keyof typeof value])) {
+      const comparisonMode = isValidPropName(key)
+        ? getComparisonModeForProp(key)
+        : ComparisonMode.AUTO;
+      if (
+        !COMPARATORS[comparisonMode](
+          expected[key as keyof typeof expected],
+          value[key as keyof typeof value]
+        )
+      ) {
         return false;
       }
     }

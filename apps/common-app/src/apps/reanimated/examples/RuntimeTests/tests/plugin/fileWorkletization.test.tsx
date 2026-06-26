@@ -1,68 +1,58 @@
-import React, { useEffect } from 'react';
-import { View } from 'react-native';
-import { useSharedValue } from 'react-native-reanimated';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
-import { describe, expect, getRegisteredValue, registerValue, render, test, wait } from '../../ReJest/RuntimeTestsApi';
-import { getThree, implicitContextObject, ImplicitWorkletClass } from './fileWorkletization';
-import { scheduleOnUI } from 'react-native-worklets';
-
-const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
+import {
+  beforeEach,
+  describe,
+  expect,
+  notify,
+  test,
+  waitForNotification,
+} from '../../ReJest/RuntimeTestsApi';
+import {
+  getThree,
+  implicitContextObject,
+  ImplicitWorkletClass,
+} from './fileWorkletization';
 
 describe('Test file workletization', () => {
+  const PASS_NOTIFICATION = 'PASS';
+  let result: number | null = null;
+
+  const callbackPass = (value: number) => {
+    result = value;
+    notify(PASS_NOTIFICATION);
+  };
+
+  beforeEach(() => {
+    result = null;
+  });
+
   test('Functions and methods are workletized', async () => {
-    const ExampleComponent = () => {
-      const output = useSharedValue<number | null>(null);
-      registerValue(SHARED_VALUE_REF, output);
-
-      useEffect(() => {
-        scheduleOnUI(() => {
-          output.value = getThree();
-        });
-      });
-
-      return <View />;
-    };
-    await render(<ExampleComponent />);
-    await wait(100);
-    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe(3);
+    scheduleOnUI(() => {
+      'worklet';
+      scheduleOnRN(callbackPass, getThree());
+    });
+    await waitForNotification(PASS_NOTIFICATION);
+    expect(result).toBe(3);
   });
 
   test('WorkletContextObjects are workletized', async () => {
-    const ExampleComponent = () => {
-      const output = useSharedValue<number | null>(null);
-      registerValue(SHARED_VALUE_REF, output);
-
-      useEffect(() => {
-        scheduleOnUI(() => {
-          output.value = implicitContextObject.getFive();
-        });
-      });
-
-      return <View />;
-    };
-    await render(<ExampleComponent />);
-    await wait(100);
-    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe(5);
+    scheduleOnUI(() => {
+      'worklet';
+      scheduleOnRN(callbackPass, implicitContextObject.getFive());
+    });
+    await waitForNotification(PASS_NOTIFICATION);
+    expect(result).toBe(5);
   });
 
-  test('WorkletClasses are workletized', async () => {
-    const ExampleComponent = () => {
-      const output = useSharedValue<number | null>(null);
-      registerValue(SHARED_VALUE_REF, output);
-
-      useEffect(() => {
-        scheduleOnUI(() => {
-          output.value = new ImplicitWorkletClass().getSeven();
-        });
+  if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+    test('WorkletClasses are workletized', async () => {
+      scheduleOnUI(() => {
+        'worklet';
+        scheduleOnRN(callbackPass, new ImplicitWorkletClass().getSeven());
       });
-
-      return <View />;
-    };
-    await render(<ExampleComponent />);
-    await wait(100);
-    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe(7);
-  });
+      await waitForNotification(PASS_NOTIFICATION);
+      expect(result).toBe(7);
+    });
+  }
 });

@@ -27,12 +27,14 @@ import {
   View,
   VirtualizedList,
   StyleSheet,
+  type ScrollViewProps,
 } from 'react-native';
 import { ScrollView as RNGHScrollView } from 'react-native-gesture-handler';
 import { Path as RNSVGPath } from 'react-native-svg';
 import { makeMutable } from 'react-native-reanimated';
 // @ts-expect-error No types for deep import.
 import ReactFabric from 'react-native/Libraries/Renderer/shims/ReactFabric';
+import { useCallback, useState } from 'react';
 
 const findHostInstance_DEPRECATED = ReactFabric.findHostInstance_DEPRECATED as (
   ref: any
@@ -43,6 +45,31 @@ makeMutable(() => {
   'worklet';
   return undefined;
 });
+
+const CustomScrollComponent = (props: ScrollViewProps) => (
+  <View>
+    <ScrollView {...props} />
+  </View>
+);
+
+function FlatListWithCustomRenderer({ data, ref }: { data: any[]; ref: any }) {
+  const renderItem = useCallback((info: any) => {
+    return <Text>{info.item}</Text>;
+  }, []);
+
+  const renderScrollComponent = useCallback((props: ScrollViewProps) => {
+    return <CustomScrollComponent {...props} />;
+  }, []);
+
+  return (
+    <FlatList
+      data={data}
+      ref={ref}
+      renderItem={renderItem}
+      renderScrollComponent={renderScrollComponent}
+    />
+  );
+}
 
 type ImperativeShadowNodeWrapper = {
   source: string;
@@ -64,7 +91,6 @@ class Node {
   ['getScrollRef()']?: string | Node;
   ['__internalInstanceHandle']?: string | Node;
   ['findHostInstance_DEPRECATED()']?: string | Node;
-  ['_hasAnimatedRef']?: string;
   ['_componentRef']?: string | Node;
   ['stateNode.node']?: string | Node;
   ['shadowNodeWrapper']?: string;
@@ -88,6 +114,12 @@ let visited = new Set<any>();
 
 function getRefChecker(name: string) {
   return (ref: any) => {
+    ref.getScrollResponder &&
+      console.log(
+        'equality check for scroll responder',
+        ref === ref.getScrollResponder()
+      );
+
     refId = 1;
     foundRefToId = new Map<any, number>();
 
@@ -209,23 +241,18 @@ function comparator(node: Node) {
     }
   }
 
-  if (ref._hasAnimatedRef) {
-    node._hasAnimatedRef = '"YES"';
-    const derivedRef = ref._componentRef;
-    if (derivedRef) {
-      if (foundRefToId.has(derivedRef)) {
-        node['_componentRef'] = `"OBJECT ${foundRefToId.get(derivedRef)}"`;
-      } else {
-        const id = refId++;
-        foundRefToId.set(derivedRef, id);
-        const propName = '_componentRef';
-        const derivedSource = `${source}.${propName}`;
-        const newNode = new Node(id, derivedSource, derivedRef);
-        node[propName] = newNode;
-        nodesToCheck.push(newNode);
-      }
+  const derivedRef = ref._componentRef;
+  if (derivedRef) {
+    if (foundRefToId.has(derivedRef)) {
+      node['_componentRef'] = `"OBJECT ${foundRefToId.get(derivedRef)}"`;
     } else {
-      node['_componentRef'] = '"NO"';
+      const id = refId++;
+      foundRefToId.set(derivedRef, id);
+      const propName = '_componentRef';
+      const derivedSource = `${source}.${propName}`;
+      const newNode = new Node(id, derivedSource, derivedRef);
+      node[propName] = newNode;
+      nodesToCheck.push(newNode);
     }
   }
 }
@@ -239,7 +266,6 @@ const printableProps = [
   'getNativeScrollRef()',
   'getScrollRef()',
   '__internalInstanceHandle',
-  '_hasAnimatedRef',
   '_componentRef',
   'findHostInstance_DEPRECATED()',
   'stateNode.node',
@@ -436,97 +462,110 @@ function findNativeStateObjects(node: Node, ref: any, source: string = '') {
 }
 
 export default function InstanceDiscoveryExample() {
+  const [discovered, setDiscovered] = useState(false);
+
   return (
     <>
       <Text style={styles.headingText}>
         Instance Discovery Example. Check the outputs in the console to see
         where correct host instances are found. This example throws when exited.
       </Text>
-      <ActivityIndicator ref={getRefChecker('ActivityIndicator')} />
-      <Button title="Button" onPress={() => {}} ref={getRefChecker('Button')} />
-      <FlatList
-        data={[]}
-        renderItem={() => null}
-        ref={getRefChecker('FlatList')}
-      />
-      <Image
-        source={{ uri: 'https://reactnative.dev/img/tiny_logo.png' }}
-        style={{ width: 50, height: 50 }}
-        ref={getRefChecker('Image')}
-      />
-      <ImageBackground
-        source={{ uri: 'https://reactnative.dev/img/tiny_logo.png' }}
-        style={{ width: 50, height: 50 }}
-        ref={getRefChecker('ImageBackground')}
-      />
-      <KeyboardAvoidingView
-        behavior="padding"
-        style={{ flex: 1 }}
-        ref={getRefChecker('KeyboardAvoidingView')}>
-        <Text>KeyboardAvoidingView</Text>
-      </KeyboardAvoidingView>
-      <Modal visible={false} ref={getRefChecker('Modal')}>
-        <Text>Modal Content</Text>
-      </Modal>
-      <Pressable onPress={() => {}} ref={getRefChecker('Pressable')}>
-        <Text>Pressable</Text>
-      </Pressable>
-      <RefreshControl
-        refreshing={false}
-        onRefresh={() => {}}
-        ref={getRefChecker('RefreshControl')}
-      />
-      <ScrollView ref={getRefChecker('ScrollView')}>
-        <Text>ScrollView Content</Text>
-      </ScrollView>
-
-      <SectionList
-        sections={[]}
-        renderItem={() => null}
-        keyExtractor={(item, index) => index.toString()}
-        ref={getRefChecker('SectionList')}
-      />
-
-      <Switch ref={getRefChecker('Switch')} />
-      <Text ref={getRefChecker('Text')}>Sample Text</Text>
-      <TextInput
-        style={{ height: 40, borderColor: 'gray', borderWidth: 1 }}
-        ref={getRefChecker('TextInput')}
-      />
-      <TouchableHighlight
-        onPress={() => {}}
-        ref={getRefChecker('TouchableHighlight')}>
-        <Text>TouchableHighlight</Text>
-      </TouchableHighlight>
-      <TouchableOpacity
-        onPress={() => {}}
-        ref={getRefChecker('TouchableOpacity')}>
-        <Text>TouchableOpacity</Text>
-      </TouchableOpacity>
-      <VirtualizedList
-        data={[]}
-        getItemCount={() => 0}
-        getItem={() => null}
-        renderItem={() => null}
-        keyExtractor={(item, index) => index.toString()}
-        ref={getRefChecker('VirtualizedList')}
-      />
-      <View ref={getRefChecker('View')} />
-      <FlashList
-        data={[]}
-        renderItem={() => null}
-        ref={getRefChecker('FlashList')}
-      />
-      <RNGHScrollView ref={getRefChecker('RNGHScrollView')}>
-        <Text>RNGH ScrollView Content</Text>
-      </RNGHScrollView>
-      <RNSVGPath
-        ref={getRefChecker('SVG Path')}
-        d="M150 0 L75 200 L225 200 Z"
-        fill="lime"
-        stroke="purple"
-        strokeWidth="1"
-      />
+      <Button title="Discover Instances" onPress={() => setDiscovered(true)} />
+      {discovered && (
+        <>
+          <ActivityIndicator ref={getRefChecker('ActivityIndicator')} />
+          <Button
+            title="Button"
+            onPress={() => {}}
+            ref={getRefChecker('Button')}
+          />
+          <FlatList
+            data={[]}
+            renderItem={() => null}
+            ref={getRefChecker('FlatList')}
+          />
+          <Image
+            source={{ uri: 'https://reactnative.dev/img/tiny_logo.png' }}
+            style={{ width: 50, height: 50 }}
+            ref={getRefChecker('Image')}
+          />
+          <ImageBackground
+            source={{ uri: 'https://reactnative.dev/img/tiny_logo.png' }}
+            style={{ width: 50, height: 50 }}
+            ref={getRefChecker('ImageBackground')}
+          />
+          <KeyboardAvoidingView
+            behavior="padding"
+            style={{ flex: 1 }}
+            ref={getRefChecker('KeyboardAvoidingView')}>
+            <Text>KeyboardAvoidingView</Text>
+          </KeyboardAvoidingView>
+          <Modal visible={false} ref={getRefChecker('Modal')}>
+            <Text>Modal Content</Text>
+          </Modal>
+          <Pressable onPress={() => {}} ref={getRefChecker('Pressable')}>
+            <Text>Pressable</Text>
+          </Pressable>
+          <RefreshControl
+            refreshing={false}
+            onRefresh={() => {}}
+            ref={getRefChecker('RefreshControl')}
+          />
+          <ScrollView ref={getRefChecker('ScrollView')}>
+            <Text>ScrollView Content</Text>
+          </ScrollView>
+          <SectionList
+            sections={[]}
+            renderItem={() => null}
+            keyExtractor={(item, index) => index.toString()}
+            ref={getRefChecker('SectionList')}
+          />
+          <Switch ref={getRefChecker('Switch')} />
+          <Text ref={getRefChecker('Text')}>Sample Text</Text>
+          <TextInput
+            style={{ height: 40, borderColor: 'gray', borderWidth: 1 }}
+            ref={getRefChecker('TextInput')}
+          />
+          <TouchableHighlight
+            onPress={() => {}}
+            ref={getRefChecker('TouchableHighlight')}>
+            <Text>TouchableHighlight</Text>
+          </TouchableHighlight>
+          <TouchableOpacity
+            onPress={() => {}}
+            ref={getRefChecker('TouchableOpacity')}>
+            <Text>TouchableOpacity</Text>
+          </TouchableOpacity>
+          <VirtualizedList
+            data={[]}
+            getItemCount={() => 0}
+            getItem={() => null}
+            renderItem={() => null}
+            keyExtractor={(item, index) => index.toString()}
+            ref={getRefChecker('VirtualizedList')}
+          />
+          <View ref={getRefChecker('View')} />
+          <FlashList
+            data={[]}
+            renderItem={() => null}
+            ref={getRefChecker('FlashList')}
+          />
+          <RNGHScrollView ref={getRefChecker('RNGHScrollView')}>
+            <Text>RNGH ScrollView Content</Text>
+          </RNGHScrollView>
+          <RNSVGPath
+            ref={getRefChecker('SVG Path')}
+            d="M150 0 L75 200 L225 200 Z"
+            fill="lime"
+            stroke="purple"
+            strokeWidth="1"
+          />
+          <FlatListWithCustomRenderer
+            ref={getRefChecker('FlatListWithCustomRenderer')}
+            data={[]}
+          />
+        </>
+      )}
     </>
   );
 }

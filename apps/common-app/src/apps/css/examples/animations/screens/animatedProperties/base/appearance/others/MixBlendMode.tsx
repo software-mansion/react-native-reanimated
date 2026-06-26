@@ -1,3 +1,4 @@
+import type { ImageStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -8,7 +9,10 @@ import { colors, radius, sizes } from '@/theme';
 
 export default function MixBlendMode() {
   return (
-    <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
+    <ExamplesScreen<
+      ImageStyle,
+      { keyframes: CSSAnimationKeyframes<ImageStyle> }
+    >
       CardComponent={VerticalExampleCard}
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',
@@ -32,6 +36,9 @@ export default function MixBlendMode() {
             {
               description:
                 '`mix-blend-mode` is a **continuous** property. That means, it **can be smoothly animated** between values.',
+              // RN's TS types don't declare `mixBlendMode` on `ImageStyle` even
+              // though it works on Image at runtime (it's applied at the view
+              // layer like any CSS blend mode).
               keyframes: {
                 '0%, 100%': {
                   mixBlendMode: 'normal',
@@ -82,7 +89,7 @@ export default function MixBlendMode() {
                 '100%': {
                   mixBlendMode: 'luminosity',
                 },
-              },
+              } as CSSAnimationKeyframes<ImageStyle>,
               minExampleHeight: 1.5 * sizes.xxxl,
               title: 'Changing Mix Blend Mode',
             },

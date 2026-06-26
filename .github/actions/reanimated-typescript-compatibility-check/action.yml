@@ -39,7 +39,7 @@ runs:
       working-directory: packages/react-native-reanimated
       run: yarn type:check:app
 
-    - name: Run common type tests
+    - name: Run type tests
       shell: bash
       working-directory: packages/react-native-reanimated
-      run: yarn type:check:tests:common
+      run: yarn type:check:tests

@@ -1,0 +1,61 @@
+name: Package static checks
+description: Run common static checks (lint, type check, unit tests, etc.) for a workspace package
+
+inputs:
+  package-dir:
+    description: The package directory (e.g., packages/react-native-reanimated)
+    required: true
+  build-commands:
+    description: Build command(s) to run before checks; executed from the repo root
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install monorepo node dependencies
+      shell: bash
+      run: yarn install --immutable
+
+    - name: Build
+      shell: bash
+      run: ${{ inputs.build-commands }}
+
+    - name: Validate peer dependency versions
+      shell: bash
+      working-directory: ${{ inputs.package-dir }}
+      run: yarn validate-peers
+
+    - name: Check TypeScript types
+      shell: bash
+      working-directory: ${{ inputs.package-dir }}
+      run: yarn type:check
+
+    - name: Check TypeScript types with React Native Strict API
+      shell: bash
+      working-directory: ${{ inputs.package-dir }}
+      run: yarn type:check:strict
+
+    - name: Lint JavaScript
+      shell: bash
+      working-directory: ${{ inputs.package-dir }}
+      run: yarn lint:js
+
+    - name: Find unused code
+      shell: bash
+      working-directory: ${{ inputs.package-dir }}
+      run: yarn find-unused-code:js
+
+    - name: Find circular dependencies
+      shell: bash
+      working-directory: ${{ inputs.package-dir }}
+      run: yarn circular-dependency-check
+
+    - name: Run Jest unit tests
+      shell: bash
+      working-directory: ${{ inputs.package-dir }}
+      run: yarn test
+
+    - name: Check web tree-shakability
+      shell: bash
+      working-directory: ${{ inputs.package-dir }}
+      run: yarn tree-shake:check:web

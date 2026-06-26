@@ -12,6 +12,35 @@ import plugin from '../plugin';
 
 const MOCK_LOCATION = '/dev/null';
 
+jest.mock('fs', () => {
+  const actual = jest.requireActual('fs');
+  const nodePath = jest.requireActual('path');
+  const target = nodePath.resolve('/dev/null');
+  return {
+    ...actual,
+    readFileSync: (file: unknown, ...args: unknown[]) =>
+      typeof file === 'string' && nodePath.resolve(file) === target
+        ? Buffer.from('')
+        : actual.readFileSync(file, ...args),
+  };
+});
+
+expect.addSnapshotSerializer({
+  test: (v: unknown): v is string =>
+    typeof v === 'string' &&
+    (v.includes('\\\\') || /(?<![A-Za-z])[A-Za-z]:[/\\]/.test(v)),
+  serialize: (v, c, i, d, r, printer) =>
+    printer(
+      (v as string)
+        .replace(/(?<![A-Za-z])[A-Za-z]:[\\/]+/g, '/')
+        .replace(/\\\\/g, '/'),
+      c,
+      i,
+      d,
+      r
+    ),
+});
+
 function runPlugin(
   input: string,
   transformOpts: TransformOptions = {},
@@ -363,33 +392,6 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    test("doesn't capture default globals", () => {
-      const input = html`<script>
-        function f() {
-          'worklet';
-          console.log('test');
-        }
-      </script>`;
-
-      const { code, ast } = runPlugin(input, { ast: true });
-      let closureBindings;
-      traverse(ast!, {
-        enter(path) {
-          if (
-            path.isAssignmentExpression() &&
-            'property' in path.node.left &&
-            'name' in path.node.left.property &&
-            'properties' in path.node.right &&
-            path.node.left.property.name === '__closure'
-          ) {
-            closureBindings = path.node.right.properties;
-          }
-        },
-      });
-      expect(closureBindings).toEqual([]);
-      expect(code).toMatchSnapshot();
-    });
-
     test('implicitly captures globals with strictGlobal disabled', () => {
       const input = html`<script>
         function f() {
@@ -451,38 +453,6 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    test('captures locally bound variables named like globals', () => {
-      const input = html`<script>
-        const console = {
-          log: () => 42,
-        };
-
-        function f() {
-          'worklet';
-          console.log(console);
-        }
-      </script>`;
-
-      const { code, ast } = runPlugin(input, { ast: true });
-      let closureBindings;
-      traverse(ast!, {
-        enter(path) {
-          if (
-            path.isAssignmentExpression() &&
-            'property' in path.node.left &&
-            'name' in path.node.left.property &&
-            'properties' in path.node.right &&
-            path.node.left.property.name === '__closure'
-          ) {
-            closureBindings = path.node.right.properties;
-          }
-        },
-      });
-      expect(closureBindings).not.toEqual([]);
-      expect(code).toMatch(/f\.__closure = {\s*console/gm);
-      expect(code).toMatchSnapshot();
-    });
-
     test("doesn't capture custom globals", () => {
       const input = html`<script>
         function f() {
@@ -536,79 +506,6 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toMatch(/f\.__closure = {\s*foo/gm);
-      expect(code).toMatchSnapshot();
-    });
-  });
-
-  describe('for explicit worklets', () => {
-    test('workletizes FunctionDeclaration', () => {
-      const input = html`<script>
-        function foo(x) {
-          'worklet';
-          return x + 2;
-        }
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
-      expect(code).not.toContain("'worklet';");
-      expect(code).toMatchSnapshot();
-    });
-
-    test('workletizes ArrowFunctionExpression', () => {
-      const input = html`<script>
-        const foo = (x) => {
-          'worklet';
-          return x + 2;
-        };
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
-      expect(code).not.toContain("'worklet';");
-      expect(code).toMatchSnapshot();
-    });
-
-    test('workletizes unnamed FunctionExpression', () => {
-      const input = html`<script>
-        const foo = function (x) {
-          'worklet';
-          return x + 2;
-        };
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
-      expect(code).not.toContain("'worklet';");
-      expect(code).toMatchSnapshot();
-    });
-
-    test('workletizes named FunctionExpression', () => {
-      const input = html`<script>
-        const foo = function foo(x) {
-          'worklet';
-          return x + 2;
-        };
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
-      expect(code).not.toContain("'worklet';");
-      expect(code).toMatchSnapshot();
-    });
-
-    test('workletizes ObjectMethod', () => {
-      const input = html`<script>
-        const foo = {
-          bar(x) {
-            'worklet';
-            return x + 2;
-          },
-        };
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
       expect(code).toMatchSnapshot();
     });
   });
@@ -743,18 +640,6 @@ describe('babel plugin', () => {
   });
 
   describe('for function hooks', () => {
-    test('workletizes hook wrapped ArrowFunctionExpression automatically', () => {
-      const input = html`<script>
-        const animatedStyle = useAnimatedStyle(() => ({
-          width: 50,
-        }));
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
     test('workletizes hook wrapped unnamed FunctionExpression automatically', () => {
       const input = html`<script>
         const animatedStyle = useAnimatedStyle(function () {

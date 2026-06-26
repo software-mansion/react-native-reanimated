@@ -1,8 +1,6 @@
-import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 import groovy.json.JsonSlurper
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import java.util.Properties
 import javax.inject.Inject
 
@@ -22,19 +20,6 @@ fun safeAppExtGet(prop: String, fallback: Any?): Any? {
         appProject.extensions.extraProperties.get(prop)
     else
         fallback
-}
-
-fun isNewArchitectureEnabled(): Boolean {
-    // In React Native 0.82+, users can no longer opt-out of the New Architecture.
-    if (getReactNativeMinorVersion() >= 82) {
-        return true
-    }
-
-    // In older versions, to opt-in for the New Architecture, you can either:
-    // - Set `newArchEnabled` to true inside the `gradle.properties` file
-    // - Invoke gradle with `-newArchEnabled=true`
-    // - Set an environment variable `ORG_GRADLE_PROJECT_newArchEnabled=true`
-    return project.hasProperty("newArchEnabled") && project.property("newArchEnabled") == "true"
 }
 
 fun resolveReactNativeDirectory(): File {
@@ -64,11 +49,6 @@ fun getReactNativeVersion(): String {
     val reactProperties = Properties()
     file("$reactNativeRootDir/ReactAndroid/gradle.properties").inputStream().use { reactProperties.load(it) }
     return reactProperties.getProperty("VERSION_NAME")
-}
-
-fun getReactNativeMinorVersion(): Int {
-    val reactNativeVersion = getReactNativeVersion()
-    return if (reactNativeVersion.startsWith("0.0.0-")) 1000 else reactNativeVersion.split(".")[1].toInt()
 }
 
 fun getReanimatedVersion(): String {
@@ -121,16 +101,20 @@ fun validateConflictingFeatureFlags(featureFlags: HashMap<String, String>) {
     }
 }
 
-if (isNewArchitectureEnabled() && project != rootProject) {
+if (project != rootProject) {
     apply(plugin = "com.facebook.react")
 }
 
 val packageDir: File = project.projectDir.parentFile
 val reactNativeRootDir: File = resolveReactNativeDirectory()
-val REACT_NATIVE_MINOR_VERSION: Int = getReactNativeMinorVersion()
 val REACT_NATIVE_VERSION: String = getReactNativeVersion()
+val IS_REACT_NATIVE_86_OR_NEWER: Boolean = run {
+    val parts = REACT_NATIVE_VERSION.split(".")
+    val major = parts.getOrNull(0)?.toIntOrNull() ?: 0
+    val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
+    major > 0 || minor >= 86
+}
 val REANIMATED_VERSION: String = getReanimatedVersion()
-val IS_NEW_ARCHITECTURE_ENABLED: Boolean = isNewArchitectureEnabled()
 val IS_REANIMATED_EXAMPLE_APP: Boolean = safeAppExtGet("isReanimatedExampleApp", false)?.toString()?.toBoolean() ?: false
 val REANIMATED_PROFILING: Boolean = safeAppExtGet("enableReanimatedProfiling", false)?.toString()?.toBoolean() ?: false
 val REANIMATED_FEATURE_FLAGS: String = getReanimatedStaticFeatureFlags()
@@ -142,7 +126,11 @@ val reanimatedPrefabHeadersDir: File = project.file("${layout.buildDirectory.get
 
 fun reactNativeArchitectures(): List<String> {
     val value = project.findProperty("reactNativeArchitectures") as String?
-    return value?.split(",") ?: listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")
+    return value?.split(",")
+        ?.map { it.trim() }
+        ?.filter { it.isNotEmpty() }
+        ?.ifEmpty { null }
+        ?: listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")
 }
 
 if (project == rootProject) {
@@ -153,6 +141,8 @@ if (project == rootProject) {
         }
     }
 }
+
+apply(from = "./generate-stub-pch.gradle.kts")
 
 android {
     compileSdk = safeExtGet("compileSdkVersion", 36) as Int
@@ -187,14 +177,13 @@ android {
         buildConfigField("String", "REANIMATED_VERSION_JAVA", "\"$REANIMATED_VERSION\"")
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
-        buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
+        buildConfigField("boolean", "IS_REACT_NATIVE_86_OR_NEWER", IS_REACT_NATIVE_86_OR_NEWER.toString())
 
         @Suppress("UnstableApiUsage")
         externalNativeBuild {
             cmake {
                 arguments(
                     "-DANDROID_STL=c++_shared",
-                    "-DREACT_NATIVE_MINOR_VERSION=$REACT_NATIVE_MINOR_VERSION",
                     "-DANDROID_TOOLCHAIN=clang",
                     "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
                     "-DIS_REANIMATED_EXAMPLE_APP=$IS_REANIMATED_EXAMPLE_APP",
@@ -213,7 +202,6 @@ android {
 
     externalNativeBuild {
         cmake {
-            this.version = System.getenv("CMAKE_VERSION") ?: "3.22.1"
             path = file("CMakeLists.txt")
         }
     }
@@ -240,9 +228,7 @@ android {
                 "**/libjsi.so",
                 "**/libhermes.so",
                 "**/libhermesvm.so",
-                "**/libhermestooling.so",
                 "**/libreactnative.so",
-                "**/libjscexecutor.so",
                 "**/libworklets.so",
             )
         }
@@ -253,24 +239,8 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    project.tasks.withType<ExternalNativeBuildJsonTask>().configureEach {
-        val isExampleApp = IS_REANIMATED_EXAMPLE_APP
-        val pkgDir = packageDir
-        val cxxRoot = File(project.buildDir.parentFile, ".cxx")
-        doLast {
-            if (!isExampleApp) {
-                return@doLast
-            }
-            val generated = cxxRoot.walkTopDown()
-                .filter { it.name == "compile_commands.json" && it.isFile }
-                .maxByOrNull { it.lastModified() }
-            if (generated == null) {
-                logger.warn("Failed to generate clangd metadata: no compile_commands.json under $cxxRoot")
-                return@doLast
-            }
-            File("$pkgDir/compile_commands.json").writeText(generated.readText())
-            logger.info("Generated clangd metadata from $generated.")
-        }
+    if (IS_REANIMATED_EXAMPLE_APP) {
+        apply(from = "../../../scripts/llvm-tools/android-hook.gradle.kts")
     }
 }
 
@@ -304,16 +274,6 @@ tasks.register("assertMinimalReactNativeVersionTask") {
 }
 
 tasks.named("preBuild") { dependsOn("assertMinimalReactNativeVersionTask") }
-
-tasks.register("assertNewArchitectureEnabledTask") {
-    val isNewArch = IS_NEW_ARCHITECTURE_ENABLED
-    onlyIf { !isNewArch }
-    doFirst {
-        throw GradleException("[Reanimated] Reanimated requires new architecture to be enabled. Please enable it by setting `newArchEnabled` to `true` in `gradle.properties`.")
-    }
-}
-
-tasks.named("preBuild") { dependsOn("assertNewArchitectureEnabledTask") }
 
 val validateWorkletsBuildResult = providers.exec {
     workingDir(projectDir.path)

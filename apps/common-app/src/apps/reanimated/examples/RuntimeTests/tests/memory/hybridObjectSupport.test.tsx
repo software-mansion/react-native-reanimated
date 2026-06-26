@@ -1,11 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  getWorkletRuntimeFromPool,
+  notify,
+  test,
+  waitForNotification,
+} from '../../ReJest/RuntimeTestsApi';
 import {
   createSerializable,
   createSynchronizable,
-  createWorkletRuntime,
   registerCustomSerializable,
   runOnUISync,
   scheduleOnRN,
@@ -68,7 +74,7 @@ const getTestData = () => {
 };
 
 describe('Test HybridObject Support', () => {
-  const workletRuntime = createWorkletRuntime();
+  const workletRuntime = getWorkletRuntimeFromPool('test');
 
   test('passes HybridObjects from RN runtime to UI runtime', () => {
     // Arrange

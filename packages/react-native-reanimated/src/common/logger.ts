@@ -66,7 +66,7 @@ export function getLoggerConfig() {
  *
  *   - Level: The minimum log level to display.
  *   - Strict: Whether to log warnings and errors that are not strict. Defaults to
- *       false.
+ *     false.
  */
 export function updateLoggerConfig(
   currentConfig: LoggerConfigInternal,

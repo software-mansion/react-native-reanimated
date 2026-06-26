@@ -1,6 +1,6 @@
 {
   "name": "react-native-worklets",
-  "version": "0.9.0-main",
+  "version": "0.11.0-main",
   "description": "The React Native multithreading library",
   "keywords": [
     "react-native",
@@ -9,7 +9,7 @@
     "worklets"
   ],
   "scripts": {
-    "build": "yarn workspace babel-plugin-worklets build && yarn set-version && bob build",
+    "build": "yarn workspace babel-plugin-worklets build && yarn set-version && yarn run --top-level bob build",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
     "find-unused-code:js": "knip",
     "format": "yarn format:js && yarn format:plugin && yarn format:common && yarn format:android && yarn format:apple",
@@ -19,16 +19,18 @@
     "format:android:java": "node ../../scripts/format-java.js",
     "format:apple": "find apple -iname \"*.h\" -o -iname \"*.m\" -o -iname \"*.mm\" -o -iname \"*.cpp\" | xargs clang-format -i",
     "format:common": "find Common -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
-    "format:js": "prettier --write --list-different src",
+    "format:js": "yarn run --top-level oxfmt src",
     "format:plugin": "yarn workspace babel-plugin-worklets format",
-    "lint": "yarn lint:js && yarn lint:common && yarn lint:plugin && yarn lint:android && yarn lint:apple",
-    "lint:android": "../../scripts/validate-android.sh && ./android/gradlew -p android spotlessCheck -q && ../../scripts/cpplint.sh android/src && yarn format:android:cpp --dry-run -Werror && yarn lint:cmake",
-    "lint:apple": "../../scripts/validate-apple.sh && yarn format:apple --dry-run -Werror",
-    "lint:common": "../../scripts/validate-common.sh && ../../scripts/cpplint.sh Common && yarn format:common --dry-run -Werror",
+    "lint": "yarn lint:js && yarn lint:plugin && yarn lint:android && yarn lint:apple && yarn lint:clang-tidy",
+    "lint:android": "../../scripts/validate-android.sh && ../../scripts/validate-common.sh && ./android/gradlew -p android spotlessCheck -q && yarn format:common --dry-run -Werror && yarn format:android:cpp --dry-run -Werror && yarn lint:cmake",
+    "lint:apple": "../../scripts/validate-apple.sh && ../../scripts/validate-common.sh && yarn format:common --dry-run -Werror && yarn format:apple --dry-run -Werror",
     "lint:cmake": "find ./android -type d \\( -name build -o -name .cxx \\) -prune -o -type f -name 'CMakeLists.txt' -print | xargs ../../scripts/lint-cmake.sh",
-    "lint:clang-tidy": "../../scripts/clang-tidy-lint.sh \".\"",
-    "lint:js": "eslint src && yarn prettier --check src",
+    "lint:clang-tidy": "yarn lint:clang-tidy:ios && yarn lint:clang-tidy:android",
+    "lint:clang-tidy:ios": "../../scripts/llvm-tools/clang-tidy-lint.sh --platform=ios",
+    "lint:clang-tidy:android": "../../scripts/llvm-tools/clang-tidy-lint.sh --platform=android",
+    "lint:js": "eslint src && yarn run --top-level oxfmt --check src",
     "lint:plugin": "yarn workspace babel-plugin-worklets lint",
+    "prepack": "yarn build",
     "set-version": "node scripts/set-version.js",
     "test": "jest",
     "type:check": "yarn type:check:src:native && yarn type:check:src:web && yarn type:check:plugin && yarn type:check:app && yarn type:check:tests",
@@ -37,6 +39,9 @@
     "type:check:app": "yarn workspace common-app type:check",
     "type:check:plugin": "yarn workspace babel-plugin-worklets type:check",
     "type:check:tests": "../../scripts/test-ts.sh __typetests__",
+    "type:check:strict": "yarn type:check:strict:src && yarn type:check:strict:app",
+    "type:check:strict:src": "yarn tsc --noEmit --customConditions react-native-strict-api",
+    "type:check:strict:app": "yarn workspace common-app type:check:strict",
     "tree-shake:check:web": "yarn is-tree-shakable --resolution web",
     "validate-peers": "node ../../scripts/validate-compatibility-peer-dependencies.js"
   },
@@ -55,7 +60,7 @@
     "@babel/core": "*",
     "@react-native/metro-config": "*",
     "react": "*",
-    "react-native": "0.81 - 0.85"
+    "react-native": "0.83 - 0.86"
   },
   "dependencies": {
     "@babel/plugin-transform-arrow-functions": "^7.27.1",
@@ -67,6 +72,7 @@
     "@babel/plugin-transform-template-literals": "^7.27.1",
     "@babel/plugin-transform-unicode-regex": "^7.27.1",
     "@babel/preset-typescript": "^7.28.5",
+    "@babel/types": "^7.27.1",
     "convert-source-map": "^2.0.0",
     "semver": "^7.7.4"
   },
@@ -75,7 +81,7 @@
     "@babel/core": "7.28.4",
     "@react-native-community/cli": "20.1.0",
     "@react-native/eslint-config": "0.83.0",
-    "@react-native/jest-preset": "patch:@react-native/jest-preset@npm%3A0.85.2#~/.yarn/patches/@react-native-jest-preset-npm-0.85.2-d3275e8971.patch",
+    "@react-native/jest-preset": "patch:@react-native/jest-preset@npm%3A0.86.0#~/.yarn/patches/@react-native-jest-preset-npm-0.86.0-7a936108b4.patch",
     "@types/jest": "30.0.0",
     "@types/node": "24.7.0",
     "@types/react": "19.2.2",
@@ -86,10 +92,8 @@
     "jest": "30.2.0",
     "knip": "5.61.3",
     "madge": "8.0.0",
-    "prettier": "3.6.2",
     "react": "19.2.3",
-    "react-native": "0.85.2",
-    "react-native-builder-bob": "0.40.13",
+    "react-native": "0.86.0",
     "typescript": "5.9.3"
   },
   "main": "./lib/module/index",
@@ -106,6 +110,7 @@
     "compatibility.json",
     "bundleMode/index.js",
     "bundleMode/index.d.ts",
+    "bundleMode/shims/*.js",
     "scripts/worklets_utils.rb",
     "scripts/validate-react-native-version.js",
     "jest",
@@ -131,24 +136,9 @@
     "./lib/module/index.js",
     "./**/runtimeKind.{js,ts}",
     "./**/serializable.native.{js,ts}",
-    "./**/workletRuntimeEntry.native.{js,ts}",
     "./**/initializers.native.{js,ts}",
     "./**/featureFlags.native.{js,ts}"
   ],
-  "react-native-builder-bob": {
-    "source": "src",
-    "output": "lib",
-    "targets": [
-      [
-        "module",
-        {
-          "esm": false,
-          "jsxRuntime": "automatic"
-        }
-      ],
-      "typescript"
-    ]
-  },
   "codegenConfig": {
     "name": "rnworklets",
     "type": "modules",

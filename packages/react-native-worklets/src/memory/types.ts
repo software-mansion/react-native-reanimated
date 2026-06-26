@@ -184,3 +184,13 @@ export type ShareableConfig<TValue, THostDecorated, TGuestDecorated> = {
    */
   initSynchronously?: boolean;
 };
+
+export interface RemoteFunction extends SerializableRef {
+  /** Defined when extracted on a Guest Runtime. */
+  __remoteFunction: true | undefined;
+}
+
+export interface RegisteredRemoteFunction extends SerializableRef {
+  /** Defined when created on the Host Runtime. */
+  __keepAlive: true | undefined;
+}

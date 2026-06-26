@@ -18,9 +18,8 @@ const SHARED_SETTINGS: CSSAnimationSettings = {
 
 type TransformOriginProp = ViewStyle['transformOrigin'];
 
-const calculateAnimationStep = (
-  transformOrigins: Array<TransformOriginProp>
-) => (transformOrigins.length < 2 ? 100 : 100 / (transformOrigins.length - 1));
+const calculateAnimationStep = (transformOrigins: Array<TransformOriginProp>) =>
+  transformOrigins.length < 2 ? 100 : 100 / (transformOrigins.length - 1);
 
 const calculateOffset = (index: number, step: number) => {
   const offset = index * step;
@@ -29,9 +28,12 @@ const calculateOffset = (index: number, step: number) => {
 
 export default function TransformOrigin() {
   return (
-    <ExamplesScreen<{
-      transformOrigins: Array<TransformOriginProp>;
-    }>
+    <ExamplesScreen<
+      ViewStyle,
+      {
+        transformOrigins: Array<TransformOriginProp>;
+      }
+    >
       buildAnimation={({ transformOrigins }) => ({
         animationName: Object.fromEntries(
           transformOrigins.map((origin, index) => {

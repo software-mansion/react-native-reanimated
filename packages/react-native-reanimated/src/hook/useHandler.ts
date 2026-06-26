@@ -2,7 +2,6 @@
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction, makeShareable } from 'react-native-worklets';
-import type { WorkletClosure } from 'react-native-worklets/lib/typescript/types';
 
 import type { UnknownRecord } from '../common';
 import { IS_WEB } from '../common';
@@ -60,6 +59,8 @@ const objectIs: (a: unknown, b: unknown) => boolean =
     : (x, y) =>
         (x === y && (x !== 0 || 1 / (x as number) === 1 / (y as number))) ||
         (Number.isNaN(x as number) && Number.isNaN(y as number));
+
+type WorkletClosure = Record<string, unknown>;
 
 function areWorkletClosuresEqual(
   next: WorkletClosure,
@@ -142,14 +143,14 @@ export function useHandler<Event extends object, Context extends UnknownRecord>(
   'use no memo';
 
   const stateRef = useRef<{
-    context: Context;
+    context: Context | undefined;
     prevHandlers: GeneralHandlers<Event, Context> | undefined;
     prevDependencies: DependencyList;
   } | null>(null);
 
   if (stateRef.current === null) {
     stateRef.current = {
-      context: makeShareable({} as Context),
+      context: undefined,
       prevHandlers: undefined,
       prevDependencies: [],
     };
@@ -179,5 +180,13 @@ export function useHandler<Event extends object, Context extends UnknownRecord>(
     state.prevDependencies = dependencies;
   });
 
-  return { context: state.context, doDependenciesDiffer };
+  return {
+    get context() {
+      if (state.context === undefined) {
+        state.context = makeShareable({} as Context);
+      }
+      return state.context;
+    },
+    doDependenciesDiffer,
+  };
 }

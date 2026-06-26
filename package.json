@@ -20,25 +20,28 @@
   },
   "private": true,
   "scripts": {
-    "build": "husky && yarn build-packages",
-    "build-packages": "yarn workspace react-native-reanimated build",
+    "build": "husky && yarn prepare-vscode && yarn build-packages",
     "build-all": "husky && yarn workspaces foreach --all --parallel --topological-dev run build",
+    "build-apps": "yarn workspaces foreach --all --parallel --topological-dev --include '{common-app,*-example}' run build",
+    "build-docs": "yarn workspaces foreach --all --parallel --topological-dev --include 'docs-*' run build",
+    "build-packages": "yarn workspace react-native-reanimated build",
     "format": "yarn format:root && yarn format:workspaces",
-    "format:root": "prettier --cache --write --list-different --ignore-path .gitignore --ignore-path .prettierignore --ignore-path .prettiereslintignore .",
+    "format:root": "yarn run --top-level oxfmt --ignore-path .prettiereslintignore .",
     "format:md": "remark --output --ext md . && remark --rc-path .remarkrc.mdx.mjs --output --ext mdx .",
     "format:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run format",
     "lint": "yarn lint:root && yarn lint:workspaces",
     "lint:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run lint",
-    "lint:root": "eslint . --ignore-pattern 'packages/**' --ignore-pattern 'apps/**' --ignore-pattern 'docs/**' && yarn prettier --check --ignore-path .gitignore --ignore-path .prettierignore --ignore-path .prettiereslintignore .",
+    "lint:root": "eslint . --ignore-pattern 'packages/**' --ignore-pattern 'apps/**' --ignore-pattern 'docs/**' && yarn run --top-level oxfmt --check --ignore-path .prettiereslintignore .",
+    "prepare-vscode": "bash ./scripts/prepare-vscode.sh",
     "toggle-bundle-mode": "bash ./scripts/toggle-bundle-mode.sh"
   },
   "devDependencies": {
     "@babel/core": "7.28.4",
     "@eslint/compat": "1.3.1",
-    "@react-native/babel-preset": "0.85.2",
-    "@react-native/eslint-config": "0.85.2",
-    "@react-native/metro-config": "0.85.2",
-    "@react-native/typescript-config": "0.85.2",
+    "@react-native/babel-preset": "0.86.0",
+    "@react-native/eslint-config": "0.86.0",
+    "@react-native/metro-config": "0.86.0",
+    "@react-native/typescript-config": "0.86.0",
     "@types/node": "24.0.14",
     "@types/shelljs": "0.8.17",
     "@typescript-eslint/parser": "8.46.0",
@@ -57,7 +60,6 @@
     "eslint-plugin-no-inline-styles": "1.0.5",
     "eslint-plugin-no-relative-import-paths": "1.6.1",
     "eslint-plugin-perfectionist": "4.15.0",
-    "eslint-plugin-prettier": "5.5.4",
     "eslint-plugin-promise": "7.2.1",
     "eslint-plugin-react": "7.37.5",
     "eslint-plugin-react-hooks": "5.2.0",
@@ -71,16 +73,25 @@
     "lint-staged": "16.1.2",
     "madge": "8.0.0",
     "node-fetch": "3.3.2",
-    "prettier": "3.6.2",
-    "prettier-plugin-jsdoc": "1.3.3",
+    "oxfmt": "0.45.0",
     "react": "19.2.3",
-    "react-native": "0.85.2",
-    "react-native-builder-bob": "0.40.13",
+    "react-native": "0.86.0",
+    "react-native-builder-bob": "0.41.0",
     "remark-cli": "12.0.1",
     "remark-frontmatter": "5.0.0",
     "remark-gfm": "4.0.1",
     "remark-mdx": "3.1.0",
     "shelljs": "0.10.0",
+    "tstyche": "7.2.1",
     "typescript": "5.9.3"
+  },
+  "spacer": {
+    "spacer": {
+      "spacer": "thanks to this spacer changes to dependencies won't require update of bundle mode toggling script patches"
+    }
+  },
+  "resolutions": {
+    "metro": "patch:metro@npm%3A0.84.4#~/.yarn/patches/metro-npm-0.84.4-68d21d57b4.patch",
+    "metro-runtime": "patch:metro-runtime@npm%3A0.84.4#~/.yarn/patches/metro-runtime-npm-0.84.4-9533293c73.patch"
   }
 }

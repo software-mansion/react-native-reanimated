@@ -39,7 +39,9 @@ package-lock.json
 # vscode
 jsconfig.json
 .project
-.vscode
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.template
 
 # BUCK
 buck-out/
@@ -69,10 +71,13 @@ react-native-reanimated-tests.js
 # pre-commit
 .husky/log.txt
 
-# clangd
+# LLVM tools
 .cache
 CompilationDatabase
 compile_commands.json
+.xcode-compile-metadata
+.derived-data-log-*
+buildServer.json
 
 build/
 
@@ -83,3 +88,4 @@ playwright/.cache/
 
 # Claude
 .claude
+CLAUDE.md

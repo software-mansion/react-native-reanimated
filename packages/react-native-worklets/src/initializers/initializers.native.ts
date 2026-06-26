@@ -1,16 +1,12 @@
 'use strict';
 
-import {
-  disallowRNImports,
-  mockTurboModuleRegistry,
-  silenceHMRWarnings,
-} from '../bundleMode/metroOverrides';
+import { silenceHMRWarnings } from '../bundleMode/metroOverrides';
 import { initializeNetworking } from '../bundleMode/network';
-import { setupCallGuard } from '../callGuard';
 import { registerReportFatalRemoteError } from '../debug/errors';
 import { getStaticFeatureFlag } from '../featureFlags/featureFlags';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
 import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
+import { installRemoteFunctionUnpacker } from '../memory/remoteFunctionUnpacker';
 import { makeShareableCloneOnUIRecursive } from '../memory/serializable';
 import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
 import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
@@ -92,6 +88,30 @@ export function setupConsole(boundCapturableConsole: typeof console) {
   };
 }
 
+// This is only used in DEV mode in Bunde Mode, it's necessary to see the logs in metro / devtools
+export function setupConsoleForwarding(boundCapturableConsole: typeof console) {
+  'worklet';
+
+  globalThis.nativeLoggingHook = (message: string, level: number) => {
+    switch (level) {
+      case 0:
+        scheduleOnRN(boundCapturableConsole.debug, message);
+        break;
+      case 1:
+        scheduleOnRN(boundCapturableConsole.log, message);
+        break;
+      case 2:
+        scheduleOnRN(boundCapturableConsole.warn, message);
+        break;
+      case 3:
+        scheduleOnRN(boundCapturableConsole.error, message);
+        break;
+      default:
+        scheduleOnRN(boundCapturableConsole.log, message);
+    }
+  };
+}
+
 export function setupSerializer() {
   'worklet';
   globalThis.__serializer = makeShareableCloneOnUIRecursive;
@@ -126,6 +146,7 @@ function initializeRuntime() {
   installCustomSerializableUnpacker();
   installShareableHostUnpacker();
   installShareableGuestUnpacker();
+  installRemoteFunctionUnpacker();
 }
 
 /** A function that should be run only on React Native runtime. */
@@ -147,15 +168,11 @@ function initializeRNRuntime() {
 /** A function that should be run only on Worklet runtimes. */
 function initializeWorkletRuntime() {
   if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-    setupCallGuard();
-
     if (__DEV__) {
       silenceHMRWarnings();
-      disallowRNImports();
     }
 
     if (getStaticFeatureFlag('FETCH_PREVIEW_ENABLED')) {
-      mockTurboModuleRegistry();
       initializeNetworking();
     }
   }
@@ -172,22 +189,25 @@ function installRNBindingsOnUIRuntime() {
     );
   }
 
-  if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-    /** In Bundle Mode Runtimes setup their callGuard themselves. */
-    runOnUISync(setupCallGuard);
-  }
-
-  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
+  const runtimeBoundCapturableConsole =
+    globalThis._WORKLETS_BUNDLE_MODE_ENABLED && !__DEV__
+      ? null
+      : getMemorySafeCapturableConsole();
 
   runOnUISync(() => {
     'worklet';
-
-    setupConsole(runtimeBoundCapturableConsole);
     /**
      * TODO: Move `setupMicrotasks` and `setupRequestAnimationFrame` to a
      * separate function once we have a better way to distinguish between
      * Worklet Runtimes.
      */
+
+    if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+      setupConsole(runtimeBoundCapturableConsole!);
+    } else if (__DEV__) {
+      setupConsoleForwarding(runtimeBoundCapturableConsole!);
+    }
+
     setupMicrotasks();
     setupRequestAnimationFrame();
     setupSetTimeout();

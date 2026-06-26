@@ -1,11 +1,11 @@
 #pragma once
 
-/** 
-* Version of `react-native-worklets` which introduced current stable API.
-* It can be used by libraries to verify they use a compatible version
-* of `react-native-worklets` installed when integrating in C++. 
-*/
-#define WORKLETS_STABLE_API_VERSION "0.8.0"
+/**
+ * Version of `react-native-worklets` which introduced current stable API.
+ * It can be used by libraries to verify they use a compatible version
+ * of `react-native-worklets` installed when integrating in C++.
+ */
+#define WORKLETS_STABLE_API_VERSION "0.9.0"
 
 #include <cstdint>
 #include <functional>
@@ -16,6 +16,7 @@ namespace facebook::jsi {
 class Runtime;
 class Value;
 class Object;
+class Function;
 } // namespace facebook::jsi
 
 namespace worklets {
@@ -51,7 +52,9 @@ class Serializable {
     SynchronizableType,
     CustomType,
     SymbolType, /* unused */
-    ShareableType
+    ShareableType,
+    ErrorType,
+    RegExpType,
   };
 
   explicit Serializable(ValueType valueType) : valueType_(valueType) {}
@@ -105,5 +108,21 @@ extern void runSyncOnRuntime(
     const std::shared_ptr<Serializable> &worklet,
     const facebook::jsi::Value &arg0,
     const facebook::jsi::Value &arg1);
+
+extern void runSyncOnRuntime(
+    const std::shared_ptr<WorkletRuntime> &workletRuntime,
+    const facebook::jsi::Function &worklet);
+
+extern void runSyncOnRuntime(
+    const std::shared_ptr<WorkletRuntime> &workletRuntime,
+    const facebook::jsi::Function &worklet,
+    const facebook::jsi::Value &arg0);
+
+using RequestAnimationFrameHostFunction =
+    std::function<void(facebook::jsi::Runtime &rt, const facebook::jsi::Value &callback)>;
+
+extern void installRequestAnimationFrame(
+    facebook::jsi::Runtime &uiRuntime,
+    const RequestAnimationFrameHostFunction &requestAnimationFrame);
 
 } // namespace worklets

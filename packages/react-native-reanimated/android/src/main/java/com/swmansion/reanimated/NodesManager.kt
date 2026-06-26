@@ -54,8 +54,8 @@ class NodesManager(
         val uiManager = UIManagerHelper.getUIManager(context, UIManagerType.FABRIC)
         assert(uiManager != null)
         mCustomEventNamesResolver =
-            UIManagerModule.CustomEventNamesResolver { eventName ->
-                uiManager!!.resolveCustomDirectEventName(eventName)
+            object : UIManagerModule.CustomEventNamesResolver {
+                override fun resolveCustomEventName(eventName: String): String? = uiManager!!.resolveCustomDirectEventName(eventName)
             }
         mDrawPassDetector = DrawPassDetector(context)
 
@@ -205,6 +205,9 @@ class NodesManager(
             // Events can be dispatched from any thread so we have to make sure handleEvent is run from
             // the UI thread.
             if (UiThreadUtil.isOnUiThread()) {
+                // Ensure draw-pass tracking is attached before event handling; the backend reads
+                // isInDrawPass during receiveEvent.
+                mDrawPassDetector.initialize()
                 handleEvent(event)
                 performOperationsRespectingDrawPass()
             } else {

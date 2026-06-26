@@ -1,8 +1,6 @@
-import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 import groovy.json.JsonSlurper
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import java.util.Properties
 import javax.inject.Inject
 
@@ -22,19 +20,6 @@ fun safeAppExtGet(prop: String, fallback: Any?): Any? {
         appProject.extensions.extraProperties.get(prop)
     else
         fallback
-}
-
-fun isNewArchitectureEnabled(): Boolean {
-    // In React Native 0.82+, users can no longer opt-out of the New Architecture.
-    if (getReactNativeMinorVersion() >= 82) {
-        return true
-    }
-
-    // In older versions, to opt-in for the New Architecture, you can either:
-    // - Set `newArchEnabled` to true inside the `gradle.properties` file
-    // - Invoke gradle with `-newArchEnabled=true`
-    // - Set an environment variable `ORG_GRADLE_PROJECT_newArchEnabled=true`
-    return project.hasProperty("newArchEnabled") && project.property("newArchEnabled") == "true"
 }
 
 fun resolveReactNativeDirectory(): File {
@@ -127,7 +112,7 @@ fun getStaticFeatureFlagsString(featureFlags: Map<String, String>): String =
 fun isFlagEnabled(featureFlags: Map<String, String>, flagName: String): Boolean =
     featureFlags.containsKey(flagName) && featureFlags[flagName] == "true"
 
-if (isNewArchitectureEnabled() && project != rootProject) {
+if (project != rootProject) {
     apply(plugin = "com.facebook.react")
 }
 
@@ -135,10 +120,8 @@ val featureFlags = getStaticFeatureFlags()
 
 val packageDir: File = project.projectDir.parentFile
 val reactNativeRootDir: File = resolveReactNativeDirectory()
-val REACT_NATIVE_MINOR_VERSION: Int = getReactNativeMinorVersion()
 val REACT_NATIVE_VERSION: String = getReactNativeVersion()
 val WORKLETS_VERSION: String = getWorkletsVersion()
-val IS_NEW_ARCHITECTURE_ENABLED: Boolean = isNewArchitectureEnabled()
 val IS_REANIMATED_EXAMPLE_APP: Boolean = safeAppExtGet("isReanimatedExampleApp", false)?.toString()?.toBoolean() ?: false
 val FETCH_PREVIEW_ENABLED: Boolean = isFlagEnabled(featureFlags, "FETCH_PREVIEW_ENABLED")
 val WORKLETS_FEATURE_FLAGS: String = getStaticFeatureFlagsString(featureFlags)
@@ -150,27 +133,13 @@ version = WORKLETS_VERSION
 
 val workletsPrefabHeadersDir: File = project.file("${layout.buildDirectory.get().asFile.absolutePath}/prefab-headers/worklets")
 
-val JS_RUNTIME: String = run {
-    // Override JS runtime with environment variable
-    System.getenv("JS_RUNTIME")?.let { return@run it }
-
-    // Check if Hermes is enabled in app setup
-    val appProject = rootProject.allprojects.find { it.plugins.hasPlugin("com.android.application") }
-    val appExt = appProject?.extensions?.extraProperties
-    val hermesEnabled = appExt?.properties?.get("hermesEnabled")?.toString()?.toBoolean()
-        ?: (appExt?.properties?.get("react") as? Map<*, *>)?.get("enableHermes")?.let { it.toString().toBoolean() }
-        ?: false
-    if (hermesEnabled) {
-        return@run "hermes"
-    }
-
-    // Use JavaScriptCore (JSC) by default
-    "jsc"
-}
-
 fun reactNativeArchitectures(): List<String> {
     val value = project.findProperty("reactNativeArchitectures") as String?
-    return value?.split(",") ?: listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")
+    return value?.split(",")
+        ?.map { it.trim() }
+        ?.filter { it.isNotEmpty() }
+        ?.ifEmpty { null }
+        ?: listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")
 }
 
 if (project == rootProject) {
@@ -183,6 +152,7 @@ if (project == rootProject) {
 }
 
 apply(from = "./fix-prefab.gradle.kts")
+apply(from = "./generate-stub-pch.gradle.kts")
 
 android {
     compileSdk = safeExtGet("compileSdkVersion", 36) as Int
@@ -216,17 +186,14 @@ android {
         buildConfigField("boolean", "WORKLETS_PROFILING", WORKLETS_PROFILING.toString())
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
-        buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
 
         @Suppress("UnstableApiUsage")
         externalNativeBuild {
             cmake {
                 arguments(
                     "-DANDROID_STL=c++_shared",
-                    "-DREACT_NATIVE_MINOR_VERSION=$REACT_NATIVE_MINOR_VERSION",
                     "-DANDROID_TOOLCHAIN=clang",
                     "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
-                    "-DJS_RUNTIME=$JS_RUNTIME",
                     "-DIS_REANIMATED_EXAMPLE_APP=$IS_REANIMATED_EXAMPLE_APP",
                     "-DWORKLETS_FETCH_PREVIEW_ENABLED=$FETCH_PREVIEW_ENABLED",
                     "-DWORKLETS_PROFILING=$WORKLETS_PROFILING",
@@ -245,7 +212,6 @@ android {
 
     externalNativeBuild {
         cmake {
-            this.version = System.getenv("CMAKE_VERSION") ?: "3.22.1"
             path = file("CMakeLists.txt")
         }
     }
@@ -255,15 +221,13 @@ android {
             @Suppress("UnstableApiUsage")
             externalNativeBuild {
                 cmake {
-                    if (JS_RUNTIME == "hermes") {
-                        //  React Native doesn't expose these flags, but not having them
-                        //  can lead to runtime errors due to ABI mismatches.
-                        //  There's also
-                        //    HERMESVM_PROFILER_OPCODE
-                        //    HERMESVM_PROFILER_BB
-                        //  which shouldn't be defined in standard setups.
-                        arguments("-DHERMES_ENABLE_DEBUGGER=1")
-                    }
+                    //  React Native doesn't expose these flags, but not having them
+                    //  can lead to runtime errors due to ABI mismatches.
+                    //  There's also
+                    //    HERMESVM_PROFILER_OPCODE
+                    //    HERMESVM_PROFILER_BB
+                    //  which shouldn't be defined in standard setups.
+                    arguments("-DHERMES_ENABLE_DEBUGGER=1")
                 }
             }
         }
@@ -291,9 +255,7 @@ android {
                 "**/libjsi.so",
                 "**/libhermes.so",
                 "**/libhermesvm.so",
-                "**/libhermestooling.so",
                 "**/libreactnative.so",
-                "**/libjscexecutor.so",
             )
         }
     }
@@ -315,24 +277,8 @@ android {
         }
     }
 
-    project.tasks.withType<ExternalNativeBuildJsonTask>().configureEach {
-        val isExampleApp = IS_REANIMATED_EXAMPLE_APP
-        val pkgDir = packageDir
-        val cxxRoot = File(project.buildDir.parentFile, ".cxx")
-        doLast {
-            if (!isExampleApp) {
-                return@doLast
-            }
-            val generated = cxxRoot.walkTopDown()
-                .filter { it.name == "compile_commands.json" && it.isFile }
-                .maxByOrNull { it.lastModified() }
-            if (generated == null) {
-                logger.warn("Failed to generate clangd metadata: no compile_commands.json under $cxxRoot")
-                return@doLast
-            }
-            File("$pkgDir/compile_commands.json").writeText(generated.readText())
-            logger.info("Generated clangd metadata from $generated.")
-        }
+    if (IS_REANIMATED_EXAMPLE_APP) {
+        apply(from = "../../../scripts/llvm-tools/android-hook.gradle.kts")
     }
 }
 
@@ -366,16 +312,6 @@ tasks.register("assertMinimalReactNativeVersionTask") {
 }
 
 tasks.named("preBuild") { dependsOn("assertMinimalReactNativeVersionTask") }
-
-tasks.register("assertNewArchitectureEnabledTask") {
-    val isNewArch = IS_NEW_ARCHITECTURE_ENABLED
-    onlyIf { !isNewArch }
-    doFirst {
-        throw GradleException("[Worklets] Worklets require new architecture to be enabled. Please enable it by setting `newArchEnabled` to `true` in `gradle.properties`.")
-    }
-}
-
-tasks.named("preBuild") { dependsOn("assertNewArchitectureEnabledTask") }
 
 // Workaround for AGP 9 + Kotlin 2.x lint K2 UAST crash on .gradle.kts build scripts.
 // See: https://issuetracker.google.com/issues/432144179
@@ -414,9 +350,7 @@ dependencies {
     "implementation"("androidx.core:core:1.15.0")
     "implementation"("com.facebook.react:react-android") // version substituted by RNGP
     "implementation"("androidx.core:core-ktx:1.17.0")
-    if (JS_RUNTIME == "hermes") {
-        "implementation"("com.facebook.react:hermes-android") // version substituted by RNGP
-    }
+    "implementation"("com.facebook.react:hermes-android") // version substituted by RNGP
 }
 
 tasks.named("preBuild") { dependsOn("prepareWorkletsHeadersForPrefabs") }

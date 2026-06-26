@@ -1,42 +1,38 @@
 #pragma once
 
+#include <jsi/jsi.h>
 #include <worklets/Compat/StableApi.h>
 #include <worklets/Registries/WorkletRuntimeRegistry.h>
-
-#include <jsi/jsi.h>
+#include <worklets/Tools/JSScheduler.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
 
 #include <memory>
+#include <mutex>
+#include <optional>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 using namespace facebook;
 
 namespace worklets {
 
-jsi::Function getValueUnpacker(jsi::Runtime &rt);
+// Frees the heap-allocated jsi::Value wrapper without running ~jsi::Value.
+// Use when the runtime that owns the JSI handle is already gone. When the
+// owning runtime is terminated, the orphaned JSI objects would crash the app
+// if their destructors ran, because they call into memory managed by the
+// terminated runtime. The JS object itself lived inside the runtime's heap
+// and was reclaimed with the runtime; only the C++ wrapper allocation
+// remains, and we free it here without invoking ~jsi::Value.
+// See https://github.com/facebook/hermes/blob/75b617a/API/jsi/jsi/jsi.h#L833
+inline void freeWithoutCallingDestructor(std::unique_ptr<jsi::Value> &value) {
+  ::operator delete(value.release());
+}
 
-inline void cleanupIfRuntimeExists(jsi::Runtime *rt, std::unique_ptr<jsi::Value> &value) {
+inline void cleanupRuntimeAware(jsi::Runtime *rt, std::unique_ptr<jsi::Value> &value) {
   if (rt != nullptr && !WorkletRuntimeRegistry::isRuntimeAlive(rt)) {
-    // The below use of unique_ptr.release prevents the smart pointer from
-    // calling the destructor of the kept object. This effectively results in
-    // leaking some memory. We do this on purpose, as sometimes we would keep
-    // references to JSI objects past the lifetime of its runtime (e.g.,
-    // shared values references from the RN VM holds reference to JSI objects
-    // on the UI runtime). When the UI runtime is terminated, the orphaned JSI
-    // objects would crash the app when their destructors are called, because
-    // they call into a memory that's managed by the terminated runtime. We
-    // accept the tradeoff of leaking memory here, as it has a limited impact.
-    // This scenario can only occur when the React instance is torn down which
-    // happens in development mode during app reloads, or in production when
-    // the app is being shut down gracefully by the system. An alternative
-    // solution would require us to keep track of all JSI values that are in
-    // use which would require additional data structure and compute spent on
-    // bookkeeping that only for the sake of destroying the values in time
-    // before the runtime is terminated. Note that the underlying memory that
-    // jsi::Value refers to is managed by the VM and gets freed along with the
-    // runtime.
-    value.release(); // NOLINT
+    freeWithoutCallingDestructor(value);
   }
 }
 
@@ -75,7 +71,7 @@ class RetainingSerializable : virtual public BaseClass {
   }
 
   ~RetainingSerializable() override {
-    cleanupIfRuntimeExists(secondaryRuntime_, secondaryValue_);
+    cleanupRuntimeAware(secondaryRuntime_, secondaryValue_);
   }
 };
 
@@ -100,23 +96,45 @@ class SerializableJSRef : public jsi::NativeState {
   }
 };
 
+[[nodiscard]]
 jsi::Value makeSerializableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
     const jsi::Value &shouldRetainRemote,
     const jsi::Value &nativeStateSource);
 
+[[nodiscard]]
 std::shared_ptr<Serializable> extractSerializableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeSerializableValue,
     const std::string &errorMessage = "[Worklets] Expecting the object to be of type SerializableJSRef.");
 
-template <typename T>
-std::shared_ptr<T> extractSerializableOrThrow(
+[[nodiscard]]
+std::shared_ptr<Serializable> extractSerializableOrThrow(
+    jsi::Runtime &rt,
+    const jsi::Object &maybeSerializableValue,
+    const std::string &errorMessage = "[Worklets] Expecting the object to be of type SerializableJSRef.");
+
+template <typename TSerializable>
+[[nodiscard]]
+std::shared_ptr<TSerializable> extractSerializableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &serializableRef,
     const std::string &errorMessage = "[Worklets] Provided serializable object is of an incompatible type.") {
-  auto res = std::dynamic_pointer_cast<T>(extractSerializableOrThrow(rt, serializableRef, errorMessage));
+  auto res = std::dynamic_pointer_cast<TSerializable>(extractSerializableOrThrow(rt, serializableRef, errorMessage));
+  if (!res) {
+    throw std::runtime_error(errorMessage);
+  }
+  return res;
+}
+
+template <typename TSerializable>
+[[nodiscard]]
+std::shared_ptr<TSerializable> extractSerializableOrThrow(
+    jsi::Runtime &rt,
+    const jsi::Object &serializableRef,
+    const std::string &errorMessage = "[Worklets] Provided serializable object is of an incompatible type.") {
+  auto res = std::dynamic_pointer_cast<TSerializable>(extractSerializableOrThrow(rt, serializableRef, errorMessage));
   if (!res) {
     throw std::runtime_error(errorMessage);
   }
@@ -128,6 +146,19 @@ class SerializableArray : public Serializable {
   SerializableArray(jsi::Runtime &rt, const jsi::Array &array);
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+  std::vector<jsi::Value> getJSIValueArr(jsi::Runtime &rt) {
+    std::vector<jsi::Value> args;
+    args.reserve(data_.size());
+    for (const auto &item : data_) {
+      args.push_back(item->toJSValue(rt));
+    }
+    return args;
+  }
+
+  [[nodiscard]] const std::vector<std::shared_ptr<Serializable>> &getList() const {
+    return data_;
+  }
 
  protected:
   std::vector<std::shared_ptr<Serializable>> data_;
@@ -166,6 +197,31 @@ class SerializableSet : public Serializable {
   std::vector<std::shared_ptr<Serializable>> data_;
 };
 
+class SerializableError : public Serializable {
+ public:
+  SerializableError(const std::string &name, const std::string &message, const std::optional<std::string> &stack)
+      : Serializable(ValueType::ErrorType), name_(name), message_(message), stack_(stack) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  const std::string name_;
+  const std::string message_;
+  const std::optional<std::string> stack_;
+};
+
+class SerializableRegExp : public Serializable {
+ public:
+  SerializableRegExp(const std::string &pattern, const std::string &flags)
+      : Serializable(ValueType::RegExpType), pattern_(pattern), flags_(flags) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  const std::string pattern_;
+  const std::string flags_;
+};
+
 class SerializableHostObject : public Serializable {
  public:
   SerializableHostObject(jsi::Runtime &, const std::shared_ptr<jsi::HostObject> &hostObject)
@@ -179,11 +235,8 @@ class SerializableHostObject : public Serializable {
 
 class SerializableHostFunction : public Serializable {
  public:
-  SerializableHostFunction(jsi::Runtime &rt, jsi::Function function)
-      : Serializable(ValueType::HostFunctionType),
-        hostFunction_(function.getHostFunction(rt)),
-        name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
-        paramCount_(function.getProperty(rt, "length").asNumber()) {}
+  SerializableHostFunction(const jsi::HostFunctionType &function, const std::string &name, unsigned int paramCount)
+      : Serializable(ValueType::HostFunctionType), hostFunction_(function), name_(name), paramCount_(paramCount) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -193,16 +246,27 @@ class SerializableHostFunction : public Serializable {
   const unsigned int paramCount_;
 };
 
+struct ArrayBufferMetadata {
+  std::string typeName;
+  size_t byteOffset;
+  size_t length;
+};
+
 class SerializableArrayBuffer : public Serializable {
  public:
-  SerializableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer)
+  SerializableArrayBuffer(
+      jsi::Runtime &rt,
+      const jsi::ArrayBuffer &arrayBuffer,
+      std::optional<ArrayBufferMetadata> metadata = std::nullopt)
       : Serializable(ValueType::ArrayBufferType),
+        metadata_(std::move(metadata)),
         data_(arrayBuffer.data(rt), arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
-  const std::vector<uint8_t> data_;
+  std::optional<ArrayBufferMetadata> metadata_;
+  std::vector<uint8_t> data_;
 };
 
 class SerializableWorklet : public SerializableObject {
@@ -226,32 +290,6 @@ class SerializableImport : public Serializable {
   const std::string imported_;
 };
 
-class SerializableRemoteFunction : public Serializable,
-                                   public std::enable_shared_from_this<SerializableRemoteFunction> {
- private:
-  jsi::Runtime *runtime_;
-#ifndef NDEBUG
-  const std::string name_;
-#endif
-  std::unique_ptr<jsi::Value> function_;
-
- public:
-  SerializableRemoteFunction(jsi::Runtime &rt, jsi::Function &&function)
-      : Serializable(ValueType::RemoteFunctionType),
-        runtime_(&rt),
-#ifndef NDEBUG
-        name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
-#endif
-        function_(std::make_unique<jsi::Value>(rt, std::move(function))) {
-  }
-
-  ~SerializableRemoteFunction() override {
-    cleanupIfRuntimeExists(runtime_, function_);
-  }
-
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
-};
-
 class SerializableInitializer : public Serializable {
  private:
   // We don't release the initializer since the handle can get
@@ -269,7 +307,7 @@ class SerializableInitializer : public Serializable {
         initializer_(std::make_unique<SerializableObject>(rt, initializerObject)) {}
 
   ~SerializableInitializer() override {
-    cleanupIfRuntimeExists(remoteRuntime_, remoteValue_);
+    cleanupRuntimeAware(remoteRuntime_, remoteValue_);
   }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
@@ -300,7 +338,7 @@ class SerializableBigInt : public Serializable {
  protected:
   /**
    * This member is used only when the BigInt fits into int64_t range.
-  */
+   */
   std::optional<int64_t> fastValue_{};
   std::string slowValue_{};
 };
