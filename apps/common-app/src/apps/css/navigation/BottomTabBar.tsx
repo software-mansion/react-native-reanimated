@@ -19,6 +19,7 @@ import type { TabRoute } from '@/apps/css/navigation/types';
 import { colors, flex, spacing, text } from '@/theme';
 
 import { useLocalNavigationRef } from './LocalNavigationProvider';
+import { getExampleScreenPaths } from './utils';
 
 const TABS_GAP = spacing.xxs;
 
@@ -81,6 +82,22 @@ export default function BottomTabBar({
     []
   );
 
+  // On navigation screens the gradient hides list content scrolling behind the
+  // floating tab bar. Example screens have no such list, so we fade it out.
+  // Paths are stored as an array rather than a Set: a Set is not preserved when
+  // captured into a worklet on native, so the check uses `includes`.
+  const exampleScreenPaths = useMemo(
+    () => [...getExampleScreenPaths(routes)],
+    [routes]
+  );
+  const isExampleScreen = useDerivedValue(() => {
+    const path = currentRoute.value;
+    return path !== undefined && exampleScreenPaths.includes(path);
+  });
+  const gradientStyle = useAnimatedStyle(() => ({
+    opacity: withTiming(isExampleScreen.value ? 0 : 1),
+  }));
+
   const handleMeasure = useCallback(
     (width: number, idx: number) => {
       scheduleOnUI(() => {
@@ -98,9 +115,11 @@ export default function BottomTabBar({
 
   return (
     <View style={[styles.wrapper, { height: BOTTOM_BAR_HEIGHT + inset }]}>
-      <View pointerEvents="none" style={styles.gradient}>
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.gradient, gradientStyle]}>
         {gradient}
-      </View>
+      </Animated.View>
       <View style={styles.container}>
         <View style={[flex.row, { gap: TABS_GAP }]}>
           <Animated.View

@@ -9,6 +9,7 @@ globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;
 // is-tree-shakable-suppress
 init();
 
+export { isBundleModeEnabled } from './debug/bundleMode';
 export { toggleSlowAnimationsOnUIRuntime } from './debug/slowAnimations';
 export {
   callMicrotasks,

@@ -155,7 +155,6 @@ const styles = StyleSheet.create({
   actionBtn: {
     borderRadius: radius.md,
     borderWidth: 1,
-    elevation: 2,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     shadowOffset: { height: 0, width: 0 },

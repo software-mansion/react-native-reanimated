@@ -676,7 +676,11 @@ if (__DEV__) {
       const promise = Promise.resolve();
       await expect(() => {
         createSerializable(promise);
-      }).toThrow('Cannot copy value of type `Promise`');
+      }).toThrow(
+        globalThis._WORKLETS_BUNDLE_MODE_ENABLED
+          ? 'Cannot copy value of type `Promise`'
+          : 'Promises cannot be converted to serializable.'
+      );
     });
 
     test('throws when trying to serialize a Proxy', async () => {

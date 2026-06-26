@@ -1,5 +1,6 @@
 #include <reanimated/CSS/common/values/CSSColor.h>
 #include <reanimated/CSS/svg/values/SVGBrush.h>
+#include <reanimated/CSS/utils/props.h>
 
 #include <utility>
 
@@ -17,24 +18,7 @@ CSSColorBase<TColorType, TDerived>::CSSColorBase(TColorType colorType) : channel
 
 template <ColorTypeEnum TColorType, typename TDerived>
 CSSColorBase<TColorType, TDerived>::CSSColorBase(int64_t numberValue)
-    : channels{0, 0, 0, 0}, colorType(TColorType::Rgba) {
-  uint32_t color;
-  // On Android, colors are represented as signed 32-bit integers. In JS, we use
-  // a bitwise operation (normalizedColor = normalizedColor | 0x0) to ensure the
-  // value is treated as a signed int, causing numbers above 2^31 to become
-  // negative. To correctly interpret these in C++, we cast negative values to
-  // int32_t to preserve their bit pattern, then assign to uint32_t. This wraps
-  // the bits (modulo 2^32), effectively reversing the JS-side bit shift.
-  if (numberValue < 0) {
-    color = static_cast<int32_t>(numberValue);
-  } else {
-    color = static_cast<uint32_t>(numberValue);
-  }
-  channels[0] = (color >> 16) & 0xFF; // Red
-  channels[1] = (color >> 8) & 0xFF; // Green
-  channels[2] = color & 0xFF; // Blue
-  channels[3] = (color >> 24) & 0xFF; // Alpha
-}
+    : channels(extractColorChannels(numberValue)), colorType(TColorType::Rgba) {}
 
 template <ColorTypeEnum TColorType, typename TDerived>
 CSSColorBase<TColorType, TDerived>::CSSColorBase(bool value)

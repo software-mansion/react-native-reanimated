@@ -3,6 +3,7 @@ package com.swmansion.reanimated
 import android.content.ContentResolver
 import android.os.SystemClock
 import android.provider.Settings
+import android.util.Log
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
 import com.facebook.react.bridge.NativeModule
@@ -222,13 +223,43 @@ open class NativeProxy {
         return true
     }
 
+    // TODO(#9681): Temporary workaround for RN >= 0.86. Since RN 0.86,
+    // overrideBySynchronousMountPropsAtMountingAndroid defaults on, so RN's only public
+    // synchronous-update API (synchronouslyUpdateViewOnUIThread) seeds the tagToSynchronousMountProps
+    // cache that then clamps later commits and freezes animations. On RN >= 0.86 we instead call
+    // MountingManager.updatePropsSynchronously directly (apply without cache seeding) via reflection, since
+    // MountingManager is internal. On older RN the flag is off, so we keep the original RN path
+    // unchanged (gated by BuildConfig.IS_REACT_NATIVE_86_OR_NEWER, derived from the RN version at
+    // build time). Remove once RN exposes a non-seeding synchronous-update API.
+    private val mountingManager: Any by lazy {
+        FabricUIManager::class.java.getDeclaredField("mMountingManager").run {
+            isAccessible = true
+            get(mFabricUIManager)
+        }
+    }
+
+    private val updatePropsSynchronouslyMethod by lazy {
+        mountingManager.javaClass.methods
+            .first {
+                it.name.startsWith("updatePropsSynchronously") && it.parameterTypes.size == 2
+            }.apply { isAccessible = true }
+    }
+
     @DoNotStrip
     fun synchronouslyUpdateUIProps(
         intBuffer: IntArray,
         doubleBuffer: DoubleArray,
     ) {
         SynchronousPropsBufferParser.parse(intBuffer, doubleBuffer) { viewTag, props ->
-            mFabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, props)
+            if (BuildConfig.IS_REACT_NATIVE_86_OR_NEWER) {
+                try {
+                    updatePropsSynchronouslyMethod.invoke(mountingManager, viewTag, props)
+                } catch (e: Exception) {
+                    Log.w("Reanimated", "synchronouslyUpdateUIProps failed for tag $viewTag", e)
+                }
+            } else {
+                mFabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, props)
+            }
         }
     }
 
