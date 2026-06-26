@@ -143,14 +143,14 @@ export function useHandler<Event extends object, Context extends UnknownRecord>(
   'use no memo';
 
   const stateRef = useRef<{
-    context: Context;
+    context: Context | undefined;
     prevHandlers: GeneralHandlers<Event, Context> | undefined;
     prevDependencies: DependencyList;
   } | null>(null);
 
   if (stateRef.current === null) {
     stateRef.current = {
-      context: makeShareable({} as Context),
+      context: undefined,
       prevHandlers: undefined,
       prevDependencies: [],
     };
@@ -180,5 +180,13 @@ export function useHandler<Event extends object, Context extends UnknownRecord>(
     state.prevDependencies = dependencies;
   });
 
-  return { context: state.context, doDependenciesDiffer };
+  return {
+    get context() {
+      if (state.context === undefined) {
+        state.context = makeShareable({} as Context);
+      }
+      return state.context;
+    },
+    doDependenciesDiffer,
+  };
 }

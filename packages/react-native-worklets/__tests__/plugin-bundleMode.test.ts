@@ -28,6 +28,7 @@ import type { PluginOptions } from '../plugin';
 import plugin from '../plugin';
 
 const MOCK_LOCATION = 'test.js';
+const MOCK_TSX_LOCATION = 'test.tsx';
 const MOCK_WORKLET_RUNTIME_ENTRY = 'react-native-worklets/src/index.ts';
 const MOCK_OTHER_FILE = 'someOtherFile.ts';
 
@@ -193,11 +194,51 @@ describe('babel plugin in bundleMode', () => {
       const { code, files } = runPlugin(
         input,
         {},
-        { workletizableModules: ['some-library'] }
+        { importForwarding: { moduleNames: ['some-library'] } }
       );
       expect(files).toHaveLength(1);
       expect(code).toMatchSnapshot();
       expect(files[0].content).toMatchSnapshot();
+    });
+
+    test('strips JSX dev attributes in written worklet files', () => {
+      const input = html`<script>
+        import { ImportedComponent } from 'react-native-worklets';
+
+        function renderView() {
+          'worklet';
+          return <ImportedComponent />;
+        }
+      </script>`;
+
+      const control = transformSync(input.replace(/<\/?script[^>]*>/g, ''), {
+        filename: MOCK_TSX_LOCATION,
+        compact: false,
+        babelrc: false,
+        configFile: false,
+        presets: [
+          ['@babel/preset-react', { runtime: 'classic', development: true }],
+        ],
+        envName: 'development',
+      })!.code;
+      expect(control).toContain('__self');
+      expect(control).toContain('__source');
+
+      const { files } = runPlugin(
+        input,
+        {
+          presets: [
+            ['@babel/preset-react', { runtime: 'classic', development: true }],
+          ],
+          envName: 'development',
+        },
+        { importForwarding: { moduleNames: ['react-native-worklets'] } },
+        MOCK_TSX_LOCATION
+      );
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toContain('return <ImportedComponent />;');
+      expect(files[0].content).not.toContain('__self');
+      expect(files[0].content).not.toContain('__source');
     });
 
     test('rebases relative imports against the worklets directory', () => {
@@ -213,7 +254,7 @@ describe('babel plugin in bundleMode', () => {
       const { files } = runPlugin(
         input,
         {},
-        { workletizableModules: ['some-library'] },
+        { importForwarding: { relativePaths: ['some-library'] } },
         fakeFilename
       );
       const filesDirPath = path.resolve(
@@ -241,7 +282,7 @@ describe('babel plugin in bundleMode', () => {
       const { files } = runPlugin(
         input,
         {},
-        { workletizableModules: ['some-library'] },
+        { importForwarding: { relativePaths: ['some-library'] } },
         fakeFilename
       );
       expect(files).toHaveLength(1);
@@ -391,6 +432,30 @@ describe('babel plugin in bundleMode', () => {
       const { code, files } = runPlugin(input, {}, {}, generatedFilename);
       expect(files).toHaveLength(0);
       expect(code).not.toContain(REQUIRE_PREFIX);
+    });
+
+    test('autoworkletization fires before emitting a file', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          scheduleOnUI(() => {
+            return 1;
+          });
+        }
+      </script>`;
+
+      const { files: firstPass } = runPlugin(input);
+      assert(firstPass.length >= 1);
+      const outerFile = firstPass[firstPass.length - 1];
+
+      const { code: rePassedCode } = runPlugin(
+        outerFile.content,
+        {},
+        {},
+        outerFile.path
+      );
+
+      expect(rePassedCode).toContain(REQUIRE_PREFIX);
     });
   });
 });

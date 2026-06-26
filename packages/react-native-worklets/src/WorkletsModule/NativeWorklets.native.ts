@@ -168,6 +168,20 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.createSerializableRegExp(pattern, flags);
   }
 
+  createSerializableArrayBufferView<TValue extends ArrayBufferView>(
+    typeName: string,
+    buffer: ArrayBuffer,
+    byteOffset: number,
+    length: number
+  ): SerializableRef<TValue> {
+    return this.#workletsModuleProxy.createSerializableArrayBufferView<TValue>(
+      typeName,
+      buffer,
+      byteOffset,
+      length
+    );
+  }
+
   createSerializableInitializer(obj: object) {
     return this.#workletsModuleProxy.createSerializableInitializer(obj);
   }

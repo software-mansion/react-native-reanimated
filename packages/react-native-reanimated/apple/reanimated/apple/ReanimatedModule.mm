@@ -163,7 +163,18 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 - (BOOL)hasReactNativeFailedReload
 {
   id workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
-  return ![_moduleRegistry moduleIsInitialized:[workletsModule class]];
+  if (![_moduleRegistry moduleIsInitialized:[workletsModule class]]) {
+    return YES;
+  }
+
+  // On a double reload React Native can momentarily leave the surface presenter without
+  // a scheduler. This is another manifestation of the same non-fatal reload race, so we
+  // bail on it here instead of asserting on a nil scheduler later in installTurboModule.
+  if ([_surfacePresenter scheduler] == nil) {
+    return YES;
+  }
+
+  return NO;
 }
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)

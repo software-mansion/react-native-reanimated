@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { createAnimatedComponent } from 'react-native-reanimated';
 
 import {
@@ -11,6 +11,7 @@ import {
 import { colors, radius, sizes, spacing } from '@/theme';
 
 const AnimatedTextInput = createAnimatedComponent(TextInput);
+const AnimatedPressable = createAnimatedComponent(Pressable);
 
 export default function ArbitraryWebSelectors() {
   const [value, setValue] = useState('');
@@ -172,36 +173,35 @@ export default function ArbitraryWebSelectors() {
           </VerticalExampleCard>
 
           <VerticalExampleCard
-            description=":focus-visible fires only when focus arrives via the keyboard (Tab), not when the input is clicked. The built-in :focus would fire either way - this is a distinct selector that the web layer passes through unchanged."
+            description=":focus-visible matches when the button is focused via the keyboard (Tab) - not on click. Tab to it to see it highlight; clicking won't."
             labelTypes={['web']}
-            title=":focus-visible (keyboard focus only)"
-            code={`<AnimatedTextInput
+            title=":focus-visible (keyboard focus)"
+            code={`<AnimatedPressable
   style={{
-    borderColor: {
+    backgroundColor: {
       default: colors.foreground3,
       ':focus-visible': colors.primary,
     },
     transitionDuration: '150ms',
   }}
 />`}
-            collapsedCode={`borderColor: {
+            collapsedCode={`backgroundColor: {
   default: colors.foreground3,
   ':focus-visible': colors.primary,
 },`}>
-            <AnimatedTextInput
-              placeholder="Tab vs click to compare"
+            <AnimatedPressable
               style={[
-                styles.input,
+                styles.button,
                 {
-                  borderColor: {
+                  backgroundColor: {
                     ':focus-visible': colors.primary,
                     default: colors.foreground3,
                   },
-                  borderWidth: 2,
                   transitionDuration: '150ms',
                 },
-              ]}
-            />
+              ]}>
+              <Text style={styles.buttonLabel}>Tab to focus</Text>
+            </AnimatedPressable>
           </VerticalExampleCard>
         </Section>
       </Scroll>
@@ -210,6 +210,16 @@ export default function ArbitraryWebSelectors() {
 }
 
 const styles = StyleSheet.create({
+  button: {
+    alignItems: 'center',
+    borderRadius: radius.md,
+    height: sizes.md,
+    justifyContent: 'center',
+    width: sizes.xxl,
+  },
+  buttonLabel: {
+    color: colors.foreground1,
+  },
   content: {
     gap: spacing.xs,
   },

@@ -99,17 +99,14 @@ export function makeWorkletFactory(
   assert(transformed, '[Reanimated] `transformed` is undefined.');
   assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
 
-  const {
-    closureVariables,
-    libraryBindingsToImport,
-    relativeBindingsToImport,
-  } = includeClosure
-    ? getClosure(fun, state)
-    : {
-        closureVariables: [],
-        libraryBindingsToImport: new Set<Binding>(),
-        relativeBindingsToImport: new Set<Binding>(),
-      };
+  const { closureVariables, moduleBindingsToImport, relativeBindingsToImport } =
+    includeClosure
+      ? getClosure(fun, state)
+      : {
+          closureVariables: [],
+          moduleBindingsToImport: new Set<Binding>(),
+          relativeBindingsToImport: new Set<Binding>(),
+        };
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
@@ -393,7 +390,7 @@ export function makeWorkletFactory(
     updateRelativeRequires(factory, state);
 
     generateWorkletFile(
-      libraryBindingsToImport,
+      moduleBindingsToImport,
       relativeBindingsToImport,
       factory,
       workletHash,

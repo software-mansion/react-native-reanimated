@@ -16,7 +16,7 @@ const { blockList, extraNodeModules } = getMonorepoMetroOptions(
 const monorepoRoot = path.resolve(__dirname, '../..');
 
 /** @type {import('@react-native/metro-config').MetroConfig} */
-const config = {
+let config = {
   projectRoot: __dirname,
   watchFolders: [monorepoRoot],
 
@@ -27,6 +27,9 @@ const config = {
     extraNodeModules,
   },
 };
+
+const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
+config = mergeConfig(config, bundleModeMetroConfig);
 
 module.exports = wrapWithReanimatedMetroConfig(
   mergeConfig(defaultConfig, config)
