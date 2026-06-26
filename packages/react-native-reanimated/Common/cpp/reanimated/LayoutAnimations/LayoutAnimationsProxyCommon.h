@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <react/debug/react_native_assert.h>
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/uimanager/UIManager.h>
@@ -28,6 +29,31 @@ struct LayoutAnimation {
     return count == 0;
   }
 };
+
+#ifdef ANDROID
+// Bookkeeping for animation starts that were scheduled onto the UI thread but
+// haven't run yet — see `pendingStarts_` below.
+struct PendingStart {
+  int count = 0;
+  uint64_t handle = 0;
+};
+
+// Removes one pending start for the given tag and returns whether it was
+// cancelled since it was scheduled (i.e. its handle is no longer current).
+// Call under the proxy mutex.
+inline bool
+consumeIsCancelled(std::unordered_map<Tag, PendingStart> &pendingStarts, const Tag tag, const uint64_t handle) {
+  const auto it = pendingStarts.find(tag);
+  // every scheduled start keeps its entry alive until it is consumed —
+  // cancellations only bump the handle, they never erase
+  react_native_assert(it != pendingStarts.end() && "PendingStart not found");
+  const bool isCancelled = it->second.handle != handle;
+  if (--it->second.count == 0) {
+    pendingStarts.erase(it);
+  }
+  return isCancelled;
+}
+#endif
 
 class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDelegate {
  public:
@@ -80,6 +106,18 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
 
   void restoreOpacityInCaseOfFlakyEnteringAnimation(SurfaceId surfaceId) const;
 
+  // On Android pullTransaction can run on the JS thread, so animation starts
+  // are scheduled onto the UI thread. If `maybeCancelAnimation` is called between the
+  // start was scheduled and the lambda runs, it
+  // finds no `layoutAnimations_` entry to erase (the start lambda hasn't created it
+  // yet) and the cancellation is lost — the stale start would later
+  // "resurrect" the animation for a view whose Remove+Delete are already on
+  // their way to the mounting layer
+  // (https://github.com/software-mansion/react-native-reanimated/issues/7493).
+
+  // To work around this, we keep a separate `pendingStarts_` map that tracks scheduled starts by tag,
+  //  with a generation counter to detect cancellations.
+  mutable std::unordered_map<Tag, PendingStart> pendingStarts_;
 #endif
 };
 

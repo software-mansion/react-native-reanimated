@@ -32,7 +32,7 @@ export function getClosure(
         typePath.skip();
       },
       ReferencedIdentifier(idPath) {
-        if (idPath.isJSXIdentifier()) {
+        if (idPath.isJSXIdentifier() && !state.opts.bundleMode) {
           return;
         }
 

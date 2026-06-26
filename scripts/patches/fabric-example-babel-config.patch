@@ -1,0 +1,13 @@
+diff --git a/apps/fabric-example/babel.config.js b/apps/fabric-example/babel.config.js
+index 1a4d98fe45..add8e4364d 100644
+--- a/apps/fabric-example/babel.config.js
++++ b/apps/fabric-example/babel.config.js
+@@ -1,7 +1,7 @@
+ /** @type {import('react-native-worklets/plugin').PluginOptions} */
+ const workletsPluginOptions = {
+   strictGlobal: true,
+-  bundleMode: false,
++  bundleMode: true,
+ };
+ 
+ /** @type {import('@babel/core').TransformOptions} */

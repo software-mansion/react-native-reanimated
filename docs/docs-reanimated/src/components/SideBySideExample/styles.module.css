@@ -1,0 +1,64 @@
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: stretch;
+  margin: 16px 0;
+}
+
+.preview {
+  flex: 1 1 0;
+  min-width: 240px;
+  display: flex;
+}
+
+.code {
+  flex: 2 1 0;
+  min-width: 340px;
+  display: flex;
+}
+
+.row > .preview > *,
+.row > .code > * {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+}
+
+.liveCard {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--swm-border);
+  background-color: var(--swm-off-background);
+}
+
+.loading {
+  margin: auto;
+  padding: 24px;
+}
+
+.videoCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--swm-border);
+  background-color: var(--swm-off-background);
+}
+
+.video {
+  width: 100%;
+  max-height: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+[data-theme='light'] .videoDark {
+  display: none;
+}
+
+[data-theme='dark'] .videoLight {
+  display: none;
+}

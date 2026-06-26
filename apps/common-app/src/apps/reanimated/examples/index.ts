@@ -238,6 +238,10 @@ const InvalidValueAccessExample: React.FC = () =>
   React.createElement(
     require('./InvalidValueAccessExample').default as React.FC
   );
+const InterruptedExitingExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/InterruptedExitingExample').default as React.FC
+  );
 const InvertedFlatListExample: React.FC = () =>
   React.createElement(require('./InvertedFlatListExample').default as React.FC);
 const KeyframeAnimation: React.FC = () =>
@@ -391,7 +395,9 @@ const RuntimeTestsExample: React.FC = () =>
     require('./RuntimeTests/RuntimeTestsExample').default as React.FC
   );
 const ScreenlessBasic: React.FC = () =>
-  React.createElement(require('./SharedElementTransitions/ScreenlessBasic').default as React.FC);
+  React.createElement(
+    require('./SharedElementTransitions/ScreenlessBasic').default as React.FC
+  );
 const ScreenStackExample: React.FC = () =>
   React.createElement(require('./ScreenStackExample').default as React.FC);
 const ScreenStackHeaderConfigBackgroundColorExample: React.FC = () =>
@@ -486,8 +492,6 @@ const WithoutBabelPluginExample: React.FC = () =>
   );
 const WobbleExample: React.FC = () =>
   React.createElement(require('./WobbleExample').default as React.FC);
-
-
 
 export const REAPlatform = {
   IOS: 'ios',
@@ -1075,6 +1079,10 @@ export const EXAMPLES: Record<string, Example> = {
   DeleteAncestorOfExiting: {
     title: '[LA] Deleting view with an exiting animation',
     screen: DeleteAncestorOfExiting,
+  },
+  InterruptedExiting: {
+    title: '[LA] Interrupted exiting animation (#7493)',
+    screen: InterruptedExitingExample,
   },
   NestedNativeStacksWithLayout: {
     title: '[LA] Nested NativeStacks with layout',

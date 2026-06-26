@@ -676,7 +676,7 @@ var require_closure = __commonJS({
           typePath.skip();
         },
         ReferencedIdentifier(idPath) {
-          if (idPath.isJSXIdentifier()) {
+          if (idPath.isJSXIdentifier() && !state.opts.bundleMode) {
             return;
           }
           const name = idPath.node.name;
@@ -762,7 +762,7 @@ var require_generate = __commonJS({
       const transformedProg = (_a = (0, core_1.transformFromAstSync)(newProg, void 0, {
         filename: state.file.opts.filename,
         presets: ["@babel/preset-typescript"],
-        plugins: [state.autoworkletizationPlugin],
+        plugins: [state.autoworkletizationPlugin, stripJsxDevAttributesPlugin],
         ast: false,
         babelrc: false,
         configFile: false,
@@ -772,6 +772,21 @@ var require_generate = __commonJS({
       const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
       (0, fs_1.writeFileSync)(dedicatedFilePath, transformedProg);
     }
+    var stripJsxDevAttributesPlugin = {
+      name: "worklets-strip-jsx-dev-attributes",
+      visitor: {
+        JSXAttribute(path) {
+          const name = path.node.name;
+          if (name.type !== "JSXIdentifier") {
+            return;
+          }
+          if (name.name !== "__self" && name.name !== "__source") {
+            return;
+          }
+          path.remove();
+        }
+      }
+    };
   }
 });
 

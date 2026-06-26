@@ -132,9 +132,9 @@ function getBundleModeMetroConfig(/** @type {any} */ config) {
     );
 
   const currentGetTransformOptions = config?.transformer?.getTransformOptions;
-  config.transformer.getTransformOptions = async () => {
+  config.transformer.getTransformOptions = async (...args) => {
     const options = currentGetTransformOptions
-      ? await currentGetTransformOptions()
+      ? await currentGetTransformOptions(...args)
       : {};
     return {
       ...options,
@@ -151,7 +151,8 @@ function getBundleModeMetroConfig(/** @type {any} */ config) {
 function bundleModeCreateModuleIdFactory() {
   let nextId = 0;
   const idFileMap = new Map();
-  return (/** @type {string} */ moduleName) => {
+  return (/** @type {string} */ moduleNameRaw) => {
+    const moduleName = moduleNameRaw.replace(/\\/g, '/');
     if (idFileMap.has(moduleName)) {
       return idFileMap.get(moduleName);
     }

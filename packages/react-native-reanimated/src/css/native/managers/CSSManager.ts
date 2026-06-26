@@ -60,6 +60,7 @@ export default class CSSManager implements ICSSManager {
       transitionProperties,
       pseudoStylesBySelector,
       ,
+      ,
       filteredStyle,
     ] = filterCSSAndStyleProperties(style);
 
@@ -73,20 +74,20 @@ export default class CSSManager implements ICSSManager {
         ? this.propsBuilder.build(filteredStyle)
         : undefined;
 
+    const transitionDetached = this.cssTransitionsManager.update(
+      transitionProperties,
+      normalizedStyle ?? {}
+    );
+
+    // Record the committed style as the base so animations and (on Android) a
+    // detaching transition can revert to it instead of interpolator defaults.
     if (
       normalizedStyle &&
-      (hasAnimation ||
-        // We also need to update the current style on Android when the
-        // transition is detached.
-        (IS_ANDROID && !hasTransition && this.hadTransitionLastUpdate))
+      (hasAnimation || (IS_ANDROID && transitionDetached))
     ) {
       setViewStyle(this.viewTag, normalizedStyle);
     }
 
-    this.cssTransitionsManager.update(
-      transitionProperties,
-      normalizedStyle ?? {}
-    );
     this.cssAnimationsManager.update(animationProperties);
     this.cssPseudoStylesManager.update(
       pseudoStylesBySelector,
