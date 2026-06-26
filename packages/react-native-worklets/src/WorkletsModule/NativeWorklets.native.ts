@@ -410,34 +410,53 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 export const WorkletsModule: IWorkletsModule = new NativeWorklets();
 
 function installUnpackers(workletsModuleProxy: WorkletsModuleProxy) {
-  workletsModuleProxy.loadUnpackers(
-    (installValueUnpacker as WorkletFunction).__initData!.code,
-    (installValueUnpacker as WorkletFunction).__initData!.location ?? '',
-    (installValueUnpacker as WorkletFunction).__initData!.sourceMap ?? '',
-    (installSynchronizableUnpacker as WorkletFunction).__initData!.code,
-    (installSynchronizableUnpacker as WorkletFunction).__initData!.location ??
-      '',
-    (installSynchronizableUnpacker as WorkletFunction).__initData!.sourceMap ??
-      '',
-    (installCustomSerializableUnpacker as WorkletFunction).__initData!.code,
-    (installCustomSerializableUnpacker as WorkletFunction).__initData!
-      .location ?? '',
-    (installCustomSerializableUnpacker as WorkletFunction).__initData!
-      .sourceMap ?? '',
-    (installShareableHostUnpacker as WorkletFunction).__initData!.code,
-    (installShareableHostUnpacker as WorkletFunction).__initData!.location ??
-      '',
-    (installShareableHostUnpacker as WorkletFunction).__initData!.sourceMap ??
-      '',
-    (installShareableGuestUnpacker as WorkletFunction).__initData!.code,
-    (installShareableGuestUnpacker as WorkletFunction).__initData!.location ??
-      '',
-    (installShareableGuestUnpacker as WorkletFunction).__initData!.sourceMap ??
-      '',
-    (installRemoteFunctionUnpacker as WorkletFunction).__initData!.code,
-    (installRemoteFunctionUnpacker as WorkletFunction).__initData!.location ??
-      '',
-    (installRemoteFunctionUnpacker as WorkletFunction).__initData!.sourceMap ??
-      ''
-  );
+  const value = (installValueUnpacker as WorkletFunction).__initData!;
+  const synchronizable = (installSynchronizableUnpacker as WorkletFunction)
+    .__initData!;
+  const customSerializable = (
+    installCustomSerializableUnpacker as WorkletFunction
+  ).__initData!;
+  const shareableHost = (installShareableHostUnpacker as WorkletFunction)
+    .__initData!;
+  const shareableGuest = (installShareableGuestUnpacker as WorkletFunction)
+    .__initData!;
+  const remoteFunction = (installRemoteFunctionUnpacker as WorkletFunction)
+    .__initData!;
+
+  if (value.bytecode !== undefined) {
+    if (__DEV__) {
+      throw new Error(
+        '[Worklets] Unpackers were compiled to Hermes bytecode in a development build, which is not supported.'
+      );
+    }
+    workletsModuleProxy.loadUnpackersWithBytecode(
+      value.bytecode,
+      synchronizable.bytecode!,
+      customSerializable.bytecode!,
+      shareableHost.bytecode!,
+      shareableGuest.bytecode!,
+      remoteFunction.bytecode!
+    );
+  } else {
+    workletsModuleProxy.loadUnpackersWithCode(
+      value.code!,
+      value.location ?? '',
+      value.sourceMap ?? '',
+      synchronizable.code!,
+      synchronizable.location ?? '',
+      synchronizable.sourceMap ?? '',
+      customSerializable.code!,
+      customSerializable.location ?? '',
+      customSerializable.sourceMap ?? '',
+      shareableHost.code!,
+      shareableHost.location ?? '',
+      shareableHost.sourceMap ?? '',
+      shareableGuest.code!,
+      shareableGuest.location ?? '',
+      shareableGuest.sourceMap ?? '',
+      remoteFunction.code!,
+      remoteFunction.location ?? '',
+      remoteFunction.sourceMap ?? ''
+    );
+  }
 }

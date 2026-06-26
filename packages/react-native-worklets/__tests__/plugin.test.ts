@@ -1819,7 +1819,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toMatch(
-        /code: "function\*foo_null[0-9]+\(\){yield'hello';yield'world';}"/gm
+        /code: "\(function\*foo_null[0-9]+\(\){yield'hello';yield'world';}\)"/gm
       );
       expect(code).toMatchSnapshot();
     });
@@ -1849,7 +1849,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toMatch(
-        /code: "async function foo_null[0-9]+\(\){await Promise.resolve\(\);}"/gm
+        /code: "\(async function foo_null[0-9]+\(\){await Promise.resolve\(\);}\)"/gm
       );
       expect(code).toMatchSnapshot();
     });
