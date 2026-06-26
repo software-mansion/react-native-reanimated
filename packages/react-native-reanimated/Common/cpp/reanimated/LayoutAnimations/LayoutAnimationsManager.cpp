@@ -111,6 +111,7 @@ void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, con
 }
 
 void LayoutAnimationsManager::transferSharedConfig(const Tag from, const Tag to) {
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   sharedTransitions_[to] = sharedTransitions_[from];
 }
 

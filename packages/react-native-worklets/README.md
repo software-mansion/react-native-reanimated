@@ -1,5 +1,9 @@
 <img src="https://github.com/user-attachments/assets/41b37472-e55a-4c54-9064-31258e03870c" alt="React Native Worklets by Software Mansion" width="100%">
 
+[![Ad](https://swm-delivery.com/www/images/zone-gh-react-native-worklets-1?n=1)](https://swm-delivery.com/www/delivery/ck-slug.php?zoneid=zone-gh-react-native-worklets-1\&n=1)
+[![Ad](https://swm-delivery.com/www/images/zone-gh-react-native-worklets-2?n=1)](https://swm-delivery.com/www/delivery/ck-slug.php?zoneid=zone-gh-react-native-worklets-2\&n=1)
+[![Ad](https://swm-delivery.com/www/images/zone-gh-react-native-worklets-3?n=1)](https://swm-delivery.com/www/delivery/ck-slug.php?zoneid=zone-gh-react-native-worklets-3\&n=1)
+
 ### The React Native multithreading library
 
 React Native Worklets is a library that allows you to run JavaScript code in parallel on multiple threads and runtimes, without writing any native code.
@@ -7,9 +11,7 @@ React Native Worklets is a library that allows you to run JavaScript code in par
 ## Nightly CI state
 
 [![NPM Worklets publish \[Nightly\]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish.yml)
-[![Lint clang-tidy \[Nightly\]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml)
 [![Expo DevClient build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/expo-devclient-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/expo-devclient-build-check-nightly.yml)
-[![Worklets Bundle Mode build check \[Nightly\]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/worklets-bundle-mode-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/worklets-bundle-mode-build-check-nightly.yml)
 [![URL validation](https://github.com/software-mansion/react-native-reanimated/actions/workflows/url-validation-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/url-validation-nightly.yml)
 
 ## Documentation

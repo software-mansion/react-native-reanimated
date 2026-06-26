@@ -85,7 +85,9 @@ const extractVersions = (
   data: [string, CompatibilityEntry][],
   getVersions: (entry: CompatibilityEntry) => string[]
 ): string[] =>
-  Array.from(new Set(data.flatMap(([, entry]) => getVersions(entry)))).sort();
+  Array.from(new Set(data.flatMap(([, entry]) => getVersions(entry)))).sort(
+    (a, b) => a.localeCompare(b, undefined, { numeric: true })
+  );
 
 const createCompatibilityItems = (
   filteredData: [string, CompatibilityEntry][],

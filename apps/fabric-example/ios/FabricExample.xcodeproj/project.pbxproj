@@ -161,7 +161,7 @@
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
 				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
-				1232BDDFC9DE5BCE2776187D /* [CP-User] Generate metadata for clangd */,
+				F292819CEF75281295E50DEC /* [CP-User] Generate compile metadata for LLVM tools */,
 			);
 			buildRules = (
 			);
@@ -263,17 +263,6 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FabricExample/Pods-FabricExample-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		1232BDDFC9DE5BCE2776187D /* [CP-User] Generate metadata for clangd */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = true;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			name = "[CP-User] Generate metadata for clangd";
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/bash;
-			shellScript = "../../../packages/react-native-reanimated/scripts/clangd-generate-xcode-metadata.sh";
-		};
 		C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -312,6 +301,17 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FabricExample/Pods-FabricExample-resources.sh\"\n";
 			showEnvVarsInLog = 0;
+		};
+		F292819CEF75281295E50DEC /* [CP-User] Generate compile metadata for LLVM tools */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = true;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "[CP-User] Generate compile metadata for LLVM tools";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "../../../scripts/llvm-tools/generate-xcode-metadata.sh";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -472,6 +472,7 @@
 					"$(inherited)",
 					" ",
 				);
+				PODFILE_DIR = "$(SRCROOT)";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -565,6 +566,7 @@
 					"$(inherited)",
 					" ",
 				);
+				PODFILE_DIR = "$(SRCROOT)";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;

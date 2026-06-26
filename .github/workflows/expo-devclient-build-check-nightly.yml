@@ -27,17 +27,16 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Check out reanimated repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - name: Setup Java 17
         if: ${{ matrix.platform == 'Android' }}
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@17f84c3641ba7b8f6deff6309fc4c864478f5d62
         with:
           distribution: 'zulu'
           java-version: 17
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
         if: ${{ matrix.platform == 'iOS' }}
         with:
-          ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
       - name: Create Expo app
         run: npx create-expo-app@latest ${{ env.APP_NAME }} --template blank-typescript

@@ -12,12 +12,14 @@ export type ToThrowArgs = [string?];
 type ToBeNullArgs = [];
 type ToBeWithinRangeArgs = [number, number];
 type ToBeCalledArgs = [number];
+type ToIncludeArgs = [string];
 
 export type SyncMatcherArguments =
   | ToBeArgs
   | ToBeNullArgs
   | ToBeCalledArgs
-  | ToBeWithinRangeArgs;
+  | ToBeWithinRangeArgs
+  | ToIncludeArgs;
 export type AsyncMatcherArguments = ToThrowArgs;
 export type MatcherReturn = {
   pass: boolean;
@@ -173,6 +175,22 @@ export const toBeCalledJSMatcher: Matcher<ToBeCalledArgs> = (
   return toBeCalledOnThreadMatcher(currentValue, negation, times, 'JS');
 };
 
+export const toIncludeMatcher: Matcher<ToIncludeArgs> = (
+  currentValue,
+  negation,
+  substring
+) => {
+  const pass =
+    typeof currentValue === 'string' && currentValue.includes(substring);
+  return {
+    pass,
+    message:
+      typeof currentValue !== 'string'
+        ? `Expected a ${green('string')} received ${red(typeof currentValue)}`
+        : `Expected string${negation ? ' NOT' : ''} to include ${green(substring)}, received ${red(currentValue)}`,
+  };
+};
+
 export const toThrowMatcher: AsyncMatcher<ToThrowArgs> = async (
   throwingFunction,
   negation,
@@ -248,6 +266,10 @@ async function mockConsole(): Promise<
   console.warn = mockedConsoleFunction;
   await syncUIRunner.runOnUIBlocking(() => {
     'worklet';
+    (globalThis as Record<string, unknown>).__originalConsoleError =
+      console.error;
+    (globalThis as Record<string, unknown>).__originalConsoleWarn =
+      console.warn;
     console.error = mockedConsoleFunction;
     console.warn = mockedConsoleFunction;
   });
@@ -257,8 +279,12 @@ async function mockConsole(): Promise<
     console.warn = originalWarning;
     await syncUIRunner.runOnUIBlocking(() => {
       'worklet';
-      console.error = originalError;
-      console.warn = originalWarning;
+      console.error = (globalThis as Record<string, unknown>)
+        .__originalConsoleError as typeof console.error;
+      console.warn = (globalThis as Record<string, unknown>)
+        .__originalConsoleWarn as typeof console.warn;
+      delete (globalThis as Record<string, unknown>).__originalConsoleError;
+      delete (globalThis as Record<string, unknown>).__originalConsoleWarn;
     });
   };
 

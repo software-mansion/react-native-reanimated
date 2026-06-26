@@ -10,8 +10,8 @@ double getDuration(jsi::Runtime &rt, const jsi::Object &config) {
   return config.getProperty(rt, "duration").asNumber();
 }
 
-EasingFunction getTimingFunction(jsi::Runtime &rt, const jsi::Object &config) {
-  return createEasingFunction(rt, config.getProperty(rt, "timingFunction"));
+EasingConfig getEasingConfig(jsi::Runtime &rt, const jsi::Object &config) {
+  return getEasingConfig(rt, config.getProperty(rt, "timingFunction"));
 }
 
 double getDelay(jsi::Runtime &rt, const jsi::Object &config) {

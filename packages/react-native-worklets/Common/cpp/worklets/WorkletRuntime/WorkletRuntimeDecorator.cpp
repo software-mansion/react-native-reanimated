@@ -5,7 +5,7 @@
 #include <worklets/Tools/PlatformLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/HermesProfiling.h>
-#include <worklets/WorkletRuntime/RuntimeKind.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
@@ -25,7 +25,6 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
 #if defined(__APPLE__) && OS_LOG_TARGET_HAS_10_15_FEATURES
 static os_log_t workletsInstrumentsLogHandle = nullptr;
@@ -51,24 +50,9 @@ static inline double performanceNow() {
   return duration / NANOSECONDS_IN_MILLISECOND;
 }
 
-static inline std::vector<jsi::Value> parseArgs(
-    jsi::Runtime &rt,
-    const std::shared_ptr<SerializableArray> &serializableArgs) {
-  if (serializableArgs == nullptr) {
-    return {};
-  }
-
-  auto argsArray = serializableArgs->toJSValue(rt).asObject(rt).asArray(rt);
-  auto argsSize = argsArray.size(rt);
-  std::vector<jsi::Value> result(argsSize);
-  for (size_t i = 0; i < argsSize; i++) {
-    result[i] = argsArray.getValueAtIndex(rt, i);
-  }
-  return result;
-}
-
 void WorkletRuntimeDecorator::decorate(
     jsi::Runtime &rt,
+    const RuntimeData::RuntimeKind runtimeKind,
     const std::string &name,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const bool isDevBundle,
@@ -78,11 +62,11 @@ void WorkletRuntimeDecorator::decorate(
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
-  rt.global().setProperty(rt, runtimeKindBindingName, static_cast<int>(RuntimeKind::Worker));
+  rt.global().setProperty(rt, RuntimeData::runtimeKindBindingName, static_cast<int>(runtimeKind));
 
   rt.global().setProperty(rt, "_WORKLET", true);
 
-  rt.global().setProperty(rt, "_LABEL", jsi::String::createFromAscii(rt, name));
+  rt.global().setProperty(rt, RuntimeData::runtimeNameBindingName, jsi::String::createFromAscii(rt, name));
 
   rt.global().setProperty(rt, "__DEV__", isDevBundle);
 
@@ -147,12 +131,6 @@ void WorkletRuntimeDecorator::decorate(
     return jsi::Value::undefined();
   });
 
-  jsi_utils::installJsiFunction(
-      rt, "_createSerializable", [](jsi::Runtime &rt, const jsi::Value &value, const jsi::Value &nativeStateSource) {
-        auto shouldRetainRemote = jsi::Value::undefined();
-        return makeSerializableClone(rt, value, shouldRetainRemote, nativeStateSource);
-      });
-
   jsi_utils::installJsiFunction(rt, "_createSerializableHostObject", [](jsi::Runtime &rt, const jsi::Value &value) {
     return makeSerializableHostObject(rt, value.asObject(rt).asHostObject(rt));
   });
@@ -201,54 +179,9 @@ void WorkletRuntimeDecorator::decorate(
     return makeSerializableInitializer(rt, value.asObject(rt));
   });
 
-  jsi_utils::installJsiFunction(rt, "_createSerializableFunction", [](jsi::Runtime &rt, const jsi::Value &value) {
-    return makeSerializableFunction(rt, value.asObject(rt).asFunction(rt));
-  });
-
   jsi_utils::installJsiFunction(rt, "_createSerializableSynchronizable", [](jsi::Runtime &rt, const jsi::Value &value) {
     return SerializableJSRef::newNativeStateObject(rt, extractSerializableOrThrow(rt, value));
   });
-
-  jsi_utils::installJsiFunction(
-      rt,
-      "_scheduleRemoteFunctionOnJS",
-      [jsScheduler](jsi::Runtime &rt, const jsi::Value &funValue, const jsi::Value &argsValue) {
-        auto serializableRemoteFun = extractSerializableOrThrow<SerializableRemoteFunction>(
-            rt,
-            funValue,
-            "[Worklets] Incompatible object passed to scheduleOnJS. It is only allowed to schedule worklets or functions defined on the React Native JS runtime this way.");
-
-        auto serializableArgs = argsValue.isUndefined()
-            ? nullptr
-            : extractSerializableOrThrow<SerializableArray>(rt, argsValue, "[Worklets] Args must be an array.");
-
-        jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
-          auto fun = serializableRemoteFun->toJSValue(rt).asObject(rt).asFunction(rt);
-          if (serializableArgs == nullptr) {
-            // fast path for remote function w/o arguments
-            fun.call(rt);
-          } else {
-            auto args = parseArgs(rt, serializableArgs);
-            fun.call(rt, const_cast<const jsi::Value *>(args.data()), args.size());
-          }
-        });
-      });
-
-  jsi_utils::installJsiFunction(
-      rt,
-      "_scheduleHostFunctionOnJS",
-      [jsScheduler](jsi::Runtime &rt, const jsi::Value &hostFunValue, const jsi::Value &argsValue) {
-        auto hostFun = hostFunValue.asObject(rt).asFunction(rt).getHostFunction(rt);
-
-        auto serializableArgs = argsValue.isUndefined()
-            ? nullptr
-            : extractSerializableOrThrow<SerializableArray>(rt, argsValue, "[Worklets] Args must be an array.");
-
-        jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
-          auto args = parseArgs(rt, serializableArgs);
-          hostFun(rt, jsi::Value::undefined(), const_cast<const jsi::Value *>(args.data()), args.size());
-        });
-      });
 
   jsi_utils::installJsiFunction(
       rt,

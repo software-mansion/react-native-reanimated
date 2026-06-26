@@ -72,7 +72,8 @@ class LayoutAnimationsManager {
   std::unordered_map<int, std::shared_ptr<Serializable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Serializable>> layoutAnimations_;
   std::unordered_map<int, bool> shouldAnimateExitingForTag_;
-  mutable std::recursive_mutex animationsMutex_; // Protects `enteringAnimations_`, `exitingAnimations_`,
+  mutable std::recursive_mutex animationsMutex_; // Protects `enteringAnimationsForNativeID_`,
+  // `sharedTransitionsForNativeID_`, `sharedTransitions_`, `enteringAnimations_`, `exitingAnimations_`,
   // `layoutAnimations_` and `shouldAnimateExitingForTag_`.
 };
 

@@ -15,7 +15,9 @@ import type { AnimatedProps } from '../helperTypes';
 import { LayoutAnimationConfig } from './LayoutAnimationConfig';
 import { AnimatedView } from './View';
 
-const AnimatedFlatList = createAnimatedComponent(FlatList);
+const AnimatedFlatList =
+  /* is-tree-shakable-suppress */
+  createAnimatedComponent(FlatList);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface CellRendererComponentProps<ItemT = any> {
@@ -77,14 +79,14 @@ interface ReanimatedFlatListPropsWithLayout<T> extends AnimatedProps<
    * rendered and its index and returns animated view styles.
    */
   CellRendererComponentStyle?:
-    | StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>
+    | StyleProp<AnimatedStyle<ViewStyle>>
     | (({
         item,
         index,
       }: {
         item: T;
         index: number;
-      }) => StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>)
+      }) => StyleProp<AnimatedStyle<ViewStyle>>)
     | undefined;
 }
 
@@ -99,13 +101,15 @@ interface AnimatedFlatListComplement<T> extends FlatList<T> {
 // We need explicit any here, because this is the exact same type that is used in React Native types.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const FlatListRender = function <Item = any>(
-  props: ReanimatedFlatListPropsWithLayout<Item>,
-  ref: React.Ref<FlatList>
+  props: ReanimatedFlatListPropsWithLayout<Item> & {
+    ref?: React.Ref<FlatList>;
+  }
 ) {
   const {
     itemLayoutAnimation,
     skipEnteringExitingAnimations,
     CellRendererComponentStyle,
+    ref,
     ...restProps
   } = props;
 

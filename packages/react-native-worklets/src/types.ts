@@ -68,7 +68,7 @@ interface WorkletInitData {
 interface WorkletProps {
   __closure: WorkletClosure;
   __workletHash: number;
-  /** Only in Legacy Bundling. */
+  /** Only in Legacy Eval Mode. */
   __initData?: WorkletInitData;
   /** Only for Handles. */
   __init?: () => unknown;
@@ -105,8 +105,7 @@ export interface WorkletImport {
   };
 }
 
-/** Configuration object for creating a worklet runtime. */
-export type WorkletRuntimeConfig = {
+type WorkletRuntimeConfigBase = {
   /** The name of the worklet runtime. */
   name?: string;
   /**
@@ -127,33 +126,36 @@ export type WorkletRuntimeConfig = {
    * defaults to `true`.
    */
   enableEventLoop?: true;
-} & (
-  | {
-      /**
-       * If true, the runtime will use the default queue implementation for
-       * scheduling worklets. Defaults to true.
-       */
-      useDefaultQueue?: true;
-      /**
-       * An optional custom queue to be used for scheduling worklets.
-       *
-       * The queue has to implement the C++ `AsyncQueue` interface from
-       * `<worklets/RunLoop/AsyncQueue.h>`.
-       */
-      customQueue?: never;
-    }
-  | {
-      /**
-       * If true, the runtime will use the default queue implementation for
-       * scheduling worklets. Defaults to true.
-       */
-      useDefaultQueue: false;
-      /**
-       * An optional custom queue to be used for scheduling worklets.
-       *
-       * The queue has to implement the C++ `AsyncQueue` interface from
-       * `<worklets/RunLoop/AsyncQueue.h>`.
-       */
-      customQueue?: object;
-    }
-);
+};
+
+/** Configuration object for creating a worklet runtime. */
+export type WorkletRuntimeConfig = WorkletRuntimeConfigBase &
+  (
+    | {
+        /**
+         * The queue used for scheduling worklets on this runtime.
+         *
+         * - `'default'` (the default): use the built-in queue implementation.
+         * - An object implementing the C++ `AsyncQueue` interface from
+         *   `<worklets/RunLoop/AsyncQueue.h>`: use the provided custom queue.
+         * - `null`: do not attach any queue to the runtime.
+         */
+        queue?: 'default' | object | null;
+        useDefaultQueue?: never;
+        customQueue?: never;
+      }
+    | {
+        queue?: never;
+        /** @deprecated Use {@link queue} instead. */
+        useDefaultQueue?: true;
+        /** @deprecated Use {@link queue} instead. */
+        customQueue?: never;
+      }
+    | {
+        queue?: never;
+        /** @deprecated Use {@link queue} instead. */
+        useDefaultQueue: false;
+        /** @deprecated Use {@link queue} instead. */
+        customQueue?: object;
+      }
+  );

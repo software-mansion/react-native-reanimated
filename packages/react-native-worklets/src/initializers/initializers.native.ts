@@ -1,15 +1,12 @@
 'use strict';
 
-import {
-  disallowRNImports,
-  mockTurboModuleRegistry,
-  silenceHMRWarnings,
-} from '../bundleMode/metroOverrides';
+import { silenceHMRWarnings } from '../bundleMode/metroOverrides';
 import { initializeNetworking } from '../bundleMode/network';
 import { registerReportFatalRemoteError } from '../debug/errors';
 import { getStaticFeatureFlag } from '../featureFlags/featureFlags';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
 import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
+import { installRemoteFunctionUnpacker } from '../memory/remoteFunctionUnpacker';
 import { makeShareableCloneOnUIRecursive } from '../memory/serializable';
 import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
 import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
@@ -149,6 +146,7 @@ function initializeRuntime() {
   installCustomSerializableUnpacker();
   installShareableHostUnpacker();
   installShareableGuestUnpacker();
+  installRemoteFunctionUnpacker();
 }
 
 /** A function that should be run only on React Native runtime. */
@@ -172,11 +170,9 @@ function initializeWorkletRuntime() {
   if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     if (__DEV__) {
       silenceHMRWarnings();
-      disallowRNImports();
     }
 
     if (getStaticFeatureFlag('FETCH_PREVIEW_ENABLED')) {
-      mockTurboModuleRegistry();
       initializeNetworking();
     }
   }

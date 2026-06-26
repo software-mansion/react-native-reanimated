@@ -1,8 +1,13 @@
 #include <jsi/jsi.h>
+#include <react/debug/react_native_assert.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
+#include <worklets/WorkletRuntime/RuntimeManager.h>
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -10,11 +15,15 @@ using namespace facebook;
 
 namespace worklets {
 
+namespace {
+
 jsi::Function getValueUnpacker(jsi::Runtime &rt) {
   auto valueUnpacker = rt.global().getProperty(rt, "__valueUnpacker");
   react_native_assert(valueUnpacker.isObject() && "valueUnpacker not found");
   return valueUnpacker.asObject(rt).asFunction(rt);
 }
+
+} // namespace
 
 jsi::Value makeSerializableClone(
     jsi::Runtime &rt,
@@ -32,7 +41,15 @@ jsi::Value makeSerializableClone(
     } else if (!object.getProperty(rt, "__init").isUndefined()) {
       return makeSerializableInitializer(rt, object);
     } else if (object.isFunction(rt)) {
-      return makeSerializableFunction(rt, object.asFunction(rt));
+      auto fun = object.asFunction(rt);
+      if (fun.isHostFunction(rt)) {
+        auto name = fun.getProperty(rt, "name").asString(rt).utf8(rt);
+        return makeSerializableHostFunction(
+            rt, fun.getHostFunction(rt), name, fun.getProperty(rt, "length").asNumber());
+      } else {
+        throw std::runtime_error(
+            "[Worklets] Cloning remote functions from Worklet Runtimes is only available in Bundle Mode.");
+      }
     } else if (object.isArray(rt)) {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
         serializable = std::make_shared<RetainingSerializable<SerializableArray>>(rt, object.asArray(rt));
@@ -82,14 +99,21 @@ std::shared_ptr<Serializable> extractSerializableOrThrow(
     const jsi::Value &maybeSerializableValue,
     const std::string &errorMessage) {
   if (maybeSerializableValue.isObject()) {
-    auto object = maybeSerializableValue.asObject(rt);
-    if (object.hasNativeState(rt)) {
-      auto nativeState = object.getNativeState(rt);
-      return std::dynamic_pointer_cast<SerializableJSRef>(nativeState)->value();
-    }
-    throw std::runtime_error("[Worklets] Attempted to extract from an Object that wasn't converted to a Serializable.");
+    auto object = maybeSerializableValue.getObject(rt);
+    return extractSerializableOrThrow(rt, object, errorMessage);
   } else if (maybeSerializableValue.isUndefined()) {
     return Serializable::undefined();
+  }
+  throw std::runtime_error(errorMessage);
+}
+
+std::shared_ptr<Serializable> extractSerializableOrThrow(
+    jsi::Runtime &rt,
+    const jsi::Object &maybeSerializableValue,
+    const std::string &errorMessage) {
+  if (maybeSerializableValue.hasNativeState(rt)) {
+    auto nativeState = maybeSerializableValue.getNativeState(rt);
+    return std::dynamic_pointer_cast<SerializableJSRef>(nativeState)->value();
   }
   throw std::runtime_error(errorMessage);
 }
@@ -125,7 +149,13 @@ jsi::Value SerializableArrayBuffer::toJSValue(jsi::Runtime &rt) {
   auto arrayBuffer =
       rt.global().getPropertyAsFunction(rt, "ArrayBuffer").callAsConstructor(rt, size).getObject(rt).getArrayBuffer(rt);
   memcpy(arrayBuffer.data(rt), data_.data(), size);
-  return arrayBuffer;
+  if (!metadata_.has_value()) {
+    return arrayBuffer;
+  }
+
+  auto constructor = rt.global().getPropertyAsFunction(rt, metadata_->typeName.c_str());
+  return constructor.callAsConstructor(
+      rt, arrayBuffer, static_cast<double>(metadata_->byteOffset), static_cast<double>(metadata_->length));
 }
 
 SerializableObject::SerializableObject(jsi::Runtime &rt, const jsi::Object &object)
@@ -208,6 +238,29 @@ jsi::Value SerializableSet::toJSValue(jsi::Runtime &rt) {
   return set;
 }
 
+jsi::Value SerializableRegExp::toJSValue(jsi::Runtime &rt) {
+  return rt.global()
+      .getPropertyAsFunction(rt, "RegExp")
+      .callAsConstructor(rt, jsi::String::createFromUtf8(rt, pattern_), jsi::String::createFromUtf8(rt, flags_));
+}
+
+jsi::Value SerializableError::toJSValue(jsi::Runtime &rt) {
+  auto error = rt.global()
+                   .getPropertyAsFunction(rt, "Error")
+                   .callAsConstructor(rt, jsi::String::createFromUtf8(rt, message_))
+                   .getObject(rt);
+
+  error.setProperty(rt, "name", jsi::String::createFromUtf8(rt, name_));
+
+  if (stack_.has_value()) {
+    error.setProperty(rt, "stack", jsi::String::createFromUtf8(rt, stack_.value()));
+  } else {
+    error.setProperty(rt, "stack", jsi::String::createFromUtf8(rt, ""));
+  }
+
+  return error;
+}
+
 jsi::Value SerializableHostObject::toJSValue(jsi::Runtime &rt) {
   return jsi::Object::createFromHostObject(rt, hostObject_);
 }
@@ -236,22 +289,6 @@ jsi::Value SerializableImport::toJSValue(jsi::Runtime &rt) {
 
   const auto imported = jsi::String::createFromUtf8(rt, imported_);
   return metroRequire.asObject(rt).asFunction(rt).call(rt, source_).asObject(rt).getProperty(rt, imported);
-}
-
-jsi::Value SerializableRemoteFunction::toJSValue(jsi::Runtime &rt) {
-  if (&rt == runtime_) {
-    return jsi::Value(rt, *function_);
-  } else {
-#ifndef NDEBUG
-    return getValueUnpacker(rt).call(
-        rt,
-        SerializableJSRef::newNativeStateObject(rt, shared_from_this()),
-        jsi::String::createFromAscii(rt, "RemoteFunction"),
-        jsi::String::createFromUtf8(rt, name_));
-#else
-    return SerializableJSRef::newNativeStateObject(rt, shared_from_this());
-#endif
-  }
 }
 
 jsi::Value SerializableInitializer::toJSValue(jsi::Runtime &rt) {

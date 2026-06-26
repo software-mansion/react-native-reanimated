@@ -1,6 +1,5 @@
 #include <ReactCommon/CallInvoker.h>
 #include <folly/dynamic.h>
-#include <react/renderer/uimanager/UIManagerBinding.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 
@@ -38,8 +37,12 @@ const facebook::react::ShadowNode *findInShadowTreeByTag(const facebook::react::
 
 void LayoutAnimationsProxyCommon::restoreOpacityInCaseOfFlakyEnteringAnimation(SurfaceId surfaceId) const {
   std::vector<std::pair<double, Tag>> opacityToRestore;
-  for (const auto tag : finishedAnimationTags_) {
-    const auto &opacity = layoutAnimations_[tag].opacity;
+  for (const auto tag : maybeSettledAnimationTags_) {
+    const auto layoutAnimationIt = layoutAnimations_.find(tag);
+    if (layoutAnimationIt == layoutAnimations_.end() || !layoutAnimationIt->second.isSettled()) {
+      continue;
+    }
+    const auto &opacity = layoutAnimationIt->second.opacity;
     if (opacity.has_value()) {
       opacityToRestore.emplace_back(std::pair<double, Tag>{opacity.value(), tag});
     }

@@ -15,6 +15,7 @@ import {
   toBeNullableMatcher,
   toBeUndefined,
   toBeWithinRangeMatcher,
+  toIncludeMatcher,
   toThrowMatcher,
 } from './rawMatchers';
 import { compareSnapshots } from './snapshotMatchers';
@@ -67,6 +68,7 @@ export class Matchers {
   public toBeNullable = this.decorateMatcher(toBeNullableMatcher);
   public toBeUndefined = this.decorateMatcher(toBeUndefined);
   public toBeWithinRange = this.decorateMatcher(toBeWithinRangeMatcher);
+  public toInclude = this.decorateMatcher(toIncludeMatcher);
   public toThrow = this.decorateAsyncMatcher(toThrowMatcher);
   public toBeCalled = this.decorateMatcher(toBeCalledMatcher);
   public toBeCalledUI = this.decorateMatcher(toBeCalledUIMatcher);

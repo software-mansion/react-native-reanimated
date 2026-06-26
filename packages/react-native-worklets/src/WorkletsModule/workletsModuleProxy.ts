@@ -1,6 +1,10 @@
 'use strict';
 
-import type { SerializableRef, SynchronizableRef } from '../memory/types';
+import type {
+  RemoteFunction,
+  SerializableRef,
+  SynchronizableRef,
+} from '../memory/types';
 import type { WorkletRuntime } from '../types';
 
 /** Type of `__workletsModuleProxy` injected with JSI. */
@@ -20,14 +24,11 @@ export interface WorkletsModuleProxy {
     shareableHostUnpackerSourceMap: string,
     shareableGuestUnpackerCode: string,
     shareableGuestUnpackerLocation: string,
-    shareableGuestUnpackerSourceMap: string
+    shareableGuestUnpackerSourceMap: string,
+    remoteFunctionUnpackerCode: string,
+    remoteFunctionUnpackerLocation: string,
+    remoteFunctionUnpackerSourceMap: string
   ): void;
-
-  createSerializable<TValue>(
-    value: TValue,
-    shouldPersistRemote: boolean,
-    nativeStateSource?: object
-  ): SerializableRef<TValue>;
 
   createSerializableImport<TValue>(
     source: string,
@@ -67,6 +68,10 @@ export interface WorkletsModuleProxy {
     shouldRetainRemote?: boolean
   ): SerializableRef<unknown[]>;
 
+  createSerializableArrayBuffer(
+    arrayBuffer: ArrayBuffer
+  ): SerializableRef<ArrayBuffer>;
+
   createSerializableMap<TKey, TValue>(
     keys: TKey[],
     values: TValue[]
@@ -76,11 +81,31 @@ export interface WorkletsModuleProxy {
     values: TValues[]
   ): SerializableRef<Set<TValues>>;
 
+  createSerializableError(
+    name: string,
+    message: string,
+    stack: string | undefined
+  ): SerializableRef<Error>;
+
+  createSerializableRegExp(
+    pattern: string,
+    flags: string
+  ): SerializableRef<RegExp>;
+
+  createSerializableArrayBufferView<TValue extends ArrayBufferView>(
+    typeName: string,
+    buffer: ArrayBuffer,
+    byteOffset: number,
+    length: number
+  ): SerializableRef<TValue>;
+
   createSerializableInitializer(obj: object): SerializableRef<object>;
 
-  createSerializableFunction<TArgs extends unknown[], TReturn>(
-    func: (...args: TArgs) => TReturn
-  ): SerializableRef<TReturn>;
+  createSerializableNonWorkletFunction<TArgs extends unknown[], TReturn>(
+    fun: (...args: TArgs) => TReturn,
+    functionId: number,
+    functionName: string | undefined
+  ): SerializableRef<(...args: TArgs) => TReturn>;
 
   createSerializableWorklet(
     worklet: object,
@@ -106,6 +131,11 @@ export interface WorkletsModuleProxy {
     decorateHost: SerializableRef,
     decorateGuest: SerializableRef
   ): SerializableRef<TValue>;
+
+  scheduleOnRN<TArgs extends unknown[]>(
+    fun: RemoteFunction | ((...args: TArgs) => unknown),
+    args: SerializableRef<TArgs> | undefined
+  ): void;
 
   scheduleOnUI<TValue>(
     serializableArrayOfWorklets: SerializableRef<TValue[]>,
@@ -149,6 +179,13 @@ export interface WorkletsModuleProxy {
     scheduleStack?: string
   ): TReturn;
 
+  handlePromise<TValue>(
+    resolveOrReject:
+      | ((value: TValue | PromiseLike<TValue>) => void)
+      | RemoteFunction,
+    valueOrError: SerializableRef<TValue>
+  ): void;
+
   reportFatalErrorOnJS(message: string, stack: string, name: string): void;
 
   createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue>;
@@ -181,9 +218,15 @@ export interface WorkletsModuleProxy {
   getUIRuntimeHolder(): object;
 
   getUISchedulerHolder(): object;
+
+  /** @deprecated Don't use unless you have to. */
+  createSerializableLEGACY<TValue>(
+    value: TValue,
+    nativeStateSource: object | undefined
+  ): SerializableRef<TValue>;
 }
 
-type InternalMethods = 'loadUnpackers';
+type InternalMethods = 'loadUnpackers' | 'createSerializableLEGACY';
 
 type TurboModulePublic = {
   toggleSlowAnimationsOnUIRuntime(): boolean;

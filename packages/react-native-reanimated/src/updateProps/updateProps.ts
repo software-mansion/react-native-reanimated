@@ -22,9 +22,12 @@ import type {
   PropUpdates,
 } from '../createAnimatedComponent/commonTypes';
 import jsPropsUpdater from '../createAnimatedComponent/JSPropsUpdater';
+import { getStaticFeatureFlag } from '../featureFlags';
 import type { Descriptor } from '../hook/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
+
+const USE_ANIMATION_BACKEND = getStaticFeatureFlag('USE_ANIMATION_BACKEND');
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
@@ -32,6 +35,7 @@ let updateProps: (
   isAnimatedProps?: boolean
 ) => void;
 
+// is-tree-shakable-suppress
 if (SHOULD_BE_USE_WEB) {
   updateProps = (viewDescriptors, updates, isAnimatedProps) => {
     'worklet';
@@ -108,7 +112,7 @@ type NativePropsOperation = {
 function createUpdatePropsManager() {
   'worklet';
   const nativeOperations: NativePropsOperation[] = [];
-  const jsOperations: JSPropsOperation[] = [];
+  let jsOperations: JSPropsOperation[] = [];
 
   let flushPending = false;
 
@@ -161,15 +165,19 @@ function createUpdatePropsManager() {
         nativeOperations.length = 0;
       }
       if (jsOperations.length) {
+        // Fresh array each flush: scheduleOnRN caches serialized args by identity.
         scheduleOnRN(updateJSProps, jsOperations);
-        jsOperations.length = 0;
+        jsOperations = [];
       }
       flushPending = false;
-      global._maybeFlushUIUpdatesQueue();
+      if (!USE_ANIMATION_BACKEND) {
+        global._maybeFlushUIUpdatesQueue();
+      }
     },
   };
 }
 
+// is-tree-shakable-suppress
 if (SHOULD_BE_USE_WEB) {
   const maybeThrowError = () => {
     // Jest attempts to access a property of this object to check if it is a Jest mock

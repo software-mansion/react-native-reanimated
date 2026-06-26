@@ -9,6 +9,7 @@ interface AnimatedTextComplement extends Text {
   getNode(): Text;
 }
 
+// is-tree-shakable-suppress
 export const AnimatedText = createAnimatedComponent(Text);
 
 export type AnimatedText = typeof AnimatedText & AnimatedTextComplement;

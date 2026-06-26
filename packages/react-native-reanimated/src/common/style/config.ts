@@ -1,7 +1,6 @@
 /* eslint-disable camelcase */
 'use strict';
 import { IS_ANDROID } from '../constants';
-import type { PlainStyle } from '../types';
 import {
   processAspectRatio,
   processBoxShadow,
@@ -15,11 +14,11 @@ import {
   processTransform,
   processTransformOrigin,
 } from './processors';
-import type { PropsBuilderConfig } from './types';
+import type { AllStyleProps, PropsBuilderConfig } from './types';
 
 const colorAttributes = { process: processColor };
 
-export const STYLE_PROPERTIES_CONFIG: PropsBuilderConfig<PlainStyle> = {
+export const STYLE_PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   /** Layout and Positioning */
   // FLEXBOX
   flex: true,
@@ -192,6 +191,8 @@ export const STYLE_PROPERTIES_CONFIG: PropsBuilderConfig<PlainStyle> = {
   opacity: true,
   mixBlendMode: true,
 
+  // @ts-ignore Available since RN 0.87
+  backgroundImage: false, // TODO
   experimental_backgroundImage: false, // TODO
   // @ts-ignore This type doesn't exist on non-strict-api
   experimental_backgroundPosition: false, // TODO
