@@ -83,6 +83,11 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
         afterTopScreen, beforeTopScreen, filteredMutations, mutations, propsParserContext, surfaceId);
   }
 
+  for (const auto tag : sharedTransitionTagsToErase_) {
+    layoutAnimationsManager_->clearSharedTransitionConfig(tag);
+  }
+  sharedTransitionTagsToErase_.clear();
+
   for (auto &node : entering_) {
     startEnteringAnimation(node);
   }
@@ -188,7 +193,12 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         break;
       }
       case ShadowViewMutation::Delete: {
-        lightNodes_.erase(mutation.oldChildShadowView.tag);
+        const auto deletedTag = mutation.oldChildShadowView.tag;
+        lightNodes_.erase(deletedTag);
+        if (layoutAnimationsManager_->hasLayoutAnimation(
+          deletedTag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION)) {
+          sharedTransitionTagsToErase_.push_back(deletedTag);
+        }
         break;
       }
       case ShadowViewMutation::Insert: {
@@ -294,9 +304,10 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
   auto surfaceId = layoutAnimation.finalView.surfaceId;
 
   if (sharedTransitionManager_->tagToName_.contains(tag)) {
-    auto sharedTag = sharedTransitionManager_->tagToName_[tag];
     sharedTransitionManager_->containerTags_.erase(sharedTag);
-
+    auto sharedTag = sharedTransitionManager_->tagToName_[tag];
+    // Remove config of containerTag
+    layoutAnimationsManager_->clearSharedTransitionConfig(tag);
     sharedContainersToRemove_.push_back(tag);
     tagsToRestore_.push_back(restoreMap_[tag][1]);
     transformForNode_.clear();

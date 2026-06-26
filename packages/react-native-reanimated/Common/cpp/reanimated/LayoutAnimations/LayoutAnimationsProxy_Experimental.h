@@ -59,6 +59,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::vector<std::shared_ptr<LightNode>> containersToInsert_;
   mutable std::unordered_map<Tag, react::Transform> transformForNode_;
+  mutable std::vector<Tag> sharedTransitionTagsToErase_;
 
   mutable ForceScreenSnapshotFunction forceScreenSnapshot_;
 
