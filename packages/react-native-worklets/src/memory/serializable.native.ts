@@ -596,26 +596,22 @@ function cloneArrayBuffer(
 function cloneArrayBufferView<TValue extends ArrayBufferView>(
   value: TValue
 ): SerializableRef<TValue> {
-  const buffer = value.buffer;
   const typeName = value.constructor.name;
-  const handle = cloneInitializer({
-    __init: () => {
-      'worklet';
-      if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
-        throw new Error(`[Worklets] Invalid array view name \`${typeName}\`.`);
-      }
-      const constructor = global[typeName as keyof typeof global];
-      if (constructor === undefined) {
-        throw new Error(
-          `[Worklets] Constructor for \`${typeName}\` not found.`
-        );
-      }
-      return new constructor(buffer);
-    },
-  }) as unknown as SerializableRef<TValue>;
-  serializableMappingCache.set(value, handle);
-
-  return handle;
+  if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
+    throw new Error(`[Worklets] Invalid array view name \`${typeName}\`.`);
+  }
+  const length =
+    typeName === 'DataView'
+      ? value.byteLength
+      : (value as unknown as { length: number }).length;
+  const clone = WorkletsModule.createSerializableArrayBufferView<TValue>(
+    typeName,
+    value.buffer as ArrayBuffer,
+    value.byteOffset,
+    length
+  );
+  serializableMappingCache.set(value, clone);
+  return clone;
 }
 
 function cloneSynchronizable<TValue>(
@@ -760,6 +756,29 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
         return globalThis.__workletsModuleProxy.createSerializableRegExp(
           value.source,
           value.flags
+        ) as FlatSerializableRef<TValue>;
+      }
+      if (value instanceof ArrayBuffer) {
+        return globalThis.__workletsModuleProxy.createSerializableArrayBuffer(
+          value
+        ) as FlatSerializableRef<TValue>;
+      }
+      if (ArrayBuffer.isView(value)) {
+        const typeName = value.constructor.name;
+        if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
+          throw new Error(
+            `[Worklets] Invalid array view name \`${typeName}\`.`
+          );
+        }
+        const length =
+          typeName === 'DataView'
+            ? value.byteLength
+            : (value as unknown as { length: number }).length;
+        return globalThis.__workletsModuleProxy.createSerializableArrayBufferView(
+          typeName,
+          value.buffer as ArrayBuffer,
+          value.byteOffset,
+          length
         ) as FlatSerializableRef<TValue>;
       }
       if (value instanceof Map) {

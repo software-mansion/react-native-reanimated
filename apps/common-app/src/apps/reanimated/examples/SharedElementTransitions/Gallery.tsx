@@ -7,6 +7,7 @@ import Animated, { FadeIn, cubicBezier } from 'react-native-reanimated';
 import florence from './assets/florence.jpg';
 import countryside from './assets/countryside.jpg';
 import dawn from './assets/dawn.jpg';
+import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
 
 type StackParamList = {
   Home: undefined;
@@ -38,7 +39,7 @@ const gallery = {
 
 type Tag = keyof typeof gallery;
 
-function HomeScreen({
+function HomeScreenContent({
   navigation,
 }: NativeStackScreenProps<StackParamList, 'Home'>) {
   const chips = ['Italy', 'Tourism', 'Nature'];
@@ -111,7 +112,7 @@ function HomeScreen({
   );
 }
 
-function DetailsScreen({
+function DetailsScreenContent({
   route,
   navigation,
 }: NativeStackScreenProps<StackParamList, 'Details'>) {
@@ -148,6 +149,9 @@ function DetailsScreen({
     </View>
   );
 }
+
+const HomeScreen = withSharedTransitionBoundary(HomeScreenContent);
+const DetailsScreen = withSharedTransitionBoundary(DetailsScreenContent);
 
 export default function GalleryExample() {
   return (

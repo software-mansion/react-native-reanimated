@@ -13,10 +13,10 @@ CSSLoopTransition::CSSLoopTransition(
     const Tag viewTag,
     const std::string &componentName,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    CSSTransition::Observer &observer)
+    OnUpdateCallback onUpdate)
     : viewTag_(viewTag),
       componentName_(componentName),
-      observer_(observer),
+      onUpdate_(std::move(onUpdate)),
       styleInterpolator_(TransitionStyleInterpolator(componentName_, viewStylesRepository)),
       progressProvider_(TransitionProgressProvider()) {}
 
@@ -24,13 +24,9 @@ double CSSLoopTransition::getMinDelay(double timestamp) const {
   return progressProvider_.getMinDelay(timestamp);
 }
 
-TransitionProgressState CSSLoopTransition::getState() const {
-  return progressProvider_.getState();
-}
-
 bool CSSLoopTransition::update(const double timestamp, OperationsLoop &loop) {
   progressProvider_.update(timestamp);
-  observer_.onTransitionUpdate(viewTag_);
+  onUpdate_(viewTag_);
 
   if (progressProvider_.getState() == TransitionProgressState::Pending) {
     loop.schedule(shared_from_this(), timestamp + progressProvider_.getMinDelay(timestamp));
@@ -101,8 +97,6 @@ void CSSLoopTransition::handleChangedProperties(
       continue;
     }
 
-    properties_.insert(propertyName);
-
     // Update the transition style interpolator
     bool isReversed;
     if (lastUpdateValue.count(propertyName)) {
@@ -135,8 +129,6 @@ void CSSLoopTransition::handleChangedProperties(
       continue;
     }
 
-    properties_.insert(propertyName);
-
     bool isReversed;
     if (lastUpdateValue.count(propertyName)) {
       isReversed = styleInterpolator_.createOrUpdateInterpolator(
@@ -154,15 +146,11 @@ void CSSLoopTransition::handleChangedProperties(
 void CSSLoopTransition::removeProperties(const std::vector<std::string> &propertyNames) {
   styleInterpolator_.removeProperties(propertyNames);
   progressProvider_.removeProperties(propertyNames);
-  for (const auto &propertyName : propertyNames) {
-    properties_.erase(propertyName);
-  }
 }
 
 void CSSLoopTransition::removeProperty(const std::string &propertyName) {
   styleInterpolator_.removeProperty(propertyName);
   progressProvider_.removeProperty(propertyName);
-  properties_.erase(propertyName);
 }
 
 } // namespace reanimated::css

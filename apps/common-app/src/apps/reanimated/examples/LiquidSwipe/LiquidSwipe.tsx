@@ -35,7 +35,6 @@ export default function LiquidSwipe() {
   const isBack = useSharedValue(false);
   const centerY = useSharedValue(initialWaveCenter);
   const progress = useSharedValue(0);
-  const dragX = useSharedValue(0);
   const startY = useSharedValue(0);
 
   const maxDist = width - initialSideWidth;
@@ -45,7 +44,6 @@ export default function LiquidSwipe() {
       // stop animating progress, this will also place "isBack" value in the
       // final state (we update isBack in progress animation callback)
       cancelAnimation(progress);
-      dragX.value = 0;
       startY.value = isBack.value ? event.y : centerY.value;
     })
     .onChange((event) => {

@@ -4,6 +4,7 @@ import type {
   FunctionExpression,
   ImportDeclaration,
   ImportSpecifier,
+  JSXAttribute,
 } from '@babel/types';
 import {
   cloneNode,
@@ -72,7 +73,7 @@ export function generateWorkletFile(
   const transformedProg = transformFromAstSync(newProg, undefined, {
     filename: state.file.opts.filename,
     presets: ['@babel/preset-typescript'],
-    plugins: [state.autoworkletizationPlugin],
+    plugins: [state.autoworkletizationPlugin, stripJsxDevAttributesPlugin],
     ast: false,
     babelrc: false,
     configFile: false,
@@ -85,3 +86,22 @@ export function generateWorkletFile(
 
   writeFileSync(dedicatedFilePath, transformedProg);
 }
+
+const stripJsxDevAttributesPlugin = {
+  name: 'worklets-strip-jsx-dev-attributes',
+  visitor: {
+    JSXAttribute(path: NodePath<JSXAttribute>) {
+      const name = path.node.name;
+
+      if (name.type !== 'JSXIdentifier') {
+        return;
+      }
+
+      if (name.name !== '__self' && name.name !== '__source') {
+        return;
+      }
+
+      path.remove();
+    },
+  },
+};

@@ -274,6 +274,70 @@ transform: {
             </Svg>
           </VerticalExampleCard>
         </Section>
+
+        <Section
+          description="An 'undefined' selector value - or a selector provided without a 'default' - resets the property to its default value."
+          title="Resolving to the default value">
+          <VerticalExampleCard
+            title="Reset on press (:active is undefined)"
+            code={`<Animated.View
+  style={{
+    transform: {
+      default: [{ scale: 1.3 }],
+      ':active': undefined,
+    },
+    transitionDuration: '150ms',
+  }}
+/>`}
+            collapsedCode={`transform: {
+  default: [{ scale: 1.3 }],
+  ':active': undefined,
+},`}>
+            <Animated.View
+              style={[
+                styles.box,
+                {
+                  backgroundColor: colors.primary,
+                  transform: {
+                    ':active': undefined,
+                    default: [{ scale: 1.3 }],
+                  },
+                  transitionDuration: '150ms',
+                },
+              ]}
+              onStartShouldSetResponder={() => true}
+            />
+          </VerticalExampleCard>
+
+          <VerticalExampleCard
+            title="Omitted default (opacity)"
+            code={`<Animated.View
+  style={{
+    // No 'default' - rest state resolves to the property default (1).
+    opacity: {
+      ':active': 0.3,
+    },
+    transitionDuration: '150ms',
+  }}
+/>`}
+            collapsedCode={`opacity: {
+  ':active': 0.3,
+},`}>
+            <Animated.View
+              style={[
+                styles.box,
+                {
+                  backgroundColor: colors.primary,
+                  opacity: {
+                    ':active': 0.3,
+                  },
+                  transitionDuration: '150ms',
+                },
+              ]}
+              onStartShouldSetResponder={() => true}
+            />
+          </VerticalExampleCard>
+        </Section>
       </Scroll>
     </Screen>
   );
