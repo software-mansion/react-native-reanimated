@@ -222,7 +222,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           operationsLoop_,
           std::make_shared<CSSPlatformTransitionProxy>(
               platformDepMethodsHolder.cssCanRouteProperty,
-              platformDepMethodsHolder.cssApplyTransition,
+              platformDepMethodsHolder.cssApplyTransitionJSI,
+              platformDepMethodsHolder.cssApplyTransitionDynamic,
               platformDepMethodsHolder.cssRemoveTransition))),
       pseudoStylesRegistry_(std::make_shared<PseudoStylesRegistry>(
           platformDepMethodsHolder.attachPseudoSelector,
@@ -322,9 +323,9 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
         if (!surfaceId) {
           return;
         }
+        // The flush set is drained by `executeLayoutAnimationsRequests`, driven
+        // by `runGrandCallback` (backend) or a JS `requestAnimationFrameFinalizer` (non-backend).
         strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
-
-        strongThis->requestRenderForLayoutAnimations();
       };
 
   EndLayoutAnimationFunction endLayoutAnimation = [weakThis = weak_from_this()](int tag, bool shouldRemove) {
@@ -335,14 +336,6 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     }
 
     auto surfaceId = strongThis->layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
-
-    if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-      // in the backend path this is called from runGrandCallback,
-      // we are guaranteed to have the changes flushed
-    } else {
-      strongThis->requestRenderForLayoutAnimations();
-    }
-
     if (!surfaceId) {
       return;
     }
@@ -612,7 +605,7 @@ void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi:
   cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
-void ReanimatedModuleProxy::registerPseudoStyle(
+void ReanimatedModuleProxy::registerPseudoStyles(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &config) {
@@ -620,26 +613,35 @@ void ReanimatedModuleProxy::registerPseudoStyle(
   const auto tag = shadowNode->getTag();
   const auto configObj = config.asObject(rt);
 
-  const auto selectorStr = stringFromValue(rt, configObj.getProperty(rt, "selector"));
-  const auto selectorEnum = pseudoSelectorFromString(selectorStr);
-  if (!selectorEnum) {
-    return;
-  }
+  const auto defaultStyle = jsi::dynamicFromValue(rt, configObj.getProperty(rt, "defaultStyle"));
+  const auto selectorsArray = configObj.getProperty(rt, "selectors").asObject(rt).asArray(rt);
+  const auto selectorsCount = selectorsArray.size(rt);
 
-  auto transitionConfig =
-      css::parseCSSTransitionConfig(rt, shadowNode->getComponentName(), configObj.getProperty(rt, "transition"));
+  std::vector<PseudoStylesRegistry::SelectorRegistration> selectors;
+  selectors.reserve(selectorsCount);
 
   auto lock = updatesRegistryManager_->lock();
-  cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, std::move(transitionConfig));
-  pseudoStylesRegistry_->registerPseudoStyle(
-      tag,
-      shadowNode,
-      *selectorEnum,
-      jsi::dynamicFromValue(rt, configObj.getProperty(rt, "selectorStyle")),
-      jsi::dynamicFromValue(rt, configObj.getProperty(rt, "defaultStyle")));
+
+  for (size_t i = 0; i < selectorsCount; ++i) {
+    const auto entryObj = selectorsArray.getValueAtIndex(rt, i).asObject(rt);
+    const auto selectorEnum = pseudoSelectorFromString(stringFromValue(rt, entryObj.getProperty(rt, "selector")));
+    if (!selectorEnum) {
+      continue;
+    }
+
+    auto transitionConfig =
+        css::parseCSSTransitionConfig(rt, shadowNode->getComponentName(), entryObj.getProperty(rt, "transition"));
+    // TODO - clean up pseudo selectors registration not to have to clear the changedProperties object
+    transitionConfig.changedProperties.clear();
+    cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, std::move(transitionConfig));
+
+    selectors.push_back({*selectorEnum, jsi::dynamicFromValue(rt, entryObj.getProperty(rt, "selectorStyle"))});
+  }
+
+  pseudoStylesRegistry_->registerPseudoStyles(tag, shadowNode, defaultStyle, selectors);
 }
 
-void ReanimatedModuleProxy::unregisterPseudoStyle(jsi::Runtime &, const jsi::Value &viewTag) {
+void ReanimatedModuleProxy::unregisterPseudoStyles(jsi::Runtime &, const jsi::Value &viewTag) {
   auto lock = updatesRegistryManager_->lock();
   pseudoStylesRegistry_->remove(viewTag.asNumber());
 }
@@ -808,11 +810,6 @@ void ReanimatedModuleProxy::performOperations() {
   }
 
   commitUpdates(uiRuntime, updatesBatch);
-
-  // Clear the entire cache after the commit
-  // (we don't know if the view is updated from outside of Reanimated
-  // so we have to clear the entire cache)
-  viewStylesRepository_->clearNodesCache();
 }
 
 void ReanimatedModuleProxy::performNonLayoutOperations() {
@@ -1206,7 +1203,8 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
     // TODO: we don't use the mount hook here, but we still need a way to handleNodeRemovals
     // for now we leave this to leak the memory, a fix will come in a follow-up
   } else {
-    mountHook_ = std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, request);
+    mountHook_ =
+        std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, viewStylesRepository_, request);
   }
 
   commitHook_ = std::make_shared<ReanimatedCommitHook>(uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
@@ -1580,25 +1578,25 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
   addMethod<2>(
       rt,
       obj,
-      "registerPseudoStyle",
+      "registerPseudoStyles",
       [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
         }
-        strongThis->registerPseudoStyle(rt, at<0>(args), at<1>(args));
+        strongThis->registerPseudoStyles(rt, at<0>(args), at<1>(args));
       });
 
   addMethod<1>(
       rt,
       obj,
-      "unregisterPseudoStyle",
+      "unregisterPseudoStyles",
       [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
         }
-        strongThis->unregisterPseudoStyle(rt, at<0>(args));
+        strongThis->unregisterPseudoStyles(rt, at<0>(args));
       });
 
   return obj;

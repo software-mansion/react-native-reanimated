@@ -70,10 +70,13 @@ struct PlatformDepMethodsHolder {
   MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction;
   PlatformAttachPseudoSelectorFunction attachPseudoSelector;
   PlatformDetachPseudoSelectorFunction detachPseudoSelector;
-  std::shared_ptr<css::CSSPlatformAnimationFactory> platformAnimationFactory;
   css::CSSCanRoutePropertyFunction cssCanRouteProperty;
-  css::CSSApplyTransitionFunction cssApplyTransition;
+  css::CSSApplyTransitionJSIFunction cssApplyTransitionJSI;
+  css::CSSApplyTransitionDynamicFunction cssApplyTransitionDynamic;
   css::CSSRemoveTransitionFunction cssRemoveTransition;
+  // Last so platform initializers that don't supply it (iOS, Android today)
+  // can omit it and rely on value-init (= null shared_ptr).
+  std::shared_ptr<css::CSSPlatformAnimationFactory> platformAnimationFactory;
 };
 
 } // namespace reanimated

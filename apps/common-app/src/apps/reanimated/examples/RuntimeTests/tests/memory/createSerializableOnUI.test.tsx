@@ -283,6 +283,75 @@ describe('Test createSerializableOnUI', () => {
     expect(regExpValue.test('FOO-BAR')).toBe(true);
   });
 
+  test('createSerializableOnUITypedArray', () => {
+    const typedArrayValue = runOnUISync(() => {
+      'worklet';
+      const arr = new Uint8Array(4);
+      arr[0] = 1;
+      arr[1] = 2;
+      arr[2] = 3;
+      arr[3] = 4;
+      return arr;
+    });
+
+    expect(typedArrayValue instanceof Uint8Array).toBe(true);
+    expect(typedArrayValue.length).toBe(4);
+    expect(typedArrayValue[0]).toBe(1);
+    expect(typedArrayValue[1]).toBe(2);
+    expect(typedArrayValue[2]).toBe(3);
+    expect(typedArrayValue[3]).toBe(4);
+  });
+
+  test('createSerializableOnUIInt32Array', () => {
+    const typedArrayValue = runOnUISync(() => {
+      'worklet';
+      const arr = new Int32Array(2);
+      arr[0] = -1;
+      arr[1] = 42;
+      return arr;
+    });
+
+    expect(typedArrayValue instanceof Int32Array).toBe(true);
+    expect(typedArrayValue.length).toBe(2);
+    expect(typedArrayValue[0]).toBe(-1);
+    expect(typedArrayValue[1]).toBe(42);
+  });
+
+  test('createSerializableOnUITypedArraySubrange', () => {
+    const typedArrayValue = runOnUISync(() => {
+      'worklet';
+      const buf = new ArrayBuffer(16);
+      const full = new Uint16Array(buf);
+      for (let i = 0; i < full.length; i++) {
+        full[i] = i + 1;
+      }
+      return new Uint16Array(buf, 4, 2);
+    });
+
+    expect(typedArrayValue instanceof Uint16Array).toBe(true);
+    expect(typedArrayValue.length).toBe(2);
+    expect(typedArrayValue.byteOffset).toBe(4);
+    expect(typedArrayValue.buffer.byteLength).toBe(16);
+    expect(typedArrayValue[0]).toBe(3);
+    expect(typedArrayValue[1]).toBe(4);
+  });
+
+  test('createSerializableOnUIDataView', () => {
+    const dataViewValue = runOnUISync(() => {
+      'worklet';
+      const buf = new ArrayBuffer(4);
+      const view = new DataView(buf);
+      view.setUint8(0, 0xab);
+      view.setUint8(1, 0xcd);
+      return view;
+    });
+
+    expect(dataViewValue instanceof DataView).toBe(true);
+    expect(dataViewValue.byteLength).toBe(4);
+    expect(dataViewValue.getUint8(0)).toBe(0xab);
+    expect(dataViewValue.getUint8(1)).toBe(0xcd);
+  });
+
   test('createSerializableOnUIPlainObject', () => {
     // Arrange & Act
     enum key {
@@ -454,7 +523,6 @@ describe('Test createSerializableOnUI', () => {
   // });
 
   test('createSerializableOnUIInaccessibleObject', async () => {
-    // Arrange
     const clazz = runOnUISync(() => {
       'worklet';
       class Clazz {
@@ -464,7 +532,6 @@ describe('Test createSerializableOnUI', () => {
       return new Clazz();
     });
 
-    // Act & Assert
     await expect(() => {
       clazz.method();
     }).toThrow();
@@ -496,12 +563,14 @@ describe('Test createSerializableOnUI', () => {
     }).toThrow();
   });
 
-  test('throws when trying to serialize a Promise', async () => {
-    await expect(() =>
-      runOnUISync(() => {
-        'worklet';
-        return Promise.resolve();
-      })
-    ).toThrow('Promises cannot be converted to serializable.');
-  });
+  if (__DEV__) {
+    test('throws when trying to serialize a Promise', async () => {
+      await expect(() =>
+        runOnUISync(() => {
+          'worklet';
+          return Promise.resolve();
+        })
+      ).toThrow('Cannot copy value of type `Promise`');
+    });
+  }
 });

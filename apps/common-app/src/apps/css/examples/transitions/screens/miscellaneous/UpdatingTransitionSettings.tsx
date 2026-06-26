@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type {
   CSSTransitionProperties,
@@ -56,11 +57,12 @@ const TRANSITION_STYLES: Array<StyleProps> = [
 ];
 
 export default function UpdatingTransitionSettings() {
-  const [transitionProperties, setTransitionProperties] =
-    useState<CSSTransitionProperties>({
-      transitionProperty: 'all',
-      ...DEFAULT_SETTINGS,
-    });
+  const [transitionProperties, setTransitionProperties] = useState<
+    CSSTransitionProperties<ViewStyle>
+  >({
+    transitionProperty: 'all',
+    ...DEFAULT_SETTINGS,
+  });
   const [currentStyleIndex, setCurrentStyleIndex] = useState(0);
   const [displayStyleChanges, setDisplayStyleChanges] = useState(true);
 

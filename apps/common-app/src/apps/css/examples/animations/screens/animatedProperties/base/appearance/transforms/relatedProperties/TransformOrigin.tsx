@@ -28,9 +28,12 @@ const calculateOffset = (index: number, step: number) => {
 
 export default function TransformOrigin() {
   return (
-    <ExamplesScreen<{
-      transformOrigins: Array<TransformOriginProp>;
-    }>
+    <ExamplesScreen<
+      ViewStyle,
+      {
+        transformOrigins: Array<TransformOriginProp>;
+      }
+    >
       buildAnimation={({ transformOrigins }) => ({
         animationName: Object.fromEntries(
           transformOrigins.map((origin, index) => {
