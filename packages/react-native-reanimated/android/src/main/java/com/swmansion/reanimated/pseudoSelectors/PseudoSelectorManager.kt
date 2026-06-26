@@ -3,10 +3,15 @@ package com.swmansion.reanimated.pseudoSelectors
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewParent
+import com.facebook.react.bridge.UIManager
+import com.facebook.react.bridge.UIManagerListener
 import com.facebook.react.bridge.UiThreadUtil
+import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
+import com.facebook.react.uimanager.IllegalViewOperationException
 import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
 
+@OptIn(UnstableReactNativeAPI::class)
 class PseudoSelectorManager(
     private val fabricUIManager: FabricUIManager,
 ) {
@@ -18,12 +23,29 @@ class PseudoSelectorManager(
 
     private val touchListenerViews = HashSet<View>()
 
-    private val hoverCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
+    private val hover = TouchHoverCoordinator()
 
-    private val hoveredViews = LinkedHashSet<View>()
+    private val pendingAttaches = LinkedHashMap<String, PendingAttach>()
+    private var mountListenerRegistered = false
 
-    // Reused by updateHoverStates to avoid allocating on every hover event (UI thread only).
-    private val hoverLocationBuffer = IntArray(2)
+    private data class PendingAttach(
+        val tag: Int,
+        val selector: Int,
+        val callback: PseudoSelectorCallback,
+    )
+
+    private val mountListener =
+        object : UIManagerListener {
+            override fun didMountItems(uiManager: UIManager) = flushPendingAttaches()
+
+            override fun willMountItems(uiManager: UIManager) = Unit
+
+            override fun willDispatchViewUpdates(uiManager: UIManager) = Unit
+
+            override fun didDispatchMountItems(uiManager: UIManager) = Unit
+
+            override fun didScheduleMountItems(uiManager: UIManager) = Unit
+        }
 
     fun attach(
         tag: Int,
@@ -31,15 +53,57 @@ class PseudoSelectorManager(
         callback: PseudoSelectorCallback,
     ) {
         UiThreadUtil.runOnUiThread {
-            val view = fabricUIManager.resolveView(tag) ?: return@runOnUiThread
-            val key = "$tag:$selector"
-            when (selector) {
-                0 -> attachFocusWithin(view, key, callback)
-                1 -> attachFocus(view, key, callback)
-                2 -> attachHover(view, key, callback)
-                3 -> attachActive(view, key, callback)
-                4 -> attachActiveDeepest(view, key, callback)
+            val view = tryResolveView(tag)
+            if (view != null) {
+                attachToView(view, tag, selector, callback)
+            } else {
+                pendingAttaches["$tag:$selector"] = PendingAttach(tag, selector, callback)
+                ensureMountListener()
             }
+        }
+    }
+
+    private fun attachToView(
+        view: View,
+        tag: Int,
+        selector: Int,
+        callback: PseudoSelectorCallback,
+    ) {
+        val key = "$tag:$selector"
+        when (selector) {
+            0 -> attachFocusWithin(view, key, callback)
+            1 -> attachFocus(view, key, callback)
+            2 -> attachHover(view, key, callback)
+            3 -> attachActive(view, key, callback)
+            4 -> attachActiveDeepest(view, key, callback)
+        }
+    }
+
+    private fun tryResolveView(tag: Int): View? =
+        try {
+            fabricUIManager.resolveView(tag)
+        } catch (e: IllegalViewOperationException) {
+            null
+        }
+
+    private fun ensureMountListener() {
+        if (mountListenerRegistered) {
+            return
+        }
+        mountListenerRegistered = true
+        fabricUIManager.addUIManagerEventListener(mountListener)
+    }
+
+    private fun flushPendingAttaches() {
+        if (pendingAttaches.isEmpty()) {
+            return
+        }
+        val iterator = pendingAttaches.values.iterator()
+        while (iterator.hasNext()) {
+            val pending = iterator.next()
+            val view = tryResolveView(pending.tag) ?: continue
+            iterator.remove()
+            attachToView(view, pending.tag, pending.selector, pending.callback)
         }
     }
 
@@ -92,27 +156,12 @@ class PseudoSelectorManager(
         key: String,
         callback: PseudoSelectorCallback,
     ) {
-        // Android fires ACTION_HOVER_EXIT on an ancestor when the pointer moves onto a
-        // hoverable descendant, but CSS :hover must stay active there. So on enter/exit
-        // (not per-frame MOVE) recompute every registered view from the pointer position.
-        hoverCallbacks[view] = callback
-        val listener =
-            View.OnHoverListener { _, event ->
-                when (event.actionMasked) {
-                    MotionEvent.ACTION_HOVER_ENTER,
-                    MotionEvent.ACTION_HOVER_EXIT,
-                    -> updateHoverStates(event.rawX, event.rawY)
-                }
-                false
-            }
-        view.setOnHoverListener(listener)
+        ensureTouchListener(view)
+        hover.register(view, callback)
         detachActions[key] =
             Runnable {
-                hoverCallbacks.remove(view)
-                if (hoveredViews.remove(view)) {
-                    callback.onSelectorStateChanged(false)
-                }
-                view.setOnHoverListener(null)
+                hover.unregister(view)
+                maybeRemoveTouchListener(view)
             }
     }
 
@@ -157,10 +206,16 @@ class PseudoSelectorManager(
                             it.onSelectorStateChanged(true)
                         }
                     }
+                    hover.recompute(event.rawX, event.rawY)
                 }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                MotionEvent.ACTION_UP -> {
                     fireActiveCallbacksUpTree(view, false)
                     deepestCallbacks[view]?.onSelectorStateChanged(false)
+                }
+                MotionEvent.ACTION_CANCEL -> {
+                    fireActiveCallbacksUpTree(view, false)
+                    deepestCallbacks[view]?.onSelectorStateChanged(false)
+                    hover.clearAll()
                 }
             }
             false
@@ -168,7 +223,7 @@ class PseudoSelectorManager(
     }
 
     private fun maybeRemoveTouchListener(view: View) {
-        if (view !in activeCallbacks && view !in deepestCallbacks) {
+        if (view !in activeCallbacks && view !in deepestCallbacks && !hover.isRegistered(view)) {
             touchListenerViews.remove(view)
             view.setOnTouchListener(null)
         }
@@ -178,7 +233,11 @@ class PseudoSelectorManager(
         tag: Int,
         selector: Int,
     ) {
-        UiThreadUtil.runOnUiThread { detachActions.remove("$tag:$selector")?.run() }
+        UiThreadUtil.runOnUiThread {
+            val key = "$tag:$selector"
+            pendingAttaches.remove(key)
+            detachActions.remove(key)?.run()
+        }
     }
 
     /**
@@ -225,32 +284,6 @@ class PseudoSelectorManager(
                 activeCallbacks[parent]?.onSelectorStateChanged(isActive)
             }
             parent = parent.parent
-        }
-    }
-
-    /**
-     * Recompute every registered view's _:hover_ state from the pointer position, firing only on
-     * change. A view is hovered while the point is in its on-screen bounds - true for an ancestor
-     * while the pointer is over a descendant. Uses live (mid-animation) `getLocationOnScreen` bounds.
-     */
-    private fun updateHoverStates(
-        rawX: Float,
-        rawY: Float,
-    ) {
-        val loc = hoverLocationBuffer
-        for ((view, callback) in hoverCallbacks) {
-            view.getLocationOnScreen(loc)
-            val contains =
-                rawX >= loc[0] && rawX <= loc[0] + view.width &&
-                    rawY >= loc[1] && rawY <= loc[1] + view.height
-            val wasHovered = hoveredViews.contains(view)
-            if (contains && !wasHovered) {
-                hoveredViews.add(view)
-                callback.onSelectorStateChanged(true)
-            } else if (!contains && wasHovered) {
-                hoveredViews.remove(view)
-                callback.onSelectorStateChanged(false)
-            }
         }
     }
 
