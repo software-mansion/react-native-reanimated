@@ -102,7 +102,7 @@
   "peerDependencies": {
     "react": "*",
     "react-native": "0.83 - 0.86",
-    "react-native-worklets": "*"
+    "react-native-worklets": "0.11.0-main"
   },
   "devDependencies": {
     "@babel/core": "7.28.4",
