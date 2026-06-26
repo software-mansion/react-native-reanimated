@@ -154,6 +154,8 @@ android {
     }
     if (rootProject.hasProperty("ndkVersion")) {
         ndkVersion = rootProject.extensions.extraProperties.get("ndkVersion") as String
+    } else if (safeExtGet('ndkVersion', null)) {
+        ndkVersion = safeExtGet("ndkVersion", null)
     }
 
     buildFeatures {
