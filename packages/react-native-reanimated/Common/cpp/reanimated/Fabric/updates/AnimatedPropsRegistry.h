@@ -18,6 +18,10 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
   /// Also removes updates older than `cleanupTimestamp` from the registry.
   jsi::Value getUpdatesOlderThanTimestamp(jsi::Runtime &rt, double timestamp, double cleanupTimestamp);
 
+  /// Drops every entry. Called by the JS-side GC once the last animated view
+  /// unmount.
+  void removeAll();
+
  private:
   std::unordered_map<Tag, double> timestampMap_;
 

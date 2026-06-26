@@ -149,6 +149,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   jsi::Value getSettledUpdates(jsi::Runtime &rt);
 
+  void removeOrphanedProps(jsi::Runtime &rt);
+
   void dispatchCommand(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeValue,
