@@ -35,6 +35,7 @@ let updateProps: (
   isAnimatedProps?: boolean
 ) => void;
 
+// is-tree-shakable-suppress
 if (SHOULD_BE_USE_WEB) {
   updateProps = (viewDescriptors, updates, isAnimatedProps) => {
     'worklet';
@@ -111,7 +112,7 @@ type NativePropsOperation = {
 function createUpdatePropsManager() {
   'worklet';
   const nativeOperations: NativePropsOperation[] = [];
-  const jsOperations: JSPropsOperation[] = [];
+  let jsOperations: JSPropsOperation[] = [];
 
   let flushPending = false;
 
@@ -164,8 +165,9 @@ function createUpdatePropsManager() {
         nativeOperations.length = 0;
       }
       if (jsOperations.length) {
+        // Fresh array each flush: scheduleOnRN caches serialized args by identity.
         scheduleOnRN(updateJSProps, jsOperations);
-        jsOperations.length = 0;
+        jsOperations = [];
       }
       flushPending = false;
       if (!USE_ANIMATION_BACKEND) {
@@ -175,6 +177,7 @@ function createUpdatePropsManager() {
   };
 }
 
+// is-tree-shakable-suppress
 if (SHOULD_BE_USE_WEB) {
   const maybeThrowError = () => {
     // Jest attempts to access a property of this object to check if it is a Jest mock

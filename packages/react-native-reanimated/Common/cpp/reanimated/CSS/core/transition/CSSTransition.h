@@ -1,9 +1,9 @@
 #pragma once
 
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
-#include <reanimated/CSS/easing/EasingFunctions.h>
+#include <reanimated/CSS/core/transition/CSSLoopTransition.h>
+#include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
-#include <reanimated/CSS/progress/TransitionProgressProvider.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
 
 #include <react/renderer/core/ShadowNode.h>
@@ -11,12 +11,8 @@
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <memory>
-#include <string>
-#include <vector>
 
 namespace reanimated::css {
-
-class CSSLoopTransition;
 
 class CSSTransition {
  public:
@@ -29,7 +25,10 @@ class CSSTransition {
   CSSTransition(
       std::shared_ptr<const ShadowNode> shadowNode,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+      const std::shared_ptr<CSSPlatformTransitionProxy> &platformTransitionProxy,
+      const std::shared_ptr<OperationsLoop> &loop,
       Observer &observer);
+  ~CSSTransition();
 
   Tag getViewTag() const {
     return shadowNode_->getTag();
@@ -44,29 +43,27 @@ class CSSTransition {
   }
 
   TransitionProperties getProperties() const;
-  double getMinDelay(double timestamp) const;
-  TransitionProgressState getState() const;
 
-  void schedule(OperationsLoop &loop);
-  void unschedule(OperationsLoop &loop);
+  folly::dynamic computeCurrentLoopStyle();
 
-  folly::dynamic run(
-      jsi::Runtime &rt,
-      const PropertyValueDiffsMap &propertiesDiffs,
-      const folly::dynamic &lastUpdateValue,
-      double timestamp);
-  /** TODO: unify folly::dynamic and jsi::value versions */
-  folly::dynamic
-  run(const PropertyValueDynamicDiffsMap &propertiesDiffs, const folly::dynamic &lastUpdateValue, double timestamp);
-  void updateSettings(
-      const PropertiesSettingsMap &changedPropertiesSettings,
-      const std::vector<std::string> &removedProperties);
-
-  folly::dynamic computeCurrentStyle();
+  /// Applies a config: routes props between the platform and loop sides and runs them.
+  folly::dynamic run(jsi::Runtime &rt, CSSTransitionConfig &&config, const folly::dynamic &lastUpdates);
+  /// Runs the loop side directly from already-computed (dynamic) diffs.
+  folly::dynamic run(const PropertyValueDynamicDiffsMap &propertyDiffs, const folly::dynamic &lastUpdates);
+  void cancel();
 
  private:
   const std::shared_ptr<const ShadowNode> shadowNode_;
-  const std::shared_ptr<CSSLoopTransition> loopTransition_;
+  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
+  const std::shared_ptr<CSSPlatformTransitionProxy> platformTransitionProxy_;
+  const std::shared_ptr<OperationsLoop> loop_;
+  Observer &observer_;
+
+  CSSTransitionRouting routing_;
+  std::shared_ptr<CSSLoopTransition> loopTransition_;
+
+  CSSLoopTransition &ensureLoopTransition();
+  void scheduleLoop(double timestamp);
 };
 
 } // namespace reanimated::css

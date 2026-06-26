@@ -1,5 +1,6 @@
 import type { JSX, ReactNode } from 'react';
 import { useMemo } from 'react';
+import type { ViewStyle } from 'react-native';
 import type {
   CSSTransitionProperties,
   StyleProps,
@@ -26,12 +27,12 @@ type ExampleCardsSection = {
 };
 
 type ExampleScreenContentProps = {
-  transitionProperties: Partial<CSSTransitionProperties>;
+  transitionProperties: Partial<CSSTransitionProperties<ViewStyle>>;
   cards: Array<ExampleCardsSection>;
   transitionStyles: Array<StyleProps>;
   displayStyleChanges?: boolean;
   renderExample: (
-    transition: CSSTransitionProperties,
+    transition: CSSTransitionProperties<ViewStyle>,
     style: StyleProps
   ) => JSX.Element;
 };

@@ -14,7 +14,7 @@ import {
   WorkletsCompatibility,
 } from '@site/src/components/Compatibility';
 import Optional from '@site/src/components/Optional';
-import AvailableFrom from '@site/src/components/AvailableFrom';
+import { Badges } from '@swmansion/t-rex-ui';
 import Indent from '@site/src/components/Indent';
 import Row from '@site/src/components/Row';
 import Grid from '@site/src/components/Grid';
@@ -35,7 +35,7 @@ export default {
   Version,
   Spacer,
   Optional,
-  AvailableFrom,
+  Badges,
   Indent,
   Row,
   Grid,

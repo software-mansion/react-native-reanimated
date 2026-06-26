@@ -2,6 +2,7 @@
 #include <worklets/Compat/Holders.h>
 #include <worklets/Compat/StableApi.h>
 #include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/SerializableRemoteFunction.h>
 #include <worklets/SharedItems/Shareable.h>
 #include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/JSISerializer.h>
@@ -86,6 +87,8 @@ std::shared_ptr<Serializable> extractSerializable(
       return extractSerializableOrThrow<Shareable>(rt, value, errorMessage);
     case Serializable::ValueType::ErrorType:
       return extractSerializableOrThrow<SerializableError>(rt, value, errorMessage);
+    case Serializable::ValueType::RegExpType:
+      return extractSerializableOrThrow<SerializableRegExp>(rt, value, errorMessage);
     default:
       throw std::runtime_error("[Worklets] Invalid expected type provided to extractSerializable.");
   }

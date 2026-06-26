@@ -4,7 +4,7 @@ import { Component } from 'react';
 import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 
-import type { AnyComponent, AnyRecord, PlainStyle } from '../../common';
+import type { AnyComponent, UnknownRecord } from '../../common';
 import { IS_JEST, SHOULD_BE_USE_WEB } from '../../common';
 import type {
   InternalHostInstance,
@@ -17,23 +17,24 @@ import type {
 } from '../../createAnimatedComponent/commonTypes';
 import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
+import type { DefaultStyle } from '../../hook/commonTypes';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
 import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../native';
 import { CSSManager } from '../platform';
 import type { CSSStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
 
-export type AnimatedComponentProps = Record<string, unknown> & {
+export type AnimatedComponentProps = UnknownRecord & {
   ref?: Ref<Component>;
-  style?: StyleProp<PlainStyle>;
+  style?: StyleProp<DefaultStyle>;
 };
 
 // TODO - change these ugly underscore prefixed methods and properties to real
 // private/protected ones when possible (when changes from this repo are merged
 // to the main one)
 export default class AnimatedComponent<
-  P extends AnyRecord = AnimatedComponentProps,
-  S extends AnyRecord = Record<string, unknown>,
+  P extends UnknownRecord = AnimatedComponentProps,
+  S extends object = UnknownRecord,
 >
   extends Component<P, S>
   implements IAnimatedComponentInternalBase
@@ -45,7 +46,6 @@ export default class AnimatedComponent<
   _viewInfo?: ViewInfo;
   _cssStyle: CSSStyle = {}; // RN style object with Reanimated CSS properties
   _componentRef: AnimatedComponentRef | HTMLElement | null = null;
-  _hasAnimatedRef = false;
   // Used only on web
   _componentDOMRef: HTMLElement | null = null;
   _willUnmount: boolean = false;
@@ -109,7 +109,10 @@ export default class AnimatedComponent<
   }
 
   _setComponentRef = (ref: Component | HTMLElement) => {
-    const forwardedRef = this.props.forwardedRef;
+    const forwardedRef = this.props.forwardedRef as
+      | ((ref: Component | HTMLElement) => void)
+      | { current: Component | HTMLElement | null }
+      | undefined;
     // Forward to user ref prop (if one has been specified)
     if (typeof forwardedRef === 'function') {
       // Handle function-based refs. String-based refs are handled as functions.
@@ -136,7 +139,6 @@ export default class AnimatedComponent<
     // Component can specify ref which should be animated when animated version of the component is created.
     // Otherwise, we animate the component itself.
     if (componentRef && componentRef.getAnimatableRef) {
-      this._hasAnimatedRef = true;
       return componentRef.getAnimatableRef();
     }
     // Case for SVG components on Web
@@ -151,7 +153,9 @@ export default class AnimatedComponent<
   };
 
   _updateStyles(props: P) {
-    this._cssStyle = StyleSheet.flatten(props.style) ?? {};
+    this._cssStyle = (StyleSheet.flatten(
+      props.style as StyleProp<DefaultStyle>
+    ) ?? {}) as CSSStyle;
   }
 
   componentDidMount() {
@@ -169,7 +173,10 @@ export default class AnimatedComponent<
     if (!IS_JEST) {
       this._CSSManager ??= new CSSManager(
         this._getViewInfo(),
-        this.ChildComponent.displayName
+        // `react-native-svg`'s web classes don't set `static displayName`
+        // (only the native side does), so fall back to the class `name` which
+        // matches the React `displayName` pattern used elsewhere.
+        this.ChildComponent.displayName ?? this.ChildComponent.name
       );
       this._CSSManager?.update(this._cssStyle);
     }
@@ -218,7 +225,9 @@ export default class AnimatedComponent<
       <ChildComponent
         {...(props ?? this.props)}
         {...platformProps}
-        style={filterNonCSSStyleProps(props?.style ?? this.props.style)}
+        style={filterNonCSSStyleProps(
+          (props?.style ?? this.props.style) as StyleProp<CSSStyle>
+        )}
         // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
         // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
         ref={this._setComponentRef as (ref: Component) => void}

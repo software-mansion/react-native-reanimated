@@ -7,6 +7,7 @@
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <utility>
@@ -209,6 +210,18 @@ class SerializableError : public Serializable {
   const std::optional<std::string> stack_;
 };
 
+class SerializableRegExp : public Serializable {
+ public:
+  SerializableRegExp(const std::string &pattern, const std::string &flags)
+      : Serializable(ValueType::RegExpType), pattern_(pattern), flags_(flags) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  const std::string pattern_;
+  const std::string flags_;
+};
+
 class SerializableHostObject : public Serializable {
  public:
   SerializableHostObject(jsi::Runtime &, const std::shared_ptr<jsi::HostObject> &hostObject)
@@ -233,16 +246,27 @@ class SerializableHostFunction : public Serializable {
   const unsigned int paramCount_;
 };
 
+struct ArrayBufferMetadata {
+  std::string typeName;
+  size_t byteOffset;
+  size_t length;
+};
+
 class SerializableArrayBuffer : public Serializable {
  public:
-  SerializableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer)
+  SerializableArrayBuffer(
+      jsi::Runtime &rt,
+      const jsi::ArrayBuffer &arrayBuffer,
+      std::optional<ArrayBufferMetadata> metadata = std::nullopt)
       : Serializable(ValueType::ArrayBufferType),
+        metadata_(std::move(metadata)),
         data_(arrayBuffer.data(rt), arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
-  const std::vector<uint8_t> data_;
+  std::optional<ArrayBufferMetadata> metadata_;
+  std::vector<uint8_t> data_;
 };
 
 class SerializableWorklet : public SerializableObject {
@@ -264,71 +288,6 @@ class SerializableImport : public Serializable {
  protected:
   const double source_;
   const std::string imported_;
-};
-
-/** Forward declaration */
-class RuntimeManager;
-
-class SerializableRemoteFunction : public Serializable,
-                                   public std::enable_shared_from_this<SerializableRemoteFunction> {
- private:
-  struct RNRuntimeData {
-    const int remoteId;
-    const std::shared_ptr<JSScheduler> jsScheduler;
-  };
-
-  struct WorkletRuntimeData {
-    std::unique_ptr<jsi::Value> function;
-  };
-
-  jsi::Runtime *hostRuntime_;
-  const RuntimeData::RuntimeId hostRuntimeId_;
-  std::variant<RNRuntimeData, WorkletRuntimeData> runtimeData_;
-  const std::string name_;
-
- public:
-  /** Creates RN Runtime Remote Function. */
-  SerializableRemoteFunction(
-      jsi::Runtime &rnRuntime,
-      const std::string &name,
-      const int remoteId,
-      const std::shared_ptr<JSScheduler> &jsScheduler)
-      : Serializable(ValueType::RemoteFunctionType),
-        hostRuntime_(&rnRuntime),
-        hostRuntimeId_(RuntimeData::rnRuntimeId),
-        runtimeData_(RNRuntimeData{.remoteId = remoteId, .jsScheduler = jsScheduler}),
-        name_(name) {}
-
-  /** Creates Worklet Runtime Remote Function. */
-  SerializableRemoteFunction(
-      jsi::Runtime &workletRuntime,
-      const std::string &name,
-      jsi::Function &&function,
-      RuntimeData::RuntimeId hostRuntimeId)
-      : Serializable(ValueType::RemoteFunctionType),
-        hostRuntime_(&workletRuntime),
-        hostRuntimeId_(hostRuntimeId),
-        runtimeData_(WorkletRuntimeData{.function = std::make_unique<jsi::Value>(workletRuntime, std::move(function))}),
-        name_(name) {}
-
-  ~SerializableRemoteFunction() override;
-
-  SerializableRemoteFunction(const SerializableRemoteFunction &) = delete;
-  SerializableRemoteFunction &operator=(const SerializableRemoteFunction &) = delete;
-
-  void resolveOrRejectPromise(
-      const std::shared_ptr<Serializable> &resolveValue,
-      const std::shared_ptr<RuntimeManager> &runtimeManager);
-
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
-
-  [[nodiscard]] bool isHostedOnRNRuntime() const noexcept {
-    return std::holds_alternative<RNRuntimeData>(runtimeData_);
-  }
-
-  [[nodiscard]] RuntimeData::RuntimeId getHostRuntimeId() const {
-    return hostRuntimeId_;
-  }
 };
 
 class SerializableInitializer : public Serializable {

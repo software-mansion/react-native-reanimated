@@ -35,10 +35,11 @@ import {
   variableDeclarator,
 } from '@babel/types';
 import { strict as assert } from 'assert';
-import { basename, relative } from 'path';
+import { basename, relative, sep } from 'path';
 
 import { getClosure } from './closure';
 import { generateWorkletFile } from './generate';
+import { updateRelativeRequires } from './imports';
 import { workletTransformSync } from './transform';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
 import { workletClassFactorySuffix } from './types';
@@ -98,17 +99,14 @@ export function makeWorkletFactory(
   assert(transformed, '[Reanimated] `transformed` is undefined.');
   assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
 
-  const {
-    closureVariables,
-    libraryBindingsToImport,
-    relativeBindingsToImport,
-  } = includeClosure
-    ? getClosure(fun, state)
-    : {
-        closureVariables: [],
-        libraryBindingsToImport: new Set<Binding>(),
-        relativeBindingsToImport: new Set<Binding>(),
-      };
+  const { closureVariables, moduleBindingsToImport, relativeBindingsToImport } =
+    includeClosure
+      ? getClosure(fun, state)
+      : {
+          closureVariables: [],
+          moduleBindingsToImport: new Set<Binding>(),
+          relativeBindingsToImport: new Set<Binding>(),
+        };
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
@@ -177,17 +175,18 @@ export function makeWorkletFactory(
   // When testing with jest I noticed that environment variables are set later
   // than some functions are evaluated. E.g. this cannot be above this function
   // because it would always evaluate to true.
-  const shouldInjectLocation = !isRelease();
+  const shouldInjectLocation = !isRelease(state);
   if (shouldInjectLocation) {
     let location = state.file.opts.filename;
     if (state.opts.relativeSourceLocation) {
       location = relative(state.cwd, location);
       // It seems there is no designated option to use relative paths in generated sourceMap
       sourceMapString = sourceMapString?.replace(
-        state.file.opts.filename,
-        location
+        toPosix(state.file.opts.filename),
+        toPosix(location)
       );
     }
+    location = toPosix(location);
 
     initDataObjectExpression.properties.push(
       objectProperty(identifier('location'), stringLiteral(location))
@@ -200,9 +199,10 @@ export function makeWorkletFactory(
     );
   }
 
-  const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
+  const shouldIncludeInitData =
+    !state.opts.omitNativeOnlyData && !state.opts.bundleMode;
 
-  if (shouldIncludeInitData && !state.opts.bundleMode) {
+  if (shouldIncludeInitData) {
     const initDataDeclaration = variableDeclaration('const', [
       variableDeclarator(initDataId, initDataObjectExpression),
     ]);
@@ -273,7 +273,7 @@ export function makeWorkletFactory(
     ),
   ];
 
-  const shouldInjectVersion = !isRelease();
+  const shouldInjectVersion = !isRelease(state);
   if (shouldInjectVersion) {
     statements.push(
       expressionStatement(
@@ -289,7 +289,7 @@ export function makeWorkletFactory(
     );
   }
 
-  if (shouldIncludeInitData && !state.opts.bundleMode) {
+  if (shouldIncludeInitData) {
     statements.push(
       expressionStatement(
         assignmentExpression(
@@ -305,7 +305,7 @@ export function makeWorkletFactory(
     );
   }
 
-  if (!isRelease() && !state.opts.bundleMode) {
+  if (!isRelease(state) && !state.opts.bundleMode) {
     statements.unshift(
       variableDeclaration('const', [
         variableDeclarator(
@@ -352,7 +352,7 @@ export function makeWorkletFactory(
     return clonedId;
   });
 
-  if (shouldIncludeInitData && !state.opts.bundleMode) {
+  if (shouldIncludeInitData) {
     factoryParams.unshift(cloneNode(initDataId, true));
   }
 
@@ -387,8 +387,10 @@ export function makeWorkletFactory(
   );
 
   if (state.opts.bundleMode) {
+    updateRelativeRequires(factory, state);
+
     generateWorkletFile(
-      libraryBindingsToImport,
+      moduleBindingsToImport,
       relativeBindingsToImport,
       factory,
       workletHash,
@@ -475,7 +477,7 @@ function makeWorkletName(
     source = basename(filepath);
 
     // Get the library name from the path.
-    const splitFilepath = filepath.split('/');
+    const splitFilepath = filepath.split(/[\\/]/);
     const nodeModulesIndex = splitFilepath.indexOf('node_modules');
     if (nodeModulesIndex !== -1) {
       const libraryName = splitFilepath[nodeModulesIndex + 1];
@@ -503,6 +505,10 @@ function makeWorkletName(
   reactName = reactName || toIdentifier(suffix);
 
   return { workletName, reactName };
+}
+
+function toPosix(p: string): string {
+  return sep === '/' ? p : p.split(sep).join('/');
 }
 
 const extraPlugins = [

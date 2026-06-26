@@ -87,6 +87,18 @@ export interface WorkletsModuleProxy {
     stack: string | undefined
   ): SerializableRef<Error>;
 
+  createSerializableRegExp(
+    pattern: string,
+    flags: string
+  ): SerializableRef<RegExp>;
+
+  createSerializableArrayBufferView<TValue extends ArrayBufferView>(
+    typeName: string,
+    buffer: ArrayBuffer,
+    byteOffset: number,
+    length: number
+  ): SerializableRef<TValue>;
+
   createSerializableInitializer(obj: object): SerializableRef<object>;
 
   createSerializableNonWorkletFunction<TArgs extends unknown[], TReturn>(

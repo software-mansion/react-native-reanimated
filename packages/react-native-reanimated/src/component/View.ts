@@ -9,6 +9,7 @@ interface AnimatedViewComplement extends View {
   getNode(): View;
 }
 
+// is-tree-shakable-suppress
 export const AnimatedView = createAnimatedComponent(View);
 
 export type AnimatedView = typeof AnimatedView & AnimatedViewComplement;

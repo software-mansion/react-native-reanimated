@@ -1,4 +1,6 @@
+#import <reanimated/CSS/utils/platform.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
+#import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/REASlowAnimations.h>
@@ -37,6 +39,7 @@ SetGestureStateFunction makeSetGestureStateFunction(RCTModuleRegistry *moduleReg
 
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
 {
+  // NOLINTNEXTLINE(performance-unnecessary-value-param)
   auto requestRender = [nodesManager](std::function<void(double)> onRender) {
     [nodesManager postOnAnimation:^(READisplayLink *displayLink) {
 #if !TARGET_OS_OSX
@@ -79,8 +82,11 @@ MaybeFlushUIUpdatesQueueFunction makeMaybeFlushUIUpdatesQueueFunction(REANodesMa
 
 RegisterSensorFunction makeRegisterSensorFunction(ReanimatedSensorContainer *reanimatedSensorContainer)
 {
-  auto registerSensorFunction =
-      [=](int sensorType, int interval, int iosReferenceFrame, std::function<void(double[], int)> setter) -> int {
+  auto registerSensorFunction = [=](int sensorType,
+                                    int interval,
+                                    int iosReferenceFrame,
+                                    // NOLINTNEXTLINE(performance-unnecessary-value-param)
+                                    std::function<void(double[], int)> setter) -> int {
     return [reanimatedSensorContainer
            registerSensor:(ReanimatedSensorType)sensorType
                  interval:interval
@@ -101,6 +107,7 @@ UnregisterSensorFunction makeUnregisterSensorFunction(ReanimatedSensorContainer 
 KeyboardEventSubscribeFunction makeSubscribeForKeyboardEventsFunction(REAKeyboardEventObserver *keyboardObserver)
 {
   auto subscribeForKeyboardEventsFunction =
+      // NOLINTNEXTLINE(performance-unnecessary-value-param)
       [=](std::function<void(int keyboardState, int height)> keyboardEventDataUpdater,
           bool isStatusBarTranslucent,
           bool isNavigationBarTranslucent) {
@@ -120,6 +127,54 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
   return unsubscribeFromKeyboardEventsFunction;
 }
 
+css::CSSCanRoutePropertyFunction makeCSSCanRouteProperty()
+{
+  return &css::canRouteCSSProperty;
+}
+
+css::CSSApplyTransitionJSIFunction makeCSSApplyTransitionJSI(REACSSPlatformTransitions *platformTransitions)
+{
+  return [platformTransitions](
+             jsi::Runtime &rt,
+             Tag viewTag,
+             const std::string &propertyName,
+             const jsi::Value &fromValue,
+             const jsi::Value &toValue,
+             const css::CSSTransitionPropertySettings &settings,
+             double timestamp) {
+    return [platformTransitions applyTransitionForTag:viewTag
+                                         propertyName:propertyName
+                                            fromValue:fromValue
+                                              toValue:toValue
+                                              runtime:rt
+                                             settings:settings
+                                            timestamp:timestamp];
+  };
+}
+
+css::CSSApplyTransitionDynamicFunction makeCSSApplyTransitionDynamic(REACSSPlatformTransitions *platformTransitions)
+{
+  return [platformTransitions](
+             Tag viewTag,
+             const std::string &propertyName,
+             const folly::dynamic &fromValue,
+             const folly::dynamic &toValue,
+             double timestamp) {
+    return [platformTransitions applyDynamicTransitionForTag:viewTag
+                                                propertyName:propertyName
+                                                   fromValue:fromValue
+                                                     toValue:toValue
+                                                   timestamp:timestamp];
+  };
+}
+
+css::CSSRemoveTransitionFunction makeCSSRemoveTransition(REACSSPlatformTransitions *platformTransitions)
+{
+  return [platformTransitions](Tag viewTag, const std::string &propertyName) {
+    [platformTransitions removeTransitionForTag:viewTag propertyName:propertyName];
+  };
+}
+
 ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager)
 {
   auto forceScreenSnapshot = [=](Tag tag) {
@@ -128,7 +183,7 @@ ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nod
     REAUIView<RCTComponentViewProtocol> *maybeRNSScreenView = [componentViewRegistry findComponentViewWithTag:tag];
     SEL setSnapshotAfterUpdatesSelector = @selector(setSnapshotAfterUpdates:);
     if ([maybeRNSScreenView respondsToSelector:setSnapshotAfterUpdatesSelector]) {
-      [(id<RNScreenViewOptionalProtocol>)maybeRNSScreenView setSnapshotAfterUpdates:YES];
+      [static_cast<id<RNScreenViewOptionalProtocol>>(maybeRNSScreenView) setSnapshotAfterUpdates:YES];
     }
   };
   return forceScreenSnapshot;
@@ -181,6 +236,13 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto attachPseudoSelectorFunction = makeAttachPseudoSelectorFunction(attachQueue);
   auto detachPseudoSelectorFunction = makeDetachPseudoSelectorFunction(attachQueue);
 
+  REACSSPlatformTransitions *platformTransitions =
+      [[REACSSPlatformTransitions alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
+  auto cssCanRouteProperty = makeCSSCanRouteProperty();
+  auto cssApplyTransitionJSI = makeCSSApplyTransitionJSI(platformTransitions);
+  auto cssApplyTransitionDynamic = makeCSSApplyTransitionDynamic(platformTransitions);
+  auto cssRemoveTransition = makeCSSRemoveTransition(platformTransitions);
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       forceScreenSnapshotFunction,
@@ -194,6 +256,10 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       maybeFlushUIUpdatesQueueFunction,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
+      cssCanRouteProperty,
+      cssApplyTransitionJSI,
+      cssApplyTransitionDynamic,
+      cssRemoveTransition,
   };
   return platformDepMethodsHolder;
 }

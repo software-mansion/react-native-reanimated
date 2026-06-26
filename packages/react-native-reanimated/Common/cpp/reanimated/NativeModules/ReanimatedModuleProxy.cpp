@@ -203,17 +203,28 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #ifdef __APPLE__
       forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
 #endif
+      staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
+      updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
       operationsLoop_(std::make_shared<OperationsLoop>(
           uiScheduler,
           platformDepMethodsHolder.requestRender,
-          platformDepMethodsHolder.getAnimationTimestamp)),
+          platformDepMethodsHolder.getAnimationTimestamp,
+          updatesRegistryManager_)),
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
-      staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
-      updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(staticPropsRegistry_, animatedPropsRegistry_)),
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
-      cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>(operationsLoop_, cssAnimationKeyframesRegistry_)),
-      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(viewStylesRepository_, operationsLoop_)),
+      cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>(
+          operationsLoop_,
+          cssAnimationKeyframesRegistry_,
+          platformDepMethodsHolder.platformAnimationFactory)),
+      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
+          viewStylesRepository_,
+          operationsLoop_,
+          std::make_shared<CSSPlatformTransitionProxy>(
+              platformDepMethodsHolder.cssCanRouteProperty,
+              platformDepMethodsHolder.cssApplyTransitionJSI,
+              platformDepMethodsHolder.cssApplyTransitionDynamic,
+              platformDepMethodsHolder.cssRemoveTransition))),
       pseudoStylesRegistry_(std::make_shared<PseudoStylesRegistry>(
           platformDepMethodsHolder.attachPseudoSelector,
           platformDepMethodsHolder.detachPseudoSelector,
@@ -225,16 +236,13 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #endif // ANDROID
       subscribeForKeyboardEventsFunction_(platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
-  {
-    auto lock = updatesRegistryManager_->lock();
-    // Add registries in order of their priority (from the lowest to the
-    // highest)
-    // CSS transitions should be overriden by animated style animations;
-    // animated style animations should be overriden by CSS animations.
-    updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
-    updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
-    updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
-  }
+  // Add registries in order of their priority (from the lowest to the
+  // highest). CSS transitions should be overriden by animated style
+  // animations; animated style animations should be overriden by CSS
+  // animations.
+  updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
+  updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
+  updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
 
 #ifdef ANDROID
   // Pre-allocate the synchronous props buffers so the first frame doesn't pay
@@ -279,6 +287,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     }
 
     const auto timestamp = strongThis->getAnimationTimestamp_();
+    auto lock = strongThis->updatesRegistryManager_->lock();
     strongThis->animatedPropsRegistry_->update(rt, operations, timestamp);
   };
 
@@ -314,9 +323,9 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
         if (!surfaceId) {
           return;
         }
+        // The flush set is drained by `executeLayoutAnimationsRequests`, driven
+        // by `runGrandCallback` (backend) or a JS `requestAnimationFrameFinalizer` (non-backend).
         strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
-
-        strongThis->requestRenderForLayoutAnimations();
       };
 
   EndLayoutAnimationFunction endLayoutAnimation = [weakThis = weak_from_this()](int tag, bool shouldRemove) {
@@ -327,14 +336,6 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     }
 
     auto surfaceId = strongThis->layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
-
-    if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-      // in the backend path this is called from runGrandCallback,
-      // we are guaranteed to have the changes flushed
-    } else {
-      strongThis->requestRenderForLayoutAnimations();
-    }
-
     if (!surfaceId) {
       return;
     }
@@ -532,12 +533,13 @@ void ReanimatedModuleProxy::cleanupSensors() {
 }
 
 void ReanimatedModuleProxy::setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle) {
+  auto lock = updatesRegistryManager_->lock();
   staticPropsRegistry_->set(rt, viewTag.asNumber(), viewStyle);
 }
 
 void ReanimatedModuleProxy::markNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) {
-  auto lock = updatesRegistryManager_->lock();
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  auto lock = updatesRegistryManager_->lock();
   updatesRegistryManager_->markNodeAsRemovable(shadowNode);
 }
 
@@ -552,16 +554,19 @@ void ReanimatedModuleProxy::registerCSSKeyframes(
     const jsi::Value &compoundComponentName,
     const jsi::Value &keyframesConfig) {
   const auto compoundComponentNameStr = compoundComponentName.asString(rt).utf8(rt);
+  auto parsedConfig =
+      parseCSSAnimationKeyframesConfig(rt, keyframesConfig, compoundComponentNameStr, viewStylesRepository_);
+
+  auto lock = updatesRegistryManager_->lock();
   cssAnimationKeyframesRegistry_->set(
-      animationName.asString(rt).utf8(rt),
-      compoundComponentNameStr,
-      parseCSSAnimationKeyframesConfig(rt, keyframesConfig, compoundComponentNameStr, viewStylesRepository_));
+      animationName.asString(rt).utf8(rt), compoundComponentNameStr, std::move(parsedConfig));
 }
 
 void ReanimatedModuleProxy::unregisterCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
     const jsi::Value &compoundComponentName) {
+  auto lock = updatesRegistryManager_->lock();
   cssAnimationKeyframesRegistry_->remove(
       animationName.asString(rt).utf8(rt), compoundComponentName.asString(rt).utf8(rt));
 }
@@ -572,10 +577,11 @@ void ReanimatedModuleProxy::applyCSSAnimations(
     const jsi::Value &compoundComponentName,
     const jsi::Value &animationUpdates) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  const auto compoundComponentNameStr = compoundComponentName.asString(rt).utf8(rt);
   const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
 
   auto lock = updatesRegistryManager_->lock();
-  cssAnimationsRegistry_->apply(shadowNode, compoundComponentName.asString(rt).utf8(rt), updates);
+  cssAnimationsRegistry_->apply(shadowNode, compoundComponentNameStr, updates);
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
@@ -588,10 +594,10 @@ void ReanimatedModuleProxy::runCSSTransition(
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &transitionConfig) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  const auto config = parseCSSTransitionConfig(rt, shadowNode->getComponentName(), transitionConfig);
+  auto config = parseCSSTransitionConfig(rt, shadowNode->getComponentName(), transitionConfig);
 
   auto lock = updatesRegistryManager_->lock();
-  cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, config);
+  cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, std::move(config));
 }
 
 void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) {
@@ -599,7 +605,7 @@ void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi:
   cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
-void ReanimatedModuleProxy::registerPseudoStyle(
+void ReanimatedModuleProxy::registerPseudoStyles(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &config) {
@@ -607,29 +613,35 @@ void ReanimatedModuleProxy::registerPseudoStyle(
   const auto tag = shadowNode->getTag();
   const auto configObj = config.asObject(rt);
 
-  const auto selectorStr = stringFromValue(rt, configObj.getProperty(rt, "selector"));
-  const auto selectorEnum = pseudoSelectorFromString(selectorStr);
-  if (!selectorEnum) {
-    return;
-  }
+  const auto defaultStyle = jsi::dynamicFromValue(rt, configObj.getProperty(rt, "defaultStyle"));
+  const auto selectorsArray = configObj.getProperty(rt, "selectors").asObject(rt).asArray(rt);
+  const auto selectorsCount = selectorsArray.size(rt);
 
-  auto transitionConfig =
-      css::parseCSSTransitionConfig(rt, shadowNode->getComponentName(), configObj.getProperty(rt, "transition"));
-  // We want to provide only the default settings (we drop the diff not to run any transitions straight away.
-  // The diff will be provided when `PseudoStylesRegistry::onSelectorStateChanged` is run).
-  transitionConfig.changedProperties.clear();
+  std::vector<PseudoStylesRegistry::SelectorRegistration> selectors;
+  selectors.reserve(selectorsCount);
 
   auto lock = updatesRegistryManager_->lock();
-  cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, transitionConfig);
-  pseudoStylesRegistry_->registerPseudoStyle(
-      tag,
-      shadowNode,
-      *selectorEnum,
-      jsi::dynamicFromValue(rt, configObj.getProperty(rt, "selectorStyle")),
-      jsi::dynamicFromValue(rt, configObj.getProperty(rt, "defaultStyle")));
+
+  for (size_t i = 0; i < selectorsCount; ++i) {
+    const auto entryObj = selectorsArray.getValueAtIndex(rt, i).asObject(rt);
+    const auto selectorEnum = pseudoSelectorFromString(stringFromValue(rt, entryObj.getProperty(rt, "selector")));
+    if (!selectorEnum) {
+      continue;
+    }
+
+    auto transitionConfig =
+        css::parseCSSTransitionConfig(rt, shadowNode->getComponentName(), entryObj.getProperty(rt, "transition"));
+    // TODO - clean up pseudo selectors registration not to have to clear the changedProperties object
+    transitionConfig.changedProperties.clear();
+    cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, std::move(transitionConfig));
+
+    selectors.push_back({*selectorEnum, jsi::dynamicFromValue(rt, entryObj.getProperty(rt, "selectorStyle"))});
+  }
+
+  pseudoStylesRegistry_->registerPseudoStyles(tag, shadowNode, defaultStyle, selectors);
 }
 
-void ReanimatedModuleProxy::unregisterPseudoStyle(jsi::Runtime &, const jsi::Value &viewTag) {
+void ReanimatedModuleProxy::unregisterPseudoStyles(jsi::Runtime &, const jsi::Value &viewTag) {
   auto lock = updatesRegistryManager_->lock();
   pseudoStylesRegistry_->remove(viewTag.asNumber());
 }
@@ -646,6 +658,7 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
   // TODO(future): flush updates from CSS animations and CSS transitions registries
   // TODO(future): find a better way to obtain timestamp for removing updates
   // TODO(future): move removing old updates to separate method
+  auto lock = updatesRegistryManager_->lock();
   return animatedPropsRegistry_->getUpdatesOlderThanTimestamp(
       rt, currentTimestamp - 1000 /* 1 second */, currentTimestamp - 2000 /* 2 seconds */);
 }
@@ -778,14 +791,10 @@ void ReanimatedModuleProxy::performOperations() {
       // Update CSS animations and flush updates
       cssAnimationsRegistry_->flushUpdates(updatesBatch);
     }
+  }
 
-    if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
-      applySynchronousUpdates(updatesBatch, false);
-    }
-
-    if ((updatesBatch.size() > 0) && updatesRegistryManager_->shouldReanimatedSkipCommit()) {
-      updatesRegistryManager_->pleaseCommitAfterPause();
-    }
+  if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
+    applySynchronousUpdates(updatesBatch, false);
   }
 
   if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
@@ -794,21 +803,23 @@ void ReanimatedModuleProxy::performOperations() {
     // In this case, we should skip the commit here and let React Native do
     // it. The commit will include the current values from the updates manager
     // which will be applied in ReanimatedCommitHook.
+    if (!updatesBatch.empty()) {
+      updatesRegistryManager_->pleaseCommitAfterPause();
+    }
     return;
   }
 
   commitUpdates(uiRuntime, updatesBatch);
-
-  // Clear the entire cache after the commit
-  // (we don't know if the view is updated from outside of Reanimated
-  // so we have to clear the entire cache)
-  viewStylesRepository_->clearNodesCache();
 }
 
 void ReanimatedModuleProxy::performNonLayoutOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performNonLayoutOperations");
 
-  UpdatesBatch updatesBatch = animatedPropsRegistry_->getPendingUpdates();
+  UpdatesBatch updatesBatch;
+  {
+    auto lock = updatesRegistryManager_->lock();
+    updatesBatch = animatedPropsRegistry_->getPendingUpdates();
+  }
   applySynchronousUpdates(updatesBatch, true);
 }
 
@@ -817,9 +828,9 @@ AnimationMutations ReanimatedModuleProxy::collectNonLayoutAnimationUpdates() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::collectNonLayoutAnimationUpdates");
 
   AnimationMutations mutations;
+  jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   {
     auto lock = updatesRegistryManager_->lock();
-    jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
     animatedPropsRegistry_->flushNonLayoutUpdates(uiRuntime, mutations);
   }
   return mutations;
@@ -1031,25 +1042,31 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
 
   std::unordered_map<SurfaceId, PropsMap> propsMapBySurface;
+  PropsMap collectedProps;
+  bool flushRegistry;
 
+  // Release the lock before shadowTree.commit - it re-enters via ReanimatedCommitHook.
+  {
+    auto lock = updatesRegistryManager_->lock();
 #ifdef ANDROID
-  updatesRegistryManager_->collectPropsToRevertBySurface(propsMapBySurface);
+    updatesRegistryManager_->collectPropsToRevertBySurface(propsMapBySurface);
 #endif
+    flushRegistry = shouldFlushRegistry_.exchange(false);
+    if (flushRegistry) {
+      collectedProps = updatesRegistryManager_->collectProps();
+    }
+  }
 
-  if (shouldFlushRegistry_) {
-    shouldFlushRegistry_ = false;
-    const auto propsMap = updatesRegistryManager_->collectProps();
-    for (auto const &[family, props] : propsMap) {
-      const auto surfaceId = family->getSurfaceId();
-      auto &propsVector = propsMapBySurface[surfaceId][family];
+  if (flushRegistry) {
+    for (auto const &[family, props] : collectedProps) {
+      auto &propsVector = propsMapBySurface[family->getSurfaceId()][family];
       for (const auto &prop : props) {
         propsVector.emplace_back(prop);
       }
     }
   } else {
     for (auto const &[shadowNodeFamily, props] : updatesBatch) {
-      SurfaceId surfaceId = shadowNodeFamily->getSurfaceId();
-      propsMapBySurface[surfaceId][shadowNodeFamily].emplace_back(props);
+      propsMapBySurface[shadowNodeFamily->getSurfaceId()][shadowNodeFamily].emplace_back(props);
     }
   }
 
@@ -1077,6 +1094,7 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
 
 #ifdef ANDROID
       if (status == ShadowTree::CommitStatus::Succeeded) {
+        auto lock = updatesRegistryManager_->lock();
         updatesRegistryManager_->clearPropsToRevert(surfaceId);
       }
 #else
@@ -1185,7 +1203,8 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
     // TODO: we don't use the mount hook here, but we still need a way to handleNodeRemovals
     // for now we leave this to leak the memory, a fix will come in a follow-up
   } else {
-    mountHook_ = std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, request);
+    mountHook_ =
+        std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, viewStylesRepository_, request);
   }
 
   commitHook_ = std::make_shared<ReanimatedCommitHook>(uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
@@ -1253,6 +1272,7 @@ std::function<std::string()> ReanimatedModuleProxy::createRegistriesLeakCheck() 
 
     std::string result = "";
 
+    auto lock = strongThis->updatesRegistryManager_->lock();
     result += "AnimatedPropsRegistry: " + format(strongThis->animatedPropsRegistry_->isEmpty());
     result += "\nCSSAnimationsRegistry: " + format(strongThis->cssAnimationsRegistry_->isEmpty());
     result += "\nCSSTransitionsRegistry: " + format(strongThis->cssTransitionsRegistry_->isEmpty());
@@ -1558,25 +1578,25 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
   addMethod<2>(
       rt,
       obj,
-      "registerPseudoStyle",
+      "registerPseudoStyles",
       [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
         }
-        strongThis->registerPseudoStyle(rt, at<0>(args), at<1>(args));
+        strongThis->registerPseudoStyles(rt, at<0>(args), at<1>(args));
       });
 
   addMethod<1>(
       rt,
       obj,
-      "unregisterPseudoStyle",
+      "unregisterPseudoStyles",
       [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
         }
-        strongThis->unregisterPseudoStyle(rt, at<0>(args));
+        strongThis->unregisterPseudoStyles(rt, at<0>(args));
       });
 
   return obj;

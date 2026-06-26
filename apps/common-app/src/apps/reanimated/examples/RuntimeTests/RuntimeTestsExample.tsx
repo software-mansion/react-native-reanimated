@@ -60,8 +60,9 @@ export default function RuntimeTestsExample() {
         {
           testSuiteName: 'runtimes',
           importTest: () => {
-            require('./tests/runtimes/errorTraces.test');
-            require('./tests/runtimes/loggingFromWorkletRuntime.test');
+            __DEV__ && require('./tests/runtimes/errorTraces.test');
+            __DEV__ &&
+              require('./tests/runtimes/loggingFromWorkletRuntime.test');
             require('./tests/runtimes/createWorkletRuntime.test');
             require('./tests/runtimes/scheduleOnRN.test');
             require('./tests/runtimes/runOnUISync.test');
@@ -74,6 +75,15 @@ export default function RuntimeTestsExample() {
             require('./tests/runtimes/runOnRuntimeSyncWithId.test');
             require('./tests/runtimes/scheduleOnRuntimeWithId.test');
           },
+        },
+        {
+          testSuiteName: 'bundle mode core',
+          importTest: () => {
+            require('./tests/runtimes/reactNativeImportShim.test');
+            require('./tests/runtimes/turboModuleRegistryShim.test');
+          },
+          disabled: !globalThis._WORKLETS_BUNDLE_MODE_ENABLED,
+          skipByDefault: true,
         },
         {
           testSuiteName: 'run loop',
@@ -97,6 +107,7 @@ export default function RuntimeTestsExample() {
             // TODO: update expected values
             // require('./tests/core/cancelAnimation.test');
             // TODO: speed up useSharedValue tests, they have unnecessarily long delays
+            require('./tests/core/useSharedValue/animationAssigning.test');
             require('./tests/core/useSharedValue/synchronization.test');
             require('./tests/core/useSharedValue/numbers.test');
             require('./tests/core/useSharedValue/arrays.test');
@@ -174,8 +185,11 @@ export default function RuntimeTestsExample() {
           testSuiteName: 'babel plugin',
           importTest: () => {
             require('./tests/plugin/fileWorkletization.test');
-            require('./tests/plugin/contextObjects.test');
-            require('./tests/plugin/workletClasses.test');
+            if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+              require('./tests/plugin/contextObjects.test');
+              require('./tests/plugin/workletClasses.test');
+            }
+            require('./tests/plugin/jsxInWorklets.test');
             require('./tests/plugin/recursion.test');
             require('./tests/plugin/versionMismatch.test');
           },
