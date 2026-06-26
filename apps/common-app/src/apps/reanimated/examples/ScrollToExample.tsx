@@ -198,14 +198,16 @@ const AnimatedSectionList = Animated.createAnimatedComponent(
 
 const SectionListExample = ({ animated, ref }: ExampleProps) => {
   const aref = useAnimatedRef<typeof AnimatedSectionList>();
+  const lastTarget = useRef({ sectionIndex: 0, itemIndex: 0 });
 
   useImperativeHandle(ref, () => ({
     scrollFromJS() {
       console.log(getRuntimeKind());
-      aref.current?.scrollToLocation({
+      lastTarget.current = {
         sectionIndex: Math.floor((Math.random() * DATA.length) / 10),
         itemIndex: Math.floor((Math.random() * DATA.length) / 10),
-      });
+      };
+      aref.current?.scrollToLocation(lastTarget.current);
     },
     scrollFromUI() {
       scheduleOnUI(() => {
@@ -240,6 +242,20 @@ const SectionListExample = ({ animated, ref }: ExampleProps) => {
         <Text style={styles.header}>{title}</Text>
       )}
       stickySectionHeadersEnabled={false}
+      // scrollToLocation can target a row that is still offscreen and not yet
+      // measured; without getItemLayout the list cannot know its offset and
+      // would otherwise throw. Jump to an approximate offset so the row renders,
+      // then retry the precise scroll once it is measured.
+      onScrollToIndexFailed={({ averageItemLength, index }) => {
+        aref.current?.getScrollResponder()?.scrollTo({
+          y: averageItemLength * index,
+          animated: false,
+        });
+        setTimeout(
+          () => aref.current?.scrollToLocation(lastTarget.current),
+          50
+        );
+      }}
     />
   );
 };
