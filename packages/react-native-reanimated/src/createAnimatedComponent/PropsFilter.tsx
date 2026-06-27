@@ -23,6 +23,7 @@ function dummyListener() {
 
 export class PropsFilter implements IPropsFilter {
   private _initialPropsMap = new Map<AnimatedStyleHandle, StyleProps>();
+  private _initialInlinePropValues = new Map<string, unknown>();
 
   public filterNonAnimatedProps(
     component: AnimatedComponentTypeInternal
@@ -79,9 +80,20 @@ export class PropsFilter implements IPropsFilter {
           props[key] = dummyListener;
         }
       } else if (isSharedValue(value)) {
-        if (component._isFirstRender) {
-          props[key] = value.value;
+        // Pass the initial value of the inline shared value prop on every
+        // render (not just the first one) so that the props committed by React
+        // stay stable across re-renders, like with animated props initial
+        // values. In particular, this keeps the children of <Animated.Text>
+        // with inline `text` prop intact - committing different text children
+        // would replace the RawText shadow node with one from a new family,
+        // detaching it from the animated updates.
+        if (!this._initialInlinePropValues.has(key)) {
+          this._initialInlinePropValues.set(
+            key,
+            initialUpdaterRun(() => value.value)
+          );
         }
+        props[key] = this._initialInlinePropValues.get(key);
       } else {
         props[key] = value;
       }
