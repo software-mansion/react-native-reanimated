@@ -12,10 +12,11 @@ class RNRuntimeStatus {
     isDead_ = true;
   }
 
-  template <typename Fn>
-  void runWhileLocked(Fn &&fn) {
+  template <typename TFn>
+  void runWhileLocked(TFn &&fn) {
     std::lock_guard<std::mutex> lock(mutex_);
-    std::forward<Fn>(fn)(isDead_);
+    const bool isDead = isDead_;
+    std::forward<TFn>(fn)(isDead);
   }
 
  private:
