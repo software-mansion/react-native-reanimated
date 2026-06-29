@@ -23,11 +23,13 @@ jsi::Function getRemoteFunctionUnpacker(jsi::Runtime &rt) {
 
 SerializableRemoteFunction::~SerializableRemoteFunction() {
   if (isHostedOnRNRuntime()) {
-    if (rnRuntimeStatus_->isDead()) {
-      freeWithoutCallingDestructor(function_);
-    } else {
-      function_.reset();
-    }
+    rnRuntimeStatus_->runWhileLocked([this](bool isDead) {
+      if (isDead) {
+        freeWithoutCallingDestructor(function_);
+      } else {
+        function_.reset();
+      }
+    });
   } else {
     cleanupRuntimeAware(hostRuntime_, function_);
   }

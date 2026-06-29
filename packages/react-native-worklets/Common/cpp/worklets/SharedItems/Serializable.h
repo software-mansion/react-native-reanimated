@@ -30,9 +30,16 @@ inline void freeWithoutCallingDestructor(std::unique_ptr<jsi::Value> &value) {
 }
 
 inline void cleanupRuntimeAware(jsi::Runtime *rt, std::unique_ptr<jsi::Value> &value) {
-  if (rt != nullptr && !WorkletRuntimeRegistry::isRuntimeAlive(rt)) {
-    freeWithoutCallingDestructor(value);
+  if (rt == nullptr) {
+    return;
   }
+  WorkletRuntimeRegistry::runWhileLocked(rt, [&value](bool isAlive) {
+    if (isAlive) {
+      value.reset();
+    } else {
+      freeWithoutCallingDestructor(value);
+    }
+  });
 }
 
 template <typename BaseClass>

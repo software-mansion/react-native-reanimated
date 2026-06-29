@@ -1,21 +1,26 @@
 #pragma once
 
-#include <atomic>
+#include <mutex>
+#include <utility>
 
 namespace worklets {
 
 class RNRuntimeStatus {
  public:
-  [[nodiscard]] bool isDead() const {
-    return isDead_;
-  }
-
   void setDead() {
+    std::lock_guard<std::mutex> lock(mutex_);
     isDead_ = true;
   }
 
+  template <typename Fn>
+  void runWhileLocked(Fn &&fn) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::forward<Fn>(fn)(isDead_);
+  }
+
  private:
-  std::atomic_bool isDead_ = false;
+  bool isDead_ = false;
+  std::mutex mutex_;
 };
 
 } // namespace worklets

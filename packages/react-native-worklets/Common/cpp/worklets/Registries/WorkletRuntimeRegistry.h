@@ -5,6 +5,7 @@
 
 #include <mutex>
 #include <set>
+#include <utility>
 
 using namespace facebook;
 
@@ -30,10 +31,12 @@ class WorkletRuntimeRegistry {
   friend class WorkletRuntimeCollector;
 
  public:
-  static bool isRuntimeAlive(jsi::Runtime *runtime) {
+  template <typename TFn>
+  static void runWhileLocked(jsi::Runtime *runtime, TFn &&fn) {
     react_native_assert(runtime != nullptr && "runtime is nullptr");
     std::lock_guard<std::mutex> lock(mutex_);
-    return registry_.find(runtime) != registry_.end();
+    const bool isAlive = registry_.find(runtime) != registry_.end();
+    std::forward<TFn>(fn)(isAlive);
   }
 };
 
