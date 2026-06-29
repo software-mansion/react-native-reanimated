@@ -471,5 +471,22 @@ describe('CSSPseudoStylesManager', () => {
 
       expect(unregisterPseudoStyles).not.toHaveBeenCalled();
     });
+
+    test('re-registers identical styles after unmountCleanup (reused instance remount)', () => {
+      const style: CSSStyle = {
+        opacity: { default: 0, ':hover': 1 },
+      };
+
+      pushStyle(manager, style);
+      manager.unmountCleanup();
+      jest.clearAllMocks();
+
+      // The same manager instance is reused (e.g. a frozen subtree thaws and the
+      // AnimatedComponent's CSSManager is kept). An identical-styles update must not
+      // be swallowed by the deepEqual early-return; it has to re-register natively.
+      pushStyle(manager, { ...style });
+
+      expect(registerPseudoStyles).toHaveBeenCalledTimes(1);
+    });
   });
 });
