@@ -6,7 +6,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import type { ComponentRef } from 'react';
 import { useEffect, useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
+  interpolateColor,
   scrollTo,
   useAnimatedRef,
   useAnimatedStyle,
@@ -23,16 +25,19 @@ import { typedMemo } from '@/utils';
 import Text from '../core/Text';
 
 const TABS_GAP = spacing.xxxs;
+const PILL_SQUASH = 0.12;
 
 type TabSelectorProps<T extends string> = {
   tabs: Readonly<Array<T>>;
   selectedTab: T;
+  tabProgress: SharedValue<number>;
   onSelectTab: (tab: T) => void;
 };
 
 function TabSelector<T extends string>({
   onSelectTab,
   selectedTab,
+  tabProgress,
   tabs,
 }: TabSelectorProps<T>) {
   const scrollViewRef = useAnimatedRef<ComponentRef<Animated.ScrollView>>();
@@ -47,6 +52,13 @@ function TabSelector<T extends string>({
       (containerWidth.value -
         (tabWidths.value[tabWidths.value.length - 1] ?? 0)) /
       2
+  );
+
+  const tabCount = tabs.length;
+  const widthsReady = useDerivedValue(
+    () =>
+      tabWidths.value.length === tabCount &&
+      tabWidths.value.every((width) => width > 0)
   );
 
   const activeTabIndex = useMemo(
@@ -67,8 +79,10 @@ function TabSelector<T extends string>({
     });
   }, [activeTabIndex, scrollViewRef, tabWidths]);
 
+  // Keep the whole selector hidden until the tabs are measured, so the active
+  // label never flashes white-on-white before the pill behind it can render.
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: withTiming(+(containerWidth.value > 0)),
+    opacity: withTiming(+(containerWidth.value > 0 && widthsReady.value)),
   }));
 
   const paddingBeforeAnimatedStyle = useAnimatedStyle(() => ({
@@ -78,6 +92,50 @@ function TabSelector<T extends string>({
   const paddingAfterAnimatedStyle = useAnimatedStyle(() => ({
     width: paddingAfter.value,
   }));
+
+  const pillAnimatedStyle = useAnimatedStyle(() => {
+    // Always return the same set of keys so a not-ready -> ready (or back)
+    // transition can never leave a stale width / transform applied.
+    if (!widthsReady.value) {
+      return {
+        opacity: 0,
+        transform: [{ translateX: 0 }, { scaleX: 1 }],
+        width: 0,
+      };
+    }
+    const widths = tabWidths.value;
+
+    const lastIndex = tabCount - 1;
+    // Clamp so rubber-band overshoot can't index past the first / last tab.
+    const progress = Math.min(Math.max(tabProgress.value, 0), lastIndex);
+    const from = Math.floor(progress);
+    const to = Math.min(from + 1, lastIndex);
+    const fraction = progress - from;
+
+    let offsetFrom = 0;
+    for (let index = 0; index < from; index++) {
+      offsetFrom += widths[index] + TABS_GAP;
+    }
+    const offsetTo =
+      from === to ? offsetFrom : offsetFrom + widths[from] + TABS_GAP;
+
+    const centerFrom = offsetFrom + widths[from] / 2;
+    const centerTo = offsetTo + widths[to] / 2;
+    const center = centerFrom + (centerTo - centerFrom) * fraction;
+    const width = widths[from] + (widths[to] - widths[from]) * fraction;
+
+    // 0 when resting on a tab, 1 at the midpoint between two tabs.
+    const transit = 1 - Math.abs(2 * fraction - 1);
+
+    return {
+      opacity: 1,
+      transform: [
+        { translateX: center - width / 2 },
+        { scaleX: 1 + PILL_SQUASH * transit },
+      ],
+      width,
+    };
+  });
 
   const gradient = useMemo(
     () => (
@@ -141,10 +199,15 @@ function TabSelector<T extends string>({
         }}>
         <Animated.View style={paddingBeforeAnimatedStyle} />
         <View style={styles.tabs}>
+          <Animated.View
+            pointerEvents="none"
+            style={[styles.pill, pillAnimatedStyle]}
+          />
           {tabs.map((tab, index) => (
             <Tab
+              index={index}
               key={tab}
-              selected={tab === selectedTab}
+              tabProgress={tabProgress}
               title={tab}
               onPress={() => onSelectTab(tab)}
               onMeasure={(widthArg) =>
@@ -183,35 +246,44 @@ function TabSelector<T extends string>({
 
 type TabProps = {
   title: string;
-  selected: boolean;
+  index: number;
+  tabProgress: SharedValue<number>;
   onPress: () => void;
   onMeasure: (width: number) => void;
 };
 
-function Tab({ onMeasure, onPress, selected, title }: TabProps) {
+function Tab({ index, onMeasure, onPress, tabProgress, title }: TabProps) {
+  const animatedTextStyle = useAnimatedStyle(() => {
+    const coverage = Math.min(
+      Math.max(1 - Math.abs(index - tabProgress.value), 0),
+      1
+    );
+    return {
+      color: interpolateColor(
+        coverage,
+        [0, 1],
+        [colors.foreground2, colors.white]
+      ),
+    };
+  });
+
   return (
     <Pressable
-      style={[styles.tab, selected && styles.activeTab]}
+      style={styles.tab}
       onPress={onPress}
       onLayout={({
         nativeEvent: {
           layout: { width },
         },
       }) => onMeasure(width)}>
-      <Text style={selected && styles.activeTabText} variant="label2">
-        {title}
+      <Text variant="label2">
+        <Animated.Text style={animatedTextStyle}>{title}</Animated.Text>
       </Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  activeTab: {
-    backgroundColor: colors.primary,
-  },
-  activeTabText: {
-    color: colors.white,
-  },
   buttons: {
     ...(StyleSheet.absoluteFill as object),
     alignItems: 'center',
@@ -221,6 +293,14 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.5,
+  },
+  pill: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.full,
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    top: 0,
   },
   tab: {
     borderRadius: radius.full,

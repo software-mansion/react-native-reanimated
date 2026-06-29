@@ -43,6 +43,8 @@
 }
 @end
 
+static const CGFloat kTouchHoverSlop = 10.0;
+
 @implementation REATouchHoverCoordinator {
   NSMutableArray<REATouchHoverEntry *> *_entries;
   REAHoverTouchObserver *_windowObserver;
@@ -91,10 +93,7 @@
       [removed addObject:entry];
     }
   }
-  [_entries removeObjectsInArray:removed];
-  if (_entries.count == 0) {
-    [self removeWindowObserver];
-  }
+  [self purgeEntries:removed];
 }
 
 - (UIWindow *)activeKeyWindow
@@ -140,6 +139,20 @@
   }
   _windowObserver = nil;
   _observedWindow = nil;
+  // Clear any sticky :hover left in the window we just stopped observing (e.g. when a modal/alert
+  // becomes key and we rebind), mirroring Android's removeWindowObserver.
+  [self clearAll];
+}
+
+- (void)purgeEntries:(NSArray<REATouchHoverEntry *> *)batch
+{
+  if (batch.count == 0) {
+    return;
+  }
+  [_entries removeObjectsInArray:batch];
+  if (_entries.count == 0) {
+    [self removeWindowObserver];
+  }
 }
 
 - (void)observeTouchBegan:(UITouch *)touch
@@ -163,7 +176,7 @@
   CGPoint inWindow = [touch locationInView:window];
   CGFloat dx = inWindow.x - _windowTouchStart.x;
   CGFloat dy = inWindow.y - _windowTouchStart.y;
-  if (dx * dx + dy * dy > 100.0) {
+  if (dx * dx + dy * dy > kTouchHoverSlop * kTouchHoverSlop) {
     [self clearAll];
   }
 }
@@ -214,12 +227,7 @@
     }
     [self setEntry:entry hovered:wantHover];
   }
-  if (dead != nil) {
-    [_entries removeObjectsInArray:dead];
-    if (_entries.count == 0) {
-      [self removeWindowObserver];
-    }
-  }
+  [self purgeEntries:dead];
 }
 
 - (void)clearAll
