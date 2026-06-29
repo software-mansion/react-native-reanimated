@@ -126,7 +126,16 @@ const routes = {
       },
       PseudoShowcase: {
         name: 'Showcase',
-        Component: pseudoSelectors.Showcase,
+        routes: {
+          PseudoShowcaseForm: {
+            name: 'Form',
+            Component: pseudoSelectors.Form,
+          },
+          PseudoShowcasePlanets: {
+            name: 'Planets',
+            Component: pseudoSelectors.Planets,
+          },
+        },
       },
     },
   },
