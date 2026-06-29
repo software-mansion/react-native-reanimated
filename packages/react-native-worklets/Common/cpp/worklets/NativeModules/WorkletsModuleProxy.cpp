@@ -68,8 +68,8 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           runtimeBindings_,
           bundleModeConfig_,
           unpackerLoader_,
-          RuntimeData::rnRuntimeId,
-          rnRuntimeStatus_)) {
+          rnRuntimeStatus_,
+          RuntimeData::rnRuntimeId)) {
   RNRuntimeWorkletDecorator::decorate(rnRuntime, rnRuntimeProxy_->toOptimizedObject(rnRuntime), jsLogger_);
 }
 

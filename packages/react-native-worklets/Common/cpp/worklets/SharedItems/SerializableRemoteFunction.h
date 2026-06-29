@@ -1,7 +1,6 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <logger/react_native_log.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/RNRuntimeStatus.h>
@@ -63,10 +62,6 @@ class SerializableRemoteFunction : public Serializable,
   [[nodiscard]] RuntimeData::RuntimeId getHostRuntimeId() const noexcept {
     return hostRuntimeId_;
   }
-
-  static std::atomic_int counter_;
-  int id = counter_++;
-  static std::vector<std::shared_ptr<SerializableRemoteFunction>> leakMap_;
 
  private:
   jsi::Runtime *hostRuntime_;

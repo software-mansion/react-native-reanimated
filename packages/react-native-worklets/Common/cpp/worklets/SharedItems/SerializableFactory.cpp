@@ -1,11 +1,9 @@
 #include <jsi/jsi.h>
 #include <worklets/SharedItems/SerializableFactory.h>
 #include <worklets/SharedItems/SerializableRemoteFunction.h>
-#include <worklets/Tools/RNRuntimeStatus.h>
 
 #include <memory>
 #include <utility>
-#include <vector>
 
 namespace worklets {
 
@@ -63,8 +61,6 @@ jsi::Value makeSerializableHostFunction(
   return SerializableJSRef::newNativeStateObject(rt, serializable);
 }
 
-std::vector<std::shared_ptr<SerializableRemoteFunction>> SerializableRemoteFunction::leakMap_;
-
 jsi::Value makeRNRuntimeSerializableRemoteFunction(
     jsi::Runtime &rnRuntime,
     const std::string &name,
@@ -77,12 +73,6 @@ jsi::Value makeRNRuntimeSerializableRemoteFunction(
       jsi::Value(rnRuntime, function).getObject(rnRuntime).getFunction(rnRuntime),
       jsScheduler,
       rnRuntimeStatus);
-  SerializableRemoteFunction::leakMap_.push_back(serializable);
-  if (SerializableRemoteFunction::leakMap_.size() > 10) {
-    react_native_log_info("Cleaning up leaked RN Runtime Remote Functions");
-    SerializableRemoteFunction::leakMap_.resize(0);
-  }
-
   return SerializableJSRef::newNativeStateObject(rnRuntime, serializable);
 }
 

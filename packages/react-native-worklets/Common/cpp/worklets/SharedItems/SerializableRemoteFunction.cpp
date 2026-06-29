@@ -1,5 +1,4 @@
 #include <jsi/jsi.h>
-#include <logger/react_native_log.h>
 #include <react/debug/react_native_assert.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableRemoteFunction.h>
@@ -21,8 +20,6 @@ jsi::Function getRemoteFunctionUnpacker(jsi::Runtime &rt) {
 }
 
 } // namespace
-
-std::atomic_int SerializableRemoteFunction::counter_ = 0;
 
 SerializableRemoteFunction::~SerializableRemoteFunction() {
   if (isHostedOnRNRuntime()) {
