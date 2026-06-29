@@ -9,16 +9,11 @@ import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
 import { isSynchronizable } from './isSynchronizable';
 import {
-  nextRemoteFunctionId,
-  registerRemoteFunction,
-} from './remoteFunctionRegistry';
-import {
   serializableMappingCache,
   serializableMappingFlag,
 } from './serializableMappingCache';
 import type {
   FlatSerializableRef,
-  RegisteredRemoteFunction,
   RegistrationData,
   RemoteFunction,
   SerializableRef,
@@ -132,7 +127,14 @@ export function createSerializable<TValue>(
 
   const cached = getFromCache(value);
   if (cached !== undefined) {
-    return cached as SerializableRef<TValue>;
+    if (cached instanceof WeakRef) {
+      const deref = cached.deref();
+      if (deref !== undefined) {
+        return deref as SerializableRef<TValue>;
+      }
+    } else {
+      return cached as SerializableRef<TValue>;
+    }
   }
 
   if (Array.isArray(value)) {
@@ -400,16 +402,11 @@ function cloneArray<T extends unknown[]>(
 function cloneNonWorkletFunction<TArgs extends unknown[], TReturn>(
   fun: (...args: TArgs) => TReturn
 ): SerializableRef<(...args: TArgs) => TReturn> {
-  const functionId = nextRemoteFunctionId;
   const clone = WorkletsModule.createSerializableNonWorkletFunction(
     fun,
-    functionId,
     __DEV__ ? fun.name : undefined
   ) as SerializableRef<(...args: TArgs) => TReturn>;
-  if ((clone as RegisteredRemoteFunction).__keepAlive) {
-    registerRemoteFunction(fun);
-  }
-  serializableMappingCache.set(fun, clone);
+  serializableMappingCache.set(fun, new WeakRef(clone));
   serializableMappingCache.set(clone);
 
   freezeObjectInDev(fun);
