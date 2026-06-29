@@ -1,4 +1,5 @@
 #import <worklets/NativeModules/JSIWorkletsModuleProxy.h>
+#import <worklets/Tools/RNRuntimeStatus.h>
 #import <worklets/Tools/ScriptBuffer.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
@@ -7,7 +8,6 @@
 #import <worklets/apple/AssertTurboModuleManagerQueue.h>
 #import <worklets/apple/IOSUIScheduler.h>
 #import <worklets/apple/WorkletsModule.h>
-#import <worklets/Tools/RNRuntimeStatus.h>
 
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>

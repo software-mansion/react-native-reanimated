@@ -24,7 +24,7 @@ jsi::Function getRemoteFunctionUnpacker(jsi::Runtime &rt) {
 SerializableRemoteFunction::~SerializableRemoteFunction() {
   if (isHostedOnRNRuntime()) {
     if (rnRuntimeStatus_->isDead()) {
-      ::operator delete(function_.release());
+      freeWithoutCallingDestructor(function_);
     } else {
       function_.reset();
     }
