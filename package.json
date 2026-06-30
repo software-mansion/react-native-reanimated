@@ -25,6 +25,7 @@
     "build-apps": "yarn workspaces foreach --all --parallel --topological-dev --include '{common-app,*-example}' run build",
     "build-docs": "yarn workspaces foreach --all --parallel --topological-dev --include 'docs-*' run build",
     "build-packages": "yarn workspace react-native-reanimated build",
+    "doctor": "node scripts/doctor/doctor.js",
     "format": "yarn format:root && yarn format:workspaces",
     "format:root": "yarn run --top-level oxfmt --ignore-path .prettiereslintignore .",
     "format:md": "remark --output --ext md . && remark --rc-path .remarkrc.mdx.mjs --output --ext mdx .",
