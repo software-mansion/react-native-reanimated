@@ -4,13 +4,15 @@
 
 #import <UIKit/UIKit.h>
 
-/// One registered touch-`:hover` view (weak owner = unregister key, weak view = bounds).
+/// One registered touch-`:hover` view. `displayed` is the live `:hover` (its callback has fired);
+/// `committed` is the sticky state a tap leaves behind, restored when a pan/scroll is rolled back.
 @interface REATouchHoverEntry : NSObject {
  @public
   __weak id owner;
   __weak UIView *view;
   std::function<void(bool)> callback;
-  BOOL hovered;
+  BOOL displayed;
+  BOOL committed;
 }
 @end
 @implementation REATouchHoverEntry
@@ -26,27 +28,29 @@
 @end
 
 @interface REATouchHoverCoordinator () <UIGestureRecognizerDelegate>
-- (void)observeTouchBegan:(UITouch *)touch;
-- (void)observeTouchMoved:(UITouch *)touch;
-- (void)observeTouchCancelled;
+- (void)primaryTouchBegan:(NSSet<UITouch *> *)touches;
+- (void)primaryTouchMoved:(NSSet<UITouch *> *)touches;
+- (void)primaryTouchEnded:(NSSet<UITouch *> *)touches;
+- (void)primaryTouchCancelled:(NSSet<UITouch *> *)touches;
 @end
 
 @implementation REAHoverTouchObserver
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
-  [self.coordinator observeTouchBegan:touches.anyObject];
+  [self.coordinator primaryTouchBegan:touches];
 }
 - (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
-  [self.coordinator observeTouchMoved:touches.anyObject];
+  [self.coordinator primaryTouchMoved:touches];
 }
 - (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
+  [self.coordinator primaryTouchEnded:touches];
   [self failIfSequenceEnded:event];
 }
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
-  [self.coordinator observeTouchCancelled];
+  [self.coordinator primaryTouchCancelled:touches];
   [self failIfSequenceEnded:event];
 }
 - (void)failIfSequenceEnded:(UIEvent *)event
@@ -66,7 +70,13 @@ static const CGFloat kTouchHoverSlop = 10.0;
   NSMutableArray<REATouchHoverEntry *> *_entries;
   REAHoverTouchObserver *_windowObserver;
   __weak UIWindow *_observedWindow;
-  CGPoint _windowTouchStart;
+  // Only the first finger drives `:hover`; the rest are ignored until it lifts (matches the web,
+  // where a touch implicitly captures the pointer). nil between gestures.
+  __weak UITouch *_primaryTouch;
+  __weak UIView *_primaryHitView;
+  CGPoint _primaryDownPoint;
+  BOOL _panned;
+  BOOL _rolledBackForScroll;
 }
 
 + (instancetype)sharedCoordinator
@@ -96,7 +106,8 @@ static const CGFloat kTouchHoverSlop = 10.0;
   entry->owner = owner;
   entry->view = view;
   entry->callback = std::move(callback);
-  entry->hovered = NO;
+  entry->displayed = NO;
+  entry->committed = NO;
   [_entries addObject:entry];
   [self refreshWindowObserver];
 }
@@ -106,7 +117,8 @@ static const CGFloat kTouchHoverSlop = 10.0;
   NSMutableArray<REATouchHoverEntry *> *removed = [NSMutableArray array];
   for (REATouchHoverEntry *entry in _entries) {
     if (entry->owner == nil || entry->owner == owner) {
-      [self setEntry:entry hovered:NO];
+      [self setEntry:entry displayed:NO];
+      entry->committed = NO;
       [removed addObject:entry];
     }
   }
@@ -156,8 +168,9 @@ static const CGFloat kTouchHoverSlop = 10.0;
   }
   _windowObserver = nil;
   _observedWindow = nil;
-  // Clear any sticky :hover left in the window we just stopped observing (e.g. when a modal/alert
-  // becomes key and we rebind), mirroring Android's removeWindowObserver.
+  _primaryTouch = nil;
+  // Drop any sticky :hover left in the window we stopped observing (e.g. when a modal/alert becomes
+  // key and we rebind), mirroring Android's removeWindowObserver.
   [self clearAll];
 }
 
@@ -172,85 +185,161 @@ static const CGFloat kTouchHoverSlop = 10.0;
   }
 }
 
-- (void)observeTouchBegan:(UITouch *)touch
+#pragma mark - Primary-touch lifecycle
+
+- (void)primaryTouchBegan:(NSSet<UITouch *> *)touches
 {
+  if (_primaryTouch != nil) {
+    return; // A finger is already driving :hover; ignore the rest.
+  }
   UIWindow *window = _observedWindow;
+  UITouch *touch = touches.anyObject;
   if (window == nil || touch == nil) {
     return;
   }
-  CGPoint inWindow = [touch locationInView:window];
-  _windowTouchStart = inWindow;
-  [self recomputeAtWindowPoint:inWindow];
+  _primaryTouch = touch;
+  _panned = NO;
+  _rolledBackForScroll = NO;
+  _primaryDownPoint = [touch locationInView:window];
+  _primaryHitView = [window hitTest:_primaryDownPoint withEvent:nil];
+  // Reconcile the live :hover to the touched view's hit-path: press feedback on the new branch,
+  // and the previously-committed branch is cleared right away (restored later if this is a pan).
+  [self displayHitPathAtWindowPoint:_primaryDownPoint];
 }
 
-- (void)observeTouchMoved:(UITouch *)touch
+- (void)primaryTouchMoved:(NSSet<UITouch *> *)touches
 {
-  // A scroll/drag (movement past a small slop) dismisses sticky :hover, matching Chrome.
-  UIWindow *window = _observedWindow;
-  if (window == nil || touch == nil) {
+  if (_primaryTouch == nil || ![touches containsObject:_primaryTouch]) {
     return;
   }
-  CGPoint inWindow = [touch locationInView:window];
-  CGFloat dx = inWindow.x - _windowTouchStart.x;
-  CGFloat dy = inWindow.y - _windowTouchStart.y;
+  UIWindow *window = _observedWindow;
+  if (window == nil) {
+    return;
+  }
+  CGPoint inWindow = [_primaryTouch locationInView:window];
+  CGFloat dx = inWindow.x - _primaryDownPoint.x;
+  CGFloat dy = inWindow.y - _primaryDownPoint.y;
   if (dx * dx + dy * dy > kTouchHoverSlop * kTouchHoverSlop) {
-    [self clearAll];
+    // A drag/scroll: mark it so the release rolls back to the committed :hover instead of committing
+    // this branch. The branch keeps showing for now, so :hover stays while the finger moves over the
+    // view (a within-view drag).
+    _panned = YES;
+  }
+  // Once an enclosing scroll view actually starts scrolling, roll back the tentative :hover right
+  // away instead of waiting for release - matching Android (whose per-view touch is cancelled by the
+  // scroll) and the web (which drops the press feedback the moment scrolling begins). A within-view
+  // drag that does not scroll keeps the :hover.
+  if (_panned && !_rolledBackForScroll && [self primaryTouchStartedScrolling]) {
+    _rolledBackForScroll = YES;
+    [self revertToCommitted];
   }
 }
 
-- (void)observeTouchCancelled
+- (BOOL)primaryTouchStartedScrolling
 {
-  [self clearAll];
+  for (UIView *view = _primaryHitView; view != nil; view = view.superview) {
+    if ([view isKindOfClass:[UIScrollView class]] && ((UIScrollView *)view).isDragging) {
+      return YES;
+    }
+  }
+  return NO;
 }
 
-- (void)setEntry:(REATouchHoverEntry *)entry hovered:(BOOL)hovered
+- (void)primaryTouchEnded:(NSSet<UITouch *> *)touches
 {
-  if (entry->hovered == hovered) {
+  if (_primaryTouch == nil || ![touches containsObject:_primaryTouch]) {
     return;
   }
-  entry->hovered = hovered;
-  if (entry->callback) {
-    entry->callback(hovered);
+  // Decide tap-vs-pan from the lift point too, in case the slop was only crossed between the last
+  // delivered move and the release (a fast flick); the final location is the source of truth.
+  UIWindow *window = _observedWindow;
+  if (!_panned && window != nil) {
+    CGPoint up = [_primaryTouch locationInView:window];
+    CGFloat dx = up.x - _primaryDownPoint.x;
+    CGFloat dy = up.y - _primaryDownPoint.y;
+    if (dx * dx + dy * dy > kTouchHoverSlop * kTouchHoverSlop) {
+      _panned = YES;
+    }
+  }
+  _primaryTouch = nil;
+  if (_panned) {
+    [self revertToCommitted]; // A pan/scroll never changes the sticky :hover.
+  } else {
+    [self commitDisplayed]; // A tap makes the touched branch sticky.
   }
 }
 
-- (void)recomputeAtWindowPoint:(CGPoint)inWindow
+- (void)primaryTouchCancelled:(NSSet<UITouch *> *)touches
+{
+  if (_primaryTouch == nil || ![touches containsObject:_primaryTouch]) {
+    return;
+  }
+  _primaryTouch = nil;
+  [self revertToCommitted];
+}
+
+#pragma mark - State reconciliation
+
+- (void)setEntry:(REATouchHoverEntry *)entry displayed:(BOOL)displayed
+{
+  if (entry->displayed == displayed) {
+    return;
+  }
+  entry->displayed = displayed;
+  if (entry->callback) {
+    entry->callback(displayed);
+  }
+}
+
+- (void)displayHitPathAtWindowPoint:(CGPoint)inWindow
 {
   // Hit-test the topmost view: :hover applies to it and its ancestors only (matching CSS), so views
-  // that merely overlap the hit branch no longer all activate. hitTest already honors z-order,
+  // that merely overlap the hit branch no longer all activate. hitTest honors z-order,
   // userInteractionEnabled, hidden and alpha, and returns nil over blank space (clears all :hover).
-  UIView *hit = nil;
   UIWindow *window = _observedWindow;
-  if (window != nil) {
-    hit = [window hitTest:inWindow withEvent:nil];
-  }
+  UIView *hit = window != nil ? [window hitTest:inWindow withEvent:nil] : nil;
   NSMutableArray<REATouchHoverEntry *> *dead = nil;
   for (REATouchHoverEntry *entry in _entries) {
     UIView *view = entry->view;
     if (view == nil) {
-      [self setEntry:entry hovered:NO];
+      [self setEntry:entry displayed:NO];
       if (dead == nil) {
         dead = [NSMutableArray array];
       }
       [dead addObject:entry];
       continue;
     }
-    BOOL wantHover = NO;
+    BOOL onHitPath = NO;
     for (UIView *current = hit; current != nil; current = current.superview) {
       if (current == view) {
-        wantHover = YES;
+        onHitPath = YES;
         break;
       }
     }
-    [self setEntry:entry hovered:wantHover];
+    [self setEntry:entry displayed:onHitPath];
   }
   [self purgeEntries:dead];
+}
+
+- (void)commitDisplayed
+{
+  for (REATouchHoverEntry *entry in _entries) {
+    entry->committed = entry->displayed;
+  }
+}
+
+- (void)revertToCommitted
+{
+  for (REATouchHoverEntry *entry in _entries) {
+    [self setEntry:entry displayed:entry->committed];
+  }
 }
 
 - (void)clearAll
 {
   for (REATouchHoverEntry *entry in _entries) {
-    [self setEntry:entry hovered:NO];
+    [self setEntry:entry displayed:NO];
+    entry->committed = NO;
   }
 }
 

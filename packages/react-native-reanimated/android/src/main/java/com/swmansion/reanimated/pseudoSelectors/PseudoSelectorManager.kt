@@ -2,6 +2,7 @@ package com.swmansion.reanimated.pseudoSelectors
 
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.ViewParent
 import com.facebook.react.bridge.UIManager
 import com.facebook.react.bridge.UIManagerListener
@@ -198,6 +199,10 @@ class PseudoSelectorManager(
             return
         }
         view.setOnTouchListener { _, event ->
+            // Feed the hover model from the touched view so it works inside a Modal/Dialog (a
+            // separate window the window observer is blind to); the guards keep it idempotent when
+            // the window observer already drove the same Activity-window gesture.
+            hover.onTouchEvent(event, view.rootView as? ViewGroup)
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     fireActiveCallbacksUpTree(view, true)
@@ -206,7 +211,6 @@ class PseudoSelectorManager(
                             it.onSelectorStateChanged(true)
                         }
                     }
-                    hover.recompute(view, event.rawX, event.rawY)
                 }
                 MotionEvent.ACTION_UP -> {
                     fireActiveCallbacksUpTree(view, false)
@@ -215,7 +219,6 @@ class PseudoSelectorManager(
                 MotionEvent.ACTION_CANCEL -> {
                     fireActiveCallbacksUpTree(view, false)
                     deepestCallbacks[view]?.onSelectorStateChanged(false)
-                    hover.clearAll()
                 }
             }
             false
