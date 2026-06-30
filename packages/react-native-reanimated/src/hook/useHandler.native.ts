@@ -23,12 +23,9 @@ export interface UseHandlerContext<TContext extends UnknownRecord> {
   doDependenciesDiffer: boolean;
 }
 
-function isBabelPluginEnabled(handlers: UnknownRecord): boolean {
-  const handlerFunctions = Object.values(handlers);
-  // If there is no function provided, we assume that the Babel plugin is enabled.
-  return (
-    handlerFunctions.length === 0 || handlerFunctions.some(isWorkletFunction)
-  );
+function isBabelPluginEnabled(_handlers: UnknownRecord): boolean {
+  // Babel plugin must be enabled in all non-web environments.
+  return true;
 }
 
 function ensureWorkletHandlers(handlers: UnknownRecord) {

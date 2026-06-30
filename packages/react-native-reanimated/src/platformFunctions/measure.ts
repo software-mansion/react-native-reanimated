@@ -1,17 +1,7 @@
 'use strict';
-import { RuntimeKind } from 'react-native-worklets';
-
-import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
-import type {
-  InstanceOrElement,
-  MeasuredDimensions,
-  ShadowNodeWrapper,
-} from '../commonTypes';
-import type {
-  AnimatedRef,
-  AnimatedRefOnJS,
-  AnimatedRefOnUI,
-} from '../hook/commonTypes';
+import { IS_JEST, logger } from '../common';
+import type { InstanceOrElement, MeasuredDimensions } from '../commonTypes';
+import type { AnimatedRef } from '../hook/commonTypes';
 
 type Measure = <TRef extends InstanceOrElement>(
   animatedRef: AnimatedRef<TRef>
@@ -30,37 +20,6 @@ type Measure = <TRef extends InstanceOrElement>(
  */
 export let measure: Measure;
 
-function measureNative(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
-  'worklet';
-  if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
-    return null;
-  }
-
-  const viewTag = animatedRef();
-  if (viewTag === -1) {
-    logger.warn(
-      `The view with tag ${viewTag} is not a valid argument for measure(). This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
-    );
-    return null;
-  }
-
-  const measured = global._measure!(viewTag as ShadowNodeWrapper);
-  if (measured === null) {
-    logger.warn(
-      `The view has some undefined, not-yet-computed or meaningless value of \`LayoutMetrics\` type. This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
-    );
-    return null;
-  }
-  if (isNaN(measured.x)) {
-    logger.warn(
-      `The view gets view-flattened on Android. To disable view-flattening, set \`collapsable={false}\` on this component.`
-    );
-    return null;
-  }
-
-  return measured;
-}
-
 function measureJest() {
   logger.warn('measure() cannot be used with Jest.');
   return null;
@@ -71,12 +30,7 @@ function measureDefault() {
   return null;
 }
 
-if (!SHOULD_BE_USE_WEB) {
-  // Those assertions are actually correct since on Native platforms `AnimatedRef` is
-  // mapped as a different function in `serializableMappingCache` and
-  // TypeScript is not able to infer that.
-  measure = measureNative as unknown as Measure;
-} else if (IS_JEST) {
+if (IS_JEST) {
   measure = measureJest;
 } else {
   measure = measureDefault;

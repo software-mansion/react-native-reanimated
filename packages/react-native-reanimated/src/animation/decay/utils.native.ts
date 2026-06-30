@@ -8,7 +8,7 @@ import type {
   Timestamp,
 } from '../../commonTypes';
 
-export const VELOCITY_EPS = 1 / 20;
+export const VELOCITY_EPS = 1;
 export const SLOPE_FACTOR = 0.1;
 
 export interface DecayAnimation extends Animation<DecayAnimation> {

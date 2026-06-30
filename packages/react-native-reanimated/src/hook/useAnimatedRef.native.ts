@@ -1,16 +1,21 @@
 'use strict';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import type { HostInstance } from 'react-native';
+import { createSerializable, serializableMappingCache } from 'react-native-worklets';
 
+import { IS_JEST } from '../common/constants';
 import type {
   InstanceOrElement,
   InternalHostInstance,
   ShadowNodeWrapper,
 } from '../commonTypes';
+import { getShadowNodeWrapperFromRef } from '../fabricUtils';
+import { makeMutable } from '../mutables';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 import type {
   AnimatedRef,
   AnimatedRefObserver,
+  AnimatedRefOnUI,
   MaybeObserverCleanup,
 } from './commonTypes';
 
@@ -67,6 +72,34 @@ function useAnimatedRefBase<TRef extends InstanceOrElement>(
   return resultRef.current;
 }
 
+function useAnimatedRefNative<
+  TRef extends InstanceOrElement = HostInstance,
+>(): AnimatedRef<TRef> {
+  const [sharedWrapper] = useState(() =>
+    makeMutable<ShadowNodeWrapper | null>(null)
+  );
+
+  const resultRef = useAnimatedRefBase<TRef>((ref) => {
+    const currentWrapper = getShadowNodeWrapperFromRef(ref);
+
+    sharedWrapper.value = currentWrapper;
+
+    return currentWrapper;
+  });
+
+  if (!serializableMappingCache.get(resultRef)) {
+    const animatedRefSerializableHandle = createSerializable({
+      __init: (): AnimatedRefOnUI => {
+        'worklet';
+        return () => sharedWrapper.value;
+      },
+    });
+    serializableMappingCache.set(resultRef, animatedRefSerializableHandle);
+  }
+
+  return resultRef;
+}
+
 function useAnimatedRefWeb<
   TRef extends InstanceOrElement = HostInstance,
 >(): AnimatedRef<TRef> {
@@ -88,4 +121,6 @@ function useAnimatedRefWeb<
  *   the reference object.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef
  */
-export const useAnimatedRef = useAnimatedRefWeb;
+export const useAnimatedRef = IS_JEST
+  ? useAnimatedRefWeb
+  : useAnimatedRefNative;

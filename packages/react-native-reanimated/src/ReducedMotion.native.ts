@@ -1,12 +1,10 @@
 'use strict';
-import { IS_WINDOW_AVAILABLE } from './common';
 import { makeMutable } from './mutables';
 
+type localGlobal = typeof global & Record<string, unknown>;
+
 export function isReducedMotionEnabledInSystem() {
-  return IS_WINDOW_AVAILABLE
-    ? // @ts-ignore Fallback if `window` is undefined.
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    : false;
+  return !!(global as localGlobal)._REANIMATED_IS_REDUCED_MOTION;
 }
 
 const IS_REDUCED_MOTION_ENABLED_IN_SYSTEM = isReducedMotionEnabledInSystem();
