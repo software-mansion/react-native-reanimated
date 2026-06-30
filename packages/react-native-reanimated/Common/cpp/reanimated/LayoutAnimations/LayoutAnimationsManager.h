@@ -46,25 +46,29 @@ class LayoutAnimationsManager {
  public:
   LayoutAnimationsManager() : sharedTransitionManager_(std::make_shared<SharedTransitionManager>()) {}
 
-#if __APPLE__
-  explicit LayoutAnimationsManager(RunCoreAnimationForView runCoreAnimationForView) : LayoutAnimationsManager() {
-    runCoreAnimationForView_ = std::move(runCoreAnimationForView);
+  explicit LayoutAnimationsManager(RunNativeLayoutAnimation runNativeLayoutAnimation) : LayoutAnimationsManager() {
+    runNativeLayoutAnimation_ = std::move(runNativeLayoutAnimation);
   }
-#endif
 
   void configureAnimationBatch(const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch);
   void setShouldAnimateExiting(const int tag, const bool value);
   bool shouldAnimateExiting(const int tag, const bool shouldAnimate);
   bool hasLayoutAnimation(const int tag, const LayoutAnimationType type);
   void startLayoutAnimation(jsi::Runtime &rt, const int tag, const LayoutAnimationType type, const jsi::Object &values);
-#if __APPLE__
+  // Computes a generic keyframe descriptor in JS (by sampling the preset's
+  // animation objects for the given runtime `values`) and hands it to the
+  // platform's native animation player. Used instead of `startLayoutAnimation`
+  // when the native layout-animations feature flag is enabled.
   void startNativeLayoutAnimation(
+      jsi::Runtime &rt,
       const int tag,
       const LayoutAnimationType type,
-      const facebook::react::Rect &startFrame,
-      const facebook::react::Rect &endFrame,
+      const jsi::Object &values,
+      const bool usePresentationLayer,
       std::function<void(bool)> &&onAnimationEnd);
-#endif
+  bool hasNativeLayoutAnimationPlayer() const {
+    return runNativeLayoutAnimation_ != nullptr;
+  }
   void clearLayoutAnimationConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
@@ -91,9 +95,7 @@ class LayoutAnimationsManager {
   // `sharedTransitionsForNativeID_`, `sharedTransitions_`, `enteringAnimations_`, `exitingAnimations_`,
   // `layoutAnimations_` and `shouldAnimateExitingForTag_`.
 
-#if __APPLE__
-  RunCoreAnimationForView runCoreAnimationForView_;
-#endif
+  RunNativeLayoutAnimation runNativeLayoutAnimation_;
 };
 
 } // namespace reanimated

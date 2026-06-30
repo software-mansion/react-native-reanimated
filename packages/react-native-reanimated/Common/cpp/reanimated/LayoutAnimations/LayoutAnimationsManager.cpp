@@ -1,6 +1,5 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/LayoutAnimations/NativeLayoutAnimation.h>
-#include <reanimated/LayoutAnimations/NativeLayoutAnimationPresetFactory.h>
+#include <reanimated/LayoutAnimations/NativeLayoutAnimationDescriptor.h>
 
 #include <memory>
 #include <unordered_map>
@@ -90,44 +89,76 @@ void LayoutAnimationsManager::startLayoutAnimation(
       rt, jsi::Value(tag), jsi::Value(static_cast<int>(type)), values, configPair.first->toJSValue(rt));
 }
 
-#if __APPLE__
+static NativeLayoutAnimationDescriptor parseNativeDescriptor(jsi::Runtime &rt, const jsi::Object &descriptorObj) {
+  NativeLayoutAnimationDescriptor descriptor;
+  descriptor.durationMs = descriptorObj.getProperty(rt, "durationMs").asNumber();
+
+  jsi::Array properties = descriptorObj.getProperty(rt, "properties").asObject(rt).asArray(rt);
+  const size_t propertyCount = properties.size(rt);
+  descriptor.properties.reserve(propertyCount);
+
+  for (size_t i = 0; i < propertyCount; i++) {
+    jsi::Object property = properties.getValueAtIndex(rt, i).asObject(rt);
+
+    NativeLayoutAnimationProperty parsedProperty;
+    parsedProperty.keyPath = property.getProperty(rt, "keyPath").asString(rt).utf8(rt);
+
+    jsi::Array offsets = property.getProperty(rt, "offsets").asObject(rt).asArray(rt);
+    jsi::Array values = property.getProperty(rt, "values").asObject(rt).asArray(rt);
+    const size_t keyframeCount = offsets.size(rt);
+    parsedProperty.offsets.reserve(keyframeCount);
+    parsedProperty.values.reserve(keyframeCount);
+    for (size_t j = 0; j < keyframeCount; j++) {
+      parsedProperty.offsets.push_back(offsets.getValueAtIndex(rt, j).asNumber());
+      parsedProperty.values.push_back(values.getValueAtIndex(rt, j).asNumber());
+    }
+
+    descriptor.properties.push_back(std::move(parsedProperty));
+  }
+
+  return descriptor;
+}
+
 void LayoutAnimationsManager::startNativeLayoutAnimation(
+    jsi::Runtime &rt,
     const int tag,
     const LayoutAnimationType type,
-    const facebook::react::Rect &startFrame,
-    const facebook::react::Rect &endFrame,
+    const jsi::Object &values,
+    const bool usePresentationLayer,
     std::function<void(bool)> &&onAnimationEnd) {
+  if (!runNativeLayoutAnimation_) {
+    onAnimationEnd(true);
+    return;
+  }
+
   LayoutAnimationConfigEntry configPair;
   {
     auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
     if (!getConfigsForType(type).contains(tag)) {
+      onAnimationEnd(true);
       return;
     }
     configPair = getConfigsForType(type)[tag];
   }
 
-  if (!configPair.second || !configPair.second->presetName) {
+  if (!configPair.first) {
+    onAnimationEnd(true);
     return;
   }
 
-  std::vector<NativeLayoutAnimation> animations = NativeLayoutAnimationPresetFactory::instance()
-                                                      .create(type, *configPair.second->presetName)
-                                                      ->calculate(startFrame, endFrame);
+  // Ask JS to run the preset builder for these runtime values and sample it into
+  // a generic keyframe descriptor (the same animation objects the legacy path
+  // would have driven frame-by-frame).
+  jsi::Object layoutAnimationsManager =
+      rt.global().getPropertyAsObject(rt, "global").getPropertyAsObject(rt, "LayoutAnimationsManager");
+  jsi::Function computeNativeDescriptor = layoutAnimationsManager.getPropertyAsFunction(rt, "computeNativeDescriptor");
+  jsi::Value descriptorValue = computeNativeDescriptor.call(
+      rt, jsi::Value(tag), jsi::Value(static_cast<int>(type)), values, configPair.first->toJSValue(rt));
 
-  auto callback = std::make_shared<std::function<void(bool)>>(std::move(onAnimationEnd));
-  if (type == LayoutAnimationType::ENTERING) {
-    facebook::react::Rect initialFrame = startFrame;
-    dispatch_async(dispatch_get_main_queue(), ^{
-      runCoreAnimationForView_(tag, initialFrame, animations, *configPair.second, false, [callback](bool finished) {
-        (*callback)(finished);
-      });
-    });
-  } else {
-    runCoreAnimationForView_(
-        tag, startFrame, animations, *configPair.second, true, [callback](bool finished) { (*callback)(finished); });
-  }
+  NativeLayoutAnimationDescriptor descriptor = parseNativeDescriptor(rt, descriptorValue.asObject(rt));
+
+  runNativeLayoutAnimation_(tag, descriptor, usePresentationLayer, std::move(onAnimationEnd));
 }
-#endif
 
 void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const {
   jsi::Value layoutAnimationRepositoryAsValue =

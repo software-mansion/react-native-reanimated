@@ -199,17 +199,11 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       requestRender_(platformDepMethodsHolder.requestRender),
       animatedSensorModule_(platformDepMethodsHolder),
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
+      runNativeLayoutAnimationFunction_(platformDepMethodsHolder.runNativeLayoutAnimation),
 #ifdef __APPLE__
-      runCoreAnimationForViewFunction_(platformDepMethodsHolder.runCoreAnimationForView),
       forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
 #endif
-      layoutAnimationsManager_(
-#ifdef __APPLE__
-          std::make_shared<LayoutAnimationsManager>(runCoreAnimationForViewFunction_)
-#else
-          std::make_shared<LayoutAnimationsManager>()
-#endif
-              ),
+      layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>(runNativeLayoutAnimationFunction_)),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
       operationsLoop_(std::make_shared<OperationsLoop>(

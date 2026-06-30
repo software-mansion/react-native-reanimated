@@ -15,6 +15,22 @@
 
 namespace reanimated {
 
+namespace {
+// Whether layout animations should be played by the platform's native animation
+// engine (Core Animation / `android.animation`) instead of the legacy
+// JS-driven React mutation path. Resolved at compile time from the static
+// feature flags so the unused branch is dropped entirely.
+constexpr bool useNativeLayoutAnimations() {
+#if __APPLE__
+  return StaticFeatureFlags::getFlag("IOS_USE_NATIVE_LAYOUT_ANIMATIONS");
+#elif defined(ANDROID)
+  return StaticFeatureFlags::getFlag("ANDROID_USE_NATIVE_LAYOUT_ANIMATIONS");
+#else
+  return false;
+#endif
+}
+} // namespace
+
 // We never modify the Shadow Tree, we just send some additional
 // mutations to the mounting layer.
 // When animations finish, the Host Tree will represent the most recent Shadow
@@ -653,24 +669,6 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
               .finalView = finalView, .currentView = current, .parentTag = mutation.parentTag, .opacity = opacity});
       window = strongThis->surfaceManager.getWindow(mutation.newChildShadowView.surfaceId);
     }
-    auto oldView = mutation.oldChildShadowView;
-    auto newView = mutation.newChildShadowView;
-
-#if __APPLE__
-    if constexpr (StaticFeatureFlags::getFlag("IOS_USE_NATIVE_LAYOUT_ANIMATIONS")) {
-      strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
-          tag,
-          LayoutAnimationType::ENTERING,
-          // old view does not really exist here with proper data so we just
-          // pass new view
-          newView.layoutMetrics.frame,
-          newView.layoutMetrics.frame,
-          [strongThis, tag](bool finished) { strongThis->endLayoutAnimation(tag, false); });
-
-      return;
-    }
-#endif
-
     Snapshot values(mutation.newChildShadowView, window);
     auto &uiRuntime = strongThis->uiRuntime_;
     jsi::Object yogaValues(uiRuntime);
@@ -682,6 +680,18 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
     yogaValues.setProperty(uiRuntime, "targetHeight", values.height);
     yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
     yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
+
+    if constexpr (useNativeLayoutAnimations()) {
+      strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
+          uiRuntime,
+          tag,
+          LayoutAnimationType::ENTERING,
+          yogaValues,
+          /* usePresentationLayer */ false,
+          [strongThis, tag](bool /* finished */) { strongThis->endLayoutAnimation(tag, false); });
+      return;
+    }
+
     strongThis->layoutAnimationsManager_->startLayoutAnimation(
         uiRuntime, tag, LayoutAnimationType::ENTERING, yogaValues);
   });
@@ -708,16 +718,6 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
       window = strongThis->surfaceManager.getWindow(surfaceId);
     }
 
-#if __APPLE__
-    if constexpr (StaticFeatureFlags::getFlag("IOS_USE_NATIVE_LAYOUT_ANIMATIONS")) {
-      strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
-          tag,
-          LayoutAnimationType::EXITING,
-          oldView.layoutMetrics.frame,
-          oldView.layoutMetrics.frame,
-          [strongThis, tag](bool finished) { strongThis->endLayoutAnimation(tag, finished); });
-    } else
-#endif
     {
       Snapshot values(oldView, window);
 
@@ -731,8 +731,19 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
       yogaValues.setProperty(uiRuntime, "currentHeight", values.height);
       yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
       yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
-      strongThis->layoutAnimationsManager_->startLayoutAnimation(
-          uiRuntime, tag, LayoutAnimationType::EXITING, yogaValues);
+
+      if constexpr (useNativeLayoutAnimations()) {
+        strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
+            uiRuntime,
+            tag,
+            LayoutAnimationType::EXITING,
+            yogaValues,
+            /* usePresentationLayer */ true,
+            [strongThis, tag](bool finished) { strongThis->endLayoutAnimation(tag, finished); });
+      } else {
+        strongThis->layoutAnimationsManager_->startLayoutAnimation(
+            uiRuntime, tag, LayoutAnimationType::EXITING, yogaValues);
+      }
     }
     strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
   });
@@ -751,7 +762,6 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
     }
 
     auto oldView = mutation.oldChildShadowView;
-    auto newView = mutation.newChildShadowView;
     Rect window{};
     {
       auto &mutex = strongThis->mutex;
@@ -759,19 +769,6 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
       strongThis->createLayoutAnimation(mutation, oldView, surfaceId, tag);
       window = strongThis->surfaceManager.getWindow(surfaceId);
     }
-
-#if __APPLE__
-    if constexpr (StaticFeatureFlags::getFlag("IOS_USE_NATIVE_LAYOUT_ANIMATIONS")) {
-      strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
-          tag,
-          LayoutAnimationType::LAYOUT,
-          oldView.layoutMetrics.frame,
-          newView.layoutMetrics.frame,
-          [strongThis, tag](bool finished) { strongThis->endLayoutAnimation(tag, false); });
-
-      return;
-    }
-#endif
 
     Snapshot currentValues(oldView, window);
     Snapshot targetValues(mutation.newChildShadowView, window);
@@ -792,6 +789,18 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
     yogaValues.setProperty(uiRuntime, "targetHeight", targetValues.height);
     yogaValues.setProperty(uiRuntime, "windowWidth", targetValues.windowWidth);
     yogaValues.setProperty(uiRuntime, "windowHeight", targetValues.windowHeight);
+
+    if constexpr (useNativeLayoutAnimations()) {
+      strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
+          uiRuntime,
+          tag,
+          LayoutAnimationType::LAYOUT,
+          yogaValues,
+          /* usePresentationLayer */ true,
+          [strongThis, tag](bool /* finished */) { strongThis->endLayoutAnimation(tag, false); });
+      return;
+    }
+
     strongThis->layoutAnimationsManager_->startLayoutAnimation(uiRuntime, tag, LayoutAnimationType::LAYOUT, yogaValues);
   });
 }

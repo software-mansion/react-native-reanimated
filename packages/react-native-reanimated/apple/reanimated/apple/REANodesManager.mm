@@ -10,6 +10,14 @@
 #import <React/RCTMountingManager.h>
 #import <React/RCTUtils.h>
 
+#import <QuartzCore/QuartzCore.h>
+
+#include <algorithm>
+#include <cmath>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 using namespace facebook::react;
 
 @implementation REANodesManager {
@@ -175,84 +183,31 @@ using namespace facebook::react;
   [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
 }
 
-// TODO: This probably should be removed but I'm leaving just in case I want to quickly rollback to this behaviour
-// I took the route to use CATransaction instead of CAAnimationGroup, it seems to work better with interrupted
-// animations
-//- (void)runCoreAnimationForView:(ReactTag)viewTag
-//                   initialFrame:(const facebook::react::Rect &)initialFrame
-//                     animations:(const std::vector<reanimated::NativeLayoutAnimation> &)animations
-//                         config:(const reanimated::LayoutAnimationRawConfig &)config
-//           usePresentationLayer:(bool)usePresentationLayer
-//                     completion:(std::function<void(bool)>)completion
-//                   animationKey:(NSString *)animationKey
-//{
-//  RCTSurfacePresenter *surfacePresenter = self.surfacePresenter;
-//  RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
-//  REAUIView<RCTComponentViewProtocol> *componentView =
-//      [componentViewRegistry findComponentViewWithTag:static_cast<Tag>(viewTag)];
-//
-//  // Apart from entering animations, we are using the presentation layer's frame instead of the oldFrame to properly
-//  // handle cases where animation is interrupted mid-way and replaced by the next one. In such cases the presentation
-//  // layer allows us to start the new animation from the current visible position of the view and avoid "jumps"
-//  CGRect presentationLayerFrame = componentView.layer.presentationLayer.frame;
-//  facebook::react::Rect baseFrame = usePresentationLayer ? facebook::react::Rect{{presentationLayerFrame.origin.x,
-//  presentationLayerFrame.origin.y}, {presentationLayerFrame.size.width, presentationLayerFrame.size.height}} :
-//  initialFrame;
-//
-//  // TODO: Perhaps we could just add centerOffsets directly to baseFrame here and not have to deal with them anywhere
-//  // else?
-//
-//  NSMutableArray *processedAnimations = [NSMutableArray array];
-//
-//  double delay = config.values->delay.value_or(0) / 1000;
-//  double durationWithDelay = (config.values->duration.value() / 1000) + delay;
-//
-//  for (const auto &anim : animations) {
-//    double fromValue = anim.getInitialValue(baseFrame);
-//    double toValue = anim.targetValue;
-//    NSString *keyPath = [NSString stringWithUTF8String:anim.key.c_str()];
-//
-//    // TODO: Detect if there's spring in the config and if so, use CASpringAnimation with proper config
-//    CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:keyPath];
-//    animation.fromValue = @(fromValue);
-//    animation.toValue = @(toValue);
-//    animation.beginTime = delay;
-//
-//    [processedAnimations addObject:animation];
-//
-//    // TODO: This is hardcoded for now. Figure this out for setting the final values of the properties
-//    // Probably such implementation needs to be somewhere here, as it's iOS specific on setting something
-//    // on the CA Layer
-//    if ([keyPath isEqual:@"position.x"]) {
-//      componentView.layer.position = CGPointMake(toValue, componentView.layer.position.y);
-//    } else {
-//      componentView.layer.position = CGPointMake(componentView.layer.position.x, toValue);
-//    }
-//  }
-//
-//  CAAnimationGroup *animationGroup = [CAAnimationGroup animation];
-//  animationGroup.animations = processedAnimations;
-//  animationGroup.duration = durationWithDelay;
-//
-//  REACoreAnimationDelegate *delegate =
-//      [REACoreAnimationDelegate delegateWithStart:nil
-//                                             stop:^(CAAnimation *animation, BOOL finished) {
-//                                               completion(finished);
-//                                             }];
-//  animationGroup.delegate = delegate;
-//
-//  [componentView.layer addAnimation:animationGroup forKey:@"LAYOUT_ANIMATION"];
-//}
-
-- (void)runCoreAnimationForView:(ReactTag)viewTag
-                   initialFrame:(const facebook::react::Rect &)initialFrame
-                     animations:(const std::vector<reanimated::NativeLayoutAnimation> &)animations
-                         config:(const reanimated::LayoutAnimationRawConfig &)config
-           usePresentationLayer:(bool)usePresentationLayer
-                     completion:(std::function<void(bool)>)completion
+- (void)runNativeLayoutAnimationForView:(ReactTag)viewTag
+                             descriptor:(const reanimated::NativeLayoutAnimationDescriptor &)descriptor
+                   usePresentationLayer:(bool)usePresentationLayer
+                             completion:(std::function<void(bool)>)completion
 {
-  // If there are no animations, we're "finished" successfully.
-  if (animations.size() == 0) {
+  // Core Animation must be driven on the main thread, but the descriptor is
+  // produced on the UI (worklet) thread - hop over if necessary.
+  if (![NSThread isMainThread]) {
+    reanimated::NativeLayoutAnimationDescriptor descriptorCopy = descriptor;
+    __weak REANodesManager *weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+      REANodesManager *strongSelf = weakSelf;
+      if (strongSelf == nil) {
+        completion(NO);
+        return;
+      }
+      [strongSelf runNativeLayoutAnimationForView:viewTag
+                                       descriptor:descriptorCopy
+                             usePresentationLayer:usePresentationLayer
+                                       completion:completion];
+    });
+    return;
+  }
+
+  if (descriptor.properties.empty()) {
     completion(YES);
     return;
   }
@@ -261,61 +216,220 @@ using namespace facebook::react;
   RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
   REAUIView<RCTComponentViewProtocol> *componentView =
       [componentViewRegistry findComponentViewWithTag:static_cast<Tag>(viewTag)];
+  if (componentView == nil) {
+    completion(NO);
+    return;
+  }
+  CALayer *layer = componentView.layer;
 
-  // Apart from entering animations, we are using the presentation layer's frame instead of the oldFrame to properly
-  // handle cases where animation is interrupted mid-way and replaced by the next one. In such cases the presentation
-  // layer allows us to start the new animation from the current visible position of the view and avoid "jumps"
-  CGRect presentationLayerFrame = componentView.layer.presentationLayer.frame;
-  facebook::react::Rect baseFrame = usePresentationLayer ? facebook::react::Rect{{presentationLayerFrame.origin.x, presentationLayerFrame.origin.y}, {presentationLayerFrame.size.width, presentationLayerFrame.size.height}} : initialFrame;
+  // Index the sampled channels by name for quick lookup / interpolation.
+  std::unordered_map<std::string, const reanimated::NativeLayoutAnimationProperty *> channels;
+  for (const auto &property : descriptor.properties) {
+    channels[property.keyPath] = &property;
+  }
+  auto hasChannel = [&channels](const char *name) { return channels.find(name) != channels.end(); };
 
-  // TODO: Perhaps we could just add centerOffsets directly to baseFrame here and not have to deal with them anywhere
-  // else?
+  // Linear interpolation of a channel's sampled values at a normalized offset.
+  auto channelValueAt = [&channels](const char *name, double offset, double fallback) -> double {
+    auto it = channels.find(name);
+    if (it == channels.end()) {
+      return fallback;
+    }
+    const auto &offsets = it->second->offsets;
+    const auto &values = it->second->values;
+    if (values.empty()) {
+      return fallback;
+    }
+    if (offset <= offsets.front()) {
+      return values.front();
+    }
+    if (offset >= offsets.back()) {
+      return values.back();
+    }
+    for (size_t i = 1; i < offsets.size(); i++) {
+      if (offset <= offsets[i]) {
+        const double span = offsets[i] - offsets[i - 1];
+        const double t = span > 0 ? (offset - offsets[i - 1]) / span : 0;
+        return values[i - 1] + (values[i] - values[i - 1]) * t;
+      }
+    }
+    return values.back();
+  };
 
-  [CATransaction begin];
+  // Build a single uniform timeline. Resampling every grouped channel onto the
+  // same key times keeps composed transforms / position-from-origin aligned.
+  size_t sampleCount = 2;
+  for (const auto &property : descriptor.properties) {
+    sampleCount = std::max(sampleCount, property.offsets.size());
+  }
+  sampleCount = std::min<size_t>(sampleCount, 240);
 
-  double delay = config.values->delay.value_or(0) / 1000;
-  double duration = config.values->duration.value() / 1000;
-  double absoluteBeginTime = [componentView.layer convertTime:CACurrentMediaTime() fromLayer:nil] + delay;
+  std::vector<double> sampleOffsets;
+  sampleOffsets.reserve(sampleCount);
+  NSMutableArray<NSNumber *> *keyTimes = [NSMutableArray arrayWithCapacity:sampleCount];
+  for (size_t i = 0; i < sampleCount; i++) {
+    const double offset = sampleCount > 1 ? static_cast<double>(i) / static_cast<double>(sampleCount - 1) : 0;
+    sampleOffsets.push_back(offset);
+    [keyTimes addObject:@(offset)];
+  }
 
+  double durationSec = descriptor.durationMs / 1000.0;
+  if (durationSec <= 0) {
+    durationSec = 1.0 / 60.0;
+  }
+
+  // Compose a CATransform3D from the canonical transform channels in a fixed
+  // order (scale -> skew -> rotateZ -> rotateX -> rotateY -> translate ->
+  // perspective). Channel angles are already in radians.
+  auto composeTransform = [&channelValueAt](double offset) -> CATransform3D {
+    const double sx = channelValueAt("scaleX", offset, 1);
+    const double sy = channelValueAt("scaleY", offset, 1);
+    const double skewX = channelValueAt("skewX", offset, 0);
+    const double rotationZ = channelValueAt("rotation", offset, 0);
+    const double rotationX = channelValueAt("rotationX", offset, 0);
+    const double rotationY = channelValueAt("rotationY", offset, 0);
+    const double translateX = channelValueAt("translateX", offset, 0);
+    const double translateY = channelValueAt("translateY", offset, 0);
+    const double perspective = channelValueAt("perspective", offset, 0);
+
+    CATransform3D matrix = CATransform3DMakeScale(sx, sy, 1);
+    if (skewX != 0) {
+      CATransform3D skew = CATransform3DIdentity;
+      skew.m21 = std::tan(skewX);
+      matrix = CATransform3DConcat(matrix, skew);
+    }
+    if (rotationZ != 0) {
+      matrix = CATransform3DConcat(matrix, CATransform3DMakeRotation(rotationZ, 0, 0, 1));
+    }
+    if (rotationX != 0) {
+      matrix = CATransform3DConcat(matrix, CATransform3DMakeRotation(rotationX, 1, 0, 0));
+    }
+    if (rotationY != 0) {
+      matrix = CATransform3DConcat(matrix, CATransform3DMakeRotation(rotationY, 0, 1, 0));
+    }
+    if (translateX != 0 || translateY != 0) {
+      matrix = CATransform3DConcat(matrix, CATransform3DMakeTranslation(translateX, translateY, 0));
+    }
+    if (perspective != 0) {
+      CATransform3D perspectiveMatrix = CATransform3DIdentity;
+      perspectiveMatrix.m34 = -1.0 / perspective;
+      matrix = CATransform3DConcat(matrix, perspectiveMatrix);
+    }
+    return matrix;
+  };
+
+  CALayer *presentationLayer = usePresentationLayer ? layer.presentationLayer : nil;
+  // Only start from the presentation layer when we're actually interrupting an
+  // in-flight animation on that key path - otherwise a freshly committed layout
+  // would incorrectly start from its final on-screen position.
+  auto presentationActive = [&](NSString *keyPath) -> BOOL {
+    return presentationLayer != nil &&
+        [layer animationForKey:[@"REA_LAYOUT_" stringByAppendingString:keyPath]] != nil;
+  };
+
+  NSMutableArray<NSString *> *animatedKeyPaths = [NSMutableArray array];
+  NSMutableArray<CAKeyframeAnimation *> *animations = [NSMutableArray array];
+  NSMutableArray *finalModelValues = [NSMutableArray array];
+
+  auto registerAnimation = [&](NSString *keyPath, NSMutableArray *values, id finalValue, id presentationValue) {
+    if (presentationValue != nil && values.count > 0) {
+      values[0] = presentationValue;
+    }
+    CAKeyframeAnimation *animation = [CAKeyframeAnimation animationWithKeyPath:keyPath];
+    animation.values = values;
+    animation.keyTimes = keyTimes;
+    animation.duration = durationSec;
+    animation.calculationMode = kCAAnimationLinear;
+    animation.removedOnCompletion = YES;
+    animation.fillMode = kCAFillModeRemoved;
+    [animatedKeyPaths addObject:keyPath];
+    [animations addObject:animation];
+    [finalModelValues addObject:finalValue];
+  };
+
+  // opacity
+  if (hasChannel("opacity")) {
+    NSMutableArray<NSNumber *> *values = [NSMutableArray arrayWithCapacity:sampleCount];
+    for (double offset : sampleOffsets) {
+      [values addObject:@(channelValueAt("opacity", offset, 1))];
+    }
+    id presentationValue = presentationActive(@"opacity") ? @(presentationLayer.opacity) : nil;
+    registerAnimation(@"opacity", values, @(channelValueAt("opacity", 1.0, 1)), presentationValue);
+  }
+
+  // transform (composed from the canonical transform channels)
+  const bool hasTransform = hasChannel("translateX") || hasChannel("translateY") || hasChannel("scaleX") ||
+      hasChannel("scaleY") || hasChannel("rotation") || hasChannel("rotationX") || hasChannel("rotationY") ||
+      hasChannel("skewX") || hasChannel("perspective");
+  if (hasTransform) {
+    NSMutableArray<NSValue *> *values = [NSMutableArray arrayWithCapacity:sampleCount];
+    for (double offset : sampleOffsets) {
+      [values addObject:[NSValue valueWithCATransform3D:composeTransform(offset)]];
+    }
+    id presentationValue = presentationActive(@"transform") ? [NSValue valueWithCATransform3D:presentationLayer.transform] : nil;
+    registerAnimation(@"transform", values, [NSValue valueWithCATransform3D:composeTransform(1.0)], presentationValue);
+  }
+
+  // layout: width/height -> bounds.size, originX/originY -> position
+  const CGSize currentBounds = layer.bounds.size;
+  const CGPoint anchorPoint = layer.anchorPoint;
+  const bool hasSize = hasChannel("width") || hasChannel("height");
+  const bool hasOrigin = hasChannel("originX") || hasChannel("originY");
+
+  if (hasSize) {
+    NSMutableArray<NSValue *> *values = [NSMutableArray arrayWithCapacity:sampleCount];
+    for (double offset : sampleOffsets) {
+      const double width = channelValueAt("width", offset, currentBounds.width);
+      const double height = channelValueAt("height", offset, currentBounds.height);
+      [values addObject:[NSValue valueWithCGSize:CGSizeMake(width, height)]];
+    }
+    const double finalWidth = channelValueAt("width", 1.0, currentBounds.width);
+    const double finalHeight = channelValueAt("height", 1.0, currentBounds.height);
+    id presentationValue = presentationActive(@"bounds.size") ? [NSValue valueWithCGSize:presentationLayer.bounds.size] : nil;
+    registerAnimation(
+        @"bounds.size", values, [NSValue valueWithCGSize:CGSizeMake(finalWidth, finalHeight)], presentationValue);
+  }
+
+  if (hasOrigin) {
+    NSMutableArray<NSValue *> *values = [NSMutableArray arrayWithCapacity:sampleCount];
+    auto positionAt = [&](double offset) -> CGPoint {
+      const double width = channelValueAt("width", offset, currentBounds.width);
+      const double height = channelValueAt("height", offset, currentBounds.height);
+      const double originX = channelValueAt("originX", offset, layer.frame.origin.x);
+      const double originY = channelValueAt("originY", offset, layer.frame.origin.y);
+      return CGPointMake(originX + anchorPoint.x * width, originY + anchorPoint.y * height);
+    };
+    for (double offset : sampleOffsets) {
+      [values addObject:[NSValue valueWithCGPoint:positionAt(offset)]];
+    }
+    id presentationValue = presentationActive(@"position") ? [NSValue valueWithCGPoint:presentationLayer.position] : nil;
+    registerAnimation(@"position", values, [NSValue valueWithCGPoint:positionAt(1.0)], presentationValue);
+  }
+
+  if (animations.count == 0) {
+    completion(YES);
+    return;
+  }
+
+  // Attach the completion to the (single) longest-running animation. Every
+  // animation here shares the same duration, so the first one is fine.
   REACoreAnimationDelegate *delegate =
       [REACoreAnimationDelegate delegateWithStart:nil
                                              stop:^(CAAnimation *animation, BOOL finished) { completion(finished); }];
 
-  int i = 0;
-  for (const auto &anim : animations) {
-    double fromValue = anim.getInitialValue(baseFrame);
-    double toValue = anim.targetValue;
-    NSString *keyPath = [NSString stringWithUTF8String:anim.key.c_str()];
-
-    CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:keyPath];
-    animation.fromValue = @(fromValue);
-    animation.toValue = @(toValue);
-
-    animation.beginTime = absoluteBeginTime;
-    animation.duration = duration;
-
-    // Attach the delegate ONLY to the last animation
-    // For more complex animations if we have such, that would have different pieces of different durations
-    // we should find the longest one and attach it there
-    // This is the only reasonable way to do it, I believe. We cannot use CAAnimationGroups because if we do that
-    // further interruptable layout animations that don't contain certain animations of our current group
-    // will cause those animations to end abruptly
-    // On the other hand, just using animation group with different keys, will cause shifts of layouts
-    // between different types of layout animations
-    if (i == animations.size() - 1) {
+  [CATransaction begin];
+  [CATransaction setDisableActions:YES];
+  for (NSUInteger i = 0; i < animations.count; i++) {
+    NSString *keyPath = animatedKeyPaths[i];
+    CAKeyframeAnimation *animation = animations[i];
+    if (i == 0) {
       animation.delegate = delegate;
     }
-
-    [componentView.layer addAnimation:animation forKey:keyPath];
-
-    // Set the value for after the animation finishes - otherwise it will come back to the original state
-    [CATransaction begin];
-    [CATransaction setDisableActions:YES];
-    [componentView.layer setValue:@(toValue) forKeyPath:keyPath];
-    [CATransaction commit];
-    i++;
+    // Commit the final value to the model layer first, so the view holds its
+    // end state once the (auto-removed) animation completes - no snap-back.
+    [layer setValue:finalModelValues[i] forKeyPath:keyPath];
+    [layer addAnimation:animation forKey:[@"REA_LAYOUT_" stringByAppendingString:keyPath]];
   }
-
   [CATransaction commit];
 }
 

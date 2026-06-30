@@ -3,6 +3,7 @@
 #include <reanimated/android/AnimationFrameCallback.h>
 #include <reanimated/android/EventHandler.h>
 #include <reanimated/android/KeyboardWorkletWrapper.h>
+#include <reanimated/android/LayoutAnimationCallback.h>
 #include <reanimated/android/NativeProxy.h>
 #include <reanimated/android/PseudoSelectorCallback.h>
 #include <reanimated/android/SensorSetter.h>
@@ -13,6 +14,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
     reanimated::AnimationFrameCallback::registerNatives();
     reanimated::EventHandler::registerNatives();
     reanimated::PseudoSelectorCallback::registerNatives();
+    reanimated::LayoutAnimationCallback::registerNatives();
     reanimated::SensorSetter::registerNatives();
     reanimated::KeyboardWorkletWrapper::registerNatives();
   });
