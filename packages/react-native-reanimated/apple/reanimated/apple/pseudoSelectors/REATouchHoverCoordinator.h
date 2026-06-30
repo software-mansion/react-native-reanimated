@@ -5,10 +5,11 @@
 #import <UIKit/UIKit.h>
 #import <functional>
 
-/// Drives touch `:hover` to match mobile Chromium: a tap makes the touched view's hit-path sticky
-/// (`committed`), while a pan/scroll never changes the committed `:hover` (the live `displayed` state
-/// rolls back to it on release, or as soon as scrolling starts). Only the first finger counts; later
-/// fingers are ignored until it lifts. A single passive key-window touch observer feeds this.
+/// Drives touch `:hover` (Chromium model): touching a view makes it (and its registered ancestors)
+/// `:hover`, dropping any previously-hovered view on that same touch-down. The `:hover` then stays for
+/// the whole gesture - through moves and scrolls - and is dropped on release only when the finger
+/// lifts off the view without having scrolled. Only the first finger counts; later fingers are ignored
+/// until it lifts. A single passive key-window touch observer feeds this.
 @interface REATouchHoverCoordinator : NSObject
 + (instancetype)sharedCoordinator;
 - (void)registerObserver:(id)owner view:(UIView *)view callback:(std::function<void(bool)>)callback;
