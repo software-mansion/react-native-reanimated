@@ -323,6 +323,37 @@ function checkNdk() {
 /** @type {Conflict[]} */
 const conflicts = [];
 
+// Divergences we've reviewed and accept on purpose, so the checks only fire on
+// NEW, unexpected drift. Forcing these to one value would break things:
+//   - Java 18 is deliberately used by the RN-compat / nightly jobs.
+//   - tvos-example tracks older RN (0.84.1), which ships gradle 9.0.0.
+//   - worklets spotless 8.1.0 is real drift, but bumping may need `spotlessApply`.
+/** @type {Record<string, { accept: string[], reason: string }>} */
+const EXPECTED = {
+  'CI Java version': { accept: ['18'], reason: 'RN-compat / nightly jobs intentionally test JDK 18' },
+  'Gradle wrapper': { accept: ['9.0.0'], reason: 'tvos-example tracks older RN (0.84.1) which ships gradle 9.0.0' },
+  'Spotless plugin': { accept: ['8.1.0'], reason: 'worklets pending bump to 8.4.0 — deferred (needs spotlessApply)' },
+};
+
+/** @type {{ name: string, values: string[], reason: string }[]} */
+const accepted = [];
+
+/**
+ * Drops reviewed-and-accepted versions for `name`. A real conflict exists only
+ * if >1 of the REMAINING versions differ. Records what it accepted so the
+ * report shows it rather than hiding it.
+ * @param {string} name @param {string[]} versions @returns {string[]}
+ */
+function applyExpected(name, versions) {
+  const exp = EXPECTED[name];
+  if (!exp) return versions;
+  const dropped = versions.filter((v) => exp.accept.includes(v));
+  if (versions.length > 1 && dropped.length > 0) {
+    accepted.push({ name, values: dropped, reason: exp.reason });
+  }
+  return versions.filter((v) => !exp.accept.includes(v));
+}
+
 /** @param {string} globEnd @param {string[]} dirs @param {RegExp} re @returns {Record<string, string[]>} */
 function groupVersions(globEnd, dirs, re) {
   const byVer = {};
@@ -338,7 +369,7 @@ function groupVersions(globEnd, dirs, re) {
 function consistencyGradle() {
   // Gradle wrappers live in BOTH apps and packages (each native lib ships its own).
   const byVer = groupVersions('gradle/wrapper/gradle-wrapper.properties', ['apps', 'packages'], /gradle-(\d+\.\d+(?:\.\d+)?)-/);
-  const versions = Object.keys(byVer);
+  const versions = applyExpected('Gradle wrapper', Object.keys(byVer));
   if (versions.length > 1) {
     conflicts.push({ name: 'Gradle wrapper', detail: `${versions.length} versions across the repo`, items: versions.map((v) => `${v} — ${byVer[v].join(', ')}`) });
   }
@@ -346,7 +377,7 @@ function consistencyGradle() {
 
 function consistencySpotless() {
   const byVer = groupVersions('android/build.gradle.kts', ['packages'], /com\.diffplug\.spotless"\)\s*version\s*"([\d.]+)"/);
-  const versions = Object.keys(byVer);
+  const versions = applyExpected('Spotless plugin', Object.keys(byVer));
   if (versions.length > 1) {
     conflicts.push({ name: 'Spotless plugin', detail: `${versions.join(' vs ')} across packages`, items: versions.map((v) => `${v} — ${byVer[v].join(', ')}`) });
   }
@@ -360,9 +391,9 @@ function consistencyJavaCI() {
     let m;
     while ((m = re.exec(text))) (byVer[m[1]] || (byVer[m[1]] = new Set())).add(f);
   }
-  const versions = Object.keys(byVer);
+  const versions = applyExpected('CI Java version', Object.keys(byVer));
   if (versions.length > 1) {
-    conflicts.push({ name: 'CI Java version', detail: `JDK ${versions.join(' vs ')} across workflows (18 is used by some nightly RN-compat jobs — confirm intended)`, items: versions.map((v) => `${v} — ${byVer[v].size} file(s)`) });
+    conflicts.push({ name: 'CI Java version', detail: `JDK ${versions.join(' vs ')} across workflows`, items: versions.map((v) => `${v} — ${byVer[v].size} file(s)`) });
   }
 }
 
@@ -384,6 +415,7 @@ function consistencyRuby() {
 function run() {
   findings.length = 0;
   conflicts.length = 0;
+  accepted.length = 0;
   if (!CONSISTENCY_ONLY) {
     [
       checkNode,
@@ -446,6 +478,13 @@ function report() {
     }
   }
 
+  if (accepted.length > 0 && !QUIET) {
+    console.log(C.dim('\nAccepted divergences (reviewed, not flagged):'));
+    for (const a of accepted) {
+      console.log(C.dim(`   · ${a.name}: ${a.values.join(', ')} — ${a.reason}`));
+    }
+  }
+
   const errors = findings.filter((f) => f.severity === 'error' && (f.status === 'WRONG' || f.status === 'MISSING'));
   const warns = findings.filter((f) => (f.status === 'WARN' || f.status === 'DRIFT') && f.severity !== 'error');
 
@@ -456,7 +495,8 @@ function report() {
       `${C.yellow(warns.length + ' warn')}  ` +
       `${C.red(errors.length + ' error')}  ` +
       `${C.dim(findings.filter((f) => f.status === 'INFO').length + ' info')}  ` +
-      `${C.yellow(conflicts.length + ' conflict')}`
+      `${C.yellow(conflicts.length + ' conflict')}  ` +
+      `${C.dim(accepted.length + ' accepted')}`
   );
 
   const okHidden = DISPLAY_ALL ? 0 : findings.filter((f) => f.status === 'OK').length;
