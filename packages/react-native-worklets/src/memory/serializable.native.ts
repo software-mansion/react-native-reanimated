@@ -127,7 +127,8 @@ export function createSerializable<TValue>(
 
   const cached = getFromCache(value);
   if (cached !== undefined) {
-    if (cached instanceof WeakRef) {
+    if (globalThis.WeakRef && cached instanceof WeakRef) {
+      // WeakRef is installed on runtimes only with Hermes microtaskQueue enabled.
       const deref = cached.deref();
       if (deref !== undefined) {
         return deref as SerializableRef<TValue>;
@@ -406,10 +407,14 @@ function cloneNonWorkletFunction<TArgs extends unknown[], TReturn>(
     fun,
     __DEV__ ? fun.name : undefined
   ) as SerializableRef<(...args: TArgs) => TReturn>;
-  serializableMappingCache.set(fun, new WeakRef(clone));
-  serializableMappingCache.set(clone);
 
-  freezeObjectInDev(fun);
+  if (globalThis.WeakRef) {
+    // WeakRef is installed on runtimes only with Hermes microtaskQueue enabled.
+    serializableMappingCache.set(fun, new WeakRef(clone));
+    serializableMappingCache.set(clone);
+    freezeObjectInDev(fun);
+  }
+
   return clone;
 }
 
