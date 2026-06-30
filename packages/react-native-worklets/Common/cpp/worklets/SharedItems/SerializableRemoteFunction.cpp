@@ -40,6 +40,11 @@ jsi::Value SerializableRemoteFunction::unpackSelf(jsi::Runtime &rt) {
 jsi::Value SerializableRemoteFunction::RNOrigin::toJSValue(jsi::Runtime &rt) {
   if (&rt == hostRuntime_) {
     const auto registry = getRemoteFunctionRegistry(rt);
+#ifndef NDEBUG
+    react_native_assert(
+        registry.getPropertyAsFunction(rt, "has").callWithThis(rt, registry, jsi::Value(remoteId_)).getBool() &&
+        "Remote function registry does not contain the function to be retrieved.");
+#endif // NDEBUG
     return registry.getPropertyAsFunction(rt, "get").callWithThis(rt, registry, jsi::Value(remoteId_));
   }
   std::shared_ptr<SerializableRemoteFunction> proxy;
@@ -93,6 +98,11 @@ SerializableRemoteFunction::RNOrigin::RNOriginProxy::RNOriginProxy(const std::sh
 SerializableRemoteFunction::RNOrigin::RNOriginProxy::~RNOriginProxy() {
   origin_->getJSScheduler()->scheduleOnJS([id = origin_->getRemoteId()](jsi::Runtime &rt) {
     const auto registry = getRemoteFunctionRegistry(rt);
+#ifndef NDEBUG
+    react_native_assert(
+        registry.getPropertyAsFunction(rt, "has").callWithThis(rt, registry, jsi::Value(id)).getBool() &&
+        "Remote function registry does not contain the function to be deleted.");
+#endif // NDEBUG
     registry.getPropertyAsFunction(rt, "delete").callWithThis(rt, registry, jsi::Value(id));
   });
 }
@@ -107,7 +117,10 @@ jsi::Value SerializableRemoteFunction::RNOrigin::RNOriginProxy::toJSValue(jsi::R
 void SerializableRemoteFunction::RNOrigin::RNOriginProxy::resolveOrRejectPromise(
     const std::shared_ptr<Serializable> &resolveValue,
     const std::shared_ptr<RuntimeManager> &runtimeManager) {
-  origin_->resolveOrRejectPromise(resolveValue, runtimeManager);
+  origin_->jsScheduler_->scheduleOnJS(
+      [resolver = static_pointer_cast<RNOriginProxy>(shared_from_this()), resolveValue](jsi::Runtime &rt) {
+        resolver->origin_->toJSValue(rt).getObject(rt).getFunction(rt).call(rt, resolveValue->toJSValue(rt));
+      });
 }
 
 } // namespace worklets
