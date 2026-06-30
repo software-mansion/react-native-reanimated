@@ -61,7 +61,9 @@ class TouchHoverCoordinator {
 
     /**
      * Mirrors CSS hit-testing: turns :hover on for the topmost view at the touch and its registered
-     * ancestors, off for the rest.
+     * ancestors, off for the rest. Views that merely overlap the hit branch (which a plain bounds
+     * test would all activate) stay off, because only the hit branch is hovered. Rooted on the
+     * touched view's own window so it works inside a Modal/Dialog (a separate window from the Activity).
      */
     fun recompute(
         sourceView: View,

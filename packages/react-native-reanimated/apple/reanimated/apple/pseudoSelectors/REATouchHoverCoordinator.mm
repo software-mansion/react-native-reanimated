@@ -16,8 +16,11 @@
 @implementation REATouchHoverEntry
 @end
 
-/// Passive key-window touch observer. It never leaves `.possible`, so it never claims the gesture
-/// or interferes with the per-view `:active` / `:active-deepest` recognizers.
+/// Passive key-window touch observer. It only ever transitions to `.failed` (once every finger of a
+/// sequence has lifted), so it never claims the gesture or interferes with the per-view `:active` /
+/// `:active-deepest` recognizers. Reaching that terminal state each sequence is essential: UIKit only
+/// runs `-reset` after a terminal transition, and an observer that stays `.possible` forever is never
+/// reset, wedging the key window's gesture environment so a UIScrollView pan can no longer begin.
 @interface REAHoverTouchObserver : UIGestureRecognizer
 @property (nonatomic, weak) REATouchHoverCoordinator *coordinator;
 @end
@@ -37,9 +40,23 @@
 {
   [self.coordinator observeTouchMoved:touches.anyObject];
 }
+- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
+{
+  [self failIfSequenceEnded:event];
+}
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
   [self.coordinator observeTouchCancelled];
+  [self failIfSequenceEnded:event];
+}
+- (void)failIfSequenceEnded:(UIEvent *)event
+{
+  for (UITouch *touch in event.allTouches) {
+    if (touch.phase != UITouchPhaseEnded && touch.phase != UITouchPhaseCancelled) {
+      return;
+    }
+  }
+  self.state = UIGestureRecognizerStateFailed;
 }
 @end
 
