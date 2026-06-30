@@ -9,8 +9,13 @@
  * files that already pin them (.nvmrc, package.json, Gemfile.lock,
  * Podfile.lock, build.gradle) so there is nothing to duplicate or forget.
  *
- * Default mode is advisory: it reports and exits 0. Pass --ci to make
- * `error`-severity findings fail the process.
+ * Flags:
+ *   (default)           advisory; hides rows that already match; exits 0
+ *   --display-all       also show passing (OK) rows
+ *   --quiet             show only warnings/errors/conflicts (hide INFO too)
+ *   --consistency-only  run only the cross-file checks (needs no host tools)
+ *   --ci                fail on error-severity findings; in --consistency-only,
+ *                       also fail on any cross-file conflict (cheap CI gate)
  */
 
 const { spawnSync } = require('child_process');
@@ -19,8 +24,11 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const NODE_BIN = path.join(ROOT, 'node_modules', '.bin');
+const PROBE_TIMEOUT_MS = 10000;
 const CI = process.argv.includes('--ci');
 const DISPLAY_ALL = process.argv.includes('--display-all');
+const QUIET = process.argv.includes('--quiet');
+const CONSISTENCY_ONLY = process.argv.includes('--consistency-only');
 const isMac = process.platform === 'darwin';
 
 const C = process.stdout.isTTY
@@ -104,8 +112,12 @@ function probe(cmd, args, opts = {}) {
     encoding: 'utf8',
     env,
     cwd: opts.cwd ? path.join(ROOT, opts.cwd) : ROOT,
+    timeout: PROBE_TIMEOUT_MS,
   });
-  if (res.error) {
+  // On a hung tool, spawnSync sets res.error (ETIMEDOUT) and/or res.signal when
+  // it kills the process — treat that as "couldn't resolve" instead of blocking
+  // the whole run. A normal non-zero exit (res.signal null) keeps its output.
+  if (res.error || res.signal) {
     return { found: false, out: '', stdout: '' };
   }
   return { found: true, out: `${res.stdout || ''}${res.stderr || ''}`.trim(), stdout: (res.stdout || '').trim() };
@@ -220,6 +232,20 @@ function checkCocoapods() {
     return add({ name: 'cocoapods', status: 'INFO', severity: 'info', required: want, found: 'not resolvable', source, note: 'Checked via `bundle exec pod` (the pod the repo uses). Run `bundle install` in apps/fabric-example.' });
   }
   add({ name: 'cocoapods', status: got === want ? 'OK' : 'WARN', severity: 'warn', required: want, found: got, source, note: 'Checked via `bundle exec pod`, not a global pod.', hint: got === want ? undefined : 'bundle install (from apps/fabric-example)' });
+}
+
+function checkBundler() {
+  if (!isMac) return;
+  const lock = read('apps/fabric-example/Gemfile.lock') || '';
+  const want = (lock.match(/BUNDLED WITH\s+(\d+\.\d+\.\d+)/) || [])[1] || '';
+  if (!want) return;
+  const { found, out } = probe('bundle', ['--version']);
+  const got = (out.match(/\d+\.\d+\.\d+/) || [''])[0];
+  const source = 'apps/fabric-example/Gemfile.lock (BUNDLED WITH)';
+  if (!found || !got) {
+    return add({ name: 'bundler', status: 'INFO', severity: 'info', required: want, found: 'not installed', source, note: 'Only needed for iOS pod work.', hint: `gem install bundler -v ${want}` });
+  }
+  add({ name: 'bundler', status: got === want ? 'OK' : 'WARN', severity: 'warn', required: want, found: got, source, hint: got === want ? undefined : `gem install bundler -v ${want}` });
 }
 
 function checkCmake() {
@@ -358,20 +384,23 @@ function consistencyRuby() {
 function run() {
   findings.length = 0;
   conflicts.length = 0;
-  [
-    checkNode,
-    checkYarn,
-    checkClangFormat,
-    checkClangTidy,
-    checkClangd,
-    checkCmake,
-    checkCmakeLang,
-    checkRuby,
-    checkCocoapods,
-    checkJdk,
-    checkXcodeBuildServer,
-    checkNdk,
-  ].forEach((c) => c());
+  if (!CONSISTENCY_ONLY) {
+    [
+      checkNode,
+      checkYarn,
+      checkClangFormat,
+      checkClangTidy,
+      checkClangd,
+      checkCmake,
+      checkCmakeLang,
+      checkRuby,
+      checkCocoapods,
+      checkBundler,
+      checkJdk,
+      checkXcodeBuildServer,
+      checkNdk,
+    ].forEach((c) => c());
+  }
   [consistencyGradle, consistencySpotless, consistencyJavaCI, consistencyRuby].forEach((c) => c());
   return { findings, conflicts };
 }
@@ -394,7 +423,10 @@ function report() {
   console.log(C.bold('\nreanimated-doctor') + C.dim('  (host toolchain vs. repo-pinned versions)\n'));
 
   // By default, hide rows that already match — only surface what needs attention.
-  const shown = DISPLAY_ALL ? findings : findings.filter((f) => f.status !== 'OK');
+  // --quiet also drops INFO rows (unpinned/not-needed context).
+  const shown = DISPLAY_ALL
+    ? findings
+    : findings.filter((f) => f.status !== 'OK' && !(QUIET && f.status === 'INFO'));
   for (const f of shown) {
     const sym = SYM[f.status] || '?';
     const head = `${sym} ${f.name.padEnd(26)} ${C.dim('need')} ${f.required.padEnd(20)} ${C.dim('found')} ${f.found}`;
@@ -432,8 +464,14 @@ function report() {
     console.log(C.dim(`(${okHidden} ok hidden — pass --display-all to show)`));
   }
 
-  if (CI && errors.length > 0) {
-    console.log(C.red('\nFailing because --ci and ' + errors.length + ' error-severity finding(s).'));
+  // In --consistency-only, cross-file conflicts are the whole point — make them
+  // fatal under --ci so the repo can enforce them with no host tools / no flake.
+  const fatalConflicts = CONSISTENCY_ONLY && conflicts.length > 0;
+  if (CI && (errors.length > 0 || fatalConflicts)) {
+    const reasons = [];
+    if (errors.length > 0) reasons.push(`${errors.length} error-severity finding(s)`);
+    if (fatalConflicts) reasons.push(`${conflicts.length} cross-file conflict(s)`);
+    console.log(C.red(`\nFailing because --ci and ${reasons.join(' + ')}.`));
     return 1;
   }
   console.log(C.dim('\nadvisory run — exiting 0 (pass --ci to enforce)\n'));
