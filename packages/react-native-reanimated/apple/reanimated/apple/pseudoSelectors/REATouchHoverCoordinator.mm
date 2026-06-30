@@ -49,7 +49,7 @@ static const CGFloat kTouchHoverSlop = 10.0;
   NSMutableArray<REATouchHoverEntry *> *_entries;
   REAHoverTouchObserver *_windowObserver;
   __weak UIWindow *_observedWindow;
-  CGPoint _windowTouchStartScreen;
+  CGPoint _windowTouchStart;
 }
 
 + (instancetype)sharedCoordinator
@@ -162,9 +162,8 @@ static const CGFloat kTouchHoverSlop = 10.0;
     return;
   }
   CGPoint inWindow = [touch locationInView:window];
-  CGPoint onScreen = [window convertPoint:inWindow toCoordinateSpace:window.screen.coordinateSpace];
-  _windowTouchStartScreen = onScreen;
-  [self recomputeAtScreenPoint:onScreen];
+  _windowTouchStart = inWindow;
+  [self recomputeAtWindowPoint:inWindow];
 }
 
 - (void)observeTouchMoved:(UITouch *)touch
@@ -175,9 +174,8 @@ static const CGFloat kTouchHoverSlop = 10.0;
     return;
   }
   CGPoint inWindow = [touch locationInView:window];
-  CGPoint onScreen = [window convertPoint:inWindow toCoordinateSpace:window.screen.coordinateSpace];
-  CGFloat dx = onScreen.x - _windowTouchStartScreen.x;
-  CGFloat dy = onScreen.y - _windowTouchStartScreen.y;
+  CGFloat dx = inWindow.x - _windowTouchStart.x;
+  CGFloat dy = inWindow.y - _windowTouchStart.y;
   if (dx * dx + dy * dy > kTouchHoverSlop * kTouchHoverSlop) {
     [self clearAll];
   }
@@ -199,22 +197,16 @@ static const CGFloat kTouchHoverSlop = 10.0;
   }
 }
 
-// Visible only if the whole superview chain is, mirroring Android's View.isShown().
-- (BOOL)isViewVisibleOnScreen:(UIView *)view
+- (void)recomputeAtWindowPoint:(CGPoint)inWindow
 {
-  if (view.window == nil) {
-    return NO;
+  // Hit-test the topmost view: :hover applies to it and its ancestors only (matching CSS), so views
+  // that merely overlap the hit branch no longer all activate. hitTest already honors z-order,
+  // userInteractionEnabled, hidden and alpha, and returns nil over blank space (clears all :hover).
+  UIView *hit = nil;
+  UIWindow *window = _observedWindow;
+  if (window != nil) {
+    hit = [window hitTest:inWindow withEvent:nil];
   }
-  for (UIView *current = view; current != nil; current = current.superview) {
-    if (current.hidden || current.alpha <= 0.01) {
-      return NO;
-    }
-  }
-  return YES;
-}
-
-- (void)recomputeAtScreenPoint:(CGPoint)onScreen
-{
   NSMutableArray<REATouchHoverEntry *> *dead = nil;
   for (REATouchHoverEntry *entry in _entries) {
     UIView *view = entry->view;
@@ -227,9 +219,11 @@ static const CGFloat kTouchHoverSlop = 10.0;
       continue;
     }
     BOOL wantHover = NO;
-    if ([self isViewVisibleOnScreen:view]) {
-      CGPoint local = [view convertPoint:onScreen fromCoordinateSpace:view.window.screen.coordinateSpace];
-      wantHover = [view pointInside:local withEvent:nil];
+    for (UIView *current = hit; current != nil; current = current.superview) {
+      if (current == view) {
+        wantHover = YES;
+        break;
+      }
     }
     [self setEntry:entry hovered:wantHover];
   }
