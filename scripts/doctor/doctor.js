@@ -20,6 +20,7 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..', '..');
 const NODE_BIN = path.join(ROOT, 'node_modules', '.bin');
 const CI = process.argv.includes('--ci');
+const DISPLAY_ALL = process.argv.includes('--display-all');
 const isMac = process.platform === 'darwin';
 
 const C = process.stdout.isTTY
@@ -392,12 +393,17 @@ const SYM = {
 function report() {
   console.log(C.bold('\nreanimated-doctor') + C.dim('  (host toolchain vs. repo-pinned versions)\n'));
 
-  for (const f of findings) {
+  // By default, hide rows that already match — only surface what needs attention.
+  const shown = DISPLAY_ALL ? findings : findings.filter((f) => f.status !== 'OK');
+  for (const f of shown) {
     const sym = SYM[f.status] || '?';
     const head = `${sym} ${f.name.padEnd(26)} ${C.dim('need')} ${f.required.padEnd(20)} ${C.dim('found')} ${f.found}`;
     console.log(head);
     if (f.note) console.log(`   ${C.dim('→ ' + f.note)}`);
     if (f.hint && f.status !== 'OK') console.log(`   ${C.dim('fix: ' + f.hint)}`);
+  }
+  if (shown.length === 0 && conflicts.length === 0) {
+    console.log(C.green('✔ everything matches the repo-pinned versions.'));
   }
 
   if (conflicts.length > 0) {
@@ -420,6 +426,11 @@ function report() {
       `${C.dim(findings.filter((f) => f.status === 'INFO').length + ' info')}  ` +
       `${C.yellow(conflicts.length + ' conflict')}`
   );
+
+  const okHidden = DISPLAY_ALL ? 0 : findings.filter((f) => f.status === 'OK').length;
+  if (okHidden > 0) {
+    console.log(C.dim(`(${okHidden} ok hidden — pass --display-all to show)`));
+  }
 
   if (CI && errors.length > 0) {
     console.log(C.red('\nFailing because --ci and ' + errors.length + ' error-severity finding(s).'));
