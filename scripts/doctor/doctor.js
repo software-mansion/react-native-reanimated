@@ -488,15 +488,25 @@ function report() {
   const errors = findings.filter((f) => f.severity === 'error' && (f.status === 'WRONG' || f.status === 'MISSING'));
   const warns = findings.filter((f) => (f.status === 'WARN' || f.status === 'DRIFT') && f.severity !== 'error');
 
+  // Two concerns, two lines: host findings you fix by INSTALLING tools, vs repo
+  // consistency you fix by EDITING files. Conflating them caused real confusion.
   console.log('');
+  console.log(C.bold('Summary'));
+  if (!CONSISTENCY_ONLY) {
+    console.log(
+      `  ${C.dim('your machine ')} ` +
+        `${C.green(findings.filter((f) => f.status === 'OK').length + ' ok')}  ` +
+        `${C.yellow(warns.length + ' warn')}  ` +
+        `${C.red(errors.length + ' error')}  ` +
+        `${C.dim(findings.filter((f) => f.status === 'INFO').length + ' info')}` +
+        C.dim('  (install/configure to fix)')
+    );
+  }
   console.log(
-    `${C.bold('Summary')}  ` +
-      `${C.green(findings.filter((f) => f.status === 'OK').length + ' ok')}  ` +
-      `${C.yellow(warns.length + ' warn')}  ` +
-      `${C.red(errors.length + ' error')}  ` +
-      `${C.dim(findings.filter((f) => f.status === 'INFO').length + ' info')}  ` +
+    `  ${C.dim('repo         ')} ` +
       `${C.yellow(conflicts.length + ' conflict')}  ` +
-      `${C.dim(accepted.length + ' accepted')}`
+      `${C.dim(accepted.length + ' accepted')}` +
+      C.dim('  (CI-enforceable via --consistency-only)')
   );
 
   const okHidden = DISPLAY_ALL ? 0 : findings.filter((f) => f.status === 'OK').length;
