@@ -1,6 +1,8 @@
 'use strict';
 
-/*
+/* 
+ * !Mostly AI generated!
+ *
  * reanimated-doctor — checks that host tools NOT installed by `yarn install`
  * (clang-format, clang-tidy, cmake, ruby, cocoapods, the NDK, ...) match the
  * versions this repo expects. Required versions are DERIVED from the canonical
