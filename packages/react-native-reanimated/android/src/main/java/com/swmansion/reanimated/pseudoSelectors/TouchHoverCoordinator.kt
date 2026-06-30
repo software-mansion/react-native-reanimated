@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import android.view.Window
 import com.facebook.react.bridge.ReactContext
 import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
@@ -101,7 +100,6 @@ class TouchHoverCoordinator {
                 downScrollable = scrollable?.let { WeakReference(it) }
                 downScrollX = scrollable?.scrollX ?: 0
                 downScrollY = scrollable?.scrollY ?: 0
-                // Touch-down reconciles `:hover` to the touched branch, dropping any previous one.
                 reconcileToBranchOf(view)
             }
             MotionEvent.ACTION_UP -> {

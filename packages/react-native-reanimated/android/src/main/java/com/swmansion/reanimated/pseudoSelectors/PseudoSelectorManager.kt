@@ -198,8 +198,6 @@ class PseudoSelectorManager(
             return
         }
         view.setOnTouchListener { _, event ->
-            // The touched view drives `:hover` from here (the foreground view is always reported
-            // correctly, unlike a window-wide hit-test).
             hover.onBoxTouch(view, event)
             // Only the first finger (pointer id 0) drives `:active`; a second finger lands on another
             // view as its own split-down with a non-zero pointer id and is ignored, so multi-touch
@@ -298,8 +296,8 @@ class PseudoSelectorManager(
     }
 
     /**
-     * Walk up its ancestor chain and fire
-     * the callback for every ancestor that has _:active_ registered.
+     * Walks up the source view's ancestor chain, firing the callback for the source and every
+     * ancestor that has _:active_ registered.
      */
     private fun fireActiveCallbacksUpTree(
         source: View,

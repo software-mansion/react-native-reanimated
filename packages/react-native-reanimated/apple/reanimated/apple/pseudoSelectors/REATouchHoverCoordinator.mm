@@ -191,7 +191,6 @@
   // Touch-down reconciles `:hover` to the touched branch right away: the new branch lights up and any
   // previously-hovered view is dropped on this same down, even if the touch later becomes a scroll.
   [self hoverBranchOfHitView:hit];
-  // Remember the enclosing scroll view so the release can detect that a scroll happened.
   _downScrollView = [self enclosingScrollViewOfView:hit];
   _downScrollOffset = _downScrollView != nil ? _downScrollView.contentOffset : CGPointZero;
 }

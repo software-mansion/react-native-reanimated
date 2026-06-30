@@ -319,7 +319,6 @@ static int _focusObserverContext;
     return;
   }
   _activeTouchCounted = NO;
-  // The owning touch is released once its last `:active` recognizer ends, freeing the next press.
   if (--sActiveTouchCount <= 0) {
     sActiveTouchCount = 0;
     sActivePrimaryTouch = nil;
