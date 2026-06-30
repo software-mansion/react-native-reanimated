@@ -201,23 +201,32 @@ class PseudoSelectorManager(
             // The touched view drives `:hover` from here (the foreground view is always reported
             // correctly, unlike a window-wide hit-test).
             hover.onBoxTouch(view, event)
+            // Only the first finger (pointer id 0) drives `:active`; a second finger lands on another
+            // view as its own split-down with a non-zero pointer id and is ignored, so multi-touch
+            // can't press several views at once (matching the web's single active pointer). Teardown
+            // keys on that owning id rather than the index-0 slot, so two fingers on the same view
+            // still release cleanly when the first one lifts (its up arrives as ACTION_POINTER_UP, and
+            // the trailing ACTION_UP then carries the second finger's non-zero id).
             when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    fireActiveCallbacksUpTree(view, true)
-                    deepestCallbacks[view]?.let {
-                        if (!hasDeepestDescendantAt(view, event.rawX, event.rawY)) {
-                            it.onSelectorStateChanged(true)
+                MotionEvent.ACTION_DOWN ->
+                    if (event.getPointerId(0) == 0) {
+                        fireActiveCallbacksUpTree(view, true)
+                        deepestCallbacks[view]?.let {
+                            if (!hasDeepestDescendantAt(view, event.rawX, event.rawY)) {
+                                it.onSelectorStateChanged(true)
+                            }
                         }
                     }
-                }
-                MotionEvent.ACTION_UP -> {
-                    fireActiveCallbacksUpTree(view, false)
-                    deepestCallbacks[view]?.onSelectorStateChanged(false)
-                }
-                MotionEvent.ACTION_CANCEL -> {
-                    fireActiveCallbacksUpTree(view, false)
-                    deepestCallbacks[view]?.onSelectorStateChanged(false)
-                }
+                MotionEvent.ACTION_POINTER_UP ->
+                    if (event.getPointerId(event.actionIndex) == 0) {
+                        deactivate(view)
+                    }
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL,
+                ->
+                    if (eventHasPrimaryPointer(event)) {
+                        deactivate(view)
+                    }
             }
             false
         }
@@ -264,6 +273,24 @@ class PseudoSelectorManager(
             if (rawX >= loc[0] && rawX <= loc[0] + candidate.width &&
                 rawY >= loc[1] && rawY <= loc[1] + candidate.height
             ) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun deactivate(view: View) {
+        fireActiveCallbacksUpTree(view, false)
+        deepestCallbacks[view]?.onSelectorStateChanged(false)
+    }
+
+    /**
+     * Whether the owning first finger (pointer id 0) is among this event's pointers. The pointer index
+     * order is undefined across events, so the id is matched by value rather than by the index-0 slot.
+     */
+    private fun eventHasPrimaryPointer(event: MotionEvent): Boolean {
+        for (i in 0 until event.pointerCount) {
+            if (event.getPointerId(i) == 0) {
                 return true
             }
         }
