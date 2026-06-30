@@ -20,7 +20,7 @@ import type { PluginOptions } from './options';
 export interface WorkletsPluginPass {
   file: BabelFile;
   key: string;
-  opts: PluginOptions;
+  opts: InitializedPluginOptions;
   cwd: string;
   filename: string | undefined;
   workletNumber: number;
@@ -79,3 +79,10 @@ export function isWorkletizableObjectNode(
 export const workletClassFactorySuffix = '__classFactory';
 
 export const generatedWorkletsDir = '.worklets';
+
+export type InitializedPluginOptions = Omit<
+  PluginOptions,
+  'importForwarding'
+> & {
+  importForwarding: Required<NonNullable<PluginOptions['importForwarding']>>;
+};

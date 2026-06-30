@@ -129,7 +129,6 @@ export interface AnimatedComponentRef extends Component {
 export interface IAnimatedComponentInternalBase {
   ChildComponent: AnyComponent;
   _componentRef: AnimatedComponentRef | HTMLElement | null;
-  _hasAnimatedRef: boolean;
   _viewInfo?: ViewInfo;
 
   /**

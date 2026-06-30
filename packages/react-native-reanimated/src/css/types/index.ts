@@ -1,5 +1,5 @@
 'use strict';
-import type { CSSAnimationProp } from './animation';
+import type { CSSAnimationCallbackProp, CSSAnimationProp } from './animation';
 import type {
   CSSTransitionCallbackProp,
   CSSTransitionProp,
@@ -17,4 +17,5 @@ export type * from './transition';
 export type CSSConfigProp =
   | CSSTransitionProp
   | CSSAnimationProp
-  | CSSTransitionCallbackProp;
+  | CSSTransitionCallbackProp
+  | CSSAnimationCallbackProp;

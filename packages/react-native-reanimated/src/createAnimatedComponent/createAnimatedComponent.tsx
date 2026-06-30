@@ -41,19 +41,6 @@ type AnimatableComponent<C extends ComponentType<any>> = C & {
 };
 
 /**
- * @deprecated Please use `Animated.FlatList` component instead of calling
- *   `Animated.createAnimatedComponent(FlatList)` manually.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function createAnimatedComponent<T = any>(
-  Component: typeof FlatList<T>,
-  options?: Options<InitialComponentProps>
-): AnimatedComponentType<
-  Readonly<FlatListProps<T>>,
-  ComponentRef<typeof FlatList<T>>
->;
-
-/**
  * Lets you create an Animated version of any React Native component.
  *
  * @param Component - The component you want to make animatable.
@@ -69,9 +56,28 @@ export function createAnimatedComponent<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TInstance extends AnimatableComponent<ComponentType<any>>,
 >(
-  Component: TInstance,
+  // `FlatList` is excluded so that calls passing it fall through to the
+  // deprecated overload below (which nudges towards `Animated.FlatList`).
+  // This overload is declared first so that a bare reference to
+  // `createAnimatedComponent` (e.g. `Animated.createAnimatedComponent` passed
+  // as a value) resolves to a non-deprecated signature instead of being
+  // falsely flagged by `@typescript-eslint/no-deprecated`.
+  Component: TInstance extends typeof FlatList<infer _> ? never : TInstance,
   options?: Options<InitialComponentProps>
 ): AnimatedComponentType<Readonly<ComponentProps<TInstance>>, TInstance>;
+
+/**
+ * @deprecated Please use `Animated.FlatList` component instead of calling
+ *   `Animated.createAnimatedComponent(FlatList)` manually.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function createAnimatedComponent<T = any>(
+  Component: typeof FlatList<T>,
+  options?: Options<InitialComponentProps>
+): AnimatedComponentType<
+  Readonly<FlatListProps<T>>,
+  ComponentRef<typeof FlatList<T>>
+>;
 
 export function createAnimatedComponent<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

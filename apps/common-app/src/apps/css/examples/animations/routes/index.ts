@@ -105,16 +105,17 @@ const routes = {
   TestExamples: {
     CardComponent: routeCards.TestExamplesCard,
     name: 'Test Examples',
+    /* eslint-disable perfectionist/sort-objects */
     routes: {
+      Playground: {
+        Component: testExamples.Playground,
+        name: 'Playground',
+      },
       IterationCountAndFillMode: {
         Component: testExamples.IterationCountAndFillMode,
         displayed: !IS_WEB,
         labelTypes: ['needsFix'],
         name: 'Iteration Count and Fill Mode',
-      },
-      Playground: {
-        Component: testExamples.Playground,
-        name: 'Playground',
       },
       RelativeMargins: {
         Component: testExamples.RelativeMargins,
@@ -123,6 +124,7 @@ const routes = {
         name: 'Relative Margins',
       },
     },
+    /* eslint-enable perfectionist/sort-objects */
   },
 } satisfies Routes;
 

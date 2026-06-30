@@ -94,12 +94,12 @@ export interface ReanimatedModuleProxy {
 
   getSettledUpdates(): SettledUpdate[];
 
-  registerPseudoStyle(
+  registerPseudoStyles(
     shadowNodeWrapper: ShadowNodeWrapper,
     config: CSSPseudoStyleConfig
   ): void;
 
-  unregisterPseudoStyle(viewTag: number): void;
+  unregisterPseudoStyles(viewTag: number): void;
 }
 
 export interface IReanimatedModule extends Omit<

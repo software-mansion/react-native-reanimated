@@ -77,6 +77,15 @@ export default function RuntimeTestsExample() {
           },
         },
         {
+          testSuiteName: 'bundle mode core',
+          importTest: () => {
+            require('./tests/runtimes/reactNativeImportShim.test');
+            require('./tests/runtimes/turboModuleRegistryShim.test');
+          },
+          disabled: !globalThis._WORKLETS_BUNDLE_MODE_ENABLED,
+          skipByDefault: true,
+        },
+        {
           testSuiteName: 'run loop',
           importTest: () => {
             require('./tests/runLoop/requestAnimationFrame.test');
@@ -98,6 +107,7 @@ export default function RuntimeTestsExample() {
             // TODO: update expected values
             // require('./tests/core/cancelAnimation.test');
             // TODO: speed up useSharedValue tests, they have unnecessarily long delays
+            require('./tests/core/useSharedValue/animationAssigning.test');
             require('./tests/core/useSharedValue/synchronization.test');
             require('./tests/core/useSharedValue/numbers.test');
             require('./tests/core/useSharedValue/arrays.test');
@@ -179,6 +189,7 @@ export default function RuntimeTestsExample() {
               require('./tests/plugin/contextObjects.test');
               require('./tests/plugin/workletClasses.test');
             }
+            require('./tests/plugin/jsxInWorklets.test');
             require('./tests/plugin/recursion.test');
             require('./tests/plugin/versionMismatch.test');
           },

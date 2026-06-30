@@ -159,11 +159,14 @@ android {
 
     namespace = "com.swmansion.worklets"
 
-    if (rootProject.hasProperty("ndkPath")) {
-        ndkPath = rootProject.extensions.extraProperties.get("ndkPath") as String
+    val resolvedNdkPath = rootProject.findProperty("ndkPath") as? String
+    if (!resolvedNdkPath.isNullOrEmpty()) {
+        ndkPath = resolvedNdkPath
     }
-    if (rootProject.hasProperty("ndkVersion")) {
-        ndkVersion = rootProject.extensions.extraProperties.get("ndkVersion") as String
+
+    val resolvedNdkVersion = rootProject.findProperty("ndkVersion") as? String
+    if (!resolvedNdkVersion.isNullOrEmpty()) {
+        ndkVersion = resolvedNdkVersion
     }
 
     buildFeatures {
@@ -212,7 +215,6 @@ android {
 
     externalNativeBuild {
         cmake {
-            this.version = System.getenv("CMAKE_VERSION") ?: "3.22.1"
             path = file("CMakeLists.txt")
         }
     }
