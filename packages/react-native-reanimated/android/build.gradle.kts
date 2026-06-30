@@ -23,9 +23,13 @@ fun safeAppExtGet(prop: String, fallback: Any?): Any? {
 }
 
 fun resolveReactNativeDirectory(): File {
-    val reactNativeLocation = safeAppExtGet("REACT_NATIVE_NODE_MODULES_DIR", null) as String?
-    if (reactNativeLocation != null) {
-        return file(reactNativeLocation)
+    val reactNativeLocationProperty = safeAppExtGet("REACT_NATIVE_NODE_MODULES_DIR", null)
+    if (reactNativeLocationProperty != null) {
+        return when (reactNativeLocationProperty) {
+            is File -> reactNativeLocationProperty
+            is String -> file(reactNativeLocationProperty)
+            else -> file(reactNativeLocationProperty.toString())
+        }
     }
 
     // Fallback to node resolver for custom directory structures like monorepos.
