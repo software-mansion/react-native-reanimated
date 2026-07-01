@@ -71,11 +71,11 @@ describe('Test mixed order of execution', () => {
       // Act
       scheduleOnRuntime(rt, () => {
         'worklet';
+        // heavy task, to make sure that next scheduleOnRuntime will schedule task on async queue
+        Array.from({ length: 100000 }, (_v, i) => (i / 2) * i * 9 + 7);
         getMethodMap()[firstMethodName](() =>
           order(firstMethodOrder, notification1)
         );
-        // heavy task, to make sure that next scheduleOnRuntime will schedule task on async queue
-        new Array(100000).map((_v, i) => (i / 2) * i * 9 + 7);
       });
       scheduleOnRuntime(rt, () => {
         'worklet';
