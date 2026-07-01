@@ -186,10 +186,6 @@ struct ActiveTransition {
     // speed/timeOffset (e.g. RN Screens during navigation) from shifting it.
     anim.beginTime = [layer convertTime:beginTime fromLayer:nil];
     anim.timingFunction = timing;
-    // Backwards fill covers the delay window. Non-persistent transitions self-remove on completion
-    // and the layer reads the model below; persistent ones (pseudo selectors, which always take
-    // priority) keep their presentation so an RN re-commit of the base prop can't snap the value
-    // back to the rendered default once the animation ends.
     anim.fillMode = persistent ? kCAFillModeBoth : kCAFillModeBackwards;
     anim.removedOnCompletion = persistent ? NO : YES;
 
