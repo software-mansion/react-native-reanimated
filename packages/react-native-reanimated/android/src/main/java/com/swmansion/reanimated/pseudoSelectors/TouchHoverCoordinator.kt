@@ -38,6 +38,7 @@ class TouchHoverCoordinator {
     // The first finger's gesture claims `:hover` by its down time, so the window observer can tell a
     // hover gesture's release from a blank-space touch-down.
     private var claimedDownTime = Long.MIN_VALUE
+    private var downTargetView: WeakReference<View>? = null
 
     fun register(
         view: View,
@@ -87,6 +88,7 @@ class TouchHoverCoordinator {
             event.downTime != claimedDownTime
         ) {
             claimedDownTime = event.downTime
+            downTargetView = WeakReference(view)
             reconcileToBranchOf(view)
         }
     }
@@ -119,18 +121,6 @@ class TouchHoverCoordinator {
             screenY <= tmpLocation[1] + view.height
     }
 
-    private fun isPointOverAnyHovered(
-        screenX: Float,
-        screenY: Float,
-    ): Boolean {
-        for (view in hovered) {
-            if (isPointInView(view, screenX, screenY)) {
-                return true
-            }
-        }
-        return false
-    }
-
     private fun clearAll() {
         for ((view, callback) in hoverCallbacks) {
             setHovered(view, callback, false)
@@ -149,21 +139,23 @@ class TouchHoverCoordinator {
         callback.onSelectorStateChanged(on)
     }
 
-    // Decides a hover gesture's fate at the first finger's release: keep `:hover` when the finger lifts
-    // back over a hovered view, drop it otherwise. Screen coords for the lifting pointer are derived
-    // from the index-0 raw/local delta, since getRawX/Y(index) needs API 29.
+    // Keeps `:hover` when the first finger lifts back over the view it went down on, drops it otherwise.
+    // Screen coords for the lifting pointer are derived from the index-0 raw/local delta, since
+    // getRawX/Y(index) needs API 29.
     private fun finishHoverGesture(
         event: MotionEvent,
         pointerIndex: Int,
     ) {
         if (event.downTime != claimedDownTime) {
-            return // not the hover gesture (e.g. a stray up after it was already resolved)
+            return
         }
         claimedDownTime = Long.MIN_VALUE
-        val screenX = event.getX(pointerIndex) + (event.rawX - event.getX(0))
-        val screenY = event.getY(pointerIndex) + (event.rawY - event.getY(0))
-        if (!isPointOverAnyHovered(screenX, screenY)) {
-            clearAll()
+        val target = downTargetView?.get() ?: return
+        downTargetView = null
+        val releaseX = event.getX(pointerIndex) + (event.rawX - event.getX(0))
+        val releaseY = event.getY(pointerIndex) + (event.rawY - event.getY(0))
+        if (!isPointInView(target, releaseX, releaseY)) {
+            hoverCallbacks[target]?.let { setHovered(target, it, false) }
         }
     }
 
