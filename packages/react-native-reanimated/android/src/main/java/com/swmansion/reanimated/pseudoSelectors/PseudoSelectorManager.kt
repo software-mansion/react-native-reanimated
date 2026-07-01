@@ -30,8 +30,18 @@ class PseudoSelectorManager(
 
     private val hover = TouchHoverCoordinator()
 
+    // The window observer drives :active / :active-deepest (hover.onPress/onRelease); we remember what
+    // a press turned on so the matching release turns the same views back off.
+    private var windowPressedLeaf: View? = null
+    private var windowPressedDeepest: View? = null
+
     private val pendingAttaches = LinkedHashMap<String, PendingAttach>()
     private var mountListenerRegistered = false
+
+    init {
+        hover.onPress = ::onWindowPress
+        hover.onRelease = ::onWindowRelease
+    }
 
     private data class PendingAttach(
         val tag: Int,
@@ -178,11 +188,13 @@ class PseudoSelectorManager(
     ) {
         val host = findTouchHost(view)
         activeCallbacks[view] = callback
-        acquireTouchListener(host)
+        acquireTouchListener(host) // Modal/Dialog fallback
+        hover.retainObserver(view) // Activity-window observer (the primary driver)
         detachActions[key] =
             Runnable {
                 activeCallbacks.remove(view)
                 releaseTouchListener(host)
+                hover.releaseObserver()
             }
     }
 
@@ -193,11 +205,13 @@ class PseudoSelectorManager(
     ) {
         val host = findTouchHost(view)
         deepestCallbacks[view] = callback
-        acquireTouchListener(host)
+        acquireTouchListener(host) // Modal/Dialog fallback
+        hover.retainObserver(view) // Activity-window observer (the primary driver)
         detachActions[key] =
             Runnable {
                 deepestCallbacks.remove(view)
                 releaseTouchListener(host)
+                hover.releaseObserver()
             }
     }
 
@@ -262,12 +276,46 @@ class PseudoSelectorManager(
         host: View,
         event: MotionEvent,
     ) {
-        findTouchedLeaf(host, event)?.let {
-            gestureDownLeaf[host] = it
-            fireActiveCallbacksUpTree(it, true)
-            fireDeepestIfHit(it, event.rawX, event.rawY)
+        // The window observer already drives this on the Activity window; only fire here for gestures
+        // it missed - i.e. touches inside a Modal/Dialog, a separate window it is blind to.
+        if (!hover.isObservedGesture(event)) {
+            findTouchedLeaf(host, event)?.let {
+                gestureDownLeaf[host] = it
+                fireActiveCallbacksUpTree(it, true)
+                fireDeepestIfHit(it, event.rawX, event.rawY)
+            }
         }
         hover.onViewTouchDown(host, event)
+    }
+
+    // Activity-window press: resolve the pressed tag to a leaf (svg's virtual child or a real view) and
+    // drive :active up its ancestor chain, plus :active-deepest for the deepest registered ancestor.
+    private fun onWindowPress(tag: Int) {
+        val leaf = tryResolveView(tag) ?: return
+        windowPressedLeaf = leaf
+        fireActiveCallbacksUpTree(leaf, true)
+        firstDeepestAncestor(leaf)?.let {
+            deepestCallbacks[it]?.onSelectorStateChanged(true)
+            windowPressedDeepest = it
+        }
+    }
+
+    private fun onWindowRelease() {
+        windowPressedLeaf?.let { fireActiveCallbacksUpTree(it, false) }
+        windowPressedLeaf = null
+        windowPressedDeepest?.let { deepestCallbacks[it]?.onSelectorStateChanged(false) }
+        windowPressedDeepest = null
+    }
+
+    // The deepest :active-deepest view at the press: the first one walking up from the pressed leaf.
+    private fun firstDeepestAncestor(leaf: View): View? {
+        if (leaf in deepestCallbacks) return leaf
+        var parent: ViewParent? = leaf.parent
+        while (parent != null) {
+            if (parent is View && parent in deepestCallbacks) return parent
+            parent = parent.parent
+        }
+        return null
     }
 
     private fun onHostRelease(host: View) {

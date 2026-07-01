@@ -31,6 +31,13 @@ class TouchHoverCoordinator {
     // path mid-gesture so the second hit-test resolves the element behind it.
     private var observedGestureDownTime = Long.MIN_VALUE
 
+    // Reported for :active / :active-deepest: the react tag pressed under this gesture, then its release.
+    var onPress: ((tag: Int) -> Unit)? = null
+    var onRelease: (() -> Unit)? = null
+
+    // The observer is shared by :hover / :active / :active-deepest, so keep it alive until the last one.
+    private var observerRefCount = 0
+
     // Weak so a stale wrapper can never pin a destroyed Activity (this outlives Activities).
     private var observedWindow: WeakReference<Window>? = null
     private var originalWindowCallback: WeakReference<Window.Callback>? = null
@@ -49,7 +56,7 @@ class TouchHoverCoordinator {
             false
         }
         hoverCallbacks[view] = callback
-        ensureWindowObserver(view)
+        retainObserver(view)
     }
 
     fun unregister(view: View) {
@@ -58,12 +65,25 @@ class TouchHoverCoordinator {
         if (hoveredViews.remove(view)) {
             callback?.onSelectorStateChanged(false)
         }
-        if (hoverCallbacks.isEmpty()) {
+        releaseObserver()
+    }
+
+    fun isRegistered(view: View) = view in hoverCallbacks
+
+    // Keeps the window observer alive while any touch selector (:hover / :active / :active-deepest) uses it.
+    fun retainObserver(view: View) {
+        observerRefCount++
+        ensureWindowObserver(view)
+    }
+
+    fun releaseObserver() {
+        if (--observerRefCount == 0) {
             removeWindowObserver()
         }
     }
 
-    fun isRegistered(view: View) = view in hoverCallbacks
+    // True while the window observer already handled this gesture, so per-view listeners skip it (Modal only).
+    fun isObservedGesture(event: MotionEvent) = event.downTime == observedGestureDownTime
 
     /**
      * Mirrors CSS hit-testing: turns :hover on for the topmost view at the touch and its registered
@@ -129,6 +149,24 @@ class TouchHoverCoordinator {
         return targets.mapTo(HashSet(targets.size)) { it.getViewId() }
     }
 
+    // Topmost react tag under the touch (svg's virtual child rides the path with a null view), so the
+    // host can resolve it and walk up to drive :active / :active-deepest.
+    private fun pressTag(
+        screenX: Float,
+        screenY: Float,
+    ): Int? {
+        val root = hoverRootViewGroup() ?: return null
+        root.getLocationOnScreen(tmpLocation)
+        val targets =
+            TouchTargetHelper.findTargetPathAndCoordinatesForTouch(
+                screenX - tmpLocation[0],
+                screenY - tmpLocation[1],
+                root,
+                tmpCoords,
+            )
+        return targets.firstOrNull()?.getViewId()
+    }
+
     private fun hoverRootViewGroup(): ViewGroup? {
         val window = observedWindow?.get() ?: hoverCallbacks.keys.firstOrNull()?.activityWindow()
         return window?.decorView as? ViewGroup
@@ -179,8 +217,9 @@ class TouchHoverCoordinator {
                             slopExceeded = false
                             observedGestureDownTime = event.downTime
                             recompute(event.rawX, event.rawY)
+                            pressTag(event.rawX, event.rawY)?.let { onPress?.invoke(it) }
                         }
-                        // A scroll/drag past slop dismisses sticky :hover, matching iOS.
+                        // A scroll/drag past slop dismisses sticky :hover and ends the press, matching iOS.
                         MotionEvent.ACTION_MOVE ->
                             if (!slopExceeded) {
                                 val dx = event.rawX - startX
@@ -188,9 +227,14 @@ class TouchHoverCoordinator {
                                 if (dx * dx + dy * dy > slop * slop) {
                                     slopExceeded = true
                                     clearAll()
+                                    onRelease?.invoke()
                                 }
                             }
-                        MotionEvent.ACTION_CANCEL -> clearAll()
+                        MotionEvent.ACTION_UP -> onRelease?.invoke()
+                        MotionEvent.ACTION_CANCEL -> {
+                            clearAll()
+                            onRelease?.invoke()
+                        }
                     }
                     return original.dispatchTouchEvent(event)
                 }
