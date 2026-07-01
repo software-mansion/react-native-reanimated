@@ -25,6 +25,12 @@ class TouchHoverCoordinator {
     private val tmpLocation = IntArray(2)
     private val tmpCoords = FloatArray(2)
 
+    // downTime of the gesture the window observer last reconciled, so the per-view touch listener can
+    // skip re-reconciling the same Activity-window gesture. Reconciling twice re-runs the hit-test
+    // after the first hover already changed a prop, and for svg that invalidates the front element's
+    // path mid-gesture so the second hit-test resolves the element behind it.
+    private var observedGestureDownTime = Long.MIN_VALUE
+
     // Weak so a stale wrapper can never pin a destroyed Activity (this outlives Activities).
     private var observedWindow: WeakReference<Window>? = null
     private var originalWindowCallback: WeakReference<Window.Callback>? = null
@@ -71,6 +77,19 @@ class TouchHoverCoordinator {
         reconcile(sourceView.rootView as? ViewGroup, screenX, screenY)
     }
 
+    // A touch going down on a registered view. The window observer sees Activity-window touches first
+    // and reconciles them, so this only runs for gestures the observer missed - i.e. touches inside a
+    // Modal/Dialog, a separate window the observer is blind to. This avoids reconciling twice.
+    fun onViewTouchDown(
+        sourceView: View,
+        event: MotionEvent,
+    ) {
+        if (event.downTime == observedGestureDownTime) {
+            return
+        }
+        reconcile(sourceView.rootView as? ViewGroup, event.rawX, event.rawY)
+    }
+
     // Blank-space (window observer) path: no source view, so hit-test the observed window's tree.
     fun recompute(
         screenX: Float,
@@ -105,11 +124,7 @@ class TouchHoverCoordinator {
         val localY = screenY - tmpLocation[1]
         val targets =
             TouchTargetHelper.findTargetPathAndCoordinatesForTouch(localX, localY, root, tmpCoords)
-        val tags = HashSet<Int>(targets.size)
-        for (target in targets) {
-            tags.add(target.getViewId())
-        }
-        return tags
+        return targets.mapTo(HashSet(targets.size)) { it.getViewId() }
     }
 
     private fun hoverRootViewGroup(): ViewGroup? {
@@ -160,6 +175,7 @@ class TouchHoverCoordinator {
                             startX = event.rawX
                             startY = event.rawY
                             slopExceeded = false
+                            observedGestureDownTime = event.downTime
                             recompute(event.rawX, event.rawY)
                         }
                         // A scroll/drag past slop dismisses sticky :hover, matching iOS.

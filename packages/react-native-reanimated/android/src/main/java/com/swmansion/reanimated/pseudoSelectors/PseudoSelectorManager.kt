@@ -267,7 +267,7 @@ class PseudoSelectorManager(
             fireActiveCallbacksUpTree(it, true)
             fireDeepestIfHit(it, event.rawX, event.rawY)
         }
-        hover.recompute(host, event.rawX, event.rawY)
+        hover.onViewTouchDown(host, event)
     }
 
     private fun onHostRelease(host: View) {
