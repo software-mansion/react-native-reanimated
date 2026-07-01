@@ -27957,7 +27957,7 @@ __metadata:
   peerDependencies:
     react: "*"
     react-native: 0.83 - 0.86
-    react-native-worklets: "*"
+    react-native-worklets: 0.11.0-main
   languageName: unknown
   linkType: soft
 
