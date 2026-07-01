@@ -25,6 +25,11 @@ class TouchHoverCoordinator {
     private val tmpLocation = IntArray(2)
     private val tmpCoords = FloatArray(2)
 
+    // downTime of the gesture the window observer last reconciled, letting the per-view listener skip
+    // reconciling it again: a second reconcile re-runs the hit-test after the first hover mutated a
+    // prop, which for svg invalidates the front element's path so it resolves the one behind it.
+    private var observedGestureDownTime = Long.MIN_VALUE
+
     // Weak so a stale wrapper can never pin a destroyed Activity (this outlives Activities).
     private var observedWindow: WeakReference<Window>? = null
     private var originalWindowCallback: WeakReference<Window.Callback>? = null
@@ -73,6 +78,18 @@ class TouchHoverCoordinator {
         reconcile(sourceView.rootView as? ViewGroup, screenX, screenY)
     }
 
+    // Touch-down on a registered view. The observer reconciles Activity-window gestures first, so this
+    // only handles ones it misses - e.g. a touch inside a Modal, a window the observer can't see.
+    fun onViewTouchDown(
+        sourceView: View,
+        event: MotionEvent,
+    ) {
+        if (event.downTime == observedGestureDownTime) {
+            return
+        }
+        reconcile(sourceView.rootView as? ViewGroup, event.rawX, event.rawY)
+    }
+
     // Blank-space (window observer) path: no source view, so hit-test the observed window's tree.
     fun recompute(
         screenX: Float,
@@ -89,29 +106,25 @@ class TouchHoverCoordinator {
         if (hoverCallbacks.isEmpty()) {
             return
         }
-        val hitPath: Set<View> = if (root == null) emptySet() else hitTestPath(root, screenX, screenY)
+        val hitTags: Set<Int> = if (root == null) emptySet() else hitTestPath(root, screenX, screenY)
         for ((view, callback) in hoverCallbacks) {
-            setHovered(view, callback, view in hitPath)
+            setHovered(view, callback, view.id in hitTags)
         }
     }
 
-    // Views on the hit branch (topmost target up to the root) via RN's hit-test, which already honors
-    // z-order, transforms, clipping and pointer-events.
+    // React tags on the hit branch (RN's hit-test honors z-order/transforms/clipping/pointer-events).
+    // Matching by tag also covers svg's virtual children, whose tag rides the path with a null view.
     private fun hitTestPath(
         root: ViewGroup,
         screenX: Float,
         screenY: Float,
-    ): Set<View> {
+    ): Set<Int> {
         root.getLocationOnScreen(tmpLocation)
         val localX = screenX - tmpLocation[0]
         val localY = screenY - tmpLocation[1]
         val targets =
             TouchTargetHelper.findTargetPathAndCoordinatesForTouch(localX, localY, root, tmpCoords)
-        val views = HashSet<View>(targets.size)
-        for (target in targets) {
-            target.getView()?.let { views.add(it) }
-        }
-        return views
+        return targets.mapTo(HashSet(targets.size)) { it.getViewId() }
     }
 
     private fun hoverRootViewGroup(): ViewGroup? {
@@ -162,6 +175,7 @@ class TouchHoverCoordinator {
                             startX = event.rawX
                             startY = event.rawY
                             slopExceeded = false
+                            observedGestureDownTime = event.downTime
                             recompute(event.rawX, event.rawY)
                         }
                         // A scroll/drag past slop dismisses sticky :hover, matching iOS.
