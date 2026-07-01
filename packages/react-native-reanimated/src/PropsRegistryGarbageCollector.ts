@@ -1,5 +1,7 @@
 'use strict';
 
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
+
 import {
   unprocessColor,
   unprocessColorsInProps,
@@ -11,7 +13,6 @@ import { ReanimatedModule } from './ReanimatedModule';
 const FLUSH_INTERVAL_MS = 500;
 
 export const PropsRegistryGarbageCollector = {
-  viewsCount: 0,
   viewsMap: new Map<number, IAnimatedComponentInternal>(),
   intervalId: null as NodeJS.Timeout | null,
 
@@ -25,17 +26,20 @@ export const PropsRegistryGarbageCollector = {
       return;
     }
     this.viewsMap.set(viewTag, component);
-    this.viewsCount++;
-    if (this.viewsCount === 1) {
+    if (this.viewsMap.size === 1) {
       this.registerInterval();
     }
   },
 
   unregisterView(viewTag: number) {
-    this.viewsMap.delete(viewTag);
-    this.viewsCount--;
-    if (this.viewsCount === 0) {
+    // `delete` returns false when the tag wasn't tracked (the nested-component
+    // case registerView skipped above); bail to keep the count symmetric.
+    if (!this.viewsMap.delete(viewTag)) {
+      return;
+    }
+    if (this.viewsMap.size === 0) {
       this.unregisterInterval();
+      scheduleOrphanedPropsCleanup();
     }
   },
 
@@ -65,6 +69,25 @@ export const PropsRegistryGarbageCollector = {
     }
   },
 };
+
+// The last animated view just unmounted, so the GC interval has stopped and no
+// commit will drain the registry. An in-flight animation frame can still re-add
+// the view's props; wait one UI frame for it to run, then clear the registry.
+function scheduleOrphanedPropsCleanup() {
+  scheduleOnUI(() => {
+    'worklet';
+    requestAnimationFrame(() => {
+      'worklet';
+      scheduleOnRN(removeOrphanedProps);
+    });
+  });
+}
+
+function removeOrphanedProps() {
+  if (PropsRegistryGarbageCollector.viewsMap.size === 0) {
+    ReanimatedModule.removeOrphanedProps();
+  }
+}
 
 function unprocessProps(props: StyleProps) {
   unprocessColorsInProps(props);
