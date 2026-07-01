@@ -67,6 +67,12 @@ class CSSTransition {
 
   CSSLoopTransition &ensureLoopTransition();
   void scheduleLoop(double timestamp);
+
+  /// Target values of the properties routed to the platform side, recorded in the updates registry
+  /// so the commit hook keeps re-applying them over React's committed base value - otherwise a
+  /// pseudo-selector value snaps back to the rendered base once the native animation ends.
+  folly::dynamic collectPlatformTargets(jsi::Runtime &rt, const CSSTransitionConfig &config) const;
+  folly::dynamic collectPlatformTargets(const PropertyValueDynamicDiffsMap &propertyDiffs) const;
 };
 
 } // namespace reanimated::css
