@@ -6,6 +6,7 @@
 #include <react/debug/react_native_assert.h>
 
 #include <memory>
+#include <tuple>
 #include <utility>
 
 namespace reanimated {
@@ -36,7 +37,13 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     }
 
     if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
-      timestampMap_[shadowNode->getTag()] = timestamp;
+      const auto tag = shadowNode->getTag();
+      timestampMap_[tag] = timestamp;
+      // If JS already has a `settledProps` snapshot for this tag, it is now
+      // stale — schedule a refresh on the next `getUpdatesOlderThanTimestamp`.
+      if (syncedTags_.erase(tag) > 0) {
+        invalidatedTags_.insert(tag);
+      }
     }
   }
 }
@@ -48,22 +55,40 @@ jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   removeUpdatesOlderThanTimestamp(cleanupTimestamp);
 
-  std::vector<std::pair<Tag, std::reference_wrapper<const folly::dynamic>>> updates;
+  // Each returned tag is paired with whether it came from the settled path —
+  // only settled-path tags are tracked as "synced" so that an ongoing animation
+  // doesn't re-trigger an invalidation/sync on every GC tick.
+  std::vector<std::tuple<Tag, std::reference_wrapper<const folly::dynamic>, bool>> updates;
 
   for (const auto &[viewTag, pair] : updatesRegistry_) {
     auto it = timestampMap_.find(viewTag);
-    if (it != timestampMap_.end() && it->second < timestamp) {
-      updates.emplace_back(viewTag, std::cref(pair.second));
+    if (it == timestampMap_.end()) {
+      continue;
+    }
+    const bool isSettled = it->second < timestamp;
+    const auto invalidatedIt = invalidatedTags_.find(viewTag);
+    const bool isStaleSynced = invalidatedIt != invalidatedTags_.end();
+    if (isSettled || isStaleSynced) {
+      updates.emplace_back(viewTag, std::cref(pair.second), isSettled);
+      if (isStaleSynced) {
+        // Only erase serviced invalidations; if a tag was invalidated but the
+        // matching update batch hasn't been flushed into updatesRegistry_ yet,
+        // we leave the entry so the next sync picks it up.
+        invalidatedTags_.erase(invalidatedIt);
+      }
     }
   }
 
   const jsi::Array array(rt, updates.size());
   size_t i = 0;
-  for (const auto &[viewTag, styleProps] : updates) {
+  for (const auto &[viewTag, styleProps, isSettled] : updates) {
     const jsi::Object item(rt);
     item.setProperty(rt, "viewTag", viewTag);
     item.setProperty(rt, "styleProps", jsi::valueFromDynamic(rt, styleProps.get()));
     array.setValueAtIndex(rt, i++, item);
+    if (isSettled) {
+      syncedTags_.insert(viewTag);
+    }
   }
 
   return jsi::Value(rt, array);
@@ -85,6 +110,8 @@ void AnimatedPropsRegistry::removeUpdatesOlderThanTimestamp(const double timesta
 void AnimatedPropsRegistry::removeTag(const Tag tag) {
   updatesRegistry_.erase(tag);
   timestampMap_.erase(tag);
+  syncedTags_.erase(tag);
+  invalidatedTags_.erase(tag);
 }
 
 } // namespace reanimated
