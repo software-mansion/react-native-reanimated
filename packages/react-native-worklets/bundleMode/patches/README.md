@@ -11,7 +11,7 @@ To use Bundle Mode in `react-native-worklets` you need to apply several patches.
 
 Based on your package manager you should either use patches from `yarn` directory or `patch-package` directory.
 
-Find the version of `metro` and `metro-runtime` that are a closest match to the ones used in your project. You can find out which versions of packages you have by running `yarn why metro` or `npm why metro`.
+Find the version of `metro` and `metro-runtime` that are a closest match to the ones used in your project. You can find out which versions of packages you have by running `yarn why metro`, `npm why metro`, or `bun why metro --top`.
 
 This versions don't have to match exactly as the patches are usually compatible with multiple versions of the packages.
 
@@ -51,6 +51,40 @@ Using npm and patch-package is a lot more problematic in patching transitive dep
 1. Run `patch-package` to apply the patches:
    ```terminal
    npx patch-package
+   ```
+## Using bun and patch-package
+
+Using bun patching and patch-package gives you the benefit of the bun runtime in your project (works with monorepos and `linker=isolated`). Bun's patching method is better than just `patch-package` alone, and doesn't create any issues with transitive dependencies or the bun cache. (You should use the patches in the `patch-package` directory)
+
+1. Install `patch-package`:
+   ```terminal
+   bun i patch-package --save-dev
+   ```
+1. Create `patches` directory in the project root
+1. If you're not certain which versions of patchs you need to apply, you can run `bun why --top` to find out which versions of packages you have. For example, to find out which version of `metro` you have, run:
+   ```terminal
+   bun why metro --top
+   ```
+1. Copy the patch files for `metro`, `metro-runtime` to the `patches` directory.
+1. Run `bun patch` to prep packages:
+   ```terminal
+   bun patch metro
+   ```
+   AND
+   ```terminal
+   bun patch metro-runtime
+   ```
+1. Run `patch-package` to apply the patches:
+   ```terminal
+   bunx patch-package
+   ```
+1. Run `bun patch --commit` to commit patches to the repo:
+   ```terminal
+   bun patch --commit 'node_modules/metro'
+   ```
+   AND
+   ```terminal
+   bun patch --commit 'node_modules/metro-runtime'
    ```
 
 ## Using Yarn Classic (Yarn 1) and patch-package
