@@ -22,7 +22,10 @@ import com.swmansion.reanimated.nativeProxy.LayoutAnimationCallback
 object NativeLayoutAnimator {
     private val runningAnimators = HashMap<Int, ValueAnimator>()
 
-    private class Channel(val offsets: DoubleArray, val values: DoubleArray) {
+    private class Channel(
+        val offsets: DoubleArray,
+        val values: DoubleArray,
+    ) {
         fun valueAt(fraction: Double): Double {
             if (values.isEmpty()) return 0.0
             if (fraction <= offsets.first()) return values.first()

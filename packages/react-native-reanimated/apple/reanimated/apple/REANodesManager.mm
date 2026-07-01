@@ -12,11 +12,11 @@
 
 #import <QuartzCore/QuartzCore.h>
 
-#include <algorithm>
-#include <cmath>
-#include <string>
-#include <unordered_map>
-#include <vector>
+#import <algorithm>
+#import <cmath>
+#import <string>
+#import <unordered_map>
+#import <vector>
 
 using namespace facebook::react;
 
@@ -191,7 +191,6 @@ using namespace facebook::react;
   // Core Animation must be driven on the main thread, but the descriptor is
   // produced on the UI (worklet) thread - hop over if necessary.
   if (![NSThread isMainThread]) {
-    reanimated::NativeLayoutAnimationDescriptor descriptorCopy = descriptor;
     __weak REANodesManager *weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
       REANodesManager *strongSelf = weakSelf;
@@ -200,7 +199,7 @@ using namespace facebook::react;
         return;
       }
       [strongSelf runNativeLayoutAnimationForView:viewTag
-                                       descriptor:descriptorCopy
+                                       descriptor:descriptor
                              usePresentationLayer:usePresentationLayer
                                        completion:completion];
     });

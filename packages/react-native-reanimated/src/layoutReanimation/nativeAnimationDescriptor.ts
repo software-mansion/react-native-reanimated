@@ -21,7 +21,7 @@ import type { AnimationObject, LayoutAnimation } from '../commonTypes';
  * arrays so it maps trivially onto `CAKeyframeAnimation` (iOS) and `Keyframe[]`
  * / `ValueAnimator` (Android) on the native side.
  */
-export interface NativeLayoutAnimationProperty {
+interface NativeLayoutAnimationProperty {
   /**
    * Canonical, platform-agnostic channel name. One of: `opacity`, `originX`,
    * `originY`, `width`, `height`, `translateX`, `translateY`, `scaleX`,
