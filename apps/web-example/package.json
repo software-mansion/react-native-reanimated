@@ -11,9 +11,9 @@
     "build": "",
     "lint": "eslint . --max-warnings 0",
     "type:check": "tsc --noEmit",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e": "node scripts/run-e2e.mjs",
+    "test:e2e:ui": "node scripts/run-e2e.mjs --ui",
+    "test:e2e:headed": "node scripts/run-e2e.mjs --headed"
   },
   "dependencies": {
     "common-app": "workspace:*",
