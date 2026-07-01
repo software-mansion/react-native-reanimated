@@ -12,14 +12,16 @@ import java.lang.ref.WeakReference
 
 /**
  * Drives touch `:hover` to match the web (Chromium): touching a view makes it (and its registered
- * ancestors) `:hover` and drops any previously-hovered view on that same touch-down; the `:hover` then
- * stays for the whole gesture - through moves and scrolls - and is dropped on release only when the
- * finger lifts off the view without a scroll having taken the gesture over. Only the first finger
- * counts; the rest are ignored until it lifts.
+ * ancestors) `:hover` and drops any previously-hovered view on that same touch-down. Only the
+ * touch-down target and the release location matter: the `:hover` stays for the whole gesture -
+ * through moves and scrolls - and on release is kept only if the finger lifts back over a hovered
+ * view, otherwise it is dropped. Only the first finger counts; the rest are ignored until it lifts.
  *
- * The touched view is reported directly by its own touch listener (so the foreground view is always
- * found, unlike a window-wide hit-test that can hit a background screen). A window observer handles the
- * blank-space case: if a touch-down is not claimed by any hover view it clears the `:hover`.
+ * The touch-down target is reported directly by the touched view's own listener (so the foreground
+ * view is always found, unlike a window-wide hit-test that can hit a background screen). The window
+ * observer owns the rest of the gesture: it sees the real ACTION_UP with the release location even
+ * when a scroll makes the view tree cancel the per-view listener mid-gesture, and it clears the
+ * `:hover` when a touch-down lands on blank space off every registered view.
  *
  * register also wires the pointer (mouse/stylus) hover, which stays live and non-sticky.
  */
@@ -33,17 +35,9 @@ class TouchHoverCoordinator {
     private var originalWindowCallback: WeakReference<Window.Callback>? = null
     private var wrappedWindowCallback: WeakReference<Window.Callback>? = null
 
-    // A hover view claims the in-flight gesture (by its down time); the window observer then knows the
-    // touch did not land on blank space. The deepest touched view becomes the down-target.
+    // The first finger's gesture claims `:hover` by its down time, so the window observer can tell a
+    // hover gesture's release from a blank-space touch-down.
     private var claimedDownTime = Long.MIN_VALUE
-    private var downTargetView: WeakReference<View>? = null
-
-    // Enclosing scrollable of the down-target + its scroll position at touch-down, so the release can
-    // tell a scroll (keep `:hover`) from a deliberate drag off the view (drop it). A scroll may end as
-    // a normal ACTION_UP off the view rather than an ACTION_CANCEL, so the offset is the reliable cue.
-    private var downScrollable: WeakReference<View>? = null
-    private var downScrollX = 0
-    private var downScrollY = 0
 
     fun register(
         view: View,
@@ -69,9 +63,6 @@ class TouchHoverCoordinator {
         if (hovered.remove(view)) {
             callback?.onSelectorStateChanged(false)
         }
-        if (downTargetView?.get() === view) {
-            downTargetView = null
-        }
         if (hoverCallbacks.isEmpty()) {
             removeWindowObserver()
         }
@@ -81,44 +72,22 @@ class TouchHoverCoordinator {
 
     /**
      * Fed by the shared per-view touch listener for every registered view. The touched view itself is
-     * passed, so the foreground branch is always the one that lights up.
+     * passed, so the foreground branch is always the one that lights up. Only the touch-down is handled
+     * here; the window observer owns the release (see [ensureWindowObserver]).
      */
     fun onBoxTouch(
         view: View,
         event: MotionEvent,
     ) {
-        when (event.actionMasked) {
-            // Only the first finger drives `:hover`; a second finger lands on another view as its own
-            // split-down with a non-zero pointer id and is ignored.
-            MotionEvent.ACTION_DOWN -> {
-                if (event.getPointerId(0) != 0 || event.downTime == claimedDownTime) {
-                    return // not the first finger, or a shallower view already claimed this gesture
-                }
-                claimedDownTime = event.downTime
-                downTargetView = WeakReference(view)
-                val scrollable = enclosingScrollable(view)
-                downScrollable = scrollable?.let { WeakReference(it) }
-                downScrollX = scrollable?.scrollX ?: 0
-                downScrollY = scrollable?.scrollY ?: 0
-                reconcileToBranchOf(view)
-            }
-            MotionEvent.ACTION_UP -> {
-                if (downTargetView?.get() !== view) {
-                    return
-                }
-                downTargetView = null
-                // A scroll keeps the `:hover`; otherwise it is dropped unless released back over the
-                // view (releasing over it keeps it sticky).
-                if (!hasScrolled() && !isPointInView(view, event.rawX, event.rawY)) {
-                    clearAll()
-                }
-            }
-            MotionEvent.ACTION_CANCEL -> {
-                // A scroll (or other ancestor) took the gesture over - keep the `:hover`.
-                if (downTargetView?.get() === view) {
-                    downTargetView = null
-                }
-            }
+        // Only the first finger drives `:hover`; a second finger lands on another view as its own
+        // split-down with a non-zero pointer id and is ignored. The deepest touched view claims the
+        // gesture first (its listener runs before its ancestors'), so its branch is the one that lights.
+        if (event.actionMasked == MotionEvent.ACTION_DOWN &&
+            event.getPointerId(0) == 0 &&
+            event.downTime != claimedDownTime
+        ) {
+            claimedDownTime = event.downTime
+            reconcileToBranchOf(view)
         }
     }
 
@@ -138,26 +107,6 @@ class TouchHoverCoordinator {
         }
     }
 
-    private fun hasScrolled(): Boolean {
-        val scrollable = downScrollable?.get() ?: return false
-        return scrollable.scrollX != downScrollX || scrollable.scrollY != downScrollY
-    }
-
-    private fun enclosingScrollable(view: View?): View? {
-        var current: View? = view
-        while (current != null) {
-            if (current.canScrollVertically(1) ||
-                current.canScrollVertically(-1) ||
-                current.canScrollHorizontally(1) ||
-                current.canScrollHorizontally(-1)
-            ) {
-                return current
-            }
-            current = current.parent as? View
-        }
-        return null
-    }
-
     private fun isPointInView(
         view: View,
         screenX: Float,
@@ -168,6 +117,18 @@ class TouchHoverCoordinator {
             screenX <= tmpLocation[0] + view.width &&
             screenY >= tmpLocation[1] &&
             screenY <= tmpLocation[1] + view.height
+    }
+
+    private fun isPointOverAnyHovered(
+        screenX: Float,
+        screenY: Float,
+    ): Boolean {
+        for (view in hovered) {
+            if (isPointInView(view, screenX, screenY)) {
+                return true
+            }
+        }
+        return false
     }
 
     private fun clearAll() {
@@ -188,9 +149,28 @@ class TouchHoverCoordinator {
         callback.onSelectorStateChanged(on)
     }
 
-    // Catches touch-downs on blank space (off every registered view). The down is first dispatched to
-    // the view tree (a hover view claims it via its own listener), then checked: if nothing claimed
-    // this gesture, the touch was on blank space and the `:hover` is cleared.
+    // Decides a hover gesture's fate at the first finger's release: keep `:hover` when the finger lifts
+    // back over a hovered view, drop it otherwise. Screen coords for the lifting pointer are derived
+    // from the index-0 raw/local delta, since getRawX/Y(index) needs API 29.
+    private fun finishHoverGesture(
+        event: MotionEvent,
+        pointerIndex: Int,
+    ) {
+        if (event.downTime != claimedDownTime) {
+            return // not the hover gesture (e.g. a stray up after it was already resolved)
+        }
+        claimedDownTime = Long.MIN_VALUE
+        val screenX = event.getX(pointerIndex) + (event.rawX - event.getX(0))
+        val screenY = event.getY(pointerIndex) + (event.rawY - event.getY(0))
+        if (!isPointOverAnyHovered(screenX, screenY)) {
+            clearAll()
+        }
+    }
+
+    // The window observer sees the whole gesture at the Window.Callback level, above the view tree, so
+    // it still gets the real ACTION_UP (with the release location) even after a scroll makes the tree
+    // cancel the per-view listener. A touch-down first goes to the tree (a hover view claims it via its
+    // own listener); if nothing claimed the gesture, the down was on blank space and `:hover` is cleared.
     private fun ensureWindowObserver(view: View) {
         val window = view.activityWindow() ?: return
         if (observedWindow?.get() === window) {
@@ -203,11 +183,24 @@ class TouchHoverCoordinator {
             object : Window.Callback by original {
                 override fun dispatchTouchEvent(event: MotionEvent): Boolean {
                     val handled = original.dispatchTouchEvent(event)
-                    if (event.actionMasked == MotionEvent.ACTION_DOWN &&
-                        event.getPointerId(0) == 0 &&
-                        claimedDownTime != event.downTime
-                    ) {
-                        clearAll()
+                    when (event.actionMasked) {
+                        // A touch-down that no hover view claimed landed on blank space -> drop `:hover`.
+                        MotionEvent.ACTION_DOWN ->
+                            if (event.getPointerId(0) == 0 && claimedDownTime != event.downTime) {
+                                clearAll()
+                            }
+                        // The first finger lifts, either last or early while others stay down: keep
+                        // `:hover` only if it lifted back over a hovered view.
+                        MotionEvent.ACTION_UP ->
+                            if (event.getPointerId(0) == 0) {
+                                finishHoverGesture(event, 0)
+                            }
+                        MotionEvent.ACTION_POINTER_UP ->
+                            if (event.getPointerId(event.actionIndex) == 0) {
+                                finishHoverGesture(event, event.actionIndex)
+                            }
+                        // A system-level cancel is not a deliberate release, so `:hover` is kept.
+                        MotionEvent.ACTION_CANCEL -> claimedDownTime = Long.MIN_VALUE
                     }
                     return handled
                 }
@@ -228,7 +221,7 @@ class TouchHoverCoordinator {
         observedWindow = null
         originalWindowCallback = null
         wrappedWindowCallback = null
-        downTargetView = null
+        claimedDownTime = Long.MIN_VALUE
         clearAll()
     }
 

@@ -64,10 +64,6 @@
   // Only the first finger drives `:hover`; the rest are ignored until it lifts (matches the web,
   // where a touch implicitly captures the pointer). nil between gestures.
   __weak UITouch *_primaryTouch;
-  // Enclosing scroll view of the touched view at touch-down + its offset then, so the release can tell
-  // a scroll (keep the `:hover`) from a deliberate drag off the view and release (drop it).
-  __weak UIScrollView *_downScrollView;
-  CGPoint _downScrollOffset;
 }
 
 + (instancetype)sharedCoordinator
@@ -191,8 +187,6 @@
   // Touch-down reconciles `:hover` to the touched branch right away: the new branch lights up and any
   // previously-hovered view is dropped on this same down, even if the touch later becomes a scroll.
   [self hoverBranchOfHitView:hit];
-  _downScrollView = [self enclosingScrollViewOfView:hit];
-  _downScrollOffset = _downScrollView != nil ? _downScrollView.contentOffset : CGPointZero;
 }
 
 - (void)primaryTouchEnded:(NSSet<UITouch *> *)touches
@@ -203,11 +197,8 @@
   UIWindow *window = _observedWindow;
   UITouch *touch = _primaryTouch;
   _primaryTouch = nil;
-  // A scroll keeps the `:hover` - the finger did not deliberately leave the view to release elsewhere.
-  if (_downScrollView != nil && !CGPointEqualToPoint(_downScrollView.contentOffset, _downScrollOffset)) {
-    return;
-  }
-  // Otherwise the `:hover` is dropped unless the finger is released back over the hovered view.
+  // Only the release location matters: keep `:hover` when the finger lifts back over the hovered view,
+  // drop it when the finger lifts anywhere else - including after dragging or scrolling off the view.
   UIView *hit = window != nil ? [window hitTest:[touch locationInView:window] withEvent:nil] : nil;
   if (![self isHitViewOverHovered:hit]) {
     [self clearAll];
@@ -220,7 +211,8 @@
     return;
   }
   _primaryTouch = nil;
-  // A cancel (typically a scroll taking the gesture over) keeps the `:hover`.
+  // A cancel is a system interruption, not a deliberate release, so the `:hover` is kept; a real finger
+  // lift arrives through touchesEnded, where the release location decides.
 }
 
 #pragma mark - State reconciliation
@@ -275,16 +267,6 @@
     }
   }
   return NO;
-}
-
-- (UIScrollView *)enclosingScrollViewOfView:(UIView *)view
-{
-  for (UIView *current = view; current != nil; current = current.superview) {
-    if ([current isKindOfClass:[UIScrollView class]]) {
-      return (UIScrollView *)current;
-    }
-  }
-  return nil;
 }
 
 - (void)clearAll
