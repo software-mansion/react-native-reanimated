@@ -7,6 +7,7 @@
 #include <react/jni/WritableNativeMap.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <reanimated/Compat/WorkletsApi.h>
+#include <reanimated/LayoutAnimations/NativeLayoutAnimationDescriptor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 
 #include <memory>
@@ -73,6 +74,11 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
       jboolean isInDrawPass);
   void attachPseudoSelector(Tag tag, PseudoSelector selector, std::function<void(bool)> callback);
   void detachPseudoSelector(Tag tag, PseudoSelector selector);
+  void runNativeLayoutAnimation(
+      const int tag,
+      const NativeLayoutAnimationDescriptor &descriptor,
+      const bool usePresentationLayer,
+      std::function<void(bool)> &&completion);
 
   /***
    * Wraps a method of `NativeProxy` in a function object capturing `this`

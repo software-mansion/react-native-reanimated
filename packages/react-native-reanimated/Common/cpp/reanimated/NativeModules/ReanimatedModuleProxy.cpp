@@ -198,11 +198,12 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       eventHandlerRegistry_(std::make_unique<UIEventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       animatedSensorModule_(platformDepMethodsHolder),
-      layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>()),
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
+      runNativeLayoutAnimationFunction_(platformDepMethodsHolder.runNativeLayoutAnimation),
 #ifdef __APPLE__
       forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
 #endif
+      layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>(runNativeLayoutAnimationFunction_)),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
       operationsLoop_(std::make_shared<OperationsLoop>(
@@ -488,6 +489,7 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     batchItem.tag = item.getProperty(rt, "viewTag").asNumber();
     batchItem.type = static_cast<LayoutAnimationType>(item.getProperty(rt, "type").asNumber());
     auto config = item.getProperty(rt, "config");
+
     if (config.isUndefined()) {
       batchItem.config = nullptr;
     } else {
@@ -497,6 +499,16 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     auto sharedTag = item.getProperty(rt, "sharedTransitionTag");
     if (!sharedTag.isUndefined()) {
       batchItem.sharedTransitionTag = sharedTag.asString(rt).utf8(rt);
+    }
+
+    auto rawConfig = item.getProperty(rt, "rawConfig");
+
+    if (rawConfig.isUndefined()) {
+      batchItem.rawConfig = nullptr;
+    } else {
+      const LayoutAnimationRawConfig &rawConfigObject =
+          LayoutAnimationsManager::extractRawConfigValues(rt, rawConfig.asObject(rt));
+      batchItem.rawConfig = std::make_shared<LayoutAnimationRawConfig>(rawConfigObject);
     }
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);

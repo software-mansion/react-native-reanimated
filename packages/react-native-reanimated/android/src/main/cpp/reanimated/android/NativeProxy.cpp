@@ -7,6 +7,7 @@
 #include <reanimated/android/AnimationFrameCallback.h>
 #include <reanimated/android/EventHandler.h>
 #include <reanimated/android/KeyboardWorkletWrapper.h>
+#include <reanimated/android/LayoutAnimationCallback.h>
 #include <reanimated/android/NativeProxy.h>
 #include <reanimated/android/PseudoSelectorCallback.h>
 #include <reanimated/android/SensorSetter.h>
@@ -254,6 +255,60 @@ void NativeProxy::detachPseudoSelector(Tag tag, PseudoSelector selector) {
   method(javaPart_.get(), static_cast<int>(tag), static_cast<int>(selector));
 }
 
+void NativeProxy::runNativeLayoutAnimation(
+    const int tag,
+    const NativeLayoutAnimationDescriptor &descriptor,
+    const bool usePresentationLayer,
+    std::function<void(bool)> &&completion) {
+  // Flatten the descriptor into primitive arrays so it can cross the JNI
+  // boundary cheaply: key paths joined with '\n', per-property keyframe counts,
+  // and concatenated offsets/values arrays.
+  std::string joinedKeyPaths;
+  std::vector<int> keyframeCounts;
+  std::vector<double> offsets;
+  std::vector<double> values;
+  keyframeCounts.reserve(descriptor.properties.size());
+
+  for (size_t i = 0; i < descriptor.properties.size(); i++) {
+    const auto &property = descriptor.properties[i];
+    if (i > 0) {
+      joinedKeyPaths += '\n';
+    }
+    joinedKeyPaths += property.keyPath;
+    keyframeCounts.push_back(static_cast<int>(property.offsets.size()));
+    offsets.insert(offsets.end(), property.offsets.begin(), property.offsets.end());
+    values.insert(values.end(), property.values.begin(), property.values.end());
+  }
+
+  auto keyframeCountsArray = jni::JArrayInt::newArray(keyframeCounts.size());
+  keyframeCountsArray->setRegion(0, keyframeCounts.size(), keyframeCounts.data());
+  auto offsetsArray = jni::JArrayDouble::newArray(offsets.size());
+  offsetsArray->setRegion(0, offsets.size(), offsets.data());
+  auto valuesArray = jni::JArrayDouble::newArray(values.size());
+  valuesArray->setRegion(0, values.size(), values.data());
+
+  static const auto method = getJniMethod<void(
+      jint,
+      jdouble,
+      jboolean,
+      jni::alias_ref<JString>,
+      jni::alias_ref<jni::JArrayInt>,
+      jni::alias_ref<jni::JArrayDouble>,
+      jni::alias_ref<jni::JArrayDouble>,
+      LayoutAnimationCallback::javaobject)>("runNativeLayoutAnimation");
+
+  method(
+      javaPart_.get(),
+      static_cast<jint>(tag),
+      static_cast<jdouble>(descriptor.durationMs),
+      static_cast<jboolean>(usePresentationLayer),
+      jni::make_jstring(joinedKeyPaths),
+      keyframeCountsArray,
+      offsetsArray,
+      valuesArray,
+      LayoutAnimationCallback::newObjectCxxArgs(std::move(completion)).get());
+}
+
 double NativeProxy::getAnimationTimestamp() {
   static const auto method = getJniMethod<jlong()>("getAnimationTimestamp");
   jlong output = method(javaPart_.get());
@@ -327,6 +382,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto maybeFlushUiUpdatesQueueFunction = bindThis(&NativeProxy::maybeFlushUIUpdatesQueue);
 
+  auto runNativeLayoutAnimationFunction = bindThis(&NativeProxy::runNativeLayoutAnimation);
+
   auto attachPseudoSelectorFunction = bindThis(&NativeProxy::attachPseudoSelector);
 
   auto detachPseudoSelectorFunction = bindThis(&NativeProxy::detachPseudoSelector);
@@ -342,6 +399,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUiUpdatesQueueFunction,
+      runNativeLayoutAnimationFunction,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
   };

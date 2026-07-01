@@ -232,13 +232,14 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   // platform frame source for the loop.
   std::vector<std::function<void(double)>> pendingFrameCallbacks_;
   AnimatedSensorModule animatedSensorModule_;
-  std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
   std::function<void(double)> pendingAnimationFrameCallbackFromWorklets_;
 
+  const RunNativeLayoutAnimation runNativeLayoutAnimationFunction_;
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
 #endif
+  std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   const std::shared_ptr<OperationsLoop> operationsLoop_;

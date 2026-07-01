@@ -86,6 +86,8 @@ export class SlideInLeft
     const initialValues = this.initialValues;
     const targetValues = this.targetValues;
 
+    this.applyRawConfig(SlideInLeft.presetName, config, delay);
+
     return (values) => {
       'worklet';
       return {
@@ -133,6 +135,8 @@ export class SlideOutRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const targetValues = this.targetValues;
+
+    this.applyRawConfig(SlideOutRight.presetName, config, delay);
 
     return (values) => {
       'worklet';
