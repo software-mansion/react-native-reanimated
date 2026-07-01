@@ -45,6 +45,12 @@ const AnimatedStyleUpdateExample: React.FC = () =>
   );
 const AnimatedTabBarExample: React.FC = () =>
   React.createElement(require('./AnimatedTabBarExample').default as React.FC);
+const AnimatedTextExample: React.FC = () =>
+  React.createElement(require('./AnimatedTextExample').default as React.FC);
+const AnimatedTextInputExample: React.FC = () =>
+  React.createElement(
+    require('./AnimatedTextInputExample').default as React.FC
+  );
 const AnimatedTextWidthExample: React.FC = () =>
   React.createElement(
     require('./AnimatedTextWidthExample').default as React.FC
@@ -530,6 +536,16 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🎞️',
     title: 'FPS',
     screen: FpsExample,
+  },
+  AnimatedTextExample: {
+    icon: '📝',
+    title: 'Animated text',
+    screen: AnimatedTextExample,
+  },
+  AnimatedTextInputExample: {
+    icon: '⌨️',
+    title: 'Animated text input',
+    screen: AnimatedTextInputExample,
   },
   HermesSamplingProfilerExample: {
     icon: '📊',
