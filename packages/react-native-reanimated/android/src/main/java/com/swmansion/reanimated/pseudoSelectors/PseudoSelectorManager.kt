@@ -198,25 +198,33 @@ class PseudoSelectorManager(
             return
         }
         view.setOnTouchListener { _, event ->
+            hover.onBoxTouch(view, event)
+            // Only the first finger (pointer id 0) drives `:active`; a second finger lands on another
+            // view as its own split-down with a non-zero pointer id and is ignored, so multi-touch
+            // can't press several views at once (matching the web's single active pointer). Teardown
+            // keys on that owning id rather than the index-0 slot, so two fingers on the same view
+            // still release cleanly when the first one lifts (its up arrives as ACTION_POINTER_UP, and
+            // the trailing ACTION_UP then carries the second finger's non-zero id).
             when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    fireActiveCallbacksUpTree(view, true)
-                    deepestCallbacks[view]?.let {
-                        if (!hasDeepestDescendantAt(view, event.rawX, event.rawY)) {
-                            it.onSelectorStateChanged(true)
+                MotionEvent.ACTION_DOWN ->
+                    if (event.getPointerId(0) == 0) {
+                        fireActiveCallbacksUpTree(view, true)
+                        deepestCallbacks[view]?.let {
+                            if (!hasDeepestDescendantAt(view, event.rawX, event.rawY)) {
+                                it.onSelectorStateChanged(true)
+                            }
                         }
                     }
-                    hover.recompute(view, event.rawX, event.rawY)
-                }
-                MotionEvent.ACTION_UP -> {
-                    fireActiveCallbacksUpTree(view, false)
-                    deepestCallbacks[view]?.onSelectorStateChanged(false)
-                }
-                MotionEvent.ACTION_CANCEL -> {
-                    fireActiveCallbacksUpTree(view, false)
-                    deepestCallbacks[view]?.onSelectorStateChanged(false)
-                    hover.clearAll()
-                }
+                MotionEvent.ACTION_POINTER_UP ->
+                    if (event.getPointerId(event.actionIndex) == 0) {
+                        deactivate(view)
+                    }
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL,
+                ->
+                    if (eventHasPrimaryPointer(event)) {
+                        deactivate(view)
+                    }
             }
             false
         }
@@ -269,9 +277,27 @@ class PseudoSelectorManager(
         return false
     }
 
+    private fun deactivate(view: View) {
+        fireActiveCallbacksUpTree(view, false)
+        deepestCallbacks[view]?.onSelectorStateChanged(false)
+    }
+
     /**
-     * Walk up its ancestor chain and fire
-     * the callback for every ancestor that has _:active_ registered.
+     * Whether the owning first finger (pointer id 0) is among this event's pointers. The pointer index
+     * order is undefined across events, so the id is matched by value rather than by the index-0 slot.
+     */
+    private fun eventHasPrimaryPointer(event: MotionEvent): Boolean {
+        for (i in 0 until event.pointerCount) {
+            if (event.getPointerId(i) == 0) {
+                return true
+            }
+        }
+        return false
+    }
+
+    /**
+     * Walks up the source view's ancestor chain, firing the callback for the source and every
+     * ancestor that has _:active_ registered.
      */
     private fun fireActiveCallbacksUpTree(
         source: View,

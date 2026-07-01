@@ -5,9 +5,11 @@
 #import <UIKit/UIKit.h>
 #import <functional>
 
-/// Drives sticky touch `:hover` (Chromium model): a tapped view stays `:hover` after the finger
-/// lifts, clearing only when a later touch lands elsewhere or a scroll cancels it. A single passive
-/// key-window touch observer recomputes which registered views contain each touch-down.
+/// Drives touch `:hover` (Chromium model): touching a view makes it (and its registered ancestors)
+/// `:hover`, dropping any previously-hovered view on that same touch-down. The `:hover` then stays for
+/// the whole gesture - through moves and scrolls - and is dropped on release only when the finger
+/// lifts off the view without having scrolled. Only the first finger counts; later fingers are ignored
+/// until it lifts. A single passive key-window touch observer feeds this.
 @interface REATouchHoverCoordinator : NSObject
 + (instancetype)sharedCoordinator;
 - (void)registerObserver:(id)owner view:(UIView *)view callback:(std::function<void(bool)>)callback;
