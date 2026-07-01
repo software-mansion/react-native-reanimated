@@ -374,7 +374,7 @@ export enum Platform {
 
 declare global {
   interface Navigator {
-    userAgent: string;
-    vendor: string;
+    readonly userAgent: string;
+    readonly vendor: string;
   }
 }
