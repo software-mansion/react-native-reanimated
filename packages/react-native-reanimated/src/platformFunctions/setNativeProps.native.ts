@@ -51,17 +51,11 @@ function setNativePropsJest() {
   logger.warn('setNativeProps() is not supported with Jest.');
 }
 
-function setNativePropsDefault() {
-  logger.warn('setNativeProps() is not supported on this configuration.');
-}
-
-if (!IS_JEST) {
+if (IS_JEST) {
+  setNativeProps = setNativePropsJest;
+} else {
   // Those assertions are actually correct since on Native platforms `AnimatedRef` is
   // mapped as a different function in `serializableMappingCache` and
   // TypeScript is not able to infer that.
   setNativeProps = setNativePropsNative as unknown as SetNativeProps;
-} else if (IS_JEST) {
-  setNativeProps = setNativePropsJest;
-} else {
-  setNativeProps = setNativePropsDefault;
 }

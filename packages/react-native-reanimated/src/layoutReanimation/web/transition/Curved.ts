@@ -3,8 +3,8 @@ import { LayoutAnimationType } from '../../../commonTypes';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
 import type { TransitionData } from '../animationParser';
 import type { AnimationConfig } from '../config';
-import type { WebEasingsNames } from '../Easing.web';
-import { getEasingByName } from '../Easing.web';
+import type { WebEasingsNames } from '../Easing';
+import { getEasingByName } from '../Easing';
 
 function resetStyle(component: HTMLElement) {
   component.style.animationName = ''; // This line prevents unwanted entering animation

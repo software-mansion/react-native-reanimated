@@ -21,14 +21,8 @@ function setGestureStateJest() {
   logger.warn('setGestureState() cannot be used with Jest.');
 }
 
-function setGestureStateDefault() {
-  logger.warn('setGestureState() is not supported on this configuration.');
-}
-
-if (!IS_JEST) {
-  setGestureState = setGestureStateNative;
-} else if (IS_JEST) {
+if (IS_JEST) {
   setGestureState = setGestureStateJest;
 } else {
-  setGestureState = setGestureStateDefault;
+  setGestureState = setGestureStateNative;
 }

@@ -66,18 +66,11 @@ function measureJest() {
   return null;
 }
 
-function measureDefault() {
-  logger.warn('measure() is not supported on this configuration.');
-  return null;
-}
-
-if (!IS_JEST) {
+if (IS_JEST) {
+  measure = measureJest;
+} else {
   // Those assertions are actually correct since on Native platforms `AnimatedRef` is
   // mapped as a different function in `serializableMappingCache` and
   // TypeScript is not able to infer that.
   measure = measureNative as unknown as Measure;
-} else if (IS_JEST) {
-  measure = measureJest;
-} else {
-  measure = measureDefault;
 }

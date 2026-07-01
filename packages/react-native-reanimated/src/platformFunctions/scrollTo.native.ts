@@ -38,17 +38,11 @@ function scrollToJest() {
   logger.warn('scrollTo() is not supported with Jest.');
 }
 
-function scrollToDefault() {
-  logger.warn('scrollTo() is not supported on this configuration.');
-}
-
-if (!IS_JEST) {
+if (IS_JEST) {
+  scrollTo = scrollToJest;
+} else {
   // Those assertions are actually correct since on Native platforms `AnimatedRef` is
   // mapped as a different function in `serializableMappingCache` and
   // TypeScript is not able to infer that.
   scrollTo = scrollToNative as unknown as ScrollTo;
-} else if (IS_JEST) {
-  scrollTo = scrollToJest;
-} else {
-  scrollTo = scrollToDefault;
 }

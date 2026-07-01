@@ -1,21 +1,7 @@
 'use strict';
 
-import { IS_JEST, logger } from '../common';
+import { logger } from '../common';
 
-type SetGestureState = (handlerTag: number, newState: number) => void;
-
-export let setGestureState: SetGestureState;
-
-function setGestureStateJest() {
-  logger.warn('setGestureState() cannot be used with Jest.');
-}
-
-function setGestureStateDefault() {
-  logger.warn('setGestureState() is not supported on this configuration.');
-}
-
-if (IS_JEST) {
-  setGestureState = setGestureStateJest;
-} else {
-  setGestureState = setGestureStateDefault;
+export function setGestureState() {
+  logger.warn('setGestureState() is not available on web.');
 }

@@ -51,17 +51,11 @@ function dispatchCommandJest() {
   logger.warn('dispatchCommand() is not supported with Jest.');
 }
 
-function dispatchCommandDefault() {
-  logger.warn('dispatchCommand() is not supported on this configuration.');
-}
-
-if (!IS_JEST) {
+if (IS_JEST) {
+  dispatchCommand = dispatchCommandJest;
+} else {
   // Those assertions are actually correct since on Native platforms `AnimatedRef` is
   // mapped as a different function in `serializableMappingCache` and
   // TypeScript is not able to infer that.
   dispatchCommand = dispatchCommandNative as unknown as DispatchCommand;
-} else if (IS_JEST) {
-  dispatchCommand = dispatchCommandJest;
-} else {
-  dispatchCommand = dispatchCommandDefault;
 }

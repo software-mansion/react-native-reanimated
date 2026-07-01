@@ -1,38 +1,13 @@
 'use strict';
-import { IS_JEST, logger } from '../common';
-import type { InstanceOrElement, StyleProps } from '../commonTypes';
+import type { InternalHostInstance, StyleProps } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
+import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
+import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
 
-type SetNativeProps = <TRef extends InstanceOrElement>(
+export function setNativeProps<TRef extends InternalHostInstance>(
   animatedRef: AnimatedRef<TRef>,
   updates: StyleProps
-) => void;
-/**
- * Lets you imperatively update component properties. You should always reach
- * for
- * [useAnimatedStyle](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle)
- * and
- * [useAnimatedProps](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps)
- * first when animating styles or properties.
- *
- * @param animatedRef - An [animated
- *   ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef#returns)
- *   connected to the component you'd want to update.
- * @param updates - An object with properties you want to update.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/setNativeProps
- */
-export let setNativeProps: SetNativeProps;
-
-function setNativePropsJest() {
-  logger.warn('setNativeProps() is not supported with Jest.');
-}
-
-function setNativePropsDefault() {
-  logger.warn('setNativeProps() is not supported on this configuration.');
-}
-
-if (IS_JEST) {
-  setNativeProps = setNativePropsJest;
-} else {
-  setNativeProps = setNativePropsDefault;
+) {
+  const component = animatedRef() as ReanimatedHTMLElement;
+  _updatePropsJS(updates, component);
 }

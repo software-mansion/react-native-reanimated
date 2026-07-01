@@ -6,7 +6,7 @@ import { withStyleAnimation } from '../animation';
 import { IS_JEST } from '../common';
 import type {
   LayoutAnimation,
-  LayoutAnimationStartFunction,
+  LayoutAnimationsManager,
   LayoutAnimationValues,
   SharedValue,
 } from '../commonTypes';
@@ -42,10 +42,7 @@ function stopObservingProgress(
   scheduleFlush();
 }
 
-function createLayoutAnimationManager(): {
-  start: LayoutAnimationStartFunction;
-  stop: (tag: number) => void;
-} {
+function createLayoutAnimationManager(): LayoutAnimationsManager {
   'worklet';
   const currentAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
@@ -137,6 +134,4 @@ if (!IS_JEST) {
   });
 }
 
-export type LayoutAnimationsManager = ReturnType<
-  typeof createLayoutAnimationManager
->;
+export type { LayoutAnimationsManager };

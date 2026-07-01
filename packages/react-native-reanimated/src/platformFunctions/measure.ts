@@ -1,37 +1,27 @@
 'use strict';
-import { IS_JEST, logger } from '../common';
-import type { InstanceOrElement, MeasuredDimensions } from '../commonTypes';
+import { logger } from '../common';
+import type { InternalHostInstance, MeasuredDimensions } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 
-type Measure = <TRef extends InstanceOrElement>(
+export function measure<TRef extends InternalHostInstance>(
   animatedRef: AnimatedRef<TRef>
-) => MeasuredDimensions | null;
+): MeasuredDimensions | null {
+  const element = animatedRef() as HTMLElement | null;
 
-/**
- * Lets you synchronously get the dimensions and position of a view on the
- * screen.
- *
- * @param animatedRef - An [animated
- *   ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef#returns)
- *   connected to the component you'd want to get the measurements from.
- * @returns An object containing component measurements or null when the
- *   measurement couldn't be performed- {@link MeasuredDimensions}.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/measure/
- */
-export let measure: Measure;
+  if (!element) {
+    logger.warn(
+      `The view with tag ${element} is not a valid argument for measure(). This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
+    );
+    return null;
+  }
 
-function measureJest() {
-  logger.warn('measure() cannot be used with Jest.');
-  return null;
-}
-
-function measureDefault() {
-  logger.warn('measure() is not supported on this configuration.');
-  return null;
-}
-
-if (IS_JEST) {
-  measure = measureJest;
-} else {
-  measure = measureDefault;
+  const viewportOffset = element.getBoundingClientRect();
+  return {
+    width: element.offsetWidth,
+    height: element.offsetHeight,
+    x: element.offsetLeft,
+    y: element.offsetTop,
+    pageX: viewportOffset.left,
+    pageY: viewportOffset.top,
+  };
 }

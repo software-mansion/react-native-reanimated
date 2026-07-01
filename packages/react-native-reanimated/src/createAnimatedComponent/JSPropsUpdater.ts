@@ -31,6 +31,6 @@ class JSPropsUpdaterWeb implements IJSPropsUpdater {
   }
 }
 
-const jsPropsUpdater = new JSPropsUpdaterWeb();
+const jsPropsUpdater: IJSPropsUpdater = new JSPropsUpdaterWeb();
 
 export default jsPropsUpdater;
