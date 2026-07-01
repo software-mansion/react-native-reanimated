@@ -249,17 +249,29 @@ function checkBundler() {
 }
 
 function checkCmake() {
-  const floor =
-    (read('packages/react-native-reanimated/android/CMakeLists.txt') || '').match(/cmake_minimum_required\(\s*VERSION\s+([\d.]+)/i)?.[1] ||
-    '3.16';
-  const floorV = parseVersion(floor);
+  // Several CMakeLists.txt pin their own floor (reanimated/worklets android,
+  // NativeView) and they don't all agree — take the highest so a bump to any
+  // one of them is never silently missed.
+  let floor = null;
+  let floorV = null;
+  for (const f of walk('packages', (p) => p.endsWith('CMakeLists.txt'))) {
+    const m = (read(f) || '').match(/cmake_minimum_required\(\s*VERSION\s+([\d.]+)/i);
+    const v = m && parseVersion(m[1]);
+    if (v && (!floorV || v.major > floorV.major || (v.major === floorV.major && v.minor > floorV.minor))) {
+      floor = m[1];
+      floorV = v;
+    }
+  }
+  floor = floor || '3.16';
+  floorV = floorV || parseVersion(floor);
+  const source = 'packages/**/CMakeLists.txt (highest cmake_minimum_required)';
   const { found, out } = probe('cmake', ['--version']);
   const v = parseVersion(out);
   if (!found || !v) {
-    return add({ name: 'cmake', status: 'INFO', severity: 'info', required: `>=${floor}`, found: 'not on PATH', source: 'android/CMakeLists.txt', note: 'Usually provided by the Android SDK; only needed for local Android C++ builds.' });
+    return add({ name: 'cmake', status: 'INFO', severity: 'info', required: `>=${floor}`, found: 'not on PATH', source, note: 'Usually provided by the Android SDK; only needed for local Android C++ builds.' });
   }
   const ok = v.major > floorV.major || (v.major === floorV.major && v.minor >= floorV.minor);
-  add({ name: 'cmake', status: ok ? 'OK' : 'WARN', severity: 'warn', required: `>=${floor}`, found: v.raw, source: 'android/CMakeLists.txt', hint: ok ? undefined : 'brew install cmake (or use the SDK-bundled one)' });
+  add({ name: 'cmake', status: ok ? 'OK' : 'WARN', severity: 'warn', required: `>=${floor}`, found: v.raw, source, hint: ok ? undefined : 'brew install cmake (or use the SDK-bundled one)' });
 }
 
 function checkClangd() {
@@ -308,10 +320,35 @@ function checkXcodeBuildServer() {
   add({ name: 'xcode-build-server', status: present ? 'OK' : 'INFO', severity: 'info', required: 'any (unpinned)', found: present ? 'installed' : 'not installed', source: 'scripts/llvm-tools/generate-xcode-metadata.sh', note: present ? 'No version is pinned; CI uses whatever brew installs.' : 'Needed to build the iOS clang-tidy compile database.', hint: present ? undefined : 'brew install xcode-build-server' });
 }
 
+/** @returns {string} best-guess Android SDK root, honoring the standard env vars first */
+function androidSdkRoot() {
+  const home = process.env.HOME || '';
+  return process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT || (isMac ? path.join(home, 'Library', 'Android', 'sdk') : path.join(home, 'Android', 'Sdk'));
+}
+
 function checkNdk() {
   const gradle = read('apps/fabric-example/android/build.gradle') || '';
   const want = (gradle.match(/ndkVersion\s*=\s*"([^"]+)"/) || [])[1] || '';
-  add({ name: 'NDK', status: 'INFO', severity: 'info', required: want, found: '(pinned in build.gradle)', source: 'apps/fabric-example/android/build.gradle', note: 'Already structurally validated by the android-validation workflow; shown here for reference (PCH formats differ across NDK majors).' });
+  const source = 'apps/fabric-example/android/build.gradle (ndkVersion)';
+  if (!want) {
+    return add({ name: 'NDK', status: 'INFO', severity: 'info', required: '(unset)', found: '—', source, note: 'Could not parse ndkVersion from build.gradle.' });
+  }
+  // The NDK isn't a binary with its own `--version` — side-by-side installs
+  // live at $ANDROID_HOME/ndk/<version>, so check that directory listing
+  // instead of shelling out. CI installs the exact pin via sdkmanager; this
+  // checks whether your local SDK has it too.
+  const ndkDir = path.join(androidSdkRoot(), 'ndk');
+  let installed = null;
+  try {
+    installed = fs.readdirSync(ndkDir);
+  } catch {
+    // SDK/ndk dir not found; fall through to the INFO case below.
+  }
+  if (installed === null) {
+    return add({ name: 'NDK', status: 'INFO', severity: 'info', required: want, found: 'SDK not found', source, note: `Checked ${ndkDir}. Set ANDROID_HOME/ANDROID_SDK_ROOT, or install via Android Studio. Only needed for local Android C++ builds.` });
+  }
+  const ok = installed.includes(want);
+  add({ name: 'NDK', status: ok ? 'OK' : 'WARN', severity: 'warn', required: want, found: ok ? want : installed.join(', ') || '(none installed)', source, note: 'PCH formats differ across NDK majors.', hint: ok ? undefined : `sdkmanager --install "ndk;${want}" (or Android Studio > SDK Manager > SDK Tools > NDK)` });
 }
 
 // ---------------------------------------------------------------------------
@@ -412,6 +449,38 @@ function consistencyRuby() {
   }
 }
 
+function consistencyCocoapods() {
+  // check-ruby-pods.sh hardcodes EXPECTED_PODS right next to EXPECTED_RUBY
+  // (see consistencyRuby) and is run in CI against all three example apps —
+  // treat it and their three Podfile.locks as the full set of canonical sources.
+  const sources = [];
+  const podfileLocks = [
+    ['apps/fabric-example/ios/Podfile.lock', 'fabric-example Podfile.lock'],
+    ['apps/tvos-example/ios/Podfile.lock', 'tvos-example Podfile.lock'],
+    ['apps/macos-example/macos/Podfile.lock', 'macos-example Podfile.lock'],
+  ];
+  for (const [file, label] of podfileLocks) {
+    const v = ((read(file) || '').match(/COCOAPODS:\s*(\S+)/i) || [])[1];
+    if (v) sources.push([label, v]);
+  }
+  const guard = ((read('.github/workflows/helper/check-ruby-pods.sh') || '').match(/EXPECTED_PODS="([^"]+)"/) || [])[1];
+  if (guard) sources.push(['check-ruby-pods.sh EXPECTED_PODS', guard]);
+  const distinct = new Set(sources.map(([, v]) => v));
+  if (distinct.size > 1) {
+    conflicts.push({ name: 'CocoaPods version', detail: `${distinct.size} different versions declared`, items: sources.map(([k, v]) => `${v} — ${k}`) });
+  }
+}
+
+function consistencyNdk() {
+  // Only fabric-example and tvos-example ship an Android target, each with
+  // its own ndkVersion pin — that's the full set worth comparing.
+  const byVer = groupVersions('android/build.gradle', ['apps'], /ndkVersion\s*=\s*"([^"]+)"/);
+  const versions = Object.keys(byVer);
+  if (versions.length > 1) {
+    conflicts.push({ name: 'NDK version', detail: `${versions.length} versions across example apps`, items: versions.map((v) => `${v} — ${byVer[v].join(', ')}`) });
+  }
+}
+
 function run() {
   findings.length = 0;
   conflicts.length = 0;
@@ -433,7 +502,7 @@ function run() {
       checkNdk,
     ].forEach((c) => c());
   }
-  [consistencyGradle, consistencySpotless, consistencyJavaCI, consistencyRuby].forEach((c) => c());
+  [consistencyGradle, consistencySpotless, consistencyJavaCI, consistencyRuby, consistencyCocoapods, consistencyNdk].forEach((c) => c());
   return { findings, conflicts };
 }
 
