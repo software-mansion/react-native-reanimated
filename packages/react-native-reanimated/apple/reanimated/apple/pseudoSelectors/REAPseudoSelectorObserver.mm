@@ -227,7 +227,7 @@ static int _focusObserverContext;
        ]) {
     id ob = [nc addObserverForName:beginName
                             object:nil
-                             queue:NSOperationQueue.mainQueue
+                             queue:nil
                         usingBlock:^(NSNotification *note) {
                           if (isOurs(note)) {
                             callback(true);
@@ -241,7 +241,7 @@ static int _focusObserverContext;
        ]) {
     id ob = [nc addObserverForName:endName
                             object:nil
-                             queue:NSOperationQueue.mainQueue
+                             queue:nil
                         usingBlock:^(NSNotification *note) {
                           if (isOurs(note)) {
                             callback(false);

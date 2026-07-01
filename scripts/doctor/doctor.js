@@ -1,0 +1,605 @@
+'use strict';
+
+/* 
+ * !Mostly AI generated!
+ *
+ * reanimated-doctor — checks that host tools NOT installed by `yarn install`
+ * (clang-format, clang-tidy, cmake, ruby, cocoapods, the NDK, ...) match the
+ * versions this repo expects. Required versions are DERIVED from the canonical
+ * files that already pin them (.nvmrc, package.json, Gemfile.lock,
+ * Podfile.lock, build.gradle) so there is nothing to duplicate or forget.
+ *
+ * Flags:
+ *   (default)           advisory; hides rows that already match; exits 0
+ *   --display-all       also show passing (OK) rows
+ *   --quiet             show only warnings/errors/conflicts (hide INFO too)
+ *   --consistency-only  run only the cross-file checks (needs no host tools)
+ *   --ci                fail on error-severity findings; in --consistency-only,
+ *                       also fail on any cross-file conflict (cheap CI gate)
+ */
+
+const { spawnSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+
+const ROOT = path.resolve(__dirname, '..', '..');
+const NODE_BIN = path.join(ROOT, 'node_modules', '.bin');
+const PROBE_TIMEOUT_MS = 10000;
+const CI = process.argv.includes('--ci');
+const DISPLAY_ALL = process.argv.includes('--display-all');
+const QUIET = process.argv.includes('--quiet');
+const CONSISTENCY_ONLY = process.argv.includes('--consistency-only');
+const isMac = process.platform === 'darwin';
+
+const C = process.stdout.isTTY
+  ? {
+      red: (s) => `\x1b[31m${s}\x1b[0m`,
+      yellow: (s) => `\x1b[33m${s}\x1b[0m`,
+      green: (s) => `\x1b[32m${s}\x1b[0m`,
+      dim: (s) => `\x1b[2m${s}\x1b[0m`,
+      bold: (s) => `\x1b[1m${s}\x1b[0m`,
+    }
+  : new Proxy({}, { get: () => (s) => s });
+
+/** @param {string} file @returns {string | null} */
+function read(file) {
+  try {
+    return fs.readFileSync(path.join(ROOT, file), 'utf8');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Lists checked-in files under `rel` matching `filter`, skipping vendored and
+ * build directories so node_modules' RN-managed copies don't pollute results.
+ * @param {string} rel
+ * @param {(f: string) => boolean} filter
+ * @param {string[]} [out]
+ * @param {number} [depth]
+ * @returns {string[]}
+ */
+function walk(rel, filter, out = [], depth = 0) {
+  const SKIP = new Set(['node_modules', 'vendor', 'build', '.git', '.cxx', 'Pods', '.yarn']);
+  let entries;
+  try {
+    entries = fs.readdirSync(path.join(ROOT, rel), { withFileTypes: true });
+  } catch {
+    return out;
+  }
+  for (const e of entries) {
+    if (SKIP.has(e.name)) continue;
+    const child = path.join(rel, e.name);
+    if (e.isDirectory()) {
+      if (depth < 6) walk(child, filter, out, depth + 1);
+    } else if (filter(child)) {
+      out.push(child);
+    }
+  }
+  return out;
+}
+
+/** @param {string} bin @returns {boolean} */
+function onPath(bin) {
+  for (const dir of (process.env.PATH || '').split(path.delimiter)) {
+    try {
+      fs.accessSync(path.join(dir, bin), fs.constants.X_OK);
+      return true;
+    } catch {
+      // not here; keep looking
+    }
+  }
+  return false;
+}
+
+/**
+ * Runs a command and returns its combined output, optionally with the repo's
+ * node_modules/.bin stripped from PATH so we see the binary an editor or a
+ * plain shell would resolve — not the npm-pinned shim that yarn injects.
+ * @param {string} cmd
+ * @param {string[]} args
+ * @param {{ excludeNodeBin?: boolean, cwd?: string }} [opts]
+ */
+function probe(cmd, args, opts = {}) {
+  const env = { ...process.env };
+  if (opts.excludeNodeBin) {
+    env.PATH = (env.PATH || '')
+      .split(path.delimiter)
+      .filter((p) => path.resolve(p) !== NODE_BIN)
+      .join(path.delimiter);
+  }
+  const res = spawnSync(cmd, args, {
+    encoding: 'utf8',
+    env,
+    cwd: opts.cwd ? path.join(ROOT, opts.cwd) : ROOT,
+    timeout: PROBE_TIMEOUT_MS,
+  });
+  // On a hung tool, spawnSync sets res.error (ETIMEDOUT) and/or res.signal when
+  // it kills the process — treat that as "couldn't resolve" instead of blocking
+  // the whole run. A normal non-zero exit (res.signal null) keeps its output.
+  if (res.error || res.signal) {
+    return { found: false, out: '', stdout: '' };
+  }
+  return { found: true, out: `${res.stdout || ''}${res.stderr || ''}`.trim(), stdout: (res.stdout || '').trim() };
+}
+
+/** @param {string | null} str @returns {{ raw: string, major: number, minor: number, patch: number } | null} */
+function parseVersion(str) {
+  const m = /(\d+)\.(\d+)(?:\.(\d+))?/.exec(str || '');
+  if (!m) {
+    return null;
+  }
+  return { raw: m[0], major: +m[1], minor: +m[2], patch: +(m[3] || 0) };
+}
+
+/** @typedef {{ name: string, status: string, severity: string, required: string, found: string, source: string, hint?: string, note?: string }} Finding */
+
+/** @type {Finding[]} */
+const findings = [];
+
+/** @param {Finding} f */
+function add(f) {
+  findings.push(f);
+}
+
+// ---------------------------------------------------------------------------
+// Checks. Each derives its requirement from a canonical file, then compares.
+// ---------------------------------------------------------------------------
+
+function checkNode() {
+  const want = (read('.nvmrc') || '').trim();
+  const wantV = parseVersion(want);
+  if (!wantV) {
+    return add({ name: 'node', status: 'INFO', severity: 'info', required: want || '(unset)', found: '—', source: '.nvmrc', note: 'Could not parse a version from .nvmrc.' });
+  }
+  const { found, out } = probe('node', ['--version']);
+  const gotV = parseVersion(out);
+  if (!found || !gotV) {
+    return add({ name: 'node', status: 'MISSING', severity: 'error', required: want, found: '—', source: '.nvmrc', hint: 'nvm install (reads .nvmrc), or: fnm use' });
+  }
+  let status = 'OK';
+  if (gotV.major !== wantV.major) status = 'WRONG';
+  else if (gotV.minor !== wantV.minor) status = 'WARN';
+  add({ name: 'node', status, severity: status === 'WRONG' ? 'error' : 'warn', required: `${want}.x`, found: gotV.raw, source: '.nvmrc', hint: 'nvm install (reads .nvmrc)' });
+}
+
+function checkYarn() {
+  const pm = JSON.parse(read('package.json') || '{}').packageManager || '';
+  const want = pm.split('@')[1] || '';
+  const { found, out } = probe('yarn', ['--version']);
+  const got = (out.match(/\d+\.\d+\.\d+/) || [''])[0];
+  if (!found || !got) {
+    return add({ name: 'yarn', status: 'MISSING', severity: 'error', required: want, found: '—', source: 'package.json#packageManager', hint: 'corepack enable && corepack prepare yarn@' + want + ' --activate' });
+  }
+  add({ name: 'yarn', status: got === want ? 'OK' : 'WRONG', severity: 'error', required: want, found: got, source: 'package.json#packageManager', hint: 'corepack prepare yarn@' + want + ' --activate' });
+}
+
+function checkClangFormat() {
+  // The repo pins clang-format via the clang-format-node npm package; yarn's
+  // format:* scripts resolve to node_modules/.bin. The drift is when a human
+  // shell or an editor's format-on-save uses a DIFFERENT clang-format on PATH.
+  const pinned = parseVersion(probe(path.join(NODE_BIN, 'clang-format'), ['--version']).out);
+  const onPath = probe('clang-format', ['--version'], { excludeNodeBin: true });
+  const pathV = parseVersion(onPath.out);
+  const source = 'node_modules/.bin/clang-format (clang-format-node)';
+  if (!pinned) {
+    return add({ name: 'clang-format', status: 'MISSING', severity: 'warn', required: '(pinned binary)', found: '—', source, hint: 'yarn install — the pinned binary is missing' });
+  }
+  if (!onPath.found || !pathV) {
+    return add({ name: 'clang-format (PATH)', status: 'INFO', severity: 'info', required: pinned.raw, found: 'not on PATH', source, note: 'No clang-format on PATH. yarn format:* still works via the pinned binary; an editor formatting on save would have none.' });
+  }
+  const drift = pathV.major !== pinned.major || pathV.minor !== pinned.minor;
+  add({ name: 'clang-format (PATH)', status: drift ? 'DRIFT' : 'OK', severity: 'warn', required: pinned.raw, found: pathV.raw, source, note: drift ? 'Your shell/editor clang-format differs from the pinned one. Formatting a file outside `yarn format:*` will produce diffs CI rejects.' : undefined, hint: drift ? 'Use `yarn format:apple` (pinned), or install matching LLVM, or point your editor at node_modules/.bin/clang-format' : undefined });
+}
+
+function checkClangTidy() {
+  // Genuinely unpinned: iOS uses homebrew LLVM, Android uses the NDK's binary.
+  const { found, out } = probe('clang-tidy', ['--version']);
+  const v = parseVersion(out);
+  add({ name: 'clang-tidy', status: 'INFO', severity: 'info', required: 'unpinned (iOS: LLVM, Android: NDK)', found: found && v ? v.raw : 'not on PATH', source: 'scripts/llvm-tools', note: 'No version pin exists. iOS-LLVM and NDK clang-tidy report different findings; a different major than CI changes which checks fire.' });
+}
+
+function checkRuby() {
+  if (!isMac) return;
+  const base = (s) => (s || '').replace(/p\d+$/, '').trim();
+  // Gemfile.lock records the ruby that actually locked the gems and that CI
+  // runs — the authoritative version. (.ruby-version disagrees; see the
+  // consistency pass, which surfaces all the conflicting sources.)
+  const lock = read('apps/fabric-example/Gemfile.lock') || '';
+  const lockRuby = (lock.match(/RUBY VERSION\s+ruby\s+(\S+)/) || [])[1] || '';
+  const want = base(lockRuby);
+  const { found, out } = probe('ruby', ['--version']);
+  const got = (out.match(/ruby (\d+\.\d+\.\d+)/) || [])[1] || '';
+  const source = 'apps/fabric-example/Gemfile.lock (RUBY VERSION)';
+  if (!found || !got) {
+    return add({ name: 'ruby', status: 'INFO', severity: 'info', required: lockRuby, found: 'not installed', source, note: 'Only needed for iOS pod work.' });
+  }
+  const ok = base(got) === want;
+  add({ name: 'ruby', status: ok ? 'OK' : 'WARN', severity: 'warn', required: lockRuby, found: got, source, hint: ok ? undefined : `install ruby ${want} via your version manager (rbenv/asdf/rvm) — matches Gemfile.lock + CI` });
+}
+
+function checkCocoapods() {
+  if (!isMac) return;
+  const lock = read('apps/fabric-example/ios/Podfile.lock') || '';
+  const want = (lock.match(/COCOAPODS:\s*(\S+)/i) || [])[1] || '';
+  // The repo always runs the bundler-pinned pod (`bundle exec pod`), never a
+  // global one — so check that, not whatever `pod` happens to be on PATH.
+  // Parse the version from stdout only; bundler/ruby warnings land on stderr.
+  const { found, stdout } = probe('bundle', ['exec', 'pod', '--version'], { cwd: 'apps/fabric-example' });
+  const got = (stdout.match(/\d+\.\d+\.\d+/) || [''])[0];
+  const source = 'apps/fabric-example/ios/Podfile.lock (via bundle exec pod)';
+  if (!found || !got) {
+    return add({ name: 'cocoapods', status: 'INFO', severity: 'info', required: want, found: 'not resolvable', source, note: 'Checked via `bundle exec pod` (the pod the repo uses). Run `bundle install` in apps/fabric-example.' });
+  }
+  add({ name: 'cocoapods', status: got === want ? 'OK' : 'WARN', severity: 'warn', required: want, found: got, source, note: 'Checked via `bundle exec pod`, not a global pod.', hint: got === want ? undefined : 'bundle install (from apps/fabric-example)' });
+}
+
+function checkBundler() {
+  if (!isMac) return;
+  const lock = read('apps/fabric-example/Gemfile.lock') || '';
+  const want = (lock.match(/BUNDLED WITH\s+(\d+\.\d+\.\d+)/) || [])[1] || '';
+  if (!want) return;
+  const { found, out } = probe('bundle', ['--version']);
+  const got = (out.match(/\d+\.\d+\.\d+/) || [''])[0];
+  const source = 'apps/fabric-example/Gemfile.lock (BUNDLED WITH)';
+  if (!found || !got) {
+    return add({ name: 'bundler', status: 'INFO', severity: 'info', required: want, found: 'not installed', source, note: 'Only needed for iOS pod work.', hint: `gem install bundler -v ${want}` });
+  }
+  add({ name: 'bundler', status: got === want ? 'OK' : 'WARN', severity: 'warn', required: want, found: got, source, hint: got === want ? undefined : `gem install bundler -v ${want}` });
+}
+
+function checkCmake() {
+  // Several CMakeLists.txt pin their own floor (reanimated/worklets android,
+  // NativeView) and they don't all agree — take the highest so a bump to any
+  // one of them is never silently missed.
+  let floor = null;
+  let floorV = null;
+  for (const f of walk('packages', (p) => p.endsWith('CMakeLists.txt'))) {
+    const m = (read(f) || '').match(/cmake_minimum_required\(\s*VERSION\s+([\d.]+)/i);
+    const v = m && parseVersion(m[1]);
+    if (v && (!floorV || v.major > floorV.major || (v.major === floorV.major && v.minor > floorV.minor))) {
+      floor = m[1];
+      floorV = v;
+    }
+  }
+  floor = floor || '3.16';
+  floorV = floorV || parseVersion(floor);
+  const source = 'packages/**/CMakeLists.txt (highest cmake_minimum_required)';
+  const { found, out } = probe('cmake', ['--version']);
+  const v = parseVersion(out);
+  if (!found || !v) {
+    return add({ name: 'cmake', status: 'INFO', severity: 'info', required: `>=${floor}`, found: 'not on PATH', source, note: 'Usually provided by the Android SDK; only needed for local Android C++ builds.' });
+  }
+  const ok = v.major > floorV.major || (v.major === floorV.major && v.minor >= floorV.minor);
+  add({ name: 'cmake', status: ok ? 'OK' : 'WARN', severity: 'warn', required: `>=${floor}`, found: v.raw, source, hint: ok ? undefined : 'brew install cmake (or use the SDK-bundled one)' });
+}
+
+function checkClangd() {
+  const { found, out } = probe('clangd', ['--version']);
+  const v = parseVersion(out);
+  add({ name: 'clangd', status: 'INFO', severity: 'info', required: 'unpinned (LLVM)', found: found && v ? v.raw : 'not on PATH', source: '.clangd', note: 'Drives in-editor C++ diagnostics; whichever clangd is on PATH is used, so editor warnings can differ from CI.' });
+}
+
+function checkCmakeLang() {
+  // cmake-format and cmake-lint both ship in the cmakelang pip package; CI pins it.
+  const action = read('.github/actions/android-validation/action.yml') || '';
+  const want = (action.match(/cmakelang==([\d.]+)/) || [])[1] || '';
+  const fmt = probe('cmake-format', ['--version']);
+  const lint = probe('cmake-lint', ['--version']);
+  const source = `.github/actions/android-validation/action.yml (cmakelang==${want})`;
+  if (!fmt.found && !lint.found) {
+    return add({ name: 'cmake-format / cmake-lint', status: 'INFO', severity: 'info', required: want, found: 'not installed', source, note: 'From the cmakelang pip package; only needed to format/lint CMakeLists.', hint: `pip install cmakelang==${want}` });
+  }
+  if (!fmt.found || !lint.found) {
+    const missing = fmt.found ? 'cmake-lint' : 'cmake-format';
+    return add({ name: 'cmake-format / cmake-lint', status: 'WARN', severity: 'warn', required: want, found: `${missing} missing`, source, note: 'Both ship in the cmakelang package and must be installed together.', hint: `pip install cmakelang==${want}` });
+  }
+  // Check BOTH binaries — they can drift apart, and the failing one matters.
+  const fmtV = parseVersion(fmt.stdout) || parseVersion(fmt.out);
+  const lintV = parseVersion(lint.stdout) || parseVersion(lint.out);
+  const ok = !!fmtV && !!lintV && fmtV.raw === want && lintV.raw === want;
+  const found = ok ? want : `cmake-format ${fmtV ? fmtV.raw : '?'}, cmake-lint ${lintV ? lintV.raw : '?'}`;
+  add({ name: 'cmake-format / cmake-lint', status: ok ? 'OK' : 'WARN', severity: 'warn', required: want, found, source, hint: ok ? undefined : `pip install cmakelang==${want} (both binaries must match CI)` });
+}
+
+function checkJdk() {
+  const ci = read('.github/actions/android-validation/action.yml') || '';
+  const want = (ci.match(/java-version:\s*'?(\d+)/) || [])[1] || '17';
+  const { found, out } = probe('java', ['-version']);
+  const v = parseVersion((out.match(/version "(\d[^"]*)"/) || [])[1] || out);
+  if (!found || !v) {
+    return add({ name: 'java (JDK)', status: 'INFO', severity: 'info', required: want, found: 'not on PATH', source: '.github/actions/android-validation/action.yml', note: 'Only needed for local Android builds.' });
+  }
+  const ok = v.major === +want;
+  add({ name: 'java (JDK)', status: ok ? 'OK' : 'WARN', severity: 'warn', required: `${want} (major)`, found: String(v.major), source: 'CI setup-java (android-validation)', hint: ok ? undefined : `Install a JDK ${want} (CI uses Zulu ${want}); a different major breaks AGP/Gradle locally.` });
+}
+
+function checkXcodeBuildServer() {
+  if (!isMac) return;
+  const present = onPath('xcode-build-server');
+  add({ name: 'xcode-build-server', status: present ? 'OK' : 'INFO', severity: 'info', required: 'any (unpinned)', found: present ? 'installed' : 'not installed', source: 'scripts/llvm-tools/generate-xcode-metadata.sh', note: present ? 'No version is pinned; CI uses whatever brew installs.' : 'Needed to build the iOS clang-tidy compile database.', hint: present ? undefined : 'brew install xcode-build-server' });
+}
+
+/** @returns {string} best-guess Android SDK root, honoring the standard env vars first */
+function androidSdkRoot() {
+  const home = process.env.HOME || '';
+  return process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT || (isMac ? path.join(home, 'Library', 'Android', 'sdk') : path.join(home, 'Android', 'Sdk'));
+}
+
+function checkNdk() {
+  const gradle = read('apps/fabric-example/android/build.gradle') || '';
+  const want = (gradle.match(/ndkVersion\s*=\s*"([^"]+)"/) || [])[1] || '';
+  const source = 'apps/fabric-example/android/build.gradle (ndkVersion)';
+  if (!want) {
+    return add({ name: 'NDK', status: 'INFO', severity: 'info', required: '(unset)', found: '—', source, note: 'Could not parse ndkVersion from build.gradle.' });
+  }
+  // The NDK isn't a binary with its own `--version` — side-by-side installs
+  // live at $ANDROID_HOME/ndk/<version>, so check that directory listing
+  // instead of shelling out. CI installs the exact pin via sdkmanager; this
+  // checks whether your local SDK has it too.
+  const ndkDir = path.join(androidSdkRoot(), 'ndk');
+  let installed = null;
+  try {
+    installed = fs.readdirSync(ndkDir);
+  } catch {
+    // SDK/ndk dir not found; fall through to the INFO case below.
+  }
+  if (installed === null) {
+    return add({ name: 'NDK', status: 'INFO', severity: 'info', required: want, found: 'SDK not found', source, note: `Checked ${ndkDir}. Set ANDROID_HOME/ANDROID_SDK_ROOT, or install via Android Studio. Only needed for local Android C++ builds.` });
+  }
+  const ok = installed.includes(want);
+  add({ name: 'NDK', status: ok ? 'OK' : 'WARN', severity: 'warn', required: want, found: ok ? want : installed.join(', ') || '(none installed)', source, note: 'PCH formats differ across NDK majors.', hint: ok ? undefined : `sdkmanager --install "ndk;${want}" (or Android Studio > SDK Manager > SDK Tools > NDK)` });
+}
+
+// ---------------------------------------------------------------------------
+// Cross-file consistency — canonical sources that should agree but don't.
+// ---------------------------------------------------------------------------
+
+/** @typedef {{ name: string, detail: string, items: string[] }} Conflict */
+
+/** @type {Conflict[]} */
+const conflicts = [];
+
+// Divergences we've reviewed and accept on purpose, so the checks only fire on
+// NEW, unexpected drift. Forcing these to one value would break things:
+//   - Java 18 is deliberately used by the RN-compat / nightly jobs.
+//   - tvos-example tracks older RN (0.84.1), which ships gradle 9.0.0.
+//   - worklets spotless 8.1.0 is real drift, but bumping may need `spotlessApply`.
+/** @type {Record<string, { accept: string[], reason: string }>} */
+const EXPECTED = {
+  'CI Java version': { accept: ['18'], reason: 'RN-compat / nightly jobs intentionally test JDK 18' },
+  'Gradle wrapper': { accept: ['9.0.0'], reason: 'tvos-example tracks older RN (0.84.1) which ships gradle 9.0.0' },
+  'Spotless plugin': { accept: ['8.1.0'], reason: 'worklets pending bump to 8.4.0 — deferred (needs spotlessApply)' },
+};
+
+/** @type {{ name: string, values: string[], reason: string }[]} */
+const accepted = [];
+
+/**
+ * Drops reviewed-and-accepted versions for `name`. A real conflict exists only
+ * if >1 of the REMAINING versions differ. Records what it accepted so the
+ * report shows it rather than hiding it.
+ * @param {string} name @param {string[]} versions @returns {string[]}
+ */
+function applyExpected(name, versions) {
+  const exp = EXPECTED[name];
+  if (!exp) return versions;
+  const dropped = versions.filter((v) => exp.accept.includes(v));
+  if (versions.length > 1 && dropped.length > 0) {
+    accepted.push({ name, values: dropped, reason: exp.reason });
+  }
+  return versions.filter((v) => !exp.accept.includes(v));
+}
+
+/** @param {string} globEnd @param {string[]} dirs @param {RegExp} re @returns {Record<string, string[]>} */
+function groupVersions(globEnd, dirs, re) {
+  const byVer = {};
+  for (const dir of dirs) {
+    for (const f of walk(dir, (p) => p.endsWith(globEnd))) {
+      const m = (read(f) || '').match(re);
+      if (m) (byVer[m[1]] || (byVer[m[1]] = [])).push(f);
+    }
+  }
+  return byVer;
+}
+
+function consistencyGradle() {
+  // Gradle wrappers live in BOTH apps and packages (each native lib ships its own).
+  const byVer = groupVersions('gradle/wrapper/gradle-wrapper.properties', ['apps', 'packages'], /gradle-(\d+\.\d+(?:\.\d+)?)-/);
+  const versions = applyExpected('Gradle wrapper', Object.keys(byVer));
+  if (versions.length > 1) {
+    conflicts.push({ name: 'Gradle wrapper', detail: `${versions.length} versions across the repo`, items: versions.map((v) => `${v} — ${byVer[v].join(', ')}`) });
+  }
+}
+
+function consistencySpotless() {
+  const byVer = groupVersions('android/build.gradle.kts', ['packages'], /com\.diffplug\.spotless"\)\s*version\s*"([\d.]+)"/);
+  const versions = applyExpected('Spotless plugin', Object.keys(byVer));
+  if (versions.length > 1) {
+    conflicts.push({ name: 'Spotless plugin', detail: `${versions.join(' vs ')} across packages`, items: versions.map((v) => `${v} — ${byVer[v].join(', ')}`) });
+  }
+}
+
+function consistencyJavaCI() {
+  const byVer = {};
+  for (const f of walk('.github', (p) => p.endsWith('.yml') || p.endsWith('.yaml'))) {
+    const text = read(f) || '';
+    const re = /java-version:\s*'?(\d+)/g;
+    let m;
+    while ((m = re.exec(text))) (byVer[m[1]] || (byVer[m[1]] = new Set())).add(f);
+  }
+  const versions = applyExpected('CI Java version', Object.keys(byVer));
+  if (versions.length > 1) {
+    conflicts.push({ name: 'CI Java version', detail: `JDK ${versions.join(' vs ')} across workflows`, items: versions.map((v) => `${v} — ${byVer[v].size} file(s)`) });
+  }
+}
+
+function consistencyRuby() {
+  const base = (s) => (s || '').replace(/p\d+$/, '').trim();
+  const sources = [];
+  const rv = (read('.ruby-version') || '').trim();
+  if (rv) sources.push(['.ruby-version', rv]);
+  const lockRuby = ((read('apps/fabric-example/Gemfile.lock') || '').match(/RUBY VERSION\s+ruby\s+(\S+)/) || [])[1];
+  if (lockRuby) sources.push(['Gemfile.lock RUBY VERSION', lockRuby]);
+  const guard = ((read('.github/workflows/helper/check-ruby-pods.sh') || '').match(/EXPECTED_RUBY="([^"]+)"/) || [])[1];
+  if (guard) sources.push(['check-ruby-pods.sh EXPECTED_RUBY', guard]);
+  const distinct = new Set(sources.map(([, v]) => base(v)));
+  if (distinct.size > 1) {
+    conflicts.push({ name: 'Ruby version', detail: `${distinct.size} different versions declared`, items: sources.map(([k, v]) => `${v} — ${k}`) });
+  }
+}
+
+function consistencyCocoapods() {
+  // check-ruby-pods.sh hardcodes EXPECTED_PODS right next to EXPECTED_RUBY
+  // (see consistencyRuby) and is run in CI against all three example apps —
+  // treat it and their three Podfile.locks as the full set of canonical sources.
+  const sources = [];
+  const podfileLocks = [
+    ['apps/fabric-example/ios/Podfile.lock', 'fabric-example Podfile.lock'],
+    ['apps/tvos-example/ios/Podfile.lock', 'tvos-example Podfile.lock'],
+    ['apps/macos-example/macos/Podfile.lock', 'macos-example Podfile.lock'],
+  ];
+  for (const [file, label] of podfileLocks) {
+    const v = ((read(file) || '').match(/COCOAPODS:\s*(\S+)/i) || [])[1];
+    if (v) sources.push([label, v]);
+  }
+  const guard = ((read('.github/workflows/helper/check-ruby-pods.sh') || '').match(/EXPECTED_PODS="([^"]+)"/) || [])[1];
+  if (guard) sources.push(['check-ruby-pods.sh EXPECTED_PODS', guard]);
+  const distinct = new Set(sources.map(([, v]) => v));
+  if (distinct.size > 1) {
+    conflicts.push({ name: 'CocoaPods version', detail: `${distinct.size} different versions declared`, items: sources.map(([k, v]) => `${v} — ${k}`) });
+  }
+}
+
+function consistencyNdk() {
+  // Only fabric-example and tvos-example ship an Android target, each with
+  // its own ndkVersion pin — that's the full set worth comparing.
+  const byVer = groupVersions('android/build.gradle', ['apps'], /ndkVersion\s*=\s*"([^"]+)"/);
+  const versions = Object.keys(byVer);
+  if (versions.length > 1) {
+    conflicts.push({ name: 'NDK version', detail: `${versions.length} versions across example apps`, items: versions.map((v) => `${v} — ${byVer[v].join(', ')}`) });
+  }
+}
+
+function run() {
+  findings.length = 0;
+  conflicts.length = 0;
+  accepted.length = 0;
+  if (!CONSISTENCY_ONLY) {
+    [
+      checkNode,
+      checkYarn,
+      checkClangFormat,
+      checkClangTidy,
+      checkClangd,
+      checkCmake,
+      checkCmakeLang,
+      checkRuby,
+      checkCocoapods,
+      checkBundler,
+      checkJdk,
+      checkXcodeBuildServer,
+      checkNdk,
+    ].forEach((c) => c());
+  }
+  [consistencyGradle, consistencySpotless, consistencyJavaCI, consistencyRuby, consistencyCocoapods, consistencyNdk].forEach((c) => c());
+  return { findings, conflicts };
+}
+
+// ---------------------------------------------------------------------------
+// Report
+// ---------------------------------------------------------------------------
+
+const SYM = {
+  OK: C.green('✔'),
+  WARN: C.yellow('!'),
+  DRIFT: C.yellow('⇄'),
+  WRONG: C.red('✘'),
+  MISSING: C.red('✘'),
+  INFO: C.dim('·'),
+};
+
+/** @returns {number} the process exit code */
+function report() {
+  console.log(C.bold('\nreanimated-doctor') + C.dim('  (host toolchain vs. repo-pinned versions)\n'));
+
+  // By default, hide rows that already match — only surface what needs attention.
+  // --quiet also drops INFO rows (unpinned/not-needed context).
+  const shown = DISPLAY_ALL
+    ? findings
+    : findings.filter((f) => f.status !== 'OK' && !(QUIET && f.status === 'INFO'));
+  for (const f of shown) {
+    const sym = SYM[f.status] || '?';
+    const head = `${sym} ${f.name.padEnd(26)} ${C.dim('need')} ${f.required.padEnd(20)} ${C.dim('found')} ${f.found}`;
+    console.log(head);
+    if (f.note) console.log(`   ${C.dim('→ ' + f.note)}`);
+    if (f.hint && f.status !== 'OK') console.log(`   ${C.dim('fix: ' + f.hint)}`);
+  }
+  if (shown.length === 0 && conflicts.length === 0) {
+    console.log(C.green('✔ everything matches the repo-pinned versions.'));
+  }
+
+  if (conflicts.length > 0) {
+    console.log(C.bold('\nCross-file consistency') + C.dim('  (canonical sources that disagree)'));
+    for (const c of conflicts) {
+      console.log(`${C.yellow('⚠')} ${c.name}: ${c.detail}`);
+      for (const it of c.items) console.log(`   ${C.dim('· ' + it)}`);
+    }
+  }
+
+  if (accepted.length > 0 && !QUIET) {
+    console.log(C.dim('\nAccepted divergences (reviewed, not flagged):'));
+    for (const a of accepted) {
+      console.log(C.dim(`   · ${a.name}: ${a.values.join(', ')} — ${a.reason}`));
+    }
+  }
+
+  const errors = findings.filter((f) => f.severity === 'error' && (f.status === 'WRONG' || f.status === 'MISSING'));
+  const warns = findings.filter((f) => (f.status === 'WARN' || f.status === 'DRIFT') && f.severity !== 'error');
+
+  // Two concerns, two lines: host findings you fix by INSTALLING tools, vs repo
+  // consistency you fix by EDITING files. Conflating them caused real confusion.
+  console.log('');
+  console.log(C.bold('Summary'));
+  if (!CONSISTENCY_ONLY) {
+    console.log(
+      `  ${C.dim('your machine ')} ` +
+        `${C.green(findings.filter((f) => f.status === 'OK').length + ' ok')}  ` +
+        `${C.yellow(warns.length + ' warn')}  ` +
+        `${C.red(errors.length + ' error')}  ` +
+        `${C.dim(findings.filter((f) => f.status === 'INFO').length + ' info')}` +
+        C.dim('  (install/configure to fix)')
+    );
+  }
+  console.log(
+    `  ${C.dim('repo         ')} ` +
+      `${C.yellow(conflicts.length + ' conflict')}  ` +
+      `${C.dim(accepted.length + ' accepted')}` +
+      C.dim('  (CI-enforceable via --consistency-only)')
+  );
+
+  const okHidden = DISPLAY_ALL ? 0 : findings.filter((f) => f.status === 'OK').length;
+  if (okHidden > 0) {
+    console.log(C.dim(`(${okHidden} ok hidden — pass --display-all to show)`));
+  }
+
+  // In --consistency-only, cross-file conflicts are the whole point — make them
+  // fatal under --ci so the repo can enforce them with no host tools / no flake.
+  const fatalConflicts = CONSISTENCY_ONLY && conflicts.length > 0;
+  if (CI && (errors.length > 0 || fatalConflicts)) {
+    const reasons = [];
+    if (errors.length > 0) reasons.push(`${errors.length} error-severity finding(s)`);
+    if (fatalConflicts) reasons.push(`${conflicts.length} cross-file conflict(s)`);
+    console.log(C.red(`\nFailing because --ci and ${reasons.join(' + ')}.`));
+    return 1;
+  }
+  console.log(C.dim('\nadvisory run — exiting 0 (pass --ci to enforce)\n'));
+  return 0;
+}
+
+if (require.main === module) {
+  run();
+  process.exit(report());
+}
+
+module.exports = { parseVersion, run, report, findings, conflicts };

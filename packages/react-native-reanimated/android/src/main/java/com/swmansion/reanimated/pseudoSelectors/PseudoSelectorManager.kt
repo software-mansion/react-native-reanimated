@@ -47,6 +47,28 @@ class PseudoSelectorManager(
             override fun didScheduleMountItems(uiManager: UIManager) = Unit
         }
 
+    private val pendingAttaches = LinkedHashMap<String, PendingAttach>()
+    private var mountListenerRegistered = false
+
+    private data class PendingAttach(
+        val tag: Int,
+        val selector: Int,
+        val callback: PseudoSelectorCallback,
+    )
+
+    private val mountListener =
+        object : UIManagerListener {
+            override fun didMountItems(uiManager: UIManager) = flushPendingAttaches()
+
+            override fun willMountItems(uiManager: UIManager) = Unit
+
+            override fun willDispatchViewUpdates(uiManager: UIManager) = Unit
+
+            override fun didDispatchMountItems(uiManager: UIManager) = Unit
+
+            override fun didScheduleMountItems(uiManager: UIManager) = Unit
+        }
+
     fun attach(
         tag: Int,
         selector: Int,
