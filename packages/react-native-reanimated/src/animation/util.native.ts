@@ -2,7 +2,9 @@
 'use strict';
 import {
   createSerializable,
+  isWorkletFunction,
   RuntimeKind,
+  scheduleOnUI,
   serializableMappingCache,
 } from 'react-native-worklets';
 
@@ -15,7 +17,7 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
-import { logger } from '../common';
+import { IS_JEST, logger } from '../common';
 import type {
   AnimatableValue,
   AnimatableValueObject,
@@ -82,10 +84,28 @@ if (__DEV__ && ReducedMotionManager.jsValue) {
 }
 
 export function assertEasingIsWorklet(
-  _easing: EasingFunction | EasingFunctionFactory
+  easing: EasingFunction | EasingFunctionFactory
 ): void {
   'worklet';
-  return;
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
+    // If this is called on UI (for example from gesture handler with worklets), we don't get easing,
+    // but its bound copy, which is not a worklet. We don't want to throw any error then.
+    return;
+  }
+  if (IS_JEST) {
+    // It is possible to run reanimated on web without plugin, so let's skip this check on web
+    return;
+  }
+  // @ts-ignore typescript wants us to use `in` instead, which doesn't work with host objects
+  if (easing?.factory) {
+    return;
+  }
+
+  if (!isWorkletFunction(easing)) {
+    throw new Error(
+      '[Reanimated] The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.'
+    );
+  }
 }
 
 export function initialUpdaterRun<T>(updater: () => T) {
@@ -549,7 +569,29 @@ export function defineAnimation<
     return animation;
   };
 
-  return create();
+  if (
+    globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative ||
+    IS_JEST
+  ) {
+    return create();
+  }
+  create.__isAnimationDefinition = true;
+
+  // @ts-expect-error it's fine
+  return create;
+}
+
+function cancelAnimationNative<TValue>(sharedValue: SharedValue<TValue>): void {
+  'worklet';
+  // setting the current value cancels the animation if one is currently running
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
+    sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+  } else {
+    scheduleOnUI(() => {
+      'worklet';
+      sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+    });
+  }
 }
 
 function cancelAnimationWeb<TValue>(sharedValue: SharedValue<TValue>): void {
@@ -565,4 +607,6 @@ function cancelAnimationWeb<TValue>(sharedValue: SharedValue<TValue>): void {
  *   cancel.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/cancelAnimation
  */
-export const cancelAnimation = cancelAnimationWeb;
+export const cancelAnimation = IS_JEST
+  ? cancelAnimationWeb
+  : cancelAnimationNative;

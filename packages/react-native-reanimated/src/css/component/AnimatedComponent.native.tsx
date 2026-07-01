@@ -6,13 +6,20 @@ import { Platform, StyleSheet } from 'react-native';
 
 import type { AnyComponent, UnknownRecord } from '../../common';
 import { IS_JEST } from '../../common';
-import type { ShadowNodeWrapper } from '../../commonTypes';
+import type {
+  InternalHostInstance,
+  ShadowNodeWrapper,
+} from '../../commonTypes';
 import type {
   AnimatedComponentRef,
   IAnimatedComponentInternalBase,
   ViewInfo,
 } from '../../createAnimatedComponent/commonTypes';
+import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
+import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import type { DefaultStyle } from '../../hook/commonTypes';
+import { findHostInstance } from '../../platform-specific/findHostInstance';
+import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../native';
 import { CSSManager } from '../platform';
 import type { CSSStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
@@ -61,15 +68,38 @@ export default class AnimatedComponent<
       return this._viewInfo;
     }
 
-    const shadowNodeWrapper: ShadowNodeWrapper | null = null;
-    const reactViewName: string | undefined = undefined;
+    let viewTag: number | typeof this._componentRef;
+    let shadowNodeWrapper: ShadowNodeWrapper | null = null;
+    let DOMElement: HTMLElement | null = null;
+    let reactViewName: string | undefined;
 
-    // At this point we assume that `_setComponentRef` was already called and `_component` is set.
-    // `this._component` on web represents HTMLElement of our component, that's why we use casting
-    // TODO - implement a valid solution later on - this is a temporary fix
-    const viewTag: number | typeof this._componentRef = this._componentRef;
-    const DOMElement = this._componentDOMRef;
+    if (IS_JEST) {
+      // At this point we assume that `_setComponentRef` was already called and `_component` is set.
+      // `this._component` on web represents HTMLElement of our component, that's why we use casting
+      // TODO - implement a valid solution later on - this is a temporary fix
+      viewTag = this._componentRef;
+      DOMElement = this._componentDOMRef;
+    } else {
+      const hostInstance = findHostInstance(this);
+      if (!hostInstance) {
+        /*
+          findHostInstance can return null for a component that doesn't render anything 
+          (render function returns null). Example: 
+          svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
+        */
+        throw new Error(
+          '[Reanimated] Cannot find host instance for this component. Maybe it renders nothing?'
+        );
+      }
 
+      const viewInfo = getViewInfo(hostInstance);
+      viewTag = viewInfo.viewTag ?? -1;
+      reactViewName = viewInfo.reactViewName;
+      shadowNodeWrapper = getShadowNodeWrapperFromRef(
+        this as InternalHostInstance,
+        hostInstance
+      );
+    }
     this._viewInfo = { viewTag, shadowNodeWrapper, reactViewName };
     if (DOMElement) {
       this._viewInfo.DOMElement = DOMElement;
@@ -112,10 +142,12 @@ export default class AnimatedComponent<
       return componentRef.getAnimatableRef();
     }
     // Case for SVG components on Web
-    if (componentRef && componentRef.elementRef) {
-      this._componentDOMRef = componentRef.elementRef.current;
-    } else {
-      this._componentDOMRef = ref as HTMLElement;
+    if (IS_JEST) {
+      if (componentRef && componentRef.elementRef) {
+        this._componentDOMRef = componentRef.elementRef.current;
+      } else {
+        this._componentDOMRef = ref as HTMLElement;
+      }
     }
     return componentRef;
   };
@@ -128,6 +160,15 @@ export default class AnimatedComponent<
 
   componentDidMount() {
     this._updateStyles(this.props);
+
+    const viewTag = this._viewInfo?.viewTag;
+    if (
+      !IS_JEST &&
+      this._willUnmount &&
+      typeof viewTag === 'number'
+    ) {
+      unmarkNodeAsRemovable(viewTag);
+    }
 
     if (!IS_JEST) {
       this._CSSManager ??= new CSSManager(
@@ -146,6 +187,16 @@ export default class AnimatedComponent<
   componentWillUnmount() {
     if (!IS_JEST && this._CSSManager) {
       this._CSSManager.unmountCleanup();
+    }
+
+    const wrapper = this._viewInfo?.shadowNodeWrapper;
+    if (!IS_JEST && wrapper) {
+      // Mark node as removable on the native (C++) side, but only actually remove it
+      // when it no longer exists in the Shadow Tree. This ensures proper cleanup of
+      // animations/transitions/props while handling cases where the node might be
+      // remounted (e.g., when frozen) after componentWillUnmount is called.
+
+      markNodeAsRemovable(wrapper);
     }
 
     this._willUnmount = true;

@@ -121,11 +121,21 @@ function createMapperRegistry() {
     }
   }
 
-  const schedulingFunction = requestAnimationFrame;
+  const schedulingFunction = IS_JEST
+    ? requestAnimationFrame
+    : globalThis.requestAnimationFrameFinalizer;
 
   function scheduledMapperRun() {
     runRequested = false;
     mapperRun();
+    if (!IS_JEST) {
+      // We always run mappers on native.
+      schedulingFunction(scheduledMapperRun);
+    }
+  }
+
+  if (!IS_JEST) {
+    schedulingFunction(scheduledMapperRun);
   }
 
   global.__mapperRun = mapperRun;
@@ -206,10 +216,14 @@ function createMapperRegistry() {
         sv.addListener(mapper.id, () => {
           mapper.dirty = true;
           isAnyMapperDirty = true;
-          maybeRequestUpdates();
+          if (IS_JEST) {
+            maybeRequestUpdates();
+          }
         });
       }
-      maybeRequestUpdates();
+      if (IS_JEST) {
+        maybeRequestUpdates();
+      }
     },
     stop: (mapperID: number) => {
       const mapper = mappers.get(mapperID);

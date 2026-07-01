@@ -489,15 +489,22 @@ export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
   | JestAnimatedStyleHandle<Style | AnimatedProps> {
   const animatedUpdaterData = useRef<AnimatedUpdaterData | null>(null);
   let inputs = Object.values(updater.__closure ?? {});
-  if (!inputs.length && dependencies?.length) {
-    // let web work without a Babel plugin
-    inputs = dependencies;
-  }
-  if (__DEV__ && !inputs.length && !dependencies && !isWorkletFunction(updater)) {
-    throw new Error(
-      `[Reanimated] \`useAnimatedStyle\` was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel plugin.
+  if (IS_JEST) {
+    if (!inputs.length && dependencies?.length) {
+      // let web work without a Babel plugin
+      inputs = dependencies;
+    }
+    if (
+      __DEV__ &&
+      !inputs.length &&
+      !dependencies &&
+      !isWorkletFunction(updater)
+    ) {
+      throw new Error(
+        `[Reanimated] \`useAnimatedStyle\` was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel plugin.
 For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin\`.`
-    );
+      );
+    }
   }
   const adaptersArray = adapters
     ? Array.isArray(adapters)

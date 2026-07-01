@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
 
+import { IS_JEST } from '../common';
 import { startMapper, stopMapper } from '../core';
 import type { DependencyList } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
@@ -39,9 +40,11 @@ export function useAnimatedReaction<PreparedResult>(
 
   let inputs = Object.values(prepare.__closure ?? {});
 
-  if (!inputs.length && dependencies?.length) {
-    // let web work without Worklets Babel plugin
-    inputs = dependencies;
+  if (IS_JEST) {
+    if (!inputs.length && dependencies?.length) {
+      // let web work without Worklets Babel plugin
+      inputs = dependencies;
+    }
   }
 
   if (dependencies === undefined) {

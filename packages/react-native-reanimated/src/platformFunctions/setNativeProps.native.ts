@@ -1,7 +1,17 @@
 'use strict';
-import { IS_JEST, logger } from '../common';
-import type { InstanceOrElement, StyleProps } from '../commonTypes';
-import type { AnimatedRef } from '../hook/commonTypes';
+import { RuntimeKind } from 'react-native-worklets';
+
+import { IS_JEST, logger, processColorsInProps } from '../common';
+import type {
+  InstanceOrElement,
+  ShadowNodeWrapper,
+  StyleProps,
+} from '../commonTypes';
+import type {
+  AnimatedRef,
+  AnimatedRefOnJS,
+  AnimatedRefOnUI,
+} from '../hook/commonTypes';
 
 type SetNativeProps = <TRef extends InstanceOrElement>(
   animatedRef: AnimatedRef<TRef>,
@@ -23,6 +33,20 @@ type SetNativeProps = <TRef extends InstanceOrElement>(
  */
 export let setNativeProps: SetNativeProps;
 
+function setNativePropsNative(
+  animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
+  updates: StyleProps
+) {
+  'worklet';
+  if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
+    logger.warn('setNativeProps() can only be used on the UI runtime.');
+    return;
+  }
+  const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
+  processColorsInProps(updates);
+  global._updateProps!([{ shadowNodeWrapper, updates }]);
+}
+
 function setNativePropsJest() {
   logger.warn('setNativeProps() is not supported with Jest.');
 }
@@ -31,7 +55,12 @@ function setNativePropsDefault() {
   logger.warn('setNativeProps() is not supported on this configuration.');
 }
 
-if (IS_JEST) {
+if (!IS_JEST) {
+  // Those assertions are actually correct since on Native platforms `AnimatedRef` is
+  // mapped as a different function in `serializableMappingCache` and
+  // TypeScript is not able to infer that.
+  setNativeProps = setNativePropsNative as unknown as SetNativeProps;
+} else if (IS_JEST) {
   setNativeProps = setNativePropsJest;
 } else {
   setNativeProps = setNativePropsDefault;

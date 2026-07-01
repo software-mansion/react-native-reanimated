@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
+import { IS_JEST } from '../common';
 import type { SharedValue } from '../commonTypes';
 import { makeMutable, startMapper, stopMapper } from '../core';
 import type { DependencyList } from './commonTypes';
@@ -42,9 +43,11 @@ export function useDerivedValue<Value>(
 ): DerivedValue<Value> {
   const initRef = useRef<SharedValue<Value> | null>(null);
   let inputs = Object.values(updater.__closure ?? {});
-  if (!inputs.length && dependencies?.length) {
-    // let web work without a Babel/SWC plugin
-    inputs = dependencies;
+  if (IS_JEST) {
+    if (!inputs.length && dependencies?.length) {
+      // let web work without a Babel/SWC plugin
+      inputs = dependencies;
+    }
   }
 
   // build dependencies
