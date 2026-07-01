@@ -21,10 +21,16 @@ During cloning we use `Object.entries` to iterate over the keys which throws an 
 For convenience we moved this cache to a separate file so it doesn't scare us with red squiggles.
 */
 
-const cache = new WeakMap<object, SerializableRef | symbol>();
+const cache = new WeakMap<
+  object,
+  SerializableRef | WeakRef<SerializableRef> | symbol
+>();
 
 export const serializableMappingCache = {
-  set(serializable: object, serializableRef?: SerializableRef): void {
+  set(
+    serializable: object,
+    serializableRef?: SerializableRef | WeakRef<SerializableRef>
+  ): void {
     cache.set(serializable, serializableRef || serializableMappingFlag);
   },
   get: cache.get.bind(cache),
