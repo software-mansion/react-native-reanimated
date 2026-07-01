@@ -56,6 +56,7 @@ class LayoutAnimationsManager {
   bool hasLayoutAnimation(const int tag, const LayoutAnimationType type);
   void startLayoutAnimation(jsi::Runtime &rt, const int tag, const LayoutAnimationType type, const jsi::Object &values);
   void clearLayoutAnimationConfig(const int tag);
+  void clearSharedTransitionConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
   void transferSharedConfig(const Tag from, const Tag to);
