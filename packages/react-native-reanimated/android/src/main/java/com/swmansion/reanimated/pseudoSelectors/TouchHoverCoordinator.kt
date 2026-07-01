@@ -87,29 +87,29 @@ class TouchHoverCoordinator {
         if (hoverCallbacks.isEmpty()) {
             return
         }
-        val hitPath: Set<View> = if (root == null) emptySet() else hitTestPath(root, screenX, screenY)
+        val hitTags: Set<Int> = if (root == null) emptySet() else hitTestPath(root, screenX, screenY)
         for ((view, callback) in hoverCallbacks) {
-            setHovered(view, callback, view in hitPath)
+            setHovered(view, callback, view.id in hitTags)
         }
     }
 
-    // Views on the hit branch (topmost target up to the root) via RN's hit-test, which already honors
-    // z-order, transforms, clipping and pointer-events.
+    // React tags on the hit branch (RN's hit-test honors z-order/transforms/clipping/pointer-events).
+    // Matching by tag also covers svg's virtual children, whose tag rides the path with a null view.
     private fun hitTestPath(
         root: ViewGroup,
         screenX: Float,
         screenY: Float,
-    ): Set<View> {
+    ): Set<Int> {
         root.getLocationOnScreen(tmpLocation)
         val localX = screenX - tmpLocation[0]
         val localY = screenY - tmpLocation[1]
         val targets =
             TouchTargetHelper.findTargetPathAndCoordinatesForTouch(localX, localY, root, tmpCoords)
-        val views = HashSet<View>(targets.size)
+        val tags = HashSet<Int>(targets.size)
         for (target in targets) {
-            target.getView()?.let { views.add(it) }
+            tags.add(target.getViewId())
         }
-        return views
+        return tags
     }
 
     private fun hoverRootViewGroup(): ViewGroup? {
