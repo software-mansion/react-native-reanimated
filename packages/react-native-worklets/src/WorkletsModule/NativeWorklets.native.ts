@@ -188,12 +188,10 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   createSerializableNonWorkletFunction<TArgs extends unknown[], TReturn>(
     fun: (...args: TArgs) => TReturn,
-    functionId: number,
     functionName: string | undefined
   ): SerializableRef<(...args: TArgs) => TReturn> {
     return this.#workletsModuleProxy.createSerializableNonWorkletFunction(
       fun,
-      functionId,
       functionName
     );
   }
