@@ -172,11 +172,13 @@ struct ActiveTransition {
     }
 
     CABasicAnimation *anim = [CABasicAnimation animationWithKeyPath:keyPath];
-    // On interruption, start from the live presentation value; the implicit
-    // fromValue would race RN's model commit.
+    // Interrupting a running animation: continue from where the layer actually is (its live
+    // presentation value). If the presentation isn't available yet (a rapid re-trigger before the
+    // render server produced a frame), fall back to the model value - never to fromId, which is the
+    // settled pseudo target and would make a quick tap jump to the full value before animating back.
     if ([[layer animationForKey:keyPath] isKindOfClass:[CABasicAnimation class]]) {
       id presentationValue = [[layer presentationLayer] valueForKeyPath:keyPath];
-      anim.fromValue = presentationValue ?: fromId;
+      anim.fromValue = presentationValue ?: [layer valueForKeyPath:keyPath];
     } else {
       anim.fromValue = fromId;
     }
@@ -189,12 +191,15 @@ struct ActiveTransition {
     anim.fillMode = persistent ? kCAFillModeBoth : kCAFillModeBackwards;
     anim.removedOnCompletion = persistent ? NO : YES;
 
-    // Commit toValue to the model and add the animation in one transaction
-    // (implicit actions off): on auto-removal the layer shows the final model
-    // value with no snap, and recycled layers carry no stale animated state.
+    // Add the animation (implicit actions off). Non-persistent transitions also commit toValue to
+    // the model so the layer shows the settled value once they self-remove. Persistent (pseudo)
+    // animations hold their value via fillMode instead, so we leave the model at the base value -
+    // committing the target there would only make the interruption fallback above read it back.
     [CATransaction begin];
     [CATransaction setDisableActions:YES];
-    [layer setValue:toId forKeyPath:keyPath];
+    if (!persistent) {
+      [layer setValue:toId forKeyPath:keyPath];
+    }
     [layer addAnimation:anim forKey:keyPath];
     [CATransaction commit];
   });
