@@ -25,10 +25,9 @@ class TouchHoverCoordinator {
     private val tmpLocation = IntArray(2)
     private val tmpCoords = FloatArray(2)
 
-    // downTime of the gesture the window observer last reconciled, so the per-view touch listener can
-    // skip re-reconciling the same Activity-window gesture. Reconciling twice re-runs the hit-test
-    // after the first hover already changed a prop, and for svg that invalidates the front element's
-    // path mid-gesture so the second hit-test resolves the element behind it.
+    // downTime of the gesture the window observer last reconciled, letting the per-view listener skip
+    // reconciling it again: a second reconcile re-runs the hit-test after the first hover mutated a
+    // prop, which for svg invalidates the front element's path so it resolves the one behind it.
     private var observedGestureDownTime = Long.MIN_VALUE
 
     // Weak so a stale wrapper can never pin a destroyed Activity (this outlives Activities).
@@ -79,9 +78,8 @@ class TouchHoverCoordinator {
         reconcile(sourceView.rootView as? ViewGroup, screenX, screenY)
     }
 
-    // A touch going down on a registered view. The window observer sees Activity-window touches first
-    // and reconciles them, so this only runs for gestures the observer missed - i.e. touches inside a
-    // Modal/Dialog, a separate window the observer is blind to. This avoids reconciling twice.
+    // Touch-down on a registered view. The observer reconciles Activity-window gestures first, so this
+    // only handles ones it misses - e.g. a touch inside a Modal, a window the observer can't see.
     fun onViewTouchDown(
         sourceView: View,
         event: MotionEvent,
