@@ -47,6 +47,41 @@ void CSSTransitionsRegistry::setPseudoLockedProperties(const Tag viewTag, const 
   }
 }
 
+void CSSTransitionsRegistry::reconcilePseudoStyledProperties(
+    const Tag viewTag,
+    const folly::dynamic &defaults,
+    const TransitionProperties &lockedProperties) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  const auto it = registry_.find(viewTag);
+  if (it == registry_.end()) {
+    return;
+  }
+  auto updates = getUpdatesFromRegistry(viewTag);
+  if (updates.isNull() || updates.empty()) {
+    return;
+  }
+
+  const auto &transition = it->second;
+  bool changed = false;
+  for (const auto &[propKey, freshValue] : defaults.items()) {
+    if (freshValue.isNull()) {
+      continue;
+    }
+    const auto propName = propKey.asString();
+    if (lockedProperties.contains(propName) || transition->isAnimatingProperty(propName)) {
+      continue;
+    }
+    if (updates.count(propName) != 0 && updates[propName] != freshValue) {
+      updates[propName] = freshValue;
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    setInUpdatesRegistry(transition->getShadowNodeFamily(), updates);
+  }
+}
+
 void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto tags = std::exchange(updatedTags_, {});

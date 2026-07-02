@@ -60,6 +60,7 @@ class TransitionProgressProvider final {
   void update(double timestamp);
   void setPropertySettings(const PropertiesSettingsMap &changedPropertiesSettings);
   CSSTransitionPropertySettings getPropertySettings(const std::string &propertyName) const;
+  bool isPropertyAnimating(const std::string &propertyName) const;
 
  private:
   TransitionPropertyProgressProviders propertyProgressProviders_;

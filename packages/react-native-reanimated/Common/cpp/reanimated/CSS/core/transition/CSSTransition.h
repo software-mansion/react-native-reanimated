@@ -11,6 +11,7 @@
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <memory>
+#include <string>
 
 namespace reanimated::css {
 
@@ -53,6 +54,8 @@ class CSSTransition {
   void cancel();
 
   void setPseudoLockedProperties(TransitionProperties properties);
+  /// Whether the loop is currently animating the property.
+  bool isAnimatingProperty(const std::string &propertyName) const;
 
  private:
   const std::shared_ptr<const ShadowNode> shadowNode_;
