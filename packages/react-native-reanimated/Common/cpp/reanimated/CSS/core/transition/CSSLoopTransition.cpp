@@ -71,6 +71,10 @@ void CSSLoopTransition::updateSettings(
   progressProvider_.setPropertySettings(changedPropertiesSettings);
 }
 
+bool CSSLoopTransition::isAnimatingProperty(const std::string &propertyName) const {
+  return progressProvider_.isPropertyAnimating(propertyName);
+}
+
 folly::dynamic CSSLoopTransition::computeCurrentStyle(const std::shared_ptr<const ShadowNode> &shadowNode) {
   auto result = styleInterpolator_.interpolate(shadowNode, progressProvider_);
   // Remove interpolators for which interpolation has finished

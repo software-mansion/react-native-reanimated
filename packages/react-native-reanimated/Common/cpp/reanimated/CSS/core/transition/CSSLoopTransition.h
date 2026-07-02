@@ -46,6 +46,8 @@ class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enab
 
   folly::dynamic computeCurrentStyle(const std::shared_ptr<const ShadowNode> &shadowNode);
 
+  bool isAnimatingProperty(const std::string &propertyName) const;
+
  private:
   const Tag viewTag_;
   const std::string componentName_;

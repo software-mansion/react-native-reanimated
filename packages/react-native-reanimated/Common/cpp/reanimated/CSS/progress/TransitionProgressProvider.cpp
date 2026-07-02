@@ -195,4 +195,9 @@ CSSTransitionPropertySettings TransitionProgressProvider::getPropertySettings(co
   return propertySettings_.at(propertyName);
 }
 
+bool TransitionProgressProvider::isPropertyAnimating(const std::string &propertyName) const {
+  const auto it = propertyProgressProviders_.find(propertyName);
+  return it != propertyProgressProviders_.end() && it->second->getState() != TransitionProgressState::Idle;
+}
+
 } // namespace reanimated::css

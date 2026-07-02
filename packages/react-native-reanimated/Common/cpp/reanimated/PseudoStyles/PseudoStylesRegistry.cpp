@@ -40,6 +40,22 @@ std::array<folly::dynamic, (1u << kPseudoSelectorBits)> PseudoStylesRegistry::re
   return newPrecomputedStyles;
 }
 
+// static
+css::TransitionProperties PseudoStylesRegistry::collectPseudoLockedProperties(const TagEntry &entry) {
+  css::TransitionProperties properties;
+  for (const auto &[selector, data] : entry.selectors) {
+    if (!(entry.activeMask & (1u << static_cast<int>(selector)))) {
+      continue;
+    }
+    for (const auto &[propKey, value] : data.selectorStyle.items()) {
+      if (!value.isNull()) {
+        properties.insert(propKey.asString());
+      }
+    }
+  }
+  return properties;
+}
+
 void PseudoStylesRegistry::registerPseudoStyles(
     Tag tag,
     const std::shared_ptr<const ShadowNode> &shadowNode,
@@ -58,6 +74,10 @@ void PseudoStylesRegistry::registerPseudoStyles(
     entry.selectors[registration.selector] = {registration.selectorStyle};
   }
   entry.precomputedStyles = recomputeAllStyles(entry);
+
+  // A settled toggle value held in the updates registry would keep overriding renders that
+  // trigger no transition run; refresh it with the just-registered defaults.
+  cssTransitionsRegistry_->reconcilePseudoStyledProperties(tag, entry.defaults, collectPseudoLockedProperties(entry));
 
   for (const auto selector : newSelectors) {
     attachFn_(
@@ -103,18 +123,7 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
   const auto &fromStyle = entry.precomputedStyles[oldMask];
   const auto &toStyle = entry.precomputedStyles[entry.activeMask];
 
-  css::TransitionProperties lockedProperties;
-  for (const auto &[sel, data] : entry.selectors) {
-    if (!(entry.activeMask & (1u << static_cast<int>(sel)))) {
-      continue;
-    }
-    for (const auto &[propKey, val] : data.selectorStyle.items()) {
-      if (!val.isNull()) {
-        lockedProperties.insert(propKey.asString());
-      }
-    }
-  }
-  cssTransitionsRegistry_->setPseudoLockedProperties(tag, lockedProperties);
+  cssTransitionsRegistry_->setPseudoLockedProperties(tag, collectPseudoLockedProperties(entry));
 
   css::PropertyValueDynamicDiffsMap valueChanges;
   for (const auto &[propKey, toVal] : toStyle.items()) {
