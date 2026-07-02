@@ -109,7 +109,7 @@ type NativePropsOperation = {
 function createUpdatePropsManager() {
   'worklet';
   const nativeOperations: NativePropsOperation[] = [];
-  const jsOperations: JSPropsOperation[] = [];
+  let jsOperations: JSPropsOperation[] = [];
 
   let flushPending = false;
 
@@ -162,8 +162,9 @@ function createUpdatePropsManager() {
         nativeOperations.length = 0;
       }
       if (jsOperations.length) {
+        // Fresh array each flush: scheduleOnRN caches serialized args by identity.
         scheduleOnRN(updateJSProps, jsOperations);
-        jsOperations.length = 0;
+        jsOperations = [];
       }
       flushPending = false;
     },
