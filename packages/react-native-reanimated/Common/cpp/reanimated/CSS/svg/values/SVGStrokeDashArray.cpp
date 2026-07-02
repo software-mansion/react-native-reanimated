@@ -43,6 +43,11 @@ bool SVGStrokeDashArray::canConstruct(const folly::dynamic &value) {
 }
 
 folly::dynamic SVGStrokeDashArray::toDynamic() const {
+  // Empty means "no dashing" - emit null instead of [], which react-native-svg
+  // would feed to Android's DashPathEffect that requires at least 2 intervals.
+  if (values.empty()) {
+    return nullptr;
+  }
   folly::dynamic array = folly::dynamic::array;
   array.reserve(values.size());
   for (const auto &value : values) {
