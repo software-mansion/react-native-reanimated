@@ -52,14 +52,10 @@ Using npm and patch-package is a lot more problematic in patching transitive dep
    ```terminal
    npx patch-package
    ```
-## Using bun and patch-package
+## Using bun
 
-Using bun patching and patch-package gives you the benefit of the bun runtime in your project (works with monorepos and `linker=isolated`). Bun's patching method is better than just `patch-package` alone, and doesn't create any issues with transitive dependencies or the bun cache. (You should use the patches in the `patch-package` directory)
+Using bun for patching gives you the benefit of the bun runtime in your project (works with monorepos and `linker=isolated`). Bun's patching method generally works better in bun repos, and doesn't create any issues with transitive dependencies or the bun cache. (You should use the patches in the `patch-package` directory)
 
-1. Install `patch-package`:
-   ```terminal
-   bun i patch-package --save-dev
-   ```
 1. Create `patches` directory in the project root
 1. If you're not certain which versions of patchs you need to apply, you can run `bun why --top` to find out which versions of packages you have. For example, to find out which version of `metro` you have, run:
    ```terminal
@@ -74,9 +70,13 @@ Using bun patching and patch-package gives you the benefit of the bun runtime in
    ```terminal
    bun patch metro-runtime
    ```
-1. Run `patch-package` to apply the patches:
+1. Enter directory using `cd` and apply patch using git:
    ```terminal
-   bunx patch-package
+   cd node_modules/metro && git apply ../../patches/metro+0.84.4.patch
+   ```
+   AND
+   ```terminal
+   cd node_modules/metro-runtime && git apply ../../patches/metro-runtime+0.84.4.patch
    ```
 1. Run `bun patch --commit` to commit patches to the repo:
    ```terminal
