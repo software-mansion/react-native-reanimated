@@ -1,17 +1,11 @@
 'use strict';
 
-// This module is resolved only on web, where react-native-web is always
-// present, so the helpers can be imported statically. Loading them with a
-// runtime require() breaks under strict ESM bundlers (webpack, Rollup,
-// esbuild): a module with ESM exports gets no CommonJS require at runtime,
-// so the helpers stayed undefined and _updatePropsJS crashed on every
-// animation frame (#9844). Only Metro tolerated the previous mixed form.
-//
-// The imports point at react-native-web's CommonJS build with fully
-// specified .js extensions. SSR frameworks (e.g. Next.js) externalize
-// react-native-web and load it with Node's native ESM resolver, which
-// rejects the extensionless relative imports inside the ESM build in
-// dist/exports, while the CommonJS build loads everywhere.
+// Static imports so that strict ESM bundlers (webpack, Rollup, esbuild)
+// resolve the helpers at build time - a runtime require() is not available
+// in ESM modules there, which left the helpers undefined (#9844). The
+// CommonJS build is used because SSR frameworks load externalized
+// react-native-web with Node's ESM resolver, which rejects the
+// extensionless relative imports inside the dist/exports ESM build.
 
 // @ts-ignore react-native-web internals have no type declarations.
 // eslint-disable-next-line n/no-unpublished-import
@@ -20,8 +14,8 @@ import * as createReactDOMStyleModule from 'react-native-web/dist/cjs/exports/St
 // eslint-disable-next-line n/no-unpublished-import
 import * as preprocessModule from 'react-native-web/dist/cjs/exports/StyleSheet/preprocess.js';
 
-// Node's CJS-ESM interop and bundler interop expose a transpiled default
-// export under `.default`; fall back to the namespace itself just in case.
+// Node exposes a transpiled CJS default export as `.default`, bundlers as
+// the module itself.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const interopDefault = (module: any) => module.default ?? module;
 
