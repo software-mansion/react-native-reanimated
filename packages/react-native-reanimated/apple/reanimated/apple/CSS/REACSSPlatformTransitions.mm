@@ -27,7 +27,9 @@ namespace {
 // and the reversing snapshot handle interruptions; settings are reused by the
 // toggle path.
 struct ActiveTransition {
-  PlatformValue adjustedStart;
+  // Unset when the transition interrupted a running one mid-flight: its real
+  // start is the live presentation value, which no future target can equal.
+  std::optional<PlatformValue> adjustedStart;
   PlatformValue adjustedEnd;
   ReversingState reversing;
   CSSTransitionPropertySettings settings;
@@ -70,13 +72,24 @@ struct ActiveTransition {
   auto &properties = _active[viewTag];
   const auto activeIt = properties.find(propertyName);
   // Targeting the in-flight transition's start value means this is a reversal.
-  const ActiveTransition *previous =
-      (activeIt != properties.end() && toValue == activeIt->second.adjustedStart) ? &activeIt->second : nullptr;
+  const ActiveTransition *previous = (activeIt != properties.end() && activeIt->second.adjustedStart &&
+                                      toValue == *activeIt->second.adjustedStart)
+      ? &activeIt->second
+      : nullptr;
   ReversingState reversing = previous
       ? reverseShorten(previous->reversing, timestamp, settings.duration, settings.delay, settings.easingConfig)
       : makeReversingState(timestamp, settings.duration, settings.delay, settings.easingConfig);
 
-  const PlatformValue adjustedStart = previous ? previous->adjustedEnd : fromValue;
+  // https://drafts.csswg.org/css-transitions/#reversing - only a reversal inherits
+  // the interrupted transition's end value;
+  std::optional<PlatformValue> adjustedStart;
+  if (previous) {
+    adjustedStart = previous->adjustedEnd;
+  } else if (activeIt == properties.end()) {
+    adjustedStart = fromValue;
+  } else if (timestamp >= activeIt->second.reversing.startTimestamp + activeIt->second.reversing.duration) {
+    adjustedStart = activeIt->second.adjustedEnd;
+  }
   [self animateTag:viewTag
       propertyName:propertyName
          fromValue:fromValue
