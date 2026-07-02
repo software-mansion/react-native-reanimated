@@ -15,6 +15,7 @@ import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
+import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.common.UIManagerType;
 import com.facebook.soloader.SoLoader;
@@ -305,7 +306,19 @@ public class NativeProxy {
     }
 
     for (int i = 0; i < tags.length; i++) {
-      if (mFabricUIManager.resolveView(tags[i]) == null) {
+      try {
+        if (mFabricUIManager.resolveView(tags[i]) == null) {
+          tags[i] = -1;
+        }
+      } catch (IllegalViewOperationException e) {
+        // `resolveView` is expected to return `null` for a tag without a
+        // mounted view, but it instead throws when the tag's `ViewState` is
+        // already registered while the Android view hasn't been created yet.
+        // This happens when a view is mid-preallocation and a third-party view
+        // manager (e.g. lottie-react-native) dispatches an event synchronously
+        // from within `createView`, re-entering this code path. Treat it the
+        // same as a missing view.
+        // See https://github.com/software-mansion/react-native-reanimated/issues/9636.
         tags[i] = -1;
       }
     }

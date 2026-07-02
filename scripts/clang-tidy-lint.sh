@@ -15,4 +15,7 @@ if [ ! -f "compile_commands.json" ]; then
   )
 fi
 
-run-clang-tidy -quiet -p . -header-filter="^.*/$1/.*\.h$" "$1"
+ndk_bin="$(grep -oE '/[^ "]+/clang\+\+' compile_commands.json | head -1 | xargs dirname)"
+
+run-clang-tidy -quiet -p . -clang-tidy-binary "$ndk_bin/clang-tidy" \
+  -header-filter="^.*/$1/.*\.h$" "$1"

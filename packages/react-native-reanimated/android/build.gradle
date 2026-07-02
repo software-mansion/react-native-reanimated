@@ -130,6 +130,8 @@ if (project == rootProject) {
 apply plugin: "com.android.library"
 apply plugin: "maven-publish"
 
+apply from: "./generate-stub-pch.gradle.kts"
+
 android {
     compileSdkVersion safeExtGet("compileSdkVersion", 36)
 
