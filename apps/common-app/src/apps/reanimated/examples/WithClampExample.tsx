@@ -137,7 +137,9 @@ export default function AnimatedStyleUpdateExample() {
   });
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.scrollView}
+      contentContainerStyle={styles.container}>
       <Example
         testedStyle={clampedStyleWithAnimationModifier}
         description="Clamped spring with withClamp HOC"
@@ -168,8 +170,11 @@ export default function AnimatedStyleUpdateExample() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scrollView: {
     flex: 1,
+  },
+  container: {
+    flexGrow: 1,
     flexDirection: 'column',
     padding: CLAMP_MARKER_HEIGHT,
   },
