@@ -38,6 +38,16 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   std::vector<std::shared_ptr<MutationNode>> roots;
   std::unordered_map<Tag, Tag> movedViews;
 
+  // If React re-creates or re-inserts a tag whose exiting removal we are still
+  // withholding, it has contradicted that withheld Remove/Delete. Flush it now
+  // instead of letting it fire later against a stale hierarchy (which would
+  // unmount the wrong, still-live view and crash the mounting layer).
+  //
+  // This must run before addOngoingAnimations (which would otherwise emit an
+  // Update for a tag we are about to Delete this frame) and before
+  // parseRemoveMutations, so the rest of the pipeline sees clean bookkeeping.
+  reconcileContradictedRemovals(mutations, filteredMutations, surfaceId);
+
   addOngoingAnimations(surfaceId, filteredMutations);
 
 #ifdef ANDROID
@@ -67,6 +77,32 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   addOngoingAnimations(surfaceId, filteredMutations);
 
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
+}
+
+void LayoutAnimationsProxy_Legacy::reconcileContradictedRemovals(
+    ShadowViewMutationList &mutations,
+    ShadowViewMutationList &filteredMutations,
+    SurfaceId surfaceId) const {
+  auto &[deadNodes] = surfaceContext_[surfaceId];
+  for (auto &mutation : mutations) {
+    if (mutation.type != ShadowViewMutation::Type::Create && mutation.type != ShadowViewMutation::Type::Insert) {
+      continue;
+    }
+    auto tag = mutation.newChildShadowView.tag;
+    auto it = nodeForTag_.find(tag);
+    // Only a MutationNode represents a withheld removal; a plain Node is just a
+    // live parent of some removed child and must be left untouched.
+    if (it == nodeForTag_.end() || !it->second->isMutationNode()) {
+      continue;
+    }
+    auto node = std::static_pointer_cast<MutationNode>(it->second);
+    // Flush the withheld Remove/Delete for this tag (and its withheld subtree)
+    // right now, mirroring the deadNodes cleanup in handleRemovals. This removes
+    // the stale view before React's Create/Insert re-registers the same tag.
+    endAnimationsRecursively(node, filteredMutations);
+    maybeDropAncestors(node->unflattenedParent, node, filteredMutations);
+    deadNodes.erase(node);
+  }
 }
 
 std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::progressLayoutAnimation(int tag, const jsi::Object &newStyle) {
@@ -127,7 +163,13 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
   }
 
   auto node = nodeForTag_[tag];
-  react_native_assert(node->isMutationNode() && "exiting tag must map to a MutationNode");
+  if (!node->isMutationNode()) {
+    // The node was replaced by a plain Node (e.g. by a reparenting move) after
+    // the exiting animation started, so there is no withheld removal to
+    // finalize. Casting it to MutationNode here would corrupt the heap, and the
+    // react_native_assert that used to guard this is compiled out in release.
+    return {};
+  }
   auto mutationNode = std::static_pointer_cast<MutationNode>(node);
   mutationNode->state = ExitingState_Legacy::DEAD;
   auto &[deadNodes] = surfaceContext_[surfaceId];
