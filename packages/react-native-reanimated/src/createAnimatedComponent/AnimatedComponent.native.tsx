@@ -250,9 +250,7 @@ export default class AnimatedComponent
     );
   }
 
-  componentDidUpdate(
-    prevProps: AnimatedComponentProps<InitialComponentProps>
-  ) {
+  componentDidUpdate(prevProps: AnimatedComponentProps<InitialComponentProps>) {
     this._configureLayoutAnimation(
       LayoutAnimationType.LAYOUT,
       this.props.layout,

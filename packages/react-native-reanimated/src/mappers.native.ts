@@ -1,24 +1,12 @@
 'use strict';
 
-import { scheduleOnUI } from 'react-native-worklets';
-
 import { IS_JEST } from './common';
-import type {
-  MapperOutputs,
-  MapperRawInputs,
-  SharedValue,
-} from './commonTypes';
+import type { MapperOutputs, MapperRawInputs } from './commonTypes';
 import { isSharedValue } from './isSharedValue';
+import type { Mapper, MapperExtractedInputs } from './mappersBase';
+import { makeStartMapper } from './mappersBase';
 
-type MapperExtractedInputs = SharedValue[];
-
-type Mapper = {
-  id: number;
-  dirty: boolean;
-  worklet: () => void;
-  inputs: MapperExtractedInputs;
-  outputs?: MapperOutputs;
-};
+export { stopMapper } from './mappersBase';
 
 function createMapperRegistry() {
   'worklet';
@@ -239,29 +227,4 @@ function createMapperRegistry() {
   };
 }
 
-let MAPPER_ID = 9999;
-
-export function startMapper(
-  worklet: () => void,
-  inputs: MapperRawInputs = [],
-  outputs: MapperOutputs = []
-): number {
-  const mapperID = (MAPPER_ID += 1);
-
-  scheduleOnUI(() => {
-    let mapperRegistry = global.__mapperRegistry;
-    if (mapperRegistry === undefined) {
-      mapperRegistry = global.__mapperRegistry = createMapperRegistry();
-    }
-    mapperRegistry.start(mapperID, worklet, inputs, outputs);
-  });
-
-  return mapperID;
-}
-
-export function stopMapper(mapperID: number): void {
-  scheduleOnUI(() => {
-    const mapperRegistry = global.__mapperRegistry;
-    mapperRegistry?.stop(mapperID);
-  });
-}
+export const startMapper = makeStartMapper(createMapperRegistry);

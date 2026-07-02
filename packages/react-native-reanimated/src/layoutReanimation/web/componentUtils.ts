@@ -24,11 +24,7 @@ import { Animations, TransitionType } from './config';
 import { TransitionGenerator } from './createAnimation';
 import { scheduleAnimationCleanup } from './domUtils';
 import type { WebEasingsNames } from './Easing';
-import {
-  getEasingByName,
-  maybeGetBezierEasing,
-  WebEasings,
-} from './Easing';
+import { getEasingByName, maybeGetBezierEasing, WebEasings } from './Easing';
 import { prepareCurvedTransition } from './transition/Curved';
 
 function getSnapshotForElement(element: HTMLElement): ReanimatedSnapshot {

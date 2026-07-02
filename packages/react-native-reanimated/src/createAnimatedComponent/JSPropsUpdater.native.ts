@@ -3,13 +3,11 @@ import { scheduleOnUI } from 'react-native-worklets';
 
 import { IS_JEST } from '../common';
 import type {
-  AnimatedComponentProps,
   AnimatedComponentTypeInternal,
-  IAnimatedComponentInternal,
   IJSPropsUpdater,
-  InitialComponentProps,
   JSPropsOperation,
 } from './commonTypes';
+import { JSPropsUpdaterWeb } from './JSPropsUpdaterBase';
 
 class JSPropsUpdaterNative implements IJSPropsUpdater {
   private static _tagToComponentMapping = new Map<
@@ -45,30 +43,6 @@ class JSPropsUpdaterNative implements IJSPropsUpdater {
       const component = JSPropsUpdaterNative._tagToComponentMapping.get(tag);
       component?.setNativeProps(updates);
     });
-  }
-}
-
-class JSPropsUpdaterWeb implements IJSPropsUpdater {
-  public registerComponent(
-    _animatedComponent: React.Component<
-      AnimatedComponentProps<InitialComponentProps>
-    > &
-      IAnimatedComponentInternal
-  ) {
-    // noop
-  }
-
-  public unregisterComponent(
-    _animatedComponent: React.Component<
-      AnimatedComponentProps<InitialComponentProps>
-    > &
-      IAnimatedComponentInternal
-  ) {
-    // noop
-  }
-
-  public updateProps(_operations: JSPropsOperation[]) {
-    // noop
   }
 }
 

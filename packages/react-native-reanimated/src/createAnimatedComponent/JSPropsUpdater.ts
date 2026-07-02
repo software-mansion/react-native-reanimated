@@ -1,35 +1,6 @@
 'use strict';
-import type {
-  AnimatedComponentProps,
-  IAnimatedComponentInternal,
-  IJSPropsUpdater,
-  InitialComponentProps,
-  JSPropsOperation,
-} from './commonTypes';
-
-class JSPropsUpdaterWeb implements IJSPropsUpdater {
-  public registerComponent(
-    _animatedComponent: React.Component<
-      AnimatedComponentProps<InitialComponentProps>
-    > &
-      IAnimatedComponentInternal
-  ) {
-    // noop
-  }
-
-  public unregisterComponent(
-    _animatedComponent: React.Component<
-      AnimatedComponentProps<InitialComponentProps>
-    > &
-      IAnimatedComponentInternal
-  ) {
-    // noop
-  }
-
-  public updateProps(_operations: JSPropsOperation[]) {
-    // noop
-  }
-}
+import type { IJSPropsUpdater } from './commonTypes';
+import { JSPropsUpdaterWeb } from './JSPropsUpdaterBase';
 
 const jsPropsUpdater: IJSPropsUpdater = new JSPropsUpdaterWeb();
 

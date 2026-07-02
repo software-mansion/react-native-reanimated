@@ -162,11 +162,7 @@ export default class AnimatedComponent<
     this._updateStyles(this.props);
 
     const viewTag = this._viewInfo?.viewTag;
-    if (
-      !IS_JEST &&
-      this._willUnmount &&
-      typeof viewTag === 'number'
-    ) {
+    if (!IS_JEST && this._willUnmount && typeof viewTag === 'number') {
       unmarkNodeAsRemovable(viewTag);
     }
 

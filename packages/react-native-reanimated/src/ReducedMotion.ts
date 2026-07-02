@@ -1,6 +1,6 @@
 'use strict';
 import { IS_WINDOW_AVAILABLE } from './common';
-import { makeMutable } from './mutables';
+import { createReducedMotionManager } from './ReducedMotionBase';
 
 export function isReducedMotionEnabledInSystem() {
   return IS_WINDOW_AVAILABLE
@@ -9,13 +9,6 @@ export function isReducedMotionEnabledInSystem() {
     : false;
 }
 
-const IS_REDUCED_MOTION_ENABLED_IN_SYSTEM = isReducedMotionEnabledInSystem();
-
-export const ReducedMotionManager = {
-  jsValue: IS_REDUCED_MOTION_ENABLED_IN_SYSTEM,
-  uiValue: makeMutable(IS_REDUCED_MOTION_ENABLED_IN_SYSTEM),
-  setEnabled(value: boolean) {
-    ReducedMotionManager.jsValue = value;
-    ReducedMotionManager.uiValue.value = value;
-  },
-};
+export const ReducedMotionManager = createReducedMotionManager(
+  isReducedMotionEnabledInSystem()
+);
