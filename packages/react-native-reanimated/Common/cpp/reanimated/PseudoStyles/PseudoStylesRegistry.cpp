@@ -50,13 +50,16 @@ void PseudoStylesRegistry::registerPseudoStyles(
   auto &entry = registry_[tag];
   entry.shadowNode = shadowNode;
   entry.defaults = defaults;
+  std::vector<PseudoSelector> newSelectors;
   for (const auto &registration : selectors) {
+    if (!entry.selectors.contains(registration.selector)) {
+      newSelectors.push_back(registration.selector);
+    }
     entry.selectors[registration.selector] = {registration.selectorStyle};
   }
   entry.precomputedStyles = recomputeAllStyles(entry);
 
-  for (const auto &registration : selectors) {
-    const auto selector = registration.selector;
+  for (const auto selector : newSelectors) {
     attachFn_(
         tag,
         selector,
@@ -100,9 +103,23 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
   const auto &fromStyle = entry.precomputedStyles[oldMask];
   const auto &toStyle = entry.precomputedStyles[entry.activeMask];
 
+  css::TransitionProperties lockedProperties;
+  for (const auto &[sel, data] : entry.selectors) {
+    if (!(entry.activeMask & (1u << static_cast<int>(sel)))) {
+      continue;
+    }
+    for (const auto &[propKey, val] : data.selectorStyle.items()) {
+      if (!val.isNull()) {
+        lockedProperties.insert(propKey.asString());
+      }
+    }
+  }
+  cssTransitionsRegistry_->setPseudoLockedProperties(tag, lockedProperties);
+
   css::PropertyValueDynamicDiffsMap valueChanges;
   for (const auto &[propKey, toVal] : toStyle.items()) {
     const auto propName = propKey.asString();
+    // Fallback only - the platform/loop prefer the live current value when one exists.
     const folly::dynamic &fromVal = fromStyle.count(propName) ? fromStyle[propName] : toVal;
     valueChanges.emplace(propName, std::make_pair(fromVal, toVal));
   }
