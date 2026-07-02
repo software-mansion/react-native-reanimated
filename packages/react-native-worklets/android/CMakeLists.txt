@@ -1,5 +1,5 @@
 project(Worklets)
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -67,6 +67,9 @@ endif()
 
 add_library(worklets SHARED ${WORKLETS_COMMON_CPP_SOURCES}
                             ${WORKLETS_ANDROID_CPP_SOURCES})
+
+target_precompile_headers(worklets PRIVATE
+                          "${ANDROID_CPP_DIR}/WorkletsPCH.h")
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
   include(
