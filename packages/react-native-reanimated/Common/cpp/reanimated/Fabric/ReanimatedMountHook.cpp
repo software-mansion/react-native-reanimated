@@ -9,8 +9,12 @@ namespace reanimated {
 ReanimatedMountHook::ReanimatedMountHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
+    const std::shared_ptr<css::ViewStylesRepository> &viewStylesRepository,
     const std::function<void()> &requestFlush)
-    : uiManager_(uiManager), updatesRegistryManager_(updatesRegistryManager), requestFlush_(requestFlush) {
+    : uiManager_(uiManager),
+      updatesRegistryManager_(updatesRegistryManager),
+      viewStylesRepository_(viewStylesRepository),
+      requestFlush_(requestFlush) {
   uiManager_->registerMountHook(*this);
 }
 
@@ -37,6 +41,9 @@ void ReanimatedMountHook::shadowTreeDidMount(
 
   {
     auto lock = updatesRegistryManager_->lock();
+    // Record the mounted tree for relative-length resolution.
+    viewStylesRepository_->setLastMountedRoot(rootShadowNode);
+
     // Always drain removable nodes, even on Reanimated's own commits. While CSS
     // animations run every mount carries the mount trait, so returning early here
     // would skip removals for the whole animation and leak unmounted nodes if the
