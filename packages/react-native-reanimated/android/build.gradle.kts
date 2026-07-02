@@ -109,6 +109,12 @@ if (project != rootProject) {
 val packageDir: File = project.projectDir.parentFile
 val reactNativeRootDir: File = resolveReactNativeDirectory()
 val REACT_NATIVE_VERSION: String = getReactNativeVersion()
+val IS_REACT_NATIVE_86_OR_NEWER: Boolean = run {
+    val parts = REACT_NATIVE_VERSION.split(".")
+    val major = parts.getOrNull(0)?.toIntOrNull() ?: 0
+    val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
+    major > 0 || minor >= 86
+}
 val REANIMATED_VERSION: String = getReanimatedVersion()
 val IS_REANIMATED_EXAMPLE_APP: Boolean = safeAppExtGet("isReanimatedExampleApp", false)?.toString()?.toBoolean() ?: false
 val REANIMATED_PROFILING: Boolean = safeAppExtGet("enableReanimatedProfiling", false)?.toString()?.toBoolean() ?: false
@@ -172,6 +178,7 @@ android {
         buildConfigField("String", "REANIMATED_VERSION_JAVA", "\"$REANIMATED_VERSION\"")
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
+        buildConfigField("boolean", "IS_REACT_NATIVE_86_OR_NEWER", IS_REACT_NATIVE_86_OR_NEWER.toString())
 
         @Suppress("UnstableApiUsage")
         externalNativeBuild {
