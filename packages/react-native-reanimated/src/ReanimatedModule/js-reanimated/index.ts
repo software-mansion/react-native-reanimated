@@ -67,7 +67,7 @@ export const _updatePropsJS = (
       // React Native Web 0.19+ no longer provides setNativeProps function,
       // so we need to update DOM nodes directly.
       updatePropsDOM(component, rawStyles, isAnimatedProps);
-    } else if (Object.keys(component.props).length > 0) {
+    } else if (component.props && Object.keys(component.props).length > 0) {
       Object.keys(component.props).forEach((key) => {
         if (!rawStyles[key]) {
           return;
