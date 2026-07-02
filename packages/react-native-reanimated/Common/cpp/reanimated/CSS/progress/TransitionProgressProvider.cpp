@@ -192,7 +192,13 @@ void TransitionProgressProvider::setPropertySettings(const PropertiesSettingsMap
 }
 
 CSSTransitionPropertySettings TransitionProgressProvider::getPropertySettings(const std::string &propertyName) const {
-  return propertySettings_.at(propertyName);
+  const auto it = propertySettings_.find(propertyName);
+  if (it == propertySettings_.end()) {
+    // A pseudo toggle can run a property whose settings never parsed (e.g. a discrete
+    // property without allowDiscrete); fall back to instant settings instead of throwing.
+    return CSSTransitionPropertySettings{};
+  }
+  return it->second;
 }
 
 } // namespace reanimated::css
