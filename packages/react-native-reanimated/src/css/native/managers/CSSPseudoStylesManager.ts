@@ -62,8 +62,7 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
       return;
     }
 
-    // Re-render with the same native selectors keeps the existing registration
-    // (and its active pseudo state) alive - only an actual selector removal detaches.
+    // Only a selector removal detaches; re-renders keep the registration alive.
     if (this.isRegistered && removedSelector) {
       this.detach();
     }

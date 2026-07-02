@@ -119,9 +119,7 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
   css::PropertyValueDynamicDiffsMap valueChanges;
   for (const auto &[propKey, toVal] : toStyle.items()) {
     const auto propName = propKey.asString();
-    // The precomputed previous value is the `from` fallback. The platform/loop still prefer the
-    // live current value when one exists (presentation layer / last interpolated output) for a
-    // smooth interruption; this value is used on the first run when there is nothing live to read.
+    // Fallback only - the platform/loop prefer the live current value when one exists.
     const folly::dynamic &fromVal = fromStyle.count(propName) ? fromStyle[propName] : toVal;
     valueChanges.emplace(propName, std::make_pair(fromVal, toVal));
   }

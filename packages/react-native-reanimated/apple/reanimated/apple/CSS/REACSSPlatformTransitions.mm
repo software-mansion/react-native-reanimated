@@ -27,8 +27,7 @@ namespace {
 // and the reversing snapshot handle interruptions; settings are reused by the
 // toggle path.
 struct ActiveTransition {
-  // Unset when the transition interrupted a running one mid-flight: its real
-  // start is the live presentation value, which no future target can equal.
+  // Unset after a mid-flight interruption - the live start value can't match any target.
   std::optional<PlatformValue> adjustedStart;
   PlatformValue adjustedEnd;
   ReversingState reversing;
@@ -72,16 +71,15 @@ struct ActiveTransition {
   auto &properties = _active[viewTag];
   const auto activeIt = properties.find(propertyName);
   // Targeting the in-flight transition's start value means this is a reversal.
-  const ActiveTransition *previous = (activeIt != properties.end() && activeIt->second.adjustedStart &&
-                                      toValue == *activeIt->second.adjustedStart)
+  const ActiveTransition *previous =
+      (activeIt != properties.end() && activeIt->second.adjustedStart && toValue == *activeIt->second.adjustedStart)
       ? &activeIt->second
       : nullptr;
   ReversingState reversing = previous
       ? reverseShorten(previous->reversing, timestamp, settings.duration, settings.delay, settings.easingConfig)
       : makeReversingState(timestamp, settings.duration, settings.delay, settings.easingConfig);
 
-  // https://drafts.csswg.org/css-transitions/#reversing - only a reversal inherits
-  // the interrupted transition's end value;
+  // https://drafts.csswg.org/css-transitions/#reversing
   std::optional<PlatformValue> adjustedStart;
   if (previous) {
     adjustedStart = previous->adjustedEnd;
@@ -185,10 +183,8 @@ struct ActiveTransition {
     }
 
     CABasicAnimation *anim = [CABasicAnimation animationWithKeyPath:keyPath];
-    // Interrupting a running animation: continue from where the layer actually is (its live
-    // presentation value). If the presentation isn't available yet (a rapid re-trigger before the
-    // render server produced a frame), fall back to the model value - never to fromId, which is the
-    // settled pseudo target and would make a quick tap jump to the full value before animating back.
+    // On interruption, continue from the live presentation value, falling back to the
+    // model - never to fromId, which would snap a quick tap to the settled pseudo target.
     if ([[layer animationForKey:keyPath] isKindOfClass:[CABasicAnimation class]]) {
       id presentationValue = [[layer presentationLayer] valueForKeyPath:keyPath];
       anim.fromValue = presentationValue ?: [layer valueForKeyPath:keyPath];
@@ -204,10 +200,8 @@ struct ActiveTransition {
     anim.fillMode = persistent ? kCAFillModeBoth : kCAFillModeBackwards;
     anim.removedOnCompletion = persistent ? NO : YES;
 
-    // Add the animation (implicit actions off). Non-persistent transitions also commit toValue to
-    // the model so the layer shows the settled value once they self-remove. Persistent (pseudo)
-    // animations hold their value via fillMode instead, so we leave the model at the base value -
-    // committing the target there would only make the interruption fallback above read it back.
+    // Non-persistent transitions commit toValue to the model so the layer settles there on
+    // self-removal; persistent (pseudo) ones hold their value via fillMode and keep the base model.
     [CATransaction begin];
     [CATransaction setDisableActions:YES];
     if (!persistent) {
