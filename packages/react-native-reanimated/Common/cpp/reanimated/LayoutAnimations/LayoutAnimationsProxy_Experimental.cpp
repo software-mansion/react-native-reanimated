@@ -521,8 +521,7 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
     lightNodes_[node->current.tag] = node;
     startExitingAnimation(node);
   } else {
-    // TODO (future): add proper cleanup
-    //    layoutAnimationsManager_->clearLayoutAnimationConfig(node->tag);
+    layoutAnimationsManager_->clearLayoutAnimationConfig(node->current.tag);
   }
 
   return wantAnimateExit;
