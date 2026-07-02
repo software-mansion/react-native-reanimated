@@ -74,9 +74,13 @@ Using bun for patching gives you the benefit of the bun runtime in your project 
    ```terminal
    cd node_modules/metro && git apply ../../patches/metro+0.84.4.patch
    ```
-   AND
+   AND (You should use `cd ../..` to return to the project's root before running this one)
    ```terminal
    cd node_modules/metro-runtime && git apply ../../patches/metro-runtime+0.84.4.patch
+   ```
+1. Return to project root:
+   ```terminal
+   cd ../..
    ```
 1. Run `bun patch --commit` to commit patches to the repo:
    ```terminal
@@ -85,6 +89,10 @@ Using bun for patching gives you the benefit of the bun runtime in your project 
    AND
    ```terminal
    bun patch --commit 'node_modules/metro-runtime'
+   ```
+1. Remove the old patches (optional):
+   ```terminal
+   rm ./patches/metro+*.patch && rm ./patches/metro-runtime+*.patch
    ```
 
 ## Using Yarn Classic (Yarn 1) and patch-package
