@@ -3,27 +3,54 @@ package com.swmansion.reanimated.pseudoSelectors
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewParent
+import com.facebook.react.bridge.UIManager
+import com.facebook.react.bridge.UIManagerListener
 import com.facebook.react.bridge.UiThreadUtil
+import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
+import com.facebook.react.uimanager.IllegalViewOperationException
+import com.facebook.react.uimanager.ReactCompoundView
 import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
 
+@OptIn(UnstableReactNativeAPI::class)
 class PseudoSelectorManager(
     private val fabricUIManager: FabricUIManager,
 ) {
-    // Key = "$tag:$selectorInt" - allows multiple selectors per view.
+    // Key = "$tag:$selector" - allows multiple selectors per view.
     private val detachActions = HashMap<String, Runnable>()
 
     private val activeCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
     private val deepestCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
 
-    private val touchListenerViews = HashSet<View>()
+    // A touch host can be shared by several registered views, so its listener is reference-counted.
+    private val touchHostRefs = HashMap<View, Int>()
 
-    private val hoverCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
+    // The view the current gesture went down on, per host, so a release clears the same one.
+    private val gestureDownLeaf = HashMap<View, View>()
 
-    private val hoveredViews = LinkedHashSet<View>()
+    private val hover = TouchHoverCoordinator()
 
-    // Reused by updateHoverStates to avoid allocating on every hover event (UI thread only).
-    private val hoverLocationBuffer = IntArray(2)
+    private val pendingAttaches = LinkedHashMap<String, PendingAttach>()
+    private var mountListenerRegistered = false
+
+    private data class PendingAttach(
+        val tag: Int,
+        val selector: Int,
+        val callback: PseudoSelectorCallback,
+    )
+
+    private val mountListener =
+        object : UIManagerListener {
+            override fun didMountItems(uiManager: UIManager) = flushPendingAttaches()
+
+            override fun willMountItems(uiManager: UIManager) = Unit
+
+            override fun willDispatchViewUpdates(uiManager: UIManager) = Unit
+
+            override fun didDispatchMountItems(uiManager: UIManager) = Unit
+
+            override fun didScheduleMountItems(uiManager: UIManager) = Unit
+        }
 
     fun attach(
         tag: Int,
@@ -31,15 +58,57 @@ class PseudoSelectorManager(
         callback: PseudoSelectorCallback,
     ) {
         UiThreadUtil.runOnUiThread {
-            val view = fabricUIManager.resolveView(tag) ?: return@runOnUiThread
-            val key = "$tag:$selector"
-            when (selector) {
-                0 -> attachFocusWithin(view, key, callback)
-                1 -> attachFocus(view, key, callback)
-                2 -> attachHover(view, key, callback)
-                3 -> attachActive(view, key, callback)
-                4 -> attachActiveDeepest(view, key, callback)
+            val view = tryResolveView(tag)
+            if (view != null) {
+                attachToView(view, tag, selector, callback)
+            } else {
+                pendingAttaches["$tag:$selector"] = PendingAttach(tag, selector, callback)
+                ensureMountListener()
             }
+        }
+    }
+
+    private fun attachToView(
+        view: View,
+        tag: Int,
+        selector: Int,
+        callback: PseudoSelectorCallback,
+    ) {
+        val key = "$tag:$selector"
+        when (selector) {
+            0 -> attachFocusWithin(view, key, callback)
+            1 -> attachFocus(view, key, callback)
+            2 -> attachHover(view, key, callback)
+            3 -> attachActive(view, key, callback)
+            4 -> attachActiveDeepest(view, key, callback)
+        }
+    }
+
+    private fun tryResolveView(tag: Int): View? =
+        try {
+            fabricUIManager.resolveView(tag)
+        } catch (e: IllegalViewOperationException) {
+            null
+        }
+
+    private fun ensureMountListener() {
+        if (mountListenerRegistered) {
+            return
+        }
+        mountListenerRegistered = true
+        fabricUIManager.addUIManagerEventListener(mountListener)
+    }
+
+    private fun flushPendingAttaches() {
+        if (pendingAttaches.isEmpty()) {
+            return
+        }
+        val iterator = pendingAttaches.values.iterator()
+        while (iterator.hasNext()) {
+            val pending = iterator.next()
+            val view = tryResolveView(pending.tag) ?: continue
+            iterator.remove()
+            attachToView(view, pending.tag, pending.selector, pending.callback)
         }
     }
 
@@ -92,27 +161,13 @@ class PseudoSelectorManager(
         key: String,
         callback: PseudoSelectorCallback,
     ) {
-        // Android fires ACTION_HOVER_EXIT on an ancestor when the pointer moves onto a
-        // hoverable descendant, but CSS :hover must stay active there. So on enter/exit
-        // (not per-frame MOVE) recompute every registered view from the pointer position.
-        hoverCallbacks[view] = callback
-        val listener =
-            View.OnHoverListener { _, event ->
-                when (event.actionMasked) {
-                    MotionEvent.ACTION_HOVER_ENTER,
-                    MotionEvent.ACTION_HOVER_EXIT,
-                    -> updateHoverStates(event.rawX, event.rawY)
-                }
-                false
-            }
-        view.setOnHoverListener(listener)
+        val host = findTouchHost(view)
+        acquireTouchListener(host)
+        hover.register(view, callback)
         detachActions[key] =
             Runnable {
-                hoverCallbacks.remove(view)
-                if (hoveredViews.remove(view)) {
-                    callback.onSelectorStateChanged(false)
-                }
-                view.setOnHoverListener(null)
+                hover.unregister(view)
+                releaseTouchListener(host)
             }
     }
 
@@ -121,12 +176,13 @@ class PseudoSelectorManager(
         key: String,
         callback: PseudoSelectorCallback,
     ) {
+        val host = findTouchHost(view)
         activeCallbacks[view] = callback
-        ensureTouchListener(view)
+        acquireTouchListener(host)
         detachActions[key] =
             Runnable {
                 activeCallbacks.remove(view)
-                maybeRemoveTouchListener(view)
+                releaseTouchListener(host)
             }
     }
 
@@ -135,42 +191,99 @@ class PseudoSelectorManager(
         key: String,
         callback: PseudoSelectorCallback,
     ) {
+        val host = findTouchHost(view)
         deepestCallbacks[view] = callback
-        ensureTouchListener(view)
+        acquireTouchListener(host)
         detachActions[key] =
             Runnable {
                 deepestCallbacks.remove(view)
-                maybeRemoveTouchListener(view)
+                releaseTouchListener(host)
             }
     }
 
-    private fun ensureTouchListener(view: View) {
-        if (!touchListenerViews.add(view)) {
+    /** The view that receives [view]'s touches: itself, or its nearest ReactCompoundView ancestor (e.g. SvgView). */
+    private fun findTouchHost(view: View): View {
+        var parent: ViewParent? = view.parent
+        while (parent is View) {
+            if (parent is ReactCompoundView) {
+                return parent
+            }
+            parent = parent.parent
+        }
+        return view
+    }
+
+    /** The view pressed at [event]: a compound host's hit-tested virtual child, else the host itself. */
+    private fun findTouchedLeaf(
+        host: View,
+        event: MotionEvent,
+    ): View? =
+        if (host is ReactCompoundView) {
+            tryResolveView(host.reactTagForTouch(event.x, event.y))
+        } else {
+            host
+        }
+
+    private fun acquireTouchListener(host: View) {
+        val count = touchHostRefs.getOrDefault(host, 0)
+        touchHostRefs[host] = count + 1
+        if (count == 0) {
+            host.setOnTouchListener { _, event -> onHostTouch(host, event) }
+        }
+    }
+
+    private fun releaseTouchListener(host: View) {
+        val count = touchHostRefs.getOrDefault(host, 0)
+        if (count > 1) {
+            touchHostRefs[host] = count - 1
             return
         }
-        view.setOnTouchListener { _, event ->
-            when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    fireActiveCallbacksUpTree(view, true)
-                    deepestCallbacks[view]?.let {
-                        if (!hasDeepestDescendantAt(view, event.rawX, event.rawY)) {
-                            it.onSelectorStateChanged(true)
-                        }
-                    }
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    fireActiveCallbacksUpTree(view, false)
-                    deepestCallbacks[view]?.onSelectorStateChanged(false)
-                }
-            }
-            false
-        }
+        touchHostRefs.remove(host)
+        gestureDownLeaf.remove(host)
+        host.setOnTouchListener(null)
     }
 
-    private fun maybeRemoveTouchListener(view: View) {
-        if (view !in activeCallbacks && view !in deepestCallbacks) {
-            touchListenerViews.remove(view)
-            view.setOnTouchListener(null)
+    private fun onHostTouch(
+        host: View,
+        event: MotionEvent,
+    ): Boolean {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> onHostDown(host, event)
+            MotionEvent.ACTION_UP -> onHostRelease(host)
+            MotionEvent.ACTION_CANCEL -> {
+                onHostRelease(host)
+                hover.clearAll()
+            }
+        }
+        return false
+    }
+
+    private fun onHostDown(
+        host: View,
+        event: MotionEvent,
+    ) {
+        findTouchedLeaf(host, event)?.let {
+            gestureDownLeaf[host] = it
+            fireActiveCallbacksUpTree(it, true)
+            fireDeepestIfHit(it, event.rawX, event.rawY)
+        }
+        hover.onViewTouchDown(host, event)
+    }
+
+    private fun onHostRelease(host: View) {
+        val leaf = gestureDownLeaf.remove(host) ?: return
+        fireActiveCallbacksUpTree(leaf, false)
+        deepestCallbacks[leaf]?.onSelectorStateChanged(false)
+    }
+
+    private fun fireDeepestIfHit(
+        leaf: View,
+        rawX: Float,
+        rawY: Float,
+    ) {
+        val deepest = deepestCallbacks[leaf] ?: return
+        if (!hasDeepestDescendantAt(leaf, rawX, rawY)) {
+            deepest.onSelectorStateChanged(true)
         }
     }
 
@@ -178,7 +291,11 @@ class PseudoSelectorManager(
         tag: Int,
         selector: Int,
     ) {
-        UiThreadUtil.runOnUiThread { detachActions.remove("$tag:$selector")?.run() }
+        UiThreadUtil.runOnUiThread {
+            val key = "$tag:$selector"
+            pendingAttaches.remove(key)
+            detachActions.remove(key)?.run()
+        }
     }
 
     /**
@@ -210,10 +327,7 @@ class PseudoSelectorManager(
         return false
     }
 
-    /**
-     * Walk up its ancestor chain and fire
-     * the callback for every ancestor that has _:active_ registered.
-     */
+    /** Fires the callback for [source] and every ancestor registered for _:active_. */
     private fun fireActiveCallbacksUpTree(
         source: View,
         isActive: Boolean,
@@ -225,32 +339,6 @@ class PseudoSelectorManager(
                 activeCallbacks[parent]?.onSelectorStateChanged(isActive)
             }
             parent = parent.parent
-        }
-    }
-
-    /**
-     * Recompute every registered view's _:hover_ state from the pointer position, firing only on
-     * change. A view is hovered while the point is in its on-screen bounds - true for an ancestor
-     * while the pointer is over a descendant. Uses live (mid-animation) `getLocationOnScreen` bounds.
-     */
-    private fun updateHoverStates(
-        rawX: Float,
-        rawY: Float,
-    ) {
-        val loc = hoverLocationBuffer
-        for ((view, callback) in hoverCallbacks) {
-            view.getLocationOnScreen(loc)
-            val contains =
-                rawX >= loc[0] && rawX <= loc[0] + view.width &&
-                    rawY >= loc[1] && rawY <= loc[1] + view.height
-            val wasHovered = hoveredViews.contains(view)
-            if (contains && !wasHovered) {
-                hoveredViews.add(view)
-                callback.onSelectorStateChanged(true)
-            } else if (!contains && wasHovered) {
-                hoveredViews.remove(view)
-                callback.onSelectorStateChanged(false)
-            }
         }
     }
 
