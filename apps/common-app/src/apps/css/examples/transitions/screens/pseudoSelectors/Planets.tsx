@@ -52,7 +52,7 @@ export default function Planets() {
           title="Planets">
           <VerticalExampleCard
             title="Hover a planet to reveal its name, press it for a glow"
-            code={`<Animated.View // planet
+            code={`<Animated.View
   style={{
     transform: {
       default: [{ scale: 1 }],
