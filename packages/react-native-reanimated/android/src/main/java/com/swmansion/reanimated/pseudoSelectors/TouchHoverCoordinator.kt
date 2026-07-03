@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.view.Window
 import com.facebook.react.bridge.ReactContext
@@ -14,10 +13,12 @@ import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
 import java.lang.ref.WeakReference
 
 /**
- * Drives sticky touch :hover (Chromium model): a tapped view stays hovered after the finger lifts,
- * clearing only when a later touch lands elsewhere or a scroll cancels it. The hosting manager feeds
- * it touch-downs (per-view, plus a window observer for blank space). register also wires the pointer
- * (mouse/stylus) hover, which stays non-sticky.
+ * Drives sticky touch :hover: only the touch-down and release locations matter. A touch-down hovers
+ * the views on its hit branch (and unhovers the rest, including on blank space), and when the first
+ * finger lifts, a hovered view stays hovered only if the finger is still over it - moves and scrolls
+ * in between change nothing. The Activity-window observer sees whole gestures; the hosting manager
+ * feeds per-view touches as the fallback for windows the observer is blind to (Modal/Dialog).
+ * register also wires the pointer (mouse/stylus) hover, which stays non-sticky.
  */
 class TouchHoverCoordinator {
     private val hoverCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
@@ -29,6 +30,10 @@ class TouchHoverCoordinator {
     // reconciling it again: a second reconcile re-runs the hit-test after the first hover mutated a
     // prop, which for svg invalidates the front element's path so it resolves the one behind it.
     private var observedGestureDownTime = Long.MIN_VALUE
+
+    // downTime of the gesture whose release was already settled, so a later finger that inherits
+    // pointer id 0 mid-gesture (or the per-view listener echoing the observer) cannot settle again.
+    private var settledGestureDownTime = Long.MIN_VALUE
 
     // Weak so a stale wrapper can never pin a destroyed Activity (this outlives Activities).
     private var observedWindow: WeakReference<Window>? = null
@@ -84,11 +89,35 @@ class TouchHoverCoordinator {
         sourceView: View,
         event: MotionEvent,
     ) {
-        if (event.downTime == observedGestureDownTime) {
+        if (event.downTime == observedGestureDownTime || isGestureSettled(event)) {
             return
         }
         reconcile(sourceView.rootView as? ViewGroup, event.rawX, event.rawY)
     }
+
+    // The Modal/Dialog counterparts of the observer's release handling. A cancel there ends the
+    // gesture for good (the real release is never delivered), so the sticky :hover is dropped.
+    fun onViewTouchUp(
+        sourceView: View,
+        event: MotionEvent,
+    ) {
+        if (event.downTime == observedGestureDownTime) {
+            return
+        }
+        settleHover(sourceView.rootView as? ViewGroup, event)
+    }
+
+    fun onViewTouchCancel(event: MotionEvent) {
+        if (event.downTime == observedGestureDownTime || isGestureSettled(event)) {
+            return
+        }
+        settledGestureDownTime = event.downTime
+        clearAll()
+    }
+
+    // Once a gesture's first finger released (or its cancel cleared), later fingers that inherit
+    // pointer id 0 within the same gesture must stay ignored, web-like.
+    fun isGestureSettled(event: MotionEvent) = event.downTime == settledGestureDownTime
 
     // Blank-space (window observer) path: no source view, so hit-test the observed window's tree.
     fun recompute(
@@ -112,6 +141,31 @@ class TouchHoverCoordinator {
         }
     }
 
+    // The first finger lifted: a hovered view stays hovered only if the finger is still over it.
+    // Screen coords of the lifting pointer come from the index-0 raw/local delta (getRawX/Y(index)
+    // needs API 29); nothing new is ever hovered here.
+    private fun settleHover(
+        root: ViewGroup?,
+        event: MotionEvent,
+    ) {
+        if (event.downTime == settledGestureDownTime) {
+            return
+        }
+        settledGestureDownTime = event.downTime
+        val index = event.findPointerIndex(0)
+        if (index < 0 || hoveredViews.isEmpty()) {
+            return
+        }
+        val screenX = event.getX(index) + (event.rawX - event.getX(0))
+        val screenY = event.getY(index) + (event.rawY - event.getY(0))
+        val hitTags: Set<Int> = if (root == null) emptySet() else hitTestPath(root, screenX, screenY)
+        for (view in hoveredViews.toList()) {
+            if (view.id !in hitTags) {
+                hoverCallbacks[view]?.let { setHovered(view, it, false) }
+            }
+        }
+    }
+
     // React tags on the hit branch (RN's hit-test honors z-order/transforms/clipping/pointer-events).
     // Matching by tag also covers svg's virtual children, whose tag rides the path with a null view.
     private fun hitTestPath(
@@ -132,7 +186,7 @@ class TouchHoverCoordinator {
         return window?.decorView as? ViewGroup
     }
 
-    fun clearAll() {
+    private fun clearAll() {
         if (hoveredViews.isEmpty()) {
             return
         }
@@ -162,33 +216,25 @@ class TouchHoverCoordinator {
         // The Activity (and its window) can be replaced; re-bind onto the live one.
         removeWindowObserver()
         val original = window.callback ?: return
-        val slop = ViewConfiguration.get(view.context).scaledTouchSlop.toFloat()
         val wrapper =
             object : Window.Callback by original {
-                private var startX = 0f
-                private var startY = 0f
-                private var slopExceeded = false
-
                 override fun dispatchTouchEvent(event: MotionEvent): Boolean {
                     when (event.actionMasked) {
                         MotionEvent.ACTION_DOWN -> {
-                            startX = event.rawX
-                            startY = event.rawY
-                            slopExceeded = false
                             observedGestureDownTime = event.downTime
                             recompute(event.rawX, event.rawY)
                         }
-                        // A scroll/drag past slop dismisses sticky :hover, matching iOS.
-                        MotionEvent.ACTION_MOVE ->
-                            if (!slopExceeded) {
-                                val dx = event.rawX - startX
-                                val dy = event.rawY - startY
-                                if (dx * dx + dy * dy > slop * slop) {
-                                    slopExceeded = true
-                                    clearAll()
-                                }
+                        // Only the first finger's release settles the gesture; it can arrive as the
+                        // last-finger up or early, while other fingers stay down. A cancel is a system
+                        // interruption, not a release, so it keeps the :hover.
+                        MotionEvent.ACTION_UP ->
+                            if (event.findPointerIndex(0) >= 0) {
+                                settleHover(hoverRootViewGroup(), event)
                             }
-                        MotionEvent.ACTION_CANCEL -> clearAll()
+                        MotionEvent.ACTION_POINTER_UP ->
+                            if (event.getPointerId(event.actionIndex) == 0) {
+                                settleHover(hoverRootViewGroup(), event)
+                            }
                     }
                     return original.dispatchTouchEvent(event)
                 }

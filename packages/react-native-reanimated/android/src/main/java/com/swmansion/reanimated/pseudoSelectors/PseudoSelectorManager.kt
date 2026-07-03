@@ -243,17 +243,33 @@ class PseudoSelectorManager(
         host.setOnTouchListener(null)
     }
 
+    // Only the first finger (pointer id 0) drives the press selectors, matching the web's single
+    // active pointer; its release can arrive as the last-finger up or early via a pointer-up while
+    // other fingers stay down.
     private fun onHostTouch(
         host: View,
         event: MotionEvent,
     ): Boolean {
         when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN -> onHostDown(host, event)
-            MotionEvent.ACTION_UP -> onHostRelease(host)
-            MotionEvent.ACTION_CANCEL -> {
-                onHostRelease(host)
-                hover.clearAll()
-            }
+            MotionEvent.ACTION_DOWN ->
+                if (event.getPointerId(0) == 0 && !hover.isGestureSettled(event)) {
+                    onHostDown(host, event)
+                }
+            MotionEvent.ACTION_POINTER_UP ->
+                if (event.getPointerId(event.actionIndex) == 0) {
+                    onHostRelease(host)
+                    hover.onViewTouchUp(host, event)
+                }
+            MotionEvent.ACTION_UP ->
+                if (event.findPointerIndex(0) >= 0) {
+                    onHostRelease(host)
+                    hover.onViewTouchUp(host, event)
+                }
+            MotionEvent.ACTION_CANCEL ->
+                if (event.findPointerIndex(0) >= 0) {
+                    onHostRelease(host)
+                    hover.onViewTouchCancel(event)
+                }
         }
         return false
     }

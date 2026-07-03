@@ -36,7 +36,18 @@
 #endif
   NSArray *_notificationObservers;
   std::function<void(bool)> _callback;
+  // Whether this observer's `:active` recognizer is counted in the shared active-touch tally below.
+  BOOL _activeTouchCounted;
 }
+
+#if !TARGET_OS_OSX
+// Single active touch: the first finger to press an `:active` / `:active-deepest` view owns it, and
+// other fingers are ignored until it (and everything it activated) lifts - matching the web. The
+// touch is shared across all observers; the count tracks how many of its recognizers are live so the
+// owner can be released once the last one ends.
+static __weak UITouch *sActivePrimaryTouch;
+static NSInteger sActiveTouchCount;
+#endif
 
 - (instancetype)initWithView:(REAUIView *)view
                     selector:(reanimated::PseudoSelector)selector
@@ -260,14 +271,57 @@ static int _focusObserverContext;
   switch (recognizer.state) {
     case UIGestureRecognizerStateBegan:
       _callback(true);
+      [self retainActiveTouch];
       break;
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled:
     case UIGestureRecognizerStateFailed:
       _callback(false);
+      [self releaseActiveTouch];
       break;
     default:
       break;
+  }
+}
+
+// Single active touch is gated here: the first finger claims `sActivePrimaryTouch`; a later finger on
+// another `:active` view is a different UITouch and is refused, so only the first press takes effect.
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch
+{
+  if (![self participatesInActiveDeepestArbitration]) {
+    return YES;
+  }
+  // A claim made here is only counted once a recognizer actually begins; a touch that claims but never
+  // begins (e.g. refused in `gestureRecognizerShouldBegin`) would otherwise pin the token until its
+  // `UITouch` deallocates. When no gesture is in flight the count is back to zero, so any lingering
+  // token is stale and the next first finger reclaims it.
+  if (sActiveTouchCount == 0) {
+    sActivePrimaryTouch = nil;
+  }
+  if (sActivePrimaryTouch == nil) {
+    sActivePrimaryTouch = touch;
+    return YES;
+  }
+  return sActivePrimaryTouch == touch;
+}
+
+- (void)retainActiveTouch
+{
+  if ([self participatesInActiveDeepestArbitration] && !_activeTouchCounted) {
+    _activeTouchCounted = YES;
+    sActiveTouchCount++;
+  }
+}
+
+- (void)releaseActiveTouch
+{
+  if (!_activeTouchCounted) {
+    return;
+  }
+  _activeTouchCounted = NO;
+  if (--sActiveTouchCount <= 0) {
+    sActiveTouchCount = 0;
+    sActivePrimaryTouch = nil;
   }
 }
 
@@ -369,10 +423,15 @@ static int _focusObserverContext;
     [_view removeGestureRecognizer:_gestureRecognizer];
   }
   _gestureRecognizer = nil;
-#if !TARGET_OS_OSX && !TARGET_OS_TV
+#if !TARGET_OS_OSX
+  // Release this observer's hold on the active touch so tearing it down mid-press cannot wedge the
+  // shared count and silently block every later `:active`.
+  [self releaseActiveTouch];
+#if !TARGET_OS_TV
   if (_selector == reanimated::PseudoSelector::Hover) {
     [[REATouchHoverCoordinator sharedCoordinator] unregisterObserver:self];
   }
+#endif
 #endif
 #if TARGET_OS_OSX
   if (_trackingArea && _view) {
