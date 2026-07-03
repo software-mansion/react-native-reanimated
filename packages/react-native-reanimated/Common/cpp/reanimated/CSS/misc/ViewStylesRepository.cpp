@@ -13,13 +13,11 @@ ViewStylesRepository::ViewStylesRepository(
 jsi::Value ViewStylesRepository::getNodeProp(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::string &propName) {
-  int tag = shadowNode->getTag();
-
-  auto &cachedNode = shadowNodeCache_[tag];
-  updateCacheIfNeeded(cachedNode, shadowNode);
+  const auto resolvedNode = getNewestNode(shadowNode);
+  const auto *layoutableShadowNode = dynamic_cast<const LayoutableShadowNode *>(resolvedNode.get());
 
   if (propName == "width" || propName == "height" || propName == "top" || propName == "left") {
-    const auto &layoutMetrics = cachedNode.layoutMetrics;
+    const auto layoutMetrics = layoutableShadowNode ? layoutableShadowNode->layoutMetrics_ : LayoutMetrics{};
 
     if (propName == "width") {
       return {layoutMetrics.frame.size.width};
@@ -31,7 +29,13 @@ jsi::Value ViewStylesRepository::getNodeProp(
       return {layoutMetrics.frame.origin.x};
     }
   } else {
-    const auto &viewProps = cachedNode.viewProps;
+    if (!layoutableShadowNode) {
+      return jsi::Value::undefined();
+    }
+    const auto viewProps = std::static_pointer_cast<const ViewProps>(resolvedNode->getProps());
+    if (!viewProps) {
+      return jsi::Value::undefined();
+    }
 
     if (propName == "opacity") {
       return {viewProps->opacity};
@@ -48,21 +52,63 @@ jsi::Value ViewStylesRepository::getNodeProp(
 jsi::Value ViewStylesRepository::getParentNodeProp(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::string &propName) {
-  const auto surfaceId = shadowNode->getSurfaceId();
-  const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
-
-  std::shared_ptr<const ShadowNode> parentNode = nullptr;
-
-  shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
-    auto currentRevision = shadowTree.getCurrentRevision();
-    parentNode = dom::getParentNode(currentRevision.rootShadowNode, *shadowNode);
-  });
+  const auto parentNode = getParentNode(shadowNode);
 
   if (!parentNode) {
     return jsi::Value::undefined();
   }
 
   return getNodeProp(parentNode, propName);
+}
+
+std::shared_ptr<const ShadowNode> ViewStylesRepository::getNewestNode(
+    const std::shared_ptr<const ShadowNode> &shadowNode) const {
+  // Resolve shadowNode against the last mounted root instead of reading the live
+  // ShadowTree: uiManager_->getNewestCloneOfShadowNode takes the ShadowTree commit
+  // lock, and this method runs under the updates-registry lock while a concurrent
+  // Fabric commit takes the same two locks in the opposite order (the ANR
+  // deadlock). Falls back to the passed node. Mirrors RN's getShadowNodeInSubtree:
+  // https://github.com/facebook/react-native/blob/v0.86.0-rc.3/packages/react-native/ReactCommon/react/renderer/uimanager/UIManager.cpp#L339
+  RootShadowNode::Shared root;
+  {
+    const std::lock_guard<std::mutex> lock{lastMountedRootMutex_};
+    const auto it = lastMountedRootBySurface_.find(shadowNode->getSurfaceId());
+    if (it == lastMountedRootBySurface_.end()) {
+      return shadowNode;
+    }
+    root = it->second;
+  }
+
+  if (ShadowNode::sameFamily(*root, *shadowNode)) {
+    return root;
+  }
+
+  const auto ancestors = shadowNode->getFamily().getAncestors(*root);
+  if (ancestors.empty()) {
+    return shadowNode;
+  }
+
+  const auto &deepest = ancestors.back();
+  return deepest.first.get().getChildren().at(deepest.second);
+}
+
+std::shared_ptr<const ShadowNode> ViewStylesRepository::getParentNode(
+    const std::shared_ptr<const ShadowNode> &shadowNode) const {
+  RootShadowNode::Shared root;
+  {
+    const std::lock_guard<std::mutex> lock{lastMountedRootMutex_};
+    const auto it = lastMountedRootBySurface_.find(shadowNode->getSurfaceId());
+    if (it == lastMountedRootBySurface_.end()) {
+      return nullptr;
+    }
+    root = it->second;
+  }
+  return dom::getParentNode(root, *shadowNode);
+}
+
+void ViewStylesRepository::setLastMountedRoot(const RootShadowNode::Shared &rootShadowNode) {
+  const std::lock_guard<std::mutex> lock{lastMountedRootMutex_};
+  lastMountedRootBySurface_[rootShadowNode->getSurfaceId()] = rootShadowNode;
 }
 
 folly::dynamic ViewStylesRepository::getStyleProp(const Tag tag, const PropertyPath &propertyPath) {
@@ -72,30 +118,6 @@ folly::dynamic ViewStylesRepository::getStyleProp(const Tag tag, const PropertyP
   }
 
   return getPropertyValue(staticPropsRegistry_->get(tag), propertyPath);
-}
-
-void ViewStylesRepository::clearNodesCache() {
-  shadowNodeCache_.clear();
-}
-
-void ViewStylesRepository::updateCacheIfNeeded(
-    CachedShadowNode &cachedNode,
-    const std::shared_ptr<const ShadowNode> &shadowNode) {
-  auto newestCloneOfShadowNode = uiManager_->getNewestCloneOfShadowNode(*shadowNode);
-
-  // Check if newestCloneOfShadowNode is valid (is already mounted / not
-  // yet unmounted)
-  if (!newestCloneOfShadowNode) {
-    return;
-  }
-
-  auto layoutableShadowNode = dynamic_cast<const LayoutableShadowNode *>(newestCloneOfShadowNode.get());
-  if (!layoutableShadowNode) {
-    return;
-  }
-
-  cachedNode.layoutMetrics = layoutableShadowNode->layoutMetrics_;
-  cachedNode.viewProps = std::static_pointer_cast<const ViewProps>(newestCloneOfShadowNode->getProps());
 }
 
 folly::dynamic ViewStylesRepository::getPropertyValue(const folly::dynamic &value, const PropertyPath &propertyPath) {
