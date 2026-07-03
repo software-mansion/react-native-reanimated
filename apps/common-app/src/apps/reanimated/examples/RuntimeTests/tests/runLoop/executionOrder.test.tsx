@@ -71,11 +71,14 @@ describe('Test mixed order of execution', () => {
       // Act
       scheduleOnRuntime(rt, () => {
         'worklet';
+        // Stay busy until the second task below is enqueued.
+        const busyUntil = performance.now() + 10;
+        while (performance.now() < busyUntil) {
+          // Do nothing.
+        }
         getMethodMap()[firstMethodName](() =>
           order(firstMethodOrder, notification1)
         );
-        // heavy task, to make sure that next scheduleOnRuntime will schedule task on async queue
-        new Array(100000).map((_v, i) => (i / 2) * i * 9 + 7);
       });
       scheduleOnRuntime(rt, () => {
         'worklet';
