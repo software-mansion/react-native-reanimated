@@ -13,7 +13,8 @@ export const IS_ANDROID: boolean = /* @__PURE__ */ (() =>
   Platform?.OS === 'android')();
 export const IS_IOS: boolean = /* @__PURE__ */ (() => Platform?.OS === 'ios')();
 export const IS_WEB: boolean = Platform?.OS === 'web';
-export const IS_JEST: boolean = !!process.env.JEST_WORKER_ID;
+export const IS_JEST: boolean =
+  typeof globalThis.jest !== 'undefined' || process.env.NODE_ENV === 'test';
 /** @knipIgnore */
 export const IS_WINDOWS: boolean = Platform?.OS === 'windows';
 
