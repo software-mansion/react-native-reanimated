@@ -29,9 +29,9 @@ export function checkInvalidWriteDuringRender() {
   }
 }
 
-export type Listener<TValue> = (newValue: TValue) => void;
+type Listener<TValue> = (newValue: TValue) => void;
 
-export type PartialMutable<TValue> = Omit<Mutable<TValue>, 'get' | 'set'>;
+type PartialMutable<TValue> = Omit<Mutable<TValue>, 'get' | 'set'>;
 
 /**
  * Adds `get` and `set` methods to the mutable object to handle access to

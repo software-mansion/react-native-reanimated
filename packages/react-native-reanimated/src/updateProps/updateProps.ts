@@ -29,6 +29,7 @@ export const updatePropsJestWrapper = makeUpdatePropsJestWrapper(updateProps);
 
 export default updateProps;
 
+// is-tree-shakable-suppress
 global.UpdatePropsManager = new Proxy(
   {},
   {

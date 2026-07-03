@@ -3,10 +3,10 @@ import type { ComponentRef } from 'react';
 import type { ScrollView } from 'react-native';
 
 import { logger } from '../common';
-import type { InternalHostInstance } from '../commonTypes';
+import type { InstanceOrElement } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 
-export function scrollTo<TRef extends InternalHostInstance>(
+export function scrollTo<TRef extends InstanceOrElement>(
   animatedRef: AnimatedRef<TRef>,
   x: number,
   y: number,

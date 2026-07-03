@@ -47,11 +47,11 @@ import {
  * object to prevent from freezing it in development.
  */
 export const IN_STYLE_UPDATER = { current: false };
-export const IN_STYLE_UPDATER_UI = createSerializable({ current: false });
+const IN_STYLE_UPDATER_UI = createSerializable({ current: false });
 // is-tree-shakable-suppress
 serializableMappingCache.set(IN_STYLE_UPDATER, IN_STYLE_UPDATER_UI);
 
-export const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
+const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
   originX: true,
   originY: true,
   width: true,
@@ -64,7 +64,7 @@ export const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
   backgroundColor: true,
 };
 
-export type LayoutAnimationProp = keyof typeof LAYOUT_ANIMATION_SUPPORTED_PROPS;
+type LayoutAnimationProp = keyof typeof LAYOUT_ANIMATION_SUPPORTED_PROPS;
 
 export function isValidLayoutAnimationProp(prop: string) {
   'worklet';
@@ -85,7 +85,7 @@ export function initialUpdaterRun<T>(updater: () => T) {
   return result;
 }
 
-export interface RecognizedPrefixSuffix {
+interface RecognizedPrefixSuffix {
   prefix?: string;
   suffix?: string;
   strippedValue: number;

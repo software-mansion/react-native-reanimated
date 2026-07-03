@@ -1,10 +1,10 @@
 'use strict';
-import type { InternalHostInstance, StyleProps } from '../commonTypes';
+import type { InstanceOrElement, StyleProps } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
 
-export function setNativeProps<TRef extends InternalHostInstance>(
+export function setNativeProps<TRef extends InstanceOrElement>(
   animatedRef: AnimatedRef<TRef>,
   updates: StyleProps
 ) {

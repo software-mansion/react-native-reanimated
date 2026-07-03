@@ -1,9 +1,9 @@
 'use strict';
 import { logger } from '../common';
-import type { InternalHostInstance, MeasuredDimensions } from '../commonTypes';
+import type { InstanceOrElement, MeasuredDimensions } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 
-export function measure<TRef extends InternalHostInstance>(
+export function measure<TRef extends InstanceOrElement>(
   animatedRef: AnimatedRef<TRef>
 ): MeasuredDimensions | null {
   const element = animatedRef() as HTMLElement | null;

@@ -5,7 +5,7 @@ import { isWorkletFunction } from 'react-native-worklets';
 import type { UnknownRecord } from '../common';
 import type { ReanimatedEvent } from './commonTypes';
 
-export interface GeneralHandler<
+interface GeneralHandler<
   TEvent extends object,
   TContext extends UnknownRecord,
 > {
@@ -38,16 +38,16 @@ export function ensureWorkletHandlers(handlers: UnknownRecord) {
   }
 }
 
-export const objectIs: (a: unknown, b: unknown) => boolean =
+const objectIs: (a: unknown, b: unknown) => boolean =
   typeof Object.is === 'function'
     ? Object.is
     : (x, y) =>
         (x === y && (x !== 0 || 1 / (x as number) === 1 / (y as number))) ||
         (Number.isNaN(x as number) && Number.isNaN(y as number));
 
-export type WorkletClosure = Record<string, unknown>;
+type WorkletClosure = Record<string, unknown>;
 
-export function areWorkletClosuresEqual(
+function areWorkletClosuresEqual(
   next: WorkletClosure,
   prev: WorkletClosure
 ): boolean {
@@ -60,7 +60,7 @@ export function areWorkletClosuresEqual(
   );
 }
 
-export function areWorkletsEqual(
+function areWorkletsEqual(
   next: WorkletFunction,
   prev: WorkletFunction
 ): boolean {

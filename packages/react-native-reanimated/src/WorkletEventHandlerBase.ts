@@ -12,7 +12,7 @@ type JSEvent<Event extends object> = NativeSyntheticEvent<EventPayload<Event>>;
 // In JS implementation (e.g. for web) we don't use Reanimated's
 // event emitter, therefore we have to handle here
 // the event that came from React Native and convert it.
-export function jsListener<Event extends object>(
+function jsListener<Event extends object>(
   eventName: string,
   handler: (event: ReanimatedEvent<Event>) => void
 ) {

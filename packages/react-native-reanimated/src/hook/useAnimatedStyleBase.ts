@@ -17,7 +17,7 @@ import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type { Descriptor } from './commonTypes';
 import { isAnimated, shallowEqual } from './utils';
 
-export interface AnimatedState {
+interface AnimatedState {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   last: AnimatedStyle<any>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,7 +38,7 @@ export interface AnimatedUpdaterData {
   styleUpdaterContainer: StyleUpdaterContainer;
 }
 
-export function prepareAnimation(
+function prepareAnimation(
   frameTimestamp: number,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animatedProp: AnimatedStyle<any>,
@@ -101,7 +101,7 @@ export function prepareAnimation(
   }
 }
 
-export function runAnimations(
+function runAnimations(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animation: AnimatedStyle<any>,
   timestamp: Timestamp,
