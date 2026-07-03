@@ -7,16 +7,26 @@ namespace reanimated::css {
 void StaticPropsRegistry::set(jsi::Runtime &rt, const Tag viewTag, const jsi::Value &props) {
   if (props.isNull() || props.isUndefined()) {
     remove(viewTag);
-  } else {
-    const auto newProps = dynamicFromValue(rt, props);
-    if (has(viewTag)) {
-      notifyObservers(viewTag, get(viewTag), newProps);
+    return;
+  }
+
+  const auto newProps = dynamicFromValue(rt, props);
+  folly::dynamic oldProps;
+  {
+    std::lock_guard<std::mutex> lock{mutex_};
+    const auto it = registry_.find(viewTag);
+    if (it != registry_.end()) {
+      oldProps = it->second;
     }
     registry_[viewTag] = newProps;
+  }
+  if (!oldProps.isNull()) {
+    notifyObservers(viewTag, oldProps, newProps);
   }
 }
 
 folly::dynamic StaticPropsRegistry::get(const Tag viewTag) const {
+  std::lock_guard<std::mutex> lock{mutex_};
   auto it = registry_.find(viewTag);
   if (it == registry_.end()) {
     return nullptr;
@@ -25,14 +35,17 @@ folly::dynamic StaticPropsRegistry::get(const Tag viewTag) const {
 }
 
 bool StaticPropsRegistry::has(const Tag viewTag) const {
+  std::lock_guard<std::mutex> lock{mutex_};
   return registry_.find(viewTag) != registry_.end();
 }
 
 void StaticPropsRegistry::remove(const Tag viewTag) {
+  std::lock_guard<std::mutex> lock{mutex_};
   registry_.erase(viewTag);
 }
 
 bool StaticPropsRegistry::isEmpty() const {
+  std::lock_guard<std::mutex> lock{mutex_};
   return registry_.empty() && observers_.empty();
 }
 
