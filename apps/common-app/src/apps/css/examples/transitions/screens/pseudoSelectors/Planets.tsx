@@ -66,15 +66,14 @@ export default function Planets() {
   }}>
   <Animated.View
     style={{
-      opacity: { default: 0.02, ':hover': 1 },
+      opacity: { default: 0, ':hover': 1 },
       transitionDuration: '200ms',
-    }}
-    onStartShouldSetResponder={() => true}>
+    }}>
     <Text>{name}</Text>
   </Animated.View>
 </Animated.View>`}
             collapsedCode={`opacity: {
-  default: 0.02,
+  default: 0,
   ':hover': 1,
 },
 transform: {
@@ -118,11 +117,10 @@ boxShadow: {
                       style={[
                         styles.nameWrapper,
                         {
-                          opacity: { ':hover': 1, default: 0.02 },
+                          opacity: { ':hover': 1, default: 0 },
                           transitionDuration: '200ms',
                         },
-                      ]}
-                      onStartShouldSetResponder={() => true}>
+                      ]}>
                       <Text style={styles.name}>{planet.name}</Text>
                     </Animated.View>
                   </Animated.View>
