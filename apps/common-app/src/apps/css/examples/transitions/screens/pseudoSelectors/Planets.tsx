@@ -58,16 +58,14 @@ export default function Planets() {
       default: [{ scale: 1 }],
       ':active': [{ scale: 1.1 }],
     },
-    // boxShadow works on iOS, Android and web
     boxShadow: {
       default: \`0 0 0 0 \${color}00\`,
       ':active': \`0 0 18px 4px \${color}\`,
     },
     transitionDuration: '200ms',
   }}>
-  <Animated.View // name label
+  <Animated.View
     style={{
-      // 0.02 not 0: iOS skips alpha<0.01 views in hit-testing
       opacity: { default: 0.02, ':hover': 1 },
       transitionDuration: '200ms',
     }}
