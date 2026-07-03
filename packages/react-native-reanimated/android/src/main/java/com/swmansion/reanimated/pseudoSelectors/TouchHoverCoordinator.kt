@@ -67,8 +67,6 @@ class TouchHoverCoordinator {
         }
     }
 
-    fun isRegistered(view: View) = view in hoverCallbacks
-
     /**
      * Mirrors CSS hit-testing: turns :hover on for the topmost view at the touch and its registered
      * ancestors, off for the rest. Views that merely overlap the hit branch (which a plain bounds
@@ -95,8 +93,7 @@ class TouchHoverCoordinator {
         reconcile(sourceView.rootView as? ViewGroup, event.rawX, event.rawY)
     }
 
-    // The Modal/Dialog counterparts of the observer's release handling. A cancel there ends the
-    // gesture for good (the real release is never delivered), so the sticky :hover is dropped.
+    // The Modal/Dialog counterpart of the observer's UP/POINTER_UP release handling.
     fun onViewTouchUp(
         sourceView: View,
         event: MotionEvent,
@@ -107,6 +104,8 @@ class TouchHoverCoordinator {
         settleHover(sourceView.rootView as? ViewGroup, event)
     }
 
+    // The Modal/Dialog counterpart of cancel: it ends the gesture for good (the real release is never
+    // delivered there), so the sticky :hover is dropped.
     fun onViewTouchCancel(event: MotionEvent) {
         if (event.downTime == observedGestureDownTime || isGestureSettled(event)) {
             return

@@ -252,7 +252,7 @@ class PseudoSelectorManager(
     ): Boolean {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN ->
-                if (event.getPointerId(0) == 0 && !hover.isGestureSettled(event)) {
+                if (!hover.isGestureSettled(event)) {
                     onHostDown(host, event)
                 }
             MotionEvent.ACTION_POINTER_UP ->

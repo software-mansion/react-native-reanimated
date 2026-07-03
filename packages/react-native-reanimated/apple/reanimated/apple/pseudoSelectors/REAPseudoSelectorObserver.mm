@@ -14,7 +14,7 @@
 #endif
 - (void)attachActiveGestureRecognizerToView:(REAUIView *)view;
 - (void)attachHoverToView:(REAUIView *)view;
-- (BOOL)participatesInActiveDeepestArbitration;
+- (BOOL)isPressSelector;
 #if !TARGET_OS_OSX
 - (void)attachFocusToView:(REAUIView *)view;
 - (void)attachFocusWithinToView:(REAUIView *)view;
@@ -288,7 +288,7 @@ static int _focusObserverContext;
 // another `:active` view is a different UITouch and is refused, so only the first press takes effect.
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch
 {
-  if (![self participatesInActiveDeepestArbitration]) {
+  if (![self isPressSelector]) {
     return YES;
   }
   // A claim made here is only counted once a recognizer actually begins; a touch that claims but never
@@ -307,7 +307,7 @@ static int _focusObserverContext;
 
 - (void)retainActiveTouch
 {
-  if ([self participatesInActiveDeepestArbitration] && !_activeTouchCounted) {
+  if ([self isPressSelector] && !_activeTouchCounted) {
     _activeTouchCounted = YES;
     sActiveTouchCount++;
   }
@@ -355,7 +355,7 @@ static int _focusObserverContext;
 
 #endif // TARGET_OS_OSX
 
-- (BOOL)participatesInActiveDeepestArbitration
+- (BOOL)isPressSelector
 {
   return _selector == reanimated::PseudoSelector::Active || _selector == reanimated::PseudoSelector::ActiveDeepest;
 }
@@ -384,7 +384,7 @@ static int _focusObserverContext;
   while (current && current != view) {
     for (UIGestureRecognizer *gr in current.gestureRecognizers) {
       if ([gr.delegate isKindOfClass:[REAPseudoSelectorObserver class]] &&
-          [(REAPseudoSelectorObserver *)gr.delegate participatesInActiveDeepestArbitration]) {
+          [(REAPseudoSelectorObserver *)gr.delegate isPressSelector]) {
         return NO;
       }
     }
@@ -396,7 +396,7 @@ static int _focusObserverContext;
   while (current && current != view) {
     for (NSGestureRecognizer *gr in current.gestureRecognizers) {
       if ([gr.delegate isKindOfClass:[REAPseudoSelectorObserver class]] &&
-          [(REAPseudoSelectorObserver *)gr.delegate participatesInActiveDeepestArbitration]) {
+          [(REAPseudoSelectorObserver *)gr.delegate isPressSelector]) {
         return NO;
       }
     }
