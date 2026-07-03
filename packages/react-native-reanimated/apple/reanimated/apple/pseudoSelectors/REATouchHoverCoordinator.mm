@@ -57,6 +57,10 @@
 }
 @end
 
+// Movement (points) below which a release counts as a stationary tap - the finger never left the
+// touched branch, so the release re-hit-test is skipped. Matches UIKit's tap allowable-movement.
+static const CGFloat kPrimaryTouchTapMovement = 10.0;
+
 @implementation REATouchHoverCoordinator {
   NSMutableArray<REATouchHoverEntry *> *_entries;
   REAHoverTouchObserver *_windowObserver;
@@ -64,6 +68,7 @@
   // Only the first finger drives `:hover`; the rest are ignored, web-like. The claim is held until
   // every finger of the sequence lifts, so a later finger can never become a new primary mid-gesture.
   __weak UITouch *_primaryTouch;
+  CGPoint _primaryTouchDownPoint;
 }
 
 + (instancetype)sharedCoordinator
@@ -183,7 +188,8 @@
     return;
   }
   _primaryTouch = touch;
-  UIView *hit = [window hitTest:[touch locationInView:window] withEvent:nil];
+  _primaryTouchDownPoint = [touch locationInView:window];
+  UIView *hit = [window hitTest:_primaryTouchDownPoint withEvent:nil];
   // Touch-down reconciles `:hover` to the touched branch right away: the new branch lights up and any
   // previously-hovered view is dropped on this same down, even if the touch later becomes a scroll.
   [self hoverBranchOfHitView:hit];
@@ -195,8 +201,20 @@
     return;
   }
   UIWindow *window = _observedWindow;
-  // Only the release location matters: a hovered view stays hovered when the finger lifts over it and
-  // is dropped otherwise - including after dragging or scrolling off it. Nothing new is hovered here.
+  // A stationary tap never leaves the touched branch, so keep it as-is; the release re-hit-test is only
+  // needed once the finger has actually moved (a drag/scroll). Skipping it for a tap also sidesteps a
+  // react-native-svg quirk: RNSVG's hit-test can resolve a different element after the front one
+  // re-renders for `:hover`, which would spuriously drop a just-hovered svg element on release.
+  if (window != nil) {
+    CGPoint releasePoint = [_primaryTouch locationInView:window];
+    CGFloat dx = releasePoint.x - _primaryTouchDownPoint.x;
+    CGFloat dy = releasePoint.y - _primaryTouchDownPoint.y;
+    if (dx * dx + dy * dy <= kPrimaryTouchTapMovement * kPrimaryTouchTapMovement) {
+      return;
+    }
+  }
+  // The finger moved: only the release location matters now - a hovered view stays hovered when the
+  // finger lifts over it and is dropped otherwise (dragged or scrolled off). Nothing new is hovered.
   // A cancelled primary never gets here, so a system interruption keeps the `:hover`.
   UIView *hit = window != nil ? [window hitTest:[_primaryTouch locationInView:window] withEvent:nil] : nil;
   for (REATouchHoverEntry *entry in _entries) {
