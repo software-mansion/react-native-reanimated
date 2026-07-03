@@ -142,9 +142,9 @@ FadeInUp.springify()
 ```
 
 * `.springify()` enables the spring-based animation configuration.
-* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
-* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
-* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `120`.
+* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `4`.
+* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `900`.
 * `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
 * `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
@@ -436,9 +436,9 @@ FlipInXUp.springify()
 ```
 
 * `.springify()` enables the spring-based animation configuration.
-* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
-* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
-* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `120`.
+* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `4`.
+* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `900`.
 * `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
 * `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
@@ -552,9 +552,9 @@ LightSpeedInLeft.springify()
 ```
 
 * `.springify()` enables the spring-based animation configuration.
-* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
-* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
-* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `120`.
+* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `4`.
+* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `900`.
 * `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
 * `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
@@ -658,9 +658,9 @@ PinwheelIn.springify()
 ```
 
 * `.springify()` enables the spring-based animation configuration.
-* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
-* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
-* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `120`.
+* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `4`.
+* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `900`.
 * `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
 * `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
@@ -771,9 +771,9 @@ RollInLeft.springify()
 ```
 
 * `.springify()` enables the spring-based animation configuration.
-* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
-* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
-* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `120`.
+* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `4`.
+* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `900`.
 * `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
 * `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
@@ -908,9 +908,9 @@ RotateInUpLeft.springify()
 ```
 
 * `.springify()` enables the spring-based animation configuration.
-* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
-* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
-* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `120`.
+* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `4`.
+* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `900`.
 * `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
 * `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
@@ -1035,9 +1035,9 @@ SlideInUp.springify()
 ```
 
 * `.springify()` enables the spring-based animation configuration.
-* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
-* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
-* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `120`.
+* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `4`.
+* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `900`.
 * `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
 * `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
@@ -1154,9 +1154,9 @@ StretchInX.springify()
 ```
 
 * `.springify()` enables the spring-based animation configuration.
-* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
-* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
-* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `120`.
+* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `4`.
+* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `900`.
 * `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
 * `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
@@ -1339,9 +1339,9 @@ ZoomInRotate.springify()
 ```
 
 * `.springify()` enables the spring-based animation configuration.
-* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
-* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
-* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `120`.
+* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `4`.
+* `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `900`.
 * `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
 * `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 

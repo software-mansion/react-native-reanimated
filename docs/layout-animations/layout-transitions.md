@@ -58,11 +58,11 @@ LinearTransition.springify()
 ```
 
 * `.springify()` enables the spring-based animation configuration.
-* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
-* `.dampingRatio(value: number)` decides how damped the spring is. Value `1` means the spring is critically damped, and value `>1` means the spring is overdamped. Defaults to `0.5`.
-* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
+* `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `120`.
+* `.dampingRatio(value: number)` decides how damped the spring is. Value `1` means the spring is critically damped, and value `>1` means the spring is overdamped. Defaults to `1`.
+* `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `4`.
 * `.rotate(degree: string)` lets you rotate the element.
-* `.stiffness(value: number)` decides how bouncy the spring is - the higher the number, the less bouncy it is. Defaults to `100`.
+* `.stiffness(value: number)` decides how bouncy the spring is - the higher the number, the less bouncy it is. Defaults to `900`.
 * `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
 * `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
