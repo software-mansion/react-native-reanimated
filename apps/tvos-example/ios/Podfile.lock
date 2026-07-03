@@ -1784,7 +1784,7 @@ PODS:
     - React-utils (= 0.84.1-0)
     - ReactNativeDependencies
   - ReactNativeDependencies (0.84.1)
-  - RNReanimated (4.3.1):
+  - RNReanimated (4.3.2):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1805,11 +1805,11 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNReanimated/apple (= 4.3.1)
-    - RNReanimated/common (= 4.3.1)
+    - RNReanimated/apple (= 4.3.2)
+    - RNReanimated/common (= 4.3.2)
     - RNWorklets
     - Yoga
-  - RNReanimated/apple (4.3.1):
+  - RNReanimated/apple (4.3.2):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1832,7 +1832,7 @@ PODS:
     - ReactNativeDependencies
     - RNWorklets
     - Yoga
-  - RNReanimated/common (4.3.1):
+  - RNReanimated/common (4.3.2):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2158,7 +2158,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   FBLazyVector: a3651a4af13997df8df1bcd5af1cc7507d51dc7b
-  hermes-engine: 21a27a020253d73ec0a50005a2d146e1b7ba70ed
+  hermes-engine: 39f6f8fcbf4a3de4b5f302782e4c4158c0206473
   RCTDeprecation: e1d3de84bd12761f1a42ae433c805c84ce3e1447
   RCTRequired: 5f75a4215a8c9551b303a95b0394968ae7490f18
   RCTSwiftUI: 6cfd2a6b1506648cd96493d252069bd1b49bdea4
@@ -2167,7 +2167,7 @@ SPEC CHECKSUMS:
   React: b785d635f91eb1df402a0dbc0305546f139c8048
   React-callinvoker: 3e490bb38efd7cef31c17154d33d3cc294db880b
   React-Core: 35963efb0dff21849c40f81fd73d46f636de9d56
-  React-Core-prebuilt: 56f76ee5e223326cefe6309861ba27c1174071f4
+  React-Core-prebuilt: 863d645b758813fba398918db637d80629c9c9b2
   React-CoreModules: 3dd7061935350ba9bd5c2d3e7dbf52cdb5ebb47b
   React-cxxreact: ed404f7277d9558a63eb9991d09100a4362d33fa
   React-debug: a26fb9a83e45de87601236175f68e3f3b92ab8ac
@@ -2228,8 +2228,8 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: 51e6ac892436c657aa7dfe118942aeacda08179f
   ReactCodegen: 3862d3679a3064814550db04f7a5366833d65eea
   ReactCommon: c315584be8ff201e245f9d8cc4b380154235ef2d
-  ReactNativeDependencies: 34b8489e3e615d820fea42d70f086b9420ca4470
-  RNReanimated: 12870cd060e1ceaaf24e22001dbf36a510f9abdc
+  ReactNativeDependencies: 0c56a0cfb725c416c75f4456bc7a4c7d7952ff8f
+  RNReanimated: 69a94e12d05383078cef5ea92a860c59e8a9bf13
   RNWorklets: 62609702cb79e0804db583fe15beccccd3b497c6
   Yoga: e2029bb72b7cb951e09aa1ee1316c9f5f28409da
 
