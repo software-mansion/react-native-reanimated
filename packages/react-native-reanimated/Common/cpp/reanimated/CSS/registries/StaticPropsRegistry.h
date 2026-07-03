@@ -2,6 +2,7 @@
 
 #include <react/renderer/core/ShadowNode.h>
 
+#include <mutex>
 #include <unordered_map>
 
 namespace reanimated::css {
@@ -24,6 +25,10 @@ class StaticPropsRegistry {
   void removeObserver(Tag viewTag);
 
  private:
+  /// registry_ is written on the JS thread (setViewStyle) and read on the UI
+  /// thread during interpolation and on the commit/mount thread during node
+  /// removals, so it needs its own guard. observers_ is JS-thread-only.
+  mutable std::mutex mutex_;
   std::unordered_map<Tag, folly::dynamic> registry_;
   std::unordered_map<Tag, PropsObserver> observers_;
 
