@@ -13,7 +13,8 @@ export let createTextShadowValue: (style: any) => void | string;
 // has require() so we load them synchronously; strict-ESM bundlers and SSR don't,
 // so require() throws and we fall back to import()ing the dist/cjs build
 // (dist/exports' extensionless imports fail Node's ESM resolver). If neither
-// resolves, the helpers stay undefined and the DOM branch is skipped, as on native.
+// resolves, the helpers stay undefined and the DOM update is skipped, so those
+// styles just aren't applied (no crash).
 //
 // Kept as a single top-level try/catch (no top-level `if` or IIFE) so the module
 // stays tree-shakable - see the is-tree-shakable check.
@@ -44,7 +45,7 @@ try {
       );
       createReactDOMStyle = interopDefault(styleModule);
     } catch (_e2) {
-      // Unresolved: the DOM update branch stays disabled, as on native.
+      // Unresolved: the DOM update is skipped, so these styles aren't applied.
     }
 
     try {
