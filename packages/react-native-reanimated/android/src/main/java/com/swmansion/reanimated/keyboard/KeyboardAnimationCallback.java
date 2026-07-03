@@ -10,6 +10,7 @@ public class KeyboardAnimationCallback extends WindowInsetsAnimationCompat.Callb
   private final NotifyAboutKeyboardChangeFunction mNotifyAboutKeyboardChange;
   private static final int CONTENT_TYPE_MASK = WindowInsetsCompat.Type.ime();
   private final boolean mIsNavigationBarTranslucent;
+  private boolean mPendingStartDispatch = false;
 
   public KeyboardAnimationCallback(
       Keyboard keyboard,
@@ -30,7 +31,9 @@ public class KeyboardAnimationCallback extends WindowInsetsAnimationCompat.Callb
       return bounds;
     }
     mKeyboard.onAnimationStart();
-    mNotifyAboutKeyboardChange.call();
+    // Dispatching synchronously here can cancel the still-pending insets
+    // animation, so the dispatch is deferred to onProgress or onEnd.
+    mPendingStartDispatch = true;
     return super.onStart(animation, bounds);
   }
 
@@ -47,6 +50,7 @@ public class KeyboardAnimationCallback extends WindowInsetsAnimationCompat.Callb
       }
     }
     if (isAnyKeyboardAnimationRunning) {
+      mPendingStartDispatch = false;
       mKeyboard.updateHeight(insets, mIsNavigationBarTranslucent);
       mNotifyAboutKeyboardChange.call();
     }
@@ -56,6 +60,10 @@ public class KeyboardAnimationCallback extends WindowInsetsAnimationCompat.Callb
   @Override
   public void onEnd(@NonNull WindowInsetsAnimationCompat animation) {
     if (isKeyboardAnimation(animation)) {
+      if (mPendingStartDispatch) {
+        mNotifyAboutKeyboardChange.call();
+      }
+      mPendingStartDispatch = false;
       mKeyboard.onAnimationEnd();
       mNotifyAboutKeyboardChange.call();
     }
