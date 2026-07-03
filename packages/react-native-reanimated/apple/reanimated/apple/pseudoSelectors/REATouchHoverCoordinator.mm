@@ -189,7 +189,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   }
   _primaryTouch = touch;
   _primaryTouchDownPoint = [touch locationInView:window];
-  UIView *hit = [window hitTest:_primaryTouchDownPoint withEvent:nil];
+  UIView *hit = [self hitTestInWindow:window atPoint:_primaryTouchDownPoint];
   // Touch-down reconciles `:hover` to the touched branch right away: the new branch lights up and any
   // previously-hovered view is dropped on this same down, even if the touch later becomes a scroll.
   [self hoverBranchOfHitView:hit];
@@ -216,7 +216,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   // The finger moved: only the release location matters now - a hovered view stays hovered when the
   // finger lifts over it and is dropped otherwise (dragged or scrolled off). Nothing new is hovered.
   // A cancelled primary never gets here, so a system interruption keeps the `:hover`.
-  UIView *hit = window != nil ? [window hitTest:[_primaryTouch locationInView:window] withEvent:nil] : nil;
+  UIView *hit = window != nil ? [self hitTestInWindow:window atPoint:[_primaryTouch locationInView:window]] : nil;
   for (REATouchHoverEntry *entry in _entries) {
     if (entry->hovered && ![self isView:entry->view onBranchOfHitView:hit]) {
       [self setEntry:entry hovered:NO];
@@ -242,11 +242,39 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   }
 }
 
+// UIKit's -hitTest: skips views with alpha below ~0.01, so an `opacity: 0` view is unreachable. Bump each
+// near-zero registered view over the threshold for the hit-test, restoring before compositing (never drawn).
+- (UIView *)hitTestInWindow:(UIWindow *)window atPoint:(CGPoint)point
+{
+  static const CGFloat kHitTestableAlpha = 0.02;
+  NSMutableArray<UIView *> *lifted = nil;
+  NSMutableArray<NSNumber *> *savedAlphas = nil;
+  for (REATouchHoverEntry *entry in _entries) {
+    UIView *view = entry->view;
+    if (view == nil || view.alpha >= kHitTestableAlpha || [lifted containsObject:view]) {
+      continue;
+    }
+    if (lifted == nil) {
+      lifted = [NSMutableArray array];
+      savedAlphas = [NSMutableArray array];
+    }
+    [lifted addObject:view];
+    [savedAlphas addObject:@(view.alpha)];
+    view.alpha = kHitTestableAlpha;
+  }
+  UIView *hit = [window hitTest:point withEvent:nil];
+  [lifted enumerateObjectsUsingBlock:^(UIView *view, NSUInteger index, BOOL *stop) {
+    view.alpha = savedAlphas[index].floatValue;
+  }];
+  return hit;
+}
+
 - (void)hoverBranchOfHitView:(UIView *)hit
 {
   // Hit-test the topmost view: `:hover` applies to it and its registered ancestors only (matching
   // CSS), so views that merely overlap the hit branch no longer all activate. hitTest honors z-order,
-  // userInteractionEnabled, hidden and alpha, and returns nil over blank space (drops all `:hover`).
+  // userInteractionEnabled and hidden (alpha is relaxed above), and returns nil over blank space (drops
+  // all `:hover`).
   NSMutableArray<REATouchHoverEntry *> *dead = nil;
   for (REATouchHoverEntry *entry in _entries) {
     UIView *view = entry->view;
