@@ -214,15 +214,42 @@ static const CGFloat kTouchHoverSlop = 10.0;
   }
 }
 
+// UIKit's -hitTest: skips views with alpha below ~0.01, so an `opacity: 0` view is unreachable. Bump each
+// near-zero registered view over the threshold for the hit-test, restoring before compositing (never drawn).
+- (UIView *)hitTestInWindow:(UIWindow *)window atPoint:(CGPoint)point
+{
+  static const CGFloat kHitTestableAlpha = 0.02;
+  NSMutableArray<UIView *> *lifted = nil;
+  NSMutableArray<NSNumber *> *savedAlphas = nil;
+  for (REATouchHoverEntry *entry in _entries) {
+    UIView *view = entry->view;
+    if (view == nil || view.alpha >= kHitTestableAlpha || [lifted containsObject:view]) {
+      continue;
+    }
+    if (lifted == nil) {
+      lifted = [NSMutableArray array];
+      savedAlphas = [NSMutableArray array];
+    }
+    [lifted addObject:view];
+    [savedAlphas addObject:@(view.alpha)];
+    view.alpha = kHitTestableAlpha;
+  }
+  UIView *hit = [window hitTest:point withEvent:nil];
+  [lifted enumerateObjectsUsingBlock:^(UIView *view, NSUInteger index, BOOL *stop) {
+    view.alpha = savedAlphas[index].floatValue;
+  }];
+  return hit;
+}
+
 - (void)recomputeAtWindowPoint:(CGPoint)inWindow
 {
   // Hit-test the topmost view: :hover applies to it and its ancestors only (matching CSS), so views
   // that merely overlap the hit branch no longer all activate. hitTest already honors z-order,
-  // userInteractionEnabled, hidden and alpha, and returns nil over blank space (clears all :hover).
+  // userInteractionEnabled and hidden, and returns nil over blank space (clears all :hover).
   UIView *hit = nil;
   UIWindow *window = _observedWindow;
   if (window != nil) {
-    hit = [window hitTest:inWindow withEvent:nil];
+    hit = [self hitTestInWindow:window atPoint:inWindow];
   }
   NSMutableArray<REATouchHoverEntry *> *dead = nil;
   for (REATouchHoverEntry *entry in _entries) {

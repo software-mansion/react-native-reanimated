@@ -18,7 +18,7 @@ jobs:
   docs_reanimated_build_check:
     if: github.repository == 'software-mansion/react-native-reanimated'
     name: Docs Reanimated build check
-    uses: ./.github/workflows/docs-reanimated-build-check.yml
+    uses: ./.github/workflows/docs-build.yml
 
   example_android_build_check:
     if: github.repository == 'software-mansion/react-native-reanimated'
@@ -43,17 +43,12 @@ jobs:
   reanimated_android_validation:
     if: github.repository == 'software-mansion/react-native-reanimated'
     name: Reanimated Android validation
-    uses: ./.github/workflows/reanimated-android-validation.yml
+    uses: ./.github/workflows/android-validation.yml
 
   reanimated_apple_validation:
     if: github.repository == 'software-mansion/react-native-reanimated'
     name: Reanimated Apple validation
-    uses: ./.github/workflows/reanimated-apple-validation.yml
-
-  reanimated_common_build_check:
-    if: github.repository == 'software-mansion/react-native-reanimated'
-    name: Reanimated Common build check
-    uses: ./.github/workflows/reanimated-common-validation.yml
+    uses: ./.github/workflows/apple-validation.yml
 
   reanimated_compatibility_check_nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
