@@ -293,6 +293,14 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(const Tag viewTag, const do
   }
 
   setInUpdatesRegistry(shadowNode, updatedStyle);
+  // The registry alone is only committed on a React-source commit (via the
+  // commit hook). During a pure animation-delay window there is no such commit,
+  // so a backwards fill computed here would never reach the screen. Enqueue it
+  // into the per-frame delta batch as well, the way running updates and CSS
+  // transitions do, so the CSS loop commits it without needing a React commit.
+  if (shadowNode && !updatedStyle.empty()) {
+    addUpdatesToBatch(shadowNode, updatedStyle);
+  }
 }
 
 void CSSAnimationsRegistry::activateDelayedAnimations(const double timestamp) {
