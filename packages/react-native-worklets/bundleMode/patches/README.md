@@ -61,7 +61,6 @@ Using bun for patching gives you the benefit of the bun runtime in your project 
    ```terminal
    bun why metro --top
    ```
-1. Copy the patch files for `metro`, `metro-runtime` to the `patches` directory.
 1. Run `bun patch` to prep packages:
    ```terminal
    bun patch metro
@@ -70,17 +69,13 @@ Using bun for patching gives you the benefit of the bun runtime in your project 
    ```terminal
    bun patch metro-runtime
    ```
-1. Enter directory using `cd` and apply patch using git:
+1. Replace metro version with your version of patch:
    ```terminal
-   cd node_modules/metro && git apply ../../patches/metro+0.84.4.patch
+   curl -L https://github.com/software-mansion/react-native-reanimated/raw/main/packages/react-native-worklets/bundleMode/patches/patch-package/metro/metro%2B0.84.4.patch | git apply --directory=node_modules/metro
    ```
-   AND (You should use `cd ../..` to return to the project's root before running this one)
+   AND 
    ```terminal
-   cd node_modules/metro-runtime && git apply ../../patches/metro-runtime+0.84.4.patch
-   ```
-1. Return to project root:
-   ```terminal
-   cd ../..
+   curl -L https://raw.githubusercontent.com/software-mansion/react-native-reanimated/refs/heads/main/packages/react-native-worklets/bundleMode/patches/patch-package/metro-runtime/metro-runtime%2B0.84.4.patch | git apply --directory=node_modules/metro-runtime
    ```
 1. Run `bun patch --commit` to commit patches to the repo:
    ```terminal
@@ -90,11 +85,6 @@ Using bun for patching gives you the benefit of the bun runtime in your project 
    ```terminal
    bun patch --commit 'node_modules/metro-runtime'
    ```
-1. Remove the old patches (optional):
-   ```terminal
-   rm ./patches/metro+*.patch && rm ./patches/metro-runtime+*.patch
-   ```
-
 ## Using Yarn Classic (Yarn 1) and patch-package
 
 Instructions here are similar to the npm ones, but you should use Yarn commands instead, i.e. `yarn cache clean` and `yarn dedupe`.
