@@ -2,6 +2,7 @@ package com.swmansion.reanimated.pseudoSelectors
 
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.ViewParent
 import com.facebook.react.bridge.UIManager
 import com.facebook.react.bridge.UIManagerListener
@@ -27,6 +28,9 @@ class PseudoSelectorManager(
 
     // The view the current gesture went down on, per host, so a release clears the same one.
     private val gestureDownLeaf = HashMap<View, View>()
+
+    // Window-space down point [rawX, rawY] per host, to measure how far the press has travelled.
+    private val gestureDownPoint = HashMap<View, FloatArray>()
 
     private val hover = TouchHoverCoordinator()
 
@@ -240,6 +244,7 @@ class PseudoSelectorManager(
         }
         touchHostRefs.remove(host)
         gestureDownLeaf.remove(host)
+        gestureDownPoint.remove(host)
         host.setOnTouchListener(null)
     }
 
@@ -254,6 +259,10 @@ class PseudoSelectorManager(
             MotionEvent.ACTION_DOWN ->
                 if (!hover.isGestureSettled(event)) {
                     onHostDown(host, event)
+                }
+            MotionEvent.ACTION_MOVE ->
+                if (event.findPointerIndex(0) >= 0) {
+                    onHostMove(host, event)
                 }
             MotionEvent.ACTION_POINTER_UP ->
                 if (event.getPointerId(event.actionIndex) == 0) {
@@ -280,13 +289,30 @@ class PseudoSelectorManager(
     ) {
         findTouchedLeaf(host, event)?.let {
             gestureDownLeaf[host] = it
+            gestureDownPoint[host] = floatArrayOf(event.rawX, event.rawY)
             fireActiveCallbacksUpTree(it, true)
             fireDeepestIfHit(it, event.rawX, event.rawY)
         }
         hover.onViewTouchDown(host, event)
     }
 
+    // Past the touch slop the press is a scroll/drag, not a tap, so drop `:active` (web parity). A scroll
+    // container also cancels the gesture, but this covers a drag with nothing to intercept it.
+    private fun onHostMove(
+        host: View,
+        event: MotionEvent,
+    ) {
+        val down = gestureDownPoint[host] ?: return
+        val dx = event.rawX - down[0]
+        val dy = event.rawY - down[1]
+        val slop = ViewConfiguration.get(host.context).scaledTouchSlop.toFloat()
+        if (dx * dx + dy * dy > slop * slop) {
+            onHostRelease(host)
+        }
+    }
+
     private fun onHostRelease(host: View) {
+        gestureDownPoint.remove(host)
         val leaf = gestureDownLeaf.remove(host) ?: return
         fireActiveCallbacksUpTree(leaf, false)
         deepestCallbacks[leaf]?.onSelectorStateChanged(false)

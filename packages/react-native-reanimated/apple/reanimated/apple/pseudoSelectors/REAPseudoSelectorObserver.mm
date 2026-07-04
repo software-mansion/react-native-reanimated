@@ -23,6 +23,12 @@
 #endif
 @end
 
+#if !TARGET_OS_OSX
+// Past this travel distance (points) from its down point a press is a scroll/drag, not a tap, which
+// drops `:active` - as on the web.
+static const CGFloat kActivePressMovementThreshold = 10.0;
+#endif
+
 @implementation REAPseudoSelectorObserver {
   __weak REAUIView *_view;
   reanimated::PseudoSelector _selector;
@@ -38,6 +44,12 @@
   std::function<void(bool)> _callback;
   // Whether this observer's `:active` recognizer is counted in the shared active-touch tally below.
   BOOL _activeTouchCounted;
+#if !TARGET_OS_OSX
+  // Window-space location where the active press began, and whether movement past the slop has already
+  // dropped `:active` this press.
+  CGPoint _pressDownLocation;
+  BOOL _pressDismissed;
+#endif
 }
 
 #if !TARGET_OS_OSX
@@ -92,7 +104,7 @@ static NSInteger sActiveTouchCount;
 {
 #if !TARGET_OS_OSX
   UILongPressGestureRecognizer *recognizer =
-      [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleTouchGesture:)];
+      [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleActiveGesture:)];
   recognizer.cancelsTouchesInView = NO;
 #else
   NSPressGestureRecognizer *recognizer =
@@ -109,7 +121,7 @@ static NSInteger sActiveTouchCount;
 #if !TARGET_OS_OSX
 #if !TARGET_OS_TV
   UIHoverGestureRecognizer *recognizer =
-      [[UIHoverGestureRecognizer alloc] initWithTarget:self action:@selector(handleTouchGesture:)];
+      [[UIHoverGestureRecognizer alloc] initWithTarget:self action:@selector(handleHoverGesture:)];
   recognizer.delegate = self;
   [view addGestureRecognizer:recognizer];
   _gestureRecognizer = recognizer;
@@ -266,18 +278,53 @@ static int _focusObserverContext;
 
 #if !TARGET_OS_OSX
 
-- (void)handleTouchGesture:(UIGestureRecognizer *)recognizer
+- (void)handleActiveGesture:(UILongPressGestureRecognizer *)recognizer
+{
+  switch (recognizer.state) {
+    case UIGestureRecognizerStateBegan:
+      _pressDownLocation = [recognizer locationInView:nil];
+      _pressDismissed = NO;
+      _callback(true);
+      [self retainActiveTouch];
+      break;
+    case UIGestureRecognizerStateChanged: {
+      // Measured in window space so a content-tracking scroll (finger stays over the moving view) still
+      // counts. The active-touch token is held until the finger lifts, so the single active pointer holds.
+      if (_pressDismissed) {
+        break;
+      }
+      CGPoint point = [recognizer locationInView:nil];
+      CGFloat dx = point.x - _pressDownLocation.x;
+      CGFloat dy = point.y - _pressDownLocation.y;
+      if (dx * dx + dy * dy > kActivePressMovementThreshold * kActivePressMovementThreshold) {
+        _pressDismissed = YES;
+        _callback(false);
+      }
+      break;
+    }
+    case UIGestureRecognizerStateEnded:
+    case UIGestureRecognizerStateCancelled:
+    case UIGestureRecognizerStateFailed:
+      if (!_pressDismissed) {
+        _callback(false);
+      }
+      [self releaseActiveTouch];
+      break;
+    default:
+      break;
+  }
+}
+
+- (void)handleHoverGesture:(UIHoverGestureRecognizer *)recognizer
 {
   switch (recognizer.state) {
     case UIGestureRecognizerStateBegan:
       _callback(true);
-      [self retainActiveTouch];
       break;
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled:
     case UIGestureRecognizerStateFailed:
       _callback(false);
-      [self releaseActiveTouch];
       break;
     default:
       break;
