@@ -40,7 +40,18 @@ typedef NSGestureRecognizer REAGestureRecognizer;
 #endif
   NSArray *_notificationObservers;
   std::function<void(bool)> _callback;
+#if !TARGET_OS_OSX
+  // Whether this observer marked its SVG shape touch-`responsible` (see sSvgResponsibleRefs).
+  BOOL _markedSvgResponsible;
+#endif
 }
+
+#if !TARGET_OS_OSX
+// Ref-count of pseudo observers keeping each SVG shape touch-`responsible` (set via KVC, since reanimated
+// must not link react-native-svg). Marking it lets RNSVGSvgView's per-path hitTest resolve the shape, so
+// overlapping `:active-deepest` shapes arbitrate to the topmost. Reverted when the last observer detaches.
+static NSMapTable<REAUIView *, NSNumber *> *sSvgResponsibleRefs;
+#endif
 
 - (instancetype)initWithView:(REAUIView *)view
                     selector:(reanimated::PseudoSelector)selector
@@ -63,6 +74,7 @@ typedef NSGestureRecognizer REAGestureRecognizer;
     case reanimated::PseudoSelector::Active:
     case reanimated::PseudoSelector::ActiveDeepest:
       [self attachActiveGestureRecognizerToView:interactionView];
+      [self markSvgResponsible];
       break;
     case reanimated::PseudoSelector::Hover:
       [self attachHoverToView:interactionView];
@@ -360,6 +372,63 @@ static int _focusObserverContext;
 
 #endif // TARGET_OS_OSX
 
+#if !TARGET_OS_OSX
+// _view is an SVG shape when the recognizer moved to an interaction ancestor and _view is an RNSVG node.
+- (BOOL)isSvgShape
+{
+  return _view != nil && _view != _interactionView && [NSStringFromClass([_view class]) hasPrefix:@"RNSVG"];
+}
+
+// The RNSVGSvgView hosting _view: the topmost consecutive RNSVG ancestor (walking past any RNSVG groups).
+- (REAUIView *)svgViewAncestor
+{
+  REAUIView *svgView = nil;
+  for (REAUIView *v = _view; v != nil && [NSStringFromClass([v class]) hasPrefix:@"RNSVG"]; v = v.superview) {
+    svgView = v;
+  }
+  return svgView;
+}
+
+// Mark _view touch-`responsible` (KVC) so RNSVGSvgView's per-path hitTest resolves it; ref-counted so
+// several selectors on one shape don't each toggle it.
+- (void)markSvgResponsible
+{
+  if (_markedSvgResponsible || ![self isSvgShape] || ![_view respondsToSelector:@selector(setResponsible:)]) {
+    return;
+  }
+  if (sSvgResponsibleRefs == nil) {
+    sSvgResponsibleRefs = [NSMapTable weakToStrongObjectsMapTable];
+  }
+  NSInteger count = [[sSvgResponsibleRefs objectForKey:_view] integerValue];
+  if (count == 0) {
+    [_view setValue:@YES forKey:@"responsible"];
+  }
+  [sSvgResponsibleRefs setObject:@(count + 1) forKey:_view];
+  _markedSvgResponsible = YES;
+}
+
+- (void)unmarkSvgResponsible
+{
+  if (!_markedSvgResponsible) {
+    return;
+  }
+  _markedSvgResponsible = NO;
+  REAUIView *shape = _view;
+  if (shape == nil || sSvgResponsibleRefs == nil) {
+    return;
+  }
+  NSInteger count = [[sSvgResponsibleRefs objectForKey:shape] integerValue];
+  if (count <= 1) {
+    [sSvgResponsibleRefs removeObjectForKey:shape];
+    if ([shape respondsToSelector:@selector(setResponsible:)]) {
+      [shape setValue:@NO forKey:@"responsible"];
+    }
+  } else {
+    [sSvgResponsibleRefs setObject:@(count - 1) forKey:shape];
+  }
+}
+#endif
+
 - (BOOL)gestureRecognizerShouldBegin:(REAGestureRecognizer *)gestureRecognizer
 {
   REAUIView *view = _view;
@@ -371,10 +440,19 @@ static int _focusObserverContext;
   if (_selector != reanimated::PseudoSelector::ActiveDeepest) {
     return YES;
   }
-  // TODO: doesn't arbitrate :active-deepest among overlapping/nested SVG shapes. For SVG,
-  // _interactionView is a shared ancestor and [view hitTest:] is per-path (self-or-nil), so no
-  // descendant recognizer is found and every SVG observer returns YES (all overlapping fire).
-  // Fix via RNSVGSvgView's child-walking hit-test (as Android does); needs on-device check. Follow-up.
+#if !TARGET_OS_OSX
+  // SVG shapes are virtual children on a shared SvgView, so the descendant walk below can't see them
+  // ([view hitTest:] on the interaction ancestor is self-or-nil). Arbitrate per-path via the SvgView's
+  // own hitTest, which - with the shapes marked responsible - returns the topmost shape under the point,
+  // so this observer wins only when that shape is its own.
+  if ([self isSvgShape]) {
+    REAUIView *svgView = [self svgViewAncestor];
+    if (svgView == nil) {
+      return YES;
+    }
+    return [svgView hitTest:[gestureRecognizer locationInView:svgView] withEvent:nil] == view;
+  }
+#endif
   // Walk up from the hit view: if a descendant already has an :active-deepest
   // or :active recognizer, it owns the touch.
   CGPoint location = [gestureRecognizer locationInView:view];
@@ -419,6 +497,9 @@ static int _focusObserverContext;
     [gestureHost removeGestureRecognizer:_gestureRecognizer];
   }
   _gestureRecognizer = nil;
+#if !TARGET_OS_OSX
+  [self unmarkSvgResponsible];
+#endif
 #if TARGET_OS_OSX
   if (_trackingArea && _view) {
     [_view removeTrackingArea:_trackingArea];
