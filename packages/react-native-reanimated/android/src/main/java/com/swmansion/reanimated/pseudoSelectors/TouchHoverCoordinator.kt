@@ -16,8 +16,9 @@ import java.lang.ref.WeakReference
  * Drives sticky touch :hover: only the touch-down and release locations matter. A touch-down hovers
  * the views on its hit branch (and unhovers the rest, including on blank space), and when the first
  * finger lifts, a hovered view stays hovered only if the finger is still over it - moves and scrolls
- * in between change nothing. The Activity-window observer sees whole gestures; the hosting manager
- * feeds per-view touches as the fallback for windows the observer is blind to (Modal/Dialog).
+ * in between change nothing. A window observer sees whole gestures (including blank space) for every
+ * window that hosts a hovered view: the Activity window, plus each Modal/Dialog window fed in via RN's
+ * ExtraWindowEventListener (RN >= 0.86). On older RN the per-view listeners are the Modal fallback.
  * register also wires the pointer (mouse/stylus) hover, which stays non-sticky.
  */
 class TouchHoverCoordinator {
@@ -26,19 +27,37 @@ class TouchHoverCoordinator {
     private val tmpLocation = IntArray(2)
     private val tmpCoords = FloatArray(2)
 
-    // downTime of the gesture the window observer last reconciled, letting the per-view listener skip
-    // reconciling it again: a second reconcile re-runs the hit-test after the first hover mutated a
-    // prop, which for svg invalidates the front element's path so it resolves the one behind it.
-    private var observedGestureDownTime = Long.MIN_VALUE
-
     // downTime of the gesture whose release was already settled, so a later finger that inherits
     // pointer id 0 mid-gesture (or the per-view listener echoing the observer) cannot settle again.
     private var settledGestureDownTime = Long.MIN_VALUE
 
-    // Weak so a stale wrapper can never pin a destroyed Activity (this outlives Activities).
-    private var observedWindow: WeakReference<Window>? = null
-    private var originalWindowCallback: WeakReference<Window.Callback>? = null
-    private var wrappedWindowCallback: WeakReference<Window.Callback>? = null
+    // One observer per window whose Window.Callback we have wrapped. Held weakly so a dismissed
+    // Dialog/Activity window is never pinned by the (long-lived) coordinator: each live window holds
+    // its own observer via window.callback, and dead entries are pruned lazily.
+    private val observedWindows = mutableListOf<WeakReference<WindowObserver>>()
+
+    // Wraps a window's Window.Callback to observe its whole touch stream (blank space included), rooting
+    // reconciliation on that window's own decor view so it works per-window (Activity and each Dialog).
+    private inner class WindowObserver(
+        window: Window,
+        val original: Window.Callback,
+    ) : Window.Callback by original {
+        val windowRef = WeakReference(window)
+
+        override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+            val root = windowRef.get()?.decorView as? ViewGroup
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> reconcile(root, event.rawX, event.rawY)
+                // Only the first finger's release settles; a cancel is a system interruption, not a
+                // release, so it keeps the :hover (this observer still receives the real UP).
+                MotionEvent.ACTION_UP ->
+                    if (event.findPointerIndex(0) >= 0) settleHover(root, event)
+                MotionEvent.ACTION_POINTER_UP ->
+                    if (event.getPointerId(event.actionIndex) == 0) settleHover(root, event)
+            }
+            return original.dispatchTouchEvent(event)
+        }
+    }
 
     fun register(
         view: View,
@@ -63,8 +82,20 @@ class TouchHoverCoordinator {
             callback?.onSelectorStateChanged(false)
         }
         if (hoverCallbacks.isEmpty()) {
-            removeWindowObserver()
+            removeAllWindowObservers()
         }
+    }
+
+    /** Observe a Modal/Dialog window (fed by RN's ExtraWindowEventListener) so its blank-space touches
+     *  clear :hover, exactly like the Activity window. */
+    fun observeExtraWindow(window: Window) {
+        installObserverOnWindow(window)
+    }
+
+    /** Stop observing a dismissed Modal/Dialog window and drop only the :hover left inside it. */
+    fun stopObservingExtraWindow(window: Window) {
+        removeObserverFromWindow(window)
+        clearHoverForWindow(window)
     }
 
     /**
@@ -81,13 +112,14 @@ class TouchHoverCoordinator {
         reconcile(sourceView.rootView as? ViewGroup, screenX, screenY)
     }
 
-    // Touch-down on a registered view. The observer reconciles Activity-window gestures first, so this
-    // only handles ones it misses - e.g. a touch inside a Modal, a window the observer can't see.
+    // Touch-down on a registered view. Skipped when the view's window is already observed (the window
+    // observer handles the whole gesture, incl. blank space); the per-view path is the Modal fallback
+    // for windows with no observer (RN < 0.86).
     fun onViewTouchDown(
         sourceView: View,
         event: MotionEvent,
     ) {
-        if (event.downTime == observedGestureDownTime || isGestureSettled(event)) {
+        if (isWindowObserved(sourceView) || isGestureSettled(event)) {
             return
         }
         reconcile(sourceView.rootView as? ViewGroup, event.rawX, event.rawY)
@@ -98,16 +130,19 @@ class TouchHoverCoordinator {
         sourceView: View,
         event: MotionEvent,
     ) {
-        if (event.downTime == observedGestureDownTime) {
+        if (isWindowObserved(sourceView)) {
             return
         }
         settleHover(sourceView.rootView as? ViewGroup, event)
     }
 
-    // The Modal/Dialog counterpart of cancel: it ends the gesture for good (the real release is never
-    // delivered there), so the sticky :hover is dropped.
-    fun onViewTouchCancel(event: MotionEvent) {
-        if (event.downTime == observedGestureDownTime || isGestureSettled(event)) {
+    // The Modal/Dialog counterpart of cancel: with no window observer the real release is never
+    // delivered here, so the sticky :hover is dropped.
+    fun onViewTouchCancel(
+        sourceView: View,
+        event: MotionEvent,
+    ) {
+        if (isWindowObserved(sourceView) || isGestureSettled(event)) {
             return
         }
         settledGestureDownTime = event.downTime
@@ -118,14 +153,6 @@ class TouchHoverCoordinator {
     // pointer id 0 within the same gesture must stay ignored, web-like.
     fun isGestureSettled(event: MotionEvent) = event.downTime == settledGestureDownTime
 
-    // Blank-space (window observer) path: no source view, so hit-test the observed window's tree.
-    fun recompute(
-        screenX: Float,
-        screenY: Float,
-    ) {
-        reconcile(hoverRootViewGroup(), screenX, screenY)
-    }
-
     private fun reconcile(
         root: ViewGroup?,
         screenX: Float,
@@ -134,6 +161,8 @@ class TouchHoverCoordinator {
         if (hoverCallbacks.isEmpty()) {
             return
         }
+        // hoverCallbacks is iterated globally (across windows) so a blank-space down in one window also
+        // clears a :hover held in another; the hit-test itself is rooted on the touched window.
         val hitTags: Set<Int> = if (root == null) emptySet() else hitTestPath(root, screenX, screenY)
         for ((view, callback) in hoverCallbacks) {
             setHovered(view, callback, view.id in hitTags)
@@ -180,17 +209,26 @@ class TouchHoverCoordinator {
         return targets.mapTo(HashSet(targets.size)) { it.getViewId() }
     }
 
-    private fun hoverRootViewGroup(): ViewGroup? {
-        val window = observedWindow?.get() ?: hoverCallbacks.keys.firstOrNull()?.activityWindow()
-        return window?.decorView as? ViewGroup
-    }
-
     private fun clearAll() {
         if (hoveredViews.isEmpty()) {
             return
         }
         for (view in hoveredViews.toList()) {
             hoverCallbacks[view]?.let { setHovered(view, it, false) }
+        }
+    }
+
+    // Drops only the :hover held on views living in [window] (used on that window's dismiss), leaving
+    // hovers in other windows untouched.
+    private fun clearHoverForWindow(window: Window) {
+        if (hoveredViews.isEmpty()) {
+            return
+        }
+        val decor = window.decorView
+        for (view in hoveredViews.toList()) {
+            if (view.rootView === decor) {
+                hoverCallbacks[view]?.let { setHovered(view, it, false) }
+            }
         }
     }
 
@@ -209,52 +247,65 @@ class TouchHoverCoordinator {
     // Catches touch-downs on blank space (off any registered view), which per-view listeners miss.
     private fun ensureWindowObserver(view: View) {
         val window = view.activityWindow() ?: return
-        if (observedWindow?.get() === window) {
-            return
-        }
-        // The Activity (and its window) can be replaced; re-bind onto the live one.
-        removeWindowObserver()
-        val original = window.callback ?: return
-        val wrapper =
-            object : Window.Callback by original {
-                override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-                    when (event.actionMasked) {
-                        MotionEvent.ACTION_DOWN -> {
-                            observedGestureDownTime = event.downTime
-                            recompute(event.rawX, event.rawY)
-                        }
-                        // Only the first finger's release settles the gesture; it can arrive as the
-                        // last-finger up or early, while other fingers stay down. A cancel is a system
-                        // interruption, not a release, so it keeps the :hover.
-                        MotionEvent.ACTION_UP ->
-                            if (event.findPointerIndex(0) >= 0) {
-                                settleHover(hoverRootViewGroup(), event)
-                            }
-                        MotionEvent.ACTION_POINTER_UP ->
-                            if (event.getPointerId(event.actionIndex) == 0) {
-                                settleHover(hoverRootViewGroup(), event)
-                            }
-                    }
-                    return original.dispatchTouchEvent(event)
-                }
-            }
-        originalWindowCallback = WeakReference(original)
-        wrappedWindowCallback = WeakReference(wrapper)
-        observedWindow = WeakReference(window)
-        window.callback = wrapper
+        installObserverOnWindow(window)
     }
 
-    private fun removeWindowObserver() {
-        val window = observedWindow?.get()
-        val wrapper = wrappedWindowCallback?.get()
-        // Restore only if our wrapper is still the live callback (nothing wrapped us afterwards).
-        if (window != null && wrapper != null && window.callback === wrapper) {
-            window.callback = originalWindowCallback?.get()
+    private fun installObserverOnWindow(window: Window) {
+        pruneObservers()
+        if (isObserving(window)) {
+            return
         }
-        observedWindow = null
-        originalWindowCallback = null
-        wrappedWindowCallback = null
+        val original = window.callback ?: return
+        val observer = WindowObserver(window, original)
+        observedWindows.add(WeakReference(observer))
+        window.callback = observer
+    }
+
+    private fun removeObserverFromWindow(window: Window) {
+        val iterator = observedWindows.iterator()
+        while (iterator.hasNext()) {
+            val observer = iterator.next().get()
+            if (observer == null) {
+                iterator.remove()
+                continue
+            }
+            if (observer.windowRef.get() === window) {
+                // Restore only if our wrapper is still the live callback (nothing wrapped us afterwards).
+                if (window.callback === observer) {
+                    window.callback = observer.original
+                }
+                iterator.remove()
+            }
+        }
+    }
+
+    private fun removeAllWindowObservers() {
+        for (reference in observedWindows) {
+            val observer = reference.get() ?: continue
+            val window = observer.windowRef.get() ?: continue
+            if (window.callback === observer) {
+                window.callback = observer.original
+            }
+        }
+        observedWindows.clear()
         clearAll()
+    }
+
+    private fun isObserving(window: Window) = observedWindows.any { it.get()?.windowRef?.get() === window }
+
+    private fun isWindowObserved(view: View): Boolean {
+        val decor = view.rootView
+        return observedWindows.any {
+            it
+                .get()
+                ?.windowRef
+                ?.get()
+                ?.decorView === decor
+        }
+    }
+
+    private fun pruneObservers() {
+        observedWindows.removeAll { it.get()?.windowRef?.get() == null }
     }
 
     private fun View.activityWindow(): Window? {
