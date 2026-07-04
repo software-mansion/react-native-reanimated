@@ -15,6 +15,9 @@
 @implementation REATouchHoverEntry
 @end
 
+/// Passive key-window touch observer that never claims the gesture. It must reach `.failed` once every
+/// finger lifts: UIKit only runs `-reset` after a terminal transition, and an observer stuck at
+/// `.possible` wedges the window's gesture environment so a UIScrollView pan can no longer begin.
 @interface REAHoverTouchObserver : UIGestureRecognizer
 @property (nonatomic, weak) REATouchHoverCoordinator *coordinator;
 @end
@@ -51,12 +54,14 @@
 }
 @end
 
+// Movement (points) below which a release counts as a stationary tap (UIKit's tap allowable-movement).
 static const CGFloat kPrimaryTouchTapMovement = 10.0;
 
 @implementation REATouchHoverCoordinator {
   NSMutableArray<REATouchHoverEntry *> *_entries;
   REAHoverTouchObserver *_windowObserver;
   __weak UIWindow *_observedWindow;
+  // Only the first finger drives `:hover` (web-like); the claim is held until every finger lifts.
   __weak UITouch *_primaryTouch;
   CGPoint _primaryTouchDownPoint;
 }
@@ -149,6 +154,7 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
   _windowObserver = nil;
   _observedWindow = nil;
   _primaryTouch = nil;
+  // Drop any `:hover` left in the window we stopped observing (e.g. a modal/alert became key).
   [self clearAll];
 }
 
@@ -187,6 +193,9 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
     return;
   }
   UIWindow *window = _observedWindow;
+  // A stationary tap never left the touched branch, so keep `:hover` and skip the release re-hit-test.
+  // That also sidesteps an RNSVG quirk: its hit-test can resolve a different element once the front one
+  // re-rendered for `:hover`, dropping a just-hovered svg element.
   if (window != nil) {
     CGPoint releasePoint = [_primaryTouch locationInView:window];
     CGFloat dx = releasePoint.x - _primaryTouchDownPoint.x;
@@ -195,6 +204,8 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
       return;
     }
   }
+  // The finger moved: keep a hovered view only if the finger lifted over it. A cancelled primary never
+  // reaches here, so a system interruption keeps `:hover`.
   UIView *hit = window != nil ? [self hitTestInWindow:window atPoint:[_primaryTouch locationInView:window]] : nil;
   for (REATouchHoverEntry *entry in _entries) {
     if (entry->hovered && ![self isView:entry->view onBranchOfHitView:hit]) {
@@ -250,6 +261,8 @@ static const CGFloat kPrimaryTouchTapMovement = 10.0;
 
 - (void)hoverBranchOfHitView:(UIView *)hit
 {
+  // `:hover` applies to the topmost hit view and its registered ancestors only (matching CSS); a nil
+  // hit (blank space) drops all `:hover`.
   NSMutableArray<REATouchHoverEntry *> *dead = nil;
   for (REATouchHoverEntry *entry in _entries) {
     UIView *view = entry->view;
