@@ -24,6 +24,7 @@
 @end
 
 #if !TARGET_OS_OSX
+// Past this travel (points) a press is a scroll/drag, not a tap, so it drops `:active` (web parity).
 static const CGFloat kActivePressMovementThreshold = 10.0;
 #endif
 
@@ -48,6 +49,8 @@ static const CGFloat kActivePressMovementThreshold = 10.0;
 }
 
 #if !TARGET_OS_OSX
+// Single active touch (web-like): the first finger to press an `:active`/`:active-deepest` view owns it
+// across all observers until it lifts; the count tracks live recognizers so it's released with the last.
 static __weak UITouch *sActivePrimaryTouch;
 static NSInteger sActiveTouchCount;
 #endif
@@ -132,10 +135,8 @@ static NSInteger sActiveTouchCount;
 }
 
 #if !TARGET_OS_OSX
-// Fires only when this view's own text input gains focus.
-// On iOS, resolveView returns the Fabric wrapper (RCTTextInputComponentView), not the inner
-// UITextField/UITextView. The notification object is always the inner UITextField/UITextView,
-// which is always a direct child of the wrapper - so superview == strongView is sufficient.
+// The focus notification's object is the inner UITextField/UITextView, always a direct child of the
+// Fabric wrapper (RCTTextInputComponentView) that resolveView returns - so superview == view suffices.
 - (void)attachFocusToView:(REAUIView *)view
 {
   __weak REAUIView *weakView = view;
@@ -279,6 +280,7 @@ static int _focusObserverContext;
       [self retainActiveTouch];
       break;
     case UIGestureRecognizerStateChanged: {
+      // Measured in window space so a content-tracking scroll (finger stays over the moving view) counts.
       if (_pressDismissed) {
         break;
       }
@@ -322,11 +324,14 @@ static int _focusObserverContext;
 }
 #endif
 
+// The first finger claims `sActivePrimaryTouch`; a later finger is a different UITouch and is refused.
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch
 {
   if (![self isPressSelector]) {
     return YES;
   }
+  // With no recognizer live (count 0), any leftover token is stale (a claim that never began), so let
+  // the next first finger reclaim it.
   if (sActiveTouchCount == 0) {
     sActivePrimaryTouch = nil;
   }
@@ -405,6 +410,7 @@ static int _focusObserverContext;
   if (_selector != reanimated::PseudoSelector::ActiveDeepest) {
     return YES;
   }
+  // Yield to a deeper :active-deepest view under the touch - it owns the arbitration.
   CGPoint location = [gestureRecognizer locationInView:view];
 #if !TARGET_OS_OSX
   UIView *current = [view hitTest:location withEvent:nil];
@@ -451,6 +457,7 @@ static int _focusObserverContext;
   }
   _gestureRecognizer = nil;
 #if !TARGET_OS_OSX
+  // Release the active-touch hold so tearing down mid-press can't wedge the shared count.
   [self releaseActiveTouch];
 #if !TARGET_OS_TV
   if (_selector == reanimated::PseudoSelector::Hover) {
