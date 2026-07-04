@@ -69,7 +69,8 @@ Using bun for patching gives you the benefit of the bun runtime in your project 
    ```terminal
    bun patch metro-runtime
    ```
-1. Replace metro version with your version of patch: (Change the numbers at the end (0.84.4) to the version of your choice (e.g. 0.82.4)
+1. Replace metro version with your version of patch:
+   (Change the numbers at the end (0.84.4) to the version of your choice (e.g. 0.82.4)
    ```terminal
    curl -L https://github.com/software-mansion/react-native-reanimated/raw/main/packages/react-native-worklets/bundleMode/patches/patch-package/metro/metro%2B0.84.4.patch | git apply --directory=node_modules/metro
    ```
