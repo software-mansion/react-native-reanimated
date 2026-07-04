@@ -2,6 +2,7 @@ package com.swmansion.reanimated.pseudoSelectors
 
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.ViewParent
 import com.facebook.react.bridge.UIManager
 import com.facebook.react.bridge.UIManagerListener
@@ -24,6 +25,8 @@ class PseudoSelectorManager(
     private val touchHostRefs = HashMap<View, Int>()
 
     private val gestureDownLeaf = HashMap<View, View>()
+
+    private val gestureDownPoint = HashMap<View, FloatArray>()
 
     private val hover = TouchHoverCoordinator()
 
@@ -235,6 +238,7 @@ class PseudoSelectorManager(
         }
         touchHostRefs.remove(host)
         gestureDownLeaf.remove(host)
+        gestureDownPoint.remove(host)
         host.setOnTouchListener(null)
     }
 
@@ -246,6 +250,10 @@ class PseudoSelectorManager(
             MotionEvent.ACTION_DOWN ->
                 if (!hover.isGestureSettled(event)) {
                     onHostDown(host, event)
+                }
+            MotionEvent.ACTION_MOVE ->
+                if (event.findPointerIndex(0) >= 0) {
+                    onHostMove(host, event)
                 }
             MotionEvent.ACTION_POINTER_UP ->
                 if (event.getPointerId(event.actionIndex) == 0) {
@@ -272,13 +280,28 @@ class PseudoSelectorManager(
     ) {
         findTouchedLeaf(host, event)?.let {
             gestureDownLeaf[host] = it
+            gestureDownPoint[host] = floatArrayOf(event.rawX, event.rawY)
             fireActiveCallbacksUpTree(it, true)
             fireDeepestIfHit(it, event.rawX, event.rawY)
         }
         hover.onViewTouchDown(host, event)
     }
 
+    private fun onHostMove(
+        host: View,
+        event: MotionEvent,
+    ) {
+        val down = gestureDownPoint[host] ?: return
+        val dx = event.rawX - down[0]
+        val dy = event.rawY - down[1]
+        val slop = ViewConfiguration.get(host.context).scaledTouchSlop.toFloat()
+        if (dx * dx + dy * dy > slop * slop) {
+            onHostRelease(host)
+        }
+    }
+
     private fun onHostRelease(host: View) {
+        gestureDownPoint.remove(host)
         val leaf = gestureDownLeaf.remove(host) ?: return
         fireActiveCallbacksUpTree(leaf, false)
         deepestCallbacks[leaf]?.onSelectorStateChanged(false)
