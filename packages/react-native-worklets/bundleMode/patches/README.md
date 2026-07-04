@@ -75,7 +75,7 @@ Using bun for patching gives you the benefit of the bun runtime in your project 
    ```
    AND 
    ```terminal
-   curl -L https://raw.githubusercontent.com/software-mansion/react-native-reanimated/refs/heads/main/packages/react-native-worklets/bundleMode/patches/patch-package/metro-runtime/metro-runtime%2B0.84.4.patch | git apply --directory=node_modules/metro-runtime
+   curl -L https://github.com/software-mansion/react-native-reanimated/raw/main/packages/react-native-worklets/bundleMode/patches/patch-package/metro-runtime/metro-runtime%2B0.84.4.patch | git apply --directory=node_modules/metro-runtime
    ```
 1. Run `bun patch --commit` to commit patches to the repo:
    ```terminal
