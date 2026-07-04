@@ -293,6 +293,10 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(const Tag viewTag, const do
   }
 
   setInUpdatesRegistry(shadowNode, updatedStyle);
+
+  if (shadowNode && !updatedStyle.empty()) {
+    addUpdatesToBatch(shadowNode, updatedStyle);
+  }
 }
 
 void CSSAnimationsRegistry::activateDelayedAnimations(const double timestamp) {
