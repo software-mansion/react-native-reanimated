@@ -522,7 +522,7 @@ describe('Test createSerializableOnUI', () => {
   //   expect('magicKey' in Object.getPrototypeOf(obj)).toBe(true);
   // });
 
-  test('createSerializableOnUIInaccessibleObject', async () => {
+  test('createSerializableOnUIInaccessibleObject', () => {
     const clazz = runOnUISync(() => {
       'worklet';
       class Clazz {
@@ -532,9 +532,7 @@ describe('Test createSerializableOnUI', () => {
       return new Clazz();
     });
 
-    await expect(() => {
-      clazz.method();
-    }).toThrow();
+    expect(clazz).toBe(undefined);
   });
 
   test('createSerializableOnUIRemoteNamedFunctionSyncCall', async () => {
@@ -564,13 +562,12 @@ describe('Test createSerializableOnUI', () => {
   });
 
   if (__DEV__) {
-    test('throws when trying to serialize a Promise', async () => {
-      await expect(() =>
-        runOnUISync(() => {
-          'worklet';
-          return Promise.resolve();
-        })
-      ).toThrow('Cannot copy value of type `Promise`');
+    test('replaces an unsupported Promise with undefined', () => {
+      const value = runOnUISync(() => {
+        'worklet';
+        return Promise.resolve();
+      });
+      expect(value).toBe(undefined);
     });
   }
 });
