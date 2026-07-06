@@ -45,13 +45,20 @@ We no longer recommend setting experimental React Native release level because i
 
 Here's how you can enable `preventShadowTreeCommitExhaustion` feature flag from React Native.
 
-First, please apply the following change in `ReactNativeFeatureFlagsDefaults.h`:
+First, please apply the following change in `react-native/ReactCommon/react/featureflags/ReactNativeFeatureFlagsDefaults.h` for Apple:
 
 ```diff
    bool preventShadowTreeCommitExhaustion() override {
 -    return false;
 +    return true;
    }
+```
+
+and in `react-native/ReactAndroid/src/main/java/com/facebook/react/internal/featureflags/ReactNativeFeatureFlagsDefaults.kt` for Android:
+
+```diff
+-  override fun preventShadowTreeCommitExhaustion(): Boolean = false
++  override fun preventShadowTreeCommitExhaustion(): Boolean = true
 ```
 
 It is recommended to make a patch after applying this change to make it persistent using tools like [patch-package](https://www.npmjs.com/package/patch-package), [yarn patch](https://yarnpkg.com/cli/patch) or [pnpm patch](https://pnpm.io/cli/patch).
@@ -121,7 +128,7 @@ This feature flag enables a mechanism that periodically synchronizes animated st
 
 When enabled, Reanimated will use the React Native's new Animation Backend for applying animated changes. The backend will now be responsible for keeping animation changes in sync with the current React tree. This is meant to help with long-term stability and unlock new performance optimizations.
 
-This flag is experimental and defaults to `false`. To use it, you must run React Native 0.85.2 or newer with `useSharedAnimatedBackend` feature flag enabled (which is achieved by using React Native's Experimental release level in development).
+This flag is experimental and defaults to `false`. To use it, you must run React Native 0.85.2 or newer with `useSharedAnimatedBackend` feature flag enabled (which is achieved by using React Native's Experimental release level in development, or by manually patching as [instructions above](#disable_commit_pausing_mechanism)).
 
 ### `IOS_CSS_CORE_ANIMATION`
 
