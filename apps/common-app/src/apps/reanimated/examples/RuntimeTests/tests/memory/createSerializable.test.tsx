@@ -618,7 +618,7 @@ describe('Test createSerializable', () => {
         }
         const inaccessibleObject = new Inaccessible();
 
-        expect(() => {
+        await expect(() => {
           createSerializable(inaccessibleObject);
         }).not.toThrow();
 
@@ -681,14 +681,14 @@ if (__DEV__) {
   describe('createSerializable for unsupported types', () => {
     test('does not throw when trying to serialize a Promise', async () => {
       const promise = Promise.resolve();
-      expect(() => {
+      await expect(() => {
         createSerializable(promise);
       }).not.toThrow();
     });
 
     test('does not throw when trying to serialize a Proxy', async () => {
       const proxy = new Proxy({ a: 1 }, { getPrototypeOf: () => null });
-      expect(() => {
+      await expect(() => {
         createSerializable(proxy);
       }).not.toThrow();
     });

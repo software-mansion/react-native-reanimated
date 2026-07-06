@@ -522,7 +522,7 @@ describe('Test createSerializableOnUI', () => {
   //   expect('magicKey' in Object.getPrototypeOf(obj)).toBe(true);
   // });
 
-  test('createSerializableOnUIInaccessibleObject', async () => {
+  test('createSerializableOnUIInaccessibleObject', () => {
     const clazz = runOnUISync(() => {
       'worklet';
       class Clazz {
@@ -562,7 +562,7 @@ describe('Test createSerializableOnUI', () => {
   });
 
   if (__DEV__) {
-    test('replaces an unsupported Promise with undefined', async () => {
+    test('replaces an unsupported Promise with undefined', () => {
       const value = runOnUISync(() => {
         'worklet';
         return Promise.resolve();
