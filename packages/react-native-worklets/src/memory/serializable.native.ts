@@ -210,12 +210,8 @@ export function createSerializable<TValue>(
       return cloneCustom(value, pack, i) as SerializableRef<TValue>;
     }
   }
-  const constructorName =
-    (value as { constructor?: { name?: string } })?.constructor?.name ||
-    'unknown';
-  throw new Error(
-    `[Worklets] Cannot copy value of type \`${constructorName}\`.`
-  );
+
+  return cloneUndefined() as SerializableRef<TValue>;
 }
 
 if (isBundleModeEnabled()) {
