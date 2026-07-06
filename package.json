@@ -36,7 +36,7 @@
     "toggle-bundle-mode": "bash ./scripts/toggle-bundle-mode.sh"
   },
   "devDependencies": {
-    "@babel/core": "7.28.4",
+    "@babel/core": "7.29.6",
     "@eslint/compat": "1.3.1",
     "@react-native/babel-preset": "0.86.0",
     "@react-native/eslint-config": "0.86.0",

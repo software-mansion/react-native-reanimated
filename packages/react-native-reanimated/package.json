@@ -105,7 +105,7 @@
     "react-native-worklets": "0.11.0-main"
   },
   "devDependencies": {
-    "@babel/core": "7.28.4",
+    "@babel/core": "7.29.6",
     "@babel/preset-env": "7.28.3",
     "@react-native/babel-preset": "0.86.0",
     "@react-native/eslint-config": "0.86.0",
