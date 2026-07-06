@@ -150,6 +150,10 @@ button[class*='DocSearch-Button'] {
   display: flex;
 }
 
+[class*='sidebar'] [class*='navbar__title'] {
+  margin-left: 0;
+}
+
 @media (max-width: 996px) {
   .navbar .navbar__title {
     display: none;
