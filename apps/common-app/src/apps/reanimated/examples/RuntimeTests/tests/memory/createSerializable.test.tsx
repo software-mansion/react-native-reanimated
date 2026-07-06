@@ -618,9 +618,16 @@ describe('Test createSerializable', () => {
         }
         const inaccessibleObject = new Inaccessible();
 
-        await expect(() => {
+        expect(() => {
           createSerializable(inaccessibleObject);
-        }).toThrow('Cannot copy value of type `Inaccessible`.');
+        }).not.toThrow();
+
+        scheduleOnTarget(() => {
+          'worklet';
+          scheduleOnRN(callbackPass, inaccessibleObject === undefined);
+        });
+        await waitForNotification(PASS_NOTIFICATION);
+        expect(result).toBe(true);
       });
 
       test('createSerializableRemoteNamedFunctionSyncCall', async () => {
@@ -672,22 +679,18 @@ describe('Test createSerializable', () => {
 
 if (__DEV__) {
   describe('createSerializable for unsupported types', () => {
-    test('throws when trying to serialize a Promise', async () => {
+    test('does not throw when trying to serialize a Promise', async () => {
       const promise = Promise.resolve();
-      await expect(() => {
+      expect(() => {
         createSerializable(promise);
-      }).toThrow(
-        globalThis._WORKLETS_BUNDLE_MODE_ENABLED
-          ? 'Cannot copy value of type `Promise`'
-          : 'Promises cannot be converted to serializable.'
-      );
+      }).not.toThrow();
     });
 
-    test('throws when trying to serialize a Proxy', async () => {
+    test('does not throw when trying to serialize a Proxy', async () => {
       const proxy = new Proxy({ a: 1 }, { getPrototypeOf: () => null });
-      await expect(() => {
+      expect(() => {
         createSerializable(proxy);
-      }).toThrow('Cannot copy value of type');
+      }).not.toThrow();
     });
   });
 
