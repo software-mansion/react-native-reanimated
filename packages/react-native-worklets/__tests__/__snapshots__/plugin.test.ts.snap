@@ -5311,74 +5311,74 @@ runOnUI(function null3Factory({
 `;
 
 exports[`babel plugin generally strips queries from filename when injecting source maps 1`] = `
-"const _worklet_6032208129584_init_data = {
-  code: "function foo_nullQuery1(){var foo_nullQuery1='bar';}",
+"const _worklet_11232621911025_init_data = {
+  code: "(function foo_nullQuery1(){var foo_nullQuery1='bar';})",
   location: "/dev/null?query",
   sourceMap: "{\\"version\\":3,\\"names\\":[\\"foo_nullQuery1\\"],\\"sources\\":[\\"/dev/null?query\\"],\\"mappings\\":\\"AACQ,SAAAA,cAAeA,CAAA,EAEb,GAAI,CAAAA,cAAW,OACjB\\",\\"ignoreList\\":[]}"
 };
 const foo = function foo_nullQuery1Factory({
-  _worklet_6032208129584_init_data
+  _worklet_11232621911025_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
     var foo = 'bar';
   };
   foo.__closure = {};
-  foo.__workletHash = 6032208129584;
+  foo.__workletHash = 11232621911025;
   foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_6032208129584_init_data;
+  foo.__initData = _worklet_11232621911025_init_data;
   foo.__stackDetails = _e;
   return foo;
 }({
-  _worklet_6032208129584_init_data
+  _worklet_11232621911025_init_data
 });"
 `;
 
 exports[`babel plugin generally strips queries from filename when injecting source maps 2`] = `
-"const _worklet_9777712418544_init_data = {
-  code: "function foo_nullHash1(){var foo_nullHash1='bar';}",
+"const _worklet_8167316224945_init_data = {
+  code: "(function foo_nullHash1(){var foo_nullHash1='bar';})",
   location: "/dev/null#hash",
   sourceMap: "{\\"version\\":3,\\"names\\":[\\"foo_nullHash1\\"],\\"sources\\":[\\"/dev/null#hash\\"],\\"mappings\\":\\"AACQ,SAAAA,aAAeA,CAAA,EAEb,GAAI,CAAAA,aAAW,OACjB\\",\\"ignoreList\\":[]}"
 };
 const foo = function foo_nullHash1Factory({
-  _worklet_9777712418544_init_data
+  _worklet_8167316224945_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
     var foo = 'bar';
   };
   foo.__closure = {};
-  foo.__workletHash = 9777712418544;
+  foo.__workletHash = 8167316224945;
   foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_9777712418544_init_data;
+  foo.__initData = _worklet_8167316224945_init_data;
   foo.__stackDetails = _e;
   return foo;
 }({
-  _worklet_9777712418544_init_data
+  _worklet_8167316224945_init_data
 });"
 `;
 
 exports[`babel plugin generally strips queries from filename when injecting source maps 3`] = `
-"const _worklet_1554595230128_init_data = {
-  code: "function foo_nullQueryHash1(){var foo_nullQueryHash1='bar';}",
+"const _worklet_6204255084081_init_data = {
+  code: "(function foo_nullQueryHash1(){var foo_nullQueryHash1='bar';})",
   location: "/dev/null?query#hash",
   sourceMap: "{\\"version\\":3,\\"names\\":[\\"foo_nullQueryHash1\\"],\\"sources\\":[\\"/dev/null?query#hash\\"],\\"mappings\\":\\"AACQ,SAAAA,kBAAeA,CAAA,EAEb,GAAI,CAAAA,kBAAW,OACjB\\",\\"ignoreList\\":[]}"
 };
 const foo = function foo_nullQueryHash1Factory({
-  _worklet_1554595230128_init_data
+  _worklet_6204255084081_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
     var foo = 'bar';
   };
   foo.__closure = {};
-  foo.__workletHash = 1554595230128;
+  foo.__workletHash = 6204255084081;
   foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_1554595230128_init_data;
+  foo.__initData = _worklet_6204255084081_init_data;
   foo.__stackDetails = _e;
   return foo;
 }({
-  _worklet_1554595230128_init_data
+  _worklet_6204255084081_init_data
 });"
 `;
 
