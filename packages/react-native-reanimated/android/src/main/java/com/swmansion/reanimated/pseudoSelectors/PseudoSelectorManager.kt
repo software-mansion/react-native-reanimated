@@ -36,6 +36,7 @@ class PseudoSelectorManager(
 
     private val pendingAttaches = LinkedHashMap<String, PendingAttach>()
     private var mountListenerRegistered = false
+    private var pressWindowInterceptorSet = false
 
     private data class PendingAttach(
         val tag: Int,
@@ -175,11 +176,107 @@ class PseudoSelectorManager(
         val host = findTouchHost(view)
         callbacks[view] = callback
         acquireTouchListener(host)
+        // A compound host (e.g. SvgView) delivers ACTION_DOWN to a per-view listener but not the following
+        // MOVE/UP, so :active would set on press yet never clear. The window observer sees every event on
+        // the window and drives the slop-dismiss/release below, the same way it makes :hover work on svg.
+        hover.retainWindowObserver(view)
+        ensureExtraWindowBridge()
+        ensurePressWindowInterceptor()
         detachActions[key] =
             Runnable {
                 callbacks.remove(view)
                 releaseTouchListener(host)
+                hover.releaseWindowObserver()
             }
+    }
+
+    private fun ensurePressWindowInterceptor() {
+        if (pressWindowInterceptorSet) {
+            return
+        }
+        pressWindowInterceptorSet = true
+        hover.setWindowTouchInterceptor(::onWindowPressTouch)
+    }
+
+    // The hover coordinator's per-window observer feeds every touch here. It is the reliable source for the
+    // whole press: a compound host such as an SvgView intermittently never delivers the down (nor the
+    // following events) to its per-view listener on a real finger, whereas the window observer sees them all.
+    private fun onWindowPressTouch(event: MotionEvent) {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> windowPressDown(event)
+            MotionEvent.ACTION_MOVE ->
+                if (event.findPointerIndex(0) >= 0) {
+                    for (host in gestureByHost.keys.toList()) {
+                        onHostMove(host, event)
+                    }
+                }
+            MotionEvent.ACTION_UP ->
+                if (event.findPointerIndex(0) >= 0) {
+                    releaseAllHostGestures()
+                }
+            MotionEvent.ACTION_POINTER_UP ->
+                if (event.getPointerId(event.actionIndex) == 0) {
+                    releaseAllHostGestures()
+                }
+            MotionEvent.ACTION_CANCEL ->
+                releaseAllHostGestures()
+        }
+    }
+
+    // Seed the press from the window-level down by hit-testing the registered hosts geometrically.
+    // reactTagForTouch is a geometric resolve that (unlike the per-view listener) does not depend on the
+    // touch being delivered to the compound host, so the :active set is reliable on a real finger.
+    private fun windowPressDown(event: MotionEvent) {
+        if (activeCallbacks.isEmpty() && deepestCallbacks.isEmpty()) {
+            return
+        }
+        for (host in pressHosts()) {
+            if (gestureByHost.containsKey(host) || !hostContainsScreen(host, event.rawX, event.rawY)) {
+                continue
+            }
+            val leaf = findTouchedLeafOnScreen(host, event.rawX, event.rawY) ?: continue
+            gestureByHost[host] = HostGesture(leaf, event.rawX, event.rawY)
+            fireActiveCallbacksUpTree(leaf, true)
+            fireDeepestIfHit(leaf, event.rawX, event.rawY)
+        }
+    }
+
+    private fun pressHosts(): Set<View> {
+        val hosts = LinkedHashSet<View>()
+        activeCallbacks.keys.forEach { hosts.add(findTouchHost(it)) }
+        deepestCallbacks.keys.forEach { hosts.add(findTouchHost(it)) }
+        return hosts
+    }
+
+    private fun hostContainsScreen(
+        host: View,
+        rawX: Float,
+        rawY: Float,
+    ): Boolean {
+        val loc = IntArray(2)
+        host.getLocationOnScreen(loc)
+        return rawX >= loc[0] && rawX < loc[0] + host.width && rawY >= loc[1] && rawY < loc[1] + host.height
+    }
+
+    // Like [findTouchedLeaf] but from screen coordinates, since the window observer's event is
+    // window-relative; reactTagForTouch needs host-local coordinates.
+    private fun findTouchedLeafOnScreen(
+        host: View,
+        rawX: Float,
+        rawY: Float,
+    ): View? =
+        if (host is ReactCompoundView) {
+            val loc = IntArray(2)
+            host.getLocationOnScreen(loc)
+            tryResolveView(host.reactTagForTouch(rawX - loc[0], rawY - loc[1]))
+        } else {
+            host
+        }
+
+    private fun releaseAllHostGestures() {
+        for (host in gestureByHost.keys.toList()) {
+            onHostRelease(host)
+        }
     }
 
     // The nearest ReactCompoundView ancestor (e.g. SvgView) that owns [view]'s touches, else [view].
@@ -228,6 +325,13 @@ class PseudoSelectorManager(
         host: View,
         event: MotionEvent,
     ): Boolean {
+        // Once a window observer is installed it owns the whole press for that window: it hit-tests the down
+        // (reliable even when a compound host such as an SvgView never delivers the down to this per-view
+        // listener on a real finger) and drives slop-dismiss/release from the real OS stream. The per-view
+        // listener is only the pre-0.86 / unobserved-window (Modal/Dialog) fallback.
+        if (hover.isWindowObserved(host)) {
+            return false
+        }
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN ->
                 if (!hover.isGestureSettled(event)) {

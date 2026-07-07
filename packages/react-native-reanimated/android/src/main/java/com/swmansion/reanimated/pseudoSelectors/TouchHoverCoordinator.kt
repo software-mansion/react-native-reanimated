@@ -38,6 +38,12 @@ class TouchHoverCoordinator {
 
     private val observedWindows = mutableListOf<WeakReference<WindowObserver>>()
 
+    // The observer is shared by :hover and the press selectors; keep it installed until neither needs it.
+    private var windowObserverRetainCount = 0
+
+    // Press selectors tap the same per-window touch stream to catch the MOVE/UP a compound host swallows.
+    private var windowTouchInterceptor: ((MotionEvent) -> Unit)? = null
+
     private inner class WindowObserver(
         window: Window,
         val original: Window.Callback,
@@ -59,6 +65,7 @@ class TouchHoverCoordinator {
                 MotionEvent.ACTION_POINTER_UP ->
                     if (event.getPointerId(event.actionIndex) == 0) settleHover(root, event, downPoint)
             }
+            windowTouchInterceptor?.invoke(event)
             return original.dispatchTouchEvent(event)
         }
     }
@@ -70,7 +77,7 @@ class TouchHoverCoordinator {
     ) {
         hoverCallbacks[view] = callback
         acquireHoverListener(host)
-        ensureWindowObserver(view)
+        retainWindowObserver(view)
     }
 
     fun unregister(
@@ -82,7 +89,26 @@ class TouchHoverCoordinator {
             callback?.onSelectorStateChanged(false)
         }
         releaseHoverListener(host)
-        if (hoverCallbacks.isEmpty()) {
+        releaseWindowObserver()
+    }
+
+    fun setWindowTouchInterceptor(interceptor: (MotionEvent) -> Unit) {
+        windowTouchInterceptor = interceptor
+    }
+
+    // Both :hover and the press selectors need the per-window observer; ref-count so it outlives whichever
+    // registers first and is torn down only once the last of them detaches.
+    fun retainWindowObserver(view: View) {
+        windowObserverRetainCount++
+        ensureWindowObserver(view)
+    }
+
+    fun releaseWindowObserver() {
+        if (windowObserverRetainCount == 0) {
+            return
+        }
+        windowObserverRetainCount--
+        if (windowObserverRetainCount == 0) {
             removeAllWindowObservers()
         }
     }
@@ -371,7 +397,7 @@ class TouchHoverCoordinator {
         }
     }
 
-    private fun isWindowObserved(view: View): Boolean {
+    fun isWindowObserved(view: View): Boolean {
         val decor = view.rootView
         return observedWindows.any { it.liveWindow()?.decorView === decor }
     }
