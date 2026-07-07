@@ -15918,6 +15918,7 @@ __metadata:
     esbuild-register: "npm:3.5.0"
     glob: "npm:13.0.6"
     prettier: "npm:3.6.2"
+    prism-react-renderer: "npm:2.4.1"
     raf: "npm:3.4.1"
     raw-loader: "npm:4.0.2"
     react: "npm:19.1.1"
@@ -15982,6 +15983,7 @@ __metadata:
     esbuild-register: "npm:3.5.0"
     glob: "npm:13.0.6"
     prettier: "npm:3.6.2"
+    prism-react-renderer: "npm:2.4.1"
     raf: "npm:3.4.1"
     raw-loader: "npm:4.0.2"
     react: "npm:19.1.1"
@@ -27852,7 +27854,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prism-react-renderer@npm:^2.3.0":
+"prism-react-renderer@npm:2.4.1, prism-react-renderer@npm:^2.3.0":
   version: 2.4.1
   resolution: "prism-react-renderer@npm:2.4.1"
   dependencies:

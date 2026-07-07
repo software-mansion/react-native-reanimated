@@ -50,6 +50,7 @@
     "copy-text-to-clipboard": "3.2.2",
     "glob": "13.0.6",
     "prettier": "3.6.2",
+    "prism-react-renderer": "2.4.1",
     "raf": "3.4.1",
     "raw-loader": "4.0.2",
     "react": "19.1.1",
