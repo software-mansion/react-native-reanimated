@@ -63,9 +63,15 @@ jsi::Value makeSerializableHostFunction(
 jsi::Value makeSerializableRemoteFunction(
     jsi::Runtime &rnRuntime,
     const std::string &name,
-    const int remoteId,
-    const std::shared_ptr<JSScheduler> &jsScheduler) {
-  auto serializable = std::make_shared<SerializableRemoteFunction>(rnRuntime, name, remoteId, jsScheduler);
+    const jsi::Function &function,
+    const std::shared_ptr<JSScheduler> &jsScheduler,
+    const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus) {
+  auto serializable = std::make_shared<SerializableRemoteFunction>(
+      rnRuntime,
+      name,
+      jsi::Value(rnRuntime, function).getObject(rnRuntime).getFunction(rnRuntime),
+      jsScheduler,
+      rnRuntimeStatus);
   return SerializableJSRef::newNativeStateObject(rnRuntime, serializable);
 }
 

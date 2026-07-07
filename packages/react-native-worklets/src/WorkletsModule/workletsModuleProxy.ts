@@ -96,7 +96,6 @@ export interface WorkletsModuleProxy {
 
   createSerializableNonWorkletFunction<TArgs extends unknown[], TReturn>(
     fun: (...args: TArgs) => TReturn,
-    functionId: number,
     functionName: string | undefined
   ): SerializableRef<(...args: TArgs) => TReturn>;
 
