@@ -1234,11 +1234,11 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
           componentDescriptorRegistry,
           scheduler->getContextContainer(),
           getJSIRuntimeFromWorkletRuntime(uiRuntime_),
-          uiScheduler_
+          uiScheduler_,
+          uiManager_
 #ifdef ANDROID
           ,
           filterUnmountedTagsFunction_,
-          uiManager_,
           jsInvoker_
 #endif
       );
@@ -1247,22 +1247,19 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
 #endif
       layoutAnimationsProxy_ = std::move(layoutAnimationsProxyExperimental);
     } else {
-      auto layoutAnimationsProxyLegacy = std::make_shared<LayoutAnimationsProxy_Legacy>(
+      layoutAnimationsProxy_ = std::make_shared<LayoutAnimationsProxy_Legacy>(
           layoutAnimationsManager_,
           componentDescriptorRegistry,
           scheduler->getContextContainer(),
           getJSIRuntimeFromWorkletRuntime(uiRuntime_),
-          uiScheduler_
+          uiScheduler_,
+          uiManager_
 #ifdef ANDROID
           ,
           filterUnmountedTagsFunction_,
-          uiManager_,
           jsInvoker_
 #endif
       );
-      // TODO (future): support in experimental
-      uiManager_->setAnimationDelegate(layoutAnimationsProxyLegacy.get());
-      layoutAnimationsProxy_ = std::move(layoutAnimationsProxyLegacy);
     }
   }
 }
