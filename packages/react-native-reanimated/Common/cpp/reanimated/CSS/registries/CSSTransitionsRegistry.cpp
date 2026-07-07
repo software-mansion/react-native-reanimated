@@ -39,6 +39,14 @@ void CSSTransitionsRegistry::run(
   recordInitialUpdate(transition, initialUpdate);
 }
 
+void CSSTransitionsRegistry::setPseudoLockedProperties(const Tag viewTag, const TransitionProperties &properties) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  const auto it = registry_.find(viewTag);
+  if (it != registry_.end()) {
+    it->second->setPseudoLockedProperties(properties);
+  }
+}
+
 void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto tags = std::exchange(updatedTags_, {});

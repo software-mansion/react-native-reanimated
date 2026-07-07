@@ -56,6 +56,12 @@ add_library(
 target_precompile_headers(reanimated PRIVATE
                           "${ANDROID_CPP_DIR}/ReanimatedPCH.h")
 
+# Stop Clang from embedding a build timestamp in the .pch. Without this the PCH
+# is non-reproducible across builds, so ccache can't reuse it and translation
+# units reject a restored PCH as "modified since built".
+target_compile_options(
+  reanimated PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:-Xclang;-fno-pch-timestamp>")
+
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
   include(
     "${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")

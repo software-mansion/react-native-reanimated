@@ -1,4 +1,5 @@
 #import <worklets/NativeModules/JSIWorkletsModuleProxy.h>
+#import <worklets/Tools/RNRuntimeStatus.h>
 #import <worklets/Tools/ScriptBuffer.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
@@ -27,6 +28,7 @@ using namespace worklets;
 @implementation WorkletsModule {
   AnimationFrameQueue *animationFrameQueue_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
+  std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
   WorkletsNetworking *workletsNetworking_;
 #endif // WORKLETS_FETCH_PREVIEW_ENABLED
@@ -79,6 +81,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
   };
   animationFrameQueue_ = [AnimationFrameQueue new];
   auto runtimeBindings = [self getRuntimeBindings:rnRuntime bundleModeEnabled:bundleModeEnabled];
+  rnRuntimeStatus_ = std::make_shared<RNRuntimeStatus>();
 
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
       rnRuntime,
@@ -86,7 +89,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
       uiScheduler,
       std::move(isJavaScriptQueue),
       runtimeBindings,
-      BundleModeConfig{.enabled = static_cast<bool>(bundleModeEnabled), .script = script, .sourceURL = sourceURL});
+      BundleModeConfig{.enabled = static_cast<bool>(bundleModeEnabled), .script = script, .sourceURL = sourceURL},
+      rnRuntimeStatus_);
 
   return @YES;
 }
@@ -109,9 +113,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
 
   [animationFrameQueue_ invalidate];
 
-  // We have to destroy extra runtimes when invalidate is called. If we clean
-  // it up later instead there's a chance the runtime will retain references
-  // to invalidated memory and will crash on destruction.
+  rnRuntimeStatus_->setDead();
   workletsModuleProxy_.reset();
 
   [super invalidate];

@@ -139,7 +139,7 @@ function Card({
   );
 }
 
-export default function Showcase() {
+export default function Form() {
   return (
     <Screen>
       <Scroll contentContainerStyle={styles.content} withBottomBarSpacing>
