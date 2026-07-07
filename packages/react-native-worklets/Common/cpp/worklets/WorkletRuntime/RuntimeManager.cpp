@@ -9,6 +9,7 @@
 
 namespace worklets {
 
+#ifndef NDEBUG
 namespace {
 void evaluateModuleUpdate(
     const std::shared_ptr<WorkletRuntime> &workletRuntime,
@@ -20,6 +21,7 @@ void evaluateModuleUpdate(
   });
 }
 } // namespace
+#endif // NDEBUG
 
 std::shared_ptr<WorkletRuntime> RuntimeManager::getRuntime(uint64_t runtimeId) {
   std::shared_lock lock(weakRuntimesMutex_);
@@ -75,6 +77,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
   return workletRuntime;
 }
 
+#ifndef NDEBUG
 void RuntimeManager::propagateModuleUpdate(const std::string &code, const std::string &sourceUrl) {
   std::unique_lock registrationLock(registrationMutex_);
 
@@ -90,6 +93,7 @@ void RuntimeManager::loadModuleUpdates(const std::shared_ptr<WorkletRuntime> &wo
     evaluateModuleUpdate(workletRuntime, update.code, update.sourceUrl);
   }
 }
+#endif // NDEBUG
 
 std::shared_ptr<WorkletRuntime> RuntimeManager::createUninitializedUIRuntime(
     const std::shared_ptr<AsyncQueue> &uiAsyncQueue) {
