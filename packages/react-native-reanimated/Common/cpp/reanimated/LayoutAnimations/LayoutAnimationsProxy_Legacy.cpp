@@ -1,6 +1,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 
 #include <react/debug/react_native_assert.h>
+#include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 
 #include <memory>
@@ -58,8 +59,15 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
 
   parseRemoveMutations(movedViews, mutations, roots);
 
-  auto shouldAnimate = !surfacesToRemove_.contains(surfaceId);
-  surfacesToRemove_.erase(surfaceId);
+  // Consume the teardown mark only on the transaction that actually clears
+  // the root — pulls emitted for animation frames must not eat it early.
+  auto shouldAnimate = true;
+  const auto removesRootChildren = std::ranges::any_of(mutations, [surfaceId](const auto &mutation) {
+    return mutation.type == ShadowViewMutation::Remove && mutation.parentTag == surfaceId;
+  });
+  if (removesRootChildren) {
+    shouldAnimate = surfacesToRemove_.erase(surfaceId) == 0;
+  }
   handleRemovals(filteredMutations, roots, deadNodes, shouldAnimate);
 
   handleUpdatesAndEnterings(filteredMutations, movedViews, mutations, propsParserContext, surfaceId);
@@ -959,23 +967,22 @@ inline bool MutationNode::isMutationNode() {
   return true;
 }
 
-// UIManagerAnimationDelegate
+// UIManagerCommitHook
 
-void LayoutAnimationsProxy_Legacy::uiManagerDidConfigureNextLayoutAnimation(
-    jsi::Runtime &runtime,
-    const RawValue &config,
-    const jsi::Value &successCallbackValue,
-    const jsi::Value &failureCallbackValue) const {}
-
-void LayoutAnimationsProxy_Legacy::setComponentDescriptorRegistry(
-    const SharedComponentDescriptorRegistry &componentDescriptorRegistry) {}
-
-bool LayoutAnimationsProxy_Legacy::shouldAnimateFrame() const {
-  return false;
-}
-
-void LayoutAnimationsProxy_Legacy::stopSurface(SurfaceId surfaceId) {
-  surfacesToRemove_.insert(surfaceId);
+// Surface teardown commits an empty root (SurfaceHandler::stop) before the
+// teardown transaction is pulled — mark it so pullTransaction skips exit
+// animations. Reading the ShadowTreeRegistry here instead would deadlock (#8579).
+RootShadowNode::Unshared LayoutAnimationsProxy_Legacy::shadowTreeWillCommit(
+    const ShadowTree &shadowTree,
+    const RootShadowNode::Shared & /*oldRootShadowNode*/,
+    const RootShadowNode::Unshared &newRootShadowNode) noexcept {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  if (newRootShadowNode->getChildren().empty()) {
+    surfacesToRemove_.insert(shadowTree.getSurfaceId());
+  } else {
+    surfacesToRemove_.erase(shadowTree.getSurfaceId());
+  }
+  return newRootShadowNode;
 }
 
 } // namespace reanimated
