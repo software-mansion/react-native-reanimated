@@ -5,6 +5,7 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
+#include <worklets/SharedItems/SerializableRemoteFunction.h>
 #include <worklets/SharedItems/Shareable.h>
 #include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/FeatureFlags.h>
@@ -163,21 +164,6 @@ inline jsi::Value createWorkletRuntime(
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
-inline jsi::Value propagateModuleUpdate(
-    const std::shared_ptr<RuntimeManager> &runtimeManager,
-    const std::string &code,
-    const std::string &sourceUrl) {
-  const auto runtimes = runtimeManager->getAllRuntimes();
-
-  for (const auto &runtime : runtimes) {
-    runtime->runSync([code, sourceUrl](jsi::Runtime &rt) -> void {
-      const auto buffer = std::make_shared<jsi::StringBuffer>(code);
-      rt.evaluateJavaScript(buffer, sourceUrl);
-    });
-  }
-  return jsi::Value::undefined();
-}
-
 inline jsi::Value reportFatalErrorOnJS(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &message,
@@ -334,25 +320,22 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         return makeSerializableArrayBuffer(rt, buffer);
       });
 
-  jsi_utils::addMethod<3>(
+  jsi_utils::addMethod<2>(
       rt,
       obj,
       "createSerializableNonWorkletFunction",
-      [jsScheduler = jsScheduler_, hostRuntimeId = hostRuntimeId_](
-          jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+      [jsScheduler = jsScheduler_, hostRuntimeId = hostRuntimeId_, rnRuntimeStatus = rnRuntimeStatus_](
+          jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         auto fun = at<0>(args).getObject(rt).getFunction(rt);
-        const auto name = at<2>(args).isUndefined() ? "" : at<2>(args).getString(rt).utf8(rt);
+        const auto name = at<1>(args).isUndefined() ? "" : at<1>(args).getString(rt).utf8(rt);
         if (fun.isHostFunction(rt)) {
           return makeSerializableHostFunction(
               rt, fun.getHostFunction(rt), name, fun.getProperty(rt, "length").getNumber());
+        } else if (hostRuntimeId == RuntimeData::rnRuntimeId) {
+          return makeRNRuntimeSerializableRemoteFunction(rt, name, fun, jsScheduler, rnRuntimeStatus);
+        } else {
+          return makeWorkletRuntimeSerializableRemoteFunction(rt, name, fun, hostRuntimeId);
         }
-        if (hostRuntimeId == RuntimeData::rnRuntimeId) {
-          const int remoteId = static_cast<int>(at<1>(args).getNumber());
-          auto ref = makeSerializableRemoteFunction(rt, name, remoteId, jsScheduler);
-          ref.asObject(rt).setProperty(rt, "__keepAlive", true);
-          return ref;
-        }
-        return makeSerializableRemoteFunction(rt, name, std::move(fun), hostRuntimeId);
       });
 
   jsi_utils::addMethod<2>(
@@ -396,6 +379,18 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         const auto pattern = at<0>(args).getString(rt).utf8(rt);
         const auto flags = at<1>(args).getString(rt).utf8(rt);
         return makeSerializableRegExp(rt, pattern, flags);
+      });
+
+  jsi_utils::addMethod<4>(
+      rt,
+      obj,
+      "createSerializableArrayBufferView",
+      [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[4]) {
+        const auto typeName = at<0>(args).getString(rt).utf8(rt);
+        const auto arrayBuffer = at<1>(args).getObject(rt).getArrayBuffer(rt);
+        const auto byteOffset = static_cast<size_t>(at<2>(args).getNumber());
+        const auto length = static_cast<size_t>(at<3>(args).getNumber());
+        return makeSerializableArrayBuffer(rt, arrayBuffer, ArrayBufferMetadata{typeName, byteOffset, length});
       });
 
   jsi_utils::addMethod<2>(
@@ -694,16 +689,17 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         return SerializableJSRef::newNativeStateObject(rt, shareable);
       });
 
+#ifndef NDEBUG
   jsi_utils::addMethod<2>(
       rt,
       obj,
       "propagateModuleUpdate",
       [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
-        return propagateModuleUpdate(
-            runtimeManager,
-            /* code */ at<0>(args).asString(rt).utf8(rt),
-            /* sourceURL */ at<1>(args).asString(rt).utf8(rt));
+        const auto code = at<0>(args).getString(rt).utf8(rt);
+        const auto sourceUrl = at<1>(args).getString(rt).utf8(rt);
+        runtimeManager->propagateModuleUpdate(code, sourceUrl);
       });
+#endif // NDEBUG
 
   jsi_utils::addMethod<0>(
       rt, obj, "getUIRuntimeHolder", [uiWorkletRuntime = uiWorkletRuntime_](jsi::Runtime &rt, const jsi::Value &) {

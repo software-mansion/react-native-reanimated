@@ -103,7 +103,7 @@ export function processInlineStylesWarning(
   path: NodePath<JSXAttribute>,
   state: WorkletsPluginPass
 ) {
-  if (isRelease()) {
+  if (isRelease(state)) {
     return;
   }
   if (state.opts.disableInlineStylesWarning) {

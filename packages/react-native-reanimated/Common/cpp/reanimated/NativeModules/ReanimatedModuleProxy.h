@@ -144,8 +144,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void runCSSTransition(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &transitionConfig);
   void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag);
 
-  void registerPseudoStyle(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &config);
-  void unregisterPseudoStyle(jsi::Runtime &rt, const jsi::Value &viewTag);
+  void registerPseudoStyles(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &config);
+  void unregisterPseudoStyles(jsi::Runtime &rt, const jsi::Value &viewTag);
 
   jsi::Value getSettledUpdates(jsi::Runtime &rt);
 
@@ -200,20 +200,6 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
   void applySynchronousUpdates(UpdatesBatch &updatesBatch, bool allowPartialUpdates);
-
-  /** Use only on the UI thread. */
-  void requestRenderForLayoutAnimations() {
-    if (layoutAnimationRenderRequested_) [[likely]] {
-      return;
-    }
-
-    layoutAnimationRenderRequested_ = true;
-    requestRender_([weakThis = weak_from_this()](double) {
-      if (auto strongThis = weakThis.lock()) {
-        strongThis->layoutAnimationRenderRequested_ = false;
-      }
-    });
-  }
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
   std::shared_ptr<UIManagerAnimationBackend> getAnimationBackend();
@@ -279,8 +265,6 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   std::shared_ptr<ReanimatedMountHook> mountHook_;
   /// Access only on UI thread.
   std::set<SurfaceId> layoutAnimationFlushRequests_;
-  /// Access only on UI thread.
-  bool layoutAnimationRenderRequested_;
 
   const KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction_;
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;

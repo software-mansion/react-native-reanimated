@@ -18,6 +18,10 @@ jobs:
       react-native-versions: ${{ steps.set-outputs.outputs.react-native-versions }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Setup Node
+        uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610
+        with:
+          node-version-file: '.nvmrc'
       - name: Read compatibility.json
         run: node .github/workflows/helper/read-compatibility.js
       - name: Set outputs
@@ -52,11 +56,10 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610
         with:
-          node-version: 24
+          node-version-file: '.nvmrc'
       - uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
         if: ${{ matrix.platform == 'iOS' }}
         with:
-          ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
       - name: Check if react-native version exists
         id: check-react-native-version

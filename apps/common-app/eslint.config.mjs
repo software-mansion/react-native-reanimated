@@ -37,7 +37,7 @@ export default config(
       globals: {
         React: true,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        ...reactNative.environments['react-native']['react-native'],
+        ...reactNative.environments['react-native'].globals,
         ...globals.node,
       },
     },

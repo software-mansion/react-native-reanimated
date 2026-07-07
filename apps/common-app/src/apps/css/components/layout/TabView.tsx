@@ -5,18 +5,21 @@ import {
   Children,
   cloneElement,
   memo,
+  useCallback,
   useEffect,
   useMemo,
   useState,
 } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
-  useAnimatedReaction,
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { colors, flex, sizes, spacing } from '@/theme';
 import { IS_WEB } from '@/utils';
@@ -25,6 +28,18 @@ import TabSelector from '../inputs/TabSelector';
 
 const WINDOW_WIDTH = Dimensions.get('screen').width;
 
+const SWIPE_ACTIVATION_DISTANCE = 15;
+const SWIPE_FAIL_DISTANCE = 15;
+const SWIPE_DISTANCE_THRESHOLD = WINDOW_WIDTH * 0.2;
+const SWIPE_VELOCITY_THRESHOLD = 500;
+const EDGE_RESISTANCE = 0.2;
+const INACTIVE_TAB_SCALE = 0.9;
+
+function clamp(value: number, min: number, max: number): number {
+  'worklet';
+  return Math.min(Math.max(value, min), max);
+}
+
 type TabProps = PropsWithChildren<{
   name: string;
 }>;
@@ -32,37 +47,30 @@ type TabProps = PropsWithChildren<{
 type TabPropsInternal = {
   index: number;
   rendered: boolean;
-  selectedTabIndex: SharedValue<number>;
-  previousSelectedTabIndex: SharedValue<number>;
+  tabProgress: SharedValue<number>;
 } & TabProps;
 
 const Tab = memo(function Tab({
   children,
   index,
-  previousSelectedTabIndex,
   rendered,
-  selectedTabIndex,
+  tabProgress,
 }: TabPropsInternal): ReactElement {
-  const animatedTabStyle = useAnimatedStyle(() => ({
-    opacity:
-      index === selectedTabIndex.value ||
-      index === previousSelectedTabIndex.value
-        ? 1
-        : 0,
-    transform: [
-      {
-        translateX: withTiming(
-          Math.sign(index - selectedTabIndex.value) * WINDOW_WIDTH
-        ),
-      },
-      {
-        translateY: withTiming(-sizes.md * +(index !== selectedTabIndex.value)),
-      },
-      {
-        scale: withTiming(index === selectedTabIndex.value ? 1 : 0.9),
-      },
-    ],
-  }));
+  const animatedTabStyle = useAnimatedStyle(() => {
+    // Clamped so tabs more than one screen away stay parked off-screen rather
+    // than sliding arbitrarily far during multi-tab transitions.
+    const distance = clamp(index - tabProgress.value, -1, 1);
+    const offset = Math.abs(distance);
+
+    return {
+      opacity: 1 - offset,
+      transform: [
+        { translateX: distance * WINDOW_WIDTH },
+        { translateY: -sizes.md * offset },
+        { scale: 1 - (1 - INACTIVE_TAB_SCALE) * offset },
+      ],
+    };
+  });
 
   return (
     <Animated.View style={[styles.tab, animatedTabStyle]}>
@@ -98,16 +106,69 @@ const TabView: TabViewComponent = ({ children }: TabViewProps) => {
   const [screenTransitionFinished, setScreenTransitionFinished] =
     useState(IS_WEB);
 
-  const previousSelectedTabIndex = useSharedValue(0);
+  // Committed integer index; drives the tab bar and the swipe decisions.
   const selectedTabIndex = useSharedValue(0);
+  // Live fractional index every tab animation reads (timing on tap/release,
+  // set directly while dragging).
+  const tabProgress = useSharedValue(0);
+  // Captured at drag start so an interrupted settle continues from where it is.
+  const dragStartProgress = useSharedValue(0);
 
-  useAnimatedReaction(
-    () => selectedTabName,
-    (name) => {
+  const handleSelectTab = useCallback(
+    (name: string) => {
       const index = tabNames.indexOf(name);
-      previousSelectedTabIndex.value = selectedTabIndex.value;
       selectedTabIndex.value = index;
-    }
+      tabProgress.value = withTiming(index);
+      setSelectedTabName(name);
+    },
+    [tabNames, selectedTabIndex, tabProgress]
+  );
+
+  const numberOfTabs = tabNames.length;
+
+  const swipeGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .enabled(numberOfTabs > 1)
+        .activeOffsetX([-SWIPE_ACTIVATION_DISTANCE, SWIPE_ACTIVATION_DISTANCE])
+        .failOffsetY([-SWIPE_FAIL_DISTANCE, SWIPE_FAIL_DISTANCE])
+        .onStart(() => {
+          cancelAnimation(tabProgress);
+          dragStartProgress.value = tabProgress.value;
+        })
+        .onUpdate((event) => {
+          const lastIndex = numberOfTabs - 1;
+          const raw =
+            dragStartProgress.value - event.translationX / WINDOW_WIDTH;
+          // Rubber-band past the first / last tab.
+          if (raw < 0) {
+            tabProgress.value = raw * EDGE_RESISTANCE;
+          } else if (raw > lastIndex) {
+            tabProgress.value = lastIndex + (raw - lastIndex) * EDGE_RESISTANCE;
+          } else {
+            tabProgress.value = raw;
+          }
+        })
+        .onEnd((event) => {
+          const current = selectedTabIndex.value;
+          const goNext =
+            (-event.translationX > SWIPE_DISTANCE_THRESHOLD ||
+              -event.velocityX > SWIPE_VELOCITY_THRESHOLD) &&
+            current < numberOfTabs - 1;
+          const goPrev =
+            (event.translationX > SWIPE_DISTANCE_THRESHOLD ||
+              event.velocityX > SWIPE_VELOCITY_THRESHOLD) &&
+            current > 0;
+
+          const target = goNext ? current + 1 : goPrev ? current - 1 : current;
+
+          if (target !== current) {
+            selectedTabIndex.value = target;
+            scheduleOnRN(setSelectedTabName, tabNames[target]);
+          }
+          tabProgress.value = withTiming(target);
+        }),
+    [numberOfTabs, tabNames, tabProgress, dragStartProgress, selectedTabIndex]
   );
 
   useEffect(() => {
@@ -124,21 +185,23 @@ const TabView: TabViewComponent = ({ children }: TabViewProps) => {
       <View style={styles.tabBar}>
         <TabSelector
           selectedTab={selectedTabName}
+          tabProgress={tabProgress}
           tabs={tabNames}
-          onSelectTab={setSelectedTabName}
+          onSelectTab={handleSelectTab}
         />
       </View>
-      <View style={flex.fill}>
-        {childrenArray.map((child, index) =>
-          cloneElement(child, {
-            index,
-            key: index,
-            previousSelectedTabIndex,
-            rendered: index === 0 || screenTransitionFinished,
-            selectedTabIndex,
-          })
-        )}
-      </View>
+      <GestureDetector gesture={swipeGesture}>
+        <View style={flex.fill}>
+          {childrenArray.map((child, index) =>
+            cloneElement(child, {
+              index,
+              key: index,
+              rendered: index === 0 || screenTransitionFinished,
+              tabProgress,
+            })
+          )}
+        </View>
+      </GestureDetector>
     </>
   );
 };

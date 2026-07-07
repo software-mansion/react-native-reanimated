@@ -7,6 +7,27 @@ const darkCodeTheme = require('./src/theme/CodeBlock/highlighting-dark.js');
 const webpack = require('webpack');
 const path = require('path');
 
+const {
+  topbarBannerReservationScript,
+} = require('@swmansion/t-rex-ui/topbar-banner');
+// @ts-expect-error -- .ts extension is intentional; not type-checked by tsc here.
+const { TOP_BAR_BANNER } = require('./src/components/topbarBanner.config.ts');
+
+const firstBannerZone = TOP_BAR_BANNER.zones[0];
+const bannerReservationHeadTags = firstBannerZone
+  ? [
+      {
+        tagName: 'script',
+        attributes: { type: 'text/javascript' },
+        innerHTML: topbarBannerReservationScript(
+          firstBannerZone.zoneId,
+          firstBannerZone.contentId,
+          TOP_BAR_BANNER.hiddenPaths
+        ),
+      },
+    ]
+  : [];
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title:
@@ -22,6 +43,8 @@ const config = {
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'software-mansion', // Usually your GitHub org/user name.
   projectName: 'react-native-worklets', // Usually your repo name.
+
+  headTags: bannerReservationHeadTags,
 
   scripts: [],
 
@@ -53,7 +76,11 @@ const config = {
           sidebarCollapsible: false,
           editUrl:
             'https://github.com/software-mansion/react-native-reanimated/edit/main/docs/docs-worklets',
-          versions: { current: { label: '0.x' } },
+          lastVersion: 'current',
+          versions: {
+            current: { label: '0.10' },
+            '0.9': { label: '0.9', banner: 'none' },
+          },
         },
         theme: { customCss: require.resolve('./src/css/index.css') },
       }),
@@ -178,6 +205,16 @@ const config = {
                   test: /\.js$/,
                   exclude: /\.yarn[\\/]unprocessed/,
                   use: 'babel-loader',
+                },
+                {
+                  test: /\.m?js$/,
+                  resolve: {
+                    fullySpecified: false,
+                  },
+                },
+                {
+                  test: /react-native-(worklets|reanimated)[\\/]lib[\\/]module[\\/].*\.js$/,
+                  type: 'javascript/auto',
                 },
               ],
             },

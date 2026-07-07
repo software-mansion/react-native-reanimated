@@ -30,7 +30,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: 24
+          node-version-file: '.nvmrc'
 
       - name: Read and resolve compatibility matrix
         run: node .github/workflows/helper/read-reanimated-worklets-compatibility.js
@@ -59,7 +59,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: 24
+          node-version-file: '.nvmrc'
 
       - name: Set up JDK 18
         uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9
@@ -124,7 +124,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: 24
+          node-version-file: '.nvmrc'
 
       - name: Restore result cache
         id: result-cache
@@ -146,6 +146,21 @@ jobs:
           react-native-version: ${{ matrix.reactNativeVersion }}
           reanimated-version: ${{ matrix.reanimatedVersion }}
           worklets-version: ${{ matrix.workletsVersion }}
+
+      # RN >= 0.83 needs Xcode 26.3 because of a bug
+      # See https://github.com/fmtlib/fmt/issues/4740
+      - name: Select Xcode for older React Native
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        env:
+          RN_VERSION: ${{ matrix.reactNativeVersion }}
+        run: |
+          RN_MINOR="$(echo "${RN_VERSION}" | cut -d. -f2)"
+          if [ "${RN_MINOR}" -lt 83 ]; then
+            echo "React Native ${RN_VERSION} < 0.83, pinning Xcode 26.3"
+            echo "DEVELOPER_DIR=/Applications/Xcode_26.3.app/Contents/Developer" >> "$GITHUB_ENV"
+          else
+            echo "React Native ${RN_VERSION} >= 0.83, using default Xcode"
+          fi
 
       - name: Build app (iOS Debug)
         if: steps.result-cache.outputs.cache-hit != 'true'
