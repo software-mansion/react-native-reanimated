@@ -109,6 +109,11 @@ export type LayoutAnimationStartFunction = (
   config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
 ) => void;
 
+export type LayoutAnimationsManager = {
+  start: LayoutAnimationStartFunction;
+  stop: (tag: number) => void;
+};
+
 export interface ILayoutAnimationBuilder {
   build: () => LayoutAnimationFunction;
 }
