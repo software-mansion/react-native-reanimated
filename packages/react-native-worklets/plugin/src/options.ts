@@ -75,7 +75,7 @@ export interface PluginOptions {
   /**
    * _EXPERIMENTAL_
    *
-   * This options enabled compilation of worklets to Hermes bytecode. The
+   * This options enables compilation of worklets to Hermes bytecode. The
    * compilation is used only for production builds.
    *
    * This setting applies only to Legacy Eval Mode and has no effect on Bundle

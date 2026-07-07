@@ -230,6 +230,9 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         });
       });
 
+#ifndef NDEBUG
+// Nothing.
+#else
   jsi_utils::addMethod<6>(
       rt,
       obj,
@@ -248,6 +251,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             BytecodeUnpacker{.bytecode = bytecode(5)},
         });
       });
+#endif // NDEBUG
 
   jsi_utils::addMethod<1>(
       rt, obj, "createSerializableBigInt", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {

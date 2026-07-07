@@ -23,12 +23,11 @@ function compile(funString: string, state: WorkletsPluginPass): Buffer | null {
     return null;
   }
 
-  const source = '(' + funString + '\n)';
   try {
-    return runHermesc(hermesc, source);
+    return runHermesc(hermesc, funString);
   } catch (error) {
     if (errorStderr(error).includes('JSX')) {
-      const transformed = transformJsx(source);
+      const transformed = transformJsx(funString);
       if (transformed !== null) {
         try {
           return runHermesc(hermesc, transformed);
