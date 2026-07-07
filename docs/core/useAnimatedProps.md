@@ -49,16 +49,18 @@ Only relevant when using Reanimated [without the Babel plugin on the Web](https:
 
 An optional function or an array of functions.
 
-Sometimes when working with third-party libraries properties might be named differently on the API surface from what they really represent on the native side. Adapters make it possible to handle these cases by defining a way to convert these props.
+Sometimes when working with third-party libraries properties might be named differently on the API surface from what they really represent on the native side. Adapters make it possible to handle these cases by defining a way to convert these props before they reach the native side.
 
-Reanimated comes with two built-in adapters:
+Define an adapter as a [worklet](/docs/fundamentals/glossary#worklet) function and pass it directly to `useAnimatedProps`:
 
-* [`SVGAdapter`](https://github.com/software-mansion/react-native-reanimated/blob/Reanimated2/src/reanimated2/PropAdapters.ts#L19) for handling `transform` property in `react-native-svg`
-* [`TextInputAdapter`](https://github.com/software-mansion/react-native-reanimated/blob/Reanimated2/src/reanimated2/PropAdapters.ts#L57).
+```jsx
+const adapter = (props) => {
+  'worklet';
+  // reshape props here
+};
 
-You can create your own adapters using `createAnimatedPropAdapter` function.
-
-Here's an example of adapting `fill` and `stroke` properties from `react-native-svg` to be able to animate them with Reanimated.
+const animatedProps = useAnimatedProps(updater, [], adapter);
+```
 
 ### Color-related properties
 
