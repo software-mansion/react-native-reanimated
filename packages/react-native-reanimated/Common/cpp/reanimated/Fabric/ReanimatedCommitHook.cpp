@@ -20,43 +20,48 @@ ReanimatedCommitHook::ReanimatedCommitHook(
       updatesRegistryManager_(updatesRegistryManager),
       layoutAnimationsProxy_(layoutAnimationsProxy) {
   uiManager_->registerCommitHook(*this);
+  uiManager_->registerMountHook(*this);
+  // Pick up surfaces that existed before Reanimated initialized. We're not
+  // on a commit stack here, so reading the registry is safe.
+  uiManager_->getShadowTreeRegistry().enumerate(
+      [this](const ShadowTree &shadowTree, bool & /*stop*/) { maybeInitializeLayoutAnimations(shadowTree); });
 }
 
 ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
+  uiManager_->unregisterMountHook(*this);
   uiManager_->unregisterCommitHook(*this);
 }
 
-void ReanimatedCommitHook::maybeInitializeLayoutAnimations(SurfaceId surfaceId) {
-  auto lock = std::unique_lock<std::mutex>(mutex_);
-  if (surfaceId > currentMaxSurfaceId_) {
-    // when a new surfaceId is observed we call setMountingOverrideDelegate
-    // for all yet unseen surfaces
-    uiManager_->getShadowTreeRegistry().enumerate(
-        [strongThis = shared_from_this()](const ShadowTree &shadowTree, bool &stop) {
-          // Executed synchronously.
-          if (shadowTree.getSurfaceId() <= strongThis->currentMaxSurfaceId_) {
-            // the set function actually adds our delegate to a list, so we
-            // shouldn't invoke it twice for the same surface
-            return;
-          }
-          // TODO: We should consider registering a new instance of proxy for each surface.
-          // The current approach will encounter problems on platforms where it is more common to have multiple
-          // surfaces.
-          strongThis->layoutAnimationsProxy_->startSurface(shadowTree.getSurfaceId());
-          shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(strongThis->layoutAnimationsProxy_);
-        });
-    currentMaxSurfaceId_ = surfaceId;
+void ReanimatedCommitHook::maybeInitializeLayoutAnimations(const ShadowTree &shadowTree) {
+  {
+    auto lock = std::unique_lock<std::mutex>(mutex_);
+    if (!seenSurfaces_.insert(shadowTree.getSurfaceId()).second) {
+      return;
+    }
   }
+  // Don't read the ShadowTreeRegistry here — commits run under its shared
+  // lock and a nested acquisition deadlocks with a queued writer (#8579).
+  // TODO: We should consider registering a new instance of proxy for each surface.
+  // The current approach will encounter problems on platforms where it is more common to have multiple
+  // surfaces.
+  layoutAnimationsProxy_->startSurface(shadowTree.getSurfaceId());
+  shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(layoutAnimationsProxy_);
+}
+
+void ReanimatedCommitHook::shadowTreeDidUnmount(SurfaceId surfaceId, HighResTimeStamp /*unmountTime*/) noexcept {
+  // Forget stopped surfaces so a reused surface id registers again.
+  auto lock = std::unique_lock<std::mutex>(mutex_);
+  seenSurfaces_.erase(surfaceId);
 }
 
 RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
-    ShadowTree const &,
+    ShadowTree const &shadowTree,
     RootShadowNode::Shared const &,
     RootShadowNode::Unshared const &newRootShadowNode,
     const ShadowTreeCommitOptions &commitOptions) noexcept {
   ReanimatedSystraceSection s("ReanimatedCommitHook::shadowTreeWillCommit");
 
-  maybeInitializeLayoutAnimations(newRootShadowNode->getSurfaceId());
+  maybeInitializeLayoutAnimations(shadowTree);
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     return newRootShadowNode;
