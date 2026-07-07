@@ -143,11 +143,7 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const queries = [
-        '?query',
-        '#hash',
-        '?query#hash'
-      ];
+      const queries = ['?query', '#hash', '?query#hash'];
 
       for (const query of queries) {
         const filename = MOCK_LOCATION + query;
@@ -155,7 +151,8 @@ describe('babel plugin', () => {
         const { code } = runPlugin(input, {}, {}, filename);
 
         expect(code).toMatch(/sourceMap: /gm);
-        expect(code).toContain(filename)
+        expect(code).toContain(filename);
+        expect(code).toMatchSnapshot();
       }
     });
 
