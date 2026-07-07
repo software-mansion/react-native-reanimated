@@ -234,11 +234,22 @@ class PseudoSelectorManager(
             if (gestureByHost.containsKey(host) || !hostContainsScreen(host, event.rawX, event.rawY)) {
                 continue
             }
-            val leaf = findTouchedLeafOnScreen(host, event.rawX, event.rawY) ?: continue
-            gestureByHost[host] = HostGesture(leaf, event.rawX, event.rawY)
-            fireActiveCallbacksUpTree(leaf, true)
-            fireDeepestIfHit(leaf, event.rawX, event.rawY)
+            val leaf = findTouchedLeaf(host, event.rawX, event.rawY) ?: continue
+            beginPress(host, leaf, event.rawX, event.rawY)
         }
+    }
+
+    // Turn :active on for the pressed leaf and its registered ancestors, and :active-deepest for the
+    // deepest hit, recording the gesture so a later slop-dismiss or release can turn them back off.
+    private fun beginPress(
+        host: View,
+        leaf: View,
+        rawX: Float,
+        rawY: Float,
+    ) {
+        gestureByHost[host] = HostGesture(leaf, rawX, rawY)
+        fireActiveCallbacksUpTree(leaf, true)
+        fireDeepestIfHit(leaf, rawX, rawY)
     }
 
     private fun pressHosts(): Set<View> {
@@ -258,9 +269,10 @@ class PseudoSelectorManager(
         return rawX >= loc[0] && rawX < loc[0] + host.width && rawY >= loc[1] && rawY < loc[1] + host.height
     }
 
-    // Like [findTouchedLeaf] but from screen coordinates, since the window observer's event is
-    // window-relative; reactTagForTouch needs host-local coordinates.
-    private fun findTouchedLeafOnScreen(
+    // The element under a screen point: reactTagForTouch geometrically resolves the compound host's
+    // front-most child (e.g. an SvgView's topmost shape) and needs host-local coordinates, so translate by
+    // the host's on-screen location; a plain host resolves to itself.
+    private fun findTouchedLeaf(
         host: View,
         rawX: Float,
         rawY: Float,
@@ -290,16 +302,6 @@ class PseudoSelectorManager(
         }
         return view
     }
-
-    private fun findTouchedLeaf(
-        host: View,
-        event: MotionEvent,
-    ): View? =
-        if (host is ReactCompoundView) {
-            tryResolveView(host.reactTagForTouch(event.x, event.y))
-        } else {
-            host
-        }
 
     private fun acquireTouchListener(host: View) {
         val count = touchHostRefs.getOrDefault(host, 0)
@@ -363,10 +365,8 @@ class PseudoSelectorManager(
         host: View,
         event: MotionEvent,
     ) {
-        findTouchedLeaf(host, event)?.let {
-            gestureByHost[host] = HostGesture(it, event.rawX, event.rawY)
-            fireActiveCallbacksUpTree(it, true)
-            fireDeepestIfHit(it, event.rawX, event.rawY)
+        findTouchedLeaf(host, event.rawX, event.rawY)?.let {
+            beginPress(host, it, event.rawX, event.rawY)
         }
         hover.onViewTouchDown(host, event)
     }
