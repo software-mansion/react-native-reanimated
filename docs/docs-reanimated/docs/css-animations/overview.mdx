@@ -13,7 +13,7 @@ Let's make a box that gently pulses forever. We define a set of _keyframes_ that
 import AnimationNameBasic from '@site/src/examples/css-animations/AnimationNameBasic';
 import AnimationNameBasicSrc from '!!raw-loader!@site/src/examples/css-animations/AnimationNameBasic';
 
-<InteractiveExample src={AnimationNameBasicSrc} component={AnimationNameBasic} />
+<InteractiveExample src={AnimationNameBasicSrc} component={AnimationNameBasic}/>
 
 The heart of the animation is a keyframes object and a duration:
 
@@ -51,9 +51,11 @@ There's no button and no state here - the animation starts as soon as the compon
 You describe an animation in two parts:
 
 1. **Keyframes** - [`animationName`](/docs/css-animations/animation-name) takes an object that maps offsets (`from`, `to`, or percentages like `50%`) to the styles at that point in the timeline.
-2. **Timing** - properties like [`animationDuration`](/docs/css-animations/animation-duration), [`animationIterationCount`](/docs/css-animations/animation-iteration-count), and [`animationDirection`](/docs/css-animations/animation-direction) control how that timeline plays.
+1. **Timing** - properties like [`animationDuration`](/docs/css-animations/animation-duration), [`animationIterationCount`](/docs/css-animations/animation-iteration-count), and [`animationDirection`](/docs/css-animations/animation-direction) control how that timeline plays.
 
 Reanimated interpolates between your keyframes and plays them back on the timeline you set.
+
+Passing an object to a prop called `animationName` might look surprising at first. The name comes from CSS on the web, where you declare keyframes under a named `@keyframes` rule and then reference that name from the `animation-name` property. React Native has no global stylesheet to hold named rules, so instead of a name you pass the keyframes object directly to `animationName`.
 
 Not every style property can be animated. See [Supported style properties](/docs/guides/supported-properties) for the full list and where each one works.
 

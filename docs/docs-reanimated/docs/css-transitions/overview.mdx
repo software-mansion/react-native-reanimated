@@ -10,20 +10,20 @@ Instead of driving an animation by hand, you declare _which_ properties should a
 
 ## Your first transition
 
-Let's build a box that grows and changes color every time you press a button. Notice that we never animate anything manually - we just change `width` and `backgroundColor` based on state and let a transition do the rest.
+Let's build a box that resizes and changes color every time you press a button. Notice that we never animate anything manually - we just change `width` and `backgroundColor` based on state and let a transition do the rest.
 
 import TransitionPropertyBasic from '@site/src/examples/css-transitions/TransitionPropertyBasic';
 import TransitionPropertyBasicSrc from '!!raw-loader!@site/src/examples/css-transitions/TransitionPropertyBasic';
 
-<InteractiveExample src={TransitionPropertyBasicSrc} component={TransitionPropertyBasic} />
+<InteractiveExample src={TransitionPropertyBasicSrc} component={TransitionPropertyBasic}/>
 
 There are only two ingredients that turn a plain style change into a smooth transition:
 
 ```jsx
 <Animated.View
   style={{
-    width: isToggled ? 240 : 120,
-    backgroundColor: isToggled ? '#fa7f7c' : '#87cce8',
+    width,
+    backgroundColor,
     // highlight-start
     transitionProperty: ['width', 'backgroundColor'],
     transitionDuration: 500,
@@ -35,7 +35,7 @@ There are only two ingredients that turn a plain style change into a smooth tran
 - [`transitionProperty`](/docs/css-transitions/transition-property) tells Reanimated which style properties to watch.
 - [`transitionDuration`](/docs/css-transitions/transition-duration) sets how long the change takes.
 
-When `isToggled` flips, `width` and `backgroundColor` get new values, and Reanimated smoothly animates between the old and new ones.
+Whenever `width` and `backgroundColor` get new values, Reanimated smoothly animates between the old and new ones.
 
 ## How it works
 
@@ -44,11 +44,11 @@ The idea behind a CSS transition is simple: a transition runs when a watched pro
 That means two things have to be true for a transition to fire:
 
 1. The style is applied to an [Animated component](/docs/fundamentals/glossary#animated-component), such as `Animated.View`.
-2. The new value comes from a re-render - typically a React state or prop change.
+1. The new value comes from a re-render - typically a React state or prop change.
 
 Not every style property can be transitioned, and some (like `flexDirection` or `justifyContent`) change discretely instead of animating smoothly. See [Supported style properties](/docs/guides/supported-properties) for what can be animated, and [`transitionBehavior`](/docs/css-transitions/transition-behavior) for how discrete properties are handled.
 
-:::caution
+:::note
 
 A transition only reacts to values that change between renders. Passing an inline [shared value](/docs/fundamentals/glossary#shared-value) won't trigger a transition, because updating a shared value doesn't re-render the component. For shared-value-driven animations, use [`useAnimatedStyle`](/docs/core/useAnimatedStyle) instead.
 
