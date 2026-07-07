@@ -62,13 +62,13 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
 
   workletRuntime->init(targetProxy);
 
-  if (initializer) {
-    workletRuntime->runSync(initializer);
-  }
-
 #ifndef NDEBUG
   withRegistrationPaused([&] { loadModuleUpdates(workletRuntime); });
 #endif // NDEBUG
+
+  if (initializer) {
+    workletRuntime->runSync(initializer);
+  }
 
   registerRuntime(runtimeId, workletRuntime);
 
