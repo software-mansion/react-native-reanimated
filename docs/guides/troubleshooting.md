@@ -16,7 +16,7 @@ All of them are supposed to work correctly only within the same minor version. T
 
 **Problem:** This usually happens when Reanimated is not properly installed, e.g. forgetting to include the Worklets Babel plugin in `babel.config.js`.
 
-**Solution:** See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#react-native-community-cli for more information.
+**Solution:** See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#react-native-community-cli for more information. If the Worklets Babel plugin is already set up correctly, your Metro bundler cache may be stale - reset it with `yarn start --reset-cache`, `npm start -- --reset-cache` or `expo start -c` and run the app again.
 
 ### Native part of Reanimated doesn't seem to be initialized
 
