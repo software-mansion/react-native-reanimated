@@ -151,7 +151,8 @@ function getBundleModeMetroConfig(/** @type {any} */ config) {
 function bundleModeCreateModuleIdFactory() {
   let nextId = 0;
   const idFileMap = new Map();
-  return (/** @type {string} */ moduleName) => {
+  return (/** @type {string} */ moduleNameRaw) => {
+    const moduleName = moduleNameRaw.replace(/\\/g, '/');
     if (idFileMap.has(moduleName)) {
       return idFileMap.get(moduleName);
     }
