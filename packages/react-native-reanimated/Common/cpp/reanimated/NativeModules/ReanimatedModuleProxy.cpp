@@ -391,6 +391,12 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
 }
 
 ReanimatedModuleProxy::~ReanimatedModuleProxy() {
+  if (coreLayoutAnimationsDriver_) {
+    coreLayoutAnimationsDriver_->setLayoutAnimationStatusDelegate(nullptr);
+    // We overwrote the animation delegate with the layout animations proxy
+    // which dies with this module, while UIManager may outlive it.
+    uiManager_->setAnimationDelegate(nullptr);
+  }
   // event handler registry and frame callbacks store some JSI values from UI
   // runtime, so they have to go away before we tear down the runtime
   eventHandlerRegistry_.reset();
@@ -1023,6 +1029,37 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
   updatesBatch = std::move(shadowTreeUpdatesBatch);
 }
 
+void ReanimatedModuleProxy::onAnimationStarted() {
+  // Called from the core driver's pullTransaction, which on Android may run
+  // on the JS thread — hop to the UI thread before starting the tick loop.
+  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this()]() {
+    if (auto strongThis = weakThis.lock()) {
+      strongThis->scheduleCoreLayoutAnimationTick();
+    }
+  });
+}
+
+void ReanimatedModuleProxy::onAllAnimationsComplete() {
+  // The tick loop stops itself once the driver has no more animations.
+}
+
+void ReanimatedModuleProxy::scheduleCoreLayoutAnimationTick() {
+  requestRender_([weakThis = weak_from_this()](const double) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+    // Repull transactions so the core driver can emit interpolated frames.
+    // Not UIManager::animationTick, which would also tick NativeAnimated.
+    // TODO (future): enumerate -> visit
+    strongThis->uiManager_->getShadowTreeRegistry().enumerate(
+        [](const ShadowTree &shadowTree, bool &) { shadowTree.notifyDelegatesOfUpdates(); });
+    if (strongThis->coreLayoutAnimationsDriver_->shouldAnimateFrame()) {
+      strongThis->scheduleCoreLayoutAnimationTick();
+    }
+  });
+}
+
 void ReanimatedModuleProxy::requestFlushRegistry() {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     shouldFlushRegistry_ = true;
@@ -1207,7 +1244,8 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
         std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, viewStylesRepository_, request);
   }
 
-  commitHook_ = std::make_shared<ReanimatedCommitHook>(uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(
+      uiManager_, updatesRegistryManager_, layoutAnimationsProxy_, coreLayoutAnimationsDriver_);
 }
 
 void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
@@ -1250,6 +1288,21 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
           jsInvoker_
 #endif
       );
+      // Taking over the animation delegate slot (needed to receive
+      // stopSurface) would silently swallow LayoutAnimation.configureNext
+      // from React Native, so the delegate calls are forwarded to a
+      // Reanimated-owned core LayoutAnimationDriver, registered as another
+      // chained MountingOverrideDelegate in ReanimatedCommitHook.
+      auto contextContainer = scheduler->getContextContainer();
+      coreLayoutAnimationsDriver_ = std::make_shared<LayoutAnimationDriver>(
+          [jsInvoker = jsInvoker_](std::function<void(jsi::Runtime &)> &&callback) {
+            jsInvoker->invokeAsync(std::move(callback));
+          },
+          contextContainer,
+          this);
+      // Normally wired by the Scheduler, which already ran.
+      coreLayoutAnimationsDriver_->setComponentDescriptorRegistry(componentDescriptorRegistry);
+      layoutAnimationsProxyLegacy->coreDriver_ = coreLayoutAnimationsDriver_;
       // TODO (future): support in experimental
       uiManager_->setAnimationDelegate(layoutAnimationsProxyLegacy.get());
       layoutAnimationsProxy_ = std::move(layoutAnimationsProxyLegacy);

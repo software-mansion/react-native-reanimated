@@ -117,6 +117,10 @@ const CombinedTest: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/Combined').default as React.FC
   );
+const ConfigureNextCompatExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/ConfigureNextCompatExample').default as React.FC
+  );
 const ComposedHandlerConditionalExample: React.FC = () =>
   React.createElement(
     require('./ComposedHandlerConditionalExample').default as React.FC
@@ -1107,6 +1111,10 @@ export const EXAMPLES: Record<string, Example> = {
   CombinedLayoutAnimations: {
     title: '[LA] Entering and Exiting with Layout',
     screen: CombinedTest,
+  },
+  ConfigureNextCompat: {
+    title: '[LA] LayoutAnimation.configureNext compatibility',
+    screen: ConfigureNextCompatExample,
   },
   DefaultAnimations: {
     title: '[LA] Default layout animations',

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <react/renderer/animations/LayoutAnimationDriver.h>
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/scheduler/Scheduler.h>
@@ -110,6 +111,10 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
   mutable std::unordered_map<SurfaceId, SurfaceContext> surfaceContext_;
   mutable std::unordered_map<Tag, int> leastRemoved;
   mutable std::unordered_set<SurfaceId> surfacesToRemove_;
+  // Core driver handling React Native's LayoutAnimation.configureNext.
+  // We occupy the UIManager animation delegate slot (to receive stopSurface),
+  // so we forward the UIManagerAnimationDelegate calls to this driver.
+  std::shared_ptr<LayoutAnimationDriver> coreDriver_;
 
   LayoutAnimationsProxy_Legacy(
       const std::shared_ptr<LayoutAnimationsManager> &layoutAnimationsManager,

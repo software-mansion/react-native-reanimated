@@ -2,6 +2,7 @@
 
 #include <ReactCommon/CallInvoker.h>
 #include <cxxreact/ReactNativeVersion.h>
+#include <react/renderer/animations/LayoutAnimationDriver.h>
 #include <react/renderer/componentregistry/componentNameByReactViewName.h>
 #include <react/renderer/core/ShadowNode.h>
 #include <react/renderer/uimanager/UIManager.h>
@@ -62,7 +63,8 @@ enum class GrandCallbackSource : std::uint8_t {
   EventInAndroidDraw,
 };
 
-class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModuleProxy> {
+class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModuleProxy>,
+                              public LayoutAnimationStatusDelegate {
  public:
   ReanimatedModuleProxy(
       const std::shared_ptr<worklets::WorkletRuntime> &uiRuntime,
@@ -77,7 +79,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   // is fully constructed.
   void init(const PlatformDepMethodsHolder &platformDepMethodsHolder);
 
-  ~ReanimatedModuleProxy();
+  ~ReanimatedModuleProxy() override;
 
   [[nodiscard]]
   jsi::Object toOptimizedObject(jsi::Runtime &rt);
@@ -162,6 +164,12 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void initializeFabric(const std::shared_ptr<UIManager> &uiManager);
 
   void initializeLayoutAnimationsProxy();
+
+  // LayoutAnimationStatusDelegate for coreLayoutAnimationsDriver_, which
+  // handles React Native's LayoutAnimation.configureNext.
+  void onAnimationStarted() override;
+  void onAllAnimationsComplete() override;
+  void scheduleCoreLayoutAnimationTick();
 
   std::string obtainPropFromShadowNode(
       jsi::Runtime &rt,
@@ -261,6 +269,11 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<LayoutAnimationsProxyCommon> layoutAnimationsProxy_;
+  // Reanimated-owned instance of the core LayoutAnimation driver. Since we
+  // take over the UIManager animation delegate slot (to receive stopSurface),
+  // we forward the delegate calls here so LayoutAnimation.configureNext from
+  // React Native keeps working.
+  std::shared_ptr<LayoutAnimationDriver> coreLayoutAnimationsDriver_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<ReanimatedMountHook> mountHook_;
   /// Access only on UI thread.

@@ -15,10 +15,12 @@ namespace reanimated {
 ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-    const std::shared_ptr<LayoutAnimationsProxyCommon> &layoutAnimationsProxy)
+    const std::shared_ptr<LayoutAnimationsProxyCommon> &layoutAnimationsProxy,
+    const std::shared_ptr<const MountingOverrideDelegate> &coreLayoutAnimationsDriver)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
-      layoutAnimationsProxy_(layoutAnimationsProxy) {
+      layoutAnimationsProxy_(layoutAnimationsProxy),
+      coreLayoutAnimationsDriver_(coreLayoutAnimationsDriver) {
   uiManager_->registerCommitHook(*this);
 }
 
@@ -43,6 +45,11 @@ void ReanimatedCommitHook::maybeInitializeLayoutAnimations(SurfaceId surfaceId) 
           // The current approach will encounter problems on platforms where it is more common to have multiple
           // surfaces.
           strongThis->layoutAnimationsProxy_->startSurface(shadowTree.getSurfaceId());
+          if (strongThis->coreLayoutAnimationsDriver_) {
+            // Register the core LayoutAnimation driver first so our proxy
+            // receives its interpolated mutations and passes them through.
+            shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(strongThis->coreLayoutAnimationsDriver_);
+          }
           shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(strongThis->layoutAnimationsProxy_);
         });
     currentMaxSurfaceId_ = surfaceId;

@@ -965,17 +965,28 @@ void LayoutAnimationsProxy_Legacy::uiManagerDidConfigureNextLayoutAnimation(
     jsi::Runtime &runtime,
     const RawValue &config,
     const jsi::Value &successCallbackValue,
-    const jsi::Value &failureCallbackValue) const {}
+    const jsi::Value &failureCallbackValue) const {
+  if (coreDriver_) {
+    coreDriver_->uiManagerDidConfigureNextLayoutAnimation(runtime, config, successCallbackValue, failureCallbackValue);
+  }
+}
 
 void LayoutAnimationsProxy_Legacy::setComponentDescriptorRegistry(
-    const SharedComponentDescriptorRegistry &componentDescriptorRegistry) {}
+    const SharedComponentDescriptorRegistry &componentDescriptorRegistry) {
+  if (coreDriver_) {
+    coreDriver_->setComponentDescriptorRegistry(componentDescriptorRegistry);
+  }
+}
 
 bool LayoutAnimationsProxy_Legacy::shouldAnimateFrame() const {
-  return false;
+  return coreDriver_ && coreDriver_->shouldAnimateFrame();
 }
 
 void LayoutAnimationsProxy_Legacy::stopSurface(SurfaceId surfaceId) {
   surfacesToRemove_.insert(surfaceId);
+  if (coreDriver_) {
+    coreDriver_->stopSurface(surfaceId);
+  }
 }
 
 } // namespace reanimated
