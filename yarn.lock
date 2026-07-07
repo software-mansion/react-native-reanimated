@@ -8853,9 +8853,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swmansion/t-rex-ui@npm:1.3.3":
-  version: 1.3.3
-  resolution: "@swmansion/t-rex-ui@npm:1.3.3"
+"@swmansion/t-rex-ui@npm:1.3.4":
+  version: 1.3.4
+  resolution: "@swmansion/t-rex-ui@npm:1.3.4"
   dependencies:
     "@docusaurus/core": "npm:3.9.2"
     "@docusaurus/module-type-aliases": "npm:3.9.2"
@@ -8876,10 +8876,11 @@ __metadata:
     "@emotion/styled": "*"
     "@mui/material": ">=5.0.0"
     copy-text-to-clipboard: ^3.2.2
+    prism-react-renderer: ^2.0.0
     react: "*"
     react-dom: "*"
     react-icons: "*"
-  checksum: 10/8f54dbd22dae69f8b0880ea588867764d443c7ff1cd1e6317922b6650a56fb9655ccfd1532e203714936a9321f339255ae78d78218ac5be262b15ffe822458ac
+  checksum: 10/b975d217072808600dd82570bec0f57b57b27041a297265c575b91fea2007214842836305a0c33fd5b86ef8aaf6b29d2bfbbaa2a55257af7cfecca47049c4d42
   languageName: node
   linkType: hard
 
@@ -13902,13 +13903,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"clsx@npm:^1.2.1":
-  version: 1.2.1
-  resolution: "clsx@npm:1.2.1"
-  checksum: 10/5ded6f61f15f1fa0350e691ccec43a28b12fb8e64c8e94715f2a937bc3722d4c3ed41d6e945c971fc4dcc2a7213a43323beaf2e1c28654af63ba70c9968a8643
-  languageName: node
-  linkType: hard
-
 "clsx@npm:^2.0.0, clsx@npm:^2.1.1":
   version: 2.1.1
   resolution: "clsx@npm:2.1.1"
@@ -15909,7 +15903,7 @@ __metadata:
     "@mui/material": "npm:7.1.0"
     "@react-native/assets-registry": "npm:0.83.0"
     "@shopify/flash-list": "npm:2.1.0"
-    "@swmansion/t-rex-ui": "npm:1.3.3"
+    "@swmansion/t-rex-ui": "npm:1.3.4"
     "@types/raf": "npm:3.4.3"
     "@types/react": "npm:19.2.2"
     "@vercel/og": "npm:0.6.2"
@@ -15924,7 +15918,6 @@ __metadata:
     esbuild-register: "npm:3.5.0"
     glob: "npm:13.0.6"
     prettier: "npm:3.6.2"
-    prism-react-renderer: "npm:2.1.0"
     raf: "npm:3.4.1"
     raw-loader: "npm:4.0.2"
     react: "npm:19.1.1"
@@ -15974,7 +15967,7 @@ __metadata:
     "@mui/material": "npm:7.1.0"
     "@react-native/assets-registry": "npm:0.83.0"
     "@shopify/flash-list": "npm:2.1.0"
-    "@swmansion/t-rex-ui": "npm:1.3.3"
+    "@swmansion/t-rex-ui": "npm:1.3.4"
     "@types/raf": "npm:3.4.3"
     "@types/react": "npm:19.2.2"
     "@vercel/og": "npm:0.6.2"
@@ -15989,7 +15982,6 @@ __metadata:
     esbuild-register: "npm:3.5.0"
     glob: "npm:13.0.6"
     prettier: "npm:3.6.2"
-    prism-react-renderer: "npm:2.1.0"
     raf: "npm:3.4.1"
     raw-loader: "npm:4.0.2"
     react: "npm:19.1.1"
@@ -27857,18 +27849,6 @@ __metadata:
   version: 1.1.0
   resolution: "pretty-time@npm:1.1.0"
   checksum: 10/ed5783ea5225680672c53ff104343256037a0e2296387d2f71afecce9e10e83f9131291e6809d4405c0dc25c53f2949dce0233349589762ca499e380d3df2f8a
-  languageName: node
-  linkType: hard
-
-"prism-react-renderer@npm:2.1.0":
-  version: 2.1.0
-  resolution: "prism-react-renderer@npm:2.1.0"
-  dependencies:
-    "@types/prismjs": "npm:^1.26.0"
-    clsx: "npm:^1.2.1"
-  peerDependencies:
-    react: ">=16.0.0"
-  checksum: 10/9e5cbd31ed6305f48421890bdb700f716598339038698c34f03a79dfe3393eccf0ce5bad09b4d5cc1b86c6791693e6c52ca604f3cc0766cf9b9546b62c549d1c
   languageName: node
   linkType: hard
 
