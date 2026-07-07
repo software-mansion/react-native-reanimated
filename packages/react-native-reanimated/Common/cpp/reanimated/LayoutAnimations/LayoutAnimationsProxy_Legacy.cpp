@@ -1,6 +1,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 
 #include <react/debug/react_native_assert.h>
+#include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 
 #include <memory>
@@ -62,8 +63,15 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
 
   parseRemoveMutations(movedViews, mutations, roots);
 
-  auto surfaceDropped = surfacesToRemove_.contains(surfaceId);
-  surfacesToRemove_.erase(surfaceId);
+  // We recognize dropped surfaces by the presence of a Remove mutation for a root child. This can produce false
+  // positives. Ideal solution will be to introduce an appropriate API in RN
+  auto surfaceDropped = false;
+  const auto removesRootChildren = std::ranges::any_of(mutations, [surfaceId](const auto &mutation) {
+    return mutation.type == ShadowViewMutation::Remove && mutation.parentTag == surfaceId;
+  });
+  if (removesRootChildren) {
+    surfaceDropped = surfacesToRemove_.erase(surfaceId) != 0;
+  }
   const bool flushDeadNodes = shouldFlushDeadNodes(surfaceDropped);
   handleRemovals(filteredMutations, roots, deadNodes, surfaceDropped, flushDeadNodes);
 #ifdef ANDROID
@@ -1060,23 +1068,22 @@ SurfaceContext &LayoutAnimationsProxy_Legacy::getSurfaceContext(const SurfaceId 
   return it->second;
 }
 
-// UIManagerAnimationDelegate
+// UIManagerCommitHook
 
-void LayoutAnimationsProxy_Legacy::uiManagerDidConfigureNextLayoutAnimation(
-    jsi::Runtime &runtime,
-    const RawValue &config,
-    const jsi::Value &successCallbackValue,
-    const jsi::Value &failureCallbackValue) const {}
-
-void LayoutAnimationsProxy_Legacy::setComponentDescriptorRegistry(
-    const SharedComponentDescriptorRegistry &componentDescriptorRegistry) {}
-
-bool LayoutAnimationsProxy_Legacy::shouldAnimateFrame() const {
-  return false;
-}
-
-void LayoutAnimationsProxy_Legacy::stopSurface(SurfaceId surfaceId) {
-  surfacesToRemove_.insert(surfaceId);
+// Surface teardown commits an empty root (SurfaceHandler::stop) before the
+// teardown transaction is pulled — mark it so pullTransaction skips exit
+// animations. Reading the ShadowTreeRegistry here instead would deadlock.
+RootShadowNode::Unshared LayoutAnimationsProxy_Legacy::shadowTreeWillCommit(
+    const ShadowTree &shadowTree,
+    const RootShadowNode::Shared & /*oldRootShadowNode*/,
+    const RootShadowNode::Unshared &newRootShadowNode) noexcept {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  if (newRootShadowNode->getChildren().empty()) {
+    surfacesToRemove_.insert(shadowTree.getSurfaceId());
+  } else {
+    surfacesToRemove_.erase(shadowTree.getSurfaceId());
+  }
+  return newRootShadowNode;
 }
 
 } // namespace reanimated
