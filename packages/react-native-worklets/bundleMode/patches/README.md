@@ -57,7 +57,7 @@ Using npm and patch-package is a lot more problematic in patching transitive dep
 Using bun for patching gives you the benefit of the bun runtime in your project (works with monorepos and `linker=isolated`). Bun's patching method generally works better in bun repos, and doesn't create any issues with transitive dependencies or the bun cache. (You should use the patches in the `patch-package` directory)
 
 1. Create `patches` directory in the project root
-1. If you're not certain which versions of patchs you need to apply, you can run `bun why --top` to find out which versions of packages you have. For example, to find out which version of `metro` you have, run:
+1. If you're not certain which versions of patches you need to apply, you can run `bun why --top` to find out which versions of packages you have. For example, to find out which version of `metro` you have, run:
    ```terminal
    bun why metro --top
    ```
