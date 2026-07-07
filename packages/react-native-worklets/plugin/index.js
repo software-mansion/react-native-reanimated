@@ -990,6 +990,7 @@ var require_workletStringCode = __commonJS({
     var types_2 = require_types();
     var utils_1 = require_utils();
     var MOCK_SOURCE_MAP = "mock source map";
+    var querySuffixRE = /[?#].*$/;
     function buildWorkletString(fun, state, closureVariables, workletName, inputMap) {
       var _a;
       restoreRecursiveCalls(fun, workletName);
@@ -1028,7 +1029,7 @@ var require_workletStringCode = __commonJS({
       if (includeSourceMap) {
         inputMap.sourcesContent = [];
         for (const sourceFile of inputMap.sources) {
-          inputMap.sourcesContent.push(fs.readFileSync(sourceFile).toString("utf-8"));
+          inputMap.sourcesContent.push(fs.readFileSync(sourceFile.replace(querySuffixRE, "")).toString("utf-8"));
         }
       }
       const transformed = (0, transform_1.workletTransformSync)(code, {
