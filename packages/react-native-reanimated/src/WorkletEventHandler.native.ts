@@ -2,7 +2,7 @@
 import { registerEventHandler, unregisterEventHandler } from './core';
 import type { IWorkletEventHandler, ReanimatedEvent } from './hook/commonTypes';
 
-class WorkletEventHandlerNative<
+export class WorkletEventHandler<
   Event extends object,
 > implements IWorkletEventHandler<Event> {
   eventNames: string[];
@@ -68,5 +68,3 @@ class WorkletEventHandlerNative<
     this.#registrations.delete(viewTag);
   }
 }
-
-export const WorkletEventHandler = WorkletEventHandlerNative;

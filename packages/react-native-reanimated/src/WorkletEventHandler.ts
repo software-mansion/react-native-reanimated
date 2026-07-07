@@ -21,7 +21,7 @@ function jsListener<Event extends object>(
   };
 }
 
-class WorkletEventHandlerWeb<
+export class WorkletEventHandler<
   Event extends object,
 > implements IWorkletEventHandler<Event> {
   eventNames: string[];
@@ -66,5 +66,3 @@ class WorkletEventHandlerWeb<
     // noop
   }
 }
-
-export const WorkletEventHandler = WorkletEventHandlerWeb;
