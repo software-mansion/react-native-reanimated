@@ -1,6 +1,4 @@
 'use strict';
-import { IS_JEST } from './common';
-import { WorkletEventHandlerWeb } from './commonWorkletEventHandler';
 import { registerEventHandler, unregisterEventHandler } from './core';
 import type { IWorkletEventHandler, ReanimatedEvent } from './hook/commonTypes';
 
@@ -71,6 +69,4 @@ class WorkletEventHandlerNative<
   }
 }
 
-export const WorkletEventHandler = IS_JEST
-  ? WorkletEventHandlerWeb
-  : WorkletEventHandlerNative;
+export const WorkletEventHandler = WorkletEventHandlerNative;
