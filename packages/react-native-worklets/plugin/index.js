@@ -814,7 +814,7 @@ var require_hermesBytecode = __commonJS({
       try {
         return runHermesc(hermesc, funString);
       } catch (error) {
-        if (errorStderr(error).includes("JSX")) {
+        if (getErrorOutput(error).includes("JSX")) {
           const transformed = transformJsx(funString);
           if (transformed !== null) {
             try {
@@ -861,7 +861,7 @@ var require_hermesBytecode = __commonJS({
         stdio: ["pipe", "pipe", "pipe"]
       });
     }
-    function errorStderr(error) {
+    function getErrorOutput(error) {
       const stderr = error === null || error === void 0 ? void 0 : error.stderr;
       if (stderr) {
         return stderr.toString();
@@ -869,7 +869,7 @@ var require_hermesBytecode = __commonJS({
       return error instanceof Error ? error.message : String(error);
     }
     function warnFallback(error) {
-      const reason = errorStderr(error).trim().split("\n")[0];
+      const reason = getErrorOutput(error).trim().split("\n")[0];
       warnOnce(`Could not compile a worklet to Hermes bytecode, falling back to a source string. ${reason}`);
       return null;
     }

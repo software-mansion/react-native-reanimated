@@ -26,7 +26,7 @@ function compile(funString: string, state: WorkletsPluginPass): Buffer | null {
   try {
     return runHermesc(hermesc, funString);
   } catch (error) {
-    if (errorStderr(error).includes('JSX')) {
+    if (getErrorOutput(error).includes('JSX')) {
       const transformed = transformJsx(funString);
       if (transformed !== null) {
         try {
@@ -85,7 +85,7 @@ function runHermesc(hermesc: string, source: string): Buffer {
   });
 }
 
-function errorStderr(error: unknown): string {
+function getErrorOutput(error: unknown): string {
   const stderr = (error as { stderr?: Buffer | string })?.stderr;
   if (stderr) {
     return stderr.toString();
@@ -94,7 +94,7 @@ function errorStderr(error: unknown): string {
 }
 
 function warnFallback(error: unknown): null {
-  const reason = errorStderr(error).trim().split('\n')[0];
+  const reason = getErrorOutput(error).trim().split('\n')[0];
   warnOnce(
     `Could not compile a worklet to Hermes bytecode, falling back to a source string. ${reason}`
   );
