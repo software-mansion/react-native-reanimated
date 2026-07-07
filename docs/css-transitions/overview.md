@@ -1,0 +1,73 @@
+# Overview
+
+CSS transitions let you smoothly animate a style property whenever its value changes. If you've used transitions in CSS on the web, this will feel instantly familiar - and if you haven't, don't worry, we'll cover everything you need to know.
+
+Instead of driving an animation by hand, you declare *which* properties should animate and *how long* the change should take. Then you update the style the way you normally would, and Reanimated animates between the old and new values for you.
+
+## Your first transition
+
+Let's build a box that resizes and changes color every time you press a button. Notice that we never animate anything manually - we just change `width` and `backgroundColor` based on state and let a transition do the rest.
+
+There are only two ingredients that turn a plain style change into a smooth transition:
+
+```jsx
+<Animated.View
+  style={{
+    width,
+    backgroundColor,
+    // highlight-start
+    transitionProperty: ['width', 'backgroundColor'],
+    transitionDuration: 500,
+    // highlight-end
+  }}
+/>
+```
+
+* [`transitionProperty`](/docs/css-transitions/transition-property) tells Reanimated which style properties to watch.
+* [`transitionDuration`](/docs/css-transitions/transition-duration) sets how long the change takes.
+
+Whenever `width` and `backgroundColor` get new values, Reanimated smoothly animates between the old and new ones.
+
+## How it works
+
+The idea behind a CSS transition is simple: a transition runs when a watched property changes *between renders*.
+
+That means two things have to be true for a transition to fire:
+
+1. The style is applied to an [Animated component](/docs/fundamentals/glossary#animated-component), such as `Animated.View`.
+2. The new value comes from a re-render - typically a React state or prop change.
+
+Not every style property can be transitioned, and some (like `flexDirection` or `justifyContent`) change discretely instead of animating smoothly. See [Supported style properties](/docs/guides/supported-properties) for what can be animated, and [`transitionBehavior`](/docs/css-transitions/transition-behavior) for how discrete properties are handled.
+
+> **Note**
+>
+> A transition only reacts to values that change between renders. Passing an inline [shared value](/docs/fundamentals/glossary#shared-value) won't trigger a transition, because updating a shared value doesn't re-render the component. For shared-value-driven animations, use [`useAnimatedStyle`](/docs/core/useAnimatedStyle) instead.
+
+## When should I use CSS transitions?
+
+Reach for CSS transitions whenever an animation is driven by *state*: toggling a menu, expanding and collapsing a section, switching a theme, or showing and hiding an element. This covers most everyday UI animations, and it's the recommended place to start.
+
+When you need frame-by-frame control (gesture-driven or scroll-driven interactions, screen transitions, or several animations orchestrated together), use the shared values API with [`useAnimatedStyle`](/docs/core/useAnimatedStyle).
+
+Why start with CSS?
+
+CSS transitions are *declarative*: you describe the result you want, not the steps to get there. That means less code (there are no hooks or shared values to wire up), a familiar mental model if you're coming from the web, and animations that run in Reanimated's core, off the JavaScript thread. Because Reanimated knows exactly which properties are animating, a declarative API also leaves more room to optimize under the hood over time.
+
+## Summary
+
+* A CSS transition animates a style property when its value changes between renders.
+* You need [`transitionProperty`](/docs/css-transitions/transition-property) to say what to watch and [`transitionDuration`](/docs/css-transitions/transition-duration) to say how long it takes.
+* Transitions run on [Animated components](/docs/fundamentals/glossary#animated-component) and react to state or prop changes, not to shared value updates.
+* Use CSS transitions for state-driven animations, and [`useAnimatedStyle`](/docs/core/useAnimatedStyle) for gesture-driven or orchestrated ones.
+
+## What's next?
+
+Now that you've got the basics, explore the individual properties to fine-tune your transitions:
+
+* [`transitionProperty`](/docs/css-transitions/transition-property)
+* [`transitionDuration`](/docs/css-transitions/transition-duration)
+* [`transitionTimingFunction`](/docs/css-transitions/transition-timing-function)
+* [`transitionDelay`](/docs/css-transitions/transition-delay)
+* [`transitionBehavior`](/docs/css-transitions/transition-behavior)
+
+Looking for animations that play on their own or loop through multiple steps? Head over to [CSS Animations](/docs/css-animations/overview).
