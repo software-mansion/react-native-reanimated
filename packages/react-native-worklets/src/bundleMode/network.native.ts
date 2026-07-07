@@ -6,6 +6,8 @@
  * The NetworkingModule itself is injected via C++.
  */
 export function initializeNetworking() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require('react-native/Libraries/TurboModule/TurboModuleRegistry');
   const TurboModules = globalThis.TurboModules;
 
   TurboModules.set('FileReaderModule', makeMockTurboModule('FileReaderModule'));

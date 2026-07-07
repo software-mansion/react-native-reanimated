@@ -57,7 +57,7 @@ Pod::Spec.new do |s|
 
   s.dependency 'React-jsi'
   s.dependency 'React-hermes'
-  
+
   s.pod_target_xcconfig = {
     "USE_HEADERMAP" => "YES",
     "DEFINES_MODULE" => "YES",
@@ -70,6 +70,7 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/DoubleConversion"',
       '"$(PODS_ROOT)/Headers/Private/React-Core"',
       '"$(PODS_ROOT)/Headers/Private/Yoga"',
+      '"$(PODS_CONFIGURATION_BUILD_DIR)/React-utils/React_utils.framework/Headers/react/utils/platform/ios"',
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
