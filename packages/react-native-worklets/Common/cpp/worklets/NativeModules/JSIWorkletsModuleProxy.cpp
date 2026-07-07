@@ -164,21 +164,6 @@ inline jsi::Value createWorkletRuntime(
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
-inline jsi::Value propagateModuleUpdate(
-    const std::shared_ptr<RuntimeManager> &runtimeManager,
-    const std::string &code,
-    const std::string &sourceUrl) {
-  const auto runtimes = runtimeManager->getAllRuntimes();
-
-  for (const auto &runtime : runtimes) {
-    runtime->runSync([code, sourceUrl](jsi::Runtime &rt) -> void {
-      const auto buffer = std::make_shared<jsi::StringBuffer>(code);
-      rt.evaluateJavaScript(buffer, sourceUrl);
-    });
-  }
-  return jsi::Value::undefined();
-}
-
 inline jsi::Value reportFatalErrorOnJS(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &message,
@@ -704,16 +689,17 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         return SerializableJSRef::newNativeStateObject(rt, shareable);
       });
 
+#ifndef NDEBUG
   jsi_utils::addMethod<2>(
       rt,
       obj,
       "propagateModuleUpdate",
       [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
-        return propagateModuleUpdate(
-            runtimeManager,
-            /* code */ at<0>(args).asString(rt).utf8(rt),
-            /* sourceURL */ at<1>(args).asString(rt).utf8(rt));
+        const auto code = at<0>(args).getString(rt).utf8(rt);
+        const auto sourceUrl = at<1>(args).getString(rt).utf8(rt);
+        runtimeManager->propagateModuleUpdate(code, sourceUrl);
       });
+#endif // NDEBUG
 
   jsi_utils::addMethod<0>(
       rt, obj, "getUIRuntimeHolder", [uiWorkletRuntime = uiWorkletRuntime_](jsi::Runtime &rt, const jsi::Value &) {
