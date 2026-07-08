@@ -18,8 +18,18 @@ jobs:
       react-native-versions-with-nightly: ${{ steps.set-outputs.outputs.react-native-versions-with-nightly }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          sparse-checkout: |
+            /.nvmrc
+            /.github/workflows/helper
+            /packages/react-native-reanimated/compatibility.json
+          sparse-checkout-cone-mode: false
+      - name: Use Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.nvmrc'
       - name: Read compatibility.json
-        run: node .github/workflows/helper/read-compatibility.js
+        run: node --experimental-strip-types .github/workflows/helper/read-compatibility.ts
       - name: Set outputs
         id: set-outputs
         run: |

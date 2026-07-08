@@ -1,8 +1,12 @@
-const fs = require('fs');
-const path = require('path');
-const { execSync } = require('child_process');
+import { execSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-function resolveNpmVersion(pkgName, versionRange) {
+function resolveNpmVersion(
+  pkgName: string,
+  versionRange: string
+): string | null {
   const spec = `${pkgName}@${versionRange}`;
   try {
     const rawOutput = execSync(`npm view "${spec}" version --json`, {
@@ -25,12 +29,14 @@ function resolveNpmVersion(pkgName, versionRange) {
   }
 }
 
-function toRange(version) {
+function toRange(version: string): string {
   return version.includes('x') ? version : `${version}.x`;
 }
 
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+
 const compatibilityPath = path.join(
-  __dirname,
+  currentDir,
   '..',
   '..',
   '..',
@@ -40,7 +46,7 @@ const compatibilityPath = path.join(
 );
 
 const workletsCompatibilityPath = path.join(
-  __dirname,
+  currentDir,
   '..',
   '..',
   '..',
@@ -51,13 +57,13 @@ const workletsCompatibilityPath = path.join(
 
 const compatibilityData = JSON.parse(
   fs.readFileSync(compatibilityPath, 'utf8')
-);
+) as CompatibilityData;
 const workletsCompatibilityData = JSON.parse(
   fs.readFileSync(workletsCompatibilityPath, 'utf8')
-);
+) as WorkletsCompatibilityData;
 
 const fabricCompatibility = compatibilityData.fabric;
-const matrixEntries = [];
+const matrixEntries: MatrixEntry[] = [];
 
 for (const [reanimatedRange, details] of Object.entries(fabricCompatibility)) {
   if (reanimatedRange === 'nightly') {
@@ -131,7 +137,7 @@ for (const [reanimatedRange, details] of Object.entries(fabricCompatibility)) {
   }
 }
 
-const uniqueEntries = new Map();
+const uniqueEntries = new Map<string, MatrixEntry>();
 for (const entry of matrixEntries) {
   const key = `${entry.reactNativeVersion}-${entry.reanimatedVersion}-${entry.workletsVersion}`;
   uniqueEntries.set(key, entry);
@@ -143,3 +149,23 @@ fs.writeFileSync(
   '/tmp/reanimated-worklets-matrix.json',
   JSON.stringify(matrix)
 );
+
+type CompatibilityDetails = {
+  'react-native'?: string[];
+  'react-native-worklets'?: string[];
+};
+
+type CompatibilityData = {
+  fabric: Record<string, CompatibilityDetails>;
+};
+
+type WorkletsCompatibilityData = Record<
+  string,
+  { 'react-native'?: string[] } | undefined
+>;
+
+type MatrixEntry = {
+  reactNativeVersion: string;
+  reanimatedVersion: string;
+  workletsVersion: string;
+};
