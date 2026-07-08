@@ -82,7 +82,26 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
 
   addOngoingAnimations(surfaceId, filteredMutations);
 
+  dropUpdatesForDeletedViews(filteredMutations);
+
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
+}
+
+// The LayoutAnimationDriver can pair a final keyframe update with the withheld
+// Remove/Delete it replays in the same transaction; we emit removals first, so
+// the update would reach the mounting layer after its view was deleted.
+void LayoutAnimationsProxy_Legacy::dropUpdatesForDeletedViews(ShadowViewMutationList &filteredMutations) const {
+  std::unordered_set<Tag> deletedTags;
+  for (const auto &mutation : filteredMutations) {
+    if (mutation.type == ShadowViewMutation::Delete) {
+      deletedTags.insert(mutation.oldChildShadowView.tag);
+    }
+  }
+  if (!deletedTags.empty()) {
+    std::erase_if(filteredMutations, [&deletedTags](const auto &mutation) {
+      return mutation.type == ShadowViewMutation::Update && deletedTags.contains(mutation.newChildShadowView.tag);
+    });
+  }
 }
 
 // If React re-creates or re-inserts a tag whose exiting removal we are still
