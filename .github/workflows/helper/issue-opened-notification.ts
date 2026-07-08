@@ -1,19 +1,24 @@
 import { postToSlack } from './slack.ts';
 
 async function main(): Promise<void> {
-  const number = process.env.ISSUE_NUMBER ?? '';
-  const title = process.env.ISSUE_TITLE ?? '';
-  const url = process.env.ISSUE_URL ?? '';
-  const author = process.env.ISSUE_AUTHOR ?? '';
+  const number = process.env.ISSUE_NUMBER;
+  const url = process.env.ISSUE_URL;
+  const title = process.env.ISSUE_TITLE;
+  const author = process.env.ISSUE_AUTHOR;
 
-  const heading =
-    number && title
-      ? `🆕 New issue opened: #${number} — ${title}`
-      : '🆕 A new issue was opened.';
+  if (!number || !url) {
+    throw new Error(
+      'ISSUE_NUMBER and ISSUE_URL are required to post a new-issue notification.'
+    );
+  }
+
+  const heading = title
+    ? `🆕 New issue opened: #${number} — ${title}`
+    : `🆕 New issue opened: #${number}`;
 
   const lines = [heading];
   if (author) lines.push(`Opened by ${author}`);
-  if (url) lines.push(url);
+  lines.push(url);
 
   await postToSlack({ text: lines.join('\n') });
 }

@@ -32,6 +32,10 @@ type NightlyFailure = {
   date: string;
 };
 
+type NightlyStatus =
+  | { kind: 'ok'; failures: NightlyFailure[] }
+  | { kind: 'unknown' };
+
 const GITHUB_ACTIONS_BADGE_REGEX =
   /\[!\[(?<name>(?:[^[\]]|\[[^\]]*\])+)\]\((?<badgeUrl>https:\/\/github\.com\/software-mansion\/react-native-reanimated\/actions\/workflows\/[^)]+\/badge\.svg[^)]*)\)\]\((?<workflowUrl>https:\/\/github\.com\/software-mansion\/react-native-reanimated\/actions\/workflows\/[^)]+)\)/g;
 
@@ -96,15 +100,15 @@ async function getFailingBadges(badges: BadgeInfo[]): Promise<BadgeResult[]> {
   return results.filter((result) => result.status === 'failing');
 }
 
-async function getRNNightlyFailures(): Promise<NightlyFailure[]> {
+async function getRNNightlyFailures(): Promise<NightlyStatus> {
   let data: NightlyLibraryEntry[];
 
   try {
     const response = await fetch(NIGHTLY_TESTS_DATA_URL);
-    if (!response.ok) return [];
+    if (!response.ok) return { kind: 'unknown' };
     data = (await response.json()) as NightlyLibraryEntry[];
   } catch {
-    return [];
+    return { kind: 'unknown' };
   }
 
   const failures: NightlyFailure[] = [];
@@ -125,12 +129,12 @@ async function getRNNightlyFailures(): Promise<NightlyFailure[]> {
     }
   }
 
-  return failures;
+  return { kind: 'ok', failures };
 }
 
 function formatSlackMessage(
   failingBadges: BadgeResult[],
-  nightlyFailures: NightlyFailure[]
+  nightly: NightlyStatus
 ): string {
   const sections: string[] = [];
 
@@ -143,8 +147,15 @@ function formatSlackMessage(
     );
   }
 
-  if (nightlyFailures.length > 0) {
-    const lines = nightlyFailures.map(
+  if (nightly.kind === 'unknown') {
+    sections.push(
+      [
+        '⚠️ Could not fetch React Native nightly test data (react-native-community/nightly-tests) — status unknown:',
+        NIGHTLY_TESTS_WEBSITE_URL,
+      ].join('\n')
+    );
+  } else if (nightly.failures.length > 0) {
+    const lines = nightly.failures.map(
       (failure) =>
         `• ${failure.library} (${failure.platform}) — nightly ${failure.date}`
     );
@@ -166,11 +177,11 @@ function formatSlackMessage(
 
 async function main(): Promise<void> {
   const badges = await getActionsBadgesFromReadme();
-  const [failingBadges, nightlyFailures] = await Promise.all([
+  const [failingBadges, nightly] = await Promise.all([
     getFailingBadges(badges),
     getRNNightlyFailures(),
   ]);
-  const text = formatSlackMessage(failingBadges, nightlyFailures);
+  const text = formatSlackMessage(failingBadges, nightly);
 
   await postToSlack({ text });
 }
