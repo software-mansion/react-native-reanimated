@@ -319,7 +319,7 @@ describe('babel plugin in bundleMode', () => {
     });
   });
 
-  describe('worklet runtime entry-point toggle', () => {
+  describe('bundle mode flag toggle', () => {
     for (const [label, filename] of TOGGLE_PATH_CASES) {
       test(`flips _WORKLETS_BUNDLE_MODE_ENABLED to true in the ${label} file`, () => {
         const input = html`<script>

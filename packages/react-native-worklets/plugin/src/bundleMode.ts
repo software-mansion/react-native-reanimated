@@ -20,8 +20,8 @@ const togglePaths = [
  *
  * `globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;`
  *
- * With `true` in the Worklets' entry-point file when the `bundleMode` option is
- * enabled in the Babel plugin.
+ * With `true` in each of the Worklets' toggle-target files when the
+ * `bundleMode` option is enabled in the Babel plugin.
  *
  * This way Bundle Mode is not accidentally set up in eager import environments.
  */
