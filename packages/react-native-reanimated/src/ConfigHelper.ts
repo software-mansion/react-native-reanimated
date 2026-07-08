@@ -3,11 +3,6 @@
 import type { LoggerConfig } from './common';
 import { getLoggerConfig, updateLoggerConfig } from './common';
 
-export {
-  addWhitelistedNativeProps,
-  addWhitelistedUIProps,
-} from './commonConfigHelper';
-
 /**
  * Updates Reanimated logger config with the user-provided configuration. Will
  * affect Reanimated code executed after call to this function so it should be

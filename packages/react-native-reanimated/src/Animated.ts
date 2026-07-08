@@ -7,5 +7,5 @@ export { AnimatedView as View } from './component/View';
 export {
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
-} from './ConfigHelper';
+} from './ConfigHelperCommon';
 export { createAnimatedComponent } from './createAnimatedComponent';

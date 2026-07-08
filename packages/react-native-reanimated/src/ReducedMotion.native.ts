@@ -1,5 +1,5 @@
 'use strict';
-import { createReducedMotionManager } from './commonReducedMotion';
+import { createReducedMotionManager } from './ReducedMotionCommon';
 
 type localGlobal = typeof global & Record<string, unknown>;
 

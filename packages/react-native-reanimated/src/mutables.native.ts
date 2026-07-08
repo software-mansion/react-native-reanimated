@@ -9,16 +9,16 @@ import {
   UIRuntimeId,
 } from 'react-native-worklets';
 
+import type { Mutable } from './commonTypes';
+import { getStaticFeatureFlag } from './featureFlags';
 import {
   addCompilerSafeGetAndSet,
   checkInvalidReadDuringRender,
   checkInvalidWriteDuringRender,
   mutableHostDecorator,
-} from './commonMutables';
-import type { Mutable } from './commonTypes';
-import { getStaticFeatureFlag } from './featureFlags';
+} from './mutablesCommon';
 
-export { makeMutableUI } from './commonMutables';
+export { makeMutableUI } from './mutablesCommon';
 
 const USE_SYNCHRONIZABLE_FOR_MUTABLES = getStaticFeatureFlag(
   'USE_SYNCHRONIZABLE_FOR_MUTABLES'

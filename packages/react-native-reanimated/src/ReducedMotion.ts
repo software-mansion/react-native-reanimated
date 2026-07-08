@@ -1,6 +1,6 @@
 'use strict';
 import { IS_WINDOW_AVAILABLE } from './common';
-import { createReducedMotionManager } from './commonReducedMotion';
+import { createReducedMotionManager } from './ReducedMotionCommon';
 
 export function isReducedMotionEnabledInSystem() {
   return IS_WINDOW_AVAILABLE
