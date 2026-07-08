@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import {
   Button,
+  DevSettings,
   LayoutAnimation,
   StyleSheet,
   Text,
@@ -70,6 +71,52 @@ export default function TestApp() {
         onPress={() => setRenderNull(true)}
       />
 
+      <Button
+        testID="storm"
+        title="Mount/unmount storm (3s)"
+        onPress={() => {
+          // Rapid mount/unmount churn with exit animations in flight.
+          const id = setInterval(() => setReaBoxes((v) => !v), 80);
+          setTimeout(() => {
+            clearInterval(id);
+            setReaBoxes(true);
+          }, 3000);
+        }}
+      />
+
+      <View style={styles.row2}>
+        {[0, 60, 150, 350].map((ms) => (
+          <Button
+            key={ms}
+            testID={`hide-reload-${ms}`}
+            title={`R@${ms}`}
+            onPress={() => {
+              setReaBoxes(false); // start 600ms exit fade
+              setTimeout(() => DevSettings.reload(), ms);
+            }}
+          />
+        ))}
+        <Button
+          testID="storm-reload"
+          title="R@storm"
+          onPress={() => {
+            const id = setInterval(() => setReaBoxes((v) => !v), 80);
+            setTimeout(() => {
+              clearInterval(id);
+              DevSettings.reload();
+            }, 1000);
+          }}
+        />
+      </View>
+
+      <Button
+        testID="logbox"
+        title="LogBox churn (console.error)"
+        onPress={() => {
+          console.error('REA-ATTACK logbox surface churn ' + Date.now());
+        }}
+      />
+
       <Text style={styles.hint}>
         Teardown test: keep REA boxes visible, then reload JS. Expect
         [REA-TEST] teardown log and instant removal without exit animation.
@@ -82,6 +129,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: 80, paddingHorizontal: 16, gap: 16 },
   title: { fontSize: 18, fontWeight: 'bold', textAlign: 'center' },
   row: { flexDirection: 'row', gap: 12, height: 80 },
+  row2: { flexDirection: 'row', gap: 4, flexWrap: 'wrap' },
   reaBox: { width: 60, height: 60, backgroundColor: 'tomato', borderRadius: 8 },
   cnBox: { width: 60, height: 60, backgroundColor: 'royalblue', borderRadius: 8 },
   cnBoxBig: { width: 240, height: 120 },
