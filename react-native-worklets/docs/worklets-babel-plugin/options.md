@@ -12,7 +12,9 @@ interface PluginOptions {
   disableWorkletClasses?: boolean;
   extraPlugins?: string[];
   extraPresets?: string[];
+  getHBCBinary?: () => string;
   globals?: string[];
+  hermesBytecode?: boolean;
   omitNativeOnlyData?: boolean;
   relativeSourceLocation?: boolean;
   strictGlobal?: boolean;
@@ -120,6 +122,31 @@ Defaults to an empty array.
 
 This is a list of Babel presets that will be used when transforming worklets' code with Worklets Babel Plugin.
 
+### getHBCBinary
+
+> **Caution**
+>
+> Experimental feature.
+
+Defaults to `undefined`.
+
+Returns the absolute path to the Hermes bytecode compiler (`hermesc`) binary.
+This option is part of the experimental [`hermesBytecode`](#hermesbytecode)
+feature and is required when it is enabled — the plugin invokes this binary to
+compile each worklet.
+
+```js
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  hermesBytecode: true,
+  getHBCBinary: () => {
+    // Return the absolute path to the `hermesc` binary for the current host machine.
+  },
+};
+```
+
+Example implementation is available [here](https://github.com/software-mansion/react-native-reanimated/blob/7881f20a6778d25055e9127efaae0139562fde40/apps/fabric-example/babel.config.js#L28).
+
 ### globals
 
 Defaults to an empty array.
@@ -182,6 +209,28 @@ JS THREAD
 This output occurs because the entire `global` object (!) would be copied to the UI thread for it to be assigned by `setOnUI`. Then, `readOnUI` would again copy the `global` object and read from this copy.
 
 There is a [huge list of identifiers blocklisted by default](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/globals.ts).
+
+### hermesBytecode
+
+> **Caution**
+>
+> Experimental feature.
+
+Defaults to `false`.
+
+Enabled compilation of worklets to [Hermes](https://github.com/facebook/hermes) bytecode
+ahead of time instead of shipping them as source strings in [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode).
+At runtime the Worklet Runtime evaluates the precompiled bytecode directly,
+skipping code evaluation overhead costs.
+
+This is a workaround for the [increased memory consumption of `eval` calls
+in Hermes](https://github.com/software-mansion/react-native-reanimated/issues/9650).
+
+Enabling it requires the
+[`getHBCBinary`](#gethbcbinary) option so the plugin can locate the Hermes compiler.
+
+Bytecode is only emitted for production builds.
+This option has no effect in [Bundle Mode](/docs/bundleMode/).
 
 ### omitNativeOnlyData
 
