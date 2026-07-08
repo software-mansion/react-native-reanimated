@@ -2,6 +2,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { postToSlack } from './slack.ts';
+
 type BadgeStatus = 'failing' | 'passing' | 'unknown';
 
 type BadgeInfo = {
@@ -14,8 +16,33 @@ type BadgeResult = BadgeInfo & {
   status: BadgeStatus;
 };
 
+type NightlyDailyResult = {
+  android?: string;
+  ios?: string;
+};
+
+type NightlyLibraryEntry = {
+  library: string;
+  results?: Record<string, NightlyDailyResult>;
+};
+
+type NightlyFailure = {
+  library: string;
+  platform: 'iOS' | 'Android';
+  date: string;
+};
+
 const GITHUB_ACTIONS_BADGE_REGEX =
   /\[!\[(?<name>(?:[^[\]]|\[[^\]]*\])+)\]\((?<badgeUrl>https:\/\/github\.com\/software-mansion\/react-native-reanimated\/actions\/workflows\/[^)]+\/badge\.svg[^)]*)\)\]\((?<workflowUrl>https:\/\/github\.com\/software-mansion\/react-native-reanimated\/actions\/workflows\/[^)]+)\)/g;
+
+const NIGHTLY_TESTS_DATA_URL =
+  'https://react-native-community.github.io/nightly-tests/data.json';
+const NIGHTLY_TESTS_WEBSITE_URL =
+  'https://react-native-community.github.io/nightly-tests/';
+const NIGHTLY_TRACKED_LIBRARIES = [
+  'react-native-reanimated',
+  'react-native-worklets',
+];
 
 function parseBadgeStatus(svg: string): BadgeStatus {
   const normalized = svg.toLowerCase();
@@ -69,37 +96,81 @@ async function getFailingBadges(badges: BadgeInfo[]): Promise<BadgeResult[]> {
   return results.filter((result) => result.status === 'failing');
 }
 
-function formatSlackMessage(failingBadges: BadgeResult[]): string {
-  if (failingBadges.length === 0) {
-    return '✅ All GitHub Actions badges from README are passing.';
+async function getRNNightlyFailures(): Promise<NightlyFailure[]> {
+  let data: NightlyLibraryEntry[];
+
+  try {
+    const response = await fetch(NIGHTLY_TESTS_DATA_URL);
+    if (!response.ok) return [];
+    data = (await response.json()) as NightlyLibraryEntry[];
+  } catch {
+    return [];
   }
 
-  const lines = failingBadges.map(
-    (badge) => `• ${badge.name}: ${badge.workflowUrl}`
-  );
+  const failures: NightlyFailure[] = [];
 
-  return ['❌ Failing GitHub Actions badges found:', ...lines].join('\n');
+  for (const library of NIGHTLY_TRACKED_LIBRARIES) {
+    const entry = data.find((item) => item.library === library);
+    if (!entry?.results) continue;
+
+    const latestDate = Object.keys(entry.results).sort().at(-1);
+    if (!latestDate) continue;
+
+    const result = entry.results[latestDate];
+    if (result.ios === 'failure') {
+      failures.push({ library, platform: 'iOS', date: latestDate });
+    }
+    if (result.android === 'failure') {
+      failures.push({ library, platform: 'Android', date: latestDate });
+    }
+  }
+
+  return failures;
 }
 
-export async function postToSlack({ text }: { text: string }): Promise<void> {
-  const webhook = process.env.SLACK_WEBHOOK_URL;
-  if (!webhook) throw new Error('SLACK_WEBHOOK_URL is required');
-  const res = await fetch(webhook, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text }),
-  });
+function formatSlackMessage(
+  failingBadges: BadgeResult[],
+  nightlyFailures: NightlyFailure[]
+): string {
+  const sections: string[] = [];
 
-  if (!res.ok) {
-    const t = await res.text().catch(() => '');
-    throw new Error(`Slack webhook error ${res.status}: ${t.slice(0, 400)}`);
+  if (failingBadges.length > 0) {
+    const lines = failingBadges.map(
+      (badge) => `• ${badge.name}: ${badge.workflowUrl}`
+    );
+    sections.push(
+      ['❌ Failing GitHub Actions badges found:', ...lines].join('\n')
+    );
   }
+
+  if (nightlyFailures.length > 0) {
+    const lines = nightlyFailures.map(
+      (failure) =>
+        `• ${failure.library} (${failure.platform}) — nightly ${failure.date}`
+    );
+    sections.push(
+      [
+        '❌ Failing React Native nightly tests (react-native-community/nightly-tests):',
+        ...lines,
+        NIGHTLY_TESTS_WEBSITE_URL,
+      ].join('\n')
+    );
+  }
+
+  if (sections.length === 0) {
+    return '✅ All README GitHub Actions badges are passing and Reanimated & Worklets pass the latest React Native nightly tests.';
+  }
+
+  return sections.join('\n\n');
 }
 
 async function main(): Promise<void> {
   const badges = await getActionsBadgesFromReadme();
-  const failingBadges = await getFailingBadges(badges);
-  const text = formatSlackMessage(failingBadges);
+  const [failingBadges, nightlyFailures] = await Promise.all([
+    getFailingBadges(badges),
+    getRNNightlyFailures(),
+  ]);
+  const text = formatSlackMessage(failingBadges, nightlyFailures);
 
   await postToSlack({ text });
 }
