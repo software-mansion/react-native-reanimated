@@ -228,6 +228,16 @@ export type MapperRawInputs = unknown[];
 
 export type MapperOutputs = SharedValue[];
 
+export type MapperExtractedInputs = SharedValue[];
+
+export type Mapper = {
+  id: number;
+  dirty: boolean;
+  worklet: () => void;
+  inputs: MapperExtractedInputs;
+  outputs?: MapperOutputs;
+};
+
 export type MapperRegistry = {
   start: (
     mapperID: number,

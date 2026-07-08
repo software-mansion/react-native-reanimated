@@ -170,13 +170,3 @@ export function mutableHostDecorator<TValue>(
 
   return mutable;
 }
-
-/** @deprecated Used only in `animationsManager.ts`. Don't use. */
-export function makeMutableUI<TValue>(initial: TValue): Mutable<TValue> {
-  'worklet';
-  const mutable = mutableHostDecorator({
-    value: initial,
-  } as ShareableHost<TValue> & Mutable<TValue>);
-
-  return mutable;
-}

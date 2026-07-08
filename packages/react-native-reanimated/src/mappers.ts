@@ -3,9 +3,13 @@
 import { scheduleOnUI } from 'react-native-worklets';
 
 import { IS_JEST } from './common';
-import type { MapperOutputs, MapperRawInputs } from './commonTypes';
+import type {
+  Mapper,
+  MapperExtractedInputs,
+  MapperOutputs,
+  MapperRawInputs,
+} from './commonTypes';
 import { isSharedValue } from './isSharedValue';
-import type { Mapper, MapperExtractedInputs } from './mappersCommon';
 
 function createMapperRegistry() {
   'worklet';

@@ -10,8 +10,6 @@ import {
 } from './mutablesCommon';
 import { valueSetter } from './valueSetter';
 
-export { makeMutableUI } from './mutablesCommon';
-
 interface JestMutable<TValue> extends Mutable<TValue> {
   toJSON: () => string;
 }

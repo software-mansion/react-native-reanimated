@@ -18,8 +18,6 @@ import {
   mutableHostDecorator,
 } from './mutablesCommon';
 
-export { makeMutableUI } from './mutablesCommon';
-
 const USE_SYNCHRONIZABLE_FOR_MUTABLES = getStaticFeatureFlag(
   'USE_SYNCHRONIZABLE_FOR_MUTABLES'
 );
