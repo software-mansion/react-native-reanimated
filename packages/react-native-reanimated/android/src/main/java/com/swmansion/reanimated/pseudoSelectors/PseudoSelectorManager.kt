@@ -22,7 +22,6 @@ class PseudoSelectorManager(
     private val fabricUIManager: FabricUIManager,
     private val reactContext: WeakReference<ReactApplicationContext>,
 ) {
-    // Keyed by "$tag:$selector" so a view can register several selectors.
     private val detachActions = HashMap<String, Runnable>()
 
     private val activeCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
@@ -176,9 +175,6 @@ class PseudoSelectorManager(
         val host = findTouchHost(view)
         callbacks[view] = callback
         acquireTouchListener(host)
-        // A compound host (e.g. SvgView) delivers ACTION_DOWN to a per-view listener but not the following
-        // MOVE/UP, so :active would set on press yet never clear. The window observer sees every event on
-        // the window and drives the slop-dismiss/release below, the same way it makes :hover work on svg.
         hover.retainWindowObserver(view)
         ensureExtraWindowBridge()
         ensurePressWindowInterceptor()
@@ -198,9 +194,6 @@ class PseudoSelectorManager(
         hover.setWindowTouchInterceptor(::onWindowPressTouch)
     }
 
-    // The hover coordinator's per-window observer feeds every touch here. It is the reliable source for the
-    // whole press: a compound host such as an SvgView intermittently never delivers the down (nor the
-    // following events) to its per-view listener on a real finger, whereas the window observer sees them all.
     private fun onWindowPressTouch(event: MotionEvent) {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> windowPressDown(event)
@@ -223,9 +216,6 @@ class PseudoSelectorManager(
         }
     }
 
-    // Seed the press from the window-level down by hit-testing the registered hosts geometrically.
-    // reactTagForTouch is a geometric resolve that (unlike the per-view listener) does not depend on the
-    // touch being delivered to the compound host, so the :active set is reliable on a real finger.
     private fun windowPressDown(event: MotionEvent) {
         if (activeCallbacks.isEmpty() && deepestCallbacks.isEmpty()) {
             return
@@ -239,8 +229,6 @@ class PseudoSelectorManager(
         }
     }
 
-    // Turn :active on for the pressed leaf and its registered ancestors, and :active-deepest for the
-    // deepest hit, recording the gesture so a later slop-dismiss or release can turn them back off.
     private fun beginPress(
         host: View,
         leaf: View,
@@ -269,9 +257,6 @@ class PseudoSelectorManager(
         return rawX >= loc[0] && rawX <= loc[0] + view.width && rawY >= loc[1] && rawY <= loc[1] + view.height
     }
 
-    // The element under a screen point: reactTagForTouch geometrically resolves the compound host's
-    // front-most child (e.g. an SvgView's topmost shape) and needs host-local coordinates, so translate by
-    // the host's on-screen location; a plain host resolves to itself.
     private fun findTouchedLeaf(
         host: View,
         rawX: Float,
@@ -291,7 +276,6 @@ class PseudoSelectorManager(
         }
     }
 
-    // The nearest ReactCompoundView ancestor (e.g. SvgView) that owns [view]'s touches, else [view].
     private fun findTouchHost(view: View): View {
         var parent: ViewParent? = view.parent
         while (parent is View) {
@@ -326,10 +310,6 @@ class PseudoSelectorManager(
         host: View,
         event: MotionEvent,
     ): Boolean {
-        // Once a window observer is installed it owns the whole press for that window: it hit-tests the down
-        // (reliable even when a compound host such as an SvgView never delivers the down to this per-view
-        // listener on a real finger) and drives slop-dismiss/release from the real OS stream. The per-view
-        // listener is only the pre-0.86 / unobserved-window (Modal/Dialog) fallback.
         if (hover.isWindowObserved(host)) {
             return false
         }
@@ -371,7 +351,6 @@ class PseudoSelectorManager(
         hover.onViewTouchDown(host, event)
     }
 
-    // Past the touch slop the press is a scroll/drag, not a tap, so drop :active (web parity).
     private fun onHostMove(
         host: View,
         event: MotionEvent,
@@ -413,9 +392,6 @@ class PseudoSelectorManager(
         }
     }
 
-    // Per-view/per-window listeners are removed by their detach actions as views unmount; these two outlive
-    // that (the mount listener on the UIManager and the ExtraWindowEventListener on the ReactContext), so
-    // drop them when the context is invalidated instead of leaving them registered on the dying context.
     fun invalidate() {
         UiThreadUtil.runOnUiThread {
             if (mountListenerRegistered) {
@@ -427,7 +403,6 @@ class PseudoSelectorManager(
         }
     }
 
-    // A pressed ancestor yields its :active-deepest to a deeper registered view covering the same point.
     private fun hasDeepestDescendantAt(
         ancestor: View,
         rawX: Float,
