@@ -1,15 +1,32 @@
+#include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
 
 #include <jsi/jsi.h>
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace worklets {
 
 WorkletHermesRuntime::WorkletHermesRuntime(std::unique_ptr<facebook::hermes::HermesRuntime> runtime)
     : jsi::WithRuntimeDecorator<WorkletsReentrancyCheck>(*runtime, reentrancyCheck_), runtime_(std::move(runtime)) {
+  auto evalBytecode = [](facebook::jsi::Runtime &rt,
+                         const facebook::jsi::Value &,
+                         const facebook::jsi::Value *args,
+                         size_t) -> facebook::jsi::Value {
+    const auto buffer = args[0].getObject(rt).getArrayBuffer(rt);
+    auto data = std::vector<uint8_t>(buffer.data(rt), buffer.data(rt) + buffer.size(rt));
+    return rt.evaluateJavaScript(std::make_shared<BytecodeBuffer>(data), "");
+  };
+  runtime_->global().setProperty(
+      *runtime_,
+      "evalBytecode",
+      facebook::jsi::Function::createFromHostFunction(
+          *runtime_, facebook::jsi::PropNameID::forAscii(*runtime_, "evalBytecode"), 1, evalBytecode));
+
 #ifndef NDEBUG
   facebook::hermes::HermesRuntime *wrappedRuntime = runtime_.get();
   jsi::Value evalWithSourceMap = jsi::Function::createFromHostFunction(
