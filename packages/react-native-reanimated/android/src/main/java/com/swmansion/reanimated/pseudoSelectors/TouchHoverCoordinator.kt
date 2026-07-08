@@ -13,12 +13,6 @@ import com.facebook.react.uimanager.TouchTargetHelper
 import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
 import java.lang.ref.WeakReference
 
-/**
- * Sticky touch :hover: a touch-down hovers the views on its hit branch and unhovers the rest; the
- * first finger's release keeps a view hovered only if the finger is still over it (moves, scrolls,
- * and cancels in between change nothing). A per-window Window.Callback observer drives every window
- * with a hovered view; per-view listeners are the pre-0.86 Modal/Dialog fallback.
- */
 class TouchHoverCoordinator {
     private val hoverCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
     private val hoveredViews = LinkedHashSet<View>()
@@ -29,19 +23,14 @@ class TouchHoverCoordinator {
     private var settledGestureDownTime = Long.MIN_VALUE
     private var touchSlop = -1f
 
-    // Pointer (mouse/stylus) hover only; the touch paths never read these. True while the last pointer
-    // sample hit-tested onto a registered view's branch, so an off-branch pointer that never entered is
-    // left alone and can't clobber a touch-set sticky. lastPointer* anchors the slop-gated re-hit-test.
     private var pointerInsideRegistered = false
     private var lastPointerX = 0f
     private var lastPointerY = 0f
 
     private val observedWindows = mutableListOf<WeakReference<WindowObserver>>()
 
-    // The observer is shared by :hover and the press selectors; keep it installed until neither needs it.
     private var windowObserverRetainCount = 0
 
-    // Press selectors tap the same per-window touch stream to catch the MOVE/UP a compound host swallows.
     private var windowTouchInterceptor: ((MotionEvent) -> Unit)? = null
 
     private inner class WindowObserver(
@@ -96,8 +85,6 @@ class TouchHoverCoordinator {
         windowTouchInterceptor = interceptor
     }
 
-    // Both :hover and the press selectors need the per-window observer; ref-count so it outlives whichever
-    // registers first and is torn down only once the last of them detaches.
     fun retainWindowObserver(view: View) {
         windowObserverRetainCount++
         ensureWindowObserver(view)
@@ -113,10 +100,6 @@ class TouchHoverCoordinator {
         }
     }
 
-    // Pointer (mouse/stylus) hover follows the pointer non-stickily. Its listener lives on the touch
-    // HOST, not the registered view: an svg element is a virtual child of its SvgView and never receives
-    // hover events, so the listener must sit on the SvgView and reconcile the hit branch. For a plain
-    // view the host is the view. Ref-counted since a host (an SvgView) can back several hover elements.
     private fun acquireHoverListener(host: View) {
         val count = hoverHostRefs.getOrDefault(host, 0)
         hoverHostRefs[host] = count + 1
@@ -152,14 +135,6 @@ class TouchHoverCoordinator {
         clearHoverForWindow(window)
     }
 
-    /**
-     * Pointer (mouse/stylus) hover. A pointer streams a flood of HOVER_MOVE across the whole host, and
-     * for an SvgView host that canvas dwarfs the drawn element. Re-hit-testing every event would unhover
-     * a touch-set sticky the instant the pointer strays onto empty canvas it never entered, and trip the
-     * RNSVG quirk where a stationary re-hit-test right after a fill change resolves the element behind it.
-     * So we re-apply only on a real change: crossing the over/not-over edge, or moving past slop while
-     * over the hit branch. A stationary pointer, or one over empty canvas it never entered, is left be.
-     */
     fun recompute(
         sourceView: View,
         screenX: Float,
@@ -183,8 +158,6 @@ class TouchHoverCoordinator {
         pointerInsideRegistered = overRegistered
     }
 
-    // A true pointer exit (pen lifted, mouse left the host) unhovers the branch it was on. We can't
-    // trust the exit coordinates: some devices report an EXIT whose point is still over the host.
     private fun onPointerExit() {
         if (pointerInsideRegistered) {
             applyHover(emptySet())
@@ -248,8 +221,6 @@ class TouchHoverCoordinator {
         applyHover(if (root == null) emptySet() else hitTestPath(root, screenX, screenY))
     }
 
-    // Turn :hover on for the registered views on the hit branch and off for the rest. A set operation,
-    // so registered ancestors on the branch hover together with the leaf.
     private fun applyHover(hitTags: Set<Int>) {
         for ((view, callback) in hoverCallbacks) {
             setHovered(view, callback, view.id in hitTags)
@@ -269,12 +240,9 @@ class TouchHoverCoordinator {
         if (index < 0 || hoveredViews.isEmpty()) {
             return
         }
-        // getRawX/Y(index) needs API 29, so reconstruct the lifting pointer's screen coords from the delta.
         val screenX = event.getX(index) + (event.rawX - event.getX(0))
         val screenY = event.getY(index) + (event.rawY - event.getY(0))
         if (downPoint != null && isStationary(screenX, screenY, downPoint, root)) {
-            // Keep :hover as set on down. Re-hit-testing a stationary release is redundant and hits an
-            // RNSVG quirk: the re-rendered front element resolves the one behind it, dropping the hover.
             return
         }
         val hitTags: Set<Int> = if (root == null) emptySet() else hitTestPath(root, screenX, screenY)
@@ -318,7 +286,6 @@ class TouchHoverCoordinator {
         if (hoveredViews.isEmpty()) {
             return
         }
-        // toList() snapshots because setHovered mutates hoveredViews.
         for (view in hoveredViews.toList()) {
             if (predicate(view)) {
                 hoverCallbacks[view]?.let { setHovered(view, it, false) }
@@ -389,7 +356,6 @@ class TouchHoverCoordinator {
         clearAll()
     }
 
-    // Restore only if our wrapper is still the live callback (nothing wrapped us afterwards).
     private fun restoreCallback(observer: WindowObserver) {
         val window = observer.windowRef.get() ?: return
         if (window.callback === observer) {
