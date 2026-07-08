@@ -15,8 +15,6 @@ import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
 
-const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
-
 const KeyboardStateNames = {
   [KeyboardState.UNKNOWN]: 'UNKNOWN',
   [KeyboardState.OPENING]: 'OPENING',
@@ -57,13 +55,15 @@ export default function AnimatedKeyboardExample() {
   });
 
   const animatedHeightProps = useAnimatedProps(() => {
-    const text = `Keyboard height: ${keyboard.height.value}`;
-    return { text, defaultValue: text };
+    return {
+      text: `Keyboard height: ${keyboard.height.value}`,
+    };
   });
 
   const animatedStateProps = useAnimatedProps(() => {
-    const text = `Keyboard state: ${KeyboardStateNames[keyboard.state.value]} - ${keyboard.state.value}`;
-    return { text, defaultValue: text };
+    return {
+      text: `Keyboard state: ${KeyboardStateNames[keyboard.state.value]} - ${keyboard.state.value}`,
+    };
   });
 
   return (
@@ -98,14 +98,12 @@ export default function AnimatedKeyboardExample() {
         </TouchableOpacity>
       </Animated.View>
       <View style={styles.infoContainer}>
-        <AnimatedTextInput
+        <Animated.Text
           style={styles.infoText}
-          editable={false}
           animatedProps={animatedHeightProps}
         />
-        <AnimatedTextInput
+        <Animated.Text
           style={styles.infoText}
-          editable={false}
           animatedProps={animatedStateProps}
         />
       </View>
@@ -127,7 +125,6 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontWeight: '700',
-    width: '100%',
   },
   accessoryBar: {
     position: 'absolute',
