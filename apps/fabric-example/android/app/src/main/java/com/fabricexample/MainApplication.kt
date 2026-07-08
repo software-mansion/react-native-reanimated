@@ -9,6 +9,8 @@ import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint
 import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.facebook.react.common.assets.ReactFontManager
 import com.facebook.react.common.ReleaseLevel
+import com.facebook.react.internal.featureflags.ReactNativeFeatureFlags
+import com.facebook.react.internal.featureflags.ReactNativeFeatureFlagsOverrides_RNOSS_Experimental_Android
 
 class MainApplication : Application(), ReactApplication {
 
@@ -27,6 +29,13 @@ class MainApplication : Application(), ReactApplication {
     super.onCreate()
     DefaultNewArchitectureEntryPoint.releaseLevel = ReleaseLevel.EXPERIMENTAL
     loadReactNative(this)
+    // TODO(test-only): RN disables LayoutAnimation on Android by default;
+    // enable it so the bench can exercise configureNext next to Reanimated.
+    ReactNativeFeatureFlags.dangerouslyForceOverride(
+      object : ReactNativeFeatureFlagsOverrides_RNOSS_Experimental_Android() {
+        override fun enableLayoutAnimationsOnAndroid(): Boolean = true
+      }
+    )
 
     ReactFontManager.getInstance().addCustomFont(this, "Poppins", R.font.poppins)
     ReactFontManager.getInstance().addCustomFont(this, "Ubuntu Mono", R.font.ubuntumono)

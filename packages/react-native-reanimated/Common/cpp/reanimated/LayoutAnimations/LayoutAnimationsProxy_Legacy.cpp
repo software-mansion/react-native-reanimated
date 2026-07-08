@@ -1,5 +1,6 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 
+#include <glog/logging.h>
 #include <react/debug/react_native_assert.h>
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
@@ -67,6 +68,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   });
   if (removesRootChildren) {
     shouldAnimate = surfacesToRemove_.erase(surfaceId) == 0;
+  }
+  // Test-only log (this branch is a testbench, not for merging)
+  if (!shouldAnimate) {
+    LOG(INFO) << "[REA-TEST] teardown transaction for surface " << surfaceId << ", skipping exit animations";
   }
   handleRemovals(filteredMutations, roots, deadNodes, shouldAnimate);
 
