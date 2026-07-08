@@ -49,6 +49,7 @@ export function createNativePropsBuilder<TProps extends UnknownRecord>(
 
 export type NativePropsBuilder = ReturnType<typeof createNativePropsBuilder>;
 
+// is-tree-shakable-suppress
 export const stylePropsBuilder = createNativePropsBuilder(
   STYLE_PROPERTIES_CONFIG
 );

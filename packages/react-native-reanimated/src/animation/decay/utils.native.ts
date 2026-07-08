@@ -2,4 +2,4 @@
 
 export * from './utilsBase';
 
-export const VELOCITY_EPS = 1 / 20;
+export const VELOCITY_EPS = 1;

@@ -16,8 +16,10 @@ export const IS_WEB: boolean = Platform?.OS === 'web';
 export const IS_JEST: boolean =
   typeof globalThis.jest !== 'undefined' || process.env.NODE_ENV === 'test';
 /** @knipIgnore */
+// is-tree-shakable-suppress
 export const IS_WINDOWS: boolean = Platform?.OS === 'windows';
 
 export const IS_WINDOW_AVAILABLE: boolean = isWindowAvailable();
 
+/** @knipIgnore */
 export const SHOULD_BE_USE_WEB = IS_JEST || IS_WEB || IS_WINDOWS;

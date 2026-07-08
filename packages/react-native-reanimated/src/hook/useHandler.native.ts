@@ -1,7 +1,7 @@
 'use strict';
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
-import { isWorkletFunction, makeShareable } from 'react-native-worklets';
+import { makeShareable } from 'react-native-worklets';
 
 import type { UnknownRecord } from '../common';
 import type { DependencyList } from './commonTypes';
@@ -14,12 +14,9 @@ import {
 
 export type { UseHandlerContext } from './useHandlerBase';
 
-function isBabelPluginEnabled(handlers: UnknownRecord): boolean {
-  const handlerFunctions = Object.values(handlers);
-  // If there is no function provided, we assume that the Babel plugin is enabled.
-  return (
-    handlerFunctions.length === 0 || handlerFunctions.some(isWorkletFunction)
-  );
+function isBabelPluginEnabled(_handlers: UnknownRecord): boolean {
+  // Babel plugin must be enabled in all non-web environments.
+  return true;
 }
 
 /**

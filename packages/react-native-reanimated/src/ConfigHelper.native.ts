@@ -1,7 +1,9 @@
 'use strict';
 
+import { runOnUISync } from 'react-native-worklets';
+
 import type { LoggerConfig } from './common';
-import { getLoggerConfig, updateLoggerConfig } from './common';
+import { getLoggerConfig, IS_JEST, updateLoggerConfig } from './common';
 
 export {
   addWhitelistedNativeProps,
@@ -22,4 +24,8 @@ export function configureReanimatedLogger(config: LoggerConfig) {
   const currentConfig = getLoggerConfig();
   // Update the configuration object in the React runtime
   updateLoggerConfig(currentConfig, config);
+  // Register the updated configuration in the UI runtime
+  if (!IS_JEST) {
+    runOnUISync(updateLoggerConfig, currentConfig, config);
+  }
 }
