@@ -1,3 +1,4 @@
+#include <glog/logging.h> // TODO(test-only): remove before merging
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 
 #include <react/renderer/mounting/ShadowTree.h>
@@ -20,6 +21,8 @@ std::shared_ptr<LayoutAnimationsProxyCommon> LayoutAnimationsProxyRegistry::regi
 
   auto instance = proxyFactory_(surfaceId);
   shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(instance);
+  // TODO(test-only): remove before merging
+  LOG(INFO) << "[REA-TEST] initialized LA for surface " << surfaceId;
   instances_.emplace(surfaceId, instance);
   return instance;
 }

@@ -1,3 +1,4 @@
+#include <glog/logging.h> // TODO(test-only): remove before merging
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
@@ -20,8 +21,11 @@ ReanimatedCommitHook::ReanimatedCommitHook(
       updatesRegistryManager_(updatesRegistryManager),
       layoutAnimationsProxyRegistry_(layoutAnimationsProxyRegistry) {
   uiManager_->registerCommitHook(*this);
-  uiManager_->getShadowTreeRegistry().enumerate(
-      [this](const ShadowTree &shadowTree, bool & /*stop*/) { registerLayoutAnimations(shadowTree); });
+  uiManager_->getShadowTreeRegistry().enumerate([this](const ShadowTree &shadowTree, bool & /*stop*/) {
+    // TODO(test-only): remove before merging
+    LOG(INFO) << "[REA-TEST] init-enumerate found surface " << shadowTree.getSurfaceId();
+    registerLayoutAnimations(shadowTree);
+  });
 }
 
 ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {

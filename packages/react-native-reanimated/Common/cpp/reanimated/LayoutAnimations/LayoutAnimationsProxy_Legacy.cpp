@@ -1,3 +1,4 @@
+#include <glog/logging.h> // TODO(test-only): remove before merging
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 
@@ -1079,6 +1080,9 @@ inline bool MutationNode::isMutationNode() {
 // cancellation can't go through weak_from_this like maybeCancelAnimation does.
 void LayoutAnimationsProxy_Legacy::cancelAllAnimations() const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  // TODO(test-only): remove before merging
+  LOG(INFO) << "[REA-TEST] cleaned up LA state for surface " << surfaceId_
+            << " (animations: " << layoutAnimations_.size() << ")";
 #ifdef ANDROID
   // invalidate animation starts that are scheduled but haven't run yet
   for (auto &[tag, pendingStart] : pendingStarts_) {
