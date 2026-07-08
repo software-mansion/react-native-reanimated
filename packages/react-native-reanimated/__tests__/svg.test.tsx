@@ -1,14 +1,13 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 import { Pressable, Text } from 'react-native';
-import { Circle, Svg } from 'react-native-svg';
-
 import Animated, {
   useAnimatedProps,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
-} from '../src';
+} from 'react-native-reanimated';
+import { Circle, Svg } from 'react-native-svg';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 jest.mock('react-native-svg', () => require('../mock'));
