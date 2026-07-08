@@ -3,12 +3,6 @@ import { act, renderHook } from '@testing-library/react-native';
 
 import { useFrameCallback } from '../src';
 
-jest.mock('../src/initializers', () =>
-  jest.requireActual('../src/initializers.ts')
-);
-jest.mock('../src/mutables', () => jest.requireActual('../src/mutables.ts'));
-jest.mock('../src/mappers', () => jest.requireActual('../src/mappers.ts'));
-
 describe('useFrameCallback', () => {
   beforeAll(() => {
     jest.useFakeTimers();

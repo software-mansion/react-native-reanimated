@@ -7,12 +7,6 @@ import type { SharedValue } from '../src';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from '../src';
 import { getAnimatedStyle } from '../src/jestUtils';
 
-jest.mock('../src/initializers', () =>
-  jest.requireActual('../src/initializers.ts')
-);
-jest.mock('../src/mutables', () => jest.requireActual('../src/mutables.ts'));
-jest.mock('../src/mappers', () => jest.requireActual('../src/mappers.ts'));
-
 interface Props {
   sharedValue: SharedValue<number>;
 }

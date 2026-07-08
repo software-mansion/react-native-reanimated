@@ -13,12 +13,6 @@ import Animated, {
 } from '../src';
 import type { JestAnimatedStyleHandle } from '../src/hook/commonTypes';
 
-jest.mock('../src/initializers', () =>
-  jest.requireActual('../src/initializers.ts')
-);
-jest.mock('../src/mutables', () => jest.requireActual('../src/mutables.ts'));
-jest.mock('../src/mappers', () => jest.requireActual('../src/mappers.ts'));
-
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 jest.mock('react-native-svg', () => require('../mock'));
 

@@ -8,12 +8,6 @@ import Animated, {
   withTiming,
 } from '../src';
 
-jest.mock('../src/initializers', () =>
-  jest.requireActual('../src/initializers.ts')
-);
-jest.mock('../src/mutables', () => jest.requireActual('../src/mutables.ts'));
-jest.mock('../src/mappers', () => jest.requireActual('../src/mappers.ts'));
-
 jest.useFakeTimers();
 
 describe('Tests of inline styles', () => {

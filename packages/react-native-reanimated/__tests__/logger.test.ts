@@ -1,14 +1,6 @@
 import { configureReanimatedLogger } from '../src';
 import { logger, ReanimatedLogLevel } from '../src/common';
 
-jest.mock('../src/initializers', () =>
-  jest.requireActual('../src/initializers.ts')
-);
-jest.mock('../src/ConfigHelper', () =>
-  jest.requireActual('../src/ConfigHelper.ts')
-);
-jest.mock('../src/mutables', () => jest.requireActual('../src/mutables.ts'));
-
 const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
 const errorSpy = jest.spyOn(console, 'error').mockImplementation();
 

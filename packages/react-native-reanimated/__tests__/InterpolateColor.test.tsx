@@ -9,12 +9,6 @@ import Animated, {
   withTiming,
 } from '../src';
 
-jest.mock('../src/initializers', () =>
-  jest.requireActual('../src/initializers.ts')
-);
-jest.mock('../src/mutables', () => jest.requireActual('../src/mutables.ts'));
-jest.mock('../src/mappers', () => jest.requireActual('../src/mappers.ts'));
-
 describe('colors interpolation', () => {
   test('interpolates rgb without gamma correction', () => {
     const colors = ['#105060', '#609020'];

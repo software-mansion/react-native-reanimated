@@ -11,12 +11,6 @@ import Animated, {
   withTiming,
 } from '../src';
 
-jest.mock('../src/initializers', () =>
-  jest.requireActual('../src/initializers.ts')
-);
-jest.mock('../src/mutables', () => jest.requireActual('../src/mutables.ts'));
-jest.mock('../src/mappers', () => jest.requireActual('../src/mappers.ts'));
-
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const LIGHT_COLORS = ['rgba(56, 172, 221, 1)', 'rgba(87, 180, 149, 1)'];

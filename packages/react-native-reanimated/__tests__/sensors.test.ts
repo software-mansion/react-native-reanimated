@@ -3,12 +3,6 @@ import { act, renderHook } from '@testing-library/react-hooks';
 import type { SensorConfig, Value3D, ValueRotation } from '../src';
 import { SensorType, useAnimatedSensor } from '../src';
 
-jest.mock('../src/initializers', () =>
-  jest.requireActual('../src/initializers.ts')
-);
-jest.mock('../src/mutables', () => jest.requireActual('../src/mutables.ts'));
-jest.mock('../src/mappers', () => jest.requireActual('../src/mappers.ts'));
-
 let eventHandler: (data: Value3D | ValueRotation) => void;
 
 jest.mock('../src/core', () => {
