@@ -6,12 +6,12 @@ on:
       - main
     paths:
       - '.github/workflows/reanimated-worklets-compatibility-check.yml'
-      - '.github/workflows/helper/read-reanimated-worklets-compatibility.js'
+      - '.github/workflows/helper/read-reanimated-worklets-compatibility.ts'
       - '.github/actions/create-rnc-cli-app/**'
   pull_request:
     paths:
       - '.github/workflows/reanimated-worklets-compatibility-check.yml'
-      - '.github/workflows/helper/read-reanimated-worklets-compatibility.js'
+      - '.github/workflows/helper/read-reanimated-worklets-compatibility.ts'
       - '.github/actions/create-rnc-cli-app/**'
   workflow_dispatch:
   schedule:
@@ -26,6 +26,13 @@ jobs:
       matrix-size: ${{ steps.set-outputs.outputs.matrix-size }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          sparse-checkout: |
+            /.nvmrc
+            /.github/workflows/helper
+            /packages/react-native-reanimated/compatibility.json
+            /packages/react-native-worklets/compatibility.json
+          sparse-checkout-cone-mode: false
 
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -33,7 +40,7 @@ jobs:
           node-version-file: '.nvmrc'
 
       - name: Read and resolve compatibility matrix
-        run: node .github/workflows/helper/read-reanimated-worklets-compatibility.js
+        run: node --experimental-strip-types .github/workflows/helper/read-reanimated-worklets-compatibility.ts
 
       - name: Set outputs
         id: set-outputs

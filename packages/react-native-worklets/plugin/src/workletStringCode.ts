@@ -36,6 +36,7 @@ import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
 
 const MOCK_SOURCE_MAP = 'mock source map';
+const querySuffixRE = /[?#].*$/;
 
 export function buildWorkletString(
   fun: BabelFile,
@@ -125,7 +126,7 @@ export function buildWorkletString(
     // allowed to read files from disk.
     for (const sourceFile of inputMap.sources) {
       inputMap.sourcesContent.push(
-        fs.readFileSync(sourceFile).toString('utf-8')
+        fs.readFileSync(sourceFile.replace(querySuffixRE, '')).toString('utf-8')
       );
     }
   }
@@ -162,7 +163,9 @@ export function buildWorkletString(
     }
   }
 
-  return [transformed.code, JSON.stringify(sourceMap)];
+  const wrappedCode = `(${transformed.code})`;
+
+  return [wrappedCode, JSON.stringify(sourceMap)];
 }
 
 /**

@@ -1,5 +1,5 @@
 diff --git a/apps/fabric-example/babel.config.js b/apps/fabric-example/babel.config.js
-index 1a4d98fe45..add8e4364d 100644
+index a696887cc7..3d189bf4a2 100644
 --- a/apps/fabric-example/babel.config.js
 +++ b/apps/fabric-example/babel.config.js
 @@ -1,7 +1,7 @@
@@ -8,6 +8,6 @@ index 1a4d98fe45..add8e4364d 100644
    strictGlobal: true,
 -  bundleMode: false,
 +  bundleMode: true,
+   hermesBytecode: false,
+   getHBCBinary,
  };
- 
- /** @type {import('@babel/core').TransformOptions} */

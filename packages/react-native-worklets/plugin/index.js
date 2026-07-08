@@ -790,6 +790,121 @@ var require_generate = __commonJS({
   }
 });
 
+// lib/hermesBytecode.js
+var require_hermesBytecode = __commonJS({
+  "lib/hermesBytecode.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.compileWorkletToHbc = compileWorkletToHbc;
+    var core_1 = require("@babel/core");
+    var child_process_1 = require("child_process");
+    function compileWorkletToHbc(funString, workletHash, state) {
+      if (compilationCache.has(workletHash)) {
+        return compilationCache.get(workletHash);
+      }
+      const result = compile(funString, state);
+      compilationCache.set(workletHash, result);
+      return result;
+    }
+    function compile(funString, state) {
+      const hermesc = resolveHbcBinary(state);
+      if (!hermesc) {
+        return null;
+      }
+      try {
+        return runHermesc(hermesc, funString);
+      } catch (error) {
+        if (getErrorOutput(error).includes("JSX")) {
+          const transformed = transformJsx(funString);
+          if (transformed !== null) {
+            try {
+              return runHermesc(hermesc, transformed);
+            } catch (retryError) {
+              return warnFallback(retryError);
+            }
+          }
+        }
+        return warnFallback(error);
+      }
+    }
+    var MAX_BYTECODE_BYTES = 256 * 1024 * 1024;
+    var compilationCache = /* @__PURE__ */ new Map();
+    var warnedMessages = /* @__PURE__ */ new Set();
+    function warnOnce(message) {
+      if (warnedMessages.has(message)) {
+        return;
+      }
+      warnedMessages.add(message);
+      console.warn(`[Worklets] ${message}`);
+    }
+    function resolveHbcBinary(state) {
+      const { getHBCBinary } = state.opts;
+      if (!getHBCBinary) {
+        warnOnce("The `getHBCBinary` plugin option is required to compile worklets to Hermes bytecode. Falling back to shipping worklets as source strings.");
+        return null;
+      }
+      try {
+        const binary = getHBCBinary();
+        if (!binary) {
+          throw new Error("`getHBCBinary` returned an empty path.");
+        }
+        return binary;
+      } catch (error) {
+        warnOnce(`Calling \`getHBCBinary\` failed, falling back to a source string. ${error instanceof Error ? error.message : String(error)}`);
+        return null;
+      }
+    }
+    function runHermesc(hermesc, source) {
+      return (0, child_process_1.execFileSync)(hermesc, ["-g0", "-emit-binary", "-O", "-w", "-"], {
+        input: source,
+        maxBuffer: MAX_BYTECODE_BYTES,
+        stdio: ["pipe", "pipe", "pipe"]
+      });
+    }
+    function getErrorOutput(error) {
+      const stderr = error === null || error === void 0 ? void 0 : error.stderr;
+      if (stderr) {
+        return stderr.toString();
+      }
+      return error instanceof Error ? error.message : String(error);
+    }
+    function warnFallback(error) {
+      const reason = getErrorOutput(error).trim().split("\n")[0];
+      warnOnce(`Could not compile a worklet to Hermes bytecode, falling back to a source string. ${reason}`);
+      return null;
+    }
+    var jsxPluginPath;
+    function resolveJsxPlugin() {
+      if (jsxPluginPath === void 0) {
+        try {
+          jsxPluginPath = require.resolve("@babel/plugin-transform-react-jsx");
+        } catch (_a) {
+          jsxPluginPath = null;
+        }
+      }
+      return jsxPluginPath;
+    }
+    function transformJsx(source) {
+      var _a;
+      const plugin = resolveJsxPlugin();
+      if (!plugin) {
+        return null;
+      }
+      try {
+        const result = (0, core_1.transformSync)(source, {
+          babelrc: false,
+          configFile: false,
+          compact: true,
+          plugins: [plugin]
+        });
+        return (_a = result === null || result === void 0 ? void 0 : result.code) !== null && _a !== void 0 ? _a : null;
+      } catch (_b) {
+        return null;
+      }
+    }
+  }
+});
+
 // lib/transform.js
 var require_transform = __commonJS({
   "lib/transform.js"(exports2) {
@@ -875,6 +990,7 @@ var require_workletStringCode = __commonJS({
     var types_2 = require_types();
     var utils_1 = require_utils();
     var MOCK_SOURCE_MAP = "mock source map";
+    var querySuffixRE = /[?#].*$/;
     function buildWorkletString(fun, state, closureVariables, workletName, inputMap) {
       var _a;
       restoreRecursiveCalls(fun, workletName);
@@ -913,7 +1029,7 @@ var require_workletStringCode = __commonJS({
       if (includeSourceMap) {
         inputMap.sourcesContent = [];
         for (const sourceFile of inputMap.sources) {
-          inputMap.sourcesContent.push(fs.readFileSync(sourceFile).toString("utf-8"));
+          inputMap.sourcesContent.push(fs.readFileSync(sourceFile.replace(querySuffixRE, "")).toString("utf-8"));
         }
       }
       const transformed = (0, transform_1.workletTransformSync)(code, {
@@ -941,7 +1057,8 @@ var require_workletStringCode = __commonJS({
           delete sourceMap.sourcesContent;
         }
       }
-      return [transformed.code, JSON.stringify(sourceMap)];
+      const wrappedCode = `(${transformed.code})`;
+      return [wrappedCode, JSON.stringify(sourceMap)];
     }
     function restoreRecursiveCalls(file, newName) {
       (0, core_1.traverse)(file, {
@@ -1009,6 +1126,7 @@ var require_workletFactory = __commonJS({
     var path_1 = require("path");
     var closure_1 = require_closure();
     var generate_1 = require_generate();
+    var hermesBytecode_1 = require_hermesBytecode();
     var imports_1 = require_imports();
     var transform_1 = require_transform();
     var types_2 = require_types();
@@ -1066,9 +1184,14 @@ var require_workletFactory = __commonJS({
       (0, assert_1.strict)(pathForStringDefinitions, "[Reanimated] `pathForStringDefinitions` is null.");
       (0, assert_1.strict)(pathForStringDefinitions.parentPath, "[Reanimated] `pathForStringDefinitions.parentPath` is null.");
       const initDataId = pathForStringDefinitions.parentPath.scope.generateUidIdentifier(`worklet_${workletHash}_init_data`);
-      const initDataObjectExpression = (0, types_12.objectExpression)([
-        (0, types_12.objectProperty)((0, types_12.identifier)("code"), (0, types_12.stringLiteral)(funString))
-      ]);
+      const shouldIncludeInitData = !state.opts.omitNativeOnlyData && !state.opts.bundleMode;
+      const shouldEmitBytecode = !!state.opts.hermesBytecode && (0, utils_1.isRelease)(state) && shouldIncludeInitData;
+      const bytecode = shouldEmitBytecode ? (0, hermesBytecode_1.compileWorkletToHbc)(funString, workletHash, state) : null;
+      const initDataObjectExpression = (0, types_12.objectExpression)(bytecode ? [
+        (0, types_12.objectProperty)((0, types_12.identifier)("bytecode"), (0, types_12.memberExpression)((0, types_12.newExpression)((0, types_12.identifier)("Uint8Array"), [
+          (0, types_12.arrayExpression)(Array.from(bytecode, (byte) => (0, types_12.numericLiteral)(byte)))
+        ]), (0, types_12.identifier)("buffer")))
+      ] : [(0, types_12.objectProperty)((0, types_12.identifier)("code"), (0, types_12.stringLiteral)(funString))]);
       const shouldInjectLocation = !(0, utils_1.isRelease)(state);
       if (shouldInjectLocation) {
         let location = state.file.opts.filename;
@@ -1079,10 +1202,9 @@ var require_workletFactory = __commonJS({
         location = toPosix(location);
         initDataObjectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)("location"), (0, types_12.stringLiteral)(location)));
       }
-      if (sourceMapString) {
+      if (!bytecode && sourceMapString) {
         initDataObjectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)("sourceMap"), (0, types_12.stringLiteral)(sourceMapString)));
       }
-      const shouldIncludeInitData = !state.opts.omitNativeOnlyData && !state.opts.bundleMode;
       if (shouldIncludeInitData) {
         const initDataDeclaration = (0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
@@ -1461,11 +1583,20 @@ var require_bundleMode = __commonJS({
     exports2.toggleBundleMode = toggleBundleMode;
     var types_12 = require("@babel/types");
     var path_1 = require("path");
-    var WORKLETS_SRC_ENTRY_PATH = (0, path_1.join)("react-native-worklets", "src", "index.ts");
-    var WORKLETS_LIB_ENTRY_PATH = (0, path_1.join)("react-native-worklets", "lib", "module", "index.js");
+    var WORKLETS_PACKAGE = "react-native-worklets";
+    var WORKLETS_SRC_DIR = (0, path_1.join)(WORKLETS_PACKAGE, "src");
+    var WORKLETS_LIB_DIR = (0, path_1.join)(WORKLETS_PACKAGE, "lib", "module");
+    var togglePaths = [
+      (0, path_1.join)(WORKLETS_SRC_DIR, "index.ts"),
+      (0, path_1.join)(WORKLETS_SRC_DIR, "debug", "bundleMode.native.ts"),
+      (0, path_1.join)(WORKLETS_LIB_DIR, "index.js"),
+      (0, path_1.join)(WORKLETS_LIB_DIR, "debug", "bundleMode.native.js")
+    ];
     function toggleBundleMode(path, state) {
-      var _a, _b;
-      if (!state.opts.bundleMode || !((_a = state.filename) === null || _a === void 0 ? void 0 : _a.endsWith(WORKLETS_SRC_ENTRY_PATH)) && !((_b = state.filename) === null || _b === void 0 ? void 0 : _b.endsWith(WORKLETS_LIB_ENTRY_PATH))) {
+      if (!state.opts.bundleMode || !togglePaths.some((togglePath) => {
+        var _a;
+        return (_a = state.filename) === null || _a === void 0 ? void 0 : _a.endsWith(togglePath);
+      })) {
         return;
       }
       const expressionPath = path.get("expression");

@@ -1,5 +1,6 @@
 'use strict';
 
+import { isBundleModeEnabled } from '../debug/bundleMode';
 import { registerWorkletStackDetails } from '../debug/errors';
 import { jsVersion } from '../debug/jsVersion';
 import { logger } from '../debug/logger';
@@ -217,7 +218,7 @@ export function createSerializable<TValue>(
   );
 }
 
-if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+if (isBundleModeEnabled()) {
   // TODO: Do it programmatically.
   createSerializable.__bundleData = {
     imported: 'createSerializable',
@@ -865,7 +866,7 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
 
 /** @deprecated This function is no longer supported. */
 export const makeShareableCloneOnUIRecursive = (
-  globalThis._WORKLETS_BUNDLE_MODE_ENABLED
+  isBundleModeEnabled()
     ? createSerializable
     : makeShareableCloneOnUIRecursiveLEGACY
 ) as typeof makeShareableCloneOnUIRecursiveLEGACY;

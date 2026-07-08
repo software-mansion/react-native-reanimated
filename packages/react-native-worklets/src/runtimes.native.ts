@@ -1,5 +1,6 @@
 'use strict';
 
+import { isBundleModeEnabled } from './debug/bundleMode';
 import { getStaticFeatureFlag } from './featureFlags/featureFlags';
 import { addNoBundleModeGuardImplementation } from './guardImplementation';
 import {
@@ -177,7 +178,7 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
   );
 }
 
-if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+if (!isBundleModeEnabled()) {
   function scheduleOnRuntimeWorklet<Args extends unknown[], ReturnValue>(
     workletRuntime: WorkletRuntime,
     worklet: WorkletFunction<Args, ReturnValue>,
@@ -255,7 +256,7 @@ export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
   );
 }
 
-if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+if (!isBundleModeEnabled()) {
   function scheduleOnRuntimeWithIdWorklet<Args extends unknown[], ReturnValue>(
     runtimeId: number,
     worklet: WorkletFunction<Args, ReturnValue>,
@@ -551,7 +552,7 @@ export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
   });
 }
 
-if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+if (__DEV__ && !isBundleModeEnabled()) {
   /**
    * QoL guards to give a meaningful error message when the user tries to call
    * these functions on Worklet Runtimes outside of the Bundle Mode.
