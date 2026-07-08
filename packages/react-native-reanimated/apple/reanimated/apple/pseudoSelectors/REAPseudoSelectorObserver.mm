@@ -36,15 +36,10 @@
 #endif
   NSArray *_notificationObservers;
   std::function<void(bool)> _callback;
-  // Whether this observer's `:active` recognizer is counted in the shared active-touch tally below.
   BOOL _activeTouchCounted;
 }
 
 #if !TARGET_OS_OSX
-// Single active touch: the first finger to press an `:active` / `:active-deepest` view owns it, and
-// other fingers are ignored until it (and everything it activated) lifts - matching the web. The
-// touch is shared across all observers; the count tracks how many of its recognizers are live so the
-// owner can be released once the last one ends.
 static __weak UITouch *sActivePrimaryTouch;
 static NSInteger sActiveTouchCount;
 #endif
@@ -284,17 +279,11 @@ static int _focusObserverContext;
   }
 }
 
-// Single active touch is gated here: the first finger claims `sActivePrimaryTouch`; a later finger on
-// another `:active` view is a different UITouch and is refused, so only the first press takes effect.
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch
 {
   if (![self isPressSelector]) {
     return YES;
   }
-  // A claim made here is only counted once a recognizer actually begins; a touch that claims but never
-  // begins (e.g. refused in `gestureRecognizerShouldBegin`) would otherwise pin the token until its
-  // `UITouch` deallocates. When no gesture is in flight the count is back to zero, so any lingering
-  // token is stale and the next first finger reclaims it.
   if (sActiveTouchCount == 0) {
     sActivePrimaryTouch = nil;
   }
@@ -370,14 +359,9 @@ static int _focusObserverContext;
   if (!view) {
     return NO;
   }
-  // The descendant walk below is only meaningful for :active-deepest.
-  // :active always allows, and any other selector (e.g. :hover, which shares
-  // this delegate) never participates in deepest arbitration.
   if (_selector != reanimated::PseudoSelector::ActiveDeepest) {
     return YES;
   }
-  // For :active-deepest, walk up from the hit view: if a descendant already
-  // participates in :active-deepest arbitration, that descendant owns the touch.
   CGPoint location = [gestureRecognizer locationInView:view];
 #if !TARGET_OS_OSX
   UIView *current = [view hitTest:location withEvent:nil];
@@ -424,8 +408,6 @@ static int _focusObserverContext;
   }
   _gestureRecognizer = nil;
 #if !TARGET_OS_OSX
-  // Release this observer's hold on the active touch so tearing it down mid-press cannot wedge the
-  // shared count and silently block every later `:active`.
   [self releaseActiveTouch];
 #if !TARGET_OS_TV
   if (_selector == reanimated::PseudoSelector::Hover) {

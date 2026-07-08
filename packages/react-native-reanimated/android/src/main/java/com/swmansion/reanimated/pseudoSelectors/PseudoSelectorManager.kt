@@ -16,16 +16,13 @@ import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
 class PseudoSelectorManager(
     private val fabricUIManager: FabricUIManager,
 ) {
-    // Key = "$tag:$selector" - allows multiple selectors per view.
     private val detachActions = HashMap<String, Runnable>()
 
     private val activeCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
     private val deepestCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
 
-    // A touch host can be shared by several registered views, so its listener is reference-counted.
     private val touchHostRefs = HashMap<View, Int>()
 
-    // The view the current gesture went down on, per host, so a release clears the same one.
     private val gestureDownLeaf = HashMap<View, View>()
 
     private val hover = TouchHoverCoordinator()
@@ -201,7 +198,6 @@ class PseudoSelectorManager(
             }
     }
 
-    /** The view that receives [view]'s touches: itself, or its nearest ReactCompoundView ancestor (e.g. SvgView). */
     private fun findTouchHost(view: View): View {
         var parent: ViewParent? = view.parent
         while (parent is View) {
@@ -213,7 +209,6 @@ class PseudoSelectorManager(
         return view
     }
 
-    /** The view pressed at [event]: a compound host's hit-tested virtual child, else the host itself. */
     private fun findTouchedLeaf(
         host: View,
         event: MotionEvent,
@@ -243,9 +238,6 @@ class PseudoSelectorManager(
         host.setOnTouchListener(null)
     }
 
-    // Only the first finger (pointer id 0) drives the press selectors, matching the web's single
-    // active pointer; its release can arrive as the last-finger up or early via a pointer-up while
-    // other fingers stay down.
     private fun onHostTouch(
         host: View,
         event: MotionEvent,
@@ -314,17 +306,11 @@ class PseudoSelectorManager(
         }
     }
 
-    /**
-     * Returns true if any view registered for _:active-deepest_ is a strict descendant of
-     * `ancestor` and contains the screen point (`rawX`, `rawY`), so the ancestor yields priority
-     * to the deeper view.
-     */
     private fun hasDeepestDescendantAt(
         ancestor: View,
         rawX: Float,
         rawY: Float,
     ): Boolean {
-        // With fewer than two registered views the only candidate is the ancestor itself.
         if (deepestCallbacks.size < 2) {
             return false
         }
@@ -343,7 +329,6 @@ class PseudoSelectorManager(
         return false
     }
 
-    /** Fires the callback for [source] and every ancestor registered for _:active_. */
     private fun fireActiveCallbacksUpTree(
         source: View,
         isActive: Boolean,
