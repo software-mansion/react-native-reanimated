@@ -52,6 +52,7 @@ Using npm and patch-package is a lot more problematic in patching transitive dep
    ```terminal
    npx patch-package
    ```
+
 ## Using bun
 
 Using bun for patching gives you the benefit of the bun runtime in your project (works with monorepos and `linker=isolated`). Bun's patching method generally works better in bun repos, and doesn't create any issues with transitive dependencies or the bun cache. (You should use the patches in the `patch-package` directory)
@@ -74,7 +75,7 @@ Using bun for patching gives you the benefit of the bun runtime in your project 
    ```terminal
    curl -L https://github.com/software-mansion/react-native-reanimated/raw/main/packages/react-native-worklets/bundleMode/patches/patch-package/metro/metro%2B0.84.4.patch | git apply --directory=node_modules/metro
    ```
-   AND 
+   AND
    ```terminal
    curl -L https://github.com/software-mansion/react-native-reanimated/raw/main/packages/react-native-worklets/bundleMode/patches/patch-package/metro-runtime/metro-runtime%2B0.84.4.patch | git apply --directory=node_modules/metro-runtime
    ```
@@ -86,6 +87,7 @@ Using bun for patching gives you the benefit of the bun runtime in your project 
    ```terminal
    bun patch --commit 'node_modules/metro-runtime'
    ```
+
 ## Using Yarn Classic (Yarn 1) and patch-package
 
 Instructions here are similar to the npm ones, but you should use Yarn commands instead, i.e. `yarn cache clean` and `yarn dedupe`.
