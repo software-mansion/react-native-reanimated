@@ -19,6 +19,7 @@ export default function TestApp() {
   const [reaBoxes, setReaBoxes] = useState(true);
   const [bigBox, setBigBox] = useState(false);
   const [renderNull, setRenderNull] = useState(false);
+  const [cnRows, setCnRows] = useState(true);
 
   if (renderNull) {
     // Renders an empty root: exercises the empty-root-commit path while the
@@ -64,6 +65,24 @@ export default function TestApp() {
         testID="configure-next-box"
         style={[styles.cnBox, bigBox && styles.cnBoxBig]}
       />
+
+      <Button
+        testID="cn-remove"
+        title={`configureNext ${cnRows ? 'REMOVE' : 'insert'} views (delete anim)`}
+        onPress={() => {
+          // Presets.easeInEaseOut includes a delete animation (opacity), which
+          // makes the LayoutAnimationDriver withhold the Remove/Delete
+          // mutations and replay them after the animation — the bsky crash path.
+          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+          setCnRows((v) => !v);
+        }}
+      />
+      <View style={styles.row}>
+        {cnRows &&
+          [0, 1, 2].map((i) => (
+            <View key={i} style={styles.plainBox} />
+          ))}
+      </View>
 
       <Button
         testID="render-null"
@@ -131,6 +150,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 12, height: 80 },
   row2: { flexDirection: 'row', gap: 4, flexWrap: 'wrap' },
   reaBox: { width: 60, height: 60, backgroundColor: 'tomato', borderRadius: 8 },
+  plainBox: { width: 60, height: 60, backgroundColor: 'seagreen', borderRadius: 8 },
   cnBox: { width: 60, height: 60, backgroundColor: 'royalblue', borderRadius: 8 },
   cnBoxBig: { width: 240, height: 120 },
   hint: { color: 'gray' },

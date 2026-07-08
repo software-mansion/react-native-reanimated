@@ -79,6 +79,22 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
 
   addOngoingAnimations(surfaceId, filteredMutations);
 
+  // The LayoutAnimationDriver can emit a final keyframe update in the same
+  // transaction as the deferred Remove/Delete it withheld for a delete
+  // animation. We emit removals before updates, so such an update would
+  // otherwise reach the mounting layer after its view was deleted.
+  std::unordered_set<Tag> deletedTags;
+  for (const auto &mutation : filteredMutations) {
+    if (mutation.type == ShadowViewMutation::Delete) {
+      deletedTags.insert(mutation.oldChildShadowView.tag);
+    }
+  }
+  if (!deletedTags.empty()) {
+    std::erase_if(filteredMutations, [&deletedTags](const auto &mutation) {
+      return mutation.type == ShadowViewMutation::Update && deletedTags.contains(mutation.newChildShadowView.tag);
+    });
+  }
+
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
 
