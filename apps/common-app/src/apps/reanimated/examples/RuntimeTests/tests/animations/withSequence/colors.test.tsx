@@ -17,7 +17,7 @@ import {
   test,
   useTestRef,
   wait,
-  waitForNotification,
+  waitForNotifications,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 
@@ -36,38 +36,72 @@ describe('withSequence animation of color', () => {
     ACTIVE = 'ACTIVE',
     PASSIVE = 'PASSIVE',
   }
-  const DELAY = 75;
+  const DELAY = 300;
+
+  // Notification names are prefixed per component because the two components
+  // don't run in lockstep - the test has to wait for both of them, otherwise
+  // it could sample the slower one mid-flight. Cancelled segments run their
+  // callbacks too, hence the `finished` check.
+  const segment = (
+    component: Component,
+    color: string,
+    duration: number,
+    notificationName: string
+  ) => {
+    'worklet';
+    return withDelay(
+      DELAY,
+      withTiming(color, { duration }, (finished) => {
+        if (finished) {
+          notify(`${component}_${notificationName}`);
+        }
+      })
+    );
+  };
+
+  const bothNotified = (notificationName: string) =>
+    waitForNotifications([
+      `${Component.ACTIVE}_${notificationName}`,
+      `${Component.PASSIVE}_${notificationName}`,
+    ]) as Promise<boolean>;
+
   const WidthComponent = ({
     startColor,
     middleColor,
     finalColor,
   }: TestCase) => {
-    const colorActiveSV = useSharedValue(startColor);
-    const colorPassiveSV = useSharedValue(startColor);
+    // null until the effect sets the target, so the first render applies a
+    // plain color and only one sequence animation is ever created
+    const colorActiveSV = useSharedValue<string | null>(null);
+    const colorPassiveSV = useSharedValue<string>(startColor);
 
     const refActive = useTestRef(Component.ACTIVE);
     const refPassive = useTestRef(Component.PASSIVE);
 
     const styleActive = useAnimatedStyle(() => {
+      const targetColor = colorActiveSV.value;
+      if (targetColor === null) {
+        return { backgroundColor: startColor };
+      }
       return {
         backgroundColor: withSequence(
-          withDelay(
-            DELAY,
-            withTiming(colorActiveSV.value, { duration: 200 }, () =>
-              notify(START_ANIMATION_NOTIFICATION_NAME)
-            )
+          segment(
+            Component.ACTIVE,
+            targetColor,
+            200,
+            START_ANIMATION_NOTIFICATION_NAME
           ),
-          withDelay(
-            DELAY,
-            withTiming(middleColor, { duration: 300 }, () =>
-              notify(MIDDLE_ANIMATION_NOTIFICATION_NAME)
-            )
+          segment(
+            Component.ACTIVE,
+            middleColor,
+            300,
+            MIDDLE_ANIMATION_NOTIFICATION_NAME
           ),
-          withDelay(
-            DELAY,
-            withTiming(colorActiveSV.value, { duration: 200 }, () =>
-              notify(FINAL_ANIMATION_NOTIFICATION_NAME)
-            )
+          segment(
+            Component.ACTIVE,
+            targetColor,
+            200,
+            FINAL_ANIMATION_NOTIFICATION_NAME
           )
         ),
       };
@@ -84,23 +118,23 @@ describe('withSequence animation of color', () => {
 
     useEffect(() => {
       colorPassiveSV.value = withSequence(
-        withDelay(
-          DELAY,
-          withTiming(finalColor, { duration: 200 }, () =>
-            notify(START_ANIMATION_NOTIFICATION_NAME)
-          )
+        segment(
+          Component.PASSIVE,
+          finalColor,
+          200,
+          START_ANIMATION_NOTIFICATION_NAME
         ),
-        withDelay(
-          DELAY,
-          withTiming(middleColor, { duration: 300 }, () =>
-            notify(MIDDLE_ANIMATION_NOTIFICATION_NAME)
-          )
+        segment(
+          Component.PASSIVE,
+          middleColor,
+          300,
+          MIDDLE_ANIMATION_NOTIFICATION_NAME
         ),
-        withDelay(
-          DELAY,
-          withTiming(finalColor, { duration: 200 }, () =>
-            notify(FINAL_ANIMATION_NOTIFICATION_NAME)
-          )
+        segment(
+          Component.PASSIVE,
+          finalColor,
+          200,
+          FINAL_ANIMATION_NOTIFICATION_NAME
         )
       );
     }, [colorPassiveSV, finalColor, middleColor]);
@@ -190,17 +224,15 @@ describe('withSequence animation of color', () => {
 
       await wait(DELAY / 2);
       // TODO: There is inconsistency in parsing props, we don't parse colors properly during first frame (render).
-      // It will be fixed in the future.
+      // It will be fixed in the future. The active component renders its first color through that path,
+      // so only the passive one is checked here.
       if (!startColor.startsWith('hwb')) {
-        expect(
-          await activeComponent.getAnimatedStyle('backgroundColor')
-        ).not.toBe(startColor, ComparisonMode.COLOR);
         expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(
           startColor,
           ComparisonMode.COLOR
         );
       }
-      await waitForNotification(START_ANIMATION_NOTIFICATION_NAME);
+      expect(await bothNotified(START_ANIMATION_NOTIFICATION_NAME)).toBe(true);
       expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(
         finalColor,
         ComparisonMode.COLOR
@@ -209,7 +241,7 @@ describe('withSequence animation of color', () => {
         finalColor,
         ComparisonMode.COLOR
       );
-      await waitForNotification(MIDDLE_ANIMATION_NOTIFICATION_NAME);
+      expect(await bothNotified(MIDDLE_ANIMATION_NOTIFICATION_NAME)).toBe(true);
       expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(
         middleColor,
         ComparisonMode.COLOR
@@ -218,7 +250,7 @@ describe('withSequence animation of color', () => {
         middleColor,
         ComparisonMode.COLOR
       );
-      await waitForNotification(FINAL_ANIMATION_NOTIFICATION_NAME);
+      expect(await bothNotified(FINAL_ANIMATION_NOTIFICATION_NAME)).toBe(true);
       expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(
         finalColor,
         ComparisonMode.COLOR
