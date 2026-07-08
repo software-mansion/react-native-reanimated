@@ -1,3 +1,4 @@
+#include <glog/logging.h> // TODO(test-only): remove before merging
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
@@ -23,8 +24,11 @@ ReanimatedCommitHook::ReanimatedCommitHook(
   uiManager_->registerMountHook(*this);
   // Pick up surfaces that existed before Reanimated initialized. We're not
   // on a commit stack here, so reading the registry is safe.
-  uiManager_->getShadowTreeRegistry().enumerate(
-      [this](const ShadowTree &shadowTree, bool & /*stop*/) { maybeInitializeLayoutAnimations(shadowTree); });
+  uiManager_->getShadowTreeRegistry().enumerate([this](const ShadowTree &shadowTree, bool & /*stop*/) {
+    // TODO(test-only): remove before merging
+    LOG(INFO) << "[REA-TEST] init-enumerate found surface " << shadowTree.getSurfaceId();
+    maybeInitializeLayoutAnimations(shadowTree);
+  });
 }
 
 ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
@@ -46,6 +50,8 @@ void ReanimatedCommitHook::maybeInitializeLayoutAnimations(const ShadowTree &sha
   // surfaces.
   layoutAnimationsProxy_->startSurface(shadowTree.getSurfaceId());
   shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(layoutAnimationsProxy_);
+  // TODO(test-only): remove before merging
+  LOG(INFO) << "[REA-TEST] initialized LA for surface " << shadowTree.getSurfaceId();
 }
 
 void ReanimatedCommitHook::shadowTreeDidUnmount(SurfaceId surfaceId, HighResTimeStamp /*unmountTime*/) noexcept {
