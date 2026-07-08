@@ -1,5 +1,9 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
+exports[`babel plugin in bundleMode bundle mode flag toggle does not flip the flag in unrelated files 1`] = `"globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;"`;
+
+exports[`babel plugin in bundleMode bundle mode flag toggle does not flip the flag without bundleMode option 1`] = `"globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;"`;
+
 exports[`babel plugin in bundleMode nested worklets extracts each nested worklet into its own file 1`] = `"const foo = require("react-native-worklets/.worklets/16646339867656.js").default({});"`;
 
 exports[`babel plugin in bundleMode nested worklets extracts each nested worklet into its own file 2`] = `
@@ -151,9 +155,3 @@ exports[`babel plugin in bundleMode worklet file emission written file content h
 `;
 
 exports[`babel plugin in bundleMode worklet file emission written file path matches the require path 1`] = `"const foo = require("react-native-worklets/.worklets/16618675255854.js").default({});"`;
-
-exports[`babel plugin in bundleMode worklet runtime entry-point toggle does not flip the flag in unrelated files 1`] = `"globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;"`;
-
-exports[`babel plugin in bundleMode worklet runtime entry-point toggle does not flip the flag without bundleMode option 1`] = `"globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;"`;
-
-exports[`babel plugin in bundleMode worklet runtime entry-point toggle flips _WORKLETS_BUNDLE_MODE_ENABLED to true in the entry-point 1`] = `"globalThis._WORKLETS_BUNDLE_MODE_ENABLED = true;"`;

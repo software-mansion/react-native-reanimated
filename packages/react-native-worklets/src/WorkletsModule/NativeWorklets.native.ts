@@ -1,5 +1,6 @@
 'use strict';
 
+import { isBundleModeEnabled } from '../debug/bundleMode';
 import { checkCppVersion } from '../debug/checkCppVersion';
 import { jsVersion } from '../debug/jsVersion';
 import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
@@ -29,7 +30,7 @@ class NativeWorklets implements IWorkletsModule {
   #serializableFalse: SerializableRef<boolean>;
 
   constructor() {
-    const bundleModeEnabled = globalThis._WORKLETS_BUNDLE_MODE_ENABLED ?? false;
+    const bundleModeEnabled = isBundleModeEnabled();
     globalThis._WORKLETS_VERSION_JS = jsVersion;
     const onRNRuntime = isRNRuntime();
     if (globalThis.__workletsModuleProxy === undefined && onRNRuntime) {
