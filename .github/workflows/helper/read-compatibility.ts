@@ -1,8 +1,10 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const compatibilityPath = path.join(
-  __dirname,
+  currentDir,
   '..',
   '..',
   '..',
@@ -14,7 +16,7 @@ const compatibilityData = JSON.parse(
   fs.readFileSync(compatibilityPath, 'utf8')
 );
 
-const versions = compatibilityData['fabric']['nightly']['react-native'];
+const versions = compatibilityData.fabric.nightly['react-native'];
 const versionsJson = JSON.stringify(versions);
 
 const versionsWithNightly = [...versions, 'nightly'];

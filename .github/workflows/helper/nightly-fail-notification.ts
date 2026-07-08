@@ -15,7 +15,6 @@ type BadgeResult = BadgeInfo & {
 };
 
 const GITHUB_ACTIONS_BADGE_REGEX =
-  // @ts-expect-error It's fine to use capture groups here.
   /\[!\[(?<name>(?:[^[\]]|\[[^\]]*\])+)\]\((?<badgeUrl>https:\/\/github\.com\/software-mansion\/react-native-reanimated\/actions\/workflows\/[^)]+\/badge\.svg[^)]*)\)\]\((?<workflowUrl>https:\/\/github\.com\/software-mansion\/react-native-reanimated\/actions\/workflows\/[^)]+)\)/g;
 
 function parseBadgeStatus(svg: string): BadgeStatus {
