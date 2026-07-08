@@ -155,5 +155,3 @@ exports[`babel plugin in bundleMode worklet file emission written file path matc
 exports[`babel plugin in bundleMode worklet runtime entry-point toggle does not flip the flag in unrelated files 1`] = `"globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;"`;
 
 exports[`babel plugin in bundleMode worklet runtime entry-point toggle does not flip the flag without bundleMode option 1`] = `"globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;"`;
-
-exports[`babel plugin in bundleMode worklet runtime entry-point toggle flips _WORKLETS_BUNDLE_MODE_ENABLED to true in the entry-point 1`] = `"globalThis._WORKLETS_BUNDLE_MODE_ENABLED = true;"`;

@@ -1583,11 +1583,20 @@ var require_bundleMode = __commonJS({
     exports2.toggleBundleMode = toggleBundleMode;
     var types_12 = require("@babel/types");
     var path_1 = require("path");
-    var WORKLETS_SRC_ENTRY_PATH = (0, path_1.join)("react-native-worklets", "src", "index.ts");
-    var WORKLETS_LIB_ENTRY_PATH = (0, path_1.join)("react-native-worklets", "lib", "module", "index.js");
+    var WORKLETS_PACKAGE = "react-native-worklets";
+    var WORKLETS_SRC_DIR = (0, path_1.join)(WORKLETS_PACKAGE, "src");
+    var WORKLETS_LIB_DIR = (0, path_1.join)(WORKLETS_PACKAGE, "lib", "module");
+    var togglePaths = [
+      (0, path_1.join)(WORKLETS_SRC_DIR, "index.ts"),
+      (0, path_1.join)(WORKLETS_SRC_DIR, "debug", "bundleMode.native.ts"),
+      (0, path_1.join)(WORKLETS_LIB_DIR, "index.js"),
+      (0, path_1.join)(WORKLETS_LIB_DIR, "debug", "bundleMode.native.js")
+    ];
     function toggleBundleMode(path, state) {
-      var _a, _b;
-      if (!state.opts.bundleMode || !((_a = state.filename) === null || _a === void 0 ? void 0 : _a.endsWith(WORKLETS_SRC_ENTRY_PATH)) && !((_b = state.filename) === null || _b === void 0 ? void 0 : _b.endsWith(WORKLETS_LIB_ENTRY_PATH))) {
+      if (!state.opts.bundleMode || !togglePaths.some((togglePath) => {
+        var _a;
+        return (_a = state.filename) === null || _a === void 0 ? void 0 : _a.endsWith(togglePath);
+      })) {
         return;
       }
       const expressionPath = path.get("expression");
