@@ -14,7 +14,7 @@
 #endif
 - (void)attachActiveGestureRecognizerToView:(REAUIView *)view;
 - (void)attachHoverToView:(REAUIView *)view;
-- (BOOL)participatesInActiveDeepestArbitration;
+- (BOOL)isPressSelector;
 #if !TARGET_OS_OSX
 - (void)attachFocusToView:(REAUIView *)view;
 - (void)attachFocusWithinToView:(REAUIView *)view;
@@ -36,7 +36,13 @@
 #endif
   NSArray *_notificationObservers;
   std::function<void(bool)> _callback;
+  BOOL _activeTouchCounted;
 }
+
+#if !TARGET_OS_OSX
+static __weak UITouch *sActivePrimaryTouch;
+static NSInteger sActiveTouchCount;
+#endif
 
 - (instancetype)initWithView:(REAUIView *)view
                     selector:(reanimated::PseudoSelector)selector
@@ -260,14 +266,51 @@ static int _focusObserverContext;
   switch (recognizer.state) {
     case UIGestureRecognizerStateBegan:
       _callback(true);
+      [self retainActiveTouch];
       break;
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled:
     case UIGestureRecognizerStateFailed:
       _callback(false);
+      [self releaseActiveTouch];
       break;
     default:
       break;
+  }
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch
+{
+  if (![self isPressSelector]) {
+    return YES;
+  }
+  if (sActiveTouchCount == 0) {
+    sActivePrimaryTouch = nil;
+  }
+  if (sActivePrimaryTouch == nil) {
+    sActivePrimaryTouch = touch;
+    return YES;
+  }
+  return sActivePrimaryTouch == touch;
+}
+
+- (void)retainActiveTouch
+{
+  if ([self isPressSelector] && !_activeTouchCounted) {
+    _activeTouchCounted = YES;
+    sActiveTouchCount++;
+  }
+}
+
+- (void)releaseActiveTouch
+{
+  if (!_activeTouchCounted) {
+    return;
+  }
+  _activeTouchCounted = NO;
+  if (--sActiveTouchCount <= 0) {
+    sActiveTouchCount = 0;
+    sActivePrimaryTouch = nil;
   }
 }
 
@@ -301,7 +344,7 @@ static int _focusObserverContext;
 
 #endif // TARGET_OS_OSX
 
-- (BOOL)participatesInActiveDeepestArbitration
+- (BOOL)isPressSelector
 {
   return _selector == reanimated::PseudoSelector::Active || _selector == reanimated::PseudoSelector::ActiveDeepest;
 }
@@ -316,21 +359,16 @@ static int _focusObserverContext;
   if (!view) {
     return NO;
   }
-  // The descendant walk below is only meaningful for :active-deepest.
-  // :active always allows, and any other selector (e.g. :hover, which shares
-  // this delegate) never participates in deepest arbitration.
   if (_selector != reanimated::PseudoSelector::ActiveDeepest) {
     return YES;
   }
-  // For :active-deepest, walk up from the hit view: if a descendant already
-  // participates in :active-deepest arbitration, that descendant owns the touch.
   CGPoint location = [gestureRecognizer locationInView:view];
 #if !TARGET_OS_OSX
   UIView *current = [view hitTest:location withEvent:nil];
   while (current && current != view) {
     for (UIGestureRecognizer *gr in current.gestureRecognizers) {
       if ([gr.delegate isKindOfClass:[REAPseudoSelectorObserver class]] &&
-          [(REAPseudoSelectorObserver *)gr.delegate participatesInActiveDeepestArbitration]) {
+          [(REAPseudoSelectorObserver *)gr.delegate isPressSelector]) {
         return NO;
       }
     }
@@ -342,7 +380,7 @@ static int _focusObserverContext;
   while (current && current != view) {
     for (NSGestureRecognizer *gr in current.gestureRecognizers) {
       if ([gr.delegate isKindOfClass:[REAPseudoSelectorObserver class]] &&
-          [(REAPseudoSelectorObserver *)gr.delegate participatesInActiveDeepestArbitration]) {
+          [(REAPseudoSelectorObserver *)gr.delegate isPressSelector]) {
         return NO;
       }
     }
@@ -369,10 +407,13 @@ static int _focusObserverContext;
     [_view removeGestureRecognizer:_gestureRecognizer];
   }
   _gestureRecognizer = nil;
-#if !TARGET_OS_OSX && !TARGET_OS_TV
+#if !TARGET_OS_OSX
+  [self releaseActiveTouch];
+#if !TARGET_OS_TV
   if (_selector == reanimated::PseudoSelector::Hover) {
     [[REATouchHoverCoordinator sharedCoordinator] unregisterObserver:self];
   }
+#endif
 #endif
 #if TARGET_OS_OSX
   if (_trackingArea && _view) {
