@@ -4,7 +4,6 @@ import {
   toggleSlowAnimationsOnUIRuntime,
 } from 'react-native-worklets';
 
-import { IS_JEST } from './common';
 import { initSvgCssSupport } from './css/svg';
 import { getStaticFeatureFlag } from './featureFlags';
 import type { IReanimatedModule } from './ReanimatedModule';
@@ -22,12 +21,9 @@ export function initializeReanimatedModule(
   }
 }
 
-// is-tree-shakable-suppress
-if (!IS_JEST) {
-  globalThis.__toggleSlowAnimationsOnUIRuntime = () =>
-    toggleSlowAnimationsOnUIRuntime();
-  runOnUISync(() => {
-    'worklet';
-    global._tagToJSPropNamesMapping = {};
-  });
-}
+globalThis.__toggleSlowAnimationsOnUIRuntime = () =>
+  toggleSlowAnimationsOnUIRuntime();
+runOnUISync(() => {
+  'worklet';
+  global._tagToJSPropNamesMapping = {};
+});

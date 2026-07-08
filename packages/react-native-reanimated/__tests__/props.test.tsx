@@ -11,6 +11,12 @@ import Animated, {
 } from '../src';
 import { processBoxShadow, processColor } from '../src/common';
 
+jest.mock('../src/initializers', () =>
+  jest.requireActual('../src/initializers.ts')
+);
+jest.mock('../src/mutables', () => jest.requireActual('../src/mutables.ts'));
+jest.mock('../src/mappers', () => jest.requireActual('../src/mappers.ts'));
+
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const AnimatedComponent = () => {

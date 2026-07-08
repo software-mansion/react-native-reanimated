@@ -9,12 +9,10 @@ import {
   UIRuntimeId,
 } from 'react-native-worklets';
 
-import { IS_JEST } from './common';
 import {
   addCompilerSafeGetAndSet,
   checkInvalidReadDuringRender,
   checkInvalidWriteDuringRender,
-  makeMutableWeb,
   mutableHostDecorator,
 } from './commonMutables';
 import type { Mutable } from './commonTypes';
@@ -126,7 +124,7 @@ function mutableGuestDecorator<TValue>(
   return mutable;
 }
 
-function makeMutableNative<TValue>(initial: TValue): Mutable<TValue> {
+export function makeMutable<TValue>(initial: TValue): Mutable<TValue> {
   const dirtyFlag = USE_SYNCHRONIZABLE_FOR_MUTABLES
     ? createSynchronizable(false)
     : undefined;
@@ -148,5 +146,3 @@ function makeMutableNative<TValue>(initial: TValue): Mutable<TValue> {
 
   return shareable;
 }
-
-export const makeMutable = IS_JEST ? makeMutableWeb : makeMutableNative;

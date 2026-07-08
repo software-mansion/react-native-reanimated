@@ -1,6 +1,5 @@
 'use strict';
 
-import { IS_JEST } from './common';
 import type { Mapper, MapperExtractedInputs } from './commonMappers';
 import { makeStartMapper } from './commonMappers';
 import type { MapperOutputs, MapperRawInputs } from './commonTypes';
@@ -13,7 +12,6 @@ function createMapperRegistry() {
   const mappers = new Map<number, Mapper>();
   let sortedMappers: Mapper[] = [];
 
-  let runRequested = false;
   let processingMappers = false;
 
   function updateMappersOrder() {
@@ -109,54 +107,17 @@ function createMapperRegistry() {
     }
   }
 
-  const schedulingFunction = IS_JEST
-    ? requestAnimationFrame
-    : globalThis.requestAnimationFrameFinalizer;
+  const schedulingFunction = globalThis.requestAnimationFrameFinalizer;
 
   function scheduledMapperRun() {
-    runRequested = false;
     mapperRun();
-    if (!IS_JEST) {
-      // We always run mappers on native.
-      schedulingFunction(scheduledMapperRun);
-    }
-  }
-
-  if (!IS_JEST) {
+    // We always run mappers on native.
     schedulingFunction(scheduledMapperRun);
   }
 
-  global.__mapperRun = mapperRun;
+  schedulingFunction(scheduledMapperRun);
 
-  function maybeRequestUpdates() {
-    if (IS_JEST) {
-      // On Jest environment we avoid using queueMicrotask as that'd require test
-      // to advance the clock manually. This on other hand would require tests
-      // to know how many times mappers need to run. As we don't want tests to
-      // make any assumptions on that number it is easier to execute mappers
-      // immediately for testing purposes and only expect test to advance timers
-      // if they want to make any assertions on the effects of animations being run.
-      mapperRun();
-    } else if (!runRequested) {
-      if (processingMappers) {
-        // In general, we should avoid having mappers trigger updates as this may
-        // result in unpredictable behavior. Specifically, the updated value can
-        // be read by mappers that run later in the same frame but previous mappers
-        // would access the old value. Updating mappers during the mapper-run phase
-        // breaks the order in which we should execute the mappers. However, doing
-        // that is still a possibility and there are some instances where people use
-        // the API in that way, hence we need to prevent mapper-run phase falling into
-        // an infinite loop. We do that by detecting when mapper-run is requested while
-        // we are already in mapper-run phase, and in that case we use `requestAnimationFrame`
-        // instead of `queueMicrotask` which will schedule mapper run for the next
-        // frame instead of queuing another set of updates in the same frame.
-        schedulingFunction(scheduledMapperRun);
-      } else {
-        queueMicrotask(scheduledMapperRun);
-      }
-      runRequested = true;
-    }
-  }
+  global.__mapperRun = mapperRun;
 
   function extractInputs(
     inputs: unknown,
@@ -204,13 +165,7 @@ function createMapperRegistry() {
         sv.addListener(mapper.id, () => {
           mapper.dirty = true;
           isAnyMapperDirty = true;
-          if (IS_JEST) {
-            maybeRequestUpdates();
-          }
         });
-      }
-      if (IS_JEST) {
-        maybeRequestUpdates();
       }
     },
     stop: (mapperID: number) => {

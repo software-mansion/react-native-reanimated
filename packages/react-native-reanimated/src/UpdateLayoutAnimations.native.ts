@@ -1,7 +1,6 @@
 'use strict';
 import { createSerializable } from 'react-native-worklets';
 
-import { IS_JEST } from './common';
 import type {
   LayoutAnimationBatchItem,
   LayoutAnimationFunction,
@@ -51,35 +50,21 @@ function createUpdateManager() {
  *   those that were updated later). This is used to retain the correct ordering
  *   of shared elements. Defaults to `false`.
  */
-export let updateLayoutAnimations: (
+const updateLayoutAnimationsManager = createUpdateManager();
+
+export const updateLayoutAnimations: (
   viewTag: number,
   type: LayoutAnimationType,
   config?: Keyframe | LayoutAnimationFunction,
   isUnmounting?: boolean,
   sharedTransitionTag?: string
-) => void;
-
-// is-tree-shakable-suppress
-if (IS_JEST) {
-  updateLayoutAnimations = () => {
-    // no-op
-  };
-} else {
-  const updateLayoutAnimationsManager = createUpdateManager();
-  updateLayoutAnimations = (
-    viewTag,
-    type,
-    config,
-    isUnmounting,
-    sharedTransitionTag
-  ) =>
-    updateLayoutAnimationsManager.update(
-      {
-        viewTag,
-        type,
-        config: config ? createSerializable(config) : undefined,
-        sharedTransitionTag,
-      },
-      isUnmounting
-    );
-}
+) => void = (viewTag, type, config, isUnmounting, sharedTransitionTag) =>
+  updateLayoutAnimationsManager.update(
+    {
+      viewTag,
+      type,
+      config: config ? createSerializable(config) : undefined,
+      sharedTransitionTag,
+    },
+    isUnmounting
+  );
