@@ -1,12 +1,10 @@
 'use strict';
-import { IS_WINDOW_AVAILABLE } from './common';
 import { createReducedMotionManager } from './ReducedMotionCommon';
 
+type localGlobal = typeof global & Record<string, unknown>;
+
 export function isReducedMotionEnabledInSystem() {
-  return IS_WINDOW_AVAILABLE
-    ? // @ts-ignore Fallback if `window` is undefined.
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    : false;
+  return !!(global as localGlobal)._REANIMATED_IS_REDUCED_MOTION;
 }
 
 export const ReducedMotionManager = createReducedMotionManager(
