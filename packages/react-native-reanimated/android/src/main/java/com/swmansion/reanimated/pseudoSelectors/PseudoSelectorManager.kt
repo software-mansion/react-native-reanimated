@@ -413,6 +413,20 @@ class PseudoSelectorManager(
         }
     }
 
+    // Per-view/per-window listeners are removed by their detach actions as views unmount; these two outlive
+    // that (the mount listener on the UIManager and the ExtraWindowEventListener on the ReactContext), so
+    // drop them when the context is invalidated instead of leaving them registered on the dying context.
+    fun invalidate() {
+        UiThreadUtil.runOnUiThread {
+            if (mountListenerRegistered) {
+                fabricUIManager.removeUIManagerEventListener(mountListener)
+                mountListenerRegistered = false
+            }
+            extraWindowBridge?.uninstall()
+            extraWindowBridge = null
+        }
+    }
+
     // A pressed ancestor yields its :active-deepest to a deeper registered view covering the same point.
     private fun hasDeepestDescendantAt(
         ancestor: View,
