@@ -69,8 +69,6 @@ export const _updatePropsJS = (
       updatePropsDOM(component, rawStyles, isAnimatedProps);
     } else if (component.props && Object.keys(component.props).length > 0) {
       Object.keys(component.props).forEach((key) => {
-        // Presence test, not truthiness - a real update of 0 / '' / false is
-        // still an update and must be applied.
         if (!(key in rawStyles)) {
           return;
         }
