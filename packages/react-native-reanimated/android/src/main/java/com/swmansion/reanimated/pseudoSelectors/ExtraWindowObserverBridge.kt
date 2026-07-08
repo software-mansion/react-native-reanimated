@@ -5,12 +5,6 @@ import android.view.Window
 import com.facebook.react.bridge.ReactContext
 import java.lang.reflect.Proxy
 
-/**
- * Feeds each Modal/Dialog window into [TouchHoverCoordinator] via RN 0.86+'s public
- * `ExtraWindowEventListener`. It is bound by reflection + a [Proxy] rather than implemented directly,
- * because that interface is absent before RN 0.86 while reanimated compiles one source tree against RN
- * 0.83-0.86. The proxy also answers equals/hashCode/toString, since the listener lands in a hashed set.
- */
 internal class ExtraWindowObserverBridge(
     private val reactContext: ReactContext,
     private val hover: TouchHoverCoordinator,
