@@ -231,7 +231,7 @@ class PseudoSelectorManager(
             return
         }
         for (host in pressHosts()) {
-            if (gestureByHost.containsKey(host) || !hostContainsScreen(host, event.rawX, event.rawY)) {
+            if (gestureByHost.containsKey(host) || !viewContainsScreenPoint(host, event.rawX, event.rawY)) {
                 continue
             }
             val leaf = findTouchedLeaf(host, event.rawX, event.rawY) ?: continue
@@ -259,14 +259,14 @@ class PseudoSelectorManager(
         return hosts
     }
 
-    private fun hostContainsScreen(
-        host: View,
+    private fun viewContainsScreenPoint(
+        view: View,
         rawX: Float,
         rawY: Float,
     ): Boolean {
         val loc = IntArray(2)
-        host.getLocationOnScreen(loc)
-        return rawX >= loc[0] && rawX < loc[0] + host.width && rawY >= loc[1] && rawY < loc[1] + host.height
+        view.getLocationOnScreen(loc)
+        return rawX >= loc[0] && rawX <= loc[0] + view.width && rawY >= loc[1] && rawY <= loc[1] + view.height
     }
 
     // The element under a screen point: reactTagForTouch geometrically resolves the compound host's
@@ -422,15 +422,11 @@ class PseudoSelectorManager(
         if (deepestCallbacks.size < 2) {
             return false
         }
-        val loc = IntArray(2)
         // TODO: Optimize so we don't iterate over all the views with :active-deepest every time.
         for (candidate in deepestCallbacks.keys) {
             if (candidate === ancestor) continue
             if (!isDescendantOf(candidate, ancestor)) continue
-            candidate.getLocationOnScreen(loc)
-            if (rawX >= loc[0] && rawX <= loc[0] + candidate.width &&
-                rawY >= loc[1] && rawY <= loc[1] + candidate.height
-            ) {
+            if (viewContainsScreenPoint(candidate, rawX, rawY)) {
                 return true
             }
         }
