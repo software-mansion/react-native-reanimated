@@ -2688,4 +2688,22 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
   });
+
+  describe('for react-compiler', () => {
+    test('adds worklet directives to functions before react-compiler outlines them', () => {
+      const input = html`<script>
+        const TestComponent = ({ number }) => {
+          const keyToIndex = useDerivedValue(() => [1, 2, 3].map(() => null));
+
+          return null;
+        };
+      </script>`;
+
+      const { code } = runPlugin(input, {
+        plugins: ['babel-plugin-react-compiler'],
+      });
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
+  });
 });

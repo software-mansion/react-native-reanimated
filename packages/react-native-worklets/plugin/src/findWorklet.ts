@@ -34,3 +34,52 @@ export function findWorklet(
   }
   return undefined;
 }
+
+export function forEachWorkletizableFunction(
+  arg: NodePath,
+  state: WorkletsPluginPass,
+  acceptWorkletizableFunction: boolean,
+  acceptObject: boolean,
+  callback: (path: NodePath<WorkletizableFunction>) => void
+): void {
+  const maybeWorklet = findWorklet(
+    arg,
+    state,
+    acceptWorkletizableFunction,
+    acceptObject
+  );
+  if (!maybeWorklet) {
+    return;
+  }
+  if (isWorkletizableFunctionPath(maybeWorklet)) {
+    callback(maybeWorklet);
+  } else if (isWorkletizableObjectPath(maybeWorklet)) {
+    forEachWorkletizableObjectProperty(maybeWorklet, state, callback);
+  }
+}
+
+export function forEachWorkletizableObjectProperty(
+  path: NodePath<WorkletizableObject>,
+  state: WorkletsPluginPass,
+  callback: (path: NodePath<WorkletizableFunction>) => void
+): void {
+  const properties = path.get('properties');
+  for (const property of properties) {
+    if (property.isObjectMethod()) {
+      callback(property);
+    } else if (property.isObjectProperty()) {
+      const value = property.get('value');
+      forEachWorkletizableFunction(
+        value,
+        state,
+        true, // acceptWorkletizableFunction
+        false, // acceptObject
+        callback
+      );
+    } else {
+      throw new Error(
+        `'${property.type}' as to-be workletized argument is not supported for object hooks.`
+      );
+    }
+  }
+}
