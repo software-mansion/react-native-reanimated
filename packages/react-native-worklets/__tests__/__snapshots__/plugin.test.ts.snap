@@ -160,6 +160,8 @@ FadeIn.withCallback(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('FadeIn with build after');
   };
   null1.__closure = {};
@@ -184,6 +186,8 @@ new FadeIn().withCallback(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('FadeIn with build after');
   };
   null1.__closure = {};
@@ -208,6 +212,8 @@ FadeIn.build().withCallback(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('FadeIn with build before');
   };
   null1.__closure = {};
@@ -232,6 +238,8 @@ new FadeIn().build().withCallback(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('FadeIn with build before');
   };
   null1.__closure = {};
@@ -256,6 +264,8 @@ FadeIn.build().duration().withCallback(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('FadeIn with build');
   };
   null1.__closure = {};
@@ -280,6 +290,8 @@ new FadeIn().build().duration().withCallback(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('FadeIn with build');
   };
   null1.__closure = {};
@@ -304,6 +316,8 @@ FadeIn.withCallback(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('FadeIn with AmogusIn after');
   };
   null1.__closure = {};
@@ -328,6 +342,8 @@ new FadeIn().withCallback(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('FadeIn with AmogusIn after');
   };
   null1.__closure = {};
@@ -352,6 +368,8 @@ FadeIn.withCallback(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('FadeIn');
   };
   null1.__closure = {};
@@ -376,6 +394,8 @@ new FadeIn().withCallback(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('FadeIn');
   };
   null1.__closure = {};
@@ -1020,6 +1040,8 @@ const foo = useAnimatedStyle(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     const x = 1;
   };
   null1.__closure = {};
@@ -1041,6 +1063,8 @@ const foo = useAnimatedStyle(function null1Factory({
   _worklet_317748698275_init_data
 }) {
   const null1 = function () {
+    "use no memo";
+
     const x = 1;
   };
   null1.__closure = {};
@@ -1060,6 +1084,8 @@ const foo = useAnimatedStyle(function null1Factory({
   _worklet_317748698275_init_data
 }) {
   const null1 = function () {
+    "use no memo";
+
     const x = 1;
   };
   null1.__closure = {};
@@ -2208,6 +2234,8 @@ const animatedStyle = useAnimatedStyle(function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
+    "use no memo";
+
     return {
       width: 50
     };
@@ -2234,6 +2262,8 @@ const animatedStyle = useAnimatedStyle(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return {
       width: 50
     };
@@ -2260,6 +2290,8 @@ const style = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return {
       color: 'red',
       backgroundColor: 'blue'
@@ -2397,6 +2429,8 @@ useAnimatedScrollHandler(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function (event) {
+    "use no memo";
+
     console.log(event);
   };
   null1.__closure = {};
@@ -2441,7 +2475,9 @@ useAnimatedScrollHandler({
     _worklet_15695285586601_init_data
   }) {
     const _e = [new global.Error(), 1, -27];
-    const null1 = function () {};
+    const null1 = function () {
+      "use no memo";
+    };
     null1.__closure = {};
     null1.__workletHash = 15695285586601;
     null1.__pluginVersion = "x.y.z";
@@ -2455,7 +2491,9 @@ useAnimatedScrollHandler({
     _worklet_15793781905194_init_data
   }) {
     const _e = [new global.Error(), 1, -27];
-    const null2 = function () {};
+    const null2 = function () {
+      "use no memo";
+    };
     null2.__closure = {};
     null2.__workletHash = 15793781905194;
     null2.__pluginVersion = "x.y.z";
@@ -2469,7 +2507,9 @@ useAnimatedScrollHandler({
     _worklet_6645178700715_init_data
   }) {
     const _e = [new global.Error(), 1, -27];
-    const null3 = function () {};
+    const null3 = function () {
+      "use no memo";
+    };
     null3.__closure = {};
     null3.__workletHash = 6645178700715;
     null3.__pluginVersion = "x.y.z";
@@ -2483,7 +2523,9 @@ useAnimatedScrollHandler({
     _worklet_15833406824748_init_data
   }) {
     const _e = [new global.Error(), 1, -27];
-    const null4 = function () {};
+    const null4 = function () {
+      "use no memo";
+    };
     null4.__closure = {};
     null4.__workletHash = 15833406824748;
     null4.__pluginVersion = "x.y.z";
@@ -2497,7 +2539,9 @@ useAnimatedScrollHandler({
     _worklet_6687899605933_init_data
   }) {
     const _e = [new global.Error(), 1, -27];
-    const null5 = function () {};
+    const null5 = function () {
+      "use no memo";
+    };
     null5.__closure = {};
     null5.__workletHash = 6687899605933;
     null5.__pluginVersion = "x.y.z";
@@ -2521,6 +2565,8 @@ useAnimatedScrollHandler(function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function (event) {
+    "use no memo";
+
     console.log(event);
   };
   foo.__closure = {};
@@ -2545,6 +2591,8 @@ useAnimatedScrollHandler(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function (event) {
+    "use no memo";
+
     console.log(event);
   };
   null1.__closure = {};
@@ -2570,6 +2618,8 @@ useAnimatedScrollHandler({
   }) {
     const _e = [new global.Error(), 1, -27];
     const null1 = function (event) {
+      "use no memo";
+
       console.log(event);
     };
     null1.__closure = {};
@@ -2596,6 +2646,8 @@ useAnimatedScrollHandler({
   }) {
     const _e = [new global.Error(), 1, -27];
     const onScroll = function (event) {
+      "use no memo";
+
       console.log(event);
     };
     onScroll.__closure = {};
@@ -2622,6 +2674,8 @@ useAnimatedScrollHandler({
   }) {
     const _e = [new global.Error(), 1, -27];
     const onScroll = function (event) {
+      "use no memo";
+
       console.log(event);
     };
     onScroll.__closure = {};
@@ -2648,6 +2702,8 @@ useAnimatedScrollHandler({
   }) {
     const _e = [new global.Error(), 1, -27];
     const null1 = function (event) {
+      "use no memo";
+
       console.log(event);
     };
     null1.__closure = {};
@@ -2660,6 +2716,50 @@ useAnimatedScrollHandler({
     _worklet_13398616180494_init_data
   })
 });"
+`;
+
+exports[`babel plugin for react-compiler adds worklet directives to functions before react-compiler outlines them 1`] = `
+"import { c as _c } from "react/compiler-runtime";
+const _worklet_13965742592370_init_data = {
+  code: "(function null1(){return[1,2,3].map(function(){return null;});})",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+const TestComponent = t0 => {
+  const $ = _c(2);
+  if ($[0] !== "334946d229dc920aaf28bb8fd0705f10807290a3162fa05fe7deecf7dce3a2a2") {
+    for (let $i = 0; $i < 2; $i += 1) {
+      $[$i] = Symbol.for("react.memo_cache_sentinel");
+    }
+    $[0] = "334946d229dc920aaf28bb8fd0705f10807290a3162fa05fe7deecf7dce3a2a2";
+  }
+  let t1;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = function null1Factory({
+      _worklet_13965742592370_init_data
+    }) {
+      const _e = [new global.Error(), 1, -27];
+      const null1 = function () {
+        "use no memo";
+
+        return [1, 2, 3].map(() => null);
+      };
+      null1.__closure = {};
+      null1.__workletHash = 13965742592370;
+      null1.__pluginVersion = "x.y.z";
+      null1.__initData = _worklet_13965742592370_init_data;
+      null1.__stackDetails = _e;
+      return null1;
+    }({
+      _worklet_13965742592370_init_data
+    });
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  useDerivedValue(t1);
+  return null;
+};"
 `;
 
 exports[`babel plugin for react-native-gesture-handler doesn't transform chained methods of objects containing Gesture property 1`] = `
@@ -2819,6 +2919,8 @@ const foo = useTapGesture({
   }) {
     const _e = [new global.Error(), 1, -27];
     const null1 = function () {
+      "use no memo";
+
       console.log('onBegin');
     };
     null1.__closure = {};
@@ -2835,6 +2937,8 @@ const foo = useTapGesture({
   }) {
     const _e = [new global.Error(), 1, -27];
     const null2 = function (_event) {
+      "use no memo";
+
       console.log('onStart');
     };
     null2.__closure = {};
@@ -2851,6 +2955,8 @@ const foo = useTapGesture({
   }) {
     const _e = [new global.Error(), 1, -27];
     const null3 = function (_event, _success) {
+      "use no memo";
+
       console.log('onEnd');
     };
     null3.__closure = {};
@@ -2886,6 +2992,8 @@ const foo = Gesture.Tap().numberOfTaps(2).onBegin(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('onBegin');
   };
   null1.__closure = {};
@@ -2901,6 +3009,8 @@ const foo = Gesture.Tap().numberOfTaps(2).onBegin(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null2 = function (_event) {
+    "use no memo";
+
     console.log('onStart');
   };
   null2.__closure = {};
@@ -2916,6 +3026,8 @@ const foo = Gesture.Tap().numberOfTaps(2).onBegin(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null3 = function (_event, _success) {
+    "use no memo";
+
     console.log('onEnd');
   };
   null3.__closure = {};
@@ -2939,7 +3051,9 @@ const onStart = function null1Factory({
   _worklet_15695285586601_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
-  const null1 = function () {};
+  const null1 = function () {
+    "use no memo";
+  };
   null1.__closure = {};
   null1.__workletHash = 15695285586601;
   null1.__pluginVersion = "x.y.z";
@@ -2963,6 +3077,8 @@ const onBegin = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('onBegin');
   };
   null1.__closure = {};
@@ -2991,6 +3107,8 @@ const onBegin = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('onBegin');
   };
   null1.__closure = {};
@@ -3020,6 +3138,8 @@ styleFactory = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return 'AssignmentExpression';
   };
   null1.__closure = {};
@@ -3045,6 +3165,8 @@ const styleFactory = function styleFactory_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const styleFactory = function () {
+    "use no memo";
+
     return 'FunctionDeclaration';
   };
   styleFactory.__closure = {};
@@ -3072,6 +3194,8 @@ styleFactory = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return {};
   };
   null1.__closure = {};
@@ -3097,6 +3221,8 @@ let styleFactory = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return {};
   };
   null1.__closure = {};
@@ -3124,6 +3250,8 @@ styleFactory = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return 'AssignmentExpression';
   };
   null1.__closure = {};
@@ -3149,6 +3277,8 @@ const styleFactory = function styleFactory_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const styleFactory = function () {
+    "use no memo";
+
     return {};
   };
   styleFactory.__closure = {};
@@ -3175,6 +3305,8 @@ styleFactory = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return {};
   };
   null1.__closure = {};
@@ -3200,6 +3332,8 @@ let styleFactory = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return {};
   };
   null1.__closure = {};
@@ -3229,6 +3363,8 @@ styleFactory = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return 'AssignmentExpression';
   };
   null1.__closure = {};
@@ -3255,7 +3391,9 @@ handler = {
     _worklet_15695285586601_init_data
   }) {
     const _e = [new global.Error(), 1, -27];
-    const null1 = function () {};
+    const null1 = function () {
+      "use no memo";
+    };
     null1.__closure = {};
     null1.__workletHash = 15695285586601;
     null1.__pluginVersion = "x.y.z";
@@ -3280,7 +3418,9 @@ let handler = {
     _worklet_15695285586601_init_data
   }) {
     const _e = [new global.Error(), 1, -27];
-    const null1 = function () {};
+    const null1 = function () {
+      "use no memo";
+    };
     null1.__closure = {};
     null1.__workletHash = 15695285586601;
     null1.__pluginVersion = "x.y.z";
@@ -3310,6 +3450,8 @@ handler = {
   }) {
     const _e = [new global.Error(), 1, -27];
     const null1 = function () {
+      "use no memo";
+
       return 'AssignmentExpression';
     };
     null1.__closure = {};
@@ -3338,6 +3480,8 @@ styleFactory = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return 'AssignmentAfterUse';
   };
   null1.__closure = {};
@@ -3362,6 +3506,8 @@ let styleFactory = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return {};
   };
   null1.__closure = {};
@@ -3388,6 +3534,8 @@ function outerScope() {
   }) {
     const _e = [new global.Error(), 1, -27];
     const null1 = function () {
+      "use no memo";
+
       return {};
     };
     null1.__closure = {};
@@ -3416,6 +3564,8 @@ const secondReference = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return {};
   };
   null1.__closure = {};
@@ -3443,6 +3593,8 @@ const recursiveWorklet = function recursiveWorklet_null1Factory({
 }) {
   const _e = [new global.Error(), -2, -27];
   const recursiveWorklet = function () {
+    "use no memo";
+
     if (!globalThis._WORKLET) {
       runOnUI(recursiveWorklet)();
     }
@@ -3507,7 +3659,9 @@ function App() {
       _worklet_15101577807674_init_data
     }) {
       const _e = [new global.Error(), 1, -27];
-      const onScroll = function () {};
+      const onScroll = function () {
+        "use no memo";
+      };
       onScroll.__closure = {};
       onScroll.__workletHash = 15101577807674;
       onScroll.__pluginVersion = "x.y.z";
@@ -5059,6 +5213,8 @@ runOnUI(function null2Factory({
 }) {
   const _e = [new global.Error(), -3, -27];
   const null2 = function () {
+    "use no memo";
+
     console.log('Hello from UI thread');
     runOnJS(function null1Factory({
       _worklet_11239746781805_init_data
@@ -5118,6 +5274,8 @@ runOnUI(function null3Factory({
 }) {
   const _e = [new global.Error(), -5, -27];
   const null3 = function () {
+    "use no memo";
+
     console.log('Hello from UI thread');
     runOnJS(function null2Factory({
       _worklet_381514241210_init_data,
@@ -5132,6 +5290,8 @@ runOnUI(function null3Factory({
         }) {
           const _e = [new global.Error(), 1, -27];
           const null1 = function () {
+            "use no memo";
+
             console.log('Hello from UI thread again');
           };
           null1.__closure = {};
@@ -5279,6 +5439,8 @@ runOnUI(function null3Factory({
 }) {
   const _e = [new global.Error(), -4, -27];
   const null3 = function () {
+    "use no memo";
+
     const a = function null1Factory({
       _worklet_10798770476691_init_data
     }) {
@@ -5450,6 +5612,8 @@ function Box() {
   }) {
     const _e = [new global.Error(), -2, -27];
     const null1 = function () {
+      "use no memo";
+
       return {
         transform: [{
           translateX: offset.value * 255

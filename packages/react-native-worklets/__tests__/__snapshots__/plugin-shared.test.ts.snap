@@ -10,6 +10,8 @@ function Box() {
 exports[`babel plugin core (bundle mode) autoworkletization workletizes useAnimatedStyle callback 2`] = `
 "export default (function testJs1Factory({}) {
   const testJs1 = function () {
+    "use no memo";
+
     return {
       width: 100
     };
@@ -160,6 +162,8 @@ function Box() {
   }) {
     const _e = [new global.Error(), 1, -27];
     const testJs1 = function () {
+      "use no memo";
+
       return {
         width: 100
       };

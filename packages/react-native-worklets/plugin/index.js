@@ -519,6 +519,7 @@ var require_autoworkletization = __commonJS({
         (0, directives_1.replaceImplicitReturnWithBlock)(path.node);
       }
       (0, directives_1.addDirective)(path.node.body, "worklet");
+      (0, directives_1.addDirective)(path.node.body, "use no memo");
     }
   }
 });
@@ -1655,6 +1656,11 @@ var require_workletStringCode = __commonJS({
         });
       }
       const workletFunction = (0, types_12.functionExpression)((0, types_12.identifier)(workletName), expression.params, expression.body, expression.generator, expression.async);
+      (0, core_1.traverse)(fun, {
+        Directive(path) {
+          path.remove();
+        }
+      });
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "`inputMap` is undefined.");
       const includeSourceMap = !((0, utils_1.isRelease)(state) || state.opts.disableSourceMaps);

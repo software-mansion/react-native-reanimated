@@ -138,4 +138,5 @@ function addDirectives(path: NodePath<WorkletizableFunction>): void {
     replaceImplicitReturnWithBlock(path.node);
   }
   addDirective(path.node.body as BlockStatement, 'worklet');
+  addDirective(path.node.body as BlockStatement, 'use no memo');
 }

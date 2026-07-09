@@ -1,0 +1,16 @@
+diff --git a/dist/index.js b/dist/index.js
+index ac4a79e741a176252312419e439be74cc80998e5..3a69d8ef85103fc5226874b0881120f3b8050529 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -104510,6 +104510,11 @@ function outlineFunctions(fn, fbtOperands) {
+     for (const instr of block.instructions) {
+       const { value, lvalue } = instr;
+       if (value.kind === "FunctionExpression" || value.kind === "ObjectMethod") {
++        if (value.loweredFunc.func.directives.some(
++          (directive) => OPT_OUT_DIRECTIVES.has(directive)
++        )) {
++          continue;
++        }
+         outlineFunctions(value.loweredFunc.func, fbtOperands);
+       }
+       if (value.kind === "FunctionExpression" && value.loweredFunc.func.context.length === 0 && // TODO: handle outlining named functions
