@@ -69,13 +69,7 @@ export function forEachWorkletizableObjectProperty(
       callback(property);
     } else if (property.isObjectProperty()) {
       const value = property.get('value');
-      forEachWorkletizableFunction(
-        value,
-        state,
-        true, // acceptWorkletizableFunction
-        false, // acceptObject
-        callback
-      );
+      forEachWorkletizableFunction(value, state, true, false, callback);
     } else {
       throw new Error(
         `'${property.type}' as to-be workletized argument is not supported for object hooks.`

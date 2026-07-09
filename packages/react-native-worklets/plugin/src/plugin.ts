@@ -9,8 +9,8 @@ import type {
 } from '@babel/types';
 
 import {
-  addWorkletDirectiveToKnownCallback,
-  handleWorkletCallback,
+  addDirectivesToKnownCallback,
+  handleWorkletizableCallback,
 } from './autoworkletization';
 import { toggleBundleMode } from './bundleMode';
 import { processIfWorkletClass } from './class';
@@ -119,14 +119,12 @@ export function getAutoworkletizationMicroPlugin() {
   return {
     CallExpression: {
       enter(path: NodePath<CallExpression>, state: WorkletsPluginPass) {
-        handleWorkletCallback(path, state);
+        handleWorkletizableCallback(path, state);
       },
     },
     [WorkletizableFunction]: {
       enter(path: NodePath) {
-        addWorkletDirectiveToKnownCallback(
-          path as NodePath<WorkletizableFunction>
-        );
+        addDirectivesToKnownCallback(path as NodePath<WorkletizableFunction>);
       },
     },
   };

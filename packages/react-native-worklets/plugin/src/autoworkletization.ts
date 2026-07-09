@@ -72,7 +72,7 @@ const reanimatedFunctionArgsToWorkletize = new Map([
   ...Array.from(gestureHandlerBuilderMethods).map((name) => [name, [0]]),
 ] as [string, number[]][]);
 
-export function addWorkletDirectiveToKnownCallback(
+export function addDirectivesToKnownCallback(
   path: NodePath<WorkletizableFunction>
 ): void {
   if (isGestureHandlerEventCallback(path) || isLayoutAnimationCallback(path)) {
@@ -80,7 +80,7 @@ export function addWorkletDirectiveToKnownCallback(
   }
 }
 
-export function handleWorkletCallback(
+export function handleWorkletizableCallback(
   path: NodePath<CallExpression>,
   state: WorkletsPluginPass
 ): void {

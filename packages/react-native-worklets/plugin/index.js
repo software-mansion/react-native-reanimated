@@ -184,15 +184,7 @@ var require_findWorklet = __commonJS({
           callback(property);
         } else if (property.isObjectProperty()) {
           const value = property.get("value");
-          forEachWorkletizableFunction(
-            value,
-            state,
-            true,
-            // acceptWorkletizableFunction
-            false,
-            // acceptObject
-            callback
-          );
+          forEachWorkletizableFunction(value, state, true, false, callback);
         } else {
           throw new Error(`'${property.type}' as to-be workletized argument is not supported for object hooks.`);
         }
@@ -432,8 +424,8 @@ var require_autoworkletization = __commonJS({
   "lib/autoworkletization.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.addWorkletDirectiveToKnownCallback = addWorkletDirectiveToKnownCallback;
-    exports2.handleWorkletCallback = handleWorkletCallback;
+    exports2.addDirectivesToKnownCallback = addDirectivesToKnownCallback;
+    exports2.handleWorkletizableCallback = handleWorkletizableCallback;
     var types_12 = require("@babel/types");
     var directives_1 = require_directives();
     var findWorklet_1 = require_findWorklet();
@@ -495,12 +487,12 @@ var require_autoworkletization = __commonJS({
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerObjectHooks).map((name) => [name, [0]]),
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerBuilderMethods).map((name) => [name, [0]])
     ]);
-    function addWorkletDirectiveToKnownCallback(path) {
+    function addDirectivesToKnownCallback(path) {
       if ((0, gestureHandlerAutoworkletization_1.isGestureHandlerEventCallback)(path) || (0, layoutAnimationAutoworkletization_1.isLayoutAnimationCallback)(path)) {
         addDirectives(path);
       }
     }
-    function handleWorkletCallback(path, state) {
+    function handleWorkletizableCallback(path, state) {
       const callee = (0, types_12.isSequenceExpression)(path.node.callee) ? path.node.callee.expressions[path.node.callee.expressions.length - 1] : path.node.callee;
       const name = "name" in callee ? callee.name : "property" in callee && "name" in callee.property ? callee.property.name : void 0;
       if (name === void 0) {
@@ -2165,12 +2157,12 @@ function getAutoworkletizationMicroPlugin() {
   return {
     CallExpression: {
       enter(path, state) {
-        (0, autoworkletization_1.handleWorkletCallback)(path, state);
+        (0, autoworkletization_1.handleWorkletizableCallback)(path, state);
       }
     },
     [types_1.WorkletizableFunction]: {
       enter(path) {
-        (0, autoworkletization_1.addWorkletDirectiveToKnownCallback)(path);
+        (0, autoworkletization_1.addDirectivesToKnownCallback)(path);
       }
     }
   };
