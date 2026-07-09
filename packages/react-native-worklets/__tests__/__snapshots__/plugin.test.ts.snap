@@ -2718,50 +2718,6 @@ useAnimatedScrollHandler({
 });"
 `;
 
-exports[`babel plugin for react-compiler adds worklet directives to functions before react-compiler outlines them 1`] = `
-"import { c as _c } from "react/compiler-runtime";
-const _worklet_13965742592370_init_data = {
-  code: "(function null1(){return[1,2,3].map(function(){return null;});})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const TestComponent = t0 => {
-  const $ = _c(2);
-  if ($[0] !== "334946d229dc920aaf28bb8fd0705f10807290a3162fa05fe7deecf7dce3a2a2") {
-    for (let $i = 0; $i < 2; $i += 1) {
-      $[$i] = Symbol.for("react.memo_cache_sentinel");
-    }
-    $[0] = "334946d229dc920aaf28bb8fd0705f10807290a3162fa05fe7deecf7dce3a2a2";
-  }
-  let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = function null1Factory({
-      _worklet_13965742592370_init_data
-    }) {
-      const _e = [new global.Error(), 1, -27];
-      const null1 = function () {
-        "use no memo";
-
-        return [1, 2, 3].map(() => null);
-      };
-      null1.__closure = {};
-      null1.__workletHash = 13965742592370;
-      null1.__pluginVersion = "x.y.z";
-      null1.__initData = _worklet_13965742592370_init_data;
-      null1.__stackDetails = _e;
-      return null1;
-    }({
-      _worklet_13965742592370_init_data
-    });
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  useDerivedValue(t1);
-  return null;
-};"
-`;
-
 exports[`babel plugin for react-native-gesture-handler doesn't transform chained methods of objects containing Gesture property 1`] = `
 "const foo = Something.Gesture.Tap().onEnd(() => {
   console.log('onEnd');

@@ -12,6 +12,7 @@
     "@babel/types": "7.28.4",
     "@types/node": "24.0.14",
     "@typescript-eslint/parser": "8.37.0",
+    "babel-plugin-react-compiler": "patch:babel-plugin-react-compiler@npm%3A1.0.0#~/.yarn/patches/babel-plugin-react-compiler-npm-1.0.0-5beba4221c.patch",
     "esbuild": "0.25.10",
     "eslint": "9.37.0",
     "tsc-watch": "7.2.0",

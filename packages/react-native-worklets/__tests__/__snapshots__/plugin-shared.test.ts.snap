@@ -70,6 +70,20 @@ exports[`babel plugin core (bundle mode) closure handling does not capture defau
 });"
 `;
 
+exports[`babel plugin core (bundle mode) for react-compiler prevents outlining from worklet functions 1`] = `
+"export default (function testJs1Factory({}) {
+  const testJs1 = function () {
+    "use no memo";
+
+    return [1, 2, 3].map(() => null);
+  };
+  testJs1.__closure = {};
+  testJs1.__workletHash = 10677258624486;
+  testJs1.__pluginVersion = "x.y.z";
+  return testJs1;
+});"
+`;
+
 exports[`babel plugin core (bundle mode) without worklets leaves code untouched and emits no factory 1`] = `
 "function foo() {
   var x = 1;
@@ -264,6 +278,49 @@ const f = function f_testJs1Factory({
 }({
   _worklet_861694609719_init_data
 });"
+`;
+
+exports[`babel plugin core (bundleless mode) for react-compiler prevents outlining from worklet functions 1`] = `
+"import { c as _c } from "react/compiler-runtime";
+const _worklet_10677258624486_init_data = {
+  code: "(function testJs1(){return[1,2,3].map(function(){return null;});})",
+  location: "test.js"
+};
+const TestComponent = t0 => {
+  const $ = _c(2);
+  if ($[0] !== "334946d229dc920aaf28bb8fd0705f10807290a3162fa05fe7deecf7dce3a2a2") {
+    for (let $i = 0; $i < 2; $i += 1) {
+      $[$i] = Symbol.for("react.memo_cache_sentinel");
+    }
+    $[0] = "334946d229dc920aaf28bb8fd0705f10807290a3162fa05fe7deecf7dce3a2a2";
+  }
+  let t1;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = function testJs1Factory({
+      _worklet_10677258624486_init_data
+    }) {
+      const _e = [new global.Error(), 1, -27];
+      const testJs1 = function () {
+        "use no memo";
+
+        return [1, 2, 3].map(() => null);
+      };
+      testJs1.__closure = {};
+      testJs1.__workletHash = 10677258624486;
+      testJs1.__pluginVersion = "x.y.z";
+      testJs1.__initData = _worklet_10677258624486_init_data;
+      testJs1.__stackDetails = _e;
+      return testJs1;
+    }({
+      _worklet_10677258624486_init_data
+    });
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  useDerivedValue(t1);
+  return null;
+};"
 `;
 
 exports[`babel plugin core (bundleless mode) without worklets leaves code untouched and emits no factory 1`] = `

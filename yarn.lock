@@ -12203,7 +12203,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"babel-plugin-react-compiler@npm:^1.0.0":
+"babel-plugin-react-compiler@npm:1.0.0, babel-plugin-react-compiler@npm:^1.0.0":
   version: 1.0.0
   resolution: "babel-plugin-react-compiler@npm:1.0.0"
   dependencies:
@@ -12619,6 +12619,7 @@ __metadata:
     "@babel/types": "npm:7.28.4"
     "@types/node": "npm:24.0.14"
     "@typescript-eslint/parser": "npm:8.37.0"
+    babel-plugin-react-compiler: "patch:babel-plugin-react-compiler@npm%3A1.0.0#~/.yarn/patches/babel-plugin-react-compiler-npm-1.0.0-5beba4221c.patch"
     esbuild: "npm:0.25.10"
     eslint: "npm:9.37.0"
     tsc-watch: "npm:7.2.0"
