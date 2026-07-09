@@ -70,10 +70,7 @@ export function makeWorkletFactory(
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
-  assert(
-    state.file.opts.filename,
-    '[Reanimated] `state.file.opts.filename` is undefined.'
-  );
+  assert(state.file.opts.filename, '`state.file.opts.filename` is undefined.');
 
   const codeObject = generate(fun.node, {
     sourceMaps: true,
@@ -97,8 +94,8 @@ export function makeWorkletFactory(
     inputSourceMap: codeObject.map,
   });
 
-  assert(transformed, '[Reanimated] `transformed` is undefined.');
-  assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
+  assert(transformed, '`transformed` is undefined.');
+  assert(transformed.ast, '`transformed.ast` is undefined.');
 
   const { closureVariables, moduleBindingsToImport, relativeBindingsToImport } =
     includeClosure
@@ -139,7 +136,7 @@ export function makeWorkletFactory(
     workletName,
     transformed.map
   );
-  assert(funString, '[Reanimated] `funString` is undefined.');
+  assert(funString, '`funString` is undefined.');
   const workletHash = hash(funString);
 
   let lineOffset = 1;
@@ -155,13 +152,10 @@ export function makeWorkletFactory(
   const pathForStringDefinitions = fun.parentPath.isProgram()
     ? fun
     : fun.findParent((path) => path.parentPath?.isProgram() ?? false);
-  assert(
-    pathForStringDefinitions,
-    '[Reanimated] `pathForStringDefinitions` is null.'
-  );
+  assert(pathForStringDefinitions, '`pathForStringDefinitions` is null.');
   assert(
     pathForStringDefinitions.parentPath,
-    '[Reanimated] `pathForStringDefinitions.parentPath` is null.'
+    '`pathForStringDefinitions.parentPath` is null.'
   );
 
   const initDataId =
@@ -236,11 +230,11 @@ export function makeWorkletFactory(
 
   assert(
     !isFunctionDeclaration(funExpression),
-    '[Reanimated] `funExpression` is a `FunctionDeclaration`.'
+    '`funExpression` is a `FunctionDeclaration`.'
   );
   assert(
     !isObjectMethod(funExpression),
-    '[Reanimated] `funExpression` is an `ObjectMethod`.'
+    '`funExpression` is an `ObjectMethod`.'
   );
 
   const statements: Array<
@@ -465,7 +459,7 @@ function stripWorkletDirectives(fun: NodePath<WorkletizableFunction>): void {
 function shouldMockVersion(): boolean {
   // We don't want to pollute tests with current version number so we mock it
   // for all tests (except one)
-  return process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION === '1';
+  return process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION === '1';
 }
 
 function hash(str: string): number {

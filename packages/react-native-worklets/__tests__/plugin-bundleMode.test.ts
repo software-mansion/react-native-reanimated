@@ -69,7 +69,7 @@ function runPlugin(
 
 describe('babel plugin in bundleMode', () => {
   beforeEach(() => {
-    process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION = '1';
+    process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
     capturedFiles.length = 0;
   });
 

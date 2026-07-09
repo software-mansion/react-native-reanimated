@@ -995,10 +995,10 @@ var require_workletStringCode = __commonJS({
       var _a;
       restoreRecursiveCalls(fun, workletName);
       const draftExpression = fun.program.body.find((obj) => (0, types_12.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_12.isExpressionStatement)(obj));
-      (0, assert_1.strict)(draftExpression, "[Reanimated] `draftExpression` is undefined.");
+      (0, assert_1.strict)(draftExpression, "`draftExpression` is undefined.");
       const expression = (0, types_12.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
       (0, assert_1.strict)("params" in expression, "'params' property is undefined in 'expression'");
-      (0, assert_1.strict)((0, types_12.isBlockStatement)(expression.body), "[Reanimated] `expression.body` is not a `BlockStatement`");
+      (0, assert_1.strict)((0, types_12.isBlockStatement)(expression.body), "`expression.body` is not a `BlockStatement`");
       const parsedClasses = /* @__PURE__ */ new Set();
       if (!state.opts.disableWorkletClasses) {
         (0, core_1.traverse)(fun, {
@@ -1024,7 +1024,7 @@ var require_workletStringCode = __commonJS({
       }
       const workletFunction = (0, types_12.functionExpression)((0, types_12.identifier)(workletName), expression.params, expression.body, expression.generator, expression.async);
       const code = (0, generator_1.default)(workletFunction).code;
-      (0, assert_1.strict)(inputMap, "[Reanimated] `inputMap` is undefined.");
+      (0, assert_1.strict)(inputMap, "`inputMap` is undefined.");
       const includeSourceMap = !((0, utils_1.isRelease)(state) || state.opts.disableSourceMaps);
       if (includeSourceMap) {
         inputMap.sourcesContent = [];
@@ -1047,7 +1047,7 @@ var require_workletStringCode = __commonJS({
         configFile: false,
         comments: false
       });
-      (0, assert_1.strict)(transformed, "[Reanimated] `transformed` is null.");
+      (0, assert_1.strict)(transformed, "`transformed` is null.");
       let sourceMap;
       if (includeSourceMap) {
         if (shouldMockSourceMap()) {
@@ -1074,7 +1074,7 @@ var require_workletStringCode = __commonJS({
       });
     }
     function shouldMockSourceMap() {
-      return process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP === "1";
+      return process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP === "1";
     }
     function prependClosure(path, closureVariables, closureDeclaration) {
       if (closureVariables.length === 0 || !(0, types_12.isProgram)(path.parent)) {
@@ -1139,7 +1139,7 @@ var require_workletFactory = __commonJS({
       const includeClosure = state.opts.bundleMode || !hasDirective(fun, "no-worklet-closure");
       const limitInitDataHoisting = hasDirective(fun, "limit-init-data-hoisting");
       stripWorkletDirectives(fun);
-      (0, assert_1.strict)(state.file.opts.filename, "[Reanimated] `state.file.opts.filename` is undefined.");
+      (0, assert_1.strict)(state.file.opts.filename, "`state.file.opts.filename` is undefined.");
       const codeObject = (0, generator_1.default)(fun.node, {
         sourceMaps: true,
         sourceFileName: state.file.opts.filename
@@ -1154,8 +1154,8 @@ var require_workletFactory = __commonJS({
         configFile: false,
         inputSourceMap: codeObject.map
       });
-      (0, assert_1.strict)(transformed, "[Reanimated] `transformed` is undefined.");
-      (0, assert_1.strict)(transformed.ast, "[Reanimated] `transformed.ast` is undefined.");
+      (0, assert_1.strict)(transformed, "`transformed` is undefined.");
+      (0, assert_1.strict)(transformed.ast, "`transformed.ast` is undefined.");
       const { closureVariables, moduleBindingsToImport, relativeBindingsToImport } = includeClosure ? (0, closure_1.getClosure)(fun, state) : {
         closureVariables: [],
         moduleBindingsToImport: /* @__PURE__ */ new Set(),
@@ -1171,7 +1171,7 @@ var require_workletFactory = __commonJS({
         mutatedClosureVariables = closureVariables;
       }
       let [funString, sourceMapString] = (0, workletStringCode_1.buildWorkletString)(transformed.ast, state, mutatedClosureVariables, workletName, transformed.map);
-      (0, assert_1.strict)(funString, "[Reanimated] `funString` is undefined.");
+      (0, assert_1.strict)(funString, "`funString` is undefined.");
       const workletHash = hash(funString);
       let lineOffset = 1;
       if (closureVariables.length > 0) {
@@ -1181,8 +1181,8 @@ var require_workletFactory = __commonJS({
         var _a2, _b;
         return (_b = (_a2 = path.parentPath) === null || _a2 === void 0 ? void 0 : _a2.isProgram()) !== null && _b !== void 0 ? _b : false;
       });
-      (0, assert_1.strict)(pathForStringDefinitions, "[Reanimated] `pathForStringDefinitions` is null.");
-      (0, assert_1.strict)(pathForStringDefinitions.parentPath, "[Reanimated] `pathForStringDefinitions.parentPath` is null.");
+      (0, assert_1.strict)(pathForStringDefinitions, "`pathForStringDefinitions` is null.");
+      (0, assert_1.strict)(pathForStringDefinitions.parentPath, "`pathForStringDefinitions.parentPath` is null.");
       const initDataId = pathForStringDefinitions.parentPath.scope.generateUidIdentifier(`worklet_${workletHash}_init_data`);
       const shouldIncludeInitData = !state.opts.omitNativeOnlyData && !state.opts.bundleMode;
       const shouldEmitBytecode = !!state.opts.hermesBytecode && (0, utils_1.isRelease)(state) && shouldIncludeInitData;
@@ -1215,8 +1215,8 @@ var require_workletFactory = __commonJS({
           pathForStringDefinitions.insertBefore(initDataDeclaration);
         }
       }
-      (0, assert_1.strict)(!(0, types_12.isFunctionDeclaration)(funExpression), "[Reanimated] `funExpression` is a `FunctionDeclaration`.");
-      (0, assert_1.strict)(!(0, types_12.isObjectMethod)(funExpression), "[Reanimated] `funExpression` is an `ObjectMethod`.");
+      (0, assert_1.strict)(!(0, types_12.isFunctionDeclaration)(funExpression), "`funExpression` is a `FunctionDeclaration`.");
+      (0, assert_1.strict)(!(0, types_12.isObjectMethod)(funExpression), "`funExpression` is an `ObjectMethod`.");
       const statements = [
         (0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)((0, types_12.identifier)(reactName), funExpression)
@@ -1289,7 +1289,7 @@ var require_workletFactory = __commonJS({
       });
     }
     function shouldMockVersion() {
-      return process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION === "1";
+      return process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION === "1";
     }
     function hash(str) {
       let i = str.length;
@@ -1468,7 +1468,7 @@ var require_objectWorklets = __commonJS({
             // acceptObject
           );
         } else {
-          throw new Error(`[Reanimated] '${property.type}' as to-be workletized argument is not supported for object hooks.`);
+          throw new Error(`'${property.type}' as to-be workletized argument is not supported for object hooks.`);
         }
       }
     }
@@ -2006,7 +2006,7 @@ var require_inlineStylesWarning = __commonJS({
     function processTransformPropertyForInlineStylesWarning(path) {
       if ((0, types_12.isArrayExpression)(path.node)) {
         const elements = path.get("elements");
-        (0, assert_1.strict)(Array.isArray(elements), "[Reanimated] `elements` should be an array.");
+        (0, assert_1.strict)(Array.isArray(elements), "`elements` should be an array.");
         for (const element of elements) {
           if (element.isObjectExpression()) {
             processStyleObjectForInlineStylesWarning(element);
@@ -2041,10 +2041,10 @@ var require_inlineStylesWarning = __commonJS({
         return;
       }
       const expression = path.get("value").get("expression");
-      (0, assert_1.strict)(!Array.isArray(expression), "[Reanimated] `expression` should not be an array.");
+      (0, assert_1.strict)(!Array.isArray(expression), "`expression` should not be an array.");
       if (expression.isArrayExpression()) {
         const elements = expression.get("elements");
-        (0, assert_1.strict)(Array.isArray(elements), "[Reanimated] `elements` should be an array.");
+        (0, assert_1.strict)(Array.isArray(elements), "`elements` should be an array.");
         for (const element of elements) {
           if (element.isObjectExpression()) {
             processStyleObjectForInlineStylesWarning(element);
