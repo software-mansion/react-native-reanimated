@@ -32,6 +32,12 @@ TransitionProperties CSSTransition::getProperties() const {
 folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config, const folly::dynamic &lastUpdates) {
   const auto timestamp = loop_->resolveTimestamp();
 
+  for (const auto &propertyName : pseudoLockedProperties_) {
+    config.changedPropertiesSettings.erase(propertyName);
+    config.changedProperties.erase(propertyName);
+    std::erase(config.removedProperties, propertyName);
+  }
+
   auto loopConfig = platformTransitionProxy_->processConfig(rt, getViewTag(), config, routing_, timestamp);
   if (loopConfig.empty()) {
     return folly::dynamic::object();
@@ -70,6 +76,10 @@ folly::dynamic CSSTransition::computeCurrentLoopStyle() {
     return folly::dynamic::object();
   }
   return loopTransition_->computeCurrentStyle(shadowNode_);
+}
+
+void CSSTransition::setPseudoLockedProperties(TransitionProperties properties) {
+  pseudoLockedProperties_ = std::move(properties);
 }
 
 void CSSTransition::cancel() {

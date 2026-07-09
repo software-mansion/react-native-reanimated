@@ -1,5 +1,6 @@
 'use strict';
 
+import type { ShareableHost } from 'react-native-worklets';
 import { runOnUISync } from 'react-native-worklets';
 
 import { withStyleAnimation } from '../animation';
@@ -8,15 +9,23 @@ import type {
   LayoutAnimation,
   LayoutAnimationStartFunction,
   LayoutAnimationValues,
+  Mutable,
   SharedValue,
 } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { getStaticFeatureFlag } from '../featureFlags';
-import { makeMutableUI } from '../mutables';
+import { mutableHostDecorator } from '../mutablesCommon';
 import type { NativeLayoutAnimationDescriptor } from './nativeAnimationDescriptor';
 import { buildNativeLayoutAnimationDescriptor } from './nativeAnimationDescriptor';
 
 const TAG_OFFSET = 1e9;
+
+function makeMutableUI<TValue>(initial: TValue): Mutable<TValue> {
+  'worklet';
+  return mutableHostDecorator({
+    value: initial,
+  } as ShareableHost<TValue> & Mutable<TValue>);
+}
 
 const USE_ANIMATION_BACKEND = getStaticFeatureFlag('USE_ANIMATION_BACKEND');
 

@@ -102,7 +102,7 @@
   "peerDependencies": {
     "react": "*",
     "react-native": "0.83 - 0.86",
-    "react-native-worklets": "*"
+    "react-native-worklets": "0.11.0-main"
   },
   "devDependencies": {
     "@babel/core": "7.28.4",
@@ -158,8 +158,8 @@
     "./lib/module/layoutReanimation/animationsManager.js",
     "./src/core.ts",
     "./lib/module/core.js",
-    "./src/initializers.ts",
-    "./lib/module/initializers.js",
+    "./src/initializers.native.ts",
+    "./lib/module/initializers.native.js",
     "./src/index.ts",
     "./lib/module/index.js"
   ]

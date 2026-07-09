@@ -39,6 +39,7 @@ import { basename, relative, sep } from 'path';
 
 import { getClosure } from './closure';
 import { generateWorkletFile } from './generate';
+import { compileWorkletToHbc } from './hermesBytecode';
 import { updateRelativeRequires } from './imports';
 import { workletTransformSync } from './transform';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
@@ -168,13 +169,34 @@ export function makeWorkletFactory(
       `worklet_${workletHash}_init_data`
     );
 
-  const initDataObjectExpression = objectExpression([
-    objectProperty(identifier('code'), stringLiteral(funString)),
-  ]);
+  const shouldIncludeInitData =
+    !state.opts.omitNativeOnlyData && !state.opts.bundleMode;
 
-  // When testing with jest I noticed that environment variables are set later
-  // than some functions are evaluated. E.g. this cannot be above this function
-  // because it would always evaluate to true.
+  const shouldEmitBytecode =
+    !!state.opts.hermesBytecode && isRelease(state) && shouldIncludeInitData;
+
+  const bytecode = shouldEmitBytecode
+    ? compileWorkletToHbc(funString, workletHash, state)
+    : null;
+
+  const initDataObjectExpression = objectExpression(
+    bytecode
+      ? [
+          objectProperty(
+            identifier('bytecode'),
+            memberExpression(
+              newExpression(identifier('Uint8Array'), [
+                arrayExpression(
+                  Array.from(bytecode, (byte) => numericLiteral(byte))
+                ),
+              ]),
+              identifier('buffer')
+            )
+          ),
+        ]
+      : [objectProperty(identifier('code'), stringLiteral(funString))]
+  );
+
   const shouldInjectLocation = !isRelease(state);
   if (shouldInjectLocation) {
     let location = state.file.opts.filename;
@@ -193,14 +215,11 @@ export function makeWorkletFactory(
     );
   }
 
-  if (sourceMapString) {
+  if (!bytecode && sourceMapString) {
     initDataObjectExpression.properties.push(
       objectProperty(identifier('sourceMap'), stringLiteral(sourceMapString))
     );
   }
-
-  const shouldIncludeInitData =
-    !state.opts.omitNativeOnlyData && !state.opts.bundleMode;
 
   if (shouldIncludeInitData) {
     const initDataDeclaration = variableDeclaration('const', [
