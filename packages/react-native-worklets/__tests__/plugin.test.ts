@@ -104,7 +104,7 @@ describe('babel plugin', () => {
     });
 
     test('injects its version', () => {
-      process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '0'; // don't mock version
+      process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '0';
       const input = html`<script>
         function foo() {
           'worklet';
@@ -117,7 +117,7 @@ describe('babel plugin', () => {
     });
 
     test('injects source maps', () => {
-      process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '0'; // don't mock source maps
+      process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '0';
       const input = html`<script>
         function foo() {
           'worklet';
@@ -135,7 +135,7 @@ describe('babel plugin', () => {
     });
 
     test('strips queries from filename when injecting source maps', () => {
-      process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '0'; // don't mock source maps
+      process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '0';
       const input = html`<script>
         function foo() {
           'worklet';
@@ -157,7 +157,7 @@ describe('babel plugin', () => {
     });
 
     test('uses relative source location when `relativeSourceLocation` is set to `true`', () => {
-      process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '0'; // don't mock source maps
+      process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '0';
       const input = html`<script>
         function foo() {
           'worklet';
