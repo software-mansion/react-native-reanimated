@@ -89,46 +89,36 @@ const routes = {
     },
   },
   PseudoSelectors: {
+    flatten: true,
     name: 'Pseudo Selectors',
     CardComponent: routeCards.PseudoSelectorsCard,
     routes: {
-      PseudoHover: {
-        name: ':hover',
-        Component: pseudoSelectors.Hover,
+      Selectors: {
+        name: 'Selectors',
+        routes: {
+          PseudoHover: {
+            name: ':hover',
+            Component: pseudoSelectors.Hover,
+          },
+          PseudoActive: {
+            name: ':active',
+            Component: pseudoSelectors.Active,
+          },
+          PseudoActiveDeepest: {
+            name: ':active-deepest',
+            Component: pseudoSelectors.ActiveDeepest,
+          },
+          PseudoFocus: {
+            name: ':focus',
+            Component: pseudoSelectors.Focus,
+          },
+          PseudoFocusWithin: {
+            name: ':focus-within',
+            Component: pseudoSelectors.FocusWithin,
+          },
+        },
       },
-      PseudoActive: {
-        name: ':active',
-        Component: pseudoSelectors.Active,
-      },
-      PseudoActiveBlocksRender: {
-        name: 'selectors block render transition',
-        Component: pseudoSelectors.ActiveBlocksRender,
-      },
-      PseudoActiveDeepest: {
-        name: ':active-deepest',
-        Component: pseudoSelectors.ActiveDeepest,
-      },
-      PseudoFocus: {
-        name: ':focus',
-        Component: pseudoSelectors.Focus,
-      },
-      PseudoFocusWithin: {
-        name: ':focus-within',
-        Component: pseudoSelectors.FocusWithin,
-      },
-      PseudoHoverWithLoop: {
-        name: 'Looping transition + :hover',
-        Component: pseudoSelectors.HoverWithLoop,
-      },
-      PseudoPerStateTransitionConfig: {
-        name: 'Per-state transition configs',
-        Component: pseudoSelectors.PerStateTransitionConfig,
-      },
-      PseudoArbitraryWebSelectors: {
-        name: 'Arbitrary web selectors',
-        Component: pseudoSelectors.ArbitraryWebSelectors,
-      },
-      PseudoShowcase: {
+      Showcase: {
         name: 'Showcase',
         routes: {
           PseudoShowcaseForm: {
@@ -138,6 +128,27 @@ const routes = {
           PseudoShowcasePlanets: {
             name: 'Planets',
             Component: pseudoSelectors.Planets,
+          },
+        },
+      },
+      TestExamples: {
+        name: 'Test Examples',
+        routes: {
+          PseudoActiveBlocksRender: {
+            name: 'selectors block render transition',
+            Component: pseudoSelectors.ActiveBlocksRender,
+          },
+          PseudoHoverWithLoop: {
+            name: 'Looping transition + :hover',
+            Component: pseudoSelectors.HoverWithLoop,
+          },
+          PseudoPerStateTransitionConfig: {
+            name: 'Per-state transition configs',
+            Component: pseudoSelectors.PerStateTransitionConfig,
+          },
+          PseudoArbitraryWebSelectors: {
+            name: 'Arbitrary web selectors',
+            Component: pseudoSelectors.ArbitraryWebSelectors,
           },
         },
       },
