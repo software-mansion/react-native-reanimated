@@ -1,13 +1,29 @@
+import com.diffplug.gradle.spotless.SpotlessExtension
 import groovy.json.JsonSlurper
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 import javax.inject.Inject
 
+buildscript {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    dependencies {
+        // Spotless is only applied when this module is the root project, to lint
+        // Reanimated's own sources (see the `project == rootProject` block below).
+        // It's put on the buildscript classpath and applied conditionally instead of
+        // declared in the plugins {} block: a versioned plugins {} entry fails in
+        // consumer apps that already have Spotless on their root buildscript classpath
+        // with "plugin ... already on the classpath with an unknown version".
+        classpath("com.diffplug.spotless:spotless-plugin-gradle:8.4.0")
+    }
+}
+
 plugins {
     id("com.android.library")
     id("maven-publish")
-    id("com.diffplug.spotless") version "8.4.0"
     id("org.jetbrains.kotlin.android")
 }
 
@@ -134,7 +150,8 @@ fun reactNativeArchitectures(): List<String> {
 }
 
 if (project == rootProject) {
-    spotless {
+    apply(plugin = "com.diffplug.spotless")
+    configure<SpotlessExtension> {
         kotlin {
             target("src/**/*.kt")
             ktlint()
