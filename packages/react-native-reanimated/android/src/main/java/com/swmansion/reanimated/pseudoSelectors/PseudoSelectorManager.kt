@@ -4,6 +4,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewParent
+import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UIManager
 import com.facebook.react.bridge.UIManagerListener
 import com.facebook.react.bridge.UiThreadUtil
@@ -11,11 +12,14 @@ import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.uimanager.IllegalViewOperationException
 import com.facebook.react.uimanager.ReactCompoundView
+import com.swmansion.reanimated.BuildConfig
 import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
+import java.lang.ref.WeakReference
 
 @OptIn(UnstableReactNativeAPI::class)
 class PseudoSelectorManager(
     private val fabricUIManager: FabricUIManager,
+    private val reactContext: WeakReference<ReactApplicationContext>,
 ) {
     private val detachActions = HashMap<String, Runnable>()
 
@@ -29,6 +33,8 @@ class PseudoSelectorManager(
     private val gestureDownPoint = HashMap<View, FloatArray>()
 
     private val hover = TouchHoverCoordinator()
+
+    private var extraWindowBridge: ExtraWindowObserverBridge? = null
 
     private val pendingAttaches = LinkedHashMap<String, PendingAttach>()
     private var mountListenerRegistered = false
@@ -164,11 +170,20 @@ class PseudoSelectorManager(
         val host = findTouchHost(view)
         acquireTouchListener(host)
         hover.register(view, callback)
+        ensureExtraWindowBridge()
         detachActions[key] =
             Runnable {
                 hover.unregister(view)
                 releaseTouchListener(host)
             }
+    }
+
+    private fun ensureExtraWindowBridge() {
+        if (!BuildConfig.IS_REACT_NATIVE_86_OR_NEWER || extraWindowBridge != null) {
+            return
+        }
+        val context = reactContext.get() ?: return
+        extraWindowBridge = ExtraWindowObserverBridge(context, hover).also { it.install() }
     }
 
     private fun attachActive(
@@ -268,7 +283,7 @@ class PseudoSelectorManager(
             MotionEvent.ACTION_CANCEL ->
                 if (event.findPointerIndex(0) >= 0) {
                     onHostRelease(host)
-                    hover.onViewTouchCancel(event)
+                    hover.onViewTouchCancel(host, event)
                 }
         }
         return false
