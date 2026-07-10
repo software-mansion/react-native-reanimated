@@ -691,7 +691,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   }
 
 #if REACT_NATIVE_VERSION_MINOR >= 87
-  int tag = eventTarget->getTag();
+  const auto tag = eventTarget->getTag();
 #else
   // A stale event dispatched during unmount may carry an EventTarget with a null
   // InstanceHandle which getTag() would dereference (see #9925).
@@ -700,7 +700,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   if (shadowNodeFamily == nullptr) {
     return false;
   }
-  int tag = shadowNodeFamily->getTag();
+  const auto tag = shadowNodeFamily->getTag();
 #endif
   auto eventType = rawEvent.type;
   if (eventType.rfind("top", 0) == 0) {
