@@ -98,7 +98,7 @@ void AnimatedPropsRegistry::removeUpdatesOlderThanTimestamp(const double timesta
   for (auto it = timestampMap_.begin(); it != timestampMap_.end();) {
     const auto viewTag = it->first;
     const auto viewTimestamp = it->second;
-    if (viewTimestamp < timestamp) {
+    if (viewTimestamp < timestamp && syncedTags_.count(viewTag) > 0) {
       it = timestampMap_.erase(it);
       updatesRegistry_.erase(viewTag);
     } else {
