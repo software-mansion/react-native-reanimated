@@ -692,12 +692,15 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
 
   const auto shadowNodeFamily = rawEvent.shadowNodeFamily.lock();
   if (shadowNodeFamily == nullptr) {
-    // The component has already been unmounted and its ShadowNodeFamily
-    // destroyed, but a stale event still fired (e.g. react-native-svg emits
-    // onSvgLayout from a deferred drawRect: after the view unmounted). Don't
-    // read the tag from eventTarget here — EventTarget::getTag() dereferences
-    // its InstanceHandle which may be null for such events (see #9925). Drop
-    // the event, like UIManagerBinding::dispatchEventToJS does.
+    // This check is needed because a stale event dispatched while its
+    // component is being unmounted may carry an EventTarget whose
+    // InstanceHandle is null, and EventTarget::getTag() dereferences it
+    // unconditionally (see #9925). This stems from a data race in
+    // EventEmitter that will be fixed in React Native 0.87
+    // (https://github.com/facebook/react-native/pull/56763), but Reanimated
+    // also supports older versions. Read the tag from the ShadowNodeFamily
+    // instead and drop the event when the family is already destroyed, like
+    // UIManagerBinding::dispatchEventToJS does.
     return false;
   }
 
