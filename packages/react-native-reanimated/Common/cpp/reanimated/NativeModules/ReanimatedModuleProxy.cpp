@@ -690,15 +690,18 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
     return false;
   }
 
+#if REACT_NATIVE_VERSION_MINOR < 87
+  // A stale event dispatched during unmount may carry an EventTarget with a null
+  // InstanceHandle which getTag() would dereference (see #9925).
+  // Fixed in React Native 0.87 by https://github.com/facebook/react-native/pull/56763.
   const auto shadowNodeFamily = rawEvent.shadowNodeFamily.lock();
   if (shadowNodeFamily == nullptr) {
-    // A stale event dispatched during unmount may carry an EventTarget with a null
-    // InstanceHandle which getTag() would dereference (see #9925).
-    // Fixed in React Native 0.87 by https://github.com/facebook/react-native/pull/56763.
     return false;
   }
-
   int tag = shadowNodeFamily->getTag();
+#else
+  int tag = eventTarget->getTag();
+#endif
   auto eventType = rawEvent.type;
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
