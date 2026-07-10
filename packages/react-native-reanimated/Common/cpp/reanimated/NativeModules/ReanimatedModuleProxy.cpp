@@ -692,8 +692,10 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
 
   const auto shadowNodeFamily = rawEvent.shadowNodeFamily.lock();
   if (shadowNodeFamily == nullptr) {
-    // getTag() would dereference a null InstanceHandle on stale events dispatched
-    // during unmount (#9925, fixed in RN 0.87 by facebook/react-native#56763).
+    // This check is needed because a stale event dispatched during unmount may
+    // carry an EventTarget with a null InstanceHandle which getTag() would
+    // dereference (see #9925). Fixed in React Native 0.87 by
+    // https://github.com/facebook/react-native/pull/56763.
     return false;
   }
 
