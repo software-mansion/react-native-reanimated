@@ -66,7 +66,8 @@ const CoordsComponent = ({
 };
 
 describe('getRelativeCoords', () => {
-  // TODO: investigate and fix, on Android sometimes we receive 49s instead of 50s
+  // Android pixel snapping can report a 50dp offset as 49.999…, so the
+  // coordinates are rounded to the nearest integer instead of floored.
   test.each([
     ['flex-start', 'flex-start', 0, 0],
     ['flex-start', 'center', 50, 0],
@@ -92,10 +93,10 @@ describe('getRelativeCoords', () => {
       const coords = (await getRegisteredValue(REGISTERED_VALUE_KEY)).onUI;
       expect(coords).not.toBeNullable();
       if (coords) {
-        expect(Math.floor((coords as unknown as ComponentCoords).x)).toBe(
+        expect(Math.round((coords as unknown as ComponentCoords).x)).toBe(
           expectedValueX
         );
-        expect(Math.floor((coords as unknown as ComponentCoords).y)).toBe(
+        expect(Math.round((coords as unknown as ComponentCoords).y)).toBe(
           expectedValueY
         );
       }
