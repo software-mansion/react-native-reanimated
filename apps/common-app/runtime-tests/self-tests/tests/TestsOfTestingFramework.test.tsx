@@ -232,12 +232,12 @@ describe('Tests of Test Framework', () => {
     expect([]).not.toBeNullable();
     expect(0).not.toBeNullable();
   });
-  test('Test comparators - ❌', () => {
+  test.failing('Test comparators - ❌', () => {
     expect(0).toBeNullable();
     expect(2).not.toBeWithinRange(1.99999999, 2.0000001);
   });
 
-  test('withTiming - ❌', async () => {
+  test.failing('withTiming - ❌', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('BrownComponent');
     await wait(600);
@@ -247,7 +247,7 @@ describe('Tests of Test Framework', () => {
     );
   });
 
-  test('withTiming - ❌', async () => {
+  test.failing('withTiming - ❌', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('BrownComponent');
     await wait(600);
@@ -268,7 +268,7 @@ describe('Tests of Test Framework', () => {
     expect(await component.getAnimatedStyle('width')).toBe(100);
   });
 
-  test('withTiming - expect callback call - ❌', async () => {
+  test.failing('withTiming - expect callback call - ❌', async () => {
     await render(<AnimatedComponent />);
     await wait(600);
     expect(getTrackerCallCount('useAnimatedStyleTracker')).toBeCalled(4);
@@ -365,7 +365,7 @@ describe('Tests of Test Framework', () => {
       }).toThrow();
     });
 
-    test('Warn with no error message - ❌', async () => {
+    test.failing('Warn with no error message - ❌', async () => {
       await expect(() => {}).toThrow();
     });
 
@@ -373,13 +373,13 @@ describe('Tests of Test Framework', () => {
       await expect(() => {}).not.toThrow();
     });
 
-    test('Warn with with error message - ✅', async () => {
+    test('Warn with error message - ✅', async () => {
       await expect(() => {
         console.warn('OH, NO!');
       }).toThrow('OH, NO!');
     });
 
-    test('Warn with with error message - ❌', async () => {
+    test.failing('Warn with error message - ❌', async () => {
       await expect(() => {
         console.warn('OH, NO!');
       }).toThrow('OH, YES!');
@@ -391,13 +391,13 @@ describe('Tests of Test Framework', () => {
       }).toThrow();
     });
 
-    test('console.error  with with error message - ✅', async () => {
+    test('console.error with error message - ✅', async () => {
       await expect(() => {
         console.error('OH, NO!');
       }).toThrow('OH, NO!');
     });
 
-    test('console.error  with with error message - ❌', async () => {
+    test.failing('console.error with error message - ❌', async () => {
       await expect(() => {
         console.error('OH, NO!');
       }).toThrow('OH, YES!');
@@ -409,13 +409,13 @@ describe('Tests of Test Framework', () => {
       }).toThrow();
     });
 
-    test('Throw error with with error message - ✅', async () => {
+    test('Throw error with error message - ✅', async () => {
       await expect(() => {
         throw new Error('OH, NO!');
       }).toThrow('OH, NO!');
     });
 
-    test('Throw error with with error message - ❌', async () => {
+    test.failing('Throw error with error message - ❌', async () => {
       await expect(() => {
         throw new Error('OH, NO!');
       }).toThrow('OH, YES!');

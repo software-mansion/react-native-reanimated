@@ -44,6 +44,7 @@ export enum DescribeDecorator {
 export enum TestDecorator {
   ONLY = 'only',
   SKIP = 'skip',
+  FAILING = 'failing',
 }
 
 export type TestCase = {
