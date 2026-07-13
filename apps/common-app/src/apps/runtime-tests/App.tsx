@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import React from 'react';
@@ -40,12 +41,12 @@ function HomeScreen({ navigation }: HomeScreenProps) {
 function ReanimatedTestsScreen() {
   const RuntimeTestsRunner = (
     require('../../../runtime-tests/ReJest/RuntimeTestsRunner') as {
-      default: React.ComponentType<{ tests: RuntimeTestSuite[] }>;
+      default: React.ComponentType<{ tests: Array<RuntimeTestSuite> }>;
     }
   ).default;
   const { REANIMATED_TEST_SUITES } =
     require('../../../runtime-tests/reanimated/suites') as {
-      REANIMATED_TEST_SUITES: RuntimeTestSuite[];
+      REANIMATED_TEST_SUITES: Array<RuntimeTestSuite>;
     };
   return <RuntimeTestsRunner tests={REANIMATED_TEST_SUITES} />;
 }
@@ -53,12 +54,12 @@ function ReanimatedTestsScreen() {
 function WorkletsTestsScreen() {
   const RuntimeTestsRunner = (
     require('../../../runtime-tests/ReJest/RuntimeTestsRunner') as {
-      default: React.ComponentType<{ tests: RuntimeTestSuite[] }>;
+      default: React.ComponentType<{ tests: Array<RuntimeTestSuite> }>;
     }
   ).default;
   const { WORKLETS_TEST_SUITES } =
     require('../../../runtime-tests/worklets/suites') as {
-      WORKLETS_TEST_SUITES: RuntimeTestSuite[];
+      WORKLETS_TEST_SUITES: Array<RuntimeTestSuite>;
     };
   return <RuntimeTestsRunner tests={WORKLETS_TEST_SUITES} />;
 }
@@ -74,24 +75,24 @@ export default function App() {
   return (
     <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen
-        name="Runtime Tests"
         component={HomeScreen}
+        name="Runtime Tests"
         options={{
           headerTitle: '🧪 Runtime tests',
           title: 'Runtime tests',
         }}
       />
       <Stack.Screen
-        name="Reanimated Tests"
         component={ReanimatedTestsScreen}
+        name="Reanimated Tests"
         options={{
           headerTitle: 'Reanimated runtime tests',
           title: 'Reanimated runtime tests',
         }}
       />
       <Stack.Screen
-        name="Worklets Tests"
         component={WorkletsTestsScreen}
+        name="Worklets Tests"
         options={{
           headerTitle: 'Worklets runtime tests',
           title: 'Worklets runtime tests',

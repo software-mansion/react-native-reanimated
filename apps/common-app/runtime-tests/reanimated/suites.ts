@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 import type { RuntimeTestSuite } from '../types';
 
 type Describe = (name: string, buildSuite: () => void) => void;
