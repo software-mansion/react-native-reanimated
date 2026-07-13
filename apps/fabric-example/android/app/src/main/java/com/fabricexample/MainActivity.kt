@@ -14,7 +14,8 @@ class MainActivity : ReactActivity() {
    * Returns the name of the main component registered from JavaScript. This is used to schedule
    * rendering of the component.
    */
-  override fun getMainComponentName(): String = "FabricExample"
+  override fun getMainComponentName(): String =
+      if (BuildConfig.RUNTIME_TESTS) "FabricExampleRuntimeTests" else "FabricExample"
 
   /**
    * Returns the instance of the [ReactActivityDelegate]. We use [DefaultReactActivityDelegate]
@@ -25,6 +26,13 @@ class MainActivity : ReactActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     installSplashScreen()
+    if (BuildConfig.RUNTIME_TESTS) {
+      // The React host is created lazily by the delegate inside super.onCreate,
+      // so the library has to be captured before that.
+      intent?.getStringExtra("RUNTIME_TESTS_LIBRARY")?.let {
+        MainApplication.runtimeTestsLibrary = it
+      }
+    }
     super.onCreate(savedInstanceState)
 
     // Comment out this for now, as react-native-screens goes crazy with
