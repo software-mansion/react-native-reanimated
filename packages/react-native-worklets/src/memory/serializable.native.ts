@@ -454,9 +454,9 @@ function cloneNonWorkletFunction<TArgs extends unknown[], TReturn>(
   if (globalThis.WeakRef) {
     // WeakRef is installed on runtimes only with Hermes microtaskQueue enabled.
     serializableMappingCache.set(fun, new WeakRef(clone));
-    serializableMappingCache.set(clone);
-    freezeObjectInDev(fun);
   }
+  serializableMappingCache.set(clone);
+  freezeObjectInDev(fun);
 
   return clone;
 }

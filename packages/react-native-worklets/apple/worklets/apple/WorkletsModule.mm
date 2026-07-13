@@ -113,7 +113,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
 
   [animationFrameQueue_ invalidate];
 
-  rnRuntimeStatus_->setDead();
+  if (rnRuntimeStatus_) {
+    rnRuntimeStatus_->setDead();
+  }
   workletsModuleProxy_.reset();
 
   [super invalidate];
