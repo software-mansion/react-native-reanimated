@@ -26,7 +26,9 @@
  *   --simulator       Simulator name used when `--launch` is set. Defaults to
  *                     "iPhone 17"; falls back to the first available iPhone.
  *   --udid            Simulator UDID. Takes precedence over --simulator.
- *   --connect-timeout Seconds to wait for the first client. Default 600.
+ *   --connect-timeout Seconds to wait for the first client, counted from app
+ *                     launch when --launch is set (so a slow xcodebuild does
+ *                     not eat the budget). Default 600.
  *   --idle-timeout    Seconds without any message before aborting. Default 600.
  */
 
@@ -97,12 +99,21 @@ if (ONLY) {
   console.log(`[runtime-tests] suite filter: ${ONLY.join(', ')}`);
 }
 
-connectTimer = setTimeout(() => {
-  console.error(
-    `[runtime-tests] no device connected within ${CONNECT_TIMEOUT_MS / 1000}s, exiting`
-  );
-  shutdown(1);
-}, CONNECT_TIMEOUT_MS);
+function armConnectTimer() {
+  if (client) {
+    return;
+  }
+  connectTimer = setTimeout(() => {
+    console.error(
+      `[runtime-tests] no device connected within ${CONNECT_TIMEOUT_MS / 1000}s, exiting`
+    );
+    shutdown(1);
+  }, CONNECT_TIMEOUT_MS);
+}
+
+if (!SHOULD_LAUNCH) {
+  armConnectTimer();
+}
 
 wss.on('connection', (socket) => {
   if (client) {
@@ -461,7 +472,7 @@ async function ensureBooted(device) {
   await run('xcrun', ['simctl', 'bootstatus', device.udid]);
 }
 
-async function buildApp(udid) {
+async function buildApp() {
   console.log(
     `[runtime-tests] building with xcodebuild (${CONFIGURATION})… this can take a few minutes`
   );
@@ -475,22 +486,39 @@ async function buildApp(udid) {
       '-configuration',
       CONFIGURATION,
       '-destination',
-      `id=${udid}`,
+      'generic/platform=iOS Simulator',
       'build',
     ],
     { cwd: iosDir }
   );
 }
 
+// The products directory depends on the machine's DerivedData configuration,
+// so resolve it from xcodebuild instead of hardcoding a path.
 async function appPath() {
-  const products = path.join(
-    iosDir,
-    'Build',
-    'Products',
-    `${CONFIGURATION}-iphonesimulator`,
-    'FabricExample.app'
+  const { stdout } = await run(
+    'xcodebuild',
+    [
+      '-workspace',
+      'FabricExample.xcworkspace',
+      '-scheme',
+      'DebugRuntimeTests',
+      '-configuration',
+      CONFIGURATION,
+      '-destination',
+      'generic/platform=iOS Simulator',
+      '-showBuildSettings',
+      '-json',
+    ],
+    { cwd: iosDir }
   );
-  return products;
+  const entries = JSON.parse(stdout.slice(stdout.indexOf('[')));
+  const entry =
+    entries.find(
+      (candidate) => candidate.buildSettings.WRAPPER_NAME === 'FabricExample.app'
+    ) ?? entries[0];
+  const { TARGET_BUILD_DIR, WRAPPER_NAME } = entry.buildSettings;
+  return path.join(TARGET_BUILD_DIR, WRAPPER_NAME);
 }
 
 async function installAndLaunch(udid) {
@@ -533,9 +561,10 @@ if (SHOULD_LAUNCH) {
     const device = await resolveSimulator();
     await ensureBooted(device);
     if (!SKIP_BUILD) {
-      await buildApp(device.udid);
+      await buildApp();
     }
     await installAndLaunch(device.udid);
+    armConnectTimer();
   })().catch((error) => {
     console.error(`[runtime-tests] ${error.message}`);
     if (error.stderr) {
