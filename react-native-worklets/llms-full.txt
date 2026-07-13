@@ -270,7 +270,7 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
 const { getDefaultConfig, mergeConfig } = require("expo/metro-config");
 const { getBundleModeMetroConfig } = require("react-native-worklets/bundleMode");
 
-@type {import('expo/metro-config').MetroConfig} */
+/** @type {import('expo/metro-config').MetroConfig} */
 let config = getDefaultConfig(__dirname);
 
 // Your modifications to the config
