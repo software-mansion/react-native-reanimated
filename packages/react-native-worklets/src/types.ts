@@ -129,6 +129,15 @@ type WorkletRuntimeConfigBase = {
    * defaults to `true`.
    */
   enableEventLoop?: true;
+  /**
+   * Determines whether access to the underlying JS runtime is synchronized
+   * with a mutex. If set to `false`, the runtime is created lock-free — no
+   * mutex is acquired around JSI operations or synchronous calls, which
+   * removes the locking overhead. Use it only when you can guarantee that the
+   * runtime is never accessed from more than one thread at a time. If not
+   * specified, it defaults to `true`.
+   */
+  enableLocking?: boolean;
 };
 
 /** Configuration object for creating a worklet runtime. */

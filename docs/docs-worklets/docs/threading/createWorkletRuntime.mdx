@@ -53,6 +53,7 @@ runtime->runGuarded(worklet, ...args);
     initializer?: () => void;
     animationQueuePollingRate?: number;
     enableEventLoop?: true;
+    enableLocking?: boolean;
     queue?: 'default' | object | null;
   };
 
@@ -84,6 +85,11 @@ Time interval in milliseconds between polling of frame callbacks scheduled by `r
 
 Determines whether to enable the default event loop. Defaults to `true`.
 When enabled, the runtime provides `setTimeout`, `setImmediate`, `setInterval`, `requestAnimationFrame`, `queueMicrotask`, `clearTimeout`, `clearInterval`, `clearImmediate`, and `cancelAnimationFrame`.
+
+##### `enableLocking`
+
+Determines whether access to the underlying JS runtime is synchronized with a mutex. Defaults to `true`.
+When set to `false`, the runtime is created lock-free — no mutex is acquired around JSI operations or synchronous calls, which removes the locking overhead. Use it only when you can guarantee that the runtime is never accessed from more than one thread at a time, e.g. when all work on the runtime is scheduled through its queue.
 
 ##### `queue`
 

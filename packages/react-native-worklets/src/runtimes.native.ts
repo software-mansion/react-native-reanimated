@@ -81,6 +81,7 @@ export function createWorkletRuntime(
   let queue: 'default' | object | null = 'default';
   let animationQueuePollingRate: number;
   let enableEventLoop = true;
+  let enableLocking = true;
   if (typeof nameOrConfig === 'string') {
     name = nameOrConfig;
     initializerFn = initializer;
@@ -97,6 +98,7 @@ export function createWorkletRuntime(
       nameOrConfig?.animationQueuePollingRate ?? 16
     );
     enableEventLoop = nameOrConfig?.enableEventLoop ?? true;
+    enableLocking = nameOrConfig?.enableLocking ?? true;
   }
 
   const useDefaultQueue = queue === 'default';
@@ -126,7 +128,8 @@ export function createWorkletRuntime(
     }),
     useDefaultQueue,
     customQueue,
-    enableEventLoop
+    enableEventLoop,
+    enableLocking
   );
 }
 

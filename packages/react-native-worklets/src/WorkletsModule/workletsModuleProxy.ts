@@ -160,7 +160,8 @@ export interface WorkletsModuleProxy {
     initializer: SerializableRef<() => void>,
     useDefaultQueue: boolean,
     customQueue: object | undefined,
-    enableEventLoop: boolean
+    enableEventLoop: boolean,
+    enableLocking: boolean
   ): WorkletRuntime;
 
   scheduleOnRuntime<TValue>(

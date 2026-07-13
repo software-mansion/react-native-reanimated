@@ -52,6 +52,16 @@ export function createWorkletRuntimeTypeTests() {
     customQueue: {},
   });
 
+  // Correct usage - config object with enableLocking = true.
+  createWorkletRuntime({
+    enableLocking: true,
+  });
+
+  // Correct usage - config object with enableLocking = false.
+  createWorkletRuntime({
+    enableLocking: false,
+  });
+
   // Correct usage - deprecated positional parameters
   createWorkletRuntime('test', initializer);
 
@@ -83,5 +93,10 @@ export function createWorkletRuntimeTypeTests() {
     queue: 'default',
     useDefaultQueue: false,
     customQueue: {},
+  });
+
+  // @ts-expect-error - Wrong enableLocking type in config object
+  createWorkletRuntime({
+    enableLocking: 'false',
   });
 }
