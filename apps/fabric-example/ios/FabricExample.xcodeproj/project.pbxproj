@@ -248,7 +248,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\ncase \"$CONFIGURATION\" in\n  *RuntimeTests*)\n    for RUNTIME_TESTS_LIBRARY in reanimated worklets; do\n      ENTRY_FILE=\"index.runtimeTests.$RUNTIME_TESTS_LIBRARY.js\" BUNDLE_NAME=\"main.runtimeTests.$RUNTIME_TESTS_LIBRARY\" /bin/sh -c \"\\\"$WITH_ENVIRONMENT\\\" \\\"$REACT_NATIVE_XCODE\\\"\"\n    done\n    ;;\n  *)\n    /bin/sh -c \"\\\"$WITH_ENVIRONMENT\\\" \\\"$REACT_NATIVE_XCODE\\\"\"\n    ;;\nesac\n";
+			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\ncase \"$CONFIGURATION\" in\n  *RuntimeTests*)\n    for RUNTIME_TESTS_LIBRARY in reanimated worklets self-tests; do\n      ENTRY_FILE=\"index.runtimeTests.$RUNTIME_TESTS_LIBRARY.js\" BUNDLE_NAME=\"main.runtimeTests.$RUNTIME_TESTS_LIBRARY\" /bin/sh -c \"\\\"$WITH_ENVIRONMENT\\\" \\\"$REACT_NATIVE_XCODE\\\"\"\n    done\n    ;;\n  *)\n    /bin/sh -c \"\\\"$WITH_ENVIRONMENT\\\" \\\"$REACT_NATIVE_XCODE\\\"\"\n    ;;\nesac\n";
 		};
 		00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
