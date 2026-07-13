@@ -20,3 +20,13 @@ jobs:
     with:
       configuration: ${{ matrix.configuration }}
       bundleMode: ${{ matrix.bundleMode }}
+
+  android:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    strategy:
+      fail-fast: false
+      matrix:
+        bundleMode: [false, true]
+    uses: ./.github/workflows/runtime-tests-android.yml
+    with:
+      bundleMode: ${{ matrix.bundleMode }}
