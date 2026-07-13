@@ -320,9 +320,13 @@ function shutdown(code) {
   clearTimer('idle');
   if (metroChild && !metroChild.killed) {
     try {
-      metroChild.kill('SIGTERM');
+      process.kill(-metroChild.pid, 'SIGTERM');
     } catch {
-      /* ignore */
+      try {
+        metroChild.kill('SIGTERM');
+      } catch {
+        /* ignore */
+      }
     }
   }
   wss.close(() => {
@@ -410,12 +414,15 @@ async function ensureMetroRunning() {
   );
   // --reset-cache: a Metro cache produced under a different Bundle Mode
   // setting serves stale module maps ("Requiring unknown module").
+  // detached: Metro must get its own process group so shutdown can kill the
+  // whole tree — killing just the yarn wrapper orphans the actual Metro process.
   metroChild = spawn(
     'yarn',
     ['start', '--port', String(METRO_PORT), '--reset-cache'],
     {
       cwd: projectRoot,
       stdio: ['ignore', 'pipe', 'pipe'],
+      detached: true,
     }
   );
   metroChild.stdout.on('data', (chunk) => {

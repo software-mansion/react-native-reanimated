@@ -26,6 +26,7 @@ interface AutoRunRuntimeTestsRunnerProps {
   autoRun: AutoRunConfig;
   library: string;
   forbidReanimated?: boolean;
+  warmUp?: () => Promise<void>;
 }
 
 interface ProgressState {
@@ -50,6 +51,7 @@ export default function AutoRunRuntimeTestsRunner({
   autoRun,
   library,
   forbidReanimated,
+  warmUp,
 }: AutoRunRuntimeTestsRunnerProps) {
   const [component, setComponent] = useState<ReactNode | null>(null);
   const [status, setStatus] = useState<string>(
@@ -98,10 +100,9 @@ export default function AutoRunRuntimeTestsRunner({
         });
 
         const known = new Set(tests.map((test) => test.testSuiteName));
-        const unknown = [
-          ...(filterSet ?? []),
-          ...(includeSet ?? []),
-        ].filter((name) => !known.has(name));
+        const unknown = [...(filterSet ?? []), ...(includeSet ?? [])].filter(
+          (name) => !known.has(name)
+        );
         if (unknown.length > 0) {
           throw new Error(`Unknown test suites: ${unknown.join(', ')}`);
         }
@@ -125,6 +126,9 @@ export default function AutoRunRuntimeTestsRunner({
           render: setComponent,
           onProgress: setProgress,
         });
+        if (warmUp) {
+          await warmUp();
+        }
         const summary = await runTests();
         if (forbidReanimated && isReanimatedLoaded()) {
           summary.failed += 1;
@@ -140,7 +144,7 @@ export default function AutoRunRuntimeTestsRunner({
       cancelled = true;
       teardown();
     };
-  }, [autoRun.wsUrl, tests, library, forbidReanimated]);
+  }, [autoRun.wsUrl, tests, library, forbidReanimated, warmUp]);
 
   return (
     <View style={styles.flexOne}>
