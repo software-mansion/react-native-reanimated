@@ -21,6 +21,7 @@ react {
     //   skip the bundling of the JS bundle and the assets. Default is "debug", "debugOptimized".
     //   If you add flavors like lite, prod, etc. you'll have to list your debuggableVariants.
     // debuggableVariants = ["liteDebug", "liteDebugOptimized", "prodDebug", "prodDebugOptimized"]
+    debuggableVariants = ["debug", "debugOptimized", "debugRuntimeTests"]
 
     /* Bundling */
     //   A list containing the node command and its flags. Default is just 'node'.
@@ -83,6 +84,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        buildConfigField "boolean", "RUNTIME_TESTS", "false"
     }
     signingConfigs {
         debug {
@@ -95,6 +97,15 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
+        }
+        debugRuntimeTests {
+            initWith debug
+            matchingFallbacks = ["debug"]
+            // The React Native Gradle plugin fills this placeholder only for
+            // the build types it knows about (debug, debugOptimized, release).
+            manifestPlaceholders = [usesCleartextTraffic: "true"]
+            buildConfigField "boolean", "RUNTIME_TESTS", "true"
+            resValue "integer", "react_native_dev_server_port", (findProperty("reactNativeDevServerPort") ?: "8081").toString()
         }
         release {
             // Caution! In production, you need to generate your own keystore file.

@@ -1,38 +1,7 @@
 #!/usr/bin/env node
-/**
- * Host-side runner for the iOS DebugRuntimeTests scheme.
- *
- * Usage:
- *   node scripts/runtime-tests-server.js --library <reanimated|worklets|self-tests>
- *                                        [--launch] [--skip-build]
- *                                        [--only foo,bar]
- *                                        [--metro-port 8081] [--port <metro+1>]
- *                                        [--simulator "iPhone 17"] [--udid <UDID>]
- *                                        [--configuration DebugRuntimeTests]
- *                                        [--connect-timeout 600] [--idle-timeout 600]
- *
- *   --library         Which library's tests the connecting app must run.
- *                     Exactly one of `reanimated` or `worklets`. Required.
- *   --launch          Also build (xcodebuild), install and launch the app on
- *                     the simulator after the server is listening. Without it,
- *                     the server just waits for a device to connect.
- *   --skip-build      With --launch: skip xcodebuild and reuse the app that is
- *                     already installed (or in the build products directory).
- *   --only            Comma-separated suite filter forwarded in the `start`
- *                     envelope.
- *   --metro-port      Metro port to probe/start. Defaults to 8081.
- *   --port            WebSocket port to listen on. Defaults to metro-port + 1,
- *                     which is also what the app derives from its bundle URL.
- *   --simulator       Simulator name used when `--launch` is set. Defaults to
- *                     "iPhone 17"; falls back to the first available iPhone.
- *   --udid            Simulator UDID. Takes precedence over --simulator.
- *   --connect-timeout Seconds to wait for the first client, counted from app
- *                     launch when --launch is set (so a slow xcodebuild does
- *                     not eat the budget). Default 600.
- *   --idle-timeout    Seconds without any message before aborting. Default 600.
- */
 
 const path = require('path');
+const fs = require('fs');
 const net = require('net');
 const http = require('http');
 const { spawn, execFile } = require('child_process');
@@ -40,11 +9,14 @@ const WebSocket = require('ws');
 const WebSocketServer = WebSocket.WebSocketServer || WebSocket.Server;
 
 const LIBRARIES = ['reanimated', 'worklets', 'self-tests'];
+const PLATFORMS = ['ios', 'android'];
 const BOOLEAN_FLAGS = new Set(['launch', 'skip-build']);
 const BUNDLE_ID = 'org.reactjs.native.example.FabricExample';
+const ANDROID_APP_ID = 'com.fabricexample';
 
 const args = parseArgs(process.argv.slice(2));
 const LIBRARY = String(args.library ?? '').toLowerCase();
+const PLATFORM = String(args.platform ?? 'ios').toLowerCase();
 const METRO_PORT = Number(args['metro-port'] ?? 8081);
 const PORT = Number(args.port ?? METRO_PORT + 1);
 const ONLY = args.only
@@ -59,6 +31,8 @@ const SHOULD_LAUNCH = args.launch === true || args.launch === '';
 const SKIP_BUILD = args['skip-build'] === true || args['skip-build'] === '';
 const SIMULATOR = args.simulator ?? 'iPhone 17';
 const UDID = args.udid ?? null;
+const SERIAL = args.serial ?? null;
+const AVD = args.avd ?? null;
 const CONFIGURATION = args.configuration ?? 'DebugRuntimeTests';
 
 if (!LIBRARIES.includes(LIBRARY)) {
@@ -68,8 +42,16 @@ if (!LIBRARIES.includes(LIBRARY)) {
   process.exit(1);
 }
 
+if (!PLATFORMS.includes(PLATFORM)) {
+  console.error(
+    `[runtime-tests] --platform must be one of: ${PLATFORMS.join(', ')} (got: ${PLATFORM})`
+  );
+  process.exit(1);
+}
+
 const projectRoot = path.resolve(__dirname, '..');
 const iosDir = path.join(projectRoot, 'ios');
+const androidDir = path.join(projectRoot, 'android');
 
 let client = null;
 let runStartedAt = 0;
@@ -148,9 +130,15 @@ wss.on('connection', (socket) => {
       console.error(
         '[runtime-tests] device disconnected mid-run without sending `done`.'
       );
-      console.error(
-        '[runtime-tests] Check the iOS simulator log for crashes (Xcode → Devices → View Device Logs)'
-      );
+      if (PLATFORM === 'android') {
+        console.error(
+          '[runtime-tests] Check `adb logcat` for crashes (grep AndroidRuntime or ReactNative)'
+        );
+      } else {
+        console.error(
+          '[runtime-tests] Check the iOS simulator log for crashes (Xcode → Devices → View Device Logs)'
+        );
+      }
       console.error(
         '[runtime-tests] or grep `[remoteReporter]` in Metro output for the WS close reason.'
       );
@@ -272,6 +260,11 @@ function onError(msg) {
   }
   exitCode = 1;
   runFinished = true;
+  if (client) {
+    client.close();
+  } else {
+    shutdown(exitCode);
+  }
 }
 
 function send(payload) {
@@ -351,9 +344,6 @@ function probeTcp(host, port, timeoutMs = 500) {
   });
 }
 
-// Metro answers `GET /status` with the literal body "packager-status:running".
-// Use this rather than a raw TCP probe so we don't get fooled by a half-closed
-// socket or a different server happening to be on the port.
 function probeMetro(timeoutMs = 1000) {
   return new Promise((resolve) => {
     const req = http.get(
@@ -493,8 +483,6 @@ async function buildApp() {
   );
 }
 
-// The products directory depends on the machine's DerivedData configuration,
-// so resolve it from xcodebuild instead of hardcoding a path.
 async function appPath() {
   const { stdout } = await run(
     'xcodebuild',
@@ -526,8 +514,6 @@ async function installAndLaunch(udid) {
   console.log(`[runtime-tests] installing ${app}`);
   await run('xcrun', ['simctl', 'install', udid, app]);
 
-  // Point the app at the right Metro instance. NSUserDefaults are cleared on
-  // reinstall, so this has to happen after `simctl install`.
   await run('xcrun', [
     'simctl',
     'spawn',
@@ -555,15 +541,171 @@ async function installAndLaunch(udid) {
   );
 }
 
+function sdkTool(dir, name) {
+  const sdkRoot = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT;
+  if (sdkRoot) {
+    const candidate = path.join(sdkRoot, dir, name);
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return name;
+}
+
+const ADB = sdkTool('platform-tools', 'adb');
+
+function adb(serial, adbArgs, options = {}) {
+  return run(ADB, ['-s', serial, ...adbArgs], options);
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function listAndroidDevices() {
+  const { stdout } = await run(ADB, ['devices']);
+  return stdout
+    .split('\n')
+    .slice(1)
+    .map((line) => line.trim().split(/\s+/))
+    .filter((parts) => parts.length >= 2 && parts[1] === 'device')
+    .map((parts) => parts[0]);
+}
+
+async function resolveAndroidDevice() {
+  const serials = await listAndroidDevices();
+
+  if (SERIAL) {
+    if (!serials.includes(SERIAL)) {
+      throw new Error(
+        `No connected Android device with serial ${SERIAL} (see \`adb devices\`)`
+      );
+    }
+    return SERIAL;
+  }
+
+  if (serials.length > 0) {
+    if (serials.length > 1) {
+      console.log(
+        `[runtime-tests] multiple Android devices connected, using ${serials[0]}`
+      );
+    }
+    return serials[0];
+  }
+
+  const emulatorBin = sdkTool('emulator', 'emulator');
+  const { stdout } = await run(emulatorBin, ['-list-avds']);
+  const avds = stdout
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith('INFO'));
+  const avd = AVD ?? avds[0];
+  if (!avd) {
+    throw new Error(
+      'No Android device connected and no AVDs available (see `emulator -list-avds`)'
+    );
+  }
+
+  console.log(`[runtime-tests] booting emulator ${avd}`);
+  const child = spawn(
+    emulatorBin,
+    ['-avd', avd, '-no-snapshot-save', '-no-boot-anim', '-no-audio'],
+    { detached: true, stdio: 'ignore' }
+  );
+  child.unref();
+
+  const deadline = Date.now() + 300_000;
+  while (Date.now() < deadline) {
+    const booted = await listAndroidDevices();
+    if (booted.length > 0) {
+      const { stdout: bootCompleted } = await adb(booted[0], [
+        'shell',
+        'getprop',
+        'sys.boot_completed',
+      ]).catch(() => ({ stdout: '' }));
+      if (bootCompleted.trim() === '1') {
+        return booted[0];
+      }
+    }
+    await sleep(2000);
+  }
+  throw new Error(`Emulator ${avd} did not boot within 300s`);
+}
+
+async function buildAndroidApp(serial) {
+  const abi = await adb(serial, ['shell', 'getprop', 'ro.product.cpu.abi'])
+    .then(({ stdout }) => stdout.trim())
+    .catch(() => null);
+  console.log(
+    `[runtime-tests] building with gradle (assembleDebugRuntimeTests${abi ? `, ABI ${abi}` : ''})… this can take a while`
+  );
+  const gradleArgs = [
+    'assembleDebugRuntimeTests',
+    `-PreactNativeDevServerPort=${METRO_PORT}`,
+  ];
+  if (abi) {
+    gradleArgs.push(`-PreactNativeArchitectures=${abi}`);
+  }
+  await run(path.join(androidDir, 'gradlew'), gradleArgs, { cwd: androidDir });
+}
+
+async function installAndLaunchAndroid(serial) {
+  const apk = path.join(
+    androidDir,
+    'app',
+    'build',
+    'outputs',
+    'apk',
+    'debugRuntimeTests',
+    'app-debugRuntimeTests.apk'
+  );
+  if (!fs.existsSync(apk)) {
+    throw new Error(`APK not found at ${apk} — run once without --skip-build`);
+  }
+  console.log(`[runtime-tests] installing ${apk}`);
+  await adb(serial, ['install', '-r', apk]);
+
+  for (const port of [METRO_PORT, PORT]) {
+    await adb(serial, ['reverse', `tcp:${port}`, `tcp:${port}`]).catch(
+      () => {}
+    );
+  }
+
+  await adb(serial, ['shell', 'am', 'force-stop', ANDROID_APP_ID]).catch(
+    () => {}
+  );
+  console.log(
+    `[runtime-tests] launching ${ANDROID_APP_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY}`
+  );
+  await adb(serial, [
+    'shell',
+    'am',
+    'start',
+    '-n',
+    `${ANDROID_APP_ID}/.MainActivity`,
+    '--es',
+    'RUNTIME_TESTS_LIBRARY',
+    LIBRARY,
+  ]);
+}
+
 if (SHOULD_LAUNCH) {
   (async () => {
     await ensureMetroRunning();
-    const device = await resolveSimulator();
-    await ensureBooted(device);
-    if (!SKIP_BUILD) {
-      await buildApp();
+    if (PLATFORM === 'android') {
+      const serial = await resolveAndroidDevice();
+      if (!SKIP_BUILD) {
+        await buildAndroidApp(serial);
+      }
+      await installAndLaunchAndroid(serial);
+    } else {
+      const device = await resolveSimulator();
+      await ensureBooted(device);
+      if (!SKIP_BUILD) {
+        await buildApp();
+      }
+      await installAndLaunch(device.udid);
     }
-    await installAndLaunch(device.udid);
     armConnectTimer();
   })().catch((error) => {
     console.error(`[runtime-tests] ${error.message}`);
