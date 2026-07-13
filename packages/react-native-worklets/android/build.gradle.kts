@@ -8,7 +8,6 @@ plugins {
     id("com.android.library")
     id("maven-publish")
     id("com.diffplug.spotless") version "8.1.0"
-    id("org.jetbrains.kotlin.android")
 }
 
 fun safeExtGet(prop: String, fallback: Any?): Any? =
@@ -271,6 +270,13 @@ android {
     sourceSets {
         getByName("main") {
             java {
+                if (FETCH_PREVIEW_ENABLED) {
+                    srcDir("src/networking")
+                } else {
+                    srcDir("src/no-networking")
+                }
+            }
+            kotlin {
                 if (FETCH_PREVIEW_ENABLED) {
                     srcDir("src/networking")
                 } else {

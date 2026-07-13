@@ -1,0 +1,45 @@
+diff --git a/android/build.gradle b/android/build.gradle
+index 3f3b0d543b844104305b31d58ff0e27a93a38e75..53c0f84a422e77c900ab7642aa9207c52f5bb775 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -86,7 +86,6 @@ if (isRunningInContextOfScreensRepo()) {
+     apply plugin: "com.facebook.react"
+ }
+ apply plugin: 'com.android.library'
+-apply plugin: 'kotlin-android'
+ 
+ def reactNativeArchitectures() {
+     def value = project.getProperties().get("reactNativeArchitectures")
+@@ -170,6 +169,11 @@ android {
+     }
+     sourceSets.main {
+         ext.androidResDir = "src/main/res"
++        kotlin {
++            srcDirs += [
++                "src/fabric/java",
++            ]
++        }
+         java {
+             srcDirs += [
+                 "src/fabric/java",
+diff --git a/ios/RNSScreenContentWrapper.mm b/ios/RNSScreenContentWrapper.mm
+index 7756a55b7aef23de1ad248e3471cebf69e4aceba..5204b49837c01fd51c615dc50dea9ef26e54e64f 100644
+--- a/ios/RNSScreenContentWrapper.mm
++++ b/ios/RNSScreenContentWrapper.mm
+@@ -15,6 +15,16 @@
+ 
+ @implementation RNSScreenContentWrapper
+ 
++- (instancetype)initWithFrame:(CGRect)frame
++{
++  if (self = [super initWithFrame:frame]) {
++    static const auto defaultProps = std::make_shared<const react::RNSScreenContentWrapperProps>();
++    _props = defaultProps;
++  }
++
++  return self;
++}
++
+ - (void)notifyDelegateWithFrame:(CGRect)frame
+ {
+   [self.delegate contentWrapper:self receivedReactFrame:frame];

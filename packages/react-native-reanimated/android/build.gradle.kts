@@ -8,7 +8,6 @@ plugins {
     id("com.android.library")
     id("maven-publish")
     id("com.diffplug.spotless") version "8.4.0"
-    id("org.jetbrains.kotlin.android")
 }
 
 fun safeExtGet(prop: String, fallback: Any?): Any? =
