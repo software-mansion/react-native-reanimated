@@ -10,15 +10,15 @@ import { createStack, IS_MACOS } from '@/utils';
 import type { RuntimeTestSuite } from '../../../runtime-tests/types';
 
 type RootStackParamList = {
-  'Runtime Tests': undefined;
+  Tests: undefined;
   'Reanimated Tests': undefined;
   'Worklets Tests': undefined;
 };
 
 interface HomeScreenProps {
   navigation:
-    | StackNavigationProp<RootStackParamList, 'Runtime Tests'>
-    | NativeStackNavigationProp<RootStackParamList, 'Runtime Tests'>;
+    | StackNavigationProp<RootStackParamList, 'Tests'>
+    | NativeStackNavigationProp<RootStackParamList, 'Tests'>;
 }
 
 function HomeScreen({ navigation }: HomeScreenProps) {
@@ -76,7 +76,7 @@ export default function App() {
     <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen
         component={HomeScreen}
-        name="Runtime Tests"
+        name="Tests"
         options={{
           headerTitle: '🧪 Runtime tests',
           title: 'Runtime tests',
