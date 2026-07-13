@@ -58,12 +58,14 @@ interface AutoRunRuntimeTestsAppProps {
   tests: RuntimeTestSuite[];
   library: string;
   forbidReanimated?: boolean;
+  warmUp?: () => Promise<void>;
 }
 
 export default function AutoRunRuntimeTestsApp({
   tests,
   library,
   forbidReanimated,
+  warmUp,
 }: AutoRunRuntimeTestsAppProps) {
   const wsUrl = deriveWsUrl();
   return (
@@ -76,6 +78,7 @@ export default function AutoRunRuntimeTestsApp({
           autoRun={{ wsUrl }}
           library={library}
           forbidReanimated={forbidReanimated}
+          warmUp={warmUp}
         />
       </View>
     </View>
