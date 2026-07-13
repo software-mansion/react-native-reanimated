@@ -138,11 +138,4 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/StrictMode/StrictMode.test');
     },
   },
-  {
-    skipByDefault: true,
-    testSuiteName: 'self-tests',
-    importTest: () => {
-      require('./tests/TestsOfTestingFramework.test');
-    },
-  },
 ];

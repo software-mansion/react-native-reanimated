@@ -13,6 +13,7 @@ type RootStackParamList = {
   Tests: undefined;
   'Reanimated Tests': undefined;
   'Worklets Tests': undefined;
+  'Self-Tests': undefined;
 };
 
 interface HomeScreenProps {
@@ -33,6 +34,11 @@ function HomeScreen({ navigation }: HomeScreenProps) {
         style={styles.button}
         onPress={() => navigation.navigate('Worklets Tests')}>
         <Text style={styles.title}>🧵 Worklets Tests</Text>
+      </Pressable>
+      <Pressable
+        style={styles.button}
+        onPress={() => navigation.navigate('Self-Tests')}>
+        <Text style={styles.title}>🔬 ReJest Self-Tests</Text>
       </Pressable>
     </View>
   );
@@ -62,6 +68,19 @@ function WorkletsTestsScreen() {
       WORKLETS_TEST_SUITES: Array<RuntimeTestSuite>;
     };
   return <RuntimeTestsRunner tests={WORKLETS_TEST_SUITES} />;
+}
+
+function SelfTestsScreen() {
+  const RuntimeTestsRunner = (
+    require('../../../runtime-tests/ReJest/RuntimeTestsRunner') as {
+      default: React.ComponentType<{ tests: Array<RuntimeTestSuite> }>;
+    }
+  ).default;
+  const { SELF_TEST_SUITES } =
+    require('../../../runtime-tests/self-tests/suites') as {
+      SELF_TEST_SUITES: Array<RuntimeTestSuite>;
+    };
+  return <RuntimeTestsRunner tests={SELF_TEST_SUITES} />;
 }
 
 const Stack = createStack<RootStackParamList>();
@@ -96,6 +115,14 @@ export default function App() {
         options={{
           headerTitle: 'Worklets runtime tests',
           title: 'Worklets runtime tests',
+        }}
+      />
+      <Stack.Screen
+        component={SelfTestsScreen}
+        name="Self-Tests"
+        options={{
+          headerTitle: 'ReJest self-tests',
+          title: 'ReJest self-tests',
         }}
       />
     </Stack.Navigator>
