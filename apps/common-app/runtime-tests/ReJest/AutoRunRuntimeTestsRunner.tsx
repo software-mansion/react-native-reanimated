@@ -81,11 +81,15 @@ export default function AutoRunRuntimeTestsRunner({
           setStatus(message);
         }
       },
-      onStart: async ({ only }) => {
+      onStart: async ({ only, include }) => {
         const filterSet = only ? new Set(only) : null;
+        const includeSet = include ? new Set(include) : null;
         const selected = tests.filter((test) => {
           if (test.disabled) {
             return false;
+          }
+          if (includeSet?.has(test.testSuiteName)) {
+            return true;
           }
           if (filterSet) {
             return filterSet.has(test.testSuiteName);
@@ -93,12 +97,13 @@ export default function AutoRunRuntimeTestsRunner({
           return !test.skipByDefault;
         });
 
-        if (filterSet) {
-          const known = new Set(tests.map((test) => test.testSuiteName));
-          const unknown = [...filterSet].filter((name) => !known.has(name));
-          if (unknown.length > 0) {
-            throw new Error(`Unknown test suites: ${unknown.join(', ')}`);
-          }
+        const known = new Set(tests.map((test) => test.testSuiteName));
+        const unknown = [
+          ...(filterSet ?? []),
+          ...(includeSet ?? []),
+        ].filter((name) => !known.has(name));
+        if (unknown.length > 0) {
+          throw new Error(`Unknown test suites: ${unknown.join(', ')}`);
         }
 
         const { configure, runTests } = require('./RuntimeTestsApi') as {
