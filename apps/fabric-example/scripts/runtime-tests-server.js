@@ -60,7 +60,13 @@ const args = parseArgs(process.argv.slice(2));
 const LIBRARY = String(args.library ?? '').toLowerCase();
 const PLATFORM = String(args.platform ?? 'ios').toLowerCase();
 const METRO_PORT = Number(args['metro-port'] ?? 8081);
-const PORT = Number(args.port ?? METRO_PORT + 1);
+const ARG_CONFIGURATION = args.configuration ?? 'DebugRuntimeTests';
+// Release builds embed the JS bundles: no Metro, and the app falls back to
+// ws://localhost:8082 since there is no bundle URL to derive a port from.
+const IS_RELEASE_CONFIGURATION = ARG_CONFIGURATION.startsWith('Release');
+const PORT = Number(
+  args.port ?? (IS_RELEASE_CONFIGURATION ? 8082 : METRO_PORT + 1)
+);
 const ONLY = args.only
   ? args.only
       .split(',')
@@ -75,7 +81,8 @@ const SIMULATOR = args.simulator ?? 'iPhone 17';
 const UDID = args.udid ?? null;
 const SERIAL = args.serial ?? null;
 const AVD = args.avd ?? null;
-const CONFIGURATION = args.configuration ?? 'DebugRuntimeTests';
+const CONFIGURATION = ARG_CONFIGURATION;
+const IS_RELEASE = IS_RELEASE_CONFIGURATION;
 
 if (!LIBRARIES.includes(LIBRARY)) {
   console.error(
@@ -87,6 +94,13 @@ if (!LIBRARIES.includes(LIBRARY)) {
 if (!PLATFORMS.includes(PLATFORM)) {
   console.error(
     `[runtime-tests] --platform must be one of: ${PLATFORMS.join(', ')} (got: ${PLATFORM})`
+  );
+  process.exit(1);
+}
+
+if (PLATFORM === 'android' && IS_RELEASE) {
+  console.error(
+    '[runtime-tests] --platform android supports only Debug configurations for now'
   );
   process.exit(1);
 }
@@ -556,18 +570,20 @@ async function installAndLaunch(udid) {
   console.log(`[runtime-tests] installing ${app}`);
   await run('xcrun', ['simctl', 'install', udid, app]);
 
-  // Point the app at the right Metro instance. NSUserDefaults are cleared on
-  // reinstall, so this has to happen after `simctl install`.
-  await run('xcrun', [
-    'simctl',
-    'spawn',
-    udid,
-    'defaults',
-    'write',
-    BUNDLE_ID,
-    'RCT_jsLocation',
-    `localhost:${METRO_PORT}`,
-  ]);
+  if (!IS_RELEASE) {
+    // Point the app at the right Metro instance. NSUserDefaults are cleared on
+    // reinstall, so this has to happen after `simctl install`.
+    await run('xcrun', [
+      'simctl',
+      'spawn',
+      udid,
+      'defaults',
+      'write',
+      BUNDLE_ID,
+      'RCT_jsLocation',
+      `localhost:${METRO_PORT}`,
+    ]);
+  }
 
   await run('xcrun', ['simctl', 'terminate', udid, BUNDLE_ID]).catch(() => {});
   console.log(
@@ -739,7 +755,9 @@ async function installAndLaunchAndroid(serial) {
 
 if (SHOULD_LAUNCH) {
   (async () => {
-    await ensureMetroRunning();
+    if (!IS_RELEASE) {
+      await ensureMetroRunning();
+    }
     if (PLATFORM === 'android') {
       const serial = await resolveAndroidDevice();
       if (!SKIP_BUILD) {
