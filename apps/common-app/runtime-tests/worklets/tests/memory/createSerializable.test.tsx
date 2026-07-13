@@ -182,7 +182,7 @@ describe('Test createSerializable', () => {
       });
 
       test('createSerializableHostObject', async () => {
-        const hostObjectValue = globalThis.__reanimatedModuleProxy;
+        const hostObjectValue = globalThis.__workletsModuleProxy;
         const hostObjectKeys = Object.keys(hostObjectValue);
         scheduleOnTarget(() => {
           'worklet';
@@ -674,13 +674,12 @@ if (__DEV__) {
   describe('createSerializable for unsupported types', () => {
     test('throws when trying to serialize a Promise', async () => {
       const promise = Promise.resolve();
+      // The exact message differs between Bundle Mode and Legacy Eval Mode
+      // and between the RN-side and UI-side serialization paths; both
+      // variants name the offending type.
       await expect(() => {
         createSerializable(promise);
-      }).toThrow(
-        globalThis._WORKLETS_BUNDLE_MODE_ENABLED
-          ? 'Cannot copy value of type `Promise`'
-          : 'Promises cannot be converted to serializable.'
-      );
+      }).toThrow('Promise');
     });
 
     test('throws when trying to serialize a Proxy', async () => {

@@ -1,5 +1,4 @@
-import { isColor, processColorNumber } from '../utils/colorUtils';
-
+/* eslint-disable @typescript-eslint/no-var-requires */
 import type { TestValue, ValidPropNames } from '../types';
 import { ComparisonMode, isValidPropName } from '../types';
 
@@ -37,10 +36,12 @@ const COMPARATORS: {
   },
 
   [ComparisonMode.COLOR]: (expected, value) => {
+    const { isColor, processColor } =
+      require('react-native-reanimated') as typeof import('react-native-reanimated');
     if (!isColor(expected) || !isColor(value)) {
       return false;
     }
-    return processColorNumber(expected) === processColorNumber(value);
+    return processColor(expected) === processColor(value);
   },
 
   [ComparisonMode.PIXEL]: (expected, value) => {

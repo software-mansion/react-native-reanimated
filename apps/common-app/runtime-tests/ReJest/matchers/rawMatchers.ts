@@ -208,17 +208,56 @@ export const toThrowMatcher: AsyncMatcher<ToThrowArgs> = async (
   let thrownException = false;
   let thrownExceptionMessage = null;
 
+  // Errors thrown on a Worklet Runtime inside a synchronous call (e.g.
+  // `runOnUISync`) don't reject on the RN runtime — they are reported
+  // asynchronously through `ErrorUtils.reportFatalError`. Capture the global
+  // handler for the duration of the call so the matcher sees them regardless
+  // of which handler (LogBox, remote reporter) is installed around the run.
+  const errorUtils = (
+    globalThis as {
+      ErrorUtils?: {
+        getGlobalHandler: () => (error: Error, isFatal?: boolean) => void;
+        setGlobalHandler: (
+          handler: (error: Error, isFatal?: boolean) => void
+        ) => void;
+      };
+    }
+  ).ErrorUtils;
+  let uncaughtErrorMessage: string | null = null;
+  const previousGlobalHandler = errorUtils?.getGlobalHandler();
+  errorUtils?.setGlobalHandler((error) => {
+    if (uncaughtErrorMessage === null) {
+      uncaughtErrorMessage = error?.message ?? String(error);
+    }
+  });
+
   try {
     await throwingFunction();
   } catch (e) {
     thrownException = true;
     thrownExceptionMessage = (e as Error)?.message || '';
   }
+
+  const deadline = Date.now() + 500;
+  while (
+    !thrownException &&
+    uncaughtErrorMessage === null &&
+    getCapturedConsoleErrors().consoleErrorCount < 1 &&
+    Date.now() < deadline
+  ) {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+
+  if (previousGlobalHandler) {
+    errorUtils?.setGlobalHandler(previousGlobalHandler);
+  }
   await restoreConsole();
 
   const { consoleErrorCount, consoleErrorMessage } = getCapturedConsoleErrors();
-  const errorWasThrown = thrownException || consoleErrorCount >= 1;
-  const capturedMessage = thrownExceptionMessage || consoleErrorMessage;
+  const errorWasThrown =
+    thrownException || uncaughtErrorMessage !== null || consoleErrorCount >= 1;
+  const capturedMessage =
+    thrownExceptionMessage || uncaughtErrorMessage || consoleErrorMessage;
   const messageIsCorrect = errorMessage
     ? capturedMessage.includes(errorMessage)
     : true;

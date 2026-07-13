@@ -523,16 +523,20 @@ describe('Test createSerializableOnUI', () => {
   // });
 
   test('createSerializableOnUIInaccessibleObject', async () => {
-    const clazz = runOnUISync(() => {
-      'worklet';
-      class Clazz {
-        method() {}
-      }
-
-      return new Clazz();
-    });
-
+    // In Debug the unsupported value is copied back as an inaccessible
+    // placeholder that throws on property access; in Release `runOnUISync`
+    // throws synchronously while copying the value back. Both paths must
+    // land inside the asserted function.
     await expect(() => {
+      const clazz = runOnUISync(() => {
+        'worklet';
+        class Clazz {
+          method() {}
+        }
+
+        return new Clazz();
+      });
+
       clazz.method();
     }).toThrow();
   });
@@ -565,12 +569,14 @@ describe('Test createSerializableOnUI', () => {
 
   if (__DEV__) {
     test('throws when trying to serialize a Promise', async () => {
+      // The exact message differs between Bundle Mode and Legacy Eval Mode;
+      // both variants name the offending type.
       await expect(() =>
         runOnUISync(() => {
           'worklet';
           return Promise.resolve();
         })
-      ).toThrow('Cannot copy value of type `Promise`');
+      ).toThrow('Promise');
     });
   }
 });

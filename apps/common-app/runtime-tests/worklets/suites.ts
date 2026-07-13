@@ -1,3 +1,5 @@
+import { isBundleModeEnabled } from 'react-native-worklets';
+
 import type { RuntimeTestSuite } from '../types';
 
 export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
@@ -37,7 +39,11 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runtimes/reactNativeImportShim.test');
       require('./tests/runtimes/turboModuleRegistryShim.test');
     },
-    disabled: !globalThis._WORKLETS_BUNDLE_MODE_ENABLED,
+    // With inline requires, reading `globalThis._WORKLETS_BUNDLE_MODE_ENABLED`
+    // here would race module initialization order — the flag is only set once
+    // some module actually evaluates `react-native-worklets`. Calling
+    // `isBundleModeEnabled()` forces that initialization first.
+    disabled: !isBundleModeEnabled(),
     skipByDefault: true,
   },
   {

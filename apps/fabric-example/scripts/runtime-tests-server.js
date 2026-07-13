@@ -73,6 +73,12 @@ const ONLY = args.only
       .map((s) => s.trim())
       .filter(Boolean)
   : null;
+const INCLUDE = args.include
+  ? args.include
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+  : null;
 const CONNECT_TIMEOUT_MS = Number(args['connect-timeout'] ?? 600) * 1000;
 const IDLE_TIMEOUT_MS = Number(args['idle-timeout'] ?? 600) * 1000;
 const SHOULD_LAUNCH = args.launch === true || args.launch === '';
@@ -248,23 +254,24 @@ function onHello(msg) {
     return;
   }
 
-  if (ONLY) {
-    const unknown = ONLY.filter((name) => !declared.includes(name));
-    if (unknown.length > 0) {
-      console.error(
-        `[runtime-tests] unknown suite name(s): ${unknown.join(', ')}`
-      );
-      console.error(
-        `[runtime-tests] available suites: ${declared.join(', ')}`
-      );
-      send({ type: 'error', message: `Unknown suites: ${unknown.join(', ')}` });
-      shutdown(1);
-      return;
-    }
+  const requested = [...(ONLY ?? []), ...(INCLUDE ?? [])];
+  const unknown = requested.filter((name) => !declared.includes(name));
+  if (unknown.length > 0) {
+    console.error(
+      `[runtime-tests] unknown suite name(s): ${unknown.join(', ')}`
+    );
+    console.error(`[runtime-tests] available suites: ${declared.join(', ')}`);
+    send({ type: 'error', message: `Unknown suites: ${unknown.join(', ')}` });
+    shutdown(1);
+    return;
   }
 
   runStartedAt = Date.now();
-  send({ type: 'start', ...(ONLY ? { only: ONLY } : {}) });
+  send({
+    type: 'start',
+    ...(ONLY ? { only: ONLY } : {}),
+    ...(INCLUDE ? { include: INCLUDE } : {}),
+  });
   console.log('[runtime-tests] start sent, running tests…');
 }
 
@@ -439,12 +446,18 @@ async function ensureMetroRunning() {
     );
   }
   console.log(
-    `[runtime-tests] starting Metro (\`yarn start --port ${METRO_PORT}\`)`
+    `[runtime-tests] starting Metro (\`yarn start --port ${METRO_PORT} --reset-cache\`)`
   );
-  metroChild = spawn('yarn', ['start', '--port', String(METRO_PORT)], {
-    cwd: projectRoot,
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
+  // --reset-cache: a Metro cache produced under a different Bundle Mode
+  // setting serves stale module maps ("Requiring unknown module").
+  metroChild = spawn(
+    'yarn',
+    ['start', '--port', String(METRO_PORT), '--reset-cache'],
+    {
+      cwd: projectRoot,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }
+  );
   metroChild.stdout.on('data', (chunk) => {
     process.stdout.write(`[metro] ${chunk}`);
   });
