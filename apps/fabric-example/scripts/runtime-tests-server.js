@@ -3,7 +3,7 @@
  * Host-side runner for the iOS DebugRuntimeTests scheme.
  *
  * Usage:
- *   node scripts/runtime-tests-server.js --library <reanimated|worklets>
+ *   node scripts/runtime-tests-server.js --library <reanimated|worklets|self-tests>
  *                                        [--launch] [--skip-build]
  *                                        [--only foo,bar]
  *                                        [--metro-port 8081] [--port <metro+1>]
@@ -39,7 +39,7 @@ const { spawn, execFile } = require('child_process');
 const WebSocket = require('ws');
 const WebSocketServer = WebSocket.WebSocketServer || WebSocket.Server;
 
-const LIBRARIES = ['reanimated', 'worklets'];
+const LIBRARIES = ['reanimated', 'worklets', 'self-tests'];
 const BOOLEAN_FLAGS = new Set(['launch', 'skip-build']);
 const BUNDLE_ID = 'org.reactjs.native.example.FabricExample';
 
