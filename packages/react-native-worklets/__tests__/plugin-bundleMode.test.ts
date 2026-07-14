@@ -4,6 +4,8 @@ import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
+import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 
 import { countOccurrences } from '../jest/pluginTestUtils';
@@ -175,6 +177,50 @@ describe('babel plugin in bundleMode', () => {
       expect(files).toHaveLength(1);
       expect(files[0].content).not.toContain('__stackDetails');
       expect(files[0].content).toMatchSnapshot();
+    });
+
+    test('emits a worklet file when the process working directory has no @babel/preset-typescript reachable', () => {
+      // Regression test for a bug in `generateWorkletFile`: its internal
+      // `transformFromAstSync` call passes `presets: ['@babel/preset-typescript']`
+      // as a bare specifier and does not set an explicit `cwd`, so Babel
+      // resolves it relative to `process.cwd()` (see
+      // `@babel/core`'s `buildRootChain`, which uses `dirname: context.cwd`
+      // for presets/plugins passed directly as options rather than via a
+      // config file). `@babel/preset-typescript` is a direct dependency of
+      // `react-native-worklets` itself, but nothing guarantees it is
+      // reachable from whatever directory happens to be the current
+      // process's cwd when Metro/Babel invoke this transform (e.g. a
+      // monorepo subpackage directory, or a worker process with a cwd that
+      // differs from the project root). Whether resolution succeeds then
+      // depends entirely on incidental node_modules hoisting by the package
+      // manager, which is not guaranteed to be stable (this was observed to
+      // fail intermittently under pnpm during a real Metro release bundle).
+      // Reproduce by pointing `process.cwd()` at an isolated directory with
+      // no `@babel/preset-typescript` anywhere in its node_modules ancestry,
+      // and assert that worklet generation still succeeds.
+      const isolatedDir = fs.mkdtempSync(
+        path.join(os.tmpdir(), 'worklets-isolated-cwd-')
+      );
+      fs.mkdirSync(path.join(isolatedDir, 'node_modules'), {
+        recursive: true,
+      });
+      const previousCwd = process.cwd();
+
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var x = 1;
+        }
+      </script>`;
+
+      try {
+        process.chdir(isolatedDir);
+        const { files } = runPlugin(input);
+        expect(files).toHaveLength(1);
+      } finally {
+        process.chdir(previousCwd);
+        fs.rmSync(isolatedDir, { recursive: true, force: true });
+      }
     });
 
     test('forwards closure variables from source to factory', () => {
