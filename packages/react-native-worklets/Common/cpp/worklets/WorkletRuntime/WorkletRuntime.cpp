@@ -46,10 +46,12 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
         runtime_(std::move(runtime)) {}
 };
 
-static std::shared_ptr<jsi::Runtime> makeRuntime(const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
+static std::shared_ptr<jsi::Runtime> makeRuntime(
+    const std::shared_ptr<std::recursive_mutex> &runtimeMutex,
+    bool enableLocking) {
   auto hermesRuntime = facebook::hermes::makeHermesRuntime();
   std::shared_ptr<jsi::Runtime> jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime));
-  if (!runtimeMutex) {
+  if (!enableLocking) {
     return jsiRuntime;
   }
   return std::make_shared<LockableRuntime>(jsiRuntime, runtimeMutex);
@@ -63,15 +65,16 @@ WorkletRuntime::WorkletRuntime(
     bool enableEventLoop,
     bool enableLocking)
     : runtimeId_(runtimeId),
-      runtimeMutex_(enableLocking ? std::make_shared<std::recursive_mutex>() : nullptr),
-      runtime_(makeRuntime(runtimeMutex_)),
+      enableLocking_(enableLocking),
+      runtimeMutex_(std::make_shared<std::recursive_mutex>()),
+      runtime_(makeRuntime(runtimeMutex_, enableLocking_)),
       runtimeKind_(runtimeKind),
       name_(name),
       queue_(queue) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
   if (enableEventLoop) {
-    eventLoop_ = std::make_shared<EventLoop>(name_, runtime_, queue_);
+    eventLoop_ = std::make_shared<EventLoop>(name_, runtime_, queue_, enableLocking_ ? nullptr : runtimeMutex_);
     eventLoop_->run();
   }
 }
