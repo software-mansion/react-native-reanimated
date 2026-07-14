@@ -39,14 +39,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   std::vector<std::shared_ptr<MutationNode>> roots;
   std::unordered_map<Tag, Tag> movedViews;
 
-  // If React re-creates or re-inserts a tag whose exiting removal we are still
-  // withholding, it has contradicted that withheld Remove/Delete. Flush it now
-  // instead of letting it fire later against a stale hierarchy (which would
-  // unmount the wrong, still-live view and crash the mounting layer).
-  //
-  // This must run before addOngoingAnimations (which would otherwise emit an
-  // Update for a tag we are about to Delete this frame) and before
-  // parseRemoveMutations, so the rest of the pipeline sees clean bookkeeping.
   reconcileContradictedRemovals(mutations, filteredMutations, surfaceId);
 
   addOngoingAnimations(surfaceId, filteredMutations);
@@ -74,6 +66,14 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
 
+// If React re-creates or re-inserts a tag whose exiting removal we are still
+// withholding, it has contradicted that withheld Remove/Delete. Flush it now
+// instead of letting it fire later against a stale hierarchy (which would
+// unmount the wrong, still-live view and crash the mounting layer).
+//
+// This must run before addOngoingAnimations (which would otherwise emit an
+// Update for a tag we are about to Delete this frame) and before
+// parseRemoveMutations, so the rest of the pipeline sees clean bookkeeping.
 void LayoutAnimationsProxy_Legacy::reconcileContradictedRemovals(
     ShadowViewMutationList &mutations,
     ShadowViewMutationList &filteredMutations,
@@ -160,10 +160,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
 
   auto node = nodeForTag_[tag];
   if (!node->isMutationNode()) {
-    // The node was replaced by a plain Node (e.g. by a reparenting move) after
-    // the exiting animation started, so there is no withheld removal to
-    // finalize. Casting it to MutationNode here would corrupt the heap, and the
-    // react_native_assert that used to guard this is compiled out in release.
+    react_native_assert(false && "exiting tag must map to a MutationNode");
     return {};
   }
   auto mutationNode = std::static_pointer_cast<MutationNode>(node);
