@@ -86,6 +86,7 @@ function HomeScreen({ navigation }: HomeScreenProps) {
       )}
       ItemSeparatorComponent={ItemSeparator}
       style={styles.list}
+      contentInsetAdjustmentBehavior="automatic"
     />
   );
 }
