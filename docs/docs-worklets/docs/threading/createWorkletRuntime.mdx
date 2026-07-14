@@ -52,10 +52,11 @@ runtime->runGuarded(worklet, ...args);
     name?: string;
     initializer?: () => void;
     animationQueuePollingRate?: number;
-    enableEventLoop?: true;
-    enableLocking?: boolean;
     queue?: 'default' | object | null;
-  };
+  } & (
+    | { enableEventLoop?: true; enableLocking?: true }
+    | { enableEventLoop?: false; enableLocking: false }
+  );
 
   function createWorkletRuntime(
     config?: WorkletRuntimeConfig
@@ -85,11 +86,12 @@ Time interval in milliseconds between polling of frame callbacks scheduled by `r
 
 Determines whether to enable the default event loop. Defaults to `true`.
 When enabled, the runtime provides `setTimeout`, `setImmediate`, `setInterval`, `requestAnimationFrame`, `queueMicrotask`, `clearTimeout`, `clearInterval`, `clearImmediate`, and `cancelAnimationFrame`.
+The event loop cannot be enabled on a runtime with `enableLocking` set to `false`.
 
 ##### `enableLocking`
 
 Determines whether access to the underlying JS runtime is synchronized with a mutex around every JSI operation. Defaults to `true`.
-When set to `false`, individual JSI operations are no longer synchronized, which removes the per-operation locking overhead. The runtime still keeps its mutex and acquires it once per call for jobs scheduled on the runtime's queue, timer callbacks, synchronous calls such as `runOnRuntimeSync`, `registerCustomSerializable`, and module updates during development, so all of these remain safe to use. Use it only when you can guarantee that native code accessing the runtime directly through JSI (bypassing the Worklets API) never runs concurrently with other work on the runtime.
+When set to `false`, individual JSI operations are no longer synchronized, which removes the per-operation locking overhead, and the runtime is created without the event loop — `enableEventLoop` cannot be set to `true`, so methods like `setTimeout` or `requestAnimationFrame` are unavailable. The runtime still keeps its mutex and acquires it once per call for jobs scheduled on the runtime's queue, synchronous calls such as `runOnRuntimeSync`, `registerCustomSerializable`, and module updates during development, so all of these remain safe to use. Use it only when you can guarantee that native code accessing the runtime directly through JSI (bypassing the Worklets API) never runs concurrently with other work on the runtime.
 
 ##### `queue`
 

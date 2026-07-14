@@ -81,6 +81,23 @@ export function createWorkletRuntimeTypeTests() {
     customQueue: {},
   });
 
+  // Correct usage - config object with enableEventLoop = true.
+  createWorkletRuntime({
+    enableEventLoop: true,
+  });
+
+  // Correct usage - config object with enableEventLoop = true and enableLocking = true.
+  createWorkletRuntime({
+    enableEventLoop: true,
+    enableLocking: true,
+  });
+
+  // Correct usage - config object with enableEventLoop = false and enableLocking = false.
+  createWorkletRuntime({
+    enableEventLoop: false,
+    enableLocking: false,
+  });
+
   // Correct usage - deprecated positional parameters
   createWorkletRuntime('test', initializer);
 
@@ -117,5 +134,22 @@ export function createWorkletRuntimeTypeTests() {
   // @ts-expect-error - Wrong enableLocking type in config object
   createWorkletRuntime({
     enableLocking: 'false',
+  });
+
+  // @ts-expect-error - The event loop cannot be enabled when locking is disabled
+  createWorkletRuntime({
+    enableEventLoop: true,
+    enableLocking: false,
+  });
+
+  // @ts-expect-error - The event loop cannot be disabled without disabling locking
+  createWorkletRuntime({
+    enableEventLoop: false,
+  });
+
+  // @ts-expect-error - The event loop cannot be disabled with locking enabled
+  createWorkletRuntime({
+    enableEventLoop: false,
+    enableLocking: true,
   });
 }

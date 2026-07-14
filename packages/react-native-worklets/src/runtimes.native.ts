@@ -97,8 +97,15 @@ export function createWorkletRuntime(
     animationQueuePollingRate = Math.round(
       nameOrConfig?.animationQueuePollingRate ?? 16
     );
-    enableEventLoop = nameOrConfig?.enableEventLoop ?? true;
     enableLocking = nameOrConfig?.enableLocking ?? true;
+    if (!enableLocking && nameOrConfig?.enableEventLoop) {
+      throw new Error(
+        '[Worklets] The Event Loop cannot be enabled on a runtime with locking disabled.'
+      );
+    }
+    enableEventLoop = enableLocking
+      ? (nameOrConfig?.enableEventLoop ?? true)
+      : false;
   }
 
   const useDefaultQueue = queue === 'default';
