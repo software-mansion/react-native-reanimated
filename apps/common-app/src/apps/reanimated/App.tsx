@@ -3,14 +3,7 @@ import './types';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import React, { memo } from 'react';
-import {
-  Alert,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { FlatList, Touchable } from 'react-native-gesture-handler';
 import { useReducedMotion } from 'react-native-reanimated';
 
@@ -75,7 +68,6 @@ function HomeScreen({ navigation }: HomeScreenProps) {
           icon={EXAMPLES[name].icon}
           title={EXAMPLES[name].title}
           onPress={() => {
-            Alert.alert('Pressed!'); // TODO: Remove after RNGH debugging is done
             navigation.navigate(name);
             if (!wasClicked.includes(name)) {
               setTimeout(() => setWasClicked([...wasClicked, name]), 500);
