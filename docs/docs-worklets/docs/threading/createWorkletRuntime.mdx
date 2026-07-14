@@ -54,7 +54,7 @@ runtime->runGuarded(worklet, ...args);
     animationQueuePollingRate?: number;
     queue?: 'default' | object | null;
   } & (
-    | { enableEventLoop?: true; enableLocking?: true }
+    | { enableEventLoop?: boolean; enableLocking?: true }
     | { enableEventLoop?: false; enableLocking: false }
   );
 

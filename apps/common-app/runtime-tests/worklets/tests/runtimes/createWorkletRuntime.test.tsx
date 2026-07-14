@@ -12,6 +12,7 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 
 const INITIALIZER_CALLED_NOTIFICATION = 'INITIALIZER_CALLED_NOTIFICATION';
+const EVENT_LOOP_CHECKED_NOTIFICATION = 'EVENT_LOOP_CHECKED_NOTIFICATION';
 const LONG_INITIALIZER_NOTIFICATION = 'LONG_INITIALIZER_NOTIFICATION';
 const SCHEDULED_WORKLET_NOTIFICATION = 'SCHEDULED_WORKLET_NOTIFICATION';
 
@@ -50,6 +51,44 @@ describe('createWorkletRuntime', () => {
     expect(initializerCalled).toBe(true);
     expect(runtime.name).toBe('test');
     expect(runtime.toString()).toBe('[WorkletRuntime "test"]');
+  });
+
+  test('should not provide the event loop when enableEventLoop is false', async () => {
+    // Arrange
+    let availableMethods: string[] = [];
+    const onChecked = (methods: string[]) => {
+      availableMethods = methods;
+      notify(EVENT_LOOP_CHECKED_NOTIFICATION);
+    };
+
+    // Act
+    const runtime = createWorkletRuntime({
+      name: 'test',
+      enableEventLoop: false,
+    });
+    scheduleOnRuntime(runtime, () => {
+      'worklet';
+      const methods = [
+        'setTimeout',
+        'setImmediate',
+        'setInterval',
+        'requestAnimationFrame',
+        'queueMicrotask',
+        'clearTimeout',
+        'clearInterval',
+        'clearImmediate',
+        'cancelAnimationFrame',
+      ];
+      const globals = globalThis as unknown as Record<string, unknown>;
+      scheduleOnRN(
+        onChecked,
+        methods.filter((method) => globals[method] !== undefined)
+      );
+    });
+    await waitForNotification(EVENT_LOOP_CHECKED_NOTIFICATION);
+
+    // Assert
+    expect(availableMethods.length).toBe(0);
   });
 
   test('should run a long-running initializer on a runtime with disabled locking', async () => {

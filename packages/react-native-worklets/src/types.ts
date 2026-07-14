@@ -133,7 +133,7 @@ export type WorkletRuntimeConfig = WorkletRuntimeConfigBase &
          * scheduling APIs. If not specified, it defaults to `true`. Cannot be
          * enabled when {@link enableLocking} is set to `false`.
          */
-        enableEventLoop?: true;
+        enableEventLoop?: boolean;
         /**
          * Determines whether access to the underlying JS runtime is
          * synchronized with a mutex around every JSI operation. If not
