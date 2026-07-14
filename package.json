@@ -91,6 +91,7 @@
     }
   },
   "resolutions": {
+    "@expo/metro-config/hermes-parser": "0.36.1",
     "metro": "patch:metro@npm%3A0.84.4#~/.yarn/patches/metro-npm-0.84.4-68d21d57b4.patch",
     "metro-runtime": "patch:metro-runtime@npm%3A0.84.4#~/.yarn/patches/metro-runtime-npm-0.84.4-9533293c73.patch"
   }
