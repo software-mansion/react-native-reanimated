@@ -47,7 +47,7 @@ type WorkletRuntimeConfig = {
   name?: string;
   initializer?: () => void;
   animationQueuePollingRate?: number;
-  enableEventLoop?: true;
+  enableEventLoop?: boolean;
   queue?: 'default' | object | null;
 };
 
