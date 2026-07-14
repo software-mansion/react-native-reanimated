@@ -153,20 +153,21 @@ export type WorkletRuntimeConfig = WorkletRuntimeConfigBase &
         enableEventLoop?: false;
         /**
          * Determines whether access to the underlying JS runtime is
-         * synchronized with a mutex around every JSI operation. If not
-         * specified, it defaults to `true`.
+         * synchronized with a mutex around every JSI operation.
          *
          * When set to `false`, individual JSI operations are no longer
          * synchronized, which removes the per-operation locking overhead, and
          * the runtime is created without the Event Loop — {@link
-         * enableEventLoop} cannot be set to `true`, so methods like
-         * `setTimeout` are unavailable. The runtime still keeps its mutex and
-         * acquires it once per call for jobs scheduled on the runtime's
-         * queue, synchronous calls, `registerCustomSerializable`, and module
-         * updates during development, so all of these remain safe to use.
-         * Use it only when you can guarantee that native code accessing the
-         * runtime directly through JSI never runs concurrently with other
-         * work on the runtime.
+         * enableEventLoop} cannot be set to `true`, so asynchronous APIs like
+         * `setTimeout`, `requestAnimationFrame`, `queueMicrotask`, and
+         * Promise continuations (`async`/`await`) are unavailable. The
+         * runtime still keeps its mutex and acquires it once per call for
+         * jobs scheduled on the runtime's queue, synchronous calls,
+         * `registerCustomSerializable`, and module updates during
+         * development, so all of these remain safe to use. Use it only when
+         * you can guarantee that native code accessing the runtime directly
+         * through JSI never runs concurrently with other work on the
+         * runtime.
          */
         enableLocking: false;
       }
