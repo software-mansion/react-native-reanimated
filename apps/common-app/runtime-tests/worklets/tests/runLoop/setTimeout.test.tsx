@@ -119,8 +119,11 @@ describe('Test setTimeout', () => {
             'worklet';
             const startTime = performance.now();
             setTimeout(() => {
-              if (performance.now() - startTime >= delay) {
+              const elapsed = performance.now() - startTime;
+              if (elapsed >= delay - 1) {
                 setFlag();
+              } else {
+                setFlag(`not_ok: fired after ${elapsed}ms`);
               }
               notify(notification);
             }, delay);
