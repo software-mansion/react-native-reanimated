@@ -34,7 +34,7 @@ import { Path as RNSVGPath } from 'react-native-svg';
 import { makeMutable } from 'react-native-reanimated';
 // @ts-expect-error No types for deep import.
 import ReactFabric from 'react-native/Libraries/Renderer/shims/ReactFabric';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 const findHostInstance_DEPRECATED = ReactFabric.findHostInstance_DEPRECATED as (
   ref: any
@@ -114,7 +114,11 @@ let visited = new Set<any>();
 
 function getRefChecker(name: string) {
   return (ref: any) => {
-    console.log('equality check', ref === ref.getScrollResponder());
+    ref.getScrollResponder &&
+      console.log(
+        'equality check for scroll responder',
+        ref === ref.getScrollResponder()
+      );
 
     refId = 1;
     foundRefToId = new Map<any, number>();
@@ -458,101 +462,110 @@ function findNativeStateObjects(node: Node, ref: any, source: string = '') {
 }
 
 export default function InstanceDiscoveryExample() {
+  const [discovered, setDiscovered] = useState(false);
+
   return (
     <>
       <Text style={styles.headingText}>
         Instance Discovery Example. Check the outputs in the console to see
         where correct host instances are found. This example throws when exited.
       </Text>
-      <ActivityIndicator ref={getRefChecker('ActivityIndicator')} />
-      <Button title="Button" onPress={() => {}} ref={getRefChecker('Button')} />
-      <FlatList
-        data={[]}
-        renderItem={() => null}
-        ref={getRefChecker('FlatList')}
-      />
-      <Image
-        source={{ uri: 'https://reactnative.dev/img/tiny_logo.png' }}
-        style={{ width: 50, height: 50 }}
-        ref={getRefChecker('Image')}
-      />
-      <ImageBackground
-        source={{ uri: 'https://reactnative.dev/img/tiny_logo.png' }}
-        style={{ width: 50, height: 50 }}
-        ref={getRefChecker('ImageBackground')}
-      />
-      <KeyboardAvoidingView
-        behavior="padding"
-        style={{ flex: 1 }}
-        ref={getRefChecker('KeyboardAvoidingView')}>
-        <Text>KeyboardAvoidingView</Text>
-      </KeyboardAvoidingView>
-      <Modal visible={false} ref={getRefChecker('Modal')}>
-        <Text>Modal Content</Text>
-      </Modal>
-      <Pressable onPress={() => {}} ref={getRefChecker('Pressable')}>
-        <Text>Pressable</Text>
-      </Pressable>
-      <RefreshControl
-        refreshing={false}
-        onRefresh={() => {}}
-        ref={getRefChecker('RefreshControl')}
-      />
-      <ScrollView ref={getRefChecker('ScrollView')}>
-        <Text>ScrollView Content</Text>
-      </ScrollView>
-
-      <SectionList
-        sections={[]}
-        renderItem={() => null}
-        keyExtractor={(item, index) => index.toString()}
-        ref={getRefChecker('SectionList')}
-      />
-
-      <Switch ref={getRefChecker('Switch')} />
-      <Text ref={getRefChecker('Text')}>Sample Text</Text>
-      <TextInput
-        style={{ height: 40, borderColor: 'gray', borderWidth: 1 }}
-        ref={getRefChecker('TextInput')}
-      />
-      <TouchableHighlight
-        onPress={() => {}}
-        ref={getRefChecker('TouchableHighlight')}>
-        <Text>TouchableHighlight</Text>
-      </TouchableHighlight>
-      <TouchableOpacity
-        onPress={() => {}}
-        ref={getRefChecker('TouchableOpacity')}>
-        <Text>TouchableOpacity</Text>
-      </TouchableOpacity>
-      <VirtualizedList
-        data={[]}
-        getItemCount={() => 0}
-        getItem={() => null}
-        renderItem={() => null}
-        keyExtractor={(item, index) => index.toString()}
-        ref={getRefChecker('VirtualizedList')}
-      />
-      <View ref={getRefChecker('View')} />
-      <FlashList
-        data={[]}
-        renderItem={() => null}
-        ref={getRefChecker('FlashList')}
-      />
-      <RNGHScrollView ref={getRefChecker('RNGHScrollView')}>
-        <Text>RNGH ScrollView Content</Text>
-      </RNGHScrollView>
-      <RNSVGPath
-        ref={getRefChecker('SVG Path')}
-        d="M150 0 L75 200 L225 200 Z"
-        fill="lime"
-        stroke="purple"
-        strokeWidth="1"
-      />
-      <FlatListWithCustomRenderer
-        ref={getRefChecker('FlatListWithCustomRenderer')}
-        data={[]}
-      />
+      <Button title="Discover Instances" onPress={() => setDiscovered(true)} />
+      {discovered && (
+        <>
+          <ActivityIndicator ref={getRefChecker('ActivityIndicator')} />
+          <Button
+            title="Button"
+            onPress={() => {}}
+            ref={getRefChecker('Button')}
+          />
+          <FlatList
+            data={[]}
+            renderItem={() => null}
+            ref={getRefChecker('FlatList')}
+          />
+          <Image
+            source={{ uri: 'https://reactnative.dev/img/tiny_logo.png' }}
+            style={{ width: 50, height: 50 }}
+            ref={getRefChecker('Image')}
+          />
+          <ImageBackground
+            source={{ uri: 'https://reactnative.dev/img/tiny_logo.png' }}
+            style={{ width: 50, height: 50 }}
+            ref={getRefChecker('ImageBackground')}
+          />
+          <KeyboardAvoidingView
+            behavior="padding"
+            style={{ flex: 1 }}
+            ref={getRefChecker('KeyboardAvoidingView')}>
+            <Text>KeyboardAvoidingView</Text>
+          </KeyboardAvoidingView>
+          <Modal visible={false} ref={getRefChecker('Modal')}>
+            <Text>Modal Content</Text>
+          </Modal>
+          <Pressable onPress={() => {}} ref={getRefChecker('Pressable')}>
+            <Text>Pressable</Text>
+          </Pressable>
+          <RefreshControl
+            refreshing={false}
+            onRefresh={() => {}}
+            ref={getRefChecker('RefreshControl')}
+          />
+          <ScrollView ref={getRefChecker('ScrollView')}>
+            <Text>ScrollView Content</Text>
+          </ScrollView>
+          <SectionList
+            sections={[]}
+            renderItem={() => null}
+            keyExtractor={(item, index) => index.toString()}
+            ref={getRefChecker('SectionList')}
+          />
+          <Switch ref={getRefChecker('Switch')} />
+          <Text ref={getRefChecker('Text')}>Sample Text</Text>
+          <TextInput
+            style={{ height: 40, borderColor: 'gray', borderWidth: 1 }}
+            ref={getRefChecker('TextInput')}
+          />
+          <TouchableHighlight
+            onPress={() => {}}
+            ref={getRefChecker('TouchableHighlight')}>
+            <Text>TouchableHighlight</Text>
+          </TouchableHighlight>
+          <TouchableOpacity
+            onPress={() => {}}
+            ref={getRefChecker('TouchableOpacity')}>
+            <Text>TouchableOpacity</Text>
+          </TouchableOpacity>
+          <VirtualizedList
+            data={[]}
+            getItemCount={() => 0}
+            getItem={() => null}
+            renderItem={() => null}
+            keyExtractor={(item, index) => index.toString()}
+            ref={getRefChecker('VirtualizedList')}
+          />
+          <View ref={getRefChecker('View')} />
+          <FlashList
+            data={[]}
+            renderItem={() => null}
+            ref={getRefChecker('FlashList')}
+          />
+          <RNGHScrollView ref={getRefChecker('RNGHScrollView')}>
+            <Text>RNGH ScrollView Content</Text>
+          </RNGHScrollView>
+          <RNSVGPath
+            ref={getRefChecker('SVG Path')}
+            d="M150 0 L75 200 L225 200 Z"
+            fill="lime"
+            stroke="purple"
+            strokeWidth="1"
+          />
+          <FlatListWithCustomRenderer
+            ref={getRefChecker('FlatListWithCustomRenderer')}
+            data={[]}
+          />
+        </>
+      )}
     </>
   );
 }

@@ -1,5 +1,6 @@
 'use strict';
 
+import { isBundleModeEnabled } from '../debug/bundleMode';
 import { addNoBundleModeGuardImplementation } from '../guardImplementation';
 import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
@@ -62,6 +63,6 @@ export function createShareable<
   );
 }
 
-if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+if (__DEV__ && !isBundleModeEnabled()) {
   addNoBundleModeGuardImplementation(createShareable);
 }

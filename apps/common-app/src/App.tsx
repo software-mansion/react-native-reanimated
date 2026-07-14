@@ -14,7 +14,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { colors, flex, radius, text } from '@/theme';
 import { IS_MACOS, IS_WEB, noop } from '@/utils';
 
-import { CSSApp, ReanimatedApp } from './apps';
+import { CSSApp, ReanimatedApp, RuntimeTestsApp } from './apps';
 import { LeakCheck, NukeContext } from './components';
 
 LogBox.ignoreLogs([
@@ -95,6 +95,14 @@ const SCREENS = [
     component: CSSApp,
     name: 'CSS',
   },
+  ...(IS_WEB
+    ? []
+    : [
+        {
+          component: RuntimeTestsApp,
+          name: 'Runtime Tests',
+        },
+      ]),
   {
     component: ReanimatedApp,
     name: 'Reanimated',

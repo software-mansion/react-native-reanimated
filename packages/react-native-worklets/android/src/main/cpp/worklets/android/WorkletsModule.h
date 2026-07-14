@@ -4,6 +4,7 @@
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
+#include <worklets/Tools/RNRuntimeStatus.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
@@ -67,6 +68,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
   friend HybridBase;
   jni::global_ref<WorkletsModule::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
+  std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
 };
 

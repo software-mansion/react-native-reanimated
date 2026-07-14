@@ -1,6 +1,8 @@
 #import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
 
 #import <reanimated/CSS/utils/platform.h>
+#import <reanimated/CSS/utils/reversingShortening.h>
+#import <reanimated/apple/CSS/REACSSPlatformProps.h>
 #import <reanimated/apple/REAUIView.h>
 
 #import <React/RCTComponentViewProtocol.h>
@@ -11,45 +13,34 @@
 
 #import <QuartzCore/QuartzCore.h>
 
-#import <stdexcept>
 #import <string>
-#import <variant>
+#import <unordered_map>
+#import <utility>
 
+using namespace facebook;
 using namespace facebook::react;
 using namespace reanimated::css;
 
-bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &easing)
-{
-  if (propertyName != "opacity") {
-    return false;
-  }
-  return std::holds_alternative<LinearEasing>(easing) || std::holds_alternative<CubicBezierEasing>(easing);
-}
+namespace {
 
-static CAMediaTimingFunction *makeTimingFunction(const EasingConfig &easing)
-{
-  if (std::holds_alternative<CubicBezierEasing>(easing)) {
-    const auto &cb = std::get<CubicBezierEasing>(easing);
-    return [CAMediaTimingFunction functionWithControlPoints:(float)cb.x1:(float)cb.y1:(float)cb.x2:(float)cb.y2];
-  }
-  return [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
-}
+// Per-property state for an in-flight native transition. adjustedStart/adjustedEnd
+// and the reversing snapshot handle interruptions; settings are reused by the
+// toggle path.
+struct ActiveTransition {
+  // Unset after a mid-flight interruption - the live start value can't match any target.
+  std::optional<PlatformValue> adjustedStart;
+  PlatformValue adjustedEnd;
+  ReversingState reversing;
+  CSSTransitionPropertySettings settings;
+};
 
-static id idFromPlatformValue(NSString *propertyName, const PlatformValue &value)
-{
-  if (const auto *v = std::get_if<double>(&value)) {
-    return @(*v);
-  }
-  // Fired when the parser produced a variant alternative the iOS renderer
-  // doesn't yet handle, or std::monostate (parser couldn't parse the value).
-  // Both indicate a developer-side bug worth surfacing loudly.
-  throw std::runtime_error(
-      std::string("[Reanimated] iOS renderer cannot convert PlatformValue for property '") +
-      std::string(propertyName.UTF8String) + "'");
-}
+} // namespace
 
 @implementation REACSSPlatformTransitions {
   __weak RCTSurfacePresenter *_surfacePresenter;
+  // viewTag -> propertyName -> active transition. Accessed only on the thread
+  // that drives routing; the CALayer work below hops to the main queue.
+  std::unordered_map<Tag, std::unordered_map<std::string, ActiveTransition>> _active;
 }
 
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter
@@ -67,17 +58,118 @@ static id idFromPlatformValue(NSString *propertyName, const PlatformValue &value
   return view.layer;
 }
 
-- (void)applyTransition:(const CSSPlatformTransitionPropertyConfig &)config
+// Reverse-shortens against any in-flight transition, animates natively, and
+// records the new active state. fromValue/toValue are already parsed.
+- (void)applyForTag:(Tag)viewTag
+       propertyName:(const std::string &)propertyName
+          fromValue:(const PlatformValue &)fromValue
+            toValue:(const PlatformValue &)toValue
+           settings:(const CSSTransitionPropertySettings &)settings
+          timestamp:(double)timestamp
+         persistent:(BOOL)persistent
 {
-  // CALayer access must run on the main thread; runCSSTransition arrives here
-  // on the JS thread during React's shouldComponentUpdate.
-  Tag viewTag = config.viewTag;
-  NSString *keyPath = [NSString stringWithUTF8String:config.propertyName.c_str()];
-  id toValue = idFromPlatformValue(keyPath, config.toValue);
-  id fromValue = idFromPlatformValue(keyPath, config.fromValue);
-  double durationSec = config.durationMs / 1000.0;
-  CFTimeInterval beginTime = config.startTimestampMs / 1000.0;
-  CAMediaTimingFunction *timing = makeTimingFunction(config.easing);
+  auto &properties = _active[viewTag];
+  const auto activeIt = properties.find(propertyName);
+  // Targeting the in-flight transition's start value means this is a reversal.
+  const ActiveTransition *previous =
+      (activeIt != properties.end() && activeIt->second.adjustedStart && toValue == *activeIt->second.adjustedStart)
+      ? &activeIt->second
+      : nullptr;
+  ReversingState reversing = previous
+      ? reverseShorten(previous->reversing, timestamp, settings.duration, settings.delay, settings.easingConfig)
+      : makeReversingState(timestamp, settings.duration, settings.delay, settings.easingConfig);
+
+  // https://drafts.csswg.org/css-transitions/#reversing
+  std::optional<PlatformValue> adjustedStart;
+  if (previous) {
+    adjustedStart = previous->adjustedEnd;
+  } else if (activeIt == properties.end()) {
+    adjustedStart = fromValue;
+  } else if (timestamp >= activeIt->second.reversing.startTimestamp + activeIt->second.reversing.duration) {
+    adjustedStart = activeIt->second.adjustedEnd;
+  }
+  [self animateTag:viewTag
+      propertyName:propertyName
+         fromValue:fromValue
+           toValue:toValue
+        durationMs:reversing.duration
+       startTimeMs:reversing.startTimestamp
+            easing:settings.easingConfig
+        persistent:persistent];
+  properties[propertyName] = ActiveTransition{adjustedStart, toValue, std::move(reversing), settings};
+}
+
+- (BOOL)applyTransitionForTag:(Tag)viewTag
+                 propertyName:(const std::string &)propertyName
+                    fromValue:(const jsi::Value &)fromValue
+                      toValue:(const jsi::Value &)toValue
+                      runtime:(jsi::Runtime &)runtime
+                     settings:(const CSSTransitionPropertySettings &)settings
+                    timestamp:(double)timestamp
+{
+  const auto from = parsePlatformValue(runtime, propertyName, fromValue);
+  const auto to = parsePlatformValue(runtime, propertyName, toValue);
+  if (!from || !to) {
+    return NO;
+  }
+  [self applyForTag:viewTag
+       propertyName:propertyName
+          fromValue:*from
+            toValue:*to
+           settings:settings
+          timestamp:timestamp
+         persistent:NO];
+  return YES;
+}
+
+- (BOOL)applyDynamicTransitionForTag:(Tag)viewTag
+                        propertyName:(const std::string &)propertyName
+                           fromValue:(const folly::dynamic &)fromValue
+                             toValue:(const folly::dynamic &)toValue
+                           timestamp:(double)timestamp
+{
+  const auto propertiesIt = _active.find(viewTag);
+  if (propertiesIt == _active.end()) {
+    return NO;
+  }
+  const auto activeIt = propertiesIt->second.find(propertyName);
+  if (activeIt == propertiesIt->second.end()) {
+    // No config apply ran for this property, so there are no settings to reuse.
+    return NO;
+  }
+  const auto from = parsePlatformValue(propertyName, fromValue);
+  const auto to = parsePlatformValue(propertyName, toValue);
+  if (!from || !to) {
+    return NO;
+  }
+  // Copy: applyForTag re-assigns this property's active entry below.
+  const CSSTransitionPropertySettings settings = activeIt->second.settings;
+  [self applyForTag:viewTag
+       propertyName:propertyName
+          fromValue:*from
+            toValue:*to
+           settings:settings
+          timestamp:timestamp
+         persistent:YES];
+  return YES;
+}
+
+- (void)animateTag:(Tag)viewTag
+      propertyName:(const std::string &)propertyName
+         fromValue:(const PlatformValue &)fromValue
+           toValue:(const PlatformValue &)toValue
+        durationMs:(double)durationMs
+       startTimeMs:(double)startTimeMs
+            easing:(const EasingConfig &)easing
+        persistent:(BOOL)persistent
+{
+  // Capture everything up front; CALayer access must happen on the main thread.
+  NSString *keyPath = caLayerKeyPathForCSSProperty(propertyName);
+  id fromId = idFromPlatformValue(fromValue);
+  id toId = idFromPlatformValue(toValue);
+  double durationSec = durationMs / 1000.0;
+  CFTimeInterval beginTime = startTimeMs / 1000.0;
+  CAMediaTimingFunction *timing = makeCSSTimingFunction(easing);
 
   __weak __typeof__(self) weakSelf = self;
   RCTExecuteOnMainQueue(^{
@@ -91,43 +183,46 @@ static id idFromPlatformValue(NSString *propertyName, const PlatformValue &value
     }
 
     CABasicAnimation *anim = [CABasicAnimation animationWithKeyPath:keyPath];
-    // Implicit fromValue races RN's model commit; on reversal we want the
-    // live presentation value, mirroring how the loop side picks up the
-    // interpolator's last output on interruption.
+    // On interruption, continue from the live presentation value, falling back to the
+    // model - never to fromId, which would snap a quick tap to the settled pseudo target.
     if ([[layer animationForKey:keyPath] isKindOfClass:[CABasicAnimation class]]) {
       id presentationValue = [[layer presentationLayer] valueForKeyPath:keyPath];
-      anim.fromValue = presentationValue ?: fromValue;
+      anim.fromValue = presentationValue ?: [layer valueForKeyPath:keyPath];
     } else {
-      anim.fromValue = fromValue;
+      anim.fromValue = fromId;
     }
-    anim.toValue = toValue;
+    anim.toValue = toId;
     anim.duration = durationSec;
-    // beginTime is in the layer's local clock; convert from absolute time so
-    // ancestor speed/timeOffset (e.g. RN Screens during navigation) doesn't
-    // make the animation appear already complete or never-starting.
+    // beginTime is in the layer's local clock; converting keeps ancestor
+    // speed/timeOffset (e.g. RN Screens during navigation) from shifting it.
     anim.beginTime = [layer convertTime:beginTime fromLayer:nil];
     anim.timingFunction = timing;
-    // Backwards fill paints fromValue during the delay window; the animation
-    // self-removes on completion and the layer reads the model below.
-    anim.fillMode = kCAFillModeBackwards;
-    anim.removedOnCompletion = YES;
+    anim.fillMode = persistent ? kCAFillModeBoth : kCAFillModeBackwards;
+    anim.removedOnCompletion = persistent ? NO : YES;
 
-    // Commit toValue to the model first (with implicit actions disabled), then
-    // add the animation in the same transaction. The model is correct for the
-    // entire lifetime of the animation; once the animation auto-removes the
-    // layer reads the model and there's no snap. This is what stops stale
-    // animations from outliving their view and bleeding onto layers that RN
-    // has since recycled onto unrelated components.
+    // Non-persistent transitions commit toValue to the model so the layer settles there on
+    // self-removal; persistent (pseudo) ones hold their value via fillMode and keep the base model.
     [CATransaction begin];
     [CATransaction setDisableActions:YES];
-    [layer setValue:toValue forKeyPath:keyPath];
+    if (!persistent) {
+      [layer setValue:toId forKeyPath:keyPath];
+    }
     [layer addAnimation:anim forKey:keyPath];
     [CATransaction commit];
   });
 }
 
-- (void)removeTransitionForTag:(Tag)viewTag propertyName:(NSString *)propertyName
+- (void)removeTransitionForTag:(Tag)viewTag propertyName:(const std::string &)propertyName
 {
+  const auto propertiesIt = _active.find(viewTag);
+  if (propertiesIt != _active.end()) {
+    propertiesIt->second.erase(propertyName);
+    if (propertiesIt->second.empty()) {
+      _active.erase(propertiesIt);
+    }
+  }
+
+  NSString *keyPath = caLayerKeyPathForCSSProperty(propertyName);
   __weak __typeof__(self) weakSelf = self;
   RCTExecuteOnMainQueue(^{
     __typeof__(self) strongSelf = weakSelf;
@@ -139,11 +234,11 @@ static id idFromPlatformValue(NSString *propertyName, const PlatformValue &value
       return;
     }
     // Freeze the last visible frame into the model so the layer doesn't snap.
-    id presentationValue = [[layer presentationLayer] valueForKeyPath:propertyName];
+    id presentationValue = [[layer presentationLayer] valueForKeyPath:keyPath];
     if (presentationValue) {
-      [layer setValue:presentationValue forKeyPath:propertyName];
+      [layer setValue:presentationValue forKeyPath:keyPath];
     }
-    [layer removeAnimationForKey:propertyName];
+    [layer removeAnimationForKey:keyPath];
   });
 }
 

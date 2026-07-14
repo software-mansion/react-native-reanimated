@@ -18,12 +18,18 @@ jobs:
       react-native-versions: ${{ steps.set-outputs.outputs.react-native-versions }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          sparse-checkout: |
+            /.nvmrc
+            /.github/workflows/helper
+            /packages/react-native-reanimated/compatibility.json
+          sparse-checkout-cone-mode: false
       - name: Setup Node
         uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610
         with:
           node-version-file: '.nvmrc'
       - name: Read compatibility.json
-        run: node .github/workflows/helper/read-compatibility.js
+        run: node --experimental-strip-types .github/workflows/helper/read-compatibility.ts
       - name: Set outputs
         id: set-outputs
         run: |

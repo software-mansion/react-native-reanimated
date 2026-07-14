@@ -1,21 +1,25 @@
 import Active from './Active';
+import ActiveBlocksRender from './ActiveBlocksRender';
 import ActiveDeepest from './ActiveDeepest';
 import ArbitraryWebSelectors from './ArbitraryWebSelectors';
 import Focus from './Focus';
 import FocusWithin from './FocusWithin';
+import Form from './Form';
 import Hover from './Hover';
 import HoverWithLoop from './HoverWithLoop';
 import PerStateTransitionConfig from './PerStateTransitionConfig';
-import Showcase from './Showcase';
+import Planets from './Planets';
 
 export default {
   Active,
+  ActiveBlocksRender,
   ActiveDeepest,
   ArbitraryWebSelectors,
   Focus,
   FocusWithin,
+  Form,
   Hover,
   HoverWithLoop,
   PerStateTransitionConfig,
-  Showcase,
+  Planets,
 };

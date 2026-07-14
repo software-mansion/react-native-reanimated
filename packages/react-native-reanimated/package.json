@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "4.5.0-main",
+  "version": "4.6.0-main",
   "description": "More powerful alternative to Animated library for React Native.",
   "keywords": [
     "react-native",
@@ -102,16 +102,16 @@
   "peerDependencies": {
     "react": "*",
     "react-native": "0.83 - 0.86",
-    "react-native-worklets": "*"
+    "react-native-worklets": "0.11.0-main"
   },
   "devDependencies": {
     "@babel/core": "7.28.4",
     "@babel/preset-env": "7.28.3",
-    "@react-native/babel-preset": "0.85.2",
-    "@react-native/eslint-config": "0.85.2",
-    "@react-native/jest-preset": "patch:@react-native/jest-preset@npm%3A0.85.2#~/.yarn/patches/@react-native-jest-preset-npm-0.85.2-d3275e8971.patch",
-    "@react-native/metro-config": "0.85.2",
-    "@react-native/typescript-config": "0.85.2",
+    "@react-native/babel-preset": "0.86.0",
+    "@react-native/eslint-config": "0.86.0",
+    "@react-native/jest-preset": "patch:@react-native/jest-preset@npm%3A0.86.0#~/.yarn/patches/@react-native-jest-preset-npm-0.86.0-7a936108b4.patch",
+    "@react-native/metro-config": "0.86.0",
+    "@react-native/typescript-config": "0.86.0",
     "@shopify/flash-list": "2.1.0",
     "@testing-library/dom": "10.4.0",
     "@testing-library/jest-native": "5.4.3",
@@ -133,7 +133,7 @@
     "madge": "8.0.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-native": "0.85.2",
+    "react-native": "0.86.0",
     "react-native-svg": "15.15.4",
     "react-native-web": "0.21.1",
     "react-native-worklets": "workspace:*",
@@ -142,10 +142,15 @@
   },
   "codegenConfig": {
     "name": "rnreanimated",
-    "type": "modules",
+    "type": "all",
     "jsSrcsDir": "./src/specs",
     "android": {
       "javaPackageName": "com.swmansion.reanimated"
+    },
+    "ios": {
+      "componentProvider": {
+        "REASharedTransitionBoundary": "REASharedTransitionBoundaryView"
+      }
     }
   },
   "sideEffects": [
@@ -153,8 +158,8 @@
     "./lib/module/layoutReanimation/animationsManager.js",
     "./src/core.ts",
     "./lib/module/core.js",
-    "./src/initializers.ts",
-    "./lib/module/initializers.js",
+    "./src/initializers.native.ts",
+    "./lib/module/initializers.native.js",
     "./src/index.ts",
     "./lib/module/index.js"
   ]

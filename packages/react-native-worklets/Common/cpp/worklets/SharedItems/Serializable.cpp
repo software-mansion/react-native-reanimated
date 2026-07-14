@@ -7,6 +7,7 @@
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -20,18 +21,6 @@ jsi::Function getValueUnpacker(jsi::Runtime &rt) {
   auto valueUnpacker = rt.global().getProperty(rt, "__valueUnpacker");
   react_native_assert(valueUnpacker.isObject() && "valueUnpacker not found");
   return valueUnpacker.asObject(rt).asFunction(rt);
-}
-
-jsi::Function getRemoteFunctionUnpacker(jsi::Runtime &rt) {
-  auto remoteFunctionUnpacker = rt.global().getProperty(rt, "__remoteFunctionUnpacker");
-  react_native_assert(remoteFunctionUnpacker.isObject() && "remoteFunctionUnpacker not found");
-  return remoteFunctionUnpacker.asObject(rt).asFunction(rt);
-}
-
-jsi::Object getRemoteFunctionRegistry(jsi::Runtime &rt) {
-  auto registry = rt.global().getProperty(rt, "__remoteFunctionRegistry");
-  react_native_assert(registry.isObject() && "remoteFunctionRegistry not found");
-  return registry.getObject(rt);
 }
 
 } // namespace
@@ -160,7 +149,13 @@ jsi::Value SerializableArrayBuffer::toJSValue(jsi::Runtime &rt) {
   auto arrayBuffer =
       rt.global().getPropertyAsFunction(rt, "ArrayBuffer").callAsConstructor(rt, size).getObject(rt).getArrayBuffer(rt);
   memcpy(arrayBuffer.data(rt), data_.data(), size);
-  return arrayBuffer;
+  if (!metadata_.has_value()) {
+    return arrayBuffer;
+  }
+
+  auto constructor = rt.global().getPropertyAsFunction(rt, metadata_->typeName.c_str());
+  return constructor.callAsConstructor(
+      rt, arrayBuffer, static_cast<double>(metadata_->byteOffset), static_cast<double>(metadata_->length));
 }
 
 SerializableObject::SerializableObject(jsi::Runtime &rt, const jsi::Object &object)
@@ -294,61 +289,6 @@ jsi::Value SerializableImport::toJSValue(jsi::Runtime &rt) {
 
   const auto imported = jsi::String::createFromUtf8(rt, imported_);
   return metroRequire.asObject(rt).asFunction(rt).call(rt, source_).asObject(rt).getProperty(rt, imported);
-}
-
-SerializableRemoteFunction::~SerializableRemoteFunction() {
-  if (isHostedOnRNRuntime()) {
-    // TODO: consider batching
-    const auto &data = std::get<RNRuntimeData>(runtimeData_);
-    data.jsScheduler->scheduleOnJS([id = data.remoteId](jsi::Runtime &rt) {
-      const auto registry = getRemoteFunctionRegistry(rt);
-      registry.getPropertyAsFunction(rt, "delete").callWithThis(rt, registry, jsi::Value(id));
-    });
-  } else {
-    auto &workletData = std::get<WorkletRuntimeData>(runtimeData_);
-    cleanupRuntimeAware(hostRuntime_, workletData.function);
-  }
-}
-
-jsi::Value SerializableRemoteFunction::toJSValue(jsi::Runtime &rt) {
-  if (&rt == hostRuntime_) {
-    if (isHostedOnRNRuntime()) {
-      const auto &rnData = std::get<RNRuntimeData>(runtimeData_);
-      const auto registry = getRemoteFunctionRegistry(rt);
-      return registry.getPropertyAsFunction(rt, "get").callWithThis(rt, registry, jsi::Value(rnData.remoteId));
-    } else {
-      const auto &workletData = std::get<WorkletRuntimeData>(runtimeData_);
-      return jsi::Value(rt, *workletData.function);
-    }
-  } else {
-    const auto name = name_.empty() ? jsi::Value::undefined() : jsi::String::createFromUtf8(rt, name_);
-    auto holderFunction = getRemoteFunctionUnpacker(rt).call(rt, name).getObject(rt);
-    holderFunction.setNativeState(rt, std::make_shared<SerializableJSRef>(shared_from_this()));
-    return holderFunction;
-  }
-}
-
-// TODO: generalize it and merge with other scheduling methods
-void SerializableRemoteFunction::resolveOrRejectPromise(
-    const std::shared_ptr<Serializable> &resolveValue,
-    const std::shared_ptr<RuntimeManager> &runtimeManager) {
-  if (isHostedOnRNRuntime()) {
-    const auto &data = std::get<RNRuntimeData>(runtimeData_);
-    data.jsScheduler->scheduleOnJS([resolver = shared_from_this(), resolveValue](jsi::Runtime &rt) {
-      resolver->toJSValue(rt).getObject(rt).getFunction(rt).call(rt, resolveValue->toJSValue(rt));
-    });
-  } else {
-    const auto workletRuntime = runtimeManager->getRuntime(hostRuntimeId_);
-    // NOLINTNEXTLINE(readability/braces)
-    if (!workletRuntime) [[unlikely]] {
-      // Host runtime is dead, most likely we're the last owner of the Remote Function.
-      // Do nothing.
-    } else {
-      workletRuntime->schedule([resolver = shared_from_this(), resolveValue](jsi::Runtime &rt) {
-        resolver->toJSValue(rt).getObject(rt).getFunction(rt).call(rt, resolveValue->toJSValue(rt));
-      });
-    }
-  }
 }
 
 jsi::Value SerializableInitializer::toJSValue(jsi::Runtime &rt) {

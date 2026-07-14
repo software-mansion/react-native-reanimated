@@ -58,7 +58,10 @@ export type WorkletStackDetails = [
 type WorkletClosure = Record<string, unknown>;
 
 interface WorkletInitData {
-  code: string;
+  /** Only when bytecode isn't toggled. */
+  code?: string;
+  /** Only in production builds and explicitly toggled. */
+  bytecode?: ArrayBuffer;
   /** Only in dev builds. */
   location?: string;
   /** Only in dev builds. */
@@ -68,7 +71,7 @@ interface WorkletInitData {
 interface WorkletProps {
   __closure: WorkletClosure;
   __workletHash: number;
-  /** Only in Legacy Bundling. */
+  /** Only in Legacy Eval Mode. */
   __initData?: WorkletInitData;
   /** Only for Handles. */
   __init?: () => unknown;
