@@ -134,8 +134,22 @@ type WorkletRuntimeConfigBase = {
    * with a mutex. If set to `false`, the runtime is created lock-free — no
    * mutex is acquired around JSI operations or synchronous calls, which
    * removes the locking overhead. Use it only when you can guarantee that the
-   * runtime is never accessed from more than one thread at a time. If not
-   * specified, it defaults to `true`.
+   * runtime is never accessed from more than one thread at the same time.
+   * Scheduling all work through the runtime's queue satisfies this in release
+   * builds, with the following caveats:
+   *
+   * - `registerCustomSerializable` executes code synchronously on every
+   *   existing worklet runtime from the calling thread. Call it before
+   *   creating lock-free runtimes, or only while the lock-free runtime is
+   *   idle.
+   * - In development builds with Bundle Mode, fast refresh evaluates updated
+   *   modules synchronously on every runtime from the React Native thread,
+   *   which can race with a busy lock-free runtime.
+   * - The `initializer` runs synchronously on the creating thread, so
+   *   callbacks it schedules (for example with `setTimeout`) may start on the
+   *   runtime's queue thread before the initializer finishes.
+   *
+   * If not specified, it defaults to `true`.
    */
   enableLocking?: boolean;
 };

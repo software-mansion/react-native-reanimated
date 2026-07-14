@@ -62,6 +62,25 @@ export function createWorkletRuntimeTypeTests() {
     enableLocking: false,
   });
 
+  // Correct usage - config object with enableLocking = false and no queue.
+  createWorkletRuntime({
+    enableLocking: false,
+    queue: null,
+  });
+
+  // Correct usage - config object with enableLocking = false and a custom queue.
+  createWorkletRuntime({
+    enableLocking: false,
+    queue: {},
+  });
+
+  // Correct usage - config object with enableLocking = false, useDefaultQueue = false and customQueue.
+  createWorkletRuntime({
+    enableLocking: false,
+    useDefaultQueue: false,
+    customQueue: {},
+  });
+
   // Correct usage - deprecated positional parameters
   createWorkletRuntime('test', initializer);
 
