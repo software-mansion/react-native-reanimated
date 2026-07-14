@@ -7,6 +7,7 @@
 #include <ranges>
 #include <set>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -33,7 +34,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
-  auto &[deadNodes] = surfaceContext_[surfaceId];
+  auto &surfaceCtx = getSurfaceContext(surfaceId);
+  auto &deadNodes = surfaceCtx.deadNodes;
 
   std::vector<std::shared_ptr<MutationNode>> roots;
   std::unordered_map<Tag, Tag> movedViews;
@@ -60,9 +62,13 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
 
   parseRemoveMutations(movedViews, mutations, roots);
 
-  auto shouldAnimate = !surfacesToRemove_.contains(surfaceId);
+  auto surfaceDropped = surfacesToRemove_.contains(surfaceId);
   surfacesToRemove_.erase(surfaceId);
-  handleRemovals(filteredMutations, roots, deadNodes, shouldAnimate);
+  const bool flushDeadNodes = shouldFlushDeadNodes(surfaceDropped);
+  handleRemovals(filteredMutations, roots, deadNodes, surfaceDropped, flushDeadNodes);
+#ifdef ANDROID
+  maybeScheduleCleanupPull(surfaceCtx, surfaceId, flushDeadNodes);
+#endif // ANDROID
 
   handleUpdatesAndEnterings(filteredMutations, movedViews, mutations, propsParserContext, surfaceId);
 
@@ -83,7 +89,7 @@ void LayoutAnimationsProxy_Legacy::reconcileContradictedRemovals(
     ShadowViewMutationList &mutations,
     ShadowViewMutationList &filteredMutations,
     SurfaceId surfaceId) const {
-  auto &[deadNodes] = surfaceContext_[surfaceId];
+  auto &deadNodes = getSurfaceContext(surfaceId).deadNodes;
   for (auto &mutation : mutations) {
     if (mutation.type != ShadowViewMutation::Type::Create && mutation.type != ShadowViewMutation::Type::Insert) {
       continue;
@@ -104,6 +110,44 @@ void LayoutAnimationsProxy_Legacy::reconcileContradictedRemovals(
     deadNodes.erase(node);
   }
 }
+
+// We don't change the view hierarchy when on the main thread unless the surface is dropped. This is won't be necessary
+// under the pull model
+bool LayoutAnimationsProxy_Legacy::shouldFlushDeadNodes([[maybe_unused]] const bool surfaceDropped) const {
+#ifdef ANDROID
+  return surfaceDropped || std::this_thread::get_id() != uiThreadId_;
+#else
+  return true;
+#endif
+}
+
+#ifdef ANDROID
+// We schedule a pullTransaction call to happen on the JS thread so it can safely remove dead nodes after exiting
+// finished
+void LayoutAnimationsProxy_Legacy::maybeScheduleCleanupPull(
+    SurfaceContext &surfaceCtx,
+    const SurfaceId surfaceId,
+    const bool flushedDeadNodes) const {
+  if (flushedDeadNodes) {
+    surfaceCtx.cleanupPullScheduled = false;
+  } else if (!surfaceCtx.deadNodes.empty() && !surfaceCtx.cleanupPullScheduled) {
+    surfaceCtx.cleanupPullScheduled = true;
+    scheduleDeferredCleanupPull(surfaceId);
+  }
+}
+
+void LayoutAnimationsProxy_Legacy::scheduleDeferredCleanupPull(SurfaceId surfaceId) const {
+  const std::weak_ptr<UIManager> weakUiManager = uiManager_;
+  jsInvoker_->invokeAsync([weakUiManager, surfaceId](jsi::Runtime &) {
+    auto uiManager = weakUiManager.lock();
+    if (!uiManager) {
+      return;
+    }
+    uiManager->getShadowTreeRegistry().visit(
+        surfaceId, [](ShadowTree const &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
+  });
+}
+#endif
 
 std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::progressLayoutAnimation(int tag, const jsi::Object &newStyle) {
 #ifdef LAYOUT_ANIMATIONS_LOGS
@@ -169,7 +213,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
   }
   auto mutationNode = std::static_pointer_cast<MutationNode>(node);
   mutationNode->state = ExitingState_Legacy::DEAD;
-  auto &[deadNodes] = surfaceContext_[surfaceId];
+  auto &deadNodes = getSurfaceContext(surfaceId).deadNodes;
   deadNodes.insert(mutationNode);
 
   return surfaceId;
@@ -281,12 +325,13 @@ void LayoutAnimationsProxy_Legacy::handleRemovals(
     ShadowViewMutationList &filteredMutations,
     std::vector<std::shared_ptr<MutationNode>> &roots,
     std::unordered_set<std::shared_ptr<MutationNode>> &deadNodes,
-    bool shouldAnimate) const {
+    bool surfaceDropped,
+    bool flushDeadNodes) const {
   // iterate from the end, so that children
   // with higher indices appear first in the mutations list
   for (auto it = roots.rbegin(); it != roots.rend(); it++) {
     auto &node = *it;
-    if (!startAnimationsRecursively(node, true, shouldAnimate, false, filteredMutations)) {
+    if (!startAnimationsRecursively(node, true, !surfaceDropped, false, filteredMutations)) {
       filteredMutations.push_back(node->mutation);
       node->unflattenedParent->removeChildFromUnflattenedTree(node); //???
       if (node->state != ExitingState_Legacy::MOVED) {
@@ -301,6 +346,10 @@ void LayoutAnimationsProxy_Legacy::handleRemovals(
     }
   }
 
+  if (!flushDeadNodes) {
+    // Deferred - the host still has these views mounted, bookkeeping stays.
+    return;
+  }
   for (const auto &node : deadNodes) {
     if (node->state != ExitingState_Legacy::DELETED) {
       endAnimationsRecursively(node, filteredMutations);
@@ -713,6 +762,7 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
           auto &mutex = strongThis->mutex;
           auto lock = std::unique_lock<std::recursive_mutex>(mutex);
 #ifdef ANDROID
+          strongThis->uiThreadId_ = std::this_thread::get_id();
           if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
             // the view was removed before this start could run
             return;
@@ -773,12 +823,12 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
           auto &mutex = strongThis->mutex;
           auto lock = std::unique_lock<std::recursive_mutex>(mutex);
 #ifdef ANDROID
+          strongThis->uiThreadId_ = std::this_thread::get_id();
           if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
-            // the view was removed (e.g. its subtree was force-ended by a screen
-            // pop) before this start could run — its Remove+Delete are already on
-            // their way to the mounting layer, so starting the animation now
-            // would emit updates for a view that's about to be deleted
-            strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
+            // The view was removed before this start could run. Deliberately no
+            // clearLayoutAnimationConfig: with tag reuse the config maps already
+            // describe the re-created view, and wiping them would leave it mounted
+            // at opacity 0. A dead tag's stale configs can never fire again.
             return;
           }
 #endif
@@ -836,6 +886,7 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
           auto &mutex = strongThis->mutex;
           auto lock = std::unique_lock<std::recursive_mutex>(mutex);
 #ifdef ANDROID
+          strongThis->uiThreadId_ = std::this_thread::get_id();
           if (consumeIsCancelled(strongThis->pendingStarts_, tag, handle)) {
             // the view was removed before this start could run
             return;
@@ -996,6 +1047,17 @@ inline bool Node::isMutationNode() {
 
 inline bool MutationNode::isMutationNode() {
   return true;
+}
+
+void LayoutAnimationsProxy_Legacy::startSurface(const SurfaceId surfaceId) {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  surfaceContext_[surfaceId] = SurfaceContext{};
+}
+
+SurfaceContext &LayoutAnimationsProxy_Legacy::getSurfaceContext(const SurfaceId surfaceId) const {
+  const auto it = surfaceContext_.find(surfaceId);
+  react_native_assert(it != surfaceContext_.end() && "surface must be registered by startSurface");
+  return it->second;
 }
 
 // UIManagerAnimationDelegate
