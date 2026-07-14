@@ -4,7 +4,7 @@ PODS:
     - hermes-engine/Pre-built (= 250829098.0.13)
   - hermes-engine/Pre-built (250829098.0.13)
   - MMKVCore (2.4.0)
-  - NitroMmkv (4.3.0):
+  - NitroMmkv (4.3.2):
     - hermes-engine
     - MMKVCore (= 2.4.0)
     - NitroModules
@@ -1514,7 +1514,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-safe-area-context (5.7.0):
+  - react-native-safe-area-context (5.8.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1527,8 +1527,8 @@ PODS:
     - React-graphics
     - React-ImageManager
     - React-jsi
-    - react-native-safe-area-context/common (= 5.7.0)
-    - react-native-safe-area-context/fabric (= 5.7.0)
+    - react-native-safe-area-context/common (= 5.8.0)
+    - react-native-safe-area-context/fabric (= 5.8.0)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-renderercss
@@ -1538,7 +1538,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-safe-area-context/common (5.7.0):
+  - react-native-safe-area-context/common (5.8.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1560,7 +1560,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-safe-area-context/fabric (5.7.0):
+  - react-native-safe-area-context/fabric (5.8.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2592,7 +2592,7 @@ SPEC CHECKSUMS:
   FBLazyVector: b825d1f36b7df26b356d550962e6e439f63d2468
   hermes-engine: f3d44ae0b581f3fdb528e45b4f11f4957a0e737d
   MMKVCore: 3d16ce9f7d411e135020915fde98a056859a1efa
-  NitroMmkv: f88c5fc16c4d35f5551b3e2254808bbbdac75954
+  NitroMmkv: 03c39a836c42b5fe90d384cbe1474aa7a6babb2a
   NitroModules: 07938ead84b77fe9aa2f9bd0a1a2220007b9a5fd
   RCTDeprecation: 898d89471faee1d8c5ef6f102108a535a4468b3f
   RCTRequired: d9e73ac35b646f24d4eb763f87d0bcc5c7de3bef
@@ -2633,7 +2633,7 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 568d6adbacd4792a1e0c5bc6f4e1410de185feee
   React-microtasksnativemodule: d5ba9b6a284d13a1da1beaf84fa45e3c919bb1ba
   React-mutationobservernativemodule: f4ba1251941b7ddf676a10e2ab9dea5016bd314e
-  react-native-safe-area-context: 163b8569394431c71f5905c581bda147e8868d7f
+  react-native-safe-area-context: 387a4dd65211636db9ebd18cfe47278ce24e663b
   React-NativeModulesApple: 3dd5813ae4c6542dcd8b31f58d069c4379a21233
   React-networking: 1932dd1df1612af4ff5bab95150ffe8cd7da6c59
   React-oscompat: 8364fec24348a2ae5374a3e75a4ec49447e9b196

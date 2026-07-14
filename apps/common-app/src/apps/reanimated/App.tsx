@@ -4,15 +4,14 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import React, { memo } from 'react';
 import {
-  FlatList,
+  Alert,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { RectButton } from 'react-native-gesture-handler';
+import { FlatList, Touchable } from 'react-native-gesture-handler';
 import { useReducedMotion } from 'react-native-reanimated';
 
 import { BackButton, DrawerButton } from '@/components';
@@ -70,11 +69,13 @@ function HomeScreen({ navigation }: HomeScreenProps) {
     <FlatList
       data={findExamples(search)}
       initialNumToRender={EXAMPLES_NAMES.length}
+      contentInsetAdjustmentBehavior="automatic"
       renderItem={({ item: name }) => (
         <Item
           icon={EXAMPLES[name].icon}
           title={EXAMPLES[name].title}
           onPress={() => {
+            Alert.alert('Pressed!'); // TODO: Remove after RNGH debugging is done
             navigation.navigate(name);
             if (!wasClicked.includes(name)) {
               setTimeout(() => setWasClicked([...wasClicked, name]), 500);
@@ -91,7 +92,6 @@ function HomeScreen({ navigation }: HomeScreenProps) {
           wasClicked={wasClicked.includes(name)}
         />
       )}
-      renderScrollComponent={(props) => <ScrollView {...props} />}
       ItemSeparatorComponent={ItemSeparator}
       style={styles.list}
     />
@@ -115,7 +115,8 @@ function Item({
   wasClicked,
   shouldWork,
 }: ItemProps) {
-  const Button = IS_MACOS ? Pressable : RectButton;
+  const Button = IS_MACOS ? Pressable : Touchable;
+
   return (
     <Button
       style={[
@@ -123,8 +124,8 @@ function Item({
         disabled && styles.disabledButton,
         wasClicked && styles.visitedItem,
       ]}
-      onPress={onPress}
-      enabled={!disabled}>
+      onPress={!disabled ? onPress : undefined}
+      activeUnderlayOpacity={0.7}>
       {icon && <Text style={styles.title}>{icon + '  '}</Text>}
       <Text style={styles.title}>{title}</Text>
       {shouldWork !== undefined && (
