@@ -128,20 +128,17 @@ export type WorkletRuntimeConfig = WorkletRuntimeConfigBase &
   (
     | {
         /**
-         * Determines whether to enable the default Event Loop or not. The
-         * Event Loop provides implementations for `setTimeout`,
-         * `setImmediate`, `setInterval`, `requestAnimationFrame`,
-         * `queueMicrotask`, `clearTimeout`, `clearInterval`,
-         * `clearImmediate`, and `cancelAnimationFrame` methods. If not
-         * specified, it defaults to `true`. The Event Loop cannot be enabled
-         * on a runtime with {@link enableLocking} set to `false`.
+         * Determines whether to enable the default Event Loop, which provides
+         * `setTimeout`, `setInterval`, `requestAnimationFrame` and other
+         * scheduling APIs. If not specified, it defaults to `true`. Cannot be
+         * enabled when {@link enableLocking} is set to `false`.
          */
         enableEventLoop?: true;
         /**
          * Determines whether access to the underlying JS runtime is
          * synchronized with a mutex around every JSI operation. If not
          * specified, it defaults to `true`. Can be disabled only together
-         * with the Event Loop — see the `enableLocking: false` variant.
+         * with the Event Loop.
          */
         enableLocking?: true;
       }
@@ -155,18 +152,11 @@ export type WorkletRuntimeConfig = WorkletRuntimeConfigBase &
          * Determines whether access to the underlying JS runtime is
          * synchronized with a mutex around every JSI operation.
          *
-         * When set to `false`, individual JSI operations are no longer
-         * synchronized, which removes the per-operation locking overhead, and
-         * the runtime is created without the Event Loop — {@link
-         * enableEventLoop} cannot be set to `true`, so asynchronous APIs like
-         * `setTimeout`, `requestAnimationFrame`, `queueMicrotask`, and
-         * Promise continuations (`async`/`await`) are unavailable. The
-         * runtime still keeps its mutex and acquires it once per call for
-         * jobs scheduled on the runtime's queue, synchronous calls,
-         * `registerCustomSerializable`, and module updates during
-         * development, so all of these remain safe to use. Use it only when
-         * you can guarantee that native code accessing the runtime directly
-         * through JSI never runs concurrently with other work on the
+         * When set to `false`, per-operation locking is disabled and the
+         * runtime is created without the Event Loop — asynchronous APIs like
+         * timers or Promise continuations are unavailable. Worklets APIs
+         * remain safe to use; only native code accessing the runtime directly
+         * through JSI must not run concurrently with other work on the
          * runtime.
          */
         enableLocking: false;

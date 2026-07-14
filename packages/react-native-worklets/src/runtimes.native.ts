@@ -98,7 +98,7 @@ export function createWorkletRuntime(
       nameOrConfig?.animationQueuePollingRate ?? 16
     );
     enableLocking = nameOrConfig?.enableLocking ?? true;
-    if (!enableLocking && nameOrConfig?.enableEventLoop) {
+    if (__DEV__ && !enableLocking && nameOrConfig?.enableEventLoop) {
       throw new Error(
         '[Worklets] The Event Loop cannot be enabled on a runtime with locking disabled.'
       );

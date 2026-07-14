@@ -72,9 +72,10 @@ WorkletRuntime::WorkletRuntime(
       runtimeKind_(runtimeKind),
       name_(name),
       queue_(queue) {
-  if (enableEventLoop && !enableLocking) {
-    throw std::runtime_error("[Worklets] The Event Loop cannot be enabled on a Worklet Runtime with locking disabled.");
-  }
+  react_native_assert(
+      (enableLocking || !enableEventLoop) &&
+      "[Worklets] The Event Loop cannot be enabled on a Worklet Runtime with "
+      "locking disabled.");
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
   if (enableEventLoop) {
