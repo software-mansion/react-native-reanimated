@@ -8,6 +8,21 @@ plugins {
     id("com.android.library")
     id("maven-publish")
     id("com.diffplug.spotless") version "8.1.0"
+    id("org.jetbrains.kotlin.android") apply false
+}
+
+fun shouldApplyKotlinAndroidPlugin(): Boolean {
+    val agpMajorVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION.substringBefore('.').toInt()
+    if (agpMajorVersion <= 8) {
+        return true
+    }
+
+    val builtInKotlin = providers.gradleProperty("android.builtInKotlin").orNull?.toBoolean() ?: true
+    return !builtInKotlin
+}
+
+if (shouldApplyKotlinAndroidPlugin()) {
+    apply(plugin = "org.jetbrains.kotlin.android")
 }
 
 fun safeExtGet(prop: String, fallback: Any?): Any? =
@@ -269,18 +284,11 @@ android {
 
     sourceSets {
         getByName("main") {
-            java {
-                if (FETCH_PREVIEW_ENABLED) {
-                    srcDir("src/networking")
-                } else {
-                    srcDir("src/no-networking")
-                }
-            }
             kotlin {
                 if (FETCH_PREVIEW_ENABLED) {
-                    srcDir("src/networking")
+                    directories.add("src/networking")
                 } else {
-                    srcDir("src/no-networking")
+                    directories.add("src/no-networking")
                 }
             }
         }
@@ -292,7 +300,7 @@ android {
 }
 
 if (project != rootProject) {
-    kotlin {
+    extensions.configure<org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension> {
         compilerOptions {
             jvmTarget = JvmTarget.fromTarget("17")
         }
