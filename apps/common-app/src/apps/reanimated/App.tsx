@@ -62,7 +62,6 @@ function HomeScreen({ navigation }: HomeScreenProps) {
     <FlatList
       data={findExamples(search)}
       initialNumToRender={EXAMPLES_NAMES.length}
-      contentInsetAdjustmentBehavior="automatic"
       renderItem={({ item: name }) => (
         <Item
           icon={EXAMPLES[name].icon}
