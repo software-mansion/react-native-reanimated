@@ -13,6 +13,7 @@
 
 #include <memory>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -97,8 +98,13 @@ static inline void mergeAndSwap(
   std::swap(A, merged);
 }
 
+// Created by startSurface before the proxy can pull for that surface.
+// Entries are never erased, so stray pulls after teardown always find state.
 struct SurfaceContext {
   mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
+#ifdef ANDROID
+  mutable bool cleanupPullScheduled = false;
+#endif
 };
 
 struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
@@ -110,6 +116,13 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
   mutable std::unordered_map<SurfaceId, SurfaceContext> surfaceContext_;
   mutable std::unordered_map<Tag, int> leastRemoved;
   mutable std::unordered_set<SurfaceId> surfacesToRemove_;
+  bool shouldFlushDeadNodes(bool surfaceDropped) const;
+#ifdef ANDROID
+  mutable std::thread::id uiThreadId_;
+
+  void maybeScheduleCleanupPull(SurfaceContext &surfaceCtx, SurfaceId surfaceId, bool flushedDeadNodes) const;
+  void scheduleDeferredCleanupPull(SurfaceId surfaceId) const;
+#endif
 
   LayoutAnimationsProxy_Legacy(
       const std::shared_ptr<LayoutAnimationsManager> &layoutAnimationsManager,
@@ -146,6 +159,8 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) override;
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
+  void startSurface(const SurfaceId surfaceId) override;
+  SurfaceContext &getSurfaceContext(SurfaceId surfaceId) const;
   void maybeCancelAnimation(const int tag) const;
 
   void reconcileContradictedRemovals(
@@ -160,7 +175,8 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
       ShadowViewMutationList &filteredMutations,
       std::vector<std::shared_ptr<MutationNode>> &roots,
       std::unordered_set<std::shared_ptr<MutationNode>> &deadNodes,
-      bool shouldAnimate) const;
+      bool surfaceDropped,
+      bool flushDeadNodes) const;
 
   void handleUpdatesAndEnterings(
       ShadowViewMutationList &filteredMutations,
