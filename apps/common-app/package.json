@@ -46,7 +46,7 @@
     "react-strict-dom": "0.0.55"
   },
   "devDependencies": {
-    "@babel/core": "7.28.4",
+    "@babel/core": "7.29.6",
     "@babel/preset-env": "7.28.3",
     "@babel/runtime": "7.28.4",
     "@react-native-community/cli": "20.1.0",

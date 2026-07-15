@@ -80,7 +80,7 @@
   },
   "devDependencies": {
     "@babel/cli": "7.28.3",
-    "@babel/core": "7.28.4",
+    "@babel/core": "7.29.6",
     "@react-native-community/cli": "20.1.0",
     "@react-native/eslint-config": "0.83.0",
     "@react-native/jest-preset": "patch:@react-native/jest-preset@npm%3A0.87.0-rc.0#~/.yarn/patches/@react-native-jest-preset-npm-0.87.0-rc.0-63494e1a37.patch",
