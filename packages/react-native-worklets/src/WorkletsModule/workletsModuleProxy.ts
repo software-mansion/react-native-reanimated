@@ -9,7 +9,7 @@ import type { WorkletRuntime } from '../types';
 
 /** Type of `__workletsModuleProxy` injected with JSI. */
 export interface WorkletsModuleProxy {
-  loadUnpackers(
+  loadUnpackersWithCode(
     valueUnpackerCode: string,
     valueUnpackerLocation: string,
     valueUnpackerSourceMap: string,
@@ -28,6 +28,15 @@ export interface WorkletsModuleProxy {
     remoteFunctionUnpackerCode: string,
     remoteFunctionUnpackerLocation: string,
     remoteFunctionUnpackerSourceMap: string
+  ): void;
+
+  loadUnpackersWithBytecode(
+    valueUnpackerBytecode: ArrayBuffer,
+    synchronizableUnpackerBytecode: ArrayBuffer,
+    customSerializableUnpackerBytecode: ArrayBuffer,
+    shareableHostUnpackerBytecode: ArrayBuffer,
+    shareableGuestUnpackerBytecode: ArrayBuffer,
+    remoteFunctionUnpackerBytecode: ArrayBuffer
   ): void;
 
   createSerializableImport<TValue>(
@@ -103,7 +112,6 @@ export interface WorkletsModuleProxy {
 
   createSerializableNonWorkletFunction<TArgs extends unknown[], TReturn>(
     fun: (...args: TArgs) => TReturn,
-    functionId: number,
     functionName: string | undefined
   ): SerializableRef<(...args: TArgs) => TReturn>;
 
@@ -226,7 +234,10 @@ export interface WorkletsModuleProxy {
   ): SerializableRef<TValue>;
 }
 
-type InternalMethods = 'loadUnpackers' | 'createSerializableLEGACY';
+type InternalMethods =
+  | 'loadUnpackersWithCode'
+  | 'loadUnpackersWithBytecode'
+  | 'createSerializableLEGACY';
 
 type TurboModulePublic = {
   toggleSlowAnimationsOnUIRuntime(): boolean;
