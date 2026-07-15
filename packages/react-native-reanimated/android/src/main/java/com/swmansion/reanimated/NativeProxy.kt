@@ -250,6 +250,7 @@ open class NativeProxy {
         intBuffer: IntArray,
         doubleBuffer: DoubleArray,
     ) {
+        UiThreadUtil.assertOnUiThread()
         SynchronousPropsBufferParser.parse(intBuffer, doubleBuffer) { viewTag, props ->
             if (BuildConfig.IS_REACT_NATIVE_86_OR_NEWER) {
                 try {
