@@ -654,7 +654,7 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
 
   // TODO(future): flush updates from CSS animations and CSS transitions registries
   auto lock = updatesRegistryManager_->lock();
-  return animatedPropsRegistry_->getUpdatesOlderThanTimestamp(rt, currentTimestamp - 1000 /* 1 second */);
+  return animatedPropsRegistry_->collectSettledUpdates(rt, currentTimestamp - 1000 /* 1 second */);
 }
 
 bool ReanimatedModuleProxy::handleEvent(

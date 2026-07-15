@@ -44,7 +44,7 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
       const auto tag = shadowNode->getTag();
       timestampMap_[tag] = timestamp;
       // If JS already has a `settledProps` snapshot for this tag, it is now
-      // stale — schedule a refresh on the next `getUpdatesOlderThanTimestamp`.
+      // stale — schedule a refresh on the next `collectSettledUpdates`.
       if (syncedTags_.erase(tag) > 0) {
         invalidatedTags_.insert(tag);
       }
@@ -52,7 +52,7 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
   }
 }
 
-jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt, const double timestamp) {
+jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const double settledTimestamp) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
 
   std::vector<std::pair<Tag, std::reference_wrapper<const folly::dynamic>>> updates;
@@ -76,17 +76,17 @@ jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt,
       ++it;
       continue;
     }
-    const bool isSettled = timestampIt->second < timestamp;
+    const bool isSettled = timestampIt->second < settledTimestamp;
     const auto invalidatedIt = invalidatedTags_.find(viewTag);
-    const bool isStaleSynced = invalidatedIt != invalidatedTags_.end();
-    if (isSettled || isStaleSynced) {
+    const bool isInvalidated = invalidatedIt != invalidatedTags_.end();
+    if (isSettled || isInvalidated) {
       updates.emplace_back(viewTag, std::cref(it->second.second));
       if (isSettled) {
         // Only settled-path tags are tracked as "synced" so that an ongoing
         // animation doesn't re-trigger an invalidation/sync on every GC tick.
         syncedTags_.insert(viewTag);
       }
-      if (isStaleSynced) {
+      if (isInvalidated) {
         // Only erase serviced invalidations; if a tag was invalidated but the
         // matching update batch hasn't been flushed into updatesRegistry_ yet,
         // we leave the entry so the next sync picks it up.
