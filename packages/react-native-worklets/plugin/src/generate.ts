@@ -72,25 +72,7 @@ export function generateWorkletFile(
 
   const transformedProg = transformFromAstSync(newProg, undefined, {
     filename: state.file.opts.filename,
-    // Resolve `@babel/preset-typescript` relative to this package's own
-    // install location (it is a direct dependency of `react-native-worklets`)
-    // instead of passing the bare specifier. Without an explicit `cwd`
-    // above, Babel resolves presets/plugins passed directly as options
-    // relative to `process.cwd()` (see `buildRootChain` in
-    // `@babel/core/lib/config/config-chain.js`), not relative to `filename`.
-    // Nothing guarantees `@babel/preset-typescript` is reachable from
-    // whatever directory happens to be the current process's cwd when this
-    // transform runs (e.g. a monorepo subpackage directory, or a bundler
-    // worker process with a different cwd) — that depends entirely on the
-    // package manager's incidental node_modules hoisting behavior, which is
-    // not guaranteed to be stable across installs (e.g. with pnpm).
-    // Resolving it from our own package directory instead removes that
-    // dependency on hoisting.
-    presets: [
-      require.resolve('@babel/preset-typescript', {
-        paths: [dirname(require.resolve('react-native-worklets/package.json'))],
-      }),
-    ],
+    presets: [resolvePresetTypescript()],
     plugins: [state.autoworkletizationPlugin, stripJsxDevAttributesPlugin],
     ast: false,
     babelrc: false,
@@ -103,6 +85,16 @@ export function generateWorkletFile(
   const dedicatedFilePath = resolve(filesDirPath, `${workletHash}.js`);
 
   writeFileSync(dedicatedFilePath, transformedProg);
+}
+
+function resolvePresetTypescript(): string {
+  try {
+    return require.resolve('@babel/preset-typescript');
+  } catch {
+    return require.resolve('@babel/preset-typescript', {
+      paths: [dirname(require.resolve('react-native-worklets/package.json'))],
+    });
+  }
 }
 
 const stripJsxDevAttributesPlugin = {
