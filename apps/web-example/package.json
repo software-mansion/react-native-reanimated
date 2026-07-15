@@ -18,6 +18,7 @@
   "dependencies": {
     "common-app": "workspace:*",
     "expo": "56.0.12",
+    "hermes-parser": "0.36.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.87.0-rc.0",

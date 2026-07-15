@@ -19742,7 +19742,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hermes-parser@npm:0.29.1":
+"hermes-parser@npm:0.29.1, hermes-parser@npm:^0.29.1":
   version: 0.29.1
   resolution: "hermes-parser@npm:0.29.1"
   dependencies:
@@ -19760,7 +19760,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hermes-parser@npm:0.33.3":
+"hermes-parser@npm:0.33.3, hermes-parser@npm:^0.33.3":
   version: 0.33.3
   resolution: "hermes-parser@npm:0.33.3"
   dependencies:
@@ -34150,6 +34150,7 @@ __metadata:
     common-app: "workspace:*"
     eslint: "npm:9.37.0"
     expo: "npm:56.0.12"
+    hermes-parser: "npm:0.36.1"
     react: "npm:19.2.3"
     react-dom: "npm:19.2.3"
     react-native: "npm:0.87.0-rc.0"
