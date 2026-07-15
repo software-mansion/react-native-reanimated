@@ -40,7 +40,7 @@
     "react-native-nitro-modules": "patch:react-native-nitro-modules@npm%3A0.35.2#~/.yarn/patches/react-native-nitro-modules-npm-0.35.2-717188fdb0.patch",
     "react-native-reanimated": "workspace:*",
     "react-native-safe-area-context": "patch:react-native-safe-area-context@npm%3A5.7.0#~/.yarn/patches/react-native-safe-area-context-npm-5.7.0-fcff6bf187.patch",
-    "react-native-screens": "4.24.0",
+    "react-native-screens": "patch:react-native-screens@npm%3A4.24.0#~/.yarn/patches/react-native-screens-npm-4.24.0-c572d01561.patch",
     "react-native-svg": "15.15.4",
     "react-native-worklets": "workspace:*",
     "react-strict-dom": "0.0.55"

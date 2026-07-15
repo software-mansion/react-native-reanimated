@@ -1,0 +1,20 @@
+diff --git a/lib/typescript/components/Screen.web.d.ts b/lib/typescript/components/Screen.web.d.ts
+index fdb5fe9302936eccc917fceba35524e13b41b42c..86c7c79c4c7a8c02dc8a37ae26ecf99d79633e42 100644
+--- a/lib/typescript/components/Screen.web.d.ts
++++ b/lib/typescript/components/Screen.web.d.ts
+@@ -1,11 +1,11 @@
+ import { ScreenProps } from '../types';
+-import { Animated, View } from 'react-native';
++import { View } from 'react-native';
+ import React from 'react';
+ export declare const InnerScreen: typeof View;
+ export declare class NativeScreen extends React.Component<ScreenProps> {
+     render(): React.JSX.Element;
+ }
+-declare const Screen: Animated.AnimatedComponent<typeof NativeScreen>;
+-export declare const ScreenContext: React.Context<Animated.AnimatedComponent<typeof NativeScreen>>;
++declare const Screen: React.ComponentType<ScreenProps & React.RefAttributes<View>>;
++export declare const ScreenContext: React.Context<React.ComponentType<ScreenProps & React.RefAttributes<View>>>;
+ export default Screen;
+ //# sourceMappingURL=Screen.web.d.ts.map
+\ No newline at end of file
