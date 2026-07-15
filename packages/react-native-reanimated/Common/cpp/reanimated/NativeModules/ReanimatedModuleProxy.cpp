@@ -646,12 +646,12 @@ void ReanimatedModuleProxy::unregisterPseudoStyles(jsi::Runtime &, const jsi::Va
   pseudoStylesRegistry_->remove(viewTag.asNumber());
 }
 
-constexpr double SETTLED_ANIMATION_THRESHOLD_MS = 1000;
-
 jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
   react_native_assert(
       StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS") &&
       "getSettledUpdates requires FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS static feature flag to be enabled");
+
+  constexpr double SETTLED_ANIMATION_THRESHOLD_MS = 1000;
 
   // TODO(future): use unified timestamp
   const auto currentTimestamp = getAnimationTimestamp_();
