@@ -62,7 +62,7 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const 
   for (auto it = updatesRegistry_.begin(); it != updatesRegistry_.end();) {
     const auto viewTag = it->first;
 
-    if (syncedTags_.count(viewTag) > 0) {
+    if (syncedTags_.contains(viewTag)) {
       // React already has the latest value for this tag (synced on a previous
       // call, so the `settledProps` state is committed by now) — the registry
       // entry is redundant. `syncedTags_` is intentionally retained to detect
