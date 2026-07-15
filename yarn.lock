@@ -16161,7 +16161,7 @@ __metadata:
     clsx: "npm:2.1.0"
     copy-text-to-clipboard: "npm:3.2.2"
     copy-webpack-plugin: "npm:11.0.0"
-    esbuild: "npm:0.25.10"
+    esbuild: "npm:0.28.1"
     esbuild-register: "npm:3.5.0"
     glob: "npm:13.0.6"
     prettier: "npm:3.6.2"
