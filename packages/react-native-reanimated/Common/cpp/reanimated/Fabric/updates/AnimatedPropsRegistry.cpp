@@ -6,7 +6,6 @@
 #include <react/debug/react_native_assert.h>
 
 #include <memory>
-#include <tuple>
 #include <utility>
 
 namespace reanimated {
@@ -56,10 +55,7 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
 jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt, const double timestamp) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
 
-  // Each returned tag is paired with whether it came from the settled path —
-  // only settled-path tags are tracked as "synced" so that an ongoing animation
-  // doesn't re-trigger an invalidation/sync on every GC tick.
-  std::vector<std::tuple<Tag, std::reference_wrapper<const folly::dynamic>, bool>> updates;
+  std::vector<std::pair<Tag, std::reference_wrapper<const folly::dynamic>>> updates;
 
   for (auto it = updatesRegistry_.begin(); it != updatesRegistry_.end();) {
     const auto viewTag = it->first;
@@ -84,7 +80,12 @@ jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt,
     const auto invalidatedIt = invalidatedTags_.find(viewTag);
     const bool isStaleSynced = invalidatedIt != invalidatedTags_.end();
     if (isSettled || isStaleSynced) {
-      updates.emplace_back(viewTag, std::cref(it->second.second), isSettled);
+      updates.emplace_back(viewTag, std::cref(it->second.second));
+      if (isSettled) {
+        // Only settled-path tags are tracked as "synced" so that an ongoing
+        // animation doesn't re-trigger an invalidation/sync on every GC tick.
+        syncedTags_.insert(viewTag);
+      }
       if (isStaleSynced) {
         // Only erase serviced invalidations; if a tag was invalidated but the
         // matching update batch hasn't been flushed into updatesRegistry_ yet,
@@ -97,14 +98,11 @@ jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt,
 
   const jsi::Array array(rt, updates.size());
   size_t i = 0;
-  for (const auto &[viewTag, styleProps, isSettled] : updates) {
+  for (const auto &[viewTag, styleProps] : updates) {
     const jsi::Object item(rt);
     item.setProperty(rt, "viewTag", viewTag);
     item.setProperty(rt, "styleProps", jsi::valueFromDynamic(rt, styleProps.get()));
     array.setValueAtIndex(rt, i++, item);
-    if (isSettled) {
-      syncedTags_.insert(viewTag);
-    }
   }
 
   return jsi::Value(rt, array);
