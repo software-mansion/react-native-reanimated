@@ -1,5 +1,10 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/NativeLayoutAnimationDescriptor.h>
+// LayoutAnimationTrace start
+#ifndef NDEBUG
+#include <reanimated/LayoutAnimations/LayoutAnimationTraceInstrumentation.h>
+#endif // NDEBUG
+// LayoutAnimationTrace end
 
 #include <memory>
 #include <unordered_map>
@@ -16,6 +21,12 @@ void LayoutAnimationsManager::configureAnimationBatch(const std::vector<LayoutAn
     const auto &config = layoutAnimationConfig.config;
     const auto &rawConfig = layoutAnimationConfig.rawConfig;
     const auto &sharedTag = layoutAnimationConfig.sharedTransitionTag;
+
+    // LayoutAnimationTrace start
+#ifndef NDEBUG
+    layout_animation_trace::recordConfigurationStored(tag, type, config != nullptr);
+#endif // NDEBUG
+    // LayoutAnimationTrace end
 
     if (type == LayoutAnimationType::ENTERING) {
       enteringAnimationsForNativeID_[tag] = std::make_pair(config, rawConfig);
@@ -156,6 +167,12 @@ void LayoutAnimationsManager::startNativeLayoutAnimation(
       rt, jsi::Value(tag), jsi::Value(static_cast<int>(type)), values, configPair.first->toJSValue(rt));
 
   NativeLayoutAnimationDescriptor descriptor = parseNativeDescriptor(rt, descriptorValue.asObject(rt));
+
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+  layout_animation_trace::recordNativeDescriptor(tag, type, descriptor);
+#endif // NDEBUG
+  // LayoutAnimationTrace end
 
   runNativeLayoutAnimation_(tag, descriptor, usePresentationLayer, std::move(onAnimationEnd));
 }

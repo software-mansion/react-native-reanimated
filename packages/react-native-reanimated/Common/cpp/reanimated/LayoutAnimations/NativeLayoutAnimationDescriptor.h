@@ -3,6 +3,12 @@
 #include <string>
 #include <vector>
 
+// LayoutAnimationTrace start
+#ifndef NDEBUG
+#include <reanimated/LayoutAnimations/LayoutAnimationTrace.h>
+#endif // NDEBUG
+// LayoutAnimationTrace end
+
 namespace reanimated {
 
 // A single animated channel of a native layout animation. Mirrors
@@ -27,6 +33,12 @@ struct NativeLayoutAnimationProperty {
 struct NativeLayoutAnimationDescriptor {
   double durationMs = 0;
   std::vector<NativeLayoutAnimationProperty> properties;
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+  uint64_t traceGeneration = 0;
+  layout_animation_trace::AnimationType traceAnimationType = layout_animation_trace::AnimationType::Layout;
+#endif // NDEBUG
+  // LayoutAnimationTrace end
 };
 
 } // namespace reanimated

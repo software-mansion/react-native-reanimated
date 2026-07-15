@@ -1,5 +1,6 @@
 'use strict';
 import type {
+  AnimationRawConfig,
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from './commonTypes';
@@ -19,13 +20,15 @@ import type {
  *   at the end of the batch, after all the non-deferred configurations (even
  *   those that were updated later). This is used to retain the correct ordering
  *   of shared elements. Defaults to `false`.
+ * @param rawConfig - The raw layout animation configuration.
  */
 export const updateLayoutAnimations: (
   viewTag: number,
   type: LayoutAnimationType,
   config?: Keyframe | LayoutAnimationFunction,
   isUnmounting?: boolean,
-  sharedTransitionTag?: string
+  sharedTransitionTag?: string,
+  rawConfig?: AnimationRawConfig
 ) => void = () => {
   // no-op
 };

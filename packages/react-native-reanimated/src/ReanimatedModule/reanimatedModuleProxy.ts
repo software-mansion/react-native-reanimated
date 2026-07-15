@@ -17,9 +17,44 @@ import type {
   CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
 } from '../css/native';
+// LayoutAnimationTrace start
+import type { LayoutAnimationTraceStartOptions } from '../layoutReanimation/layoutAnimationTrace';
+// LayoutAnimationTrace end
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {
+  // LayoutAnimationTrace start
+  /** @internal Development-only layout-animation diagnostics. */
+  _startLayoutAnimationTrace?(options: LayoutAnimationTraceStartOptions): void;
+  /** @internal Development-only layout-animation diagnostics. */
+  _stopLayoutAnimationTrace?(): void;
+  /** @internal Development-only layout-animation diagnostics. */
+  _clearLayoutAnimationTrace?(): void;
+  /** @internal Development-only layout-animation diagnostics. */
+  _getLayoutAnimationTrace?(): string;
+  /** @internal Development-only layout-animation diagnostics. */
+  _isLayoutAnimationTraceActive?(): boolean;
+  /** @internal Development-only layout-animation diagnostics. */
+  _recordLayoutAnimationConfigurationQueued?(
+    viewTag: number,
+    type: number,
+    configured: boolean,
+    deferred: boolean
+  ): void;
+  /** @internal Development-only layout-animation test-bench event. */
+  _recordLayoutAnimationTraceEvent?(
+    event:
+      | 'scenario-reset'
+      | 'scenario-run'
+      | 'scenario-interrupt'
+      | 'scenario-cancel'
+      | 'callback-invoked'
+      | 'animation-settled',
+    finished: boolean | null,
+    callbackCount: number | null
+  ): void;
+  // LayoutAnimationTrace end
+
   registerEventHandler<T>(
     eventHandler: SerializableRef<T>,
     eventName: string,

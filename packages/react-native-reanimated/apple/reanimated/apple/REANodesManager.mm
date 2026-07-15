@@ -4,6 +4,11 @@
 #import <reanimated/apple/REACoreAnimationDelegate.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/REAUIView.h>
+// LayoutAnimationTrace start
+#ifndef NDEBUG
+#import <reanimated/apple/LayoutAnimationTraceInstrumentation.h>
+#endif // NDEBUG
+// LayoutAnimationTrace end
 
 #import <React/RCTComponentViewProtocol.h>
 #import <React/RCTComponentViewRegistry.h>
@@ -195,6 +200,11 @@ using namespace facebook::react;
     dispatch_async(dispatch_get_main_queue(), ^{
       REANodesManager *strongSelf = weakSelf;
       if (strongSelf == nil) {
+// LayoutAnimationTrace start
+#ifndef NDEBUG
+        reanimated::layout_animation_trace::recordApplePlatformCompleted(viewTag, descriptor, nil, false, false);
+#endif // NDEBUG
+       // LayoutAnimationTrace end
         completion(NO);
         return;
       }
@@ -207,6 +217,11 @@ using namespace facebook::react;
   }
 
   if (descriptor.properties.empty()) {
+// LayoutAnimationTrace start
+#ifndef NDEBUG
+    reanimated::layout_animation_trace::recordApplePlatformCompleted(viewTag, descriptor, nil, true, false);
+#endif // NDEBUG
+    // LayoutAnimationTrace end
     completion(YES);
     return;
   }
@@ -215,7 +230,18 @@ using namespace facebook::react;
   RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
   REAUIView<RCTComponentViewProtocol> *componentView =
       [componentViewRegistry findComponentViewWithTag:static_cast<Tag>(viewTag)];
+// LayoutAnimationTrace start
+#ifndef NDEBUG
+  reanimated::layout_animation_trace::recordApplePostMountObserved(viewTag, descriptor, componentView);
+  reanimated::layout_animation_trace::recordAppleNativeViewLookup(viewTag, descriptor, componentView);
+#endif // NDEBUG
+  // LayoutAnimationTrace end
   if (componentView == nil) {
+// LayoutAnimationTrace start
+#ifndef NDEBUG
+    reanimated::layout_animation_trace::recordApplePlatformCompleted(viewTag, descriptor, nil, false, false);
+#endif // NDEBUG
+    // LayoutAnimationTrace end
     completion(NO);
     return;
   }
@@ -226,7 +252,9 @@ using namespace facebook::react;
   for (const auto &property : descriptor.properties) {
     channels[property.keyPath] = &property;
   }
-  auto hasChannel = [&channels](const char *name) { return channels.find(name) != channels.end(); };
+  auto hasChannel = [&channels](const char *name) {
+    return channels.find(name) != channels.end();
+  };
 
   // Linear interpolation of a channel's sampled values at a normalized offset.
   auto channelValueAt = [&channels](const char *name, double offset, double fallback) -> double {
@@ -322,8 +350,7 @@ using namespace facebook::react;
   // in-flight animation on that key path - otherwise a freshly committed layout
   // would incorrectly start from its final on-screen position.
   auto presentationActive = [&](NSString *keyPath) -> BOOL {
-    return presentationLayer != nil &&
-        [layer animationForKey:[@"REA_LAYOUT_" stringByAppendingString:keyPath]] != nil;
+    return presentationLayer != nil && [layer animationForKey:[@"REA_LAYOUT_" stringByAppendingString:keyPath]] != nil;
   };
 
   NSMutableArray<NSString *> *animatedKeyPaths = [NSMutableArray array];
@@ -365,7 +392,8 @@ using namespace facebook::react;
     for (double offset : sampleOffsets) {
       [values addObject:[NSValue valueWithCATransform3D:composeTransform(offset)]];
     }
-    id presentationValue = presentationActive(@"transform") ? [NSValue valueWithCATransform3D:presentationLayer.transform] : nil;
+    id presentationValue =
+        presentationActive(@"transform") ? [NSValue valueWithCATransform3D:presentationLayer.transform] : nil;
     registerAnimation(@"transform", values, [NSValue valueWithCATransform3D:composeTransform(1.0)], presentationValue);
   }
 
@@ -384,7 +412,8 @@ using namespace facebook::react;
     }
     const double finalWidth = channelValueAt("width", 1.0, currentBounds.width);
     const double finalHeight = channelValueAt("height", 1.0, currentBounds.height);
-    id presentationValue = presentationActive(@"bounds.size") ? [NSValue valueWithCGSize:presentationLayer.bounds.size] : nil;
+    id presentationValue =
+        presentationActive(@"bounds.size") ? [NSValue valueWithCGSize:presentationLayer.bounds.size] : nil;
     registerAnimation(
         @"bounds.size", values, [NSValue valueWithCGSize:CGSizeMake(finalWidth, finalHeight)], presentationValue);
   }
@@ -401,20 +430,42 @@ using namespace facebook::react;
     for (double offset : sampleOffsets) {
       [values addObject:[NSValue valueWithCGPoint:positionAt(offset)]];
     }
-    id presentationValue = presentationActive(@"position") ? [NSValue valueWithCGPoint:presentationLayer.position] : nil;
+    id presentationValue =
+        presentationActive(@"position") ? [NSValue valueWithCGPoint:presentationLayer.position] : nil;
     registerAnimation(@"position", values, [NSValue valueWithCGPoint:positionAt(1.0)], presentationValue);
   }
 
   if (animations.count == 0) {
+// LayoutAnimationTrace start
+#ifndef NDEBUG
+    reanimated::layout_animation_trace::recordApplePlatformCompleted(viewTag, descriptor, componentView, true, false);
+#endif // NDEBUG
+    // LayoutAnimationTrace end
     completion(YES);
     return;
   }
 
   // Attach the completion to the (single) longest-running animation. Every
   // animation here shares the same duration, so the first one is fine.
-  REACoreAnimationDelegate *delegate =
-      [REACoreAnimationDelegate delegateWithStart:nil
-                                             stop:^(CAAnimation *animation, BOOL finished) { completion(finished); }];
+  REACoreAnimationDelegate *delegate = [REACoreAnimationDelegate
+      delegateWithStart:^(CAAnimation *animation) {
+// LayoutAnimationTrace start
+#ifndef NDEBUG
+        reanimated::layout_animation_trace::recordApplePlatformStarted(viewTag, descriptor, componentView);
+        reanimated::layout_animation_trace::recordAppleModelPresentationSample(viewTag, descriptor, componentView);
+#endif // NDEBUG
+       // LayoutAnimationTrace end
+      }
+      stop:^(CAAnimation *animation, BOOL finished) {
+// LayoutAnimationTrace start
+#ifndef NDEBUG
+        reanimated::layout_animation_trace::recordAppleModelPresentationSample(viewTag, descriptor, componentView);
+        reanimated::layout_animation_trace::recordApplePlatformCompleted(
+            viewTag, descriptor, componentView, finished, true);
+#endif // NDEBUG
+       // LayoutAnimationTrace end
+        completion(finished);
+      }];
 
   [CATransaction begin];
   [CATransaction setDisableActions:YES];

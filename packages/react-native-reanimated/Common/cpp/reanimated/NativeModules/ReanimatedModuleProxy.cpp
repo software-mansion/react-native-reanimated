@@ -14,6 +14,12 @@
 #include <reanimated/Fabric/updates/PropsLayoutFilter.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
+// LayoutAnimationTrace start
+#ifndef NDEBUG
+#include <reanimated/LayoutAnimations/LayoutAnimationTraceInstrumentation.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationTraceRecorder.h>
+#endif // NDEBUG
+// LayoutAnimationTrace end
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/NativeModules/SynchronousPropsBufferSerializer.h>
@@ -27,6 +33,7 @@
 #endif // __ANDROID__
 
 #include <algorithm>
+#include <cmath>
 #include <functional>
 #include <memory>
 #include <string>
@@ -46,6 +53,141 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
 }
 
 namespace {
+
+// LayoutAnimationTrace start
+#ifndef NDEBUG
+
+[[noreturn]] void throwLayoutAnimationTraceError(jsi::Runtime &rt, const std::string &message) {
+  throw jsi::JSError(rt, "[Reanimated] Invalid layout-animation trace options: " + message);
+}
+
+jsi::Value getRequiredTraceProperty(jsi::Runtime &rt, const jsi::Object &object, const char *name) {
+  auto value = object.getProperty(rt, name);
+  if (value.isUndefined() || value.isNull()) {
+    throwLayoutAnimationTraceError(rt, std::string("missing '") + name + "'.");
+  }
+  return value;
+}
+
+std::string getRequiredTraceString(jsi::Runtime &rt, const jsi::Object &object, const char *name) {
+  auto value = getRequiredTraceProperty(rt, object, name);
+  if (!value.isString()) {
+    throwLayoutAnimationTraceError(rt, std::string("'") + name + "' must be a string.");
+  }
+  return value.asString(rt).utf8(rt);
+}
+
+std::optional<std::string> getOptionalTraceString(jsi::Runtime &rt, const jsi::Object &object, const char *name) {
+  auto value = object.getProperty(rt, name);
+  if (value.isUndefined() || value.isNull()) {
+    return std::nullopt;
+  }
+  if (!value.isString()) {
+    throwLayoutAnimationTraceError(rt, std::string("'") + name + "' must be a string when provided.");
+  }
+  return value.asString(rt).utf8(rt);
+}
+
+layout_animation_trace::Backend parseTraceBackend(jsi::Runtime &rt, const std::string &backend) {
+  if (backend == "legacy") {
+    return layout_animation_trace::Backend::Legacy;
+  }
+  if (backend == "native") {
+    return layout_animation_trace::Backend::Native;
+  }
+  throwLayoutAnimationTraceError(rt, "'backend' must be 'legacy' or 'native'.");
+}
+
+layout_animation_trace::EventName parseTraceHarnessEventName(jsi::Runtime &rt, const std::string &eventName) {
+  static const std::unordered_map<std::string, layout_animation_trace::EventName> eventNames = {
+      {"scenario-reset", layout_animation_trace::EventName::ScenarioReset},
+      {"scenario-run", layout_animation_trace::EventName::ScenarioRun},
+      {"scenario-interrupt", layout_animation_trace::EventName::ScenarioInterrupt},
+      {"scenario-cancel", layout_animation_trace::EventName::ScenarioCancel},
+      {"callback-invoked", layout_animation_trace::EventName::CallbackInvoked},
+      {"animation-settled", layout_animation_trace::EventName::AnimationSettled}};
+  const auto event = eventNames.find(eventName);
+  if (event == eventNames.end()) {
+    throwLayoutAnimationTraceError(rt, "unknown test-bench event.");
+  }
+  return event->second;
+}
+
+void validateTraceScenario(jsi::Runtime &rt, const std::string &scenario) {
+  static const std::unordered_set<std::string> scenarios = {
+      "linear-position",
+      "position-size-with-text",
+      "fade-in-out",
+      "slide-in-out",
+      "entering-interrupted-by-layout",
+      "layout-interrupted-by-layout",
+      "exit-during-layout",
+      "cancel-before-platform-start",
+      "parent-removal-with-flattening",
+      "reduced-motion",
+      "unsupported-style-property",
+      "transform-order-sensitive"};
+  if (!scenarios.contains(scenario)) {
+    throwLayoutAnimationTraceError(rt, "unknown 'scenario'.");
+  }
+}
+
+std::optional<layout_animation_trace::Environment> parseTraceEnvironment(jsi::Runtime &rt, const jsi::Object &options) {
+  auto value = options.getProperty(rt, "environment");
+  if (value.isUndefined() || value.isNull()) {
+    return std::nullopt;
+  }
+  if (!value.isObject()) {
+    throwLayoutAnimationTraceError(rt, "'environment' must be an object when provided.");
+  }
+
+  auto object = value.asObject(rt);
+  auto platform = getRequiredTraceString(rt, object, "platform");
+  if (platform != "ios" && platform != "android") {
+    throwLayoutAnimationTraceError(rt, "'environment.platform' must be 'ios' or 'android'.");
+  }
+  auto reducedMotion = getRequiredTraceProperty(rt, object, "reducedMotion");
+  if (!reducedMotion.isBool()) {
+    throwLayoutAnimationTraceError(rt, "'environment.reducedMotion' must be a boolean.");
+  }
+
+  return layout_animation_trace::Environment{
+      .commitSha = getOptionalTraceString(rt, object, "commitSha"),
+      .platform = std::move(platform),
+      .osVersion = getOptionalTraceString(rt, object, "osVersion"),
+      .deviceModel = getOptionalTraceString(rt, object, "deviceModel"),
+      .reducedMotion = reducedMotion.getBool()};
+}
+
+layout_animation_trace::Session parseLayoutAnimationTraceSession(jsi::Runtime &rt, const jsi::Value &optionsValue) {
+  if (!optionsValue.isObject()) {
+    throwLayoutAnimationTraceError(rt, "options must be an object.");
+  }
+  auto options = optionsValue.asObject(rt);
+
+  auto runIdValue = getRequiredTraceProperty(rt, options, "runId");
+  if (!runIdValue.isNumber()) {
+    throwLayoutAnimationTraceError(rt, "'runId' must be a non-negative integer.");
+  }
+  const auto runId = runIdValue.asNumber();
+  constexpr double maxSafeInteger = 9007199254740991.0;
+  if (!std::isfinite(runId) || runId < 0 || std::floor(runId) != runId || runId > maxSafeInteger) {
+    throwLayoutAnimationTraceError(rt, "'runId' must be a non-negative safe integer.");
+  }
+
+  auto backend = parseTraceBackend(rt, getRequiredTraceString(rt, options, "backend"));
+  auto scenario = getRequiredTraceString(rt, options, "scenario");
+  validateTraceScenario(rt, scenario);
+
+  return layout_animation_trace::Session{
+      .runId = static_cast<uint64_t>(runId),
+      .backend = backend,
+      .scenario = std::move(scenario),
+      .environment = parseTraceEnvironment(rt, options)};
+}
+
+#endif // NDEBUG
+// LayoutAnimationTrace end
 
 #if REACT_NATIVE_VERSION_MINOR >= 85
 void mergeAnimatedProps(AnimatedProps &target, AnimatedProps &&source) {
@@ -324,8 +466,13 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
         if (!surfaceId) {
           return;
         }
-        // The flush set is drained by `executeLayoutAnimationsRequests`, driven
-        // by `runGrandCallback` (backend) or a JS `requestAnimationFrameFinalizer` (non-backend).
+    // LayoutAnimationTrace start
+#ifndef NDEBUG
+        layout_animation_trace::recordSurfaceFlushRequested(tag, *surfaceId);
+#endif // NDEBUG
+       // LayoutAnimationTrace end
+       // The flush set is drained by `executeLayoutAnimationsRequests`, driven
+       // by `runGrandCallback` (backend) or a JS `requestAnimationFrameFinalizer` (non-backend).
         strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
       };
 
@@ -340,6 +487,11 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     if (!surfaceId) {
       return;
     }
+    // LayoutAnimationTrace start
+#ifndef NDEBUG
+    layout_animation_trace::recordSurfaceFlushRequested(tag, *surfaceId);
+#endif // NDEBUG
+    // LayoutAnimationTrace end
     strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
   };
 
@@ -477,6 +629,32 @@ ReanimatedModuleProxy::setDynamicFeatureFlag(jsi::Runtime &rt, const jsi::Value 
   return jsi::Value::undefined();
 }
 
+// LayoutAnimationTrace start
+#ifndef NDEBUG
+
+void ReanimatedModuleProxy::startLayoutAnimationTrace(jsi::Runtime &rt, const jsi::Value &options) {
+  layout_animation_trace::Recorder::getInstance().start(parseLayoutAnimationTraceSession(rt, options));
+}
+
+void ReanimatedModuleProxy::stopLayoutAnimationTrace() {
+  layout_animation_trace::Recorder::getInstance().stop();
+}
+
+void ReanimatedModuleProxy::clearLayoutAnimationTrace() {
+  layout_animation_trace::Recorder::getInstance().clear();
+}
+
+std::string ReanimatedModuleProxy::getLayoutAnimationTrace() const {
+  return layout_animation_trace::Recorder::getInstance().exportJSONL();
+}
+
+bool ReanimatedModuleProxy::isLayoutAnimationTraceActive() const {
+  return layout_animation_trace::Recorder::getInstance().isActive();
+}
+
+#endif // NDEBUG
+// LayoutAnimationTrace end
+
 jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     jsi::Runtime &rt,
     const jsi::Value &layoutAnimationsBatch) {
@@ -510,6 +688,12 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
           LayoutAnimationsManager::extractRawConfigValues(rt, rawConfig.asObject(rt));
       batchItem.rawConfig = std::make_shared<LayoutAnimationRawConfig>(rawConfigObject);
     }
+    // LayoutAnimationTrace start
+#ifndef NDEBUG
+    layout_animation_trace::recordConfigurationFlushed(
+        batchItem.tag, batchItem.type, batchItem.config != nullptr, length);
+#endif // NDEBUG
+    // LayoutAnimationTrace end
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);
   return jsi::Value::undefined();
@@ -1610,6 +1794,80 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
         }
         strongThis->unregisterPseudoStyles(rt, at<0>(args));
       });
+
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+  addMethod<4>(
+      rt,
+      obj,
+      "_recordLayoutAnimationConfigurationQueued",
+      [](jsi::Runtime &, const jsi::Value &, const jsi::Value(&args)[4]) {
+        layout_animation_trace::recordConfigurationQueued(
+            static_cast<int>(at<0>(args).asNumber()),
+            static_cast<LayoutAnimationType>(at<1>(args).asNumber()),
+            at<2>(args).getBool(),
+            at<3>(args).getBool());
+      });
+
+  addMethod<3>(
+      rt,
+      obj,
+      "_recordLayoutAnimationTraceEvent",
+      [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+        const auto eventName = parseTraceHarnessEventName(rt, at<0>(args).asString(rt).utf8(rt));
+        const auto finished = at<1>(args).isBool() ? std::optional<bool>(at<1>(args).getBool()) : std::nullopt;
+        const auto callbackCount = at<2>(args).isNumber()
+            ? std::optional<uint64_t>(static_cast<uint64_t>(at<2>(args).asNumber()))
+            : std::nullopt;
+        layout_animation_trace::recordHarnessEvent(eventName, finished, callbackCount);
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "_startLayoutAnimationTrace",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->startLayoutAnimationTrace(rt, at<0>(args));
+      });
+
+  addMethod<0>(rt, obj, "_stopLayoutAnimationTrace", [weakThis = weak_from_this()](jsi::Runtime &, const jsi::Value &) {
+    auto strongThis = weakThis.lock();
+    if (strongThis) {
+      strongThis->stopLayoutAnimationTrace();
+    }
+  });
+
+  addMethod<0>(
+      rt, obj, "_clearLayoutAnimationTrace", [weakThis = weak_from_this()](jsi::Runtime &, const jsi::Value &) {
+        auto strongThis = weakThis.lock();
+        if (strongThis) {
+          strongThis->clearLayoutAnimationTrace();
+        }
+      });
+
+  addMethod<0>(
+      rt,
+      obj,
+      "_getLayoutAnimationTrace",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &) -> jsi::Value {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value::undefined();
+        }
+        return jsi::Value(jsi::String::createFromUtf8(rt, strongThis->getLayoutAnimationTrace()));
+      });
+
+  addMethod<0>(
+      rt, obj, "_isLayoutAnimationTraceActive", [weakThis = weak_from_this()](jsi::Runtime &, const jsi::Value &) {
+        auto strongThis = weakThis.lock();
+        return jsi::Value(strongThis && strongThis->isLayoutAnimationTraceActive());
+      });
+#endif // NDEBUG
+  // LayoutAnimationTrace end
 
   return obj;
 }

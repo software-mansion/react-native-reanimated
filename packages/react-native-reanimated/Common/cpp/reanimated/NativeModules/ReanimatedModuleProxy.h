@@ -98,6 +98,16 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   jsi::Value getStaticFeatureFlag(jsi::Runtime &rt, const jsi::Value &name);
   jsi::Value setDynamicFeatureFlag(jsi::Runtime &rt, const jsi::Value &name, const jsi::Value &value);
 
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+  void startLayoutAnimationTrace(jsi::Runtime &rt, const jsi::Value &options);
+  void stopLayoutAnimationTrace();
+  void clearLayoutAnimationTrace();
+  [[nodiscard]] std::string getLayoutAnimationTrace() const;
+  [[nodiscard]] bool isLayoutAnimationTraceActive() const;
+#endif // NDEBUG
+  // LayoutAnimationTrace end
+
   jsi::Value configureLayoutAnimationBatch(jsi::Runtime &rt, const jsi::Value &layoutAnimationsBatch);
   void setShouldAnimateExiting(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &shouldAnimate);
 

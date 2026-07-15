@@ -1,4 +1,9 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
+// LayoutAnimationTrace start
+#ifndef NDEBUG
+#include <reanimated/LayoutAnimations/LayoutAnimationTraceInstrumentation.h>
+#endif // NDEBUG
+// LayoutAnimationTrace end
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
@@ -30,6 +35,7 @@ constexpr bool useNativeLayoutAnimations() {
   return false;
 #endif
 }
+
 } // namespace
 
 // We never modify the Shadow Tree, we just send some additional
@@ -56,6 +62,12 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
 
   std::vector<std::shared_ptr<MutationNode>> roots;
   std::unordered_map<Tag, Tag> movedViews;
+
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+  layout_animation_trace::recordMutationsSeen(mutations);
+#endif // NDEBUG
+  // LayoutAnimationTrace end
 
   addOngoingAnimations(surfaceId, filteredMutations);
 
@@ -85,6 +97,12 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
 
   addOngoingAnimations(surfaceId, filteredMutations);
 
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+  layout_animation_trace::recordMutationsEmitted(filteredMutations);
+#endif // NDEBUG
+  // LayoutAnimationTrace end
+
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
 
@@ -100,6 +118,12 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::progressLayoutAnimation(i
   }
 
   auto &layoutAnimation = layoutAnimationIt->second;
+
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+  layout_animation_trace::recordProgress(tag, layoutAnimation, uiRuntime_, newStyle);
+#endif // NDEBUG
+  // LayoutAnimationTrace end
 
   maybeRestoreOpacity(layoutAnimation, newStyle);
 
@@ -130,6 +154,13 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
   }
 
   auto &layoutAnimation = layoutAnimationIt->second;
+
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+  layout_animation_trace::recordLogicalCompleted(
+      tag, layoutAnimation.finalView.surfaceId, layoutAnimation.count, shouldRemove);
+#endif // NDEBUG
+  // LayoutAnimationTrace end
 
   // multiple layout animations can be triggered for a view
   // one after the other, so we need to keep count of how many
@@ -589,6 +620,15 @@ bool LayoutAnimationsProxy_Legacy::startAnimationsRecursively(
     layoutAnimationsManager_->clearLayoutAnimationConfig(node->tag);
   }
 
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+  if (wantAnimateExit) {
+    layout_animation_trace::recordRemovalDelayed(
+        node->tag, node->mutation.oldChildShadowView.surfaceId, hasExitAnimation, hasAnimatedChildren);
+  }
+#endif // NDEBUG
+  // LayoutAnimationTrace end
+
   return wantAnimateExit;
 }
 
@@ -665,6 +705,11 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
 
   auto &viewProps = static_cast<const ViewProps &>(*mutation.newChildShadowView.props);
   auto opacity = viewProps.opacity;
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+  const auto traceGeneration = layout_animation_trace::recordStartRequested(LayoutAnimationType::ENTERING, mutation);
+#endif // NDEBUG
+  // LayoutAnimationTrace end
 #ifdef ANDROID
   const auto handle = pendingStarts_[tag].handle;
   pendingStarts_[tag].count++;
@@ -678,6 +723,12 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
        mutation,
        opacity,
        tag
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+       ,
+       traceGeneration
+#endif
+  // LayoutAnimationTrace end
 #ifdef ANDROID
        ,
        handle
@@ -706,6 +757,12 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
         }
 
         Snapshot values(mutation.newChildShadowView, window);
+    // LayoutAnimationTrace start
+#ifndef NDEBUG
+        layout_animation_trace::recordUIRuntimeStarted(
+            tag, mutation.newChildShadowView.surfaceId, LayoutAnimationType::ENTERING, traceGeneration);
+#endif // NDEBUG
+       // LayoutAnimationTrace end
         auto &uiRuntime = strongThis->uiRuntime_;
         jsi::Object yogaValues(uiRuntime);
         yogaValues.setProperty(uiRuntime, "targetOriginX", values.x);
@@ -738,6 +795,11 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
   LOG(INFO) << "start exiting animation for tag " << tag << std::endl;
 #endif
   auto surfaceId = mutation.oldChildShadowView.surfaceId;
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+  const auto traceGeneration = layout_animation_trace::recordStartRequested(LayoutAnimationType::EXITING, mutation);
+#endif // NDEBUG
+  // LayoutAnimationTrace end
 #ifdef ANDROID
   const auto handle = pendingStarts_[tag].handle;
   pendingStarts_[tag].count++;
@@ -749,6 +811,12 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
        tag,
        mutation,
        surfaceId
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+       ,
+       traceGeneration
+#endif
+  // LayoutAnimationTrace end
 #ifdef ANDROID
        ,
        handle
@@ -779,6 +847,11 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
         }
 
         Snapshot values(oldView, window);
+    // LayoutAnimationTrace start
+#ifndef NDEBUG
+        layout_animation_trace::recordUIRuntimeStarted(tag, surfaceId, LayoutAnimationType::EXITING, traceGeneration);
+#endif // NDEBUG
+       // LayoutAnimationTrace end
 
         auto &uiRuntime = strongThis->uiRuntime_;
         jsi::Object yogaValues(uiRuntime);
@@ -812,6 +885,11 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
   LOG(INFO) << "start layout animation for tag " << tag << std::endl;
 #endif
   auto surfaceId = mutation.oldChildShadowView.surfaceId;
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+  const auto traceGeneration = layout_animation_trace::recordStartRequested(LayoutAnimationType::LAYOUT, mutation);
+#endif // NDEBUG
+  // LayoutAnimationTrace end
 #ifdef ANDROID
   const auto handle = pendingStarts_[tag].handle;
   pendingStarts_[tag].count++;
@@ -823,6 +901,12 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
        mutation,
        surfaceId,
        tag
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+       ,
+       traceGeneration
+#endif
+  // LayoutAnimationTrace end
 #ifdef ANDROID
        ,
        handle
@@ -850,6 +934,11 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
 
         Snapshot currentValues(oldView, window);
         Snapshot targetValues(mutation.newChildShadowView, window);
+    // LayoutAnimationTrace start
+#ifndef NDEBUG
+        layout_animation_trace::recordUIRuntimeStarted(tag, surfaceId, LayoutAnimationType::LAYOUT, traceGeneration);
+#endif // NDEBUG
+       // LayoutAnimationTrace end
 
         auto &uiRuntime = strongThis->uiRuntime_;
         jsi::Object yogaValues(uiRuntime);
@@ -891,6 +980,11 @@ void LayoutAnimationsProxy_Legacy::updateOngoingAnimationTarget(const int tag, c
 }
 
 void LayoutAnimationsProxy_Legacy::maybeCancelAnimation(const int tag) const {
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+  layout_animation_trace::recordCancelRequested(tag);
+#endif // NDEBUG
+  // LayoutAnimationTrace end
 #ifdef ANDROID
   // invalidate animation starts that are scheduled but haven't run yet
   if (const auto it = pendingStarts_.find(tag); it != pendingStarts_.end()) {

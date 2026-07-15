@@ -18,6 +18,16 @@ function createUpdateManager() {
 
   return {
     update(batchItem: LayoutAnimationBatchItem, isUnmounting?: boolean) {
+      // LayoutAnimationTrace start
+      if (__DEV__) {
+        global.__reanimatedModuleProxy?._recordLayoutAnimationConfigurationQueued?.(
+          batchItem.viewTag,
+          batchItem.type,
+          batchItem.config !== undefined,
+          isUnmounting === true
+        );
+      }
+      // LayoutAnimationTrace end
       if (isUnmounting) {
         deferredAnimations.push(batchItem);
       } else {

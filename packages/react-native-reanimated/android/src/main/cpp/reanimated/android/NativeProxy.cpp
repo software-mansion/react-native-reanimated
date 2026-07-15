@@ -1,5 +1,10 @@
 #include <react/fabric/Binding.h>
 #include <reanimated/Compat/WorkletsApi.h>
+// LayoutAnimationTrace start
+#ifndef NDEBUG
+#include <reanimated/LayoutAnimations/LayoutAnimationTraceInstrumentation.h>
+#endif // NDEBUG
+// LayoutAnimationTrace end
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
@@ -260,6 +265,17 @@ void NativeProxy::runNativeLayoutAnimation(
     const NativeLayoutAnimationDescriptor &descriptor,
     const bool usePresentationLayer,
     std::function<void(bool)> &&completion) {
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+  completion = [completion = std::move(completion),
+                tag,
+                generation = descriptor.traceGeneration,
+                animationType = descriptor.traceAnimationType](const bool finished) mutable {
+    layout_animation_trace::recordAndroidPlatformCompleted(tag, generation, animationType, finished);
+    completion(finished);
+  };
+#endif // NDEBUG
+  // LayoutAnimationTrace end
   // Flatten the descriptor into primitive arrays so it can cross the JNI
   // boundary cheaply: key paths joined with '\n', per-property keyframe counts,
   // and concatenated offsets/values arrays.
