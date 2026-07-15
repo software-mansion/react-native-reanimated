@@ -1818,6 +1818,24 @@ var require_class = __commonJS({
   }
 });
 
+// lib/classMethod.js
+var require_classMethod = __commonJS({
+  "lib/classMethod.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.processIfWorkletMethod = processIfWorkletMethod;
+    var types_12 = require("@babel/types");
+    var assert_1 = require("assert");
+    function processIfWorkletMethod(path) {
+      if (path.node.body.directives.some((d) => d.value.value === "worklet")) {
+        (0, assert_1.strict)((0, types_12.isIdentifier)(path.node.key), "ClassMethod key must be an Identifier");
+        const methodIdentifier = path.node.key;
+        path.replaceWith((0, types_12.classProperty)((0, types_12.cloneNode)(methodIdentifier, true), (0, types_12.functionExpression)((0, types_12.cloneNode)(methodIdentifier, true), path.node.params.filter((p) => (0, types_12.isFunctionParameter)(p)).map((p) => (0, types_12.cloneNode)(p, true)), (0, types_12.cloneNode)(path.node.body, true), path.node.generator, path.node.async)));
+      }
+    }
+  }
+});
+
 // lib/contextObject.js
 var require_contextObject = __commonJS({
   "lib/contextObject.js"(exports2) {
@@ -2090,6 +2108,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var autoworkletization_1 = require_autoworkletization();
 var bundleMode_1 = require_bundleMode();
 var class_1 = require_class();
+var classMethod_1 = require_classMethod();
 var contextObject_1 = require_contextObject();
 var file_1 = require_file();
 var globals_1 = require_globals();
@@ -2148,6 +2167,13 @@ module.exports = function WorkletsBabelPlugin() {
               return;
             }
             (0, class_1.processIfWorkletClass)(path, state);
+          });
+        }
+      },
+      ClassMethod: {
+        enter(path, state) {
+          runWithTaggedExceptions(state, () => {
+            (0, classMethod_1.processIfWorkletMethod)(path);
           });
         }
       },
