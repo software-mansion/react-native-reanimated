@@ -83,6 +83,7 @@ const staticFlagsReanimated = [
   'ENABLE_SHARED_ELEMENT_TRANSITIONS',
   'FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS',
   'USE_ANIMATION_BACKEND',
+  'IOS_USE_NATIVE_LAYOUT_ANIMATIONS',
 ] as const;
 
 const staticFlagsWorklets = [
