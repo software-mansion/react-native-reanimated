@@ -15,7 +15,7 @@ void evaluateModuleUpdate(
     const std::shared_ptr<WorkletRuntime> &workletRuntime,
     const std::string &code,
     const std::string &sourceUrl) {
-  workletRuntime->runSync([&code, &sourceUrl](jsi::Runtime &rt) -> void {
+  workletRuntime->runSyncLocked([&code, &sourceUrl](jsi::Runtime &rt) -> void {
     const auto buffer = std::make_shared<jsi::StringBuffer>(code);
     rt.evaluateJavaScript(buffer, sourceUrl);
   });

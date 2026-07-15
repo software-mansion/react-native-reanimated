@@ -7,12 +7,11 @@
 namespace worklets {
 void MemoryManager::loadAllCustomSerializables(const std::shared_ptr<WorkletRuntime> &runtime) {
   std::lock_guard lock(customSerializationDataMutex_);
-  runtime->executeSync([&](jsi::Runtime &rt) -> jsi::Value {
+  runtime->runSyncLocked([&](jsi::Runtime &rt) {
     const auto registry = getCustomSerializationRegistry(rt);
     for (const auto &data : customSerializationData_) {
       loadCustomSerializable(rt, registry, data);
     }
-    return jsi::Value::undefined();
   });
 }
 
@@ -20,10 +19,9 @@ void MemoryManager::loadCustomSerializable(
     const std::shared_ptr<WorkletRuntime> &runtime,
     const SerializationData &data) {
   std::lock_guard lock(customSerializationDataMutex_);
-  runtime->executeSync([this, data](jsi::Runtime &rt) -> jsi::Value {
+  runtime->runSyncLocked([this, data](jsi::Runtime &rt) {
     const auto registry = getCustomSerializationRegistry(rt);
     loadCustomSerializable(rt, registry, data);
-    return jsi::Value::undefined();
   });
 }
 

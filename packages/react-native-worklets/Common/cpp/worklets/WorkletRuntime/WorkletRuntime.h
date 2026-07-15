@@ -56,7 +56,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   std::invoke_result_t<TCallable, Args...> runSync(TCallable &&callable, Args &&...args) const;
   template <typename... Args>
   jsi::Value runSync(const jsi::Function &function, Args &&...args) const {
-    auto lock = acquireCallLock();
 #ifndef NDEBUG
     return callGuarded(function, std::nullopt, std::forward<Args>(args)...);
 #else
@@ -68,7 +67,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 #ifndef NDEBUG
     return runSyncWithStack(worklet, std::nullopt, std::forward<Args>(args)...);
 #else
-    auto lock = acquireCallLock();
     jsi::Runtime &rt = *runtime_;
     auto function = worklet->toJSValue(rt).asObject(rt).asFunction(rt);
     return function.call(rt, args...);
@@ -80,7 +78,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       const std::shared_ptr<SerializableWorklet> &worklet,
       const std::optional<std::string> &scheduleStack,
       Args &&...args) const {
-    auto lock = acquireCallLock();
     jsi::Runtime &rt = *runtime_;
     auto function = worklet->toJSValue(rt).asObject(rt).asFunction(rt);
     return callGuarded(function, scheduleStack, std::forward<Args>(args)...);
@@ -90,6 +87,12 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   std::invoke_result_t<TCallable, jsi::Runtime &> runSync(TCallable &&job) const {
     jsi::Runtime &rt = getJSIRuntime();
     auto lock = acquireRuntimeLock();
+    return job(rt);
+  }
+  template <RuntimeCallable TCallable>
+  std::invoke_result_t<TCallable, jsi::Runtime &> runSyncLocked(TCallable &&job) const {
+    jsi::Runtime &rt = getJSIRuntime();
+    auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
     return job(rt);
   }
 
@@ -233,7 +236,10 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   void legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpackerLoader);
 
   [[nodiscard]] std::unique_lock<std::recursive_mutex> acquireRuntimeLock() const {
-    return std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
+    if (enableLocking_) {
+      return std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
+    }
+    return {};
   }
 
   [[nodiscard]] std::unique_lock<std::recursive_mutex> acquireCallLock() const {

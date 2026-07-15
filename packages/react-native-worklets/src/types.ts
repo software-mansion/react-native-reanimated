@@ -154,10 +154,11 @@ export type WorkletRuntimeConfig = WorkletRuntimeConfigBase &
          *
          * When set to `false`, per-operation locking is disabled and the
          * runtime is created without the Event Loop — asynchronous APIs like
-         * timers or Promise continuations are unavailable. Worklets APIs
-         * remain safe to use; only native code accessing the runtime directly
-         * through JSI must not run concurrently with other work on the
-         * runtime.
+         * timers or Promise continuations are unavailable. Work scheduled on
+         * the runtime's queue, `registerCustomSerializable`, and module
+         * updates during development remain synchronized; synchronous calls
+         * like `runOnRuntimeSync` and direct JSI access must not run
+         * concurrently with other work on the runtime.
          */
         enableLocking: false;
       }

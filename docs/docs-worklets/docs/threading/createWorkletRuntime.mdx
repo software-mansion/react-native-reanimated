@@ -90,7 +90,7 @@ When enabled, the runtime provides `setTimeout`, `setImmediate`, `setInterval`, 
 ##### `enableLocking`
 
 Determines whether access to the underlying JS runtime is synchronized with a mutex around every JSI operation. Defaults to `true`.
-When set to `false`, per-operation locking is disabled and the runtime is created without the event loop — `enableEventLoop: true` isn't allowed and asynchronous APIs like timers or Promise continuations are unavailable. Worklets APIs remain safe to use; only native code accessing the runtime directly through JSI must not run concurrently with other work on the runtime.
+When set to `false`, per-operation locking is disabled and the runtime is created without the event loop — `enableEventLoop: true` isn't allowed and asynchronous APIs like timers or Promise continuations are unavailable. Work scheduled on the runtime's queue, `registerCustomSerializable`, and module updates during development remain synchronized; synchronous calls such as `runOnRuntimeSync` and direct JSI access must not run concurrently with other work on the runtime.
 
 ##### `queue`
 

@@ -85,7 +85,6 @@ WorkletRuntime::WorkletRuntime(
 }
 
 void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy) {
-  auto lock = acquireCallLock();
   jsi::Runtime &rt = *runtime_;
 
   rt.setRuntimeData(
@@ -159,6 +158,7 @@ void WorkletRuntime::schedule(jsi::Function &&function) const {
       return;
     }
 
+    auto lock = strongThis->acquireCallLock();
     strongThis->runSync(*function);
   });
 }
@@ -175,6 +175,7 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet) cons
       return;
     }
 
+    auto lock = strongThis->acquireCallLock();
     strongThis->runSync(worklet);
   });
 }
@@ -193,6 +194,7 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet, std:
       return;
     }
 
+    auto lock = strongThis->acquireCallLock();
     strongThis->runSyncWithStack(worklet, scheduleStack);
   });
 }
@@ -216,9 +218,13 @@ void WorkletRuntime::schedule(std::function<void()> job) const {
       "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
       "async queue is not set. Recreate the runtime with a valid async queue.");
 
-  queue_->push([job = std::move(job), runtimeMutex = enableLocking_ ? nullptr : runtimeMutex_]() {
-    auto lock =
-        runtimeMutex ? std::unique_lock<std::recursive_mutex>(*runtimeMutex) : std::unique_lock<std::recursive_mutex>();
+  if (enableLocking_) {
+    queue_->push(std::move(job));
+    return;
+  }
+
+  queue_->push([job = std::move(job), runtimeMutex = runtimeMutex_]() {
+    auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex);
     job();
   });
 }
@@ -235,7 +241,7 @@ void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
       return;
     }
 
-    auto lock = strongThis->acquireRuntimeLock();
+    auto lock = std::unique_lock<std::recursive_mutex>(*strongThis->runtimeMutex_);
     jsi::Runtime &runtime = strongThis->getJSIRuntime();
     job(runtime);
   });
