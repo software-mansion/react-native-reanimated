@@ -2,7 +2,9 @@ package com.swmansion.reanimated.pseudoSelectors
 
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.ViewParent
+import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UIManager
 import com.facebook.react.bridge.UIManagerListener
 import com.facebook.react.bridge.UiThreadUtil
@@ -10,25 +12,29 @@ import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.uimanager.IllegalViewOperationException
 import com.facebook.react.uimanager.ReactCompoundView
+import com.swmansion.reanimated.BuildConfig
 import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
+import java.lang.ref.WeakReference
 
 @OptIn(UnstableReactNativeAPI::class)
 class PseudoSelectorManager(
     private val fabricUIManager: FabricUIManager,
+    private val reactContext: WeakReference<ReactApplicationContext>,
 ) {
-    // Key = "$tag:$selector" - allows multiple selectors per view.
     private val detachActions = HashMap<String, Runnable>()
 
     private val activeCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
     private val deepestCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
 
-    // A touch host can be shared by several registered views, so its listener is reference-counted.
     private val touchHostRefs = HashMap<View, Int>()
 
-    // The view the current gesture went down on, per host, so a release clears the same one.
     private val gestureDownLeaf = HashMap<View, View>()
 
+    private val gestureDownPoint = HashMap<View, FloatArray>()
+
     private val hover = TouchHoverCoordinator()
+
+    private var extraWindowBridge: ExtraWindowObserverBridge? = null
 
     private val pendingAttaches = LinkedHashMap<String, PendingAttach>()
     private var mountListenerRegistered = false
@@ -164,11 +170,20 @@ class PseudoSelectorManager(
         val host = findTouchHost(view)
         acquireTouchListener(host)
         hover.register(view, callback)
+        ensureExtraWindowBridge()
         detachActions[key] =
             Runnable {
                 hover.unregister(view)
                 releaseTouchListener(host)
             }
+    }
+
+    private fun ensureExtraWindowBridge() {
+        if (!BuildConfig.IS_REACT_NATIVE_86_OR_NEWER || extraWindowBridge != null) {
+            return
+        }
+        val context = reactContext.get() ?: return
+        extraWindowBridge = ExtraWindowObserverBridge(context, hover).also { it.install() }
     }
 
     private fun attachActive(
@@ -201,7 +216,6 @@ class PseudoSelectorManager(
             }
     }
 
-    /** The view that receives [view]'s touches: itself, or its nearest ReactCompoundView ancestor (e.g. SvgView). */
     private fun findTouchHost(view: View): View {
         var parent: ViewParent? = view.parent
         while (parent is View) {
@@ -213,7 +227,6 @@ class PseudoSelectorManager(
         return view
     }
 
-    /** The view pressed at [event]: a compound host's hit-tested virtual child, else the host itself. */
     private fun findTouchedLeaf(
         host: View,
         event: MotionEvent,
@@ -240,6 +253,7 @@ class PseudoSelectorManager(
         }
         touchHostRefs.remove(host)
         gestureDownLeaf.remove(host)
+        gestureDownPoint.remove(host)
         host.setOnTouchListener(null)
     }
 
@@ -248,12 +262,29 @@ class PseudoSelectorManager(
         event: MotionEvent,
     ): Boolean {
         when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN -> onHostDown(host, event)
-            MotionEvent.ACTION_UP -> onHostRelease(host)
-            MotionEvent.ACTION_CANCEL -> {
-                onHostRelease(host)
-                hover.clearAll()
-            }
+            MotionEvent.ACTION_DOWN ->
+                if (!hover.isGestureSettled(event)) {
+                    onHostDown(host, event)
+                }
+            MotionEvent.ACTION_MOVE ->
+                if (event.findPointerIndex(0) >= 0) {
+                    onHostMove(host, event)
+                }
+            MotionEvent.ACTION_POINTER_UP ->
+                if (event.getPointerId(event.actionIndex) == 0) {
+                    onHostRelease(host)
+                    hover.onViewTouchUp(host, event)
+                }
+            MotionEvent.ACTION_UP ->
+                if (event.findPointerIndex(0) >= 0) {
+                    onHostRelease(host)
+                    hover.onViewTouchUp(host, event)
+                }
+            MotionEvent.ACTION_CANCEL ->
+                if (event.findPointerIndex(0) >= 0) {
+                    onHostRelease(host)
+                    hover.onViewTouchCancel(host, event)
+                }
         }
         return false
     }
@@ -264,13 +295,28 @@ class PseudoSelectorManager(
     ) {
         findTouchedLeaf(host, event)?.let {
             gestureDownLeaf[host] = it
+            gestureDownPoint[host] = floatArrayOf(event.rawX, event.rawY)
             fireActiveCallbacksUpTree(it, true)
             fireDeepestIfHit(it, event.rawX, event.rawY)
         }
         hover.onViewTouchDown(host, event)
     }
 
+    private fun onHostMove(
+        host: View,
+        event: MotionEvent,
+    ) {
+        val down = gestureDownPoint[host] ?: return
+        val dx = event.rawX - down[0]
+        val dy = event.rawY - down[1]
+        val slop = ViewConfiguration.get(host.context).scaledTouchSlop.toFloat()
+        if (dx * dx + dy * dy > slop * slop) {
+            onHostRelease(host)
+        }
+    }
+
     private fun onHostRelease(host: View) {
+        gestureDownPoint.remove(host)
         val leaf = gestureDownLeaf.remove(host) ?: return
         fireActiveCallbacksUpTree(leaf, false)
         deepestCallbacks[leaf]?.onSelectorStateChanged(false)
@@ -298,17 +344,11 @@ class PseudoSelectorManager(
         }
     }
 
-    /**
-     * Returns true if any view registered for _:active-deepest_ is a strict descendant of
-     * `ancestor` and contains the screen point (`rawX`, `rawY`), so the ancestor yields priority
-     * to the deeper view.
-     */
     private fun hasDeepestDescendantAt(
         ancestor: View,
         rawX: Float,
         rawY: Float,
     ): Boolean {
-        // With fewer than two registered views the only candidate is the ancestor itself.
         if (deepestCallbacks.size < 2) {
             return false
         }
@@ -327,7 +367,6 @@ class PseudoSelectorManager(
         return false
     }
 
-    /** Fires the callback for [source] and every ancestor registered for _:active_. */
     private fun fireActiveCallbacksUpTree(
         source: View,
         isActive: Boolean,

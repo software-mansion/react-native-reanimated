@@ -63,8 +63,8 @@ function runPlugin(
 
 describe('babel plugin', () => {
   beforeEach(() => {
-    process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '1';
-    process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION = '1';
+    process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '1';
+    process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
   });
 
   describe('generally', () => {
@@ -104,7 +104,7 @@ describe('babel plugin', () => {
     });
 
     test('injects its version', () => {
-      process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION = '0'; // don't mock version
+      process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '0';
       const input = html`<script>
         function foo() {
           'worklet';
@@ -117,7 +117,7 @@ describe('babel plugin', () => {
     });
 
     test('injects source maps', () => {
-      process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '0'; // don't mock source maps
+      process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '0';
       const input = html`<script>
         function foo() {
           'worklet';
@@ -134,8 +134,30 @@ describe('babel plugin', () => {
       );
     });
 
+    test('strips queries from filename when injecting source maps', () => {
+      process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '0';
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var foo = 'bar';
+        }
+      </script>`;
+
+      const queries = ['?query', '#hash', '?query#hash'];
+
+      for (const query of queries) {
+        const filename = MOCK_LOCATION + query;
+
+        const { code } = runPlugin(input, {}, {}, filename);
+
+        expect(code).toMatch(/sourceMap: /gm);
+        expect(code).toContain(filename);
+        expect(code).toMatchSnapshot();
+      }
+    });
+
     test('uses relative source location when `relativeSourceLocation` is set to `true`', () => {
-      process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '0'; // don't mock source maps
+      process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '0';
       const input = html`<script>
         function foo() {
           'worklet';
@@ -1819,7 +1841,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toMatch(
-        /code: "function\*foo_null[0-9]+\(\){yield'hello';yield'world';}"/gm
+        /code: "\(function\*foo_null[0-9]+\(\){yield'hello';yield'world';}\)"/gm
       );
       expect(code).toMatchSnapshot();
     });
@@ -1849,7 +1871,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toMatch(
-        /code: "async function foo_null[0-9]+\(\){await Promise.resolve\(\);}"/gm
+        /code: "\(async function foo_null[0-9]+\(\){await Promise.resolve\(\);}\)"/gm
       );
       expect(code).toMatchSnapshot();
     });

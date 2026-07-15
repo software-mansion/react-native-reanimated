@@ -51,19 +51,38 @@ export default function Planets() {
           description="Three differently sized planets orbit the screen center on a tilted (elliptical) path. Each planet's name is hidden until you hover; active enlarges it with a colored glow."
           title="Planets">
           <VerticalExampleCard
-            title="Hover a planet to reveal its name"
+            title="Hover a planet to reveal its name, press it for a glow"
             code={`<Animated.View
   style={{
-    // 0.02 not 0: iOS skips alpha<0.01 views in hit-testing
-    opacity: { default: 0.02, ':hover': 1 },
+    transform: {
+      default: [{ scale: 1 }],
+      ':active': [{ scale: 1.1 }],
+    },
+    boxShadow: {
+      default: \`0 0 0 0 \${color}00\`,
+      ':active': \`0 0 18px 4px \${color}\`,
+    },
     transitionDuration: '200ms',
-  }}
-  onStartShouldSetResponder={() => true}>
-  <Text>{name}</Text>
+  }}>
+  <Animated.View
+    style={{
+      opacity: { default: 0, ':hover': 1 },
+      transitionDuration: '200ms',
+    }}>
+    <Text>{name}</Text>
+  </Animated.View>
 </Animated.View>`}
             collapsedCode={`opacity: {
-  default: 0.02,
+  default: 0,
   ':hover': 1,
+},
+transform: {
+  default: [{ scale: 1 }],
+  ':active': [{ scale: 1.1 }],
+},
+boxShadow: {
+  default: \`0 0 0 0 \${color}00\`,
+  ':active': \`0 0 18px 4px \${color}\`,
 },`}>
             <Animated.View style={styles.stage}>
               <Animated.View style={styles.orbitPlane}>
@@ -81,11 +100,11 @@ export default function Planets() {
                       {
                         backgroundColor: planet.color,
                         borderRadius: planet.size / 2,
-                        elevation: { ':active': 12, default: 0 },
+                        boxShadow: {
+                          ':active': `0 0 18px 4px ${planet.color}`,
+                          default: `0 0 0 0 ${planet.color}00`,
+                        },
                         height: planet.size,
-                        shadowColor: planet.color,
-                        shadowOpacity: { ':active': 0.9, default: 0 },
-                        shadowRadius: { ':active': 18, default: 0 },
                         transform: {
                           ':active': [{ scale: 1.1 }],
                           default: [{ scale: 1 }],
@@ -98,11 +117,10 @@ export default function Planets() {
                       style={[
                         styles.nameWrapper,
                         {
-                          opacity: { ':hover': 1, default: 0.02 },
+                          opacity: { ':hover': 1, default: 0 },
                           transitionDuration: '200ms',
                         },
-                      ]}
-                      onStartShouldSetResponder={() => true}>
+                      ]}>
                       <Text style={styles.name}>{planet.name}</Text>
                     </Animated.View>
                   </Animated.View>
@@ -137,7 +155,6 @@ const styles = StyleSheet.create({
   },
   orbiter: {
     position: 'absolute',
-    shadowOffset: { height: 0, width: 0 },
   },
   orbitPlane: {
     height: PLANE_HEIGHT,

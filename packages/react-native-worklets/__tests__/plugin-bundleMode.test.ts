@@ -32,6 +32,16 @@ const MOCK_TSX_LOCATION = 'test.tsx';
 const MOCK_WORKLET_RUNTIME_ENTRY = 'react-native-worklets/src/index.ts';
 const MOCK_OTHER_FILE = 'someOtherFile.ts';
 
+const TOGGLE_PATH_CASES: ReadonlyArray<[label: string, filename: string]> = [
+  ['source entry-point', MOCK_WORKLET_RUNTIME_ENTRY],
+  ['source mode-check', 'react-native-worklets/src/debug/bundleMode.native.ts'],
+  ['built entry-point', 'react-native-worklets/lib/module/index.js'],
+  [
+    'built mode-check',
+    'react-native-worklets/lib/module/debug/bundleMode.native.js',
+  ],
+];
+
 const REQUIRE_PREFIX = 'require("react-native-worklets/.worklets/';
 
 function runPlugin(
@@ -59,7 +69,7 @@ function runPlugin(
 
 describe('babel plugin in bundleMode', () => {
   beforeEach(() => {
-    process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION = '1';
+    process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
     capturedFiles.length = 0;
   });
 
@@ -309,15 +319,19 @@ describe('babel plugin in bundleMode', () => {
     });
   });
 
-  describe('worklet runtime entry-point toggle', () => {
-    test('flips _WORKLETS_BUNDLE_MODE_ENABLED to true in the entry-point', () => {
-      const input = html`<script>
-        globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;
-      </script>`;
+  describe('bundle mode flag toggle', () => {
+    for (const [label, filename] of TOGGLE_PATH_CASES) {
+      test(`flips _WORKLETS_BUNDLE_MODE_ENABLED to true in the ${label} file`, () => {
+        const input = html`<script>
+          globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;
+        </script>`;
 
-      const { code } = runPlugin(input, {}, {}, MOCK_WORKLET_RUNTIME_ENTRY);
-      expect(code).toMatchSnapshot();
-    });
+        const { code } = runPlugin(input, {}, {}, filename);
+        expect(code).toContain(
+          'globalThis._WORKLETS_BUNDLE_MODE_ENABLED = true;'
+        );
+      });
+    }
 
     test('does not flip the flag in unrelated files', () => {
       const input = html`<script>

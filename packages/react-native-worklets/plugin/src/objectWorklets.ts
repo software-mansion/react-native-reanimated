@@ -50,7 +50,7 @@ export function processWorkletizableObject(
       );
     } else {
       throw new Error(
-        `[Reanimated] '${property.type}' as to-be workletized argument is not supported for object hooks.`
+        `'${property.type}' as to-be workletized argument is not supported for object hooks.`
       );
     }
   }
