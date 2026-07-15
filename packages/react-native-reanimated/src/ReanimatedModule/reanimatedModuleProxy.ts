@@ -94,6 +94,8 @@ export interface ReanimatedModuleProxy {
 
   getSettledUpdates(): SettledUpdate[];
 
+  removeOrphanedProps(): void;
+
   registerPseudoStyles(
     shadowNodeWrapper: ShadowNodeWrapper,
     config: CSSPseudoStyleConfig

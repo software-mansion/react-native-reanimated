@@ -663,6 +663,11 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
       rt, currentTimestamp - 1000 /* 1 second */, currentTimestamp - 2000 /* 2 seconds */);
 }
 
+void ReanimatedModuleProxy::removeOrphanedProps(jsi::Runtime &rt) {
+  auto lock = updatesRegistryManager_->lock();
+  animatedPropsRegistry_->removeAll();
+}
+
 bool ReanimatedModuleProxy::handleEvent(
     const std::string &eventName,
     const int emitterReactTag,
@@ -1585,6 +1590,14 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
       return jsi::Value::undefined();
     }
     return strongThis->getSettledUpdates(rt);
+  });
+
+  addMethod<0>(rt, obj, "removeOrphanedProps", [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+    strongThis->removeOrphanedProps(rt);
   });
 
   addMethod<2>(
