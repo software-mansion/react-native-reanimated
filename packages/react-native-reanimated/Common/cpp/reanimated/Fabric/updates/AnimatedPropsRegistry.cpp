@@ -70,7 +70,10 @@ jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(
     if (it == timestampMap_.end()) {
       continue;
     }
-    const bool isSettled = it->second < timestamp;
+    // Skip settled entries that were already synced to React — otherwise the
+    // same entry would be returned on every tick until it gets evicted,
+    // triggering a redundant React render each time.
+    const bool isSettled = it->second < timestamp && syncedTags_.count(viewTag) == 0;
     const auto invalidatedIt = invalidatedTags_.find(viewTag);
     const bool isStaleSynced = invalidatedIt != invalidatedTags_.end();
     if (isSettled || isStaleSynced) {
