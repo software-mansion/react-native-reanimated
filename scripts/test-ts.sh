@@ -25,7 +25,7 @@ STATUS=0
 
 check_types() {
   local suffixes="$1"
-  yarn tsc --noEmit --target es6 --module ESNext --jsx react-native --skipLibCheck true --allowSyntheticDefaultImports true --moduleResolution node --esModuleInterop true --strict true --forceConsistentCasingInFileNames true --moduleSuffixes "$suffixes" --resolveJsonModule "${FILES[@]}" || STATUS=1
+  yarn tsc --noEmit --target es6 --module ESNext --jsx react-native --skipLibCheck true --allowSyntheticDefaultImports true --moduleResolution bundler --customConditions react-native-legacy-deep-imports --esModuleInterop true --strict true --forceConsistentCasingInFileNames true --moduleSuffixes "$suffixes" --resolveJsonModule "${FILES[@]}" || STATUS=1
 }
 
 if [ ${#FILES[@]} -gt 0 ]; then
