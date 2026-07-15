@@ -2,6 +2,7 @@ import type { NodePath, PluginItem } from '@babel/core';
 import type {
   CallExpression,
   ClassDeclaration,
+  ClassMethod,
   ExpressionStatement,
   JSXAttribute,
   ObjectExpression,
@@ -14,6 +15,7 @@ import {
 } from './autoworkletization';
 import { toggleBundleMode } from './bundleMode';
 import { processIfWorkletClass } from './class';
+import { processIfWorkletMethod } from './classMethod';
 import { processIfWorkletContextObject } from './contextObject';
 import { processIfWorkletFile } from './file';
 import { initializeState } from './globals';
@@ -84,6 +86,13 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
               return;
             }
             processIfWorkletClass(path, state);
+          });
+        },
+      },
+      ClassMethod: {
+        enter(path: NodePath<ClassMethod>, state: WorkletsPluginPass) {
+          runWithTaggedExceptions(state, () => {
+            processIfWorkletMethod(path);
           });
         },
       },

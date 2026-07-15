@@ -1,0 +1,43 @@
+diff --git a/android/build.gradle b/android/build.gradle
+index e2aa501d9dbafa7927bf2cefb6c9a8242d8c141c..5419709c600152869dd0b7e8d448bee00eb4781c 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -19,7 +19,6 @@ def isNewArchitectureEnabled() {
+ }
+ 
+ apply plugin: "com.android.library"
+-apply plugin: 'org.jetbrains.kotlin.android'
+ apply from: '../nitrogen/generated/android/NitroMmkv+autolinking.gradle'
+ apply from: "./fix-prefab.gradle"
+ 
+diff --git a/android/fix-prefab.gradle b/android/fix-prefab.gradle
+index d6c010ef785bd821d8fad4ad643079f2f070a2c6..c489b154b3365cbb3889fe3ba8bb599ba9e5f1ec 100644
+--- a/android/fix-prefab.gradle
++++ b/android/fix-prefab.gradle
+@@ -28,6 +28,11 @@ afterEvaluate {
+       return
+     }
+ 
++    // The legacy variant collections were removed in AGP 9. Prefab generation
++    // no longer needs this workaround there, so retain it only for older AGP.
++    if (!proj.android.hasProperty('applicationVariants') && !proj.android.hasProperty('libraryVariants')) {
++      return
++    }
+     def variants = proj.android.hasProperty('applicationVariants') ? proj.android.applicationVariants : proj.android.libraryVariants
+     // Touch the prefab_config.json files to ensure that in ExternalNativeJsonGenerator.kt we will re-trigger the prefab CLI to
+     // generate a libnameConfig.cmake file that will contain our native library (.so).
+diff --git a/nitrogen/generated/android/NitroMmkv+autolinking.gradle b/nitrogen/generated/android/NitroMmkv+autolinking.gradle
+index 070028aa776b6b99911f7e3ff54699e4bdaa25b8..3f1a1ae0c09c9b04e2c6ef5cd31c939f4ad5c3a0 100644
+--- a/nitrogen/generated/android/NitroMmkv+autolinking.gradle
++++ b/nitrogen/generated/android/NitroMmkv+autolinking.gradle
+@@ -18,6 +18,10 @@ logger.warn("[NitroModules] 🔥 NitroMmkv is boosted by nitro!")
+ android {
+   sourceSets {
+     main {
++      kotlin.srcDirs += [
++        // Nitrogen files
++        "${project.projectDir}/../nitrogen/generated/android/kotlin"
++      ]
+       java.srcDirs += [
+         // Nitrogen files
+         "${project.projectDir}/../nitrogen/generated/android/kotlin"

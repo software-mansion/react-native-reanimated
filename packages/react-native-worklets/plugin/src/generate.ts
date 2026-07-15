@@ -72,7 +72,7 @@ export function generateWorkletFile(
 
   const transformedProg = transformFromAstSync(newProg, undefined, {
     filename: state.file.opts.filename,
-    presets: ['@babel/preset-typescript'],
+    presets: [resolvePresetTypescript()],
     plugins: [state.autoworkletizationPlugin, stripJsxDevAttributesPlugin],
     ast: false,
     babelrc: false,
@@ -85,6 +85,16 @@ export function generateWorkletFile(
   const dedicatedFilePath = resolve(filesDirPath, `${workletHash}.js`);
 
   writeFileSync(dedicatedFilePath, transformedProg);
+}
+
+function resolvePresetTypescript(): string {
+  try {
+    return require.resolve('@babel/preset-typescript');
+  } catch {
+    return require.resolve('@babel/preset-typescript', {
+      paths: [dirname(require.resolve('react-native-worklets/package.json'))],
+    });
+  }
 }
 
 const stripJsxDevAttributesPlugin = {

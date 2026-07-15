@@ -761,7 +761,7 @@ var require_generate = __commonJS({
       const newProg = (0, types_12.program)([...imports, (0, types_12.exportDefaultDeclaration)(factory)]);
       const transformedProg = (_a = (0, core_1.transformFromAstSync)(newProg, void 0, {
         filename: state.file.opts.filename,
-        presets: ["@babel/preset-typescript"],
+        presets: [resolvePresetTypescript()],
         plugins: [state.autoworkletizationPlugin, stripJsxDevAttributesPlugin],
         ast: false,
         babelrc: false,
@@ -771,6 +771,15 @@ var require_generate = __commonJS({
       (0, assert_1.default)(transformedProg, "[Worklets] `transformedProg` is undefined.");
       const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
       (0, fs_1.writeFileSync)(dedicatedFilePath, transformedProg);
+    }
+    function resolvePresetTypescript() {
+      try {
+        return require.resolve("@babel/preset-typescript");
+      } catch (_a) {
+        return require.resolve("@babel/preset-typescript", {
+          paths: [(0, path_1.dirname)(require.resolve("react-native-worklets/package.json"))]
+        });
+      }
     }
     var stripJsxDevAttributesPlugin = {
       name: "worklets-strip-jsx-dev-attributes",
@@ -1809,6 +1818,24 @@ var require_class = __commonJS({
   }
 });
 
+// lib/classMethod.js
+var require_classMethod = __commonJS({
+  "lib/classMethod.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.processIfWorkletMethod = processIfWorkletMethod;
+    var types_12 = require("@babel/types");
+    var assert_1 = require("assert");
+    function processIfWorkletMethod(path) {
+      if (path.node.body.directives.some((d) => d.value.value === "worklet")) {
+        (0, assert_1.strict)((0, types_12.isIdentifier)(path.node.key), "ClassMethod key must be an Identifier");
+        const methodIdentifier = path.node.key;
+        path.replaceWith((0, types_12.classProperty)((0, types_12.cloneNode)(methodIdentifier, true), (0, types_12.functionExpression)((0, types_12.cloneNode)(methodIdentifier, true), path.node.params.filter((p) => (0, types_12.isFunctionParameter)(p)).map((p) => (0, types_12.cloneNode)(p, true)), (0, types_12.cloneNode)(path.node.body, true), path.node.generator, path.node.async)));
+      }
+    }
+  }
+});
+
 // lib/contextObject.js
 var require_contextObject = __commonJS({
   "lib/contextObject.js"(exports2) {
@@ -2081,6 +2108,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var autoworkletization_1 = require_autoworkletization();
 var bundleMode_1 = require_bundleMode();
 var class_1 = require_class();
+var classMethod_1 = require_classMethod();
 var contextObject_1 = require_contextObject();
 var file_1 = require_file();
 var globals_1 = require_globals();
@@ -2139,6 +2167,13 @@ module.exports = function WorkletsBabelPlugin() {
               return;
             }
             (0, class_1.processIfWorkletClass)(path, state);
+          });
+        }
+      },
+      ClassMethod: {
+        enter(path, state) {
+          runWithTaggedExceptions(state, () => {
+            (0, classMethod_1.processIfWorkletMethod)(path);
           });
         }
       },
