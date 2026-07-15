@@ -36,7 +36,12 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
       addUpdatesToBatch(shadowNode->getFamilyShared(), jsi::dynamicFromValue(rt, updates));
     }
 
-    if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
+    // When USE_ANIMATION_BACKEND is enabled, updates bypass `updatesRegistry_`,
+    // so entries added to `timestampMap_` would never be synced and thus never
+    // evicted, leaking until view unmount.
+    if constexpr (
+        StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS") &&
+        !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
       const auto tag = shadowNode->getTag();
       timestampMap_[tag] = timestamp;
       // If JS already has a `settledProps` snapshot for this tag, it is now
