@@ -128,7 +128,7 @@ type WorkletRuntimeConfigBase = {
    * `clearImmediate`, and `cancelAnimationFrame` methods. If not specified, it
    * defaults to `true`.
    */
-  enableEventLoop?: true;
+  enableEventLoop?: boolean;
 };
 
 /** Configuration object for creating a worklet runtime. */
