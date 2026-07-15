@@ -761,7 +761,7 @@ var require_generate = __commonJS({
       const newProg = (0, types_12.program)([...imports, (0, types_12.exportDefaultDeclaration)(factory)]);
       const transformedProg = (_a = (0, core_1.transformFromAstSync)(newProg, void 0, {
         filename: state.file.opts.filename,
-        presets: ["@babel/preset-typescript"],
+        presets: [resolvePresetTypescript()],
         plugins: [state.autoworkletizationPlugin, stripJsxDevAttributesPlugin],
         ast: false,
         babelrc: false,
@@ -771,6 +771,15 @@ var require_generate = __commonJS({
       (0, assert_1.default)(transformedProg, "[Worklets] `transformedProg` is undefined.");
       const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
       (0, fs_1.writeFileSync)(dedicatedFilePath, transformedProg);
+    }
+    function resolvePresetTypescript() {
+      try {
+        return require.resolve("@babel/preset-typescript");
+      } catch (_a) {
+        return require.resolve("@babel/preset-typescript", {
+          paths: [(0, path_1.dirname)(require.resolve("react-native-worklets/package.json"))]
+        });
+      }
     }
     var stripJsxDevAttributesPlugin = {
       name: "worklets-strip-jsx-dev-attributes",
