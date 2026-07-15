@@ -8,7 +8,21 @@ plugins {
     id("com.android.library")
     id("maven-publish")
     id("com.diffplug.spotless") version "8.4.0"
-    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.android") apply false
+}
+
+fun shouldApplyKotlinAndroidPlugin(): Boolean {
+    val agpMajorVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION.substringBefore('.').toInt()
+    if (agpMajorVersion <= 8) {
+        return true
+    }
+
+    val builtInKotlin = providers.gradleProperty("android.builtInKotlin").orNull?.toBoolean() ?: true
+    return !builtInKotlin
+}
+
+if (shouldApplyKotlinAndroidPlugin()) {
+    apply(plugin = "org.jetbrains.kotlin.android")
 }
 
 fun safeExtGet(prop: String, fallback: Any?): Any? =
@@ -248,7 +262,7 @@ android {
 }
 
 if (project != rootProject) {
-    kotlin {
+    extensions.configure<org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension> {
         compilerOptions {
             jvmTarget = JvmTarget.fromTarget("17")
         }
