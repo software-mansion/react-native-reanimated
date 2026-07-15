@@ -4,11 +4,8 @@
 
 #include <react/renderer/uimanager/UIManager.h>
 
-#include <memory>
-#include <string>
 #include <unordered_map>
 #include <unordered_set>
-#include <vector>
 
 namespace reanimated {
 

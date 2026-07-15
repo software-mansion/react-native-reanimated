@@ -5,8 +5,10 @@
 
 #include <react/debug/react_native_assert.h>
 
+#include <functional>
 #include <memory>
 #include <utility>
+#include <vector>
 
 namespace reanimated {
 
