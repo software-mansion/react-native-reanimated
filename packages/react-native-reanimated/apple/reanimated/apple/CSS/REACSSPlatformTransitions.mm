@@ -27,7 +27,8 @@ namespace {
 // and the reversing snapshot handle interruptions; settings are reused by the
 // toggle path.
 struct ActiveTransition {
-  PlatformValue adjustedStart;
+  // Unset after a mid-flight interruption - the live start value can't match any target.
+  std::optional<PlatformValue> adjustedStart;
   PlatformValue adjustedEnd;
   ReversingState reversing;
   CSSTransitionPropertySettings settings;
@@ -65,24 +66,36 @@ struct ActiveTransition {
             toValue:(const PlatformValue &)toValue
            settings:(const CSSTransitionPropertySettings &)settings
           timestamp:(double)timestamp
+         persistent:(BOOL)persistent
 {
   auto &properties = _active[viewTag];
   const auto activeIt = properties.find(propertyName);
   // Targeting the in-flight transition's start value means this is a reversal.
   const ActiveTransition *previous =
-      (activeIt != properties.end() && toValue == activeIt->second.adjustedStart) ? &activeIt->second : nullptr;
+      (activeIt != properties.end() && activeIt->second.adjustedStart && toValue == *activeIt->second.adjustedStart)
+      ? &activeIt->second
+      : nullptr;
   ReversingState reversing = previous
       ? reverseShorten(previous->reversing, timestamp, settings.duration, settings.delay, settings.easingConfig)
       : makeReversingState(timestamp, settings.duration, settings.delay, settings.easingConfig);
 
-  const PlatformValue adjustedStart = previous ? previous->adjustedEnd : fromValue;
+  // https://drafts.csswg.org/css-transitions/#reversing
+  std::optional<PlatformValue> adjustedStart;
+  if (previous) {
+    adjustedStart = previous->adjustedEnd;
+  } else if (activeIt == properties.end()) {
+    adjustedStart = fromValue;
+  } else if (timestamp >= activeIt->second.reversing.startTimestamp + activeIt->second.reversing.duration) {
+    adjustedStart = activeIt->second.adjustedEnd;
+  }
   [self animateTag:viewTag
       propertyName:propertyName
          fromValue:fromValue
            toValue:toValue
         durationMs:reversing.duration
        startTimeMs:reversing.startTimestamp
-            easing:settings.easingConfig];
+            easing:settings.easingConfig
+        persistent:persistent];
   properties[propertyName] = ActiveTransition{adjustedStart, toValue, std::move(reversing), settings};
 }
 
@@ -104,7 +117,8 @@ struct ActiveTransition {
           fromValue:*from
             toValue:*to
            settings:settings
-          timestamp:timestamp];
+          timestamp:timestamp
+         persistent:NO];
   return YES;
 }
 
@@ -135,7 +149,8 @@ struct ActiveTransition {
           fromValue:*from
             toValue:*to
            settings:settings
-          timestamp:timestamp];
+          timestamp:timestamp
+         persistent:YES];
   return YES;
 }
 
@@ -146,6 +161,7 @@ struct ActiveTransition {
         durationMs:(double)durationMs
        startTimeMs:(double)startTimeMs
             easing:(const EasingConfig &)easing
+        persistent:(BOOL)persistent
 {
   // Capture everything up front; CALayer access must happen on the main thread.
   NSString *keyPath = caLayerKeyPathForCSSProperty(propertyName);
@@ -167,11 +183,11 @@ struct ActiveTransition {
     }
 
     CABasicAnimation *anim = [CABasicAnimation animationWithKeyPath:keyPath];
-    // On interruption, start from the live presentation value; the implicit
-    // fromValue would race RN's model commit.
+    // On interruption, continue from the live presentation value, falling back to the
+    // model - never to fromId, which would snap a quick tap to the settled pseudo target.
     if ([[layer animationForKey:keyPath] isKindOfClass:[CABasicAnimation class]]) {
       id presentationValue = [[layer presentationLayer] valueForKeyPath:keyPath];
-      anim.fromValue = presentationValue ?: fromId;
+      anim.fromValue = presentationValue ?: [layer valueForKeyPath:keyPath];
     } else {
       anim.fromValue = fromId;
     }
@@ -181,17 +197,16 @@ struct ActiveTransition {
     // speed/timeOffset (e.g. RN Screens during navigation) from shifting it.
     anim.beginTime = [layer convertTime:beginTime fromLayer:nil];
     anim.timingFunction = timing;
-    // Backwards fill paints fromValue during the delay window; the animation
-    // self-removes on completion and the layer reads the model below.
-    anim.fillMode = kCAFillModeBackwards;
-    anim.removedOnCompletion = YES;
+    anim.fillMode = persistent ? kCAFillModeBoth : kCAFillModeBackwards;
+    anim.removedOnCompletion = persistent ? NO : YES;
 
-    // Commit toValue to the model and add the animation in one transaction
-    // (implicit actions off): on auto-removal the layer shows the final model
-    // value with no snap, and recycled layers carry no stale animated state.
+    // Non-persistent transitions commit toValue to the model so the layer settles there on
+    // self-removal; persistent (pseudo) ones hold their value via fillMode and keep the base model.
     [CATransaction begin];
     [CATransaction setDisableActions:YES];
-    [layer setValue:toId forKeyPath:keyPath];
+    if (!persistent) {
+      [layer setValue:toId forKeyPath:keyPath];
+    }
     [layer addAnimation:anim forKey:keyPath];
     [CATransaction commit];
   });

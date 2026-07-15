@@ -690,7 +690,19 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
     return false;
   }
 
-  int tag = eventTarget->getTag();
+#if REACT_NATIVE_VERSION_MINOR >= 87
+  const auto tag = eventTarget->getTag();
+#else
+  // A stale event dispatched during unmount may carry an EventTarget with a null
+  // InstanceHandle which getTag() would dereference (see #9925).
+  // Fixed in React Native 0.87 by https://github.com/facebook/react-native/pull/56763.
+  const auto shadowNodeFamily = rawEvent.shadowNodeFamily.lock();
+  if (shadowNodeFamily == nullptr) {
+    return false;
+  }
+  const auto tag = shadowNodeFamily->getTag();
+#endif
+
   auto eventType = rawEvent.type;
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);

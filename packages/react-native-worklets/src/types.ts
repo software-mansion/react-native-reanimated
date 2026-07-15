@@ -58,7 +58,10 @@ export type WorkletStackDetails = [
 type WorkletClosure = Record<string, unknown>;
 
 interface WorkletInitData {
-  code: string;
+  /** Only when bytecode isn't toggled. */
+  code?: string;
+  /** Only in production builds and explicitly toggled. */
+  bytecode?: ArrayBuffer;
   /** Only in dev builds. */
   location?: string;
   /** Only in dev builds. */
@@ -125,7 +128,7 @@ type WorkletRuntimeConfigBase = {
    * `clearImmediate`, and `cancelAnimationFrame` methods. If not specified, it
    * defaults to `true`.
    */
-  enableEventLoop?: true;
+  enableEventLoop?: boolean;
 };
 
 /** Configuration object for creating a worklet runtime. */
