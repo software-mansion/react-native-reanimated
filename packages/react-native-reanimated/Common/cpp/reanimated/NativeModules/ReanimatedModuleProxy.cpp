@@ -644,6 +644,8 @@ void ReanimatedModuleProxy::unregisterPseudoStyle(jsi::Runtime &, const jsi::Val
   pseudoStylesRegistry_->remove(viewTag.asNumber());
 }
 
+constexpr double SETTLED_ANIMATION_THRESHOLD_MS = 1000;
+
 jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
   react_native_assert(
       StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS") &&
@@ -654,7 +656,7 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
 
   // TODO(future): flush updates from CSS animations and CSS transitions registries
   auto lock = updatesRegistryManager_->lock();
-  return animatedPropsRegistry_->collectSettledUpdates(rt, currentTimestamp - 1000 /* 1 second */);
+  return animatedPropsRegistry_->collectSettledUpdates(rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS);
 }
 
 bool ReanimatedModuleProxy::handleEvent(
