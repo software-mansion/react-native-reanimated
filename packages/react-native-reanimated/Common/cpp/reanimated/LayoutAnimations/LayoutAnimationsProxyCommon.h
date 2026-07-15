@@ -91,6 +91,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   virtual void startSurface(const SurfaceId surfaceId);
 
  protected:
+  void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
+
   mutable std::unordered_set<Tag> maybeSettledAnimationTags_;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
