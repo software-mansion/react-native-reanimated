@@ -52,7 +52,7 @@ runtime->runGuarded(worklet, ...args);
     name?: string;
     initializer?: () => void;
     animationQueuePollingRate?: number;
-    enableEventLoop?: true;
+    enableEventLoop?: boolean;
     queue?: 'default' | object | null;
   };
 

@@ -100,6 +100,10 @@ const routes = {
         name: ':active',
         Component: pseudoSelectors.Active,
       },
+      PseudoActiveBlocksRender: {
+        name: 'selectors block render transition',
+        Component: pseudoSelectors.ActiveBlocksRender,
+      },
       PseudoActiveDeepest: {
         name: ':active-deepest',
         Component: pseudoSelectors.ActiveDeepest,
@@ -126,7 +130,16 @@ const routes = {
       },
       PseudoShowcase: {
         name: 'Showcase',
-        Component: pseudoSelectors.Showcase,
+        routes: {
+          PseudoShowcaseForm: {
+            name: 'Form',
+            Component: pseudoSelectors.Form,
+          },
+          PseudoShowcasePlanets: {
+            name: 'Planets',
+            Component: pseudoSelectors.Planets,
+          },
+        },
       },
     },
   },

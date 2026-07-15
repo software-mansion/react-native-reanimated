@@ -70,8 +70,8 @@ describe.each([
   { label: 'bundle', bundleMode: true },
 ])('babel plugin core ($label mode)', ({ bundleMode }) => {
   beforeEach(() => {
-    process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION = '1';
-    process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '1';
+    process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
+    process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '1';
     capturedFiles.length = 0;
   });
 

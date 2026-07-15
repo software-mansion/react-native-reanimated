@@ -5,27 +5,41 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewConfiguration
+import android.view.ViewGroup
 import android.view.Window
 import com.facebook.react.bridge.ReactContext
+import com.facebook.react.uimanager.TouchTargetHelper
 import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
 import java.lang.ref.WeakReference
 
-/**
- * Drives sticky touch :hover (Chromium model): a tapped view stays hovered after the finger lifts,
- * clearing only when a later touch lands elsewhere or a scroll cancels it. The hosting manager feeds
- * it touch-downs (per-view, plus a window observer for blank space). register also wires the pointer
- * (mouse/stylus) hover, which stays non-sticky.
- */
 class TouchHoverCoordinator {
     private val hoverCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
     private val hoveredViews = LinkedHashSet<View>()
     private val tmpLocation = IntArray(2)
+    private val tmpCoords = FloatArray(2)
 
-    // Weak so a stale wrapper can never pin a destroyed Activity (this outlives Activities).
-    private var observedWindow: WeakReference<Window>? = null
-    private var originalWindowCallback: WeakReference<Window.Callback>? = null
-    private var wrappedWindowCallback: WeakReference<Window.Callback>? = null
+    private var settledGestureDownTime = Long.MIN_VALUE
+
+    private val observedWindows = mutableListOf<WeakReference<WindowObserver>>()
+
+    private inner class WindowObserver(
+        window: Window,
+        val original: Window.Callback,
+    ) : Window.Callback by original {
+        val windowRef = WeakReference(window)
+
+        override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+            val root = windowRef.get()?.decorView as? ViewGroup
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> reconcile(root, event.rawX, event.rawY)
+                MotionEvent.ACTION_UP ->
+                    if (event.findPointerIndex(0) >= 0) settleHover(root, event)
+                MotionEvent.ACTION_POINTER_UP ->
+                    if (event.getPointerId(event.actionIndex) == 0) settleHover(root, event)
+            }
+            return original.dispatchTouchEvent(event)
+        }
+    }
 
     fun register(
         view: View,
@@ -35,7 +49,7 @@ class TouchHoverCoordinator {
             when (event.actionMasked) {
                 MotionEvent.ACTION_HOVER_ENTER,
                 MotionEvent.ACTION_HOVER_EXIT,
-                -> recompute(event.rawX, event.rawY)
+                -> recompute(view, event.rawX, event.rawY)
             }
             false
         }
@@ -50,31 +64,127 @@ class TouchHoverCoordinator {
             callback?.onSelectorStateChanged(false)
         }
         if (hoverCallbacks.isEmpty()) {
-            removeWindowObserver()
+            removeAllWindowObservers()
         }
     }
 
-    fun isRegistered(view: View) = view in hoverCallbacks
+    fun observeExtraWindow(window: Window) {
+        installObserverOnWindow(window)
+    }
 
-    /** Turns :hover on for every registered view whose bounds contain the touch, off for the rest. */
+    fun stopObservingExtraWindow(window: Window) {
+        removeObserverFromWindow(window)
+        clearHoverForWindow(window)
+    }
+
     fun recompute(
+        sourceView: View,
+        screenX: Float,
+        screenY: Float,
+    ) {
+        reconcile(sourceView.rootView as? ViewGroup, screenX, screenY)
+    }
+
+    fun onViewTouchDown(
+        sourceView: View,
+        event: MotionEvent,
+    ) {
+        if (isWindowObserved(sourceView) || isGestureSettled(event)) {
+            return
+        }
+        reconcile(sourceView.rootView as? ViewGroup, event.rawX, event.rawY)
+    }
+
+    fun onViewTouchUp(
+        sourceView: View,
+        event: MotionEvent,
+    ) {
+        if (isWindowObserved(sourceView)) {
+            return
+        }
+        settleHover(sourceView.rootView as? ViewGroup, event)
+    }
+
+    fun onViewTouchCancel(
+        sourceView: View,
+        event: MotionEvent,
+    ) {
+        if (isWindowObserved(sourceView) || isGestureSettled(event)) {
+            return
+        }
+        settledGestureDownTime = event.downTime
+        clearAll()
+    }
+
+    fun isGestureSettled(event: MotionEvent) = event.downTime == settledGestureDownTime
+
+    private fun reconcile(
+        root: ViewGroup?,
         screenX: Float,
         screenY: Float,
     ) {
         if (hoverCallbacks.isEmpty()) {
             return
         }
+        val hitTags: Set<Int> = if (root == null) emptySet() else hitTestPath(root, screenX, screenY)
         for ((view, callback) in hoverCallbacks) {
-            setHovered(view, callback, isPointInViewOnScreen(view, screenX, screenY))
+            setHovered(view, callback, view.id in hitTags)
         }
     }
 
-    fun clearAll() {
+    private fun settleHover(
+        root: ViewGroup?,
+        event: MotionEvent,
+    ) {
+        if (event.downTime == settledGestureDownTime) {
+            return
+        }
+        settledGestureDownTime = event.downTime
+        val index = event.findPointerIndex(0)
+        if (index < 0 || hoveredViews.isEmpty()) {
+            return
+        }
+        val screenX = event.getX(index) + (event.rawX - event.getX(0))
+        val screenY = event.getY(index) + (event.rawY - event.getY(0))
+        val hitTags: Set<Int> = if (root == null) emptySet() else hitTestPath(root, screenX, screenY)
+        for (view in hoveredViews.toList()) {
+            if (view.id !in hitTags) {
+                hoverCallbacks[view]?.let { setHovered(view, it, false) }
+            }
+        }
+    }
+
+    private fun hitTestPath(
+        root: ViewGroup,
+        screenX: Float,
+        screenY: Float,
+    ): Set<Int> {
+        root.getLocationOnScreen(tmpLocation)
+        val localX = screenX - tmpLocation[0]
+        val localY = screenY - tmpLocation[1]
+        val targets =
+            TouchTargetHelper.findTargetPathAndCoordinatesForTouch(localX, localY, root, tmpCoords)
+        return targets.mapTo(HashSet(targets.size)) { it.getViewId() }
+    }
+
+    private fun clearAll() {
         if (hoveredViews.isEmpty()) {
             return
         }
         for (view in hoveredViews.toList()) {
             hoverCallbacks[view]?.let { setHovered(view, it, false) }
+        }
+    }
+
+    private fun clearHoverForWindow(window: Window) {
+        if (hoveredViews.isEmpty()) {
+            return
+        }
+        val decor = window.decorView
+        for (view in hoveredViews.toList()) {
+            if (view.rootView === decor) {
+                hoverCallbacks[view]?.let { setHovered(view, it, false) }
+            }
         }
     }
 
@@ -90,77 +200,66 @@ class TouchHoverCoordinator {
         callback.onSelectorStateChanged(hovered)
     }
 
-    private fun isPointInViewOnScreen(
-        view: View,
-        screenX: Float,
-        screenY: Float,
-    ): Boolean {
-        if (!view.isShown) {
-            return false
-        }
-        view.getLocationOnScreen(tmpLocation)
-        val left = tmpLocation[0]
-        val top = tmpLocation[1]
-        return screenX >= left && screenX <= left + view.width &&
-            screenY >= top && screenY <= top + view.height
-    }
-
-    // Catches touch-downs on blank space (off any registered view), which per-view listeners miss.
     private fun ensureWindowObserver(view: View) {
         val window = view.activityWindow() ?: return
-        if (observedWindow?.get() === window) {
-            return
-        }
-        // The Activity (and its window) can be replaced; re-bind onto the live one.
-        removeWindowObserver()
-        val original = window.callback ?: return
-        val slop = ViewConfiguration.get(view.context).scaledTouchSlop.toFloat()
-        val wrapper =
-            object : Window.Callback by original {
-                private var startX = 0f
-                private var startY = 0f
-                private var slopExceeded = false
-
-                override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-                    when (event.actionMasked) {
-                        MotionEvent.ACTION_DOWN -> {
-                            startX = event.rawX
-                            startY = event.rawY
-                            slopExceeded = false
-                            recompute(event.rawX, event.rawY)
-                        }
-                        // A scroll/drag past slop dismisses sticky :hover, matching iOS.
-                        MotionEvent.ACTION_MOVE ->
-                            if (!slopExceeded) {
-                                val dx = event.rawX - startX
-                                val dy = event.rawY - startY
-                                if (dx * dx + dy * dy > slop * slop) {
-                                    slopExceeded = true
-                                    clearAll()
-                                }
-                            }
-                        MotionEvent.ACTION_CANCEL -> clearAll()
-                    }
-                    return original.dispatchTouchEvent(event)
-                }
-            }
-        originalWindowCallback = WeakReference(original)
-        wrappedWindowCallback = WeakReference(wrapper)
-        observedWindow = WeakReference(window)
-        window.callback = wrapper
+        installObserverOnWindow(window)
     }
 
-    private fun removeWindowObserver() {
-        val window = observedWindow?.get()
-        val wrapper = wrappedWindowCallback?.get()
-        // Restore only if our wrapper is still the live callback (nothing wrapped us afterwards).
-        if (window != null && wrapper != null && window.callback === wrapper) {
-            window.callback = originalWindowCallback?.get()
+    private fun installObserverOnWindow(window: Window) {
+        pruneObservers()
+        if (isObserving(window)) {
+            return
         }
-        observedWindow = null
-        originalWindowCallback = null
-        wrappedWindowCallback = null
+        val original = window.callback ?: return
+        val observer = WindowObserver(window, original)
+        observedWindows.add(WeakReference(observer))
+        window.callback = observer
+    }
+
+    private fun removeObserverFromWindow(window: Window) {
+        val iterator = observedWindows.iterator()
+        while (iterator.hasNext()) {
+            val observer = iterator.next().get()
+            if (observer == null) {
+                iterator.remove()
+                continue
+            }
+            if (observer.windowRef.get() === window) {
+                if (window.callback === observer) {
+                    window.callback = observer.original
+                }
+                iterator.remove()
+            }
+        }
+    }
+
+    private fun removeAllWindowObservers() {
+        for (reference in observedWindows) {
+            val observer = reference.get() ?: continue
+            val window = observer.windowRef.get() ?: continue
+            if (window.callback === observer) {
+                window.callback = observer.original
+            }
+        }
+        observedWindows.clear()
         clearAll()
+    }
+
+    private fun isObserving(window: Window) = observedWindows.any { it.get()?.windowRef?.get() === window }
+
+    private fun isWindowObserved(view: View): Boolean {
+        val decor = view.rootView
+        return observedWindows.any {
+            it
+                .get()
+                ?.windowRef
+                ?.get()
+                ?.decorView === decor
+        }
+    }
+
+    private fun pruneObservers() {
+        observedWindows.removeAll { it.get()?.windowRef?.get() == null }
     }
 
     private fun View.activityWindow(): Window? {
