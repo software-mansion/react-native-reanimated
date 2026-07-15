@@ -12,8 +12,8 @@ const AnimatedPolygon = Animated.createAnimatedComponent(Polygon);
 export default function PolygonExample() {
   return (
     <ExamplesScreen<
-      { keyframes: CSSAnimationKeyframes<PolygonProps> },
-      PolygonProps
+      PolygonProps,
+      { keyframes: CSSAnimationKeyframes<PolygonProps> }
     >
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',
@@ -39,6 +39,8 @@ export default function PolygonExample() {
           name: 'Points',
           sections: [
             {
+              description:
+                'On the web, Polygon renders as an SVG `<polygon>` whose `points` cannot be animated via CSS, so point animations work only on iOS and Android.',
               examples: [
                 {
                   description:
@@ -92,6 +94,7 @@ export default function PolygonExample() {
                   title: 'Hexagon breathe',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Same Number of Points',
             },
             {

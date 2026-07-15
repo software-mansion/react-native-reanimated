@@ -1,5 +1,4 @@
 'use strict';
-import type { PlainStyle } from '../../common';
 import { hasSuffix } from '../../common';
 import { type WebPropsBuilder, webPropsBuilder } from '../../common/web';
 import { getWebSvgPropsBuilder } from '../svg/web';
@@ -12,9 +11,9 @@ import { parseTimingFunction } from './utils';
 
 export function processKeyframeDefinitions<TStyle extends object>(
   definitions: CSSAnimationKeyframes<TStyle>,
-  componentName = ''
+  svgElementTag = ''
 ) {
-  const propsBuilder = getWebSvgPropsBuilder(componentName) ?? webPropsBuilder;
+  const propsBuilder = getWebSvgPropsBuilder(svgElementTag) ?? webPropsBuilder;
 
   // Whole-set fixups (strokeDasharray endpoints, open/closed path Z-padding)
   // before serializing each block.
@@ -39,11 +38,13 @@ export function processKeyframeDefinitions<TStyle extends object>(
     .join(' ');
 }
 
-function processKeyframeBlock(
-  { animationTimingFunction, ...rules }: CSSAnimationKeyframeBlock<PlainStyle>,
+function processKeyframeBlock<S extends object>(
+  { animationTimingFunction, ...rules }: CSSAnimationKeyframeBlock<S>,
   propsBuilder: WebPropsBuilder
 ): string | null {
-  const style = propsBuilder.build(rules);
+  const style = propsBuilder.build(
+    rules as Parameters<typeof propsBuilder.build>[0]
+  );
 
   if (!style) {
     return null;

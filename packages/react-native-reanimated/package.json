@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "4.5.0-main",
+  "version": "4.6.0-main",
   "description": "More powerful alternative to Animated library for React Native.",
   "keywords": [
     "react-native",
@@ -10,12 +10,13 @@
   ],
   "scripts": {
     "test": "jest",
-    "lint": "yarn lint:js && yarn lint:common && yarn lint:android && yarn lint:apple",
+    "lint": "yarn lint:js && yarn lint:android && yarn lint:apple && yarn lint:clang-tidy",
     "lint:js": "eslint src __tests__ __typetests__ && yarn run --top-level oxfmt --check src __tests__ __typetests__",
-    "lint:android": "../../scripts/validate-android.sh && yarn validate-includes android && ./android/gradlew -p android spotlessCheck -q && ../../scripts/cpplint.sh android/src && yarn format:android:cpp --dry-run -Werror && yarn lint:cmake",
-    "lint:common": "../../scripts/validate-common.sh && yarn validate-includes Common && ../../scripts/cpplint.sh Common && yarn format:common --dry-run -Werror",
-    "lint:clang-tidy": "../../scripts/clang-tidy-lint.sh \".\"",
-    "lint:apple": "../../scripts/validate-apple.sh && yarn validate-includes apple && yarn format:apple --dry-run -Werror",
+    "lint:android": "../../scripts/validate-android.sh && ../../scripts/validate-common.sh && yarn validate-includes Common && yarn validate-includes android && ./android/gradlew -p android spotlessCheck -q && yarn format:common --dry-run -Werror && yarn format:android:cpp --dry-run -Werror && yarn lint:cmake",
+    "lint:apple": "../../scripts/validate-apple.sh && ../../scripts/validate-common.sh && yarn validate-includes Common && yarn validate-includes apple && yarn format:common --dry-run -Werror && yarn format:apple --dry-run -Werror",
+    "lint:clang-tidy": "yarn lint:clang-tidy:ios && yarn lint:clang-tidy:android",
+    "lint:clang-tidy:ios": "../../scripts/llvm-tools/clang-tidy-lint.sh --platform=ios",
+    "lint:clang-tidy:android": "../../scripts/llvm-tools/clang-tidy-lint.sh --platform=android",
     "lint:cmake": "find ./android -type d \\( -name build -o -name .cxx \\) -prune -o -type f -name 'CMakeLists.txt' -print | xargs ../../scripts/lint-cmake.sh",
     "format": "yarn format:js && yarn format:apple && yarn format:android && yarn format:common",
     "format:js": "yarn run --top-level oxfmt src __tests__ __typetests__",
@@ -100,17 +101,17 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "0.83 - 0.86",
-    "react-native-worklets": "*"
+    "react-native": "0.83 - 0.87",
+    "react-native-worklets": "0.11.0-main"
   },
   "devDependencies": {
     "@babel/core": "7.28.4",
     "@babel/preset-env": "7.28.3",
-    "@react-native/babel-preset": "0.85.2",
-    "@react-native/eslint-config": "0.85.2",
-    "@react-native/jest-preset": "patch:@react-native/jest-preset@npm%3A0.85.2#~/.yarn/patches/@react-native-jest-preset-npm-0.85.2-d3275e8971.patch",
-    "@react-native/metro-config": "0.85.2",
-    "@react-native/typescript-config": "0.85.2",
+    "@react-native/babel-preset": "0.87.0-rc.0",
+    "@react-native/eslint-config": "0.87.0-rc.0",
+    "@react-native/jest-preset": "patch:@react-native/jest-preset@npm%3A0.87.0-rc.0#~/.yarn/patches/@react-native-jest-preset-npm-0.87.0-rc.0-63494e1a37.patch",
+    "@react-native/metro-config": "0.87.0-rc.0",
+    "@react-native/typescript-config": "0.87.0-rc.0",
     "@shopify/flash-list": "2.1.0",
     "@testing-library/dom": "10.4.0",
     "@testing-library/jest-native": "5.4.3",
@@ -132,7 +133,7 @@
     "madge": "8.0.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-native": "0.85.2",
+    "react-native": "0.87.0-rc.0",
     "react-native-svg": "15.15.4",
     "react-native-web": "0.21.1",
     "react-native-worklets": "workspace:*",
@@ -141,10 +142,15 @@
   },
   "codegenConfig": {
     "name": "rnreanimated",
-    "type": "modules",
+    "type": "all",
     "jsSrcsDir": "./src/specs",
     "android": {
       "javaPackageName": "com.swmansion.reanimated"
+    },
+    "ios": {
+      "componentProvider": {
+        "REASharedTransitionBoundary": "REASharedTransitionBoundaryView"
+      }
     }
   },
   "sideEffects": [
@@ -152,8 +158,8 @@
     "./lib/module/layoutReanimation/animationsManager.js",
     "./src/core.ts",
     "./lib/module/core.js",
-    "./src/initializers.ts",
-    "./lib/module/initializers.js",
+    "./src/initializers.native.ts",
+    "./lib/module/initializers.native.js",
     "./src/index.ts",
     "./lib/module/index.js"
   ]

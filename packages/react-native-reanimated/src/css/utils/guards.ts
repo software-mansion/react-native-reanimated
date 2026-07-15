@@ -6,10 +6,12 @@ import {
 } from '../constants';
 import type { PredefinedTimingFunction, StepsModifier } from '../easing/types';
 import type {
+  CSSAnimationCallbackProp,
   CSSAnimationKeyframes,
   CSSAnimationProp,
   CSSConfigProp,
   CSSKeyframesRule,
+  CSSTransitionCallbackProp,
   CSSTransitionProp,
   Repeat,
   TimeUnit,
@@ -54,6 +56,34 @@ export const isTransitionProp = (key: string): key is CSSTransitionProp => {
   }
 };
 
+export const isTransitionCallbackProp = (
+  key: string
+): key is CSSTransitionCallbackProp => {
+  switch (key) {
+    case 'onTransitionRun':
+    case 'onTransitionStart':
+    case 'onTransitionEnd':
+    case 'onTransitionCancel':
+      return true;
+    default:
+      return false;
+  }
+};
+
+export const isAnimationCallbackProp = (
+  key: string
+): key is CSSAnimationCallbackProp => {
+  switch (key) {
+    case 'onAnimationStart':
+    case 'onAnimationEnd':
+    case 'onAnimationIteration':
+    case 'onAnimationCancel':
+      return true;
+    default:
+      return false;
+  }
+};
+
 export const isStepsModifier = (value: string): value is StepsModifier => {
   switch (value) {
     case 'jump-start':
@@ -69,7 +99,10 @@ export const isStepsModifier = (value: string): value is StepsModifier => {
 };
 
 export const isCSSConfigProp = (key: string): key is CSSConfigProp =>
-  isTransitionProp(key) || isAnimationProp(key);
+  isTransitionProp(key) ||
+  isAnimationProp(key) ||
+  isTransitionCallbackProp(key) ||
+  isAnimationCallbackProp(key);
 
 export const isTimeUnit = (value: unknown): value is TimeUnit =>
   // TODO: implement more strict check

@@ -1,6 +1,6 @@
 'use strict';
 import { createPropsBuilder } from '../../style';
-import type { PlainStyle, UnknownRecord } from '../../types';
+import type { UnknownRecord } from '../../types';
 import {
   hasValueProcessor,
   isConfigPropertyAlias,
@@ -15,8 +15,16 @@ import type { PropsBuilderConfig, RuleBuilder } from './types';
 type WebPropsBuilderConfig<P extends UnknownRecord = UnknownRecord> =
   PropsBuilderConfig<P>;
 
+type WebPropsBuilderOptions = {
+  // Appends ' !important' to every emitted declaration (e.g. pseudo-selector
+  // rules that must override the element's inline styles).
+  important?: boolean;
+  // Emits `<prop>: initial` for props whose input value is `undefined`
+  includeUnprocessed?: boolean;
+};
+
 export type WebPropsBuilder<P extends UnknownRecord = UnknownRecord> = {
-  build(props: Partial<P>): string | null;
+  build(props: Partial<P>, options?: WebPropsBuilderOptions): string | null;
 };
 
 export function createWebPropsBuilder<TProps extends UnknownRecord>(
@@ -81,11 +89,16 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
   });
 
   return {
-    build(props: Partial<TProps>): string | null {
+    build(
+      props: Partial<TProps>,
+      options?: WebPropsBuilderOptions
+    ): string | null {
       usedRuleBuilders.clear();
 
       // Build props - rule builders are fed during processing
-      const processedProps = propsBuilder.build(props);
+      const processedProps = propsBuilder.build(props, {
+        includeUnprocessed: options?.includeUnprocessed,
+      });
 
       // Build only used rule builders and merge their results
       for (const builder of usedRuleBuilders) {
@@ -93,11 +106,19 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
       }
 
       // Convert to CSS string
+      const importance = options?.important ? ' !important' : '';
       const cssString = Object.entries(processedProps)
         .reduce<string[]>((acc, [key, value]) => {
+          const name = nameAliases.get(key) ?? key;
           if (isDefined(value)) {
-            const name = nameAliases.get(key) ?? key;
-            acc.push(`${kebabizeCamelCase(name)}: ${value as string}`);
+            acc.push(
+              `${kebabizeCamelCase(name)}: ${value as string}${importance}`
+            );
+          } else if (
+            options?.includeUnprocessed &&
+            props[key as keyof TProps] === undefined
+          ) {
+            acc.push(`${kebabizeCamelCase(name)}: initial${importance}`);
           }
           return acc;
         }, [])
@@ -108,5 +129,4 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
   };
 }
 
-export const webPropsBuilder =
-  createWebPropsBuilder<PlainStyle>(PROPERTIES_CONFIG);
+export const webPropsBuilder = createWebPropsBuilder(PROPERTIES_CONFIG);

@@ -76,13 +76,13 @@ export function unregisterCSSTransition(viewTag: number) {
   ReanimatedModule.unregisterCSSTransition(viewTag);
 }
 
-export function registerPseudoStyle(
+export function registerPseudoStyles(
   shadowNodeWrapper: ShadowNodeWrapper,
   config: CSSPseudoStyleConfig
 ) {
-  ReanimatedModule.registerPseudoStyle(shadowNodeWrapper, config);
+  ReanimatedModule.registerPseudoStyles(shadowNodeWrapper, config);
 }
 
-export function unregisterPseudoStyle(viewTag: number) {
-  ReanimatedModule.unregisterPseudoStyle(viewTag);
+export function unregisterPseudoStyles(viewTag: number) {
+  ReanimatedModule.unregisterPseudoStyles(viewTag);
 }

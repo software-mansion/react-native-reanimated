@@ -19,8 +19,8 @@ const FOCAL_POINT_DISCLAIMER =
 export default function RadialGradientExample() {
   return (
     <ExamplesScreen<
-      { keyframes: CSSAnimationKeyframes<CSSRadialGradientProps> },
-      CSSRadialGradientProps
+      CSSRadialGradientProps,
+      { keyframes: CSSAnimationKeyframes<CSSRadialGradientProps> }
     >
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',

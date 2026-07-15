@@ -70,8 +70,8 @@ describe.each([
   { label: 'bundle', bundleMode: true },
 ])('babel plugin core ($label mode)', ({ bundleMode }) => {
   beforeEach(() => {
-    process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION = '1';
-    process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '1';
+    process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
+    process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '1';
     capturedFiles.length = 0;
   });
 
@@ -212,6 +212,50 @@ describe.each([
       const result = runPlugin(input, { bundleMode });
       expect(result.files).toHaveLength(0);
       expect(result.code).toMatchSnapshot();
+    });
+  });
+
+  describe('state environment flavor detection', () => {
+    const sampleInput = html`<script>
+      function foo() {
+        'worklet';
+        return 1;
+      }
+    </script>`.replace(/<\/?script[^>]*>/g, '');
+
+    function transformWithEnvName(envName: string): string {
+      capturedFiles.length = 0;
+      const transformed = transformSync(sampleInput, {
+        filename: MOCK_LOCATION,
+        compact: false,
+        babelrc: false,
+        configFile: false,
+        envName,
+        plugins: [
+          [
+            plugin,
+            {
+              bundleMode,
+              disableSourceMaps: true,
+              relativeSourceLocation: true,
+            },
+          ],
+        ],
+      });
+      assert(transformed);
+      return bundleMode
+        ? capturedFiles.map((f) => f.content).join('\n')
+        : (transformed.code ?? '');
+    }
+
+    test('envName "production" is detected as release', () => {
+      expect(transformWithEnvName('production')).not.toContain(
+        '__pluginVersion'
+      );
+    });
+
+    test('envName "development" is not detected as release', () => {
+      expect(transformWithEnvName('development')).toContain('__pluginVersion');
     });
   });
 });

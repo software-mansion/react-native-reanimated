@@ -4,6 +4,7 @@ import type {
   FunctionExpression,
   ImportDeclaration,
   ImportSpecifier,
+  JSXAttribute,
 } from '@babel/types';
 import {
   cloneNode,
@@ -21,13 +22,13 @@ import type { WorkletsPluginPass } from './types';
 import { generatedWorkletsDir } from './types';
 
 export function generateWorkletFile(
-  libraryBindingsToImport: Set<Binding>,
+  moduleBindingsToImport: Set<Binding>,
   relativeBindingsToImport: Set<Binding>,
   factory: FunctionExpression,
   workletHash: number,
   state: WorkletsPluginPass
 ) {
-  const libraryImports = Array.from(libraryBindingsToImport)
+  const libraryImports = Array.from(moduleBindingsToImport)
     .filter(
       (binding) =>
         (binding.path.isImportSpecifier() ||
@@ -71,8 +72,8 @@ export function generateWorkletFile(
 
   const transformedProg = transformFromAstSync(newProg, undefined, {
     filename: state.file.opts.filename,
-    presets: ['@babel/preset-typescript'],
-    plugins: [],
+    presets: [resolvePresetTypescript()],
+    plugins: [state.autoworkletizationPlugin, stripJsxDevAttributesPlugin],
     ast: false,
     babelrc: false,
     configFile: false,
@@ -85,3 +86,32 @@ export function generateWorkletFile(
 
   writeFileSync(dedicatedFilePath, transformedProg);
 }
+
+function resolvePresetTypescript(): string {
+  try {
+    return require.resolve('@babel/preset-typescript');
+  } catch {
+    return require.resolve('@babel/preset-typescript', {
+      paths: [dirname(require.resolve('react-native-worklets/package.json'))],
+    });
+  }
+}
+
+const stripJsxDevAttributesPlugin = {
+  name: 'worklets-strip-jsx-dev-attributes',
+  visitor: {
+    JSXAttribute(path: NodePath<JSXAttribute>) {
+      const name = path.node.name;
+
+      if (name.type !== 'JSXIdentifier') {
+        return;
+      }
+
+      if (name.name !== '__self' && name.name !== '__source') {
+        return;
+      }
+
+      path.remove();
+    },
+  },
+};

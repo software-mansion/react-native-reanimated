@@ -12,6 +12,35 @@ import plugin from '../plugin';
 
 const MOCK_LOCATION = '/dev/null';
 
+jest.mock('fs', () => {
+  const actual = jest.requireActual('fs');
+  const nodePath = jest.requireActual('path');
+  const target = nodePath.resolve('/dev/null');
+  return {
+    ...actual,
+    readFileSync: (file: unknown, ...args: unknown[]) =>
+      typeof file === 'string' && nodePath.resolve(file) === target
+        ? Buffer.from('')
+        : actual.readFileSync(file, ...args),
+  };
+});
+
+expect.addSnapshotSerializer({
+  test: (v: unknown): v is string =>
+    typeof v === 'string' &&
+    (v.includes('\\\\') || /(?<![A-Za-z])[A-Za-z]:[/\\]/.test(v)),
+  serialize: (v, c, i, d, r, printer) =>
+    printer(
+      (v as string)
+        .replace(/(?<![A-Za-z])[A-Za-z]:[\\/]+/g, '/')
+        .replace(/\\\\/g, '/'),
+      c,
+      i,
+      d,
+      r
+    ),
+});
+
 function runPlugin(
   input: string,
   transformOpts: TransformOptions = {},
@@ -34,8 +63,8 @@ function runPlugin(
 
 describe('babel plugin', () => {
   beforeEach(() => {
-    process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '1';
-    process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION = '1';
+    process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '1';
+    process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
   });
 
   describe('generally', () => {
@@ -75,7 +104,7 @@ describe('babel plugin', () => {
     });
 
     test('injects its version', () => {
-      process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION = '0'; // don't mock version
+      process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '0';
       const input = html`<script>
         function foo() {
           'worklet';
@@ -88,7 +117,7 @@ describe('babel plugin', () => {
     });
 
     test('injects source maps', () => {
-      process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '0'; // don't mock source maps
+      process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '0';
       const input = html`<script>
         function foo() {
           'worklet';
@@ -105,8 +134,30 @@ describe('babel plugin', () => {
       );
     });
 
+    test('strips queries from filename when injecting source maps', () => {
+      process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '0';
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var foo = 'bar';
+        }
+      </script>`;
+
+      const queries = ['?query', '#hash', '?query#hash'];
+
+      for (const query of queries) {
+        const filename = MOCK_LOCATION + query;
+
+        const { code } = runPlugin(input, {}, {}, filename);
+
+        expect(code).toMatch(/sourceMap: /gm);
+        expect(code).toContain(filename);
+        expect(code).toMatchSnapshot();
+      }
+    });
+
     test('uses relative source location when `relativeSourceLocation` is set to `true`', () => {
-      process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '0'; // don't mock source maps
+      process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '0';
       const input = html`<script>
         function foo() {
           'worklet';
@@ -1790,7 +1841,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toMatch(
-        /code: "function\*foo_null[0-9]+\(\){yield'hello';yield'world';}"/gm
+        /code: "\(function\*foo_null[0-9]+\(\){yield'hello';yield'world';}\)"/gm
       );
       expect(code).toMatchSnapshot();
     });
@@ -1820,7 +1871,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toMatch(
-        /code: "async function foo_null[0-9]+\(\){await Promise.resolve\(\);}"/gm
+        /code: "\(async function foo_null[0-9]+\(\){await Promise.resolve\(\);}\)"/gm
       );
       expect(code).toMatchSnapshot();
     });

@@ -1,5 +1,6 @@
 'use strict';
 
+import type { ShareableHost } from 'react-native-worklets';
 import { runOnUISync } from 'react-native-worklets';
 
 import { withStyleAnimation } from '../animation';
@@ -8,31 +9,46 @@ import type {
   LayoutAnimation,
   LayoutAnimationStartFunction,
   LayoutAnimationValues,
+  Mutable,
   SharedValue,
 } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
-import { makeMutableUI } from '../mutables';
+import { getStaticFeatureFlag } from '../featureFlags';
+import { mutableHostDecorator } from '../mutablesCommon';
 
 const TAG_OFFSET = 1e9;
 
+function makeMutableUI<TValue>(initial: TValue): Mutable<TValue> {
+  'worklet';
+  return mutableHostDecorator({
+    value: initial,
+  } as ShareableHost<TValue> & Mutable<TValue>);
+}
+
+const USE_ANIMATION_BACKEND = getStaticFeatureFlag('USE_ANIMATION_BACKEND');
+
 function startObservingProgress(
   tag: number,
-  sharedValue: SharedValue<Record<string, unknown>>
+  sharedValue: SharedValue<Record<string, unknown>>,
+  scheduleFlush: () => void
 ): void {
   'worklet';
   sharedValue.addListener(tag + TAG_OFFSET, () => {
     global._notifyAboutProgress(tag, sharedValue.value);
+    scheduleFlush();
   });
 }
 
 function stopObservingProgress(
   tag: number,
   sharedValue: SharedValue<number>,
+  scheduleFlush: () => void,
   removeView = false
 ): void {
   'worklet';
   sharedValue.removeListener(tag + TAG_OFFSET);
   global._notifyAboutEnd(tag, removeView);
+  scheduleFlush();
 }
 
 function createLayoutAnimationManager(): {
@@ -42,6 +58,27 @@ function createLayoutAnimationManager(): {
   'worklet';
   const currentAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
+
+  // Flush layout-animation progress once per frame via the frame finalizer
+  // (after all `requestAnimationFrame` callbacks), reusing the same
+  // `_maybeFlushUIUpdatesQueue` path as animated-prop updates.
+  // This finalizer runs after the mapper run (which re-queues itself a frame
+  // ahead, so it sits earlier in the finalizer queue). When a mapper-driven
+  // animation is also active, its flush runs first and already commits the
+  // layout-animation updates too, so our `_maybeFlushUIUpdatesQueue` here is a
+  // no-op; when only layout animations run, this is the single flush.
+  // The backend drives its own flush from `runGrandCallback`, so this is non-backend only.
+  let flushRequested = false;
+  const scheduleFlush = () => {
+    if (USE_ANIMATION_BACKEND || flushRequested) {
+      return;
+    }
+    flushRequested = true;
+    globalThis.requestAnimationFrameFinalizer(() => {
+      flushRequested = false;
+      global._maybeFlushUIUpdatesQueue();
+    });
+  };
 
   return {
     start(
@@ -70,7 +107,7 @@ function createLayoutAnimationManager(): {
         value = makeMutableUI(style.initialValues);
         mutableValuesForTag.set(tag, value);
       } else {
-        stopObservingProgress(tag, value);
+        stopObservingProgress(tag, value, scheduleFlush);
         value._value = style.initialValues;
       }
 
@@ -81,14 +118,14 @@ function createLayoutAnimationManager(): {
           currentAnimationForTag.delete(tag);
           mutableValuesForTag.delete(tag);
           const shouldRemoveView = type === LayoutAnimationType.EXITING;
-          stopObservingProgress(tag, value, shouldRemoveView);
+          stopObservingProgress(tag, value, scheduleFlush, shouldRemoveView);
         }
         if (style.callback) {
           style.callback(finished === undefined ? false : finished);
         }
       };
 
-      startObservingProgress(tag, value);
+      startObservingProgress(tag, value, scheduleFlush);
       value.value = animation;
     },
     stop(tag: number) {
@@ -96,7 +133,7 @@ function createLayoutAnimationManager(): {
       if (!value) {
         return;
       }
-      stopObservingProgress(tag, value);
+      stopObservingProgress(tag, value, scheduleFlush);
     },
   };
 }

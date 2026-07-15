@@ -8,9 +8,12 @@ import {
   variableDeclarator,
 } from '@babel/types';
 
-export function isRelease() {
+import type { WorkletsPluginPass } from './types';
+
+export function isRelease(state: WorkletsPluginPass) {
   const pattern = /(prod|release|stag[ei])/i;
   return !!(
+    state.file.opts.envName?.match(pattern) ||
     process.env.BABEL_ENV?.match(pattern) ||
     process.env.NODE_ENV?.match(pattern)
   );
