@@ -30,7 +30,7 @@
     "@react-navigation/native-stack": "7.17.9",
     "@react-navigation/stack": "7.10.10",
     "@shopify/flash-list": "2.3.1",
-    "axios": "1.15.0",
+    "axios": "1.16.0",
     "d3-shape": "3.2.0",
     "fuse.js": "patch:fuse.js@npm%3A7.1.0#~/.yarn/patches/fuse.js-npm-7.1.0-5dcae892a6.patch",
     "react": "19.2.3",
@@ -46,7 +46,7 @@
     "react-strict-dom": "0.0.55"
   },
   "devDependencies": {
-    "@babel/core": "7.28.4",
+    "@babel/core": "7.29.6",
     "@babel/preset-env": "7.28.3",
     "@babel/runtime": "7.28.4",
     "@react-native-community/cli": "20.1.0",
