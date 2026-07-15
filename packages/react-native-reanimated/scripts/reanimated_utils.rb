@@ -59,6 +59,13 @@ def assert_conflicting_feature_flags(feature_flags)
   if ios_sync_ui_props && shared_element_transitions
     raise "[Reanimated] The feature flags `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. Please disable one of them in your package.json"
   end
+
+  use_animation_backend = feature_flags['USE_ANIMATION_BACKEND'] == 'true'
+  force_react_render_for_settled_animations = feature_flags['FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS'] == 'true'
+
+  if use_animation_backend && force_react_render_for_settled_animations
+    raise "[Reanimated] The feature flags `USE_ANIMATION_BACKEND` and `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS` cannot be enabled simultaneously. If you want to use the animation backend, you need to explicitly disable `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS` feature flag (enabled by default) in your package.json"
+  end
 end
 
 def get_static_feature_flags()
