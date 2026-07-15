@@ -102,7 +102,7 @@ fun validateConflictingFeatureFlags(featureFlags: HashMap<String, String>) {
 
     val useAnimationBackend = featureFlags["USE_ANIMATION_BACKEND"] == "true"
     val forceReactRenderForSettledAnimations = featureFlags["FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS"] == "true"
-    
+
     if (useAnimationBackend && forceReactRenderForSettledAnimations) {
         throw GradleException(
             "[Reanimated] The feature flags `USE_ANIMATION_BACKEND` and `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS` cannot be enabled simultaneously. If you want to use the animation backend, you need to explicitly disable `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS` feature flag (enabled by default) in your package.json."
