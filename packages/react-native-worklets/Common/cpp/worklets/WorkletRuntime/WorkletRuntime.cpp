@@ -11,7 +11,6 @@
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
 #include <memory>
-#include <mutex>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -158,7 +157,6 @@ void WorkletRuntime::schedule(jsi::Function &&function) const {
       return;
     }
 
-    auto lock = strongThis->acquireCallLock();
     strongThis->runSync(*function);
   });
 }
@@ -175,7 +173,6 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet) cons
       return;
     }
 
-    auto lock = strongThis->acquireCallLock();
     strongThis->runSync(worklet);
   });
 }
@@ -194,7 +191,6 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet, std:
       return;
     }
 
-    auto lock = strongThis->acquireCallLock();
     strongThis->runSyncWithStack(worklet, scheduleStack);
   });
 }
@@ -218,15 +214,7 @@ void WorkletRuntime::schedule(std::function<void()> job) const {
       "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
       "async queue is not set. Recreate the runtime with a valid async queue.");
 
-  if (enableLocking_) {
-    queue_->push(std::move(job));
-    return;
-  }
-
-  queue_->push([job = std::move(job), runtimeMutex = runtimeMutex_]() {
-    auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex);
-    job();
-  });
+  queue_->push(std::move(job));
 }
 
 void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
@@ -241,7 +229,7 @@ void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
       return;
     }
 
-    auto lock = std::unique_lock<std::recursive_mutex>(*strongThis->runtimeMutex_);
+    auto lock = strongThis->acquireRuntimeLock();
     jsi::Runtime &runtime = strongThis->getJSIRuntime();
     job(runtime);
   });

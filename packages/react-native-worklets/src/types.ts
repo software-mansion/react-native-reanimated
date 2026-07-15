@@ -152,13 +152,12 @@ export type WorkletRuntimeConfig = WorkletRuntimeConfigBase &
          * Determines whether access to the underlying JS runtime is
          * synchronized with a mutex around every JSI operation.
          *
-         * When set to `false`, per-operation locking is disabled and the
-         * runtime is created without the Event Loop — asynchronous APIs like
-         * timers or Promise continuations are unavailable. Work scheduled on
-         * the runtime's queue, `registerCustomSerializable`, and module
-         * updates during development remain synchronized; synchronous calls
-         * like `runOnRuntimeSync` and direct JSI access must not run
-         * concurrently with other work on the runtime.
+         * When set to `false`, the runtime takes no locks and is created
+         * without the Event Loop — asynchronous APIs like timers or Promise
+         * continuations are unavailable. Custom serializables registered and
+         * module updates made after the runtime's creation aren't applied to
+         * it. Synchronizing access to the runtime is the caller's
+         * responsibility.
          */
         enableLocking: false;
       }

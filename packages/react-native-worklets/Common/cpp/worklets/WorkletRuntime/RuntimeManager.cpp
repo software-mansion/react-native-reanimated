@@ -15,7 +15,7 @@ void evaluateModuleUpdate(
     const std::shared_ptr<WorkletRuntime> &workletRuntime,
     const std::string &code,
     const std::string &sourceUrl) {
-  workletRuntime->runSyncLocked([&code, &sourceUrl](jsi::Runtime &rt) -> void {
+  workletRuntime->runSync([&code, &sourceUrl](jsi::Runtime &rt) -> void {
     const auto buffer = std::make_shared<jsi::StringBuffer>(code);
     rt.evaluateJavaScript(buffer, sourceUrl);
   });
@@ -85,7 +85,9 @@ void RuntimeManager::propagateModuleUpdate(const std::string &code, const std::s
   moduleUpdates_.push_back(ModuleUpdate{.sourceUrl = sourceUrl, .code = code});
 
   for (const auto &runtime : getAllRuntimes()) {
-    evaluateModuleUpdate(runtime, code, sourceUrl);
+    if (runtime->isLockingEnabled()) {
+      evaluateModuleUpdate(runtime, code, sourceUrl);
+    }
   }
 }
 

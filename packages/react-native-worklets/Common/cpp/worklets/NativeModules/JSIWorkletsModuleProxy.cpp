@@ -203,7 +203,9 @@ inline void registerCustomSerializable(
   runtimeManager->withRegistrationPaused([&] {
     memoryManager->registerCustomSerializable(data);
     for (const auto &runtime : runtimeManager->getAllRuntimes()) {
-      memoryManager->loadCustomSerializable(runtime, data);
+      if (runtime->isLockingEnabled()) {
+        memoryManager->loadCustomSerializable(runtime, data);
+      }
     }
   });
 }

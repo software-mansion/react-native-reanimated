@@ -89,12 +89,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     auto lock = acquireRuntimeLock();
     return job(rt);
   }
-  template <RuntimeCallable TCallable>
-  std::invoke_result_t<TCallable, jsi::Runtime &> runSyncLocked(TCallable &&job) const {
-    jsi::Runtime &rt = getJSIRuntime();
-    auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
-    return job(rt);
-  }
 
   /* #endregion */
 
@@ -166,6 +160,10 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
   [[nodiscard]] std::string getRuntimeName() const noexcept {
     return name_;
+  }
+
+  [[nodiscard]] bool isLockingEnabled() const noexcept {
+    return enableLocking_;
   }
 
   explicit WorkletRuntime(
@@ -240,13 +238,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       return std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
     }
     return {};
-  }
-
-  [[nodiscard]] std::unique_lock<std::recursive_mutex> acquireCallLock() const {
-    if (enableLocking_) {
-      return {};
-    }
-    return std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
   }
 
   const RuntimeData::RuntimeId runtimeId_;
