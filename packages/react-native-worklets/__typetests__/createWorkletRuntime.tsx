@@ -52,6 +52,16 @@ export function createWorkletRuntimeTypeTests() {
     customQueue: {},
   });
 
+  // Correct usage - config object with enableEventLoop = true.
+  createWorkletRuntime({
+    enableEventLoop: true,
+  });
+
+  // Correct usage - config object with enableEventLoop = false.
+  createWorkletRuntime({
+    enableEventLoop: false,
+  });
+
   // Correct usage - deprecated positional parameters
   createWorkletRuntime('test', initializer);
 
@@ -83,5 +93,10 @@ export function createWorkletRuntimeTypeTests() {
     queue: 'default',
     useDefaultQueue: false,
     customQueue: {},
+  });
+
+  // @ts-expect-error - Wrong enableEventLoop type in config object
+  createWorkletRuntime({
+    enableEventLoop: 'false',
   });
 }

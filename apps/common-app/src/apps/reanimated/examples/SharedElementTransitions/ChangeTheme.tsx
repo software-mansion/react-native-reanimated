@@ -16,6 +16,8 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
+import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
+
 const Stack = createNativeStackNavigator();
 const Context = createContext({
   theme: true,
@@ -83,7 +85,7 @@ function getTheme(theme: boolean, disabled: boolean) {
   return { style, transition };
 }
 
-function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen1Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   const { theme, disabled, modals, toggleTheme, toggleDisabled, toggleModals } =
     useContext(Context);
   const { style, transition } = useMemo(
@@ -157,7 +159,7 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   );
 }
 
-function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen2Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   const { theme, disabled, toggleTheme, toggleDisabled } = useContext(Context);
   const { style, transition } = useMemo(
     () => getTheme(theme, disabled),
@@ -216,7 +218,7 @@ function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
   );
 }
 
-function Screen3({ navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen3Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   const { theme, disabled, toggleTheme, toggleDisabled } = useContext(Context);
   const { style, transition } = useMemo(
     () => getTheme(theme, disabled),
@@ -275,7 +277,11 @@ function Screen3({ navigation }: NativeStackScreenProps<ParamListBase>) {
   );
 }
 
-export default function ReducedMotionSharedExample() {
+const Screen1 = withSharedTransitionBoundary(Screen1Content);
+const Screen2 = withSharedTransitionBoundary(Screen2Content);
+const Screen3 = withSharedTransitionBoundary(Screen3Content);
+
+export default function ChangeThemeExample() {
   const [theme, setTheme] = useState(true);
   const [disabled, setDisabled] = useState(false);
   const [modals, setModals] = useState(false);

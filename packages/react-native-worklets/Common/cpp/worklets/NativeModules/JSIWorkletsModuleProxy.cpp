@@ -5,6 +5,7 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
+#include <worklets/SharedItems/SerializableRemoteFunction.h>
 #include <worklets/SharedItems/Shareable.h>
 #include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/FeatureFlags.h>
@@ -159,23 +160,9 @@ inline jsi::Value createWorkletRuntime(
     std::shared_ptr<SerializableWorklet> &initializer,
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop) {
-  const auto workletRuntime = runtimeManager->createWorkletRuntime(sourceProxy, name, initializer, queue);
+  const auto workletRuntime =
+      runtimeManager->createWorkletRuntime(sourceProxy, name, initializer, queue, enableEventLoop);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
-}
-
-inline jsi::Value propagateModuleUpdate(
-    const std::shared_ptr<RuntimeManager> &runtimeManager,
-    const std::string &code,
-    const std::string &sourceUrl) {
-  const auto runtimes = runtimeManager->getAllRuntimes();
-
-  for (const auto &runtime : runtimes) {
-    runtime->runSync([code, sourceUrl](jsi::Runtime &rt) -> void {
-      const auto buffer = std::make_shared<jsi::StringBuffer>(code);
-      rt.evaluateJavaScript(buffer, sourceUrl);
-    });
-  }
-  return jsi::Value::undefined();
 }
 
 inline jsi::Value reportFatalErrorOnJS(
@@ -229,55 +216,37 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   jsi_utils::addMethod<18>(
       rt,
       obj,
-      "loadUnpackers",
+      "loadUnpackersWithCode",
       [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[18]) {
-        const auto valueUnpackerCode = at<0>(args).asString(rt).utf8(rt);
-        const auto valueUnpackerLocation = at<1>(args).asString(rt).utf8(rt);
-        const auto valueUnpackerSourceMap = at<2>(args).asString(rt).utf8(rt);
+        const auto str = [&](size_t i) {
+          return args[i].getString(rt).utf8(rt);
+        };
+        unpackerLoader->loadCodeUnpackers({
+            CodeUnpacker{.code = str(0), .location = str(1), .sourceMap = str(2)},
+            CodeUnpacker{.code = str(3), .location = str(4), .sourceMap = str(5)},
+            CodeUnpacker{.code = str(6), .location = str(7), .sourceMap = str(8)},
+            CodeUnpacker{.code = str(9), .location = str(10), .sourceMap = str(11)},
+            CodeUnpacker{.code = str(12), .location = str(13), .sourceMap = str(14)},
+            CodeUnpacker{.code = str(15), .location = str(16), .sourceMap = str(17)},
+        });
+      });
 
-        const auto synchronizableUnpackerCode = at<3>(args).asString(rt).utf8(rt);
-        const auto synchronizableUnpackerLocation = at<4>(args).asString(rt).utf8(rt);
-        const auto synchronizableUnpackerSourceMap = at<5>(args).asString(rt).utf8(rt);
-
-        const auto customSerializableUnpackerCode = at<6>(args).asString(rt).utf8(rt);
-        const auto customSerializableUnpackerLocation = at<7>(args).asString(rt).utf8(rt);
-        const auto customSerializableUnpackerSourceMap = at<8>(args).asString(rt).utf8(rt);
-
-        const auto shareableHostUnpackerCode = at<9>(args).asString(rt).utf8(rt);
-        const auto shareableHostUnpackerLocation = at<10>(args).asString(rt).utf8(rt);
-        const auto shareableHostUnpackerSourceMap = at<11>(args).asString(rt).utf8(rt);
-
-        const auto shareableGuestUnpackerCode = at<12>(args).asString(rt).utf8(rt);
-        const auto shareableGuestUnpackerLocation = at<13>(args).asString(rt).utf8(rt);
-        const auto shareableGuestUnpackerSourceMap = at<14>(args).asString(rt).utf8(rt);
-
-        const auto remoteFunctionUnpackerCode = args[15].asString(rt).utf8(rt);
-        const auto remoteFunctionUnpackerLocation = args[16].asString(rt).utf8(rt);
-        const auto remoteFunctionUnpackerSourceMap = args[17].asString(rt).utf8(rt);
-
-        unpackerLoader->loadUnpackers(ShareableUnpackers{
-            .valueUnpacker =
-                {.code = valueUnpackerCode, .location = valueUnpackerLocation, .sourceMap = valueUnpackerSourceMap},
-            .synchronizableUnpacker =
-                {.code = synchronizableUnpackerCode,
-                 .location = synchronizableUnpackerLocation,
-                 .sourceMap = synchronizableUnpackerSourceMap},
-            .customSerializableUnpacker =
-                {.code = customSerializableUnpackerCode,
-                 .location = customSerializableUnpackerLocation,
-                 .sourceMap = customSerializableUnpackerSourceMap},
-            .shareableHostUnpacker =
-                {.code = shareableHostUnpackerCode,
-                 .location = shareableHostUnpackerLocation,
-                 .sourceMap = shareableHostUnpackerSourceMap},
-            .shareableGuestUnpacker =
-                {.code = shareableGuestUnpackerCode,
-                 .location = shareableGuestUnpackerLocation,
-                 .sourceMap = shareableGuestUnpackerSourceMap},
-            .remoteFunctionUnpacker =
-                {.code = remoteFunctionUnpackerCode,
-                 .location = remoteFunctionUnpackerLocation,
-                 .sourceMap = remoteFunctionUnpackerSourceMap},
+  jsi_utils::addMethod<6>(
+      rt,
+      obj,
+      "loadUnpackersWithBytecode",
+      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[6]) {
+        const auto bytecode = [&](size_t i) {
+          const auto buffer = args[i].getObject(rt).getArrayBuffer(rt);
+          return std::vector<uint8_t>(buffer.data(rt), buffer.data(rt) + buffer.size(rt));
+        };
+        unpackerLoader->loadBytecodeUnpackers({
+            BytecodeUnpacker{.bytecode = bytecode(0)},
+            BytecodeUnpacker{.bytecode = bytecode(1)},
+            BytecodeUnpacker{.bytecode = bytecode(2)},
+            BytecodeUnpacker{.bytecode = bytecode(3)},
+            BytecodeUnpacker{.bytecode = bytecode(4)},
+            BytecodeUnpacker{.bytecode = bytecode(5)},
         });
       });
 
@@ -334,25 +303,22 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         return makeSerializableArrayBuffer(rt, buffer);
       });
 
-  jsi_utils::addMethod<3>(
+  jsi_utils::addMethod<2>(
       rt,
       obj,
       "createSerializableNonWorkletFunction",
-      [jsScheduler = jsScheduler_, hostRuntimeId = hostRuntimeId_](
-          jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+      [jsScheduler = jsScheduler_, hostRuntimeId = hostRuntimeId_, rnRuntimeStatus = rnRuntimeStatus_](
+          jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         auto fun = at<0>(args).getObject(rt).getFunction(rt);
-        const auto name = at<2>(args).isUndefined() ? "" : at<2>(args).getString(rt).utf8(rt);
+        const auto name = at<1>(args).isUndefined() ? "" : at<1>(args).getString(rt).utf8(rt);
         if (fun.isHostFunction(rt)) {
           return makeSerializableHostFunction(
               rt, fun.getHostFunction(rt), name, fun.getProperty(rt, "length").getNumber());
+        } else if (hostRuntimeId == RuntimeData::rnRuntimeId) {
+          return makeRNRuntimeSerializableRemoteFunction(rt, name, fun, jsScheduler, rnRuntimeStatus);
+        } else {
+          return makeWorkletRuntimeSerializableRemoteFunction(rt, name, fun, hostRuntimeId);
         }
-        if (hostRuntimeId == RuntimeData::rnRuntimeId) {
-          const int remoteId = static_cast<int>(at<1>(args).getNumber());
-          auto ref = makeSerializableRemoteFunction(rt, name, remoteId, jsScheduler);
-          ref.asObject(rt).setProperty(rt, "__keepAlive", true);
-          return ref;
-        }
-        return makeSerializableRemoteFunction(rt, name, std::move(fun), hostRuntimeId);
       });
 
   jsi_utils::addMethod<2>(
@@ -396,6 +362,18 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         const auto pattern = at<0>(args).getString(rt).utf8(rt);
         const auto flags = at<1>(args).getString(rt).utf8(rt);
         return makeSerializableRegExp(rt, pattern, flags);
+      });
+
+  jsi_utils::addMethod<4>(
+      rt,
+      obj,
+      "createSerializableArrayBufferView",
+      [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[4]) {
+        const auto typeName = at<0>(args).getString(rt).utf8(rt);
+        const auto arrayBuffer = at<1>(args).getObject(rt).getArrayBuffer(rt);
+        const auto byteOffset = static_cast<size_t>(at<2>(args).getNumber());
+        const auto length = static_cast<size_t>(at<3>(args).getNumber());
+        return makeSerializableArrayBuffer(rt, arrayBuffer, ArrayBufferMetadata{typeName, byteOffset, length});
       });
 
   jsi_utils::addMethod<2>(
@@ -694,16 +672,17 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         return SerializableJSRef::newNativeStateObject(rt, shareable);
       });
 
+#ifndef NDEBUG
   jsi_utils::addMethod<2>(
       rt,
       obj,
       "propagateModuleUpdate",
       [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
-        return propagateModuleUpdate(
-            runtimeManager,
-            /* code */ at<0>(args).asString(rt).utf8(rt),
-            /* sourceURL */ at<1>(args).asString(rt).utf8(rt));
+        const auto code = at<0>(args).getString(rt).utf8(rt);
+        const auto sourceUrl = at<1>(args).getString(rt).utf8(rt);
+        runtimeManager->propagateModuleUpdate(code, sourceUrl);
       });
+#endif // NDEBUG
 
   jsi_utils::addMethod<0>(
       rt, obj, "getUIRuntimeHolder", [uiWorkletRuntime = uiWorkletRuntime_](jsi::Runtime &rt, const jsi::Value &) {

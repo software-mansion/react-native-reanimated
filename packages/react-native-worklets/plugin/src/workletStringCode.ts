@@ -36,6 +36,7 @@ import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
 
 const MOCK_SOURCE_MAP = 'mock source map';
+const querySuffixRE = /[?#].*$/;
 
 export function buildWorkletString(
   fun: BabelFile,
@@ -50,7 +51,7 @@ export function buildWorkletString(
     fun.program.body.find((obj) => isFunctionDeclaration(obj)) ||
     fun.program.body.find((obj) => isExpressionStatement(obj));
 
-  assert(draftExpression, '[Reanimated] `draftExpression` is undefined.');
+  assert(draftExpression, '`draftExpression` is undefined.');
 
   const expression = isFunctionDeclaration(draftExpression)
     ? draftExpression
@@ -62,7 +63,7 @@ export function buildWorkletString(
   );
   assert(
     isBlockStatement(expression.body),
-    '[Reanimated] `expression.body` is not a `BlockStatement`'
+    '`expression.body` is not a `BlockStatement`'
   );
 
   const parsedClasses = new Set<string>();
@@ -114,9 +115,9 @@ export function buildWorkletString(
 
   const code = generate(workletFunction).code;
 
-  assert(inputMap, '[Reanimated] `inputMap` is undefined.');
+  assert(inputMap, '`inputMap` is undefined.');
 
-  const includeSourceMap = !(isRelease() || state.opts.disableSourceMaps);
+  const includeSourceMap = !(isRelease(state) || state.opts.disableSourceMaps);
 
   if (includeSourceMap) {
     // Clear contents array (should be empty anyways)
@@ -125,7 +126,7 @@ export function buildWorkletString(
     // allowed to read files from disk.
     for (const sourceFile of inputMap.sources) {
       inputMap.sourcesContent.push(
-        fs.readFileSync(sourceFile).toString('utf-8')
+        fs.readFileSync(sourceFile.replace(querySuffixRE, '')).toString('utf-8')
       );
     }
   }
@@ -146,7 +147,7 @@ export function buildWorkletString(
     comments: false,
   });
 
-  assert(transformed, '[Reanimated] `transformed` is null.');
+  assert(transformed, '`transformed` is null.');
 
   let sourceMap;
   if (includeSourceMap) {
@@ -162,7 +163,9 @@ export function buildWorkletString(
     }
   }
 
-  return [transformed.code, JSON.stringify(sourceMap)];
+  const wrappedCode = `(${transformed.code})`;
+
+  return [wrappedCode, JSON.stringify(sourceMap)];
 }
 
 /**
@@ -187,7 +190,7 @@ function restoreRecursiveCalls(file: BabelFile, newName: string): void {
 function shouldMockSourceMap() {
   // We don't want to pollute tests with source maps so we mock it
   // for all tests (except one)
-  return process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP === '1';
+  return process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP === '1';
 }
 
 function prependClosure(

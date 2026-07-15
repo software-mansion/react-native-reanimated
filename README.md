@@ -1,5 +1,9 @@
 <img src="https://github.com/user-attachments/assets/a516a6ef-fc1e-4d38-a4d8-6d53d6e51a21" alt="React Native Reanimated and React Native Worklets by Software Mansion" width="100%">
 
+[![Ad](https://swm-delivery.com/www/images/zone-gh-react-native-reanimated-1?n=1)](https://swm-delivery.com/www/delivery/ck-slug.php?zoneid=zone-gh-react-native-reanimated-1\&n=1)
+[![Ad](https://swm-delivery.com/www/images/zone-gh-react-native-reanimated-2?n=1)](https://swm-delivery.com/www/delivery/ck-slug.php?zoneid=zone-gh-react-native-reanimated-2\&n=1)
+[![Ad](https://swm-delivery.com/www/images/zone-gh-react-native-reanimated-3?n=1)](https://swm-delivery.com/www/delivery/ck-slug.php?zoneid=zone-gh-react-native-reanimated-3\&n=1)
+
 # Reanimated & Worklets
 
 This repository contains two main packages:
@@ -13,6 +17,7 @@ This repository contains two main packages:
 
 ## Nightly CI state
 
+[![Main branch build](https://github.com/software-mansion/react-native-reanimated/actions/workflows/main-branch-build.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/main-branch-build.yml)
 [![NPM Reanimated publish \[Nightly\]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish.yml)
 [![NPM Worklets publish \[Nightly\]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish.yml)
 [![Reanimated + Worklets compatibility check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-worklets-compatibility-check.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-worklets-compatibility-check.yml)

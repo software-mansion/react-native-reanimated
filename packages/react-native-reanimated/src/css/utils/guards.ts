@@ -1,56 +1,108 @@
 'use strict';
 import { isNumber, isPercentage } from '../../common';
 import {
-  ANIMATION_PROPS,
-  TRANSITION_PROPS,
   VALID_PARAMETRIZED_TIMING_FUNCTIONS,
   VALID_PREDEFINED_TIMING_FUNCTIONS,
-  VALID_STEPS_MODIFIERS,
 } from '../constants';
 import type { PredefinedTimingFunction, StepsModifier } from '../easing/types';
 import type {
+  CSSAnimationCallbackProp,
   CSSAnimationKeyframes,
   CSSAnimationProp,
+  CSSConfigProp,
   CSSKeyframesRule,
-  CSSStyleProp,
+  CSSTransitionCallbackProp,
   CSSTransitionProp,
   Repeat,
   TimeUnit,
 } from '../types';
 
-const ANIMATION_PROPS_SET = new Set<string>(ANIMATION_PROPS);
-const TRANSITION_PROPS_SET = new Set<string>(TRANSITION_PROPS);
-// is-tree-shakable-suppress
-const VALID_STEPS_MODIFIERS_SET = new Set<string>(VALID_STEPS_MODIFIERS);
-
-const VALID_PREDEFINED_TIMING_FUNCTIONS_SET = new Set<string>(
-  VALID_PREDEFINED_TIMING_FUNCTIONS
-);
-
-const VALID_PARAMETRIZED_TIMING_FUNCTIONS_SET = new Set<string>(
-  VALID_PARAMETRIZED_TIMING_FUNCTIONS
-);
-
 export const isPredefinedTimingFunction = (
   value: string
 ): value is PredefinedTimingFunction =>
-  VALID_PREDEFINED_TIMING_FUNCTIONS_SET.has(value);
+  (VALID_PREDEFINED_TIMING_FUNCTIONS as readonly string[]).includes(value);
 
 export const smellsLikeTimingFunction = (value: string) =>
-  VALID_PREDEFINED_TIMING_FUNCTIONS_SET.has(value) ||
-  VALID_PARAMETRIZED_TIMING_FUNCTIONS_SET.has(value.split('(')[0].trim());
+  isPredefinedTimingFunction(value) ||
+  VALID_PARAMETRIZED_TIMING_FUNCTIONS.includes(value.split('(')[0].trim());
 
-export const isAnimationProp = (key: string): key is CSSAnimationProp =>
-  ANIMATION_PROPS_SET.has(key);
+export const isAnimationProp = (key: string): key is CSSAnimationProp => {
+  switch (key) {
+    case 'animationName':
+    case 'animationDuration':
+    case 'animationTimingFunction':
+    case 'animationDelay':
+    case 'animationIterationCount':
+    case 'animationDirection':
+    case 'animationFillMode':
+    case 'animationPlayState':
+      return true;
+    default:
+      return false;
+  }
+};
 
-export const isTransitionProp = (key: string): key is CSSTransitionProp =>
-  TRANSITION_PROPS_SET.has(key);
+export const isTransitionProp = (key: string): key is CSSTransitionProp => {
+  switch (key) {
+    case 'transitionProperty':
+    case 'transitionDuration':
+    case 'transitionTimingFunction':
+    case 'transitionDelay':
+    case 'transitionBehavior':
+    case 'transition':
+      return true;
+    default:
+      return false;
+  }
+};
 
-export const isStepsModifier = (value: string): value is StepsModifier =>
-  VALID_STEPS_MODIFIERS_SET.has(value);
+export const isTransitionCallbackProp = (
+  key: string
+): key is CSSTransitionCallbackProp => {
+  switch (key) {
+    case 'onTransitionRun':
+    case 'onTransitionStart':
+    case 'onTransitionEnd':
+    case 'onTransitionCancel':
+      return true;
+    default:
+      return false;
+  }
+};
 
-export const isCSSStyleProp = (key: string): key is CSSStyleProp =>
-  isTransitionProp(key) || isAnimationProp(key);
+export const isAnimationCallbackProp = (
+  key: string
+): key is CSSAnimationCallbackProp => {
+  switch (key) {
+    case 'onAnimationStart':
+    case 'onAnimationEnd':
+    case 'onAnimationIteration':
+    case 'onAnimationCancel':
+      return true;
+    default:
+      return false;
+  }
+};
+
+export const isStepsModifier = (value: string): value is StepsModifier => {
+  switch (value) {
+    case 'jump-start':
+    case 'start':
+    case 'jump-end':
+    case 'end':
+    case 'jump-none':
+    case 'jump-both':
+      return true;
+    default:
+      return false;
+  }
+};
+
+export const isCSSConfigProp = (key: string): key is CSSConfigProp =>
+  isTransitionProp(key) ||
+  isAnimationProp(key) ||
+  isTransitionCallbackProp(key) ||
+  isAnimationCallbackProp(key);
 
 export const isTimeUnit = (value: unknown): value is TimeUnit =>
   // TODO: implement more strict check
@@ -72,3 +124,16 @@ export const isCSSKeyframesObject = (
 
 export const isCSSKeyframesRule = (value: object): value is CSSKeyframesRule =>
   typeof value === 'object' && 'cssRules' in value && 'cssText' in value;
+
+export const isPseudoSelectorValue = (
+  value: unknown
+): value is Record<string, unknown> => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+  const keys = Object.keys(value);
+  if (keys.length === 0) {
+    return false;
+  }
+  return keys.every((key) => key === 'default' || key.startsWith(':'));
+};

@@ -71,7 +71,8 @@ struct PlatformDepMethodsHolder {
   PlatformAttachPseudoSelectorFunction attachPseudoSelector;
   PlatformDetachPseudoSelectorFunction detachPseudoSelector;
   css::CSSCanRoutePropertyFunction cssCanRouteProperty;
-  css::CSSApplyTransitionFunction cssApplyTransition;
+  css::CSSApplyTransitionJSIFunction cssApplyTransitionJSI;
+  css::CSSApplyTransitionDynamicFunction cssApplyTransitionDynamic;
   css::CSSRemoveTransitionFunction cssRemoveTransition;
   // Last so platform initializers that don't supply it (iOS, Android today)
   // can omit it and rely on value-init (= null shared_ptr).

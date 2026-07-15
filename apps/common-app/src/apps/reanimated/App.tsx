@@ -94,6 +94,7 @@ function HomeScreen({ navigation }: HomeScreenProps) {
       renderScrollComponent={(props) => <ScrollView {...props} />}
       ItemSeparatorComponent={ItemSeparator}
       style={styles.list}
+      contentInsetAdjustmentBehavior="automatic"
     />
   );
 }

@@ -12,8 +12,8 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 export default function CircleExample() {
   return (
     <ExamplesScreen<
-      { keyframes: CSSAnimationKeyframes<CircleProps> },
-      CircleProps
+      CircleProps,
+      { keyframes: CSSAnimationKeyframes<CircleProps> }
     >
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',

@@ -22,9 +22,9 @@ Spring-based animations are yet to be introduced to the web. Due to that, playgr
 
 - We recommend using layout animation builders outside of components or with `useMemo` to ensure the best performance.
 - `withInitialValues` and `withTargetValues` are typed per preset, so only props specific to the animation preset are accepted (see each preset's _Values & Type definitions_ block).
-- <AvailableFrom version="4.4.0"/> For transforms, prefer flat top-level props like `{ translateX: 50 }` over `transform: [{ translateX: 50 }]`. The `transform: [{ ... }]` tuple form still works but is deprecated since `4.4.0`.
+- <Badges version="4.4.0"> For transforms, prefer flat top-level props like `{ translateX: 50 }` over `transform: [{ translateX: 50 }]`. The `transform: [{ ... }]` tuple form still works but is deprecated since 4.4.0.</Badges>
 - `withInitialValues` overrides the initial values of the animation (the state the element starts from).
-- <AvailableFrom version="4.4.0"/> `withTargetValues` overrides the target values of the animation (the state the element animates to).
+- <Badges version="4.4.0"> `withTargetValues` overrides the target values of the animation (the state the element animates to).</Badges>
 - _Values & Type definitions_ blocks after each animation preset show the exact type for both `withInitialValues` and `withTargetValues` (they accept the same props per preset). The deprecated `transform` prop also shows the order in which transforms are applied. In the flat form, object key order is ignored and the preset applies transforms in its built-in order.
 - If both forms are used, the flat prop wins for that transform slot; remaining slots fall back to the tuple value, then to the preset default. Mixing forms is supported but not recommended.
 - On the New Architecture:
@@ -112,7 +112,7 @@ Available fade animations:
     </TabItem>
 
     <TabItem value="target" label="Target values">
-      <AvailableFrom version="4.4.0"/> These are the default target values for each animation that can be customized with the `withTargetValues` modifier.
+      <Badges version="4.4.0"> These are the default target values for each animation that can be customized with the `withTargetValues` modifier.</Badges>
 
       | Name           | Config                            |
       | -------------- | --------------------------------- |
@@ -183,9 +183,9 @@ FadeInUp.springify()
 ```
 
 - `.springify()` enables the spring-based animation configuration.
-- `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
-- `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
-- `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+- `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `120`.
+- `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `4`.
+- `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `900`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
 - `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
@@ -207,7 +207,7 @@ FadeInDown.delay(500)
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
 - `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).
-- <AvailableFrom version="4.4.0"/> `.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).
+- <Badges version="4.4.0"> `.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).</Badges>
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Bounce
@@ -291,7 +291,7 @@ Available bounce animations:
     </TabItem>
 
     <TabItem value="target" label="Target values">
-      <AvailableFrom version="4.4.0"/> These are the default target values for each animation that can be customized with the `withTargetValues` modifier.
+      <Badges version="4.4.0"> These are the default target values for each animation that can be customized with the `withTargetValues` modifier.</Badges>
 
       | Name             | Config                                 |
       | ---------------- | -------------------------------------- |
@@ -353,7 +353,7 @@ BounceInDown.duration(500)
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).
-- <AvailableFrom version="4.4.0"/> `.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).
+- <Badges version="4.4.0"> `.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).</Badges>
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Flip
@@ -443,7 +443,7 @@ Available flip animations:
     </TabItem>
 
     <TabItem value="target" label="Target values">
-      <AvailableFrom version="4.4.0"/> These are the default target values for each animation that can be customized with the `withTargetValues` modifier.
+      <Badges version="4.4.0"> These are the default target values for each animation that can be customized with the `withTargetValues` modifier.</Badges>
 
       | Name            | Config                                                                      |
       | --------------- | --------------------------------------------------------------------------- |
@@ -539,9 +539,9 @@ FlipInXUp.springify()
 ```
 
 - `.springify()` enables the spring-based animation configuration.
-- `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
-- `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
-- `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+- `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `120`.
+- `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `4`.
+- `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `900`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
 - `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
@@ -563,7 +563,7 @@ FlipInEasyY.delay(500)
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).
-- <AvailableFrom version="4.4.0"/> `.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).
+- <Badges version="4.4.0"> `.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).</Badges>
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## LightSpeed
@@ -631,7 +631,7 @@ Available lightspeed animations:
     </TabItem>
 
     <TabItem value="target" label="Target values">
-      <AvailableFrom version="4.4.0"/> These are the default target values for each animation that can be customized with the `withTargetValues` modifier.
+      <Badges version="4.4.0"> These are the default target values for each animation that can be customized with the `withTargetValues` modifier.</Badges>
 
       | Name                 | Config                                                             |
       | -------------------- | ------------------------------------------------------------------ |
@@ -686,9 +686,9 @@ LightSpeedInLeft.springify()
 ```
 
 - `.springify()` enables the spring-based animation configuration.
-- `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
-- `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
-- `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+- `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `120`.
+- `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `4`.
+- `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `900`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
 - `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
@@ -710,7 +710,7 @@ LightSpeedInRight.delay(500)
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).
-- <AvailableFrom version="4.4.0"/> `.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).
+- <Badges version="4.4.0"> `.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).</Badges>
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Pinwheel
@@ -770,7 +770,7 @@ Available pinwheel animations:
     </TabItem>
 
     <TabItem value="target" label="Target values">
-      <AvailableFrom version="4.4.0"/> These are the default target values for each animation that can be customized with the `withTargetValues` modifier.
+      <Badges version="4.4.0"> These are the default target values for each animation that can be customized with the `withTargetValues` modifier.</Badges>
 
       | Name          | Config                                     |
       | ------------- | ------------------------------------------ |
@@ -823,9 +823,9 @@ PinwheelIn.springify()
 ```
 
 - `.springify()` enables the spring-based animation configuration.
-- `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
-- `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
-- `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+- `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `120`.
+- `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `4`.
+- `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `900`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
 - `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
@@ -847,7 +847,7 @@ PinwheelIn.delay(500)
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).
-- <AvailableFrom version="4.4.0"/> `.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).
+- <Badges version="4.4.0"> `.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).</Badges>
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Roll
@@ -913,7 +913,7 @@ Available roll animations:
     </TabItem>
 
     <TabItem value="target" label="Target values">
-      <AvailableFrom version="4.4.0"/> These are the default target values for each animation that can be customized with the `withTargetValues` modifier.
+      <Badges version="4.4.0"> These are the default target values for each animation that can be customized with the `withTargetValues` modifier.</Badges>
 
       | Name           | Config                                                   |
       | -------------- | -------------------------------------------------------- |
@@ -967,9 +967,9 @@ RollInLeft.springify()
 ```
 
 - `.springify()` enables the spring-based animation configuration.
-- `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
-- `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
-- `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+- `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `120`.
+- `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `4`.
+- `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `900`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
 - `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
@@ -991,7 +991,7 @@ RollInRight.delay(500)
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).
-- <AvailableFrom version="4.4.0"/> `.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).
+- <Badges version="4.4.0"> `.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).</Badges>
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Rotate
@@ -1071,7 +1071,7 @@ Available rotate animations:
     </TabItem>
 
     <TabItem value="target" label="Target values">
-      <AvailableFrom version="4.4.0"/> These are the default target values for each animation that can be customized with the `withTargetValues` modifier.
+      <Badges version="4.4.0"> These are the default target values for each animation that can be customized with the `withTargetValues` modifier.</Badges>
 
       | Name                 | Config                                                                                                                                                                  |
       | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1135,9 +1135,9 @@ RotateInUpLeft.springify()
 ```
 
 - `.springify()` enables the spring-based animation configuration.
-- `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
-- `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
-- `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+- `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `120`.
+- `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `4`.
+- `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `900`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
 - `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
@@ -1159,7 +1159,7 @@ RotateInDownLeft.delay(500)
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).
-- <AvailableFrom version="4.4.0"/> `.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).
+- <Badges version="4.4.0"> `.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).</Badges>
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Slide
@@ -1237,7 +1237,7 @@ Available slide animations:
     </TabItem>
 
     <TabItem value="target" label="Target values">
-      <AvailableFrom version="4.4.0"/> These are the default target values for each animation that can be customized with the `withTargetValues` modifier.
+      <Badges version="4.4.0"> These are the default target values for each animation that can be customized with the `withTargetValues` modifier.</Badges>
 
       | Name            | Config                                                                                     |
       | --------------- | ------------------------------------------------------------------------------------------ |
@@ -1293,9 +1293,9 @@ SlideInUp.springify()
 ```
 
 - `.springify()` enables the spring-based animation configuration.
-- `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
-- `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
-- `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+- `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `120`.
+- `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `4`.
+- `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `900`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
 - `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
@@ -1317,7 +1317,7 @@ SlideInDown.delay(500)
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).
-- <AvailableFrom version="4.4.0"/> `.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).
+- <Badges version="4.4.0"> `.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).</Badges>
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Stretch
@@ -1383,7 +1383,7 @@ Available stretch animations:
     </TabItem>
 
     <TabItem value="target" label="Target values">
-      <AvailableFrom version="4.4.0"/> These are the default target values for each animation that can be customized with the `withTargetValues` modifier.
+      <Badges version="4.4.0"> These are the default target values for each animation that can be customized with the `withTargetValues` modifier.</Badges>
 
       | Name          | Config          |
       | ------------- | --------------- |
@@ -1443,9 +1443,9 @@ StretchInX.springify()
 ```
 
 - `.springify()` enables the spring-based animation configuration.
-- `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
-- `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
-- `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+- `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `120`.
+- `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `4`.
+- `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `900`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
 - `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
@@ -1467,7 +1467,7 @@ StretchInY.delay(500)
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).
-- <AvailableFrom version="4.4.0"/> `.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).
+- <Badges version="4.4.0"> `.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).</Badges>
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Zoom
@@ -1569,7 +1569,7 @@ Available zoom animations:
     </TabItem>
 
     <TabItem value="target" label="Target values">
-      <AvailableFrom version="4.4.0"/> These are the default target values for each animation that can be customized with the `withTargetValues` modifier.
+      <Badges version="4.4.0"> These are the default target values for each animation that can be customized with the `withTargetValues` modifier.</Badges>
 
       | Name              | Config                                            |
       | ----------------- | ------------------------------------------------- |
@@ -1659,9 +1659,9 @@ ZoomInRotate.springify()
 ```
 
 - `.springify()` enables the spring-based animation configuration.
-- `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `10`.
-- `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
-- `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
+- `.damping(value: number)` decides how quickly a spring stops moving. Higher damping means the spring will come to rest faster. Defaults to `120`.
+- `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `4`.
+- `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `900`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
 - `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
@@ -1683,7 +1683,7 @@ ZoomIn.delay(500)
 - `.randomDelay()` randomizes the delay of the animation between `0` and the provided delay. Uses 1000 ms if delay wasn't provided.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withInitialValues(values)` overrides the initial values of the animation. Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).
-- <AvailableFrom version="4.4.0"/> `.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).
+- <Badges version="4.4.0"> `.withTargetValues(values)` overrides the target values of the animation (the state the element animates to). Each preset accepts only the properties it animates (see the _Values & Type definitions_ block above).</Badges>
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Platform compatibility

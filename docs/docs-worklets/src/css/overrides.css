@@ -1,6 +1,8 @@
 :root {
   --swm-expandable-transition: transform 200ms ease;
   --doc-sidebar-width: 410px !important;
+  --swm-logo-height: 40px;
+  --swm-logo-title-width: 120px;
 }
 
 table {
@@ -150,6 +152,18 @@ button[class*='DocSearch-Button'] {
   display: flex;
 }
 
+@media (min-width: 996px) {
+  [class*='sidebar'] [class*='navbar__logo'][class*='sidebarLogo'] {
+    height: var(--ifm-navbar-height);
+  }
+
+  [class*='sidebar'] [class*='navbar__title'] {
+    margin-left: 0;
+    display: flex;
+    align-items: center;
+  }
+}
+
 @media (max-width: 996px) {
   .navbar .navbar__title {
     display: none;
@@ -163,4 +177,8 @@ button[class*='DocSearch-Button'] {
       text-align: center;
     }
   }
+}
+
+[class*='headerWithBadges'] {
+  align-items: baseline;
 }

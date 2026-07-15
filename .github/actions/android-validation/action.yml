@@ -24,10 +24,13 @@ runs:
       with:
         cache: 'yarn'
 
-    - name: Set up C++ lint tools
-      uses: ./.github/actions/setup-cpp-lint
-      with:
-        install-cmakelang: 'true'
+    - name: Install clang-tidy and cmakelang
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang-tidy
+        python -m pip install --upgrade pip
+        python -m pip install cmakelang==0.6.13
 
     - name: Clear annotations
       shell: bash
@@ -37,13 +40,27 @@ runs:
       shell: bash
       run: yarn install --immutable
 
-    - name: Build package
-      if: ${{ inputs.build-package == 'true' }}
+    - name: Install Android NDK matching the example app's pin
       shell: bash
-      working-directory: ${{ inputs.package-dir }}
-      run: yarn build
+      run: |
+        set -e
+        NDK_VERSION="$(grep -oE 'ndkVersion\s*=\s*"[^"]+"' apps/fabric-example/android/build.gradle | sed -E 's/.*"([^"]+)".*/\1/')"
+        echo "installing ndk;$NDK_VERSION"
+        SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+        printf 'y\n%.0s' $(seq 50) | "$SDKMANAGER" --licenses > /dev/null
+        "$SDKMANAGER" --install "ndk;$NDK_VERSION"
+
+    - name: Generate Android compile database
+      shell: bash
+      working-directory: apps/fabric-example/android
+      run: ./gradlew :react-native-reanimated:configureCMakeDebug :react-native-worklets:configureCMakeDebug -PreactNativeArchitectures=arm64-v8a
 
     - name: Lint Android
       shell: bash
       working-directory: ${{ inputs.package-dir }}
       run: yarn lint:android
+
+    - name: Lint Android (clang-tidy)
+      shell: bash
+      working-directory: ${{ inputs.package-dir }}
+      run: yarn lint:clang-tidy:android --strict

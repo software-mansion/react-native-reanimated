@@ -1,4 +1,3 @@
-import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 import groovy.json.JsonSlurper
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -118,6 +117,12 @@ if (project != rootProject) {
 val packageDir: File = project.projectDir.parentFile
 val reactNativeRootDir: File = resolveReactNativeDirectory()
 val REACT_NATIVE_VERSION: String = getReactNativeVersion()
+val IS_REACT_NATIVE_86_OR_NEWER: Boolean = run {
+    val parts = REACT_NATIVE_VERSION.split(".")
+    val major = parts.getOrNull(0)?.toIntOrNull() ?: 0
+    val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
+    major > 0 || minor >= 86
+}
 val REANIMATED_VERSION: String = getReanimatedVersion()
 val IS_REANIMATED_EXAMPLE_APP: Boolean = safeAppExtGet("isReanimatedExampleApp", false)?.toString()?.toBoolean() ?: false
 val REANIMATED_PROFILING: Boolean = safeAppExtGet("enableReanimatedProfiling", false)?.toString()?.toBoolean() ?: false
@@ -130,7 +135,11 @@ val reanimatedPrefabHeadersDir: File = project.file("${layout.buildDirectory.get
 
 fun reactNativeArchitectures(): List<String> {
     val value = project.findProperty("reactNativeArchitectures") as String?
-    return value?.split(",") ?: listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")
+    return value?.split(",")
+        ?.map { it.trim() }
+        ?.filter { it.isNotEmpty() }
+        ?.ifEmpty { null }
+        ?: listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")
 }
 
 if (project == rootProject) {
@@ -149,11 +158,14 @@ android {
 
     namespace = "com.swmansion.reanimated"
 
-    if (rootProject.hasProperty("ndkPath")) {
-        ndkPath = rootProject.extensions.extraProperties.get("ndkPath") as String
+    val resolvedNdkPath = rootProject.findProperty("ndkPath") as? String
+    if (!resolvedNdkPath.isNullOrEmpty()) {
+        ndkPath = resolvedNdkPath
     }
-    if (rootProject.hasProperty("ndkVersion")) {
-        ndkVersion = rootProject.extensions.extraProperties.get("ndkVersion") as String
+
+    val resolvedNdkVersion = rootProject.findProperty("ndkVersion") as? String
+    if (!resolvedNdkVersion.isNullOrEmpty()) {
+        ndkVersion = resolvedNdkVersion
     }
 
     buildFeatures {
@@ -177,6 +189,7 @@ android {
         buildConfigField("String", "REANIMATED_VERSION_JAVA", "\"$REANIMATED_VERSION\"")
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
+        buildConfigField("boolean", "IS_REACT_NATIVE_86_OR_NEWER", IS_REACT_NATIVE_86_OR_NEWER.toString())
 
         @Suppress("UnstableApiUsage")
         externalNativeBuild {
@@ -201,7 +214,6 @@ android {
 
     externalNativeBuild {
         cmake {
-            this.version = System.getenv("CMAKE_VERSION") ?: "3.22.1"
             path = file("CMakeLists.txt")
         }
     }
@@ -239,24 +251,8 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    project.tasks.withType<ExternalNativeBuildJsonTask>().configureEach {
-        val isExampleApp = IS_REANIMATED_EXAMPLE_APP
-        val pkgDir = packageDir
-        val cxxRoot = File(project.buildDir.parentFile, ".cxx")
-        doLast {
-            if (!isExampleApp) {
-                return@doLast
-            }
-            val generated = cxxRoot.walkTopDown()
-                .filter { it.name == "compile_commands.json" && it.isFile }
-                .maxByOrNull { it.lastModified() }
-            if (generated == null) {
-                logger.warn("Failed to generate clangd metadata: no compile_commands.json under $cxxRoot")
-                return@doLast
-            }
-            File("$pkgDir/compile_commands.json").writeText(generated.readText())
-            logger.info("Generated clangd metadata from $generated.")
-        }
+    if (IS_REANIMATED_EXAMPLE_APP) {
+        apply(from = "../../../scripts/llvm-tools/android-hook.gradle.kts")
     }
 }
 
