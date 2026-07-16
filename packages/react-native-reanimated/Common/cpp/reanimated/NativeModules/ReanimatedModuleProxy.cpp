@@ -524,15 +524,13 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
       StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS") &&
       "getSettledUpdates requires FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS static feature flag to be enabled");
 
+  constexpr double SETTLED_ANIMATION_THRESHOLD_MS = 1000;
+
   // TODO(future): use unified timestamp
   const auto currentTimestamp = getAnimationTimestamp_();
 
-  // TODO: fix bug when threshold difference is smaller than 1 second
   // TODO(future): flush updates from CSS animations and CSS transitions registries
-  // TODO(future): find a better way to obtain timestamp for removing updates
-  // TODO(future): move removing old updates to separate method
-  return animatedPropsRegistry_->getUpdatesOlderThanTimestamp(
-      rt, currentTimestamp - 1000 /* 1 second */, currentTimestamp - 2000 /* 2 seconds */);
+  return animatedPropsRegistry_->collectSettledUpdates(rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS);
 }
 
 bool ReanimatedModuleProxy::handleEvent(
