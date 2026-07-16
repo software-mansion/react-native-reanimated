@@ -53,6 +53,8 @@ function main() {
       compatibilityWorkletsRange
     );
   }
+
+  process.exit(status);
 }
 
 /**
