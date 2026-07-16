@@ -87,7 +87,9 @@ Time interval in milliseconds between polling of frame callbacks scheduled by `r
 Determines whether to enable the default event loop. Defaults to `true`. Always disabled on runtimes with `enableLocking: false`.
 When enabled, the runtime provides `setTimeout`, `setImmediate`, `setInterval`, `requestAnimationFrame`, `queueMicrotask`, `clearTimeout`, `clearInterval`, `clearImmediate`, and `cancelAnimationFrame`.
 
+<Badges version="0.12.0">
 ##### `enableLocking`
+</Badges>
 
 Determines whether access to the underlying JS runtime is synchronized with a mutex around every JSI operation. If not specified, it defaults to `true`.
 Can be disabled only together with the Event Loop.
