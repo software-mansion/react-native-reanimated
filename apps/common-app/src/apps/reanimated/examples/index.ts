@@ -308,6 +308,13 @@ const NativeModals: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/NativeModals').default as React.FC
   );
+// LayoutAnimationTrace start
+const NativeLayoutAnimationsTestBench: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/NativeLayoutAnimationsTestBench')
+      .default as React.FC
+  );
+// LayoutAnimationTrace end
 const NestedLayoutAnimationConfig: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/NestedLayoutAnimationConfig').default
@@ -1084,6 +1091,12 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] Interrupted exiting animation (#7493)',
     screen: InterruptedExitingExample,
   },
+  // LayoutAnimationTrace start
+  NativeLayoutAnimationsTestBench: {
+    title: '[LA] Native backend test bench',
+    screen: NativeLayoutAnimationsTestBench,
+  },
+  // LayoutAnimationTrace end
   NestedNativeStacksWithLayout: {
     title: '[LA] Nested NativeStacks with layout',
     screen: NestedNativeStacksWithLayout,
