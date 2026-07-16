@@ -13,12 +13,20 @@ on:
         required: false
         type: boolean
         default: false
+      configuration:
+        required: false
+        type: string
+        default: DebugRuntimeTests
   workflow_dispatch:
     inputs:
       bundleMode:
         required: false
         type: boolean
         default: false
+      configuration:
+        required: false
+        type: string
+        default: DebugRuntimeTests
 
 jobs:
   runtime-tests-ios:
@@ -28,8 +36,9 @@ jobs:
     env:
       WORKING_DIRECTORY: apps/fabric-example
       REANIMATED_DIR: packages/react-native-reanimated
+      CONFIGURATION: ${{ inputs.configuration || 'DebugRuntimeTests' }}
     concurrency:
-      group: runtime-tests-ios-${{ github.ref }}-${{ inputs.bundleMode }}
+      group: runtime-tests-ios-${{ github.ref }}-${{ inputs.bundleMode }}-${{ inputs.configuration || 'DebugRuntimeTests' }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -72,9 +81,9 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >-
           node scripts/runtime-tests-server.js --launch --library self-tests
-          --connect-timeout 900 --idle-timeout 900
+          --configuration "$CONFIGURATION" --connect-timeout 900 --idle-timeout 900
           || node scripts/runtime-tests-server.js --launch --library self-tests
-          --skip-build --connect-timeout 900 --idle-timeout 900
+          --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900
 
       # The "intentional failures" suite only contains failing tests; the runner
       # exiting zero here would mean CI cannot catch real failures.
@@ -82,7 +91,7 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >-
           if node scripts/runtime-tests-server.js --launch --library self-tests
-          --skip-build --connect-timeout 900 --idle-timeout 900
+          --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900
           --only "intentional failures";
           then echo "A failing suite did not fail the runner" && exit 1;
           else echo "Failing tests correctly failed the runner"; fi
@@ -91,14 +100,14 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >-
           node scripts/runtime-tests-server.js --launch --library worklets
-          --skip-build --connect-timeout 900 --idle-timeout 900
+          --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900
           || node scripts/runtime-tests-server.js --launch --library worklets
-          --skip-build --connect-timeout 900 --idle-timeout 900
+          --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900
 
       - name: Run Reanimated runtime tests (reuses the build, retries once)
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >-
           node scripts/runtime-tests-server.js --launch --library reanimated
-          --skip-build --connect-timeout 900 --idle-timeout 900
+          --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900
           || node scripts/runtime-tests-server.js --launch --library reanimated
-          --skip-build --connect-timeout 900 --idle-timeout 900
+          --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900
