@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { isSerializableRef, createSerializable } from 'react-native-worklets';
-import { describe, expect, test } from '../../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  getWorkletRuntimeFromPool,
+  test,
+} from '../../../ReJest/RuntimeTestsApi';
 
 describe('Test isSerializableRef', () => {
   test('check if createSerializable<number> returns serializable ref', () => {
@@ -152,7 +157,7 @@ describe('Test isSerializableRef', () => {
   });
 
   test('check if createSerializable<host object> returns serializable ref', () => {
-    const hostObjectValue = globalThis.__reanimatedModuleProxy;
+    const hostObjectValue = getWorkletRuntimeFromPool('test');
     const serializableRef = createSerializable(hostObjectValue);
 
     expect(isSerializableRef(serializableRef)).toBe(true);

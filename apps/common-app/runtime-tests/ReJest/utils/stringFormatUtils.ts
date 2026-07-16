@@ -136,17 +136,20 @@ export function formatTestName(
   if (Array.isArray(variableObject)) {
     variableObject.forEach((value, index) => {
       // python-like syntax ${1} {2}
-      testName = testName.replace('${' + index + '}', valueToString(value));
+      testName = testName
+        .split('${' + index + '}')
+        .join(valueToString(value));
     });
   }
   if (typeof variableObject === 'object') {
     const keys = Object.keys(variableObject);
     keys.forEach((k) => {
       // Typical object literal syntax
-      testName = testName.replace(
-        '${' + k + '}',
-        valueToString(variableObject[k as keyof typeof variableObject])
-      );
+      testName = testName
+        .split('${' + k + '}')
+        .join(
+          valueToString(variableObject[k as keyof typeof variableObject])
+        );
     });
   }
 
