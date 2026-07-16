@@ -107,11 +107,27 @@ When enabled, Shared Element Transitions are available to use, also the synchron
 
 This feature flag enables a mechanism that periodically synchronizes animated style updates back to React by triggering a React render for animated components with accumulated animated styles and evicting them from the registry on the C++ side. It is supposed to improve performance by decreasing the number of `ShadowNode` clone operations in `ReanimatedCommitHook` for React commits. When enabled, it also alters the behavior when detaching animated styles from animated components—the animated styles are not reverted to the original styles. If your app depends on that previous behavior, set this flag to `false` in `reanimated.staticFeatureFlags` in your app's `package.json`.
 
+This feature flag conflicts with [`USE_ANIMATION_BACKEND`](#use_animation_backend) and they cannot be enabled simultaneously. The animation backend keeps animated changes in sync with the React tree on its own, so the settled animations synchronization mechanism is unnecessary. Since `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS` is enabled by default, so if you want to use the animation backend, you need to explicitly disable this flag in your app's `package.json`.
+
 ### `USE_ANIMATION_BACKEND`
 
 When enabled, Reanimated will use the React Native's new Animation Backend for applying animated changes. The backend will now be responsible for keeping animation changes in sync with the current React tree. This is meant to help with long-term stability and unlock new performance optimizations.
 
 This flag is experimental and defaults to `false`. To use it, you must run React Native 0.85.2 or newer with `useSharedAnimatedBackend` feature flag enabled (which is achieved by using React Native's Experimental release level in development).
+
+This feature flag conflicts with [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#force_react_render_for_settled_animations) and they cannot be enabled simultaneously. Since `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS` is enabled by default, you need to explicitly disable it in your app's `package.json` when enabling `USE_ANIMATION_BACKEND`:
+
+```json
+{
+  // ...
+  "reanimated": {
+    "staticFeatureFlags": {
+      "USE_ANIMATION_BACKEND": true,
+      "FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS": false
+    }
+  }
+}
+```
 
 ### `IOS_CSS_CORE_ANIMATION`
 
