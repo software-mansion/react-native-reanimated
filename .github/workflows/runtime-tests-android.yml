@@ -125,7 +125,7 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: false
           working-directory: apps/fabric-example
-          script: node scripts/runtime-tests-server.js --launch --platform android --library worklets --skip-build --connect-timeout 900 --idle-timeout 900 || node scripts/runtime-tests-server.js --launch --platform android --library worklets --skip-build --connect-timeout 900 --idle-timeout 900
+          script: node scripts/runtime-tests-server.js --launch --platform android --library worklets --skip-build --connect-timeout 900 --idle-timeout 900 ${{ matrix.bundleMode && '--include "bundle mode core"' || '' }} || node scripts/runtime-tests-server.js --launch --platform android --library worklets --skip-build --connect-timeout 900 --idle-timeout 900 ${{ matrix.bundleMode && '--include "bundle mode core"' || '' }}
 
       - name: Run Reanimated runtime tests on the emulator (retries once)
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
