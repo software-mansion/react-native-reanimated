@@ -1,11 +1,13 @@
-import { makeMutable } from 'react-native-reanimated';
-
 import type { TestValue, TrackerCallCount } from '../types';
 import { ComparisonMode } from '../types';
 import { cyan, green, red, yellow } from '../utils/stringFormatUtils';
 import { SyncUIRunner } from '../utils/SyncUIRunner';
 import { getComparator } from './Comparators';
-import { getRuntimeKind, RuntimeKind } from 'react-native-worklets';
+import {
+  createSynchronizable,
+  getRuntimeKind,
+  RuntimeKind,
+} from 'react-native-worklets';
 
 type ToBeArgs = [TestValue, ComparisonMode?];
 export type ToThrowArgs = [string?];
@@ -240,8 +242,8 @@ async function mockConsole(): Promise<
   const syncUIRunner = new SyncUIRunner();
   let counterJS = 0;
 
-  const counterUI = makeMutable(0);
-  const recordedMessage = makeMutable('');
+  const counterUI = createSynchronizable(0);
+  const recordedMessage = createSynchronizable('');
 
   const originalError = console.error;
   const originalWarning = console.warn;
@@ -254,12 +256,16 @@ async function mockConsole(): Promise<
     if (getRuntimeKind() === RuntimeKind.ReactNative) {
       incrementJS();
     } else {
-      counterUI.value++;
+      counterUI.setBlocking((prev) => {
+        return prev + 1;
+      });
     }
     if (typeof message === 'object' && 'message' in message) {
-      recordedMessage.value = message.message;
+      recordedMessage.setBlocking(message.message);
     } else {
-      recordedMessage.value = message.split('\n\nThis error is located at:')[0];
+      recordedMessage.setBlocking(
+        message.split('\n\nThis error is located at:')[0]
+      );
     }
   };
   console.error = mockedConsoleFunction;
@@ -289,10 +295,10 @@ async function mockConsole(): Promise<
   };
 
   const getCapturedConsoleErrors = () => {
-    const count = counterUI.value + counterJS;
+    const count = counterUI.getBlocking() + counterJS;
     return {
       consoleErrorCount: count,
-      consoleErrorMessage: recordedMessage.value,
+      consoleErrorMessage: recordedMessage.getBlocking(),
     };
   };
 

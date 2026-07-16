@@ -1,4 +1,4 @@
-import { isColor, processColor } from 'react-native-reanimated';
+import { isColor, processColorNumber } from './colorUtils';
 
 import type { TestValue } from '../types';
 
@@ -94,7 +94,7 @@ export function getColorSquare(color: string) {
   if (!isColor(color)) {
     return '??';
   }
-  const colorNumber = processColor(color);
+  const colorNumber = processColorNumber(color);
   /* eslint-disable no-bitwise */
   const red = (colorNumber >> 16) & 255;
   const green = (colorNumber >> 8) & 255;
