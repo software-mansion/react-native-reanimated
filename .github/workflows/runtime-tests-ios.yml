@@ -101,8 +101,10 @@ jobs:
         run: >-
           node scripts/runtime-tests-server.js --launch --library worklets
           --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900
+          ${{ inputs.bundleMode && '--include "bundle mode core"' || '' }}
           || node scripts/runtime-tests-server.js --launch --library worklets
           --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900
+          ${{ inputs.bundleMode && '--include "bundle mode core"' || '' }}
 
       - name: Run Reanimated runtime tests (reuses the build, retries once)
         working-directory: ${{ env.WORKING_DIRECTORY }}
