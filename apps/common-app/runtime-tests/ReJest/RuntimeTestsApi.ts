@@ -73,13 +73,26 @@ const testOnly: DecoratedTestFunction = (
 testOnly.each = <T>(examples: Array<T>) => {
   return testSuiteBuilder.testEach(examples, TestDecorator.ONLY);
 };
+const testFailing: DecoratedTestFunction = (
+  name: string,
+  testCase: MaybeAsync<void>
+) => {
+  testSuiteBuilder.test(name, testCase, TestDecorator.FAILING);
+};
+testFailing.each = <T>(examples: Array<T>) => {
+  return testSuiteBuilder.testEach(examples, TestDecorator.FAILING);
+};
 
 type TestType = DecoratedTestFunction &
-  Record<TestDecorator.SKIP | TestDecorator.ONLY, DecoratedTestFunction>;
+  Record<
+    TestDecorator.SKIP | TestDecorator.ONLY | TestDecorator.FAILING,
+    DecoratedTestFunction
+  >;
 
 export const test = <TestType>testBasic;
 test.skip = testSkip;
 test.only = testOnly;
+test.failing = testFailing;
 
 export function beforeAll(job: MaybeAsync<void>) {
   testSuiteBuilder.beforeAll(job);
