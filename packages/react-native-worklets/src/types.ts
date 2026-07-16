@@ -139,6 +139,11 @@ export type WorkletRuntimeConfig = WorkletRuntimeConfigBase &
          * synchronized with a mutex around every JSI operation. If not
          * specified, it defaults to `true`. Can be disabled only together
          * with the Event Loop.
+         *
+         * Runtime without locking doesn't receive HMR updates
+         * and new Custom Serializable registrations.
+         *
+         * Disable only when you can guarantee thread safety of all access to the runtime.
          */
         enableLocking?: true;
       }
@@ -150,14 +155,14 @@ export type WorkletRuntimeConfig = WorkletRuntimeConfigBase &
         enableEventLoop?: false;
         /**
          * Determines whether access to the underlying JS runtime is
-         * synchronized with a mutex around every JSI operation.
+         * synchronized with a mutex around every JSI operation. If not
+         * specified, it defaults to `true`. Can be disabled only together
+         * with the Event Loop.
          *
-         * When set to `false`, the runtime takes no locks and is created
-         * without the Event Loop — asynchronous APIs like timers or Promise
-         * continuations are unavailable. Custom serializables registered and
-         * module updates made after the runtime's creation aren't applied to
-         * it. Synchronizing access to the runtime is the caller's
-         * responsibility.
+         * Runtime without locking doesn't receive HMR updates
+         * and new Custom Serializable registrations.
+         *
+         * Disable only when you can guarantee thread safety of all access to the runtime.
          */
         enableLocking: false;
       }

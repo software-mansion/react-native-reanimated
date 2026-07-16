@@ -519,10 +519,10 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       obj,
       "createWorkletRuntime",
       [sourceProxy = shared_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[6]) {
-        const auto name = at<0>(args).asString(rt).utf8(rt);
+        const auto name = at<0>(args).getString(rt).utf8(rt);
         auto serializableInitializer = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Initializer must be a worklet.");
-        const auto useDefaultQueue = at<2>(args).asBool();
+        const auto useDefaultQueue = at<2>(args).getBool();
 
         std::shared_ptr<AsyncQueue> asyncQueue;
         if (useDefaultQueue) {
@@ -531,8 +531,8 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
           asyncQueue = extractAsyncQueue(rt, at<3>(args));
         }
 
-        const auto enableEventLoop = at<4>(args).asBool();
-        const auto enableLocking = at<5>(args).asBool();
+        const auto enableEventLoop = at<4>(args).getBool();
+        const auto enableLocking = at<5>(args).getBool();
         const auto runtimeManager = sourceProxy->getRuntimeManager();
 
         return createWorkletRuntime(
