@@ -138,6 +138,7 @@ import SpringPresetsExample from './SpringPresetsExample';
 import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
 import StrictModeComparison from './LayoutAnimations/StrictModeComparisonExample';
+import SuspenseLayoutAnimationCrashExample from './SuspenseLayoutAnimationCrashExample';
 import SvgExample from './SvgExample';
 import SwipeableList from './LayoutAnimations/SwipeableList';
 import SwipeableListExample from './SwipeableListExample';
@@ -183,6 +184,12 @@ export const EXAMPLES: Record<string, Example> = {
     icon: 'ℹ️',
     title: 'About',
     screen: AboutExample,
+  },
+
+  SuspenseLayoutAnimationCrashExample: {
+    icon: '💥',
+    title: 'Suspense + Layout Animation Crash',
+    screen: SuspenseLayoutAnimationCrashExample,
   },
 
   // Empty example for test purposes

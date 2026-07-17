@@ -2,7 +2,7 @@
 
 import { runOnUISync } from 'react-native-worklets';
 
-import { withStyleAnimation } from '../animation';
+import { cancelAnimation, withStyleAnimation } from '../animation';
 import { SHOULD_BE_USE_WEB } from '../common';
 import type {
   LayoutAnimation,
@@ -74,9 +74,7 @@ function createLayoutAnimationManager(): {
         value._value = style.initialValues;
       }
 
-      const animation = withStyleAnimation(currentAnimation);
-
-      animation.callback = (finished?: boolean) => {
+      const animation = withStyleAnimation(currentAnimation, (finished) => {
         if (finished) {
           currentAnimationForTag.delete(tag);
           mutableValuesForTag.delete(tag);
@@ -84,9 +82,9 @@ function createLayoutAnimationManager(): {
           stopObservingProgress(tag, value, shouldRemoveView);
         }
         if (style.callback) {
-          style.callback(finished === undefined ? false : finished);
+          style.callback(finished);
         }
-      };
+      });
 
       startObservingProgress(tag, value);
       value.value = animation;
@@ -96,7 +94,11 @@ function createLayoutAnimationManager(): {
       if (!value) {
         return;
       }
-      stopObservingProgress(tag, value);
+      // native already made its cleanup, so we just do cleanup here on JS side
+      value.removeListener(tag + TAG_OFFSET);
+      cancelAnimation(value);
+      currentAnimationForTag.delete(tag);
+      mutableValuesForTag.delete(tag);
     },
   };
 }
