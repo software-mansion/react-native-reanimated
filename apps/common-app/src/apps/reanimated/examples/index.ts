@@ -182,6 +182,10 @@ const EmojiWaterfallExample: React.FC = () =>
   React.createElement(require('./EmojiWaterfallExample').default as React.FC);
 const EmptyExample: React.FC = () =>
   React.createElement(require('./EmptyExample').default as React.FC);
+const SuspenseLayoutAnimationCrashExample: React.FC = () =>
+  React.createElement(
+    require('./SuspenseLayoutAnimationCrashExample').default as React.FC
+  );
 const ExtrapolationExample: React.FC = () =>
   React.createElement(require('./ExtrapolationExample').default as React.FC);
 const FetchExample: React.FC = () =>
@@ -514,6 +518,12 @@ export const EXAMPLES: Record<string, Example> = {
     icon: 'ℹ️',
     title: 'About',
     screen: AboutExample,
+  },
+
+  SuspenseLayoutAnimationCrashExample: {
+    icon: '💥',
+    title: 'Suspense + Layout Animation Crash',
+    screen: SuspenseLayoutAnimationCrashExample,
   },
 
   // Empty example for test purposes
