@@ -9,9 +9,11 @@ function Box() {
 
 exports[`babel plugin core (bundle mode) autoworkletization workletizes useAnimatedStyle callback 2`] = `
 "export default (function testJs1Factory({}) {
-  const testJs1 = () => ({
-    width: 100
-  });
+  const testJs1 = function () {
+    return {
+      width: 100
+    };
+  };
   testJs1.__closure = {};
   testJs1.__workletHash = 16304373026183;
   testJs1.__pluginVersion = "x.y.z";
@@ -157,9 +159,11 @@ function Box() {
     _worklet_16304373026183_init_data
   }) {
     const _e = [new global.Error(), 1, -27];
-    const testJs1 = () => ({
-      width: 100
-    });
+    const testJs1 = function () {
+      return {
+        width: 100
+      };
+    };
     testJs1.__closure = {};
     testJs1.__workletHash = 16304373026183;
     testJs1.__pluginVersion = "x.y.z";
