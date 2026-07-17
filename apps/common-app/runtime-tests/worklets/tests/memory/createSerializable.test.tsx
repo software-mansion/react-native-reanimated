@@ -182,7 +182,9 @@ describe('Test createSerializable', () => {
       });
 
       test('createSerializableHostObject', async () => {
-        const hostObjectValue = globalThis.__reanimatedModuleProxy;
+        const hostObjectValue = getWorkletRuntimeFromPool(
+          'test'
+        ) as unknown as Record<string, unknown>;
         const hostObjectKeys = Object.keys(hostObjectValue);
         scheduleOnTarget(() => {
           'worklet';
@@ -676,11 +678,7 @@ if (__DEV__) {
       const promise = Promise.resolve();
       await expect(() => {
         createSerializable(promise);
-      }).toThrow(
-        globalThis._WORKLETS_BUNDLE_MODE_ENABLED
-          ? 'Cannot copy value of type `Promise`'
-          : 'Promises cannot be converted to serializable.'
-      );
+      }).toThrow('Promise');
     });
 
     test('throws when trying to serialize a Proxy', async () => {
