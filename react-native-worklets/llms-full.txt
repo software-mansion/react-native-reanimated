@@ -2382,9 +2382,11 @@ type WorkletRuntimeConfig = {
   name?: string;
   initializer?: () => void;
   animationQueuePollingRate?: number;
-  enableEventLoop?: boolean;
   queue?: 'default' | object | null;
-};
+} & (
+  | { enableEventLoop?: boolean; enableLocking?: true }
+  | { enableEventLoop?: false; enableLocking: false }
+);
 
 function createWorkletRuntime(
   config?: WorkletRuntimeConfig
@@ -2411,8 +2413,17 @@ Time interval in milliseconds between polling of frame callbacks scheduled by `r
 
 ##### `enableEventLoop`
 
-Determines whether to enable the default event loop. Defaults to `true`.
+Determines whether to enable the default event loop. Defaults to `true`. Always disabled on runtimes with `enableLocking: false`.
 When enabled, the runtime provides `setTimeout`, `setImmediate`, `setInterval`, `requestAnimationFrame`, `queueMicrotask`, `clearTimeout`, `clearInterval`, `clearImmediate`, and `cancelAnimationFrame`.
+
+##### `enableLocking`
+
+Determines whether access to the underlying JS runtime is synchronized with a mutex around every JSI operation. If not specified, it defaults to `true`.
+Can be disabled only together with the Event Loop.
+
+Runtime without locking doesn't receive HMR updates and new Custom Serializable registrations.
+
+Disable only when you can guarantee thread safety of all access to the runtime.
 
 ##### `queue`
 
