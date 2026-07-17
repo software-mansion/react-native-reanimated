@@ -438,17 +438,13 @@ const foo = function foo_null1Factory({
 `;
 
 exports[`babel plugin for class worklets workletizes class field 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
-var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
-var _worklet_5242161306529_init_data = {
+"var _worklet_5242161306529_init_data = {
   code: "(function null1(x){return x+2;})",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-var Foo = (0, _createClass2.default)(function Foo() {
-  (0, _classCallCheck2.default)(this, Foo);
-  this.bar = function null1Factory({
+class Foo {
+  bar = function null1Factory({
     _worklet_5242161306529_init_data
   }) {
     var _e = [new global.Error(), 1, -27];
@@ -464,214 +460,168 @@ var Foo = (0, _createClass2.default)(function Foo() {
   }({
     _worklet_5242161306529_init_data
   });
-});"
+}"
 `;
 
 exports[`babel plugin for class worklets workletizes constructor 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
-var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
-var _worklet_15863994936429_init_data = {
-  code: "(function Foo_null1(x){const Foo_null1=this._recur;const{_classCallCheck}=this.__closure;_classCallCheck(this,Foo_null1);this.x=x;})",
+"var _worklet_12770959706952_init_data = {
+  code: "(function constructor_null1(x){this.x=x;})",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-var Foo = (0, _createClass2.default)(function Foo_null1Factory({
-  _worklet_15863994936429_init_data,
-  _classCallCheck
-}) {
-  var _e = [new global.Error(), -2, -27];
-  var Foo = function (x) {
-    _classCallCheck(this, Foo);
-    this.x = x;
-  };
-  Foo.__closure = {
-    _classCallCheck
-  };
-  Foo.__workletHash = 15863994936429;
-  Foo.__pluginVersion = "x.y.z";
-  Foo.__initData = _worklet_15863994936429_init_data;
-  Foo.__stackDetails = _e;
-  return Foo;
-}({
-  _worklet_15863994936429_init_data,
-  _classCallCheck: _classCallCheck2.default
-}));"
+class Foo {
+  constructor = function constructor_null1Factory({
+    _worklet_12770959706952_init_data
+  }) {
+    var _e = [new global.Error(), 1, -27];
+    var constructor = function (x) {
+      this.x = x;
+    };
+    constructor.__closure = {};
+    constructor.__workletHash = 12770959706952;
+    constructor.__pluginVersion = "x.y.z";
+    constructor.__initData = _worklet_12770959706952_init_data;
+    constructor.__stackDetails = _e;
+    return constructor;
+  }({
+    _worklet_12770959706952_init_data
+  });
+}"
 `;
 
 exports[`babel plugin for class worklets workletizes getter 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
-var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
-var x = 5;
-var _worklet_7889222906109_init_data = {
-  code: "(function null1(){const{x}=this.__closure;return x+2;})",
+"var x = 5;
+var _worklet_3641425857427_init_data = {
+  code: "(function bar_null1(){const{x}=this.__closure;return x+2;})",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-var Foo = function () {
-  function Foo() {
-    (0, _classCallCheck2.default)(this, Foo);
-  }
-  return (0, _createClass2.default)(Foo, [{
-    key: "bar",
-    get: function null1Factory({
-      _worklet_7889222906109_init_data,
+class Foo {
+  bar = function bar_null1Factory({
+    _worklet_3641425857427_init_data,
+    x
+  }) {
+    var _e = [new global.Error(), -2, -27];
+    var bar = function () {
+      return x + 2;
+    };
+    bar.__closure = {
       x
-    }) {
-      var _e = [new global.Error(), -2, -27];
-      var null1 = function () {
-        return x + 2;
-      };
-      null1.__closure = {
-        x
-      };
-      null1.__workletHash = 7889222906109;
-      null1.__pluginVersion = "x.y.z";
-      null1.__initData = _worklet_7889222906109_init_data;
-      null1.__stackDetails = _e;
-      return null1;
-    }({
-      _worklet_7889222906109_init_data,
-      x
-    })
-  }]);
-}();"
+    };
+    bar.__workletHash = 3641425857427;
+    bar.__pluginVersion = "x.y.z";
+    bar.__initData = _worklet_3641425857427_init_data;
+    bar.__stackDetails = _e;
+    return bar;
+  }({
+    _worklet_3641425857427_init_data,
+    x
+  });
+}"
 `;
 
 exports[`babel plugin for class worklets workletizes instance method 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
-var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
-var _worklet_17127187394127_init_data = {
+"var _worklet_17127187394127_init_data = {
   code: "(function bar_null1(x){return x+2;})",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-var Foo = function () {
-  function Foo() {
-    (0, _classCallCheck2.default)(this, Foo);
-  }
-  return (0, _createClass2.default)(Foo, [{
-    key: "bar",
-    value: function bar_null1Factory({
-      _worklet_17127187394127_init_data
-    }) {
-      var _e = [new global.Error(), 1, -27];
-      var bar = function (x) {
-        return x + 2;
-      };
-      bar.__closure = {};
-      bar.__workletHash = 17127187394127;
-      bar.__pluginVersion = "x.y.z";
-      bar.__initData = _worklet_17127187394127_init_data;
-      bar.__stackDetails = _e;
-      return bar;
-    }({
-      _worklet_17127187394127_init_data
-    })
-  }]);
-}();"
+class Foo {
+  bar = function bar_null1Factory({
+    _worklet_17127187394127_init_data
+  }) {
+    var _e = [new global.Error(), 1, -27];
+    var bar = function (x) {
+      return x + 2;
+    };
+    bar.__closure = {};
+    bar.__workletHash = 17127187394127;
+    bar.__pluginVersion = "x.y.z";
+    bar.__initData = _worklet_17127187394127_init_data;
+    bar.__stackDetails = _e;
+    return bar;
+  }({
+    _worklet_17127187394127_init_data
+  });
+}"
 `;
 
 exports[`babel plugin for class worklets workletizes setter 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
-var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
-var _worklet_10034678309414_init_data = {
-  code: "(function null1(x){this.x=x+2;})",
+"var _worklet_13746008877832_init_data = {
+  code: "(function bar_null1(x){this.x=x+2;})",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-var Foo = function () {
-  function Foo() {
-    (0, _classCallCheck2.default)(this, Foo);
-  }
-  return (0, _createClass2.default)(Foo, [{
-    key: "bar",
-    set: function null1Factory({
-      _worklet_10034678309414_init_data
-    }) {
-      var _e = [new global.Error(), 1, -27];
-      var null1 = function (x) {
-        this.x = x + 2;
-      };
-      null1.__closure = {};
-      null1.__workletHash = 10034678309414;
-      null1.__pluginVersion = "x.y.z";
-      null1.__initData = _worklet_10034678309414_init_data;
-      null1.__stackDetails = _e;
-      return null1;
-    }({
-      _worklet_10034678309414_init_data
-    })
-  }]);
-}();"
+class Foo {
+  bar = function bar_null1Factory({
+    _worklet_13746008877832_init_data
+  }) {
+    var _e = [new global.Error(), 1, -27];
+    var bar = function (x) {
+      this.x = x + 2;
+    };
+    bar.__closure = {};
+    bar.__workletHash = 13746008877832;
+    bar.__pluginVersion = "x.y.z";
+    bar.__initData = _worklet_13746008877832_init_data;
+    bar.__stackDetails = _e;
+    return bar;
+  }({
+    _worklet_13746008877832_init_data
+  });
+}"
 `;
 
 exports[`babel plugin for class worklets workletizes static class field 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
-var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
-var Foo = (0, _createClass2.default)(function Foo() {
-  (0, _classCallCheck2.default)(this, Foo);
-});
-var _worklet_5242161306529_init_data = {
+"var _worklet_5242161306529_init_data = {
   code: "(function null1(x){return x+2;})",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-Foo.bar = function null1Factory({
-  _worklet_5242161306529_init_data
-}) {
-  var _e = [new global.Error(), 1, -27];
-  var null1 = function (x) {
-    return x + 2;
-  };
-  null1.__closure = {};
-  null1.__workletHash = 5242161306529;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_5242161306529_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_5242161306529_init_data
-});"
+class Foo {
+  static bar = function null1Factory({
+    _worklet_5242161306529_init_data
+  }) {
+    var _e = [new global.Error(), 1, -27];
+    var null1 = function (x) {
+      return x + 2;
+    };
+    null1.__closure = {};
+    null1.__workletHash = 5242161306529;
+    null1.__pluginVersion = "x.y.z";
+    null1.__initData = _worklet_5242161306529_init_data;
+    null1.__stackDetails = _e;
+    return null1;
+  }({
+    _worklet_5242161306529_init_data
+  });
+}"
 `;
 
 exports[`babel plugin for class worklets workletizes static method 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
-var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
-var _worklet_17127187394127_init_data = {
+"var _worklet_17127187394127_init_data = {
   code: "(function bar_null1(x){return x+2;})",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-var Foo = function () {
-  function Foo() {
-    (0, _classCallCheck2.default)(this, Foo);
-  }
-  return (0, _createClass2.default)(Foo, null, [{
-    key: "bar",
-    value: function bar_null1Factory({
-      _worklet_17127187394127_init_data
-    }) {
-      var _e = [new global.Error(), 1, -27];
-      var bar = function (x) {
-        return x + 2;
-      };
-      bar.__closure = {};
-      bar.__workletHash = 17127187394127;
-      bar.__pluginVersion = "x.y.z";
-      bar.__initData = _worklet_17127187394127_init_data;
-      bar.__stackDetails = _e;
-      return bar;
-    }({
-      _worklet_17127187394127_init_data
-    })
-  }]);
-}();"
+class Foo {
+  bar = function bar_null1Factory({
+    _worklet_17127187394127_init_data
+  }) {
+    var _e = [new global.Error(), 1, -27];
+    var bar = function (x) {
+      return x + 2;
+    };
+    bar.__closure = {};
+    bar.__workletHash = 17127187394127;
+    bar.__pluginVersion = "x.y.z";
+    bar.__initData = _worklet_17127187394127_init_data;
+    bar.__stackDetails = _e;
+    return bar;
+  }({
+    _worklet_17127187394127_init_data
+  });
+}"
 `;
 
 exports[`babel plugin for closure capturing captures worklets environment 1`] = `
