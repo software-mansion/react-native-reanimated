@@ -51,7 +51,9 @@ if (IS_WEB) {
 }
 
 const FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS =
-  getStaticFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS') && !IS_WEB;
+  getStaticFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS') &&
+  !getStaticFeatureFlag('USE_ANIMATION_BACKEND') &&
+  !IS_WEB;
 
 export type Options<P> = {
   setNativeProps?: (ref: AnimatedComponentRef, props: P) => void;
