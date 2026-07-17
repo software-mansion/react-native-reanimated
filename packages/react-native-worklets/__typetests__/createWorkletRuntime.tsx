@@ -52,6 +52,35 @@ export function createWorkletRuntimeTypeTests() {
     customQueue: {},
   });
 
+  // Correct usage - config object with enableLocking = true.
+  createWorkletRuntime({
+    enableLocking: true,
+  });
+
+  // Correct usage - config object with enableLocking = false.
+  createWorkletRuntime({
+    enableLocking: false,
+  });
+
+  // Correct usage - config object with enableLocking = false and no queue.
+  createWorkletRuntime({
+    enableLocking: false,
+    queue: null,
+  });
+
+  // Correct usage - config object with enableLocking = false and a custom queue.
+  createWorkletRuntime({
+    enableLocking: false,
+    queue: {},
+  });
+
+  // Correct usage - config object with enableLocking = false, useDefaultQueue = false and customQueue.
+  createWorkletRuntime({
+    enableLocking: false,
+    useDefaultQueue: false,
+    customQueue: {},
+  });
+
   // Correct usage - config object with enableEventLoop = true.
   createWorkletRuntime({
     enableEventLoop: true,
@@ -60,6 +89,24 @@ export function createWorkletRuntimeTypeTests() {
   // Correct usage - config object with enableEventLoop = false.
   createWorkletRuntime({
     enableEventLoop: false,
+  });
+
+  // Correct usage - config object with enableEventLoop = true and enableLocking = true.
+  createWorkletRuntime({
+    enableEventLoop: true,
+    enableLocking: true,
+  });
+
+  // Correct usage - config object with enableEventLoop = false and enableLocking = true.
+  createWorkletRuntime({
+    enableEventLoop: false,
+    enableLocking: true,
+  });
+
+  // Correct usage - config object with enableEventLoop = false and enableLocking = false.
+  createWorkletRuntime({
+    enableEventLoop: false,
+    enableLocking: false,
   });
 
   // Correct usage - deprecated positional parameters
@@ -95,8 +142,19 @@ export function createWorkletRuntimeTypeTests() {
     customQueue: {},
   });
 
+  // @ts-expect-error - Wrong enableLocking type in config object
+  createWorkletRuntime({
+    enableLocking: 'false',
+  });
+
   // @ts-expect-error - Wrong enableEventLoop type in config object
   createWorkletRuntime({
     enableEventLoop: 'false',
+  });
+
+  // @ts-expect-error - The event loop cannot be enabled when locking is disabled
+  createWorkletRuntime({
+    enableEventLoop: true,
+    enableLocking: false,
   });
 }
