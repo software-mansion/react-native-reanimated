@@ -49,20 +49,23 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - name: Use Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with:
-          cache: 'yarn'
-      - name: Clear annotations
-        run: .github/workflows/helper/clear-annotations.sh
 
       - name: Check if react-native version exists
         id: check-react-native-version
         run: |
-          if ! npm view react-native@${{ matrix.react-native-version }} dist-tags ; then 
+          if ! npm view react-native@${{ matrix.react-native-version }} dist-tags ; then
             echo "React Native version ${{ matrix.react-native-version }} does not exist - Skipping..."
             echo "SKIP_BUILD=true" >> $GITHUB_OUTPUT
           fi
+
+      - name: Use Node.js
+        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          cache: 'yarn'
+      - name: Clear annotations
+        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
+        run: .github/workflows/helper/clear-annotations.sh
 
       - name: Run TypeScript Compatibility Check
         if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}

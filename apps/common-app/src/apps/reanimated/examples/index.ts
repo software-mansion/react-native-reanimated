@@ -394,10 +394,6 @@ const RestoreStateExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/RestoreState').default
   );
-const RuntimeTestsExample: React.FC = () =>
-  React.createElement(
-    require('./RuntimeTests/RuntimeTestsExample').default as React.FC
-  );
 const ScreenlessBasic: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/ScreenlessBasic').default as React.FC
@@ -575,12 +571,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '3️⃣',
     title: 'Third party components',
     screen: ThirdPartyComponentsExample,
-  },
-  RuntimeTests: {
-    icon: '⚙️',
-    title: 'RuntimeTestsExample',
-    screen: RuntimeTestsExample,
-    disabledPlatforms: [REAPlatform.WEB],
   },
   Synchronizable: {
     icon: '🔄',

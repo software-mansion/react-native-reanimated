@@ -160,7 +160,8 @@ inline jsi::Value createWorkletRuntime(
     std::shared_ptr<SerializableWorklet> &initializer,
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop) {
-  const auto workletRuntime = runtimeManager->createWorkletRuntime(sourceProxy, name, initializer, queue);
+  const auto workletRuntime =
+      runtimeManager->createWorkletRuntime(sourceProxy, name, initializer, queue, enableEventLoop);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 

@@ -1,0 +1,375 @@
+import type { ReactNode } from 'react';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList } from 'react-native-gesture-handler';
+
+import { configure, runTests } from './RuntimeTestsApi';
+import { RenderLock } from './utils/SyncUIRunner';
+
+export class ErrorBoundary extends React.Component<
+  { children: React.JSX.Element | Array<React.JSX.Element> },
+  { hasError: boolean }
+> {
+  constructor(props: {
+    children: React.JSX.Element | Array<React.JSX.Element>;
+  }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(_: unknown) {
+    // Update state so the next render will show the fallback UI.
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <Text>Unable to render component</Text>;
+    }
+
+    return this.props.children;
+  }
+}
+
+let renderLock: RenderLock = new RenderLock();
+
+export type RunnerId = 'Reanimated' | 'Worklets' | 'SelfTests';
+
+let sessionOwner: RunnerId | null = null;
+const sessionOwnerListeners = new Set<() => void>();
+
+function claimSession(runnerId: RunnerId) {
+  sessionOwner = runnerId;
+  sessionOwnerListeners.forEach((listener) => listener());
+}
+
+function subscribeToSessionOwner(listener: () => void) {
+  sessionOwnerListeners.add(listener);
+  return () => {
+    sessionOwnerListeners.delete(listener);
+  };
+}
+
+function getSessionOwner() {
+  return sessionOwner;
+}
+
+interface TestData {
+  testSuiteName: string;
+  importTest: () => void;
+  skipByDefault?: boolean;
+  disabled?: boolean;
+}
+
+interface RuntimeTestRunnerProps {
+  tests: TestData[];
+  runnerId: RunnerId;
+}
+
+export default function RuntimeTestsRunner({
+  tests,
+  runnerId,
+}: RuntimeTestRunnerProps) {
+  const [component, setComponent] = useState<ReactNode | null>(null);
+  const [started, setStarted] = useState<boolean>(false);
+  const [finished, setFinished] = useState<boolean>(false);
+
+  const testSelectionCallbacks = useRef<Set<() => void>>(new Set());
+
+  useEffect(() => {
+    tests.forEach((testData) => {
+      !testData.skipByDefault &&
+        testSelectionCallbacks.current.add(testData.importTest);
+    });
+  }, [tests]);
+
+  useEffect(() => {
+    if (renderLock) {
+      renderLock.unlock();
+    }
+  }, [component]);
+
+  async function run() {
+    renderLock = configure({ render: setComponent });
+    await runTests();
+    setFinished(true);
+  }
+
+  const currentSessionOwner = useSyncExternalStore(
+    subscribeToSessionOwner,
+    getSessionOwner
+  );
+
+  function handleStartClick() {
+    if (getSessionOwner() !== null) {
+      return;
+    }
+    claimSession(runnerId);
+    testSelectionCallbacks.current.forEach((callback) => callback());
+    setStarted(true);
+    // eslint-disable-next-line no-void
+    void run();
+  }
+
+  if (currentSessionOwner !== null && !started) {
+    return (
+      <View style={styles.flexOne}>
+        <Text style={navyText}>
+          {currentSessionOwner === runnerId
+            ? `${runnerId} tests already started in this session. Reload the app to run them again.`
+            : `${currentSessionOwner} tests already started in this session. Reload the app to run ${runnerId} tests.`}
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.flexOne}>
+      {started ? null : (
+        <>
+          <TestSelector
+            tests={tests}
+            testSelectionCallbacks={testSelectionCallbacks}
+          />
+          <TouchableOpacity onPress={handleStartClick} style={button}>
+            <Text style={whiteText}>Run tests</Text>
+          </TouchableOpacity>
+        </>
+      )}
+      {/* Don't render anything if component is undefined to prevent blinking */}
+      {component || null}
+      {finished ? (
+        <Text style={navyText}>Reload the app to run the tests again</Text>
+      ) : null}
+    </View>
+  );
+}
+
+interface TestSelectorProps {
+  tests: Array<TestData>;
+  testSelectionCallbacks: React.RefObject<Set<() => void>>;
+}
+
+function TestSelector({ tests, testSelectionCallbacks }: TestSelectorProps) {
+  const [selectedTests, setSelectedTests] = useState<Map<string, boolean>>(
+    tests.reduce((acc, testData) => {
+      acc.set(testData.testSuiteName, !testData.skipByDefault);
+      return acc;
+    }, new Map<string, boolean>())
+  );
+
+  function selectAllClick(select: boolean) {
+    tests
+      .filter((button) => !button.disabled)
+      .forEach((button) => {
+        setSelectedTests(
+          (selectedTests) =>
+            new Map(selectedTests.set(button.testSuiteName, select))
+        );
+        if (select) {
+          testSelectionCallbacks.current.add(button.importTest);
+        } else {
+          testSelectionCallbacks.current.delete(button.importTest);
+        }
+      });
+  }
+
+  function selectClick(button: TestData) {
+    setSelectedTests(
+      new Map(
+        selectedTests.set(
+          button.testSuiteName,
+          !selectedTests.get(button.testSuiteName)
+        )
+      )
+    );
+    if (testSelectionCallbacks.current.has(button.importTest)) {
+      testSelectionCallbacks.current.delete(button.importTest);
+    } else {
+      testSelectionCallbacks.current.add(button.importTest);
+    }
+  }
+
+  return (
+    <View style={styles.flexOne}>
+      <SelectAllButtonProps
+        handleSelectAllClick={selectAllClick}
+        select={true}
+      />
+      <SelectAllButtonProps
+        handleSelectAllClick={selectAllClick}
+        select={false}
+      />
+
+      <FlatList
+        style={styles.selectButtonsFrame}
+        data={tests}
+        renderItem={({ item }) => {
+          return (
+            <SelectTest
+              // TODO: Fix me
+              // @ts-ignore RNGH types for web FlatList are broken.
+              key={item.testSuiteName}
+              // TODO: Fix me
+              // @ts-ignore RNGH types for web FlatList are broken.
+              disabled={item.disabled}
+              // TODO: Fix me
+              // @ts-ignore RNGH types for web FlatList are broken.
+              testSuiteName={item.testSuiteName}
+              // TODO: Fix me
+              // @ts-ignore RNGH types for web FlatList are broken.
+              selectClick={() => selectClick(item)}
+              selectedTests={selectedTests}
+            />
+          );
+        }}
+      />
+    </View>
+  );
+}
+
+interface SelectTestProps {
+  testSuiteName: string;
+  selectClick: () => void;
+  selectedTests: Map<string, boolean>;
+  disabled?: boolean;
+}
+
+function SelectTest({
+  testSuiteName,
+  selectClick,
+  selectedTests,
+  disabled,
+}: SelectTestProps) {
+  function handleSelectClickOut() {
+    selectClick();
+  }
+
+  return (
+    <TouchableOpacity
+      disabled={disabled}
+      style={[styles.buttonWrapper, disabled ? styles.disabledButton : {}]}
+      onPress={() => handleSelectClickOut()}>
+      <View
+        style={[
+          styles.checkbox,
+          selectedTests.get(testSuiteName) ? styles.checkedCheckbox : {},
+        ]}
+      />
+      <View style={selectButton}>
+        <Text style={navyText}>{testSuiteName}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+interface SelectAllButtonProps {
+  handleSelectAllClick: (select: boolean) => void;
+  select: boolean;
+}
+
+function SelectAllButtonProps({
+  handleSelectAllClick,
+  select,
+}: SelectAllButtonProps) {
+  return (
+    <TouchableOpacity
+      onPress={() => handleSelectAllClick(select)}
+      style={selectAllButton}>
+      <Text style={navyText}>{select ? 'Select all' : 'Deselect all'}</Text>
+    </TouchableOpacity>
+  );
+}
+
+const commonStyles = StyleSheet.create({
+  textCommon: {
+    fontSize: 20,
+    alignSelf: 'center',
+  },
+  buttonCommon: {
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  whiteButtonCommon: {
+    borderWidth: 2,
+    backgroundColor: 'white',
+    borderColor: 'navy',
+    marginVertical: 5,
+    borderRadius: 10,
+  },
+});
+
+const basicStyles = StyleSheet.create({
+  selectAllButton: { marginHorizontal: 20 },
+  selectButton: { flex: 1 },
+  button: { backgroundColor: 'navy', zIndex: 1, height: 60, marginBottom: 40 },
+  navyText: { color: 'navy' },
+  whiteText: { color: 'white' },
+});
+
+const whiteButtonCommon = StyleSheet.flatten([
+  commonStyles.buttonCommon,
+  commonStyles.whiteButtonCommon,
+]);
+const selectAllButton = StyleSheet.flatten([
+  whiteButtonCommon,
+  basicStyles.selectAllButton,
+]);
+const selectButton = StyleSheet.flatten([
+  whiteButtonCommon,
+  basicStyles.selectButton,
+]);
+const button = StyleSheet.flatten([
+  commonStyles.buttonCommon,
+  basicStyles.button,
+]);
+const navyText = StyleSheet.flatten([
+  commonStyles.textCommon,
+  basicStyles.navyText,
+]);
+const whiteText = StyleSheet.flatten([
+  commonStyles.textCommon,
+  basicStyles.whiteText,
+]);
+
+const styles = StyleSheet.create({
+  flexOne: {
+    flex: 1,
+    flexDirection: 'column',
+  },
+
+  selectButtonsFrame: {
+    borderRadius: 10,
+    backgroundColor: 'lightblue',
+    margin: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+  },
+
+  buttonWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    marginRight: 10,
+    borderWidth: 2,
+    backgroundColor: 'white',
+    borderColor: 'navy',
+    borderRadius: 5,
+  },
+  checkedCheckbox: {
+    backgroundColor: 'navy',
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+});

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "cd ios && bundle install && bundle exec pod update --no-repo-update",
-    "android": "react-native run-android",
+    "android": "react-native run-android --active-arch-only",
     "ios": "react-native run-ios",
     "start": "react-native start",
     "format": "yarn run --top-level oxfmt .",
@@ -14,7 +14,7 @@
   "dependencies": {
     "common-app": "workspace:*",
     "react": "19.2.3",
-    "react-native": "0.86.0"
+    "react-native": "0.87.0-rc.0"
   },
   "devDependencies": {
     "@types/react": "19.2.2",
