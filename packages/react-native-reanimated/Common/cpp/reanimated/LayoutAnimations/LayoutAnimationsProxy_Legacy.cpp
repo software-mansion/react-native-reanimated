@@ -1,4 +1,6 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
+#include <reanimated/NativeModules/ReanimatedModuleProxy.h>
+#include <reanimated/Tools/FeatureFlags.h>
 
 #include <react/debug/react_native_assert.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
@@ -13,6 +15,22 @@
 #include <vector>
 
 namespace reanimated {
+
+namespace {
+// Whether layout animations should be played by the platform's native animation
+// engine (Core Animation / `android.animation`) instead of the legacy
+// JS-driven React mutation path. Resolved at compile time from the static
+// feature flags so the unused branch is dropped entirely.
+constexpr bool useNativeLayoutAnimations() {
+#if __APPLE__
+  return StaticFeatureFlags::getFlag("IOS_USE_NATIVE_LAYOUT_ANIMATIONS");
+#elif defined(ANDROID)
+  return StaticFeatureFlags::getFlag("ANDROID_USE_NATIVE_LAYOUT_ANIMATIONS");
+#else
+  return false;
+#endif
+}
+} // namespace
 
 // We never modify the Shadow Tree, we just send some additional
 // mutations to the mounting layer.
@@ -30,6 +48,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   LOG(INFO) << std::endl;
   LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " " << surfaceId << std::endl;
 #endif
+
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
@@ -135,7 +154,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::progressLayoutAnimation(i
   return layoutAnimation.finalView.surfaceId;
 }
 
-std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int tag, bool shouldRemove) {
+std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int tag, bool shouldRemove) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "end layout animation for " << tag << " - should remove " << shouldRemove << std::endl;
 #endif
@@ -736,6 +755,18 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
         yogaValues.setProperty(uiRuntime, "targetHeight", values.height);
         yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
         yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
+
+        if constexpr (useNativeLayoutAnimations()) {
+          strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
+              uiRuntime,
+              tag,
+              LayoutAnimationType::ENTERING,
+              yogaValues,
+              /* usePresentationLayer */ false,
+              [strongThis, tag](bool /* finished */) { strongThis->endLayoutAnimation(tag, false); });
+          return;
+        }
+
         strongThis->layoutAnimationsManager_->startLayoutAnimation(
             uiRuntime, tag, LayoutAnimationType::ENTERING, yogaValues);
       });
@@ -798,8 +829,19 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
         yogaValues.setProperty(uiRuntime, "currentHeight", values.height);
         yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
         yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
-        strongThis->layoutAnimationsManager_->startLayoutAnimation(
-            uiRuntime, tag, LayoutAnimationType::EXITING, yogaValues);
+
+        if constexpr (useNativeLayoutAnimations()) {
+          strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
+              uiRuntime,
+              tag,
+              LayoutAnimationType::EXITING,
+              yogaValues,
+              /* usePresentationLayer */ true,
+              [strongThis, tag](bool finished) { strongThis->endLayoutAnimation(tag, finished); });
+        } else {
+          strongThis->layoutAnimationsManager_->startLayoutAnimation(
+              uiRuntime, tag, LayoutAnimationType::EXITING, yogaValues);
+        }
         strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
       });
 }
@@ -864,6 +906,18 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
         yogaValues.setProperty(uiRuntime, "targetHeight", targetValues.height);
         yogaValues.setProperty(uiRuntime, "windowWidth", targetValues.windowWidth);
         yogaValues.setProperty(uiRuntime, "windowHeight", targetValues.windowHeight);
+
+        if constexpr (useNativeLayoutAnimations()) {
+          strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
+              uiRuntime,
+              tag,
+              LayoutAnimationType::LAYOUT,
+              yogaValues,
+              /* usePresentationLayer */ true,
+              [strongThis, tag](bool /* finished */) { strongThis->endLayoutAnimation(tag, false); });
+          return;
+        }
+
         strongThis->layoutAnimationsManager_->startLayoutAnimation(
             uiRuntime, tag, LayoutAnimationType::LAYOUT, yogaValues);
       });

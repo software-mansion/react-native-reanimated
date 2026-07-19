@@ -127,6 +127,20 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
   return unsubscribeFromKeyboardEventsFunction;
 }
 
+RunNativeLayoutAnimation makeRunNativeLayoutAnimation(REANodesManager *nodesManager)
+{
+  return [nodesManager](
+             const int viewTag,
+             const reanimated::NativeLayoutAnimationDescriptor &descriptor,
+             const bool usePresentationLayer,
+             std::function<void(bool)> &&completion) {
+    [nodesManager runNativeLayoutAnimationForView:viewTag
+                                      descriptor:descriptor
+                            usePresentationLayer:usePresentationLayer
+                                      completion:std::move(completion)];
+  };
+}
+
 css::CSSCanRoutePropertyFunction makeCSSCanRouteProperty()
 {
   return &css::canRouteCSSProperty;
@@ -231,6 +245,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   auto maybeFlushUIUpdatesQueueFunction = makeMaybeFlushUIUpdatesQueueFunction(nodesManager);
 
+  auto runNativeLayoutAnimation = makeRunNativeLayoutAnimation(nodesManager);
+
   REAPseudoSelectorAttachQueue *attachQueue =
       [[REAPseudoSelectorAttachQueue alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
   auto attachPseudoSelectorFunction = makeAttachPseudoSelectorFunction(attachQueue);
@@ -254,6 +270,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUIUpdatesQueueFunction,
+      runNativeLayoutAnimation,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
       cssCanRouteProperty,

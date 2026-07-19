@@ -1,6 +1,8 @@
 #import <React/RCTEventDispatcherProtocol.h>
 #import <React/RCTSurfacePresenter.h>
 
+#import <reanimated/LayoutAnimations/LayoutAnimationConfig.h>
+#import <reanimated/LayoutAnimations/NativeLayoutAnimationDescriptor.h>
 #import <reanimated/apple/READisplayLink.h>
 
 typedef void (^REAOnAnimationCallback)(READisplayLink *displayLink);
@@ -21,5 +23,10 @@ typedef void (^REAPerformOperations)();
 - (void)synchronouslyUpdateUIProps:(ReactTag)viewTag props:(const folly::dynamic &)props;
 - (void)registerPerformOperations:(REAPerformOperations)performOperations;
 - (void)maybeFlushUIUpdatesQueue;
+// Plays a generic, pre-sampled layout-animation descriptor via Core Animation.
+- (void)runNativeLayoutAnimationForView:(ReactTag)viewTag
+                             descriptor:(const reanimated::NativeLayoutAnimationDescriptor &)descriptor
+                   usePresentationLayer:(bool)usePresentationLayer
+                             completion:(std::function<void(bool)>)completion;
 
 @end

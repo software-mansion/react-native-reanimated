@@ -426,7 +426,10 @@ export default class AnimatedComponent
         ? this.reanimatedID
         : this.getComponentViewTag(),
       type,
-      currentConfig && maybeBuild(currentConfig)
+      currentConfig && maybeBuild(currentConfig),
+      undefined,
+      undefined,
+      currentConfig?.rawConfig
     );
   }
 

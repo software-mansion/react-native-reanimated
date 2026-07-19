@@ -88,4 +88,8 @@ playwright/.cache/
 
 # Claude
 .claude
+.agents
+.codex
+.mcp.json
+skills-lock.json
 CLAUDE.md
