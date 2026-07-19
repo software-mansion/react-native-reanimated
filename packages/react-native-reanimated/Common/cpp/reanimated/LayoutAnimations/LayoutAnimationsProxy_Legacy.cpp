@@ -781,7 +781,7 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
               LayoutAnimationType::ENTERING,
               yogaValues,
               /* usePresentationLayer */ false,
-              [strongThis, tag](bool /* finished */) { strongThis->endLayoutAnimation(tag, false); });
+              /* shouldRemove */ false);
           return;
         }
 
@@ -871,7 +871,7 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
               LayoutAnimationType::EXITING,
               yogaValues,
               /* usePresentationLayer */ true,
-              [strongThis, tag](bool finished) { strongThis->endLayoutAnimation(tag, finished); });
+              /* shouldRemove */ true);
         } else {
           strongThis->layoutAnimationsManager_->startLayoutAnimation(
               uiRuntime, tag, LayoutAnimationType::EXITING, yogaValues);
@@ -964,7 +964,7 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
               LayoutAnimationType::LAYOUT,
               yogaValues,
               /* usePresentationLayer */ true,
-              [strongThis, tag](bool /* finished */) { strongThis->endLayoutAnimation(tag, false); });
+              /* shouldRemove */ false);
           return;
         }
 

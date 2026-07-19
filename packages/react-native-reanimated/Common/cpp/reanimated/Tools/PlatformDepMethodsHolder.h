@@ -11,6 +11,7 @@
 #include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationConfig.h>
 #include <reanimated/LayoutAnimations/NativeLayoutAnimationDescriptor.h>
+#include <reanimated/LayoutAnimations/NativeLayoutAnimationHandle.h>
 
 #include <memory>
 #include <string>
@@ -56,10 +57,12 @@ using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 // currently rendered state when interrupting an in-flight animation. The
 // completion is invoked with `true` when the animation finished naturally.
 using RunNativeLayoutAnimation = std::function<void(
-    const int tag,
+    NativeLayoutAnimationHandle handle,
     const NativeLayoutAnimationDescriptor &descriptor,
     const bool usePresentationLayer,
+    NativeLayoutAnimationCancellationToken cancellationToken,
     std::function<void(bool)> &&completion)>;
+using CancelNativeLayoutAnimation = std::function<void(NativeLayoutAnimationHandle handle)>;
 
 using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
 
@@ -82,8 +85,10 @@ struct PlatformDepMethodsHolder {
   KeyboardEventSubscribeFunction subscribeForKeyboardEvents;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEvents;
   MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction;
-  // Native layout-animation player. Provided on both iOS and Android.
+  // Native layout-animation player. Provided on both iOS and Android. Native
+  // cancellation is currently implemented by the stabilized iOS PoC only.
   RunNativeLayoutAnimation runNativeLayoutAnimation;
+  CancelNativeLayoutAnimation cancelNativeLayoutAnimation;
   PlatformAttachPseudoSelectorFunction attachPseudoSelector;
   PlatformDetachPseudoSelectorFunction detachPseudoSelector;
   css::CSSCanRoutePropertyFunction cssCanRouteProperty;

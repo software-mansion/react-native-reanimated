@@ -54,6 +54,29 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
 
 namespace {
 
+RunNativeLayoutAnimation scheduleNativeLayoutAnimationCompletionsOnUI(
+    RunNativeLayoutAnimation runNativeLayoutAnimation,
+    const std::shared_ptr<UIScheduler> &uiScheduler) {
+  if (!runNativeLayoutAnimation) {
+    return nullptr;
+  }
+  return [runNativeLayoutAnimation = std::move(runNativeLayoutAnimation), uiScheduler](
+             NativeLayoutAnimationHandle handle,
+             const NativeLayoutAnimationDescriptor &descriptor,
+             bool usePresentationLayer,
+             NativeLayoutAnimationCancellationToken cancellationToken,
+             std::function<void(bool)> &&completion) {
+    runNativeLayoutAnimation(
+        handle,
+        descriptor,
+        usePresentationLayer,
+        std::move(cancellationToken),
+        [uiScheduler, completion = std::move(completion)](bool finished) mutable {
+          scheduleOnUI(uiScheduler, [completion = std::move(completion), finished]() mutable { completion(finished); });
+        });
+  };
+}
+
 // LayoutAnimationTrace start
 #ifndef NDEBUG
 
@@ -345,7 +368,9 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #ifdef __APPLE__
       forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
 #endif
-      layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>(runNativeLayoutAnimationFunction_)),
+      layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>(
+          scheduleNativeLayoutAnimationCompletionsOnUI(runNativeLayoutAnimationFunction_, uiScheduler_),
+          platformDepMethodsHolder.cancelNativeLayoutAnimation)),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
       operationsLoop_(std::make_shared<OperationsLoop>(
@@ -398,6 +423,12 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 }
 
 void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMethodsHolder) {
+  layoutAnimationsManager_->setNativeLayoutAnimationCompletionHandler(
+      [weakThis = weak_from_this()](NativeLayoutAnimationHandle handle, bool shouldRemove) {
+        if (auto strongThis = weakThis.lock()) {
+          strongThis->handleNativeLayoutAnimationCompletion(handle, shouldRemove);
+        }
+      });
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     // Backend path: callbacks are drained later inside runGrandCallback under
     // the manager lock; no wrap needed here.
@@ -541,6 +572,28 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       endLayoutAnimation,
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction,
       requestAnimationFrame);
+}
+
+void ReanimatedModuleProxy::handleNativeLayoutAnimationCompletion(
+    NativeLayoutAnimationHandle handle,
+    bool shouldRemove) {
+  // Native platform callbacks are delivered to this method on Reanimated's UI
+  // thread by LayoutAnimationsManager.
+  auto surfaceId = layoutAnimationsProxy_->endLayoutAnimation(handle.tag, shouldRemove);
+  if (!surfaceId) {
+    return;
+  }
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+  layout_animation_trace::recordSurfaceFlushRequested(handle.tag, *surfaceId);
+#endif
+  // LayoutAnimationTrace end
+  layoutAnimationFlushRequests_.insert(*surfaceId);
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    startBackendIfNeeded();
+  } else {
+    performOperations();
+  }
 }
 
 ReanimatedModuleProxy::~ReanimatedModuleProxy() {
@@ -1865,6 +1918,21 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
       rt, obj, "_isLayoutAnimationTraceActive", [weakThis = weak_from_this()](jsi::Runtime &, const jsi::Value &) {
         auto strongThis = weakThis.lock();
         return jsi::Value(strongThis && strongThis->isLayoutAnimationTraceActive());
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "_setNativeLayoutAnimationStartPaused",
+      [weakThis = weak_from_this()](jsi::Runtime &, const jsi::Value &, const jsi::Value(&args)[1]) {
+        const bool paused = at<0>(args).getBool();
+        if (auto strongThis = weakThis.lock()) {
+          scheduleOnUI(strongThis->uiScheduler_, [weakThis, paused]() {
+            if (auto strongThis = weakThis.lock()) {
+              strongThis->layoutAnimationsManager_->setNativeLayoutAnimationStartPaused(paused);
+            }
+          });
+        }
       });
 #endif // NDEBUG
   // LayoutAnimationTrace end

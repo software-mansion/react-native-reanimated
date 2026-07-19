@@ -75,9 +75,10 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
   void attachPseudoSelector(Tag tag, PseudoSelector selector, std::function<void(bool)> callback);
   void detachPseudoSelector(Tag tag, PseudoSelector selector);
   void runNativeLayoutAnimation(
-      const int tag,
+      NativeLayoutAnimationHandle handle,
       const NativeLayoutAnimationDescriptor &descriptor,
       const bool usePresentationLayer,
+      NativeLayoutAnimationCancellationToken cancellationToken,
       std::function<void(bool)> &&completion);
 
   /***

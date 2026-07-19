@@ -42,13 +42,26 @@ struct SharedTransitionManager {
 using TransitionMap = std::unordered_map<SharedTag, Transition>;
 using Transitions = std::vector<std::pair<SharedTag, Transition>>;
 
-class LayoutAnimationsManager {
+class LayoutAnimationsManager : public std::enable_shared_from_this<LayoutAnimationsManager> {
  public:
-  LayoutAnimationsManager() : sharedTransitionManager_(std::make_shared<SharedTransitionManager>()) {}
+  using NativeLayoutAnimationCompletionHandler = std::function<void(NativeLayoutAnimationHandle, bool shouldRemove)>;
 
-  explicit LayoutAnimationsManager(RunNativeLayoutAnimation runNativeLayoutAnimation) : LayoutAnimationsManager() {
-    runNativeLayoutAnimation_ = std::move(runNativeLayoutAnimation);
+  LayoutAnimationsManager(
+      RunNativeLayoutAnimation runNativeLayoutAnimation,
+      CancelNativeLayoutAnimation cancelNativeLayoutAnimation)
+      : sharedTransitionManager_(std::make_shared<SharedTransitionManager>()),
+        runNativeLayoutAnimation_(std::move(runNativeLayoutAnimation)),
+        cancelNativeLayoutAnimation_(std::move(cancelNativeLayoutAnimation)) {}
+
+  void setNativeLayoutAnimationCompletionHandler(NativeLayoutAnimationCompletionHandler handler) {
+    nativeLayoutAnimationCompletionHandler_ = std::move(handler);
   }
+
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+  void setNativeLayoutAnimationStartPaused(bool paused);
+#endif
+  // LayoutAnimationTrace end
 
   void configureAnimationBatch(const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch);
   void setShouldAnimateExiting(const int tag, const bool value);
@@ -65,12 +78,12 @@ class LayoutAnimationsManager {
       const LayoutAnimationType type,
       const jsi::Object &values,
       const bool usePresentationLayer,
-      std::function<void(bool)> &&onAnimationEnd);
+      const bool shouldRemove);
   bool hasNativeLayoutAnimationPlayer() const {
     return runNativeLayoutAnimation_ != nullptr;
   }
   void clearLayoutAnimationConfig(const int tag);
-  void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
+  void cancelLayoutAnimation(jsi::Runtime &rt, const int tag);
   void transferConfigFromNativeID(const int nativeId, const int tag);
   void transferSharedConfig(const Tag from, const Tag to);
   std::shared_ptr<SharedTransitionManager> getSharedTransitionManager();
@@ -80,6 +93,30 @@ class LayoutAnimationsManager {
  private:
   using LayoutAnimationConfigEntry =
       std::pair<std::shared_ptr<Serializable>, std::shared_ptr<LayoutAnimationRawConfig>>;
+
+  struct ActiveNativeLayoutAnimation {
+    NativeLayoutAnimationHandle handle;
+    NativeLayoutAnimationCancellationToken cancellationToken;
+    NativeLayoutAnimationTargetMask targets;
+    bool shouldRemoveOnTermination;
+  };
+
+  struct NativeLayoutAnimationsForTag {
+    uint64_t nextGeneration = 0;
+    std::vector<ActiveNativeLayoutAnimation> active;
+  };
+
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+  struct PendingNativeLayoutAnimationStart {
+    NativeLayoutAnimationHandle handle;
+    NativeLayoutAnimationDescriptor descriptor;
+    bool usePresentationLayer;
+    NativeLayoutAnimationCancellationToken cancellationToken;
+    std::function<void(bool)> completion;
+  };
+#endif
+  // LayoutAnimationTrace end
 
   std::unordered_map<int, LayoutAnimationConfigEntry> &getConfigsForType(const LayoutAnimationType type);
 
@@ -96,6 +133,25 @@ class LayoutAnimationsManager {
   // `layoutAnimations_` and `shouldAnimateExitingForTag_`.
 
   RunNativeLayoutAnimation runNativeLayoutAnimation_;
+  CancelNativeLayoutAnimation cancelNativeLayoutAnimation_;
+  NativeLayoutAnimationCompletionHandler nativeLayoutAnimationCompletionHandler_;
+  std::unordered_map<int, NativeLayoutAnimationsForTag> nativeAnimations_;
+
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+  bool nativeLayoutAnimationStartPaused_ = false;
+  std::vector<PendingNativeLayoutAnimationStart> pendingNativeLayoutAnimationStarts_;
+#endif
+  // LayoutAnimationTrace end
+
+  void finishNativeLayoutAnimation(jsi::Runtime &rt, NativeLayoutAnimationHandle handle, bool finished);
+  void cancelNativeLayoutAnimationHandle(jsi::Runtime &rt, NativeLayoutAnimationHandle handle);
+  void submitNativeLayoutAnimationStart(
+      NativeLayoutAnimationHandle handle,
+      const NativeLayoutAnimationDescriptor &descriptor,
+      bool usePresentationLayer,
+      NativeLayoutAnimationCancellationToken cancellationToken,
+      std::function<void(bool)> &&completion);
 };
 
 } // namespace reanimated

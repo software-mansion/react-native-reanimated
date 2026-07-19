@@ -25,19 +25,19 @@ export const TEST_BENCH_SCENARIOS = [
     id: 'entering-interrupted-by-layout',
     title: '5. Entering interrupted by layout',
     description:
-      'Use Interrupt to move the view 240 ms into its entering animation.',
+      'Run + interrupt moves the view 240 ms into its entering animation.',
   },
   {
     id: 'layout-interrupted-by-layout',
     title: '6. Layout interrupted by layout',
     description:
-      'Use Interrupt to replace the first layout target after 240 ms.',
+      'Run + interrupt replaces the first layout target after 240 ms.',
   },
   {
     id: 'exit-during-layout',
     title: '7. Exit during layout',
     description:
-      'Use Interrupt to remove a view while its layout animation is active.',
+      'Run + interrupt removes the view 240 ms into its layout animation.',
   },
   {
     id: 'cancel-before-platform-start',

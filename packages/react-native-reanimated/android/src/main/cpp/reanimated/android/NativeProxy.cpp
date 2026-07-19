@@ -261,19 +261,32 @@ void NativeProxy::detachPseudoSelector(Tag tag, PseudoSelector selector) {
 }
 
 void NativeProxy::runNativeLayoutAnimation(
-    const int tag,
+    NativeLayoutAnimationHandle handle,
     const NativeLayoutAnimationDescriptor &descriptor,
     const bool usePresentationLayer,
+    NativeLayoutAnimationCancellationToken cancellationToken,
     std::function<void(bool)> &&completion) {
+  const int tag = handle.tag;
   // LayoutAnimationTrace start
 #ifndef NDEBUG
+  if (cancellationToken->load(std::memory_order_acquire)) {
+    layout_animation_trace::recordAndroidPlatformCompleted(
+        tag, descriptor.traceGeneration, descriptor.traceAnimationType, false, false);
+    completion(false);
+    return;
+  }
   completion = [completion = std::move(completion),
                 tag,
                 generation = descriptor.traceGeneration,
                 animationType = descriptor.traceAnimationType](const bool finished) mutable {
-    layout_animation_trace::recordAndroidPlatformCompleted(tag, generation, animationType, finished);
+    layout_animation_trace::recordAndroidPlatformCompleted(tag, generation, animationType, finished, true);
     completion(finished);
   };
+#else
+  if (cancellationToken->load(std::memory_order_acquire)) {
+    completion(false);
+    return;
+  }
 #endif // NDEBUG
   // LayoutAnimationTrace end
   // Flatten the descriptor into primitive arrays so it can cross the JNI
@@ -416,6 +429,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUiUpdatesQueueFunction,
       runNativeLayoutAnimationFunction,
+      nullptr,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
   };

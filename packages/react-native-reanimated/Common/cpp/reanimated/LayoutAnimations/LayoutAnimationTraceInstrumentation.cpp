@@ -256,7 +256,8 @@ void recordAndroidPlatformCompleted(
     const int tag,
     const uint64_t generation,
     const AnimationType animationType,
-    const bool finished) {
+    const bool finished,
+    const bool platformAnimationCreated) {
   Event event;
   event.source = Source::Android;
   event.event = EventName::PlatformCompleted;
@@ -264,6 +265,7 @@ void recordAndroidPlatformCompleted(
   event.animationType = animationType;
   event.generation = generation;
   event.finished = finished;
+  event.platformAnimationCreated = platformAnimationCreated;
   Recorder::getInstance().record(std::move(event));
 }
 

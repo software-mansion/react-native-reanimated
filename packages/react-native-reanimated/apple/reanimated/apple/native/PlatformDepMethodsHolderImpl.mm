@@ -130,14 +130,23 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
 RunNativeLayoutAnimation makeRunNativeLayoutAnimation(REANodesManager *nodesManager)
 {
   return [nodesManager](
-             const int viewTag,
+             const reanimated::NativeLayoutAnimationHandle handle,
              const reanimated::NativeLayoutAnimationDescriptor &descriptor,
              const bool usePresentationLayer,
+             reanimated::NativeLayoutAnimationCancellationToken cancellationToken,
              std::function<void(bool)> &&completion) {
-    [nodesManager runNativeLayoutAnimationForView:viewTag
-                                      descriptor:descriptor
-                            usePresentationLayer:usePresentationLayer
-                                      completion:std::move(completion)];
+    [nodesManager runNativeLayoutAnimation:handle
+                                descriptor:descriptor
+                      usePresentationLayer:usePresentationLayer
+                         cancellationToken:std::move(cancellationToken)
+                                completion:std::move(completion)];
+  };
+}
+
+CancelNativeLayoutAnimation makeCancelNativeLayoutAnimation(REANodesManager *nodesManager)
+{
+  return [nodesManager](const reanimated::NativeLayoutAnimationHandle handle) {
+    [nodesManager cancelNativeLayoutAnimation:handle];
   };
 }
 
@@ -246,6 +255,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto maybeFlushUIUpdatesQueueFunction = makeMaybeFlushUIUpdatesQueueFunction(nodesManager);
 
   auto runNativeLayoutAnimation = makeRunNativeLayoutAnimation(nodesManager);
+  auto cancelNativeLayoutAnimation = makeCancelNativeLayoutAnimation(nodesManager);
 
   REAPseudoSelectorAttachQueue *attachQueue =
       [[REAPseudoSelectorAttachQueue alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
@@ -271,6 +281,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUIUpdatesQueueFunction,
       runNativeLayoutAnimation,
+      cancelNativeLayoutAnimation,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
       cssCanRouteProperty,

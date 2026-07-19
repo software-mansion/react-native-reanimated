@@ -19,10 +19,13 @@ import {
 
 import { ScenarioRenderer } from './scenarios';
 import {
+  countLayoutAnimationTraceEvents,
+  countRejectedPlatformStarts,
   getCompiledLayoutAnimationBackend,
   getReducedMotionEnabled,
   readLayoutAnimationTrace,
   recordLayoutAnimationTraceEvent,
+  setNativeLayoutAnimationStartPaused,
   startLayoutAnimationTrace,
   stopLayoutAnimationTrace,
 } from './trace';
@@ -74,20 +77,28 @@ function cycleDurationMs(
 }
 
 interface ControlButtonProps {
+  disabled?: boolean;
   label: string;
   onPress: () => void;
   secondary?: boolean;
 }
 
-function ControlButton({ label, onPress, secondary }: ControlButtonProps) {
+function ControlButton({
+  disabled,
+  label,
+  onPress,
+  secondary,
+}: ControlButtonProps) {
   return (
     <Pressable
       accessibilityRole="button"
+      disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
         styles.controlButton,
         secondary && styles.secondaryButton,
-        pressed && styles.pressedButton,
+        pressed && !disabled && styles.pressedButton,
+        disabled && styles.disabledButton,
       ]}>
       <Text
         style={[
@@ -111,7 +122,7 @@ export default function NativeLayoutAnimationsTestBench() {
     String(DEFAULT_REPETITIONS)
   );
   const [phase, setPhase] = useState<TestBenchPhase>('reset');
-  const [revision, setRevision] = useState(0);
+  const [activeMode, setActiveMode] = useState<TestBenchMode | null>(null);
   const [callbackCount, setCallbackCount] = useState(0);
   const [lastFinished, setLastFinished] = useState<boolean | null>(null);
   const [status, setStatus] = useState<RunStatus>('idle');
@@ -126,6 +137,7 @@ export default function NativeLayoutAnimationsTestBench() {
   const runIdRef = useRef(0);
   const callbackCountRef = useRef(0);
   const lastFinishedRef = useRef<boolean | null>(null);
+  const nativeStartGateActiveRef = useRef(false);
 
   const durationMs = clampInteger(
     durationInput,
@@ -160,17 +172,19 @@ export default function NativeLayoutAnimationsTestBench() {
 
   const reset = useCallback(async () => {
     clearTimers();
+    nativeStartGateActiveRef.current = false;
+    setNativeLayoutAnimationStartPaused(false);
     stopLayoutAnimationTrace();
     callbackCountRef.current = 0;
     lastFinishedRef.current = null;
     setCallbackCount(0);
     setLastFinished(null);
     setStatus('idle');
+    setActiveMode(null);
     setStatusMessage(
-      'Ready. Run uses fixed timing; Interrupt fires at 240 ms.'
+      'Ready. Choose one deterministic run mode; Interrupt fires at 240 ms.'
     );
     setPhase('reset');
-    setRevision((value) => value + 1);
 
     const reducedMotion = await getReducedMotionEnabled();
     const nextRunId = runIdRef.current + 1;
@@ -190,6 +204,8 @@ export default function NativeLayoutAnimationsTestBench() {
     reset().catch(console.error);
     return () => {
       clearTimers();
+      nativeStartGateActiveRef.current = false;
+      setNativeLayoutAnimationStartPaused(false);
       stopLayoutAnimationTrace();
     };
   }, [clearTimers, reset]);
@@ -210,6 +226,10 @@ export default function NativeLayoutAnimationsTestBench() {
       setCallbackCount(count);
       setLastFinished(finished);
       recordLayoutAnimationTraceEvent('callback-invoked', finished, count);
+      if (nativeStartGateActiveRef.current) {
+        nativeStartGateActiveRef.current = false;
+        setNativeLayoutAnimationStartPaused(false);
+      }
       refreshTrace();
     },
     [refreshTrace]
@@ -223,6 +243,7 @@ export default function NativeLayoutAnimationsTestBench() {
       setCallbackCount(0);
       setLastFinished(null);
       setStatus('running');
+      setActiveMode(mode);
       setStatusMessage(
         `${mode.toUpperCase()} · ${repetitions} deterministic repetition${
           repetitions === 1 ? '' : 's'
@@ -233,7 +254,14 @@ export default function NativeLayoutAnimationsTestBench() {
       for (let repetition = 0; repetition < repetitions; repetition++) {
         const cycleStart = repetition * oneCycleMs;
         schedule(() => {
-          setRevision((value) => value + 1);
+          if (
+            backend === 'native' &&
+            scenario === 'cancel-before-platform-start' &&
+            mode === 'cancel'
+          ) {
+            nativeStartGateActiveRef.current = true;
+            setNativeLayoutAnimationStartPaused(true);
+          }
           setPhase('reset');
           if (repetition > 0) {
             recordLayoutAnimationTraceEvent('scenario-reset');
@@ -274,25 +302,49 @@ export default function NativeLayoutAnimationsTestBench() {
       schedule(() => {
         const count = callbackCountRef.current;
         const finished = lastFinishedRef.current;
+        const isCancelBeforePlatformStart =
+          scenario === 'cancel-before-platform-start' && mode === 'cancel';
         const cancellationResultIsExpected =
-          scenario !== 'cancel-before-platform-start' ||
-          mode !== 'cancel' ||
-          finished === false;
+          !isCancelBeforePlatformStart || finished === false;
+        const callbackCountIsExpected = isCancelBeforePlatformStart
+          ? count === repetitions
+          : count >= repetitions;
+        const platformStartCount =
+          countLayoutAnimationTraceEvents('platform-started');
+        const platformStartCountIsExpected =
+          !isCancelBeforePlatformStart || platformStartCount === 0;
+        const rejectedPlatformStartCount = countRejectedPlatformStarts();
+        const rejectedPlatformStartCountIsExpected =
+          !isCancelBeforePlatformStart ||
+          backend !== 'native' ||
+          rejectedPlatformStartCount === repetitions;
         const passed =
-          count >= repetitions &&
+          callbackCountIsExpected &&
           finished !== null &&
-          cancellationResultIsExpected;
+          cancellationResultIsExpected &&
+          platformStartCountIsExpected &&
+          rejectedPlatformStartCountIsExpected;
         recordLayoutAnimationTraceEvent('animation-settled', finished, count);
         setStatus(passed ? 'pass' : 'fail');
         setStatusMessage(
           passed
             ? `PASS · observed ${count} callback${count === 1 ? '' : 's'}`
-            : `FAIL · callbacks=${count}, last finished=${String(finished)}`
+            : `FAIL · callbacks=${count}, last finished=${String(
+                finished
+              )}, platform starts=${platformStartCount}, rejected starts=${rejectedPlatformStartCount}`
         );
         refreshTrace();
       }, repetitions * oneCycleMs);
     },
-    [clearTimers, durationMs, refreshTrace, repetitions, scenario, schedule]
+    [
+      backend,
+      clearTimers,
+      durationMs,
+      refreshTrace,
+      repetitions,
+      scenario,
+      schedule,
+    ]
   );
 
   const copyTrace = useCallback(() => {
@@ -323,11 +375,13 @@ export default function NativeLayoutAnimationsTestBench() {
         {TEST_BENCH_SCENARIOS.map((item) => (
           <Pressable
             accessibilityRole="button"
+            disabled={status === 'running'}
             key={item.id}
             onPress={() => setScenario(item.id)}
             style={[
               styles.scenarioButton,
               item.id === scenario && styles.selectedScenarioButton,
+              status === 'running' && styles.disabledButton,
             ]}>
             <Text
               style={[
@@ -367,21 +421,34 @@ export default function NativeLayoutAnimationsTestBench() {
 
       <View style={styles.controls}>
         <ControlButton
+          disabled={status === 'running'}
           label="Reset"
           onPress={() => {
             reset().catch(console.error);
           }}
           secondary
         />
-        <ControlButton label="Run" onPress={() => execute('run')} />
-        <ControlButton label="Interrupt" onPress={() => execute('interrupt')} />
-        <ControlButton label="Cancel" onPress={() => execute('cancel')} />
+        <ControlButton
+          disabled={status === 'running'}
+          label="Run uninterrupted"
+          onPress={() => execute('run')}
+        />
+        <ControlButton
+          disabled={status === 'running'}
+          label="Run + interrupt"
+          onPress={() => execute('interrupt')}
+        />
+        <ControlButton
+          disabled={status === 'running'}
+          label="Run + cancel"
+          onPress={() => execute('cancel')}
+        />
       </View>
 
       <View style={styles.stageCard}>
         <ScenarioRenderer
           durationMs={durationMs}
-          key={`${scenario}-${revision}`}
+          mode={activeMode}
           onAnimationCallback={onAnimationCallback}
           phase={phase}
           scenario={scenario}
@@ -537,6 +604,9 @@ const styles = StyleSheet.create({
   },
   pressedButton: {
     opacity: 0.65,
+  },
+  disabledButton: {
+    opacity: 0.45,
   },
   controlButtonText: {
     color: 'white',

@@ -15,10 +15,15 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import type { TestBenchPhase, TestBenchScenarioId } from './types';
+import type {
+  TestBenchMode,
+  TestBenchPhase,
+  TestBenchScenarioId,
+} from './types';
 
 interface ScenarioProps {
   durationMs: number;
+  mode: TestBenchMode | null;
   phase: TestBenchPhase;
   onAnimationCallback: (finished: boolean) => void;
 }
@@ -53,7 +58,7 @@ function LinearPositionScenario({
   return (
     <View style={styles.stageRow}>
       <Animated.View
-        layout={layout}
+        layout={phase === 'reset' ? undefined : layout}
         style={[
           styles.box,
           styles.blueBox,
@@ -74,7 +79,7 @@ function PositionSizeTextScenario({
   return (
     <View style={styles.stageColumn}>
       <Animated.View
-        layout={layout}
+        layout={phase === 'reset' ? undefined : layout}
         style={[
           styles.textBox,
           atTarget ? styles.textBoxEnd : styles.textBoxStart,
@@ -204,7 +209,7 @@ function LayoutInterruptedByLayoutScenario({
   return (
     <View style={styles.stageRow}>
       <Animated.View
-        layout={layout}
+        layout={phase === 'reset' ? undefined : layout}
         style={[styles.largeBox, styles.cyanBox, positionStyle]}
       />
     </View>
@@ -213,6 +218,7 @@ function LayoutInterruptedByLayoutScenario({
 
 function ExitDuringLayoutScenario({
   durationMs,
+  mode,
   phase,
   onAnimationCallback,
 }: ScenarioProps) {
@@ -231,8 +237,10 @@ function ExitDuringLayoutScenario({
     <View style={styles.stageRow}>
       {visible && (
         <Animated.View
-          exiting={exiting}
-          layout={layout}
+          exiting={
+            mode === 'interrupt' || mode === 'cancel' ? exiting : undefined
+          }
+          layout={phase === 'reset' ? undefined : layout}
           style={[
             styles.largeBox,
             styles.redBox,
@@ -313,7 +321,7 @@ function ReducedMotionScenario({
   return (
     <View style={styles.stageRow}>
       <Animated.View
-        layout={layout}
+        layout={phase === 'reset' ? undefined : layout}
         style={[
           styles.largeBox,
           styles.greenBox,
@@ -357,7 +365,7 @@ function UnsupportedStylePropertyScenario({
   return (
     <View style={styles.stageRow}>
       <Animated.View
-        layout={layout}
+        layout={phase === 'reset' ? undefined : layout}
         style={[
           styles.unsupportedBox,
           phase === 'reset'

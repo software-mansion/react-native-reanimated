@@ -26,6 +26,7 @@ interface LayoutAnimationTraceProxy {
   }): void;
   _stopLayoutAnimationTrace?(): void;
   _getLayoutAnimationTrace?(): string;
+  _setNativeLayoutAnimationStartPaused?(paused: boolean): void;
   _recordLayoutAnimationTraceEvent?(
     event: HarnessTraceEvent,
     finished: boolean | null,
@@ -87,6 +88,49 @@ export function recordLayoutAnimationTraceEvent(
 
 export function readLayoutAnimationTrace(): string {
   return getTraceProxy()?._getLayoutAnimationTrace?.() ?? '';
+}
+
+export function countLayoutAnimationTraceEvents(event: string): number {
+  return readLayoutAnimationTrace()
+    .split('\n')
+    .filter((line) => {
+      if (!line) {
+        return false;
+      }
+      try {
+        return (JSON.parse(line) as { event?: unknown }).event === event;
+      } catch {
+        return false;
+      }
+    }).length;
+}
+
+export function countRejectedPlatformStarts(): number {
+  return readLayoutAnimationTrace()
+    .split('\n')
+    .filter((line) => {
+      if (!line) {
+        return false;
+      }
+      try {
+        const entry = JSON.parse(line) as {
+          event?: unknown;
+          finished?: unknown;
+          platformAnimationCreated?: unknown;
+        };
+        return (
+          entry.event === 'platform-completed' &&
+          entry.finished === false &&
+          entry.platformAnimationCreated === false
+        );
+      } catch {
+        return false;
+      }
+    }).length;
+}
+
+export function setNativeLayoutAnimationStartPaused(paused: boolean): void {
+  getTraceProxy()?._setNativeLayoutAnimationStartPaused?.(paused);
 }
 
 export function stopLayoutAnimationTrace(): void {

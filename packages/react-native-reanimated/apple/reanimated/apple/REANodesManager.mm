@@ -188,31 +188,63 @@ using namespace facebook::react;
   [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
 }
 
-- (void)runNativeLayoutAnimationForView:(ReactTag)viewTag
-                             descriptor:(const reanimated::NativeLayoutAnimationDescriptor &)descriptor
-                   usePresentationLayer:(bool)usePresentationLayer
-                             completion:(std::function<void(bool)>)completion
+- (void)runNativeLayoutAnimation:(reanimated::NativeLayoutAnimationHandle)handle
+                      descriptor:(const reanimated::NativeLayoutAnimationDescriptor &)descriptor
+            usePresentationLayer:(bool)usePresentationLayer
+               cancellationToken:(reanimated::NativeLayoutAnimationCancellationToken)cancellationToken
+                      completion:(std::function<void(bool)>)completion
 {
+  const ReactTag viewTag = handle.tag;
+
   // Core Animation must be driven on the main thread, but the descriptor is
-  // produced on the UI (worklet) thread - hop over if necessary.
+  // produced on the UI (worklet) thread - hop over with owned inputs.
   if (![NSThread isMainThread]) {
+    auto ownedDescriptor = std::make_shared<const reanimated::NativeLayoutAnimationDescriptor>(descriptor);
+    auto ownedCompletion = std::make_shared<std::function<void(bool)>>(std::move(completion));
     __weak REANodesManager *weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
       REANodesManager *strongSelf = weakSelf;
       if (strongSelf == nil) {
 // LayoutAnimationTrace start
 #ifndef NDEBUG
-        reanimated::layout_animation_trace::recordApplePlatformCompleted(viewTag, descriptor, nil, false, false);
+        reanimated::layout_animation_trace::recordApplePlatformCompleted(viewTag, *ownedDescriptor, nil, false, false);
 #endif // NDEBUG
        // LayoutAnimationTrace end
-        completion(NO);
+        (*ownedCompletion)(NO);
         return;
       }
-      [strongSelf runNativeLayoutAnimationForView:viewTag
-                                       descriptor:descriptor
-                             usePresentationLayer:usePresentationLayer
-                                       completion:completion];
+      [strongSelf runNativeLayoutAnimationOnMain:handle
+                                      descriptor:*ownedDescriptor
+                            usePresentationLayer:usePresentationLayer
+                               cancellationToken:std::move(cancellationToken)
+                                      completion:std::move(*ownedCompletion)];
     });
+    return;
+  }
+
+  [self runNativeLayoutAnimationOnMain:handle
+                            descriptor:descriptor
+                  usePresentationLayer:usePresentationLayer
+                     cancellationToken:std::move(cancellationToken)
+                            completion:std::move(completion)];
+}
+
+- (void)runNativeLayoutAnimationOnMain:(reanimated::NativeLayoutAnimationHandle)handle
+                            descriptor:(const reanimated::NativeLayoutAnimationDescriptor &)descriptor
+                  usePresentationLayer:(bool)usePresentationLayer
+                     cancellationToken:(reanimated::NativeLayoutAnimationCancellationToken)cancellationToken
+                            completion:(std::function<void(bool)>)completion
+{
+  RCTAssertMainQueue();
+  const ReactTag viewTag = handle.tag;
+
+  if (cancellationToken->load(std::memory_order_acquire)) {
+// LayoutAnimationTrace start
+#ifndef NDEBUG
+    reanimated::layout_animation_trace::recordApplePlatformCompleted(viewTag, descriptor, nil, false, false);
+#endif // NDEBUG
+    // LayoutAnimationTrace end
+    completion(NO);
     return;
   }
 
@@ -246,6 +278,7 @@ using namespace facebook::react;
     return;
   }
   CALayer *layer = componentView.layer;
+  NSString *generationKey = [NSString stringWithFormat:@"REA_LAYOUT_GENERATION_%llu", handle.generation];
 
   // Index the sampled channels by name for quick lookup / interpolation.
   std::unordered_map<std::string, const reanimated::NativeLayoutAnimationProperty *> channels;
@@ -350,7 +383,16 @@ using namespace facebook::react;
   // in-flight animation on that key path - otherwise a freshly committed layout
   // would incorrectly start from its final on-screen position.
   auto presentationActive = [&](NSString *keyPath) -> BOOL {
-    return presentationLayer != nil && [layer animationForKey:[@"REA_LAYOUT_" stringByAppendingString:keyPath]] != nil;
+    if (presentationLayer == nil) {
+      return NO;
+    }
+    NSString *suffix = [@"_" stringByAppendingString:keyPath];
+    for (NSString *key in layer.animationKeys) {
+      if ([key hasPrefix:@"REA_LAYOUT_GENERATION_"] && [key hasSuffix:suffix]) {
+        return YES;
+      }
+    }
+    return NO;
   };
 
   NSMutableArray<NSString *> *animatedKeyPaths = [NSMutableArray array];
@@ -478,9 +520,32 @@ using namespace facebook::react;
     // Commit the final value to the model layer first, so the view holds its
     // end state once the (auto-removed) animation completes - no snap-back.
     [layer setValue:finalModelValues[i] forKeyPath:keyPath];
-    [layer addAnimation:animation forKey:[@"REA_LAYOUT_" stringByAppendingString:keyPath]];
+    [layer addAnimation:animation
+                 forKey:[[generationKey stringByAppendingString:@"_"] stringByAppendingString:keyPath]];
   }
   [CATransaction commit];
+}
+
+- (void)cancelNativeLayoutAnimation:(reanimated::NativeLayoutAnimationHandle)handle
+{
+  const ReactTag viewTag = handle.tag;
+  if (![NSThread isMainThread]) {
+    __weak REANodesManager *weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{ [weakSelf cancelNativeLayoutAnimation:handle]; });
+    return;
+  }
+  RCTComponentViewRegistry *registry = self.surfacePresenter.mountingManager.componentViewRegistry;
+  REAUIView<RCTComponentViewProtocol> *view = [registry findComponentViewWithTag:static_cast<Tag>(viewTag)];
+  CALayer *layer = view.layer;
+  if (layer == nil) {
+    return;
+  }
+  NSString *prefix = [NSString stringWithFormat:@"REA_LAYOUT_GENERATION_%llu_", handle.generation];
+  for (NSString *key in layer.animationKeys.copy) {
+    if ([key hasPrefix:prefix]) {
+      [layer removeAnimationForKey:key];
+    }
+  }
 }
 
 @end

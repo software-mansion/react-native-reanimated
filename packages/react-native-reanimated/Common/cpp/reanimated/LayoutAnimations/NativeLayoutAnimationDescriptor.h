@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include <reanimated/LayoutAnimations/NativeLayoutAnimationHandle.h>
+
 // LayoutAnimationTrace start
 #ifndef NDEBUG
 #include <reanimated/LayoutAnimations/LayoutAnimationTrace.h>
@@ -40,5 +42,23 @@ struct NativeLayoutAnimationDescriptor {
 #endif // NDEBUG
   // LayoutAnimationTrace end
 };
+
+inline NativeLayoutAnimationTargetMask getNativeLayoutAnimationTargets(
+    const NativeLayoutAnimationDescriptor &descriptor) {
+  NativeLayoutAnimationTargetMask targets = 0;
+  for (const auto &property : descriptor.properties) {
+    const auto &keyPath = property.keyPath;
+    if (keyPath == "opacity") {
+      targets |= targetMask(NativeLayoutAnimationTarget::Opacity);
+    } else if (keyPath == "originX" || keyPath == "originY") {
+      targets |= targetMask(NativeLayoutAnimationTarget::Position);
+    } else if (keyPath == "width" || keyPath == "height") {
+      targets |= targetMask(NativeLayoutAnimationTarget::BoundsSize);
+    } else {
+      targets |= targetMask(NativeLayoutAnimationTarget::Transform);
+    }
+  }
+  return targets;
+}
 
 } // namespace reanimated

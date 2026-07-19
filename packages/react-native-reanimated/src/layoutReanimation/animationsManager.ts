@@ -58,14 +58,19 @@ function createLayoutAnimationManager(): {
   stop: (tag: number) => void;
   computeNativeDescriptor: (
     tag: number,
+    generation: number,
     type: LayoutAnimationType,
     yogaValues: Partial<LayoutAnimationValues>,
     config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
   ) => NativeLayoutAnimationDescriptor;
+  completeNative: (tag: number, generation: number, finished: boolean) => void;
 } {
   'worklet';
   const currentAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
+  const nativeCallbacks = new Map<string, LayoutAnimation['callback']>();
+  const nativeCallbackKey = (tag: number, generation: number) =>
+    `${tag}:${generation}`;
 
   // Flush layout-animation progress once per frame via the frame finalizer
   // (after all `requestAnimationFrame` callbacks), reusing the same
@@ -152,13 +157,23 @@ function createLayoutAnimationManager(): {
      * shared values nor drives the animation per-frame from JS.
      */
     computeNativeDescriptor(
-      _tag: number,
+      tag: number,
+      generation: number,
       _type: LayoutAnimationType,
       yogaValues: Partial<LayoutAnimationValues>,
       config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
     ): NativeLayoutAnimationDescriptor {
       const style = config(yogaValues);
+      if (style.callback) {
+        nativeCallbacks.set(nativeCallbackKey(tag, generation), style.callback);
+      }
       return buildNativeLayoutAnimationDescriptor(style);
+    },
+    completeNative(tag: number, generation: number, finished: boolean) {
+      const key = nativeCallbackKey(tag, generation);
+      const callback = nativeCallbacks.get(key);
+      nativeCallbacks.delete(key);
+      callback?.(finished);
     },
   };
 }

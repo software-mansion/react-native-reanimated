@@ -56,7 +56,12 @@ void recordCancelRequested(int tag);
 void recordSurfaceFlushRequested(int tag, facebook::react::SurfaceId surfaceId);
 
 void recordNativeDescriptor(int tag, LayoutAnimationType type, NativeLayoutAnimationDescriptor &descriptor);
-void recordAndroidPlatformCompleted(int tag, uint64_t generation, AnimationType animationType, bool finished);
+void recordAndroidPlatformCompleted(
+    int tag,
+    uint64_t generation,
+    AnimationType animationType,
+    bool finished,
+    bool platformAnimationCreated);
 
 } // namespace reanimated::layout_animation_trace
 

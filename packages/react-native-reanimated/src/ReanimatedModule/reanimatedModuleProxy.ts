@@ -34,6 +34,8 @@ export interface ReanimatedModuleProxy {
   _getLayoutAnimationTrace?(): string;
   /** @internal Development-only layout-animation diagnostics. */
   _isLayoutAnimationTraceActive?(): boolean;
+  /** @internal Development-only native layout-animation start gate. */
+  _setNativeLayoutAnimationStartPaused?(paused: boolean): void;
   /** @internal Development-only layout-animation diagnostics. */
   _recordLayoutAnimationConfigurationQueued?(
     viewTag: number,

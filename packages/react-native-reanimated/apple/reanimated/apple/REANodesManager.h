@@ -3,6 +3,7 @@
 
 #import <reanimated/LayoutAnimations/LayoutAnimationConfig.h>
 #import <reanimated/LayoutAnimations/NativeLayoutAnimationDescriptor.h>
+#import <reanimated/LayoutAnimations/NativeLayoutAnimationHandle.h>
 #import <reanimated/apple/READisplayLink.h>
 
 typedef void (^REAOnAnimationCallback)(READisplayLink *displayLink);
@@ -24,9 +25,11 @@ typedef void (^REAPerformOperations)();
 - (void)registerPerformOperations:(REAPerformOperations)performOperations;
 - (void)maybeFlushUIUpdatesQueue;
 // Plays a generic, pre-sampled layout-animation descriptor via Core Animation.
-- (void)runNativeLayoutAnimationForView:(ReactTag)viewTag
-                             descriptor:(const reanimated::NativeLayoutAnimationDescriptor &)descriptor
-                   usePresentationLayer:(bool)usePresentationLayer
-                             completion:(std::function<void(bool)>)completion;
+- (void)runNativeLayoutAnimation:(reanimated::NativeLayoutAnimationHandle)handle
+                      descriptor:(const reanimated::NativeLayoutAnimationDescriptor &)descriptor
+            usePresentationLayer:(bool)usePresentationLayer
+               cancellationToken:(reanimated::NativeLayoutAnimationCancellationToken)cancellationToken
+                      completion:(std::function<void(bool)>)completion;
+- (void)cancelNativeLayoutAnimation:(reanimated::NativeLayoutAnimationHandle)handle;
 
 @end

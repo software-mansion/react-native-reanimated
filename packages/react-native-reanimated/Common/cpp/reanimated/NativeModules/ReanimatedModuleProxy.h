@@ -110,6 +110,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   jsi::Value configureLayoutAnimationBatch(jsi::Runtime &rt, const jsi::Value &layoutAnimationsBatch);
   void setShouldAnimateExiting(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &shouldAnimate);
+  void handleNativeLayoutAnimationCompletion(NativeLayoutAnimationHandle handle, bool shouldRemove);
 
   bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
 
