@@ -2,7 +2,7 @@ import '../plugin/src/jestMatchers';
 
 import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
-import { describe, expect, jest, test } from '@jest/globals';
+import { describe, expect, test } from '@jest/globals';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
 
