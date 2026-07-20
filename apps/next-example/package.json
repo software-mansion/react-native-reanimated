@@ -16,17 +16,17 @@
   },
   "dependencies": {
     "expo": "54.0.13",
-    "next": "16.2.2",
+    "next": "16.2.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-native": "0.86.0",
+    "react-native": "0.87.0-rc.0",
     "react-native-reanimated": "workspace:*",
     "react-native-web": "0.21.1",
     "react-native-worklets": "workspace:*",
     "webpack": "5.105.4"
   },
   "devDependencies": {
-    "@babel/core": "7.28.4",
+    "@babel/core": "7.29.6",
     "@expo/next-adapter": "6.0.0",
     "@next/bundle-analyzer": "15.5.4",
     "babel-plugin-transform-define": "2.1.4",

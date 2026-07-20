@@ -4,7 +4,7 @@
   "private": true,
   "devDependencies": {
     "@babel/cli": "7.28.3",
-    "@babel/core": "7.28.4",
+    "@babel/core": "7.29.6",
     "@babel/plugin-transform-class-properties": "7.27.1",
     "@babel/plugin-transform-classes": "7.28.4",
     "@babel/plugin-transform-unicode-regex": "7.27.1",

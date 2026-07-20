@@ -270,14 +270,16 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     initializer: SerializableRef<() => void>,
     useDefaultQueue: boolean,
     customQueue: object | undefined,
-    enableEventLoop: boolean
+    enableEventLoop: boolean,
+    enableLocking: boolean
   ) {
     return this.#workletsModuleProxy.createWorkletRuntime(
       name,
       initializer,
       useDefaultQueue,
       customQueue,
-      enableEventLoop
+      enableEventLoop,
+      enableLocking
     );
   }
 

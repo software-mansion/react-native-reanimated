@@ -290,7 +290,7 @@ void NativeProxy::handleEvent(
   jsi::Value payload;
   try {
     payload = jsi::Value::createFromJsonUtf8(uiRuntime, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
-  } catch (std::exception &) {
+  } catch (...) {
     // Ignore events with malformed JSON payload.
     return;
   }
