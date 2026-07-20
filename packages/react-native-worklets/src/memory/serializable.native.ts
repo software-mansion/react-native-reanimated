@@ -225,14 +225,17 @@ export function createSerializable<TValue>(
       return cloneCustom(value, pack, i) as SerializableRef<TValue>;
     }
   }
-  const constructorName =
-    (value as { constructor?: { name?: string } })?.constructor?.name ||
-    'unknown';
-  const path = formatSerializationPath();
-  const location = path ? ` It was located at \`${path}\`.` : '';
-  console.warn(
-    `[Worklets] Cannot copy value of type \`${constructorName}\`.${location}`
-  );
+
+  if (__DEV__) {
+    const constructorName =
+      (value as { constructor?: { name?: string } })?.constructor?.name ||
+      'unknown';
+    const path = formatSerializationPath();
+    const location = path ? ` It was located at \`${path}\`.` : '';
+    console.warn(
+      `[Worklets] Cannot copy value of type \`${constructorName}\`.${location}`
+    );
+  }
 
   return cloneUndefined() as SerializableRef<TValue>;
 }
