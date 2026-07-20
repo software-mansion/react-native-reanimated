@@ -41,11 +41,7 @@ export function useDerivedValue<Value>(
   dependencies?: DependencyList
 ): DerivedValue<Value> {
   const initRef = useRef<SharedValue<Value> | null>(null);
-  let inputs = Object.values(updater.__closure ?? {});
-  if (!inputs.length && dependencies?.length) {
-    // let web work without a Babel/SWC plugin
-    inputs = dependencies;
-  }
+  const inputs = Object.values(updater.__closure ?? {});
 
   // build dependencies
   if (dependencies === undefined) {

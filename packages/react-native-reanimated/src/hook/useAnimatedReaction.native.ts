@@ -37,12 +37,7 @@ export function useAnimatedReaction<PreparedResult>(
 ) {
   const previous = useSharedValue<PreparedResult | null>(null);
 
-  let inputs = Object.values(prepare.__closure ?? {});
-
-  if (!inputs.length && dependencies?.length) {
-    // let web work without Worklets Babel plugin
-    inputs = dependencies;
-  }
+  const inputs = Object.values(prepare.__closure ?? {});
 
   if (dependencies === undefined) {
     dependencies = [

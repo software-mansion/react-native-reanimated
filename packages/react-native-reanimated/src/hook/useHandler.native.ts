@@ -1,20 +1,10 @@
 'use strict';
-import { isWorkletFunction } from 'react-native-worklets';
-
 import type { UnknownRecord } from '../common';
 import type { DependencyList } from './commonTypes';
 import type { GeneralHandlers, UseHandlerContext } from './useHandlerCommon';
 import { useHandlerBase } from './useHandlerCommon';
 
 export type { UseHandlerContext } from './useHandlerCommon';
-
-function isBabelPluginEnabled(handlers: UnknownRecord): boolean {
-  const handlerFunctions = Object.values(handlers);
-  // If there is no function provided, we assume that the Babel plugin is enabled.
-  return (
-    handlerFunctions.length === 0 || handlerFunctions.some(isWorkletFunction)
-  );
-}
 
 /**
  * Lets you find out whether the event handler dependencies have changed.
@@ -29,5 +19,6 @@ export function useHandler<Event extends object, Context extends UnknownRecord>(
   handlers: GeneralHandlers<Event, Context>,
   dependencies?: DependencyList
 ): UseHandlerContext<Context> {
-  return useHandlerBase(handlers, dependencies, isBabelPluginEnabled(handlers));
+  // The Babel plugin is always enabled outside of the web.
+  return useHandlerBase(handlers, dependencies, true);
 }
