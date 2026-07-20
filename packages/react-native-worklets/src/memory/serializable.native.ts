@@ -89,6 +89,27 @@ const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // We use it to check if later on the function reenters with the same object
 let processedObjectAtThresholdDepth: unknown;
 
+const serializationPathStack: string[] = [];
+
+function withPathSegment<TValue>(
+  getSegment: () => string,
+  serialize: () => TValue
+): TValue {
+  if (!__DEV__) {
+    return serialize();
+  }
+  serializationPathStack.push(getSegment());
+  try {
+    return serialize();
+  } finally {
+    serializationPathStack.pop();
+  }
+}
+
+function formatSerializationPath(): string {
+  return __DEV__ ? serializationPathStack.join('') : '';
+}
+
 export function createSerializable<TValue>(
   value: TValue,
   shouldPersistRemote = false,
@@ -213,9 +234,13 @@ export function createSerializable<TValue>(
   const constructorName =
     (value as { constructor?: { name?: string } })?.constructor?.name ||
     'unknown';
-  throw new Error(
-    `[Worklets] Cannot copy value of type \`${constructorName}\`.`
+  const path = formatSerializationPath();
+  const location = path ? ` It was located at \`${path}\`.` : '';
+  console.warn(
+    `[Worklets] Cannot copy value of type \`${constructorName}\`.${location}`
   );
+
+  return cloneUndefined() as SerializableRef<TValue>;
 }
 
 if (isBundleModeEnabled()) {
@@ -360,10 +385,9 @@ function cloneObjectProperties<T extends object>(
     if (key === '__initData' && clonedProps.__initData !== undefined) {
       continue;
     }
-    clonedProps[key] = createSerializable(
-      element,
-      shouldPersistRemote,
-      depth + 1
+    clonedProps[key] = withPathSegment(
+      () => `[${JSON.stringify(key)}]`,
+      () => createSerializable(element, shouldPersistRemote, depth + 1)
     );
   }
   return clonedProps;
@@ -387,8 +411,11 @@ function cloneArray<T extends unknown[]>(
   shouldPersistRemote: boolean,
   depth: number
 ): SerializableRef<T> {
-  const clonedElements = value.map((element) =>
-    createSerializable(element, shouldPersistRemote, depth + 1)
+  const clonedElements = value.map((element, index) =>
+    withPathSegment(
+      () => `[${index}]`,
+      () => createSerializable(element, shouldPersistRemote, depth + 1)
+    )
   );
   const clone = WorkletsModule.createSerializableArray(
     clonedElements,
@@ -456,33 +483,37 @@ function cloneWorklet<TValue extends WorkletFunction>(
     // seems more elegant to handle it this way.
     delete (value as WorkletFunction).__stackDetails;
   }
-  const clonedProps: Record<string, unknown> = cloneObjectProperties(
-    value,
-    shouldPersistRemote,
-    depth
-  );
-  // to save on transferring static __initData field of worklet structure
-  // we request serializable value to persist its UI counterpart. This means
-  // that the __initData field that contains long strings representing the
-  // worklet code, source map, and location, will always be
-  // serialized/deserialized once.
-  clonedProps.__initData = createSerializable(
-    value.__initData,
-    true,
-    depth + 1
-  );
+  return withPathSegment(
+    () => `<worklet ${value.name || 'anonymous'}>`,
+    () => {
+      const clonedProps: Record<string, unknown> = cloneObjectProperties(
+        value,
+        shouldPersistRemote,
+        depth
+      );
+      // to save on transferring static __initData field of worklet structure
+      // we request serializable value to persist its UI counterpart. This means
+      // that the __initData field that contains long strings representing the
+      // worklet code, source map, and location, will always be
+      // serialized/deserialized once.
+      clonedProps.__initData = withPathSegment(
+        () => '["__initData"]',
+        () => createSerializable(value.__initData, true, depth + 1)
+      );
 
-  const clone = WorkletsModule.createSerializableWorklet(
-    clonedProps,
-    // TODO: Check after refactor if we can remove shouldPersistRemote parameter (imho it's redundant here since worklets are always persistent)
-    // retain all worklets
-    true
-  ) as SerializableRef<TValue>;
-  serializableMappingCache.set(value, clone);
-  serializableMappingCache.set(clone);
+      const clone = WorkletsModule.createSerializableWorklet(
+        clonedProps,
+        // TODO: Check after refactor if we can remove shouldPersistRemote parameter (imho it's redundant here since worklets are always persistent)
+        // retain all worklets
+        true
+      ) as SerializableRef<TValue>;
+      serializableMappingCache.set(value, clone);
+      serializableMappingCache.set(clone);
 
-  freezeObjectInDev(value);
-  return clone;
+      freezeObjectInDev(value);
+      return clone;
+    }
+  );
 }
 
 /**
@@ -545,9 +576,21 @@ function cloneMap(
 ): SerializableRef<Map<unknown, unknown>> {
   const clonedKeys: unknown[] = [];
   const clonedValues: unknown[] = [];
+  let index = 0;
   for (const [key, element] of value.entries()) {
-    clonedKeys.push(createSerializable(key));
-    clonedValues.push(createSerializable(element));
+    clonedKeys.push(
+      withPathSegment(
+        () => `.keys()[${index}]`,
+        () => createSerializable(key)
+      )
+    );
+    clonedValues.push(
+      withPathSegment(
+        () => `.values()[${index}]`,
+        () => createSerializable(element)
+      )
+    );
+    index++;
   }
   const clone = WorkletsModule.createSerializableMap(clonedKeys, clonedValues);
   serializableMappingCache.set(value, clone);
@@ -559,8 +602,15 @@ function cloneMap(
 
 function cloneSet(value: Set<unknown>): SerializableRef<Set<unknown>> {
   const clonedElements: unknown[] = [];
+  let index = 0;
   for (const element of value) {
-    clonedElements.push(createSerializable(element));
+    clonedElements.push(
+      withPathSegment(
+        () => `.values()[${index}]`,
+        () => createSerializable(element)
+      )
+    );
+    index++;
   }
   const clone = WorkletsModule.createSerializableSet(clonedElements);
   serializableMappingCache.set(value, clone);
@@ -642,7 +692,10 @@ function cloneCustom<TValue extends object, TPacked = unknown>(
   typeId: number
 ): SerializableRef<TValue> {
   const packedData = pack(data);
-  const serialized = createSerializable(packedData);
+  const serialized = withPathSegment(
+    () => '.pack()',
+    () => createSerializable(packedData)
+  );
 
   return WorkletsModule.createCustomSerializable(
     serialized,
