@@ -687,6 +687,15 @@ if (__DEV__) {
         createSerializable(proxy);
       }).toThrow('Cannot copy value of type');
     });
+
+    test('warns when passing an unserializable value to a worklet', async () => {
+      const nestedMap = new Map([[0, [{ someKey: new Date() }]]]);
+      await expect(() => {
+        createSerializable(nestedMap);
+      }).toThrow(
+        'Cannot copy value of type `Date`. It was located at `.values()[0][0]["someKey"]`.'
+      );
+    });
   });
 
   describe('Test serializable freezing', () => {
