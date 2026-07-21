@@ -6,6 +6,7 @@ const WEB_ONLY_IN_JEST = new Set([
   'mappers',
   'ConfigHelper',
   'UpdateLayoutAnimations',
+  'useAnimatedStyle',
 ]);
 
 /** @type {import('jest-resolve').SyncResolver} */
