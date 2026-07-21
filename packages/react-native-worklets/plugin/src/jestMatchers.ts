@@ -4,6 +4,7 @@ export {};
 declare global {
   namespace jest {
     interface Matchers<R> {
+      toHaveInitData(times?: number): R;
       toHaveWorkletData(times?: number): R;
       toHaveInlineStyleWarning(times?: number): R;
       toHaveLocation(location: string): R;
