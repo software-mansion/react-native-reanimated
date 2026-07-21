@@ -39,9 +39,9 @@
     "type:check:app": "yarn workspace common-app type:check",
     "type:check:plugin": "yarn workspace babel-plugin-worklets type:check",
     "type:check:tests": "../../scripts/test-ts.sh __typetests__",
-    "type:check:legacy-rn-api": "yarn type:check:legacy-rn-api:src && yarn type:check:legacy-rn-api:app",
-    "type:check:legacy-rn-api:src": "yarn tsc --noEmit --customConditions react-native-legacy-deep-imports",
-    "type:check:legacy-rn-api:app": "yarn workspace common-app type:check:legacy-rn-api",
+    "type:check:legacy-rn-types": "yarn type:check:legacy-rn-types:src && yarn type:check:legacy-rn-types:app",
+    "type:check:legacy-rn-types:src": "yarn tsc --noEmit --customConditions react-native-legacy-deep-imports",
+    "type:check:legacy-rn-types:app": "yarn workspace common-app type:check:legacy-rn-types",
     "tree-shake:check:web": "yarn is-tree-shakable --resolution web",
     "validate-peers": "node ../../scripts/validate-compatibility-peer-dependencies.js"
   },
