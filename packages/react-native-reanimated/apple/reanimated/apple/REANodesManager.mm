@@ -198,7 +198,11 @@ using namespace facebook::react;
 
   // Core Animation must be driven on the main thread, but the descriptor is
   // produced on the UI (worklet) thread - hop over with owned inputs.
-  if (![NSThread isMainThread]) {
+  // Entering starts during the mounting transaction, before Fabric registers
+  // the inserted view. Queue one main-thread turn, as the first PoC did, so the
+  // lookup runs after that transaction mounts the view.
+  const bool isEntering = !usePresentationLayer;
+  if (![NSThread isMainThread] || isEntering) {
     auto ownedDescriptor = std::make_shared<const reanimated::NativeLayoutAnimationDescriptor>(descriptor);
     auto ownedCompletion = std::make_shared<std::function<void(bool)>>(std::move(completion));
     __weak REANodesManager *weakSelf = self;

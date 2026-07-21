@@ -771,6 +771,7 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
         yogaValues.setProperty(uiRuntime, "targetGlobalOriginY", values.y);
         yogaValues.setProperty(uiRuntime, "targetWidth", values.width);
         yogaValues.setProperty(uiRuntime, "targetHeight", values.height);
+        yogaValues.setProperty(uiRuntime, "targetOpacity", opacity);
         yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
         yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
 

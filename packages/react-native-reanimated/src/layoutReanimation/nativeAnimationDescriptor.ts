@@ -148,7 +148,8 @@ function flattenStyleSnapshot(style: Record<string, unknown>): FlatFrame {
  * factories resolve into concrete animation objects synchronously.
  */
 export function buildNativeLayoutAnimationDescriptor(
-  style: LayoutAnimation
+  style: LayoutAnimation,
+  fallbackOpacity?: number
 ): NativeLayoutAnimationDescriptor {
   'worklet';
   const animation = withStyleAnimation(
@@ -221,6 +222,19 @@ export function buildNativeLayoutAnimationDescriptor(
     } else {
       properties.push({ keyPath: channel, offsets, values });
     }
+  }
+
+  // Entering views mount with a temporary opacity of 0 to prevent a flash
+  // before the native animation starts. The legacy frame loop restores the
+  // view's real opacity when the animation does not animate opacity itself.
+  // Add the same fallback to the native descriptor so geometry-only entering
+  // animations do not leave the mounted view transparent.
+  if (fallbackOpacity !== undefined && !channels.has('opacity')) {
+    properties.push({
+      keyPath: 'opacity',
+      offsets: [0, 1],
+      values: [fallbackOpacity, fallbackOpacity],
+    });
   }
 
   return { durationMs, properties };

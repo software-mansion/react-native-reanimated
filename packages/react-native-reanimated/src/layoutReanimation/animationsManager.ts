@@ -20,6 +20,10 @@ import { buildNativeLayoutAnimationDescriptor } from './nativeAnimationDescripto
 
 const TAG_OFFSET = 1e9;
 
+type NativeLayoutAnimationValues = Partial<LayoutAnimationValues> & {
+  targetOpacity?: number;
+};
+
 function makeMutableUI<TValue>(initial: TValue): Mutable<TValue> {
   'worklet';
   return mutableHostDecorator({
@@ -60,7 +64,7 @@ function createLayoutAnimationManager(): {
     tag: number,
     generation: number,
     type: LayoutAnimationType,
-    yogaValues: Partial<LayoutAnimationValues>,
+    yogaValues: NativeLayoutAnimationValues,
     config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
   ) => NativeLayoutAnimationDescriptor;
   completeNative: (tag: number, generation: number, finished: boolean) => void;
@@ -159,15 +163,23 @@ function createLayoutAnimationManager(): {
     computeNativeDescriptor(
       tag: number,
       generation: number,
-      _type: LayoutAnimationType,
-      yogaValues: Partial<LayoutAnimationValues>,
+      type: LayoutAnimationType,
+      yogaValues: NativeLayoutAnimationValues,
       config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
     ): NativeLayoutAnimationDescriptor {
       const style = config(yogaValues);
       if (style.callback) {
         nativeCallbacks.set(nativeCallbackKey(tag, generation), style.callback);
       }
-      return buildNativeLayoutAnimationDescriptor(style);
+      const fallbackOpacity =
+        type === LayoutAnimationType.ENTERING
+          ? yogaValues.targetOpacity
+          : undefined;
+      const descriptor = buildNativeLayoutAnimationDescriptor(
+        style,
+        fallbackOpacity
+      );
+      return descriptor;
     },
     completeNative(tag: number, generation: number, finished: boolean) {
       const key = nativeCallbackKey(tag, generation);
