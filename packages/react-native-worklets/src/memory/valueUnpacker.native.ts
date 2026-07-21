@@ -26,7 +26,7 @@ export function installValueUnpacker() {
         const initData = objectToUnpack.__initData;
         if (initData!.bytecode !== undefined) {
           workletFun = globalThis.evalBytecode!(initData!.bytecode);
-        } else if (globalThis.evalWithSourceMap) {
+        } else if (globalThis.evalWithSourceMap && initData!.sourceMap) {
           // if the runtime (hermes only for now) supports loading source maps
           // we want to use the proper filename for the location as it guarantees
           // that debugger understands and loads the source code of the file where
@@ -34,7 +34,7 @@ export function installValueUnpacker() {
           workletFun = globalThis.evalWithSourceMap(
             initData!.code!,
             initData!.location!,
-            initData!.sourceMap!
+            initData!.sourceMap
           );
         } else if (globalThis.evalWithSourceUrl) {
           // if the runtime doesn't support loading source maps, in dev mode we
