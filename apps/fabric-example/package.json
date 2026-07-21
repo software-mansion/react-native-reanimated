@@ -9,7 +9,9 @@
     "start": "react-native start",
     "format": "yarn run --top-level oxfmt .",
     "lint": "eslint . --max-warnings 0",
-    "type:check": "tsc --noEmit"
+    "type:check": "tsc --noEmit",
+    "runtime-tests": "node ./scripts/runtime-tests-server.js --launch",
+    "runtime-tests:server": "node ./scripts/runtime-tests-server.js"
   },
   "dependencies": {
     "common-app": "workspace:*",
@@ -19,7 +21,8 @@
   "devDependencies": {
     "@types/react": "19.2.2",
     "eslint": "9.37.0",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "ws": "8.18.3"
   },
   "engines": {
     "node": ">= 22.11.0"

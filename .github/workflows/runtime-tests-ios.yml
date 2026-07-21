@@ -1,0 +1,107 @@
+name: Runtime tests iOS
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  pull_request:
+    paths:
+      - .github/workflows/runtime-tests-ios.yml
+      - apps/common-app/runtime-tests/**
+      - apps/fabric-example/scripts/runtime-tests-server.js
+  workflow_call:
+    inputs:
+      bundleMode:
+        required: false
+        type: boolean
+        default: false
+  workflow_dispatch:
+    inputs:
+      bundleMode:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  runtime-tests-ios:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }}
+    runs-on: macos-26
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        # The workflow-name check is required: the nightly caller also runs on
+        # pull_request, and its workflow_call legs must keep their explicit
+        # inputs.bundleMode instead of fanning out both modes.
+        bundleMode: ${{ fromJSON((github.event_name == 'pull_request' && github.workflow == 'Runtime tests iOS') && '[false, true]' || format('[{0}]', inputs.bundleMode)) }}
+    env:
+      WORKING_DIRECTORY: apps/fabric-example
+      REANIMATED_DIR: packages/react-native-reanimated
+    concurrency:
+      group: runtime-tests-ios-${{ github.ref }}-${{ matrix.bundleMode }}
+      cancel-in-progress: true
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
+        with:
+          bundler-cache: true
+
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
+
+      - name: Toggle Bundle Mode off (Legacy Eval)
+        if: ${{ !matrix.bundleMode }}
+        run: yarn toggle-bundle-mode
+
+      - name: Build Reanimated package
+        working-directory: ${{ env.REANIMATED_DIR }}
+        run: yarn build
+
+      - name: Install Pods (with caching)
+        uses: ./.github/actions/install-pods
+        with:
+          working-directory: ${{ env.WORKING_DIRECTORY }}
+          pod-directory: ios
+
+      - name: Cache DerivedData
+        uses: ./.github/actions/cache-derived-data
+        with:
+          platform: ios
+          working-directory: ${{ env.WORKING_DIRECTORY }}
+          pod-directory: ios
+
+      - name: Run ReJest self-tests (builds the app, retries once)
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: >-
+          node scripts/runtime-tests-server.js --launch --library self-tests
+          --connect-timeout 900 --idle-timeout 900
+          || node scripts/runtime-tests-server.js --launch --library self-tests
+          --skip-build --connect-timeout 900 --idle-timeout 900
+
+      - name: Verify CI catches failing tests
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: >-
+          if node scripts/runtime-tests-server.js --launch --library self-tests
+          --skip-build --connect-timeout 900 --idle-timeout 900
+          --only "intentional failures";
+          then echo "A failing suite did not fail the runner" && exit 1;
+          else echo "Failing tests correctly failed the runner"; fi
+
+      - name: Run Worklets runtime tests (reuses the build, retries once)
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: >-
+          node scripts/runtime-tests-server.js --launch --library worklets
+          --skip-build --connect-timeout 900 --idle-timeout 900
+          || node scripts/runtime-tests-server.js --launch --library worklets
+          --skip-build --connect-timeout 900 --idle-timeout 900
+
+      - name: Run Reanimated runtime tests (reuses the build, retries once)
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: >-
+          node scripts/runtime-tests-server.js --launch --library reanimated
+          --skip-build --connect-timeout 900 --idle-timeout 900
+          || node scripts/runtime-tests-server.js --launch --library reanimated
+          --skip-build --connect-timeout 900 --idle-timeout 900
