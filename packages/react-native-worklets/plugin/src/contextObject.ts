@@ -3,8 +3,6 @@ import type { ObjectExpression } from '@babel/types';
 import {
   blockStatement,
   cloneNode,
-  directive,
-  directiveLiteral,
   functionExpression,
   identifier,
   isIdentifier,
@@ -13,6 +11,7 @@ import {
   returnStatement,
 } from '@babel/types';
 
+import { addWorkletDirectivesToBody } from './directives';
 import type { WorkletsPluginPass } from './types';
 
 export const contextObjectMarker = '__workletContextObject';
@@ -44,11 +43,10 @@ function processWorkletContextObject(objectExpression: ObjectExpression): void {
   const workletObjectFactory = functionExpression(
     null,
     [],
-    blockStatement(
-      [returnStatement(cloneNode(objectExpression))],
-      [directive(directiveLiteral('worklet'))]
-    )
+    blockStatement([returnStatement(cloneNode(objectExpression))])
   );
+
+  addWorkletDirectivesToBody(workletObjectFactory.body);
 
   objectExpression.properties.push(
     objectProperty(

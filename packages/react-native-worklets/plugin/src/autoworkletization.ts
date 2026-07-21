@@ -1,8 +1,8 @@
 import type { NodePath } from '@babel/core';
-import type { BlockStatement, CallExpression } from '@babel/types';
+import type { CallExpression } from '@babel/types';
 import { isSequenceExpression, isV8IntrinsicIdentifier } from '@babel/types';
 
-import { addDirective, replaceImplicitReturnWithBlock } from './directives';
+import { addWorkletDirectivesToPath } from './directives';
 import { forEachWorkletizableFunction } from './findWorklet';
 import {
   gestureHandlerBuilderMethods,
@@ -76,7 +76,7 @@ export function addDirectivesToKnownCallback(
   path: NodePath<WorkletizableFunction>
 ): void {
   if (isGestureHandlerEventCallback(path) || isLayoutAnimationCallback(path)) {
-    addDirectives(path);
+    addWorkletDirectivesToPath(path);
   }
 }
 
@@ -128,15 +128,7 @@ function addDirectivesToArgs(
       state,
       acceptWorkletizableFunction,
       acceptObject,
-      addDirectives
+      addWorkletDirectivesToPath
     );
   });
-}
-
-function addDirectives(path: NodePath<WorkletizableFunction>): void {
-  if (path.isArrowFunctionExpression()) {
-    replaceImplicitReturnWithBlock(path.node);
-  }
-  addDirective(path.node.body as BlockStatement, 'worklet');
-  addDirective(path.node.body as BlockStatement, 'use no memo');
 }

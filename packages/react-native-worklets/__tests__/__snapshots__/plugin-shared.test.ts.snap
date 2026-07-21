@@ -28,6 +28,8 @@ exports[`babel plugin core (bundle mode) closure handling captures locally bound
   console
 }) {
   const f = function () {
+    "use no memo";
+
     console.log(console);
   };
   f.__closure = {
@@ -45,6 +47,8 @@ exports[`babel plugin core (bundle mode) closure handling captures multiple clos
   b
 }) {
   const foo = function () {
+    "use no memo";
+
     return a + b;
   };
   foo.__closure = {
@@ -60,6 +64,8 @@ exports[`babel plugin core (bundle mode) closure handling captures multiple clos
 exports[`babel plugin core (bundle mode) closure handling does not capture default globals 1`] = `
 "export default (function f_testJs1Factory({}) {
   const f = function () {
+    "use no memo";
+
     console.log('hi');
     return Math.random();
   };
@@ -95,6 +101,8 @@ exports[`babel plugin core (bundle mode) worklet shapes workletizes ArrowFunctio
 exports[`babel plugin core (bundle mode) worklet shapes workletizes ArrowFunctionExpression 2`] = `
 "export default (function testJs1Factory({}) {
   const testJs1 = function (x) {
+    "use no memo";
+
     return x + 2;
   };
   testJs1.__closure = {};
@@ -109,6 +117,8 @@ exports[`babel plugin core (bundle mode) worklet shapes workletizes FunctionDecl
 exports[`babel plugin core (bundle mode) worklet shapes workletizes FunctionDeclaration 2`] = `
 "export default (function foo_testJs1Factory({}) {
   const foo = function (x) {
+    "use no memo";
+
     return x + 2;
   };
   foo.__closure = {};
@@ -127,6 +137,8 @@ exports[`babel plugin core (bundle mode) worklet shapes workletizes ObjectMethod
 exports[`babel plugin core (bundle mode) worklet shapes workletizes ObjectMethod 2`] = `
 "export default (function bar_testJs1Factory({}) {
   const bar = function (x) {
+    "use no memo";
+
     return x + 2;
   };
   bar.__closure = {};
@@ -141,6 +153,8 @@ exports[`babel plugin core (bundle mode) worklet shapes workletizes named Functi
 exports[`babel plugin core (bundle mode) worklet shapes workletizes named FunctionExpression 2`] = `
 "export default (function foo_testJs1Factory({}) {
   const foo = function (x) {
+    "use no memo";
+
     return x + 2;
   };
   foo.__closure = {};
@@ -155,6 +169,8 @@ exports[`babel plugin core (bundle mode) worklet shapes workletizes unnamed Func
 exports[`babel plugin core (bundle mode) worklet shapes workletizes unnamed FunctionExpression 2`] = `
 "export default (function testJs1Factory({}) {
   const testJs1 = function (x) {
+    "use no memo";
+
     return x + 2;
   };
   testJs1.__closure = {};
@@ -208,6 +224,8 @@ const f = function f_testJs1Factory({
 }) {
   const _e = [new global.Error(), -2, -27];
   const f = function () {
+    "use no memo";
+
     console.log(console);
   };
   f.__closure = {
@@ -238,6 +256,8 @@ const foo = function foo_testJs1Factory({
 }) {
   const _e = [new global.Error(), -3, -27];
   const foo = function () {
+    "use no memo";
+
     return a + b;
   };
   foo.__closure = {
@@ -266,6 +286,8 @@ const f = function f_testJs1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const f = function () {
+    "use no memo";
+
     console.log('hi');
     return Math.random();
   };
@@ -339,6 +361,8 @@ const foo = function testJs1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const testJs1 = function (x) {
+    "use no memo";
+
     return x + 2;
   };
   testJs1.__closure = {};
@@ -362,6 +386,8 @@ const foo = function foo_testJs1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function (x) {
+    "use no memo";
+
     return x + 2;
   };
   foo.__closure = {};
@@ -386,6 +412,8 @@ const foo = {
   }) {
     const _e = [new global.Error(), 1, -27];
     const bar = function (x) {
+      "use no memo";
+
       return x + 2;
     };
     bar.__closure = {};
@@ -410,6 +438,8 @@ const foo = function foo_testJs1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function (x) {
+    "use no memo";
+
     return x + 2;
   };
   foo.__closure = {};
@@ -433,6 +463,8 @@ const foo = function testJs1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const testJs1 = function (x) {
+    "use no memo";
+
     return x + 2;
   };
   testJs1.__closure = {};

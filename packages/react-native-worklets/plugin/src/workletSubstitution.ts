@@ -6,6 +6,7 @@ import {
   objectProperty,
 } from '@babel/types';
 
+import { addDirective } from './directives';
 import type { WorkletsPluginPass } from './types';
 import { WorkletizableFunction } from './types';
 import { replaceWithFactoryCall } from './utils';
@@ -25,6 +26,7 @@ export function processIfWithWorkletDirective(
   if (!hasWorkletDirective(path.node.body.directives)) {
     return false;
   }
+  addDirective(path.node.body, 'use no memo');
   processWorklet(path, state);
   return true;
 }

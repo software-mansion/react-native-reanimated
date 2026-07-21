@@ -16,8 +16,6 @@ import {
   assignmentExpression,
   blockStatement,
   callExpression,
-  directive,
-  directiveLiteral,
   expressionStatement,
   functionDeclaration,
   functionExpression,
@@ -33,6 +31,7 @@ import {
 } from '@babel/types';
 import { strict as assert } from 'assert';
 
+import { addWorkletDirectivesToBody } from './directives';
 import { workletTransformSync } from './transform';
 import type { WorkletsPluginPass } from './types';
 import { workletClassFactorySuffix } from './types';
@@ -117,8 +116,7 @@ function getPolyfilledAst(
 function appendWorkletDirectiveToPolyfills(statements: Statement[]) {
   statements.forEach((statement) => {
     if (isFunctionDeclaration(statement)) {
-      const workletDirective = directive(directiveLiteral('worklet'));
-      statement.body.directives.push(workletDirective);
+      addWorkletDirectivesToBody(statement.body);
     }
   });
 }
@@ -158,26 +156,22 @@ function replaceClassDeclarationWithFactoryAndCall(
   const classFactoryDeclaration = functionDeclaration(
     identifier(classFactoryName),
     [],
-    blockStatement(
-      [
-        variableDeclaration('const', [
-          variableDeclarator(identifier(className), classDeclarationInit),
-        ]),
-        expressionStatement(
-          assignmentExpression(
-            '=',
-            memberExpression(
-              identifier(className),
-              identifier(classFactoryName)
-            ),
-            identifier(classFactoryName)
-          )
-        ),
-        returnStatement(identifier(className)),
-      ],
-      [directive(directiveLiteral('worklet'))]
-    )
+    blockStatement([
+      variableDeclaration('const', [
+        variableDeclarator(identifier(className), classDeclarationInit),
+      ]),
+      expressionStatement(
+        assignmentExpression(
+          '=',
+          memberExpression(identifier(className), identifier(classFactoryName)),
+          identifier(classFactoryName)
+        )
+      ),
+      returnStatement(identifier(className)),
+    ])
   );
+
+  addWorkletDirectivesToBody(classFactoryDeclaration.body);
 
   const newClassDeclaration = variableDeclaration('const', [
     variableDeclarator(

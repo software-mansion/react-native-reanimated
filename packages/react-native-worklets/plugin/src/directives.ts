@@ -1,3 +1,4 @@
+import type { NodePath } from '@babel/core';
 import type { ArrowFunctionExpression, BlockStatement } from '@babel/types';
 import {
   blockStatement,
@@ -6,6 +7,22 @@ import {
   isBlockStatement,
   returnStatement,
 } from '@babel/types';
+
+import type { WorkletizableFunction } from './types';
+
+export function addWorkletDirectivesToPath(
+  path: NodePath<WorkletizableFunction>
+): void {
+  if (path.isArrowFunctionExpression()) {
+    replaceImplicitReturnWithBlock(path.node);
+  }
+  addWorkletDirectivesToBody(path.node.body as BlockStatement);
+}
+
+export function addWorkletDirectivesToBody(node: BlockStatement): void {
+  addDirective(node, 'worklet');
+  addDirective(node, 'use no memo');
+}
 
 export function addDirective(node: BlockStatement, dir: string): void {
   if (
@@ -22,10 +39,9 @@ export function addDirective(node: BlockStatement, dir: string): void {
  *
  * `() => 1` becomes `() => { return 1 }`
  *
- * This is necessary because the worklet directive is only allowed on block
- * statements.
+ * It's necessary because directives are only allowed on block statements.
  */
-export function replaceImplicitReturnWithBlock(path: ArrowFunctionExpression) {
+function replaceImplicitReturnWithBlock(path: ArrowFunctionExpression) {
   if (!isBlockStatement(path.body)) {
     path.body = blockStatement([returnStatement(path.body)]);
   }
