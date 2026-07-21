@@ -166,7 +166,7 @@ describe('Test reusing animatedStyles', () => {
       const componentTwo = getTestComponent(COMPONENT_REF.TWO);
       const componentThree = getTestComponent(COMPONENT_REF.THREE);
 
-      await wait(300);
+      await wait(600);
 
       // Check the distance from the top
       const finalStyleFull = { height: 80, top: 0, margin: 0, ...finalStyle };

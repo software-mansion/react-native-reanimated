@@ -11,6 +11,7 @@ import type {
   TestSuite,
   TestValue,
 } from '../types';
+import { TestDecorator } from '../types';
 import { RenderLock } from '../utils/SyncUIRunner';
 import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
 import { assertTestCase } from './Asserts';
@@ -192,6 +193,14 @@ export class TestRunner {
       await testSuite.beforeEach();
     }
     await testCase.run();
+
+    if (testCase.decorator === TestDecorator.FAILING) {
+      if (testCase.errors.length > 0) {
+        testCase.errors.length = 0;
+      } else {
+        testCase.errors.push('Expected the test to fail, but it passed');
+      }
+    }
 
     this._testSummary.showTestCaseSummary(testCase, testSuite.nestingLevel);
 

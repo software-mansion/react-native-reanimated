@@ -7,6 +7,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { BackButton, DrawerButton } from '@/components';
 import { createStack, IS_MACOS } from '@/utils';
 
+import type { RunnerId } from '../../../runtime-tests/ReJest/RuntimeTestsRunner';
 import type { RuntimeTestSuite } from '../../../runtime-tests/types';
 
 type RootStackParamList = {
@@ -47,40 +48,53 @@ function HomeScreen({ navigation }: HomeScreenProps) {
 function ReanimatedTestsScreen() {
   const RuntimeTestsRunner = (
     require('../../../runtime-tests/ReJest/RuntimeTestsRunner') as {
-      default: React.ComponentType<{ tests: Array<RuntimeTestSuite> }>;
+      default: React.ComponentType<{
+        tests: Array<RuntimeTestSuite>;
+        runnerId: RunnerId;
+      }>;
     }
   ).default;
   const { REANIMATED_TEST_SUITES } =
     require('../../../runtime-tests/reanimated/suites') as {
       REANIMATED_TEST_SUITES: Array<RuntimeTestSuite>;
     };
-  return <RuntimeTestsRunner tests={REANIMATED_TEST_SUITES} />;
+  return (
+    <RuntimeTestsRunner runnerId="Reanimated" tests={REANIMATED_TEST_SUITES} />
+  );
 }
 
 function WorkletsTestsScreen() {
   const RuntimeTestsRunner = (
     require('../../../runtime-tests/ReJest/RuntimeTestsRunner') as {
-      default: React.ComponentType<{ tests: Array<RuntimeTestSuite> }>;
+      default: React.ComponentType<{
+        tests: Array<RuntimeTestSuite>;
+        runnerId: RunnerId;
+      }>;
     }
   ).default;
   const { WORKLETS_TEST_SUITES } =
     require('../../../runtime-tests/worklets/suites') as {
       WORKLETS_TEST_SUITES: Array<RuntimeTestSuite>;
     };
-  return <RuntimeTestsRunner tests={WORKLETS_TEST_SUITES} />;
+  return (
+    <RuntimeTestsRunner runnerId="Worklets" tests={WORKLETS_TEST_SUITES} />
+  );
 }
 
 function SelfTestsScreen() {
   const RuntimeTestsRunner = (
     require('../../../runtime-tests/ReJest/RuntimeTestsRunner') as {
-      default: React.ComponentType<{ tests: Array<RuntimeTestSuite> }>;
+      default: React.ComponentType<{
+        tests: Array<RuntimeTestSuite>;
+        runnerId: RunnerId;
+      }>;
     }
   ).default;
   const { SELF_TEST_SUITES } =
     require('../../../runtime-tests/self-tests/suites') as {
       SELF_TEST_SUITES: Array<RuntimeTestSuite>;
     };
-  return <RuntimeTestsRunner tests={SELF_TEST_SUITES} />;
+  return <RuntimeTestsRunner runnerId="SelfTests" tests={SELF_TEST_SUITES} />;
 }
 
 const Stack = createStack<RootStackParamList>();

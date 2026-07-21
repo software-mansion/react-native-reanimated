@@ -1,9 +1,11 @@
-import { makeMutable } from 'react-native-reanimated';
+import { createSynchronizable } from 'react-native-worklets';
 
 import type { TrackerCallCount } from '../types';
 
 let callCallTrackerRegistryJS: Record<string, number> = {};
-const callCallTrackerRegistryUI = makeMutable<Record<string, number>>({});
+const callCallTrackerRegistryUI = createSynchronizable<
+  Record<string, number>
+>({});
 function callTrackerJS(name: string) {
   if (!callCallTrackerRegistryJS[name]) {
     callCallTrackerRegistryJS[name] = 0;
@@ -15,11 +17,9 @@ export class CallTrackerRegistry {
   public callTracker(name: string) {
     'worklet';
     if (_WORKLET) {
-      if (!callCallTrackerRegistryUI.value[name]) {
-        callCallTrackerRegistryUI.value[name] = 0;
-      }
-      callCallTrackerRegistryUI.value[name]++;
-      callCallTrackerRegistryUI.value = { ...callCallTrackerRegistryUI.value };
+      callCallTrackerRegistryUI.setBlocking((prev) => {
+        return { ...prev, [name]: (prev[name] ?? 0) + 1 };
+      });
     } else {
       callTrackerJS(name);
     }
@@ -29,12 +29,12 @@ export class CallTrackerRegistry {
     return {
       name,
       onJS: callCallTrackerRegistryJS[name] ?? 0,
-      onUI: callCallTrackerRegistryUI.value[name] ?? 0,
+      onUI: callCallTrackerRegistryUI.getBlocking()[name] ?? 0,
     };
   }
 
   public resetRegistry() {
-    callCallTrackerRegistryUI.value = {};
+    callCallTrackerRegistryUI.setBlocking({});
     callCallTrackerRegistryJS = {};
   }
 }

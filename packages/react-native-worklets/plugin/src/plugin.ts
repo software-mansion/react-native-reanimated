@@ -10,8 +10,8 @@ import type {
 } from '@babel/types';
 
 import {
-  processCalleesAutoworkletizableCallbacks,
-  processIfAutoworkletizableCallback,
+  addDirectivesToKnownCallback,
+  handleWorkletizableCallback,
 } from './autoworkletization';
 import { toggleBundleMode } from './bundleMode';
 import { processIfWorkletClass } from './class';
@@ -46,13 +46,19 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
     pre(this: WorkletsPluginPass) {
       runWithTaggedExceptions(this, () => {
         initializeState(this);
+        /**
+         * We run the micro-plugin in the `pre` step of the whole pipeline to
+         * add all 'worklet' directives before React Compiler kicks in.
+         *
+         * As of now React Compiler begins its work on `Program` visitor.
+         */
+        this.file.path.traverse(getAutoworkletizationMicroPlugin(), this);
       });
     },
     visitor: {
       CallExpression: {
         enter(path: NodePath<CallExpression>, state: WorkletsPluginPass) {
           runWithTaggedExceptions(state, () => {
-            processCalleesAutoworkletizableCallbacks(path, state);
             if (state.opts.substituteWebPlatformChecks) {
               substituteWebCallExpression(path);
             }
@@ -64,12 +70,9 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
           path: NodePath<WorkletizableFunction>,
           state: WorkletsPluginPass
         ) {
-          runWithTaggedExceptions(
-            state,
-            () =>
-              processIfWithWorkletDirective(path, state) ||
-              processIfAutoworkletizableCallback(path, state)
-          );
+          runWithTaggedExceptions(state, () => {
+            processIfWithWorkletDirective(path, state);
+          });
         },
       },
       ObjectExpression: {
@@ -120,3 +123,18 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
     },
   };
 };
+
+export function getAutoworkletizationMicroPlugin() {
+  return {
+    CallExpression: {
+      enter(path: NodePath<CallExpression>, state: WorkletsPluginPass) {
+        handleWorkletizableCallback(path, state);
+      },
+    },
+    [WorkletizableFunction]: {
+      enter(path: NodePath) {
+        addDirectivesToKnownCallback(path as NodePath<WorkletizableFunction>);
+      },
+    },
+  };
+}

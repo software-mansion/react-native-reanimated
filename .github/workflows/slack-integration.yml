@@ -8,10 +8,12 @@ on:
   workflow_dispatch:
   issues:
     types: [opened]
+  pull_request_target:
+    types: [opened]
 
 jobs:
   daily-status-report:
-    if: github.repository == 'software-mansion/react-native-reanimated' && github.event_name != 'issues'
+    if: github.repository == 'software-mansion/react-native-reanimated' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     env:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -52,3 +54,36 @@ jobs:
           ISSUE_URL: ${{ github.event.issue.html_url }}
           ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
         run: node --experimental-strip-types .github/workflows/helper/issue-opened-notification.ts
+
+  pull-request-opened-report:
+    if: >-
+      github.repository == 'software-mansion/react-native-reanimated' &&
+      github.event_name == 'pull_request_target' &&
+      github.event.pull_request.user.type != 'Bot' &&
+      github.event.pull_request.author_association != 'OWNER' &&
+      github.event.pull_request.author_association != 'MEMBER' &&
+      github.event.pull_request.author_association != 'COLLABORATOR'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          sparse-checkout: .github/workflows/helper
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Report new pull request to Slack
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
+        run: node --experimental-strip-types .github/workflows/helper/pull-request-opened-notification.ts

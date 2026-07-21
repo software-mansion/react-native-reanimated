@@ -198,14 +198,23 @@ const AnimatedSectionList = Animated.createAnimatedComponent(
 
 const SectionListExample = ({ animated, ref }: ExampleProps) => {
   const aref = useAnimatedRef<typeof AnimatedSectionList>();
+  const scrollLocationRef = useRef({ sectionIndex: 0, itemIndex: 0 });
+
+  const scrollToLocation = useCallback(() => {
+    aref.current?.scrollToLocation({
+      ...scrollLocationRef.current,
+      animated,
+    });
+  }, [animated, aref]);
 
   useImperativeHandle(ref, () => ({
     scrollFromJS() {
       console.log(getRuntimeKind());
-      aref.current?.scrollToLocation({
+      scrollLocationRef.current = {
         sectionIndex: Math.floor((Math.random() * DATA.length) / 10),
         itemIndex: Math.floor((Math.random() * DATA.length) / 10),
-      });
+      };
+      scrollToLocation();
     },
     scrollFromUI() {
       scheduleOnUI(() => {
@@ -239,6 +248,13 @@ const SectionListExample = ({ animated, ref }: ExampleProps) => {
       renderSectionHeader={({ section: { title } }) => (
         <Text style={styles.header}>{title}</Text>
       )}
+      onScrollToIndexFailed={({ averageItemLength, index }) => {
+        aref.current?.getScrollResponder()?.scrollTo({
+          y: averageItemLength * index,
+          animated: false,
+        });
+        setTimeout(scrollToLocation, 100);
+      }}
       stickySectionHeadersEnabled={false}
     />
   );

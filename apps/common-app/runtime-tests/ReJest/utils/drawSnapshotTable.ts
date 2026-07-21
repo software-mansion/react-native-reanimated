@@ -1,4 +1,4 @@
-import { isColor } from 'react-native-reanimated';
+import { isColor } from './colorUtils';
 
 import {
   getComparator,

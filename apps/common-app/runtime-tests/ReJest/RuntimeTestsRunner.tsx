@@ -1,5 +1,10 @@
 import type { ReactNode } from 'react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 
@@ -33,6 +38,27 @@ export class ErrorBoundary extends React.Component<
 
 let renderLock: RenderLock = new RenderLock();
 
+export type RunnerId = 'Reanimated' | 'Worklets' | 'SelfTests';
+
+let sessionOwner: RunnerId | null = null;
+const sessionOwnerListeners = new Set<() => void>();
+
+function claimSession(runnerId: RunnerId) {
+  sessionOwner = runnerId;
+  sessionOwnerListeners.forEach((listener) => listener());
+}
+
+function subscribeToSessionOwner(listener: () => void) {
+  sessionOwnerListeners.add(listener);
+  return () => {
+    sessionOwnerListeners.delete(listener);
+  };
+}
+
+function getSessionOwner() {
+  return sessionOwner;
+}
+
 interface TestData {
   testSuiteName: string;
   importTest: () => void;
@@ -42,9 +68,13 @@ interface TestData {
 
 interface RuntimeTestRunnerProps {
   tests: TestData[];
+  runnerId: RunnerId;
 }
 
-export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
+export default function RuntimeTestsRunner({
+  tests,
+  runnerId,
+}: RuntimeTestRunnerProps) {
   const [component, setComponent] = useState<ReactNode | null>(null);
   const [started, setStarted] = useState<boolean>(false);
   const [finished, setFinished] = useState<boolean>(false);
@@ -70,11 +100,32 @@ export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
     setFinished(true);
   }
 
+  const currentSessionOwner = useSyncExternalStore(
+    subscribeToSessionOwner,
+    getSessionOwner
+  );
+
   function handleStartClick() {
+    if (getSessionOwner() !== null) {
+      return;
+    }
+    claimSession(runnerId);
     testSelectionCallbacks.current.forEach((callback) => callback());
     setStarted(true);
     // eslint-disable-next-line no-void
     void run();
+  }
+
+  if (currentSessionOwner !== null && !started) {
+    return (
+      <View style={styles.flexOne}>
+        <Text style={navyText}>
+          {currentSessionOwner === runnerId
+            ? `${runnerId} tests already started in this session. Reload the app to run them again.`
+            : `${currentSessionOwner} tests already started in this session. Reload the app to run ${runnerId} tests.`}
+        </Text>
+      </View>
+    );
   }
 
   return (

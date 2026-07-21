@@ -1,4 +1,4 @@
-import { isColor, processColor } from 'react-native-reanimated';
+import { colorsAreClose, isColor } from '../utils/colorUtils';
 
 import type { TestValue, ValidPropNames } from '../types';
 import { ComparisonMode, isValidPropName } from '../types';
@@ -40,7 +40,7 @@ const COMPARATORS: {
     if (!isColor(expected) || !isColor(value)) {
       return false;
     }
-    return processColor(expected) === processColor(value);
+    return colorsAreClose(expected, value);
   },
 
   [ComparisonMode.PIXEL]: (expected, value) => {

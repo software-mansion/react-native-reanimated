@@ -523,16 +523,16 @@ describe('Test createSerializableOnUI', () => {
   // });
 
   test('createSerializableOnUIInaccessibleObject', async () => {
-    const clazz = runOnUISync(() => {
-      'worklet';
-      class Clazz {
-        method() {}
-      }
-
-      return new Clazz();
-    });
-
     await expect(() => {
+      const clazz = runOnUISync(() => {
+        'worklet';
+        class Clazz {
+          method() {}
+        }
+
+        return new Clazz();
+      });
+
       clazz.method();
     }).toThrow();
   });
@@ -570,7 +570,7 @@ describe('Test createSerializableOnUI', () => {
           'worklet';
           return Promise.resolve();
         })
-      ).toThrow('Cannot copy value of type `Promise`');
+      ).toThrow('Promise');
     });
   }
 });

@@ -1,4 +1,4 @@
-import { isColor, processColor } from 'react-native-reanimated';
+import { isColor, processColorNumber } from './colorUtils';
 
 import type { TestValue } from '../types';
 
@@ -94,7 +94,7 @@ export function getColorSquare(color: string) {
   if (!isColor(color)) {
     return '??';
   }
-  const colorNumber = processColor(color);
+  const colorNumber = processColorNumber(color);
   /* eslint-disable no-bitwise */
   const red = (colorNumber >> 16) & 255;
   const green = (colorNumber >> 8) & 255;
@@ -136,17 +136,20 @@ export function formatTestName(
   if (Array.isArray(variableObject)) {
     variableObject.forEach((value, index) => {
       // python-like syntax ${1} {2}
-      testName = testName.replace('${' + index + '}', valueToString(value));
+      testName = testName
+        .split('${' + index + '}')
+        .join(valueToString(value));
     });
   }
   if (typeof variableObject === 'object') {
     const keys = Object.keys(variableObject);
     keys.forEach((k) => {
       // Typical object literal syntax
-      testName = testName.replace(
-        '${' + k + '}',
-        valueToString(variableObject[k as keyof typeof variableObject])
-      );
+      testName = testName
+        .split('${' + k + '}')
+        .join(
+          valueToString(variableObject[k as keyof typeof variableObject])
+        );
     });
   }
 

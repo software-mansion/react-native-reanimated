@@ -1,11 +1,13 @@
-import { makeMutable } from 'react-native-reanimated';
-
 import type { TestValue, TrackerCallCount } from '../types';
 import { ComparisonMode } from '../types';
 import { cyan, green, red, yellow } from '../utils/stringFormatUtils';
 import { SyncUIRunner } from '../utils/SyncUIRunner';
 import { getComparator } from './Comparators';
-import { getRuntimeKind, RuntimeKind } from 'react-native-worklets';
+import {
+  createSynchronizable,
+  getRuntimeKind,
+  RuntimeKind,
+} from 'react-native-worklets';
 
 type ToBeArgs = [TestValue, ComparisonMode?];
 export type ToThrowArgs = [string?];
@@ -206,17 +208,53 @@ export const toThrowMatcher: AsyncMatcher<ToThrowArgs> = async (
   let thrownException = false;
   let thrownExceptionMessage = null;
 
+  const errorUtils = (
+    globalThis as {
+      ErrorUtils?: {
+        getGlobalHandler: () => (error: Error, isFatal?: boolean) => void;
+        setGlobalHandler: (
+          handler: (error: Error, isFatal?: boolean) => void
+        ) => void;
+      };
+    }
+  ).ErrorUtils;
+  let uncaughtErrorMessage: string | null = null;
+  const previousGlobalHandler = errorUtils?.getGlobalHandler();
+  errorUtils?.setGlobalHandler((error) => {
+    if (uncaughtErrorMessage === null) {
+      uncaughtErrorMessage = error?.message ?? String(error);
+    }
+  });
+
   try {
-    await throwingFunction();
-  } catch (e) {
-    thrownException = true;
-    thrownExceptionMessage = (e as Error)?.message || '';
+    try {
+      await throwingFunction();
+    } catch (e) {
+      thrownException = true;
+      thrownExceptionMessage = (e as Error)?.message || '';
+    }
+
+    const deadline = Date.now() + 500;
+    while (
+      !thrownException &&
+      uncaughtErrorMessage === null &&
+      getCapturedConsoleErrors().consoleErrorCount < 1 &&
+      Date.now() < deadline
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+  } finally {
+    if (previousGlobalHandler) {
+      errorUtils?.setGlobalHandler(previousGlobalHandler);
+    }
+    await restoreConsole();
   }
-  await restoreConsole();
 
   const { consoleErrorCount, consoleErrorMessage } = getCapturedConsoleErrors();
-  const errorWasThrown = thrownException || consoleErrorCount >= 1;
-  const capturedMessage = thrownExceptionMessage || consoleErrorMessage;
+  const errorWasThrown =
+    thrownException || uncaughtErrorMessage !== null || consoleErrorCount >= 1;
+  const capturedMessage =
+    thrownExceptionMessage || uncaughtErrorMessage || consoleErrorMessage;
   const messageIsCorrect = errorMessage
     ? capturedMessage.includes(errorMessage)
     : true;
@@ -240,8 +278,8 @@ async function mockConsole(): Promise<
   const syncUIRunner = new SyncUIRunner();
   let counterJS = 0;
 
-  const counterUI = makeMutable(0);
-  const recordedMessage = makeMutable('');
+  const counterUI = createSynchronizable(0);
+  const recordedMessage = createSynchronizable('');
 
   const originalError = console.error;
   const originalWarning = console.warn;
@@ -254,12 +292,16 @@ async function mockConsole(): Promise<
     if (getRuntimeKind() === RuntimeKind.ReactNative) {
       incrementJS();
     } else {
-      counterUI.value++;
+      counterUI.setBlocking((prev) => {
+        return prev + 1;
+      });
     }
     if (typeof message === 'object' && 'message' in message) {
-      recordedMessage.value = message.message;
+      recordedMessage.setBlocking(message.message);
     } else {
-      recordedMessage.value = message.split('\n\nThis error is located at:')[0];
+      recordedMessage.setBlocking(
+        message.split('\n\nThis error is located at:')[0]
+      );
     }
   };
   console.error = mockedConsoleFunction;
@@ -289,10 +331,10 @@ async function mockConsole(): Promise<
   };
 
   const getCapturedConsoleErrors = () => {
-    const count = counterUI.value + counterJS;
+    const count = counterUI.getBlocking() + counterJS;
     return {
       consoleErrorCount: count,
-      consoleErrorMessage: recordedMessage.value,
+      consoleErrorMessage: recordedMessage.getBlocking(),
     };
   };
 
