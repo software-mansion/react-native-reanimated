@@ -32,7 +32,7 @@ var require_directives = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.handleWorkletDirective = handleWorkletDirective;
     exports2.addWorkletDirectivesToPath = addWorkletDirectivesToPath;
-    exports2.addWorkletDirectivesToBody = addWorkletDirectivesToBody;
+    exports2.addWorkletDirectivesToFunctionBody = addWorkletDirectivesToFunctionBody;
     exports2.addDirective = addDirective;
     var types_12 = require("@babel/types");
     function handleWorkletDirective(path) {
@@ -44,9 +44,9 @@ var require_directives = __commonJS({
       if (path.isArrowFunctionExpression()) {
         replaceImplicitReturnWithBlock(path.node);
       }
-      addWorkletDirectivesToBody(path.node.body);
+      addWorkletDirectivesToFunctionBody(path.node.body);
     }
-    function addWorkletDirectivesToBody(node) {
+    function addWorkletDirectivesToFunctionBody(node) {
       addDirective(node, "worklet");
       addDirective(node, "use no memo");
     }
@@ -695,7 +695,7 @@ var require_class = __commonJS({
     function appendWorkletDirectiveToPolyfills(statements) {
       statements.forEach((statement) => {
         if ((0, types_12.isFunctionDeclaration)(statement)) {
-          (0, directives_12.addWorkletDirectivesToBody)(statement.body);
+          (0, directives_12.addWorkletDirectivesToFunctionBody)(statement.body);
         }
       });
     }
@@ -711,7 +711,7 @@ var require_class = __commonJS({
         (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(className), (0, types_12.identifier)(classFactoryName)), (0, types_12.identifier)(classFactoryName))),
         (0, types_12.returnStatement)((0, types_12.identifier)(className))
       ]));
-      (0, directives_12.addWorkletDirectivesToBody)(classFactoryDeclaration.body);
+      (0, directives_12.addWorkletDirectivesToFunctionBody)(classFactoryDeclaration.body);
       const newClassDeclaration = (0, types_12.variableDeclaration)("const", [
         (0, types_12.variableDeclarator)((0, types_12.identifier)(className), (0, types_12.callExpression)((0, types_12.identifier)(classFactoryName), []))
       ]);
@@ -869,7 +869,7 @@ var require_contextObject = __commonJS({
     }
     function processWorkletContextObject(objectExpression) {
       const workletObjectFactory = (0, types_12.functionExpression)(null, [], (0, types_12.blockStatement)([(0, types_12.returnStatement)((0, types_12.cloneNode)(objectExpression))]));
-      (0, directives_12.addWorkletDirectivesToBody)(workletObjectFactory.body);
+      (0, directives_12.addWorkletDirectivesToFunctionBody)(workletObjectFactory.body);
       objectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)(`${exports2.contextObjectMarker}Factory`), workletObjectFactory));
     }
     function removeContextObjectMarker(objectExpression) {

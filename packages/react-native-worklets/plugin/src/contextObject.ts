@@ -11,7 +11,7 @@ import {
   returnStatement,
 } from '@babel/types';
 
-import { addWorkletDirectivesToBody } from './directives';
+import { addWorkletDirectivesToFunctionBody } from './directives';
 import type { WorkletsPluginPass } from './types';
 
 export const contextObjectMarker = '__workletContextObject';
@@ -46,7 +46,7 @@ function processWorkletContextObject(objectExpression: ObjectExpression): void {
     blockStatement([returnStatement(cloneNode(objectExpression))])
   );
 
-  addWorkletDirectivesToBody(workletObjectFactory.body);
+  addWorkletDirectivesToFunctionBody(workletObjectFactory.body);
 
   objectExpression.properties.push(
     objectProperty(

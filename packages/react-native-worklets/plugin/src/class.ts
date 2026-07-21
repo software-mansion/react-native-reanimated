@@ -31,7 +31,7 @@ import {
 } from '@babel/types';
 import { strict as assert } from 'assert';
 
-import { addWorkletDirectivesToBody } from './directives';
+import { addWorkletDirectivesToFunctionBody } from './directives';
 import { workletTransformSync } from './transform';
 import type { WorkletsPluginPass } from './types';
 import { workletClassFactorySuffix } from './types';
@@ -116,7 +116,7 @@ function getPolyfilledAst(
 function appendWorkletDirectiveToPolyfills(statements: Statement[]) {
   statements.forEach((statement) => {
     if (isFunctionDeclaration(statement)) {
-      addWorkletDirectivesToBody(statement.body);
+      addWorkletDirectivesToFunctionBody(statement.body);
     }
   });
 }
@@ -171,7 +171,7 @@ function replaceClassDeclarationWithFactoryAndCall(
     ])
   );
 
-  addWorkletDirectivesToBody(classFactoryDeclaration.body);
+  addWorkletDirectivesToFunctionBody(classFactoryDeclaration.body);
 
   const newClassDeclaration = variableDeclaration('const', [
     variableDeclarator(

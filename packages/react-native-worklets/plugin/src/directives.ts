@@ -29,10 +29,10 @@ export function addWorkletDirectivesToPath(
   if (path.isArrowFunctionExpression()) {
     replaceImplicitReturnWithBlock(path.node);
   }
-  addWorkletDirectivesToBody(path.node.body as BlockStatement);
+  addWorkletDirectivesToFunctionBody(path.node.body as BlockStatement);
 }
 
-export function addWorkletDirectivesToBody(node: BlockStatement): void {
+export function addWorkletDirectivesToFunctionBody(node: BlockStatement): void {
   addDirective(node, 'worklet');
   addDirective(node, 'use no memo');
 }
@@ -52,7 +52,7 @@ export function addDirective(node: BlockStatement, dir: string): void {
  *
  * `() => 1` becomes `() => { return 1 }`
  *
- * It's necessary because directives are only allowed on block statements.
+ * Directives are only allowed on block statement function bodies.
  */
 function replaceImplicitReturnWithBlock(path: ArrowFunctionExpression) {
   if (!isBlockStatement(path.body)) {
