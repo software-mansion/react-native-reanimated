@@ -10,7 +10,7 @@ inputs:
     required: true
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Install monorepo node dependencies
       shell: bash
