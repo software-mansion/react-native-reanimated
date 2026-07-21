@@ -30,9 +30,26 @@ var require_directives = __commonJS({
   "lib/directives.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.handleWorkletDirective = handleWorkletDirective;
+    exports2.addWorkletDirectivesToPath = addWorkletDirectivesToPath;
+    exports2.addWorkletDirectivesToFunctionBody = addWorkletDirectivesToFunctionBody;
     exports2.addDirective = addDirective;
-    exports2.replaceImplicitReturnWithBlock = replaceImplicitReturnWithBlock;
     var types_12 = require("@babel/types");
+    function handleWorkletDirective(path) {
+      if (path.node.value.value === "worklet" && path.parentPath.isBlockStatement()) {
+        addDirective(path.parentPath.node, "use no memo");
+      }
+    }
+    function addWorkletDirectivesToPath(path) {
+      if (path.isArrowFunctionExpression()) {
+        replaceImplicitReturnWithBlock(path.node);
+      }
+      addWorkletDirectivesToFunctionBody(path.node.body);
+    }
+    function addWorkletDirectivesToFunctionBody(node) {
+      addDirective(node, "worklet");
+      addDirective(node, "use no memo");
+    }
     function addDirective(node, dir) {
       if (!node.directives.some((functionDirective) => functionDirective.value.value === dir)) {
         node.directives.push((0, types_12.directive)((0, types_12.directiveLiteral)(dir)));
@@ -427,7 +444,7 @@ var require_autoworkletization = __commonJS({
     exports2.addDirectivesToKnownCallback = addDirectivesToKnownCallback;
     exports2.handleWorkletizableCallback = handleWorkletizableCallback;
     var types_12 = require("@babel/types");
-    var directives_1 = require_directives();
+    var directives_12 = require_directives();
     var findWorklet_1 = require_findWorklet();
     var gestureHandlerAutoworkletization_1 = require_gestureHandlerAutoworkletization();
     var layoutAnimationAutoworkletization_1 = require_layoutAnimationAutoworkletization();
@@ -489,7 +506,7 @@ var require_autoworkletization = __commonJS({
     ]);
     function addDirectivesToKnownCallback(path) {
       if ((0, gestureHandlerAutoworkletization_1.isGestureHandlerEventCallback)(path) || (0, layoutAnimationAutoworkletization_1.isLayoutAnimationCallback)(path)) {
-        addDirectives(path);
+        (0, directives_12.addWorkletDirectivesToPath)(path);
       }
     }
     function handleWorkletizableCallback(path, state) {
@@ -511,14 +528,8 @@ var require_autoworkletization = __commonJS({
     }
     function addDirectivesToArgs(args, state, acceptWorkletizableFunction, acceptObject) {
       args.forEach((arg) => {
-        (0, findWorklet_1.forEachWorkletizableFunction)(arg, state, acceptWorkletizableFunction, acceptObject, addDirectives);
+        (0, findWorklet_1.forEachWorkletizableFunction)(arg, state, acceptWorkletizableFunction, acceptObject, directives_12.addWorkletDirectivesToPath);
       });
-    }
-    function addDirectives(path) {
-      if (path.isArrowFunctionExpression()) {
-        (0, directives_1.replaceImplicitReturnWithBlock)(path.node);
-      }
-      (0, directives_1.addDirective)(path.node.body, "worklet");
     }
   }
 });
@@ -637,6 +648,7 @@ var require_class = __commonJS({
     var traverse_1 = __importDefault(require("@babel/traverse"));
     var types_12 = require("@babel/types");
     var assert_1 = require("assert");
+    var directives_12 = require_directives();
     var transform_1 = require_transform();
     var types_2 = require_types();
     var utils_1 = require_utils();
@@ -683,8 +695,7 @@ var require_class = __commonJS({
     function appendWorkletDirectiveToPolyfills(statements) {
       statements.forEach((statement) => {
         if ((0, types_12.isFunctionDeclaration)(statement)) {
-          const workletDirective = (0, types_12.directive)((0, types_12.directiveLiteral)("worklet"));
-          statement.body.directives.push(workletDirective);
+          (0, directives_12.addWorkletDirectivesToFunctionBody)(statement.body);
         }
       });
     }
@@ -699,7 +710,8 @@ var require_class = __commonJS({
         ]),
         (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(className), (0, types_12.identifier)(classFactoryName)), (0, types_12.identifier)(classFactoryName))),
         (0, types_12.returnStatement)((0, types_12.identifier)(className))
-      ], [(0, types_12.directive)((0, types_12.directiveLiteral)("worklet"))]));
+      ]));
+      (0, directives_12.addWorkletDirectivesToFunctionBody)(classFactoryDeclaration.body);
       const newClassDeclaration = (0, types_12.variableDeclaration)("const", [
         (0, types_12.variableDeclarator)((0, types_12.identifier)(className), (0, types_12.callExpression)((0, types_12.identifier)(classFactoryName), []))
       ]);
@@ -842,6 +854,7 @@ var require_contextObject = __commonJS({
     exports2.processIfWorkletContextObject = processIfWorkletContextObject;
     exports2.isContextObject = isContextObject;
     var types_12 = require("@babel/types");
+    var directives_12 = require_directives();
     exports2.contextObjectMarker = "__workletContextObject";
     function processIfWorkletContextObject(path, _state) {
       if (!isContextObject(path.node)) {
@@ -855,7 +868,8 @@ var require_contextObject = __commonJS({
       return objectExpression.properties.some((property) => (0, types_12.isObjectProperty)(property) && (0, types_12.isIdentifier)(property.key) && property.key.name === exports2.contextObjectMarker);
     }
     function processWorkletContextObject(objectExpression) {
-      const workletObjectFactory = (0, types_12.functionExpression)(null, [], (0, types_12.blockStatement)([(0, types_12.returnStatement)((0, types_12.cloneNode)(objectExpression))], [(0, types_12.directive)((0, types_12.directiveLiteral)("worklet"))]));
+      const workletObjectFactory = (0, types_12.functionExpression)(null, [], (0, types_12.blockStatement)([(0, types_12.returnStatement)((0, types_12.cloneNode)(objectExpression))]));
+      (0, directives_12.addWorkletDirectivesToFunctionBody)(workletObjectFactory.body);
       objectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)(`${exports2.contextObjectMarker}Factory`), workletObjectFactory));
     }
     function removeContextObjectMarker(objectExpression) {
@@ -873,7 +887,7 @@ var require_file = __commonJS({
     exports2.isImplicitContextObject = isImplicitContextObject;
     var types_12 = require("@babel/types");
     var contextObject_12 = require_contextObject();
-    var directives_1 = require_directives();
+    var directives_12 = require_directives();
     var types_2 = require_types();
     function processIfWorkletFile(path, state) {
       if (!path.node.directives.some((functionDirective) => functionDirective.value.value === "worklet")) {
@@ -901,10 +915,7 @@ var require_file = __commonJS({
     function processWorkletizableEntity(nodePath, state) {
       var _a;
       if ((0, types_2.isWorkletizableFunctionPath)(nodePath)) {
-        if (nodePath.isArrowFunctionExpression()) {
-          (0, directives_1.replaceImplicitReturnWithBlock)(nodePath.node);
-        }
-        (0, directives_1.addDirective)(nodePath.node.body, "worklet");
+        (0, directives_12.addWorkletDirectivesToPath)(nodePath);
       } else if ((0, types_2.isWorkletizableObjectPath)(nodePath)) {
         if (isImplicitContextObject(nodePath)) {
           appendWorkletContextObjectMarker(nodePath.node);
@@ -936,7 +947,7 @@ var require_file = __commonJS({
       const properties = objectPath.get("properties");
       properties.forEach((property) => {
         if (property.isObjectMethod()) {
-          (0, directives_1.addDirective)(property.node.body, "worklet");
+          (0, directives_12.addWorkletDirectivesToPath)(property);
         } else if (property.isObjectProperty()) {
           const valuePath = property.get("value");
           processWorkletizableEntity(valuePath, state);
@@ -1682,6 +1693,11 @@ var require_workletStringCode = __commonJS({
         });
       }
       const workletFunction = (0, types_12.functionExpression)((0, types_12.identifier)(workletName), expression.params, expression.body, expression.generator, expression.async);
+      (0, core_1.traverse)(fun, {
+        Directive(path) {
+          path.remove();
+        }
+      });
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "`inputMap` is undefined.");
       const includeSourceMap = !((0, utils_1.isRelease)(state) || state.opts.disableSourceMaps);
@@ -2097,6 +2113,7 @@ var bundleMode_1 = require_bundleMode();
 var class_1 = require_class();
 var classMethod_1 = require_classMethod();
 var contextObject_1 = require_contextObject();
+var directives_1 = require_directives();
 var file_1 = require_file();
 var globals_1 = require_globals();
 var inlineStylesWarning_1 = require_inlineStylesWarning();
@@ -2198,6 +2215,11 @@ function getAutoworkletizationMicroPlugin() {
     [types_1.WorkletizableFunction]: {
       enter(path) {
         (0, autoworkletization_1.addDirectivesToKnownCallback)(path);
+      }
+    },
+    Directive: {
+      enter(path) {
+        (0, directives_1.handleWorkletDirective)(path);
       }
     }
   };

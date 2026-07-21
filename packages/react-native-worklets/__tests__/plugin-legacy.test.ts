@@ -5,10 +5,10 @@ import { transformSync } from '@babel/core';
 import traverse from '@babel/traverse';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
+import type { PluginOptions } from 'react-native-worklets/plugin';
+import plugin from 'react-native-worklets/plugin';
 
 import { version as packageVersion } from '../package.json';
-import type { PluginOptions } from '../plugin';
-import plugin from '../plugin';
 
 const MOCK_LOCATION = '/dev/null';
 
@@ -129,9 +129,7 @@ describe('babel plugin', () => {
       // Expect a string that contains (including the backslash): sourceMap: \"{
       expect(code).toMatch(/sourceMap: /gm);
       // this non-mocked source map is hard-coded, feel free to update it accordingly
-      expect(code).toContain(
-        'AACQ,SAAAA,SAAeA,CAAA,EAEb,GAAI,CAAAA,SAAM,CAAK,MACjB'
-      );
+      expect(code).toContain('AACQ,SAAAA,SAAeA,CAAA,MAAAA,SAAA,O');
     });
 
     test('strips queries from filename when injecting source maps', () => {
@@ -351,19 +349,6 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).not.toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    test('removes "worklet"; directive from worklets', () => {
-      const input = html`<script>
-        function foo(x) {
-          "worklet"; // prettier-ignore
-          return x + 2;
-        }
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).not.toContain('"worklet";');
       expect(code).toMatchSnapshot();
     });
 
@@ -1734,7 +1719,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input, {}, { omitNativeOnlyData: true });
-      expect(code).toHaveWorkletData(0);
+      expect(code).toHaveInitData(0);
       expect(code).toMatchSnapshot();
     });
 
