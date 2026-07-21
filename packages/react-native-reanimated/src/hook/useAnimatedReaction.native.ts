@@ -14,7 +14,8 @@ import { useAnimatedReactionBase } from './useAnimatedReactionCommon';
  *   react.
  * @param react - A function that reacts to changes in the value returned by the
  *   `prepare` function.
- * @param dependencies - An optional array of dependencies.
+ * @param dependencies - An optional array of dependencies. Only relevant when
+ *   using Reanimated without the Babel plugin on the Web.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/useAnimatedReaction
  */
 // @ts-expect-error This overload is required by our API.
@@ -30,9 +31,9 @@ export function useAnimatedReaction<PreparedResult>(
     [prepare: PreparedResult, previous: PreparedResult | null],
     void
   >,
-  dependencies?: DependencyList
+  _dependencies?: DependencyList
 ) {
   const inputs = Object.values(prepare.__closure ?? {});
 
-  useAnimatedReactionBase(prepare, react, dependencies, inputs);
+  useAnimatedReactionBase(prepare, react, undefined, inputs);
 }

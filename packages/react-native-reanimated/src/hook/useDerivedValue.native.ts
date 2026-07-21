@@ -13,7 +13,8 @@ export type { DerivedValue } from './useDerivedValueCommon';
  *
  * @param updater - A function called whenever at least one of the shared values
  *   or state used in the function body changes.
- * @param dependencies - An optional array of dependencies.
+ * @param dependencies - An optional array of dependencies. Only relevant when
+ *   using Reanimated without the Babel plugin on the Web.
  * @returns A new readonly shared value based on a value returned from the
  *   updater function
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useDerivedValue
@@ -26,9 +27,9 @@ export function useDerivedValue<Value>(
 
 export function useDerivedValue<Value>(
   updater: WorkletFunction<[], Value>,
-  dependencies?: DependencyList
+  _dependencies?: DependencyList
 ): DerivedValue<Value> {
   const inputs = Object.values(updater.__closure ?? {});
 
-  return useDerivedValueBase(updater, dependencies, inputs);
+  return useDerivedValueBase(updater, undefined, inputs);
 }
