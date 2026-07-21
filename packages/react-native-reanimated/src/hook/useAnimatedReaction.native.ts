@@ -31,14 +31,9 @@ export function useAnimatedReaction<PreparedResult>(
     [prepare: PreparedResult, previous: PreparedResult | null],
     void
   >,
-  dependencies?: DependencyList
+  _dependencies?: DependencyList
 ) {
-  let inputs = Object.values(prepare.__closure ?? {});
+  const inputs = Object.values(prepare.__closure ?? {});
 
-  if (!inputs.length && dependencies?.length) {
-    // let web work without Worklets Babel plugin
-    inputs = dependencies;
-  }
-
-  useAnimatedReactionBase(prepare, react, dependencies, inputs);
+  useAnimatedReactionBase(prepare, react, undefined, inputs);
 }
