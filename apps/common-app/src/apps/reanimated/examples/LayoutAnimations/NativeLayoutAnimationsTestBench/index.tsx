@@ -282,13 +282,27 @@ export default function NativeLayoutAnimationsTestBench() {
             cycleStart + RESET_SETTLE_MS + INTERRUPT_AT_MS
           );
         } else if (mode === 'cancel') {
-          schedule(
-            () => {
+          let remainingPolls = 1000;
+          const waitForStartRequest = () => {
+            // Wait until Fabric has actually requested this repetition's
+            // animation. For the native backend the submission gate is still
+            // closed, so cancelling now deterministically precedes CA start.
+            if (
+              countLayoutAnimationTraceEvents('start-requested') > repetition
+            ) {
               setPhase('cancel');
               recordLayoutAnimationTraceEvent('scenario-cancel');
-            },
-            cycleStart + RESET_SETTLE_MS + 1
-          );
+              return;
+            }
+            remainingPolls -= 1;
+            if (remainingPolls === 0) {
+              nativeStartGateActiveRef.current = false;
+              setNativeLayoutAnimationStartPaused(false);
+              return;
+            }
+            schedule(waitForStartRequest, 1);
+          };
+          schedule(waitForStartRequest, cycleStart + RESET_SETTLE_MS + 1);
         } else if (scenarioHasRunEnd(scenario)) {
           schedule(
             () => {

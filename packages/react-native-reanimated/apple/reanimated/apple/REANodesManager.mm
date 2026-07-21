@@ -489,21 +489,30 @@ using namespace facebook::react;
 
   // Attach the completion to the (single) longest-running animation. Every
   // animation here shares the same duration, so the first one is fine.
+  // LayoutAnimationTrace start
+#ifndef NDEBUG
+  // The delegate outlives this method. Keep the trace metadata alive for its
+  // start/stop callbacks instead of capturing the descriptor reference.
+  auto traceDescriptor = std::make_shared<const reanimated::NativeLayoutAnimationDescriptor>(descriptor);
+#endif // NDEBUG
+  // LayoutAnimationTrace end
   REACoreAnimationDelegate *delegate = [REACoreAnimationDelegate
       delegateWithStart:^(CAAnimation *animation) {
 // LayoutAnimationTrace start
 #ifndef NDEBUG
-        reanimated::layout_animation_trace::recordApplePlatformStarted(viewTag, descriptor, componentView);
-        reanimated::layout_animation_trace::recordAppleModelPresentationSample(viewTag, descriptor, componentView);
+        reanimated::layout_animation_trace::recordApplePlatformStarted(viewTag, *traceDescriptor, componentView);
+        reanimated::layout_animation_trace::recordAppleModelPresentationSample(
+            viewTag, *traceDescriptor, componentView);
 #endif // NDEBUG
        // LayoutAnimationTrace end
       }
       stop:^(CAAnimation *animation, BOOL finished) {
 // LayoutAnimationTrace start
 #ifndef NDEBUG
-        reanimated::layout_animation_trace::recordAppleModelPresentationSample(viewTag, descriptor, componentView);
+        reanimated::layout_animation_trace::recordAppleModelPresentationSample(
+            viewTag, *traceDescriptor, componentView);
         reanimated::layout_animation_trace::recordApplePlatformCompleted(
-            viewTag, descriptor, componentView, finished, true);
+            viewTag, *traceDescriptor, componentView, finished, true);
 #endif // NDEBUG
        // LayoutAnimationTrace end
         completion(finished);

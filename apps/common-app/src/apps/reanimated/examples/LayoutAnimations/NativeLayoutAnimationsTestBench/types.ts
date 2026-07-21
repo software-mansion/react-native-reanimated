@@ -42,7 +42,8 @@ export const TEST_BENCH_SCENARIOS = [
   {
     id: 'cancel-before-platform-start',
     title: '8. Cancel before platform start',
-    description: 'Use Cancel to remove the entering view on the next JS task.',
+    description:
+      'Use Cancel to remove the entering view after its request and before native platform start.',
   },
   {
     id: 'parent-removal-with-flattening',
