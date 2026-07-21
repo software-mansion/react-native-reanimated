@@ -17,6 +17,10 @@ export function initializeNetworking() {
   );
   TurboModules.set('WebSocketModule', makeMockTurboModule('WebSocketModule'));
   TurboModules.set(
+    'NativeReactNativeFeatureFlagsCxx',
+    new Proxy({}, { get: () => () => undefined })
+  );
+  TurboModules.set(
     'BlobModule',
     makeMockTurboModule('BlobModule', ['addNetworkingHandler'])
   );
