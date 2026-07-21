@@ -27,13 +27,9 @@ export function useDerivedValue<Value>(
 
 export function useDerivedValue<Value>(
   updater: WorkletFunction<[], Value>,
-  dependencies?: DependencyList
+  _dependencies?: DependencyList
 ): DerivedValue<Value> {
-  let inputs = Object.values(updater.__closure ?? {});
-  if (!inputs.length && dependencies?.length) {
-    // let web work without a Babel/SWC plugin
-    inputs = dependencies;
-  }
+  const inputs = Object.values(updater.__closure ?? {});
 
-  return useDerivedValueBase(updater, dependencies, inputs);
+  return useDerivedValueBase(updater, undefined, inputs);
 }

@@ -12747,12 +12747,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"babel-plugin-react-compiler@npm:^1.0.0":
+"babel-plugin-react-compiler@npm:1.0.0, babel-plugin-react-compiler@npm:^1.0.0":
   version: 1.0.0
   resolution: "babel-plugin-react-compiler@npm:1.0.0"
   dependencies:
     "@babel/types": "npm:^7.26.0"
   checksum: 10/51358f4da7dd338afd93ca647af3b5b95fdedd2ffde78719fbba5c542e3d66d338f020bc61234caf4ddf25cddbf517ae101ff76e362e3244d1047c1e64d90a60
+  languageName: node
+  linkType: hard
+
+"babel-plugin-react-compiler@patch:babel-plugin-react-compiler@npm%3A1.0.0#~/.yarn/patches/babel-plugin-react-compiler-npm-1.0.0-5beba4221c.patch":
+  version: 1.0.0
+  resolution: "babel-plugin-react-compiler@patch:babel-plugin-react-compiler@npm%3A1.0.0#~/.yarn/patches/babel-plugin-react-compiler-npm-1.0.0-5beba4221c.patch::version=1.0.0&hash=6e782b"
+  dependencies:
+    "@babel/types": "npm:^7.26.0"
+  checksum: 10/df0b2874a6e2830bb49a44266674ecb0fc5725bf8e6d00c15af67565611979fd4e14e0fefbbeb82ed5e630ddecdc4d1ad39cf38432ee4e37a3b4e5a0727958ba
   languageName: node
   linkType: hard
 
@@ -13163,6 +13172,7 @@ __metadata:
     "@babel/types": "npm:7.28.4"
     "@types/node": "npm:24.0.14"
     "@typescript-eslint/parser": "npm:8.37.0"
+    babel-plugin-react-compiler: "patch:babel-plugin-react-compiler@npm%3A1.0.0#~/.yarn/patches/babel-plugin-react-compiler-npm-1.0.0-5beba4221c.patch"
     esbuild: "npm:0.25.10"
     eslint: "npm:9.37.0"
     tsc-watch: "npm:7.2.0"

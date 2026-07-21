@@ -1,8 +1,9 @@
-import type { NodePath, PluginItem } from '@babel/core';
+import type { NodePath, PluginItem, Visitor } from '@babel/core';
 import type {
   CallExpression,
   ClassDeclaration,
   ClassMethod,
+  Directive,
   ExpressionStatement,
   JSXAttribute,
   ObjectExpression,
@@ -17,6 +18,7 @@ import { toggleBundleMode } from './bundleMode';
 import { processIfWorkletClass } from './class';
 import { processIfWorkletMethod } from './classMethod';
 import { processIfWorkletContextObject } from './contextObject';
+import { handleWorkletDirective } from './directives';
 import { processIfWorkletFile } from './file';
 import { initializeState } from './globals';
 import { processInlineStylesWarning } from './inlineStylesWarning';
@@ -124,7 +126,7 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
   };
 };
 
-export function getAutoworkletizationMicroPlugin() {
+export function getAutoworkletizationMicroPlugin(): Visitor<WorkletsPluginPass> {
   return {
     CallExpression: {
       enter(path: NodePath<CallExpression>, state: WorkletsPluginPass) {
@@ -134,6 +136,11 @@ export function getAutoworkletizationMicroPlugin() {
     [WorkletizableFunction]: {
       enter(path: NodePath) {
         addDirectivesToKnownCallback(path as NodePath<WorkletizableFunction>);
+      },
+    },
+    Directive: {
+      enter(path: NodePath) {
+        handleWorkletDirective(path as NodePath<Directive>);
       },
     },
   };
