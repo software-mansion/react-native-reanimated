@@ -23,23 +23,23 @@ jest.mock('../src/WorkletsModule/NativeWorklets', () => {
 
 class Clazz {}
 
-function setDev(value: boolean) {
-  (globalThis as unknown as { __DEV__: boolean }).__DEV__ = value;
-}
-
 describe('createSerializable unsupported-type warning', () => {
+  const globalWithDev = globalThis as unknown as { __DEV__?: boolean };
+
   beforeEach(() => {
     jest.spyOn(console, 'warn').mockImplementation();
+    globalWithDev.__DEV__ = true;
   });
 
   afterEach(() => {
-    setDev(true);
+    delete globalWithDev.__DEV__;
     jest.restoreAllMocks();
   });
 
   test('warns without a location for a top-level unsupported value', () => {
-    createSerializable(new Clazz());
+    const result = createSerializable(new Clazz());
 
+    expect(result).toHaveProperty('value', undefined);
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledWith(
       '[Worklets] Cannot copy value of type `Clazz`.'
@@ -110,10 +110,11 @@ describe('createSerializable unsupported-type warning', () => {
   });
 
   test('does not warn outside dev', () => {
-    setDev(false);
+    globalWithDev.__DEV__ = false;
 
-    createSerializable(new Clazz());
+    const result = createSerializable(new Clazz());
 
+    expect(result).toHaveProperty('value', undefined);
     expect(console.warn).not.toHaveBeenCalled();
   });
 });
