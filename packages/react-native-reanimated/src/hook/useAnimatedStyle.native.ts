@@ -43,16 +43,10 @@ export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
   updater:
     | WorkletFunction<[], Style>
     | ((() => Style) & Record<string, unknown>),
-  _dependencies?: DependencyList | null,
+  dependencies?: DependencyList | null,
   adapters?: AnimatedPropsAdapterWorklet | AnimatedPropsAdapterWorklet[] | null,
   isAnimatedProps = false
 ): AnimatedStyleHandle<Style | AnimatedProps> {
-  if (__DEV__ && _dependencies !== undefined && _dependencies !== null) {
-    throw new Error(
-      '[Reanimated] dependencies should only be used in web implementation.'
-    );
-  }
-
   const animatedUpdaterData = useRef<AnimatedUpdaterData | null>(null);
   const inputs = Object.values(updater.__closure ?? {});
   const adaptersArray = adapters
@@ -64,7 +58,11 @@ export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
   const areAnimationsActive = useSharedValue<boolean>(true);
 
   // build dependencies
-  const dependencies = [...inputs, updater.__workletHash];
+  if (!dependencies) {
+    dependencies = [...inputs, updater.__workletHash];
+  } else {
+    dependencies.push(updater.__workletHash);
+  }
   if (adaptersHash) {
     dependencies.push(adaptersHash);
   }
