@@ -1,9 +1,7 @@
 'use strict';
-import type { RefObject } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
 
 import type {
-  AnimatedPropsAdapterFunction,
   AnimatedStyle,
   AnimationObject,
   NestedObjectValues,
@@ -12,12 +10,12 @@ import type {
   StyleUpdaterContainer,
   Timestamp,
 } from '../commonTypes';
-import { updateProps, updatePropsJestWrapper } from '../updateProps';
+import { updateProps } from '../updateProps';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type { Descriptor } from './commonTypes';
 import { isAnimated, shallowEqual } from './utils';
 
-interface AnimatedState {
+export interface AnimatedState {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   last: AnimatedStyle<any>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,7 +36,7 @@ export interface AnimatedUpdaterData {
   styleUpdaterContainer: StyleUpdaterContainer;
 }
 
-function prepareAnimation(
+export function prepareAnimation(
   frameTimestamp: number,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animatedProp: AnimatedStyle<any>,
@@ -101,7 +99,7 @@ function prepareAnimation(
   }
 }
 
-function runAnimations(
+export function runAnimations(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animation: AnimatedStyle<any>,
   timestamp: Timestamp,
@@ -293,112 +291,6 @@ export function styleUpdater(
   state.last = newValues;
 }
 
-export function jestStyleUpdater(
-  viewDescriptors: SharedValue<Descriptor[]>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
-  state: AnimatedState,
-  animationsActive: SharedValue<boolean>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  animatedValues: RefObject<AnimatedStyle<any>>,
-  adapters: AnimatedPropsAdapterFunction[],
-  forceUpdate?: boolean
-): void {
-  'worklet';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const animations: AnimatedStyle<any> = state.animations ?? {};
-  const newValues = updater() ?? {};
-  const oldValues = state.last;
-
-  // extract animated props
-  let hasAnimations = false;
-  let frameTimestamp: number | undefined;
-  Object.keys(animations).forEach((key) => {
-    const value = newValues[key];
-    if (!isAnimated(value)) {
-      delete animations[key];
-    }
-  });
-  Object.keys(newValues).forEach((key) => {
-    const value = newValues[key];
-    if (isAnimated(value)) {
-      frameTimestamp =
-        global.__frameTimestamp || global._getAnimationTimestamp();
-      prepareAnimation(frameTimestamp, value, animations[key], oldValues[key]);
-      animations[key] = value;
-      hasAnimations = true;
-    }
-  });
-
-  function frame(timestamp: Timestamp) {
-    // eslint-disable-next-line @typescript-eslint/no-shadow
-    const { animations, last, isAnimationCancelled } = state;
-    if (isAnimationCancelled) {
-      state.isAnimationRunning = false;
-      return;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updates: AnimatedStyle<any> = {};
-    let allFinished = true;
-    Object.keys(animations).forEach((propName) => {
-      const finished = runAnimations(
-        animations[propName],
-        timestamp,
-        propName,
-        updates,
-        animationsActive
-      );
-      if (finished) {
-        last[propName] = updates[propName];
-        delete animations[propName];
-      } else {
-        allFinished = false;
-      }
-    });
-
-    if (Object.keys(updates).length) {
-      updatePropsJestWrapper(
-        viewDescriptors,
-        updates,
-        animatedValues,
-        adapters
-      );
-    }
-
-    if (!allFinished) {
-      requestAnimationFrame(frame);
-    } else {
-      state.isAnimationRunning = false;
-    }
-  }
-
-  if (hasAnimations) {
-    state.animations = animations;
-    if (!state.isAnimationRunning) {
-      state.isAnimationCancelled = false;
-      state.isAnimationRunning = true;
-      frame(frameTimestamp!);
-    }
-  } else {
-    state.isAnimationCancelled = true;
-    state.animations = [];
-  }
-
-  // calculate diff
-  state.last = newValues;
-
-  if (!shallowEqual(oldValues, newValues) || forceUpdate) {
-    updatePropsJestWrapper(
-      viewDescriptors,
-      newValues,
-      animatedValues,
-      adapters
-    );
-  }
-}
-
-// check for invalid usage of shared values in returned object
 export function checkSharedValueUsage(
   prop: NestedObjectValues<AnimationObject>,
   currentKey?: string
@@ -442,8 +334,4 @@ export function buildWorkletsHash<Args extends unknown[], ReturnValue>(
       acc + worklet.__workletHash.toString(),
     ''
   );
-}
-
-export function animatedStyleHandleToJSON(): string {
-  return '{}';
 }

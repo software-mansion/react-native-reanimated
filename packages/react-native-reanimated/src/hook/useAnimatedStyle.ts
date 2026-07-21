@@ -1,4 +1,5 @@
 'use strict';
+import type { RefObject } from 'react';
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction, makeShareable } from 'react-native-worklets';
@@ -6,28 +7,145 @@ import { isWorkletFunction, makeShareable } from 'react-native-worklets';
 import { initialUpdaterRun } from '../animation';
 import { IS_JEST } from '../common';
 import type {
+  AnimatedPropsAdapterFunction,
   AnimatedPropsAdapterWorklet,
   AnimatedStyle,
+  SharedValue,
+  Timestamp,
 } from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
+import { updatePropsJestWrapper } from '../updateProps';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type {
   AnimatedStyleHandle,
   DefaultStyle,
   DependencyList,
+  Descriptor,
   JestAnimatedStyleHandle,
 } from './commonTypes';
-import type { AnimatedUpdaterData } from './useAnimatedStyleCommon';
+import type {
+  AnimatedState,
+  AnimatedUpdaterData,
+} from './useAnimatedStyleCommon';
 import {
-  animatedStyleHandleToJSON,
   buildWorkletsHash,
   checkSharedValueUsage,
-  jestStyleUpdater,
+  prepareAnimation,
+  runAnimations,
   styleUpdater,
 } from './useAnimatedStyleCommon';
 import { useSharedValue } from './useSharedValue';
-import { validateAnimatedStyles } from './utils';
+import { isAnimated, shallowEqual, validateAnimatedStyles } from './utils';
+
+function jestStyleUpdater(
+  viewDescriptors: SharedValue<Descriptor[]>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
+  state: AnimatedState,
+  animationsActive: SharedValue<boolean>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  animatedValues: RefObject<AnimatedStyle<any>>,
+  adapters: AnimatedPropsAdapterFunction[],
+  forceUpdate?: boolean
+): void {
+  'worklet';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const animations: AnimatedStyle<any> = state.animations ?? {};
+  const newValues = updater() ?? {};
+  const oldValues = state.last;
+
+  // extract animated props
+  let hasAnimations = false;
+  let frameTimestamp: number | undefined;
+  Object.keys(animations).forEach((key) => {
+    const value = newValues[key];
+    if (!isAnimated(value)) {
+      delete animations[key];
+    }
+  });
+  Object.keys(newValues).forEach((key) => {
+    const value = newValues[key];
+    if (isAnimated(value)) {
+      frameTimestamp =
+        global.__frameTimestamp || global._getAnimationTimestamp();
+      prepareAnimation(frameTimestamp, value, animations[key], oldValues[key]);
+      animations[key] = value;
+      hasAnimations = true;
+    }
+  });
+
+  function frame(timestamp: Timestamp) {
+    // eslint-disable-next-line @typescript-eslint/no-shadow
+    const { animations, last, isAnimationCancelled } = state;
+    if (isAnimationCancelled) {
+      state.isAnimationRunning = false;
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updates: AnimatedStyle<any> = {};
+    let allFinished = true;
+    Object.keys(animations).forEach((propName) => {
+      const finished = runAnimations(
+        animations[propName],
+        timestamp,
+        propName,
+        updates,
+        animationsActive
+      );
+      if (finished) {
+        last[propName] = updates[propName];
+        delete animations[propName];
+      } else {
+        allFinished = false;
+      }
+    });
+
+    if (Object.keys(updates).length) {
+      updatePropsJestWrapper(
+        viewDescriptors,
+        updates,
+        animatedValues,
+        adapters
+      );
+    }
+
+    if (!allFinished) {
+      requestAnimationFrame(frame);
+    } else {
+      state.isAnimationRunning = false;
+    }
+  }
+
+  if (hasAnimations) {
+    state.animations = animations;
+    if (!state.isAnimationRunning) {
+      state.isAnimationCancelled = false;
+      state.isAnimationRunning = true;
+      frame(frameTimestamp!);
+    }
+  } else {
+    state.isAnimationCancelled = true;
+    state.animations = [];
+  }
+
+  // calculate diff
+  state.last = newValues;
+
+  if (!shallowEqual(oldValues, newValues) || forceUpdate) {
+    updatePropsJestWrapper(
+      viewDescriptors,
+      newValues,
+      animatedValues,
+      adapters
+    );
+  }
+}
+
+function animatedStyleHandleToJSON(): string {
+  return '{}';
+}
 
 /**
  * Lets you create a styles object, similar to StyleSheet styles, which can be
