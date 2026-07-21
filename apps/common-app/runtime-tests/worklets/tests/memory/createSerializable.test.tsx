@@ -689,11 +689,12 @@ if (__DEV__) {
     });
 
     test('warns when passing an unserializable value to a worklet', async () => {
-      const nestedMap = new Map([[0, [{ someKey: new Date() }]]]);
+      class Clazz {}
+      const nestedMap = new Map([[0, [{ someKey: new Clazz() }]]]);
       await expect(() => {
         createSerializable(nestedMap);
       }).toThrow(
-        'Cannot copy value of type `Date`. It was located at `.values()[0][0]["someKey"]`.'
+        'Cannot copy value of type `Clazz`. It was located at `.values()[0][0]["someKey"]`.'
       );
     });
   });

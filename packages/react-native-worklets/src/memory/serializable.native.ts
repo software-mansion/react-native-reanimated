@@ -594,11 +594,11 @@ function cloneMap(
           createSerializable(element)
         )
       );
+      index++;
     } else {
       clonedKeys.push(createSerializable(key));
       clonedValues.push(createSerializable(element));
     }
-    index++;
   }
   const clone = WorkletsModule.createSerializableMap(clonedKeys, clonedValues);
   serializableMappingCache.set(value, clone);
@@ -618,10 +618,10 @@ function cloneSet(value: Set<unknown>): SerializableRef<Set<unknown>> {
           createSerializable(element)
         )
       );
+      index++;
     } else {
       clonedElements.push(createSerializable(element));
     }
-    index++;
   }
   const clone = WorkletsModule.createSerializableSet(clonedElements);
   serializableMappingCache.set(value, clone);
