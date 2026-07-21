@@ -1,9 +1,6 @@
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
 const workletsPluginOptions = {
   strictGlobal: true,
-  bundleMode: true,
-  hermesBytecode: false,
-  getHBCBinary,
 };
 
 /** @type {import('@babel/core').TransformOptions} */
@@ -22,20 +19,3 @@ module.exports = {
     ],
   ],
 };
-
-const path = require('path');
-
-function getHBCBinary() {
-  const hermescDir = path.join(
-    path.dirname(require.resolve('hermes-compiler/package.json')),
-    'hermesc'
-  );
-  const binDir =
-    process.platform === 'darwin'
-      ? 'osx-bin'
-      : process.platform === 'win32'
-        ? 'win64-bin'
-        : 'linux64-bin';
-  const binName = process.platform === 'win32' ? 'hermesc.exe' : 'hermesc';
-  return path.join(hermescDir, binDir, binName);
-}

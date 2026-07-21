@@ -48,7 +48,6 @@ describe('scheduleOnRuntimeWithId', () => {
       (runtimeId) => {
         runOnRuntimeSyncWithId(runtimeId, () => {
           'worklet';
-          // TODO: fix worklet re-serialization outside of Bundle Mode
           (globalThis as localGlobal).scheduleOnRN = scheduleOnRN;
         });
       }

@@ -88,34 +88,30 @@ describe('Test Synchronizable creation and serialization', () => {
     expect(value).toBe(42);
   });
 
-  // TODO: This test doesn't work because nested `scheduleOnRN` isn't copied properly.
-  // It will be fixed when BundleMode™ becomes the standard.
-  // test('Synchronizable serializes correctly from UI Runtime to BG Runtime', async () => {
-  //   const synchronizable = createSynchronizable(42);
-  //   let readValue = 0;
+  test('Synchronizable serializes correctly from UI Runtime to BG Runtime', async () => {
+    const synchronizable = createSynchronizable(42);
+    let readValue = 0;
 
-  //   const onJSCallback = (value: number) => {
-  //     readValue = value;
-  //     notify(NOTIFICATION);
-  //   };
+    const onJSCallback = (value: number) => {
+      readValue = value;
+      notify(NOTIFICATION);
+    };
 
-  //   // Act
-  //   const runtime = createWorkletRuntime({
-  //     name: 'test',
-  //   });
-  //   scheduleOnUI(() => {
-  //     scheduleOnRuntime(runtime, () => {
-  //       'worklet';
-  //       const value = synchronizable.getBlocking();
-  //       console.log(scheduleOnRN);
-  //       scheduleOnRN(onJSCallback)(value);
-  //     })();
-  //   })();
+    // Act
+    scheduleOnUI(() => {
+      'worklet';
+      scheduleOnRuntime(workletRuntime, () => {
+        'worklet';
+        const value = synchronizable.getBlocking();
+        scheduleOnRN(onJSCallback, value);
+      });
+    });
 
-  //   await waitForNotify(NOTIFICATION);
+    await waitForNotification(NOTIFICATION);
 
-  //   expect(readValue).toBe(42);
-  // });
+    // Assert
+    expect(readValue).toBe(42);
+  });
 });
 
 const initialValue = 0;

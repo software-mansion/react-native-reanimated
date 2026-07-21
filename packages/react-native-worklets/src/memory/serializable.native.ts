@@ -1,7 +1,5 @@
 'use strict';
 
-import { isBundleModeEnabled } from '../debug/bundleMode';
-import { registerWorkletStackDetails } from '../debug/errors';
 import { jsVersion } from '../debug/jsVersion';
 import { logger } from '../debug/logger';
 import { getRuntimeKind, RuntimeKind } from '../runtimeKind';
@@ -143,12 +141,10 @@ export function createSerializable<TValue>(
     return cloneArray(value, shouldPersistRemote, depth);
   }
   if (isFunction) {
-    if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-      if ((value as unknown as WorkletImport).__bundleData) {
-        return cloneImport(
-          value as unknown as WorkletImport
-        ) as SerializableRef<TValue>;
-      }
+    if ((value as unknown as WorkletImport).__bundleData) {
+      return cloneImport(
+        value as unknown as WorkletImport
+      ) as SerializableRef<TValue>;
     }
     if ((value as unknown as RemoteFunction).__remoteFunction) {
       // Remote functions are already serialized.
@@ -218,13 +214,11 @@ export function createSerializable<TValue>(
   );
 }
 
-if (isBundleModeEnabled()) {
-  // TODO: Do it programmatically.
-  createSerializable.__bundleData = {
-    imported: 'createSerializable',
-    source: require.resolveWeak('react-native-worklets'),
-  };
-}
+// TODO: Do it programmatically.
+createSerializable.__bundleData = {
+  imported: 'createSerializable',
+  source: require.resolveWeak('react-native-worklets'),
+};
 
 if (!globalThis.__customSerializationRegistry) {
   globalThis.__customSerializationRegistry =
@@ -354,12 +348,6 @@ function cloneObjectProperties<T extends object>(
 ): Record<string, unknown> {
   const clonedProps: Record<string, unknown> = {};
   for (const [key, element] of Object.entries(value)) {
-    // We don't need to clone __initData field as it contains long strings
-    // representing the worklet code, source map, and location, and we will
-    // serialize/deserialize it once.
-    if (key === '__initData' && clonedProps.__initData !== undefined) {
-      continue;
-    }
     clonedProps[key] = createSerializable(
       element,
       shouldPersistRemote,
@@ -440,36 +428,14 @@ function cloneWorklet<TValue extends WorkletFunction>(
     if (babelVersion !== undefined && babelVersion !== jsVersion) {
       throw new Error(
         `[Worklets] Mismatch between JavaScript code version and Worklets Babel plugin version (${jsVersion} vs. ${babelVersion}).
-    See \`https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version\` for more details.
-    Offending code was: \`${getWorkletCode(value)}\``
+    See \`https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version\` for more details.`
       );
     }
-    registerWorkletStackDetails(
-      value.__workletHash,
-      (value as WorkletFunction).__stackDetails!
-    );
-  }
-  if ((value as WorkletFunction).__stackDetails) {
-    // `Error` type of value cannot be copied to the UI thread, so we
-    // remove it after we handled it in dev mode or delete it to ignore it in production mode.
-    // Not removing this would cause an infinite loop in production mode and it just
-    // seems more elegant to handle it this way.
-    delete (value as WorkletFunction).__stackDetails;
   }
   const clonedProps: Record<string, unknown> = cloneObjectProperties(
     value,
     shouldPersistRemote,
     depth
-  );
-  // to save on transferring static __initData field of worklet structure
-  // we request serializable value to persist its UI counterpart. This means
-  // that the __initData field that contains long strings representing the
-  // worklet code, source map, and location, will always be
-  // serialized/deserialized once.
-  clonedProps.__initData = createSerializable(
-    value.__initData,
-    true,
-    depth + 1
   );
 
   const clone = WorkletsModule.createSerializableWorklet(
@@ -650,19 +616,6 @@ function cloneCustom<TValue extends object, TPacked = unknown>(
   ) as SerializableRef<TValue>;
 }
 
-const WORKLET_CODE_THRESHOLD = 255;
-
-function getWorkletCode(value: WorkletFunction) {
-  const code = value?.__initData?.code;
-  if (!code) {
-    return 'unknown';
-  }
-  if (code.length > WORKLET_CODE_THRESHOLD) {
-    return `${code.substring(0, WORKLET_CODE_THRESHOLD)}...`;
-  }
-  return code;
-}
-
 /**
  * We freeze
  *
@@ -702,174 +655,11 @@ function freezeObjectInDev<TValue extends object>(value: TValue) {
   Object.preventExtensions(value);
 }
 
-function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
-  value: TValue
-): FlatSerializableRef<TValue> {
-  'worklet';
-  // eslint-disable-next-line @typescript-eslint/no-shadow
-  function cloneRecursive(value: TValue): FlatSerializableRef<TValue> {
-    if (
-      (typeof value === 'object' && value !== null) ||
-      typeof value === 'function'
-    ) {
-      if (isHostObject(value)) {
-        // We call `_createSerializableClone` to wrap the provided HostObject
-        // inside SerializableJSRef.
-        return globalThis._createSerializableHostObject(
-          value
-        ) as FlatSerializableRef<TValue>;
-      }
-      if ((value as Record<string, unknown>).__remoteFunction) {
-        // RemoteFunctions are created by us therefore they are
-        // a Serializable out of the box and there is no need to
-        // call `_createSerializableClone`.
-        return value as FlatSerializableRef<TValue>;
-      }
-      if (Array.isArray(value)) {
-        return globalThis._createSerializableArray(
-          value.map(cloneRecursive)
-        ) as FlatSerializableRef<TValue>;
-      }
-      if ((value as Record<string, unknown>).__synchronizableRef) {
-        return globalThis._createSerializableSynchronizable(
-          value
-        ) as FlatSerializableRef<TValue>;
-      }
-      if ((value as Record<string, unknown>).__serializableRef) {
-        return value as FlatSerializableRef<TValue>;
-      }
-      if (value instanceof Set) {
-        const values: unknown[] = [];
-        value.forEach((element) => {
-          values.push(cloneRecursive(element));
-        });
-        return globalThis.__workletsModuleProxy.createSerializableSet(
-          values
-        ) as FlatSerializableRef<TValue>;
-      }
-      if (value instanceof Error) {
-        const { name, message, stack } = value;
-        return globalThis.__workletsModuleProxy.createSerializableError(
-          name,
-          message,
-          stack
-        ) as FlatSerializableRef<TValue>;
-      }
-      if (value instanceof RegExp) {
-        return globalThis.__workletsModuleProxy.createSerializableRegExp(
-          value.source,
-          value.flags
-        ) as FlatSerializableRef<TValue>;
-      }
-      if (value instanceof ArrayBuffer) {
-        return globalThis.__workletsModuleProxy.createSerializableArrayBuffer(
-          value
-        ) as FlatSerializableRef<TValue>;
-      }
-      if (ArrayBuffer.isView(value)) {
-        const typeName = value.constructor.name;
-        if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
-          throw new Error(
-            `[Worklets] Invalid array view name \`${typeName}\`.`
-          );
-        }
-        const length =
-          typeName === 'DataView'
-            ? value.byteLength
-            : (value as unknown as { length: number }).length;
-        return globalThis.__workletsModuleProxy.createSerializableArrayBufferView(
-          typeName,
-          value.buffer as ArrayBuffer,
-          value.byteOffset,
-          length
-        ) as FlatSerializableRef<TValue>;
-      }
-      if (value instanceof Map) {
-        const keys: unknown[] = [];
-        const values: unknown[] = [];
-        value.forEach((element, key) => {
-          keys.push(cloneRecursive(key));
-          values.push(cloneRecursive(element));
-        });
-        return globalThis.__workletsModuleProxy.createSerializableMap(
-          keys,
-          values
-        ) as FlatSerializableRef<TValue>;
-      }
-      if (Object.getPrototypeOf(value) !== Object.prototype) {
-        const length = globalThis.__customSerializationRegistry.length;
-        for (let i = 0; i < length; i++) {
-          const { determine, pack } =
-            globalThis.__customSerializationRegistry[i];
-          if (determine(value)) {
-            const packedData = pack(value);
-            return globalThis.__workletsModuleProxy.createCustomSerializable(
-              cloneRecursive(packedData as TValue) as SerializableRef<object>,
-              i
-            ) as FlatSerializableRef<TValue>;
-          }
-        }
-      }
-      if (__DEV__ && value instanceof Promise) {
-        throw new Error(
-          '[Worklets] Promises cannot be converted to serializable.'
-        );
-      }
-      const toAdapt: Record<string, FlatSerializableRef<TValue>> = {};
-      for (const [key, element] of Object.entries(value)) {
-        toAdapt[key] = cloneRecursive(element);
-      }
-      return globalThis.__workletsModuleProxy.createSerializableLEGACY(
-        toAdapt,
-        value
-      ) as FlatSerializableRef<TValue>;
-    }
-
-    if (typeof value === 'string') {
-      return globalThis._createSerializableString(value);
-    }
-
-    if (typeof value === 'number') {
-      return globalThis._createSerializableNumber(value);
-    }
-
-    if (typeof value === 'boolean') {
-      return globalThis._createSerializableBoolean(value);
-    }
-
-    if (typeof value === 'bigint') {
-      return globalThis._createSerializableBigInt(value);
-    }
-
-    if (typeof value === 'symbol') {
-      // TODO: add native support
-      return globalThis._createSerializableString(
-        String(value)
-      ) as FlatSerializableRef<TValue>;
-    }
-
-    if (value === undefined) {
-      return globalThis._createSerializableUndefined();
-    }
-
-    if (value === null) {
-      return globalThis._createSerializableNull();
-    }
-
-    return globalThis.__workletsModuleProxy.createSerializableLEGACY(
-      value,
-      undefined
-    ) as FlatSerializableRef<TValue>;
-  }
-  return cloneRecursive(value);
-}
-
 /** @deprecated This function is no longer supported. */
-export const makeShareableCloneOnUIRecursive = (
-  isBundleModeEnabled()
-    ? createSerializable
-    : makeShareableCloneOnUIRecursiveLEGACY
-) as typeof makeShareableCloneOnUIRecursiveLEGACY;
+export const makeShareableCloneOnUIRecursive =
+  createSerializable as unknown as <TValue>(
+    value: TValue
+  ) => FlatSerializableRef<TValue>;
 
 /**
  * This function creates a value on UI with persistent state - changes to it on

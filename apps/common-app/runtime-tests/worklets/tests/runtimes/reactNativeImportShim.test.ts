@@ -11,8 +11,6 @@ import {
 describe("importing 'react-native' on Worklet Runtimes", () => {
   const workerRuntime = getWorkletRuntimeFromPool('test');
 
-  const testFn = globalThis._WORKLETS_BUNDLE_MODE_ENABLED ? test : test.skip;
-
   const targets = [
     {
       targetRuntime: 'UI',
@@ -27,7 +25,7 @@ describe("importing 'react-native' on Worklet Runtimes", () => {
 
   targets.forEach(({ targetRuntime, runOnTarget }) => {
     describe(`on ${targetRuntime} Runtime`, () => {
-      testFn('works without access', () => {
+      test('works without access', () => {
         const status = runOnTarget(() => {
           'worklet';
           const reactNative = require('react-native');
@@ -37,7 +35,7 @@ describe("importing 'react-native' on Worklet Runtimes", () => {
         expect(status).toBe(true);
       });
 
-      testFn('throws when accessing unsafe APIs', async () => {
+      test('throws when accessing unsafe APIs', async () => {
         await expect(() => {
           runOnTarget(() => {
             'worklet';

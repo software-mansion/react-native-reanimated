@@ -16,9 +16,7 @@ import {
 
 describe('runOnRuntimeSync', () => {
   const PASS_NOTIFICATION = 'PASS';
-  const FAIL_NOTIFICATION = 'FAIL';
   let value = 0;
-  let reason = '';
 
   const workletRuntime1 = getWorkletRuntimeFromPool('test');
   const workletRuntime2 = getWorkletRuntimeFromPool('test2');
@@ -28,14 +26,8 @@ describe('runOnRuntimeSync', () => {
     notify(PASS_NOTIFICATION);
   };
 
-  const callbackFail = (rea: string) => {
-    reason = rea;
-    notify(FAIL_NOTIFICATION);
-  };
-
   beforeEach(() => {
     value = 0;
-    reason = '';
   });
 
   test('schedules on RN Runtime to a Worker Runtime', () => {
@@ -47,81 +39,35 @@ describe('runOnRuntimeSync', () => {
     expect(result).toBe(42);
   });
 
-  if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-    test('schedules on UI Runtime to a Worker Runtime', async () => {
-      scheduleOnUI(() => {
+  test('schedules on UI Runtime to a Worker Runtime', async () => {
+    scheduleOnUI(() => {
+      'worklet';
+
+      const result = runOnRuntimeSync(workletRuntime1, () => {
         'worklet';
-
-        const result = runOnRuntimeSync(workletRuntime1, () => {
-          'worklet';
-          return 42;
-        });
-
-        scheduleOnRN(callbackPass, result);
+        return 42;
       });
 
-      await waitForNotification(PASS_NOTIFICATION);
-      expect(value).toBe(42);
+      scheduleOnRN(callbackPass, result);
     });
 
-    test('schedules on Worker Runtime to another Worker Runtime', async () => {
-      scheduleOnRuntime(workletRuntime1, () => {
+    await waitForNotification(PASS_NOTIFICATION);
+    expect(value).toBe(42);
+  });
+
+  test('schedules on Worker Runtime to another Worker Runtime', async () => {
+    scheduleOnRuntime(workletRuntime1, () => {
+      'worklet';
+
+      const result = runOnRuntimeSync(workletRuntime2, () => {
         'worklet';
-
-        const result = runOnRuntimeSync(workletRuntime2, () => {
-          'worklet';
-          return 42;
-        });
-
-        scheduleOnRN(callbackPass, result);
+        return 42;
       });
 
-      await waitForNotification(PASS_NOTIFICATION);
-      expect(value).toBe(42);
-    });
-  } else if (__DEV__) {
-    test('throws when scheduling on UI Runtime to a Worker Runtime', async () => {
-      scheduleOnUI(() => {
-        'worklet';
-        try {
-          runOnRuntimeSync(workletRuntime1, () => {
-            'worklet';
-            return 42;
-          });
-        } catch (error) {
-          scheduleOnRN(
-            callbackFail,
-            error instanceof Error ? error.message : String(error)
-          );
-        }
-      });
-
-      await waitForNotification(FAIL_NOTIFICATION);
-      expect(reason).toBe(
-        '[Worklets] runOnRuntimeSync cannot be called on Worklet Runtimes outside of the Bundle Mode.'
-      );
+      scheduleOnRN(callbackPass, result);
     });
 
-    test('throws when scheduling on Worker Runtime to another Worker Runtime', async () => {
-      scheduleOnRuntime(workletRuntime1, () => {
-        'worklet';
-        try {
-          runOnRuntimeSync(workletRuntime2, () => {
-            'worklet';
-            return 42;
-          });
-        } catch (error) {
-          scheduleOnRN(
-            callbackFail,
-            error instanceof Error ? error.message : String(error)
-          );
-        }
-      });
-
-      await waitForNotification(FAIL_NOTIFICATION);
-      expect(reason).toBe(
-        '[Worklets] runOnRuntimeSync cannot be called on Worklet Runtimes outside of the Bundle Mode.'
-      );
-    });
-  }
+    await waitForNotification(PASS_NOTIFICATION);
+    expect(value).toBe(42);
+  });
 });

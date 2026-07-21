@@ -15,9 +15,7 @@ import {
 
 describe('scheduleOnUI', () => {
   const PASS_NOTIFICATION = 'PASS';
-  const FAIL_NOTIFICATION = 'FAIL';
   let value = 0;
-  let reason = '';
 
   const workletRuntime = getWorkletRuntimeFromPool('test');
 
@@ -26,14 +24,8 @@ describe('scheduleOnUI', () => {
     notify(PASS_NOTIFICATION);
   };
 
-  const callbackFail = (rea: string) => {
-    reason = rea;
-    notify(FAIL_NOTIFICATION);
-  };
-
   beforeEach(() => {
     value = 0;
-    reason = '';
   });
 
   test('schedules on RN Runtime to UI Runtime', async () => {
@@ -46,75 +38,29 @@ describe('scheduleOnUI', () => {
     expect(value).toBe(42);
   });
 
-  if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-    test('schedules on UI Runtime to UI Runtime', async () => {
+  test('schedules on UI Runtime to UI Runtime', async () => {
+    scheduleOnUI(() => {
+      'worklet';
       scheduleOnUI(() => {
         'worklet';
-        scheduleOnUI(() => {
-          'worklet';
-          scheduleOnRN(callbackPass, 42);
-        });
+        scheduleOnRN(callbackPass, 42);
       });
-
-      await waitForNotification(PASS_NOTIFICATION);
-      expect(value).toBe(42);
     });
 
-    test('schedules on Worker Runtime to UI Runtime', async () => {
-      scheduleOnRuntime(workletRuntime, () => {
-        'worklet';
-        scheduleOnUI(() => {
-          'worklet';
-          scheduleOnRN(callbackPass, 42);
-        });
-      });
+    await waitForNotification(PASS_NOTIFICATION);
+    expect(value).toBe(42);
+  });
 
-      await waitForNotification(PASS_NOTIFICATION);
-      expect(value).toBe(42);
-    });
-  } else if (__DEV__) {
-    test('throws when scheduling on UI Runtime to UI Runtime', async () => {
+  test('schedules on Worker Runtime to UI Runtime', async () => {
+    scheduleOnRuntime(workletRuntime, () => {
+      'worklet';
       scheduleOnUI(() => {
         'worklet';
-        try {
-          scheduleOnUI(() => {
-            'worklet';
-            scheduleOnRN(callbackPass, 42);
-          });
-        } catch (error) {
-          scheduleOnRN(
-            callbackFail,
-            error instanceof Error ? error.message : String(error)
-          );
-        }
+        scheduleOnRN(callbackPass, 42);
       });
-
-      await waitForNotification(FAIL_NOTIFICATION);
-      expect(reason).toBe(
-        '[Worklets] scheduleOnUI cannot be called on Worklet Runtimes outside of the Bundle Mode.'
-      );
     });
 
-    test('throws when scheduling on Worker Runtime to UI Runtime', async () => {
-      scheduleOnRuntime(workletRuntime, () => {
-        'worklet';
-        try {
-          scheduleOnUI(() => {
-            'worklet';
-            scheduleOnRN(callbackPass, 42);
-          });
-        } catch (error) {
-          scheduleOnRN(
-            callbackFail,
-            error instanceof Error ? error.message : String(error)
-          );
-        }
-      });
-
-      await waitForNotification(FAIL_NOTIFICATION);
-      expect(reason).toBe(
-        '[Worklets] scheduleOnUI cannot be called on Worklet Runtimes outside of the Bundle Mode.'
-      );
-    });
-  }
+    await waitForNotification(PASS_NOTIFICATION);
+    expect(value).toBe(42);
+  });
 });

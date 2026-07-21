@@ -1,9 +1,7 @@
 import type { NodePath, PluginItem } from '@babel/core';
 import type {
   CallExpression,
-  ClassDeclaration,
   ClassMethod,
-  ExpressionStatement,
   JSXAttribute,
   ObjectExpression,
   Program,
@@ -13,8 +11,6 @@ import {
   addDirectivesToKnownCallback,
   handleWorkletizableCallback,
 } from './autoworkletization';
-import { toggleBundleMode } from './bundleMode';
-import { processIfWorkletClass } from './class';
 import { processIfWorkletMethod } from './classMethod';
 import { processIfWorkletContextObject } from './contextObject';
 import { processIfWorkletFile } from './file';
@@ -82,16 +78,6 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
           });
         },
       },
-      ClassDeclaration: {
-        enter(path: NodePath<ClassDeclaration>, state: WorkletsPluginPass) {
-          runWithTaggedExceptions(state, () => {
-            if (state.opts.disableWorkletClasses) {
-              return;
-            }
-            processIfWorkletClass(path, state);
-          });
-        },
-      },
       ClassMethod: {
         enter(path: NodePath<ClassMethod>, state: WorkletsPluginPass) {
           runWithTaggedExceptions(state, () => {
@@ -103,13 +89,6 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
         enter(path: NodePath<Program>, state: WorkletsPluginPass) {
           runWithTaggedExceptions(state, () => {
             processIfWorkletFile(path, state);
-          });
-        },
-      },
-      ExpressionStatement: {
-        enter(path: NodePath<ExpressionStatement>, state: WorkletsPluginPass) {
-          runWithTaggedExceptions(state, () => {
-            toggleBundleMode(path, state);
           });
         },
       },

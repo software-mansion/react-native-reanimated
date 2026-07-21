@@ -1,8 +1,6 @@
 'use strict';
 
-import { isBundleModeEnabled } from './debug/bundleMode';
 import { getStaticFeatureFlag } from './featureFlags/featureFlags';
-import { addNoBundleModeGuardImplementation } from './guardImplementation';
 import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
@@ -63,11 +61,6 @@ export function setupMicrotasks() {
  * - Passed function and args are automatically
  *   [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize)
  *   and serialized.
- * - This function cannot be called from the [UI
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
- *   or a [Worker
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
- *   unless you have the [Bundle Mode](/docs/bundleMode/) enabled.
  *
  * @param fun - A reference to a function you want to schedule on the [UI
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
@@ -395,14 +388,4 @@ function flushUIQueue(): void {
       scheduleStacks
     );
   });
-}
-
-if (__DEV__ && !isBundleModeEnabled()) {
-  /**
-   * QoL guards to give a meaningful error message when the user tries to call
-   * these functions on Worklet Runtimes outside of the Bundle Mode.
-   */
-  addNoBundleModeGuardImplementation(runOnUIAsync);
-  addNoBundleModeGuardImplementation(runOnUISync);
-  addNoBundleModeGuardImplementation(scheduleOnUI);
 }

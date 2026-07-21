@@ -18,12 +18,6 @@ bool isDevBundleFromRNRuntime(jsi::Runtime &rnRuntime) {
   return rtDev.isBool() && rtDev.asBool();
 }
 
-/**
- * This method is required outside of Bundle Mode to make sure we start creating
- * Worklet Runtimes only after unpackers code was loaded from the RN Runtime.
- *
- * In Bundle Mode unpackers are installed during bundle evaluation instead.
- */
 void WorkletsModuleProxy::start() {
   /**
    * We call additional `init` method here because
@@ -55,7 +49,6 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       bundleModeConfig_(bundleModeConfig),
       memoryManager_(std::make_shared<MemoryManager>()),
       runtimeManager_(std::make_shared<RuntimeManager>()),
-      unpackerLoader_(std::make_shared<UnpackerLoader>()),
       rnRuntimeStatus_(rnRuntimeStatus),
       uiWorkletRuntime_(runtimeManager_->createUninitializedUIRuntime(std::make_shared<AsyncQueueUI>(uiScheduler_))),
       rnRuntimeProxy_(std::make_shared<JSIWorkletsModuleProxy>(
@@ -67,7 +60,6 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           uiWorkletRuntime_,
           runtimeBindings_,
           bundleModeConfig_,
-          unpackerLoader_,
           rnRuntimeStatus_,
           RuntimeData::rnRuntimeId)) {
   RNRuntimeWorkletDecorator::decorate(rnRuntime, rnRuntimeProxy_->toOptimizedObject(rnRuntime), jsLogger_);

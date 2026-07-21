@@ -80,13 +80,3 @@ jobs:
         run:
           yarn react-native bundle --reset-cache --entry-file='App.tsx' --bundle-output='${{ matrix.bundle_output }}'
           --dev=true --platform=android
-
-      - name: Disable Bundle Mode
-        shell: bash
-        run: yarn toggle-bundle-mode
-      - name: Check Example App bundling (Eval Mode)
-        shell: bash
-        working-directory: ${{ env.EXAMPLE_DIR }}
-        run:
-          yarn react-native bundle --reset-cache --entry-file='App.tsx' --bundle-output='${{ matrix.bundle_output }}'
-          --dev=true --platform=android

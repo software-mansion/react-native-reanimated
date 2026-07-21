@@ -2,10 +2,6 @@
 
 import { init } from './initializers/initializers';
 
-// Worklets Babel Plugin replaces `false` with `true` here
-// when Bundle Mode is enabled.
-globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;
-
 // is-tree-shakable-suppress
 init();
 
@@ -82,11 +78,7 @@ export {
   scheduleOnRN,
   scheduleOnUI,
 } from './threads';
-export type {
-  WorkletFunction,
-  WorkletRuntime,
-  WorkletStackDetails,
-} from './types';
+export type { WorkletFunction, WorkletRuntime } from './types';
 export { isWorkletFunction } from './workletFunction';
 export { WorkletsModule } from './WorkletsModule/NativeWorklets';
 export type {

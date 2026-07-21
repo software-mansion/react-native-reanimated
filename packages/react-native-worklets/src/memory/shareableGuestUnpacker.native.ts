@@ -8,7 +8,6 @@ import type {
   runOnRuntimeSyncWithId as BundleRunOnRuntimeSyncWithId,
   scheduleOnRuntimeWithId as BundleScheduleOnRuntimeWithId,
 } from '../runtimes';
-import type { WorkletFunction } from '../types';
 import type {
   SerializableRef,
   Shareable,
@@ -19,71 +18,18 @@ import type {
 
 export function installShareableGuestUnpacker() {
   'worklet';
-  'no-worklet-closure';
-  let runOnRuntimeSyncFromId: typeof BundleRunOnRuntimeSyncWithId;
-  let runOnRuntimeAsyncFromId: typeof BundleRunOnRuntimeAsyncWithId;
-  let memoize: (
+  const { serializableMappingCache } = require('./serializableMappingCache');
+  const memoize: (
     unpacked: Shareable<unknown>,
     serialized: SerializableRef<unknown>
-  ) => void;
+  ) => void = serializableMappingCache.set.bind(serializableMappingCache);
 
-  let scheduleOnRuntimeFromId: typeof BundleScheduleOnRuntimeWithId;
-  let serializer: (value: unknown) => SerializableRef<unknown>;
-
-  if (
-    globalThis.__RUNTIME_KIND === 1 ||
-    globalThis._WORKLETS_BUNDLE_MODE_ENABLED
-  ) {
-    serializer = require('./serializable').createSerializable;
-    const { serializableMappingCache } = require('./serializableMappingCache');
-    memoize = serializableMappingCache.set.bind(serializableMappingCache);
-
-    runOnRuntimeSyncFromId = require('../runtimes').runOnRuntimeSyncWithId;
-    runOnRuntimeAsyncFromId = require('../runtimes').runOnRuntimeAsyncWithId;
-    scheduleOnRuntimeFromId = require('../runtimes').scheduleOnRuntimeWithId;
-  } else {
-    // Serializer can't be inlined here because it might be yet undefined
-    // when the unpacker is installed.
-    serializer = (value: unknown) => globalThis.__serializer(value);
-    memoize = () => {
-      // No-op on Worklet Runtimes outside of Bundle Mode.
-    };
-
-    const proxy = globalThis.__workletsModuleProxy;
-    runOnRuntimeSyncFromId = ((
-      hostId: number,
-      worklet: WorkletFunction,
-      ...args: unknown[]
-    ) => {
-      const serializedWorklet = serializer(() => {
-        'worklet';
-        'limit-init-data-hoisting';
-        return globalThis.__serializer(worklet(...args));
-      });
-      return proxy.runOnRuntimeSyncWithId(hostId, serializedWorklet);
-    }) as typeof BundleRunOnRuntimeSyncWithId;
-
-    scheduleOnRuntimeFromId = ((
-      hostId: number,
-      worklet: WorkletFunction,
-      ...args: unknown[]
-    ) => {
-      proxy.scheduleOnRuntimeWithId(
-        hostId,
-        serializer(() => {
-          'worklet';
-          'limit-init-data-hoisting';
-          return globalThis.__serializer(worklet(...args));
-        })
-      );
-    }) as typeof BundleScheduleOnRuntimeWithId;
-
-    runOnRuntimeAsyncFromId = (() => {
-      throw new Error(
-        '[Worklets] `Shareable.getAsync` can only be called on the RN Runtime.'
-      );
-    }) as typeof BundleRunOnRuntimeAsyncWithId;
-  }
+  const runOnRuntimeSyncFromId: typeof BundleRunOnRuntimeSyncWithId =
+    require('../runtimes').runOnRuntimeSyncWithId;
+  const runOnRuntimeAsyncFromId: typeof BundleRunOnRuntimeAsyncWithId =
+    require('../runtimes').runOnRuntimeAsyncWithId;
+  const scheduleOnRuntimeFromId: typeof BundleScheduleOnRuntimeWithId =
+    require('../runtimes').scheduleOnRuntimeWithId;
 
   function shareableGuestUnpacker<TValue>(
     hostId: number,
@@ -100,19 +46,16 @@ export function installShareableGuestUnpacker() {
 
     const get = () => {
       'worklet';
-      'limit-init-data-hoisting';
       return (shareableGuest as Host).value;
     };
 
     const setWithValue = (value: TValue) => {
       'worklet';
-      'limit-init-data-hoisting';
       (shareableGuest as Host).value = value;
     };
 
     const setWithSetter = (setter: (prev: TValue) => TValue) => {
       'worklet';
-      'limit-init-data-hoisting';
       const currentValue = (shareableGuest as Host).value;
       const newValue = setter(currentValue);
       (shareableGuest as Host).value = newValue;

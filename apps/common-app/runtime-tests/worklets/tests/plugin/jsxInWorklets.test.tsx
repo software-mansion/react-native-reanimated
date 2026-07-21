@@ -27,21 +27,19 @@ describe('Test JSX in worklets', () => {
     result = false;
   });
 
-  if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-    test('worklets with JSX work on Worklet runtime', async () => {
-      function renderView() {
-        'worklet';
-        return <ImportedComponent />;
-      }
+  test('worklets with JSX work on Worklet runtime', async () => {
+    function renderView() {
+      'worklet';
+      return <ImportedComponent />;
+    }
 
-      scheduleOnUI(() => {
-        'worklet';
-        const element = renderView() as React.ReactElement;
-        scheduleOnRN(callbackPass, typeof element.type === 'function');
-      });
-
-      await waitForNotification(PASS_NOTIFICATION);
-      expect(result).toBe(true);
+    scheduleOnUI(() => {
+      'worklet';
+      const element = renderView() as React.ReactElement;
+      scheduleOnRN(callbackPass, typeof element.type === 'function');
     });
-  }
+
+    await waitForNotification(PASS_NOTIFICATION);
+    expect(result).toBe(true);
+  });
 });

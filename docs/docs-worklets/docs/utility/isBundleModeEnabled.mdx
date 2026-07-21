@@ -7,16 +7,16 @@ title: isBundleModeEnabled
   # isBundleModeEnabled
 </Badges>
 
-Checks whether [Bundle Mode](/docs/bundleMode) is enabled.
+Checks whether [Bundle Mode](/docs/bundleMode) is active.
 
-For instructions on how to enable Bundle Mode, see the [Bundle Mode documentation](/docs/bundleMode).
+As of 1.0.0, Bundle Mode is the only mode of running worklets, so this function always returns `true` on native platforms and `false` on the Web. It's kept mainly for compatibility.
 
 ## Reference
 
 ```typescript
 import { isBundleModeEnabled } from 'react-native-worklets';
 
-console.log(isBundleModeEnabled()); // true if Bundle Mode is enabled
+console.log(isBundleModeEnabled()); // true on native platforms
 ```
 
 <details>
@@ -29,4 +29,4 @@ console.log(isBundleModeEnabled()); // true if Bundle Mode is enabled
 
 ### Returns
 
-`true` if Bundle Mode is enabled, `false` otherwise (including in [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode) and on the Web).
+`true` on native platforms, `false` on the Web.

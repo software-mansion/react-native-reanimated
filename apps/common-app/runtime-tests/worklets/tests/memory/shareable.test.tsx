@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import {
   createShareable,
   runOnUISync,
@@ -104,17 +105,11 @@ const getInitOptions = (initMode: unknown) => ({
 });
 
 const PASS_NOTIFICATION = 'PASS';
-const FAIL_NOTIFICATION = 'FAIL';
 let value = 0;
-let reason = '';
 
 const callbackPass = (num: number) => {
   value = num;
   notify(PASS_NOTIFICATION);
-};
-const callbackFail = (rea: string) => {
-  reason = rea;
-  notify(FAIL_NOTIFICATION);
 };
 
 describe('Shareable hosted on UI', () => {
@@ -433,7 +428,6 @@ describe('Shareable hosted on Worker Runtime', () => {
 
   beforeEach(() => {
     value = 0;
-    reason = '';
   });
 
   test.each(initModes)(
@@ -603,35 +597,13 @@ describe('Shareable hosted on Worker Runtime', () => {
       );
       scheduleOnUI(() => {
         'worklet';
-        try {
-          (shareable as ShareableGuest<number>).getAsync().then(
-            (value) => {
-              scheduleOnRN(callbackPass, value);
-            },
-            (error: unknown) => {
-              scheduleOnRN(
-                callbackFail,
-                error instanceof Error ? error.message : String(error)
-              );
-            }
-          );
-        } catch (e) {
-          scheduleOnRN(
-            callbackFail,
-            e instanceof Error ? e.message : String(e)
-          );
-        }
+        (shareable as ShareableGuest<number>).getAsync().then((value) => {
+          scheduleOnRN(callbackPass, value);
+        });
       });
 
-      if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-        await waitForNotification(PASS_NOTIFICATION);
-        expect(value).toBe(42);
-      } else {
-        await waitForNotification(FAIL_NOTIFICATION);
-        expect(reason).toInclude(
-          '`Shareable.getAsync` can only be called on the RN Runtime'
-        );
-      }
+      await waitForNotification(PASS_NOTIFICATION);
+      expect(value).toBe(42);
     }
   );
 
@@ -675,34 +647,12 @@ describe('Shareable hosted on Worker Runtime', () => {
       );
       scheduleOnRuntime(otherGuest, () => {
         'worklet';
-        try {
-          (shareable as ShareableGuest<number>)
-            .getAsync()
-            .then((value) => {
-              scheduleOnRN(callbackPass, value);
-            })
-            .catch((error: unknown) => {
-              scheduleOnRN(
-                callbackFail,
-                error instanceof Error ? error.message : String(error)
-              );
-            });
-        } catch (e) {
-          scheduleOnRN(
-            callbackFail,
-            e instanceof Error ? e.message : String(e)
-          );
-        }
+        (shareable as ShareableGuest<number>).getAsync().then((value) => {
+          scheduleOnRN(callbackPass, value);
+        });
       });
-      if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-        await waitForNotification(PASS_NOTIFICATION);
-        expect(value).toBe(42);
-      } else {
-        await waitForNotification(FAIL_NOTIFICATION);
-        expect(reason).toInclude(
-          '`Shareable.getAsync` can only be called on the RN Runtime'
-        );
-      }
+      await waitForNotification(PASS_NOTIFICATION);
+      expect(value).toBe(42);
     }
   );
 

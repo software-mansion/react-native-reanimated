@@ -75,4 +75,4 @@ object.a = 10; // <-- Warning: You can't mutate the object after serializing it
 - This function is rarely used as in almost all cases Worklets handle the creation of Serializables for you.
 - This function includes cycle detection to prevent infinite recursion.
 - `jsi::NativeState` of a passed value is preserved during serialization.
-- In [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode), `createSerializable` can be called only on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime). In Bundle Mode, it can be called from any Runtime. If you need to create a Serializable on a [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) in Legacy Eval Mode, use deprecated [makeShareableCloneOnUIRecursive](/docs/memory/makeShareableCloneOnUIRecursive) instead.
+- `createSerializable` can be called from any Runtime.

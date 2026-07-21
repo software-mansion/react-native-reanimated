@@ -15,79 +15,21 @@ exports[`babel plugin for DirectiveLiterals doesn't transform functions without 
 `;
 
 exports[`babel plugin for DirectiveLiterals doesn't transform string literals 1`] = `
-"const _worklet_10922646814144_init_data = {
-  code: "(function foo_null1(x){const bar='worklet';const baz=\\"worklet\\";})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_10922646814144_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
+"export default (function foo_null1Factory({}) {
   const foo = function (x) {
-    const bar = 'worklet'; // prettier-ignore
-    const baz = "worklet"; // prettier-ignore
+    const bar = 'worklet';
+    const baz = "worklet";
   };
   foo.__closure = {};
   foo.__workletHash = 10922646814144;
   foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_10922646814144_init_data;
-  foo.__stackDetails = _e;
   return foo;
-}({
-  _worklet_10922646814144_init_data
 });"
 `;
 
-exports[`babel plugin for DirectiveLiterals removes "worklet"; directive from worklets 1`] = `
-"const _worklet_12046452140568_init_data = {
-  code: "(function foo_null1(x){return x+2;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_12046452140568_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const foo = function (x) {
-    // prettier-ignore
-    return x + 2;
-  };
-  foo.__closure = {};
-  foo.__workletHash = 12046452140568;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_12046452140568_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}({
-  _worklet_12046452140568_init_data
-});"
-`;
+exports[`babel plugin for DirectiveLiterals removes "worklet"; directive from worklets 1`] = `"const foo = require("react-native-worklets/.worklets/12046452140568.js").default({});"`;
 
-exports[`babel plugin for DirectiveLiterals removes 'worklet'; directive from worklets 1`] = `
-"const _worklet_12046452140568_init_data = {
-  code: "(function foo_null1(x){return x+2;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_12046452140568_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const foo = function (x) {
-    // prettier-ignore
-    return x + 2;
-  };
-  foo.__closure = {};
-  foo.__workletHash = 12046452140568;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_12046452140568_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}({
-  _worklet_12046452140568_init_data
-});"
-`;
+exports[`babel plugin for DirectiveLiterals removes 'worklet'; directive from worklets 1`] = `"const foo = require("react-native-worklets/.worklets/12046452140568.js").default({});"`;
 
 exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown chained methods before 1`] = `
 "FadeIn.AmogusIn().withCallback(() => {
@@ -149,478 +91,92 @@ exports[`babel plugin for Layout Animations doesn't workletize callback function
 });"
 `;
 
-exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after 1`] = `
-"const _worklet_15894285101311_init_data = {
-  code: "(function null1(){console.log('FadeIn with build after');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-FadeIn.withCallback(function null1Factory({
-  _worklet_15894285101311_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    console.log('FadeIn with build after');
-  };
-  null1.__closure = {};
-  null1.__workletHash = 15894285101311;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_15894285101311_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_15894285101311_init_data
-})).build();"
-`;
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after 1`] = `"FadeIn.withCallback(require("react-native-worklets/.worklets/15894285101311.js").default({})).build();"`;
 
-exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after with new keyword 1`] = `
-"const _worklet_15894285101311_init_data = {
-  code: "(function null1(){console.log('FadeIn with build after');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-new FadeIn().withCallback(function null1Factory({
-  _worklet_15894285101311_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    console.log('FadeIn with build after');
-  };
-  null1.__closure = {};
-  null1.__workletHash = 15894285101311;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_15894285101311_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_15894285101311_init_data
-})).build();"
-`;
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after with new keyword 1`] = `"new FadeIn().withCallback(require("react-native-worklets/.worklets/15894285101311.js").default({})).build();"`;
 
-exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods before 1`] = `
-"const _worklet_12078690053346_init_data = {
-  code: "(function null1(){console.log('FadeIn with build before');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-FadeIn.build().withCallback(function null1Factory({
-  _worklet_12078690053346_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    console.log('FadeIn with build before');
-  };
-  null1.__closure = {};
-  null1.__workletHash = 12078690053346;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_12078690053346_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_12078690053346_init_data
-}));"
-`;
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods before 1`] = `"FadeIn.build().withCallback(require("react-native-worklets/.worklets/12078690053346.js").default({}));"`;
 
-exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods before with new keyword 1`] = `
-"const _worklet_12078690053346_init_data = {
-  code: "(function null1(){console.log('FadeIn with build before');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-new FadeIn().build().withCallback(function null1Factory({
-  _worklet_12078690053346_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    console.log('FadeIn with build before');
-  };
-  null1.__closure = {};
-  null1.__workletHash = 12078690053346;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_12078690053346_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_12078690053346_init_data
-}));"
-`;
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods before with new keyword 1`] = `"new FadeIn().build().withCallback(require("react-native-worklets/.worklets/12078690053346.js").default({}));"`;
 
-exports[`babel plugin for Layout Animations workletizes callback functions on longer chains of known objects 1`] = `
-"const _worklet_511094838491_init_data = {
-  code: "(function null1(){console.log('FadeIn with build');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-FadeIn.build().duration().withCallback(function null1Factory({
-  _worklet_511094838491_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    console.log('FadeIn with build');
-  };
-  null1.__closure = {};
-  null1.__workletHash = 511094838491;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_511094838491_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_511094838491_init_data
-}));"
-`;
+exports[`babel plugin for Layout Animations workletizes callback functions on longer chains of known objects 1`] = `"FadeIn.build().duration().withCallback(require("react-native-worklets/.worklets/511094838491.js").default({}));"`;
 
-exports[`babel plugin for Layout Animations workletizes callback functions on longer chains of known objects with new keyword 1`] = `
-"const _worklet_511094838491_init_data = {
-  code: "(function null1(){console.log('FadeIn with build');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-new FadeIn().build().duration().withCallback(function null1Factory({
-  _worklet_511094838491_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    console.log('FadeIn with build');
-  };
-  null1.__closure = {};
-  null1.__workletHash = 511094838491;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_511094838491_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_511094838491_init_data
-}));"
-`;
+exports[`babel plugin for Layout Animations workletizes callback functions on longer chains of known objects with new keyword 1`] = `"new FadeIn().build().duration().withCallback(require("react-native-worklets/.worklets/511094838491.js").default({}));"`;
 
-exports[`babel plugin for Layout Animations workletizes callback functions on unknown objects chained after 1`] = `
-"const _worklet_12590719392748_init_data = {
-  code: "(function null1(){console.log('FadeIn with AmogusIn after');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-FadeIn.withCallback(function null1Factory({
-  _worklet_12590719392748_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    console.log('FadeIn with AmogusIn after');
-  };
-  null1.__closure = {};
-  null1.__workletHash = 12590719392748;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_12590719392748_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_12590719392748_init_data
-})).AmogusIn();"
-`;
+exports[`babel plugin for Layout Animations workletizes callback functions on unknown objects chained after 1`] = `"FadeIn.withCallback(require("react-native-worklets/.worklets/12590719392748.js").default({})).AmogusIn();"`;
 
-exports[`babel plugin for Layout Animations workletizes callback functions on unknown objects chained after with new keyword 1`] = `
-"const _worklet_12590719392748_init_data = {
-  code: "(function null1(){console.log('FadeIn with AmogusIn after');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-new FadeIn().withCallback(function null1Factory({
-  _worklet_12590719392748_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    console.log('FadeIn with AmogusIn after');
-  };
-  null1.__closure = {};
-  null1.__workletHash = 12590719392748;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_12590719392748_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_12590719392748_init_data
-})).AmogusIn();"
-`;
+exports[`babel plugin for Layout Animations workletizes callback functions on unknown objects chained after with new keyword 1`] = `"new FadeIn().withCallback(require("react-native-worklets/.worklets/12590719392748.js").default({})).AmogusIn();"`;
 
-exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically 1`] = `
-"const _worklet_86581056303_init_data = {
-  code: "(function null1(){console.log('FadeIn');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-FadeIn.withCallback(function null1Factory({
-  _worklet_86581056303_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    console.log('FadeIn');
-  };
-  null1.__closure = {};
-  null1.__workletHash = 86581056303;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_86581056303_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_86581056303_init_data
-}));"
-`;
+exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically 1`] = `"FadeIn.withCallback(require("react-native-worklets/.worklets/86581056303.js").default({}));"`;
 
-exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically with new keyword 1`] = `
-"const _worklet_86581056303_init_data = {
-  code: "(function null1(){console.log('FadeIn');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-new FadeIn().withCallback(function null1Factory({
-  _worklet_86581056303_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    console.log('FadeIn');
-  };
-  null1.__closure = {};
-  null1.__workletHash = 86581056303;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_86581056303_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_86581056303_init_data
-}));"
-`;
+exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically with new keyword 1`] = `"new FadeIn().withCallback(require("react-native-worklets/.worklets/86581056303.js").default({}));"`;
 
 exports[`babel plugin for async functions makes an async worklet factory 1`] = `
-"const _worklet_6889153741475_init_data = {
-  code: "(async function foo_null1(){await Promise.resolve();})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_6889153741475_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
+"export default (function foo_null1Factory({}) {
   const foo = async function () {
     await Promise.resolve();
   };
   foo.__closure = {};
   foo.__workletHash = 6889153741475;
   foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_6889153741475_init_data;
-  foo.__stackDetails = _e;
   return foo;
-}({
-  _worklet_6889153741475_init_data
-});"
-`;
-
-exports[`babel plugin for async functions makes an async worklet string 1`] = `
-"const _worklet_6889153741475_init_data = {
-  code: "(async function foo_null1(){await Promise.resolve();})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_6889153741475_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const foo = async function () {
-    await Promise.resolve();
-  };
-  foo.__closure = {};
-  foo.__workletHash = 6889153741475;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_6889153741475_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}({
-  _worklet_6889153741475_init_data
 });"
 `;
 
 exports[`babel plugin for class worklets workletizes class field 1`] = `
-"var _worklet_5242161306529_init_data = {
-  code: "(function null1(x){return x+2;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-class Foo {
-  bar = function null1Factory({
-    _worklet_5242161306529_init_data
-  }) {
-    var _e = [new global.Error(), 1, -27];
-    var null1 = function (x) {
-      return x + 2;
-    };
-    null1.__closure = {};
-    null1.__workletHash = 5242161306529;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_5242161306529_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_5242161306529_init_data
-  });
+"class Foo {
+  bar = require("react-native-worklets/.worklets/5242161306529.js").default({});
 }"
 `;
 
 exports[`babel plugin for class worklets workletizes constructor 1`] = `
-"var _worklet_12770959706952_init_data = {
-  code: "(function constructor_null1(x){this.x=x;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-class Foo {
-  constructor = function constructor_null1Factory({
-    _worklet_12770959706952_init_data
-  }) {
-    var _e = [new global.Error(), 1, -27];
-    var constructor = function (x) {
-      this.x = x;
-    };
-    constructor.__closure = {};
-    constructor.__workletHash = 12770959706952;
-    constructor.__pluginVersion = "x.y.z";
-    constructor.__initData = _worklet_12770959706952_init_data;
-    constructor.__stackDetails = _e;
-    return constructor;
-  }({
-    _worklet_12770959706952_init_data
-  });
+"class Foo {
+  constructor = require("react-native-worklets/.worklets/12770959706952.js").default({});
 }"
 `;
 
 exports[`babel plugin for class worklets workletizes getter 1`] = `
-"var x = 5;
-var _worklet_3641425857427_init_data = {
-  code: "(function bar_null1(){const{x}=this.__closure;return x+2;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
+"const x = 5;
 class Foo {
-  bar = function bar_null1Factory({
-    _worklet_3641425857427_init_data,
-    x
-  }) {
-    var _e = [new global.Error(), -2, -27];
-    var bar = function () {
-      return x + 2;
-    };
-    bar.__closure = {
-      x
-    };
-    bar.__workletHash = 3641425857427;
-    bar.__pluginVersion = "x.y.z";
-    bar.__initData = _worklet_3641425857427_init_data;
-    bar.__stackDetails = _e;
-    return bar;
-  }({
-    _worklet_3641425857427_init_data,
+  bar = require("react-native-worklets/.worklets/3641425857427.js").default({
     x
   });
 }"
 `;
 
 exports[`babel plugin for class worklets workletizes instance method 1`] = `
-"var _worklet_17127187394127_init_data = {
-  code: "(function bar_null1(x){return x+2;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-class Foo {
-  bar = function bar_null1Factory({
-    _worklet_17127187394127_init_data
-  }) {
-    var _e = [new global.Error(), 1, -27];
-    var bar = function (x) {
-      return x + 2;
-    };
-    bar.__closure = {};
-    bar.__workletHash = 17127187394127;
-    bar.__pluginVersion = "x.y.z";
-    bar.__initData = _worklet_17127187394127_init_data;
-    bar.__stackDetails = _e;
-    return bar;
-  }({
-    _worklet_17127187394127_init_data
-  });
+"class Foo {
+  bar = require("react-native-worklets/.worklets/17127187394127.js").default({});
 }"
 `;
 
+exports[`babel plugin for class worklets workletizes instance method 2`] = `
+"export default (function bar_null1Factory({}) {
+  const bar = function (x) {
+    return x + 2;
+  };
+  bar.__closure = {};
+  bar.__workletHash = 17127187394127;
+  bar.__pluginVersion = "x.y.z";
+  return bar;
+});"
+`;
+
 exports[`babel plugin for class worklets workletizes setter 1`] = `
-"var _worklet_13746008877832_init_data = {
-  code: "(function bar_null1(x){this.x=x+2;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-class Foo {
-  bar = function bar_null1Factory({
-    _worklet_13746008877832_init_data
-  }) {
-    var _e = [new global.Error(), 1, -27];
-    var bar = function (x) {
-      this.x = x + 2;
-    };
-    bar.__closure = {};
-    bar.__workletHash = 13746008877832;
-    bar.__pluginVersion = "x.y.z";
-    bar.__initData = _worklet_13746008877832_init_data;
-    bar.__stackDetails = _e;
-    return bar;
-  }({
-    _worklet_13746008877832_init_data
-  });
+"class Foo {
+  bar = require("react-native-worklets/.worklets/13746008877832.js").default({});
 }"
 `;
 
 exports[`babel plugin for class worklets workletizes static class field 1`] = `
-"var _worklet_5242161306529_init_data = {
-  code: "(function null1(x){return x+2;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-class Foo {
-  static bar = function null1Factory({
-    _worklet_5242161306529_init_data
-  }) {
-    var _e = [new global.Error(), 1, -27];
-    var null1 = function (x) {
-      return x + 2;
-    };
-    null1.__closure = {};
-    null1.__workletHash = 5242161306529;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_5242161306529_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_5242161306529_init_data
-  });
+"class Foo {
+  static bar = require("react-native-worklets/.worklets/5242161306529.js").default({});
 }"
 `;
 
 exports[`babel plugin for class worklets workletizes static method 1`] = `
-"var _worklet_17127187394127_init_data = {
-  code: "(function bar_null1(x){return x+2;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-class Foo {
-  bar = function bar_null1Factory({
-    _worklet_17127187394127_init_data
-  }) {
-    var _e = [new global.Error(), 1, -27];
-    var bar = function (x) {
-      return x + 2;
-    };
-    bar.__closure = {};
-    bar.__workletHash = 17127187394127;
-    bar.__pluginVersion = "x.y.z";
-    bar.__initData = _worklet_17127187394127_init_data;
-    bar.__stackDetails = _e;
-    return bar;
-  }({
-    _worklet_17127187394127_init_data
-  });
+"class Foo {
+  bar = require("react-native-worklets/.worklets/17127187394127.js").default({});
 }"
 `;
 
@@ -629,17 +185,17 @@ exports[`babel plugin for closure capturing captures worklets environment 1`] = 
 const objX = {
   x
 };
-const _worklet_2667862979572_init_data = {
-  code: "(function f_null1(){const{x,objX}=this.__closure;return{res:x+objX.x};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const f = function f_null1Factory({
-  _worklet_2667862979572_init_data,
+const f = require("react-native-worklets/.worklets/2667862979572.js").default({
+  x,
+  objX
+});"
+`;
+
+exports[`babel plugin for closure capturing captures worklets environment 2`] = `
+"export default (function f_null1Factory({
   x,
   objX
 }) {
-  const _e = [new global.Error(), -3, -27];
   const f = function () {
     return {
       res: x + objX.x
@@ -651,89 +207,17 @@ const f = function f_null1Factory({
   };
   f.__workletHash = 2667862979572;
   f.__pluginVersion = "x.y.z";
-  f.__initData = _worklet_2667862979572_init_data;
-  f.__stackDetails = _e;
   return f;
-}({
-  _worklet_2667862979572_init_data,
-  x,
-  objX
 });"
 `;
 
-exports[`babel plugin for closure capturing doesn't capture arguments 1`] = `
-"const _worklet_17546282635735_init_data = {
-  code: "(function f_null1(a,b,c){console.log(arguments);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const f = function f_null1Factory({
-  _worklet_17546282635735_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const f = function (a, b, c) {
-    console.log(arguments);
-  };
-  f.__closure = {};
-  f.__workletHash = 17546282635735;
-  f.__pluginVersion = "x.y.z";
-  f.__initData = _worklet_17546282635735_init_data;
-  f.__stackDetails = _e;
-  return f;
-}({
-  _worklet_17546282635735_init_data
-});"
-`;
+exports[`babel plugin for closure capturing doesn't capture arguments 1`] = `"const f = require("react-native-worklets/.worklets/17546282635735.js").default({});"`;
 
-exports[`babel plugin for closure capturing doesn't capture custom globals 1`] = `
-"const _worklet_6576012734481_init_data = {
-  code: "(function f_null1(){console.log(foo);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const f = function f_null1Factory({
-  _worklet_6576012734481_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const f = function () {
-    console.log(foo);
-  };
-  f.__closure = {};
-  f.__workletHash = 6576012734481;
-  f.__pluginVersion = "x.y.z";
-  f.__initData = _worklet_6576012734481_init_data;
-  f.__stackDetails = _e;
-  return f;
-}({
-  _worklet_6576012734481_init_data
-});"
-`;
+exports[`babel plugin for closure capturing doesn't capture custom globals 1`] = `"const f = require("react-native-worklets/.worklets/6576012734481.js").default({});"`;
 
 exports[`babel plugin for closure capturing doesn't capture locally bound variables named like custom globals 1`] = `
 "const foo = 42;
-const _worklet_12399805416363_init_data = {
-  code: "(function f_null1(){const{foo}=this.__closure;console.log(foo);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const f = function f_null1Factory({
-  _worklet_12399805416363_init_data,
-  foo
-}) {
-  const _e = [new global.Error(), -2, -27];
-  const f = function () {
-    console.log(foo);
-  };
-  f.__closure = {
-    foo
-  };
-  f.__workletHash = 12399805416363;
-  f.__pluginVersion = "x.y.z";
-  f.__initData = _worklet_12399805416363_init_data;
-  f.__stackDetails = _e;
-  return f;
-}({
-  _worklet_12399805416363_init_data,
+const f = require("react-native-worklets/.worklets/12399805416363.js").default({
   foo
 });"
 `;
@@ -742,68 +226,35 @@ exports[`babel plugin for closure capturing doesn't capture objects' properties 
 "const foo = {
   bar: 42
 };
-const _worklet_105746754388_init_data = {
-  code: "(function f_null1(){const{foo}=this.__closure;console.log(foo.bar);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const f = function f_null1Factory({
-  _worklet_105746754388_init_data,
-  foo
-}) {
-  const _e = [new global.Error(), -2, -27];
-  const f = function () {
-    console.log(foo.bar);
-  };
-  f.__closure = {
-    foo
-  };
-  f.__workletHash = 105746754388;
-  f.__pluginVersion = "x.y.z";
-  f.__initData = _worklet_105746754388_init_data;
-  f.__stackDetails = _e;
-  return f;
-}({
-  _worklet_105746754388_init_data,
+const f = require("react-native-worklets/.worklets/105746754388.js").default({
   foo
 });"
 `;
 
-exports[`babel plugin for closure capturing doesn't implicitly captures globals in strict mode 1`] = `
-"const _worklet_11257575550579_init_data = {
-  code: "(function f_null1(){globalStuff();})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const f = function f_null1Factory({
-  _worklet_11257575550579_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
+exports[`babel plugin for closure capturing doesn't implicitly captures globals in strict mode 1`] = `"const f = require("react-native-worklets/.worklets/11257575550579.js").default({});"`;
+
+exports[`babel plugin for closure capturing doesn't implicitly captures globals in strict mode 2`] = `
+"export default (function f_null1Factory({}) {
   const f = function () {
     globalStuff();
   };
   f.__closure = {};
   f.__workletHash = 11257575550579;
   f.__pluginVersion = "x.y.z";
-  f.__initData = _worklet_11257575550579_init_data;
-  f.__stackDetails = _e;
   return f;
-}({
-  _worklet_11257575550579_init_data
 });"
 `;
 
 exports[`babel plugin for closure capturing implicitly captures globals with strictGlobal disabled 1`] = `
-"const _worklet_6596166861206_init_data = {
-  code: "(function f_null1(){const{globalStuff}=this.__closure;globalStuff();})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const f = function f_null1Factory({
-  _worklet_6596166861206_init_data,
+"const f = require("react-native-worklets/.worklets/6596166861206.js").default({
+  globalStuff
+});"
+`;
+
+exports[`babel plugin for closure capturing implicitly captures globals with strictGlobal disabled 2`] = `
+"export default (function f_null1Factory({
   globalStuff
 }) {
-  const _e = [new global.Error(), -2, -27];
   const f = function () {
     globalStuff();
   };
@@ -812,213 +263,58 @@ const f = function f_null1Factory({
   };
   f.__workletHash = 6596166861206;
   f.__pluginVersion = "x.y.z";
-  f.__initData = _worklet_6596166861206_init_data;
-  f.__stackDetails = _e;
   return f;
-}({
-  _worklet_6596166861206_init_data,
-  globalStuff
 });"
 `;
 
 exports[`babel plugin for context objects creates factories 1`] = `
-"const _worklet_3929819179120_init_data = {
-  code: "(function null1(){return{bar:function(){return'bar';}};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = {
+"const foo = {
   bar() {
     return 'bar';
   },
-  __workletContextObjectFactory: function null1Factory({
-    _worklet_3929819179120_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function () {
-      return {
-        bar() {
-          return 'bar';
-        }
-      };
-    };
-    null1.__closure = {};
-    null1.__workletHash = 3929819179120;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_3929819179120_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_3929819179120_init_data
-  })
+  __workletContextObjectFactory: require("react-native-worklets/.worklets/3929819179120.js").default({})
 };"
 `;
 
 exports[`babel plugin for context objects preserves bindings 1`] = `
-"const _worklet_13763170431677_init_data = {
-  code: "(function null1(){return{bar:function(){return'bar';},foobar:function(){return this.bar();}};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = {
+"const foo = {
   bar() {
     return 'bar';
   },
   foobar() {
     return this.bar();
   },
-  __workletContextObjectFactory: function null1Factory({
-    _worklet_13763170431677_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function () {
-      return {
-        bar() {
-          return 'bar';
-        },
-        foobar() {
-          return this.bar();
-        }
-      };
-    };
-    null1.__closure = {};
-    null1.__workletHash = 13763170431677;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_13763170431677_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_13763170431677_init_data
-  })
+  __workletContextObjectFactory: require("react-native-worklets/.worklets/13763170431677.js").default({})
 };"
 `;
 
 exports[`babel plugin for context objects removes marker 1`] = `
-"const _worklet_3929819179120_init_data = {
-  code: "(function null1(){return{bar:function(){return'bar';}};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = {
+"const foo = {
   bar() {
     return 'bar';
   },
-  __workletContextObjectFactory: function null1Factory({
-    _worklet_3929819179120_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function () {
-      return {
-        bar() {
-          return 'bar';
-        }
-      };
-    };
-    null1.__closure = {};
-    null1.__workletHash = 3929819179120;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_3929819179120_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_3929819179120_init_data
-  })
+  __workletContextObjectFactory: require("react-native-worklets/.worklets/3929819179120.js").default({})
 };"
 `;
 
 exports[`babel plugin for context objects workletizes regardless of marker value 1`] = `
-"const _worklet_3929819179120_init_data = {
-  code: "(function null1(){return{bar:function(){return'bar';}};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = {
+"const foo = {
   bar() {
     return 'bar';
   },
-  __workletContextObjectFactory: function null1Factory({
-    _worklet_3929819179120_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function () {
-      return {
-        bar() {
-          return 'bar';
-        }
-      };
-    };
-    null1.__closure = {};
-    null1.__workletHash = 3929819179120;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_3929819179120_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_3929819179120_init_data
-  })
+  __workletContextObjectFactory: require("react-native-worklets/.worklets/3929819179120.js").default({})
 };"
 `;
 
-exports[`babel plugin for debugging does inject location for worklets in dev builds 1`] = `
-"const _worklet_317748698275_init_data = {
-  code: "(function null1(){const x=1;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = useAnimatedStyle(function null1Factory({
-  _worklet_317748698275_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    const x = 1;
-  };
-  null1.__closure = {};
-  null1.__workletHash = 317748698275;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_317748698275_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_317748698275_init_data
-}));"
-`;
-
-exports[`babel plugin for debugging doesn't inject location for worklets in production builds 1`] = `
-"const _worklet_317748698275_init_data = {
-  code: "(function null1(){const x=1;})"
-};
-const foo = useAnimatedStyle(function null1Factory({
-  _worklet_317748698275_init_data
-}) {
-  const null1 = function () {
-    const x = 1;
-  };
-  null1.__closure = {};
-  null1.__workletHash = 317748698275;
-  null1.__initData = _worklet_317748698275_init_data;
-  return null1;
-}({
-  _worklet_317748698275_init_data
-}));"
-`;
-
 exports[`babel plugin for debugging doesn't inject version for worklets in production builds 1`] = `
-"const _worklet_317748698275_init_data = {
-  code: "(function null1(){const x=1;})"
-};
-const foo = useAnimatedStyle(function null1Factory({
-  _worklet_317748698275_init_data
-}) {
+"export default (function null1Factory({}) {
   const null1 = function () {
     const x = 1;
   };
   null1.__closure = {};
   null1.__workletHash = 317748698275;
-  null1.__initData = _worklet_317748698275_init_data;
   return null1;
-}({
-  _worklet_317748698275_init_data
-}));"
+});"
 `;
 
 exports[`babel plugin for file workletization doesn't workletize function outside of top level scope 1`] = `
@@ -1029,1134 +325,133 @@ exports[`babel plugin for file workletization doesn't workletize function outsid
 }"
 `;
 
+exports[`babel plugin for file workletization marks ClassDeclaration in default export with __workletClass 1`] = `
+"export default class Clazz {
+  foo() {
+    return 'bar';
+  }
+  __workletClass = true;
+}"
+`;
+
+exports[`babel plugin for file workletization marks ClassDeclaration in named export with __workletClass 1`] = `
+"export class Clazz {
+  foo() {
+    return 'bar';
+  }
+  __workletClass = true;
+}"
+`;
+
+exports[`babel plugin for file workletization marks ClassDeclaration with __workletClass 1`] = `
+"class Clazz {
+  foo() {
+    return 'bar';
+  }
+  __workletClass = true;
+}"
+`;
+
 exports[`babel plugin for file workletization moves CommonJS export to the bottom of the file 1`] = `
-"const _worklet_7222489488656_init_data = {
-  code: "(function foo_null1(){})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_7222489488656_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const foo = function () {};
-  foo.__closure = {};
-  foo.__workletHash = 7222489488656;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_7222489488656_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}({
-  _worklet_7222489488656_init_data
-});
+"const foo = require("react-native-worklets/.worklets/7222489488656.js").default({});
 const bar = 1;
 exports.foo = foo;"
 `;
 
 exports[`babel plugin for file workletization moves multiple CommonJS exports to the bottom of the file 1`] = `
-"const _worklet_7222489488656_init_data = {
-  code: "(function foo_null1(){})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_7222489488656_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const foo = function () {};
-  foo.__closure = {};
-  foo.__workletHash = 7222489488656;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_7222489488656_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}({
-  _worklet_7222489488656_init_data
-});
-const _worklet_6929869424900_init_data = {
-  code: "(function bar_null2(){})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const bar = function bar_null2Factory({
-  _worklet_6929869424900_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const bar = function () {};
-  bar.__closure = {};
-  bar.__workletHash = 6929869424900;
-  bar.__pluginVersion = "x.y.z";
-  bar.__initData = _worklet_6929869424900_init_data;
-  bar.__stackDetails = _e;
-  return bar;
-}({
-  _worklet_6929869424900_init_data
-});
-const _worklet_195120228813_init_data = {
-  code: "(function baz_null3(){})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const baz = function baz_null3Factory({
-  _worklet_195120228813_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const baz = function () {};
-  baz.__closure = {};
-  baz.__workletHash = 195120228813;
-  baz.__pluginVersion = "x.y.z";
-  baz.__initData = _worklet_195120228813_init_data;
-  baz.__stackDetails = _e;
-  return baz;
-}({
-  _worklet_195120228813_init_data
-});
-const _worklet_6972205995780_init_data = {
-  code: "(function foobar_null4(){})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foobar = function foobar_null4Factory({
-  _worklet_6972205995780_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const foobar = function () {};
-  foobar.__closure = {};
-  foobar.__workletHash = 6972205995780;
-  foobar.__pluginVersion = "x.y.z";
-  foobar.__initData = _worklet_6972205995780_init_data;
-  foobar.__stackDetails = _e;
-  return foobar;
-}({
-  _worklet_6972205995780_init_data
-});
+"const foo = require("react-native-worklets/.worklets/7222489488656.js").default({});
+const bar = require("react-native-worklets/.worklets/6929869424900.js").default({});
+const baz = require("react-native-worklets/.worklets/195120228813.js").default({});
+const foobar = require("react-native-worklets/.worklets/6972205995780.js").default({});
 exports.foo = foo;
 exports.bar = bar;
 exports.baz = baz;
 exports.foobar = foobar;"
 `;
 
-exports[`babel plugin for file workletization workletizes ArrowFunctionExpression 1`] = `
-"const _worklet_598741038089_init_data = {
-  code: "(function null1(){return'bar';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function null1Factory({
-  _worklet_598741038089_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    return 'bar';
-  };
-  null1.__closure = {};
-  null1.__workletHash = 598741038089;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_598741038089_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_598741038089_init_data
-});"
-`;
+exports[`babel plugin for file workletization workletizes ArrowFunctionExpression 1`] = `"const foo = require("react-native-worklets/.worklets/598741038089.js").default({});"`;
 
-exports[`babel plugin for file workletization workletizes ArrowFunctionExpression in default export 1`] = `
-"const _worklet_598741038089_init_data = {
-  code: "(function null1(){return'bar';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-export default (function null1Factory({
-  _worklet_598741038089_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    return 'bar';
-  };
-  null1.__closure = {};
-  null1.__workletHash = 598741038089;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_598741038089_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-})({
-  _worklet_598741038089_init_data
-});"
-`;
+exports[`babel plugin for file workletization workletizes ArrowFunctionExpression in default export 1`] = `"export default require("react-native-worklets/.worklets/598741038089.js").default({});"`;
 
-exports[`babel plugin for file workletization workletizes ArrowFunctionExpression in named export 1`] = `
-"const _worklet_598741038089_init_data = {
-  code: "(function null1(){return'bar';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-export const foo = function null1Factory({
-  _worklet_598741038089_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    return 'bar';
-  };
-  null1.__closure = {};
-  null1.__workletHash = 598741038089;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_598741038089_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_598741038089_init_data
-});"
-`;
+exports[`babel plugin for file workletization workletizes ArrowFunctionExpression in named export 1`] = `"export const foo = require("react-native-worklets/.worklets/598741038089.js").default({});"`;
 
-exports[`babel plugin for file workletization workletizes ClassDeclaration 1`] = `
-"const _worklet_15868919720148_init_data = {
-  code: "(function _classCallCheck_null1(a,n){if(!(a instanceof n))throw new TypeError(\\"Cannot call a class as a function\\");})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_2252488982580_init_data = {
-  code: "(function _toPrimitive_null2(t,r){if(\\"object\\"!=typeof t||!t)return t;var e=t[Symbol.toPrimitive];if(void 0!==e){var i=e.call(t,r||\\"default\\");if(\\"object\\"!=typeof i)return i;throw new TypeError(\\"@@toPrimitive must return a primitive value.\\");}return(\\"string\\"===r?String:Number)(t);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_3965092496943_init_data = {
-  code: "(function _toPropertyKey_null3(t){const{_toPrimitive}=this.__closure;var i=_toPrimitive(t,\\"string\\");return\\"symbol\\"==typeof i?i:i+\\"\\";})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_6010199818103_init_data = {
-  code: "(function _defineProperties_null4(e,r){const{_toPropertyKey}=this.__closure;for(var t=0;t<r.length;t++){var o=r[t];o.enumerable=o.enumerable||!1,o.configurable=!0,\\"value\\"in o&&(o.writable=!0),Object.defineProperty(e,_toPropertyKey(o.key),o);}})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_12220641603510_init_data = {
-  code: "(function _createClass_null5(e,r,t){const{_defineProperties}=this.__closure;return r&&_defineProperties(e.prototype,r),t&&_defineProperties(e,t),Object.defineProperty(e,\\"prototype\\",{writable:!1}),e;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_163643135588_init_data = {
-  code: "(function Clazz__classFactory_null6(){const Clazz__classFactory_null6=this._recur;const{_classCallCheck,_createClass}=this.__closure;const Clazz=function(){function Clazz(){_classCallCheck(this,Clazz);}return _createClass(Clazz,[{key:\\"foo\\",value:function foo(){return'bar';}}]);}();Clazz.Clazz__classFactory=Clazz__classFactory_null6;return Clazz;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const Clazz = function () {
-  const _classCallCheck = function _classCallCheck_null1Factory({
-    _worklet_15868919720148_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const _classCallCheck = function (a, n) {
-      if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
-    };
-    _classCallCheck.__closure = {};
-    _classCallCheck.__workletHash = 15868919720148;
-    _classCallCheck.__pluginVersion = "x.y.z";
-    _classCallCheck.__initData = _worklet_15868919720148_init_data;
-    _classCallCheck.__stackDetails = _e;
-    return _classCallCheck;
-  }({
-    _worklet_15868919720148_init_data
-  });
-  const _toPrimitive = function _toPrimitive_null2Factory({
-    _worklet_2252488982580_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const _toPrimitive = function (t, r) {
-      if ("object" != typeof t || !t) return t;
-      var e = t[Symbol.toPrimitive];
-      if (void 0 !== e) {
-        var i = e.call(t, r || "default");
-        if ("object" != typeof i) return i;
-        throw new TypeError("@@toPrimitive must return a primitive value.");
-      }
-      return ("string" === r ? String : Number)(t);
-    };
-    _toPrimitive.__closure = {};
-    _toPrimitive.__workletHash = 2252488982580;
-    _toPrimitive.__pluginVersion = "x.y.z";
-    _toPrimitive.__initData = _worklet_2252488982580_init_data;
-    _toPrimitive.__stackDetails = _e;
-    return _toPrimitive;
-  }({
-    _worklet_2252488982580_init_data
-  });
-  const _toPropertyKey = function _toPropertyKey_null3Factory({
-    _worklet_3965092496943_init_data,
-    _toPrimitive
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _toPropertyKey = function (t) {
-      var i = _toPrimitive(t, "string");
-      return "symbol" == typeof i ? i : i + "";
-    };
-    _toPropertyKey.__closure = {
-      _toPrimitive
-    };
-    _toPropertyKey.__workletHash = 3965092496943;
-    _toPropertyKey.__pluginVersion = "x.y.z";
-    _toPropertyKey.__initData = _worklet_3965092496943_init_data;
-    _toPropertyKey.__stackDetails = _e;
-    return _toPropertyKey;
-  }({
-    _worklet_3965092496943_init_data,
-    _toPrimitive
-  });
-  const _defineProperties = function _defineProperties_null4Factory({
-    _worklet_6010199818103_init_data,
-    _toPropertyKey
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _defineProperties = function (e, r) {
-      for (var t = 0; t < r.length; t++) {
-        var o = r[t];
-        o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
-      }
-    };
-    _defineProperties.__closure = {
-      _toPropertyKey
-    };
-    _defineProperties.__workletHash = 6010199818103;
-    _defineProperties.__pluginVersion = "x.y.z";
-    _defineProperties.__initData = _worklet_6010199818103_init_data;
-    _defineProperties.__stackDetails = _e;
-    return _defineProperties;
-  }({
-    _worklet_6010199818103_init_data,
-    _toPropertyKey
-  });
-  const _createClass = function _createClass_null5Factory({
-    _worklet_12220641603510_init_data,
-    _defineProperties
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _createClass = function (e, r, t) {
-      return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
-        writable: !1
-      }), e;
-    };
-    _createClass.__closure = {
-      _defineProperties
-    };
-    _createClass.__workletHash = 12220641603510;
-    _createClass.__pluginVersion = "x.y.z";
-    _createClass.__initData = _worklet_12220641603510_init_data;
-    _createClass.__stackDetails = _e;
-    return _createClass;
-  }({
-    _worklet_12220641603510_init_data,
-    _defineProperties
-  });
-  const Clazz__classFactory = function Clazz__classFactory_null6Factory({
-    _worklet_163643135588_init_data,
-    _classCallCheck,
-    _createClass
-  }) {
-    const _e = [new global.Error(), -3, -27];
-    const Clazz__classFactory = function () {
-      const Clazz = /*#__PURE__*/function () {
-        function Clazz() {
-          _classCallCheck(this, Clazz);
-        }
-        return _createClass(Clazz, [{
-          key: "foo",
-          value: function foo() {
-            return 'bar';
-          }
-        }]);
-      }();
-      Clazz.Clazz__classFactory = Clazz__classFactory;
-      return Clazz;
-    };
-    Clazz__classFactory.__closure = {
-      _classCallCheck,
-      _createClass
-    };
-    Clazz__classFactory.__workletHash = 163643135588;
-    Clazz__classFactory.__pluginVersion = "x.y.z";
-    Clazz__classFactory.__initData = _worklet_163643135588_init_data;
-    Clazz__classFactory.__stackDetails = _e;
-    return Clazz__classFactory;
-  }({
-    _worklet_163643135588_init_data,
-    _classCallCheck,
-    _createClass
-  });
-  const Clazz = Clazz__classFactory();
-  return Clazz;
-}();"
-`;
+exports[`babel plugin for file workletization workletizes FunctionDeclaration 1`] = `"const foo = require("react-native-worklets/.worklets/8267719815216.js").default({});"`;
 
-exports[`babel plugin for file workletization workletizes ClassDeclaration in default export 1`] = `
-"const _worklet_15868919720148_init_data = {
-  code: "(function _classCallCheck_null1(a,n){if(!(a instanceof n))throw new TypeError(\\"Cannot call a class as a function\\");})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_2252488982580_init_data = {
-  code: "(function _toPrimitive_null2(t,r){if(\\"object\\"!=typeof t||!t)return t;var e=t[Symbol.toPrimitive];if(void 0!==e){var i=e.call(t,r||\\"default\\");if(\\"object\\"!=typeof i)return i;throw new TypeError(\\"@@toPrimitive must return a primitive value.\\");}return(\\"string\\"===r?String:Number)(t);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_3965092496943_init_data = {
-  code: "(function _toPropertyKey_null3(t){const{_toPrimitive}=this.__closure;var i=_toPrimitive(t,\\"string\\");return\\"symbol\\"==typeof i?i:i+\\"\\";})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_6010199818103_init_data = {
-  code: "(function _defineProperties_null4(e,r){const{_toPropertyKey}=this.__closure;for(var t=0;t<r.length;t++){var o=r[t];o.enumerable=o.enumerable||!1,o.configurable=!0,\\"value\\"in o&&(o.writable=!0),Object.defineProperty(e,_toPropertyKey(o.key),o);}})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_12220641603510_init_data = {
-  code: "(function _createClass_null5(e,r,t){const{_defineProperties}=this.__closure;return r&&_defineProperties(e.prototype,r),t&&_defineProperties(e,t),Object.defineProperty(e,\\"prototype\\",{writable:!1}),e;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_163643135588_init_data = {
-  code: "(function Clazz__classFactory_null6(){const Clazz__classFactory_null6=this._recur;const{_classCallCheck,_createClass}=this.__closure;const Clazz=function(){function Clazz(){_classCallCheck(this,Clazz);}return _createClass(Clazz,[{key:\\"foo\\",value:function foo(){return'bar';}}]);}();Clazz.Clazz__classFactory=Clazz__classFactory_null6;return Clazz;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-export default (function () {
-  const _classCallCheck = function _classCallCheck_null1Factory({
-    _worklet_15868919720148_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const _classCallCheck = function (a, n) {
-      if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
-    };
-    _classCallCheck.__closure = {};
-    _classCallCheck.__workletHash = 15868919720148;
-    _classCallCheck.__pluginVersion = "x.y.z";
-    _classCallCheck.__initData = _worklet_15868919720148_init_data;
-    _classCallCheck.__stackDetails = _e;
-    return _classCallCheck;
-  }({
-    _worklet_15868919720148_init_data
-  });
-  const _toPrimitive = function _toPrimitive_null2Factory({
-    _worklet_2252488982580_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const _toPrimitive = function (t, r) {
-      if ("object" != typeof t || !t) return t;
-      var e = t[Symbol.toPrimitive];
-      if (void 0 !== e) {
-        var i = e.call(t, r || "default");
-        if ("object" != typeof i) return i;
-        throw new TypeError("@@toPrimitive must return a primitive value.");
-      }
-      return ("string" === r ? String : Number)(t);
-    };
-    _toPrimitive.__closure = {};
-    _toPrimitive.__workletHash = 2252488982580;
-    _toPrimitive.__pluginVersion = "x.y.z";
-    _toPrimitive.__initData = _worklet_2252488982580_init_data;
-    _toPrimitive.__stackDetails = _e;
-    return _toPrimitive;
-  }({
-    _worklet_2252488982580_init_data
-  });
-  const _toPropertyKey = function _toPropertyKey_null3Factory({
-    _worklet_3965092496943_init_data,
-    _toPrimitive
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _toPropertyKey = function (t) {
-      var i = _toPrimitive(t, "string");
-      return "symbol" == typeof i ? i : i + "";
-    };
-    _toPropertyKey.__closure = {
-      _toPrimitive
-    };
-    _toPropertyKey.__workletHash = 3965092496943;
-    _toPropertyKey.__pluginVersion = "x.y.z";
-    _toPropertyKey.__initData = _worklet_3965092496943_init_data;
-    _toPropertyKey.__stackDetails = _e;
-    return _toPropertyKey;
-  }({
-    _worklet_3965092496943_init_data,
-    _toPrimitive
-  });
-  const _defineProperties = function _defineProperties_null4Factory({
-    _worklet_6010199818103_init_data,
-    _toPropertyKey
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _defineProperties = function (e, r) {
-      for (var t = 0; t < r.length; t++) {
-        var o = r[t];
-        o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
-      }
-    };
-    _defineProperties.__closure = {
-      _toPropertyKey
-    };
-    _defineProperties.__workletHash = 6010199818103;
-    _defineProperties.__pluginVersion = "x.y.z";
-    _defineProperties.__initData = _worklet_6010199818103_init_data;
-    _defineProperties.__stackDetails = _e;
-    return _defineProperties;
-  }({
-    _worklet_6010199818103_init_data,
-    _toPropertyKey
-  });
-  const _createClass = function _createClass_null5Factory({
-    _worklet_12220641603510_init_data,
-    _defineProperties
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _createClass = function (e, r, t) {
-      return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
-        writable: !1
-      }), e;
-    };
-    _createClass.__closure = {
-      _defineProperties
-    };
-    _createClass.__workletHash = 12220641603510;
-    _createClass.__pluginVersion = "x.y.z";
-    _createClass.__initData = _worklet_12220641603510_init_data;
-    _createClass.__stackDetails = _e;
-    return _createClass;
-  }({
-    _worklet_12220641603510_init_data,
-    _defineProperties
-  });
-  const Clazz__classFactory = function Clazz__classFactory_null6Factory({
-    _worklet_163643135588_init_data,
-    _classCallCheck,
-    _createClass
-  }) {
-    const _e = [new global.Error(), -3, -27];
-    const Clazz__classFactory = function () {
-      const Clazz = /*#__PURE__*/function () {
-        function Clazz() {
-          _classCallCheck(this, Clazz);
-        }
-        return _createClass(Clazz, [{
-          key: "foo",
-          value: function foo() {
-            return 'bar';
-          }
-        }]);
-      }();
-      Clazz.Clazz__classFactory = Clazz__classFactory;
-      return Clazz;
-    };
-    Clazz__classFactory.__closure = {
-      _classCallCheck,
-      _createClass
-    };
-    Clazz__classFactory.__workletHash = 163643135588;
-    Clazz__classFactory.__pluginVersion = "x.y.z";
-    Clazz__classFactory.__initData = _worklet_163643135588_init_data;
-    Clazz__classFactory.__stackDetails = _e;
-    return Clazz__classFactory;
-  }({
-    _worklet_163643135588_init_data,
-    _classCallCheck,
-    _createClass
-  });
-  const Clazz = Clazz__classFactory();
-  return Clazz;
-})();"
-`;
+exports[`babel plugin for file workletization workletizes FunctionDeclaration in default export 1`] = `"export default require("react-native-worklets/.worklets/8267719815216.js").default({});"`;
 
-exports[`babel plugin for file workletization workletizes ClassDeclaration in named export 1`] = `
-"const _worklet_15868919720148_init_data = {
-  code: "(function _classCallCheck_null1(a,n){if(!(a instanceof n))throw new TypeError(\\"Cannot call a class as a function\\");})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_2252488982580_init_data = {
-  code: "(function _toPrimitive_null2(t,r){if(\\"object\\"!=typeof t||!t)return t;var e=t[Symbol.toPrimitive];if(void 0!==e){var i=e.call(t,r||\\"default\\");if(\\"object\\"!=typeof i)return i;throw new TypeError(\\"@@toPrimitive must return a primitive value.\\");}return(\\"string\\"===r?String:Number)(t);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_3965092496943_init_data = {
-  code: "(function _toPropertyKey_null3(t){const{_toPrimitive}=this.__closure;var i=_toPrimitive(t,\\"string\\");return\\"symbol\\"==typeof i?i:i+\\"\\";})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_6010199818103_init_data = {
-  code: "(function _defineProperties_null4(e,r){const{_toPropertyKey}=this.__closure;for(var t=0;t<r.length;t++){var o=r[t];o.enumerable=o.enumerable||!1,o.configurable=!0,\\"value\\"in o&&(o.writable=!0),Object.defineProperty(e,_toPropertyKey(o.key),o);}})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_12220641603510_init_data = {
-  code: "(function _createClass_null5(e,r,t){const{_defineProperties}=this.__closure;return r&&_defineProperties(e.prototype,r),t&&_defineProperties(e,t),Object.defineProperty(e,\\"prototype\\",{writable:!1}),e;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_163643135588_init_data = {
-  code: "(function Clazz__classFactory_null6(){const Clazz__classFactory_null6=this._recur;const{_classCallCheck,_createClass}=this.__closure;const Clazz=function(){function Clazz(){_classCallCheck(this,Clazz);}return _createClass(Clazz,[{key:\\"foo\\",value:function foo(){return'bar';}}]);}();Clazz.Clazz__classFactory=Clazz__classFactory_null6;return Clazz;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-export const Clazz = function () {
-  const _classCallCheck = function _classCallCheck_null1Factory({
-    _worklet_15868919720148_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const _classCallCheck = function (a, n) {
-      if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
-    };
-    _classCallCheck.__closure = {};
-    _classCallCheck.__workletHash = 15868919720148;
-    _classCallCheck.__pluginVersion = "x.y.z";
-    _classCallCheck.__initData = _worklet_15868919720148_init_data;
-    _classCallCheck.__stackDetails = _e;
-    return _classCallCheck;
-  }({
-    _worklet_15868919720148_init_data
-  });
-  const _toPrimitive = function _toPrimitive_null2Factory({
-    _worklet_2252488982580_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const _toPrimitive = function (t, r) {
-      if ("object" != typeof t || !t) return t;
-      var e = t[Symbol.toPrimitive];
-      if (void 0 !== e) {
-        var i = e.call(t, r || "default");
-        if ("object" != typeof i) return i;
-        throw new TypeError("@@toPrimitive must return a primitive value.");
-      }
-      return ("string" === r ? String : Number)(t);
-    };
-    _toPrimitive.__closure = {};
-    _toPrimitive.__workletHash = 2252488982580;
-    _toPrimitive.__pluginVersion = "x.y.z";
-    _toPrimitive.__initData = _worklet_2252488982580_init_data;
-    _toPrimitive.__stackDetails = _e;
-    return _toPrimitive;
-  }({
-    _worklet_2252488982580_init_data
-  });
-  const _toPropertyKey = function _toPropertyKey_null3Factory({
-    _worklet_3965092496943_init_data,
-    _toPrimitive
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _toPropertyKey = function (t) {
-      var i = _toPrimitive(t, "string");
-      return "symbol" == typeof i ? i : i + "";
-    };
-    _toPropertyKey.__closure = {
-      _toPrimitive
-    };
-    _toPropertyKey.__workletHash = 3965092496943;
-    _toPropertyKey.__pluginVersion = "x.y.z";
-    _toPropertyKey.__initData = _worklet_3965092496943_init_data;
-    _toPropertyKey.__stackDetails = _e;
-    return _toPropertyKey;
-  }({
-    _worklet_3965092496943_init_data,
-    _toPrimitive
-  });
-  const _defineProperties = function _defineProperties_null4Factory({
-    _worklet_6010199818103_init_data,
-    _toPropertyKey
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _defineProperties = function (e, r) {
-      for (var t = 0; t < r.length; t++) {
-        var o = r[t];
-        o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
-      }
-    };
-    _defineProperties.__closure = {
-      _toPropertyKey
-    };
-    _defineProperties.__workletHash = 6010199818103;
-    _defineProperties.__pluginVersion = "x.y.z";
-    _defineProperties.__initData = _worklet_6010199818103_init_data;
-    _defineProperties.__stackDetails = _e;
-    return _defineProperties;
-  }({
-    _worklet_6010199818103_init_data,
-    _toPropertyKey
-  });
-  const _createClass = function _createClass_null5Factory({
-    _worklet_12220641603510_init_data,
-    _defineProperties
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _createClass = function (e, r, t) {
-      return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
-        writable: !1
-      }), e;
-    };
-    _createClass.__closure = {
-      _defineProperties
-    };
-    _createClass.__workletHash = 12220641603510;
-    _createClass.__pluginVersion = "x.y.z";
-    _createClass.__initData = _worklet_12220641603510_init_data;
-    _createClass.__stackDetails = _e;
-    return _createClass;
-  }({
-    _worklet_12220641603510_init_data,
-    _defineProperties
-  });
-  const Clazz__classFactory = function Clazz__classFactory_null6Factory({
-    _worklet_163643135588_init_data,
-    _classCallCheck,
-    _createClass
-  }) {
-    const _e = [new global.Error(), -3, -27];
-    const Clazz__classFactory = function () {
-      const Clazz = /*#__PURE__*/function () {
-        function Clazz() {
-          _classCallCheck(this, Clazz);
-        }
-        return _createClass(Clazz, [{
-          key: "foo",
-          value: function foo() {
-            return 'bar';
-          }
-        }]);
-      }();
-      Clazz.Clazz__classFactory = Clazz__classFactory;
-      return Clazz;
-    };
-    Clazz__classFactory.__closure = {
-      _classCallCheck,
-      _createClass
-    };
-    Clazz__classFactory.__workletHash = 163643135588;
-    Clazz__classFactory.__pluginVersion = "x.y.z";
-    Clazz__classFactory.__initData = _worklet_163643135588_init_data;
-    Clazz__classFactory.__stackDetails = _e;
-    return Clazz__classFactory;
-  }({
-    _worklet_163643135588_init_data,
-    _classCallCheck,
-    _createClass
-  });
-  const Clazz = Clazz__classFactory();
-  return Clazz;
-}();"
-`;
+exports[`babel plugin for file workletization workletizes FunctionDeclaration in named export 1`] = `"export const foo = require("react-native-worklets/.worklets/8267719815216.js").default({});"`;
 
-exports[`babel plugin for file workletization workletizes FunctionDeclaration 1`] = `
-"const _worklet_8267719815216_init_data = {
-  code: "(function foo_null1(){return'bar';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_8267719815216_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const foo = function () {
-    return 'bar';
-  };
-  foo.__closure = {};
-  foo.__workletHash = 8267719815216;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_8267719815216_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}({
-  _worklet_8267719815216_init_data
-});"
-`;
+exports[`babel plugin for file workletization workletizes FunctionExpression 1`] = `"const foo = require("react-native-worklets/.worklets/598741038089.js").default({});"`;
 
-exports[`babel plugin for file workletization workletizes FunctionDeclaration in default export 1`] = `
-"const _worklet_8267719815216_init_data = {
-  code: "(function foo_null1(){return'bar';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-export default (function foo_null1Factory({
-  _worklet_8267719815216_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const foo = function () {
-    return 'bar';
-  };
-  foo.__closure = {};
-  foo.__workletHash = 8267719815216;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_8267719815216_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-})({
-  _worklet_8267719815216_init_data
-});"
-`;
+exports[`babel plugin for file workletization workletizes FunctionExpression in default export 1`] = `"export default require("react-native-worklets/.worklets/598741038089.js").default({});"`;
 
-exports[`babel plugin for file workletization workletizes FunctionDeclaration in named export 1`] = `
-"const _worklet_8267719815216_init_data = {
-  code: "(function foo_null1(){return'bar';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-export const foo = function foo_null1Factory({
-  _worklet_8267719815216_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const foo = function () {
-    return 'bar';
-  };
-  foo.__closure = {};
-  foo.__workletHash = 8267719815216;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_8267719815216_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}({
-  _worklet_8267719815216_init_data
-});"
-`;
-
-exports[`babel plugin for file workletization workletizes FunctionExpression 1`] = `
-"const _worklet_598741038089_init_data = {
-  code: "(function null1(){return'bar';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function null1Factory({
-  _worklet_598741038089_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    return 'bar';
-  };
-  null1.__closure = {};
-  null1.__workletHash = 598741038089;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_598741038089_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_598741038089_init_data
-});"
-`;
-
-exports[`babel plugin for file workletization workletizes FunctionExpression in default export 1`] = `
-"const _worklet_598741038089_init_data = {
-  code: "(function null1(){return'bar';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-export default (function null1Factory({
-  _worklet_598741038089_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    return 'bar';
-  };
-  null1.__closure = {};
-  null1.__workletHash = 598741038089;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_598741038089_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-})({
-  _worklet_598741038089_init_data
-});"
-`;
-
-exports[`babel plugin for file workletization workletizes FunctionExpression in named export 1`] = `
-"const _worklet_598741038089_init_data = {
-  code: "(function null1(){return'bar';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-export const foo = function null1Factory({
-  _worklet_598741038089_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    return 'bar';
-  };
-  null1.__closure = {};
-  null1.__workletHash = 598741038089;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_598741038089_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_598741038089_init_data
-});"
-`;
+exports[`babel plugin for file workletization workletizes FunctionExpression in named export 1`] = `"export const foo = require("react-native-worklets/.worklets/598741038089.js").default({});"`;
 
 exports[`babel plugin for file workletization workletizes ObjectMethod 1`] = `
-"const _worklet_10297630573799_init_data = {
-  code: "(function bar_null1(){return'bar';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = {
-  bar: function bar_null1Factory({
-    _worklet_10297630573799_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const bar = function () {
-      return 'bar';
-    };
-    bar.__closure = {};
-    bar.__workletHash = 10297630573799;
-    bar.__pluginVersion = "x.y.z";
-    bar.__initData = _worklet_10297630573799_init_data;
-    bar.__stackDetails = _e;
-    return bar;
-  }({
-    _worklet_10297630573799_init_data
-  })
+"const foo = {
+  bar: require("react-native-worklets/.worklets/10297630573799.js").default({})
 };"
 `;
 
 exports[`babel plugin for file workletization workletizes ObjectMethod in default export 1`] = `
-"const _worklet_10297630573799_init_data = {
-  code: "(function bar_null1(){return'bar';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-export default {
-  bar: function bar_null1Factory({
-    _worklet_10297630573799_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const bar = function () {
-      return 'bar';
-    };
-    bar.__closure = {};
-    bar.__workletHash = 10297630573799;
-    bar.__pluginVersion = "x.y.z";
-    bar.__initData = _worklet_10297630573799_init_data;
-    bar.__stackDetails = _e;
-    return bar;
-  }({
-    _worklet_10297630573799_init_data
-  })
+"export default {
+  bar: require("react-native-worklets/.worklets/10297630573799.js").default({})
 };"
 `;
 
 exports[`babel plugin for file workletization workletizes ObjectMethod in named export 1`] = `
-"const _worklet_10297630573799_init_data = {
-  code: "(function bar_null1(){return'bar';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-export const foo = {
-  bar: function bar_null1Factory({
-    _worklet_10297630573799_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const bar = function () {
-      return 'bar';
-    };
-    bar.__closure = {};
-    bar.__workletHash = 10297630573799;
-    bar.__pluginVersion = "x.y.z";
-    bar.__initData = _worklet_10297630573799_init_data;
-    bar.__stackDetails = _e;
-    return bar;
-  }({
-    _worklet_10297630573799_init_data
-  })
+"export const foo = {
+  bar: require("react-native-worklets/.worklets/10297630573799.js").default({})
 };"
 `;
 
-exports[`babel plugin for file workletization workletizes assigned FunctionDeclaration 1`] = `
-"const _worklet_8267719815216_init_data = {
-  code: "(function foo_null1(){return'bar';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_8267719815216_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const foo = function () {
-    return 'bar';
-  };
-  foo.__closure = {};
-  foo.__workletHash = 8267719815216;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_8267719815216_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}({
-  _worklet_8267719815216_init_data
-});"
-`;
+exports[`babel plugin for file workletization workletizes assigned FunctionDeclaration 1`] = `"const foo = require("react-native-worklets/.worklets/8267719815216.js").default({});"`;
 
 exports[`babel plugin for file workletization workletizes implicit WorkletContextObject 1`] = `
-"const _worklet_13763170431677_init_data = {
-  code: "(function null1(){return{bar:function(){return'bar';},foobar:function(){return this.bar();}};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = {
+"const foo = {
   bar() {
     return 'bar';
   },
   foobar() {
     return this.bar();
   },
-  __workletContextObjectFactory: function null1Factory({
-    _worklet_13763170431677_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function () {
-      return {
-        bar() {
-          return 'bar';
-        },
-        foobar() {
-          return this.bar();
-        }
-      };
-    };
-    null1.__closure = {};
-    null1.__workletHash = 13763170431677;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_13763170431677_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_13763170431677_init_data
-  })
+  __workletContextObjectFactory: require("react-native-worklets/.worklets/13763170431677.js").default({})
 };"
 `;
 
 exports[`babel plugin for file workletization workletizes implicit WorkletContextObject in default export 1`] = `
-"const _worklet_13763170431677_init_data = {
-  code: "(function null1(){return{bar:function(){return'bar';},foobar:function(){return this.bar();}};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-export default {
+"export default {
   bar() {
     return 'bar';
   },
   foobar() {
     return this.bar();
   },
-  __workletContextObjectFactory: function null1Factory({
-    _worklet_13763170431677_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function () {
-      return {
-        bar() {
-          return 'bar';
-        },
-        foobar() {
-          return this.bar();
-        }
-      };
-    };
-    null1.__closure = {};
-    null1.__workletHash = 13763170431677;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_13763170431677_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_13763170431677_init_data
-  })
+  __workletContextObjectFactory: require("react-native-worklets/.worklets/13763170431677.js").default({})
 };"
 `;
 
 exports[`babel plugin for file workletization workletizes implicit WorkletContextObject in named export 1`] = `
-"const _worklet_13763170431677_init_data = {
-  code: "(function null1(){return{bar:function(){return'bar';},foobar:function(){return this.bar();}};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-export const foo = {
+"export const foo = {
   bar() {
     return 'bar';
   },
   foobar() {
     return this.bar();
   },
-  __workletContextObjectFactory: function null1Factory({
-    _worklet_13763170431677_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function () {
-      return {
-        bar() {
-          return 'bar';
-        },
-        foobar() {
-          return this.bar();
-        }
-      };
-    };
-    null1.__closure = {};
-    null1.__workletHash = 13763170431677;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_13763170431677_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_13763170431677_init_data
-  })
+  __workletContextObjectFactory: require("react-native-worklets/.worklets/13763170431677.js").default({})
 };"
 `;
 
 exports[`babel plugin for file workletization workletizes multiple functions 1`] = `
-"const _worklet_8267719815216_init_data = {
-  code: "(function foo_null1(){return'bar';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_8267719815216_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const foo = function () {
-    return 'bar';
-  };
-  foo.__closure = {};
-  foo.__workletHash = 8267719815216;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_8267719815216_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}({
-  _worklet_8267719815216_init_data
-});
-const _worklet_6769067074636_init_data = {
-  code: "(function null2(){return'foobar';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const bar = function null2Factory({
-  _worklet_6769067074636_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null2 = function () {
-    return 'foobar';
-  };
-  null2.__closure = {};
-  null2.__workletHash = 6769067074636;
-  null2.__pluginVersion = "x.y.z";
-  null2.__initData = _worklet_6769067074636_init_data;
-  null2.__stackDetails = _e;
-  return null2;
-}({
-  _worklet_6769067074636_init_data
-});"
+"const foo = require("react-native-worklets/.worklets/8267719815216.js").default({});
+const bar = require("react-native-worklets/.worklets/6769067074636.js").default({});"
 `;
 
-exports[`babel plugin for function hooks workletizes hook wrapped named FunctionExpression automatically 1`] = `
-"const _worklet_17573641830910_init_data = {
-  code: "(function foo_null1(){return{width:50};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const animatedStyle = useAnimatedStyle(function foo_null1Factory({
-  _worklet_17573641830910_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
+exports[`babel plugin for function hooks workletizes hook wrapped named FunctionExpression automatically 1`] = `"const animatedStyle = useAnimatedStyle(require("react-native-worklets/.worklets/17573641830910.js").default({}));"`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped named FunctionExpression automatically 2`] = `
+"export default (function foo_null1Factory({}) {
   const foo = function () {
     return {
       width: 50
@@ -2165,24 +460,14 @@ const animatedStyle = useAnimatedStyle(function foo_null1Factory({
   foo.__closure = {};
   foo.__workletHash = 17573641830910;
   foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_17573641830910_init_data;
-  foo.__stackDetails = _e;
   return foo;
-}({
-  _worklet_17573641830910_init_data
-}));"
+});"
 `;
 
-exports[`babel plugin for function hooks workletizes hook wrapped unnamed FunctionExpression automatically 1`] = `
-"const _worklet_12344077285575_init_data = {
-  code: "(function null1(){return{width:50};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const animatedStyle = useAnimatedStyle(function null1Factory({
-  _worklet_12344077285575_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
+exports[`babel plugin for function hooks workletizes hook wrapped unnamed FunctionExpression automatically 1`] = `"const animatedStyle = useAnimatedStyle(require("react-native-worklets/.worklets/12344077285575.js").default({}));"`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped unnamed FunctionExpression automatically 2`] = `
+"export default (function null1Factory({}) {
   const null1 = function () {
     return {
       width: 50
@@ -2191,24 +476,17 @@ const animatedStyle = useAnimatedStyle(function null1Factory({
   null1.__closure = {};
   null1.__workletHash = 12344077285575;
   null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_12344077285575_init_data;
-  null1.__stackDetails = _e;
   return null1;
-}({
-  _worklet_12344077285575_init_data
-}));"
+});"
 `;
 
 exports[`babel plugin for function hooks workletizes hook wrapped worklet reference automatically 1`] = `
-"const _worklet_16289365939249_init_data = {
-  code: "(function null1(){return{color:'red',backgroundColor:'blue'};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const style = function null1Factory({
-  _worklet_16289365939249_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
+"const style = require("react-native-worklets/.worklets/16289365939249.js").default({});
+const animatedStyle = useAnimatedStyle(style);"
+`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped worklet reference automatically 2`] = `
+"export default (function null1Factory({}) {
   const null1 = function () {
     return {
       color: 'red',
@@ -2218,50 +496,12 @@ const style = function null1Factory({
   null1.__closure = {};
   null1.__workletHash = 16289365939249;
   null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_16289365939249_init_data;
-  null1.__stackDetails = _e;
   return null1;
-}({
-  _worklet_16289365939249_init_data
-});
-const animatedStyle = useAnimatedStyle(style);"
-`;
-
-exports[`babel plugin for generators makes a generator worklet factory 1`] = `
-"const _worklet_6751874160474_init_data = {
-  code: "(function*foo_null1(){yield'hello';yield'world';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_6751874160474_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const foo = function* () {
-    yield 'hello';
-    yield 'world';
-  };
-  foo.__closure = {};
-  foo.__workletHash = 6751874160474;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_6751874160474_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}({
-  _worklet_6751874160474_init_data
 });"
 `;
 
-exports[`babel plugin for generators makes a generator worklet string 1`] = `
-"const _worklet_6751874160474_init_data = {
-  code: "(function*foo_null1(){yield'hello';yield'world';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_6751874160474_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
+exports[`babel plugin for generators makes a generator worklet factory 1`] = `
+"export default (function foo_null1Factory({}) {
   const foo = function* () {
     yield 'hello';
     yield 'world';
@@ -2269,11 +509,7 @@ const foo = function foo_null1Factory({
   foo.__closure = {};
   foo.__workletHash = 6751874160474;
   foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_6751874160474_init_data;
-  foo.__stackDetails = _e;
   return foo;
-}({
-  _worklet_6751874160474_init_data
 });"
 `;
 
@@ -2336,279 +572,43 @@ exports[`babel plugin for inline styles shows a warning if user uses .value insi
 
 exports[`babel plugin for object hooks supports empty object in useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler({});"`;
 
-exports[`babel plugin for object hooks transforms ArrowFunctionExpression as argument of useAnimatedScrollHandler 1`] = `
-"const _worklet_13398616180494_init_data = {
-  code: "(function null1(event){console.log(event);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-useAnimatedScrollHandler(function null1Factory({
-  _worklet_13398616180494_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function (event) {
-    console.log(event);
-  };
-  null1.__closure = {};
-  null1.__workletHash = 13398616180494;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_13398616180494_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_13398616180494_init_data
-}));"
-`;
+exports[`babel plugin for object hooks transforms ArrowFunctionExpression as argument of useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler(require("react-native-worklets/.worklets/13398616180494.js").default({}));"`;
 
 exports[`babel plugin for object hooks transforms each object property in useAnimatedScrollHandler 1`] = `
-"const _worklet_15695285586601_init_data = {
-  code: "(function null1(){})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_15793781905194_init_data = {
-  code: "(function null2(){})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_6645178700715_init_data = {
-  code: "(function null3(){})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_15833406824748_init_data = {
-  code: "(function null4(){})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_6687899605933_init_data = {
-  code: "(function null5(){})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-useAnimatedScrollHandler({
-  onScroll: function null1Factory({
-    _worklet_15695285586601_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function () {};
-    null1.__closure = {};
-    null1.__workletHash = 15695285586601;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_15695285586601_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_15695285586601_init_data
-  }),
-  onBeginDrag: function null2Factory({
-    _worklet_15793781905194_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null2 = function () {};
-    null2.__closure = {};
-    null2.__workletHash = 15793781905194;
-    null2.__pluginVersion = "x.y.z";
-    null2.__initData = _worklet_15793781905194_init_data;
-    null2.__stackDetails = _e;
-    return null2;
-  }({
-    _worklet_15793781905194_init_data
-  }),
-  onEndDrag: function null3Factory({
-    _worklet_6645178700715_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null3 = function () {};
-    null3.__closure = {};
-    null3.__workletHash = 6645178700715;
-    null3.__pluginVersion = "x.y.z";
-    null3.__initData = _worklet_6645178700715_init_data;
-    null3.__stackDetails = _e;
-    return null3;
-  }({
-    _worklet_6645178700715_init_data
-  }),
-  onMomentumBegin: function null4Factory({
-    _worklet_15833406824748_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null4 = function () {};
-    null4.__closure = {};
-    null4.__workletHash = 15833406824748;
-    null4.__pluginVersion = "x.y.z";
-    null4.__initData = _worklet_15833406824748_init_data;
-    null4.__stackDetails = _e;
-    return null4;
-  }({
-    _worklet_15833406824748_init_data
-  }),
-  onMomentumEnd: function null5Factory({
-    _worklet_6687899605933_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null5 = function () {};
-    null5.__closure = {};
-    null5.__workletHash = 6687899605933;
-    null5.__pluginVersion = "x.y.z";
-    null5.__initData = _worklet_6687899605933_init_data;
-    null5.__stackDetails = _e;
-    return null5;
-  }({
-    _worklet_6687899605933_init_data
-  })
+"useAnimatedScrollHandler({
+  onScroll: require("react-native-worklets/.worklets/15695285586601.js").default({}),
+  onBeginDrag: require("react-native-worklets/.worklets/15793781905194.js").default({}),
+  onEndDrag: require("react-native-worklets/.worklets/6645178700715.js").default({}),
+  onMomentumBegin: require("react-native-worklets/.worklets/15833406824748.js").default({}),
+  onMomentumEnd: require("react-native-worklets/.worklets/6687899605933.js").default({})
 });"
 `;
 
-exports[`babel plugin for object hooks transforms named FunctionExpression as argument of useAnimatedScrollHandler 1`] = `
-"const _worklet_3237328317303_init_data = {
-  code: "(function foo_null1(event){console.log(event);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-useAnimatedScrollHandler(function foo_null1Factory({
-  _worklet_3237328317303_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const foo = function (event) {
-    console.log(event);
-  };
-  foo.__closure = {};
-  foo.__workletHash = 3237328317303;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_3237328317303_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}({
-  _worklet_3237328317303_init_data
-}));"
-`;
+exports[`babel plugin for object hooks transforms named FunctionExpression as argument of useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler(require("react-native-worklets/.worklets/3237328317303.js").default({}));"`;
 
-exports[`babel plugin for object hooks transforms unnamed FunctionExpression as argument of useAnimatedScrollHandler 1`] = `
-"const _worklet_13398616180494_init_data = {
-  code: "(function null1(event){console.log(event);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-useAnimatedScrollHandler(function null1Factory({
-  _worklet_13398616180494_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function (event) {
-    console.log(event);
-  };
-  null1.__closure = {};
-  null1.__workletHash = 13398616180494;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_13398616180494_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_13398616180494_init_data
-}));"
-`;
+exports[`babel plugin for object hooks transforms unnamed FunctionExpression as argument of useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler(require("react-native-worklets/.worklets/13398616180494.js").default({}));"`;
 
 exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped ArrowFunctionExpression automatically 1`] = `
-"const _worklet_13398616180494_init_data = {
-  code: "(function null1(event){console.log(event);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-useAnimatedScrollHandler({
-  onScroll: function null1Factory({
-    _worklet_13398616180494_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function (event) {
-      console.log(event);
-    };
-    null1.__closure = {};
-    null1.__workletHash = 13398616180494;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_13398616180494_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_13398616180494_init_data
-  })
+"useAnimatedScrollHandler({
+  onScroll: require("react-native-worklets/.worklets/13398616180494.js").default({})
 });"
 `;
 
 exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped ObjectMethod automatically 1`] = `
-"const _worklet_16289303987389_init_data = {
-  code: "(function onScroll_null1(event){console.log(event);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-useAnimatedScrollHandler({
-  onScroll: function onScroll_null1Factory({
-    _worklet_16289303987389_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const onScroll = function (event) {
-      console.log(event);
-    };
-    onScroll.__closure = {};
-    onScroll.__workletHash = 16289303987389;
-    onScroll.__pluginVersion = "x.y.z";
-    onScroll.__initData = _worklet_16289303987389_init_data;
-    onScroll.__stackDetails = _e;
-    return onScroll;
-  }({
-    _worklet_16289303987389_init_data
-  })
+"useAnimatedScrollHandler({
+  onScroll: require("react-native-worklets/.worklets/16289303987389.js").default({})
 });"
 `;
 
 exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped named FunctionExpression automatically 1`] = `
-"const _worklet_16289303987389_init_data = {
-  code: "(function onScroll_null1(event){console.log(event);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-useAnimatedScrollHandler({
-  onScroll: function onScroll_null1Factory({
-    _worklet_16289303987389_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const onScroll = function (event) {
-      console.log(event);
-    };
-    onScroll.__closure = {};
-    onScroll.__workletHash = 16289303987389;
-    onScroll.__pluginVersion = "x.y.z";
-    onScroll.__initData = _worklet_16289303987389_init_data;
-    onScroll.__stackDetails = _e;
-    return onScroll;
-  }({
-    _worklet_16289303987389_init_data
-  })
+"useAnimatedScrollHandler({
+  onScroll: require("react-native-worklets/.worklets/16289303987389.js").default({})
 });"
 `;
 
 exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped unnamed FunctionExpression automatically 1`] = `
-"const _worklet_13398616180494_init_data = {
-  code: "(function null1(event){console.log(event);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-useAnimatedScrollHandler({
-  onScroll: function null1Factory({
-    _worklet_13398616180494_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function (event) {
-      console.log(event);
-    };
-    null1.__closure = {};
-    null1.__workletHash = 13398616180494;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_13398616180494_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_13398616180494_init_data
-  })
+"useAnimatedScrollHandler({
+  onScroll: require("react-native-worklets/.worklets/13398616180494.js").default({})
 });"
 `;
 
@@ -2639,15 +639,7 @@ exports[`babel plugin for react-native-gesture-handler transforms spread operato
 `;
 
 exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for arrays 1`] = `
-"const _worklet_12830172710526_init_data = {
-  code: "(function foo_null1(){const bar=[4,5];const baz=[1,...[2,3],...bar];})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_12830172710526_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
+"export default (function foo_null1Factory({}) {
   const foo = function () {
     const bar = [4, 5];
     const baz = [1, ...[2, 3], ...bar];
@@ -2655,72 +647,36 @@ const foo = function foo_null1Factory({
   foo.__closure = {};
   foo.__workletHash = 12830172710526;
   foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_12830172710526_init_data;
-  foo.__stackDetails = _e;
   return foo;
-}({
-  _worklet_12830172710526_init_data
 });"
 `;
 
 exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for function arguments 1`] = `
-"const _worklet_6578320838713_init_data = {
-  code: "(function foo_null1(...args){console.log(args);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_6578320838713_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
+"export default (function foo_null1Factory({}) {
   const foo = function (...args) {
     console.log(args);
   };
   foo.__closure = {};
   foo.__workletHash = 6578320838713;
   foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_6578320838713_init_data;
-  foo.__stackDetails = _e;
   return foo;
-}({
-  _worklet_6578320838713_init_data
 });"
 `;
 
 exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for function calls 1`] = `
-"const _worklet_12908294140089_init_data = {
-  code: "(function foo_null1(arg){console.log(...arg);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_12908294140089_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
+"export default (function foo_null1Factory({}) {
   const foo = function (arg) {
     console.log(...arg);
   };
   foo.__closure = {};
   foo.__workletHash = 12908294140089;
   foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_12908294140089_init_data;
-  foo.__stackDetails = _e;
   return foo;
-}({
-  _worklet_12908294140089_init_data
 });"
 `;
 
 exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for objects 1`] = `
-"const _worklet_15693683824325_init_data = {
-  code: "(function foo_null1(){const bar={d:4,e:5};const baz={a:1,...{b:2,c:3},...bar};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_15693683824325_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
+"export default (function foo_null1Factory({}) {
   const foo = function () {
     const bar = {
       d: 4,
@@ -2738,192 +694,28 @@ const foo = function foo_null1Factory({
   foo.__closure = {};
   foo.__workletHash = 15693683824325;
   foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_15693683824325_init_data;
-  foo.__stackDetails = _e;
   return foo;
-}({
-  _worklet_15693683824325_init_data
 });"
 `;
 
 exports[`babel plugin for react-native-gesture-handler workletizes gesture callbacks using the hooks api 1`] = `
-"const _worklet_7919510602824_init_data = {
-  code: "(function null1(){console.log('onBegin');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_2618650549343_init_data = {
-  code: "(function null2(_event){console.log('onStart');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_12912670672289_init_data = {
-  code: "(function null3(_event,_success){console.log('onEnd');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = useTapGesture({
+"const foo = useTapGesture({
   numberOfTaps: 2,
-  onBegin: function null1Factory({
-    _worklet_7919510602824_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function () {
-      console.log('onBegin');
-    };
-    null1.__closure = {};
-    null1.__workletHash = 7919510602824;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_7919510602824_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_7919510602824_init_data
-  }),
-  onStart: function null2Factory({
-    _worklet_2618650549343_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null2 = function (_event) {
-      console.log('onStart');
-    };
-    null2.__closure = {};
-    null2.__workletHash = 2618650549343;
-    null2.__pluginVersion = "x.y.z";
-    null2.__initData = _worklet_2618650549343_init_data;
-    null2.__stackDetails = _e;
-    return null2;
-  }({
-    _worklet_2618650549343_init_data
-  }),
-  onEnd: function null3Factory({
-    _worklet_12912670672289_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null3 = function (_event, _success) {
-      console.log('onEnd');
-    };
-    null3.__closure = {};
-    null3.__workletHash = 12912670672289;
-    null3.__pluginVersion = "x.y.z";
-    null3.__initData = _worklet_12912670672289_init_data;
-    null3.__stackDetails = _e;
-    return null3;
-  }({
-    _worklet_12912670672289_init_data
-  })
+  onBegin: require("react-native-worklets/.worklets/7919510602824.js").default({}),
+  onStart: require("react-native-worklets/.worklets/2618650549343.js").default({}),
+  onEnd: require("react-native-worklets/.worklets/12912670672289.js").default({})
 });"
 `;
 
-exports[`babel plugin for react-native-gesture-handler workletizes possibly chained gesture object callback functions automatically 1`] = `
-"const _worklet_7919510602824_init_data = {
-  code: "(function null1(){console.log('onBegin');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_2618650549343_init_data = {
-  code: "(function null2(_event){console.log('onStart');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_12912670672289_init_data = {
-  code: "(function null3(_event,_success){console.log('onEnd');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = Gesture.Tap().numberOfTaps(2).onBegin(function null1Factory({
-  _worklet_7919510602824_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    console.log('onBegin');
-  };
-  null1.__closure = {};
-  null1.__workletHash = 7919510602824;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_7919510602824_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_7919510602824_init_data
-})).onStart(function null2Factory({
-  _worklet_2618650549343_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null2 = function (_event) {
-    console.log('onStart');
-  };
-  null2.__closure = {};
-  null2.__workletHash = 2618650549343;
-  null2.__pluginVersion = "x.y.z";
-  null2.__initData = _worklet_2618650549343_init_data;
-  null2.__stackDetails = _e;
-  return null2;
-}({
-  _worklet_2618650549343_init_data
-})).onEnd(function null3Factory({
-  _worklet_12912670672289_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null3 = function (_event, _success) {
-    console.log('onEnd');
-  };
-  null3.__closure = {};
-  null3.__workletHash = 12912670672289;
-  null3.__pluginVersion = "x.y.z";
-  null3.__initData = _worklet_12912670672289_init_data;
-  null3.__stackDetails = _e;
-  return null3;
-}({
-  _worklet_12912670672289_init_data
-}));"
-`;
+exports[`babel plugin for react-native-gesture-handler workletizes possibly chained gesture object callback functions automatically 1`] = `"const foo = Gesture.Tap().numberOfTaps(2).onBegin(require("react-native-worklets/.worklets/7919510602824.js").default({})).onStart(require("react-native-worklets/.worklets/2618650549343.js").default({})).onEnd(require("react-native-worklets/.worklets/12912670672289.js").default({}));"`;
 
 exports[`babel plugin for react-native-gesture-handler workletizes referenced callbacks 1`] = `
-"const _worklet_15695285586601_init_data = {
-  code: "(function null1(){})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const onStart = function null1Factory({
-  _worklet_15695285586601_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {};
-  null1.__closure = {};
-  null1.__workletHash = 15695285586601;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_15695285586601_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_15695285586601_init_data
-});
+"const onStart = require("react-native-worklets/.worklets/15695285586601.js").default({});
 const foo = Gesture.Tap().onStart(onStart);"
 `;
 
 exports[`babel plugin for react-native-gesture-handler workletizes referenced gesture callbacks using the hooks api 1`] = `
-"const _worklet_7919510602824_init_data = {
-  code: "(function null1(){console.log('onBegin');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const onBegin = function null1Factory({
-  _worklet_7919510602824_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    console.log('onBegin');
-  };
-  null1.__closure = {};
-  null1.__workletHash = 7919510602824;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_7919510602824_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_7919510602824_init_data
-});
+"const onBegin = require("react-native-worklets/.worklets/7919510602824.js").default({});
 const foo = useTapGesture({
   numberOfTaps: 2,
   onBegin: onBegin
@@ -2931,27 +723,7 @@ const foo = useTapGesture({
 `;
 
 exports[`babel plugin for react-native-gesture-handler workletizes referenced gesture callbacks using the hooks api and shorthand syntax 1`] = `
-"const _worklet_7919510602824_init_data = {
-  code: "(function null1(){console.log('onBegin');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const onBegin = function null1Factory({
-  _worklet_7919510602824_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    console.log('onBegin');
-  };
-  null1.__closure = {};
-  null1.__workletHash = 7919510602824;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_7919510602824_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_7919510602824_init_data
-});
+"const onBegin = require("react-native-worklets/.worklets/7919510602824.js").default({});
 const foo = useTapGesture({
   numberOfTaps: 2,
   onBegin
@@ -2960,207 +732,47 @@ const foo = useTapGesture({
 
 exports[`babel plugin for referenced worklets prefers AssignmentExpression over VariableDeclarator 1`] = `
 "let styleFactory = () => 1;
-const _worklet_8280998122457_init_data = {
-  code: "(function null1(){return'AssignmentExpression';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-styleFactory = function null1Factory({
-  _worklet_8280998122457_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    return 'AssignmentExpression';
-  };
-  null1.__closure = {};
-  null1.__workletHash = 8280998122457;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_8280998122457_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_8280998122457_init_data
-});
+styleFactory = require("react-native-worklets/.worklets/8280998122457.js").default({});
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets prefers FunctionDeclaration over AssignmentExpression 1`] = `
-"const _worklet_3701210124198_init_data = {
-  code: "(function styleFactory_null1(){return'FunctionDeclaration';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const styleFactory = function styleFactory_null1Factory({
-  _worklet_3701210124198_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const styleFactory = function () {
-    return 'FunctionDeclaration';
-  };
-  styleFactory.__closure = {};
-  styleFactory.__workletHash = 3701210124198;
-  styleFactory.__pluginVersion = "x.y.z";
-  styleFactory.__initData = _worklet_3701210124198_init_data;
-  styleFactory.__stackDetails = _e;
-  return styleFactory;
-}({
-  _worklet_3701210124198_init_data
-});
+"const styleFactory = require("react-native-worklets/.worklets/3701210124198.js").default({});
 styleFactory = () => 'AssignmentExpression';
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpression on its AssignmentExpression 1`] = `
 "let styleFactory;
-const _worklet_12404887720670_init_data = {
-  code: "(function null1(){return{};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-styleFactory = function null1Factory({
-  _worklet_12404887720670_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    return {};
-  };
-  null1.__closure = {};
-  null1.__workletHash = 12404887720670;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_12404887720670_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_12404887720670_init_data
-});
+styleFactory = require("react-native-worklets/.worklets/12404887720670.js").default({});
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpression on its VariableDeclarator 1`] = `
-"const _worklet_12404887720670_init_data = {
-  code: "(function null1(){return{};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-let styleFactory = function null1Factory({
-  _worklet_12404887720670_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    return {};
-  };
-  null1.__closure = {};
-  null1.__workletHash = 12404887720670;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_12404887720670_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_12404887720670_init_data
-});
+"let styleFactory = require("react-native-worklets/.worklets/12404887720670.js").default({});
 const animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpression only on last AssignmentExpression 1`] = `
 "let styleFactory;
 styleFactory = () => 1;
-const _worklet_8280998122457_init_data = {
-  code: "(function null1(){return'AssignmentExpression';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-styleFactory = function null1Factory({
-  _worklet_8280998122457_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    return 'AssignmentExpression';
-  };
-  null1.__closure = {};
-  null1.__workletHash = 8280998122457;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_8280998122457_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_8280998122457_init_data
-});
+styleFactory = require("react-native-worklets/.worklets/8280998122457.js").default({});
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes FunctionDeclaration 1`] = `
-"const _worklet_9076365995074_init_data = {
-  code: "(function styleFactory_null1(){return{};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const styleFactory = function styleFactory_null1Factory({
-  _worklet_9076365995074_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const styleFactory = function () {
-    return {};
-  };
-  styleFactory.__closure = {};
-  styleFactory.__workletHash = 9076365995074;
-  styleFactory.__pluginVersion = "x.y.z";
-  styleFactory.__initData = _worklet_9076365995074_init_data;
-  styleFactory.__stackDetails = _e;
-  return styleFactory;
-}({
-  _worklet_9076365995074_init_data
-});
+"const styleFactory = require("react-native-worklets/.worklets/9076365995074.js").default({});
 const animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes FunctionExpression on its AssignmentExpression 1`] = `
 "let styleFactory;
-const _worklet_12404887720670_init_data = {
-  code: "(function null1(){return{};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-styleFactory = function null1Factory({
-  _worklet_12404887720670_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    return {};
-  };
-  null1.__closure = {};
-  null1.__workletHash = 12404887720670;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_12404887720670_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_12404887720670_init_data
-});
+styleFactory = require("react-native-worklets/.worklets/12404887720670.js").default({});
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes FunctionExpression on its VariableDeclarator 1`] = `
-"const _worklet_12404887720670_init_data = {
-  code: "(function null1(){return{};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-let styleFactory = function null1Factory({
-  _worklet_12404887720670_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    return {};
-  };
-  null1.__closure = {};
-  null1.__workletHash = 12404887720670;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_12404887720670_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_12404887720670_init_data
-});
+"let styleFactory = require("react-native-worklets/.worklets/12404887720670.js").default({});
 const animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
@@ -3169,77 +781,21 @@ exports[`babel plugin for referenced worklets workletizes FunctionExpression onl
 styleFactory = function () {
   return 1;
 };
-const _worklet_8280998122457_init_data = {
-  code: "(function null1(){return'AssignmentExpression';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-styleFactory = function null1Factory({
-  _worklet_8280998122457_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    return 'AssignmentExpression';
-  };
-  null1.__closure = {};
-  null1.__workletHash = 8280998122457;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_8280998122457_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_8280998122457_init_data
-});
+styleFactory = require("react-native-worklets/.worklets/8280998122457.js").default({});
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes ObjectExpression on its AssignmentExpression 1`] = `
 "let handler;
-const _worklet_15695285586601_init_data = {
-  code: "(function null1(){})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
 handler = {
-  onScroll: function null1Factory({
-    _worklet_15695285586601_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function () {};
-    null1.__closure = {};
-    null1.__workletHash = 15695285586601;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_15695285586601_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_15695285586601_init_data
-  })
+  onScroll: require("react-native-worklets/.worklets/15695285586601.js").default({})
 };
 const scrollHandler = useAnimatedScrollHandler(handler);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes ObjectExpression on its VariableDeclarator 1`] = `
-"const _worklet_15695285586601_init_data = {
-  code: "(function null1(){})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-let handler = {
-  onScroll: function null1Factory({
-    _worklet_15695285586601_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function () {};
-    null1.__closure = {};
-    null1.__workletHash = 15695285586601;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_15695285586601_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_15695285586601_init_data
-  })
+"let handler = {
+  onScroll: require("react-native-worklets/.worklets/15695285586601.js").default({})
 };
 const scrollHandler = useAnimatedScrollHandler(handler);"
 `;
@@ -3249,28 +805,8 @@ exports[`babel plugin for referenced worklets workletizes ObjectExpression only 
 handler = {
   onScroll: () => 1
 };
-const _worklet_8280998122457_init_data = {
-  code: "(function null1(){return'AssignmentExpression';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
 handler = {
-  onScroll: function null1Factory({
-    _worklet_8280998122457_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function () {
-      return 'AssignmentExpression';
-    };
-    null1.__closure = {};
-    null1.__workletHash = 8280998122457;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_8280998122457_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_8280998122457_init_data
-  })
+  onScroll: require("react-native-worklets/.worklets/8280998122457.js").default({})
 };
 const scrollHandler = useAnimatedScrollHandler(handler);"
 `;
@@ -3278,77 +814,17 @@ const scrollHandler = useAnimatedScrollHandler(handler);"
 exports[`babel plugin for referenced worklets workletizes assignments that appear after the worklet is used 1`] = `
 "let styleFactory = () => ({});
 animatedStyle = useAnimatedStyle(styleFactory);
-const _worklet_13154627498348_init_data = {
-  code: "(function null1(){return'AssignmentAfterUse';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-styleFactory = function null1Factory({
-  _worklet_13154627498348_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    return 'AssignmentAfterUse';
-  };
-  null1.__closure = {};
-  null1.__workletHash = 13154627498348;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_13154627498348_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_13154627498348_init_data
-});"
+styleFactory = require("react-native-worklets/.worklets/13154627498348.js").default({});"
 `;
 
 exports[`babel plugin for referenced worklets workletizes in immediate scope 1`] = `
-"const _worklet_12404887720670_init_data = {
-  code: "(function null1(){return{};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-let styleFactory = function null1Factory({
-  _worklet_12404887720670_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    return {};
-  };
-  null1.__closure = {};
-  null1.__workletHash = 12404887720670;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_12404887720670_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_12404887720670_init_data
-});
+"let styleFactory = require("react-native-worklets/.worklets/12404887720670.js").default({});
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes in nested scope 1`] = `
-"const _worklet_12404887720670_init_data = {
-  code: "(function null1(){return{};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-function outerScope() {
-  let styleFactory = function null1Factory({
-    _worklet_12404887720670_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const null1 = function () {
-      return {};
-    };
-    null1.__closure = {};
-    null1.__workletHash = 12404887720670;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_12404887720670_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_12404887720670_init_data
-  });
+"function outerScope() {
+  let styleFactory = require("react-native-worklets/.worklets/12404887720670.js").default({});
   function innerScope() {
     animatedStyle = useAnimatedStyle(styleFactory);
   }
@@ -3356,57 +832,13 @@ function outerScope() {
 `;
 
 exports[`babel plugin for referenced worklets workletizes multiple referencing 1`] = `
-"const _worklet_12404887720670_init_data = {
-  code: "(function null1(){return{};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const secondReference = function null1Factory({
-  _worklet_12404887720670_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const null1 = function () {
-    return {};
-  };
-  null1.__closure = {};
-  null1.__workletHash = 12404887720670;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_12404887720670_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}({
-  _worklet_12404887720670_init_data
-});
+"const secondReference = require("react-native-worklets/.worklets/12404887720670.js").default({});
 const firstReference = secondReference;
 const animatedStyle = useAnimatedStyle(firstReference);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes recursion 1`] = `
-"const _worklet_8174903816409_init_data = {
-  code: "(function recursiveWorklet_null1(){const recursiveWorklet_null1=this._recur;const{runOnUI}=this.__closure;if(!globalThis._WORKLET){runOnUI(recursiveWorklet_null1)();}})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const recursiveWorklet = function recursiveWorklet_null1Factory({
-  _worklet_8174903816409_init_data,
-  runOnUI
-}) {
-  const _e = [new global.Error(), -2, -27];
-  const recursiveWorklet = function () {
-    if (!globalThis._WORKLET) {
-      runOnUI(recursiveWorklet)();
-    }
-  };
-  recursiveWorklet.__closure = {
-    runOnUI
-  };
-  recursiveWorklet.__workletHash = 8174903816409;
-  recursiveWorklet.__pluginVersion = "x.y.z";
-  recursiveWorklet.__initData = _worklet_8174903816409_init_data;
-  recursiveWorklet.__stackDetails = _e;
-  return recursiveWorklet;
-}({
-  _worklet_8174903816409_init_data,
+"const recursiveWorklet = require("react-native-worklets/.worklets/8174903816409.js").default({
   runOnUI
 });"
 `;
@@ -3420,113 +852,37 @@ exports[`babel plugin for sequence expressions supports SequenceExpression 1`] =
 `;
 
 exports[`babel plugin for sequence expressions supports SequenceExpression, many arguments 1`] = `
-"const _worklet_12447993019415_init_data = {
-  code: "(function onStart_null1(){})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-function App() {
+"function App() {
   (0, 3, fun)({
-    onStart: function onStart_null1Factory({
-      _worklet_12447993019415_init_data
-    }) {
-      const _e = [new global.Error(), 1, -27];
-      const onStart = function () {};
-      onStart.__closure = {};
-      onStart.__workletHash = 12447993019415;
-      onStart.__pluginVersion = "x.y.z";
-      onStart.__initData = _worklet_12447993019415_init_data;
-      onStart.__stackDetails = _e;
-      return onStart;
-    }({
-      _worklet_12447993019415_init_data
-    })
+    onStart: require("react-native-worklets/.worklets/12447993019415.js").default({})
   }, []);
 }"
 `;
 
 exports[`babel plugin for sequence expressions supports SequenceExpression, with objectHook 1`] = `
-"const _worklet_15101577807674_init_data = {
-  code: "(function onScroll_null1(){})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-function App() {
+"function App() {
   (0, useAnimatedScrollHandler)({
-    onScroll: function onScroll_null1Factory({
-      _worklet_15101577807674_init_data
-    }) {
-      const _e = [new global.Error(), 1, -27];
-      const onScroll = function () {};
-      onScroll.__closure = {};
-      onScroll.__workletHash = 15101577807674;
-      onScroll.__pluginVersion = "x.y.z";
-      onScroll.__initData = _worklet_15101577807674_init_data;
-      onScroll.__stackDetails = _e;
-      return onScroll;
-    }({
-      _worklet_15101577807674_init_data
-    })
+    onScroll: require("react-native-worklets/.worklets/15101577807674.js").default({})
   }, []);
 }"
 `;
 
 exports[`babel plugin for sequence expressions supports SequenceExpression, with worklet 1`] = `
-"const _worklet_12447993019415_init_data = {
-  code: "(function onStart_null1(){})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-function App() {
+"function App() {
   (0, fun)({
-    onStart: function onStart_null1Factory({
-      _worklet_12447993019415_init_data
-    }) {
-      const _e = [new global.Error(), 1, -27];
-      const onStart = function () {};
-      onStart.__closure = {};
-      onStart.__workletHash = 12447993019415;
-      onStart.__pluginVersion = "x.y.z";
-      onStart.__initData = _worklet_12447993019415_init_data;
-      onStart.__stackDetails = _e;
-      return onStart;
-    }({
-      _worklet_12447993019415_init_data
-    })
+    onStart: require("react-native-worklets/.worklets/12447993019415.js").default({})
   }, []);
 }"
 `;
 
 exports[`babel plugin for sequence expressions supports SequenceExpression, with worklet closure 1`] = `
-"const _worklet_12891541337286_init_data = {
-  code: "(function onStart_null1(){const{obj}=this.__closure;const a=obj.a;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-function App() {
+"function App() {
   const obj = {
     a: 1,
     b: 2
   };
   (0, fun)({
-    onStart: function onStart_null1Factory({
-      _worklet_12891541337286_init_data,
-      obj
-    }) {
-      const _e = [new global.Error(), -2, -27];
-      const onStart = function () {
-        const a = obj.a;
-      };
-      onStart.__closure = {
-        obj
-      };
-      onStart.__workletHash = 12891541337286;
-      onStart.__pluginVersion = "x.y.z";
-      onStart.__initData = _worklet_12891541337286_init_data;
-      onStart.__stackDetails = _e;
-      return onStart;
-    }({
-      _worklet_12891541337286_init_data,
+    onStart: require("react-native-worklets/.worklets/12891541337286.js").default({
       obj
     })
   }, []);
@@ -3534,20 +890,13 @@ function App() {
 `;
 
 exports[`babel plugin for web configuration doesn't substitute isWeb and shouldBeUseWeb in worklets 1`] = `
-"const _worklet_6025589628865_init_data = {
-  code: "(function foo_null1(){const{isWeb,shouldBeUseWeb}=this.__closure;const x=isWeb();const y=shouldBeUseWeb();})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_6025589628865_init_data,
+"export default (function foo_null1Factory({
   isWeb,
   shouldBeUseWeb
 }) {
-  const _e = [new global.Error(), -3, -27];
   const foo = function () {
-    const x = true;
-    const y = true;
+    const x = isWeb();
+    const y = shouldBeUseWeb();
   };
   foo.__closure = {
     isWeb,
@@ -3555,13 +904,7 @@ const foo = function foo_null1Factory({
   };
   foo.__workletHash = 6025589628865;
   foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_6025589628865_init_data;
-  foo.__stackDetails = _e;
   return foo;
-}({
-  _worklet_6025589628865_init_data,
-  isWeb,
-  shouldBeUseWeb
 });"
 `;
 
@@ -3575,1797 +918,141 @@ exports[`babel plugin for web configuration doesn't substitute isWeb and shouldB
 const y = shouldBeUseWeb();"
 `;
 
-exports[`babel plugin for web configuration includes initData when omitNativeOnlyData option is set to false 1`] = `
-"const _worklet_2747953837011_init_data = {
-  code: "(function foo_null1(){var bar='bar';})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_2747953837011_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const foo = function () {
-    var bar = 'bar';
-  };
-  foo.__closure = {};
-  foo.__workletHash = 2747953837011;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_2747953837011_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}({
-  _worklet_2747953837011_init_data
-});"
-`;
-
-exports[`babel plugin for web configuration skips initData when omitNativeOnlyData option is set to true 1`] = `
-"const foo = function foo_null1Factory({}) {
-  const _e = [new global.Error(), 1, -27];
-  const foo = function () {
-    var foo = 'bar';
-  };
-  foo.__closure = {};
-  foo.__workletHash = 17205484352689;
-  foo.__pluginVersion = "x.y.z";
-  foo.__stackDetails = _e;
-  return foo;
-}({});"
-`;
-
 exports[`babel plugin for web configuration substitutes isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to true 1`] = `
 "const x = true;
 const y = true;"
 `;
 
-exports[`babel plugin for worklet classes appends polyfills 1`] = `
-"const _worklet_15868919720148_init_data = {
-  code: "(function _classCallCheck_null1(a,n){if(!(a instanceof n))throw new TypeError(\\"Cannot call a class as a function\\");})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_2252488982580_init_data = {
-  code: "(function _toPrimitive_null2(t,r){if(\\"object\\"!=typeof t||!t)return t;var e=t[Symbol.toPrimitive];if(void 0!==e){var i=e.call(t,r||\\"default\\");if(\\"object\\"!=typeof i)return i;throw new TypeError(\\"@@toPrimitive must return a primitive value.\\");}return(\\"string\\"===r?String:Number)(t);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_3965092496943_init_data = {
-  code: "(function _toPropertyKey_null3(t){const{_toPrimitive}=this.__closure;var i=_toPrimitive(t,\\"string\\");return\\"symbol\\"==typeof i?i:i+\\"\\";})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_6010199818103_init_data = {
-  code: "(function _defineProperties_null4(e,r){const{_toPropertyKey}=this.__closure;for(var t=0;t<r.length;t++){var o=r[t];o.enumerable=o.enumerable||!1,o.configurable=!0,\\"value\\"in o&&(o.writable=!0),Object.defineProperty(e,_toPropertyKey(o.key),o);}})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_12220641603510_init_data = {
-  code: "(function _createClass_null5(e,r,t){const{_defineProperties}=this.__closure;return r&&_defineProperties(e.prototype,r),t&&_defineProperties(e,t),Object.defineProperty(e,\\"prototype\\",{writable:!1}),e;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_163643135588_init_data = {
-  code: "(function Clazz__classFactory_null6(){const Clazz__classFactory_null6=this._recur;const{_classCallCheck,_createClass}=this.__closure;const Clazz=function(){function Clazz(){_classCallCheck(this,Clazz);}return _createClass(Clazz,[{key:\\"foo\\",value:function foo(){return'bar';}}]);}();Clazz.Clazz__classFactory=Clazz__classFactory_null6;return Clazz;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const Clazz = function () {
-  const _classCallCheck = function _classCallCheck_null1Factory({
-    _worklet_15868919720148_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const _classCallCheck = function (a, n) {
-      if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
-    };
-    _classCallCheck.__closure = {};
-    _classCallCheck.__workletHash = 15868919720148;
-    _classCallCheck.__pluginVersion = "x.y.z";
-    _classCallCheck.__initData = _worklet_15868919720148_init_data;
-    _classCallCheck.__stackDetails = _e;
-    return _classCallCheck;
-  }({
-    _worklet_15868919720148_init_data
-  });
-  const _toPrimitive = function _toPrimitive_null2Factory({
-    _worklet_2252488982580_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const _toPrimitive = function (t, r) {
-      if ("object" != typeof t || !t) return t;
-      var e = t[Symbol.toPrimitive];
-      if (void 0 !== e) {
-        var i = e.call(t, r || "default");
-        if ("object" != typeof i) return i;
-        throw new TypeError("@@toPrimitive must return a primitive value.");
-      }
-      return ("string" === r ? String : Number)(t);
-    };
-    _toPrimitive.__closure = {};
-    _toPrimitive.__workletHash = 2252488982580;
-    _toPrimitive.__pluginVersion = "x.y.z";
-    _toPrimitive.__initData = _worklet_2252488982580_init_data;
-    _toPrimitive.__stackDetails = _e;
-    return _toPrimitive;
-  }({
-    _worklet_2252488982580_init_data
-  });
-  const _toPropertyKey = function _toPropertyKey_null3Factory({
-    _worklet_3965092496943_init_data,
-    _toPrimitive
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _toPropertyKey = function (t) {
-      var i = _toPrimitive(t, "string");
-      return "symbol" == typeof i ? i : i + "";
-    };
-    _toPropertyKey.__closure = {
-      _toPrimitive
-    };
-    _toPropertyKey.__workletHash = 3965092496943;
-    _toPropertyKey.__pluginVersion = "x.y.z";
-    _toPropertyKey.__initData = _worklet_3965092496943_init_data;
-    _toPropertyKey.__stackDetails = _e;
-    return _toPropertyKey;
-  }({
-    _worklet_3965092496943_init_data,
-    _toPrimitive
-  });
-  const _defineProperties = function _defineProperties_null4Factory({
-    _worklet_6010199818103_init_data,
-    _toPropertyKey
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _defineProperties = function (e, r) {
-      for (var t = 0; t < r.length; t++) {
-        var o = r[t];
-        o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
-      }
-    };
-    _defineProperties.__closure = {
-      _toPropertyKey
-    };
-    _defineProperties.__workletHash = 6010199818103;
-    _defineProperties.__pluginVersion = "x.y.z";
-    _defineProperties.__initData = _worklet_6010199818103_init_data;
-    _defineProperties.__stackDetails = _e;
-    return _defineProperties;
-  }({
-    _worklet_6010199818103_init_data,
-    _toPropertyKey
-  });
-  const _createClass = function _createClass_null5Factory({
-    _worklet_12220641603510_init_data,
-    _defineProperties
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _createClass = function (e, r, t) {
-      return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
-        writable: !1
-      }), e;
-    };
-    _createClass.__closure = {
-      _defineProperties
-    };
-    _createClass.__workletHash = 12220641603510;
-    _createClass.__pluginVersion = "x.y.z";
-    _createClass.__initData = _worklet_12220641603510_init_data;
-    _createClass.__stackDetails = _e;
-    return _createClass;
-  }({
-    _worklet_12220641603510_init_data,
-    _defineProperties
-  });
-  const Clazz__classFactory = function Clazz__classFactory_null6Factory({
-    _worklet_163643135588_init_data,
-    _classCallCheck,
-    _createClass
-  }) {
-    const _e = [new global.Error(), -3, -27];
-    const Clazz__classFactory = function () {
-      const Clazz = /*#__PURE__*/function () {
-        function Clazz() {
-          _classCallCheck(this, Clazz);
-        }
-        return _createClass(Clazz, [{
-          key: "foo",
-          value: function foo() {
-            return 'bar';
-          }
-        }]);
-      }();
-      Clazz.Clazz__classFactory = Clazz__classFactory;
-      return Clazz;
-    };
-    Clazz__classFactory.__closure = {
-      _classCallCheck,
-      _createClass
-    };
-    Clazz__classFactory.__workletHash = 163643135588;
-    Clazz__classFactory.__pluginVersion = "x.y.z";
-    Clazz__classFactory.__initData = _worklet_163643135588_init_data;
-    Clazz__classFactory.__stackDetails = _e;
-    return Clazz__classFactory;
-  }({
-    _worklet_163643135588_init_data,
-    _classCallCheck,
-    _createClass
-  });
-  const Clazz = Clazz__classFactory();
-  return Clazz;
-}();"
-`;
+exports[`babel plugin for worklet names appends file name to function name 1`] = `"const foo = require("react-native-worklets/.worklets/13429356329999.js").default({});"`;
 
-exports[`babel plugin for worklet classes creates factories 1`] = `
-"const _worklet_15868919720148_init_data = {
-  code: "(function _classCallCheck_null1(a,n){if(!(a instanceof n))throw new TypeError(\\"Cannot call a class as a function\\");})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_2252488982580_init_data = {
-  code: "(function _toPrimitive_null2(t,r){if(\\"object\\"!=typeof t||!t)return t;var e=t[Symbol.toPrimitive];if(void 0!==e){var i=e.call(t,r||\\"default\\");if(\\"object\\"!=typeof i)return i;throw new TypeError(\\"@@toPrimitive must return a primitive value.\\");}return(\\"string\\"===r?String:Number)(t);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_3965092496943_init_data = {
-  code: "(function _toPropertyKey_null3(t){const{_toPrimitive}=this.__closure;var i=_toPrimitive(t,\\"string\\");return\\"symbol\\"==typeof i?i:i+\\"\\";})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_6010199818103_init_data = {
-  code: "(function _defineProperties_null4(e,r){const{_toPropertyKey}=this.__closure;for(var t=0;t<r.length;t++){var o=r[t];o.enumerable=o.enumerable||!1,o.configurable=!0,\\"value\\"in o&&(o.writable=!0),Object.defineProperty(e,_toPropertyKey(o.key),o);}})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_12220641603510_init_data = {
-  code: "(function _createClass_null5(e,r,t){const{_defineProperties}=this.__closure;return r&&_defineProperties(e.prototype,r),t&&_defineProperties(e,t),Object.defineProperty(e,\\"prototype\\",{writable:!1}),e;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_163643135588_init_data = {
-  code: "(function Clazz__classFactory_null6(){const Clazz__classFactory_null6=this._recur;const{_classCallCheck,_createClass}=this.__closure;const Clazz=function(){function Clazz(){_classCallCheck(this,Clazz);}return _createClass(Clazz,[{key:\\"foo\\",value:function foo(){return'bar';}}]);}();Clazz.Clazz__classFactory=Clazz__classFactory_null6;return Clazz;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const Clazz = function () {
-  const _classCallCheck = function _classCallCheck_null1Factory({
-    _worklet_15868919720148_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const _classCallCheck = function (a, n) {
-      if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
-    };
-    _classCallCheck.__closure = {};
-    _classCallCheck.__workletHash = 15868919720148;
-    _classCallCheck.__pluginVersion = "x.y.z";
-    _classCallCheck.__initData = _worklet_15868919720148_init_data;
-    _classCallCheck.__stackDetails = _e;
-    return _classCallCheck;
-  }({
-    _worklet_15868919720148_init_data
-  });
-  const _toPrimitive = function _toPrimitive_null2Factory({
-    _worklet_2252488982580_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const _toPrimitive = function (t, r) {
-      if ("object" != typeof t || !t) return t;
-      var e = t[Symbol.toPrimitive];
-      if (void 0 !== e) {
-        var i = e.call(t, r || "default");
-        if ("object" != typeof i) return i;
-        throw new TypeError("@@toPrimitive must return a primitive value.");
-      }
-      return ("string" === r ? String : Number)(t);
-    };
-    _toPrimitive.__closure = {};
-    _toPrimitive.__workletHash = 2252488982580;
-    _toPrimitive.__pluginVersion = "x.y.z";
-    _toPrimitive.__initData = _worklet_2252488982580_init_data;
-    _toPrimitive.__stackDetails = _e;
-    return _toPrimitive;
-  }({
-    _worklet_2252488982580_init_data
-  });
-  const _toPropertyKey = function _toPropertyKey_null3Factory({
-    _worklet_3965092496943_init_data,
-    _toPrimitive
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _toPropertyKey = function (t) {
-      var i = _toPrimitive(t, "string");
-      return "symbol" == typeof i ? i : i + "";
-    };
-    _toPropertyKey.__closure = {
-      _toPrimitive
-    };
-    _toPropertyKey.__workletHash = 3965092496943;
-    _toPropertyKey.__pluginVersion = "x.y.z";
-    _toPropertyKey.__initData = _worklet_3965092496943_init_data;
-    _toPropertyKey.__stackDetails = _e;
-    return _toPropertyKey;
-  }({
-    _worklet_3965092496943_init_data,
-    _toPrimitive
-  });
-  const _defineProperties = function _defineProperties_null4Factory({
-    _worklet_6010199818103_init_data,
-    _toPropertyKey
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _defineProperties = function (e, r) {
-      for (var t = 0; t < r.length; t++) {
-        var o = r[t];
-        o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
-      }
-    };
-    _defineProperties.__closure = {
-      _toPropertyKey
-    };
-    _defineProperties.__workletHash = 6010199818103;
-    _defineProperties.__pluginVersion = "x.y.z";
-    _defineProperties.__initData = _worklet_6010199818103_init_data;
-    _defineProperties.__stackDetails = _e;
-    return _defineProperties;
-  }({
-    _worklet_6010199818103_init_data,
-    _toPropertyKey
-  });
-  const _createClass = function _createClass_null5Factory({
-    _worklet_12220641603510_init_data,
-    _defineProperties
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _createClass = function (e, r, t) {
-      return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
-        writable: !1
-      }), e;
-    };
-    _createClass.__closure = {
-      _defineProperties
-    };
-    _createClass.__workletHash = 12220641603510;
-    _createClass.__pluginVersion = "x.y.z";
-    _createClass.__initData = _worklet_12220641603510_init_data;
-    _createClass.__stackDetails = _e;
-    return _createClass;
-  }({
-    _worklet_12220641603510_init_data,
-    _defineProperties
-  });
-  const Clazz__classFactory = function Clazz__classFactory_null6Factory({
-    _worklet_163643135588_init_data,
-    _classCallCheck,
-    _createClass
-  }) {
-    const _e = [new global.Error(), -3, -27];
-    const Clazz__classFactory = function () {
-      const Clazz = /*#__PURE__*/function () {
-        function Clazz() {
-          _classCallCheck(this, Clazz);
-        }
-        return _createClass(Clazz, [{
-          key: "foo",
-          value: function foo() {
-            return 'bar';
-          }
-        }]);
-      }();
-      Clazz.Clazz__classFactory = Clazz__classFactory;
-      return Clazz;
-    };
-    Clazz__classFactory.__closure = {
-      _classCallCheck,
-      _createClass
-    };
-    Clazz__classFactory.__workletHash = 163643135588;
-    Clazz__classFactory.__pluginVersion = "x.y.z";
-    Clazz__classFactory.__initData = _worklet_163643135588_init_data;
-    Clazz__classFactory.__stackDetails = _e;
-    return Clazz__classFactory;
-  }({
-    _worklet_163643135588_init_data,
-    _classCallCheck,
-    _createClass
-  });
-  const Clazz = Clazz__classFactory();
-  return Clazz;
-}();"
-`;
-
-exports[`babel plugin for worklet classes injects class factory into worklets 1`] = `
-"const _worklet_17269864397438_init_data = {
-  code: "(function foo_null1(){const{Clazz__classFactory}=this.__closure;const Clazz=Clazz__classFactory();const clazz=new Clazz();})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_17269864397438_init_data,
-  Clazz
-}) {
-  const _e = [new global.Error(), -2, -27];
-  const foo = function () {
-    const clazz = new Clazz();
-  };
-  foo.__closure = {
-    Clazz__classFactory: Clazz.Clazz__classFactory
-  };
-  foo.__workletHash = 17269864397438;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_17269864397438_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}({
-  _worklet_17269864397438_init_data,
-  Clazz
-});"
-`;
-
-exports[`babel plugin for worklet classes is disabled via option 1`] = `
-"function foo() {
-  this.prop = 42;
-}
-const _worklet_206127167852_init_data = {
-  code: "(function bar_null1(){const{foo}=this.__closure;const instance=new foo();})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const bar = function bar_null1Factory({
-  _worklet_206127167852_init_data,
-  foo
-}) {
-  const _e = [new global.Error(), -2, -27];
-  const bar = function () {
-    const instance = new foo();
-  };
-  bar.__closure = {
-    foo
-  };
-  bar.__workletHash = 206127167852;
-  bar.__pluginVersion = "x.y.z";
-  bar.__initData = _worklet_206127167852_init_data;
-  bar.__stackDetails = _e;
-  return bar;
-}({
-  _worklet_206127167852_init_data,
-  foo
-});"
-`;
-
-exports[`babel plugin for worklet classes keeps this binding 1`] = `
-"const _worklet_15868919720148_init_data = {
-  code: "(function _classCallCheck_null1(a,n){if(!(a instanceof n))throw new TypeError(\\"Cannot call a class as a function\\");})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_2252488982580_init_data = {
-  code: "(function _toPrimitive_null2(t,r){if(\\"object\\"!=typeof t||!t)return t;var e=t[Symbol.toPrimitive];if(void 0!==e){var i=e.call(t,r||\\"default\\");if(\\"object\\"!=typeof i)return i;throw new TypeError(\\"@@toPrimitive must return a primitive value.\\");}return(\\"string\\"===r?String:Number)(t);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_3965092496943_init_data = {
-  code: "(function _toPropertyKey_null3(t){const{_toPrimitive}=this.__closure;var i=_toPrimitive(t,\\"string\\");return\\"symbol\\"==typeof i?i:i+\\"\\";})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_6010199818103_init_data = {
-  code: "(function _defineProperties_null4(e,r){const{_toPropertyKey}=this.__closure;for(var t=0;t<r.length;t++){var o=r[t];o.enumerable=o.enumerable||!1,o.configurable=!0,\\"value\\"in o&&(o.writable=!0),Object.defineProperty(e,_toPropertyKey(o.key),o);}})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_12220641603510_init_data = {
-  code: "(function _createClass_null5(e,r,t){const{_defineProperties}=this.__closure;return r&&_defineProperties(e.prototype,r),t&&_defineProperties(e,t),Object.defineProperty(e,\\"prototype\\",{writable:!1}),e;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_14490328793273_init_data = {
-  code: "(function _defineProperty_null6(e,r,t){const{_toPropertyKey}=this.__closure;return(r=_toPropertyKey(r))in e?Object.defineProperty(e,r,{value:t,enumerable:!0,configurable:!0,writable:!0}):e[r]=t,e;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_11604519449277_init_data = {
-  code: "(function Clazz__classFactory_null7(){const Clazz__classFactory_null7=this._recur;const{_classCallCheck,_defineProperty,_createClass}=this.__closure;const Clazz=function(){function Clazz(){_classCallCheck(this,Clazz);_defineProperty(this,\\"member\\",1);}return _createClass(Clazz,[{key:\\"foo\\",value:function foo(){return this.member;}}]);}();Clazz.Clazz__classFactory=Clazz__classFactory_null7;return Clazz;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const Clazz = function () {
-  const _classCallCheck = function _classCallCheck_null1Factory({
-    _worklet_15868919720148_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const _classCallCheck = function (a, n) {
-      if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
-    };
-    _classCallCheck.__closure = {};
-    _classCallCheck.__workletHash = 15868919720148;
-    _classCallCheck.__pluginVersion = "x.y.z";
-    _classCallCheck.__initData = _worklet_15868919720148_init_data;
-    _classCallCheck.__stackDetails = _e;
-    return _classCallCheck;
-  }({
-    _worklet_15868919720148_init_data
-  });
-  const _toPrimitive = function _toPrimitive_null2Factory({
-    _worklet_2252488982580_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const _toPrimitive = function (t, r) {
-      if ("object" != typeof t || !t) return t;
-      var e = t[Symbol.toPrimitive];
-      if (void 0 !== e) {
-        var i = e.call(t, r || "default");
-        if ("object" != typeof i) return i;
-        throw new TypeError("@@toPrimitive must return a primitive value.");
-      }
-      return ("string" === r ? String : Number)(t);
-    };
-    _toPrimitive.__closure = {};
-    _toPrimitive.__workletHash = 2252488982580;
-    _toPrimitive.__pluginVersion = "x.y.z";
-    _toPrimitive.__initData = _worklet_2252488982580_init_data;
-    _toPrimitive.__stackDetails = _e;
-    return _toPrimitive;
-  }({
-    _worklet_2252488982580_init_data
-  });
-  const _toPropertyKey = function _toPropertyKey_null3Factory({
-    _worklet_3965092496943_init_data,
-    _toPrimitive
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _toPropertyKey = function (t) {
-      var i = _toPrimitive(t, "string");
-      return "symbol" == typeof i ? i : i + "";
-    };
-    _toPropertyKey.__closure = {
-      _toPrimitive
-    };
-    _toPropertyKey.__workletHash = 3965092496943;
-    _toPropertyKey.__pluginVersion = "x.y.z";
-    _toPropertyKey.__initData = _worklet_3965092496943_init_data;
-    _toPropertyKey.__stackDetails = _e;
-    return _toPropertyKey;
-  }({
-    _worklet_3965092496943_init_data,
-    _toPrimitive
-  });
-  const _defineProperties = function _defineProperties_null4Factory({
-    _worklet_6010199818103_init_data,
-    _toPropertyKey
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _defineProperties = function (e, r) {
-      for (var t = 0; t < r.length; t++) {
-        var o = r[t];
-        o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
-      }
-    };
-    _defineProperties.__closure = {
-      _toPropertyKey
-    };
-    _defineProperties.__workletHash = 6010199818103;
-    _defineProperties.__pluginVersion = "x.y.z";
-    _defineProperties.__initData = _worklet_6010199818103_init_data;
-    _defineProperties.__stackDetails = _e;
-    return _defineProperties;
-  }({
-    _worklet_6010199818103_init_data,
-    _toPropertyKey
-  });
-  const _createClass = function _createClass_null5Factory({
-    _worklet_12220641603510_init_data,
-    _defineProperties
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _createClass = function (e, r, t) {
-      return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
-        writable: !1
-      }), e;
-    };
-    _createClass.__closure = {
-      _defineProperties
-    };
-    _createClass.__workletHash = 12220641603510;
-    _createClass.__pluginVersion = "x.y.z";
-    _createClass.__initData = _worklet_12220641603510_init_data;
-    _createClass.__stackDetails = _e;
-    return _createClass;
-  }({
-    _worklet_12220641603510_init_data,
-    _defineProperties
-  });
-  const _defineProperty = function _defineProperty_null6Factory({
-    _worklet_14490328793273_init_data,
-    _toPropertyKey
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _defineProperty = function (e, r, t) {
-      return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
-        value: t,
-        enumerable: !0,
-        configurable: !0,
-        writable: !0
-      }) : e[r] = t, e;
-    };
-    _defineProperty.__closure = {
-      _toPropertyKey
-    };
-    _defineProperty.__workletHash = 14490328793273;
-    _defineProperty.__pluginVersion = "x.y.z";
-    _defineProperty.__initData = _worklet_14490328793273_init_data;
-    _defineProperty.__stackDetails = _e;
-    return _defineProperty;
-  }({
-    _worklet_14490328793273_init_data,
-    _toPropertyKey
-  });
-  const Clazz__classFactory = function Clazz__classFactory_null7Factory({
-    _worklet_11604519449277_init_data,
-    _classCallCheck,
-    _defineProperty,
-    _createClass
-  }) {
-    const _e = [new global.Error(), -4, -27];
-    const Clazz__classFactory = function () {
-      const Clazz = /*#__PURE__*/function () {
-        function Clazz() {
-          _classCallCheck(this, Clazz);
-          _defineProperty(this, "member", 1);
-        }
-        return _createClass(Clazz, [{
-          key: "foo",
-          value: function foo() {
-            return this.member;
-          }
-        }]);
-      }();
-      Clazz.Clazz__classFactory = Clazz__classFactory;
-      return Clazz;
-    };
-    Clazz__classFactory.__closure = {
-      _classCallCheck,
-      _defineProperty,
-      _createClass
-    };
-    Clazz__classFactory.__workletHash = 11604519449277;
-    Clazz__classFactory.__pluginVersion = "x.y.z";
-    Clazz__classFactory.__initData = _worklet_11604519449277_init_data;
-    Clazz__classFactory.__stackDetails = _e;
-    return Clazz__classFactory;
-  }({
-    _worklet_11604519449277_init_data,
-    _classCallCheck,
-    _defineProperty,
-    _createClass
-  });
-  const Clazz = Clazz__classFactory();
-  return Clazz;
-}();"
-`;
-
-exports[`babel plugin for worklet classes modifies closures 1`] = `
-"const _worklet_17269864397438_init_data = {
-  code: "(function foo_null1(){const{Clazz__classFactory}=this.__closure;const Clazz=Clazz__classFactory();const clazz=new Clazz();})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_17269864397438_init_data,
-  Clazz
-}) {
-  const _e = [new global.Error(), -2, -27];
-  const foo = function () {
-    const clazz = new Clazz();
-  };
-  foo.__closure = {
-    Clazz__classFactory: Clazz.Clazz__classFactory
-  };
-  foo.__workletHash = 17269864397438;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_17269864397438_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}({
-  _worklet_17269864397438_init_data,
-  Clazz
-});"
-`;
-
-exports[`babel plugin for worklet classes removes marker 1`] = `
-"const _worklet_15868919720148_init_data = {
-  code: "(function _classCallCheck_null1(a,n){if(!(a instanceof n))throw new TypeError(\\"Cannot call a class as a function\\");})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_2252488982580_init_data = {
-  code: "(function _toPrimitive_null2(t,r){if(\\"object\\"!=typeof t||!t)return t;var e=t[Symbol.toPrimitive];if(void 0!==e){var i=e.call(t,r||\\"default\\");if(\\"object\\"!=typeof i)return i;throw new TypeError(\\"@@toPrimitive must return a primitive value.\\");}return(\\"string\\"===r?String:Number)(t);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_3965092496943_init_data = {
-  code: "(function _toPropertyKey_null3(t){const{_toPrimitive}=this.__closure;var i=_toPrimitive(t,\\"string\\");return\\"symbol\\"==typeof i?i:i+\\"\\";})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_6010199818103_init_data = {
-  code: "(function _defineProperties_null4(e,r){const{_toPropertyKey}=this.__closure;for(var t=0;t<r.length;t++){var o=r[t];o.enumerable=o.enumerable||!1,o.configurable=!0,\\"value\\"in o&&(o.writable=!0),Object.defineProperty(e,_toPropertyKey(o.key),o);}})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_12220641603510_init_data = {
-  code: "(function _createClass_null5(e,r,t){const{_defineProperties}=this.__closure;return r&&_defineProperties(e.prototype,r),t&&_defineProperties(e,t),Object.defineProperty(e,\\"prototype\\",{writable:!1}),e;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_163643135588_init_data = {
-  code: "(function Clazz__classFactory_null6(){const Clazz__classFactory_null6=this._recur;const{_classCallCheck,_createClass}=this.__closure;const Clazz=function(){function Clazz(){_classCallCheck(this,Clazz);}return _createClass(Clazz,[{key:\\"foo\\",value:function foo(){return'bar';}}]);}();Clazz.Clazz__classFactory=Clazz__classFactory_null6;return Clazz;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const Clazz = function () {
-  const _classCallCheck = function _classCallCheck_null1Factory({
-    _worklet_15868919720148_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const _classCallCheck = function (a, n) {
-      if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
-    };
-    _classCallCheck.__closure = {};
-    _classCallCheck.__workletHash = 15868919720148;
-    _classCallCheck.__pluginVersion = "x.y.z";
-    _classCallCheck.__initData = _worklet_15868919720148_init_data;
-    _classCallCheck.__stackDetails = _e;
-    return _classCallCheck;
-  }({
-    _worklet_15868919720148_init_data
-  });
-  const _toPrimitive = function _toPrimitive_null2Factory({
-    _worklet_2252488982580_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const _toPrimitive = function (t, r) {
-      if ("object" != typeof t || !t) return t;
-      var e = t[Symbol.toPrimitive];
-      if (void 0 !== e) {
-        var i = e.call(t, r || "default");
-        if ("object" != typeof i) return i;
-        throw new TypeError("@@toPrimitive must return a primitive value.");
-      }
-      return ("string" === r ? String : Number)(t);
-    };
-    _toPrimitive.__closure = {};
-    _toPrimitive.__workletHash = 2252488982580;
-    _toPrimitive.__pluginVersion = "x.y.z";
-    _toPrimitive.__initData = _worklet_2252488982580_init_data;
-    _toPrimitive.__stackDetails = _e;
-    return _toPrimitive;
-  }({
-    _worklet_2252488982580_init_data
-  });
-  const _toPropertyKey = function _toPropertyKey_null3Factory({
-    _worklet_3965092496943_init_data,
-    _toPrimitive
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _toPropertyKey = function (t) {
-      var i = _toPrimitive(t, "string");
-      return "symbol" == typeof i ? i : i + "";
-    };
-    _toPropertyKey.__closure = {
-      _toPrimitive
-    };
-    _toPropertyKey.__workletHash = 3965092496943;
-    _toPropertyKey.__pluginVersion = "x.y.z";
-    _toPropertyKey.__initData = _worklet_3965092496943_init_data;
-    _toPropertyKey.__stackDetails = _e;
-    return _toPropertyKey;
-  }({
-    _worklet_3965092496943_init_data,
-    _toPrimitive
-  });
-  const _defineProperties = function _defineProperties_null4Factory({
-    _worklet_6010199818103_init_data,
-    _toPropertyKey
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _defineProperties = function (e, r) {
-      for (var t = 0; t < r.length; t++) {
-        var o = r[t];
-        o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
-      }
-    };
-    _defineProperties.__closure = {
-      _toPropertyKey
-    };
-    _defineProperties.__workletHash = 6010199818103;
-    _defineProperties.__pluginVersion = "x.y.z";
-    _defineProperties.__initData = _worklet_6010199818103_init_data;
-    _defineProperties.__stackDetails = _e;
-    return _defineProperties;
-  }({
-    _worklet_6010199818103_init_data,
-    _toPropertyKey
-  });
-  const _createClass = function _createClass_null5Factory({
-    _worklet_12220641603510_init_data,
-    _defineProperties
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _createClass = function (e, r, t) {
-      return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
-        writable: !1
-      }), e;
-    };
-    _createClass.__closure = {
-      _defineProperties
-    };
-    _createClass.__workletHash = 12220641603510;
-    _createClass.__pluginVersion = "x.y.z";
-    _createClass.__initData = _worklet_12220641603510_init_data;
-    _createClass.__stackDetails = _e;
-    return _createClass;
-  }({
-    _worklet_12220641603510_init_data,
-    _defineProperties
-  });
-  const Clazz__classFactory = function Clazz__classFactory_null6Factory({
-    _worklet_163643135588_init_data,
-    _classCallCheck,
-    _createClass
-  }) {
-    const _e = [new global.Error(), -3, -27];
-    const Clazz__classFactory = function () {
-      const Clazz = /*#__PURE__*/function () {
-        function Clazz() {
-          _classCallCheck(this, Clazz);
-        }
-        return _createClass(Clazz, [{
-          key: "foo",
-          value: function foo() {
-            return 'bar';
-          }
-        }]);
-      }();
-      Clazz.Clazz__classFactory = Clazz__classFactory;
-      return Clazz;
-    };
-    Clazz__classFactory.__closure = {
-      _classCallCheck,
-      _createClass
-    };
-    Clazz__classFactory.__workletHash = 163643135588;
-    Clazz__classFactory.__pluginVersion = "x.y.z";
-    Clazz__classFactory.__initData = _worklet_163643135588_init_data;
-    Clazz__classFactory.__stackDetails = _e;
-    return Clazz__classFactory;
-  }({
-    _worklet_163643135588_init_data,
-    _classCallCheck,
-    _createClass
-  });
-  const Clazz = Clazz__classFactory();
-  return Clazz;
-}();"
-`;
-
-exports[`babel plugin for worklet classes workletizes polyfills 1`] = `
-"const _worklet_15868919720148_init_data = {
-  code: "(function _classCallCheck_null1(a,n){if(!(a instanceof n))throw new TypeError(\\"Cannot call a class as a function\\");})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_2252488982580_init_data = {
-  code: "(function _toPrimitive_null2(t,r){if(\\"object\\"!=typeof t||!t)return t;var e=t[Symbol.toPrimitive];if(void 0!==e){var i=e.call(t,r||\\"default\\");if(\\"object\\"!=typeof i)return i;throw new TypeError(\\"@@toPrimitive must return a primitive value.\\");}return(\\"string\\"===r?String:Number)(t);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_3965092496943_init_data = {
-  code: "(function _toPropertyKey_null3(t){const{_toPrimitive}=this.__closure;var i=_toPrimitive(t,\\"string\\");return\\"symbol\\"==typeof i?i:i+\\"\\";})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_6010199818103_init_data = {
-  code: "(function _defineProperties_null4(e,r){const{_toPropertyKey}=this.__closure;for(var t=0;t<r.length;t++){var o=r[t];o.enumerable=o.enumerable||!1,o.configurable=!0,\\"value\\"in o&&(o.writable=!0),Object.defineProperty(e,_toPropertyKey(o.key),o);}})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_12220641603510_init_data = {
-  code: "(function _createClass_null5(e,r,t){const{_defineProperties}=this.__closure;return r&&_defineProperties(e.prototype,r),t&&_defineProperties(e,t),Object.defineProperty(e,\\"prototype\\",{writable:!1}),e;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_163643135588_init_data = {
-  code: "(function Clazz__classFactory_null6(){const Clazz__classFactory_null6=this._recur;const{_classCallCheck,_createClass}=this.__closure;const Clazz=function(){function Clazz(){_classCallCheck(this,Clazz);}return _createClass(Clazz,[{key:\\"foo\\",value:function foo(){return'bar';}}]);}();Clazz.Clazz__classFactory=Clazz__classFactory_null6;return Clazz;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const Clazz = function () {
-  const _classCallCheck = function _classCallCheck_null1Factory({
-    _worklet_15868919720148_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const _classCallCheck = function (a, n) {
-      if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
-    };
-    _classCallCheck.__closure = {};
-    _classCallCheck.__workletHash = 15868919720148;
-    _classCallCheck.__pluginVersion = "x.y.z";
-    _classCallCheck.__initData = _worklet_15868919720148_init_data;
-    _classCallCheck.__stackDetails = _e;
-    return _classCallCheck;
-  }({
-    _worklet_15868919720148_init_data
-  });
-  const _toPrimitive = function _toPrimitive_null2Factory({
-    _worklet_2252488982580_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const _toPrimitive = function (t, r) {
-      if ("object" != typeof t || !t) return t;
-      var e = t[Symbol.toPrimitive];
-      if (void 0 !== e) {
-        var i = e.call(t, r || "default");
-        if ("object" != typeof i) return i;
-        throw new TypeError("@@toPrimitive must return a primitive value.");
-      }
-      return ("string" === r ? String : Number)(t);
-    };
-    _toPrimitive.__closure = {};
-    _toPrimitive.__workletHash = 2252488982580;
-    _toPrimitive.__pluginVersion = "x.y.z";
-    _toPrimitive.__initData = _worklet_2252488982580_init_data;
-    _toPrimitive.__stackDetails = _e;
-    return _toPrimitive;
-  }({
-    _worklet_2252488982580_init_data
-  });
-  const _toPropertyKey = function _toPropertyKey_null3Factory({
-    _worklet_3965092496943_init_data,
-    _toPrimitive
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _toPropertyKey = function (t) {
-      var i = _toPrimitive(t, "string");
-      return "symbol" == typeof i ? i : i + "";
-    };
-    _toPropertyKey.__closure = {
-      _toPrimitive
-    };
-    _toPropertyKey.__workletHash = 3965092496943;
-    _toPropertyKey.__pluginVersion = "x.y.z";
-    _toPropertyKey.__initData = _worklet_3965092496943_init_data;
-    _toPropertyKey.__stackDetails = _e;
-    return _toPropertyKey;
-  }({
-    _worklet_3965092496943_init_data,
-    _toPrimitive
-  });
-  const _defineProperties = function _defineProperties_null4Factory({
-    _worklet_6010199818103_init_data,
-    _toPropertyKey
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _defineProperties = function (e, r) {
-      for (var t = 0; t < r.length; t++) {
-        var o = r[t];
-        o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
-      }
-    };
-    _defineProperties.__closure = {
-      _toPropertyKey
-    };
-    _defineProperties.__workletHash = 6010199818103;
-    _defineProperties.__pluginVersion = "x.y.z";
-    _defineProperties.__initData = _worklet_6010199818103_init_data;
-    _defineProperties.__stackDetails = _e;
-    return _defineProperties;
-  }({
-    _worklet_6010199818103_init_data,
-    _toPropertyKey
-  });
-  const _createClass = function _createClass_null5Factory({
-    _worklet_12220641603510_init_data,
-    _defineProperties
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _createClass = function (e, r, t) {
-      return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
-        writable: !1
-      }), e;
-    };
-    _createClass.__closure = {
-      _defineProperties
-    };
-    _createClass.__workletHash = 12220641603510;
-    _createClass.__pluginVersion = "x.y.z";
-    _createClass.__initData = _worklet_12220641603510_init_data;
-    _createClass.__stackDetails = _e;
-    return _createClass;
-  }({
-    _worklet_12220641603510_init_data,
-    _defineProperties
-  });
-  const Clazz__classFactory = function Clazz__classFactory_null6Factory({
-    _worklet_163643135588_init_data,
-    _classCallCheck,
-    _createClass
-  }) {
-    const _e = [new global.Error(), -3, -27];
-    const Clazz__classFactory = function () {
-      const Clazz = /*#__PURE__*/function () {
-        function Clazz() {
-          _classCallCheck(this, Clazz);
-        }
-        return _createClass(Clazz, [{
-          key: "foo",
-          value: function foo() {
-            return 'bar';
-          }
-        }]);
-      }();
-      Clazz.Clazz__classFactory = Clazz__classFactory;
-      return Clazz;
-    };
-    Clazz__classFactory.__closure = {
-      _classCallCheck,
-      _createClass
-    };
-    Clazz__classFactory.__workletHash = 163643135588;
-    Clazz__classFactory.__pluginVersion = "x.y.z";
-    Clazz__classFactory.__initData = _worklet_163643135588_init_data;
-    Clazz__classFactory.__stackDetails = _e;
-    return Clazz__classFactory;
-  }({
-    _worklet_163643135588_init_data,
-    _classCallCheck,
-    _createClass
-  });
-  const Clazz = Clazz__classFactory();
-  return Clazz;
-}();"
-`;
-
-exports[`babel plugin for worklet classes workletizes regardless of marker value 1`] = `
-"const _worklet_15868919720148_init_data = {
-  code: "(function _classCallCheck_null1(a,n){if(!(a instanceof n))throw new TypeError(\\"Cannot call a class as a function\\");})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_2252488982580_init_data = {
-  code: "(function _toPrimitive_null2(t,r){if(\\"object\\"!=typeof t||!t)return t;var e=t[Symbol.toPrimitive];if(void 0!==e){var i=e.call(t,r||\\"default\\");if(\\"object\\"!=typeof i)return i;throw new TypeError(\\"@@toPrimitive must return a primitive value.\\");}return(\\"string\\"===r?String:Number)(t);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_3965092496943_init_data = {
-  code: "(function _toPropertyKey_null3(t){const{_toPrimitive}=this.__closure;var i=_toPrimitive(t,\\"string\\");return\\"symbol\\"==typeof i?i:i+\\"\\";})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_6010199818103_init_data = {
-  code: "(function _defineProperties_null4(e,r){const{_toPropertyKey}=this.__closure;for(var t=0;t<r.length;t++){var o=r[t];o.enumerable=o.enumerable||!1,o.configurable=!0,\\"value\\"in o&&(o.writable=!0),Object.defineProperty(e,_toPropertyKey(o.key),o);}})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_12220641603510_init_data = {
-  code: "(function _createClass_null5(e,r,t){const{_defineProperties}=this.__closure;return r&&_defineProperties(e.prototype,r),t&&_defineProperties(e,t),Object.defineProperty(e,\\"prototype\\",{writable:!1}),e;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_163643135588_init_data = {
-  code: "(function Clazz__classFactory_null6(){const Clazz__classFactory_null6=this._recur;const{_classCallCheck,_createClass}=this.__closure;const Clazz=function(){function Clazz(){_classCallCheck(this,Clazz);}return _createClass(Clazz,[{key:\\"foo\\",value:function foo(){return'bar';}}]);}();Clazz.Clazz__classFactory=Clazz__classFactory_null6;return Clazz;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const Clazz = function () {
-  const _classCallCheck = function _classCallCheck_null1Factory({
-    _worklet_15868919720148_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const _classCallCheck = function (a, n) {
-      if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
-    };
-    _classCallCheck.__closure = {};
-    _classCallCheck.__workletHash = 15868919720148;
-    _classCallCheck.__pluginVersion = "x.y.z";
-    _classCallCheck.__initData = _worklet_15868919720148_init_data;
-    _classCallCheck.__stackDetails = _e;
-    return _classCallCheck;
-  }({
-    _worklet_15868919720148_init_data
-  });
-  const _toPrimitive = function _toPrimitive_null2Factory({
-    _worklet_2252488982580_init_data
-  }) {
-    const _e = [new global.Error(), 1, -27];
-    const _toPrimitive = function (t, r) {
-      if ("object" != typeof t || !t) return t;
-      var e = t[Symbol.toPrimitive];
-      if (void 0 !== e) {
-        var i = e.call(t, r || "default");
-        if ("object" != typeof i) return i;
-        throw new TypeError("@@toPrimitive must return a primitive value.");
-      }
-      return ("string" === r ? String : Number)(t);
-    };
-    _toPrimitive.__closure = {};
-    _toPrimitive.__workletHash = 2252488982580;
-    _toPrimitive.__pluginVersion = "x.y.z";
-    _toPrimitive.__initData = _worklet_2252488982580_init_data;
-    _toPrimitive.__stackDetails = _e;
-    return _toPrimitive;
-  }({
-    _worklet_2252488982580_init_data
-  });
-  const _toPropertyKey = function _toPropertyKey_null3Factory({
-    _worklet_3965092496943_init_data,
-    _toPrimitive
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _toPropertyKey = function (t) {
-      var i = _toPrimitive(t, "string");
-      return "symbol" == typeof i ? i : i + "";
-    };
-    _toPropertyKey.__closure = {
-      _toPrimitive
-    };
-    _toPropertyKey.__workletHash = 3965092496943;
-    _toPropertyKey.__pluginVersion = "x.y.z";
-    _toPropertyKey.__initData = _worklet_3965092496943_init_data;
-    _toPropertyKey.__stackDetails = _e;
-    return _toPropertyKey;
-  }({
-    _worklet_3965092496943_init_data,
-    _toPrimitive
-  });
-  const _defineProperties = function _defineProperties_null4Factory({
-    _worklet_6010199818103_init_data,
-    _toPropertyKey
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _defineProperties = function (e, r) {
-      for (var t = 0; t < r.length; t++) {
-        var o = r[t];
-        o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
-      }
-    };
-    _defineProperties.__closure = {
-      _toPropertyKey
-    };
-    _defineProperties.__workletHash = 6010199818103;
-    _defineProperties.__pluginVersion = "x.y.z";
-    _defineProperties.__initData = _worklet_6010199818103_init_data;
-    _defineProperties.__stackDetails = _e;
-    return _defineProperties;
-  }({
-    _worklet_6010199818103_init_data,
-    _toPropertyKey
-  });
-  const _createClass = function _createClass_null5Factory({
-    _worklet_12220641603510_init_data,
-    _defineProperties
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const _createClass = function (e, r, t) {
-      return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
-        writable: !1
-      }), e;
-    };
-    _createClass.__closure = {
-      _defineProperties
-    };
-    _createClass.__workletHash = 12220641603510;
-    _createClass.__pluginVersion = "x.y.z";
-    _createClass.__initData = _worklet_12220641603510_init_data;
-    _createClass.__stackDetails = _e;
-    return _createClass;
-  }({
-    _worklet_12220641603510_init_data,
-    _defineProperties
-  });
-  const Clazz__classFactory = function Clazz__classFactory_null6Factory({
-    _worklet_163643135588_init_data,
-    _classCallCheck,
-    _createClass
-  }) {
-    const _e = [new global.Error(), -3, -27];
-    const Clazz__classFactory = function () {
-      const Clazz = /*#__PURE__*/function () {
-        function Clazz() {
-          _classCallCheck(this, Clazz);
-        }
-        return _createClass(Clazz, [{
-          key: "foo",
-          value: function foo() {
-            return 'bar';
-          }
-        }]);
-      }();
-      Clazz.Clazz__classFactory = Clazz__classFactory;
-      return Clazz;
-    };
-    Clazz__classFactory.__closure = {
-      _classCallCheck,
-      _createClass
-    };
-    Clazz__classFactory.__workletHash = 163643135588;
-    Clazz__classFactory.__pluginVersion = "x.y.z";
-    Clazz__classFactory.__initData = _worklet_163643135588_init_data;
-    Clazz__classFactory.__stackDetails = _e;
-    return Clazz__classFactory;
-  }({
-    _worklet_163643135588_init_data,
-    _classCallCheck,
-    _createClass
-  });
-  const Clazz = Clazz__classFactory();
-  return Clazz;
-}();"
-`;
-
-exports[`babel plugin for worklet names appends file name to function name 1`] = `
-"const _worklet_13429356329999_init_data = {
-  code: "(function foo_sourceJs1(){return 1;})",
-  location: "/source.js"
-};
-const foo = function foo_sourceJs1Factory({
-  _worklet_13429356329999_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
+exports[`babel plugin for worklet names appends file name to function name 2`] = `
+"export default (function foo_sourceJs1Factory({}) {
   const foo = function () {
     return 1;
   };
   foo.__closure = {};
   foo.__workletHash = 13429356329999;
   foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_13429356329999_init_data;
-  foo.__stackDetails = _e;
   return foo;
-}({
-  _worklet_13429356329999_init_data
 });"
 `;
 
-exports[`babel plugin for worklet names appends library name to function name 1`] = `
-"const _worklet_17546537132335_init_data = {
-  code: "(function foo_library_sourceJs1(){return 1;})",
-  location: "/node_modules/library/source.js"
-};
-const foo = function foo_library_sourceJs1Factory({
-  _worklet_17546537132335_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
+exports[`babel plugin for worklet names appends library name to function name 1`] = `"const foo = require("react-native-worklets/.worklets/17546537132335.js").default({});"`;
+
+exports[`babel plugin for worklet names appends library name to function name 2`] = `
+"export default (function foo_library_sourceJs1Factory({}) {
   const foo = function () {
     return 1;
   };
   foo.__closure = {};
   foo.__workletHash = 17546537132335;
   foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_17546537132335_init_data;
-  foo.__stackDetails = _e;
   return foo;
-}({
-  _worklet_17546537132335_init_data
 });"
 `;
 
-exports[`babel plugin for worklet names handles names with illegal characters 1`] = `
-"const _worklet_16707951948783_init_data = {
-  code: "(function foo_SourceJs1(){return 1;})",
-  location: "/-source.js"
-};
-const foo = function foo_SourceJs1Factory({
-  _worklet_16707951948783_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
+exports[`babel plugin for worklet names handles names with illegal characters 1`] = `"const foo = require("react-native-worklets/.worklets/16707951948783.js").default({});"`;
+
+exports[`babel plugin for worklet names handles names with illegal characters 2`] = `
+"export default (function foo_SourceJs1Factory({}) {
   const foo = function () {
     return 1;
   };
   foo.__closure = {};
   foo.__workletHash = 16707951948783;
   foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_16707951948783_init_data;
-  foo.__stackDetails = _e;
   return foo;
-}({
-  _worklet_16707951948783_init_data
 });"
 `;
 
-exports[`babel plugin for worklet names preserves recursion 1`] = `
-"const _worklet_8592789870364_init_data = {
-  code: "(function foo_null1(){const foo_null1=this._recur;foo_null1(1);})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_8592789870364_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
+exports[`babel plugin for worklet names preserves recursion 1`] = `"const foo = require("react-native-worklets/.worklets/8592789870364.js").default({});"`;
+
+exports[`babel plugin for worklet names preserves recursion 2`] = `
+"export default (function foo_null1Factory({}) {
   const foo = function () {
     foo(1);
   };
   foo.__closure = {};
   foo.__workletHash = 8592789870364;
   foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_8592789870364_init_data;
-  foo.__stackDetails = _e;
   return foo;
-}({
-  _worklet_8592789870364_init_data
 });"
 `;
 
-exports[`babel plugin for worklet names unnamed ArrowFunctionExpression 1`] = `
-"const _worklet_16463388434953_init_data = {
-  code: "(function null1(){return 1;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-(function null1Factory({
-  _worklet_16463388434953_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
+exports[`babel plugin for worklet names unnamed ArrowFunctionExpression 1`] = `"require("react-native-worklets/.worklets/16463388434953.js").default({});"`;
+
+exports[`babel plugin for worklet names unnamed ArrowFunctionExpression 2`] = `
+"export default (function null1Factory({}) {
   const null1 = function () {
     return 1;
   };
   null1.__closure = {};
   null1.__workletHash = 16463388434953;
   null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_16463388434953_init_data;
-  null1.__stackDetails = _e;
   return null1;
-})({
-  _worklet_16463388434953_init_data
 });"
 `;
 
-exports[`babel plugin for worklet names unnamed FunctionExpression 1`] = `
-"const _worklet_16463388434953_init_data = {
-  code: "(function null1(){return 1;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-[function null1Factory({
-  _worklet_16463388434953_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
+exports[`babel plugin for worklet names unnamed FunctionExpression 1`] = `"[require("react-native-worklets/.worklets/16463388434953.js").default({})]();"`;
+
+exports[`babel plugin for worklet names unnamed FunctionExpression 2`] = `
+"export default (function null1Factory({}) {
   const null1 = function () {
     return 1;
   };
   null1.__closure = {};
   null1.__workletHash = 16463388434953;
   null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_16463388434953_init_data;
-  null1.__stackDetails = _e;
   return null1;
-}({
-  _worklet_16463388434953_init_data
-})]();"
-`;
-
-exports[`babel plugin for worklet nesting transpiles nested worklets 1`] = `
-"const _worklet_15547305016511_init_data = {
-  code: "(function null1(){console.log('bar');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_2134086209467_init_data = {
-  code: "(function null2(){const{_worklet_15547305016511_init_data}=this.__closure;const bar=function null1Factory({_worklet_15547305016511_init_data:_worklet_15547305016511_init_data}){const _e=[new global.Error(),1,-27];const null1=function(){console.log('bar');};null1.__closure={};null1.__workletHash=15547305016511;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_15547305016511_init_data;null1.__stackDetails=_e;return null1;}({_worklet_15547305016511_init_data:_worklet_15547305016511_init_data});bar();})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function null2Factory({
-  _worklet_2134086209467_init_data,
-  _worklet_15547305016511_init_data
-}) {
-  const _e = [new global.Error(), -2, -27];
-  const null2 = function () {
-    const bar = function null1Factory({
-      _worklet_15547305016511_init_data
-    }) {
-      const _e = [new global.Error(), 1, -27];
-      const null1 = function () {
-        console.log('bar');
-      };
-      null1.__closure = {};
-      null1.__workletHash = 15547305016511;
-      null1.__pluginVersion = "x.y.z";
-      null1.__initData = _worklet_15547305016511_init_data;
-      null1.__stackDetails = _e;
-      return null1;
-    }({
-      _worklet_15547305016511_init_data
-    });
-    bar();
-  };
-  null2.__closure = {
-    _worklet_15547305016511_init_data
-  };
-  null2.__workletHash = 2134086209467;
-  null2.__pluginVersion = "x.y.z";
-  null2.__initData = _worklet_2134086209467_init_data;
-  null2.__stackDetails = _e;
-  return null2;
-}({
-  _worklet_2134086209467_init_data,
-  _worklet_15547305016511_init_data
 });"
 `;
+
+exports[`babel plugin for worklet nesting transpiles nested worklets 1`] = `"const foo = require("react-native-worklets/.worklets/5516654757986.js").default({});"`;
 
 exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnJS in runOnUI 1`] = `
-"const _worklet_11239746781805_init_data = {
-  code: "(function null1(){console.log('Hello from JS thread');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_1913796782382_init_data = {
-  code: "(function null2(){const{runOnJS,_worklet_11239746781805_init_data}=this.__closure;console.log('Hello from UI thread');runOnJS(function null1Factory({_worklet_11239746781805_init_data:_worklet_11239746781805_init_data}){const _e=[new global.Error(),1,-27];const null1=function(){console.log('Hello from JS thread');};null1.__closure={};null1.__workletHash=11239746781805;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_11239746781805_init_data;null1.__stackDetails=_e;return null1;}({_worklet_11239746781805_init_data:_worklet_11239746781805_init_data}))();})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-runOnUI(function null2Factory({
-  _worklet_1913796782382_init_data,
-  runOnJS,
-  _worklet_11239746781805_init_data
-}) {
-  const _e = [new global.Error(), -3, -27];
-  const null2 = function () {
-    console.log('Hello from UI thread');
-    runOnJS(function null1Factory({
-      _worklet_11239746781805_init_data
-    }) {
-      const _e = [new global.Error(), 1, -27];
-      const null1 = function () {
-        console.log('Hello from JS thread');
-      };
-      null1.__closure = {};
-      null1.__workletHash = 11239746781805;
-      null1.__pluginVersion = "x.y.z";
-      null1.__initData = _worklet_11239746781805_init_data;
-      null1.__stackDetails = _e;
-      return null1;
-    }({
-      _worklet_11239746781805_init_data
-    }))();
-  };
-  null2.__closure = {
-    runOnJS,
-    _worklet_11239746781805_init_data
-  };
-  null2.__workletHash = 1913796782382;
-  null2.__pluginVersion = "x.y.z";
-  null2.__initData = _worklet_1913796782382_init_data;
-  null2.__stackDetails = _e;
-  return null2;
-}({
-  _worklet_1913796782382_init_data,
-  runOnJS,
-  _worklet_11239746781805_init_data
+"runOnUI(require("react-native-worklets/.worklets/15923453707957.js").default({
+  runOnJS
 }))();"
 `;
 
 exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnUI in runOnJS in runOnUI 1`] = `
-"const _worklet_7548753055656_init_data = {
-  code: "(function null1(){console.log('Hello from UI thread again');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_381514241210_init_data = {
-  code: "(function null2(){const{runOnUI,_worklet_7548753055656_init_data}=this.__closure;console.log('Hello from JS thread');runOnUI(function null1Factory({_worklet_7548753055656_init_data:_worklet_7548753055656_init_data}){const _e=[new global.Error(),1,-27];const null1=function(){console.log('Hello from UI thread again');};null1.__closure={};null1.__workletHash=7548753055656;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_7548753055656_init_data;null1.__stackDetails=_e;return null1;}({_worklet_7548753055656_init_data:_worklet_7548753055656_init_data}))();})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_10460337587208_init_data = {
-  code: "(function null3(){const{runOnJS,_worklet_381514241210_init_data,runOnUI,_worklet_7548753055656_init_data}=this.__closure;console.log('Hello from UI thread');runOnJS(function null2Factory({_worklet_381514241210_init_data:_worklet_381514241210_init_data,runOnUI:runOnUI,_worklet_7548753055656_init_data:_worklet_7548753055656_init_data}){const _e=[new global.Error(),-3,-27];const null2=function(){console.log('Hello from JS thread');runOnUI(function null1Factory({_worklet_7548753055656_init_data:_worklet_7548753055656_init_data}){const _e=[new global.Error(),1,-27];const null1=function(){console.log('Hello from UI thread again');};null1.__closure={};null1.__workletHash=7548753055656;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_7548753055656_init_data;null1.__stackDetails=_e;return null1;}({_worklet_7548753055656_init_data:_worklet_7548753055656_init_data}))();};null2.__closure={runOnUI:runOnUI,_worklet_7548753055656_init_data:_worklet_7548753055656_init_data};null2.__workletHash=381514241210;null2.__pluginVersion=\\"x.y.z\\";null2.__initData=_worklet_381514241210_init_data;null2.__stackDetails=_e;return null2;}({_worklet_381514241210_init_data:_worklet_381514241210_init_data,runOnUI:runOnUI,_worklet_7548753055656_init_data:_worklet_7548753055656_init_data}))();})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-runOnUI(function null3Factory({
-  _worklet_10460337587208_init_data,
+"runOnUI(require("react-native-worklets/.worklets/15590996795784.js").default({
   runOnJS,
-  _worklet_381514241210_init_data,
-  runOnUI,
-  _worklet_7548753055656_init_data
-}) {
-  const _e = [new global.Error(), -5, -27];
-  const null3 = function () {
-    console.log('Hello from UI thread');
-    runOnJS(function null2Factory({
-      _worklet_381514241210_init_data,
-      runOnUI,
-      _worklet_7548753055656_init_data
-    }) {
-      const _e = [new global.Error(), -3, -27];
-      const null2 = function () {
-        console.log('Hello from JS thread');
-        runOnUI(function null1Factory({
-          _worklet_7548753055656_init_data
-        }) {
-          const _e = [new global.Error(), 1, -27];
-          const null1 = function () {
-            console.log('Hello from UI thread again');
-          };
-          null1.__closure = {};
-          null1.__workletHash = 7548753055656;
-          null1.__pluginVersion = "x.y.z";
-          null1.__initData = _worklet_7548753055656_init_data;
-          null1.__stackDetails = _e;
-          return null1;
-        }({
-          _worklet_7548753055656_init_data
-        }))();
-      };
-      null2.__closure = {
-        runOnUI,
-        _worklet_7548753055656_init_data
-      };
-      null2.__workletHash = 381514241210;
-      null2.__pluginVersion = "x.y.z";
-      null2.__initData = _worklet_381514241210_init_data;
-      null2.__stackDetails = _e;
-      return null2;
-    }({
-      _worklet_381514241210_init_data,
-      runOnUI,
-      _worklet_7548753055656_init_data
-    }))();
-  };
-  null3.__closure = {
-    runOnJS,
-    _worklet_381514241210_init_data,
-    runOnUI,
-    _worklet_7548753055656_init_data
-  };
-  null3.__workletHash = 10460337587208;
-  null3.__pluginVersion = "x.y.z";
-  null3.__initData = _worklet_10460337587208_init_data;
-  null3.__stackDetails = _e;
-  return null3;
-}({
-  _worklet_10460337587208_init_data,
-  runOnJS,
-  _worklet_381514241210_init_data,
-  runOnUI,
-  _worklet_7548753055656_init_data
+  runOnUI
 }))();"
 `;
 
-exports[`babel plugin for worklet nesting transpiles nested worklets with depth 3 1`] = `
-"const _worklet_7394546508057_init_data = {
-  code: "(function null1(){console.log('foobar');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_418382687015_init_data = {
-  code: "(function null2(){const{_worklet_7394546508057_init_data}=this.__closure;const foobar=function null1Factory({_worklet_7394546508057_init_data:_worklet_7394546508057_init_data}){const _e=[new global.Error(),1,-27];const null1=function(){console.log('foobar');};null1.__closure={};null1.__workletHash=7394546508057;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_7394546508057_init_data;null1.__stackDetails=_e;return null1;}({_worklet_7394546508057_init_data:_worklet_7394546508057_init_data});})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_10944879085802_init_data = {
-  code: "(function null3(){const{_worklet_418382687015_init_data,_worklet_7394546508057_init_data}=this.__closure;const bar=function null2Factory({_worklet_418382687015_init_data:_worklet_418382687015_init_data,_worklet_7394546508057_init_data:_worklet_7394546508057_init_data}){const _e=[new global.Error(),-2,-27];const null2=function(){const foobar=function null1Factory({_worklet_7394546508057_init_data:_worklet_7394546508057_init_data}){const _e=[new global.Error(),1,-27];const null1=function(){console.log('foobar');};null1.__closure={};null1.__workletHash=7394546508057;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_7394546508057_init_data;null1.__stackDetails=_e;return null1;}({_worklet_7394546508057_init_data:_worklet_7394546508057_init_data});};null2.__closure={_worklet_7394546508057_init_data:_worklet_7394546508057_init_data};null2.__workletHash=418382687015;null2.__pluginVersion=\\"x.y.z\\";null2.__initData=_worklet_418382687015_init_data;null2.__stackDetails=_e;return null2;}({_worklet_418382687015_init_data:_worklet_418382687015_init_data,_worklet_7394546508057_init_data:_worklet_7394546508057_init_data});bar();})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function null3Factory({
-  _worklet_10944879085802_init_data,
-  _worklet_418382687015_init_data,
-  _worklet_7394546508057_init_data
-}) {
-  const _e = [new global.Error(), -3, -27];
-  const null3 = function () {
-    const bar = function null2Factory({
-      _worklet_418382687015_init_data,
-      _worklet_7394546508057_init_data
-    }) {
-      const _e = [new global.Error(), -2, -27];
-      const null2 = function () {
-        const foobar = function null1Factory({
-          _worklet_7394546508057_init_data
-        }) {
-          const _e = [new global.Error(), 1, -27];
-          const null1 = function () {
-            console.log('foobar');
-          };
-          null1.__closure = {};
-          null1.__workletHash = 7394546508057;
-          null1.__pluginVersion = "x.y.z";
-          null1.__initData = _worklet_7394546508057_init_data;
-          null1.__stackDetails = _e;
-          return null1;
-        }({
-          _worklet_7394546508057_init_data
-        });
-      };
-      null2.__closure = {
-        _worklet_7394546508057_init_data
-      };
-      null2.__workletHash = 418382687015;
-      null2.__pluginVersion = "x.y.z";
-      null2.__initData = _worklet_418382687015_init_data;
-      null2.__stackDetails = _e;
-      return null2;
-    }({
-      _worklet_418382687015_init_data,
-      _worklet_7394546508057_init_data
-    });
-    bar();
-  };
-  null3.__closure = {
-    _worklet_418382687015_init_data,
-    _worklet_7394546508057_init_data
-  };
-  null3.__workletHash = 10944879085802;
-  null3.__pluginVersion = "x.y.z";
-  null3.__initData = _worklet_10944879085802_init_data;
-  null3.__stackDetails = _e;
-  return null3;
-}({
-  _worklet_10944879085802_init_data,
-  _worklet_418382687015_init_data,
-  _worklet_7394546508057_init_data
-});"
-`;
+exports[`babel plugin for worklet nesting transpiles nested worklets with depth 3 1`] = `"const foo = require("react-native-worklets/.worklets/16623333101921.js").default({});"`;
 
 exports[`babel plugin for worklet nesting transpiles worklets with functions defined on UI thread to run them on JS 1`] = `
-"const _worklet_10798770476691_init_data = {
-  code: "(function null1(){console.log('Good morning from JS thread!');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_9016903891659_init_data = {
-  code: "(function null2(){console.log('Good afternoon from JS thread');})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const _worklet_8358853488176_init_data = {
-  code: "(function null3(){const{_worklet_10798770476691_init_data,_worklet_9016903891659_init_data,runOnJS}=this.__closure;const a=function null1Factory({_worklet_10798770476691_init_data:_worklet_10798770476691_init_data}){const _e=[new global.Error(),1,-27];const null1=function(){console.log('Good morning from JS thread!');};null1.__closure={};null1.__workletHash=10798770476691;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_10798770476691_init_data;null1.__stackDetails=_e;return null1;}({_worklet_10798770476691_init_data:_worklet_10798770476691_init_data});const b=function null2Factory({_worklet_9016903891659_init_data:_worklet_9016903891659_init_data}){const _e=[new global.Error(),1,-27];const null2=function(){console.log('Good afternoon from JS thread');};null2.__closure={};null2.__workletHash=9016903891659;null2.__pluginVersion=\\"x.y.z\\";null2.__initData=_worklet_9016903891659_init_data;null2.__stackDetails=_e;return null2;}({_worklet_9016903891659_init_data:_worklet_9016903891659_init_data});const func=Math.random()<0.5?a:b;runOnJS(func)();})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-runOnUI(function null3Factory({
-  _worklet_8358853488176_init_data,
-  _worklet_10798770476691_init_data,
-  _worklet_9016903891659_init_data,
-  runOnJS
-}) {
-  const _e = [new global.Error(), -4, -27];
-  const null3 = function () {
-    const a = function null1Factory({
-      _worklet_10798770476691_init_data
-    }) {
-      const _e = [new global.Error(), 1, -27];
-      const null1 = function () {
-        console.log('Good morning from JS thread!');
-      };
-      null1.__closure = {};
-      null1.__workletHash = 10798770476691;
-      null1.__pluginVersion = "x.y.z";
-      null1.__initData = _worklet_10798770476691_init_data;
-      null1.__stackDetails = _e;
-      return null1;
-    }({
-      _worklet_10798770476691_init_data
-    });
-    const b = function null2Factory({
-      _worklet_9016903891659_init_data
-    }) {
-      const _e = [new global.Error(), 1, -27];
-      const null2 = function () {
-        console.log('Good afternoon from JS thread');
-      };
-      null2.__closure = {};
-      null2.__workletHash = 9016903891659;
-      null2.__pluginVersion = "x.y.z";
-      null2.__initData = _worklet_9016903891659_init_data;
-      null2.__stackDetails = _e;
-      return null2;
-    }({
-      _worklet_9016903891659_init_data
-    });
-    const func = Math.random() < 0.5 ? a : b;
-    runOnJS(func)();
-  };
-  null3.__closure = {
-    _worklet_10798770476691_init_data,
-    _worklet_9016903891659_init_data,
-    runOnJS
-  };
-  null3.__workletHash = 8358853488176;
-  null3.__pluginVersion = "x.y.z";
-  null3.__initData = _worklet_8358853488176_init_data;
-  null3.__stackDetails = _e;
-  return null3;
-}({
-  _worklet_8358853488176_init_data,
-  _worklet_10798770476691_init_data,
-  _worklet_9016903891659_init_data,
+"runOnUI(require("react-native-worklets/.worklets/10682263099467.js").default({
   runOnJS
 }))();"
 `;
 
-exports[`babel plugin generally strips queries from filename when injecting source maps 1`] = `
-"const _worklet_11232621911025_init_data = {
-  code: "(function foo_nullQuery1(){var foo_nullQuery1='bar';})",
-  location: "/dev/null?query",
-  sourceMap: "{\\"version\\":3,\\"names\\":[\\"foo_nullQuery1\\"],\\"sources\\":[\\"/dev/null?query\\"],\\"mappings\\":\\"AACQ,SAAAA,cAAeA,CAAA,EAEb,GAAI,CAAAA,cAAW,OACjB\\",\\"ignoreList\\":[]}"
-};
-const foo = function foo_nullQuery1Factory({
-  _worklet_11232621911025_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const foo = function () {
-    var foo = 'bar';
+exports[`babel plugin generally removes comments from worklets 1`] = `
+"export default (function null1Factory({}) {
+  const null1 = function () {
+    return true;
   };
-  foo.__closure = {};
-  foo.__workletHash = 11232621911025;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_11232621911025_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}({
-  _worklet_11232621911025_init_data
-});"
-`;
-
-exports[`babel plugin generally strips queries from filename when injecting source maps 2`] = `
-"const _worklet_8167316224945_init_data = {
-  code: "(function foo_nullHash1(){var foo_nullHash1='bar';})",
-  location: "/dev/null#hash",
-  sourceMap: "{\\"version\\":3,\\"names\\":[\\"foo_nullHash1\\"],\\"sources\\":[\\"/dev/null#hash\\"],\\"mappings\\":\\"AACQ,SAAAA,aAAeA,CAAA,EAEb,GAAI,CAAAA,aAAW,OACjB\\",\\"ignoreList\\":[]}"
-};
-const foo = function foo_nullHash1Factory({
-  _worklet_8167316224945_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const foo = function () {
-    var foo = 'bar';
-  };
-  foo.__closure = {};
-  foo.__workletHash = 8167316224945;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_8167316224945_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}({
-  _worklet_8167316224945_init_data
-});"
-`;
-
-exports[`babel plugin generally strips queries from filename when injecting source maps 3`] = `
-"const _worklet_6204255084081_init_data = {
-  code: "(function foo_nullQueryHash1(){var foo_nullQueryHash1='bar';})",
-  location: "/dev/null?query#hash",
-  sourceMap: "{\\"version\\":3,\\"names\\":[\\"foo_nullQueryHash1\\"],\\"sources\\":[\\"/dev/null?query#hash\\"],\\"mappings\\":\\"AACQ,SAAAA,kBAAeA,CAAA,EAEb,GAAI,CAAAA,kBAAW,OACjB\\",\\"ignoreList\\":[]}"
-};
-const foo = function foo_nullQueryHash1Factory({
-  _worklet_6204255084081_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const foo = function () {
-    var foo = 'bar';
-  };
-  foo.__closure = {};
-  foo.__workletHash = 6204255084081;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_6204255084081_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}({
-  _worklet_6204255084081_init_data
+  null1.__closure = {};
+  null1.__workletHash = 14529469240622;
+  null1.__pluginVersion = "x.y.z";
+  return null1;
 });"
 `;
 
 exports[`babel plugin generally supports recursive calls 1`] = `
 "const a = 1;
-const _worklet_7456730356062_init_data = {
-  code: "(function foo_null1(t){const foo_null1=this._recur;const{a}=this.__closure;if(t>0){return a+foo_null1(t-1);}})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_7456730356062_init_data,
+const foo = require("react-native-worklets/.worklets/7456730356062.js").default({
+  a
+});"
+`;
+
+exports[`babel plugin generally supports recursive calls 2`] = `
+"export default (function foo_null1Factory({
   a
 }) {
-  const _e = [new global.Error(), -2, -27];
   const foo = function (t) {
     if (t > 0) {
       return a + foo(t - 1);
@@ -5376,46 +1063,15 @@ const foo = function foo_null1Factory({
   };
   foo.__workletHash = 7456730356062;
   foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_7456730356062_init_data;
-  foo.__stackDetails = _e;
   return foo;
-}({
-  _worklet_7456730356062_init_data,
-  a
 });"
 `;
 
 exports[`babel plugin generally transforms 1`] = `
 "import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
-const _worklet_17019765756365_init_data = {
-  code: "(function null1(){const{offset}=this.__closure;return{transform:[{translateX:offset.value*255}]};})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
 function Box() {
   const offset = useSharedValue(0);
-  const animatedStyles = useAnimatedStyle(function null1Factory({
-    _worklet_17019765756365_init_data,
-    offset
-  }) {
-    const _e = [new global.Error(), -2, -27];
-    const null1 = function () {
-      return {
-        transform: [{
-          translateX: offset.value * 255
-        }]
-      };
-    };
-    null1.__closure = {
-      offset
-    };
-    null1.__workletHash = 17019765756365;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_17019765756365_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_17019765756365_init_data,
+  const animatedStyles = useAnimatedStyle(require("react-native-worklets/.worklets/17019765756365.js").default({
     offset
   }));
   return <>
@@ -5423,4 +1079,24 @@ function Box() {
               <Button onPress={() => offset.value = Math.random()} title="Move" />
             </>;
 }"
+`;
+
+exports[`babel plugin generally transforms 2`] = `
+"export default (function null1Factory({
+  offset
+}) {
+  const null1 = function () {
+    return {
+      transform: [{
+        translateX: offset.value * 255
+      }]
+    };
+  };
+  null1.__closure = {
+    offset
+  };
+  null1.__workletHash = 17019765756365;
+  null1.__pluginVersion = "x.y.z";
+  return null1;
+});"
 `;

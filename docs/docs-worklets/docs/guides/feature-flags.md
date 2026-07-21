@@ -32,8 +32,7 @@ This feature flags is supposed to improve the visual perception and perceived sm
 ### `FETCH_PREVIEW_ENABLED`
 </Badges>
 
-This feature flag enables the [preview of fetch API on Worklet Runtimes](/docs/bundleMode/usage#running-network-requests-in-worklets) in the [Bundle Mode](/docs/bundleMode/). Make sure to follow the rest of the [setup instructions](/docs/bundleMode/setup/) after enabling this flag.
-**This flag only takes effect in Bundle Mode.**
+This feature flag enables the [preview of fetch API on Worklet Runtimes](/docs/bundleMode/usage#running-network-requests-in-worklets). Make sure your app follows the [setup instructions](/docs/bundleMode/setup/), including the `metro` and `metro-runtime` patches, for this flag to work.
 
 <Badges version="0.9.0">
 ### `ENABLE_CROSS_RUNTIME_STACK_TRACES`

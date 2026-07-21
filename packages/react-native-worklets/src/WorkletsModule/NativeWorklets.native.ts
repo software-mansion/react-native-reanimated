@@ -1,22 +1,15 @@
 'use strict';
 
-import { isBundleModeEnabled } from '../debug/bundleMode';
 import { checkCppVersion } from '../debug/checkCppVersion';
 import { jsVersion } from '../debug/jsVersion';
-import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
-import { installRemoteFunctionUnpacker } from '../memory/remoteFunctionUnpacker';
-import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
-import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
-import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
 import type {
   RemoteFunction,
   SerializableRef,
   SynchronizableRef,
 } from '../memory/types';
-import { installValueUnpacker } from '../memory/valueUnpacker';
 import { isRNRuntime } from '../runtimeKind';
 import { WorkletsTurboModule } from '../specs';
-import type { WorkletFunction, WorkletRuntime } from '../types';
+import type { WorkletRuntime } from '../types';
 import type {
   IWorkletsModule,
   WorkletsModuleProxy,
@@ -30,14 +23,10 @@ class NativeWorklets implements IWorkletsModule {
   #serializableFalse: SerializableRef<boolean>;
 
   constructor() {
-    const bundleModeEnabled = isBundleModeEnabled();
     globalThis._WORKLETS_VERSION_JS = jsVersion;
     const onRNRuntime = isRNRuntime();
     if (globalThis.__workletsModuleProxy === undefined && onRNRuntime) {
-      WorkletsTurboModule?.installTurboModule(bundleModeEnabled);
-      if (!bundleModeEnabled) {
-        installUnpackers(globalThis.__workletsModuleProxy);
-      }
+      WorkletsTurboModule?.installTurboModule();
       WorkletsTurboModule?.start();
     }
     if (globalThis.__workletsModuleProxy === undefined) {
@@ -47,11 +36,9 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       );
     }
     if (__DEV__) {
-      if (bundleModeEnabled) {
-        console.log(
-          '[Worklets] Bundle mode initialization: Downloaded the bundle for Worklet Runtimes.'
-        );
-      }
+      console.log(
+        '[Worklets] Bundle mode initialization: Downloaded the bundle for Worklet Runtimes.'
+      );
       if (onRNRuntime) {
         checkCppVersion();
       }
@@ -409,55 +396,3 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 }
 
 export const WorkletsModule: IWorkletsModule = new NativeWorklets();
-
-function installUnpackers(workletsModuleProxy: WorkletsModuleProxy) {
-  const value = (installValueUnpacker as WorkletFunction).__initData!;
-  const synchronizable = (installSynchronizableUnpacker as WorkletFunction)
-    .__initData!;
-  const customSerializable = (
-    installCustomSerializableUnpacker as WorkletFunction
-  ).__initData!;
-  const shareableHost = (installShareableHostUnpacker as WorkletFunction)
-    .__initData!;
-  const shareableGuest = (installShareableGuestUnpacker as WorkletFunction)
-    .__initData!;
-  const remoteFunction = (installRemoteFunctionUnpacker as WorkletFunction)
-    .__initData!;
-
-  if (value.bytecode !== undefined) {
-    if (__DEV__) {
-      throw new Error(
-        '[Worklets] Unpackers were compiled to Hermes bytecode in a development build, which is not supported.'
-      );
-    }
-    workletsModuleProxy.loadUnpackersWithBytecode(
-      value.bytecode,
-      synchronizable.bytecode!,
-      customSerializable.bytecode!,
-      shareableHost.bytecode!,
-      shareableGuest.bytecode!,
-      remoteFunction.bytecode!
-    );
-  } else {
-    workletsModuleProxy.loadUnpackersWithCode(
-      value.code!,
-      value.location ?? '',
-      value.sourceMap ?? '',
-      synchronizable.code!,
-      synchronizable.location ?? '',
-      synchronizable.sourceMap ?? '',
-      customSerializable.code!,
-      customSerializable.location ?? '',
-      customSerializable.sourceMap ?? '',
-      shareableHost.code!,
-      shareableHost.location ?? '',
-      shareableHost.sourceMap ?? '',
-      shareableGuest.code!,
-      shareableGuest.location ?? '',
-      shareableGuest.sourceMap ?? '',
-      remoteFunction.code!,
-      remoteFunction.location ?? '',
-      remoteFunction.sourceMap ?? ''
-    );
-  }
-}

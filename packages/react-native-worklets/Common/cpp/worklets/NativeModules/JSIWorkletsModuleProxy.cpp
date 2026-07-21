@@ -216,43 +216,6 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   auto obj = jsi::Object(rt);
   using jsi_utils::at;
 
-  jsi_utils::addMethod<18>(
-      rt,
-      obj,
-      "loadUnpackersWithCode",
-      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[18]) {
-        const auto str = [&](size_t i) {
-          return args[i].getString(rt).utf8(rt);
-        };
-        unpackerLoader->loadCodeUnpackers({
-            CodeUnpacker{.code = str(0), .location = str(1), .sourceMap = str(2)},
-            CodeUnpacker{.code = str(3), .location = str(4), .sourceMap = str(5)},
-            CodeUnpacker{.code = str(6), .location = str(7), .sourceMap = str(8)},
-            CodeUnpacker{.code = str(9), .location = str(10), .sourceMap = str(11)},
-            CodeUnpacker{.code = str(12), .location = str(13), .sourceMap = str(14)},
-            CodeUnpacker{.code = str(15), .location = str(16), .sourceMap = str(17)},
-        });
-      });
-
-  jsi_utils::addMethod<6>(
-      rt,
-      obj,
-      "loadUnpackersWithBytecode",
-      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[6]) {
-        const auto bytecode = [&](size_t i) {
-          const auto buffer = args[i].getObject(rt).getArrayBuffer(rt);
-          return std::vector<uint8_t>(buffer.data(rt), buffer.data(rt) + buffer.size(rt));
-        };
-        unpackerLoader->loadBytecodeUnpackers({
-            BytecodeUnpacker{.bytecode = bytecode(0)},
-            BytecodeUnpacker{.bytecode = bytecode(1)},
-            BytecodeUnpacker{.bytecode = bytecode(2)},
-            BytecodeUnpacker{.bytecode = bytecode(3)},
-            BytecodeUnpacker{.bytecode = bytecode(4)},
-            BytecodeUnpacker{.bytecode = bytecode(5)},
-        });
-      });
-
   jsi_utils::addMethod<1>(
       rt, obj, "createSerializableBigInt", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         return makeSerializableBigInt(rt, at<0>(args).asBigInt(rt));
@@ -707,25 +670,6 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         obj.setNativeState(rt, std::move(nativeState));
         return jsi::Value(std::move(obj));
       });
-
-  /* #region deprecated */
-
-  jsi_utils::addMethod<2>(
-      rt,
-      obj,
-      "createSerializableLEGACY",
-      [hostRuntimeId = hostRuntimeId_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
-        react_native_assert(
-            hostRuntimeId != RuntimeData::rnRuntimeId &&
-            "createSerializableLEGACY should never be called on the React Native runtime.");
-        (void)hostRuntimeId;
-        const auto &value = at<0>(args);
-        const auto shouldRetainRemote = jsi::Value::undefined();
-        const auto &nativeStateSource = at<1>(args);
-        return makeSerializableClone(rt, value, shouldRetainRemote, nativeStateSource);
-      });
-
-  /* #endregion deprecated */
 
   return obj;
 }

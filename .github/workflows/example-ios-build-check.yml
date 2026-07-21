@@ -39,10 +39,6 @@ on:
       - apps/fabric-example/**
   workflow_call:
     inputs:
-      bundleMode:
-        required: false
-        type: boolean
-        default: false
       configuration:
         required: false
         type: string
@@ -58,9 +54,9 @@ jobs:
       REANIMATED_DIR: packages/react-native-reanimated
       CONFIGURATION: ${{ inputs.configuration || 'Debug' }}
       BUILD_MARKER_DIR: .build-markers
-      CACHE_KEY: ios-${{ github.sha }}-${{ inputs.configuration || 'Debug' }}-${{ inputs.bundleMode || false }}
+      CACHE_KEY: ios-${{ github.sha }}-${{ inputs.configuration || 'Debug' }}
     concurrency:
-      group: ios-${{ github.ref }}-${{ inputs.bundleMode }}-${{ inputs.configuration || 'Debug' }}
+      group: ios-${{ github.ref }}-${{ inputs.configuration || 'Debug' }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -89,9 +85,6 @@ jobs:
       - name: Install monorepo node dependencies
         if: steps.result-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
-      - name: Toggle Bundle Mode
-        if: steps.result-cache.outputs.cache-hit != 'true' && inputs.bundleMode
-        run: yarn toggle-bundle-mode
       - name: Build Reanimated package
         if: steps.result-cache.outputs.cache-hit != 'true'
         working-directory: ${{ env.REANIMATED_DIR }}

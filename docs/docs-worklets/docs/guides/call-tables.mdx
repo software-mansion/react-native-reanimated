@@ -5,30 +5,21 @@ sidebar_label: Call tables
 
 # Call tables
 
-Call tables are quick references that show **where a given scheduling function can be called from**, depending on whether [Bundle Mode](/docs/bundleMode) is enabled or not.
-
-### Why does Bundle Mode matter?
-
-In [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode), Worklet Runtimes only have a subset of functionalities of the RN Runtime, due to limitations of serialization of worklets. With Bundle Mode enabled, every runtime has access to the full JavaScript bundle, so most threading APIs become available on all runtimes.
+Call tables are quick references that show **from which runtimes a given scheduling function can be called**. Since worklets run in [Bundle Mode](/docs/bundleMode), every runtime has access to the full JavaScript bundle and most threading APIs are available on all runtimes - however, some functions can still be called only from specific runtimes.
 
 ### How to read a call table
 
 Take [scheduleOnUI](/docs/threading/scheduleOnUI) as an example:
 
 <CallTable
-  bundleMode={{
+  calls={{
 rnRuntime: true,
 uiRuntime: true,
 workerRuntime: true,
 }}
-  noBundleMode={{
-rnRuntime: true,
-uiRuntime: false,
-workerRuntime: false,
-}}
 />
 
-A green check mark in the table means that the function can be called from that runtime, while a red cross means that calling the function from that runtime will throw an error. So in this case, `scheduleOnUI` can be called from any runtime when Bundle Mode is on, but only from the RN Runtime when Bundle Mode is off:
+A green check mark in the table means that the function can be called from that runtime, while a red cross means that calling the function from that runtime will throw an error. So in this case, `scheduleOnUI` can be called from any runtime:
 
 ```tsx {9-11,14-16,20-22}
 import {
@@ -39,19 +30,29 @@ import {
 
 const workerRuntime = createWorkletRuntime();
 
-// We are on RN Runtime -
-// this is always fine
+// We are on the RN Runtime -
+// calling scheduleOnUI is fine
 scheduleOnUI(/*...*/);
 
 scheduleOnUI(() => {
   // We are on the UI Runtime -
-  // this is only fine with Bundle Mode enabled
+  // calling scheduleOnUI is fine
   scheduleOnUI(/*...*/);
 });
 
 scheduleOnRuntime(workerRuntime, () => {
   // We are on the Worker Runtime -
-  // this is only fine with Bundle Mode enabled
+  // calling scheduleOnUI is fine
   scheduleOnUI(/*...*/);
 });
 ```
+
+Compare it with [runOnUIAsync](/docs/threading/runOnUIAsync), which can be called only from the RN Runtime:
+
+<CallTable
+  calls={{
+rnRuntime: true,
+uiRuntime: false,
+workerRuntime: false,
+}}
+/>

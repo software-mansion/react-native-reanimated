@@ -93,13 +93,6 @@ function processWorkletizableEntity(
     processVariableDeclaration(nodePath, state);
   } else if (nodePath.isClassDeclaration()) {
     appendWorkletClassMarker(nodePath.node.body);
-    if (nodePath.node.id?.name) {
-      // We don't support unnamed classes yet.
-      state.classesToWorkletize.push({
-        node: nodePath.node,
-        name: nodePath.node.id.name,
-      });
-    }
   }
 }
 

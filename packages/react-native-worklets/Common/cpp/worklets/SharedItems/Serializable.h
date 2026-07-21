@@ -103,13 +103,6 @@ class SerializableJSRef : public jsi::NativeState {
 };
 
 [[nodiscard]]
-jsi::Value makeSerializableClone(
-    jsi::Runtime &rt,
-    const jsi::Value &value,
-    const jsi::Value &shouldRetainRemote,
-    const jsi::Value &nativeStateSource);
-
-[[nodiscard]]
 std::shared_ptr<Serializable> extractSerializableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeSerializableValue,

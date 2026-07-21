@@ -509,7 +509,6 @@ export interface Example {
     android: boolean;
   };
   disabledPlatforms?: (typeof REAPlatform)[keyof typeof REAPlatform][];
-  needsBundleMode?: boolean;
 }
 
 export const EXAMPLES: Record<string, Example> = {
@@ -585,9 +584,8 @@ export const EXAMPLES: Record<string, Example> = {
   },
   FetchExample: {
     icon: '📡',
-    title: 'Fetch & XHR (Bundle Mode)',
+    title: 'Fetch & XHR',
     screen: FetchExample,
-    needsBundleMode: true,
   },
   ModifyExample: {
     icon: '🪛',

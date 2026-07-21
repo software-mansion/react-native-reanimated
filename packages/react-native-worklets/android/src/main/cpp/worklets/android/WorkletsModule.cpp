@@ -40,13 +40,12 @@ WorkletsModule::WorkletsModule(
           jsCallInvoker,
           uiScheduler,
           getIsOnJSQueueThread(),
-          getRuntimeBindings(bundleModeConfig.enabled, *rnRuntime),
+          getRuntimeBindings(*rnRuntime),
           bundleModeConfig,
           rnRuntimeStatus_)) {}
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
-    jboolean bundleModeEnabled,
     jlong jsContext,
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
     jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
@@ -57,18 +56,13 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
   auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext); // NOLINT //(performance-no-int-to-ptr)
   auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
 
-  std::shared_ptr<const ScriptBuffer> script = nullptr;
-  std::string sourceURL;
-  if (bundleModeEnabled) {
-    auto cxxWrapper = jScriptBufferWrapper->cthis();
-    script = cxxWrapper->getScript();
-    sourceURL = cxxWrapper->getSourceUrl();
-  }
+  auto cxxWrapper = jScriptBufferWrapper->cthis();
+  std::shared_ptr<const ScriptBuffer> script = cxxWrapper->getScript();
+  std::string sourceURL = cxxWrapper->getSourceUrl();
 
   return makeCxxInstance(
       jThis,
       BundleModeConfig{
-          .enabled = static_cast<bool>(bundleModeEnabled),
           .script = script,
           .sourceURL = sourceURL,
       },
@@ -77,15 +71,12 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
       uiScheduler);
 }
 
-std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(
-    const bool bundleModeEnabled,
-    jsi::Runtime &rnRuntime) {
+std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(jsi::Runtime &rnRuntime) {
   return std::make_shared<RuntimeBindings>(RuntimeBindings{
       .requestAnimationFrame = getRequestAnimationFrame(),
-      .nativeLoggingHook =
-          bundleModeEnabled ? extractNativeLoggingHookFromRNRuntime(rnRuntime) : RuntimeBindings::NativeLoggingHook{}
+      .nativeLoggingHook = extractNativeLoggingHookFromRNRuntime(rnRuntime)
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-      ,
+          ,
       .abortRequest = getAbortRequest(),
       .clearCookies = getClearCookies(),
       .sendRequest = getSendRequest()

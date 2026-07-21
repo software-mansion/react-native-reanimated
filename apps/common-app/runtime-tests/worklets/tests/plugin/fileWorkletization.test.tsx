@@ -8,11 +8,7 @@ import {
   test,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
-import {
-  getThree,
-  implicitContextObject,
-  ImplicitWorkletClass,
-} from './fileWorkletization';
+import { getThree, implicitContextObject } from './fileWorkletization';
 
 describe('Test file workletization', () => {
   const PASS_NOTIFICATION = 'PASS';
@@ -44,15 +40,4 @@ describe('Test file workletization', () => {
     await waitForNotification(PASS_NOTIFICATION);
     expect(result).toBe(5);
   });
-
-  if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-    test('WorkletClasses are workletized', async () => {
-      scheduleOnUI(() => {
-        'worklet';
-        scheduleOnRN(callbackPass, new ImplicitWorkletClass().getSeven());
-      });
-      await waitForNotification(PASS_NOTIFICATION);
-      expect(result).toBe(7);
-    });
-  }
 });

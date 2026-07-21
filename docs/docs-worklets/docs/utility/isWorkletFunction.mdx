@@ -35,29 +35,13 @@ console.log(isNonWorkletFunction); // false
   ```typescript
   type WorkletClosure = Record<string, unknown>;
 
-  export type WorkletStackDetails = [
-    error: Error,
-    lineOffset: number,
-    columnOffset: number,
-  ];
-
-  interface WorkletInitData {
-    code: string;
-    /** Only in dev builds. */
-    location?: string;
-    /** Only in dev builds. */
-    sourceMap?: string;
-    /** Only in dev builds. */
-    version?: string;
-  }
-
   interface WorkletProps {
     __closure: WorkletClosure;
     __workletHash: number;
-    __initData: WorkletInitData;
+    /** Only for Handles. */
     __init?: () => unknown;
-    /** `__stackDetails` is removed after parsing. */
-    __stackDetails?: WorkletStackDetails;
+    /** Only in dev builds. */
+    __pluginVersion?: string;
   }
 
   type WorkletFunction<

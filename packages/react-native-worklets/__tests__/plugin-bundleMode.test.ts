@@ -16,10 +16,18 @@ const capturedFiles: CapturedFile[] = [];
 
 jest.mock('fs', () => {
   const actual = jest.requireActual('fs');
+  const stagedFiles = new Map<string, string>();
   return {
     ...actual,
     writeFileSync: (filepath: string, content: string) => {
-      capturedFiles.push({ path: String(filepath), content: String(content) });
+      stagedFiles.set(String(filepath), String(content));
+    },
+    renameSync: (from: string, to: string) => {
+      capturedFiles.push({
+        path: String(to),
+        content: stagedFiles.get(String(from))!,
+      });
+      stagedFiles.delete(String(from));
     },
   };
 });
@@ -31,18 +39,6 @@ import plugin from '../plugin';
 
 const MOCK_LOCATION = 'test.js';
 const MOCK_TSX_LOCATION = 'test.tsx';
-const MOCK_WORKLET_RUNTIME_ENTRY = 'react-native-worklets/src/index.ts';
-const MOCK_OTHER_FILE = 'someOtherFile.ts';
-
-const TOGGLE_PATH_CASES: ReadonlyArray<[label: string, filename: string]> = [
-  ['source entry-point', MOCK_WORKLET_RUNTIME_ENTRY],
-  ['source mode-check', 'react-native-worklets/src/debug/bundleMode.native.ts'],
-  ['built entry-point', 'react-native-worklets/lib/module/index.js'],
-  [
-    'built mode-check',
-    'react-native-worklets/lib/module/debug/bundleMode.native.js',
-  ],
-];
 
 const REQUIRE_PREFIX = 'require("react-native-worklets/.worklets/';
 
@@ -59,10 +55,7 @@ function runPlugin(
     babelrc: false,
     configFile: false,
     ...transformOpts,
-    plugins: [
-      ...(transformOpts.plugins || []),
-      [plugin, { disableSourceMaps: true, ...pluginOpts, bundleMode: true }],
-    ],
+    plugins: [...(transformOpts.plugins || []), [plugin, pluginOpts]],
   };
   const transformed = transformSync(strippedInput, config);
   assert(transformed);
@@ -353,49 +346,6 @@ describe('babel plugin in bundleMode', () => {
     });
   });
 
-  describe('bundle mode flag toggle', () => {
-    for (const [label, filename] of TOGGLE_PATH_CASES) {
-      test(`flips _WORKLETS_BUNDLE_MODE_ENABLED to true in the ${label} file`, () => {
-        const input = html`<script>
-          globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;
-        </script>`;
-
-        const { code } = runPlugin(input, {}, {}, filename);
-        expect(code).toContain(
-          'globalThis._WORKLETS_BUNDLE_MODE_ENABLED = true;'
-        );
-      });
-    }
-
-    test('does not flip the flag in unrelated files', () => {
-      const input = html`<script>
-        globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;
-      </script>`;
-
-      const { code } = runPlugin(input, {}, {}, MOCK_OTHER_FILE);
-      expect(code).toMatchSnapshot();
-    });
-
-    test('does not flip the flag without bundleMode option', () => {
-      const input = html`<script>
-        globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;
-      </script>`;
-
-      const transformed = transformSync(
-        input.replace(/<\/?script[^>]*>/g, ''),
-        {
-          filename: MOCK_WORKLET_RUNTIME_ENTRY,
-          compact: false,
-          babelrc: false,
-          configFile: false,
-          plugins: [[plugin, {}]],
-        }
-      );
-      assert(transformed?.code);
-      expect(transformed.code).toMatchSnapshot();
-    });
-  });
-
   describe('nested worklets', () => {
     test('extracts each nested worklet into its own file', () => {
       const input = html`<script>
@@ -437,29 +387,6 @@ describe('babel plugin in bundleMode', () => {
       const outerFile = files.find((f) => code.includes(path.basename(f.path)));
       assert(outerFile);
       expect(files[files.length - 1]).toBe(outerFile);
-    });
-  });
-
-  describe('with source maps enabled', () => {
-    test('emits a worklet file without crashing', () => {
-      // Other tests in this file disable source maps so the filename can be
-      // arbitrary; here we run with real source-map generation against a real
-      // file path so that path is at least exercised once.
-      const input = html`<script>
-        function foo() {
-          'worklet';
-          var x = 1;
-        }
-      </script>`;
-
-      const { code, files } = runPlugin(
-        input,
-        {},
-        { disableSourceMaps: false },
-        __filename
-      );
-      expect(files).toHaveLength(1);
-      expect(code).toContain(REQUIRE_PREFIX);
     });
   });
 

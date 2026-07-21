@@ -24,7 +24,6 @@ export interface WorkletsPluginPass {
   cwd: string;
   filename: string | undefined;
   workletNumber: number;
-  classesToWorkletize: { node: BabelNode; name: string }[];
   skipFile: boolean;
 }
 
@@ -74,8 +73,6 @@ export function isWorkletizableObjectNode(
 ): node is WorkletizableObject {
   return isObjectExpression(node);
 }
-
-export const workletClassFactorySuffix = '__classFactory';
 
 export const generatedWorkletsDir = '.worklets';
 

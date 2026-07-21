@@ -10,20 +10,18 @@ import {
 const expectedErrorMessage =
   '[Worklets] Accessing TurboModules is not allowed on Worklet Runtimes.';
 
-const bundleModeEnabled = !!globalThis._WORKLETS_BUNDLE_MODE_ENABLED;
 const proxy = globalThis.__workletsModuleProxy as
   | { getStaticFeatureFlag: (name: string) => boolean }
   | undefined;
-const fetchPreviewEnabled =
-  bundleModeEnabled && !!proxy?.getStaticFeatureFlag('FETCH_PREVIEW_ENABLED');
+const fetchPreviewEnabled = !!proxy?.getStaticFeatureFlag(
+  'FETCH_PREVIEW_ENABLED'
+);
 
 describe('accessing Turbo Modules on Worklet Runtimes', () => {
   const workerRuntime = getWorkletRuntimeFromPool('test');
 
-  const testFn = bundleModeEnabled ? test : test.skip;
   const previewOnFn = fetchPreviewEnabled ? test : test.skip;
-  const previewOffFn =
-    bundleModeEnabled && !fetchPreviewEnabled ? test : test.skip;
+  const previewOffFn = !fetchPreviewEnabled ? test : test.skip;
 
   const targets = [
     {
@@ -39,7 +37,7 @@ describe('accessing Turbo Modules on Worklet Runtimes', () => {
 
   targets.forEach(({ targetRuntime, runOnTarget }) => {
     describe(`on ${targetRuntime} Runtime`, () => {
-      testFn('throws for non-polyfilled modules', () => {
+      test('throws for non-polyfilled modules', () => {
         const errorMessage = runOnTarget(() => {
           'worklet';
           try {

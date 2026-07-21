@@ -14,7 +14,7 @@ import {
   stringLiteral,
 } from '@babel/types';
 import assert from 'assert';
-import { writeFileSync } from 'fs';
+import { renameSync, writeFileSync } from 'fs';
 import { dirname, resolve } from 'path';
 
 import { createImportPathLiteral } from './imports';
@@ -84,7 +84,13 @@ export function generateWorkletFile(
 
   const dedicatedFilePath = resolve(filesDirPath, `${workletHash}.js`);
 
-  writeFileSync(dedicatedFilePath, transformedProg);
+  // Multiple bundler or test workers can process files referencing the same
+  // worklet concurrently. A plain write could be observed half-done by a
+  // worker that requires the file, so we write to a per-process temporary
+  // file and atomically move it into place.
+  const temporaryFilePath = `${dedicatedFilePath}.${process.pid}.tmp`;
+  writeFileSync(temporaryFilePath, transformedProg);
+  renameSync(temporaryFilePath, dedicatedFilePath);
 }
 
 function resolvePresetTypescript(): string {

@@ -32,10 +32,6 @@ export function getClosure(
         typePath.skip();
       },
       ReferencedIdentifier(idPath) {
-        if (idPath.isJSXIdentifier() && !state.opts.bundleMode) {
-          return;
-        }
-
         const name = idPath.node.name;
 
         if (capturedNames.has(name)) {
@@ -86,7 +82,7 @@ export function getClosure(
           scope = scope.parent;
         }
 
-        if (state.opts.bundleMode && isImport(binding)) {
+        if (isImport(binding)) {
           if (
             isImportRelative(binding) &&
             canForwardRelativeImport(

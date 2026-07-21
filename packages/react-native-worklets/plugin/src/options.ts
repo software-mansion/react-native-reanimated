@@ -1,15 +1,5 @@
 export interface PluginOptions {
   /**
-   * Enables the [Bundle
-   * Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode).
-   *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#bundle-mode}
-   *
-   * - Defaults to `false`.
-   */
-  bundleMode?: boolean;
-
-  /**
    * Turning on this option suppresses a helpful warning when you use [inline
    * shared
    * values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animations-in-inline-styling).
@@ -19,28 +9,6 @@ export interface PluginOptions {
    * - Defaults to `false`.
    */
   disableInlineStylesWarning?: boolean;
-
-  /**
-   * This option turns off the source map generation for worklets. Mostly used
-   * for testing purposes.
-   *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#disablesourcemaps}
-   *
-   * - Defaults to `false`.
-   */
-  disableSourceMaps?: boolean;
-
-  /**
-   * Disables [Worklet Classes
-   * support](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about#experimental-worklet-classes).
-   * You might need to disable this feature when using [Custom
-   * Serializables](https://docs.swmansion.com/react-native-worklets/docs/memory/registerCustomSerializable).
-   *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#disableworkletclasses}
-   *
-   * - Defaults to `false`.
-   */
-  disableWorkletClasses?: boolean;
 
   /**
    * This is a list of Babel plugins that will be used when transforming
@@ -71,52 +39,6 @@ export interface PluginOptions {
    * - Defaults to an empty array `[]`.
    */
   globals?: string[];
-
-  /**
-   * _EXPERIMENTAL_
-   *
-   * This options enables compilation of worklets to Hermes bytecode. The
-   * compilation is used only for production builds.
-   *
-   * This setting applies only to Legacy Eval Mode and has no effect on Bundle
-   * Mode.
-   */
-  hermesBytecode?: boolean;
-
-  /**
-   * _EXPERIMENTAL_
-   *
-   * This option is required to specify the path to the Hermes bytecode compiler
-   * binary. It is used only when `hermesBytecode` is enabled.
-   */
-  getHBCBinary?: () => string;
-
-  /** Temporary internal option to create ShareableUnpacker. */
-  limitInitDataHoisting?: boolean;
-
-  /**
-   * This option comes in handy for Web apps. Because Babel ordinarily doesn't
-   * get information about the target platform, it includes worklet data in the
-   * bundle that only Native apps find relevant. If you enable this option, your
-   * bundle size will be smaller.
-   *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#omitnativeonlydata}
-   *
-   * - Defaults to `false`.
-   */
-  omitNativeOnlyData?: boolean;
-
-  /**
-   * This option dictates the passed file location for a worklet's source map.
-   * If you enable this option, the file paths will be relative to `process.cwd`
-   * (the current directory where Babel executes). This can be handy for Jest
-   * test snapshots to ensure consistent results across machines.
-   *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#relativesourcelocation}
-   *
-   * - Defaults to `false`.
-   */
-  relativeSourceLocation?: boolean;
 
   /**
    * This option makes it so no global identifiers are implicitly captured in
