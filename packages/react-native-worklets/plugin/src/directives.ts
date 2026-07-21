@@ -1,5 +1,9 @@
 import type { NodePath } from '@babel/core';
-import type { ArrowFunctionExpression, BlockStatement } from '@babel/types';
+import type {
+  ArrowFunctionExpression,
+  BlockStatement,
+  Directive,
+} from '@babel/types';
 import {
   blockStatement,
   directive,
@@ -9,6 +13,15 @@ import {
 } from '@babel/types';
 
 import type { WorkletizableFunction } from './types';
+
+export function handleWorkletDirective(path: NodePath<Directive>): void {
+  if (
+    path.node.value.value === 'worklet' &&
+    path.parentPath.isBlockStatement()
+  ) {
+    addDirective(path.parentPath.node, 'use no memo');
+  }
+}
 
 export function addWorkletDirectivesToPath(
   path: NodePath<WorkletizableFunction>
