@@ -2,31 +2,17 @@
 import { useCallback, useEffect, useRef } from 'react';
 
 import type { Maybe } from '../common';
-import { IS_WEB, logger } from '../common';
+import { logger } from '../common';
 import type {
   InstanceOrElement,
   InternalHostInstance,
   SharedValue,
 } from '../commonTypes';
-import type {
-  AnimatedRef,
-  ReanimatedScrollEvent,
-  RNNativeScrollEvent,
-} from './commonTypes';
-import type { EventHandlerInternal } from './useEvent';
-import { useEvent } from './useEvent';
+import type { AnimatedRef } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
 
 const NOT_INITIALIZED_WARNING =
   'animatedRef is not initialized in useScrollOffset. Make sure to pass the animated ref to the scrollable component to get scroll offset updates.';
-
-const NATIVE_SCROLL_EVENT_NAMES = [
-  'onScroll',
-  'onScrollBeginDrag',
-  'onScrollEndDrag',
-  'onMomentumScrollBegin',
-  'onMomentumScrollEnd',
-] as const;
 
 /**
  * Lets you synchronously get the current offset of a scrollable component.
@@ -38,11 +24,7 @@ const NATIVE_SCROLL_EVENT_NAMES = [
  *   scrollable component.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset
  */
-export const useScrollOffset = IS_WEB
-  ? useScrollOffsetWeb
-  : useScrollOffsetNative;
-
-function useScrollOffsetWeb<TRef extends InstanceOrElement>(
+export function useScrollOffset<TRef extends InstanceOrElement>(
   animatedRef: Maybe<AnimatedRef<TRef>>,
   providedOffset?: SharedValue<number>
 ): SharedValue<number> {
@@ -75,47 +57,6 @@ function useScrollOffsetWeb<TRef extends InstanceOrElement>(
 
       return () => {
         element.removeEventListener('scroll', eventHandler);
-      };
-    });
-  }, [animatedRef, eventHandler]);
-
-  return offset;
-}
-
-function useScrollOffsetNative<TRef extends InstanceOrElement>(
-  animatedRef: Maybe<AnimatedRef<TRef>>,
-  providedOffset?: SharedValue<number>
-): SharedValue<number> {
-  const internalOffset = useSharedValue(0);
-  const offset = useRef(providedOffset ?? internalOffset).current;
-
-  const eventHandler = useEvent<RNNativeScrollEvent>(
-    (event: ReanimatedScrollEvent) => {
-      'worklet';
-      offset.value =
-        event.contentOffset.x === 0
-          ? event.contentOffset.y
-          : event.contentOffset.x;
-    },
-    NATIVE_SCROLL_EVENT_NAMES
-    // Read https://github.com/software-mansion/react-native-reanimated/pull/5056
-    // for more information about this cast.
-  ) as unknown as EventHandlerInternal<ReanimatedScrollEvent>;
-
-  useEffect(() => {
-    if (!animatedRef) {
-      return;
-    }
-
-    return animatedRef.observe((tag) => {
-      if (!tag) {
-        logger.warn(NOT_INITIALIZED_WARNING);
-        return;
-      }
-
-      eventHandler.workletEventHandler.registerForEvents(tag);
-      return () => {
-        eventHandler.workletEventHandler.unregisterFromEvents(tag);
       };
     });
   }, [animatedRef, eventHandler]);

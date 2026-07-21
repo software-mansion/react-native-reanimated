@@ -81,6 +81,7 @@ export function createWorkletRuntime(
   let queue: 'default' | object | null = 'default';
   let animationQueuePollingRate: number;
   let enableEventLoop = true;
+  let enableLocking = true;
   if (typeof nameOrConfig === 'string') {
     name = nameOrConfig;
     initializerFn = initializer;
@@ -96,7 +97,15 @@ export function createWorkletRuntime(
     animationQueuePollingRate = Math.round(
       nameOrConfig?.animationQueuePollingRate ?? 16
     );
-    enableEventLoop = nameOrConfig?.enableEventLoop ?? true;
+    enableLocking = nameOrConfig?.enableLocking ?? true;
+    if (__DEV__ && !enableLocking && nameOrConfig?.enableEventLoop) {
+      throw new Error(
+        '[Worklets] The Event Loop cannot be enabled on a runtime with locking disabled.'
+      );
+    }
+    enableEventLoop = enableLocking
+      ? (nameOrConfig?.enableEventLoop ?? true)
+      : false;
   }
 
   const useDefaultQueue = queue === 'default';
@@ -126,7 +135,8 @@ export function createWorkletRuntime(
     }),
     useDefaultQueue,
     customQueue,
-    enableEventLoop
+    enableEventLoop,
+    enableLocking
   );
 }
 

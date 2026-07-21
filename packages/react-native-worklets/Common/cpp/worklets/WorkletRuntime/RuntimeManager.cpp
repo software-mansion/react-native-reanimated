@@ -55,11 +55,12 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
     const std::string &name,
     const std::shared_ptr<SerializableWorklet> &initializer,
     const std::shared_ptr<AsyncQueue> &queue,
-    bool enableEventLoop) {
+    bool enableEventLoop,
+    bool enableLocking) {
   const auto runtimeId = getNextRuntimeId();
 
-  const auto workletRuntime =
-      std::make_shared<WorkletRuntime>(runtimeId, RuntimeData::RuntimeKind::Worker, name, queue, enableEventLoop);
+  const auto workletRuntime = std::make_shared<WorkletRuntime>(
+      runtimeId, RuntimeData::RuntimeKind::Worker, name, queue, enableEventLoop, enableLocking);
   const auto targetProxy = JSIWorkletsModuleProxy::createForNewRuntime(sourceProxy, runtimeId);
 
   workletRuntime->init(targetProxy);
@@ -84,7 +85,9 @@ void RuntimeManager::propagateModuleUpdate(const std::string &code, const std::s
   moduleUpdates_.push_back(ModuleUpdate{.sourceUrl = sourceUrl, .code = code});
 
   for (const auto &runtime : getAllRuntimes()) {
-    evaluateModuleUpdate(runtime, code, sourceUrl);
+    if (runtime->isLockingEnabled()) {
+      evaluateModuleUpdate(runtime, code, sourceUrl);
+    }
   }
 }
 

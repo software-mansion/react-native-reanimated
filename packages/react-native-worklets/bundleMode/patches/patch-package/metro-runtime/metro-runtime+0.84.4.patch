@@ -12,25 +12,3 @@ index 534ac87..5773985 100644
    if (global.globalEvalWithSourceUrl) {
      global.globalEvalWithSourceUrl(code, sourceURL);
    } else {
-diff --git a/node_modules/metro-runtime/src/polyfills/require.js b/node_modules/metro-runtime/src/polyfills/require.js
-index c46fb7c..2ba29ab 100644
---- a/node_modules/metro-runtime/src/polyfills/require.js
-+++ b/node_modules/metro-runtime/src/polyfills/require.js
-@@ -334,14 +334,14 @@ function unknownModuleError(id) {
-   }
-   return Error(message);
- }
-+metroRequire.getModules = () => {
-+  return modules;
-+};
- if (__DEV__) {
-   metroRequire.Systrace = {
-     beginEvent: () => {},
-     endEvent: () => {},
-   };
--  metroRequire.getModules = () => {
--    return modules;
--  };
-   var createHotReloadingObject = function () {
-     const hot = {
-       _acceptCallback: null,

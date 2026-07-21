@@ -304,6 +304,7 @@ static int _focusObserverContext;
   }
 }
 
+#if !TARGET_OS_TV
 - (void)handleHoverGesture:(UIHoverGestureRecognizer *)recognizer
 {
   switch (recognizer.state) {
@@ -319,6 +320,7 @@ static int _focusObserverContext;
       break;
   }
 }
+#endif
 
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch
 {

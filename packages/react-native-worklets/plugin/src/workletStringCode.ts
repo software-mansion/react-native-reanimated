@@ -51,7 +51,7 @@ export function buildWorkletString(
     fun.program.body.find((obj) => isFunctionDeclaration(obj)) ||
     fun.program.body.find((obj) => isExpressionStatement(obj));
 
-  assert(draftExpression, '[Reanimated] `draftExpression` is undefined.');
+  assert(draftExpression, '`draftExpression` is undefined.');
 
   const expression = isFunctionDeclaration(draftExpression)
     ? draftExpression
@@ -63,7 +63,7 @@ export function buildWorkletString(
   );
   assert(
     isBlockStatement(expression.body),
-    '[Reanimated] `expression.body` is not a `BlockStatement`'
+    '`expression.body` is not a `BlockStatement`'
   );
 
   const parsedClasses = new Set<string>();
@@ -115,7 +115,7 @@ export function buildWorkletString(
 
   const code = generate(workletFunction).code;
 
-  assert(inputMap, '[Reanimated] `inputMap` is undefined.');
+  assert(inputMap, '`inputMap` is undefined.');
 
   const includeSourceMap = !(isRelease(state) || state.opts.disableSourceMaps);
 
@@ -147,7 +147,7 @@ export function buildWorkletString(
     comments: false,
   });
 
-  assert(transformed, '[Reanimated] `transformed` is null.');
+  assert(transformed, '`transformed` is null.');
 
   let sourceMap;
   if (includeSourceMap) {
@@ -190,7 +190,7 @@ function restoreRecursiveCalls(file: BabelFile, newName: string): void {
 function shouldMockSourceMap() {
   // We don't want to pollute tests with source maps so we mock it
   // for all tests (except one)
-  return process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP === '1';
+  return process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP === '1';
 }
 
 function prependClosure(

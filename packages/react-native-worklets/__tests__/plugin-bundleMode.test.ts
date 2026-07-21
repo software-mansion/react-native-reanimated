@@ -4,6 +4,8 @@ import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
+import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 
 import { countOccurrences } from '../jest/pluginTestUtils';
@@ -69,7 +71,7 @@ function runPlugin(
 
 describe('babel plugin in bundleMode', () => {
   beforeEach(() => {
-    process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION = '1';
+    process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
     capturedFiles.length = 0;
   });
 
@@ -175,6 +177,38 @@ describe('babel plugin in bundleMode', () => {
       expect(files).toHaveLength(1);
       expect(files[0].content).not.toContain('__stackDetails');
       expect(files[0].content).toMatchSnapshot();
+    });
+
+    test('emits a worklet file when cwd has no @babel/preset-typescript reachable', () => {
+      const isolatedDir = fs.mkdtempSync(
+        path.join(os.tmpdir(), 'worklets-isolated-cwd-')
+      );
+      fs.mkdirSync(path.join(isolatedDir, 'node_modules'), {
+        recursive: true,
+      });
+      const previousCwd = process.cwd();
+
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var x = 1;
+        }
+      </script>`;
+
+      expect(() =>
+        require.resolve('@babel/preset-typescript', {
+          paths: [isolatedDir],
+        })
+      ).toThrow();
+
+      try {
+        process.chdir(isolatedDir);
+        const { files } = runPlugin(input);
+        expect(files).toHaveLength(1);
+      } finally {
+        process.chdir(previousCwd);
+        fs.rmSync(isolatedDir, { recursive: true, force: true });
+      }
     });
 
     test('forwards closure variables from source to factory', () => {
