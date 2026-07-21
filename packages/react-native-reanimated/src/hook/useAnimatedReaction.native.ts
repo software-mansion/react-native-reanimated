@@ -1,10 +1,8 @@
 'use strict';
-import { useEffect } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
 
-import { startMapper, stopMapper } from '../core';
 import type { DependencyList } from './commonTypes';
-import { useSharedValue } from './useSharedValue';
+import { useAnimatedReactionBase } from './useAnimatedReactionCommon';
 
 /**
  * Lets you to respond to changes in a [shared
@@ -16,8 +14,7 @@ import { useSharedValue } from './useSharedValue';
  *   react.
  * @param react - A function that reacts to changes in the value returned by the
  *   `prepare` function.
- * @param dependencies - An optional array of dependencies. Only relevant when
- *   using Reanimated without the Babel plugin on the Web.
+ * @param dependencies - An optional array of dependencies.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/useAnimatedReaction
  */
 // @ts-expect-error This overload is required by our API.
@@ -35,32 +32,7 @@ export function useAnimatedReaction<PreparedResult>(
   >,
   dependencies?: DependencyList
 ) {
-  const previous = useSharedValue<PreparedResult | null>(null);
-
   const inputs = Object.values(prepare.__closure ?? {});
 
-  if (dependencies === undefined) {
-    dependencies = [
-      ...Object.values(prepare.__closure ?? {}),
-      ...Object.values(react.__closure ?? {}),
-      prepare.__workletHash,
-      react.__workletHash,
-    ];
-  } else {
-    dependencies.push(prepare.__workletHash, react.__workletHash);
-  }
-
-  useEffect(() => {
-    const fun = () => {
-      'worklet';
-      const input = prepare();
-      react(input, previous.value);
-      previous.value = input;
-    };
-    const mapperId = startMapper(fun, inputs);
-    return () => {
-      stopMapper(mapperId);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, dependencies);
+  useAnimatedReactionBase(prepare, react, dependencies, inputs);
 }

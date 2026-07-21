@@ -1,10 +1,8 @@
 'use strict';
-import { useEffect } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
 
-import { startMapper, stopMapper } from '../core';
 import type { DependencyList } from './commonTypes';
-import { useSharedValue } from './useSharedValue';
+import { useAnimatedReactionBase } from './useAnimatedReactionCommon';
 
 /**
  * Lets you to respond to changes in a [shared
@@ -35,8 +33,6 @@ export function useAnimatedReaction<PreparedResult>(
   >,
   dependencies?: DependencyList
 ) {
-  const previous = useSharedValue<PreparedResult | null>(null);
-
   let inputs = Object.values(prepare.__closure ?? {});
 
   if (!inputs.length && dependencies?.length) {
@@ -44,28 +40,5 @@ export function useAnimatedReaction<PreparedResult>(
     inputs = dependencies;
   }
 
-  if (dependencies === undefined) {
-    dependencies = [
-      ...Object.values(prepare.__closure ?? {}),
-      ...Object.values(react.__closure ?? {}),
-      prepare.__workletHash,
-      react.__workletHash,
-    ];
-  } else {
-    dependencies.push(prepare.__workletHash, react.__workletHash);
-  }
-
-  useEffect(() => {
-    const fun = () => {
-      'worklet';
-      const input = prepare();
-      react(input, previous.value);
-      previous.value = input;
-    };
-    const mapperId = startMapper(fun, inputs);
-    return () => {
-      stopMapper(mapperId);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, dependencies);
+  useAnimatedReactionBase(prepare, react, dependencies, inputs);
 }
