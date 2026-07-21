@@ -139,9 +139,9 @@ export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
     checkSharedValueUsage(initial.value);
   }
 
-  const animatedStyleHandle = useRef<
-    AnimatedStyleHandle<Style | AnimatedProps> | null
-  >(null);
+  const animatedStyleHandle = useRef<AnimatedStyleHandle<
+    Style | AnimatedProps
+  > | null>(null);
 
   if (!animatedStyleHandle.current) {
     const styleUpdaterContainer =
