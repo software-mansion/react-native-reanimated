@@ -1,5 +1,6 @@
 'use strict';
 
+import { logger } from '../../common';
 import { worklet } from '../../jestUtils';
 import { renderUseHandler, runCommonTests } from './useHandler.shared';
 
@@ -42,6 +43,14 @@ describe('useHandler (native)', () => {
   });
 
   describe('dependencies parameter is ignored', () => {
+    beforeEach(() => {
+      jest.spyOn(logger, 'warn').mockImplementation();
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
     test('doDependenciesDiffer is unaffected by changing deps', () => {
       const w = worklet();
       const { result, rerender } = renderUseHandler({ onScroll: w }, [1]);
@@ -58,6 +67,10 @@ describe('useHandler (native)', () => {
       // deps change to completely different values
       rerender({ handlers: { onScroll: w }, deps: ['a', 'b', 'c'] });
       expect(result.current.doDependenciesDiffer).toBe(false);
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        'dependencies should only be used in web implementation.'
+      );
     });
 
     test('doDependenciesDiffer is unaffected by undefined deps', () => {
@@ -72,6 +85,8 @@ describe('useHandler (native)', () => {
       // handler changes - true despite deps staying undefined
       rerender({ handlers: { onScroll: worklet() }, deps: undefined });
       expect(result.current.doDependenciesDiffer).toBe(true);
+
+      expect(logger.warn).not.toHaveBeenCalled();
     });
 
     test('doDependenciesDiffer is unaffected by empty deps', () => {
@@ -86,6 +101,10 @@ describe('useHandler (native)', () => {
       // handler changes - true despite empty deps array
       rerender({ handlers: { onScroll: worklet() }, deps: [] });
       expect(result.current.doDependenciesDiffer).toBe(true);
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        'dependencies should only be used in web implementation.'
+      );
     });
   });
 });

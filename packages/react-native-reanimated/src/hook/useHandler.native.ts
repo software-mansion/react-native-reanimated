@@ -4,6 +4,7 @@ import type { WorkletFunction } from 'react-native-worklets';
 import { makeShareable } from 'react-native-worklets';
 
 import type { UnknownRecord } from '../common';
+import { logger } from '../common';
 import type { DependencyList } from './commonTypes';
 import type { GeneralHandlers, UseHandlerContext } from './useHandlerCommon';
 import {
@@ -28,6 +29,10 @@ export function useHandler<Event extends object, Context extends UnknownRecord>(
   _dependencies?: DependencyList
 ): UseHandlerContext<Context> {
   'use no memo';
+
+  if (__DEV__ && _dependencies !== undefined) {
+    logger.warn('dependencies should only be used in web implementation.');
+  }
 
   const stateRef = useRef<{
     context: Context | undefined;
