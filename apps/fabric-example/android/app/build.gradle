@@ -21,7 +21,10 @@ react {
     //   skip the bundling of the JS bundle and the assets. Default is "debug", "debugOptimized".
     //   If you add flavors like lite, prod, etc. you'll have to list your debuggableVariants.
     // debuggableVariants = ["liteDebug", "liteDebugOptimized", "prodDebug", "prodDebugOptimized"]
-    debuggableVariants = ["debug", "debugOptimized", "debugRuntimeTests"]
+    // releaseRuntimeTests is listed so the plugin skips its single-entry
+    // bundling; the per-library bundles are produced by the
+    // bundleRuntimeTests* tasks below instead.
+    debuggableVariants = ["debug", "debugOptimized", "debugRuntimeTests", "releaseRuntimeTests"]
 
     /* Bundling */
     //   A list containing the node command and its flags. Default is just 'node'.
@@ -114,6 +117,51 @@ android {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
+        releaseRuntimeTests {
+            initWith release
+            matchingFallbacks = ["release"]
+            // The remote reporter connects over cleartext ws://; the RN plugin
+            // fills this placeholder only for the build types it knows about.
+            manifestPlaceholders = [usesCleartextTraffic: "true"]
+            buildConfigField "boolean", "RUNTIME_TESTS", "true"
+        }
+    }
+}
+
+def runtimeTestsLibraries = ["reanimated", "worklets", "self-tests"]
+def runtimeTestsAssetsDir = layout.buildDirectory.dir("generated/runtimeTestsBundles/assets")
+def runtimeTestsResDir = layout.buildDirectory.dir("generated/runtimeTestsBundles/res")
+
+android.sourceSets.releaseRuntimeTests {
+    assets.srcDirs += runtimeTestsAssetsDir.get().asFile
+    res.srcDirs += runtimeTestsResDir.get().asFile
+}
+
+def runtimeTestsBundleTasks = runtimeTestsLibraries.collect { library ->
+    def suffix = library.split("-").collect { it.capitalize() }.join("")
+    tasks.register("bundleRuntimeTests${suffix}", Exec) {
+        workingDir rootDir.parentFile
+        inputs.file(new File(rootDir.parentFile, "index.runtimeTests.${library}.js"))
+        inputs.property("bundleCommand", { commandLine.join(" ") })
+        outputs.file(runtimeTestsAssetsDir.get().file("main.runtimeTests.${library}.jsbundle").asFile)
+        commandLine "node",
+            file("../../../../node_modules/react-native/cli.js").path,
+            "bundle",
+            "--platform", "android",
+            "--dev", "false",
+            "--minify", "false",
+            "--reset-cache",
+            "--entry-file", "index.runtimeTests.${library}.js",
+            "--bundle-output", runtimeTestsAssetsDir.get().file("main.runtimeTests.${library}.jsbundle").asFile.path,
+            "--assets-dest", runtimeTestsResDir.get().asFile.path
+    }
+}
+
+tasks.configureEach { task ->
+    def name = task.name
+    if (name.contains("ReleaseRuntimeTests") &&
+        (name.startsWith("merge") || name.toLowerCase().contains("lint"))) {
+        task.dependsOn(runtimeTestsBundleTasks)
     }
 }
 
