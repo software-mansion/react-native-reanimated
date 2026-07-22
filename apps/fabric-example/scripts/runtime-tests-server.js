@@ -63,7 +63,7 @@ const androidDir = path.join(projectRoot, 'android');
 
 let client = null;
 let androidSerial = null;
-let androidRelaunchesRemaining = 2;
+let androidRelaunchesRemaining = 1;
 let pendingAndroidRelaunch = false;
 let runStartedAt = 0;
 let exitCode = 1;
@@ -567,18 +567,16 @@ async function installAndLaunch(udid) {
   console.log(`[runtime-tests] installing ${app}`);
   await run('xcrun', ['simctl', 'install', udid, app]);
 
-  if (!IS_RELEASE) {
-    await run('xcrun', [
-      'simctl',
-      'spawn',
-      udid,
-      'defaults',
-      'write',
-      BUNDLE_ID,
-      'RCT_jsLocation',
-      `localhost:${METRO_PORT}`,
-    ]);
-  }
+  await run('xcrun', [
+    'simctl',
+    'spawn',
+    udid,
+    'defaults',
+    'write',
+    BUNDLE_ID,
+    'RCT_jsLocation',
+    `localhost:${METRO_PORT}`,
+  ]);
 
   await run('xcrun', ['simctl', 'terminate', udid, BUNDLE_ID]).catch(() => {});
   console.log(
@@ -694,10 +692,10 @@ async function buildAndroidApp(serial) {
   console.log(
     `[runtime-tests] building with gradle (assemble${CONFIGURATION}${abi ? `, ABI ${abi}` : ''})… this can take a while`
   );
-  const gradleArgs = [
-    `assemble${CONFIGURATION}`,
-    `-PreactNativeDevServerPort=${METRO_PORT}`,
-  ];
+  const gradleArgs = [`assemble${CONFIGURATION}`];
+  if (!IS_RELEASE) {
+    gradleArgs.push(`-PreactNativeDevServerPort=${METRO_PORT}`);
+  }
   if (abi) {
     gradleArgs.push(`-PreactNativeArchitectures=${abi}`);
   }
@@ -721,7 +719,7 @@ async function installAndLaunchAndroid(serial) {
   console.log(`[runtime-tests] installing ${apk}`);
   await adb(serial, ['install', '-r', apk]);
 
-  for (const port of IS_RELEASE ? [PORT] : [METRO_PORT, PORT]) {
+  for (const port of [METRO_PORT, PORT]) {
     await adb(serial, ['reverse', `tcp:${port}`, `tcp:${port}`]).catch(
       () => {}
     );
