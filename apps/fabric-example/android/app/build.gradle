@@ -133,31 +133,34 @@ android.sourceSets.releaseRuntimeTests {
     assets.srcDirs += runtimeTestsAssetsDir.get().asFile
 }
 
-def hermesOs = org.gradle.internal.os.OperatingSystem.current()
-def hermesBin = hermesOs.isMacOsX() ? "osx-bin" : (hermesOs.isWindows() ? "win64-bin" : "linux64-bin")
-def hermescFile = file("../../../../node_modules/hermes-compiler/hermesc/${hermesBin}/hermesc")
+def reactExtension = project.extensions.getByName("react")
+def reactRootDir = reactExtension.root.get().asFile
+def runtimeTestsBundleCommand = reactExtension.nodeExecutableAndArgs.get() + [reactExtension.cliFile.get().asFile.path]
+def hermescCommand = com.facebook.react.utils.PathUtils.detectOSAwareHermesCommand(
+    reactRootDir, reactExtension.hermesCommand.get())
 
 def runtimeTestsBundleTasks = runtimeTestsLibraries.collect { library ->
     def suffix = library.split("-").collect { it.capitalize() }.join("")
     def jsBundle = runtimeTestsJsDir.get().file("main.runtimeTests.${library}.jsbundle").asFile
     def hbcBundle = runtimeTestsAssetsDir.get().file("main.runtimeTests.${library}.jsbundle").asFile
     def bundleTask = tasks.register("bundleRuntimeTests${suffix}", Exec) {
-        workingDir rootDir.parentFile
+        workingDir reactRootDir
         doFirst { jsBundle.parentFile.mkdirs() }
-        commandLine "node",
-            file("../../../../node_modules/react-native/cli.js").path,
+        commandLine(runtimeTestsBundleCommand + [
             "bundle",
             "--platform", "android",
             "--dev", "false",
             "--minify", "false",
             "--reset-cache",
             "--entry-file", "index.runtimeTests.${library}.js",
-            "--bundle-output", jsBundle.path
+            "--bundle-output", jsBundle.path,
+        ])
     }
     tasks.register("compileRuntimeTests${suffix}", Exec) {
         dependsOn(bundleTask)
+        workingDir reactRootDir
         doFirst { hbcBundle.parentFile.mkdirs() }
-        commandLine hermescFile.path, "-emit-binary", "-O", "-out", hbcBundle.path, jsBundle.path
+        commandLine(hermescCommand, "-emit-binary", "-O", "-out", hbcBundle.path, jsBundle.path)
     }
 }
 
