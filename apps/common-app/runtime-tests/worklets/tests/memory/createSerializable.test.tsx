@@ -620,9 +620,18 @@ describe('Test createSerializable', () => {
         }
         const inaccessibleObject = new Inaccessible();
 
-        await expect(() => {
-          createSerializable(inaccessibleObject);
-        }).toThrow('Cannot copy value of type `Inaccessible`.');
+        if (__DEV__) {
+          await expect(() => {
+            createSerializable(inaccessibleObject);
+          }).toThrow('Cannot copy value of type `Inaccessible`.');
+        } else {
+          scheduleOnTarget(() => {
+            'worklet';
+            scheduleOnRN(callbackPass, inaccessibleObject === undefined);
+          });
+          await waitForNotification(PASS_NOTIFICATION);
+          expect(result).toBe(true);
+        }
       });
 
       test('createSerializableRemoteNamedFunctionSyncCall', async () => {
