@@ -20,7 +20,5 @@ export function useHandler<Event extends object, Context extends UnknownRecord>(
   handlers: GeneralHandlers<Event, Context>,
   _dependencies?: DependencyList
 ): UseHandlerContext<Context> {
-  // The Babel plugin is always enabled outside of the web, so handlers are
-  // always compared instead of the dependencies.
   return useHandlerBase(handlers, undefined, true);
 }

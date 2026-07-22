@@ -20,7 +20,8 @@ function isBabelPluginEnabled(handlers: UnknownRecord): boolean {
  * Lets you find out whether the event handler dependencies have changed.
  *
  * @param handlers - An object of event handlers.
- * @param dependencies - An optional array of dependencies.
+ * @param dependencies - An optional array of dependencies. Only relevant when
+ *   using Reanimated without the Babel plugin on the Web.
  * @returns An object containing a boolean indicating whether the dependencies
  *   have changed.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/useHandler
