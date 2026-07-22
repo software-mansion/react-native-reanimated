@@ -62,9 +62,6 @@ const iosDir = path.join(projectRoot, 'ios');
 const androidDir = path.join(projectRoot, 'android');
 
 let client = null;
-let androidSerial = null;
-let androidRelaunchesRemaining = 1;
-let pendingAndroidRelaunch = false;
 let runStartedAt = 0;
 let exitCode = 1;
 let runFinished = false;
@@ -135,21 +132,6 @@ wss.on('connection', (socket) => {
   });
 
   socket.on('close', () => {
-    if (pendingAndroidRelaunch) {
-      pendingAndroidRelaunch = false;
-      client = null;
-      connectTimer = setTimeout(() => {
-        console.error(
-          `[runtime-tests] no device reconnected within ${CONNECT_TIMEOUT_MS / 1000}s after relaunch, exiting`
-        );
-        shutdown(1);
-      }, CONNECT_TIMEOUT_MS);
-      launchAndroidActivity(androidSerial).catch((error) => {
-        console.error(`[runtime-tests] relaunch failed: ${error.message}`);
-        shutdown(1);
-      });
-      return;
-    }
     if (!runFinished && runStartedAt > 0) {
       console.error('');
       console.error('========================================');
@@ -210,19 +192,6 @@ function onHello(msg) {
     console.error(
       `[runtime-tests] the app is running the ${deviceLibrary || 'unknown'} entry point but this server expects ${LIBRARY}.`
     );
-    if (
-      PLATFORM === 'android' &&
-      androidSerial &&
-      androidRelaunchesRemaining > 0
-    ) {
-      androidRelaunchesRemaining--;
-      pendingAndroidRelaunch = true;
-      console.error(
-        `[runtime-tests] relaunching the app (${androidRelaunchesRemaining} retries left)`
-      );
-      client.close();
-      return;
-    }
     console.error(
       '[runtime-tests] Relaunch via --launch (which sets RUNTIME_TESTS_LIBRARY) or restart the app with the right entry point.'
     );
@@ -725,10 +694,6 @@ async function installAndLaunchAndroid(serial) {
     );
   }
 
-  await launchAndroidActivity(serial);
-}
-
-async function launchAndroidActivity(serial) {
   await adb(serial, ['shell', 'am', 'force-stop', ANDROID_APP_ID]).catch(
     () => {}
   );
@@ -739,6 +704,9 @@ async function launchAndroidActivity(serial) {
     'shell',
     'am',
     'start',
+    // A force-stopped app can otherwise be recreated from the stale recents
+    // task record, whose base intent carries no extras.
+    '--activity-clear-task',
     '-n',
     `${ANDROID_APP_ID}/.MainActivity`,
     '--es',
@@ -754,7 +722,6 @@ if (SHOULD_LAUNCH) {
     }
     if (PLATFORM === 'android') {
       const serial = await resolveAndroidDevice();
-      androidSerial = serial;
       if (!SKIP_BUILD) {
         await buildAndroidApp(serial);
       }
