@@ -126,19 +126,24 @@ android {
 }
 
 def runtimeTestsLibraries = ["reanimated", "worklets", "self-tests"]
+def runtimeTestsJsDir = layout.buildDirectory.dir("generated/runtimeTestsBundles/js")
 def runtimeTestsAssetsDir = layout.buildDirectory.dir("generated/runtimeTestsBundles/assets")
-def runtimeTestsResDir = layout.buildDirectory.dir("generated/runtimeTestsBundles/res")
 
 android.sourceSets.releaseRuntimeTests {
     assets.srcDirs += runtimeTestsAssetsDir.get().asFile
-    res.srcDirs += runtimeTestsResDir.get().asFile
 }
+
+def hermesOs = org.gradle.internal.os.OperatingSystem.current()
+def hermesBin = hermesOs.isMacOsX() ? "osx-bin" : (hermesOs.isWindows() ? "win64-bin" : "linux64-bin")
+def hermescFile = file("../../../../node_modules/hermes-compiler/hermesc/${hermesBin}/hermesc")
 
 def runtimeTestsBundleTasks = runtimeTestsLibraries.collect { library ->
     def suffix = library.split("-").collect { it.capitalize() }.join("")
-    def bundleFile = runtimeTestsAssetsDir.get().file("main.runtimeTests.${library}.jsbundle").asFile
-    tasks.register("bundleRuntimeTests${suffix}", Exec) {
+    def jsBundle = runtimeTestsJsDir.get().file("main.runtimeTests.${library}.jsbundle").asFile
+    def hbcBundle = runtimeTestsAssetsDir.get().file("main.runtimeTests.${library}.jsbundle").asFile
+    def bundleTask = tasks.register("bundleRuntimeTests${suffix}", Exec) {
         workingDir rootDir.parentFile
+        doFirst { jsBundle.parentFile.mkdirs() }
         commandLine "node",
             file("../../../../node_modules/react-native/cli.js").path,
             "bundle",
@@ -147,14 +152,17 @@ def runtimeTestsBundleTasks = runtimeTestsLibraries.collect { library ->
             "--minify", "false",
             "--reset-cache",
             "--entry-file", "index.runtimeTests.${library}.js",
-            "--bundle-output", bundleFile.path,
-            "--assets-dest", runtimeTestsResDir.get().asFile.path
+            "--bundle-output", jsBundle.path
+    }
+    tasks.register("compileRuntimeTests${suffix}", Exec) {
+        dependsOn(bundleTask)
+        doFirst { hbcBundle.parentFile.mkdirs() }
+        commandLine hermescFile.path, "-emit-binary", "-O", "-out", hbcBundle.path, jsBundle.path
     }
 }
 
 tasks.configureEach { task ->
-    if (task.name == "mergeReleaseRuntimeTestsAssets" ||
-        task.name == "mergeReleaseRuntimeTestsResources") {
+    if (task.name == "mergeReleaseRuntimeTestsAssets") {
         task.dependsOn(runtimeTestsBundleTasks)
     }
 }

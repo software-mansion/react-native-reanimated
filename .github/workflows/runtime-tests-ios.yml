@@ -7,6 +7,7 @@ on:
       - .github/workflows/runtime-tests-ios.yml
       - apps/common-app/runtime-tests/**
       - apps/fabric-example/scripts/runtime-tests-server.js
+      - apps/fabric-example/ios/**
   workflow_call:
     inputs:
       bundleMode:
