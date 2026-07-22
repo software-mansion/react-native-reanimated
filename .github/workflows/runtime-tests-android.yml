@@ -14,12 +14,20 @@ on:
         required: false
         type: boolean
         default: false
+      configuration:
+        required: false
+        type: string
+        default: DebugRuntimeTests
   workflow_dispatch:
     inputs:
       bundleMode:
         required: false
         type: boolean
         default: false
+      configuration:
+        required: false
+        type: string
+        default: DebugRuntimeTests
 
 jobs:
   runtime-tests-android:
@@ -37,8 +45,9 @@ jobs:
     env:
       WORKING_DIRECTORY: apps/fabric-example
       REANIMATED_DIR: packages/react-native-reanimated
+      CONFIGURATION: ${{ inputs.configuration || 'DebugRuntimeTests' }}
     concurrency:
-      group: runtime-tests-android-${{ github.ref }}-${{ matrix.bundleMode }}
+      group: runtime-tests-android-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'DebugRuntimeTests' }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -69,9 +78,9 @@ jobs:
         working-directory: ${{ env.REANIMATED_DIR }}
         run: yarn build
 
-      - name: Build app (debugRuntimeTests)
+      - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}/android
-        run: ./gradlew assembleDebugRuntimeTests --build-cache -PreactNativeArchitectures=x86_64
+        run: ./gradlew "assemble$CONFIGURATION" --build-cache -PreactNativeArchitectures=x86_64
 
       - name: AVD cache
         id: avd-cache
@@ -103,7 +112,7 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: false
           working-directory: apps/fabric-example
-          script: node scripts/runtime-tests-server.js --launch --platform android --library self-tests --skip-build --connect-timeout 900 --idle-timeout 900 || node scripts/runtime-tests-server.js --launch --platform android --library self-tests --skip-build --connect-timeout 900 --idle-timeout 900
+          script: node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library self-tests --skip-build --connect-timeout 900 --idle-timeout 900 || node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library self-tests --skip-build --connect-timeout 900 --idle-timeout 900
 
       - name: Verify CI catches failing tests
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
@@ -114,7 +123,7 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: false
           working-directory: apps/fabric-example
-          script: if node scripts/runtime-tests-server.js --launch --platform android --library self-tests --skip-build --connect-timeout 900 --idle-timeout 900 --only "intentional failures"; then echo "A failing suite did not fail the runner" && exit 1; else echo "Failing tests correctly failed the runner"; fi
+          script: if node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library self-tests --skip-build --connect-timeout 900 --idle-timeout 900 --only "intentional failures"; then echo "A failing suite did not fail the runner" && exit 1; else echo "Failing tests correctly failed the runner"; fi
 
       - name: Run Worklets runtime tests on the emulator (retries once)
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
@@ -125,7 +134,7 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: false
           working-directory: apps/fabric-example
-          script: node scripts/runtime-tests-server.js --launch --platform android --library worklets --skip-build --connect-timeout 900 --idle-timeout 900 ${{ matrix.bundleMode && '--include "bundle mode core"' || '' }} || node scripts/runtime-tests-server.js --launch --platform android --library worklets --skip-build --connect-timeout 900 --idle-timeout 900 ${{ matrix.bundleMode && '--include "bundle mode core"' || '' }}
+          script: node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library worklets --skip-build --connect-timeout 900 --idle-timeout 900 ${{ matrix.bundleMode && '--include "bundle mode core"' || '' }} || node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library worklets --skip-build --connect-timeout 900 --idle-timeout 900 ${{ matrix.bundleMode && '--include "bundle mode core"' || '' }}
 
       - name: Run Reanimated runtime tests on the emulator (retries once)
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
@@ -136,4 +145,4 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: false
           working-directory: apps/fabric-example
-          script: node scripts/runtime-tests-server.js --launch --platform android --library reanimated --skip-build --connect-timeout 900 --idle-timeout 900 || node scripts/runtime-tests-server.js --launch --platform android --library reanimated --skip-build --connect-timeout 900 --idle-timeout 900
+          script: node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library reanimated --skip-build --connect-timeout 900 --idle-timeout 900 || node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library reanimated --skip-build --connect-timeout 900 --idle-timeout 900

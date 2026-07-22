@@ -9,6 +9,8 @@ exports[`babel plugin in bundleMode nested worklets extracts each nested worklet
 exports[`babel plugin in bundleMode nested worklets extracts each nested worklet into its own file 2`] = `
 "export default (function testJs2Factory({}) {
   const testJs2 = function () {
+    "use no memo";
+
     const bar = require("react-native-worklets/.worklets/5480525138333.js").default({});
     return bar();
   };
@@ -33,6 +35,8 @@ exports[`babel plugin in bundleMode source replacement still captures closure ev
   x
 }) {
   const foo = function () {
+    "use no memo";
+
     return x;
   };
   foo.__closure = {
@@ -49,6 +53,8 @@ exports[`babel plugin in bundleMode worklet file emission does not emit init dat
 exports[`babel plugin in bundleMode worklet file emission does not emit init data 2`] = `
 "export default (function foo_testJs1Factory({}) {
   const foo = function () {
+    "use no memo";
+
     var x = 1;
   };
   foo.__closure = {};
@@ -61,6 +67,8 @@ exports[`babel plugin in bundleMode worklet file emission does not emit init dat
 exports[`babel plugin in bundleMode worklet file emission does not emit stack-trace machinery 1`] = `
 "export default (function foo_testJs1Factory({}) {
   const foo = function () {
+    "use no memo";
+
     var x = 1;
   };
   foo.__closure = {};
@@ -73,6 +81,8 @@ exports[`babel plugin in bundleMode worklet file emission does not emit stack-tr
 exports[`babel plugin in bundleMode worklet file emission does not rebase relative requires from non-workletizable files 1`] = `
 "export default (function baz_fileTs1Factory({}) {
   const baz = function () {
+    "use no memo";
+
     const helper = require('./helper');
     return helper.foo();
   };
@@ -98,6 +108,8 @@ exports[`babel plugin in bundleMode worklet file emission forwards closure varia
   b
 }) {
   const foo = function () {
+    "use no memo";
+
     return a + b;
   };
   foo.__closure = {
@@ -119,6 +131,8 @@ exports[`babel plugin in bundleMode worklet file emission preserves workletizabl
 "import { foo } from "some-library";
 export default (function bar_testJs1Factory({}) {
   const bar = function () {
+    "use no memo";
+
     return foo();
   };
   bar.__closure = {};
@@ -131,6 +145,8 @@ export default (function bar_testJs1Factory({}) {
 exports[`babel plugin in bundleMode worklet file emission rebases relative requires inside the worklet body against the worklets directory 1`] = `
 "export default (function baz_fileJs1Factory({}) {
   const baz = function () {
+    "use no memo";
+
     const helper = require("../../some-library/helper");
     return helper.foo();
   };
@@ -144,6 +160,8 @@ exports[`babel plugin in bundleMode worklet file emission rebases relative requi
 exports[`babel plugin in bundleMode worklet file emission written file content has factory shape 1`] = `
 "export default (function foo_testJs1Factory({}) {
   const foo = function () {
+    "use no memo";
+
     var x = 1;
     return x;
   };

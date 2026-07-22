@@ -1,6 +1,5 @@
 import type { NodePath } from '@babel/core';
 import type {
-  BlockStatement,
   ClassBody,
   ObjectExpression,
   ObjectMethod,
@@ -22,7 +21,7 @@ import {
 } from '@babel/types';
 
 import { contextObjectMarker } from './contextObject';
-import { addDirective, replaceImplicitReturnWithBlock } from './directives';
+import { addWorkletDirectivesToPath } from './directives';
 import type { WorkletsPluginPass } from './types';
 import {
   isWorkletizableFunctionPath,
@@ -79,10 +78,7 @@ function processWorkletizableEntity(
   state: WorkletsPluginPass
 ) {
   if (isWorkletizableFunctionPath(nodePath)) {
-    if (nodePath.isArrowFunctionExpression()) {
-      replaceImplicitReturnWithBlock(nodePath.node);
-    }
-    addDirective(nodePath.node.body as BlockStatement, 'worklet');
+    addWorkletDirectivesToPath(nodePath);
   } else if (isWorkletizableObjectPath(nodePath)) {
     if (isImplicitContextObject(nodePath)) {
       appendWorkletContextObjectMarker(nodePath.node);
@@ -123,7 +119,7 @@ function processWorkletAggregator(
   const properties = objectPath.get('properties');
   properties.forEach((property) => {
     if (property.isObjectMethod()) {
-      addDirective(property.node.body, 'worklet');
+      addWorkletDirectivesToPath(property);
     } else if (property.isObjectProperty()) {
       const valuePath = property.get('value');
       processWorkletizableEntity(valuePath, state);

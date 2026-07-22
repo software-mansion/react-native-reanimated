@@ -1,6 +1,8 @@
 import '../plugin/src/jestMatchers';
 
+import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
+import { describe, expect, test } from '@jest/globals';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
 
@@ -11,7 +13,7 @@ type CapturedFile = { path: string; content: string };
 const capturedFiles: CapturedFile[] = [];
 
 jest.mock('fs', () => {
-  const actual = jest.requireActual('fs');
+  const actual: object = jest.requireActual('fs');
   return {
     ...actual,
     writeFileSync: (filepath: string, content: string) => {
@@ -35,15 +37,18 @@ type RunResult = {
 function runPlugin(
   input: string,
   pluginOpts: PluginOptions,
-  filename: string = MOCK_LOCATION
+  transformOpts: TransformOptions = {}
 ): RunResult {
+  capturedFiles.length = 0;
   const strippedInput = input.replace(/<\/?script[^>]*>/g, '');
   const transformed = transformSync(strippedInput, {
-    filename,
+    filename: MOCK_LOCATION,
     compact: false,
     babelrc: false,
     configFile: false,
+    ...transformOpts,
     plugins: [
+      ...(transformOpts.plugins ?? []),
       [
         plugin,
         {
@@ -221,31 +226,11 @@ describe.each([
         'worklet';
         return 1;
       }
-    </script>`.replace(/<\/?script[^>]*>/g, '');
+    </script>`;
 
     function transformWithEnvName(envName: string): string {
-      capturedFiles.length = 0;
-      const transformed = transformSync(sampleInput, {
-        filename: MOCK_LOCATION,
-        compact: false,
-        babelrc: false,
-        configFile: false,
-        envName,
-        plugins: [
-          [
-            plugin,
-            {
-              bundleMode,
-              disableSourceMaps: true,
-              relativeSourceLocation: true,
-            },
-          ],
-        ],
-      });
-      assert(transformed);
-      return bundleMode
-        ? capturedFiles.map((f) => f.content).join('\n')
-        : (transformed.code ?? '');
+      const result = runPlugin(sampleInput, { bundleMode }, { envName });
+      return workletText(result, bundleMode);
     }
 
     test('envName "production" is detected as release', () => {
@@ -256,6 +241,30 @@ describe.each([
 
     test('envName "development" is not detected as release', () => {
       expect(transformWithEnvName('development')).toContain('__pluginVersion');
+    });
+  });
+
+  describe('for react-compiler', () => {
+    test('prevents outlining from worklet functions', () => {
+      const input = html`<script>
+        const TestComponent = ({ number }) => {
+          const keyToIndex = useDerivedValue(() => [1, 2, 3].map(() => null));
+
+          return null;
+        };
+      </script>`;
+
+      const result = runPlugin(
+        input,
+        { bundleMode },
+        { envName: 'development', plugins: ['babel-plugin-react-compiler'] }
+      );
+
+      const notOutlinedFunction = '.map(() => null);';
+      const output = bundleMode ? result.files[0].content : result.code;
+
+      expect(output).toMatch(notOutlinedFunction);
+      expect(output).toMatchSnapshot();
     });
   });
 });
