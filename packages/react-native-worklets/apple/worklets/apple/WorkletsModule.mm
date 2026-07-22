@@ -13,7 +13,6 @@
 #import <React/RCTCallInvoker.h>
 
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-#import <FBReactNativeSpec/FBReactNativeSpec.h>
 #import <React/RCTNetworking.h>
 #import <ReactCommon/RCTTurboModule.h>
 #import <worklets/apple/Networking/WorkletsNetworking.h>
