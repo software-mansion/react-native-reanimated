@@ -139,9 +139,6 @@ def runtimeTestsBundleTasks = runtimeTestsLibraries.collect { library ->
     def bundleFile = runtimeTestsAssetsDir.get().file("main.runtimeTests.${library}.jsbundle").asFile
     tasks.register("bundleRuntimeTests${suffix}", Exec) {
         workingDir rootDir.parentFile
-        outputs.file(bundleFile)
-        // The bundle depends on the whole JS graph, not just the entry file.
-        outputs.upToDateWhen { false }
         commandLine "node",
             file("../../../../node_modules/react-native/cli.js").path,
             "bundle",
@@ -156,9 +153,8 @@ def runtimeTestsBundleTasks = runtimeTestsLibraries.collect { library ->
 }
 
 tasks.configureEach { task ->
-    def name = task.name
-    if (name.contains("ReleaseRuntimeTests") &&
-        (name.startsWith("merge") || name.toLowerCase().contains("lint"))) {
+    if (task.name == "mergeReleaseRuntimeTestsAssets" ||
+        task.name == "mergeReleaseRuntimeTestsResources") {
         task.dependsOn(runtimeTestsBundleTasks)
     }
 }
