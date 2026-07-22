@@ -28,5 +28,5 @@ export function useComposedEventHandler<
   Event extends object,
   Context extends Record<string, unknown>,
 >(handlers: (EventHandlerProcessed<Event, Context> | null)[]) {
-  return useComposedEventHandlerBase(handlers, handlers);
+  return useComposedEventHandlerBase(handlers, undefined);
 }
