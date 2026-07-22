@@ -11,7 +11,7 @@ import type { EventHandlerProcessed } from './useEvent';
  * @param handlers - An array of event handlers created using
  *   [useEvent](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useEvent)
  *   hook.
- * @returns An object you need to pass to a coresponding "onEvent" prop on an
+ * @returns An object you need to pass to a corresponding "onEvent" prop on an
  *   `Animated` component (for example handlers responsible for `onScroll` event
  *   go to `onScroll` prop).
  * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/useComposedEventHandler
