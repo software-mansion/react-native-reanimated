@@ -141,9 +141,10 @@ def runtimeTestsBundleTasks = runtimeTestsLibraries.collect { library ->
     def suffix = library.split("-").collect { it.capitalize() }.join("")
     tasks.register("bundleRuntimeTests${suffix}", Exec) {
         workingDir rootDir.parentFile
-        inputs.file(new File(rootDir.parentFile, "index.runtimeTests.${library}.js"))
-        inputs.property("bundleCommand", { commandLine.join(" ") })
         outputs.file(runtimeTestsAssetsDir.get().file("main.runtimeTests.${library}.jsbundle").asFile)
+        // The bundle depends on the whole JS graph, not just the entry file,
+        // so up-to-date checks can never be sound here.
+        outputs.upToDateWhen { false }
         commandLine "node",
             file("../../../../node_modules/react-native/cli.js").path,
             "bundle",
