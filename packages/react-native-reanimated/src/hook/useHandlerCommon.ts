@@ -1,10 +1,9 @@
 'use strict';
-import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
-import { isWorkletFunction, makeShareable } from 'react-native-worklets';
+import { isWorkletFunction } from 'react-native-worklets';
 
 import type { UnknownRecord } from '../common';
-import type { DependencyList, ReanimatedEvent } from './commonTypes';
+import type { ReanimatedEvent } from './commonTypes';
 
 interface GeneralHandler<
   TEvent extends object,
@@ -23,7 +22,7 @@ export interface UseHandlerContext<TContext extends UnknownRecord> {
   doDependenciesDiffer: boolean;
 }
 
-function ensureWorkletHandlers(handlers: UnknownRecord) {
+export function ensureWorkletHandlers(handlers: UnknownRecord) {
   const nonWorkletNames = Object.entries(handlers).reduce<string[]>(
     (acc, [name, handler]) => {
       if (!isWorkletFunction(handler)) acc.push(name);
@@ -75,7 +74,7 @@ function areWorkletsEqual(
   );
 }
 
-function areWorkletHandlersEqual(
+export function areWorkletHandlersEqual(
   next: Partial<Record<string, WorkletFunction>> | undefined,
   prev: Partial<Record<string, WorkletFunction>> | undefined
 ) {
@@ -102,7 +101,7 @@ function areWorkletHandlersEqual(
   });
 }
 
-function areDependenciesEqual(
+export function areDependenciesEqual(
   next: Array<unknown> | undefined,
   prev: Array<unknown> | undefined
 ): boolean {
@@ -111,63 +110,4 @@ function areDependenciesEqual(
   }
 
   return next.every((value, index) => objectIs(value, prev[index]));
-}
-
-export function useHandlerBase<
-  Event extends object,
-  Context extends UnknownRecord,
->(
-  handlers: GeneralHandlers<Event, Context>,
-  dependencies: DependencyList | undefined,
-  isBabelPluginEnabled: boolean
-): UseHandlerContext<Context> {
-  'use no memo';
-
-  const stateRef = useRef<{
-    context: Context | undefined;
-    prevHandlers: GeneralHandlers<Event, Context> | undefined;
-    prevDependencies: DependencyList;
-  } | null>(null);
-
-  if (stateRef.current === null) {
-    stateRef.current = {
-      context: undefined,
-      prevHandlers: undefined,
-      prevDependencies: [],
-    };
-  }
-
-  const state = stateRef.current;
-  let doDependenciesDiffer = true;
-
-  if (isBabelPluginEnabled) {
-    if (__DEV__) {
-      ensureWorkletHandlers(handlers);
-    }
-    doDependenciesDiffer = !areWorkletHandlersEqual(
-      handlers as Record<string, WorkletFunction>,
-      state.prevHandlers as Record<string, WorkletFunction>
-    );
-  } else if (dependencies) {
-    doDependenciesDiffer = !areDependenciesEqual(
-      dependencies,
-      state.prevDependencies
-    );
-  }
-
-  // Write after commit to avoid corruption from interrupted renders (in case of concurrent mode).
-  useEffect(() => {
-    state.prevHandlers = handlers;
-    state.prevDependencies = dependencies;
-  });
-
-  return {
-    get context() {
-      if (state.context === undefined) {
-        state.context = makeShareable({} as Context);
-      }
-      return state.context;
-    },
-    doDependenciesDiffer,
-  };
 }

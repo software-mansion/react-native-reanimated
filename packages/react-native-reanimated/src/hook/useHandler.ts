@@ -1,10 +1,16 @@
 'use strict';
-import { isWorkletFunction } from 'react-native-worklets';
+import { useEffect, useRef } from 'react';
+import type { WorkletFunction } from 'react-native-worklets';
+import { isWorkletFunction, makeShareable } from 'react-native-worklets';
 
 import type { UnknownRecord } from '../common';
 import type { DependencyList } from './commonTypes';
 import type { GeneralHandlers, UseHandlerContext } from './useHandlerCommon';
-import { useHandlerBase } from './useHandlerCommon';
+import {
+  areDependenciesEqual,
+  areWorkletHandlersEqual,
+  ensureWorkletHandlers,
+} from './useHandlerCommon';
 
 export type { UseHandlerContext } from './useHandlerCommon';
 
@@ -30,5 +36,53 @@ export function useHandler<Event extends object, Context extends UnknownRecord>(
   handlers: GeneralHandlers<Event, Context>,
   dependencies?: DependencyList
 ): UseHandlerContext<Context> {
-  return useHandlerBase(handlers, dependencies, isBabelPluginEnabled(handlers));
+  'use no memo';
+
+  const stateRef = useRef<{
+    context: Context | undefined;
+    prevHandlers: GeneralHandlers<Event, Context> | undefined;
+    prevDependencies: DependencyList;
+  } | null>(null);
+
+  if (stateRef.current === null) {
+    stateRef.current = {
+      context: undefined,
+      prevHandlers: undefined,
+      prevDependencies: [],
+    };
+  }
+
+  const state = stateRef.current;
+  let doDependenciesDiffer = true;
+
+  if (isBabelPluginEnabled(handlers)) {
+    if (__DEV__) {
+      ensureWorkletHandlers(handlers);
+    }
+    doDependenciesDiffer = !areWorkletHandlersEqual(
+      handlers as Record<string, WorkletFunction>,
+      state.prevHandlers as Record<string, WorkletFunction>
+    );
+  } else if (dependencies) {
+    doDependenciesDiffer = !areDependenciesEqual(
+      dependencies,
+      state.prevDependencies
+    );
+  }
+
+  // Write after commit to avoid corruption from interrupted renders (in case of concurrent mode).
+  useEffect(() => {
+    state.prevHandlers = handlers;
+    state.prevDependencies = dependencies;
+  });
+
+  return {
+    get context() {
+      if (state.context === undefined) {
+        state.context = makeShareable({} as Context);
+      }
+      return state.context;
+    },
+    doDependenciesDiffer,
+  };
 }
