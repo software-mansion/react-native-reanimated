@@ -22,8 +22,7 @@ react {
     //   If you add flavors like lite, prod, etc. you'll have to list your debuggableVariants.
     // debuggableVariants = ["liteDebug", "liteDebugOptimized", "prodDebug", "prodDebugOptimized"]
     // releaseRuntimeTests is listed so the plugin skips its single-entry
-    // bundling; the per-library bundles are produced by the
-    // bundleRuntimeTests* tasks below instead.
+    // bundling; the bundleRuntimeTests* tasks bundle per library instead.
     debuggableVariants = ["debug", "debugOptimized", "debugRuntimeTests", "releaseRuntimeTests"]
 
     /* Bundling */
@@ -120,8 +119,6 @@ android {
         releaseRuntimeTests {
             initWith release
             matchingFallbacks = ["release"]
-            // The remote reporter connects over cleartext ws://; the RN plugin
-            // fills this placeholder only for the build types it knows about.
             manifestPlaceholders = [usesCleartextTraffic: "true"]
             buildConfigField "boolean", "RUNTIME_TESTS", "true"
         }
@@ -139,11 +136,11 @@ android.sourceSets.releaseRuntimeTests {
 
 def runtimeTestsBundleTasks = runtimeTestsLibraries.collect { library ->
     def suffix = library.split("-").collect { it.capitalize() }.join("")
+    def bundleFile = runtimeTestsAssetsDir.get().file("main.runtimeTests.${library}.jsbundle").asFile
     tasks.register("bundleRuntimeTests${suffix}", Exec) {
         workingDir rootDir.parentFile
-        outputs.file(runtimeTestsAssetsDir.get().file("main.runtimeTests.${library}.jsbundle").asFile)
-        // The bundle depends on the whole JS graph, not just the entry file,
-        // so up-to-date checks can never be sound here.
+        outputs.file(bundleFile)
+        // The bundle depends on the whole JS graph, not just the entry file.
         outputs.upToDateWhen { false }
         commandLine "node",
             file("../../../../node_modules/react-native/cli.js").path,
@@ -153,7 +150,7 @@ def runtimeTestsBundleTasks = runtimeTestsLibraries.collect { library ->
             "--minify", "false",
             "--reset-cache",
             "--entry-file", "index.runtimeTests.${library}.js",
-            "--bundle-output", runtimeTestsAssetsDir.get().file("main.runtimeTests.${library}.jsbundle").asFile.path,
+            "--bundle-output", bundleFile.path,
             "--assets-dest", runtimeTestsResDir.get().asFile.path
     }
 }

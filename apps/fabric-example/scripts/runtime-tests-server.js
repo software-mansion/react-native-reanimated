@@ -18,13 +18,10 @@ const args = parseArgs(process.argv.slice(2));
 const LIBRARY = String(args.library ?? '').toLowerCase();
 const PLATFORM = String(args.platform ?? 'ios').toLowerCase();
 const METRO_PORT = Number(args['metro-port'] ?? 8081);
-const ARG_CONFIGURATION = args.configuration ?? 'DebugRuntimeTests';
-// Release builds embed the JS bundles: no Metro, and the app falls back to
-// ws://localhost:8082 since there is no bundle URL to derive a port from.
-const IS_RELEASE_CONFIGURATION = ARG_CONFIGURATION.startsWith('Release');
-const PORT = Number(
-  args.port ?? (IS_RELEASE_CONFIGURATION ? 8082 : METRO_PORT + 1)
-);
+const CONFIGURATION = args.configuration ?? 'DebugRuntimeTests';
+const IS_RELEASE = CONFIGURATION.startsWith('Release');
+// Release builds have no Metro; the app then reports to port 8082.
+const PORT = Number(args.port ?? (IS_RELEASE ? 8082 : METRO_PORT + 1));
 const ONLY = args.only
   ? args.only
       .split(',')
@@ -39,8 +36,6 @@ const SIMULATOR = args.simulator ?? 'iPhone 17';
 const UDID = args.udid ?? null;
 const SERIAL = args.serial ?? null;
 const AVD = args.avd ?? null;
-const CONFIGURATION = ARG_CONFIGURATION;
-const IS_RELEASE = IS_RELEASE_CONFIGURATION;
 
 if (!LIBRARIES.includes(LIBRARY)) {
   console.error(
@@ -217,7 +212,7 @@ function onHello(msg) {
       androidRelaunchesRemaining--;
       pendingAndroidRelaunch = true;
       console.error(
-        `[runtime-tests] relaunching the app (${androidRelaunchesRemaining} retries left) — the persisted library selection makes the next start deterministic`
+        `[runtime-tests] relaunching the app (${androidRelaunchesRemaining} retries left)`
       );
       client.close();
       return;
