@@ -1,18 +1,28 @@
 'use strict';
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 import type { Maybe } from '../common';
 import { logger } from '../common';
+import type { InstanceOrElement, SharedValue } from '../commonTypes';
 import type {
-  InstanceOrElement,
-  InternalHostInstance,
-  SharedValue,
-} from '../commonTypes';
-import type { AnimatedRef } from './commonTypes';
+  AnimatedRef,
+  ReanimatedScrollEvent,
+  RNNativeScrollEvent,
+} from './commonTypes';
+import type { EventHandlerInternal } from './useEvent';
+import { useEvent } from './useEvent';
 import { useSharedValue } from './useSharedValue';
 
 const NOT_INITIALIZED_WARNING =
   'animatedRef is not initialized in useScrollOffset. Make sure to pass the animated ref to the scrollable component to get scroll offset updates.';
+
+const NATIVE_SCROLL_EVENT_NAMES = [
+  'onScroll',
+  'onScrollBeginDrag',
+  'onScrollEndDrag',
+  'onMomentumScrollBegin',
+  'onMomentumScrollEnd',
+] as const;
 
 /**
  * Lets you synchronously get the current offset of a scrollable component.
@@ -31,15 +41,18 @@ export function useScrollOffset<TRef extends InstanceOrElement>(
   const internalOffset = useSharedValue(0);
   const offset = useRef(providedOffset ?? internalOffset).current;
 
-  const eventHandler = useCallback(() => {
-    'worklet';
-    if (animatedRef?.current) {
-      const element = getWebScrollableElement(animatedRef.current);
-      // scrollLeft is the X axis scrolled offset, works properly also with RTL layout
+  const eventHandler = useEvent<RNNativeScrollEvent>(
+    (event: ReanimatedScrollEvent) => {
+      'worklet';
       offset.value =
-        element.scrollLeft === 0 ? element.scrollTop : element.scrollLeft;
-    }
-  }, [animatedRef, offset]);
+        event.contentOffset.x === 0
+          ? event.contentOffset.y
+          : event.contentOffset.x;
+    },
+    NATIVE_SCROLL_EVENT_NAMES
+    // Read https://github.com/software-mansion/react-native-reanimated/pull/5056
+    // for more information about this cast.
+  ) as unknown as EventHandlerInternal<ReanimatedScrollEvent>;
 
   useEffect(() => {
     if (!animatedRef) {
@@ -47,25 +60,17 @@ export function useScrollOffset<TRef extends InstanceOrElement>(
     }
 
     return animatedRef.observe((tag) => {
-      if (!animatedRef.current || !tag) {
+      if (!tag) {
         logger.warn(NOT_INITIALIZED_WARNING);
         return;
       }
 
-      const element = getWebScrollableElement(animatedRef.current);
-      element.addEventListener('scroll', eventHandler);
-
+      eventHandler.workletEventHandler.registerForEvents(tag);
       return () => {
-        element.removeEventListener('scroll', eventHandler);
+        eventHandler.workletEventHandler.unregisterFromEvents(tag);
       };
     });
   }, [animatedRef, eventHandler]);
 
   return offset;
-}
-
-function getWebScrollableElement(
-  scrollComponent: InternalHostInstance
-): HTMLElement {
-  return scrollComponent?.getScrollableNode?.() ?? scrollComponent;
 }

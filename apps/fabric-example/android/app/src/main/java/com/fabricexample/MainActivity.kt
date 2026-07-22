@@ -29,6 +29,10 @@ class MainActivity : ReactActivity() {
     if (BuildConfig.RUNTIME_TESTS) {
       intent?.getStringExtra("RUNTIME_TESTS_LIBRARY")?.let {
         MainApplication.runtimeTestsLibrary = it
+        getSharedPreferences("runtimeTests", MODE_PRIVATE)
+          .edit()
+          .putString("library", it)
+          .commit()
       }
     }
     super.onCreate(savedInstanceState)

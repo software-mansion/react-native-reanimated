@@ -30,11 +30,25 @@ class MainApplication : Application(), ReactApplication {
         } else {
           "index"
         },
+      jsBundleAssetPath =
+        if (BuildConfig.RUNTIME_TESTS) {
+          "main.runtimeTests.$runtimeTestsLibrary.jsbundle"
+        } else {
+          "index.android.bundle"
+        },
     )
   }
 
   override fun onCreate() {
     super.onCreate()
+    if (BuildConfig.RUNTIME_TESTS) {
+      // loadReactNative may create the React host before any Activity runs, so
+      // the library selected by the previous launch has to be restored here —
+      // MainActivity's intent extra alone can lose that race.
+      runtimeTestsLibrary =
+        getSharedPreferences("runtimeTests", MODE_PRIVATE)
+          .getString("library", runtimeTestsLibrary) ?: runtimeTestsLibrary
+    }
     DefaultNewArchitectureEntryPoint.releaseLevel = ReleaseLevel.EXPERIMENTAL
     loadReactNative(this)
 

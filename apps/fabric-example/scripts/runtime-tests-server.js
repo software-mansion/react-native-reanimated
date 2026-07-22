@@ -62,18 +62,14 @@ if (!PLATFORMS.includes(PLATFORM)) {
   process.exit(1);
 }
 
-if (PLATFORM === 'android' && IS_RELEASE) {
-  console.error(
-    '[runtime-tests] --platform android supports only Debug configurations for now'
-  );
-  process.exit(1);
-}
-
 const projectRoot = path.resolve(__dirname, '..');
 const iosDir = path.join(projectRoot, 'ios');
 const androidDir = path.join(projectRoot, 'android');
 
 let client = null;
+let androidSerial = null;
+let androidRelaunchesRemaining = 2;
+let pendingAndroidRelaunch = false;
 let runStartedAt = 0;
 let exitCode = 1;
 let runFinished = false;
@@ -144,6 +140,21 @@ wss.on('connection', (socket) => {
   });
 
   socket.on('close', () => {
+    if (pendingAndroidRelaunch) {
+      pendingAndroidRelaunch = false;
+      client = null;
+      connectTimer = setTimeout(() => {
+        console.error(
+          `[runtime-tests] no device reconnected within ${CONNECT_TIMEOUT_MS / 1000}s after relaunch, exiting`
+        );
+        shutdown(1);
+      }, CONNECT_TIMEOUT_MS);
+      launchAndroidActivity(androidSerial).catch((error) => {
+        console.error(`[runtime-tests] relaunch failed: ${error.message}`);
+        shutdown(1);
+      });
+      return;
+    }
     if (!runFinished && runStartedAt > 0) {
       console.error('');
       console.error('========================================');
@@ -204,6 +215,19 @@ function onHello(msg) {
     console.error(
       `[runtime-tests] the app is running the ${deviceLibrary || 'unknown'} entry point but this server expects ${LIBRARY}.`
     );
+    if (
+      PLATFORM === 'android' &&
+      androidSerial &&
+      androidRelaunchesRemaining > 0
+    ) {
+      androidRelaunchesRemaining--;
+      pendingAndroidRelaunch = true;
+      console.error(
+        `[runtime-tests] relaunching the app (${androidRelaunchesRemaining} retries left) — the persisted library selection makes the next start deterministic`
+      );
+      client.close();
+      return;
+    }
     console.error(
       '[runtime-tests] Relaunch via --launch (which sets RUNTIME_TESTS_LIBRARY) or restart the app with the right entry point.'
     );
@@ -673,10 +697,10 @@ async function buildAndroidApp(serial) {
     .then(({ stdout }) => stdout.trim())
     .catch(() => null);
   console.log(
-    `[runtime-tests] building with gradle (assembleDebugRuntimeTests${abi ? `, ABI ${abi}` : ''})… this can take a while`
+    `[runtime-tests] building with gradle (assemble${CONFIGURATION}${abi ? `, ABI ${abi}` : ''})… this can take a while`
   );
   const gradleArgs = [
-    'assembleDebugRuntimeTests',
+    `assemble${CONFIGURATION}`,
     `-PreactNativeDevServerPort=${METRO_PORT}`,
   ];
   if (abi) {
@@ -686,14 +710,15 @@ async function buildAndroidApp(serial) {
 }
 
 async function installAndLaunchAndroid(serial) {
+  const buildType = CONFIGURATION[0].toLowerCase() + CONFIGURATION.slice(1);
   const apk = path.join(
     androidDir,
     'app',
     'build',
     'outputs',
     'apk',
-    'debugRuntimeTests',
-    'app-debugRuntimeTests.apk'
+    buildType,
+    `app-${buildType}.apk`
   );
   if (!fs.existsSync(apk)) {
     throw new Error(`APK not found at ${apk} — run once without --skip-build`);
@@ -701,12 +726,16 @@ async function installAndLaunchAndroid(serial) {
   console.log(`[runtime-tests] installing ${apk}`);
   await adb(serial, ['install', '-r', apk]);
 
-  for (const port of [METRO_PORT, PORT]) {
+  for (const port of IS_RELEASE ? [PORT] : [METRO_PORT, PORT]) {
     await adb(serial, ['reverse', `tcp:${port}`, `tcp:${port}`]).catch(
       () => {}
     );
   }
 
+  await launchAndroidActivity(serial);
+}
+
+async function launchAndroidActivity(serial) {
   await adb(serial, ['shell', 'am', 'force-stop', ANDROID_APP_ID]).catch(
     () => {}
   );
@@ -732,6 +761,7 @@ if (SHOULD_LAUNCH) {
     }
     if (PLATFORM === 'android') {
       const serial = await resolveAndroidDevice();
+      androidSerial = serial;
       if (!SKIP_BUILD) {
         await buildAndroidApp(serial);
       }

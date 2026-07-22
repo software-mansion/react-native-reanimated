@@ -25,6 +25,8 @@ const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function (x) {
+    "use no memo";
+
     const bar = 'worklet'; // prettier-ignore
     const baz = "worklet"; // prettier-ignore
   };
@@ -36,31 +38,6 @@ const foo = function foo_null1Factory({
   return foo;
 }({
   _worklet_10922646814144_init_data
-});"
-`;
-
-exports[`babel plugin for DirectiveLiterals removes "worklet"; directive from worklets 1`] = `
-"const _worklet_12046452140568_init_data = {
-  code: "(function foo_null1(x){return x+2;})",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-const foo = function foo_null1Factory({
-  _worklet_12046452140568_init_data
-}) {
-  const _e = [new global.Error(), 1, -27];
-  const foo = function (x) {
-    // prettier-ignore
-    return x + 2;
-  };
-  foo.__closure = {};
-  foo.__workletHash = 12046452140568;
-  foo.__pluginVersion = "x.y.z";
-  foo.__initData = _worklet_12046452140568_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}({
-  _worklet_12046452140568_init_data
 });"
 `;
 
@@ -76,6 +53,8 @@ const foo = function foo_null1Factory({
   const _e = [new global.Error(), 1, -27];
   const foo = function (x) {
     // prettier-ignore
+    "use no memo";
+
     return x + 2;
   };
   foo.__closure = {};
@@ -160,6 +139,8 @@ FadeIn.withCallback(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('FadeIn with build after');
   };
   null1.__closure = {};
@@ -184,6 +165,8 @@ new FadeIn().withCallback(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('FadeIn with build after');
   };
   null1.__closure = {};
@@ -208,6 +191,8 @@ FadeIn.build().withCallback(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('FadeIn with build before');
   };
   null1.__closure = {};
@@ -232,6 +217,8 @@ new FadeIn().build().withCallback(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('FadeIn with build before');
   };
   null1.__closure = {};
@@ -256,6 +243,8 @@ FadeIn.build().duration().withCallback(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('FadeIn with build');
   };
   null1.__closure = {};
@@ -280,6 +269,8 @@ new FadeIn().build().duration().withCallback(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('FadeIn with build');
   };
   null1.__closure = {};
@@ -304,6 +295,8 @@ FadeIn.withCallback(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('FadeIn with AmogusIn after');
   };
   null1.__closure = {};
@@ -328,6 +321,8 @@ new FadeIn().withCallback(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('FadeIn with AmogusIn after');
   };
   null1.__closure = {};
@@ -352,6 +347,8 @@ FadeIn.withCallback(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('FadeIn');
   };
   null1.__closure = {};
@@ -376,6 +373,8 @@ new FadeIn().withCallback(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('FadeIn');
   };
   null1.__closure = {};
@@ -400,6 +399,8 @@ const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = async function () {
+    "use no memo";
+
     await Promise.resolve();
   };
   foo.__closure = {};
@@ -424,6 +425,8 @@ const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = async function () {
+    "use no memo";
+
     await Promise.resolve();
   };
   foo.__closure = {};
@@ -449,6 +452,8 @@ class Foo {
   }) {
     var _e = [new global.Error(), 1, -27];
     var null1 = function (x) {
+      "use no memo";
+
       return x + 2;
     };
     null1.__closure = {};
@@ -475,6 +480,8 @@ class Foo {
   }) {
     var _e = [new global.Error(), 1, -27];
     var constructor = function (x) {
+      "use no memo";
+
       this.x = x;
     };
     constructor.__closure = {};
@@ -503,6 +510,8 @@ class Foo {
   }) {
     var _e = [new global.Error(), -2, -27];
     var bar = function () {
+      "use no memo";
+
       return x + 2;
     };
     bar.__closure = {
@@ -532,6 +541,8 @@ class Foo {
   }) {
     var _e = [new global.Error(), 1, -27];
     var bar = function (x) {
+      "use no memo";
+
       return x + 2;
     };
     bar.__closure = {};
@@ -558,6 +569,8 @@ class Foo {
   }) {
     var _e = [new global.Error(), 1, -27];
     var bar = function (x) {
+      "use no memo";
+
       this.x = x + 2;
     };
     bar.__closure = {};
@@ -584,6 +597,8 @@ class Foo {
   }) {
     var _e = [new global.Error(), 1, -27];
     var null1 = function (x) {
+      "use no memo";
+
       return x + 2;
     };
     null1.__closure = {};
@@ -610,6 +625,8 @@ class Foo {
   }) {
     var _e = [new global.Error(), 1, -27];
     var bar = function (x) {
+      "use no memo";
+
       return x + 2;
     };
     bar.__closure = {};
@@ -641,6 +658,8 @@ const f = function f_null1Factory({
 }) {
   const _e = [new global.Error(), -3, -27];
   const f = function () {
+    "use no memo";
+
     return {
       res: x + objX.x
     };
@@ -672,6 +691,8 @@ const f = function f_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const f = function (a, b, c) {
+    "use no memo";
+
     console.log(arguments);
   };
   f.__closure = {};
@@ -696,6 +717,8 @@ const f = function f_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const f = function () {
+    "use no memo";
+
     console.log(foo);
   };
   f.__closure = {};
@@ -722,6 +745,8 @@ const f = function f_null1Factory({
 }) {
   const _e = [new global.Error(), -2, -27];
   const f = function () {
+    "use no memo";
+
     console.log(foo);
   };
   f.__closure = {
@@ -753,6 +778,8 @@ const f = function f_null1Factory({
 }) {
   const _e = [new global.Error(), -2, -27];
   const f = function () {
+    "use no memo";
+
     console.log(foo.bar);
   };
   f.__closure = {
@@ -780,6 +807,8 @@ const f = function f_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const f = function () {
+    "use no memo";
+
     globalStuff();
   };
   f.__closure = {};
@@ -805,6 +834,8 @@ const f = function f_null1Factory({
 }) {
   const _e = [new global.Error(), -2, -27];
   const f = function () {
+    "use no memo";
+
     globalStuff();
   };
   f.__closure = {
@@ -836,6 +867,8 @@ const foo = {
   }) {
     const _e = [new global.Error(), 1, -27];
     const null1 = function () {
+      "use no memo";
+
       return {
         bar() {
           return 'bar';
@@ -872,6 +905,8 @@ const foo = {
   }) {
     const _e = [new global.Error(), 1, -27];
     const null1 = function () {
+      "use no memo";
+
       return {
         bar() {
           return 'bar';
@@ -908,6 +943,8 @@ const foo = {
   }) {
     const _e = [new global.Error(), 1, -27];
     const null1 = function () {
+      "use no memo";
+
       return {
         bar() {
           return 'bar';
@@ -941,6 +978,8 @@ const foo = {
   }) {
     const _e = [new global.Error(), 1, -27];
     const null1 = function () {
+      "use no memo";
+
       return {
         bar() {
           return 'bar';
@@ -970,6 +1009,8 @@ const foo = useAnimatedStyle(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     const x = 1;
   };
   null1.__closure = {};
@@ -991,6 +1032,8 @@ const foo = useAnimatedStyle(function null1Factory({
   _worklet_317748698275_init_data
 }) {
   const null1 = function () {
+    "use no memo";
+
     const x = 1;
   };
   null1.__closure = {};
@@ -1010,6 +1053,8 @@ const foo = useAnimatedStyle(function null1Factory({
   _worklet_317748698275_init_data
 }) {
   const null1 = function () {
+    "use no memo";
+
     const x = 1;
   };
   null1.__closure = {};
@@ -1039,7 +1084,9 @@ const foo = function foo_null1Factory({
   _worklet_7222489488656_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
-  const foo = function () {};
+  const foo = function () {
+    "use no memo";
+  };
   foo.__closure = {};
   foo.__workletHash = 7222489488656;
   foo.__pluginVersion = "x.y.z";
@@ -1063,7 +1110,9 @@ const foo = function foo_null1Factory({
   _worklet_7222489488656_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
-  const foo = function () {};
+  const foo = function () {
+    "use no memo";
+  };
   foo.__closure = {};
   foo.__workletHash = 7222489488656;
   foo.__pluginVersion = "x.y.z";
@@ -1082,7 +1131,9 @@ const bar = function bar_null2Factory({
   _worklet_6929869424900_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
-  const bar = function () {};
+  const bar = function () {
+    "use no memo";
+  };
   bar.__closure = {};
   bar.__workletHash = 6929869424900;
   bar.__pluginVersion = "x.y.z";
@@ -1101,7 +1152,9 @@ const baz = function baz_null3Factory({
   _worklet_195120228813_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
-  const baz = function () {};
+  const baz = function () {
+    "use no memo";
+  };
   baz.__closure = {};
   baz.__workletHash = 195120228813;
   baz.__pluginVersion = "x.y.z";
@@ -1120,7 +1173,9 @@ const foobar = function foobar_null4Factory({
   _worklet_6972205995780_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
-  const foobar = function () {};
+  const foobar = function () {
+    "use no memo";
+  };
   foobar.__closure = {};
   foobar.__workletHash = 6972205995780;
   foobar.__pluginVersion = "x.y.z";
@@ -1147,6 +1202,8 @@ const foo = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return 'bar';
   };
   null1.__closure = {};
@@ -1171,6 +1228,8 @@ export default (function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return 'bar';
   };
   null1.__closure = {};
@@ -1195,6 +1254,8 @@ export const foo = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return 'bar';
   };
   null1.__closure = {};
@@ -1245,6 +1306,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), 1, -27];
     const _classCallCheck = function (a, n) {
+      "use no memo";
+
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
     };
     _classCallCheck.__closure = {};
@@ -1261,6 +1324,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), 1, -27];
     const _toPrimitive = function (t, r) {
+      "use no memo";
+
       if ("object" != typeof t || !t) return t;
       var e = t[Symbol.toPrimitive];
       if (void 0 !== e) {
@@ -1285,6 +1350,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _toPropertyKey = function (t) {
+      "use no memo";
+
       var i = _toPrimitive(t, "string");
       return "symbol" == typeof i ? i : i + "";
     };
@@ -1306,6 +1373,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _defineProperties = function (e, r) {
+      "use no memo";
+
       for (var t = 0; t < r.length; t++) {
         var o = r[t];
         o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
@@ -1329,6 +1398,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _createClass = function (e, r, t) {
+      "use no memo";
+
       return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
         writable: !1
       }), e;
@@ -1352,6 +1423,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -3, -27];
     const Clazz__classFactory = function () {
+      "use no memo";
+
       const Clazz = /*#__PURE__*/function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
@@ -1422,6 +1495,8 @@ export default (function () {
   }) {
     const _e = [new global.Error(), 1, -27];
     const _classCallCheck = function (a, n) {
+      "use no memo";
+
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
     };
     _classCallCheck.__closure = {};
@@ -1438,6 +1513,8 @@ export default (function () {
   }) {
     const _e = [new global.Error(), 1, -27];
     const _toPrimitive = function (t, r) {
+      "use no memo";
+
       if ("object" != typeof t || !t) return t;
       var e = t[Symbol.toPrimitive];
       if (void 0 !== e) {
@@ -1462,6 +1539,8 @@ export default (function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _toPropertyKey = function (t) {
+      "use no memo";
+
       var i = _toPrimitive(t, "string");
       return "symbol" == typeof i ? i : i + "";
     };
@@ -1483,6 +1562,8 @@ export default (function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _defineProperties = function (e, r) {
+      "use no memo";
+
       for (var t = 0; t < r.length; t++) {
         var o = r[t];
         o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
@@ -1506,6 +1587,8 @@ export default (function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _createClass = function (e, r, t) {
+      "use no memo";
+
       return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
         writable: !1
       }), e;
@@ -1529,6 +1612,8 @@ export default (function () {
   }) {
     const _e = [new global.Error(), -3, -27];
     const Clazz__classFactory = function () {
+      "use no memo";
+
       const Clazz = /*#__PURE__*/function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
@@ -1599,6 +1684,8 @@ export const Clazz = function () {
   }) {
     const _e = [new global.Error(), 1, -27];
     const _classCallCheck = function (a, n) {
+      "use no memo";
+
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
     };
     _classCallCheck.__closure = {};
@@ -1615,6 +1702,8 @@ export const Clazz = function () {
   }) {
     const _e = [new global.Error(), 1, -27];
     const _toPrimitive = function (t, r) {
+      "use no memo";
+
       if ("object" != typeof t || !t) return t;
       var e = t[Symbol.toPrimitive];
       if (void 0 !== e) {
@@ -1639,6 +1728,8 @@ export const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _toPropertyKey = function (t) {
+      "use no memo";
+
       var i = _toPrimitive(t, "string");
       return "symbol" == typeof i ? i : i + "";
     };
@@ -1660,6 +1751,8 @@ export const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _defineProperties = function (e, r) {
+      "use no memo";
+
       for (var t = 0; t < r.length; t++) {
         var o = r[t];
         o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
@@ -1683,6 +1776,8 @@ export const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _createClass = function (e, r, t) {
+      "use no memo";
+
       return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
         writable: !1
       }), e;
@@ -1706,6 +1801,8 @@ export const Clazz = function () {
   }) {
     const _e = [new global.Error(), -3, -27];
     const Clazz__classFactory = function () {
+      "use no memo";
+
       const Clazz = /*#__PURE__*/function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
@@ -1750,6 +1847,8 @@ const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
+    "use no memo";
+
     return 'bar';
   };
   foo.__closure = {};
@@ -1774,6 +1873,8 @@ export default (function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
+    "use no memo";
+
     return 'bar';
   };
   foo.__closure = {};
@@ -1798,6 +1899,8 @@ export const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
+    "use no memo";
+
     return 'bar';
   };
   foo.__closure = {};
@@ -1822,6 +1925,8 @@ const foo = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return 'bar';
   };
   null1.__closure = {};
@@ -1846,6 +1951,8 @@ export default (function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return 'bar';
   };
   null1.__closure = {};
@@ -1870,6 +1977,8 @@ export const foo = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return 'bar';
   };
   null1.__closure = {};
@@ -1895,6 +2004,8 @@ const foo = {
   }) {
     const _e = [new global.Error(), 1, -27];
     const bar = function () {
+      "use no memo";
+
       return 'bar';
     };
     bar.__closure = {};
@@ -1921,6 +2032,8 @@ export default {
   }) {
     const _e = [new global.Error(), 1, -27];
     const bar = function () {
+      "use no memo";
+
       return 'bar';
     };
     bar.__closure = {};
@@ -1947,6 +2060,8 @@ export const foo = {
   }) {
     const _e = [new global.Error(), 1, -27];
     const bar = function () {
+      "use no memo";
+
       return 'bar';
     };
     bar.__closure = {};
@@ -1972,6 +2087,8 @@ const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
+    "use no memo";
+
     return 'bar';
   };
   foo.__closure = {};
@@ -2003,6 +2120,8 @@ const foo = {
   }) {
     const _e = [new global.Error(), 1, -27];
     const null1 = function () {
+      "use no memo";
+
       return {
         bar() {
           return 'bar';
@@ -2042,6 +2161,8 @@ export default {
   }) {
     const _e = [new global.Error(), 1, -27];
     const null1 = function () {
+      "use no memo";
+
       return {
         bar() {
           return 'bar';
@@ -2081,6 +2202,8 @@ export const foo = {
   }) {
     const _e = [new global.Error(), 1, -27];
     const null1 = function () {
+      "use no memo";
+
       return {
         bar() {
           return 'bar';
@@ -2113,6 +2236,8 @@ const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
+    "use no memo";
+
     return 'bar';
   };
   foo.__closure = {};
@@ -2134,6 +2259,8 @@ const bar = function null2Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null2 = function () {
+    "use no memo";
+
     return 'foobar';
   };
   null2.__closure = {};
@@ -2158,6 +2285,8 @@ const animatedStyle = useAnimatedStyle(function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
+    "use no memo";
+
     return {
       width: 50
     };
@@ -2184,6 +2313,8 @@ const animatedStyle = useAnimatedStyle(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return {
       width: 50
     };
@@ -2210,6 +2341,8 @@ const style = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return {
       color: 'red',
       backgroundColor: 'blue'
@@ -2238,6 +2371,8 @@ const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function* () {
+    "use no memo";
+
     yield 'hello';
     yield 'world';
   };
@@ -2263,6 +2398,8 @@ const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function* () {
+    "use no memo";
+
     yield 'hello';
     yield 'world';
   };
@@ -2347,6 +2484,8 @@ useAnimatedScrollHandler(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function (event) {
+    "use no memo";
+
     console.log(event);
   };
   null1.__closure = {};
@@ -2391,7 +2530,9 @@ useAnimatedScrollHandler({
     _worklet_15695285586601_init_data
   }) {
     const _e = [new global.Error(), 1, -27];
-    const null1 = function () {};
+    const null1 = function () {
+      "use no memo";
+    };
     null1.__closure = {};
     null1.__workletHash = 15695285586601;
     null1.__pluginVersion = "x.y.z";
@@ -2405,7 +2546,9 @@ useAnimatedScrollHandler({
     _worklet_15793781905194_init_data
   }) {
     const _e = [new global.Error(), 1, -27];
-    const null2 = function () {};
+    const null2 = function () {
+      "use no memo";
+    };
     null2.__closure = {};
     null2.__workletHash = 15793781905194;
     null2.__pluginVersion = "x.y.z";
@@ -2419,7 +2562,9 @@ useAnimatedScrollHandler({
     _worklet_6645178700715_init_data
   }) {
     const _e = [new global.Error(), 1, -27];
-    const null3 = function () {};
+    const null3 = function () {
+      "use no memo";
+    };
     null3.__closure = {};
     null3.__workletHash = 6645178700715;
     null3.__pluginVersion = "x.y.z";
@@ -2433,7 +2578,9 @@ useAnimatedScrollHandler({
     _worklet_15833406824748_init_data
   }) {
     const _e = [new global.Error(), 1, -27];
-    const null4 = function () {};
+    const null4 = function () {
+      "use no memo";
+    };
     null4.__closure = {};
     null4.__workletHash = 15833406824748;
     null4.__pluginVersion = "x.y.z";
@@ -2447,7 +2594,9 @@ useAnimatedScrollHandler({
     _worklet_6687899605933_init_data
   }) {
     const _e = [new global.Error(), 1, -27];
-    const null5 = function () {};
+    const null5 = function () {
+      "use no memo";
+    };
     null5.__closure = {};
     null5.__workletHash = 6687899605933;
     null5.__pluginVersion = "x.y.z";
@@ -2471,6 +2620,8 @@ useAnimatedScrollHandler(function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function (event) {
+    "use no memo";
+
     console.log(event);
   };
   foo.__closure = {};
@@ -2495,6 +2646,8 @@ useAnimatedScrollHandler(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function (event) {
+    "use no memo";
+
     console.log(event);
   };
   null1.__closure = {};
@@ -2520,6 +2673,8 @@ useAnimatedScrollHandler({
   }) {
     const _e = [new global.Error(), 1, -27];
     const null1 = function (event) {
+      "use no memo";
+
       console.log(event);
     };
     null1.__closure = {};
@@ -2546,6 +2701,8 @@ useAnimatedScrollHandler({
   }) {
     const _e = [new global.Error(), 1, -27];
     const onScroll = function (event) {
+      "use no memo";
+
       console.log(event);
     };
     onScroll.__closure = {};
@@ -2572,6 +2729,8 @@ useAnimatedScrollHandler({
   }) {
     const _e = [new global.Error(), 1, -27];
     const onScroll = function (event) {
+      "use no memo";
+
       console.log(event);
     };
     onScroll.__closure = {};
@@ -2598,6 +2757,8 @@ useAnimatedScrollHandler({
   }) {
     const _e = [new global.Error(), 1, -27];
     const null1 = function (event) {
+      "use no memo";
+
       console.log(event);
     };
     null1.__closure = {};
@@ -2649,6 +2810,8 @@ const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
+    "use no memo";
+
     const bar = [4, 5];
     const baz = [1, ...[2, 3], ...bar];
   };
@@ -2674,6 +2837,8 @@ const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function (...args) {
+    "use no memo";
+
     console.log(args);
   };
   foo.__closure = {};
@@ -2698,6 +2863,8 @@ const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function (arg) {
+    "use no memo";
+
     console.log(...arg);
   };
   foo.__closure = {};
@@ -2722,6 +2889,8 @@ const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
+    "use no memo";
+
     const bar = {
       d: 4,
       e: 5
@@ -2769,6 +2938,8 @@ const foo = useTapGesture({
   }) {
     const _e = [new global.Error(), 1, -27];
     const null1 = function () {
+      "use no memo";
+
       console.log('onBegin');
     };
     null1.__closure = {};
@@ -2785,6 +2956,8 @@ const foo = useTapGesture({
   }) {
     const _e = [new global.Error(), 1, -27];
     const null2 = function (_event) {
+      "use no memo";
+
       console.log('onStart');
     };
     null2.__closure = {};
@@ -2801,6 +2974,8 @@ const foo = useTapGesture({
   }) {
     const _e = [new global.Error(), 1, -27];
     const null3 = function (_event, _success) {
+      "use no memo";
+
       console.log('onEnd');
     };
     null3.__closure = {};
@@ -2836,6 +3011,8 @@ const foo = Gesture.Tap().numberOfTaps(2).onBegin(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('onBegin');
   };
   null1.__closure = {};
@@ -2851,6 +3028,8 @@ const foo = Gesture.Tap().numberOfTaps(2).onBegin(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null2 = function (_event) {
+    "use no memo";
+
     console.log('onStart');
   };
   null2.__closure = {};
@@ -2866,6 +3045,8 @@ const foo = Gesture.Tap().numberOfTaps(2).onBegin(function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null3 = function (_event, _success) {
+    "use no memo";
+
     console.log('onEnd');
   };
   null3.__closure = {};
@@ -2889,7 +3070,9 @@ const onStart = function null1Factory({
   _worklet_15695285586601_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
-  const null1 = function () {};
+  const null1 = function () {
+    "use no memo";
+  };
   null1.__closure = {};
   null1.__workletHash = 15695285586601;
   null1.__pluginVersion = "x.y.z";
@@ -2913,6 +3096,8 @@ const onBegin = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('onBegin');
   };
   null1.__closure = {};
@@ -2941,6 +3126,8 @@ const onBegin = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     console.log('onBegin');
   };
   null1.__closure = {};
@@ -2970,6 +3157,8 @@ styleFactory = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return 'AssignmentExpression';
   };
   null1.__closure = {};
@@ -2995,6 +3184,8 @@ const styleFactory = function styleFactory_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const styleFactory = function () {
+    "use no memo";
+
     return 'FunctionDeclaration';
   };
   styleFactory.__closure = {};
@@ -3022,6 +3213,8 @@ styleFactory = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return {};
   };
   null1.__closure = {};
@@ -3047,6 +3240,8 @@ let styleFactory = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return {};
   };
   null1.__closure = {};
@@ -3074,6 +3269,8 @@ styleFactory = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return 'AssignmentExpression';
   };
   null1.__closure = {};
@@ -3099,6 +3296,8 @@ const styleFactory = function styleFactory_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const styleFactory = function () {
+    "use no memo";
+
     return {};
   };
   styleFactory.__closure = {};
@@ -3125,6 +3324,8 @@ styleFactory = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return {};
   };
   null1.__closure = {};
@@ -3150,6 +3351,8 @@ let styleFactory = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return {};
   };
   null1.__closure = {};
@@ -3179,6 +3382,8 @@ styleFactory = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return 'AssignmentExpression';
   };
   null1.__closure = {};
@@ -3205,7 +3410,9 @@ handler = {
     _worklet_15695285586601_init_data
   }) {
     const _e = [new global.Error(), 1, -27];
-    const null1 = function () {};
+    const null1 = function () {
+      "use no memo";
+    };
     null1.__closure = {};
     null1.__workletHash = 15695285586601;
     null1.__pluginVersion = "x.y.z";
@@ -3230,7 +3437,9 @@ let handler = {
     _worklet_15695285586601_init_data
   }) {
     const _e = [new global.Error(), 1, -27];
-    const null1 = function () {};
+    const null1 = function () {
+      "use no memo";
+    };
     null1.__closure = {};
     null1.__workletHash = 15695285586601;
     null1.__pluginVersion = "x.y.z";
@@ -3260,6 +3469,8 @@ handler = {
   }) {
     const _e = [new global.Error(), 1, -27];
     const null1 = function () {
+      "use no memo";
+
       return 'AssignmentExpression';
     };
     null1.__closure = {};
@@ -3288,6 +3499,8 @@ styleFactory = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return 'AssignmentAfterUse';
   };
   null1.__closure = {};
@@ -3312,6 +3525,8 @@ let styleFactory = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return {};
   };
   null1.__closure = {};
@@ -3338,6 +3553,8 @@ function outerScope() {
   }) {
     const _e = [new global.Error(), 1, -27];
     const null1 = function () {
+      "use no memo";
+
       return {};
     };
     null1.__closure = {};
@@ -3366,6 +3583,8 @@ const secondReference = function null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return {};
   };
   null1.__closure = {};
@@ -3393,6 +3612,8 @@ const recursiveWorklet = function recursiveWorklet_null1Factory({
 }) {
   const _e = [new global.Error(), -2, -27];
   const recursiveWorklet = function () {
+    "use no memo";
+
     if (!globalThis._WORKLET) {
       runOnUI(recursiveWorklet)();
     }
@@ -3431,7 +3652,9 @@ function App() {
       _worklet_12447993019415_init_data
     }) {
       const _e = [new global.Error(), 1, -27];
-      const onStart = function () {};
+      const onStart = function () {
+        "use no memo";
+      };
       onStart.__closure = {};
       onStart.__workletHash = 12447993019415;
       onStart.__pluginVersion = "x.y.z";
@@ -3457,7 +3680,9 @@ function App() {
       _worklet_15101577807674_init_data
     }) {
       const _e = [new global.Error(), 1, -27];
-      const onScroll = function () {};
+      const onScroll = function () {
+        "use no memo";
+      };
       onScroll.__closure = {};
       onScroll.__workletHash = 15101577807674;
       onScroll.__pluginVersion = "x.y.z";
@@ -3483,7 +3708,9 @@ function App() {
       _worklet_12447993019415_init_data
     }) {
       const _e = [new global.Error(), 1, -27];
-      const onStart = function () {};
+      const onStart = function () {
+        "use no memo";
+      };
       onStart.__closure = {};
       onStart.__workletHash = 12447993019415;
       onStart.__pluginVersion = "x.y.z";
@@ -3515,6 +3742,8 @@ function App() {
     }) {
       const _e = [new global.Error(), -2, -27];
       const onStart = function () {
+        "use no memo";
+
         const a = obj.a;
       };
       onStart.__closure = {
@@ -3546,6 +3775,8 @@ const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), -3, -27];
   const foo = function () {
+    "use no memo";
+
     const x = true;
     const y = true;
   };
@@ -3586,6 +3817,8 @@ const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
+    "use no memo";
+
     var bar = 'bar';
   };
   foo.__closure = {};
@@ -3603,6 +3836,8 @@ exports[`babel plugin for web configuration skips initData when omitNativeOnlyDa
 "const foo = function foo_null1Factory({}) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
+    "use no memo";
+
     var foo = 'bar';
   };
   foo.__closure = {};
@@ -3655,6 +3890,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), 1, -27];
     const _classCallCheck = function (a, n) {
+      "use no memo";
+
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
     };
     _classCallCheck.__closure = {};
@@ -3671,6 +3908,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), 1, -27];
     const _toPrimitive = function (t, r) {
+      "use no memo";
+
       if ("object" != typeof t || !t) return t;
       var e = t[Symbol.toPrimitive];
       if (void 0 !== e) {
@@ -3695,6 +3934,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _toPropertyKey = function (t) {
+      "use no memo";
+
       var i = _toPrimitive(t, "string");
       return "symbol" == typeof i ? i : i + "";
     };
@@ -3716,6 +3957,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _defineProperties = function (e, r) {
+      "use no memo";
+
       for (var t = 0; t < r.length; t++) {
         var o = r[t];
         o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
@@ -3739,6 +3982,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _createClass = function (e, r, t) {
+      "use no memo";
+
       return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
         writable: !1
       }), e;
@@ -3762,6 +4007,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -3, -27];
     const Clazz__classFactory = function () {
+      "use no memo";
+
       const Clazz = /*#__PURE__*/function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
@@ -3832,6 +4079,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), 1, -27];
     const _classCallCheck = function (a, n) {
+      "use no memo";
+
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
     };
     _classCallCheck.__closure = {};
@@ -3848,6 +4097,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), 1, -27];
     const _toPrimitive = function (t, r) {
+      "use no memo";
+
       if ("object" != typeof t || !t) return t;
       var e = t[Symbol.toPrimitive];
       if (void 0 !== e) {
@@ -3872,6 +4123,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _toPropertyKey = function (t) {
+      "use no memo";
+
       var i = _toPrimitive(t, "string");
       return "symbol" == typeof i ? i : i + "";
     };
@@ -3893,6 +4146,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _defineProperties = function (e, r) {
+      "use no memo";
+
       for (var t = 0; t < r.length; t++) {
         var o = r[t];
         o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
@@ -3916,6 +4171,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _createClass = function (e, r, t) {
+      "use no memo";
+
       return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
         writable: !1
       }), e;
@@ -3939,6 +4196,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -3, -27];
     const Clazz__classFactory = function () {
+      "use no memo";
+
       const Clazz = /*#__PURE__*/function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
@@ -3984,6 +4243,8 @@ const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), -2, -27];
   const foo = function () {
+    "use no memo";
+
     const clazz = new Clazz();
   };
   foo.__closure = {
@@ -4015,6 +4276,8 @@ const bar = function bar_null1Factory({
 }) {
   const _e = [new global.Error(), -2, -27];
   const bar = function () {
+    "use no memo";
+
     const instance = new foo();
   };
   bar.__closure = {
@@ -4073,6 +4336,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), 1, -27];
     const _classCallCheck = function (a, n) {
+      "use no memo";
+
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
     };
     _classCallCheck.__closure = {};
@@ -4089,6 +4354,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), 1, -27];
     const _toPrimitive = function (t, r) {
+      "use no memo";
+
       if ("object" != typeof t || !t) return t;
       var e = t[Symbol.toPrimitive];
       if (void 0 !== e) {
@@ -4113,6 +4380,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _toPropertyKey = function (t) {
+      "use no memo";
+
       var i = _toPrimitive(t, "string");
       return "symbol" == typeof i ? i : i + "";
     };
@@ -4134,6 +4403,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _defineProperties = function (e, r) {
+      "use no memo";
+
       for (var t = 0; t < r.length; t++) {
         var o = r[t];
         o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
@@ -4157,6 +4428,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _createClass = function (e, r, t) {
+      "use no memo";
+
       return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
         writable: !1
       }), e;
@@ -4179,6 +4452,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _defineProperty = function (e, r, t) {
+      "use no memo";
+
       return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
         value: t,
         enumerable: !0,
@@ -4206,6 +4481,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -4, -27];
     const Clazz__classFactory = function () {
+      "use no memo";
+
       const Clazz = /*#__PURE__*/function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
@@ -4254,6 +4531,8 @@ const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), -2, -27];
   const foo = function () {
+    "use no memo";
+
     const clazz = new Clazz();
   };
   foo.__closure = {
@@ -4307,6 +4586,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), 1, -27];
     const _classCallCheck = function (a, n) {
+      "use no memo";
+
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
     };
     _classCallCheck.__closure = {};
@@ -4323,6 +4604,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), 1, -27];
     const _toPrimitive = function (t, r) {
+      "use no memo";
+
       if ("object" != typeof t || !t) return t;
       var e = t[Symbol.toPrimitive];
       if (void 0 !== e) {
@@ -4347,6 +4630,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _toPropertyKey = function (t) {
+      "use no memo";
+
       var i = _toPrimitive(t, "string");
       return "symbol" == typeof i ? i : i + "";
     };
@@ -4368,6 +4653,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _defineProperties = function (e, r) {
+      "use no memo";
+
       for (var t = 0; t < r.length; t++) {
         var o = r[t];
         o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
@@ -4391,6 +4678,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _createClass = function (e, r, t) {
+      "use no memo";
+
       return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
         writable: !1
       }), e;
@@ -4414,6 +4703,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -3, -27];
     const Clazz__classFactory = function () {
+      "use no memo";
+
       const Clazz = /*#__PURE__*/function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
@@ -4484,6 +4775,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), 1, -27];
     const _classCallCheck = function (a, n) {
+      "use no memo";
+
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
     };
     _classCallCheck.__closure = {};
@@ -4500,6 +4793,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), 1, -27];
     const _toPrimitive = function (t, r) {
+      "use no memo";
+
       if ("object" != typeof t || !t) return t;
       var e = t[Symbol.toPrimitive];
       if (void 0 !== e) {
@@ -4524,6 +4819,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _toPropertyKey = function (t) {
+      "use no memo";
+
       var i = _toPrimitive(t, "string");
       return "symbol" == typeof i ? i : i + "";
     };
@@ -4545,6 +4842,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _defineProperties = function (e, r) {
+      "use no memo";
+
       for (var t = 0; t < r.length; t++) {
         var o = r[t];
         o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
@@ -4568,6 +4867,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _createClass = function (e, r, t) {
+      "use no memo";
+
       return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
         writable: !1
       }), e;
@@ -4591,6 +4892,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -3, -27];
     const Clazz__classFactory = function () {
+      "use no memo";
+
       const Clazz = /*#__PURE__*/function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
@@ -4661,6 +4964,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), 1, -27];
     const _classCallCheck = function (a, n) {
+      "use no memo";
+
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
     };
     _classCallCheck.__closure = {};
@@ -4677,6 +4982,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), 1, -27];
     const _toPrimitive = function (t, r) {
+      "use no memo";
+
       if ("object" != typeof t || !t) return t;
       var e = t[Symbol.toPrimitive];
       if (void 0 !== e) {
@@ -4701,6 +5008,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _toPropertyKey = function (t) {
+      "use no memo";
+
       var i = _toPrimitive(t, "string");
       return "symbol" == typeof i ? i : i + "";
     };
@@ -4722,6 +5031,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _defineProperties = function (e, r) {
+      "use no memo";
+
       for (var t = 0; t < r.length; t++) {
         var o = r[t];
         o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
@@ -4745,6 +5056,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -2, -27];
     const _createClass = function (e, r, t) {
+      "use no memo";
+
       return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
         writable: !1
       }), e;
@@ -4768,6 +5081,8 @@ const Clazz = function () {
   }) {
     const _e = [new global.Error(), -3, -27];
     const Clazz__classFactory = function () {
+      "use no memo";
+
       const Clazz = /*#__PURE__*/function () {
         function Clazz() {
           _classCallCheck(this, Clazz);
@@ -4811,6 +5126,8 @@ const foo = function foo_sourceJs1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
+    "use no memo";
+
     return 1;
   };
   foo.__closure = {};
@@ -4834,6 +5151,8 @@ const foo = function foo_library_sourceJs1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
+    "use no memo";
+
     return 1;
   };
   foo.__closure = {};
@@ -4857,6 +5176,8 @@ const foo = function foo_SourceJs1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
+    "use no memo";
+
     return 1;
   };
   foo.__closure = {};
@@ -4881,6 +5202,8 @@ const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
+    "use no memo";
+
     foo(1);
   };
   foo.__closure = {};
@@ -4905,6 +5228,8 @@ exports[`babel plugin for worklet names unnamed ArrowFunctionExpression 1`] = `
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return 1;
   };
   null1.__closure = {};
@@ -4929,6 +5254,8 @@ exports[`babel plugin for worklet names unnamed FunctionExpression 1`] = `
 }) {
   const _e = [new global.Error(), 1, -27];
   const null1 = function () {
+    "use no memo";
+
     return 1;
   };
   null1.__closure = {};
@@ -4959,11 +5286,15 @@ const foo = function null2Factory({
 }) {
   const _e = [new global.Error(), -2, -27];
   const null2 = function () {
+    "use no memo";
+
     const bar = function null1Factory({
       _worklet_15547305016511_init_data
     }) {
       const _e = [new global.Error(), 1, -27];
       const null1 = function () {
+        "use no memo";
+
         console.log('bar');
       };
       null1.__closure = {};
@@ -5009,12 +5340,16 @@ runOnUI(function null2Factory({
 }) {
   const _e = [new global.Error(), -3, -27];
   const null2 = function () {
+    "use no memo";
+
     console.log('Hello from UI thread');
     runOnJS(function null1Factory({
       _worklet_11239746781805_init_data
     }) {
       const _e = [new global.Error(), 1, -27];
       const null1 = function () {
+        "use no memo";
+
         console.log('Hello from JS thread');
       };
       null1.__closure = {};
@@ -5068,6 +5403,8 @@ runOnUI(function null3Factory({
 }) {
   const _e = [new global.Error(), -5, -27];
   const null3 = function () {
+    "use no memo";
+
     console.log('Hello from UI thread');
     runOnJS(function null2Factory({
       _worklet_381514241210_init_data,
@@ -5076,12 +5413,16 @@ runOnUI(function null3Factory({
     }) {
       const _e = [new global.Error(), -3, -27];
       const null2 = function () {
+        "use no memo";
+
         console.log('Hello from JS thread');
         runOnUI(function null1Factory({
           _worklet_7548753055656_init_data
         }) {
           const _e = [new global.Error(), 1, -27];
           const null1 = function () {
+            "use no memo";
+
             console.log('Hello from UI thread again');
           };
           null1.__closure = {};
@@ -5152,17 +5493,23 @@ const foo = function null3Factory({
 }) {
   const _e = [new global.Error(), -3, -27];
   const null3 = function () {
+    "use no memo";
+
     const bar = function null2Factory({
       _worklet_418382687015_init_data,
       _worklet_7394546508057_init_data
     }) {
       const _e = [new global.Error(), -2, -27];
       const null2 = function () {
+        "use no memo";
+
         const foobar = function null1Factory({
           _worklet_7394546508057_init_data
         }) {
           const _e = [new global.Error(), 1, -27];
           const null1 = function () {
+            "use no memo";
+
             console.log('foobar');
           };
           null1.__closure = {};
@@ -5229,11 +5576,15 @@ runOnUI(function null3Factory({
 }) {
   const _e = [new global.Error(), -4, -27];
   const null3 = function () {
+    "use no memo";
+
     const a = function null1Factory({
       _worklet_10798770476691_init_data
     }) {
       const _e = [new global.Error(), 1, -27];
       const null1 = function () {
+        "use no memo";
+
         console.log('Good morning from JS thread!');
       };
       null1.__closure = {};
@@ -5250,6 +5601,8 @@ runOnUI(function null3Factory({
     }) {
       const _e = [new global.Error(), 1, -27];
       const null2 = function () {
+        "use no memo";
+
         console.log('Good afternoon from JS thread');
       };
       null2.__closure = {};
@@ -5286,13 +5639,15 @@ exports[`babel plugin generally strips queries from filename when injecting sour
 "const _worklet_11232621911025_init_data = {
   code: "(function foo_nullQuery1(){var foo_nullQuery1='bar';})",
   location: "/dev/null?query",
-  sourceMap: "{\\"version\\":3,\\"names\\":[\\"foo_nullQuery1\\"],\\"sources\\":[\\"/dev/null?query\\"],\\"mappings\\":\\"AACQ,SAAAA,cAAeA,CAAA,EAEb,GAAI,CAAAA,cAAW,OACjB\\",\\"ignoreList\\":[]}"
+  sourceMap: "{\\"version\\":3,\\"names\\":[\\"foo_nullQuery1\\"],\\"sources\\":[\\"/dev/null?query\\"],\\"mappings\\":\\"AACQ,SAAAA,cAAeA,CAAA,MAAAA,cAAA,O\\",\\"ignoreList\\":[]}"
 };
 const foo = function foo_nullQuery1Factory({
   _worklet_11232621911025_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
+    "use no memo";
+
     var foo = 'bar';
   };
   foo.__closure = {};
@@ -5310,13 +5665,15 @@ exports[`babel plugin generally strips queries from filename when injecting sour
 "const _worklet_8167316224945_init_data = {
   code: "(function foo_nullHash1(){var foo_nullHash1='bar';})",
   location: "/dev/null#hash",
-  sourceMap: "{\\"version\\":3,\\"names\\":[\\"foo_nullHash1\\"],\\"sources\\":[\\"/dev/null#hash\\"],\\"mappings\\":\\"AACQ,SAAAA,aAAeA,CAAA,EAEb,GAAI,CAAAA,aAAW,OACjB\\",\\"ignoreList\\":[]}"
+  sourceMap: "{\\"version\\":3,\\"names\\":[\\"foo_nullHash1\\"],\\"sources\\":[\\"/dev/null#hash\\"],\\"mappings\\":\\"AACQ,SAAAA,aAAeA,CAAA,MAAAA,aAAA,O\\",\\"ignoreList\\":[]}"
 };
 const foo = function foo_nullHash1Factory({
   _worklet_8167316224945_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
+    "use no memo";
+
     var foo = 'bar';
   };
   foo.__closure = {};
@@ -5334,13 +5691,15 @@ exports[`babel plugin generally strips queries from filename when injecting sour
 "const _worklet_6204255084081_init_data = {
   code: "(function foo_nullQueryHash1(){var foo_nullQueryHash1='bar';})",
   location: "/dev/null?query#hash",
-  sourceMap: "{\\"version\\":3,\\"names\\":[\\"foo_nullQueryHash1\\"],\\"sources\\":[\\"/dev/null?query#hash\\"],\\"mappings\\":\\"AACQ,SAAAA,kBAAeA,CAAA,EAEb,GAAI,CAAAA,kBAAW,OACjB\\",\\"ignoreList\\":[]}"
+  sourceMap: "{\\"version\\":3,\\"names\\":[\\"foo_nullQueryHash1\\"],\\"sources\\":[\\"/dev/null?query#hash\\"],\\"mappings\\":\\"AACQ,SAAAA,kBAAeA,CAAA,MAAAA,kBAAA,O\\",\\"ignoreList\\":[]}"
 };
 const foo = function foo_nullQueryHash1Factory({
   _worklet_6204255084081_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
   const foo = function () {
+    "use no memo";
+
     var foo = 'bar';
   };
   foo.__closure = {};
@@ -5367,6 +5726,8 @@ const foo = function foo_null1Factory({
 }) {
   const _e = [new global.Error(), -2, -27];
   const foo = function (t) {
+    "use no memo";
+
     if (t > 0) {
       return a + foo(t - 1);
     }
@@ -5400,6 +5761,8 @@ function Box() {
   }) {
     const _e = [new global.Error(), -2, -27];
     const null1 = function () {
+      "use no memo";
+
       return {
         transform: [{
           translateX: offset.value * 255
