@@ -41,13 +41,6 @@ class MainApplication : Application(), ReactApplication {
 
   override fun onCreate() {
     super.onCreate()
-    if (BuildConfig.RUNTIME_TESTS) {
-      // loadReactNative may create the React host before MainActivity reads
-      // the intent extra, so the persisted selection has to be restored first.
-      runtimeTestsLibrary =
-        getSharedPreferences("runtimeTests", MODE_PRIVATE)
-          .getString("library", runtimeTestsLibrary) ?: runtimeTestsLibrary
-    }
     DefaultNewArchitectureEntryPoint.releaseLevel = ReleaseLevel.EXPERIMENTAL
     loadReactNative(this)
 
