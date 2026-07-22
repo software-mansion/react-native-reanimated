@@ -615,9 +615,19 @@ var require_utils = __commonJS({
     exports2.replaceWithFactoryCall = replaceWithFactoryCall;
     var types_12 = require("@babel/types");
     function isRelease(state) {
-      var _a, _b, _c;
-      const pattern = /(prod|release|stag[ei])/i;
-      return !!(((_a = state.file.opts.envName) === null || _a === void 0 ? void 0 : _a.match(pattern)) || ((_b = process.env.BABEL_ENV) === null || _b === void 0 ? void 0 : _b.match(pattern)) || ((_c = process.env.NODE_ENV) === null || _c === void 0 ? void 0 : _c.match(pattern)));
+      var _a, _b;
+      const releasePattern = /(prod|release|stag[ei])/i;
+      const developmentPattern = /dev/i;
+      const envName = state.file.opts.envName;
+      if (envName) {
+        if (envName.match(releasePattern)) {
+          return true;
+        }
+        if (envName.match(developmentPattern)) {
+          return false;
+        }
+      }
+      return !!(((_a = process.env.BABEL_ENV) === null || _a === void 0 ? void 0 : _a.match(releasePattern)) || ((_b = process.env.NODE_ENV) === null || _b === void 0 ? void 0 : _b.match(releasePattern)));
     }
     function replaceWithFactoryCall(toReplace, name, factoryCall) {
       if (!name || !needsDeclaration(toReplace)) {

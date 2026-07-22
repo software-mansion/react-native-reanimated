@@ -10,7 +10,7 @@
     "type:check": "yarn type:check:native && yarn type:check:web",
     "type:check:native": "tsc --noEmit",
     "type:check:web": "tsc --noEmit --project tsconfig.web.json",
-    "type:check:strict": "tsc --noEmit --customConditions react-native-strict-api"
+    "type:check:legacy-rn-types": "tsc --noEmit --customConditions react-native-legacy-deep-imports"
   },
   "peerDependencies": {
     "react-native": "*"

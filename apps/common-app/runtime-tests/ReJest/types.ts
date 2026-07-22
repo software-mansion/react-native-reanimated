@@ -140,8 +140,15 @@ export type TestValue =
   | OperationUpdate
   | (() => unknown);
 
+export type TestProgress = {
+  current: number;
+  total: number;
+  currentName: string;
+};
+
 export type TestConfiguration = {
   render: Dispatch<SetStateAction<ReactNode | null>>;
+  onProgress?: (progress: TestProgress) => void;
 };
 
 export type Mismatch = {

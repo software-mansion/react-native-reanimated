@@ -38,11 +38,14 @@ WorkletHermesRuntime::WorkletHermesRuntime(std::unique_ptr<facebook::hermes::Her
         auto code = std::make_shared<const jsi::StringBuffer>(args[0].asString(rt).utf8(rt));
         std::string sourceURL;
         if (count > 1 && args[1].isString()) {
-          sourceURL = args[1].asString(rt).utf8(rt);
+          sourceURL = args[1].getString(rt).utf8(rt);
         }
         std::shared_ptr<const jsi::Buffer> sourceMap;
         if (count > 2 && args[2].isString()) {
-          sourceMap = std::make_shared<const jsi::StringBuffer>(args[2].asString(rt).utf8(rt));
+          auto sourceMapString = args[2].getString(rt).utf8(rt);
+          if (!sourceMapString.empty()) {
+            sourceMap = std::make_shared<const jsi::StringBuffer>(std::move(sourceMapString));
+          }
         }
         return wrappedRuntime->evaluateJavaScriptWithSourceMap(code, sourceMap, sourceURL);
       });
