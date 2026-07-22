@@ -26,7 +26,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        configuration: [DebugRuntimeTests, ReleaseRuntimeTests]
         bundleMode: [false, true]
     uses: ./.github/workflows/runtime-tests-android.yml
     with:
+      configuration: ${{ matrix.configuration }}
       bundleMode: ${{ matrix.bundleMode }}
