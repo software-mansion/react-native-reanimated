@@ -30,6 +30,12 @@ class MainApplication : Application(), ReactApplication {
         } else {
           "index"
         },
+      jsBundleAssetPath =
+        if (BuildConfig.RUNTIME_TESTS) {
+          "main.runtimeTests.$runtimeTestsLibrary.jsbundle"
+        } else {
+          "index.android.bundle"
+        },
     )
   }
 

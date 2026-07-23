@@ -18,7 +18,10 @@ const args = parseArgs(process.argv.slice(2));
 const LIBRARY = String(args.library ?? '').toLowerCase();
 const PLATFORM = String(args.platform ?? 'ios').toLowerCase();
 const METRO_PORT = Number(args['metro-port'] ?? 8081);
-const PORT = Number(args.port ?? METRO_PORT + 1);
+const CONFIGURATION = args.configuration ?? 'DebugRuntimeTests';
+const IS_RELEASE = CONFIGURATION.startsWith('Release');
+// Release builds have no Metro; the app then reports to port 8082.
+const PORT = Number(args.port ?? (IS_RELEASE ? 8082 : METRO_PORT + 1));
 const ONLY = args.only
   ? args.only
       .split(',')
@@ -33,7 +36,6 @@ const SIMULATOR = args.simulator ?? 'iPhone 17';
 const UDID = args.udid ?? null;
 const SERIAL = args.serial ?? null;
 const AVD = args.avd ?? null;
-const CONFIGURATION = args.configuration ?? 'DebugRuntimeTests';
 
 if (!LIBRARIES.includes(LIBRARY)) {
   console.error(
@@ -637,12 +639,12 @@ async function buildAndroidApp(serial) {
     .then(({ stdout }) => stdout.trim())
     .catch(() => null);
   console.log(
-    `[runtime-tests] building with gradle (assembleDebugRuntimeTests${abi ? `, ABI ${abi}` : ''})… this can take a while`
+    `[runtime-tests] building with gradle (assemble${CONFIGURATION}${abi ? `, ABI ${abi}` : ''})… this can take a while`
   );
-  const gradleArgs = [
-    'assembleDebugRuntimeTests',
-    `-PreactNativeDevServerPort=${METRO_PORT}`,
-  ];
+  const gradleArgs = [`assemble${CONFIGURATION}`];
+  if (!IS_RELEASE) {
+    gradleArgs.push(`-PreactNativeDevServerPort=${METRO_PORT}`);
+  }
   if (abi) {
     gradleArgs.push(`-PreactNativeArchitectures=${abi}`);
   }
@@ -650,14 +652,15 @@ async function buildAndroidApp(serial) {
 }
 
 async function installAndLaunchAndroid(serial) {
+  const buildType = CONFIGURATION[0].toLowerCase() + CONFIGURATION.slice(1);
   const apk = path.join(
     androidDir,
     'app',
     'build',
     'outputs',
     'apk',
-    'debugRuntimeTests',
-    'app-debugRuntimeTests.apk'
+    buildType,
+    `app-${buildType}.apk`
   );
   if (!fs.existsSync(apk)) {
     throw new Error(`APK not found at ${apk} — run once without --skip-build`);
@@ -681,6 +684,9 @@ async function installAndLaunchAndroid(serial) {
     'shell',
     'am',
     'start',
+    // A force-stopped app can otherwise be recreated from the stale recents
+    // task record, whose base intent carries no extras.
+    '--activity-clear-task',
     '-n',
     `${ANDROID_APP_ID}/.MainActivity`,
     '--es',
@@ -691,7 +697,9 @@ async function installAndLaunchAndroid(serial) {
 
 if (SHOULD_LAUNCH) {
   (async () => {
-    await ensureMetroRunning();
+    if (!IS_RELEASE) {
+      await ensureMetroRunning();
+    }
     if (PLATFORM === 'android') {
       const serial = await resolveAndroidDevice();
       if (!SKIP_BUILD) {

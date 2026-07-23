@@ -21,7 +21,9 @@ react {
     //   skip the bundling of the JS bundle and the assets. Default is "debug", "debugOptimized".
     //   If you add flavors like lite, prod, etc. you'll have to list your debuggableVariants.
     // debuggableVariants = ["liteDebug", "liteDebugOptimized", "prodDebug", "prodDebugOptimized"]
-    debuggableVariants = ["debug", "debugOptimized", "debugRuntimeTests"]
+    // releaseRuntimeTests is listed so the plugin skips its single-entry
+    // bundling; the bundleRuntimeTests* tasks bundle per library instead.
+    debuggableVariants = ["debug", "debugOptimized", "debugRuntimeTests", "releaseRuntimeTests"]
 
     /* Bundling */
     //   A list containing the node command and its flags. Default is just 'node'.
@@ -114,6 +116,57 @@ android {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
+        releaseRuntimeTests {
+            initWith release
+            matchingFallbacks = ["release"]
+            manifestPlaceholders = [usesCleartextTraffic: "true"]
+            buildConfigField "boolean", "RUNTIME_TESTS", "true"
+        }
+    }
+}
+
+def runtimeTestsLibraries = ["reanimated", "worklets", "self-tests"]
+def runtimeTestsJsDir = layout.buildDirectory.dir("generated/runtimeTestsBundles/js")
+def runtimeTestsAssetsDir = layout.buildDirectory.dir("generated/runtimeTestsBundles/assets")
+
+android.sourceSets.releaseRuntimeTests {
+    assets.srcDirs += runtimeTestsAssetsDir.get().asFile
+}
+
+def reactExtension = project.extensions.getByName("react")
+def reactRootDir = reactExtension.root.get().asFile
+def runtimeTestsBundleCommand = reactExtension.nodeExecutableAndArgs.get() + [reactExtension.cliFile.get().asFile.path]
+def hermescCommand = com.facebook.react.utils.PathUtils.detectOSAwareHermesCommand(
+    reactRootDir, reactExtension.hermesCommand.get())
+
+def runtimeTestsBundleTasks = runtimeTestsLibraries.collect { library ->
+    def suffix = library.split("-").collect { it.capitalize() }.join("")
+    def jsBundle = runtimeTestsJsDir.get().file("main.runtimeTests.${library}.jsbundle").asFile
+    def hbcBundle = runtimeTestsAssetsDir.get().file("main.runtimeTests.${library}.jsbundle").asFile
+    def bundleTask = tasks.register("bundleRuntimeTests${suffix}", Exec) {
+        workingDir reactRootDir
+        doFirst { jsBundle.parentFile.mkdirs() }
+        commandLine(runtimeTestsBundleCommand + [
+            "bundle",
+            "--platform", "android",
+            "--dev", "false",
+            "--minify", "false",
+            "--reset-cache",
+            "--entry-file", "index.runtimeTests.${library}.js",
+            "--bundle-output", jsBundle.path,
+        ])
+    }
+    tasks.register("compileRuntimeTests${suffix}", Exec) {
+        dependsOn(bundleTask)
+        workingDir reactRootDir
+        doFirst { hbcBundle.parentFile.mkdirs() }
+        commandLine(hermescCommand, "-emit-binary", "-O", "-out", hbcBundle.path, jsBundle.path)
+    }
+}
+
+tasks.configureEach { task ->
+    if (task.name == "mergeReleaseRuntimeTestsAssets") {
+        task.dependsOn(runtimeTestsBundleTasks)
     }
 }
 
