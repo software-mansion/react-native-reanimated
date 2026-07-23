@@ -8,6 +8,7 @@ const WEB_ONLY_IN_JEST = new Set([
   'UpdateLayoutAnimations',
   'useAnimatedRef',
   'useAnimatedStyle',
+  'JSPropsUpdater',
 ]);
 
 /** @type {import('jest-resolve').SyncResolver} */
