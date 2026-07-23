@@ -1026,6 +1026,7 @@ var require_globals = __commonJS({
     exports2.isGeneratedWorkletFile = isGeneratedWorkletFile;
     exports2.initializeGlobals = initializeGlobals;
     exports2.addCustomGlobals = addCustomGlobals;
+    var assert_1 = require("assert");
     var path_1 = __importDefault(require("path"));
     var types_12 = require_types();
     var notCapturedIdentifiers = [
@@ -1156,7 +1157,8 @@ var require_globals = __commonJS({
         addCustomGlobals(state);
       }
       const userImportForwarding = state.opts.importForwarding;
-      state.opts.importForwarding = {
+      (0, assert_1.strict)(state.importForwarding === void 0, "state.importForwarding should be undefined at this point");
+      state.importForwarding = {
         relativePaths: [
           ...defaultAllowedPaths,
           ...(_a = userImportForwarding === null || userImportForwarding === void 0 ? void 0 : userImportForwarding.relativePaths) !== null && _a !== void 0 ? _a : []
@@ -1314,7 +1316,7 @@ var require_imports = __commonJS({
           var _a;
           if (nodePath.get("callee").isIdentifier({ name: "require" }) && ((_a = nodePath.get("arguments")[0]) === null || _a === void 0 ? void 0 : _a.isStringLiteral())) {
             const requiredModule = nodePath.get("arguments")[0];
-            if (requiredModule.node.value.startsWith(".") && canForwardRelativeImport(state.file.opts.filename || "", state.opts.importForwarding.relativePaths)) {
+            if (requiredModule.node.value.startsWith(".") && canForwardRelativeImport(state.file.opts.filename || "", state.importForwarding.relativePaths)) {
               requiredModule.replaceWith(createImportPathLiteral(requiredModule.node.value, state));
             }
           }
@@ -1411,13 +1413,13 @@ var require_closure = __commonJS({
             scope = scope.parent;
           }
           if (state.opts.bundleMode && (0, imports_1.isImport)(binding)) {
-            if ((0, imports_1.isImportRelative)(binding) && (0, imports_1.canForwardRelativeImport)(state.filename, state.opts.importForwarding.relativePaths)) {
+            if ((0, imports_1.isImportRelative)(binding) && (0, imports_1.canForwardRelativeImport)(state.filename, state.importForwarding.relativePaths)) {
               capturedNames.add(name);
               relativeBindingsToImport.add(binding);
               return;
             }
             const source = binding.path.parentPath.node.source.value;
-            if ((0, imports_1.canForwardModuleImport)(source, state.opts.importForwarding.moduleNames)) {
+            if ((0, imports_1.canForwardModuleImport)(source, state.importForwarding.moduleNames)) {
               capturedNames.add(name);
               moduleBindingsToImport.add(binding);
               return;
