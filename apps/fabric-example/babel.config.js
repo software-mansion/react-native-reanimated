@@ -1,9 +1,12 @@
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
 const workletsPluginOptions = {
-  strictGlobal: true,
   bundleMode: true,
+  strictGlobal: true,
   hermesBytecode: false,
   getHBCBinary,
+  importForwarding: {
+    moduleNames: ['axios'],
+  },
 };
 
 /** @type {import('@babel/core').TransformOptions} */

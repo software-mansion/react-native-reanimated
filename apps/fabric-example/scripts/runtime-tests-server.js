@@ -28,12 +28,6 @@ const ONLY = args.only
       .map((s) => s.trim())
       .filter(Boolean)
   : null;
-const INCLUDE = args.include
-  ? args.include
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean)
-  : null;
 const CONNECT_TIMEOUT_MS = Number(args['connect-timeout'] ?? 600) * 1000;
 const IDLE_TIMEOUT_MS = Number(args['idle-timeout'] ?? 600) * 1000;
 const SHOULD_LAUNCH = args.launch === true || args.launch === '';
@@ -200,8 +194,7 @@ function onHello(msg) {
     return;
   }
 
-  const requested = [...(ONLY ?? []), ...(INCLUDE ?? [])];
-  const unknown = requested.filter((name) => !declared.includes(name));
+  const unknown = (ONLY ?? []).filter((name) => !declared.includes(name));
   if (unknown.length > 0) {
     console.error(
       `[runtime-tests] unknown suite name(s): ${unknown.join(', ')}`
@@ -216,7 +209,6 @@ function onHello(msg) {
   send({
     type: 'start',
     ...(ONLY ? { only: ONLY } : {}),
-    ...(INCLUDE ? { include: INCLUDE } : {}),
   });
   console.log('[runtime-tests] start sent, running tests…');
 }
@@ -694,9 +686,6 @@ async function installAndLaunchAndroid(serial) {
     );
   }
 
-  await adb(serial, ['shell', 'am', 'force-stop', ANDROID_APP_ID]).catch(
-    () => {}
-  );
   console.log(
     `[runtime-tests] launching ${ANDROID_APP_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY}`
   );
@@ -704,9 +693,13 @@ async function installAndLaunchAndroid(serial) {
     'shell',
     'am',
     'start',
-    // A force-stopped app can otherwise be recreated from the stale recents
-    // task record, whose base intent carries no extras.
-    '--activity-clear-task',
+    // -S force-stops the app inside am, avoiding the race a separate
+    // `am force-stop` loses against this launch. CLEAR_TASK|NEW_TASK then wipes
+    // the recents task record so its extra-less base intent cannot be restored
+    // instead of this launch (CLEAR_TASK is ignored without NEW_TASK).
+    '-S',
+    '-f',
+    '0x10008000',
     '-n',
     `${ANDROID_APP_ID}/.MainActivity`,
     '--es',
