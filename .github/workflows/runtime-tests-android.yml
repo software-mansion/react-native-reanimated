@@ -1,0 +1,148 @@
+name: Runtime tests Android
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  pull_request:
+    paths:
+      - .github/workflows/runtime-tests-android.yml
+      - apps/common-app/runtime-tests/**
+      - apps/fabric-example/scripts/runtime-tests-server.js
+      - apps/fabric-example/android/**
+  workflow_call:
+    inputs:
+      bundleMode:
+        required: false
+        type: boolean
+        default: false
+      configuration:
+        required: false
+        type: string
+        default: DebugRuntimeTests
+  workflow_dispatch:
+    inputs:
+      bundleMode:
+        required: false
+        type: boolean
+        default: false
+      configuration:
+        required: false
+        type: string
+        default: DebugRuntimeTests
+
+jobs:
+  runtime-tests-android:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        # The workflow-name check is required: the nightly caller also runs on
+        # pull_request, and its workflow_call legs must keep their explicit
+        # inputs.bundleMode instead of fanning out both modes.
+        bundleMode: ${{ fromJSON((github.event_name == 'pull_request' && github.workflow == 'Runtime tests Android') && '[false, true]' || format('[{0}]', inputs.bundleMode)) }}
+    env:
+      WORKING_DIRECTORY: apps/fabric-example
+      REANIMATED_DIR: packages/react-native-reanimated
+      CONFIGURATION: ${{ inputs.configuration || 'DebugRuntimeTests' }}
+    concurrency:
+      group: runtime-tests-android-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'DebugRuntimeTests' }}
+      cancel-in-progress: true
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Setup Java 17
+        uses: actions/setup-java@17f84c3641ba7b8f6deff6309fc4c864478f5d62
+        with:
+          distribution: 'zulu'
+          java-version: 17
+
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
+
+      - name: Toggle Bundle Mode off (Legacy Eval)
+        if: ${{ !matrix.bundleMode }}
+        run: yarn toggle-bundle-mode
+
+      - name: Build Reanimated package
+        working-directory: ${{ env.REANIMATED_DIR }}
+        run: yarn build
+
+      - name: Build app
+        working-directory: ${{ env.WORKING_DIRECTORY }}/android
+        run: ./gradlew "assemble$CONFIGURATION" --build-cache -PreactNativeArchitectures=x86_64
+
+      - name: AVD cache
+        id: avd-cache
+        uses: actions/cache@6f8efc29b200d32929f49075959781ed54ec270c
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-34-x86_64
+
+      - name: Create AVD and generate a boot snapshot
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 34
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          working-directory: apps/fabric-example
+          script: echo "Generated AVD snapshot for caching."
+
+      - name: Run ReJest self-tests on the emulator (retries once)
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 34
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          working-directory: apps/fabric-example
+          script: node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library self-tests --skip-build --connect-timeout 900 --idle-timeout 900 || node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library self-tests --skip-build --connect-timeout 900 --idle-timeout 900
+
+      - name: Verify CI catches failing tests
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 34
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          working-directory: apps/fabric-example
+          script: if node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library self-tests --skip-build --connect-timeout 900 --idle-timeout 900 --only "intentional failures"; then echo "A failing suite did not fail the runner" && exit 1; else echo "Failing tests correctly failed the runner"; fi
+
+      - name: Run Worklets runtime tests on the emulator (retries once)
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 34
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          working-directory: apps/fabric-example
+          script: node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library worklets --skip-build --connect-timeout 900 --idle-timeout 900 || node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library worklets --skip-build --connect-timeout 900 --idle-timeout 900
+
+      - name: Run Reanimated runtime tests on the emulator (retries once)
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 34
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          working-directory: apps/fabric-example
+          script: node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library reanimated --skip-build --connect-timeout 900 --idle-timeout 900 || node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library reanimated --skip-build --connect-timeout 900 --idle-timeout 900

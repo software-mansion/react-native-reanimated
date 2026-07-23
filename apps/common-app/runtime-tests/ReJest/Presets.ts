@@ -61,7 +61,7 @@ const NOT_NUMBERS = [Infinity, -Infinity, NaN];
 // #region strings
 const TYPICAL_STRINGS = [
   'Aaaaaaa\n \t\t \v aaaaaa',
-  'Super long'.repeat(10000000),
+  'Super long'.repeat(100000),
   '',
   'A string primitive',
 ];

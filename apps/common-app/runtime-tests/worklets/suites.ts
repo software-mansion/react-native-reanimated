@@ -1,3 +1,5 @@
+import { isBundleModeEnabled } from 'react-native-worklets';
+
 import type { RuntimeTestSuite } from '../types';
 
 export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
@@ -37,7 +39,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runtimes/reactNativeImportShim.test');
       require('./tests/runtimes/turboModuleRegistryShim.test');
     },
-    disabled: !globalThis._WORKLETS_BUNDLE_MODE_ENABLED,
+    disabled: !isBundleModeEnabled(),
     skipByDefault: true,
   },
   {

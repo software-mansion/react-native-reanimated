@@ -73,7 +73,7 @@ export function generateWorkletFile(
   const transformedProg = transformFromAstSync(newProg, undefined, {
     filename: state.file.opts.filename,
     presets: [resolvePresetTypescript()],
-    plugins: [state.autoworkletizationPlugin, stripJsxDevAttributesPlugin],
+    plugins: [stripJsxDevAttributesPlugin],
     ast: false,
     babelrc: false,
     configFile: false,

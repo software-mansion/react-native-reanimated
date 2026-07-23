@@ -1,7 +1,5 @@
 import type { NodePath } from '@babel/core';
 import type {
-  ArrowFunctionExpression,
-  BlockStatement,
   ClassBody,
   ObjectExpression,
   ObjectMethod,
@@ -11,23 +9,19 @@ import type {
   VariableDeclaration,
 } from '@babel/types';
 import {
-  blockStatement,
   booleanLiteral,
   classProperty,
-  directive,
-  directiveLiteral,
   identifier,
   isAssignmentExpression,
-  isBlockStatement,
   isExpressionStatement,
   isIdentifier,
   isMemberExpression,
   isObjectProperty,
   objectProperty,
-  returnStatement,
 } from '@babel/types';
 
 import { contextObjectMarker } from './contextObject';
+import { addWorkletDirectivesToPath } from './directives';
 import type { WorkletsPluginPass } from './types';
 import {
   isWorkletizableFunctionPath,
@@ -84,10 +78,7 @@ function processWorkletizableEntity(
   state: WorkletsPluginPass
 ) {
   if (isWorkletizableFunctionPath(nodePath)) {
-    if (nodePath.isArrowFunctionExpression()) {
-      replaceImplicitReturnWithBlock(nodePath.node);
-    }
-    appendWorkletDirective(nodePath.node.body as BlockStatement);
+    addWorkletDirectivesToPath(nodePath);
   } else if (isWorkletizableObjectPath(nodePath)) {
     if (isImplicitContextObject(nodePath)) {
       appendWorkletContextObjectMarker(nodePath.node);
@@ -128,36 +119,12 @@ function processWorkletAggregator(
   const properties = objectPath.get('properties');
   properties.forEach((property) => {
     if (property.isObjectMethod()) {
-      appendWorkletDirective(property.node.body);
+      addWorkletDirectivesToPath(property);
     } else if (property.isObjectProperty()) {
       const valuePath = property.get('value');
       processWorkletizableEntity(valuePath, state);
     }
   });
-}
-
-/**
- * Replaces implicit return statements with a block statement i.e.:
- *
- * `() => 1` becomes `() => { return 1 }`
- *
- * This is necessary because the worklet directive is only allowed on block
- * statements.
- */
-function replaceImplicitReturnWithBlock(path: ArrowFunctionExpression) {
-  if (!isBlockStatement(path.body)) {
-    path.body = blockStatement([returnStatement(path.body)]);
-  }
-}
-
-function appendWorkletDirective(node: BlockStatement) {
-  if (
-    !node.directives.some(
-      (functionDirective) => functionDirective.value.value === 'worklet'
-    )
-  ) {
-    node.directives.push(directive(directiveLiteral('worklet')));
-  }
 }
 
 function appendWorkletContextObjectMarker(objectExpression: ObjectExpression) {

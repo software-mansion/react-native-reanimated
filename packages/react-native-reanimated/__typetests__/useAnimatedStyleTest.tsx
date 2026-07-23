@@ -33,7 +33,7 @@ function UseAnimatedStyleInAnimatedComponent() {
   }
 
   function UseAnimatedStyleTest2() {
-    const sv = useSharedValue('0');
+    const sv = useSharedValue(false);
     // @ts-expect-error properly detects illegal type
     const animatedStyle = useAnimatedStyle(() => {
       return {
@@ -52,7 +52,7 @@ function UseAnimatedStyleInAnimatedComponent() {
   }
 
   function UseAnimatedStyleTest4() {
-    const sv = useSharedValue({ width: '0' });
+    const sv = useSharedValue({ width: false });
     // @ts-expect-error properly detects illegal type
     const animatedStyle = useAnimatedStyle(() => {
       return sv.value;
@@ -157,7 +157,7 @@ function UseAnimatedStyleInAnimatedComponent() {
   }
 
   function UseAnimatedStyleTest14() {
-    const sv = useSharedValue(0);
+    const sv = useSharedValue('0');
 
     // @ts-expect-error properly detects illegal type
     const animatedStyle = useAnimatedStyle(() => {
@@ -184,7 +184,7 @@ function UseAnimatedStyleInAnimatedComponent() {
   }
 
   function UseAnimatedStyleTest16() {
-    const sv = useSharedValue({ width: 0 });
+    const sv = useSharedValue({ width: '0' });
 
     // @ts-expect-error properly detects illegal type
     const animatedStyle = useAnimatedStyle(() => {
@@ -207,7 +207,7 @@ function UseAnimatedStyleInAnimatedComponent() {
   }
 
   function UseAnimatedStyleTest18() {
-    const sv = useSharedValue({ shadowOffset: { width: 0 } });
+    const sv = useSharedValue({ shadowOffset: { width: '0' } });
     // @ts-expect-error properly detects illegal type
     const animatedStyle = useAnimatedStyle(() => {
       return {
@@ -270,9 +270,8 @@ function UseAnimatedStyleInAnimatedComponent() {
 
   function UseAnimatedStyleTest23() {
     const animatedStyle = useAnimatedStyle(() => ({
-      // @ts-expect-error Passing a number here will work,
-      // but we don't allow for it as a part of API.
-      backgroundColor: 0x000000,
+      // @ts-expect-error properly detects illegal type
+      backgroundColor: true,
     }));
   }
 
@@ -304,6 +303,7 @@ function UseAnimatedStyleInNonAnimatedComponents() {
   function UseAnimatedStyleTestAllComponentsSingleStyle() {
     const width = useSharedValue(50);
     const animatedStyle = useAnimatedStyle(() => ({ width: width.value }));
+    const rcProps = { refreshing: false, onRefresh: () => undefined };
 
     return (
       <>
@@ -319,12 +319,8 @@ function UseAnimatedStyleInNonAnimatedComponents() {
         <Pressable style={animatedStyle}>
           <View />
         </Pressable>
-        <RefreshControl
-          refreshing={false}
-          onRefresh={() => null}
-          // @ts-expect-error animated styles cannot be passed to non-animated components
-          style={animatedStyle}
-        />
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <RefreshControl {...rcProps} style={animatedStyle} />
         {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
         <ScrollView style={animatedStyle} />
         {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
@@ -369,6 +365,7 @@ function UseAnimatedStyleInNonAnimatedComponents() {
     const width = useSharedValue(50);
     const animatedStyle = useAnimatedStyle(() => ({ width: width.value }));
     const plainStyle = { opacity: 1 };
+    const rcProps = { refreshing: false, onRefresh: () => undefined };
 
     return (
       <>
@@ -387,12 +384,8 @@ function UseAnimatedStyleInNonAnimatedComponents() {
         <Pressable style={[plainStyle, animatedStyle]}>
           <View />
         </Pressable>
-        <RefreshControl
-          refreshing={false}
-          onRefresh={() => null}
-          // @ts-expect-error animated styles cannot be passed to non-animated components
-          style={[animatedStyle, plainStyle]}
-        />
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <RefreshControl {...rcProps} style={[animatedStyle, plainStyle]} />
         {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
         <SafeAreaView style={[plainStyle, animatedStyle]} />
         {/* @ts-expect-error animated styles cannot be passed to non-animated components */}

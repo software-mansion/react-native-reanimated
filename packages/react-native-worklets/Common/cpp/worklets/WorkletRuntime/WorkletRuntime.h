@@ -14,6 +14,7 @@
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -85,7 +86,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   template <RuntimeCallable TCallable>
   std::invoke_result_t<TCallable, jsi::Runtime &> runSync(TCallable &&job) const {
     jsi::Runtime &rt = getJSIRuntime();
-    auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
+    auto lock = acquireRuntimeLock();
     return job(rt);
   }
 
@@ -100,7 +101,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   template <typename... Args>
   std::shared_ptr<Serializable> runSyncSerialized(const jsi::Function &function, Args &&...args) const {
     jsi::Runtime &rt = getJSIRuntime();
-    auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
+    auto lock = acquireRuntimeLock();
     auto result = runSync(function, std::forward<Args>(args)...);
     auto serializableResult = extractSerializableOrThrow(
         rt,
@@ -116,7 +117,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       const std::optional<std::string> &scheduleStack,
       Args &&...args) const {
     jsi::Runtime &rt = getJSIRuntime();
-    auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
+    auto lock = acquireRuntimeLock();
     auto result = runSyncWithStack(worklet, scheduleStack, std::forward<Args>(args)...);
     auto serializableResult = extractSerializableOrThrow(
         rt,
@@ -130,7 +131,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   std::shared_ptr<Serializable> runSyncSerialized(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args)
       const {
     jsi::Runtime &rt = getJSIRuntime();
-    auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
+    auto lock = acquireRuntimeLock();
     auto result = runSync(worklet, std::forward<Args>(args)...);
     auto serializableResult = extractSerializableOrThrow(
         rt,
@@ -161,12 +162,17 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     return name_;
   }
 
+  [[nodiscard]] bool isLockingEnabled() const noexcept {
+    return enableLocking_;
+  }
+
   explicit WorkletRuntime(
       RuntimeData::RuntimeId runtimeId,
       RuntimeData::RuntimeKind runtimeKind,
       const std::string &name,
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
-      bool enableEventLoop = true);
+      bool enableEventLoop = true,
+      bool enableLocking = true);
 
   void init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy);
 
@@ -227,7 +233,15 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
   void legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpackerLoader);
 
+  [[nodiscard]] std::unique_lock<std::recursive_mutex> acquireRuntimeLock() const {
+    if (enableLocking_) {
+      return std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
+    }
+    return {};
+  }
+
   const RuntimeData::RuntimeId runtimeId_;
+  const bool enableLocking_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;
   std::shared_ptr<JSScheduler> jsScheduler_;

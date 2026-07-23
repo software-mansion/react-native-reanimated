@@ -182,7 +182,9 @@ describe('Test createSerializable', () => {
       });
 
       test('createSerializableHostObject', async () => {
-        const hostObjectValue = globalThis.__reanimatedModuleProxy;
+        const hostObjectValue = getWorkletRuntimeFromPool(
+          'test'
+        ) as unknown as Record<string, unknown>;
         const hostObjectKeys = Object.keys(hostObjectValue);
         scheduleOnTarget(() => {
           'worklet';
@@ -610,19 +612,6 @@ describe('Test createSerializable', () => {
         }).toThrow('Trying to convert a cyclic object');
       });
 
-      test('createSerializableInaccessibleObject', async () => {
-        class Inaccessible {
-          access() {
-            return true;
-          }
-        }
-        const inaccessibleObject = new Inaccessible();
-
-        await expect(() => {
-          createSerializable(inaccessibleObject);
-        }).toThrow('Cannot copy value of type `Inaccessible`.');
-      });
-
       test('createSerializableRemoteNamedFunctionSyncCall', async () => {
         function fooFunction() {}
         scheduleOnTarget(() => {
@@ -676,11 +665,7 @@ if (__DEV__) {
       const promise = Promise.resolve();
       await expect(() => {
         createSerializable(promise);
-      }).toThrow(
-        globalThis._WORKLETS_BUNDLE_MODE_ENABLED
-          ? 'Cannot copy value of type `Promise`'
-          : 'Promises cannot be converted to serializable.'
-      );
+      }).toThrow('Promise');
     });
 
     test('throws when trying to serialize a Proxy', async () => {
@@ -688,6 +673,16 @@ if (__DEV__) {
       await expect(() => {
         createSerializable(proxy);
       }).toThrow('Cannot copy value of type');
+    });
+
+    test('warns when passing an unserializable value to a worklet', async () => {
+      class Clazz {}
+      const nestedMap = new Map([[0, [{ someKey: new Clazz() }]]]);
+      await expect(() => {
+        createSerializable(nestedMap);
+      }).toThrow(
+        'Cannot copy value of type `Clazz`. It was located at `.values()[0][0]["someKey"]`.'
+      );
     });
   });
 

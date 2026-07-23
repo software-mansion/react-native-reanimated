@@ -13,6 +13,8 @@ import {
 
 const INITIALIZER_CALLED_NOTIFICATION = 'INITIALIZER_CALLED_NOTIFICATION';
 const EVENT_LOOP_CHECKED_NOTIFICATION = 'EVENT_LOOP_CHECKED_NOTIFICATION';
+const LONG_INITIALIZER_NOTIFICATION = 'LONG_INITIALIZER_NOTIFICATION';
+const SCHEDULED_WORKLET_NOTIFICATION = 'SCHEDULED_WORKLET_NOTIFICATION';
 
 describe('createWorkletRuntime', () => {
   test('should create a worklet runtime by passing config with only name', () => {
@@ -87,5 +89,46 @@ describe('createWorkletRuntime', () => {
 
     // Assert
     expect(availableMethods.length).toBe(0);
+  });
+
+  test('should run a long-running initializer on a runtime with disabled locking', async () => {
+    // Arrange
+    let initializerDuration = 0;
+    let scheduledValue = 0;
+    const onInitializerDone = (duration: number) => {
+      initializerDuration = duration;
+      notify(LONG_INITIALIZER_NOTIFICATION);
+    };
+    const onWorkletDone = (value: number) => {
+      scheduledValue = value;
+      notify(SCHEDULED_WORKLET_NOTIFICATION);
+    };
+    const initializer = () => {
+      'worklet';
+      const start = performance.now();
+      let elapsed = 0;
+      while (elapsed < 500) {
+        elapsed = performance.now() - start;
+      }
+      scheduleOnRN(onInitializerDone, elapsed);
+    };
+
+    // Act
+    const runtime = createWorkletRuntime({
+      name: 'test',
+      enableLocking: false,
+      initializer,
+    });
+    await waitForNotification(LONG_INITIALIZER_NOTIFICATION);
+    scheduleOnRuntime(runtime, () => {
+      'worklet';
+      scheduleOnRN(onWorkletDone, 42);
+    });
+    await waitForNotification(SCHEDULED_WORKLET_NOTIFICATION);
+
+    // Assert
+    expect(initializerDuration >= 500).toBe(true);
+    expect(scheduledValue).toBe(42);
+    expect(runtime.name).toBe('test');
   });
 });

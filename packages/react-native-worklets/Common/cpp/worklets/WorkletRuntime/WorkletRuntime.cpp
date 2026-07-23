@@ -46,9 +46,14 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
         runtime_(std::move(runtime)) {}
 };
 
-static std::shared_ptr<jsi::Runtime> makeRuntime(const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
+static std::shared_ptr<jsi::Runtime> makeRuntime(
+    const std::shared_ptr<std::recursive_mutex> &runtimeMutex,
+    bool enableLocking) {
   auto hermesRuntime = facebook::hermes::makeHermesRuntime();
   std::shared_ptr<jsi::Runtime> jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime));
+  if (!enableLocking) {
+    return jsiRuntime;
+  }
   return std::make_shared<LockableRuntime>(jsiRuntime, runtimeMutex);
 }
 
@@ -57,13 +62,19 @@ WorkletRuntime::WorkletRuntime(
     const RuntimeData::RuntimeKind runtimeKind,
     const std::string &name,
     const std::shared_ptr<AsyncQueue> &queue,
-    bool enableEventLoop)
+    bool enableEventLoop,
+    bool enableLocking)
     : runtimeId_(runtimeId),
+      enableLocking_(enableLocking),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
-      runtime_(makeRuntime(runtimeMutex_)),
+      runtime_(makeRuntime(runtimeMutex_, enableLocking_)),
       runtimeKind_(runtimeKind),
       name_(name),
       queue_(queue) {
+  react_native_assert(
+      (enableLocking || !enableEventLoop) &&
+      "[Worklets] The Event Loop cannot be enabled on a Worklet Runtime with "
+      "locking disabled.");
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
   if (enableEventLoop) {
@@ -218,7 +229,7 @@ void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
       return;
     }
 
-    auto lock = std::unique_lock<std::recursive_mutex>(*strongThis->runtimeMutex_);
+    auto lock = strongThis->acquireRuntimeLock();
     jsi::Runtime &runtime = strongThis->getJSIRuntime();
     job(runtime);
   });

@@ -2,6 +2,8 @@ import type { NodePath } from '@babel/core';
 import type { CallExpression } from '@babel/types';
 import { isSequenceExpression, isV8IntrinsicIdentifier } from '@babel/types';
 
+import { addWorkletDirectivesToPath } from './directives';
+import { forEachWorkletizableFunction } from './findWorklet';
 import {
   gestureHandlerBuilderMethods,
   gestureHandlerObjectHooks,
@@ -9,9 +11,7 @@ import {
   isGestureObjectEventCallbackMethod,
 } from './gestureHandlerAutoworkletization';
 import { isLayoutAnimationCallback } from './layoutAnimationAutoworkletization';
-import { tryProcessingNode } from './objectWorklets';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
-import { processWorklet } from './workletSubstitution';
 
 const reanimatedObjectHooks = new Set([
   'useAnimatedScrollHandler',
@@ -72,19 +72,15 @@ const reanimatedFunctionArgsToWorkletize = new Map([
   ...Array.from(gestureHandlerBuilderMethods).map((name) => [name, [0]]),
 ] as [string, number[]][]);
 
-/** @returns `true` if the function was workletized, `false` otherwise. */
-export function processIfAutoworkletizableCallback(
-  path: NodePath<WorkletizableFunction>,
-  state: WorkletsPluginPass
-): boolean {
+export function addDirectivesToKnownCallback(
+  path: NodePath<WorkletizableFunction>
+): void {
   if (isGestureHandlerEventCallback(path) || isLayoutAnimationCallback(path)) {
-    processWorklet(path, state);
-    return true;
+    addWorkletDirectivesToPath(path);
   }
-  return false;
 }
 
-export function processCalleesAutoworkletizableCallbacks(
+export function handleWorkletizableCallback(
   path: NodePath<CallExpression>,
   state: WorkletsPluginPass
 ): void {
@@ -92,8 +88,6 @@ export function processCalleesAutoworkletizableCallbacks(
     ? path.node.callee.expressions[path.node.callee.expressions.length - 1]
     : path.node.callee;
 
-  // We are looking for objects we know we should workletize
-  // hence if object is not named, we return.
   const name =
     'name' in callee
       ? callee.name
@@ -112,23 +106,29 @@ export function processCalleesAutoworkletizableCallbacks(
       .get('arguments')
       .filter((_, index) => argIndices.includes(index));
 
-    processArgs(args, state, acceptWorkletizableFunction, acceptObject);
+    addDirectivesToArgs(args, state, acceptWorkletizableFunction, acceptObject);
   } else if (
     !isV8IntrinsicIdentifier(callee) &&
     isGestureObjectEventCallbackMethod(callee)
   ) {
     const args = path.get('arguments');
-    processArgs(args, state, true, true);
+    addDirectivesToArgs(args, state, true, true);
   }
 }
 
-function processArgs(
+function addDirectivesToArgs(
   args: NodePath[],
   state: WorkletsPluginPass,
   acceptWorkletizableFunction: boolean,
   acceptObject: boolean
 ): void {
   args.forEach((arg) => {
-    tryProcessingNode(arg, state, acceptWorkletizableFunction, acceptObject);
+    forEachWorkletizableFunction(
+      arg,
+      state,
+      acceptWorkletizableFunction,
+      acceptObject,
+      addWorkletDirectivesToPath
+    );
   });
 }

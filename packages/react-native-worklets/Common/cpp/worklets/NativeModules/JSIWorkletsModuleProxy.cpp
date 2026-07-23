@@ -159,9 +159,10 @@ inline jsi::Value createWorkletRuntime(
     const std::string &name,
     std::shared_ptr<SerializableWorklet> &initializer,
     const std::shared_ptr<AsyncQueue> &queue,
-    bool enableEventLoop) {
+    bool enableEventLoop,
+    bool enableLocking) {
   const auto workletRuntime =
-      runtimeManager->createWorkletRuntime(sourceProxy, name, initializer, queue, enableEventLoop);
+      runtimeManager->createWorkletRuntime(sourceProxy, name, initializer, queue, enableEventLoop, enableLocking);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
@@ -202,7 +203,9 @@ inline void registerCustomSerializable(
   runtimeManager->withRegistrationPaused([&] {
     memoryManager->registerCustomSerializable(data);
     for (const auto &runtime : runtimeManager->getAllRuntimes()) {
-      memoryManager->loadCustomSerializable(runtime, data);
+      if (runtime->isLockingEnabled()) {
+        memoryManager->loadCustomSerializable(runtime, data);
+      }
     }
   });
 }
@@ -511,15 +514,15 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
 #endif // NDEBUG
       });
 
-  jsi_utils::addMethod<5>(
+  jsi_utils::addMethod<6>(
       rt,
       obj,
       "createWorkletRuntime",
-      [sourceProxy = shared_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[5]) {
-        const auto name = at<0>(args).asString(rt).utf8(rt);
+      [sourceProxy = shared_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[6]) {
+        const auto name = at<0>(args).getString(rt).utf8(rt);
         auto serializableInitializer = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Initializer must be a worklet.");
-        const auto useDefaultQueue = at<2>(args).asBool();
+        const auto useDefaultQueue = at<2>(args).getBool();
 
         std::shared_ptr<AsyncQueue> asyncQueue;
         if (useDefaultQueue) {
@@ -528,11 +531,12 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
           asyncQueue = extractAsyncQueue(rt, at<3>(args));
         }
 
-        const auto enableEventLoop = at<4>(args).asBool();
+        const auto enableEventLoop = at<4>(args).getBool();
+        const auto enableLocking = at<5>(args).getBool();
         const auto runtimeManager = sourceProxy->getRuntimeManager();
 
         return createWorkletRuntime(
-            rt, runtimeManager, sourceProxy, name, serializableInitializer, asyncQueue, enableEventLoop);
+            rt, runtimeManager, sourceProxy, name, serializableInitializer, asyncQueue, enableEventLoop, enableLocking);
       });
 
   jsi_utils::addMethod<3>(

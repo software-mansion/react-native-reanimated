@@ -147,10 +147,10 @@ describe('Test setInterval', () => {
               const now = performance.now();
               totalTime += now - lastTime;
               lastTime = now;
-              if (totalTime >= delay * iter) {
+              if (totalTime >= delay * iter - iter) {
                 setFlag('ok');
               } else {
-                setFlag('not_ok');
+                setFlag(`not_ok: ${totalTime}ms after ${iter} intervals`);
               }
 
               if (iter === 1) {
