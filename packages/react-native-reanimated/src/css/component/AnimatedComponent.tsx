@@ -63,8 +63,8 @@ export default class AnimatedComponent<
     const shadowNodeWrapper: ShadowNodeWrapper | null = null;
     const reactViewName: string | undefined = undefined;
 
-    // At this point we assume that `_setComponentRef` was already called and `_component` is set.
-    // `this._component` on web represents HTMLElement of our component, that's why we use casting
+    // At this point we assume that `_setComponentRef` was already called and `_componentRef` is set.
+    // `this._componentRef` on web represents HTMLElement of our component, that's why we use casting
     // TODO - implement a valid solution later on - this is a temporary fix
     const viewTag = this._componentRef;
     const DOMElement = this._componentDOMRef;
