@@ -26,13 +26,7 @@ export interface WorkletsPluginPass {
   workletNumber: number;
   classesToWorkletize: { node: BabelNode; name: string }[];
   skipFile: boolean;
-  /**
-   * `importForwarding` merged with the plugin's built-in defaults, computed
-   * once per file in `initializeState`. Kept on the pass (not written back to
-   * `state.opts`) so the plugin never mutates its shared options object — see
-   * the comment in `initializeState`.
-   */
-  resolvedImportForwarding: ResolvedImportForwarding;
+  importForwarding: InitializedImportForwarding;
 }
 
 export type WorkletizableFunction =
@@ -86,6 +80,6 @@ export const workletClassFactorySuffix = '__classFactory';
 
 export const generatedWorkletsDir = '.worklets';
 
-export type ResolvedImportForwarding = Required<
+type InitializedImportForwarding = Required<
   NonNullable<PluginOptions['importForwarding']>
 >;

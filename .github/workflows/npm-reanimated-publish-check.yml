@@ -1,0 +1,12 @@
+name: npm reanimated publish check
+permissions:
+  contents: read
+  id-token: write
+on:
+  pull_request:
+    branches:
+      - '[0-9]+.[0-9]+-stable'
+
+jobs:
+  npm-reanimated-publish-check:
+    uses: ./.github/workflows/npm-reanimated-publish.yml
