@@ -5,10 +5,6 @@ import type { AnimatedStyle } from '../commonTypes';
 import type { PropUpdates } from '../createAnimatedComponent/commonTypes';
 import type { Descriptor } from '../hook/commonTypes';
 
-/**
- * This used to be `SharedValue<Descriptors[]>` but objects holding just a
- * single `value` prop are fine too.
- */
 export interface ViewDescriptorsWrapper {
   value: Readonly<Descriptor[]>;
 }
