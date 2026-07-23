@@ -28,12 +28,6 @@ const ONLY = args.only
       .map((s) => s.trim())
       .filter(Boolean)
   : null;
-const INCLUDE = args.include
-  ? args.include
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean)
-  : null;
 const CONNECT_TIMEOUT_MS = Number(args['connect-timeout'] ?? 600) * 1000;
 const IDLE_TIMEOUT_MS = Number(args['idle-timeout'] ?? 600) * 1000;
 const SHOULD_LAUNCH = args.launch === true || args.launch === '';
@@ -200,8 +194,7 @@ function onHello(msg) {
     return;
   }
 
-  const requested = [...(ONLY ?? []), ...(INCLUDE ?? [])];
-  const unknown = requested.filter((name) => !declared.includes(name));
+  const unknown = (ONLY ?? []).filter((name) => !declared.includes(name));
   if (unknown.length > 0) {
     console.error(
       `[runtime-tests] unknown suite name(s): ${unknown.join(', ')}`
@@ -216,7 +209,6 @@ function onHello(msg) {
   send({
     type: 'start',
     ...(ONLY ? { only: ONLY } : {}),
-    ...(INCLUDE ? { include: INCLUDE } : {}),
   });
   console.log('[runtime-tests] start sent, running tests…');
 }

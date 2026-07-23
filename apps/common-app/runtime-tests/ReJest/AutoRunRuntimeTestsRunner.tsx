@@ -83,15 +83,11 @@ export default function AutoRunRuntimeTestsRunner({
           setStatus(message);
         }
       },
-      onStart: async ({ only, include }) => {
+      onStart: async ({ only }) => {
         const filterSet = only ? new Set(only) : null;
-        const includeSet = include ? new Set(include) : null;
         const selected = tests.filter((test) => {
           if (test.disabled) {
             return false;
-          }
-          if (includeSet?.has(test.testSuiteName)) {
-            return true;
           }
           if (filterSet) {
             return filterSet.has(test.testSuiteName);
@@ -100,7 +96,7 @@ export default function AutoRunRuntimeTestsRunner({
         });
 
         const known = new Set(tests.map((test) => test.testSuiteName));
-        const unknown = [...(filterSet ?? []), ...(includeSet ?? [])].filter(
+        const unknown = [...(filterSet ?? [])].filter(
           (name) => !known.has(name)
         );
         if (unknown.length > 0) {

@@ -37,14 +37,12 @@ export interface RemoteReporterOptions {
   onStatus: (message: string) => void;
   onStart: (params: {
     only?: string[];
-    include?: string[];
   }) => Promise<RunSummary | void>;
 }
 
 interface StartMessage {
   type: 'start';
   only?: string[];
-  include?: string[];
 }
 
 interface ErrorUtilsGlobal {
