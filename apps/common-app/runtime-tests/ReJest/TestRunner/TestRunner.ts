@@ -8,6 +8,7 @@ import type {
   ValueWrapper,
   TestCase,
   TestConfiguration,
+  TestProgress,
   TestSuite,
   TestValue,
 } from '../types';
@@ -39,6 +40,9 @@ export class TestRunner {
   private _callTrackerRegistry = new CallTrackerRegistry();
   private _notificationRegistry = new NotificationRegistry();
   private _workletRuntimePool = new WorkletRuntimePool();
+  private _progressHook: ((progress: TestProgress) => void) | null = null;
+  private _progressIndex: number = 0;
+  private _progressTotal: number = 0;
   private _testSuiteBuilder = new TestSuiteBuilder();
 
   public getWindowDimensionsMocker() {
@@ -71,6 +75,7 @@ export class TestRunner {
 
   public configure(config: TestConfiguration) {
     this._renderHook = config.render;
+    this._progressHook = config.onProgress ?? null;
     return this._renderLock;
   }
 
@@ -154,10 +159,21 @@ export class TestRunner {
   public async runTests() {
     console.log('\n');
     await this._testSuiteBuilder.buildTests();
+    this._progressIndex = 0;
+    this._progressTotal = this._testSuiteBuilder
+      .getTestSuites()
+      .reduce(
+        (sum, suite) =>
+          suite.skip
+            ? sum
+            : sum + suite.testCases.filter((testCase) => !testCase.skip).length,
+        0
+      );
     for (const testSuite of this._testSuiteBuilder.getTestSuites()) {
       await this.runTestSuite(testSuite);
     }
     this._testSummary.printSummary();
+    return this._testSummary.getSummary();
   }
 
   private async runTestSuite(testSuite: TestSuite) {
@@ -188,11 +204,23 @@ export class TestRunner {
     this._callTrackerRegistry.resetRegistry();
     this._notificationRegistry.resetRegistry();
     this._currentTestCase = testCase;
+    this._progressIndex += 1;
+    this._progressHook?.({
+      current: this._progressIndex,
+      total: this._progressTotal,
+      currentName: testCase.name,
+    });
 
-    if (testSuite.beforeEach) {
-      await testSuite.beforeEach();
+    try {
+      if (testSuite.beforeEach) {
+        await testSuite.beforeEach();
+      }
+      await testCase.run();
+    } catch (error) {
+      const message =
+        error instanceof Error ? (error.stack ?? error.message) : String(error);
+      testCase.errors.push(`[uncaught] ${message}`);
     }
-    await testCase.run();
 
     if (testCase.decorator === TestDecorator.FAILING) {
       if (testCase.errors.length > 0) {
@@ -204,14 +232,21 @@ export class TestRunner {
 
     this._testSummary.showTestCaseSummary(testCase, testSuite.nestingLevel);
 
-    if (testSuite.afterEach) {
-      await testSuite.afterEach();
-    }
+    try {
+      if (testSuite.afterEach) {
+        await testSuite.afterEach();
+      }
 
-    this._currentTestCase = null;
-    await this.render(null);
-    await this._animationRecorder.unmockAnimationTimer();
-    await this._animationRecorder.stopRecordingAnimationUpdates();
+      this._currentTestCase = null;
+      await this.render(null);
+      await this._animationRecorder.unmockAnimationTimer();
+      await this._animationRecorder.stopRecordingAnimationUpdates();
+    } catch (error) {
+      const message =
+        error instanceof Error ? (error.stack ?? error.message) : String(error);
+      console.error(`[uncaught in test cleanup] ${message}`);
+      this._currentTestCase = null;
+    }
   }
 
   public expect(currentValue: TestValue): Matchers {

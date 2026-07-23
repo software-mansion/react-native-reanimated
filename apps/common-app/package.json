@@ -10,7 +10,7 @@
     "type:check": "yarn type:check:native && yarn type:check:web",
     "type:check:native": "tsc --noEmit",
     "type:check:web": "tsc --noEmit --project tsconfig.web.json",
-    "type:check:strict": "tsc --noEmit --customConditions react-native-strict-api"
+    "type:check:legacy-rn-types": "tsc --noEmit --customConditions react-native-legacy-deep-imports"
   },
   "peerDependencies": {
     "react-native": "*"
@@ -30,7 +30,7 @@
     "@react-navigation/native-stack": "7.17.9",
     "@react-navigation/stack": "7.10.10",
     "@shopify/flash-list": "2.3.1",
-    "axios": "1.16.0",
+    "axios": "1.18.0",
     "d3-shape": "3.2.0",
     "fuse.js": "patch:fuse.js@npm%3A7.1.0#~/.yarn/patches/fuse.js-npm-7.1.0-5dcae892a6.patch",
     "react": "19.2.3",

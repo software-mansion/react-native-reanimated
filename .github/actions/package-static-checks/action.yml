@@ -30,10 +30,10 @@ runs:
       working-directory: ${{ inputs.package-dir }}
       run: yarn type:check
 
-    - name: Check TypeScript types with React Native Strict API
+    - name: Check TypeScript types with React Native Legacy API
       shell: bash
       working-directory: ${{ inputs.package-dir }}
-      run: yarn type:check:strict
+      run: yarn type:check:legacy-rn-types
 
     - name: Lint JavaScript
       shell: bash

@@ -4,6 +4,7 @@ export {};
 declare global {
   namespace jest {
     interface Matchers<R> {
+      toHaveInitData(times?: number): R;
       toHaveWorkletData(times?: number): R;
       toHaveInlineStyleWarning(times?: number): R;
       toHaveLocation(location: string): R;
@@ -14,19 +15,47 @@ declare global {
 }
 
 const WORKLET_REGEX = /^(const|var) _worklet_[0-9]+_init_data/gm;
+const USE_NO_MEMO_REGEX = /['"]use no memo['"]/g;
 const INLINE_STYLE_WARNING_REGEX =
   /console\.warn\(require\("react-native-reanimated"\)\.getUseOfValueInStyleWarning\(\)\)/g;
 
 expect.extend({
-  toHaveWorkletData(received: string, expectedMatchCount = 1) {
+  toHaveInitData(received: string, expectedMatchCount = 1) {
     const receivedMatchCount = received.match(WORKLET_REGEX)?.length || 0;
 
     if (receivedMatchCount === expectedMatchCount) {
       return {
         message: () =>
-          `Reanimated: found worklet data ${expectedMatchCount} times`,
+          `Reanimated: found worklet init data ${expectedMatchCount} times`,
         pass: true,
       };
+    }
+    return {
+      message: () =>
+        `Reanimated: expected code to have worklet init data ${expectedMatchCount} times, but found ${receivedMatchCount}`,
+      pass: false,
+    };
+  },
+
+  toHaveWorkletData(received: string, expectedMatchCount = 1) {
+    const receivedMatchCount = received.match(WORKLET_REGEX)?.length || 0;
+
+    if (receivedMatchCount === expectedMatchCount) {
+      const useNoMemoMatchCount =
+        received.match(USE_NO_MEMO_REGEX)?.length || 0;
+      if (useNoMemoMatchCount === expectedMatchCount) {
+        return {
+          message: () =>
+            `Reanimated: found worklet data ${expectedMatchCount} times`,
+          pass: true,
+        };
+      } else {
+        return {
+          message: () =>
+            `Reanimated: found worklet data ${expectedMatchCount} times, but also found "use no memo" directive ${useNoMemoMatchCount} times`,
+          pass: false,
+        };
+      }
     }
     return {
       message: () =>
