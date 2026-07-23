@@ -1,26 +1,18 @@
 'use strict';
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
-import { isWorkletFunction, makeShareable } from 'react-native-worklets';
+import { makeShareable } from 'react-native-worklets';
 
 import type { UnknownRecord } from '../common';
+import { logger } from '../common';
 import type { DependencyList } from './commonTypes';
 import type { GeneralHandlers, UseHandlerContext } from './useHandlerCommon';
 import {
-  areDependenciesEqual,
   areWorkletHandlersEqual,
   ensureWorkletHandlers,
 } from './useHandlerCommon';
 
 export type { UseHandlerContext } from './useHandlerCommon';
-
-function isBabelPluginEnabled(handlers: UnknownRecord): boolean {
-  const handlerFunctions = Object.values(handlers);
-  // If there is no function provided, we assume that the Babel plugin is enabled.
-  return (
-    handlerFunctions.length === 0 || handlerFunctions.some(isWorkletFunction)
-  );
-}
 
 /**
  * Lets you find out whether the event handler dependencies have changed.
@@ -34,46 +26,39 @@ function isBabelPluginEnabled(handlers: UnknownRecord): boolean {
  */
 export function useHandler<Event extends object, Context extends UnknownRecord>(
   handlers: GeneralHandlers<Event, Context>,
-  dependencies?: DependencyList
+  _dependencies?: DependencyList
 ): UseHandlerContext<Context> {
   'use no memo';
+
+  if (__DEV__ && _dependencies !== undefined) {
+    logger.warn('dependencies should only be used in web implementation.');
+  }
 
   const stateRef = useRef<{
     context: Context | undefined;
     prevHandlers: GeneralHandlers<Event, Context> | undefined;
-    prevDependencies: DependencyList;
   } | null>(null);
 
   if (stateRef.current === null) {
     stateRef.current = {
       context: undefined,
       prevHandlers: undefined,
-      prevDependencies: [],
     };
   }
 
   const state = stateRef.current;
-  let doDependenciesDiffer = true;
 
-  if (isBabelPluginEnabled(handlers)) {
-    if (__DEV__) {
-      ensureWorkletHandlers(handlers);
-    }
-    doDependenciesDiffer = !areWorkletHandlersEqual(
-      handlers as Record<string, WorkletFunction>,
-      state.prevHandlers as Record<string, WorkletFunction>
-    );
-  } else if (dependencies) {
-    doDependenciesDiffer = !areDependenciesEqual(
-      dependencies,
-      state.prevDependencies
-    );
+  if (__DEV__) {
+    ensureWorkletHandlers(handlers);
   }
+  const doDependenciesDiffer = !areWorkletHandlersEqual(
+    handlers as Record<string, WorkletFunction>,
+    state.prevHandlers as Record<string, WorkletFunction>
+  );
 
   // Write after commit to avoid corruption from interrupted renders (in case of concurrent mode).
   useEffect(() => {
     state.prevHandlers = handlers;
-    state.prevDependencies = dependencies;
   });
 
   return {

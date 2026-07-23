@@ -1,6 +1,7 @@
 'use strict';
 import type { WorkletFunction } from 'react-native-worklets';
 
+import { logger } from '../common';
 import type { DependencyList } from './commonTypes';
 import { useAnimatedReactionBase } from './useAnimatedReactionCommon';
 
@@ -33,6 +34,10 @@ export function useAnimatedReaction<PreparedResult>(
   >,
   _dependencies?: DependencyList
 ) {
+  if (__DEV__ && _dependencies !== undefined) {
+    logger.warn('dependencies should only be used in web implementation.');
+  }
+
   const inputs = Object.values(prepare.__closure ?? {});
 
   useAnimatedReactionBase(prepare, react, undefined, inputs);
