@@ -9,6 +9,7 @@ const WEB_ONLY_IN_JEST = new Set([
   'useAnimatedRef',
   'useAnimatedStyle',
   'JSPropsUpdater',
+  'updateProps',
 ]);
 
 /** @type {import('jest-resolve').SyncResolver} */
