@@ -9,4 +9,4 @@ export type {
 } from './utilsCommon';
 export { isValidRubberBandConfig, SLOPE_FACTOR } from './utilsCommon';
 
-export const VELOCITY_EPS = 1 / 20;
+export const VELOCITY_EPS = 1;
