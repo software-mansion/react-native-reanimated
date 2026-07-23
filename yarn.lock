@@ -13973,7 +13973,7 @@ __metadata:
     react-native-safe-area-context: "npm:5.7.0"
     react-native-screens: "npm:4.24.0"
     react-native-svg: "npm:15.15.4"
-    react-native-worklets: "npm:0.9.1"
+    react-native-worklets: "npm:0.9.3"
     react-strict-dom: "npm:0.0.55"
     react-test-renderer: "npm:19.2.3"
     typescript: "npm:5.9.3"
@@ -22323,7 +22323,7 @@ __metadata:
     react-native: "npm:0.81.4"
     react-native-macos: "patch:react-native-macos@npm%3A0.81.4#~/.yarn/patches/react-native-macos-npm-0.81.4.patch"
     react-native-reanimated: "workspace:*"
-    react-native-worklets: "npm:0.9.1"
+    react-native-worklets: "npm:0.9.3"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -25215,7 +25215,7 @@ __metadata:
     react-native: "npm:0.85.2"
     react-native-reanimated: "workspace:*"
     react-native-web: "npm:0.21.1"
-    react-native-worklets: "npm:0.9.1"
+    react-native-worklets: "npm:0.9.3"
     start-server-and-test: "npm:2.1.2"
     typescript: "npm:5.9.3"
     webpack: "npm:5.105.4"
@@ -28507,7 +28507,7 @@ __metadata:
     react-native-is-edge-to-edge: "npm:^1.3.1"
     react-native-svg: "npm:15.15.4"
     react-native-web: "npm:0.21.1"
-    react-native-worklets: "npm:0.9.1"
+    react-native-worklets: "npm:0.9.3"
     react-test-renderer: "npm:19.2.3"
     semver: "npm:^7.7.3"
     typescript: "npm:5.9.3"
@@ -28616,9 +28616,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-worklets@npm:0.9.1":
-  version: 0.9.1
-  resolution: "react-native-worklets@npm:0.9.1"
+"react-native-worklets@npm:0.9.3":
+  version: 0.9.3
+  resolution: "react-native-worklets@npm:0.9.3"
   dependencies:
     "@babel/plugin-transform-arrow-functions": "npm:^7.27.1"
     "@babel/plugin-transform-class-properties": "npm:^7.28.6"
@@ -28629,6 +28629,7 @@ __metadata:
     "@babel/plugin-transform-template-literals": "npm:^7.27.1"
     "@babel/plugin-transform-unicode-regex": "npm:^7.27.1"
     "@babel/preset-typescript": "npm:^7.28.5"
+    "@babel/types": "npm:^7.27.1"
     convert-source-map: "npm:^2.0.0"
     semver: "npm:^7.7.4"
   peerDependencies:
@@ -28636,7 +28637,7 @@ __metadata:
     "@react-native/metro-config": "*"
     react: "*"
     react-native: 0.83 - 0.86
-  checksum: 10/03ec3dfcff65311af247149135d2727e60851c99c12b67927093f8022a618115ad3dda29b707fcb77a7a8a0fe0a68efea065bfa3053020df8dc6f7b402d4d16f
+  checksum: 10/621740e88a1bbac97e9f3de8c64e1e3058c170c039ad9c4f90dc4030e4da2f192a22b8f73a4b3c3600f76ffa91f7c060258834973686129e208dedd94b63a4c8
   languageName: node
   linkType: hard
 
@@ -32330,7 +32331,7 @@ __metadata:
     react: "npm:19.2.3"
     react-native: "npm:react-native-tvos@0.85.3-0"
     react-native-reanimated: "workspace:*"
-    react-native-worklets: "npm:0.9.1"
+    react-native-worklets: "npm:0.9.3"
     react-test-renderer: "npm:19.2.3"
     typescript: "npm:5.9.3"
   languageName: unknown
