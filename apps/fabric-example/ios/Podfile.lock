@@ -2198,7 +2198,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNWorklets (0.11.1):
+  - RNWorklets (0.11.2):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2220,10 +2220,10 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNWorklets/apple (= 0.11.1)
-    - RNWorklets/common (= 0.11.1)
+    - RNWorklets/apple (= 0.11.2)
+    - RNWorklets/common (= 0.11.2)
     - Yoga
-  - RNWorklets/apple (0.11.1):
+  - RNWorklets/apple (0.11.2):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2246,7 +2246,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNWorklets/common (0.11.1):
+  - RNWorklets/common (0.11.2):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2538,7 +2538,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   FBLazyVector: b3e7ad108f0d882e30445c5527d774e3fd432f3d
-  hermes-engine: 627616e521c3b3f19c9e15348c24ac8da9859500
+  hermes-engine: c5355d3a55a7c79bd0541ed68d942b9f6d769214
   MMKVCore: 3d16ce9f7d411e135020915fde98a056859a1efa
   NitroMmkv: 3163b5e55ecaa9a2c90088fc76f4f4d5ec0fb3d8
   NitroModules: 2d92eeea80a5afdebe7b4fd2443b5bd4d7ba1a44
@@ -2621,7 +2621,7 @@ SPEC CHECKSUMS:
   RNReanimated: 27a2ac012e5795b0a6cf6dff64b0670baddad735
   RNScreens: 01b065ded2dfe7987bcce770ff3a196be417ff41
   RNSVG: 3fe8590403ac9f107b4d14591bc6e54da4894e5c
-  RNWorklets: 0380c2bea64be730fd3178d5a3126cda01169968
+  RNWorklets: 68630ef7ed1cc992cfc78a02b87b18648729b78b
   Yoga: fe50ab299e578f397fef753cf309c6703a4db29b
 
 PODFILE CHECKSUM: 57bbab89b8d7e783d0fe0caf63c8ff8b06333f80
