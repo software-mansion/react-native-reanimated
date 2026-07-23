@@ -207,7 +207,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   if (!dependencies) {
     dependencies = [...inputs, updater.__workletHash];
   } else {
-    dependencies.push(updater.__workletHash);
+    dependencies = [...dependencies, updater.__workletHash];
   }
   if (adaptersHash) {
     dependencies.push(adaptersHash);

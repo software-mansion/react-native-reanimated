@@ -25,7 +25,11 @@ export function useAnimatedReactionBase<PreparedResult>(
       react.__workletHash,
     ];
   } else {
-    dependencies.push(prepare.__workletHash, react.__workletHash);
+    dependencies = [
+      ...dependencies,
+      prepare.__workletHash,
+      react.__workletHash,
+    ];
   }
 
   useEffect(() => {
