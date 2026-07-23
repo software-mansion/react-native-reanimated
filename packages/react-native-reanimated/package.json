@@ -154,8 +154,8 @@
     }
   },
   "sideEffects": [
-    "./src/layoutReanimation/animationsManager.ts",
-    "./lib/module/layoutReanimation/animationsManager.js",
+    "./src/layoutReanimation/animationsManager.native.ts",
+    "./lib/module/layoutReanimation/animationsManager.native.js",
     "./src/core.ts",
     "./lib/module/core.js",
     "./src/initializers.native.ts",
