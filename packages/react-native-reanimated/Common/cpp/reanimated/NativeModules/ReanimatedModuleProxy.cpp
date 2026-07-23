@@ -1264,6 +1264,19 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
       uiManager_->setAnimationDelegate(layoutAnimationsProxyLegacy.get());
       layoutAnimationsProxy_ = std::move(layoutAnimationsProxyLegacy);
     }
+
+    layoutAnimationsProxy_->setGetLatestRegistryPropsFunction([weakThis = weak_from_this()](Tag tag) -> folly::dynamic {
+      auto strongThis = weakThis.lock();
+      if (!strongThis) {
+        return nullptr;
+      }
+      const auto &updatesRegistryManager = strongThis->updatesRegistryManager_;
+      if (UpdatesRegistryManager::isLockedByCurrentThread()) {
+        return updatesRegistryManager->collectPropsForTag(tag);
+      }
+      auto lock = updatesRegistryManager->lock();
+      return updatesRegistryManager->collectPropsForTag(tag);
+    });
   }
 }
 

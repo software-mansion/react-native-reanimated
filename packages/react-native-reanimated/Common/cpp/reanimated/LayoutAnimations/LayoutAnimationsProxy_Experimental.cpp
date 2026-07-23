@@ -3,6 +3,9 @@
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
+#include <folly/dynamic.h>
+#include <jsi/JSIDynamic.h>
+
 #include <algorithm>
 #include <memory>
 #include <ranges>
@@ -258,7 +261,16 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::progressLayoutAnima
 
   maybeRestoreOpacity(layoutAnimation, newStyle);
 
-  auto rawProps = std::make_shared<RawProps>(uiRuntime_, jsi::Value(uiRuntime_, newStyle));
+  folly::dynamic mergedRawProps = folly::dynamic::object();
+  if (getLatestRegistryProps_) {
+    auto latestRegistryProps = getLatestRegistryProps_(tag);
+    if (latestRegistryProps.isObject()) {
+      mergedRawProps.update(latestRegistryProps);
+    }
+  }
+  mergedRawProps.update(jsi::dynamicFromValue(uiRuntime_, jsi::Value(uiRuntime_, newStyle)));
+
+  auto rawProps = std::make_shared<RawProps>(std::move(mergedRawProps));
 
   const PropsParserContext propsParserContext{layoutAnimation.finalView.surfaceId, *contextContainer_};
 #ifdef RN_SERIALIZABLE_STATE
