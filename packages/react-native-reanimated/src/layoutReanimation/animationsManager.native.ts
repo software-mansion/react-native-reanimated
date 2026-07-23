@@ -141,5 +141,3 @@ runOnUISync(() => {
   'worklet';
   global.LayoutAnimationsManager = createLayoutAnimationManager();
 });
-
-export type { LayoutAnimationsManager };
