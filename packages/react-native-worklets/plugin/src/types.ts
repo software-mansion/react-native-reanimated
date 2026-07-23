@@ -20,12 +20,19 @@ import type { PluginOptions } from './options';
 export interface WorkletsPluginPass {
   file: BabelFile;
   key: string;
-  opts: InitializedPluginOptions;
+  opts: PluginOptions;
   cwd: string;
   filename: string | undefined;
   workletNumber: number;
   classesToWorkletize: { node: BabelNode; name: string }[];
   skipFile: boolean;
+  /**
+   * `importForwarding` merged with the plugin's built-in defaults, computed
+   * once per file in `initializeState`. Kept on the pass (not written back to
+   * `state.opts`) so the plugin never mutates its shared options object — see
+   * the comment in `initializeState`.
+   */
+  resolvedImportForwarding: ResolvedImportForwarding;
 }
 
 export type WorkletizableFunction =
@@ -79,9 +86,6 @@ export const workletClassFactorySuffix = '__classFactory';
 
 export const generatedWorkletsDir = '.worklets';
 
-export type InitializedPluginOptions = Omit<
-  PluginOptions,
-  'importForwarding'
-> & {
-  importForwarding: Required<NonNullable<PluginOptions['importForwarding']>>;
-};
+export type ResolvedImportForwarding = Required<
+  NonNullable<PluginOptions['importForwarding']>
+>;

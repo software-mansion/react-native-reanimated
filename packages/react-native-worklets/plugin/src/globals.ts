@@ -147,8 +147,15 @@ export function initializeState(state: WorkletsPluginPass) {
     addCustomGlobals(state);
   }
 
+  // Store the merged import-forwarding config on the pass rather than writing
+  // it back to `state.opts`. Babel reuses one `state.opts` reference across all
+  // files in a transform pass, so mutating it here mutates the plugin's shared
+  // options object. Tools that hash the resolved Babel options — notably
+  // babel-jest, whose transform-cache key includes
+  // `JSON.stringify(babelOptions.options)` — then see a different options object
+  // for every file (the arrays keep growing), which busts the cache entirely.
   const userImportForwarding = state.opts.importForwarding;
-  state.opts.importForwarding = {
+  state.resolvedImportForwarding = {
     relativePaths: [
       ...defaultAllowedPaths,
       ...(userImportForwarding?.relativePaths ?? []),

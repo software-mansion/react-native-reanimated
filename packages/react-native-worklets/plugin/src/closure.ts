@@ -91,7 +91,7 @@ export function getClosure(
             isImportRelative(binding) &&
             canForwardRelativeImport(
               state.filename,
-              state.opts.importForwarding.relativePaths
+              state.resolvedImportForwarding.relativePaths
             )
           ) {
             capturedNames.add(name);
@@ -105,7 +105,7 @@ export function getClosure(
           if (
             canForwardModuleImport(
               source,
-              state.opts.importForwarding.moduleNames
+              state.resolvedImportForwarding.moduleNames
             )
           ) {
             capturedNames.add(name);
