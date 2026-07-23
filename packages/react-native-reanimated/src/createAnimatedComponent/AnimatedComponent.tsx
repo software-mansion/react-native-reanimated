@@ -1,6 +1,4 @@
 'use strict';
-import '../layoutReanimation/animationsManager';
-
 import type React from 'react';
 import { Fragment } from 'react';
 
