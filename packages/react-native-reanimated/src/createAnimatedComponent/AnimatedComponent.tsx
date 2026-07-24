@@ -3,13 +3,12 @@ import type React from 'react';
 import { Fragment } from 'react';
 
 import { maybeBuild } from '../animationBuilder';
-import { IS_JEST, logger } from '../common';
+import { logger } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import { getStaticFeatureFlag } from '../featureFlags';
-import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import { type BaseAnimationBuilder } from '../layoutReanimation';
 import { SharedTransition } from '../layoutReanimation/SharedTransition';
 import {
@@ -86,10 +85,6 @@ export default class AnimatedComponent
     this._options = options;
     this._displayName = displayName;
 
-    if (IS_JEST) {
-      this.jestAnimatedStyle = { value: {} };
-      this.jestAnimatedProps = { value: {} };
-    }
     this._configureSharedTransition(true);
     const entering = this.props.entering;
     const skipEntering = this.context?.current;
@@ -214,7 +209,7 @@ export default class AnimatedComponent
   _handleAnimatedStylesUpdate(
     prevStyles: StyleProps[],
     currentStyles: StyleProps[],
-    jestAnimatedStyleOrProps: { value: StyleProps }
+    _jestAnimatedStyleOrProps: { value: StyleProps }
   ) {
     const { viewTag, shadowNodeWrapper } = this._getViewInfo();
     const newStyles = new Set<StyleProps>(currentStyles);
@@ -257,17 +252,6 @@ export default class AnimatedComponent
         },
         style.styleUpdaterContainer
       );
-      if (IS_JEST) {
-        /**
-         * We need to connect Jest's TestObject instance whose contains just
-         * props object with the updateProps() function where we update the
-         * properties of the component. We can't update props object directly
-         * because TestObject contains a copy of props - look at render
-         * function: const props = this._filterNonAnimatedProps(this.props);
-         */
-        Object.assign(jestAnimatedStyleOrProps.value, style.initial.value);
-        style.jestAnimatedValues.current = jestAnimatedStyleOrProps;
-      }
     });
   }
 
@@ -418,11 +402,6 @@ export default class AnimatedComponent
   render() {
     const filteredProps = this._PropsFilter.filterNonAnimatedProps(this);
 
-    if (IS_JEST) {
-      filteredProps.jestAnimatedStyle = this.jestAnimatedStyle;
-      filteredProps.jestAnimatedProps = this.jestAnimatedProps;
-    }
-
     // Layout animations on web are set inside `componentDidMount` method, which is called after first render.
     // Because of that we can encounter a situation in which component is visible for a short amount of time, and later on animation triggers.
     // I've tested that on various browsers and devices and it did not happen to me. To be sure that it won't happen to someone else,
@@ -440,16 +419,7 @@ export default class AnimatedComponent
           };
     }
 
-    let nativeID, jestProps;
-
-    if (IS_JEST) {
-      jestProps = {
-        jestInlineStyle:
-          this.props.style && filterOutAnimatedStyles(this.props.style),
-        jestAnimatedStyle: this.jestAnimatedStyle,
-        jestAnimatedProps: this.jestAnimatedProps,
-      };
-    }
+    let nativeID;
 
     // TODO: Remove need for this \/\/\/\/.
     // RNSVG expects Gradient elem to have stops passed as children. When we want to animate them,
@@ -467,28 +437,6 @@ export default class AnimatedComponent
     return super.render({
       nativeID,
       ...filteredProps,
-      ...jestProps,
     });
   }
-}
-
-function filterOutAnimatedStyles(
-  style: NestedArray<StyleProps | AnimatedStyleHandle | null | undefined>
-): NestedArray<StyleProps | null | undefined> {
-  if (!style) {
-    return style;
-  }
-  if (!Array.isArray(style)) {
-    return style?.viewDescriptors ? {} : style;
-  }
-  return style
-    .filter(
-      (styleElement) => !(styleElement && 'viewDescriptors' in styleElement)
-    )
-    .map((styleElement) => {
-      if (Array.isArray(styleElement)) {
-        return filterOutAnimatedStyles(styleElement);
-      }
-      return styleElement;
-    });
 }
