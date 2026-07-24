@@ -568,23 +568,6 @@ void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) con
   });
 }
 
-void LayoutAnimationsProxy_Experimental::transferConfigFromNativeID(const std::string &nativeIdString, const int tag)
-    const {
-  if (nativeIdString.empty() || nativeIdString.length() > 9) {
-    return;
-  }
-  auto nativeId = 0;
-  for (int i = 0; i < nativeIdString.length(); i++) {
-    if (nativeIdString[i] < '0' || nativeIdString[i] > '9') {
-      return;
-    }
-    nativeId *= 10;
-    nativeId += nativeIdString[i] - '0';
-  }
-
-  layoutAnimationsManager_->transferConfigFromNativeID(nativeId, tag);
-}
-
 // When entering animations start, we temporarily set opacity to 0
 // so that we can immediately insert the view at the right position
 // and schedule the animation on the UI thread
