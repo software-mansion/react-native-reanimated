@@ -14,7 +14,11 @@ import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 import type { Maybe, MutuallyExclusiveUnion } from './common';
 import type { CSSStyle } from './css';
 import type { EasingFunctionFactory } from './Easing';
-import type { AnimatedStyleHandle } from './hook/commonTypes';
+import type { AnimatedStyleHandle, Descriptor } from './hook/commonTypes';
+
+export interface ViewDescriptorsWrapper {
+  value: Readonly<Descriptor[]>;
+}
 
 type LayoutAnimationOptions =
   | 'originX'

@@ -1,11 +1,10 @@
 'use strict';
 
 import { processBoxShadowWeb, processFilterWeb } from '../common/web';
+import type { ViewDescriptorsWrapper } from '../commonTypes';
 import type { PropUpdates } from '../createAnimatedComponent/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
-import type { ViewDescriptorsWrapper } from './updatePropsCommon';
-import { makeUpdatePropsJestWrapper } from './updatePropsCommon';
 
 const updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
@@ -24,7 +23,5 @@ const updateProps: (
     _updatePropsJS(updates, component, isAnimatedProps);
   });
 };
-
-export const updatePropsJestWrapper = makeUpdatePropsJestWrapper(updateProps);
 
 export default updateProps;

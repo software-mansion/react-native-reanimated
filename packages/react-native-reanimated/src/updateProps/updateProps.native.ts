@@ -8,15 +8,17 @@ import {
   processTransformOrigin,
   stylePropsBuilder,
 } from '../common';
-import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
+import type {
+  ShadowNodeWrapper,
+  StyleProps,
+  ViewDescriptorsWrapper,
+} from '../commonTypes';
 import type {
   JSPropsOperation,
   PropUpdates,
 } from '../createAnimatedComponent/commonTypes';
 import jsPropsUpdater from '../createAnimatedComponent/JSPropsUpdater';
 import { getStaticFeatureFlag } from '../featureFlags';
-import type { ViewDescriptorsWrapper } from './updatePropsCommon';
-import { makeUpdatePropsJestWrapper } from './updatePropsCommon';
 
 const USE_ANIMATION_BACKEND = getStaticFeatureFlag('USE_ANIMATION_BACKEND');
 
@@ -47,8 +49,6 @@ const updateProps: (
     isAnimatedProps ? updates : stylePropsBuilder.build(updates)
   );
 };
-
-export const updatePropsJestWrapper = makeUpdatePropsJestWrapper(updateProps);
 
 export default updateProps;
 
