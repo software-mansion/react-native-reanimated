@@ -177,10 +177,17 @@ function isBundleModeOn() {
  */
 function setBundleMode(on) {
   if (isBundleModeOn() === on) return false;
-  const ok = on
-    ? PATCH_FILES.every((p) => git(['apply', p]))
-    : PATCH_FILES.every((p) => git(['apply', '--reverse', p]));
-  if (!ok) throw new Error('failed to toggle bundle-mode patches');
+  const apply = on ? ['apply'] : ['apply', '--reverse'];
+  const undo = on ? ['apply', '--reverse'] : ['apply'];
+  const done = [];
+  for (const p of PATCH_FILES) {
+    if (git([...apply, p])) {
+      done.push(p);
+      continue;
+    }
+    for (const d of done.reverse()) git([...undo, d]);
+    throw new Error('failed to toggle bundle-mode patches');
+  }
   return true;
 }
 
