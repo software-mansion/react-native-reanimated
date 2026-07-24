@@ -16,6 +16,7 @@ export const IS_WEB: boolean = Platform?.OS === 'web';
 export const IS_JEST: boolean =
   typeof globalThis.jest !== 'undefined' || process.env.NODE_ENV === 'test';
 /** @knipIgnore */
-export const IS_WINDOWS: boolean = Platform?.OS === 'windows';
+export const IS_WINDOWS: boolean = /* @__PURE__ */ (() =>
+  Platform?.OS === 'windows')();
 
 export const IS_WINDOW_AVAILABLE: boolean = isWindowAvailable();
