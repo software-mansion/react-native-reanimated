@@ -2,7 +2,7 @@
 import type React from 'react';
 import { Fragment } from 'react';
 
-import { maybeBuild } from '../animationBuilder';
+import { checkStyleOverwriting, maybeBuild } from '../animationBuilder';
 import { IS_JEST, logger } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
@@ -10,18 +10,8 @@ import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import { getStaticFeatureFlag } from '../featureFlags';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
-import { type BaseAnimationBuilder } from '../layoutReanimation';
 import { SharedTransition } from '../layoutReanimation/SharedTransition';
-import {
-  configureWebLayoutAnimations,
-  getReducedMotionFromConfig,
-  saveSnapshot,
-  startWebLayoutAnimation,
-  tryActivateLayoutTransition,
-} from '../layoutReanimation/web';
-import type { CustomConfig } from '../layoutReanimation/web/config';
-import { addHTMLMutationObserver } from '../layoutReanimation/web/domUtils';
-import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
+import { PropsRegistryGarbageCollector } from '../PropsRegistryGarbageCollector';
 import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
 import type {
   AnimatedComponentProps,
@@ -36,13 +26,15 @@ import type {
 } from './commonTypes';
 import { InlinePropManager } from './InlinePropManager';
 import jsPropsUpdater from './JSPropsUpdater';
+import { NativeEventsManager } from './NativeEventsManager';
 import { PropsFilter } from './PropsFilter';
 import { filterStyles, flattenArray } from './utils';
 
 let id = 0;
 
-// is-tree-shakable-suppress
-configureWebLayoutAnimations();
+const FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS =
+  getStaticFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS') &&
+  !getStaticFeatureFlag('USE_ANIMATION_BACKEND');
 
 export type Options<P> = {
   setNativeProps?: (ref: AnimatedComponentRef, props: P) => void;
@@ -86,6 +78,10 @@ export default class AnimatedComponent
     this._options = options;
     this._displayName = displayName;
 
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+      this.state = { settledProps: {} };
+    }
+
     if (IS_JEST) {
       this.jestAnimatedStyle = { value: {} };
       this.jestAnimatedProps = { value: {} };
@@ -100,9 +96,18 @@ export default class AnimatedComponent
 
   componentDidMount() {
     super.componentDidMount();
+    // It exists only on native platforms. We initialize it here because the ref to the animated component is available only post-mount
+    this._NativeEventsManager = new NativeEventsManager(this, this._options);
     this._NativeEventsManager?.attachEvents();
     this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+      const viewTag = this.getComponentViewTag();
+      if (viewTag !== -1) {
+        PropsRegistryGarbageCollector.registerView(viewTag, this);
+      }
+    }
 
     if (this._options?.jsProps?.length) {
       jsPropsUpdater.registerComponent(this, this._options.jsProps);
@@ -117,42 +122,6 @@ export default class AnimatedComponent
       this.props.exiting
     );
 
-    if (this._componentDOMRef) {
-      const element = this._componentDOMRef as ReanimatedHTMLElement;
-      const dummyClone = element.dummyClone;
-      // If the element was cloned (because of the exiting animation), we need to bring it back to the DOM
-      while (dummyClone?.firstChild) {
-        element.appendChild(dummyClone.firstChild);
-      }
-      delete element.dummyClone;
-
-      if (this.props.exiting) {
-        saveSnapshot(element);
-      }
-
-      if (!this.props.entering) {
-        this._isFirstRender = false;
-        return;
-      }
-
-      if (getReducedMotionFromConfig(this.props.entering as CustomConfig)) {
-        this._isFirstRender = false;
-        (this.props.entering as BaseAnimationBuilder).callbackV?.(true);
-        return;
-      }
-
-      const skipEntering = this.context?.current;
-      if (!skipEntering) {
-        startWebLayoutAnimation(
-          this.props,
-          element,
-          LayoutAnimationType.ENTERING
-        );
-      } else if (element.style) {
-        element.style.visibility = 'initial';
-      }
-    }
-
     this._isFirstRender = false;
   }
 
@@ -162,30 +131,25 @@ export default class AnimatedComponent
     this._detachStyles();
     this._InlinePropManager.detachInlineProps();
 
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+      const viewTag = this.getComponentViewTag();
+      if (viewTag !== -1) {
+        PropsRegistryGarbageCollector.unregisterView(viewTag);
+      }
+    }
+
     if (this._options?.jsProps?.length) {
       jsPropsUpdater.unregisterComponent(this);
     }
-
-    const exiting = this.props.exiting;
-
-    if (this._componentDOMRef && exiting) {
-      if (getReducedMotionFromConfig(exiting as CustomConfig)) {
-        (exiting as BaseAnimationBuilder).callbackV?.(true);
-        return;
-      }
-
-      addHTMLMutationObserver();
-
-      startWebLayoutAnimation(
-        this.props,
-        this._componentDOMRef as ReanimatedHTMLElement,
-        LayoutAnimationType.EXITING
-      );
-    }
   }
 
-  _syncStylePropsBackToReact(_props: StyleProps) {
-    // noop
+  _syncStylePropsBackToReact(props: StyleProps) {
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+      this.setState((state) => ({
+        settledProps: { ...state.settledProps, ...props },
+      }));
+      // TODO(future): revert changes when animated styles are detached
+    }
   }
 
   _detachStyles() {
@@ -284,11 +248,7 @@ export default class AnimatedComponent
     );
   }
 
-  componentDidUpdate(
-    prevProps: AnimatedComponentProps<InitialComponentProps>,
-    _prevState: Readonly<unknown>,
-    snapshot: DOMRect | null
-  ) {
+  componentDidUpdate(prevProps: AnimatedComponentProps<InitialComponentProps>) {
     this._configureLayoutAnimation(
       LayoutAnimationType.LAYOUT,
       this.props.layout,
@@ -304,24 +264,6 @@ export default class AnimatedComponent
     this._NativeEventsManager?.updateEvents(prevProps);
     this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
-
-    if (this.props.exiting && this._componentDOMRef) {
-      saveSnapshot(this._componentDOMRef);
-    }
-
-    if (snapshot && this.props.layout) {
-      if (getReducedMotionFromConfig(this.props.layout as CustomConfig)) {
-        (this.props.layout as BaseAnimationBuilder).callbackV?.(true);
-
-        return;
-      }
-
-      tryActivateLayoutTransition(
-        this.props,
-        this._componentDOMRef as ReanimatedHTMLElement,
-        snapshot
-      );
-    }
   }
 
   _updateStyles(props: AnimatedComponentProps<InitialComponentProps>): void {
@@ -358,11 +300,38 @@ export default class AnimatedComponent
     }
   }
   _configureLayoutAnimation(
-    _type: LayoutAnimationType,
-    _currentConfig: LayoutAnimationOrBuilder | undefined,
-    _previousConfig?: LayoutAnimationOrBuilder
+    type: LayoutAnimationType,
+    currentConfig: LayoutAnimationOrBuilder | undefined,
+    previousConfig?: LayoutAnimationOrBuilder
   ) {
-    // noop
+    if (currentConfig === previousConfig) {
+      return;
+    }
+
+    if (
+      __DEV__ &&
+      currentConfig &&
+      type !== LayoutAnimationType.LAYOUT &&
+      this.props.style &&
+      !this._hasWarnedAboutLayoutAnimationStyleOverwriting
+    ) {
+      const onWarn = () =>
+        (this._hasWarnedAboutLayoutAnimationStyleOverwriting = true);
+      checkStyleOverwriting(
+        currentConfig,
+        this.props.style,
+        this._displayName,
+        onWarn
+      );
+    }
+
+    updateLayoutAnimations(
+      type === LayoutAnimationType.ENTERING
+        ? this.reanimatedID
+        : this.getComponentViewTag(),
+      type,
+      currentConfig && maybeBuild(currentConfig)
+    );
   }
 
   _configureSharedTransition(useNativeId?: boolean) {
@@ -407,10 +376,6 @@ export default class AnimatedComponent
   // It is called before the component gets rerendered. This way we can access components' position before it changed
   // and later on, in componentDidUpdate, calculate translation for layout transition.
   getSnapshotBeforeUpdate() {
-    if (this.props.layout && this._componentDOMRef?.getBoundingClientRect) {
-      return this._componentDOMRef.getBoundingClientRect();
-    }
-
     // `getSnapshotBeforeUpdate` has to return value which is not `undefined`.
     return null;
   }
@@ -423,23 +388,7 @@ export default class AnimatedComponent
       filteredProps.jestAnimatedProps = this.jestAnimatedProps;
     }
 
-    // Layout animations on web are set inside `componentDidMount` method, which is called after first render.
-    // Because of that we can encounter a situation in which component is visible for a short amount of time, and later on animation triggers.
-    // I've tested that on various browsers and devices and it did not happen to me. To be sure that it won't happen to someone else,
-    // I've decided to hide component at first render. Its visibility is reset in `componentDidMount`.
-    if (
-      this._isFirstRender &&
-      filteredProps.entering &&
-      !getReducedMotionFromConfig(filteredProps.entering as CustomConfig)
-    ) {
-      filteredProps.style = Array.isArray(filteredProps.style)
-        ? filteredProps.style.concat([{ visibility: 'hidden' }])
-        : {
-            ...(filteredProps.style ?? {}),
-            visibility: 'hidden', // Hide component until `componentDidMount` triggers
-          };
-    }
-
+    const skipEntering = this.context?.current;
     let nativeID, jestProps;
 
     if (IS_JEST) {
@@ -449,6 +398,8 @@ export default class AnimatedComponent
         jestAnimatedStyle: this.jestAnimatedStyle,
         jestAnimatedProps: this.jestAnimatedProps,
       };
+    } else if (!skipEntering) {
+      nativeID = `${this.reanimatedID}`;
     }
 
     // TODO: Remove need for this \/\/\/\/.
@@ -462,6 +413,16 @@ export default class AnimatedComponent
       if (filteredProps.children === undefined) {
         filteredProps.children = <Fragment />;
       }
+    }
+
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+      return super.render({
+        nativeID,
+        ...filteredProps,
+        ...this.state.settledProps,
+        style: [...flattenArray(filteredProps.style), this.state.settledProps],
+        ...jestProps,
+      });
     }
 
     return super.render({
