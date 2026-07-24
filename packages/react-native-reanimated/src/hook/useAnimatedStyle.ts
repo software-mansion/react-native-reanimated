@@ -12,10 +12,11 @@ import type {
   AnimatedStyle,
   SharedValue,
   Timestamp,
+  ViewDescriptorsWrapper,
 } from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
-import { updatePropsJestWrapper } from '../updateProps';
+import { updateProps } from '../updateProps';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type {
   AnimatedStyleHandle,
@@ -37,6 +38,28 @@ import {
 } from './useAnimatedStyleCommon';
 import { useSharedValue } from './useSharedValue';
 import { isAnimated, shallowEqual, validateAnimatedStyles } from './utils';
+
+const updatePropsJestWrapper = IS_JEST
+  ? (
+      viewDescriptors: ViewDescriptorsWrapper,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      updates: AnimatedStyle<any>,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      animatedValues: RefObject<AnimatedStyle<any>>,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      adapters: ((updates: AnimatedStyle<any>) => void)[]
+    ): void => {
+      adapters.forEach((adapter) => {
+        adapter(updates);
+      });
+      animatedValues.current.value = {
+        ...animatedValues.current.value,
+        ...updates,
+      };
+
+      updateProps(viewDescriptors, updates);
+    }
+  : undefined;
 
 function jestStyleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
@@ -103,7 +126,7 @@ function jestStyleUpdater(
     });
 
     if (Object.keys(updates).length) {
-      updatePropsJestWrapper(
+      updatePropsJestWrapper?.(
         viewDescriptors,
         updates,
         animatedValues,
@@ -134,7 +157,7 @@ function jestStyleUpdater(
   state.last = newValues;
 
   if (!shallowEqual(oldValues, newValues) || forceUpdate) {
-    updatePropsJestWrapper(
+    updatePropsJestWrapper?.(
       viewDescriptors,
       newValues,
       animatedValues,
