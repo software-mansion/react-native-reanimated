@@ -67,11 +67,11 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
       const SharedComponentDescriptorRegistry &componentDescriptorRegistry,
       const std::shared_ptr<const ContextContainer> &contextContainer,
       jsi::Runtime &uiRuntime,
-      const std::shared_ptr<UIScheduler> &uiScheduler
+      const std::shared_ptr<UIScheduler> &uiScheduler,
+      const std::shared_ptr<UIManager> &uiManager
 #ifdef ANDROID
       ,
       const PreserveMountedTagsFunction &filterUnmountedTagsFunction,
-      const std::shared_ptr<UIManager> &uiManager,
       const std::shared_ptr<CallInvoker> &jsInvoker
 #endif
       )
@@ -80,11 +80,11 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
             componentDescriptorRegistry,
             contextContainer,
             uiRuntime,
-            uiScheduler
+            uiScheduler,
+            uiManager
 #ifdef ANDROID
             ,
             filterUnmountedTagsFunction,
-            uiManager,
             jsInvoker
 #endif
             ),

@@ -3,8 +3,8 @@
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/scheduler/Scheduler.h>
-#include <react/renderer/uimanager/UIManagerAnimationDelegate.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
+#include <react/renderer/uimanager/UIManagerCommitHook.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
@@ -102,7 +102,7 @@ struct SurfaceContext {
 };
 
 struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
-                                      public UIManagerAnimationDelegate,
+                                      public UIManagerCommitHook,
                                       public std::enable_shared_from_this<LayoutAnimationsProxy_Legacy> {
   mutable std::unordered_map<Tag, std::shared_ptr<Node>> nodeForTag_;
   mutable std::recursive_mutex mutex;
@@ -116,11 +116,11 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
       const SharedComponentDescriptorRegistry &componentDescriptorRegistry,
       const std::shared_ptr<const ContextContainer> &contextContainer,
       jsi::Runtime &uiRuntime,
-      const std::shared_ptr<UIScheduler> &uiScheduler
+      const std::shared_ptr<UIScheduler> &uiScheduler,
+      const std::shared_ptr<UIManager> &uiManager
 #ifdef ANDROID
       ,
       const PreserveMountedTagsFunction &filterUnmountedTagsFunction,
-      const std::shared_ptr<UIManager> &uiManager,
       const std::shared_ptr<CallInvoker> &jsInvoker
 #endif
       )
@@ -129,14 +129,19 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
             componentDescriptorRegistry,
             contextContainer,
             uiRuntime,
-            uiScheduler
+            uiScheduler,
+            uiManager
 #ifdef ANDROID
             ,
             filterUnmountedTagsFunction,
-            uiManager,
             jsInvoker
 #endif
         ) {
+    uiManager->registerCommitHook(*this);
+  }
+
+  ~LayoutAnimationsProxy_Legacy() override {
+    uiManager_->unregisterCommitHook(*this);
   }
 
   void startEnteringAnimation(const int tag, ShadowViewMutation &mutation) const;
@@ -206,19 +211,15 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
       const TransactionTelemetry &telemetry,
       ShadowViewMutationList mutations) const override;
 
-  // UIManagerAnimationDelegate
+  // UIManagerCommitHook
 
-  void uiManagerDidConfigureNextLayoutAnimation(
-      jsi::Runtime &runtime,
-      const RawValue &config,
-      const jsi::Value &successCallbackValue,
-      const jsi::Value &failureCallbackValue) const override;
+  void commitHookWasRegistered(const UIManager &uiManager) noexcept override {}
+  void commitHookWasUnregistered(const UIManager &uiManager) noexcept override {}
 
-  void setComponentDescriptorRegistry(const SharedComponentDescriptorRegistry &componentDescriptorRegistry) override;
-
-  bool shouldAnimateFrame() const override;
-
-  void stopSurface(SurfaceId surfaceId) override;
+  RootShadowNode::Unshared shadowTreeWillCommit(
+      const ShadowTree &shadowTree,
+      const RootShadowNode::Shared &oldRootShadowNode,
+      const RootShadowNode::Unshared &newRootShadowNode) noexcept override;
 };
 
 } // namespace reanimated

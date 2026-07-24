@@ -1,6 +1,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 
 #include <react/debug/react_native_assert.h>
+#include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 
 #include <memory>
@@ -60,13 +61,36 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
 
   parseRemoveMutations(movedViews, mutations, roots);
 
-  auto shouldAnimate = !surfacesToRemove_.contains(surfaceId);
-  surfacesToRemove_.erase(surfaceId);
+  // Consume the teardown mark only on the transaction that actually clears
+  // the root — pulls emitted for animation frames must not eat it early.
+  auto shouldAnimate = true;
+  const auto removesRootChildren = std::ranges::any_of(mutations, [surfaceId](const auto &mutation) {
+    return mutation.type == ShadowViewMutation::Remove && mutation.parentTag == surfaceId;
+  });
+  if (removesRootChildren) {
+    shouldAnimate = surfacesToRemove_.erase(surfaceId) == 0;
+  }
   handleRemovals(filteredMutations, roots, deadNodes, shouldAnimate);
 
   handleUpdatesAndEnterings(filteredMutations, movedViews, mutations, propsParserContext, surfaceId);
 
   addOngoingAnimations(surfaceId, filteredMutations);
+
+  // The LayoutAnimationDriver can emit a final keyframe update in the same
+  // transaction as the deferred Remove/Delete it withheld for a delete
+  // animation. We emit removals before updates, so such an update would
+  // otherwise reach the mounting layer after its view was deleted.
+  std::unordered_set<Tag> deletedTags;
+  for (const auto &mutation : filteredMutations) {
+    if (mutation.type == ShadowViewMutation::Delete) {
+      deletedTags.insert(mutation.oldChildShadowView.tag);
+    }
+  }
+  if (!deletedTags.empty()) {
+    std::erase_if(filteredMutations, [&deletedTags](const auto &mutation) {
+      return mutation.type == ShadowViewMutation::Update && deletedTags.contains(mutation.newChildShadowView.tag);
+    });
+  }
 
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
@@ -998,23 +1022,22 @@ inline bool MutationNode::isMutationNode() {
   return true;
 }
 
-// UIManagerAnimationDelegate
+// UIManagerCommitHook
 
-void LayoutAnimationsProxy_Legacy::uiManagerDidConfigureNextLayoutAnimation(
-    jsi::Runtime &runtime,
-    const RawValue &config,
-    const jsi::Value &successCallbackValue,
-    const jsi::Value &failureCallbackValue) const {}
-
-void LayoutAnimationsProxy_Legacy::setComponentDescriptorRegistry(
-    const SharedComponentDescriptorRegistry &componentDescriptorRegistry) {}
-
-bool LayoutAnimationsProxy_Legacy::shouldAnimateFrame() const {
-  return false;
-}
-
-void LayoutAnimationsProxy_Legacy::stopSurface(SurfaceId surfaceId) {
-  surfacesToRemove_.insert(surfaceId);
+// Surface teardown commits an empty root (SurfaceHandler::stop) before the
+// teardown transaction is pulled — mark it so pullTransaction skips exit
+// animations. Reading the ShadowTreeRegistry here instead would deadlock (#8579).
+RootShadowNode::Unshared LayoutAnimationsProxy_Legacy::shadowTreeWillCommit(
+    const ShadowTree &shadowTree,
+    const RootShadowNode::Shared & /*oldRootShadowNode*/,
+    const RootShadowNode::Unshared &newRootShadowNode) noexcept {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  if (newRootShadowNode->getChildren().empty()) {
+    surfacesToRemove_.insert(shadowTree.getSurfaceId());
+  } else {
+    surfacesToRemove_.erase(shadowTree.getSurfaceId());
+  }
+  return newRootShadowNode;
 }
 
 } // namespace reanimated
