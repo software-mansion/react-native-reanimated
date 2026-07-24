@@ -1,5 +1,6 @@
 import type { NodePath } from '@babel/core';
 import type { CallExpression } from '@babel/types';
+import { strict as assert } from 'assert';
 import path from 'path';
 
 import { processCalleesAutoworkletizableCallbacks } from './autoworkletization';
@@ -161,7 +162,13 @@ export function initializeState(state: WorkletsPluginPass) {
   }
 
   const userImportForwarding = state.opts.importForwarding;
-  state.opts.importForwarding = {
+
+  assert(
+    state.importForwarding === undefined,
+    'state.importForwarding should be undefined at this point'
+  );
+
+  state.importForwarding = {
     relativePaths: [
       ...defaultAllowedPaths,
       ...(userImportForwarding?.relativePaths ?? []),
