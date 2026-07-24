@@ -1453,7 +1453,7 @@ var require_generate = __commonJS({
     var imports_1 = require_imports();
     var types_2 = require_types();
     function generateWorkletFile(moduleBindingsToImport, relativeBindingsToImport, factory, workletHash, state) {
-      var _a;
+      var _a, _b;
       const libraryImports = Array.from(moduleBindingsToImport).filter((binding) => (binding.path.isImportSpecifier() || binding.path.isImportDefaultSpecifier()) && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
       const filesDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), types_2.generatedWorkletsDir);
       const relativeImports = Array.from(relativeBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, imports_1.createImportPathLiteral)(binding.path.parentPath.node.source.value, state)));
@@ -1470,7 +1470,9 @@ var require_generate = __commonJS({
       })) === null || _a === void 0 ? void 0 : _a.code;
       (0, assert_1.default)(transformedProg, "[Worklets] `transformedProg` is undefined.");
       const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
-      (0, fs_1.writeFileSync)(dedicatedFilePath, transformedProg);
+      const output = process.env.WORKLETS_WRITE_ORIGIN ? `// __workletOrigin: ${(_b = state.file.opts.filename) !== null && _b !== void 0 ? _b : "unknown"}
+${transformedProg}` : transformedProg;
+      (0, fs_1.writeFileSync)(dedicatedFilePath, output);
     }
     function resolvePresetTypescript() {
       try {
