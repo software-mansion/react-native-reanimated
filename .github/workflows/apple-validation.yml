@@ -39,6 +39,9 @@ on:
         description: 'Package to validate (react-native-reanimated or react-native-worklets). If not specified, validates both.'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   apple-validation:
     if: github.repository == 'software-mansion/react-native-reanimated'

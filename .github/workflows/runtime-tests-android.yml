@@ -29,6 +29,9 @@ on:
         type: string
         default: DebugRuntimeTests
 
+permissions:
+  contents: read
+
 jobs:
   runtime-tests-android:
     if: github.repository == 'software-mansion/react-native-reanimated'
