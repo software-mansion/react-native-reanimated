@@ -28,7 +28,7 @@ export function updateRelativeRequires(
           requiredModule.node.value.startsWith('.') &&
           canForwardRelativeImport(
             state.file.opts.filename || '',
-            state.opts.importForwarding.relativePaths
+            state.importForwarding.relativePaths
           )
         ) {
           requiredModule.replaceWith(
