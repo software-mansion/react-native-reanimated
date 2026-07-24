@@ -19,5 +19,3 @@ export const IS_JEST: boolean =
 export const IS_WINDOWS: boolean = Platform?.OS === 'windows';
 
 export const IS_WINDOW_AVAILABLE: boolean = isWindowAvailable();
-
-export const SHOULD_BE_USE_WEB = IS_JEST || IS_WEB || IS_WINDOWS;
