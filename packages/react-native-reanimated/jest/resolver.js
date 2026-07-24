@@ -10,14 +10,18 @@ const WEB_ONLY_IN_JEST = new Set([
   'useAnimatedStyle',
   'JSPropsUpdater',
   'util',
+  'css/component/AnimatedComponent',
 ]);
 
 /** @type {import('jest-resolve').SyncResolver} */
 module.exports = (request, options) => {
   const basename = request.split('/').pop();
+  const isWebOnly = [...WEB_ONLY_IN_JEST].some((entry) =>
+    entry.includes('/') ? request.endsWith(entry) : basename === entry
+  );
   if (
     request.startsWith('.') &&
-    WEB_ONLY_IN_JEST.has(basename) &&
+    isWebOnly &&
     options.basedir.includes('react-native-reanimated')
   ) {
     return options.defaultResolver(request, {
