@@ -9,6 +9,7 @@ const WEB_ONLY_IN_JEST = new Set([
   'useAnimatedRef',
   'useAnimatedStyle',
   'JSPropsUpdater',
+  'util',
   'css/component/AnimatedComponent',
 ]);
 
