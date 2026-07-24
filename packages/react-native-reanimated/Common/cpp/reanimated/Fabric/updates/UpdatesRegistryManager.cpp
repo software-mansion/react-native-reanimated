@@ -106,6 +106,22 @@ PropsMap UpdatesRegistryManager::collectProps() {
   return propsMap;
 }
 
+folly::dynamic UpdatesRegistryManager::collectPropsForTag(Tag tag) {
+  react_native_assert(isLockedByCurrentThread());
+  folly::dynamic merged = nullptr;
+  for (auto &registry : registries_) {
+    const auto &props = registry->get(tag);
+    if (!props.isObject()) {
+      continue;
+    }
+    if (!merged.isObject()) {
+      merged = folly::dynamic::object();
+    }
+    merged.update(props);
+  }
+  return merged;
+}
+
 #ifdef ANDROID
 
 bool UpdatesRegistryManager::hasPropsToRevert() {

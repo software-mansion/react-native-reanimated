@@ -21,6 +21,11 @@ std::optional<facebook::react::SurfaceId> LayoutAnimationsProxyCommon::onGesture
 
 void LayoutAnimationsProxyCommon::startSurface(const SurfaceId surfaceId) {}
 
+void LayoutAnimationsProxyCommon::setGetLatestRegistryPropsFunction(
+    GetLatestRegistryPropsFunction getLatestRegistryProps) {
+  getLatestRegistryProps_ = std::move(getLatestRegistryProps);
+}
+
 #ifdef ANDROID
 
 const facebook::react::ShadowNode *findInShadowTreeByTag(const facebook::react::ShadowNode &node, Tag tag) {
