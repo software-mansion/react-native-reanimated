@@ -4,6 +4,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewParent
+import android.view.ViewTreeObserver
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UIManager
 import com.facebook.react.bridge.UIManagerListener
@@ -27,22 +28,25 @@ class PseudoSelectorManager(
     private val deepestCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
 
     private val touchHostRefs = HashMap<View, Int>()
-
-    private val gestureDownLeaf = HashMap<View, View>()
-
-    private val gestureDownPoint = HashMap<View, FloatArray>()
+    private val gestureByHost = HashMap<View, HostGesture>()
 
     private val hover = TouchHoverCoordinator()
-
     private var extraWindowBridge: ExtraWindowObserverBridge? = null
 
     private val pendingAttaches = LinkedHashMap<String, PendingAttach>()
     private var mountListenerRegistered = false
+    private var pressWindowInterceptorSet = false
 
     private data class PendingAttach(
         val tag: Int,
         val selector: Int,
         val callback: PseudoSelectorCallback,
+    )
+
+    private class HostGesture(
+        val leaf: View,
+        val downX: Float,
+        val downY: Float,
     )
 
     private val mountListener =
@@ -82,11 +86,11 @@ class PseudoSelectorManager(
     ) {
         val key = "$tag:$selector"
         when (selector) {
-            0 -> attachFocusWithin(view, key, callback)
-            1 -> attachFocus(view, key, callback)
+            0 -> attachFocusListener(view, key, callback) { view.hasFocus() }
+            1 -> attachFocusListener(view, key, callback) { it === view }
             2 -> attachHover(view, key, callback)
-            3 -> attachActive(view, key, callback)
-            4 -> attachActiveDeepest(view, key, callback)
+            3 -> attachPressSelector(view, key, callback, activeCallbacks)
+            4 -> attachPressSelector(view, key, callback, deepestCallbacks)
         }
     }
 
@@ -118,43 +122,19 @@ class PseudoSelectorManager(
         }
     }
 
-    private fun attachFocusWithin(
+    private fun attachFocusListener(
         view: View,
         key: String,
         callback: PseudoSelectorCallback,
+        isFocused: (newFocus: View?) -> Boolean,
     ) {
-        var isFocused = false
+        var focused = false
         val listener =
-            android.view.ViewTreeObserver.OnGlobalFocusChangeListener { _, _ ->
-                val hasFocus = view.hasFocus()
-                if (hasFocus && !isFocused) {
-                    isFocused = true
-                    callback.onSelectorStateChanged(true)
-                } else if (!hasFocus && isFocused) {
-                    isFocused = false
-                    callback.onSelectorStateChanged(false)
-                }
-            }
-        view.viewTreeObserver.addOnGlobalFocusChangeListener(listener)
-        detachActions[key] =
-            Runnable { view.viewTreeObserver.removeOnGlobalFocusChangeListener(listener) }
-    }
-
-    private fun attachFocus(
-        view: View,
-        key: String,
-        callback: PseudoSelectorCallback,
-    ) {
-        var isFocused = false
-        val listener =
-            android.view.ViewTreeObserver.OnGlobalFocusChangeListener { _, newFocus ->
-                val directFocus = newFocus == view
-                if (directFocus && !isFocused) {
-                    isFocused = true
-                    callback.onSelectorStateChanged(true)
-                } else if (!directFocus && isFocused) {
-                    isFocused = false
-                    callback.onSelectorStateChanged(false)
+            ViewTreeObserver.OnGlobalFocusChangeListener { _, newFocus ->
+                val nowFocused = isFocused(newFocus)
+                if (nowFocused != focused) {
+                    focused = nowFocused
+                    callback.onSelectorStateChanged(nowFocused)
                 }
             }
         view.viewTreeObserver.addOnGlobalFocusChangeListener(listener)
@@ -169,11 +149,11 @@ class PseudoSelectorManager(
     ) {
         val host = findTouchHost(view)
         acquireTouchListener(host)
-        hover.register(view, callback)
+        hover.register(view, host, callback)
         ensureExtraWindowBridge()
         detachActions[key] =
             Runnable {
-                hover.unregister(view)
+                hover.unregister(view, host)
                 releaseTouchListener(host)
             }
     }
@@ -186,34 +166,114 @@ class PseudoSelectorManager(
         extraWindowBridge = ExtraWindowObserverBridge(context, hover).also { it.install() }
     }
 
-    private fun attachActive(
+    private fun attachPressSelector(
         view: View,
         key: String,
         callback: PseudoSelectorCallback,
+        callbacks: MutableMap<View, PseudoSelectorCallback>,
     ) {
         val host = findTouchHost(view)
-        activeCallbacks[view] = callback
+        callbacks[view] = callback
         acquireTouchListener(host)
+        hover.retainWindowObserver(view)
+        ensureExtraWindowBridge()
+        ensurePressWindowInterceptor()
         detachActions[key] =
             Runnable {
-                activeCallbacks.remove(view)
+                callbacks.remove(view)
                 releaseTouchListener(host)
+                hover.releaseWindowObserver()
             }
     }
 
-    private fun attachActiveDeepest(
-        view: View,
-        key: String,
-        callback: PseudoSelectorCallback,
-    ) {
-        val host = findTouchHost(view)
-        deepestCallbacks[view] = callback
-        acquireTouchListener(host)
-        detachActions[key] =
-            Runnable {
-                deepestCallbacks.remove(view)
-                releaseTouchListener(host)
+    private fun ensurePressWindowInterceptor() {
+        if (pressWindowInterceptorSet) {
+            return
+        }
+        pressWindowInterceptorSet = true
+        hover.setWindowTouchInterceptor(::onWindowPressTouch)
+    }
+
+    private fun onWindowPressTouch(event: MotionEvent) {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> windowPressDown(event)
+            MotionEvent.ACTION_MOVE ->
+                if (event.findPointerIndex(0) >= 0) {
+                    for (host in gestureByHost.keys.toList()) {
+                        onHostMove(host, event)
+                    }
+                }
+            MotionEvent.ACTION_UP ->
+                if (event.findPointerIndex(0) >= 0) {
+                    releaseAllHostGestures()
+                }
+            MotionEvent.ACTION_POINTER_UP ->
+                if (event.getPointerId(event.actionIndex) == 0) {
+                    releaseAllHostGestures()
+                }
+            MotionEvent.ACTION_CANCEL ->
+                releaseAllHostGestures()
+        }
+    }
+
+    private fun windowPressDown(event: MotionEvent) {
+        if (activeCallbacks.isEmpty() && deepestCallbacks.isEmpty()) {
+            return
+        }
+        for (host in pressHosts()) {
+            if (gestureByHost.containsKey(host) || !viewContainsScreenPoint(host, event.rawX, event.rawY)) {
+                continue
             }
+            val leaf = findTouchedLeaf(host, event.rawX, event.rawY) ?: continue
+            beginPress(host, leaf, event.rawX, event.rawY)
+        }
+    }
+
+    private fun beginPress(
+        host: View,
+        leaf: View,
+        rawX: Float,
+        rawY: Float,
+    ) {
+        gestureByHost[host] = HostGesture(leaf, rawX, rawY)
+        fireActiveCallbacksUpTree(leaf, true)
+        fireDeepestIfHit(leaf, rawX, rawY)
+    }
+
+    private fun pressHosts(): Set<View> {
+        val hosts = LinkedHashSet<View>()
+        activeCallbacks.keys.forEach { hosts.add(findTouchHost(it)) }
+        deepestCallbacks.keys.forEach { hosts.add(findTouchHost(it)) }
+        return hosts
+    }
+
+    private fun viewContainsScreenPoint(
+        view: View,
+        rawX: Float,
+        rawY: Float,
+    ): Boolean {
+        val loc = IntArray(2)
+        view.getLocationOnScreen(loc)
+        return rawX >= loc[0] && rawX <= loc[0] + view.width && rawY >= loc[1] && rawY <= loc[1] + view.height
+    }
+
+    private fun findTouchedLeaf(
+        host: View,
+        rawX: Float,
+        rawY: Float,
+    ): View? =
+        if (host is ReactCompoundView) {
+            val loc = IntArray(2)
+            host.getLocationOnScreen(loc)
+            tryResolveView(host.reactTagForTouch(rawX - loc[0], rawY - loc[1]))
+        } else {
+            host
+        }
+
+    private fun releaseAllHostGestures() {
+        for (host in gestureByHost.keys.toList()) {
+            onHostRelease(host)
+        }
     }
 
     private fun findTouchHost(view: View): View {
@@ -226,16 +286,6 @@ class PseudoSelectorManager(
         }
         return view
     }
-
-    private fun findTouchedLeaf(
-        host: View,
-        event: MotionEvent,
-    ): View? =
-        if (host is ReactCompoundView) {
-            tryResolveView(host.reactTagForTouch(event.x, event.y))
-        } else {
-            host
-        }
 
     private fun acquireTouchListener(host: View) {
         val count = touchHostRefs.getOrDefault(host, 0)
@@ -252,8 +302,7 @@ class PseudoSelectorManager(
             return
         }
         touchHostRefs.remove(host)
-        gestureDownLeaf.remove(host)
-        gestureDownPoint.remove(host)
+        gestureByHost.remove(host)
         host.setOnTouchListener(null)
     }
 
@@ -261,6 +310,9 @@ class PseudoSelectorManager(
         host: View,
         event: MotionEvent,
     ): Boolean {
+        if (hover.isWindowObserved(host)) {
+            return false
+        }
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN ->
                 if (!hover.isGestureSettled(event)) {
@@ -293,11 +345,8 @@ class PseudoSelectorManager(
         host: View,
         event: MotionEvent,
     ) {
-        findTouchedLeaf(host, event)?.let {
-            gestureDownLeaf[host] = it
-            gestureDownPoint[host] = floatArrayOf(event.rawX, event.rawY)
-            fireActiveCallbacksUpTree(it, true)
-            fireDeepestIfHit(it, event.rawX, event.rawY)
+        findTouchedLeaf(host, event.rawX, event.rawY)?.let {
+            beginPress(host, it, event.rawX, event.rawY)
         }
         hover.onViewTouchDown(host, event)
     }
@@ -306,9 +355,9 @@ class PseudoSelectorManager(
         host: View,
         event: MotionEvent,
     ) {
-        val down = gestureDownPoint[host] ?: return
-        val dx = event.rawX - down[0]
-        val dy = event.rawY - down[1]
+        val gesture = gestureByHost[host] ?: return
+        val dx = event.rawX - gesture.downX
+        val dy = event.rawY - gesture.downY
         val slop = ViewConfiguration.get(host.context).scaledTouchSlop.toFloat()
         if (dx * dx + dy * dy > slop * slop) {
             onHostRelease(host)
@@ -316,8 +365,7 @@ class PseudoSelectorManager(
     }
 
     private fun onHostRelease(host: View) {
-        gestureDownPoint.remove(host)
-        val leaf = gestureDownLeaf.remove(host) ?: return
+        val leaf = gestureByHost.remove(host)?.leaf ?: return
         fireActiveCallbacksUpTree(leaf, false)
         deepestCallbacks[leaf]?.onSelectorStateChanged(false)
     }
@@ -344,6 +392,17 @@ class PseudoSelectorManager(
         }
     }
 
+    fun invalidate() {
+        UiThreadUtil.runOnUiThread {
+            if (mountListenerRegistered) {
+                fabricUIManager.removeUIManagerEventListener(mountListener)
+                mountListenerRegistered = false
+            }
+            extraWindowBridge?.uninstall()
+            extraWindowBridge = null
+        }
+    }
+
     private fun hasDeepestDescendantAt(
         ancestor: View,
         rawX: Float,
@@ -352,15 +411,11 @@ class PseudoSelectorManager(
         if (deepestCallbacks.size < 2) {
             return false
         }
-        val loc = IntArray(2)
         // TODO: Optimize so we don't iterate over all the views with :active-deepest every time.
         for (candidate in deepestCallbacks.keys) {
             if (candidate === ancestor) continue
             if (!isDescendantOf(candidate, ancestor)) continue
-            candidate.getLocationOnScreen(loc)
-            if (rawX >= loc[0] && rawX <= loc[0] + candidate.width &&
-                rawY >= loc[1] && rawY <= loc[1] + candidate.height
-            ) {
+            if (viewContainsScreenPoint(candidate, rawX, rawY)) {
                 return true
             }
         }

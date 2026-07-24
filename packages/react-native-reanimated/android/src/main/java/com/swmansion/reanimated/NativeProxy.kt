@@ -134,6 +134,7 @@ open class NativeProxy {
         if (mInvalidated.getAndSet(true)) {
             return
         }
+        pseudoSelectorManager.invalidate()
         if (mHybridData.isValid) {
             invalidateCpp()
         }
