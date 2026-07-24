@@ -42,6 +42,7 @@
     "type:check:legacy-rn-types": "yarn type:check:legacy-rn-types:src && yarn type:check:legacy-rn-types:app",
     "type:check:legacy-rn-types:src": "yarn tsc --noEmit --customConditions react-native-legacy-deep-imports",
     "type:check:legacy-rn-types:app": "yarn workspace common-app type:check:legacy-rn-types",
+    "type:check:legacy-rn-types:tests": "../../scripts/test-ts.sh --customConditions react-native-legacy-deep-imports __typetests__",
     "tree-shake:check:web": "yarn is-tree-shakable --resolution web",
     "validate-peers": "node ../../scripts/validate-compatibility-peer-dependencies.js"
   },
