@@ -160,7 +160,7 @@ class TouchHoverCoordinator {
 
     private fun onPointerExit() {
         if (pointerInsideRegistered) {
-            applyHover(emptySet())
+            applyHover(emptyList())
         }
         pointerInsideRegistered = false
     }
@@ -218,10 +218,10 @@ class TouchHoverCoordinator {
         if (hoverCallbacks.isEmpty()) {
             return
         }
-        applyHover(if (root == null) emptySet() else hitTestPath(root, screenX, screenY))
+        applyHover(if (root == null) emptyList() else hitTestPath(root, screenX, screenY))
     }
 
-    private fun applyHover(hitTags: Set<Int>) {
+    private fun applyHover(hitTags: Collection<Int>) {
         for ((view, callback) in hoverCallbacks) {
             setHovered(view, callback, view.id in hitTags)
         }
@@ -245,7 +245,7 @@ class TouchHoverCoordinator {
         if (downPoint != null && isStationary(screenX, screenY, downPoint, root)) {
             return
         }
-        val hitTags: Set<Int> = if (root == null) emptySet() else hitTestPath(root, screenX, screenY)
+        val hitTags: List<Int> = if (root == null) emptyList() else hitTestPath(root, screenX, screenY)
         unhoverWhere { it.id !in hitTags }
     }
 
@@ -273,13 +273,25 @@ class TouchHoverCoordinator {
         root: ViewGroup,
         screenX: Float,
         screenY: Float,
-    ): Set<Int> {
+    ): List<Int> {
         root.getLocationOnScreen(tmpLocation)
         val localX = screenX - tmpLocation[0]
         val localY = screenY - tmpLocation[1]
         val targets =
             TouchTargetHelper.findTargetPathAndCoordinatesForTouch(localX, localY, root, tmpCoords)
-        return targets.mapTo(HashSet(targets.size)) { it.getViewId() }
+        return targets.map { it.getViewId() }
+    }
+
+    /// React tags on the touch target path through [view]'s window at the given screen point,
+    /// ordered deepest first. Unlike a bounds check this honours z-order, clipping, transforms
+    /// and pointerEvents, and resolves compound (SVG) children to the front-most shape.
+    fun hitTestTagsAt(
+        view: View,
+        screenX: Float,
+        screenY: Float,
+    ): List<Int> {
+        val root = view.rootView as? ViewGroup ?: return emptyList()
+        return hitTestPath(root, screenX, screenY)
     }
 
     private inline fun unhoverWhere(predicate: (View) -> Boolean) {

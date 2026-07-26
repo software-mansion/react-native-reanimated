@@ -220,13 +220,33 @@ class PseudoSelectorManager(
         if (activeCallbacks.isEmpty() && deepestCallbacks.isEmpty()) {
             return
         }
+        val hitTagsByRoot = HashMap<View, List<Int>>()
+        var pressedHost: View? = null
+        var pressedHitTags: List<Int> = emptyList()
+        var pressedDepth = Int.MAX_VALUE
+
         for (host in pressHosts()) {
-            if (gestureByHost.containsKey(host) || !viewContainsScreenPoint(host, event.rawX, event.rawY)) {
+            if (gestureByHost.containsKey(host)) {
                 continue
             }
-            val leaf = findTouchedLeaf(host, event.rawX, event.rawY) ?: continue
-            beginPress(host, leaf, event.rawX, event.rawY)
+            val hitTags =
+                hitTagsByRoot.getOrPut(host.rootView) {
+                    hover.hitTestTagsAt(host, event.rawX, event.rawY)
+                }
+            // Every host on the touch path is a candidate, but only the deepest one starts a
+            // gesture - fireActiveCallbacksUpTree already walks to its ancestors, so starting one
+            // per ancestor would fire them twice.
+            val depth = hitTags.indexOf(host.id)
+            if (depth >= 0 && depth < pressedDepth) {
+                pressedDepth = depth
+                pressedHost = host
+                pressedHitTags = hitTags
+            }
         }
+
+        val host = pressedHost ?: return
+        val leaf = findTouchedLeaf(host, event.rawX, event.rawY) ?: return
+        beginPress(host, leaf, event.rawX, event.rawY, pressedHitTags)
     }
 
     private fun beginPress(
@@ -234,10 +254,11 @@ class PseudoSelectorManager(
         leaf: View,
         rawX: Float,
         rawY: Float,
+        hitTags: List<Int>,
     ) {
         gestureByHost[host] = HostGesture(leaf, rawX, rawY)
         fireActiveCallbacksUpTree(leaf, true)
-        fireDeepestIfHit(leaf, rawX, rawY)
+        fireDeepestIfHit(leaf, hitTags)
     }
 
     private fun pressHosts(): Set<View> {
@@ -245,16 +266,6 @@ class PseudoSelectorManager(
         activeCallbacks.keys.forEach { hosts.add(findTouchHost(it)) }
         deepestCallbacks.keys.forEach { hosts.add(findTouchHost(it)) }
         return hosts
-    }
-
-    private fun viewContainsScreenPoint(
-        view: View,
-        rawX: Float,
-        rawY: Float,
-    ): Boolean {
-        val loc = IntArray(2)
-        view.getLocationOnScreen(loc)
-        return rawX >= loc[0] && rawX <= loc[0] + view.width && rawY >= loc[1] && rawY <= loc[1] + view.height
     }
 
     private fun findTouchedLeaf(
@@ -346,7 +357,9 @@ class PseudoSelectorManager(
         event: MotionEvent,
     ) {
         findTouchedLeaf(host, event.rawX, event.rawY)?.let {
-            beginPress(host, it, event.rawX, event.rawY)
+            // This path only runs when the host itself received the touch, so the hit test is
+            // needed just to arbitrate :active-deepest between nested candidates.
+            beginPress(host, it, event.rawX, event.rawY, hover.hitTestTagsAt(host, event.rawX, event.rawY))
         }
         hover.onViewTouchDown(host, event)
     }
@@ -372,11 +385,10 @@ class PseudoSelectorManager(
 
     private fun fireDeepestIfHit(
         leaf: View,
-        rawX: Float,
-        rawY: Float,
+        hitTags: List<Int>,
     ) {
         val deepest = deepestCallbacks[leaf] ?: return
-        if (!hasDeepestDescendantAt(leaf, rawX, rawY)) {
+        if (!hasDeepestDescendantAt(leaf, hitTags)) {
             deepest.onSelectorStateChanged(true)
         }
     }
@@ -405,8 +417,7 @@ class PseudoSelectorManager(
 
     private fun hasDeepestDescendantAt(
         ancestor: View,
-        rawX: Float,
-        rawY: Float,
+        hitTags: List<Int>,
     ): Boolean {
         if (deepestCallbacks.size < 2) {
             return false
@@ -415,7 +426,7 @@ class PseudoSelectorManager(
         for (candidate in deepestCallbacks.keys) {
             if (candidate === ancestor) continue
             if (!isDescendantOf(candidate, ancestor)) continue
-            if (viewContainsScreenPoint(candidate, rawX, rawY)) {
+            if (candidate.id in hitTags) {
                 return true
             }
         }
