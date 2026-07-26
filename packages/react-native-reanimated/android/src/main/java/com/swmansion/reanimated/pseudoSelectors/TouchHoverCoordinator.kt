@@ -282,9 +282,9 @@ class TouchHoverCoordinator {
         return targets.map { it.getViewId() }
     }
 
-    /// React tags on the touch target path through [view]'s window at the given screen point,
-    /// ordered deepest first. Unlike a bounds check this honours z-order, clipping, transforms
-    /// and pointerEvents, and resolves compound (SVG) children to the front-most shape.
+    // React tags on the touch target path through the view's window at the given screen point,
+    // ordered deepest first. Unlike a bounds check this honours z-order, clipping, transforms
+    // and pointerEvents, and resolves compound (SVG) children to the front-most shape.
     fun hitTestTagsAt(
         view: View,
         screenX: Float,
