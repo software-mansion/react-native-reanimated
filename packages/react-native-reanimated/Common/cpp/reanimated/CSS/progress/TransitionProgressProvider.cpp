@@ -116,7 +116,9 @@ void TransitionProgressProvider::runProgressProvider(
     const bool isReversed,
     const double timestamp) {
 
-  const auto &settings = propertySettings_.at(propertyName);
+  // Routed through the accessor so this path gets the same missing-settings fallback instead of
+  // throwing std::out_of_range on the platform UI thread.
+  const auto settings = getPropertySettings(propertyName);
 
   const auto providerIt = propertyProgressProviders_.find(propertyName);
 
