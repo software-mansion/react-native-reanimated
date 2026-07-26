@@ -62,13 +62,13 @@ void CSSTransitionsRegistry::reconcilePseudoStyledProperties(
   }
 
   const auto &transition = it->second;
-  bool changed = false;
+  const auto shadowNode = transition->getShadowNode();
+  PropertyValueDynamicDiffsMap corrections;
+  bool evicted = false;
+
   for (const auto &[propKey, freshValue] : defaults.items()) {
     const auto propName = propKey.asString();
-    if (lockedProperties.contains(propName) || transition->isAnimatingProperty(propName)) {
-      continue;
-    }
-    if (updates.count(propName) == 0) {
+    if (lockedProperties.contains(propName) || updates.count(propName) == 0) {
       continue;
     }
     if (freshValue.isNull()) {
@@ -76,15 +76,20 @@ void CSSTransitionsRegistry::reconcilePseudoStyledProperties(
       // and the resting value is whatever React renders. Drop the override rather than pinning
       // the view at its toggle-time value forever.
       updates.erase(propName);
-      changed = true;
+      evicted = true;
     } else if (updates[propName] != freshValue) {
-      updates[propName] = freshValue;
-      changed = true;
+      // Both ends are the fresh value: the transition starts from the live registry value, so
+      // this retargets a property that is still mid-flight instead of fighting it, and settles
+      // instantly when the property has no transition config.
+      corrections.emplace(propName, std::make_pair(freshValue, freshValue));
     }
   }
 
-  if (changed) {
+  if (evicted) {
     setInUpdatesRegistry(transition->getShadowNodeFamily(), updates);
+  }
+  if (!corrections.empty()) {
+    run(shadowNode, corrections);
   }
 }
 

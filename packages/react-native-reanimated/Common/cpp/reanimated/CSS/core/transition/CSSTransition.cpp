@@ -82,10 +82,6 @@ void CSSTransition::setPseudoLockedProperties(TransitionProperties properties) {
   pseudoLockedProperties_ = std::move(properties);
 }
 
-bool CSSTransition::isAnimatingProperty(const std::string &propertyName) const {
-  return loopTransition_ && loopTransition_->isAnimatingProperty(propertyName);
-}
-
 void CSSTransition::cancel() {
   if (loopTransition_) {
     loop_->remove(loopTransition_);
