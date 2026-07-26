@@ -64,14 +64,20 @@ void CSSTransitionsRegistry::reconcilePseudoStyledProperties(
   const auto &transition = it->second;
   bool changed = false;
   for (const auto &[propKey, freshValue] : defaults.items()) {
-    if (freshValue.isNull()) {
-      continue;
-    }
     const auto propName = propKey.asString();
     if (lockedProperties.contains(propName) || transition->isAnimatingProperty(propName)) {
       continue;
     }
-    if (updates.count(propName) != 0 && updates[propName] != freshValue) {
+    if (updates.count(propName) == 0) {
+      continue;
+    }
+    if (freshValue.isNull()) {
+      // The property is styled only by the selector, so there is no default to settle back to
+      // and the resting value is whatever React renders. Drop the override rather than pinning
+      // the view at its toggle-time value forever.
+      updates.erase(propName);
+      changed = true;
+    } else if (updates[propName] != freshValue) {
       updates[propName] = freshValue;
       changed = true;
     }
