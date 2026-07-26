@@ -244,16 +244,16 @@ transform: {
             title="SVG radius"
             code={`// r needs a base prop value, otherwise it renders at 0.
 <AnimatedCircle
-  cx={25} cy={25} fill={colors.primary}
-  r={24}
+  cx={24} cy={24} fill={colors.primary}
+  r={22}
   style={{
-    r: { default: 24, ':active': 12 },
+    r: { default: 22, ':active': 12 },
     transitionDuration: '200ms',
   }}
   onStartShouldSetResponder={() => true}
 />`}
             collapsedCode={`r: {
-  default: 24,
+  default: 22,
   ':active': 12,
 },`}>
             <Svg height={sizes.md} width={sizes.md}>
