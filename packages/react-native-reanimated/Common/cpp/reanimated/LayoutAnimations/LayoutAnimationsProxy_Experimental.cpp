@@ -142,9 +142,8 @@ void LayoutAnimationsProxy_Experimental::reconcileContradictedRemovals(
       // cleanup runs at the end of the transaction — after this Create would
       // have re-registered the tag in the mounting layer's view registry — so
       // it must be flushed now instead.
-      const auto deadIt = std::find_if(deadNodes.begin(), deadNodes.end(), [tag](const auto &deadNode) {
-        return deadNode->current.tag == tag;
-      });
+      const auto deadIt = std::find_if(
+          deadNodes.begin(), deadNodes.end(), [tag](const auto &deadNode) { return deadNode->current.tag == tag; });
       if (deadIt == deadNodes.end()) {
         continue;
       }
