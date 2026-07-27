@@ -34,6 +34,7 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
   void reconcilePseudoStyledProperties(
       Tag viewTag,
       const folly::dynamic &defaults,
+      const folly::dynamic &previousDefaults,
       const TransitionProperties &lockedProperties);
 
   void flushUpdates(UpdatesBatch &updatesBatch);

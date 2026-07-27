@@ -64,6 +64,7 @@ void PseudoStylesRegistry::registerPseudoStyles(
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
 
   auto &entry = registry_[tag];
+  auto previousDefaults = std::move(entry.defaults);
   entry.shadowNode = shadowNode;
   entry.defaults = defaults;
   std::vector<PseudoSelector> newSelectors;
@@ -79,7 +80,7 @@ void PseudoStylesRegistry::registerPseudoStyles(
   // The lock is otherwise only refreshed by a selector toggle, so a render that changes which
   // properties the pseudo block styles leaves it stale in both directions.
   cssTransitionsRegistry_->setPseudoLockedProperties(tag, lockedProperties);
-  cssTransitionsRegistry_->reconcilePseudoStyledProperties(tag, entry.defaults, lockedProperties);
+  cssTransitionsRegistry_->reconcilePseudoStyledProperties(tag, entry.defaults, previousDefaults, lockedProperties);
 
   for (const auto selector : newSelectors) {
     attachFn_(

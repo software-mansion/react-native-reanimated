@@ -50,6 +50,7 @@ void CSSTransitionsRegistry::setPseudoLockedProperties(const Tag viewTag, const 
 void CSSTransitionsRegistry::reconcilePseudoStyledProperties(
     const Tag viewTag,
     const folly::dynamic &defaults,
+    const folly::dynamic &previousDefaults,
     const TransitionProperties &lockedProperties) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto it = registry_.find(viewTag);
@@ -77,6 +78,20 @@ void CSSTransitionsRegistry::reconcilePseudoStyledProperties(
       evicted = true;
     } else if (updates[propName] != freshValue) {
       corrections.emplace(propName, std::make_pair(updates[propName], freshValue));
+    }
+  }
+
+  // A property can also leave the pseudo block while its selector stays, which does not
+  // unregister the tag. It is no longer in the defaults, so the loop above never visits it and
+  // its settled value would keep overriding renders.
+  if (previousDefaults.isObject()) {
+    for (const auto &propKey : previousDefaults.keys()) {
+      const auto propName = propKey.asString();
+      if (defaults.count(propName) != 0 || lockedProperties.contains(propName) || updates.count(propName) == 0) {
+        continue;
+      }
+      updates.erase(propName);
+      evicted = true;
     }
   }
 
