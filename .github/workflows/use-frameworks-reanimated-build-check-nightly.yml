@@ -11,6 +11,9 @@ on:
   workflow_call:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   use-frameworks-reanimated-build-check-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
