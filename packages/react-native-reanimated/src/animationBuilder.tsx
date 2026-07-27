@@ -7,6 +7,7 @@ import type {
   StyleProps,
 } from './commonTypes';
 import type { NestedArray } from './createAnimatedComponent/commonTypes';
+import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 
 const mockTargetValues: LayoutAnimationValues = {
   targetOriginX: 0,
@@ -58,7 +59,7 @@ export function checkStyleOverwriting(
   layoutAnimationOrBuilder:
     | ILayoutAnimationBuilder
     | LayoutAnimationFunction
-    | Keyframe,
+    | ReanimatedKeyframe,
   style: NestedArray<StyleProps>,
   displayName: string,
   onWarn: () => void
@@ -102,8 +103,8 @@ export function maybeBuild(
   layoutAnimationOrBuilder:
     | ILayoutAnimationBuilder
     | LayoutAnimationFunction
-    | Keyframe
-): LayoutAnimationFunction | Keyframe {
+    | ReanimatedKeyframe
+): LayoutAnimationFunction | ReanimatedKeyframe {
   if (isAnimationBuilder(layoutAnimationOrBuilder)) {
     const animationFactory = layoutAnimationOrBuilder.build();
     return animationFactory;
@@ -113,7 +114,7 @@ export function maybeBuild(
 }
 
 function isAnimationBuilder(
-  value: ILayoutAnimationBuilder | LayoutAnimationFunction | Keyframe
+  value: ILayoutAnimationBuilder | LayoutAnimationFunction | ReanimatedKeyframe
 ): value is ILayoutAnimationBuilder {
   return 'build' in value && typeof value.build === 'function';
 }
