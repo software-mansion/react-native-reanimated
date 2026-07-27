@@ -25,10 +25,6 @@ class TouchHoverCoordinator(
     private var settledGestureDownTime = Long.MIN_VALUE
     private var touchSlop = -1f
 
-    private var pointerInsideRegistered = false
-    private var lastPointerX = 0f
-    private var lastPointerY = 0f
-
     private val observedWindows = mutableListOf<WeakReference<WindowObserver>>()
 
     private var windowObserverRetainCount = 0
@@ -46,7 +42,6 @@ class TouchHoverCoordinator(
                 MotionEvent.ACTION_DOWN -> {
                     downPoint[0] = event.rawX
                     downPoint[1] = event.rawY
-                    pointerInsideRegistered = false
                     reconcile(root, event.rawX, event.rawY)
                 }
                 MotionEvent.ACTION_UP ->
@@ -136,31 +131,11 @@ class TouchHoverCoordinator(
         screenX: Float,
         screenY: Float,
     ) {
-        val root = sourceView.rootView as? ViewGroup ?: return
-        if (hoverCallbacks.isEmpty()) {
-            return
-        }
-        val hitTags = hitTestPath(root, screenX, screenY)
-        val overRegistered = hoverCallbacks.keys.any { it.id in hitTags }
-        if (overRegistered) {
-            if (!pointerInsideRegistered ||
-                movedBeyondSlop(root, screenX - lastPointerX, screenY - lastPointerY)
-            ) {
-                applyHover(hitTags)
-                lastPointerX = screenX
-                lastPointerY = screenY
-            }
-        } else if (pointerInsideRegistered) {
-            applyHover(hitTags)
-        }
-        pointerInsideRegistered = overRegistered
+        reconcile(sourceView.rootView as? ViewGroup, screenX, screenY)
     }
 
     private fun onPointerExit() {
-        if (pointerInsideRegistered) {
-            applyHover(emptyList())
-        }
-        pointerInsideRegistered = false
+        clearAll()
     }
 
     private fun movedBeyondSlop(
@@ -179,7 +154,6 @@ class TouchHoverCoordinator(
         if (isWindowObserved(sourceView) || isGestureSettled(event)) {
             return
         }
-        pointerInsideRegistered = false
         reconcile(sourceView.rootView as? ViewGroup, event.rawX, event.rawY)
     }
 
@@ -291,7 +265,6 @@ class TouchHoverCoordinator(
     }
 
     private fun clearAll() {
-        pointerInsideRegistered = false
         unhoverWhere { true }
     }
 
