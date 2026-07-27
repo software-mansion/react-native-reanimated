@@ -72,16 +72,11 @@ void CSSTransitionsRegistry::reconcilePseudoStyledProperties(
       continue;
     }
     if (freshValue.isNull()) {
-      // The property is styled only by the selector, so there is no default to settle back to
-      // and the resting value is whatever React renders. Drop the override rather than pinning
-      // the view at its toggle-time value forever.
+      // Styled only by the selector, so the resting value is whatever React renders.
       updates.erase(propName);
       evicted = true;
     } else if (updates[propName] != freshValue) {
-      // Both ends are the fresh value: the transition starts from the live registry value, so
-      // this retargets a property that is still mid-flight instead of fighting it, and settles
-      // instantly when the property has no transition config.
-      corrections.emplace(propName, std::make_pair(freshValue, freshValue));
+      corrections.emplace(propName, std::make_pair(updates[propName], freshValue));
     }
   }
 

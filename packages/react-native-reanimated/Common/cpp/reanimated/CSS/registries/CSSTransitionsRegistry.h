@@ -29,10 +29,8 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
   void run(const std::shared_ptr<const ShadowNode> &shadowNode, const PropertyValueDynamicDiffsMap &propertyDiffs);
 
   void setPseudoLockedProperties(Tag viewTag, const TransitionProperties &properties);
-  /// Refreshes settled (unlocked, not animating) pseudo-styled properties held in the
-  /// updates registry with the fresh default values. Without this a settled toggle value
-  /// keeps overriding every later render that triggers no transition run (e.g. a pseudo
-  /// property with no transition config freezes at its tap-time value forever).
+  /// Retargets settled pseudo-styled values to the fresh defaults, so a toggle value left in
+  /// the updates registry stops overriding later renders.
   void reconcilePseudoStyledProperties(
       Tag viewTag,
       const folly::dynamic &defaults,
