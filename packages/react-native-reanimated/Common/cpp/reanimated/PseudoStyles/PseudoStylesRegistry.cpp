@@ -40,6 +40,22 @@ std::array<folly::dynamic, (1u << kPseudoSelectorBits)> PseudoStylesRegistry::re
   return newPrecomputedStyles;
 }
 
+// static
+css::TransitionProperties PseudoStylesRegistry::collectPseudoLockedProperties(const TagEntry &entry) {
+  css::TransitionProperties properties;
+  for (const auto &[selector, data] : entry.selectors) {
+    if (!(entry.activeMask & (1u << static_cast<int>(selector)))) {
+      continue;
+    }
+    for (const auto &[propKey, value] : data.selectorStyle.items()) {
+      if (!value.isNull()) {
+        properties.insert(propKey.asString());
+      }
+    }
+  }
+  return properties;
+}
+
 void PseudoStylesRegistry::registerPseudoStyles(
     Tag tag,
     const std::shared_ptr<const ShadowNode> &shadowNode,
@@ -48,6 +64,7 @@ void PseudoStylesRegistry::registerPseudoStyles(
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
 
   auto &entry = registry_[tag];
+  auto previousDefaults = std::move(entry.defaults);
   entry.shadowNode = shadowNode;
   entry.defaults = defaults;
   std::vector<PseudoSelector> newSelectors;
@@ -58,6 +75,12 @@ void PseudoStylesRegistry::registerPseudoStyles(
     entry.selectors[registration.selector] = {registration.selectorStyle};
   }
   entry.precomputedStyles = recomputeAllStyles(entry);
+
+  const auto lockedProperties = collectPseudoLockedProperties(entry);
+  // Otherwise the lock is only refreshed by a selector toggle and goes stale when a render
+  // changes which properties the pseudo block styles.
+  cssTransitionsRegistry_->setPseudoLockedProperties(tag, lockedProperties);
+  cssTransitionsRegistry_->reconcilePseudoStyledProperties(tag, entry.defaults, previousDefaults, lockedProperties);
 
   for (const auto selector : newSelectors) {
     attachFn_(
@@ -117,18 +140,7 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
   const auto &fromStyle = entry.precomputedStyles[oldMask];
   const auto &toStyle = entry.precomputedStyles[entry.activeMask];
 
-  css::TransitionProperties lockedProperties;
-  for (const auto &[sel, data] : entry.selectors) {
-    if (!(entry.activeMask & (1u << static_cast<int>(sel)))) {
-      continue;
-    }
-    for (const auto &[propKey, val] : data.selectorStyle.items()) {
-      if (!val.isNull()) {
-        lockedProperties.insert(propKey.asString());
-      }
-    }
-  }
-  cssTransitionsRegistry_->setPseudoLockedProperties(tag, lockedProperties);
+  cssTransitionsRegistry_->setPseudoLockedProperties(tag, collectPseudoLockedProperties(entry));
 
   css::PropertyValueDynamicDiffsMap valueChanges;
   for (const auto &[propKey, toVal] : toStyle.items()) {
