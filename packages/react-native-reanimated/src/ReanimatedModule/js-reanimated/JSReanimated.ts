@@ -18,6 +18,7 @@ import type {
 import { SensorType } from '../../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSEventHandler,
   CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
 } from '../../css/native';
@@ -281,6 +282,12 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
+  setCSSEventHandler(_handler: CSSEventHandler): void {
+    throw new Error(
+      '[Reanimated] `setCSSEventHandler` is not available in JSReanimated.'
+    );
+  }
+
   markNodeAsRemovable(_shadowNodeWrapper: ShadowNodeWrapper): void {
     throw new Error(
       '[Reanimated] markNodeAsRemovable is not available in JSReanimated.'
@@ -315,7 +322,8 @@ class JSReanimated implements IReanimatedModule {
   applyCSSAnimations(
     _shadowNodeWrapper: ShadowNodeWrapper,
     _compoundComponentName: string,
-    _animationUpdates: CSSAnimationUpdates
+    _animationUpdates: CSSAnimationUpdates,
+    _eventMask: number
   ) {
     throw new Error(
       '[Reanimated] `applyCSSAnimations` is not available in JSReanimated.'

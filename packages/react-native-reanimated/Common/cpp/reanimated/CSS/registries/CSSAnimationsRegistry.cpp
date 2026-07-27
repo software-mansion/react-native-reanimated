@@ -14,8 +14,12 @@ namespace reanimated::css {
 CSSAnimationsRegistry::CSSAnimationsRegistry(
     const std::shared_ptr<OperationsLoop> &loop,
     const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
-    const std::shared_ptr<CSSPlatformAnimationFactory> &platformAnimationFactory)
-    : loop_(loop), keyframesRegistry_(keyframesRegistry), platformAnimationFactory_(platformAnimationFactory) {}
+    const std::shared_ptr<CSSPlatformAnimationFactory> &platformAnimationFactory,
+    const std::shared_ptr<CSSEventsEmitter> &eventsEmitter)
+    : loop_(loop),
+      keyframesRegistry_(keyframesRegistry),
+      platformAnimationFactory_(platformAnimationFactory),
+      eventsEmitter_(eventsEmitter) {}
 
 bool CSSAnimationsRegistry::needsFlush() const {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
@@ -116,13 +120,28 @@ void CSSAnimationsRegistry::AnimationObserver::onAnimationNeedsRevert(const Tag 
   owner_.pendingRevertTags_.insert(viewTag);
 }
 
+void CSSAnimationsRegistry::AnimationObserver::onAnimationEvent(
+    const Tag viewTag,
+    const std::string &animationName,
+    const CSSEventType type,
+    const double elapsedTimeMs) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  owner_.eventsEmitter_->schedule(createCSSEvent(viewTag, type, animationName, elapsedTimeMs));
+}
+
 void CSSAnimationsRegistry::removeTag(const Tag viewTag) {
   auto it = groups_.find(viewTag);
   if (it != groups_.end()) {
     it->second.unschedule(*loop_);
+    // Report before erasing, since the animations are destroyed with the group.
+    const auto timestamp = loop_->resolveTimestamp();
+    for (const auto &animation : it->second.getAnimations()) {
+      animation->reportCancellation(timestamp);
+    }
     groups_.erase(it);
   }
   removeFromUpdatesRegistry(viewTag);
+  eventsEmitter_->clearTag(viewTag);
 }
 
 std::optional<CSSAnimationsGroup> CSSAnimationsRegistry::maybeBuildNewGroup(
@@ -170,6 +189,14 @@ std::optional<CSSAnimationsGroup> CSSAnimationsRegistry::maybeBuildNewGroup(
       if (oldIt->second.empty()) {
         oldByName.erase(oldIt);
       }
+    }
+  }
+
+  // Whatever is left was not carried over into the new group, so those
+  // animations are being interrupted rather than completed.
+  for (const auto &[_, leftoverAnimations] : oldByName) {
+    for (const auto &animation : leftoverAnimations) {
+      animation->reportCancellation(timestamp);
     }
   }
 

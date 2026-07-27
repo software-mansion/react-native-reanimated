@@ -16,6 +16,7 @@ class CSSLoopAnimation : public OperationsLoop::LoopOperation, public std::enabl
  public:
   CSSLoopAnimation(
       Tag viewTag,
+      std::string animationName,
       const std::shared_ptr<AnimationStyleInterpolator> &interpolator,
       const std::shared_ptr<CSSAnimationSettings> &settings,
       const std::shared_ptr<KeyframeEasingConfigs> &keyframeEasingConfigs,
@@ -36,14 +37,28 @@ class CSSLoopAnimation : public OperationsLoop::LoopOperation, public std::enabl
   void setAnimatedProperties(const std::unordered_set<std::string> &loopDrivenProperties);
   void updateSettings(const PartialCSSAnimationSettings &updatedSettings, double timestamp);
 
+  /// Emits a cancel event when the animation is torn down before finishing.
+  void reportCancellation(double timestamp);
+
  private:
   static constexpr double FALLBACK_INTERPOLATION_THRESHOLD = 0.5;
 
   const Tag viewTag_;
+  const std::string animationName_;
   const std::shared_ptr<CSSAnimationSettings> settings_;
   const std::shared_ptr<AnimationStyleInterpolator> interpolator_;
   const std::shared_ptr<AnimationProgressProvider> progressProvider_;
   CSSAnimation::Observer &observer_;
+
+  AnimationProgressState lastObservedState_;
+  unsigned lastObservedIteration_;
+
+  /// Diffs the progress state captured before the last provider update against
+  /// the current one and emits the boundaries that were crossed.
+  void reportProgressEvents(double timestamp);
+  void reportStart();
+  void reportIterations(double timestamp);
+  void reportEnd();
 };
 
 } // namespace reanimated::css

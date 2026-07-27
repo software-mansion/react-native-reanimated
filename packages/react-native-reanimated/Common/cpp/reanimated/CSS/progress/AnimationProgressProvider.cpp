@@ -1,5 +1,6 @@
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 
+#include <algorithm>
 #include <memory>
 #include <utility>
 
@@ -65,6 +66,26 @@ double AnimationProgressProvider::getStartTimestamp(const double timestamp) cons
   // should be applied (it depends on the animation delay and the total
   // time when the animation was paused)
   return creationTimestamp_ + delay_ + getTotalPausedTime(timestamp);
+}
+
+double AnimationProgressProvider::getDuration() const {
+  return duration_;
+}
+
+double AnimationProgressProvider::getDelay() const {
+  return delay_;
+}
+
+double AnimationProgressProvider::getIterationCount() const {
+  return iterationCount_;
+}
+
+unsigned AnimationProgressProvider::getCurrentIteration() const {
+  return currentIteration_;
+}
+
+double AnimationProgressProvider::getActiveElapsedTime(const double timestamp) const {
+  return std::max(0.0, timestamp - getStartTimestamp(timestamp));
 }
 
 void AnimationProgressProvider::pause(const double timestamp) {

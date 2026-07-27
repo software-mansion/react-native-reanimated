@@ -212,11 +212,13 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           updatesRegistryManager_)),
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(staticPropsRegistry_, animatedPropsRegistry_)),
+      cssEventsEmitter_(std::make_shared<CSSEventsEmitter>(jsCallInvoker)),
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>(
           operationsLoop_,
           cssAnimationKeyframesRegistry_,
-          platformDepMethodsHolder.platformAnimationFactory)),
+          platformDepMethodsHolder.platformAnimationFactory,
+          cssEventsEmitter_)),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
           viewStylesRepository_,
           operationsLoop_,
@@ -394,6 +396,8 @@ ReanimatedModuleProxy::~ReanimatedModuleProxy() {
   // event handler registry and frame callbacks store some JSI values from UI
   // runtime, so they have to go away before we tear down the runtime
   eventHandlerRegistry_.reset();
+  // The events emitter holds the JS event handler for the same reason.
+  cssEventsEmitter_->invalidate();
 }
 
 jsi::Value ReanimatedModuleProxy::registerEventHandler(
@@ -575,18 +579,37 @@ void ReanimatedModuleProxy::applyCSSAnimations(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &compoundComponentName,
-    const jsi::Value &animationUpdates) {
+    const jsi::Value &animationUpdates,
+    const jsi::Value &eventMask) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto compoundComponentNameStr = compoundComponentName.asString(rt).utf8(rt);
   const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
 
-  auto lock = updatesRegistryManager_->lock();
-  cssAnimationsRegistry_->apply(shadowNode, compoundComponentNameStr, updates);
+  // The mask has to be in place before the animations run, so that the very
+  // first frame can already tell whether the view listens for events.
+  cssEventsEmitter_->setMask(shadowNode->getTag(), static_cast<css::CSSEventMask>(eventMask.asNumber()));
+
+  {
+    auto lock = updatesRegistryManager_->lock();
+    cssAnimationsRegistry_->apply(shadowNode, compoundComponentNameStr, updates);
+  }
+
+  cssEventsEmitter_->flush();
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
-  auto lock = updatesRegistryManager_->lock();
-  cssAnimationsRegistry_->remove(viewTag.asNumber());
+  {
+    auto lock = updatesRegistryManager_->lock();
+    cssAnimationsRegistry_->remove(viewTag.asNumber());
+  }
+
+  // A teardown triggered from JS may not be followed by another frame, so the
+  // cancel events it produced have to be delivered here.
+  cssEventsEmitter_->flush();
+}
+
+void ReanimatedModuleProxy::setCSSEventHandler(jsi::Runtime &rt, const jsi::Value &handler) {
+  cssEventsEmitter_->setEmitFunction(std::make_shared<jsi::Function>(handler.asObject(rt).asFunction(rt)));
 }
 
 void ReanimatedModuleProxy::runCSSTransition(
@@ -803,6 +826,11 @@ void ReanimatedModuleProxy::performOperations() {
     }
   }
 
+  // Deliberately outside the lock scope above: delivering events hops to the JS
+  // thread, and doing that under the registry lock risks a lock-order inversion
+  // against the shadow tree commit.
+  cssEventsEmitter_->flush();
+
   if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
     applySynchronousUpdates(updatesBatch, false);
   }
@@ -937,6 +965,9 @@ AnimationMutations ReanimatedModuleProxy::runGrandCallback(
         mutations = executeOperationsAndCollectUpdates(timestamp);
         stopBackendIfIdle(!mutations.batch.empty());
       }
+      // This is the frame driver used when USE_ANIMATION_BACKEND is enabled, in
+      // which case performOperations never runs, so events must drain here too.
+      cssEventsEmitter_->flush();
       return mutations;
     }
 
@@ -1529,16 +1560,28 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
         strongThis->unregisterCSSKeyframes(rt, at<0>(args), at<1>(args));
       });
 
-  addMethod<3>(
+  addMethod<4>(
       rt,
       obj,
       "applyCSSAnimations",
-      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[4]) {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
         }
-        strongThis->applyCSSAnimations(rt, at<0>(args), at<1>(args), at<2>(args));
+        strongThis->applyCSSAnimations(rt, at<0>(args), at<1>(args), at<2>(args), at<3>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "setCSSEventHandler",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->setCSSEventHandler(rt, at<0>(args));
       });
 
   addMethod<1>(

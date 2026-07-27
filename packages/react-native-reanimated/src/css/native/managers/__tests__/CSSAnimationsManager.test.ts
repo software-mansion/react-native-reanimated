@@ -4,6 +4,7 @@ import type { ShadowNodeWrapper } from '../../../../commonTypes';
 import { ANIMATION_NAME_PREFIX } from '../../../constants';
 import { CSSKeyframesRuleBase } from '../../../models';
 import type { CSSAnimationProperties } from '../../../types';
+import { CSS_EVENT_MASK, cssCallbacksRegistry } from '../../events';
 import { cssKeyframesRegistry, CSSKeyframesRuleImpl } from '../../keyframes';
 import { normalizeSingleCSSAnimationSettings } from '../../normalization';
 import {
@@ -45,6 +46,7 @@ describe('CSSAnimationsManager', () => {
     // @ts-expect-error - reset private property
     CSSKeyframesRuleBase.currentAnimationID = 0;
     cssKeyframesRegistry.clear();
+    cssCallbacksRegistry.clear();
   });
 
   // TODO - add tests with keyframes rule class
@@ -70,7 +72,8 @@ describe('CSSAnimationsManager', () => {
             newAnimationSettings: {
               0: normalizeSingleCSSAnimationSettings(animationProperties),
             },
-          }
+          },
+          0
         );
 
         expect(unregisterCSSAnimations).not.toHaveBeenCalled();
@@ -106,7 +109,8 @@ describe('CSSAnimationsManager', () => {
             settingsUpdates: {
               0: { duration: 3000, timingFunction: 'ease-in', delay: 0 },
             },
-          }
+          },
+          0
         );
         expect(unregisterCSSAnimations).not.toHaveBeenCalled();
       });
@@ -140,7 +144,8 @@ describe('CSSAnimationsManager', () => {
             newAnimationSettings: {
               0: normalizeSingleCSSAnimationSettings(newAnimationProperties),
             },
-          }
+          },
+          0
         );
         expect(unregisterCSSAnimations).not.toHaveBeenCalled();
       });
@@ -212,7 +217,8 @@ describe('CSSAnimationsManager', () => {
         expect(applyCSSAnimations).toHaveBeenLastCalledWith(
           shadowNodeWrapper,
           COMPOUND_COMPONENT_NAME,
-          expect.objectContaining({ animationNames: [rule2.name] })
+          expect.objectContaining({ animationNames: [rule2.name] }),
+          0
         );
       });
 
@@ -290,7 +296,8 @@ describe('CSSAnimationsManager', () => {
                 0: expect.objectContaining({ duration: 2000 }),
                 1: expect.objectContaining({ duration: 2000 }),
               },
-            }
+            },
+            0
           );
 
           manager.update({
@@ -304,7 +311,8 @@ describe('CSSAnimationsManager', () => {
             COMPOUND_COMPONENT_NAME,
             {
               animationNames: [animation2Name, animation1Name],
-            }
+            },
+            0
           );
         });
 
@@ -324,7 +332,8 @@ describe('CSSAnimationsManager', () => {
                 0: expect.objectContaining({ duration: 2000 }),
                 1: expect.objectContaining({ duration: 500 }),
               },
-            }
+            },
+            0
           );
 
           manager.update({
@@ -342,7 +351,8 @@ describe('CSSAnimationsManager', () => {
                 0: { duration: 2000 },
                 1: { duration: 500 },
               },
-            }
+            },
+            0
           );
         });
       });
@@ -392,6 +402,100 @@ describe('CSSAnimationsManager', () => {
         expect(unregisterCSSAnimations).not.toHaveBeenCalled();
         expect(applyCSSAnimations).not.toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('animation callbacks', () => {
+    const ANIMATION = {
+      animationName: { from: { opacity: 0 } },
+      animationDuration: '2s',
+    } satisfies CSSAnimationProperties;
+
+    test('requests the events matching the provided callbacks', () => {
+      manager.update(ANIMATION, { onAnimationEnd: jest.fn() });
+
+      expect(applyCSSAnimations).toHaveBeenLastCalledWith(
+        shadowNodeWrapper,
+        COMPOUND_COMPONENT_NAME,
+        expect.anything(),
+        CSS_EVENT_MASK.animationEnd
+      );
+    });
+
+    test('sends the new mask when only the set of callbacks changes', () => {
+      manager.update(ANIMATION, { onAnimationEnd: jest.fn() });
+      manager.update(ANIMATION, {
+        onAnimationEnd: jest.fn(),
+        onAnimationStart: jest.fn(),
+      });
+
+      expect(applyCSSAnimations).toHaveBeenCalledTimes(2);
+      expect(applyCSSAnimations).toHaveBeenLastCalledWith(
+        shadowNodeWrapper,
+        COMPOUND_COMPONENT_NAME,
+        {},
+        CSS_EVENT_MASK.animationEnd | CSS_EVENT_MASK.animationStart
+      );
+    });
+
+    test('does not re-apply when only the callback identity changes', () => {
+      manager.update(ANIMATION, { onAnimationEnd: jest.fn() });
+      manager.update(ANIMATION, { onAnimationEnd: jest.fn() });
+
+      expect(applyCSSAnimations).toHaveBeenCalledTimes(1);
+    });
+
+    test('delivers a native event to the provided callback', () => {
+      const onAnimationEnd = jest.fn();
+      manager.update(ANIMATION, { onAnimationEnd });
+
+      cssCallbacksRegistry.dispatch([
+        {
+          tag: viewTag,
+          type: 'animationEnd',
+          name: animationName(0),
+          elapsedTime: 2,
+        },
+      ]);
+
+      expect(onAnimationEnd).toHaveBeenCalledWith({
+        animationName: animationName(0),
+        elapsedTime: 2,
+      });
+    });
+
+    test('keeps delivering events while the animation detaches', () => {
+      const onAnimationCancel = jest.fn();
+      manager.update(ANIMATION, { onAnimationCancel });
+      manager.update(null, { onAnimationCancel });
+
+      cssCallbacksRegistry.dispatch([
+        {
+          tag: viewTag,
+          type: 'animationCancel',
+          name: animationName(0),
+          elapsedTime: 0.5,
+        },
+      ]);
+
+      expect(onAnimationCancel).toHaveBeenCalledTimes(1);
+    });
+
+    test('stops delivering events after unmount cleanup', () => {
+      const onAnimationEnd = jest.fn();
+      manager.update(ANIMATION, { onAnimationEnd });
+      manager.unmountCleanup();
+
+      cssCallbacksRegistry.dispatch([
+        {
+          tag: viewTag,
+          type: 'animationEnd',
+          name: animationName(0),
+          elapsedTime: 2,
+        },
+      ]);
+
+      expect(onAnimationEnd).not.toHaveBeenCalled();
     });
   });
 });

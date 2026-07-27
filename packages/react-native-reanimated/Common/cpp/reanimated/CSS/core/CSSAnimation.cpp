@@ -22,6 +22,7 @@ CSSAnimation::CSSAnimation(
       styleInterpolator_(cssKeyframesConfig.styleInterpolatorFactory->create()),
       loopAnimation_(std::make_shared<CSSLoopAnimation>(
           viewTag,
+          name_,
           styleInterpolator_,
           settings_,
           cssKeyframesConfig.keyframeEasingConfigs,
@@ -33,6 +34,10 @@ CSSAnimation::CSSAnimation(
 
 AnimationProgressState CSSAnimation::getState() const {
   return loopAnimation_->getState();
+}
+
+void CSSAnimation::reportCancellation(const double timestamp) {
+  loopAnimation_->reportCancellation(timestamp);
 }
 
 folly::dynamic CSSAnimation::getBackwardsFillStyle() const {

@@ -13,6 +13,7 @@ import type {
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSEventHandler,
   CSSPseudoStyleConfig,
   CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
@@ -63,6 +64,9 @@ export interface ReanimatedModuleProxy {
 
   setViewStyle(viewTag: number, style: StyleProps): void;
 
+  /** Registers the single handler receiving every CSS event batch. */
+  setCSSEventHandler(handler: CSSEventHandler): void;
+
   markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper): void;
   unmarkNodeAsRemovable(viewTag: number): void;
 
@@ -80,7 +84,8 @@ export interface ReanimatedModuleProxy {
   applyCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,
     compoundComponentName: string,
-    animationUpdates: CSSAnimationUpdates
+    animationUpdates: CSSAnimationUpdates,
+    eventMask: number
   ): void;
 
   unregisterCSSAnimations(viewTag: number): void;

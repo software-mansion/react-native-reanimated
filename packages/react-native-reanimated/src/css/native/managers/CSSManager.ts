@@ -59,7 +59,7 @@ export default class CSSManager implements ICSSManager {
       animationProperties,
       transitionProperties,
       pseudoStylesBySelector,
-      ,
+      animationCallbacks,
       ,
       filteredStyle,
     ] = filterCSSAndStyleProperties(style);
@@ -88,7 +88,7 @@ export default class CSSManager implements ICSSManager {
       setViewStyle(this.viewTag, normalizedStyle);
     }
 
-    this.cssAnimationsManager.update(animationProperties);
+    this.cssAnimationsManager.update(animationProperties, animationCallbacks);
     this.cssPseudoStylesManager.update(
       pseudoStylesBySelector,
       transitionProperties

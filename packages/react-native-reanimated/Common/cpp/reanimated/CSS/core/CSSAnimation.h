@@ -4,6 +4,7 @@
 #include <reanimated/CSS/configs/CSSKeyframesConfig.h>
 #include <reanimated/CSS/core/CSSPlatformAnimation.h>
 #include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
+#include <reanimated/CSS/events/CSSEvent.h>
 #include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolator.h>
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
@@ -24,6 +25,10 @@ class CSSAnimation {
     // Called when the animation finishes without `forwards` fill mode and will
     // need to be reverted to the underlying style on the next flush.
     virtual void onAnimationNeedsRevert(Tag viewTag) = 0;
+    // Called when the animation crosses a lifecycle boundary the user can
+    // subscribe to. `elapsedTimeMs` follows the CSS `elapsedTime` contract.
+    virtual void
+    onAnimationEvent(Tag viewTag, const std::string &animationName, CSSEventType type, double elapsedTimeMs) = 0;
   };
 
   CSSAnimation(
@@ -57,6 +62,10 @@ class CSSAnimation {
   void unschedule(OperationsLoop &loop);
 
   void updateSettings(const PartialCSSAnimationSettings &updatedSettings, double timestamp);
+
+  /// Emits a cancel event unless the animation already finished. Must be called
+  /// before the animation is destroyed.
+  void reportCancellation(double timestamp);
 
  private:
   const Tag viewTag_;

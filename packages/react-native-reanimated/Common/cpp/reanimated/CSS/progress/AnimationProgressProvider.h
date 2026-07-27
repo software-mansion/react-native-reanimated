@@ -39,6 +39,15 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   AnimationProgressState getState() const;
   double getStartTimestamp(double timestamp) const;
 
+  double getDuration() const;
+  double getDelay() const;
+  double getIterationCount() const;
+  unsigned getCurrentIteration() const;
+  /// Time spent in the active phase, i.e. excluding the delay and any time the
+  /// animation was paused. Zero while the animation is still delayed.
+  double getActiveElapsedTime(double timestamp) const;
+  bool shouldFinish(double timestamp) const;
+
   void pause(double timestamp);
   void play(double timestamp);
   void update(double timestamp) override;
@@ -60,7 +69,6 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   double totalPausedTime_ = 0;
 
   double getTotalPausedTime(double timestamp) const;
-  bool shouldFinish(double timestamp) const;
   AnimationProgressState computeState(double timestamp) const;
 
   double updateIterationProgress(double currentIterationElapsedTime);

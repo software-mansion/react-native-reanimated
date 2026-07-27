@@ -1,6 +1,7 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type {
+  CSSAnimationCallbacks,
   CSSAnimationKeyframes,
   ExistingCSSAnimationProperties,
   ICSSAnimationsManager,
@@ -16,6 +17,7 @@ import type {
   CSSAnimationUpdates,
   NormalizedSingleCSSAnimationSettings,
 } from '../types';
+import CSSAnimationCallbacksManager from './CSSAnimationCallbacksManager';
 
 type ProcessedAnimation = {
   normalizedSettings: NormalizedSingleCSSAnimationSettings;
@@ -26,8 +28,10 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
   private readonly viewTag: number;
   private readonly compoundComponentName: string;
+  private readonly callbacksManager: CSSAnimationCallbacksManager;
 
   private attachedAnimations: ProcessedAnimation[] = [];
+  private appliedEventMask = 0;
 
   constructor(
     shadowNodeWrapper: ShadowNodeWrapper,
@@ -37,9 +41,18 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     this.shadowNodeWrapper = shadowNodeWrapper;
     this.viewTag = viewTag;
     this.compoundComponentName = compoundComponentName;
+    this.callbacksManager = new CSSAnimationCallbacksManager(viewTag);
   }
 
-  update(animationProperties: ExistingCSSAnimationProperties | null): void {
+  update(
+    animationProperties: ExistingCSSAnimationProperties | null,
+    callbacks: CSSAnimationCallbacks | null = null
+  ): void {
+    // Callbacks are synced before the animations are touched so that a cancel
+    // emitted while detaching still reaches the user.
+    this.callbacksManager.sync(callbacks ?? {});
+    const eventMask = this.callbacksManager.getMask();
+
     if (!animationProperties) {
       this.detach();
       return;
@@ -60,16 +73,27 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
         return;
       }
 
-      applyCSSAnimations(
-        this.shadowNodeWrapper,
-        this.compoundComponentName,
-        animationUpdates
-      );
+      this.apply(animationUpdates, eventMask);
+    } else if (eventMask !== this.appliedEventMask) {
+      // The requested events changed while the animations themselves did not,
+      // so the native side still has to learn about the new mask.
+      this.apply({}, eventMask);
     }
   }
 
   unmountCleanup(): void {
+    this.callbacksManager.detach();
     this.unregisterKeyframesUsage();
+  }
+
+  private apply(animationUpdates: CSSAnimationUpdates, eventMask: number) {
+    this.appliedEventMask = eventMask;
+    applyCSSAnimations(
+      this.shadowNodeWrapper,
+      this.compoundComponentName,
+      animationUpdates,
+      eventMask
+    );
   }
 
   private detach() {
@@ -77,6 +101,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
       unregisterCSSAnimations(this.viewTag);
       this.unregisterKeyframesUsage();
       this.attachedAnimations = [];
+      this.appliedEventMask = 0;
     }
   }
 
