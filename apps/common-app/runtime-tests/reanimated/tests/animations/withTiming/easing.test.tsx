@@ -114,7 +114,9 @@ describe('withTiming snapshots 📸, test EASING', () => {
       await expect(async () => {
         await render(
           <ErrorBoundary>
-            <ActiveAnimatedComponent easing={EasingRN.linear} />
+            <ActiveAnimatedComponent
+              easing={(value) => EasingRN.linear(value)}
+            />
           </ErrorBoundary>
         );
       }).toThrow(
