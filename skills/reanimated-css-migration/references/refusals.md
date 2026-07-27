@@ -31,34 +31,15 @@ things the tool cannot do.
 
 ## Lossy: an equivalent exists but changes behavior
 
-These look migratable and are the most dangerous cases, because the result
-compiles and often appears to work.
+The dangerous set: these compile and often appear to work.
 
-**Completion callbacks.** `withTiming(value, config, callback)` gives a
-`finished` flag. The CSS callbacks are typed for every platform but only wired
-up on web, so on iOS and Android they never fire. They also carry no `finished`
-equivalent. A callback that only logs can be dropped; one that chains an
-animation or sets state is load-bearing and blocks the migration.
-
-**Imperative control.** `cancelAnimation` has no CSS counterpart.
-`animationPlayState: 'paused'` suspends an animation, it does not cancel it and
-does not freeze it at the current value the way cancelling does.
-
-**Explicit reduced motion.** CSS has no reduced-motion support on any platform.
-If the source passes a `reduceMotion` config, uses the `ReduceMotion` enum, or
-calls `useReducedMotion`, leave it alone: the author asked for behavior that
-would silently disappear.
-
-**Discrete properties.** Keyword-valued properties such as `display`,
-`position`, `flexDirection`, `justifyContent`, `alignItems`, `overflow`,
-`fontWeight` and `textAlign` are dropped from transitions entirely unless
-`transitionBehavior: 'allow-discrete'` is set, and even then they flip at the
-midpoint rather than interpolating. Either refuse, or set the behavior and warn
-about the midpoint flip.
-
-**Mid-flight retargeting.** Re-issuing `withTiming` toward the same target
-inherits the original start time and value. CSS transitions approximate this but
-do not reproduce it, so animations that are re-triggered rapidly will differ.
+| Pattern | What breaks | Do |
+| --- | --- | --- |
+| Completion callback that chains an animation or sets state | CSS callbacks are wired up only on web and carry no `finished` flag anywhere | Refuse. A callback that only logs can be dropped instead |
+| `cancelAnimation`, or pausing, reversing, restarting from an effect or handler | `animationPlayState` suspends; it does not cancel or freeze at the current value | Refuse |
+| `reduceMotion` config, `ReduceMotion` enum, `useReducedMotion` | CSS has no reduced-motion support on any platform | Refuse |
+| Discrete keyword properties: `display`, `position`, `flexDirection`, `justifyContent`, `alignItems`, `overflow`, `fontWeight`, `textAlign` | Dropped from transitions unless `transitionBehavior: 'allow-discrete'`, and then they flip at the midpoint | Refuse, or set the behavior and warn about the midpoint flip |
+| Rapid re-triggering of the same target | `withTiming` inherits the original start time and value; CSS approximates but does not reproduce it | Refuse if the timing matters |
 
 ## Properties that would regress
 
@@ -96,11 +77,12 @@ despite covering a single platform.
 
 ## What to say
 
-Give each refusal a file, a one-sentence reason, and a next step. Group them by
-reason rather than listing them per file, so a user with forty gesture-driven
-components reads one explanation and not forty.
+Per refusal: the file, a one-sentence reason, a next step.
 
-Where a follow-up refactor would unlock the migration, offer it as a separate
-piece of work with its own risk, never as part of this diff. Converting shadow
-properties to `boxShadow` is the common example: it would widen platform
-coverage, and it is a visual change that deserves its own review.
+Group by reason, not by file. Forty gesture-driven components get one
+explanation, not forty.
+
+Where a follow-up refactor would unlock the migration, offer it as separate
+work with its own risk. Never fold it into this diff. `shadow*` to `boxShadow`
+is the common example: it widens platform coverage and is a visual change that
+needs its own review.

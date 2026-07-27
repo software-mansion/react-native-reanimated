@@ -7,223 +7,179 @@ compatibility: Requires Reanimated 4.x and the New Architecture
 
 # Reanimated hooks to CSS migration
 
-Converts imperative, worklet-driven animations into Reanimated's declarative CSS
-animations and transitions, but only where the result is behaviorally identical.
-Coverage is not the goal: a migration that changes timing, interruption or
-platform coverage is a defect even when the animation still looks roughly right.
+Convert only where the result is behaviorally identical. Changed timing,
+interruption or platform coverage is a defect, even if the animation still looks
+roughly right. Coverage is not the goal.
 
-The safety model is deliberately asymmetric: **which source patterns you may
-convert is open, which conditions permit conversion is closed.** You are
-expected to reason about code shapes not listed here. You are not permitted to
-migrate anything that fails a precondition or hits a refusal.
+Which source shapes you may convert is open: reason about code not listed here.
+Which conditions permit conversion is closed: never migrate past a failed
+precondition or a refusal.
 
-## Failures that produce no error
+## Four silent failures
 
-Four things break an animation without throwing, warning, or failing a typecheck
-or a test, and all four look correct in a diff. Two of them mean the call site
-must not be converted at all. Two are mistakes in the output of a conversion
-that is otherwise fine. Know which is which before you start.
+None of these throw, warn, or fail a typecheck or test. All look correct in a
+diff.
 
-**Do not migrate the call site when:**
+Do not migrate when:
 
-- **The driver is written from a worklet.** Gesture callbacks are workletized
-  onto the UI thread by default, as are `useAnimatedReaction`, `useFrameCallback`,
-  scroll handlers and sensors. Driving React state from there needs a
-  `scheduleOnRN` thread hop per update, which is worse than the code you started
-  with. A shared value written from `useEffect` or a plain JS callback is the
-  opposite case: convert it to state and migrate.
-- **React Native renders the property but CSS cannot animate it.** The hook
-  version works today and the CSS version stops. Unsupported properties are
-  dropped by the props builder with no warning at all.
-- **The value changes every frame.** Once it is state, each change re-renders.
-  Migrate discrete changes, not streams.
+- **The driver is written in a worklet.** Gesture callbacks, `useAnimatedReaction`,
+  `useFrameCallback`, scroll handlers and sensors run on the UI thread. Reaching
+  React state from there costs a `scheduleOnRN` hop per update.
+- **React Native renders the property where CSS cannot animate it.** It works
+  today and stops after. Unsupported properties are dropped with no warning.
+- **The value changes every frame.** As state, every change re-renders. Migrate
+  discrete changes, not streams.
 
-**Get these right in every conversion you do apply:**
+A shared value written from `useEffect` or a plain JS callback is the opposite
+case: convert it to state and migrate.
 
-- **Always set a duration**, `animationDuration` or `transitionDuration` to match
-  whichever mechanism you emitted. Both default to 0, which discards the motion
-  entirely.
-- **On animations only, set `animationFillMode: 'forwards'`** when the element
-  should stay where it lands. The CSS default is `none`, which discards the
-  computed value and snaps it back to the start. Transitions have no fill mode
-  and need none, because the underlying prop value genuinely changed; adding one
-  to a transition does nothing.
+Always, in every conversion you apply:
+
+- **Set a duration**, `animationDuration` or `transitionDuration` to match what
+  you emitted. Both default to 0, which discards the motion.
+- **Set `animationFillMode: 'forwards'` on animations** that should stay where
+  they land. The default `none` snaps back to the start. Transitions have no fill
+  mode; adding one does nothing.
 
 ## References
 
-Load at most one reference file per question.
+Load at most one per question.
 
 | File | When to read |
 | --- | --- |
-| `references/preconditions.md` | Deciding whether a specific call site may be migrated |
-| `references/refusals.md` | A pattern looks unmigratable and you need the reason and the advice to give |
-| `references/examples.md` | You need calibration on what a good conversion looks like |
-| `references/api-map.md` | Mapping a `with*` function or an `Easing.*` value, or choosing transition vs animation |
+| `references/preconditions.md` | Deciding whether a call site may be migrated |
+| `references/refusals.md` | A pattern looks unmigratable and you need the reason and the advice |
+| `references/examples.md` | Calibrating what a good conversion looks like |
+| `references/api-map.md` | Mapping a `with*` or `Easing.*` value, or choosing transition vs animation |
 
-For the authoritative list of which style properties animate on which platform,
-consult
+Property support:
 [Supported style properties](https://docs.swmansion.com/react-native-reanimated/docs/guides/supported-properties).
-`references/refusals.md` lists only the properties where CSS is behind React
-Native, which is the subset that matters when deciding whether to migrate.
+API signatures:
+[CSS Animations](https://docs.swmansion.com/react-native-reanimated/docs/category/css-animations),
+[CSS Transitions](https://docs.swmansion.com/react-native-reanimated/docs/category/css-transitions).
 
-For API signatures and configuration options, consult the
-[CSS Animations](https://docs.swmansion.com/react-native-reanimated/docs/category/css-animations)
-and [CSS Transitions](https://docs.swmansion.com/react-native-reanimated/docs/category/css-transitions)
-documentation.
+## Scale the process to the request
 
-## Match the process to the request
+| Request | Do |
+| --- | --- |
+| One call site, already in front of you | Phase 2 only. Convert or explain. No inventory, report or ledger |
+| "Can this be CSS?", no edit requested | Phase 2 reasoning, no edits |
+| A directory, feature or app | Full sequence |
 
-The phases below are for migrating a codebase or a feature. They are the wrong
-shape for a smaller question, and running them anyway is worse than not using
-this skill at all.
-
-- **One call site, already in front of you.** Skip to Phase 2. Check the
-  preconditions, check the properties, convert or explain why not. No inventory,
-  no report, no ledger.
-- **"Can this be CSS?" with no request to change anything.** Answer it. Phase 2
-  reasoning only, no edits.
-- **A whole directory, feature or app.** Run the full sequence.
-
-The preconditions, the refusals and the property check are never optional at any
-size. Everything else scales with the request.
+Preconditions, refusals and the property check apply at every size. Everything
+else scales.
 
 ## Before you start
 
-1. Read the installed Reanimated version. CSS animations require 4.x and the New
-   Architecture. On 3.x, stop and say so; do not attempt the upgrade as part of
-   this work.
-1. Require a clean working tree, or an explicit acknowledgment from the user
-   that uncommitted changes are theirs. They need to be able to diff and revert.
-1. Establish the project's target platforms from package.json, app config and
-   the presence of web bundler config. Record what you found; every property
-   decision depends on it.
-1. Agree the scope. A directory, a feature, or the whole app. Never touch files
-   outside it.
+1. Read the installed Reanimated version. On 3.x, stop and say so. Do not
+   upgrade as part of this work.
+1. Require a clean working tree, or explicit acknowledgment that uncommitted
+   changes are the user's.
+1. Determine target platforms from package.json, app config and web bundler
+   config. Record them; every property decision depends on it.
+1. Agree the scope. Never touch files outside it.
 
-Infer what you can from the codebase. Ask only about things genuinely
-unresolvable, and batch those into a single message.
+Infer what you can. Batch genuine questions into one message.
 
 ## Phase 1: inventory
 
-Find every animation call site in scope: `useAnimatedStyle`, `useAnimatedProps`,
-`useDerivedValue`, and the `with*` functions.
+Find every `useAnimatedStyle`, `useAnimatedProps`, `useDerivedValue` and `with*`
+call site in scope. Record file, component, animated properties, driver, and
+effective platforms.
 
-For each one record the file, the component, the animated properties, what
-drives the animation, and the call site's effective platforms. Effective
-platforms narrow when the file carries a platform suffix (`.ios`, `.android`,
-`.web`, `.native` on any of js, jsx, ts, tsx), or when the code sits inside a
-`Platform.OS` branch or a `Platform.select` arm. A `.ios.tsx` file only needs
-iOS support.
+Effective platforms narrow to:
 
-Report the counts before going further. If nothing is migratable, say so and
-stop rather than forcing a conversion.
+- the suffix, for `.ios` / `.android` / `.web` / `.native` on js, jsx, ts, tsx
+- the branch, inside `Platform.OS` or a `Platform.select` arm
+
+Report counts before continuing. If nothing is migratable, say so and stop.
 
 ## Phase 2: classify
 
-For each call site, work through `references/preconditions.md`. Every
-precondition must hold. If any fails, the call site is not migratable and the
-failing precondition is the reason you report.
+Work each call site through `references/preconditions.md`. Every precondition
+must hold; the first failure is the reason you report.
 
-**State which precondition permits each migration.** If you cannot name the
-condition you are relying on, you have pattern-matched rather than reasoned, and
-you must not migrate. This is the single rule that keeps an open transformation
-set safe.
+**Name the precondition that permits each migration.** Cannot name one, do not
+migrate. This is what keeps an open transformation set safe.
 
 Check every animated property against the table in `references/refusals.md` for
-the call site's effective platforms. A property covering only one platform is not
-automatically a problem: what matters is whether React Native renders it
-somewhere CSS cannot animate it.
+that site's effective platforms. Single-platform support is not itself a
+problem; what matters is whether React Native renders it where CSS cannot.
 
-Classify each site as migratable, needs-review, or refused. Prefer needs-review
-over migratable whenever you are weighing a judgment call.
+Label each site migratable, needs-review, or refused. When weighing a judgment
+call, choose needs-review.
 
 ## Phase 3: report before editing
 
-Print the plan as ordinary text in the conversation. Do not bury it in a plan
-object or a collapsed block, and do not start editing until the user has agreed
-to it.
+Print as ordinary text. Not a plan object, not a collapsed block. Do not edit
+until the user agrees.
 
-The plan has to stay readable at thirty call sites, so do not paste a diff per
-site. Use three parts:
+Never paste a diff per site. Report three parts:
 
-**A count.** One line: how many sites are migratable, how many need review, how
-many are refused.
+1. **Counts.** Migratable, needs-review, refused.
 
-**A table of what would change**, one row per call site, no code:
+1. **A table, no code**, one row per site:
 
-| File | What it animates | Becomes | Note |
-| --- | --- | --- | --- |
-| `Card.tsx:34` | opacity, translateY on mount | animation | fillMode forwards |
-| `Toggle.tsx:12` | backgroundColor on press | transition | shared value becomes state |
+   | File | What it animates | Becomes | Note |
+   | --- | --- | --- | --- |
+   | `Card.tsx:34` | opacity, translateY on mount | animation | fillMode forwards |
+   | `Toggle.tsx:12` | backgroundColor on press | transition | shared value becomes state |
 
-**Refusals grouped by reason, not by file**, with a count and one explanation
-each. Forty gesture-driven components are one line saying forty, not forty
-lines. A migration is judged on what it declines and whether it explains itself,
-so this is half the output, not an appendix.
+1. **Refusals grouped by reason**, with counts. Forty gesture-driven components
+   are one line, not forty.
 
-Then show the full before and after for **two or three representative sites
-only**, picked to cover the different shapes in the table. That is enough for
-the user to judge the approach without reading everything.
+Then show before and after for two or three representative sites only, covering
+the different shapes in the table.
 
-Let the user narrow the list before you apply anything.
+Let the user narrow the list before applying anything.
 
 ## Phase 4: apply
 
-Before fanning out, migrate three call sites that differ from each other and
-compare the results. Correcting your approach after three files is far cheaper
-than correcting the same mistake across thirty. If the three disagree about
-anything, resolve it before continuing.
+Migrate three differing call sites first and compare. Resolve any disagreement
+between them before continuing: fixing the approach after three files is cheaper
+than after thirty.
 
-Keep progress in a file on disk, not in the conversation, listing every call
-site in scope with a status of pending, done or refused, plus the precondition
-or refusal reason. Update it as you go. Conversation memory does not survive
-compaction, and a migration that loses its place re-edits files it already
-finished. After any interruption, trust the file and `git diff` over your own
-recollection of what you did.
+Keep a status file on disk listing every site as pending, done or refused, with
+its precondition or refusal reason. Update it as you go. Conversation memory does
+not survive compaction; after any interruption trust the file and `git diff`, not
+recall.
 
-Migrate one call site at a time. After each one, the component must satisfy
-every equivalence obligation in `references/preconditions.md`: same appearance
-on first render, same end state, same behavior on re-trigger, interrupt and
-unmount, and no other change to what the component renders.
+Then, one call site at a time:
 
-Remove the shared values, hooks and imports that the conversion makes dead, and
-nothing else. Keep `Platform.select` structures exactly as the author wrote
-them and migrate within each arm; flattening a deliberate platform decision is a
-regression regardless of how the animation behaves.
+- Satisfy every equivalence obligation in `references/preconditions.md`.
+- Remove the shared values, hooks and imports the conversion made dead, and
+  nothing else.
+- Keep `Platform.select` structures as written; migrate inside each arm.
+- Never swap one API for another. `shadow*` to `boxShadow` is a separate
+  refactor. Suggest it in the report; keep it out of the diff.
 
-Never rewrite one API into a different one as part of this work. Converting
-shadow properties to `boxShadow`, for example, is an independent refactor with
-its own visual risk. Suggest it in the report; do not fold it into the diff.
+Checkpoint per file: one line on what changed, then let the user stop you. Per
+call site is noise; only at the end means the mistake already repeated thirty
+times.
 
-Checkpoint per file, not per call site, and not once at the very end. After each
-file, say what changed in one line and let the user stop you. Asking after every
-call site is noise in a file with six of them; asking only at the end means a
-mistake in the approach has already been repeated thirty times.
-
-Stop and ask, rather than deciding alone, whenever a site turns out to differ
-from the plan the user agreed to: a property you had not spotted, a driver that
-is a worklet after all, or an equivalence obligation you cannot satisfy.
+Stop and ask whenever a site differs from the agreed plan: an unspotted
+property, a driver that turns out to be a worklet, an obligation you cannot
+satisfy.
 
 ## Phase 5: verify
 
 1. Typecheck and lint the changed files.
-1. Watch the animation run. Static checks cannot detect any of the four failure
-   modes above, so this is the only step that constitutes evidence.
-1. Watch the first frame specifically, and re-trigger once. Those are where a
-   missing fill mode and a dead driver show up.
+1. Watch the animation run. Static checks catch none of the four silent
+   failures, so this is the only real evidence.
+1. Watch the first frame, and re-trigger once. That is where a missing fill mode
+   and a dead driver surface.
 
-Report what you verified and what you could not. If you did not run the app, say
-so plainly rather than implying the change is confirmed.
+Report what you verified and what you did not. If you did not run the app, say
+so plainly.
 
-## General rules
+## Rules
 
-- Default to not migrating. An unrecognized shape is a refusal needing manual
-  review, never a best guess.
-- Hook-based Reanimated stays the correct answer for gesture-driven,
-  scroll-driven, measurement-driven and imperative animation. Say so when
-  refusing, so the output reads as advice rather than a limitation list.
-- Never emit `transitionProperty: 'all'` as a substitute for working out which
-  properties change.
-- Hoist keyframe objects out of render. One created during render is a new
-  object every time, which restarts the animation on every re-render.
-- If the user asks only about one phase, go straight to it.
+- Default to not migrating. An unrecognized shape is a refusal for manual
+  review, never a guess.
+- Hooks stay correct for gesture-, scroll-, measurement-driven and imperative
+  animation. Say so when refusing, so the output reads as advice.
+- Never emit `transitionProperty: 'all'` instead of working out which properties
+  change.
+- Hoist keyframe objects out of render. A new object each render restarts the
+  animation.
+- If the user asks about one phase, go straight to it.

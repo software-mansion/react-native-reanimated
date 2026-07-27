@@ -1,9 +1,8 @@
 # Worked examples
 
-Calibration, not an allow-list. These show what a correct conversion looks like
-and what the common traps look like. Converting a shape that is not shown here
-is expected, provided every precondition in `preconditions.md` holds and you can
-name the one that permits it.
+Calibration, not an allow-list. Converting a shape not shown here is expected,
+provided every precondition in `preconditions.md` holds and you can name the one
+that permits it.
 
 ## Contents
 
@@ -11,7 +10,7 @@ name the one that permits it.
 - Migrate: play once on mount
 - Migrate: React state toggle
 - Migrate: staggered loop
-- Leave alone: handler-written shared value
+- Migrate: shared value written from a JS callback
 - Leave alone: spring
 - Preserve: platform-specific values
 - Trap: easing names
@@ -68,18 +67,17 @@ function Spinner() {
 }
 ```
 
-Note where the CSS properties live: inline in the style array, never inside
-`StyleSheet.create`. Putting them in the stylesheet is a type error, because
-`StyleSheet.create` is typed against React Native's own style types. Keep the
-static styles in the stylesheet and put the animation properties beside them.
-
-The shared value, the effect and the cleanup all become dead and are removed.
-`cancelAnimation` in a cleanup is not imperative control in the sense of the
-refusal list: it only stops the animation on unmount, which CSS does anyway.
-
-`withRepeat`'s third argument reverses the direction. When it is `true`, add
-`animationDirection: 'alternate'`. Hoist the keyframes to module scope, because
-an object created during render restarts the animation on every re-render.
+- CSS properties go inline in the style array, never in `StyleSheet.create`.
+  That is a type error: `StyleSheet.create` is typed against React Native's own
+  style types. Static styles stay in the stylesheet, animation properties beside
+  it.
+- Hoist keyframes to module scope. An object created during render restarts the
+  animation every render.
+- Remove the now-dead shared value, effect and cleanup.
+- `cancelAnimation` in a cleanup is not imperative control. It only stops the
+  animation on unmount, which CSS does anyway.
+- `withRepeat`'s third argument is `reverse`. When `true`, add
+  `animationDirection: 'alternate'`.
 
 ## Migrate: play once on mount
 
