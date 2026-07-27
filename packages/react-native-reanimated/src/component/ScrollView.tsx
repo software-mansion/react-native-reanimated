@@ -4,7 +4,10 @@ import React from 'react';
 import { ScrollView } from 'react-native';
 
 import type { SharedValue } from '../commonTypes';
-import { createAnimatedComponent } from '../createAnimatedComponent';
+import {
+  type AnimatedComponentType,
+  createAnimatedComponent,
+} from '../createAnimatedComponent';
 import type { AnimatedRef } from '../hook';
 import { useAnimatedRef, useScrollOffset } from '../hook';
 
@@ -15,7 +18,10 @@ type AnimatedScrollViewComplement = ComponentRef<typeof ScrollView> & {
 };
 
 // is-tree-shakable-suppress
-const AnimatedScrollViewComponent = createAnimatedComponent(ScrollView);
+const AnimatedScrollViewComponent: AnimatedComponentType<
+  Readonly<ComponentProps<typeof ScrollView>>,
+  ComponentRef<typeof ScrollView>
+> = createAnimatedComponent(ScrollView);
 
 export type AnimatedScrollViewProps = ComponentProps<
   typeof AnimatedScrollViewComponent

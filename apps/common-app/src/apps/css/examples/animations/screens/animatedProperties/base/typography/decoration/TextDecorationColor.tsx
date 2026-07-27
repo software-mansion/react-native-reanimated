@@ -7,7 +7,7 @@ import { ExamplesScreen, VerticalExampleCard } from '@/apps/css/components';
 import type { ExampleScreenProps } from '@/apps/css/navigation/types';
 import { colors } from '@/theme';
 
-export default function TextDecorationStyle({
+export default function TextDecorationColor({
   labelTypes,
 }: ExampleScreenProps) {
   return (
