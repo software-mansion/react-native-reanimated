@@ -35,6 +35,10 @@ on:
         type: string
         default: ''
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   publish:
     runs-on: ubuntu-latest
