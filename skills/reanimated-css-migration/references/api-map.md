@@ -23,14 +23,21 @@ usually does not, because the value lives in a shared value, and introducing the
 render by converting that to state is part of the migration. The exception is a
 write that happens in a worklet, which stays on the hooks API.
 
-**Use an animation** when the motion is self-contained: it plays on mount,
-loops, or moves through more than two states. Nothing needs to change and
-nothing needs to re-render. This is where `withSequence` and any looping
-`withRepeat` go, because a transition cannot express intermediate stops.
+**Use an animation** when the motion carries its own timeline: it plays on
+mount, loops, or runs through intermediate stops that you define as keyframes.
+Once it starts, nothing else drives it. This is where `withSequence` and any
+looping `withRepeat` go.
 
-The short test: if you can name the event that starts it, and it goes from one
-value to one other value, it is a transition. If it starts by itself, repeats,
-or has a middle, it is an animation.
+The distinction is not how many values the motion passes through, because a
+transition can pass through many. A stepper or a multi-stage progress bar eases
+from one value to the next as often as the state changes. The distinction is who
+supplies the intermediate values: with a transition the app does, one render at
+a time, and the element eases to wherever it was last told to go. With an
+animation the keyframes do, on a clock, with no further input.
+
+The short test: if every step needs something outside the element to trigger it,
+it is a transition, however many steps there are. If the steps play themselves,
+it is an animation.
 
 Two consequences follow:
 
