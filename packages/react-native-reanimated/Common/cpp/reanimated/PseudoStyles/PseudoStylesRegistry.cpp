@@ -81,8 +81,7 @@ void PseudoStylesRegistry::remove(Tag tag) {
   TagEntry entry = std::move(it->second);
   registry_.erase(it);
 
-  // The listeners are going away, so an active selector would stay applied forever and its
-  // lock would keep filtering render transitions.
+  // The listeners are going away, so an active selector would stay applied forever.
   if (entry.activeMask != 0) {
     cssTransitionsRegistry_->setPseudoLockedProperties(tag, {});
     const auto &fromStyle = entry.precomputedStyles[entry.activeMask];

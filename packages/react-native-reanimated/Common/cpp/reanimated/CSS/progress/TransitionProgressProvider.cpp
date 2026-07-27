@@ -116,8 +116,6 @@ void TransitionProgressProvider::runProgressProvider(
     const bool isReversed,
     const double timestamp) {
 
-  // Routed through the accessor so this path gets the same missing-settings fallback instead of
-  // throwing std::out_of_range on the platform UI thread.
   const auto settings = getPropertySettings(propertyName);
 
   const auto providerIt = propertyProgressProviders_.find(propertyName);
@@ -196,8 +194,8 @@ void TransitionProgressProvider::setPropertySettings(const PropertiesSettingsMap
 CSSTransitionPropertySettings TransitionProgressProvider::getPropertySettings(const std::string &propertyName) const {
   const auto it = propertySettings_.find(propertyName);
   if (it == propertySettings_.end()) {
-    // A pseudo toggle can run a property whose settings never parsed (e.g. a discrete
-    // property without allowDiscrete); fall back to instant settings instead of throwing.
+    // A pseudo toggle can run a property whose settings never parsed, e.g. a discrete
+    // property without allowDiscrete.
     return CSSTransitionPropertySettings{};
   }
   return it->second;
