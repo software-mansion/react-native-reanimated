@@ -179,20 +179,44 @@ These are exact, not approximations. The polynomial easings are quadratic and
 cubic Beziers in disguise, so degree-elevating them to a cubic gives the CSS
 form with no error.
 
+Four base easings have an exact cubic Bezier form:
+
 | Source | CSS timing function |
 | --- | --- |
-| `Easing.linear` | `'linear'` |
+| `Easing.linear`, `Easing.poly(1)` | `'linear'` |
 | `Easing.ease` | `'ease-in'` or `cubicBezier(0.42, 0, 1, 1)` |
-| `Easing.quad` | `cubicBezier(1/3, 0, 2/3, 1/3)` |
-| `Easing.cubic` | `cubicBezier(1/3, 0, 2/3, 0)` |
-| `Easing.out(Easing.quad)` | `cubicBezier(1/3, 2/3, 2/3, 1)` |
-| `Easing.out(Easing.cubic)` | `cubicBezier(1/3, 1, 2/3, 1)` |
-| `Easing.out(Easing.ease)` | `'ease-out'` or `cubicBezier(0, 0, 0.58, 1)` |
-| `Easing.bezier(a, b, c, d)` | `cubicBezier(a, b, c, d)` |
-| `Easing.bezierFn(a, b, c, d)` | `cubicBezier(a, b, c, d)` |
+| `Easing.quad`, `Easing.poly(2)` | `cubicBezier(1/3, 0, 2/3, 1/3)` |
+| `Easing.cubic`, `Easing.poly(3)` | `cubicBezier(1/3, 0, 2/3, 0)` |
+| `Easing.bezier(a, b, c, d)`, `Easing.bezierFn(a, b, c, d)` | `cubicBezier(a, b, c, d)` |
 | `Easing.steps(n, true)` | `steps(n, 'jump-start')` |
 | `Easing.steps(n, false)` | `steps(n, 'jump-end')` |
-| `Easing.in(f)` | translate `f` unchanged |
+
+`Easing.poly(n)` is `t` to the power `n`, so only the integer cases above are
+exact. Any other exponent belongs in the approximations section.
+
+Two composition rules extend that table to any wrapped easing, so do not look
+for a row per combination:
+
+- **`Easing.in(f)` is `f`.** `in_` returns its argument unchanged, so translate
+  the inner easing and ignore the wrapper.
+- **`Easing.out(f)` reflects the curve.** For any `f` with an exact form
+  `cubicBezier(x1, y1, x2, y2)`, the result is
+  `cubicBezier(1 - x2, 1 - y2, 1 - x1, 1 - y1)`. This holds because
+  `out(f)(t) = 1 - f(1 - t)`, which for a cubic Bezier is the same curve rotated
+  180 degrees about its midpoint, and it stays exact even when control points
+  fall outside 0..1.
+
+Worked examples of the second rule, which is where the commonly quoted values
+come from:
+
+| Source | Reflection | CSS timing function |
+| --- | --- | --- |
+| `Easing.out(Easing.ease)` | of `(0.42, 0, 1, 1)` | `'ease-out'` or `cubicBezier(0, 0, 0.58, 1)` |
+| `Easing.out(Easing.quad)` | of `(1/3, 0, 2/3, 1/3)` | `cubicBezier(1/3, 2/3, 2/3, 1)` |
+| `Easing.out(Easing.cubic)` | of `(1/3, 0, 2/3, 0)` | `cubicBezier(1/3, 1, 2/3, 1)` |
+
+`Easing.inOut(f)` is not covered by either rule. It is piecewise, so no single
+cubic Bezier reproduces it, whatever `f` is.
 
 Match on the source expression, not on a runtime value. The library attaches its
 easing name symbol only to the top-level members, so anything wrapped in `out()`
