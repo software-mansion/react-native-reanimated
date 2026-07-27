@@ -10,6 +10,9 @@ on:
     - cron: '37 19 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   url-validation-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
