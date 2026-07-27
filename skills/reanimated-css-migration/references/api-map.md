@@ -10,43 +10,25 @@
 
 ## Transition or animation: which one
 
-They look interchangeable and are not. Picking the wrong one is the most common
-way a migration compiles and then misbehaves at runtime.
+Decide by what drives each step.
 
-**Use a transition** when a value moves from A to B in response to something: a
-press, a toggle, an expand, a theme change, a selection. A transition is declared
-in the style and fires whenever a watched property differs between two renders.
-It has no concept of a timeline, only of "this value changed, ease it".
+**Transition** when something outside the element triggers every step: press,
+toggle, expand, theme change, selection. Step count is irrelevant, a stepper is
+still a transition.
 
-Choose on the shape of the motion, not on whether the code re-renders today. It
-usually does not, because the value lives in a shared value, and introducing the
-render by converting that to state is part of the migration. The exception is a
-write that happens in a worklet, which stays on the hooks API.
+**Animation** when the steps play themselves once started: mount, loop, keyframe
+sequence. `withSequence` and looping `withRepeat` go here.
 
-**Use an animation** when the motion carries its own timeline: it plays on
-mount, loops, or runs through intermediate stops that you define as keyframes.
-Once it starts, nothing else drives it. This is where `withSequence` and any
-looping `withRepeat` go.
+Do not decide by whether the code re-renders today. It usually does not, and
+introducing that render by converting the shared value to state is part of the
+migration. The exception is a write inside a worklet, which stays on the hooks
+API.
 
-The distinction is not how many values the motion passes through, because a
-transition can pass through many. A stepper or a multi-stage progress bar eases
-from one value to the next as often as the state changes. The distinction is who
-supplies the intermediate values: with a transition the app does, one render at
-a time, and the element eases to wherever it was last told to go. With an
-animation the keyframes do, on a clock, with no further input.
+Two failure modes:
 
-The short test: if every step needs something outside the element to trigger it,
-it is a transition, however many steps there are. If the steps play themselves,
-it is an animation.
-
-Two consequences follow:
-
-- A transition on a value that never re-renders does nothing at all. That is
-  usually solved by turning the shared value into state, not by refusing, unless
-  the write happens in a worklet. An animation does not care either way, because
-  it is not driven by prop diffing.
-- An animation runs when the element mounts. If you convert an interaction into
-  an animation by mistake, it fires immediately on screen load.
+- A transition whose value never re-renders does nothing. Convert the driver to
+  state.
+- An animation used for an interaction fires on mount instead of on the event.
 
 ## The `with*` functions, mapped
 
@@ -77,42 +59,27 @@ check the resting state after converting.
 
 ## Springs
 
-There is no spring timing function in CSS. There are two honest options, and
-which applies depends on whether the spring oscillates.
+CSS has no spring timing function. Convert only when every spring parameter is a
+literal you can read at migration time. Refuse anything reading `velocity` from a
+gesture or building its config at runtime.
 
-Reanimated ships four presets. Their damping ratios, computed from the values in
-`animation/spring/springConfigs.ts`:
+Presets, from `animation/spring/springConfigs.ts`:
 
-| Preset | zeta | Shape | Overshoot | Settles |
+| Preset | zeta | Overshoot | Settles | Convert to |
 | --- | --- | --- | --- | --- |
-| `SnappySpringConfig` | 0.92 | clamped, `overshootClamping: true` | none | ~386ms |
-| `GentleSpringConfig` | 1.00 | critically damped | none | ~495ms |
-| `WigglySpringConfig` | 0.75 | underdamped | ~3% | ~478ms |
-| `Reanimated3DefaultSpringConfig` | 0.50 | underdamped | ~16% | ~916ms |
+| `SnappySpringConfig` | 0.92 clamped | none | ~386ms | `cubicBezier` or `linear(...)` |
+| `GentleSpringConfig` | 1.00 | none | ~495ms | `cubicBezier` or `linear(...)` |
+| `WigglySpringConfig` | 0.75 | ~3% | ~478ms | `linear(...)` only |
+| `Reanimated3DefaultSpringConfig` | 0.50 | ~16% | ~916ms | `linear(...)` only |
 
-**Monotonic springs** (Gentle, and Snappy because clamping removes the
-overshoot) rise once and stop. A `cubicBezier` approximates them acceptably, and
-a sampled `linear(...)` matches them closely.
-
-**Oscillating springs** (Wiggly, Reanimated3Default) cross the target and come
-back. A cubic Bezier cannot express that: it can overshoot once, because the y
-control points are not clamped to 0..1, but it cannot oscillate. Sample these to
-`linear(...)` instead, which takes an arbitrary number of control points and is
-the standard way to express a spring as an easing.
+A cubic Bezier can overshoot once but cannot oscillate, so anything that crosses
+the target and comes back needs `linear(...)`.
 
 To sample: simulate the damped oscillator from 0 to 1, take 20-30 evenly spaced
-points across the settle time, and emit them as `linear(p0, p1, ... pn)` with
-`animationDuration` set to that settle time. The resulting motion is visually
-equivalent, though not physically identical.
+points across the settle time, emit `linear(p0, p1, ... pn)`, and set
+`animationDuration` to that settle time.
 
-**When to refuse instead.** A spring whose configuration is not statically
-known cannot be sampled: anything reading `velocity` from a gesture, or building
-its config at runtime. Those stay on the hooks API. A spring is only convertible
-when every parameter is a literal you can read at migration time.
-
-Say which option you used and why. Silently substituting `ease-out` for a spring
-is the change users notice and dislike most, because the overshoot is usually
-the entire point.
+Never substitute `ease-out` for a spring. Say which option you used.
 
 ## Pseudo-selectors, and why they usually beat a state round-trip
 
@@ -129,11 +96,12 @@ replace the whole shared-value or React-state round-trip:
 />
 ```
 
-That is fewer moving parts than the hook version, and it does not re-render on
-every press. Prefer it whenever the trigger is genuinely press, hover or focus.
+Prefer this whenever the trigger is press, hover or focus. It needs no state and
+does not re-render.
 
-`Pressable` also takes a render prop, which is useful when the pressed state has
-to reach a child rather than the pressed element itself:
+Use `Pressable`'s render prop instead when the styled element is not the one
+being pressed, several children react differently to one press, or the value
+depends on `pressed` in a way one selector cannot express:
 
 ```tsx
 <Pressable>
@@ -148,17 +116,9 @@ to reach a child rather than the pressed element itself:
 
 Bare numbers are milliseconds, so `transitionDuration: 300` is valid.
 
-Reach for the render prop when the styled element is not the one receiving the
-touch, when several children react to one press, or when the value depends on
-`pressed` in a way a single pseudo-selector cannot express. Otherwise the
-pseudo-selector is simpler and avoids the re-render.
-
-The same shape works for any boolean a parent already tracks and passes down:
-selection, focus, expansion, validity. If the parent re-renders when the flag
-flips, a transition on the child fires. This is often the cleanest way to
-migrate a component whose driver was a shared value, because it converts the
-driver to something that actually re-renders, without restructuring the data
-flow.
+The same shape works for any boolean a parent already passes down: selection,
+focus, expansion, validity. The parent re-render fires the child's transition,
+which is often the shortest route out of a shared-value driver.
 
 ## Easing
 
