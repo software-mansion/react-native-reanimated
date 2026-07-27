@@ -13,11 +13,15 @@
 They look interchangeable and are not. Picking the wrong one is the most common
 way a migration compiles and then misbehaves at runtime.
 
-**Use a transition** when a value changes from A to B in response to something,
-and the component re-renders as a result: a press, a toggle, an expand, a theme
-change, a selection. A transition is declared in the style and fires
-whenever a watched property differs between two renders. It has no concept of a
-timeline, only of "this value changed, ease it".
+**Use a transition** when a value moves from A to B in response to something: a
+press, a toggle, an expand, a theme change, a selection. A transition is declared
+in the style and fires whenever a watched property differs between two renders.
+It has no concept of a timeline, only of "this value changed, ease it".
+
+Choose on the shape of the motion, not on whether the code re-renders today. It
+usually does not, because the value lives in a shared value, and introducing the
+render by converting that to state is part of the migration. The exception is a
+write that happens in a worklet, which stays on the hooks API.
 
 **Use an animation** when the motion is self-contained: it plays on mount,
 loops, or moves through more than two states. Nothing needs to change and
