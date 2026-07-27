@@ -124,6 +124,9 @@ Options:
   --platform=<ios,android>   Platform(s) to bundle (default: ios). May also be
                              passed as positional args.
   --bundle-mode=<bool>       Build with worklets bundle mode on (default: true).
+                             Verified against the built bundle; if it does not
+                             match, scripts/toggle-bundle-mode.sh is run and the
+                             bundle rebuilt (and restored afterwards).
   --attributions=<bool>      Credit generated worklets back to the library that
                              authored them instead of react-native-worklets
                              (default: false). Only valid with bundle mode on.
@@ -139,52 +142,43 @@ Valid combinations:
   );
 }
 
-const PATCH_FILES = [
-  'fabric-example-metro-config.patch',
-  'fabric-example-babel-config.patch',
-].map((f) => path.join(MONOREPO_ROOT, 'scripts', 'patches', f));
+const TOGGLE_SCRIPT = path.join(
+  MONOREPO_ROOT,
+  'scripts',
+  'toggle-bundle-mode.sh'
+);
 
-function git(gitArgs) {
-  return (
-    spawnSync('git', gitArgs, { cwd: MONOREPO_ROOT, stdio: 'ignore' })
-      .status === 0
-  );
-}
-
-/** @returns {boolean} True if the bundle-mode patches are currently applied. */
-function isBundleModeOn() {
-  const applied = PATCH_FILES.every((p) =>
-    git(['apply', '--reverse', '--check', p])
-  );
-  const reversed = PATCH_FILES.every((p) => git(['apply', '--check', p]));
-  if (applied && !reversed) return true;
-  if (reversed && !applied) return false;
-  throw new Error(
-    'bundle-mode patches are in a mixed/unknown state; fix ' +
-      'apps/fabric-example/{metro,babel}.config.js manually and retry.'
-  );
-}
+const BUNDLE_MODE_ASSIGN =
+  /_WORKLETS_BUNDLE_MODE_ENABLED\s*=\s*(!0|!1|true|false)/g;
 
 /**
- * Bring bundle mode to `on`.
- *
- * @param {boolean} on
- * @returns {boolean} Whether anything changed.
+ * @param {string} bundleFile
+ * @returns {boolean} Whether the built bundle has bundle mode enabled.
  */
-function setBundleMode(on) {
-  if (isBundleModeOn() === on) return false;
-  const apply = on ? ['apply'] : ['apply', '--reverse'];
-  const undo = on ? ['apply', '--reverse'] : ['apply'];
-  const done = [];
-  for (const p of PATCH_FILES) {
-    if (git([...apply, p])) {
-      done.push(p);
-      continue;
-    }
-    for (const d of done.reverse()) git([...undo, d]);
-    throw new Error('failed to toggle bundle-mode patches');
+function detectBundleMode(bundleFile) {
+  const matches = [
+    ...fs.readFileSync(bundleFile, 'utf8').matchAll(BUNDLE_MODE_ASSIGN),
+  ];
+  if (matches.length === 0) {
+    throw new Error(
+      'could not find _WORKLETS_BUNDLE_MODE_ENABLED in the bundle; ' +
+        'is react-native-worklets part of the app?'
+    );
   }
-  return true;
+  return matches.some((m) => m[1] === '!0' || m[1] === 'true');
+}
+
+function toggleBundleMode() {
+  const res = spawnSync('bash', [TOGGLE_SCRIPT], {
+    cwd: MONOREPO_ROOT,
+    stdio: ['ignore', 2, 2],
+  });
+  if (res.error) throw res.error;
+  if (res.status !== 0) {
+    throw new Error(
+      `scripts/toggle-bundle-mode.sh failed with exit code ${res.status}`
+    );
+  }
 }
 
 /**
@@ -231,6 +225,34 @@ function buildBundle(platform, outDir, attribute) {
     );
   }
   return { bundle, map };
+}
+
+/**
+ * Build `platform` and make sure the result really is in the requested bundle
+ * mode, toggling the repo once and rebuilding if it isn't.
+ *
+ * @param {string} platform
+ * @param {string} outDir
+ * @param {{ bundleMode: boolean; attributions: boolean }} args
+ * @param {{ toggled: boolean }} state
+ * @returns {{ bundle: string; map: string }}
+ */
+function buildInRequestedMode(platform, outDir, args, state) {
+  const built = buildBundle(platform, outDir, args.attributions);
+  if (detectBundleMode(built.bundle) === args.bundleMode) return built;
+
+  if (state.toggled) {
+    throw new Error(
+      'scripts/toggle-bundle-mode.sh ran but the bundle is still ' +
+        `bundle-mode=${!args.bundleMode}`
+    );
+  }
+  console.error(
+    `• bundle came out bundle-mode=${!args.bundleMode}, toggling and rebuilding…`
+  );
+  toggleBundleMode();
+  state.toggled = true;
+  return buildInRequestedMode(platform, outDir, args, state);
 }
 
 async function attributeBundle(bundleFile, mapFile, attribute) {
@@ -296,8 +318,7 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'reanimated-bundle-cost-'));
 
-  const originalBundleMode = isBundleModeOn();
-  let toggled = false;
+  const state = { toggled: false };
 
   const modeLabel = `bundle-mode=${args.bundleMode}, attributions=${args.attributions}`;
   console.error(`• ${modeLabel}`);
@@ -305,9 +326,8 @@ async function main() {
   /** @type {Record<string, any>} */
   const report = {};
   try {
-    toggled = setBundleMode(args.bundleMode);
     for (const platform of args.platforms) {
-      const { bundle, map } = buildBundle(platform, tmp, args.attributions);
+      const { bundle, map } = buildInRequestedMode(platform, tmp, args, state);
       const { total, groups } = await attributeBundle(
         bundle,
         map,
@@ -320,7 +340,7 @@ async function main() {
       };
     }
   } finally {
-    if (toggled) setBundleMode(originalBundleMode);
+    if (state.toggled) toggleBundleMode();
     if (args.keep) console.error(`\nartifacts kept in ${tmp}`);
     else fs.rmSync(tmp, { recursive: true, force: true });
   }
