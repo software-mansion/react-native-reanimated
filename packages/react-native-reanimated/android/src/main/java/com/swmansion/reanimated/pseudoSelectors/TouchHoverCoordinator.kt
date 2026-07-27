@@ -14,7 +14,7 @@ import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
 import java.lang.ref.WeakReference
 
 class TouchHoverCoordinator(
-    private val onWindowTouch: (MotionEvent) -> Unit = {},
+    private val onWindowTouch: (ViewGroup?, MotionEvent) -> Unit = { _, _ -> },
 ) {
     private val hoverCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
     private val hoveredViews = LinkedHashSet<View>()
@@ -54,7 +54,7 @@ class TouchHoverCoordinator(
                 MotionEvent.ACTION_POINTER_UP ->
                     if (event.getPointerId(event.actionIndex) == 0) settleHover(root, event, downPoint)
             }
-            onWindowTouch(event)
+            onWindowTouch(root, event)
             return original.dispatchTouchEvent(event)
         }
     }
@@ -143,7 +143,9 @@ class TouchHoverCoordinator(
         val hitTags = hitTestPath(root, screenX, screenY)
         val overRegistered = hoverCallbacks.keys.any { it.id in hitTags }
         if (overRegistered) {
-            if (!pointerInsideRegistered || movedBeyondSlop(root, screenX, screenY)) {
+            if (!pointerInsideRegistered ||
+                movedBeyondSlop(root, screenX - lastPointerX, screenY - lastPointerY)
+            ) {
                 applyHover(hitTags)
                 lastPointerX = screenX
                 lastPointerY = screenY
@@ -163,11 +165,9 @@ class TouchHoverCoordinator(
 
     private fun movedBeyondSlop(
         root: ViewGroup?,
-        screenX: Float,
-        screenY: Float,
+        dx: Float,
+        dy: Float,
     ): Boolean {
-        val dx = screenX - lastPointerX
-        val dy = screenY - lastPointerY
         val slop = scaledTouchSlop(root)
         return dx * dx + dy * dy > slop * slop
     }
@@ -238,23 +238,13 @@ class TouchHoverCoordinator(
         }
         val screenX = event.getX(index) + (event.rawX - event.getX(0))
         val screenY = event.getY(index) + (event.rawY - event.getY(0))
-        if (downPoint != null && isStationary(screenX, screenY, downPoint, root)) {
+        if (downPoint != null &&
+            !movedBeyondSlop(root, screenX - downPoint[0], screenY - downPoint[1])
+        ) {
             return
         }
         val hitTags: List<Int> = if (root == null) emptyList() else hitTestPath(root, screenX, screenY)
         unhoverWhere { it.id !in hitTags }
-    }
-
-    private fun isStationary(
-        x: Float,
-        y: Float,
-        downPoint: FloatArray,
-        root: ViewGroup?,
-    ): Boolean {
-        val dx = x - downPoint[0]
-        val dy = y - downPoint[1]
-        val slop = scaledTouchSlop(root)
-        return dx * dx + dy * dy <= slop * slop
     }
 
     private fun scaledTouchSlop(root: ViewGroup?): Float {

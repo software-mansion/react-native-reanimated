@@ -3,6 +3,7 @@ package com.swmansion.reanimated.pseudoSelectors
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
+import android.view.ViewGroup
 import android.view.ViewParent
 import android.view.ViewTreeObserver
 import com.facebook.react.bridge.ReactApplicationContext
@@ -184,12 +185,15 @@ class PseudoSelectorManager(
             }
     }
 
-    private fun onWindowPressTouch(event: MotionEvent) {
+    private fun onWindowPressTouch(
+        root: ViewGroup?,
+        event: MotionEvent,
+    ) {
         if (activeCallbacks.isEmpty() && deepestCallbacks.isEmpty() && gestureByHost.isEmpty()) {
             return
         }
         when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN -> windowPressDown(event)
+            MotionEvent.ACTION_DOWN -> windowPressDown(root, event)
             MotionEvent.ACTION_MOVE ->
                 if (event.findPointerIndex(0) >= 0) {
                     for (host in gestureByHost.keys.toList()) {
@@ -209,36 +213,23 @@ class PseudoSelectorManager(
         }
     }
 
-    private fun windowPressDown(event: MotionEvent) {
-        if (activeCallbacks.isEmpty() && deepestCallbacks.isEmpty()) {
+    private fun windowPressDown(
+        root: ViewGroup?,
+        event: MotionEvent,
+    ) {
+        if (root == null || (activeCallbacks.isEmpty() && deepestCallbacks.isEmpty())) {
             return
         }
-        val hitTagsByRoot = HashMap<View, List<Int>>()
-        var pressedHost: View? = null
-        var pressedHitTags: List<Int> = emptyList()
-        var pressedDepth = Int.MAX_VALUE
-
-        for (host in pressHosts()) {
-            if (gestureByHost.containsKey(host)) {
-                continue
-            }
-            val hitTags =
-                hitTagsByRoot.getOrPut(host.rootView) {
-                    hover.hitTestTagsAt(host, event.rawX, event.rawY)
-                }
-            // Only the deepest host starts a gesture; fireActiveCallbacksUpTree covers its
-            // ancestors, so starting one per ancestor would fire them twice.
-            val depth = hitTags.indexOf(host.id)
-            if (depth >= 0 && depth < pressedDepth) {
-                pressedDepth = depth
-                pressedHost = host
-                pressedHitTags = hitTags
-            }
+        val hostsById = pressHosts().associateBy { it.id }
+        val hitTags = hover.hitTestTagsAt(root, event.rawX, event.rawY)
+        // The path is ordered target first, so the first host on it is the deepest one;
+        // fireActiveCallbacksUpTree covers its ancestors.
+        val host = hitTags.firstNotNullOfOrNull { hostsById[it] } ?: return
+        if (gestureByHost.containsKey(host)) {
+            return
         }
-
-        val host = pressedHost ?: return
         val leaf = findTouchedLeaf(host, event.rawX, event.rawY) ?: return
-        beginPress(host, leaf, event.rawX, event.rawY, pressedHitTags)
+        beginPress(host, leaf, event.rawX, event.rawY, hitTags)
     }
 
     private fun beginPress(
