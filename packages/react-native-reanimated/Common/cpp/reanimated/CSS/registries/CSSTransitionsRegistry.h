@@ -29,8 +29,8 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
   void run(const std::shared_ptr<const ShadowNode> &shadowNode, const PropertyValueDynamicDiffsMap &propertyDiffs);
 
   void setPseudoLockedProperties(Tag viewTag, const TransitionProperties &properties);
-  /// Retargets settled pseudo-styled values to the fresh defaults, so a toggle value left in
-  /// the updates registry stops overriding later renders.
+  /// Retargets settled pseudo-styled values to the fresh defaults, so a toggle value left in the
+  /// updates registry stops overriding later renders.
   void reconcilePseudoStyledProperties(
       Tag viewTag,
       const folly::dynamic &defaults,

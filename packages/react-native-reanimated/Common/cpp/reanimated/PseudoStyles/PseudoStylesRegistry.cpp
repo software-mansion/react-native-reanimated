@@ -77,8 +77,8 @@ void PseudoStylesRegistry::registerPseudoStyles(
   entry.precomputedStyles = recomputeAllStyles(entry);
 
   const auto lockedProperties = collectPseudoLockedProperties(entry);
-  // The lock is otherwise only refreshed by a selector toggle, so a render that changes which
-  // properties the pseudo block styles leaves it stale in both directions.
+  // Otherwise the lock is only refreshed by a selector toggle and goes stale when a render
+  // changes which properties the pseudo block styles.
   cssTransitionsRegistry_->setPseudoLockedProperties(tag, lockedProperties);
   cssTransitionsRegistry_->reconcilePseudoStyledProperties(tag, entry.defaults, previousDefaults, lockedProperties);
 

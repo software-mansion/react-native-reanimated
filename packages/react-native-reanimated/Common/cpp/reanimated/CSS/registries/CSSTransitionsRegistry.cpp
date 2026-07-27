@@ -81,9 +81,8 @@ void CSSTransitionsRegistry::reconcilePseudoStyledProperties(
     }
   }
 
-  // A property can also leave the pseudo block while its selector stays, which does not
-  // unregister the tag. It is no longer in the defaults, so the loop above never visits it and
-  // its settled value would keep overriding renders.
+  // A property can leave the pseudo block while its selector stays, which does not unregister
+  // the tag and leaves it out of the defaults above.
   if (previousDefaults.isObject()) {
     for (const auto &propKey : previousDefaults.keys()) {
       const auto propName = propKey.asString();
