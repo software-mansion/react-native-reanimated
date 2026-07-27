@@ -19,15 +19,15 @@ const blockedDirs = [monorepoRoot, commonAppPath, reanimatedPath, workletsPath];
  * @param {string[]} modulesToFilter - Module names to block from being resolved
  *   from unwanted locations.
  * @param {string} appDir - Absolute path to the app directory.
- * @param {import('@react-native/metro-config').MetroConfig} defaultConfig -
- *   Metro configuration https://reactnative.dev/docs/metro
+ * @param {RegExp | RegExp[] | undefined} existingBlockList - Existing Metro
+ *   module block list.
  * @returns {{
  *   blockList: RegExp[];
  *   extraNodeModules: { [x: string]: string };
  * }}
  */
-function getMonorepoMetroOptions(modulesToFilter, appDir, defaultConfig) {
-  const blockList = getModuleBlocklist(modulesToFilter, defaultConfig);
+function getMonorepoMetroOptions(modulesToFilter, appDir, existingBlockList) {
+  const blockList = getModuleBlocklist(modulesToFilter, existingBlockList);
   const extraNodeModules = getExtraNodeModules(modulesToFilter, appDir);
 
   return {
@@ -38,11 +38,11 @@ function getMonorepoMetroOptions(modulesToFilter, appDir, defaultConfig) {
 
 /**
  * @param {string[]} moduleNames
- * @param {import('@react-native/metro-config').MetroConfig} defaultConfig -
- *   Metro configuration https://reactnative.dev/docs/metro
+ * @param {RegExp | RegExp[] | undefined} existingBlockList - Existing Metro
+ *   module block list.
  * @returns {RegExp[]}
  */
-function getModuleBlocklist(moduleNames, defaultConfig) {
+function getModuleBlocklist(moduleNames, existingBlockList) {
   const blockList = moduleNames.reduce(
     (/** @type {RegExp[]} */ acc, /** @type {string} */ moduleName) => {
       blockedDirs.forEach((dir) => {
@@ -52,9 +52,7 @@ function getModuleBlocklist(moduleNames, defaultConfig) {
     },
     []
   );
-  const mergedBlockList = [
-    ...blockList.concat(defaultConfig?.resolver?.blockList ?? []),
-  ];
+  const mergedBlockList = [...blockList.concat(existingBlockList ?? [])];
   return mergedBlockList;
 }
 

@@ -10,8 +10,7 @@ const defaultConfig = getDefaultConfig(__dirname);
 const { blockList, extraNodeModules } = getMonorepoMetroOptions(
   modulesToFilter,
   __dirname,
-  // @ts-expect-error Metro types differ for macOS
-  defaultConfig
+  defaultConfig.resolver.blockList
 );
 
 const monorepoRoot = path.resolve(__dirname, '../..');
