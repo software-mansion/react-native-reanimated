@@ -4,6 +4,7 @@
 #include <react/debug/react_native_assert.h>
 
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -65,7 +66,7 @@ void CSSTransitionsRegistry::reconcilePseudoStyledProperties(
   const auto &transition = it->second;
   const auto shadowNode = transition->getShadowNode();
   PropertyValueDynamicDiffsMap corrections;
-  bool evicted = false;
+  std::vector<std::string> evictedProperties;
 
   for (const auto &[propKey, freshValue] : defaults.items()) {
     const auto propName = propKey.asString();
@@ -75,7 +76,7 @@ void CSSTransitionsRegistry::reconcilePseudoStyledProperties(
     if (freshValue.isNull()) {
       // Styled only by the selector, so the resting value is whatever React renders.
       updates.erase(propName);
-      evicted = true;
+      evictedProperties.push_back(propName);
     } else if (updates[propName] != freshValue) {
       corrections.emplace(propName, std::make_pair(updates[propName], freshValue));
     }
@@ -90,11 +91,14 @@ void CSSTransitionsRegistry::reconcilePseudoStyledProperties(
         continue;
       }
       updates.erase(propName);
-      evicted = true;
+      evictedProperties.push_back(propName);
     }
   }
 
-  if (evicted) {
+  if (!evictedProperties.empty()) {
+    // An in-flight transition would otherwise re-emit the evicted value on its next tick and
+    // pin the property again.
+    transition->removeProperties(evictedProperties);
     setInUpdatesRegistry(transition->getShadowNodeFamily(), updates);
   }
   if (!corrections.empty()) {
