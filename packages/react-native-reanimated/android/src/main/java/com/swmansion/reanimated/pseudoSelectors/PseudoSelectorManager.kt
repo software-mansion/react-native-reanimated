@@ -233,9 +233,8 @@ class PseudoSelectorManager(
                 hitTagsByRoot.getOrPut(host.rootView) {
                     hover.hitTestTagsAt(host, event.rawX, event.rawY)
                 }
-            // Every host on the touch path is a candidate, but only the deepest one starts a
-            // gesture - fireActiveCallbacksUpTree already walks to its ancestors, so starting one
-            // per ancestor would fire them twice.
+            // Only the deepest host starts a gesture; fireActiveCallbacksUpTree covers its
+            // ancestors, so starting one per ancestor would fire them twice.
             val depth = hitTags.indexOf(host.id)
             if (depth >= 0 && depth < pressedDepth) {
                 pressedDepth = depth
@@ -357,8 +356,8 @@ class PseudoSelectorManager(
         event: MotionEvent,
     ) {
         findTouchedLeaf(host, event.rawX, event.rawY)?.let {
-            // This path only runs when the host itself received the touch, so the hit test is
-            // needed just to arbitrate :active-deepest between nested candidates.
+            // The host already received the touch here; the hit test only arbitrates
+            // :active-deepest between nested candidates.
             beginPress(host, it, event.rawX, event.rawY, hover.hitTestTagsAt(host, event.rawX, event.rawY))
         }
         hover.onViewTouchDown(host, event)
