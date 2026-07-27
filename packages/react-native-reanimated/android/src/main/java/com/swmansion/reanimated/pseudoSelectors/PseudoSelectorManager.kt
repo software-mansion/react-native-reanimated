@@ -30,12 +30,11 @@ class PseudoSelectorManager(
     private val touchHostRefs = HashMap<View, Int>()
     private val gestureByHost = HashMap<View, HostGesture>()
 
-    private val hover = TouchHoverCoordinator()
+    private val hover = TouchHoverCoordinator(::onWindowPressTouch)
     private var extraWindowBridge: ExtraWindowObserverBridge? = null
 
     private val pendingAttaches = LinkedHashMap<String, PendingAttach>()
     private var mountListenerRegistered = false
-    private var pressWindowInterceptorSet = false
 
     private data class PendingAttach(
         val tag: Int,
@@ -177,7 +176,6 @@ class PseudoSelectorManager(
         acquireTouchListener(host)
         hover.retainWindowObserver(view)
         ensureExtraWindowBridge()
-        ensurePressWindowInterceptor()
         detachActions[key] =
             Runnable {
                 callbacks.remove(view)
@@ -186,15 +184,10 @@ class PseudoSelectorManager(
             }
     }
 
-    private fun ensurePressWindowInterceptor() {
-        if (pressWindowInterceptorSet) {
+    private fun onWindowPressTouch(event: MotionEvent) {
+        if (activeCallbacks.isEmpty() && deepestCallbacks.isEmpty() && gestureByHost.isEmpty()) {
             return
         }
-        pressWindowInterceptorSet = true
-        hover.setWindowTouchInterceptor(::onWindowPressTouch)
-    }
-
-    private fun onWindowPressTouch(event: MotionEvent) {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> windowPressDown(event)
             MotionEvent.ACTION_MOVE ->

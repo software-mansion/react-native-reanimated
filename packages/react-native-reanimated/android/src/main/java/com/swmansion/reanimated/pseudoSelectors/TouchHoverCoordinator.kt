@@ -13,7 +13,9 @@ import com.facebook.react.uimanager.TouchTargetHelper
 import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
 import java.lang.ref.WeakReference
 
-class TouchHoverCoordinator {
+class TouchHoverCoordinator(
+    private val onWindowTouch: (MotionEvent) -> Unit = {},
+) {
     private val hoverCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
     private val hoveredViews = LinkedHashSet<View>()
     private val hoverHostRefs = HashMap<View, Int>()
@@ -30,8 +32,6 @@ class TouchHoverCoordinator {
     private val observedWindows = mutableListOf<WeakReference<WindowObserver>>()
 
     private var windowObserverRetainCount = 0
-
-    private var windowTouchInterceptor: ((MotionEvent) -> Unit)? = null
 
     private inner class WindowObserver(
         window: Window,
@@ -54,7 +54,7 @@ class TouchHoverCoordinator {
                 MotionEvent.ACTION_POINTER_UP ->
                     if (event.getPointerId(event.actionIndex) == 0) settleHover(root, event, downPoint)
             }
-            windowTouchInterceptor?.invoke(event)
+            onWindowTouch(event)
             return original.dispatchTouchEvent(event)
         }
     }
@@ -79,10 +79,6 @@ class TouchHoverCoordinator {
         }
         releaseHoverListener(host)
         releaseWindowObserver()
-    }
-
-    fun setWindowTouchInterceptor(interceptor: (MotionEvent) -> Unit) {
-        windowTouchInterceptor = interceptor
     }
 
     fun retainWindowObserver(view: View) {
