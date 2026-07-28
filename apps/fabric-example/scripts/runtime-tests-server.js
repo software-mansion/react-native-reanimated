@@ -529,7 +529,12 @@ async function ensureBooted(device) {
 }
 
 function sanitizerBuildArgs() {
-  return SANITIZER === 'thread' ? ['-enableThreadSanitizer', 'YES'] : [];
+  // -enableThreadSanitizer alone does not reach the Pods project on CI (the
+  // built products carried no -fsanitize=thread), so the build setting is
+  // also forced as a command-line override, which applies to every target.
+  return SANITIZER === 'thread'
+    ? ['-enableThreadSanitizer', 'YES', 'ENABLE_THREAD_SANITIZER=YES']
+    : [];
 }
 
 async function buildApp() {
