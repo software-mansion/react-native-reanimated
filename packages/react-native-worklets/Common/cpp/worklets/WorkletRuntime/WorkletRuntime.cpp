@@ -47,7 +47,8 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
 };
 
 static std::shared_ptr<jsi::Runtime> makeRuntime(const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
-  auto hermesRuntime = facebook::hermes::makeHermesRuntime();
+  auto config = ::hermes::vm::RuntimeConfig::Builder().withMicrotaskQueue(true).build();
+  auto hermesRuntime = facebook::hermes::makeHermesRuntime(config);
   std::shared_ptr<jsi::Runtime> jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime));
   return std::make_shared<LockableRuntime>(jsiRuntime, runtimeMutex);
 }
@@ -147,6 +148,7 @@ void WorkletRuntime::schedule(jsi::Function &&function) const {
     }
 
     strongThis->runSync(*function);
+    strongThis->callMicrotasks();
   });
 }
 
@@ -163,6 +165,7 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet) cons
     }
 
     strongThis->runSync(worklet);
+    strongThis->callMicrotasks();
   });
 }
 
@@ -181,6 +184,7 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet, std:
     }
 
     strongThis->runSyncWithStack(worklet, scheduleStack);
+    strongThis->callMicrotasks();
   });
 }
 #endif // NDEBUG
@@ -194,6 +198,7 @@ void WorkletRuntime::callMicrotasks() const {
         callMicrotasksObject.asFunction(rt).call(rt);
       }
     }
+    rt.drainMicrotasks();
   });
 }
 
@@ -221,6 +226,7 @@ void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
     auto lock = std::unique_lock<std::recursive_mutex>(*strongThis->runtimeMutex_);
     jsi::Runtime &runtime = strongThis->getJSIRuntime();
     job(runtime);
+    strongThis->callMicrotasks();
   });
 }
 

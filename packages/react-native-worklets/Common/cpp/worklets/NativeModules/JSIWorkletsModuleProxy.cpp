@@ -114,6 +114,7 @@ inline jsi::Value runOnUISync(
     auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
         rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
     auto serializedResult = uiWorkletRuntime->runSyncSerializedWithStack(serializableWorklet, scheduleStack);
+    uiWorkletRuntime->callMicrotasks();
     return serializedResult->toJSValue(rt);
   }
   return jsi::Value::undefined();
@@ -125,6 +126,7 @@ runOnUISync(const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime, jsi::Runt
     auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
         rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
     auto serializedResult = uiWorkletRuntime->runSyncSerialized(serializableWorklet);
+    uiWorkletRuntime->callMicrotasks();
     return serializedResult->toJSValue(rt);
   }
   return jsi::Value::undefined();
@@ -140,7 +142,9 @@ jsi::Value runOnRuntimeSync(
   auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
   auto worklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
-  return workletRuntime->runSyncSerializedWithStack(worklet, scheduleStack)->toJSValue(rt);
+  auto serializedResult = workletRuntime->runSyncSerializedWithStack(worklet, scheduleStack);
+  workletRuntime->callMicrotasks();
+  return serializedResult->toJSValue(rt);
 }
 #else
 jsi::Value
@@ -148,7 +152,9 @@ runOnRuntimeSync(jsi::Runtime &rt, const jsi::Value &workletRuntimeValue, const 
   auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
   auto worklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
-  return workletRuntime->runSyncSerialized(worklet)->toJSValue(rt);
+  auto serializedResult = workletRuntime->runSyncSerialized(worklet);
+  workletRuntime->callMicrotasks();
+  return serializedResult->toJSValue(rt);
 }
 #endif // NDEBUG
 

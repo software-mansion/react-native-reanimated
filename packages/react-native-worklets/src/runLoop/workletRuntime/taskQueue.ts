@@ -14,6 +14,11 @@ export function setupTaskQueue() {
     timeoutCallbacks: new Map(),
   };
   globalThis._taskQueue = queue;
+  const drainHermesJobs = (
+    globalThis as unknown as {
+      HermesInternal?: { drainJobs?: () => void };
+    }
+  ).HermesInternal?.drainJobs;
 
   globalThis.__runTimeoutCallback = function (handlerId: number) {
     const task = queue.timeoutCallbacks.get(handlerId);
@@ -27,6 +32,7 @@ export function setupTaskQueue() {
       queue.microtasks[i]();
     }
     queue.microtasks = [];
+    drainHermesJobs?.();
   };
 }
 
