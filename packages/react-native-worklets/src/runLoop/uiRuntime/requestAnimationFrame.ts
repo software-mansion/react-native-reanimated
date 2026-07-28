@@ -14,6 +14,18 @@ export function setupRequestAnimationFrame() {
 
   let queuedFinalizers: (() => void)[] = [];
 
+  // Whether the per-frame flush loop is currently scheduled. The loop stops itself when there is no
+  // queued work and is restarted by `scheduleFlush()` whenever something is enqueued, so an idle UI
+  // runtime no longer runs the loop on every frame.
+  let isLoopScheduled = false;
+
+  function scheduleFlush() {
+    if (!isLoopScheduled) {
+      isLoopScheduled = true;
+      globalThis.__nativeRequestAnimationFrame(nativeFlushQueue);
+    }
+  }
+
   function executeQueue(timestamp: number) {
     flushedCallbacks = queuedCallbacks;
     queuedCallbacks = [];
@@ -42,6 +54,7 @@ export function setupRequestAnimationFrame() {
   ): number {
     const handle = queuedCallbacksEnd++;
     queuedCallbacks.push(callback);
+    scheduleFlush();
     return handle;
   }
 
@@ -60,8 +73,13 @@ export function setupRequestAnimationFrame() {
   function nativeFlushQueue(timestamp: number) {
     flushQueue(timestamp);
 
-    /* Schedule next frame */
-    globalThis.__nativeRequestAnimationFrame(nativeFlushQueue);
+    /* Schedule the next frame only while there is pending work; otherwise stop the loop and let
+       scheduleFlush() restart it on the next enqueue. */
+    if (queuedCallbacks.length > 0 || queuedFinalizers.length > 0) {
+      globalThis.__nativeRequestAnimationFrame(nativeFlushQueue);
+    } else {
+      isLoopScheduled = false;
+    }
   }
 
   function flushQueue(timestamp: number) {
@@ -75,10 +93,11 @@ export function setupRequestAnimationFrame() {
     cancelAnimationFrame as typeof globalThis.cancelAnimationFrame;
   globalThis.requestAnimationFrameFinalizer = (callback: () => void) => {
     queuedFinalizers.push(callback);
+    scheduleFlush();
   };
 
   /* Start the loop */
-  globalThis.__nativeRequestAnimationFrame(nativeFlushQueue);
+  scheduleFlush();
 
   // TODO: Remove it after support for Reanimated 4.3 is dropped.
   globalThis.__flushAnimationFrame = (eventTimestamp: number) => {
