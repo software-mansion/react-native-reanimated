@@ -11,6 +11,8 @@
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace reanimated::css {
 
@@ -51,6 +53,9 @@ class CSSTransition {
   /// Runs the loop side directly from already-computed (dynamic) diffs.
   folly::dynamic run(const PropertyValueDynamicDiffsMap &propertyDiffs, const folly::dynamic &lastUpdates);
   void cancel();
+  /// Drops the properties from the transition, so neither the loop nor a native animation keeps
+  /// writing them once their value has been evicted from the updates registry.
+  void removeProperties(const std::vector<std::string> &propertyNames);
 
   void setPseudoLockedProperties(TransitionProperties properties);
 

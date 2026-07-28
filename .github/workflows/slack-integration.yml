@@ -11,6 +11,9 @@ on:
   pull_request_target:
     types: [opened]
 
+permissions:
+  contents: read
+
 jobs:
   daily-status-report:
     if: github.repository == 'software-mansion/react-native-reanimated' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')

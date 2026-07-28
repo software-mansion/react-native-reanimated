@@ -55,11 +55,13 @@ const androidProject = createReactNativeProject({
 const {
   snapshotResolver: _,
   watchPlugins: __,
+  moduleNameMapper: { '^react-native($|/.*)': ___, ...webModuleNameMapper },
   ...baseWebPreset
 } = getWebPreset();
 
 const webProject = createProject({
   ...baseWebPreset,
+  moduleNameMapper: webModuleNameMapper,
   setupFiles: [...baseWebPreset.setupFiles, '<rootDir>/jest/setup.web.js'],
   displayName: 'web',
   testMatch: ['**/*.web.test.@(js|jsx|ts|tsx)'],
