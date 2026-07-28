@@ -12,6 +12,7 @@ import type {
 } from '../commonTypes';
 import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import type { BaseAnimationBuilder } from '../layoutReanimation';
+import type { ReanimatedKeyframe } from '../layoutReanimation/animationBuilder/Keyframe';
 import type { SharedTransition } from '../layoutReanimation/SharedTransition';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 
@@ -95,14 +96,14 @@ export type AnimatedComponentProps<
     | BaseAnimationBuilder
     | typeof BaseAnimationBuilder
     | EntryExitAnimationFunction
-    | Keyframe
+    | ReanimatedKeyframe
   ) &
     LayoutAnimationStaticContext;
   exiting?: (
     | BaseAnimationBuilder
     | typeof BaseAnimationBuilder
     | EntryExitAnimationFunction
-    | Keyframe
+    | ReanimatedKeyframe
   ) &
     LayoutAnimationStaticContext;
 };
@@ -111,7 +112,7 @@ export type LayoutAnimationOrBuilder = (
   | BaseAnimationBuilder
   | typeof BaseAnimationBuilder
   | EntryExitAnimationFunction
-  | Keyframe
+  | ReanimatedKeyframe
   | ILayoutAnimationBuilder
 ) &
   LayoutAnimationStaticContext;
