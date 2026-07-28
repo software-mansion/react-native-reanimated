@@ -118,7 +118,7 @@ function armConnectTimer() {
   }, CONNECT_TIMEOUT_MS);
 }
 
-if (!SHOULD_LAUNCH) {
+if (!SHOULD_LAUNCH && !BUILD_ONLY) {
   armConnectTimer();
 }
 
