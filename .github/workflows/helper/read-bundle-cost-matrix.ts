@@ -7,7 +7,6 @@ const HOW_MANY_MINORS = 3;
 const OUTPUT_PATH = '/tmp/bundle-cost-matrix.json';
 
 type CompatibilityDetails = {
-  'react-native'?: string[];
   'react-native-worklets'?: string[];
 };
 
@@ -15,16 +14,10 @@ type CompatibilityData = {
   fabric: Record<string, CompatibilityDetails>;
 };
 
-type WorkletsCompatibilityData = Record<
-  string,
-  { 'react-native'?: string[] } | undefined
->;
-
 type MatrixEntry = {
   reanimatedRange: string;
   reanimatedVersion: string;
   workletsVersion: string;
-  reactNativeVersion: string;
 };
 
 type MatrixJob = MatrixEntry & { bundleMode: boolean };
@@ -106,13 +99,6 @@ const compatibilityData = JSON.parse(
   )
 ) as CompatibilityData;
 
-const workletsCompatibilityData = JSON.parse(
-  fs.readFileSync(
-    path.join(packagesDir, 'react-native-worklets', 'compatibility.json'),
-    'utf8'
-  )
-) as WorkletsCompatibilityData;
-
 const reanimatedRanges = Object.keys(compatibilityData.fabric)
   .filter((range) => parseSimpleRange(range) !== null)
   .sort(compareRangesDesc);
@@ -125,7 +111,6 @@ for (const reanimatedRange of reanimatedRanges) {
   }
   const details = compatibilityData.fabric[reanimatedRange];
   const workletsRanges = details['react-native-worklets'] ?? [];
-  const reanimatedReactNative = details['react-native'] ?? [];
 
   const workletsRange = highestMinor(workletsRanges);
   if (!workletsRange) {
@@ -133,38 +118,22 @@ for (const reanimatedRange of reanimatedRanges) {
     continue;
   }
 
-  const workletsReactNative =
-    workletsCompatibilityData[workletsRange]?.['react-native'] ?? [];
-  const commonReactNative = reanimatedReactNative.filter((version) =>
-    workletsReactNative.includes(version)
-  );
-  const reactNativeMinor = highestMinor(commonReactNative);
-  if (!reactNativeMinor) {
-    console.warn(
-      `${reanimatedRange}: no React Native version supported by both it and ` +
-        `worklets ${workletsRange}, skipping`
-    );
-    continue;
-  }
-
   const reanimatedVersion = resolveNpmVersion(
     'react-native-reanimated',
     toRange(reanimatedRange)
   );
+  if (!reanimatedVersion) {
+    console.warn(`${reanimatedRange}: not published yet, skipping`);
+    continue;
+  }
+
   const workletsVersion = resolveNpmVersion(
     'react-native-worklets',
     toRange(workletsRange)
   );
-  const reactNativeVersion = resolveNpmVersion(
-    'react-native',
-    toRange(reactNativeMinor)
-  );
-
-  if (!reanimatedVersion || !workletsVersion || !reactNativeVersion) {
+  if (!workletsVersion) {
     console.warn(
-      `${reanimatedRange}: could not resolve published versions ` +
-        `(reanimated=${reanimatedVersion}, worklets=${workletsVersion}, ` +
-        `react-native=${reactNativeVersion}), skipping`
+      `${reanimatedRange}: worklets ${workletsRange} is not published yet, skipping`
     );
     continue;
   }
@@ -173,7 +142,6 @@ for (const reanimatedRange of reanimatedRanges) {
     reanimatedRange,
     reanimatedVersion,
     workletsVersion,
-    reactNativeVersion,
   });
 }
 

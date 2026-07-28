@@ -12,6 +12,12 @@ type PlatformResult = {
   groups: Record<string, number>;
 };
 
+type ExpectedJob = {
+  reanimatedVersion: string;
+  workletsVersion: string;
+  bundleMode: boolean;
+};
+
 type ResultFile = {
   reanimatedVersion: string;
   workletsVersion: string;
@@ -43,6 +49,43 @@ function readResults(dir: string): ResultFile[] {
   return files;
 }
 
+function compareVersionsDesc(a: string, b: string): number {
+  const left = a.split('.').map(Number);
+  const right = b.split('.').map(Number);
+  for (let i = 0; i < Math.max(left.length, right.length); i++) {
+    const diff = (right[i] ?? 0) - (left[i] ?? 0);
+    if (diff) {
+      return diff;
+    }
+  }
+  return 0;
+}
+
+function jobKey(reanimatedVersion: string, bundleMode: boolean): string {
+  return `${reanimatedVersion} bundle-mode=${bundleMode}`;
+}
+
+function readExpectedJobs(): ExpectedJob[] {
+  const raw = process.env.EXPECTED_MATRIX;
+  if (!raw) {
+    return [];
+  }
+  try {
+    return JSON.parse(raw) as ExpectedJob[];
+  } catch {
+    return [];
+  }
+}
+
+function missingJobs(results: ResultFile[]): string[] {
+  const measured = new Set(
+    results.map((result) => jobKey(result.reanimatedVersion, result.bundleMode))
+  );
+  return readExpectedJobs()
+    .map((job) => jobKey(job.reanimatedVersion, job.bundleMode))
+    .filter((key) => !measured.has(key));
+}
+
 function formatMessage(results: ResultFile[], runUrl: string): string {
   const lines: string[] = ['*Nightly bundle cost*'];
 
@@ -53,7 +96,7 @@ function formatMessage(results: ResultFile[], runUrl: string): string {
     byVersion.set(result.reanimatedVersion, existing);
   }
 
-  const versions = [...byVersion.keys()].sort().reverse();
+  const versions = [...byVersion.keys()].sort(compareVersionsDesc);
 
   for (const version of versions) {
     const entries = byVersion.get(version)!;
@@ -69,6 +112,7 @@ function formatMessage(results: ResultFile[], runUrl: string): string {
         body.push(
           `${platform.padEnd(8)} bundle-mode=${String(entry.bundleMode).padEnd(6)} ` +
             `total ${mb(result.total).padStart(8)}  ` +
+            `gzip ${mb(result.gzip).padStart(8)}  ` +
             `reanimated ${mb(reanimated).padStart(8)}  ` +
             `worklets ${mb(worklets).padStart(8)}`
         );
@@ -76,7 +120,7 @@ function formatMessage(results: ResultFile[], runUrl: string): string {
     }
 
     lines.push(
-      `\n*reanimated ${version}* + worklets ${workletsVersion} (RN ${reactNativeVersion})` +
+      `\n*reanimated ${version}* + worklets ${workletsVersion} (app RN ${reactNativeVersion})` +
         '\n```\n' +
         body.join('\n') +
         '\n```'
@@ -94,11 +138,14 @@ async function main(): Promise<void> {
     process.env.RUN_URL ??
     'https://github.com/software-mansion/react-native-reanimated/actions';
 
-  if (results.length === 0) {
+  const failed =
+    process.env.MEASURE_RESULT !== 'success' ||
+    results.length === 0 ||
+    missingJobs(results).length > 0;
+
+  if (failed) {
     await postToSlack({
-      text:
-        '*Nightly bundle cost*\nNo results were produced — every measure job ' +
-        `failed or uploaded nothing.\n<${runUrl}|Workflow run>`,
+      text: `*Nightly bundle cost*\nThe run failed, check the CI logs.\n<${runUrl}|Workflow run>`,
     });
     return;
   }
