@@ -58,6 +58,7 @@ jobs:
       REANIMATED_DIR: packages/react-native-reanimated
       CONFIGURATION: ${{ inputs.configuration || 'DebugRuntimeTests' }}
       SANITIZER_FLAG: ${{ inputs.sanitizer && format('--sanitizer {0}', inputs.sanitizer) || '' }}
+      SANITIZER_SKIP_BUILD_FLAG: ${{ inputs.sanitizer && '--skip-build' || '' }}
     concurrency:
       group: runtime-tests-ios-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'DebugRuntimeTests' }}-${{ inputs.sanitizer }}
       cancel-in-progress: true
@@ -106,16 +107,28 @@ jobs:
           working-directory: ${{ env.WORKING_DIRECTORY }}
           pod-directory: ios
 
+      # The sanitizer test steps are advisory, so the build has to be its own
+      # hard-failing step or a broken build would be swallowed with them.
+      - name: Build app (sanitizer)
+        if: ${{ inputs.sanitizer }}
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: node scripts/runtime-tests-server.js --build-only --configuration "$CONFIGURATION" $SANITIZER_FLAG
+
       - name: Run ReJest self-tests (builds the app, retries once)
+        id: self-tests
         working-directory: ${{ env.WORKING_DIRECTORY }}
         continue-on-error: ${{ inputs.sanitizer != '' }}
         run: >-
           node scripts/runtime-tests-server.js --launch --library self-tests
-          --configuration "$CONFIGURATION" --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
+          --configuration "$CONFIGURATION" $SANITIZER_SKIP_BUILD_FLAG --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
           || node scripts/runtime-tests-server.js --launch --library self-tests
           --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
 
+      # The inverted exit-code check cannot distinguish "the failing suite
+      # failed" from "the app never launched", so it only runs when the
+      # self-tests step proved the app works.
       - name: Verify CI catches failing tests
+        if: ${{ steps.self-tests.outcome == 'success' }}
         working-directory: ${{ env.WORKING_DIRECTORY }}
         continue-on-error: ${{ inputs.sanitizer != '' }}
         run: >-

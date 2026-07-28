@@ -10,7 +10,7 @@ const WebSocketServer = WebSocket.WebSocketServer || WebSocket.Server;
 
 const LIBRARIES = ['reanimated', 'worklets', 'self-tests'];
 const PLATFORMS = ['ios', 'android'];
-const BOOLEAN_FLAGS = new Set(['launch', 'skip-build']);
+const BOOLEAN_FLAGS = new Set(['launch', 'skip-build', 'build-only']);
 const BUNDLE_ID = 'org.reactjs.native.example.FabricExample';
 const ANDROID_APP_ID = 'com.fabricexample';
 
@@ -31,6 +31,7 @@ const ONLY = args.only
 const CONNECT_TIMEOUT_MS = Number(args['connect-timeout'] ?? 600) * 1000;
 const IDLE_TIMEOUT_MS = Number(args['idle-timeout'] ?? 600) * 1000;
 const SHOULD_LAUNCH = args.launch === true || args.launch === '';
+const BUILD_ONLY = args['build-only'] === true || args['build-only'] === '';
 const SKIP_BUILD = args['skip-build'] === true || args['skip-build'] === '';
 const SIMULATOR = args.simulator ?? 'iPhone 17';
 const UDID = args.udid ?? null;
@@ -38,7 +39,7 @@ const SERIAL = args.serial ?? null;
 const AVD = args.avd ?? null;
 const SANITIZER = args.sanitizer ? String(args.sanitizer).toLowerCase() : null;
 
-if (!LIBRARIES.includes(LIBRARY)) {
+if (!BUILD_ONLY && !LIBRARIES.includes(LIBRARY)) {
   console.error(
     `[runtime-tests] --library must be one of: ${LIBRARIES.join(', ')} (got: ${LIBRARY || 'nothing'})`
   );
@@ -59,6 +60,16 @@ if (SANITIZER && SANITIZER !== 'thread') {
 
 if (SANITIZER && PLATFORM !== 'ios') {
   console.error('[runtime-tests] --sanitizer is only supported on iOS');
+  process.exit(1);
+}
+
+if (BUILD_ONLY && PLATFORM !== 'ios') {
+  console.error('[runtime-tests] --build-only is only supported on iOS');
+  process.exit(1);
+}
+
+if (BUILD_ONLY && SHOULD_LAUNCH) {
+  console.error('[runtime-tests] --build-only cannot be combined with --launch');
   process.exit(1);
 }
 
@@ -308,7 +319,7 @@ function clearTimer(which) {
 }
 
 function printSanitizerReports() {
-  if (!SANITIZER) {
+  if (!SANITIZER || BUILD_ONLY) {
     return;
   }
   let files = [];
@@ -785,10 +796,27 @@ if (SHOULD_LAUNCH) {
     }
     armConnectTimer();
   })().catch((error) => {
-    console.error(`[runtime-tests] ${error.message}`);
-    if (error.stderr) {
-      console.error(String(error.stderr).slice(-4000));
-    }
+    printCommandFailure(error);
+    shutdown(1);
+  });
+}
+
+function printCommandFailure(error) {
+  console.error(`[runtime-tests] ${error.message}`);
+  if (error.stdout) {
+    console.error(String(error.stdout).slice(-20000));
+  }
+  if (error.stderr) {
+    console.error(String(error.stderr).slice(-4000));
+  }
+}
+
+if (BUILD_ONLY) {
+  (async () => {
+    await buildApp();
+    shutdown(0);
+  })().catch((error) => {
+    printCommandFailure(error);
     shutdown(1);
   });
 }
