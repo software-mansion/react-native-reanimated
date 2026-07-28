@@ -89,6 +89,23 @@ void CSSTransition::cancel() {
   platformTransitionProxy_->cancelAll(getViewTag(), routing_.platform);
 }
 
+void CSSTransition::removeProperties(const std::vector<std::string> &propertyNames) {
+  TransitionProperties platformProperties;
+  for (const auto &propertyName : propertyNames) {
+    if (routing_.platform.erase(propertyName) > 0) {
+      platformProperties.insert(propertyName);
+    }
+    routing_.loop.erase(propertyName);
+  }
+
+  if (!platformProperties.empty()) {
+    platformTransitionProxy_->cancelAll(getViewTag(), platformProperties);
+  }
+  if (loopTransition_) {
+    loopTransition_->removeProperties(propertyNames);
+  }
+}
+
 CSSLoopTransition &CSSTransition::ensureLoopTransition() {
   if (!loopTransition_) {
     loopTransition_ = std::make_shared<CSSLoopTransition>(
