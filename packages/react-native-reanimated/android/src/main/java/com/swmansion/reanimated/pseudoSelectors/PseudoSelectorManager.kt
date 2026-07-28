@@ -219,7 +219,7 @@ class PseudoSelectorManager(
         if (gestureByHost.containsKey(host)) {
             return
         }
-        val leaf = findTouchedLeaf(host, event.rawX, event.rawY) ?: return
+        val leaf = findTouchedLeaf(host, hitTags) ?: return
         beginPress(host, leaf, event.rawX, event.rawY, hitTags)
     }
 
@@ -240,15 +240,15 @@ class PseudoSelectorManager(
             .map { findTouchHost(it) }
             .associateBy { it.id }
 
+    // / The path already resolves compound children to the touched shape, and it is the only
+    // / source that maps screen coordinates through each ancestor's transform. Deriving
+    // / host-local coordinates from raw ones instead would mis-target a scaled or rotated host.
     private fun findTouchedLeaf(
         host: View,
-        rawX: Float,
-        rawY: Float,
+        hitTags: List<Int>,
     ): View? =
         if (host is ReactCompoundView) {
-            val loc = IntArray(2)
-            host.getLocationOnScreen(loc)
-            tryResolveView(host.reactTagForTouch(rawX - loc[0], rawY - loc[1]))
+            hitTags.firstOrNull()?.let { tryResolveView(it) }
         } else {
             host
         }
@@ -328,10 +328,9 @@ class PseudoSelectorManager(
         host: View,
         event: MotionEvent,
     ) {
-        findTouchedLeaf(host, event.rawX, event.rawY)?.let {
-            // The host already received the touch here; the hit test only arbitrates
-            // :active-deepest between nested candidates.
-            beginPress(host, it, event.rawX, event.rawY, hover.hitTestTagsAt(host, event.rawX, event.rawY))
+        val hitTags = hover.hitTestTagsAt(host, event.rawX, event.rawY)
+        findTouchedLeaf(host, hitTags)?.let {
+            beginPress(host, it, event.rawX, event.rawY, hitTags)
         }
         hover.onViewTouchDown(host, event)
     }
