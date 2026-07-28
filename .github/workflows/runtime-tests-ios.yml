@@ -117,20 +117,14 @@ jobs:
       - name: Run ReJest self-tests (builds the app, retries once)
         id: self-tests
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        continue-on-error: ${{ inputs.sanitizer != '' }}
         run: >-
           node scripts/runtime-tests-server.js --launch --library self-tests
           --configuration "$CONFIGURATION" $SANITIZER_SKIP_BUILD_FLAG --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
           || node scripts/runtime-tests-server.js --launch --library self-tests
           --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
 
-      # The inverted exit-code check cannot distinguish "the failing suite
-      # failed" from "the app never launched", so it only runs when the
-      # self-tests step proved the app works.
       - name: Verify CI catches failing tests
-        if: ${{ steps.self-tests.outcome == 'success' }}
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        continue-on-error: ${{ inputs.sanitizer != '' }}
         run: >-
           if node scripts/runtime-tests-server.js --launch --library self-tests
           --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
@@ -140,7 +134,6 @@ jobs:
 
       - name: Run Worklets runtime tests (reuses the build, retries once)
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        continue-on-error: ${{ inputs.sanitizer != '' }}
         run: >-
           node scripts/runtime-tests-server.js --launch --library worklets
           --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
@@ -149,15 +142,14 @@ jobs:
 
       - name: Run Reanimated runtime tests (reuses the build, retries once)
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        continue-on-error: ${{ inputs.sanitizer != '' }}
         run: >-
           node scripts/runtime-tests-server.js --launch --library reanimated
           --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
           || node scripts/runtime-tests-server.js --launch --library reanimated
           --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
 
-      # The test steps are advisory under a sanitizer, so detected races must
-      # fail the job through this hard-failing aggregation instead.
+      # With halt_on_error=0 a detected race does not fail the tests that
+      # triggered it, so the collected reports have to fail the job here.
       - name: Fail on sanitizer reports
         if: ${{ always() && inputs.sanitizer != '' }}
         working-directory: ${{ env.WORKING_DIRECTORY }}
