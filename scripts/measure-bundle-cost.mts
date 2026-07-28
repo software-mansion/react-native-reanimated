@@ -1,15 +1,46 @@
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
-const zlib = require('zlib');
-const { spawnSync } = require('child_process');
-const { SourceMapConsumer } = require('source-map');
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import zlib from 'node:zlib';
+import { SourceMapConsumer as UntypedSourceMapConsumer } from 'source-map';
 
-const MONOREPO_ROOT = path.resolve(__dirname, '..');
+type Mapping = [number, number, string | null];
+
+interface MappingItem {
+  generatedLine: number;
+  generatedColumn: number;
+  source: string | null;
+}
+
+interface Consumer {
+  eachMapping(
+    callback: (mapping: MappingItem) => void,
+    context: unknown,
+    order: number
+  ): void;
+  destroy?: () => void;
+}
+
+interface SourceMapConsumerConstructor {
+  new (map: unknown): Consumer | Promise<Consumer>;
+  GENERATED_ORDER: number;
+}
+
+const SourceMapConsumer =
+  UntypedSourceMapConsumer as SourceMapConsumerConstructor;
+
+interface RawSourceMap {
+  sections?: {
+    offset: { line: number; column: number };
+    map: RawSourceMap;
+  }[];
+}
+
+const MONOREPO_ROOT = path.resolve(import.meta.dirname, '..');
 const FABRIC_APP = path.join(MONOREPO_ROOT, 'apps', 'fabric-example');
 
-/** @type {{ label: string; test: RegExp }[]} * */
-const GROUPS = [
+const GROUPS: { label: string; test: RegExp }[] = [
   {
     label: 'react-native-worklets',
     test: /(?:node_modules|packages)[/\\]react-native-worklets[/\\]/,
@@ -22,11 +53,11 @@ const GROUPS = [
 
 const WORKLETS_GEN = /[/\\]react-native-worklets[/\\]\.worklets[/\\]/;
 const ORIGIN_RE = /^\/\/ __workletOrigin: (.*)$/m;
-/** @type {Map<string, string>} */
-const originCache = new Map();
+const originCache = new Map<string, string>();
 
-function resolveWorkletOrigin(file, seen) {
-  if (originCache.has(file)) return originCache.get(file);
+function resolveWorkletOrigin(file: string, seen?: Set<string>): string {
+  const cached = originCache.get(file);
+  if (cached !== undefined) return cached;
   let origin = file;
   try {
     const match = fs.readFileSync(file, 'utf8').match(ORIGIN_RE);
@@ -47,7 +78,7 @@ function resolveWorkletOrigin(file, seen) {
   return origin;
 }
 
-function classify(source, attribute) {
+function classify(source: string | null, attribute: boolean): string {
   if (!source) return 'other';
   const resolved =
     attribute && WORKLETS_GEN.test(source)
@@ -57,31 +88,38 @@ function classify(source, attribute) {
   return group ? group.label : 'other';
 }
 
-function fail(message) {
-  console.error(message);
-  process.exit(1);
+function fail(message: string): never {
+  throw new Error(message);
 }
 
-function parseBool(value, name) {
+function parseBool(value: string, name: string): boolean {
   if (value === 'true') return true;
   if (value === 'false') return false;
   fail(`--${name} expects true or false (got "${value}")`);
-  return false; // unreachable
 }
 
-function parseArgs(argv) {
-  const args = {
+interface Args {
+  platforms: string[];
+  bundleMode: boolean;
+  json: boolean;
+  keep: boolean;
+  help: boolean;
+}
+
+function parseArgs(argv: string[]): Args {
+  const args: Args = {
     platforms: [],
     bundleMode: true,
     json: false,
     keep: false,
+    help: false,
   };
   for (const a of argv) {
     if (a === '--json') args.json = true;
     else if (a === '--keep') args.keep = true;
     else if (a === '-h' || a === '--help') {
-      printHelp();
-      process.exit(0);
+      args.help = true;
+      return args;
     } else if (a.startsWith('--bundle-mode=')) {
       args.bundleMode = parseBool(
         a.slice('--bundle-mode='.length),
@@ -99,12 +137,12 @@ function parseArgs(argv) {
   return args;
 }
 
-function printHelp() {
+function printHelp(): void {
   console.log(
     `Measure per-library bundle cost of the fabric example app.
 
 Usage:
-  node scripts/measure-bundle-cost.js [options] [platforms...]
+  node scripts/measure-bundle-cost.mts [options] [platforms...]
 
 Options:
   --platform=<ios,android>   Platform(s) to bundle (default: ios). May also be
@@ -125,11 +163,8 @@ const TOGGLE_SCRIPT = path.join(
 const BUNDLE_MODE_ASSIGN =
   /_WORKLETS_BUNDLE_MODE_ENABLED\s*=\s*(!0|!1|true|false)/g;
 
-/**
- * @param {string} bundleFile
- * @returns {boolean} Whether the built bundle has bundle mode enabled.
- */
-function detectBundleMode(bundleFile) {
+/** @returns Whether the built bundle has bundle mode enabled. */
+function detectBundleMode(bundleFile: string): boolean {
   const matches = [
     ...fs.readFileSync(bundleFile, 'utf8').matchAll(BUNDLE_MODE_ASSIGN),
   ];
@@ -142,7 +177,7 @@ function detectBundleMode(bundleFile) {
   return matches.some((m) => m[1] === '!0' || m[1] === 'true');
 }
 
-function toggleBundleMode() {
+function toggleBundleMode(): void {
   const res = spawnSync('bash', [TOGGLE_SCRIPT], {
     cwd: MONOREPO_ROOT,
     stdio: ['ignore', 2, 2],
@@ -155,15 +190,12 @@ function toggleBundleMode() {
   }
 }
 
-/**
- * Build a minified production bundle with a source map for `platform`.
- *
- * @param {string} platform
- * @param {string} outDir
- * @param {boolean} attribute
- * @returns {{ bundle: string; map: string }}
- */
-function buildBundle(platform, outDir, attribute) {
+/** Build a minified production bundle with a source map for `platform`. */
+function buildBundle(
+  platform: string,
+  outDir: string,
+  attribute: boolean
+): { bundle: string; map: string } {
   const bundle = path.join(outDir, `${platform}.bundle.js`);
   const map = `${bundle}.map`;
   console.error(`• building ${platform} bundle…`);
@@ -204,14 +236,13 @@ function buildBundle(platform, outDir, attribute) {
 /**
  * Build `platform` and make sure the result really is in the requested bundle
  * mode, toggling the repo once and rebuilding if it isn't.
- *
- * @param {string} platform
- * @param {string} outDir
- * @param {{ bundleMode: boolean }} args
- * @param {{ toggled: boolean }} state
- * @returns {{ bundle: string; map: string }}
  */
-function buildInRequestedMode(platform, outDir, args, state) {
+function buildInRequestedMode(
+  platform: string,
+  outDir: string,
+  args: { bundleMode: boolean },
+  state: { toggled: boolean }
+): { bundle: string; map: string } {
   const built = buildBundle(platform, outDir, args.bundleMode);
   if (detectBundleMode(built.bundle) === args.bundleMode) return built;
 
@@ -229,35 +260,24 @@ function buildInRequestedMode(platform, outDir, args, state) {
   return buildInRequestedMode(platform, outDir, args, state);
 }
 
-/**
- * Read every mapping of a flat source map as `[line, column, source]`.
- *
- * @param {any} map
- * @returns {Promise<[number, number, string | null][]>}
- */
-async function readFlatMappings(map) {
+/** Read every mapping of a flat source map. */
+async function readFlatMappings(map: RawSourceMap): Promise<Mapping[]> {
   const consumer = await new SourceMapConsumer(map);
-  /** @type {[number, number, string | null][]} */
-  const mappings = [];
+  const mappings: Mapping[] = [];
   consumer.eachMapping(
     (m) => mappings.push([m.generatedLine, m.generatedColumn, m.source]),
     null,
     SourceMapConsumer.GENERATED_ORDER
   );
-  if (typeof consumer.destroy === 'function') consumer.destroy();
+  consumer.destroy?.();
   return mappings;
 }
 
-/**
- * Read every mapping of a source map, in generated order.
- * @param {any} map
- * @returns {Promise<[number, number, string | null][]>}
- */
-async function collectMappings(map) {
+/** Read every mapping of a source map, in generated order. */
+async function collectMappings(map: RawSourceMap): Promise<Mapping[]> {
   if (!map.sections) return readFlatMappings(map);
 
-  /** @type {[number, number, string | null][]} */
-  const mappings = [];
+  const mappings: Mapping[] = [];
   for (const section of map.sections) {
     const { line, column } = section.offset;
     for (const [l, c, source] of await readFlatMappings(section.map)) {
@@ -268,8 +288,12 @@ async function collectMappings(map) {
   return mappings;
 }
 
-async function attributeBundle(bundleFile, mapFile, attribute) {
-  const code = fs.readFileSync(bundleFile, 'utf8');
+async function attributeBundle(
+  bundleFile: string,
+  mapFile: string,
+  attribute: boolean
+): Promise<{ total: number; groups: Record<string, number> }> {
+  const code: string = fs.readFileSync(bundleFile, 'utf8');
   const lines = code.split('\n');
 
   const lineStart = [0, 0];
@@ -279,7 +303,7 @@ async function attributeBundle(bundleFile, mapFile, attribute) {
     offset += Buffer.byteLength(lines[i], 'utf8') + 1; // +1 for the '\n'
   }
   const total = Buffer.byteLength(code, 'utf8');
-  const byteOf = (line, column) =>
+  const byteOf = (line: number, column: number) =>
     lineStart[line] +
     Buffer.byteLength(lines[line - 1].slice(0, column), 'utf8');
 
@@ -287,8 +311,7 @@ async function attributeBundle(bundleFile, mapFile, attribute) {
     JSON.parse(fs.readFileSync(mapFile, 'utf8'))
   );
 
-  /** @type {Record<string, number>} */
-  const groups = { other: 0 };
+  const groups: Record<string, number> = { other: 0 };
   for (const g of GROUPS) groups[g.label] = 0;
 
   for (let i = 0; i < mappings.length; i++) {
@@ -303,11 +326,18 @@ async function attributeBundle(bundleFile, mapFile, attribute) {
   return { total, groups };
 }
 
-const mb = (n) => `${(n / 1024 / 1024).toFixed(2)} MB`;
-const pct = (n, total) => `${total ? ((n / total) * 100).toFixed(1) : '0.0'}%`;
-const gzipSize = (buf) => zlib.gzipSync(buf, { level: 9 }).length;
+const mb = (n: number) => `${(n / 1024 / 1024).toFixed(2)} MB`;
+const pct = (n: number, total: number) =>
+  `${total ? ((n / total) * 100).toFixed(1) : '0.0'}%`;
+const gzipSize = (buf: Buffer) => zlib.gzipSync(buf, { level: 9 }).length;
 
-function printReport(title, result) {
+interface Result {
+  total: number;
+  gzip: number;
+  groups: Record<string, number>;
+}
+
+function printReport(title: string, result: Result): void {
   const { total, gzip, groups } = result;
   console.log(`\n${title}    total ${mb(total)} (${mb(gzip)} gzipped)`);
   const rows = Object.entries(groups).sort((a, b) => b[1] - a[1]);
@@ -318,8 +348,12 @@ function printReport(title, result) {
   }
 }
 
-async function main() {
+async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
+  if (args.help) {
+    printHelp();
+    return;
+  }
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'reanimated-bundle-cost-'));
 
   const state = { toggled: false };
@@ -327,8 +361,7 @@ async function main() {
   const modeLabel = `bundle-mode=${args.bundleMode}`;
   console.error(`• ${modeLabel}`);
 
-  /** @type {Record<string, any>} */
-  const report = {};
+  const report: Record<string, Result> = {};
   try {
     for (const platform of args.platforms) {
       const { bundle, map } = buildInRequestedMode(platform, tmp, args, state);
@@ -358,7 +391,7 @@ async function main() {
   }
 }
 
-main().catch((err) => {
+main().catch((err: Error) => {
   console.error(err.message || err);
-  process.exit(1);
+  process.exitCode = 1;
 });
