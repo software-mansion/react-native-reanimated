@@ -375,9 +375,9 @@ class PseudoSelectorManager(
         }
     }
 
-    // / The window callbacks and the mount listener are the only hooks that outlive the React
-    // / context, so they are dropped explicitly. The detach actions are not run: they notify C++
-    // / over JNI, which is being torn down concurrently.
+    // / The dev menu holds this manager for a generation past the context it belongs to, so the
+    // / views and callbacks are dropped rather than left to the garbage collector. The detach
+    // / actions are cleared, never run: they notify C++ over JNI, which is being torn down.
     fun invalidate() {
         UiThreadUtil.runOnUiThread {
             if (mountListenerRegistered) {
@@ -386,7 +386,14 @@ class PseudoSelectorManager(
             }
             extraWindowBridge?.uninstall()
             extraWindowBridge = null
-            hover.uninstallWindowObservers()
+            hover.uninstall()
+            touchHostRefs.keys.forEach { it.setOnTouchListener(null) }
+            touchHostRefs.clear()
+            gestureByHost.clear()
+            activeCallbacks.clear()
+            deepestCallbacks.clear()
+            pendingAttaches.clear()
+            detachActions.clear()
         }
     }
 

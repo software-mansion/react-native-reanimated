@@ -77,12 +77,16 @@ class TouchHoverCoordinator(
         releaseWindowObserver()
     }
 
-    // / Restores every window callback, extra windows included, without notifying anything: the
-    // / C++ side that onSelectorStateChanged calls into is being torn down concurrently.
-    fun uninstallWindowObservers() {
+    // / Drops every listener and observer, extra windows included, without notifying anything:
+    // / the C++ side that onSelectorStateChanged calls into is being torn down concurrently.
+    fun uninstall() {
         windowObserverRetainCount = 0
         observedWindows.forEach { reference -> reference.get()?.let { restoreCallback(it) } }
         observedWindows.clear()
+        hoverHostRefs.keys.forEach { it.setOnHoverListener(null) }
+        hoverHostRefs.clear()
+        hoverCallbacks.clear()
+        hoveredViews.clear()
     }
 
     fun retainWindowObserver(view: View) {
