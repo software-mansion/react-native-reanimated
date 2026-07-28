@@ -77,17 +77,12 @@ class TouchHoverCoordinator(
         releaseWindowObserver()
     }
 
-    // / Drops every listener and observer without notifying anything: this runs while the React
-    // / context is being destroyed, and onSelectorStateChanged is a JNI call into C++ that is
-    // / concurrently being torn down.
-    fun uninstall() {
+    // / Restores every window callback, extra windows included, without notifying anything: the
+    // / C++ side that onSelectorStateChanged calls into is being torn down concurrently.
+    fun uninstallWindowObservers() {
         windowObserverRetainCount = 0
         observedWindows.forEach { reference -> reference.get()?.let { restoreCallback(it) } }
         observedWindows.clear()
-        hoverHostRefs.keys.forEach { it.setOnHoverListener(null) }
-        hoverHostRefs.clear()
-        hoverCallbacks.clear()
-        hoveredViews.clear()
     }
 
     fun retainWindowObserver(view: View) {
@@ -114,7 +109,7 @@ class TouchHoverCoordinator(
                     MotionEvent.ACTION_HOVER_ENTER,
                     MotionEvent.ACTION_HOVER_MOVE,
                     -> recompute(host, event.rawX, event.rawY)
-                    MotionEvent.ACTION_HOVER_EXIT -> onPointerExit()
+                    MotionEvent.ACTION_HOVER_EXIT -> clearAll()
                 }
                 false
             }
@@ -146,10 +141,6 @@ class TouchHoverCoordinator(
         screenY: Float,
     ) {
         reconcile(sourceView.rootView as? ViewGroup, screenX, screenY)
-    }
-
-    private fun onPointerExit() {
-        clearAll()
     }
 
     private fun movedBeyondSlop(
@@ -202,10 +193,7 @@ class TouchHoverCoordinator(
         if (hoverCallbacks.isEmpty()) {
             return
         }
-        applyHover(if (root == null) emptyList() else hitTestPath(root, screenX, screenY))
-    }
-
-    private fun applyHover(hitTags: Collection<Int>) {
+        val hitTags: List<Int> = if (root == null) emptyList() else hitTestPath(root, screenX, screenY)
         for ((view, callback) in hoverCallbacks) {
             setHovered(view, callback, view.id in hitTags)
         }

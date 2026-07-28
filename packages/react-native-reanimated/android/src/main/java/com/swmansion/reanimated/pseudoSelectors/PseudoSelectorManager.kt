@@ -189,27 +189,18 @@ class PseudoSelectorManager(
         root: ViewGroup?,
         event: MotionEvent,
     ) {
-        if (activeCallbacks.isEmpty() && deepestCallbacks.isEmpty() && gestureByHost.isEmpty()) {
-            return
-        }
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> windowPressDown(root, event)
             MotionEvent.ACTION_MOVE ->
-                if (event.findPointerIndex(0) >= 0) {
-                    for (host in gestureByHost.keys.toList()) {
-                        onHostMove(host, event)
-                    }
+                if (gestureByHost.isNotEmpty()) {
+                    gestureByHost.keys.toList().forEach { onHostMove(it, event) }
                 }
-            MotionEvent.ACTION_UP ->
-                if (event.findPointerIndex(0) >= 0) {
-                    releaseAllHostGestures()
-                }
+            // A secondary finger lifting does not end a press started by the primary one.
             MotionEvent.ACTION_POINTER_UP ->
                 if (event.getPointerId(event.actionIndex) == 0) {
                     releaseAllHostGestures()
                 }
-            MotionEvent.ACTION_CANCEL ->
-                releaseAllHostGestures()
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> releaseAllHostGestures()
         }
     }
 
@@ -220,7 +211,7 @@ class PseudoSelectorManager(
         if (root == null || (activeCallbacks.isEmpty() && deepestCallbacks.isEmpty())) {
             return
         }
-        val hostsById = pressHosts().associateBy { it.id }
+        val hostsById = pressHostsById()
         val hitTags = hover.hitTestTagsAt(root, event.rawX, event.rawY)
         // The path is ordered target first, so the first host on it is the deepest one;
         // fireActiveCallbacksUpTree covers its ancestors.
@@ -244,12 +235,10 @@ class PseudoSelectorManager(
         fireDeepestIfHit(leaf, hitTags)
     }
 
-    private fun pressHosts(): Set<View> {
-        val hosts = LinkedHashSet<View>()
-        activeCallbacks.keys.forEach { hosts.add(findTouchHost(it)) }
-        deepestCallbacks.keys.forEach { hosts.add(findTouchHost(it)) }
-        return hosts
-    }
+    private fun pressHostsById(): Map<Int, View> =
+        (activeCallbacks.keys + deepestCallbacks.keys)
+            .map { findTouchHost(it) }
+            .associateBy { it.id }
 
     private fun findTouchedLeaf(
         host: View,
@@ -387,8 +376,9 @@ class PseudoSelectorManager(
         }
     }
 
-    // / Drops every listener and observer. The detach actions are discarded rather than run,
-    // / because they notify C++ through JNI and the React context is being destroyed concurrently.
+    // / The window callbacks and the mount listener are the only hooks that outlive the React
+    // / context, so they are dropped explicitly. The detach actions are not run: they notify C++
+    // / over JNI, which is being torn down concurrently.
     fun invalidate() {
         UiThreadUtil.runOnUiThread {
             if (mountListenerRegistered) {
@@ -397,15 +387,7 @@ class PseudoSelectorManager(
             }
             extraWindowBridge?.uninstall()
             extraWindowBridge = null
-
-            hover.uninstall()
-            touchHostRefs.keys.forEach { it.setOnTouchListener(null) }
-            touchHostRefs.clear()
-            gestureByHost.clear()
-            activeCallbacks.clear()
-            deepestCallbacks.clear()
-            pendingAttaches.clear()
-            detachActions.clear()
+            hover.uninstallWindowObservers()
         }
     }
 
