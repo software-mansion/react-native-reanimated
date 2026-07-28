@@ -387,6 +387,8 @@ class PseudoSelectorManager(
         }
     }
 
+    // / Drops every listener and observer. The detach actions are discarded rather than run,
+    // / because they notify C++ through JNI and the React context is being destroyed concurrently.
     fun invalidate() {
         UiThreadUtil.runOnUiThread {
             if (mountListenerRegistered) {
@@ -395,6 +397,15 @@ class PseudoSelectorManager(
             }
             extraWindowBridge?.uninstall()
             extraWindowBridge = null
+
+            hover.uninstall()
+            touchHostRefs.keys.forEach { it.setOnTouchListener(null) }
+            touchHostRefs.clear()
+            gestureByHost.clear()
+            activeCallbacks.clear()
+            deepestCallbacks.clear()
+            pendingAttaches.clear()
+            detachActions.clear()
         }
     }
 

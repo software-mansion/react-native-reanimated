@@ -32,6 +32,7 @@ class TouchHoverCoordinator(
     private inner class WindowObserver(
         window: Window,
         val original: Window.Callback,
+        val isExtra: Boolean,
     ) : Window.Callback by original {
         val windowRef = WeakReference(window)
         private val downPoint = FloatArray(2)
@@ -76,6 +77,19 @@ class TouchHoverCoordinator(
         releaseWindowObserver()
     }
 
+    // / Drops every listener and observer without notifying anything: this runs while the React
+    // / context is being destroyed, and onSelectorStateChanged is a JNI call into C++ that is
+    // / concurrently being torn down.
+    fun uninstall() {
+        windowObserverRetainCount = 0
+        observedWindows.forEach { reference -> reference.get()?.let { restoreCallback(it) } }
+        observedWindows.clear()
+        hoverHostRefs.keys.forEach { it.setOnHoverListener(null) }
+        hoverHostRefs.clear()
+        hoverCallbacks.clear()
+        hoveredViews.clear()
+    }
+
     fun retainWindowObserver(view: View) {
         windowObserverRetainCount++
         ensureWindowObserver(view)
@@ -87,7 +101,7 @@ class TouchHoverCoordinator(
         }
         windowObserverRetainCount--
         if (windowObserverRetainCount == 0) {
-            removeAllWindowObservers()
+            removeActivityWindowObservers()
         }
     }
 
@@ -118,7 +132,7 @@ class TouchHoverCoordinator(
     }
 
     fun observeExtraWindow(window: Window) {
-        installObserverOnWindow(window)
+        installObserverOnWindow(window, isExtra = true)
     }
 
     fun stopObservingExtraWindow(window: Window) {
@@ -289,16 +303,19 @@ class TouchHoverCoordinator(
 
     private fun ensureWindowObserver(view: View) {
         val window = view.activityWindow() ?: return
-        installObserverOnWindow(window)
+        installObserverOnWindow(window, isExtra = false)
     }
 
-    private fun installObserverOnWindow(window: Window) {
+    private fun installObserverOnWindow(
+        window: Window,
+        isExtra: Boolean,
+    ) {
         observedWindows.removeAll { it.liveWindow() == null }
         if (observedWindows.any { it.liveWindow() === window }) {
             return
         }
         val original = window.callback ?: return
-        val observer = WindowObserver(window, original)
+        val observer = WindowObserver(window, original, isExtra)
         observedWindows.add(WeakReference(observer))
         window.callback = observer
     }
@@ -318,11 +335,20 @@ class TouchHoverCoordinator(
         }
     }
 
-    private fun removeAllWindowObservers() {
-        for (reference in observedWindows) {
-            reference.get()?.let { restoreCallback(it) }
+    // / Extra windows are added by the bridge when a Dialog appears and are never re-added, so
+    // / only the activity window is dropped when the last registration goes away.
+    private fun removeActivityWindowObservers() {
+        observedWindows.removeAll { reference ->
+            val observer = reference.get()
+            when {
+                observer == null -> true
+                observer.isExtra -> false
+                else -> {
+                    restoreCallback(observer)
+                    true
+                }
+            }
         }
-        observedWindows.clear()
         clearAll()
     }
 
