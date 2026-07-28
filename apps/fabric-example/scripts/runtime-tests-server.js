@@ -599,7 +599,9 @@ async function installAndLaunch(udid) {
 
   await run('xcrun', ['simctl', 'terminate', udid, BUNDLE_ID]).catch(() => {});
   if (SANITIZER) {
-    fs.rmSync(SANITIZER_REPORT_DIR, { recursive: true, force: true });
+    if (!SKIP_BUILD) {
+      fs.rmSync(SANITIZER_REPORT_DIR, { recursive: true, force: true });
+    }
     fs.mkdirSync(SANITIZER_REPORT_DIR, { recursive: true });
   }
   console.log(
@@ -813,6 +815,9 @@ function printCommandFailure(error) {
 
 if (BUILD_ONLY) {
   (async () => {
+    if (SANITIZER) {
+      fs.rmSync(SANITIZER_REPORT_DIR, { recursive: true, force: true });
+    }
     await buildApp();
     shutdown(0);
   })().catch((error) => {

@@ -155,3 +155,15 @@ jobs:
           --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
           || node scripts/runtime-tests-server.js --launch --library reanimated
           --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
+
+      # The test steps are advisory under a sanitizer, so detected races must
+      # fail the job through this hard-failing aggregation instead.
+      - name: Fail on sanitizer reports
+        if: ${{ always() && inputs.sanitizer != '' }}
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          if ls sanitizer-reports/* >/dev/null 2>&1; then
+            echo "Sanitizer produced $(ls sanitizer-reports | wc -l | tr -d ' ') report file(s) — see the test step logs above."
+            exit 1
+          fi
+          echo "No sanitizer reports."
