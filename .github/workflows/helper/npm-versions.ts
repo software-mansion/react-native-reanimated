@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 
 const NPM_VIEW_TIMEOUT_MS = 60_000;
 
@@ -6,7 +6,7 @@ const publishedVersionsCache = new Map<string, string[]>();
 
 function npmView(spec: string, field: string): unknown {
   try {
-    const rawOutput = execSync(`npm view "${spec}" ${field} --json`, {
+    const rawOutput = execFileSync('npm', ['view', spec, field, '--json'], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
       timeout: NPM_VIEW_TIMEOUT_MS,
