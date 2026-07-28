@@ -3,15 +3,16 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
-  listVersionsByRecency,
+  listPublishedVersions,
   resolveNpmVersion,
   toRange,
 } from './npm-versions.ts';
 
-const HOW_MANY_MINORS = 3;
+const HOW_MANY_MINORS = 2;
 const OUTPUT_PATH = '/tmp/bundle-cost-matrix.json';
 const REANIMATED = 'react-native-reanimated';
 const WORKLETS = 'react-native-worklets';
+const MAIN = 'main';
 
 type CompatibilityDetails = {
   'react-native-worklets'?: string[];
@@ -44,7 +45,7 @@ const knownRanges = new Set(
 );
 
 const reanimatedRanges: string[] = [];
-for (const version of listVersionsByRecency(REANIMATED)) {
+for (const version of listPublishedVersions(REANIMATED).toReversed()) {
   if (version.includes('-')) {
     continue;
   }
@@ -99,7 +100,13 @@ if (matrix.length === 0) {
   throw new Error('resolved an empty bundle-cost matrix');
 }
 
-const jobs: MatrixJob[] = matrix.flatMap((entry) => [
+const mainEntry: MatrixEntry = {
+  reanimatedRange: MAIN,
+  reanimatedVersion: MAIN,
+  workletsVersion: MAIN,
+};
+
+const jobs: MatrixJob[] = [mainEntry, ...matrix].flatMap((entry) => [
   { ...entry, bundleMode: true },
   { ...entry, bundleMode: false },
 ]);

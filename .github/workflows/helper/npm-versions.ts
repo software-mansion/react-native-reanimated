@@ -18,7 +18,7 @@ function npmView(spec: string, field: string): unknown {
   }
 }
 
-function listPublishedVersions(pkgName: string): string[] {
+export function listPublishedVersions(pkgName: string): string[] {
   const cached = publishedVersionsCache.get(pkgName);
   if (cached) {
     return cached;
@@ -28,18 +28,6 @@ function listPublishedVersions(pkgName: string): string[] {
   const versions = Array.isArray(parsed) ? (parsed as string[]) : [];
   publishedVersionsCache.set(pkgName, versions);
   return versions;
-}
-
-export function listVersionsByRecency(pkgName: string): string[] {
-  const parsed = npmView(pkgName, 'time');
-  if (!parsed || typeof parsed !== 'object') {
-    return [];
-  }
-
-  return Object.entries(parsed as Record<string, string>)
-    .filter(([version]) => version !== 'created' && version !== 'modified')
-    .sort(([, a], [, b]) => Date.parse(b) - Date.parse(a))
-    .map(([version]) => version);
 }
 
 export function toRange(version: string): string {

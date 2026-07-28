@@ -78,9 +78,11 @@ jobs:
           fi
 
       - name: Resolve Reanimated and Worklets from the app
+        if: matrix.reanimatedRange != 'main'
         run: node --experimental-strip-types .github/workflows/helper/use-app-local-reanimated.ts
 
       - name: Install released Reanimated and Worklets
+        if: matrix.reanimatedRange != 'main'
         run: |
           YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn workspace fabric-example add \
             "react-native-reanimated@${{ matrix.reanimatedVersion }}" \
@@ -96,9 +98,11 @@ jobs:
           worklets=$(resolve react-native-worklets)
           react_native=$(resolve react-native)
           echo "reanimated=${reanimated}, worklets=${worklets}, react-native=${react_native}"
-          if [ "${reanimated}" != "${{ matrix.reanimatedVersion }}" ] || [ "${worklets}" != "${{ matrix.workletsVersion }}" ]; then
-            echo "::error::the app resolves reanimated ${reanimated} / worklets ${worklets}, expected ${{ matrix.reanimatedVersion }} / ${{ matrix.workletsVersion }}"
-            exit 1
+          if [ "${{ matrix.reanimatedRange }}" != "main" ]; then
+            if [ "${reanimated}" != "${{ matrix.reanimatedVersion }}" ] || [ "${worklets}" != "${{ matrix.workletsVersion }}" ]; then
+              echo "::error::the app resolves reanimated ${reanimated} / worklets ${worklets}, expected ${{ matrix.reanimatedVersion }} / ${{ matrix.workletsVersion }}"
+              exit 1
+            fi
           fi
           {
             echo "reanimated=${reanimated}"
