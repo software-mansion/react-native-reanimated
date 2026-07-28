@@ -5,7 +5,7 @@ PODS:
     - ReactNativeDependencies
   - fast_float (8.0.0):
     - ReactNativeDependencies
-  - FBLazyVector (0.87.0-rc.2):
+  - FBLazyVector (0.87.0-rc.3):
     - React-Core-prebuilt
   - fmt (12.1.0):
     - ReactNativeDependencies
@@ -68,107 +68,107 @@ PODS:
     - ReactNativeDependencies
   - RCT-Folly/Default (2024.11.18.00):
     - ReactNativeDependencies
-  - RCTDeprecation (0.87.0-rc.2):
+  - RCTDeprecation (0.87.0-rc.3):
     - React-Core-prebuilt
-  - RCTRequired (0.87.0-rc.2):
+  - RCTRequired (0.87.0-rc.3):
     - React-Core-prebuilt
-  - RCTSwiftUI (0.87.0-rc.2)
-  - RCTSwiftUIWrapper (0.87.0-rc.2):
+  - RCTSwiftUI (0.87.0-rc.3)
+  - RCTSwiftUIWrapper (0.87.0-rc.3):
     - RCTSwiftUI
-  - RCTTypeSafety (0.87.0-rc.2):
-    - FBLazyVector (= 0.87.0-rc.2)
-    - RCTRequired (= 0.87.0-rc.2)
-    - React-Core (= 0.87.0-rc.2)
-  - React (0.87.0-rc.2):
-    - React-Core (= 0.87.0-rc.2)
-    - React-Core/DevSupport (= 0.87.0-rc.2)
-    - React-Core/RCTWebSocket (= 0.87.0-rc.2)
-    - React-RCTActionSheet (= 0.87.0-rc.2)
-    - React-RCTAnimation (= 0.87.0-rc.2)
-    - React-RCTBlob (= 0.87.0-rc.2)
-    - React-RCTImage (= 0.87.0-rc.2)
-    - React-RCTLinking (= 0.87.0-rc.2)
-    - React-RCTNetwork (= 0.87.0-rc.2)
-    - React-RCTSettings (= 0.87.0-rc.2)
-    - React-RCTText (= 0.87.0-rc.2)
-    - React-RCTVibration (= 0.87.0-rc.2)
-  - React-bridging (0.87.0-rc.2):
+  - RCTTypeSafety (0.87.0-rc.3):
+    - FBLazyVector (= 0.87.0-rc.3)
+    - RCTRequired (= 0.87.0-rc.3)
+    - React-Core (= 0.87.0-rc.3)
+  - React (0.87.0-rc.3):
+    - React-Core (= 0.87.0-rc.3)
+    - React-Core/DevSupport (= 0.87.0-rc.3)
+    - React-Core/RCTWebSocket (= 0.87.0-rc.3)
+    - React-RCTActionSheet (= 0.87.0-rc.3)
+    - React-RCTAnimation (= 0.87.0-rc.3)
+    - React-RCTBlob (= 0.87.0-rc.3)
+    - React-RCTImage (= 0.87.0-rc.3)
+    - React-RCTLinking (= 0.87.0-rc.3)
+    - React-RCTNetwork (= 0.87.0-rc.3)
+    - React-RCTSettings (= 0.87.0-rc.3)
+    - React-RCTText (= 0.87.0-rc.3)
+    - React-RCTVibration (= 0.87.0-rc.3)
+  - React-bridging (0.87.0-rc.3):
     - React-callinvoker
     - React-Core-prebuilt
     - React-jsi
     - React-timing
     - ReactNativeDependencies
-  - React-callinvoker (0.87.0-rc.2)
-  - React-Core (0.87.0-rc.2):
+  - React-callinvoker (0.87.0-rc.3)
+  - React-Core (0.87.0-rc.3):
     - React-Core-prebuilt
-    - React-Core/Default (= 0.87.0-rc.2)
+    - React-Core/Default (= 0.87.0-rc.3)
   - React-Core-prebuilt (0.87.0-rc.2):
     - ReactNativeDependencies
-  - React-Core/CoreModulesHeaders (0.87.0-rc.2):
+  - React-Core/CoreModulesHeaders (0.87.0-rc.3):
     - React-Core-prebuilt
-  - React-Core/Default (0.87.0-rc.2):
+  - React-Core/Default (0.87.0-rc.3):
     - React-Core-prebuilt
-  - React-Core/DevSupport (0.87.0-rc.2):
+  - React-Core/DevSupport (0.87.0-rc.3):
     - React-Core-prebuilt
-  - React-Core/RCTActionSheetHeaders (0.87.0-rc.2):
+  - React-Core/RCTActionSheetHeaders (0.87.0-rc.3):
     - React-Core-prebuilt
-  - React-Core/RCTAnimationHeaders (0.87.0-rc.2):
+  - React-Core/RCTAnimationHeaders (0.87.0-rc.3):
     - React-Core-prebuilt
-  - React-Core/RCTBlobHeaders (0.87.0-rc.2):
+  - React-Core/RCTBlobHeaders (0.87.0-rc.3):
     - React-Core-prebuilt
-  - React-Core/RCTImageHeaders (0.87.0-rc.2):
+  - React-Core/RCTImageHeaders (0.87.0-rc.3):
     - React-Core-prebuilt
-  - React-Core/RCTLinkingHeaders (0.87.0-rc.2):
+  - React-Core/RCTLinkingHeaders (0.87.0-rc.3):
     - React-Core-prebuilt
-  - React-Core/RCTNetworkHeaders (0.87.0-rc.2):
+  - React-Core/RCTNetworkHeaders (0.87.0-rc.3):
     - React-Core-prebuilt
-  - React-Core/RCTSettingsHeaders (0.87.0-rc.2):
+  - React-Core/RCTSettingsHeaders (0.87.0-rc.3):
     - React-Core-prebuilt
-  - React-Core/RCTTextHeaders (0.87.0-rc.2):
+  - React-Core/RCTTextHeaders (0.87.0-rc.3):
     - React-Core-prebuilt
-  - React-Core/RCTVibrationHeaders (0.87.0-rc.2):
+  - React-Core/RCTVibrationHeaders (0.87.0-rc.3):
     - React-Core-prebuilt
-  - React-Core/RCTWebSocket (0.87.0-rc.2):
+  - React-Core/RCTWebSocket (0.87.0-rc.3):
     - React-Core-prebuilt
-  - React-CoreModules (0.87.0-rc.2):
-    - RCTTypeSafety (= 0.87.0-rc.2)
+  - React-CoreModules (0.87.0-rc.3):
+    - RCTTypeSafety (= 0.87.0-rc.3)
     - React-Core-prebuilt
-    - React-Core/CoreModulesHeaders (= 0.87.0-rc.2)
+    - React-Core/CoreModulesHeaders (= 0.87.0-rc.3)
     - React-debug
     - React-featureflags
-    - React-jsi (= 0.87.0-rc.2)
+    - React-jsi (= 0.87.0-rc.3)
     - React-jsinspector
     - React-jsinspectorcdp
     - React-jsinspectortracing
     - React-NativeModulesApple
     - React-RCTBlob
     - React-RCTFBReactNativeSpec
-    - React-RCTImage (= 0.87.0-rc.2)
+    - React-RCTImage (= 0.87.0-rc.3)
     - React-runtimeexecutor
     - React-utils
     - ReactCommon
     - ReactNativeDependencies
-  - React-cxxreact (0.87.0-rc.2):
+  - React-cxxreact (0.87.0-rc.3):
     - hermes-engine
-    - React-callinvoker (= 0.87.0-rc.2)
+    - React-callinvoker (= 0.87.0-rc.3)
     - React-Core-prebuilt
-    - React-debug (= 0.87.0-rc.2)
-    - React-jserrorhandler (= 0.87.0-rc.2)
-    - React-jsi (= 0.87.0-rc.2)
+    - React-debug (= 0.87.0-rc.3)
+    - React-jserrorhandler (= 0.87.0-rc.3)
+    - React-jsi (= 0.87.0-rc.3)
     - React-jsinspector
     - React-jsinspectorcdp
     - React-jsinspectortracing
-    - React-logger (= 0.87.0-rc.2)
-    - React-perflogger (= 0.87.0-rc.2)
+    - React-logger (= 0.87.0-rc.3)
+    - React-perflogger (= 0.87.0-rc.3)
     - React-runtimeexecutor
-    - React-timing (= 0.87.0-rc.2)
+    - React-timing (= 0.87.0-rc.3)
     - React-utils
     - ReactNativeDependencies
-  - React-cxxstableapi (0.87.0-rc.2)
-  - React-debug (0.87.0-rc.2):
-    - React-debug/redbox (= 0.87.0-rc.2)
-  - React-debug/redbox (0.87.0-rc.2)
-  - React-defaultsnativemodule (0.87.0-rc.2):
+  - React-cxxstableapi (0.87.0-rc.3)
+  - React-debug (0.87.0-rc.3):
+    - React-debug/redbox (= 0.87.0-rc.3)
+  - React-debug/redbox (0.87.0-rc.3)
+  - React-defaultsnativemodule (0.87.0-rc.3):
     - hermes-engine
     - React-Core-prebuilt
     - React-domnativemodule
@@ -186,7 +186,7 @@ PODS:
     - React-webperformancenativemodule
     - ReactNativeDependencies
     - Yoga
-  - React-domnativemodule (0.87.0-rc.2):
+  - React-domnativemodule (0.87.0-rc.3):
     - hermes-engine
     - React-bridging
     - React-Core-prebuilt
@@ -201,7 +201,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - React-Fabric (0.87.0-rc.2):
+  - React-Fabric (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -210,25 +210,25 @@ PODS:
     - React-Core-prebuilt
     - React-cxxreact
     - React-debug
-    - React-Fabric/animated (= 0.87.0-rc.2)
-    - React-Fabric/animationbackend (= 0.87.0-rc.2)
-    - React-Fabric/animations (= 0.87.0-rc.2)
-    - React-Fabric/attributedstring (= 0.87.0-rc.2)
-    - React-Fabric/bridging (= 0.87.0-rc.2)
-    - React-Fabric/componentregistry (= 0.87.0-rc.2)
-    - React-Fabric/componentregistrynative (= 0.87.0-rc.2)
-    - React-Fabric/components (= 0.87.0-rc.2)
-    - React-Fabric/consistency (= 0.87.0-rc.2)
-    - React-Fabric/core (= 0.87.0-rc.2)
-    - React-Fabric/dom (= 0.87.0-rc.2)
-    - React-Fabric/imagemanager (= 0.87.0-rc.2)
-    - React-Fabric/leakchecker (= 0.87.0-rc.2)
-    - React-Fabric/mounting (= 0.87.0-rc.2)
-    - React-Fabric/observers (= 0.87.0-rc.2)
-    - React-Fabric/scheduler (= 0.87.0-rc.2)
-    - React-Fabric/telemetry (= 0.87.0-rc.2)
-    - React-Fabric/uimanager (= 0.87.0-rc.2)
-    - React-Fabric/viewtransition (= 0.87.0-rc.2)
+    - React-Fabric/animated (= 0.87.0-rc.3)
+    - React-Fabric/animationbackend (= 0.87.0-rc.3)
+    - React-Fabric/animations (= 0.87.0-rc.3)
+    - React-Fabric/attributedstring (= 0.87.0-rc.3)
+    - React-Fabric/bridging (= 0.87.0-rc.3)
+    - React-Fabric/componentregistry (= 0.87.0-rc.3)
+    - React-Fabric/componentregistrynative (= 0.87.0-rc.3)
+    - React-Fabric/components (= 0.87.0-rc.3)
+    - React-Fabric/consistency (= 0.87.0-rc.3)
+    - React-Fabric/core (= 0.87.0-rc.3)
+    - React-Fabric/dom (= 0.87.0-rc.3)
+    - React-Fabric/imagemanager (= 0.87.0-rc.3)
+    - React-Fabric/leakchecker (= 0.87.0-rc.3)
+    - React-Fabric/mounting (= 0.87.0-rc.3)
+    - React-Fabric/observers (= 0.87.0-rc.3)
+    - React-Fabric/scheduler (= 0.87.0-rc.3)
+    - React-Fabric/telemetry (= 0.87.0-rc.3)
+    - React-Fabric/uimanager (= 0.87.0-rc.3)
+    - React-Fabric/viewtransition (= 0.87.0-rc.3)
     - React-featureflags
     - React-graphics
     - React-jsi
@@ -240,7 +240,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/animated (0.87.0-rc.2):
+  - React-Fabric/animated (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -261,7 +261,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/animationbackend (0.87.0-rc.2):
+  - React-Fabric/animationbackend (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -281,7 +281,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/animations (0.87.0-rc.2):
+  - React-Fabric/animations (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -301,7 +301,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/attributedstring (0.87.0-rc.2):
+  - React-Fabric/attributedstring (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -321,7 +321,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/bridging (0.87.0-rc.2):
+  - React-Fabric/bridging (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -341,7 +341,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/componentregistry (0.87.0-rc.2):
+  - React-Fabric/componentregistry (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -361,7 +361,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/componentregistrynative (0.87.0-rc.2):
+  - React-Fabric/componentregistrynative (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -381,7 +381,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/components (0.87.0-rc.2):
+  - React-Fabric/components (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -390,10 +390,10 @@ PODS:
     - React-Core-prebuilt
     - React-cxxreact
     - React-debug
-    - React-Fabric/components/legacyviewmanagerinterop (= 0.87.0-rc.2)
-    - React-Fabric/components/root (= 0.87.0-rc.2)
-    - React-Fabric/components/scrollview (= 0.87.0-rc.2)
-    - React-Fabric/components/view (= 0.87.0-rc.2)
+    - React-Fabric/components/legacyviewmanagerinterop (= 0.87.0-rc.3)
+    - React-Fabric/components/root (= 0.87.0-rc.3)
+    - React-Fabric/components/scrollview (= 0.87.0-rc.3)
+    - React-Fabric/components/view (= 0.87.0-rc.3)
     - React-featureflags
     - React-graphics
     - React-jsi
@@ -405,27 +405,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/components/legacyviewmanagerinterop (0.87.0-rc.2):
-    - hermes-engine
-    - RCTRequired
-    - RCTTypeSafety
-    - React-bridging
-    - React-Core
-    - React-Core-prebuilt
-    - React-cxxreact
-    - React-debug
-    - React-featureflags
-    - React-graphics
-    - React-jsi
-    - React-jsiexecutor
-    - React-logger
-    - React-rendererdebug
-    - React-runtimeexecutor
-    - React-runtimescheduler
-    - React-utils
-    - ReactCommon/turbomodule/core
-    - ReactNativeDependencies
-  - React-Fabric/components/root (0.87.0-rc.2):
+  - React-Fabric/components/legacyviewmanagerinterop (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -445,7 +425,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/components/scrollview (0.87.0-rc.2):
+  - React-Fabric/components/root (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -465,7 +445,27 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/components/view (0.87.0-rc.2):
+  - React-Fabric/components/scrollview (0.87.0-rc.3):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-bridging
+    - React-Core
+    - React-Core-prebuilt
+    - React-cxxreact
+    - React-debug
+    - React-featureflags
+    - React-graphics
+    - React-jsi
+    - React-jsiexecutor
+    - React-logger
+    - React-rendererdebug
+    - React-runtimeexecutor
+    - React-runtimescheduler
+    - React-utils
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+  - React-Fabric/components/view (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -487,7 +487,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - React-Fabric/consistency (0.87.0-rc.2):
+  - React-Fabric/consistency (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -507,7 +507,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/core (0.87.0-rc.2):
+  - React-Fabric/core (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -527,7 +527,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/dom (0.87.0-rc.2):
+  - React-Fabric/dom (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -547,7 +547,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/imagemanager (0.87.0-rc.2):
+  - React-Fabric/imagemanager (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -567,7 +567,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/leakchecker (0.87.0-rc.2):
+  - React-Fabric/leakchecker (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -587,7 +587,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/mounting (0.87.0-rc.2):
+  - React-Fabric/mounting (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -608,7 +608,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/observers (0.87.0-rc.2):
+  - React-Fabric/observers (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -617,9 +617,9 @@ PODS:
     - React-Core-prebuilt
     - React-cxxreact
     - React-debug
-    - React-Fabric/observers/events (= 0.87.0-rc.2)
-    - React-Fabric/observers/intersection (= 0.87.0-rc.2)
-    - React-Fabric/observers/mutation (= 0.87.0-rc.2)
+    - React-Fabric/observers/events (= 0.87.0-rc.3)
+    - React-Fabric/observers/intersection (= 0.87.0-rc.3)
+    - React-Fabric/observers/mutation (= 0.87.0-rc.3)
     - React-featureflags
     - React-graphics
     - React-jsi
@@ -631,27 +631,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/observers/events (0.87.0-rc.2):
-    - hermes-engine
-    - RCTRequired
-    - RCTTypeSafety
-    - React-bridging
-    - React-Core
-    - React-Core-prebuilt
-    - React-cxxreact
-    - React-debug
-    - React-featureflags
-    - React-graphics
-    - React-jsi
-    - React-jsiexecutor
-    - React-logger
-    - React-rendererdebug
-    - React-runtimeexecutor
-    - React-runtimescheduler
-    - React-utils
-    - ReactCommon/turbomodule/core
-    - ReactNativeDependencies
-  - React-Fabric/observers/intersection (0.87.0-rc.2):
+  - React-Fabric/observers/events (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -671,7 +651,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/observers/mutation (0.87.0-rc.2):
+  - React-Fabric/observers/intersection (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -691,7 +671,27 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/scheduler (0.87.0-rc.2):
+  - React-Fabric/observers/mutation (0.87.0-rc.3):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-bridging
+    - React-Core
+    - React-Core-prebuilt
+    - React-cxxreact
+    - React-debug
+    - React-featureflags
+    - React-graphics
+    - React-jsi
+    - React-jsiexecutor
+    - React-logger
+    - React-rendererdebug
+    - React-runtimeexecutor
+    - React-runtimescheduler
+    - React-utils
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+  - React-Fabric/scheduler (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -716,7 +716,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/telemetry (0.87.0-rc.2):
+  - React-Fabric/telemetry (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -736,7 +736,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/uimanager (0.87.0-rc.2):
+  - React-Fabric/uimanager (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -745,7 +745,7 @@ PODS:
     - React-Core-prebuilt
     - React-cxxreact
     - React-debug
-    - React-Fabric/uimanager/consistency (= 0.87.0-rc.2)
+    - React-Fabric/uimanager/consistency (= 0.87.0-rc.3)
     - React-featureflags
     - React-graphics
     - React-jsi
@@ -758,7 +758,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/uimanager/consistency (0.87.0-rc.2):
+  - React-Fabric/uimanager/consistency (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -779,7 +779,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-Fabric/viewtransition (0.87.0-rc.2):
+  - React-Fabric/viewtransition (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -799,7 +799,7 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-FabricComponents (0.87.0-rc.2):
+  - React-FabricComponents (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -808,8 +808,8 @@ PODS:
     - React-cxxreact
     - React-debug
     - React-Fabric
-    - React-FabricComponents/components (= 0.87.0-rc.2)
-    - React-FabricComponents/textlayoutmanager (= 0.87.0-rc.2)
+    - React-FabricComponents/components (= 0.87.0-rc.3)
+    - React-FabricComponents/textlayoutmanager (= 0.87.0-rc.3)
     - React-featureflags
     - React-graphics
     - React-jsi
@@ -822,7 +822,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - React-FabricComponents/components (0.87.0-rc.2):
+  - React-FabricComponents/components (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -831,17 +831,17 @@ PODS:
     - React-cxxreact
     - React-debug
     - React-Fabric
-    - React-FabricComponents/components/inputaccessory (= 0.87.0-rc.2)
-    - React-FabricComponents/components/iostextinput (= 0.87.0-rc.2)
-    - React-FabricComponents/components/modal (= 0.87.0-rc.2)
-    - React-FabricComponents/components/rncore (= 0.87.0-rc.2)
-    - React-FabricComponents/components/safeareaview (= 0.87.0-rc.2)
-    - React-FabricComponents/components/scrollview (= 0.87.0-rc.2)
-    - React-FabricComponents/components/switch (= 0.87.0-rc.2)
-    - React-FabricComponents/components/text (= 0.87.0-rc.2)
-    - React-FabricComponents/components/textinput (= 0.87.0-rc.2)
-    - React-FabricComponents/components/unimplementedview (= 0.87.0-rc.2)
-    - React-FabricComponents/components/virtualview (= 0.87.0-rc.2)
+    - React-FabricComponents/components/inputaccessory (= 0.87.0-rc.3)
+    - React-FabricComponents/components/iostextinput (= 0.87.0-rc.3)
+    - React-FabricComponents/components/modal (= 0.87.0-rc.3)
+    - React-FabricComponents/components/rncore (= 0.87.0-rc.3)
+    - React-FabricComponents/components/safeareaview (= 0.87.0-rc.3)
+    - React-FabricComponents/components/scrollview (= 0.87.0-rc.3)
+    - React-FabricComponents/components/switch (= 0.87.0-rc.3)
+    - React-FabricComponents/components/text (= 0.87.0-rc.3)
+    - React-FabricComponents/components/textinput (= 0.87.0-rc.3)
+    - React-FabricComponents/components/unimplementedview (= 0.87.0-rc.3)
+    - React-FabricComponents/components/virtualview (= 0.87.0-rc.3)
     - React-featureflags
     - React-graphics
     - React-jsi
@@ -854,28 +854,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - React-FabricComponents/components/inputaccessory (0.87.0-rc.2):
-    - hermes-engine
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-Core-prebuilt
-    - React-cxxreact
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-jsi
-    - React-jsiexecutor
-    - React-logger
-    - React-RCTFBReactNativeSpec
-    - React-rendererdebug
-    - React-runtimescheduler
-    - React-utils
-    - ReactCommon/turbomodule/core
-    - ReactNativeDependencies
-    - Yoga
-  - React-FabricComponents/components/iostextinput (0.87.0-rc.2):
+  - React-FabricComponents/components/inputaccessory (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -896,7 +875,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - React-FabricComponents/components/modal (0.87.0-rc.2):
+  - React-FabricComponents/components/iostextinput (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -917,7 +896,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - React-FabricComponents/components/rncore (0.87.0-rc.2):
+  - React-FabricComponents/components/modal (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -938,7 +917,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - React-FabricComponents/components/safeareaview (0.87.0-rc.2):
+  - React-FabricComponents/components/rncore (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -959,7 +938,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - React-FabricComponents/components/scrollview (0.87.0-rc.2):
+  - React-FabricComponents/components/safeareaview (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -980,7 +959,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - React-FabricComponents/components/switch (0.87.0-rc.2):
+  - React-FabricComponents/components/scrollview (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1001,7 +980,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - React-FabricComponents/components/text (0.87.0-rc.2):
+  - React-FabricComponents/components/switch (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1022,7 +1001,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - React-FabricComponents/components/textinput (0.87.0-rc.2):
+  - React-FabricComponents/components/text (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1043,7 +1022,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - React-FabricComponents/components/unimplementedview (0.87.0-rc.2):
+  - React-FabricComponents/components/textinput (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1064,7 +1043,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - React-FabricComponents/components/virtualview (0.87.0-rc.2):
+  - React-FabricComponents/components/unimplementedview (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1085,7 +1064,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - React-FabricComponents/textlayoutmanager (0.87.0-rc.2):
+  - React-FabricComponents/components/virtualview (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1106,27 +1085,48 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - React-FabricImage (0.87.0-rc.2):
+  - React-FabricComponents/textlayoutmanager (0.87.0-rc.3):
     - hermes-engine
-    - RCTRequired (= 0.87.0-rc.2)
-    - RCTTypeSafety (= 0.87.0-rc.2)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-cxxreact
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-jsi
+    - React-jsiexecutor
+    - React-logger
+    - React-RCTFBReactNativeSpec
+    - React-rendererdebug
+    - React-runtimescheduler
+    - React-utils
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
+  - React-FabricImage (0.87.0-rc.3):
+    - hermes-engine
+    - RCTRequired (= 0.87.0-rc.3)
+    - RCTTypeSafety (= 0.87.0-rc.3)
     - React-Core-prebuilt
     - React-Fabric
     - React-featureflags
     - React-graphics
     - React-ImageManager
     - React-jsi
-    - React-jsiexecutor (= 0.87.0-rc.2)
+    - React-jsiexecutor (= 0.87.0-rc.3)
     - React-logger
     - React-rendererdebug
     - React-utils
     - ReactCommon
     - ReactNativeDependencies
     - Yoga
-  - React-featureflags (0.87.0-rc.2):
+  - React-featureflags (0.87.0-rc.3):
     - React-Core-prebuilt
     - ReactNativeDependencies
-  - React-featureflagsnativemodule (0.87.0-rc.2):
+  - React-featureflagsnativemodule (0.87.0-rc.3):
     - hermes-engine
     - React-Core-prebuilt
     - React-featureflags
@@ -1135,7 +1135,7 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-graphics (0.87.0-rc.2):
+  - React-graphics (0.87.0-rc.3):
     - hermes-engine
     - React-Core-prebuilt
     - React-featureflags
@@ -1144,21 +1144,21 @@ PODS:
     - React-rendererdebug
     - React-utils
     - ReactNativeDependencies
-  - React-hermes (0.87.0-rc.2):
+  - React-hermes (0.87.0-rc.3):
     - hermes-engine
     - React-Core-prebuilt
-    - React-cxxreact (= 0.87.0-rc.2)
+    - React-cxxreact (= 0.87.0-rc.3)
     - React-jsi
-    - React-jsiexecutor (= 0.87.0-rc.2)
+    - React-jsiexecutor (= 0.87.0-rc.3)
     - React-jsinspector
     - React-jsinspectorcdp
     - React-jsinspectortracing
     - React-jsitooling
     - React-oscompat
-    - React-perflogger (= 0.87.0-rc.2)
+    - React-perflogger (= 0.87.0-rc.3)
     - React-runtimeexecutor
     - ReactNativeDependencies
-  - React-idlecallbacksnativemodule (0.87.0-rc.2):
+  - React-idlecallbacksnativemodule (0.87.0-rc.3):
     - hermes-engine
     - React-bridging
     - React-Core-prebuilt
@@ -1169,7 +1169,7 @@ PODS:
     - React-runtimescheduler
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-ImageManager (0.87.0-rc.2):
+  - React-ImageManager (0.87.0-rc.3):
     - React-Core-prebuilt
     - React-Core/Default
     - React-debug
@@ -1178,7 +1178,7 @@ PODS:
     - React-rendererdebug
     - React-utils
     - ReactNativeDependencies
-  - React-intersectionobservernativemodule (0.87.0-rc.2):
+  - React-intersectionobservernativemodule (0.87.0-rc.3):
     - hermes-engine
     - React-bridging
     - React-Core-prebuilt
@@ -1194,7 +1194,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - React-jserrorhandler (0.87.0-rc.2):
+  - React-jserrorhandler (0.87.0-rc.3):
     - hermes-engine
     - React-bridging
     - React-Core-prebuilt
@@ -1202,11 +1202,11 @@ PODS:
     - React-featureflags
     - React-jsi
     - ReactNativeDependencies
-  - React-jsi (0.87.0-rc.2):
+  - React-jsi (0.87.0-rc.3):
     - hermes-engine
     - React-Core-prebuilt
     - ReactNativeDependencies
-  - React-jsiexecutor (0.87.0-rc.2):
+  - React-jsiexecutor (0.87.0-rc.3):
     - hermes-engine
     - React-Core-prebuilt
     - React-cxxreact
@@ -1221,7 +1221,7 @@ PODS:
     - React-runtimeexecutor
     - React-utils
     - ReactNativeDependencies
-  - React-jsinspector (0.87.0-rc.2):
+  - React-jsinspector (0.87.0-rc.3):
     - hermes-engine
     - React-Core-prebuilt
     - React-featureflags
@@ -1230,18 +1230,18 @@ PODS:
     - React-jsinspectornetwork
     - React-jsinspectortracing
     - React-oscompat
-    - React-perflogger (= 0.87.0-rc.2)
+    - React-perflogger (= 0.87.0-rc.3)
     - React-runtimeexecutor
     - React-utils
     - ReactNativeDependencies
-  - React-jsinspectorcdp (0.87.0-rc.2):
+  - React-jsinspectorcdp (0.87.0-rc.3):
     - React-Core-prebuilt
     - ReactNativeDependencies
-  - React-jsinspectornetwork (0.87.0-rc.2):
+  - React-jsinspectornetwork (0.87.0-rc.3):
     - React-Core-prebuilt
     - React-jsinspectorcdp
     - ReactNativeDependencies
-  - React-jsinspectortracing (0.87.0-rc.2):
+  - React-jsinspectortracing (0.87.0-rc.3):
     - hermes-engine
     - React-Core-prebuilt
     - React-jsi
@@ -1250,28 +1250,28 @@ PODS:
     - React-timing
     - React-utils
     - ReactNativeDependencies
-  - React-jsitooling (0.87.0-rc.2):
+  - React-jsitooling (0.87.0-rc.3):
     - hermes-engine
     - React-Core-prebuilt
-    - React-cxxreact (= 0.87.0-rc.2)
+    - React-cxxreact (= 0.87.0-rc.3)
     - React-debug
-    - React-jsi (= 0.87.0-rc.2)
+    - React-jsi (= 0.87.0-rc.3)
     - React-jsinspector
     - React-jsinspectorcdp
     - React-jsinspectortracing
     - React-runtimeexecutor
     - React-utils
     - ReactNativeDependencies
-  - React-jsitracing (0.87.0-rc.2):
+  - React-jsitracing (0.87.0-rc.3):
     - React-jsi
-  - React-logger (0.87.0-rc.2):
+  - React-logger (0.87.0-rc.3):
     - React-Core-prebuilt
     - ReactNativeDependencies
-  - React-Mapbuffer (0.87.0-rc.2):
+  - React-Mapbuffer (0.87.0-rc.3):
     - React-Core-prebuilt
     - React-debug
     - ReactNativeDependencies
-  - React-microtasksnativemodule (0.87.0-rc.2):
+  - React-microtasksnativemodule (0.87.0-rc.3):
     - hermes-engine
     - React-Core-prebuilt
     - React-jsi
@@ -1279,7 +1279,7 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-mutationobservernativemodule (0.87.0-rc.2):
+  - React-mutationobservernativemodule (0.87.0-rc.3):
     - hermes-engine
     - React-bridging
     - React-Core-prebuilt
@@ -1364,7 +1364,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - React-NativeModulesApple (0.87.0-rc.2):
+  - React-NativeModulesApple (0.87.0-rc.3):
     - hermes-engine
     - React-bridging
     - React-callinvoker
@@ -1379,18 +1379,18 @@ PODS:
     - React-runtimeexecutor
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - React-networking (0.87.0-rc.2):
+  - React-networking (0.87.0-rc.3):
     - React-Core-prebuilt
     - React-jsinspectornetwork
     - React-jsinspectortracing
     - React-performancetimeline
     - React-timing
     - ReactNativeDependencies
-  - React-oscompat (0.87.0-rc.2)
-  - React-perflogger (0.87.0-rc.2):
+  - React-oscompat (0.87.0-rc.3)
+  - React-perflogger (0.87.0-rc.3):
     - React-Core-prebuilt
     - ReactNativeDependencies
-  - React-performancecdpmetrics (0.87.0-rc.2):
+  - React-performancecdpmetrics (0.87.0-rc.3):
     - hermes-engine
     - React-Core-prebuilt
     - React-jsi
@@ -1398,7 +1398,7 @@ PODS:
     - React-runtimeexecutor
     - React-timing
     - ReactNativeDependencies
-  - React-performancetimeline (0.87.0-rc.2):
+  - React-performancetimeline (0.87.0-rc.3):
     - React-Core-prebuilt
     - React-featureflags
     - React-jsinspector
@@ -1406,9 +1406,9 @@ PODS:
     - React-perflogger
     - React-timing
     - ReactNativeDependencies
-  - React-RCTActionSheet (0.87.0-rc.2):
-    - React-Core/RCTActionSheetHeaders (= 0.87.0-rc.2)
-  - React-RCTAnimatedModuleProvider (0.87.0-rc.2):
+  - React-RCTActionSheet (0.87.0-rc.3):
+    - React-Core/RCTActionSheetHeaders (= 0.87.0-rc.3)
+  - React-RCTAnimatedModuleProvider (0.87.0-rc.3):
     - hermes-engine
     - React-Core
     - React-Core-prebuilt
@@ -1417,7 +1417,7 @@ PODS:
     - ReactCommon
     - ReactNativeDependencies
     - Yoga
-  - React-RCTAnimation (0.87.0-rc.2):
+  - React-RCTAnimation (0.87.0-rc.3):
     - RCTTypeSafety
     - React-Core-prebuilt
     - React-Core/RCTAnimationHeaders
@@ -1428,7 +1428,7 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon
     - ReactNativeDependencies
-  - React-RCTAppDelegate (0.87.0-rc.2):
+  - React-RCTAppDelegate (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1457,7 +1457,7 @@ PODS:
     - React-utils
     - ReactCommon
     - ReactNativeDependencies
-  - React-RCTBlob (0.87.0-rc.2):
+  - React-RCTBlob (0.87.0-rc.3):
     - hermes-engine
     - React-Core-prebuilt
     - React-Core/RCTBlobHeaders
@@ -1470,9 +1470,9 @@ PODS:
     - React-RCTNetwork
     - ReactCommon
     - ReactNativeDependencies
-  - React-RCTFabric (0.87.0-rc.2):
+  - React-RCTFabric (0.87.0-rc.3):
     - React-Core-prebuilt
-  - React-RCTFBReactNativeSpec (0.87.0-rc.2):
+  - React-RCTFBReactNativeSpec (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1481,10 +1481,10 @@ PODS:
     - React-Core-prebuilt
     - React-jsi
     - React-NativeModulesApple
-    - React-RCTFBReactNativeSpec/components (= 0.87.0-rc.2)
+    - React-RCTFBReactNativeSpec/components (= 0.87.0-rc.3)
     - ReactCommon
     - ReactNativeDependencies
-  - React-RCTFBReactNativeSpec/components (0.87.0-rc.2):
+  - React-RCTFBReactNativeSpec/components (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1502,7 +1502,7 @@ PODS:
     - ReactCommon
     - ReactNativeDependencies
     - Yoga
-  - React-RCTImage (0.87.0-rc.2):
+  - React-RCTImage (0.87.0-rc.3):
     - RCTTypeSafety
     - React-Core-prebuilt
     - React-Core/RCTImageHeaders
@@ -1512,14 +1512,14 @@ PODS:
     - React-RCTNetwork
     - ReactCommon
     - ReactNativeDependencies
-  - React-RCTLinking (0.87.0-rc.2):
-    - React-Core/RCTLinkingHeaders (= 0.87.0-rc.2)
-    - React-jsi (= 0.87.0-rc.2)
+  - React-RCTLinking (0.87.0-rc.3):
+    - React-Core/RCTLinkingHeaders (= 0.87.0-rc.3)
+    - React-jsi (= 0.87.0-rc.3)
     - React-NativeModulesApple
     - React-RCTFBReactNativeSpec
     - ReactCommon
-    - ReactCommon/turbomodule/core (= 0.87.0-rc.2)
-  - React-RCTNetwork (0.87.0-rc.2):
+    - ReactCommon/turbomodule/core (= 0.87.0-rc.3)
+  - React-RCTNetwork (0.87.0-rc.3):
     - RCTTypeSafety
     - React-Core-prebuilt
     - React-Core/RCTNetworkHeaders
@@ -1533,9 +1533,9 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon
     - ReactNativeDependencies
-  - React-RCTRuntime (0.87.0-rc.2):
+  - React-RCTRuntime (0.87.0-rc.3):
     - React-Core-prebuilt
-  - React-RCTSettings (0.87.0-rc.2):
+  - React-RCTSettings (0.87.0-rc.3):
     - RCTTypeSafety
     - React-Core-prebuilt
     - React-Core/RCTSettingsHeaders
@@ -1544,10 +1544,10 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon
     - ReactNativeDependencies
-  - React-RCTText (0.87.0-rc.2):
-    - React-Core/RCTTextHeaders (= 0.87.0-rc.2)
+  - React-RCTText (0.87.0-rc.3):
+    - React-Core/RCTTextHeaders (= 0.87.0-rc.3)
     - Yoga
-  - React-RCTVibration (0.87.0-rc.2):
+  - React-RCTVibration (0.87.0-rc.3):
     - React-Core-prebuilt
     - React-Core/RCTVibrationHeaders
     - React-jsi
@@ -1555,15 +1555,15 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon
     - ReactNativeDependencies
-  - React-rendererconsistency (0.87.0-rc.2)
-  - React-renderercss (0.87.0-rc.2):
+  - React-rendererconsistency (0.87.0-rc.3)
+  - React-renderercss (0.87.0-rc.3):
     - React-debug
     - React-utils
-  - React-rendererdebug (0.87.0-rc.2):
+  - React-rendererdebug (0.87.0-rc.3):
     - React-Core-prebuilt
     - React-debug
     - ReactNativeDependencies
-  - React-RuntimeApple (0.87.0-rc.2):
+  - React-RuntimeApple (0.87.0-rc.3):
     - hermes-engine
     - React-callinvoker
     - React-Core-prebuilt
@@ -1586,7 +1586,7 @@ PODS:
     - React-runtimescheduler
     - React-utils
     - ReactNativeDependencies
-  - React-RuntimeCore (0.87.0-rc.2):
+  - React-RuntimeCore (0.87.0-rc.3):
     - hermes-engine
     - React-Core-prebuilt
     - React-cxxreact
@@ -1602,14 +1602,14 @@ PODS:
     - React-runtimescheduler
     - React-utils
     - ReactNativeDependencies
-  - React-runtimeexecutor (0.87.0-rc.2):
+  - React-runtimeexecutor (0.87.0-rc.3):
     - React-Core-prebuilt
     - React-debug
     - React-featureflags
-    - React-jsi (= 0.87.0-rc.2)
+    - React-jsi (= 0.87.0-rc.3)
     - React-utils
     - ReactNativeDependencies
-  - React-RuntimeHermes (0.87.0-rc.2):
+  - React-RuntimeHermes (0.87.0-rc.3):
     - hermes-engine
     - React-Core-prebuilt
     - React-featureflags
@@ -1624,7 +1624,7 @@ PODS:
     - React-runtimeexecutor
     - React-utils
     - ReactNativeDependencies
-  - React-runtimescheduler (0.87.0-rc.2):
+  - React-runtimescheduler (0.87.0-rc.3):
     - hermes-engine
     - React-callinvoker
     - React-Core-prebuilt
@@ -1641,15 +1641,15 @@ PODS:
     - React-timing
     - React-utils
     - ReactNativeDependencies
-  - React-timing (0.87.0-rc.2):
+  - React-timing (0.87.0-rc.3):
     - React-debug
-  - React-utils (0.87.0-rc.2):
+  - React-utils (0.87.0-rc.3):
     - hermes-engine
     - React-Core-prebuilt
     - React-debug
-    - React-jsi (= 0.87.0-rc.2)
+    - React-jsi (= 0.87.0-rc.3)
     - ReactNativeDependencies
-  - React-viewtransitionnativemodule (0.87.0-rc.2):
+  - React-viewtransitionnativemodule (0.87.0-rc.3):
     - hermes-engine
     - React-Core-prebuilt
     - React-Fabric
@@ -1661,7 +1661,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - React-webperformancenativemodule (0.87.0-rc.2):
+  - React-webperformancenativemodule (0.87.0-rc.3):
     - hermes-engine
     - React-bridging
     - React-Core-prebuilt
@@ -1673,9 +1673,9 @@ PODS:
     - React-runtimeexecutor
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - ReactAppDependencyProvider (0.87.0-rc.2):
+  - ReactAppDependencyProvider (0.87.0-rc.3):
     - ReactCodegen
-  - ReactCodegen (0.87.0-rc.2):
+  - ReactCodegen (0.87.0-rc.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1695,33 +1695,33 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - ReactCommon (0.87.0-rc.2):
+  - ReactCommon (0.87.0-rc.3):
     - React-Core-prebuilt
-    - ReactCommon/turbomodule (= 0.87.0-rc.2)
+    - ReactCommon/turbomodule (= 0.87.0-rc.3)
     - ReactNativeDependencies
-  - ReactCommon/turbomodule (0.87.0-rc.2):
+  - ReactCommon/turbomodule (0.87.0-rc.3):
     - hermes-engine
-    - React-callinvoker (= 0.87.0-rc.2)
+    - React-callinvoker (= 0.87.0-rc.3)
     - React-Core-prebuilt
-    - React-jsi (= 0.87.0-rc.2)
-    - React-logger (= 0.87.0-rc.2)
-    - React-perflogger (= 0.87.0-rc.2)
-    - ReactCommon/turbomodule/core (= 0.87.0-rc.2)
+    - React-jsi (= 0.87.0-rc.3)
+    - React-logger (= 0.87.0-rc.3)
+    - React-perflogger (= 0.87.0-rc.3)
+    - ReactCommon/turbomodule/core (= 0.87.0-rc.3)
     - ReactNativeDependencies
-  - ReactCommon/turbomodule/core (0.87.0-rc.2):
+  - ReactCommon/turbomodule/core (0.87.0-rc.3):
     - hermes-engine
     - React-bridging
-    - React-callinvoker (= 0.87.0-rc.2)
+    - React-callinvoker (= 0.87.0-rc.3)
     - React-Core-prebuilt
-    - React-cxxreact (= 0.87.0-rc.2)
-    - React-debug (= 0.87.0-rc.2)
-    - React-featureflags (= 0.87.0-rc.2)
-    - React-jsi (= 0.87.0-rc.2)
-    - React-logger (= 0.87.0-rc.2)
-    - React-perflogger (= 0.87.0-rc.2)
-    - React-utils (= 0.87.0-rc.2)
+    - React-cxxreact (= 0.87.0-rc.3)
+    - React-debug (= 0.87.0-rc.3)
+    - React-featureflags (= 0.87.0-rc.3)
+    - React-jsi (= 0.87.0-rc.3)
+    - React-logger (= 0.87.0-rc.3)
+    - React-perflogger (= 0.87.0-rc.3)
+    - React-utils (= 0.87.0-rc.3)
     - ReactNativeDependencies
-  - ReactNativeDependencies (0.87.0-rc.2)
+  - ReactNativeDependencies (0.87.0-rc.3)
   - RNCClipboard (1.16.3):
     - hermes-engine
     - RCTRequired
@@ -2354,7 +2354,7 @@ SPEC CHECKSUMS:
   boost: 8502bfdc46e2804408af2e163049ece181009af4
   DoubleConversion: 501a575c40c0b50c89685762dd3e415e6bb26fb0
   fast_float: 7c925d1cebf8328d4018d061f49377e9f887e3b4
-  FBLazyVector: 664eb8ad95be7a44da13368102dcbfd8c4c55186
+  FBLazyVector: e2f68e3cecc4c982e269dedf0e9828cb040af62e
   fmt: ba0886e864ebb21d14c98b2e12e164b8002f5b93
   glog: 3cf7cb46f743c4bc758ae3e6d9c15bd1b4cfd6d4
   hermes-engine: efd64fa18d0ad583cd32c693f2bca975e61f1245
@@ -2362,82 +2362,82 @@ SPEC CHECKSUMS:
   NitroMmkv: df3ae7b9ee6c9bae4ac5439994fa213e71c72ef0
   NitroModules: 64af0ce266d7004b0bab69787953f67c5415ba38
   RCT-Folly: 82921e585c0400eda46fac1068297aa9dfb035e4
-  RCTDeprecation: 9b72c0f2e53b2b9ad5dd27876379cfd06eb858c1
-  RCTRequired: fb1d3383e107751ca08a37986064a03643bed1f9
-  RCTSwiftUI: e1547871fc8e24fe1b2d651ec1085dba614d2052
-  RCTSwiftUIWrapper: 4e65bd897f5e13741688651a68e6e0cc15d3e5b9
-  RCTTypeSafety: 3f280ce16067a39580a94492dea9291efe6408cb
-  React: 794bf0b67159e1822428e1611443dc4c5c207367
-  React-bridging: 2fd867da985a579a843f5e5139badd8bead44cb2
-  React-callinvoker: a53e81ee90284e334e6a22b47b17b69533be30df
-  React-Core: ea12f9661fb9acf7f8f2af75ec05ff80f2b85309
+  RCTDeprecation: 30a2bea6ccc5674b0ad13b580232f824e8fcdafe
+  RCTRequired: 3e8d3753cdc3a49ba8cec9c8cc2f64fc81ae9b3d
+  RCTSwiftUI: 7b1c8e648bf02d2eda9ee3b493324e3767f34dee
+  RCTSwiftUIWrapper: a5c011620c1c9baa79f01257ecabcb5096c3f518
+  RCTTypeSafety: 34903c3c2f234836c78128f53af3182b06e77837
+  React: 05420392269f6d2759b2c95c718f904dd3a6787d
+  React-bridging: b47e6c64df013a72e069ff334a51e63e297aa4ca
+  React-callinvoker: c89e376f1662771d232672784c8ea6181d39ef31
+  React-Core: be0b02f2989d0a2c36d67f5241854065f89699e2
   React-Core-prebuilt: e20c715717bd33a500e312ed14be83bee5461129
-  React-CoreModules: ad6fa8a2655678f8011b63723cb3ea7c033ac951
-  React-cxxreact: 727482428053b99800741779e8c8339c3a62acc1
-  React-cxxstableapi: e69c99071a89ae7151f6a653b68d8d6cb0abeaf5
-  React-debug: 05d6db0d76cfa3fab4d697f005d8d0b348278ef2
-  React-defaultsnativemodule: c12954b430fad5e04a79f903318e4422238d2ceb
-  React-domnativemodule: 364cb69871a577faab4a919952ae86dc829ec4ac
-  React-Fabric: 800a541e5ef87c2e228709dd3947e508d68960b6
-  React-FabricComponents: 4b7449b2f409c79f1687ba9af20ceb4c227247b3
-  React-FabricImage: b59fcd4191528039154daad9c3fe637a4caa8be7
-  React-featureflags: a45fd5698de80adc467718e93ed20ae517e8a44b
-  React-featureflagsnativemodule: 6a79d39c88cf756f1355627e2433cd3f1638be4b
-  React-graphics: 26c8e6ec98d5f122a253a454d886e30f1e1de141
-  React-hermes: e4e50b42c8222dfdceb7f22c37b8a359787bf7ee
-  React-idlecallbacksnativemodule: eabd73426bc0c48227e38a92290b20d61a215194
-  React-ImageManager: 7526692d373a4be86117771dd8e70db29201fad7
-  React-intersectionobservernativemodule: cf13e509dde6ea5c4f8bfef64eeb6e38b3a1af46
-  React-jserrorhandler: d0bc56683be3dbc38ab9a1a42d15dcb76e274398
-  React-jsi: a8240c3ee3b6279a2c40c4f4c0321f0d8f92eb1b
-  React-jsiexecutor: 5b242d360c24a873f8965ec5fb654fc89c4f9be9
-  React-jsinspector: dd736e34e2fdbb47feb20460b97e949e5213bd99
-  React-jsinspectorcdp: afe790a44d2bfd0a51764498019e304d7c5bdd5c
-  React-jsinspectornetwork: fa223ab59f4d62ed1a7e8e8ba6ba502ac7630b1e
-  React-jsinspectortracing: 74d0a93c484041880202c2c36dc8c94b8d40c830
-  React-jsitooling: 56478ca140eb44848c5c9c85e1f1e95f814eee72
-  React-jsitracing: 825b9569d71f7328f0eb3b5f85baf7f6275812c7
-  React-logger: ec43bec43e210aa97bdeb1b36c9ad64a66ba9ea0
-  React-Mapbuffer: 1cc67f5b0c08d4210d3d67c3f1de27d4a210c546
-  React-microtasksnativemodule: 333928650fc44795b4607931956158f291d32b55
-  React-mutationobservernativemodule: 5768c94e354f34a1b0aa77abf7c20208aa5442c1
+  React-CoreModules: ff6489319684dc3b7643e0c7a0ff75e5108f24a0
+  React-cxxreact: 456bad89ec37af9c1784dea3ec9d4df4cacc215b
+  React-cxxstableapi: 1e6d511b502f488ff3df7928243545c8194d106d
+  React-debug: 9a7ebde8e48d9c27d6397c55f0af9a16eb31a8b9
+  React-defaultsnativemodule: 11976f27d2ed82f5f07acf678712cb656158e72e
+  React-domnativemodule: fa45615ecb8c5ccfa5e885da4618e2f345e8a91a
+  React-Fabric: 69bb054fb251888a2bc22f7ce39a0d0392d090cb
+  React-FabricComponents: c4fe4297536d36868badb2e746e67f6c44452f75
+  React-FabricImage: cc220b3da8dd3b59a4331521a753291ce4aab869
+  React-featureflags: 5a31b41e6ba3630129f14977230836af205c420e
+  React-featureflagsnativemodule: d098ea62d060f6ef7d220d9afa7745a29fc3c31b
+  React-graphics: c9464431251af02b3cd8fd4c128da81bf628c34c
+  React-hermes: 50f0d1cc369459e2223ba261972a5bd21008b914
+  React-idlecallbacksnativemodule: fa08be4569b77aa69eec9fa23fa3771fb3c512c4
+  React-ImageManager: 2109a045d748d85ddcd376fba1ceec3edcf95186
+  React-intersectionobservernativemodule: d683640027cf80c1a8f8f624f89272df414ca774
+  React-jserrorhandler: a5cd9b3f4c5b81fbf7f650dc6dfd96ea4aa58042
+  React-jsi: 6d337416fd64ba154931e566d16b5bae45f93ba6
+  React-jsiexecutor: f557d039263a28bab443132877e5dad8c81f2a6b
+  React-jsinspector: 7a1cc9fb223b8f810be45299bd75c6a282e88d89
+  React-jsinspectorcdp: b3cff03357b4f6bb11bc478a7d2d56bc0bd8c01a
+  React-jsinspectornetwork: 8b3876820b5bc4beba62e7029f5ce871dc7f4c14
+  React-jsinspectortracing: d56613bf0296d984a3f50c52d935bcccad428ba6
+  React-jsitooling: 3b59e129ea639c8e733774309dce13a42382e691
+  React-jsitracing: 721ca6c48d8050ad28d691d60a4e66007e56f15c
+  React-logger: bb39a1c3acf3d356082536ac5cb52904d17cba31
+  React-Mapbuffer: 550de3a99987262568e6486c4eab7f4d855e48c9
+  React-microtasksnativemodule: 67dc7162e241337dff5993392bb94788857a9352
+  React-mutationobservernativemodule: eebf2b798190fb8bb717753b78e80eda81ac19ce
   react-native-safe-area-context: b5811d7e125c575340d23b96841ae69592b4169c
-  React-NativeModulesApple: feca7458e1e1a10aab1adfe4df498bd2f63c736e
-  React-networking: 27c7cfb3566b2478bce8550240c3346d482971fe
-  React-oscompat: f9b9b902dcaad40357232e24e751efd0c3e3747a
-  React-perflogger: cb5f083bb25d7208ceb00405c9a55ba12e5097ef
-  React-performancecdpmetrics: 4cf073399ae020584f45308a3877aa32b36f2dcf
-  React-performancetimeline: 55877d95e4a3d80c777c602525a168d9505ea7cb
-  React-RCTActionSheet: 8415c40095985264bd2f669e0a27a13df7b76501
-  React-RCTAnimatedModuleProvider: 80d602c3e908e6e5788dac205c699e7335aca7cc
-  React-RCTAnimation: 9f3fae700afecf9519ef14b9c20fd8d46805424f
-  React-RCTAppDelegate: a01d53da5f9c6388092fd2087ce5018872f30031
-  React-RCTBlob: 99507048cb96507746736e8c89c9a893d9bf1471
-  React-RCTFabric: 5ed05091ee91532cba504f06da4f6c6bf098ba52
-  React-RCTFBReactNativeSpec: 69160840e00abb9a5536487efc55866c78a6c576
-  React-RCTImage: de571c6aaf754642c96c0cb7b6f55a2f39461d71
-  React-RCTLinking: c7212ded7fe6bc5087362b1baf198a2b90ffd0e4
-  React-RCTNetwork: e279e69387acfce35d1d2030a43f37ada761df44
-  React-RCTRuntime: 7f7b876808b8160538554d6625d9d5d0700a89a7
-  React-RCTSettings: 076ff18dc8537940a39618ce7e3ce1f7a5ee683c
-  React-RCTText: 1d7cb0c7aac2c38b603a18ec9dfee6a65f970f06
-  React-RCTVibration: b4db53c153163acaf40291ae7c15cb5d0061e9c7
-  React-rendererconsistency: 17d9df89129c2f08d9e89c5516dea691963c5f36
-  React-renderercss: 6fb97b7ad2860c4866345a1944b3dab4a7050839
-  React-rendererdebug: d40e6c0393eedaa1a5d197674a67b34df9860e74
-  React-RuntimeApple: 0e9dd6523747357b19d1c6aeb5d6b9d8ca445b9c
-  React-RuntimeCore: 192f4f1588042dc13faffcf10c10cd3a85d1ed3c
-  React-runtimeexecutor: c2b73c02b38b07e5463bde087495bc1e600719f0
-  React-RuntimeHermes: 4c6c2fafdadc2566273199a639aa9c7fc4c4ea64
-  React-runtimescheduler: 4c434ac897d88b009c5195bf9857e528c58ac5d0
-  React-timing: 9b887d07933e64c4a121de5e9e7bbc2cce905ab0
-  React-utils: c7095f51dacbd70be32b9e9849298ba185a72b16
-  React-viewtransitionnativemodule: 1058b64a7879039692a561290c02dcb93d1afa5e
-  React-webperformancenativemodule: 8f154b4c6ed340f53ea7f262a5154e0c6fa14de0
-  ReactAppDependencyProvider: e26484e96a193fee64fb6869a913c53fe128ea72
-  ReactCodegen: 9bd87f8be5b6225e76f8ae7623a73ab1e46af6c8
-  ReactCommon: 3d4d0533fb067ae9bfc61e9595d796e1b5a3c60e
-  ReactNativeDependencies: 07775e8fc888ccfeb419213cbb09861a0fab431b
+  React-NativeModulesApple: f5db74d3375e35bc2bdd69ffc317ba6f65275e0e
+  React-networking: e16284129754b6422e09429cc4bd857ea2ffcaba
+  React-oscompat: 2127fcd074f7b5f669ffae234c3c61b9856931d6
+  React-perflogger: d15d654a72bfbc0413fab72c9485a1c3b7b97ebe
+  React-performancecdpmetrics: ef79621373278c6381869dba2a57b7e8a44a68fb
+  React-performancetimeline: 52c861b94d7e66c72e05ae25b541eee5e2c8544c
+  React-RCTActionSheet: d634f6b735d24b0fa6550e920e5aba8c19feb042
+  React-RCTAnimatedModuleProvider: e58535e3d1dde482970cc7b4cf6cbd1f138e0fd3
+  React-RCTAnimation: 43fb3119458495f4d7639a00cce69da8f59cc18e
+  React-RCTAppDelegate: 56e92f74ed0a1104420cd77f73ad31218cc00ec3
+  React-RCTBlob: 1e970015a9280f7a5cc684413a7c9b2596b99049
+  React-RCTFabric: d7c04c327c7d4762691a3a76e4ae560678f47bef
+  React-RCTFBReactNativeSpec: d3bb5318454644c35929dc7d0b794b24ae6ae1ec
+  React-RCTImage: 823adb01e022db7398319101f5704a6ab98ce7ff
+  React-RCTLinking: 3b07297fe9dadadcb8e9c06192327390bd5d2587
+  React-RCTNetwork: 0353deef9f0a794d26e8a8f7d5b6ae3a9adfdbe2
+  React-RCTRuntime: 28ed2573730fc04ee2d57bbcb3153e738684f893
+  React-RCTSettings: 1b9161583e259b5faa6a256099c81aabf3b1184b
+  React-RCTText: bd5db37fcdad8471c835d3c8a27dae53a85f9543
+  React-RCTVibration: 725811a823335633dd48afa3087dc9f4a685b4c3
+  React-rendererconsistency: c52b96b0b7eca6db445946add3ce46bd2cb95290
+  React-renderercss: d7c255934aac2b8140ebfab9a2448410e9bb9cd2
+  React-rendererdebug: 347ff502b064206797a69b284823c70967031f9a
+  React-RuntimeApple: aca158c4337b57ae3b44a7bd629000a2d0480937
+  React-RuntimeCore: 06ddaedc3702ee76f0875744e43e6d408f193e20
+  React-runtimeexecutor: ec229a0f7d119f3a27420fe6fc9b3f2c99f64a51
+  React-RuntimeHermes: a42627b54360a915c4f021e390792615b51857ff
+  React-runtimescheduler: 914b91e3d351552e703e2458a72880c1a432587f
+  React-timing: b94922a32bada404a55c66fd8142736ac35a727f
+  React-utils: ca885cb94b7623b763116dd6ff9c4dc2dee728db
+  React-viewtransitionnativemodule: 9ffcfb7af1e1efc4794e24639feef8c303d3ddb5
+  React-webperformancenativemodule: 1156e37ce3dfd181b9a68be9fa8823c12deacc88
+  ReactAppDependencyProvider: 47580512734b0e81faf92a6c58429b767fa9e73a
+  ReactCodegen: f67b87f00ab9fb0e17f8bee1362afe81bb8027d6
+  ReactCommon: cdb7fb7d84ef961be9d7e27a6b277020d9662d00
+  ReactNativeDependencies: a04f47655a73881700013851f4c3acc455829e66
   RNCClipboard: f2c861be2669e65f3efa4618c22c95ba1b6dadda
   RNCMaskedView: d4884d6b3b256bd1830a211db3d5f551def82e36
   RNGestureHandler: 7a9dd456190bfe073532480187f559d825881190
