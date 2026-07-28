@@ -2,10 +2,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { resolveNpmVersion, toRange } from './npm-versions.ts';
+import {
+  listVersionsByRecency,
+  resolveNpmVersion,
+  toRange,
+} from './npm-versions.ts';
 
 const HOW_MANY_MINORS = 3;
 const OUTPUT_PATH = '/tmp/bundle-cost-matrix.json';
+const REANIMATED = 'react-native-reanimated';
+const WORKLETS = 'react-native-worklets';
 
 type CompatibilityDetails = {
   'react-native-worklets'?: string[];
@@ -28,14 +34,25 @@ const packagesDir = path.join(currentDir, '..', '..', '..', 'packages');
 
 const compatibilityData = JSON.parse(
   fs.readFileSync(
-    path.join(packagesDir, 'react-native-reanimated', 'compatibility.json'),
+    path.join(packagesDir, REANIMATED, 'compatibility.json'),
     'utf8'
   )
 ) as CompatibilityData;
 
-const reanimatedRanges = Object.keys(compatibilityData.fabric).filter(
-  (range) => range !== 'nightly'
+const knownRanges = new Set(
+  Object.keys(compatibilityData.fabric).filter((range) => range !== 'nightly')
 );
+
+const reanimatedRanges: string[] = [];
+for (const version of listVersionsByRecency(REANIMATED)) {
+  if (version.includes('-')) {
+    continue;
+  }
+  const range = toRange(version.split('.').slice(0, 2).join('.'));
+  if (knownRanges.has(range) && !reanimatedRanges.includes(range)) {
+    reanimatedRanges.push(range);
+  }
+}
 
 const matrix: MatrixEntry[] = [];
 
@@ -46,14 +63,13 @@ for (const reanimatedRange of reanimatedRanges) {
   const details = compatibilityData.fabric[reanimatedRange];
   const workletsRanges = details['react-native-worklets'] ?? [];
 
-  const workletsRange = workletsRanges.at(-1);
-  if (!workletsRange) {
+  if (workletsRanges.length === 0) {
     console.warn(`${reanimatedRange}: no compatible worklets range, skipping`);
     continue;
   }
 
   const reanimatedVersion = resolveNpmVersion(
-    'react-native-reanimated',
+    REANIMATED,
     toRange(reanimatedRange)
   );
   if (!reanimatedVersion) {
@@ -62,12 +78,12 @@ for (const reanimatedRange of reanimatedRanges) {
   }
 
   const workletsVersion = resolveNpmVersion(
-    'react-native-worklets',
-    toRange(workletsRange)
+    WORKLETS,
+    workletsRanges.map(toRange).join(' || ')
   );
   if (!workletsVersion) {
     console.warn(
-      `${reanimatedRange}: worklets ${workletsRange} is not published yet, skipping`
+      `${reanimatedRange}: worklets ${workletsRanges.join(', ')} are not published yet, skipping`
     );
     continue;
   }

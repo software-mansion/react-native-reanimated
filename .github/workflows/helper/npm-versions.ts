@@ -2,6 +2,46 @@ import { execSync } from 'node:child_process';
 
 const NPM_VIEW_TIMEOUT_MS = 60_000;
 
+const publishedVersionsCache = new Map<string, string[]>();
+
+function npmView(spec: string, field: string): unknown {
+  try {
+    const rawOutput = execSync(`npm view "${spec}" ${field} --json`, {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      timeout: NPM_VIEW_TIMEOUT_MS,
+    }).trim();
+
+    return rawOutput ? JSON.parse(rawOutput) : null;
+  } catch {
+    return null;
+  }
+}
+
+function listPublishedVersions(pkgName: string): string[] {
+  const cached = publishedVersionsCache.get(pkgName);
+  if (cached) {
+    return cached;
+  }
+
+  const parsed = npmView(pkgName, 'versions');
+  const versions = Array.isArray(parsed) ? (parsed as string[]) : [];
+  publishedVersionsCache.set(pkgName, versions);
+  return versions;
+}
+
+export function listVersionsByRecency(pkgName: string): string[] {
+  const parsed = npmView(pkgName, 'time');
+  if (!parsed || typeof parsed !== 'object') {
+    return [];
+  }
+
+  return Object.entries(parsed as Record<string, string>)
+    .filter(([version]) => version !== 'created' && version !== 'modified')
+    .sort(([, a], [, b]) => Date.parse(b) - Date.parse(a))
+    .map(([version]) => version);
+}
+
 export function toRange(version: string): string {
   return version.includes('x') ? version : `${version}.x`;
 }
@@ -10,25 +50,20 @@ export function resolveNpmVersion(
   pkgName: string,
   versionRange: string
 ): string | null {
-  const spec = `${pkgName}@${versionRange}`;
-  try {
-    const rawOutput = execSync(`npm view "${spec}" version --json`, {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-      timeout: NPM_VIEW_TIMEOUT_MS,
-    }).trim();
+  const parsed = npmView(`${pkgName}@${versionRange}`, 'version');
 
-    if (!rawOutput) {
-      return null;
-    }
-
-    const parsed = JSON.parse(rawOutput) as string | string[];
-    if (Array.isArray(parsed)) {
-      return parsed.at(-1) ?? null;
-    }
-
+  if (typeof parsed === 'string') {
     return parsed;
-  } catch {
+  }
+
+  if (!Array.isArray(parsed) || parsed.length === 0) {
     return null;
   }
+
+  const matching = new Set(parsed as string[]);
+  return (
+    listPublishedVersions(pkgName).findLast((version) =>
+      matching.has(version)
+    ) ?? null
+  );
 }
