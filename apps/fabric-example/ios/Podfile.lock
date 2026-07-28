@@ -102,7 +102,7 @@ PODS:
   - React-Core (0.87.0-rc.3):
     - React-Core-prebuilt
     - React-Core/Default (= 0.87.0-rc.3)
-  - React-Core-prebuilt (0.87.0-rc.2):
+  - React-Core-prebuilt (0.87.0-rc.3):
     - ReactNativeDependencies
   - React-Core/CoreModulesHeaders (0.87.0-rc.3):
     - React-Core-prebuilt
@@ -2371,7 +2371,7 @@ SPEC CHECKSUMS:
   React-bridging: b47e6c64df013a72e069ff334a51e63e297aa4ca
   React-callinvoker: c89e376f1662771d232672784c8ea6181d39ef31
   React-Core: be0b02f2989d0a2c36d67f5241854065f89699e2
-  React-Core-prebuilt: e20c715717bd33a500e312ed14be83bee5461129
+  React-Core-prebuilt: dda224fa3725d884158f10c01feebf9b5663aca3
   React-CoreModules: ff6489319684dc3b7643e0c7a0ff75e5108f24a0
   React-cxxreact: 456bad89ec37af9c1784dea3ec9d4df4cacc215b
   React-cxxstableapi: 1e6d511b502f488ff3df7928243545c8194d106d
