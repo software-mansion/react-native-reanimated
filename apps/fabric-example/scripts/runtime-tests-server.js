@@ -813,12 +813,29 @@ function printCommandFailure(error) {
   }
 }
 
+async function assertSanitizerRuntimeEmbedded() {
+  const app = await appPath();
+  const frameworks = path.join(app, 'Frameworks');
+  const embedded =
+    fs.existsSync(frameworks) &&
+    fs.readdirSync(frameworks).some((name) => name.startsWith('libclang_rt.tsan'));
+  if (!embedded) {
+    throw new Error(
+      `the ThreadSanitizer runtime is not embedded in ${app} — the build was not instrumented`
+    );
+  }
+  console.log('[runtime-tests] ThreadSanitizer runtime is embedded in the app');
+}
+
 if (BUILD_ONLY) {
   (async () => {
     if (SANITIZER) {
       fs.rmSync(SANITIZER_REPORT_DIR, { recursive: true, force: true });
     }
     await buildApp();
+    if (SANITIZER) {
+      await assertSanitizerRuntimeEmbedded();
+    }
     shutdown(0);
   })().catch((error) => {
     printCommandFailure(error);
