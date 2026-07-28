@@ -22,6 +22,20 @@ type MatrixEntry = {
 
 type MatrixJob = MatrixEntry & { bundleMode: boolean };
 
+const NPM_VIEW_TIMEOUT_MS = 60_000;
+
+function compareVersions(a: string, b: string): number {
+  const left = a.split('.').map(Number);
+  const right = b.split('.').map(Number);
+  for (let i = 0; i < Math.max(left.length, right.length); i++) {
+    const diff = (left[i] ?? 0) - (right[i] ?? 0);
+    if (diff) {
+      return diff;
+    }
+  }
+  return 0;
+}
+
 function resolveNpmVersion(
   pkgName: string,
   versionRange: string
@@ -31,6 +45,7 @@ function resolveNpmVersion(
     const rawOutput = execSync(`npm view "${spec}" version --json`, {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
+      timeout: NPM_VIEW_TIMEOUT_MS,
     }).trim();
 
     if (!rawOutput) {
@@ -39,7 +54,7 @@ function resolveNpmVersion(
 
     const parsed = JSON.parse(rawOutput) as string | string[];
     if (Array.isArray(parsed)) {
-      return parsed[parsed.length - 1];
+      return parsed.length > 0 ? parsed.sort(compareVersions).at(-1)! : null;
     }
 
     return parsed;

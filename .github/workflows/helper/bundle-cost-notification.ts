@@ -30,6 +30,24 @@ function mb(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 }
 
+function parseResultFile(file: string): ResultFile | null {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(file, 'utf8')) as ResultFile;
+    if (
+      typeof parsed?.reanimatedVersion !== 'string' ||
+      typeof parsed?.bundleMode !== 'boolean' ||
+      typeof parsed?.results !== 'object' ||
+      parsed.results === null
+    ) {
+      throw new Error('unexpected shape');
+    }
+    return parsed;
+  } catch (error) {
+    console.error(`ignoring ${file}: ${String(error)}`);
+    return null;
+  }
+}
+
 function readResults(dir: string): ResultFile[] {
   if (!fs.existsSync(dir)) {
     return [];
@@ -41,7 +59,10 @@ function readResults(dir: string): ResultFile[] {
       if (entry.isDirectory()) {
         walk(full);
       } else if (entry.name.endsWith('.json')) {
-        files.push(JSON.parse(fs.readFileSync(full, 'utf8')) as ResultFile);
+        const parsed = parseResultFile(full);
+        if (parsed) {
+          files.push(parsed);
+        }
       }
     }
   };
@@ -133,24 +154,26 @@ function formatMessage(results: ResultFile[], runUrl: string): string {
 
 async function main(): Promise<void> {
   const dir = process.argv[2] ?? '/tmp/bundle-cost-results';
-  const results = readResults(dir);
   const runUrl =
     process.env.RUN_URL ??
     'https://github.com/software-mansion/react-native-reanimated/actions';
+  const failureText = `*Nightly bundle cost*\nThe run failed, check the CI logs.\n<${runUrl}|Workflow run>`;
 
-  const failed =
-    process.env.MEASURE_RESULT !== 'success' ||
-    results.length === 0 ||
-    missingJobs(results).length > 0;
-
-  if (failed) {
-    await postToSlack({
-      text: `*Nightly bundle cost*\nThe run failed, check the CI logs.\n<${runUrl}|Workflow run>`,
-    });
-    return;
+  let message: string;
+  try {
+    const results = readResults(dir);
+    const failed =
+      process.env.MEASURE_RESULT !== 'success' ||
+      results.length === 0 ||
+      missingJobs(results).length > 0;
+    message = failed ? failureText : formatMessage(results, runUrl);
+  } catch (error) {
+    console.error(error);
+    process.exitCode = 1;
+    message = failureText;
   }
 
-  await postToSlack({ text: formatMessage(results, runUrl) });
+  await postToSlack({ text: message });
 }
 
 await main();

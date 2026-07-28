@@ -17,6 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
+          persist-credentials: false
           sparse-checkout: |
             /.nvmrc
             /.github/workflows/helper
@@ -47,6 +48,8 @@ jobs:
       APP_DIR: apps/fabric-example
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -106,20 +109,25 @@ jobs:
           cat /tmp/raw.json
 
       - name: Attach version metadata
+        env:
+          REANIMATED_VERSION: ${{ matrix.reanimatedVersion }}
+          WORKLETS_VERSION: ${{ matrix.workletsVersion }}
+          REACT_NATIVE_VERSION: ${{ steps.installed.outputs.react-native }}
+          BUNDLE_MODE: ${{ matrix.bundleMode }}
         run: |
           mkdir -p /tmp/bundle-cost-results
           jq \
-            --arg reanimated "${{ matrix.reanimatedVersion }}" \
-            --arg worklets "${{ matrix.workletsVersion }}" \
-            --arg reactNative "${{ steps.installed.outputs.react-native }}" \
-            --argjson bundleMode ${{ matrix.bundleMode }} \
+            --arg reanimated "$REANIMATED_VERSION" \
+            --arg worklets "$WORKLETS_VERSION" \
+            --arg reactNative "$REACT_NATIVE_VERSION" \
+            --argjson bundleMode "$BUNDLE_MODE" \
             'del(.mode) as $results | {
                reanimatedVersion: $reanimated,
                workletsVersion: $worklets,
                reactNativeVersion: $reactNative,
                bundleMode: $bundleMode,
                results: $results
-             }' /tmp/raw.json > "/tmp/bundle-cost-results/${{ matrix.reanimatedVersion }}-bundle-mode-${{ matrix.bundleMode }}.json"
+             }' /tmp/raw.json > "/tmp/bundle-cost-results/${REANIMATED_VERSION}-bundle-mode-${BUNDLE_MODE}.json"
 
       - name: Upload result
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -134,6 +142,7 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
+          persist-credentials: false
           sparse-checkout: |
             /.nvmrc
             /.github/workflows/helper
