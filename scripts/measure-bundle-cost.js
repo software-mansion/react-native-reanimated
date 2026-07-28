@@ -229,6 +229,45 @@ function buildInRequestedMode(platform, outDir, args, state) {
   return buildInRequestedMode(platform, outDir, args, state);
 }
 
+/**
+ * Read every mapping of a flat source map as `[line, column, source]`.
+ *
+ * @param {any} map
+ * @returns {Promise<[number, number, string | null][]>}
+ */
+async function readFlatMappings(map) {
+  const consumer = await new SourceMapConsumer(map);
+  /** @type {[number, number, string | null][]} */
+  const mappings = [];
+  consumer.eachMapping(
+    (m) => mappings.push([m.generatedLine, m.generatedColumn, m.source]),
+    null,
+    SourceMapConsumer.GENERATED_ORDER
+  );
+  if (typeof consumer.destroy === 'function') consumer.destroy();
+  return mappings;
+}
+
+/**
+ * Read every mapping of a source map, in generated order.
+ * @param {any} map
+ * @returns {Promise<[number, number, string | null][]>}
+ */
+async function collectMappings(map) {
+  if (!map.sections) return readFlatMappings(map);
+
+  /** @type {[number, number, string | null][]} */
+  const mappings = [];
+  for (const section of map.sections) {
+    const { line, column } = section.offset;
+    for (const [l, c, source] of await readFlatMappings(section.map)) {
+      mappings.push([l + line, l === 1 ? c + column : c, source]);
+    }
+  }
+  mappings.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  return mappings;
+}
+
 async function attributeBundle(bundleFile, mapFile, attribute) {
   const code = fs.readFileSync(bundleFile, 'utf8');
   const lines = code.split('\n');
@@ -244,16 +283,8 @@ async function attributeBundle(bundleFile, mapFile, attribute) {
     lineStart[line] +
     Buffer.byteLength(lines[line - 1].slice(0, column), 'utf8');
 
-  const consumer = await new SourceMapConsumer(
+  const mappings = await collectMappings(
     JSON.parse(fs.readFileSync(mapFile, 'utf8'))
-  );
-
-  /** @type {[number, number, string | null][]} */
-  const mappings = [];
-  consumer.eachMapping(
-    (m) => mappings.push([m.generatedLine, m.generatedColumn, m.source]),
-    null,
-    SourceMapConsumer.GENERATED_ORDER
   );
 
   /** @type {Record<string, number>} */
@@ -269,7 +300,6 @@ async function attributeBundle(bundleFile, mapFile, attribute) {
     groups[classify(source, attribute)] += size;
   }
 
-  if (typeof consumer.destroy === 'function') consumer.destroy();
   return { total, groups };
 }
 
