@@ -68,18 +68,6 @@ function readResults(dir: string): ResultFile[] {
   return files;
 }
 
-function compareVersionsDesc(a: string, b: string): number {
-  const left = a.split('.').map(Number);
-  const right = b.split('.').map(Number);
-  for (let i = 0; i < Math.max(left.length, right.length); i++) {
-    const diff = (right[i] ?? 0) - (left[i] ?? 0);
-    if (diff) {
-      return diff;
-    }
-  }
-  return 0;
-}
-
 function jobKey(reanimatedVersion: string, bundleMode: boolean): string {
   return `${reanimatedVersion} bundle-mode=${bundleMode}`;
 }
@@ -115,7 +103,14 @@ function formatMessage(results: ResultFile[], runUrl: string): string {
     byVersion.set(result.reanimatedVersion, existing);
   }
 
-  const versions = [...byVersion.keys()].sort(compareVersionsDesc);
+  const expectedOrder = readExpectedJobs().map((job) => job.reanimatedVersion);
+  const orderOf = (version: string) => {
+    const index = expectedOrder.indexOf(version);
+    return index === -1 ? expectedOrder.length : index;
+  };
+  const versions = [...byVersion.keys()].sort(
+    (a, b) => orderOf(a) - orderOf(b)
+  );
 
   for (const version of versions) {
     const entries = byVersion.get(version)!;
