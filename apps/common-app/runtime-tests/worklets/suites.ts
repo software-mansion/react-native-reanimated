@@ -39,8 +39,9 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runtimes/reactNativeImportShim.test');
       require('./tests/runtimes/turboModuleRegistryShim.test');
     },
-    disabled: !isBundleModeEnabled(),
-    skipByDefault: true,
+    // The shims these tests assert on are only active in __DEV__, so the suite
+    // stays out of Release builds until Bundle Mode supports them there.
+    disabled: !isBundleModeEnabled() || !__DEV__,
   },
   {
     testSuiteName: 'run loop',

@@ -7,6 +7,7 @@ import type {
   LayoutAnimationType,
 } from './commonTypes';
 import { configureLayoutAnimationBatch } from './core';
+import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 
 function createUpdateManager() {
   const animations: LayoutAnimationBatchItem[] = [];
@@ -55,7 +56,7 @@ const updateLayoutAnimationsManager = createUpdateManager();
 export const updateLayoutAnimations: (
   viewTag: number,
   type: LayoutAnimationType,
-  config?: Keyframe | LayoutAnimationFunction,
+  config?: ReanimatedKeyframe | LayoutAnimationFunction,
   isUnmounting?: boolean,
   sharedTransitionTag?: string
 ) => void = (viewTag, type, config, isUnmounting, sharedTransitionTag) =>

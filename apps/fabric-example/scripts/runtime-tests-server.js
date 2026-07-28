@@ -194,23 +194,22 @@ function onHello(msg) {
     return;
   }
 
-  if (ONLY) {
-    const unknown = ONLY.filter((name) => !declared.includes(name));
-    if (unknown.length > 0) {
-      console.error(
-        `[runtime-tests] unknown suite name(s): ${unknown.join(', ')}`
-      );
-      console.error(
-        `[runtime-tests] available suites: ${declared.join(', ')}`
-      );
-      send({ type: 'error', message: `Unknown suites: ${unknown.join(', ')}` });
-      shutdown(1);
-      return;
-    }
+  const unknown = (ONLY ?? []).filter((name) => !declared.includes(name));
+  if (unknown.length > 0) {
+    console.error(
+      `[runtime-tests] unknown suite name(s): ${unknown.join(', ')}`
+    );
+    console.error(`[runtime-tests] available suites: ${declared.join(', ')}`);
+    send({ type: 'error', message: `Unknown suites: ${unknown.join(', ')}` });
+    shutdown(1);
+    return;
   }
 
   runStartedAt = Date.now();
-  send({ type: 'start', ...(ONLY ? { only: ONLY } : {}) });
+  send({
+    type: 'start',
+    ...(ONLY ? { only: ONLY } : {}),
+  });
   console.log('[runtime-tests] start sent, running tests…');
 }
 
@@ -301,9 +300,13 @@ function shutdown(code) {
   clearTimer('idle');
   if (metroChild && !metroChild.killed) {
     try {
-      metroChild.kill('SIGTERM');
+      process.kill(-metroChild.pid, 'SIGTERM');
     } catch {
-      /* ignore */
+      try {
+        metroChild.kill('SIGTERM');
+      } catch {
+        /* ignore */
+      }
     }
   }
   wss.close(() => {
@@ -387,12 +390,21 @@ async function ensureMetroRunning() {
     );
   }
   console.log(
-    `[runtime-tests] starting Metro (\`yarn start --port ${METRO_PORT}\`)`
+    `[runtime-tests] starting Metro (\`yarn start --port ${METRO_PORT} --reset-cache\`)`
   );
-  metroChild = spawn('yarn', ['start', '--port', String(METRO_PORT)], {
-    cwd: projectRoot,
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
+  // --reset-cache: a Metro cache produced under a different Bundle Mode
+  // setting serves stale module maps ("Requiring unknown module").
+  // detached: Metro must get its own process group so shutdown can kill the
+  // whole tree — killing just the yarn wrapper orphans the actual Metro process.
+  metroChild = spawn(
+    'yarn',
+    ['start', '--port', String(METRO_PORT), '--reset-cache'],
+    {
+      cwd: projectRoot,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      detached: true,
+    }
+  );
   metroChild.stdout.on('data', (chunk) => {
     process.stdout.write(`[metro] ${chunk}`);
   });
@@ -674,9 +686,6 @@ async function installAndLaunchAndroid(serial) {
     );
   }
 
-  await adb(serial, ['shell', 'am', 'force-stop', ANDROID_APP_ID]).catch(
-    () => {}
-  );
   console.log(
     `[runtime-tests] launching ${ANDROID_APP_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY}`
   );
@@ -684,9 +693,13 @@ async function installAndLaunchAndroid(serial) {
     'shell',
     'am',
     'start',
-    // A force-stopped app can otherwise be recreated from the stale recents
-    // task record, whose base intent carries no extras.
-    '--activity-clear-task',
+    // -S force-stops the app inside am, avoiding the race a separate
+    // `am force-stop` loses against this launch. CLEAR_TASK|NEW_TASK then wipes
+    // the recents task record so its extra-less base intent cannot be restored
+    // instead of this launch (CLEAR_TASK is ignored without NEW_TASK).
+    '-S',
+    '-f',
+    '0x10008000',
     '-n',
     `${ANDROID_APP_ID}/.MainActivity`,
     '--es',

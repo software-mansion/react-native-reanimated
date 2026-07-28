@@ -5,6 +5,7 @@ import type {
   ComponentType,
   ReactNode,
   Ref,
+  RefAttributes,
 } from 'react';
 import type { FlatList, FlatListProps } from 'react-native';
 
@@ -29,11 +30,17 @@ type AnimatedComponentRef<TInstance> =
 export type AnimatedComponentType<
   Props extends object = object,
   Instance = unknown,
-> = (
-  props: Omit<AnimatedProps<Props>, 'ref'> & {
-    ref?: AnimatedComponentRef<Instance>;
-  }
-) => ReactNode;
+> = {
+  (
+    props: Omit<AnimatedProps<Props>, 'ref'> & {
+      ref?: AnimatedComponentRef<Instance>;
+    }
+  ): ReactNode;
+  (
+    props: Omit<AnimatedProps<Props>, 'ref'> &
+      RefAttributes<ExtractElementRef<Instance>>
+  ): ReactNode;
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnimatableComponent<C extends ComponentType<any>> = C & {

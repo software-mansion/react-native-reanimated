@@ -4,10 +4,9 @@ import type { ShareableHost } from 'react-native-worklets';
 import { runOnUISync } from 'react-native-worklets';
 
 import { cancelAnimation, withStyleAnimation } from '../animation';
-import { SHOULD_BE_USE_WEB } from '../common';
 import type {
   LayoutAnimation,
-  LayoutAnimationStartFunction,
+  LayoutAnimationsManager,
   LayoutAnimationValues,
   Mutable,
   SharedValue,
@@ -51,10 +50,7 @@ function stopObservingProgress(
   scheduleFlush();
 }
 
-function createLayoutAnimationManager(): {
-  start: LayoutAnimationStartFunction;
-  stop: (tag: number) => void;
-} {
+function createLayoutAnimationManager(): LayoutAnimationsManager {
   'worklet';
   const currentAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
@@ -141,13 +137,7 @@ function createLayoutAnimationManager(): {
 }
 
 // is-tree-shakable-suppress
-if (!SHOULD_BE_USE_WEB) {
-  runOnUISync(() => {
-    'worklet';
-    global.LayoutAnimationsManager = createLayoutAnimationManager();
-  });
-}
-
-export type LayoutAnimationsManager = ReturnType<
-  typeof createLayoutAnimationManager
->;
+runOnUISync(() => {
+  'worklet';
+  global.LayoutAnimationsManager = createLayoutAnimationManager();
+});

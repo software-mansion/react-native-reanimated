@@ -35,7 +35,9 @@ export interface RemoteReporterOptions {
   library: string;
   declaredSuites: DeclaredSuite[];
   onStatus: (message: string) => void;
-  onStart: (params: { only?: string[] }) => Promise<RunSummary | void>;
+  onStart: (params: {
+    only?: string[];
+  }) => Promise<RunSummary | void>;
 }
 
 interface StartMessage {
