@@ -21,6 +21,10 @@ on:
   workflow_call:
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   changes:
     if: github.repository == 'software-mansion/react-native-reanimated'

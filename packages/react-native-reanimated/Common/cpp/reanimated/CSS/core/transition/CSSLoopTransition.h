@@ -46,6 +46,8 @@ class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enab
 
   folly::dynamic computeCurrentStyle(const std::shared_ptr<const ShadowNode> &shadowNode);
 
+  void removeProperties(const std::vector<std::string> &propertyNames);
+
  private:
   const Tag viewTag_;
   const std::string componentName_;
@@ -64,7 +66,6 @@ class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enab
       const PropertyValueDynamicDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
       double timestamp);
-  void removeProperties(const std::vector<std::string> &propertyNames);
   void removeProperty(const std::string &propertyName);
 };
 

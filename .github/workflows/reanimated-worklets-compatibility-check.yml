@@ -17,6 +17,9 @@ on:
   schedule:
     - cron: '30 2 * * *'
 
+permissions:
+  contents: read
+
 jobs:
   read-compatibility-json:
     if: github.repository == 'software-mansion/react-native-reanimated'

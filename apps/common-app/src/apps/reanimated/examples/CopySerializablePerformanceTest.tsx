@@ -41,7 +41,7 @@ export default function CopySerializablePerformanceTest() {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
       <View style={styles.container}>
         <Text style={styles.description}>
           This test measures the performance of Worklet&apos;s

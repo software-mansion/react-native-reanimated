@@ -18,6 +18,9 @@ on:
   workflow_call:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   babel-plugin-static-check:
     if: github.repository == 'software-mansion/react-native-reanimated'

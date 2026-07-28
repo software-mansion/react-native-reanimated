@@ -14,6 +14,9 @@ on:
   workflow_call:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   example-next-build-check-and-test:
     runs-on: ubuntu-latest
