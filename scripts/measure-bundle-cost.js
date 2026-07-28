@@ -73,7 +73,6 @@ function parseArgs(argv) {
   const args = {
     platforms: [],
     bundleMode: true,
-    attributions: false,
     json: false,
     keep: false,
   };
@@ -88,11 +87,6 @@ function parseArgs(argv) {
         a.slice('--bundle-mode='.length),
         'bundle-mode'
       );
-    } else if (a.startsWith('--attributions=')) {
-      args.attributions = parseBool(
-        a.slice('--attributions='.length),
-        'attributions'
-      );
     } else if (a.startsWith('--platform=')) {
       args.platforms = a.slice('--platform='.length).split(',').filter(Boolean);
     } else if (!a.startsWith('-')) {
@@ -102,14 +96,6 @@ function parseArgs(argv) {
     }
   }
   if (args.platforms.length === 0) args.platforms = ['ios'];
-
-  if (args.attributions && !args.bundleMode) {
-    fail(
-      '--attributions=true requires --bundle-mode=true.\n' +
-        'Worklets are only extracted into dedicated files (and thus only need ' +
-        're-attribution) in bundle mode.'
-    );
-  }
   return args;
 }
 
@@ -124,21 +110,9 @@ Options:
   --platform=<ios,android>   Platform(s) to bundle (default: ios). May also be
                              passed as positional args.
   --bundle-mode=<bool>       Build with worklets bundle mode on (default: true).
-                             Verified against the built bundle; if it does not
-                             match, scripts/toggle-bundle-mode.sh is run and the
-                             bundle rebuilt (and restored afterwards).
-  --attributions=<bool>      Credit generated worklets back to the library that
-                             authored them instead of react-native-worklets
-                             (default: false). Only valid with bundle mode on.
   --json                     Emit machine-readable JSON instead of a table.
   --keep                     Keep the generated bundle/source-map artifacts.
-  -h, --help                 Show this help.
-
-Valid combinations:
-  --bundle-mode=true  --attributions=false   (default) worklets counted raw
-  --bundle-mode=true  --attributions=true    worklets credited to their author
-  --bundle-mode=false                        no bundle mode (plain tree-shaking)
-  --bundle-mode=false --attributions=true    INVALID`
+  -h, --help                 Show this help.`
   );
 }
 
@@ -233,12 +207,12 @@ function buildBundle(platform, outDir, attribute) {
  *
  * @param {string} platform
  * @param {string} outDir
- * @param {{ bundleMode: boolean; attributions: boolean }} args
+ * @param {{ bundleMode: boolean }} args
  * @param {{ toggled: boolean }} state
  * @returns {{ bundle: string; map: string }}
  */
 function buildInRequestedMode(platform, outDir, args, state) {
-  const built = buildBundle(platform, outDir, args.attributions);
+  const built = buildBundle(platform, outDir, args.bundleMode);
   if (detectBundleMode(built.bundle) === args.bundleMode) return built;
 
   if (state.toggled) {
@@ -320,7 +294,7 @@ async function main() {
 
   const state = { toggled: false };
 
-  const modeLabel = `bundle-mode=${args.bundleMode}, attributions=${args.attributions}`;
+  const modeLabel = `bundle-mode=${args.bundleMode}`;
   console.error(`• ${modeLabel}`);
 
   /** @type {Record<string, any>} */
@@ -331,7 +305,7 @@ async function main() {
       const { total, groups } = await attributeBundle(
         bundle,
         map,
-        args.attributions
+        args.bundleMode
       );
       report[platform] = {
         total,
