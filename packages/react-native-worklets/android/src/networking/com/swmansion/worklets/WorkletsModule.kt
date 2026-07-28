@@ -166,9 +166,6 @@ class WorkletsModule(
             return
         }
         if (mHybridData != null && mHybridData!!.isValid) {
-            // We have to destroy extra runtimes when invalidate is called. If we clean
-            // it up later instead there's a chance the runtime will retain references
-            // to invalidated memory and will crash on its destruction.
             invalidateCpp()
         }
         mAndroidUIScheduler.deactivate()

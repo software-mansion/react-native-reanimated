@@ -26,6 +26,11 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
+project 'FabricExample.xcodeproj',
+        'Debug' => :debug,
+        'DebugRuntimeTests' => :debug,
+        'Release' => :release
+
 target 'FabricExample' do
   config = use_native_modules!
 

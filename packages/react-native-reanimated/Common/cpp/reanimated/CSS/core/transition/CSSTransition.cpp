@@ -32,6 +32,12 @@ TransitionProperties CSSTransition::getProperties() const {
 folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config, const folly::dynamic &lastUpdates) {
   const auto timestamp = loop_->resolveTimestamp();
 
+  for (const auto &propertyName : pseudoLockedProperties_) {
+    config.changedPropertiesSettings.erase(propertyName);
+    config.changedProperties.erase(propertyName);
+    std::erase(config.removedProperties, propertyName);
+  }
+
   auto loopConfig = platformTransitionProxy_->processConfig(rt, getViewTag(), config, routing_, timestamp);
   if (loopConfig.empty()) {
     return folly::dynamic::object();
@@ -72,11 +78,32 @@ folly::dynamic CSSTransition::computeCurrentLoopStyle() {
   return loopTransition_->computeCurrentStyle(shadowNode_);
 }
 
+void CSSTransition::setPseudoLockedProperties(TransitionProperties properties) {
+  pseudoLockedProperties_ = std::move(properties);
+}
+
 void CSSTransition::cancel() {
   if (loopTransition_) {
     loop_->remove(loopTransition_);
   }
   platformTransitionProxy_->cancelAll(getViewTag(), routing_.platform);
+}
+
+void CSSTransition::removeProperties(const std::vector<std::string> &propertyNames) {
+  TransitionProperties platformProperties;
+  for (const auto &propertyName : propertyNames) {
+    if (routing_.platform.erase(propertyName) > 0) {
+      platformProperties.insert(propertyName);
+    }
+    routing_.loop.erase(propertyName);
+  }
+
+  if (!platformProperties.empty()) {
+    platformTransitionProxy_->cancelAll(getViewTag(), platformProperties);
+  }
+  if (loopTransition_) {
+    loopTransition_->removeProperties(propertyNames);
+  }
 }
 
 CSSLoopTransition &CSSTransition::ensureLoopTransition() {

@@ -1,4 +1,5 @@
 import Active from './Active';
+import ActiveBlocksRender from './ActiveBlocksRender';
 import ActiveDeepest from './ActiveDeepest';
 import ArbitraryWebSelectors from './ArbitraryWebSelectors';
 import Focus from './Focus';
@@ -11,6 +12,7 @@ import Planets from './Planets';
 
 export default {
   Active,
+  ActiveBlocksRender,
   ActiveDeepest,
   ArbitraryWebSelectors,
   Focus,

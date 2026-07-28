@@ -4,7 +4,6 @@
 
 #import <UIKit/UIKit.h>
 
-/// One registered touch-`:hover` view (weak owner = unregister key, weak view = bounds).
 @interface REATouchHoverEntry : NSObject {
  @public
   __weak id owner;
@@ -16,40 +15,50 @@
 @implementation REATouchHoverEntry
 @end
 
-/// Passive key-window touch observer. It never leaves `.possible`, so it never claims the gesture
-/// or interferes with the per-view `:active` / `:active-deepest` recognizers.
 @interface REAHoverTouchObserver : UIGestureRecognizer
 @property (nonatomic, weak) REATouchHoverCoordinator *coordinator;
 @end
 
 @interface REATouchHoverCoordinator () <UIGestureRecognizerDelegate>
-- (void)observeTouchBegan:(UITouch *)touch;
-- (void)observeTouchMoved:(UITouch *)touch;
-- (void)observeTouchCancelled;
+- (void)primaryTouchBegan:(NSSet<UITouch *> *)touches;
+- (void)primaryTouchEnded:(NSSet<UITouch *> *)touches;
+- (void)touchSequenceEnded;
 @end
 
 @implementation REAHoverTouchObserver
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
-  [self.coordinator observeTouchBegan:touches.anyObject];
+  [self.coordinator primaryTouchBegan:touches];
 }
-- (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
+- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
-  [self.coordinator observeTouchMoved:touches.anyObject];
+  [self.coordinator primaryTouchEnded:touches];
+  [self failIfSequenceEnded:event];
 }
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
-  [self.coordinator observeTouchCancelled];
+  [self failIfSequenceEnded:event];
+}
+- (void)failIfSequenceEnded:(UIEvent *)event
+{
+  for (UITouch *touch in event.allTouches) {
+    if (touch.phase != UITouchPhaseEnded && touch.phase != UITouchPhaseCancelled) {
+      return;
+    }
+  }
+  self.state = UIGestureRecognizerStateFailed;
+  [self.coordinator touchSequenceEnded];
 }
 @end
 
-static const CGFloat kTouchHoverSlop = 10.0;
+static const CGFloat kPrimaryTouchTapMovement = 10.0;
 
 @implementation REATouchHoverCoordinator {
   NSMutableArray<REATouchHoverEntry *> *_entries;
   REAHoverTouchObserver *_windowObserver;
   __weak UIWindow *_observedWindow;
-  CGPoint _windowTouchStartScreen;
+  __weak UITouch *_primaryTouch;
+  CGPoint _primaryTouchDownPoint;
 }
 
 + (instancetype)sharedCoordinator
@@ -139,8 +148,7 @@ static const CGFloat kTouchHoverSlop = 10.0;
   }
   _windowObserver = nil;
   _observedWindow = nil;
-  // Clear any sticky :hover left in the window we just stopped observing (e.g. when a modal/alert
-  // becomes key and we rebind), mirroring Android's removeWindowObserver.
+  _primaryTouch = nil;
   [self clearAll];
 }
 
@@ -155,38 +163,52 @@ static const CGFloat kTouchHoverSlop = 10.0;
   }
 }
 
-- (void)observeTouchBegan:(UITouch *)touch
+#pragma mark - Primary-touch lifecycle
+
+- (void)primaryTouchBegan:(NSSet<UITouch *> *)touches
 {
+  if (_primaryTouch != nil) {
+    return;
+  }
   UIWindow *window = _observedWindow;
+  UITouch *touch = touches.anyObject;
   if (window == nil || touch == nil) {
     return;
   }
-  CGPoint inWindow = [touch locationInView:window];
-  CGPoint onScreen = [window convertPoint:inWindow toCoordinateSpace:window.screen.coordinateSpace];
-  _windowTouchStartScreen = onScreen;
-  [self recomputeAtScreenPoint:onScreen];
+  _primaryTouch = touch;
+  _primaryTouchDownPoint = [touch locationInView:window];
+  UIView *hit = [self hitTestInWindow:window atPoint:_primaryTouchDownPoint];
+  [self hoverBranchOfHitView:hit];
 }
 
-- (void)observeTouchMoved:(UITouch *)touch
+- (void)primaryTouchEnded:(NSSet<UITouch *> *)touches
 {
-  // A scroll/drag (movement past a small slop) dismisses sticky :hover, matching Chrome.
-  UIWindow *window = _observedWindow;
-  if (window == nil || touch == nil) {
+  if (_primaryTouch == nil || ![touches containsObject:_primaryTouch]) {
     return;
   }
-  CGPoint inWindow = [touch locationInView:window];
-  CGPoint onScreen = [window convertPoint:inWindow toCoordinateSpace:window.screen.coordinateSpace];
-  CGFloat dx = onScreen.x - _windowTouchStartScreen.x;
-  CGFloat dy = onScreen.y - _windowTouchStartScreen.y;
-  if (dx * dx + dy * dy > kTouchHoverSlop * kTouchHoverSlop) {
-    [self clearAll];
+  UIWindow *window = _observedWindow;
+  if (window != nil) {
+    CGPoint releasePoint = [_primaryTouch locationInView:window];
+    CGFloat dx = releasePoint.x - _primaryTouchDownPoint.x;
+    CGFloat dy = releasePoint.y - _primaryTouchDownPoint.y;
+    if (dx * dx + dy * dy <= kPrimaryTouchTapMovement * kPrimaryTouchTapMovement) {
+      return;
+    }
+  }
+  UIView *hit = window != nil ? [self hitTestInWindow:window atPoint:[_primaryTouch locationInView:window]] : nil;
+  for (REATouchHoverEntry *entry in _entries) {
+    if (entry->hovered && ![self isView:entry->view onBranchOfHitView:hit]) {
+      [self setEntry:entry hovered:NO];
+    }
   }
 }
 
-- (void)observeTouchCancelled
+- (void)touchSequenceEnded
 {
-  [self clearAll];
+  _primaryTouch = nil;
 }
+
+#pragma mark - State reconciliation
 
 - (void)setEntry:(REATouchHoverEntry *)entry hovered:(BOOL)hovered
 {
@@ -199,21 +221,34 @@ static const CGFloat kTouchHoverSlop = 10.0;
   }
 }
 
-// Visible only if the whole superview chain is, mirroring Android's View.isShown().
-- (BOOL)isViewVisibleOnScreen:(UIView *)view
+// UIKit's -hitTest: skips views with alpha below ~0.01, so an `opacity: 0` view is unreachable. Bump each
+// near-zero registered view over the threshold for the hit-test, restoring before compositing (never drawn).
+- (UIView *)hitTestInWindow:(UIWindow *)window atPoint:(CGPoint)point
 {
-  if (view.window == nil) {
-    return NO;
-  }
-  for (UIView *current = view; current != nil; current = current.superview) {
-    if (current.hidden || current.alpha <= 0.01) {
-      return NO;
+  static const CGFloat kHitTestableAlpha = 0.02;
+  NSMutableArray<UIView *> *lifted = nil;
+  NSMutableArray<NSNumber *> *savedAlphas = nil;
+  for (REATouchHoverEntry *entry in _entries) {
+    UIView *view = entry->view;
+    if (view == nil || view.alpha >= kHitTestableAlpha || [lifted containsObject:view]) {
+      continue;
     }
+    if (lifted == nil) {
+      lifted = [NSMutableArray array];
+      savedAlphas = [NSMutableArray array];
+    }
+    [lifted addObject:view];
+    [savedAlphas addObject:@(view.alpha)];
+    view.alpha = kHitTestableAlpha;
   }
-  return YES;
+  UIView *hit = [window hitTest:point withEvent:nil];
+  [lifted enumerateObjectsUsingBlock:^(UIView *view, NSUInteger index, BOOL *stop) {
+    view.alpha = savedAlphas[index].floatValue;
+  }];
+  return hit;
 }
 
-- (void)recomputeAtScreenPoint:(CGPoint)onScreen
+- (void)hoverBranchOfHitView:(UIView *)hit
 {
   NSMutableArray<REATouchHoverEntry *> *dead = nil;
   for (REATouchHoverEntry *entry in _entries) {
@@ -226,14 +261,19 @@ static const CGFloat kTouchHoverSlop = 10.0;
       [dead addObject:entry];
       continue;
     }
-    BOOL wantHover = NO;
-    if ([self isViewVisibleOnScreen:view]) {
-      CGPoint local = [view convertPoint:onScreen fromCoordinateSpace:view.window.screen.coordinateSpace];
-      wantHover = [view pointInside:local withEvent:nil];
-    }
-    [self setEntry:entry hovered:wantHover];
+    [self setEntry:entry hovered:[self isView:view onBranchOfHitView:hit]];
   }
   [self purgeEntries:dead];
+}
+
+- (BOOL)isView:(UIView *)view onBranchOfHitView:(UIView *)hit
+{
+  for (UIView *current = hit; current != nil; current = current.superview) {
+    if (current == view) {
+      return YES;
+    }
+  }
+  return NO;
 }
 
 - (void)clearAll

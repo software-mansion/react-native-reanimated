@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import type {
-  GestureStateManager,
+  LegacyGestureStateManager,
   GestureTouchEvent,
   GestureUpdateEvent,
   PanGestureChangeEventPayload,
@@ -49,9 +49,11 @@ function Ball() {
       'worklet';
       isPressed.value = false;
     })
-    .onTouchesMove((e: GestureTouchEvent, state: GestureStateManager) => {
-      state.activate();
-    });
+    .onTouchesMove(
+      (_e: GestureTouchEvent, state: LegacyGestureStateManager) => {
+        state.activate();
+      }
+    );
 
   return (
     <GestureDetector gesture={gesture}>

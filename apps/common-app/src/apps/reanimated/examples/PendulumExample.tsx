@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import type {
-  GestureStateManager,
+  LegacyGestureStateManager,
   GestureTouchEvent,
 } from 'react-native-gesture-handler';
 import {
@@ -98,9 +98,11 @@ export default function SpringExample() {
     .onFinalize(() => {
       pendulumSwing.value = withSpring(0, config);
     })
-    .onTouchesMove((e: GestureTouchEvent, state: GestureStateManager) => {
-      state.activate();
-    });
+    .onTouchesMove(
+      (_e: GestureTouchEvent, state: LegacyGestureStateManager) => {
+        state.activate();
+      }
+    );
 
   const fields: Array<FieldDefinition> = [
     { fieldName: 'Mass', value: mass, setValue: setMass },

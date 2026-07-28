@@ -38,6 +38,15 @@ SVGStrokeDashArray SVGStrokeDashArray::interpolate(
   return SVGStrokeDashArray(result);
 }
 
+folly::dynamic SVGStrokeDashArray::toDynamic() const {
+  // Empty means "no dashing" - emit null instead of [], which react-native-svg
+  // would feed to Android's DashPathEffect that requires at least 2 intervals.
+  if (values.empty()) {
+    return nullptr;
+  }
+  return CSSLengthVector::toDynamic();
+}
+
 #ifndef NDEBUG
 
 std::ostream &operator<<(std::ostream &os, const SVGStrokeDashArray &strokeDashArray) {

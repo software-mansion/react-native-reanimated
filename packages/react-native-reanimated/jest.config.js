@@ -28,7 +28,7 @@ const createReactNativeProject = (config = {}) =>
   createProject({
     preset: '@react-native/jest-preset',
     testEnvironment: 'node',
-    resolver: 'react-native-worklets/jest/resolver',
+    resolver: '<rootDir>/jest/resolver.js',
     transformIgnorePatterns: [
       'node_modules/(?!((jest-)?react-native|@react-native(-community)?|react-native-worklets)/)',
     ],
@@ -55,11 +55,13 @@ const androidProject = createReactNativeProject({
 const {
   snapshotResolver: _,
   watchPlugins: __,
+  moduleNameMapper: { '^react-native($|/.*)': ___, ...webModuleNameMapper },
   ...baseWebPreset
 } = getWebPreset();
 
 const webProject = createProject({
   ...baseWebPreset,
+  moduleNameMapper: webModuleNameMapper,
   setupFiles: [...baseWebPreset.setupFiles, '<rootDir>/jest/setup.web.js'],
   displayName: 'web',
   testMatch: ['**/*.web.test.@(js|jsx|ts|tsx)'],

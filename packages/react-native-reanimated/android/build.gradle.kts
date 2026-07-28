@@ -8,7 +8,21 @@ plugins {
     id("com.android.library")
     id("maven-publish")
     id("com.diffplug.spotless") version "8.4.0"
-    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.android") apply false
+}
+
+fun shouldApplyKotlinAndroidPlugin(): Boolean {
+    val agpMajorVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION.substringBefore('.').toInt()
+    if (agpMajorVersion <= 8) {
+        return true
+    }
+
+    val builtInKotlin = providers.gradleProperty("android.builtInKotlin").orNull?.toBoolean() ?: true
+    return !builtInKotlin
+}
+
+if (shouldApplyKotlinAndroidPlugin()) {
+    apply(plugin = "org.jetbrains.kotlin.android")
 }
 
 fun safeExtGet(prop: String, fallback: Any?): Any? =
@@ -23,9 +37,13 @@ fun safeAppExtGet(prop: String, fallback: Any?): Any? {
 }
 
 fun resolveReactNativeDirectory(): File {
-    val reactNativeLocation = safeAppExtGet("REACT_NATIVE_NODE_MODULES_DIR", null) as String?
-    if (reactNativeLocation != null) {
-        return file(reactNativeLocation)
+    val reactNativeLocationProperty = safeAppExtGet("REACT_NATIVE_NODE_MODULES_DIR", null)
+    if (reactNativeLocationProperty != null) {
+        return when (reactNativeLocationProperty) {
+            is File -> reactNativeLocationProperty
+            is String -> file(reactNativeLocationProperty)
+            else -> file(reactNativeLocationProperty.toString())
+        }
     }
 
     // Fallback to node resolver for custom directory structures like monorepos.
@@ -97,6 +115,15 @@ fun validateConflictingFeatureFlags(featureFlags: HashMap<String, String>) {
     if (androidSyncUiProps && sharedElementTransitions) {
         throw GradleException(
             "[Reanimated] The feature flags `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. Please disable one of them in your package.json."
+        )
+    }
+
+    val useAnimationBackend = featureFlags["USE_ANIMATION_BACKEND"] == "true"
+    val forceReactRenderForSettledAnimations = featureFlags["FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS"] == "true"
+
+    if (useAnimationBackend && forceReactRenderForSettledAnimations) {
+        throw GradleException(
+            "[Reanimated] The feature flags `USE_ANIMATION_BACKEND` and `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS` cannot be enabled simultaneously. If you want to use the animation backend, you need to explicitly disable `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS` feature flag (enabled by default) in your package.json."
         )
     }
 }
@@ -248,7 +275,7 @@ android {
 }
 
 if (project != rootProject) {
-    kotlin {
+    extensions.configure<org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension> {
         compilerOptions {
             jvmTarget = JvmTarget.fromTarget("17")
         }

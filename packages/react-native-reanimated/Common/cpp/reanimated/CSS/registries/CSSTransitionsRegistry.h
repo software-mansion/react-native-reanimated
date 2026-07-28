@@ -28,6 +28,15 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
       CSSTransitionConfig &&config);
   void run(const std::shared_ptr<const ShadowNode> &shadowNode, const PropertyValueDynamicDiffsMap &propertyDiffs);
 
+  void setPseudoLockedProperties(Tag viewTag, const TransitionProperties &properties);
+  /// Retargets settled pseudo-styled values to the fresh defaults, so a toggle value left in the
+  /// updates registry stops overriding later renders.
+  void reconcilePseudoStyledProperties(
+      Tag viewTag,
+      const folly::dynamic &defaults,
+      const folly::dynamic &previousDefaults,
+      const TransitionProperties &lockedProperties);
+
   void flushUpdates(UpdatesBatch &updatesBatch);
 #if REACT_NATIVE_VERSION_MINOR >= 85
   void flushUpdates(UpdatesBatchAnimatedProps &updatesBatch);

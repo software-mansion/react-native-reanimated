@@ -206,8 +206,6 @@ transform: {
           </VerticalExampleCard>
 
           <VerticalExampleCard
-            description="Currenlty Pseudoselectors in SVG are only supported on the Web."
-            labelTypes={['web']}
             title="SVG fill"
             code={`// Base geometry stays as real props so it renders at rest;
 // the ':active' style only swaps the changing prop.
@@ -243,7 +241,6 @@ transform: {
           </VerticalExampleCard>
 
           <VerticalExampleCard
-            labelTypes={['web']}
             title="SVG radius"
             code={`// r needs a base prop value, otherwise it renders at 0.
 <AnimatedCircle

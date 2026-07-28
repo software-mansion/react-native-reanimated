@@ -5,9 +5,6 @@
 
 #import <mutex>
 
-#import <FBReactNativeSpec/FBReactNativeSpec.h>
-#import <React-Core/React/RCTFollyConvert.h>
-#import <React-jsi/jsi/JSIDynamic.h>
 #import <React/RCTAssert.h>
 #import <React/RCTConvert.h>
 #import <React/RCTHTTPRequestHandler.h>
@@ -17,7 +14,10 @@
 #import <React/RCTNetworkTask.h>
 #import <React/RCTNetworking.h>
 #import <React/RCTUtils.h>
+#import <ReactCommon/RCTTurboModule.h>
+#import <jsi/JSIDynamic.h>
 #import <react/featureflags/ReactNativeFeatureFlags.h>
+#import <react/utils/FollyConvert.h>
 
 #import <worklets/WorkletRuntime/WorkletRuntime.h>
 #import <worklets/apple/Networking/WorkletsNetworking.h>

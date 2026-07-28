@@ -182,6 +182,10 @@ const EmojiWaterfallExample: React.FC = () =>
   React.createElement(require('./EmojiWaterfallExample').default as React.FC);
 const EmptyExample: React.FC = () =>
   React.createElement(require('./EmptyExample').default as React.FC);
+const SuspenseLayoutAnimationCrashExample: React.FC = () =>
+  React.createElement(
+    require('./SuspenseLayoutAnimationCrashExample').default as React.FC
+  );
 const ExtrapolationExample: React.FC = () =>
   React.createElement(require('./ExtrapolationExample').default as React.FC);
 const FetchExample: React.FC = () =>
@@ -390,10 +394,6 @@ const RestoreStateExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/RestoreState').default
   );
-const RuntimeTestsExample: React.FC = () =>
-  React.createElement(
-    require('./RuntimeTests/RuntimeTestsExample').default as React.FC
-  );
 const ScreenlessBasic: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/ScreenlessBasic').default as React.FC
@@ -520,6 +520,12 @@ export const EXAMPLES: Record<string, Example> = {
     screen: AboutExample,
   },
 
+  SuspenseLayoutAnimationCrashExample: {
+    icon: '💥',
+    title: 'Suspense + Layout Animation Crash',
+    screen: SuspenseLayoutAnimationCrashExample,
+  },
+
   // Empty example for test purposes
   EmptyExample: {
     icon: '👻',
@@ -565,12 +571,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '3️⃣',
     title: 'Third party components',
     screen: ThirdPartyComponentsExample,
-  },
-  RuntimeTests: {
-    icon: '⚙️',
-    title: 'RuntimeTestsExample',
-    screen: RuntimeTestsExample,
-    disabledPlatforms: [REAPlatform.WEB],
   },
   Synchronizable: {
     icon: '🔄',

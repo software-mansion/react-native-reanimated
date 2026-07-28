@@ -148,6 +148,10 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
   void maybeCancelAnimation(const int tag) const;
 
+  void reconcileContradictedRemovals(
+      ShadowViewMutationList &mutations,
+      ShadowViewMutationList &filteredMutations,
+      SurfaceId surfaceId) const;
   void parseRemoveMutations(
       std::unordered_map<Tag, Tag> &movedViews,
       ShadowViewMutationList &mutations,

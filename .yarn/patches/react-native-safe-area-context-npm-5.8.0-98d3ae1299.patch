@@ -1,0 +1,47 @@
+diff --git a/android/build.gradle b/android/build.gradle
+index f324b9a9f3c3b3cf28eaac7fa09471592212bf3f..746780e8adb72670f533a0348fbd16684affd1e0 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -32,7 +32,6 @@ def isNewArchitectureEnabled() {
+ }
+ 
+ apply plugin: 'com.android.library'
+-apply plugin: 'kotlin-android'
+ 
+ if (isNewArchitectureEnabled()) {
+     apply plugin: "com.facebook.react"
+@@ -82,6 +81,17 @@ android {
+         exclude "**/libreact_render*.so"
+     }
+     sourceSets.main {
++        kotlin {
++            if (isNewArchitectureEnabled()) {
++                srcDirs += [
++                    "src/fabric/java"
++                ]
++            } else {
++                srcDirs += [
++                    "src/paper/java"
++                ]
++            }
++        }
+         java {
+             if (isNewArchitectureEnabled()) {
+                 srcDirs += [
+diff --git a/ios/RNCSafeAreaProvider.m b/ios/RNCSafeAreaProvider.m
+index 6f92859b959a01d61c29d89395c2ecad912e6617..f49e1ee1f67f85f2e5f91cd117b7a89fd625cc53 100644
+--- a/ios/RNCSafeAreaProvider.m
++++ b/ios/RNCSafeAreaProvider.m
+@@ -23,9 +23,11 @@ - (instancetype)initWithEventDispatcher:(id<RCTEventDispatcherProtocol>)eventDis
+   RCTAssertParam(eventDispatcher);
+ 
+   if ((self = [super initWithFrame:CGRectZero])) {
++    // macOS/tvOS use the legacy SafeAreaProvider, which dispatches onInsetsChange
++    // via RCTEventEmitter.receiveEvent (uncallable in bridgeless); keep it unset.
++#if !TARGET_OS_TV && !TARGET_OS_OSX
+     _eventDispatcher = eventDispatcher;
+ 
+-#if !TARGET_OS_TV && !TARGET_OS_OSX
+     [NSNotificationCenter.defaultCenter addObserver:self
+                                            selector:@selector(invalidateSafeAreaInsets)
+                                                name:UIKeyboardDidShowNotification

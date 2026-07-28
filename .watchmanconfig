@@ -1,0 +1,22 @@
+{
+  "ignore_dirs": [
+    ".claude",
+    ".yarn/cache",
+    ".yarn/unprocessed",
+    "docs",
+    "apps/fabric-example/android/.gradle",
+    "apps/fabric-example/android/build",
+    "apps/fabric-example/android/app/build",
+    "apps/fabric-example/android/app/.cxx",
+    "apps/fabric-example/ios/Pods",
+    "apps/fabric-example/ios/build",
+    "apps/tvos-example/ios/Pods",
+    "apps/tvos-example/ios/build",
+    "apps/macos-example/macos/Pods",
+    "apps/macos-example/macos/build",
+    "packages/react-native-reanimated/android/build",
+    "packages/react-native-reanimated/android/.cxx",
+    "packages/react-native-worklets/android/build",
+    "packages/react-native-worklets/android/.cxx"
+  ]
+}

@@ -93,7 +93,7 @@ open class NativeProxy {
 
         mFabricUIManager =
             UIManagerHelper.getUIManager(context, UIManagerType.FABRIC) as FabricUIManager
-        pseudoSelectorManager = PseudoSelectorManager(mFabricUIManager)
+        pseudoSelectorManager = PseudoSelectorManager(mFabricUIManager, mContext)
 
         val callInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
         mHybridData =

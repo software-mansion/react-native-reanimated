@@ -356,7 +356,7 @@ describe('CSSPseudoStylesManager', () => {
       expect(unregisterPseudoStyles).not.toHaveBeenCalled();
     });
 
-    test('detaches and re-registers when selector style changes', () => {
+    test('updates in place without detaching when only selector style changes', () => {
       pushStyle(manager, {
         opacity: { default: 0, ':hover': 1 },
       });
@@ -366,7 +366,7 @@ describe('CSSPseudoStylesManager', () => {
         opacity: { default: 0, ':hover': 0.5 },
       });
 
-      expect(unregisterPseudoStyles).toHaveBeenCalledWith(viewTag);
+      expect(unregisterPseudoStyles).not.toHaveBeenCalled();
       expect(registerPseudoStyles).toHaveBeenCalledWith(
         shadowNodeWrapper,
         expect.objectContaining({
@@ -377,7 +377,7 @@ describe('CSSPseudoStylesManager', () => {
       );
     });
 
-    test('detaches and re-registers when only the transition changes', () => {
+    test('updates in place without detaching when only the transition changes', () => {
       pushStyle(manager, {
         opacity: { default: 0, ':hover': 1 },
         transitionProperty: 'opacity',
@@ -391,7 +391,7 @@ describe('CSSPseudoStylesManager', () => {
         transitionDuration: '500ms',
       });
 
-      expect(unregisterPseudoStyles).toHaveBeenCalledWith(viewTag);
+      expect(unregisterPseudoStyles).not.toHaveBeenCalled();
       expect(registerPseudoStyles).toHaveBeenCalledWith(
         shadowNodeWrapper,
         expect.objectContaining({
@@ -404,6 +404,20 @@ describe('CSSPseudoStylesManager', () => {
           ],
         })
       );
+    });
+
+    test('detaches and re-registers when a selector is removed', () => {
+      pushStyle(manager, {
+        opacity: { default: 0, ':hover': 1, ':active': 0.5 },
+      });
+      jest.clearAllMocks();
+
+      pushStyle(manager, {
+        opacity: { default: 0, ':hover': 1 },
+      });
+
+      expect(unregisterPseudoStyles).toHaveBeenCalledWith(viewTag);
+      expect(registerPseudoStyles).toHaveBeenCalled();
     });
   });
 

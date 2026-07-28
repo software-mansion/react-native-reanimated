@@ -4,8 +4,10 @@ import styles from './styles.module.css';
 import SelectionBox, { DraggableId } from './SelectionBox';
 import {
   DynamicStyles,
+  SelectionBounds,
   StaticStyles,
   TextScaleStyles,
+  clampMovementDelta,
   computeSelectionStyles,
   computeTextStyles,
 } from './utils';
@@ -71,15 +73,42 @@ const SelectedLabel: React.FC<{
     textLabelRef.current.className = clsx(styles.interactiveHeaderText);
   }, [isInteractive]);
 
+  const getSelectionBounds = (): SelectionBounds => {
+    const container = selectionContainerRef.current;
+    const entries = [container, ...container.querySelectorAll('*')].map(
+      (element) => ({ element, rect: element.getBoundingClientRect() })
+    );
+    const frameEntries = entries.filter(
+      (entry) => entry.element !== textLabelRef.current
+    );
+
+    return {
+      left: Math.min(...entries.map((entry) => entry.rect.left)),
+      top: Math.min(...frameEntries.map((entry) => entry.rect.top)),
+      right: Math.max(...entries.map((entry) => entry.rect.right)),
+      bottom: Math.max(...frameEntries.map((entry) => entry.rect.bottom)),
+    };
+  };
+
   const movementPropagator = (
     movementDelta: { x: number; y: number },
     draggableIdentifier: DraggableId
   ) => {
     if (!isInteractive) return;
 
+    const clampedDelta = clampMovementDelta(
+      movementDelta,
+      draggableIdentifier,
+      getSelectionBounds(),
+      {
+        width: document.documentElement.clientWidth,
+        height: document.documentElement.clientHeight,
+      }
+    );
+
     applyDynamicStyles(
       computeSelectionStyles(
-        movementDelta,
+        clampedDelta,
         draggableIdentifier,
         dynamicStyles.current
       )
@@ -91,7 +120,7 @@ const SelectedLabel: React.FC<{
 
   return (
     <span ref={selectionRef} className={styles.selection}>
-      <DndContext>
+      <DndContext autoScroll={false}>
         <div ref={selectionContainerRef} className={styles.selectionContainer}>
           <SelectionBox
             propagationFunction={movementPropagator}

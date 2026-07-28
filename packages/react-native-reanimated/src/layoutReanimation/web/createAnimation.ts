@@ -13,12 +13,12 @@ import { convertAnimationObjectToKeyframes } from './animationParser';
 import type { InitialValuesStyleProps, KeyframeDefinitions } from './config';
 import { AnimationsData, TransitionType } from './config';
 import { insertWebAnimation } from './domUtils';
-import { CurvedTransition } from './transition/Curved.web';
-import { EntryExitTransition } from './transition/EntryExit.web';
-import { FadingTransition } from './transition/Fading.web';
-import { JumpingTransition } from './transition/Jumping.web';
-import { LinearTransition } from './transition/Linear.web';
-import { SequencedTransition } from './transition/Sequenced.web';
+import { CurvedTransition } from './transition/Curved';
+import { EntryExitTransition } from './transition/EntryExit';
+import { FadingTransition } from './transition/Fading';
+import { JumpingTransition } from './transition/Jumping';
+import { LinearTransition } from './transition/Linear';
+import { SequencedTransition } from './transition/Sequenced';
 
 type TransformType = NonNullable<TransformsStyle['transform']>;
 type TransformValue = string | number;

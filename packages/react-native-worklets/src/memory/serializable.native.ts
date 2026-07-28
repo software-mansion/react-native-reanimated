@@ -1,5 +1,6 @@
 'use strict';
 
+import { isBundleModeEnabled } from '../debug/bundleMode';
 import { registerWorkletStackDetails } from '../debug/errors';
 import { jsVersion } from '../debug/jsVersion';
 import { logger } from '../debug/logger';
@@ -9,16 +10,11 @@ import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
 import { isSynchronizable } from './isSynchronizable';
 import {
-  nextRemoteFunctionId,
-  registerRemoteFunction,
-} from './remoteFunctionRegistry';
-import {
   serializableMappingCache,
   serializableMappingFlag,
 } from './serializableMappingCache';
 import type {
   FlatSerializableRef,
-  RegisteredRemoteFunction,
   RegistrationData,
   RemoteFunction,
   SerializableRef,
@@ -93,6 +89,21 @@ const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // We use it to check if later on the function reenters with the same object
 let processedObjectAtThresholdDepth: unknown;
 
+const serializationPathStack: string[] = [];
+
+function withPathSegment<TValue>(segment: string, serialize: () => TValue) {
+  serializationPathStack.push(segment);
+  try {
+    return serialize();
+  } finally {
+    serializationPathStack.pop();
+  }
+}
+
+function formatSerializationPath(): string {
+  return serializationPathStack.join('');
+}
+
 export function createSerializable<TValue>(
   value: TValue,
   shouldPersistRemote = false,
@@ -132,7 +143,15 @@ export function createSerializable<TValue>(
 
   const cached = getFromCache(value);
   if (cached !== undefined) {
-    return cached as SerializableRef<TValue>;
+    if (globalThis.WeakRef && cached instanceof WeakRef) {
+      // WeakRef is installed on runtimes only with Hermes microtaskQueue enabled.
+      const deref = cached.deref();
+      if (deref !== undefined) {
+        return deref as SerializableRef<TValue>;
+      }
+    } else {
+      return cached as SerializableRef<TValue>;
+    }
   }
 
   if (Array.isArray(value)) {
@@ -206,15 +225,22 @@ export function createSerializable<TValue>(
       return cloneCustom(value, pack, i) as SerializableRef<TValue>;
     }
   }
-  const constructorName =
-    (value as { constructor?: { name?: string } })?.constructor?.name ||
-    'unknown';
-  throw new Error(
-    `[Worklets] Cannot copy value of type \`${constructorName}\`.`
-  );
+
+  if (__DEV__) {
+    const constructorName =
+      (value as { constructor?: { name?: string } })?.constructor?.name ||
+      'unknown';
+    const path = formatSerializationPath();
+    const location = path ? ` It was located at \`${path}\`.` : '';
+    console.warn(
+      `[Worklets] Cannot copy value of type \`${constructorName}\`.${location}`
+    );
+  }
+
+  return cloneUndefined() as SerializableRef<TValue>;
 }
 
-if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+if (isBundleModeEnabled()) {
   // TODO: Do it programmatically.
   createSerializable.__bundleData = {
     imported: 'createSerializable',
@@ -356,11 +382,17 @@ function cloneObjectProperties<T extends object>(
     if (key === '__initData' && clonedProps.__initData !== undefined) {
       continue;
     }
-    clonedProps[key] = createSerializable(
-      element,
-      shouldPersistRemote,
-      depth + 1
-    );
+    if (__DEV__) {
+      clonedProps[key] = withPathSegment(`[${JSON.stringify(key)}]`, () =>
+        createSerializable(element, shouldPersistRemote, depth + 1)
+      );
+    } else {
+      clonedProps[key] = createSerializable(
+        element,
+        shouldPersistRemote,
+        depth + 1
+      );
+    }
   }
   return clonedProps;
 }
@@ -383,8 +415,12 @@ function cloneArray<T extends unknown[]>(
   shouldPersistRemote: boolean,
   depth: number
 ): SerializableRef<T> {
-  const clonedElements = value.map((element) =>
-    createSerializable(element, shouldPersistRemote, depth + 1)
+  const clonedElements = value.map((element, index) =>
+    __DEV__
+      ? withPathSegment(`[${index}]`, () =>
+          createSerializable(element, shouldPersistRemote, depth + 1)
+        )
+      : createSerializable(element, shouldPersistRemote, depth + 1)
   );
   const clone = WorkletsModule.createSerializableArray(
     clonedElements,
@@ -400,19 +436,18 @@ function cloneArray<T extends unknown[]>(
 function cloneNonWorkletFunction<TArgs extends unknown[], TReturn>(
   fun: (...args: TArgs) => TReturn
 ): SerializableRef<(...args: TArgs) => TReturn> {
-  const functionId = nextRemoteFunctionId;
   const clone = WorkletsModule.createSerializableNonWorkletFunction(
     fun,
-    functionId,
     __DEV__ ? fun.name : undefined
   ) as SerializableRef<(...args: TArgs) => TReturn>;
-  if ((clone as RegisteredRemoteFunction).__keepAlive) {
-    registerRemoteFunction(fun);
-  }
-  serializableMappingCache.set(fun, clone);
-  serializableMappingCache.set(clone);
 
+  if (globalThis.WeakRef) {
+    // WeakRef is installed on runtimes only with Hermes microtaskQueue enabled.
+    serializableMappingCache.set(fun, new WeakRef(clone));
+  }
+  serializableMappingCache.set(clone);
   freezeObjectInDev(fun);
+
   return clone;
 }
 
@@ -453,33 +488,39 @@ function cloneWorklet<TValue extends WorkletFunction>(
     // seems more elegant to handle it this way.
     delete (value as WorkletFunction).__stackDetails;
   }
-  const clonedProps: Record<string, unknown> = cloneObjectProperties(
-    value,
-    shouldPersistRemote,
-    depth
-  );
-  // to save on transferring static __initData field of worklet structure
-  // we request serializable value to persist its UI counterpart. This means
-  // that the __initData field that contains long strings representing the
-  // worklet code, source map, and location, will always be
-  // serialized/deserialized once.
-  clonedProps.__initData = createSerializable(
-    value.__initData,
-    true,
-    depth + 1
-  );
+  const buildClone = (): SerializableRef<TValue> => {
+    const clonedProps: Record<string, unknown> = cloneObjectProperties(
+      value,
+      shouldPersistRemote,
+      depth
+    );
+    // to save on transferring static __initData field of worklet structure
+    // we request serializable value to persist its UI counterpart. This means
+    // that the __initData field that contains long strings representing the
+    // worklet code, source map, and location, will always be
+    // serialized/deserialized once.
+    clonedProps.__initData = __DEV__
+      ? withPathSegment('["__initData"]', () =>
+          createSerializable(value.__initData, true, depth + 1)
+        )
+      : createSerializable(value.__initData, true, depth + 1);
 
-  const clone = WorkletsModule.createSerializableWorklet(
-    clonedProps,
-    // TODO: Check after refactor if we can remove shouldPersistRemote parameter (imho it's redundant here since worklets are always persistent)
-    // retain all worklets
-    true
-  ) as SerializableRef<TValue>;
-  serializableMappingCache.set(value, clone);
-  serializableMappingCache.set(clone);
+    const clone = WorkletsModule.createSerializableWorklet(
+      clonedProps,
+      // TODO: Check after refactor if we can remove shouldPersistRemote parameter (imho it's redundant here since worklets are always persistent)
+      // retain all worklets
+      true
+    ) as SerializableRef<TValue>;
+    serializableMappingCache.set(value, clone);
+    serializableMappingCache.set(clone);
 
-  freezeObjectInDev(value);
-  return clone;
+    freezeObjectInDev(value);
+    return clone;
+  };
+
+  return __DEV__
+    ? withPathSegment(`<worklet ${value.name || 'anonymous'}>`, buildClone)
+    : buildClone();
 }
 
 /**
@@ -542,9 +583,22 @@ function cloneMap(
 ): SerializableRef<Map<unknown, unknown>> {
   const clonedKeys: unknown[] = [];
   const clonedValues: unknown[] = [];
+  let index = 0;
   for (const [key, element] of value.entries()) {
-    clonedKeys.push(createSerializable(key));
-    clonedValues.push(createSerializable(element));
+    if (__DEV__) {
+      clonedKeys.push(
+        withPathSegment(`.keys()[${index}]`, () => createSerializable(key))
+      );
+      clonedValues.push(
+        withPathSegment(`.values()[${index}]`, () =>
+          createSerializable(element)
+        )
+      );
+      index++;
+    } else {
+      clonedKeys.push(createSerializable(key));
+      clonedValues.push(createSerializable(element));
+    }
   }
   const clone = WorkletsModule.createSerializableMap(clonedKeys, clonedValues);
   serializableMappingCache.set(value, clone);
@@ -556,8 +610,18 @@ function cloneMap(
 
 function cloneSet(value: Set<unknown>): SerializableRef<Set<unknown>> {
   const clonedElements: unknown[] = [];
+  let index = 0;
   for (const element of value) {
-    clonedElements.push(createSerializable(element));
+    if (__DEV__) {
+      clonedElements.push(
+        withPathSegment(`.values()[${index}]`, () =>
+          createSerializable(element)
+        )
+      );
+      index++;
+    } else {
+      clonedElements.push(createSerializable(element));
+    }
   }
   const clone = WorkletsModule.createSerializableSet(clonedElements);
   serializableMappingCache.set(value, clone);
@@ -639,7 +703,9 @@ function cloneCustom<TValue extends object, TPacked = unknown>(
   typeId: number
 ): SerializableRef<TValue> {
   const packedData = pack(data);
-  const serialized = createSerializable(packedData);
+  const serialized = __DEV__
+    ? withPathSegment('.pack()', () => createSerializable(packedData))
+    : createSerializable(packedData);
 
   return WorkletsModule.createCustomSerializable(
     serialized,
@@ -863,7 +929,7 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
 
 /** @deprecated This function is no longer supported. */
 export const makeShareableCloneOnUIRecursive = (
-  globalThis._WORKLETS_BUNDLE_MODE_ENABLED
+  isBundleModeEnabled()
     ? createSerializable
     : makeShareableCloneOnUIRecursiveLEGACY
 ) as typeof makeShareableCloneOnUIRecursiveLEGACY;

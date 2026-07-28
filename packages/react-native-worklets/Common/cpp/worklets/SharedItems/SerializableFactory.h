@@ -9,6 +9,8 @@
 
 namespace worklets {
 
+class RNRuntimeStatus;
+
 jsi::Value makeSerializableString(jsi::Runtime &rt, const jsi::String &string);
 
 jsi::Value makeSerializableNumber(jsi::Runtime &rt, double number);
@@ -63,16 +65,17 @@ jsi::Value makeSerializableHostFunction(
     const std::string &name,
     unsigned int paramCount);
 
-jsi::Value makeRNOriginSerializableRemoteFunction(
+jsi::Value makeRNRuntimeSerializableRemoteFunction(
     jsi::Runtime &rnRuntime,
     const std::string &name,
-    int remoteId,
-    const std::shared_ptr<JSScheduler> &jsScheduler);
+    const jsi::Function &function,
+    const std::shared_ptr<JSScheduler> &jsScheduler,
+    const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus);
 
-jsi::Value makeWorkletOriginSerializableRemoteFunction(
+jsi::Value makeWorkletRuntimeSerializableRemoteFunction(
     jsi::Runtime &workletRuntime,
     const std::string &name,
-    jsi::Function &&function,
+    const jsi::Function &function,
     RuntimeData::RuntimeId hostRuntimeId);
 
 jsi::Value makeSerializableWorklet(jsi::Runtime &rt, const jsi::Object &object, const bool &shouldRetainRemote);
