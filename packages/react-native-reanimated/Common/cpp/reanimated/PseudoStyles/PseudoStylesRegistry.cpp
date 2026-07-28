@@ -101,10 +101,24 @@ void PseudoStylesRegistry::remove(Tag tag) {
   if (it == registry_.end()) {
     return;
   }
-  auto selectorsToDetach = std::move(it->second.selectors);
+  TagEntry entry = std::move(it->second);
   registry_.erase(it);
 
-  for (const auto &[selector, data] : selectorsToDetach) {
+  // The listeners are going away, so an active selector would stay applied forever.
+  if (entry.activeMask != 0) {
+    cssTransitionsRegistry_->setPseudoLockedProperties(tag, {});
+    const auto &fromStyle = entry.precomputedStyles[entry.activeMask];
+    const auto &toStyle = entry.precomputedStyles[0];
+    css::PropertyValueDynamicDiffsMap valueChanges;
+    for (const auto &[propKey, toVal] : toStyle.items()) {
+      const auto propName = propKey.asString();
+      const folly::dynamic &fromVal = fromStyle.count(propName) ? fromStyle[propName] : toVal;
+      valueChanges.emplace(propName, std::make_pair(fromVal, toVal));
+    }
+    cssTransitionsRegistry_->run(entry.shadowNode, valueChanges);
+  }
+
+  for (const auto &[selector, data] : entry.selectors) {
     detachFn_(tag, selector);
   }
 }
