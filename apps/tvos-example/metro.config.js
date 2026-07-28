@@ -10,7 +10,7 @@ const defaultConfig = getDefaultConfig(__dirname);
 const { blockList, extraNodeModules } = getMonorepoMetroOptions(
   modulesToFilter,
   __dirname,
-  defaultConfig
+  /** @type {Parameters<typeof getMonorepoMetroOptions>[2]} */ (defaultConfig)
 );
 
 const monorepoRoot = path.resolve(__dirname, '../..');
