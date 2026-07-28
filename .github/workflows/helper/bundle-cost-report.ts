@@ -1,8 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { postToSlack } from './slack.ts';
-
 const REANIMATED = 'react-native-reanimated';
 const WORKLETS = 'react-native-worklets';
 
@@ -152,28 +150,24 @@ function formatMessage(results: ResultFile[], runUrl: string): string {
   return lines.join('\n');
 }
 
-async function main(): Promise<void> {
-  const dir = process.argv[2] ?? '/tmp/bundle-cost-results';
+export function buildBundleCostSection(
+  dir = process.env.BUNDLE_COST_DIR ?? '/tmp/bundle-cost-results'
+): string {
   const runUrl =
     process.env.RUN_URL ??
     'https://github.com/software-mansion/react-native-reanimated/actions';
   const failureText = `*Nightly bundle cost*\nThe run failed, check the CI logs.\n<${runUrl}|Workflow run>`;
 
-  let message: string;
   try {
     const results = readResults(dir);
     const failed =
       process.env.MEASURE_RESULT !== 'success' ||
       results.length === 0 ||
       missingJobs(results).length > 0;
-    message = failed ? failureText : formatMessage(results, runUrl);
+    return failed ? failureText : formatMessage(results, runUrl);
   } catch (error) {
     console.error(error);
     process.exitCode = 1;
-    message = failureText;
+    return failureText;
   }
-
-  await postToSlack({ text: message });
 }
-
-await main();
