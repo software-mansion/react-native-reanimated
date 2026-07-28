@@ -24,6 +24,14 @@ jobs:
       configuration: ${{ matrix.configuration }}
       bundleMode: ${{ matrix.bundleMode }}
 
+  ios-tsan:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    uses: ./.github/workflows/runtime-tests-ios.yml
+    with:
+      configuration: ReleaseRuntimeTests
+      bundleMode: true
+      sanitizer: thread
+
   android:
     if: github.repository == 'software-mansion/react-native-reanimated'
     strategy:

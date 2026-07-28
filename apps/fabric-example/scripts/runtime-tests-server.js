@@ -36,6 +36,7 @@ const SIMULATOR = args.simulator ?? 'iPhone 17';
 const UDID = args.udid ?? null;
 const SERIAL = args.serial ?? null;
 const AVD = args.avd ?? null;
+const SANITIZER = args.sanitizer ? String(args.sanitizer).toLowerCase() : null;
 
 if (!LIBRARIES.includes(LIBRARY)) {
   console.error(
@@ -51,9 +52,20 @@ if (!PLATFORMS.includes(PLATFORM)) {
   process.exit(1);
 }
 
+if (SANITIZER && SANITIZER !== 'thread') {
+  console.error(`[runtime-tests] --sanitizer supports only: thread`);
+  process.exit(1);
+}
+
+if (SANITIZER && PLATFORM !== 'ios') {
+  console.error('[runtime-tests] --sanitizer is only supported on iOS');
+  process.exit(1);
+}
+
 const projectRoot = path.resolve(__dirname, '..');
 const iosDir = path.join(projectRoot, 'ios');
 const androidDir = path.join(projectRoot, 'android');
+const SANITIZER_REPORT_DIR = path.join(projectRoot, 'sanitizer-reports');
 
 let client = null;
 let runStartedAt = 0;
@@ -295,7 +307,36 @@ function clearTimer(which) {
   }
 }
 
+function printSanitizerReports() {
+  if (!SANITIZER) {
+    return;
+  }
+  let files = [];
+  try {
+    files = fs
+      .readdirSync(SANITIZER_REPORT_DIR)
+      .filter((name) => name.startsWith('tsan.'));
+  } catch {
+    return;
+  }
+  if (files.length === 0) {
+    console.log('[runtime-tests] no sanitizer reports were produced');
+    return;
+  }
+  console.error('');
+  console.error('========================================');
+  console.error(`[runtime-tests] ${files.length} sanitizer report file(s):`);
+  for (const name of files) {
+    console.error(`--- ${name} ---`);
+    console.error(
+      fs.readFileSync(path.join(SANITIZER_REPORT_DIR, name), 'utf8')
+    );
+  }
+  console.error('========================================');
+}
+
 function shutdown(code) {
+  printSanitizerReports();
   clearTimer('connect');
   clearTimer('idle');
   if (metroChild && !metroChild.killed) {
@@ -476,9 +517,13 @@ async function ensureBooted(device) {
   await run('xcrun', ['simctl', 'bootstatus', device.udid]);
 }
 
+function sanitizerBuildArgs() {
+  return SANITIZER === 'thread' ? ['-enableThreadSanitizer', 'YES'] : [];
+}
+
 async function buildApp() {
   console.log(
-    `[runtime-tests] building with xcodebuild (${CONFIGURATION})… this can take a few minutes`
+    `[runtime-tests] building with xcodebuild (${CONFIGURATION}${SANITIZER ? `, ${SANITIZER} sanitizer` : ''})… this can take a few minutes`
   );
   await run(
     'xcodebuild',
@@ -491,6 +536,7 @@ async function buildApp() {
       CONFIGURATION,
       '-destination',
       'generic/platform=iOS Simulator',
+      ...sanitizerBuildArgs(),
       'build',
     ],
     { cwd: iosDir }
@@ -509,6 +555,7 @@ async function appPath() {
       CONFIGURATION,
       '-destination',
       'generic/platform=iOS Simulator',
+      ...sanitizerBuildArgs(),
       '-showBuildSettings',
       '-json',
     ],
@@ -540,6 +587,10 @@ async function installAndLaunch(udid) {
   ]);
 
   await run('xcrun', ['simctl', 'terminate', udid, BUNDLE_ID]).catch(() => {});
+  if (SANITIZER) {
+    fs.rmSync(SANITIZER_REPORT_DIR, { recursive: true, force: true });
+    fs.mkdirSync(SANITIZER_REPORT_DIR, { recursive: true });
+  }
   console.log(
     `[runtime-tests] launching ${BUNDLE_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY}`
   );
@@ -550,6 +601,11 @@ async function installAndLaunch(udid) {
       env: {
         ...process.env,
         SIMCTL_CHILD_RUNTIME_TESTS_LIBRARY: LIBRARY,
+        ...(SANITIZER === 'thread'
+          ? {
+              SIMCTL_CHILD_TSAN_OPTIONS: `log_path=${path.join(SANITIZER_REPORT_DIR, 'tsan')} halt_on_error=0`,
+            }
+          : {}),
       },
     }
   );
