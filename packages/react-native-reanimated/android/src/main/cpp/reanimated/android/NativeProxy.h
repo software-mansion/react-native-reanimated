@@ -8,6 +8,7 @@
 #include <react/renderer/scheduler/Scheduler.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
+#include <reanimated/android/CSS/CSSPlatformTransitions.h>
 
 #include <memory>
 #include <string>
@@ -73,6 +74,15 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
       jboolean isInDrawPass);
   void attachPseudoSelector(Tag tag, PseudoSelector selector, std::function<void(bool)> callback);
   void detachPseudoSelector(Tag tag, PseudoSelector selector);
+  bool cssAnimateTransition(
+      int viewTag,
+      const std::string &propertyName,
+      double fromValue,
+      double toValue,
+      double durationMs,
+      double elapsedMs,
+      const PlatformEasing &easing);
+  void cssRemoveTransition(int viewTag, const std::string &propertyName);
 
   /***
    * Wraps a method of `NativeProxy` in a function object capturing `this`
@@ -87,6 +97,17 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
     // It's probably safe to pass `this` as reference here...
     return [this, methodPtr](TParams &&...args) {
       return (this->*methodPtr)(std::forward<TParams>(args)...);
+    };
+  }
+
+  /// Binds a method of a separately owned object, keeping that object alive for
+  /// as long as the callback lives.
+  template <typename TObject, typename TReturn, typename... TParams>
+  static std::function<TReturn(TParams...)> bindShared(
+      std::shared_ptr<TObject> object,
+      TReturn (TObject::*methodPtr)(TParams...)) {
+    return [object = std::move(object), methodPtr](TParams &&...args) {
+      return ((*object).*methodPtr)(std::forward<TParams>(args)...);
     };
   }
 
