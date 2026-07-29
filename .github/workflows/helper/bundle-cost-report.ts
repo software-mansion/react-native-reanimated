@@ -141,13 +141,13 @@ function formatSummary(results: ResultFile[], runUrl: string): string {
   if (!mainEntries || others.length === 0) {
     return (
       '*Nightly bundle cost*\nNothing to compare, check the CI logs.\n' +
-      `<${runUrl}|Workflow run>`
+      `<${runUrl}|bundle cost workflow run>`
     );
   }
 
   const lines = [
     '*Nightly bundle cost*',
-    `main vs ${others.join(', ')} (average)`,
+    `main vs ${others.join(' vs ')}`,
     '```',
   ];
 
@@ -156,18 +156,17 @@ function formatSummary(results: ResultFile[], runUrl: string): string {
     ['worklets', WORKLETS],
   ]) {
     const main = sumGroup(mainEntries, group);
-    const baseline =
-      others.reduce(
-        (sum, version) => sum + sumGroup(byVersion.get(version)!, group),
-        0
-      ) / others.length;
-    lines.push(
-      `${label.padEnd(11)} ${percentChange(main, baseline).padStart(7)}  ` +
-        `(${mb(main)} vs ${mb(baseline)})`
+    const baselines = others.map((version) =>
+      sumGroup(byVersion.get(version)!, group)
     );
+    const changes = baselines
+      .map((baseline) => percentChange(main, baseline).padStart(7))
+      .join(' ');
+    const sizes = [main, ...baselines].map((size) => mb(size)).join(' vs ');
+    lines.push(`${label.padEnd(11)} ${changes}  (${sizes})`);
   }
 
-  lines.push('```', `\n<${runUrl}|Workflow run>`);
+  lines.push('```', `\n<${runUrl}|bundle cost workflow run>`);
   return lines.join('\n');
 }
 
@@ -213,7 +212,7 @@ export function buildBundleCostSection(
   const runUrl =
     process.env.RUN_URL ??
     'https://github.com/software-mansion/react-native-reanimated/actions';
-  const failureText = `*Nightly bundle cost*\nThe run failed, check the CI logs.\n<${runUrl}|Workflow run>`;
+  const failureText = `*Nightly bundle cost*\nThe run failed, check the CI logs.\n<${runUrl}|bundle cost workflow run>`;
 
   try {
     const results = readResults(dir);
