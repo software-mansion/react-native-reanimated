@@ -84,7 +84,11 @@ export function generateWorkletFile(
 
   const dedicatedFilePath = resolve(filesDirPath, `${workletHash}.js`);
 
-  writeFileSync(dedicatedFilePath, transformedProg);
+  const output = process.env.WORKLETS_WRITE_ORIGIN
+    ? `// __workletOrigin: ${state.file.opts.filename ?? 'unknown'}\n${transformedProg}`
+    : transformedProg;
+
+  writeFileSync(dedicatedFilePath, output);
 }
 
 function resolvePresetTypescript(): string {

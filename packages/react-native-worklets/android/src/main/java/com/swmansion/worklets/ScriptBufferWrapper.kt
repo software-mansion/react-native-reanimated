@@ -70,6 +70,7 @@ class ScriptBufferWrapper(
 
     companion object {
         private const val DEV_BUNDLE_FILE_NAME = "WorkletsDevBundle.js"
+        private const val CONNECT_TIMEOUT_MS = 5_000
 
         private fun reactNativeDownloadedBundleFile(context: Context): File? {
             val reactApplication = context.applicationContext as? ReactApplication ?: return null
@@ -85,6 +86,7 @@ class ScriptBufferWrapper(
             outputFile: File,
         ) {
             val connection = URL(url).openConnection() as HttpURLConnection
+            connection.connectTimeout = CONNECT_TIMEOUT_MS
             try {
                 val statusCode =
                     try {
