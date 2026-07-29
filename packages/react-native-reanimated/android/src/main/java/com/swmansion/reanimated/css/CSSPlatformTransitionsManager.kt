@@ -19,6 +19,7 @@ internal class CSSPlatformTransitionsManager(
     private val animationTimestamp: () -> Long,
 ) {
     private val animators = HashMap<Key, ObjectAnimator>()
+    private val reconciler = CSSPlatformTransitionReconciler(::repairClobberedValues)
     private val startTokens = HashMap<Key, Long>()
 
     private var nextStartToken = 0L
@@ -76,6 +77,7 @@ internal class CSSPlatformTransitionsManager(
             val key = Key(viewTag, propertyName)
             startTokens.remove(key)
             animators.remove(key)?.cancel()
+            if (animators.isEmpty()) reconciler.untrackAll()
         }
     }
 
@@ -124,6 +126,7 @@ internal class CSSPlatformTransitionsManager(
             object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
                     if (animators[key] === animation) animators.remove(key)
+                    if (animators.isEmpty()) reconciler.untrackAll()
                 }
             },
         )
@@ -137,6 +140,17 @@ internal class CSSPlatformTransitionsManager(
         }
         animator.start()
         animators[key] = animator
+        reconciler.track(view)
+    }
+
+    /** Re-asserts the animator's own value wherever a commit overwrote it. */
+    private fun repairClobberedValues() {
+        animators.forEach { (key, animator) ->
+            val view = animator.target as? View ?: return@forEach
+            val writer = cssPropertyWriterFor(key.propertyName) ?: return@forEach
+            val current = animator.animatedValue as? Float ?: return@forEach
+            if (writer.get(view) != current) writer.setValue(view, current)
+        }
     }
 
     /** PathInterpolator flattens its curve on construction, so cache it. Type is in the key
