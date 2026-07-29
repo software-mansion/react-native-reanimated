@@ -390,8 +390,7 @@ class PseudoSelectorManager(
     private fun hasDeepestDescendantAt(
         ancestor: View,
         hitTags: List<Int>,
-    ): Boolean =
-        deepestCallbacks.keys.any { it !== ancestor && it.id in hitTags && isDescendantOf(it, ancestor) }
+    ): Boolean = deepestCallbacks.keys.any { it !== ancestor && it.id in hitTags && isDescendantOf(it, ancestor) }
 
     private fun fireActiveCallbacksUpTree(
         source: View,
