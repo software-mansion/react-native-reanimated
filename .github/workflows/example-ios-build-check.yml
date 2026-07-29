@@ -48,6 +48,15 @@ on:
         type: string
         default: Debug
   workflow_dispatch:
+    inputs:
+      configuration:
+        description: Build configuration
+        required: true
+        type: choice
+        options:
+          - Debug
+          - Release
+        default: Debug
 
 permissions:
   contents: read
@@ -119,7 +128,7 @@ jobs:
         if: steps.result-cache.outputs.cache-hit != 'true'
         working-directory: ${{ env.WORKING_DIRECTORY }}/ios
         shell: bash -eo pipefail {0}
-        run: xcodebuild -workspace FabricExample.xcworkspace -configuration "$CONFIGURATION" -scheme "$CONFIGURATION FabricExample" -destination "generic/platform=iOS Simulator" 2>&1 | xcode-build-server parse -o compile_commands.json
+        run: xcodebuild -workspace FabricExample.xcworkspace -configuration "$CONFIGURATION" -scheme "$CONFIGURATION FabricExample" -destination "generic/platform=iOS Simulator" 2>&1 | tee /dev/stderr | xcode-build-server parse -o compile_commands.json
 
       - name: Generate per-package compile_commands.json
         if: steps.result-cache.outputs.cache-hit != 'true'
