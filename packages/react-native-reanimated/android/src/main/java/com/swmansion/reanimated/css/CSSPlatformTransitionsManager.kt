@@ -13,18 +13,11 @@ import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.uimanager.IllegalViewOperationException
 import java.lang.ref.WeakReference
 
-/**
- * Android counterpart of `REACSSPlatformTransitions`: plays a resolved CSS
- * transition timeline on a native [View] with [ObjectAnimator]. Which [View]
- * channel carries a property is [cssViewChannelFor]'s decision.
- *
- * The whole path requires API 29 (`View.setTransitionAlpha`), gated once where the
- * manager is constructed, so nothing below re-checks the version.
- */
 @RequiresApi(Build.VERSION_CODES.Q)
 internal class CSSPlatformTransitionsManager(
     private val fabricUIManager: FabricUIManager,
     private val reactContext: WeakReference<ReactApplicationContext>,
+    private val animationTimestamp: () -> Long,
 ) {
     private val animators = HashMap<Key, ObjectAnimator>()
     private val interpolators = HashMap<InterpolatorKey, TimeInterpolator>()
@@ -46,16 +39,15 @@ internal class CSSPlatformTransitionsManager(
         fromValue: Double,
         toValue: Double,
         durationMs: Double,
-        elapsedMs: Double,
+        startTimestampMs: Double,
         easingType: Int,
         easingPointsX: FloatArray,
         easingPointsY: FloatArray,
     ): Boolean {
         val channel = cssViewChannelFor(propertyName) ?: return false
         if (!channel.canAnimateTo(toValue)) return false
-        // Scale 0 is Android's "Remove animations"; ValueAnimator would finish
-        // instantly. CSS transitions have no reduced-motion policy, so hand the
-        // property back to the loop rather than inventing one here.
+        // Scale 0 means animations are off. CSS transitions have no reduced-motion
+        // policy, so hand the property back to the loop rather than inventing one.
         val context = reactContext.get() ?: return false
         val scale = DurationScale.effectiveScale(context)
         if (scale <= 0f) return false
@@ -63,7 +55,7 @@ internal class CSSPlatformTransitionsManager(
         UiThreadUtil.runOnUiThread {
             val view = viewForTag(viewTag) ?: return@runOnUiThread
             val interpolator = interpolatorFor(easingType, easingPointsX, easingPointsY)
-            start(view, Key(viewTag, propertyName), channel, fromValue, toValue, durationMs, elapsedMs, interpolator, scale)
+            start(view, Key(viewTag, propertyName), channel, fromValue, toValue, durationMs, startTimestampMs, interpolator, scale)
         }
         return true
     }
@@ -86,7 +78,7 @@ internal class CSSPlatformTransitionsManager(
         fromValue: Double,
         toValue: Double,
         durationMs: Double,
-        elapsedMs: Double,
+        startTimestampMs: Double,
         interpolator: TimeInterpolator,
         scale: Float,
     ) {
@@ -95,8 +87,6 @@ internal class CSSPlatformTransitionsManager(
         // cancelled transition began. Read it before prepare() moves the channel.
         val interrupted = animators.remove(key)
         val startValue = if (interrupted != null) channel.renderedValue(view) else fromValue
-        // cancel() leaves the value in place, unlike end(), so an interruption keeps
-        // rendering the current frame until the replacement seeks over it.
         interrupted?.cancel()
 
         channel.prepare(view, toValue)
@@ -110,14 +100,15 @@ internal class CSSPlatformTransitionsManager(
         animator.addListener(
             object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
-                    // Only drop our own entry: a replacement may already own the key.
+                    // A replacement may already own the key.
                     if (animators[key] === animation) animators.remove(key)
                 }
             },
         )
-        // A negative elapsed is transition-delay; a positive one is reverse-shortening
-        // backdating the start. setCurrentFraction seeks with the scaled duration and
-        // applies synchronously, so no frame renders at the un-seeked position.
+        // ObjectAnimator has no absolute start time, so resolve one against the clock
+        // here rather than in C++: the hop to this thread and the wait for the next
+        // frame would otherwise shift the whole timeline late.
+        val elapsedMs = animationTimestamp().toDouble() - startTimestampMs
         if (elapsedMs < 0) animator.startDelay = (-elapsedMs / scale).toLong()
         animator.start()
         animators[key] = animator
@@ -127,9 +118,9 @@ internal class CSSPlatformTransitionsManager(
     }
 
     /**
-     * PathInterpolator flattens its curve natively on construction, so cache the
-     * built interpolator. The type is part of the key because different families
-     * can share a point list.
+     * PathInterpolator flattens its curve natively on construction, so cache it. The
+     * type is part of the key because different families can share a point list:
+     * linear(0.5, 1) and cubicBezier(0, 1, 0.5, 1) both normalize to [0,1],[0.5,1].
      */
     private fun interpolatorFor(
         type: Int,
@@ -144,8 +135,7 @@ internal class CSSPlatformTransitionsManager(
         try {
             fabricUIManager.resolveView(viewTag)
         } catch (e: IllegalViewOperationException) {
-            // Throws instead of returning null when the tag is registered but the
-            // Android view has not been created yet.
+            // Thrown, not null, when the tag is registered but the View does not exist yet.
             null
         }
 }
