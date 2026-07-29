@@ -99,7 +99,7 @@ open class NativeProxy {
         pseudoSelectorManager = PseudoSelectorManager(mFabricUIManager, mContext)
         cssPlatformTransitionsManager =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                CSSPlatformTransitionsManager(mFabricUIManager, mContext)
+                CSSPlatformTransitionsManager(mFabricUIManager, mContext, ::getAnimationTimestamp)
             } else {
                 null
             }
@@ -280,7 +280,7 @@ open class NativeProxy {
         fromValue: Double,
         toValue: Double,
         durationMs: Double,
-        elapsedMs: Double,
+        startTimestampMs: Double,
         easingType: Int,
         easingPointsX: FloatArray,
         easingPointsY: FloatArray,
@@ -291,7 +291,7 @@ open class NativeProxy {
             fromValue,
             toValue,
             durationMs,
-            elapsedMs,
+            startTimestampMs,
             easingType,
             easingPointsX,
             easingPointsY,

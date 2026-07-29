@@ -94,18 +94,13 @@ bool CSSPlatformTransitions::applyTransition(
     adjustedStart = active->adjustedEnd;
   }
 
-  // Elapsed rather than an absolute start: reverse-shortening backdates the start
-  // (elapsed > 0, the animator seeks) and transition-delay pushes it forward
-  // (elapsed < 0, the animator waits). Computing it here also keeps Kotlin off a
-  // second clock, which would drift from the loop's slow-animations timestamp.
-  const double elapsedMs = timestamp - reversing.startTimestamp;
   if (!animate_(
           static_cast<int>(viewTag),
           propertyName,
           *from,
           *to,
           reversing.duration,
-          elapsedMs,
+          reversing.startTimestamp,
           toPlatformEasing(resolvedSettings.easingConfig))) {
     return false;
   }
