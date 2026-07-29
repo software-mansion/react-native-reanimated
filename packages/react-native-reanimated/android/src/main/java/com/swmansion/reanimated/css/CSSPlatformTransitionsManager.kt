@@ -4,6 +4,7 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.animation.TimeInterpolator
+import android.view.Choreographer
 import android.view.View
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UiThreadUtil
@@ -42,16 +43,22 @@ internal class CSSPlatformTransitionsManager(
         easingPointsY: FloatArray,
     ): Boolean {
         val writer = cssPropertyWriterFor(propertyName) ?: return false
-        // Scale 0 means animations are off. CSS transitions have no reduced-motion
-        // policy, so hand the property back to the loop rather than inventing one.
         val context = reactContext.get() ?: return false
         val scale = DurationScale.effectiveScale(context)
+        // Scale 0 means animations are off, and ValueAnimator would finish instantly.
         if (scale <= 0f) return false
 
         UiThreadUtil.runOnUiThread {
-            val view = viewForTag(viewTag) ?: return@runOnUiThread
-            val interpolator = interpolatorFor(easingType, easingPointsX, easingPointsY)
-            start(view, Key(viewTag, propertyName), writer, fromValue, toValue, durationMs, startTimestampMs, interpolator, scale)
+            val begin = {
+                viewForTag(viewTag)?.also { view ->
+                    val interpolator = interpolatorFor(easingType, easingPointsX, easingPointsY)
+                    start(view, Key(viewTag, propertyName), writer, fromValue, toValue, durationMs, startTimestampMs, interpolator, scale)
+                } != null
+            }
+            // A tag can be registered before its View exists, with the mount still in
+            // flight. The start timestamp is absolute, so waiting a frame costs nothing:
+            // the elapsed offset absorbs it.
+            if (!begin()) Choreographer.getInstance().postFrameCallback { begin() }
         }
         return true
     }

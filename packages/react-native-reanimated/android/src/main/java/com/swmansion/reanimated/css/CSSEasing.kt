@@ -4,7 +4,11 @@ import android.animation.TimeInterpolator
 import android.view.animation.LinearInterpolator
 import android.view.animation.PathInterpolator
 
-/** Curves are reproduced rather than sampled, so `steps()` keeps its discontinuities. */
+/**
+ * `steps()` and `linear()` stops are evaluated directly, so `steps()` keeps its
+ * discontinuities at any duration. Cubic-bezier delegates to `PathInterpolator`,
+ * which flattens the curve internally.
+ */
 internal object CSSEasing {
     // Must match PlatformEasing::Type.
     private const val CUBIC_BEZIER = 1
