@@ -78,7 +78,7 @@ WorkletRuntime::WorkletRuntime(
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
   if (enableEventLoop) {
-    eventLoop_ = std::make_shared<EventLoop>(name_, runtime_, queue_);
+    eventLoop_ = std::make_shared<EventLoop>(name_, runtime_, queue_, runtimeMutex_);
     eventLoop_->run();
   }
 }
@@ -157,8 +157,7 @@ void WorkletRuntime::schedule(jsi::Function &&function) const {
       return;
     }
 
-    strongThis->runSync(*function);
-    strongThis->drainMicrotasks();
+    strongThis->runSyncAndDrainMicrotasks(*function);
   });
 }
 
@@ -174,8 +173,7 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet) cons
       return;
     }
 
-    strongThis->runSync(worklet);
-    strongThis->drainMicrotasks();
+    strongThis->runSyncAndDrainMicrotasks(worklet);
   });
 }
 
@@ -193,8 +191,7 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet, std:
       return;
     }
 
-    strongThis->runSyncWithStack(worklet, scheduleStack);
-    strongThis->drainMicrotasks();
+    strongThis->runSyncWithStackAndDrainMicrotasks(worklet, scheduleStack);
   });
 }
 #endif // NDEBUG
@@ -303,29 +300,5 @@ std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::
   auto weakHolder = std::static_pointer_cast<WeakRuntimeHolder>(runtimeData);
   return weakHolder->weakRuntime;
 }
-
-/* #region deprecated */
-
-void WorkletRuntime::runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet) {
-  schedule(worklet);
-}
-
-jsi::Value WorkletRuntime::executeSync(jsi::Runtime &caller, const jsi::Value &worklet) const {
-  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
-      caller, worklet, "[Worklets] Only worklets can be executed synchronously on UI runtime.");
-  auto result = runSyncSerialized(serializableWorklet);
-  drainMicrotasks();
-  return result->toJSValue(caller);
-}
-
-jsi::Value WorkletRuntime::executeSync(std::function<jsi::Value(jsi::Runtime &)> &&job) const {
-  return runSync(job);
-}
-
-jsi::Value WorkletRuntime::executeSync(const std::function<jsi::Value(jsi::Runtime &)> &job) const {
-  return runSync(job);
-}
-
-/* #endregion */
 
 } // namespace worklets

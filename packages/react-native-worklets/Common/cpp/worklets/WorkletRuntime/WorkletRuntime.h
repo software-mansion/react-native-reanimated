@@ -36,6 +36,9 @@ concept RuntimeCallable = requires(TCallable &&callable, jsi::Runtime &rt) {
   { callable(rt) };
 } || ImplicitlySerializableCallable<TCallable>;
 
+template <typename TResult>
+concept SyncCallResult = std::is_same_v<TResult, jsi::Value> || std::is_same_v<TResult, std::shared_ptr<Serializable>>;
+
 /**
  * Forward declaration to avoid circular dependencies.
  */
@@ -85,17 +88,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    */
   void schedule(std::function<void(jsi::Runtime &)> job) const;
 
-  /* #region runSync */
-
-  /**
-   * Executes a callable synchronously on the worklet runtime.
-   *
-   * This method does not drain either the Worklets or Hermes microtask queues.
-   * The caller is responsible for invoking `drainMicrotasks()` when needed.
-   */
-  template <RuntimeCallable TCallable, typename... Args>
-  std::invoke_result_t<TCallable, Args...> runSync(TCallable &&callable, Args &&...args) const;
-
   /**
    * Executes a JSI function synchronously on the worklet runtime.
    *
@@ -114,43 +106,47 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   /**
    * Executes a serialized worklet synchronously on the worklet runtime.
    *
-   * This method does not drain either the Worklets or Hermes microtask queues.
-   * The caller is responsible for invoking `drainMicrotasks()` when needed.
-   */
-  template <typename... Args>
-  jsi::Value runSync(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args) const {
-#ifndef NDEBUG
-    return runSyncWithStack(worklet, std::nullopt, std::forward<Args>(args)...);
-#else
-    jsi::Runtime &rt = *runtime_;
-    auto function = worklet->toJSValue(rt).asObject(rt).asFunction(rt);
-    return function.call(rt, args...);
-#endif // NDEBUG
-  }
-#ifndef NDEBUG
-  /**
-   * Executes a serialized worklet synchronously with scheduling stack metadata.
+   * In debug builds `scheduleStack` is attached to the guarded call so an
+   * exception thrown by the worklet can be reported with the JS call site that
+   * scheduled it; in release builds it is ignored.
    *
    * This method does not drain either the Worklets or Hermes microtask queues.
    * The caller is responsible for invoking `drainMicrotasks()` when needed.
    */
-  template <typename... Args>
-  jsi::Value runSyncWithStack(
+  template <SyncCallResult TResult = jsi::Value, typename... Args>
+  TResult runSyncWithStack(
       const std::shared_ptr<SerializableWorklet> &worklet,
       const std::optional<std::string> &scheduleStack,
       Args &&...args) const {
     jsi::Runtime &rt = *runtime_;
-    auto function = worklet->toJSValue(rt).asObject(rt).asFunction(rt);
-    return callGuarded(function, scheduleStack, std::forward<Args>(args)...);
-  }
+    auto function = worklet->toJSValue(rt).getObject(rt).getFunction(rt);
+#ifndef NDEBUG
+    auto result = callGuarded(function, scheduleStack, std::forward<Args>(args)...);
+#else
+    (void)scheduleStack;
+    auto result = function.call(rt, args...);
 #endif // NDEBUG
+    if constexpr (std::is_same_v<TResult, std::shared_ptr<Serializable>>) {
+      return extractSerializableOrThrow(
+          rt,
+          result,
+          "[Worklets] Worklet passed to `runSync` must return a value serialized with `createSerializable`.");
+    } else {
+      return result;
+    }
+  }
 
   /**
-   * Executes a callable synchronously on the worklet runtime.
+   * Executes a serialized worklet synchronously on the worklet runtime.
    *
    * This method does not drain either the Worklets or Hermes microtask queues.
    * The caller is responsible for invoking `drainMicrotasks()` when needed.
    */
+  template <SyncCallResult TResult = jsi::Value, typename... Args>
+  TResult runSync(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args) const {
+    return runSyncWithStack<TResult>(worklet, std::nullopt, std::forward<Args>(args)...);
+  }
+
   template <RuntimeCallable TCallable>
   std::invoke_result_t<TCallable, jsi::Runtime &> runSync(TCallable &&job) const {
     jsi::Runtime &rt = getJSIRuntime();
@@ -158,54 +154,39 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     return job(rt);
   }
 
-  /* #endregion */
-  /* #region runSyncSerialized */
-
-  template <ImplicitlySerializableCallable TCallable, typename... Args>
-  std::shared_ptr<Serializable> runSyncSerialized(TCallable &&callable, Args &&...args) const;
+  /**
+   * Executes a callable, JSI function or serialized worklet synchronously and
+   * drains microtasks before releasing the runtime lock.
+   */
   template <typename... Args>
-  std::shared_ptr<Serializable> runSyncSerialized(const jsi::Function &function, Args &&...args) const {
-    jsi::Runtime &rt = getJSIRuntime();
+  auto runSyncAndDrainMicrotasks(Args &&...args) const {
     auto lock = acquireRuntimeLock();
-    auto result = runSync(function, std::forward<Args>(args)...);
-    auto serializableResult = extractSerializableOrThrow(
-        rt,
-        result,
-        "[Worklets] Function passed to `runSyncSerialized`"
-        "must return a value serialized with `createSerializable`.");
-    return serializableResult;
+    using Result = decltype(runSync(std::forward<Args>(args)...));
+    if constexpr (std::is_void_v<Result>) {
+      runSync(std::forward<Args>(args)...);
+      drainMicrotasks();
+    } else {
+      auto result = runSync(std::forward<Args>(args)...);
+      drainMicrotasks();
+      return result;
+    }
   }
-#ifndef NDEBUG
-  template <typename... Args>
-  std::shared_ptr<Serializable> runSyncSerializedWithStack(
+
+  /**
+   * Executes a serialized worklet synchronously, optionally attaching
+   * scheduling stack metadata, and drains microtasks before releasing the
+   * runtime lock.
+   */
+  template <SyncCallResult TResult = jsi::Value, typename... Args>
+  TResult runSyncWithStackAndDrainMicrotasks(
       const std::shared_ptr<SerializableWorklet> &worklet,
       const std::optional<std::string> &scheduleStack,
       Args &&...args) const {
-    jsi::Runtime &rt = getJSIRuntime();
     auto lock = acquireRuntimeLock();
-    auto result = runSyncWithStack(worklet, scheduleStack, std::forward<Args>(args)...);
-    auto serializableResult = extractSerializableOrThrow(
-        rt,
-        result,
-        "[Worklets] Worklet passed to `runSyncSerialized`"
-        "must return a value serialized with `createSerializable`.");
-    return serializableResult;
+    auto result = runSyncWithStack<TResult>(worklet, scheduleStack, std::forward<Args>(args)...);
+    drainMicrotasks();
+    return result;
   }
-#endif // NDEBUG
-  template <typename... Args>
-  std::shared_ptr<Serializable> runSyncSerialized(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args)
-      const {
-    jsi::Runtime &rt = getJSIRuntime();
-    auto lock = acquireRuntimeLock();
-    auto result = runSync(worklet, std::forward<Args>(args)...);
-    auto serializableResult = extractSerializableOrThrow(
-        rt,
-        result,
-        "[Worklets] Worklet passed to `runSyncSerialized`"
-        "must return a value serialized with `createSerializable`.");
-    return serializableResult;
-  }
-  /* #endregion */
 
   void drainMicrotasks() const {
     runSync([](jsi::Runtime &rt) { jsi_utils::drainMicrotasks(rt); });
@@ -244,27 +225,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       bool enableLocking = true);
 
   void init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy);
-
-  /* #region deprecated */
-
-  /** @deprecated Use `runSync` instead. */
-  template <typename... Args>
-  jsi::Value runGuarded(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args) const {
-    return runSync(worklet, std::forward<Args>(args)...);
-  }
-
-  /** @deprecated Use `schedule` instead. */
-  void runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet);
-
-  /** @deprecated Use `runSyncSerialized` and extract to `jsi::Value` with
-   * `extractSerializableOrThrow` instead. */
-  jsi::Value executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const;
-  /** @deprecated Use `runSync` instead. */
-  jsi::Value executeSync(std::function<jsi::Value(jsi::Runtime &)> &&job) const;
-  /** @deprecated Use `runSync` instead. */
-  jsi::Value executeSync(const std::function<jsi::Value(jsi::Runtime &)> &job) const;
-
-  /* #endregion */
 
   /**
    * Retrieves a weak reference to the WorkletRuntime associated with the
