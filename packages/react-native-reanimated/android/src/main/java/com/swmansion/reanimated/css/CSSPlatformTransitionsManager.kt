@@ -65,24 +65,11 @@ internal class CSSPlatformTransitionsManager(
             val token = ++nextStartToken
             startTokens[key] = token
 
-            val begin = {
+            beginWhenMounted(key, token, startTimestampMs + durationMs) {
                 viewForTag(viewTag)?.also { view ->
                     val interpolator = interpolatorFor(easingType, easingPointsX, easingPointsY)
                     start(view, key, writer, fromValue, toValue, durationMs, startTimestampMs, interpolator, scale)
                 } != null
-            }
-            // A tag can be registered before its View exists, with the mount still in
-            // flight. The start timestamp is absolute, so waiting a frame costs nothing:
-            // the elapsed offset absorbs it.
-            if (begin()) {
-                startTokens.remove(key)
-            } else {
-                Choreographer.getInstance().postFrameCallback {
-                    if (startTokens[key] == token) {
-                        startTokens.remove(key)
-                        begin()
-                    }
-                }
             }
         }
         return true
@@ -98,6 +85,26 @@ internal class CSSPlatformTransitionsManager(
             startTokens.remove(key)
             animators.remove(key)?.cancel()
         }
+    }
+
+    /**
+     * A tag can be registered before its View exists, with the mount still in flight.
+     * The start timestamp is absolute, so a late start seeks rather than drifting, and
+     * retrying needs no arbitrary timeout: once the transition would have ended there
+     * is nothing left to play.
+     */
+    private fun beginWhenMounted(
+        key: Key,
+        token: Long,
+        endTimestampMs: Double,
+        begin: () -> Boolean,
+    ) {
+        if (startTokens[key] != token) return
+        if (begin() || animationTimestamp() >= endTimestampMs) {
+            startTokens.remove(key)
+            return
+        }
+        Choreographer.getInstance().postFrameCallback { beginWhenMounted(key, token, endTimestampMs, begin) }
     }
 
     private fun start(
