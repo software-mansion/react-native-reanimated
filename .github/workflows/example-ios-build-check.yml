@@ -66,7 +66,6 @@ jobs:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: macos-26
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
       WORKING_DIRECTORY: apps/fabric-example
       REANIMATED_DIR: packages/react-native-reanimated
       CONFIGURATION: ${{ inputs.configuration || 'Debug' }}
@@ -89,10 +88,6 @@ jobs:
       - name: Skip already validated build
         if: steps.result-cache.outputs.cache-hit == 'true'
         run: echo "This commit already built successfully on iOS $CONFIGURATION."
-
-      - name: Verify Xcode version
-        if: steps.result-cache.outputs.cache-hit != 'true'
-        run: xcodebuild -version
 
       - uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
         if: steps.result-cache.outputs.cache-hit != 'true'
