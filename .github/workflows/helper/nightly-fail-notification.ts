@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { buildBundleCostSection } from './bundle-cost-report.ts';
 import { postToSlack } from './slack.ts';
 
 type BadgeStatus = 'failing' | 'passing' | 'unknown';
@@ -181,7 +182,10 @@ async function main(): Promise<void> {
     getFailingBadges(badges),
     getRNNightlyFailures(),
   ]);
-  const text = formatSlackMessage(failingBadges, nightly);
+  const text = [
+    formatSlackMessage(failingBadges, nightly),
+    buildBundleCostSection(),
+  ].join('\n\n');
 
   await postToSlack({ text });
 }
