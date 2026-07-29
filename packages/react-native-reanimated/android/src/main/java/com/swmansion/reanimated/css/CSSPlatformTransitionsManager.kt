@@ -4,16 +4,13 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.animation.TimeInterpolator
-import android.os.Build
 import android.view.View
-import androidx.annotation.RequiresApi
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.uimanager.IllegalViewOperationException
 import java.lang.ref.WeakReference
 
-@RequiresApi(Build.VERSION_CODES.Q)
 internal class CSSPlatformTransitionsManager(
     private val fabricUIManager: FabricUIManager,
     private val reactContext: WeakReference<ReactApplicationContext>,
@@ -44,8 +41,7 @@ internal class CSSPlatformTransitionsManager(
         easingPointsX: FloatArray,
         easingPointsY: FloatArray,
     ): Boolean {
-        val channel = cssViewChannelFor(propertyName) ?: return false
-        if (!channel.canAnimateTo(toValue)) return false
+        val writer = cssPropertyWriterFor(propertyName) ?: return false
         // Scale 0 means animations are off. CSS transitions have no reduced-motion
         // policy, so hand the property back to the loop rather than inventing one.
         val context = reactContext.get() ?: return false
@@ -55,7 +51,7 @@ internal class CSSPlatformTransitionsManager(
         UiThreadUtil.runOnUiThread {
             val view = viewForTag(viewTag) ?: return@runOnUiThread
             val interpolator = interpolatorFor(easingType, easingPointsX, easingPointsY)
-            start(view, Key(viewTag, propertyName), channel, fromValue, toValue, durationMs, startTimestampMs, interpolator, scale)
+            start(view, Key(viewTag, propertyName), writer, fromValue, toValue, durationMs, startTimestampMs, interpolator, scale)
         }
         return true
     }
@@ -64,17 +60,13 @@ internal class CSSPlatformTransitionsManager(
         viewTag: Int,
         propertyName: String,
     ) {
-        UiThreadUtil.runOnUiThread {
-            animators.remove(Key(viewTag, propertyName))?.cancel()
-            // Views are pooled and prepareToRecycleView knows nothing about our channel.
-            cssViewChannelFor(propertyName)?.let { channel -> viewForTag(viewTag)?.let(channel::reset) }
-        }
+        UiThreadUtil.runOnUiThread { animators.remove(Key(viewTag, propertyName))?.cancel() }
     }
 
     private fun start(
         view: View,
         key: Key,
-        channel: CSSViewChannel,
+        writer: android.util.FloatProperty<View>,
         fromValue: Double,
         toValue: Double,
         durationMs: Double,
@@ -84,17 +76,12 @@ internal class CSSPlatformTransitionsManager(
     ) {
         // On interruption resume from what is on screen: fromValue is the committed
         // style value, so starting there would snap the view back to where the
-        // cancelled transition began. Read it before prepare() moves the channel.
+        // cancelled transition began.
         val interrupted = animators.remove(key)
-        val startValue = if (interrupted != null) channel.renderedValue(view) else fromValue
+        val startValue = if (interrupted != null) writer.get(view) else fromValue.toFloat()
         interrupted?.cancel()
 
-        channel.prepare(view, toValue)
-        val from = channel.channelValue(startValue, toValue)
-        val to = channel.channelValue(toValue, toValue)
-        channel.property.setValue(view, from)
-
-        val animator = ObjectAnimator.ofFloat(view, channel.property, from, to)
+        val animator = ObjectAnimator.ofFloat(view, writer, startValue, toValue.toFloat())
         animator.interpolator = interpolator
         animator.duration = (durationMs / scale).toLong().coerceAtLeast(1L)
         animator.addListener(

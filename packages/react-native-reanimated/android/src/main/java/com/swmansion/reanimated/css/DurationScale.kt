@@ -8,13 +8,13 @@ import android.provider.Settings
 /**
  * `ValueAnimator` multiplies every duration and start delay by a process-global scale,
  * but a CSS transition has to last exactly as long as the author wrote, so callers
- * pre-divide by this. The per-instance opt-out is `max-target-o` and the static setter
- * is process-global, so neither is usable from a library.
+ * pre-divide by this. `overrideDurationScale` would opt a single animator out, but it
+ * is `@hide` with no greylist entry, and the only other setter is process-global.
  */
 internal object DurationScale {
     fun effectiveScale(context: Context): Float {
-        // areAnimatorsEnabled() is the only signal that reflects a forced disable,
-        // which Settings.Global does not.
+        // Battery saver disables animations without touching Settings.Global, and
+        // areAnimatorsEnabled() (literally `scale != 0`) is the only signal for it.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !ValueAnimator.areAnimatorsEnabled()) {
             return 0f
         }
