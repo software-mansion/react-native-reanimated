@@ -1,7 +1,6 @@
 package com.swmansion.reanimated
 
 import android.content.ContentResolver
-import android.os.Build
 import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
@@ -48,7 +47,7 @@ open class NativeProxy {
     private val gestureHandlerStateManager: GestureHandlerStateManager?
     private val keyboardAnimationManager: KeyboardAnimationManager
     private val pseudoSelectorManager: PseudoSelectorManager
-    private val cssPlatformTransitionsManager: CSSPlatformTransitionsManager?
+    private val cssPlatformTransitionsManager: CSSPlatformTransitionsManager
     private var firstUptime: Long = SystemClock.uptimeMillis()
     private var slowAnimationsEnabled = false
     private val animationsDragFactor = 10
@@ -98,11 +97,7 @@ open class NativeProxy {
             UIManagerHelper.getUIManager(context, UIManagerType.FABRIC) as FabricUIManager
         pseudoSelectorManager = PseudoSelectorManager(mFabricUIManager, mContext)
         cssPlatformTransitionsManager =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                CSSPlatformTransitionsManager(mFabricUIManager, mContext, ::getAnimationTimestamp)
-            } else {
-                null
-            }
+            CSSPlatformTransitionsManager(mFabricUIManager, mContext, ::getAnimationTimestamp)
 
         val callInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
         mHybridData =
@@ -284,7 +279,7 @@ open class NativeProxy {
         easingPointsX: FloatArray,
         easingPointsY: FloatArray,
     ): Boolean =
-        cssPlatformTransitionsManager?.animateTransition(
+        cssPlatformTransitionsManager.animateTransition(
             viewTag,
             propertyName,
             fromValue,
@@ -294,14 +289,14 @@ open class NativeProxy {
             easingType,
             easingPointsX,
             easingPointsY,
-        ) ?: false
+        )
 
     @DoNotStrip
     fun cssRemoveTransition(
         viewTag: Int,
         propertyName: String,
     ) {
-        cssPlatformTransitionsManager?.removeTransition(viewTag, propertyName)
+        cssPlatformTransitionsManager.removeTransition(viewTag, propertyName)
     }
 
     @DoNotStrip
