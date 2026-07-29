@@ -2,7 +2,6 @@
 #include <jsi/jsi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Tools/JSLogger.h>
-#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RuntimeHolder.h>
 #include <worklets/WorkletRuntime/ScriptLoader.h>
 #include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
@@ -46,10 +45,9 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
         runtime_(std::move(runtime)) {}
 };
 
-static std::shared_ptr<jsi::Runtime> makeRuntime(
-    const std::shared_ptr<std::recursive_mutex> &runtimeMutex,
-    bool enableLocking) {
-  auto config = ::hermes::vm::RuntimeConfig::Builder().withMicrotaskQueue(true).build();
+static std::shared_ptr<jsi::Runtime>
+makeRuntime(const std::shared_ptr<std::recursive_mutex> &runtimeMutex, bool enableLocking, bool enableMicrotaskQueue) {
+  auto config = ::hermes::vm::RuntimeConfig::Builder().withMicrotaskQueue(enableMicrotaskQueue).build();
   auto hermesRuntime = facebook::hermes::makeHermesRuntime(config);
   std::shared_ptr<jsi::Runtime> jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime));
   if (!enableLocking) {
@@ -68,7 +66,8 @@ WorkletRuntime::WorkletRuntime(
     : runtimeId_(runtimeId),
       enableLocking_(enableLocking),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
-      runtime_(makeRuntime(runtimeMutex_, enableLocking_)),
+      runtime_(
+          makeRuntime(runtimeMutex_, enableLocking_, runtimeKind == RuntimeData::RuntimeKind::UI || enableEventLoop)),
       runtimeKind_(runtimeKind),
       name_(name),
       queue_(queue) {
@@ -159,7 +158,7 @@ void WorkletRuntime::schedule(jsi::Function &&function) const {
     }
 
     strongThis->runSync(*function);
-    strongThis->callMicrotasks();
+    strongThis->drainMicrotasks();
   });
 }
 
@@ -176,7 +175,7 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet) cons
     }
 
     strongThis->runSync(worklet);
-    strongThis->callMicrotasks();
+    strongThis->drainMicrotasks();
   });
 }
 
@@ -195,23 +194,10 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet, std:
     }
 
     strongThis->runSyncWithStack(worklet, scheduleStack);
-    strongThis->callMicrotasks();
+    strongThis->drainMicrotasks();
   });
 }
 #endif // NDEBUG
-
-void WorkletRuntime::callMicrotasks() const {
-  runSync([](jsi::Runtime &rt) {
-    auto callMicrotasks = rt.global().getProperty(rt, "__callMicrotasks");
-    if (callMicrotasks.isObject()) {
-      auto callMicrotasksObject = callMicrotasks.asObject(rt);
-      if (callMicrotasksObject.isFunction(rt)) {
-        callMicrotasksObject.asFunction(rt).call(rt);
-      }
-    }
-    rt.drainMicrotasks();
-  });
-}
 
 void WorkletRuntime::schedule(std::function<void()> job) const {
   react_native_assert(
@@ -237,7 +223,7 @@ void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
     auto lock = strongThis->acquireRuntimeLock();
     jsi::Runtime &runtime = strongThis->getJSIRuntime();
     job(runtime);
-    strongThis->callMicrotasks();
+    strongThis->drainMicrotasks();
   });
 }
 
@@ -328,6 +314,7 @@ jsi::Value WorkletRuntime::executeSync(jsi::Runtime &caller, const jsi::Value &w
   auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       caller, worklet, "[Worklets] Only worklets can be executed synchronously on UI runtime.");
   auto result = runSyncSerialized(serializableWorklet);
+  drainMicrotasks();
   return result->toJSValue(caller);
 }
 

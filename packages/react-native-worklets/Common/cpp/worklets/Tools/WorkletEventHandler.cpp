@@ -13,6 +13,7 @@ void WorkletEventHandler::process(
     const double eventTimestamp,
     const jsi::Value &eventValue) const {
   workletRuntime->runSync(handlerFunction_, jsi::Value(eventTimestamp), eventValue);
+  workletRuntime->drainMicrotasks();
 }
 
 uint64_t WorkletEventHandler::getHandlerId() const {

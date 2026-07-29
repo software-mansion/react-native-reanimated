@@ -15,13 +15,13 @@ import {
   waitForNotification,
   beforeEach,
 } from '../../../ReJest/RuntimeTestsApi';
+import {
+  startCountingMicrotaskDrains,
+  stopCountingMicrotaskDrains,
+} from './microtaskDrainCounter';
 
 const PASS_NOTIFICATION = 'PASS';
 const FAIL_NOTIFICATION = 'FAIL';
-
-type localGlobal = typeof globalThis & {
-  scheduleOnRN: typeof scheduleOnRN;
-};
 
 describe('scheduleOnRuntimeWithId', () => {
   let value = 0;
@@ -49,7 +49,7 @@ describe('scheduleOnRuntimeWithId', () => {
         runOnRuntimeSyncWithId(runtimeId, () => {
           'worklet';
           // TODO: fix worklet re-serialization outside of Bundle Mode
-          (globalThis as localGlobal).scheduleOnRN = scheduleOnRN;
+          globalThis.scheduleOnRN = scheduleOnRN;
         });
       }
     );
@@ -76,6 +76,43 @@ describe('scheduleOnRuntimeWithId', () => {
     expect(value).toBe(42);
   });
 
+  [
+    { name: 'UI', runtimeId: UIRuntimeId },
+    { name: 'Worker', runtimeId: workletRuntime1.runtimeId },
+  ].forEach(({ name, runtimeId }) => {
+    test(`drains microtasks after execution on ${name} Runtime`, async () => {
+      scheduleOnRuntimeWithId(runtimeId, () => {
+        'worklet';
+        queueMicrotask(() => {
+          globalThis.scheduleOnRN(callbackPass, 42);
+        });
+      });
+
+      await waitForNotification(PASS_NOTIFICATION);
+      expect(value).toBe(42);
+    });
+  });
+
+  [
+    { name: 'UI', runtimeId: UIRuntimeId },
+    { name: 'Worker', runtimeId: workletRuntime1.runtimeId },
+  ].forEach(({ name, runtimeId }) => {
+    test(`drains microtasks exactly once after execution on ${name} Runtime`, async () => {
+      startCountingMicrotaskDrains(runtimeId);
+
+      scheduleOnRuntimeWithId(runtimeId, () => {
+        'worklet';
+        scheduleOnRN(callbackPass, 42);
+      });
+      await waitForNotification(PASS_NOTIFICATION);
+
+      const microtaskDrainCount = stopCountingMicrotaskDrains(runtimeId);
+
+      // The counter setup and the tested execution each drain once.
+      expect(microtaskDrainCount).toBe(2);
+    });
+  });
+
   test('from RN Runtime to non-existing Runtime', async () => {
     const fun = () =>
       scheduleOnRuntimeWithId(9999, () => {
@@ -94,7 +131,7 @@ describe('scheduleOnRuntimeWithId', () => {
       'worklet';
       scheduleOnRuntimeWithId(UIRuntimeId, () => {
         'worklet';
-        (globalThis as localGlobal).scheduleOnRN(callbackPass, 42);
+        globalThis.scheduleOnRN(callbackPass, 42);
       });
     });
     await waitForNotification(PASS_NOTIFICATION);
@@ -106,7 +143,7 @@ describe('scheduleOnRuntimeWithId', () => {
       'worklet';
       scheduleOnRuntimeWithId(workletRuntime1.runtimeId, () => {
         'worklet';
-        (globalThis as localGlobal).scheduleOnRN(callbackPass, 42);
+        globalThis.scheduleOnRN(callbackPass, 42);
       });
     });
     await waitForNotification(PASS_NOTIFICATION);
@@ -140,7 +177,7 @@ describe('scheduleOnRuntimeWithId', () => {
       'worklet';
       scheduleOnRuntimeWithId(UIRuntimeId, () => {
         'worklet';
-        (globalThis as localGlobal).scheduleOnRN(callbackPass, 42);
+        globalThis.scheduleOnRN(callbackPass, 42);
       });
     });
     await waitForNotification(PASS_NOTIFICATION);
@@ -151,7 +188,7 @@ describe('scheduleOnRuntimeWithId', () => {
       'worklet';
       scheduleOnRuntimeWithId(workletRuntime1.runtimeId, () => {
         'worklet';
-        (globalThis as localGlobal).scheduleOnRN(callbackPass, 42);
+        globalThis.scheduleOnRN(callbackPass, 42);
       });
     });
     await waitForNotification(PASS_NOTIFICATION);
@@ -162,7 +199,7 @@ describe('scheduleOnRuntimeWithId', () => {
       'worklet';
       scheduleOnRuntimeWithId(workletRuntime2.runtimeId, () => {
         'worklet';
-        (globalThis as localGlobal).scheduleOnRN(callbackPass, 42);
+        globalThis.scheduleOnRN(callbackPass, 42);
       });
     });
     await waitForNotification(PASS_NOTIFICATION);
@@ -174,7 +211,7 @@ describe('scheduleOnRuntimeWithId', () => {
       try {
         scheduleOnRuntimeWithId(9999, () => {
           'worklet';
-          (globalThis as localGlobal).scheduleOnRN(callbackPass, 42);
+          globalThis.scheduleOnRN(callbackPass, 42);
         });
       } catch (error) {
         scheduleOnRN(

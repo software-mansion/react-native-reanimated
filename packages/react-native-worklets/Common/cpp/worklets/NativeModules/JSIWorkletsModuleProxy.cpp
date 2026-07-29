@@ -100,7 +100,7 @@ inline void scheduleOnUI(
 #endif // NDEBUG
     }
 
-    uiWorkletRuntime->callMicrotasks();
+    uiWorkletRuntime->drainMicrotasks();
   });
 }
 
@@ -114,7 +114,7 @@ inline jsi::Value runOnUISync(
     auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
         rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
     auto serializedResult = uiWorkletRuntime->runSyncSerializedWithStack(serializableWorklet, scheduleStack);
-    uiWorkletRuntime->callMicrotasks();
+    uiWorkletRuntime->drainMicrotasks();
     return serializedResult->toJSValue(rt);
   }
   return jsi::Value::undefined();
@@ -126,7 +126,7 @@ runOnUISync(const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime, jsi::Runt
     auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
         rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
     auto serializedResult = uiWorkletRuntime->runSyncSerialized(serializableWorklet);
-    uiWorkletRuntime->callMicrotasks();
+    uiWorkletRuntime->drainMicrotasks();
     return serializedResult->toJSValue(rt);
   }
   return jsi::Value::undefined();
@@ -143,7 +143,7 @@ jsi::Value runOnRuntimeSync(
   auto worklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
   auto serializedResult = workletRuntime->runSyncSerializedWithStack(worklet, scheduleStack);
-  workletRuntime->callMicrotasks();
+  workletRuntime->drainMicrotasks();
   return serializedResult->toJSValue(rt);
 }
 #else
@@ -153,7 +153,7 @@ runOnRuntimeSync(jsi::Runtime &rt, const jsi::Value &workletRuntimeValue, const 
   auto worklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
   auto serializedResult = workletRuntime->runSyncSerialized(worklet);
-  workletRuntime->callMicrotasks();
+  workletRuntime->drainMicrotasks();
   return serializedResult->toJSValue(rt);
 }
 #endif // NDEBUG
@@ -514,10 +514,12 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         if (at<2>(args).isString()) {
           scheduleStack = at<2>(args).asString(rt).utf8(rt);
         }
-        return workletRuntime->runSyncSerializedWithStack(serializableWorklet, scheduleStack)->toJSValue(rt);
+        auto serializedResult = workletRuntime->runSyncSerializedWithStack(serializableWorklet, scheduleStack);
 #else
-        return workletRuntime->runSyncSerialized(serializableWorklet)->toJSValue(rt);
+        auto serializedResult = workletRuntime->runSyncSerialized(serializableWorklet);
 #endif // NDEBUG
+        workletRuntime->drainMicrotasks();
+        return serializedResult->toJSValue(rt);
       });
 
   jsi_utils::addMethod<6>(

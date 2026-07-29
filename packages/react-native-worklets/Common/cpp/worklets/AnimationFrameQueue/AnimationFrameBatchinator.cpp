@@ -48,6 +48,8 @@ void AnimationFrameBatchinator::flush() {
     for (const auto &callback : callbacks) {
       uiWorkletRuntime->runSync(*callback, timestampMs);
     }
+    // Runs only Hermes microtasks, which we don't use - but calling this function makes Hermes clean WeakRefs.
+    uiWorkletRuntime->getJSIRuntime().drainMicrotasks();
   });
 }
 

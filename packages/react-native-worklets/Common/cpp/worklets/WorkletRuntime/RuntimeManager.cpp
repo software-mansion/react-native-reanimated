@@ -19,6 +19,7 @@ void evaluateModuleUpdate(
     const auto buffer = std::make_shared<jsi::StringBuffer>(code);
     rt.evaluateJavaScript(buffer, sourceUrl);
   });
+  // workletRuntime->drainMicrotasks();
 }
 } // namespace
 #endif // NDEBUG
@@ -71,6 +72,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
 
   if (initializer) {
     workletRuntime->runSync(initializer);
+    // workletRuntime->drainMicrotasks();
   }
 
   registerRuntime(runtimeId, workletRuntime);

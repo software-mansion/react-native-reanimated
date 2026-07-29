@@ -15,6 +15,10 @@ import {
   test,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
+import {
+  startCountingMicrotaskDrains,
+  stopCountingMicrotaskDrains,
+} from './microtaskDrainCounter';
 
 const PASS_NOTIFICATION = 'PASS';
 const FAIL_NOTIFICATION = 'FAIL';
@@ -73,6 +77,48 @@ describe('runOnRuntimeAsyncWithId', () => {
     );
 
     expect(result).toBe(42);
+  });
+
+  [
+    { name: 'UI', runtimeId: UIRuntimeId },
+    { name: 'Worker', runtimeId: workletRuntime1.runtimeId },
+  ].forEach(({ name, runtimeId }) => {
+    test(`drains microtasks after execution on ${name} Runtime`, async () => {
+      await runOnRuntimeAsyncWithId(runtimeId, () => {
+        'worklet';
+        globalThis.didRunMicrotask = false;
+        queueMicrotask(() => {
+          globalThis.didRunMicrotask = true;
+        });
+      });
+
+      const didRunMicrotask = await runOnRuntimeAsyncWithId(runtimeId, () => {
+        'worklet';
+        const result = globalThis.didRunMicrotask;
+        globalThis.didRunMicrotask = undefined;
+        return result;
+      });
+
+      expect(didRunMicrotask).toBe(true);
+    });
+  });
+
+  [
+    { name: 'UI', runtimeId: UIRuntimeId },
+    { name: 'Worker', runtimeId: workletRuntime1.runtimeId },
+  ].forEach(({ name, runtimeId }) => {
+    test(`drains microtasks exactly once after execution on ${name} Runtime`, async () => {
+      startCountingMicrotaskDrains(runtimeId);
+
+      await runOnRuntimeAsyncWithId(runtimeId, () => {
+        'worklet';
+      });
+
+      const microtaskDrainCount = stopCountingMicrotaskDrains(runtimeId);
+
+      // The counter setup and the tested execution each drain once.
+      expect(microtaskDrainCount).toBe(2);
+    });
   });
 
   test('rejects when scheduling from RN Runtime to Worker Runtime with error', async () => {

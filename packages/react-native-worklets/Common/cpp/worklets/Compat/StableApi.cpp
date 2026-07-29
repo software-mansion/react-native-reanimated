@@ -98,6 +98,7 @@ void runSyncOnRuntime(
     const std::shared_ptr<WorkletRuntime> &workletRuntime,
     const std::shared_ptr<Serializable> &worklet) {
   workletRuntime->runSync(std::static_pointer_cast<SerializableWorklet>(worklet));
+  workletRuntime->drainMicrotasks();
 }
 
 void runSyncOnRuntime(
@@ -105,6 +106,7 @@ void runSyncOnRuntime(
     const std::shared_ptr<Serializable> &worklet,
     const facebook::jsi::Value &arg0) {
   workletRuntime->runSync(std::static_pointer_cast<SerializableWorklet>(worklet), arg0);
+  workletRuntime->drainMicrotasks();
 }
 
 void runSyncOnRuntime(
@@ -113,10 +115,12 @@ void runSyncOnRuntime(
     const facebook::jsi::Value &arg0,
     const facebook::jsi::Value &arg1) {
   workletRuntime->runSync(std::static_pointer_cast<SerializableWorklet>(worklet), arg0, arg1);
+  workletRuntime->drainMicrotasks();
 }
 
 void runSyncOnRuntime(const std::shared_ptr<WorkletRuntime> &workletRuntime, const facebook::jsi::Function &function) {
   workletRuntime->runSync(function);
+  workletRuntime->drainMicrotasks();
 }
 
 void runSyncOnRuntime(
@@ -124,6 +128,7 @@ void runSyncOnRuntime(
     const facebook::jsi::Function &function,
     const facebook::jsi::Value &arg0) {
   workletRuntime->runSync(function, arg0);
+  workletRuntime->drainMicrotasks();
 }
 
 std::shared_ptr<WorkletRuntime> getWorkletRuntimeFromHolder(

@@ -1,4 +1,5 @@
 #include <worklets/RunLoop/EventLoop.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
 
 #include <memory>
 #include <string>
@@ -79,7 +80,7 @@ void EventLoop::pushTask(std::function<void(jsi::Runtime &rt)> &&job) {
   queue_->push([weakRuntime = std::weak_ptr<jsi::Runtime>{runtime_}, job = std::move(job)] {
     if (auto runtime = weakRuntime.lock()) {
       job(*runtime);
-      runtime->drainMicrotasks();
+      jsi_utils::drainMicrotasks(*runtime);
     }
   });
 }

@@ -31,11 +31,6 @@ export function setupMicrotasks() {
 
   let microtasksQueue: Array<() => void> = [];
   let isExecutingMicrotasksQueue = false;
-  const drainHermesJobs = (
-    globalThis as unknown as {
-      HermesInternal?: { drainJobs?: () => void };
-    }
-  ).HermesInternal?.drainJobs;
   globalThis.queueMicrotask = (callback: () => void) => {
     microtasksQueue.push(callback);
   };
@@ -53,7 +48,6 @@ export function setupMicrotasks() {
         microtasksQueue[index]();
       }
       microtasksQueue = [];
-      drainHermesJobs?.();
       globalThis._microtaskQueueFinalizers.forEach((finalizer) => finalizer());
     } finally {
       isExecutingMicrotasksQueue = false;
