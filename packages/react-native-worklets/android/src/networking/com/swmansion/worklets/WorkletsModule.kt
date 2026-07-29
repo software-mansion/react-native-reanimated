@@ -71,11 +71,9 @@ class WorkletsModule(
         val jsContext = checkNotNull(context.javaScriptContextHolder).get()
         val jsCallInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
 
-        val sourceURL = context.sourceURL
-
         val scriptBufferWrapper: ScriptBufferWrapper? =
             if (bundleModeEnabled) {
-                ScriptBufferWrapper(sourceURL!!, context.assets)
+                ScriptBufferWrapper(context.sourceURL, context)
             } else {
                 null
             }
