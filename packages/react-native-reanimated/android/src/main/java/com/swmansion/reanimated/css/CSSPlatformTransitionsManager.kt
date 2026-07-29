@@ -125,6 +125,11 @@ internal class CSSPlatformTransitionsManager(
         val startValue = if (interrupted != null) writer.get(view) else fromValue.toFloat()
         interrupted?.cancel()
 
+        // React Native has already committed the target, and ObjectAnimator writes nothing
+        // until its first frame - which transition-delay defers. Without this the view
+        // would show the target for the whole delay and then jump back.
+        writer.setValue(view, startValue)
+
         val animator = ObjectAnimator.ofFloat(view, writer, startValue, toValue.toFloat())
         animator.interpolator = interpolator
         animator.duration = (durationMs / scale).toLong().coerceAtLeast(1L)
