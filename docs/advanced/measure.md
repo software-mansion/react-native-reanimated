@@ -6,19 +6,20 @@
 
 ```jsx
 import { measure } from 'react-native-reanimated';
+import { scheduleOnUI } from 'react-native-worklets';
 
 function App() {
   const animatedRef = useAnimatedRef();
 
   const handlePress = () => {
-    runOnUI(() => {
+    scheduleOnUI(() => {
       // highlight-next-line
       const measurement = measure(animatedRef);
       if (measurement === null) {
         return;
       }
       // ...
-    })();
+    });
   };
 
   return <Animated.View ref={animatedRef} />;
@@ -65,7 +66,7 @@ or returns `null` when the measurement couldn't be performed.
 
 ## Remarks
 
-* `measure` is implemented only on the [UI thread](/docs/fundamentals/glossary#ui-thread). When using `measure` inside [event handlers](https://react.dev/learn/responding-to-events#adding-event-handlers), it has to be wrapped with the [`runOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI) function.
+* `measure` is implemented only on the [UI thread](/docs/fundamentals/glossary#ui-thread). When using `measure` inside [event handlers](https://react.dev/learn/responding-to-events#adding-event-handlers), it has to be wrapped with the [`scheduleOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI) function.
 
 * The `useAnimatedStyle` function is first evaluated on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) just before the views are attached to the native side. For this reason, to safely use the measure within `useAnimatedStyle`, a condition similar to the one below must be added to the code:
 
@@ -91,7 +92,7 @@ Consecutive runs of `useAnimatedStyle` are executed on the UI thread.
 const animatedRef = useAnimatedRef();
 
 const handlePress = () => {
-  runOnUI(() => {
+  scheduleOnUI(() => {
     const measurement = measure(animatedRef);
 
     // highlight-start
@@ -100,7 +101,7 @@ const handlePress = () => {
     }
     // highlight-end
     // ...
-  })();
+  });
 };
 ```
 
