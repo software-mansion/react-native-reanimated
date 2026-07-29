@@ -68,12 +68,14 @@ class ScriptBufferWrapper(
 
     companion object {
         private const val DEV_BUNDLE_FILE_NAME = "WorkletsDevBundle.js"
+        private const val CONNECT_TIMEOUT_MS = 5_000
 
         private fun downloadScriptToFile(
             url: String,
             outputFile: File,
         ) {
             val connection = URL(url).openConnection() as HttpURLConnection
+            connection.connectTimeout = CONNECT_TIMEOUT_MS
             try {
                 val statusCode =
                     try {
