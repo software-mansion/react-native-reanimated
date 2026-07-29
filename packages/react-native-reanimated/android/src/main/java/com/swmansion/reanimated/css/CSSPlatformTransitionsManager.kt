@@ -18,6 +18,10 @@ internal class CSSPlatformTransitionsManager(
     private val animationTimestamp: () -> Long,
 ) {
     private val animators = HashMap<Key, ObjectAnimator>()
+    private val startTokens = HashMap<Key, Long>()
+
+    /** Monotonic so a token is never reused, even after its entry is dropped. */
+    private var nextStartToken = 0L
     private val interpolators = HashMap<InterpolatorKey, TimeInterpolator>()
 
     private data class Key(
@@ -31,6 +35,12 @@ internal class CSSPlatformTransitionsManager(
         val pointsY: List<Float>,
     )
 
+    /**
+     * Returns whether the property is accepted for native playback, decided before the
+     * hop to the UI thread. Playback itself can still fail there if the View never
+     * mounts, and there is no path back to demote the property afterwards - the same
+     * contract the Apple backend has.
+     */
     fun animateTransition(
         viewTag: Int,
         propertyName: String,
@@ -49,16 +59,31 @@ internal class CSSPlatformTransitionsManager(
         if (scale <= 0f) return false
 
         UiThreadUtil.runOnUiThread {
+            val key = Key(viewTag, propertyName)
+            // Claiming a fresh token invalidates any retry still queued for this key,
+            // so a superseded request cannot start on a later frame.
+            val token = ++nextStartToken
+            startTokens[key] = token
+
             val begin = {
                 viewForTag(viewTag)?.also { view ->
                     val interpolator = interpolatorFor(easingType, easingPointsX, easingPointsY)
-                    start(view, Key(viewTag, propertyName), writer, fromValue, toValue, durationMs, startTimestampMs, interpolator, scale)
+                    start(view, key, writer, fromValue, toValue, durationMs, startTimestampMs, interpolator, scale)
                 } != null
             }
             // A tag can be registered before its View exists, with the mount still in
             // flight. The start timestamp is absolute, so waiting a frame costs nothing:
             // the elapsed offset absorbs it.
-            if (!begin()) Choreographer.getInstance().postFrameCallback { begin() }
+            if (begin()) {
+                startTokens.remove(key)
+            } else {
+                Choreographer.getInstance().postFrameCallback {
+                    if (startTokens[key] == token) {
+                        startTokens.remove(key)
+                        begin()
+                    }
+                }
+            }
         }
         return true
     }
@@ -67,7 +92,12 @@ internal class CSSPlatformTransitionsManager(
         viewTag: Int,
         propertyName: String,
     ) {
-        UiThreadUtil.runOnUiThread { animators.remove(Key(viewTag, propertyName))?.cancel() }
+        UiThreadUtil.runOnUiThread {
+            val key = Key(viewTag, propertyName)
+            // Also drops any queued retry for this key.
+            startTokens.remove(key)
+            animators.remove(key)?.cancel()
+        }
     }
 
     private fun start(
