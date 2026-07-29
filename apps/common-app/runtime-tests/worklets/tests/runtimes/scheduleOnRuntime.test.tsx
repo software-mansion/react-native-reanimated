@@ -52,6 +52,34 @@ describe('scheduleOnRuntime', () => {
     expect(value).toBe(42);
   });
 
+  test('schedules on UI Runtime to a Worker Runtime', async () => {
+    scheduleOnUI(() => {
+      'worklet';
+
+      scheduleOnRuntime(workletRuntime1, () => {
+        'worklet';
+        globalThis.scheduleOnRN(callbackPass, 42);
+      });
+    });
+
+    await waitForNotification(PASS_NOTIFICATION);
+    expect(value).toBe(42);
+  });
+
+  test('schedules on Worker Runtime to another Worker Runtime', async () => {
+    scheduleOnRuntime(workletRuntime1, () => {
+      'worklet';
+
+      scheduleOnRuntime(workletRuntime2, () => {
+        'worklet';
+        globalThis.scheduleOnRN(callbackPass, 42);
+      });
+    });
+
+    await waitForNotification(PASS_NOTIFICATION);
+    expect(value).toBe(42);
+  });
+
   test('drains microtasks after execution', async () => {
     scheduleOnRuntime(workletRuntime1, () => {
       'worklet';
@@ -79,33 +107,5 @@ describe('scheduleOnRuntime', () => {
 
     // The counter setup and the tested execution each drain once.
     expect(microtaskDrainCount).toBe(2);
-  });
-
-  test('schedules on UI Runtime to a Worker Runtime', async () => {
-    scheduleOnUI(() => {
-      'worklet';
-
-      scheduleOnRuntime(workletRuntime1, () => {
-        'worklet';
-        globalThis.scheduleOnRN(callbackPass, 42);
-      });
-    });
-
-    await waitForNotification(PASS_NOTIFICATION);
-    expect(value).toBe(42);
-  });
-
-  test('schedules on Worker Runtime to another Worker Runtime', async () => {
-    scheduleOnRuntime(workletRuntime1, () => {
-      'worklet';
-
-      scheduleOnRuntime(workletRuntime2, () => {
-        'worklet';
-        globalThis.scheduleOnRN(callbackPass, 42);
-      });
-    });
-
-    await waitForNotification(PASS_NOTIFICATION);
-    expect(value).toBe(42);
   });
 });

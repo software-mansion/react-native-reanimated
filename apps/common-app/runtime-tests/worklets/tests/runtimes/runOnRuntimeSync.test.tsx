@@ -51,40 +51,6 @@ describe('runOnRuntimeSync', () => {
     expect(result).toBe(42);
   });
 
-  test('drains microtasks after synchronous execution', () => {
-    runOnRuntimeSync(workletRuntime1, () => {
-      'worklet';
-      globalThis.didRunMicrotask = false;
-      queueMicrotask(() => {
-        globalThis.didRunMicrotask = true;
-      });
-    });
-
-    const didRunMicrotask = runOnRuntimeSync(workletRuntime1, () => {
-      'worklet';
-      const result = globalThis.didRunMicrotask;
-      globalThis.didRunMicrotask = undefined;
-      return result;
-    });
-
-    expect(didRunMicrotask).toBe(true);
-  });
-
-  test('drains microtasks exactly once after synchronous execution', () => {
-    startCountingMicrotaskDrains(workletRuntime1.runtimeId);
-
-    runOnRuntimeSync(workletRuntime1, () => {
-      'worklet';
-    });
-
-    const microtaskDrainCount = stopCountingMicrotaskDrains(
-      workletRuntime1.runtimeId
-    );
-
-    // The counter setup and the tested execution each drain once.
-    expect(microtaskDrainCount).toBe(2);
-  });
-
   if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     test('schedules on UI Runtime to a Worker Runtime', async () => {
       scheduleOnUI(() => {
@@ -162,4 +128,38 @@ describe('runOnRuntimeSync', () => {
       );
     });
   }
+
+  test('drains microtasks after synchronous execution', () => {
+    runOnRuntimeSync(workletRuntime1, () => {
+      'worklet';
+      globalThis.didRunMicrotask = false;
+      queueMicrotask(() => {
+        globalThis.didRunMicrotask = true;
+      });
+    });
+
+    const didRunMicrotask = runOnRuntimeSync(workletRuntime1, () => {
+      'worklet';
+      const result = globalThis.didRunMicrotask;
+      globalThis.didRunMicrotask = undefined;
+      return result;
+    });
+
+    expect(didRunMicrotask).toBe(true);
+  });
+
+  test('drains microtasks exactly once after synchronous execution', () => {
+    startCountingMicrotaskDrains(workletRuntime1.runtimeId);
+
+    runOnRuntimeSync(workletRuntime1, () => {
+      'worklet';
+    });
+
+    const microtaskDrainCount = stopCountingMicrotaskDrains(
+      workletRuntime1.runtimeId
+    );
+
+    // The counter setup and the tested execution each drain once.
+    expect(microtaskDrainCount).toBe(2);
+  });
 });

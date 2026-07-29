@@ -62,48 +62,6 @@ describe('runOnRuntimeSyncWithId', () => {
     expect(result).toBe(42);
   });
 
-  [
-    { name: 'UI', runtimeId: UIRuntimeId },
-    { name: 'Worker', runtimeId: workletRuntime1.runtimeId },
-  ].forEach(({ name, runtimeId }) => {
-    test(`drains microtasks after synchronous execution on ${name} Runtime`, () => {
-      runOnRuntimeSyncWithId(runtimeId, () => {
-        'worklet';
-        globalThis.didRunMicrotask = false;
-        queueMicrotask(() => {
-          globalThis.didRunMicrotask = true;
-        });
-      });
-
-      const didRunMicrotask = runOnRuntimeSyncWithId(runtimeId, () => {
-        'worklet';
-        const result = globalThis.didRunMicrotask;
-        globalThis.didRunMicrotask = undefined;
-        return result;
-      });
-
-      expect(didRunMicrotask).toBe(true);
-    });
-  });
-
-  [
-    { name: 'UI', runtimeId: UIRuntimeId },
-    { name: 'Worker', runtimeId: workletRuntime1.runtimeId },
-  ].forEach(({ name, runtimeId }) => {
-    test(`drains microtasks exactly once after synchronous execution on ${name} Runtime`, () => {
-      startCountingMicrotaskDrains(runtimeId);
-
-      runOnRuntimeSyncWithId(runtimeId, () => {
-        'worklet';
-      });
-
-      const microtaskDrainCount = stopCountingMicrotaskDrains(runtimeId);
-
-      // The counter setup and the tested execution each drain once.
-      expect(microtaskDrainCount).toBe(2);
-    });
-  });
-
   test('from RN Runtime to non-existing Runtime', async () => {
     const fun = () =>
       runOnRuntimeSyncWithId(9999, () => {
@@ -375,4 +333,46 @@ describe('runOnRuntimeSyncWithId', () => {
       );
     });
   }
+
+  [
+    { name: 'UI', runtimeId: UIRuntimeId },
+    { name: 'Worker', runtimeId: workletRuntime1.runtimeId },
+  ].forEach(({ name, runtimeId }) => {
+    test(`drains microtasks after synchronous execution on ${name} Runtime`, () => {
+      runOnRuntimeSyncWithId(runtimeId, () => {
+        'worklet';
+        globalThis.didRunMicrotask = false;
+        queueMicrotask(() => {
+          globalThis.didRunMicrotask = true;
+        });
+      });
+
+      const didRunMicrotask = runOnRuntimeSyncWithId(runtimeId, () => {
+        'worklet';
+        const result = globalThis.didRunMicrotask;
+        globalThis.didRunMicrotask = undefined;
+        return result;
+      });
+
+      expect(didRunMicrotask).toBe(true);
+    });
+  });
+
+  [
+    { name: 'UI', runtimeId: UIRuntimeId },
+    { name: 'Worker', runtimeId: workletRuntime1.runtimeId },
+  ].forEach(({ name, runtimeId }) => {
+    test(`drains microtasks exactly once after synchronous execution on ${name} Runtime`, () => {
+      startCountingMicrotaskDrains(runtimeId);
+
+      runOnRuntimeSyncWithId(runtimeId, () => {
+        'worklet';
+      });
+
+      const microtaskDrainCount = stopCountingMicrotaskDrains(runtimeId);
+
+      // The counter setup and the tested execution each drain once.
+      expect(microtaskDrainCount).toBe(2);
+    });
+  });
 });
