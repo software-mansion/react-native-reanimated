@@ -14,6 +14,38 @@ const BOOLEAN_FLAGS = new Set(['launch', 'skip-build', 'build-only']);
 const BUNDLE_ID = 'org.reactjs.native.example.FabricExample';
 const ANDROID_APP_ID = 'com.fabricexample';
 
+const projectRoot = path.resolve(__dirname, '..');
+const iosDir = path.join(projectRoot, 'ios');
+const androidDir = path.join(projectRoot, 'android');
+const SANITIZER_REPORT_DIR = path.join(projectRoot, 'sanitizer-reports');
+// -enable*Sanitizer alone does not reach the Pods project on CI (the built
+// products carried no -fsanitize flags), so each build setting is also forced
+// as a command-line override, which applies to every target.
+const SANITIZERS = {
+  thread: {
+    buildArgs: ['-enableThreadSanitizer', 'YES', 'ENABLE_THREAD_SANITIZER=YES'],
+    launchEnv: {
+      SIMCTL_CHILD_TSAN_OPTIONS: `log_path=${path.join(SANITIZER_REPORT_DIR, 'tsan')} halt_on_error=0`,
+    },
+    runtimePrefix: 'libclang_rt.tsan',
+  },
+  address: {
+    buildArgs: [
+      '-enableAddressSanitizer',
+      'YES',
+      'ENABLE_ADDRESS_SANITIZER=YES',
+      '-enableUndefinedBehaviorSanitizer',
+      'YES',
+      'ENABLE_UNDEFINED_BEHAVIOR_SANITIZER=YES',
+    ],
+    launchEnv: {
+      SIMCTL_CHILD_ASAN_OPTIONS: `log_path=${path.join(SANITIZER_REPORT_DIR, 'asan')}`,
+      SIMCTL_CHILD_UBSAN_OPTIONS: `log_path=${path.join(SANITIZER_REPORT_DIR, 'ubsan')} print_stacktrace=1`,
+    },
+    runtimePrefix: 'libclang_rt.asan',
+  },
+};
+
 const args = parseArgs(process.argv.slice(2));
 const LIBRARY = String(args.library ?? '').toLowerCase();
 const PLATFORM = String(args.platform ?? 'ios').toLowerCase();
@@ -53,8 +85,10 @@ if (!PLATFORMS.includes(PLATFORM)) {
   process.exit(1);
 }
 
-if (SANITIZER && SANITIZER !== 'thread') {
-  console.error(`[runtime-tests] --sanitizer supports only: thread`);
+if (SANITIZER && !SANITIZERS[SANITIZER]) {
+  console.error(
+    `[runtime-tests] --sanitizer supports only: ${Object.keys(SANITIZERS).join(', ')}`
+  );
   process.exit(1);
 }
 
@@ -72,11 +106,6 @@ if (BUILD_ONLY && SHOULD_LAUNCH) {
   console.error('[runtime-tests] --build-only cannot be combined with --launch');
   process.exit(1);
 }
-
-const projectRoot = path.resolve(__dirname, '..');
-const iosDir = path.join(projectRoot, 'ios');
-const androidDir = path.join(projectRoot, 'android');
-const SANITIZER_REPORT_DIR = path.join(projectRoot, 'sanitizer-reports');
 
 let client = null;
 let runStartedAt = 0;
@@ -324,9 +353,7 @@ function printSanitizerReports() {
   }
   let files = [];
   try {
-    files = fs
-      .readdirSync(SANITIZER_REPORT_DIR)
-      .filter((name) => name.startsWith('tsan.'));
+    files = fs.readdirSync(SANITIZER_REPORT_DIR);
   } catch {
     return;
   }
@@ -529,12 +556,7 @@ async function ensureBooted(device) {
 }
 
 function sanitizerBuildArgs() {
-  // -enableThreadSanitizer alone does not reach the Pods project on CI (the
-  // built products carried no -fsanitize=thread), so the build setting is
-  // also forced as a command-line override, which applies to every target.
-  return SANITIZER === 'thread'
-    ? ['-enableThreadSanitizer', 'YES', 'ENABLE_THREAD_SANITIZER=YES']
-    : [];
+  return SANITIZER ? SANITIZERS[SANITIZER].buildArgs : [];
 }
 
 async function buildApp() {
@@ -619,11 +641,7 @@ async function installAndLaunch(udid) {
       env: {
         ...process.env,
         SIMCTL_CHILD_RUNTIME_TESTS_LIBRARY: LIBRARY,
-        ...(SANITIZER === 'thread'
-          ? {
-              SIMCTL_CHILD_TSAN_OPTIONS: `log_path=${path.join(SANITIZER_REPORT_DIR, 'tsan')} halt_on_error=0`,
-            }
-          : {}),
+        ...(SANITIZER ? SANITIZERS[SANITIZER].launchEnv : {}),
       },
     }
   );
@@ -820,16 +838,19 @@ function printCommandFailure(error) {
 
 async function assertSanitizerRuntimeEmbedded() {
   const app = await appPath();
+  const prefix = SANITIZERS[SANITIZER].runtimePrefix;
   const frameworks = path.join(app, 'Frameworks');
   const embedded =
     fs.existsSync(frameworks) &&
-    fs.readdirSync(frameworks).some((name) => name.startsWith('libclang_rt.tsan'));
+    fs.readdirSync(frameworks).some((name) => name.startsWith(prefix));
   if (!embedded) {
     throw new Error(
-      `the ThreadSanitizer runtime is not embedded in ${app} — the build was not instrumented`
+      `the ${SANITIZER} sanitizer runtime (${prefix}*) is not embedded in ${app} — the build was not instrumented`
     );
   }
-  console.log('[runtime-tests] ThreadSanitizer runtime is embedded in the app');
+  console.log(
+    `[runtime-tests] ${SANITIZER} sanitizer runtime is embedded in the app`
+  );
 }
 
 if (BUILD_ONLY) {

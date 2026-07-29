@@ -97,7 +97,7 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}/ios
         run: |
           bundle install
-          RCT_USE_PREBUILT_RNCORE=0 bundle exec pod update --no-repo-update
+          RCT_USE_PREBUILT_RNCORE=0 RCT_USE_RN_DEP=0 bundle exec pod update --no-repo-update
 
       - name: Cache DerivedData
         if: ${{ !inputs.sanitizer }}
