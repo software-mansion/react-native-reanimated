@@ -75,7 +75,7 @@ inline void scheduleOnUI(
 #ifndef NDEBUG
                               scheduleStacks = std::move(scheduleStacks),
 #endif // NDEBUG
-                              weakUIWorkletRuntime]() {
+                              weakUIWorkletRuntime](jsi::Runtime &) {
     // This callback can outlive the WorkletsModuleProxy object during the
     // invalidation of React Native. This happens when WorkletsModuleProxy
     // destructor is called on the JS thread and the UI thread is
@@ -99,8 +99,6 @@ inline void scheduleOnUI(
       uiWorkletRuntime->runSync(worklets[i]);
 #endif // NDEBUG
     }
-
-    uiWorkletRuntime->drainMicrotasks();
   });
 }
 
@@ -152,8 +150,7 @@ runOnRuntimeSync(jsi::Runtime &rt, const jsi::Value &workletRuntimeValue, const 
   auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
   auto worklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
-  auto serializedResult =
-      workletRuntime->runSyncAndDrainMicrotasks<std::shared_ptr<Serializable>>(worklet, std::nullopt);
+  auto serializedResult = workletRuntime->runSyncAndDrainMicrotasks<std::shared_ptr<Serializable>>(worklet);
   return serializedResult->toJSValue(rt);
 }
 #endif // NDEBUG
@@ -509,14 +506,17 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
         auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Only worklets can be executed on a worklet runtime.");
-        std::optional<std::string> scheduleStack;
 #ifndef NDEBUG
+        std::optional<std::string> scheduleStack;
         if (at<2>(args).isString()) {
           scheduleStack = at<2>(args).asString(rt).utf8(rt);
         }
-#endif // NDEBUG
         auto serializedResult = workletRuntime->runSyncWithStackAndDrainMicrotasks<std::shared_ptr<Serializable>>(
             serializableWorklet, scheduleStack);
+#else
+        auto serializedResult =
+            workletRuntime->runSyncAndDrainMicrotasks<std::shared_ptr<Serializable>>(serializableWorklet);
+#endif // NDEBUG
         return serializedResult->toJSValue(rt);
       });
 

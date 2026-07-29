@@ -97,7 +97,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   template <typename... Args>
   jsi::Value runSync(const jsi::Function &function, Args &&...args) const {
 #ifndef NDEBUG
-    return callGuarded(function, std::nullopt, std::forward<Args>(args)...);
+    return callGuarded(function, std::forward<Args>(args)...);
 #else
     return function.call(*runtime_, args...);
 #endif // NDEBUG
@@ -121,16 +121,13 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     jsi::Runtime &rt = *runtime_;
     auto function = worklet->toJSValue(rt).getObject(rt).getFunction(rt);
 #ifndef NDEBUG
-    auto result = callGuarded(function, scheduleStack, std::forward<Args>(args)...);
+    auto result = callGuardedWithStack(function, scheduleStack, std::forward<Args>(args)...);
 #else
     (void)scheduleStack;
     auto result = function.call(rt, args...);
 #endif // NDEBUG
     if constexpr (std::is_same_v<TResult, std::shared_ptr<Serializable>>) {
-      return extractSerializableOrThrow(
-          rt,
-          result,
-          "[Worklets] Worklet passed to `runSync` must return a value serialized with `createSerializable`.");
+      return extractSerializableOrThrow(rt, result);
     } else {
       return result;
     }
@@ -149,14 +146,26 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
   template <RuntimeCallable TCallable>
   std::invoke_result_t<TCallable, jsi::Runtime &> runSync(TCallable &&job) const {
-    jsi::Runtime &rt = getJSIRuntime();
     auto lock = acquireRuntimeLock();
+    jsi::Runtime &rt = getJSIRuntime();
     return job(rt);
   }
 
   /**
-   * Executes a callable, JSI function or serialized worklet synchronously and
-   * drains microtasks before releasing the runtime lock.
+   * Executes a serialized worklet synchronously and drains microtasks before
+   * releasing the runtime lock.
+   */
+  template <SyncCallResult TResult = jsi::Value, typename... Args>
+  TResult runSyncAndDrainMicrotasks(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args) const {
+    auto lock = acquireRuntimeLock();
+    auto result = runSync<TResult>(worklet, std::forward<Args>(args)...);
+    drainMicrotasks();
+    return result;
+  }
+
+  /**
+   * Executes a callable or JSI function synchronously and drains microtasks
+   * before releasing the runtime lock.
    */
   template <typename... Args>
   auto runSyncAndDrainMicrotasks(Args &&...args) const {
@@ -173,9 +182,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   }
 
   /**
-   * Executes a serialized worklet synchronously, optionally attaching
-   * scheduling stack metadata, and drains microtasks before releasing the
-   * runtime lock.
+   * Executes a serialized worklet synchronously with scheduling stack metadata
+   * and drains microtasks before releasing the runtime lock.
    */
   template <SyncCallResult TResult = jsi::Value, typename... Args>
   TResult runSyncWithStackAndDrainMicrotasks(
@@ -186,10 +194,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     auto result = runSyncWithStack<TResult>(worklet, scheduleStack, std::forward<Args>(args)...);
     drainMicrotasks();
     return result;
-  }
-
-  void drainMicrotasks() const {
-    runSync([](jsi::Runtime &rt) { jsi_utils::drainMicrotasks(rt); });
   }
 
   jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propName) override;
@@ -237,13 +241,21 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   static std::weak_ptr<WorkletRuntime> getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt);
 
  private:
+  void drainMicrotasks() const {
+    runSync([](jsi::Runtime &rt) { jsi_utils::drainMicrotasks(rt); });
+  }
+
 #ifndef NDEBUG
-  // Wraps the provided function in a try/catch so an exception thrown on the
-  // worklet runtime can be reported on the RN Runtime LogBox with a
-  // stack pointing back to the JS call site that scheduled the worklet.
+  /**
+   * Wraps the provided function in a try/catch so an exception thrown on the
+   * worklet runtime can be reported on the RN Runtime LogBox with a
+   * stack pointing back to the JS call site that scheduled the worklet.
+   */
   template <typename... Args>
-  jsi::Value callGuarded(const jsi::Function &function, const std::optional<std::string> &scheduleStack, Args &&...args)
-      const {
+  jsi::Value callGuardedWithStack(
+      const jsi::Function &function,
+      const std::optional<std::string> &scheduleStack,
+      Args &&...args) const {
     auto &rt = *runtime_;
     try {
       return function.call(rt, args...);
@@ -251,6 +263,15 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       JSLogger::handleJSError(jsScheduler_, rt, name_, e, scheduleStack);
       return jsi::Value::undefined();
     }
+  }
+
+  /**
+   * Wraps the provided function in a try/catch, reporting any exception without a
+   * scheduling stack.
+   */
+  template <typename... Args>
+  jsi::Value callGuarded(const jsi::Function &function, Args &&...args) const {
+    return callGuardedWithStack(function, std::nullopt, std::forward<Args>(args)...);
   }
 #endif // NDEBUG
 
