@@ -255,7 +255,7 @@ bool NativeProxy::cssAnimateTransition(
     const double fromValue,
     const double toValue,
     const double durationMs,
-    const double elapsedMs,
+    const double startTimestampMs,
     const PlatformEasing &easing) {
   static const auto method = getJniMethod<jboolean(
       int,
@@ -278,7 +278,7 @@ bool NativeProxy::cssAnimateTransition(
              fromValue,
              toValue,
              durationMs,
-             elapsedMs,
+             startTimestampMs,
              static_cast<int>(easing.type),
              jPointsX,
              jPointsY) != JNI_FALSE;

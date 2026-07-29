@@ -40,7 +40,7 @@ class CSSPlatformTransitions {
       double fromValue,
       double toValue,
       double durationMs,
-      double elapsedMs,
+      double startTimestampMs,
       const PlatformEasing &easing)>;
   using RemoveFunction = std::function<void(int viewTag, const std::string &propertyName)>;
 
