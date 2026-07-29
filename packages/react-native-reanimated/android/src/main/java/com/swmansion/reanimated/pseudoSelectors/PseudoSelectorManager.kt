@@ -191,10 +191,7 @@ class PseudoSelectorManager(
     ) {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> windowPressDown(root, event)
-            MotionEvent.ACTION_MOVE ->
-                if (gestureByHost.isNotEmpty()) {
-                    gestureByHost.keys.toList().forEach { onHostMove(it, event) }
-                }
+            MotionEvent.ACTION_MOVE -> gestureByHost.keys.toList().forEach { onHostMove(it, event) }
             // A secondary finger lifting does not end a press started by the primary one.
             MotionEvent.ACTION_POINTER_UP ->
                 if (event.getPointerId(event.actionIndex) == 0) {
@@ -236,9 +233,7 @@ class PseudoSelectorManager(
     }
 
     private fun pressHostsById(): Map<Int, View> =
-        (activeCallbacks.keys + deepestCallbacks.keys)
-            .map { findTouchHost(it) }
-            .associateBy { it.id }
+        (activeCallbacks.keys + deepestCallbacks.keys).map { findTouchHost(it) }.associateBy { it.id }
 
     // / The path already resolves compound children to the touched shape, and it is the only
     // / source that maps screen coordinates through each ancestor's transform. Deriving
@@ -253,11 +248,7 @@ class PseudoSelectorManager(
             host
         }
 
-    private fun releaseAllHostGestures() {
-        for (host in gestureByHost.keys.toList()) {
-            onHostRelease(host)
-        }
-    }
+    private fun releaseAllHostGestures() = gestureByHost.keys.toList().forEach { onHostRelease(it) }
 
     private fun findTouchHost(view: View): View {
         var parent: ViewParent? = view.parent
@@ -332,7 +323,7 @@ class PseudoSelectorManager(
         findTouchedLeaf(host, hitTags)?.let {
             beginPress(host, it, event.rawX, event.rawY, hitTags)
         }
-        hover.onViewTouchDown(host, event)
+        hover.recompute(host, event.rawX, event.rawY)
     }
 
     private fun onHostMove(
@@ -380,10 +371,8 @@ class PseudoSelectorManager(
     // / actions are cleared, never run: they notify C++ over JNI, which is being torn down.
     fun invalidate() {
         UiThreadUtil.runOnUiThread {
-            if (mountListenerRegistered) {
-                fabricUIManager.removeUIManagerEventListener(mountListener)
-                mountListenerRegistered = false
-            }
+            fabricUIManager.removeUIManagerEventListener(mountListener)
+            mountListenerRegistered = false
             extraWindowBridge?.uninstall()
             extraWindowBridge = null
             hover.uninstall()
@@ -397,23 +386,12 @@ class PseudoSelectorManager(
         }
     }
 
+    // TODO: Optimize so we don't iterate over all the views with :active-deepest every time.
     private fun hasDeepestDescendantAt(
         ancestor: View,
         hitTags: List<Int>,
-    ): Boolean {
-        if (deepestCallbacks.size < 2) {
-            return false
-        }
-        // TODO: Optimize so we don't iterate over all the views with :active-deepest every time.
-        for (candidate in deepestCallbacks.keys) {
-            if (candidate === ancestor) continue
-            if (!isDescendantOf(candidate, ancestor)) continue
-            if (candidate.id in hitTags) {
-                return true
-            }
-        }
-        return false
-    }
+    ): Boolean =
+        deepestCallbacks.keys.any { it !== ancestor && it.id in hitTags && isDescendantOf(it, ancestor) }
 
     private fun fireActiveCallbacksUpTree(
         source: View,

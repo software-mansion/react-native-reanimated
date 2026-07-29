@@ -23,7 +23,6 @@ class TouchHoverCoordinator(
     private val tmpCoords = FloatArray(2)
 
     private var settledGestureDownTime = Long.MIN_VALUE
-    private var touchSlop = -1f
 
     private val observedWindows = mutableListOf<WeakReference<WindowObserver>>()
 
@@ -152,18 +151,9 @@ class TouchHoverCoordinator(
         dx: Float,
         dy: Float,
     ): Boolean {
-        val slop = scaledTouchSlop(root)
+        val context = root?.context ?: hoverCallbacks.keys.firstOrNull()?.context ?: return true
+        val slop = ViewConfiguration.get(context).scaledTouchSlop.toFloat()
         return dx * dx + dy * dy > slop * slop
-    }
-
-    fun onViewTouchDown(
-        sourceView: View,
-        event: MotionEvent,
-    ) {
-        if (isWindowObserved(sourceView) || isGestureSettled(event)) {
-            return
-        }
-        reconcile(sourceView.rootView as? ViewGroup, event.rawX, event.rawY)
     }
 
     fun onViewTouchUp(
@@ -227,14 +217,6 @@ class TouchHoverCoordinator(
         unhoverWhere { it.id !in hitTags }
     }
 
-    private fun scaledTouchSlop(root: ViewGroup?): Float {
-        if (touchSlop < 0f) {
-            val context = root?.context ?: hoverCallbacks.keys.firstOrNull()?.context ?: return 0f
-            touchSlop = ViewConfiguration.get(context).scaledTouchSlop.toFloat()
-        }
-        return touchSlop
-    }
-
     private fun hitTestPath(
         root: ViewGroup,
         screenX: Float,
@@ -260,9 +242,6 @@ class TouchHoverCoordinator(
     }
 
     private inline fun unhoverWhere(predicate: (View) -> Boolean) {
-        if (hoveredViews.isEmpty()) {
-            return
-        }
         for (view in hoveredViews.toList()) {
             if (predicate(view)) {
                 hoverCallbacks[view]?.let { setHovered(view, it, false) }
