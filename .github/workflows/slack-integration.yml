@@ -88,6 +88,10 @@ jobs:
             "react-native-reanimated@${{ matrix.reanimatedVersion }}" \
             "react-native-worklets@${{ matrix.workletsVersion }}"
 
+      - name: Make the released Worklets plugin write worklet origins
+        if: matrix.reanimatedRange != 'main' && matrix.bundleMode
+        run: node --experimental-strip-types .github/workflows/helper/patch-worklets-attribution.ts
+
       - name: Report what is actually installed
         id: installed
         run: |

@@ -3,6 +3,7 @@ import path from 'node:path';
 
 const REANIMATED = 'react-native-reanimated';
 const WORKLETS = 'react-native-worklets';
+const MAIN = 'main';
 
 type PlatformResult = {
   total: number;
@@ -93,24 +94,88 @@ function missingJobs(results: ResultFile[]): string[] {
     .filter((key) => !measured.has(key));
 }
 
-function formatMessage(results: ResultFile[], runUrl: string): string {
-  const lines: string[] = ['*Nightly bundle cost*'];
-
+function groupByVersion(results: ResultFile[]): Map<string, ResultFile[]> {
   const byVersion = new Map<string, ResultFile[]>();
   for (const result of results) {
     const existing = byVersion.get(result.reanimatedVersion) ?? [];
     existing.push(result);
     byVersion.set(result.reanimatedVersion, existing);
   }
+  return byVersion;
+}
 
+function sortVersions(versions: string[]): string[] {
   const expectedOrder = readExpectedJobs().map((job) => job.reanimatedVersion);
   const orderOf = (version: string) => {
     const index = expectedOrder.indexOf(version);
     return index === -1 ? expectedOrder.length : index;
   };
-  const versions = [...byVersion.keys()].sort(
-    (a, b) => orderOf(a) - orderOf(b)
+  return [...versions].sort((a, b) => orderOf(a) - orderOf(b));
+}
+
+function sumGroup(entries: ResultFile[], group: string): number {
+  let sum = 0;
+  for (const entry of entries) {
+    for (const result of Object.values(entry.results)) {
+      sum += result.groups[group] ?? 0;
+    }
+  }
+  return sum;
+}
+
+function percentChange(value: number, baseline: number): string {
+  if (baseline === 0) {
+    return 'n/a';
+  }
+  const change = ((value - baseline) / baseline) * 100;
+  return `${change > 0 ? '+' : ''}${change.toFixed(1)}%`;
+}
+
+function formatSummary(results: ResultFile[], runUrl: string): string {
+  const byVersion = groupByVersion(results);
+  const mainEntries = byVersion.get(MAIN);
+  const others = sortVersions([...byVersion.keys()]).filter(
+    (version) => version !== MAIN
   );
+
+  if (!mainEntries || others.length === 0) {
+    return (
+      '*Nightly bundle cost*\nNothing to compare, check the CI logs.\n' +
+      `<${runUrl}|Workflow run>`
+    );
+  }
+
+  const lines = [
+    '*Nightly bundle cost*',
+    `main vs ${others.join(', ')} (average)`,
+    '```',
+  ];
+
+  for (const [label, group] of [
+    ['reanimated', REANIMATED],
+    ['worklets', WORKLETS],
+  ]) {
+    const main = sumGroup(mainEntries, group);
+    const baseline =
+      others.reduce(
+        (sum, version) => sum + sumGroup(byVersion.get(version)!, group),
+        0
+      ) / others.length;
+    lines.push(
+      `${label.padEnd(11)} ${percentChange(main, baseline).padStart(7)}  ` +
+        `(${mb(main)} vs ${mb(baseline)})`
+    );
+  }
+
+  lines.push('```', `\n<${runUrl}|Workflow run>`);
+  return lines.join('\n');
+}
+
+function formatTable(results: ResultFile[]): string {
+  const lines: string[] = ['Nightly bundle cost'];
+
+  const byVersion = groupByVersion(results);
+  const versions = sortVersions([...byVersion.keys()]);
 
   for (const version of versions) {
     const entries = byVersion.get(version)!;
@@ -134,14 +199,11 @@ function formatMessage(results: ResultFile[], runUrl: string): string {
     }
 
     lines.push(
-      `\n*reanimated ${version}* + worklets ${workletsVersion} (app RN ${reactNativeVersion})` +
-        '\n```\n' +
-        body.join('\n') +
-        '\n```'
+      `\nreanimated ${version} + worklets ${workletsVersion} (app RN ${reactNativeVersion})\n` +
+        body.join('\n')
     );
   }
 
-  lines.push(`\n<${runUrl}|Workflow run>`);
   return lines.join('\n');
 }
 
@@ -159,7 +221,13 @@ export function buildBundleCostSection(
       process.env.MEASURE_RESULT !== 'success' ||
       results.length === 0 ||
       missingJobs(results).length > 0;
-    return failed ? failureText : formatMessage(results, runUrl);
+
+    if (failed) {
+      return failureText;
+    }
+
+    console.log(formatTable(results));
+    return formatSummary(results, runUrl);
   } catch (error) {
     console.error(error);
     process.exitCode = 1;
