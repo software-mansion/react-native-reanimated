@@ -151,19 +151,25 @@ function formatSummary(results: ResultFile[], runUrl: string): string {
     '```',
   ];
 
-  for (const [label, group] of [
-    ['reanimated', REANIMATED],
-    ['worklets', WORKLETS],
-  ]) {
-    const main = sumGroup(mainEntries, group);
+  const rows: [string, string, boolean][] = [
+    ['reanimated(bundlemode)', REANIMATED, true],
+    ['reanimated(legacy)', REANIMATED, false],
+    ['worklets(bundlemode)', WORKLETS, true],
+    ['worklets(legacy)', WORKLETS, false],
+  ];
+
+  for (const [label, group, bundleMode] of rows) {
+    const inMode = (entries: ResultFile[]) =>
+      entries.filter((entry) => entry.bundleMode === bundleMode);
+    const main = sumGroup(inMode(mainEntries), group);
     const baselines = others.map((version) =>
-      sumGroup(byVersion.get(version)!, group)
+      sumGroup(inMode(byVersion.get(version)!), group)
     );
     const changes = baselines
       .map((baseline) => percentChange(main, baseline).padStart(7))
       .join(' ');
     const sizes = [main, ...baselines].map((size) => mb(size)).join(' vs ');
-    lines.push(`${label.padEnd(11)} ${changes}  (${sizes})`);
+    lines.push(`${label.padEnd(23)} ${changes}  (${sizes})`);
   }
 
   lines.push('```', `\n<${runUrl}|bundle cost workflow run>`);
