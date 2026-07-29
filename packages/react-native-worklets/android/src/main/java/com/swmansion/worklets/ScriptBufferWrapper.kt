@@ -6,6 +6,7 @@ import android.content.res.AssetManager
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
 import com.facebook.proguard.annotations.DoNotStripAny
+import com.facebook.react.ReactApplication
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
@@ -49,8 +50,9 @@ class ScriptBufferWrapper(
                     initHybridFromFile(uri, uri)
                 }
                 else -> {
-                    val bundleFile = File(context.cacheDir, DEV_BUNDLE_FILE_NAME)
-                    downloadScriptToFile(uri, bundleFile)
+                    val bundleFile =
+                        reactNativeDownloadedBundleFile(context)
+                            ?: File(context.cacheDir, DEV_BUNDLE_FILE_NAME).also { downloadScriptToFile(uri, it) }
                     initHybridFromFile(bundleFile.absolutePath, uri)
                 }
             }
@@ -68,6 +70,15 @@ class ScriptBufferWrapper(
 
     companion object {
         private const val DEV_BUNDLE_FILE_NAME = "WorkletsDevBundle.js"
+
+        private fun reactNativeDownloadedBundleFile(context: Context): File? {
+            val reactApplication = context.applicationContext as? ReactApplication ?: return null
+            val bundlePath =
+                reactApplication.reactHost
+                    ?.devSupportManager
+                    ?.downloadedJSBundleFile ?: return null
+            return File(bundlePath).takeIf { it.exists() }
+        }
 
         private fun downloadScriptToFile(
             url: String,
