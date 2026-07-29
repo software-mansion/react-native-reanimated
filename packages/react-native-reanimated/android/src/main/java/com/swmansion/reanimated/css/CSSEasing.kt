@@ -4,14 +4,9 @@ import android.animation.TimeInterpolator
 import android.view.animation.LinearInterpolator
 import android.view.animation.PathInterpolator
 
-/**
- * Rebuilds a CSS easing as a [TimeInterpolator] from the exact description sent by
- * `PlatformEasing` in CSSPlatformTransitions.h. The curves are reproduced rather
- * than sampled, so `steps()` keeps its discontinuities at any duration.
- */
+/** Curves are reproduced rather than sampled, so `steps()` keeps its discontinuities. */
 internal object CSSEasing {
     // Must match PlatformEasing::Type.
-    private const val LINEAR = 0
     private const val CUBIC_BEZIER = 1
     private const val STEPS = 2
     private const val LINEAR_STOPS = 3
@@ -22,7 +17,6 @@ internal object CSSEasing {
         pointsY: FloatArray,
     ): TimeInterpolator =
         when (type) {
-            // PathInterpolator's four-argument form is exactly CSS cubic-bezier.
             CUBIC_BEZIER -> PathInterpolator(pointsX[0], pointsY[0], pointsX[1], pointsY[1])
             STEPS -> StepsInterpolator(pointsX, pointsY)
             LINEAR_STOPS -> LinearStopsInterpolator(pointsX, pointsY)
@@ -30,10 +24,8 @@ internal object CSSEasing {
         }
 
     /**
-     * Index of the last point at or before [x]. Mirrors `firstSmallerOrEqual`
-     * exactly: an upper bound stepped back one, so a run of equal x values
-     * resolves to its last entry rather than an arbitrary one. Runs once per
-     * frame per animator, hence the binary search.
+     * Mirrors `firstSmallerOrEqual`: an upper bound stepped back one, so a run of equal
+     * x values resolves to its last entry rather than an arbitrary one.
      */
     private fun lastIndexAtOrBefore(
         x: Float,
@@ -48,7 +40,6 @@ internal object CSSEasing {
         return if (low == 0) 0 else low - 1
     }
 
-    /** Holds each step's value until the next one; never interpolates between them. */
     private class StepsInterpolator(
         private val pointsX: FloatArray,
         private val pointsY: FloatArray,
@@ -56,7 +47,6 @@ internal object CSSEasing {
         override fun getInterpolation(input: Float): Float = pointsY[lastIndexAtOrBefore(input, pointsX)]
     }
 
-    /** Straight segments between the stops, matching `linear()` with stops. */
     private class LinearStopsInterpolator(
         private val pointsX: FloatArray,
         private val pointsY: FloatArray,
