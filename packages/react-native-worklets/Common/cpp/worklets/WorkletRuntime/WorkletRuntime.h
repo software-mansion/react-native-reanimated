@@ -176,27 +176,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
   void init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy);
 
-  /* #region deprecated */
-
-  /** @deprecated Use `runSync` instead. */
-  template <typename... Args>
-  jsi::Value runGuarded(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args) const {
-    return runSync(worklet, std::forward<Args>(args)...);
-  }
-
-  /** @deprecated Use `schedule` instead. */
-  void runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet);
-
-  /** @deprecated Use `runSyncSerialized` and extract to `jsi::Value` with
-   * `extractSerializableOrThrow` instead. */
-  jsi::Value executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const;
-  /** @deprecated Use `runSync` instead. */
-  jsi::Value executeSync(std::function<jsi::Value(jsi::Runtime &)> &&job) const;
-  /** @deprecated Use `runSync` instead. */
-  jsi::Value executeSync(const std::function<jsi::Value(jsi::Runtime &)> &job) const;
-
-  /* #endregion */
-
   /**
    * Retrieves a weak reference to the WorkletRuntime associated with the
    * provided jsi::Runtime.
