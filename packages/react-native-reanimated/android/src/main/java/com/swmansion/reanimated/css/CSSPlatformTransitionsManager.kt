@@ -18,6 +18,7 @@ internal class CSSPlatformTransitionsManager(
     private val animationTimestamp: () -> Long,
 ) {
     private val animators = HashMap<Key, ObjectAnimator>()
+    private val reconciler = CSSPlatformTransitionReconciler(::repairClobberedValues)
     private val startTokens = HashMap<Key, Long>()
 
     /** Monotonic so a token is never reused, even after its entry is dropped. */
@@ -84,6 +85,7 @@ internal class CSSPlatformTransitionsManager(
             // Also drops any queued retry for this key.
             startTokens.remove(key)
             animators.remove(key)?.cancel()
+            if (animators.isEmpty()) reconciler.untrackAll()
         }
     }
 
@@ -138,6 +140,7 @@ internal class CSSPlatformTransitionsManager(
                 override fun onAnimationEnd(animation: Animator) {
                     // A replacement may already own the key.
                     if (animators[key] === animation) animators.remove(key)
+                    if (animators.isEmpty()) reconciler.untrackAll()
                 }
             },
         )
@@ -148,8 +151,19 @@ internal class CSSPlatformTransitionsManager(
         if (elapsedMs < 0) animator.startDelay = (-elapsedMs / scale).toLong()
         animator.start()
         animators[key] = animator
+        reconciler.track(view)
         if (elapsedMs > 0 && durationMs > 0) {
             animator.setCurrentFraction((elapsedMs / durationMs).toFloat().coerceIn(0f, 1f))
+        }
+    }
+
+    /** Re-asserts the animator's own value wherever a commit overwrote it. */
+    private fun repairClobberedValues() {
+        animators.forEach { (key, animator) ->
+            val view = animator.target as? View ?: return@forEach
+            val writer = cssPropertyWriterFor(key.propertyName) ?: return@forEach
+            val current = animator.animatedValue as? Float ?: return@forEach
+            if (writer.get(view) != current) writer.setValue(view, current)
         }
     }
 
