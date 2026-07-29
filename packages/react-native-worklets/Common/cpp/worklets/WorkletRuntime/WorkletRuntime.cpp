@@ -2,7 +2,6 @@
 #include <jsi/jsi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Tools/JSLogger.h>
-#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RuntimeHolder.h>
 #include <worklets/WorkletRuntime/ScriptLoader.h>
 #include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
@@ -157,7 +156,7 @@ void WorkletRuntime::schedule(jsi::Function &&function) const {
       return;
     }
 
-    strongThis->runSync(*function);
+    strongThis->runSyncAndDrainMicrotasks(*function);
   });
 }
 
@@ -173,7 +172,7 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet) cons
       return;
     }
 
-    strongThis->runSync(worklet);
+    strongThis->runSyncAndDrainMicrotasks(worklet);
   });
 }
 
@@ -191,22 +190,10 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet, std:
       return;
     }
 
-    strongThis->runSyncWithStack(worklet, scheduleStack);
+    strongThis->runSyncWithStackAndDrainMicrotasks(worklet, scheduleStack);
   });
 }
 #endif // NDEBUG
-
-void WorkletRuntime::callMicrotasks() const {
-  runSync([](jsi::Runtime &rt) {
-    auto callMicrotasks = rt.global().getProperty(rt, "__callMicrotasks");
-    if (callMicrotasks.isObject()) {
-      auto callMicrotasksObject = callMicrotasks.asObject(rt);
-      if (callMicrotasksObject.isFunction(rt)) {
-        callMicrotasksObject.asFunction(rt).call(rt);
-      }
-    }
-  });
-}
 
 void WorkletRuntime::schedule(std::function<void()> job) const {
   react_native_assert(
@@ -232,6 +219,7 @@ void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
     auto lock = strongThis->acquireRuntimeLock();
     jsi::Runtime &runtime = strongThis->getJSIRuntime();
     job(runtime);
+    strongThis->drainMicrotasks();
   });
 }
 
