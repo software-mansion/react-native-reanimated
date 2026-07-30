@@ -100,17 +100,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
     };
   }
 
-  /// Binds a method of a separately owned object, keeping that object alive for
-  /// as long as the callback lives.
-  template <typename TObject, typename TReturn, typename... TParams>
-  static std::function<TReturn(TParams...)> bindShared(
-      std::shared_ptr<TObject> object,
-      TReturn (TObject::*methodPtr)(TParams...)) {
-    return [object = std::move(object), methodPtr](TParams &&...args) {
-      return ((*object).*methodPtr)(std::forward<TParams>(args)...);
-    };
-  }
-
   template <class Signature>
   JMethod<Signature> getJniMethod(std::string const &methodName) {
     return javaPart_->getClass()->getMethod<Signature>(methodName.c_str());
