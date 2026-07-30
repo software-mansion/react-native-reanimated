@@ -76,8 +76,8 @@ class TouchHoverCoordinator(
         releaseWindowObserver()
     }
 
-    // / Drops every listener and observer, extra windows included, without notifying anything:
-    // / the C++ side that onSelectorStateChanged calls into is being torn down concurrently.
+    // Extra windows are dropped here too, unlike removeActivityWindowObservers. Nothing is
+    // notified: onSelectorStateChanged calls into C++, which is being torn down concurrently.
     fun uninstall() {
         windowObserverRetainCount = 0
         observedWindows.forEach { reference -> reference.get()?.let { restoreCallback(it) } }
@@ -230,8 +230,7 @@ class TouchHoverCoordinator(
         return targets.map { it.getViewId() }
     }
 
-    // Tags on the touch target path, deepest first. Honours z-order, clipping and
-    // pointerEvents, and resolves compound (SVG) children to the front-most shape.
+    // Ordered target first, with compound (SVG) children resolved to the touched shape.
     fun hitTestTagsAt(
         view: View,
         screenX: Float,
@@ -306,8 +305,8 @@ class TouchHoverCoordinator(
         }
     }
 
-    // / Extra windows are added by the bridge when a Dialog appears and are never re-added, so
-    // / only the activity window is dropped when the last registration goes away.
+    // The bridge reports each Dialog once and never re-adds it, so only the activity window is
+    // dropped when the last registration goes away.
     private fun removeActivityWindowObservers() {
         observedWindows.removeAll { reference ->
             val observer = reference.get()

@@ -210,8 +210,7 @@ class PseudoSelectorManager(
         }
         val hostsById = pressHostsById()
         val hitTags = hover.hitTestTagsAt(root, event.rawX, event.rawY)
-        // The path is ordered target first, so the first host on it is the deepest one;
-        // fireActiveCallbacksUpTree covers its ancestors.
+        // Ordered target first, so the first host on the path is the deepest one.
         val host = hitTags.firstNotNullOfOrNull { hostsById[it] } ?: return
         if (gestureByHost.containsKey(host)) {
             return
@@ -235,9 +234,8 @@ class PseudoSelectorManager(
     private fun pressHostsById(): Map<Int, View> =
         (activeCallbacks.keys + deepestCallbacks.keys).map { findTouchHost(it) }.associateBy { it.id }
 
-    // / The path already resolves compound children to the touched shape, and it is the only
-    // / source that maps screen coordinates through each ancestor's transform. Deriving
-    // / host-local coordinates from raw ones instead would mis-target a scaled or rotated host.
+    // Raw coordinates cannot be made host-local without the ancestors' transforms, which the
+    // touch path has already applied when it resolved the compound child.
     private fun findTouchedLeaf(
         host: View,
         hitTags: List<Int>,
@@ -276,8 +274,8 @@ class PseudoSelectorManager(
             return
         }
         touchHostRefs.remove(host)
-        // A descendant can unmount mid-press, and the press it started covers every ancestor, so
-        // dropping the gesture silently would leave them all active with no event left to end it.
+        // The press covers every ancestor, so dropping it silently when a descendant unmounts
+        // mid-press would leave them all active with no event left to end it.
         onHostRelease(host)
         host.setOnTouchListener(null)
     }
@@ -368,9 +366,9 @@ class PseudoSelectorManager(
         }
     }
 
-    // / The dev menu holds this manager for a generation past the context it belongs to, so the
-    // / views and callbacks are dropped rather than left to the garbage collector. The detach
-    // / actions are cleared, never run: they notify C++ over JNI, which is being torn down.
+    // The dev menu keeps this manager alive a generation past its own React context, so the views
+    // and callbacks are dropped explicitly. The detach actions are cleared rather than run: they
+    // notify C++ over JNI, which is being torn down concurrently.
     fun invalidate() {
         UiThreadUtil.runOnUiThread {
             fabricUIManager.removeUIManagerEventListener(mountListener)
