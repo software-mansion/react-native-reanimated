@@ -15,7 +15,6 @@ std::vector<float> toFloats(const std::vector<double> &values) {
   return {values.begin(), values.end()};
 }
 
-// EasingConfig has exactly these four alternatives, so the conversion is total.
 PlatformEasing toPlatformEasing(const css::EasingConfig &easingConfig) {
   if (const auto *bezier = std::get_if<css::CubicBezierEasing>(&easingConfig)) {
     return {
@@ -64,8 +63,6 @@ bool CSSPlatformTransitions::applyTransition(
 
   const ActiveTransition *active = activeTransitionFor(viewTag, propertyName);
 
-  // The toggle path carries no settings of its own, so it reuses the ones the
-  // config apply stored.
   if (settings == nullptr && active == nullptr) {
     return false;
   }
