@@ -256,7 +256,8 @@ bool NativeProxy::cssAnimateTransition(
     const double toValue,
     const double durationMs,
     const double startTimestampMs,
-    const PlatformEasing &easing) {
+    const PlatformEasing &easing,
+    const bool persistent) {
   static const auto method = getJniMethod<jboolean(
       int,
       jni::alias_ref<jni::JString>,
@@ -266,7 +267,8 @@ bool NativeProxy::cssAnimateTransition(
       double,
       int,
       jni::alias_ref<jni::JArrayFloat>,
-      jni::alias_ref<jni::JArrayFloat>)>("cssAnimateTransition");
+      jni::alias_ref<jni::JArrayFloat>,
+      jboolean)>("cssAnimateTransition");
   auto jPointsX = jni::JArrayFloat::newArray(easing.pointsX.size());
   jPointsX->setRegion(0, easing.pointsX.size(), easing.pointsX.data());
   auto jPointsY = jni::JArrayFloat::newArray(easing.pointsY.size());
@@ -281,7 +283,8 @@ bool NativeProxy::cssAnimateTransition(
              startTimestampMs,
              static_cast<int>(easing.type),
              jPointsX,
-             jPointsY) != JNI_FALSE;
+             jPointsY,
+             static_cast<jboolean>(persistent)) != JNI_FALSE;
 }
 
 void NativeProxy::cssRemoveTransition(const int viewTag, const std::string &propertyName) {

@@ -279,6 +279,7 @@ open class NativeProxy {
         easingType: Int,
         easingPointsX: FloatArray,
         easingPointsY: FloatArray,
+        persistent: Boolean,
     ): Boolean =
         cssPlatformTransitionsManager.animateTransition(
             viewTag,
@@ -290,6 +291,7 @@ open class NativeProxy {
             easingType,
             easingPointsX,
             easingPointsY,
+            persistent,
         )
 
     @DoNotStrip

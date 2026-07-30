@@ -98,7 +98,8 @@ bool CSSPlatformTransitions::applyTransition(
           *to,
           reversing.duration,
           reversing.startTimestamp,
-          toPlatformEasing(resolvedSettings.easingConfig))) {
+          toPlatformEasing(resolvedSettings.easingConfig),
+          settings == nullptr)) {
     return false;
   }
 

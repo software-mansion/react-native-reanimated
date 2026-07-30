@@ -30,7 +30,8 @@ struct PlatformEasing {
 class CSSPlatformTransitions {
  public:
   /// Returns false when the view can't carry the animation, in which case the
-  /// property falls back to the loop.
+  /// property falls back to the loop. A `persistent` transition has no committed
+  /// style behind it, so its value must outlive the animation itself.
   using AnimateFunction = std::function<bool(
       int viewTag,
       const std::string &propertyName,
@@ -38,7 +39,8 @@ class CSSPlatformTransitions {
       double toValue,
       double durationMs,
       double startTimestampMs,
-      const PlatformEasing &easing)>;
+      const PlatformEasing &easing,
+      bool persistent)>;
   using RemoveFunction = std::function<void(int viewTag, const std::string &propertyName)>;
 
   CSSPlatformTransitions(AnimateFunction animate, RemoveFunction remove);
