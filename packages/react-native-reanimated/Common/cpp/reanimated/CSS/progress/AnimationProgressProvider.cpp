@@ -59,7 +59,21 @@ double AnimationProgressProvider::getKeyframeProgress(const double fromOffset, c
 }
 
 AnimationProgressState AnimationProgressProvider::getState() const {
-  return state_;
+  if (lifecycle_.hasEnded()) {
+    return AnimationProgressState::Finished;
+  }
+  if (pauseTimestamp_ > 0) {
+    return AnimationProgressState::Paused;
+  }
+  return lifecycle_.hasStarted() ? AnimationProgressState::Running : AnimationProgressState::Pending;
+}
+
+void AnimationProgressProvider::onMilestone(RunLifecycle::Reporter reporter) {
+  lifecycle_.onMilestone(std::move(reporter));
+}
+
+void AnimationProgressProvider::abort() {
+  lifecycle_.abort();
 }
 
 double AnimationProgressProvider::getStartTimestamp(const double timestamp) const {
@@ -82,14 +96,13 @@ void AnimationProgressProvider::play(const double timestamp) {
 
 void AnimationProgressProvider::update(const double timestamp) {
   TimeProgressProvider::update(timestamp);
-  state_ = computeState(timestamp);
+  lifecycle_.reachPosition(computeStage(timestamp), currentIteration_);
 }
 
 void AnimationProgressProvider::resetProgress() {
   TimeProgressProvider::resetProgress();
   currentIteration_ = 1;
   previousIterationsDuration_ = 0;
-  state_ = AnimationProgressState::Pending;
 }
 
 std::optional<double> AnimationProgressProvider::calculateRawProgress(const double timestamp) {
@@ -130,17 +143,19 @@ bool AnimationProgressProvider::shouldFinish(const double timestamp) const {
   return elapsedDuration >= duration_ * iterationCount_;
 }
 
-AnimationProgressState AnimationProgressProvider::computeState(const double timestamp) const {
+RunStage AnimationProgressProvider::computeStage(const double timestamp) const {
   if (shouldFinish(timestamp)) {
-    return AnimationProgressState::Finished;
-  }
-  if (pauseTimestamp_ > 0) {
-    return AnimationProgressState::Paused;
+    return RunStage::Ended;
   }
   if (timestamp < getStartTimestamp(timestamp) || !rawProgress_.has_value()) {
-    return AnimationProgressState::Pending;
+    return RunStage::Created;
   }
-  return AnimationProgressState::Running;
+  // A paused run sits at its start timestamp with a raw progress of 0, so it
+  // looks started. It cannot start until it is played.
+  if (pauseTimestamp_ > 0 && !lifecycle_.hasStarted()) {
+    return RunStage::Created;
+  }
+  return RunStage::Started;
 }
 
 double AnimationProgressProvider::updateIterationProgress(const double currentIterationElapsedTime) {
