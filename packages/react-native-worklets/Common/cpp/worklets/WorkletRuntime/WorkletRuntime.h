@@ -42,18 +42,44 @@ class JSIWorkletsModuleProxy;
 
 class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_this<WorkletRuntime> {
  public:
+  /**
+   * Schedules a JSI function to run asynchronously on the worklet runtime.
+   */
   void schedule(jsi::Function &&function) const;
+
+  /**
+   * Schedules a serialized worklet to run asynchronously on the worklet runtime.
+   */
   void schedule(std::shared_ptr<SerializableWorklet> worklet) const;
 #ifndef NDEBUG
+  /**
+   * Schedules a serialized worklet to run asynchronously on the worklet runtime,
+   * remembering the call site that scheduled it for error reporting.
+   */
   void schedule(std::shared_ptr<SerializableWorklet> worklet, std::optional<std::string> scheduleStack) const;
 #endif // NDEBUG
+
+  /**
+   * Schedules a job to run asynchronously on the worklet runtime. The job does
+   * not receive the runtime.
+   */
   void schedule(std::function<void()> job) const;
+
+  /**
+   * Schedules a job to run asynchronously on the worklet runtime, passing it the
+   * runtime.
+   */
   void schedule(std::function<void(jsi::Runtime &)> job) const;
 
   /* #region runSync */
 
   template <RuntimeCallable TCallable, typename... Args>
   std::invoke_result_t<TCallable, Args...> runSync(TCallable &&callable, Args &&...args) const;
+
+  /**
+   * Synchronously invokes a JSI function on the worklet runtime and returns its
+   * result.
+   */
   template <typename... Args>
   jsi::Value runSync(const jsi::Function &function, Args &&...args) const {
 #ifndef NDEBUG
@@ -62,6 +88,11 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     return function.call(*runtime_, args...);
 #endif // NDEBUG
   }
+
+  /**
+   * Synchronously invokes a serialized worklet on the worklet runtime and
+   * returns its result.
+   */
   template <typename... Args>
   jsi::Value runSync(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args) const {
 #ifndef NDEBUG
@@ -73,6 +104,11 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 #endif // NDEBUG
   }
 #ifndef NDEBUG
+  /**
+   * Synchronously invokes a serialized worklet on the worklet runtime and
+   * returns its result, remembering the call site that scheduled it for error
+   * reporting.
+   */
   template <typename... Args>
   jsi::Value runSyncWithStack(
       const std::shared_ptr<SerializableWorklet> &worklet,
@@ -83,6 +119,11 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     return callGuarded(function, scheduleStack, std::forward<Args>(args)...);
   }
 #endif // NDEBUG
+
+  /**
+   * Synchronously runs a callback on the worklet runtime, passing it the
+   * runtime, and returns its result.
+   */
   template <RuntimeCallable TCallable>
   std::invoke_result_t<TCallable, jsi::Runtime &> runSync(TCallable &&job) const {
     jsi::Runtime &rt = getJSIRuntime();
@@ -92,12 +133,20 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
   /* #endregion */
 
+  /**
+   * Runs the worklet runtime's pending microtasks.
+   */
   void callMicrotasks() const;
 
   /* #region runSyncSerialized */
 
   template <ImplicitlySerializableCallable TCallable, typename... Args>
   std::shared_ptr<Serializable> runSyncSerialized(TCallable &&callable, Args &&...args) const;
+
+  /**
+   * Synchronously invokes a JSI function on the worklet runtime and returns its
+   * result serialized for use on other runtimes.
+   */
   template <typename... Args>
   std::shared_ptr<Serializable> runSyncSerialized(const jsi::Function &function, Args &&...args) const {
     jsi::Runtime &rt = getJSIRuntime();
@@ -111,6 +160,11 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     return serializableResult;
   }
 #ifndef NDEBUG
+  /**
+   * Synchronously invokes a serialized worklet on the worklet runtime and
+   * returns its result serialized for use on other runtimes, remembering the
+   * call site that scheduled it for error reporting.
+   */
   template <typename... Args>
   std::shared_ptr<Serializable> runSyncSerializedWithStack(
       const std::shared_ptr<SerializableWorklet> &worklet,
@@ -127,6 +181,10 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     return serializableResult;
   }
 #endif // NDEBUG
+  /**
+   * Synchronously invokes a serialized worklet on the worklet runtime and
+   * returns its result serialized for use on other runtimes.
+   */
   template <typename... Args>
   std::shared_ptr<Serializable> runSyncSerialized(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args)
       const {
