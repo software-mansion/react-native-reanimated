@@ -253,6 +253,6 @@ withTiming(1, { easing: Easing.ease })   // Bezier(0.42, 0, 1, 1)
 
 `Easing.ease` is CSS `ease-in`, not CSS `ease`. Emitting
 `animationTimingFunction: 'ease'` silently changes the curve. See
-the Easing section of `api-map.md`, including what to do about the
+`timing-functions.md`, including what to do about the
 `withTiming` default of `Easing.inOut(Easing.quad)`, which has no exact
 equivalent.

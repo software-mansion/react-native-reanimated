@@ -36,7 +36,8 @@ Load at most one per question.
 | `references/preconditions.md` | Deciding whether a call site may be migrated |
 | `references/refusals.md` | A pattern looks unmigratable and you need the reason and advice |
 | `references/examples.md` | Calibrating what a conversion looks like |
-| `references/api-map.md` | Mapping a `with*` or `Easing.*`, or choosing transition vs animation |
+| `references/api-map.md` | Mapping a `with*`, or choosing transition vs animation |
+| `references/timing-functions.md` | Converting an `Easing.*` value or a spring |
 
 Property support:
 [supported properties](https://docs.swmansion.com/react-native-reanimated/docs/guides/supported-properties).

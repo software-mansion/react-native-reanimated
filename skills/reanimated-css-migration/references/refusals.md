@@ -18,7 +18,7 @@ things the tool cannot do.
 
 | Pattern | Why | What to tell the user |
 | --- | --- | --- |
-| `withSpring` with a runtime config | Sampling needs every parameter known at migration time. A `velocity` taken from a gesture, or a config built at runtime, cannot be sampled | Keep it on the hooks API. Statically configured springs are convertible; see `api-map.md` |
+| `withSpring` with a runtime config | Sampling needs every parameter known at migration time. A `velocity` taken from a gesture, or a config built at runtime, cannot be sampled | Keep it on the hooks API. Statically configured springs are convertible; see `timing-functions.md` |
 | `withDecay` | Velocity-driven with no fixed target | Keep it. CSS timelines are fixed-duration by definition |
 | `withClamp` | No bounding concept in CSS | Keep it |
 | Gesture-driven values | Gesture callbacks are workletized onto the UI thread by default, so reaching React state needs a `scheduleOnRN` hop per update | Keep it. This is exactly what the hooks API is for. A gesture with `.runOnJS(true)` runs on the JS thread and is migratable if its updates are discrete |
