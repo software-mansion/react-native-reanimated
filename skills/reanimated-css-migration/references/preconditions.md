@@ -2,63 +2,57 @@
 
 ## Contents
 
-- Preconditions: all seven must hold before migrating a call site
-- Equivalence obligations: what must still be true afterwards
-- Effective platforms: narrowing the property check
+- Preconditions: check all 7 before converting a call site
+- Equivalence obligations: check all 5 after converting
+- Effective platforms
 
 ## Preconditions
 
-All must hold. The first failure is the reason you report.
+All 7 must pass. Report the first failure as the reason.
 
-### 1. The driver is written on the JS thread, in discrete steps
+### 1. Driver written on the JS thread, changing discretely
 
-Migrate when the write happens in:
+| Where the shared value is written | Verdict |
+| --- | --- |
+| `useEffect` | pass |
+| plain JS callback: `onPress`, `onChange`, timer, network response | pass |
+| gesture with `.runOnJS(true)` | pass |
+| gesture without `.runOnJS(true)` | refuse, worklet |
+| `useAnimatedReaction`, `useFrameCallback`, scroll handler, sensor, keyboard hook | refuse, worklet |
+| anything updating every frame | refuse, would re-render per frame |
 
-- `useEffect`
-- a plain JS callback: `onPress`, `onChange`, a timer, a network response
-- a gesture callback with `.runOnJS(true)`
+Converting the shared value to `useState` is the migration, not a reason to
+refuse. Most hook code does not re-render today.
 
-Converting the shared value to `useState` is **part of this migration**, not a
-reason to refuse. Most hook code does not re-render today; the new state change
-is what fires the transition.
+Gesture classification: UI thread unless `.runOnJS(true)` is set or a callback
+is not a worklet.
 
-Refuse when the write happens in a worklet: gesture callbacks (workletized onto
-the UI thread by default), `useAnimatedReaction`, `useFrameCallback`, scroll
-handlers, sensors, the keyboard hook. React state from there costs a
-`scheduleOnRN` hop per update.
+### 2. Animated values are pure functions of the driver
 
-Refuse continuous updates even on the JS thread. A pan following a finger would
-re-render every frame once it is state.
+Every value must reduce to fixed keyframe endpoints.
 
-To classify a gesture: UI thread unless `.runOnJS(true)` is set or one of its
-callbacks is not a worklet.
-
-### 2. Every animated value is a pure function of the driver
-
-Values must be expressible as fixed keyframe endpoints.
-
-| Qualifies | Does not |
+| Pass | Refuse |
 | --- | --- |
 | affine arithmetic on the driver | trigonometry, `Math.atan2`, parametric geometry |
 | color interpolation | anything reading runtime layout |
 
-Check this independently of precondition 1. A call site often has a migratable
-driver and an inexpressible body.
+Check independently of precondition 1: a migratable driver often has an
+inexpressible body.
 
-### 3. Every property is animatable on the effective platforms
+### 3. Properties animatable on the effective platforms
 
-Check the table in `refusals.md`, then
-[supported properties](https://docs.swmansion.com/react-native-reanimated/docs/guides/supported-properties)
-for anything not listed. Do not reason from memory.
+Check `refusals.md`, then
+[supported properties](https://docs.swmansion.com/react-native-reanimated/docs/guides/supported-properties).
+Never from memory.
 
-Safe when React Native does not render it there either: the animation was
-already inert, so nothing is lost. Unsafe when React Native renders it and CSS
-cannot animate it.
+| Condition | Verdict |
+| --- | --- |
+| React Native does not render it there either | pass, already inert |
+| React Native renders it, CSS cannot animate it | refuse, would stop working |
 
-### 4. Reduced motion is carried across, not dropped
+### 4. Reduced motion carried across
 
-CSS has no reduced-motion support of its own. Preserve it with the hook
-Reanimated already exports, and drive the duration from it:
+Emit a guard; do not drop it.
 
 ```tsx
 const reduced = useReducedMotion();
@@ -72,65 +66,61 @@ const reduced = useReducedMotion();
 />
 ```
 
-Emit the guard whenever the source passes a `reduceMotion` config, references
-`ReduceMotion`, or calls `useReducedMotion`. Every `with*` also carries an
-implicit `ReduceMotion.System`, so emit it by default for anything a user would
-notice. Where you decide the motion is too small to matter, say so in the report
-rather than dropping it silently.
+| Condition | Action |
+| --- | --- |
+| source uses `reduceMotion`, `ReduceMotion`, `useReducedMotion` | emit the guard |
+| no explicit use, motion is user-noticeable | emit the guard, `with*` implied `ReduceMotion.System` |
+| motion too small to matter | may drop, state it in the report |
 
-Use a small non-zero duration, never `0`. A transition whose `duration + delay`
-is `<= 0` is discarded outright (`css/native/normalization/transition/config.ts`),
-so the element jumps and no transition event can fire. `1` keeps the motion
-imperceptible while leaving the transition real, which also keeps behavior
-consistent with web once animation and transition events land.
+Reduced-motion duration: `1`. Never `0`: `duration + delay <= 0` discards the
+transition outright (`css/native/normalization/transition/config.ts`), so the
+element jumps and no transition event can fire.
 
-Bare numbers are milliseconds: `1` is 1ms. Do not write `0.01` expecting 10ms,
-that is 0.01ms.
+Bare numbers are milliseconds. `1` is 1ms; `0.01` is 0.01ms, not 10ms.
 
 ### 5. No consumed completion callback
 
-CSS callbacks are typed on all platforms but wired up only on web, and carry no
-`finished` equivalent anywhere.
+CSS callbacks are wired up only on web and carry no `finished` equivalent.
 
-- Callback only logs: drop it, migrate.
-- Callback chains an animation or sets state: refuse.
+| Callback body | Action |
+| --- | --- |
+| logging only | drop it, migrate |
+| chains an animation, sets state, anything observable | refuse |
 
 ### 6. No imperative control
 
-Refuse `cancelAnimation`, or anything that pauses, reverses, restarts or
-interrupts from an effect or handler. `animationPlayState` suspends; it does not
-cancel or freeze at the current value.
+Refuse `cancelAnimation`, or pausing, reversing, restarting, interrupting from
+an effect or handler. `animationPlayState` suspends; it does not cancel or
+freeze at the current value.
 
-### 7. The target is an Animated component
+Exception: `cancelAnimation` in an unmount cleanup. CSS stops on unmount anyway.
 
-Must be an `Animated` built-in or wrapped with
-`Animated.createAnimatedComponent`. CSS properties on a plain component are
-ignored silently.
+### 7. Target is an Animated component
+
+Must be an `Animated` built-in or `Animated.createAnimatedComponent`. CSS
+properties on a plain component are ignored silently.
 
 ## Equivalence obligations
 
-All must hold after converting. If you cannot confirm one, revert that site and
-report it as needs-review.
+Check all 5 after converting. Cannot confirm one, revert that site and report
+needs-review.
 
-1. **First render identical.** No flash of unstyled or final state. A converted
-   mount animation usually needs `animationFillMode: 'forwards'`.
-1. **End state identical**, after completion and after fill mode applies.
-1. **Re-trigger identical.** Fire the driver twice quickly; the second run must
-   start where the hook version would.
-1. **Interrupt and unmount identical.** Unmount mid-animation; nothing throws,
-   nothing keeps running.
-1. **Nothing else changed.** Same element tree, props and conditional logic.
-   Only the animation mechanism moved.
+| # | Must hold | How to check |
+| --- | --- | --- |
+| 1 | First render identical | No flash of unstyled or final state. Mount animations usually need `animationFillMode: 'forwards'` |
+| 2 | End state identical | After completion, and after fill mode applies |
+| 3 | Re-trigger identical | Fire the driver twice quickly; second run starts where the hook version would |
+| 4 | Interrupt and unmount identical | Unmount mid-animation; nothing throws, nothing keeps running |
+| 5 | Nothing else changed | Same element tree, props, conditional logic |
 
 ## Effective platforms
 
-A call site need not satisfy every platform the project ships.
-
 | Context | Requires |
 | --- | --- |
-| `.ios` / `.android` / `.web` suffix | that platform |
+| `.ios` / `.android` / `.web` suffix | that platform only |
 | `.native` suffix | iOS and Android, not web |
-| `Platform.OS` branch, `Platform.select` arm | that branch's platform |
+| `Platform.OS` branch or `Platform.select` arm | that branch's platform only |
+| none of the above | every platform the project ships |
 
-Migrate inside each `Platform.select` arm and keep the structure. Collapsing a
-deliberate platform decision is a regression on its own terms.
+Migrate inside each `Platform.select` arm; keep the structure. Collapsing a
+deliberate platform decision is a regression on its own.
