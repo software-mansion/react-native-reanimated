@@ -4,6 +4,7 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.animation.TimeInterpolator
+import android.util.FloatProperty
 import android.view.Choreographer
 import android.view.View
 import com.facebook.react.bridge.ReactApplicationContext
@@ -17,7 +18,8 @@ internal class CSSPlatformTransitionsManager(
     private val reactContext: WeakReference<ReactApplicationContext>,
     private val animationTimestamp: () -> Long,
 ) {
-    private val animators = HashMap<Key, ObjectAnimator>()
+    private val animators = HashMap<Key, RunningTransition>()
+    private val reconciler = CSSPlatformTransitionReconciler(::repairClobberedValues)
     private val startTokens = HashMap<Key, Long>()
 
     /** Monotonic so a token is never reused, even after its entry is dropped. */
@@ -28,6 +30,18 @@ internal class CSSPlatformTransitionsManager(
         val viewTag: Int,
         val propertyName: String,
     )
+
+    private class RunningTransition(
+        val animator: ObjectAnimator,
+        val writer: FloatProperty<View>,
+        val startValue: Float,
+    ) {
+        /**
+         * ObjectAnimator leaves its animated value uninitialised until its first frame, which
+         * a start delay defers, so until then the property must show the start value.
+         */
+        fun currentValue(): Float = if (animator.isRunning) animator.animatedValue as Float else startValue
+    }
 
     private data class InterpolatorKey(
         val type: Int,
@@ -83,7 +97,7 @@ internal class CSSPlatformTransitionsManager(
             val key = Key(viewTag, propertyName)
             // Also drops any queued retry for this key.
             startTokens.remove(key)
-            animators.remove(key)?.cancel()
+            animators.remove(key)?.animator?.cancel()
         }
     }
 
@@ -110,7 +124,7 @@ internal class CSSPlatformTransitionsManager(
     private fun start(
         view: View,
         key: Key,
-        writer: android.util.FloatProperty<View>,
+        writer: FloatProperty<View>,
         fromValue: Double,
         toValue: Double,
         durationMs: Double,
@@ -123,7 +137,7 @@ internal class CSSPlatformTransitionsManager(
         // cancelled transition began.
         val interrupted = animators.remove(key)
         val startValue = if (interrupted != null) writer.get(view) else fromValue.toFloat()
-        interrupted?.cancel()
+        interrupted?.animator?.cancel()
 
         // React Native has already committed the target, and ObjectAnimator writes nothing
         // until its first frame - which transition-delay defers. Without this the view
@@ -137,7 +151,7 @@ internal class CSSPlatformTransitionsManager(
             object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
                     // A replacement may already own the key.
-                    if (animators[key] === animation) animators.remove(key)
+                    if (animators[key]?.animator === animation) animators.remove(key)
                 }
             },
         )
@@ -147,10 +161,22 @@ internal class CSSPlatformTransitionsManager(
         val elapsedMs = animationTimestamp().toDouble() - startTimestampMs
         if (elapsedMs < 0) animator.startDelay = (-elapsedMs / scale).toLong()
         animator.start()
-        animators[key] = animator
+        animators[key] = RunningTransition(animator, writer, startValue)
+        reconciler.track(view)
         if (elapsedMs > 0 && durationMs > 0) {
             animator.setCurrentFraction((elapsedMs / durationMs).toFloat().coerceIn(0f, 1f))
         }
+    }
+
+    /** Re-asserts each animator's own value wherever a commit overwrote it. */
+    private fun repairClobberedValues(): Boolean {
+        animators.values.forEach { running ->
+            // target is held weakly, so read the View through it rather than keeping one.
+            val view = running.animator.target as? View ?: return@forEach
+            val current = running.currentValue()
+            if (running.writer.get(view) != current) running.writer.setValue(view, current)
+        }
+        return animators.isNotEmpty()
     }
 
     /**
