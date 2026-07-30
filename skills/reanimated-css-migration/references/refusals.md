@@ -37,7 +37,7 @@ The dangerous set: these compile and often appear to work.
 | --- | --- | --- |
 | Completion callback that chains an animation or sets state | CSS callbacks are wired up only on web and carry no `finished` flag anywhere | Refuse. A callback that only logs can be dropped instead |
 | `cancelAnimation`, or pausing, reversing, restarting from an effect or handler | `animationPlayState` suspends; it does not cancel or freeze at the current value | Refuse |
-| `reduceMotion` config, `ReduceMotion` enum, `useReducedMotion` | CSS has no reduced-motion support on any platform | Refuse |
+| `reduceMotion` config, `ReduceMotion` enum, `useReducedMotion` | CSS has no reduced-motion support of its own | Not a refusal. Emit a `useReducedMotion()` guard and drive the duration from it, per precondition 4 |
 | Discrete keyword properties: `display`, `position`, `flexDirection`, `justifyContent`, `alignItems`, `overflow`, `fontWeight`, `textAlign` | Dropped from transitions unless `transitionBehavior: 'allow-discrete'`, and then they flip at the midpoint | Refuse, or set the behavior and warn about the midpoint flip |
 | Rapid re-triggering of the same target | `withTiming` inherits the original start time and value; CSS approximates but does not reproduce it | Refuse if the timing matters |
 

@@ -55,13 +55,37 @@ Safe when React Native does not render it there either: the animation was
 already inert, so nothing is lost. Unsafe when React Native renders it and CSS
 cannot animate it.
 
-### 4. No explicit reduced-motion handling
+### 4. Reduced motion is carried across, not dropped
 
-Refuse if the code passes a `reduceMotion` config, references `ReduceMotion`, or
-calls `useReducedMotion`. CSS has no reduced-motion support.
+CSS has no reduced-motion support of its own. Preserve it with the hook
+Reanimated already exports, and drive the duration from it:
 
-Every `with*` carries an implicit `ReduceMotion.System` that migrating does
-lose. That is accepted. This protects only code whose author showed they cared.
+```tsx
+const reduced = useReducedMotion();
+
+<Animated.View
+  style={[styles.panel, {
+    height: expanded ? 300 : 100,
+    transitionProperty: ['height'],
+    transitionDuration: reduced ? 1 : 300,
+  }]}
+/>
+```
+
+Emit the guard whenever the source passes a `reduceMotion` config, references
+`ReduceMotion`, or calls `useReducedMotion`. Every `with*` also carries an
+implicit `ReduceMotion.System`, so emit it by default for anything a user would
+notice. Where you decide the motion is too small to matter, say so in the report
+rather than dropping it silently.
+
+Use a small non-zero duration, never `0`. A transition whose `duration + delay`
+is `<= 0` is discarded outright (`css/native/normalization/transition/config.ts`),
+so the element jumps and no transition event can fire. `1` keeps the motion
+imperceptible while leaving the transition real, which also keeps behavior
+consistent with web once animation and transition events land.
+
+Bare numbers are milliseconds: `1` is 1ms. Do not write `0.01` expecting 10ms,
+that is 0.01ms.
 
 ### 5. No consumed completion callback
 
