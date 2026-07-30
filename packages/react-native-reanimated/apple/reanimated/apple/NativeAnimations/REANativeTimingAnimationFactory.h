@@ -3,20 +3,9 @@
 #import <QuartzCore/QuartzCore.h>
 
 #import <reanimated/NativeAnimations/NativeAnimationIR.h>
+#import <reanimated/apple/NativeAnimations/REANativeAnimationTrack.h>
 
 NS_ASSUME_NONNULL_BEGIN
-
-@interface REANativeTimingTrackAnimation : NSObject
-
-@property (nonatomic, readonly) CAAnimation *animation;
-@property (nonatomic, readonly) NSString *keyPath;
-@property (nonatomic, readonly) NSString *targetName;
-
-- (instancetype)initWithAnimation:(CAAnimation *)animation
-                          keyPath:(NSString *)keyPath
-                       targetName:(NSString *)targetName;
-
-@end
 
 /**
  * Converts one platform-neutral timing track into a Core Animation primitive.
@@ -27,10 +16,10 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface REANativeTimingAnimationFactory : NSObject
 
-+ (nullable REANativeTimingTrackAnimation *)animationForTrack:(const reanimated::NativeAnimationTrack &)track
-                                               planDurationMs:(double)planDurationMs
-                                                        layer:(CALayer *)layer
-                                               localBeginTime:(CFTimeInterval)localBeginTime;
++ (nullable REANativeAnimationTrack *)animationForTrack:(const reanimated::NativeAnimationTrack &)track
+                                         planDurationMs:(double)planDurationMs
+                                                  layer:(CALayer *)layer
+                                         localBeginTime:(CFTimeInterval)localBeginTime;
 
 @end
 

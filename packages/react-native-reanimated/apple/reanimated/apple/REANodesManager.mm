@@ -1,5 +1,6 @@
 #import <reanimated/NativeAnimations/NativeAnimationCompilation.h>
 #import <reanimated/Tools/FeatureFlags.h>
+#import <reanimated/apple/NativeAnimations/REANativeAnimationRegistry.h>
 #import <reanimated/apple/NativeAnimations/REANativeLayoutAnimationPostMountQueue.h>
 #import <reanimated/apple/NativeAnimations/REANativeTimingAnimationFactory.h>
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
@@ -30,38 +31,6 @@ using namespace facebook::react;
 
 namespace {
 
-struct NativeTimingPlanCompletion {
-  explicit NativeTimingPlanCompletion(NSUInteger trackCount, std::function<void(bool)> &&callback)
-      : pendingTrackCount(trackCount), completion(std::move(callback))
-  {
-  }
-
-  NSUInteger pendingTrackCount;
-  bool allFinished{true};
-  bool startRecorded{false};
-  bool completed{false};
-  std::function<void(bool)> completion;
-
-  void trackStopped(const bool finished)
-  {
-    if (completed || pendingTrackCount == 0) {
-      return;
-    }
-    allFinished = allFinished && finished;
-    pendingTrackCount--;
-    if (pendingTrackCount == 0) {
-      completed = true;
-      auto callback = std::move(completion);
-      callback(allFinished);
-    }
-  }
-};
-
-NSString *nativeTimingAnimationKeyPrefix(const reanimated::NativeAnimationHandle &handle)
-{
-  return [NSString stringWithFormat:@"reanimated.layout.%d.%d.%llu.", handle.surfaceId, handle.tag, handle.generation];
-}
-
 } // namespace
 
 @implementation REANodesManager {
@@ -69,6 +38,7 @@ NSString *nativeTimingAnimationKeyPrefix(const reanimated::NativeAnimationHandle
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   REAEventHandler _eventHandler;
   REAPerformOperations _performOperations;
+  REANativeAnimationRegistry *_nativeAnimationRegistry;
   REANativeLayoutAnimationPostMountQueue *_nativeLayoutAnimationPostMountQueue;
 }
 
@@ -107,6 +77,7 @@ NSString *nativeTimingAnimationKeyPrefix(const reanimated::NativeAnimationHandle
 
   if ((self = [super init])) {
     _onAnimationCallbacks = [NSMutableArray new];
+    _nativeAnimationRegistry = [REANativeAnimationRegistry new];
     _eventHandler = ^(id<RCTEvent> event) {
       // no-op
     };
@@ -376,12 +347,12 @@ NSString *nativeTimingAnimationKeyPrefix(const reanimated::NativeAnimationHandle
     return;
   }
   const CFTimeInterval localBeginTime = [layer convertTime:CACurrentMediaTime() fromLayer:nil];
-  NSMutableArray<REANativeTimingTrackAnimation *> *tracks = [NSMutableArray arrayWithCapacity:plan.tracks.size()];
+  NSMutableArray<REANativeAnimationTrack *> *tracks = [NSMutableArray arrayWithCapacity:plan.tracks.size()];
   for (const auto &track : plan.tracks) {
-    REANativeTimingTrackAnimation *animation = [REANativeTimingAnimationFactory animationForTrack:track
-                                                                                   planDurationMs:plan.totalDurationMs
-                                                                                            layer:layer
-                                                                                   localBeginTime:localBeginTime];
+    REANativeAnimationTrack *animation = [REANativeTimingAnimationFactory animationForTrack:track
+                                                                             planDurationMs:plan.totalDurationMs
+                                                                                      layer:layer
+                                                                             localBeginTime:localBeginTime];
     if (animation == nil) {
 // LayoutAnimationTrace start
 #ifndef NDEBUG
@@ -401,12 +372,13 @@ NSString *nativeTimingAnimationKeyPrefix(const reanimated::NativeAnimationHandle
   }
 
   auto traceState = std::make_shared<const reanimated::NativeLayoutAnimationDescriptor>(traceDescriptor);
-  auto completionState = std::make_shared<NativeTimingPlanCompletion>(tracks.count, std::move(completion));
-  NSString *keyPrefix = nativeTimingAnimationKeyPrefix(handle);
+  auto sharedCompletion = std::make_shared<std::function<void(bool)>>(std::move(completion));
+  NSString *keyPrefix =
+      [NSString stringWithFormat:@"reanimated.layout.%d.%d.%llu.", handle.surfaceId, handle.tag, handle.generation];
 #ifndef NDEBUG
   folly::dynamic animationKeys = folly::dynamic::array;
   folly::dynamic primitives = folly::dynamic::array;
-  for (REANativeTimingTrackAnimation *track in tracks) {
+  for (REANativeAnimationTrack *track in tracks) {
     NSString *animationKey = [keyPrefix stringByAppendingString:track.targetName];
     animationKeys.push_back(animationKey.UTF8String);
     primitives.push_back(NSStringFromClass(track.animation.class).UTF8String);
@@ -416,40 +388,51 @@ NSString *nativeTimingAnimationKeyPrefix(const reanimated::NativeAnimationHandle
           "animationKeys", std::move(animationKeys))("primitives", std::move(primitives)));
 #endif // NDEBUG
 
-  [CATransaction begin];
-  [CATransaction setDisableActions:YES];
-  for (REANativeTimingTrackAnimation *track in tracks) {
-    REACoreAnimationDelegate *delegate = [REACoreAnimationDelegate
-        delegateWithStart:^(CAAnimation *) {
-          if (!completionState->startRecorded) {
-            completionState->startRecorded = true;
+  const BOOL installed = [_nativeAnimationRegistry installTracks:tracks
+      handle:handle
+      layer:layer
+      onStart:[viewTag,
+               traceState,
+               componentView
+#ifndef NDEBUG
+               ,
+               platformDetails
+#endif
+  ]() {
 // LayoutAnimationTrace start
 #ifndef NDEBUG
-            reanimated::layout_animation_trace::recordApplePlatformStarted(
-                viewTag, *traceState, componentView, *platformDetails);
-            reanimated::layout_animation_trace::recordAppleModelPresentationSample(viewTag, *traceState, componentView);
+        reanimated::layout_animation_trace::recordApplePlatformStarted(
+            viewTag, *traceState, componentView, *platformDetails);
+        reanimated::layout_animation_trace::recordAppleModelPresentationSample(viewTag, *traceState, componentView);
 #endif // NDEBUG
        // LayoutAnimationTrace end
-          }
+      }
+      onTerminal:[viewTag, traceState, componentView, sharedCompletion](bool finished) mutable {
+// LayoutAnimationTrace start
+#ifndef NDEBUG
+        reanimated::layout_animation_trace::recordAppleModelPresentationSample(viewTag, *traceState, componentView);
+        reanimated::layout_animation_trace::recordApplePlatformCompleted(
+            viewTag, *traceState, componentView, finished, true);
+#endif // NDEBUG
+       // LayoutAnimationTrace end
+        if (*sharedCompletion) {
+          auto completion = std::move(*sharedCompletion);
+          *sharedCompletion = nullptr;
+          completion(finished);
         }
-        stop:^(CAAnimation *, BOOL finished) {
-          const bool isLastTrack = completionState->pendingTrackCount == 1;
-          if (isLastTrack) {
-// LayoutAnimationTrace start
+      }];
+  if (!installed) {
 #ifndef NDEBUG
-            reanimated::layout_animation_trace::recordAppleModelPresentationSample(viewTag, *traceState, componentView);
-            reanimated::layout_animation_trace::recordApplePlatformCompleted(
-                viewTag, *traceState, componentView, completionState->allFinished && finished, true);
-#endif // NDEBUG
-       // LayoutAnimationTrace end
-          }
-          completionState->trackStopped(finished);
-        }];
-    track.animation.delegate = delegate;
-    NSString *animationKey = [keyPrefix stringByAppendingString:track.targetName];
-    [layer addAnimation:track.animation forKey:animationKey];
+    reanimated::layout_animation_trace::recordApplePlatformCompleted(
+        viewTag, traceDescriptor, componentView, false, false);
+#endif
+    if (*sharedCompletion) {
+      auto completion = std::move(*sharedCompletion);
+      *sharedCompletion = nullptr;
+      completion(NO);
+    }
+    return;
   }
-  [CATransaction commit];
 
 // LayoutAnimationTrace start
 #ifndef NDEBUG
@@ -483,6 +466,7 @@ NSString *nativeTimingAnimationKeyPrefix(const reanimated::NativeAnimationHandle
                                 completion:(std::function<void(bool)>)completion
 {
   RCTAssertMainQueue();
+  (void)usePresentationLayer;
   const ReactTag viewTag = handle.tag;
 
   if (cancellationToken->load(std::memory_order_acquire)) {
@@ -525,7 +509,6 @@ NSString *nativeTimingAnimationKeyPrefix(const reanimated::NativeAnimationHandle
     return;
   }
   CALayer *layer = componentView.layer;
-  NSString *generationKey = [NSString stringWithFormat:@"REA_LAYOUT_GENERATION_%llu", handle.generation];
 
   // Index the sampled channels by name for quick lookup / interpolation.
   std::unordered_map<std::string, const reanimated::NativeLayoutAnimationProperty *> channels;
@@ -625,30 +608,10 @@ NSString *nativeTimingAnimationKeyPrefix(const reanimated::NativeAnimationHandle
     return matrix;
   };
 
-  CALayer *presentationLayer = usePresentationLayer ? layer.presentationLayer : nil;
-  // Only start from the presentation layer when we're actually interrupting an
-  // in-flight animation on that key path - otherwise a freshly committed layout
-  // would incorrectly start from its final on-screen position.
-  auto presentationActive = [&](NSString *keyPath) -> BOOL {
-    if (presentationLayer == nil) {
-      return NO;
-    }
-    NSString *suffix = [@"_" stringByAppendingString:keyPath];
-    for (NSString *key in layer.animationKeys) {
-      if ([key hasPrefix:@"REA_LAYOUT_GENERATION_"] && [key hasSuffix:suffix]) {
-        return YES;
-      }
-    }
-    return NO;
-  };
-
   NSMutableArray<NSString *> *animatedKeyPaths = [NSMutableArray array];
   NSMutableArray<CAKeyframeAnimation *> *animations = [NSMutableArray array];
 
-  auto registerAnimation = [&](NSString *keyPath, NSMutableArray *values, id presentationValue) {
-    if (presentationValue != nil && values.count > 0) {
-      values[0] = presentationValue;
-    }
+  auto registerAnimation = [&](NSString *keyPath, NSMutableArray *values) {
     CAKeyframeAnimation *animation = [CAKeyframeAnimation animationWithKeyPath:keyPath];
     animation.values = values;
     animation.keyTimes = keyTimes;
@@ -666,8 +629,7 @@ NSString *nativeTimingAnimationKeyPrefix(const reanimated::NativeAnimationHandle
     for (double offset : sampleOffsets) {
       [values addObject:@(channelValueAt("opacity", offset, 1))];
     }
-    id presentationValue = presentationActive(@"opacity") ? @(presentationLayer.opacity) : nil;
-    registerAnimation(@"opacity", values, presentationValue);
+    registerAnimation(@"opacity", values);
   }
 
   // transform (composed from the canonical transform channels)
@@ -679,9 +641,7 @@ NSString *nativeTimingAnimationKeyPrefix(const reanimated::NativeAnimationHandle
     for (double offset : sampleOffsets) {
       [values addObject:[NSValue valueWithCATransform3D:composeTransform(offset)]];
     }
-    id presentationValue =
-        presentationActive(@"transform") ? [NSValue valueWithCATransform3D:presentationLayer.transform] : nil;
-    registerAnimation(@"transform", values, presentationValue);
+    registerAnimation(@"transform", values);
   }
 
   // layout: width/height -> bounds.size, originX/originY -> position
@@ -697,9 +657,7 @@ NSString *nativeTimingAnimationKeyPrefix(const reanimated::NativeAnimationHandle
       const double height = channelValueAt("height", offset, currentBounds.height);
       [values addObject:[NSValue valueWithCGSize:CGSizeMake(width, height)]];
     }
-    id presentationValue =
-        presentationActive(@"bounds.size") ? [NSValue valueWithCGSize:presentationLayer.bounds.size] : nil;
-    registerAnimation(@"bounds.size", values, presentationValue);
+    registerAnimation(@"bounds.size", values);
   }
 
   if (hasOrigin) {
@@ -714,9 +672,7 @@ NSString *nativeTimingAnimationKeyPrefix(const reanimated::NativeAnimationHandle
     for (double offset : sampleOffsets) {
       [values addObject:[NSValue valueWithCGPoint:positionAt(offset)]];
     }
-    id presentationValue =
-        presentationActive(@"position") ? [NSValue valueWithCGPoint:presentationLayer.position] : nil;
-    registerAnimation(@"position", values, presentationValue);
+    registerAnimation(@"position", values);
   }
 
   if (animations.count == 0) {
@@ -729,64 +685,72 @@ NSString *nativeTimingAnimationKeyPrefix(const reanimated::NativeAnimationHandle
     return;
   }
 
-  // Attach the completion to the (single) longest-running animation. Every
-  // animation here shares the same duration, so the first one is fine.
-  // LayoutAnimationTrace start
-#ifndef NDEBUG
-  // The delegate outlives this method. Keep the trace metadata alive for its
-  // start/stop callbacks instead of capturing the descriptor reference.
-  auto traceDescriptor = std::make_shared<const reanimated::NativeLayoutAnimationDescriptor>(descriptor);
-#endif // NDEBUG
-  // LayoutAnimationTrace end
-  REACoreAnimationDelegate *delegate = [REACoreAnimationDelegate
-      delegateWithStart:^(CAAnimation *animation) {
+  NSMutableArray<REANativeAnimationTrack *> *registryTracks = [NSMutableArray arrayWithCapacity:animations.count];
+  for (NSUInteger i = 0; i < animations.count; i++) {
+    NSString *keyPath = animatedKeyPaths[i];
+    NSString *ownershipTarget = [keyPath isEqualToString:@"bounds.size"] ? @"boundsSize" : keyPath;
+    [registryTracks addObject:[[REANativeAnimationTrack alloc] initWithAnimation:animations[i]
+                                                                         keyPath:keyPath
+                                                                      targetName:keyPath
+                                                             ownershipTargetName:ownershipTarget]];
+  }
+
+  auto traceState = std::make_shared<const reanimated::NativeLayoutAnimationDescriptor>(descriptor);
+  auto sharedCompletion = std::make_shared<std::function<void(bool)>>(std::move(completion));
+  const BOOL installed = [_nativeAnimationRegistry installTracks:registryTracks
+      handle:handle
+      layer:layer
+      onStart:[viewTag, traceState, componentView]() {
 // LayoutAnimationTrace start
 #ifndef NDEBUG
-        reanimated::layout_animation_trace::recordApplePlatformStarted(viewTag, *traceDescriptor, componentView);
-        reanimated::layout_animation_trace::recordAppleModelPresentationSample(
-            viewTag, *traceDescriptor, componentView);
+        reanimated::layout_animation_trace::recordApplePlatformStarted(viewTag, *traceState, componentView);
+        reanimated::layout_animation_trace::recordAppleModelPresentationSample(viewTag, *traceState, componentView);
 #endif // NDEBUG
        // LayoutAnimationTrace end
       }
-      stop:^(CAAnimation *animation, BOOL finished) {
+      onTerminal:[viewTag, traceState, componentView, sharedCompletion](bool finished) mutable {
 // LayoutAnimationTrace start
 #ifndef NDEBUG
-        reanimated::layout_animation_trace::recordAppleModelPresentationSample(
-            viewTag, *traceDescriptor, componentView);
+        reanimated::layout_animation_trace::recordAppleModelPresentationSample(viewTag, *traceState, componentView);
         reanimated::layout_animation_trace::recordApplePlatformCompleted(
-            viewTag, *traceDescriptor, componentView, finished, true);
+            viewTag, *traceState, componentView, finished, true);
 #endif // NDEBUG
        // LayoutAnimationTrace end
-        completion(finished);
+        if (*sharedCompletion) {
+          auto completion = std::move(*sharedCompletion);
+          *sharedCompletion = nullptr;
+          completion(finished);
+        }
       }];
-
-  for (NSUInteger i = 0; i < animations.count; i++) {
-    NSString *keyPath = animatedKeyPaths[i];
-    CAKeyframeAnimation *animation = animations[i];
-    if (i == 0) {
-      animation.delegate = delegate;
+  if (!installed) {
+#ifndef NDEBUG
+    reanimated::layout_animation_trace::recordApplePlatformCompleted(viewTag, descriptor, componentView, false, false);
+#endif
+    if (*sharedCompletion) {
+      auto completion = std::move(*sharedCompletion);
+      *sharedCompletion = nullptr;
+      completion(NO);
     }
-    [layer addAnimation:animation
-                 forKey:[[generationKey stringByAppendingString:@"_"] stringByAppendingString:keyPath]];
+    return;
   }
 
 // LayoutAnimationTrace start
 #ifndef NDEBUG
+  NSString *keyPrefix =
+      [NSString stringWithFormat:@"reanimated.layout.%d.%d.%llu.", handle.surfaceId, handle.tag, handle.generation];
   dispatch_after(
       dispatch_time(DISPATCH_TIME_NOW, static_cast<int64_t>(durationSec * 0.5 * NSEC_PER_SEC)),
       dispatch_get_main_queue(),
       ^{
-        NSString *prefix = [generationKey stringByAppendingString:@"_"];
         BOOL isStillActive = NO;
         for (NSString *key in layer.animationKeys) {
-          if ([key hasPrefix:prefix]) {
+          if ([key hasPrefix:keyPrefix]) {
             isStillActive = YES;
             break;
           }
         }
         if (isStillActive) {
-          reanimated::layout_animation_trace::recordAppleModelPresentationSample(
-              viewTag, *traceDescriptor, componentView);
+          reanimated::layout_animation_trace::recordAppleModelPresentationSample(viewTag, *traceState, componentView);
         }
       });
 #endif // NDEBUG
@@ -794,14 +758,17 @@ NSString *nativeTimingAnimationKeyPrefix(const reanimated::NativeAnimationHandle
 }
 
 - (void)cancelNativeLayoutAnimation:(reanimated::NativeLayoutAnimationHandle)handle
+                        disposition:(reanimated::NativeAnimationCancelDisposition)disposition
 {
   const ReactTag viewTag = handle.tag;
   if (![NSThread isMainThread]) {
     __weak REANodesManager *weakSelf = self;
-    dispatch_async(dispatch_get_main_queue(), ^{ [weakSelf cancelNativeLayoutAnimation:handle]; });
+    dispatch_async(
+        dispatch_get_main_queue(), ^{ [weakSelf cancelNativeLayoutAnimation:handle disposition:disposition]; });
     return;
   }
   [_nativeLayoutAnimationPostMountQueue cancelHandle:handle];
+  [_nativeAnimationRegistry cancelHandle:handle disposition:disposition];
   RCTComponentViewRegistry *registry = self.surfacePresenter.mountingManager.componentViewRegistry;
   REAUIView<RCTComponentViewProtocol> *view = [registry findComponentViewWithTag:static_cast<Tag>(viewTag)];
   CALayer *layer = view.layer;
@@ -809,9 +776,8 @@ NSString *nativeTimingAnimationKeyPrefix(const reanimated::NativeAnimationHandle
     return;
   }
   NSString *prefix = [NSString stringWithFormat:@"REA_LAYOUT_GENERATION_%llu_", handle.generation];
-  NSString *timingPrefix = nativeTimingAnimationKeyPrefix(handle);
   for (NSString *key in layer.animationKeys.copy) {
-    if ([key hasPrefix:prefix] || [key hasPrefix:timingPrefix]) {
+    if ([key hasPrefix:prefix]) {
       [layer removeAnimationForKey:key];
     }
   }

@@ -104,7 +104,7 @@ void CallbackNativeAnimationExecutor::cancel(
   }
   active->second.cancellationToken->store(true, std::memory_order_release);
   if (cancelNativeLayoutAnimation_) {
-    cancelNativeLayoutAnimation_(handle);
+    cancelNativeLayoutAnimation_(handle, disposition);
   }
 
   const auto reason = disposition == NativeAnimationCancelDisposition::PreservePresentationForRetarget

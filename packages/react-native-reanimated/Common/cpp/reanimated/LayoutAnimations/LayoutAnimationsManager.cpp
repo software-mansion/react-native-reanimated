@@ -386,15 +386,6 @@ void LayoutAnimationsManager::startNativeLayoutAnimation(
         break;
     }
   }
-  std::vector<NativeLayoutAnimationHandle> conflicts;
-  for (const auto &active : animationsForTag.active) {
-    if (active.handle.generation != handle.generation && (active.targets & targets) != 0) {
-      conflicts.push_back(active.handle);
-    }
-  }
-  for (const auto conflict : conflicts) {
-    cancelNativeLayoutAnimationHandle(rt, conflict);
-  }
   auto &active = nativeAnimations_[viewKey].active;
   const auto current = std::find_if(active.begin(), active.end(), [handle](const auto &animation) {
     return animation.handle.generation == handle.generation;

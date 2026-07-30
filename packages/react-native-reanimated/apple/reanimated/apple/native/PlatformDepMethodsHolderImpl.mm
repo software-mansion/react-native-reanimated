@@ -143,8 +143,10 @@ RunNativeLayoutAnimation makeRunNativeLayoutAnimation(REANodesManager *nodesMana
 
 CancelNativeLayoutAnimation makeCancelNativeLayoutAnimation(REANodesManager *nodesManager)
 {
-  return [nodesManager](const reanimated::NativeLayoutAnimationHandle handle) {
-    [nodesManager cancelNativeLayoutAnimation:handle];
+  return [nodesManager](
+             const reanimated::NativeLayoutAnimationHandle handle,
+             const reanimated::NativeAnimationCancelDisposition disposition) {
+    [nodesManager cancelNativeLayoutAnimation:handle disposition:disposition];
   };
 }
 

@@ -33,9 +33,9 @@ import {
 import {
   DEFAULT_DURATION_MS,
   DEFAULT_REPETITIONS,
-  INTERRUPT_AT_MS,
   RESET_SETTLE_MS,
   scenarioHasRunEnd,
+  scenarioInterruptAtMs,
   scenarioStartDelayMs,
   TEST_BENCH_SCENARIOS,
 } from './types';
@@ -68,7 +68,13 @@ function cycleDurationMs(
 ) {
   const startDelayMs = scenarioStartDelayMs(scenario);
   if (mode === 'interrupt') {
-    return RESET_SETTLE_MS + INTERRUPT_AT_MS + startDelayMs + durationMs + 300;
+    return (
+      RESET_SETTLE_MS +
+      scenarioInterruptAtMs(scenario, durationMs) +
+      startDelayMs +
+      durationMs +
+      300
+    );
   }
   if (mode === 'cancel') {
     return RESET_SETTLE_MS + startDelayMs + durationMs + 300;
@@ -185,9 +191,7 @@ export default function NativeLayoutAnimationsTestBench() {
     setLastFinished(null);
     setStatus('idle');
     setActiveMode(null);
-    setStatusMessage(
-      'Ready. Choose one deterministic run mode; Interrupt fires at 240 ms.'
-    );
+    setStatusMessage('Ready. Choose one deterministic run mode.');
     setPhase('reset');
 
     const reducedMotion = await getReducedMotionEnabled();
@@ -255,6 +259,7 @@ export default function NativeLayoutAnimationsTestBench() {
       );
 
       const oneCycleMs = cycleDurationMs(mode, scenario, durationMs);
+      const interruptAtMs = scenarioInterruptAtMs(scenario, durationMs);
       for (let repetition = 0; repetition < repetitions; repetition++) {
         const cycleStart = repetition * oneCycleMs;
         schedule(() => {
@@ -283,7 +288,7 @@ export default function NativeLayoutAnimationsTestBench() {
               setPhase('interrupt');
               recordLayoutAnimationTraceEvent('scenario-interrupt');
             },
-            cycleStart + RESET_SETTLE_MS + INTERRUPT_AT_MS
+            cycleStart + RESET_SETTLE_MS + interruptAtMs
           );
         } else if (mode === 'cancel') {
           let remainingPolls = 1000;
@@ -486,7 +491,8 @@ export default function NativeLayoutAnimationsTestBench() {
         </View>
       </View>
       <Text style={styles.timingNote}>
-        Interrupt offset: {INTERRUPT_AT_MS} ms · Cancel offset: next JS task
+        Interrupt offset: {scenarioInterruptAtMs(scenario, durationMs)} ms ·
+        Cancel offset: next JS task
       </Text>
 
       <View style={styles.controls}>

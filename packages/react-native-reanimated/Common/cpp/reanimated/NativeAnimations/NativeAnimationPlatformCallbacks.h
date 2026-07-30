@@ -13,6 +13,7 @@ using RunNativeLayoutAnimation = std::function<void(
     NativeLayoutAnimationCancellationToken cancellationToken,
     std::function<void(bool)> &&completion)>;
 
-using CancelNativeLayoutAnimation = std::function<void(NativeAnimationHandle handle)>;
+using CancelNativeLayoutAnimation =
+    std::function<void(NativeAnimationHandle handle, NativeAnimationCancelDisposition disposition)>;
 
 } // namespace reanimated

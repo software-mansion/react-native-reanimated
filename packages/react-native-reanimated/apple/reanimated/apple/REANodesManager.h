@@ -29,6 +29,7 @@ typedef void (^REAPerformOperations)();
                             plan:(const reanimated::NativeAnimationPlan &)plan
                cancellationToken:(reanimated::NativeLayoutAnimationCancellationToken)cancellationToken
                       completion:(std::function<void(bool)>)completion;
-- (void)cancelNativeLayoutAnimation:(reanimated::NativeLayoutAnimationHandle)handle;
+- (void)cancelNativeLayoutAnimation:(reanimated::NativeLayoutAnimationHandle)handle
+                        disposition:(reanimated::NativeAnimationCancelDisposition)disposition;
 
 @end

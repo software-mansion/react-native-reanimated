@@ -132,6 +132,15 @@ export const DEFAULT_REPETITIONS = 1;
 export const INTERRUPT_AT_MS = 240;
 export const RESET_SETTLE_MS = 100;
 
+export function scenarioInterruptAtMs(
+  scenario: TestBenchScenarioId,
+  durationMs: number
+): number {
+  return scenario === 'layout-interrupted-by-layout'
+    ? Math.round(durationMs * 0.4)
+    : INTERRUPT_AT_MS;
+}
+
 export function scenarioHasRunEnd(scenario: TestBenchScenarioId): boolean {
   return (
     scenario === 'fade-in-out' ||

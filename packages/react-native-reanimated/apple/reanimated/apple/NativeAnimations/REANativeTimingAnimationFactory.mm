@@ -43,6 +43,24 @@ NSString *targetName(const NativeAnimationTarget target)
   }
 }
 
+NSString *ownershipTargetName(const NativeAnimationTarget target)
+{
+  switch (target) {
+    case NativeAnimationTarget::Opacity:
+      return @"opacity";
+    case NativeAnimationTarget::OriginX:
+    case NativeAnimationTarget::OriginY:
+    case NativeAnimationTarget::Position:
+      return @"position";
+    case NativeAnimationTarget::Width:
+    case NativeAnimationTarget::Height:
+    case NativeAnimationTarget::BoundsSize:
+      return @"boundsSize";
+    default:
+      return @"transform";
+  }
+}
+
 NSString *keyPath(const NativeAnimationTarget target)
 {
   switch (target) {
@@ -178,26 +196,12 @@ bool appendSegment(
 
 } // namespace
 
-@implementation REANativeTimingTrackAnimation
-
-- (instancetype)initWithAnimation:(CAAnimation *)animation keyPath:(NSString *)keyPath targetName:(NSString *)targetName
-{
-  if (self = [super init]) {
-    _animation = animation;
-    _keyPath = [keyPath copy];
-    _targetName = [targetName copy];
-  }
-  return self;
-}
-
-@end
-
 @implementation REANativeTimingAnimationFactory
 
-+ (nullable REANativeTimingTrackAnimation *)animationForTrack:(const NativeAnimationTrack &)track
-                                               planDurationMs:(const double)planDurationMs
-                                                        layer:(CALayer *)layer
-                                               localBeginTime:(const CFTimeInterval)localBeginTime
++ (nullable REANativeAnimationTrack *)animationForTrack:(const NativeAnimationTrack &)track
+                                         planDurationMs:(const double)planDurationMs
+                                                  layer:(CALayer *)layer
+                                         localBeginTime:(const CFTimeInterval)localBeginTime
 {
   NSString *resolvedKeyPath = keyPath(track.target);
   NSString *resolvedTargetName = targetName(track.target);
@@ -221,9 +225,10 @@ bool appendSegment(
       animation.timingFunction = timingFunction(segment->easing);
       animation.removedOnCompletion = YES;
       animation.fillMode = kCAFillModeRemoved;
-      return [[REANativeTimingTrackAnimation alloc] initWithAnimation:animation
-                                                              keyPath:resolvedKeyPath
-                                                           targetName:resolvedTargetName];
+      return [[REANativeAnimationTrack alloc] initWithAnimation:animation
+                                                        keyPath:resolvedKeyPath
+                                                     targetName:resolvedTargetName
+                                            ownershipTargetName:ownershipTargetName(track.target)];
     }
   }
 
@@ -261,9 +266,10 @@ bool appendSegment(
   animation.duration = planDurationMs / 1000.0;
   animation.removedOnCompletion = YES;
   animation.fillMode = kCAFillModeRemoved;
-  return [[REANativeTimingTrackAnimation alloc] initWithAnimation:animation
-                                                          keyPath:resolvedKeyPath
-                                                       targetName:resolvedTargetName];
+  return [[REANativeAnimationTrack alloc] initWithAnimation:animation
+                                                    keyPath:resolvedKeyPath
+                                                 targetName:resolvedTargetName
+                                        ownershipTargetName:ownershipTargetName(track.target)];
 }
 
 @end
