@@ -129,6 +129,34 @@ export function countRejectedPlatformStarts(): number {
     }).length;
 }
 
+export function getLatestNativeRoute(trace: string): {
+  route: string;
+  reason: string;
+} | null {
+  const lines = trace.split('\n');
+  for (let index = lines.length - 1; index >= 0; index--) {
+    try {
+      const entry = JSON.parse(lines[index]) as {
+        event?: unknown;
+        details?: { route?: unknown; routeReason?: unknown };
+      };
+      if (
+        entry.event === 'descriptor-created' &&
+        typeof entry.details?.route === 'string' &&
+        typeof entry.details.routeReason === 'string'
+      ) {
+        return {
+          route: entry.details.route,
+          reason: entry.details.routeReason,
+        };
+      }
+    } catch {
+      // Ignore an incomplete line while native tracing appends the next event.
+    }
+  }
+  return null;
+}
+
 export function setNativeLayoutAnimationStartPaused(paused: boolean): void {
   getTraceProxy()?._setNativeLayoutAnimationStartPaused?.(paused);
 }

@@ -9,6 +9,10 @@ import type {
 } from '../commonTypes';
 import type { EasingFunctionFactory } from '../Easing';
 import { Easing } from '../Easing';
+import type {
+  NativeCompilableAnimation,
+  NativeEasingNode,
+} from './nativeAnimationNode';
 import {
   assertEasingIsWorklet,
   defineAnimation,
@@ -98,6 +102,11 @@ export const withTiming = function (
       );
     }
 
+    const easingName =
+      typeof config.easing === 'function' ? config.easing.name : '';
+    const nativeEasing: NativeEasingNode | null =
+      easingName === 'linear' ? { kind: 'linear' } : null;
+
     function timing(animation: InnerTimingAnimation, now: Timestamp): boolean {
       // eslint-disable-next-line @typescript-eslint/no-shadow
       const { toValue, startTime, startValue } = animation;
@@ -158,6 +167,13 @@ export const withTiming = function (
       current: toValue,
       callback,
       reduceMotion: getReduceMotionForAnimation(userConfig?.reduceMotion),
-    } as TimingAnimation;
+      __nativeAnimation: {
+        kind: 'timing',
+        durationMs: config.duration,
+        easing: nativeEasing,
+        hasCallback: callback !== undefined,
+        toValue,
+      },
+    } as TimingAnimation & NativeCompilableAnimation;
   });
 } as withTimingType;

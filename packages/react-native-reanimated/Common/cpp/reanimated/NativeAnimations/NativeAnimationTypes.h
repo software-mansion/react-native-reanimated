@@ -50,6 +50,20 @@ struct NativeAnimationViewKeyHash {
 
 enum class NativeAnimationTarget : uint8_t {
   Opacity,
+  OriginX,
+  OriginY,
+  Width,
+  Height,
+  TranslateX,
+  TranslateY,
+  ScaleX,
+  ScaleY,
+  Rotation,
+  RotationX,
+  RotationY,
+  SkewX,
+  SkewY,
+  Perspective,
   Position,
   BoundsSize,
   Transform,
@@ -63,6 +77,12 @@ enum class NativeAnimationStartValueSource : uint8_t {
 enum class NativeAnimationMountingMode : uint8_t {
   FinalState,
   RetainedCurrentState,
+};
+
+enum class NativeAnimationLifecycle : uint8_t {
+  Entering,
+  Exiting,
+  Layout,
 };
 
 enum class NativeAnimationCancelDisposition : uint8_t {

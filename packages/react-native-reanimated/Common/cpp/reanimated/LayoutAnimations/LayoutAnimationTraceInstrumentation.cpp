@@ -224,32 +224,41 @@ void recordSurfaceFlushRequested(const int tag, const SurfaceId surfaceId) {
   Recorder::getInstance().record(std::move(event));
 }
 
-void recordNativeDescriptor(
-    const int tag,
-    const LayoutAnimationType type,
-    NativeLayoutAnimationDescriptor &descriptor) {
+void recordNativePlan(const int tag, const LayoutAnimationType type, const NativeAnimationPlan &plan) {
   auto &recorder = Recorder::getInstance();
   const auto generation = recorder.getGeneration(tag).value_or(0);
-  descriptor.traceGeneration = generation;
-  descriptor.traceAnimationType = toTraceAnimationType(type).value_or(AnimationType::Layout);
 
   Event descriptorEvent;
   descriptorEvent.source = Source::UIRuntime;
   descriptorEvent.event = EventName::DescriptorCreated;
   descriptorEvent.tag = tag;
-  descriptorEvent.animationType = descriptor.traceAnimationType;
+  descriptorEvent.animationType = toTraceAnimationType(type).value_or(AnimationType::Layout);
   descriptorEvent.generation = generation;
-  descriptorEvent.details = folly::dynamic::object("durationMs", descriptor.durationMs)(
-      "propertyCount", static_cast<int64_t>(descriptor.properties.size()));
+  descriptorEvent.details = folly::dynamic::object("durationMs", plan.totalDurationMs)(
+      "trackCount", static_cast<int64_t>(plan.tracks.size()))("route", nativeAnimationRouteName(plan.route))(
+      "routeReason", nativeAnimationRouteReasonName(plan.routeReason));
   recorder.record(std::move(descriptorEvent));
 
   Event scheduledEvent;
   scheduledEvent.source = Source::UIRuntime;
   scheduledEvent.event = EventName::PlatformStartScheduled;
   scheduledEvent.tag = tag;
-  scheduledEvent.animationType = descriptor.traceAnimationType;
+  scheduledEvent.animationType = toTraceAnimationType(type).value_or(AnimationType::Layout);
   scheduledEvent.generation = generation;
   recorder.record(std::move(scheduledEvent));
+}
+
+void recordNativeFallback(const int tag, const LayoutAnimationType type, const NativeAnimationRouteReason reason) {
+  auto &recorder = Recorder::getInstance();
+  Event event;
+  event.source = Source::UIRuntime;
+  event.event = EventName::DescriptorCreated;
+  event.tag = tag;
+  event.animationType = toTraceAnimationType(type).value_or(AnimationType::Layout);
+  event.generation = recorder.getGeneration(tag).value_or(0);
+  event.details = folly::dynamic::object("route", nativeAnimationRouteName(NativeAnimationRoute::Legacy))(
+      "routeReason", nativeAnimationRouteReasonName(reason));
+  recorder.record(std::move(event));
 }
 
 void recordAndroidPlatformCompleted(

@@ -1,5 +1,5 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/LayoutAnimations/NativeLayoutAnimationDescriptor.h>
+#include <reanimated/NativeAnimations/NativeAnimationCompilation.h>
 // LayoutAnimationTrace start
 #ifndef NDEBUG
 #include <reanimated/LayoutAnimations/LayoutAnimationTraceInstrumentation.h>
@@ -9,8 +9,10 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <stdexcept>
 #include <unordered_map>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace reanimated {
@@ -102,74 +104,171 @@ void LayoutAnimationsManager::startLayoutAnimation(
       rt, jsi::Value(tag), jsi::Value(static_cast<int>(type)), values, configPair.first->toJSValue(rt));
 }
 
-static NativeLayoutAnimationDescriptor parseNativeDescriptor(jsi::Runtime &rt, const jsi::Object &descriptorObj) {
-  NativeLayoutAnimationDescriptor descriptor;
-  descriptor.durationMs = descriptorObj.getProperty(rt, "durationMs").asNumber();
-
-  jsi::Array properties = descriptorObj.getProperty(rt, "properties").asObject(rt).asArray(rt);
-  const size_t propertyCount = properties.size(rt);
-  descriptor.properties.reserve(propertyCount);
-
-  for (size_t i = 0; i < propertyCount; i++) {
-    jsi::Object property = properties.getValueAtIndex(rt, i).asObject(rt);
-
-    NativeLayoutAnimationProperty parsedProperty;
-    parsedProperty.keyPath = property.getProperty(rt, "keyPath").asString(rt).utf8(rt);
-
-    jsi::Array offsets = property.getProperty(rt, "offsets").asObject(rt).asArray(rt);
-    jsi::Array values = property.getProperty(rt, "values").asObject(rt).asArray(rt);
-    const size_t offsetCount = offsets.size(rt);
-    const size_t valueCount = values.size(rt);
-    parsedProperty.offsets.reserve(offsetCount);
-    parsedProperty.values.reserve(valueCount);
-    for (size_t j = 0; j < offsetCount; j++) {
-      parsedProperty.offsets.push_back(offsets.getValueAtIndex(rt, j).asNumber());
-    }
-    for (size_t j = 0; j < valueCount; j++) {
-      parsedProperty.values.push_back(values.getValueAtIndex(rt, j).asNumber());
-    }
-
-    descriptor.properties.push_back(std::move(parsedProperty));
+static NativeAnimationTarget parseNativeTarget(const std::string &target) {
+  static const std::unordered_map<std::string, NativeAnimationTarget> targets = {
+      {"opacity", NativeAnimationTarget::Opacity},
+      {"originX", NativeAnimationTarget::OriginX},
+      {"originY", NativeAnimationTarget::OriginY},
+      {"width", NativeAnimationTarget::Width},
+      {"height", NativeAnimationTarget::Height},
+      {"translateX", NativeAnimationTarget::TranslateX},
+      {"translateY", NativeAnimationTarget::TranslateY},
+      {"scaleX", NativeAnimationTarget::ScaleX},
+      {"scaleY", NativeAnimationTarget::ScaleY},
+      {"rotation", NativeAnimationTarget::Rotation},
+      {"rotationX", NativeAnimationTarget::RotationX},
+      {"rotationY", NativeAnimationTarget::RotationY},
+      {"skewX", NativeAnimationTarget::SkewX},
+      {"skewY", NativeAnimationTarget::SkewY},
+      {"perspective", NativeAnimationTarget::Perspective},
+  };
+  const auto result = targets.find(target);
+  if (result == targets.end()) {
+    throw std::invalid_argument("Unsupported native animation target");
   }
-
-  return descriptor;
+  return result->second;
 }
 
-static bool isValidNativeDescriptor(const NativeLayoutAnimationDescriptor &descriptor) {
-  if (!std::isfinite(descriptor.durationMs) || descriptor.durationMs < 0 || descriptor.properties.empty()) {
-    return false;
+static NativeAnimationRoute parseNativeRoute(const std::string &route) {
+  if (route == "simple") {
+    return NativeAnimationRoute::Simple;
   }
-  static const std::unordered_set<std::string> supportedTargets = {
-      "opacity",
-      "originX",
-      "originY",
-      "width",
-      "height",
-      "translateX",
-      "translateY",
-      "scaleX",
-      "scaleY",
-      "rotation",
-      "rotationX",
-      "rotationY",
-      "skewX",
-      "perspective"};
-  for (const auto &property : descriptor.properties) {
-    if (!supportedTargets.contains(property.keyPath) || property.offsets.empty() ||
-        property.offsets.size() != property.values.size()) {
-      return false;
-    }
-    double previous = -1;
-    for (size_t index = 0; index < property.offsets.size(); index++) {
-      const double offset = property.offsets[index];
-      if (!std::isfinite(offset) || !std::isfinite(property.values[index]) || offset < 0 || offset > 1 ||
-          offset < previous) {
-        return false;
-      }
-      previous = offset;
-    }
+  if (route == "structured") {
+    return NativeAnimationRoute::Structured;
   }
-  return true;
+  if (route == "sampled") {
+    return NativeAnimationRoute::Sampled;
+  }
+  throw std::invalid_argument("Unsupported native animation route");
+}
+
+static NativeAnimationRouteReason parseNativeRouteReason(const std::string &reason) {
+  if (reason == "canonical-single-timing") {
+    return NativeAnimationRouteReason::CanonicalSingleTiming;
+  }
+  if (reason == "contains-hold-or-sequence") {
+    return NativeAnimationRouteReason::ContainsHoldOrSequence;
+  }
+  if (reason == "requires-sampling") {
+    return NativeAnimationRouteReason::RequiresSampling;
+  }
+  if (reason == "unsupported-property") {
+    return NativeAnimationRouteReason::UnsupportedProperty;
+  }
+  if (reason == "unsupported-value-type") {
+    return NativeAnimationRouteReason::UnsupportedValueType;
+  }
+  if (reason == "transform-ordering-unavailable") {
+    return NativeAnimationRouteReason::TransformOrderingUnavailable;
+  }
+  return NativeAnimationRouteReason::InvalidInput;
+}
+
+static std::vector<double> parseNumberArray(jsi::Runtime &rt, const jsi::Object &object, const char *propertyName) {
+  const auto array = object.getProperty(rt, propertyName).asObject(rt).asArray(rt);
+  std::vector<double> values;
+  values.reserve(array.size(rt));
+  for (size_t index = 0; index < array.size(rt); index++) {
+    values.push_back(array.getValueAtIndex(rt, index).asNumber());
+  }
+  return values;
+}
+
+static NativeTimingFunction parseNativeEasing(jsi::Runtime &rt, const jsi::Object &segment) {
+  const auto easing = segment.getProperty(rt, "easing").asObject(rt);
+  const auto kind = easing.getProperty(rt, "kind").asString(rt).utf8(rt);
+  if (kind == "linear") {
+    return {};
+  }
+  if (kind == "cubicBezier") {
+    const auto points = parseNumberArray(rt, easing, "controlPoints");
+    if (points.size() != 4) {
+      throw std::invalid_argument("Invalid cubic bezier");
+    }
+    return {
+        .kind = NativeTimingFunctionKind::CubicBezier, .controlPoints = {points[0], points[1], points[2], points[3]}};
+  }
+  throw std::invalid_argument("Unsupported native easing");
+}
+
+static NativeAnimationSegment parseNativeSegment(jsi::Runtime &rt, const jsi::Object &segment) {
+  const auto kind = segment.getProperty(rt, "kind").asString(rt).utf8(rt);
+  if (kind == "timing") {
+    return NativeTimingSegment{
+        .startMs = segment.getProperty(rt, "startMs").asNumber(),
+        .endMs = segment.getProperty(rt, "endMs").asNumber(),
+        .from = segment.getProperty(rt, "from").asNumber(),
+        .to = segment.getProperty(rt, "to").asNumber(),
+        .easing = parseNativeEasing(rt, segment)};
+  }
+  if (kind == "hold") {
+    return NativeHoldSegment{
+        .startMs = segment.getProperty(rt, "startMs").asNumber(),
+        .endMs = segment.getProperty(rt, "endMs").asNumber(),
+        .value = segment.getProperty(rt, "value").asNumber()};
+  }
+  if (kind == "keyframes") {
+    NativeKeyframeSegment keyframes;
+    keyframes.timesMs = parseNumberArray(rt, segment, "timesMs");
+    const auto values = parseNumberArray(rt, segment, "values");
+    keyframes.values.reserve(values.size());
+    for (const auto value : values) {
+      keyframes.values.emplace_back(value);
+    }
+    return keyframes;
+  }
+  throw std::invalid_argument("Unsupported native animation segment");
+}
+
+static NativeCompilationResult parseNativeCompilation(
+    jsi::Runtime &rt,
+    const jsi::Object &compilation,
+    const NativeAnimationStartValueSource startValueSource,
+    const NativeAnimationMountingMode mountingMode,
+    const NativeAnimationLifecycle lifecycle) {
+  const auto status = compilation.getProperty(rt, "status").asString(rt).utf8(rt);
+  const auto reason = parseNativeRouteReason(compilation.getProperty(rt, "reason").asString(rt).utf8(rt));
+  if (status != "native") {
+    return {
+        status == "fallback" ? NativeCompilationStatus::Fallback : NativeCompilationStatus::Invalid,
+        std::nullopt,
+        reason};
+  }
+
+  const auto planObject = compilation.getProperty(rt, "plan").asObject(rt);
+  NativeAnimationPlan plan{
+      .totalDurationMs = planObject.getProperty(rt, "totalDurationMs").asNumber(),
+      .tracks = {},
+      .route = parseNativeRoute(planObject.getProperty(rt, "route").asString(rt).utf8(rt)),
+      .routeReason = reason,
+      .startValueSource = startValueSource,
+      .mountingMode = mountingMode,
+      .lifecycle = lifecycle};
+  const auto tracks = planObject.getProperty(rt, "tracks").asObject(rt).asArray(rt);
+  plan.tracks.reserve(tracks.size(rt));
+  for (size_t trackIndex = 0; trackIndex < tracks.size(rt); trackIndex++) {
+    const auto trackObject = tracks.getValueAtIndex(rt, trackIndex).asObject(rt);
+    NativeAnimationTrack track{
+        .target = parseNativeTarget(trackObject.getProperty(rt, "target").asString(rt).utf8(rt)), .segments = {}};
+    const auto segments = trackObject.getProperty(rt, "segments").asObject(rt).asArray(rt);
+    track.segments.reserve(segments.size(rt));
+    for (size_t segmentIndex = 0; segmentIndex < segments.size(rt); segmentIndex++) {
+      track.segments.push_back(parseNativeSegment(rt, segments.getValueAtIndex(rt, segmentIndex).asObject(rt)));
+    }
+    plan.tracks.push_back(std::move(track));
+  }
+  return validateNativeAnimationPlan(std::move(plan));
+}
+
+static NativeAnimationLifecycle nativeAnimationLifecycle(const LayoutAnimationType type) {
+  switch (type) {
+    case LayoutAnimationType::ENTERING:
+      return NativeAnimationLifecycle::Entering;
+    case LayoutAnimationType::EXITING:
+      return NativeAnimationLifecycle::Exiting;
+    default:
+      return NativeAnimationLifecycle::Layout;
+  }
 }
 
 void LayoutAnimationsManager::startNativeLayoutAnimation(
@@ -185,8 +284,23 @@ void LayoutAnimationsManager::startNativeLayoutAnimation(
   NativeLayoutAnimationHandle handle{surfaceId, tag, NativeAnimationOwner::Layout, ++animationsForTag.nextGeneration};
   animationsForTag.active.push_back({handle, 0, shouldRemove});
 
+  const auto fallbackToLegacy = [&]() {
+    auto animations = nativeAnimations_.find(viewKey);
+    if (animations != nativeAnimations_.end()) {
+      auto &active = animations->second.active;
+      active.erase(
+          std::remove_if(
+              active.begin(), active.end(), [handle](const auto &candidate) { return candidate.handle == handle; }),
+          active.end());
+      if (active.empty()) {
+        nativeAnimations_.erase(animations);
+      }
+    }
+    startLayoutAnimation(rt, tag, type, values);
+  };
+
   if (!nativeAnimationExecutor_) {
-    finishNativeLayoutAnimation(rt, handle, false);
+    fallbackToLegacy();
     return;
   }
 
@@ -205,34 +319,73 @@ void LayoutAnimationsManager::startNativeLayoutAnimation(
     return;
   }
 
-  // Ask JS to run the preset builder for these runtime values and sample it into
-  // a generic keyframe descriptor (the same animation objects the legacy path
-  // would have driven frame-by-frame).
-  NativeLayoutAnimationDescriptor descriptor;
+  NativeCompilationResult compilation{
+      NativeCompilationStatus::Invalid, std::nullopt, NativeAnimationRouteReason::InvalidInput};
   try {
     jsi::Object layoutAnimationsManager =
         rt.global().getPropertyAsObject(rt, "global").getPropertyAsObject(rt, "LayoutAnimationsManager");
-    jsi::Function computeNativeDescriptor =
-        layoutAnimationsManager.getPropertyAsFunction(rt, "computeNativeDescriptor");
-    jsi::Value descriptorValue = computeNativeDescriptor.call(
+    jsi::Function computeNativePlan = layoutAnimationsManager.getPropertyAsFunction(rt, "computeNativePlan");
+    jsi::Value compilationValue = computeNativePlan.call(
         rt,
         jsi::Value(tag),
         jsi::Value(static_cast<double>(handle.generation)),
         jsi::Value(static_cast<int>(type)),
         values,
         configPair.first->toJSValue(rt));
-    descriptor = parseNativeDescriptor(rt, descriptorValue.asObject(rt));
+    compilation = parseNativeCompilation(
+        rt,
+        compilationValue.asObject(rt),
+        usePresentationLayer ? NativeAnimationStartValueSource::CurrentVisualValue
+                             : NativeAnimationStartValueSource::ExplicitValue,
+        shouldRemove ? NativeAnimationMountingMode::RetainedCurrentState : NativeAnimationMountingMode::FinalState,
+        nativeAnimationLifecycle(type));
   } catch (...) {
-    finishNativeLayoutAnimation(rt, handle, false);
+    fallbackToLegacy();
     return;
   }
 
-  if (!isValidNativeDescriptor(descriptor)) {
-    finishNativeLayoutAnimation(rt, handle, false);
+  if (!compilation.native()) {
+    // LayoutAnimationTrace start
+#ifndef NDEBUG
+    layout_animation_trace::recordNativeFallback(tag, type, compilation.reason);
+#endif
+    // LayoutAnimationTrace end
+    fallbackToLegacy();
+    return;
+  }
+  auto plan = std::move(*compilation.plan);
+  const auto capability = nativeAnimationExecutor_->queryCapabilities(plan);
+  if (!capability.supported()) {
+    // LayoutAnimationTrace start
+#ifndef NDEBUG
+    layout_animation_trace::recordNativeFallback(tag, type, NativeAnimationRouteReason::ExecutorMissingPrimitive);
+#endif
+    // LayoutAnimationTrace end
+    fallbackToLegacy();
     return;
   }
 
-  const auto targets = getNativeLayoutAnimationTargets(descriptor);
+  NativeLayoutAnimationTargetMask targets = 0;
+  for (const auto &track : plan.tracks) {
+    switch (track.target) {
+      case NativeAnimationTarget::Opacity:
+        targets |= targetMask(NativeLayoutAnimationTarget::Opacity);
+        break;
+      case NativeAnimationTarget::OriginX:
+      case NativeAnimationTarget::OriginY:
+      case NativeAnimationTarget::Position:
+        targets |= targetMask(NativeLayoutAnimationTarget::Position);
+        break;
+      case NativeAnimationTarget::Width:
+      case NativeAnimationTarget::Height:
+      case NativeAnimationTarget::BoundsSize:
+        targets |= targetMask(NativeLayoutAnimationTarget::BoundsSize);
+        break;
+      default:
+        targets |= targetMask(NativeLayoutAnimationTarget::Transform);
+        break;
+    }
+  }
   std::vector<NativeLayoutAnimationHandle> conflicts;
   for (const auto &active : animationsForTag.active) {
     if (active.handle.generation != handle.generation && (active.targets & targets) != 0) {
@@ -253,21 +406,9 @@ void LayoutAnimationsManager::startNativeLayoutAnimation(
 
   // LayoutAnimationTrace start
 #ifndef NDEBUG
-  layout_animation_trace::recordNativeDescriptor(tag, type, descriptor);
+  layout_animation_trace::recordNativePlan(tag, type, plan);
 #endif // NDEBUG
   // LayoutAnimationTrace end
-
-  NativeAnimationPlan plan{
-      .descriptor = std::move(descriptor),
-      .startValueSource = usePresentationLayer ? NativeAnimationStartValueSource::CurrentVisualValue
-                                               : NativeAnimationStartValueSource::ExplicitValue,
-      .mountingMode =
-          shouldRemove ? NativeAnimationMountingMode::RetainedCurrentState : NativeAnimationMountingMode::FinalState};
-  const auto capability = nativeAnimationExecutor_->queryCapabilities(plan);
-  if (!capability.supported()) {
-    finishNativeLayoutAnimation(rt, handle, false);
-    return;
-  }
 
   submitNativeLayoutAnimationStart(
       handle, std::move(plan), [weakThis = weak_from_this(), &rt, handle](NativeAnimationResult result) {

@@ -1,5 +1,9 @@
 'use strict';
 import { withStyleAnimation } from '../animation';
+import type {
+  NativeAnimationNode,
+  NativeEasingNode,
+} from '../animation/nativeAnimationNode';
 import type { AnimationObject, LayoutAnimation } from '../commonTypes';
 
 /**
@@ -35,11 +39,76 @@ interface NativeLayoutAnimationProperty {
   values: number[];
 }
 
-export interface NativeLayoutAnimationDescriptor {
+interface NativeLayoutAnimationDescriptor {
   /** Total animation duration in milliseconds (includes any delay). */
   durationMs: number;
   properties: NativeLayoutAnimationProperty[];
 }
+
+type NativeLayoutAnimationRoute =
+  | 'simple'
+  | 'structured'
+  | 'sampled'
+  | 'legacy';
+
+type NativeLayoutAnimationRouteReason =
+  | 'canonical-single-timing'
+  | 'contains-hold-or-sequence'
+  | 'requires-sampling'
+  | 'unsupported-property'
+  | 'unsupported-value-type'
+  | 'transform-ordering-unavailable'
+  | 'invalid-input';
+
+interface NativeTimingSegmentDescriptor {
+  kind: 'timing';
+  startMs: number;
+  endMs: number;
+  from: number;
+  to: number;
+  easing: NativeEasingNode;
+}
+
+interface NativeHoldSegmentDescriptor {
+  kind: 'hold';
+  startMs: number;
+  endMs: number;
+  value: number;
+}
+
+interface NativeKeyframeSegmentDescriptor {
+  kind: 'keyframes';
+  timesMs: number[];
+  values: number[];
+}
+
+type NativeAnimationSegmentDescriptor =
+  | NativeTimingSegmentDescriptor
+  | NativeHoldSegmentDescriptor
+  | NativeKeyframeSegmentDescriptor;
+
+interface NativeAnimationTrackDescriptor {
+  target: string;
+  segments: NativeAnimationSegmentDescriptor[];
+}
+
+interface NativeAnimationPlanDescriptor {
+  totalDurationMs: number;
+  route: NativeLayoutAnimationRoute;
+  reason: NativeLayoutAnimationRouteReason;
+  tracks: NativeAnimationTrackDescriptor[];
+}
+
+export type NativeLayoutAnimationCompilation =
+  | {
+      status: 'native';
+      reason: NativeLayoutAnimationRouteReason;
+      plan: NativeAnimationPlanDescriptor;
+    }
+  | {
+      status: 'fallback' | 'invalid';
+      reason: NativeLayoutAnimationRouteReason;
+    };
 
 /**
  * Sampling resolution. 60 keyframes-per-second matches the display refresh and
@@ -53,6 +122,14 @@ const MAX_DURATION_MS = 20000;
 const EPSILON = 1e-4;
 
 const DEG_TO_RAD = Math.PI / 180;
+
+const STRUCTURAL_SCALAR_TARGETS = new Set([
+  'opacity',
+  'originX',
+  'originY',
+  'width',
+  'height',
+]);
 
 function angleToRadians(value: number | string): number {
   'worklet';
@@ -238,4 +315,236 @@ export function buildNativeLayoutAnimationDescriptor(
   }
 
   return { durationMs, properties };
+}
+
+interface CompiledNode {
+  durationMs: number;
+  finalValue: number;
+  segments: NativeAnimationSegmentDescriptor[];
+}
+
+function shiftSegments(
+  segments: NativeAnimationSegmentDescriptor[],
+  offsetMs: number
+): NativeAnimationSegmentDescriptor[] {
+  'worklet';
+  return segments.map((segment) => {
+    if (segment.kind === 'keyframes') {
+      return {
+        ...segment,
+        timesMs: segment.timesMs.map((timeMs) => timeMs + offsetMs),
+      };
+    }
+    return {
+      ...segment,
+      startMs: segment.startMs + offsetMs,
+      endMs: segment.endMs + offsetMs,
+    };
+  });
+}
+
+function compileNode(
+  node: NativeAnimationNode | undefined,
+  from: number
+): CompiledNode | null {
+  'worklet';
+  if (!node) {
+    return null;
+  }
+  if (node.kind === 'timing') {
+    if (
+      node.hasCallback ||
+      node.easing === null ||
+      typeof node.toValue !== 'number' ||
+      !Number.isFinite(node.durationMs) ||
+      node.durationMs < 0 ||
+      !Number.isFinite(from) ||
+      !Number.isFinite(node.toValue)
+    ) {
+      return null;
+    }
+    return {
+      durationMs: node.durationMs,
+      finalValue: node.toValue,
+      segments: [
+        {
+          kind: 'timing',
+          startMs: 0,
+          endMs: node.durationMs,
+          from,
+          to: node.toValue,
+          easing: node.easing,
+        },
+      ],
+    };
+  }
+  if (node.kind === 'delay') {
+    if (!Number.isFinite(node.delayMs) || node.delayMs < 0) {
+      return null;
+    }
+    const child = compileNode(node.animation ?? undefined, from);
+    if (!child) {
+      return null;
+    }
+    const hold: NativeHoldSegmentDescriptor[] =
+      node.delayMs === 0
+        ? []
+        : [
+            {
+              kind: 'hold',
+              startMs: 0,
+              endMs: node.delayMs,
+              value: from,
+            },
+          ];
+    return {
+      durationMs: node.delayMs + child.durationMs,
+      finalValue: child.finalValue,
+      segments: [...hold, ...shiftSegments(child.segments, node.delayMs)],
+    };
+  }
+
+  let elapsedMs = 0;
+  let currentValue = from;
+  const segments: NativeAnimationSegmentDescriptor[] = [];
+  for (const childNode of node.animations) {
+    const child = compileNode(childNode ?? undefined, currentValue);
+    if (!child) {
+      return null;
+    }
+    segments.push(...shiftSegments(child.segments, elapsedMs));
+    elapsedMs += child.durationMs;
+    currentValue = child.finalValue;
+  }
+  return {
+    durationMs: elapsedMs,
+    finalValue: currentValue,
+    segments,
+  };
+}
+
+function trackDurationMs(track: NativeAnimationTrackDescriptor): number {
+  'worklet';
+  const last = track.segments[track.segments.length - 1];
+  if (!last) {
+    return 0;
+  }
+  return last.kind === 'keyframes'
+    ? (last.timesMs[last.timesMs.length - 1] ?? 0)
+    : last.endMs;
+}
+
+function buildStructuralPlan(
+  style: LayoutAnimation,
+  fallbackOpacity?: number
+): NativeAnimationPlanDescriptor | null {
+  'worklet';
+  const animations = style.animations as Record<string, unknown>;
+  const initialValues = style.initialValues as Record<string, unknown>;
+  const tracks: NativeAnimationTrackDescriptor[] = [];
+
+  for (const target of Object.keys(animations)) {
+    if (!STRUCTURAL_SCALAR_TARGETS.has(target)) {
+      return null;
+    }
+    const animation = animations[target] as AnimationObject;
+    const from = initialValues[target];
+    if (
+      typeof from !== 'number' ||
+      animation.reduceMotion === true ||
+      !animation.__nativeAnimation
+    ) {
+      return null;
+    }
+    const compiled = compileNode(animation.__nativeAnimation, from);
+    if (!compiled) {
+      return null;
+    }
+    tracks.push({ target, segments: compiled.segments });
+  }
+
+  if (
+    fallbackOpacity !== undefined &&
+    !Object.prototype.hasOwnProperty.call(animations, 'opacity')
+  ) {
+    tracks.push({
+      target: 'opacity',
+      segments: [
+        {
+          kind: 'hold',
+          startMs: 0,
+          endMs: Math.max(0, ...tracks.map(trackDurationMs)),
+          value: fallbackOpacity,
+        },
+      ],
+    });
+  }
+
+  if (tracks.length === 0) {
+    return null;
+  }
+  const totalDurationMs = Math.max(0, ...tracks.map(trackDurationMs));
+  const simple = tracks.every(
+    (track) =>
+      track.segments.length === 1 && track.segments[0].kind === 'timing'
+  );
+  return {
+    totalDurationMs,
+    route: simple ? 'simple' : 'structured',
+    reason: simple ? 'canonical-single-timing' : 'contains-hold-or-sequence',
+    tracks,
+  };
+}
+
+export function compileNativeLayoutAnimation(
+  style: LayoutAnimation,
+  fallbackOpacity?: number
+): NativeLayoutAnimationCompilation {
+  'worklet';
+  const animationKeys = Object.keys(style.animations);
+  if (animationKeys.includes('transform')) {
+    return {
+      status: 'fallback',
+      reason: 'transform-ordering-unavailable',
+    };
+  }
+  if (animationKeys.some((target) => !STRUCTURAL_SCALAR_TARGETS.has(target))) {
+    return { status: 'fallback', reason: 'unsupported-property' };
+  }
+
+  const structuralPlan = buildStructuralPlan(style, fallbackOpacity);
+  if (structuralPlan) {
+    return {
+      status: 'native',
+      reason: structuralPlan.reason,
+      plan: structuralPlan,
+    };
+  }
+
+  const sampled = buildNativeLayoutAnimationDescriptor(style, fallbackOpacity);
+  if (
+    !Number.isFinite(sampled.durationMs) ||
+    sampled.durationMs < 0 ||
+    sampled.properties.length === 0
+  ) {
+    return { status: 'invalid', reason: 'invalid-input' };
+  }
+  const plan: NativeAnimationPlanDescriptor = {
+    totalDurationMs: sampled.durationMs,
+    route: 'sampled',
+    reason: 'requires-sampling',
+    tracks: sampled.properties.map((property) => ({
+      target: property.keyPath,
+      segments: [
+        {
+          kind: 'keyframes',
+          timesMs: property.offsets.map(
+            (offset) => offset * sampled.durationMs
+          ),
+          values: property.values,
+        },
+      ],
+    })),
+  };
+  return { status: 'native', reason: plan.reason, plan };
 }

@@ -15,8 +15,8 @@ import type {
 import { LayoutAnimationType } from '../commonTypes';
 import { getStaticFeatureFlag } from '../featureFlags';
 import { mutableHostDecorator } from '../mutablesCommon';
-import type { NativeLayoutAnimationDescriptor } from './nativeAnimationDescriptor';
-import { buildNativeLayoutAnimationDescriptor } from './nativeAnimationDescriptor';
+import type { NativeLayoutAnimationCompilation } from './nativeAnimationDescriptor';
+import { compileNativeLayoutAnimation } from './nativeAnimationDescriptor';
 
 const TAG_OFFSET = 1e9;
 
@@ -60,13 +60,13 @@ function stopObservingProgress(
 function createLayoutAnimationManager(): {
   start: LayoutAnimationStartFunction;
   stop: (tag: number) => void;
-  computeNativeDescriptor: (
+  computeNativePlan: (
     tag: number,
     generation: number,
     type: LayoutAnimationType,
     yogaValues: NativeLayoutAnimationValues,
     config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
-  ) => NativeLayoutAnimationDescriptor;
+  ) => NativeLayoutAnimationCompilation;
   completeNative: (tag: number, generation: number, finished: boolean) => void;
 } {
   'worklet';
@@ -160,26 +160,23 @@ function createLayoutAnimationManager(): {
      * (iOS) / `android.animation` (Android). Unlike `start`, it neither mutates
      * shared values nor drives the animation per-frame from JS.
      */
-    computeNativeDescriptor(
+    computeNativePlan(
       tag: number,
       generation: number,
       type: LayoutAnimationType,
       yogaValues: NativeLayoutAnimationValues,
       config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
-    ): NativeLayoutAnimationDescriptor {
+    ): NativeLayoutAnimationCompilation {
       const style = config(yogaValues);
-      if (style.callback) {
-        nativeCallbacks.set(nativeCallbackKey(tag, generation), style.callback);
-      }
       const fallbackOpacity =
         type === LayoutAnimationType.ENTERING
           ? yogaValues.targetOpacity
           : undefined;
-      const descriptor = buildNativeLayoutAnimationDescriptor(
-        style,
-        fallbackOpacity
-      );
-      return descriptor;
+      const compilation = compileNativeLayoutAnimation(style, fallbackOpacity);
+      if (compilation.status === 'native' && style.callback) {
+        nativeCallbacks.set(nativeCallbackKey(tag, generation), style.callback);
+      }
+      return compilation;
     },
     completeNative(tag: number, generation: number, finished: boolean) {
       const key = nativeCallbackKey(tag, generation);

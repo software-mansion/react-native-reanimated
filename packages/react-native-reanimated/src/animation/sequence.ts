@@ -8,6 +8,7 @@ import type {
   Timestamp,
 } from '../commonTypes';
 import type { NextAnimation, SequenceAnimation } from './commonTypes';
+import type { NativeCompilableAnimation } from './nativeAnimationNode';
 import { defineAnimation, getReduceMotionForAnimation } from './util';
 
 /**
@@ -59,7 +60,11 @@ export function withSequence(
         current: 0,
         animationIndex: 0,
         reduceMotion: getReduceMotionForAnimation(reduceMotion),
-      } as SequenceAnimation;
+        __nativeAnimation: {
+          kind: 'sequence',
+          animations: [],
+        },
+      } as SequenceAnimation & NativeCompilableAnimation;
     });
   }
 
@@ -165,7 +170,14 @@ export function withSequence(
         current: animations[0].current,
         callback,
         reduceMotion: getReduceMotionForAnimation(reduceMotion),
-      } as SequenceAnimation;
+        __nativeAnimation: {
+          kind: 'sequence',
+          animations: animations.map(
+            (animation) =>
+              (animation as NativeCompilableAnimation).__nativeAnimation ?? null
+          ),
+        },
+      } as SequenceAnimation & NativeCompilableAnimation;
     }
   );
 }

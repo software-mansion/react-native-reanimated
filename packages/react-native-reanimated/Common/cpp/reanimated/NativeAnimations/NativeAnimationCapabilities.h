@@ -6,8 +6,12 @@ namespace reanimated {
 
 enum class NativeAnimationCapabilityReason : uint8_t {
   Supported,
-  UnsupportedPlan,
   MissingExecutor,
+  InvalidPlan,
+  UnsupportedRoute,
+  UnsupportedTarget,
+  UnsupportedValueType,
+  UnsupportedSegment,
 };
 
 struct NativeAnimationCapabilityReport {

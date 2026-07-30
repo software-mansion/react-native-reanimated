@@ -3,8 +3,9 @@
 // LayoutAnimationTrace start
 #ifndef NDEBUG
 
+#include <reanimated/LayoutAnimations/LayoutAnimationTrace.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
-#include <reanimated/LayoutAnimations/NativeLayoutAnimationDescriptor.h>
+#include <reanimated/NativeAnimations/NativeAnimationPlan.h>
 
 #include <react/renderer/mounting/ShadowViewMutation.h>
 
@@ -55,7 +56,8 @@ void recordRemovalDelayed(
 void recordCancelRequested(int tag);
 void recordSurfaceFlushRequested(int tag, facebook::react::SurfaceId surfaceId);
 
-void recordNativeDescriptor(int tag, LayoutAnimationType type, NativeLayoutAnimationDescriptor &descriptor);
+void recordNativePlan(int tag, LayoutAnimationType type, const NativeAnimationPlan &plan);
+void recordNativeFallback(int tag, LayoutAnimationType type, NativeAnimationRouteReason reason);
 void recordAndroidPlatformCompleted(
     int tag,
     uint64_t generation,

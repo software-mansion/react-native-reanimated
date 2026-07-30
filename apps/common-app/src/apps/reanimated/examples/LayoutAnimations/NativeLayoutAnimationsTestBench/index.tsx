@@ -22,6 +22,7 @@ import {
   countLayoutAnimationTraceEvents,
   countRejectedPlatformStarts,
   getCompiledLayoutAnimationBackend,
+  getLatestNativeRoute,
   getReducedMotionEnabled,
   readLayoutAnimationTrace,
   recordLayoutAnimationTraceEvent,
@@ -158,6 +159,7 @@ export default function NativeLayoutAnimationsTestBench() {
     () => TEST_BENCH_SCENARIOS.find((item) => item.id === scenario)!,
     [scenario]
   );
+  const latestRoute = useMemo(() => getLatestNativeRoute(trace), [trace]);
 
   const clearTimers = useCallback(() => {
     timersRef.current.forEach(clearTimeout);
@@ -508,6 +510,10 @@ export default function NativeLayoutAnimationsTestBench() {
         <Text style={styles.callbackText}>
           callback count: {callbackCount} · last finished:{' '}
           {lastFinished === null ? '—' : String(lastFinished)}
+        </Text>
+        <Text style={styles.callbackText}>
+          route:{' '}
+          {latestRoute ? `${latestRoute.route} · ${latestRoute.reason}` : '—'}
         </Text>
         {!traceAvailable && (
           <Text style={styles.traceWarning}>

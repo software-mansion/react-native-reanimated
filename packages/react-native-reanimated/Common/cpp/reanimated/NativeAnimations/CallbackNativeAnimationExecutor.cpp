@@ -1,6 +1,9 @@
 #include <reanimated/NativeAnimations/CallbackNativeAnimationExecutor.h>
+#include <reanimated/NativeAnimations/NativeAnimationCompilation.h>
 
+#include <algorithm>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace reanimated {
@@ -29,8 +32,31 @@ NativeAnimationCapabilityReport CallbackNativeAnimationExecutor::queryCapabiliti
   if (!runNativeLayoutAnimation_) {
     return {NativeAnimationCapabilityReason::MissingExecutor};
   }
-  if (plan.descriptor.properties.empty()) {
-    return {NativeAnimationCapabilityReason::UnsupportedPlan};
+  if (!validateNativeAnimationPlan(plan).native()) {
+    return {NativeAnimationCapabilityReason::InvalidPlan};
+  }
+  for (const auto &track : plan.tracks) {
+    for (const auto &segment : track.segments) {
+      const bool scalarValues = std::visit(
+          [](const auto &typedSegment) {
+            using T = std::decay_t<decltype(typedSegment)>;
+            if constexpr (std::is_same_v<T, NativeTimingSegment>) {
+              return std::holds_alternative<double>(typedSegment.from) &&
+                  std::holds_alternative<double>(typedSegment.to) &&
+                  typedSegment.easing.kind == NativeTimingFunctionKind::Linear;
+            } else if constexpr (std::is_same_v<T, NativeHoldSegment>) {
+              return std::holds_alternative<double>(typedSegment.value);
+            } else {
+              return std::all_of(typedSegment.values.begin(), typedSegment.values.end(), [](const auto &value) {
+                return std::holds_alternative<double>(value);
+              });
+            }
+          },
+          segment);
+      if (!scalarValues) {
+        return {NativeAnimationCapabilityReason::UnsupportedValueType};
+      }
+    }
   }
   return {NativeAnimationCapabilityReason::Supported};
 }
@@ -52,9 +78,14 @@ void CallbackNativeAnimationExecutor::schedule(
   active_.emplace(handle, ActiveAnimation{cancellationToken, std::move(completion)});
 
   const bool usePresentationLayer = plan.startValueSource == NativeAnimationStartValueSource::CurrentVisualValue;
+  auto descriptor = materializeSampledLayoutDescriptor(handle, plan);
+  if (descriptor.properties.empty()) {
+    finish(handle, {NativeAnimationOutcome::Rejected, NativeAnimationResultReason::InvalidPlan});
+    return;
+  }
   runNativeLayoutAnimation_(
       handle,
-      plan.descriptor,
+      descriptor,
       usePresentationLayer,
       plan.mountingMode,
       std::move(cancellationToken),

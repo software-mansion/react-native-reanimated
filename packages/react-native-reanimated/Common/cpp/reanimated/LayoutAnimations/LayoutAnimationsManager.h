@@ -66,10 +66,9 @@ class LayoutAnimationsManager : public std::enable_shared_from_this<LayoutAnimat
   bool shouldAnimateExiting(const int tag, const bool shouldAnimate);
   bool hasLayoutAnimation(const int tag, const LayoutAnimationType type);
   void startLayoutAnimation(jsi::Runtime &rt, const int tag, const LayoutAnimationType type, const jsi::Object &values);
-  // Computes a generic keyframe descriptor in JS (by sampling the preset's
-  // animation objects for the given runtime `values`) and hands it to the
-  // platform's native animation player. Used instead of `startLayoutAnimation`
-  // when the native layout-animations feature flag is enabled.
+  // Compiles the complete resolved animation graph into platform-neutral
+  // tracks, routes unsupported graphs atomically to the legacy driver, and
+  // hands accepted plans to the shared native executor.
   void startNativeLayoutAnimation(
       jsi::Runtime &rt,
       SurfaceId surfaceId,

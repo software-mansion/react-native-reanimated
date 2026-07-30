@@ -7,6 +7,7 @@ import type {
   Timestamp,
 } from '../commonTypes';
 import type { DelayAnimation } from './commonTypes';
+import type { NativeCompilableAnimation } from './nativeAnimationNode';
 import { defineAnimation, getReduceMotionForAnimation } from './util';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
@@ -113,7 +114,14 @@ export const withDelay = function <T extends AnimationObject>(
         startTime: 0,
         started: false,
         reduceMotion: getReduceMotionForAnimation(reduceMotion),
-      };
+        __nativeAnimation: {
+          kind: 'delay',
+          delayMs,
+          animation:
+            (nextAnimation as NativeCompilableAnimation).__nativeAnimation ??
+            null,
+        },
+      } as DelayAnimation & NativeCompilableAnimation;
     }
   );
 } as withDelayType;

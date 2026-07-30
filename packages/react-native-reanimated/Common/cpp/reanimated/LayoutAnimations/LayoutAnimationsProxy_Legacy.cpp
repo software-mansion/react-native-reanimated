@@ -771,15 +771,14 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
             return;
           }
 #endif
-          if constexpr (!useNativeLayoutAnimations()) {
-            strongThis->layoutAnimations_.insert_or_assign(
-                tag,
-                LayoutAnimation{
-                    .finalView = finalView,
-                    .currentView = current,
-                    .parentTag = mutation.parentTag,
-                    .opacity = opacity});
-          }
+          // Keep the legacy state as a dormant fallback candidate. Native
+          // playback does not write per-frame updates into it. If compilation
+          // rejects the complete graph, the legacy driver can start without
+          // reconstructing Fabric state after the mount transaction.
+          strongThis->layoutAnimations_.insert_or_assign(
+              tag,
+              LayoutAnimation{
+                  .finalView = finalView, .currentView = current, .parentTag = mutation.parentTag, .opacity = opacity});
           window = strongThis->surfaceManager.getWindow(mutation.newChildShadowView.surfaceId);
         }
 
@@ -958,9 +957,7 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
             return;
           }
 #endif
-          if constexpr (!useNativeLayoutAnimations()) {
-            strongThis->createLayoutAnimation(mutation, oldView, surfaceId, tag);
-          }
+          strongThis->createLayoutAnimation(mutation, oldView, surfaceId, tag);
           window = strongThis->surfaceManager.getWindow(surfaceId);
         }
 
