@@ -14,6 +14,10 @@ import {
   test,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
+import {
+  startCountingMicrotaskDrains,
+  stopCountingMicrotaskDrains,
+} from './microtaskDrainCounter';
 
 describe('runOnRuntimeAsync', () => {
   const PASS_NOTIFICATION = 'PASS';
@@ -220,4 +224,38 @@ describe('runOnRuntimeAsync', () => {
       );
     });
   }
+
+  test('drains microtasks after execution', async () => {
+    await runOnRuntimeAsync(workletRuntime1, () => {
+      'worklet';
+      globalThis.didRunMicrotask = false;
+      queueMicrotask(() => {
+        globalThis.didRunMicrotask = true;
+      });
+    });
+
+    const didRunMicrotask = await runOnRuntimeAsync(workletRuntime1, () => {
+      'worklet';
+      const result = globalThis.didRunMicrotask;
+      globalThis.didRunMicrotask = undefined;
+      return result;
+    });
+
+    expect(didRunMicrotask).toBe(true);
+  });
+
+  test('drains microtasks exactly once after execution', async () => {
+    const counter = startCountingMicrotaskDrains(workletRuntime1.runtimeId);
+
+    await runOnRuntimeAsync(workletRuntime1, () => {
+      'worklet';
+    });
+
+    const microtaskDrainCount = stopCountingMicrotaskDrains(
+      workletRuntime1.runtimeId,
+      counter
+    );
+
+    expect(microtaskDrainCount).toBe(1);
+  });
 });

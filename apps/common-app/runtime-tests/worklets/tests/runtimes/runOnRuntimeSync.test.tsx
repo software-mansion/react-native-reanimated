@@ -13,6 +13,10 @@ import {
   test,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
+import {
+  startCountingMicrotaskDrains,
+  stopCountingMicrotaskDrains,
+} from './microtaskDrainCounter';
 
 describe('runOnRuntimeSync', () => {
   const PASS_NOTIFICATION = 'PASS';
@@ -124,4 +128,58 @@ describe('runOnRuntimeSync', () => {
       );
     });
   }
+
+  test('does not drain microtasks after synchronous execution', () => {
+    const counter = startCountingMicrotaskDrains(workletRuntime1.runtimeId);
+
+    runOnRuntimeSync(workletRuntime1, () => {
+      'worklet';
+    });
+
+    const microtaskDrainCount = stopCountingMicrotaskDrains(
+      workletRuntime1.runtimeId,
+      counter
+    );
+
+    expect(microtaskDrainCount).toBe(0);
+  });
+
+  test('leaves microtasks queued until the next scheduled task drains them', async () => {
+    runOnRuntimeSync(workletRuntime1, () => {
+      'worklet';
+      globalThis.didRunMicrotask = false;
+      queueMicrotask(() => {
+        globalThis.didRunMicrotask = true;
+        scheduleOnRN(callbackPass, 42);
+      });
+    });
+
+    const didRunMicrotaskAfterSyncCall = runOnRuntimeSync(
+      workletRuntime1,
+      () => {
+        'worklet';
+        return globalThis.didRunMicrotask;
+      }
+    );
+
+    expect(didRunMicrotaskAfterSyncCall).toBe(false);
+
+    scheduleOnRuntime(workletRuntime1, () => {
+      'worklet';
+    });
+    await waitForNotification(PASS_NOTIFICATION);
+
+    const didRunMicrotaskAfterScheduledTask = runOnRuntimeSync(
+      workletRuntime1,
+      () => {
+        'worklet';
+        const result = globalThis.didRunMicrotask;
+        globalThis.didRunMicrotask = undefined;
+        return result;
+      }
+    );
+
+    expect(didRunMicrotaskAfterScheduledTask).toBe(true);
+    expect(value).toBe(42);
+  });
 });
