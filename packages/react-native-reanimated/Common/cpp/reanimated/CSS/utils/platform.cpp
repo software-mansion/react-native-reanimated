@@ -121,8 +121,7 @@ bool canRouteCSSProperty(const std::string &propertyName, const EasingConfig &ea
   if constexpr (!StaticFeatureFlags::getFlag("ANDROID_CSS_PLATFORM_TRANSITIONS")) {
     return false;
   }
-  // Any TimeInterpolator can carry a curve, so every CSS easing routes: Kotlin
-  // rebuilds steps() and linear() stops from the same points the loop uses.
+  // Any TimeInterpolator can carry a curve, so every easing routes and this is unused.
   (void)easing;
   return propertyName == "opacity";
 #else
