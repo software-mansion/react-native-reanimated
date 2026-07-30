@@ -17,12 +17,8 @@ that permits it.
 
 ## Migrate: infinite loop
 
-The most common migratable shape. A mount effect starts a repeating animation
-and a cleanup cancels it.
-
-Before:
-
 ```tsx
+// Old (hooks)
 function Spinner() {
   const rotation = useSharedValue(0);
 
@@ -42,9 +38,8 @@ function Spinner() {
 }
 ```
 
-After:
-
 ```tsx
+// New (CSS)
 const rotate: CSSAnimationKeyframes = {
   from: { transform: [{ rotateZ: '0deg' }] },
   to: { transform: [{ rotateZ: '360deg' }] },
@@ -67,31 +62,26 @@ function Spinner() {
 }
 ```
 
-- CSS properties go inline in the style array, never in `StyleSheet.create`.
-  That is a type error: `StyleSheet.create` is typed against React Native's own
-  style types. Static styles stay in the stylesheet, animation properties beside
-  it.
-- Hoist keyframes to module scope. An object created during render restarts the
-  animation every render.
-- Remove the now-dead shared value, effect and cleanup.
-- `cancelAnimation` in a cleanup is not imperative control. It only stops the
-  animation on unmount, which CSS does anyway.
-- `withRepeat`'s third argument is `reverse`. When `true`, add
-  `animationDirection: 'alternate'`.
+- CSS properties go inline in the style array, never `StyleSheet.create` — that
+  is a type error, it is typed against React Native's own style types
+- Keyframes at module scope — an object built during render restarts the
+  animation every render
+- Delete the now-dead shared value, effect and cleanup
+- `cancelAnimation` in an unmount cleanup is not imperative control — CSS stops
+  on unmount anyway
+- `withRepeat` third argument `reverse: true` -> `animationDirection: 'alternate'`
 
 ## Migrate: play once on mount
 
-Before:
-
 ```tsx
+// Old (hooks)
 useEffect(() => {
   opacity.value = withTiming(1, { duration: 300 });
 }, []);
 ```
 
-After:
-
 ```tsx
+// New (CSS)
 const fadeIn: CSSAnimationKeyframes = {
   from: { opacity: 0 },
   to: { opacity: 1 },
@@ -100,18 +90,17 @@ const fadeIn: CSSAnimationKeyframes = {
 { animationName: fadeIn, animationDuration: '300ms', animationFillMode: 'forwards' }
 ```
 
-`animationFillMode: 'forwards'` is required. The CSS default is `none`, which
-discards the computed value at the end and snaps the view back to `opacity: 0`.
-Omitting it is the single most common way a converted mount animation breaks.
+- `animationFillMode: 'forwards'` is required — default `none` discards the
+  computed value and snaps back to `opacity: 0`. The most common way a converted
+  mount animation breaks
 
 ## Migrate: React state toggle
 
-The driver is already React state, so the change happens across a render and a
-transition fires.
-
-Before:
+Driver is already React state, so the change crosses a render and the transition
+fires.
 
 ```tsx
+// Old (hooks)
 const [expanded, setExpanded] = useState(false);
 const progress = useSharedValue(0);
 
@@ -125,9 +114,8 @@ const style = useAnimatedStyle(() => ({
 }));
 ```
 
-After:
-
 ```tsx
+// New (CSS)
 const [expanded, setExpanded] = useState(false);
 
 <Animated.View
@@ -143,15 +131,14 @@ const [expanded, setExpanded] = useState(false);
 />
 ```
 
-Enumerate the properties. Never fall back to `transitionProperty: 'all'`.
+- Enumerate the properties. Never `transitionProperty: 'all'`
 
 ## Migrate: staggered loop
 
-CSS expresses stagger with a negative delay, which pre-seeds each item at a
-different point in the cycle. There is no hook equivalent, so this is a case
-where the migrated code is simpler than the original.
+Negative `animationDelay` pre-seeds each item mid-cycle. No hook equivalent.
 
 ```tsx
+// New (CSS)
 {items.map((item, index) => (
   <Animated.View
     key={item.id}
@@ -170,13 +157,11 @@ where the migrated code is simpler than the original.
 
 ## Migrate: shared value written from a JS callback
 
-The most common shape in real code, and the one that needs the shared value
-turned into state. The write is already on the JS thread, so the conversion is
-safe.
-
-Before:
+The most common shape in real code. The write is already on the JS thread, so
+turning the shared value into state is safe.
 
 ```tsx
+// Old (hooks)
 const sv = useSharedValue(false);
 
 const style = useAnimatedStyle(() => ({
@@ -188,9 +173,8 @@ const toggle = () => {
 };
 ```
 
-After:
-
 ```tsx
+// New (CSS)
 const [on, setOn] = useState(false);
 
 const toggle = () => setOn((v) => !v);
@@ -204,31 +188,28 @@ const toggle = () => setOn((v) => !v);
 />
 ```
 
-The shared value and the style hook both disappear. Note what makes this safe:
-`toggle` is a plain JS callback, so it can call `setOn` directly. Had the write
-been inside a gesture callback, it would be running in a worklet on the UI
-thread, and reaching React state from there would need a `scheduleOnRN` hop per
-update. Leave those alone.
-
-One behavior change worth stating in the report: each toggle now re-renders the
-component. That is fine for a press, and wrong for anything changing per frame.
+- Shared value and style hook both disappear
+- Safe because `toggle` is a plain JS callback. In a gesture callback it would be
+  a worklet on the UI thread, needing a `scheduleOnRN` hop per update — refuse
+  those
+- Report the behavior change: each toggle now re-renders. Fine for a press, wrong
+  for anything per-frame
 
 ## Leave alone: spring
 
 ```tsx
+// Old (hooks) - keep as is
 scale.value = withSpring(pressed ? 0.95 : 1, { damping: 15, stiffness: 200 });
 ```
 
-CSS offers `cubicBezier`, `linear` and `steps`. None reproduce a spring, and a
-bezier approximation loses the overshoot that makes it read as one. Keep it on
-the hooks API and say why.
+- CSS offers `cubicBezier`, `linear`, `steps`. None reproduce a spring
+- A bezier approximation loses the overshoot that makes it read as one
+- Keep it on the hooks API and say why
 
 ## Preserve: platform-specific values
 
-Migrate inside each arm and keep the structure. The author chose these values
-deliberately.
-
 ```tsx
+// New (CSS) - migrate inside each arm, keep the structure
 <Animated.View
   style={[
     Platform.select({
@@ -240,10 +221,9 @@ deliberately.
 />
 ```
 
-These properties are safe to migrate even though each covers one platform:
-React Native does not render `shadowOpacity` on Android or `elevation` on iOS
-either, so nothing is lost. Do not "improve" this into `boxShadow`. That is a
-separate refactor with its own visual risk.
+- Safe despite each covering one platform — React Native renders neither
+  `shadowOpacity` on Android nor `elevation` on iOS, so nothing is lost
+- Do not "improve" this into `boxShadow`. Separate refactor, own visual risk
 
 ## Trap: easing names
 
@@ -251,8 +231,7 @@ separate refactor with its own visual risk.
 withTiming(1, { easing: Easing.ease })   // Bezier(0.42, 0, 1, 1)
 ```
 
-`Easing.ease` is CSS `ease-in`, not CSS `ease`. Emitting
-`animationTimingFunction: 'ease'` silently changes the curve. See
-`timing-functions.md`, including what to do about the
-`withTiming` default of `Easing.inOut(Easing.quad)`, which has no exact
-equivalent.
+- `Easing.ease` -> `'ease-in'`, never `'ease'`. Emitting `'ease'` silently
+  changes the curve
+- `withTiming` default is `Easing.inOut(Easing.quad)`, which has no exact
+  equivalent. See `timing-functions.md`
