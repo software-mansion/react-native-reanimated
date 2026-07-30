@@ -25,6 +25,10 @@ class PseudoSelectorManager(
 ) {
     private val detachActions = HashMap<String, Runnable>()
 
+    // Kept apart from detachActions because these are the only ones safe to run on invalidation:
+    // the rest notify C++ over JNI.
+    private val focusDetachActions = HashMap<String, Runnable>()
+
     private val activeCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
     private val deepestCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
 
@@ -138,7 +142,7 @@ class PseudoSelectorManager(
                 }
             }
         view.viewTreeObserver.addOnGlobalFocusChangeListener(listener)
-        detachActions[key] =
+        focusDetachActions[key] =
             Runnable { view.viewTreeObserver.removeOnGlobalFocusChangeListener(listener) }
     }
 
@@ -362,13 +366,14 @@ class PseudoSelectorManager(
         UiThreadUtil.runOnUiThread {
             val key = "$tag:$selector"
             pendingAttaches.remove(key)
+            focusDetachActions.remove(key)?.run()
             detachActions.remove(key)?.run()
         }
     }
 
     // The dev menu keeps this manager alive a generation past its own React context, so the views
-    // and callbacks are dropped explicitly. The detach actions are cleared rather than run: they
-    // notify C++ over JNI, which is being torn down concurrently.
+    // and callbacks are dropped explicitly. Only the focus listeners can be detached properly;
+    // the other actions notify C++ over JNI, which is being torn down concurrently.
     fun invalidate() {
         UiThreadUtil.runOnUiThread {
             fabricUIManager.removeUIManagerEventListener(mountListener)
@@ -382,6 +387,8 @@ class PseudoSelectorManager(
             activeCallbacks.clear()
             deepestCallbacks.clear()
             pendingAttaches.clear()
+            focusDetachActions.values.forEach { it.run() }
+            focusDetachActions.clear()
             detachActions.clear()
         }
     }
