@@ -18,6 +18,7 @@ import type {
 import { SensorType } from '../../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSEventHandler,
   CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
 } from '../../css/native';
@@ -278,6 +279,12 @@ class JSReanimated implements IReanimatedModule {
   setViewStyle(_viewTag: number, _style: StyleProps): void {
     throw new Error(
       '[Reanimated] setViewStyle is not available in JSReanimated.'
+    );
+  }
+
+  setCSSEventHandler(_handler: CSSEventHandler): void {
+    throw new Error(
+      '[Reanimated] `setCSSEventHandler` is not available in JSReanimated.'
     );
   }
 

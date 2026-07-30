@@ -19,6 +19,7 @@ import type {
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSEventHandler,
   CSSPseudoStyleConfig,
   CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
@@ -183,6 +184,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.setViewStyle(viewTag, style);
   }
 
+  setCSSEventHandler(handler: CSSEventHandler) {
+    this.#reanimatedModuleProxy.setCSSEventHandler(handler);
+  }
+
   markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper) {
     this.#reanimatedModuleProxy.markNodeAsRemovable(shadowNodeWrapper);
   }
@@ -269,6 +274,7 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
 
   unsubscribeFromKeyboardEvents(): void {}
   setViewStyle(): void {}
+  setCSSEventHandler(): void {}
   markNodeAsRemovable(): void {}
   unmarkNodeAsRemovable(): void {}
   registerCSSKeyframes(): void {}
