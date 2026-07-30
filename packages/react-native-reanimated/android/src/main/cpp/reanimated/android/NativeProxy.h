@@ -81,7 +81,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
       double toValue,
       double durationMs,
       double startTimestampMs,
-      const PlatformEasing &easing);
+      const PlatformEasing &easing,
+      bool persistent);
   void cssRemoveTransition(int viewTag, const std::string &propertyName);
 
   /***
