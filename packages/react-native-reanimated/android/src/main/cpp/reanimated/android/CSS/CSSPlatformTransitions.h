@@ -43,8 +43,9 @@ class CSSPlatformTransitions {
 
   CSSPlatformTransitions(AnimateFunction animate, RemoveFunction remove);
 
-  /// A null `settings` marks the pseudo-selector toggle path, which reuses the
-  /// settings stored by the config apply. Returns false when there are none.
+  /// A null `settings` marks the pseudo-selector toggle path, which carries none of
+  /// its own and reuses whatever the last config apply stored. A settings-only config
+  /// change does not re-apply, so those can be a revision behind.
   bool applyTransition(
       Tag viewTag,
       const std::string &propertyName,
