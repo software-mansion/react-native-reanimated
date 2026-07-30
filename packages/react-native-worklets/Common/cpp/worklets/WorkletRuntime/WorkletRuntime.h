@@ -49,7 +49,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   /**
    * Schedules a std::function to run asynchronously.
    *
-   * Runs a single microtask checkpoint on completion.
+   * Does not run a microtask checkpoint.
    */
   void schedule(std::function<void(jsi::Runtime &)> job) const;
 
@@ -59,14 +59,14 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    * The jsi::Function has to originate from this runtime, otherwise it will
    crash.
    *
-   * Runs a microtask checkpoint on completion.
+   * Does not run a microtask checkpoint.
    */
   void schedule(jsi::Function &&function) const;
 
   /**
    * Schedules a serialized worklet to run asynchronously.
    *
-   * Runs a microtask checkpoint on completion.
+   * Does not run a microtask checkpoint.
    */
   void schedule(std::shared_ptr<SerializableWorklet> worklet) const;
 
@@ -81,7 +81,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    * Schedules a serialized worklet to run asynchronously on the worklet runtime,
    * remembering the call site that scheduled it for error reporting.
    *
-   * Runs a single microtask checkpoint on completion.
+   * Does not run a microtask checkpoint.
    */
   void scheduleWithStack(std::shared_ptr<SerializableWorklet> worklet, std::optional<std::string> scheduleStack) const;
 
@@ -390,7 +390,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    */
   void drainMicrotasksImpl() const {
     jsi::Runtime &rt = getJSIRuntime();
-    if (!eventLoop_ && runtimeKind_ == RuntimeData::RuntimeKind::UI) {
+    if (!eventLoop_ && runtimeKind_ != RuntimeData::RuntimeKind::UI) {
+      // UI Runtime doesn't have a C++-kind Event Loop, but one polyfilled in JS.
       return;
     }
 
