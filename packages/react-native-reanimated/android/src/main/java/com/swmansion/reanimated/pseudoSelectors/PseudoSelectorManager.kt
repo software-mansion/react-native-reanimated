@@ -25,8 +25,8 @@ class PseudoSelectorManager(
 ) {
     private val detachActions = HashMap<String, Runnable>()
 
-    // Kept apart from detachActions because these are the only ones safe to run on invalidation:
-    // the rest notify C++ over JNI.
+    // Run on invalidation, unlike the rest: removing a focus listener is the only teardown action
+    // that neither notifies C++ nor is already covered by the direct teardown.
     private val focusDetachActions = HashMap<String, Runnable>()
 
     private val activeCallbacks = LinkedHashMap<View, PseudoSelectorCallback>()
