@@ -46,7 +46,7 @@ void AnimationFrameBatchinator::flush() {
 
     auto &uiWorkletRuntime = strongThis->uiWorkletRuntime_;
     for (const auto &callback : callbacks) {
-      uiWorkletRuntime->runSync(*callback, timestampMs);
+      uiWorkletRuntime->runSync([&](jsi::Runtime &rt) { callback->call(rt, static_cast<double>(timestampMs)); });
     }
   });
 }
