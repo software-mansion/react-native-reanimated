@@ -1,5 +1,6 @@
 #include <react/fabric/Binding.h>
 #include <reanimated/Compat/WorkletsApi.h>
+#include <reanimated/NativeAnimations/NativeAnimationCompilation.h>
 // LayoutAnimationTrace start
 #ifndef NDEBUG
 #include <reanimated/LayoutAnimations/LayoutAnimationTraceInstrumentation.h>
@@ -262,12 +263,12 @@ void NativeProxy::detachPseudoSelector(Tag tag, PseudoSelector selector) {
 
 void NativeProxy::runNativeLayoutAnimation(
     NativeLayoutAnimationHandle handle,
-    const NativeLayoutAnimationDescriptor &descriptor,
-    const bool usePresentationLayer,
-    NativeAnimationMountingMode,
+    const NativeAnimationPlan &plan,
     NativeLayoutAnimationCancellationToken cancellationToken,
     std::function<void(bool)> &&completion) {
   const int tag = handle.tag;
+  const auto descriptor = materializeSampledLayoutDescriptor(handle, plan);
+  const bool usePresentationLayer = plan.startValueSource == NativeAnimationStartValueSource::CurrentVisualValue;
   // LayoutAnimationTrace start
 #ifndef NDEBUG
   if (cancellationToken->load(std::memory_order_acquire)) {

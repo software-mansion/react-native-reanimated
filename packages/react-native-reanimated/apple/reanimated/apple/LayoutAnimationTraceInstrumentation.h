@@ -9,6 +9,9 @@
 #import <React/RCTComponentViewProtocol.h>
 #import <React/RCTPrimitives.h>
 
+#import <folly/dynamic.h>
+#import <optional>
+
 namespace reanimated::layout_animation_trace {
 
 void recordApplePostMountObserved(
@@ -22,7 +25,8 @@ void recordAppleNativeViewLookup(
 void recordApplePlatformStarted(
     ReactTag viewTag,
     const NativeLayoutAnimationDescriptor &descriptor,
-    REAUIView<RCTComponentViewProtocol> *componentView);
+    REAUIView<RCTComponentViewProtocol> *componentView,
+    std::optional<folly::dynamic> details = std::nullopt);
 void recordAppleModelPresentationSample(
     ReactTag viewTag,
     const NativeLayoutAnimationDescriptor &descriptor,

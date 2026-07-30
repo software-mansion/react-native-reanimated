@@ -131,15 +131,11 @@ RunNativeLayoutAnimation makeRunNativeLayoutAnimation(REANodesManager *nodesMana
 {
   return [nodesManager](
              const reanimated::NativeLayoutAnimationHandle handle,
-             const reanimated::NativeLayoutAnimationDescriptor &descriptor,
-             const bool usePresentationLayer,
-             const reanimated::NativeAnimationMountingMode mountingMode,
+             const reanimated::NativeAnimationPlan &plan,
              reanimated::NativeLayoutAnimationCancellationToken cancellationToken,
              std::function<void(bool)> &&completion) {
     [nodesManager runNativeLayoutAnimation:handle
-                                descriptor:descriptor
-                      usePresentationLayer:usePresentationLayer
-                              mountingMode:mountingMode
+                                      plan:plan
                          cancellationToken:std::move(cancellationToken)
                                 completion:std::move(completion)];
   };

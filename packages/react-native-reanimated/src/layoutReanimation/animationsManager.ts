@@ -155,10 +155,10 @@ function createLayoutAnimationManager(): {
     /**
      * Native layout-animation backend entry point. Invoked from C++ (instead of
      * `start`) when the native layout-animations feature flag is enabled. Runs
-     * the preset builder for the given runtime values and samples it into a
-     * generic keyframe descriptor that the platform plays via Core Animation
-     * (iOS) / `android.animation` (Android). Unlike `start`, it neither mutates
-     * shared values nor drives the animation per-frame from JS.
+     * the preset builder for the given runtime values and compiles its complete
+     * graph into platform-neutral timing, hold, or sampled-keyframe tracks.
+     * Unlike `start`, it neither mutates shared values nor drives the animation
+     * per-frame from JS.
      */
     computeNativePlan(
       tag: number,

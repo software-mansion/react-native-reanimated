@@ -86,7 +86,8 @@ void recordAppleEvent(
     const NativeLayoutAnimationDescriptor &descriptor,
     REAUIView<RCTComponentViewProtocol> *componentView,
     const std::optional<bool> finished = std::nullopt,
-    const std::optional<bool> platformAnimationCreated = std::nullopt)
+    const std::optional<bool> platformAnimationCreated = std::nullopt,
+    std::optional<folly::dynamic> details = std::nullopt)
 {
   Event event;
   event.source = Source::IOS;
@@ -96,6 +97,8 @@ void recordAppleEvent(
   event.generation = descriptor.traceGeneration;
   event.finished = finished;
   event.platformAnimationCreated = platformAnimationCreated;
+  event.thread = [NSThread isMainThread] ? "main" : "non-main";
+  event.details = std::move(details);
   if (componentView != nil) {
     event.values = traceViewValues(componentView);
   }
@@ -123,9 +126,11 @@ void recordAppleNativeViewLookup(
 void recordApplePlatformStarted(
     const ReactTag viewTag,
     const NativeLayoutAnimationDescriptor &descriptor,
-    REAUIView<RCTComponentViewProtocol> *componentView)
+    REAUIView<RCTComponentViewProtocol> *componentView,
+    std::optional<folly::dynamic> details)
 {
-  recordAppleEvent(EventName::PlatformStarted, viewTag, descriptor, componentView, std::nullopt, true);
+  recordAppleEvent(
+      EventName::PlatformStarted, viewTag, descriptor, componentView, std::nullopt, true, std::move(details));
 }
 
 void recordAppleModelPresentationSample(

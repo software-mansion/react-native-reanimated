@@ -2,16 +2,22 @@
 
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import type { LayoutAnimationFunction } from 'react-native-reanimated';
+import type {
+  EntryAnimationsValues,
+  LayoutAnimation,
+  LayoutAnimationFunction,
+} from 'react-native-reanimated';
 import Animated, {
   FadeIn,
   FadeOut,
+  Easing,
   Keyframe,
   LinearTransition,
   ReduceMotion,
   SlideInLeft,
   SlideOutRight,
   withTiming,
+  withSequence,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
@@ -441,6 +447,131 @@ function DelayedEnteringFinalStateScenario({
   );
 }
 
+function TimingLinearOpacityPositionScenario({
+  durationMs,
+  phase,
+  onAnimationCallback,
+}: ScenarioProps) {
+  const entering = useMemo<(values: EntryAnimationsValues) => LayoutAnimation>(
+    () => (values) => {
+      'worklet';
+      return {
+        initialValues: {
+          opacity: 0,
+          originX: values.targetOriginX - 160,
+          originY: values.targetOriginY,
+        },
+        animations: {
+          opacity: withTiming(1, {
+            duration: durationMs,
+            easing: Easing.linear,
+          }),
+          originX: withTiming(values.targetOriginX, {
+            duration: durationMs,
+            easing: Easing.linear,
+          }),
+          originY: withTiming(values.targetOriginY, {
+            duration: durationMs,
+            easing: Easing.linear,
+          }),
+        },
+        callback: (finished) => {
+          scheduleOnRN(onAnimationCallback, finished);
+        },
+      };
+    },
+    [durationMs, onAnimationCallback]
+  );
+  return (
+    <View style={styles.centeredStage}>
+      {phase !== 'reset' && phase !== 'cancel' && (
+        <Animated.View
+          entering={entering}
+          style={[styles.largeBox, styles.blueBox]}
+        />
+      )}
+    </View>
+  );
+}
+
+function TimingNonuniformSegmentsScenario({
+  durationMs,
+  phase,
+  onAnimationCallback,
+}: ScenarioProps) {
+  const entering = useMemo<(values: EntryAnimationsValues) => LayoutAnimation>(
+    () => (values) => {
+      'worklet';
+      const firstDuration = durationMs * 0.25;
+      const secondDuration = durationMs - firstDuration;
+      return {
+        initialValues: {
+          originX: values.targetOriginX - 200,
+          originY: values.targetOriginY,
+        },
+        animations: {
+          originX: withSequence(
+            withTiming(values.targetOriginX - 100, {
+              duration: firstDuration,
+              easing: Easing.linear,
+            }),
+            withTiming(values.targetOriginX, {
+              duration: secondDuration,
+              easing: Easing.bezier(0.42, 0, 0.58, 1),
+            })
+          ),
+          originY: withTiming(values.targetOriginY, {
+            duration: durationMs,
+            easing: Easing.linear,
+          }),
+        },
+        callback: (finished) => {
+          scheduleOnRN(onAnimationCallback, finished);
+        },
+      };
+    },
+    [durationMs, onAnimationCallback]
+  );
+  return (
+    <View style={styles.centeredStage}>
+      {phase !== 'reset' && phase !== 'cancel' && (
+        <Animated.View
+          entering={entering}
+          style={[styles.largeBox, styles.orangeBox]}
+        />
+      )}
+    </View>
+  );
+}
+
+function TimingDelayedOpacityScenario({
+  durationMs,
+  phase,
+  onAnimationCallback,
+}: ScenarioProps) {
+  const entering = useMemo(
+    () =>
+      FadeIn.delay(750)
+        .duration(durationMs)
+        .easing(Easing.linear)
+        .withCallback((finished) => {
+          'worklet';
+          scheduleOnRN(onAnimationCallback, finished);
+        }),
+    [durationMs, onAnimationCallback]
+  );
+  return (
+    <View style={styles.centeredStage}>
+      {phase !== 'reset' && phase !== 'cancel' && (
+        <Animated.View
+          entering={entering}
+          style={[styles.largeBox, styles.greenBox]}
+        />
+      )}
+    </View>
+  );
+}
+
 export function ScenarioRenderer(props: ScenarioRendererProps) {
   switch (props.scenario) {
     case 'linear-position':
@@ -475,6 +606,12 @@ export function ScenarioRenderer(props: ScenarioRendererProps) {
       return <LayoutInterruptedByLayoutScenario {...props} />;
     case 'retained-exit-cleanup':
       return <FadeScenario {...props} />;
+    case 'timing-linear-opacity-position':
+      return <TimingLinearOpacityPositionScenario {...props} />;
+    case 'timing-nonuniform-segments':
+      return <TimingNonuniformSegmentsScenario {...props} />;
+    case 'timing-delayed-opacity':
+      return <TimingDelayedOpacityScenario {...props} />;
   }
 }
 

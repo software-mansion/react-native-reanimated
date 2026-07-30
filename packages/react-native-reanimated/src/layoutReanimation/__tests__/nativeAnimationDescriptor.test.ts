@@ -137,6 +137,30 @@ describe('native layout animation structural compiler', () => {
     ]);
   });
 
+  test('preserves cubic-bezier control points in timing IR', () => {
+    const compilation = compileNativeLayoutAnimation({
+      animations: {
+        opacity: withTiming(1, {
+          duration: 300,
+          easing: Easing.bezier(0.42, 0, 0.58, 1),
+        }),
+      },
+      initialValues: { opacity: 0 },
+    });
+
+    expect(compilation.status).toBe('native');
+    if (compilation.status === 'native') {
+      expect(compilation.plan.route).toBe('simple');
+      expect(compilation.plan.tracks[0].segments[0]).toMatchObject({
+        kind: 'timing',
+        easing: {
+          kind: 'cubicBezier',
+          controlPoints: [0.42, 0, 0.58, 1],
+        },
+      });
+    }
+  });
+
   test('uses an explicit sampled route for opaque easing', () => {
     const compilation = compileNativeLayoutAnimation({
       animations: {

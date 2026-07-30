@@ -102,10 +102,12 @@ export const withTiming = function (
       );
     }
 
-    const easingName =
-      typeof config.easing === 'function' ? config.easing.name : '';
     const nativeEasing: NativeEasingNode | null =
-      easingName === 'linear' ? { kind: 'linear' } : null;
+      typeof config.easing === 'function'
+        ? config.easing.name === 'linear'
+          ? { kind: 'linear' }
+          : null
+        : (config.easing.__nativeEasing ?? null);
 
     function timing(animation: InnerTimingAnimation, now: Timestamp): boolean {
       // eslint-disable-next-line @typescript-eslint/no-shadow

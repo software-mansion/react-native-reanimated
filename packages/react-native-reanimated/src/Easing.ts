@@ -48,7 +48,13 @@ import type { EasingFunction } from './commonTypes';
  * - [`out`](docs/easing.html#out) runs an easing function backwards
  */
 
-export type EasingFunctionFactory = { factory: () => EasingFunction };
+export type EasingFunctionFactory = {
+  factory: () => EasingFunction;
+  __nativeEasing?: {
+    kind: 'cubicBezier';
+    controlPoints: [number, number, number, number];
+  };
+};
 
 /**
  * A linear function, `f(t) = t`. Position correlates to elapsed time one to
@@ -210,6 +216,10 @@ function bezier(
     factory: () => {
       'worklet';
       return Bezier(x1, y1, x2, y2);
+    },
+    __nativeEasing: {
+      kind: 'cubicBezier',
+      controlPoints: [x1, y1, x2, y2],
     },
   };
 }

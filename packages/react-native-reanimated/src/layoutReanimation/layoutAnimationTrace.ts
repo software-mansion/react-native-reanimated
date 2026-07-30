@@ -24,6 +24,13 @@ export const LAYOUT_ANIMATION_TRACE_SCENARIOS = [
   'reduced-motion',
   'unsupported-style-property',
   'transform-order-sensitive',
+  'final-state-layout-model',
+  'delayed-entering-final-state',
+  'back-to-back-final-commits',
+  'retained-exit-cleanup',
+  'timing-linear-opacity-position',
+  'timing-nonuniform-segments',
+  'timing-delayed-opacity',
 ] as const;
 
 export const LAYOUT_ANIMATION_TRACE_EVENTS = [

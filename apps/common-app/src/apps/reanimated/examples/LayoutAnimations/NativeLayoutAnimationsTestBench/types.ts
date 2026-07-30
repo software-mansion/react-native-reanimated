@@ -95,6 +95,27 @@ export const TEST_BENCH_SCENARIOS = [
       'Keeps the mounted view during exit, then removes it after one terminal callback.',
     group: 'final-state-first',
   },
+  {
+    id: 'timing-linear-opacity-position',
+    title: '17. Linear opacity + position',
+    description:
+      'Runs simultaneous opacity and position timing tracks through direct Core Animation primitives.',
+    group: 'timing-mvp',
+  },
+  {
+    id: 'timing-nonuniform-segments',
+    title: '18. Nonuniform timing segments',
+    description:
+      'Moves through a declared 25% segment boundary before the longer second segment.',
+    group: 'timing-mvp',
+  },
+  {
+    id: 'timing-delayed-opacity',
+    title: '19. Delayed linear opacity',
+    description:
+      'Holds the initial visual state for 750 ms, then runs direct linear timing.',
+    group: 'timing-mvp',
+  },
 ] as const;
 
 export type TestBenchScenarioId = (typeof TEST_BENCH_SCENARIOS)[number]['id'];
@@ -120,7 +141,10 @@ export function scenarioHasRunEnd(scenario: TestBenchScenarioId): boolean {
 }
 
 export function scenarioStartDelayMs(scenario: TestBenchScenarioId): number {
-  return scenario === 'delayed-entering-final-state' ? 1000 : 0;
+  if (scenario === 'delayed-entering-final-state') {
+    return 1000;
+  }
+  return scenario === 'timing-delayed-opacity' ? 750 : 0;
 }
 
 // LayoutAnimationTrace end

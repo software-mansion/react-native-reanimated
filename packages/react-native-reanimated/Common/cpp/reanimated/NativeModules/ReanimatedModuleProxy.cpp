@@ -63,16 +63,12 @@ RunNativeLayoutAnimation scheduleNativeLayoutAnimationCompletionsOnUI(
   }
   return [runNativeLayoutAnimation = std::move(runNativeLayoutAnimation), uiScheduler](
              NativeLayoutAnimationHandle handle,
-             const NativeLayoutAnimationDescriptor &descriptor,
-             bool usePresentationLayer,
-             NativeAnimationMountingMode mountingMode,
+             const NativeAnimationPlan &plan,
              NativeLayoutAnimationCancellationToken cancellationToken,
              std::function<void(bool)> &&completion) {
     runNativeLayoutAnimation(
         handle,
-        descriptor,
-        usePresentationLayer,
-        mountingMode,
+        plan,
         std::move(cancellationToken),
         [uiScheduler, completion = std::move(completion)](bool finished) mutable {
           scheduleOnUI(uiScheduler, [completion = std::move(completion), finished]() mutable { completion(finished); });
@@ -152,7 +148,14 @@ void validateTraceScenario(jsi::Runtime &rt, const std::string &scenario) {
       "parent-removal-with-flattening",
       "reduced-motion",
       "unsupported-style-property",
-      "transform-order-sensitive"};
+      "transform-order-sensitive",
+      "final-state-layout-model",
+      "delayed-entering-final-state",
+      "back-to-back-final-commits",
+      "retained-exit-cleanup",
+      "timing-linear-opacity-position",
+      "timing-nonuniform-segments",
+      "timing-delayed-opacity"};
   if (!scenarios.contains(scenario)) {
     throwLayoutAnimationTraceError(rt, "unknown 'scenario'.");
   }

@@ -10,6 +10,7 @@
 #import <optional>
 #import <unordered_map>
 #import <utility>
+#import <variant>
 #import <vector>
 
 using namespace facebook::react;
@@ -22,6 +23,8 @@ constexpr CGFloat kGeometryTolerance = 0.5;
 struct ExpectedGeometry {
   std::optional<CGFloat> originX;
   std::optional<CGFloat> originY;
+  std::optional<CGFloat> positionX;
+  std::optional<CGFloat> positionY;
   std::optional<CGFloat> width;
   std::optional<CGFloat> height;
 };
@@ -33,23 +36,61 @@ struct PendingStart {
   std::function<void()> reject;
 };
 
-std::optional<CGFloat> finalValue(const NativeLayoutAnimationDescriptor &descriptor, const std::string &keyPath)
+std::optional<NativeValue> finalValue(const NativeAnimationTrack &track)
 {
-  for (const auto &property : descriptor.properties) {
-    if (property.keyPath == keyPath && !property.values.empty()) {
-      return static_cast<CGFloat>(property.values.back());
-    }
+  if (track.segments.empty()) {
+    return std::nullopt;
   }
-  return std::nullopt;
+  return std::visit(
+      [](const auto &segment) -> std::optional<NativeValue> {
+        using T = std::decay_t<decltype(segment)>;
+        if constexpr (std::is_same_v<T, NativeTimingSegment>) {
+          return segment.to;
+        } else if constexpr (std::is_same_v<T, NativeHoldSegment>) {
+          return segment.value;
+        } else {
+          return segment.values.empty() ? std::nullopt : std::optional<NativeValue>{segment.values.back()};
+        }
+      },
+      track.segments.back());
 }
 
-ExpectedGeometry expectedGeometry(const NativeLayoutAnimationDescriptor &descriptor)
+ExpectedGeometry expectedGeometry(const NativeAnimationPlan &plan)
 {
-  return {
-      .originX = finalValue(descriptor, "originX"),
-      .originY = finalValue(descriptor, "originY"),
-      .width = finalValue(descriptor, "width"),
-      .height = finalValue(descriptor, "height")};
+  ExpectedGeometry expected;
+  for (const auto &track : plan.tracks) {
+    const auto value = finalValue(track);
+    if (!value) {
+      continue;
+    }
+    if (const auto *scalar = std::get_if<double>(&*value)) {
+      switch (track.target) {
+        case NativeAnimationTarget::OriginX:
+          expected.originX = static_cast<CGFloat>(*scalar);
+          break;
+        case NativeAnimationTarget::OriginY:
+          expected.originY = static_cast<CGFloat>(*scalar);
+          break;
+        case NativeAnimationTarget::Width:
+          expected.width = static_cast<CGFloat>(*scalar);
+          break;
+        case NativeAnimationTarget::Height:
+          expected.height = static_cast<CGFloat>(*scalar);
+          break;
+        default:
+          break;
+      }
+    } else if (const auto *point = std::get_if<NativePoint>(&*value);
+               point != nullptr && track.target == NativeAnimationTarget::Position) {
+      expected.positionX = static_cast<CGFloat>(point->x);
+      expected.positionY = static_cast<CGFloat>(point->y);
+    } else if (const auto *size = std::get_if<NativeSize>(&*value);
+               size != nullptr && track.target == NativeAnimationTarget::BoundsSize) {
+      expected.width = static_cast<CGFloat>(size->width);
+      expected.height = static_cast<CGFloat>(size->height);
+    }
+  }
+  return expected;
 }
 
 bool approximatelyEqual(CGFloat lhs, CGFloat rhs)
@@ -90,6 +131,12 @@ bool modelMatchesFinalGeometry(CALayer *layer, const ExpectedGeometry &expected)
       return false;
     }
   }
+  if (expected.positionX && !approximatelyEqual(layer.position.x, *expected.positionX)) {
+    return false;
+  }
+  if (expected.positionY && !approximatelyEqual(layer.position.y, *expected.positionY)) {
+    return false;
+  }
   return true;
 }
 
@@ -127,7 +174,7 @@ bool modelMatchesFinalGeometry(CALayer *layer, const ExpectedGeometry &expected)
 }
 
 - (void)enqueueHandle:(NativeAnimationHandle)handle
-           descriptor:(const NativeLayoutAnimationDescriptor &)descriptor
+                 plan:(const NativeAnimationPlan &)plan
          mountingMode:(NativeAnimationMountingMode)mountingMode
                 start:(std::function<void()>)start
                reject:(std::function<void()>)reject
@@ -135,7 +182,7 @@ bool modelMatchesFinalGeometry(CALayer *layer, const ExpectedGeometry &expected)
   RCTAssertMainQueue();
   RCTComponentViewRegistry *registry = _surfacePresenter.mountingManager.componentViewRegistry;
   REAUIView<RCTComponentViewProtocol> *view = [registry findComponentViewWithTag:handle.tag];
-  const auto expected = expectedGeometry(descriptor);
+  const auto expected = expectedGeometry(plan);
   const bool mountedOnSurface = view != nil && belongsToSurface(view, handle.surfaceId);
   const bool ready = mountedOnSurface &&
       (mountingMode == NativeAnimationMountingMode::RetainedCurrentState ||

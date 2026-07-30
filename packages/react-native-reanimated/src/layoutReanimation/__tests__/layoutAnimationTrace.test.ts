@@ -11,7 +11,7 @@ import {
 
 describe('layout animation trace schema', () => {
   test('defines all Objective 01 scenarios', () => {
-    expect(LAYOUT_ANIMATION_TRACE_SCENARIOS).toHaveLength(12);
+    expect(LAYOUT_ANIMATION_TRACE_SCENARIOS).toHaveLength(19);
   });
 
   test('keeps lifecycle event names unique', () => {

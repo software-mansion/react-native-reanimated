@@ -10,8 +10,6 @@
 
 #include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationConfig.h>
-#include <reanimated/LayoutAnimations/NativeLayoutAnimationDescriptor.h>
-#include <reanimated/LayoutAnimations/NativeLayoutAnimationHandle.h>
 #include <reanimated/NativeAnimations/NativeAnimationPlatformCallbacks.h>
 
 #include <memory>
@@ -52,11 +50,6 @@ using SetGestureStateFunction = std::function<void(int, int)>;
 using KeyboardEventSubscribeFunction = std::function<int(std::function<void(int, int)>, bool, bool)>;
 using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
-// Plays a pre-sampled, generic layout-animation descriptor on the platform's
-// native animation engine (Core Animation on iOS, `android.animation` on
-// Android). `usePresentationLayer` requests a seamless start from the view's
-// currently rendered state when interrupting an in-flight animation. The
-// completion is invoked with `true` when the animation finished naturally.
 using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
 
 using PlatformAttachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector, std::function<void(bool)>)>;
@@ -78,8 +71,8 @@ struct PlatformDepMethodsHolder {
   KeyboardEventSubscribeFunction subscribeForKeyboardEvents;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEvents;
   MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction;
-  // Native layout-animation player. Provided on both iOS and Android. Native
-  // cancellation is currently implemented by the stabilized iOS PoC only.
+  // Executes an owned platform-neutral layout-animation plan. Android keeps a
+  // sampled compatibility adapter until its portability objective.
   RunNativeLayoutAnimation runNativeLayoutAnimation;
   CancelNativeLayoutAnimation cancelNativeLayoutAnimation;
   PlatformAttachPseudoSelectorFunction attachPseudoSelector;

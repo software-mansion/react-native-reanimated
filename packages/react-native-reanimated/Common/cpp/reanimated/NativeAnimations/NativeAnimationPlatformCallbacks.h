@@ -1,7 +1,7 @@
 #pragma once
 
-#include <reanimated/LayoutAnimations/NativeLayoutAnimationDescriptor.h>
 #include <reanimated/LayoutAnimations/NativeLayoutAnimationHandle.h>
+#include <reanimated/NativeAnimations/NativeAnimationPlan.h>
 
 #include <functional>
 
@@ -9,9 +9,7 @@ namespace reanimated {
 
 using RunNativeLayoutAnimation = std::function<void(
     NativeAnimationHandle handle,
-    const NativeLayoutAnimationDescriptor &descriptor,
-    bool usePresentationLayer,
-    NativeAnimationMountingMode mountingMode,
+    const NativeAnimationPlan &plan,
     NativeLayoutAnimationCancellationToken cancellationToken,
     std::function<void(bool)> &&completion)>;
 

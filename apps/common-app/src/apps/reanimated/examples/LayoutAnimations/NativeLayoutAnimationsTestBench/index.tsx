@@ -438,6 +438,31 @@ export default function NativeLayoutAnimationsTestBench() {
           </Pressable>
         ))}
       </View>
+      <Text style={styles.sectionTitle}>Timing MVP</Text>
+      <View style={styles.scenarioGrid}>
+        {TEST_BENCH_SCENARIOS.filter(
+          (item) => 'group' in item && item.group === 'timing-mvp'
+        ).map((item) => (
+          <Pressable
+            accessibilityRole="button"
+            disabled={status === 'running'}
+            key={item.id}
+            onPress={() => setScenario(item.id)}
+            style={[
+              styles.scenarioButton,
+              item.id === scenario && styles.selectedScenarioButton,
+              status === 'running' && styles.disabledButton,
+            ]}>
+            <Text
+              style={[
+                styles.scenarioButtonText,
+                item.id === scenario && styles.selectedScenarioButtonText,
+              ]}>
+              {item.title}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
       <Text style={styles.description}>{selectedScenario.description}</Text>
 
       <View style={styles.fieldsRow}>

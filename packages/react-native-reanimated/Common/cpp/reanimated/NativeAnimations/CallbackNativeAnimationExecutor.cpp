@@ -36,24 +36,30 @@ NativeAnimationCapabilityReport CallbackNativeAnimationExecutor::queryCapabiliti
     return {NativeAnimationCapabilityReason::InvalidPlan};
   }
   for (const auto &track : plan.tracks) {
+    const bool directTimingTarget = track.target == NativeAnimationTarget::Opacity ||
+        track.target == NativeAnimationTarget::OriginX || track.target == NativeAnimationTarget::OriginY ||
+        track.target == NativeAnimationTarget::Position;
+    if (plan.route != NativeAnimationRoute::Sampled && !directTimingTarget) {
+      return {NativeAnimationCapabilityReason::UnsupportedTarget};
+    }
     for (const auto &segment : track.segments) {
-      const bool scalarValues = std::visit(
-          [](const auto &typedSegment) {
+      const auto supportedValue = [target = track.target](const NativeValue &value) {
+        return std::holds_alternative<double>(value) ||
+            (target == NativeAnimationTarget::Position && std::holds_alternative<NativePoint>(value));
+      };
+      const bool supportedValues = std::visit(
+          [&supportedValue](const auto &typedSegment) {
             using T = std::decay_t<decltype(typedSegment)>;
             if constexpr (std::is_same_v<T, NativeTimingSegment>) {
-              return std::holds_alternative<double>(typedSegment.from) &&
-                  std::holds_alternative<double>(typedSegment.to) &&
-                  typedSegment.easing.kind == NativeTimingFunctionKind::Linear;
+              return supportedValue(typedSegment.from) && supportedValue(typedSegment.to);
             } else if constexpr (std::is_same_v<T, NativeHoldSegment>) {
-              return std::holds_alternative<double>(typedSegment.value);
+              return supportedValue(typedSegment.value);
             } else {
-              return std::all_of(typedSegment.values.begin(), typedSegment.values.end(), [](const auto &value) {
-                return std::holds_alternative<double>(value);
-              });
+              return std::all_of(typedSegment.values.begin(), typedSegment.values.end(), supportedValue);
             }
           },
           segment);
-      if (!scalarValues) {
+      if (!supportedValues) {
         return {NativeAnimationCapabilityReason::UnsupportedValueType};
       }
     }
@@ -77,19 +83,8 @@ void CallbackNativeAnimationExecutor::schedule(
   auto cancellationToken = std::make_shared<std::atomic_bool>(false);
   active_.emplace(handle, ActiveAnimation{cancellationToken, std::move(completion)});
 
-  const bool usePresentationLayer = plan.startValueSource == NativeAnimationStartValueSource::CurrentVisualValue;
-  auto descriptor = materializeSampledLayoutDescriptor(handle, plan);
-  if (descriptor.properties.empty()) {
-    finish(handle, {NativeAnimationOutcome::Rejected, NativeAnimationResultReason::InvalidPlan});
-    return;
-  }
   runNativeLayoutAnimation_(
-      handle,
-      descriptor,
-      usePresentationLayer,
-      plan.mountingMode,
-      std::move(cancellationToken),
-      [weakThis = weak_from_this(), handle](bool finished) {
+      handle, plan, std::move(cancellationToken), [weakThis = weak_from_this(), handle](bool finished) {
         if (const auto strongThis = weakThis.lock()) {
           strongThis->finish(
               handle,

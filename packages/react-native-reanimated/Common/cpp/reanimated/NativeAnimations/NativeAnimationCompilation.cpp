@@ -6,6 +6,7 @@
 #include <optional>
 #include <sstream>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace reanimated {
 
@@ -193,8 +194,10 @@ NativeCompilationResult validateNativeAnimationPlan(NativeAnimationPlan plan) {
       plan.tracks.size() > kMaxTracks) {
     return {NativeCompilationStatus::Invalid, std::nullopt, NativeAnimationRouteReason::InvalidInput};
   }
+  std::unordered_set<NativeAnimationTarget> seenTargets;
   for (const auto &track : plan.tracks) {
-    if (track.segments.empty() || track.segments.size() > kMaxSegmentsPerTrack ||
+    if (!seenTargets.insert(track.target).second || track.segments.empty() ||
+        track.segments.size() > kMaxSegmentsPerTrack ||
         !std::all_of(track.segments.begin(), track.segments.end(), [&](const auto &segment) {
           return validSegment(segment, plan.totalDurationMs);
         })) {
