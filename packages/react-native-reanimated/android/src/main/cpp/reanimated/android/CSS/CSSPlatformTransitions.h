@@ -17,9 +17,8 @@ namespace reanimated {
 
 using namespace facebook::react;
 
-/// A CSS easing described exactly rather than sampled: `type` selects the curve
-/// and the point arrays carry its parameters. Kotlin rebuilds the interpolator,
-/// so steps() keeps its discontinuities at any duration.
+/// Carries the curve's own points rather than a sampled table, so a discontinuous
+/// steps() survives at any duration.
 struct PlatformEasing {
   enum class Type : std::uint8_t { Linear = 0, CubicBezier = 1, Steps = 2, LinearStops = 3 };
 
@@ -28,8 +27,6 @@ struct PlatformEasing {
   std::vector<float> pointsY;
 };
 
-/// Android counterpart of REACSSPlatformTransitions. Owns the per-property state
-/// CSS reversing needs and resolves the timeline for the Kotlin animator.
 class CSSPlatformTransitions {
  public:
   /// Returns false when the view can't carry the animation, in which case the
@@ -59,8 +56,6 @@ class CSSPlatformTransitions {
   void removeTransition(Tag viewTag, const std::string &propertyName);
 
  private:
-  // adjustedStart/adjustedEnd drive reversal detection; settings serve the
-  // toggle path.
   struct ActiveTransition {
     std::optional<css::PlatformValue> adjustedStart;
     css::PlatformValue adjustedEnd;

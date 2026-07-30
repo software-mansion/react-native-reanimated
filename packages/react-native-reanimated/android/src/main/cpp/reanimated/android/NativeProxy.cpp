@@ -379,9 +379,13 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto cssCanRouteProperty = css::CSSCanRoutePropertyFunction(&css::canRouteCSSProperty);
 
-  auto cssApplyTransition = bindShared(cssPlatformTransitions, &CSSPlatformTransitions::applyTransition);
+  auto cssApplyTransition = [transitions = cssPlatformTransitions](auto &&...args) {
+    return transitions->applyTransition(std::forward<decltype(args)>(args)...);
+  };
 
-  auto cssRemoveTransition = bindShared(cssPlatformTransitions, &CSSPlatformTransitions::removeTransition);
+  auto cssRemoveTransition = [transitions = cssPlatformTransitions](auto &&...args) {
+    transitions->removeTransition(std::forward<decltype(args)>(args)...);
+  };
 
   return {
       requestRender,
