@@ -5,61 +5,22 @@ import { fileURLToPath } from 'node:url';
 import { buildBundleCostSection } from './bundle-cost-report.ts';
 import { postToSlack } from './slack.ts';
 
-type BadgeStatus = 'failing' | 'passing' | 'unknown';
+async function main(): Promise<void> {
+  const badges = await getActionsBadgesFromReadme();
+  const [failingBadges, nightly] = await Promise.all([
+    getFailingBadges(badges),
+    getRNNightlyFailures(),
+  ]);
+  const text = [
+    formatSlackMessage(failingBadges, nightly),
+    buildBundleCostSection(),
+  ].join('\n\n');
 
-type BadgeInfo = {
-  name: string;
-  badgeUrl?: string;
-  workflowUrl?: string;
-};
-
-type BadgeResult = BadgeInfo & {
-  status: BadgeStatus;
-};
-
-type NightlyDailyResult = {
-  android?: string;
-  ios?: string;
-};
-
-type NightlyLibraryEntry = {
-  library: string;
-  results?: Record<string, NightlyDailyResult>;
-};
-
-type NightlyFailure = {
-  library: string;
-  platform: 'iOS' | 'Android';
-  date: string;
-};
-
-type NightlyStatus =
-  | { kind: 'ok'; failures: NightlyFailure[] }
-  | { kind: 'unknown' };
+  await postToSlack({ text });
+}
 
 const GITHUB_ACTIONS_BADGE_REGEX =
   /\[!\[(?<name>(?:[^[\]]|\[[^\]]*\])+)\]\((?<badgeUrl>https:\/\/github\.com\/software-mansion\/react-native-reanimated\/actions\/workflows\/[^)]+\/badge\.svg[^)]*)\)\]\((?<workflowUrl>https:\/\/github\.com\/software-mansion\/react-native-reanimated\/actions\/workflows\/[^)]+)\)/g;
-
-const NIGHTLY_TESTS_DATA_URL =
-  'https://react-native-community.github.io/nightly-tests/data.json';
-const NIGHTLY_TESTS_WEBSITE_URL =
-  'https://react-native-community.github.io/nightly-tests/';
-const NIGHTLY_TRACKED_LIBRARIES = [
-  'react-native-reanimated',
-  'react-native-worklets',
-];
-
-function parseBadgeStatus(svg: string): BadgeStatus {
-  const normalized = svg.toLowerCase();
-
-  if (normalized.includes('failing')) return 'failing';
-  if (normalized.includes('failure')) return 'failing';
-  if (normalized.includes('failed')) return 'failing';
-  if (normalized.includes('passing')) return 'passing';
-  if (normalized.includes('success')) return 'passing';
-
-  return 'unknown';
-}
 
 async function getActionsBadgesFromReadme(): Promise<BadgeInfo[]> {
   const currentFilePath = fileURLToPath(import.meta.url);
@@ -98,8 +59,159 @@ async function getFailingBadges(badges: BadgeInfo[]): Promise<BadgeResult[]> {
     })
   );
 
-  return results.filter((result) => result.status === 'failing');
+  const failing = results.filter((result) => result.status === 'failing');
+
+  return Promise.all(
+    failing.map(async (badge) => ({
+      ...badge,
+      run: await getFailingRun(badge),
+    }))
+  );
 }
+
+function parseBadgeStatus(svg: string): BadgeStatus {
+  const normalized = svg.toLowerCase();
+
+  if (normalized.includes('failing')) return 'failing';
+  if (normalized.includes('failure')) return 'failing';
+  if (normalized.includes('failed')) return 'failing';
+  if (normalized.includes('passing')) return 'passing';
+  if (normalized.includes('success')) return 'passing';
+
+  return 'unknown';
+}
+
+async function getFailingRun(
+  badge: BadgeInfo
+): Promise<FailingRun | undefined> {
+  if (!badge.workflowUrl) {
+    return undefined;
+  }
+
+  const ref = parseWorkflowUrl(badge.workflowUrl);
+  if (!ref) {
+    return undefined;
+  }
+
+  // A badge without filters reflects the default branch; `?branch=`/`?event=`
+  // narrow it down, so the run lookup has to use the same filters.
+  const badgeFilters = new URLSearchParams(
+    badge.badgeUrl ? new URL(badge.badgeUrl).search : ''
+  );
+  const query = new URLSearchParams({ status: 'completed' });
+  query.set('per_page', '1');
+  const branch = badgeFilters.get('branch') ?? (await getDefaultBranch(ref));
+  if (branch) {
+    query.set('branch', branch);
+  }
+  const event = badgeFilters.get('event');
+  if (event) {
+    query.set('event', event);
+  }
+
+  const response = await githubApi<{ workflow_runs?: WorkflowRun[] }>(
+    `/repos/${ref.owner}/${ref.repo}/actions/workflows/${ref.file}/runs?${query.toString()}`
+  );
+
+  const run = response?.workflow_runs?.[0];
+  if (!run?.html_url || run.conclusion === 'success') {
+    return undefined;
+  }
+
+  const attempt = run.run_attempt ?? 1;
+  return {
+    url: run.html_url,
+    label:
+      `run #${run.run_number ?? run.id}` +
+      (attempt > 1 ? ` (attempt ${attempt})` : ''),
+    failedJobs: await getFailedJobs(ref, run.id),
+  };
+}
+
+function parseWorkflowUrl(workflowUrl: string): WorkflowRef | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(workflowUrl);
+  } catch {
+    return null;
+  }
+
+  const match = parsed.pathname.match(
+    /^\/([^/]+)\/([^/]+)\/actions\/workflows\/([^/]+)$/
+  );
+  if (!match) {
+    return null;
+  }
+
+  return { owner: match[1], repo: match[2], file: match[3] };
+}
+
+const defaultBranches = new Map<string, Promise<string | null>>();
+
+function getDefaultBranch(ref: WorkflowRef): Promise<string | null> {
+  const key = `${ref.owner}/${ref.repo}`;
+  let branch = defaultBranches.get(key);
+  if (!branch) {
+    branch = githubApi<{ default_branch?: string }>(`/repos/${key}`).then(
+      (repository) => repository?.default_branch ?? null
+    );
+    defaultBranches.set(key, branch);
+  }
+  return branch;
+}
+
+const NON_FAILING_JOB_CONCLUSIONS = ['success', 'skipped', 'neutral'];
+
+async function getFailedJobs(
+  ref: WorkflowRef,
+  runId: number
+): Promise<FailedJob[]> {
+  const response = await githubApi<{ jobs?: WorkflowJob[] }>(
+    `/repos/${ref.owner}/${ref.repo}/actions/runs/${runId}/jobs?filter=latest&per_page=100`
+  );
+
+  return (response?.jobs ?? [])
+    .filter(
+      (job) =>
+        job.html_url &&
+        job.conclusion &&
+        !NON_FAILING_JOB_CONCLUSIONS.includes(job.conclusion)
+    )
+    .map((job) => ({ name: job.name ?? 'unnamed job', url: job.html_url! }));
+}
+
+const GITHUB_API_URL = process.env.GITHUB_API_URL ?? 'https://api.github.com';
+
+async function githubApi<T>(pathWithQuery: string): Promise<T | null> {
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28',
+  };
+  if (process.env.GITHUB_TOKEN) {
+    headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  }
+
+  try {
+    const response = await fetch(`${GITHUB_API_URL}${pathWithQuery}`, {
+      headers,
+    });
+    if (!response.ok) {
+      console.error(`GitHub API ${pathWithQuery} responded ${response.status}`);
+      return null;
+    }
+    return (await response.json()) as T;
+  } catch (error) {
+    console.error(`GitHub API ${pathWithQuery} failed: ${String(error)}`);
+    return null;
+  }
+}
+
+const NIGHTLY_TESTS_DATA_URL =
+  'https://react-native-community.github.io/nightly-tests/data.json';
+const NIGHTLY_TRACKED_LIBRARIES = [
+  'react-native-reanimated',
+  'react-native-worklets',
+];
 
 async function getRNNightlyFailures(): Promise<NightlyStatus> {
   let data: NightlyLibraryEntry[];
@@ -133,6 +245,9 @@ async function getRNNightlyFailures(): Promise<NightlyStatus> {
   return { kind: 'ok', failures };
 }
 
+const NIGHTLY_TESTS_WEBSITE_URL =
+  'https://react-native-community.github.io/nightly-tests/';
+
 function formatSlackMessage(
   failingBadges: BadgeResult[],
   nightly: NightlyStatus
@@ -140,9 +255,7 @@ function formatSlackMessage(
   const sections: string[] = [];
 
   if (failingBadges.length > 0) {
-    const lines = failingBadges.map(
-      (badge) => `• ${badge.name}: ${badge.workflowUrl}`
-    );
+    const lines = failingBadges.flatMap((badge) => formatFailingBadge(badge));
     sections.push(
       ['❌ Failing GitHub Actions badges found:', ...lines].join('\n')
     );
@@ -176,21 +289,92 @@ function formatSlackMessage(
   return sections.join('\n\n');
 }
 
-async function main(): Promise<void> {
-  const badges = await getActionsBadgesFromReadme();
-  const [failingBadges, nightly] = await Promise.all([
-    getFailingBadges(badges),
-    getRNNightlyFailures(),
-  ]);
-  const text = [
-    formatSlackMessage(failingBadges, nightly),
-    buildBundleCostSection(),
-  ].join('\n\n');
+const MAX_LISTED_JOBS = 5;
 
-  await postToSlack({ text });
+function formatFailingBadge(badge: BadgeResult): string[] {
+  if (!badge.run) {
+    return [`• ${badge.name}: ${badge.workflowUrl}`];
+  }
+
+  const lines = [`• ${badge.name}: <${badge.run.url}|${badge.run.label}>`];
+
+  for (const job of badge.run.failedJobs.slice(0, MAX_LISTED_JOBS)) {
+    lines.push(`    ◦ <${job.url}|${job.name}>`);
+  }
+
+  const hidden = badge.run.failedJobs.length - MAX_LISTED_JOBS;
+  if (hidden > 0) {
+    lines.push(`    ◦ …and ${hidden} more failing job(s)`);
+  }
+
+  return lines;
 }
 
 main().catch((err: unknown) => {
   console.error('Error posting GitHub Actions badge status to Slack:', err);
   process.exitCode = 1;
 });
+
+type BadgeStatus = 'failing' | 'passing' | 'unknown';
+
+type BadgeInfo = {
+  name: string;
+  badgeUrl?: string;
+  workflowUrl?: string;
+};
+
+type FailedJob = {
+  name: string;
+  url: string;
+};
+
+type FailingRun = {
+  url: string;
+  label: string;
+  failedJobs: FailedJob[];
+};
+
+type BadgeResult = BadgeInfo & {
+  status: BadgeStatus;
+  run?: FailingRun;
+};
+
+type WorkflowRef = {
+  owner: string;
+  repo: string;
+  file: string;
+};
+
+type WorkflowRun = {
+  id: number;
+  html_url?: string | null;
+  conclusion?: string | null;
+  run_number?: number;
+  run_attempt?: number;
+};
+
+type WorkflowJob = {
+  name?: string;
+  conclusion?: string | null;
+  html_url?: string | null;
+};
+
+type NightlyDailyResult = {
+  android?: string;
+  ios?: string;
+};
+
+type NightlyLibraryEntry = {
+  library: string;
+  results?: Record<string, NightlyDailyResult>;
+};
+
+type NightlyFailure = {
+  library: string;
+  platform: 'iOS' | 'Android';
+  date: string;
+};
+
+type NightlyStatus =
+  | { kind: 'ok'; failures: NightlyFailure[] }
+  | { kind: 'unknown' };
