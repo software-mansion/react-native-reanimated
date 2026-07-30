@@ -10,6 +10,7 @@ that permits it.
 - Migrate: play once on mount
 - Migrate: React state toggle
 - Migrate: staggered loop
+- Migrate: withSequence to percentage keyframes
 - Migrate: shared value written from a JS callback
 - Leave alone: spring
 - Preserve: platform-specific values
@@ -154,6 +155,37 @@ Negative `animationDelay` pre-seeds each item mid-cycle. No hook equivalent.
   />
 ))}
 ```
+
+## Migrate: withSequence to percentage keyframes
+
+Durations are absolute in the source and relative in keyframes. Sum them for
+`animationDuration`, then place each stop at its cumulative fraction.
+
+```tsx
+// Old (hooks) - 100 + 200 + 100 = 400ms total
+scale.value = withSequence(
+  withTiming(1.2, { duration: 100 }),
+  withTiming(0.9, { duration: 200 }),
+  withTiming(1, { duration: 100 })
+);
+```
+
+```tsx
+// New (CSS) - stops at 0, 100/400, 300/400, 400/400
+const pop: CSSAnimationKeyframes = {
+  '0%': { transform: [{ scale: 1 }] },
+  '25%': { transform: [{ scale: 1.2 }] },
+  '75%': { transform: [{ scale: 0.9 }] },
+  '100%': { transform: [{ scale: 1 }] },
+};
+// on the element:
+{ animationName: pop, animationDuration: '400ms', animationFillMode: 'forwards' }
+```
+
+- Animation only. A transition has one start and one end, so it cannot express
+  intermediate stops
+- The first keyframe is the value before the sequence ran, not the first
+  `withTiming` target
 
 ## Migrate: shared value written from a JS callback
 

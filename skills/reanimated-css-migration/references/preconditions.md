@@ -2,7 +2,7 @@
 
 ## Contents
 
-- Preconditions: check all 7 before converting a call site
+- Preconditions: check all 7 before converting a call site (2b covers derived values)
 - Equivalence obligations: check all 5 after converting
 - Effective platforms
 
@@ -34,10 +34,31 @@ Every value must reduce to fixed keyframe endpoints.
 | Pass | Refuse |
 | --- | --- |
 | affine arithmetic on the driver | trigonometry, `Math.atan2`, parametric geometry |
-| color interpolation | anything reading runtime layout |
+| `interpolateColor` | anything reading runtime layout |
+| `interpolate` with 2 input stops | `interpolate` whose output feeds further non-affine work |
+| `interpolate` with N stops, converting to an animation | `interpolate` with N stops, converting to a transition |
+
+`interpolate` maps to keyframes, one stop per input value, placed at the
+input's fraction of the range. A transition has only a start and an end, so a
+multi-stop `interpolate` needs an animation, not a transition.
+
+`interpolate` defaults to `Extrapolation.EXTEND` on both edges
+(`interpolation.ts:86-87`); CSS clamps at the outermost keyframe. Equivalent
+only when the driver stays inside the input range, or the source already passes
+`Extrapolation.CLAMP`. Otherwise refuse, or state the difference in the report.
 
 Check independently of precondition 1: a migratable driver often has an
 inexpressible body.
+
+### 2b. Derived values resolve to the same driver
+
+`useDerivedValue` is not itself a blocker. Classify what it derives from.
+
+| Shape | Verdict |
+| --- | --- |
+| Derives from one migratable driver, read only by this style | Inline it into the style and migrate |
+| Derives from a worklet-written value | Refuse, precondition 1 applies to the root driver |
+| Read by several consumers, or by a worklet | Refuse, the conversion would change more than this call site |
 
 ### 3. Properties animatable on the effective platforms
 
