@@ -4,6 +4,7 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.animation.TimeInterpolator
+import android.util.FloatProperty
 import android.view.Choreographer
 import android.view.View
 import com.facebook.react.bridge.ReactApplicationContext
@@ -30,15 +31,15 @@ internal class CSSPlatformTransitionsManager(
         val propertyName: String,
     )
 
-    /**
-     * ObjectAnimator leaves its animated value uninitialised until its first frame, which a
-     * start delay defers, so [startValue] is what the property must show until then.
-     */
     private class RunningTransition(
         val animator: ObjectAnimator,
+        val writer: FloatProperty<View>,
         val startValue: Float,
     ) {
-        /** What the animation should be showing right now. */
+        /**
+         * ObjectAnimator leaves its animated value uninitialised until its first frame, which
+         * a start delay defers, so until then the property must show the start value.
+         */
         fun currentValue(): Float = if (animator.isRunning) animator.animatedValue as Float else startValue
     }
 
@@ -123,7 +124,7 @@ internal class CSSPlatformTransitionsManager(
     private fun start(
         view: View,
         key: Key,
-        writer: android.util.FloatProperty<View>,
+        writer: FloatProperty<View>,
         fromValue: Double,
         toValue: Double,
         durationMs: Double,
@@ -151,7 +152,7 @@ internal class CSSPlatformTransitionsManager(
                 override fun onAnimationEnd(animation: Animator) {
                     // A replacement may already own the key.
                     if (animators[key]?.animator === animation) animators.remove(key)
-                        }
+                }
             },
         )
         // ObjectAnimator has no absolute start time, so resolve one against the clock
@@ -160,20 +161,20 @@ internal class CSSPlatformTransitionsManager(
         val elapsedMs = animationTimestamp().toDouble() - startTimestampMs
         if (elapsedMs < 0) animator.startDelay = (-elapsedMs / scale).toLong()
         animator.start()
-        animators[key] = RunningTransition(animator, startValue)
+        animators[key] = RunningTransition(animator, writer, startValue)
         reconciler.track(view)
         if (elapsedMs > 0 && durationMs > 0) {
             animator.setCurrentFraction((elapsedMs / durationMs).toFloat().coerceIn(0f, 1f))
         }
     }
 
-    /** Re-asserts the animator's own value wherever a commit overwrote it. */
+    /** Re-asserts each animator's own value wherever a commit overwrote it. */
     private fun repairClobberedValues(): Boolean {
-        animators.forEach { (key, running) ->
+        animators.values.forEach { running ->
+            // target is held weakly, so read the View through it rather than keeping one.
             val view = running.animator.target as? View ?: return@forEach
-            val writer = cssPropertyWriterFor(key.propertyName) ?: return@forEach
             val current = running.currentValue()
-            if (writer.get(view) != current) writer.setValue(view, current)
+            if (running.writer.get(view) != current) running.writer.setValue(view, current)
         }
         return animators.isNotEmpty()
     }
