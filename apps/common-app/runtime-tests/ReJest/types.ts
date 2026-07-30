@@ -171,6 +171,10 @@ declare global {
   var originalNotifyAboutProgress:
     | ((tag: number, value: Record<string, unknown>) => void)
     | undefined;
+  var originalCallMicrotasks: (() => void) | undefined;
+  var __callMicrotasks: () => void;
+  var didRunMicrotask: boolean | undefined;
+  var scheduleOnRN: typeof import('react-native-worklets').scheduleOnRN;
   var originalFlushAnimationFrame:
     | ((frameTimestamp: number) => void)
     | undefined;
