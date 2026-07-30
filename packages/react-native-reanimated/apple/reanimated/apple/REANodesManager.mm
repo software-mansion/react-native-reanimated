@@ -1,4 +1,5 @@
 #import <reanimated/Tools/FeatureFlags.h>
+#import <reanimated/apple/NativeAnimations/REANativeLayoutAnimationPostMountQueue.h>
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
 #import <reanimated/apple/REACoreAnimationDelegate.h>
@@ -30,6 +31,7 @@ using namespace facebook::react;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   REAEventHandler _eventHandler;
   REAPerformOperations _performOperations;
+  REANativeLayoutAnimationPostMountQueue *_nativeLayoutAnimationPostMountQueue;
 }
 
 - (READisplayLink *)getDisplayLink
@@ -191,18 +193,15 @@ using namespace facebook::react;
 - (void)runNativeLayoutAnimation:(reanimated::NativeLayoutAnimationHandle)handle
                       descriptor:(const reanimated::NativeLayoutAnimationDescriptor &)descriptor
             usePresentationLayer:(bool)usePresentationLayer
+                    mountingMode:(reanimated::NativeAnimationMountingMode)mountingMode
                cancellationToken:(reanimated::NativeLayoutAnimationCancellationToken)cancellationToken
                       completion:(std::function<void(bool)>)completion
 {
   const ReactTag viewTag = handle.tag;
 
-  // Core Animation must be driven on the main thread, but the descriptor is
-  // produced on the UI (worklet) thread - hop over with owned inputs.
-  // Entering starts during the mounting transaction, before Fabric registers
-  // the inserted view. Queue one main-thread turn, as the first PoC did, so the
-  // lookup runs after that transaction mounts the view.
-  const bool isEntering = !usePresentationLayer;
-  if (![NSThread isMainThread] || isEntering) {
+  // Core Animation and the post-mount queue run on the main thread. Keep all
+  // cross-thread inputs owned until the queue either starts or rejects them.
+  if (![NSThread isMainThread]) {
     auto ownedDescriptor = std::make_shared<const reanimated::NativeLayoutAnimationDescriptor>(descriptor);
     auto ownedCompletion = std::make_shared<std::function<void(bool)>>(std::move(completion));
     __weak REANodesManager *weakSelf = self;
@@ -220,6 +219,7 @@ using namespace facebook::react;
       [strongSelf runNativeLayoutAnimationOnMain:handle
                                       descriptor:*ownedDescriptor
                             usePresentationLayer:usePresentationLayer
+                                    mountingMode:mountingMode
                                cancellationToken:std::move(cancellationToken)
                                       completion:std::move(*ownedCompletion)];
     });
@@ -229,6 +229,7 @@ using namespace facebook::react;
   [self runNativeLayoutAnimationOnMain:handle
                             descriptor:descriptor
                   usePresentationLayer:usePresentationLayer
+                          mountingMode:mountingMode
                      cancellationToken:std::move(cancellationToken)
                             completion:std::move(completion)];
 }
@@ -236,8 +237,57 @@ using namespace facebook::react;
 - (void)runNativeLayoutAnimationOnMain:(reanimated::NativeLayoutAnimationHandle)handle
                             descriptor:(const reanimated::NativeLayoutAnimationDescriptor &)descriptor
                   usePresentationLayer:(bool)usePresentationLayer
+                          mountingMode:(reanimated::NativeAnimationMountingMode)mountingMode
                      cancellationToken:(reanimated::NativeLayoutAnimationCancellationToken)cancellationToken
                             completion:(std::function<void(bool)>)completion
+{
+  RCTAssertMainQueue();
+  const ReactTag viewTag = handle.tag;
+
+  if (_nativeLayoutAnimationPostMountQueue == nil) {
+    _nativeLayoutAnimationPostMountQueue =
+        [[REANativeLayoutAnimationPostMountQueue alloc] initWithSurfacePresenter:self.surfacePresenter];
+  }
+
+  auto ownedDescriptor = std::make_shared<const reanimated::NativeLayoutAnimationDescriptor>(descriptor);
+  auto sharedCompletion = std::make_shared<std::function<void(bool)>>(std::move(completion));
+  __weak REANodesManager *weakSelf = self;
+  [_nativeLayoutAnimationPostMountQueue enqueueHandle:handle
+      descriptor:*ownedDescriptor
+      mountingMode:mountingMode
+      start:[weakSelf, handle, ownedDescriptor, usePresentationLayer, cancellationToken, sharedCompletion]() mutable {
+        REANodesManager *strongSelf = weakSelf;
+        if (strongSelf == nil || !*sharedCompletion) {
+          return;
+        }
+        auto completion = std::move(*sharedCompletion);
+        *sharedCompletion = nullptr;
+        [strongSelf installNativeLayoutAnimationOnMain:handle
+                                            descriptor:*ownedDescriptor
+                                  usePresentationLayer:usePresentationLayer
+                                     cancellationToken:std::move(cancellationToken)
+                                            completion:std::move(completion)];
+      }
+      reject:[viewTag, ownedDescriptor, sharedCompletion]() mutable {
+        if (!*sharedCompletion) {
+          return;
+        }
+        auto completion = std::move(*sharedCompletion);
+        *sharedCompletion = nullptr;
+// LayoutAnimationTrace start
+#ifndef NDEBUG
+        reanimated::layout_animation_trace::recordApplePlatformCompleted(viewTag, *ownedDescriptor, nil, false, false);
+#endif // NDEBUG
+       // LayoutAnimationTrace end
+        completion(false);
+      }];
+}
+
+- (void)installNativeLayoutAnimationOnMain:(reanimated::NativeLayoutAnimationHandle)handle
+                                descriptor:(const reanimated::NativeLayoutAnimationDescriptor &)descriptor
+                      usePresentationLayer:(bool)usePresentationLayer
+                         cancellationToken:(reanimated::NativeLayoutAnimationCancellationToken)cancellationToken
+                                completion:(std::function<void(bool)>)completion
 {
   RCTAssertMainQueue();
   const ReactTag viewTag = handle.tag;
@@ -401,9 +451,8 @@ using namespace facebook::react;
 
   NSMutableArray<NSString *> *animatedKeyPaths = [NSMutableArray array];
   NSMutableArray<CAKeyframeAnimation *> *animations = [NSMutableArray array];
-  NSMutableArray *finalModelValues = [NSMutableArray array];
 
-  auto registerAnimation = [&](NSString *keyPath, NSMutableArray *values, id finalValue, id presentationValue) {
+  auto registerAnimation = [&](NSString *keyPath, NSMutableArray *values, id presentationValue) {
     if (presentationValue != nil && values.count > 0) {
       values[0] = presentationValue;
     }
@@ -416,7 +465,6 @@ using namespace facebook::react;
     animation.fillMode = kCAFillModeRemoved;
     [animatedKeyPaths addObject:keyPath];
     [animations addObject:animation];
-    [finalModelValues addObject:finalValue];
   };
 
   // opacity
@@ -426,7 +474,7 @@ using namespace facebook::react;
       [values addObject:@(channelValueAt("opacity", offset, 1))];
     }
     id presentationValue = presentationActive(@"opacity") ? @(presentationLayer.opacity) : nil;
-    registerAnimation(@"opacity", values, @(channelValueAt("opacity", 1.0, 1)), presentationValue);
+    registerAnimation(@"opacity", values, presentationValue);
   }
 
   // transform (composed from the canonical transform channels)
@@ -440,7 +488,7 @@ using namespace facebook::react;
     }
     id presentationValue =
         presentationActive(@"transform") ? [NSValue valueWithCATransform3D:presentationLayer.transform] : nil;
-    registerAnimation(@"transform", values, [NSValue valueWithCATransform3D:composeTransform(1.0)], presentationValue);
+    registerAnimation(@"transform", values, presentationValue);
   }
 
   // layout: width/height -> bounds.size, originX/originY -> position
@@ -456,12 +504,9 @@ using namespace facebook::react;
       const double height = channelValueAt("height", offset, currentBounds.height);
       [values addObject:[NSValue valueWithCGSize:CGSizeMake(width, height)]];
     }
-    const double finalWidth = channelValueAt("width", 1.0, currentBounds.width);
-    const double finalHeight = channelValueAt("height", 1.0, currentBounds.height);
     id presentationValue =
         presentationActive(@"bounds.size") ? [NSValue valueWithCGSize:presentationLayer.bounds.size] : nil;
-    registerAnimation(
-        @"bounds.size", values, [NSValue valueWithCGSize:CGSizeMake(finalWidth, finalHeight)], presentationValue);
+    registerAnimation(@"bounds.size", values, presentationValue);
   }
 
   if (hasOrigin) {
@@ -478,7 +523,7 @@ using namespace facebook::react;
     }
     id presentationValue =
         presentationActive(@"position") ? [NSValue valueWithCGPoint:presentationLayer.position] : nil;
-    registerAnimation(@"position", values, [NSValue valueWithCGPoint:positionAt(1.0)], presentationValue);
+    registerAnimation(@"position", values, presentationValue);
   }
 
   if (animations.count == 0) {
@@ -522,21 +567,37 @@ using namespace facebook::react;
         completion(finished);
       }];
 
-  [CATransaction begin];
-  [CATransaction setDisableActions:YES];
   for (NSUInteger i = 0; i < animations.count; i++) {
     NSString *keyPath = animatedKeyPaths[i];
     CAKeyframeAnimation *animation = animations[i];
     if (i == 0) {
       animation.delegate = delegate;
     }
-    // Commit the final value to the model layer first, so the view holds its
-    // end state once the (auto-removed) animation completes - no snap-back.
-    [layer setValue:finalModelValues[i] forKeyPath:keyPath];
     [layer addAnimation:animation
                  forKey:[[generationKey stringByAppendingString:@"_"] stringByAppendingString:keyPath]];
   }
-  [CATransaction commit];
+
+// LayoutAnimationTrace start
+#ifndef NDEBUG
+  dispatch_after(
+      dispatch_time(DISPATCH_TIME_NOW, static_cast<int64_t>(durationSec * 0.5 * NSEC_PER_SEC)),
+      dispatch_get_main_queue(),
+      ^{
+        NSString *prefix = [generationKey stringByAppendingString:@"_"];
+        BOOL isStillActive = NO;
+        for (NSString *key in layer.animationKeys) {
+          if ([key hasPrefix:prefix]) {
+            isStillActive = YES;
+            break;
+          }
+        }
+        if (isStillActive) {
+          reanimated::layout_animation_trace::recordAppleModelPresentationSample(
+              viewTag, *traceDescriptor, componentView);
+        }
+      });
+#endif // NDEBUG
+  // LayoutAnimationTrace end
 }
 
 - (void)cancelNativeLayoutAnimation:(reanimated::NativeLayoutAnimationHandle)handle
@@ -547,6 +608,7 @@ using namespace facebook::react;
     dispatch_async(dispatch_get_main_queue(), ^{ [weakSelf cancelNativeLayoutAnimation:handle]; });
     return;
   }
+  [_nativeLayoutAnimationPostMountQueue cancelHandle:handle];
   RCTComponentViewRegistry *registry = self.surfacePresenter.mountingManager.componentViewRegistry;
   REAUIView<RCTComponentViewProtocol> *view = [registry findComponentViewWithTag:static_cast<Tag>(viewTag)];
   CALayer *layer = view.layer;

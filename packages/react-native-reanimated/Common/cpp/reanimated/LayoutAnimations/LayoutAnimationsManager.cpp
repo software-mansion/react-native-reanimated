@@ -260,7 +260,9 @@ void LayoutAnimationsManager::startNativeLayoutAnimation(
   NativeAnimationPlan plan{
       .descriptor = std::move(descriptor),
       .startValueSource = usePresentationLayer ? NativeAnimationStartValueSource::CurrentVisualValue
-                                               : NativeAnimationStartValueSource::ExplicitValue};
+                                               : NativeAnimationStartValueSource::ExplicitValue,
+      .mountingMode =
+          shouldRemove ? NativeAnimationMountingMode::RetainedCurrentState : NativeAnimationMountingMode::FinalState};
   const auto capability = nativeAnimationExecutor_->queryCapabilities(plan);
   if (!capability.supported()) {
     finishNativeLayoutAnimation(rt, handle, false);

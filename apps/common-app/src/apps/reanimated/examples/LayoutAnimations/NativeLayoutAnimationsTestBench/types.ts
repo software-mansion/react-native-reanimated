@@ -67,6 +67,34 @@ export const TEST_BENCH_SCENARIOS = [
     title: '12. Transform-order-sensitive',
     description: 'Enters with rotate before translateX in the transform array.',
   },
+  {
+    id: 'final-state-layout-model',
+    title: '13. Final model during layout',
+    description:
+      'Moves and resizes a view whose text, border, and background must mount at the final geometry before pixels interpolate.',
+    group: 'final-state-first',
+  },
+  {
+    id: 'delayed-entering-final-state',
+    title: '14. Delayed entering',
+    description:
+      'Mounts final Fabric state, waits one second without a final-state flash, then fades in.',
+    group: 'final-state-first',
+  },
+  {
+    id: 'back-to-back-final-commits',
+    title: '15. Back-to-back final commits',
+    description:
+      'Run + interrupt sends a second final layout while the first presentation is active.',
+    group: 'final-state-first',
+  },
+  {
+    id: 'retained-exit-cleanup',
+    title: '16. Retained exit cleanup',
+    description:
+      'Keeps the mounted view during exit, then removes it after one terminal callback.',
+    group: 'final-state-first',
+  },
 ] as const;
 
 export type TestBenchScenarioId = (typeof TEST_BENCH_SCENARIOS)[number]['id'];
@@ -84,7 +112,15 @@ export const INTERRUPT_AT_MS = 240;
 export const RESET_SETTLE_MS = 100;
 
 export function scenarioHasRunEnd(scenario: TestBenchScenarioId): boolean {
-  return scenario === 'fade-in-out' || scenario === 'slide-in-out';
+  return (
+    scenario === 'fade-in-out' ||
+    scenario === 'slide-in-out' ||
+    scenario === 'retained-exit-cleanup'
+  );
+}
+
+export function scenarioStartDelayMs(scenario: TestBenchScenarioId): number {
+  return scenario === 'delayed-entering-final-state' ? 1000 : 0;
 }
 
 // LayoutAnimationTrace end

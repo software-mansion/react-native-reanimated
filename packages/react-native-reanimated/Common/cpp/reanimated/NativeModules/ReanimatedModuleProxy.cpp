@@ -65,12 +65,14 @@ RunNativeLayoutAnimation scheduleNativeLayoutAnimationCompletionsOnUI(
              NativeLayoutAnimationHandle handle,
              const NativeLayoutAnimationDescriptor &descriptor,
              bool usePresentationLayer,
+             NativeAnimationMountingMode mountingMode,
              NativeLayoutAnimationCancellationToken cancellationToken,
              std::function<void(bool)> &&completion) {
     runNativeLayoutAnimation(
         handle,
         descriptor,
         usePresentationLayer,
+        mountingMode,
         std::move(cancellationToken),
         [uiScheduler, completion = std::move(completion)](bool finished) mutable {
           scheduleOnUI(uiScheduler, [completion = std::move(completion), finished]() mutable { completion(finished); });

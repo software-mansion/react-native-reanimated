@@ -414,6 +414,33 @@ function TransformOrderSensitiveScenario({
   );
 }
 
+function DelayedEnteringFinalStateScenario({
+  durationMs,
+  phase,
+  onAnimationCallback,
+}: ScenarioProps) {
+  const entering = useMemo(
+    () =>
+      FadeIn.delay(1000)
+        .duration(durationMs)
+        .withCallback((finished) => {
+          'worklet';
+          scheduleOnRN(onAnimationCallback, finished);
+        }),
+    [durationMs, onAnimationCallback]
+  );
+  return (
+    <View style={styles.centeredStage}>
+      {phase !== 'reset' && phase !== 'cancel' && (
+        <Animated.View
+          entering={entering}
+          style={[styles.largeBox, styles.greenBox]}
+        />
+      )}
+    </View>
+  );
+}
+
 export function ScenarioRenderer(props: ScenarioRendererProps) {
   switch (props.scenario) {
     case 'linear-position':
@@ -440,6 +467,14 @@ export function ScenarioRenderer(props: ScenarioRendererProps) {
       return <UnsupportedStylePropertyScenario {...props} />;
     case 'transform-order-sensitive':
       return <TransformOrderSensitiveScenario {...props} />;
+    case 'final-state-layout-model':
+      return <PositionSizeTextScenario {...props} />;
+    case 'delayed-entering-final-state':
+      return <DelayedEnteringFinalStateScenario {...props} />;
+    case 'back-to-back-final-commits':
+      return <LayoutInterruptedByLayoutScenario {...props} />;
+    case 'retained-exit-cleanup':
+      return <FadeScenario {...props} />;
   }
 }
 

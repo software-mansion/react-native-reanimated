@@ -11,6 +11,7 @@ using RunNativeLayoutAnimation = std::function<void(
     NativeAnimationHandle handle,
     const NativeLayoutAnimationDescriptor &descriptor,
     bool usePresentationLayer,
+    NativeAnimationMountingMode mountingMode,
     NativeLayoutAnimationCancellationToken cancellationToken,
     std::function<void(bool)> &&completion)>;
 

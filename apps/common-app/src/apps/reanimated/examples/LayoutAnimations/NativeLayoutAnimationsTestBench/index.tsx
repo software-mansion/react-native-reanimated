@@ -35,6 +35,7 @@ import {
   INTERRUPT_AT_MS,
   RESET_SETTLE_MS,
   scenarioHasRunEnd,
+  scenarioStartDelayMs,
   TEST_BENCH_SCENARIOS,
 } from './types';
 import type {
@@ -64,16 +65,17 @@ function cycleDurationMs(
   scenario: TestBenchScenarioId,
   durationMs: number
 ) {
+  const startDelayMs = scenarioStartDelayMs(scenario);
   if (mode === 'interrupt') {
-    return RESET_SETTLE_MS + INTERRUPT_AT_MS + durationMs + 300;
+    return RESET_SETTLE_MS + INTERRUPT_AT_MS + startDelayMs + durationMs + 300;
   }
   if (mode === 'cancel') {
-    return RESET_SETTLE_MS + durationMs + 300;
+    return RESET_SETTLE_MS + startDelayMs + durationMs + 300;
   }
   if (scenarioHasRunEnd(scenario)) {
-    return RESET_SETTLE_MS + durationMs * 2 + 420;
+    return RESET_SETTLE_MS + startDelayMs + durationMs * 2 + 420;
   }
-  return RESET_SETTLE_MS + durationMs + 300;
+  return RESET_SETTLE_MS + startDelayMs + durationMs + 300;
 }
 
 interface ControlButtonProps {
@@ -384,9 +386,36 @@ export default function NativeLayoutAnimationsTestBench() {
         <Text style={styles.runId}>run {runId}</Text>
       </View>
 
-      <Text style={styles.sectionTitle}>Scenario</Text>
+      <Text style={styles.sectionTitle}>Baseline and lifecycle scenarios</Text>
       <View style={styles.scenarioGrid}>
-        {TEST_BENCH_SCENARIOS.map((item) => (
+        {TEST_BENCH_SCENARIOS.filter((item) => !('group' in item)).map(
+          (item) => (
+            <Pressable
+              accessibilityRole="button"
+              disabled={status === 'running'}
+              key={item.id}
+              onPress={() => setScenario(item.id)}
+              style={[
+                styles.scenarioButton,
+                item.id === scenario && styles.selectedScenarioButton,
+                status === 'running' && styles.disabledButton,
+              ]}>
+              <Text
+                style={[
+                  styles.scenarioButtonText,
+                  item.id === scenario && styles.selectedScenarioButtonText,
+                ]}>
+                {item.title}
+              </Text>
+            </Pressable>
+          )
+        )}
+      </View>
+      <Text style={styles.sectionTitle}>Final-state-first</Text>
+      <View style={styles.scenarioGrid}>
+        {TEST_BENCH_SCENARIOS.filter(
+          (item) => 'group' in item && item.group === 'final-state-first'
+        ).map((item) => (
           <Pressable
             accessibilityRole="button"
             disabled={status === 'running'}

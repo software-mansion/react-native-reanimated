@@ -11,6 +11,7 @@ namespace reanimated {
 struct NativeAnimationPlan {
   NativeLayoutAnimationDescriptor descriptor;
   NativeAnimationStartValueSource startValueSource;
+  NativeAnimationMountingMode mountingMode;
 };
 
 } // namespace reanimated

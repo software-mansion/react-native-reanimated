@@ -28,6 +28,7 @@ typedef void (^REAPerformOperations)();
 - (void)runNativeLayoutAnimation:(reanimated::NativeLayoutAnimationHandle)handle
                       descriptor:(const reanimated::NativeLayoutAnimationDescriptor &)descriptor
             usePresentationLayer:(bool)usePresentationLayer
+                    mountingMode:(reanimated::NativeAnimationMountingMode)mountingMode
                cancellationToken:(reanimated::NativeLayoutAnimationCancellationToken)cancellationToken
                       completion:(std::function<void(bool)>)completion;
 - (void)cancelNativeLayoutAnimation:(reanimated::NativeLayoutAnimationHandle)handle;

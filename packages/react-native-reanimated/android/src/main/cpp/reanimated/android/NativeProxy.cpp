@@ -264,6 +264,7 @@ void NativeProxy::runNativeLayoutAnimation(
     NativeLayoutAnimationHandle handle,
     const NativeLayoutAnimationDescriptor &descriptor,
     const bool usePresentationLayer,
+    NativeAnimationMountingMode,
     NativeLayoutAnimationCancellationToken cancellationToken,
     std::function<void(bool)> &&completion) {
   const int tag = handle.tag;

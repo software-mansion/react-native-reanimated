@@ -350,6 +350,10 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
         }
 
         if (movedViews.contains(tag)) {
+          if constexpr (useNativeLayoutAnimations()) {
+            filteredMutations.push_back(mutation);
+            continue;
+          }
           auto layoutAnimationIt = layoutAnimations_.find(tag);
           if (layoutAnimationIt == layoutAnimations_.end()) {
             if (oldShadowViewsForReparentings.contains(tag)) {
@@ -378,16 +382,34 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
         startEnteringAnimation(tag, mutation);
         filteredMutations.push_back(mutation);
 
-        // temporarily set opacity to 0 to prevent flickering on android
-        std::shared_ptr<ShadowView> newView = cloneViewWithoutOpacity(mutation, propsParserContext);
-
-        filteredMutations.push_back(
-            ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, *newView, mutationParent));
+        if constexpr (!useNativeLayoutAnimations()) {
+          // The legacy driver restores this temporary opacity through mounted
+          // frame updates. Native iOS mounts the final props and uses a
+          // post-mount explicit animation instead.
+          std::shared_ptr<ShadowView> newView = cloneViewWithoutOpacity(mutation, propsParserContext);
+          filteredMutations.push_back(
+              ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, *newView, mutationParent));
+        }
         break;
       }
 
       case ShadowViewMutation::Type::Update: {
         auto shouldAnimate = hasLayoutChanged(mutation);
+        if constexpr (useNativeLayoutAnimations()) {
+          if (shouldAnimate && layoutAnimationsManager_->hasLayoutAnimation(tag, LayoutAnimationType::LAYOUT)) {
+            oldShadowViewsForReparentings[tag] = mutation.oldChildShadowView;
+            if (movedViews.contains(tag)) {
+              mutation.parentTag = movedViews.at(tag);
+            }
+            if (mutation.parentTag != -1) {
+              startLayoutAnimation(tag, mutation);
+            }
+          }
+          // Fabric remains authoritative. The platform animation changes only
+          // presentation while this final Update mounts props and metrics.
+          filteredMutations.push_back(mutation);
+          break;
+        }
         if (!layoutAnimationsManager_->hasLayoutAnimation(tag, LayoutAnimationType::LAYOUT) ||
             (!shouldAnimate && !layoutAnimations_.contains(tag))) {
           // We should cancel any ongoing animation here to ensure that the
@@ -749,10 +771,15 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
             return;
           }
 #endif
-          strongThis->layoutAnimations_.insert_or_assign(
-              tag,
-              LayoutAnimation{
-                  .finalView = finalView, .currentView = current, .parentTag = mutation.parentTag, .opacity = opacity});
+          if constexpr (!useNativeLayoutAnimations()) {
+            strongThis->layoutAnimations_.insert_or_assign(
+                tag,
+                LayoutAnimation{
+                    .finalView = finalView,
+                    .currentView = current,
+                    .parentTag = mutation.parentTag,
+                    .opacity = opacity});
+          }
           window = strongThis->surfaceManager.getWindow(mutation.newChildShadowView.surfaceId);
         }
 
@@ -931,7 +958,9 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
             return;
           }
 #endif
-          strongThis->createLayoutAnimation(mutation, oldView, surfaceId, tag);
+          if constexpr (!useNativeLayoutAnimations()) {
+            strongThis->createLayoutAnimation(mutation, oldView, surfaceId, tag);
+          }
           window = strongThis->surfaceManager.getWindow(surfaceId);
         }
 
@@ -996,10 +1025,11 @@ void LayoutAnimationsProxy_Legacy::maybeCancelAnimation(const int tag) const {
   }
 #endif
   const auto layoutAnimationIt = layoutAnimations_.find(tag);
-  if (layoutAnimationIt == layoutAnimations_.end()) {
+  if (layoutAnimationIt != layoutAnimations_.end()) {
+    layoutAnimations_.erase(layoutAnimationIt);
+  } else if constexpr (!useNativeLayoutAnimations()) {
     return;
   }
-  layoutAnimations_.erase(layoutAnimationIt);
   scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {

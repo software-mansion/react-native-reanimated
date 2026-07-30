@@ -60,6 +60,11 @@ enum class NativeAnimationStartValueSource : uint8_t {
   CurrentVisualValue,
 };
 
+enum class NativeAnimationMountingMode : uint8_t {
+  FinalState,
+  RetainedCurrentState,
+};
+
 enum class NativeAnimationCancelDisposition : uint8_t {
   SettleToCommittedModel,
   PreservePresentationForRetarget,

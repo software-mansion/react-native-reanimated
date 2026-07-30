@@ -12,7 +12,8 @@ namespace reanimated {
 
 // Adapts the stabilized layout PoC callbacks to the shared executor contract.
 // Platform callback removal belongs to later platform extraction work.
-class CallbackNativeAnimationExecutor final : public NativeAnimationExecutor {
+class CallbackNativeAnimationExecutor final : public NativeAnimationExecutor,
+                                              public std::enable_shared_from_this<CallbackNativeAnimationExecutor> {
  public:
   CallbackNativeAnimationExecutor(
       RunNativeLayoutAnimation runNativeLayoutAnimation,

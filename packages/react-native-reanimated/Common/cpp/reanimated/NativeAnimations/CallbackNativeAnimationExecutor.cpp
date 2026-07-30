@@ -53,12 +53,19 @@ void CallbackNativeAnimationExecutor::schedule(
 
   const bool usePresentationLayer = plan.startValueSource == NativeAnimationStartValueSource::CurrentVisualValue;
   runNativeLayoutAnimation_(
-      handle, plan.descriptor, usePresentationLayer, std::move(cancellationToken), [this, handle](bool finished) {
-        finish(
-            handle,
-            finished
-                ? NativeAnimationResult{NativeAnimationOutcome::Finished, NativeAnimationResultReason::None}
-                : NativeAnimationResult{NativeAnimationOutcome::Failed, NativeAnimationResultReason::PlatformFailure});
+      handle,
+      plan.descriptor,
+      usePresentationLayer,
+      plan.mountingMode,
+      std::move(cancellationToken),
+      [weakThis = weak_from_this(), handle](bool finished) {
+        if (const auto strongThis = weakThis.lock()) {
+          strongThis->finish(
+              handle,
+              finished ? NativeAnimationResult{NativeAnimationOutcome::Finished, NativeAnimationResultReason::None}
+                       : NativeAnimationResult{
+                             NativeAnimationOutcome::Failed, NativeAnimationResultReason::PlatformFailure});
+        }
       });
 }
 

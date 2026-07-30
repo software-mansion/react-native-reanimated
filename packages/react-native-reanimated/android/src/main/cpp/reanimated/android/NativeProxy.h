@@ -78,6 +78,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
       NativeLayoutAnimationHandle handle,
       const NativeLayoutAnimationDescriptor &descriptor,
       const bool usePresentationLayer,
+      NativeAnimationMountingMode mountingMode,
       NativeLayoutAnimationCancellationToken cancellationToken,
       std::function<void(bool)> &&completion);
 
