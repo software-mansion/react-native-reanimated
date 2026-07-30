@@ -30,15 +30,15 @@ internal class CSSPlatformTransitionsManager(
         val propertyName: String,
     )
 
-    /**
-     * ObjectAnimator leaves its animated value uninitialised until its first frame, which a
-     * start delay defers, so [startValue] is what the property must show until then.
-     */
     private class RunningTransition(
         val animator: ObjectAnimator,
+        val writer: FloatProperty<View>,
         val startValue: Float,
     ) {
-        /** What the animation should be showing right now. */
+        /**
+         * ObjectAnimator leaves its animated value uninitialised until its first frame, which
+         * a start delay defers, so until then the property must show the start value.
+         */
         fun currentValue(): Float = if (animator.isRunning) animator.animatedValue as Float else startValue
     }
 
@@ -149,17 +149,17 @@ internal class CSSPlatformTransitionsManager(
             animator.setCurrentFraction((elapsedMs / durationMs).toFloat().coerceIn(0f, 1f))
         }
         animator.start()
-        animators[key] = RunningTransition(animator, startValue)
+        animators[key] = RunningTransition(animator, writer, startValue)
         reconciler.track(view)
     }
 
-    /** Re-asserts the animator's own value wherever a commit overwrote it. */
+    /** Re-asserts each animator's own value wherever a commit overwrote it. */
     private fun repairClobberedValues(): Boolean {
-        animators.forEach { (key, running) ->
+        animators.values.forEach { running ->
+            // target is held weakly, so read the View through it rather than keeping one.
             val view = running.animator.target as? View ?: return@forEach
-            val writer = cssPropertyWriterFor(key.propertyName) ?: return@forEach
             val current = running.currentValue()
-            if (writer.get(view) != current) writer.setValue(view, current)
+            if (running.writer.get(view) != current) running.writer.setValue(view, current)
         }
         return animators.isNotEmpty()
     }

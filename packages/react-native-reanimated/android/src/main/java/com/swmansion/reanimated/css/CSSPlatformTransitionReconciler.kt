@@ -4,43 +4,36 @@ import android.view.View
 import android.view.ViewTreeObserver
 
 /**
- * Platform transitions animate the same View property React Native writes, so a commit
- * touching the view overwrites the running animation - and on Android Fabric re-applies
- * the whole props blob, so any prop changing is enough.
+ * A platform transition animates the property React Native itself writes, so a commit can
+ * overwrite it mid-flight. Re-asserting just before the frame is drawn covers every writer -
+ * a Fabric mount, the synchronous props path, the animation backend - without knowing which
+ * one ran, since they all run earlier in the same frame.
  *
- * Every writer (a Fabric mount, the synchronous props path, the animation backend) runs on
- * the UI thread earlier in the frame, so re-asserting just before the frame is drawn covers
- * all of them without knowing which one ran.
- *
- * One listener per window, not per view: getViewTreeObserver returns the window's observer.
- * Each listener retires itself once [repair] reports nothing left to hold, so a cancel that
- * momentarily empties the registry cannot deregister a still-needed listener.
+ * [repair] returns whether anything is still animating.
  */
 internal class CSSPlatformTransitionReconciler(
     private val repair: () -> Boolean,
 ) {
-    private val observers = HashMap<ViewTreeObserver, ViewTreeObserver.OnPreDrawListener>()
+    /** Keyed by window: getViewTreeObserver is per window, not per view. */
+    private val tracked = HashSet<ViewTreeObserver>()
 
     fun track(view: View) {
         val observer = view.viewTreeObserver
-        if (!observer.isAlive || observers.containsKey(observer)) return
+        if (!observer.isAlive || !tracked.add(observer)) return
 
-        val listener =
+        observer.addOnPreDrawListener(
             object : ViewTreeObserver.OnPreDrawListener {
                 override fun onPreDraw(): Boolean {
-                    if (!repair()) retire(observer, this)
+                    // Retiring here rather than when the registry empties: cancelling an
+                    // animator runs its end callback part way through installing the
+                    // replacement, when the registry is briefly empty.
+                    if (!repair()) {
+                        if (observer.isAlive) observer.removeOnPreDrawListener(this)
+                        tracked.remove(observer)
+                    }
                     return true
                 }
-            }
-        observer.addOnPreDrawListener(listener)
-        observers[observer] = listener
-    }
-
-    private fun retire(
-        observer: ViewTreeObserver,
-        listener: ViewTreeObserver.OnPreDrawListener,
-    ) {
-        if (observer.isAlive) observer.removeOnPreDrawListener(listener)
-        observers.remove(observer)
+            },
+        )
     }
 }
