@@ -249,6 +249,49 @@ void NativeProxy::attachPseudoSelector(Tag tag, PseudoSelector selector, std::fu
       PseudoSelectorCallback::newObjectCxxArgs(std::move(callback)).get());
 }
 
+bool NativeProxy::cssAnimateTransition(
+    const int viewTag,
+    const std::string &propertyName,
+    const double fromValue,
+    const double toValue,
+    const double durationMs,
+    const double startTimestampMs,
+    const PlatformEasing &easing,
+    const bool persistent) {
+  static const auto method = getJniMethod<jboolean(
+      int,
+      jni::alias_ref<jni::JString>,
+      double,
+      double,
+      double,
+      double,
+      int,
+      jni::alias_ref<jni::JArrayFloat>,
+      jni::alias_ref<jni::JArrayFloat>,
+      jboolean)>("cssAnimateTransition");
+  auto jPointsX = jni::JArrayFloat::newArray(easing.pointsX.size());
+  jPointsX->setRegion(0, easing.pointsX.size(), easing.pointsX.data());
+  auto jPointsY = jni::JArrayFloat::newArray(easing.pointsY.size());
+  jPointsY->setRegion(0, easing.pointsY.size(), easing.pointsY.data());
+  return method(
+             javaPart_.get(),
+             viewTag,
+             jni::make_jstring(propertyName),
+             fromValue,
+             toValue,
+             durationMs,
+             startTimestampMs,
+             static_cast<int>(easing.type),
+             jPointsX,
+             jPointsY,
+             static_cast<jboolean>(persistent)) != JNI_FALSE;
+}
+
+void NativeProxy::cssRemoveTransition(const int viewTag, const std::string &propertyName) {
+  static const auto method = getJniMethod<void(int, jni::alias_ref<jni::JString>)>("cssRemoveTransition");
+  method(javaPart_.get(), viewTag, jni::make_jstring(propertyName));
+}
+
 void NativeProxy::detachPseudoSelector(Tag tag, PseudoSelector selector) {
   static const auto method = getJniMethod<void(int, int)>("detachPseudoSelector");
   method(javaPart_.get(), static_cast<int>(tag), static_cast<int>(selector));
@@ -331,6 +374,22 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto detachPseudoSelectorFunction = bindThis(&NativeProxy::detachPseudoSelector);
 
+  // Owned by the two callbacks below rather than by NativeProxy: this runs from
+  // the constructor's member-initializer list, where a member would still be raw
+  // memory.
+  auto cssPlatformTransitions = std::make_shared<CSSPlatformTransitions>(
+      bindThis(&NativeProxy::cssAnimateTransition), bindThis(&NativeProxy::cssRemoveTransition));
+
+  auto cssCanRouteProperty = css::CSSCanRoutePropertyFunction(&css::canRouteCSSProperty);
+
+  auto cssApplyTransition = [transitions = cssPlatformTransitions](auto &&...args) {
+    return transitions->applyTransition(std::forward<decltype(args)>(args)...);
+  };
+
+  auto cssRemoveTransition = [transitions = cssPlatformTransitions](auto &&...args) {
+    transitions->removeTransition(std::forward<decltype(args)>(args)...);
+  };
+
   return {
       requestRender,
       preserveMountedTags,
@@ -344,6 +403,9 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       maybeFlushUiUpdatesQueueFunction,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
+      cssCanRouteProperty,
+      cssApplyTransition,
+      cssRemoveTransition,
   };
 }
 

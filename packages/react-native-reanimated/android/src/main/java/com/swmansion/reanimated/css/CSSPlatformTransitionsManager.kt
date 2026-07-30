@@ -36,11 +36,14 @@ internal class CSSPlatformTransitionsManager(
         val writer: FloatProperty<View>,
         val startValue: Float,
     ) {
+        /** Final value of a finished persistent transition, which outlives its animator. */
+        var heldValue: Float? = null
+
         /**
          * ObjectAnimator leaves its animated value uninitialised until its first frame, which
          * a start delay defers, so until then the property must show the start value.
          */
-        fun currentValue(): Float = if (animator.isRunning) animator.animatedValue as Float else startValue
+        fun currentValue(): Float = heldValue ?: if (animator.isRunning) animator.animatedValue as Float else startValue
     }
 
     private data class InterpolatorKey(
@@ -65,6 +68,7 @@ internal class CSSPlatformTransitionsManager(
         easingType: Int,
         easingPointsX: FloatArray,
         easingPointsY: FloatArray,
+        persistent: Boolean,
     ): Boolean {
         val writer = cssPropertyWriterFor(propertyName) ?: return false
         val context = reactContext.get() ?: return false
@@ -82,7 +86,7 @@ internal class CSSPlatformTransitionsManager(
             beginWhenMounted(key, token, startTimestampMs + durationMs) {
                 viewForTag(viewTag)?.also { view ->
                     val interpolator = interpolatorFor(easingType, easingPointsX, easingPointsY)
-                    start(view, key, writer, fromValue, toValue, durationMs, startTimestampMs, interpolator, scale)
+                    start(view, key, writer, fromValue, toValue, durationMs, startTimestampMs, interpolator, scale, persistent)
                 } != null
             }
         }
@@ -131,6 +135,7 @@ internal class CSSPlatformTransitionsManager(
         startTimestampMs: Double,
         interpolator: TimeInterpolator,
         scale: Float,
+        persistent: Boolean,
     ) {
         // On interruption resume from what is on screen: fromValue is the committed
         // style value, so starting there would snap the view back to where the
@@ -151,7 +156,15 @@ internal class CSSPlatformTransitionsManager(
             object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
                     // A replacement may already own the key.
-                    if (animators[key]?.animator === animation) animators.remove(key)
+                    val running = animators[key] ?: return
+                    if (running.animator !== animation) return
+                    // A persistent value has no committed style behind it, so dropping the entry
+                    // would let the next commit revert the view.
+                    if (persistent) {
+                        running.heldValue = animator.animatedValue as Float
+                    } else {
+                        animators.remove(key)
+                    }
                 }
             },
         )
