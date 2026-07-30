@@ -276,7 +276,9 @@ class PseudoSelectorManager(
             return
         }
         touchHostRefs.remove(host)
-        gestureByHost.remove(host)
+        // A descendant can unmount mid-press, and the press it started covers every ancestor, so
+        // dropping the gesture silently would leave them all active with no event left to end it.
+        onHostRelease(host)
         host.setOnTouchListener(null)
     }
 
