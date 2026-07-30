@@ -1,5 +1,7 @@
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 
+#include <algorithm>
+#include <cmath>
 #include <memory>
 #include <utility>
 
@@ -155,6 +157,13 @@ double AnimationProgressProvider::updateIterationProgress(const double currentIt
 
   if (deltaIterations > 0) {
     currentIteration_ += deltaIterations;
+    // The animation finishes within its last iteration, so the counter must not
+    // run past it. Without this the final frame reports one iteration too many,
+    // which flips the direction of alternating animations.
+    const double lastIteration = std::max(1.0, std::ceil(iterationCount_));
+    if (iterationCount_ >= 0 && currentIteration_ > lastIteration) {
+      currentIteration_ = static_cast<unsigned>(lastIteration);
+    }
     previousIterationsDuration_ = (currentIteration_ - 1) * duration_;
   }
 
