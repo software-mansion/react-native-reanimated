@@ -778,6 +778,7 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
         if constexpr (useNativeLayoutAnimations()) {
           strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
               uiRuntime,
+              mutation.newChildShadowView.surfaceId,
               tag,
               LayoutAnimationType::ENTERING,
               yogaValues,
@@ -868,6 +869,7 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
         if constexpr (useNativeLayoutAnimations()) {
           strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
               uiRuntime,
+              surfaceId,
               tag,
               LayoutAnimationType::EXITING,
               yogaValues,
@@ -961,6 +963,7 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
         if constexpr (useNativeLayoutAnimations()) {
           strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
               uiRuntime,
+              surfaceId,
               tag,
               LayoutAnimationType::LAYOUT,
               yogaValues,

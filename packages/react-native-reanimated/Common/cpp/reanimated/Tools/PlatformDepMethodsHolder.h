@@ -12,6 +12,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationConfig.h>
 #include <reanimated/LayoutAnimations/NativeLayoutAnimationDescriptor.h>
 #include <reanimated/LayoutAnimations/NativeLayoutAnimationHandle.h>
+#include <reanimated/NativeAnimations/NativeAnimationPlatformCallbacks.h>
 
 #include <memory>
 #include <string>
@@ -56,14 +57,6 @@ using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 // Android). `usePresentationLayer` requests a seamless start from the view's
 // currently rendered state when interrupting an in-flight animation. The
 // completion is invoked with `true` when the animation finished naturally.
-using RunNativeLayoutAnimation = std::function<void(
-    NativeLayoutAnimationHandle handle,
-    const NativeLayoutAnimationDescriptor &descriptor,
-    const bool usePresentationLayer,
-    NativeLayoutAnimationCancellationToken cancellationToken,
-    std::function<void(bool)> &&completion)>;
-using CancelNativeLayoutAnimation = std::function<void(NativeLayoutAnimationHandle handle)>;
-
 using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
 
 using PlatformAttachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector, std::function<void(bool)>)>;

@@ -5,6 +5,7 @@
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationConfig.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
+#include <reanimated/NativeAnimations/NativeAnimationExecutor.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <jsi/jsi.h>
@@ -46,12 +47,9 @@ class LayoutAnimationsManager : public std::enable_shared_from_this<LayoutAnimat
  public:
   using NativeLayoutAnimationCompletionHandler = std::function<void(NativeLayoutAnimationHandle, bool shouldRemove)>;
 
-  LayoutAnimationsManager(
-      RunNativeLayoutAnimation runNativeLayoutAnimation,
-      CancelNativeLayoutAnimation cancelNativeLayoutAnimation)
+  explicit LayoutAnimationsManager(std::shared_ptr<NativeAnimationExecutor> nativeAnimationExecutor)
       : sharedTransitionManager_(std::make_shared<SharedTransitionManager>()),
-        runNativeLayoutAnimation_(std::move(runNativeLayoutAnimation)),
-        cancelNativeLayoutAnimation_(std::move(cancelNativeLayoutAnimation)) {}
+        nativeAnimationExecutor_(std::move(nativeAnimationExecutor)) {}
 
   void setNativeLayoutAnimationCompletionHandler(NativeLayoutAnimationCompletionHandler handler) {
     nativeLayoutAnimationCompletionHandler_ = std::move(handler);
@@ -74,13 +72,14 @@ class LayoutAnimationsManager : public std::enable_shared_from_this<LayoutAnimat
   // when the native layout-animations feature flag is enabled.
   void startNativeLayoutAnimation(
       jsi::Runtime &rt,
+      SurfaceId surfaceId,
       const int tag,
       const LayoutAnimationType type,
       const jsi::Object &values,
       const bool usePresentationLayer,
       const bool shouldRemove);
   bool hasNativeLayoutAnimationPlayer() const {
-    return runNativeLayoutAnimation_ != nullptr;
+    return nativeAnimationExecutor_ != nullptr;
   }
   void clearLayoutAnimationConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag);
@@ -96,9 +95,9 @@ class LayoutAnimationsManager : public std::enable_shared_from_this<LayoutAnimat
 
   struct ActiveNativeLayoutAnimation {
     NativeLayoutAnimationHandle handle;
-    NativeLayoutAnimationCancellationToken cancellationToken;
     NativeLayoutAnimationTargetMask targets;
     bool shouldRemoveOnTermination;
+    bool scheduled = false;
   };
 
   struct NativeLayoutAnimationsForTag {
@@ -110,10 +109,8 @@ class LayoutAnimationsManager : public std::enable_shared_from_this<LayoutAnimat
 #ifndef NDEBUG
   struct PendingNativeLayoutAnimationStart {
     NativeLayoutAnimationHandle handle;
-    NativeLayoutAnimationDescriptor descriptor;
-    bool usePresentationLayer;
-    NativeLayoutAnimationCancellationToken cancellationToken;
-    std::function<void(bool)> completion;
+    NativeAnimationPlan plan;
+    NativeAnimationCompletion completion;
   };
 #endif
   // LayoutAnimationTrace end
@@ -132,10 +129,10 @@ class LayoutAnimationsManager : public std::enable_shared_from_this<LayoutAnimat
   // `sharedTransitionsForNativeID_`, `sharedTransitions_`, `enteringAnimations_`, `exitingAnimations_`,
   // `layoutAnimations_` and `shouldAnimateExitingForTag_`.
 
-  RunNativeLayoutAnimation runNativeLayoutAnimation_;
-  CancelNativeLayoutAnimation cancelNativeLayoutAnimation_;
+  std::shared_ptr<NativeAnimationExecutor> nativeAnimationExecutor_;
   NativeLayoutAnimationCompletionHandler nativeLayoutAnimationCompletionHandler_;
-  std::unordered_map<int, NativeLayoutAnimationsForTag> nativeAnimations_;
+  std::unordered_map<NativeAnimationViewKey, NativeLayoutAnimationsForTag, NativeAnimationViewKeyHash>
+      nativeAnimations_;
 
   // LayoutAnimationTrace start
 #ifndef NDEBUG
@@ -148,10 +145,8 @@ class LayoutAnimationsManager : public std::enable_shared_from_this<LayoutAnimat
   void cancelNativeLayoutAnimationHandle(jsi::Runtime &rt, NativeLayoutAnimationHandle handle);
   void submitNativeLayoutAnimationStart(
       NativeLayoutAnimationHandle handle,
-      const NativeLayoutAnimationDescriptor &descriptor,
-      bool usePresentationLayer,
-      NativeLayoutAnimationCancellationToken cancellationToken,
-      std::function<void(bool)> &&completion);
+      NativeAnimationPlan plan,
+      NativeAnimationCompletion completion);
 };
 
 } // namespace reanimated

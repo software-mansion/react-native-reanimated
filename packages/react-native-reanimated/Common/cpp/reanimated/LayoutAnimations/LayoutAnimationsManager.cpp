@@ -174,17 +174,18 @@ static bool isValidNativeDescriptor(const NativeLayoutAnimationDescriptor &descr
 
 void LayoutAnimationsManager::startNativeLayoutAnimation(
     jsi::Runtime &rt,
+    const SurfaceId surfaceId,
     const int tag,
     const LayoutAnimationType type,
     const jsi::Object &values,
     const bool usePresentationLayer,
     const bool shouldRemove) {
-  auto &animationsForTag = nativeAnimations_[tag];
-  NativeLayoutAnimationHandle handle{tag, ++animationsForTag.nextGeneration};
-  auto cancellationToken = std::make_shared<std::atomic_bool>(false);
-  animationsForTag.active.push_back({handle, cancellationToken, 0, shouldRemove});
+  const NativeAnimationViewKey viewKey{surfaceId, tag};
+  auto &animationsForTag = nativeAnimations_[viewKey];
+  NativeLayoutAnimationHandle handle{surfaceId, tag, NativeAnimationOwner::Layout, ++animationsForTag.nextGeneration};
+  animationsForTag.active.push_back({handle, 0, shouldRemove});
 
-  if (!runNativeLayoutAnimation_) {
+  if (!nativeAnimationExecutor_) {
     finishNativeLayoutAnimation(rt, handle, false);
     return;
   }
@@ -241,7 +242,7 @@ void LayoutAnimationsManager::startNativeLayoutAnimation(
   for (const auto conflict : conflicts) {
     cancelNativeLayoutAnimationHandle(rt, conflict);
   }
-  auto &active = nativeAnimations_[tag].active;
+  auto &active = nativeAnimations_[viewKey].active;
   const auto current = std::find_if(active.begin(), active.end(), [handle](const auto &animation) {
     return animation.handle.generation == handle.generation;
   });
@@ -256,35 +257,49 @@ void LayoutAnimationsManager::startNativeLayoutAnimation(
 #endif // NDEBUG
   // LayoutAnimationTrace end
 
+  NativeAnimationPlan plan{
+      .descriptor = std::move(descriptor),
+      .startValueSource = usePresentationLayer ? NativeAnimationStartValueSource::CurrentVisualValue
+                                               : NativeAnimationStartValueSource::ExplicitValue};
+  const auto capability = nativeAnimationExecutor_->queryCapabilities(plan);
+  if (!capability.supported()) {
+    finishNativeLayoutAnimation(rt, handle, false);
+    return;
+  }
+
   submitNativeLayoutAnimationStart(
-      handle,
-      descriptor,
-      usePresentationLayer,
-      cancellationToken,
-      [weakThis = weak_from_this(), &rt, handle](bool finished) {
+      handle, std::move(plan), [weakThis = weak_from_this(), &rt, handle](NativeAnimationResult result) {
         if (auto strongThis = weakThis.lock()) {
-          strongThis->finishNativeLayoutAnimation(rt, handle, finished);
+          strongThis->finishNativeLayoutAnimation(rt, handle, result.finished());
         }
       });
 }
 
 void LayoutAnimationsManager::submitNativeLayoutAnimationStart(
     NativeLayoutAnimationHandle handle,
-    const NativeLayoutAnimationDescriptor &descriptor,
-    bool usePresentationLayer,
-    NativeLayoutAnimationCancellationToken cancellationToken,
-    std::function<void(bool)> &&completion) {
+    NativeAnimationPlan plan,
+    NativeAnimationCompletion completion) {
   // LayoutAnimationTrace start
 #ifndef NDEBUG
   if (nativeLayoutAnimationStartPaused_) {
-    pendingNativeLayoutAnimationStarts_.push_back(
-        {handle, descriptor, usePresentationLayer, std::move(cancellationToken), std::move(completion)});
+    pendingNativeLayoutAnimationStarts_.push_back({handle, std::move(plan), std::move(completion)});
     return;
   }
 #endif
   // LayoutAnimationTrace end
-  runNativeLayoutAnimation_(
-      handle, descriptor, usePresentationLayer, std::move(cancellationToken), std::move(completion));
+  const auto animationsForTag = nativeAnimations_.find({handle.surfaceId, handle.tag});
+  if (animationsForTag == nativeAnimations_.end()) {
+    return;
+  }
+  const auto animation = std::find_if(
+      animationsForTag->second.active.begin(), animationsForTag->second.active.end(), [handle](const auto &candidate) {
+        return candidate.handle == handle;
+      });
+  if (animation == animationsForTag->second.active.end()) {
+    return;
+  }
+  animation->scheduled = true;
+  nativeAnimationExecutor_->schedule(handle, std::move(plan), std::move(completion));
 }
 
 // LayoutAnimationTrace start
@@ -297,12 +312,7 @@ void LayoutAnimationsManager::setNativeLayoutAnimationStartPaused(bool paused) {
   auto pendingStarts = std::move(pendingNativeLayoutAnimationStarts_);
   pendingNativeLayoutAnimationStarts_.clear();
   for (auto &pending : pendingStarts) {
-    runNativeLayoutAnimation_(
-        pending.handle,
-        pending.descriptor,
-        pending.usePresentationLayer,
-        std::move(pending.cancellationToken),
-        std::move(pending.completion));
+    submitNativeLayoutAnimationStart(pending.handle, std::move(pending.plan), std::move(pending.completion));
   }
 }
 #endif
@@ -312,14 +322,14 @@ void LayoutAnimationsManager::finishNativeLayoutAnimation(
     jsi::Runtime &rt,
     NativeLayoutAnimationHandle handle,
     bool finished) {
-  auto animationsForTag = nativeAnimations_.find(handle.tag);
+  const NativeAnimationViewKey viewKey{handle.surfaceId, handle.tag};
+  auto animationsForTag = nativeAnimations_.find(viewKey);
   if (animationsForTag == nativeAnimations_.end()) {
     return;
   }
   auto &active = animationsForTag->second.active;
-  const auto animation = std::find_if(active.begin(), active.end(), [handle](const auto &candidate) {
-    return candidate.handle.generation == handle.generation;
-  });
+  const auto animation = std::find_if(
+      active.begin(), active.end(), [handle](const auto &candidate) { return candidate.handle == handle; });
   if (animation == active.end()) {
     return;
   }
@@ -336,13 +346,14 @@ void LayoutAnimationsManager::finishNativeLayoutAnimation(
       cancelNativeLayoutAnimationHandle(rt, other);
     }
   }
-  auto &remaining = nativeAnimations_[handle.tag].active;
+  auto &remaining = nativeAnimations_[viewKey].active;
   remaining.erase(
       std::remove_if(
-          remaining.begin(),
-          remaining.end(),
-          [handle](const auto &candidate) { return candidate.handle.generation == handle.generation; }),
+          remaining.begin(), remaining.end(), [handle](const auto &candidate) { return candidate.handle == handle; }),
       remaining.end());
+  if (remaining.empty()) {
+    nativeAnimations_.erase(viewKey);
+  }
 
   jsi::Object manager =
       rt.global().getPropertyAsObject(rt, "global").getPropertyAsObject(rt, "LayoutAnimationsManager");
@@ -354,31 +365,38 @@ void LayoutAnimationsManager::finishNativeLayoutAnimation(
 }
 
 void LayoutAnimationsManager::cancelNativeLayoutAnimationHandle(jsi::Runtime &rt, NativeLayoutAnimationHandle handle) {
-  if (const auto animations = nativeAnimations_.find(handle.tag); animations != nativeAnimations_.end()) {
+  bool scheduled = false;
+  if (const auto animations = nativeAnimations_.find({handle.surfaceId, handle.tag});
+      animations != nativeAnimations_.end()) {
     const auto animation = std::find_if(
         animations->second.active.begin(), animations->second.active.end(), [handle](const auto &candidate) {
-          return candidate.handle.generation == handle.generation;
+          return candidate.handle == handle;
         });
     if (animation != animations->second.active.end()) {
-      animation->cancellationToken->store(true, std::memory_order_release);
+      scheduled = animation->scheduled;
     }
   }
-  if (cancelNativeLayoutAnimation_) {
-    cancelNativeLayoutAnimation_(handle);
+  if (scheduled && nativeAnimationExecutor_) {
+    nativeAnimationExecutor_->cancel(handle, NativeAnimationCancelDisposition::SettleToCommittedModel);
+    return;
   }
   finishNativeLayoutAnimation(rt, handle, false);
 }
 
 void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int tag) {
-  if (const auto animations = nativeAnimations_.find(tag);
-      animations != nativeAnimations_.end() && !animations->second.active.empty()) {
-    auto handles = animations->second.active;
+  std::vector<ActiveNativeLayoutAnimation> matchingAnimations;
+  for (const auto &[viewKey, animations] : nativeAnimations_) {
+    if (viewKey.tag == tag) {
+      matchingAnimations.insert(matchingAnimations.end(), animations.active.begin(), animations.active.end());
+    }
+  }
+  if (!matchingAnimations.empty()) {
     // Non-removing handles must complete first. If an exit is present, its
     // terminal event completes last and requests retained-view cleanup.
-    std::stable_sort(handles.begin(), handles.end(), [](const auto &lhs, const auto &rhs) {
+    std::stable_sort(matchingAnimations.begin(), matchingAnimations.end(), [](const auto &lhs, const auto &rhs) {
       return !lhs.shouldRemoveOnTermination && rhs.shouldRemoveOnTermination;
     });
-    for (const auto &animation : handles) {
+    for (const auto &animation : matchingAnimations) {
       cancelNativeLayoutAnimationHandle(rt, animation.handle);
     }
     return;

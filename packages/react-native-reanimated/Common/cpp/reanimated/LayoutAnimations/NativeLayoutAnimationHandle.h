@@ -1,20 +1,13 @@
 #pragma once
 
 #include <atomic>
-#include <cstdint>
 #include <memory>
+
+#include <reanimated/NativeAnimations/NativeAnimationTypes.h>
 
 namespace reanimated {
 
-// Temporary layout-owned identity used while stabilizing the native layout
-// animation PoC. It deliberately lives beside, rather than inside, the sampled
-// descriptor: lifecycle identity and animation data have different owners.
-// Objective 05 replaces this with the shared (surface, tag, owner, generation)
-// NativeAnimationHandle.
-struct NativeLayoutAnimationHandle {
-  int tag;
-  uint64_t generation;
-};
+using NativeLayoutAnimationHandle = NativeAnimationHandle;
 
 using NativeLayoutAnimationCancellationToken = std::shared_ptr<std::atomic_bool>;
 

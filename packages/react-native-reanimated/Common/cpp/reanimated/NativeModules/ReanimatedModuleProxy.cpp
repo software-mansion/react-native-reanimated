@@ -20,6 +20,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationTraceRecorder.h>
 #endif // NDEBUG
 // LayoutAnimationTrace end
+#include <reanimated/NativeAnimations/CallbackNativeAnimationExecutor.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/NativeModules/SynchronousPropsBufferSerializer.h>
@@ -364,13 +365,15 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       requestRender_(platformDepMethodsHolder.requestRender),
       animatedSensorModule_(platformDepMethodsHolder),
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
-      runNativeLayoutAnimationFunction_(platformDepMethodsHolder.runNativeLayoutAnimation),
 #ifdef __APPLE__
       forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
 #endif
-      layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>(
-          scheduleNativeLayoutAnimationCompletionsOnUI(runNativeLayoutAnimationFunction_, uiScheduler_),
-          platformDepMethodsHolder.cancelNativeLayoutAnimation)),
+      layoutAnimationsManager_(
+          std::make_shared<LayoutAnimationsManager>(std::make_shared<CallbackNativeAnimationExecutor>(
+              scheduleNativeLayoutAnimationCompletionsOnUI(
+                  platformDepMethodsHolder.runNativeLayoutAnimation,
+                  uiScheduler_),
+              platformDepMethodsHolder.cancelNativeLayoutAnimation))),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
       operationsLoop_(std::make_shared<OperationsLoop>(

@@ -246,7 +246,6 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   GetAnimationTimestampFunction getAnimationTimestamp_;
   std::function<void(double)> pendingAnimationFrameCallbackFromWorklets_;
 
-  const RunNativeLayoutAnimation runNativeLayoutAnimationFunction_;
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
 #endif
