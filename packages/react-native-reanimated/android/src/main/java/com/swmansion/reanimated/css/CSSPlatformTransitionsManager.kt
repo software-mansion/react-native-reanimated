@@ -158,9 +158,8 @@ internal class CSSPlatformTransitionsManager(
                     // A replacement may already own the key.
                     val running = animators[key] ?: return
                     if (running.animator !== animation) return
-                    // A pseudo-selector value has no committed style behind it, so releasing the
-                    // entry would let the next commit revert the view. Hold the final value until
-                    // removeTransition instead, which is what fillMode does on Apple platforms.
+                    // A persistent value has no committed style behind it, so dropping the entry
+                    // would let the next commit revert the view.
                     if (persistent) {
                         running.heldValue = animator.animatedValue as Float
                     } else {
