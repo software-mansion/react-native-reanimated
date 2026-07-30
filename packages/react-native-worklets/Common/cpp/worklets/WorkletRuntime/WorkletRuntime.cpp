@@ -312,27 +312,4 @@ std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::
   return weakHolder->weakRuntime;
 }
 
-/* #region deprecated */
-
-void WorkletRuntime::runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet) {
-  schedule(worklet);
-}
-
-jsi::Value WorkletRuntime::executeSync(jsi::Runtime &caller, const jsi::Value &worklet) const {
-  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
-      caller, worklet, "[Worklets] Only worklets can be executed synchronously on UI runtime.");
-  auto result = runSyncSerialized(serializableWorklet);
-  return result->toJSValue(caller);
-}
-
-jsi::Value WorkletRuntime::executeSync(std::function<jsi::Value(jsi::Runtime &)> &&job) const {
-  return runSync(job);
-}
-
-jsi::Value WorkletRuntime::executeSync(const std::function<jsi::Value(jsi::Runtime &)> &job) const {
-  return runSync(job);
-}
-
-/* #endregion */
-
 } // namespace worklets
