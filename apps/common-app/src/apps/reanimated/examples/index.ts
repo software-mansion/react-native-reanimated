@@ -194,6 +194,10 @@ const SuspenseLayoutAnimationCrashExample: React.FC = () =>
   React.createElement(
     require('./SuspenseLayoutAnimationCrashExample').default as React.FC
   );
+const NestedExitingCleanupExample: React.FC = () =>
+  React.createElement(
+    require('./NestedExitingCleanupExample').default as React.FC
+  );
 const ExtrapolationExample: React.FC = () =>
   React.createElement(require('./ExtrapolationExample').default as React.FC);
 const FetchExample: React.FC = () =>
@@ -526,12 +530,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: 'ℹ️',
     title: 'About',
     screen: AboutExample,
-  },
-
-  SuspenseLayoutAnimationCrashExample: {
-    icon: '💥',
-    title: 'Suspense + Layout Animation Crash',
-    screen: SuspenseLayoutAnimationCrashExample,
   },
 
   // Empty example for test purposes
@@ -1240,6 +1238,16 @@ export const EXAMPLES: Record<string, Example> = {
   DefaultAnimationsOverrides: {
     title: '[LA] Default layout animations overrides',
     screen: DefaultAnimationsOverrides,
+  },
+  SuspenseLayoutAnimationCrashExample: {
+    icon: '💥',
+    title: '[LA] Suspense + Layout Animation Crash',
+    screen: SuspenseLayoutAnimationCrashExample,
+  },
+  NestedExitingCleanupExample: {
+    icon: '🧹',
+    title: '[LA] Nested exiting cleanup',
+    screen: NestedExitingCleanupExample,
   },
 
   // Shared Element Transitions
