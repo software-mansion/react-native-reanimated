@@ -154,8 +154,16 @@ jobs:
         if: ${{ always() && inputs.sanitizer != '' }}
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
-          if ls sanitizer-reports/* >/dev/null 2>&1; then
-            echo "Sanitizer produced $(ls sanitizer-reports | wc -l | tr -d ' ') report file(s) — see the test step logs above."
-            exit 1
+          shopt -s nullglob
+          reports=(sanitizer-reports/*)
+          if [ ${#reports[@]} -eq 0 ]; then
+            echo "No sanitizer reports."
+            exit 0
           fi
-          echo "No sanitizer reports."
+          for report in "${reports[@]}"; do
+            echo "::group::$report"
+            cat "$report"
+            echo "::endgroup::"
+          done
+          echo "::error::The ${{ inputs.sanitizer }} sanitizer produced ${#reports[@]} report file(s), printed above."
+          exit 1

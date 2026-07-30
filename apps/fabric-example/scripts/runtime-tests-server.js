@@ -361,16 +361,11 @@ function printSanitizerReports() {
     console.log('[runtime-tests] no sanitizer reports were produced');
     return;
   }
-  console.error('');
-  console.error('========================================');
-  console.error(`[runtime-tests] ${files.length} sanitizer report file(s):`);
-  for (const name of files) {
-    console.error(`--- ${name} ---`);
-    console.error(
-      fs.readFileSync(path.join(SANITIZER_REPORT_DIR, name), 'utf8')
-    );
-  }
-  console.error('========================================');
+  // Reports accumulate across the runs of a session and are printed by the
+  // step that fails on them, so only point at them here.
+  console.error(
+    `[runtime-tests] ${files.length} sanitizer report file(s) in ${SANITIZER_REPORT_DIR}: ${files.join(', ')}`
+  );
 }
 
 function shutdown(code) {
