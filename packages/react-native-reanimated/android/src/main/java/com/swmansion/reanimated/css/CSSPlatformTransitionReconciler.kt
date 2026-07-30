@@ -18,19 +18,22 @@ internal class CSSPlatformTransitionReconciler(
     private val tracked = HashSet<ViewTreeObserver>()
 
     fun track(view: View) {
+        // A window torn down mid-animation never draws again, so its listener never retires.
+        tracked.removeAll { !it.isAlive }
+
         val observer = view.viewTreeObserver
         if (!observer.isAlive || !tracked.add(observer)) return
 
         observer.addOnPreDrawListener(
             object : ViewTreeObserver.OnPreDrawListener {
                 override fun onPreDraw(): Boolean {
+                    if (repair()) return true
+
                     // Retiring here rather than when the registry empties: cancelling an
                     // animator runs its end callback part way through installing the
                     // replacement, when the registry is briefly empty.
-                    if (!repair()) {
-                        if (observer.isAlive) observer.removeOnPreDrawListener(this)
-                        tracked.remove(observer)
-                    }
+                    if (observer.isAlive) observer.removeOnPreDrawListener(this)
+                    tracked.remove(observer)
                     return true
                 }
             },
