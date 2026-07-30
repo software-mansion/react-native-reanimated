@@ -56,6 +56,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runLoop/clearInterval.test');
       require('./tests/runLoop/queueMicrotask.test');
       require('./tests/runLoop/executionOrder.test');
+      require('./tests/runLoop/finalizers.test');
     },
   },
   {
