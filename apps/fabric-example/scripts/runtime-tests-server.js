@@ -109,7 +109,9 @@ if (BUILD_ONLY && PLATFORM !== 'ios') {
 }
 
 if (BUILD_ONLY && SHOULD_LAUNCH) {
-  console.error('[runtime-tests] --build-only cannot be combined with --launch');
+  console.error(
+    '[runtime-tests] --build-only cannot be combined with --launch'
+  );
   process.exit(1);
 }
 
