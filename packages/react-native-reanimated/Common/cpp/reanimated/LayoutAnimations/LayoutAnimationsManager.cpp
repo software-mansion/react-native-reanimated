@@ -153,6 +153,12 @@ static NativeAnimationRouteReason parseNativeRouteReason(const std::string &reas
   if (reason == "requires-sampling") {
     return NativeAnimationRouteReason::RequiresSampling;
   }
+  if (reason == "reduced-motion") {
+    return NativeAnimationRouteReason::ReducedMotion;
+  }
+  if (reason == "zero-duration") {
+    return NativeAnimationRouteReason::ZeroDuration;
+  }
   if (reason == "unsupported-property") {
     return NativeAnimationRouteReason::UnsupportedProperty;
   }
@@ -248,6 +254,9 @@ static NativeCompilationResult parseNativeCompilation(
     const NativeAnimationLifecycle lifecycle) {
   const auto status = compilation.getProperty(rt, "status").asString(rt).utf8(rt);
   const auto reason = parseNativeRouteReason(compilation.getProperty(rt, "reason").asString(rt).utf8(rt));
+  if (status == "complete") {
+    return {NativeCompilationStatus::Complete, std::nullopt, reason};
+  }
   if (status != "native") {
     return {
         status == "fallback" ? NativeCompilationStatus::Fallback : NativeCompilationStatus::Invalid,
@@ -279,6 +288,9 @@ static NativeCompilationResult parseNativeCompilation(
     const auto trackObject = tracks.getValueAtIndex(rt, trackIndex).asObject(rt);
     NativeAnimationTrack track{
         .target = parseNativeTarget(trackObject.getProperty(rt, "target").asString(rt).utf8(rt)), .segments = {}};
+    if (trackObject.hasProperty(rt, "initialTimeOffsetMs")) {
+      track.initialTimeOffsetMs = trackObject.getProperty(rt, "initialTimeOffsetMs").asNumber();
+    }
     const auto segments = trackObject.getProperty(rt, "segments").asObject(rt).asArray(rt);
     track.segments.reserve(segments.size(rt));
     for (size_t segmentIndex = 0; segmentIndex < segments.size(rt); segmentIndex++) {
@@ -322,10 +334,15 @@ void LayoutAnimationsManager::startNativeLayoutAnimation(
           std::remove_if(
               active.begin(), active.end(), [handle](const auto &candidate) { return candidate.handle == handle; }),
           active.end());
-      if (active.empty()) {
-        nativeAnimations_.erase(animations);
-      }
     }
+    jsi::Object manager =
+        rt.global().getPropertyAsObject(rt, "global").getPropertyAsObject(rt, "LayoutAnimationsManager");
+    manager.getPropertyAsFunction(rt, "discardNative")
+        .call(
+            rt,
+            jsi::Value(handle.surfaceId),
+            jsi::Value(handle.tag),
+            jsi::Value(static_cast<double>(handle.generation)));
     startLayoutAnimation(rt, tag, type, values);
   };
 
@@ -357,6 +374,7 @@ void LayoutAnimationsManager::startNativeLayoutAnimation(
     jsi::Function computeNativePlan = layoutAnimationsManager.getPropertyAsFunction(rt, "computeNativePlan");
     jsi::Value compilationValue = computeNativePlan.call(
         rt,
+        jsi::Value(surfaceId),
         jsi::Value(tag),
         jsi::Value(static_cast<double>(handle.generation)),
         jsi::Value(static_cast<int>(type)),
@@ -371,6 +389,11 @@ void LayoutAnimationsManager::startNativeLayoutAnimation(
         nativeAnimationLifecycle(type));
   } catch (...) {
     fallbackToLegacy();
+    return;
+  }
+
+  if (compilation.complete()) {
+    finishNativeLayoutAnimation(rt, handle, true);
     return;
   }
 
@@ -515,14 +538,15 @@ void LayoutAnimationsManager::finishNativeLayoutAnimation(
       std::remove_if(
           remaining.begin(), remaining.end(), [handle](const auto &candidate) { return candidate.handle == handle; }),
       remaining.end());
-  if (remaining.empty()) {
-    nativeAnimations_.erase(viewKey);
-  }
-
   jsi::Object manager =
       rt.global().getPropertyAsObject(rt, "global").getPropertyAsObject(rt, "LayoutAnimationsManager");
   manager.getPropertyAsFunction(rt, "completeNative")
-      .call(rt, jsi::Value(handle.tag), jsi::Value(static_cast<double>(handle.generation)), jsi::Value(finished));
+      .call(
+          rt,
+          jsi::Value(handle.surfaceId),
+          jsi::Value(handle.tag),
+          jsi::Value(static_cast<double>(handle.generation)),
+          jsi::Value(finished));
   if (nativeLayoutAnimationCompletionHandler_) {
     nativeLayoutAnimationCompletionHandler_(handle, shouldRemove);
   }
@@ -570,6 +594,26 @@ void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int 
   jsi::Function cancelLayoutAnimation =
       layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(rt, "stop");
   cancelLayoutAnimation.call(rt, jsi::Value(tag));
+}
+
+void LayoutAnimationsManager::cancelNativeLayoutAnimationsForSurface(jsi::Runtime &rt, const SurfaceId surfaceId) {
+  std::vector<NativeLayoutAnimationHandle> handles;
+  for (auto &[viewKey, animations] : nativeAnimations_) {
+    if (viewKey.surfaceId != surfaceId) {
+      continue;
+    }
+    for (auto &animation : animations.active) {
+      // A stopped surface is removed by React Native itself. Do not request a
+      // retained-exit cleanup transaction into a surface that no longer
+      // exists.
+      animation.shouldRemoveOnTermination = false;
+      handles.push_back(animation.handle);
+    }
+  }
+  for (const auto handle : handles) {
+    cancelNativeLayoutAnimationHandle(rt, handle);
+  }
+  std::erase_if(nativeAnimations_, [surfaceId](const auto &entry) { return entry.first.surfaceId == surfaceId; });
 }
 
 void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, const int tag) {

@@ -251,6 +251,7 @@ bool appendSegment(
       animation.fromValue = from;
       animation.toValue = to;
       animation.beginTime = localBeginTime;
+      animation.timeOffset = track.initialTimeOffsetMs / 1000.0;
       animation.duration = segment->endMs / 1000.0;
       animation.timingFunction = timingFunction(segment->easing);
       animation.removedOnCompletion = YES;
@@ -293,6 +294,7 @@ bool appendSegment(
   animation.timingFunctions = data.timingFunctions;
   animation.calculationMode = kCAAnimationLinear;
   animation.beginTime = localBeginTime;
+  animation.timeOffset = track.initialTimeOffsetMs / 1000.0;
   animation.duration = planDurationMs / 1000.0;
   animation.removedOnCompletion = YES;
   animation.fillMode = kCAFillModeRemoved;

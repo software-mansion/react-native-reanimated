@@ -2,7 +2,9 @@
 
 import { withDelay, withSequence, withTiming } from '../../animation';
 import type { LayoutAnimation } from '../../commonTypes';
+import { ReduceMotion } from '../../commonTypes';
 import { Easing } from '../../Easing';
+import { nativeLayoutAnimationCallbackKey } from '../animationsManager';
 import { SlideInLeft } from '../defaultAnimations/Slide';
 import {
   buildNativeLayoutAnimationDescriptor,
@@ -75,6 +77,12 @@ describe('native layout animation descriptor', () => {
 });
 
 describe('native layout animation structural compiler', () => {
+  test('scopes callback identities to the surface', () => {
+    expect(nativeLayoutAnimationCallbackKey(1, 42, 3)).not.toBe(
+      nativeLayoutAnimationCallbackKey(2, 42, 3)
+    );
+  });
+
   test('lowers position and size into a full FLIP matrix track', () => {
     const compilation = compileNativeLayoutAnimation(
       {
@@ -224,6 +232,60 @@ describe('native layout animation structural compiler', () => {
       { kind: 'timing', startMs: 40, endMs: 100, from: 0, to: 0.5 },
       { kind: 'timing', startMs: 100, endMs: 200, from: 0.5, to: 1 },
     ]);
+  });
+
+  test('completes reduced-motion graphs without a native animation plan', () => {
+    const compilation = compileNativeLayoutAnimation({
+      animations: {
+        opacity: withTiming(1, {
+          duration: 300,
+          reduceMotion: ReduceMotion.Always,
+        }),
+      },
+      initialValues: { opacity: 0 },
+    });
+
+    expect(compilation).toEqual({
+      status: 'complete',
+      reason: 'reduced-motion',
+    });
+  });
+
+  test('completes zero-duration timing without a platform key', () => {
+    const compilation = compileNativeLayoutAnimation({
+      animations: {
+        opacity: withTiming(1, {
+          duration: 0,
+        }),
+      },
+      initialValues: { opacity: 0 },
+    });
+
+    expect(compilation).toEqual({
+      status: 'complete',
+      reason: 'zero-duration',
+    });
+  });
+
+  test('carries a resolved negative delay as an initial timeline offset', () => {
+    const compilation = compileNativeLayoutAnimation({
+      animations: {
+        opacity: withDelay(
+          -75,
+          withTiming(1, { duration: 300, easing: Easing.linear })
+        ),
+      },
+      initialValues: { opacity: 0 },
+    });
+
+    expect(compilation.status).toBe('native');
+    if (compilation.status === 'native') {
+      expect(compilation.plan.totalDurationMs).toBe(300);
+      expect(compilation.plan.tracks[0]).toMatchObject({
+        target: 'opacity',
+        initialTimeOffsetMs: 75,
+      });
+    }
   });
 
   test('preserves cubic-bezier control points in timing IR', () => {

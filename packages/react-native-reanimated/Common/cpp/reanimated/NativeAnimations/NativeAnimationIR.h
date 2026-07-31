@@ -84,6 +84,7 @@ using NativeAnimationSegment = std::variant<NativeTimingSegment, NativeHoldSegme
 struct NativeAnimationTrack {
   NativeAnimationTarget target;
   std::vector<NativeAnimationSegment> segments;
+  double initialTimeOffsetMs{0};
 };
 
 enum class NativeAnimationRoute : uint8_t {
@@ -97,6 +98,8 @@ enum class NativeAnimationRouteReason : uint8_t {
   CanonicalSingleTiming,
   ContainsHoldOrSequence,
   RequiresSampling,
+  ReducedMotion,
+  ZeroDuration,
   UnsupportedProperty,
   UnsupportedValueType,
   TransformOrderingUnavailable,

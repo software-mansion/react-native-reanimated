@@ -82,6 +82,7 @@ class LayoutAnimationsManager : public std::enable_shared_from_this<LayoutAnimat
   }
   void clearLayoutAnimationConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag);
+  void cancelNativeLayoutAnimationsForSurface(jsi::Runtime &rt, SurfaceId surfaceId);
   void transferConfigFromNativeID(const int nativeId, const int tag);
   void transferSharedConfig(const Tag from, const Tag to);
   std::shared_ptr<SharedTransitionManager> getSharedTransitionManager();

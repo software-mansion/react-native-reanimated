@@ -23,6 +23,10 @@ const char *nativeAnimationRouteReasonName(const NativeAnimationRouteReason reas
       return "contains-hold-or-sequence";
     case NativeAnimationRouteReason::RequiresSampling:
       return "requires-sampling";
+    case NativeAnimationRouteReason::ReducedMotion:
+      return "reduced-motion";
+    case NativeAnimationRouteReason::ZeroDuration:
+      return "zero-duration";
     case NativeAnimationRouteReason::UnsupportedProperty:
       return "unsupported-property";
     case NativeAnimationRouteReason::UnsupportedValueType:

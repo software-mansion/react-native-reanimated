@@ -61,6 +61,8 @@ type NativeLayoutAnimationRouteReason =
   | 'canonical-single-timing'
   | 'contains-hold-or-sequence'
   | 'requires-sampling'
+  | 'reduced-motion'
+  | 'zero-duration'
   | 'unsupported-property'
   | 'unsupported-value-type'
   | 'transform-ordering-unavailable'
@@ -96,6 +98,7 @@ type NativeAnimationSegmentDescriptor =
 interface NativeAnimationTrackDescriptor {
   target: string;
   segments: NativeAnimationSegmentDescriptor[];
+  initialTimeOffsetMs?: number;
 }
 
 interface NativeAnimationPlanDescriptor {
@@ -111,6 +114,10 @@ export type NativeLayoutAnimationCompilation =
       status: 'native';
       reason: NativeLayoutAnimationRouteReason;
       plan: NativeAnimationPlanDescriptor;
+    }
+  | {
+      status: 'complete';
+      reason: 'reduced-motion' | 'zero-duration';
     }
   | {
       status: 'fallback' | 'invalid';
@@ -516,6 +523,7 @@ function buildMatrixPlan(
 interface CompiledNode {
   durationMs: number;
   finalValue: number;
+  initialTimeOffsetMs: number;
   segments: NativeAnimationSegmentDescriptor[];
 }
 
@@ -541,7 +549,8 @@ function shiftSegments(
 
 function compileNode(
   node: NativeAnimationNode | undefined,
-  from: number
+  from: number,
+  allowInitialTimeOffset = true
 ): CompiledNode | null {
   'worklet';
   if (!node) {
@@ -562,6 +571,7 @@ function compileNode(
     return {
       durationMs: node.durationMs,
       finalValue: node.toValue,
+      initialTimeOffsetMs: 0,
       segments: [
         {
           kind: 'timing',
@@ -575,12 +585,23 @@ function compileNode(
     };
   }
   if (node.kind === 'delay') {
-    if (!Number.isFinite(node.delayMs) || node.delayMs < 0) {
+    if (!Number.isFinite(node.delayMs)) {
       return null;
     }
-    const child = compileNode(node.animation ?? undefined, from);
+    const child = compileNode(node.animation ?? undefined, from, false);
     if (!child) {
       return null;
+    }
+    if (node.delayMs < 0) {
+      if (!allowInitialTimeOffset) {
+        return null;
+      }
+      return {
+        durationMs: child.durationMs,
+        finalValue: child.finalValue,
+        initialTimeOffsetMs: Math.min(-node.delayMs, child.durationMs),
+        segments: child.segments,
+      };
     }
     const hold: NativeHoldSegmentDescriptor[] =
       node.delayMs === 0
@@ -596,6 +617,7 @@ function compileNode(
     return {
       durationMs: node.delayMs + child.durationMs,
       finalValue: child.finalValue,
+      initialTimeOffsetMs: 0,
       segments: [...hold, ...shiftSegments(child.segments, node.delayMs)],
     };
   }
@@ -604,7 +626,7 @@ function compileNode(
   let currentValue = from;
   const segments: NativeAnimationSegmentDescriptor[] = [];
   for (const childNode of node.animations) {
-    const child = compileNode(childNode ?? undefined, currentValue);
+    const child = compileNode(childNode ?? undefined, currentValue, false);
     if (!child) {
       return null;
     }
@@ -615,8 +637,97 @@ function compileNode(
   return {
     durationMs: elapsedMs,
     finalValue: currentValue,
+    initialTimeOffsetMs: 0,
     segments,
   };
+}
+
+function animationGraphHasMotion(value: unknown): boolean {
+  'worklet';
+  if (Array.isArray(value)) {
+    return value.some(animationGraphHasMotion);
+  }
+  if (value === null || typeof value !== 'object') {
+    return false;
+  }
+  const animation = value as Record<string, unknown>;
+  if (typeof animation.onFrame === 'function') {
+    return animation.reduceMotion !== true;
+  }
+  return Object.values(animation).some(animationGraphHasMotion);
+}
+
+function animationGraphContainsAnimation(value: unknown): boolean {
+  'worklet';
+  if (Array.isArray(value)) {
+    return value.some(animationGraphContainsAnimation);
+  }
+  if (value === null || typeof value !== 'object') {
+    return false;
+  }
+  const animation = value as Record<string, unknown>;
+  return (
+    typeof animation.onFrame === 'function' ||
+    Object.values(animation).some(animationGraphContainsAnimation)
+  );
+}
+
+function nativeNodeDurationMs(
+  node: NativeAnimationNode | undefined
+): number | null {
+  'worklet';
+  if (!node) {
+    return null;
+  }
+  if (node.kind === 'timing') {
+    return Number.isFinite(node.durationMs)
+      ? Math.max(0, node.durationMs)
+      : null;
+  }
+  if (node.kind === 'delay') {
+    const childDuration = nativeNodeDurationMs(node.animation ?? undefined);
+    return childDuration === null || !Number.isFinite(node.delayMs)
+      ? null
+      : Math.max(0, node.delayMs) + childDuration;
+  }
+  let durationMs = 0;
+  for (const child of node.animations) {
+    const childDuration = nativeNodeDurationMs(child ?? undefined);
+    if (childDuration === null) {
+      return null;
+    }
+    durationMs += childDuration;
+  }
+  return durationMs;
+}
+
+function animationGraphDurationMs(value: unknown): number | null {
+  'worklet';
+  if (Array.isArray(value)) {
+    let durationMs = 0;
+    let foundAnimation = false;
+    for (const child of value) {
+      const childDuration = animationGraphDurationMs(child);
+      if (childDuration !== null) {
+        durationMs = Math.max(durationMs, childDuration);
+        foundAnimation = true;
+      } else if (animationGraphContainsAnimation(child)) {
+        return null;
+      }
+    }
+    return foundAnimation ? durationMs : null;
+  }
+  if (value === null || typeof value !== 'object') {
+    return null;
+  }
+  const animation = value as Record<string, unknown>;
+  if (typeof animation.onFrame === 'function') {
+    return nativeNodeDurationMs(
+      (animation as unknown as { __nativeAnimation?: NativeAnimationNode })
+        .__nativeAnimation
+    );
+  }
+  return animationGraphDurationMs(Object.values(animation));
 }
 
 function trackDurationMs(track: NativeAnimationTrackDescriptor): number {
@@ -656,7 +767,13 @@ function buildStructuralPlan(
     if (!compiled) {
       return null;
     }
-    tracks.push({ target, segments: compiled.segments });
+    tracks.push({
+      target,
+      segments: compiled.segments,
+      ...(compiled.initialTimeOffsetMs > 0
+        ? { initialTimeOffsetMs: compiled.initialTimeOffsetMs }
+        : {}),
+    });
   }
 
   if (
@@ -699,6 +816,15 @@ export function compileNativeLayoutAnimation(
 ): NativeLayoutAnimationCompilation {
   'worklet';
   const animationKeys = Object.keys(style.animations);
+  if (
+    animationGraphContainsAnimation(style.animations) &&
+    !animationGraphHasMotion(style.animations)
+  ) {
+    return { status: 'complete', reason: 'reduced-motion' };
+  }
+  if (animationGraphDurationMs(style.animations) === 0) {
+    return { status: 'complete', reason: 'zero-duration' };
+  }
   if (animationKeys.some((target) => !MATRIX_PLAN_TARGETS.has(target))) {
     return { status: 'fallback', reason: 'unsupported-property' };
   }
@@ -725,6 +851,9 @@ export function compileNativeLayoutAnimation(
 
   const structuralPlan = buildStructuralPlan(style, fallbackOpacity);
   if (structuralPlan) {
+    if (structuralPlan.totalDurationMs === 0) {
+      return { status: 'complete', reason: 'zero-duration' };
+    }
     structuralPlan.finalGeometry = expectedFinalGeometry;
     return {
       status: 'native',

@@ -1,7 +1,7 @@
 // LayoutAnimationTrace start
 
 import React, { useMemo } from 'react';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
 import type {
   EntryAnimationsValues,
@@ -509,6 +509,147 @@ function GeometryComponentGridScenario({
   );
 }
 
+function NestedParentChildExitScenario({
+  durationMs,
+  phase,
+  onAnimationCallback,
+}: ScenarioProps) {
+  const parentExit = useMemo(
+    () =>
+      FadeOut.duration(durationMs).withCallback((finished) => {
+        'worklet';
+        scheduleOnRN(onAnimationCallback, finished);
+      }),
+    [durationMs, onAnimationCallback]
+  );
+  const childExit = useMemo(
+    () => SlideOutRight.duration(durationMs),
+    [durationMs]
+  );
+  const visible = phase === 'reset' || phase === 'run';
+  return (
+    <View style={styles.centeredStage}>
+      {visible && (
+        <Animated.View
+          collapsable={false}
+          exiting={parentExit}
+          style={[styles.nestedExitParent, styles.purpleBox]}>
+          <Animated.View
+            exiting={childExit}
+            style={[styles.nestedExitChild, styles.orangeBox]}
+          />
+        </Animated.View>
+      )}
+    </View>
+  );
+}
+
+function ReparentDuringLayoutScenario({
+  durationMs,
+  phase,
+  onAnimationCallback,
+}: ScenarioProps) {
+  const layout = useLinearTransition(durationMs, onAnimationCallback);
+  const child = (
+    <Animated.View
+      key="reparented-host"
+      layout={phase === 'reset' ? undefined : layout}
+      style={[styles.box, styles.cyanBox]}
+    />
+  );
+  return (
+    <View style={styles.reparentStage}>
+      <View style={styles.reparentSlot}>{phase !== 'interrupt' && child}</View>
+      <View style={styles.reparentSlot}>{phase === 'interrupt' && child}</View>
+    </View>
+  );
+}
+
+function ModalSurfaceRemovalScenario({
+  durationMs,
+  phase,
+  onAnimationCallback,
+}: ScenarioProps) {
+  const entering = useMemo(
+    () =>
+      FadeIn.duration(durationMs).withCallback((finished) => {
+        'worklet';
+        scheduleOnRN(onAnimationCallback, finished);
+      }),
+    [durationMs, onAnimationCallback]
+  );
+  const visible = phase === 'run' || phase === 'interrupt';
+  return (
+    <View style={styles.centeredStage}>
+      <Text style={styles.modalHint}>The animated host is in a Modal.</Text>
+      <Modal animationType="none" transparent visible={visible}>
+        <View style={styles.modalBackdrop}>
+          <Animated.View
+            entering={entering}
+            style={[styles.largeBox, styles.greenBox]}
+          />
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+function RandomDelayScenario({
+  durationMs,
+  phase,
+  onAnimationCallback,
+}: ScenarioProps) {
+  const entering = useMemo(
+    () =>
+      FadeIn.delay(800)
+        .randomDelay()
+        .duration(durationMs)
+        .withCallback((finished) => {
+          'worklet';
+          scheduleOnRN(onAnimationCallback, finished);
+        }),
+    [durationMs, onAnimationCallback]
+  );
+  return (
+    <View style={styles.centeredStage}>
+      {phase === 'run' && (
+        <Animated.View
+          entering={entering}
+          style={[styles.largeBox, styles.blueBox]}
+        />
+      )}
+    </View>
+  );
+}
+
+function NegativeDelayScenario({
+  durationMs,
+  phase,
+  onAnimationCallback,
+}: ScenarioProps) {
+  const entering = useMemo(
+    () =>
+      FadeIn.delay(-durationMs * 0.25)
+        .duration(durationMs)
+        .easing(Easing.linear)
+        .withCallback((finished) => {
+          'worklet';
+          scheduleOnRN(onAnimationCallback, finished);
+        }),
+    [durationMs, onAnimationCallback]
+  );
+  return (
+    <View style={styles.centeredStage}>
+      {phase === 'run' && (
+        <Animated.View
+          entering={entering}
+          style={[styles.largeBox, styles.redBox]}
+        />
+      )}
+    </View>
+  );
+}
+
 function DelayedEnteringFinalStateScenario({
   durationMs,
   phase,
@@ -703,6 +844,23 @@ export function ScenarioRenderer(props: ScenarioRendererProps) {
       return <TimingDelayedOpacityScenario {...props} />;
     case 'geometry-component-grid':
       return <GeometryComponentGridScenario {...props} />;
+    case 'entering-then-layout':
+      return <EnteringInterruptedByLayoutScenario {...props} />;
+    case 'entering-removed-before-start':
+      return <CancelBeforePlatformStartScenario {...props} />;
+    case 'layout-then-exit':
+    case 'forced-exit-cleanup':
+      return <ExitDuringLayoutScenario {...props} />;
+    case 'nested-parent-child-exit':
+      return <NestedParentChildExitScenario {...props} />;
+    case 'reparent-during-layout':
+      return <ReparentDuringLayoutScenario {...props} />;
+    case 'modal-surface-removal':
+      return <ModalSurfaceRemovalScenario {...props} />;
+    case 'resolved-random-delay':
+      return <RandomDelayScenario {...props} />;
+    case 'negative-delay':
+      return <NegativeDelayScenario {...props} />;
   }
 }
 
@@ -717,6 +875,42 @@ const styles = StyleSheet.create({
   },
   centeredStage: {
     alignItems: 'center',
+    height: 190,
+    justifyContent: 'center',
+  },
+  modalBackdrop: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(17, 24, 39, 0.25)',
+    flex: 1,
+    justifyContent: 'center',
+  },
+  modalHint: {
+    color: '#4b5563',
+    fontSize: 13,
+  },
+  nestedExitParent: {
+    alignItems: 'center',
+    height: 112,
+    justifyContent: 'center',
+    width: 150,
+  },
+  nestedExitChild: {
+    height: 54,
+    width: 54,
+  },
+  reparentSlot: {
+    alignItems: 'center',
+    borderColor: '#9ca3af',
+    borderRadius: 10,
+    borderWidth: 1,
+    height: 120,
+    justifyContent: 'center',
+    width: 140,
+  },
+  reparentStage: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 20,
     height: 190,
     justifyContent: 'center',
   },

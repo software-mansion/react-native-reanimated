@@ -34,6 +34,7 @@ import {
   DEFAULT_DURATION_MS,
   DEFAULT_REPETITIONS,
   RESET_SETTLE_MS,
+  scenarioCancelsBeforePlatformStart,
   scenarioHasRunEnd,
   scenarioInterruptAtMs,
   scenarioStartDelayMs,
@@ -265,7 +266,7 @@ export default function NativeLayoutAnimationsTestBench() {
         schedule(() => {
           if (
             backend === 'native' &&
-            scenario === 'cancel-before-platform-start' &&
+            scenarioCancelsBeforePlatformStart(scenario) &&
             mode === 'cancel'
           ) {
             nativeStartGateActiveRef.current = true;
@@ -326,7 +327,7 @@ export default function NativeLayoutAnimationsTestBench() {
         const count = callbackCountRef.current;
         const finished = lastFinishedRef.current;
         const isCancelBeforePlatformStart =
-          scenario === 'cancel-before-platform-start' && mode === 'cancel';
+          scenarioCancelsBeforePlatformStart(scenario) && mode === 'cancel';
         const cancellationResultIsExpected =
           !isCancelBeforePlatformStart || finished === false;
         const callbackCountIsExpected = isCancelBeforePlatformStart
@@ -472,6 +473,31 @@ export default function NativeLayoutAnimationsTestBench() {
       <View style={styles.scenarioGrid}>
         {TEST_BENCH_SCENARIOS.filter(
           (item) => 'group' in item && item.group === 'geometry'
+        ).map((item) => (
+          <Pressable
+            accessibilityRole="button"
+            disabled={status === 'running'}
+            key={item.id}
+            onPress={() => setScenario(item.id)}
+            style={[
+              styles.scenarioButton,
+              item.id === scenario && styles.selectedScenarioButton,
+              status === 'running' && styles.disabledButton,
+            ]}>
+            <Text
+              style={[
+                styles.scenarioButtonText,
+                item.id === scenario && styles.selectedScenarioButtonText,
+              ]}>
+              {item.title}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+      <Text style={styles.sectionTitle}>Public lifecycle semantics</Text>
+      <View style={styles.scenarioGrid}>
+        {TEST_BENCH_SCENARIOS.filter(
+          (item) => 'group' in item && item.group === 'public-semantics'
         ).map((item) => (
           <Pressable
             accessibilityRole="button"

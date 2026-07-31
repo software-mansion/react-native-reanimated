@@ -24,6 +24,15 @@ type NativeLayoutAnimationValues = Partial<LayoutAnimationValues> & {
   targetOpacity?: number;
 };
 
+export function nativeLayoutAnimationCallbackKey(
+  surfaceId: number,
+  tag: number,
+  generation: number
+): string {
+  'worklet';
+  return `${surfaceId}:${tag}:${generation}`;
+}
+
 function isFiniteNumber(value: unknown): value is number {
   'worklet';
   return typeof value === 'number' && Number.isFinite(value);
@@ -66,20 +75,25 @@ function createLayoutAnimationManager(): {
   start: LayoutAnimationStartFunction;
   stop: (tag: number) => void;
   computeNativePlan: (
+    surfaceId: number,
     tag: number,
     generation: number,
     type: LayoutAnimationType,
     yogaValues: NativeLayoutAnimationValues,
     config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
   ) => NativeLayoutAnimationCompilation;
-  completeNative: (tag: number, generation: number, finished: boolean) => void;
+  completeNative: (
+    surfaceId: number,
+    tag: number,
+    generation: number,
+    finished: boolean
+  ) => void;
+  discardNative: (surfaceId: number, tag: number, generation: number) => void;
 } {
   'worklet';
   const currentAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
   const nativeCallbacks = new Map<string, LayoutAnimation['callback']>();
-  const nativeCallbackKey = (tag: number, generation: number) =>
-    `${tag}:${generation}`;
 
   // Flush layout-animation progress once per frame via the frame finalizer
   // (after all `requestAnimationFrame` callbacks), reusing the same
@@ -166,6 +180,7 @@ function createLayoutAnimationManager(): {
      * per-frame from JS.
      */
     computeNativePlan(
+      surfaceId: number,
       tag: number,
       generation: number,
       type: LayoutAnimationType,
@@ -204,16 +219,33 @@ function createLayoutAnimationManager(): {
         fallbackOpacity,
         finalGeometry
       );
-      if (compilation.status === 'native' && style.callback) {
-        nativeCallbacks.set(nativeCallbackKey(tag, generation), style.callback);
+      if (
+        (compilation.status === 'native' ||
+          compilation.status === 'complete') &&
+        style.callback
+      ) {
+        nativeCallbacks.set(
+          nativeLayoutAnimationCallbackKey(surfaceId, tag, generation),
+          style.callback
+        );
       }
       return compilation;
     },
-    completeNative(tag: number, generation: number, finished: boolean) {
-      const key = nativeCallbackKey(tag, generation);
+    completeNative(
+      surfaceId: number,
+      tag: number,
+      generation: number,
+      finished: boolean
+    ) {
+      const key = nativeLayoutAnimationCallbackKey(surfaceId, tag, generation);
       const callback = nativeCallbacks.get(key);
       nativeCallbacks.delete(key);
       callback?.(finished);
+    },
+    discardNative(surfaceId: number, tag: number, generation: number) {
+      nativeCallbacks.delete(
+        nativeLayoutAnimationCallbackKey(surfaceId, tag, generation)
+      );
     },
   };
 }

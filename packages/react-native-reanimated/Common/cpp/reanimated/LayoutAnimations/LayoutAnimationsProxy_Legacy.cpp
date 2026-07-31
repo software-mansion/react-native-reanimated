@@ -1155,6 +1155,13 @@ bool LayoutAnimationsProxy_Legacy::shouldAnimateFrame() const {
 
 void LayoutAnimationsProxy_Legacy::stopSurface(SurfaceId surfaceId) {
   surfacesToRemove_.insert(surfaceId);
+  if constexpr (useNativeLayoutAnimations()) {
+    scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), surfaceId]() {
+      if (auto strongThis = weakThis.lock()) {
+        strongThis->layoutAnimationsManager_->cancelNativeLayoutAnimationsForSurface(strongThis->uiRuntime_, surfaceId);
+      }
+    });
+  }
 }
 
 } // namespace reanimated

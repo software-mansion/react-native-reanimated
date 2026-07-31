@@ -202,8 +202,9 @@ NativeCompilationResult validateNativeAnimationPlan(NativeAnimationPlan plan) {
   }
   std::unordered_set<NativeAnimationTarget> seenTargets;
   for (const auto &track : plan.tracks) {
-    if (!seenTargets.insert(track.target).second || track.segments.empty() ||
-        track.segments.size() > kMaxSegmentsPerTrack ||
+    if (!std::isfinite(track.initialTimeOffsetMs) || track.initialTimeOffsetMs < 0 ||
+        track.initialTimeOffsetMs > plan.totalDurationMs || !seenTargets.insert(track.target).second ||
+        track.segments.empty() || track.segments.size() > kMaxSegmentsPerTrack ||
         !std::all_of(track.segments.begin(), track.segments.end(), [&](const auto &segment) {
           return validSegment(segment, plan.totalDurationMs);
         })) {
@@ -261,7 +262,8 @@ std::string serializeNativeAnimationPlan(const NativeAnimationPlan &plan) {
       output << ',';
     }
     const auto &track = plan.tracks[trackIndex];
-    output << "{\"target\":\"" << targetName(track.target) << "\",\"segmentCount\":" << track.segments.size() << '}';
+    output << "{\"target\":\"" << targetName(track.target) << "\",\"initialTimeOffsetMs\":" << track.initialTimeOffsetMs
+           << ",\"segmentCount\":" << track.segments.size() << '}';
   }
   output << "]}";
   return output.str();

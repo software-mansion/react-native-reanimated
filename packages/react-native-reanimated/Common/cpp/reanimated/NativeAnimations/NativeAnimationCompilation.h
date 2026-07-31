@@ -10,6 +10,7 @@ namespace reanimated {
 
 enum class NativeCompilationStatus : uint8_t {
   Native,
+  Complete,
   Fallback,
   Invalid,
 };
@@ -21,6 +22,10 @@ struct NativeCompilationResult {
 
   bool native() const {
     return status == NativeCompilationStatus::Native && plan.has_value();
+  }
+
+  bool complete() const {
+    return status == NativeCompilationStatus::Complete;
   }
 };
 

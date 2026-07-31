@@ -123,6 +123,67 @@ export const TEST_BENCH_SCENARIOS = [
       'Runs the same final-state-first position and size change across View, Text, Image, ScrollView, border, shadow, clipping, and nested content.',
     group: 'geometry',
   },
+  {
+    id: 'entering-then-layout',
+    title: '21. Entering → layout',
+    description:
+      'Starts a layout transition while the entering generation is active.',
+    group: 'public-semantics',
+  },
+  {
+    id: 'entering-removed-before-start',
+    title: '22. Entering removed before start',
+    description:
+      'Removes an entering view while native platform start is gated.',
+    group: 'public-semantics',
+  },
+  {
+    id: 'layout-then-exit',
+    title: '23. Layout → exit at 40%',
+    description:
+      'Starts an opacity exit from the current presentation during geometry motion.',
+    group: 'public-semantics',
+  },
+  {
+    id: 'forced-exit-cleanup',
+    title: '24. Forced exit cleanup',
+    description:
+      'Cancels a retained exit and verifies one false callback with no zombie view.',
+    group: 'public-semantics',
+  },
+  {
+    id: 'nested-parent-child-exit',
+    title: '25. Nested parent/child exit',
+    description: 'Removes a parent whose child owns a separate exit animation.',
+    group: 'public-semantics',
+  },
+  {
+    id: 'reparent-during-layout',
+    title: '26. Reparent during layout',
+    description:
+      'Moves one keyed animated host between parents while layout motion is active.',
+    group: 'public-semantics',
+  },
+  {
+    id: 'modal-surface-removal',
+    title: '27. Modal surface removal',
+    description:
+      'Runs an exit inside a modal surface and then removes the modal.',
+    group: 'public-semantics',
+  },
+  {
+    id: 'resolved-random-delay',
+    title: '28. Resolved random delay',
+    description:
+      'Resolves one random delay in the builder and carries that fixed value in the plan.',
+    group: 'public-semantics',
+  },
+  {
+    id: 'negative-delay',
+    title: '29. Negative delay',
+    description: 'Starts native playback 25% into its declared timing curve.',
+    group: 'public-semantics',
+  },
 ] as const;
 
 export type TestBenchScenarioId = (typeof TEST_BENCH_SCENARIOS)[number]['id'];
@@ -152,7 +213,9 @@ export function scenarioHasRunEnd(scenario: TestBenchScenarioId): boolean {
   return (
     scenario === 'fade-in-out' ||
     scenario === 'slide-in-out' ||
-    scenario === 'retained-exit-cleanup'
+    scenario === 'retained-exit-cleanup' ||
+    scenario === 'modal-surface-removal' ||
+    scenario === 'nested-parent-child-exit'
   );
 }
 
@@ -160,7 +223,19 @@ export function scenarioStartDelayMs(scenario: TestBenchScenarioId): number {
   if (scenario === 'delayed-entering-final-state') {
     return 1000;
   }
+  if (scenario === 'resolved-random-delay') {
+    return 1000;
+  }
   return scenario === 'timing-delayed-opacity' ? 750 : 0;
+}
+
+export function scenarioCancelsBeforePlatformStart(
+  scenario: TestBenchScenarioId
+): boolean {
+  return (
+    scenario === 'cancel-before-platform-start' ||
+    scenario === 'entering-removed-before-start'
+  );
 }
 
 // LayoutAnimationTrace end
