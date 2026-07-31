@@ -93,6 +93,7 @@ Print as ordinary text. Not a plan object, not a collapsed block. No diff per
 site. Do not edit until the user agrees.
 
 1. **Counts.** Migratable, needs-review, refused.
+
 1. **Table, no code**, one row per site:
 
    | File | Animates | Becomes | Note |
@@ -102,6 +103,7 @@ site. Do not edit until the user agrees.
 
 1. **Refusals grouped by reason**, with counts. Forty gesture-driven components
    are one line.
+
 1. **Before and after for 2-3 representative sites**, covering the shapes in the
    table.
 

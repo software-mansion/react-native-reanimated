@@ -4,7 +4,6 @@
 
 - Transition or animation: which one
 - The `with*` functions, mapped
-
 - Pseudo-selectors, and why they usually beat a state round-trip
 
 ## Transition or animation: which one
