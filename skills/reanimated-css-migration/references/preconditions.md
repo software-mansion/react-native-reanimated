@@ -142,7 +142,7 @@ needs-review.
 | 2 | End state identical | After completion, and after fill mode applies |
 | 3 | Re-trigger identical | Fire the driver twice quickly; second run starts where the hook version would |
 | 4 | Interrupt and unmount identical | Unmount mid-animation; nothing throws, nothing keeps running |
-| 5 | Nothing else changed | Same element tree, props, conditional logic |
+| 5 | Nothing else changed | Same element tree, props, conditional logic. Swapping `Pressable` for `Animated.View` to use `:active` fails this: it drops the press handlers and the accessibility role |
 
 ## Effective platforms
 

@@ -75,6 +75,11 @@ replace the whole shared-value or React-state round-trip:
 Prefer this whenever the trigger is press, hover or focus. It needs no state and
 does not re-render.
 
+Keep the element that receives the touch. `Animated.Pressable` takes pseudo
+styles; swapping a `Pressable` for a plain `Animated.View` to use `:active`
+drops the press handlers and the accessibility role, failing equivalence
+obligation 5.
+
 - Write `default` unless the resting value is the property's own default. The
   pseudo object owns the property, so rest resolves to `default`; omit it and
   the value falls back to the property default (`backgroundColor` transparent,
