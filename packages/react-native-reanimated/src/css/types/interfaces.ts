@@ -1,17 +1,11 @@
 'use strict';
 import type { PseudoStylesBySelector } from '../utils';
-import type {
-  CSSAnimationCallbacks,
-  ExistingCSSAnimationProperties,
-} from './animation';
+import type { ExistingCSSAnimationProperties } from './animation';
 import type { CSSStyle } from './props';
 import type { CSSTransitionProperties } from './transition';
 
 export interface ICSSAnimationsManager {
-  update(
-    animationProperties: ExistingCSSAnimationProperties | null,
-    callbacks?: CSSAnimationCallbacks | null
-  ): void;
+  update(animationProperties: ExistingCSSAnimationProperties | null): void;
   unmountCleanup(): void;
 }
 

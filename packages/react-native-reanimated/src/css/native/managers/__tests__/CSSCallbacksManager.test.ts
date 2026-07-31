@@ -1,7 +1,7 @@
 'use strict';
 import type { CSSEventType, NativeCSSEvent } from '../../events';
 import { CSS_EVENT_MASK, cssCallbacksRegistry } from '../../events';
-import CSSAnimationCallbacksManager from '../CSSAnimationCallbacksManager';
+import CSSCallbacksManager from '../CSSCallbacksManager';
 
 const VIEW_TAG = 1;
 
@@ -16,12 +16,12 @@ const event = (
   ...overrides,
 });
 
-describe('CSSAnimationCallbacksManager', () => {
-  let manager: CSSAnimationCallbacksManager;
+describe('CSSCallbacksManager', () => {
+  let manager: CSSCallbacksManager;
 
   beforeEach(() => {
     cssCallbacksRegistry.clear();
-    manager = new CSSAnimationCallbacksManager(VIEW_TAG);
+    manager = new CSSCallbacksManager(VIEW_TAG);
   });
 
   describe('mask', () => {
@@ -166,7 +166,7 @@ describe('CSSAnimationCallbacksManager', () => {
 
     test('does not register a view that has no tag yet', () => {
       const registerSpy = jest.spyOn(cssCallbacksRegistry, 'register');
-      const tagless = new CSSAnimationCallbacksManager(-1);
+      const tagless = new CSSCallbacksManager(-1);
 
       const onAnimationEnd = jest.fn();
       tagless.sync({ onAnimationEnd });
@@ -183,7 +183,7 @@ describe('CSSAnimationCallbacksManager', () => {
     test('keeps nested components with the same tag independent', () => {
       const outer = jest.fn();
       const inner = jest.fn();
-      const otherManager = new CSSAnimationCallbacksManager(VIEW_TAG);
+      const otherManager = new CSSCallbacksManager(VIEW_TAG);
 
       manager.sync({ onAnimationEnd: outer });
       otherManager.sync({ onAnimationEnd: inner });

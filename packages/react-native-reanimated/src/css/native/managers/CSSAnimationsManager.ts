@@ -1,7 +1,6 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type {
-  CSSAnimationCallbacks,
   CSSAnimationKeyframes,
   ExistingCSSAnimationProperties,
   ICSSAnimationsManager,
@@ -17,7 +16,6 @@ import type {
   CSSAnimationUpdates,
   NormalizedSingleCSSAnimationSettings,
 } from '../types';
-import CSSAnimationCallbacksManager from './CSSAnimationCallbacksManager';
 
 type ProcessedAnimation = {
   normalizedSettings: NormalizedSingleCSSAnimationSettings;
@@ -28,7 +26,6 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
   private readonly viewTag: number;
   private readonly compoundComponentName: string;
-  private readonly callbacksManager: CSSAnimationCallbacksManager;
 
   private attachedAnimations: ProcessedAnimation[] = [];
   private appliedEventMask = 0;
@@ -41,17 +38,12 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     this.shadowNodeWrapper = shadowNodeWrapper;
     this.viewTag = viewTag;
     this.compoundComponentName = compoundComponentName;
-    this.callbacksManager = new CSSAnimationCallbacksManager(viewTag);
   }
 
   update(
     animationProperties: ExistingCSSAnimationProperties | null,
-    callbacks: CSSAnimationCallbacks | null = null
+    eventMask = 0
   ): void {
-    // Synced first so a cancel emitted while detaching still reaches the user.
-    this.callbacksManager.sync(callbacks ?? {});
-    const eventMask = this.callbacksManager.getMask();
-
     if (!animationProperties) {
       this.detach();
       return;
@@ -80,7 +72,6 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   }
 
   unmountCleanup(): void {
-    this.callbacksManager.detach();
     this.unregisterKeyframesUsage();
   }
 
