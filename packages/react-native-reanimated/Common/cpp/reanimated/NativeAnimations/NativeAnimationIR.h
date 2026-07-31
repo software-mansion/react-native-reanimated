@@ -100,6 +100,7 @@ enum class NativeAnimationRouteReason : uint8_t {
   RequiresSampling,
   ReducedMotion,
   ZeroDuration,
+  SamplingResourceExhausted,
   UnsupportedProperty,
   UnsupportedValueType,
   TransformOrderingUnavailable,

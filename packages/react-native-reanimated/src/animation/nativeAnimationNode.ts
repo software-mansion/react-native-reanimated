@@ -25,6 +25,12 @@ export type NativeAnimationNode =
   | {
       kind: 'sequence';
       animations: (NativeAnimationNode | null)[];
+    }
+  | {
+      kind: 'repeat';
+      animation: NativeAnimationNode | null;
+      count: number;
+      reverse: boolean;
     };
 
 export interface NativeCompilableAnimation extends AnimationObject {

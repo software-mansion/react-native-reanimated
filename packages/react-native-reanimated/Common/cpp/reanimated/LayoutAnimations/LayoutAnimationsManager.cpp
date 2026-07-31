@@ -159,6 +159,12 @@ static NativeAnimationRouteReason parseNativeRouteReason(const std::string &reas
   if (reason == "zero-duration") {
     return NativeAnimationRouteReason::ZeroDuration;
   }
+  if (reason == "sampling-resource-exhausted") {
+    return NativeAnimationRouteReason::SamplingResourceExhausted;
+  }
+  if (reason == "infinite-repeat") {
+    return NativeAnimationRouteReason::InfiniteRepeat;
+  }
   if (reason == "unsupported-property") {
     return NativeAnimationRouteReason::UnsupportedProperty;
   }

@@ -292,21 +292,6 @@ namespace {
 {
   RCTAssertMainQueue();
 
-  const bool hasTransformMatrixTrack =
-      std::any_of(plan.tracks.begin(), plan.tracks.end(), [](const reanimated::NativeAnimationTrack &track) {
-        return track.target == reanimated::NativeAnimationTarget::Transform;
-      });
-  if (plan.route == reanimated::NativeAnimationRoute::Sampled && !hasTransformMatrixTrack) {
-    const auto descriptor = reanimated::materializeSampledLayoutDescriptor(handle, plan);
-    [self installNativeLayoutAnimationOnMain:handle
-                                  descriptor:descriptor
-                        usePresentationLayer:plan.startValueSource ==
-                        reanimated::NativeAnimationStartValueSource::CurrentVisualValue
-                           cancellationToken:std::move(cancellationToken)
-                                  completion:std::move(completion)];
-    return;
-  }
-
   const ReactTag viewTag = handle.tag;
   const auto traceDescriptor = reanimated::materializeSampledLayoutDescriptor(handle, plan);
   if (cancellationToken->load(std::memory_order_acquire)) {

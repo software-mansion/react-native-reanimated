@@ -1,6 +1,11 @@
 'use strict';
 
-import { withDelay, withSequence, withTiming } from '../../animation';
+import {
+  withDelay,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from '../../animation';
 import type { LayoutAnimation } from '../../commonTypes';
 import { ReduceMotion } from '../../commonTypes';
 import { Easing } from '../../Easing';
@@ -10,6 +15,11 @@ import {
   buildNativeLayoutAnimationDescriptor,
   compileNativeLayoutAnimation,
 } from '../nativeAnimationDescriptor';
+import {
+  packSampledPlan,
+  simplifySampledValues,
+  unpackSampledPlan,
+} from '../nativeAnimationSampler';
 
 describe('native layout animation descriptor', () => {
   test('samples SlideInLeft and adds its target opacity', () => {
@@ -327,6 +337,149 @@ describe('native layout animation structural compiler', () => {
     }
   });
 
+  test('keeps an exact 225 ms terminal time', () => {
+    const compilation = compileNativeLayoutAnimation({
+      animations: {
+        opacity: withTiming(1, {
+          duration: 225,
+          easing: (progress) => progress,
+        }),
+      },
+      initialValues: { opacity: 0 },
+    });
+
+    expect(compilation.status).toBe('native');
+    if (compilation.status === 'native') {
+      expect(compilation.plan.totalDurationMs).toBe(225);
+      const segment = compilation.plan.tracks[0].segments[0];
+      expect(segment.kind).toBe('keyframes');
+      if (segment.kind === 'keyframes') {
+        expect(segment.timesMs[segment.timesMs.length - 1]).toBe(225);
+        expect(segment.values[segment.values.length - 1]).toBe(1);
+      }
+    }
+  });
+
+  test('retains long finite duration without a semantic cutoff', () => {
+    const compilation = compileNativeLayoutAnimation({
+      animations: {
+        opacity: withTiming(1, {
+          duration: 25000,
+          easing: (progress) => progress,
+        }),
+      },
+      initialValues: { opacity: 0 },
+    });
+
+    expect(compilation.status).toBe('native');
+    if (compilation.status === 'native') {
+      expect(compilation.plan.totalDurationMs).toBe(25000);
+    }
+  });
+
+  test('falls back explicitly when the sampling budget is exhausted', () => {
+    expect(
+      compileNativeLayoutAnimation({
+        animations: {
+          opacity: withTiming(1, {
+            duration: 50000,
+            easing: (progress) => progress,
+          }),
+        },
+        initialValues: { opacity: 0 },
+      })
+    ).toEqual({
+      status: 'fallback',
+      reason: 'sampling-resource-exhausted',
+    });
+  });
+
+  test('detects an infinite repeat before ticking it', () => {
+    expect(
+      compileNativeLayoutAnimation({
+        animations: {
+          opacity: withRepeat(
+            withTiming(1, {
+              duration: 100,
+              easing: (progress) => progress,
+            }),
+            -1
+          ),
+        },
+        initialValues: { opacity: 0 },
+      })
+    ).toEqual({ status: 'fallback', reason: 'infinite-repeat' });
+  });
+
+  test('preserves sequence boundaries in a simplified sampled curve', () => {
+    const compilation = compileNativeLayoutAnimation({
+      animations: {
+        opacity: withSequence(
+          withTiming(0.5, {
+            duration: 75,
+            easing: (progress) => progress,
+          }),
+          withTiming(1, {
+            duration: 150,
+            easing: (progress) => progress,
+          })
+        ),
+      },
+      initialValues: { opacity: 0 },
+    });
+
+    expect(compilation.status).toBe('native');
+    if (compilation.status === 'native') {
+      const segment = compilation.plan.tracks[0].segments[0];
+      expect(segment.kind).toBe('keyframes');
+      if (segment.kind === 'keyframes') {
+        expect(segment.timesMs).toContain(75);
+        expect(segment.timesMs[segment.timesMs.length - 1]).toBe(225);
+      }
+    }
+  });
+
+  test('simplifies a near-linear curve within scalar tolerance', () => {
+    const timesMs = Array.from({ length: 101 }, (_, index) => index);
+    const values = timesMs.map(
+      (timeMs) => timeMs / 100 + Math.sin(timeMs) * 0.0001
+    );
+    const simplified = simplifySampledValues(timesMs, values, 0.001);
+
+    expect(simplified.timesMs).toEqual([0, 100]);
+    for (let timeMs = 0; timeMs <= 100; timeMs++) {
+      const progress = timeMs / 100;
+      const approximation =
+        (simplified.values[0] as number) +
+        ((simplified.values[1] as number) - (simplified.values[0] as number)) *
+          progress;
+      expect(Math.abs(values[timeMs] - approximation)).toBeLessThanOrEqual(
+        0.001
+      );
+    }
+  });
+
+  test('round-trips readable and packed sampled plans exactly', () => {
+    const compilation = compileNativeLayoutAnimation({
+      animations: {
+        opacity: withTiming(1, {
+          duration: 225,
+          easing: (progress) => progress * progress,
+        }),
+      },
+      initialValues: { opacity: 0 },
+    });
+
+    expect(compilation.status).toBe('native');
+    if (compilation.status === 'native') {
+      const packed = packSampledPlan(compilation.plan);
+      expect(unpackSampledPlan(packed)).toEqual(compilation.plan);
+      expect(() => unpackSampledPlan(packed.slice(0, -1))).toThrow(
+        'Malformed sampled animation track'
+      );
+    }
+  });
+
   test('returns whole-animation fallback for unsupported properties', () => {
     expect(
       compileNativeLayoutAnimation({
@@ -337,5 +490,47 @@ describe('native layout animation structural compiler', () => {
       status: 'fallback',
       reason: 'unsupported-property',
     });
+  });
+
+  test('scales sampled payload and CA keyframe setup for 1, 10, and 100 views', () => {
+    const observations: Array<{
+      count: number;
+      payloadBytes: number;
+      caKeyframeCount: number;
+    }> = [];
+    for (const count of [1, 10, 100]) {
+      let payloadBytes = 0;
+      let keyframeCount = 0;
+      for (let index = 0; index < count; index++) {
+        const compilation = compileNativeLayoutAnimation({
+          animations: {
+            opacity: withTiming(1, {
+              duration: 900,
+              easing: Easing.bounce,
+            }),
+          },
+          initialValues: { opacity: 0 },
+        });
+        if (compilation.status !== 'native') {
+          throw new Error(
+            '[Reanimated] Expected native sampled benchmark plan.'
+          );
+        }
+        payloadBytes += packSampledPlan(compilation.plan).byteLength;
+        const segment = compilation.plan.tracks[0].segments[0];
+        keyframeCount +=
+          segment.kind === 'keyframes' ? segment.timesMs.length : 0;
+      }
+      observations.push({
+        count,
+        payloadBytes,
+        caKeyframeCount: keyframeCount,
+      });
+    }
+    expect(observations).toEqual([
+      { count: 1, payloadBytes: 904, caKeyframeCount: 53 },
+      { count: 10, payloadBytes: 9040, caKeyframeCount: 530 },
+      { count: 100, payloadBytes: 90400, caKeyframeCount: 5300 },
+    ]);
   });
 });

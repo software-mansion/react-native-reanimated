@@ -27,6 +27,8 @@ const char *nativeAnimationRouteReasonName(const NativeAnimationRouteReason reas
       return "reduced-motion";
     case NativeAnimationRouteReason::ZeroDuration:
       return "zero-duration";
+    case NativeAnimationRouteReason::SamplingResourceExhausted:
+      return "sampling-resource-exhausted";
     case NativeAnimationRouteReason::UnsupportedProperty:
       return "unsupported-property";
     case NativeAnimationRouteReason::UnsupportedValueType:

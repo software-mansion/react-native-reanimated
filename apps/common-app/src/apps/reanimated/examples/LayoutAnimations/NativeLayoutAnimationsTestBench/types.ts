@@ -184,6 +184,13 @@ export const TEST_BENCH_SCENARIOS = [
     description: 'Starts native playback 25% into its declared timing curve.',
     group: 'public-semantics',
   },
+  {
+    id: 'sampled-bounce-transform',
+    title: '30. Sampled bounce + ordered transform',
+    description:
+      'Runs opaque bounce easing and an order-sensitive transform as one native-sampled plan with nonuniform key times.',
+    group: 'sampled-fallback',
+  },
 ] as const;
 
 export type TestBenchScenarioId = (typeof TEST_BENCH_SCENARIOS)[number]['id'];
@@ -206,7 +213,9 @@ export function scenarioInterruptAtMs(
 ): number {
   return scenario === 'layout-interrupted-by-layout'
     ? Math.round(durationMs * 0.4)
-    : INTERRUPT_AT_MS;
+    : scenario === 'sampled-bounce-transform'
+      ? Math.round(durationMs * 0.4)
+      : INTERRUPT_AT_MS;
 }
 
 export function scenarioHasRunEnd(scenario: TestBenchScenarioId): boolean {

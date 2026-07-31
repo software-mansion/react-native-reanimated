@@ -802,6 +802,68 @@ function TimingDelayedOpacityScenario({
   );
 }
 
+function SampledBounceTransformScenario({
+  durationMs,
+  phase,
+  onAnimationCallback,
+}: ScenarioProps) {
+  const entering = useMemo<(values: EntryAnimationsValues) => LayoutAnimation>(
+    () => () => {
+      'worklet';
+      return {
+        initialValues: {
+          opacity: 0,
+          transform: [
+            { rotate: '-35deg' },
+            { translateX: -180 },
+            { scale: 0.65 },
+          ],
+        },
+        animations: {
+          opacity: withTiming(1, {
+            duration: durationMs,
+            easing: Easing.bounce,
+          }),
+          transform: [
+            {
+              rotate: withTiming('0deg', {
+                duration: durationMs,
+                easing: Easing.bounce,
+              }),
+            },
+            {
+              translateX: withTiming(0, {
+                duration: durationMs,
+                easing: Easing.bounce,
+              }),
+            },
+            {
+              scale: withTiming(1, {
+                duration: durationMs,
+                easing: Easing.bounce,
+              }),
+            },
+          ],
+        },
+        callback: (finished) => {
+          scheduleOnRN(onAnimationCallback, finished);
+        },
+      };
+    },
+    [durationMs, onAnimationCallback]
+  );
+  return (
+    <View style={styles.centeredStage}>
+      {phase !== 'reset' && phase !== 'cancel' && (
+        <Animated.View
+          entering={entering}
+          style={[styles.largeBox, styles.orangeBox]}
+        />
+      )}
+    </View>
+  );
+}
+
 export function ScenarioRenderer(props: ScenarioRendererProps) {
   switch (props.scenario) {
     case 'linear-position':
@@ -861,6 +923,8 @@ export function ScenarioRenderer(props: ScenarioRendererProps) {
       return <RandomDelayScenario {...props} />;
     case 'negative-delay':
       return <NegativeDelayScenario {...props} />;
+    case 'sampled-bounce-transform':
+      return <SampledBounceTransformScenario {...props} />;
   }
 }
 

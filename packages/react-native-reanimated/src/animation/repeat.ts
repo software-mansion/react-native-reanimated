@@ -8,6 +8,7 @@ import type {
   Timestamp,
 } from '../commonTypes';
 import type { RepeatAnimation } from './commonTypes';
+import type { NativeCompilableAnimation } from './nativeAnimationNode';
 import { defineAnimation, getReduceMotionForAnimation } from './util';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
@@ -139,6 +140,14 @@ export const withRepeat = function <T extends AnimationObject>(
         callback: repCallback,
         startValue: 0,
         reduceMotion: getReduceMotionForAnimation(reduceMotion),
+        __nativeAnimation: {
+          kind: 'repeat',
+          animation:
+            (nextAnimation as NativeCompilableAnimation).__nativeAnimation ??
+            null,
+          count: numberOfReps,
+          reverse,
+        },
       };
     }
   );
