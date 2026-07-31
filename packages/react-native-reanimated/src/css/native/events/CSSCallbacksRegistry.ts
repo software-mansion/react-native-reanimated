@@ -2,11 +2,9 @@
 import type { CSSEventSubscriber, NativeCSSEvent } from './types';
 
 /**
- * Routes CSS events emitted by the native side to the JS objects interested in
- * a given view.
- *
- * Nested animated components can share a single view tag, so every tag keeps a
- * set of subscribers instead of a single one.
+ * Routes CSS events emitted by the native side to the objects interested in a
+ * given view. Nested animated components can share a view tag, so every tag
+ * keeps a set of subscribers rather than a single one.
  */
 class CSSCallbacksRegistry {
   private readonly subscribersByTag_ = new Map<
