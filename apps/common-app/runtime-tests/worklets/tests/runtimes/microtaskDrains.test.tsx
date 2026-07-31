@@ -41,7 +41,19 @@ describe('microtask draining', () => {
     notify(DONE_NOTIFICATION);
   };
 
+  function restoreCallMicrotasks(runtimeId: number) {
+    runOnRuntimeSyncWithId(runtimeId, () => {
+      'worklet';
+      if (globalThis.originalCallMicrotasks) {
+        globalThis.__callMicrotasks = globalThis.originalCallMicrotasks;
+        globalThis.originalCallMicrotasks = undefined;
+      }
+    });
+  }
+
   function startCountingMicrotaskDrains(runtimeId: number) {
+    restoreCallMicrotasks(runtimeId);
+
     runOnRuntimeSyncWithId(runtimeId, () => {
       'worklet';
       const previousCallMicrotasks = globalThis.__callMicrotasks;
@@ -55,16 +67,11 @@ describe('microtask draining', () => {
     microtaskDrainCount.setBlocking(0);
   }
 
-  function stopCountingMicrotaskDrains(runtimeId: number) {
+  function drainPendingMicrotasks(runtimeId: number) {
     runOnRuntimeSyncWithId(runtimeId, () => {
       'worklet';
-      if (globalThis.originalCallMicrotasks) {
-        globalThis.__callMicrotasks = globalThis.originalCallMicrotasks;
-        globalThis.originalCallMicrotasks = undefined;
-      }
+      globalThis.__callMicrotasks();
     });
-
-    return microtaskDrainCount.getBlocking();
   }
 
   /**
@@ -76,14 +83,21 @@ describe('microtask draining', () => {
    */
   const probeDrainingCall = () => {
     'worklet';
+    let animationFrameHandle: number | undefined;
     if (getRuntimeKind() === RuntimeKind.UI) {
-      requestAnimationFrame(() => {
+      animationFrameHandle = requestAnimationFrame(() => {
         firstCallbackToRun.setBlocking((first) =>
           first === NOTHING_RAN ? ANIMATION_FRAME_RAN : first
         );
       });
     }
     queueMicrotask(() => {
+      // Cancelling here keeps the callback from outliving this case and
+      // recording itself against the next one. If the frame loop got there
+      // first it has already recorded itself and this is a no-op.
+      if (animationFrameHandle !== undefined) {
+        cancelAnimationFrame(animationFrameHandle);
+      }
       firstCallbackToRun.setBlocking((first) =>
         first === NOTHING_RAN ? MICROTASK_RAN : first
       );
@@ -192,7 +206,8 @@ describe('microtask draining', () => {
       });
 
       afterEach(() => {
-        stopCountingMicrotaskDrains(runtimeId);
+        restoreCallMicrotasks(runtimeId);
+        drainPendingMicrotasks(runtimeId);
       });
 
       test(`drains microtasks ${expectedDrains} time(s)`, async () => {
@@ -201,7 +216,7 @@ describe('microtask draining', () => {
           await waitForNotification(DONE_NOTIFICATION);
         }
 
-        const microtaskDrains = stopCountingMicrotaskDrains(runtimeId);
+        const microtaskDrains = microtaskDrainCount.getBlocking();
         const didAnimationFrameRunFirst =
           firstCallbackToRun.getBlocking() === ANIMATION_FRAME_RAN;
 
