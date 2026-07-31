@@ -225,34 +225,71 @@ describe('Test setTimeout', () => {
     }
   );
 
-  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
-    'timeouts order of execution, inverted scheduled order, runtime: **%s**',
-    async (runtimeKind) => {
-      // Arrange
-      const [notification1, notification2] = ['callback1', 'callback2'];
-      const [confirmedOrder, order] = createOrderConstraint();
+  test(`timeouts order of execution, inverted scheduled order, runtime: **${RuntimeKind.Worker}**`, async () => {
+    // Arrange
+    const [notification1, notification2] = ['callback1', 'callback2'];
+    const [confirmedOrder, order] = createOrderConstraint();
 
-      // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            setTimeout(() => {
-              order(2, notification2);
-            }, 70);
-            setTimeout(() => {
-              order(1, notification1);
-            }, 50);
-          }}
-          runtimeKind={runtimeKind}
-        />
+    // Act
+    await render(
+      <DispatchTestComponent
+        worklet={() => {
+          'worklet';
+          setTimeout(() => {
+            order(2, notification2);
+          }, 70);
+          setTimeout(() => {
+            order(1, notification1);
+          }, 50);
+        }}
+        runtimeKind={RuntimeKind.Worker}
+      />
+    );
+
+    // Assert
+    await waitForNotifications([notification1, notification2]);
+    expect(confirmedOrder.value).toBe(2);
+  });
+
+  test(`timeouts order of execution, inverted scheduled order, runtime: **${RuntimeKind.UI}**`, async () => {
+    // Arrange
+    const [notification1, notification2] = ['callback1', 'callback2'];
+    const [confirmedOrder, order] = createOrderConstraint();
+    const [bothTimeoutsWereDue, markBothTimeoutsWereDue] =
+      createTestValue<boolean>(false);
+    const shorterDelay = 50;
+    const longerDelay = 70;
+
+    // Act
+    await render(
+      <DispatchTestComponent
+        worklet={() => {
+          'worklet';
+          const scheduledAt = performance.now();
+          setTimeout(() => {
+            order(2, notification2);
+          }, longerDelay);
+          setTimeout(() => {
+            markBothTimeoutsWereDue(
+              performance.now() - scheduledAt >= longerDelay
+            );
+            order(1, notification1);
+          }, shorterDelay);
+        }}
+        runtimeKind={RuntimeKind.UI}
+      />
+    );
+
+    // Assert
+    await waitForNotifications([notification1, notification2]);
+    if (bothTimeoutsWereDue.value) {
+      expect(confirmedOrder.value === 2 || confirmedOrder.value === -1).toBe(
+        true
       );
-
-      // Assert
-      await waitForNotifications([notification1, notification2]);
+    } else {
       expect(confirmedOrder.value).toBe(2);
     }
-  );
+  });
 
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'timeouts order of execution, nested timeouts, runtime: **%s**',

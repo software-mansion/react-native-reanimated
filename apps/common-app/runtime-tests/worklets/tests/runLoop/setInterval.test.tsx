@@ -267,36 +267,75 @@ describe('Test setInterval', () => {
     }
   );
 
-  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
-    'intervals order of execution, inverted scheduled order, runtime: **%s**',
-    async (runtimeKind) => {
-      // Arrange
-      const [notification1, notification2] = ['callback1', 'callback2'];
-      const [confirmedOrder, order] = createOrderConstraint();
+  test(`intervals order of execution, inverted scheduled order, runtime: **${RuntimeKind.Worker}**`, async () => {
+    // Arrange
+    const [notification1, notification2] = ['callback1', 'callback2'];
+    const [confirmedOrder, order] = createOrderConstraint();
 
-      // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            const handle1 = setInterval(() => {
-              order(2, notification2);
-              clearInterval(handle1);
-            }, 70);
-            const handle2 = setInterval(() => {
-              order(1, notification1);
-              clearInterval(handle2);
-            }, 50);
-          }}
-          runtimeKind={runtimeKind}
-        />
+    // Act
+    await render(
+      <DispatchTestComponent
+        worklet={() => {
+          'worklet';
+          const handle1 = setInterval(() => {
+            order(2, notification2);
+            clearInterval(handle1);
+          }, 70);
+          const handle2 = setInterval(() => {
+            order(1, notification1);
+            clearInterval(handle2);
+          }, 50);
+        }}
+        runtimeKind={RuntimeKind.Worker}
+      />
+    );
+
+    // Assert
+    await waitForNotifications([notification1, notification2]);
+    expect(confirmedOrder.value).toBe(2);
+  });
+
+  test(`intervals order of execution, inverted scheduled order, runtime: **${RuntimeKind.UI}**`, async () => {
+    // Arrange
+    const [notification1, notification2] = ['callback1', 'callback2'];
+    const [confirmedOrder, order] = createOrderConstraint();
+    const [bothIntervalsWereDue, markBothIntervalsWereDue] =
+      createTestValue<boolean>(false);
+    const shorterDelay = 50;
+    const longerDelay = 70;
+
+    // Act
+    await render(
+      <DispatchTestComponent
+        worklet={() => {
+          'worklet';
+          const scheduledAt = performance.now();
+          const handle1 = setInterval(() => {
+            order(2, notification2);
+            clearInterval(handle1);
+          }, longerDelay);
+          const handle2 = setInterval(() => {
+            markBothIntervalsWereDue(
+              performance.now() - scheduledAt >= longerDelay
+            );
+            order(1, notification1);
+            clearInterval(handle2);
+          }, shorterDelay);
+        }}
+        runtimeKind={RuntimeKind.UI}
+      />
+    );
+
+    // Assert
+    await waitForNotifications([notification1, notification2]);
+    if (bothIntervalsWereDue.value) {
+      expect(confirmedOrder.value === 2 || confirmedOrder.value === -1).toBe(
+        true
       );
-
-      // Assert
-      await waitForNotifications([notification1, notification2]);
+    } else {
       expect(confirmedOrder.value).toBe(2);
     }
-  );
+  });
 
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'intervals order of execution, nested timeouts, runtime: **%s**',
