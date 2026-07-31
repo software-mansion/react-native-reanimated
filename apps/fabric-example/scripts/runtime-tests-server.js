@@ -10,11 +10,49 @@ const WebSocketServer = WebSocket.WebSocketServer || WebSocket.Server;
 
 const LIBRARIES = ['reanimated', 'worklets', 'self-tests'];
 const PLATFORMS = ['ios', 'android'];
-const BOOLEAN_FLAGS = new Set(['launch', 'skip-build']);
+const BOOLEAN_FLAGS = new Set(['launch', 'skip-build', 'build-only', 'help']);
 const BUNDLE_ID = 'org.reactjs.native.example.FabricExample';
 const ANDROID_APP_ID = 'com.fabricexample';
 
+const projectRoot = path.resolve(__dirname, '..');
+const iosDir = path.join(projectRoot, 'ios');
+const androidDir = path.join(projectRoot, 'android');
+const SANITIZER_REPORT_DIR = path.join(projectRoot, 'sanitizer-reports');
+// -enable*Sanitizer alone does not reach the Pods project on CI (the built
+// products carried no -fsanitize flags), so each build setting is also forced
+// as a command-line override, which applies to every target.
+const SANITIZERS = {
+  thread: {
+    buildArgs: ['-enableThreadSanitizer', 'YES', 'ENABLE_THREAD_SANITIZER=YES'],
+    launchEnv: {
+      SIMCTL_CHILD_TSAN_OPTIONS: `log_path=${path.join(SANITIZER_REPORT_DIR, 'tsan')} halt_on_error=0`,
+    },
+    runtimePrefix: 'libclang_rt.tsan',
+  },
+  address: {
+    buildArgs: [
+      '-enableAddressSanitizer',
+      'YES',
+      'ENABLE_ADDRESS_SANITIZER=YES',
+      '-enableUndefinedBehaviorSanitizer',
+      'YES',
+      'ENABLE_UNDEFINED_BEHAVIOR_SANITIZER=YES',
+    ],
+    launchEnv: {
+      SIMCTL_CHILD_ASAN_OPTIONS: `log_path=${path.join(SANITIZER_REPORT_DIR, 'asan')}`,
+      SIMCTL_CHILD_UBSAN_OPTIONS: `log_path=${path.join(SANITIZER_REPORT_DIR, 'ubsan')} print_stacktrace=1`,
+    },
+    runtimePrefix: 'libclang_rt.asan',
+  },
+};
+
 const args = parseArgs(process.argv.slice(2));
+
+if (args.help) {
+  printUsage();
+  process.exit(0);
+}
+
 const LIBRARY = String(args.library ?? '').toLowerCase();
 const PLATFORM = String(args.platform ?? 'ios').toLowerCase();
 const METRO_PORT = Number(args['metro-port'] ?? 8081);
@@ -31,13 +69,15 @@ const ONLY = args.only
 const CONNECT_TIMEOUT_MS = Number(args['connect-timeout'] ?? 600) * 1000;
 const IDLE_TIMEOUT_MS = Number(args['idle-timeout'] ?? 600) * 1000;
 const SHOULD_LAUNCH = args.launch === true || args.launch === '';
+const BUILD_ONLY = args['build-only'] === true || args['build-only'] === '';
 const SKIP_BUILD = args['skip-build'] === true || args['skip-build'] === '';
 const SIMULATOR = args.simulator ?? 'iPhone 17';
 const UDID = args.udid ?? null;
 const SERIAL = args.serial ?? null;
 const AVD = args.avd ?? null;
+const SANITIZER = args.sanitizer ? String(args.sanitizer).toLowerCase() : null;
 
-if (!LIBRARIES.includes(LIBRARY)) {
+if (!BUILD_ONLY && !LIBRARIES.includes(LIBRARY)) {
   console.error(
     `[runtime-tests] --library must be one of: ${LIBRARIES.join(', ')} (got: ${LIBRARY || 'nothing'})`
   );
@@ -51,9 +91,27 @@ if (!PLATFORMS.includes(PLATFORM)) {
   process.exit(1);
 }
 
-const projectRoot = path.resolve(__dirname, '..');
-const iosDir = path.join(projectRoot, 'ios');
-const androidDir = path.join(projectRoot, 'android');
+if (SANITIZER && !SANITIZERS[SANITIZER]) {
+  console.error(
+    `[runtime-tests] --sanitizer supports only: ${Object.keys(SANITIZERS).join(', ')}`
+  );
+  process.exit(1);
+}
+
+if (SANITIZER && PLATFORM !== 'ios') {
+  console.error('[runtime-tests] --sanitizer is only supported on iOS');
+  process.exit(1);
+}
+
+if (BUILD_ONLY && PLATFORM !== 'ios') {
+  console.error('[runtime-tests] --build-only is only supported on iOS');
+  process.exit(1);
+}
+
+if (BUILD_ONLY && SHOULD_LAUNCH) {
+  console.error('[runtime-tests] --build-only cannot be combined with --launch');
+  process.exit(1);
+}
 
 let client = null;
 let runStartedAt = 0;
@@ -95,7 +153,7 @@ function armConnectTimer() {
   }, CONNECT_TIMEOUT_MS);
 }
 
-if (!SHOULD_LAUNCH) {
+if (!SHOULD_LAUNCH && !BUILD_ONLY) {
   armConnectTimer();
 }
 
@@ -295,7 +353,29 @@ function clearTimer(which) {
   }
 }
 
+function printSanitizerReports() {
+  if (!SANITIZER || BUILD_ONLY) {
+    return;
+  }
+  let files = [];
+  try {
+    files = fs.readdirSync(SANITIZER_REPORT_DIR);
+  } catch {
+    return;
+  }
+  if (files.length === 0) {
+    console.log('[runtime-tests] no sanitizer reports were produced');
+    return;
+  }
+  // Reports accumulate across the runs of a session and are printed by the
+  // step that fails on them, so only point at them here.
+  console.error(
+    `[runtime-tests] ${files.length} sanitizer report file(s) in ${SANITIZER_REPORT_DIR}: ${files.join(', ')}`
+  );
+}
+
 function shutdown(code) {
+  printSanitizerReports();
   clearTimer('connect');
   clearTimer('idle');
   if (metroChild && !metroChild.killed) {
@@ -476,9 +556,13 @@ async function ensureBooted(device) {
   await run('xcrun', ['simctl', 'bootstatus', device.udid]);
 }
 
+function sanitizerBuildArgs() {
+  return SANITIZER ? SANITIZERS[SANITIZER].buildArgs : [];
+}
+
 async function buildApp() {
   console.log(
-    `[runtime-tests] building with xcodebuild (${CONFIGURATION})… this can take a few minutes`
+    `[runtime-tests] building with xcodebuild (${CONFIGURATION}${SANITIZER ? `, ${SANITIZER} sanitizer` : ''})… this can take a few minutes`
   );
   await run(
     'xcodebuild',
@@ -491,6 +575,7 @@ async function buildApp() {
       CONFIGURATION,
       '-destination',
       'generic/platform=iOS Simulator',
+      ...sanitizerBuildArgs(),
       'build',
     ],
     { cwd: iosDir }
@@ -509,6 +594,7 @@ async function appPath() {
       CONFIGURATION,
       '-destination',
       'generic/platform=iOS Simulator',
+      ...sanitizerBuildArgs(),
       '-showBuildSettings',
       '-json',
     ],
@@ -525,6 +611,9 @@ async function appPath() {
 
 async function installAndLaunch(udid) {
   const app = await appPath();
+  if (SANITIZER) {
+    assertSanitizerRuntimeEmbedded(app);
+  }
   console.log(`[runtime-tests] installing ${app}`);
   await run('xcrun', ['simctl', 'install', udid, app]);
 
@@ -540,6 +629,12 @@ async function installAndLaunch(udid) {
   ]);
 
   await run('xcrun', ['simctl', 'terminate', udid, BUNDLE_ID]).catch(() => {});
+  if (SANITIZER) {
+    if (!SKIP_BUILD) {
+      fs.rmSync(SANITIZER_REPORT_DIR, { recursive: true, force: true });
+    }
+    fs.mkdirSync(SANITIZER_REPORT_DIR, { recursive: true });
+  }
   console.log(
     `[runtime-tests] launching ${BUNDLE_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY}`
   );
@@ -550,6 +645,7 @@ async function installAndLaunch(udid) {
       env: {
         ...process.env,
         SIMCTL_CHILD_RUNTIME_TESTS_LIBRARY: LIBRARY,
+        ...(SANITIZER ? SANITIZERS[SANITIZER].launchEnv : {}),
       },
     }
   );
@@ -729,16 +825,93 @@ if (SHOULD_LAUNCH) {
     }
     armConnectTimer();
   })().catch((error) => {
-    console.error(`[runtime-tests] ${error.message}`);
-    if (error.stderr) {
-      console.error(String(error.stderr).slice(-4000));
+    printCommandFailure(error);
+    shutdown(1);
+  });
+}
+
+function printCommandFailure(error) {
+  console.error(`[runtime-tests] ${error.message}`);
+  if (error.stdout) {
+    console.error(String(error.stdout).slice(-20000));
+  }
+  if (error.stderr) {
+    console.error(String(error.stderr).slice(-4000));
+  }
+}
+
+function assertSanitizerRuntimeEmbedded(app) {
+  const prefix = SANITIZERS[SANITIZER].runtimePrefix;
+  const frameworks = path.join(app, 'Frameworks');
+  const embedded =
+    fs.existsSync(frameworks) &&
+    fs.readdirSync(frameworks).some((name) => name.startsWith(prefix));
+  if (!embedded) {
+    throw new Error(
+      `the ${SANITIZER} sanitizer runtime (${prefix}*) is not embedded in ${app} — the build was not instrumented`
+    );
+  }
+  console.log(
+    `[runtime-tests] ${SANITIZER} sanitizer runtime is embedded in the app`
+  );
+}
+
+if (BUILD_ONLY) {
+  (async () => {
+    if (SANITIZER) {
+      fs.rmSync(SANITIZER_REPORT_DIR, { recursive: true, force: true });
     }
+    await buildApp();
+    if (SANITIZER) {
+      assertSanitizerRuntimeEmbedded(await appPath());
+    }
+    shutdown(0);
+  })().catch((error) => {
+    printCommandFailure(error);
     shutdown(1);
   });
 }
 
 process.on('SIGINT', () => shutdown(130));
 process.on('SIGTERM', () => shutdown(143));
+
+function printUsage() {
+  console.log(`Usage: yarn runtime-tests --library <${LIBRARIES.join('|')}> [options]
+
+Builds the runtime tests app, installs it, runs the requested library's test
+suites and reports the results. \`yarn runtime-tests\` implies --launch;
+\`yarn runtime-tests:server\` waits for you to start the app yourself.
+
+Required
+  --library <name>          One of: ${LIBRARIES.join(', ')}.
+
+Target
+  --platform <name>         One of: ${PLATFORMS.join(', ')}. Default: ios.
+  --simulator <name>        iOS simulator to boot. Default: iPhone 17.
+  --udid <udid>             iOS simulator to reuse, instead of --simulator.
+  --serial <serial>         Android device already running (see \`adb devices\`).
+  --avd <name>              Android AVD to boot when no --serial is given.
+
+Build and run
+  --configuration <name>    Xcode configuration / Gradle build type.
+                            Default: DebugRuntimeTests. Release builds embed
+                            the bundle and run without Metro.
+  --skip-build              Reuse the installed app. Only safe when nothing
+                            native changed - JS is served by Metro.
+  --launch                  Launch the app after installing it.
+  --only <a,b>              Comma separated suite names to run. Suite names come
+                            from the library's suites.ts, for example
+                            "run loop" or "runtimes,memory".
+
+Ports and timeouts
+  --metro-port <port>       Default: 8081.
+  --port <port>             Reporting WebSocket. Default: --metro-port + 1,
+                            or 8082 for Release builds.
+  --connect-timeout <secs>  Wait for the app to connect. Default: 600.
+  --idle-timeout <secs>     Give up after this much silence. Default: 600.
+
+  --help                    Show this message.`);
+}
 
 function parseArgs(argv) {
   const out = {};
