@@ -52,6 +52,5 @@ export type CSSAnimationUpdates = {
     number,
     Partial<NormalizedSingleCSSAnimationSettings>
   >;
-  // One mask per view covers every animation it applies.
   eventMask?: number;
 };

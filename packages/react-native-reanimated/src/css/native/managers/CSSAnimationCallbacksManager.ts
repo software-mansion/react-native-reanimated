@@ -43,7 +43,6 @@ export default class CSSAnimationCallbacksManager
     this.viewTag = viewTag;
   }
 
-  /** Bitmask of the events the native side has to emit for this view. */
   getMask(): number {
     return this.eventMask;
   }

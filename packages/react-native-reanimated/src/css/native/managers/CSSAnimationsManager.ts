@@ -48,8 +48,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     animationProperties: ExistingCSSAnimationProperties | null,
     callbacks: CSSAnimationCallbacks | null = null
   ): void {
-    // Callbacks are synced before the animations are touched so that a cancel
-    // emitted while detaching still reaches the user.
+    // Synced first so a cancel emitted while detaching still reaches the user.
     this.callbacksManager.sync(callbacks ?? {});
     const eventMask = this.callbacksManager.getMask();
 
@@ -75,8 +74,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
 
       this.apply(animationUpdates, eventMask);
     } else if (eventMask !== this.appliedEventMask) {
-      // The requested events changed while the animations themselves did not,
-      // so the native side still has to learn about the new mask.
+      // Only the mask changed, but the native side still has to learn about it.
       this.apply({}, eventMask);
     }
   }
