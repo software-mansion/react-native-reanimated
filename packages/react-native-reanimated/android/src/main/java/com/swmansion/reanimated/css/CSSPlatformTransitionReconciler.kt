@@ -29,9 +29,8 @@ internal class CSSPlatformTransitionReconciler(
                 override fun onPreDraw(): Boolean {
                     if (repair()) return true
 
-                    // Retiring here rather than when the registry empties: cancelling an
-                    // animator runs its end callback part way through installing the
-                    // replacement, when the registry is briefly empty.
+                    // Retiring lazily at draw time keeps the lifecycle one-sided: the
+                    // manager only ever tracks, and a registry left empty retires here.
                     if (observer.isAlive) observer.removeOnPreDrawListener(this)
                     tracked.remove(observer)
                     return true

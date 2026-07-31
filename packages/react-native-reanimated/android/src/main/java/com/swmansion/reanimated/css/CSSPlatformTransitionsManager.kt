@@ -1,8 +1,5 @@
 package com.swmansion.reanimated.css
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
-import android.animation.ObjectAnimator
 import android.animation.TimeInterpolator
 import android.util.FloatProperty
 import android.view.Choreographer
@@ -18,7 +15,7 @@ internal class CSSPlatformTransitionsManager(
     private val reactContext: WeakReference<ReactApplicationContext>,
     private val animationTimestamp: () -> Long,
 ) {
-    private val animators = HashMap<Key, RunningTransition>()
+    private val transitions = HashMap<Key, RunningTransition>()
     private val reconciler = CSSPlatformTransitionReconciler(::repairClobberedValues)
     private val startTokens = HashMap<Key, Long>()
 
@@ -32,34 +29,75 @@ internal class CSSPlatformTransitionsManager(
     )
 
     private class RunningTransition(
-        val animator: ObjectAnimator,
+        view: View,
         val writer: FloatProperty<View>,
         val startValue: Float,
+        val toValue: Float,
+        val startTimeMs: Double,
+        val durationMs: Double,
+        val interpolator: TimeInterpolator,
+        val persistent: Boolean,
     ) {
-        /** Final value of a finished persistent transition, which outlives its animator. */
-        var heldValue: Float? = null
+        val viewRef = WeakReference(view)
 
-        /**
-         * ObjectAnimator leaves its animated value uninitialised until its first frame, which
-         * a start delay defers, so until then the property must show the start value.
-         */
-        fun currentValue(): Float = heldValue ?: if (animator.isRunning) animator.animatedValue as Float else startValue
+        /** Last value this manager wrote; the repair pass re-asserts it after commits. */
+        var current: Float = startValue
+
+        /** A finished persistent transition stays registered so its value keeps being defended. */
+        var finished: Boolean = false
     }
 
-    /** Holds the start value for the leading [delayFraction], then plays [inner] over the rest. */
-    private class HoldThenEase(
-        private val delayFraction: Float,
-        private val inner: TimeInterpolator,
-    ) : TimeInterpolator {
-        override fun getInterpolation(input: Float): Float =
-            if (input <= delayFraction) 0f else inner.getInterpolation((input - delayFraction) / (1f - delayFraction))
-    }
+    private var pumping = false
 
-    private data class InterpolatorKey(
-        val type: Int,
-        val pointsX: List<Float>,
-        val pointsY: List<Float>,
-    )
+    /**
+     * Single per-frame driver for every running transition. The absolute start timestamp
+     * makes delay and late-start seeking fall out of the arithmetic: t < 0 during the
+     * delay clamps to 0 and holds the start value, and a late first frame lands mid-curve
+     * instead of shifting the whole timeline.
+     */
+    private val framePump =
+        object : Choreographer.FrameCallback {
+            override fun doFrame(frameTimeNanos: Long) {
+                val now = animationTimestamp().toDouble()
+                var active = false
+                val iterator = transitions.entries.iterator()
+                while (iterator.hasNext()) {
+                    val running = iterator.next().value
+                    if (running.finished) continue
+                    val view = running.viewRef.get()
+                    if (view == null) {
+                        iterator.remove()
+                        continue
+                    }
+                    val t = ((now - running.startTimeMs) / running.durationMs).toFloat().coerceIn(0f, 1f)
+                    val value =
+                        running.startValue +
+                            (running.toValue - running.startValue) * running.interpolator.getInterpolation(t)
+                    running.current = value
+                    // setValue takes a primitive and View.setAlpha early-outs on an unchanged
+                    // value, so unconditional writes allocate nothing and invalidate only on
+                    // real changes.
+                    running.writer.setValue(view, value)
+                    if (t >= 1f) {
+                        if (running.persistent) running.finished = true else iterator.remove()
+                    } else {
+                        active = true
+                    }
+                }
+                if (active) {
+                    Choreographer.getInstance().postFrameCallback(this)
+                } else {
+                    pumping = false
+                }
+            }
+        }
+
+    private fun ensurePumping() {
+        if (!pumping) {
+            pumping = true
+            Choreographer.getInstance().postFrameCallback(framePump)
+        }
+    }
 
     /**
      * Returns whether the property is accepted for native playback, decided before the
@@ -81,24 +119,27 @@ internal class CSSPlatformTransitionsManager(
     ): Boolean {
         val writer = cssPropertyWriterFor(propertyName) ?: return false
         val context = reactContext.get() ?: return false
-        val scale = DurationScale.effectiveScale(context)
-        // Scale 0 means animations are off, and ValueAnimator would finish instantly.
-        if (scale <= 0f) return false
+        // Scale 0 means animations are off; refusing sends the property to the loop, which
+        // resolves the final style without animating. Other scales are not applied here:
+        // platform transitions follow the authored CSS timeline, and the slow-animations
+        // toggle already flows through the shared animation clock.
+        if (DurationScale.effectiveScale(context) <= 0f) return false
 
-        UiThreadUtil.runOnUiThread {
-            val key = Key(viewTag, propertyName)
-            // Claiming a fresh token invalidates any retry still queued for this key,
-            // so a superseded request cannot start on a later frame.
-            val token = ++nextStartToken
-            startTokens[key] = token
-
-            beginWhenMounted(key, token, startTimestampMs + durationMs) {
-                viewForTag(viewTag)?.also { view ->
-                    val interpolator = interpolatorFor(easingType, easingPointsX, easingPointsY)
-                    start(view, key, writer, fromValue, toValue, durationMs, startTimestampMs, interpolator, scale, persistent)
-                } != null
-            }
-        }
+        enqueue(
+            Command.Start(
+                viewTag,
+                propertyName,
+                writer,
+                fromValue,
+                toValue,
+                durationMs,
+                startTimestampMs,
+                easingType,
+                easingPointsX,
+                easingPointsY,
+                persistent,
+            ),
+        )
         return true
     }
 
@@ -106,11 +147,93 @@ internal class CSSPlatformTransitionsManager(
         viewTag: Int,
         propertyName: String,
     ) {
-        UiThreadUtil.runOnUiThread {
-            val key = Key(viewTag, propertyName)
-            // Also drops any queued retry for this key.
-            startTokens.remove(key)
-            animators.remove(key)?.animator?.cancel()
+        enqueue(Command.Remove(viewTag, propertyName))
+    }
+
+    private sealed class Command {
+        class Start(
+            val viewTag: Int,
+            val propertyName: String,
+            val writer: FloatProperty<View>,
+            val fromValue: Double,
+            val toValue: Double,
+            val durationMs: Double,
+            val startTimestampMs: Double,
+            val easingType: Int,
+            val pointsX: FloatArray,
+            val pointsY: FloatArray,
+            val persistent: Boolean,
+        ) : Command()
+
+        class Remove(
+            val viewTag: Int,
+            val propertyName: String,
+        ) : Command()
+    }
+
+    private val commandLock = Any()
+    private var pendingCommands = ArrayList<Command>()
+    private var spareCommands = ArrayList<Command>()
+    private var flushScheduled = false
+
+    /**
+     * One main-looper message per burst instead of one per transition: a render that
+     * starts hundreds of transitions would otherwise flood the queue, and by the time
+     * late messages ran their transitions would already be stale.
+     */
+    private fun enqueue(command: Command) {
+        val schedule: Boolean
+        synchronized(commandLock) {
+            pendingCommands.add(command)
+            schedule = !flushScheduled
+            if (schedule) flushScheduled = true
+        }
+        if (schedule) UiThreadUtil.runOnUiThread { flushCommands() }
+    }
+
+    private fun flushCommands() {
+        val batch: ArrayList<Command>
+        synchronized(commandLock) {
+            batch = pendingCommands
+            pendingCommands = spareCommands
+            flushScheduled = false
+        }
+        for (command in batch) {
+            when (command) {
+                is Command.Start -> beginTransition(command)
+                is Command.Remove -> {
+                    val key = Key(command.viewTag, command.propertyName)
+                    // Also drops any queued retry for this key.
+                    startTokens.remove(key)
+                    transitions.remove(key)
+                }
+            }
+        }
+        batch.clear()
+        spareCommands = batch
+    }
+
+    private fun beginTransition(command: Command.Start) {
+        val key = Key(command.viewTag, command.propertyName)
+        // Claiming a fresh token invalidates any retry still queued for this key, so a
+        // superseded request cannot start on a later frame.
+        val token = ++nextStartToken
+        startTokens[key] = token
+        beginWhenMounted(key, token, command.startTimestampMs + command.durationMs) {
+            viewForTag(command.viewTag)?.also { view ->
+                val interpolator = interpolatorFor(command.easingType, command.pointsX, command.pointsY)
+                start(
+                    view,
+                    key,
+                    command.writer,
+                    command.fromValue,
+                    command.toValue,
+                    command.durationMs,
+                    command.startTimestampMs,
+                    interpolator,
+                    command.persistent,
+                )
+            } != null
         }
     }
 
@@ -143,69 +266,62 @@ internal class CSSPlatformTransitionsManager(
         durationMs: Double,
         startTimestampMs: Double,
         interpolator: TimeInterpolator,
-        scale: Float,
         persistent: Boolean,
     ) {
-        // On interruption resume from what is on screen: fromValue is the committed
-        // style value, so starting there would snap the view back to where the
-        // cancelled transition began.
-        val interrupted = animators.remove(key)
-        val startValue = if (interrupted != null) writer.get(view) else fromValue.toFloat()
-        interrupted?.animator?.cancel()
+        // On interruption resume from the value this engine last wrote: fromValue is the
+        // committed style value, so starting there would snap the view back to where the
+        // superseded transition began.
+        val startValue = transitions.remove(key)?.current ?: fromValue.toFloat()
 
-        // React Native has already committed the target, and ObjectAnimator writes nothing
-        // until its first frame - which transition-delay defers. Without this the view
-        // would show the target for the whole delay and then jump back.
+        // React Native has already committed the target; show the start value until the
+        // first pump frame (and through any transition-delay).
         writer.setValue(view, startValue)
 
-        val animator = ObjectAnimator.ofFloat(view, writer, startValue, toValue.toFloat())
-        animator.addListener(
-            object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) {
-                    // A replacement may already own the key.
-                    val running = animators[key] ?: return
-                    if (running.animator !== animation) return
-                    // A persistent value has no committed style behind it, so dropping the entry
-                    // would let the next commit revert the view.
-                    if (persistent) {
-                        running.heldValue = animator.animatedValue as Float
-                    } else {
-                        animators.remove(key)
-                    }
-                }
-            },
-        )
-        // ObjectAnimator has no absolute start time, so resolve one against the clock
-        // here rather than in C++: the hop to this thread and the wait for the next
-        // frame would otherwise shift the whole timeline late.
-        val elapsedMs = animationTimestamp().toDouble() - startTimestampMs
-        val delayMs = if (elapsedMs < 0) -elapsedMs else 0.0
-        // Play through the delay rather than using startDelay. A delayed ObjectAnimator
-        // writes nothing while it waits, so any commit landing in that window stays on
-        // screen; holding the start value inside the curve makes the animator rewrite the
-        // property every frame instead. This is what kCAFillModeBackwards gives us on Apple.
-        animator.duration = ((delayMs + durationMs) / scale).toLong().coerceAtLeast(1L)
-        animator.interpolator =
-            if (delayMs > 0) HoldThenEase((delayMs / (delayMs + durationMs)).toFloat(), interpolator) else interpolator
-        if (elapsedMs > 0 && durationMs > 0) {
-            // Seek before starting: ValueAnimator.start() gates on `mSeekFraction >= 0` when
-            // deciding whether to begin immediately, so a later seek races the first frame.
-            animator.setCurrentFraction((elapsedMs / durationMs).toFloat().coerceIn(0f, 1f))
-        }
-        animator.start()
-        animators[key] = RunningTransition(animator, writer, startValue)
+        transitions[key] =
+            RunningTransition(
+                view,
+                writer,
+                startValue,
+                toValue.toFloat(),
+                startTimestampMs,
+                durationMs.coerceAtLeast(1.0),
+                interpolator,
+                persistent,
+            )
         reconciler.track(view)
+        ensurePumping()
     }
 
-    /** Re-asserts each animator's own value wherever a commit overwrote it. */
+    /** Re-asserts each transition's own value wherever a commit overwrote it. */
     private fun repairClobberedValues(): Boolean {
-        animators.values.forEach { running ->
-            // target is held weakly, so read the View through it rather than keeping one.
-            val view = running.animator.target as? View ?: return@forEach
-            val current = running.currentValue()
-            if (running.writer.get(view) != current) running.writer.setValue(view, current)
+        val iterator = transitions.values.iterator()
+        while (iterator.hasNext()) {
+            val running = iterator.next()
+            val view = running.viewRef.get()
+            if (view == null) {
+                iterator.remove()
+                continue
+            }
+            // setValue takes a primitive and setAlpha early-outs when unchanged, so an
+            // unconditional re-assert is allocation-free.
+            running.writer.setValue(view, running.current)
         }
-        return animators.isNotEmpty()
+        return transitions.isNotEmpty()
+    }
+
+    /** Compares the point arrays by content, so probing the cache allocates only the key. */
+    private class InterpolatorKey(
+        private val type: Int,
+        private val pointsX: FloatArray,
+        private val pointsY: FloatArray,
+    ) {
+        override fun equals(other: Any?): Boolean =
+            other is InterpolatorKey &&
+                type == other.type &&
+                pointsX.contentEquals(other.pointsX) &&
+                pointsY.contentEquals(other.pointsY)
+
+        override fun hashCode(): Int = 31 * (31 * type + pointsX.contentHashCode()) + pointsY.contentHashCode()
     }
 
     /**
@@ -218,7 +334,7 @@ internal class CSSPlatformTransitionsManager(
         pointsX: FloatArray,
         pointsY: FloatArray,
     ): TimeInterpolator {
-        val key = InterpolatorKey(type, pointsX.toList(), pointsY.toList())
+        val key = InterpolatorKey(type, pointsX, pointsY)
         return interpolators.getOrPut(key) { CSSEasing.interpolator(type, pointsX, pointsY) }
     }
 

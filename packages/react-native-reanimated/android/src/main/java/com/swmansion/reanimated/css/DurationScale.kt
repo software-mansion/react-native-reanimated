@@ -6,10 +6,9 @@ import android.os.Build
 import android.provider.Settings
 
 /**
- * `ValueAnimator` multiplies every duration and start delay by a process-global scale,
- * but a CSS transition has to last exactly as long as the author wrote, so callers
- * pre-divide by this. `overrideDurationScale` would opt a single animator out, but it
- * is `@hide` with no greylist entry, and the only other setter is process-global.
+ * The process-global animator duration scale. A CSS transition follows its authored
+ * timeline, so callers only consult this for the zero case, where animations are
+ * disabled entirely and the property has to settle without animating.
  */
 internal object DurationScale {
     fun effectiveScale(context: Context): Float {
