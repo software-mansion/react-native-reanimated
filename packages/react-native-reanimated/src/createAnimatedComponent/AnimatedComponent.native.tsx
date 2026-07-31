@@ -3,7 +3,7 @@ import type React from 'react';
 import { Fragment } from 'react';
 
 import { checkStyleOverwriting, maybeBuild } from '../animationBuilder';
-import { IS_JEST, logger } from '../common';
+import { IS_JEST, logger, NO_VIEW_TAG } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
@@ -104,7 +104,7 @@ export default class AnimatedComponent
 
     if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
       const viewTag = this.getComponentViewTag();
-      if (viewTag !== -1) {
+      if (viewTag !== NO_VIEW_TAG) {
         PropsRegistryGarbageCollector.registerView(viewTag, this);
       }
     }
@@ -133,7 +133,7 @@ export default class AnimatedComponent
 
     if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
       const viewTag = this.getComponentViewTag();
-      if (viewTag !== -1) {
+      if (viewTag !== NO_VIEW_TAG) {
         PropsRegistryGarbageCollector.unregisterView(viewTag);
       }
     }
@@ -181,7 +181,7 @@ export default class AnimatedComponent
 
   _detachStyles() {
     const viewTag = this.getComponentViewTag();
-    if (viewTag !== -1) {
+    if (viewTag !== NO_VIEW_TAG) {
       for (const style of this._animatedStyles) {
         style.viewDescriptors.remove(viewTag);
       }
