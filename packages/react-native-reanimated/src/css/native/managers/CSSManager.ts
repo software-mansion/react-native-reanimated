@@ -6,7 +6,7 @@ import {
 } from '../../../common';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
-import type { CSSStyle } from '../../types';
+import type { CSSAnimationCallbacks, CSSStyle } from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
 import { filterCSSAndStyleProperties } from '../../utils';
 import { setViewStyle } from '../proxy';
@@ -19,7 +19,7 @@ export default class CSSManager implements ICSSManager {
   private readonly cssAnimationsManager: CSSAnimationsManager;
   private readonly cssTransitionsManager: CSSTransitionsManager;
   private readonly cssPseudoStylesManager: CSSPseudoStylesManager;
-  private readonly cssCallbacksManager: CSSCallbacksManager;
+  private cssCallbacksManager: CSSCallbacksManager | null = null;
   private readonly viewTag: number;
   private readonly propsBuilder: ReturnType<typeof getPropsBuilder>;
   /**
@@ -54,7 +54,6 @@ export default class CSSManager implements ICSSManager {
       tag,
       this.propsBuilder
     );
-    this.cssCallbacksManager = new CSSCallbacksManager(tag);
   }
 
   update(style: CSSStyle): void {
@@ -69,8 +68,7 @@ export default class CSSManager implements ICSSManager {
 
     // Synced before either manager runs so a cancel emitted while detaching
     // still reaches the user.
-    this.cssCallbacksManager.sync(animationCallbacks ?? {});
-    const eventMask = this.cssCallbacksManager.getMask();
+    const eventMask = this.syncCallbacks(animationCallbacks);
 
     const hasAnimation = animationProperties !== null;
     const hasTransition = transitionProperties !== null;
@@ -106,9 +104,21 @@ export default class CSSManager implements ICSSManager {
   }
 
   unmountCleanup(): void {
-    this.cssCallbacksManager.detach();
+    this.cssCallbacksManager?.detach();
     this.cssAnimationsManager.unmountCleanup();
     this.cssTransitionsManager.unmountCleanup();
     this.cssPseudoStylesManager.unmountCleanup();
+  }
+
+  private syncCallbacks(callbacks: CSSAnimationCallbacks | null): number {
+    if (!this.cssCallbacksManager) {
+      if (!callbacks) {
+        return 0;
+      }
+      this.cssCallbacksManager = new CSSCallbacksManager(this.viewTag);
+    }
+
+    this.cssCallbacksManager.sync(callbacks ?? {});
+    return this.cssCallbacksManager.getMask();
   }
 }

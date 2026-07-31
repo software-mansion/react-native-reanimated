@@ -105,6 +105,19 @@ describe('CSSManager', () => {
       });
     });
 
+    test('starts delivering when a callback appears after the first update', () => {
+      const onAnimationEnd = jest.fn();
+      manager.update(ANIMATION);
+      manager.update({ ...ANIMATION, onAnimationEnd });
+
+      cssCallbacksRegistry.dispatch([event('animationEnd')]);
+
+      expect(onAnimationEnd).toHaveBeenCalledWith({
+        animationName: 'fadeIn',
+        elapsedTime: 2,
+      });
+    });
+
     test('keeps delivering events while the animation detaches', () => {
       const onAnimationCancel = jest.fn();
       manager.update({ ...ANIMATION, onAnimationCancel });
