@@ -24,6 +24,8 @@ const CALLBACK_PROP_BY_EVENT_TYPE: Record<
 
 const CALLBACK_PROPS = Object.values(CALLBACK_PROP_BY_EVENT_TYPE);
 
+// Every CSS event for a view reaches this manager, so the table doubles as the
+// check for whether the kind is one it owns. Transition kinds join it later.
 const isAnimationEventType = (
   type: CSSEventType
 ): type is CSSAnimationEventType => type in CALLBACK_PROP_BY_EVENT_TYPE;
@@ -31,7 +33,7 @@ const isAnimationEventType = (
 /** A view tag of -1 means that the component has no mounted view yet. */
 const NO_VIEW_TAG = -1;
 
-export default class CSSAnimationCallbacksManager
+export default class CSSCallbacksManager
   extends CSSCallbackStore<CSSAnimationCallbackProp, CSSAnimationEvent>
   implements CSSEventSubscriber
 {
