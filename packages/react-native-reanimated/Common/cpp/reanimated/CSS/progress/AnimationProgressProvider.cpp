@@ -72,8 +72,47 @@ void AnimationProgressProvider::setMilestoneReporter(RunLifecycle::Reporter repo
   lifecycle_.setMilestoneReporter(std::move(reporter));
 }
 
-void AnimationProgressProvider::abort() {
+void AnimationProgressProvider::abort(const double timestamp) {
+  cancelTimestamp_ = timestamp;
   lifecycle_.abort();
+}
+
+double AnimationProgressProvider::elapsedTimeAt(const RunMilestone milestone) const {
+  switch (milestone) {
+    case RunMilestone::Started:
+      return startElapsedTime();
+    case RunMilestone::Repeated:
+      return iterationElapsedTime();
+    case RunMilestone::Ended:
+      return endElapsedTime();
+    case RunMilestone::Aborted:
+      return cancelElapsedTime();
+    case RunMilestone::Created:
+      return 0;
+  }
+}
+
+double AnimationProgressProvider::startElapsedTime() const {
+  // A negative delay starts the animation partway through.
+  const auto elapsedTime = std::max(0.0, -delay_);
+
+  // An infinite animation has no total duration to be capped against.
+  if (iterationCount_ < 0) {
+    return elapsedTime;
+  }
+  return std::min(elapsedTime, duration_ * iterationCount_);
+}
+
+double AnimationProgressProvider::iterationElapsedTime() const {
+  return (currentIteration_ - 1) * duration_;
+}
+
+double AnimationProgressProvider::endElapsedTime() const {
+  return duration_ * iterationCount_;
+}
+
+double AnimationProgressProvider::cancelElapsedTime() const {
+  return std::max(0.0, cancelTimestamp_ - getStartTimestamp(cancelTimestamp_));
 }
 
 double AnimationProgressProvider::getStartTimestamp(const double timestamp) const {

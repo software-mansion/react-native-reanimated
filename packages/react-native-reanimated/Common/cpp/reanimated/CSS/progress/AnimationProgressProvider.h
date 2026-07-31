@@ -39,8 +39,11 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
 
   AnimationProgressState getState() const;
   void setMilestoneReporter(RunLifecycle::Reporter reporter);
-  void abort();
+  void abort(double timestamp);
   double getStartTimestamp(double timestamp) const;
+
+  /// Time the animation has run by the given milestone, in milliseconds.
+  double elapsedTimeAt(RunMilestone milestone) const;
 
   double getDuration() const {
     return duration_;
@@ -77,10 +80,17 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   double previousIterationsDuration_ = 0;
   double pauseTimestamp_ = 0;
   double totalPausedTime_ = 0;
+  // The lifecycle reports an abort without a timestamp, so abort() leaves one here.
+  double cancelTimestamp_ = 0;
 
   double getTotalPausedTime(double timestamp) const;
   bool shouldFinish(double timestamp) const;
   RunPhase computePhase(double timestamp) const;
+
+  double startElapsedTime() const;
+  double iterationElapsedTime() const;
+  double endElapsedTime() const;
+  double cancelElapsedTime() const;
 
   double updateIterationProgress(double currentIterationElapsedTime);
   double applyAnimationDirection(double iterationProgress) const;

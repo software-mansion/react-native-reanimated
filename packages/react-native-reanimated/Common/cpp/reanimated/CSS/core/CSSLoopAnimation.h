@@ -6,6 +6,7 @@
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -14,12 +15,23 @@ namespace reanimated::css {
 
 class CSSLoopAnimation : public OperationsLoop::LoopOperation, public std::enable_shared_from_this<CSSLoopAnimation> {
  public:
+  /// Reports a milestone of the run together with the time elapsed by then.
+  using MilestoneReporter = std::function<void(RunMilestone, double elapsedTime)>;
+
   CSSLoopAnimation(
       Tag viewTag,
       const std::shared_ptr<AnimationStyleInterpolator> &interpolator,
       const std::shared_ptr<CSSAnimationSettings> &settings,
-      const std::shared_ptr<AnimationProgressProvider> &progressProvider,
-      CSSAnimationObserver &observer);
+      const std::shared_ptr<KeyframeEasingConfigs> &keyframeEasingConfigs,
+      CSSAnimationObserver &observer,
+      double timestamp);
+
+  AnimationProgressState getState() const {
+    return progressProvider_->getState();
+  }
+
+  void onMilestone(MilestoneReporter reporter);
+  void abort(double timestamp);
 
   folly::dynamic getCurrentInterpolationStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const;
 
