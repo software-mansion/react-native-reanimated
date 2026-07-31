@@ -1,4 +1,5 @@
 'use strict';
+import { NO_VIEW_TAG } from '../../../common';
 import { CSSCallbackStore } from '../../models';
 import type { CSSAnimationCallbackProp, CSSAnimationEvent } from '../../types';
 import type {
@@ -29,9 +30,6 @@ const CALLBACK_PROPS = Object.values(CALLBACK_PROP_BY_EVENT_TYPE);
 const isAnimationEventType = (
   type: CSSEventType
 ): type is CSSAnimationEventType => type in CALLBACK_PROP_BY_EVENT_TYPE;
-
-/** A view tag of -1 means that the component has no mounted view yet. */
-const NO_VIEW_TAG = -1;
 
 export default class CSSCallbacksManager
   extends CSSCallbackStore<CSSAnimationCallbackProp, CSSAnimationEvent>
