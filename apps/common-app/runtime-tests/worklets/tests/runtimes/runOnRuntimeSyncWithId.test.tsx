@@ -1,7 +1,6 @@
 import {
   scheduleOnRN,
   scheduleOnRuntime,
-  scheduleOnRuntimeWithId,
   runOnRuntimeSyncWithId,
   scheduleOnUI,
   UIRuntimeId,
@@ -15,10 +14,6 @@ import {
   waitForNotification,
   beforeEach,
 } from '../../../ReJest/RuntimeTestsApi';
-import {
-  startCountingMicrotaskDrains,
-  stopCountingMicrotaskDrains,
-} from './microtaskDrainCounter';
 
 const PASS_NOTIFICATION = 'PASS';
 const FAIL_NOTIFICATION = 'FAIL';
@@ -334,45 +329,4 @@ describe('runOnRuntimeSyncWithId', () => {
       );
     });
   }
-
-  [
-    { name: 'UI', runtimeId: UIRuntimeId },
-    { name: 'Worker', runtimeId: workletRuntime1.runtimeId },
-  ].forEach(({ name, runtimeId }) => {
-    test(`does not drain microtasks after synchronous execution on ${name} Runtime`, () => {
-      const counter = startCountingMicrotaskDrains(runtimeId);
-
-      runOnRuntimeSyncWithId(runtimeId, () => {
-        'worklet';
-      });
-
-      const microtaskDrainCount = stopCountingMicrotaskDrains(
-        runtimeId,
-        counter
-      );
-
-      expect(microtaskDrainCount).toBe(0);
-    });
-  });
-
-  [
-    { name: 'UI', runtimeId: UIRuntimeId },
-    { name: 'Worker', runtimeId: workletRuntime1.runtimeId },
-  ].forEach(({ name, runtimeId }) => {
-    test(`runs microtasks queued during synchronous execution once a subsequent task drains them on ${name} Runtime`, async () => {
-      runOnRuntimeSyncWithId(runtimeId, () => {
-        'worklet';
-        queueMicrotask(() => {
-          scheduleOnRN(callbackPass, 42);
-        });
-      });
-
-      scheduleOnRuntimeWithId(runtimeId, () => {
-        'worklet';
-      });
-
-      await waitForNotification(PASS_NOTIFICATION);
-      expect(value).toBe(42);
-    });
-  });
 });

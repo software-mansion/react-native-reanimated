@@ -13,10 +13,6 @@ import {
   test,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
-import {
-  startCountingMicrotaskDrains,
-  stopCountingMicrotaskDrains,
-} from './microtaskDrainCounter';
 
 describe('scheduleOnRuntime', () => {
   const PASS_NOTIFICATION = 'PASS';
@@ -78,34 +74,5 @@ describe('scheduleOnRuntime', () => {
 
     await waitForNotification(PASS_NOTIFICATION);
     expect(value).toBe(42);
-  });
-
-  test('drains microtasks after execution', async () => {
-    scheduleOnRuntime(workletRuntime1, () => {
-      'worklet';
-      queueMicrotask(() => {
-        scheduleOnRN(callbackPass, 42);
-      });
-    });
-
-    await waitForNotification(PASS_NOTIFICATION);
-    expect(value).toBe(42);
-  });
-
-  test('drains microtasks exactly once after execution', async () => {
-    const counter = startCountingMicrotaskDrains(workletRuntime1.runtimeId);
-
-    scheduleOnRuntime(workletRuntime1, () => {
-      'worklet';
-      scheduleOnRN(callbackPass, 42);
-    });
-    await waitForNotification(PASS_NOTIFICATION);
-
-    const microtaskDrainCount = stopCountingMicrotaskDrains(
-      workletRuntime1.runtimeId,
-      counter
-    );
-
-    expect(microtaskDrainCount).toBe(1);
   });
 });

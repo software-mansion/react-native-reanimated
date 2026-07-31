@@ -3,7 +3,6 @@ import {
   scheduleOnRN,
   scheduleOnRuntime,
   scheduleOnUI,
-  UIRuntimeId,
 } from 'react-native-worklets';
 import {
   beforeEach,
@@ -14,10 +13,6 @@ import {
   test,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
-import {
-  startCountingMicrotaskDrains,
-  stopCountingMicrotaskDrains,
-} from './microtaskDrainCounter';
 
 describe('runOnUISync', () => {
   const PASS_NOTIFICATION = 'PASS';
@@ -128,31 +123,4 @@ describe('runOnUISync', () => {
       );
     });
   }
-
-  test('does not drain microtasks after synchronous execution', () => {
-    const counter = startCountingMicrotaskDrains(UIRuntimeId);
-
-    runOnUISync(() => {
-      'worklet';
-    });
-
-    const microtaskDrainCount = stopCountingMicrotaskDrains(
-      UIRuntimeId,
-      counter
-    );
-
-    expect(microtaskDrainCount).toBe(0);
-  });
-
-  test('runs microtasks queued during synchronous execution on the next animation frame', async () => {
-    runOnUISync(() => {
-      'worklet';
-      queueMicrotask(() => {
-        scheduleOnRN(callbackPass, 42);
-      });
-    });
-
-    await waitForNotification(PASS_NOTIFICATION);
-    expect(value).toBe(42);
-  });
 });

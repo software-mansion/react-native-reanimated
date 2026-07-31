@@ -173,7 +173,6 @@ declare global {
     | undefined;
   var originalCallMicrotasks: (() => void) | undefined;
   var __callMicrotasks: () => void;
-  var didRunMicrotask: boolean | undefined;
   var scheduleOnRN: typeof import('react-native-worklets').scheduleOnRN;
   var originalFlushAnimationFrame:
     | ((frameTimestamp: number) => void)
