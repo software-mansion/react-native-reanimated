@@ -25,21 +25,13 @@ jni::local_ref<JScriptBufferWrapper::jhybriddata> JScriptBufferWrapper::initHybr
 
 jni::local_ref<JScriptBufferWrapper::jhybriddata> JScriptBufferWrapper::initHybridFromFile(
     jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
-    const std::string &fileName) {
+    const std::string &fileName,
+    const std::string &sourceURL) {
   std::shared_ptr<const ScriptBuffer> script;
   RecoverableError::runRethrowingAsRecoverable<std::system_error>([&fileName, &script]() {
     auto bigString = JSBigFileString::fromPath(fileName);
     script = std::make_shared<ScriptBuffer>(std::move(bigString));
   });
-  return makeCxxInstance(std::move(script), fileName);
-}
-
-jni::local_ref<JScriptBufferWrapper::jhybriddata> JScriptBufferWrapper::initHybridFromString(
-    jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
-    const std::string &scriptStr,
-    const std::string &sourceURL) {
-  auto bigString = std::make_shared<JSBigStdString>(scriptStr);
-  auto script = std::make_shared<ScriptBuffer>(std::move(bigString));
   return makeCxxInstance(std::move(script), sourceURL);
 }
 
@@ -60,7 +52,6 @@ void JScriptBufferWrapper::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybridFromAssets", JScriptBufferWrapper::initHybridFromAssets),
       makeNativeMethod("initHybridFromFile", JScriptBufferWrapper::initHybridFromFile),
-      makeNativeMethod("initHybridFromString", JScriptBufferWrapper::initHybridFromString),
   });
 }
 } // namespace worklets

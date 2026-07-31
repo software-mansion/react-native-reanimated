@@ -10,7 +10,7 @@ const WebSocketServer = WebSocket.WebSocketServer || WebSocket.Server;
 
 const LIBRARIES = ['reanimated', 'worklets', 'self-tests'];
 const PLATFORMS = ['ios', 'android'];
-const BOOLEAN_FLAGS = new Set(['launch', 'skip-build', 'build-only']);
+const BOOLEAN_FLAGS = new Set(['launch', 'skip-build', 'build-only', 'help']);
 const BUNDLE_ID = 'org.reactjs.native.example.FabricExample';
 const ANDROID_APP_ID = 'com.fabricexample';
 
@@ -47,6 +47,12 @@ const SANITIZERS = {
 };
 
 const args = parseArgs(process.argv.slice(2));
+
+if (args.help) {
+  printUsage();
+  process.exit(0);
+}
+
 const LIBRARY = String(args.library ?? '').toLowerCase();
 const PLATFORM = String(args.platform ?? 'ios').toLowerCase();
 const METRO_PORT = Number(args['metro-port'] ?? 8081);
@@ -868,6 +874,44 @@ if (BUILD_ONLY) {
 
 process.on('SIGINT', () => shutdown(130));
 process.on('SIGTERM', () => shutdown(143));
+
+function printUsage() {
+  console.log(`Usage: yarn runtime-tests --library <${LIBRARIES.join('|')}> [options]
+
+Builds the runtime tests app, installs it, runs the requested library's test
+suites and reports the results. \`yarn runtime-tests\` implies --launch;
+\`yarn runtime-tests:server\` waits for you to start the app yourself.
+
+Required
+  --library <name>          One of: ${LIBRARIES.join(', ')}.
+
+Target
+  --platform <name>         One of: ${PLATFORMS.join(', ')}. Default: ios.
+  --simulator <name>        iOS simulator to boot. Default: iPhone 17.
+  --udid <udid>             iOS simulator to reuse, instead of --simulator.
+  --serial <serial>         Android device already running (see \`adb devices\`).
+  --avd <name>              Android AVD to boot when no --serial is given.
+
+Build and run
+  --configuration <name>    Xcode configuration / Gradle build type.
+                            Default: DebugRuntimeTests. Release builds embed
+                            the bundle and run without Metro.
+  --skip-build              Reuse the installed app. Only safe when nothing
+                            native changed - JS is served by Metro.
+  --launch                  Launch the app after installing it.
+  --only <a,b>              Comma separated suite names to run. Suite names come
+                            from the library's suites.ts, for example
+                            "run loop" or "runtimes,memory".
+
+Ports and timeouts
+  --metro-port <port>       Default: 8081.
+  --port <port>             Reporting WebSocket. Default: --metro-port + 1,
+                            or 8082 for Release builds.
+  --connect-timeout <secs>  Wait for the app to connect. Default: 600.
+  --idle-timeout <secs>     Give up after this much silence. Default: 600.
+
+  --help                    Show this message.`);
+}
 
 function parseArgs(argv) {
   const out = {};
