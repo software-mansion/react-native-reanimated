@@ -1,8 +1,8 @@
 #import <reanimated/NativeAnimations/NativeAnimationCompilation.h>
 #import <reanimated/Tools/FeatureFlags.h>
+#import <reanimated/apple/NativeAnimations/REANativeAnimationFactory.h>
 #import <reanimated/apple/NativeAnimations/REANativeAnimationRegistry.h>
 #import <reanimated/apple/NativeAnimations/REANativeLayoutAnimationPostMountQueue.h>
-#import <reanimated/apple/NativeAnimations/REANativeTimingAnimationFactory.h>
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
 #import <reanimated/apple/REACoreAnimationDelegate.h>
@@ -292,7 +292,11 @@ namespace {
 {
   RCTAssertMainQueue();
 
-  if (plan.route == reanimated::NativeAnimationRoute::Sampled) {
+  const bool hasTransformMatrixTrack =
+      std::any_of(plan.tracks.begin(), plan.tracks.end(), [](const reanimated::NativeAnimationTrack &track) {
+        return track.target == reanimated::NativeAnimationTarget::Transform;
+      });
+  if (plan.route == reanimated::NativeAnimationRoute::Sampled && !hasTransformMatrixTrack) {
     const auto descriptor = reanimated::materializeSampledLayoutDescriptor(handle, plan);
     [self installNativeLayoutAnimationOnMain:handle
                                   descriptor:descriptor
@@ -349,10 +353,10 @@ namespace {
   const CFTimeInterval localBeginTime = [layer convertTime:CACurrentMediaTime() fromLayer:nil];
   NSMutableArray<REANativeAnimationTrack *> *tracks = [NSMutableArray arrayWithCapacity:plan.tracks.size()];
   for (const auto &track : plan.tracks) {
-    REANativeAnimationTrack *animation = [REANativeTimingAnimationFactory animationForTrack:track
-                                                                             planDurationMs:plan.totalDurationMs
-                                                                                      layer:layer
-                                                                             localBeginTime:localBeginTime];
+    REANativeAnimationTrack *animation = [REANativeAnimationFactory animationForTrack:track
+                                                                       planDurationMs:plan.totalDurationMs
+                                                                                layer:layer
+                                                                       localBeginTime:localBeginTime];
     if (animation == nil) {
 // LayoutAnimationTrace start
 #ifndef NDEBUG
@@ -661,8 +665,9 @@ namespace {
   }
 
   if (hasOrigin) {
-    NSMutableArray<NSValue *> *values = [NSMutableArray arrayWithCapacity:sampleCount];
-    auto positionAt = [&](double offset) -> CGPoint {
+    NSMutableArray<NSNumber *> *positionXValues = [NSMutableArray arrayWithCapacity:sampleCount];
+    NSMutableArray<NSNumber *> *positionYValues = [NSMutableArray arrayWithCapacity:sampleCount];
+    auto positionAt = [&](double offset) {
       const double width = channelValueAt("width", offset, currentBounds.width);
       const double height = channelValueAt("height", offset, currentBounds.height);
       const double originX = channelValueAt("originX", offset, layer.frame.origin.x);
@@ -670,9 +675,16 @@ namespace {
       return CGPointMake(originX + anchorPoint.x * width, originY + anchorPoint.y * height);
     };
     for (double offset : sampleOffsets) {
-      [values addObject:[NSValue valueWithCGPoint:positionAt(offset)]];
+      const CGPoint position = positionAt(offset);
+      [positionXValues addObject:@(position.x)];
+      [positionYValues addObject:@(position.y)];
     }
-    registerAnimation(@"position", values);
+    if (hasChannel("originX")) {
+      registerAnimation(@"position.x", positionXValues);
+    }
+    if (hasChannel("originY")) {
+      registerAnimation(@"position.y", positionYValues);
+    }
   }
 
   if (animations.count == 0) {
@@ -688,7 +700,14 @@ namespace {
   NSMutableArray<REANativeAnimationTrack *> *registryTracks = [NSMutableArray arrayWithCapacity:animations.count];
   for (NSUInteger i = 0; i < animations.count; i++) {
     NSString *keyPath = animatedKeyPaths[i];
-    NSString *ownershipTarget = [keyPath isEqualToString:@"bounds.size"] ? @"boundsSize" : keyPath;
+    NSString *ownershipTarget = keyPath;
+    if ([keyPath isEqualToString:@"bounds.size"]) {
+      ownershipTarget = @"boundsSize";
+    } else if ([keyPath isEqualToString:@"position.x"]) {
+      ownershipTarget = @"positionX";
+    } else if ([keyPath isEqualToString:@"position.y"]) {
+      ownershipTarget = @"positionY";
+    }
     [registryTracks addObject:[[REANativeAnimationTrack alloc] initWithAnimation:animations[i]
                                                                          keyPath:keyPath
                                                                       targetName:keyPath

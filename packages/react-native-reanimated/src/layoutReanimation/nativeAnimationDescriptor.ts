@@ -5,6 +5,12 @@ import type {
   NativeEasingNode,
 } from '../animation/nativeAnimationNode';
 import type { AnimationObject, LayoutAnimation } from '../commonTypes';
+import {
+  composeLayoutFlipMatrix,
+  type NativeLayoutRect,
+  type NativeTransformMatrix,
+  resolveReactNativeTransformMatrix,
+} from './nativeTransformMatrix';
 
 /**
  * Native layout-animation descriptor.
@@ -79,7 +85,7 @@ interface NativeHoldSegmentDescriptor {
 interface NativeKeyframeSegmentDescriptor {
   kind: 'keyframes';
   timesMs: number[];
-  values: number[];
+  values: Array<number | NativeTransformMatrix>;
 }
 
 type NativeAnimationSegmentDescriptor =
@@ -97,6 +103,7 @@ interface NativeAnimationPlanDescriptor {
   route: NativeLayoutAnimationRoute;
   reason: NativeLayoutAnimationRouteReason;
   tracks: NativeAnimationTrackDescriptor[];
+  finalGeometry?: NativeLayoutRect;
 }
 
 export type NativeLayoutAnimationCompilation =
@@ -129,6 +136,12 @@ const STRUCTURAL_SCALAR_TARGETS = new Set([
   'originY',
   'width',
   'height',
+]);
+
+const MATRIX_PLAN_TARGETS = new Set([
+  ...STRUCTURAL_SCALAR_TARGETS,
+  'transform',
+  'transformOrigin',
 ]);
 
 function angleToRadians(value: number | string): number {
@@ -317,6 +330,189 @@ export function buildNativeLayoutAnimationDescriptor(
   return { durationMs, properties };
 }
 
+function cloneSampledStyle(
+  style: Record<string, unknown>
+): Record<string, unknown> {
+  'worklet';
+  const snapshot: Record<string, unknown> = {};
+  for (const key of ['opacity', 'originX', 'originY', 'width', 'height']) {
+    const value = style[key];
+    if (typeof value === 'number') {
+      snapshot[key] = value;
+    }
+  }
+  if (Array.isArray(style.transform)) {
+    snapshot.transform = style.transform.map((entry) =>
+      entry !== null && typeof entry === 'object' ? { ...entry } : entry
+    );
+  }
+  if (Array.isArray(style.transformOrigin)) {
+    snapshot.transformOrigin = [...style.transformOrigin];
+  } else if (typeof style.transformOrigin === 'string') {
+    snapshot.transformOrigin = style.transformOrigin;
+  }
+  return snapshot;
+}
+
+function geometryValue(
+  frame: Record<string, unknown>,
+  initialValues: Record<string, unknown>,
+  fallback: NativeLayoutRect | undefined,
+  key: keyof NativeLayoutRect
+): number | null {
+  'worklet';
+  const value = frame[key] ?? initialValues[key] ?? fallback?.[key];
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function sampledGeometry(
+  frame: Record<string, unknown>,
+  initialValues: Record<string, unknown>,
+  fallback?: NativeLayoutRect
+): NativeLayoutRect | null {
+  'worklet';
+  const originX = geometryValue(frame, initialValues, fallback, 'originX');
+  const originY = geometryValue(frame, initialValues, fallback, 'originY');
+  const width = geometryValue(frame, initialValues, fallback, 'width');
+  const height = geometryValue(frame, initialValues, fallback, 'height');
+  return originX === null ||
+    originY === null ||
+    width === null ||
+    height === null
+    ? null
+    : { originX, originY, width, height };
+}
+
+function buildMatrixPlan(
+  style: LayoutAnimation,
+  fallbackOpacity: number | undefined,
+  expectedFinalGeometry: NativeLayoutRect | undefined
+): NativeAnimationPlanDescriptor | null {
+  'worklet';
+  const animations = style.animations as Record<string, unknown>;
+  const animationKeys = Object.keys(animations);
+  const animatesSize =
+    animationKeys.includes('width') || animationKeys.includes('height');
+  const animation = withStyleAnimation(
+    style.animations
+  ) as unknown as AnimationObject;
+  const initialValues = style.initialValues as Record<string, unknown>;
+  animation.onStart(animation, initialValues, 0, undefined);
+
+  const sampleTimes: number[] = [];
+  const sampleFrames: Array<Record<string, unknown>> = [];
+  let now = 0;
+  while (true) {
+    const finished = animation.onFrame(animation, now);
+    sampleTimes.push(now);
+    sampleFrames.push(
+      cloneSampledStyle(animation.current as Record<string, unknown>)
+    );
+    if (finished || now >= MAX_DURATION_MS) {
+      break;
+    }
+    now += SAMPLE_INTERVAL_MS;
+  }
+
+  const durationMs = sampleTimes[sampleTimes.length - 1] || 1;
+  const finalFrame = sampleFrames[sampleFrames.length - 1];
+  const finalGeometry =
+    sampledGeometry(finalFrame, initialValues, expectedFinalGeometry) ??
+    expectedFinalGeometry;
+  if (!finalGeometry || finalGeometry.width <= 0 || finalGeometry.height <= 0) {
+    return null;
+  }
+
+  const matrixValues: NativeTransformMatrix[] = [];
+  const opacityValues: number[] = [];
+  const originXValues: number[] = [];
+  const originYValues: number[] = [];
+  let hasOpacity = false;
+  for (const frame of sampleFrames) {
+    const geometry = sampledGeometry(frame, initialValues, finalGeometry);
+    if (!geometry) {
+      return null;
+    }
+    const transform = frame.transform ?? initialValues.transform;
+    const transformOrigin =
+      frame.transformOrigin ?? initialValues.transformOrigin;
+    const styleMatrix = resolveReactNativeTransformMatrix(
+      transform,
+      geometry.width,
+      geometry.height,
+      transformOrigin
+    );
+    if (!styleMatrix) {
+      return null;
+    }
+    const matrix = animatesSize
+      ? composeLayoutFlipMatrix(geometry, finalGeometry, styleMatrix)
+      : styleMatrix;
+    if (!matrix) {
+      return null;
+    }
+    matrixValues.push(matrix);
+
+    const opacity = frame.opacity ?? initialValues.opacity;
+    if (typeof opacity === 'number' && Number.isFinite(opacity)) {
+      opacityValues.push(opacity);
+      hasOpacity = true;
+    } else {
+      opacityValues.push(fallbackOpacity ?? 1);
+    }
+    originXValues.push(geometry.originX);
+    originYValues.push(geometry.originY);
+  }
+
+  const tracks: NativeAnimationTrackDescriptor[] = [
+    {
+      target: 'transform',
+      segments: [
+        {
+          kind: 'keyframes',
+          timesMs: sampleTimes,
+          values: matrixValues,
+        },
+      ],
+    },
+  ];
+  if (!animatesSize && animationKeys.includes('originX')) {
+    tracks.push({
+      target: 'originX',
+      segments: [
+        { kind: 'keyframes', timesMs: sampleTimes, values: originXValues },
+      ],
+    });
+  }
+  if (!animatesSize && animationKeys.includes('originY')) {
+    tracks.push({
+      target: 'originY',
+      segments: [
+        { kind: 'keyframes', timesMs: sampleTimes, values: originYValues },
+      ],
+    });
+  }
+  if (
+    hasOpacity ||
+    fallbackOpacity !== undefined ||
+    animationKeys.includes('opacity')
+  ) {
+    tracks.push({
+      target: 'opacity',
+      segments: [
+        { kind: 'keyframes', timesMs: sampleTimes, values: opacityValues },
+      ],
+    });
+  }
+  return {
+    totalDurationMs: durationMs,
+    route: 'sampled',
+    reason: 'requires-sampling',
+    tracks,
+    finalGeometry,
+  };
+}
+
 interface CompiledNode {
   durationMs: number;
   finalValue: number;
@@ -498,22 +694,38 @@ function buildStructuralPlan(
 
 export function compileNativeLayoutAnimation(
   style: LayoutAnimation,
-  fallbackOpacity?: number
+  fallbackOpacity?: number,
+  expectedFinalGeometry?: NativeLayoutRect
 ): NativeLayoutAnimationCompilation {
   'worklet';
   const animationKeys = Object.keys(style.animations);
-  if (animationKeys.includes('transform')) {
-    return {
-      status: 'fallback',
-      reason: 'transform-ordering-unavailable',
-    };
-  }
-  if (animationKeys.some((target) => !STRUCTURAL_SCALAR_TARGETS.has(target))) {
+  if (animationKeys.some((target) => !MATRIX_PLAN_TARGETS.has(target))) {
     return { status: 'fallback', reason: 'unsupported-property' };
+  }
+  const requiresMatrixPlan =
+    animationKeys.includes('transform') ||
+    animationKeys.includes('transformOrigin') ||
+    animationKeys.includes('width') ||
+    animationKeys.includes('height');
+  if (requiresMatrixPlan) {
+    const matrixPlan = buildMatrixPlan(
+      style,
+      fallbackOpacity,
+      expectedFinalGeometry
+    );
+    return matrixPlan
+      ? { status: 'native', reason: matrixPlan.reason, plan: matrixPlan }
+      : {
+          status: 'fallback',
+          reason: animationKeys.includes('transform')
+            ? 'transform-ordering-unavailable'
+            : 'unsupported-value-type',
+        };
   }
 
   const structuralPlan = buildStructuralPlan(style, fallbackOpacity);
   if (structuralPlan) {
+    structuralPlan.finalGeometry = expectedFinalGeometry;
     return {
       status: 'native',
       reason: structuralPlan.reason,
@@ -533,6 +745,7 @@ export function compileNativeLayoutAnimation(
     totalDurationMs: sampled.durationMs,
     route: 'sampled',
     reason: 'requires-sampling',
+    finalGeometry: expectedFinalGeometry,
     tracks: sampled.properties.map((property) => ({
       target: property.keyPath,
       segments: [

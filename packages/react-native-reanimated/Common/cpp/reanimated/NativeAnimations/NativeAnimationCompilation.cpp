@@ -194,6 +194,12 @@ NativeCompilationResult validateNativeAnimationPlan(NativeAnimationPlan plan) {
       plan.tracks.size() > kMaxTracks) {
     return {NativeCompilationStatus::Invalid, std::nullopt, NativeAnimationRouteReason::InvalidInput};
   }
+  if (plan.finalGeometry &&
+      (!std::isfinite(plan.finalGeometry->originX) || !std::isfinite(plan.finalGeometry->originY) ||
+       !std::isfinite(plan.finalGeometry->width) || !std::isfinite(plan.finalGeometry->height) ||
+       plan.finalGeometry->width < 0 || plan.finalGeometry->height < 0)) {
+    return {NativeCompilationStatus::Invalid, std::nullopt, NativeAnimationRouteReason::InvalidInput};
+  }
   std::unordered_set<NativeAnimationTarget> seenTargets;
   for (const auto &track : plan.tracks) {
     if (!seenTargets.insert(track.target).second || track.segments.empty() ||

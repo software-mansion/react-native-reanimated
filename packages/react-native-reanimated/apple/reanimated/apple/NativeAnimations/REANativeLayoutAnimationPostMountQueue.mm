@@ -58,6 +58,12 @@ std::optional<NativeValue> finalValue(const NativeAnimationTrack &track)
 ExpectedGeometry expectedGeometry(const NativeAnimationPlan &plan)
 {
   ExpectedGeometry expected;
+  if (plan.finalGeometry) {
+    expected.originX = static_cast<CGFloat>(plan.finalGeometry->originX);
+    expected.originY = static_cast<CGFloat>(plan.finalGeometry->originY);
+    expected.width = static_cast<CGFloat>(plan.finalGeometry->width);
+    expected.height = static_cast<CGFloat>(plan.finalGeometry->height);
+  }
   for (const auto &track : plan.tracks) {
     const auto value = finalValue(track);
     if (!value) {

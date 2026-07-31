@@ -1,7 +1,8 @@
 // LayoutAnimationTrace start
 
 import React, { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import type { ViewStyle } from 'react-native';
 import type {
   EntryAnimationsValues,
   LayoutAnimation,
@@ -388,34 +389,122 @@ function TransformOrderSensitiveScenario({
   phase,
   onAnimationCallback,
 }: ScenarioProps) {
-  const entering = useMemo(
-    () =>
-      new Keyframe({
-        0: {
-          opacity: 0.2,
-          transform: [{ rotate: '90deg' }, { translateX: 90 }],
-        },
+  const entering = useMemo(() => {
+    const makeKeyframe = (
+      initialTransform: NonNullable<ViewStyle['transform']>,
+      finalTransform: NonNullable<ViewStyle['transform']>,
+      reportsCompletion: boolean
+    ) => {
+      const keyframe = new Keyframe({
+        0: { opacity: 0.2, transform: initialTransform },
         100: {
           opacity: 1,
-          transform: [{ rotate: '0deg' }, { translateX: 0 }],
+          transform: finalTransform,
         },
-      })
-        .duration(durationMs)
-        .withCallback((finished) => {
-          'worklet';
-          scheduleOnRN(onAnimationCallback, finished);
-        }),
-    [durationMs, onAnimationCallback]
-  );
+      }).duration(durationMs);
+      return reportsCompletion
+        ? keyframe.withCallback((finished) => {
+            'worklet';
+            scheduleOnRN(onAnimationCallback, finished);
+          })
+        : keyframe;
+    };
+    return {
+      rotateThenTranslate: makeKeyframe(
+        [{ rotate: '90deg' }, { translateX: 90 }],
+        [{ rotate: '0deg' }, { translateX: 0 }],
+        true
+      ),
+      translateThenRotate: makeKeyframe(
+        [{ translateX: 90 }, { rotate: '90deg' }],
+        [{ translateX: 0 }, { rotate: '0deg' }],
+        false
+      ),
+    };
+  }, [durationMs, onAnimationCallback]);
   return (
-    <View style={styles.centeredStage}>
+    <View style={styles.transformPairStage}>
       {phase === 'run' && (
-        <Animated.View
-          entering={entering}
-          style={[styles.transformBox, styles.purpleBox]}>
-          <Text style={styles.transformText}>R → T</Text>
-        </Animated.View>
+        <>
+          <Animated.View
+            entering={entering.rotateThenTranslate}
+            style={[styles.transformBox, styles.purpleBox]}>
+            <Text style={styles.transformText}>R → T</Text>
+          </Animated.View>
+          <Animated.View
+            entering={entering.translateThenRotate}
+            style={[styles.transformBox, styles.orangeBox]}>
+            <Text style={styles.transformText}>T → R</Text>
+          </Animated.View>
+        </>
       )}
+    </View>
+  );
+}
+
+function GeometryComponentGridScenario({
+  durationMs,
+  phase,
+  onAnimationCallback,
+}: ScenarioProps) {
+  const measuredLayout = useLinearTransition(durationMs, onAnimationCallback);
+  const visualLayout = useMemo(
+    () => LinearTransition.duration(durationMs),
+    [durationMs]
+  );
+  const tileStyle = [
+    styles.geometryTile,
+    phase === 'reset' ? styles.geometryTileStart : styles.geometryTileEnd,
+  ];
+  return (
+    <View style={styles.geometryGrid}>
+      <Animated.View
+        layout={phase === 'reset' ? undefined : measuredLayout}
+        style={[tileStyle, styles.blueBox]}>
+        <View style={styles.geometryNested} />
+      </Animated.View>
+      <Animated.View
+        layout={phase === 'reset' ? undefined : visualLayout}
+        style={[tileStyle, styles.greenBox]}>
+        <Text style={styles.geometryLabel}>Text wraps</Text>
+      </Animated.View>
+      <Animated.View
+        layout={phase === 'reset' ? undefined : visualLayout}
+        style={tileStyle}>
+        <Image
+          source={{
+            uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2n3sAAAAASUVORK5CYII=',
+          }}
+          style={styles.geometryImage}
+        />
+      </Animated.View>
+      <Animated.View
+        layout={phase === 'reset' ? undefined : visualLayout}
+        style={[tileStyle, styles.orangeBox]}>
+        <ScrollView>
+          <Text style={styles.geometryLabel}>Scroll content content</Text>
+        </ScrollView>
+      </Animated.View>
+      <Animated.View
+        layout={phase === 'reset' ? undefined : visualLayout}
+        style={[tileStyle, styles.geometryBorder]}
+      />
+      <Animated.View
+        layout={phase === 'reset' ? undefined : visualLayout}
+        style={[tileStyle, styles.geometryShadow]}
+      />
+      <Animated.View
+        layout={phase === 'reset' ? undefined : visualLayout}
+        style={[tileStyle, styles.geometryClip]}>
+        <View style={styles.geometryOverflow} />
+      </Animated.View>
+      <Animated.View
+        layout={phase === 'reset' ? undefined : visualLayout}
+        style={[tileStyle, styles.redBox]}>
+        <View style={styles.geometryNested}>
+          <View style={styles.geometryNestedCore} />
+        </View>
+      </Animated.View>
     </View>
   );
 }
@@ -612,6 +701,8 @@ export function ScenarioRenderer(props: ScenarioRendererProps) {
       return <TimingNonuniformSegmentsScenario {...props} />;
     case 'timing-delayed-opacity':
       return <TimingDelayedOpacityScenario {...props} />;
+    case 'geometry-component-grid':
+      return <GeometryComponentGridScenario {...props} />;
   }
 }
 
@@ -628,6 +719,73 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 190,
     justifyContent: 'center',
+  },
+  transformPairStage: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 28,
+    height: 190,
+    justifyContent: 'center',
+  },
+  geometryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    minHeight: 320,
+  },
+  geometryTile: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  geometryTileStart: {
+    height: 58,
+    width: 76,
+  },
+  geometryTileEnd: {
+    height: 92,
+    width: 112,
+  },
+  geometryLabel: {
+    color: 'white',
+    fontSize: 11,
+    padding: 4,
+  },
+  geometryImage: {
+    height: '100%',
+    width: '100%',
+  },
+  geometryBorder: {
+    borderBottomLeftRadius: 24,
+    borderColor: '#4361ee',
+    borderRadius: 8,
+    borderRightWidth: 8,
+    borderTopWidth: 3,
+  },
+  geometryShadow: {
+    backgroundColor: '#f4a261',
+    boxShadow: '6px 8px 8px rgba(0, 0, 0, 0.35)',
+  },
+  geometryClip: {
+    backgroundColor: '#2a9d8f',
+    overflow: 'hidden',
+  },
+  geometryOverflow: {
+    backgroundColor: '#e63946',
+    height: 50,
+    transform: [{ translateX: 30 }, { rotate: '20deg' }],
+    width: 130,
+  },
+  geometryNested: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    height: '70%',
+    justifyContent: 'center',
+    width: '70%',
+  },
+  geometryNestedCore: {
+    backgroundColor: 'white',
+    height: 18,
+    width: 18,
   },
   box: {
     borderRadius: 12,

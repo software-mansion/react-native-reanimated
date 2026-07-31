@@ -121,6 +121,7 @@ static NativeAnimationTarget parseNativeTarget(const std::string &target) {
       {"skewX", NativeAnimationTarget::SkewX},
       {"skewY", NativeAnimationTarget::SkewY},
       {"perspective", NativeAnimationTarget::Perspective},
+      {"transform", NativeAnimationTarget::Transform},
   };
   const auto result = targets.find(target);
   if (result == targets.end()) {
@@ -191,29 +192,48 @@ static NativeTimingFunction parseNativeEasing(jsi::Runtime &rt, const jsi::Objec
   throw std::invalid_argument("Unsupported native easing");
 }
 
-static NativeAnimationSegment parseNativeSegment(jsi::Runtime &rt, const jsi::Object &segment) {
+static NativeValue parseNativeValue(jsi::Runtime &rt, const jsi::Value &value, const NativeAnimationTarget target) {
+  if (value.isNumber()) {
+    return value.asNumber();
+  }
+  if (target != NativeAnimationTarget::Transform || !value.isObject() || !value.asObject(rt).isArray(rt)) {
+    throw std::invalid_argument("Unsupported native animation value");
+  }
+  const auto matrix = value.asObject(rt).asArray(rt);
+  if (matrix.size(rt) != 16) {
+    throw std::invalid_argument("Invalid native transform matrix");
+  }
+  NativeMatrix4 result;
+  for (size_t index = 0; index < result.values.size(); index++) {
+    result.values[index] = matrix.getValueAtIndex(rt, index).asNumber();
+  }
+  return result;
+}
+
+static NativeAnimationSegment
+parseNativeSegment(jsi::Runtime &rt, const jsi::Object &segment, const NativeAnimationTarget target) {
   const auto kind = segment.getProperty(rt, "kind").asString(rt).utf8(rt);
   if (kind == "timing") {
     return NativeTimingSegment{
         .startMs = segment.getProperty(rt, "startMs").asNumber(),
         .endMs = segment.getProperty(rt, "endMs").asNumber(),
-        .from = segment.getProperty(rt, "from").asNumber(),
-        .to = segment.getProperty(rt, "to").asNumber(),
+        .from = parseNativeValue(rt, segment.getProperty(rt, "from"), target),
+        .to = parseNativeValue(rt, segment.getProperty(rt, "to"), target),
         .easing = parseNativeEasing(rt, segment)};
   }
   if (kind == "hold") {
     return NativeHoldSegment{
         .startMs = segment.getProperty(rt, "startMs").asNumber(),
         .endMs = segment.getProperty(rt, "endMs").asNumber(),
-        .value = segment.getProperty(rt, "value").asNumber()};
+        .value = parseNativeValue(rt, segment.getProperty(rt, "value"), target)};
   }
   if (kind == "keyframes") {
     NativeKeyframeSegment keyframes;
     keyframes.timesMs = parseNumberArray(rt, segment, "timesMs");
-    const auto values = parseNumberArray(rt, segment, "values");
-    keyframes.values.reserve(values.size());
-    for (const auto value : values) {
-      keyframes.values.emplace_back(value);
+    const auto values = segment.getProperty(rt, "values").asObject(rt).asArray(rt);
+    keyframes.values.reserve(values.size(rt));
+    for (size_t index = 0; index < values.size(rt); index++) {
+      keyframes.values.push_back(parseNativeValue(rt, values.getValueAtIndex(rt, index), target));
     }
     return keyframes;
   }
@@ -243,7 +263,16 @@ static NativeCompilationResult parseNativeCompilation(
       .routeReason = reason,
       .startValueSource = startValueSource,
       .mountingMode = mountingMode,
-      .lifecycle = lifecycle};
+      .lifecycle = lifecycle,
+      .finalGeometry = std::nullopt};
+  if (planObject.hasProperty(rt, "finalGeometry")) {
+    const auto geometry = planObject.getProperty(rt, "finalGeometry").asObject(rt);
+    plan.finalGeometry = NativeLayoutGeometry{
+        .originX = geometry.getProperty(rt, "originX").asNumber(),
+        .originY = geometry.getProperty(rt, "originY").asNumber(),
+        .width = geometry.getProperty(rt, "width").asNumber(),
+        .height = geometry.getProperty(rt, "height").asNumber()};
+  }
   const auto tracks = planObject.getProperty(rt, "tracks").asObject(rt).asArray(rt);
   plan.tracks.reserve(tracks.size(rt));
   for (size_t trackIndex = 0; trackIndex < tracks.size(rt); trackIndex++) {
@@ -253,7 +282,8 @@ static NativeCompilationResult parseNativeCompilation(
     const auto segments = trackObject.getProperty(rt, "segments").asObject(rt).asArray(rt);
     track.segments.reserve(segments.size(rt));
     for (size_t segmentIndex = 0; segmentIndex < segments.size(rt); segmentIndex++) {
-      track.segments.push_back(parseNativeSegment(rt, segments.getValueAtIndex(rt, segmentIndex).asObject(rt)));
+      track.segments.push_back(
+          parseNativeSegment(rt, segments.getValueAtIndex(rt, segmentIndex).asObject(rt), track.target));
     }
     plan.tracks.push_back(std::move(track));
   }

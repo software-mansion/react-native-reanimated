@@ -75,6 +75,95 @@ describe('native layout animation descriptor', () => {
 });
 
 describe('native layout animation structural compiler', () => {
+  test('lowers position and size into a full FLIP matrix track', () => {
+    const compilation = compileNativeLayoutAnimation(
+      {
+        animations: {
+          originX: withTiming(100, { duration: 100 }),
+          originY: withTiming(200, { duration: 100 }),
+          width: withTiming(200, { duration: 100 }),
+          height: withTiming(100, { duration: 100 }),
+        },
+        initialValues: {
+          originX: 10,
+          originY: 20,
+          width: 100,
+          height: 50,
+        },
+      },
+      undefined,
+      { originX: 100, originY: 200, width: 200, height: 100 }
+    );
+
+    expect(compilation.status).toBe('native');
+    if (compilation.status === 'native') {
+      expect(compilation.plan.route).toBe('sampled');
+      expect(compilation.plan.finalGeometry).toEqual({
+        originX: 100,
+        originY: 200,
+        width: 200,
+        height: 100,
+      });
+      expect(compilation.plan.tracks.map(({ target }) => target)).toEqual([
+        'transform',
+      ]);
+      const segment = compilation.plan.tracks[0].segments[0];
+      expect(segment.kind).toBe('keyframes');
+      if (segment.kind === 'keyframes') {
+        expect(segment.values[0]).toEqual([
+          0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, -140, -205, 0, 1,
+        ]);
+        expect(segment.values[segment.values.length - 1]).toEqual([
+          1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+        ]);
+      }
+    }
+  });
+
+  test('routes ordered and duplicate style transforms as matrices', () => {
+    const compilation = compileNativeLayoutAnimation(
+      {
+        animations: {
+          transform: [
+            { translateX: withTiming(100, { duration: 100 }) },
+            { rotate: withTiming('90deg', { duration: 100 }) },
+            { translateX: withTiming(20, { duration: 100 }) },
+          ],
+        },
+        initialValues: {
+          transform: [{ translateX: 0 }, { rotate: '0deg' }, { translateX: 0 }],
+        },
+      },
+      undefined,
+      { originX: 0, originY: 0, width: 100, height: 100 }
+    );
+
+    expect(compilation.status).toBe('native');
+    if (compilation.status === 'native') {
+      expect(compilation.plan.tracks[0].target).toBe('transform');
+      expect(compilation.plan.reason).toBe('requires-sampling');
+    }
+  });
+
+  test('falls back for a zero-sized final FLIP target', () => {
+    const compilation = compileNativeLayoutAnimation(
+      {
+        animations: {
+          width: withTiming(0, { duration: 100 }),
+          height: withTiming(100, { duration: 100 }),
+        },
+        initialValues: { width: 100, height: 100 },
+      },
+      undefined,
+      { originX: 0, originY: 0, width: 0, height: 100 }
+    );
+
+    expect(compilation).toEqual({
+      status: 'fallback',
+      reason: 'unsupported-value-type',
+    });
+  });
+
   test('lowers linear timing without sampled keyframes', () => {
     const compilation = compileNativeLayoutAnimation({
       animations: {
@@ -176,37 +265,15 @@ describe('native layout animation structural compiler', () => {
     }
   });
 
-  test.each([
-    [
-      {
+  test('returns whole-animation fallback for unsupported properties', () => {
+    expect(
+      compileNativeLayoutAnimation({
         animations: { backgroundColor: withTiming(1) },
         initialValues: { backgroundColor: 0 },
-      },
-      'unsupported-property',
-    ],
-    [
-      {
-        animations: {
-          transform: [
-            { rotate: withTiming('90deg') },
-            { translateX: withTiming(20) },
-          ],
-        },
-        initialValues: {
-          transform: [{ rotate: '0deg' }, { translateX: 0 }],
-        },
-      },
-      'transform-ordering-unavailable',
-    ],
-  ] as const)(
-    'returns whole-animation fallback with reason',
-    (style, reason) => {
-      expect(
-        compileNativeLayoutAnimation(style as unknown as LayoutAnimation)
-      ).toEqual({
-        status: 'fallback',
-        reason,
-      });
-    }
-  );
+      } as unknown as LayoutAnimation)
+    ).toEqual({
+      status: 'fallback',
+      reason: 'unsupported-property',
+    });
+  });
 });

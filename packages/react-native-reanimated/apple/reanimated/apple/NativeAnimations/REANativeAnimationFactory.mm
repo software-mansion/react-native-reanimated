@@ -1,4 +1,4 @@
-#import <reanimated/apple/NativeAnimations/REANativeTimingAnimationFactory.h>
+#import <reanimated/apple/NativeAnimations/REANativeAnimationFactory.h>
 
 #import <cmath>
 #import <type_traits>
@@ -38,6 +38,8 @@ NSString *targetName(const NativeAnimationTarget target)
       return @"height";
     case NativeAnimationTarget::BoundsSize:
       return @"boundsSize";
+    case NativeAnimationTarget::Transform:
+      return @"transform";
     default:
       return nil;
   }
@@ -49,11 +51,15 @@ NSString *ownershipTargetName(const NativeAnimationTarget target)
     case NativeAnimationTarget::Opacity:
       return @"opacity";
     case NativeAnimationTarget::OriginX:
+      return @"positionX";
     case NativeAnimationTarget::OriginY:
+      return @"positionY";
     case NativeAnimationTarget::Position:
       return @"position";
     case NativeAnimationTarget::Width:
+      return @"boundsWidth";
     case NativeAnimationTarget::Height:
+      return @"boundsHeight";
     case NativeAnimationTarget::BoundsSize:
       return @"boundsSize";
     default:
@@ -78,6 +84,8 @@ NSString *keyPath(const NativeAnimationTarget target)
       return @"bounds.size.height";
     case NativeAnimationTarget::BoundsSize:
       return @"bounds.size";
+    case NativeAnimationTarget::Transform:
+      return @"transform";
     default:
       return nil;
   }
@@ -106,6 +114,28 @@ id platformValue(const NativeValue &value, const NativeAnimationTarget target, C
   if (const auto *size = std::get_if<NativeSize>(&value);
       size != nullptr && target == NativeAnimationTarget::BoundsSize) {
     return [NSValue valueWithCGSize:CGSizeMake(size->width, size->height)];
+  }
+  if (const auto *matrix = std::get_if<NativeMatrix4>(&value);
+      matrix != nullptr && target == NativeAnimationTarget::Transform) {
+    const auto &m = matrix->values;
+    return [NSValue valueWithCATransform3D:CATransform3D{
+                                               static_cast<CGFloat>(m[0]),
+                                               static_cast<CGFloat>(m[1]),
+                                               static_cast<CGFloat>(m[2]),
+                                               static_cast<CGFloat>(m[3]),
+                                               static_cast<CGFloat>(m[4]),
+                                               static_cast<CGFloat>(m[5]),
+                                               static_cast<CGFloat>(m[6]),
+                                               static_cast<CGFloat>(m[7]),
+                                               static_cast<CGFloat>(m[8]),
+                                               static_cast<CGFloat>(m[9]),
+                                               static_cast<CGFloat>(m[10]),
+                                               static_cast<CGFloat>(m[11]),
+                                               static_cast<CGFloat>(m[12]),
+                                               static_cast<CGFloat>(m[13]),
+                                               static_cast<CGFloat>(m[14]),
+                                               static_cast<CGFloat>(m[15]),
+                                           }];
   }
   return nil;
 }
@@ -196,7 +226,7 @@ bool appendSegment(
 
 } // namespace
 
-@implementation REANativeTimingAnimationFactory
+@implementation REANativeAnimationFactory
 
 + (nullable REANativeAnimationTrack *)animationForTrack:(const NativeAnimationTrack &)track
                                          planDurationMs:(const double)planDurationMs

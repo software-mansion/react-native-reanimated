@@ -24,6 +24,11 @@ type NativeLayoutAnimationValues = Partial<LayoutAnimationValues> & {
   targetOpacity?: number;
 };
 
+function isFiniteNumber(value: unknown): value is number {
+  'worklet';
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
 function makeMutableUI<TValue>(initial: TValue): Mutable<TValue> {
   'worklet';
   return mutableHostDecorator({
@@ -172,7 +177,33 @@ function createLayoutAnimationManager(): {
         type === LayoutAnimationType.ENTERING
           ? yogaValues.targetOpacity
           : undefined;
-      const compilation = compileNativeLayoutAnimation(style, fallbackOpacity);
+      const retainedGeometry = type === LayoutAnimationType.EXITING;
+      const originX = retainedGeometry
+        ? yogaValues.currentOriginX
+        : yogaValues.targetOriginX;
+      const originY = retainedGeometry
+        ? yogaValues.currentOriginY
+        : yogaValues.targetOriginY;
+      const width = retainedGeometry
+        ? yogaValues.currentWidth
+        : yogaValues.targetWidth;
+      const height = retainedGeometry
+        ? yogaValues.currentHeight
+        : yogaValues.targetHeight;
+      if (
+        !isFiniteNumber(originX) ||
+        !isFiniteNumber(originY) ||
+        !isFiniteNumber(width) ||
+        !isFiniteNumber(height)
+      ) {
+        return { status: 'invalid', reason: 'invalid-input' };
+      }
+      const finalGeometry = { originX, originY, width, height };
+      const compilation = compileNativeLayoutAnimation(
+        style,
+        fallbackOpacity,
+        finalGeometry
+      );
       if (compilation.status === 'native' && style.callback) {
         nativeCallbacks.set(nativeCallbackKey(tag, generation), style.callback);
       }

@@ -45,7 +45,8 @@ NativeAnimationCapabilityReport CallbackNativeAnimationExecutor::queryCapabiliti
     for (const auto &segment : track.segments) {
       const auto supportedValue = [target = track.target](const NativeValue &value) {
         return std::holds_alternative<double>(value) ||
-            (target == NativeAnimationTarget::Position && std::holds_alternative<NativePoint>(value));
+            (target == NativeAnimationTarget::Position && std::holds_alternative<NativePoint>(value)) ||
+            (target == NativeAnimationTarget::Transform && std::holds_alternative<NativeMatrix4>(value));
       };
       const bool supportedValues = std::visit(
           [&supportedValue](const auto &typedSegment) {

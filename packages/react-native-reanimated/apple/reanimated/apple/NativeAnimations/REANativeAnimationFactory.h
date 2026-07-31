@@ -14,7 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
  * timing, holds, and explicit keyframes become `CAKeyframeAnimation` without
  * resampling their declared times or timing functions.
  */
-@interface REANativeTimingAnimationFactory : NSObject
+@interface REANativeAnimationFactory : NSObject
 
 + (nullable REANativeAnimationTrack *)animationForTrack:(const reanimated::NativeAnimationTrack &)track
                                          planDurationMs:(double)planDurationMs

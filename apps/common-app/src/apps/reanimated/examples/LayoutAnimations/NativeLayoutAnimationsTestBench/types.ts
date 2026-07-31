@@ -116,6 +116,13 @@ export const TEST_BENCH_SCENARIOS = [
       'Holds the initial visual state for 750 ms, then runs direct linear timing.',
     group: 'timing-mvp',
   },
+  {
+    id: 'geometry-component-grid',
+    title: '20. Geometry component grid',
+    description:
+      'Runs the same final-state-first position and size change across View, Text, Image, ScrollView, border, shadow, clipping, and nested content.',
+    group: 'geometry',
+  },
 ] as const;
 
 export type TestBenchScenarioId = (typeof TEST_BENCH_SCENARIOS)[number]['id'];
