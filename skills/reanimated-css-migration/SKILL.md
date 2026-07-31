@@ -90,12 +90,16 @@ migrate.
 
 ## Phase 3: report, before editing
 
-Print as ordinary text. Not a plan object, not a collapsed block. No diff per
-site. Do not edit until the user agrees.
+Print as ordinary text. Not a plan object, not a collapsed block. Do not edit
+until the user agrees.
+
+Four parts, all required. The report is incomplete without part 4, which is the
+only part showing code and the only one the user can judge the conversion from.
 
 1. **Counts.** Migratable, needs-review, refused.
 
-1. **Table, no code**, one row per site:
+1. **Table, no code**, one row per site. Everything a site needs to say goes in
+   the Note column:
 
    | File | Animates | Becomes | Note |
    | --- | --- | --- | --- |
@@ -105,8 +109,13 @@ site. Do not edit until the user agrees.
 1. **Refusals grouped by reason**, with counts. Forty gesture-driven components
    are one line.
 
-1. **Before and after for 2-3 representative sites**, covering the shapes in the
-   table.
+1. **Before and after code for 2-3 representative sites**, covering the
+   different shapes in the table. Write it out; never promise a sample and omit
+   it. A diff for every site is the failure this replaces, not this itself.
+
+Keep out of this report: equivalence obligations to re-check, memoization
+advice, reduced-motion recipes, option menus. Those are Phase 4 and 5. Prose per
+site crowds out part 4 and makes the table unscannable.
 
 ## Phase 4: apply
 
