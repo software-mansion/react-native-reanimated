@@ -37,7 +37,6 @@ export default class CSSAnimationCallbacksManager
 {
   private readonly viewTag: number;
   private eventMask = 0;
-  private isRegistered = false;
 
   constructor(viewTag: number) {
     super(CALLBACK_PROPS);
@@ -67,26 +66,13 @@ export default class CSSAnimationCallbacksManager
   ): void {
     this.eventMask = getAnimationEventMaskFromProps(present);
 
+    if (this.viewTag === NO_VIEW_TAG) {
+      return;
+    }
     if (present.size > 0) {
-      this.register();
+      cssCallbacksRegistry.register(this.viewTag, this);
     } else {
-      this.unregister();
+      cssCallbacksRegistry.unregister(this.viewTag, this);
     }
-  }
-
-  private register(): void {
-    if (this.isRegistered || this.viewTag === NO_VIEW_TAG) {
-      return;
-    }
-    this.isRegistered = true;
-    cssCallbacksRegistry.register(this.viewTag, this);
-  }
-
-  private unregister(): void {
-    if (!this.isRegistered) {
-      return;
-    }
-    this.isRegistered = false;
-    cssCallbacksRegistry.unregister(this.viewTag, this);
   }
 }
