@@ -46,8 +46,13 @@ template <typename BaseClass>
 class RetainingSerializable : virtual public BaseClass {
  private:
   jsi::Runtime *primaryRuntime_;
-  jsi::Runtime *secondaryRuntime_;
+  jsi::Runtime *secondaryRuntime_{nullptr};
   std::unique_ptr<jsi::Value> secondaryValue_;
+  // Guards secondaryRuntime_ and secondaryValue_. The same serializable can be
+  // materialized on two secondary runtimes (e.g. UI and a Worker runtime)
+  // concurrently, so the cache must not be read while another thread sets it —
+  // a torn read could also hand runtime A's cached value to runtime B.
+  std::mutex secondaryMutex_;
 
  public:
   template <typename... Args>
@@ -64,16 +69,23 @@ class RetainingSerializable : virtual public BaseClass {
       // shared value is created and then accessed on the same runtime
       return BaseClass::toJSValue(rt);
     }
-    if (secondaryValue_ == nullptr) {
-      auto value = BaseClass::toJSValue(rt);
-      secondaryValue_ = std::make_unique<jsi::Value>(rt, value);
-      secondaryRuntime_ = &rt;
-      return value;
+    {
+      std::lock_guard<std::mutex> lock(secondaryMutex_);
+      if (secondaryValue_ != nullptr && &rt == secondaryRuntime_) {
+        return jsi::Value(rt, *secondaryValue_);
+      }
     }
-    if (&rt == secondaryRuntime_) {
-      return jsi::Value(rt, *secondaryValue_);
+    // Computed outside the lock — serialization can recurse into nested
+    // serializables, and their toJSValue must not run under this mutex.
+    auto value = BaseClass::toJSValue(rt);
+    {
+      std::lock_guard<std::mutex> lock(secondaryMutex_);
+      if (secondaryValue_ == nullptr) {
+        secondaryValue_ = std::make_unique<jsi::Value>(rt, value);
+        secondaryRuntime_ = &rt;
+      }
     }
-    return BaseClass::toJSValue(rt);
+    return value;
   }
 
   ~RetainingSerializable() override {
