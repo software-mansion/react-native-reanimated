@@ -1,6 +1,7 @@
 #include <reanimated/CSS/core/CSSLoopAnimation.h>
 
 #include <memory>
+#include <string>
 
 namespace reanimated::css {
 
@@ -9,7 +10,7 @@ CSSLoopAnimation::CSSLoopAnimation(
     const std::shared_ptr<AnimationStyleInterpolator> &interpolator,
     const std::shared_ptr<CSSAnimationSettings> &settings,
     const std::shared_ptr<KeyframeEasingConfigs> &keyframeEasingConfigs,
-    CSSAnimation::Observer &observer,
+    CSSAnimationObserver &observer,
     const double timestamp)
     : viewTag_(viewTag),
       settings_(settings),
@@ -26,6 +27,21 @@ CSSLoopAnimation::CSSLoopAnimation(
   if (settings->playState == AnimationPlayState::Paused) {
     progressProvider_->pause(timestamp);
   }
+}
+
+void CSSLoopAnimation::onMilestone(MilestoneReporter reporter) {
+  if (!reporter) {
+    progressProvider_->onMilestone(nullptr);
+    return;
+  }
+  // The provider is a member, so capturing `this` cannot outlive it.
+  progressProvider_->onMilestone([this, reporter = std::move(reporter)](const RunMilestone milestone) {
+    reporter(milestone, progressProvider_->elapsedTimeAt(milestone));
+  });
+}
+
+void CSSLoopAnimation::abort(const double timestamp) {
+  progressProvider_->abort(timestamp);
 }
 
 folly::dynamic CSSLoopAnimation::getCurrentInterpolationStyle(

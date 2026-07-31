@@ -29,18 +29,33 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
       EasingFunction easingFunction,
       const std::shared_ptr<KeyframeEasingConfigs> &keyframeEasingConfigs);
 
+  double getDuration() const {
+    return duration_;
+  }
+  double getDelay() const {
+    return delay_;
+  }
+  double getIterationCount() const {
+    return iterationCount_;
+  }
+  unsigned getCurrentIteration() const {
+    return currentIteration_;
+  }
+  AnimationDirection getDirection() const;
+  AnimationProgressState getState() const;
+  double getStartTimestamp(double timestamp) const;
+  double getGlobalProgress() const override;
+  double getKeyframeProgress(double fromOffset, double toOffset) const override;
+
   void setIterationCount(double iterationCount);
   void setDirection(AnimationDirection direction);
   void setEasingFunction(const EasingFunction &easingFunction);
 
-  AnimationDirection getDirection() const;
-  double getGlobalProgress() const override;
-  double getKeyframeProgress(double fromOffset, double toOffset) const override;
+  /// Time the animation has run by the given milestone, in milliseconds.
+  double elapsedTimeAt(RunMilestone milestone) const;
 
-  AnimationProgressState getState() const;
   void onMilestone(RunLifecycle::Reporter reporter);
-  void abort();
-  double getStartTimestamp(double timestamp) const;
+  void abort(double timestamp);
 
   void pause(double timestamp);
   void play(double timestamp);
@@ -64,10 +79,17 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   double previousIterationsDuration_ = 0;
   double pauseTimestamp_ = 0;
   double totalPausedTime_ = 0;
+  // The lifecycle reports an abort without a timestamp, so abort() leaves one here.
+  double cancelTimestamp_ = 0;
 
   double getTotalPausedTime(double timestamp) const;
   bool shouldFinish(double timestamp) const;
   RunStage computeStage(double timestamp) const;
+
+  double startElapsedTime() const;
+  double iterationElapsedTime() const;
+  double endElapsedTime() const;
+  double cancelElapsedTime() const;
 
   double updateIterationProgress(double currentIterationElapsedTime);
   double applyAnimationDirection(double iterationProgress) const;

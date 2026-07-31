@@ -2,6 +2,7 @@
 #include <reanimated/CSS/core/CSSLoopAnimation.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
+#include <algorithm>
 #include <memory>
 #include <utility>
 
@@ -17,6 +18,7 @@ CSSAnimation::CSSAnimation(
     const double timestamp)
     : viewTag_(viewTag),
       name_(std::move(animationName)),
+      observer_(observer),
       keyframesConfig_(cssKeyframesConfig),
       settings_(std::make_shared<CSSAnimationSettings>(settings)),
       styleInterpolator_(cssKeyframesConfig.styleInterpolatorFactory->create()),
@@ -31,8 +33,60 @@ CSSAnimation::CSSAnimation(
   updatePropertyRouting();
 }
 
+CSSAnimation::~CSSAnimation() {
+  // The loop co-owns the animation and unschedule() only enqueues the removal,
+  // so a frame already in flight can still tick it after we are gone. Drop the
+  // reporter so that tick has nothing to call back into.
+  loopAnimation_->onMilestone(nullptr);
+}
+
 AnimationProgressState CSSAnimation::getState() const {
   return loopAnimation_->getState();
+}
+
+void CSSAnimation::setEventMask(const CSSEventMask eventMask) {
+  if (eventMask == eventMask_) {
+    return;
+  }
+  eventMask_ = eventMask;
+
+  if (eventMask == 0) {
+    loopAnimation_->onMilestone(nullptr);
+    return;
+  }
+  loopAnimation_->onMilestone(
+      [this](const RunMilestone milestone, const double elapsedTime) { reportMilestone(milestone, elapsedTime); });
+}
+
+void CSSAnimation::reportCancellation(const double timestamp) {
+  loopAnimation_->abort(timestamp);
+}
+
+void CSSAnimation::reportMilestone(const RunMilestone milestone, const double elapsedTime) {
+  switch (milestone) {
+    case RunMilestone::Started:
+      emitEvent(CSSEventType::AnimationStart, elapsedTime);
+      break;
+    case RunMilestone::Repeated:
+      emitEvent(CSSEventType::AnimationIteration, elapsedTime);
+      break;
+    case RunMilestone::Ended:
+      emitEvent(CSSEventType::AnimationEnd, elapsedTime);
+      break;
+    case RunMilestone::Aborted:
+      emitEvent(CSSEventType::AnimationCancel, elapsedTime);
+      break;
+    case RunMilestone::Created:
+      // Animations have no creation event, unlike transitions.
+      break;
+  }
+}
+
+void CSSAnimation::emitEvent(const CSSEventType type, const double elapsedTime) const {
+  if (!hasListener(eventMask_, type)) {
+    return;
+  }
+  observer_.onAnimationEvent(viewTag_, name_, type, elapsedTime);
 }
 
 folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
