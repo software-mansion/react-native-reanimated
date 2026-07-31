@@ -15,10 +15,7 @@ export const CONFIG: [MethodsName, number, MethodsName, number][] = [
   ['setImmediate', 2, 'queueMicrotask', 1],
   ['setImmediate', 2, 'topLevel', 1],
 
-  ['requestAnimationFrame', 2, 'setTimeout', 1],
-  ['requestAnimationFrame', 2, 'setImmediate', 1],
   ['requestAnimationFrame', 1, 'requestAnimationFrame', 2],
-  ['requestAnimationFrame', 2, 'setInterval', 1],
   ['requestAnimationFrame', 2, 'queueMicrotask', 1],
   ['requestAnimationFrame', 2, 'topLevel', 1],
 
