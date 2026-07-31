@@ -6,8 +6,7 @@ import {
   toggleSlowAnimationsOnUIRuntime,
 } from 'react-native-worklets';
 
-import { cssCallbacksRegistry } from './css/native/events';
-import { setCSSEventHandler } from './css/native/proxy';
+import { cssCallbacksRegistry, setCSSEventHandler } from './css/native';
 import { initSvgCssSupport } from './css/svg';
 import { getStaticFeatureFlag } from './featureFlags';
 import type { IReanimatedModule } from './ReanimatedModule';
