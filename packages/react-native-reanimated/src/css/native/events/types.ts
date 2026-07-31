@@ -14,7 +14,6 @@ type CSSTransitionEventType =
 
 type CSSEventType = CSSAnimationEventType | CSSTransitionEventType;
 
-/** A single CSS event as it comes from the native side. */
 export type NativeCSSEvent = {
   tag: number;
   type: CSSEventType;
@@ -26,7 +25,6 @@ export type NativeCSSEvent = {
 
 export type CSSEventHandler = (events: NativeCSSEvent[]) => void;
 
-/** Receives the CSS events addressed to a single view tag. */
 export interface CSSEventSubscriber {
   handleCSSEvent(event: NativeCSSEvent): void;
 }
