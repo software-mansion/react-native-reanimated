@@ -1,5 +1,4 @@
 'use strict';
-import { logger } from '../../../common';
 import type { CSSEventSubscriber, NativeCSSEvent } from './types';
 
 /**
@@ -44,26 +43,14 @@ class CSSCallbacksRegistry {
         continue;
       }
 
-      // Snapshot the subscribers as a user callback can mount or unmount views.
-      for (const subscriber of Array.from(subscribers)) {
-        this.deliver(subscriber, event);
+      for (const subscriber of subscribers) {
+        subscriber.handleCSSEvent(event);
       }
     }
   }
 
   clear(): void {
     this.subscribersByTag_.clear();
-  }
-
-  private deliver(subscriber: CSSEventSubscriber, event: NativeCSSEvent): void {
-    try {
-      subscriber.handleCSSEvent(event);
-    } catch (error) {
-      // A throwing user callback must not drop the rest of the batch.
-      logger.error(
-        `A CSS "${event.type}" callback threw an error: ${String(error)}`
-      );
-    }
   }
 }
 

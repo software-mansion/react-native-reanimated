@@ -104,27 +104,15 @@ describe('cssCallbacksRegistry', () => {
     expect(sub.handleCSSEvent).not.toHaveBeenCalled();
   });
 
-  test('a throwing subscriber does not stop the rest of the batch', () => {
-    const consoleError = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => undefined);
-
+  test('an error thrown by a subscriber reaches the caller', () => {
     const throwing = subscriber(
       jest.fn(() => {
         throw new Error('[Reanimated] boom');
       })
     );
-    const healthy = subscriber();
     cssCallbacksRegistry.register(1, throwing);
-    cssCallbacksRegistry.register(2, healthy);
 
-    cssCallbacksRegistry.dispatch([event(1), event(2), event(1)]);
-
-    expect(throwing.handleCSSEvent).toHaveBeenCalledTimes(2);
-    expect(healthy.handleCSSEvent).toHaveBeenCalledTimes(1);
-    expect(consoleError).toHaveBeenCalledTimes(2);
-
-    consoleError.mockRestore();
+    expect(() => cssCallbacksRegistry.dispatch([event(1)])).toThrow('boom');
   });
 
   test('a subscriber unregistering itself while dispatching does not break the batch', () => {
