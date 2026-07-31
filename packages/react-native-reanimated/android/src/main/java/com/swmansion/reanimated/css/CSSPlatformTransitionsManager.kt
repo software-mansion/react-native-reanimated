@@ -46,6 +46,15 @@ internal class CSSPlatformTransitionsManager(
         fun currentValue(): Float = heldValue ?: if (animator.isRunning) animator.animatedValue as Float else startValue
     }
 
+    /** Holds the start value for the leading [delayFraction], then plays [inner] over the rest. */
+    private class HoldThenEase(
+        private val delayFraction: Float,
+        private val inner: TimeInterpolator,
+    ) : TimeInterpolator {
+        override fun getInterpolation(input: Float): Float =
+            if (input <= delayFraction) 0f else inner.getInterpolation((input - delayFraction) / (1f - delayFraction))
+    }
+
     private data class InterpolatorKey(
         val type: Int,
         val pointsX: List<Float>,
@@ -143,8 +152,6 @@ internal class CSSPlatformTransitionsManager(
         writer.setValue(view, startValue)
 
         val animator = ObjectAnimator.ofFloat(view, writer, startValue, toValue.toFloat())
-        animator.interpolator = interpolator
-        animator.duration = (durationMs / scale).toLong().coerceAtLeast(1L)
         animator.addListener(
             object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
@@ -163,10 +170,17 @@ internal class CSSPlatformTransitionsManager(
         // ObjectAnimator has no absolute start time; resolving it here rather than in C++
         // keeps the hop to this thread from shifting the timeline late.
         val elapsedMs = animationTimestamp().toDouble() - startTimestampMs
-        if (elapsedMs < 0) animator.startDelay = (-elapsedMs / scale).toLong()
+        val delayMs = if (elapsedMs < 0) -elapsedMs else 0.0
+        // Play through the delay rather than using startDelay. A delayed ObjectAnimator
+        // writes nothing while it waits, so any commit landing in that window stays on
+        // screen; holding the start value inside the curve makes the animator rewrite the
+        // property every frame instead. This is what kCAFillModeBackwards gives us on Apple.
+        animator.duration = ((delayMs + durationMs) / scale).toLong().coerceAtLeast(1L)
+        animator.interpolator =
+            if (delayMs > 0) HoldThenEase((delayMs / (delayMs + durationMs)).toFloat(), interpolator) else interpolator
         if (elapsedMs > 0 && durationMs > 0) {
-            // Seek before starting: start() gates on `mSeekFraction >= 0` when deciding
-            // whether to begin immediately, so a later seek races the first frame.
+            // Seek before starting: ValueAnimator.start() gates on `mSeekFraction >= 0` when
+            // deciding whether to begin immediately, so a later seek races the first frame.
             animator.setCurrentFraction((elapsedMs / durationMs).toFloat().coerceIn(0f, 1f))
         }
         animator.start()
