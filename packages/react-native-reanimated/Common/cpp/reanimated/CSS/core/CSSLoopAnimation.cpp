@@ -9,13 +9,40 @@ CSSLoopAnimation::CSSLoopAnimation(
     const Tag viewTag,
     const std::shared_ptr<AnimationStyleInterpolator> &interpolator,
     const std::shared_ptr<CSSAnimationSettings> &settings,
-    const std::shared_ptr<AnimationProgressProvider> &progressProvider,
-    CSSAnimationObserver &observer)
+    const std::shared_ptr<KeyframeEasingConfigs> &keyframeEasingConfigs,
+    CSSAnimationObserver &observer,
+    const double timestamp)
     : viewTag_(viewTag),
       settings_(settings),
       interpolator_(interpolator),
-      progressProvider_(progressProvider),
-      observer_(observer) {}
+      progressProvider_(std::make_shared<AnimationProgressProvider>(
+          timestamp,
+          settings->duration,
+          settings->delay,
+          settings->iterationCount,
+          settings->direction,
+          getEasingFunctionFromConfig(settings->easingConfig),
+          keyframeEasingConfigs)),
+      observer_(observer) {
+  if (settings->playState == AnimationPlayState::Paused) {
+    progressProvider_->pause(timestamp);
+  }
+}
+
+void CSSLoopAnimation::onMilestone(MilestoneReporter reporter) {
+  if (!reporter) {
+    progressProvider_->onMilestone(nullptr);
+    return;
+  }
+  // The provider is a member, so capturing `this` cannot outlive it.
+  progressProvider_->onMilestone([this, reporter = std::move(reporter)](const RunMilestone milestone) {
+    reporter(milestone, progressProvider_->elapsedTimeAt(milestone));
+  });
+}
+
+void CSSLoopAnimation::abort(const double timestamp) {
+  progressProvider_->abort(timestamp);
+}
 
 folly::dynamic CSSLoopAnimation::getCurrentInterpolationStyle(
     const std::shared_ptr<const ShadowNode> &shadowNode) const {

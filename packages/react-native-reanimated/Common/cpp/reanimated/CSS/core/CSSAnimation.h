@@ -67,27 +67,17 @@ class CSSAnimation {
   const std::shared_ptr<CSSAnimationSettings> settings_;
   const std::shared_ptr<OperationsLoop> loop_;
   const std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;
-  const std::shared_ptr<AnimationProgressProvider> progressProvider_;
   const std::shared_ptr<CSSLoopAnimation> loopAnimation_;
   const std::shared_ptr<CSSPlatformAnimationFactory> platformAnimationFactory_;
   std::shared_ptr<CSSPlatformAnimation> platformAnimation_;
 
   CSSEventMask eventMask_{0};
-  // The lifecycle reports an abort without a timestamp, so reportCancellation()
-  // leaves one here.
-  double cancelTimestamp_{0};
 
   bool isReversed() const;
   void updatePropertyRouting();
 
-  void reportMilestone(RunMilestone milestone);
+  void reportMilestone(RunMilestone milestone, double elapsedTime);
   void emitEvent(CSSEventType type, double elapsedTime) const;
-
-  // `elapsedTime` carried by each event, in milliseconds.
-  double startElapsedTime() const;
-  double iterationElapsedTime() const;
-  double endElapsedTime() const;
-  double cancelElapsedTime() const;
 };
 
 } // namespace reanimated::css
