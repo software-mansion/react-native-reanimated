@@ -1,6 +1,7 @@
 #include <reanimated/CSS/core/CSSLoopAnimation.h>
 
 #include <memory>
+#include <string>
 
 namespace reanimated::css {
 
@@ -9,7 +10,7 @@ CSSLoopAnimation::CSSLoopAnimation(
     const std::shared_ptr<AnimationStyleInterpolator> &interpolator,
     const std::shared_ptr<CSSAnimationSettings> &settings,
     const std::shared_ptr<KeyframeEasingConfigs> &keyframeEasingConfigs,
-    CSSAnimation::Observer &observer,
+    CSSAnimationObserver &observer,
     const double timestamp)
     : viewTag_(viewTag),
       settings_(settings),

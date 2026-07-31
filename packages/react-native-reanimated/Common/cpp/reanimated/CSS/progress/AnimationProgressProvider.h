@@ -42,6 +42,19 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   void abort();
   double getStartTimestamp(double timestamp) const;
 
+  double getDuration() const {
+    return duration_;
+  }
+  double getDelay() const {
+    return delay_;
+  }
+  double getIterationCount() const {
+    return iterationCount_;
+  }
+  unsigned getCurrentIteration() const {
+    return currentIteration_;
+  }
+
   void pause(double timestamp);
   void play(double timestamp);
   void update(double timestamp) override;

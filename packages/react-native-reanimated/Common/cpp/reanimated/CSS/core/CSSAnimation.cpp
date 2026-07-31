@@ -17,6 +17,7 @@ CSSAnimation::CSSAnimation(
     const double timestamp)
     : viewTag_(viewTag),
       name_(std::move(animationName)),
+      observer_(observer),
       keyframesConfig_(cssKeyframesConfig),
       settings_(std::make_shared<CSSAnimationSettings>(settings)),
       styleInterpolator_(cssKeyframesConfig.styleInterpolatorFactory->create()),
@@ -33,6 +34,24 @@ CSSAnimation::CSSAnimation(
 
 AnimationProgressState CSSAnimation::getState() const {
   return loopAnimation_->getState();
+}
+
+void CSSAnimation::setEventMask(const CSSEventMask eventMask) {
+  if (eventMask == 0) {
+    eventReporter_.reset();
+    return;
+  }
+
+  if (!eventReporter_) {
+    eventReporter_.emplace(viewTag_, name_, observer_, loopAnimation_->getProgressProvider());
+  }
+  eventReporter_->setMask(eventMask);
+}
+
+void CSSAnimation::reportCancellation(const double timestamp) {
+  if (eventReporter_) {
+    eventReporter_->cancel(timestamp);
+  }
 }
 
 folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
