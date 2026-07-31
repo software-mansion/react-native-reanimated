@@ -2,13 +2,17 @@
 
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/configs/CSSKeyframesConfig.h>
+#include <reanimated/CSS/core/CSSAnimationObserver.h>
 #include <reanimated/CSS/core/CSSPlatformAnimation.h>
 #include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
+#include <reanimated/CSS/events/CSSAnimationEventReporter.h>
+#include <reanimated/CSS/events/CSSEvent.h>
 #include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolator.h>
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace reanimated::css {
@@ -17,14 +21,7 @@ class CSSLoopAnimation;
 
 class CSSAnimation {
  public:
-  class Observer {
-   public:
-    virtual ~Observer() = default;
-    virtual void onAnimationUpdate(Tag viewTag) = 0;
-    // Called when the animation finishes without `forwards` fill mode and will
-    // need to be reverted to the underlying style on the next flush.
-    virtual void onAnimationNeedsRevert(Tag viewTag) = 0;
-  };
+  using Observer = CSSAnimationObserver;
 
   CSSAnimation(
       Tag viewTag,
@@ -53,14 +50,19 @@ class CSSAnimation {
   folly::dynamic getCurrentInterpolationStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const;
   folly::dynamic getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const;
 
+  void setEventMask(CSSEventMask eventMask);
+
   void schedule(OperationsLoop &loop);
   void unschedule(OperationsLoop &loop);
 
   void updateSettings(const PartialCSSAnimationSettings &updatedSettings, double timestamp);
 
+  void reportCancellation(double timestamp);
+
  private:
   const Tag viewTag_;
   const std::string name_;
+  Observer &observer_;
   const CSSKeyframesConfig keyframesConfig_;
   const std::shared_ptr<CSSAnimationSettings> settings_;
   const std::shared_ptr<OperationsLoop> loop_;
@@ -68,6 +70,8 @@ class CSSAnimation {
   const std::shared_ptr<CSSLoopAnimation> loopAnimation_;
   const std::shared_ptr<CSSPlatformAnimationFactory> platformAnimationFactory_;
   std::shared_ptr<CSSPlatformAnimation> platformAnimation_;
+
+  std::optional<CSSAnimationEventReporter> eventReporter_;
 
   bool isReversed() const;
   void updatePropertyRouting();
