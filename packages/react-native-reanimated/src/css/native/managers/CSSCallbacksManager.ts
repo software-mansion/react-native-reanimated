@@ -25,7 +25,7 @@ const CALLBACK_PROP_BY_EVENT_TYPE: Record<
 const CALLBACK_PROPS = Object.values(CALLBACK_PROP_BY_EVENT_TYPE);
 
 // Every CSS event for a view reaches this manager, so the table doubles as the
-// check for whether the kind is one it owns. Transition kinds join it later.
+// check for whether the kind is one it owns.
 const isAnimationEventType = (
   type: CSSEventType
 ): type is CSSAnimationEventType => type in CALLBACK_PROP_BY_EVENT_TYPE;
@@ -50,6 +50,9 @@ export default class CSSCallbacksManager
   }
 
   handleCSSEvent(event: NativeCSSEvent): void {
+    // TODO: transition events arrive here too and are dropped, so transition
+    // callbacks never fire on native. They should reach the user once the
+    // native side emits them.
     if (!isAnimationEventType(event.type)) {
       return;
     }
