@@ -175,7 +175,9 @@ describe('CSSCallbacksManager', () => {
       expect(registerSpy).not.toHaveBeenCalled();
       expect(tagless.getMask()).toBe(CSS_EVENT_MASK.animationEnd);
 
-      cssCallbacksRegistry.dispatch([event('animationEnd', { tag: NO_VIEW_TAG })]);
+      cssCallbacksRegistry.dispatch([
+        event('animationEnd', { tag: NO_VIEW_TAG }),
+      ]);
       expect(onAnimationEnd).not.toHaveBeenCalled();
 
       registerSpy.mockRestore();
