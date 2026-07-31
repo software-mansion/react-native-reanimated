@@ -142,15 +142,15 @@ describe('CSSAnimationCallbacksManager', () => {
   });
 
   describe('registration', () => {
-    test('registers only once no matter how many callbacks are added', () => {
-      const registerSpy = jest.spyOn(cssCallbacksRegistry, 'register');
+    test('adding a second callback does not duplicate delivery', () => {
+      const onAnimationStart = jest.fn();
 
-      manager.sync({ onAnimationStart: jest.fn() });
-      manager.sync({ onAnimationStart: jest.fn(), onAnimationEnd: jest.fn() });
+      manager.sync({ onAnimationStart });
+      manager.sync({ onAnimationStart, onAnimationEnd: jest.fn() });
 
-      expect(registerSpy).toHaveBeenCalledTimes(1);
+      cssCallbacksRegistry.dispatch([event('animationStart')]);
 
-      registerSpy.mockRestore();
+      expect(onAnimationStart).toHaveBeenCalledTimes(1);
     });
 
     test('unregisters when the last callback is removed', () => {
