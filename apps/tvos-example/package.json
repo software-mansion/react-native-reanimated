@@ -6,7 +6,7 @@
     "build": "cd ios && bundle install && bundle exec pod update --no-repo-update",
     "android": "react-native run-android --active-arch-only",
     "ios": "react-native run-ios",
-    "lint": "eslint . --max-warnings 0",
+    "lint": "eslint . --max-warnings 0 && yarn run --top-level oxfmt --check .",
     "format": "yarn run --top-level oxfmt .",
     "start": "react-native start",
     "test": "jest",

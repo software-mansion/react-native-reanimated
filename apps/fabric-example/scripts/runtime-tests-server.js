@@ -523,7 +523,8 @@ async function appPath() {
   const entries = JSON.parse(stdout.slice(stdout.indexOf('[')));
   const entry =
     entries.find(
-      (candidate) => candidate.buildSettings.WRAPPER_NAME === 'FabricExample.app'
+      (candidate) =>
+        candidate.buildSettings.WRAPPER_NAME === 'FabricExample.app'
     ) ?? entries[0];
   const { TARGET_BUILD_DIR, WRAPPER_NAME } = entry.buildSettings;
   return path.join(TARGET_BUILD_DIR, WRAPPER_NAME);
@@ -549,16 +550,12 @@ async function installAndLaunch(udid) {
   console.log(
     `[runtime-tests] launching ${BUNDLE_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY}`
   );
-  await run(
-    'xcrun',
-    ['simctl', 'launch', udid, BUNDLE_ID],
-    {
-      env: {
-        ...process.env,
-        SIMCTL_CHILD_RUNTIME_TESTS_LIBRARY: LIBRARY,
-      },
-    }
-  );
+  await run('xcrun', ['simctl', 'launch', udid, BUNDLE_ID], {
+    env: {
+      ...process.env,
+      SIMCTL_CHILD_RUNTIME_TESTS_LIBRARY: LIBRARY,
+    },
+  });
 }
 
 function sdkTool(dir, name) {
