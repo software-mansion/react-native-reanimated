@@ -605,6 +605,9 @@ async function appPath() {
 
 async function installAndLaunch(udid) {
   const app = await appPath();
+  if (SANITIZER) {
+    assertSanitizerRuntimeEmbedded(app);
+  }
   console.log(`[runtime-tests] installing ${app}`);
   await run('xcrun', ['simctl', 'install', udid, app]);
 
@@ -831,8 +834,7 @@ function printCommandFailure(error) {
   }
 }
 
-async function assertSanitizerRuntimeEmbedded() {
-  const app = await appPath();
+function assertSanitizerRuntimeEmbedded(app) {
   const prefix = SANITIZERS[SANITIZER].runtimePrefix;
   const frameworks = path.join(app, 'Frameworks');
   const embedded =
@@ -855,7 +857,7 @@ if (BUILD_ONLY) {
     }
     await buildApp();
     if (SANITIZER) {
-      await assertSanitizerRuntimeEmbedded();
+      assertSanitizerRuntimeEmbedded(await appPath());
     }
     shutdown(0);
   })().catch((error) => {
