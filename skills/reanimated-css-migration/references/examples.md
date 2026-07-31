@@ -12,7 +12,7 @@ that permits it.
 - Migrate: staggered loop
 - Migrate: withSequence to percentage keyframes
 - Migrate: shared value written from a JS callback
-- Leave alone: spring
+- Refuse: spring with a runtime config
 - Preserve: platform-specific values
 - Trap: easing names
 
@@ -63,12 +63,13 @@ function Spinner() {
 }
 ```
 
-- CSS properties go inline in the style array, never `StyleSheet.create` — that
+- CSS properties go inline in the style array, never `StyleSheet.create`, that
   is a type error, it is typed against React Native's own style types
-- Keyframes at module scope — an object built during render restarts the
-  animation every render
+- Keyframes at module scope, they are keyed by content, so a rebuilt identical
+  object is only waste, but one whose content varies per render restarts the
+  animation
 - Delete the now-dead shared value, effect and cleanup
-- `cancelAnimation` in an unmount cleanup is not imperative control — CSS stops
+- `cancelAnimation` in an unmount cleanup is not imperative control, CSS stops
   on unmount anyway
 - `withRepeat` third argument `reverse: true` -> `animationDirection: 'alternate'`
 
@@ -88,10 +89,10 @@ const fadeIn: CSSAnimationKeyframes = {
   to: { opacity: 1 },
 };
 // on the element:
-{ animationName: fadeIn, animationDuration: '300ms', animationFillMode: 'forwards' }
+{ animationName: fadeIn, animationDuration: '300ms', animationTimingFunction: 'ease-in-out', animationFillMode: 'forwards' }
 ```
 
-- `animationFillMode: 'forwards'` is required — default `none` discards the
+- `animationFillMode: 'forwards'` is required, default `none` discards the
   computed value and snaps back to `opacity: 0`. The most common way a converted
   mount animation breaks
 
@@ -126,6 +127,7 @@ const [expanded, setExpanded] = useState(false);
       height: expanded ? 300 : 100,
       opacity: expanded ? 1 : 0.5,
       transitionProperty: ['height', 'opacity'],
+      transitionTimingFunction: 'ease-in-out',
       transitionDuration: '200ms',
     },
   ]}
@@ -179,7 +181,7 @@ const pop: CSSAnimationKeyframes = {
   '100%': { transform: [{ scale: 1 }] },
 };
 // on the element:
-{ animationName: pop, animationDuration: '400ms', animationFillMode: 'forwards' }
+{ animationName: pop, animationDuration: '400ms', animationTimingFunction: 'ease-in-out', animationFillMode: 'forwards' }
 ```
 
 - Animation only. A transition has one start and one end, so it cannot express
@@ -215,6 +217,7 @@ const toggle = () => setOn((v) => !v);
   style={[styles.box, {
     backgroundColor: on ? 'red' : 'cyan',
     transitionProperty: ['backgroundColor'],
+    transitionTimingFunction: 'ease-in-out',
     transitionDuration: 200,
   }]}
 />
@@ -222,21 +225,21 @@ const toggle = () => setOn((v) => !v);
 
 - Shared value and style hook both disappear
 - Safe because `toggle` is a plain JS callback. In a gesture callback it would be
-  a worklet on the UI thread, needing a `scheduleOnRN` hop per update — refuse
+  a worklet on the UI thread, needing a `scheduleOnRN` hop per update, refuse
   those
 - Report the behavior change: each toggle now re-renders. Fine for a press, wrong
   for anything per-frame
 
-## Leave alone: spring
+## Refuse: spring with a runtime config
 
 ```tsx
 // Old (hooks) - keep as is
-scale.value = withSpring(pressed ? 0.95 : 1, { damping: 15, stiffness: 200 });
+scale.value = withSpring(target, { damping: props.damping, stiffness: 200 });
 ```
 
-- CSS offers `cubicBezier`, `linear`, `steps`. None reproduce a spring
-- A bezier approximation loses the overshoot that makes it read as one
-- Keep it on the hooks API and say why
+- A parameter not readable at migration time cannot be sampled
+- An all-literal config **is** convertible to `linear(...)`, see
+  `timing-functions.md`
 
 ## Preserve: platform-specific values
 
@@ -253,7 +256,7 @@ scale.value = withSpring(pressed ? 0.95 : 1, { damping: 15, stiffness: 200 });
 />
 ```
 
-- Safe despite each covering one platform — React Native renders neither
+- Safe despite each covering one platform, React Native renders neither
   `shadowOpacity` on Android nor `elevation` on iOS, so nothing is lost
 - Do not "improve" this into `boxShadow`. Separate refactor, own visual risk
 

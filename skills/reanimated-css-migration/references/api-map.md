@@ -45,10 +45,11 @@ Two failure modes:
 
 Two traps in that table:
 
-**Reverse plus an odd count changes where it stops.** `withRepeat(anim, 3, true)`
-ends at the start value, not the target, because the third pass runs backwards.
-`animationDirection: 'alternate'` behaves the same way, so the mapping holds, but
-check the resting state after converting.
+**Reverse plus an even count returns to the start.** `withRepeat(anim, 2, true)`
+ends at the start value, `withRepeat(anim, 3, true)` at the target:
+`numberOfReps` counts single passes and the last one runs forwards
+(`animation/repeat.ts:124`). `animationDirection: 'alternate'` matches, so the
+mapping holds, but check the resting state after converting.
 
 **`withSequence` durations are absolute, keyframe offsets are relative.** Two
 300ms steps become `animationDuration: '600ms'` with stops at `0%`, `50%`,
@@ -65,6 +66,7 @@ replace the whole shared-value or React-state round-trip:
 <Animated.View
   style={{
     backgroundColor: { default: '#eee', ':active': '#ccc' },
+    transitionProperty: ['backgroundColor'],
     transitionDuration: 150,
   }}
 />
@@ -72,6 +74,19 @@ replace the whole shared-value or React-state round-trip:
 
 Prefer this whenever the trigger is press, hover or focus. It needs no state and
 does not re-render.
+
+- Write `default` unless the resting value is the property's own default. The
+  pseudo object owns the property, so rest resolves to `default`; omit it and
+  the value falls back to the property default (`backgroundColor` transparent,
+  `transform` identity), never to `StyleSheet.create` or an earlier style in the
+  array
+- `:active` fires on the pressed element **and every ancestor declaring
+  `:active`**. React Native's responder system fired only the innermost, so
+  migrating nested press sites is a silent visual change. Put `:active-deepest`
+  on the ancestor that must stay quiet: it yields when a descendant declaring
+  `:active` or `:active-deepest` is pressed
+- When several selectors match one property, the later wins:
+  `:focus-within < :focus < :hover < :active < :active-deepest`
 
 Use `Pressable`'s render prop instead when the styled element is not the one
 being pressed, several children react differently to one press, or the value
@@ -81,14 +96,16 @@ depends on `pressed` in a way one selector cannot express:
 <Pressable>
   {({ pressed }) => (
     <Animated.Text
-      style={{ color: pressed ? '#000' : '#888', transitionDuration: 300 }}>
+      style={{
+        color: pressed ? '#000' : '#888',
+        transitionProperty: ['color'],
+        transitionDuration: 300,
+      }}>
       Press me
     </Animated.Text>
   )}
 </Pressable>
 ```
-
-Bare numbers are milliseconds, so `transitionDuration: 300` is valid.
 
 The same shape works for any boolean a parent already passes down: selection,
 focus, expansion, validity. The parent re-render fires the child's transition,

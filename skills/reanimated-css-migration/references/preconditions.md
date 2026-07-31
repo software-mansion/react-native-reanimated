@@ -34,7 +34,7 @@ Every value must reduce to fixed keyframe endpoints.
 | Pass | Refuse |
 | --- | --- |
 | affine arithmetic on the driver | trigonometry, `Math.atan2`, parametric geometry |
-| `interpolateColor` | anything reading runtime layout |
+| `interpolateColor` with the default `'RGB'` space | `interpolateColor` with `'HSV'` or `'LAB'` |
 | `interpolate` with 2 input stops | `interpolate` whose output feeds further non-affine work |
 | `interpolate` with N stops, converting to an animation | `interpolate` with N stops, converting to a transition |
 
@@ -46,6 +46,10 @@ multi-stop `interpolate` needs an animation, not a transition.
 (`interpolation.ts:86-87`); CSS clamps at the outermost keyframe. Equivalent
 only when the driver stays inside the input range, or the source already passes
 `Extrapolation.CLAMP`. Otherwise refuse, or state the difference in the report.
+
+`interpolateColor` with `'HSV'` or `'LAB'` traverses hue or perceptual space
+between the endpoints; CSS lerps RGBA channels. The endpoints match, so no
+equivalence obligation catches it. Refuse.
 
 Check independently of precondition 1: a migratable driver often has an
 inexpressible body.
@@ -93,9 +97,15 @@ const reduced = useReducedMotion();
 | no explicit use, motion is user-noticeable | emit the guard, `with*` implied `ReduceMotion.System` |
 | motion too small to matter | may drop, state it in the report |
 
-Reduced-motion duration: `1`. Never `0`: `duration + delay <= 0` discards the
-transition outright (`css/native/normalization/transition/config.ts`), so the
-element jumps and no transition event can fire.
+The guard's shape differs by mechanism:
+
+| Kind | Reduced-motion form |
+| --- | --- |
+| Transition | `transitionDuration: reduced ? 1 : D`. Never `0`: `duration + delay <= 0` drops the transition (`css/native/normalization/transition/config.ts:113`), so the element jumps and no transition event fires |
+| Animation | Drop `animationName` and render the value the hook rests at: the last keyframe, or the first for an infinite `alternate`. Never shorten the duration, a 1ms infinite animation strobes |
+
+There is no `duration <= 0` skip for animations, so the transition recipe does
+not transfer.
 
 Bare numbers are milliseconds. `1` is 1ms; `0.01` is 0.01ms, not 10ms.
 

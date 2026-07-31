@@ -25,7 +25,7 @@ things the tool cannot do.
 | Scroll-driven values | Same reason | Keep it |
 | Sensor, keyboard, frame callback drivers | CSS animations advance on time only. There is no scroll, sensor or keyboard timeline | Keep it |
 | `measure`, `useAnimatedRef` reads | Targets depend on runtime layout, which cannot be written as a keyframe | Keep it |
-| `useAnimatedProps` for non-style props | CSS styles are keyed off view, text and image styles | Keep it. SVG geometry props are the exception: those do animate, via `animatedProps` |
+| `useAnimatedProps` for non-style props | CSS styles are keyed off view, text and image styles | Keep it. `react-native-svg` is the exception: geometry (`cx`, `r`, `d`, `points`) and appearance (`fill`, `stroke`, `opacity`) both animate via `animatedProps`. Platform coverage differs per prop, check [Animating SVG](https://docs.swmansion.com/react-native-reanimated/docs/guides/animating-svg) |
 | Layout animations, `Keyframe`, shared element transitions | A separate subsystem with its own lifecycle | Leave untouched. Out of scope for this migration |
 | SVG `transform` and its parts | Not supported. Several forms still carry unfinished preprocessors and none are documented | Keep it on the hooks API |
 

@@ -24,7 +24,7 @@ None throw, warn, or fail a typecheck or test. All look correct in a diff.
 | React Native renders the property where CSS cannot animate it | Refuse. Works today, stops after; dropped with no warning |
 | Value changes every frame | Refuse. As state, every change re-renders |
 | Shared value written in `useEffect` or a plain JS callback | Convert it to state and migrate |
-| Emitting any animation or transition | Set `animationDuration` / `transitionDuration`. Both default to 0, which discards the motion |
+| Emitting any animation or transition | Set the duration, default 0 discards the motion. Set the timing function too: it defaults to `'ease'`, not the `withTiming` default of `Easing.inOut(Easing.quad)` |
 | Emitting an animation that should stay where it lands | Set `animationFillMode: 'forwards'`. Default `none` snaps back. Transitions have no fill mode |
 
 ## References
@@ -60,6 +60,7 @@ Preconditions, refusals and the property check apply at every size.
 | Check | Then |
 | --- | --- |
 | Installed Reanimated version | On 3.x, stop and say so. Do not upgrade as part of this work |
+| Reanimated < 4.4 with SVG in scope | Refuse the SVG sites. `EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS` defaults false before 4.4, so the CSS is dropped with no warning |
 | Working tree | Require clean, or explicit acknowledgment the changes are the user's |
 | Target platforms, from package.json, app config, web bundler config | Record them; every property decision depends on it |
 | Scope | Agree it. Never touch files outside |
@@ -146,6 +147,6 @@ Report what you verified and what you did not. Did not run the app, say so.
 | Default to not migrating; an unrecognized shape is a refusal for manual review | A wrong conversion is silent |
 | Say hooks stay correct for gesture-, scroll-, measurement-driven and imperative animation | The output should read as advice, not limitation |
 | Never emit `transitionProperty: 'all'` | Enumerate what changes |
-| Hoist keyframe objects out of render | A new object each render restarts the animation |
+| Hoist keyframe objects out of render | Keyframes are keyed by content, so a rebuilt identical object is only waste. One whose content varies per render does restart the animation |
 | Bare numeric durations are milliseconds | `300` is 300ms |
 | Go straight to a phase if the user asks about one | |

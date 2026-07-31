@@ -75,9 +75,11 @@ come from:
 | `Easing.out(Easing.quad)` | `(1/3, 0, 2/3, 1/3)` | `cubicBezier(1/3, 2/3, 2/3, 1)` |
 | `Easing.out(Easing.cubic)` | `(1/3, 0, 2/3, 0)` | `cubicBezier(1/3, 1, 2/3, 1)` |
 
-Match on the source expression, never a runtime value. The easing name symbol is
-attached only to top-level members, so anything wrapped in `out()` or `inOut()`
-loses it and falls back to linear with a warning.
+Match on the source expression, never a runtime value. A CSS timing function must
+be a predefined string, or `cubicBezier` / `linear` / `steps` from
+`react-native-reanimated`. An `Easing.*` value passed to
+`animationTimingFunction` or `transitionTimingFunction` throws
+(`css/native/normalization/common/settings.ts:55-62`).
 
 ### Approximations, and what they cost
 
@@ -86,10 +88,16 @@ loses it and falls back to linear with a warning.
 Bezier. Every unconfigured `withTiming` needs a decision. State the error rather
 than substituting silently.
 
+Omitting it is not neutral. Both properties default to `'ease'` =
+`cubicBezier(0.25, 0.1, 0.25, 1)`
+(`css/native/normalization/common/settings.ts:44`), max error ~0.36 against
+`inOut(quad)`, worse than `'linear'` at 0.125. Always emit one.
+
 | Choice | Max error |
 | --- | --- |
 | `cubicBezier(0.4625, 0.0403, 0.52, 0.9331)` | ~0.008 |
 | `'ease-in-out'` | ~0.012 |
+| omitted, so `'ease'` | ~0.36 |
 
 Both are visually indistinguishable at typical durations. Prefer
 `'ease-in-out'` for readability unless the animation is long or exactness was
