@@ -30,6 +30,8 @@ class CSSAnimation {
       const std::shared_ptr<CSSPlatformAnimationFactory> &platformAnimationFactory,
       double timestamp);
 
+  ~CSSAnimation();
+
   const std::string &getName() const {
     return name_;
   }
@@ -56,8 +58,6 @@ class CSSAnimation {
   void updateSettings(const PartialCSSAnimationSettings &updatedSettings, double timestamp);
 
   void reportCancellation(double timestamp);
-
-  ~CSSAnimation();
 
  private:
   const Tag viewTag_;

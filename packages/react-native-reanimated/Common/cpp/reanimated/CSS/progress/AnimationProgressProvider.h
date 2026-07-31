@@ -29,22 +29,6 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
       EasingFunction easingFunction,
       const std::shared_ptr<KeyframeEasingConfigs> &keyframeEasingConfigs);
 
-  void setIterationCount(double iterationCount);
-  void setDirection(AnimationDirection direction);
-  void setEasingFunction(const EasingFunction &easingFunction);
-
-  AnimationDirection getDirection() const;
-  double getGlobalProgress() const override;
-  double getKeyframeProgress(double fromOffset, double toOffset) const override;
-
-  AnimationProgressState getState() const;
-  void onMilestone(RunLifecycle::Reporter reporter);
-  void abort(double timestamp);
-  double getStartTimestamp(double timestamp) const;
-
-  /// Time the animation has run by the given milestone, in milliseconds.
-  double elapsedTimeAt(RunMilestone milestone) const;
-
   double getDuration() const {
     return duration_;
   }
@@ -57,6 +41,21 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   unsigned getCurrentIteration() const {
     return currentIteration_;
   }
+  AnimationDirection getDirection() const;
+  AnimationProgressState getState() const;
+  double getStartTimestamp(double timestamp) const;
+  double getGlobalProgress() const override;
+  double getKeyframeProgress(double fromOffset, double toOffset) const override;
+
+  void setIterationCount(double iterationCount);
+  void setDirection(AnimationDirection direction);
+  void setEasingFunction(const EasingFunction &easingFunction);
+
+  /// Time the animation has run by the given milestone, in milliseconds.
+  double elapsedTimeAt(RunMilestone milestone) const;
+
+  void onMilestone(RunLifecycle::Reporter reporter);
+  void abort(double timestamp);
 
   void pause(double timestamp);
   void play(double timestamp);

@@ -29,13 +29,12 @@ class CSSLoopAnimation : public OperationsLoop::LoopOperation, public std::enabl
   AnimationProgressState getState() const {
     return progressProvider_->getState();
   }
-
-  void onMilestone(MilestoneReporter reporter);
-  void abort(double timestamp);
-
   folly::dynamic getCurrentInterpolationStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const;
 
   void setAnimatedProperties(const std::unordered_set<std::string> &loopDrivenProperties);
+
+  void onMilestone(MilestoneReporter reporter);
+  void abort(double timestamp);
 
   bool update(double timestamp, OperationsLoop &loop) override;
 
