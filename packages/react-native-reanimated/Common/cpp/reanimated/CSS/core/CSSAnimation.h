@@ -67,6 +67,7 @@ class CSSAnimation {
   const std::shared_ptr<CSSAnimationSettings> settings_;
   const std::shared_ptr<OperationsLoop> loop_;
   const std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;
+  const std::shared_ptr<AnimationProgressProvider> progressProvider_;
   const std::shared_ptr<CSSLoopAnimation> loopAnimation_;
   const std::shared_ptr<CSSPlatformAnimationFactory> platformAnimationFactory_;
   std::shared_ptr<CSSPlatformAnimation> platformAnimation_;
@@ -79,9 +80,14 @@ class CSSAnimation {
   bool isReversed() const;
   void updatePropertyRouting();
 
-  const std::shared_ptr<AnimationProgressProvider> &progressProvider() const;
   void reportMilestone(RunMilestone milestone);
   void emitEvent(CSSEventType type, double elapsedTime) const;
+
+  // `elapsedTime` carried by each event, in milliseconds.
+  double startElapsedTime() const;
+  double iterationElapsedTime() const;
+  double endElapsedTime() const;
+  double cancelElapsedTime() const;
 };
 
 } // namespace reanimated::css

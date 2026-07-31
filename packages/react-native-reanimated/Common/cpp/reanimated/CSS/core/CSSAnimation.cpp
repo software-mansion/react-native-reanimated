@@ -1,6 +1,5 @@
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/core/CSSLoopAnimation.h>
-#include <reanimated/CSS/events/animationElapsedTime.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
 #include <algorithm>
@@ -23,25 +22,32 @@ CSSAnimation::CSSAnimation(
       keyframesConfig_(cssKeyframesConfig),
       settings_(std::make_shared<CSSAnimationSettings>(settings)),
       styleInterpolator_(cssKeyframesConfig.styleInterpolatorFactory->create()),
-      loopAnimation_(std::make_shared<CSSLoopAnimation>(
-          viewTag,
-          styleInterpolator_,
-          settings_,
-          cssKeyframesConfig.keyframeEasingConfigs,
-          observer,
-          timestamp)),
+      progressProvider_(std::make_shared<AnimationProgressProvider>(
+          timestamp,
+          settings.duration,
+          settings.delay,
+          settings.iterationCount,
+          settings.direction,
+          getEasingFunctionFromConfig(settings.easingConfig),
+          cssKeyframesConfig.keyframeEasingConfigs)),
+      loopAnimation_(
+          std::make_shared<CSSLoopAnimation>(viewTag, styleInterpolator_, settings_, progressProvider_, observer)),
       platformAnimationFactory_(platformAnimationFactory) {
+  if (settings.playState == AnimationPlayState::Paused) {
+    progressProvider_->pause(timestamp);
+  }
   updatePropertyRouting();
 }
 
 CSSAnimation::~CSSAnimation() {
-  // The provider can outlive this object, so the milestone lambda capturing
-  // `this` has to go with it.
-  progressProvider()->onMilestone(nullptr);
+  // The loop co-owns the provider and unschedule() only enqueues the removal,
+  // so a frame already in flight can still tick it after we are gone. Drop the
+  // reporter so that tick has nothing to call back into.
+  progressProvider_->onMilestone(nullptr);
 }
 
 AnimationProgressState CSSAnimation::getState() const {
-  return loopAnimation_->getState();
+  return progressProvider_->getState();
 }
 
 void CSSAnimation::setEventMask(const CSSEventMask eventMask) {
@@ -51,34 +57,30 @@ void CSSAnimation::setEventMask(const CSSEventMask eventMask) {
   eventMask_ = eventMask;
 
   if (eventMask == 0) {
-    progressProvider()->onMilestone(nullptr);
+    progressProvider_->onMilestone(nullptr);
     return;
   }
-  progressProvider()->onMilestone([this](const RunMilestone milestone) { reportMilestone(milestone); });
+  progressProvider_->onMilestone([this](const RunMilestone milestone) { reportMilestone(milestone); });
 }
 
 void CSSAnimation::reportCancellation(const double timestamp) {
   cancelTimestamp_ = timestamp;
-  progressProvider()->abort();
-}
-
-const std::shared_ptr<AnimationProgressProvider> &CSSAnimation::progressProvider() const {
-  return loopAnimation_->getProgressProvider();
+  progressProvider_->abort();
 }
 
 void CSSAnimation::reportMilestone(const RunMilestone milestone) {
   switch (milestone) {
     case RunMilestone::Started:
-      emitEvent(CSSEventType::AnimationStart, animationStartElapsedTime(*progressProvider()));
+      emitEvent(CSSEventType::AnimationStart, startElapsedTime());
       break;
     case RunMilestone::Repeated:
-      emitEvent(CSSEventType::AnimationIteration, animationIterationElapsedTime(*progressProvider()));
+      emitEvent(CSSEventType::AnimationIteration, iterationElapsedTime());
       break;
     case RunMilestone::Ended:
-      emitEvent(CSSEventType::AnimationEnd, animationEndElapsedTime(*progressProvider()));
+      emitEvent(CSSEventType::AnimationEnd, endElapsedTime());
       break;
     case RunMilestone::Aborted:
-      emitEvent(CSSEventType::AnimationCancel, animationCancelElapsedTime(*progressProvider(), cancelTimestamp_));
+      emitEvent(CSSEventType::AnimationCancel, cancelElapsedTime());
       break;
     case RunMilestone::Created:
       // Animations have no creation event, unlike transitions.
@@ -91,6 +93,30 @@ void CSSAnimation::emitEvent(const CSSEventType type, const double elapsedTime) 
     return;
   }
   observer_.onAnimationEvent(viewTag_, name_, type, elapsedTime);
+}
+
+double CSSAnimation::startElapsedTime() const {
+  // A negative delay starts the animation partway through.
+  const auto elapsedTime = std::max(0.0, -progressProvider_->getDelay());
+  const auto iterationCount = progressProvider_->getIterationCount();
+
+  // An infinite animation has no total duration to be capped against.
+  if (iterationCount < 0) {
+    return elapsedTime;
+  }
+  return std::min(elapsedTime, progressProvider_->getDuration() * iterationCount);
+}
+
+double CSSAnimation::iterationElapsedTime() const {
+  return (progressProvider_->getCurrentIteration() - 1) * progressProvider_->getDuration();
+}
+
+double CSSAnimation::endElapsedTime() const {
+  return progressProvider_->getDuration() * progressProvider_->getIterationCount();
+}
+
+double CSSAnimation::cancelElapsedTime() const {
+  return std::max(0.0, cancelTimestamp_ - progressProvider_->getStartTimestamp(cancelTimestamp_));
 }
 
 folly::dynamic CSSAnimation::getBackwardsFillStyle() const {

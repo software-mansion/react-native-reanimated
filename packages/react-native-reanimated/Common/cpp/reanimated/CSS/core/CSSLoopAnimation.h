@@ -18,17 +18,8 @@ class CSSLoopAnimation : public OperationsLoop::LoopOperation, public std::enabl
       Tag viewTag,
       const std::shared_ptr<AnimationStyleInterpolator> &interpolator,
       const std::shared_ptr<CSSAnimationSettings> &settings,
-      const std::shared_ptr<KeyframeEasingConfigs> &keyframeEasingConfigs,
-      CSSAnimationObserver &observer,
-      double timestamp);
-
-  AnimationProgressState getState() const {
-    return progressProvider_->getState();
-  }
-
-  const std::shared_ptr<AnimationProgressProvider> &getProgressProvider() const {
-    return progressProvider_;
-  }
+      const std::shared_ptr<AnimationProgressProvider> &progressProvider,
+      CSSAnimationObserver &observer);
 
   folly::dynamic getCurrentInterpolationStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const;
 

@@ -9,25 +9,13 @@ CSSLoopAnimation::CSSLoopAnimation(
     const Tag viewTag,
     const std::shared_ptr<AnimationStyleInterpolator> &interpolator,
     const std::shared_ptr<CSSAnimationSettings> &settings,
-    const std::shared_ptr<KeyframeEasingConfigs> &keyframeEasingConfigs,
-    CSSAnimationObserver &observer,
-    const double timestamp)
+    const std::shared_ptr<AnimationProgressProvider> &progressProvider,
+    CSSAnimationObserver &observer)
     : viewTag_(viewTag),
       settings_(settings),
       interpolator_(interpolator),
-      progressProvider_(std::make_shared<AnimationProgressProvider>(
-          timestamp,
-          settings->duration,
-          settings->delay,
-          settings->iterationCount,
-          settings->direction,
-          getEasingFunctionFromConfig(settings->easingConfig),
-          keyframeEasingConfigs)),
-      observer_(observer) {
-  if (settings->playState == AnimationPlayState::Paused) {
-    progressProvider_->pause(timestamp);
-  }
-}
+      progressProvider_(progressProvider),
+      observer_(observer) {}
 
 folly::dynamic CSSLoopAnimation::getCurrentInterpolationStyle(
     const std::shared_ptr<const ShadowNode> &shadowNode) const {
