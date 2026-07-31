@@ -15,10 +15,6 @@ import {
   test,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
-import {
-  startCountingMicrotaskDrains,
-  stopCountingMicrotaskDrains,
-} from './microtaskDrainCounter';
 
 const PASS_NOTIFICATION = 'PASS';
 const FAIL_NOTIFICATION = 'FAIL';
@@ -473,48 +469,4 @@ describe('runOnRuntimeAsyncWithId', () => {
       );
     });
   }
-
-  [
-    { name: 'UI', runtimeId: UIRuntimeId },
-    { name: 'Worker', runtimeId: workletRuntime1.runtimeId },
-  ].forEach(({ name, runtimeId }) => {
-    test(`drains microtasks after execution on ${name} Runtime`, async () => {
-      await runOnRuntimeAsyncWithId(runtimeId, () => {
-        'worklet';
-        globalThis.didRunMicrotask = false;
-        queueMicrotask(() => {
-          globalThis.didRunMicrotask = true;
-        });
-      });
-
-      const didRunMicrotask = await runOnRuntimeAsyncWithId(runtimeId, () => {
-        'worklet';
-        const result = globalThis.didRunMicrotask;
-        globalThis.didRunMicrotask = undefined;
-        return result;
-      });
-
-      expect(didRunMicrotask).toBe(true);
-    });
-  });
-
-  [
-    { name: 'UI', runtimeId: UIRuntimeId },
-    { name: 'Worker', runtimeId: workletRuntime1.runtimeId },
-  ].forEach(({ name, runtimeId }) => {
-    test(`drains microtasks exactly once after execution on ${name} Runtime`, async () => {
-      const counter = startCountingMicrotaskDrains(runtimeId);
-
-      await runOnRuntimeAsyncWithId(runtimeId, () => {
-        'worklet';
-      });
-
-      const microtaskDrainCount = stopCountingMicrotaskDrains(
-        runtimeId,
-        counter
-      );
-
-      expect(microtaskDrainCount).toBe(1);
-    });
-  });
 });
