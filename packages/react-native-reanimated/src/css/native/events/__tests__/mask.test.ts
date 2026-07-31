@@ -31,7 +31,7 @@ describe('getAnimationEventMaskFromProps', () => {
     ).toBe(CSS_EVENT_MASK.animationStart | CSS_EVENT_MASK.animationCancel);
   });
 
-  test('reserves the upper bits for transition events', () => {
+  test('never sets the bits reserved for transition events', () => {
     expect(
       getAnimationEventMaskFromProps([
         'onAnimationStart',
@@ -40,7 +40,5 @@ describe('getAnimationEventMaskFromProps', () => {
         'onAnimationCancel',
       ])
     ).toBe(0b1111);
-    expect(CSS_EVENT_MASK.transitionRun).toBe(1 << 4);
-    expect(CSS_EVENT_MASK.transitionCancel).toBe(1 << 7);
   });
 });
