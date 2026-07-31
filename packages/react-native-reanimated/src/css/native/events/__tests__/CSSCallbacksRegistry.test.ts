@@ -104,15 +104,58 @@ describe('cssCallbacksRegistry', () => {
     expect(sub.handleCSSEvent).not.toHaveBeenCalled();
   });
 
-  test('an error thrown by a subscriber reaches the caller', () => {
-    const throwing = subscriber(
-      jest.fn(() => {
-        throw new Error('[Reanimated] boom');
-      })
-    );
-    cssCallbacksRegistry.register(1, throwing);
+  describe('a throwing subscriber', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const errorUtils = (globalThis as any).ErrorUtils;
+    let reportFatalError: jest.SpyInstance;
 
-    expect(() => cssCallbacksRegistry.dispatch([event(1)])).toThrow('boom');
+    const throwing = () =>
+      subscriber(
+        jest.fn(() => {
+          throw new Error('[Reanimated] boom');
+        })
+      );
+
+    beforeEach(() => {
+      reportFatalError = jest
+        .spyOn(errorUtils, 'reportFatalError')
+        .mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      reportFatalError.mockRestore();
+    });
+
+    test('is reported as a fatal error', () => {
+      cssCallbacksRegistry.register(1, throwing());
+
+      cssCallbacksRegistry.dispatch([event(1)]);
+
+      expect(reportFatalError).toHaveBeenCalledTimes(1);
+      expect(reportFatalError).toHaveBeenCalledWith(
+        expect.objectContaining({ message: '[Reanimated] boom' })
+      );
+    });
+
+    test('does not stop the other subscribers of the same view', () => {
+      const healthy = subscriber();
+      cssCallbacksRegistry.register(1, throwing());
+      cssCallbacksRegistry.register(1, healthy);
+
+      cssCallbacksRegistry.dispatch([event(1)]);
+
+      expect(healthy.handleCSSEvent).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not starve the events of unrelated views in the batch', () => {
+      const other = subscriber();
+      cssCallbacksRegistry.register(1, throwing());
+      cssCallbacksRegistry.register(2, other);
+
+      cssCallbacksRegistry.dispatch([event(1), event(2)]);
+
+      expect(other.handleCSSEvent).toHaveBeenCalledTimes(1);
+    });
   });
 
   test('a subscriber unregistering itself while dispatching does not break the batch', () => {

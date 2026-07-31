@@ -42,7 +42,15 @@ class CSSCallbacksRegistry {
       }
 
       for (const subscriber of subscribers) {
-        subscriber.handleCSSEvent(event);
+        try {
+          subscriber.handleCSSEvent(event);
+        } catch (error) {
+          // A batch carries events for unrelated views, so the error is
+          // reported the way an uncaught one would be anyway. That keeps a
+          // broken callback fatal without starving the views queued behind it.
+          // @ts-expect-error React Native's `ErrorUtils` are hidden from the global scope.
+          globalThis.ErrorUtils.reportFatalError(error);
+        }
       }
     }
   }
