@@ -6,7 +6,7 @@
     "macos": "react-native run-macos",
     "build": "cd macos && bundle install && bundle exec pod update --no-repo-update",
     "format": "yarn run --top-level oxfmt .",
-    "lint": "eslint . --max-warnings 0",
+    "lint": "eslint . --max-warnings 0 && yarn run --top-level oxfmt --check .",
     "start": "react-native start",
     "type:check": "tsc --noEmit"
   },
