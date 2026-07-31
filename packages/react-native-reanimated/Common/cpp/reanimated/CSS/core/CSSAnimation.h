@@ -5,14 +5,12 @@
 #include <reanimated/CSS/core/CSSAnimationObserver.h>
 #include <reanimated/CSS/core/CSSPlatformAnimation.h>
 #include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
-#include <reanimated/CSS/events/CSSAnimationEventReporter.h>
 #include <reanimated/CSS/events/CSSEvent.h>
 #include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolator.h>
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
 
 #include <memory>
-#include <optional>
 #include <string>
 
 namespace reanimated::css {
@@ -59,6 +57,8 @@ class CSSAnimation {
 
   void reportCancellation(double timestamp);
 
+  ~CSSAnimation();
+
  private:
   const Tag viewTag_;
   const std::string name_;
@@ -71,10 +71,17 @@ class CSSAnimation {
   const std::shared_ptr<CSSPlatformAnimationFactory> platformAnimationFactory_;
   std::shared_ptr<CSSPlatformAnimation> platformAnimation_;
 
-  std::optional<CSSAnimationEventReporter> eventReporter_;
+  CSSEventMask eventMask_{0};
+  // The lifecycle reports an abort without a timestamp, so reportCancellation()
+  // leaves one here.
+  double cancelTimestamp_{0};
 
   bool isReversed() const;
   void updatePropertyRouting();
+
+  const std::shared_ptr<AnimationProgressProvider> &progressProvider() const;
+  void reportMilestone(RunMilestone milestone);
+  void emitEvent(CSSEventType type, double elapsedTime) const;
 };
 
 } // namespace reanimated::css

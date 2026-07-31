@@ -1,7 +1,9 @@
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/core/CSSLoopAnimation.h>
+#include <reanimated/CSS/events/animationElapsedTime.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
+#include <algorithm>
 #include <memory>
 #include <utility>
 
@@ -32,26 +34,63 @@ CSSAnimation::CSSAnimation(
   updatePropertyRouting();
 }
 
+CSSAnimation::~CSSAnimation() {
+  // The provider can outlive this object, so the milestone lambda capturing
+  // `this` has to go with it.
+  progressProvider()->onMilestone(nullptr);
+}
+
 AnimationProgressState CSSAnimation::getState() const {
   return loopAnimation_->getState();
 }
 
 void CSSAnimation::setEventMask(const CSSEventMask eventMask) {
-  if (eventMask == 0) {
-    eventReporter_.reset();
+  if (eventMask == eventMask_) {
     return;
   }
+  eventMask_ = eventMask;
 
-  if (!eventReporter_) {
-    eventReporter_.emplace(viewTag_, name_, observer_, loopAnimation_->getProgressProvider());
+  if (eventMask == 0) {
+    progressProvider()->onMilestone(nullptr);
+    return;
   }
-  eventReporter_->setMask(eventMask);
+  progressProvider()->onMilestone([this](const RunMilestone milestone) { reportMilestone(milestone); });
 }
 
 void CSSAnimation::reportCancellation(const double timestamp) {
-  if (eventReporter_) {
-    eventReporter_->cancel(timestamp);
+  cancelTimestamp_ = timestamp;
+  progressProvider()->abort();
+}
+
+const std::shared_ptr<AnimationProgressProvider> &CSSAnimation::progressProvider() const {
+  return loopAnimation_->getProgressProvider();
+}
+
+void CSSAnimation::reportMilestone(const RunMilestone milestone) {
+  switch (milestone) {
+    case RunMilestone::Started:
+      emitEvent(CSSEventType::AnimationStart, animationStartElapsedTime(*progressProvider()));
+      break;
+    case RunMilestone::Repeated:
+      emitEvent(CSSEventType::AnimationIteration, animationIterationElapsedTime(*progressProvider()));
+      break;
+    case RunMilestone::Ended:
+      emitEvent(CSSEventType::AnimationEnd, animationEndElapsedTime(*progressProvider()));
+      break;
+    case RunMilestone::Aborted:
+      emitEvent(CSSEventType::AnimationCancel, animationCancelElapsedTime(*progressProvider(), cancelTimestamp_));
+      break;
+    case RunMilestone::Created:
+      // Animations have no creation event, unlike transitions.
+      break;
   }
+}
+
+void CSSAnimation::emitEvent(const CSSEventType type, const double elapsedTime) const {
+  if (!hasListener(eventMask_, type)) {
+    return;
+  }
+  observer_.onAnimationEvent(viewTag_, name_, type, elapsedTime);
 }
 
 folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
