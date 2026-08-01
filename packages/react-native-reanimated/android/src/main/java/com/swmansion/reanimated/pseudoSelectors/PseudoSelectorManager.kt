@@ -1,6 +1,5 @@
 package com.swmansion.reanimated.pseudoSelectors
 
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
@@ -153,7 +152,6 @@ class PseudoSelectorManager(
         callback: PseudoSelectorCallback,
     ) {
         val host = findTouchHost(view)
-        makeHitTestable(view)
         acquireTouchListener(host)
         hover.register(view, host, callback)
         ensureExtraWindowBridge()
@@ -162,39 +160,6 @@ class PseudoSelectorManager(
                 hover.unregister(view, host)
                 releaseTouchListener(host)
             }
-    }
-
-    // Null when the app does not depend on react-native-svg, so no view can be a shape. Both
-    // reflected methods are declared on this class, making it exactly the condition under which
-    // they resolve.
-    private val svgShapeClass: Class<*>? by lazy {
-        try {
-            Class.forName(SVG_SHAPE_CLASS)
-        } catch (_: ClassNotFoundException) {
-            null
-        }
-    }
-
-    // react-native-svg keeps a shape off the touch target path unless it is marked responsible,
-    // which the library otherwise does only for shapes carrying a touch handler. Reflection keeps
-    // react-native-svg an optional dependency.
-    private fun makeHitTestable(view: View) {
-        val shapeClass = svgShapeClass ?: return
-        if (!shapeClass.isInstance(view)) {
-            // Every other view, the <Svg> root included, is already on the touch path.
-            return
-        }
-        try {
-            view.javaClass
-                .getMethod("setResponsible", Boolean::class.javaPrimitiveType)
-                .invoke(view, true)
-            // setResponsible only invalidates the shape, and the flag is read while the enclosing
-            // SvgView redraws its children. react-native-svg invalidates that SvgView from its view
-            // manager, which this bypasses, so an already drawn shape needs it invalidated here.
-            (view.javaClass.getMethod("getSvgView").invoke(view) as? View)?.invalidate()
-        } catch (e: ReflectiveOperationException) {
-            Log.w(TAG, "SVG shape not made hit-testable; :hover and :active will not fire on it", e)
-        }
     }
 
     private fun ensureExtraWindowBridge() {
@@ -212,7 +177,6 @@ class PseudoSelectorManager(
         callbacks: MutableMap<View, PseudoSelectorCallback>,
     ) {
         val host = findTouchHost(view)
-        makeHitTestable(view)
         callbacks[view] = callback
         acquireTouchListener(host)
         hover.retainWindowObserver(view)
@@ -459,10 +423,5 @@ class PseudoSelectorManager(
             parent = (parent as? View)?.parent
         }
         return false
-    }
-
-    private companion object {
-        const val SVG_SHAPE_CLASS = "com.horcrux.svg.VirtualView"
-        const val TAG = "Reanimated"
     }
 }
