@@ -290,6 +290,7 @@ shadowOpacity: {
       fill: { default: '#fca5a5', ':hover': '#dc2626' },
       transitionDuration: '150ms',
     }}
+    onStartShouldSetResponder={() => true}
   />
   {/* Front circle - drawn last, so it sits on top */}
   <AnimatedCircle
@@ -298,6 +299,7 @@ shadowOpacity: {
       fill: { default: '#93c5fd', ':hover': '#2563eb' },
       transitionDuration: '150ms',
     }}
+    onStartShouldSetResponder={() => true}
   />
 </Svg>`}
             collapsedCode={`fill: {
@@ -318,6 +320,7 @@ shadowOpacity: {
                     },
                     transitionDuration: '150ms',
                   }}
+                  onStartShouldSetResponder={() => true}
                 />
                 <AnimatedCircle
                   cx={145}
@@ -331,6 +334,7 @@ shadowOpacity: {
                     },
                     transitionDuration: '150ms',
                   }}
+                  onStartShouldSetResponder={() => true}
                 />
               </Svg>
             </View>
