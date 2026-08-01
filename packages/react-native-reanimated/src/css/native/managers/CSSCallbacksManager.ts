@@ -9,21 +9,14 @@ import type {
   NativeCSSEvent,
 } from '../events';
 import {
+  ANIMATION_CALLBACK_PROP_BY_EVENT_TYPE as CALLBACK_PROP_BY_EVENT_TYPE,
   cssCallbacksRegistry,
   getAnimationEventMaskFromProps,
 } from '../events';
 
-const CALLBACK_PROP_BY_EVENT_TYPE: Record<
-  CSSAnimationEventType,
-  CSSAnimationCallbackProp
-> = {
-  animationStart: 'onAnimationStart',
-  animationEnd: 'onAnimationEnd',
-  animationIteration: 'onAnimationIteration',
-  animationCancel: 'onAnimationCancel',
-};
-
-const CALLBACK_PROPS = Object.values(CALLBACK_PROP_BY_EVENT_TYPE);
+const CALLBACK_PROPS: CSSAnimationCallbackProp[] = Object.values(
+  CALLBACK_PROP_BY_EVENT_TYPE
+);
 
 // Every CSS event for a view reaches this manager, so the table doubles as the
 // check for whether the kind is one it owns.

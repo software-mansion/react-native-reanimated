@@ -128,6 +128,18 @@ describe('CSSManager', () => {
       expect(onAnimationCancel).toHaveBeenCalledTimes(1);
     });
 
+    test('drops a cancel emitted for an animation removed together with its callbacks', () => {
+      const onAnimationCancel = jest.fn();
+      manager.update({ ...ANIMATION, onAnimationCancel });
+      // The animation and its callbacks go away in the same update, so the
+      // native side may still emit a cancel using the mask it had before.
+      manager.update({});
+
+      cssCallbacksRegistry.dispatch([event('animationCancel')]);
+
+      expect(onAnimationCancel).not.toHaveBeenCalled();
+    });
+
     test('stops delivering events after unmount cleanup', () => {
       const onAnimationEnd = jest.fn();
       manager.update({ ...ANIMATION, onAnimationEnd });
