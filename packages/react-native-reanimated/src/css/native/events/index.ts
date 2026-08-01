@@ -1,6 +1,9 @@
 'use strict';
 export { default as cssCallbacksRegistry } from './CSSCallbacksRegistry';
-export { getAnimationEventMaskFromProps } from './mask';
+export {
+  ANIMATION_CALLBACK_PROP_BY_EVENT_TYPE,
+  getAnimationEventMaskFromProps,
+} from './mask';
 export type {
   CSSAnimationEventType,
   CSSEventHandler,
