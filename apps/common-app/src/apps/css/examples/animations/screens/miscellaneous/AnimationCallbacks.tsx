@@ -1,15 +1,9 @@
 import { useCallback, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import type { CSSAnimationProperties } from 'react-native-reanimated';
 import Animated, { css } from 'react-native-reanimated';
 
-import {
-  Button,
-  ScrollScreen,
-  Section,
-  Stagger,
-  Text,
-} from '@/apps/css/components';
+import { Button, Screen, Section, Text } from '@/apps/css/components';
 import { colors, flex, radius, sizes, spacing } from '@/theme';
 
 const pulse = css.keyframes({
@@ -66,73 +60,73 @@ export default function AnimationCallbacks() {
   );
 
   return (
-    <ScrollScreen>
-      <Stagger>
-        <Section
-          description="Animation lifecycle callbacks fired by the **native** CSS engine. `elapsedTime` is reported in **seconds**."
-          title="Animation Callbacks">
-          <View style={styles.content}>
-            <View style={styles.buttons}>
-              <Button
-                style={flex.grow}
-                title="Finite (3x)"
-                onPress={() => restart(FINITE)}
-              />
-              <Button
-                style={flex.grow}
-                title="Infinite"
-                onPress={() => restart(INFINITE)}
-              />
-              <Button
-                style={flex.grow}
-                title="Cancel"
-                onPress={() => setAnimation(null)}
-              />
-              <Button
-                style={flex.grow}
-                title="Unmount"
-                onPress={() => setIsMounted(false)}
-              />
-            </View>
-
-            <View style={styles.preview}>
-              {isMounted && (
-                <Animated.View
-                  style={[
-                    styles.box,
-                    animation,
-                    {
-                      onAnimationCancel: ({ elapsedTime }) =>
-                        log('cancel', elapsedTime),
-                      onAnimationEnd: ({ elapsedTime }) =>
-                        log('end', elapsedTime),
-                      onAnimationIteration: ({ elapsedTime }) =>
-                        log('iteration', elapsedTime),
-                      onAnimationStart: ({ elapsedTime }) =>
-                        log('start', elapsedTime),
-                    },
-                  ]}
-                />
-              )}
-            </View>
+    <Screen style={styles.screen}>
+      <Section
+        description="Animation lifecycle callbacks fired by the **native** CSS engine. `elapsedTime` is reported in **seconds**."
+        title="Animation Callbacks">
+        <View style={styles.content}>
+          <View style={styles.buttons}>
+            <Button
+              style={flex.grow}
+              title="Finite (3x)"
+              onPress={() => restart(FINITE)}
+            />
+            <Button
+              style={flex.grow}
+              title="Infinite"
+              onPress={() => restart(INFINITE)}
+            />
+            <Button
+              style={flex.grow}
+              title="Cancel"
+              onPress={() => setAnimation(null)}
+            />
+            <Button
+              style={flex.grow}
+              title="Unmount"
+              onPress={() => setIsMounted(false)}
+            />
+            <Button
+              style={flex.grow}
+              title="Clear log"
+              onPress={() => setEvents([])}
+            />
           </View>
-        </Section>
 
-        <Section description="In order of arrival" title="Event Log">
-          <View style={styles.log}>
-            {events.length === 0 ? (
-              <Text variant="subHeading2">No events yet</Text>
-            ) : (
-              events.map((event) => (
-                <Text key={event.id} variant="body1">
-                  {event.label}
-                </Text>
-              ))
+          <View style={styles.preview}>
+            {isMounted && (
+              <Animated.View
+                style={[
+                  styles.box,
+                  animation,
+                  {
+                    onAnimationCancel: ({ elapsedTime }) =>
+                      log('cancel', elapsedTime),
+                    onAnimationEnd: ({ elapsedTime }) =>
+                      log('end', elapsedTime),
+                    onAnimationIteration: ({ elapsedTime }) =>
+                      log('iteration', elapsedTime),
+                    onAnimationStart: ({ elapsedTime }) =>
+                      log('start', elapsedTime),
+                  },
+                ]}
+              />
             )}
           </View>
-        </Section>
-      </Stagger>
-    </ScrollScreen>
+        </View>
+      </Section>
+
+      <Section fill description="In order of arrival" title="Event Log">
+        <FlatList
+          contentContainerStyle={styles.logContent}
+          data={events}
+          keyExtractor={(event) => String(event.id)}
+          ListEmptyComponent={<Text variant="subHeading2">No events yet</Text>}
+          renderItem={({ item }) => <Text variant="body1">{item.label}</Text>}
+          style={styles.log}
+        />
+      </Section>
+    </Screen>
   );
 }
 
@@ -155,6 +149,9 @@ const styles = StyleSheet.create({
   log: {
     backgroundColor: colors.background2,
     borderRadius: radius.sm,
+    flex: 1,
+  },
+  logContent: {
     gap: spacing.xxxs,
     padding: spacing.xs,
   },
@@ -163,5 +160,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background2,
     borderRadius: radius.md,
     height: sizes.xxl,
+  },
+  screen: {
+    gap: spacing.sm,
+    padding: spacing.sm,
   },
 });
