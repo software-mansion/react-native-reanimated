@@ -63,13 +63,22 @@ internal class CSSPlatformTransitionsManager(
                 val iterator = transitions.entries.iterator()
                 while (iterator.hasNext()) {
                     val running = iterator.next().value
-                    if (running.finished) continue
                     val view = running.viewRef.get()
                     if (view == null) {
                         iterator.remove()
                         continue
                     }
-                    val t = ((now - running.startTimeMs) / running.durationMs).toFloat().coerceIn(0f, 1f)
+                    if (running.finished) continue
+                    val elapsedMs = now - running.startTimeMs
+                    if (elapsedMs < 0) {
+                        // Delay phase: hold the raw start value. Step-like easings are
+                        // nonzero already at t = 0, so this cannot go through the curve.
+                        running.current = running.startValue
+                        running.writer.setValue(view, running.startValue)
+                        active = true
+                        continue
+                    }
+                    val t = (elapsedMs / running.durationMs).toFloat().coerceAtMost(1f)
                     val value =
                         running.startValue +
                             (running.toValue - running.startValue) * running.interpolator.getInterpolation(t)
@@ -119,11 +128,11 @@ internal class CSSPlatformTransitionsManager(
     ): Boolean {
         val writer = cssPropertyWriterFor(propertyName) ?: return false
         val context = reactContext.get() ?: return false
-        // Scale 0 means animations are off; refusing sends the property to the loop, which
-        // resolves the final style without animating. Other scales are not applied here:
-        // platform transitions follow the authored CSS timeline, and the slow-animations
-        // toggle already flows through the shared animation clock.
-        if (DurationScale.effectiveScale(context) <= 0f) return false
+        // Refusing sends the property to the loop, which resolves the final style without
+        // animating. The animator duration scale is otherwise not applied: platform
+        // transitions follow the authored CSS timeline, and the slow-animations toggle
+        // already flows through the shared animation clock.
+        if (!DurationScale.animationsEnabled(context)) return false
 
         enqueue(
             Command.Start(
@@ -205,7 +214,14 @@ internal class CSSPlatformTransitionsManager(
                     val key = Key(command.viewTag, command.propertyName)
                     // Also drops any queued retry for this key.
                     startTokens.remove(key)
-                    transitions.remove(key)
+                    val dropped = transitions.remove(key)
+                    // The committed style already holds the target, but nothing re-writes
+                    // it to the view once this entry stops being driven; without a final
+                    // write the view would stick at the mid-flight value. A persistent
+                    // value has no committed style to settle to, so it is left as drawn.
+                    if (dropped != null && !dropped.persistent) {
+                        dropped.viewRef.get()?.let { dropped.writer.setValue(it, dropped.toValue) }
+                    }
                 }
             }
         }
@@ -219,7 +235,7 @@ internal class CSSPlatformTransitionsManager(
         // superseded request cannot start on a later frame.
         val token = ++nextStartToken
         startTokens[key] = token
-        beginWhenMounted(key, token, command.startTimestampMs + command.durationMs) {
+        beginWhenMounted(key, token, command.startTimestampMs + command.durationMs, command.persistent) {
             viewForTag(command.viewTag)?.also { view ->
                 val interpolator = interpolatorFor(command.easingType, command.pointsX, command.pointsY)
                 start(
@@ -247,14 +263,17 @@ internal class CSSPlatformTransitionsManager(
         key: Key,
         token: Long,
         endTimestampMs: Double,
+        persistent: Boolean,
         begin: () -> Boolean,
     ) {
         if (startTokens[key] != token) return
-        if (begin() || animationTimestamp() >= endTimestampMs) {
+        // A persistent value outlives its own timeline, so its start never expires; it
+        // retries until the view mounts or the key is superseded or removed.
+        if (begin() || (!persistent && animationTimestamp() >= endTimestampMs)) {
             startTokens.remove(key)
             return
         }
-        Choreographer.getInstance().postFrameCallback { beginWhenMounted(key, token, endTimestampMs, begin) }
+        Choreographer.getInstance().postFrameCallback { beginWhenMounted(key, token, endTimestampMs, persistent, begin) }
     }
 
     private fun start(

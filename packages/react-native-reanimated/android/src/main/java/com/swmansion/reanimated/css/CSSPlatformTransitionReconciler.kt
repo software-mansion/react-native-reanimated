@@ -18,6 +18,24 @@ internal class CSSPlatformTransitionReconciler(
     private val tracked = HashSet<ViewTreeObserver>()
 
     fun track(view: View) {
+        if (!view.isAttachedToWindow) {
+            // A detached view hands out a floating observer that merges into the window
+            // observer on attach and dies, leaving the listener unremovable; register
+            // once the view is genuinely attached.
+            view.addOnAttachStateChangeListener(
+                object : View.OnAttachStateChangeListener {
+                    override fun onViewAttachedToWindow(attached: View) {
+                        attached.removeOnAttachStateChangeListener(this)
+                        track(attached)
+                    }
+
+                    override fun onViewDetachedFromWindow(detached: View) {
+                        detached.removeOnAttachStateChangeListener(this)
+                    }
+                },
+            )
+            return
+        }
         // A window torn down mid-animation never draws again, so its listener never retires.
         tracked.removeAll { !it.isAlive }
 
