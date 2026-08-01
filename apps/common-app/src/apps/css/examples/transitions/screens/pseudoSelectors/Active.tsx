@@ -211,6 +211,7 @@ transform: {
     fill: { default: colors.primary, ':active': colors.primaryDark },
     transitionDuration: '200ms',
   }}
+  onStartShouldSetResponder={() => true}
 />`}
             collapsedCode={`fill: {
   default: colors.primary,
@@ -229,6 +230,7 @@ transform: {
                   },
                   transitionDuration: '200ms',
                 }}
+                onStartShouldSetResponder={() => true}
               />
             </Svg>
           </VerticalExampleCard>
@@ -243,6 +245,7 @@ transform: {
     r: { default: 22, ':active': 12 },
     transitionDuration: '200ms',
   }}
+  onStartShouldSetResponder={() => true}
 />`}
             collapsedCode={`r: {
   default: 22,
@@ -258,6 +261,7 @@ transform: {
                   r: { ':active': sizes.md / 4, default: sizes.md / 2 - 2 },
                   transitionDuration: '200ms',
                 }}
+                onStartShouldSetResponder={() => true}
               />
             </Svg>
           </VerticalExampleCard>
