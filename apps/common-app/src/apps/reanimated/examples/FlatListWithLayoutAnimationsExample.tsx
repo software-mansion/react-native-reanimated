@@ -19,7 +19,7 @@ interface Item {
 }
 
 // const data = Array.from({ length: 200 }, (_, i) => ({
-const data = Array.from({ length: 10 }, (_, i) => ({
+const data = Array.from({ length: 1000 }, (_, i) => ({
   id: i,
   color: `hsl(${(i * 10) % 360}, 100%, 90%)`,
   title: `Item ${i + 1}`,

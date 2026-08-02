@@ -1,0 +1,56 @@
+{
+  "capturePoint": "post-objective-10",
+  "platform": "ios",
+  "simulator": {
+    "model": "iPhone 17 Pro",
+    "osVersion": "26.1",
+    "udid": "860189DC-0AEA-43B7-BED2-C3D4FA56A7AB"
+  },
+  "scheme": "Debug FabricExample",
+  "backend": "native",
+  "repositoryChecks": {
+    "tests": {
+      "status": "pass",
+      "suites": 95,
+      "tests": 1445
+    },
+    "layoutReanimationTests": {
+      "status": "pass",
+      "suites": 4,
+      "tests": 40
+    },
+    "nativeTypecheck": "pass",
+    "commonAppLint": {
+      "status": "pass",
+      "preExistingWarnings": 208
+    },
+    "javascriptLint": "pass",
+    "appleLint": "pass",
+    "androidLint": "pass",
+    "iosBuild": "pass"
+  },
+  "simulatorValidation": {
+    "status": "implementation-pass-validation-skipped",
+    "attemptedScenarios": [
+      "geometry component grid",
+      "transform order comparison",
+      "position and size with text"
+    ],
+    "observed": [
+      "installed build reported COMPILED BACKEND NATIVE",
+      "geometry component grid was selected",
+      "duration was configured to 3000 ms with one repetition"
+    ],
+    "notClaimed": [
+      "animation playback",
+      "callback outcome",
+      "visual parity"
+    ],
+    "reason": "the numeric keyboard remained over the lower bench controls after bounded dismissal and relaunch attempts"
+  },
+  "notClaimed": [
+    "physical-device validation",
+    "frame-accurate video",
+    "exact per-frame content reflow"
+  ]
+}

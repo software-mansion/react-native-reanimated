@@ -1,0 +1,47 @@
+{
+  "capturePoint": "post-objective-07",
+  "platform": "ios",
+  "simulator": {
+    "model": "iPhone 17 Pro",
+    "osVersion": "26.1",
+    "udid": "0BF2326C-C973-40EB-8B19-151A01735B78"
+  },
+  "scheme": "Debug FabricExample",
+  "backend": "native",
+  "validator": {
+    "seed": 7999950,
+    "iterationsPerRun": 10000,
+    "runs": 2
+  },
+  "repositoryChecks": {
+    "tests": "pass",
+    "nativeTypecheck": "pass",
+    "fabricExampleLint": "pass",
+    "appleLint": "pass",
+    "androidLint": "pass",
+    "iosBuild": "pass"
+  },
+  "simulatorValidation": {
+    "status": "pass",
+    "supportedScenario": {
+      "name": "FadeIn and FadeOut",
+      "durationMs": 900,
+      "callbacks": 2,
+      "lastFinished": true,
+      "route": "sampled",
+      "reason": "requires-sampling",
+      "platformScheduled": true,
+      "platformStarted": true,
+      "platformCompleted": true
+    },
+    "fallbackScenario": {
+      "name": "Unsupported style property",
+      "callbacks": 1,
+      "lastFinished": true,
+      "route": "legacy",
+      "reason": "unsupported-property",
+      "platformScheduled": false,
+      "platformStarted": false
+    }
+  }
+}

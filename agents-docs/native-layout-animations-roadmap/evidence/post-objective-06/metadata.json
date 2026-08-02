@@ -1,0 +1,12 @@
+{
+  "objective": "06",
+  "date": "2026-07-31",
+  "platform": "ios",
+  "simulator": "iPhone 17 Pro",
+  "backend": "native",
+  "finalModelLayout": "pass",
+  "delayedEntering": "pass-with-frame-capture-gap",
+  "backToBackFinalCommits": "pass",
+  "retainedExitCleanup": "pass",
+  "traceValid": false
+}

@@ -1,0 +1,41 @@
+executionPrerequisite: FabricExample is open on [LA] Native backend test bench,
+  scrolled to top, selected scenario configured at duration 900 and repetitions
+  1
+steps:
+  - echo: "At top controls: reset selected scenario"
+  - tool: gesture-tap
+    args:
+      udid: 0BF2326C-C973-40EB-8B19-151A01735B78
+      x: 0.123
+      y: 0.851
+  - echo: After reset settles, run selected deterministic scenario
+  - tool: gesture-tap
+    args:
+      udid: 0BF2326C-C973-40EB-8B19-151A01735B78
+      x: 0.296
+      y: 0.851
+    delayMs: 300
+  - echo: Scroll to terminal result and trace controls
+  - tool: gesture-swipe
+    args:
+      udid: 0BF2326C-C973-40EB-8B19-151A01735B78
+      fromX: 0.5
+      fromY: 0.85
+      toX: 0.5
+      toY: 0.25
+      durationMs: 500
+    delayMs: 2000
+  - tool: await-ui-element
+    args:
+      udid: 0BF2326C-C973-40EB-8B19-151A01735B78
+      condition: visible
+      selector:
+        text: PASS
+      bundleId: org.reactjs.native.example.FabricExample
+      timeoutMs: 5000
+  - echo: PASS visible; copy exact JSONL trace
+  - tool: gesture-tap
+    args:
+      udid: 0BF2326C-C973-40EB-8B19-151A01735B78
+      x: 0.832
+      y: 0.462

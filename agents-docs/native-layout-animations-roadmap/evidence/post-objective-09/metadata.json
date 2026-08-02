@@ -1,0 +1,50 @@
+{
+  "capturePoint": "post-objective-09",
+  "platform": "ios",
+  "simulator": {
+    "model": "iPhone 17 Pro",
+    "osVersion": "26.1",
+    "udid": "860189DC-0AEA-43B7-BED2-C3D4FA56A7AB"
+  },
+  "scheme": "Debug FabricExample",
+  "backend": "native",
+  "repositoryChecks": {
+    "tests": {
+      "status": "pass",
+      "suites": 94,
+      "tests": 1437
+    },
+    "nativeTypecheck": "pass",
+    "commonAppLint": {
+      "status": "pass",
+      "preExistingWarnings": 208
+    },
+    "appleLint": "pass",
+    "iosBuild": "pass"
+  },
+  "simulatorValidation": {
+    "status": "implementation-pass-validation-skipped",
+    "scenario": "layout-interrupted-by-layout",
+    "durationMs": 5000,
+    "interruptAtPercent": 40,
+    "initialRun": {
+      "status": "fail",
+      "runId": 4,
+      "observedCallbacks": [
+        true,
+        true
+      ],
+      "diagnosis": "sampled compatibility playback bypassed the new target registry",
+      "action": "routed sampled playback through the shared registry"
+    },
+    "postFixRun": {
+      "status": "not-claimed",
+      "reason": "the app returned to iOS Home immediately after the discovered Run + interrupt action during repeated bounded Argent retries"
+    }
+  },
+  "notClaimed": [
+    "100-cycle AddressSanitizer stress",
+    "slow five-second video",
+    "CSS owner review"
+  ]
+}

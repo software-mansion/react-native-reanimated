@@ -1,0 +1,80 @@
+{
+  "capturePoint": "post-objective-12",
+  "platform": "ios",
+  "simulator": {
+    "model": "iPhone 17 Pro",
+    "osVersion": "26.1",
+    "udid": "860189DC-0AEA-43B7-BED2-C3D4FA56A7AB"
+  },
+  "scheme": "Debug FabricExample",
+  "backend": "native",
+  "repositoryChecks": {
+    "tests": {
+      "status": "pass",
+      "suites": 95,
+      "tests": 1457
+    },
+    "layoutReanimationTests": {
+      "status": "pass",
+      "suites": 4,
+      "tests": 52
+    },
+    "nativeTypecheck": "pass",
+    "commonAppTypecheck": "pass",
+    "commonAppLint": {
+      "status": "pass",
+      "preExistingWarnings": 208
+    },
+    "javascriptLint": "pass",
+    "appleLint": "pass",
+    "androidLint": "pass",
+    "iosBuild": "pass"
+  },
+  "sampling": {
+    "internalStepMs": 4,
+    "maximumDenseSamples": 10000,
+    "bounceDenseKeyframes": 226,
+    "bounceSimplifiedKeyframes": 53,
+    "setupObservations": [
+      {
+        "views": 1,
+        "compilerTimeMs": 1,
+        "packedPayloadBytes": 904,
+        "caKeyframes": 53
+      },
+      {
+        "views": 10,
+        "compilerTimeMs": 5,
+        "packedPayloadBytes": 9040,
+        "caKeyframes": 530
+      },
+      {
+        "views": 100,
+        "compilerTimeMs": 45,
+        "packedPayloadBytes": 90400,
+        "caKeyframes": 5300
+      }
+    ],
+    "timingNote": "single local Jest-process observation; setup cost, not an Objective 15 performance budget"
+  },
+  "simulatorValidation": {
+    "status": "implementation-pass-validation-skipped",
+    "observed": [
+      "the fresh Debug FabricExample build installed",
+      "the app launched on the configured iOS Simulator"
+    ],
+    "notClaimed": [
+      "bench navigation",
+      "native-sampled bounce or ordered-transform playback",
+      "40 percent interruption continuity",
+      "legacy route comparison",
+      "visual parity"
+    ],
+    "reason": "the bounded Argent execution window expired after launch and before bench navigation"
+  },
+  "notClaimed": [
+    "physical-device validation",
+    "frame-accurate video",
+    "runtime JSI packed-buffer transport"
+  ]
+}

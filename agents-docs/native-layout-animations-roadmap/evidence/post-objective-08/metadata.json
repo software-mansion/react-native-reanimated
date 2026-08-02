@@ -1,0 +1,47 @@
+{
+  "capturePoint": "post-objective-08",
+  "platform": "ios",
+  "simulator": {
+    "model": "iPhone 17 Pro",
+    "osVersion": "26.1",
+    "udid": "0BF2326C-C973-40EB-8B19-151A01735B78"
+  },
+  "scheme": "Debug FabricExample",
+  "backend": "native",
+  "repositoryChecks": {
+    "tests": {
+      "status": "pass",
+      "suites": 94,
+      "tests": 1437
+    },
+    "nativeTypecheck": "pass",
+    "fabricExampleLint": "pass",
+    "appleLint": "pass",
+    "androidLint": "pass",
+    "iosBuild": "pass"
+  },
+  "simulatorValidation": {
+    "status": "partial-pass",
+    "simpleTiming": {
+      "scenario": "timing-linear-opacity-position",
+      "runId": 3,
+      "durationMs": 1000,
+      "callbacks": 1,
+      "lastFinished": true,
+      "route": "simple",
+      "reason": "canonical-single-timing",
+      "thread": "main",
+      "mainThread": true,
+      "primitives": [
+        "CABasicAnimation",
+        "CABasicAnimation",
+        "CABasicAnimation"
+      ],
+      "animationKeyCount": 3
+    },
+    "structuredTiming": {
+      "status": "not-claimed",
+      "reason": "bench controls overlapped the app navigation header during bounded Argent retries"
+    }
+  }
+}

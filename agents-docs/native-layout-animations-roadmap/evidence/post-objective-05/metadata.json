@@ -1,0 +1,13 @@
+{
+  "objective": "05",
+  "date": "2026-07-31",
+  "platform": "ios",
+  "simulator": "iPhone 17 Pro",
+  "backend": "native",
+  "scenario": "1. LinearTransition position only",
+  "durationMs": 900,
+  "result": "pass",
+  "callbackCount": 1,
+  "lastFinished": true,
+  "traceExported": false
+}

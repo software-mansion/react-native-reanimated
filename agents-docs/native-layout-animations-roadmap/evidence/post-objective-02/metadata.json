@@ -1,0 +1,15 @@
+{
+  "capturePoint": "post-objective-02",
+  "commit": "391eaf75bf64ab7d982abc213056286af168679c",
+  "platform": "ios",
+  "simulator": { "model": "iPhone 17 Pro", "iosVersion": "26.1" },
+  "build": "Debug FabricExample",
+  "durationMs": 900,
+  "repetitionsPerExport": 1,
+  "freshResetExportRunsPerCase": 3,
+  "worktree": { "dirty": true, "preexisting": [".gitignore", "apps/fabric-example/ios/Podfile.lock", "apps/fabric-example/package.json", ".argent/", "agents-docs/"] },
+  "staticFlags": {
+    "legacy": { "ENABLE_SHARED_ELEMENT_TRANSITIONS": false, "IOS_USE_NATIVE_LAYOUT_ANIMATIONS": false },
+    "native": { "ENABLE_SHARED_ELEMENT_TRANSITIONS": false, "IOS_USE_NATIVE_LAYOUT_ANIMATIONS": true }
+  }
+}

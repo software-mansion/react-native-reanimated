@@ -1,0 +1,53 @@
+{
+  "capturePoint": "post-objective-11",
+  "platform": "ios",
+  "simulator": {
+    "model": "iPhone 17 Pro",
+    "osVersion": "26.1",
+    "udid": "860189DC-0AEA-43B7-BED2-C3D4FA56A7AB"
+  },
+  "scheme": "Debug FabricExample",
+  "backend": "native",
+  "repositoryChecks": {
+    "tests": {
+      "status": "pass",
+      "suites": 95,
+      "tests": 1449
+    },
+    "layoutReanimationTests": {
+      "status": "pass",
+      "suites": 4,
+      "tests": 44
+    },
+    "nativeTypecheck": "pass",
+    "commonAppTypecheck": "pass",
+    "commonAppLint": {
+      "status": "pass",
+      "preExistingWarnings": 208
+    },
+    "javascriptLint": "pass",
+    "appleLint": "pass",
+    "androidLint": "pass",
+    "iosBuild": "pass"
+  },
+  "simulatorValidation": {
+    "status": "implementation-pass-validation-skipped",
+    "observed": [
+      "the fresh Debug FabricExample build installed",
+      "the app launched on the configured iOS Simulator"
+    ],
+    "notClaimed": [
+      "bench navigation",
+      "entering, exiting, reduced-motion, delay, or surface-lifecycle playback",
+      "callback outcome",
+      "visual parity",
+      "ASan result"
+    ],
+    "reason": "the bounded Argent execution window expired after launch and before bench navigation"
+  },
+  "notClaimed": [
+    "physical-device validation",
+    "frame-accurate video",
+    "system reduced-motion toggle"
+  ]
+}
