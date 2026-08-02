@@ -8,6 +8,7 @@ import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
+import { isPseudoSelectorValue } from '../css/utils/guards';
 import { getStaticFeatureFlag } from '../featureFlags';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import { SharedTransition } from '../layoutReanimation/SharedTransition';
@@ -31,6 +32,14 @@ import { PropsFilter } from './PropsFilter';
 import { filterStyles, flattenArray } from './utils';
 
 let id = 0;
+
+// A stable identity keeps the injected prop from invalidating memoized children.
+const neverClaimResponder = () => false;
+
+const containsPseudoSelectorValues = (styleLike: unknown) =>
+  !!styleLike &&
+  typeof styleLike === 'object' &&
+  Object.values(styleLike).some(isPseudoSelectorValue);
 
 const FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS =
   getStaticFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS') &&
@@ -413,6 +422,22 @@ export default class AnimatedComponent
       if (filteredProps.children === undefined) {
         filteredProps.children = <Fragment />;
       }
+    }
+
+    // react-native-svg hit-tests a shape only when a responder prop marks it responsible, so
+    // pseudo selectors on SVG elements would otherwise never see the press. Passing a handler
+    // that returns false sets the flag through the library's own prop pipeline without claiming
+    // the responder; it is inert on non-SVG views.
+    if (
+      filteredProps.onStartShouldSetResponder === undefined &&
+      (flattenArray(this.props.style ?? []).some(
+        containsPseudoSelectorValues
+      ) ||
+        flattenArray(this.props.animatedProps ?? []).some(
+          containsPseudoSelectorValues
+        ))
+    ) {
+      filteredProps.onStartShouldSetResponder = neverClaimResponder;
     }
 
     if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
