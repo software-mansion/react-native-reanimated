@@ -116,7 +116,7 @@ export default function AnimationCallbacks() {
         </View>
       </Section>
 
-      <Section fill description="In order of arrival" title="Event Log">
+      <Section description="In order of arrival" title="Event Log" fill>
         <FlatList
           contentContainerStyle={styles.logContent}
           data={events}
