@@ -5,6 +5,8 @@ import { SyncUIRunner } from '../utils/SyncUIRunner';
 import { assertMockedAnimationTimestamp } from './Asserts';
 import { createUpdatesContainer } from './UpdatesContainer';
 
+const MAX_WAIT_TIME_MS = 10000;
+
 export class AnimationUpdatesRecorder {
   private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
 
@@ -16,10 +18,21 @@ export class AnimationUpdatesRecorder {
 
     await this._syncUIRunner.runOnUIBlocking(() => {
       'worklet';
+      global.animationUpdatesRecordingStarted = false;
+
+      const startCountingFrames = () => {
+        'worklet';
+        if (!global.animationUpdatesRecordingStarted) {
+          global.animationUpdatesRecordingStarted = true;
+          global.framesCount = 0;
+        }
+      };
+
       const originalUpdateProps = global._updateProps;
       global.originalUpdateProps = originalUpdateProps;
 
       const mockedUpdateProps = (operations: Operation[]) => {
+        startCountingFrames();
         recordAnimationUpdates(operations);
         originalUpdateProps(operations);
       };
@@ -32,6 +45,7 @@ export class AnimationUpdatesRecorder {
         tag: number,
         value: Record<string, unknown>
       ) => {
+        startCountingFrames();
         recordLayoutAnimationUpdates(tag, value);
         originalNotifyAboutProgress(tag, value);
       };
@@ -50,6 +64,7 @@ export class AnimationUpdatesRecorder {
         global._notifyAboutProgress = global.originalNotifyAboutProgress;
         global.originalNotifyAboutProgress = undefined;
       }
+      global.animationUpdatesRecordingStarted = undefined;
     });
   }
 
@@ -76,11 +91,31 @@ export class AnimationUpdatesRecorder {
       };
 
       global.originalFlushAnimationFrame = global.__flushAnimationFrame;
-      global.__flushAnimationFrame = (_frameTimestamp: number) => {
-        global.mockedAnimationTimestamp! += 16;
+      global.__flushAnimationFrame = (frameTimestamp: number) => {
+        if (global.mockedAnimationTimestamp === undefined) {
+          global.originalFlushAnimationFrame!(frameTimestamp);
+          return;
+        }
+        global.mockedAnimationTimestamp += 16;
         global.__frameTimestamp = global.mockedAnimationTimestamp;
-        global.originalFlushAnimationFrame!(global.mockedAnimationTimestamp!);
-        global.framesCount!++;
+        global.originalFlushAnimationFrame!(global.mockedAnimationTimestamp);
+        global.framesCount = (global.framesCount ?? 0) + 1;
+      };
+
+      global.originalNativeRequestAnimationFrame =
+        global.__nativeRequestAnimationFrame;
+      global.__nativeRequestAnimationFrame = (
+        callback: (timestamp: number) => void
+      ) => {
+        global.originalNativeRequestAnimationFrame!((timestamp: number) => {
+          if (global.mockedAnimationTimestamp === undefined) {
+            callback(timestamp);
+            return;
+          }
+          global.mockedAnimationTimestamp += 16;
+          global.framesCount = (global.framesCount ?? 0) + 1;
+          callback(global.mockedAnimationTimestamp);
+        });
       };
     });
   }
@@ -101,12 +136,13 @@ export class AnimationUpdatesRecorder {
         global.__flushAnimationFrame = global.originalFlushAnimationFrame;
         global.originalFlushAnimationFrame = undefined;
       }
-      if (global.mockedAnimationTimestamp) {
-        global.mockedAnimationTimestamp = undefined;
+      if (global.originalNativeRequestAnimationFrame) {
+        global.__nativeRequestAnimationFrame =
+          global.originalNativeRequestAnimationFrame;
+        global.originalNativeRequestAnimationFrame = undefined;
       }
-      if (global.framesCount) {
-        global.framesCount = undefined;
-      }
+      global.mockedAnimationTimestamp = undefined;
+      global.framesCount = undefined;
     });
   }
 
@@ -116,20 +152,35 @@ export class AnimationUpdatesRecorder {
     });
   }
 
-  public waitForAnimationUpdates(updatesCount: number): Promise<boolean> {
+  public waitForAnimationUpdates(
+    updatesCount: number,
+    maxWaitTime = MAX_WAIT_TIME_MS
+  ): Promise<boolean> {
     const CHECK_INTERVAL = 20;
     const flag = makeMutable(false);
-    return new Promise<boolean>((resolve) => {
+    const framesSeen = makeMutable(0);
+    return new Promise<boolean>((resolve, reject) => {
+      const startTime = performance.now();
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       const interval = setInterval(async () => {
         await new SyncUIRunner().runOnUIBlocking(() => {
           'worklet';
           assertMockedAnimationTimestamp(global.framesCount);
+          framesSeen.value = global.framesCount!;
           flag.value = global.framesCount >= updatesCount - 1;
         });
         if (flag.value) {
           clearInterval(interval);
           resolve(true);
+          return;
+        }
+        if (performance.now() - startTime > maxWaitTime) {
+          clearInterval(interval);
+          reject(
+            new Error(
+              `Timed out after ${maxWaitTime}ms while waiting for ${updatesCount} animation updates, got ${framesSeen.value}.`
+            )
+          );
         }
       }, CHECK_INTERVAL);
     });

@@ -174,6 +174,13 @@ declare global {
   var originalFlushAnimationFrame:
     | ((frameTimestamp: number) => void)
     | undefined;
+  var originalNativeRequestAnimationFrame:
+    | ((callback: (timestamp: number) => void) => void)
+    | undefined;
+  var animationUpdatesRecordingStarted: boolean | undefined;
+  var __nativeRequestAnimationFrame: (
+    callback: (timestamp: number) => void
+  ) => void;
   var _getAnimationTimestamp: () => number;
   var __frameTimestamp: number | undefined;
   var _registriesLeakCheck: () => string;

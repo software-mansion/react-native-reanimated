@@ -27,6 +27,8 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 export { Presets } from '../Presets';
 
+const RENDER_MAX_WAIT_TIME_MS = 10000;
+
 export class TestRunner {
   private _currentTestCase: TestCase | null = null;
   private _renderHook: (component: ReactElement<Component> | null) => void =
@@ -135,7 +137,14 @@ export class TestRunner {
     } catch (e) {
       console.log(e);
     }
-    return this._renderLock.waitForUnlock();
+    const stillLocked = await this._renderLock.waitForUnlock(
+      RENDER_MAX_WAIT_TIME_MS
+    );
+    if (stillLocked) {
+      throw new Error(
+        `Timed out after ${RENDER_MAX_WAIT_TIME_MS}ms while waiting for the component to render.`
+      );
+    }
   }
 
   public async clearRenderOutput() {
