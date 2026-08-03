@@ -4,13 +4,13 @@ import React, {
   useReducer,
   useRef,
   useState,
-} from "react";
-import { Button, Text, View } from "react-native";
+} from 'react';
+import { Button, Text, View } from 'react-native';
 import Animated, {
   FadeIn,
   FadeOut,
   LinearTransition,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 
 // Minimal reproduction of a Fabric mounting crash caused by Reanimated's
 // legacy LayoutAnimationsProxy (EXC_BAD_ACCESS at 0x18 on RN 0.83 /
@@ -35,7 +35,7 @@ const SUSPEND_MS = 150;
 
 const cache = new Map<
   string,
-  { status: "pending" | "done"; promise: Promise<void> }
+  { status: 'pending' | 'done'; promise: Promise<void> }
 >();
 
 function useSuspendedData(key: string) {
@@ -45,15 +45,15 @@ function useSuspendedData(key: string) {
       setTimeout(() => {
         const e = cache.get(key);
         if (e) {
-          e.status = "done";
+          e.status = 'done';
         }
         resolve();
       }, SUSPEND_MS);
     });
-    entry = { status: "pending", promise };
+    entry = { status: 'pending', promise };
     cache.set(key, entry);
   }
-  if (entry.status === "pending") {
+  if (entry.status === 'pending') {
     // eslint-disable-next-line
     throw entry.promise;
   }
@@ -89,22 +89,19 @@ function Item({
     <Animated.View
       layout={LinearTransition.duration(250)}
       entering={FadeIn.duration(200)}
-      exiting={FadeOut.duration(800)}
-    >
+      exiting={FadeOut.duration(800)}>
       {swapped ? (
         <Animated.View
           key="a"
           entering={FadeIn.duration(200)}
-          exiting={FadeOut.duration(600)}
-        >
+          exiting={FadeOut.duration(600)}>
           <Text>{`${id} · A · mode ${mode}`}</Text>
         </Animated.View>
       ) : (
         <Animated.View
           key="b"
           entering={FadeIn.duration(200)}
-          exiting={FadeOut.duration(600)}
-        >
+          exiting={FadeOut.duration(600)}>
           <Text>{`${id} · B · mode ${mode}`}</Text>
         </Animated.View>
       )}
@@ -130,8 +127,7 @@ function Skeleton() {
   return (
     <Animated.View
       entering={FadeIn.duration(150)}
-      exiting={FadeOut.duration(400)}
-    >
+      exiting={FadeOut.duration(400)}>
       <Text>Loading…</Text>
     </Animated.View>
   );
@@ -141,7 +137,7 @@ export default function SuspenseLayoutAnimationCrashExample() {
   const [mode, nextMode] = useReducer((m: number) => m + 1, 0);
   const [swapped, setSwapped] = useState(false);
   const interval = useRef<ReturnType<typeof setInterval> | undefined>(
-    undefined,
+    undefined
   );
 
   useEffect(() => () => clearInterval(interval.current), []);

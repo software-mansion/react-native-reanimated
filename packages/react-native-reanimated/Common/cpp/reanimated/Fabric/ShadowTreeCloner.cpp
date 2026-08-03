@@ -25,7 +25,7 @@ mergeProps(const ShadowNode &shadowNode, const PropsMap &propsMap, const ShadowN
   if (propsVector.size() > 1) {
     folly::dynamic newPropsDynamic = folly::dynamic::object;
     for (const auto &props : propsVector) {
-      newPropsDynamic = folly::dynamic::merge(props.operator folly::dynamic(), newPropsDynamic);
+      newPropsDynamic = folly::dynamic::merge(newPropsDynamic, props.operator folly::dynamic());
     }
     return shadowNode.getComponentDescriptor().cloneProps(propsParserContext, newProps, RawProps(newPropsDynamic));
   }
