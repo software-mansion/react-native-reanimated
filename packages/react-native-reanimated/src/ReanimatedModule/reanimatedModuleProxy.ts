@@ -91,7 +91,8 @@ export interface ReanimatedModuleProxy {
 
   runCSSTransition(
     shadowNodeWrapper: ShadowNodeWrapper,
-    transitionConfig: CSSTransitionConfig
+    transitionConfig: CSSTransitionConfig,
+    eventMask: number
   ): void;
 
   unregisterCSSTransition(viewTag: number): void;

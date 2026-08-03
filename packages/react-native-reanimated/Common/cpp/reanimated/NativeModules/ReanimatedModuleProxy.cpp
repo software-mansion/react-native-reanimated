@@ -225,7 +225,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           std::make_shared<CSSPlatformTransitionProxy>(
               platformDepMethodsHolder.cssCanRouteProperty,
               platformDepMethodsHolder.cssApplyTransition,
-              platformDepMethodsHolder.cssRemoveTransition))),
+              platformDepMethodsHolder.cssRemoveTransition),
+          cssEventsEmitter_)),
       pseudoStylesRegistry_(std::make_shared<PseudoStylesRegistry>(
           platformDepMethodsHolder.attachPseudoSelector,
           platformDepMethodsHolder.detachPseudoSelector,
@@ -598,11 +599,14 @@ void ReanimatedModuleProxy::setCSSEventHandler(jsi::Runtime &rt, const jsi::Valu
 void ReanimatedModuleProxy::runCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
-    const jsi::Value &transitionConfig) {
+    const jsi::Value &transitionConfig,
+    const jsi::Value &eventMask) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   auto config = parseCSSTransitionConfig(rt, shadowNode->getComponentName(), transitionConfig);
 
   auto lock = updatesRegistryManager_->lock();
+  // Subscribed before the run so the first `transitionrun` already has a listener.
+  cssTransitionsRegistry_->setEventMask(shadowNode, static_cast<CSSEventMask>(eventMask.asNumber()));
   cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, std::move(config));
 }
 
@@ -1571,16 +1575,16 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
         strongThis->unregisterCSSAnimations(at<0>(args));
       });
 
-  addMethod<2>(
+  addMethod<3>(
       rt,
       obj,
       "runCSSTransition",
-      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
         }
-        strongThis->runCSSTransition(rt, at<0>(args), at<1>(args));
+        strongThis->runCSSTransition(rt, at<0>(args), at<1>(args), at<2>(args));
       });
 
   addMethod<1>(
