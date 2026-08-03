@@ -24,11 +24,13 @@ internal class CSSPlatformTransitionsManager(
     /** Monotonic so a token is never reused, even after its entry is dropped. */
     private var nextStartToken = 0L
 
-    /** Access-ordered and capped: runtime-computed easing points would otherwise grow it forever. */
-    private val interpolators =
-        object : LinkedHashMap<InterpolatorKey, TimeInterpolator>(16, 0.75f, true) {
-            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<InterpolatorKey, TimeInterpolator>): Boolean = size > 64
-        }
+    /**
+     * Indexed by the easing id the C++ interner assigned. Copy-on-append keeps reads
+     * lock-free: defines are rare (once per distinct easing) and a define always
+     * happens before the first animate call that references the id.
+     */
+    @Volatile
+    private var easings = arrayOfNulls<TimeInterpolator>(0)
 
     private var pumping = false
 
@@ -92,7 +94,7 @@ internal class CSSPlatformTransitionsManager(
 
     private data class Key(
         val viewTag: Int,
-        val propertyName: String,
+        val propertyId: Int,
     )
 
     private class RunningTransition(
@@ -115,43 +117,36 @@ internal class CSSPlatformTransitionsManager(
     }
 
     private sealed class Command {
+        abstract val key: Key
+
         class Start(
-            val viewTag: Int,
-            val propertyName: String,
+            override val key: Key,
             val writer: FloatProperty<View>,
             val fromValue: Double,
             val toValue: Double,
             val durationMs: Double,
             val startTimestampMs: Double,
-            val easingType: Int,
-            val pointsX: FloatArray,
-            val pointsY: FloatArray,
+            val interpolator: TimeInterpolator,
             val persistent: Boolean,
         ) : Command()
 
         class Remove(
-            val viewTag: Int,
-            val propertyName: String,
+            override val key: Key,
         ) : Command()
     }
 
-    /**
-     * FloatArray equals is identity, so a data class or Pair key would never hit the
-     * cache (every JNI call carries fresh arrays); the point arrays must be compared
-     * by content.
-     */
-    private class InterpolatorKey(
-        private val type: Int,
-        private val pointsX: FloatArray,
-        private val pointsY: FloatArray,
+    /** PathInterpolator flattens its curve natively on construction, so build once per id. */
+    fun defineEasing(
+        easingId: Int,
+        easingType: Int,
+        easingPointsX: FloatArray,
+        easingPointsY: FloatArray,
     ) {
-        override fun equals(other: Any?): Boolean =
-            other is InterpolatorKey &&
-                type == other.type &&
-                pointsX.contentEquals(other.pointsX) &&
-                pointsY.contentEquals(other.pointsY)
-
-        override fun hashCode(): Int = 31 * (31 * type + pointsX.contentHashCode()) + pointsY.contentHashCode()
+        val interpolator = CSSEasing.interpolator(easingType, easingPointsX, easingPointsY)
+        val current = easings
+        val grown = if (easingId < current.size) current.copyOf() else current.copyOf(easingId + 1)
+        grown[easingId] = interpolator
+        easings = grown
     }
 
     /**
@@ -162,17 +157,16 @@ internal class CSSPlatformTransitionsManager(
      */
     fun animateTransition(
         viewTag: Int,
-        propertyName: String,
+        propertyId: Int,
         fromValue: Double,
         toValue: Double,
         durationMs: Double,
         startTimestampMs: Double,
-        easingType: Int,
-        easingPointsX: FloatArray,
-        easingPointsY: FloatArray,
+        easingId: Int,
         persistent: Boolean,
     ): Boolean {
-        val writer = cssPropertyWriterFor(propertyName) ?: return false
+        val writer = cssPropertyWriterFor(propertyId) ?: return false
+        val interpolator = easings.getOrNull(easingId) ?: return false
         val context = reactContext.get() ?: return false
         // Refusing sends the property to the loop, which resolves the final style without
         // animating. The animator duration scale is otherwise not applied: platform
@@ -182,16 +176,13 @@ internal class CSSPlatformTransitionsManager(
 
         enqueue(
             Command.Start(
-                viewTag,
-                propertyName,
+                Key(viewTag, propertyId),
                 writer,
                 fromValue,
                 toValue,
                 durationMs,
                 startTimestampMs,
-                easingType,
-                easingPointsX,
-                easingPointsY,
+                interpolator,
                 persistent,
             ),
         )
@@ -200,9 +191,9 @@ internal class CSSPlatformTransitionsManager(
 
     fun removeTransition(
         viewTag: Int,
-        propertyName: String,
+        propertyId: Int,
     ) {
-        enqueue(Command.Remove(viewTag, propertyName))
+        enqueue(Command.Remove(Key(viewTag, propertyId)))
     }
 
     /**
@@ -231,12 +222,7 @@ internal class CSSPlatformTransitionsManager(
 
     private fun hasPendingCommand(key: Key): Boolean =
         synchronized(commandLock) {
-            pendingCommands.any { command ->
-                when (command) {
-                    is Command.Start -> command.viewTag == key.viewTag && command.propertyName == key.propertyName
-                    is Command.Remove -> command.viewTag == key.viewTag && command.propertyName == key.propertyName
-                }
-            }
+            pendingCommands.any { it.key == key }
         }
 
     private fun flushCommands() {
@@ -257,14 +243,13 @@ internal class CSSPlatformTransitionsManager(
     }
 
     private fun beginTransition(command: Command.Start) {
-        val key = Key(command.viewTag, command.propertyName)
+        val key = command.key
         // Claiming a fresh token invalidates any retry still queued for this key, so a
         // superseded request cannot start on a later frame.
         val token = ++nextStartToken
         startTokens[key] = token
         beginWhenMounted(key, token, command.startTimestampMs + command.durationMs, command.persistent) {
-            viewForTag(command.viewTag)?.also { view ->
-                val interpolator = interpolatorFor(command.easingType, command.pointsX, command.pointsY)
+            viewForTag(key.viewTag)?.also { view ->
                 start(
                     view,
                     key,
@@ -273,7 +258,7 @@ internal class CSSPlatformTransitionsManager(
                     command.toValue,
                     command.durationMs,
                     command.startTimestampMs,
-                    interpolator,
+                    command.interpolator,
                     command.persistent,
                 )
             } != null
@@ -281,7 +266,7 @@ internal class CSSPlatformTransitionsManager(
     }
 
     private fun dropTransition(command: Command.Remove) {
-        val key = Key(command.viewTag, command.propertyName)
+        val key = command.key
         // Also drops any queued retry for this key.
         startTokens.remove(key)
         val dropped = transitions.remove(key) ?: return
@@ -384,20 +369,6 @@ internal class CSSPlatformTransitionsManager(
             running.writer.setValue(view, running.current)
         }
         return transitions.isNotEmpty()
-    }
-
-    /**
-     * PathInterpolator flattens its curve natively on construction, so cache it. The
-     * type is part of the key because different families can share a point list:
-     * linear(0.5, 1) and cubicBezier(0, 1, 0.5, 1) both normalize to [0,1],[0.5,1].
-     */
-    private fun interpolatorFor(
-        type: Int,
-        pointsX: FloatArray,
-        pointsY: FloatArray,
-    ): TimeInterpolator {
-        val key = InterpolatorKey(type, pointsX, pointsY)
-        return interpolators.getOrPut(key) { CSSEasing.interpolator(type, pointsX, pointsY) }
     }
 
     private fun viewForTag(viewTag: Int): View? =

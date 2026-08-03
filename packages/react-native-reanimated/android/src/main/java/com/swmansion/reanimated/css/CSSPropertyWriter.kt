@@ -7,10 +7,12 @@ import android.view.View
  * The View property React Native itself writes for a CSS property. Animating the
  * same field RN writes means a commit can overwrite a running animation, which the
  * pre-draw reconciliation repairs.
+ *
+ * Ids must match `platformPropertyId` in CSSPlatformTransitions.cpp.
  */
-internal fun cssPropertyWriterFor(propertyName: String): FloatProperty<View>? =
-    when (propertyName) {
-        "opacity" -> AlphaProperty
+internal fun cssPropertyWriterFor(propertyId: Int): FloatProperty<View>? =
+    when (propertyId) {
+        0 -> AlphaProperty
         else -> null
     }
 
