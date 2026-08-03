@@ -74,4 +74,38 @@ describe('CSSManager', () => {
 
     expect(setViewStyle).not.toHaveBeenCalled();
   });
+
+  describe('callback warnings', () => {
+    const ANIMATION = {
+      animationName: { from: { opacity: 0 } },
+      animationDuration: '2s',
+    } as const;
+
+    let warn: jest.SpyInstance;
+
+    beforeEach(() => {
+      warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      warn.mockRestore();
+    });
+
+    test('does not warn when the animation detaches but its callbacks stay', () => {
+      manager.update({ ...ANIMATION, onAnimationCancel: jest.fn() });
+      // Detaching keeps the callbacks so the resulting cancel still arrives,
+      // which must not be reported as callbacks that can never fire.
+      manager.update({ onAnimationCancel: jest.fn() });
+
+      expect(warn).not.toHaveBeenCalled();
+    });
+
+    test('warns when callbacks are provided to a view that never had an animation', () => {
+      manager.update({ onAnimationEnd: jest.fn() });
+
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('onAnimationEnd')
+      );
+    });
+  });
 });

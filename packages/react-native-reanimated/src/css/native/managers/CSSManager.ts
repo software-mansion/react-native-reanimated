@@ -8,7 +8,7 @@ import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
 import type { CSSStyle } from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
-import { filterCSSAndStyleProperties } from '../../utils';
+import { filterCSSAndStyleProperties, validateCSSCallbacks } from '../../utils';
 import { setViewStyle } from '../proxy';
 import CSSAnimationsManager from './CSSAnimationsManager';
 import CSSPseudoStylesManager from './CSSPseudoStylesManager';
@@ -27,6 +27,8 @@ export default class CSSManager implements ICSSManager {
    * https://github.com/software-mansion/react-native-reanimated/issues/9218).
    */
   private hadTransitionLastUpdate = false;
+  private everHadAnimation = false;
+  private everHadTransition = false;
 
   constructor(
     { shadowNodeWrapper, viewTag, reactViewName = 'RCTView' }: ViewInfo,
@@ -59,13 +61,31 @@ export default class CSSManager implements ICSSManager {
       animationProperties,
       transitionProperties,
       pseudoStylesBySelector,
-      ,
-      ,
+      animationCallbacks,
+      transitionCallbacks,
       filteredStyle,
     ] = filterCSSAndStyleProperties(style);
 
     const hasAnimation = animationProperties !== null;
     const hasTransition = transitionProperties !== null;
+
+    this.everHadAnimation ||= hasAnimation;
+    this.everHadTransition ||= hasTransition;
+
+    if (__DEV__) {
+      validateCSSCallbacks(
+        'animation',
+        'animationName',
+        animationCallbacks,
+        this.everHadAnimation
+      );
+      validateCSSCallbacks(
+        'transition',
+        'transitionDuration',
+        transitionCallbacks,
+        this.everHadTransition
+      );
+    }
 
     const normalizedStyle =
       hasAnimation ||

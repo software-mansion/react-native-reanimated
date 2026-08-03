@@ -1,7 +1,7 @@
 'use strict';
 import { css } from '../../stylesheet';
 import type { CSSStyle, CSSTransitionProperty } from '../../types';
-import { filterCSSAndStyleProperties } from '../props';
+import { filterCSSAndStyleProperties, validateCSSCallbacks } from '../props';
 
 describe(filterCSSAndStyleProperties, () => {
   beforeAll(() => {
@@ -590,7 +590,12 @@ describe(filterCSSAndStyleProperties, () => {
       });
 
       test('warns when transition callbacks are used without any transition props', () => {
-        filterCSSAndStyleProperties({ onTransitionEnd: jest.fn() } as CSSStyle);
+        validateCSSCallbacks(
+          'transition',
+          'transitionDuration',
+          { onTransitionEnd: jest.fn() },
+          false
+        );
         expect(console.warn).toHaveBeenCalledWith(
           expect.stringContaining('onTransitionEnd')
         );
@@ -683,10 +688,25 @@ describe(filterCSSAndStyleProperties, () => {
       });
 
       test('warns when animation callbacks are used without any animation props', () => {
-        filterCSSAndStyleProperties({ onAnimationEnd: jest.fn() } as CSSStyle);
+        validateCSSCallbacks(
+          'animation',
+          'animationName',
+          { onAnimationEnd: jest.fn() },
+          false
+        );
         expect(console.warn).toHaveBeenCalledWith(
           expect.stringContaining('onAnimationEnd')
         );
+      });
+
+      test('does not warn once the view has had an animation', () => {
+        validateCSSCallbacks(
+          'animation',
+          'animationName',
+          { onAnimationEnd: jest.fn() },
+          true
+        );
+        expect(console.warn).not.toHaveBeenCalled();
       });
 
       test('does not warn when an animation is configured alongside callbacks', () => {
@@ -711,13 +731,21 @@ describe(filterCSSAndStyleProperties, () => {
       });
 
       test('warns when callbacks are used but animationName has no valid keyframes', () => {
-        // An empty keyframes object means no animation actually runs, so the
-        // callbacks can never fire and the warning must still be emitted.
-        filterCSSAndStyleProperties({
+        // An empty keyframes object means no animation actually runs, so
+        // filtering reports no animation and the warning must still be emitted.
+        const [animationProperties] = filterCSSAndStyleProperties({
           animationName: {},
           animationDuration: 100,
           onAnimationEnd: jest.fn(),
         } as CSSStyle);
+        expect(animationProperties).toBeNull();
+
+        validateCSSCallbacks(
+          'animation',
+          'animationName',
+          { onAnimationEnd: jest.fn() },
+          animationProperties !== null
+        );
         expect(console.warn).toHaveBeenCalledWith(
           expect.stringContaining('onAnimationEnd')
         );
