@@ -6,11 +6,12 @@ import {
 } from '../../../common';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
-import type { CSSStyle } from '../../types';
+import type { CSSAnimationCallbacks, CSSStyle } from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
 import { filterCSSAndStyleProperties } from '../../utils';
 import { setViewStyle } from '../proxy';
 import CSSAnimationsManager from './CSSAnimationsManager';
+import CSSCallbacksManager from './CSSCallbacksManager';
 import CSSPseudoStylesManager from './CSSPseudoStylesManager';
 import CSSTransitionsManager from './CSSTransitionsManager';
 
@@ -18,6 +19,7 @@ export default class CSSManager implements ICSSManager {
   private readonly cssAnimationsManager: CSSAnimationsManager;
   private readonly cssTransitionsManager: CSSTransitionsManager;
   private readonly cssPseudoStylesManager: CSSPseudoStylesManager;
+  private cssCallbacksManager: CSSCallbacksManager | null = null;
   private readonly viewTag: number;
   private readonly propsBuilder: ReturnType<typeof getPropsBuilder>;
   /**
@@ -59,10 +61,14 @@ export default class CSSManager implements ICSSManager {
       animationProperties,
       transitionProperties,
       pseudoStylesBySelector,
-      ,
+      animationCallbacks,
       ,
       filteredStyle,
     ] = filterCSSAndStyleProperties(style);
+
+    // Synced before either manager runs so a cancel emitted while detaching
+    // still reaches the user.
+    const eventMask = this.syncCallbacks(animationCallbacks);
 
     const hasAnimation = animationProperties !== null;
     const hasTransition = transitionProperties !== null;
@@ -88,7 +94,7 @@ export default class CSSManager implements ICSSManager {
       setViewStyle(this.viewTag, normalizedStyle);
     }
 
-    this.cssAnimationsManager.update(animationProperties);
+    this.cssAnimationsManager.update(animationProperties, eventMask);
     this.cssPseudoStylesManager.update(
       pseudoStylesBySelector,
       transitionProperties
@@ -98,8 +104,21 @@ export default class CSSManager implements ICSSManager {
   }
 
   unmountCleanup(): void {
+    this.cssCallbacksManager?.detach();
     this.cssAnimationsManager.unmountCleanup();
     this.cssTransitionsManager.unmountCleanup();
     this.cssPseudoStylesManager.unmountCleanup();
+  }
+
+  private syncCallbacks(callbacks: CSSAnimationCallbacks | null): number {
+    if (!this.cssCallbacksManager) {
+      if (!callbacks) {
+        return 0;
+      }
+      this.cssCallbacksManager = new CSSCallbacksManager(this.viewTag);
+    }
+
+    this.cssCallbacksManager.sync(callbacks ?? {});
+    return this.cssCallbacksManager.getMask();
   }
 }
