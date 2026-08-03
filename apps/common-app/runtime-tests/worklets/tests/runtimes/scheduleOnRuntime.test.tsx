@@ -14,10 +14,6 @@ import {
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 
-type localGlobal = typeof globalThis & {
-  scheduleOnRN: typeof scheduleOnRN;
-};
-
 describe('scheduleOnRuntime', () => {
   const PASS_NOTIFICATION = 'PASS';
   let value = 0;
@@ -37,7 +33,7 @@ describe('scheduleOnRuntime', () => {
       runOnRuntimeSync(runtime, () => {
         'worklet';
         // TODO: fix worklet re-serialization outside of Bundle Mode
-        (globalThis as localGlobal).scheduleOnRN = scheduleOnRN;
+        globalThis.scheduleOnRN = scheduleOnRN;
       });
     });
   });
@@ -58,7 +54,7 @@ describe('scheduleOnRuntime', () => {
 
       scheduleOnRuntime(workletRuntime1, () => {
         'worklet';
-        (globalThis as localGlobal).scheduleOnRN(callbackPass, 42);
+        globalThis.scheduleOnRN(callbackPass, 42);
       });
     });
 
@@ -72,7 +68,7 @@ describe('scheduleOnRuntime', () => {
 
       scheduleOnRuntime(workletRuntime2, () => {
         'worklet';
-        (globalThis as localGlobal).scheduleOnRN(callbackPass, 42);
+        globalThis.scheduleOnRN(callbackPass, 42);
       });
     });
 
