@@ -17,6 +17,8 @@ namespace reanimated::css {
 class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enable_shared_from_this<CSSLoopTransition> {
  public:
   using OnUpdateCallback = std::function<void(Tag)>;
+  /// Reports a milestone of one transitioning property, with its elapsed time.
+  using MilestoneReporter = TransitionProgressProvider::MilestoneReporter;
 
   CSSLoopTransition(
       Tag viewTag,
@@ -25,6 +27,8 @@ class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enab
       OnUpdateCallback onUpdate);
 
   double getMinDelay(double timestamp) const;
+
+  void onMilestone(MilestoneReporter reporter);
 
   bool update(double timestamp, OperationsLoop &loop) override;
 
@@ -43,6 +47,12 @@ class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enab
   void updateSettings(
       const PropertiesSettingsMap &changedPropertiesSettings,
       const std::vector<std::string> &removedProperties);
+
+  /// Tracks the lifecycle of properties whose rendering is routed to the platform.
+  void trackProperties(
+      const PropertiesSettingsMap &propertiesSettings,
+      const std::vector<std::string> &propertyNames,
+      double timestamp);
 
   folly::dynamic computeCurrentStyle(const std::shared_ptr<const ShadowNode> &shadowNode);
 

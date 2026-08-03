@@ -21,6 +21,12 @@ CSSTransition::CSSTransition(
 
 CSSTransition::~CSSTransition() {
   platformTransitionProxy_->cancelAll(getViewTag(), routing_.platform);
+  if (loopTransition_) {
+    // The loop co-owns the transition and removal is only enqueued, so a frame
+    // already in flight can still tick it after we are gone. Drop the reporter
+    // so that tick has nothing to call back into.
+    loopTransition_->onMilestone(nullptr);
+  }
 }
 
 TransitionProperties CSSTransition::getProperties() const {
@@ -39,21 +45,48 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
   }
 
   auto loopConfig = platformTransitionProxy_->processConfig(rt, getViewTag(), config, routing_, timestamp);
-  if (loopConfig.empty()) {
-    return folly::dynamic::object();
-  }
 
-  auto &loopTransition = ensureLoopTransition();
-  loopTransition.updateSettings(loopConfig.changedPropertiesSettings, loopConfig.removedProperties);
+  if (!loopConfig.empty()) {
+    ensureLoopTransition().updateSettings(loopConfig.changedPropertiesSettings, loopConfig.removedProperties);
+  }
+  trackPlatformLifecycles(config, timestamp);
 
   // Settings-only configs reconfigure without running.
   if (!loopConfig.hasValueUpdates()) {
     return folly::dynamic::object();
   }
 
-  auto initialUpdate = loopTransition.run(rt, shadowNode_, loopConfig.changedProperties, lastUpdates, timestamp);
+  auto initialUpdate =
+      ensureLoopTransition().run(rt, shadowNode_, loopConfig.changedProperties, lastUpdates, timestamp);
   scheduleLoop(timestamp);
   return initialUpdate;
+}
+
+// TODO: add support for events reported by the platform itself; until then
+// the lifecycle of platform-routed properties temporarily runs on the loop path.
+void CSSTransition::trackPlatformLifecycles(const CSSTransitionConfig &config, const double timestamp) {
+  if (eventMask_ == 0) {
+    return;
+  }
+
+  if (loopTransition_ && !config.removedProperties.empty()) {
+    loopTransition_->removeProperties(config.removedProperties);
+  }
+
+  PropertiesSettingsMap propertiesSettings;
+  std::vector<std::string> propertyNames;
+  for (const auto &[propertyName, value] : config.changedProperties) {
+    if (routing_.platform.contains(propertyName)) {
+      propertyNames.push_back(propertyName);
+      propertiesSettings.emplace(propertyName, config.changedPropertiesSettings.at(propertyName));
+    }
+  }
+  if (propertyNames.empty()) {
+    return;
+  }
+
+  ensureLoopTransition().trackProperties(propertiesSettings, propertyNames, timestamp);
+  scheduleLoop(timestamp);
 }
 
 folly::dynamic CSSTransition::run(
@@ -113,8 +146,63 @@ CSSLoopTransition &CSSTransition::ensureLoopTransition() {
         shadowNode_->getComponentName(),
         viewStylesRepository_,
         [&observer = observer_](Tag viewTag) { observer.onTransitionUpdate(viewTag); });
+    observeMilestones(*loopTransition_);
   }
   return *loopTransition_;
+}
+
+void CSSTransition::setEventMask(const CSSEventMask eventMask) {
+  if (eventMask == eventMask_) {
+    return;
+  }
+  eventMask_ = eventMask;
+
+  if (loopTransition_) {
+    observeMilestones(*loopTransition_);
+  }
+}
+
+void CSSTransition::observeMilestones(CSSLoopTransition &loopTransition) {
+  if (eventMask_ == 0) {
+    loopTransition.onMilestone(nullptr);
+    return;
+  }
+
+  loopTransition.onMilestone(
+      [this](const RunMilestone milestone, const std::string &propertyName, const double elapsedTime) {
+        reportMilestone(milestone, propertyName, elapsedTime);
+      });
+}
+
+void CSSTransition::reportMilestone(
+    const RunMilestone milestone,
+    const std::string &propertyName,
+    const double elapsedTime) {
+  switch (milestone) {
+    case RunMilestone::Created:
+      emitEvent(CSSEventType::TransitionRun, propertyName, elapsedTime);
+      break;
+    case RunMilestone::Started:
+      emitEvent(CSSEventType::TransitionStart, propertyName, elapsedTime);
+      break;
+    case RunMilestone::Ended:
+      emitEvent(CSSEventType::TransitionEnd, propertyName, elapsedTime);
+      break;
+    case RunMilestone::Aborted:
+      emitEvent(CSSEventType::TransitionCancel, propertyName, elapsedTime);
+      break;
+    case RunMilestone::Repeated:
+      // A transition runs once, so it never repeats.
+      break;
+  }
+}
+
+void CSSTransition::emitEvent(const CSSEventType type, const std::string &propertyName, const double elapsedTime)
+    const {
+  if (!hasListener(eventMask_, type)) {
+    return;
+  }
+  observer_.onTransitionEvent(shadowNode_->getTag(), propertyName, type, elapsedTime);
 }
 
 void CSSTransition::scheduleLoop(const double timestamp) {
