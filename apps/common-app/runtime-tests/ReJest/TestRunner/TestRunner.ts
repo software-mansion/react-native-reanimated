@@ -141,6 +141,7 @@ export class TestRunner {
       RENDER_MAX_WAIT_TIME_MS
     );
     if (stillLocked) {
+      this._renderLock.unlock();
       throw new Error(
         `Timed out after ${RENDER_MAX_WAIT_TIME_MS}ms while waiting for the component to render.`
       );
@@ -248,13 +249,22 @@ export class TestRunner {
 
       this._currentTestCase = null;
       await this.render(null);
-      await this._animationRecorder.unmockAnimationTimer();
-      await this._animationRecorder.stopRecordingAnimationUpdates();
     } catch (error) {
       const message =
         error instanceof Error ? (error.stack ?? error.message) : String(error);
       console.error(`[uncaught in test cleanup] ${message}`);
+    } finally {
       this._currentTestCase = null;
+      try {
+        await this._animationRecorder.unmockAnimationTimer();
+        await this._animationRecorder.stopRecordingAnimationUpdates();
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? (error.stack ?? error.message)
+            : String(error);
+        console.error(`[uncaught in test cleanup] ${message}`);
+      }
     }
   }
 

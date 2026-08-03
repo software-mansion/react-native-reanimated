@@ -152,37 +152,36 @@ export class AnimationUpdatesRecorder {
     });
   }
 
-  public waitForAnimationUpdates(
+  public async waitForAnimationUpdates(
     updatesCount: number,
     maxWaitTime = MAX_WAIT_TIME_MS
   ): Promise<boolean> {
     const CHECK_INTERVAL = 20;
     const flag = makeMutable(false);
     const framesSeen = makeMutable(0);
-    return new Promise<boolean>((resolve, reject) => {
-      const startTime = performance.now();
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      const interval = setInterval(async () => {
-        await new SyncUIRunner().runOnUIBlocking(() => {
-          'worklet';
-          assertMockedAnimationTimestamp(global.framesCount);
-          framesSeen.value = global.framesCount!;
-          flag.value = global.framesCount >= updatesCount - 1;
-        });
-        if (flag.value) {
-          clearInterval(interval);
-          resolve(true);
-          return;
-        }
-        if (performance.now() - startTime > maxWaitTime) {
-          clearInterval(interval);
-          reject(
-            new Error(
-              `Timed out after ${maxWaitTime}ms while waiting for ${updatesCount} animation updates, got ${framesSeen.value}.`
-            )
-          );
-        }
-      }, CHECK_INTERVAL);
-    });
+    const syncUIRunner = new SyncUIRunner();
+    const startTime = performance.now();
+
+    for (;;) {
+      const remainingWaitTime = maxWaitTime - (performance.now() - startTime);
+      if (remainingWaitTime <= 0) {
+        throw new Error(
+          `Timed out after ${maxWaitTime}ms while waiting for ${updatesCount} animation updates, got ${framesSeen.value}.`
+        );
+      }
+
+      await syncUIRunner.runOnUIBlocking(() => {
+        'worklet';
+        assertMockedAnimationTimestamp(global.framesCount);
+        framesSeen.value = global.framesCount!;
+        flag.value = global.framesCount >= updatesCount - 1;
+      }, remainingWaitTime);
+
+      if (flag.value) {
+        return true;
+      }
+
+      await this.wait(CHECK_INTERVAL);
+    }
   }
 }
