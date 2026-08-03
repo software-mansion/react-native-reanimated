@@ -159,7 +159,6 @@ export class AnimationUpdatesRecorder {
     const CHECK_INTERVAL = 20;
     const flag = makeMutable(false);
     const framesSeen = makeMutable(0);
-    const syncUIRunner = new SyncUIRunner();
     const startTime = performance.now();
 
     for (;;) {
@@ -170,7 +169,7 @@ export class AnimationUpdatesRecorder {
         );
       }
 
-      await syncUIRunner.runOnUIBlocking(() => {
+      await new SyncUIRunner().runOnUIBlocking(() => {
         'worklet';
         assertMockedAnimationTimestamp(global.framesCount);
         framesSeen.value = global.framesCount!;

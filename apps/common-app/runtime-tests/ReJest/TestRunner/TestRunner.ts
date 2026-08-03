@@ -240,7 +240,12 @@ export class TestRunner {
       }
     }
 
-    this._testSummary.showTestCaseSummary(testCase, testSuite.nestingLevel);
+    const reportCleanupError = (error: unknown) => {
+      const message =
+        error instanceof Error ? (error.stack ?? error.message) : String(error);
+      testCase.errors.push(`[uncaught in test cleanup] ${message}`);
+      console.error(`[uncaught in test cleanup] ${message}`);
+    };
 
     try {
       if (testSuite.afterEach) {
@@ -250,22 +255,18 @@ export class TestRunner {
       this._currentTestCase = null;
       await this.render(null);
     } catch (error) {
-      const message =
-        error instanceof Error ? (error.stack ?? error.message) : String(error);
-      console.error(`[uncaught in test cleanup] ${message}`);
+      reportCleanupError(error);
     } finally {
       this._currentTestCase = null;
       try {
         await this._animationRecorder.unmockAnimationTimer();
         await this._animationRecorder.stopRecordingAnimationUpdates();
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? (error.stack ?? error.message)
-            : String(error);
-        console.error(`[uncaught in test cleanup] ${message}`);
+        reportCleanupError(error);
       }
     }
+
+    this._testSummary.showTestCaseSummary(testCase, testSuite.nestingLevel);
   }
 
   public expect(currentValue: TestValue): Matchers {
