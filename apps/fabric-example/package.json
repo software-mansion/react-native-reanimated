@@ -8,7 +8,7 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "format": "yarn run --top-level oxfmt .",
-    "lint": "eslint . --max-warnings 0",
+    "lint": "eslint . --max-warnings 0 && yarn run --top-level oxfmt --check .",
     "type:check": "tsc --noEmit",
     "runtime-tests": "node ./scripts/runtime-tests-server.js --launch",
     "runtime-tests:server": "node ./scripts/runtime-tests-server.js"

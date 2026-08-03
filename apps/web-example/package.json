@@ -9,7 +9,7 @@
     "production": "yarn expo export -p web && yarn serve dist --single",
     "format": "yarn run --top-level oxfmt .",
     "build": "",
-    "lint": "eslint . --max-warnings 0",
+    "lint": "eslint . --max-warnings 0 && yarn run --top-level oxfmt --check .",
     "type:check": "tsc --noEmit",
     "test:e2e": "node scripts/run-e2e.mjs",
     "test:e2e:ui": "node scripts/run-e2e.mjs --ui",

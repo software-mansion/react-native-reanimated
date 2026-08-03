@@ -11,7 +11,7 @@
     "start": "next start",
     "e2e": "start-server-and-test \"next start\" http://localhost:3000 \"cypress open --e2e\"",
     "e2e:headless": "start-server-and-test \"next start\" http://localhost:3000 \"cypress run --e2e\"",
-    "lint": "eslint --max-warnings=0 .",
+    "lint": "eslint --max-warnings=0 . && yarn run --top-level oxfmt --check .",
     "format": "yarn run --top-level oxfmt ."
   },
   "dependencies": {

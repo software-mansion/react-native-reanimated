@@ -35,7 +35,7 @@ describe('microtask draining', () => {
   const workletRuntime = getWorkletRuntimeFromPool('test');
 
   const microtaskDrainCount = createSynchronizable(0);
-  const firstCallbackToRun = createSynchronizable(NOTHING_RAN);
+  const firstCallbackThatRan = createSynchronizable(NOTHING_RAN);
 
   const notifyDone = () => {
     notify(DONE_NOTIFICATION);
@@ -86,7 +86,7 @@ describe('microtask draining', () => {
     let animationFrameHandle: number | undefined;
     if (getRuntimeKind() === RuntimeKind.UI) {
       animationFrameHandle = requestAnimationFrame(() => {
-        firstCallbackToRun.setBlocking((first) =>
+        firstCallbackThatRan.setBlocking((first) =>
           first === NOTHING_RAN ? ANIMATION_FRAME_RAN : first
         );
       });
@@ -98,7 +98,7 @@ describe('microtask draining', () => {
       if (animationFrameHandle !== undefined) {
         cancelAnimationFrame(animationFrameHandle);
       }
-      firstCallbackToRun.setBlocking((first) =>
+      firstCallbackThatRan.setBlocking((first) =>
         first === NOTHING_RAN ? MICROTASK_RAN : first
       );
       scheduleOnRN(notifyDone);
@@ -201,7 +201,7 @@ describe('microtask draining', () => {
   cases.forEach(({ name, runtimeId, expectedDrains, invoke }) => {
     describe(name, () => {
       beforeEach(() => {
-        firstCallbackToRun.setBlocking(NOTHING_RAN);
+        firstCallbackThatRan.setBlocking(NOTHING_RAN);
         startCountingMicrotaskDrains(runtimeId);
       });
 
@@ -218,7 +218,7 @@ describe('microtask draining', () => {
 
         const microtaskDrains = microtaskDrainCount.getBlocking();
         const didAnimationFrameRunFirst =
-          firstCallbackToRun.getBlocking() === ANIMATION_FRAME_RAN;
+          firstCallbackThatRan.getBlocking() === ANIMATION_FRAME_RAN;
 
         expect(didAnimationFrameRunFirst).toBe(false);
         expect(microtaskDrains).toBe(expectedDrains);
