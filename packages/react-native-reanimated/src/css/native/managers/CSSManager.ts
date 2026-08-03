@@ -6,7 +6,11 @@ import {
 } from '../../../common';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
-import type { CSSAnimationCallbacks, CSSStyle } from '../../types';
+import type {
+  CSSAnimationCallbacks,
+  CSSStyle,
+  CSSTransitionCallbacks,
+} from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
 import { filterCSSAndStyleProperties } from '../../utils';
 import { setViewStyle } from '../proxy';
@@ -68,7 +72,10 @@ export default class CSSManager implements ICSSManager {
 
     // Synced before either manager runs so a cancel emitted while detaching
     // still reaches the user.
-    const eventMask = this.syncCallbacks(animationCallbacks);
+    const { animationEventMask, transitionEventMask } = this.syncCallbacks(
+      animationCallbacks,
+      transitionCallbacks
+    );
 
     const hasAnimation = animationProperties !== null;
     const hasTransition = transitionProperties !== null;
@@ -82,7 +89,8 @@ export default class CSSManager implements ICSSManager {
 
     const transitionDetached = this.cssTransitionsManager.update(
       transitionProperties,
-      normalizedStyle ?? {}
+      normalizedStyle ?? {},
+      transitionEventMask
     );
 
     // Record the committed style as the base so animations and (on Android) a
@@ -94,7 +102,7 @@ export default class CSSManager implements ICSSManager {
       setViewStyle(this.viewTag, normalizedStyle);
     }
 
-    this.cssAnimationsManager.update(animationProperties, eventMask);
+    this.cssAnimationsManager.update(animationProperties, animationEventMask);
     this.cssPseudoStylesManager.update(
       pseudoStylesBySelector,
       transitionProperties
@@ -110,15 +118,22 @@ export default class CSSManager implements ICSSManager {
     this.cssPseudoStylesManager.unmountCleanup();
   }
 
-  private syncCallbacks(callbacks: CSSAnimationCallbacks | null): number {
+  private syncCallbacks(
+    animationCallbacks: CSSAnimationCallbacks | null,
+    transitionCallbacks: CSSTransitionCallbacks | null
+  ): { animationEventMask: number; transitionEventMask: number } {
     if (!this.cssCallbacksManager) {
-      if (!callbacks) {
-        return 0;
+      if (!animationCallbacks && !transitionCallbacks) {
+        return { animationEventMask: 0, transitionEventMask: 0 };
       }
       this.cssCallbacksManager = new CSSCallbacksManager(this.viewTag);
     }
 
-    this.cssCallbacksManager.sync(callbacks ?? {});
-    return this.cssCallbacksManager.getMask();
+    this.cssCallbacksManager.syncAnimationCallbacks(animationCallbacks);
+    this.cssCallbacksManager.syncTransitionCallbacks(transitionCallbacks);
+    return {
+      animationEventMask: this.cssCallbacksManager.getAnimationEventMask(),
+      transitionEventMask: this.cssCallbacksManager.getTransitionEventMask(),
+    };
   }
 }

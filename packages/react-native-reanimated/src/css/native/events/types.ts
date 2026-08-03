@@ -6,7 +6,7 @@ export type CSSAnimationEventType =
   | 'animationIteration'
   | 'animationCancel';
 
-type CSSTransitionEventType =
+export type CSSTransitionEventType =
   | 'transitionRun'
   | 'transitionStart'
   | 'transitionEnd'
