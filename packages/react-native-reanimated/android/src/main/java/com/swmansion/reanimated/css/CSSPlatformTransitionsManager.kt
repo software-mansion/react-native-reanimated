@@ -65,14 +65,14 @@ internal class CSSPlatformTransitionsManager(
                         active = true
                         continue
                     }
-                    val t = (elapsedMs / running.durationMs).toFloat().coerceAtMost(1f)
+                    val progress = (elapsedMs / running.durationMs).toFloat().coerceAtMost(1f)
                     val value =
                         running.startValue +
-                            (running.toValue - running.startValue) * running.interpolator.getInterpolation(t)
+                            (running.toValue - running.startValue) * running.interpolator.getInterpolation(progress)
                     running.current = value
                     // setAlpha early-outs on unchanged values, so unconditional writes cost nothing.
                     running.writer.setValue(view, value)
-                    if (t < 1f) {
+                    if (elapsedMs < running.durationMs) {
                         active = true
                         continue
                     }
