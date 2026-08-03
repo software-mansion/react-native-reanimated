@@ -1,11 +1,13 @@
 package com.swmansion.reanimated.css
 
 import android.animation.TimeInterpolator
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.util.FloatProperty
 import android.view.Choreographer
 import android.view.View
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.uimanager.IllegalViewOperationException
 import java.lang.ref.WeakReference
@@ -21,33 +23,20 @@ internal class CSSPlatformTransitionsManager(
 
     /** Monotonic so a token is never reused, even after its entry is dropped. */
     private var nextStartToken = 0L
-    private val interpolators = HashMap<InterpolatorKey, TimeInterpolator>()
 
-    private data class Key(
-        val viewTag: Int,
-        val propertyName: String,
-    )
-
-    private class RunningTransition(
-        view: View,
-        val writer: FloatProperty<View>,
-        val startValue: Float,
-        val toValue: Float,
-        val startTimeMs: Double,
-        val durationMs: Double,
-        val interpolator: TimeInterpolator,
-        val persistent: Boolean,
-    ) {
-        val viewRef = WeakReference(view)
-
-        /** Last value this manager wrote; the repair pass re-asserts it after commits. */
-        var current: Float = startValue
-
-        /** A finished persistent transition stays registered so its value keeps being defended. */
-        var finished: Boolean = false
-    }
+    /** Access-ordered and capped: runtime-computed easing points would otherwise grow it forever. */
+    private val interpolators =
+        object : LinkedHashMap<InterpolatorKey, TimeInterpolator>(16, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<InterpolatorKey, TimeInterpolator>): Boolean = size > 64
+        }
 
     private var pumping = false
+
+    private val commandLock = Any()
+    private var pendingCommands = ArrayList<Command>()
+    private var spareCommands = ArrayList<Command>()
+    private var flushScheduled = false
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     /**
      * Single per-frame driver for every running transition. The absolute start timestamp
@@ -101,11 +90,68 @@ internal class CSSPlatformTransitionsManager(
             }
         }
 
-    private fun ensurePumping() {
-        if (!pumping) {
-            pumping = true
-            Choreographer.getInstance().postFrameCallback(framePump)
-        }
+    private data class Key(
+        val viewTag: Int,
+        val propertyName: String,
+    )
+
+    private class RunningTransition(
+        view: View,
+        val writer: FloatProperty<View>,
+        val startValue: Float,
+        val toValue: Float,
+        val startTimeMs: Double,
+        val durationMs: Double,
+        val interpolator: TimeInterpolator,
+        val persistent: Boolean,
+    ) {
+        val viewRef = WeakReference(view)
+
+        /** Last value this manager wrote; the repair pass re-asserts it after commits. */
+        var current: Float = startValue
+
+        /** A finished persistent transition stays registered so its value keeps being defended. */
+        var finished: Boolean = false
+    }
+
+    private sealed class Command {
+        class Start(
+            val viewTag: Int,
+            val propertyName: String,
+            val writer: FloatProperty<View>,
+            val fromValue: Double,
+            val toValue: Double,
+            val durationMs: Double,
+            val startTimestampMs: Double,
+            val easingType: Int,
+            val pointsX: FloatArray,
+            val pointsY: FloatArray,
+            val persistent: Boolean,
+        ) : Command()
+
+        class Remove(
+            val viewTag: Int,
+            val propertyName: String,
+        ) : Command()
+    }
+
+    /**
+     * FloatArray equals is identity, so a data class or Pair key would never hit the
+     * cache (every JNI call carries fresh arrays); the point arrays must be compared
+     * by content.
+     */
+    private class InterpolatorKey(
+        private val type: Int,
+        private val pointsX: FloatArray,
+        private val pointsY: FloatArray,
+    ) {
+        override fun equals(other: Any?): Boolean =
+            other is InterpolatorKey &&
+                type == other.type &&
+                pointsX.contentEquals(other.pointsX) &&
+                pointsY.contentEquals(other.pointsY)
+
+        override fun hashCode(): Int = 31 * (31 * type + pointsX.contentHashCode()) + pointsY.contentHashCode()
     }
 
     /**
@@ -159,36 +205,15 @@ internal class CSSPlatformTransitionsManager(
         enqueue(Command.Remove(viewTag, propertyName))
     }
 
-    private sealed class Command {
-        class Start(
-            val viewTag: Int,
-            val propertyName: String,
-            val writer: FloatProperty<View>,
-            val fromValue: Double,
-            val toValue: Double,
-            val durationMs: Double,
-            val startTimestampMs: Double,
-            val easingType: Int,
-            val pointsX: FloatArray,
-            val pointsY: FloatArray,
-            val persistent: Boolean,
-        ) : Command()
-
-        class Remove(
-            val viewTag: Int,
-            val propertyName: String,
-        ) : Command()
-    }
-
-    private val commandLock = Any()
-    private var pendingCommands = ArrayList<Command>()
-    private var spareCommands = ArrayList<Command>()
-    private var flushScheduled = false
-
     /**
      * One main-looper message per burst instead of one per transition: a render that
      * starts hundreds of transitions would otherwise flood the queue, and by the time
      * late messages ran their transitions would already be stale.
+     *
+     * The message is asynchronous so a pending traversal's sync barrier cannot defer
+     * it past the frame that mounts the committed target: a plain message would then
+     * run only after that frame drew the end value, flashing it before the start
+     * value lands.
      */
     private fun enqueue(command: Command) {
         val schedule: Boolean
@@ -197,8 +222,22 @@ internal class CSSPlatformTransitionsManager(
             schedule = !flushScheduled
             if (schedule) flushScheduled = true
         }
-        if (schedule) UiThreadUtil.runOnUiThread { flushCommands() }
+        if (schedule) {
+            val message = Message.obtain(mainHandler) { flushCommands() }
+            message.isAsynchronous = true
+            mainHandler.sendMessage(message)
+        }
     }
+
+    private fun hasPendingCommand(key: Key): Boolean =
+        synchronized(commandLock) {
+            pendingCommands.any { command ->
+                when (command) {
+                    is Command.Start -> command.viewTag == key.viewTag && command.propertyName == key.propertyName
+                    is Command.Remove -> command.viewTag == key.viewTag && command.propertyName == key.propertyName
+                }
+            }
+        }
 
     private fun flushCommands() {
         val batch: ArrayList<Command>
@@ -210,19 +249,7 @@ internal class CSSPlatformTransitionsManager(
         for (command in batch) {
             when (command) {
                 is Command.Start -> beginTransition(command)
-                is Command.Remove -> {
-                    val key = Key(command.viewTag, command.propertyName)
-                    // Also drops any queued retry for this key.
-                    startTokens.remove(key)
-                    val dropped = transitions.remove(key)
-                    // The committed style already holds the target, but nothing re-writes
-                    // it to the view once this entry stops being driven; without a final
-                    // write the view would stick at the mid-flight value. A persistent
-                    // value has no committed style to settle to, so it is left as drawn.
-                    if (dropped != null && !dropped.persistent) {
-                        dropped.viewRef.get()?.let { dropped.writer.setValue(it, dropped.toValue) }
-                    }
-                }
+                is Command.Remove -> dropTransition(command)
             }
         }
         batch.clear()
@@ -253,6 +280,24 @@ internal class CSSPlatformTransitionsManager(
         }
     }
 
+    private fun dropTransition(command: Command.Remove) {
+        val key = Key(command.viewTag, command.propertyName)
+        // Also drops any queued retry for this key.
+        startTokens.remove(key)
+        val dropped = transitions.remove(key) ?: return
+        // A persistent value has no committed style to settle to; leave it as drawn.
+        if (dropped.persistent) return
+        val view = dropped.viewRef.get() ?: return
+        // The committed style already holds the target, but nothing re-writes it to
+        // the view once this entry stops being driven; without a final write the view
+        // would stick at the mid-flight value. A mount racing this removal may already
+        // have written a newer committed value though, so settle only while the view
+        // still shows the value this engine wrote last.
+        if (dropped.writer.get(view) == dropped.current) {
+            dropped.writer.setValue(view, dropped.toValue)
+        }
+    }
+
     /**
      * A tag can be registered before its View exists, with the mount still in flight.
      * The start timestamp is absolute, so a late start seeks rather than drifting, and
@@ -267,6 +312,12 @@ internal class CSSPlatformTransitionsManager(
         begin: () -> Boolean,
     ) {
         if (startTokens[key] != token) return
+        if (hasPendingCommand(key)) {
+            // A queued command for this key may invalidate this token when it flushes;
+            // retry after the flush instead of racing it with a stale start.
+            Choreographer.getInstance().postFrameCallback { beginWhenMounted(key, token, endTimestampMs, persistent, begin) }
+            return
+        }
         // A persistent value outlives its own timeline, so its start never expires; it
         // retries until the view mounts or the key is superseded or removed.
         if (begin() || (!persistent && animationTimestamp() >= endTimestampMs)) {
@@ -311,6 +362,13 @@ internal class CSSPlatformTransitionsManager(
         ensurePumping()
     }
 
+    private fun ensurePumping() {
+        if (!pumping) {
+            pumping = true
+            Choreographer.getInstance().postFrameCallback(framePump)
+        }
+    }
+
     /** Re-asserts each transition's own value wherever a commit overwrote it. */
     private fun repairClobberedValues(): Boolean {
         val iterator = transitions.values.iterator()
@@ -326,21 +384,6 @@ internal class CSSPlatformTransitionsManager(
             running.writer.setValue(view, running.current)
         }
         return transitions.isNotEmpty()
-    }
-
-    /** Compares the point arrays by content, so probing the cache allocates only the key. */
-    private class InterpolatorKey(
-        private val type: Int,
-        private val pointsX: FloatArray,
-        private val pointsY: FloatArray,
-    ) {
-        override fun equals(other: Any?): Boolean =
-            other is InterpolatorKey &&
-                type == other.type &&
-                pointsX.contentEquals(other.pointsX) &&
-                pointsY.contentEquals(other.pointsY)
-
-        override fun hashCode(): Int = 31 * (31 * type + pointsX.contentHashCode()) + pointsY.contentHashCode()
     }
 
     /**
