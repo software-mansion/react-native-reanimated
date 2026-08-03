@@ -346,18 +346,15 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 #ifndef NDEBUG
     if constexpr (TScheduleStack == ScheduleStack::Requested) {
       static_assert(RuntimeCallable<TCallable>, "[Worklets] Scheduling stacks can be used only with worklet calls.");
-      if constexpr (sizeof...(TArgs) > 0) {
-        return [&]<typename TScheduleStackArg, typename... TCallArgs>(
-                   TScheduleStackArg &&scheduleStack, TCallArgs &&...callArgs) -> decltype(auto) {
-          static_assert(
-              std::is_same_v<std::remove_cvref_t<TScheduleStackArg>, std::optional<std::string>>,
-              "[Worklets] The first argument must be an optional scheduling stack.");
-          return std::forward<TInvoker>(invoke)(
-              RequestedScheduleStack{scheduleStack}, std::forward<TCallArgs>(callArgs)...);
-        }(std::forward<TArgs>(args)...);
-      } else {
-        static_assert(sizeof...(TArgs) > 0, "[Worklets] A scheduling stack argument is required.");
-      }
+      static_assert(sizeof...(TArgs) > 0, "[Worklets] A scheduling stack argument is required.");
+      return [&]<typename TScheduleStackArg, typename... TCallArgs>(
+                 TScheduleStackArg &&scheduleStack, TCallArgs &&...callArgs) -> decltype(auto) {
+        static_assert(
+            std::is_same_v<std::remove_cvref_t<TScheduleStackArg>, std::optional<std::string>>,
+            "[Worklets] The first argument must be an optional scheduling stack.");
+        return std::forward<TInvoker>(invoke)(
+            RequestedScheduleStack{scheduleStack}, std::forward<TCallArgs>(callArgs)...);
+      }(std::forward<TArgs>(args)...);
     } else
 #endif // NDEBUG
     {
