@@ -74,9 +74,14 @@ export function unregisterCSSAnimations(viewTag: number) {
 
 export function runCSSTransition(
   shadowNodeWrapper: ShadowNodeWrapper,
-  transitionConfig: CSSTransitionConfig
+  transitionConfig: CSSTransitionConfig,
+  eventMask: number
 ) {
-  ReanimatedModule.runCSSTransition(shadowNodeWrapper, transitionConfig);
+  ReanimatedModule.runCSSTransition(
+    shadowNodeWrapper,
+    transitionConfig,
+    eventMask
+  );
 }
 
 export function unregisterCSSTransition(viewTag: number) {

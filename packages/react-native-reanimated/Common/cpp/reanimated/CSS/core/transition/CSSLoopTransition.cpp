@@ -24,6 +24,10 @@ double CSSLoopTransition::getMinDelay(double timestamp) const {
   return progressProvider_.getMinDelay(timestamp);
 }
 
+void CSSLoopTransition::onMilestone(MilestoneReporter reporter) {
+  progressProvider_.onMilestone(std::move(reporter));
+}
+
 bool CSSLoopTransition::update(const double timestamp, OperationsLoop &loop) {
   progressProvider_.update(timestamp);
   onUpdate_(viewTag_);
@@ -70,6 +74,17 @@ void CSSLoopTransition::updateSettings(
 
   // Update the settings saved in progress provider
   progressProvider_.setPropertySettings(changedPropertiesSettings);
+}
+
+void CSSLoopTransition::trackProperties(
+    const PropertiesSettingsMap &propertiesSettings,
+    const std::vector<std::string> &propertyNames,
+    const double timestamp) {
+  progressProvider_.setPropertySettings(propertiesSettings);
+  for (const auto &propertyName : propertyNames) {
+    // The platform gets no reversing state, so it always runs the full duration.
+    progressProvider_.runProgressProvider(propertyName, false, timestamp);
+  }
 }
 
 folly::dynamic CSSLoopTransition::computeCurrentStyle(const std::shared_ptr<const ShadowNode> &shadowNode) {

@@ -3,6 +3,7 @@
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/core/transition/CSSLoopTransition.h>
 #include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
+#include <reanimated/CSS/events/CSSEvent.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
 
@@ -22,6 +23,8 @@ class CSSTransition {
    public:
     virtual ~Observer() = default;
     virtual void onTransitionUpdate(Tag viewTag) = 0;
+    virtual void
+    onTransitionEvent(Tag viewTag, const std::string &propertyName, CSSEventType type, double elapsedTimeMs) = 0;
   };
 
   CSSTransition(
@@ -59,6 +62,8 @@ class CSSTransition {
 
   void setPseudoLockedProperties(TransitionProperties properties);
 
+  void setEventMask(CSSEventMask eventMask);
+
  private:
   const std::shared_ptr<const ShadowNode> shadowNode_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
@@ -70,8 +75,15 @@ class CSSTransition {
   TransitionProperties pseudoLockedProperties_;
   std::shared_ptr<CSSLoopTransition> loopTransition_;
 
+  CSSEventMask eventMask_{0};
+
   CSSLoopTransition &ensureLoopTransition();
   void scheduleLoop(double timestamp);
+  /// Changed properties the platform renders whose lifecycle we still track.
+  std::vector<std::string> platformRunProperties(const CSSTransitionConfig &config) const;
+  void observeMilestones(CSSLoopTransition &loopTransition);
+  void reportMilestone(RunMilestone milestone, const std::string &propertyName, double elapsedTime);
+  void emitEvent(CSSEventType type, const std::string &propertyName, double elapsedTime) const;
 };
 
 } // namespace reanimated::css

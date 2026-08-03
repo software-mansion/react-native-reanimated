@@ -13,8 +13,12 @@ namespace reanimated::css {
 CSSTransitionsRegistry::CSSTransitionsRegistry(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const std::shared_ptr<OperationsLoop> &loop,
-    const std::shared_ptr<CSSPlatformTransitionProxy> &platformTransitionProxy)
-    : viewStylesRepository_(viewStylesRepository), loop_(loop), platformTransitionProxy_(platformTransitionProxy) {}
+    const std::shared_ptr<CSSPlatformTransitionProxy> &platformTransitionProxy,
+    const std::shared_ptr<CSSEventsEmitter> &eventsEmitter)
+    : viewStylesRepository_(viewStylesRepository),
+      loop_(loop),
+      platformTransitionProxy_(platformTransitionProxy),
+      eventsEmitter_(eventsEmitter) {}
 
 bool CSSTransitionsRegistry::needsFlush() const {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
@@ -29,6 +33,13 @@ void CSSTransitionsRegistry::updateConfigOrRun(
   const auto &transition = getOrCreateTransition(shadowNode);
   auto initialUpdate = transition->run(rt, std::move(config), getUpdatesFromRegistry(transition->getViewTag()));
   recordInitialUpdate(transition, initialUpdate);
+}
+
+void CSSTransitionsRegistry::setEventMask(
+    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const CSSEventMask eventMask) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  getOrCreateTransition(shadowNode)->setEventMask(eventMask);
 }
 
 void CSSTransitionsRegistry::run(
@@ -154,6 +165,15 @@ CSSTransitionsRegistry::TransitionObserver::TransitionObserver(CSSTransitionsReg
 void CSSTransitionsRegistry::TransitionObserver::onTransitionUpdate(const Tag viewTag) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   owner_.updatedTags_.insert(viewTag);
+}
+
+void CSSTransitionsRegistry::TransitionObserver::onTransitionEvent(
+    const Tag viewTag,
+    const std::string &propertyName,
+    const CSSEventType type,
+    const double elapsedTimeMs) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  owner_.eventsEmitter_->emit(createCSSEvent(viewTag, type, propertyName, elapsedTimeMs));
 }
 
 void CSSTransitionsRegistry::removeTag(const Tag viewTag) {
