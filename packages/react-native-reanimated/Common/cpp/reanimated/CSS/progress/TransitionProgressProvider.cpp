@@ -54,8 +54,6 @@ ReversingState TransitionPropertyProgressProvider::getReversingState() const {
 
 void TransitionPropertyProgressProvider::onMilestone(RunLifecycle::Reporter reporter) {
   lifecycle_.onMilestone(std::move(reporter));
-  // Reports the stage already reached, so a provider observed right at
-  // creation reports Created. Stages crossed earlier are not replayed.
   lifecycle_.reachPosition(computeStage());
 }
 
@@ -71,7 +69,6 @@ void TransitionPropertyProgressProvider::update(const double timestamp) {
 
 RunStage TransitionPropertyProgressProvider::computeStage() const {
   switch (getState()) {
-    // Pending means created but still waiting out its delay.
     case TransitionProgressState::Pending:
       return RunStage::Created;
     case TransitionProgressState::Running:
@@ -198,8 +195,6 @@ void TransitionProgressProvider::runProgressProvider(
       provider = createReversingShorteningProgressProvider(timestamp, settings, *progressProvider);
     }
 
-    // Taking over a still-running property interrupts it; aborting an ended
-    // one is a no-op, so it is not cancelled retroactively.
     progressProvider->abort(timestamp);
   }
 
