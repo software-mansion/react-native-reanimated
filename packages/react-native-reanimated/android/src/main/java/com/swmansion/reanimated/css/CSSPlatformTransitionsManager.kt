@@ -39,10 +39,8 @@ internal class CSSPlatformTransitionsManager(
     private val mainHandler = Handler(Looper.getMainLooper())
 
     /**
-     * Single per-frame driver for every running transition. The absolute start timestamp
-     * makes delay and late-start seeking fall out of the arithmetic: t < 0 during the
-     * delay clamps to 0 and holds the start value, and a late first frame lands mid-curve
-     * instead of shifting the whole timeline.
+     * Single per-frame driver for every running transition. Values come from the absolute
+     * start timestamp, so delay (t < 0) and late starts need no extra state.
      */
     private val framePump =
         object : Choreographer.FrameCallback {
@@ -60,8 +58,7 @@ internal class CSSPlatformTransitionsManager(
                     if (running.finished) continue
                     val elapsedMs = now - running.startTimeMs
                     if (elapsedMs < 0) {
-                        // Delay phase: hold the raw start value. Step-like easings are
-                        // nonzero already at t = 0, so this cannot go through the curve.
+                        // Delay phase: hold the raw start value; step easings are already nonzero at t = 0.
                         running.current = running.startValue
                         running.writer.setValue(view, running.startValue)
                         active = true
@@ -72,14 +69,17 @@ internal class CSSPlatformTransitionsManager(
                         running.startValue +
                             (running.toValue - running.startValue) * running.interpolator.getInterpolation(t)
                     running.current = value
-                    // setValue takes a primitive and View.setAlpha early-outs on an unchanged
-                    // value, so unconditional writes allocate nothing and invalidate only on
-                    // real changes.
+                    // setAlpha early-outs on unchanged values, so unconditional writes cost nothing.
                     running.writer.setValue(view, value)
-                    if (t >= 1f) {
-                        if (running.persistent) running.finished = true else iterator.remove()
-                    } else {
+                    if (t < 1f) {
                         active = true
+                        continue
+                    }
+                    if (running.persistent) {
+                        // Keeps its entry so the pre-draw repair defends the final value.
+                        running.finished = true
+                    } else {
+                        iterator.remove()
                     }
                 }
                 if (active) {
@@ -135,11 +135,7 @@ internal class CSSPlatformTransitionsManager(
         ) : Command()
     }
 
-    /**
-     * FloatArray equals is identity, so a data class or Pair key would never hit the
-     * cache (every JNI call carries fresh arrays); the point arrays must be compared
-     * by content.
-     */
+    /** FloatArray equals is identity; only content comparison makes cache hits possible. */
     private class InterpolatorKey(
         private val type: Int,
         private val pointsX: FloatArray,
@@ -155,10 +151,8 @@ internal class CSSPlatformTransitionsManager(
     }
 
     /**
-     * Returns whether the property is accepted for native playback, decided before the
-     * hop to the UI thread. Playback itself can still fail there if the View never
-     * mounts, and there is no path back to demote the property afterwards - the same
-     * contract the Apple backend has.
+     * Accepts or refuses the property for native playback; false sends it to the loop.
+     * There is no later demotion path - the same contract the Apple backend has.
      */
     fun animateTransition(
         viewTag: Int,
@@ -174,10 +168,8 @@ internal class CSSPlatformTransitionsManager(
     ): Boolean {
         val writer = cssPropertyWriterFor(propertyName) ?: return false
         val context = reactContext.get() ?: return false
-        // Refusing sends the property to the loop, which resolves the final style without
-        // animating. The animator duration scale is otherwise not applied: platform
-        // transitions follow the authored CSS timeline, and the slow-animations toggle
-        // already flows through the shared animation clock.
+        // With animations disabled the loop settles the final style without animating;
+        // platform transitions otherwise ignore the animator duration scale.
         if (!DurationScale.animationsEnabled(context)) return false
 
         enqueue(
@@ -206,14 +198,9 @@ internal class CSSPlatformTransitionsManager(
     }
 
     /**
-     * One main-looper message per burst instead of one per transition: a render that
-     * starts hundreds of transitions would otherwise flood the queue, and by the time
-     * late messages ran their transitions would already be stale.
-     *
-     * The message is asynchronous so a pending traversal's sync barrier cannot defer
-     * it past the frame that mounts the committed target: a plain message would then
-     * run only after that frame drew the end value, flashing it before the start
-     * value lands.
+     * One asynchronous main-looper message per burst, not one per transition: per-command
+     * messages flood the looper under churn, and a synchronous message can be deferred by
+     * a traversal's sync barrier until the committed end value was already drawn.
      */
     private fun enqueue(command: Command) {
         val schedule: Boolean
@@ -258,8 +245,7 @@ internal class CSSPlatformTransitionsManager(
 
     private fun beginTransition(command: Command.Start) {
         val key = Key(command.viewTag, command.propertyName)
-        // Claiming a fresh token invalidates any retry still queued for this key, so a
-        // superseded request cannot start on a later frame.
+        // A fresh token invalidates any retry still queued for this key.
         val token = ++nextStartToken
         startTokens[key] = token
         beginWhenMounted(key, token, command.startTimestampMs + command.durationMs, command.persistent) {
@@ -288,21 +274,17 @@ internal class CSSPlatformTransitionsManager(
         // A persistent value has no committed style to settle to; leave it as drawn.
         if (dropped.persistent) return
         val view = dropped.viewRef.get() ?: return
-        // The committed style already holds the target, but nothing re-writes it to
-        // the view once this entry stops being driven; without a final write the view
-        // would stick at the mid-flight value. A mount racing this removal may already
-        // have written a newer committed value though, so settle only while the view
-        // still shows the value this engine wrote last.
+        // Settle on the committed target so the view does not stick mid-flight, but only
+        // if nothing newer was written: a racing mount may have applied a fresh value.
         if (dropped.writer.get(view) == dropped.current) {
             dropped.writer.setValue(view, dropped.toValue)
         }
     }
 
     /**
-     * A tag can be registered before its View exists, with the mount still in flight.
-     * The start timestamp is absolute, so a late start seeks rather than drifting, and
-     * retrying needs no arbitrary timeout: once the transition would have ended there
-     * is nothing left to play.
+     * A tag can be registered before its View mounts; retry per frame until it does.
+     * The absolute start timestamp makes a late start seek instead of drift, and an
+     * already-ended timeline stops retrying without any arbitrary timeout.
      */
     private fun beginWhenMounted(
         key: Key,
@@ -313,13 +295,11 @@ internal class CSSPlatformTransitionsManager(
     ) {
         if (startTokens[key] != token) return
         if (hasPendingCommand(key)) {
-            // A queued command for this key may invalidate this token when it flushes;
-            // retry after the flush instead of racing it with a stale start.
+            // A queued command may invalidate this token; let the flush run first.
             Choreographer.getInstance().postFrameCallback { beginWhenMounted(key, token, endTimestampMs, persistent, begin) }
             return
         }
-        // A persistent value outlives its own timeline, so its start never expires; it
-        // retries until the view mounts or the key is superseded or removed.
+        // A persistent value outlives its timeline, so its start never expires.
         if (begin() || (!persistent && animationTimestamp() >= endTimestampMs)) {
             startTokens.remove(key)
             return
@@ -338,13 +318,10 @@ internal class CSSPlatformTransitionsManager(
         interpolator: TimeInterpolator,
         persistent: Boolean,
     ) {
-        // On interruption resume from the value this engine last wrote: fromValue is the
-        // committed style value, so starting there would snap the view back to where the
-        // superseded transition began.
+        // Resume interruptions from the last written value; fromValue would snap back.
         val startValue = transitions.remove(key)?.current ?: fromValue.toFloat()
 
-        // React Native has already committed the target; show the start value until the
-        // first pump frame (and through any transition-delay).
+        // The target is already committed; show the start value until the first pump frame.
         writer.setValue(view, startValue)
 
         transitions[key] =
@@ -379,17 +356,15 @@ internal class CSSPlatformTransitionsManager(
                 iterator.remove()
                 continue
             }
-            // setValue takes a primitive and setAlpha early-outs when unchanged, so an
-            // unconditional re-assert is allocation-free.
+            // setAlpha early-outs when unchanged, so re-asserting is free.
             running.writer.setValue(view, running.current)
         }
         return transitions.isNotEmpty()
     }
 
     /**
-     * PathInterpolator flattens its curve natively on construction, so cache it. The
-     * type is part of the key because different families can share a point list:
-     * linear(0.5, 1) and cubicBezier(0, 1, 0.5, 1) both normalize to [0,1],[0.5,1].
+     * PathInterpolator flattens its curve natively on construction, so cache it. Type is
+     * part of the key: different easing families can share one point list.
      */
     private fun interpolatorFor(
         type: Int,
