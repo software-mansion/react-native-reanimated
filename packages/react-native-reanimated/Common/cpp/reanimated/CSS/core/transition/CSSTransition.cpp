@@ -60,6 +60,9 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
   }
 
   if (!platformRuns.empty()) {
+    // TODO: add support for events reported by the platform itself; until
+    // then the lifecycle of platform-routed properties temporarily runs on
+    // the loop path.
     PropertiesSettingsMap platformSettings;
     for (const auto &propertyName : platformRuns) {
       platformSettings.emplace(propertyName, config.changedPropertiesSettings.at(propertyName));
