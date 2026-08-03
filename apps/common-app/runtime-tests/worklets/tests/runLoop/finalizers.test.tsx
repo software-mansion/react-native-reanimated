@@ -68,7 +68,10 @@ describe('requestAnimationFrameFinalizer', () => {
       requestAnimationFrame(() => {
         const frameTimestamp = globalThis.__frameTimestamp;
         globalThis.requestAnimationFrameFinalizer(() => {
-          scheduleOnRN(callback, globalThis.__frameTimestamp === frameTimestamp);
+          scheduleOnRN(
+            callback,
+            globalThis.__frameTimestamp === frameTimestamp
+          );
         });
       });
     });
@@ -89,7 +92,10 @@ describe('requestAnimationFrameFinalizer', () => {
       globalThis.requestAnimationFrameFinalizer(() => {
         const frameTimestamp = globalThis.__frameTimestamp;
         globalThis.requestAnimationFrameFinalizer(() => {
-          scheduleOnRN(callback, globalThis.__frameTimestamp !== frameTimestamp);
+          scheduleOnRN(
+            callback,
+            globalThis.__frameTimestamp !== frameTimestamp
+          );
         });
       });
     });
@@ -113,22 +119,25 @@ describe('requestAnimationFrameFinalizer', () => {
   });
 });
 
+const pushSelfRemovingFinalizer = (callback: () => void) => {
+  'worklet';
+  const finalizers = (globalThis as localGlobal)._microtaskQueueFinalizers;
+  const finalizer = () => {
+    finalizers.splice(finalizers.indexOf(finalizer), 1);
+    callback();
+  };
+  finalizers.push(finalizer);
+};
+
 describe('microtask queue finalizers', () => {
   test('run after the microtask queue is drained', async () => {
     const [confirmedOrder, order] = createOrderConstraint();
 
     scheduleOnUI(() => {
       'worklet';
-      const finalizer = () => {
-        (globalThis as localGlobal)._microtaskQueueFinalizers.splice(
-          (globalThis as localGlobal)._microtaskQueueFinalizers.indexOf(
-            finalizer
-          ),
-          1
-        );
+      pushSelfRemovingFinalizer(() => {
         order(2, 'finalizer');
-      };
-      (globalThis as localGlobal)._microtaskQueueFinalizers.push(finalizer);
+      });
 
       queueMicrotask(() => {
         order(1, 'microtask');
@@ -144,16 +153,9 @@ describe('microtask queue finalizers', () => {
 
     scheduleOnUI(() => {
       'worklet';
-      const finalizer = () => {
-        (globalThis as localGlobal)._microtaskQueueFinalizers.splice(
-          (globalThis as localGlobal)._microtaskQueueFinalizers.indexOf(
-            finalizer
-          ),
-          1
-        );
+      pushSelfRemovingFinalizer(() => {
         order(3, 'finalizer');
-      };
-      (globalThis as localGlobal)._microtaskQueueFinalizers.push(finalizer);
+      });
 
       queueMicrotask(() => {
         order(1, 'microtask');
@@ -172,6 +174,10 @@ describe('microtask queue finalizers', () => {
 
     scheduleOnUI(() => {
       'worklet';
+      pushSelfRemovingFinalizer(() => {
+        order(3, 'finalizer');
+      });
+
       queueMicrotask(() => {
         (globalThis as localGlobal).__callMicrotasks();
         order(1, 'first');
@@ -181,8 +187,8 @@ describe('microtask queue finalizers', () => {
       });
     });
 
-    await waitForNotifications(['first', 'second']);
-    expect(confirmedOrder.value).toBe(2);
+    await waitForNotifications(['first', 'second', 'finalizer']);
+    expect(confirmedOrder.value).toBe(3);
   });
 
   test('are not installed on Worker Runtimes', () => {
