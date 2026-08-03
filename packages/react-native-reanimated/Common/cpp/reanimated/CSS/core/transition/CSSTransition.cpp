@@ -46,52 +46,47 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
 
   auto loopConfig = platformTransitionProxy_->processConfig(rt, getViewTag(), config, routing_, timestamp);
 
-  const auto platformRuns = platformRunProperties(config);
-  const bool hasTrackedRemovals = eventMask_ != 0 && loopTransition_ && !config.removedProperties.empty();
-  if (loopConfig.empty() && platformRuns.empty() && !hasTrackedRemovals) {
+  if (!loopConfig.empty()) {
+    ensureLoopTransition().updateSettings(loopConfig.changedPropertiesSettings, loopConfig.removedProperties);
+  }
+  trackPlatformLifecycles(config, timestamp);
+
+  // Settings-only configs reconfigure without running.
+  if (!loopConfig.hasValueUpdates()) {
     return folly::dynamic::object();
   }
 
-  auto &loopTransition = ensureLoopTransition();
-  loopTransition.updateSettings(loopConfig.changedPropertiesSettings, loopConfig.removedProperties);
-
-  if (hasTrackedRemovals) {
-    loopTransition.removeProperties(config.removedProperties);
-  }
-
-  if (!platformRuns.empty()) {
-    // TODO: add support for events reported by the platform itself; until
-    // then the lifecycle of platform-routed properties temporarily runs on
-    // the loop path.
-    PropertiesSettingsMap platformSettings;
-    for (const auto &propertyName : platformRuns) {
-      platformSettings.emplace(propertyName, config.changedPropertiesSettings.at(propertyName));
-    }
-    loopTransition.trackProperties(platformSettings, platformRuns, timestamp);
-  }
-
-  folly::dynamic initialUpdate = folly::dynamic::object();
-  // Settings-only configs reconfigure without running.
-  if (loopConfig.hasValueUpdates()) {
-    initialUpdate = loopTransition.run(rt, shadowNode_, loopConfig.changedProperties, lastUpdates, timestamp);
-  }
-  if (loopConfig.hasValueUpdates() || !platformRuns.empty()) {
-    scheduleLoop(timestamp);
-  }
+  auto initialUpdate =
+      ensureLoopTransition().run(rt, shadowNode_, loopConfig.changedProperties, lastUpdates, timestamp);
+  scheduleLoop(timestamp);
   return initialUpdate;
 }
 
-std::vector<std::string> CSSTransition::platformRunProperties(const CSSTransitionConfig &config) const {
-  std::vector<std::string> result;
+// TODO: add support for events reported by the platform itself; until then
+// the lifecycle of platform-routed properties temporarily runs on the loop path.
+void CSSTransition::trackPlatformLifecycles(const CSSTransitionConfig &config, const double timestamp) {
   if (eventMask_ == 0) {
-    return result;
+    return;
   }
+
+  if (loopTransition_ && !config.removedProperties.empty()) {
+    loopTransition_->removeProperties(config.removedProperties);
+  }
+
+  PropertiesSettingsMap propertiesSettings;
+  std::vector<std::string> propertyNames;
   for (const auto &[propertyName, value] : config.changedProperties) {
     if (routing_.platform.contains(propertyName)) {
-      result.push_back(propertyName);
+      propertyNames.push_back(propertyName);
+      propertiesSettings.emplace(propertyName, config.changedPropertiesSettings.at(propertyName));
     }
   }
-  return result;
+  if (propertyNames.empty()) {
+    return;
+  }
+
+  ensureLoopTransition().trackProperties(propertiesSettings, propertyNames, timestamp);
+  scheduleLoop(timestamp);
 }
 
 folly::dynamic CSSTransition::run(
