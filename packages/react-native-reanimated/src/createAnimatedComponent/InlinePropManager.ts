@@ -176,6 +176,7 @@ export class InlinePropManager implements IInlinePropManager {
       stopMapper(this._inlinePropsMapperId);
       this._inlinePropsMapperId = null;
     }
+    this._inlinePropsViewDescriptors = null;
     this._inlineProps = {};
   }
 }
