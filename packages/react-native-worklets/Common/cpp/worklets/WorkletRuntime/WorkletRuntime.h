@@ -98,7 +98,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 #endif // NDEBUG
 
   /**
-   * Runs a RuntimeCallable synchronously and returns its result.
+   * Runs a RuntimeJob synchronously and returns its result.
    *
    * Does not run a microtask checkpoint.
    */
