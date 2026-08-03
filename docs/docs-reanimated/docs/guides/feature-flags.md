@@ -83,7 +83,7 @@ Flickering/jittering while scrolling will be ultimately fixed by branching mecha
 
 ### `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`
 
-When enabled, non-layout styles will be applied using the `synchronouslyUpdateViewOnUIThread` method (which doesn't involve layout recalculation) instead of than `ShadowTree::commit` method (which requires layout recalculation). In an artificial benchmark, it can lead to up to 4x increase of frames per second. Even though we don't expect such high speedups in the production apps, there should be a visible improvements in the smoothness of some animations.
+When enabled, non-layout styles will be applied using the `synchronouslyUpdateViewOnUIThread` method (which doesn't involve layout recalculation) instead of the `ShadowTree::commit` method (which requires layout recalculation). In an artificial benchmark, it can lead to up to 4x increase of frames per second. Even though we don't expect such high speedups in the production apps, there should be a visible improvement in the smoothness of some animations.
 
 Currently, the following styles can be updated using the fast path: `opacity`, `elevation`, `zIndex`, `backgroundColor` (excluding `PlatformColor` values, same for all color props), `tintColor`, `placeholderTextColor`, `shadowColor`, `borderColor` (all sides, including `borderBlockColor`, `borderBlockStartColor` and `borderBlockEndColor`), `borderRadius` (all sides), `outlineColor`, `outlineOffset`, `outlineWidth` and `transform` (all transforms). All remaining styles, if present, will be updated via `ShadowTree::commit`.
 
@@ -93,11 +93,11 @@ However, there are some unwanted side effects that one needs to take into accoun
 
 1. The changes applied via `synchronouslyUpdateViewOnUIThread` are not respected by the touch gesture system of Fabric renderer which can lead to incorrect behavior, in particular if transforms are applied. For example, `Pressable` from `react-native` inside an `Animated.View` may fire `onPressIn` but silently drops `onPress` when pressed mid- or post-animation. We recommend using `Pressable`, `Touchable` or `GestureDetector` component from `react-native-gesture-handler` (which attaches to the underlying platform view rather than using `ShadowTree` to determine the component present at given point) rather than its original counterpart from `react-native`. This bug is tracked in [issue #10121](https://github.com/software-mansion/react-native-reanimated/issues/10121).
 
-1. The changes are applied via `synchronouslyUpdateViewOnUIThread` are not synchronized with changes applied by `ShadowTree::commit` which may lead to minor inconsistencies of animated styles or animated components in a single animation frame.
+1. Changes applied via `synchronouslyUpdateViewOnUIThread` are not synchronized with changes applied by `ShadowTree::commit` which may lead to minor inconsistencies of animated styles or animated components in a single animation frame.
 
 ### `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS`
 
-When enabled, non-layout styles will be applied using the `[RCTSurfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:props:]` method (which doesn't involve layout recalculation) instead of than `ShadowTree::commit` method (which requires layout recalculation), which may result in better performance of animations.
+When enabled, non-layout styles will be applied using the `[RCTSurfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:props:]` method (which doesn't involve layout recalculation) instead of the `ShadowTree::commit` method (which requires layout recalculation), which may result in better performance of animations.
 
 The set of supported styles is the same as for `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`, with the addition of `shadowOffset`, `shadowOpacity` and `shadowRadius`, which are iOS-only. For more details, see the original [PR #8367](https://github.com/software-mansion/react-native-reanimated/pull/8367).
 
