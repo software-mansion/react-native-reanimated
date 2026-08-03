@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react-native';
 import { View } from 'react-native';
 
-import Animated from '../src';
+import Animated, { makeMutable } from '../src';
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 
@@ -37,5 +37,14 @@ describe('pseudo selector values in animatedProps', () => {
     );
 
     expect(getByTestId('subject').props.fill).toBe('rgb(0,0,255)');
+  });
+
+  it('does not mistake a shared value for a pseudo selector object', () => {
+    const sharedValue = makeMutable('rgb(0,0,255)');
+    const { getByTestId } = render(
+      <AnimatedView animatedProps={{ fill: sharedValue }} testID="subject" />
+    );
+
+    expect(getByTestId('subject').props.fill).toBe(sharedValue);
   });
 });
