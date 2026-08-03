@@ -56,7 +56,6 @@ folly::dynamic CSSTransition::run(jsi::Runtime &rt, CSSTransitionConfig &&config
   loopTransition.updateSettings(loopConfig.changedPropertiesSettings, loopConfig.removedProperties, timestamp);
 
   if (hasTrackedRemovals) {
-    // Platform-side removals never reach the loop config.
     loopTransition.removeProperties(config.removedProperties);
   }
 
