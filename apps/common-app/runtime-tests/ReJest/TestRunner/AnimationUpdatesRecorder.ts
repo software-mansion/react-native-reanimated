@@ -90,18 +90,6 @@ export class AnimationUpdatesRecorder {
         return 0;
       };
 
-      global.originalFlushAnimationFrame = global.__flushAnimationFrame;
-      global.__flushAnimationFrame = (frameTimestamp: number) => {
-        if (global.mockedAnimationTimestamp === undefined) {
-          global.originalFlushAnimationFrame!(frameTimestamp);
-          return;
-        }
-        global.mockedAnimationTimestamp += 16;
-        global.__frameTimestamp = global.mockedAnimationTimestamp;
-        global.originalFlushAnimationFrame!(global.mockedAnimationTimestamp);
-        global.framesCount = (global.framesCount ?? 0) + 1;
-      };
-
       global.originalNativeRequestAnimationFrame =
         global.__nativeRequestAnimationFrame;
       global.__nativeRequestAnimationFrame = (
@@ -131,10 +119,6 @@ export class AnimationUpdatesRecorder {
         (global.requestAnimationFrame as any) =
           global.originalRequestAnimationFrame;
         global.originalRequestAnimationFrame = undefined;
-      }
-      if (global.originalFlushAnimationFrame) {
-        global.__flushAnimationFrame = global.originalFlushAnimationFrame;
-        global.originalFlushAnimationFrame = undefined;
       }
       if (global.originalNativeRequestAnimationFrame) {
         global.__nativeRequestAnimationFrame =
