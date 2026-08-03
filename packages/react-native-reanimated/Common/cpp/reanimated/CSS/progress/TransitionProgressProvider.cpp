@@ -81,17 +81,13 @@ RunStage TransitionPropertyProgressProvider::computeStage() const {
 
 double TransitionPropertyProgressProvider::elapsedTimeAt(const RunMilestone milestone) const {
   switch (milestone) {
-    case RunMilestone::Created:
-    case RunMilestone::Started:
-      return 0;
     case RunMilestone::Ended:
       return duration_;
     case RunMilestone::Aborted:
       return std::max(0.0, cancelTimestamp_ - (creationTimestamp_ + delay_));
-    case RunMilestone::Repeated:
+    default:
       return 0;
   }
-  return 0;
 }
 
 TransitionProgressState TransitionPropertyProgressProvider::getState() const {
