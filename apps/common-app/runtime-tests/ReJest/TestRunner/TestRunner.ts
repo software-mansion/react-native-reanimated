@@ -260,6 +260,10 @@ export class TestRunner {
       this._currentTestCase = null;
       try {
         await this._animationRecorder.unmockAnimationTimer();
+      } catch (error) {
+        reportCleanupError(error);
+      }
+      try {
         await this._animationRecorder.stopRecordingAnimationUpdates();
       } catch (error) {
         reportCleanupError(error);

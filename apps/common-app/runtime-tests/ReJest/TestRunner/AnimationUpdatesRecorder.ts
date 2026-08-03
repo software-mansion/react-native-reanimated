@@ -53,7 +53,7 @@ export class AnimationUpdatesRecorder {
     return updatesContainer;
   }
 
-  public async stopRecordingAnimationUpdates() {
+  public async stopRecordingAnimationUpdates(maxWaitTime = MAX_WAIT_TIME_MS) {
     await this._syncUIRunner.runOnUIBlocking(() => {
       'worklet';
       if (global.originalUpdateProps) {
@@ -65,7 +65,7 @@ export class AnimationUpdatesRecorder {
         global.originalNotifyAboutProgress = undefined;
       }
       global.animationUpdatesRecordingStarted = undefined;
-    });
+    }, maxWaitTime);
   }
 
   public async mockAnimationTimer() {
@@ -120,7 +120,7 @@ export class AnimationUpdatesRecorder {
     });
   }
 
-  public async unmockAnimationTimer() {
+  public async unmockAnimationTimer(maxWaitTime = MAX_WAIT_TIME_MS) {
     await this._syncUIRunner.runOnUIBlocking(() => {
       'worklet';
       if (global.originalGetAnimationTimestamp) {
@@ -143,7 +143,7 @@ export class AnimationUpdatesRecorder {
       }
       global.mockedAnimationTimestamp = undefined;
       global.framesCount = undefined;
-    });
+    }, maxWaitTime);
   }
 
   public wait(delay: number) {
@@ -160,6 +160,7 @@ export class AnimationUpdatesRecorder {
     const flag = makeMutable(false);
     const framesSeen = makeMutable(0);
     const startTime = performance.now();
+    let isFirstPoll = true;
 
     for (;;) {
       const remainingWaitTime = maxWaitTime - (performance.now() - startTime);
@@ -169,11 +170,18 @@ export class AnimationUpdatesRecorder {
         );
       }
 
+      const shouldAssertMock = isFirstPoll;
+      isFirstPoll = false;
+
       await new SyncUIRunner().runOnUIBlocking(() => {
         'worklet';
-        assertMockedAnimationTimestamp(global.framesCount);
+        if (shouldAssertMock) {
+          assertMockedAnimationTimestamp(global.framesCount);
+        } else if (global.framesCount === undefined) {
+          return;
+        }
         framesSeen.value = global.framesCount!;
-        flag.value = global.framesCount >= updatesCount - 1;
+        flag.value = global.framesCount! >= updatesCount - 1;
       }, remainingWaitTime);
 
       if (flag.value) {
