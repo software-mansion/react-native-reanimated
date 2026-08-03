@@ -2,6 +2,7 @@
 
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
+#include <reanimated/CSS/progress/RunLifecycle.h>
 #include <reanimated/CSS/progress/TimeProgressProvider.h>
 #include <reanimated/CSS/utils/props.h>
 #include <reanimated/CSS/utils/reversingShortening.h>
@@ -32,6 +33,13 @@ class TransitionPropertyProgressProvider final : public KeyframeProgressProvider
   ReversingState getReversingState() const;
   TransitionProgressState getState() const;
 
+  /// Time the property has run by the given milestone, in milliseconds.
+  double elapsedTimeAt(RunMilestone milestone) const;
+
+  void onMilestone(RunLifecycle::Reporter reporter);
+  void abort(double timestamp);
+  void update(double timestamp) override;
+
  protected:
   std::optional<double> calculateRawProgress(double timestamp) override;
 
@@ -40,7 +48,12 @@ class TransitionPropertyProgressProvider final : public KeyframeProgressProvider
   EasingFunction easingFunction_;
   double reversingShorteningFactor_ = 1;
 
+  RunLifecycle lifecycle_;
+  // The lifecycle reports an abort without a timestamp, so abort() leaves one here.
+  double cancelTimestamp_ = 0;
+
   double getElapsedTime(double timestamp) const;
+  RunStage computeStage() const;
 };
 
 using TransitionPropertyProgressProviders =
@@ -48,10 +61,15 @@ using TransitionPropertyProgressProviders =
 
 class TransitionProgressProvider final {
  public:
+  /// Reports a milestone of one property, with the time elapsed by then.
+  using MilestoneReporter = std::function<void(RunMilestone, const std::string &property, double elapsedTime)>;
+
   TransitionProgressState getState() const;
   double getMinDelay(double timestamp) const;
   TransitionPropertyProgressProviders getPropertyProgressProviders() const;
   std::unordered_set<std::string> getRemovedProperties() const;
+
+  void onMilestone(MilestoneReporter reporter);
 
   void runProgressProvider(const std::string &propertyName, bool isReversed, double timestamp);
   void removeProperties(const std::vector<std::string> &propertyNames);
@@ -63,6 +81,11 @@ class TransitionProgressProvider final {
 
  private:
   TransitionPropertyProgressProviders propertyProgressProviders_;
+  MilestoneReporter reporter_;
+  // removeProperty() reports a cancel, which needs a timestamp its caller does not supply.
+  double lastTimestamp_ = 0;
+
+  void observeProperty(const std::string &propertyName, TransitionPropertyProgressProvider &provider);
 
   // TO DO: currently never cleaned by design - if the property has already been transitioned in the past, we might want
   // to reuse the config (run without settings in the config).
