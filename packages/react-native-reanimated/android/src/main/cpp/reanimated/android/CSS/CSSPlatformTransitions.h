@@ -29,12 +29,10 @@ struct PlatformEasing {
 
 class CSSPlatformTransitions {
  public:
-  /// Returns false when the view can't carry the animation, in which case the
-  /// property falls back to the loop. A `persistent` transition has no committed
-  /// style behind it, so its value must outlive the animation itself. The call is
-  /// all-primitive - the easing curve is pre-registered under `easingId` and the
-  /// property under `propertyId` - so the hot per-transition JNI hop allocates
-  /// nothing.
+  /// False means the view can't carry the animation and the property falls back to
+  /// the loop. All-primitive (easing and property pre-registered by id), so the hot
+  /// per-transition JNI hop allocates nothing. A `persistent` value must outlive the
+  /// animation itself.
   using AnimateFunction = std::function<bool(
       int viewTag,
       int propertyId,

@@ -5,10 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.provider.Settings
 
-/**
- * Animations can be disabled process-wide (animator duration scale 0, or battery saver);
- * a CSS transition then has to settle on its final style without animating.
- */
+/** Animations can be disabled system-wide (duration scale 0, battery saver). */
 internal object DurationScale {
     fun animationsEnabled(context: Context): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

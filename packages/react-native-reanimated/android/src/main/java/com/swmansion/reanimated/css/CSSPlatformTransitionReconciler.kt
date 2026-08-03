@@ -7,20 +7,16 @@ import java.util.WeakHashMap
 
 /**
  * A platform transition animates the property React Native itself writes, so a commit can
- * overwrite it mid-flight. Re-asserting just before the frame is drawn covers every writer -
- * a Fabric mount, the synchronous props path, the animation backend - without knowing which
- * one ran, since they all run earlier in the same frame.
- *
- * [repair] returns whether anything is still animating.
+ * overwrite it mid-flight; re-asserting just before draw covers every writer, since they
+ * all run earlier in the same frame. [repair] returns whether anything is still animating.
  */
 internal class CSSPlatformTransitionReconciler(
     private val repair: () -> Boolean,
 ) {
     /**
-     * Keyed by window: getViewTreeObserver is per window, not per view. Weakly held,
-     * because a destroyed window's observer never reports !isAlive (only floating
-     * observers are killed, on merge) and its listener never retires (a dead window
-     * never draws), so a strong set would pin one observer per torn-down window.
+     * Keyed by window (getViewTreeObserver is per window). Weakly held: a destroyed
+     * window's observer stays isAlive forever and never draws, so a strong set would
+     * pin one observer per torn-down window.
      */
     private val tracked: MutableSet<ViewTreeObserver> =
         Collections.newSetFromMap(WeakHashMap())
@@ -31,9 +27,8 @@ internal class CSSPlatformTransitionReconciler(
 
     fun track(view: View) {
         if (!view.isAttachedToWindow) {
-            // A detached view hands out a floating observer that merges into the window
-            // observer on attach and dies, leaving the listener unremovable; register
-            // once the view is genuinely attached.
+            // A detached view's floating observer dies on attach, leaving its listener
+            // unremovable; register only once the view is genuinely attached.
             if (!pendingAttach.add(view)) return
             view.addOnAttachStateChangeListener(
                 object : View.OnAttachStateChangeListener {
@@ -51,7 +46,6 @@ internal class CSSPlatformTransitionReconciler(
             )
             return
         }
-        // A window torn down mid-animation never draws again, so its listener never retires.
         tracked.removeAll { !it.isAlive }
 
         val observer = view.viewTreeObserver
@@ -62,8 +56,7 @@ internal class CSSPlatformTransitionReconciler(
                 override fun onPreDraw(): Boolean {
                     if (repair()) return true
 
-                    // Retiring lazily at draw time keeps the lifecycle one-sided: the
-                    // manager only ever tracks, and a registry left empty retires here.
+                    // Nothing left to defend: retire until the next track().
                     if (observer.isAlive) observer.removeOnPreDrawListener(this)
                     tracked.remove(observer)
                     return true

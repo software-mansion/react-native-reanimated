@@ -167,8 +167,7 @@ void CSSPlatformTransitions::removeTransition(const Tag viewTag, const std::stri
       active_.erase(propertiesIt);
     }
   }
-  // A property that never resolves to an id was never routed, so there is
-  // nothing to remove on the platform side.
+  // A property without an id was never routed, so there is nothing to remove.
   if (const auto propertyId = platformPropertyId(propertyName)) {
     remove_(static_cast<int>(viewTag), *propertyId);
   }
