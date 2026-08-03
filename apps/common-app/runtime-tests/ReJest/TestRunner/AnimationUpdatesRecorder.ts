@@ -164,8 +164,8 @@ export class AnimationUpdatesRecorder {
         } else if (global.framesCount === undefined) {
           return;
         }
-        framesSeen.value = global.framesCount!;
-        flag.value = global.framesCount! >= updatesCount - 1;
+        framesSeen.value = global.framesCount;
+        flag.value = global.framesCount >= updatesCount - 1;
       }, remainingWaitTime);
 
       if (flag.value) {
