@@ -174,6 +174,9 @@ export class InlinePropManager implements IInlinePropManager {
   public detachInlineProps() {
     if (this._inlinePropsMapperId) {
       stopMapper(this._inlinePropsMapperId);
+      this._inlinePropsMapperId = null;
     }
+    this._inlinePropsViewDescriptors = null;
+    this._inlineProps = {};
   }
 }
