@@ -272,6 +272,45 @@ describe('CSSTransitionsManager', () => {
         );
       });
 
+      describe('event mask', () => {
+        test('sends the requested mask alongside the transition', () => {
+          manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 0 }, 0b1110000);
+          manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 1 }, 0b1110000);
+
+          expect(runCSSTransition).toHaveBeenLastCalledWith(
+            shadowNodeWrapper,
+            { opacity: { ...DEFAULT_SETTINGS, value: [0, 1] } },
+            0b1110000
+          );
+        });
+
+        test('sends the new mask when only the mask changes', () => {
+          manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 0 }, 0b0010000);
+          manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 1 }, 0b0010000);
+          manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 1 }, 0b1000000);
+
+          expect(runCSSTransition).toHaveBeenLastCalledWith(
+            shadowNodeWrapper,
+            {},
+            0b1000000
+          );
+        });
+
+        test('does not call the native side again for an unchanged mask', () => {
+          manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 0 }, 0b0010000);
+          manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 1 }, 0b0010000);
+          manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 1 }, 0b0010000);
+
+          expect(runCSSTransition).toHaveBeenCalledTimes(1);
+        });
+
+        test('does not send a mask-only update before any transition ran', () => {
+          manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 0 }, 0b0010000);
+
+          expect(runCSSTransition).not.toHaveBeenCalled();
+        });
+      });
+
       describe('detach via null config', () => {
         test('unregisters and reports the detach after a transition has run', () => {
           manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 0 });
