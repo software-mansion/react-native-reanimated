@@ -1,16 +1,13 @@
-import React from 'react';
-
 import {
   describe,
   expect,
   createOrderConstraint,
   createTestValue,
   getWorkletRuntimeFromPool,
-  render,
   test,
   waitForNotifications,
 } from '../../../ReJest/RuntimeTestsApi';
-import { DispatchTestComponent } from './DispatchTestComponent';
+import { dispatchWorklet } from './dispatchWorklet';
 import {
   createSynchronizable,
   RuntimeKind,
@@ -56,21 +53,16 @@ describe('Test mixed order of execution', () => {
       const [notification1, notification2] = ['callback1', 'callback2'];
       const [confirmedOrder, order] = createOrderConstraint();
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            const nameToMethod = getMethodMap();
-            nameToMethod[firstMethodName](() =>
-              order(firstMethodOrder, notification1)
-            );
-            nameToMethod[secondMethodName](() =>
-              order(secondMethodOrder, notification2)
-            );
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        const nameToMethod = getMethodMap();
+        nameToMethod[firstMethodName](() =>
+          order(firstMethodOrder, notification1)
+        );
+        nameToMethod[secondMethodName](() =>
+          order(secondMethodOrder, notification2)
+        );
+      }, runtimeKind);
 
       await waitForNotifications([notification1, notification2]);
       expect(confirmedOrder.value).toBe(2);
@@ -178,24 +170,19 @@ describe('Test mixed order of execution', () => {
       ];
       const [confirmedOrder, order] = createOrderConstraint();
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            const nameToMethod = getMethodMap();
-            nameToMethod[firstMethodName](() =>
-              order(firstMethodOrder, notification1)
-            );
-            nameToMethod[secondMethodName](() =>
-              order(secondMethodOrder, notification2)
-            );
-            nameToMethod[thirdMethodName](() =>
-              order(thirdMethodOrder, notification3)
-            );
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        const nameToMethod = getMethodMap();
+        nameToMethod[firstMethodName](() =>
+          order(firstMethodOrder, notification1)
+        );
+        nameToMethod[secondMethodName](() =>
+          order(secondMethodOrder, notification2)
+        );
+        nameToMethod[thirdMethodName](() =>
+          order(thirdMethodOrder, notification3)
+        );
+      }, runtimeKind);
 
       await waitForNotifications([notification1, notification2, notification3]);
       expect(confirmedOrder.value).toBe(3);
@@ -222,24 +209,19 @@ describe('Test mixed order of execution', () => {
       ];
       const [confirmedOrder, order] = createOrderConstraint();
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            const nameToMethod = getMethodMap();
-            nameToMethod[firstMethodName](() => {
-              nameToMethod[secondMethodName](() =>
-                order(secondMethodOrder, notification2)
-              );
-              order(firstMethodOrder, notification1);
-            });
-            nameToMethod[thirdMethodName](() =>
-              order(thirdMethodOrder, notification3)
-            );
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        const nameToMethod = getMethodMap();
+        nameToMethod[firstMethodName](() => {
+          nameToMethod[secondMethodName](() =>
+            order(secondMethodOrder, notification2)
+          );
+          order(firstMethodOrder, notification1);
+        });
+        nameToMethod[thirdMethodName](() =>
+          order(thirdMethodOrder, notification3)
+        );
+      }, runtimeKind);
 
       await waitForNotifications([notification1, notification2, notification3]);
       expect(confirmedOrder.value).toBe(3);
@@ -260,30 +242,25 @@ describe('Test mixed order of execution', () => {
         createTestValue<boolean>(false);
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            const nameToMethod = getMethodMap();
-            let animationFrameRegisteredAt = 0;
-            nameToMethod[firstMethodName](() => {
-              // The animation frame flush is armed for the polling rate after
-              // its registration. A timer registered past that deadline is
-              // sorted after the flush, so the strict order only holds when
-              // this callback ran in time.
-              const registeredInTime =
-                performance.now() - animationFrameRegisteredAt <
-                ANIMATION_QUEUE_POLLING_RATE;
-              nameToMethod[secondMethodName](() => order(2, notification2));
-              order(1, notification1);
-              setSecondRegisteredInTime(registeredInTime);
-            });
-            animationFrameRegisteredAt = performance.now();
-            requestAnimationFrame(() => order(3, notification3));
-          }}
-          runtimeKind={RuntimeKind.Worker}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        const nameToMethod = getMethodMap();
+        let animationFrameRegisteredAt = 0;
+        nameToMethod[firstMethodName](() => {
+          // The animation frame flush is armed for the polling rate after
+          // its registration. A timer registered past that deadline is
+          // sorted after the flush, so the strict order only holds when
+          // this callback ran in time.
+          const registeredInTime =
+            performance.now() - animationFrameRegisteredAt <
+            ANIMATION_QUEUE_POLLING_RATE;
+          nameToMethod[secondMethodName](() => order(2, notification2));
+          order(1, notification1);
+          setSecondRegisteredInTime(registeredInTime);
+        });
+        animationFrameRegisteredAt = performance.now();
+        requestAnimationFrame(() => order(3, notification3));
+      }, RuntimeKind.Worker);
 
       await waitForNotifications([notification1, notification2, notification3]);
       if (secondRegisteredInTime.value) {
