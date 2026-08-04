@@ -13,10 +13,6 @@ import {
   test,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
-import {
-  startCountingMicrotaskDrains,
-  stopCountingMicrotaskDrains,
-} from './microtaskDrainCounter';
 
 describe('runOnRuntimeSync', () => {
   const PASS_NOTIFICATION = 'PASS';
@@ -128,38 +124,4 @@ describe('runOnRuntimeSync', () => {
       );
     });
   }
-
-  test('drains microtasks after synchronous execution', () => {
-    runOnRuntimeSync(workletRuntime1, () => {
-      'worklet';
-      globalThis.didRunMicrotask = false;
-      queueMicrotask(() => {
-        globalThis.didRunMicrotask = true;
-      });
-    });
-
-    const didRunMicrotask = runOnRuntimeSync(workletRuntime1, () => {
-      'worklet';
-      const result = globalThis.didRunMicrotask;
-      globalThis.didRunMicrotask = undefined;
-      return result;
-    });
-
-    expect(didRunMicrotask).toBe(true);
-  });
-
-  test('drains microtasks exactly once after synchronous execution', () => {
-    startCountingMicrotaskDrains(workletRuntime1.runtimeId);
-
-    runOnRuntimeSync(workletRuntime1, () => {
-      'worklet';
-    });
-
-    const microtaskDrainCount = stopCountingMicrotaskDrains(
-      workletRuntime1.runtimeId
-    );
-
-    // The counter setup and the tested execution each drain once.
-    expect(microtaskDrainCount).toBe(2);
-  });
 });

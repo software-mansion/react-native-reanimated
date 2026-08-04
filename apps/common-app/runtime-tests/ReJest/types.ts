@@ -171,14 +171,16 @@ declare global {
   var originalNotifyAboutProgress:
     | ((tag: number, value: Record<string, unknown>) => void)
     | undefined;
-  var microtaskDrainCount: number | undefined;
   var originalCallMicrotasks: (() => void) | undefined;
   var __callMicrotasks: () => void;
-  var didRunMicrotask: boolean | undefined;
   var scheduleOnRN: typeof import('react-native-worklets').scheduleOnRN;
-  var originalFlushAnimationFrame:
-    | ((frameTimestamp: number) => void)
+  var originalNativeRequestAnimationFrame:
+    | ((callback: (timestamp: number) => void) => void)
     | undefined;
+  var animationUpdatesRecordingStarted: boolean | undefined;
+  var __nativeRequestAnimationFrame: (
+    callback: (timestamp: number) => void
+  ) => void;
   var _getAnimationTimestamp: () => number;
   var __frameTimestamp: number | undefined;
   var _registriesLeakCheck: () => string;
@@ -188,7 +190,6 @@ declare global {
     value: Record<string, unknown>
   ) => void;
   var _obtainProp: (shadowNodeWrapper: unknown, propName: string) => string;
-  var __flushAnimationFrame: (frameTimestamp: number) => void;
   var LayoutAnimationsManager: {
     start: LayoutAnimationStartFunction;
     stop: (tag: number) => void;

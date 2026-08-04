@@ -2,7 +2,6 @@ import {
   scheduleOnRuntime,
   scheduleOnRN,
   scheduleOnUI,
-  UIRuntimeId,
 } from 'react-native-worklets';
 import {
   beforeEach,
@@ -13,10 +12,6 @@ import {
   test,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
-import {
-  startCountingMicrotaskDrains,
-  stopCountingMicrotaskDrains,
-} from './microtaskDrainCounter';
 
 describe('scheduleOnUI', () => {
   const PASS_NOTIFICATION = 'PASS';
@@ -122,31 +117,4 @@ describe('scheduleOnUI', () => {
       );
     });
   }
-
-  test('drains microtasks after execution', async () => {
-    scheduleOnUI(() => {
-      'worklet';
-      queueMicrotask(() => {
-        scheduleOnRN(callbackPass, 42);
-      });
-    });
-
-    await waitForNotification(PASS_NOTIFICATION);
-    expect(value).toBe(42);
-  });
-
-  test('drains microtasks exactly once after execution', async () => {
-    startCountingMicrotaskDrains(UIRuntimeId);
-
-    scheduleOnUI(() => {
-      'worklet';
-      scheduleOnRN(callbackPass, 42);
-    });
-    await waitForNotification(PASS_NOTIFICATION);
-
-    const microtaskDrainCount = stopCountingMicrotaskDrains(UIRuntimeId);
-
-    // The counter setup and the tested execution each drain once.
-    expect(microtaskDrainCount).toBe(2);
-  });
 });

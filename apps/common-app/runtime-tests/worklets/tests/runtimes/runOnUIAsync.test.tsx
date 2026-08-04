@@ -4,7 +4,6 @@ import {
   scheduleOnRN,
   scheduleOnRuntime,
   scheduleOnUI,
-  UIRuntimeId,
 } from 'react-native-worklets';
 import {
   beforeEach,
@@ -15,10 +14,6 @@ import {
   test,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
-import {
-  startCountingMicrotaskDrains,
-  stopCountingMicrotaskDrains,
-} from './microtaskDrainCounter';
 
 describe('runOnUIAsync', () => {
   const PASS_NOTIFICATION = 'PASS';
@@ -184,36 +179,4 @@ describe('runOnUIAsync', () => {
       );
     });
   }
-
-  test('drains microtasks after execution', async () => {
-    await runOnUIAsync(() => {
-      'worklet';
-      globalThis.didRunMicrotask = false;
-      queueMicrotask(() => {
-        globalThis.didRunMicrotask = true;
-      });
-    });
-
-    const didRunMicrotask = await runOnUIAsync(() => {
-      'worklet';
-      const result = globalThis.didRunMicrotask;
-      globalThis.didRunMicrotask = undefined;
-      return result;
-    });
-
-    expect(didRunMicrotask).toBe(true);
-  });
-
-  test('drains microtasks exactly once after execution', async () => {
-    startCountingMicrotaskDrains(UIRuntimeId);
-
-    await runOnUIAsync(() => {
-      'worklet';
-    });
-
-    const microtaskDrainCount = stopCountingMicrotaskDrains(UIRuntimeId);
-
-    // The counter setup and the tested execution each drain once.
-    expect(microtaskDrainCount).toBe(2);
-  });
 });

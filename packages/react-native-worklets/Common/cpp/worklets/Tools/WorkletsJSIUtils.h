@@ -19,6 +19,8 @@ inline void drainMicrotasks(jsi::Runtime &rt) {
       callMicrotasksObject.getFunction(rt).call(rt);
     }
   }
+
+  // Runs only Hermes microtasks, which we don't use - but calling this function makes Hermes clean WeakRefs.
   rt.drainMicrotasks();
 }
 

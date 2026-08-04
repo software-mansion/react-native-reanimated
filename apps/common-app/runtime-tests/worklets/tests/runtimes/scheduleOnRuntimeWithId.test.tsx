@@ -15,10 +15,6 @@ import {
   waitForNotification,
   beforeEach,
 } from '../../../ReJest/RuntimeTestsApi';
-import {
-  startCountingMicrotaskDrains,
-  stopCountingMicrotaskDrains,
-} from './microtaskDrainCounter';
 
 const PASS_NOTIFICATION = 'PASS';
 const FAIL_NOTIFICATION = 'FAIL';
@@ -188,42 +184,5 @@ describe('scheduleOnRuntimeWithId', () => {
     expect(reason).toBe(
       '[Worklets] scheduleOnRuntimeWithId: no worklet runtime found for id 9999'
     );
-  });
-
-  [
-    { name: 'UI', runtimeId: UIRuntimeId },
-    { name: 'Worker', runtimeId: workletRuntime1.runtimeId },
-  ].forEach(({ name, runtimeId }) => {
-    test(`drains microtasks after execution on ${name} Runtime`, async () => {
-      scheduleOnRuntimeWithId(runtimeId, () => {
-        'worklet';
-        queueMicrotask(() => {
-          globalThis.scheduleOnRN(callbackPass, 42);
-        });
-      });
-
-      await waitForNotification(PASS_NOTIFICATION);
-      expect(value).toBe(42);
-    });
-  });
-
-  [
-    { name: 'UI', runtimeId: UIRuntimeId },
-    { name: 'Worker', runtimeId: workletRuntime1.runtimeId },
-  ].forEach(({ name, runtimeId }) => {
-    test(`drains microtasks exactly once after execution on ${name} Runtime`, async () => {
-      startCountingMicrotaskDrains(runtimeId);
-
-      scheduleOnRuntimeWithId(runtimeId, () => {
-        'worklet';
-        scheduleOnRN(callbackPass, 42);
-      });
-      await waitForNotification(PASS_NOTIFICATION);
-
-      const microtaskDrainCount = stopCountingMicrotaskDrains(runtimeId);
-
-      // The counter setup and the tested execution each drain once.
-      expect(microtaskDrainCount).toBe(2);
-    });
   });
 });

@@ -25,13 +25,9 @@ export function setupRequestAnimationFrame(animationQueuePollingRate: number) {
     flushedCallbacksEnd = queuedCallbacksEnd;
     queuedCallbacksBegin = queuedCallbacksEnd;
 
-    const lastCallbackIndex = flushedCallbacks.length - 1;
-    for (let index = 0; index <= lastCallbackIndex; index++) {
-      flushedCallbacks[index](timestamp);
-      if (index < lastCallbackIndex) {
-        // Last microtask drain is performed in C++ to trigger Hermes microtasks drain.
-        globalThis.__callMicrotasks();
-      }
+    for (const callback of flushedCallbacks) {
+      callback(timestamp);
+      globalThis.__callMicrotasks();
     }
 
     flushedCallbacksBegin = flushedCallbacksEnd;

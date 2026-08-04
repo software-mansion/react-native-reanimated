@@ -173,7 +173,7 @@ apply(from = "./fix-prefab.gradle.kts")
 apply(from = "./generate-stub-pch.gradle.kts")
 
 android {
-    compileSdk = safeExtGet("compileSdkVersion", 36) as Int
+    compileSdk = safeExtGet("compileSdkVersion", 37) as Int
 
     namespace = "com.swmansion.worklets"
 
