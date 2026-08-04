@@ -3,7 +3,7 @@ import type React from 'react';
 import { Fragment } from 'react';
 
 import { checkStyleOverwriting, maybeBuild } from '../animationBuilder';
-import { IS_JEST, logger } from '../common';
+import { IS_JEST, isEmptyObject, logger } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
@@ -415,7 +415,10 @@ export default class AnimatedComponent
       }
     }
 
-    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+    if (
+      FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS &&
+      !isEmptyObject(this.state.settledProps)
+    ) {
       // Settled updates arrive as one bag with no style-vs-props origin, so
       // partition them by the keys of attached animated props — only values
       // from `useAnimatedProps` may be passed as top-level props.
