@@ -27,6 +27,8 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 export { Presets } from '../Presets';
 
+const RENDER_MAX_WAIT_TIME_MS = 10000;
+
 export class TestRunner {
   private _currentTestCase: TestCase | null = null;
   private _renderHook: (component: ReactElement<Component> | null) => void =
@@ -135,7 +137,15 @@ export class TestRunner {
     } catch (e) {
       console.log(e);
     }
-    return this._renderLock.waitForUnlock();
+    const stillLocked = await this._renderLock.waitForUnlock(
+      RENDER_MAX_WAIT_TIME_MS
+    );
+    if (stillLocked) {
+      this._renderLock.unlock();
+      throw new Error(
+        `Timed out after ${RENDER_MAX_WAIT_TIME_MS}ms while waiting for the component to render.`
+      );
+    }
   }
 
   public async clearRenderOutput() {
@@ -230,7 +240,12 @@ export class TestRunner {
       }
     }
 
-    this._testSummary.showTestCaseSummary(testCase, testSuite.nestingLevel);
+    const reportCleanupError = (error: unknown) => {
+      const message =
+        error instanceof Error ? (error.stack ?? error.message) : String(error);
+      testCase.errors.push(`[uncaught in test cleanup] ${message}`);
+      console.error(`[uncaught in test cleanup] ${message}`);
+    };
 
     try {
       if (testSuite.afterEach) {
@@ -239,14 +254,23 @@ export class TestRunner {
 
       this._currentTestCase = null;
       await this.render(null);
-      await this._animationRecorder.unmockAnimationTimer();
-      await this._animationRecorder.stopRecordingAnimationUpdates();
     } catch (error) {
-      const message =
-        error instanceof Error ? (error.stack ?? error.message) : String(error);
-      console.error(`[uncaught in test cleanup] ${message}`);
+      reportCleanupError(error);
+    } finally {
       this._currentTestCase = null;
+      try {
+        await this._animationRecorder.unmockAnimationTimer();
+      } catch (error) {
+        reportCleanupError(error);
+      }
+      try {
+        await this._animationRecorder.stopRecordingAnimationUpdates();
+      } catch (error) {
+        reportCleanupError(error);
+      }
     }
+
+    this._testSummary.showTestCaseSummary(testCase, testSuite.nestingLevel);
   }
 
   public expect(currentValue: TestValue): Matchers {
