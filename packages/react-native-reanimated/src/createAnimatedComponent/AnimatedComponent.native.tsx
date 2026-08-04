@@ -416,11 +416,25 @@ export default class AnimatedComponent
     }
 
     if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+      // Settled updates arrive as one bag with no style-vs-props origin, so
+      // partition them by the keys of attached animated props — only values
+      // from `useAnimatedProps` may be passed as top-level props.
+      const animatedPropsKeys = new Set(
+        this._animatedProps.flatMap((animatedProp) =>
+          Object.keys(animatedProp.initial?.value ?? {})
+        )
+      );
+      const settledProps: StyleProps = {};
+      const settledStyle: StyleProps = {};
+      for (const key in this.state.settledProps) {
+        (animatedPropsKeys.has(key) ? settledProps : settledStyle)[key] =
+          this.state.settledProps[key];
+      }
       return super.render({
         nativeID,
         ...filteredProps,
-        ...this.state.settledProps,
-        style: [...flattenArray(filteredProps.style), this.state.settledProps],
+        ...settledProps,
+        style: [...flattenArray(filteredProps.style), settledStyle],
         ...jestProps,
       });
     }
