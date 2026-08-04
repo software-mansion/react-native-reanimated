@@ -1,16 +1,13 @@
-import React from 'react';
-
 import {
   describe,
   expect,
   notify,
-  render,
   test,
   createTestValue,
   waitForNotifications,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
-import { DispatchTestComponent } from './DispatchTestComponent';
+import { dispatchWorklet } from './dispatchWorklet';
 import { RuntimeKind } from 'react-native-worklets';
 
 describe('Test clearInterval', () => {
@@ -21,19 +18,14 @@ describe('Test clearInterval', () => {
       const notification = 'callback';
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            clearInterval(2137);
-            const handle = setInterval(() => {
-              clearInterval(handle);
-              notify(notification);
-            });
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        clearInterval(2137);
+        const handle = setInterval(() => {
+          clearInterval(handle);
+          notify(notification);
+        });
+      }, runtimeKind);
 
       // Assert
       await waitForNotification(notification);
@@ -48,23 +40,18 @@ describe('Test clearInterval', () => {
       const [flag, setFlag] = createTestValue('ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            const testHandle = setInterval(() => {
-              setFlag('not_ok');
-              clearInterval(testHandle);
-            }) as unknown as number;
-            const handle = setInterval(() => {
-              clearInterval(handle);
-              notify(notification);
-            });
-            clearInterval(testHandle);
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        const testHandle = setInterval(() => {
+          setFlag('not_ok');
+          clearInterval(testHandle);
+        }) as unknown as number;
+        const handle = setInterval(() => {
+          clearInterval(handle);
+          notify(notification);
+        });
+        clearInterval(testHandle);
+      }, runtimeKind);
 
       // Assert
       await waitForNotification(notification);
@@ -80,28 +67,23 @@ describe('Test clearInterval', () => {
       const [flag, setFlag] = createTestValue('ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            let testHandle = 0;
-            const handle1 = setInterval(() => {
-              clearInterval(testHandle);
-              clearInterval(handle1);
-              notify(notification1);
-            }) as unknown as number;
-            testHandle = setInterval(() => {
-              setFlag('not_ok');
-              clearInterval(testHandle);
-            }) as unknown as number;
-            const handle2 = setInterval(() => {
-              clearInterval(handle2);
-              notify(notification2);
-            });
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        let testHandle = 0;
+        const handle1 = setInterval(() => {
+          clearInterval(testHandle);
+          clearInterval(handle1);
+          notify(notification1);
+        }) as unknown as number;
+        testHandle = setInterval(() => {
+          setFlag('not_ok');
+          clearInterval(testHandle);
+        }) as unknown as number;
+        const handle2 = setInterval(() => {
+          clearInterval(handle2);
+          notify(notification2);
+        });
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);
@@ -121,32 +103,27 @@ describe('Test clearInterval', () => {
       const [flag, setFlag] = createTestValue('ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            let testHandle = 0;
-            const handle1 = setInterval(() => {
-              testHandle = setInterval(() => {
-                setFlag('not_ok');
-                clearInterval(testHandle);
-              }) as unknown as number;
-              clearInterval(handle1);
-              notify(notification1);
-            });
-            const handle2 = setInterval(() => {
-              clearInterval(testHandle);
-              const handle3 = setInterval(() => {
-                clearInterval(handle3);
-                notify(notification3);
-              });
-              clearInterval(handle2);
-              notify(notification2);
-            });
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        let testHandle = 0;
+        const handle1 = setInterval(() => {
+          testHandle = setInterval(() => {
+            setFlag('not_ok');
+            clearInterval(testHandle);
+          }) as unknown as number;
+          clearInterval(handle1);
+          notify(notification1);
+        });
+        const handle2 = setInterval(() => {
+          clearInterval(testHandle);
+          const handle3 = setInterval(() => {
+            clearInterval(handle3);
+            notify(notification3);
+          });
+          clearInterval(handle2);
+          notify(notification2);
+        });
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2, notification3]);
