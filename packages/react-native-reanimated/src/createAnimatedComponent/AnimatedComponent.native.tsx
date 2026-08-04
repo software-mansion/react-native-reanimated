@@ -151,6 +151,12 @@ export default class AnimatedComponent
     // partition them by the keys of attached animated props — only values
     // from `useAnimatedProps` may be passed as top-level props, all the
     // other ones are style-only.
+    if (this._animatedProps.length === 0) {
+      this.setState((state) => ({
+        settledStyle: { ...state.settledStyle, ...settledUpdates },
+      }));
+      return;
+    }
     const animatedPropsKeys = new Set(
       this._animatedProps.flatMap((animatedProp) =>
         Object.keys(animatedProp.initial?.value ?? {})
