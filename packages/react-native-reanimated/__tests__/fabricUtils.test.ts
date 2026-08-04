@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import type { InternalHostInstance } from '../src/commonTypes';
 import type * as FabricUtils from '../src/fabricUtils.native';
 
@@ -5,6 +6,14 @@ const REACT_FABRIC_PUBLIC_INSTANCE_PATH =
   'react-native/Libraries/ReactNative/ReactFabricPublicInstance/ReactFabricPublicInstance';
 
 const FABRIC_UTILS_PATH = '../src/fabricUtils.native';
+
+jest.mock('react-native/Libraries/Renderer/shims/ReactFabric', () => ({
+  findHostInstance_DEPRECATED: jest.fn(),
+}));
+
+function requireReactFabric(): { findHostInstance_DEPRECATED: jest.Mock } {
+  return jest.requireMock('react-native/Libraries/Renderer/shims/ReactFabric');
+}
 
 function makeHostInstance(node: unknown) {
   return { __internalInstanceHandle: { stateNode: { node } } };
@@ -48,6 +57,23 @@ describe('getShadowNodeWrapperFromRef', () => {
 
       const ref = {
         getNativeScrollRef: () => hostInstance,
+      } as unknown as InternalHostInstance;
+
+      expect(getShadowNodeWrapperFromRef(ref)).toBe(node);
+      expect(getNodeFromPublicInstance).toHaveBeenCalledWith(hostInstance);
+    });
+
+    test('falls back to _reactInternals when getNativeScrollRef returns null', () => {
+      const node = { shadowNode: true };
+      const hostInstance = makeHostInstance(node);
+      getNodeFromPublicInstance.mockReturnValue(node);
+      requireReactFabric().findHostInstance_DEPRECATED.mockReturnValue(
+        hostInstance
+      );
+
+      const ref = {
+        getNativeScrollRef: () => null,
+        _reactInternals: {},
       } as unknown as InternalHostInstance;
 
       expect(getShadowNodeWrapperFromRef(ref)).toBe(node);

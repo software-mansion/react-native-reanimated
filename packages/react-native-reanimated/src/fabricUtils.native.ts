@@ -43,8 +43,9 @@ function resolvePublicInstance(
   if (ref?.__internalInstanceHandle) {
     return ref as HostInstance;
   }
-  if (ref.getNativeScrollRef) {
-    return ref.getNativeScrollRef() as HostInstance;
+  const nativeScrollRef = ref.getNativeScrollRef?.();
+  if (nativeScrollRef) {
+    return nativeScrollRef as HostInstance;
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if ((ref as any)._reactInternals) {
