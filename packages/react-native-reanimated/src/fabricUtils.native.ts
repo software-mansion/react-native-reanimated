@@ -8,7 +8,13 @@ type GetNodeFromPublicInstance = (
   publicInstance: HostInstance
 ) => ShadowNodeWrapper | null | undefined;
 
-let getNodeFromPublicInstance: GetNodeFromPublicInstance | undefined;
+function getNodeFromPublicInstanceFallback(publicInstance: HostInstance) {
+  return (
+    publicInstance?.__internalInstanceHandle?.stateNode as
+      | { node?: ShadowNodeWrapper }
+      | undefined
+  )?.node;
+}
 
 function resolveGetNodeFromPublicInstance(): GetNodeFromPublicInstance {
   try {
@@ -25,13 +31,7 @@ function resolveGetNodeFromPublicInstance(): GetNodeFromPublicInstance {
   }
 }
 
-function getNodeFromPublicInstanceFallback(publicInstance: HostInstance) {
-  return (
-    publicInstance?.__internalInstanceHandle?.stateNode as
-      | { node?: ShadowNodeWrapper }
-      | undefined
-  )?.node;
-}
+const getNodeFromPublicInstance = resolveGetNodeFromPublicInstance();
 
 function resolvePublicInstance(
   ref: InternalHostInstance,
@@ -58,8 +58,6 @@ export function getShadowNodeWrapperFromRef(
   ref: InternalHostInstance,
   hostInstance?: HostInstance
 ): ShadowNodeWrapper {
-  getNodeFromPublicInstance ??= resolveGetNodeFromPublicInstance();
-
   const publicInstance = resolvePublicInstance(ref, hostInstance);
   const shadowNodeWrapper = getNodeFromPublicInstance(publicInstance);
 

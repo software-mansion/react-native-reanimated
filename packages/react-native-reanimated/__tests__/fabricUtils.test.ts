@@ -98,6 +98,32 @@ describe('getShadowNodeWrapperFromRef', () => {
     });
   });
 
+  describe('when resolving against the installed React Native', () => {
+    test('uses the React Native implementation rather than the fallback', () => {
+      jest.resetModules();
+      jest.dontMock(REACT_FABRIC_PUBLIC_INSTANCE_PATH);
+
+      const ReactFabricPublicInstance: {
+        getNodeFromPublicInstance: (publicInstance: unknown) => unknown;
+        // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+      } = require(REACT_FABRIC_PUBLIC_INSTANCE_PATH);
+
+      const node = { shadowNode: true };
+      const spy = jest
+        .spyOn(ReactFabricPublicInstance, 'getNodeFromPublicInstance')
+        .mockReturnValue(node);
+
+      const ref = makeHostInstance({
+        unreachableThroughReactNative: true,
+      }) as unknown as InternalHostInstance;
+
+      expect(requireFabricUtils().getShadowNodeWrapperFromRef(ref)).toBe(node);
+      expect(spy).toHaveBeenCalledWith(ref);
+
+      spy.mockRestore();
+    });
+  });
+
   describe('when React Native does not expose getNodeFromPublicInstance', () => {
     test('falls back to reading the internal instance handle', () => {
       jest.resetModules();

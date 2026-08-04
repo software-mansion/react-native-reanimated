@@ -5,7 +5,9 @@ import type { InternalHostInstance } from '../commonTypes';
 import type { IAnimatedComponentInternalBase } from '../createAnimatedComponent/commonTypes';
 import type { HostInstance } from './types';
 
-function findHostInstanceFastPath(maybeNativeRef: HostInstance | undefined) {
+function findHostInstanceFastPath(
+  maybeNativeRef: HostInstance | null | undefined
+) {
   if (!maybeNativeRef) {
     return undefined;
   }
@@ -35,14 +37,15 @@ function findHostInstanceFromScrollableRef(
     return undefined;
   }
 
-  const nativeScrollRef = maybeScrollableRef.getNativeScrollRef?.();
-  const hostInstance = findHostInstanceFastPath(nativeScrollRef ?? undefined);
+  const hostInstance = findHostInstanceFastPath(
+    maybeScrollableRef.getNativeScrollRef?.()
+  );
   if (hostInstance !== undefined) {
     return hostInstance;
   }
 
   const scrollableNode = maybeScrollableRef.getScrollableNode?.();
-  if (typeof scrollableNode !== 'object' || scrollableNode === null) {
+  if (typeof scrollableNode === 'number') {
     return undefined;
   }
   return findHostInstanceFastPath(scrollableNode);
