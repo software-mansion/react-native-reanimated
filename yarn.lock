@@ -4613,7 +4613,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@expo/json-file@npm:^10.0.7, @expo/json-file@npm:^10.0.8, @expo/json-file@npm:^10.2.0":
+"@expo/json-file@npm:^10.0.7, @expo/json-file@npm:^10.0.8":
   version: 10.2.0
   resolution: "@expo/json-file@npm:10.2.0"
   dependencies:
@@ -4898,16 +4898,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@expo/osascript@npm:^2.3.7":
-  version: 2.6.0
-  resolution: "@expo/osascript@npm:2.6.0"
-  dependencies:
-    "@expo/spawn-async": "npm:^1.8.0"
-  checksum: 10/eabc2b49cf34138c40b0cc31be686d083d96ed7bbf38f9eba197076182345ac9e88b3d627ba1ebf6581873294c61bfe788882366c74f168694f820315f3b51e6
-  languageName: node
-  linkType: hard
-
-"@expo/osascript@npm:^2.7.1":
+"@expo/osascript@npm:^2.3.7, @expo/osascript@npm:^2.7.1":
   version: 2.7.1
   resolution: "@expo/osascript@npm:2.7.1"
   dependencies:
@@ -4916,7 +4907,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@expo/package-manager@npm:^1.13.1":
+"@expo/package-manager@npm:^1.13.1, @expo/package-manager@npm:^1.9.8":
   version: 1.13.1
   resolution: "@expo/package-manager@npm:1.13.1"
   dependencies:
@@ -4927,20 +4918,6 @@ __metadata:
     ora: "npm:^3.4.0"
     resolve-workspace-root: "npm:^2.0.0"
   checksum: 10/31b1282e27f54c81551c12e3db42f82cdd68456222d3941b10ef2c06916344cfe391181bca91abf4fafe3da062227ebdb0b2194bbc62264f4117e065ef83f999
-  languageName: node
-  linkType: hard
-
-"@expo/package-manager@npm:^1.9.8":
-  version: 1.12.1
-  resolution: "@expo/package-manager@npm:1.12.1"
-  dependencies:
-    "@expo/json-file": "npm:^10.2.0"
-    "@expo/spawn-async": "npm:^1.8.0"
-    chalk: "npm:^4.0.0"
-    npm-package-arg: "npm:^11.0.0"
-    ora: "npm:^3.4.0"
-    resolve-workspace-root: "npm:^2.0.0"
-  checksum: 10/a0e49005bba0e5450862eea9f5cd6dfae36e93c39b8d581a62ed2d3acb2e162065a451e61774d7ddaa8d5302e36680e01ce5f0573fb6c4f32d4119525aa1baff
   languageName: node
   linkType: hard
 
