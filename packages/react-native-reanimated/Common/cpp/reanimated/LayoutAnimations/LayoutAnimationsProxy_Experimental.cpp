@@ -417,10 +417,6 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
       filteredMutations.push_back(
           ShadowViewMutation::InsertMutation(parent->current.tag, current, static_cast<int>(parent->children.size())));
       parent->children.push_back(node);
-      if (node->state == UNDEFINED) {
-        node->state = WAITING;
-        lightNodes_[node->current.tag] = node;
-      }
     } else {
       maybeCancelAnimation(node->current.tag);
       filteredMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
@@ -611,6 +607,13 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
     startExitingAnimation(node);
   } else {
     layoutAnimationsManager_->clearLayoutAnimationConfig(node->current.tag);
+    if (hasAnimatedChildren) {
+      // This node is also withheld even though only one of its descendants is
+      // animating. Track it so contradicted removals can be reconciled and the
+      // node can be dropped after its last animated child is deleted.
+      node->state = WAITING;
+      lightNodes_[node->current.tag] = node;
+    }
   }
 
   return wantAnimateExit;
