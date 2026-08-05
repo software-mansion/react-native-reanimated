@@ -2,7 +2,7 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import type React from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 import { Dimensions, Platform, StyleSheet, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -61,25 +61,13 @@ function ScrollableView({
 
   const startY = useSharedValue(0);
 
-  const gesture = Gesture.Pan()
-    .onBegin(() => {
+  const gesture = usePanGesture({
+    onBegin: () => {
       const currentTranslateY = translateY.value;
       startY.value = currentTranslateY;
       translateY.value = currentTranslateY; // for stop animation (assigning to a shared value stops running animation)
-    })
-    .onUpdate((event) => {
-      const nextTranslate = startY.value + event.translationY;
-
-      if (nextTranslate < loverBound.value) {
-        translateY.value =
-          loverBound.value + friction(nextTranslate - loverBound.value);
-      } else if (nextTranslate > 0) {
-        translateY.value = friction(nextTranslate);
-      } else {
-        translateY.value = nextTranslate;
-      }
-    })
-    .onEnd((event) => {
+    },
+    onDeactivate: (event) => {
       if (translateY.value < loverBound.value || translateY.value > 0) {
         const toValue = translateY.value > 0 ? 0 : loverBound.value;
 
@@ -93,7 +81,20 @@ function ScrollableView({
           velocity: event.velocityY,
         });
       }
-    });
+    },
+    onUpdate: (event) => {
+      const nextTranslate = startY.value + event.translationY;
+
+      if (nextTranslate < loverBound.value) {
+        translateY.value =
+          loverBound.value + friction(nextTranslate - loverBound.value);
+      } else if (nextTranslate > 0) {
+        translateY.value = friction(nextTranslate);
+      } else {
+        translateY.value = nextTranslate;
+      }
+    },
+  });
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
