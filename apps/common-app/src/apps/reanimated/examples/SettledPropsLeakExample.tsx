@@ -31,7 +31,13 @@ export default function SettledPropsLeakExample() {
     sv.value = withTiming(1);
   }, [sv]);
 
-  const text = useDerivedValue(() => `${Math.round(sv.value * 100)}`);
+  const text = useDerivedValue<string | undefined>(
+    () => `${Math.round(sv.value * 100)}`
+  );
+
+  const backgroundColor = useDerivedValue(() =>
+    interpolateColor(sv.value, [0, 1], ['red', 'lime'])
+  );
 
   const animatedStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
@@ -48,9 +54,17 @@ export default function SettledPropsLeakExample() {
         The box below animates from red to lime and from 0 to 100. Once the
         animations settle, the input should stay lime and display 100.
       </Text>
+      <Text>useAnimatedStyle + useAnimatedProps</Text>
       <AnimatedBox
         style={[styles.box, animatedStyle]}
         animatedProps={animatedProps}
+      />
+      <Text>inline styles + inline props</Text>
+      <AnimatedBox
+        style={[styles.box, { backgroundColor }]}
+        // @ts-expect-error `text` is the native prop backing TextInput's value
+        text={text}
+        defaultValue={text}
       />
     </View>
   );
