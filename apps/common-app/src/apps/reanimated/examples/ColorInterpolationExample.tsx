@@ -67,7 +67,7 @@ function ColorInterpolation({
     return {
       backgroundColor: interpolateFunction(color1, color2, progress.value),
     };
-  }, [color1, color2]);
+  });
 
   return (
     <View>

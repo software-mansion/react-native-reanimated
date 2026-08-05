@@ -25,37 +25,47 @@ export default function SynchronousPropsExample() {
     sv.value = withRepeat(withTiming(1, { duration: 500 }), -1, true);
   }, [sv]);
 
-  const tenSv = useDerivedValue(() => sv.value * 10, [sv]);
+  const tenSv = useDerivedValue(() => sv.value * 10);
 
-  const fiftySv = useDerivedValue(() => sv.value * 50, [sv]);
+  const fiftySv = useDerivedValue(() => sv.value * 50);
 
-  const percentSv = useDerivedValue(() => `${sv.value * 100}%`, [sv]);
+  const percentSv = useDerivedValue(() => `${sv.value * 100}%`);
 
-  const degSv = useDerivedValue(() => `${sv.value * 45}deg`, [sv]);
+  const degSv = useDerivedValue(() => `${sv.value * 45}deg`);
 
-  const radSv = useDerivedValue(() => `${(sv.value * Math.PI) / 4}rad`, [sv]);
+  const radSv = useDerivedValue(() => `${(sv.value * Math.PI) / 4}rad`);
 
-  const zIndexSv = useDerivedValue(() => Math.round(sv.value * 10), [sv]);
+  const zIndexSv = useDerivedValue(() => Math.round(sv.value * 10));
 
-  const colorSv = useDerivedValue(
-    () => interpolateColor(sv.value, [0, 1], ['red', 'blue']),
-    [sv]
+  const colorSv = useDerivedValue(() =>
+    interpolateColor(sv.value, [0, 1], ['red', 'blue'])
   );
 
-  const shadowOffsetSv = useDerivedValue(
-    () => ({ width: tenSv.value, height: tenSv.value }),
-    [sv]
-  );
+  const shadowOffsetSv = useDerivedValue(() => ({
+    width: tenSv.value,
+    height: tenSv.value,
+  }));
 
-  const perspectiveSv = useDerivedValue(
-    () => Math.pow(2, sv.value * 3 + 4.5),
-    [sv]
-  );
+  const perspectiveSv = useDerivedValue(() => Math.pow(2, sv.value * 3 + 4.5));
 
-  const matrixSv = useDerivedValue(
-    () => [sv.value * 2, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 10, 1],
-    [sv]
-  );
+  const matrixSv = useDerivedValue(() => [
+    sv.value * 2,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    10,
+    1,
+  ]);
 
   const placeholderTextColorAnimatedProps = useAnimatedProps(() => ({
     placeholderTextColor: colorSv.value,
