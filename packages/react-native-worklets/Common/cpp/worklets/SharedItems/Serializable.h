@@ -6,11 +6,12 @@
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
+#include <atomic>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <utility>
-#include <variant>
 #include <vector>
 
 using namespace facebook;
@@ -30,17 +31,25 @@ inline void freeWithoutCallingDestructor(std::unique_ptr<jsi::Value> &value) {
 }
 
 inline void cleanupRuntimeAware(jsi::Runtime *rt, std::unique_ptr<jsi::Value> &value) {
-  if (rt != nullptr && !WorkletRuntimeRegistry::isRuntimeAlive(rt)) {
-    freeWithoutCallingDestructor(value);
+  if (value == nullptr || rt == nullptr) {
+    return;
   }
+  WorkletRuntimeRegistry::runWhileLocked(rt, [&value](bool isAlive) {
+    if (isAlive) {
+      value.reset();
+    } else {
+      freeWithoutCallingDestructor(value);
+    }
+  });
 }
 
 template <typename BaseClass>
 class RetainingSerializable : virtual public BaseClass {
  private:
   jsi::Runtime *primaryRuntime_;
-  jsi::Runtime *secondaryRuntime_;
   std::unique_ptr<jsi::Value> secondaryValue_;
+  std::atomic<jsi::Runtime *> secondaryRuntime_{nullptr};
+  std::mutex secondaryCacheMutex_;
 
  public:
   template <typename... Args>
@@ -49,28 +58,24 @@ class RetainingSerializable : virtual public BaseClass {
 
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     if (&rt == primaryRuntime_) {
-      // TODO: it is suboptimal to generate new object every time getJS is
-      // called on host runtime – the objects we are generating already exists
-      // and we should possibly just grab a hold of such object and use it here
-      // instead of creating a new JS representation. As far as I understand the
-      // only case where it can be realistically called this way is when a
-      // shared value is created and then accessed on the same runtime
       return BaseClass::toJSValue(rt);
     }
-    if (secondaryValue_ == nullptr) {
-      auto value = BaseClass::toJSValue(rt);
-      secondaryValue_ = std::make_unique<jsi::Value>(rt, value);
-      secondaryRuntime_ = &rt;
-      return value;
-    }
-    if (&rt == secondaryRuntime_) {
+    if (secondaryRuntime_.load(std::memory_order_acquire) == &rt) {
       return jsi::Value(rt, *secondaryValue_);
     }
-    return BaseClass::toJSValue(rt);
+    auto value = BaseClass::toJSValue(rt);
+    {
+      std::lock_guard<std::mutex> lock(secondaryCacheMutex_);
+      if (secondaryRuntime_.load(std::memory_order_relaxed) == nullptr) {
+        secondaryValue_ = std::make_unique<jsi::Value>(rt, value);
+        secondaryRuntime_.store(&rt, std::memory_order_release);
+      }
+    }
+    return value;
   }
 
   ~RetainingSerializable() override {
-    cleanupRuntimeAware(secondaryRuntime_, secondaryValue_);
+    cleanupRuntimeAware(secondaryRuntime_.load(std::memory_order_relaxed), secondaryValue_);
   }
 };
 
@@ -245,16 +250,27 @@ class SerializableHostFunction : public Serializable {
   const unsigned int paramCount_;
 };
 
+struct ArrayBufferMetadata {
+  std::string typeName;
+  size_t byteOffset;
+  size_t length;
+};
+
 class SerializableArrayBuffer : public Serializable {
  public:
-  SerializableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer)
+  SerializableArrayBuffer(
+      jsi::Runtime &rt,
+      const jsi::ArrayBuffer &arrayBuffer,
+      std::optional<ArrayBufferMetadata> metadata = std::nullopt)
       : Serializable(ValueType::ArrayBufferType),
+        metadata_(std::move(metadata)),
         data_(arrayBuffer.data(rt), arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
-  const std::vector<uint8_t> data_;
+  std::optional<ArrayBufferMetadata> metadata_;
+  std::vector<uint8_t> data_;
 };
 
 class SerializableWorklet : public SerializableObject {
@@ -276,71 +292,6 @@ class SerializableImport : public Serializable {
  protected:
   const double source_;
   const std::string imported_;
-};
-
-/** Forward declaration */
-class RuntimeManager;
-
-class SerializableRemoteFunction : public Serializable,
-                                   public std::enable_shared_from_this<SerializableRemoteFunction> {
- private:
-  struct RNRuntimeData {
-    const int remoteId;
-    const std::shared_ptr<JSScheduler> jsScheduler;
-  };
-
-  struct WorkletRuntimeData {
-    std::unique_ptr<jsi::Value> function;
-  };
-
-  jsi::Runtime *hostRuntime_;
-  const RuntimeData::RuntimeId hostRuntimeId_;
-  std::variant<RNRuntimeData, WorkletRuntimeData> runtimeData_;
-  const std::string name_;
-
- public:
-  /** Creates RN Runtime Remote Function. */
-  SerializableRemoteFunction(
-      jsi::Runtime &rnRuntime,
-      const std::string &name,
-      const int remoteId,
-      const std::shared_ptr<JSScheduler> &jsScheduler)
-      : Serializable(ValueType::RemoteFunctionType),
-        hostRuntime_(&rnRuntime),
-        hostRuntimeId_(RuntimeData::rnRuntimeId),
-        runtimeData_(RNRuntimeData{.remoteId = remoteId, .jsScheduler = jsScheduler}),
-        name_(name) {}
-
-  /** Creates Worklet Runtime Remote Function. */
-  SerializableRemoteFunction(
-      jsi::Runtime &workletRuntime,
-      const std::string &name,
-      jsi::Function &&function,
-      RuntimeData::RuntimeId hostRuntimeId)
-      : Serializable(ValueType::RemoteFunctionType),
-        hostRuntime_(&workletRuntime),
-        hostRuntimeId_(hostRuntimeId),
-        runtimeData_(WorkletRuntimeData{.function = std::make_unique<jsi::Value>(workletRuntime, std::move(function))}),
-        name_(name) {}
-
-  ~SerializableRemoteFunction() override;
-
-  SerializableRemoteFunction(const SerializableRemoteFunction &) = delete;
-  SerializableRemoteFunction &operator=(const SerializableRemoteFunction &) = delete;
-
-  void resolveOrRejectPromise(
-      const std::shared_ptr<Serializable> &resolveValue,
-      const std::shared_ptr<RuntimeManager> &runtimeManager);
-
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
-
-  [[nodiscard]] bool isHostedOnRNRuntime() const noexcept {
-    return std::holds_alternative<RNRuntimeData>(runtimeData_);
-  }
-
-  [[nodiscard]] RuntimeData::RuntimeId getHostRuntimeId() const {
-    return hostRuntimeId_;
-  }
 };
 
 class SerializableInitializer : public Serializable {

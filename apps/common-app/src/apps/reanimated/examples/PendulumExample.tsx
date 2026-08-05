@@ -7,14 +7,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import type {
-  GestureStateManager,
-  GestureTouchEvent,
-} from 'react-native-gesture-handler';
+import type { GestureTouchEvent } from 'react-native-gesture-handler';
 import {
-  Gesture,
   GestureDetector,
   GestureHandlerRootView,
+  GestureStateManager,
+  usePanGesture,
 } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
@@ -85,22 +83,23 @@ export default function SpringExample() {
     };
   });
 
-  const gesture = Gesture.Pan()
-    .manualActivation(true)
-    .onChange((e) => {
+  const gesture = usePanGesture({
+    manualActivation: true,
+    onFinalize: () => {
+      pendulumSwing.value = withSpring(0, config);
+    },
+    onTouchesMove: (e: GestureTouchEvent) => {
+      GestureStateManager.activate(e.handlerTag);
+    },
+    onUpdate: (e) => {
       offset.value = {
         x: e.x,
         y: e.y,
       };
       pendulumSwing.value =
         (Math.atan2(-offset.value.x + 140 / 2, offset.value.y) * 180) / Math.PI;
-    })
-    .onFinalize(() => {
-      pendulumSwing.value = withSpring(0, config);
-    })
-    .onTouchesMove((e: GestureTouchEvent, state: GestureStateManager) => {
-      state.activate();
-    });
+    },
+  });
 
   const fields: Array<FieldDefinition> = [
     { fieldName: 'Mass', value: mass, setValue: setMass },

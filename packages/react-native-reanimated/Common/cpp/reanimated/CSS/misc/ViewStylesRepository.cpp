@@ -1,4 +1,5 @@
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
+#include <reanimated/Tools/FeatureFlags.h>
 
 #include <memory>
 #include <string>
@@ -13,13 +14,11 @@ ViewStylesRepository::ViewStylesRepository(
 jsi::Value ViewStylesRepository::getNodeProp(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::string &propName) {
-  int tag = shadowNode->getTag();
-
-  auto &cachedNode = shadowNodeCache_[tag];
-  updateCacheIfNeeded(cachedNode, shadowNode);
+  const auto resolvedNode = getNewestNode(shadowNode);
+  const auto *layoutableShadowNode = dynamic_cast<const LayoutableShadowNode *>(resolvedNode.get());
 
   if (propName == "width" || propName == "height" || propName == "top" || propName == "left") {
-    const auto &layoutMetrics = cachedNode.layoutMetrics;
+    const auto layoutMetrics = layoutableShadowNode ? layoutableShadowNode->layoutMetrics_ : LayoutMetrics{};
 
     if (propName == "width") {
       return {layoutMetrics.frame.size.width};
@@ -31,7 +30,13 @@ jsi::Value ViewStylesRepository::getNodeProp(
       return {layoutMetrics.frame.origin.x};
     }
   } else {
-    const auto &viewProps = cachedNode.viewProps;
+    if (!layoutableShadowNode) {
+      return jsi::Value::undefined();
+    }
+    const auto viewProps = std::static_pointer_cast<const ViewProps>(resolvedNode->getProps());
+    if (!viewProps) {
+      return jsi::Value::undefined();
+    }
 
     if (propName == "opacity") {
       return {viewProps->opacity};
@@ -48,21 +53,67 @@ jsi::Value ViewStylesRepository::getNodeProp(
 jsi::Value ViewStylesRepository::getParentNodeProp(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::string &propName) {
-  const auto surfaceId = shadowNode->getSurfaceId();
-  const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
-
-  std::shared_ptr<const ShadowNode> parentNode = nullptr;
-
-  shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
-    auto currentRevision = shadowTree.getCurrentRevision();
-    parentNode = dom::getParentNode(currentRevision.rootShadowNode, *shadowNode);
-  });
+  const auto parentNode = getParentNode(shadowNode);
 
   if (!parentNode) {
     return jsi::Value::undefined();
   }
 
   return getNodeProp(parentNode, propName);
+}
+
+std::shared_ptr<const ShadowNode> ViewStylesRepository::getNewestNode(
+    const std::shared_ptr<const ShadowNode> &shadowNode) const {
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    // Backend mode has no commit hook (it returns before taking the updates-registry
+    // lock), so reading the live tree here cannot deadlock and needs no snapshot.
+    const auto newestNode = uiManager_->getNewestCloneOfShadowNode(*shadowNode);
+    return newestNode ? newestNode : shadowNode;
+  }
+
+  // Resolve shadowNode against the last mounted root without the ShadowTree lock (the
+  // deadlock) that getNewestCloneOfShadowNode takes, falling back to the passed node.
+  // Mirrors RN's getShadowNodeInSubtree:
+  // https://github.com/facebook/react-native/blob/v0.86.0-rc.3/packages/react-native/ReactCommon/react/renderer/uimanager/UIManager.cpp#L339
+  const auto it = lastMountedRootBySurface_.find(shadowNode->getSurfaceId());
+  if (it == lastMountedRootBySurface_.end()) {
+    return shadowNode;
+  }
+  const auto &root = it->second;
+
+  if (ShadowNode::sameFamily(*root, *shadowNode)) {
+    return root;
+  }
+
+  const auto ancestors = shadowNode->getFamily().getAncestors(*root);
+  if (ancestors.empty()) {
+    return shadowNode;
+  }
+
+  const auto &deepest = ancestors.back();
+  return deepest.first.get().getChildren().at(deepest.second);
+}
+
+std::shared_ptr<const ShadowNode> ViewStylesRepository::getParentNode(
+    const std::shared_ptr<const ShadowNode> &shadowNode) const {
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    // Backend mode resolves against the live tree (see getNewestNode).
+    std::shared_ptr<const ShadowNode> parentNode = nullptr;
+    uiManager_->getShadowTreeRegistry().visit(shadowNode->getSurfaceId(), [&](const ShadowTree &shadowTree) {
+      parentNode = dom::getParentNode(shadowTree.getCurrentRevision().rootShadowNode, *shadowNode);
+    });
+    return parentNode;
+  }
+
+  const auto it = lastMountedRootBySurface_.find(shadowNode->getSurfaceId());
+  if (it == lastMountedRootBySurface_.end()) {
+    return nullptr;
+  }
+  return dom::getParentNode(it->second, *shadowNode);
+}
+
+void ViewStylesRepository::setLastMountedRoot(const RootShadowNode::Shared &rootShadowNode) {
+  lastMountedRootBySurface_[rootShadowNode->getSurfaceId()] = rootShadowNode;
 }
 
 folly::dynamic ViewStylesRepository::getStyleProp(const Tag tag, const PropertyPath &propertyPath) {
@@ -72,30 +123,6 @@ folly::dynamic ViewStylesRepository::getStyleProp(const Tag tag, const PropertyP
   }
 
   return getPropertyValue(staticPropsRegistry_->get(tag), propertyPath);
-}
-
-void ViewStylesRepository::clearNodesCache() {
-  shadowNodeCache_.clear();
-}
-
-void ViewStylesRepository::updateCacheIfNeeded(
-    CachedShadowNode &cachedNode,
-    const std::shared_ptr<const ShadowNode> &shadowNode) {
-  auto newestCloneOfShadowNode = uiManager_->getNewestCloneOfShadowNode(*shadowNode);
-
-  // Check if newestCloneOfShadowNode is valid (is already mounted / not
-  // yet unmounted)
-  if (!newestCloneOfShadowNode) {
-    return;
-  }
-
-  auto layoutableShadowNode = dynamic_cast<const LayoutableShadowNode *>(newestCloneOfShadowNode.get());
-  if (!layoutableShadowNode) {
-    return;
-  }
-
-  cachedNode.layoutMetrics = layoutableShadowNode->layoutMetrics_;
-  cachedNode.viewProps = std::static_pointer_cast<const ViewProps>(newestCloneOfShadowNode->getProps());
 }
 
 folly::dynamic ViewStylesRepository::getPropertyValue(const folly::dynamic &value, const PropertyPath &propertyPath) {

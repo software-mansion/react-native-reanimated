@@ -1,0 +1,513 @@
+---
+id: plugin-options
+title: 'Options'
+sidebar_label: 'Options'
+---
+
+import CodeBlock from '@theme/CodeBlock';
+
+# Options for Worklets Babel Plugin
+
+Our plugin offers several optional functionalities that you may need to employ advanced APIs:
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  interface PluginOptions {
+    bundleMode?: boolean;
+    disableInlineStylesWarning?: boolean;
+    disableSourceMaps?: boolean;
+    disableWorkletClasses?: boolean;
+    extraPlugins?: string[];
+    extraPresets?: string[];
+    getHBCBinary?: () => string;
+    globals?: string[];
+    hermesBytecode?: boolean;
+    omitNativeOnlyData?: boolean;
+    relativeSourceLocation?: boolean;
+    strictGlobal?: boolean;
+    substituteWebPlatformChecks?: boolean;
+    importForwarding?: {
+      moduleNames?: string[];
+      relativePaths?: string[];
+    };
+  }
+  ```
+</details>
+
+## How to use
+
+Using this is straightforward for Babel plugins; you just need to pass an object containing the options to the plugin in your `babel.config.js` file. Make sure to pass the plugin and its options as a **two-element array**.
+
+Here's an example:
+
+```js {13-16}
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  bundleMode: true,
+  disableInlineStylesWarning: true,
+  globals: ['myObjectOnUI'],
+  substituteWebPlatformChecks: true,
+}
+
+module.exports = {
+  ...
+  plugins: [
+    ...
+    [
+      'react-native-worklets/plugin',
+      workletsPluginOptions
+    ],
+  ],
+};
+```
+
+## Options
+
+### bundleMode
+
+Defaults to `false`.
+
+Enables the [Bundle Mode](/docs/bundleMode/).
+
+### disableInlineStylesWarning
+
+Defaults to `false`.
+
+Turning on this option suppresses a helpful warning when you use [inline shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animations-in-inline-styling) and might unintentionally write:
+
+```tsx
+import Animated, {useSharedValue} from 'react-native-reanimated';
+
+function MyView() {
+  const width = useSharedValue(100);
+  return <Animated.View style={{ width: width.value }}>; // Loss of reactivity when using `width.value` instead of `width`!
+}
+```
+
+You'll receive a warning about accessing `value` in an inline prop and the potential loss of reactivity that it causes. However, because there's no fail-safe mechanism that checks if the accessed property `value` comes from a Shared Value during Babel transpilation, it might cause problems:
+
+```tsx
+import { View } from 'react-native';
+
+interface MyProps {
+  taggedWidth: {
+    tag: string;
+    value: number;
+  };
+}
+
+function MyView({ taggedWidth }) {
+  return <View style={{ width: taggedWidth.value }} />; // This triggers a false warning.
+}
+```
+
+Enable this option to silence such false warnings.
+
+### disableSourceMaps
+
+Defaults to `false`.
+
+This option turns off the source map generation for worklets. Mostly used for testing purposes.
+
+<Badges version="0.7.0">
+  ### disableWorkletClasses
+</Badges>
+
+Defaults to `false`.
+
+Disables [Worklet Classes
+support](/docs/worklets-babel-plugin/about#experimental-worklet-classes).
+You might need to disable this feature when using [Custom
+Serializables](/docs/memory/registerCustomSerializable).
+
+### extraPlugins
+
+Defaults to an empty array.
+
+This is a list of Babel plugins that will be used when transforming worklets' code with Worklets Babel Plugin.
+
+### extraPresets
+
+Defaults to an empty array.
+
+This is a list of Babel presets that will be used when transforming worklets' code with Worklets Babel Plugin.
+
+<Badges version="0.11.0">
+  ### getHBCBinary
+</Badges>
+
+:::caution
+Experimental feature.
+:::
+
+Defaults to `undefined`.
+
+Returns the absolute path to the Hermes bytecode compiler (`hermesc`) binary.
+This option is part of the experimental [`hermesBytecode`](#hermesbytecode)
+feature and is required when it is enabled — the plugin invokes this binary to
+compile each worklet.
+
+```js
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  hermesBytecode: true,
+  getHBCBinary: () => {
+    // Return the absolute path to the `hermesc` binary for the current host machine.
+  },
+};
+```
+
+Example implementation is available [here](https://github.com/software-mansion/react-native-reanimated/blob/7881f20a6778d25055e9127efaae0139562fde40/apps/fabric-example/babel.config.js#L28).
+
+### globals
+
+Defaults to an empty array.
+
+This is a list of identifiers (objects) that will not be copied to the UI thread if a worklet requires them. For instance:
+
+```tsx
+const someReference = 5;
+function foo() {
+  'worklet';
+  return someReference + 1;
+}
+```
+
+In this example, `someReference` is not accessible on the UI thread. Consequently, we must copy it there, ensuring correct scoping, to keep the worklet from failing. But, consider this:
+
+```tsx
+function bar() {
+  'worklet';
+  return null;
+}
+```
+
+Here, the identifier `null` is already accessible on the UI thread. Therefore, we don't need to copy it and use a copied value there. While it might not immediately seem particularly useful to avoid copying the value, consider the following case:
+
+```tsx
+function setOnJS() {
+  global.something = 'JS THREAD';
+}
+
+function setOnUI() {
+  'worklet';
+  global.something = 'UI THREAD';
+}
+
+function readFromJS() {
+  console.log(global.something);
+}
+
+function readFromUI() {
+  'worklet';
+  console.log(global.something);
+}
+
+function run() {
+  setOnJS();
+  scheduleOnUI(setOnUI);
+  readFromJS();
+  scheduleOnUI(readFromUI);
+}
+```
+
+Without `global` as a blocklisted identifier in this case, you'd only get:
+
+```
+JS THREAD
+JS THREAD
+```
+
+This output occurs because the entire `global` object (!) would be copied to the UI thread for it to be assigned by `setOnUI`. Then, `readOnUI` would again copy the `global` object and read from this copy.
+
+There is a [huge list of identifiers blocklisted by default](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/globals.ts).
+
+<Badges version="0.11.0">
+  ### hermesBytecode
+</Badges>
+
+:::caution
+Experimental feature.
+:::
+
+Defaults to `false`.
+
+Enabled compilation of worklets to [Hermes](https://github.com/facebook/hermes) bytecode
+ahead of time instead of shipping them as source strings in [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode).
+At runtime the Worklet Runtime evaluates the precompiled bytecode directly,
+skipping code evaluation overhead costs.
+
+This is a workaround for the [increased memory consumption of `eval` calls
+in Hermes](https://github.com/software-mansion/react-native-reanimated/issues/9650).
+
+Enabling it requires the
+[`getHBCBinary`](#gethbcbinary) option so the plugin can locate the Hermes compiler.
+
+Bytecode is only emitted for production builds.
+This option has no effect in [Bundle Mode](/docs/bundleMode/).
+
+### omitNativeOnlyData
+
+Defaults to `false`.
+
+This option comes in handy for Web apps. Because Babel ordinarily doesn't get information about the target platform, it includes worklet data in the bundle that only Native apps find relevant. If you enable this option, your bundle size will be smaller.
+
+### relativeSourceLocation
+
+Defaults to `false`.
+
+This option dictates the passed file location for a worklet's source map. If you enable this option, the file paths will be relative to `process.cwd` (the current directory where Babel executes). This can be handy for Jest test snapshots to ensure consistent results across machines.
+
+<Badges version="0.8.0">
+  ### strictGlobal
+</Badges>
+
+:::note
+We highly recommend enabling this option as it will be enabled by default in the future.
+:::
+
+Defaults to `false`.
+
+This option changes how global variables are handled inside worklets. You can read more about closures and global scoping [here](/docs/fundamentals/closures#global-scoping).
+
+With this option disabled, accessing global variables inside worklets will lead to capturing them from the scheduler scope:
+
+```tsx
+global.something = 10;
+
+function setOnUI() {
+  'worklet';
+  console.log(something); // Captured from scheduler scope, prints 10
+}
+```
+
+When you enable `strictGlobal`, accessing a global variable inside a worklet will result in accessing it directly from the global scope of the worklet runtime:
+
+```tsx
+global.something = 10;
+
+function setOnUI() {
+  'worklet';
+  console.log(something); // undefined - accessed from worklet global scope
+}
+```
+
+To actually access the global variable from another runtime you must assign it to a local variable and use it in the worklet:
+
+```tsx
+global.something = 10;
+const localSomething = global.something;
+
+function setOnUI() {
+  'worklet';
+  console.log(localSomething); // prints 10
+}
+```
+
+While it might seem handy to copy everything implicitly, it can lead to unexpected behavior when the captured object shouldn't be copied between runtimes. Compare this to the [globals option](#globals), which allows you to specify which global variables should not be copied to the worklet runtime at all.
+
+`strictGlobal` takes precedence over the `globals` option.
+
+### substituteWebPlatformChecks
+
+Defaults to `false`.
+
+This option can also be useful for Web apps. In Reanimated, there are numerous checks to determine the right function implementation for a specific target platform. Enabling this option changes all the checks that identify if the target is a Web app to `true`. This alteration can aid in tree-shaking and contribute to reducing the bundle size.
+
+### importForwarding
+
+Defaults to no forwarding (an empty object).
+
+Configures [import forwarding](../bundleMode/importForwarding.mdx) for Bundle
+Mode. See the dedicated page for the full overview.
+
+#### importForwarding.moduleNames
+
+Defaults to an empty array.
+
+List of exact module names that should be forwarded as imports inside worklets.
+
+For example, to use all exports from `my-library` directly on the Worklet
+Runtime, add it to the list:
+
+```javascript
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  // ...
+  importForwarding: { moduleNames: ['my-library'] },
+};
+```
+
+At bundle time, when a worklet imports from `my-library`, the plugin forwards
+that import into the worklet body:
+
+export const importForwardingBefore = `
+import { someExport } from 'my-library';
+
+function foo() {
+  'worklet';
+
+  someExport();
+}`;
+
+export const importForwardingAfter = `// Preserved in case it's used outside the worklet.
+import { someExport } from 'my-library';
+
+function foo() {
+  'worklet';
+  // highlight-next-line
+  import { someExport } from 'my-library';
+  someExport(); // Forwarded.
+}`;
+
+<table style={{width: '100%', tableLayout: 'fixed'}}>
+  <tr>
+    <th style={{textAlign: 'center', width: '50%'}}>Before</th>
+    <th style={{textAlign: 'center', width: '50%'}}>After (conceptually)</th>
+  </tr>
+
+  <tr>
+    <td style={{verticalAlign: 'top'}}>
+      <CodeBlock language="javascript">
+        {importForwardingBefore}
+      </CodeBlock>
+    </td>
+
+    <td style={{verticalAlign: 'top'}}>
+      <CodeBlock language="javascript">
+        {importForwardingAfter}
+      </CodeBlock>
+    </td>
+  </tr>
+</table>
+
+The module name has to be an exact match — with `my-library` in the list, an
+import from `my-library/some-file` won't be forwarded:
+
+export const importForwardingExactBefore = `import { someExport } from 'my-library';
+import { someOtherExport } from 'my-library/some-file';
+
+function foo() {
+  'worklet';
+
+  someExport();
+  someOtherExport();
+}`;
+
+export const importForwardingExactAfter = `import { someExport } from 'my-library';
+import { someOtherExport } from 'my-library/some-file';
+
+function foo() {
+  'worklet';
+  // highlight-next-line
+  import { someExport } from 'my-library';
+  someExport(); // Forwarded.
+  // highlight-next-line
+  someOtherExport(); // NOT forwarded (captured from closure).
+}`;
+
+<table style={{width: '100%', tableLayout: 'fixed'}}>
+  <tr>
+    <th style={{textAlign: 'center', width: '50%'}}>Before</th>
+    <th style={{textAlign: 'center', width: '50%'}}>After (conceptually)</th>
+  </tr>
+
+  <tr>
+    <td style={{verticalAlign: 'top'}}>
+      <CodeBlock language="javascript">
+        {importForwardingExactBefore}
+      </CodeBlock>
+    </td>
+
+    <td style={{verticalAlign: 'top'}}>
+      <CodeBlock language="javascript">
+        {importForwardingExactAfter}
+      </CodeBlock>
+    </td>
+  </tr>
+</table>
+
+#### importForwarding.relativePaths
+
+Defaults to an empty array.
+
+List of paths that determine whether a module should forward its **relative**
+imports inside worklets. If a module's path matches any of the provided paths,
+all relative imports inside that module's worklets will be forwarded.
+
+Use this when authoring a library that calls helpers via relative imports
+inside its own worklets:
+
+```javascript title="my-library/index.js"
+import { someExport } from './utils';
+
+function foo() {
+  'worklet';
+
+  // We want it forwarded.
+  someExport();
+}
+```
+
+Add the library's path to `relativePaths`:
+
+```javascript
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  // ...
+  importForwarding: { relativePaths: ['my-library'] },
+};
+```
+
+At bundle time, the plugin forwards relative imports inside `my-library` into
+the worklet body:
+
+export const relativeImportForwardingBefore = `
+import { someExport } from './utils';
+
+function foo() {
+  'worklet';
+
+  someExport();
+}`;
+
+export const relativeImportForwardingAfter = `// Preserved in case it's used outside the worklet.
+import { someExport } from './utils';
+
+function foo() {
+  'worklet';
+  // highlight-next-line
+  import { someExport } from './utils';
+  someExport(); // Forwarded.
+}`;
+
+<table style={{width: '100%', tableLayout: 'fixed'}}>
+  <tr>
+    <th style={{textAlign: 'center', width: '50%'}}>Before</th>
+    <th style={{textAlign: 'center', width: '50%'}}>After (conceptually)</th>
+  </tr>
+
+  <tr>
+    <td style={{verticalAlign: 'top'}}>
+      <CodeBlock language="javascript">
+        {relativeImportForwardingBefore}
+      </CodeBlock>
+    </td>
+
+    <td style={{verticalAlign: 'top'}}>
+      <CodeBlock language="javascript">
+        {relativeImportForwardingAfter}
+      </CodeBlock>
+    </td>
+  </tr>
+</table>
+
+You can also narrow the path to a subdirectory — e.g. `my-library/src` or
+`my-library/src/utils` — to forward imports from only part of the library.
+
+`moduleNames` won't work here: adding `'./utils'` to it would forward every
+`'./utils'` import across the bundle, potentially breaking other libraries
+with a file at the same relative path. `relativePaths` scopes forwarding to a
+specific package.

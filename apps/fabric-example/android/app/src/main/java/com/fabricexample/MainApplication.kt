@@ -12,6 +12,10 @@ import com.facebook.react.common.ReleaseLevel
 
 class MainApplication : Application(), ReactApplication {
 
+  companion object {
+    var runtimeTestsLibrary: String = "reanimated"
+  }
+
   override val reactHost: ReactHost by lazy {
     getDefaultReactHost(
       context = applicationContext,
@@ -19,6 +23,18 @@ class MainApplication : Application(), ReactApplication {
         PackageList(this).packages.apply {
           // Packages that cannot be autolinked yet can be added manually here, for example:
           // add(MyReactNativePackage())
+        },
+      jsMainModulePath =
+        if (BuildConfig.RUNTIME_TESTS) {
+          "index.runtimeTests.$runtimeTestsLibrary"
+        } else {
+          "index"
+        },
+      jsBundleAssetPath =
+        if (BuildConfig.RUNTIME_TESTS) {
+          "main.runtimeTests.$runtimeTestsLibrary.jsbundle"
+        } else {
+          "index.android.bundle"
         },
     )
   }

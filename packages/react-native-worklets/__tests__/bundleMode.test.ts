@@ -18,12 +18,12 @@ describe('bundle mode Metro config', () => {
     });
 
     expect(
-      config.resolver.resolveRequest(context, 'react-native', 'ios')
+      config.resolver.resolveRequest(context, 'some-package', 'ios')
     ).toEqual({
       filePath: '/custom/resolver.js',
       type: 'sourceFile',
     });
-    expect(resolveRequest).toHaveBeenCalledWith(context, 'react-native', 'ios');
+    expect(resolveRequest).toHaveBeenCalledWith(context, 'some-package', 'ios');
   });
 
   test('falls back to context resolver when custom resolver is not provided', () => {
@@ -39,14 +39,14 @@ describe('bundle mode Metro config', () => {
     });
 
     expect(
-      config.resolver.resolveRequest(context, 'react-native', 'android')
+      config.resolver.resolveRequest(context, 'some-package', 'android')
     ).toEqual({
       filePath: '/context/resolver.js',
       type: 'sourceFile',
     });
     expect(resolveRequest).toHaveBeenCalledWith(
       context,
-      'react-native',
+      'some-package',
       'android'
     );
   });

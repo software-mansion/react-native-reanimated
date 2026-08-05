@@ -37,7 +37,7 @@ export default function MeasureExample() {
     return {
       width: 80 + 230 * sv.value,
     };
-  }, []);
+  });
 
   return (
     <>

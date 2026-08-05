@@ -1,3 +1,4 @@
+#import <reanimated/CSS/utils/platform.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
 #import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
 #import <reanimated/apple/READisplayLink.h>
@@ -38,7 +39,8 @@ SetGestureStateFunction makeSetGestureStateFunction(RCTModuleRegistry *moduleReg
 
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
 {
-  auto requestRender = [nodesManager](const std::function<void(double)> &onRender) {
+  // NOLINTNEXTLINE(performance-unnecessary-value-param)
+  auto requestRender = [nodesManager](std::function<void(double)> onRender) {
     [nodesManager postOnAnimation:^(READisplayLink *displayLink) {
 #if !TARGET_OS_OSX
       auto targetTimestamp = displayLink.targetTimestamp;
@@ -83,7 +85,8 @@ RegisterSensorFunction makeRegisterSensorFunction(ReanimatedSensorContainer *rea
   auto registerSensorFunction = [=](int sensorType,
                                     int interval,
                                     int iosReferenceFrame,
-                                    const std::function<void(double[], int)> &setter) -> int {
+                                    // NOLINTNEXTLINE(performance-unnecessary-value-param)
+                                    std::function<void(double[], int)> setter) -> int {
     return [reanimatedSensorContainer
            registerSensor:(ReanimatedSensorType)sensorType
                  interval:interval
@@ -104,7 +107,8 @@ UnregisterSensorFunction makeUnregisterSensorFunction(ReanimatedSensorContainer 
 KeyboardEventSubscribeFunction makeSubscribeForKeyboardEventsFunction(REAKeyboardEventObserver *keyboardObserver)
 {
   auto subscribeForKeyboardEventsFunction =
-      [=](const std::function<void(int keyboardState, int height)> &keyboardEventDataUpdater,
+      // NOLINTNEXTLINE(performance-unnecessary-value-param)
+      [=](std::function<void(int keyboardState, int height)> keyboardEventDataUpdater,
           bool isStatusBarTranslucent,
           bool isNavigationBarTranslucent) {
         // ignore isStatusBarTranslucent and isNavigationBarTranslucent - those are Android only
@@ -125,21 +129,31 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
 
 css::CSSCanRoutePropertyFunction makeCSSCanRouteProperty()
 {
-  return &canRouteCSSProperty;
+  return &css::canRouteCSSProperty;
 }
 
 css::CSSApplyTransitionFunction makeCSSApplyTransition(REACSSPlatformTransitions *platformTransitions)
 {
-  return [platformTransitions](const css::CSSPlatformTransitionPropertyConfig &config) {
-    [platformTransitions applyTransition:config];
+  return [platformTransitions](
+             Tag viewTag,
+             const std::string &propertyName,
+             const css::PlatformValue &fromValue,
+             const css::PlatformValue &toValue,
+             const css::CSSTransitionPropertySettings *settings,
+             double timestamp) {
+    return [platformTransitions applyTransitionForTag:viewTag
+                                         propertyName:propertyName
+                                            fromValue:fromValue
+                                              toValue:toValue
+                                             settings:settings
+                                            timestamp:timestamp];
   };
 }
 
 css::CSSRemoveTransitionFunction makeCSSRemoveTransition(REACSSPlatformTransitions *platformTransitions)
 {
   return [platformTransitions](Tag viewTag, const std::string &propertyName) {
-    [platformTransitions removeTransitionForTag:viewTag
-                                   propertyName:[NSString stringWithUTF8String:propertyName.c_str()]];
+    [platformTransitions removeTransitionForTag:viewTag propertyName:propertyName];
   };
 }
 

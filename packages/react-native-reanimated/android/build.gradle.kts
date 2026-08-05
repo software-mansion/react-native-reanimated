@@ -8,7 +8,21 @@ plugins {
     id("com.android.library")
     id("maven-publish")
     id("com.diffplug.spotless") version "8.4.0"
-    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.android") apply false
+}
+
+fun shouldApplyKotlinAndroidPlugin(): Boolean {
+    val agpMajorVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION.substringBefore('.').toInt()
+    if (agpMajorVersion <= 8) {
+        return true
+    }
+
+    val builtInKotlin = providers.gradleProperty("android.builtInKotlin").orNull?.toBoolean() ?: true
+    return !builtInKotlin
+}
+
+if (shouldApplyKotlinAndroidPlugin()) {
+    apply(plugin = "org.jetbrains.kotlin.android")
 }
 
 fun safeExtGet(prop: String, fallback: Any?): Any? =
@@ -23,9 +37,13 @@ fun safeAppExtGet(prop: String, fallback: Any?): Any? {
 }
 
 fun resolveReactNativeDirectory(): File {
-    val reactNativeLocation = safeAppExtGet("REACT_NATIVE_NODE_MODULES_DIR", null) as String?
-    if (reactNativeLocation != null) {
-        return file(reactNativeLocation)
+    val reactNativeLocationProperty = safeAppExtGet("REACT_NATIVE_NODE_MODULES_DIR", null)
+    if (reactNativeLocationProperty != null) {
+        return when (reactNativeLocationProperty) {
+            is File -> reactNativeLocationProperty
+            is String -> file(reactNativeLocationProperty)
+            else -> file(reactNativeLocationProperty.toString())
+        }
     }
 
     // Fallback to node resolver for custom directory structures like monorepos.
@@ -99,6 +117,15 @@ fun validateConflictingFeatureFlags(featureFlags: HashMap<String, String>) {
             "[Reanimated] The feature flags `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. Please disable one of them in your package.json."
         )
     }
+
+    val useAnimationBackend = featureFlags["USE_ANIMATION_BACKEND"] == "true"
+    val forceReactRenderForSettledAnimations = featureFlags["FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS"] == "true"
+
+    if (useAnimationBackend && forceReactRenderForSettledAnimations) {
+        throw GradleException(
+            "[Reanimated] The feature flags `USE_ANIMATION_BACKEND` and `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS` cannot be enabled simultaneously. If you want to use the animation backend, you need to explicitly disable `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS` feature flag (enabled by default) in your package.json."
+        )
+    }
 }
 
 if (project != rootProject) {
@@ -108,6 +135,12 @@ if (project != rootProject) {
 val packageDir: File = project.projectDir.parentFile
 val reactNativeRootDir: File = resolveReactNativeDirectory()
 val REACT_NATIVE_VERSION: String = getReactNativeVersion()
+val IS_REACT_NATIVE_86_OR_NEWER: Boolean = run {
+    val parts = REACT_NATIVE_VERSION.split(".")
+    val major = parts.getOrNull(0)?.toIntOrNull() ?: 0
+    val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
+    major > 0 || minor >= 86
+}
 val REANIMATED_VERSION: String = getReanimatedVersion()
 val IS_REANIMATED_EXAMPLE_APP: Boolean = safeAppExtGet("isReanimatedExampleApp", false)?.toString()?.toBoolean() ?: false
 val REANIMATED_PROFILING: Boolean = safeAppExtGet("enableReanimatedProfiling", false)?.toString()?.toBoolean() ?: false
@@ -139,15 +172,18 @@ if (project == rootProject) {
 apply(from = "./generate-stub-pch.gradle.kts")
 
 android {
-    compileSdk = safeExtGet("compileSdkVersion", 36) as Int
+    compileSdk = safeExtGet("compileSdkVersion", 37) as Int
 
     namespace = "com.swmansion.reanimated"
 
-    if (rootProject.hasProperty("ndkPath")) {
-        ndkPath = rootProject.extensions.extraProperties.get("ndkPath") as String
+    val resolvedNdkPath = rootProject.findProperty("ndkPath") as? String
+    if (!resolvedNdkPath.isNullOrEmpty()) {
+        ndkPath = resolvedNdkPath
     }
-    if (rootProject.hasProperty("ndkVersion")) {
-        ndkVersion = rootProject.extensions.extraProperties.get("ndkVersion") as String
+
+    val resolvedNdkVersion = rootProject.findProperty("ndkVersion") as? String
+    if (!resolvedNdkVersion.isNullOrEmpty()) {
+        ndkVersion = resolvedNdkVersion
     }
 
     buildFeatures {
@@ -171,6 +207,7 @@ android {
         buildConfigField("String", "REANIMATED_VERSION_JAVA", "\"$REANIMATED_VERSION\"")
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
+        buildConfigField("boolean", "IS_REACT_NATIVE_86_OR_NEWER", IS_REACT_NATIVE_86_OR_NEWER.toString())
 
         @Suppress("UnstableApiUsage")
         externalNativeBuild {
@@ -195,7 +232,6 @@ android {
 
     externalNativeBuild {
         cmake {
-            this.version = System.getenv("CMAKE_VERSION") ?: "3.22.1"
             path = file("CMakeLists.txt")
         }
     }
@@ -239,7 +275,7 @@ android {
 }
 
 if (project != rootProject) {
-    kotlin {
+    extensions.configure<org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension> {
         compilerOptions {
             jvmTarget = JvmTarget.fromTarget("17")
         }

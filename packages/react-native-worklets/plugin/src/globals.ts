@@ -1,8 +1,6 @@
-import type { NodePath } from '@babel/core';
-import type { CallExpression } from '@babel/types';
+import { strict as assert } from 'assert';
 import path from 'path';
 
-import { processCalleesAutoworkletizableCallbacks } from './autoworkletization';
 import { generatedWorkletsDir, type WorkletsPluginPass } from './types';
 
 const notCapturedIdentifiers = [
@@ -145,20 +143,28 @@ export function initializeState(state: WorkletsPluginPass) {
   }
   state.workletNumber = 1;
   state.classesToWorkletize = [];
-  state.autoworkletizationPlugin = {
-    name: 'worklets-autoworkletization',
-    visitor: {
-      CallExpression: {
-        enter(nodePath: NodePath<CallExpression>) {
-          processCalleesAutoworkletizableCallbacks(nodePath, state);
-        },
-      },
-    },
-  };
   if (!state.opts.strictGlobal) {
     initializeGlobals();
     addCustomGlobals(state);
   }
+
+  const userImportForwarding = state.opts.importForwarding;
+
+  assert(
+    state.importForwarding === undefined,
+    'state.importForwarding should be undefined at this point'
+  );
+
+  state.importForwarding = {
+    relativePaths: [
+      ...defaultAllowedPaths,
+      ...(userImportForwarding?.relativePaths ?? []),
+    ],
+    moduleNames: [
+      ...defaultAllowedModules,
+      ...(userImportForwarding?.moduleNames ?? []),
+    ],
+  };
 }
 
 export function isGeneratedWorkletFile(
@@ -181,6 +187,12 @@ export let globals: Set<string>;
 export function initializeGlobals() {
   globals = new Set(defaultGlobals);
 }
+
+const defaultAllowedPaths = ['react-native-worklets'];
+const defaultAllowedModules = [
+  'react-native-worklets',
+  'react-native/Libraries/Core/setUpXHR',
+];
 
 /**
  * This function allows to add custom globals such as host-functions. Those

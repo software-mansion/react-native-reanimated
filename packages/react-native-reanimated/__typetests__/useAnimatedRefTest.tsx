@@ -3,6 +3,7 @@ import type { FlashListRef } from '@shopify/flash-list';
 import { FlashList } from '@shopify/flash-list';
 import type {
   ComponentClass,
+  ComponentRef,
   ComponentType,
   ElementType,
   FunctionComponent,
@@ -19,7 +20,7 @@ function UseAnimatedRefTest() {
   // for the plain and the animated component.
   function UseAnimatedRefTestComponentTypes() {
     const AnimatedImage = Animated.createAnimatedComponent(Image);
-    const plainRefInstance = useRef<Image>(null);
+    const plainRefInstance = useRef<ComponentRef<typeof Image>>(null);
     const animatedRefInstance = useAnimatedRef<Image>();
     const plainRefComponentClass = useRef<ComponentClass<ImageProps>>(null);
     const animatedRefComponentClass =
@@ -112,7 +113,7 @@ function UseAnimatedRefTest() {
 
   function UseAnimatedRefTestView() {
     const CreatedAnimatedView = Animated.createAnimatedComponent(View);
-    const plainRefPlainComponent = useRef<View>(null);
+    const plainRefPlainComponent = useRef<ComponentRef<typeof View>>(null);
     const animatedRefPlainComponent = useAnimatedRef<View>();
     const plainRefAnimatedComponent = useRef<Animated.View>(null);
     const animatedRefAnimatedComponent = useAnimatedRef<Animated.View>();
@@ -151,7 +152,7 @@ function UseAnimatedRefTest() {
 
   function UseAnimatedRefTestText() {
     const CreatedAnimatedText = Animated.createAnimatedComponent(Text);
-    const plainRefPlainComponent = useRef<Text>(null);
+    const plainRefPlainComponent = useRef<ComponentRef<typeof Text>>(null);
     const animatedRefPlainComponent = useAnimatedRef<Text>();
     const plainRefAnimatedComponent = useRef<Animated.Text>(null);
     const animatedRefAnimatedComponent = useAnimatedRef<Animated.Text>();
@@ -190,7 +191,7 @@ function UseAnimatedRefTest() {
 
   function UseAnimatedRefTestImage() {
     const CreatedAnimatedImage = Animated.createAnimatedComponent(Image);
-    const plainRefPlainComponent = useRef<Image>(null);
+    const plainRefPlainComponent = useRef<ComponentRef<typeof Image>>(null);
     const animatedRefPlainComponent = useAnimatedRef<Image>();
     const plainRefAnimatedComponent = useRef<Animated.Image>(null);
     const animatedRefAnimatedComponent = useAnimatedRef<Animated.Image>();
@@ -266,7 +267,8 @@ function UseAnimatedRefTest() {
   function UseAnimatedRefTestScrollView() {
     const CreatedAnimatedScrollView =
       Animated.createAnimatedComponent(ScrollView);
-    const plainRefPlainComponent = useRef<ScrollView>(null);
+    const plainRefPlainComponent =
+      useRef<ComponentRef<typeof ScrollView>>(null);
     const animatedRefPlainComponent = useAnimatedRef<ScrollView>();
     const plainRefAnimatedComponent = useRef<Animated.ScrollView>(null);
     const animatedRefAnimatedComponent = useAnimatedRef<Animated.ScrollView>();
@@ -317,84 +319,100 @@ function UseAnimatedRefTest() {
 
     return (
       <>
-        <FlatList ref={plainRefPlainComponent} data={[]} renderItem={null} />
-        <FlatList ref={animatedRefPlainComponent} data={[]} renderItem={null} />
-        <FlatList ref={plainRefAnimatedComponent} data={[]} renderItem={null} />
+        <FlatList
+          ref={plainRefPlainComponent}
+          data={[]}
+          renderItem={() => null}
+        />
+        <FlatList
+          ref={animatedRefPlainComponent}
+          data={[]}
+          renderItem={() => null}
+        />
+        <FlatList
+          ref={plainRefAnimatedComponent}
+          data={[]}
+          renderItem={() => null}
+        />
         <FlatList
           ref={animatedRefAnimatedComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
-        {/* @ts-expect-error Properly detects misused type. */}
-        <FlatList ref={plainRefCreatedComponent} data={[]} renderItem={null} />
+        <FlatList
+          // @ts-expect-error Properly detects misused type.
+          ref={plainRefCreatedComponent}
+          data={[]}
+          renderItem={() => null}
+        />
         <FlatList
           ref={animatedRefCreatedComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
 
         <Animated.FlatList
           ref={plainRefPlainComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <Animated.FlatList
           ref={animatedRefPlainComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <Animated.FlatList
           ref={plainRefAnimatedComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <Animated.FlatList
           ref={animatedRefAnimatedComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <Animated.FlatList
           // @ts-expect-error Properly detects misused Plain Ref.
           ref={plainRefCreatedComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <Animated.FlatList
           ref={animatedRefCreatedComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
 
         <CreatedAnimatedFlatList
           ref={plainRefPlainComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <CreatedAnimatedFlatList
           ref={animatedRefPlainComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <CreatedAnimatedFlatList
           ref={plainRefAnimatedComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <CreatedAnimatedFlatList
           ref={animatedRefAnimatedComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <CreatedAnimatedFlatList
           // @ts-expect-error Properly detects misused Plain Ref.
           ref={plainRefCreatedComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <CreatedAnimatedFlatList
           ref={animatedRefCreatedComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
       </>
     );
@@ -416,86 +434,102 @@ function UseAnimatedRefTest() {
 
     return (
       <>
-        <FlatList ref={plainRefPlainComponent} data={[]} renderItem={null} />
-        <FlatList ref={animatedRefPlainComponent} data={[]} renderItem={null} />
-        <FlatList ref={plainRefAnimatedComponent} data={[]} renderItem={null} />
+        <FlatList
+          ref={plainRefPlainComponent}
+          data={[]}
+          renderItem={() => null}
+        />
+        <FlatList
+          ref={animatedRefPlainComponent}
+          data={[]}
+          renderItem={() => null}
+        />
+        <FlatList
+          ref={plainRefAnimatedComponent}
+          data={[]}
+          renderItem={() => null}
+        />
         <FlatList
           ref={animatedRefAnimatedComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
-        {/* @ts-expect-error Properly detects misused type. */}
-        <FlatList ref={plainRefCreatedComponent} data={[]} renderItem={null} />
+        <FlatList
+          // @ts-expect-error Properly detects misused type.
+          ref={plainRefCreatedComponent}
+          data={[]}
+          renderItem={() => null}
+        />
         <FlatList
           ref={animatedRefCreatedComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
 
         <Animated.FlatList
           ref={plainRefPlainComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <Animated.FlatList
           ref={animatedRefPlainComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <Animated.FlatList
           ref={plainRefAnimatedComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <Animated.FlatList
           ref={animatedRefAnimatedComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <Animated.FlatList
           // @ts-expect-error Properly detects misused Plain Ref.
           ref={plainRefCreatedComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <Animated.FlatList
           ref={animatedRefCreatedComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
 
         <CreatedAnimatedFlatList
           ref={plainRefPlainComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <CreatedAnimatedFlatList
           ref={animatedRefPlainComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <CreatedAnimatedFlatList
           // @ts-expect-error Properly detects misused Plain Ref.
           ref={plainRefAnimatedComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <CreatedAnimatedFlatList
           // @ts-expect-error Properly detects misused type.
           ref={animatedRefAnimatedComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <CreatedAnimatedFlatList
           // @ts-expect-error Properly detects misused Plain Ref.
           ref={plainRefCreatedComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
         <CreatedAnimatedFlatList
           ref={animatedRefCreatedComponent}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
       </>
     );
@@ -509,7 +543,7 @@ function UseAnimatedRefTest() {
     }
     class CustomClassComponent extends React.Component<CustomProps> {
       render() {
-        return <View ref={this.props.ref as Ref<View>} />;
+        return <View ref={this.props.ref as Ref<ComponentRef<typeof View>>} />;
       }
     }
 
@@ -549,14 +583,18 @@ function UseAnimatedRefTest() {
 
     return (
       <>
-        <FlashList ref={plainRef} data={[]} renderItem={null} />
-        <FlashList ref={animatedRef} data={[]} renderItem={null} />
+        <FlashList ref={plainRef} data={[]} renderItem={() => null} />
+        <FlashList ref={animatedRef} data={[]} renderItem={() => null} />
 
-        <CreatedAnimatedFlashList ref={plainRef} data={[]} renderItem={null} />
+        <CreatedAnimatedFlashList
+          ref={plainRef}
+          data={[]}
+          renderItem={() => null}
+        />
         <CreatedAnimatedFlashList
           ref={animatedRef}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
       </>
     );
@@ -571,14 +609,18 @@ function UseAnimatedRefTest() {
 
     return (
       <>
-        <FlashList ref={plainRef} data={[]} renderItem={null} />
-        <FlashList ref={animatedRef} data={[]} renderItem={null} />
+        <FlashList ref={plainRef} data={[]} renderItem={() => null} />
+        <FlashList ref={animatedRef} data={[]} renderItem={() => null} />
 
-        <CreatedAnimatedFlashList ref={plainRef} data={[]} renderItem={null} />
+        <CreatedAnimatedFlashList
+          ref={plainRef}
+          data={[]}
+          renderItem={() => null}
+        />
         <CreatedAnimatedFlashList
           ref={animatedRef}
           data={[]}
-          renderItem={null}
+          renderItem={() => null}
         />
       </>
     );

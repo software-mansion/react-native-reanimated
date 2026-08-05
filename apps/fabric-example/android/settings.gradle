@@ -1,6 +1,20 @@
 pluginManagement { includeBuild('../../../node_modules/@react-native/gradle-plugin') }
 plugins { id("com.facebook.react.settings") }
-extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
+extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
+    // This app discovers native dependencies through common-app. The default
+    // autolinking cache only watches fabric-example/package.json, so changing a
+    // dependency in common-app can otherwise leave stale native metadata.
+    ex.autolinkLibrariesFromCommand(
+        ["npx", "@react-native-community/cli", "config"],
+        file(".."),
+        files(
+            "../../../yarn.lock",
+            "../package.json",
+            "../react-native.config.js",
+            "../../common-app/scripts/dependencies.js"
+        )
+    )
+}
 rootProject.name = 'FabricExample'
 include ':app'
 includeBuild('../../../node_modules/@react-native/gradle-plugin')

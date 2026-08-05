@@ -18,16 +18,19 @@ export const processStrokeDashArray: ValueProcessor<
   if (isLength(value)) {
     result = [value];
   } else if (Array.isArray(value)) {
-    // We have to repeat the same pattern twice if the number of elements is odd
-    // "If the number of values is odd, the pattern behaves as if it was duplicated
-    // to yield an even number of values"
-    // (https://www.w3.org/TR/fill-stroke-3/#valdef-stroke-dasharray-length-percentage)
-    result =
-      value.length % 2 === 0 || value.length < 3 ? value : value.concat(value);
+    result = [...value];
   } else if (value === 'none') {
     return 'none';
   } else {
     throw new Error(`[Reanimated] ${ERROR_MESSAGES.invalidDashArray(value)}`);
+  }
+
+  // Per the SVG spec an odd-length dash array is repeated to an even length.
+  // react-native-svg's extractStroke does this, but animated values bypass it
+  // and an odd-length array crashes Android's DashPathEffect, so we repeat here.
+  // https://www.w3.org/TR/fill-stroke-3/#valdef-stroke-dasharray-length-percentage
+  if (result.length % 2 === 1) {
+    result = result.concat(result);
   }
 
   if (__DEV__) {

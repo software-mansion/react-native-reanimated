@@ -27,7 +27,7 @@ export default function IncludeFontPadding({ labelTypes }: ExampleScreenProps) {
           examples: [
             {
               description:
-                "`textAlignVertical` is a **discrete** property. That means, it **can't be smoothly animated** between values. However, we can still change this property in the animation keyframes but the change will be **abrupt**.",
+                "`includeFontPadding` is a **discrete** property. That means, it **can't be smoothly animated** between values. However, we can still change this property in the animation keyframes but the change will be **abrupt**.",
               keyframes: {
                 from: {
                   includeFontPadding: true,

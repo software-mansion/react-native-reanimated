@@ -35,9 +35,14 @@ class RuntimeManager {
       const std::string &name,
       const std::shared_ptr<SerializableWorklet> &initializer = nullptr,
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
-      bool enableEventLoop = true);
+      bool enableEventLoop = true,
+      bool enableLocking = true);
 
   std::shared_ptr<WorkletRuntime> createUninitializedUIRuntime(const std::shared_ptr<AsyncQueue> &uiAsyncQueue);
+
+#ifndef NDEBUG
+  void propagateModuleUpdate(const std::string &code, const std::string &sourceUrl);
+#endif // NDEBUG
 
   template <class Fn>
   decltype(auto) withRegistrationPaused(Fn &&fn) {
@@ -50,10 +55,22 @@ class RuntimeManager {
 
   void registerRuntime(const uint64_t runtimeId, const std::shared_ptr<WorkletRuntime> &workletRuntime);
 
+#ifndef NDEBUG
+  void loadModuleUpdates(const std::shared_ptr<WorkletRuntime> &workletRuntime);
+
+  struct ModuleUpdate {
+    std::string sourceUrl;
+    std::string code;
+  };
+#endif // NDEBUG
+
   std::atomic_uint64_t nextRuntimeId_{RuntimeData::uiRuntimeId + 1};
   std::map<uint64_t, std::weak_ptr<WorkletRuntime>> weakRuntimes_;
   std::shared_mutex weakRuntimesMutex_;
   std::mutex registrationMutex_;
+#ifndef NDEBUG
+  std::vector<ModuleUpdate> moduleUpdates_;
+#endif // NDEBUG
 };
 
 } // namespace worklets

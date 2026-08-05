@@ -40,6 +40,8 @@ export default function PolylineExample() {
           name: 'Points',
           sections: [
             {
+              description:
+                'On the web, Polyline renders as an SVG `<polyline>` whose `points` cannot be animated via CSS, so point animations work only on iOS and Android.',
               examples: [
                 {
                   description:
@@ -94,6 +96,7 @@ export default function PolylineExample() {
                   title: 'S-curve',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'Same Number of Points',
             },
             {

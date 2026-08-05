@@ -12,9 +12,12 @@ import type { EasingFunctionFactory } from '../../Easing';
 import { BaseAnimationBuilder } from './BaseAnimationBuilder';
 
 /**
- * `this` type for static methods on {@link AnimationConfigBuilder}. Represents a
- * subclass constructor exposing the shared config-only static API inherited
- * from {@link BaseAnimationBuilder}.
+ * `this` constraint for static modifiers on {@link AnimationConfigBuilder}.
+ * Represents a subclass constructor exposing the shared config-only static API
+ * inherited from {@link BaseAnimationBuilder}. The modifiers bind `this` to a
+ * concrete subtype of this so the chain preserves the receiver's instance type
+ * (e.g. `SharedTransition.springify(...)` stays a `SharedTransition`) instead
+ * of collapsing to `AnimationConfigBuilder`.
  */
 type AnimationConfigBuilderClass = typeof BaseAnimationBuilder &
   (new () => AnimationConfigBuilder);
@@ -41,10 +44,10 @@ export class AnimationConfigBuilder extends BaseAnimationBuilder {
    * @param easingFunction - An easing function which defines the animation
    *   curve.
    */
-  static easing(
-    this: AnimationConfigBuilderClass,
+  static easing<T extends AnimationConfigBuilderClass>(
+    this: T,
     easingFunction: EasingFunction | EasingFunctionFactory
-  ): AnimationConfigBuilder {
+  ): InstanceType<T> {
     const instance = this.createInstance();
     return instance.easing(easingFunction);
   }
@@ -64,10 +67,10 @@ export class AnimationConfigBuilder extends BaseAnimationBuilder {
    *
    * @param degree - The rotation degree.
    */
-  static rotate(
-    this: AnimationConfigBuilderClass,
+  static rotate<T extends AnimationConfigBuilderClass>(
+    this: T,
     degree: string
-  ): AnimationConfigBuilder {
+  ): InstanceType<T> {
     const instance = this.createInstance();
     return instance.rotate(degree);
   }
@@ -85,10 +88,10 @@ export class AnimationConfigBuilder extends BaseAnimationBuilder {
    * @param duration - An optional duration of the spring animation (in
    *   milliseconds).
    */
-  static springify(
-    this: AnimationConfigBuilderClass,
+  static springify<T extends AnimationConfigBuilderClass>(
+    this: T,
     duration?: number
-  ): AnimationConfigBuilder {
+  ): InstanceType<T> {
     const instance = this.createInstance();
     return instance.springify(duration);
   }
@@ -106,10 +109,10 @@ export class AnimationConfigBuilder extends BaseAnimationBuilder {
    *
    * @param dampingRatio - How damped the spring is.
    */
-  static dampingRatio(
-    this: AnimationConfigBuilderClass,
+  static dampingRatio<T extends AnimationConfigBuilderClass>(
+    this: T,
     dampingRatio: number
-  ): AnimationConfigBuilder {
+  ): InstanceType<T> {
     const instance = this.createInstance();
     return instance.dampingRatio(dampingRatio);
   }
@@ -127,10 +130,10 @@ export class AnimationConfigBuilder extends BaseAnimationBuilder {
    * @param value - Decides how quickly a spring stops moving. Higher damping
    *   means the spring will come to rest faster.
    */
-  static damping(
-    this: AnimationConfigBuilderClass,
+  static damping<T extends AnimationConfigBuilderClass>(
+    this: T,
     value: number
-  ): AnimationConfigBuilder {
+  ): InstanceType<T> {
     const instance = this.createInstance();
     return instance.damping(value);
   }
@@ -148,10 +151,10 @@ export class AnimationConfigBuilder extends BaseAnimationBuilder {
    * @param mass - The weight of the spring. Reducing this value makes the
    *   animation faster.
    */
-  static mass(
-    this: AnimationConfigBuilderClass,
+  static mass<T extends AnimationConfigBuilderClass>(
+    this: T,
     mass: number
-  ): AnimationConfigBuilder {
+  ): InstanceType<T> {
     const instance = this.createInstance();
     return instance.mass(mass);
   }
@@ -168,10 +171,10 @@ export class AnimationConfigBuilder extends BaseAnimationBuilder {
    *
    * @param stiffness - How bouncy the spring is.
    */
-  static stiffness(
-    this: AnimationConfigBuilderClass,
+  static stiffness<T extends AnimationConfigBuilderClass>(
+    this: T,
     stiffness: number
-  ): AnimationConfigBuilder {
+  ): InstanceType<T> {
     const instance = this.createInstance();
     return instance.stiffness(stiffness);
   }
@@ -189,10 +192,10 @@ export class AnimationConfigBuilder extends BaseAnimationBuilder {
    * @param overshootClamping - Whether a spring can bounce over the final
    *   position.
    */
-  static overshootClamping(
-    this: AnimationConfigBuilderClass,
+  static overshootClamping<T extends AnimationConfigBuilderClass>(
+    this: T,
     overshootClamping: number
-  ): AnimationConfigBuilder {
+  ): InstanceType<T> {
     const instance = this.createInstance();
     return instance.overshootClamping(overshootClamping);
   }
@@ -206,10 +209,10 @@ export class AnimationConfigBuilder extends BaseAnimationBuilder {
    * @deprecated Use {@link energyThreshold} instead. This method currently does
    *   nothing and will be removed in the upcoming major version.
    */
-  static restDisplacementThreshold(
-    this: AnimationConfigBuilderClass,
+  static restDisplacementThreshold<T extends AnimationConfigBuilderClass>(
+    this: T,
     _restDisplacementThreshold: number
-  ): AnimationConfigBuilder {
+  ): InstanceType<T> {
     return this.createInstance();
   }
 
@@ -225,10 +228,10 @@ export class AnimationConfigBuilder extends BaseAnimationBuilder {
    * @deprecated Use {@link energyThreshold} instead. This method currently does
    *   nothing and will be removed in a future version.
    */
-  static restSpeedThreshold(
-    this: AnimationConfigBuilderClass,
+  static restSpeedThreshold<T extends AnimationConfigBuilderClass>(
+    this: T,
     _restSpeedThreshold: number
-  ): AnimationConfigBuilder {
+  ): InstanceType<T> {
     return this.createInstance();
   }
 
@@ -248,10 +251,10 @@ export class AnimationConfigBuilder extends BaseAnimationBuilder {
    * @param energyThreshold - Relative energy threshold below which the spring
    *   will snap to `toValue` without further oscillations. Defaults to 6e-9.
    */
-  static energyThreshold(
-    this: AnimationConfigBuilderClass,
+  static energyThreshold<T extends AnimationConfigBuilderClass>(
+    this: T,
     energyThreshold: number
-  ): AnimationConfigBuilder {
+  ): InstanceType<T> {
     const instance = this.createInstance();
     return instance.energyThreshold(energyThreshold);
   }

@@ -12,6 +12,8 @@ struct SVGStrokeDashArray : public CSSLengthVector<SVGStrokeDashArray> {
       const SVGStrokeDashArray &to,
       const ResolvableValueInterpolationContext &context) const override;
 
+  folly::dynamic toDynamic() const override;
+
 #ifndef NDEBUG
   friend std::ostream &operator<<(std::ostream &os, const SVGStrokeDashArray &strokeDashArray);
 #endif // NDEBUG

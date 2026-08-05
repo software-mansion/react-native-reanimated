@@ -1,8 +1,11 @@
 name: GitHub Pull Request description format
 on:
-  pull_request:
+  pull_request_target:
     types:
       - opened
+
+permissions:
+  pull-requests: write
 
 jobs:
   github-pull-request-description-format:

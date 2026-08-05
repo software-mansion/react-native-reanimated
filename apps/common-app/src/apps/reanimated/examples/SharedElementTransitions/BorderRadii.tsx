@@ -5,6 +5,7 @@ import * as React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import Animated, { SharedTransition } from 'react-native-reanimated';
 import photo from './assets/image.jpg';
+import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
 
 const Stack = createNativeStackNavigator();
 
@@ -14,7 +15,7 @@ const transition = undefined;
 //   SharedTransitionType.ANIMATION
 // );
 
-function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen1Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.flexOne}>
       <Button
@@ -37,7 +38,7 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   );
 }
 
-function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen2Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.flexOne}>
       <Button title="go back" onPress={() => navigation.popTo('Screen1')} />
@@ -55,6 +56,9 @@ function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
     </View>
   );
 }
+
+const Screen1 = withSharedTransitionBoundary(Screen1Content);
+const Screen2 = withSharedTransitionBoundary(Screen2Content);
 
 export default function CustomTransitionExample() {
   return (

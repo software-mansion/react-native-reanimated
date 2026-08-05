@@ -67,11 +67,9 @@ class WorkletsModule(
         val jsContext = checkNotNull(context.javaScriptContextHolder).get()
         val jsCallInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
 
-        val sourceURL = context.sourceURL
-
         val scriptBufferWrapper: ScriptBufferWrapper? =
             if (bundleModeEnabled) {
-                ScriptBufferWrapper(sourceURL!!, context.assets)
+                ScriptBufferWrapper(context.sourceURL, context)
             } else {
                 null
             }
@@ -122,9 +120,6 @@ class WorkletsModule(
             return
         }
         if (mHybridData != null && mHybridData!!.isValid) {
-            // We have to destroy extra runtimes when invalidate is called. If we clean
-            // it up later instead there's a chance the runtime will retain references
-            // to invalidated memory and will crash on its destruction.
             invalidateCpp()
         }
         mAndroidUIScheduler.deactivate()

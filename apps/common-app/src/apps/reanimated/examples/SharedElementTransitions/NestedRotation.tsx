@@ -6,6 +6,8 @@ import { createContext } from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
+import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
+
 const Stack = createNativeStackNavigator();
 
 const Context = createContext<{
@@ -18,7 +20,7 @@ const Context = createContext<{
   green: 'greenTag',
 });
 
-function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen1Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   const { blue, purple, green } = React.useContext(Context);
   return (
     <Animated.ScrollView style={styles.flexOne}>
@@ -40,7 +42,7 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   );
 }
 
-function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen2Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   const { blue, purple, green } = React.useContext(Context);
 
   return (
@@ -59,6 +61,9 @@ function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
     </View>
   );
 }
+
+const Screen1 = withSharedTransitionBoundary(Screen1Content);
+const Screen2 = withSharedTransitionBoundary(Screen2Content);
 
 export default function NestedRotationExample() {
   const [blue, setBlue] = React.useState<string | undefined>(undefined);

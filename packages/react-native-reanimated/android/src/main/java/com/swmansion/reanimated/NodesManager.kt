@@ -54,8 +54,8 @@ class NodesManager(
         val uiManager = UIManagerHelper.getUIManager(context, UIManagerType.FABRIC)
         assert(uiManager != null)
         mCustomEventNamesResolver =
-            UIManagerModule.CustomEventNamesResolver { eventName ->
-                uiManager!!.resolveCustomDirectEventName(eventName)
+            object : UIManagerModule.CustomEventNamesResolver {
+                override fun resolveCustomEventName(eventName: String): String? = uiManager!!.resolveCustomDirectEventName(eventName)
             }
         mDrawPassDetector = DrawPassDetector(context)
 

@@ -4,9 +4,12 @@
 #include <worklets/SharedItems/Serializable.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace worklets {
+
+class RNRuntimeStatus;
 
 jsi::Value makeSerializableString(jsi::Runtime &rt, const jsi::String &string);
 
@@ -37,7 +40,10 @@ jsi::Value makeSerializableHostObject(jsi::Runtime &rt, const std::shared_ptr<js
 
 jsi::Value makeSerializableArray(jsi::Runtime &rt, const jsi::Array &array, const jsi::Value &shouldRetainRemote);
 
-jsi::Value makeSerializableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer);
+jsi::Value makeSerializableArrayBuffer(
+    jsi::Runtime &rt,
+    const jsi::ArrayBuffer &arrayBuffer,
+    std::optional<ArrayBufferMetadata> metadata = std::nullopt);
 
 jsi::Value makeSerializableMap(jsi::Runtime &rt, const jsi::Array &keys, const jsi::Array &values);
 
@@ -59,18 +65,17 @@ jsi::Value makeSerializableHostFunction(
     const std::string &name,
     unsigned int paramCount);
 
-/** Creates RN Runtime Remote Function. */
-jsi::Value makeSerializableRemoteFunction(
+jsi::Value makeRNRuntimeSerializableRemoteFunction(
     jsi::Runtime &rnRuntime,
     const std::string &name,
-    int remoteId,
-    const std::shared_ptr<JSScheduler> &jsScheduler);
+    const jsi::Function &function,
+    const std::shared_ptr<JSScheduler> &jsScheduler,
+    const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus);
 
-/** Creates Worklet Runtime Remote Function. */
-jsi::Value makeSerializableRemoteFunction(
+jsi::Value makeWorkletRuntimeSerializableRemoteFunction(
     jsi::Runtime &workletRuntime,
     const std::string &name,
-    jsi::Function &&function,
+    const jsi::Function &function,
     RuntimeData::RuntimeId hostRuntimeId);
 
 jsi::Value makeSerializableWorklet(jsi::Runtime &rt, const jsi::Object &object, const bool &shouldRetainRemote);

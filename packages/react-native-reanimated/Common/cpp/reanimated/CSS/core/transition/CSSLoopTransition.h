@@ -1,13 +1,13 @@
 #pragma once
 
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
-#include <reanimated/CSS/core/transition/CSSTransition.h>
 #include <reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -16,18 +16,15 @@ namespace reanimated::css {
 
 class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enable_shared_from_this<CSSLoopTransition> {
  public:
+  using OnUpdateCallback = std::function<void(Tag)>;
+
   CSSLoopTransition(
       Tag viewTag,
       const std::string &componentName,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      CSSTransition::Observer &observer);
-
-  TransitionProperties getProperties() const {
-    return properties_;
-  }
+      OnUpdateCallback onUpdate);
 
   double getMinDelay(double timestamp) const;
-  TransitionProgressState getState() const;
 
   bool update(double timestamp, OperationsLoop &loop) override;
 
@@ -49,12 +46,13 @@ class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enab
 
   folly::dynamic computeCurrentStyle(const std::shared_ptr<const ShadowNode> &shadowNode);
 
+  void removeProperties(const std::vector<std::string> &propertyNames);
+
  private:
   const Tag viewTag_;
   const std::string componentName_;
-  CSSTransition::Observer &observer_;
+  OnUpdateCallback onUpdate_;
 
-  TransitionProperties properties_;
   TransitionStyleInterpolator styleInterpolator_;
   TransitionProgressProvider progressProvider_;
 
@@ -68,7 +66,6 @@ class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enab
       const PropertyValueDynamicDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
       double timestamp);
-  void removeProperties(const std::vector<std::string> &propertyNames);
   void removeProperty(const std::string &propertyName);
 };
 

@@ -62,7 +62,7 @@ export default function Weave({
             (progress.value / p1) * (maxHorRadius - initialHorRadius);
     }
     const t = (progress.value - p1) / (1.0 - p1);
-    const A = isBack ? 2 * initialHorRadius : maxHorRadius;
+    const A = isBack.value ? 2 * initialHorRadius : maxHorRadius;
     const r = 40;
     const m = 9.8;
     const beta = r / (2 * m);

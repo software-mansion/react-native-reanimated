@@ -1,4 +1,5 @@
 #import <reanimated/apple/pseudoSelectors/REAPseudoSelectorObserver.h>
+#import <reanimated/apple/pseudoSelectors/REATouchHoverCoordinator.h>
 
 #if !TARGET_OS_OSX
 #import <UIKit/UIKit.h>
@@ -13,6 +14,7 @@
 #endif
 - (void)attachActiveGestureRecognizerToView:(REAUIView *)view;
 - (void)attachHoverToView:(REAUIView *)view;
+- (BOOL)isPressSelector;
 #if !TARGET_OS_OSX
 - (void)attachFocusToView:(REAUIView *)view;
 - (void)attachFocusWithinToView:(REAUIView *)view;
@@ -20,6 +22,10 @@
 - (void)attachMacFocusObservers;
 #endif
 @end
+
+#if !TARGET_OS_OSX
+static const CGFloat kActivePressMovementThreshold = 10.0;
+#endif
 
 @implementation REAPseudoSelectorObserver {
   __weak REAUIView *_view;
@@ -34,7 +40,17 @@
 #endif
   NSArray *_notificationObservers;
   std::function<void(bool)> _callback;
+  BOOL _activeTouchCounted;
+#if !TARGET_OS_OSX
+  CGPoint _pressDownLocation;
+  BOOL _pressDismissed;
+#endif
 }
+
+#if !TARGET_OS_OSX
+static __weak UITouch *sActivePrimaryTouch;
+static NSInteger sActiveTouchCount;
+#endif
 
 - (instancetype)initWithView:(REAUIView *)view
                     selector:(reanimated::PseudoSelector)selector
@@ -83,7 +99,7 @@
   recognizer.cancelsTouchesInView = NO;
 #else
   NSPressGestureRecognizer *recognizer =
-      [[NSPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleActiveGesture:)];
+      [[NSPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleTouchGesture:)];
 #endif
   recognizer.minimumPressDuration = 0;
   recognizer.delegate = self;
@@ -100,6 +116,9 @@
   recognizer.delegate = self;
   [view addGestureRecognizer:recognizer];
   _gestureRecognizer = recognizer;
+
+  // A finger never triggers UIHoverGestureRecognizer; the coordinator drives sticky touch `:hover`.
+  [[REATouchHoverCoordinator sharedCoordinator] registerObserver:self view:view callback:_callback];
 #endif
 #else // TARGET_OS_OSX
   NSTrackingArea *trackingArea = [[NSTrackingArea alloc]
@@ -250,6 +269,41 @@ static int _focusObserverContext;
 
 #if !TARGET_OS_OSX
 
+- (void)handleActiveGesture:(UILongPressGestureRecognizer *)recognizer
+{
+  switch (recognizer.state) {
+    case UIGestureRecognizerStateBegan:
+      _pressDownLocation = [recognizer locationInView:nil];
+      _pressDismissed = NO;
+      _callback(true);
+      [self retainActiveTouch];
+      break;
+    case UIGestureRecognizerStateChanged: {
+      if (_pressDismissed) {
+        break;
+      }
+      CGPoint point = [recognizer locationInView:nil];
+      CGFloat dx = point.x - _pressDownLocation.x;
+      CGFloat dy = point.y - _pressDownLocation.y;
+      if (dx * dx + dy * dy > kActivePressMovementThreshold * kActivePressMovementThreshold) {
+        _pressDismissed = YES;
+        _callback(false);
+      }
+      break;
+    }
+    case UIGestureRecognizerStateEnded:
+    case UIGestureRecognizerStateCancelled:
+    case UIGestureRecognizerStateFailed:
+      if (!_pressDismissed) {
+        _callback(false);
+      }
+      [self releaseActiveTouch];
+      break;
+    default:
+      break;
+  }
+}
+
 #if !TARGET_OS_TV
 - (void)handleHoverGesture:(UIHoverGestureRecognizer *)recognizer
 {
@@ -268,19 +322,38 @@ static int _focusObserverContext;
 }
 #endif
 
-- (void)handleActiveGesture:(UILongPressGestureRecognizer *)recognizer
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch
 {
-  switch (recognizer.state) {
-    case UIGestureRecognizerStateBegan:
-      _callback(true);
-      break;
-    case UIGestureRecognizerStateEnded:
-    case UIGestureRecognizerStateCancelled:
-    case UIGestureRecognizerStateFailed:
-      _callback(false);
-      break;
-    default:
-      break;
+  if (![self isPressSelector]) {
+    return YES;
+  }
+  if (sActiveTouchCount == 0) {
+    sActivePrimaryTouch = nil;
+  }
+  if (sActivePrimaryTouch == nil) {
+    sActivePrimaryTouch = touch;
+    return YES;
+  }
+  return sActivePrimaryTouch == touch;
+}
+
+- (void)retainActiveTouch
+{
+  if ([self isPressSelector] && !_activeTouchCounted) {
+    _activeTouchCounted = YES;
+    sActiveTouchCount++;
+  }
+}
+
+- (void)releaseActiveTouch
+{
+  if (!_activeTouchCounted) {
+    return;
+  }
+  _activeTouchCounted = NO;
+  if (--sActiveTouchCount <= 0) {
+    sActiveTouchCount = 0;
+    sActivePrimaryTouch = nil;
   }
 }
 
@@ -296,7 +369,7 @@ static int _focusObserverContext;
   _callback(false);
 }
 
-- (void)handleActiveGesture:(NSPressGestureRecognizer *)recognizer
+- (void)handleTouchGesture:(NSPressGestureRecognizer *)recognizer
 {
   switch (recognizer.state) {
     case NSGestureRecognizerStateBegan:
@@ -314,6 +387,11 @@ static int _focusObserverContext;
 
 #endif // TARGET_OS_OSX
 
+- (BOOL)isPressSelector
+{
+  return _selector == reanimated::PseudoSelector::Active || _selector == reanimated::PseudoSelector::ActiveDeepest;
+}
+
 #if !TARGET_OS_OSX
 - (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
 #else
@@ -324,22 +402,16 @@ static int _focusObserverContext;
   if (!view) {
     return NO;
   }
-  // The descendant walk below is only meaningful for :active-deepest.
-  // :active always allows, and any other selector (e.g. :hover, which shares
-  // this delegate) never participates in deepest arbitration.
   if (_selector != reanimated::PseudoSelector::ActiveDeepest) {
     return YES;
   }
-  // for :active-deepest walk up from the hit view: if any descendant
-  // already has an :active-deepest or :active gesture recognizer, that descendant
-  // owns the touch.
   CGPoint location = [gestureRecognizer locationInView:view];
 #if !TARGET_OS_OSX
   UIView *current = [view hitTest:location withEvent:nil];
   while (current && current != view) {
     for (UIGestureRecognizer *gr in current.gestureRecognizers) {
       if ([gr.delegate isKindOfClass:[REAPseudoSelectorObserver class]] &&
-          [gr isKindOfClass:[UILongPressGestureRecognizer class]]) {
+          [(REAPseudoSelectorObserver *)gr.delegate isPressSelector]) {
         return NO;
       }
     }
@@ -348,11 +420,10 @@ static int _focusObserverContext;
 #else
   NSPoint locationInSuper = [view convertPoint:location toView:view.superview];
   NSView *current = [view.superview hitTest:locationInSuper];
-
   while (current && current != view) {
     for (NSGestureRecognizer *gr in current.gestureRecognizers) {
       if ([gr.delegate isKindOfClass:[REAPseudoSelectorObserver class]] &&
-          [gr isKindOfClass:[NSPressGestureRecognizer class]]) {
+          [(REAPseudoSelectorObserver *)gr.delegate isPressSelector]) {
         return NO;
       }
     }
@@ -379,6 +450,14 @@ static int _focusObserverContext;
     [_view removeGestureRecognizer:_gestureRecognizer];
   }
   _gestureRecognizer = nil;
+#if !TARGET_OS_OSX
+  [self releaseActiveTouch];
+#if !TARGET_OS_TV
+  if (_selector == reanimated::PseudoSelector::Hover) {
+    [[REATouchHoverCoordinator sharedCoordinator] unregisterObserver:self];
+  }
+#endif
+#endif
 #if TARGET_OS_OSX
   if (_trackingArea && _view) {
     [_view removeTrackingArea:_trackingArea];

@@ -1,4 +1,5 @@
 'use strict';
+import type { UnknownRecord } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { isSharedValue } from '../isSharedValue';
 import { startMapper, stopMapper } from '../mappers';
@@ -34,15 +35,15 @@ function areInlineValuesEqual(value1: unknown, value2: unknown): boolean {
 }
 
 function inlinePropsHasChanged(
-  styles1: StyleProps,
-  styles2: StyleProps
+  props1: UnknownRecord,
+  props2: UnknownRecord
 ): boolean {
-  if (Object.keys(styles1).length !== Object.keys(styles2).length) {
+  if (Object.keys(props1).length !== Object.keys(props2).length) {
     return true;
   }
 
-  for (const key of Object.keys(styles1)) {
-    if (!areInlineValuesEqual(styles1[key], styles2[key])) {
+  for (const key of Object.keys(props1)) {
+    if (!areInlineValuesEqual(props1[key], props2[key])) {
       return true;
     }
   }
@@ -73,15 +74,11 @@ function extractSharedValuesMapFromProps(
     Record<string, unknown> /* Initial component props */
   >
 ): {
-  inlineStyles: Record<string, unknown>;
-  inlineProps: Record<string, unknown>;
+  inlineStyleProps: Record<string, unknown>;
+  inlineTopLevelProps: Record<string, unknown>;
 } {
-  // Values extracted from the `style` prop are style properties and must be
-  // processed with the style props builder, while shared values passed as
-  // top-level props (e.g. `text` on Animated.Text) can be arbitrary component
-  // props and must skip it, hence we keep them in two separate maps.
-  const inlineStyles: Record<string, unknown> = {};
-  const inlineProps: Record<string, unknown> = {};
+  const inlineStyleProps: Record<string, unknown> = {};
+  const inlineTopLevelProps: Record<string, unknown> = {};
 
   for (const key in props) {
     const value = props[key];
@@ -96,21 +93,21 @@ function extractSharedValuesMapFromProps(
         }
         for (const [styleKey, styleValue] of Object.entries(style)) {
           if (isSharedValue(styleValue)) {
-            inlineStyles[styleKey] = styleValue;
+            inlineStyleProps[styleKey] = styleValue;
           } else if (
             styleKey === 'transform' &&
             isInlineStyleTransform(styleValue)
           ) {
-            inlineStyles[styleKey] = styleValue;
+            inlineStyleProps[styleKey] = styleValue;
           }
         }
       });
     } else if (isSharedValue(value)) {
-      inlineProps[key] = value;
+      inlineTopLevelProps[key] = value;
     }
   }
 
-  return { inlineStyles, inlineProps };
+  return { inlineStyleProps, inlineTopLevelProps };
 }
 
 export function hasInlineStyles(style: StyleProps): boolean {
@@ -148,34 +145,34 @@ export function getInlineStyle(
 export class InlinePropManager implements IInlinePropManager {
   _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
   _inlinePropsMapperId: number | null = null;
-  _inlineStyles: StyleProps = {};
-  _inlineProps: StyleProps = {};
+  _inlineStyleProps: UnknownRecord = {};
+  _inlineTopLevelProps: UnknownRecord = {};
 
   public attachInlineProps(
     animatedComponent: AnimatedComponentTypeInternal,
     viewInfo: ViewInfo
   ) {
-    const { inlineStyles: newInlineStyles, inlineProps: newInlineProps } =
+    const { inlineStyleProps, inlineTopLevelProps } =
       extractSharedValuesMapFromProps(animatedComponent.props);
 
     if (animatedComponent.ChildComponent.displayName === 'Text') {
       const children = (animatedComponent.props as { children?: unknown })
         .children;
-      delete newInlineProps.children;
+      delete inlineTopLevelProps.children;
       if (isSharedValue(children)) {
         // A shared value passed as children of <Animated.Text> animates the
         // text content like the `text` prop, so we send its updates as `text`.
-        newInlineProps.text = children;
+        inlineTopLevelProps.text = children;
       } else if (Array.isArray(children) && children.some(isSharedValue)) {
         // Mixed children (e.g. <Animated.Text>Before {sv} After</Animated.Text>)
         // are joined into a single `text` update in the updater function.
-        newInlineProps.text = children;
+        inlineTopLevelProps.text = children;
       }
     }
 
     const hasChanged =
-      inlinePropsHasChanged(newInlineStyles, this._inlineStyles) ||
-      inlinePropsHasChanged(newInlineProps, this._inlineProps);
+      inlinePropsHasChanged(inlineStyleProps, this._inlineStyleProps) ||
+      inlinePropsHasChanged(inlineTopLevelProps, this._inlineTopLevelProps);
 
     if (hasChanged) {
       if (!this._inlinePropsViewDescriptors) {
@@ -191,41 +188,46 @@ export class InlinePropManager implements IInlinePropManager {
       const shareableViewDescriptors =
         this._inlinePropsViewDescriptors.shareableViewDescriptors;
 
-      const hasInlineStyleUpdates = Object.keys(newInlineStyles).length > 0;
-      const hasInlinePropUpdates = Object.keys(newInlineProps).length > 0;
-
+      const hasInlineStyleProps = Object.keys(inlineStyleProps).length > 0;
+      const hasInlineTopLevelProps =
+        Object.keys(inlineTopLevelProps).length > 0;
+      const hasInlineProps = hasInlineStyleProps || hasInlineTopLevelProps;
       const updaterFunction = () => {
         'worklet';
-        if (hasInlineStyleUpdates) {
+        if (hasInlineStyleProps) {
           updateProps(
             shareableViewDescriptors,
-            getInlinePropsUpdate(newInlineStyles) as StyleProps
+            getInlinePropsUpdate(inlineStyleProps) as StyleProps
           );
         }
-        if (hasInlinePropUpdates) {
+        if (hasInlineTopLevelProps) {
           const propsUpdate = getInlinePropsUpdate(
-            newInlineProps
+            inlineTopLevelProps
           ) as StyleProps;
           if (Array.isArray(propsUpdate.text)) {
             // Mixed children of <Animated.Text> - join the static parts with
             // the current values of the shared values into a single string
             propsUpdate.text = propsUpdate.text.join('');
           }
-          // Pass `isAnimatedProps` so that non-style props (e.g. `text` on
-          // Animated.Text) are not dropped by the style props builder.
+          // Shared values passed directly as top-level props are animated
+          // props, not styles — process them like `useAnimatedProps` updates
+          // (in particular, don't run them through the style props builder,
+          // which drops non-style keys).
           updateProps(shareableViewDescriptors, propsUpdate, true);
         }
       };
-      this._inlineStyles = newInlineStyles;
-      this._inlineProps = newInlineProps;
+      this._inlineStyleProps = inlineStyleProps;
+      this._inlineTopLevelProps = inlineTopLevelProps;
+
+
       if (this._inlinePropsMapperId) {
         stopMapper(this._inlinePropsMapperId);
       }
       this._inlinePropsMapperId = null;
-      if (hasInlineStyleUpdates || hasInlinePropUpdates) {
+      if (hasInlineProps) {
         this._inlinePropsMapperId = startMapper(updaterFunction, [
-          ...Object.values(newInlineStyles),
-          ...Object.values(newInlineProps),
+          inlineStyleProps,
+          inlineTopLevelProps,
         ]);
       }
     }
@@ -234,6 +236,10 @@ export class InlinePropManager implements IInlinePropManager {
   public detachInlineProps() {
     if (this._inlinePropsMapperId) {
       stopMapper(this._inlinePropsMapperId);
+      this._inlinePropsMapperId = null;
     }
+    this._inlinePropsViewDescriptors = null;
+    this._inlineStyleProps = {};
+    this._inlineTopLevelProps = {};
   }
 }

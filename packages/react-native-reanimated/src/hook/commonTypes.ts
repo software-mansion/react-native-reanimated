@@ -34,6 +34,9 @@ export type MaybeObserverCleanup = (() => void) | undefined;
 
 export type AnimatedRefObserver = (tag: number | null) => MaybeObserverCleanup;
 
+/** Removes the observer registered via `AnimatedRef.observe`. */
+type ObserverUnsubscribe = () => void;
+
 export type ExtractElementRef<TRef> = TRef extends ElementType
   ? ComponentRef<TRef> extends never // Ensure that ref type is explicitly defined (is not any)
     ? TRef
@@ -54,7 +57,7 @@ export type AnimatedRef<TRef extends InstanceOrElement = HostInstance> = {
     | ShadowNodeWrapper // Native
     | HTMLElement; // web
   current: AnimatedRefCurrent<TRef> | null;
-  observe: (observer: AnimatedRefObserver) => void;
+  observe: (observer: AnimatedRefObserver) => ObserverUnsubscribe;
   getTag?: () => Maybe<number>;
 };
 

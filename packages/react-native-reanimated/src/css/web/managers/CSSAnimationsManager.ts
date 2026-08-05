@@ -8,6 +8,9 @@ import {
 import { removeElementAnimation } from '../../../common/web';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
 import type {
+  CSSAnimationCallbackProp,
+  CSSAnimationCallbacks,
+  CSSAnimationEvent,
   CSSAnimationKeyframes,
   CSSAnimationSettings,
   ExistingCSSAnimationProperties,
@@ -15,14 +18,18 @@ import type {
 } from '../../types';
 import { normalizeTimeUnit } from '../../utils';
 import { processKeyframeDefinitions } from '../animationParser';
-import {
-  configureWebCSSAnimations,
-  insertCSSAnimation,
-  removeCSSAnimation,
-} from '../domUtils';
+import { insertCSSAnimation, removeCSSAnimation } from '../domUtils';
 import { CSSKeyframesRuleImpl } from '../keyframes';
 import { normalizeIterationCount } from '../normalization';
 import { maybeAddSuffixes, parseTimingFunction } from '../utils';
+import { CSSCallbackListeners } from './CSSCallbackListeners';
+
+const ANIMATION_EVENT_NAME: Record<CSSAnimationCallbackProp, string> = {
+  onAnimationStart: 'animationstart',
+  onAnimationEnd: 'animationend',
+  onAnimationIteration: 'animationiteration',
+  onAnimationCancel: 'animationcancel',
+};
 
 const isCSSKeyframesRuleImpl = (
   keyframes: ExistingCSSAnimationProperties['animationName']
@@ -40,20 +47,40 @@ type ProcessedSettings = ConvertValuesToArrays<CSSAnimationSettings>;
 
 export default class CSSAnimationsManager implements ICSSAnimationsManager {
   private readonly element: ReanimatedHTMLElement;
-  private readonly componentName: string;
+  private readonly svgElementTag: string;
 
   // Keys are processed keyframes
   private attachedAnimations: Record<string, ProcessedAnimation> = {};
   private unmountCleanupCalled = false;
 
-  constructor(element: ReanimatedHTMLElement, componentName = '') {
-    configureWebCSSAnimations();
+  private readonly callbackListeners: CSSCallbackListeners<
+    CSSAnimationCallbackProp,
+    CSSAnimationEvent
+  >;
 
+  constructor(element: ReanimatedHTMLElement, svgElementTag = '') {
     this.element = element;
-    this.componentName = componentName;
+    this.svgElementTag = svgElementTag;
+    this.callbackListeners = new CSSCallbackListeners<
+      CSSAnimationCallbackProp,
+      CSSAnimationEvent
+    >(element, ANIMATION_EVENT_NAME, (event) => {
+      const animationEvent = event as AnimationEvent;
+      return {
+        animationName: animationEvent.animationName,
+        elapsedTime: animationEvent.elapsedTime,
+      };
+    });
   }
 
-  update(animationProperties: ExistingCSSAnimationProperties | null) {
+  update(
+    animationProperties: ExistingCSSAnimationProperties | null,
+    callbacks: CSSAnimationCallbacks | null = null
+  ) {
+    // Keep listeners tied to callback presence (not animation presence) so an
+    // `animationcancel` emitted while detaching still reaches the user.
+    this.callbackListeners.sync(callbacks ?? {});
+
     if (!animationProperties) {
       this.detach();
       return;
@@ -85,7 +112,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
         const keyframes = definition as CSSAnimationKeyframes;
         const processedKeyframes = processKeyframeDefinitions(
           keyframes,
-          this.componentName
+          this.svgElementTag
         );
 
         // If the animation with the same keyframes was already attached, we can reuse it
@@ -119,6 +146,8 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   }
 
   unmountCleanup(): void {
+    this.callbackListeners.detach();
+
     if (!this.unmountCleanupCalled) {
       this.unmountCleanupCalled = true;
       // We use setTimeout to ensure that the animation is removed after the

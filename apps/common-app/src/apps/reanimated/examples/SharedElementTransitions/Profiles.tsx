@@ -13,10 +13,9 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn,
-  runOnJS,
   SharedTransition,
   useAnimatedStyle,
   useReducedMotion,
@@ -25,6 +24,8 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import leavesBackground from './assets/nature/leaves.jpg';
+import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
+import { scheduleOnRN } from 'react-native-worklets';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -88,7 +89,7 @@ const profiles = {
 
 type Tag = keyof typeof profiles;
 
-function ProfilesScreen({
+function ProfilesScreenContent({
   navigation,
 }: NativeStackScreenProps<StackParamList, 'Profiles'>) {
   const goToDetails = (tag: Tag) => {
@@ -220,7 +221,7 @@ const forests = [
   },
 ] as const;
 
-function HomeScreen({
+function HomeScreenContent({
   route,
   navigation,
 }: NativeStackScreenProps<StackParamList, 'Home'>) {
@@ -358,7 +359,7 @@ const homeStyles = StyleSheet.create({
 
 const FLING_LIMIT = 160;
 
-function DetailsScreen({
+function DetailsScreenContent({
   route,
   navigation,
 }: NativeStackScreenProps<StackParamList, 'Details'>) {
@@ -374,8 +375,12 @@ function DetailsScreen({
     navigation.goBack();
   };
 
-  const pan = Gesture.Pan()
-    .onChange((event) => {
+  const pan = usePanGesture({
+    onFinalize: () => {
+      translation.x.value = withSpring(0, springOptions);
+      translation.y.value = withSpring(0, springOptions);
+    },
+    onUpdate: (event) => {
       translation.x.value += event.changeX;
       translation.y.value += event.changeY;
 
@@ -387,14 +392,11 @@ function DetailsScreen({
       ) {
         if (!runOnlyOnce.value) {
           runOnlyOnce.value = true;
-          runOnJS(goBack)();
+          scheduleOnRN(goBack);
         }
       }
-    })
-    .onFinalize(() => {
-      translation.x.value = withSpring(0, springOptions);
-      translation.y.value = withSpring(0, springOptions);
-    });
+    },
+  });
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -497,6 +499,10 @@ const detailStyles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
+const ProfilesScreen = withSharedTransitionBoundary(ProfilesScreenContent);
+const HomeScreen = withSharedTransitionBoundary(HomeScreenContent);
+const DetailsScreen = withSharedTransitionBoundary(DetailsScreenContent);
 
 export default function ProfilesExample() {
   // hide header of parent stack

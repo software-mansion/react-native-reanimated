@@ -21,18 +21,21 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
 
   bool needsFlush() const;
 
-  // TO DO: In the future we want to decouple config update and run
+  // TODO: In the future we want to decouple config update and run
   void updateConfigOrRun(
       jsi::Runtime &rt,
       const std::shared_ptr<const ShadowNode> &shadowNode,
       CSSTransitionConfig &&config);
-  /// run Should be called only after someone has already set settings with updateConfigOrRun
-  void run(
-      jsi::Runtime &rt,
-      const std::shared_ptr<const ShadowNode> &shadowNode,
-      const PropertyValueDiffsMap &propertyDiffs);
-  /** TODO: unify folly::dynamic and jsi::value versions */
   void run(const std::shared_ptr<const ShadowNode> &shadowNode, const PropertyValueDynamicDiffsMap &propertyDiffs);
+
+  void setPseudoLockedProperties(Tag viewTag, const TransitionProperties &properties);
+  /// Retargets settled pseudo-styled values to the fresh defaults, so a toggle value left in the
+  /// updates registry stops overriding later renders.
+  void reconcilePseudoStyledProperties(
+      Tag viewTag,
+      const folly::dynamic &defaults,
+      const folly::dynamic &previousDefaults,
+      const TransitionProperties &lockedProperties);
 
   void flushUpdates(UpdatesBatch &updatesBatch);
 #if REACT_NATIVE_VERSION_MINOR >= 85
@@ -62,12 +65,9 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
   std::unordered_set<Tag> updatedTags_;
 
   void removeTag(Tag viewTag) override;
+  const std::shared_ptr<CSSTransition> &getOrCreateTransition(const std::shared_ptr<const ShadowNode> &shadowNode);
   void updateInUpdatesRegistry(const std::shared_ptr<CSSTransition> &transition, const folly::dynamic &updates);
-  void runTransition(
-      jsi::Runtime &rt,
-      const std::shared_ptr<CSSTransition> &transition,
-      const facebook::react::Tag &viewTag,
-      const PropertyValueDiffsMap &propertyDiffs);
+  void recordInitialUpdate(const std::shared_ptr<CSSTransition> &transition, const folly::dynamic &initialUpdate);
 };
 
 } // namespace reanimated::css
