@@ -51,7 +51,7 @@ export type Options<P> = {
 export default class AnimatedComponent
   extends ReanimatedAnimatedComponent<
     AnimatedComponentProps<InitialComponentProps>,
-    { settledProps: StyleProps }
+    { settledProps?: StyleProps; settledStyle?: StyleProps }
   >
   implements IAnimatedComponentInternal
 {
