@@ -44,7 +44,7 @@ export type Options<P> = {
 export default class AnimatedComponent
   extends ReanimatedAnimatedComponent<
     AnimatedComponentProps<InitialComponentProps>,
-    { settledProps: StyleProps }
+    { settledProps?: StyleProps; settledStyle?: StyleProps }
   >
   implements IAnimatedComponentInternal
 {
@@ -79,7 +79,7 @@ export default class AnimatedComponent
     this._displayName = displayName;
 
     if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
-      this.state = { settledProps: {} };
+      this.state = {};
     }
 
     if (IS_JEST) {
@@ -143,13 +143,40 @@ export default class AnimatedComponent
     }
   }
 
-  _syncStylePropsBackToReact(props: StyleProps) {
-    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
-      this.setState((state) => ({
-        settledProps: { ...state.settledProps, ...props },
-      }));
-      // TODO(future): revert changes when animated styles are detached
+  _syncStylePropsBackToReact(settledUpdates: StyleProps) {
+    if (!FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+      return;
     }
+    // Settled updates arrive as one bag with no style-vs-props origin, so
+    // partition them by the keys of attached animated props — only values
+    // from `useAnimatedProps` or shared values passed as inline top-level
+    // props may be passed as top-level props, all the other ones are
+    // style-only.
+    const animatedPropsKeys = new Set([
+      ...this._animatedProps.flatMap((animatedProp) =>
+        Object.keys(animatedProp.initial?.value ?? {})
+      ),
+      ...Object.keys(this._InlinePropManager._inlineTopLevelProps),
+    ]);
+    if (animatedPropsKeys.size === 0) {
+      this.setState((state) => ({
+        settledStyle: { ...state.settledStyle, ...settledUpdates },
+      }));
+      return;
+    }
+    this.setState((state) => {
+      const settledProps = { ...state.settledProps };
+      const settledStyle = { ...state.settledStyle };
+      for (const key in settledUpdates) {
+        if (animatedPropsKeys.has(key)) {
+          settledProps[key] = settledUpdates[key];
+        } else {
+          settledStyle[key] = settledUpdates[key];
+        }
+      }
+      return { settledProps, settledStyle };
+    });
+    // TODO(future): revert changes when animated styles are detached
   }
 
   _detachStyles() {
@@ -415,12 +442,12 @@ export default class AnimatedComponent
       }
     }
 
-    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS && this.state.settledStyle) {
       return super.render({
         nativeID,
         ...filteredProps,
         ...this.state.settledProps,
-        style: [...flattenArray(filteredProps.style), this.state.settledProps],
+        style: [...flattenArray(filteredProps.style), this.state.settledStyle],
         ...jestProps,
       });
     }
