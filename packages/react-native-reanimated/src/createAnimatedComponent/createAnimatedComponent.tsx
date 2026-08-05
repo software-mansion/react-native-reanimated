@@ -7,7 +7,7 @@ import type {
   Ref,
   RefAttributes,
 } from 'react';
-import type { FlatList, FlatListProps } from 'react-native';
+import type { FlatList, FlatListProps, TextInput } from 'react-native';
 
 import type { InstanceOrElement } from '../commonTypes';
 import type { AnimatedProps } from '../helperTypes';
@@ -48,6 +48,17 @@ type AnimatableComponent<C extends ComponentType<any>> = C & {
 };
 
 /**
+ * `text` is the native prop backing `TextInput`'s value. It's not part of
+ * `TextInputProps`, but Reanimated can update it directly, so the animated
+ * `TextInput` accepts it.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnimatableComponentProps<TInstance extends ComponentType<any>> =
+  TInstance extends typeof TextInput
+    ? ComponentProps<TInstance> & { text?: string }
+    : ComponentProps<TInstance>;
+
+/**
  * Lets you create an Animated version of any React Native component.
  *
  * @param Component - The component you want to make animatable.
@@ -71,7 +82,10 @@ export function createAnimatedComponent<
   // falsely flagged by `@typescript-eslint/no-deprecated`.
   Component: TInstance extends typeof FlatList<infer _> ? never : TInstance,
   options?: Options<InitialComponentProps>
-): AnimatedComponentType<Readonly<ComponentProps<TInstance>>, TInstance>;
+): AnimatedComponentType<
+  Readonly<AnimatableComponentProps<TInstance>>,
+  TInstance
+>;
 
 /**
  * @deprecated Please use `Animated.FlatList` component instead of calling
