@@ -1,5 +1,6 @@
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import type { PropsWithChildren } from 'react';
 import { useMemo, useState } from 'react';
 import type { ImageSourcePropType } from 'react-native';
 import {
@@ -9,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { GestureDetector, useTapGesture } from 'react-native-gesture-handler';
 import Animated, { cubicBezier } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
@@ -68,23 +69,27 @@ export default function FlexGallery() {
           { paddingBottom: BOTTOM_BAR_HEIGHT + inset + spacing.sm },
         ]}>
         {CARDS.map(({ description, image, title }, idx) => (
-          <GestureDetector
-            key={idx}
-            gesture={Gesture.Tap()
-              .onEnd(() => setExpandedIdx(idx))
-              .runOnJS(true)}>
+          <TappableCard key={idx} onTap={() => setExpandedIdx(idx)}>
             <GalleryCard
               description={description}
               expanded={idx === expandedIdx}
               image={image}
-              key={idx}
               title={title}
             />
-          </GestureDetector>
+          </TappableCard>
         ))}
       </View>
     </Screen>
   );
+}
+
+function TappableCard({
+  children,
+  onTap,
+}: PropsWithChildren<{ onTap: () => void }>) {
+  const gesture = useTapGesture({ onDeactivate: onTap, runOnJS: true });
+
+  return <GestureDetector gesture={gesture}>{children}</GestureDetector>;
 }
 
 type GalleryCardProps = {
