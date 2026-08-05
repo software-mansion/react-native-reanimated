@@ -1,6 +1,6 @@
 import React from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   Extrapolation,
@@ -74,12 +74,15 @@ export default function IPodExample() {
   const start = useSharedValue({ x: 0, y: 0 });
   const last = useSharedValue({ x: 0, y: 0 });
 
-  const gesture = Gesture.Pan()
-    .onBegin((e) => {
+  const gesture = usePanGesture({
+    onBegin: (e) => {
       start.value = { x: e.x, y: e.y };
       last.value = { x: e.x, y: e.y };
-    })
-    .onUpdate((e) => {
+    },
+    onDeactivate: () => {
+      scrollToNearestItem(position.value);
+    },
+    onUpdate: (e) => {
       const currentPos = { x: e.x, y: e.y };
       const lastPos = last.value;
       last.value = currentPos;
@@ -114,10 +117,8 @@ export default function IPodExample() {
         Extrapolation.CLAMP
       );
       scrollTo(animatedRef, position.value, 0, false);
-    })
-    .onEnd(() => {
-      scrollToNearestItem(position.value);
-    });
+    },
+  });
 
   return (
     <View style={styles.ipod}>

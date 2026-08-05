@@ -131,8 +131,8 @@ export interface IAnimatedComponentInternalBase {
   _viewInfo?: ViewInfo;
 
   /**
-   * Used for Layout Animations and Animated Styles. It is not related to event
-   * handling.
+   * Resolves the tag of the host view backing this component. Used for Layout
+   * Animations, Animated Styles and event registration.
    */
   getComponentViewTag: () => number;
 }

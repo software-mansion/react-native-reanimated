@@ -23,6 +23,33 @@ function findHostInstanceFastPath(maybeNativeRef: HostInstance | undefined) {
   return undefined;
 }
 
+type ScrollableRef = {
+  getNativeScrollRef?: () => HostInstance | null;
+  getScrollableNode?: () => HostInstance | number | null;
+};
+
+function findHostInstanceFromScrollableRef(
+  maybeScrollableRef: ScrollableRef | undefined
+) {
+  if (!maybeScrollableRef) {
+    return undefined;
+  }
+
+  const nativeScrollRef = maybeScrollableRef.getNativeScrollRef?.();
+  if (nativeScrollRef) {
+    const hostInstance = findHostInstanceFastPath(nativeScrollRef);
+    if (hostInstance !== undefined) {
+      return hostInstance;
+    }
+  }
+
+  const scrollableNode = maybeScrollableRef.getScrollableNode?.();
+  if (!scrollableNode || typeof scrollableNode === 'number') {
+    return undefined;
+  }
+  return findHostInstanceFastPath(scrollableNode);
+}
+
 function resolveFindHostInstance_DEPRECATED() {
   if (findHostInstance_DEPRECATED !== undefined) {
     return;
@@ -46,12 +73,20 @@ let findHostInstance_DEPRECATED: (ref: unknown) => HostInstance;
 export function findHostInstance(
   ref: IAnimatedComponentInternalBase | InternalHostInstance
 ): HostInstance {
+  const componentRef = (ref as IAnimatedComponentInternalBase)
+    ._componentRef as HostInstance;
+
   // Fast path for native refs
-  const hostInstance = findHostInstanceFastPath(
-    (ref as IAnimatedComponentInternalBase)._componentRef as HostInstance
-  );
+  const hostInstance = findHostInstanceFastPath(componentRef);
   if (hostInstance !== undefined) {
     return hostInstance;
+  }
+
+  const scrollableHostInstance = findHostInstanceFromScrollableRef(
+    componentRef as ScrollableRef | undefined
+  );
+  if (scrollableHostInstance !== undefined) {
+    return scrollableHostInstance;
   }
 
   resolveFindHostInstance_DEPRECATED();
@@ -61,7 +96,5 @@ export function findHostInstance(
     forward their ref to the host view that should be animated. Components that expose an animatable
     ref via `getAnimatableRef` already have it resolved into `_componentRef`.
   */
-  return findHostInstance_DEPRECATED(
-    (ref as IAnimatedComponentInternalBase)._componentRef ?? ref
-  );
+  return findHostInstance_DEPRECATED(componentRef ?? ref);
 }

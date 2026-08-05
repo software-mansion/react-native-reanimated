@@ -1,9 +1,9 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import {
-  Gesture,
   GestureDetector,
   GestureHandlerRootView,
+  usePanGesture,
 } from 'react-native-gesture-handler';
 import Animated, {
   clamp,
@@ -55,18 +55,12 @@ function Chessman({ row, col, color, symbol }: ChessmanProps) {
 
   const isActive = useSharedValue(false);
 
-  const gesture = Gesture.Pan()
-    .minDistance(0)
-    .onBegin(() => {
+  const gesture = usePanGesture({
+    minDistance: 0,
+    onBegin: () => {
       isActive.value = true;
-    })
-    .onChange((e) => {
-      offset.value = {
-        x: offset.value.x + e.changeX,
-        y: offset.value.y + e.changeY,
-      };
-    })
-    .onFinalize(() => {
+    },
+    onFinalize: () => {
       isActive.value = false;
       offset.value = withSpring(
         {
@@ -75,7 +69,14 @@ function Chessman({ row, col, color, symbol }: ChessmanProps) {
         },
         { duration: 300 }
       );
-    });
+    },
+    onUpdate: (e) => {
+      offset.value = {
+        x: offset.value.x + e.changeX,
+        y: offset.value.y + e.changeY,
+      };
+    },
+  });
 
   const animatedTextStyle = useAnimatedStyle(() => {
     return {

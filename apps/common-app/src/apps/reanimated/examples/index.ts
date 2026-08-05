@@ -17,6 +17,10 @@ const AnimatedListExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/AnimatedList').default as React.FC
   );
+const AnimatedTouchables: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/AnimatedTouchables').default as React.FC
+  );
 const AnimatedPropsExample: React.FC = () =>
   React.createElement(require('./AnimatedPropsExample').default as React.FC);
 const AnimatedSensorAccelerometerExample: React.FC = () =>
@@ -184,6 +188,10 @@ const EmptyExample: React.FC = () =>
   React.createElement(require('./EmptyExample').default as React.FC);
 const SettledPropsLeakExample: React.FC = () =>
   React.createElement(require('./SettledPropsLeakExample').default as React.FC);
+const InlineStylesAndPropsExample: React.FC = () =>
+  React.createElement(
+    require('./InlineStylesAndPropsExample').default as React.FC
+  );
 const SuspenseLayoutAnimationCrashExample: React.FC = () =>
   React.createElement(
     require('./SuspenseLayoutAnimationCrashExample').default as React.FC
@@ -538,6 +546,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '👻',
     title: 'Empty',
     screen: EmptyExample,
+  },
+  InlineStylesAndPropsExample: {
+    icon: '🎛️',
+    title: 'Inline styles and props',
+    screen: InlineStylesAndPropsExample,
   },
   FpsExample: {
     icon: '🎞️',
@@ -1130,6 +1143,10 @@ export const EXAMPLES: Record<string, Example> = {
   ParticipantList: {
     title: '[LA] Participant List',
     screen: AnimatedListExample,
+  },
+  AnimatedTouchables: {
+    title: '[LA] Animated Touchables',
+    screen: AnimatedTouchables,
   },
   OlympicAnimation: {
     title: '[LA] Olympic animation',
