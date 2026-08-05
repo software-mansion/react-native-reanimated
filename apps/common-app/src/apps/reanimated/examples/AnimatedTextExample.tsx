@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Button, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   interpolate,
@@ -6,19 +6,15 @@ import Animated, {
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
-  withRepeat,
   withTiming,
 } from 'react-native-reanimated';
 
 // TODO: sync `text` prop updates back to React as `children` prop
 
 export default function AnimatedTextExample() {
-  const sv = useSharedValue(0);
+  const ref = useRef(0);
 
-  useEffect(() => {
-    sv.value = 0;
-    sv.value = withRepeat(withTiming(1, { duration: 1000 }), -1, true);
-  }, [sv]);
+  const sv = useSharedValue(0);
 
   const textSv = useDerivedValue(() => {
     return String(Math.round(sv.value * 100));
@@ -58,6 +54,16 @@ export default function AnimatedTextExample() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.row}>
+        <Button
+          title="Toggle"
+          onPress={() => {
+            ref.current = 1 - ref.current;
+            sv.set(withTiming(ref.current, { duration: 1000 }));
+          }}
+        />
+      </View>
+
       {/* Animated text is an inline prop (string shared value) */}
       <View style={styles.row}>
         <Text>Before</Text>
