@@ -19,7 +19,7 @@ export default function AnimatedTextWidthExample() {
     return () => {
       sv.value = 0;
     };
-  });
+  }, [sv]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return { width: (1.4 + Math.sin(sv.value)) * 150 };
