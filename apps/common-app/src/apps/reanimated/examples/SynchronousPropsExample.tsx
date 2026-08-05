@@ -49,7 +49,22 @@ export default function SynchronousPropsExample() {
   const perspectiveSv = useDerivedValue(() => Math.pow(2, sv.value * 3 + 4.5));
 
   const matrixSv = useDerivedValue(() => [
-    sv.value * 2, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 10, 1
+    sv.value * 2,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    10,
+    1,
   ]);
 
   const placeholderTextColorAnimatedProps = useAnimatedProps(() => ({
