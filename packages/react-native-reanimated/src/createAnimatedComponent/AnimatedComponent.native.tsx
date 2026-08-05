@@ -149,19 +149,21 @@ export default class AnimatedComponent
     }
     // Settled updates arrive as one bag with no style-vs-props origin, so
     // partition them by the keys of attached animated props — only values
-    // from `useAnimatedProps` may be passed as top-level props, all the
-    // other ones are style-only.
-    if (this._animatedProps.length === 0) {
+    // from `useAnimatedProps` or shared values passed as inline top-level
+    // props may be passed as top-level props, all the other ones are
+    // style-only.
+    const animatedPropsKeys = new Set([
+      ...this._animatedProps.flatMap((animatedProp) =>
+        Object.keys(animatedProp.initial?.value ?? {})
+      ),
+      ...Object.keys(this._InlinePropManager._inlineTopLevelProps),
+    ]);
+    if (animatedPropsKeys.size === 0) {
       this.setState((state) => ({
         settledStyle: { ...state.settledStyle, ...settledUpdates },
       }));
       return;
     }
-    const animatedPropsKeys = new Set(
-      this._animatedProps.flatMap((animatedProp) =>
-        Object.keys(animatedProp.initial?.value ?? {})
-      )
-    );
     this.setState((state) => {
       const settledProps = { ...state.settledProps };
       const settledStyle = { ...state.settledStyle };
