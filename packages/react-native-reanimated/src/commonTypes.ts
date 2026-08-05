@@ -213,7 +213,7 @@ export interface SharedValue<Value = unknown> {
  * Instead of refactoring the code with small chances of success, we just
  * disable contravariance for `SharedValue` in this problematic case.
  */
-type SharedValueDisableContravariance<Value = unknown> = Omit<
+export type SharedValueDisableContravariance<Value = unknown> = Omit<
   SharedValue<Value>,
   'set' | 'modify'
 >;
