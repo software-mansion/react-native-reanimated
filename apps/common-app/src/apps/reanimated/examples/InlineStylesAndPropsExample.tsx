@@ -1,5 +1,5 @@
-import { useCallback } from "react";
-import type { ColorValue } from "react-native";
+import { useCallback } from 'react';
+import type { ColorValue } from 'react-native';
 import {
   Button,
   StyleSheet,
@@ -7,15 +7,15 @@ import {
   Text,
   TextInput,
   View,
-} from "react-native";
-import type { SharedValue } from "react-native-reanimated";
+} from 'react-native';
+import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   useAnimatedProps,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
-} from "react-native-reanimated";
-import { Circle, Svg } from "react-native-svg";
+} from 'react-native-reanimated';
+import { Circle, Svg } from 'react-native-svg';
 
 const AnimatedSwitch = Animated.createAnimatedComponent(Switch);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -28,7 +28,7 @@ export default function InlineStylesAndPropsExample() {
     value.set((current) => !current);
   }, [value]);
 
-  const colorSv = useDerivedValue(() => (value.value ? "lime" : "red"));
+  const colorSv = useDerivedValue(() => (value.value ? 'lime' : 'red'));
 
   const textSv = useDerivedValue(() => String(value.value ?? false));
 
@@ -103,8 +103,8 @@ export default function InlineStylesAndPropsExample() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   box: {
     width: 60,
@@ -112,9 +112,9 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "gray",
+    borderColor: 'gray',
     width: 100,
     padding: 4,
-    textAlign: "center",
+    textAlign: 'center',
   },
 });
