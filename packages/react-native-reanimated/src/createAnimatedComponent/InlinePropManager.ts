@@ -13,6 +13,8 @@ import type {
 } from './commonTypes';
 import { flattenArray } from './utils';
 
+type InlinePropsMap = Record<string, unknown>;
+
 function isInlineStyleTransform(transform: unknown): boolean {
   if (!Array.isArray(transform)) {
     return false;
@@ -22,8 +24,8 @@ function isInlineStyleTransform(transform: unknown): boolean {
 }
 
 function inlinePropsHasChanged(
-  styles1: StyleProps,
-  styles2: StyleProps
+  styles1: InlinePropsMap,
+  styles2: InlinePropsMap
 ): boolean {
   if (Object.keys(styles1).length !== Object.keys(styles2).length) {
     return true;
@@ -132,7 +134,8 @@ export function getInlineStyle(
 export class InlinePropManager implements IInlinePropManager {
   _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
   _inlinePropsMapperId: number | null = null;
-  _inlineProps: StyleProps = {};
+  _inlineStyleProps: InlinePropsMap = {};
+  _inlineTopLevelProps: InlinePropsMap = {};
 
   public attachInlineProps(
     animatedComponent: AnimatedComponentTypeInternal,
@@ -140,11 +143,9 @@ export class InlinePropManager implements IInlinePropManager {
   ) {
     const { inlineStyleProps, inlineTopLevelProps } =
       extractSharedValuesMapFromProps(animatedComponent.props);
-    const newInlineProps: Record<string, unknown> = {
-      ...inlineStyleProps,
-      ...inlineTopLevelProps,
-    };
-    const hasChanged = inlinePropsHasChanged(newInlineProps, this._inlineProps);
+    const hasChanged =
+      inlinePropsHasChanged(inlineStyleProps, this._inlineStyleProps) ||
+      inlinePropsHasChanged(inlineTopLevelProps, this._inlineTopLevelProps);
 
     if (hasChanged) {
       if (!this._inlinePropsViewDescriptors) {
@@ -163,6 +164,7 @@ export class InlinePropManager implements IInlinePropManager {
       const hasInlineStyleProps = Object.keys(inlineStyleProps).length > 0;
       const hasInlineTopLevelProps =
         Object.keys(inlineTopLevelProps).length > 0;
+      const hasInlineProps = hasInlineStyleProps || hasInlineTopLevelProps;
       const updaterFunction = () => {
         'worklet';
         if (hasInlineStyleProps) {
@@ -183,16 +185,18 @@ export class InlinePropManager implements IInlinePropManager {
           );
         }
       };
-      this._inlineProps = newInlineProps;
+      this._inlineStyleProps = inlineStyleProps;
+      this._inlineTopLevelProps = inlineTopLevelProps;
+
       if (this._inlinePropsMapperId) {
         stopMapper(this._inlinePropsMapperId);
       }
       this._inlinePropsMapperId = null;
-      if (Object.keys(newInlineProps).length) {
-        this._inlinePropsMapperId = startMapper(
-          updaterFunction,
-          Object.values(newInlineProps)
-        );
+      if (hasInlineProps) {
+        this._inlinePropsMapperId = startMapper(updaterFunction, [
+          inlineStyleProps,
+          inlineTopLevelProps,
+        ]);
       }
     }
   }
@@ -203,6 +207,7 @@ export class InlinePropManager implements IInlinePropManager {
       this._inlinePropsMapperId = null;
     }
     this._inlinePropsViewDescriptors = null;
-    this._inlineProps = {};
+    this._inlineStyleProps = {};
+    this._inlineTopLevelProps = {};
   }
 }
