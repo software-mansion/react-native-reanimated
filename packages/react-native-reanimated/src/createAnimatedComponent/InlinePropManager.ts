@@ -1,4 +1,5 @@
 'use strict';
+import type { UnknownRecord } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { isSharedValue } from '../isSharedValue';
 import { startMapper, stopMapper } from '../mappers';
@@ -13,8 +14,6 @@ import type {
 } from './commonTypes';
 import { flattenArray } from './utils';
 
-type InlinePropsMap = Record<string, unknown>;
-
 function isInlineStyleTransform(transform: unknown): boolean {
   if (!Array.isArray(transform)) {
     return false;
@@ -24,15 +23,15 @@ function isInlineStyleTransform(transform: unknown): boolean {
 }
 
 function inlinePropsHasChanged(
-  styles1: InlinePropsMap,
-  styles2: InlinePropsMap
+  props1: UnknownRecord,
+  props2: UnknownRecord
 ): boolean {
-  if (Object.keys(styles1).length !== Object.keys(styles2).length) {
+  if (Object.keys(props1).length !== Object.keys(props2).length) {
     return true;
   }
 
-  for (const key of Object.keys(styles1)) {
-    if (styles1[key] !== styles2[key]) {
+  for (const key of Object.keys(props1)) {
+    if (props1[key] !== props2[key]) {
       return true;
     }
   }
@@ -134,8 +133,8 @@ export function getInlineStyle(
 export class InlinePropManager implements IInlinePropManager {
   _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
   _inlinePropsMapperId: number | null = null;
-  _inlineStyleProps: InlinePropsMap = {};
-  _inlineTopLevelProps: InlinePropsMap = {};
+  _inlineStyleProps: UnknownRecord = {};
+  _inlineTopLevelProps: UnknownRecord = {};
 
   public attachInlineProps(
     animatedComponent: AnimatedComponentTypeInternal,
