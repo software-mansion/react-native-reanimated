@@ -31,9 +31,7 @@ export default function SettledPropsLeakExample() {
     sv.value = withTiming(1);
   }, [sv]);
 
-  const text = useDerivedValue<string | undefined>(
-    () => `${Math.round(sv.value * 100)}`
-  );
+  const text = useDerivedValue(() => `${Math.round(sv.value * 100)}`);
 
   const backgroundColor = useDerivedValue(() =>
     interpolateColor(sv.value, [0, 1], ['red', 'lime'])

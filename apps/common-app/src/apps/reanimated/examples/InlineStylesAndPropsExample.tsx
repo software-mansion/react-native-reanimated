@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import type { ColorValue } from 'react-native';
 import {
   Button,
   StyleSheet,
@@ -8,7 +7,6 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   useAnimatedProps,
   useAnimatedStyle,
@@ -67,19 +65,14 @@ export default function InlineStylesAndPropsExample() {
 
       <Text>Circle + inline prop</Text>
       <Svg width={60} height={60}>
-        <AnimatedCircle
-          cx={30}
-          cy={30}
-          r={25}
-          fill={colorSv as SharedValue<ColorValue | undefined>}
-        />
+        <AnimatedCircle cx={30} cy={30} r={25} fill={colorSv} />
       </Svg>
 
       <Text>Switch + useAnimatedProps</Text>
       <AnimatedSwitch animatedProps={switchAnimatedProps} />
 
       <Text>Switch + inline prop</Text>
-      <AnimatedSwitch value={value as SharedValue<boolean | undefined>} />
+      <AnimatedSwitch value={value} />
 
       <Text>TextInput + useAnimatedProps</Text>
       <AnimatedTextInput
