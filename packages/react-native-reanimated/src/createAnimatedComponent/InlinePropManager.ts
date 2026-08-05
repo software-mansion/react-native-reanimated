@@ -219,7 +219,6 @@ export class InlinePropManager implements IInlinePropManager {
       this._inlineStyleProps = inlineStyleProps;
       this._inlineTopLevelProps = inlineTopLevelProps;
 
-
       if (this._inlinePropsMapperId) {
         stopMapper(this._inlinePropsMapperId);
       }
