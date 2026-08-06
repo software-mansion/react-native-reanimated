@@ -55,7 +55,7 @@ export default function BottomTabBar({
       left: withTiming(offset),
       width: withTiming(width),
     };
-  }, []);
+  });
 
   const gradient = useMemo(
     () => (

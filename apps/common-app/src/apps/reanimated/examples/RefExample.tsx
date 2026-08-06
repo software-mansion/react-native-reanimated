@@ -37,7 +37,7 @@ export default function RefExample() {
 
   const style = useAnimatedStyle(() => {
     return { left: 200 * x.value, top: 200 * y.value };
-  }, []);
+  });
 
   const handleToggleSharedValue = () => {
     x.value = withTiming(Math.random(), { duration: 500 });

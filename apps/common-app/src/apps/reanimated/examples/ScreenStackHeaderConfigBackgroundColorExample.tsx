@@ -62,7 +62,7 @@ export default function ScreenStackHeaderConfigBackgroundColorExample() {
       backgroundColor: color,
       title: color,
     };
-  }, [offset]);
+  });
 
   const [counter, setCounter] = React.useState(0);
 
