@@ -9,7 +9,10 @@ import type {
 } from 'react';
 import type { FlatList, FlatListProps, TextInput } from 'react-native';
 
-import type { InstanceOrElement } from '../commonTypes';
+import type {
+  InstanceOrElement,
+  SharedValueDisableContravariance,
+} from '../commonTypes';
 import type { AnimatedProps } from '../helperTypes';
 import type { AnimatedRef } from '../hook';
 import type { ExtractElementRef } from '../hook/commonTypes';
@@ -30,14 +33,20 @@ type AnimatedComponentRef<TInstance> =
 export type AnimatedComponentType<
   Props extends object = object,
   Instance = unknown,
+  // Extra props accepted only when passed inline on the animated component.
+  // They are not part of the base component props, so they don't affect the
+  // `animatedProps` typing.
+  ExtraProps extends object = object,
 > = {
   (
-    props: Omit<AnimatedProps<Props>, 'ref'> & {
-      ref?: AnimatedComponentRef<Instance>;
-    }
+    props: Omit<AnimatedProps<Props>, 'ref'> &
+      ExtraProps & {
+        ref?: AnimatedComponentRef<Instance>;
+      }
   ): ReactNode;
   (
     props: Omit<AnimatedProps<Props>, 'ref'> &
+      ExtraProps &
       RefAttributes<ExtractElementRef<Instance>>
   ): ReactNode;
 };
@@ -50,13 +59,16 @@ type AnimatableComponent<C extends ComponentType<any>> = C & {
 /**
  * `text` is the native prop backing `TextInput`'s value. It's not part of
  * `TextInputProps`, but Reanimated can update it directly, so the animated
- * `TextInput` accepts it.
+ * `TextInput` accepts it as a shared value. Static strings are still disallowed
+ * - use `value` or `defaultValue` for those. It's added only to the inline
+ * props (not to the base component props) so that `useAnimatedProps`, which
+ * supplies raw values, keeps accepting `{ text: string }`.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnimatableComponentProps<TInstance extends ComponentType<any>> =
+type AnimatableComponentExtraProps<TInstance extends ComponentType<any>> =
   TInstance extends typeof TextInput
-    ? ComponentProps<TInstance> & { text?: string }
-    : ComponentProps<TInstance>;
+    ? { text?: SharedValueDisableContravariance<string> }
+    : object;
 
 /**
  * Lets you create an Animated version of any React Native component.
@@ -83,8 +95,9 @@ export function createAnimatedComponent<
   Component: TInstance extends typeof FlatList<infer _> ? never : TInstance,
   options?: Options<InitialComponentProps>
 ): AnimatedComponentType<
-  Readonly<AnimatableComponentProps<TInstance>>,
-  TInstance
+  Readonly<ComponentProps<TInstance>>,
+  TInstance,
+  AnimatableComponentExtraProps<TInstance>
 >;
 
 /**
