@@ -1,4 +1,5 @@
 'use strict';
+export { processBackgroundImage } from './backgroundImage';
 export {
   DynamicColorIOS,
   PlatformColor,
