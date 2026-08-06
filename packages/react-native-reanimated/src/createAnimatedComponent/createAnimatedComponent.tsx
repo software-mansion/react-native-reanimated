@@ -80,9 +80,7 @@ export function createAnimatedComponent<
   // `@typescript-eslint/no-deprecated`.
   Component: TInstance extends typeof FlatList<infer _>
     ? never
-    : TInstance extends typeof TextInput
-      ? never
-      : TInstance,
+    : Exclude<TInstance, typeof TextInput>,
   options?: Options<InitialComponentProps>
 ): AnimatedComponentType<Readonly<ComponentProps<TInstance>>, TInstance>;
 
