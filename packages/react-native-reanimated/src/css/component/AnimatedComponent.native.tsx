@@ -45,6 +45,7 @@ export default class AnimatedComponent<
   _componentRef: AnimatedComponentRef | HTMLElement | null = null;
   _componentDOMRef: HTMLElement | null = null;
   _willUnmount: boolean = false;
+  _forwardedRefCleanup?: () => void;
 
   constructor(ChildComponent: AnyComponent, props: P) {
     super(props);
@@ -91,12 +92,22 @@ export default class AnimatedComponent<
 
   _setComponentRef = (ref: Component | HTMLElement) => {
     // Forward to user ref prop (if one has been specified)
-    assignRef(this.props.forwardedRef as Ref<Component | HTMLElement>, ref);
+    const forwardedRef = this.props.forwardedRef as Ref<
+      Component | HTMLElement
+    >;
 
     if (!ref) {
       // component has been unmounted
+      if (this._forwardedRefCleanup) {
+        this._forwardedRefCleanup();
+        this._forwardedRefCleanup = undefined;
+      } else {
+        assignRef(forwardedRef, null);
+      }
       return;
     }
+
+    this._forwardedRefCleanup = assignRef(forwardedRef, ref);
     if (ref !== this._componentRef) {
       this._componentRef = this._resolveComponentRef(ref);
       // if ref is changed, reset viewInfo
