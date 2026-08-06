@@ -57,20 +57,6 @@ type AnimatableComponent<C extends ComponentType<any>> = C & {
 };
 
 /**
- * `text` is the native prop backing `TextInput`'s value. It's not part of
- * `TextInputProps`, but Reanimated can update it directly, so the animated
- * `TextInput` accepts it as a shared value. Static strings are still disallowed
- * - use `value` or `defaultValue` for those. It's added only to the inline
- * props (not to the base component props) so that `useAnimatedProps`, which
- * supplies raw values, keeps accepting `{ text: string }`.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnimatableComponentExtraProps<TInstance extends ComponentType<any>> =
-  TInstance extends typeof TextInput
-    ? { text?: SharedValueDisableContravariance<string> }
-    : object;
-
-/**
  * Lets you create an Animated version of any React Native component.
  *
  * @param Component - The component you want to make animatable.
@@ -86,18 +72,35 @@ export function createAnimatedComponent<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TInstance extends AnimatableComponent<ComponentType<any>>,
 >(
-  // `FlatList` is excluded so that calls passing it fall through to the
-  // deprecated overload below (which nudges towards `Animated.FlatList`).
-  // This overload is declared first so that a bare reference to
-  // `createAnimatedComponent` (e.g. `Animated.createAnimatedComponent` passed
-  // as a value) resolves to a non-deprecated signature instead of being
-  // falsely flagged by `@typescript-eslint/no-deprecated`.
-  Component: TInstance extends typeof FlatList<infer _> ? never : TInstance,
+  // `FlatList` and `TextInput` are excluded so that calls passing them fall
+  // through to the dedicated overloads below. This overload is declared first
+  // so that a bare reference to `createAnimatedComponent` (e.g.
+  // `Animated.createAnimatedComponent` passed as a value) resolves to a
+  // non-deprecated signature instead of being falsely flagged by
+  // `@typescript-eslint/no-deprecated`.
+  Component: TInstance extends typeof FlatList<infer _>
+    ? never
+    : TInstance extends typeof TextInput
+      ? never
+      : TInstance,
+  options?: Options<InitialComponentProps>
+): AnimatedComponentType<Readonly<ComponentProps<TInstance>>, TInstance>;
+
+/**
+ * `text` is the native prop backing `TextInput`'s value. It's not part of
+ * `TextInputProps`, but Reanimated can update it directly, so the animated
+ * `TextInput` accepts it as a shared value. Static strings are still disallowed
+ * - use `value` or `defaultValue` for those. It's added only to the inline
+ * props (not to the base component props) so that `useAnimatedProps`, which
+ * supplies raw values, keeps accepting `{ text: string }`.
+ */
+export function createAnimatedComponent(
+  Component: typeof TextInput,
   options?: Options<InitialComponentProps>
 ): AnimatedComponentType<
-  Readonly<ComponentProps<TInstance>>,
-  TInstance,
-  AnimatableComponentExtraProps<TInstance>
+  Readonly<ComponentProps<typeof TextInput>>,
+  typeof TextInput,
+  { text?: SharedValueDisableContravariance<string> }
 >;
 
 /**
