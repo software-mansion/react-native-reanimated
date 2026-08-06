@@ -15,6 +15,7 @@ import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import type { DefaultStyle } from '../../hook/commonTypes';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
+import { assignRef } from '../../reactUtils';
 import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../native';
 import { CSSManager } from '../platform';
 import type { CSSStyle } from '../types';
@@ -89,18 +90,8 @@ export default class AnimatedComponent<
   }
 
   _setComponentRef = (ref: Component | HTMLElement) => {
-    const forwardedRef = this.props.forwardedRef as
-      | ((ref: Component | HTMLElement) => void)
-      | { current: Component | HTMLElement | null }
-      | undefined;
     // Forward to user ref prop (if one has been specified)
-    if (typeof forwardedRef === 'function') {
-      // Handle function-based refs. String-based refs are handled as functions.
-      forwardedRef(ref);
-    } else if (typeof forwardedRef === 'object' && forwardedRef) {
-      // Handle createRef-based refs
-      forwardedRef.current = ref;
-    }
+    assignRef(this.props.forwardedRef as Ref<Component | HTMLElement>, ref);
 
     if (!ref) {
       // component has been unmounted

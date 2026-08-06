@@ -11,7 +11,10 @@ import {
 } from 'react';
 
 import { setShouldAnimateExitingForTag } from '../core';
+import type { InstanceWithViewTag } from '../createAnimatedComponent/getViewInfo';
+import { getViewTagFromInstance } from '../createAnimatedComponent/getViewInfo';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
+import { mergeRefs } from '../reactUtils';
 
 export const SkipEnteringContext =
   createContext<React.RefObject<boolean> | null>(null);
@@ -38,67 +41,6 @@ function SkipEntering(props: { shouldSkip: boolean; children: ReactNode }) {
   );
 }
 
-type TaggedInstance = {
-  getComponentViewTag?: () => number;
-  __nativeTag?: number;
-  getNativeScrollRef?: () => TaggedInstance | null;
-  getScrollableNode?: () => TaggedInstance | number | null;
-};
-
-function getTagFromChildInstance(
-  instance: TaggedInstance | null
-): number | null {
-  if (!instance) {
-    return null;
-  }
-
-  if (typeof instance.getComponentViewTag === 'function') {
-    const tag = instance.getComponentViewTag();
-    if (tag !== -1) {
-      return tag;
-    }
-  }
-
-  if (typeof instance.__nativeTag === 'number') {
-    return instance.__nativeTag;
-  }
-
-  const nativeScrollRef = instance.getNativeScrollRef?.();
-  if (typeof nativeScrollRef?.__nativeTag === 'number') {
-    return nativeScrollRef.__nativeTag;
-  }
-
-  const scrollableNode = instance.getScrollableNode?.();
-  if (typeof scrollableNode === 'number') {
-    return scrollableNode;
-  }
-  if (typeof scrollableNode?.__nativeTag === 'number') {
-    return scrollableNode.__nativeTag;
-  }
-
-  return null;
-}
-
-function mergeRefs<T>(...refs: (Ref<T> | undefined)[]): RefCallback<T> {
-  return (instance: T | null) => {
-    const cleanups = refs.map((ref) => {
-      if (typeof ref === 'function') {
-        const cleanup = ref(instance);
-        return typeof cleanup === 'function' ? cleanup : () => ref(null);
-      }
-      if (ref) {
-        ref.current = instance;
-        return () => {
-          ref.current = null;
-        };
-      }
-      return undefined;
-    });
-
-    return () => cleanups.forEach((cleanup) => cleanup?.());
-  };
-}
-
 // skipExiting (unlike skipEntering) cannot be done by conditionally
 // configuring the animation in `createAnimatedComponent`, since at this stage
 // we don't know if the wrapper is going to be unmounted or not.
@@ -116,15 +58,15 @@ function mergeRefs<T>(...refs: (Ref<T> | undefined)[]): RefCallback<T> {
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-animation-config/
  */
 export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps> {
-  _childInstance: TaggedInstance | null = null;
-  _mergedRef?: RefCallback<TaggedInstance>;
-  _mergedRefSource?: Ref<TaggedInstance>;
+  _childInstance: InstanceWithViewTag | null = null;
+  _mergedRef?: RefCallback<InstanceWithViewTag>;
+  _mergedRefSource?: Ref<InstanceWithViewTag>;
 
-  _setChildInstance = (instance: TaggedInstance | null) => {
+  _setChildInstance = (instance: InstanceWithViewTag | null) => {
     this._childInstance = instance;
   };
 
-  _getMergedRef(childRef: Ref<TaggedInstance> | undefined) {
+  _getMergedRef(childRef: Ref<InstanceWithViewTag> | undefined) {
     if (!this._mergedRef || this._mergedRefSource !== childRef) {
       this._mergedRefSource = childRef;
       this._mergedRef = mergeRefs(childRef, this._setChildInstance);
@@ -133,7 +75,7 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
   }
 
   getComponentViewTag() {
-    return getTagFromChildInstance(this._childInstance) ?? -1;
+    return getViewTagFromInstance(this._childInstance) ?? -1;
   }
 
   getMaybeWrappedChildren() {
@@ -155,7 +97,7 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
     }
 
     const child = Children.only(children);
-    if (!isValidElement<{ ref?: Ref<TaggedInstance> }>(child)) {
+    if (!isValidElement<{ ref?: Ref<InstanceWithViewTag> }>(child)) {
       return children;
     }
 
@@ -167,7 +109,7 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
   setShouldAnimateExiting() {
     if (Children.count(this.props.children) === 1) {
       const tag =
-        getTagFromChildInstance(this._childInstance) ?? findNodeHandle(this);
+        getViewTagFromInstance(this._childInstance) ?? findNodeHandle(this);
       if (tag) {
         setShouldAnimateExitingForTag(tag, !this.props.skipExiting);
       }
