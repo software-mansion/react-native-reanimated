@@ -108,6 +108,7 @@ endif()
 
 target_link_libraries(
   reanimated
+  c++_shared
   log
   ReactAndroid::reactnative
   ReactAndroid::jsi
