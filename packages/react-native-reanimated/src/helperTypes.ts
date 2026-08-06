@@ -13,7 +13,7 @@ import type {
   AnimatedStyle,
   EntryExitAnimationFunction,
   LayoutAnimationFunction,
-  SharedValue,
+  SharedValueDisableContravariance,
 } from './commonTypes';
 import type { NestedArray } from './createAnimatedComponent/commonTypes';
 import type { CSSStyle } from './css';
@@ -55,7 +55,7 @@ type ComponentPropsWithoutStyle<Props extends object> = Omit<
 type RestProps<Props extends object> = {
   [K in keyof ComponentPropsWithoutStyle<Props>]:
     | Props[K]
-    | SharedValue<Props[K]>;
+    | SharedValueDisableContravariance<Props[K]>;
 };
 
 type LayoutProps = {

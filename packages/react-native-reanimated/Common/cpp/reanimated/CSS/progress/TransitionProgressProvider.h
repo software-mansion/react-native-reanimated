@@ -2,7 +2,7 @@
 
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
-#include <reanimated/CSS/progress/RawProgressProvider.h>
+#include <reanimated/CSS/progress/TimeProgressProvider.h>
 #include <reanimated/CSS/utils/props.h>
 #include <reanimated/CSS/utils/reversingShortening.h>
 
@@ -16,7 +16,7 @@ namespace reanimated::css {
 
 enum class TransitionProgressState : std::uint8_t { Idle, Pending, Running };
 
-class TransitionPropertyProgressProvider final : public KeyframeProgressProvider, public RawProgressProvider {
+class TransitionPropertyProgressProvider final : public KeyframeProgressProvider, public TimeProgressProvider {
  public:
   TransitionPropertyProgressProvider(double timestamp, double duration, double delay, EasingConfig easing);
   TransitionPropertyProgressProvider(

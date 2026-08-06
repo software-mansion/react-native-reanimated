@@ -4,7 +4,7 @@
 #include <reanimated/CSS/configs/CSSKeyframesConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
-#include <reanimated/CSS/progress/RawProgressProvider.h>
+#include <reanimated/CSS/progress/TimeProgressProvider.h>
 
 #include <memory>
 
@@ -17,7 +17,7 @@ enum class AnimationProgressState : std::uint8_t {
   Finished
 };
 
-class AnimationProgressProvider final : public KeyframeProgressProvider, public RawProgressProvider {
+class AnimationProgressProvider final : public KeyframeProgressProvider, public TimeProgressProvider {
  public:
   AnimationProgressProvider(
       double timestamp,
