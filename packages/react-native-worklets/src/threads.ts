@@ -90,19 +90,34 @@ function enqueueUI<Args extends unknown[], ReturnValue>(
   }
 }
 
+let offset = 0;
+
 function flushUIQueue(): void {
   queueMicrotask(() => {
     const queue = runOnUIQueue;
     runOnUIQueue = [];
     requestAnimationFrameImpl(() => {
-      queue.forEach(([workletFunction, workletArgs, jobResolve]) => {
-        const result = workletFunction(...workletArgs);
-        if (jobResolve) {
-          jobResolve(result);
+      offset = 0;
+      while (queue.length > offset) {
+        try {
+          drainUIQueue(queue);
+        } catch (e) {
+          console.error(e);
         }
-      });
+      }
     });
   });
+}
+
+function drainUIQueue(queue: UIJob[]): void {
+  while (queue.length > offset) {
+    const [workletFunction, workletArgs, jobResolve] = queue[offset];
+    offset++;
+    const result = workletFunction(...workletArgs);
+    if (jobResolve) {
+      jobResolve(result);
+    }
+  }
 }
 
 const requestAnimationFrameImpl = !globalThis.requestAnimationFrame
