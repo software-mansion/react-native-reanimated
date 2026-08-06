@@ -78,9 +78,9 @@ export function createAnimatedComponent<
   // `Animated.createAnimatedComponent` passed as a value) resolves to a
   // non-deprecated signature instead of being falsely flagged by
   // `@typescript-eslint/no-deprecated`.
-  Component: TInstance extends typeof FlatList<infer _>
+  Component: TInstance extends typeof FlatList<infer _> | typeof TextInput
     ? never
-    : Exclude<TInstance, typeof TextInput>,
+    : TInstance,
   options?: Options<InitialComponentProps>
 ): AnimatedComponentType<Readonly<ComponentProps<TInstance>>, TInstance>;
 
