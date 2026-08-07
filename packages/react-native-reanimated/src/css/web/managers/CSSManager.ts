@@ -3,7 +3,7 @@ import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
 import type { CSSStyle } from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
-import { filterCSSAndStyleProperties } from '../../utils';
+import { filterCSSAndStyleProperties, validateCSSCallbacks } from '../../utils';
 import { configureWebCSS } from '../domUtils';
 import CSSAnimationsManager from './CSSAnimationsManager';
 import CSSPseudoSelectorsManager from './CSSPseudoSelectorsManager';
@@ -13,6 +13,8 @@ export default class CSSManager implements ICSSManager {
   private readonly animationsManager: CSSAnimationsManager;
   private readonly transitionsManager: CSSTransitionsManager;
   private readonly pseudoSelectorsManager: CSSPseudoSelectorsManager;
+  private everHadAnimation = false;
+  private everHadTransition = false;
 
   constructor(viewInfo: ViewInfo, componentDisplayName = '') {
     configureWebCSS();
@@ -36,6 +38,24 @@ export default class CSSManager implements ICSSManager {
       animationCallbacks,
       transitionCallbacks,
     ] = filterCSSAndStyleProperties(style);
+
+    this.everHadAnimation ||= animationProperties !== null;
+    this.everHadTransition ||= transitionProperties !== null;
+
+    if (__DEV__) {
+      validateCSSCallbacks(
+        'animation',
+        'animationName',
+        animationCallbacks,
+        this.everHadAnimation
+      );
+      validateCSSCallbacks(
+        'transition',
+        'transitionDuration',
+        transitionCallbacks,
+        this.everHadTransition
+      );
+    }
 
     this.animationsManager.update(animationProperties, animationCallbacks);
     this.transitionsManager.update(transitionProperties, transitionCallbacks);

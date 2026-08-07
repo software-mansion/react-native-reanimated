@@ -140,18 +140,6 @@ export function filterCSSAndStyleProperties<S extends object>(
   if (__DEV__) {
     validateCSSAnimationProps(animationProperties);
     validateCSSTransitionProps(transitionProperties);
-    validateCSSCallbacks(
-      'animation',
-      'animationName',
-      animationCallbacks,
-      hasAnimationName
-    );
-    validateCSSCallbacks(
-      'transition',
-      'transitionDuration',
-      transitionCallbacks,
-      hasTransitionConfig
-    );
   }
 
   return [
@@ -184,16 +172,19 @@ function validateCSSTransitionProps(props: Partial<CSSTransitionProperties>) {
   }
 }
 
-function validateCSSCallbacks(
+/**
+ * Warns about callbacks that nothing can ever fire. Detaching an animation
+ * leaves its callbacks in place so the resulting cancel still reaches the user,
+ * so the caller has to tell us whether this view has ever had the config.
+ */
+export function validateCSSCallbacks(
   kind: 'animation' | 'transition',
   exampleProp: string,
-  callbacks: CSSAnimationCallbacks | CSSTransitionCallbacks,
-  hasConfig: boolean
+  callbacks: CSSAnimationCallbacks | CSSTransitionCallbacks | null,
+  everHadConfig: boolean
 ) {
-  // These callbacks are driven by an actual CSS animation/transition; without
-  // the matching properties configured there is nothing that could fire them.
-  const callbackNames = Object.keys(callbacks);
-  if (callbackNames.length === 0 || hasConfig) {
+  const callbackNames = Object.keys(callbacks ?? {});
+  if (callbackNames.length === 0 || everHadConfig) {
     return;
   }
 
