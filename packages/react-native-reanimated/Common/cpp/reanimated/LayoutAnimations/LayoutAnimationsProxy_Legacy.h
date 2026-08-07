@@ -143,7 +143,6 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
   void startExitingAnimation(const int tag, ShadowViewMutation &mutation) const;
   void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation) const;
 
-  void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) override;
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
   void maybeCancelAnimation(const int tag) const;
