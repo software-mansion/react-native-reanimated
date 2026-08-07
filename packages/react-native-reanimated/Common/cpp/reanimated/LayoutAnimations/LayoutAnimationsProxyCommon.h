@@ -22,6 +22,7 @@ struct LayoutAnimation {
   Tag parentTag;
   std::optional<double> opacity;
   bool isViewAlreadyMounted = false;
+  bool shouldRemove = false;
   int count = 1;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 

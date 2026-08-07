@@ -4,7 +4,8 @@ import type { AnimationObject, Mutable } from './commonTypes';
 export function valueSetter<Value>(
   mutable: Mutable<Value>,
   value: Value,
-  forceUpdate = false
+  forceUpdate = false,
+  explicitTimestamp?: number
 ): void {
   'worklet';
   const previousAnimation = mutable._animation;
@@ -46,7 +47,9 @@ export function valueSetter<Value>(
       animation.onStart(animation, mutable.value, timestamp, previousAnimation);
     };
     const currentTimestamp =
-      global.__frameTimestamp || global._getAnimationTimestamp();
+      explicitTimestamp ??
+      global.__frameTimestamp ??
+      global._getAnimationTimestamp();
     initializeAnimation(currentTimestamp);
 
     const step = (timestamp: number) => {

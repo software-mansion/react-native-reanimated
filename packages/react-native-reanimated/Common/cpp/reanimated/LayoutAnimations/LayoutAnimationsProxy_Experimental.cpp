@@ -353,6 +353,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
   if (--layoutAnimation.count > 0) {
     return {};
   }
+  layoutAnimation.shouldRemove = shouldRemove;
   maybeSettledAnimationTags_.insert(tag);
   auto surfaceId = layoutAnimation.finalView.surfaceId;
 
@@ -478,10 +479,13 @@ void LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceI
 
     const auto layoutAnimationIt = layoutAnimations_.find(tag);
 
-    if (layoutAnimationIt == layoutAnimations_.end() || layoutAnimationIt->second.isSettled()) {
+    if (layoutAnimationIt == layoutAnimations_.end() ||
+        (layoutAnimationIt->second.isSettled() && layoutAnimationIt->second.shouldRemove)) {
       continue;
     }
 
+    // A settled non-exiting animation still has its exact final update in
+    // updateMap. Apply it before the entry is cleaned up later in this transaction.
     auto &layoutAnimation = layoutAnimationIt->second;
     layoutAnimation.isViewAlreadyMounted = true;
     auto newView = layoutAnimation.finalView;
