@@ -93,7 +93,7 @@
     "knip": "5.61.3",
     "madge": "8.0.0",
     "react": "19.2.3",
-    "react-native": "0.87.0-rc.4",
+    "react-native": "patch:react-native@npm%3A0.87.0-rc.4#~/.yarn/patches/react-native-npm-0.87.0-rc.4-5c97bcefe3.patch",
     "typescript": "5.9.3"
   },
   "main": "./lib/module/index",

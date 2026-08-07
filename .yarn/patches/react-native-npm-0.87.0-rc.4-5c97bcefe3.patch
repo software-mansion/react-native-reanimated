@@ -1,0 +1,116 @@
+diff --git a/React/Base/RCTBundleManager.h b/React/Base/RCTBundleManager.h
+index db2c1813e2a8da805a4cbfbccb9100ec3ba64b52..aeef12c40f7750ecf71e4f53b0886996c27e62ad 100644
+--- a/React/Base/RCTBundleManager.h
++++ b/React/Base/RCTBundleManager.h
+@@ -72,5 +72,13 @@ typedef NSMutableArray<NSURLQueryItem *> *_Nullable (^RCTPackagerOptionsUpdater)
+                     andDefaultGetter:(nullable RCTBridgelessBundleURLGetter)defaultGetter;
+ - (void)resetBundleURL;
+ @property (nonatomic, nullable) NSURL *bundleURL;
++
++/**
++ * File URL of the most recently downloaded bundle persisted to disk. Only set
++ * when the bundle was fetched from a remote URL (e.g. the packager); nil when
++ * the bundle was loaded from a local file, in which case its location on disk
++ * is the bundleURL itself.
++ */
++@property (nonatomic, nullable) NSURL *downloadedBundleFileURL;
+ @property (nonatomic, nonnull) RCTBundleConfiguration *bundleConfig;
+ @end
+diff --git a/React/Base/RCTJavaScriptLoader.h b/React/Base/RCTJavaScriptLoader.h
+index f6fcfc58a3b4713953ee95010a7aa11d3abdfc06..370af209a8f7af8c5217f515967905b5c045c649 100755
+--- a/React/Base/RCTJavaScriptLoader.h
++++ b/React/Base/RCTJavaScriptLoader.h
+@@ -68,6 +68,14 @@ NS_ENUM(NSInteger){
+  */
+ @property (nonatomic, readonly) NSInteger filesChangedCount;
+ 
++/**
++ * File URL of the downloaded bundle persisted to disk, from which self.data is
++ * memory-mapped. Only set when the bundle was fetched from a remote URL (e.g. the
++ * packager); nil when the bundle was loaded from a local file, in which case the
++ * bundle's location on disk is self.url.
++ */
++@property (strong, nonatomic, readonly) NSURL *downloadedBundleFileURL;
++
+ @end
+ 
+ typedef void (^RCTSourceLoadProgressBlock)(RCTLoadingProgress *progressData);
+diff --git a/React/Base/RCTJavaScriptLoader.mm b/React/Base/RCTJavaScriptLoader.mm
+index 5f7d6e9b5efe97e3b83eabaf260029a2dbdea419..fd7af540ce43540d34499bdcf492bcf9f2772c73 100755
+--- a/React/Base/RCTJavaScriptLoader.mm
++++ b/React/Base/RCTJavaScriptLoader.mm
+@@ -25,6 +25,7 @@ @interface RCTSource () {
+   NSData *_data;
+   NSUInteger _length;
+   NSInteger _filesChangedCount;
++  NSURL *_downloadedBundleFileURL;
+ }
+ 
+ @end
+@@ -210,6 +211,15 @@ static void parseHeaders(NSDictionary *headers, RCTSource *source)
+   source->_filesChangedCount = [headers[@"X-Metro-Files-Changed-Count"] integerValue];
+ }
+ 
++static NSURL *persistDownloadedBundle(NSData *data, NSError **error)
++{
++  NSString *bundlePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"ReactNativeDevBundle.js"];
++  if (![data writeToFile:bundlePath options:NSDataWritingAtomic error:error]) {
++    return nil;
++  }
++  return [NSURL fileURLWithPath:bundlePath];
++}
++
+ static void attemptAsynchronousLoadOfBundleAtURL(
+     NSURL *scriptURL,
+     RCTSourceLoadProgressBlock onProgress,
+@@ -314,7 +324,24 @@ static void attemptAsynchronousLoadOfBundleAtURL(
+           }
+         }
+ 
+-        RCTSource *source = RCTSourceCreate(sourceURL, data, data.length);
++        NSError *persistError;
++        NSURL *downloadedBundleFileURL = persistDownloadedBundle(data, &persistError);
++        if (downloadedBundleFileURL == nil) {
++          onComplete(persistError, nil);
++          return;
++        }
++
++        NSError *mappingError;
++        NSData *bundleData = [NSData dataWithContentsOfURL:downloadedBundleFileURL
++                                                    options:NSDataReadingMappedIfSafe
++                                                      error:&mappingError];
++        if (bundleData == nil) {
++          onComplete(mappingError, nil);
++          return;
++        }
++
++        RCTSource *source = RCTSourceCreate(sourceURL, bundleData, static_cast<int64_t>(bundleData.length));
++        source->_downloadedBundleFileURL = downloadedBundleFileURL;
+         parseHeaders(headers, source);
+         onComplete(nil, source);
+       }
+diff --git a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTHost.mm b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTHost.mm
+index 0d5762dbaf675371bfa74d99bd94d7bd296526fb..815e469ec0c00a290733dc54b84a97c2a680c677 100644
+--- a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTHost.mm
++++ b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTHost.mm
+@@ -537,10 +537,18 @@ - (void)loadBundleAtURL:(NSURL *)sourceURL
+              onProgress:(RCTSourceLoadProgressBlock)onProgress
+              onComplete:(RCTSourceLoadBlock)loadCallback
+ {
++  __weak RCTHost *weakSelf = self;
++  RCTSourceLoadBlock onComplete = ^(NSError *error, RCTSource *source) {
++    RCTHost *strongSelf = weakSelf;
++    if (strongSelf != nil && source != nil) {
++      strongSelf->_bundleManager.downloadedBundleFileURL = source.downloadedBundleFileURL;
++    }
++    loadCallback(error, source);
++  };
+   if ([_hostDelegate respondsToSelector:@selector(loadBundleAtURL:onProgress:onComplete:)]) {
+-    [_hostDelegate loadBundleAtURL:sourceURL onProgress:onProgress onComplete:loadCallback];
++    [_hostDelegate loadBundleAtURL:sourceURL onProgress:onProgress onComplete:onComplete];
+   } else {
+-    [RCTJavaScriptLoader loadBundleAtURL:sourceURL onProgress:onProgress onComplete:loadCallback];
++    [RCTJavaScriptLoader loadBundleAtURL:sourceURL onProgress:onProgress onComplete:onComplete];
+   }
+ }
+ 
