@@ -82,9 +82,7 @@ export default function SlowAnimationsExample() {
       <Text style={styles.text}>The box moves back and forth in a loop.</Text>
       <Animated.View style={[styles.box, animatedStyle]} />
       <Text style={styles.heading}>Spring animation</Text>
-      <Text style={styles.text}>
-        The box springs between two positions.
-      </Text>
+      <Text style={styles.text}>The box springs between two positions.</Text>
       <View style={styles.buttons}>
         <Button title="Toggle" onPress={() => setSpringOn((on) => !on)} />
       </View>
@@ -120,8 +118,8 @@ export default function SlowAnimationsExample() {
       />
       <Text style={styles.heading}>Layout animations</Text>
       <Text style={styles.text}>
-        Add and remove boxes – entering and exiting animations as well as
-        layout transitions of the other boxes are also affected.
+        Add and remove boxes – entering and exiting animations as well as layout
+        transitions of the other boxes are also affected.
       </Text>
       <View style={styles.buttons}>
         <Button
