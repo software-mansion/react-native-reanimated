@@ -1,4 +1,5 @@
 #include <worklets/RunLoop/EventLoop.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
 
 #include <memory>
 #include <string>
@@ -11,8 +12,13 @@ namespace worklets {
 EventLoop::EventLoop(
     const std::string &name,
     const std::shared_ptr<jsi::Runtime> &runtime,
-    const std::shared_ptr<AsyncQueue> &queue)
-    : runtime_(runtime), queue_(queue), timeoutsQueueState_(std::make_shared<TimeoutsQueueState>()), name_(name) {}
+    const std::shared_ptr<AsyncQueue> &queue,
+    const std::shared_ptr<std::recursive_mutex> &runtimeMutex)
+    : runtime_(runtime),
+      queue_(queue),
+      runtimeMutex_(runtimeMutex),
+      timeoutsQueueState_(std::make_shared<TimeoutsQueueState>()),
+      name_(name) {}
 
 EventLoop::~EventLoop() {
   {
@@ -76,11 +82,14 @@ void EventLoop::run() {
 }
 
 void EventLoop::pushTask(std::function<void(jsi::Runtime &rt)> &&job) {
-  queue_->push([weakRuntime = std::weak_ptr<jsi::Runtime>{runtime_}, job = std::move(job)] {
-    if (auto runtime = weakRuntime.lock()) {
-      job(*runtime);
-    }
-  });
+  queue_->push(
+      [weakRuntime = std::weak_ptr<jsi::Runtime>{runtime_}, runtimeMutex = runtimeMutex_, job = std::move(job)] {
+        if (auto runtime = weakRuntime.lock()) {
+          std::unique_lock lock(*runtimeMutex);
+          job(*runtime);
+          jsi_utils::drainMicrotasks(*runtime);
+        }
+      });
 }
 
 void EventLoop::pushTimeout(std::function<void(jsi::Runtime &rt)> &&job, int64_t delay) {
