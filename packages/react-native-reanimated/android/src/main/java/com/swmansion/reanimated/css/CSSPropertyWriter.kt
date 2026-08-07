@@ -3,10 +3,15 @@ package com.swmansion.reanimated.css
 import android.util.FloatProperty
 import android.view.View
 
-/** The View property React Native itself writes, so a commit can overwrite a running animation. */
-internal fun cssPropertyWriterFor(propertyName: String): FloatProperty<View>? =
-    when (propertyName) {
-        "opacity" -> AlphaProperty
+/**
+ * The View property React Native itself writes, so a commit can overwrite a running
+ * animation, which the pre-draw reconciliation repairs.
+ *
+ * Ids must match `platformPropertyId` in CSSPlatformTransitions.cpp.
+ */
+internal fun cssPropertyWriterFor(propertyId: Int): FloatProperty<View>? =
+    when (propertyId) {
+        0 -> AlphaProperty
         else -> null
     }
 
