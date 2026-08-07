@@ -325,7 +325,11 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
           if constexpr (RuntimeJob<TCallable>) {
             return std::forward<TCallable>(callable)(rt);
           } else {
-            auto result = this->invoke(rt, callable, scheduleStackContext, std::forward<TCallArgs>(callArgs)...);
+            auto result = this->invoke(
+                rt,
+                callable,
+                std::forward<TScheduleStackContext>(scheduleStackContext),
+                std::forward<TCallArgs>(callArgs)...);
             if constexpr (std::is_same_v<TResult, std::shared_ptr<Serializable>>) {
               return extractSerializableOrThrow(rt, result);
             } else {
@@ -334,10 +338,11 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
           }
         };
 
-        return invokeWithMicrotaskCheckpointPolicyImpl<TCheckpoint>(microtaskPolicyInvocation);
+        return invokeWithMicrotaskCheckpointPolicyImpl<TCheckpoint>(std::move(microtaskPolicyInvocation));
       };
 
-      return invokeWithStackPolicyImpl<TScheduleStack, TCallable>(stackPolicyInvocation, std::forward<TArgs>(args)...);
+      return invokeWithStackPolicyImpl<TScheduleStack, TCallable>(
+          std::move(stackPolicyInvocation), std::forward<TArgs>(args)...);
     }
   }
 
@@ -356,7 +361,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
             std::is_same_v<std::remove_cvref_t<TScheduleStackArg>, std::optional<std::string>>,
             "[Worklets] The first argument must be an optional scheduling stack.");
         return std::forward<TInvoker>(invoke)(
-            RequestedScheduleStack{scheduleStack}, std::forward<TCallArgs>(callArgs)...);
+            RequestedScheduleStack{std::forward<TScheduleStackArg>(scheduleStack)},
+            std::forward<TCallArgs>(callArgs)...);
       }(std::forward<TArgs>(args)...);
     } else
 #endif // NDEBUG
@@ -371,21 +377,20 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   template <MicrotaskCheckpoint TCheckpoint, typename TInvoker>
   auto invokeWithMicrotaskCheckpointPolicyImpl(TInvoker &&invoke) const -> std::invoke_result_t<TInvoker> {
     using Result = std::invoke_result_t<TInvoker>;
-    [[maybe_unused]] auto result = [&]() {
-      if constexpr (std::is_void_v<Result>) {
-        std::forward<TInvoker>(invoke)();
-        return std::monostate{};
+    const auto checkpoint = [&]() {
+      if constexpr (TCheckpoint == MicrotaskCheckpoint::Skip) {
+        jsi_utils::triggerWeakRefCleanup(getJSIRuntime());
       } else {
-        return std::forward<TInvoker>(invoke)();
+        drainMicrotasksImpl();
       }
-    }();
-    if constexpr (TCheckpoint == MicrotaskCheckpoint::Skip) {
-      jsi_utils::triggerWeakRefCleanup(getJSIRuntime());
+    };
+    if constexpr (std::is_void_v<Result>) {
+      std::forward<TInvoker>(invoke)();
+      checkpoint();
     } else {
-      drainMicrotasksImpl();
-    }
-    if constexpr (!std::is_void_v<Result>) {
-      return result;
+      Result result = std::forward<TInvoker>(invoke)();
+      checkpoint();
+      return std::forward<Result>(result);
     }
   }
 

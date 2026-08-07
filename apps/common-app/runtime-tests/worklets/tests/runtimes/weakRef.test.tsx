@@ -12,11 +12,6 @@ import {
   test,
 } from '../../../ReJest/RuntimeTestsApi';
 
-type LocalGlobal = typeof globalThis & {
-  weakRefTest?: WeakRef<object>;
-  gc: () => void;
-};
-
 describe('WeakRef on Worklet Runtime', () => {
   const workletRuntime = getWorkletRuntimeFromPool('test');
   const runtimes = [
@@ -46,17 +41,15 @@ describe('WeakRef on Worklet Runtime', () => {
     test(`releases targets on ${name} Runtime after draining microtasks`, async () => {
       await runOnRuntimeAsyncWithId(runtimeId, () => {
         'worklet';
-        const globals = globalThis as LocalGlobal;
         const target = {};
-        globals.weakRefTest = new WeakRef(target);
+        globalThis.weakRefTest = new WeakRef(target);
       });
 
       const isTargetAliveBeforeGC = await runOnRuntimeAsyncWithId(
         runtimeId,
         () => {
           'worklet';
-          const globals = globalThis as LocalGlobal;
-          return globals.weakRefTest?.deref() !== undefined;
+          return globalThis.weakRefTest?.deref() !== undefined;
         }
       );
       expect(isTargetAliveBeforeGC).toBe(true);
@@ -65,10 +58,9 @@ describe('WeakRef on Worklet Runtime', () => {
         runtimeId,
         () => {
           'worklet';
-          const globals = globalThis as LocalGlobal;
-          globals.gc();
-          const wasCollected = globals.weakRefTest?.deref() === undefined;
-          delete globals.weakRefTest;
+          globalThis.gc!();
+          const wasCollected = globalThis.weakRefTest?.deref() === undefined;
+          delete globalThis.weakRefTest;
           return wasCollected;
         }
       );
@@ -79,24 +71,21 @@ describe('WeakRef on Worklet Runtime', () => {
     test(`releases targets after synchronous execution on ${name} Runtime`, () => {
       runOnRuntimeSyncWithId(runtimeId, () => {
         'worklet';
-        const globals = globalThis as LocalGlobal;
         const target = {};
-        globals.weakRefTest = new WeakRef(target);
+        globalThis.weakRefTest = new WeakRef(target);
       });
 
       const isTargetAliveBeforeGC = runOnRuntimeSyncWithId(runtimeId, () => {
         'worklet';
-        const globals = globalThis as LocalGlobal;
-        return globals.weakRefTest?.deref() !== undefined;
+        return globalThis.weakRefTest?.deref() !== undefined;
       });
       expect(isTargetAliveBeforeGC).toBe(true);
 
       const wasTargetCollected = runOnRuntimeSyncWithId(runtimeId, () => {
         'worklet';
-        const globals = globalThis as LocalGlobal;
-        globals.gc();
-        const wasCollected = globals.weakRefTest?.deref() === undefined;
-        delete globals.weakRefTest;
+        globalThis.gc!();
+        const wasCollected = globalThis.weakRefTest?.deref() === undefined;
+        delete globalThis.weakRefTest;
         return wasCollected;
       });
 
@@ -121,3 +110,7 @@ describe('WeakRef on Worklet Runtime', () => {
     expect(isWeakRefAvailable).toBe(false);
   });
 });
+
+declare global {
+  var weakRefTest: WeakRef<object> | undefined;
+}
