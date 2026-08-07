@@ -398,13 +398,9 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    * Assumes the caller acquired the runtime lock.
    */
   void drainMicrotasksImpl() const {
-    jsi::Runtime &rt = getJSIRuntime();
-    if (!eventLoop_ && runtimeKind_ != RuntimeData::RuntimeKind::UI) {
-      // UI Runtime doesn't have a C++-kind Event Loop, but one polyfilled in JS.
-      return;
+    if (microtaskQueueEnabled_) {
+      jsi_utils::drainMicrotasks(getJSIRuntime());
     }
-
-    jsi_utils::drainMicrotasks(rt);
   }
 
   /**
@@ -451,6 +447,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   const RuntimeData::RuntimeId runtimeId_;
   const bool enableLocking_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
+  const bool microtaskQueueEnabled_;
   const std::shared_ptr<jsi::Runtime> runtime_;
   std::shared_ptr<JSScheduler> jsScheduler_;
   const RuntimeData::RuntimeKind runtimeKind_;

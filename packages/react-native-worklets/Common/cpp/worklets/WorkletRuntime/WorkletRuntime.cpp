@@ -66,8 +66,8 @@ WorkletRuntime::WorkletRuntime(
     : runtimeId_(runtimeId),
       enableLocking_(enableLocking),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
-      runtime_(
-          makeRuntime(runtimeMutex_, enableLocking_, runtimeKind == RuntimeData::RuntimeKind::UI || enableEventLoop)),
+      microtaskQueueEnabled_(enableEventLoop || runtimeKind == RuntimeData::RuntimeKind::UI),
+      runtime_(makeRuntime(runtimeMutex_, enableLocking_, microtaskQueueEnabled_)),
       runtimeKind_(runtimeKind),
       name_(name),
       queue_(queue) {
