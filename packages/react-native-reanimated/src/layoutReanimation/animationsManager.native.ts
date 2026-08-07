@@ -14,6 +14,7 @@ import type {
 import { LayoutAnimationType } from '../commonTypes';
 import { getStaticFeatureFlag } from '../featureFlags';
 import { mutableHostDecorator } from '../mutablesCommon';
+import { valueSetter } from '../valueSetter';
 
 const TAG_OFFSET = 1e9;
 
@@ -54,6 +55,27 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
   'worklet';
   const currentAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
+
+  // Layout animation starts are scheduled separately on the UI runtime. With
+  // a large number of views, sampling the clock for every start noticeably
+  // staggers animations which belong to the same frame. Cache the first start
+  // timestamp until the frame finalizers run so the whole batch shares one
+  // timeline.
+  let layoutAnimationStartTimestamp: number | undefined;
+  const getLayoutAnimationStartTimestamp = () => {
+    // Already shared by every callback in the current frame.
+    const frameTimestamp = global.__frameTimestamp;
+    if (frameTimestamp !== undefined) {
+      return frameTimestamp;
+    }
+    if (layoutAnimationStartTimestamp === undefined) {
+      layoutAnimationStartTimestamp = global._getAnimationTimestamp();
+      globalThis.requestAnimationFrameFinalizer(() => {
+        layoutAnimationStartTimestamp = undefined;
+      });
+    }
+    return layoutAnimationStartTimestamp;
+  };
 
   // Flush layout-animation progress once per frame via the frame finalizer
   // (after all `requestAnimationFrame` callbacks), reusing the same
@@ -120,7 +142,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       });
 
       startObservingProgress(tag, value, scheduleFlush);
-      value.value = animation;
+      valueSetter(value, animation, false, getLayoutAnimationStartTimestamp());
     },
     stop(tag: number) {
       const value = mutableValuesForTag.get(tag);
