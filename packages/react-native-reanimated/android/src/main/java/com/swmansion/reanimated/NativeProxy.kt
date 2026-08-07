@@ -46,7 +46,8 @@ open class NativeProxy {
     private val gestureHandlerStateManager: GestureHandlerStateManager?
     private val keyboardAnimationManager: KeyboardAnimationManager
     private val pseudoSelectorManager: PseudoSelectorManager
-    private var firstUptime: Long = SystemClock.uptimeMillis()
+    private var virtualBaseMs = SystemClock.uptimeMillis().toDouble()
+    private var realBaseMs = virtualBaseMs
     private var slowAnimationsEnabled = false
     private val animationsDragFactor = 10
 
@@ -140,13 +141,17 @@ open class NativeProxy {
     }
 
     private fun toggleSlowAnimations() {
+        // The virtual clock is rebased on every toggle so getAnimationTimestamp()
+        // stays continuous and ongoing animations don't jump.
+        val nowMs = SystemClock.uptimeMillis().toDouble()
+        virtualBaseMs += (nowMs - realBaseMs) / currentDragFactor()
+        realBaseMs = nowMs
         slowAnimationsEnabled = !slowAnimationsEnabled
-        if (slowAnimationsEnabled) {
-            firstUptime = SystemClock.uptimeMillis()
-        }
         mNodesManager!!.enableSlowAnimations(slowAnimationsEnabled, animationsDragFactor)
         toggleSlowAnimationsOnUIRuntime()
     }
+
+    private fun currentDragFactor() = if (slowAnimationsEnabled) animationsDragFactor.toDouble() else 1.0
 
     private fun addDevMenuOption() {
         // In Expo, `ApplicationContext` is not an instance of `ReactApplication`
@@ -272,12 +277,7 @@ open class NativeProxy {
     }
 
     @DoNotStrip
-    fun getAnimationTimestamp(): Long =
-        if (slowAnimationsEnabled) {
-            firstUptime + (SystemClock.uptimeMillis() - firstUptime) / animationsDragFactor
-        } else {
-            SystemClock.uptimeMillis()
-        }
+    fun getAnimationTimestamp(): Long = (virtualBaseMs + (SystemClock.uptimeMillis() - realBaseMs) / currentDragFactor()).toLong()
 
     @DoNotStrip
     fun registerEventHandler(handler: EventHandler) {
