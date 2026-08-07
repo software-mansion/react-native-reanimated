@@ -107,7 +107,16 @@ NSData *downloadScript(NSURL *url)
 
 } // namespace
 
-std::shared_ptr<const ScriptBuffer> getScript(NSURL *url)
+NSData *loadRemoteScript(NSURL *url, NSURL *downloadedBundleFileURL)
+{
+  if (downloadedBundleFileURL != nil &&
+      [[NSFileManager defaultManager] fileExistsAtPath:downloadedBundleFileURL.path]) {
+    return loadScriptFromFile(downloadedBundleFileURL);
+  }
+  return downloadScript(url);
+}
+
+std::shared_ptr<const ScriptBuffer> getScript(NSURL *url, NSURL *downloadedBundleFileURL)
 {
   if (url == nil) [[unlikely]] {
     NSString *errorMsg =
@@ -117,7 +126,7 @@ std::shared_ptr<const ScriptBuffer> getScript(NSURL *url)
     throw std::runtime_error([errorMsg UTF8String]);
   }
 
-  NSData *data = url.isFileURL ? loadScriptFromFile(url) : downloadScript(url);
+  NSData *data = url.isFileURL ? loadScriptFromFile(url) : loadRemoteScript(url, downloadedBundleFileURL);
   return std::make_shared<const ScriptBuffer>(std::make_shared<const NSDataScript>(data));
 }
 

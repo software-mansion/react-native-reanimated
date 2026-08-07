@@ -67,7 +67,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
 
   if (bundleModeEnabled) {
     NSURL *url = bundleManager_.bundleURL;
-    script = getScript(url);
+    script = getScript(url, bundleManager_.downloadedBundleFileURL);
     sourceURL = [[url absoluteString] UTF8String];
   }
 
