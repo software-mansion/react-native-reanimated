@@ -31,10 +31,52 @@ PlatformEasing toPlatformEasing(const css::EasingConfig &easingConfig) {
   return {PlatformEasing::Type::Linear, {}, {}};
 }
 
+/// Must match cssPropertyWriterFor on the Kotlin side.
+std::optional<int> platformPropertyId(const std::string &propertyName) {
+  if (propertyName == "opacity") {
+    return 0;
+  }
+  return std::nullopt;
+}
+
+constexpr size_t kMaxInternedEasings = 256;
+
 } // namespace
 
-CSSPlatformTransitions::CSSPlatformTransitions(AnimateFunction animate, RemoveFunction remove)
-    : animate_(std::move(animate)), remove_(std::move(remove)) {}
+std::size_t CSSPlatformTransitions::EasingKeyHash::operator()(const EasingKey &key) const {
+  std::size_t seed = std::hash<int>{}(key.type);
+  const auto combine = [&seed](const float value) {
+    seed ^= std::hash<float>{}(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+  };
+  for (const float value : key.pointsX) {
+    combine(value);
+  }
+  for (const float value : key.pointsY) {
+    combine(value);
+  }
+  return seed;
+}
+
+CSSPlatformTransitions::CSSPlatformTransitions(
+    AnimateFunction animate,
+    RemoveFunction remove,
+    DefineEasingFunction defineEasing)
+    : animate_(std::move(animate)), remove_(std::move(remove)), defineEasing_(std::move(defineEasing)) {}
+
+std::optional<int> CSSPlatformTransitions::easingIdFor(const PlatformEasing &easing) {
+  EasingKey key{static_cast<std::uint8_t>(easing.type), easing.pointsX, easing.pointsY};
+  const auto it = easingIds_.find(key);
+  if (it != easingIds_.end()) {
+    return it->second;
+  }
+  if (easingIds_.size() >= kMaxInternedEasings) {
+    return std::nullopt;
+  }
+  const int easingId = static_cast<int>(easingIds_.size());
+  defineEasing_(easingId, static_cast<int>(easing.type), easing.pointsX, easing.pointsY);
+  easingIds_.emplace(std::move(key), easingId);
+  return easingId;
+}
 
 const CSSPlatformTransitions::ActiveTransition *CSSPlatformTransitions::activeTransitionFor(
     const Tag viewTag,
@@ -59,6 +101,11 @@ bool CSSPlatformTransitions::applyTransition(
   const auto *from = std::get_if<double>(&fromValue);
   const auto *to = std::get_if<double>(&toValue);
   if (from == nullptr || to == nullptr) {
+    return false;
+  }
+
+  const auto propertyId = platformPropertyId(propertyName);
+  if (!propertyId) {
     return false;
   }
 
@@ -92,15 +139,20 @@ bool CSSPlatformTransitions::applyTransition(
     adjustedStart = active->adjustedEnd;
   }
 
+  const auto easingId = easingIdFor(toPlatformEasing(resolvedSettings.easingConfig));
+  if (!easingId) {
+    return false;
+  }
+
   if (!animate_(
           static_cast<int>(viewTag),
-          propertyName,
+          *propertyId,
           *from,
           *to,
           reversing.duration,
           reversing.startTimestamp,
-          toPlatformEasing(resolvedSettings.easingConfig),
-          persistent)) {
+              *easingId,
+              persistent)) {
     return false;
   }
 
@@ -116,7 +168,10 @@ void CSSPlatformTransitions::removeTransition(const Tag viewTag, const std::stri
       active_.erase(propertiesIt);
     }
   }
-  remove_(static_cast<int>(viewTag), propertyName);
+  // A property without an id was never routed, so there is nothing to remove.
+  if (const auto propertyId = platformPropertyId(propertyName)) {
+    remove_(static_cast<int>(viewTag), *propertyId);
+  }
 }
 
 } // namespace reanimated
