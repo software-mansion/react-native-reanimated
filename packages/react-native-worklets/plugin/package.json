@@ -29,7 +29,7 @@
     "format": "yarn run --top-level oxfmt --ignore-path '' src types/options.d.ts",
     "watch": "tsc-watch --onSuccess \"yarn bundle\"",
     "lint": "eslint --max-warnings=0 src",
-    "test": "jest",
+    "test": "yarn run --top-level jest",
     "type:check": "tsc --noEmit"
   },
   "installConfig": {
