@@ -1,22 +1,39 @@
-import { createSerializable } from '../src/memory/serializable';
+import { createSerializable } from 'react-native-worklets';
 
-jest.mock('../src/WorkletsModule/NativeWorklets', () => {
+jest.mock('react-native-worklets/initializers/initializers', () => ({
+  init: () => {},
+}));
+
+jest.mock('react-native-worklets/WorkletsModule/NativeWorklets', () => {
   const mockSerializable = (value: unknown) => ({
     __serializableRef: true,
     value,
   });
   return {
     WorkletsModule: {
-      createSerializableString: mockSerializable,
-      createSerializableNumber: mockSerializable,
-      createSerializableBoolean: mockSerializable,
-      createSerializableBigInt: mockSerializable,
-      createSerializableUndefined: mockSerializable,
-      createSerializableNull: mockSerializable,
       createSerializableArray: mockSerializable,
-      createSerializableObject: mockSerializable,
+      createSerializableArrayBuffer: mockSerializable,
+      createSerializableArrayBufferView: mockSerializable,
+      createSerializableBigInt: mockSerializable,
+      createSerializableBoolean: mockSerializable,
+      createSerializableError: mockSerializable,
+      createSerializableHostObject: mockSerializable,
+      createSerializableImport: mockSerializable,
+      createSerializableInitializer: mockSerializable,
+      createSerializableLEGACY: mockSerializable,
       createSerializableMap: mockSerializable,
+      createSerializableNonWorkletFunction: mockSerializable,
+      createSerializableNull: mockSerializable,
+      createSerializableNumber: mockSerializable,
+      createSerializableObject: mockSerializable,
+      createSerializableRegExp: mockSerializable,
       createSerializableSet: mockSerializable,
+      createSerializableString: mockSerializable,
+      createSerializableTurboModuleLike: mockSerializable,
+      createSerializableUndefined: mockSerializable,
+      createSerializableWorklet: mockSerializable,
+      setDynamicFeatureFlag: () => {},
+      getStaticFeatureFlag: () => false,
     },
   };
 });
