@@ -7,7 +7,9 @@ import {
   Text,
   View,
 } from 'react-native';
+import type { CSSTransitionProperties } from 'react-native-reanimated';
 import Animated, {
+  css,
   Easing,
   FadeIn,
   FadeOut,
@@ -15,6 +17,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 
@@ -28,8 +31,22 @@ const ENTERING = FadeIn.duration(200);
 const EXITING = FadeOut.duration(200);
 const LAYOUT = LinearTransition.duration(200);
 
+const SPIN = css.keyframes({
+  from: { transform: [{ rotate: '0deg' }] },
+  to: { transform: [{ rotate: '360deg' }] },
+});
+
+const TRANSITION = {
+  transitionProperty: 'transform',
+  transitionDuration: 1000,
+  transitionTimingFunction: 'linear',
+} satisfies CSSTransitionProperties;
+
 export default function SlowAnimationsExample() {
   const offset = useSharedValue(0);
+  const springOffset = useSharedValue(0);
+  const [springOn, setSpringOn] = useState(false);
+  const [transitionOn, setTransitionOn] = useState(false);
   const [ids, setIds] = useState([0, 1, 2]);
   const nextId = useRef(3);
 
@@ -42,8 +59,16 @@ export default function SlowAnimationsExample() {
     );
   }, [offset]);
 
+  useEffect(() => {
+    springOffset.value = withSpring(springOn ? 300 : 0);
+  }, [springOn, springOffset]);
+
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value }],
+  }));
+
+  const springStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: springOffset.value }],
   }));
 
   return (
@@ -56,6 +81,43 @@ export default function SlowAnimationsExample() {
       <Text style={styles.heading}>Timing animation</Text>
       <Text style={styles.text}>The box moves back and forth in a loop.</Text>
       <Animated.View style={[styles.box, animatedStyle]} />
+      <Text style={styles.heading}>Spring animation</Text>
+      <Text style={styles.text}>
+        The box springs between two positions.
+      </Text>
+      <View style={styles.buttons}>
+        <Button title="Toggle" onPress={() => setSpringOn((on) => !on)} />
+      </View>
+      <Animated.View style={[styles.box, springStyle]} />
+      <Text style={styles.heading}>CSS animation</Text>
+      <Text style={styles.text}>
+        The box rotates in a loop using a CSS animation.
+      </Text>
+      <Animated.View
+        style={[
+          styles.box,
+          {
+            animationName: SPIN,
+            animationDuration: 3000,
+            animationIterationCount: 'infinite',
+            animationTimingFunction: 'linear',
+          },
+        ]}
+      />
+      <Text style={styles.heading}>CSS transition</Text>
+      <Text style={styles.text}>
+        The box slides between two positions using a CSS transition.
+      </Text>
+      <View style={styles.buttons}>
+        <Button title="Toggle" onPress={() => setTransitionOn((on) => !on)} />
+      </View>
+      <Animated.View
+        style={[
+          styles.box,
+          TRANSITION,
+          { transform: [{ translateX: transitionOn ? 300 : 0 }] },
+        ]}
+      />
       <Text style={styles.heading}>Layout animations</Text>
       <Text style={styles.text}>
         Add and remove boxes – entering and exiting animations as well as
