@@ -1,5 +1,7 @@
 'use strict';
 
+import { IS_JEST } from './platformChecker';
+
 export function scheduleOnUI<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue,
   ...args: Args
@@ -78,31 +80,33 @@ function enqueueUI<Args extends unknown[], ReturnValue>(
   const job = [worklet, args, resolve, reject];
   runOnUIQueue.push(job as UIJob);
   if (runOnUIQueue.length === 1) {
-    flushUIQueue();
+    if (IS_JEST) {
+      flushUIQueue();
+    } else {
+      queueMicrotask(flushUIQueue);
+    }
   }
 }
 
 let offset = 0;
 
 function flushUIQueue(): void {
-  queueMicrotask(() => {
-    const queue = runOnUIQueue;
-    runOnUIQueue = [];
-    requestAnimationFrame(() => {
-      offset = 0;
-      while (queue.length > offset) {
-        try {
-          drainUIQueue(queue);
-        } catch (e) {
-          const [, , , jobReject] = queue[offset - 1];
-          if (jobReject) {
-            jobReject(e);
-          } else {
-            console.error(e);
-          }
+  const queue = runOnUIQueue;
+  runOnUIQueue = [];
+  requestAnimationFrame(() => {
+    offset = 0;
+    while (queue.length > offset) {
+      try {
+        drainUIQueue(queue);
+      } catch (e) {
+        const [, , , jobReject] = queue[offset - 1];
+        if (jobReject) {
+          jobReject(e);
+        } else {
+          console.error(e);
         }
       }
-    });
+    }
   });
 }
 
