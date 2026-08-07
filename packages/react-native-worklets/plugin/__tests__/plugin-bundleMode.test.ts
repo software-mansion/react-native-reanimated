@@ -1,4 +1,4 @@
-import '../plugin/src/jestMatchers';
+import '../src/jestMatchers';
 
 import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
@@ -25,9 +25,9 @@ jest.mock('fs', () => {
 });
 
 // eslint-disable-next-line import/first
-import type { PluginOptions } from '../plugin';
+import type { PluginOptions } from '../index';
 // eslint-disable-next-line import/first
-import plugin from '../plugin';
+import plugin from '../index';
 
 const MOCK_LOCATION = 'test.js';
 const MOCK_TSX_LOCATION = 'test.tsx';
@@ -322,7 +322,10 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const fakeFilename = path.relative(__dirname, 'some-library/file.js');
+      const fakeFilename = path.resolve(
+        __dirname,
+        '../../../some-library/file.js'
+      );
       const { files } = runPlugin(
         input,
         {},

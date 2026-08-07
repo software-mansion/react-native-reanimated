@@ -44,4 +44,53 @@ describe('findHostInstance', () => {
     expect(findHostInstance(animatedComponent)).toBe(hostInstance);
     expect(ReactFabric.findHostInstance_DEPRECATED).not.toHaveBeenCalled();
   });
+
+  test('resolves scrollable components through getNativeScrollRef', () => {
+    const hostInstance = {
+      __internalInstanceHandle: {},
+      __nativeTag: 42,
+      __viewConfig: { uiViewClassName: 'RCTScrollView' },
+    };
+    const animatedComponent = {
+      _componentRef: { getNativeScrollRef: () => hostInstance },
+      _hasAnimatedRef: false,
+    } as unknown as IAnimatedComponentInternalBase;
+
+    expect(findHostInstance(animatedComponent)).toBe(hostInstance);
+    expect(ReactFabric.findHostInstance_DEPRECATED).not.toHaveBeenCalled();
+  });
+
+  test('resolves scrollable components through getScrollableNode', () => {
+    const hostInstance = {
+      __internalInstanceHandle: {},
+      __nativeTag: 42,
+      __viewConfig: { uiViewClassName: 'RCTScrollView' },
+    };
+    const animatedComponent = {
+      _componentRef: { getScrollableNode: () => hostInstance },
+      _hasAnimatedRef: false,
+    } as unknown as IAnimatedComponentInternalBase;
+
+    expect(findHostInstance(animatedComponent)).toBe(hostInstance);
+    expect(ReactFabric.findHostInstance_DEPRECATED).not.toHaveBeenCalled();
+  });
+
+  test('falls back when getScrollableNode returns a view tag', () => {
+    const hostInstance = { host: true };
+    const componentRef = {
+      getNativeScrollRef: () => null,
+      getScrollableNode: () => 42,
+    };
+    const animatedComponent = {
+      _componentRef: componentRef,
+      _hasAnimatedRef: false,
+    } as unknown as IAnimatedComponentInternalBase;
+
+    ReactFabric.findHostInstance_DEPRECATED.mockReturnValue(hostInstance);
+
+    expect(findHostInstance(animatedComponent)).toBe(hostInstance);
+    expect(ReactFabric.findHostInstance_DEPRECATED).toHaveBeenCalledWith(
+      componentRef
+    );
+  });
 });

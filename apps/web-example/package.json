@@ -17,19 +17,18 @@
   },
   "dependencies": {
     "common-app": "workspace:*",
-    "expo": "56.0.12",
-    "hermes-parser": "0.36.1",
+    "expo": "57.0.8",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-native": "0.87.0-rc.3",
+    "react-native": "0.87.0-rc.4",
     "react-native-web": "0.21.2",
     "react-strict-dom": "0.0.54"
   },
   "devDependencies": {
-    "@expo/metro-runtime": "56.0.15",
+    "@expo/metro-runtime": "57.0.7",
     "@playwright/test": "1.57.0",
     "@types/react": "19.2.2",
-    "babel-preset-expo": "56.0.15",
+    "babel-preset-expo": "57.0.4",
     "eslint": "9.37.0",
     "serve": "14.2.5",
     "typescript": "5.9.3"

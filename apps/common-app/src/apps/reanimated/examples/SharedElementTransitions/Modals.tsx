@@ -2,7 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
   useAnimatedStyle,
@@ -114,22 +114,23 @@ function Screen2Content({
     y: useSharedValue(0),
   };
 
-  const gestureHandler = Gesture.Pan()
-    .onStart((event) => {
+  const gestureHandler = usePanGesture({
+    onActivate: (event) => {
       // ctx.startX = translation.x.value;
       // ctx.startY = translation.y.value;
-    })
-    .onUpdate((event) => {
-      translation.x.value = event.translationX;
-      translation.y.value = event.translationY;
-    })
-    .onEnd((_) => {
+    },
+    onDeactivate: (_) => {
       if (Math.abs(translation.x.value) + Math.abs(translation.y.value) > 150) {
         runOnJS(goNext)();
       }
       translation.x.value = withSpring(0);
       translation.y.value = withSpring(0);
-    });
+    },
+    onUpdate: (event) => {
+      translation.x.value = event.translationX;
+      translation.y.value = event.translationY;
+    },
+  });
 
   const animatedStyle = useAnimatedStyle(() => {
     return {

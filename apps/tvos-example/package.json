@@ -9,7 +9,7 @@
     "lint": "eslint . --max-warnings 0 && yarn run --top-level oxfmt --check .",
     "format": "yarn run --top-level oxfmt .",
     "start": "react-native start",
-    "test": "jest",
+    "test": "yarn run --top-level jest",
     "type:check": "tsc --noEmit"
   },
   "dependencies": {
@@ -30,7 +30,6 @@
     "@types/react-test-renderer": "19.1.0",
     "babel-jest": "30.2.0",
     "eslint": "9.37.0",
-    "jest": "30.2.0",
     "react-test-renderer": "19.2.3",
     "typescript": "5.9.3"
   },

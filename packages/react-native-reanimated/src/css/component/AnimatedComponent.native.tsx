@@ -15,6 +15,7 @@ import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import type { DefaultStyle } from '../../hook/commonTypes';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
+import { assignRef } from '../../reactUtils';
 import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../native';
 import { CSSManager } from '../platform';
 import type { CSSStyle } from '../types';
@@ -44,6 +45,7 @@ export default class AnimatedComponent<
   _componentRef: AnimatedComponentRef | HTMLElement | null = null;
   _componentDOMRef: HTMLElement | null = null;
   _willUnmount: boolean = false;
+  _forwardedRefCleanup?: () => void;
 
   constructor(ChildComponent: AnyComponent, props: P) {
     super(props);
@@ -89,23 +91,23 @@ export default class AnimatedComponent<
   }
 
   _setComponentRef = (ref: Component | HTMLElement) => {
-    const forwardedRef = this.props.forwardedRef as
-      | ((ref: Component | HTMLElement) => void)
-      | { current: Component | HTMLElement | null }
-      | undefined;
     // Forward to user ref prop (if one has been specified)
-    if (typeof forwardedRef === 'function') {
-      // Handle function-based refs. String-based refs are handled as functions.
-      forwardedRef(ref);
-    } else if (typeof forwardedRef === 'object' && forwardedRef) {
-      // Handle createRef-based refs
-      forwardedRef.current = ref;
-    }
+    const forwardedRef = this.props.forwardedRef as Ref<
+      Component | HTMLElement
+    >;
 
     if (!ref) {
       // component has been unmounted
+      if (this._forwardedRefCleanup) {
+        this._forwardedRefCleanup();
+        this._forwardedRefCleanup = undefined;
+      } else {
+        assignRef(forwardedRef, null);
+      }
       return;
     }
+
+    this._forwardedRefCleanup = assignRef(forwardedRef, ref);
     if (ref !== this._componentRef) {
       this._componentRef = this._resolveComponentRef(ref);
       // if ref is changed, reset viewInfo

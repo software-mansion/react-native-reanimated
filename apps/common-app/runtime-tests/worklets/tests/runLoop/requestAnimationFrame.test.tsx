@@ -1,17 +1,14 @@
-import React from 'react';
-
 import {
   describe,
   expect,
   notify,
-  render,
   test,
   createOrderConstraint,
   createTestValue,
   waitForNotifications,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
-import { DispatchTestComponent } from './DispatchTestComponent';
+import { dispatchWorklet } from './dispatchWorklet';
 import { RuntimeKind } from 'react-native-worklets';
 
 describe('Test requestAnimationFrame', () => {
@@ -23,15 +20,10 @@ describe('Test requestAnimationFrame', () => {
       const [flag, setFlag] = createTestValue('not_ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            requestAnimationFrame(() => setFlag('ok', notification));
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        requestAnimationFrame(() => setFlag('ok', notification));
+      }, runtimeKind);
 
       await waitForNotification(notification);
       expect(flag.value).toBe('ok');
@@ -46,20 +38,15 @@ describe('Test requestAnimationFrame', () => {
       const [flag, setFlag] = createTestValue('not_ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            const handle1 = requestAnimationFrame(() => notify(notification1));
-            const handle2 = requestAnimationFrame(() => notify(notification2));
+      dispatchWorklet(() => {
+        'worklet';
+        const handle1 = requestAnimationFrame(() => notify(notification1));
+        const handle2 = requestAnimationFrame(() => notify(notification2));
 
-            if (handle1 + 1 === handle2) {
-              setFlag('ok');
-            }
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+        if (handle1 + 1 === handle2) {
+          setFlag('ok');
+        }
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);
@@ -75,25 +62,20 @@ describe('Test requestAnimationFrame', () => {
       const [flag, setFlag] = createTestValue('not_ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            let timestamp = 0;
-            requestAnimationFrame((frameTimestamp) => {
-              timestamp = frameTimestamp;
-              notify(notification1);
-            });
-            requestAnimationFrame((frameTimestamp) => {
-              if (timestamp === frameTimestamp) {
-                setFlag('ok');
-              }
-              notify(notification2);
-            });
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        let timestamp = 0;
+        requestAnimationFrame((frameTimestamp) => {
+          timestamp = frameTimestamp;
+          notify(notification1);
+        });
+        requestAnimationFrame((frameTimestamp) => {
+          if (timestamp === frameTimestamp) {
+            setFlag('ok');
+          }
+          notify(notification2);
+        });
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);
@@ -109,25 +91,20 @@ describe('Test requestAnimationFrame', () => {
       const [flag, setFlag] = createTestValue('not_ok');
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            let timestamp = 0;
-            requestAnimationFrame((frameTimestamp) => {
-              timestamp = frameTimestamp;
-              requestAnimationFrame((frameTimestamp) => {
-                if (frameTimestamp > timestamp) {
-                  setFlag('ok');
-                }
-                notify(notification2);
-              });
-              notify(notification1);
-            });
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        let timestamp = 0;
+        requestAnimationFrame((frameTimestamp) => {
+          timestamp = frameTimestamp;
+          requestAnimationFrame((frameTimestamp) => {
+            if (frameTimestamp > timestamp) {
+              setFlag('ok');
+            }
+            notify(notification2);
+          });
+          notify(notification1);
+        });
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);
@@ -144,20 +121,15 @@ describe('Test requestAnimationFrame', () => {
       const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                order(2, notification2);
-              });
-              order(1, notification1);
-            });
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            order(2, notification2);
+          });
+          order(1, notification1);
+        });
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);
@@ -173,20 +145,15 @@ describe('Test requestAnimationFrame', () => {
       const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            requestAnimationFrame(() => {
-              order(1, notification1);
-            });
-            requestAnimationFrame(() => {
-              order(2, notification2);
-            });
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        requestAnimationFrame(() => {
+          order(1, notification1);
+        });
+        requestAnimationFrame(() => {
+          order(2, notification2);
+        });
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);
@@ -206,23 +173,18 @@ describe('Test requestAnimationFrame', () => {
       const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                order(3, notification2);
-              });
-              order(1, notification1);
-            });
-            requestAnimationFrame(() => {
-              order(2, notification3);
-            });
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            order(3, notification2);
+          });
+          order(1, notification1);
+        });
+        requestAnimationFrame(() => {
+          order(2, notification3);
+        });
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2, notification3]);
@@ -238,18 +200,13 @@ describe('Test requestAnimationFrame', () => {
       const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
-      await render(
-        <DispatchTestComponent
-          worklet={() => {
-            'worklet';
-            requestAnimationFrame(() => {
-              order(2, notification2);
-            });
-            order(1, notification1);
-          }}
-          runtimeKind={runtimeKind}
-        />
-      );
+      dispatchWorklet(() => {
+        'worklet';
+        requestAnimationFrame(() => {
+          order(2, notification2);
+        });
+        order(1, notification1);
+      }, runtimeKind);
 
       // Assert
       await waitForNotifications([notification1, notification2]);

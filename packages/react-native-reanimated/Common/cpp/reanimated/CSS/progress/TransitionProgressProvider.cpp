@@ -17,7 +17,7 @@ TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     const double duration,
     const double delay,
     EasingConfig easing)
-    : RawProgressProvider(timestamp, duration, delay),
+    : TimeProgressProvider(timestamp, duration, delay),
       easing_(std::move(easing)),
       easingFunction_(getEasingFunctionFromConfig(easing_)) {}
 
@@ -27,7 +27,7 @@ TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     const double delay,
     EasingConfig easing,
     const double reversingShorteningFactor)
-    : RawProgressProvider(timestamp, duration, delay),
+    : TimeProgressProvider(timestamp, duration, delay),
       easing_(std::move(easing)),
       easingFunction_(getEasingFunctionFromConfig(easing_)),
       reversingShorteningFactor_(reversingShorteningFactor) {}
@@ -53,7 +53,7 @@ ReversingState TransitionPropertyProgressProvider::getReversingState() const {
 
 TransitionProgressState TransitionPropertyProgressProvider::getState() const {
   // rawProgress_ is empty until the property's delay has passed
-  // (RawProgressProvider::update resets it while timestamp < creationTimestamp + delay)
+  // (TimeProgressProvider::update resets it while timestamp < creationTimestamp + delay)
   if (!rawProgress_.has_value()) {
     return TransitionProgressState::Pending;
   }

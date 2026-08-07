@@ -1,4 +1,4 @@
-import '../plugin/src/jestMatchers';
+import '../src/jestMatchers';
 
 import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
@@ -8,7 +8,7 @@ import { html } from 'code-tag';
 import type { PluginOptions } from 'react-native-worklets/plugin';
 import plugin from 'react-native-worklets/plugin';
 
-import { version as packageVersion } from '../package.json';
+import { version as packageVersion } from '../../package.json';
 
 const MOCK_LOCATION = '/dev/null';
 
@@ -529,7 +529,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input, {
-        configFile: './plugin/plugin-unit-test.babel.config.js',
+        configFile: './plugin-unit-test.babel.config.js',
       });
       expect(code).toHaveWorkletData();
       expect(code).not.toContain("'worklet';");
@@ -547,7 +547,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input, {
-        configFile: './plugin/plugin-unit-test.babel.config.js',
+        configFile: './plugin-unit-test.babel.config.js',
       });
       expect(code).toHaveWorkletData();
       expect(code).not.toContain("'worklet';");
@@ -566,7 +566,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input, {
-        configFile: './plugin/plugin-unit-test.babel.config.js',
+        configFile: './plugin-unit-test.babel.config.js',
       });
       expect(code).toHaveWorkletData();
       expect(code).not.toContain("'worklet';");
@@ -584,7 +584,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input, {
-        configFile: './plugin/plugin-unit-test.babel.config.js',
+        configFile: './plugin-unit-test.babel.config.js',
       });
       expect(code).toHaveWorkletData();
       expect(code).not.toContain("'worklet';");
@@ -602,7 +602,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input, {
-        configFile: './plugin/plugin-unit-test.babel.config.js',
+        configFile: './plugin-unit-test.babel.config.js',
       });
       expect(code).toHaveWorkletData();
       expect(code).not.toContain("'worklet';");
@@ -620,7 +620,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input, {
-        configFile: './plugin/plugin-unit-test.babel.config.js',
+        configFile: './plugin-unit-test.babel.config.js',
       });
       expect(code).toHaveWorkletData();
       expect(code).not.toContain("'worklet';");
@@ -638,7 +638,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input, {
-        configFile: './plugin/plugin-unit-test.babel.config.js',
+        configFile: './plugin-unit-test.babel.config.js',
       });
       expect(code).toHaveWorkletData();
       expect(code).not.toContain("'worklet';");

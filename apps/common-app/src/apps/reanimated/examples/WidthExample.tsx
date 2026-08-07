@@ -28,7 +28,7 @@ export default function WidthExample() {
     return {
       width: 80 + 230 * sv.value,
     };
-  }, []);
+  });
 
   return (
     <>
