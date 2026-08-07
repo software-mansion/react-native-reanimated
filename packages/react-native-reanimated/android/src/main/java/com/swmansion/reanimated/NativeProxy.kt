@@ -277,8 +277,7 @@ open class NativeProxy {
     }
 
     @DoNotStrip
-    fun getAnimationTimestamp(): Long =
-        (virtualBaseMs + (SystemClock.uptimeMillis() - realBaseMs) / currentDragFactor()).toLong()
+    fun getAnimationTimestamp(): Long = (virtualBaseMs + (SystemClock.uptimeMillis() - realBaseMs) / currentDragFactor()).toLong()
 
     @DoNotStrip
     fun registerEventHandler(handler: EventHandler) {
