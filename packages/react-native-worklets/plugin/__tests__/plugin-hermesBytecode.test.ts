@@ -3,8 +3,8 @@ import { transformSync } from '@babel/core';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
 
-import type { PluginOptions } from '../plugin';
-import plugin from '../plugin';
+import type { PluginOptions } from '../index';
+import plugin from '../index';
 
 const FAKE_HERMESC = '/fake/hermesc';
 

@@ -4,9 +4,9 @@
 
 namespace reanimated::css {
 
-class RawProgressProvider {
+class TimeProgressProvider {
  public:
-  RawProgressProvider(double timestamp, double duration, double delay);
+  TimeProgressProvider(double timestamp, double duration, double delay);
 
   void setDuration(double duration);
   void setDelay(double delay);

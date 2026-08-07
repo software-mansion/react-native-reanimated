@@ -15,7 +15,7 @@ AnimationProgressProvider::AnimationProgressProvider(
     const AnimationDirection direction,
     EasingFunction easingFunction,
     const std::shared_ptr<KeyframeEasingConfigs> &keyframeEasingConfigs)
-    : RawProgressProvider(timestamp, duration, delay),
+    : TimeProgressProvider(timestamp, duration, delay),
       iterationCount_(iterationCount),
       direction_(direction),
       easingFunction_(std::move(easingFunction)),
@@ -81,12 +81,12 @@ void AnimationProgressProvider::play(const double timestamp) {
 }
 
 void AnimationProgressProvider::update(const double timestamp) {
-  RawProgressProvider::update(timestamp);
+  TimeProgressProvider::update(timestamp);
   state_ = computeState(timestamp);
 }
 
 void AnimationProgressProvider::resetProgress() {
-  RawProgressProvider::resetProgress();
+  TimeProgressProvider::resetProgress();
   currentIteration_ = 1;
   previousIterationsDuration_ = 0;
   state_ = AnimationProgressState::Pending;

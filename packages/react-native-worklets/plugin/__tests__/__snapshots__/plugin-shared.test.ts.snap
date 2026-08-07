@@ -309,15 +309,9 @@ const _worklet_10677258624486_init_data = {
   location: "test.js"
 };
 const TestComponent = t0 => {
-  const $ = _c(2);
-  if ($[0] !== "334946d229dc920aaf28bb8fd0705f10807290a3162fa05fe7deecf7dce3a2a2") {
-    for (let $i = 0; $i < 2; $i += 1) {
-      $[$i] = Symbol.for("react.memo_cache_sentinel");
-    }
-    $[0] = "334946d229dc920aaf28bb8fd0705f10807290a3162fa05fe7deecf7dce3a2a2";
-  }
+  const $ = _c(1);
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = function testJs1Factory({
       _worklet_10677258624486_init_data
     }) {
@@ -336,9 +330,9 @@ const TestComponent = t0 => {
     }({
       _worklet_10677258624486_init_data
     });
-    $[1] = t1;
+    $[0] = t1;
   } else {
-    t1 = $[1];
+    t1 = $[0];
   }
   useDerivedValue(t1);
   return null;

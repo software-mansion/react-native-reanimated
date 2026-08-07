@@ -1,4 +1,4 @@
-import '../plugin/src/jestMatchers';
+import '../src/jestMatchers';
 
 import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
@@ -23,9 +23,9 @@ jest.mock('fs', () => {
 });
 
 // eslint-disable-next-line import/first
-import type { PluginOptions } from '../plugin';
+import type { PluginOptions } from '../index';
 // eslint-disable-next-line import/first
-import plugin from '../plugin';
+import plugin from '../index';
 
 const MOCK_LOCATION = 'test.js';
 

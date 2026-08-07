@@ -42,6 +42,7 @@
     "@react-native/eslint-config": "0.87.0-rc.4",
     "@react-native/metro-config": "0.87.0-rc.4",
     "@react-native/typescript-config": "0.87.0-rc.4",
+    "@types/jest": "30.0.0",
     "@types/node": "24.0.14",
     "@types/shelljs": "0.8.17",
     "@typescript-eslint/parser": "8.46.0",
